@@ -1,0 +1,154 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Build the Tranche-Aggregate Facility Rel.')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000060 - Build the Tranche - Aggregate Facility          */
+/*                   Relationship                                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. CLE147             Date 28Sep11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CLE041  *CREATE    Date 11Oct04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE147 - Aggregate Facility                                 */
+/*       CLE041 - Collateralised Lending Phase 2B                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CLE147*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CLE147*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CLE147*/
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)                                  /*CLE147*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('LEC000060 - Midas LE Build the Tranche-Aggregate +
+                            Facility Relationship') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Setup system prefix variable from SDSTAT data area. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+/* Call program CB0160 to get value of restart indicator. */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/* If it is NOT a restart. */
+ 
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+                DLTF       FILE(XLETRAGPD)
+                MONMSG     MSGID(CPF2105)
+ 
+                CPYF       FROMFILE(LETRAGPD) TOFILE(&DPLIB/XLETRAGPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+             ENDDO
+ 
+/* If it is a restart. */
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+                CPYF       FROMFILE(XLETRAGPD) TOFILE(LETRAGPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(LETRAGPD))
+             ENDDO
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+/* Call CB0150 to update restart indicator */
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Call Build Tranche-Aggregate Facility Relationship Program */
+ 
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CLE147*/
+             CHGVAR     VAR(&SARD) VALUE('CLE147')                                        /*CLE147*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)                      /*CLE147*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE147*/
+             CLRPFM     LEAGHSX                                                           /*CLE147*/
+             MONMSG     MSGID(CPF2817)                                                    /*CLE147*/
+             CPYF       FROMFILE(LETRAGPD) TOFILE(LETRGPPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                                  /*CLE147*/
+             MONMSG     MSGID(CPF2817)                                                    /*CLE147*/
+             CPYF       FROMFILE(LEAGHSPD) TOFILE(&DPLIB/XLEAGHSPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                                  /*CLE147*/
+             MONMSG     MSGID(CPF2817)                                                    /*CLE147*/
+             CLRPFM     FILE(LEAGDVPD)                                                    /*CLE147*/
+             ENDDO                                                                        /*CLE147*/
+                                                                                          /*CLE147*/
+             CLRPFM     FILE(LETRAGPD)
+             CALL       PGM(LE000060)
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE147*/
+             CALL       PGM(LE000062)                                                     /*CLE147*/
+             ENDDO                                                                        /*CLE147*/
+ 
+/* If no error occured in the program */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/* Call CB0150 to update restart indicator. */
+ 
+                CHGVAR     VAR(&STAT) VALUE('N')
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+                DLTF       FILE(XLETRAGPD)
+                MONMSG     MSGID(CPF2105)
+                IF         COND(&RTCD *EQ '       ') THEN(DO)                             /*CLE147*/
+                CPYF       FROMFILE(LEAGHSX) TOFILE(LEAGHSPD) +
+                             MBROPT(*ADD)                                                 /*CLE147*/
+                RGZPFM     LEAGHSPD                                                       /*CLE147*/
+                ENDDO                                                                     /*CLE147*/
+             ENDDO
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE147*/
+             CPYF       FROMFILE(XLEAGHSPD) TOFILE(LEAGHSPD) +
+                          MBROPT(*REPLACE) CRTFILE(*NO)                                   /*CLE147*/
+             ENDDO                                                                        /*CLE147*/
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('LEC000060 Midas LE Build the Tranche-Aggregate +
+                          Facility Relationship Ended +
+                          Abnormally') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+END:
+             ENDPGM

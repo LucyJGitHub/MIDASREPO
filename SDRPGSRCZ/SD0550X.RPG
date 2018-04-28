@@ -1,0 +1,422 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Create global location')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0550X - Midas SD Create Global Location Code               *
+      *                                                               *
+      *  Function:  This program sets up the Global location code     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01459             Date 14Jan94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  S01459 - Addition of headerbox and PSSR processing.          *
+      *                                                               *
+      *****************************************************************
+     FSDBANKL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Bank details ICD retrieval
+      *
+     FSDLOCNL0IF  E           K        DISK                      A    UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Location codes update index
+      *
+     FSDFCTLL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Standing data controls update
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E                    TEXT    1   1 30
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IQSDFC1    E DSSDFCTLL0
+      * UPD : Midas SD Standing data controls update
+     IYARDCS      DS                             22
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Create Global Location
+      * Start of S01459
+      * SD0550X Precompiler - Location Codes  *
+      * Remove Last Amend Box and Creation Parameter Functions
+      * End of S01459
+      * Copyright Statement - Standard Functions  *
+      * Get details for Locations - Bank Details  *
+     C                     EXSR SARVGN
+      * Text for Global Location - Location Codes  *
+     C                     MOVEATEXT      WULCNM
+     C                     MOVELWULCCY    WULDCY           Local Dealing C
+      * Crt Global Location Code - Location Codes  *
+     C                     EXSR SBCRRC
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+     C                     COMIT
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     ROLBK
+     C                     END                             *FI
+      *----------------------------------------------------------------
+      * Exit program
+     C           AAEXIT    TAG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get details for Locations - Bank Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BJBANK           Bank
+      * Move fields to key list
+     C                     MOVE *BLANK    BJBANK           Bank
+     C                     MOVEL'BANK'    BJBANK           Bank
+     C           KRSSA     CHAIN@BJREEF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0197' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBJCNCD    WUCNCD           Country Code
+     C                     MOVELBJLCCY    WULCCY           Local Currency
+     C                     Z-ADDBJRDNB    WURDNB           Run day number
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBCRRC    BEGSR
+      *================================================================
+      * Crt Global Location Code - Location Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move all fields to @DVREHI
+     C                     MOVEL'***'     DVLCCD           Location Code
+     C                     MOVELWUCNCD    DVCNCD           Country Code
+     C                     Z-ADDWURDNB    DVLCD            Last Change Dat
+     C                     MOVEL'I'       DVTYLC           Type of Last Ch
+     C                     MOVELWULCNM    DVLCNM           Location Name
+     C                     MOVELWULDCY    DVLDCY           Local Dealing C
+     C                     MOVEL*BLANK    DVMLOC           Midas Export Va
+      *
+     C           KLCRSB    KLIST
+     C                     KFLD           DVLCCD           Location Code
+      * Check for duplicate primary key
+     C           KLCRSB    SETLL@DVREHI                  90*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'USR0654' W0RTN   7
+      * Send message 'Location Codes         EX'
+     C                     MOVEL'USR0654' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C                     WRITE@DVREHI                91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Write error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * USER: Processing after Data update
+     C                     Z-ADD1         WUNORC           No. of Records
+     C                     Z-ADD*ZERO     WUNOAM           No. of Amends
+     C                     Z-ADD*ZERO     WUNODL           No. of Deletes
+     C                     Z-ADD1         WUNOIN           No. of Inserts
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SCCHRC
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YARDC   1
+      *
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDLOCNPD'AHFLNM           Filename
+      *
+     C           KLCHSC    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSC    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SCEXIT
+     C                     END
+      *
+      * Store record data for null update check
+     C                     MOVE QSDFC1    YARDCS
+      * USER: Processing after Data read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+      * Set PGM.*Record Data Changed flag
+     C           QSDFC1    IFNE YARDCS
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YARDC     IFEQ 'Y'
+     C                     UPDAT@AHREAU                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDFCTLL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes
+     C                     ROLBK                       90
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field Country Code
+     C                     MOVEL*BLANK    WUCNCD  2
+      * Define work field Local Currency code
+     C                     MOVEL*BLANK    WULCCY  3
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Location Name
+     C                     MOVEL*BLANK    WULCNM 30
+      * Define work field Local Dealing Currency
+     C                     MOVEL*BLANK    WULDCY  3
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      * Open files
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+     C                     OPEN SDBANKL1
+     C                     OPEN SDLOCNL0
+     C                     OPEN SDFCTLL0
+     C                     MOVEL'N'       W0PMT   1
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0550XPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0550XPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRBCH
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0550XPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001
+** TEXT
+Default Global Location Code

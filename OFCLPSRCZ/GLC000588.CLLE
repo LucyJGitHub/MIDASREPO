@@ -1,0 +1,120 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Accounting Rules Real Time Post')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger module                               */
+/*                                                                   */
+/*       GLC000588 - Midas OF Accounting Rules Real Time Post        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. CGL135B  *CREATE   Date 10Jul13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CGL135B - Accounting Rules Processing                       */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&RTNCDE &BNUM)
+ 
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&BNUM) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&WRKSTN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MSGID)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTRN)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&LENG)    TYPE(*CHAR) LEN(4)   VALUE(X'0110')
+             DCL        VAR(&INPT)    TYPE(*CHAR) LEN(8)   VALUE('JOBI0200')
+             DCL        VAR(&QUAL)    TYPE(*CHAR) LEN(26)
+             DCL        VAR(&INTR)    TYPE(*CHAR) LEN(16)
+             DCL        VAR(&RETRY)   TYPE(*DEC)  LEN(2 0) VALUE(0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Get the current job name so that errors can be sent to user  */
+ 
+             RTVJOBA    JOB(&WRKSTN)
+ 
+/* Send msg to prevent COB taking place during the batch job    */
+ 
+             SNDPGMMSG  MSG('MIDAS') TOMSGQ(MSTATUS)
+ 
+/* Submit the Posting job :                                     */
+ 
+             SBMJOB     JOB(GLC450) JOBD(MBATCH) OUTQ(*JOBD) +
+                          USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +
+                          GLC450 PARM(''' *CAT &BNUM *CAT ''' ''' +
+                          *CAT &WRKSTN *TCAT ''')') INLLIBL(*JOBD) +
+                          MSGQ(MOPERQ)
+ 
+/* Retrieve job reference of the submitted job                  */
+ 
+             RCVMSG     MSGTYPE(*LAST) WAIT(*MAX) MSGDTA(&MSGDTA) +
+                          MSGID(&MSGID)
+ 
+             IF         COND(&MSGID *EQ 'CPC1221') THEN(CHGVAR +
+                          VAR(&QUAL) VALUE(%SST(&MSGDTA 1 26)))
+ 
+/* Remove msg to prevent COB taking place during the batch job  */
+ 
+             SBMJOB     JOB(MIDASRMV) JOBD(MBATCH) OUTQ(*JOBD) +
+                          USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +
+                          MIDASRMV') INLLIBL(*JOBD) MSGQ(MOPERQ)
+ 
+/* Wait completion of the job                                   */
+ 
+ RETRY:      CHGVAR     VAR(&MSGID) VALUE(' ')
+             CALL       PGM(QUSRJOBI) PARM(&RTRN &LENG &INPT &QUAL +
+                          &INTR)
+ 
+/* Job is not found                                             */
+ 
+             MONMSG     MSGID(CPF3C53 CPF3C55 CPF3C58) EXEC(GOTO +
+                          CMDLBL(ENDPGM))
+ 
+/* Job is not available, wait 10 times max                      */
+ 
+             MONMSG     MSGID(CPF3C54) EXEC(RCVMSG MSGID(&MSGID))
+ 
+             IF         COND(&MSGID *EQ 'CPF3C54') +
+               THEN(DO)
+                 CHGVAR     VAR(&RETRY) VALUE(&RETRY + 1)
+                 IF         COND(&RETRY *LT 10) +
+                   THEN(DO)
+                     DLYJOB     DLY(10)
+                     GOTO       CMDLBL(RETRY)
+                   ENDDO
+               ENDDO
+ 
+             IF         COND(&RETRY *GE 10) +
+               THEN(CHGVAR VAR(%SST(&RTRN 51 8)) VALUE(' '))
+ 
+             CHGVAR     VAR(&RETRY) VALUE(0)
+ 
+/* If the job is on queue or active, wait                       */
+ 
+             IF         COND((%SST(&RTRN 51 5) *EQ '*JOBQ') *OR +
+                          (%SST(&RTRN 51 8) *EQ '*ACTIVE')) THEN(DO)
+             DLYJOB     DLY(10)
+             GOTO       CMDLBL(RETRY)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Error in message handling program - +
+                          contact System Supervisor')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             CHGVAR     VAR(&RTNCDE) VALUE('*ERROR')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             ENDPGM

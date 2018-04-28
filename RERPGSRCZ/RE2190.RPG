@@ -1,0 +1,265 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas End of Tax Yr Prcg of A/Cs and Deals')           *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Retail Module
+     F*                                                                  *
+     F*    RE2190 - END OF TAX YEAR PROCESSING OF A/C AND DEALS          *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER048             Date 19May08               *
+      *                 CER047             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11May06               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAS009             Date 16May05               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01383             Date 27Apr92               *
+     F*                                                                  *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+     F*       S01383 - BASIC RATE TAX INCORPORATION                      *
+     F*                NEW PROGRAM                                       *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FREIACD  IF  E           K        DISK
+     FACCNT   UF  E           K        DISK
+     FDEALSDC UF  E                    DISK
+     FSDBRTDL1UF  E           K        DISK
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FUNCTIONS OF INDICATORS :                                    *
+      *                                                               *
+      *         10         END OF FILE FOR REIACD                     *
+      *         11         CHAIN FAIL TO ACCNT                        *
+      *         12         END OF FILE FOR DEALSDC                    *
+      *         13         CHAIN FAIL TO SDBRTDL1                     *
+      *         U7         DATABASE ERROR                             *
+      *         LR         END OF PROGRAM                             *
+      *                                                               *
+      /EJECT
+      *                                                               *
+      *  INDET TO SUBROUTINES :                                       *
+      *                                                               *
+      *          ACCSR  -  Account processing                         *
+      *          DEALSR -  Deal processing                            *
+      *          INIT   -  Initial processing                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     I**
+     I            DS
+     I**********                              1  18 ACCKEY                                    CGL029
+     I                                        1  24 ACCKEY                                    CGL029
+     I**********                              1   60CNUM                                      CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        7   9 CCY
+     I**********                             10  130ACOD                                      CGL029
+     I**********                             14  150ACSQ                                      CGL029
+     I**********                             16  18 BRCA                                      CGL029
+     I                                       10  190ACOD                                      CGL029
+     I                                       20  210ACSQ                                      CGL029
+     I                                       22  24 BRCA                                      CGL029
+     ILDA        UDS
+     I                                        1 256 DBLDA
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+      /EJECT
+      *
+      *****************************************************************
+      *
+      ** MAIN PROCESSING :
+      *
+      ** initial processing
+      *
+     C                     EXSR INIT
+      *
+      ** detail processing
+      *
+     C                     EXSR ACCSR
+     C                     EXSR DEALSR
+      *
+      ** Update the 'Banks Included in S17 Report for Current Tax Year'
+      ** and 'Include Banks in S17 report for Next Tax Year' fields.
+      *
+     C                     MOVE 'D'       KEY     1
+     C           KEY       CHAINSDBRTDD0             13
+      *
+     C           *IN13     IFEQ '1'                        *************
+     C                     MOVEL'SDBRTDPD'DBFILE           * DBERR 002 *
+     C                     MOVEL'002'     DBASE            *************
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     ELSE
+     C                     MOVE BNXY      BTHY
+     C                     MOVE 'N'       BNXY
+     C                     UPDATSDBRTDD0
+     C                     END
+      *
+      ** end program
+     C                     MOVE '1'       *INLR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      **  ACCSR      :  ACCOUNT PROCESSING                            *
+      *   CALLED BY  :  MAIN PROCESSING                               *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACCSR     BEGSR
+      *
+      * One record per retail account exists on REIACD.
+      * This file includes closed retail accounts like ACCNTAB.
+      * Both files are kept in step until 1 year after account closure
+      * when GL0320 will delete the account records off both files
+      *
+     C                     READ REIACD                   10
+     C*
+     C* READ NON-DELETED RECORDS
+     C*
+     C           *IN10     DOWEQ'0'
+     C           RECI      ANDEQ'*'
+     C                     READ REIACD                   10
+     C                     END
+     C*
+     C           *IN10     DOWEQ'0'                        **B001
+      *
+     C           ACCNTK    CHAINACCNTABF             11
+     C           *IN11     IFEQ '1'                        **B002
+     C                     MOVELACCKEY    DBKEY            *************
+     C                     MOVEL'ACCNTAB' DBFILE           * DBERR 001 *
+     C                     MOVEL'001'     DBASE            *************
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C                     END                             **E002
+      *
+     C           NACSG     IFEQ 'Y'                        **B002
+     C                     MOVE 'N'       NACSG
+     C                     UPDATACCNTABF
+     C                     END                             **E002
+      *
+     C                     READ REIACD                   10
+     C*
+     C* READ NON-DELETED RECORDS
+     C*
+     C           *IN10     DOWEQ'0'
+     C           RECI      ANDEQ'*'
+     C                     READ REIACD                   10
+     C                     END
+     C*
+     C                     END                             **E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      **  DEALSR     :  DEAL PROCESSING                               *
+      *   CALLED BY  :  MAIN PROCESSING                               *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DEALSR    BEGSR
+      *
+      **
+     C                     READ DEALSDC                  12
+     C           *IN12     DOWEQ'0'                        **B001
+      *
+     C           DTYP      IFEQ 'IT'                       **B002
+     C           DTYP      OREQ 'TD'
+     C           DTYP      OREQ 'CD'
+      *
+     C           NACSG     IFEQ 'Y'                        **B003
+     C                     MOVE 'N'       NACSG
+     C                     UPDATDEALSDCF
+     C                     END                             **E003
+     C                     END                             **E002
+      *
+     C                     READ DEALSDC                  12
+      *
+     C                     END                             **E001
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE INIT
+      *****************************************************************
+      *                                                               *
+      **  INIT       :  initial processing                            *
+      *   CALLED BY  :  main processing                               *
+      *   CALLS      :                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'RE2190'  DBPGM
+      *
+      ** Set up key list to access file ACCNT
+      *
+     C           ACCNTK    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *
+     C                     ENDSR
+      *
+      ****************************************************************

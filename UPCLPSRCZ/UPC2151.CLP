@@ -1,0 +1,237 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas UP Second shell for source and object moves')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC2151 - Shell for object moves (all libraries)            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP028             Date 02Sep04              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. CPK015             Date 05Mar02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      CUP008             Date 07Jul00              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CUP002             Date 01Jun99              */
+/*                      CUP001 *CREATE     Date 13Aug98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP028 - Set owner of core library objects to be MIDASOWNER */
+/*                whereas owner of the other library objects be as   */
+/*                passed in &OWNER (xxOWNER).                        */
+/*       CPK015 - 4.01 packaging. Add MONMSG to error processing.    */
+/*       CUP008 - Stop types 'DATA', DOC' and 'MSGF' being processed.*/
+/*       CUP002 - Certain member types do not need to be processed.  */
+/*       CUP001 - Introduction of BRIDGE                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &UCLIB &UCLIBL &UCLIBS &UPLIB +
+                          &UPLIBL &UPLIBS &CPLIB &CPLIBL &CPLIBS +
+                          &PTFOBJ &CORLIB &PTFSRC &SRCLIB &OWNER +
+                          &AUTL &RETURN)
+/* Program runs in three modes */
+/* A = Move core libraries only */
+/* B = Move core and country libraries only */
+/* C = Move core, country and client libraries */
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&UCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UCLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UCLIBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UPLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UPLIBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPLIBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PTFOBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CORLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PTFSRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&MIDASOWNER) TYPE(*CHAR) LEN(10) +
+                          VALUE('MIDASOWNER')                                             /*CUP028*/
+ 
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USTS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+ 
+             DCLF       FILE(UPDLVCL4)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area /MIDASMSG in QTEMP */                                                 /*CPK015*/
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)                                            /*CPK015*/
+             MONMSG     MSGID(CPF0000)                                                    /*CPK015*/
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')                                                      /*CPK015*/
+ 
+/* Processing for libraries where objects are to be moved to */
+             CALL       PGM(UPC0351) PARM(&MODE &UCLIBL &UPLIBL +
+                          &CPLIBL &CORLIB &RETURN)
+             IF         COND(&RETURN *NE ' ') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGVAR     VAR(&USTS) VALUE('C')
+READNEXT:
+             IF         COND(&AUMBNM *NE ' ') THEN(DO)
+/*/COPY UPCPYSRC,C_UP0020A                                           */
+             ENDDO
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+                                                                      /*CUP002*/
+/* For particular member types proceed to next record */              /*CUP002*/
+/************IF         COND(&AUMBTP *EQ 'REDUNDANT' *OR &AUMBTP *EQ +                    /*CUP008*/
+/************             'EXE') THEN(DO)                                      /*CUP002*/ /*CUP008*/
+             IF         COND(&AUMBTP *EQ 'REDUNDANT' *OR &AUMBTP *EQ +
+                          'EXE' *OR &AUMBTP *EQ 'DOC' *OR &AUMBTP +
+                          *EQ 'MSGF' *OR &AUMBTP *EQ 'DATA') THEN(DO)                     /*CUP008*/
+                GOTO       CMDLBL(READNEXT)                           /*CUP002*/
+             ENDDO                                                    /*CUP002*/
+ 
+/* Work out object type */
+             CHGVAR     VAR(&OBJTYPE) VALUE(' ')
+/* Special case for database items as these objects do not need to   */
+/*  moved                                                            */
+             IF         COND((&AUMBTP *EQ 'PF        ') *OR +
+                             (&AUMBTP *EQ 'LF        ') *OR +
+                             (&AUMBTP *EQ 'DTAARA    ')) THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('DATA')
+             ENDDO
+             IF         COND((&AUMBTP *EQ 'DSPF      ') *OR +
+                             (&AUMBTP *EQ 'PRTF      ')) THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('*FILE')
+             ENDDO
+ 
+             IF         COND((&AUMBTP *EQ 'CLP       ') *OR +
+                             (&AUMBTP *EQ 'RPG       ') *OR +
+                             (&AUMBTP *EQ 'PGM       ') *OR +
+                             (&AUMBTP *EQ 'PLI       ')) THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('*PGM')
+             ENDDO
+ 
+             IF         COND((&AUMBTP *EQ 'CLLE      ') *OR +
+                             (&AUMBTP *EQ 'RPGLE     ') *OR +
+                             (&AUMBTP *EQ 'CLE       ')) THEN(DO)
+/* Extra checking as it is unknown whether type is *PGM or *MODULE */
+                CHGVAR     VAR(&OBJTYPE) VALUE(*MODULE)
+                RTVOBJD    OBJ(&PTFOBJ/&AUMBNM) OBJTYPE(&OBJTYPE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*PGM')
+                ENDDO
+             ENDDO
+ 
+             IF         COND((&AUMBTP *EQ 'CMD       ')) THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('*CMD')
+             ENDDO
+ 
+             IF         COND((&AUMBTP *EQ 'SRVPGM    ')) THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('*SRVPGM')
+             ENDDO
+ 
+             IF         COND((&AUMBTP *EQ 'BNDDIR    ')) THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('*BNDDIR')
+             ENDDO
+ 
+/************IF         COND((&AUMBTP *EQ 'DTAARA    ')) THEN(DO)     /*CUP002*/
+/************   CHGVAR     VAR(&OBJTYPE) VALUE('*DTAARA')             /*CUP002*/
+/************ENDDO                                                    /*CUP002*/
+ 
+             IF         COND((&AUMBTP *EQ 'PNLGRP    ')) THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('*PNLGRP')
+             ENDDO
+ 
+             IF         COND(%SST(&AUMBTP 1 4) *EQ 'COPY') +
+                          THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('/COPY')
+             ENDDO
+             IF         COND(%SST(&AUSRCF 1 2) *EQ 'SK') THEN(DO)     /*CUP002*/
+                CHGVAR     VAR(&OBJTYPE) VALUE('/COPY')               /*CUP002*/
+             ENDDO                                                    /*CUP002*/
+             IF         COND(&AUSRCF *EQ 'STDCRTPARM') THEN(DO)       /*CUP002*/
+                CHGVAR     VAR(&OBJTYPE) VALUE('/COPY')               /*CUP002*/
+             ENDDO                                                    /*CUP002*/
+ 
+/* If mode C taken, then process for UC set of libraries */
+             IF         COND(&MODE *EQ 'C') THEN(DO)
+                CALL    PGM(UPC0350) PARM(&AUMBNM &OBJTYPE &AUSRCF +
+                          &UCLIB &UCLIB &UCLIBL &UCLIBS &OWNER +
+                          &AUTL &RETURN)
+                IF COND(&RETURN *EQ 'F') THEN(DO)
+                   CHGVAR     VAR(&USTS) VALUE('F')
+                ENDDO
+ 
+/* ... then process for UP set of libraries */
+                CALL    PGM(UPC0350) PARM(&AUMBNM &OBJTYPE &AUSRCF +
+                          &UPLIB &UPLIB &UPLIBL &UPLIBS &OWNER +
+                          &AUTL &RETURN)
+                IF COND(&RETURN *EQ 'F') THEN(DO)
+                   CHGVAR     VAR(&USTS) VALUE('F')
+                ENDDO
+             ENDDO
+ 
+/* If mode B taken, then process for CP set of libraries */
+             IF       COND(&MODE *EQ 'C' *OR &MODE *EQ 'B') THEN(DO)
+                CALL    PGM(UPC0350) PARM(&AUMBNM &OBJTYPE &AUSRCF +
+                          &CPLIB &CPLIB &CPLIBL &CPLIBS &OWNER +
+                          &AUTL &RETURN)
+                IF COND(&RETURN *EQ 'F') THEN(DO)
+                   CHGVAR     VAR(&USTS) VALUE('F')
+                ENDDO
+             ENDDO
+ 
+/* For any mode process for core set of libraries */
+/*****       CALL       PGM(UPC0350) PARM(&AUMBNM &OBJTYPE &AUSRCF +
+                          &PTFOBJ &PTFSRC &CORLIB &SRCLIB &OWNER +
+                          &AUTL &RETURN)                                                  /*CUP028*/
+             CALL       PGM(UPC0350) PARM(&AUMBNM &OBJTYPE &AUSRCF +
+                          &PTFOBJ &PTFSRC &CORLIB &SRCLIB &MIDASOWNER +
+                          &AUTL &RETURN)                                                  /*CUP028*/
+             IF COND(&RETURN *EQ 'F') THEN(DO)
+                   CHGVAR     VAR(&USTS) VALUE('F')
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC2151') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)                                                    /*CPK015*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)                                                    /*CPK015*/
+             CALL       PGM(SCC0010) PARM('UPC2151' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*CPK015*/
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

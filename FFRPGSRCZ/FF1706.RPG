@@ -1,0 +1,617 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF OTC pay/receive extract')                     *
+/*OVRF*: OVRDBF FILE(FFOTPRPX) TOFILE(FFOTPRPD)                     :*
+      ****************************************************************
+      *                                                              *
+      *  Midas - Dealing Module                                      *
+      *                                                              *
+      *  FF1706 - OTC Pay/Receive Extract                            *
+      *                                                              *
+      *  Function:  This program has passed to it the transaction    *
+      *             details of an OTC option. It determines whether  *
+      *             the option is ready to produce its pay/receive   *
+      *             reporting and, if so, writes details of the same *
+      *             to the OTC pay/receive extract file.             *
+      *                                                              *
+      *  Called By: FF1705 - OTC pay/receive Extract.                *
+      *                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR746662           Date 03May11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 247517             Date 09May07               *
+      *                 247296             Date 25Apr07               *
+      *                 CPK027             Date 16Apr07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241147A            Date 07Nov06               *
+      *                 241147             Date 26Oct06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 215528             Date 21Mar03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 04Oct01               *
+      *                 CFF007             Date 13Feb01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 126117             Date 20Apr00               *
+      *                 140017             Date 20Apr00               *
+     F*                 140455             Date 20Apr00               *
+     F*                 136056             Date 18Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 Patch E ---------------------------------------*
+      *                    170520             Date 19Nov99           *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                    CPK009             DATE 13Aug99           *
+      *                    CFF003 *CREATE     DATE 14APR97           *
+      *                    XXXXXX             DATE DDMMMYY           *
+      *                                                              *
+      ****************************************************************
+      *                                                              *
+      *  AR746662 - Discrepancy in premium amount in Currency OTC     *
+      *             screen and Projected Available Balance Enquiry    *
+      *             Applied fix 249171. (Recompile)                   *
+      *             (Child: Artf746663)                               *
+      *  247517 - Reversed fix 241147.                                *
+      *  247296 -  For Ccy OTC, as MNPF was defaulted to '0.00000001',*
+      *            premium must be divided by 100.                    *
+      *  CPK027 - Errors in compiling MP1_3_TTTS - recompile over     *
+      *           changed FFTVCLZ2.                                   *
+      *  241147A - Recompile.                                         *
+      *  241147 - Recompile.                                          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  215528 - System is associating a wrong premium amount.       *
+      *           Recompiled only.                                    *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG.               *
+      *           Recompile over changed FFYTOPZ1.                    *
+      *  CPK014 - Release 4 packaging.  Rename of timestamp field.    *
+      *  CFF007 - Futures and Options Enhancement for Private Banking *
+      *  CFF006 - Fractional Ticks Enhancement.  (Recompiled)         *
+     F*  126117 - Recompiled due to changes to FFYTOPZ1.              *
+     F*  140017 - Recompiled due to changes to FFPMCLZ1.              *
+     F*  140455 - Recompiled due to changes to FFPMCLZ1.              *
+     F*  136056 - Calculate Australian option premiums correctly      *
+     F*           Recompiled due to changes in FFYTOPZ1               *
+      *     170520  - Recompile over changed TRANSD file             *
+      *     CPK009  - Recompile problems during DBA R3.00 packaging. *
+      *     CFF003  - ENHANCED OTC PROCESSING - PHASE II             *
+      *               UPGRADE FROM BLI LBL001                        *
+      *                                                              *
+      ****************************************************************
+      * INDICATORS USED                                              *
+      * ~~~~~~~~~~~~~~~                                              *
+      * 88 - Dummy access to FFOTPRPD and FFOTPRPX                   *
+      * 89 - EOF for INTYP                                           *
+      *                                                              *
+      * U7 - Program Error                                           *
+      * U8 - Database error                                          *
+      * LR - Last record                                             *
+      ****************************************************************
+     F/EJECT
+     FINTYP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FFFOTPRPDUF  E                    DISK         KCOMIT       A    UC
+     F                                              KINFSR *PSSR
+     FFFOTPRPXUF  E                    DISK                      A    UC
+     F            FFOTPRPF                          KRENAMEFFOTPRXF
+     F                                              KINFSR *PSSR
+     F*
+      /SPACE 3
+     E* Array containing Copyright Statement
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZHOLE
+     E*
+      /SPACE 3
+     IFFOTPRPF
+     I              FFIN                            FFINTT
+     IFFOTPRXF
+     I              FFIN                            FFINTT
+     IINTYPDF
+     I              CNTT                            FFCNTT
+     I              CTAM                            FFCTAM
+     I* Instrument Types
+     I*
+     I@TRANS    E DSTRANSD
+     I              RECI                            RECIX
+     I              TNBR                            TNBRX
+     I/COPY WNCPYSRC,FF1706I001
+     I* External DS for Transaction details
+     I*
+     I@TRSET    E DSTRSETD
+     I              FRNT                            XXFRNT                                    170520
+     I              AFRT                            XXAFRT                                    170520
+     I              REPA                            XXREPA                                    170520
+     I              BCMC                            XXBCMC                CFF007
+     I              BCMS                            XXBCMS                CFF007
+     I              CCMC                            XXCCMC                CFF007
+     I              CCMS                            XXCCMS                CFF007
+     I              TMST                            XXTMST                                    CPK014
+     I* External DS for Transaction Settlement details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I* External DS for Branch Code Details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* External DS for Bank details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I* External DS for Currency Details
+     I*
+     ISDTRAD    E DSSDTRADPD
+     I* External DS for Currency Details
+     I*
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QQACD1                                    CGL029
+     I* External DS for Nostro Details
+     I*
+     ISDDEAL    E DSSDDEALPD
+     I              QQACCD                          QQACD2                                    CGL029
+     I* External DS for Dealing Details
+     I*
+     IDSFDY     E DSDSFDY
+     I* First DS for access programs, short data structure
+     I*
+     ILDA       E DSLDA
+     I* Data area giving installation control details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I*
+     I/COPY ZSRSRC,FFSRDSZ1
+     I*
+     I/COPY ZSRSRC,ZYLDZ1
+     I*
+     I/COPY ZSRSRC,ZHOLI
+     I*
+     I/COPY ZSRSRC,ZHOLDS
+     I/EJECT
+     C****************************************************************
+     C* MAIN PROCESSING                                              *
+     C*                                                              *
+     C* Calls     : INIT, PROCES, UPDAT                              *
+     C****************************************************************
+     C                     EXSR INIT
+     C                     EXSR UPDAT
+     C/EJECT
+     C****************************************************************
+     C* SR/INIT   : To perform all initialisation processing         *
+     C*                                                              *
+     C* Called by : Main Processing                                  *
+     C* Calls     : ZFWDT                                            *
+     C****************************************************************
+     C           INIT      BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @TRANS
+     C                     PARM           @TRSET
+     C                     PARM           @RTCD   7
+     C                     PARM           @ERRF   8
+     C                     PARM           @ERRK  29
+     C                     PARM           @MODE   1
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C** Dummy access to FFOTPRPD and FFOTPRPX
+     C*
+     C           *IN88     IFEQ *ON
+     C                     READ FFOTPRPD                 88
+     C                     READ FFOTPRPX                 88
+     C                     ENDIF
+     C*
+     C** Set up LDA
+     C*
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'FF1706'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C*
+     C** Call AOBANKR0 to access the bank's ICD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG'    @RTCD
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** Check for Database error in AOBANKR0
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     MOVEL'SDBANKPD'@ERRF
+     C                     MOVEL'*FIRST'  @ERRK
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C** Call access program for Dealing Data Details
+     C*
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*
+     C** Check for Database error in AODEALR0
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'NO DEAL' @RTCD
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C** Call access program for Trading Data Details
+     C*
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+     C*
+     C** Check for Database error in AODEALR0
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'NO TRAD' @RTCD
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C** Check for Close of business mode
+     C*
+     C           @MODE     IFEQ 'C'
+     C                     MOVE BJDNWD    ZDAYNO
+     C                     MOVE BJLCCY    ZCCY
+     C                     MOVE BJSLCD    ZLOC
+     C                     Z-ADD1         ZNRDYS
+     C                     EXSR ZFWDT
+     C           ZDYNBR    SUB  1         PAYCD   50
+     C*
+     C                     ELSE
+     C*
+     C           BJDNWD    SUB  1         PAYCD
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C/EJECT
+     C****************************************************************
+     C* SR/UPDAT  : Validate fields                                  *
+     C*                                                              *
+     C* Called by : Main Processing                                  *
+     C* Calls     : ZFWDT, FFPMCL, WRITE                             *
+     C****************************************************************
+     C           UPDAT     BEGSR
+     C*
+     C** Check Mode
+     C*
+     C           @MODE     IFEQ 'I'
+     C                     OPEN FFOTPRPD
+     C                     ELSE
+     C                     OPEN FFOTPRPX
+     C                     ENDIF
+     C*
+     C** Access transaction settlement details
+     C*
+     C           ISTT      CHAININTYP                89
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'INTYP '  DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*KEY '   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     MOVEL'INTYP'   @ERRF
+     C                     MOVELISTT      @ERRK
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C** Check the customer settlement type
+     C*
+     C           CSLT      IFEQ 01
+     C           CSLT      OREQ 07
+     C           CSLT      OREQ 08
+     C*
+     C** Access instrument currency
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ISCY      @ISCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** Check for Database error in AOCURRR0
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     MOVEL'SDCURRPD'@ERRF
+     C                     MOVELISCY      @ERRK
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C** Access nostro location code
+     C*
+     C                     MOVELCSLA      @NONB
+     C*
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM *BLANKS   @CSTN   6
+     C                     PARM ISCY      @CYCD   3
+     C**********           PARM *BLANKS   @ACCD   4                                           CGL029
+     C                     PARM *BLANKS   @ACCD  10                                           CGL029
+     C                     PARM *BLANKS   @ACSN   2
+     C                     PARM           @NONB   2
+     C                     PARM *BLANKS   @BRCD   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+     C*
+     C** Check for Database error in AONOSTR0
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     MOVEL'SDNOSTPD'@ERRF
+     C                     MOVELISCY      @ERRK
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     MOVE A7NOSN    NOSLOC  3
+     C*
+     C** Determine telex notice date
+     C*
+     C                     MOVE PAYCD     ZDAYNO
+     C                     MOVE ISCY      ZCCY
+     C                     MOVE NOSLOC    ZLOC
+     C                     Z-ADDA6TXND    ZNRDYS
+     C                     EXSR ZFWDT
+     C                     MOVE ZDYNBR    TELDAT  50
+     C*
+     C                     ELSE
+     C*
+     C** Access local currency
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BJLCCY    @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** Check for Database error in AOCURRR0
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     MOVEL'SDCURRPD'@ERRF
+     C                     MOVELBJLCCY    @ERRK
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C** Determine telex notice date
+     C*
+     C                     MOVE PAYCD     ZDAYNO
+     C                     MOVE BJLCCY    ZCCY
+     C                     MOVE BJSLCD    ZLOC
+     C                     Z-ADDA6TXND    ZNRDYS
+     C                     EXSR ZFWDT
+     C                     MOVE ZDYNBR    TELDAT
+     C*
+     C                     ENDIF
+     C*
+     C** Check value date against telex notice date
+     C*
+     C           VALD      IFLE TELDAT
+     C*
+     C** Determine premium payable using standard SR/FFPMCL
+     C*
+     C                     Z-ADDNUCO      FFNOC
+     C                     Z-ADDCOPR      FFPRIC
+     C                     Z-ADDTKDM      FFTKDM
+     C                     Z-ADDMNPF      FFMNPF
+     C                     Z-ADDTKVL      FFTKVL
+     C                     EXSR FFPMCL
+      **                                                                                      247296
+      **   for processing type 5 (CCY OTC), divide premium by 100                             247296
+     C           ISPT      IFEQ 5                                                             247296
+     C           FFPREM    DIV  100       FFPREM                                              247296
+     C                     ENDIF                                                              247296
+     C                     Z-ADDFFPREM    EAMT
+     C*
+     C** Access branch code
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BRCA      @BRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C** Check for Database error in AOBRCHR0
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     MOVEL'SDBRCHPD'@ERRF
+     C                     MOVELBRCA      @ERRK
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     EXSR WRITE
+     C*
+     C                     MOVEL'WRITE'   @RTCD
+     C                     ENDIF
+     C*
+     C           @MODE     IFEQ 'I'
+     C                     CLOSEFFOTPRPD
+     C                     ELSE
+     C                     CLOSEFFOTPRPX
+     C                     ENDIF
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C/EJECT
+     C****************************************************************
+     C* SR/WRITE  : Write to FFOTPRPD OR FFOTPRPX                    *
+     C*                                                              *
+     C* Called by : UPDAT                                            *
+     C* Calls     : None                                             *
+     C****************************************************************
+     C           WRITE     BEGSR
+     C*
+     C                     MOVE 'D'       RECI
+     C*
+     C           TRTY      IFEQ 'P'
+     C                     MOVE 'P'       PYRC
+     C                     ELSE
+     C                     MOVE 'R'       PYRC
+     C                     ENDIF
+     C*
+     C                     Z-ADD*ZERO     PROD
+     C                     Z-ADDCSLT      SETP
+     C                     MOVE ISCY      CCY
+     C                     MOVE CSLA      OSAC
+     C                     MOVE CBID      OSBR
+     C                     Z-ADD*ZERO     FFINTT
+     C                     MOVE VALD      VDAT
+     C                     MOVELCCPN      TSEN
+     C                     MOVE CUSC      CNUM
+     C                     MOVE TNBRX     DLNO
+     C                     MOVE 'O'       RCDT
+     C                     Z-ADD*ZERO     DASN
+     C                     MOVE CFAO      FACO
+     C                     MOVE 'N'       CVMI
+     C                     MOVE *BLANKS   SPI
+     C*
+     C           TRTY      IFEQ 'P'
+     C                     Z-ADD1         PRI1
+     C                     ELSE
+     C                     Z-ADD*ZERO     PRI1
+     C                     ENDIF
+     C*
+     C                     Z-ADD*ZERO     PRI2
+     C*
+     C           TRTY      IFEQ 'S'
+     C                     Z-ADD1         PRI3
+     C                     ELSE
+     C                     Z-ADD*ZERO     PRI3
+     C                     ENDIF
+     C*
+     C                     MOVELA8BICN    BICN
+     C                     MOVELTRTY      DTYP
+     C                     MOVE *BLANKS   DLST
+     C                     Z-ADD*ZERO     RCPI
+     C                     Z-ADD*ZERO     RRDN
+     C*
+     C           CSLT      IFEQ 01
+     C           CSLT      OREQ 07
+     C           CSLT      OREQ 08
+     C           ISCY      IFNE BJLCCY
+     C           ISCY      OREQ BJLCCY
+     C           BLLCTB    ANDEQ'T'
+     C*
+     C           CCPN      IFNE *BLANKS
+     C                     MOVE '09'      MTIN
+     C                     ENDIF
+     C           CCPN      IFEQ *BLANKS
+     C                     MOVE '10'      MTIN
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           CSLT      IFEQ 01
+     C           ISCY      ANDEQBJLCCY
+     C           BLLCTB    ANDEQ'B'
+     C           CSLT      OREQ 07
+     C           ISCY      ANDEQBJLCCY
+     C           BLLCTB    ANDEQ'B'
+     C           CSLT      OREQ 08
+     C           ISCY      ANDEQBJLCCY
+     C           BLLCTB    ANDEQ'B'
+     C           CSLT      OREQ 02
+     C           CSLT      OREQ 12
+     C                     MOVE '11'      MTIN
+     C                     ENDIF
+     C*
+     C           CSLT      IFNE 01
+     C           CSLT      ANDNE02
+     C           CSLT      ANDNE07
+     C           CSLT      ANDNE08
+     C           CSLT      ANDNE12
+     C                     MOVE '12'      MTIN
+     C                     ENDIF
+     C*
+     C                     MOVE 'V'       MTEX
+     C**********           Z-ADD*ZEROS    POBK                                                CSD027
+     C                     MOVE *BLANKS   POBK                                                CSD027
+     C                     MOVE *BLANKS   SDRN
+     C                     MOVE *BLANKS   RCRD
+     C*
+     C           @MODE     IFEQ 'I'
+     C                     WRITEFFOTPRPF
+     C                     ELSE
+     C                     WRITEFFOTPRXF
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C/EJECT
+     C/COPY ZSRSRC,ZFWDT
+     C/EJECT
+     C/COPY ZSRSRC,ZACCH
+     C/EJECT
+     C/COPY ZSRSRC,FFPMCLZ1
+     C/EJECT
+     C/COPY ZSRSRC,FFTVCLZ2
+     C/EJECT
+     C/COPY ZSRSRC,FFYTOPZ1
+     C/EJECT
+     C****************************************************************
+     C* SR/*PSSR  : Program exception error routine                  *
+     C*                                                              *
+     C* Called by : UPDAT                                            *
+     C* Calls     : None                                             *
+     C****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE *BLANK    @RUN    1
+     C                     MOVEL'*ERROR'  @RTCD
+     C                     DUMP
+     C*
+     C** End program
+     C*
+     C                     SETON                     U7U8LR
+     C                     ENDIF
+     C                     RETRN
+     C*
+     C                     ENDSR
+      *
+      *
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

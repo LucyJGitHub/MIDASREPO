@@ -1,0 +1,244 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280RSIU                           *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. CPK025  *CREATE    Date 21Dec06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK025 - Externalised SR/#LRSIU from DL0280.                 *
+      *                                                               *
+      *****************************************************************
+     C/EJECT                                                              CIR001
+     C*****************************************************************   CIR001
+     C*                                                               *   CIR001
+     C*  #LRSIU - To calculate interest amounts for IRS and           *   CIR001
+     C*           generate keys if interest is Up-front.              *   CIR001
+     C*                                                               *   CIR001
+     C*  Called by  : RSSUBR - To process FRA/IRS deal type RS        *   CIR001
+     C*               RXSUBR - To process FRA/IRS deal type RX        *   CIR001
+     C*                                                               *   CIR001
+     C*  Calls      : EXCP   - Output DKEYS records by exception, and *   CIR001
+     C*                        report the event actioned on the       *   CIR001
+     C*                        printer file.                          *   CIR001
+     C*               GLINTC - Calculate interest between any two day *   CIR001
+     C*                        numbers.                               *   CIR001
+     C*               #LCIYD - Calculate interest on discount/yield   *   CIR001
+     C*                        basis.                                 *   CIR001
+     C*               EXCPTN - Output S/MINTN records by exception    *   CIR001
+     C*                        and maintain file controls for S/MINTN.*   CIR001
+     C*                                                               *   CIR001
+     C*****************************************************************   CIR001
+     C     #LRSIU        BEGSR                                                  ** #LRSIU **   CIR00
+     C*                                                                   CIR001
+     C**  ADD INTEREST ACCRUED TO CONTROL DATE (THIS WILL BE THE INTEREST CIR001
+     C**  CALCULATED TO THIS PAYMENT DATE) TO ACCRUED INTEREST ADJUSTMENT CIR001
+     C**  POSTED TO OBTAIN THE ACCRUED INTEREST TO DATE                   CIR001
+     C*                                                                   CIR001
+     C     SZAICD        ADD       SZAIAP        SZAITD                                        CIR00
+     C*                                                                   CIR001
+     C**  SUBTRACT THE ACCRUED INTEREST POSTED TO DATE FROM ACCRUED       CIR001
+     C**  INTEREST TO DATE TO GIVE ACCRUED INTEREST TO POST               CIR001
+     C*                                                                   CIR001
+     C     SZAITD        SUB       SZIPTD        SZAITP                                        CIR00
+     C*                                                                   CIR001
+     C**  GENERATE AN ACCRUAL DATE ACCOUNT KEY RECORD FOR THE ACCRUED     CIR001
+     C**  INTEREST TO POST                                                CIR001
+     C*                                                                   CIR001
+     C     SZAITP        IFNE      0                                                           CIR00
+     C                   Z-ADD     SZAITP        KYAMT                                         CIR00
+     C                   MOVE      'A'           AKY(10)                                       CIR00
+     C                   MOVE      'A'           AKY(3)                                        CIR00
+     C                   EXSR      EXCP                                                        CIR00
+     C                   MOVE      'I'           AKY(3)                                        CIR00
+     C                   END                                                                   CIR00
+     C*                                                                   CIR001
+     C**  ADD ACCRUED INTEREST TO POST TO ACCRUED INTEREST POSTED         CIR001
+     C**  TO DATE                                                         CIR001
+     C*                                                                   CIR001
+     C                   ADD       SZAITP        SZIPTD                                        CIR00
+     C*                                                                   CIR001
+     C**  ADD ACCRUED INTEREST ADJUSTMENTS NOT POSTED TO ACCRUED          CIR001
+     C**  INTEREST ADJUSTMENTS POSTED                                     CIR001
+     C*                                                                   CIR001
+     C                   ADD       SZIANP        SZAIAP                                        CIR00
+     C*                                                                   CIR001
+     C**  ZEROISE ACCRUED INTEREST ADJUSTMENTS NOT POSTED AND INTEREST    CIR001
+     C**  ACCRUED SINCE LAST INTEREST CHANGE DATE                         CIR001
+     C*                                                                   CIR001
+     C                   Z-ADD     *ZERO         SZIANP                                        CIR00
+     C                   Z-ADD     *ZERO         SZLICD                                        CIR00
+     C*                                                                   CIR001
+     C**  CALCULATE INTEREST FROM INTEREST ACCRUAL CONTROL DATE           CIR001
+     C**  TO END DATE (THIS PAYMENT DATE TO NEXT PAYMENT DATE)            CIR001
+     C*                                                                   CIR001
+     C                   Z-ADD     SZIACD        ZIBEG                                         CIR00
+     C                   Z-ADD     SZIACD        SLIDD                                         CIR00
+     C                   Z-ADD     SZEDAT        ZIEND                                         CIR00
+     C                   Z-ADD     SZPPL         ZIAMT                                         CIR00
+     C                   Z-ADD     SZINR         ZIRATE                                        CIR00
+     C                   Z-ADD     SZCBS         ZICALC                                        CIR00
+     C                   EXSR      GLINTC                                                      CIR00
+     C*                                                                   CIR001
+     C** IF INTEREST IS YIELD BASED (METHOD IS 'Y') CALCULATE IT          CIR001
+     C** (USING INFORMATION PROVIDED BY GLINTC)                           CIR001
+     C*                                                                   CIR001
+     C     SZINPM        IFEQ      'Y'                                                         CIR00
+     C                   EXSR      #LCIYD                                                      CIR00
+     C                   ELSE                                                                  CIR00
+     C                   Z-ADD(H)  ZINTR         WKINT                                         CIR00
+     C                   END                                                                   CIR00
+     C*                                                                   CIR001
+     C**  ADD INTEREST ACCRUED TO CONTROL DATE, ACCRUED INTEREST          CIR001
+     C**  ADJUSTMENTS POSTED AND THIS INTEREST AMOUNT TO OBTAIN           CIR001
+     C**  THE ACCRUED INTEREST TO DATE                                    CIR001
+     C*                                                                   CIR001
+     C     SZAICD        ADD       SZAIAP        SZAITD           13 0                         CIR00
+     C     SZAITD        ADD       WKINT         SZAITD                                        CIR00
+     C*                                                                   CIR001
+     C**  SUBTRACT INTEREST PAID/RECEIVED TO DATE FROM ACCRUED INTEREST   CIR001
+     C**  TO DATE TO GIVE INTEREST DUE                                    CIR001
+     C*                                                                   CIR001
+     C     SZAITD        SUB       SZIPRD        SZINTD           13 0                         CIR00
+     C*                                                                   CIR001
+     C**  IF DEAL IS TAX PAYABLE CALCULATE THE TAX ON THE INTEREST DUE    CIR001
+     C**  USING THE TAX RATE                                              CIR001
+     C*                                                                   CIR001
+     C     TAXI          IFEQ      'Y'                                                         CIR00
+     C     SZDIR         ANDEQ     'P'                                                         CIR00
+     C     SZITR         ANDNE     0                                                           CIR00
+     C     SZINTD        DIV       100           WK152            15 2                         CIR00
+     C     WK152         MULT(H)   SZITR         SZTAXC           13 0                         CIR00
+     C                   END                                                                   CIR00
+     C*                                                                   CIR001
+     C**  SUBTRACT TAX CALC FROM INTEREST DUE TO GIVE INT NET OF TAX      CIR001
+     C*                                                                   CIR001
+     C     SZINTD        SUB       SZTAXC        SZINOT           13 0                         CIR00
+     C*                                                                   CIR001
+     C**  GENERATE AN EVENT DATE ACCOUNT KEY FOR THE INTEREST DUE         CIR001
+     C*                                                                   CIR001
+     C     SZINTD        IFNE      0                                                           CIR00
+     C                   Z-ADD     SZINTD        KYAMT                                         CIR00
+     C                   Z-ADD     SZINTD        SAL                                           CIR00
+     C                   MOVE      'I'           AKY(10)                                       CIR00
+     C                   EXSR      EXCP                                                        CIR00
+     C                   END                                                                   CIR00
+     C*                                                                   CIR001
+     C**  GENERATE AN EVENT DATE ACCOUNT KEY RECORD FOR TAX DEDUCTED      CIR001
+     C*                                                                   CIR001
+     C     SZTAXC        IFNE      0                                                           CIR00
+     C                   Z-ADD     SZTAXC        KYAMT                                         CIR00
+     C                   MOVE      'T'           AKY(10)                                       CIR00
+     C                   EXSR      EXCP                                                        CIR00
+     C                   Z-ADD     SZINTD        WORKD                                         CIR00
+     C                   Z-ADD     SZTAXC        TAXA                                          CIR00
+     C                   EXSR      EXCPTN                                                      CIR00
+     C                   END                                                                   CIR00
+     C*                                                                   CIR001
+     C**  IF DEAL TYPE IS 'RX' GENERATE AN EVENT DATE ACCOUNT             CIR001
+     C**  KEY RECORD FOR THE INTEREST NET OF TAX AND REPORT EVENT         CIR001
+     C*                                                                   CIR001
+     C     DTYP          IFEQ      'RX'                                                        CIR00
+     C     SZINOT        IFNE      0                                                           CIR00
+     C     SZDIR         ANDEQ     'P'                                                         CIR00
+     C     BNHKTR        ANDNE     0                                                           CIR00
+     C                   Z-ADD     SZINOT        KYAMT                                         CIR00
+     C                   Z-ADD     SZINOT        SAL                                           CIR00
+     C                   MOVE      'N'           AKY(10)                                       CIR00
+     C                   EXSR      EXCP                                                        CIR00
+     C                   END                                                                   CIR00
+     C*                                                                   CIR001
+     C** PRINT REPORT LINE                                                CIR001
+     C*                                                                   CIR001
+     C                   Z-ADD     SAL           NRRSAL                                        CIR00
+     C     SZDIR         IFEQ      'P'                                                         CIR00
+     C                   Z-ADD     UPAMT         NRRPUR                                        CIR00
+     C                   TESTB     '0'           UDNSI                31                       CIR00
+0764 C                   SETOFF                                       4546                     CIR00
+0765 C     UDECP         COMP      1                                    4344                   CIR00
+     C  N43
+0766 CANN44UDECP         COMP      3                                    4546                   CIR00
+     C                   ELSE                                                                  CIR00
+     C                   Z-ADD     TPAMT         NRRPUR                                        CIR00
+     C                   SETOFF                                       33         TAXA PRT IND. CIR00
+     C                   TESTB     '0'           TDNSI                31                       CIR00
+0764 C                   SETOFF                                       4546                     CIR00
+0765 C     TDECP         COMP      1                                    4344                   CIR00
+     C  N43
+0766 CANN44TDECP         COMP      3                                    4546                   CIR00
+     C                   END                                                                   CIR00
+     C     NRBRTT        IFEQ      '00'                                                        CIR00
+     C                   MOVE      '  '          NRBRTT                                        CIR00
+     C                   SETOFF                                       31                       CIR00
+     C                   END                                                                   CIR00
+     C                   SETON                                        71                       CIR00
+     C                   MOVE      'Y'           PRONLY                                        CIR00
+     C                   EXSR      EXCP                                                        CIR00
+     C     TAXI          COMP      'Y'                                    33     RESET PRT IND.CIR00
+     C                   END                                                                   CIR00
+     C*                                                                   CIR001
+     C**  ADD TAX DEDUCTED TO THE TAX PAID TO DATE AND TAX PAID THIS      CIR001
+     C**  MONTH                                                           CIR001
+     C*                                                                   CIR001
+     C     SZTAXC        ADD       SZTPTD        SZTPTD                                        CIR00
+     C     SZTAXC        ADD       SZTPTM        SZTPTM                                        CIR00
+     C*                                                                   CIR001
+     C**  ADD INTEREST DUE TO INTEREST PAID/RECEIVED TO DATE AND          CIR001
+     C**  INTEREST PAID/RECEIVED THIS MONTH                               CIR001
+     C*                                                                   CIR001
+     C     SZINTD        ADD       SZIPRD        SZIPRD                                        CIR00
+     C     SZINTD        ADD       SZIPRM        SZIPRM                                        CIR00
+     C*                                                                   CIR001
+     C**  SET INTEREST CALCULATED FROM LAST PAYMENT DATE TO NEXT          CIR001
+     C*                                                                   CIR001
+     C                   Z-ADD     WKINT         SZLICD                                        CIR00
+     C*                                                                   CIR001
+     C**  ADD INTEREST CALCULATED TO INTEREST ACCRUED TO CONTROL DATE     CIR001
+     C*                                                                   CIR001
+     C                   ADD       WKINT         SZAICD                                        CIR00
+     C*                                                                   CIR001
+     C**  SET INTEREST CONFIRMATION INDICATOR AND INTEREST TELEX          CIR001
+     C**  INDICATOR TO OFF STATUS                                         CIR001
+     C*                                                                   CIR001
+     C     SZDIR         IFEQ      'P'                                                         CIR00
+     C                   BITOFF    '2'           SZCNFI                                        CIR00
+     C                   BITOFF    '3'           SZTLXI                                        CIR00
+     C                   ELSE                                                                  CIR00
+     C                   BITOFF    '3'           SZCNFI                                        CIR00
+     C                   BITOFF    '4'           SZTLXI                                        CIR00
+     C                   END                                                                   CIR00
+     C*                                                                   CIR001
+     C**  SET THE START/LAST INTEREST PAYMENT DATE                        CIR001
+     C**  TO THE INTEREST ACCRUAL CONTROL DATE                            CIR001
+     C*                                                                   CIR001
+     C                   Z-ADD     SZIACD        SZSLID                                        CIR00
+     C*                                                                   CIR001
+     C**  SET THE INTEREST ACCRUAL CONTROL DATE                           CIR001
+     C**  TO THE INTEREST END DATE JUST PROCESSED                         CIR001
+     C*                                                                   CIR001
+     C                   Z-ADD     SZEDAT        SZIACD                                        CIR00
+     C*                                                                   CIR001
+     C* THE NEXT INTEREST PAYMENT DATE WILL BE THE END DATE JUST PROCESSEDCIR001
+     C*                                                                   CIR001
+     C**  IF THIS DATE IS LESS THAN THE MATURITY DATE, MOVE IT INTO THE   CIR001
+     C**  NEXT INTEREST PAYMENT DATE AND INTEREST PAYMENT BASE DATE       CIR001
+     C*                                                                   CIR001
+     C     SZEDAT        IFLT      SZMDAT                                                      CIR00
+     C                   Z-ADD     SZEDAT        SZIPBD                                        CIR00
+     C                   Z-ADD     SZEDAT        SZNIPD                                        CIR00
+     C                   ELSE                                                                  CIR00
+     C*                                                                   CIR001
+     C**  ELSE ZEROIZE THE INTEREST PAYMENT BASE DATE AND NEXT INTEREST   CIR001
+     C**  PAYMENT DATE AND SET THE INTEREST PAYMENT FREQUENCY TO BLANK    CIR001
+     C*                                                                   CIR001
+     C                   Z-ADD     *ZERO         SZIPBD                                        CIR00
+     C                   Z-ADD     *ZERO         SZNIPD                                        CIR00
+     C                   MOVE      *BLANK        SZIPFC                                        CIR00
+     C                   Z-ADD     0             SZIPD                                         CIR00
+     C                   END                                                                   CIR00
+     C*                                                                   CIR001
+     C                   ENDSR                                                                 CIR00
+     C*****************************************************************   CIR001

@@ -1,0 +1,771 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FX Net Total Recalculation')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - (DL FX) Module                                       *
+      *                                                               *
+      *  FX0921 - FX CURRENCY NET RECALCULATION                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      *  Prev Amend No. CSD095             Date 08Apr14               *
+      *                 MD024497           Date 04Feb14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CDL038             Date 10May05               *
+      *                 237421             Date 02May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CDL031             Date 05Dec04               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 133143             Date 25Feb98               *
+      *                 CDL002             Date 06Mar97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  MD024497 - SSI for FX Netting Settlement (type NT) not       *
+      *             defaulted during FX Net confirmation              *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  237421 - FX Netting function - zero net ccy not allowed.     *
+      *           Amended program to allow zero ccy net.              *
+      *         - Applied 205330                                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CDL031 - Effective Date on Extended SSI (Recompile)          *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  133143 - If date format is 'M' then wrong date used to read  *
+      *            FXDEALPP                                           *
+      *  CDL002 - FX CURRENCY NET RECALCULATION                       *
+      *                                                               *
+      *****************************************************************
+      *  NOTE : ANY CHANGES MADE TO SUBR CALCIN MAY NEED TO BE        *
+      *         APPLIED ALSO TO FX0910 FX0911 AND FX0930 AS THEY      *
+      *         PERFORM SIMILAR PROCESSING                            *
+      *
+      *****************************************************************
+     FDEALSDBLIF  E           K        DISK
+     FSDCUSTLCIF  E           K        DISK
+     FFXNTIPPDUF  E           K        DISK                      A
+      *  DEALS IN PROCESS OF BEING NETTED
+     FFXNETMPDUF  E           K        DISK                      A
+      *  MASTER FILE OF NET RECORDS
+     FFXNETML4IF  E           K        DISK
+     F            FXNETMD0                          KRENAMENETMAS4
+      *  MASTER FILE OF NET RECORDS BY NET NUMBER
+     FFXNTIPL0UF  E           K        DISK
+     F            FXNTIPD0                          KRENAMENETINPRO
+      *  DEALS IN PROCESS OF BEING NETTED BY NET REFERENCE
+     FSDCGRPL1IF  E           K        DISK
+     F            @D6REI8                           KRENAMECUSREF
+      *  CUSTOMER GROUPS CODES
+     FSDEXSTL1IF  E           K        DISK
+      *  Standard settlement instructions for extended settlements
+     FMGOREFLGIF  E           K        DISK
+      *  Midas MG Out Messages by mod/trno
+     FCFFEEDL0IF  E           K        DISK
+      *  Midas Feedback key on Module/Trans Ref.
+     F/COPY WNCPYSRC,FX0921F001
+      *
+      *  Arrays and Tables
+      *
+     E                    ACCY      200  3
+     E                    PCCY      200  9
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+     E/COPY WNCPYSRC,FX0921E001
+      *
+     IP@CURF    E DSSDCUSTPD
+      *  Customer Details format for access object pgm
+     ISDMMOD    E DSSDMMODPD
+      *  Midas Modules format for access object pgm
+     ISDBANK    E DSSDBANKPD
+      *  Bank Details format for access object pgm
+     I/COPY WNCPYSRC,FX0921I001
+     ISDSSDY    E DSDSSDY
+      ** Dummy Data Structure for Access Objects.
+      *
+      *  Data structure to define Paired ccys
+     IPCCYS       DS
+     I                                        4   6 PCCYS1
+     I                                        7   9 PCCYS2
+      *  Data structure to split value date.
+     IPLVALD      DS
+     I                                        1   20PVALD1
+     I                                        3   40PVALD2
+     I                                        5   60PVALD3
+      **  Data Structure:  layout of net reference field
+     INETREF      DS
+     I                                        1  16 NETCHK
+     I                                        1   3 WFBRCA
+     I                                        4   70WFDLVD
+     I                                        8  10 WFCCY
+     I                                       11  16 WFCUSN
+     I                                       17  190WFSEQN
+      **  Data Structure:  layout of net number field
+     INETNUM      DS
+     I                                        1   60NETNO
+     I                                        1   30WFDVDT
+     I                                        4   60WFSEQ
+      **  Data Structure:  Deal Last Change date in YYMMDD format
+     I            DS
+     I                                        1   60WFDLDC
+     I                                        3   40WFDLMC
+      *  Data Structure to redefine Customer no. parm
+     I            DS
+     I**********                              1   60WFCUST                                    CSD027
+     I                                        1   6 WFCUST                                    CSD027
+     I                                        1   6 WACUST
+     I                                        7  120DDVALD
+     I                                        7  12 WAVALD
+      *  Data Structure to redefine Customer no.
+     I            DS
+     I                                        1  10 CUSGRP
+     I                                        1   6 CUSKEY
+     I                                        7  10 GRPKEY
+      **  Data Structure:  Redefine MIDAS Rundate
+     IBJMRDS      DS
+     I                                        1   20RUNADD
+     I                                        3   5 RUNAMM
+     I                                        6   70RUNAYY
+      **  Data Structure:  Define Value Date
+     IDSVALD      DS
+     I                                        1   60MMDDYY
+     I                                        1   20M#VALD
+     I                                        3   40D#VALD
+     I                                        5   60Y#VALD
+      *
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      *   Retrieve UsrId From Programme Status Data Structure
+     IPSDS       SDS
+     I                                        1  10 PGM
+     I                                     *PARMS   NOPARM
+     I                                      244 253 WRKSID
+     I                                      254 263 USERID
+     I                                      264 269 JOBNBR
+     I/COPY WNCPYSRC,FX0921I002
+      *  Key List for access to SDCGRPL1
+     C           KCUSGP    KLIST
+     C                     KFLD           D6NETG
+     C                     KFLD           GRPKEY
+     C                     MOVEL'*'       D6NETG
+      *  Key List for access to MGOREFLG
+     C           MGOREF    KLIST
+     C                     KFLD           KMODI   2
+     C                     KFLD           KMTRN  15
+      *  MIDAS ABS Extended Standard Settlements Key
+     C           EXSKEY    KLIST
+     C                     KFLD           BYCYCD
+     C                     KFLD           BYCUST
+     C                     KFLD           BYTRTY
+      *  Entry Parameter List
+     C           *ENTRY    PLIST
+     C                     PARM           PLCUST 10        Select Customer No.
+     C                     PARM           PLVALD  6        Select Value Date
+     C                     PARM           PLCCY   3        Select CCY (F4)
+     C                     PARM           PLCCY1  3        Select CCY PAIR 1
+     C                     PARM           PLCCY2  3        Select CCY PAIR 1
+     C                     PARM           PLCPGM 10        Calling Pgm
+     C                     PARM           NETA   150       NET AMOUNT
+     C                     PARM           NETAC  150       NET AMOUNT CALCULATED
+     C                     PARM           PLSEQN  30       SEQUENCE ASSIGNED
+     C                     PARM           PLNETR 19        NET REF ASSIGNED
+     C                     PARM           PLBRCA  3        BRANCH CODE
+     C                     PARM           BJRDNO  50       RUN DATE
+     C                     PARM           CHGDAT  80
+     C                     PARM           PLRTRN  8
+     C/COPY WNCPYSRC,FXH00165
+      *  Define Multi-branching fields
+     C                     MOVE BYOPBR    BYOPBR  3
+     C                     MOVE BYORBR    BYORBR  3
+      *
+     C           *LIKE     DEFN FHDBUY    BUYAMT
+     C           *LIKE     DEFN FHDBUY    SELAMT
+     C           *LIKE     DEFN FHDBUY    NETAMT
+     C           *LIKE     DEFN NETCHK    NETLFT
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' WRTCD
+     C                     PARM '*FIRST ' WOPTN
+     C           SDMMOD    PARM SDMMOD    SDSSDY
+      *
+      ** Access Bank details.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR'  WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    SDSSDY
+     C                     MOVELBJMRDT    BJMRDS
+      *
+      *  Check if Customer/Group supplied
+     C                     MOVELPLCUST    CUSGRP
+     C           GRPKEY    IFNE *BLANKS
+     C                     MOVEL'Y'       GROUP   1
+     C                     ELSE
+     C                     MOVEL'N'       GROUP
+     C                     ENDIF
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      *  SET RETURN CODE IF ZERO NET
+     C/COPY WNCPYSRC,FX0921C001
+     C***********NETA      IFEQ 0                                                             237421
+     C***********          MOVEL'FXM5027' PLRTRN                                              237421
+     C***********          ENDIF                                                              237421
+     C/COPY WNCPYSRC,FX0921C002
+      *
+      * Process Group - Retrieve D6xxx fields.
+     C           GROUP     IFEQ 'Y'
+     C           KCUSGP    CHAINSDCGRPL1             80
+     C                     ELSE
+      *
+     C**********           Z-ADD0         WFCUST                                              CSD027
+     C                     MOVE *BLANKS   WFCUST                                              CSD027
+     C                     CALL 'AOCUSTR0'             84
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM PLCUST    P@KEY  10
+     C                     PARM           P@KYST  7
+     C                     PARM           P@CURF
+      *  Set Customer in error
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     MOVELPLCUST    DBKEY
+     C                     MOVE 'SDCUSTL0'DBFILE           * DB ERROR 01 *
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     MOVE 'Y2U0004' PLRTRN
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE PLVALD    DDVALD                    Value
+     C           BJDFIN    IFEQ 'D'
+      ** Move Midas Rundate into DD/MM/YY DS or MM/DD/YY DS.
+     C                     MOVELPVALD2    MMDDPT  40
+     C                     MOVE PVALD1    MMDDPT
+     C                     ELSE
+     C                     MOVELPVALD1    MMDDPT
+     C                     MOVE PVALD2    MMDDPT
+     C                     ENDIF
+      *
+      * Set up YYYY/MM/DD data structure.
+     C                     MOVE PLVALD    VDYEAR  20
+     C           VDYEAR    IFGE 72
+     C                     Z-ADD1900      PVALD4
+     C                     ADD  VDYEAR    PVALD4
+     C                     ELSE
+     C                     Z-ADD2000      PVALD4
+     C                     ADD  VDYEAR    PVALD4
+     C                     ENDIF
+      *
+     C                     MOVE PLVALD    WQ0021
+      *
+      * Convert DDMMYY/MMDDYY date to day number.
+     C                     CALL 'ZDATE1'               82  Check Screen Da
+     C                     PARM *BLANKS   WQ0020  7        *Return code
+     C                     PARM           WQ0021  60       Work Screen Dat
+     C                     PARM BJDFIN    WQ0022  1        date format fla
+     C                     PARM *ZERO     WQVALD  50       File Date
+      *
+      * Find net number before net reference
+      *  USE THREE LAST DIGITS OF VALUE DATE
+     C                     MOVE WQVALD    WFDVDT
+     C                     MOVE *HIVAL    WFSEQ
+     C           NETNO     SETLLNETMAS4
+     C                     READPNETMAS4                  82
+     C           *IN82     IFEQ '0'
+      * Record found. Check date matches
+     C                     MOVELAMNTNO    CHKDT
+     C           *LIKE     DEFN WFDVDT    CHKDT
+     C                     MOVE AMNTNO    WFSEQ
+     C                     END
+      * If no record found for date set seq part of number to 1, otherwise
+      * increment by 1
+     C           *IN82     IFEQ '1'
+     C           CHKDT     ORNE WFDVDT
+     C                     Z-ADD1         WFSEQ
+     C                     ELSE
+     C                     ADD  1         WFSEQ
+     C                     END
+      *
+      * DETERMINE NET REFERENCE AND CREATE RECORD
+      * Set values for key NETREF
+     C                     MOVEL'DL#'     WFBRCA
+      *  USE MMDD OF VALUE DATE AND CURRENCY
+     C                     MOVELMMDDPT    WFDLVD
+     C                     MOVELPLCCY     WFCCY
+      *  USE CUSTOMER NUMBER OR GROUP CODE + ##
+     C           GRPKEY    IFEQ *BLANKS
+     C                     MOVE BBCUST    WFCUSN
+     C                     ELSE
+     C                     MOVELGRPKEY    WFCUSN
+     C                     MOVE '##'      WFCUSN
+     C                     END
+     C                     Z-ADD999       WFSEQN
+     C           NETREF    SETGTFXNETMD0
+     C                     READPFXNETMD0            N    82
+     C           *IN82     IFEQ '0'
+     C                     MOVELAMNETR    NETLFT
+     C                     MOVE AMNETR    NETSEQ  30
+     C                     END
+     C           *IN82     IFEQ '1'
+     C           NETLFT    ORNE NETCHK
+     C                     Z-ADD1         WFSEQN
+     C                     ELSE
+     C           NETSEQ    ADD  1         WFSEQN
+     C           WFSEQN    IFEQ 0
+     C                     Z-ADD1         WFSEQN
+     C                     END
+     C                     END
+     C                     MOVE NETREF    AMNETR
+     C                     MOVE NETREF    PLNETR
+     C                     MOVE NETNO     AMNTNO
+     C                     MOVE 'I'       AMRECI
+     C                     Z-ADDWQVALD    AMVALD
+      *  USE CUSTOMER SHORTNAME OR GROUP CODE
+     C           GROUP     IFEQ 'N'
+     C                     MOVE *BLANKS   AMDCSN
+     C                     MOVE BBCSSN    AMDCSN
+     C                     ELSE
+     C                     MOVE *BLANKS   AMDCSN
+     C                     MOVELGRPKEY    AMDCSN
+     C                     ENDIF
+     C                     MOVE PLVALD    AMVDTY
+     C                     MOVE PLCCY     AMCCYD
+     C                     MOVE PLCCY1    AMCCY1
+     C                     MOVE PLCCY2    AMCCY2
+     C                     MOVE WFSEQN    AMSEQN
+     C                     MOVE WFSEQN    PLSEQN
+     C                     Z-ADD0         AMLSWC
+     C                     Z-ADD0         AMLSWS
+     C                     MOVE PLBRCA    AMBRCA
+     C           NETA      IFGE 0
+     C                     Z-ADDNETA      AMDBUY
+     C                     MOVE 'B'       AMBSIN
+     C                     ELSE
+     C                     Z-SUBNETA      AMDBUY
+     C                     MOVE 'S'       AMBSIN
+     C                     END
+     C                     MOVE *BLANKS   AMPRGI
+     C                     EXSR ACCCUS
+     C                     MOVELCHGDAT    AMDTOE
+     C                     MOVELCHGDAT    AMDTCH
+     C                     TIME           AMCHTI
+     C                     MOVE 'I'       AMCHTY
+     C                     MOVE USERID    AMCHUS
+     C                     MOVE WRKSID    AMCHWS
+     C                     MOVE *BLANKS   AMEXPF
+      *  USE CUSTOMER NUMBER OR GROUP SETTLEMENT CUSTOMER NUMBER
+     C           GROUP     IFEQ 'Y'
+     C                     MOVELD6NTCU    AMCNUM
+     C                     ELSE
+     C                     MOVELBBCUST    AMCNUM
+     C                     ENDIF
+     C/COPY WNCPYSRC,FX0921C003
+      *
+     C                     WRITEFXNETMD0               82
+      *
+     C           *IN82     IFEQ '1'
+     C                     DUMP
+     C                     RETRN
+     C                     END
+      ** Process Customers within Group.
+     C           GROUP     IFEQ 'Y'
+     C           GRPKEY    SETLLSDCUSTLC
+     C/COPY WNCPYSRC,FXH00166
+     C           GRPKEY    READESDCUSTLC                 70
+     C/COPY WNCPYSRC,FXH00167
+     C                     ENDIF
+      ** Set up key to DEALSDBL with customer from within group or
+      ** customer only.
+     C           GROUP     IFEQ 'Y'
+     C                     MOVELBBCUST    CUSNUM
+     C                     ELSE
+     C                     MOVELPLCUST    CUSNUM
+     C                     ENDIF
+     C           KDEALS    SETLLDEALSDBL
+      *  Loop until end of file/customer
+     C           GROUP     IFEQ 'Y'
+     C           *IN70     DOWEQ'0'
+     C/COPY WNCPYSRC,FX0921C004
+     C                     MOVE *OFF      *IN75
+     C                     EXSR CALCNT
+     C/COPY WNCPYSRC,FX0921C005
+     C           GRPKEY    READESDCUSTLC                 70
+     C/COPY WNCPYSRC,FXH00168
+     C                     MOVELBBCUST    CUSNUM
+     C                     ENDDO
+     C                     ELSE
+     C                     EXSR CALCNT
+     C                     ENDIF
+     C/COPY WNCPYSRC,FX0921C006
+      *
+      *  Calculate Net totals
+     C           BUYAMT    SUB  SELAMT    NETAMT
+      * SET RETURN VALUE
+     C                     Z-ADDNETAMT    NETAC
+      *  IF VALUES DIFFER THEN NETTING NOT PERMITTED. DELETE IN PROGRESS
+      * RECORDS AND SET NET REFERENCE TO CANCELLED STATUS
+     C           NETAC     IFNE NETA
+     C/COPY WNCPYSRC,FXH00169
+     C                     MOVEL'FXM5020' PLRTRN
+     C/COPY WNCPYSRC,FXH00170
+     C           AMNETR    CHAINFXNETMD0             84
+     C           *IN84     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     MOVELAMNETR    DBKEY
+     C                     MOVE 'FXNETMPD'DBFILE           * DB ERROR 02 *
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     MOVE 'Y2U0004' PLRTRN
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVE 'E'       AMRECI
+     C                     MOVELCHGDAT    AMDTCH
+     C                     TIME           AMCHTI
+     C                     MOVE 'E'       AMCHTY
+     C                     MOVE USERID    AMCHUS
+     C                     MOVE WRKSID    AMCHWS
+     C                     MOVE 'E'       AMEXPF
+     C                     UPDATFXNETMD0               84
+     C           *IN84     IFEQ '1'
+      *
+     C*     Set up Error Condition Fields
+     C                     MOVELPGM       DBPGM
+     C                     MOVELAMNETR    DBKEY
+     C                     MOVE 'FXNETMPD'DBFILE           * DB ERROR 03 *
+     C                     Z-ADD3         DBASE
+     C*
+     C*     Dump and exit program
+     C                     MOVE 'Y2U0004' PLRTRN
+     C                     DUMP
+     C                     SETON                         LR
+     C                     CALL 'DBERRCTL'             82
+     C                     RETRN
+     C*
+     C                     END
+     C                     END
+     C           AMNETR    SETLLNETINPRO
+     C           AMNETR    READENETINPRO                 82
+     C           *IN82     DOWEQ'0'
+     C                     DELETNETINPRO
+     C           AMNETR    READENETINPRO                 82
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,FXH00171
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *
+     C           CALCNT    BEGSR
+      *
+      *  Key List for access to DEALSDBL
+     C           KDEALS    KLIST
+     C**********           KFLD           CUSNUM  60       Deal No.                           CSD027
+     C                     KFLD           CUSNUM  6        Deal No.                           CSD027
+     C                     KFLD           PVALD4  40
+     C***********          KFLD           PVALD2                    133143
+     C***********          KFLD           PVALD1                    133143
+     C                     KFLD           VDMON   20                133143
+     C                     KFLD           VDDAY   20                133143
+      *                                                             133143
+     C           BJDFIN    IFEQ 'D'                                 133143
+     C                     MOVE PVALD2    VDMON                     133143
+     C                     MOVE PVALD1    VDDAY                     133143
+     C                     ELSE                                     133143
+     C                     MOVE PVALD1    VDMON                     133143
+     C                     MOVE PVALD2    VDDAY                     133143
+     C                     ENDIF                                    133143
+      *
+     C           KDEALS    SETLLDEALSDBL
+      *
+      ** Process all deals for customer.
+     C           *IN75     DOWEQ*OFF
+      *
+     C           KDEALS    READEDEALSDBL                 75
+      *  Bypass deleted records and any customers part of a group that
+      *  there are no deals for.
+     C           FHDLTF    IFNE 'D'
+     C           *IN75     ANDEQ*OFF
+      * ALSO BYPASS IF NOT SELECTED CCY
+     C           FHCCY1    IFEQ PLCCY
+     C           FHCCY2    OREQ PLCCY
+      * IF PAIRS REQUIRED CHECK THEY MATCH
+     C           PLCCY1    IFEQ *BLANKS
+     C           PLCCY1    OREQ FHCCY1
+     C           PLCCY2    ANDEQFHCCY2
+     C           PLCCY2    OREQ FHCCY1
+     C           PLCCY1    ANDEQFHCCY2
+      *
+     C           PLCCY     IFEQ FHCCY1
+     C           FHNBUY    ANDEQ'Y'
+     C           FHNBRF    ANDEQ*BLANKS
+     C           PLCCY     OREQ FHCCY2
+     C           FHNSEL    ANDEQ'Y'
+     C           FHNSRF    ANDEQ*BLANKS
+     C/COPY WNCPYSRC,FXH00172
+      *  Key List for access to Netting in Progress file
+     C           KINTIP    KLIST
+     C                     KFLD           FHDN38           Deal No.
+     C                     KFLD           PLCCY            CCY
+      * CHECK NETTING NOT IN PROGRESS
+     C           KINTIP    CHAINFXNTIPPD            N83
+     C           *IN83     IFEQ '0'
+      * IF RECORD FOUND HERE, THEN ANOTHER USER IS NETTING THIS DEAL
+      * SO ACCESS NEXT DEAL
+     C                     ELSE
+      *  If deal is authorised see if it is matched
+     C           FHDSTS    IFEQ 'A'
+     C                     EXSR CALCIN
+     C                     ENDIF
+      *
+      * WRITE RECORD TO IN PROGRESS FILE TO INDICATE THAT THIS USER
+      * IS NETTING DEAL IF MATCHED DEAL
+     C           MATCHD    IFEQ 'Y'
+     C                     Z-ADDFHDN38    ANDNUM
+     C                     MOVE PLCCY     ANCYCD
+     C                     MOVE AMNETR    ANNETR
+     C           PLCCY     IFEQ FHCCY1
+     C                     MOVE 'B'       ANBSIN
+     C                     ELSE
+     C                     MOVE 'S'       ANBSIN
+     C                     ENDIF
+     C                     WRITEFXNTIPD0               84
+      * IF WRITE ERROR EXCLUDE DEAL FROM CALC
+     C           *IN84     IFEQ '0'
+      *  Update the appropriate total
+     C           FHCCY1    IFEQ PLCCY
+     C                     ADD  FHDBUY    BUYAMT
+     C                     ELSE
+     C                     ADD  FHDSEL    SELAMT
+     C                     ENDIF
+     C/COPY WNCPYSRC,FXH00173
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,FXH00174
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+     C           CALCIN    BEGSR
+      *
+     C                     MOVE 'N'       MATCHD  1
+      *
+      ** If Deal is Manually Matched
+     C           FHMTCH    IFEQ 'Y'
+     C                     MOVE 'Y'       MATCHD  1
+     C                     ELSE
+      ** else is deal matched by Confirmation Matching Process (TRAM).
+     C           BGCFMT    IFEQ 'Y'
+     C                     MOVEL'DL'      KMODI
+     C                     MOVELFHDN38    KMTRN
+     C           MGOREF    CHAINMGOREFLG             80
+     C           TRNO      CHAINCFFEEDL0             80
+      *
+     C           CPSX      IFEQ 50
+     C           CPSX      OREQ 97
+     C           CPSX      OREQ 99
+     C                     MOVE 'Y'       MATCHD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *  Access Settlement Instructions
+      *
+     CSR         ACCCUS    BEGSR
+     C                     MOVE *BLANKS   AMOURN
+     C                     MOVE *BLANKS   AMONOB
+     C                     MOVE *BLANKS   AMOBNK
+     C                     MOVE *BLANKS   AMORDC
+     C                     MOVE *BLANKS   AMSETM
+     C                     MOVE *BLANKS   AMIBNK
+     C                     MOVE *BLANKS   AMIBNA
+     C                     MOVE *BLANKS   AMCVMR
+     C                     MOVE *BLANKS   AMRCRN
+     C                     MOVE *BLANKS   AMRCRA
+     C                     MOVE *BLANKS   AMRVNO
+     C                     MOVE *BLANKS   AMAWBN
+     C                     MOVE *BLANKS   AMAWBA
+     C                     MOVE *BLANKS   AMBENN
+     C                     MOVE *BLANKS   AMBENA
+     C                     MOVE *BLANKS   AMDTP1
+     C                     MOVE *BLANKS   AMDTP2
+     C                     MOVE *BLANKS   AMDTP3
+     C                     MOVE *BLANKS   AMDTP4
+     C                     MOVE *BLANKS   AMDCHG
+     C                     MOVE *BLANKS   AMBTB1
+     C                     MOVE *BLANKS   AMBTB2
+     C                     MOVE *BLANKS   AMBTB3
+     C                     MOVE *BLANKS   AMBTB4
+     C                     MOVE *BLANKS   AMBTB5
+     C                     MOVE *BLANKS   AMBTB6
+      * ONLY CONTINUE IF NOT GROUP PROCESSING OR IF SETTLE CUST EXISTS
+      *  NO STANDARD INSTRUCTIONS EXIST FOR GROUP, BUT PERHAPS FOR
+      *  SETTLEMENT CUSTOMER. ALSO NET MUST NOT BE ZERO
+     C           GROUP     IFEQ 'N'
+     C           AMDBUY    ANDNE0
+     C           D6NTCU    ORNE *BLANKS
+     C           AMDBUY    ANDNE0
+      *  Setup Key Fields
+     C                     MOVE AMCCYD    BYCYCD
+     C**********           MOVELWFCUST    BYCUST                                            MD024497
+     C                     MOVELWFCUSN    BYCUST                                            MD024497
+     C           GROUP     IFEQ 'Y'
+     C                     MOVELD6NTCU    BYCUST
+     C                     ENDIF
+     C                     MOVE 'FX'      BYTRTY
+      *  Access Extended Settlement Instructions
+     C/COPY WNCPYSRC,FX0921C007
+     C           EXSKEY    CHAINSDEXSTL1             82
+      *  If CHAIN fails Attempt CHAIN using 'ALL TYPES' (AT).
+     C           *IN82     IFEQ '1'
+     C                     MOVEL'AT'      BYTRTY
+     C           EXSKEY    CHAINSDEXSTL1             82
+     C/COPY WNCPYSRC,FX0921C008
+     C                     END
+      *  Process retrieved transactions
+     C           *IN82     IFEQ '0'
+     C/COPY WNCPYSRC,FX0921C009
+      *  Treat Receive Instructions
+     C           AMBSIN    IFEQ 'B'
+     C                     MOVELBYRSTY    AMSETM
+      *  Setup our Nostro field
+     C                     MOVELBYORBR    AMONOB
+     C                     MOVE BYRONO    AMOURN
+      *  Receive Ordering Bank
+     C                     MOVE BYROBN    AMOBNK
+      *  Receive Ordering Customer
+     C                     MOVE BYROCS    AMORDC
+      *
+     C                     MOVE BYRIBN    AMIBNK
+     C                     MOVE BYRIBL    AMIBNA
+      *
+      *  Treat Pay instructions
+     C                     ELSE
+     C                     MOVELBYPSTY    AMSETM
+      *  Setup our Nostro field
+     C                     MOVELBYOPBR    AMONOB
+     C                     MOVE BYPONO    AMOURN
+      *  Pay Ordering Bank
+     C                     MOVE BYPOBN    AMOBNK
+      *  Pay Ordering Customer
+     C                     MOVE BYPOCS    AMORDC
+      *
+     C                     MOVE BYCVMR    AMCVMR
+     C                     MOVE BYPIBN    AMIBNK
+     C                     MOVE BYPIBA    AMIBNA
+      *
+     C                     MOVE BYRCNO    AMRCRN
+     C                     MOVE BYRCAL    AMRCRA
+      *
+     C                     MOVE BYRCNB    AMRVNO
+      *  Account With Bank
+     C                     MOVE BYACBN    AMAWBN
+     C                     MOVE BYACBL    AMAWBA
+      *  Beneficiary
+     C                     MOVE BYBYNB    AMBENN
+     C                     MOVE BYBACL    AMBENA
+      *
+     C                     MOVE BYDPY1    AMDTP1
+     C                     MOVE BYDPY2    AMDTP2
+     C                     MOVE BYDPY3    AMDTP3
+     C                     MOVE BYDPY4    AMDTP4
+      *
+     C                     MOVE BYDECG    AMDCHG
+      *
+     C                     MOVE BYBBI1    AMBTB1
+     C                     MOVE BYBBI2    AMBTB2
+     C                     MOVE BYBBI3    AMBTB3
+     C                     MOVE BYBBI4    AMBTB4
+     C                     MOVE BYBBI5    AMBTB5
+     C                     MOVE BYBBI6    AMBTB6
+      *
+     C                     END
+     C/COPY WNCPYSRC,FX0921C010
+     C                     END
+     C                     END
+      *
+     CSR                   ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY WNCPYSRC,FX0921C011
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,258 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL ATU - Request for Demand Interest Capital')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL019600 - Midas GL Account Transfer Utility - Request for   *
+      *             Demand Interest Capitalisation                    *
+      *                                                               *
+      *  Function:  This program reads through all records in GLSLACPD*
+      *             (Selected Accounts File) whose status is equal to *
+      *             'CR' and updates the ACCNTAB file with DDIS = 'D' *
+      *             and/or CDIS = 'D'.                                *
+      *                                                               *
+      *  Called By: GL009300                                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 BUG27769           Date 09Jun10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CGL114A *CREATE    Date 12Mar10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  BUG27769 - Incorrect error code                              *
+      *  CGL114A - CCR Interest Capitalisation                        *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *   21          Record not found                                *
+      *   22          Start/End Of File Reached                       *
+      *   90          File Error Occured                              *
+      *****************************************************************
+      *
+     FGLSLACL8IF  E           K        DISK         KINFSR *PSSR
+     FACCNTL0 UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C                     EXSR SRINIT
+     C                     EXSR XMSLAC
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMSLAC - Read GLSLACPD and update account details            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     XSIV01, XMACCN                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XMSLAC    BEGSR
+      *
+     C                     Z-ADD0         CTR     60
+      *
+     C           *LOVAL    SETLLGLSLACL8
+     C                     READ GLSLACL8                 90
+      *
+     C           *IN90     DOWEQ'0'
+     C                     MOVE SLFCNU    KCNUM
+     C                     MOVE SLCCY     KCCY
+     C                     MOVE SLFACO    KACOD
+     C                     MOVE SLFACS    KACSQ
+     C                     MOVE SLFBRC    KBRCA
+      *
+     C           KACCN     CHAINACCNTL0              2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *IN22     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'005'     DBASE
+     C                     MOVEL'ACCNTL0 'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+     C           ATYP      IFEQ 'R'
+     C           LTAC      ANDEQ0
+      *
+     C           PRQCD     IFEQ 'C'
+     C                     MOVE 'D'       DDIS
+     C                     MOVE 'D'       CDIS
+     C                     ENDIF
+      *
+     C           PRQCD     IFEQ 'W'
+     C                     MOVE *BLANKS   DDIS
+     C                     MOVE *BLANKS   CDIS
+     C                     ENDIF
+      *
+     C                     UPDATACCNTABF
+      *
+     C           CTR       ADD  1         CTR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ GLSLACL8                 90
+     C                     ENDDO
+      *
+     C                     MOVE 'C'       PRTCD
+     C                     MOVE CTR       PUCTR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialise and define fields                        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Retrieve Run Date.
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If return with an error (LR seton in called program) then
+      ** process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C********** @RTCD     OREQ '*ERROR*'                                                   BUG27769
+     C           @RTCD     ORNE *BLANKS                                                     BUG27769
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOBANKR0'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD007       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE 'F'       PRTCD
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  @DEFN - Definition Routine (Not Called)                      *
+      *                                                               *
+      *  Called By: None                                              *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           @DEFN     BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD   1
+     C                     PARM           PRQCD   1
+     C                     PARM           PUCTR   6
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *LIKE     DEFN CNUM      KCNUM
+     C           *LIKE     DEFN CCY       KCCY
+     C           *LIKE     DEFN ACOD      KACOD
+     C           *LIKE     DEFN ACSQ      KACSQ
+     C           *LIKE     DEFN BRCA      KBRCA
+      *
+     C           KACCN     KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCA
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE 'F'       PRTCD
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     ROLBK
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2010

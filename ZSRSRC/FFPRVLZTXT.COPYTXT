@@ -1,0 +1,221 @@
+ *****************************************************************
+ *                                                               *
+ * Bank Fusion Midas 1.4 Base -----------------------------------*
+ * Midas Plus 1.4 Base 04 ---------------------------------------*
+ * Midas Plus 1.4 Base ------------------------------------------*
+ * Midas Plus 1.3 ----------- Base ------------------------------*
+ * Midas Release 4 --------------- Base -------------------------*
+ * Midas DBA 3.05 -----------------------------------------------*
+ *  Last Amend No. CFF006             Date 28Nov00               *
+ *  Prev Amend No. CFF004             Date 21Aug96               *
+ *                                                               *
+ *****************************************************************
+ *                                                               *
+ * CFF006 - Fractional Ticks Enhancement.                        *
+ * CFF004 - Increase in size of Price Fields                     *
+ *                                                               *
+ *****************************************************************
+ 
+  FF STANDARD SUBROUTINE - FFPRVL
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Purpose:
+  ~~~~~~~~
+**To*validate*a*Price*in*screen*format*(*12*A*)*and*in*doing*so*convert   CFF004
+**it*into*its*equivalent*file*format*(*11,7*P*)************************   CFF004
+                                                                          CFF004
+  To validate a Price in screen format ( 16 A ) and in doing so convert   CFF004
+  it into its equivalent file format ( 15,8 P )                           CFF004
+ 
+  Notes for when including in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC FFSRDSZ1 should be included in 'I' specs
+   /COPY ZSRSRC FFPRVLZ2 should be included in 'E' specs
+   - if program uses FFPRCS and FFPRVL - ONLY USE 'E' SPECS FROM FFPRVL
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC FFPRVLZ3 should be included in 'I' specs
+   - if program uses FFPRCS and FFPRVL - ONLY USE 'I' SPECS FROM FFPRCS
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   /COPY ZSRSRC FFPRVLZ4 should be included in the subroutine section
+    of the 'C' specifications
+ 
+   Requirements:
+   ~~~~~~~~~~~~
+   Input:
+   ~~~~~
+************************FFSPRC***(12A)*PRICE*(*SCREEN*FORMAT*)*********   CFF004
+                        FFSPRC   (16A) PRICE ( SCREEN FORMAT )            CFF004
+                        FFTKDM  (3,0P) TICKS DENOMINATOR
+************************FFMNPF*(11,7P)*MINIMUM*PRICE*FLUCTUATION*******   CFF004
+                        FFMNPF (15,8P) MINIMUM PRICE FLUCTUATION          CFF004
+ 
+   Procedure:
+   ~~~~~~~~~
+     Note - As soon as the first error is encountered no further
+            validation is to be performed, the output fields are to be
+            set as per ( ) and the routine finished.
+ 
+   1. - If price is blank, the input price is in error
+ 
+   2. - For all characters from the first non-blank character until the
+        next blank is encountered. Each character must be one of the
+        following
+ 
+   2a.- A number ( 0 to 9 )
+ 
+ 
+        delimiter. Valid values are - '.', if Ticks Denominator <> 100
+        '-'
+                                                                          CFF006
+        If Tick Denominator is not equal to 100 and Minimum Price         CFF006
+        Fluctuation is not equal to zero, there are two possible          CFF006
+        delimeters.  First delimeter should be '-' and the second         CFF006
+        should be '.'                                                     CFF006
+ 
+   3. - Maintain counts of numbers before and numbers after any decimal
+        delimiter
+ 
+   4. - When the next blank character is found or end of input Prices
+        is reached
+ 
+****4a.-*The*count*of*numbers*before*the*decimal*delimiter*must*be*less   CFF004
+*********than*or*equal*to*4********************************************   CFF004
+                                                                          CFF004
+    4a.- The count of numbers before the decimal delimiter must be less   CFF004
+         than or equal to 7                                               CFF004
+ 
+****4b.-*The*count*of*numbers*after*the*decimal*delimiter*must*be*less*   CFF004
+*********than*or*equal*to*7********************************************   CFF004
+                                                                          CFF004
+    4b.- The count of numbers after the decimal delimiter must be less    CFF004
+         than or equal to 8                                               CFF004
+ 
+    4c.- The counts of numbers before and after the decimal delimiter
+         can not both be zero
+ 
+    4d.- There must be no furthur non blank characters to the right of
+         this blank character
+                                                                          CFF006
+    4e.- If Ticks Denominator is not 100, the count of numbers after      CFF006
+         the delimeter '-' must be less than or equal to the number of    CFF006
+         significant digits of the Tick Denominator                       CFF006
+                                                                          CFF006
+    4f.- If Ticks Denominator is not 100 AND Minimum Price Fluctuation    CFF006
+         is not zero, count of numbers after the second delimeter '.'     CFF006
+         must be less than or equal to the number of significant digits   CFF006
+         of the Minimum Price Fluctuation.                                CFF006
+ 
+***5.*-*Construct*an*11,7*numeric*value*of*the*price*input*-***********   CFF004
+                                                                          CFF004
+   5. - Construct an 15,8 numeric value of the price input -              CFF004
+        Set the integer component of the numeric field to the value
+        represented by the integers that were before the decimal
+        delimiter in the input field
+ 
+***6.*-*If*the*count*of*numbers*before*the*decimal*delimiter*was*less**   CFF004
+********than*4*-*Insert*leading*zeros*required*to*make*up*a*four*char.*   CFF004
+********integer*(*eg.*If*the*price*input*is*25.1125,*the*integer*part**   CFF004
+********of*the*numeric*price*must*be*0025*)****************************   CFF004
+                                                                          CFF004
+   6. - If the count of numbers before the decimal delimiter was less     CFF004
+        than 7 - Insert leading zeros required to make up a seven char.   CFF004
+        integer ( eg. If the price input is 25.1125, the integer part     CFF004
+        of the numeric price must be 0000025 )                            CFF004
+ 
+     6a.- Set the decimal component of the numeric price to the value
+          represented by the integers that were after the decimal
+          delimiter in the input field
+ 
+*****6b.-*If*the*count*of*numbers*after*the*decimal*delimiter*was*less*   CFF004
+**********than*7*-*Use*trailing*zeros*to*make*up*the*number*of*digits**   CFF004
+**********to*7*(*eg.*If*the*price*input*is*25.1125,*the*numeric*price**   CFF004
+**********should*be*0025.11250000*)************************************   CFF004
+                                                                          CFF004
+     6b.- If the count of numbers after the decimal delimiter was less    CFF004
+          than 8 - Use trailing zeros to make up the number of digits     CFF004
+          to 8 ( eg. If the price input is 25.1125, the numeric price     CFF004
+          should be 00025.112500000 )                                     CFF004
+ 
+     6c.- If the ticks denominator is not 100 AND minimum price           CFF006
+          fluctuation is not zero                                         CFF006
+                                                                          CFF006
+        6c.1 - Move the decimal part of the price input to numeric        CFF006
+               price without the delimeter.                               CFF006
+                                                                          CFF006
+        6c.2 - Extract the correct decimal figures from the price         CFF006
+               input to be used later to check if the decimal part        CFF006
+               is an exact multiple of the minimum price fluctuation.     CFF006
+               (eg. If the price input is 25-11.25, extract 11.25)        CFF006
+                                                                          CFF006
+        6c.3 - If no digit has been entered after the first delimeter     CFF006
+               (FFCNT2 is zero):                                          CFF006
+                                                                          CFF006
+        6c.3.1 If the ticks denominator is a number in the range 1-9,     CFF006
+               divide the decimal component of the numeric price by 10    CFF006
+                                                                          CFF006
+        6c.3.2 If the ticks denominator is a number in the range 10-99    CFF006
+               divide the decimal component of the numeric price by 100   CFF006
+                                                                          CFF006
+        6c.3.3 If the ticks denominator is a number in the range 101-999  CFF006
+              divide the decimal component of the numeric price by 1000   CFF006
+                                                                          CFF006
+ ****6c.-*If*the*instrument*ticks*denominator*is*not*100*-*Make any****   CFF006
+     6d.- If the instrument ticks denominator is not 100 - Make any       CFF006
+          necessary adjustment to the decimal component of the numeric
+          arising from the fact that the user is not obliged to enter
+          leading zeros for the fraction
+ 
+ ****6d.-*If*the*ticks*denominator*is*a*number*in*the*range*10*-*99****   CFF006
+     6d.1-If the ticks denominator is a number in the range 10 - 99       CFF006
+          and the input price had only one integer after the decimal
+          delimiter
+          - OR -
+          If the ticks denominator is a number in the range 100 - 999
+          and the input price had only two integers after the decimal
+          delimiter
+ 
+           Divide the decimal component of the numeric price by 10
+ 
+ ****6e.-*If*the*ticks*denominator*is*a*number*in*the*range*100*-*999**   CFF006
+     6d.2-If the ticks denominator is a number in the range 100 - 999     CFF006
+          and the input price had only one integer after the decimal
+          delimiter
+           Divide the decimal component of the numeric price by 100
+ 
+***7.*-*Combine*the*derived*integer*component*and*the*derived*decimal**   CFF004
+********component*to*produce*a*numeric*price*in*11,7*format************   CFF004
+                                                                          CFF004
+   7. - Combine the derived integer component and the derived decimal     CFF004
+        component to produce a numeric price in 15,8 format               CFF004
+ 
+   8. - The input price must be valid with regard to the instrument
+        details
+ 
+     8a.- If the instrument ticks denominator is 100 - numeric price
+          must be exactly divisible by the minimum price fluctuation
+          for the instrument
+                                                                          CFF006
+     8b.- Else, If the minimum price fluctuation is not zero, the         CFF006
+          price after the '-' (extracted decimal figures from price       CFF006
+          input) must be exactly divisible by the minimum price           CFF006
+          fluctuation.                                                    CFF006
+          (eg. If the price input is 25-11.25, the decimal figure 11.25   CFF006
+          must be an exact multiple of the minimum price fluctuation      CFF006
+ 
+ ****8b.-*Else,*The*value*of*the*integers*after*the*decimal*delimiter**   CFF006
+     8c.- Else, The value of the integers after the decimal delimiter     CFF006
+          in the input price must be less than the ticks denominator
+ 
+   9. - Set values of output fields
+ 
+     9a.- If no error was found - Set the error ind. to '0', output the
+          derive numeric price
+ 
+     9b.- Else error was found - Set the error ind. to '1', set the
+          numeric price to zero
+ 
+ 
+   Outputs
+***~~~~~~~**************FFPRIC*(11,7P)*PRICE*(*FILE*FORMAT*)***********   CFF004
+   ~~~~~~~              FFPRIC (15,8P) PRICE ( FILE FORMAT )              CFF004
+                        *IN89     (1A) ERROR IND> (ON IF INVALID)
+ 

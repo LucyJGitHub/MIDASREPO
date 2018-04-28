@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Account Balance Check Calculation')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC000100 - Midas RE Account Balance Check Calculation      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. AR1055588          Date 08Feb13              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CAP205   *CREATE   Date 18Feb10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1055588 - Available Balances in TOF (Child:AR1055591)     */
+/*       CAP205 - Teller Related APIs - Account Balance Check        */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2010')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('REC000100 - Midas RE Account Balance +
+                          Check Calculation') TOMSGQ(MRUNQ)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(QTEMP/LDA) VALUE(*BLANK)
+             CHGJOB     SWS(XXXXXX00)
+             CLRPFM     FILE(RPACNTQD)                                                 /*AR1055588*/
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+             CALL       PGM(RE000100)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             COMMIT
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             ROLLBACK
+ 
+ /** Send error message */
+ 
+             SNDPGMMSG  MSG('Program REC000100 ended abnormally - see joblog') +
+                          TOMSGQ(MOPERQ)
+ 
+END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             ENDPGM

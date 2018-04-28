@@ -1,0 +1,198 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Migrate Midas user data to the new system')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC001071 - Migrate Midas user data to new system files     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. A1090832           Date 20Feb13              */
+/*       Prev Amend No. A1084804           Date 29Jan13              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP038             Date 30Jul07              */
+/*                      CUP034  *CREATE    Date 18Dec06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       A1090832 - Do not duplicate triggers.                       */
+/*       A1084804 - Ensure user description is brought across.       */
+/*       CUP038 - Program doesn't monitor for empty 'FROM' files.    */
+/*       CUP034 - MidasPlus user data migration.                     */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&USRP &FMSYS &TOSYS &RTNCOD &RUSRP +                    */ /*A1084804*/
+/**********               &MITEMDD)                                                  */ /*A1084804*/
+             PGM        PARM(&USRP &FMSYS &TOSYS &RTNCOD &RUSRP +
+                          &MITEMDD &USRTXT)                                             /*A1084804*/
+ 
+             DCL        VAR(&USRP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FMSYS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TOSYS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCOD) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RUSRP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MITEMDD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&USRTXT) TYPE(*CHAR) LEN(25)                                /*A1084804*/
+ 
+             DCL        VAR(&FDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TDVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Set up library names for the PFs and LFs used in this program. */
+             CHGVAR     VAR(&FDTALIB) VALUE(&FMSYS *TCAT 'DTALIB')
+             CHGVAR     VAR(&TDTALIB) VALUE(&TOSYS *TCAT 'DTALIB')
+             CHGVAR     VAR(&TDVLIB) VALUE(&TOSYS *TCAT 'DVLIB')
+ 
+/* Copy old versions of user files to latest format. */
+             DLTF       FILE(QTEMP/FMUSERDDQT)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/FMACBRDDQT)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/FMBRBSDDQT)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/FMBROSDDQT)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/FMCMPSDDQT)
+             MONMSG     MSGID(CPF0000)
+/**********  CRTDUPOBJ  OBJ(MUSERDD) FROMLIB(&TDTALIB) +                             */ /*A1090832*/
+/**********               OBJTYPE(*FILE) TOLIB(QTEMP) +                              */ /*A1090832*/
+/**********               NEWOBJ(FMUSERDDQT)                                         */ /*A1090832*/
+             CRTDUPOBJ  OBJ(MUSERDD) FROMLIB(&TDTALIB) +
+                          OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(FMUSERDDQT) CST(*NO) TRG(*NO)                          /*A1090832*/
+             CPYF       FROMFILE(&FDTALIB/MUSERDD) +
+                          TOFILE(QTEMP/FMUSERDDQT) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CUP038*/
+/**********  CRTDUPOBJ  OBJ(MACBRDD) FROMLIB(&TDTALIB) +                             */ /*A1090832*/
+/**********               OBJTYPE(*FILE) TOLIB(QTEMP) +                              */ /*A1090832*/
+/**********               NEWOBJ(FMACBRDDQT)                                         */ /*A1090832*/
+             CRTDUPOBJ  OBJ(MACBRDD) FROMLIB(&TDTALIB) +
+                          OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(FMACBRDDQT) CST(*NO) TRG(*NO)                          /*A1090832*/
+             CPYF       FROMFILE(&FDTALIB/MACBRDD) +
+                          TOFILE(QTEMP/FMACBRDDQT) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CUP038*/
+/**********  CRTDUPOBJ  OBJ(MBRBSDD) FROMLIB(&TDTALIB) +                             */ /*A1090832*/
+/**********               OBJTYPE(*FILE) TOLIB(QTEMP) +                              */ /*A1090832*/
+/**********               NEWOBJ(FMBRBSDDQT)                                         */ /*A1090832*/
+             CRTDUPOBJ  OBJ(MBRBSDD) FROMLIB(&TDTALIB) +
+                          OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(FMBRBSDDQT) CST(*NO) TRG(*NO)                          /*A1090832*/
+             CPYF       FROMFILE(&FDTALIB/MBRBSDD) +
+                          TOFILE(QTEMP/FMBRBSDDQT) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CUP038*/
+/**********  CRTDUPOBJ  OBJ(MBROSDD) FROMLIB(&TDTALIB) +                             */ /*A1090832*/
+/**********               OBJTYPE(*FILE) TOLIB(QTEMP) +                              */ /*A1090832*/
+/**********               NEWOBJ(FMBROSDDQT)                                         */ /*A1090832*/
+             CRTDUPOBJ  OBJ(MBROSDD) FROMLIB(&TDTALIB) +
+                          OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(FMBROSDDQT) CST(*NO) TRG(*NO)                          /*A1090832*/
+             CPYF       FROMFILE(&FDTALIB/MBROSDD) +
+                          TOFILE(QTEMP/FMBROSDDQT) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CUP038*/
+/**********  CRTDUPOBJ  OBJ(MCMPSDD) FROMLIB(&TDTALIB) +                             */ /*A1090832*/
+/**********               OBJTYPE(*FILE) TOLIB(QTEMP) +                              */ /*A1090832*/
+/**********               NEWOBJ(FMCMPSDDQT)                                         */ /*A1090832*/
+             CRTDUPOBJ  OBJ(MCMPSDD) FROMLIB(&TDTALIB) +
+                          OBJTYPE(*FILE) TOLIB(QTEMP) +
+                          NEWOBJ(FMCMPSDDQT) CST(*NO) TRG(*NO)                          /*A1090832*/
+             CPYF       FROMFILE(&FDTALIB/MCMPSDD) +
+                          TOFILE(QTEMP/FMCMPSDDQT) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CUP038*/
+ 
+/* If the old profile does match the new profile and MITEMDD is being      */
+/*  processed then create copy of MACUB1.  This is used to process MACBRDD */
+/*  keyed.                                                                 */
+             IF         COND(&USRP *EQ &RUSRP) THEN(DO)
+                IF         COND(&MITEMDD *EQ 'Y') THEN(DO)
+                   DLTF       FILE(QTEMP/MACBRDDQT)
+                   MONMSG     MSGID(CPF0000)
+                   CPYF       FROMFILE(&TDVLIB/MACUB1) +
+                                TOFILE(QTEMP/MACBRDDQT) MBROPT(*REPLACE) +
+                                CRTFILE(*YES)
+                   CLRPFM     FILE(QTEMP/MACBRDDQT)
+                ENDDO
+             ENDDO
+/* If the old profile does not match the new profile then create temporary */
+/*  versions of files.                                                     */
+             ELSE       CMD(DO)
+                DLTF       FILE(QTEMP/MUSERDDQT)
+                MONMSG     MSGID(CPF0000)
+                DLTF       FILE(QTEMP/MACBRDDQT)
+                MONMSG     MSGID(CPF0000)
+                DLTF       FILE(QTEMP/MBRBSDDQT)
+                MONMSG     MSGID(CPF0000)
+                DLTF       FILE(QTEMP/MBROSDDQT)
+                MONMSG     MSGID(CPF0000)
+                DLTF       FILE(QTEMP/MCMPSDDQT)
+                MONMSG     MSGID(CPF0000)
+                CRTDUPOBJ  OBJ(MUSERDD) FROMLIB(&TDTALIB) +
+                             OBJTYPE(*FILE) TOLIB(QTEMP) NEWOBJ(MUSERDDQT)
+/* Use MACUB1 for MACBRDD as the key can be used if needed. */
+                CPYF       FROMFILE(&TDVLIB/MACUB1) +
+                             TOFILE(QTEMP/MACBRDDQT) MBROPT(*REPLACE) +
+                             CRTFILE(*YES)
+                CLRPFM     FILE(MACBRDDQT)
+                CRTDUPOBJ  OBJ(MBRBSDD) FROMLIB(&TDTALIB) +
+                             OBJTYPE(*FILE) TOLIB(QTEMP) NEWOBJ(MBRBSDDQT)
+                CRTDUPOBJ  OBJ(MBROSDD) FROMLIB(&TDTALIB) +
+                             OBJTYPE(*FILE) TOLIB(QTEMP) NEWOBJ(MBROSDDQT)
+                CRTDUPOBJ  OBJ(MCMPSDD) FROMLIB(&TDTALIB) +
+                             OBJTYPE(*FILE) TOLIB(QTEMP) NEWOBJ(MCMPSDDQT)
+             ENDDO
+ 
+/**********  CALL       PGM(SM001071) PARM(&USRP &RUSRP &MITEMDD)                    */ /*A1084804*/
+             CALL       PGM(SM001071) PARM(&USRP &RUSRP &MITEMDD +
+                          &USRTXT)                                                      /*A1084804*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                             MSGDTA('SM001071') MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                             joblog and dump for details')
+                CALL       PGM(SCC0010) PARM('SM001071' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* If the old profile does not match the new profile then copy temporary */
+/*  versions to the "to" database.                                       */
+             IF         COND(&USRP *NE &RUSRP) THEN(DO)
+                CPYF       FROMFILE(QTEMP/MUSERDDQT) +
+                             TOFILE(&TDTALIB/MUSERDD) MBROPT(*ADD)
+/* Don't copy MACBRDD if MITEM is present as this will have been handled */
+/*  separately.                                                          */
+                IF         COND(&MITEMDD *NE 'Y') THEN(DO)
+                   CPYF       FROMFILE(QTEMP/MACBRDDQT) +
+                                TOFILE(&TDTALIB/MACBRDD) MBROPT(*ADD)
+                ENDDO
+                CPYF       FROMFILE(QTEMP/MBRBSDDQT) +
+                             TOFILE(&TDTALIB/MBRBSDD) MBROPT(*ADD)
+                CPYF       FROMFILE(QTEMP/MBROSDDQT) +
+                             TOFILE(&TDTALIB/MBROSDD) MBROPT(*ADD)
+                CPYF       FROMFILE(QTEMP/MCMPSDDQT) +
+                             TOFILE(&TDTALIB/MCMPSDD) MBROPT(*ADD)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

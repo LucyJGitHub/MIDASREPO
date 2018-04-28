@@ -1,0 +1,470 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Extract Hedging Pos'ns for Amort.')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas FUTURES AND OPTIONS MODULE
+     F*                                                                  *
+     F*   FF0610  -  EXTRACT DETAILS OF HEDGING POSITIONS FOR WHICH      *
+     F*              AMORTIZATION IS REQUIRED                            *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. 173953             Date 13Feb01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 086328             Date 19Feb98               *
+      *                 CFF004             Date 18Sep96               *
+     F*                  S71062             DATE 19DEC95                 *
+     F*                  S01393             DATE 30OCT92                 *
+     F*                  FUJI-FF0011        DATE 10AUG92                 *
+     F*                  E44713 (FUJI-F00017) DATE 18SEP92               *
+     F*                  AUS022             DATE 11AUG92                 *
+     F*                  FO0094             DATE 24APR91                 *
+     F*                  FO0071             DATE 15APR91                 *
+     F*                  FO0043             DATE 20MAR91                 *
+     F*                  S01117             DATE 16FEB90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  173953 - Remove check on maturity date before writing        *
+      *           AMORTD.                                             *
+     F*   086328   - COMPLEMENT FOR FIXE 053970                          *
+     F*              FIX 053970:
+     F*             (Write once only a record in AMORTD and not one      *
+     F*              record by day.                                      *
+     F*            - REMOVE FIX B10306 (DUE TO NEW PROCESSING)           *
+     F*            - ADD PROCESSING FOR POSTNKD FILE)                    *
+     F*              REMOVE REALLY B10306                                *
+     F*   CFF004  -  Increase in size of Price Fields,(Recompiled Only)  *
+     F*   S71062  -  FF/PM Interface (Just recompiled)                   *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   E44713    - Amendments to ensure amortisation starts on
+     F*               settlement date and that duplicate records are     *
+     F*               not written to AMORTD. Based on Gems-27269         *
+     F*               and NY CCF-E50365.                                 *
+     F*               Incorporation of  pre rel-10  error fix
+     F*   AUS022  -  AUSTRALIAN CHANGE : Contract Type (CNTT) added to   *
+     F*              PF/INTYPD.  Recompile program only.                 *
+     F*   FO0094  -  PTF L170382 INSTALLED TO FIX READE ERROR, AND       *
+     F*              PROGRAM RECOMPILED WITH IGNDECERR *NO               *
+     F*   FO0071  -  PGM RECOMPILED WITH IGNDECERR *YES DUE TO PROBLEMS  *
+     F*              WITH READE OP CODE IN OS/400 REL3                   *
+     F*   FO0043  -  PROGRAM SHOULD CHECK FOR EOF ON SETLL OPERATION, AS *
+     F*              IT DOES ON READE OPERATION - IF FILE IS EMPTY,      *
+     F*              POINTER IS SET TO EOF AND SUBSEQUENT READS CAUSE    *
+     F*              UNPREDICTABLE RESULTS.                              *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F******IGNDECERR(*NO)************************************************FO0071
+     F******IGNDECERR(*YES)*****************************************FO0071FO0094
+     F*     IGNDECERR(*NO)                                               *FO0094
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/****F*:*USRPRF(*USER)*CODELIST(*NONE)*IGNDECERR(*NO)***************: *   FO0071
+/****F*:*USRPRF(*USER)*CODELIST(*NONE)*IGNDECERR(*YES)**************FO0071FO0094
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF* E           K        DISK                               S01117
+     FTABTB11 IF  E                    DISK                               86328
+     FBOOKDD  IF  E                    DISK
+     FINTYP   IF  E           K        DISK
+     FAMORT   IF  E           K        DISK                               E44713
+     F            AMORTDF                           KRENAMEAMORTD2        86328
+     F************AMORTDF**************             KRENAMEAMORT2DF 86328 E44713
+     FAMORTD  O   E                    DISK
+     FPOSTNK3 IF  E           K        DISK
+     FMATIN   IF  E           K        DISK
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F********40********EOF TABTB10***************************************S01117
+     F*       41        EOF BOOKDD
+     F*       42        EOF MATIN
+     F*       43        EOF INTYP
+     F*       44        EOF POSTNK3
+     F*       45        UNSUCCESSFUL LOKUP TO ARRAY BCD
+     F*       51        CHAIN ON AMORTD                                   86328
+     F*     80-89       RESERVED FOR STANDARD FF SUBROUTINES
+     F*     90-98       RESERVED FOR STANDARD MIDAS SUBROUTINES
+     F*     U7 U8       DATA BASE ERRORS
+     F/SPACE 2
+     E                    CPY@    1   1 80
+     E                    BCD       200  2
+     E*
+     E** Array for book codes from PF/BOOKDD
+     E*
+     IAMORTD2                                                             86328
+     I*  Rename fields to avoid clashes with other files                  86328
+     I              RECI                            RECI2                 86328
+     I              BRCA                            BRCA2                 86328
+     I              CCY                             CCY2                  86328
+     I              BOKC                            BOKC2                 86328
+     I              ISTT                            ISTT2                 86328
+     I              YRNO                            YRNO2                 86328
+     I              MTHN                            MTHN2                 86328
+     I              PCAL                            PCAL2                 86328
+     I              STRP                            STRP2                 86328
+     I              AMSD                            AMSD2                 86328
+     I              AMRP                            AMRP2                 86328
+     I              TRPL                            TRPL2                 86328
+     I              RPAD                            RPAD2                 86328
+     I*                                                                   86328
+     I*
+     IINTYPDF
+     I              ISCY                            INCUR
+     I*
+     I** Rename fields on INTYP
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     I N I T I A L I S A T I O N
+     C*================================================================
+     C*
+     C** Prepare LDA
+     C*
+     C***********          MOVEL*BLANK    DBLOT                           S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANKS   DBPGM                           S01117
+     C                     MOVEL*BLANKS   DBKEY                           S01117
+     C                     MOVEL*BLANKS   DBFILE                          S01117
+     C                     MOVEL*ZEROS    DBASE                           S01117
+     C                     MOVEL'FF0610'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C** Define KLIST for POSTNK3
+     C*
+     C           POSTKY    KLIST
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+      *                                                                   86328
+      ** Define KLIST for MATIN                                           86328
+      *                                                                   86328
+     C           AMORK     KLIST                                          86328
+     C                     KFLD           BRCA2                           86328
+     C                     KFLD           CCY2                            86328
+     C                     KFLD           BOKC2                           86328
+     C                     KFLD           ISTT2                           86328
+     C                     KFLD           YRNO2                           86328
+     C                     KFLD           MTHN2                           86328
+     C                     KFLD           PCAL2                           86328
+     C                     KFLD           STRP2                           86328
+     C                     KFLD           AMSD2                           86328
+     C*
+     C** Define Partial KLIST for setting limits on MATIN
+     C*
+     C           MNISKY    KLIST
+     C                     KFLD           RUND
+     C                     KFLD           ISTT
+     C*
+     C** Define Partial KLIST for READE on MATIN
+     C*
+     C           MNPTKY    KLIST
+     C                     KFLD           RUND
+     C*                                                                   E44713
+     C** SET UP KEY LIST FOR SET LOWER LIMITS ON AMORT                    E44713
+     C*                                                                   E44713
+     C           AMOKEY    KLIST                                          E44713
+     C                     KFLD           BRCA                            E44713
+     C                     KFLD           CCY                             E44713
+     C                     KFLD           BOKC                            E44713
+     C                     KFLD           ISTT                            E44713
+     C                     KFLD           YRNO                            E44713
+     C                     KFLD           MTHN                            E44713
+     C                     KFLD           PCAL                            E44713
+     C                     KFLD           STRP                            E44713
+     C*                                                                   E44713
+     C*                                                                   S01117
+     C**   IN THE DATAAREA RUNDAT                                         S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C***Access*TABTB10*for*Run*Date**************************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 40               S01117
+     C**N40******RECI      COMP 'D'                  4040                 S01117
+     C***********                                                         S01117
+     C***If*Record*not*found,Database*Error*01****************************S01117
+     C***********                                                         S01117
+     C************IN40     IFEQ '1'                                       S01117
+     C***********          SETON                     U7U8  ***************S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C***********          MOVEL'TABLE'   DBFILE           ***************S01117
+     C***********          MOVEL'TABTB10' DBKEY                           S01117
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+     C***********          END                                            S01117
+     C*                                                                86328
+     C           1         CHAINTABTB11F             40                86328
+     C*                                                                86328
+     C** If Record not found,Database Error XX                         86328
+     C*                                                                86328
+     C           *IN40     IFEQ '1'                                    86328
+     C           RECI      ORNE 'D'                                    86328
+     C                     SETON                     U7U8  ************** 86328
+     C                     MOVEL'XX'      DBASE            **DB ERROR X * 86328
+     C                     MOVEL'TABLE'   DBFILE           ************** 86328
+     C                     MOVEL'TABTB11' DBKEY                        86328
+     C                     SETON                     LR                86328
+     C                     RETRN                                       86328
+     C                     END                                         86328
+     C*                                                                86328
+     C           DNWD      SUB  1         LRUND   50                   86328
+     C*
+     C** Read BOOKDD and load array of book code values
+     C*
+     C** Initialise array index
+     C                     Z-ADD1         X       30
+     C*
+     C           *IN41     DOWNE'1'
+     C                     READ BOOKDDF                  41
+     C*
+     C** Ensure book codes are live and hedged
+     C*
+     C           HDGI      IFEQ 'Y'
+     C           RECI      ANDNE'*'
+     C*
+     C** Move book code to array and increment index
+     C*
+     C                     MOVE BOKC      BCD,X
+     C                     ADD  1         X
+     C*
+     C                     END
+     C                     END
+     C*
+     C** If no book codes moved to array , terminate processing
+     C*
+     C           X         IFEQ 1
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     M A I N
+     C*================================================================
+     C*
+     C** Process records from MATIN changed today
+     C*
+     C           RUND      SETLLMATIN                42                   FO0043
+     C  N42      MNPTKY    READEMATIN                    42               FO0043
+     C********** RUND      SETLLMATIN                                     FO0043
+     C********** MNPTKY    READEMATIN                    42               FO0043
+     C*
+     C** Process records with LCD equal to run date
+     C*
+     C           *IN42     DOWEQ'0'
+     C           ISTT      CHAININTYP                43
+     C*
+     C** If Record not found,Database Error 02
+     C*
+     C           *IN43     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**S01117
+     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELISTT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C** Only process for ISPT's 1 & 4 with positive period
+     C*
+     C           ISPT      IFEQ 1
+     C           ULPD      ANDGT0
+     C           ISPT      OREQ 4
+     C           ULPD      ANDGT0
+     C*
+     C** Save previous instrument type
+     C*
+     C           *LIKE     DEFN ISTT      PVISTT
+     C                     MOVE ISTT      PVISTT
+     C                     ELSE
+     C*
+     C** If record not required skip to next instrument
+     C*
+     C           MNISKY    SETGTMATIN                42
+     C  N42      MNPTKY    READEMATIN                    42
+     C                     END
+     C*
+     C** Whilst instrument type is unchanged
+     C*
+     C           ISTT      DOWEQPVISTT
+     C           *IN42     ANDEQ'0'
+     C*
+     c** Read all POSTNK3 records matching MATIN key
+     C*
+     C           POSTKY    CHAINPOSTNK3              44
+     C           *IN44     DOWEQ'0'
+     C*
+     C** Look up bookcode on array
+     C*
+     C           BOKC      LOKUPBCD                      45
+     C*
+     C** If bookcode is in array write record to AMORTD
+     C*
+     C           *IN45     IFEQ '1'
+     C*                                                                86328
+     C********** MDAT      IFGE RUND                                86328 173953
+     C********** MDAT      ANDLELRUND                               86328 173953
+     C*                                                                86328
+     C                     EXSR OPAMO
+     C*                                                                86328
+     C**********           END                                      86328 173953
+     C                     END
+     C*
+     C** Read next record for current MATIN key
+     C*
+     C           POSTKY    READEPOSTNK3                  44
+     C*
+     C** End of POSTNK3 processing (*IN44 loop)
+     C*
+     C                     END
+     C*
+     C** Read next MATIN record for run date (end of ISTT loop)
+     C*
+     C           MNPTKY    READEMATIN                    42
+     C                     END
+     C*
+     C** End of all records on MATIN for run date
+     C*
+     C                     END
+     C*
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     C L O S E
+     C*================================================================
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+      *
+      ********************************************************************
+      **                                                                 *
+      **             S  U  B  R  O  U  T  I  N  E  S                     *
+      **                                                                 *
+      ********************************************************************
+      *
+      *****************************************************************
+      **
+      **        OPAMO  - HANDLES FORMATING AND OUTPUT TO AMORTD
+      **                                                                  S01117
+      **        *PSSR  - HANDLES ABNORMAL ERROR CONDITIONS                S01117
+      **
+      *****************************************************************
+     C********************************************************************
+     C*
+     C*   S.R. OPAMO - SUB-ROUTINE TO OUTPUT TO AMORTD FILE
+     C*
+     C*  CALLED ONCE FROM PROGRAM MAIN
+     C*
+     C********************************************************************
+     C           OPAMO     BEGSR
+     C                     MOVE 'D'       RECI
+     C*********************Z-ADDRUND      AMSD                            E44713
+     C                     Z-ADDMDAT      AMSD                            E44713
+     C                     MOVE INCUR     CCY
+     C                     Z-ADDULPD      AMRP
+     C                     Z-ADDTOPL      TRPL
+     C                     Z-ADD0         RPAD
+     C*                                                                   86328
+     C** CHECK IF RECORD ALREADY EXISTS IN AMORTD                         86328
+     C*                                                                   86328
+     C                     MOVELBRCA      BRCA2                           86328
+     C                     MOVE CCY       CCY2                            86328
+     C                     MOVE BOKC      BOKC2                           86328
+     C                     MOVE ISTT      ISTT2                           86328
+     C                     Z-ADDYRNO      YRNO2                           86328
+     C                     Z-ADDMTHN      MTHN2                           86328
+     C                     MOVE PCAL      PCAL2                           86328
+     C                     Z-ADDSTRP      STRP2                           86328
+     C                     Z-ADDAMSD      AMSD2                           86328
+     C*                                                                   86328
+     C           AMORK     CHAINAMORT                51                   86328
+     C*                                                                   86328
+      **Output record to MATIND ONLY IF RECORD DOESN'T EXIST              86328
+     C*                                                                   86328
+     C   51                WRITEAMORTDF                                   86328
+     C*********************                                         86328 E44713
+     C****WRITE*AMORTD*RECORD ONLY IF NO EXISTING RECORD FOUND      86328 E44713
+     C*********************                                         86328 E44713
+     C***********AMOKEY****SETLLAMORT                    47         86328 E44713
+     C************IN47*****IFEQ '0'                                 86328 E44713
+     C*********************WRITEAMORTDF                                   86328
+     C*********************END                                      86328 E44713
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1748 @@
+0001 H        1                                                           GL1121
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Amount accrual input - initial/enq scr')      *
+0001 H***********                                                         GL1121
+0002 F********************************************************************GL1121
+0003 F*                                                                  *GL1121
+     F*  Midas   GENERAL LEDGER MODULE                                GL1121
+0005 F*                                                                  *GL1121
+0006 F*     GL1121 - AMOUNT ACCRUAL INPUT - S/AMACC                      *GL1121
+0007 F*              INITIAL/ENQUIRY SCREEN PROCESSING                   *GL1121
+0008 F*                                                                  *GL1121
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0010 F*                                                                  *GL1121
+      *  Last Amend No. MD029265           Date 15Aug14               *
+      *  Prev Amend No. AR1094265          Date 07Mar13               *
+      *                 AR851552A          Date 09Feb13               *
+      *                 CGL141             Date 12Dec12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 244292             Date 12Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL064             Date 10Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 197200             Date 20Aug01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL003             Date 03Jan97               *
+      *                 S01199             Date 27Feb90                  *
+     F*                     S01117              DATE - 09/03/89          *
+0011 F*                     S01194              DATE - 09/03/89          *
+0012 F*                                                                  *GL1121
+     F********************************************************************
+     F*                                                                  *
+      *  MD029265 - Cannot complete accrual input insert due to       *
+      *             missing narrative upon 'Enter' (Recompile)        *
+      *  AR1094265 - Associated Customer in accrual input must be the *
+      *              same with the input                              *
+      *  AR851552A - Assoc Customer is empty upon for a deleted       *
+      *              accrual input. AMASOC field should be displayed  *
+      *              on screen during delete. (Child: AR851553A)      *
+      *  CGL141 - Amount Accruals Extended Narrative.                 *
+      *           Added Hooks: CGL141_07  to CGL141_013               *
+      *  244292 - Action code 'A' should not be available for this    *
+      *           funtion. Only I, D and E.                           *
+     F*  CGL064 - Associated Customer / Cost Centre Validation changes   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  197200 - Add amend action to amount accruals maintenance        *
+     F*     CGL003 - Add fields for Accrual Frequency on Amount          *
+     F*              Accruals                                            *
+0012 F*     S01199 - HELP SYSTEM                                         *GL1121
+     F*     S01117  -  MULTI-BRANCHING                                   *
+     F*     S01194  -  NEW STANDING DATA                                 *
+     F*                                                                  *
+0013 F********************************************************************GL1121
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0016 F*L1120FMCF* F     317            WORKSTN                            S01117
+0016 F**GL1120FMCF  F     318            WORKSTN                    S01117CGL003
+     F***GL1120FMCF  F     327            WORKSTN                                      CGL003 CGL029
+     F*GL1120FMCF  F     339            WORKSTN                                        CGL029 CGL064
+     FGL1120FMCF  F     345            WORKSTN                                                CGL064
+0019 F**AMACC   IF  F     128  7AI     2 DISK                       GL1121CGL003
+     F***AMACC** IF  F     134  7AI     2 DISK                                         GL1121 CGL029
+     F***AMACC** IF  F     154  7AI     2 DISK                                         CGL029 CGL064
+     FAMACC   IF  F     160  7AI     2 DISK                                                   CGL064
+     F                                              KCOMIT
+0021 F*ABLE***IF* F      96 12AI     2 DISK                               S01194
+0022 F*                                                                   GL1121
+0023 F*       FUNCTION OF INDICATORS                                      GL1121
+0024 F*       STANDARD INPUT PROGRAM INDICATORS                           GL1121
+0014 F*  16   USED TO CONDITION FIRST TIME PASS THROUGH RPG CALC CYCLE  * GL1121
+0015 F***45***SET ON IF ERROR DURING READ FROM THE WORK STATION & HELP  * S01199
+0015 F*  45   SET ON IF ERROR DURING READ FROM THE WORK STATION         * S01199
+0025 F********U7******DATABASE ERROR                                      S01117
+0025 F*       U7 U8   DATABASE ERROR                                      S01117
+0026 F*       89      BLINK ACTION CODE LABEL                             GL1121
+0027 F*       88      NON-DISPLAY ERROR MESSAGE/CODES                     GL1121
+0028 F*       87      NON-DISPLAY CHANGE DETAILS                          GL1121
+0029 F*       86      NON-DISPLAY USEFUL DATA                             GL1121
+0030 F*       85      OUTPUT ENQUIRE - SE - SCREEN                        GL1121
+0031 F*       84      OUTPUT DELETE - SD - SCREEN                         GL1121
+0032 F*       83      OUTPUT AMEND - SA - SCREEN                          GL1121
+0033 F*       82      OUTPUT INSERT - SI - SCREEN                         GL1121
+0034 F*       81      OUTPUT INITIAL - SF - SCREEN                        GL1121
+0035 F*       80      BLINK DELETE CHECK FIELD LABEL                      GL1121
+0036 F*       79      SYSTEM SET-UP FLAG ON                               GL1121
+0037 F*       78      SF SCREEN READ IN                                   GL1121
+0038 F*       77      SE SCREEN READ IN                                   GL1121
+0039 F*       76      FIRST CYCLE IND                                     GL1121
+0040 F*       POSSIBLE MASTER FILE SITUATIONS                             GL1121
+0041 F*       75      MASTER FILE - NO RECORD FOUND - NORF                GL1121
+0042 F*       74      MASTER FILE - RECORD FOUND, MATURED - RFMA          GL1121
+0043 F*       73      MASTER FILE - RECORD FOUND, DELETED TODAY - RFDT    GL1121
+0044 F*       72      MASTER FILE - RECORD FOUND, DELETED PREVIOUSLY-RFDP GL1121
+0045 F*       71      MASTER FILE - RECORD FOUND, LIVE - RFLV             GL1121
+0046 F*       70      MASTER FILE - RECORD FOUND, BACKED OUT BY           GL1121
+0047 F*                                       RESTART/RECOVERY - RFBO     GL1121
+0048 F*       ACTION CODES ENTERED                                        GL1121
+0049 F*       69      E OR BLANK ENTERED                                  GL1121
+0050 F*       68      D ENTERED                                           GL1121
+0051 F*       67      A ENTERED                                           GL1121
+0052 F*       66      I ENTERED                                           GL1121
+0053 F*       ALLOWED ACTION CODES                                        GL1121
+0054 F*       65      INSERT OVER DELETED RECORD ALLOWED                  GL1121
+0055 F*       64      ENQUIRE - E OR BLANK ALLOWED                        GL1121
+0056 F*       63      DELETE - D ALLOWED                                  GL1121
+0057 F*       62      AMEND - A ALLOWED                                   GL1121
+0058 F*       61      INSERT - I ALLOWED                                  GL1121
+0059 F*       60      ACTION CODE ENTERED NOT I/A/D/E OR BLANK            GL1121
+0060 F*       59      MANDATORY KEY FIELD NOT ENTERED                     GL1121
+0061 F*       58      USEFUL DATA TO BE DISPLAYED                         GL1121
+     F*       54      DISPLAY OF ASSOCIATED CUSTOMER                      CGL064
+     F*       53      PROFIT CENTRE DEFAULT ON                            S01117
+     F*       51      PROFIT CENTRE AMEND ON                              S01117
+     F*       50      PROFIT CENTRE USED ON                               S01117
+     F*       49      Error in Accrual Date                               CGL003
+     F*       48      Error in Accrual Day Number                         CGL003
+     F*       47      Error in Accrual Frequency                          CGL003
+     F*       46      Accrual Frequency on Amount Accrual Switch          CGL003
+     F*       44      PROTECT ASSOCIATED CUSTOMER FIELD                   CGL064
+     F*       40      MULTIBRANCHING INDICATOR OFF                        S01117
+0062 F*       NON-STANDARD INPUT PROGRAM INDICATORS                       GL1121
+0063 F*       02      BLINK REFERENCE NUMBER                              GL1121
+0064 F*       03      BLINK CURRENCY                                      GL1121
+0065 F*       04      BLINK AMOUNT                                        GL1121
+0066 F*       05      BLINK START DATE                                    GL1121
+0067 F*       06      BLINK MATURITY DATE                                 GL1121
+0068 F*       07      BLINK DEBIT ACCOUNT                                 GL1121
+0069 F*       08      BLINK DEBIT CUSTOMER                                GL1121
+0070 F*       09      BLINK CREDIT ACCOUNT                                GL1121
+0071 F*       12      BLINK CREDIT CUSTOMER                               GL1121
+0072 F*       13      BLINK NARRATIVE                                     GL1121
+     E                    CPY@    1   1 80
+0073 E*    SUBROUTINE TABLES/ARRAYS                                       GL1121
+0074 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYGL1121
+0075 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYGL1121
+0076 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY GL1121
+0077 E                    ZA1        16  1               ZALIGN/ZEDIT     GL1121
+0078 E                    ZA2        16  1               ZALIGN/ZEDIT     GL1121
+0079 E*    STANDARD TABLES/ARRAYS                                         GL1121
+0080 E                    ERCD       19  4               ERROR CODES      GL1121
+0081 E***********         ERCM    1  17 79               ERROR MSGS.      S01117
+0081 E                    ERCM    1  20 79               ERROR MSGS.      S01117
+0082 E*    NON-STANDARD TABLES/ARRAYS                                     GL1121
+0083 I*    STANDARD FILES                                                 GL1121
+0084 I*                                                                   GL1121
+0085 I*    WORKSTATION FILE                                               GL1121
+0086 I*                                                                   GL1121
+0087 I*    FORMAT - INITIAL SCREEN                                        GL1121
+0088 I*                                                                   GL1121
+0089 IGL1120FMNS  78   8 CS   9 CF                                        GL1121
+0090 I                                        1   7 SRUNA                 GL1121
+     I                                        8   9 SID
+     I                                       10  15 SPID
+     I                                       16  18 SWSID
+0095 I*                                NON-STANDARD KEY FIELDS            GL1121
+0096 I                                       19  24 SREFN           15    GL1121
+0097 I*                                STANDARD ACTION CODE AND STRING    GL1121
+0098 I                                       25  25 SACTN                 GL1121
+     I                                        1  25 SCNSF
+0100 I*                                                                   GL1121
+0101 I*    FORMAT - ENQUIRY SCREEN                                        GL1121
+0102 I*                                                                   GL1121
+0103 I        NS  77   8 CS   9 CE                                        GL1121
+0090 I                                        1   7 SRUNA                 GL1121
+     I                                        8   9 SID
+     I                                       10  15 SPID
+     I                                       16  18 SWSID
+0095 I*                                NON-STANDARD KEY FIELDS            GL1121
+0096 I                                       19  24 SREFN                 GL1121
+0097 I*                                STANDARD ACTION CODE AND STRING    GL1121
+0098 I                                       25  25 SACTN                 GL1121
+     I*                                NON STD DETAIL SCREEN FIELDS
+     I***********                            26  28 SCCY                  S01117
+     I***********                            29  42 SAMNT                 S01117
+     I***********                            43  48 SSDAT                 S01117
+     I***********                            49  54 SMDAT                 S01117
+     I***********                            55  58 SDRAC                 S01117
+     I***********                            59  60 SDRSQ                 S01117
+     I***********                            61  66 SDRCN                 S01117
+     I***********                            67  70 SCRAC                 S01117
+     I***********                            71  72 SCRSQ                 S01117
+     I***********                            73  78 SCRCN                 S01117
+     I***********                            79 108 SNARR                 S01117
+     I                                       26  28 SBRCA                 S01117
+     I                                       29  31 SCCY                  S01117
+     I                                       32  45 SAMNT                 S01117
+     I                                       46  49 SPRFC                 S01117
+     I                                       50  55 SSTDT                 S01117
+     I                                       56  61 SMDAT                 S01117
+     I***************************************62  65 SDRAC           S01117CGL003
+     I***************************************66  67 SDRSQ           S01117CGL003
+     I***************************************68  73 SDRCN           S01117CGL003
+     I***************************************74  77 SCRAC           S01117CGL003
+     I***************************************78  79 SCRSQ           S01117CGL003
+     I***************************************80  85 SCRCN           S01117CGL003
+     I***************************************86 115 SNARR           S01117CGL003
+     I                                       62  62 SAPFQ                 CGL003
+     I                                       63  64 SFDAY                 CGL003
+     I                                       65  70 SAPDA                 CGL003
+     I**********                             71  74 SDRAC                              CGL003 CGL029
+     I**********                             75  76 SDRSQ                              CGL003 CGL029
+     I**********                             77  82 SDRCN                              CGL003 CGL029
+     I**********                             83  86 SCRAC                              CGL003 CGL029
+     I**********                             87  88 SCRSQ                              CGL003 CGL029
+     I**********                             89  94 SCRCN                              CGL003 CGL029
+     I**********                             95 124 SNARR                              CGL003 CGL029
+     I                                       71  80 SDRAC                                     CGL029
+     I                                       81  82 SDRSQ                                     CGL029
+     I                                       83  88 SDRCN                                     CGL029
+     I                                       89  98 SCRAC                                     CGL029
+     I                                       99 100 SCRSQ                                     CGL029
+     I                                      101 106 SCRCN                                     CGL029
+     I                                      107 136 SNARR                                     CGL029
+     I                                      137 142 SASOC                                     CGL064
+     I                                        1  25 SCNSF
+     I** CATCHALL
+     I*
+11   I        NS
+0131 I*                                                                   GL1121
+0132 I*    MASTER FILE - DETAIL RECORD                                    GL1121
+0133 I*                                                                   GL1121
+0134 IAMACC   NS  74   1 CM                                               GL1121
+0135 I       OR   73   1 C*                                               GL1121
+0136 I       OR   71   1 CD                                               GL1121
+0137 I                                        1   1 MRECI                 GL1121
+0138 I                                        2   70MREFN                 GL1121
+0139 I                                        8   8 MREFT                 GL1121
+0140 I                                    P  31  330MTNLU                 GL1121
+0141 I                                    P  34  360MORED                 GL1121
+0142 I                                    P  37  390MLCD                  GL1121
+0143 I                                       40  40 MCHTP                 GL1121
+0144 I                                    P  41  470MHASH                 GL1121
+0145 I                                    P  41  470MAMNT                 GL1121
+0146 I                                       48  50 MCCY                  GL1121
+0147 I                                    P  51  530MSDAT                 GL1121
+0148 I                                    P  54  560MMDAT                 GL1121
+0149 I**********                             57  600MDRAC                              GL1121 CGL029
+     I                                       57  600QQDRAC                                    CGL029
+0150 I**********                             61  660MDRCN                 GL1121              CSD027
+0150 I                                       61  66 MDRCN                                     CSD027
+0151 I**********                             67  700MCRAC                              GL1121 CGL029
+     I                                       67  700QQCRAC                                    CGL029
+0152 I**********                             71  760MCRCN                 GL1121              CSD027
+0152 I                                       71  76 MCRCN                                     CSD027
+0153 I                                       77 106 MNARR                 GL1121
+0154 I                                    P 107 1130MAMPD                 GL1121
+0155 I                                      114 1150MDRSQ                 GL1121
+0156 I                                      116 1170MCRSQ                 GL1121
+     I                                      122 125 MPRFC                 S01117
+     I                                      126 128 MBRCA                 S01117
+0157 I**************************************  1 128 MOLD1           GL1121CGL003
+     I                                      129 129 MAPFQ                 CGL003
+     I                                      130 1310MFDAY                 CGL003
+     I                                    P 132 1340MAPDA                 CGL003
+     I                                      135 1440MDRAC                                     CGL029
+     I                                      145 1540MCRAC                                     CGL029
+     I**********                            155 1600MASOC                           CGL064 AR1094265
+     I                                      155 160 MASOC                                  AR1094265
+     I**********                              1 134 MOLD1                              CGL003 CGL029
+     I**********                              1 154 MOLD1                              CGL029 CGL064
+     I                                        1 160 MOLD1                                     CGL064
+0158 I*                                                                   GL1121
+0159 I*    CATCHALL                                                       GL1121
+0160 I        NS                                                          GL1121
+0161 I                                        1   1 MRECI                 GL1121
+0166 I*                                                                   GL1121
+0167 I*    NON-STANDARD FILES                                             GL1121
+0168 I*                                                                   GL1121
+0169 I*****TABLE*FILE*-*BRANCH CODES RECORD.                              S01194
+0170 I***********                                                         S01194
+0171 I*ABLE***NS* 10   1 CD   2 C1   3 C0                                 S01194
+0172 I***********                             1   1 RECI                  S01194
+0173 I***********                             2   30RECT                  S01194
+0174 I***********                            11  130BRCD                  S01194
+0175 I***********                            14  43 BRNM                  S01194
+0176 I***********                            44  490BICN                  S01194
+0177 I***********                            50  51 LOCC                  S01194
+0178 I***********                            52  53 CMPY                  S01194
+     I***********                            52  54 CMPYM                 S01194
+0179 I***********                         P  90  920LCD                   S01194
+0180 I***********                            93  93 CHTP                  S01194
+0181 I***********                         P  94  960TNLU                  S01194
+0182 I***********                                                         S01194
+0183 I*****TABLE*FILE*-*CURRENCIES RECORD 1.                              S01194
+0184 I***********                                                         S01194
+0185 I*ABLE***NS* 11   1 CD   2 C2   3 C0                                 S01194
+0186 I*******AND*     13 C1                                               S01194
+0187 I***********                             1   1 RECI                  S01194
+0188 I***********                             2   30RECT                  S01194
+0189 I***********                            10  12 CCY                   S01194
+0190 I***********                            13  130SREC                  S01194
+0191 I***********                            14  27 CCNM                  S01194
+0192 I***********                         P  28  348SPOT                  S01194
+0193 I***********                            35  37 CCYS                  S01194
+0194 I***********                            38  380CDP                   S01194
+0195 I***********                            39  390TNOT                  S01194
+0196 I***********                            40  40 DCCY                  S01194
+0197 I***********                            41  44 SRC1                  S01194
+0198 I***********                            45  48 SRC2                  S01194
+0199 I***********                            49  520TACC                  S01194
+0200 I***********                            53  560TEQV                  S01194
+0201 I***********                            57  600SWQV                  S01194
+0202 I***********                            61  640TAC4                  S01194
+0203 I***********                            65  680TAC5                  S01194
+0204 I***********                            69  69 HIND                  S01194
+0205 I***********                         P  70  768PART                  S01194
+0206 I***********                            77  780SSNO                  S01194
+0207 I***********                         P  79  858ERLC                  S01194
+0208 I***********                            86  860MDIN                  S01194
+0209 I***********                            87  870MDIA                  S01194
+0210 I***********                            88  880MDIB                  S01194
+0211 I***********                         P  90  920LCD                   S01194
+0212 I***********                            93  93 CHTP                  S01194
+0213 I***********                         P  94  960TNLU                  S01194
+0214 I***********                                                         S01194
+0215 I*****CATCHALL                                                       S01194
+0216 I********NS*                                                         S01194
+0217 I*                                                                   GL1121
+0218 I*    STANDARD DATA STRUCTURES                                       GL1121
+0219 I*                                                                   GL1121
+0220 I*    DATA STRUCTURE FOR MASTER FILE KEY                             GL1121
+0221 I*                                                                   GL1121
+0222 I            DS                                                      GL1121
+0223 I                                        1   7 DSMKEY                GL1121
+0224 I                                        1   6 SREFN                 GL1121
+0225 I                                        7   7 SREFT                 GL1121
+0226 I*                                                                   GL1121
+0227 I*    DATA STRUCTURE FOR CHANGE DETAILS                              GL1121
+0228 I*                                                                   GL1121
+0229 I            DS                                                      GL1121
+0230 I                                        1  17 DSCHDT                GL1121
+0231 I                                        1   1 MRECI                 GL1121
+0232 I                                        2   60MTNLU                 GL1121
+0233 I                                        7  110MORED                 GL1121
+0234 I                                       12  160MLCD                  GL1121
+0235 I                                       17  17 MCHTP                 GL1121
+0236 I*                                                                   GL1121
+0237 I*    NON-STANDARD DATA STRUCTURES                                   GL1121
+0238 I*                                                                   GL1121
+0239 I*****DATA*STRUCTURE*FOR TABLE FILE KEY                              S01194
+0240 I***********                                                         S01194
+0241 I*********** DS                                                      S01194
+0242 I***********                             1  12 TABKEY                S01194
+0243 I***********                             1   2 TAB2                  S01194
+0244 I***********                             9  11 TAB3A                 S01194
+0245 I***********                            10  12 TAB3B                 S01194
+0246 I***********                             9  12 TAB4                  S01194
+0247 I***********                            12  12 TAB1                  S01194
+0248 I***********                             6  11 TAB6                  S01194
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0249 I*                                                                   GL1121
+0250 I*    STANDARD LOCAL DATA AREA FIELDS                                GL1121
+0251 I*                                                                   GL1121
+0252 ILDA        UDS                            256                       GL1121
+0253 I                                        1   8 LPROC                 GL1121
+     I***********                           134 138 LFILE                 S01194
+     I***********                           139 167 LKEY                  S01194
+     I***********                           168 175 LPROG                 S01194
+     I***********                           176 1770LDBNO                 S01194
+0073 I**********                            181 1850LRUND                 S01194
+0074 I**********                            186 192 LRUNA                 S01194
+0075 I**********                            193 193 LDATF                 S01194
+0076 I***********                           194 1940LSFLG                 S01194
+0077 I**********                            195 1960LKEYL                 S01194
+0078 I**********                            197 202 LISP                  S01194
+0079 I**********                            203 203 LTWOL                 S01194
+0080 I**********                            204 2040LLDLP                 S01194
+0081 I**********                            205 2090LTNLU                 S01194
+0082 I**********                            210 210 LDELM                 S01194
+0083 I**********                            211 211 LDUD                  S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+0073 I                                      184 1880LRUND                 S01194
+0074 I                                      189 195 LRUNA                 S01194
+0075 I                                      196 196 LDATF                 S01194
+0076 I                                      197 197 LSFLG                 S01194
+0077 I                                      198 1990LKEYL                 S01194
+0078 I                                      200 205 LISP                  S01194
+0079 I                                      206 206 LTWOL                 S01194
+0080 I                                      207 2070LLDLP                 S01194
+0081 I                                      208 2120LTNLU                 S01194
+0082 I                                      213 213 LDELM                 S01194
+0083 I                                      214 214 LDUD                  S01194
+     IWSTRN      UDS                            860
+     I                                        1 200 WST200
+     I                                      201 400 WST400
+     I                                      401 600 WST600
+     I                                      601 800 WST800
+     I                                      801 860 WST860
+     I**************************************  1 128 WST128                CGL003
+     I**********                              1 134 WST134                             CGL003 CGL029
+     I**********                              1 154 WST154                             CGL029 CGL064
+     I                                        1 160 WST160                                    CGL064
+     IRUNDT       DS                                                      S01117
+     I*                                                                   S01117
+     I* External DTAARA for run-date                                      S01117
+     I*                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*
+     IPSDS       SDS
+     I                                      244 246 SWID
+     I/COPY WNCPYSRC,GL1121I002
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I*                                                                   S01194
+     I**  DATA STRUCTURE FOR CURRENCY CODE                                S01194
+     I*                                                                   S01117
+     ISDGELR    E DSSDGELRPD                                              S01117
+     I*                                                                   S01117
+     I**   GENERAL LEDGER DETAILS                                         S01117
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     I/COPY WNCPYSRC,GL1121I001
+     I/COPY OFCPYSRCZ,CGL141_007                                                              CGL141
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WSTRN
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C           *LOCK     IN   LDA
+     C           *LOCK     IN   WSTRN
+     C                     IN   RUNDT                                     S01117
+     C           *LIKE     DEFN MFDAY     WFDAY                           CGL003
+     C*
+0269 C*  FIRST CYCLE PROCESSING                                           GL1121
+     C           *IN76     IFEQ '0'                                       S01117
+     C                     MOVEACPY@      BIS@   80
+     C* Ensure Frequency Day output field is initialised to zero
+     C                     CLEARWFDAY
+     C**                                                                  S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C**  CHECK TO SEE IF SYSTEM HAS MULTIBRANCHING INDICATOR PRESENT     S01117
+     C**                                                                  S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETOF                     40                   S01117
+     C                     ELSE                                           S01117
+     C                     SETON                     40                   S01117
+     C                     END                                            S01117
+      *                                                                   CGL003
+      **  Access Switchable features file for                             CGL003
+      **  Accrual Frequency on Amount Accruals Processing - CGL003        CGL003
+     C                     CALL 'AOSARDR0'                                CGL003
+     C                     PARM *BLANKS   @RTCD                           CGL003
+     C                     PARM '*VERIFY' @OPTN                           CGL003
+     C                     PARM 'CGL003'  WSARD   6                       CGL003
+     C           @RTCD     IFNE *BLANK                                    CGL003
+     C           @RTCD     ANDNE'*NRF   '                                 CGL003
+     C                     MOVEL'AOSARDR0'DBFILE            ************* CGL003
+     C                     Z-ADD3         DBASE             *DBERROR 003* CGL003
+     C                     MOVELWSARD     DBKEY             ************* CGL003
+     C                     MOVE @OPTN     DBOPTN  7                       CGL003
+     C                     SETON                     U7U8LR               CGL003
+     C                     EXSR *PSSR                                     CGL003
+     C                     ENDIF                                          CGL003
+      *                                                                   CGL003
+     C           @RTCD     IFEQ *BLANK                                    CGL003
+     C                     MOVE 'Y'       CGL003  1                       CGL003
+     C                     MOVE *ON       *IN46                           CGL003
+     C                     END                                            CGL003
+     C*                                                                   S01117
+     C** CHECK IF PROFIT CENTER IS USED OR NOT                            S01117
+     C*                                                                   S01117
+     C                     EXSR PRUSED                                    S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C                     GOTO END                                       S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C/COPY WNCPYSRC,GL1121C001
+     C/COPY OFCPYSRCZ,CGL141_008                                                              CGL141
+      *                                                                   CGL064
+     C                     CALL 'AOSARDR0'                                CGL064
+     C                     PARM *BLANKS   @RTCD                           CGL064
+     C                     PARM '*VERIFY' @OPTN                           CGL064
+     C                     PARM 'CGL064'  WSARD                           CGL064
+      *                                                                   CGL064
+     C           @RTCD     IFEQ *BLANK                                    CGL064
+     C                     MOVE 'Y'       CGL064  1                       CGL064
+     C                     MOVE *ON       *IN54                           CGL064
+     C                     ELSE                                           CGL064
+     C                     MOVE 'N'       CGL064                          CGL064
+     C                     MOVE *OFF      *IN54                           CGL064
+     C                     ENDIF                                          CGL064
+      *                                                                   CGL064
+     C                     END                                            S01117
+     C**                                                                  S01117
+0270 C*                                                                   GL1121
+     C           *IN45     DOUEQ'0'
+0271 C                     READ GL1120FM                 45               GL1121
+     C************IN45     IFEQ '1'                                       S01199
+     C************         MOVEAERCD      HERCD 160                       S01199
+     C************         MOVEL'GL1120'  HBPGM   8                       S01199
+     C************         CALL 'MHELP'                                   S01199
+     C************         PARM           HBPGM                           S01199
+     C************         PARM           HERCD                           S01199
+     C************         END                                            S01199
+     C                     END
+0274 C   76                GOTO ENDFC                                     GL1121
+0275 C                     SETON                     76                   GL1121
+0276 C*                                                                   GL1121
+0277 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM   GL1121
+0278 C*                                                                   GL1121
+0279 C                     MOVELLISP      WPROG   8                       GL1121
+0280 C                     MOVE '1  '     WPROG                           GL1121
+0281 C                     MOVELWPROG     SPID    6                       GL1121
+0282 C*  SET-UP STANDARD LDA FIELDS                                       GL1121
+0283 C***********          MOVE 'AMACC'   LFILE                           S01194
+0284 C***********          MOVE WPROG     LPROG                           S01194
+0283 C                     MOVEL'AMACC'   DBFILE                          S01194
+0284 C                     MOVELWPROG     DBPGM                           S01194
+0285 C                     Z-ADD7         LKEYL                           GL1121
+0286 C                     Z-ADD1         LLDLP                           GL1121
+0287 C*  SET-UP STANDARD BLANK FIELDS                                     GL1121
+0288 C                     MOVE ' '       BLK200200                       GL1121
+0289 C*                                                                   GL1121
+0290 C           LDATF     COMP 'M'                      98* DATE FORMAT  GL1121
+0291 C***********LSFLG     COMP 1                        79* SSF          S01194
+0291 C           LSFLG     COMP 'Y'                      79* SSF          S01194
+0292 C           LDUD      COMP 'U'                      58* USEFUL DATA  GL1121
+0293 C*                                                    *    DISPLAYED GL1121
+0294 C*                                                                   GL1121
+0295 C*  INITIALISE FIELD TO BLANK OUT KEY/ACTION CODE                    GL1121
+0296 C*                                                                   GL1121
+0297 C                     MOVE ' '       BLK7    7                       GL1121
+0298 C*                                                                   GL1121
+0299 C*  SET ON/OFF INDICATORS FOR ALLOWED ACTION CODES                   GL1121
+0300 C*                                                                   GL1121
+0301 C*  SSF OFF                                                          GL1121
+0302 C  N79                SETON                     61    I ALLOWED      GL1121
+      *                                                                                       197200
+      ***Allow*amend*action************************************                        197200 244292
+      *                                                                                       197200
+0303 C**N79*****           SETOF                     62    A NOT ALLOWED               GL1121 197200
+     C**N79*****           SETON                     62    A ALLOWED                   197200 244292
+     C  N79                SETOF                     62    A ALLOWED                          244292
+0304 C  N79                SETON                     63    D ALLOWED      GL1121
+0305 C  N79                SETON                     64    E ALLOWED      GL1121
+0306 C  N79                SETOF                     65    I OVER D NOT   GL1121
+0307 C*                                                       ALLOWED     GL1121
+0308 C*  SSF ON                                                           GL1121
+0309 C   79                SETON                     61    I - ALLOWED    GL1121
+      *                                                                                       197200
+      ***Allow*amend*action************************************                        197200 244292
+      *                                                                                       197200
+0310 C***79*****           SETOF                     62    A NOT ALLOWED               GL1121 197200
+0303 C***79*****           SETON                     62                                197200 244292
+     C   79                SETOF                     62    A NOT ALLOWED                      244292
+0311 C   79                SETON                     63    D ALLOWED      GL1121
+0312 C   79                SETON                     64    E ALLOWED      GL1121
+0313 C   79                SETOF                     65    I OVER D NOT   GL1121
+0314 C*                                                       ALLOWED     GL1121
+0315 C                     MOVE ' '       LDELM            DELETE METHOD  GL1121
+0316 C*                                                                   GL1121
+0317 C*  I OVER D IS NOT ALLOWED WHEN DELETE METHOD INVOLVES LEAVING RECI GL1121
+0318 C*  AS D, BECAUSE OF FILE CONTROL PROBLEMS. THE FOLLOWING CODE CHECKSGL1121
+0319 C*  THAT THIS HAS NOT BEEN ATTEMPTED.                                GL1121
+0320 C*                                                                   GL1121
+0321 C           LDELM     COMP ' '                      91               GL1121
+0322 C  N65                                                               GL1121
+0323 CORN91                GOTO ENDFC                                     GL1121
+0324 C***********          SETON                     U7LR                 S01117
+0325 C***********          MOVE '     '   LFILE                           S01194
+0326 C***********          MOVE BLK200    LKEY                            S01194
+0327 C***********          MOVE '93'      LDBNO            ** DB ERROR 93 S01194
+0324 C                     SETON                     U7U8LR               S01117
+0325 C                     MOVE '     '   DBFILE                          S01194
+0326 C                     MOVE BLK200    DBKEY                           S01194
+0327 C                     MOVE '93'      DBASE            ** DB ERROR 93 S01194
+     C                     EXSR *PSSR                                     S01194
+0328 C                     GOTO END                                       GL1121
+0329 C*                                                                   GL1121
+0330 C           ENDFC     TAG                             ** ENDFC TAG   GL1121
+0331 C*                                                                   GL1121
+0332 C*  INITIALISE STANDARD INDICATORS                                   GL1121
+0333 C                     SETON                     888786* NON-DISPLAY  GL1121
+0334 C                     SETOF                     8980  * BLINK LABELS GL1121
+0335 C                     SETOF                     858483* OUTPUT       GL1121
+0336 C                     SETOF                     8281  * SCREENS      GL1121
+0337 C                     SETOF                     696867* ACTION CODES GL1121
+0338 C                     SETOF                     66    * ENTERED      GL1121
+0339 C**********           SETOF                     59    * KEY FIELDS   S01117
+0339 C                     SETOF                     5902  *              S01117
+0340 C*                                                                   GL1121
+0341 C*  INITIALISE NON-STANDARD INDS                                     GL1121
+0342 C*                                                                   GL1121
+0343 C                     SETOF                     010203               GL1121
+0344 C                     SETOF                     040506               GL1121
+0345 C                     SETOF                     070809               GL1121
+0346 C                     SETOF                     121314               GL1121
+     C                     SETOF                     474849               CGL003
+     C/COPY WNCPYSRC,GL1121C002
+     C/COPY OFCPYSRCZ,CGL141_009                                                              CGL141
+     C                     CLEARSFDAY                                     CGL003
+0347 C*                                                                   GL1121
+0348 C*  BLANK OUT LAST CHANGE DETAILS                                    GL1121
+0349 C*                                                                   GL1121
+0350 C                     MOVE BLK200    DSCHDT                          GL1121
+0351 C*                                                                   GL1121
+0352 C*  CHECK FOR CORRECT SCREEN READ IN                                 GL1121
+0353 C*                                                                   GL1121
+0354 C   77                                                               GL1121
+0355 COR 78                GOTO PROCES                                    GL1121
+0356 C***********          SETON                     U7LR                 S01117
+0357 C***********          MOVE 'SCREN'   LFILE                           S01194
+0358 C***********          MOVE BLK200    LKEY                            S01194
+0359 C***********          MOVEL'SF OR SE'LKEY                            S01194
+0360 C***********          MOVE 'FOUND   'LKEY                            S01194
+0361 C***********          MOVE SID       LKEY                            S01194
+0362 C***********          MOVE '92'      LDBNO            ** DB ERROR 92 S01194
+0356 C                     SETON                     U7U8LR               S01117
+0357 C                     MOVEL'SCREN'   DBFILE                          S01194
+0358 C                     MOVE BLK200    DBKEY                           S01194
+0359 C                     MOVEL'SF OR SE'DBKEY                           S01194
+0360 C                     MOVE 'FOUND   'DBKEY                           S01194
+0361 C                     MOVE SID       DBKEY                           S01194
+0362 C                     MOVE '92'      DBASE            ** DB ERROR 92 S01194
+     C                     EXSR *PSSR                                     S01194
+0363 C                     GOTO END                                       GL1121
+0364 C*                                                                   GL1121
+0365 C           PROCES    TAG                             ** PROCES TAG  GL1121
+0366 C*                                                                   GL1121
+0367 C*  CLEAR ERROR CODE ARRAY, RESET INDEX                              GL1121
+0368 C*                                                                   GL1121
+0369 C                     MOVE BLK200    ERMSG  79                       GL1121
+0370 C                     MOVE '    '    ERCD                            GL1121
+0371 C                     Z-ADD0         S       20                      GL1121
+0372 C*                                                                   GL1121
+0373 C*  IF F3, END THE PROGRAM                                           GL1121
+0374 C*                                                                   GL1121
+0375 C   KC                MOVE '**      'LPROC                           GL1121
+0376 C   KC                SETON                     LR                   GL1121
+0377 C   KC                GOTO END                                       GL1121
+0378 C*                                                                   GL1121
+0379 C*  IF F12, OUTPUT BLANK INITIAL SCREEN                              GL1121
+0380 C*                                                                   GL1121
+0381 C   KL                EXSR SUBSF                                     GL1121
+     C/COPY WNCPYSRC,GL1121C003
+     C/COPY OFCPYSRCZ,CGL141_010                                                              CGL141
+0382 C   KL                GOTO END                                       GL1121
+0383 C*                                                                   GL1121
+0384 C*  IF F10, OUTPUT ERROR MSG TO INITIAL SCREEN                       GL1121
+0385 C*                                                                   GL1121
+0386 C   KJ                EXSR SUBSF                                     GL1121
+0387 C   KJ                SETOF                     88                   GL1121
+0388 C   KJ      S         ADD  1         S                               GL1121
+0389 C   KJ                MOVE ' 915'    ERCD,S                          GL1121
+0390 C   KJ                MOVE ERCM,15   ERMSG                           GL1121
+0391 C   KJ                GOTO END                                       GL1121
+0392 C*                                                                   GL1121
+0393 C*  CMD KEYS HAVE BEEN PROCESSED. ONLY PROCESSING LEFT IS TO PROCESS GL1121
+0394 C*  NEW KEY FIELDS/ACTION. WHETHER FROM SF OR SE SCREEN, PROCESSING  GL1121
+0395 C*  IS THE SAME.                                                     GL1121
+0396 C*                                                                   GL1121
+0397 C*  VALIDATE ACTION CODE                                             GL1121
+0398 C*                                                                   GL1121
+0399 C           SACTN     COMP 'I'                  606066               GL1121
+0400 C***60***** SACTN     COMP 'A'                  606067               GL1121              244292
+0401 C   60      SACTN     COMP 'D'                  606068               GL1121
+0402 C   60      SACTN     COMP 'E'                  606069               GL1121
+0403 C   60      SACTN     COMP ' '                  606069               GL1121
+     C/COPY WNCPYSRC,GLH00540
+     C/COPY OFCPYSRCZ,CGL141_011                                                              CGL141
+0404 C*                                                                   GL1121
+0405 C   69                MOVE 'E'       SACTN                           GL1121
+0406 C*                                                                   GL1121
+0407 C  N60                GOTO ACTALL                                    GL1121
+0408 C*                                                                   GL1121
+0409 C*  ERROR IF ACTION CODE NOT I,A,D OR E - OUTPUT INITIAL SCREEN      GL1121
+0410 C*                                                                   GL1121
+0411 C                     EXSR SUBSF                                     GL1121
+0412 C                     SETOF                     88                   GL1121
+0413 C                     SETON                     89                   GL1121
+0414 C           S         ADD  1         S                               GL1121
+0415 C                     MOVE ' 901'    ERCD,S                          GL1121
+0416 C                     MOVE ERCM,1    ERMSG                           GL1121
+0417 C                     GOTO END                                       GL1121
+0418 C*                                                                   GL1121
+0419 C           ACTALL    TAG                             ** ACTALL TAG  GL1121
+0420 C*                                                                   GL1121
+0421 C*  CHECK IF ACTION CODE IS ALLOWED                                  GL1121
+0422 C*                                                                   GL1121
+0423 C   66 61                                                            GL1121
+0424 COR 67 62                                                            GL1121
+0425 COR 68 63                                                            GL1121
+0426 COR 69 64             GOTO KEYVAL                                    GL1121
+0427 C*                                                                   GL1121
+0428 C                     EXSR SUBSF                                     GL1121
+0429 C                     SETOF                     88                   GL1121
+0430 C                     SETON                     89                   GL1121
+0431 C           S         ADD  1         S                               GL1121
+0432 C                     MOVE ' 902'    ERCD,S                          GL1121
+0433 C                     MOVE ERCM,2    ERMSG                           GL1121
+0434 C                     GOTO END                                       GL1121
+0435 C*                                                                   GL1121
+0436 C           KEYVAL    TAG                             ** KEYVAL TAG  GL1121
+0437 C*                                                                   GL1121
+0438 C*  TEST FOR ALL MANDATORY KEY FIELDS ENTERED                        GL1121
+0439 C*                                                                   GL1121
+0440 C***15*****           SETON                     59                   S01117
+0440 C   15                SETON                     5902                 S01117
+0441 C*                                                                   GL1121
+0442 C   59      S         ADD  1         S                               GL1121
+0443 C   59                MOVE ' 920'    ERCD,S                          GL1121
+0444 C   59                MOVE ERCM,17   ERMSG                           GL1121
+0445 C*                                                                   GL1121
+0446 C*  FOR INSERT VALIDATE KEY FIELDS INDIVIDUALLY, IF ALL ENTERED.     GL1121
+0447 C*                                                                   GL1121
+0448 C   66N59             EXSR VALKEY                                    GL1121
+0449 C*                                                                   GL1121
+0450 C*  S IS NON-ZERO IF THERE ARE ANY ERRORS. IF SO, OUTPUT SF SCREEN   GL1121
+0451 C*                                                                   GL1121
+0452 C           S         COMP 0                    8181                 GL1121
+0453 C  N81                GOTO CHMAST                                    GL1121
+0454 C*                                                                   GL1121
+0455 C                     EXSR SUBSF                                     GL1121
+0456 C                     SETOF                     88                   GL1121
+0457 C                     GOTO END                                       GL1121
+0458 C*                                                                   GL1121
+0459 C           CHMAST    TAG                             ** CHMAST TAG  GL1121
+0460 C*                                                                   GL1121
+0461 C*  CHAIN TO MASTER FILE FOR DETAIL RECORD                           GL1121
+0462 C*                                                                   GL1121
+0463 C                     SETOF                     707172               GL1121
+0464 C                     SETOF                     737475               GL1121
+0465 C                     EXSR MASTCH                                    GL1121
+     C*                                                                   S01117
+     C** BRANCH CODE IS NOW OBTAINED FROM THE RECORD IN LF/AMACC FOR      S01117
+     C** ACTION CODE IS 'E' AND 'D'.  THEREFORE, CHECK THE AUTHORISATION  S01117
+     C** IF MULTIBRANCHING INDICATOR IS ON USE PGM/ZVACTBU, OTHERWISE     S01117
+     C** USE PGM/AVACTU                                                   S01117
+      ***Include*action*code*'A'******************************                         197200 244292
+     C*                                                                   S01117
+     C           *IN75     IFEQ '0'                                       S01117
+     C           SACTN     IFEQ 'E'                                       S01117
+     C           SACTN     OREQ 'D'                                       S01117
+     C********** SACTN     OREQ 'A'                                                    197200 244292
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     MOVE SACTN     W@ACTN  1                       S01117
+     C                     MOVE MBRCA     W@BRCA  3                       S01117
+     C                     EXSR MBACTN                                    S01117
+     C                     ELSE                                           S01117
+     C                     MOVE SACTN     W@ACTN  1                       S01117
+     C                     EXSR SGACTN                                    S01117
+     C                     END                                            S01117
+     C           W@ERR     IFNE 0                                         S01117
+     C                     EXSR SPFERR                                    S01117
+     C                     GOTO END                                       S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+0466 C*                                                                   GL1121
+0467 C*  MOVE MASTER RECORD FOUND INTO OLD128                             GL1121
+0468 C*  TO SIMPLIFY PROCESSING                                           GL1121
+0469 C*                                                                   GL1121
+0470 C**N75****************MOVELMOLD1     OLD128128                 GL1121CGL003
+     C**N75*****           MOVELMOLD1     OLD134134                                    CGL003 CGL029
+     C**N75*****           MOVELMOLD1     OLD154154                                    CGL029 CGL064
+     C  N75                MOVELMOLD1     OLD160160                                           CGL064
+0471 C*                                                                   GL1121
+0472 C*  UPDATE TNLU IN LDA                                               GL1121
+0473 C*                                                                   GL1121
+0474 C  N75                MOVE MTNLU     LTNLU                           GL1121
+0475 C   75                Z-ADD0         LTNLU                           GL1121
+0476 C*                                                                   GL1121
+0477 C*  DETERMINE SITUATION FOUND ON MASTER                              GL1121
+0478 C*  FILE AND GOTO RELEVANT PROCESSING.                               GL1121
+0479 C*                                                                   GL1121
+0480 C*  NO RECORD FOUND                                                  GL1121
+0481 C*                                                                   GL1121
+0482 C   75                GOTO NORF                                      GL1121
+0483 C*                                                                   GL1121
+0484 C*  RECORD FOUND - MATURED                                           GL1121
+0485 C*                                                                   GL1121
+0486 C   74                GOTO RFMA                                      GL1121
+0487 C*                                                                   GL1121
+0488 C*  TEST RECORD FOUND WITH RECORD ID *                               GL1121
+0489 C*  FOR BACKED OUT BY RESTART/RECOVERY                               GL1121
+0490 C*                                                                   GL1121
+0491 C   73      MLCD      COMP 0                    73  70               GL1121
+0492 C*                                                                   GL1121
+0493 C*  RECORD FOUND HAS BEEN BACKED OUT                                 GL1121
+0494 C*                                                                   GL1121
+0495 C   70                GOTO RFBO                                      GL1121
+0496 C*                                                                   GL1121
+0497 C*  TEST RECORD FOUND WITH RECORD ID *                               GL1121
+0498 C*  FOR DELETED TODAY OR PREVIOUSLY                                  GL1121
+0499 C*                                                                   GL1121
+0500 C   73      MLCD      COMP LRUND                  7273               GL1121
+0501 C*                                                                   GL1121
+0502 C*  RECORD WITH RECORD ID * HAS BEEN                                 GL1121
+0503 C*  DELETED TODAY                                                    GL1121
+0504 C*                                                                   GL1121
+0505 C   73                GOTO RFDT                                      GL1121
+0506 C*                                                                   GL1121
+0507 C*  RECORD FOUND WITH RECORD ID * WAS DELETED PREVIOUSLY             GL1121
+0508 C*  - THAT IS, PRIOR TO TODAY                                        GL1121
+0509 C*                                                                   GL1121
+0510 C   72                GOTO RFDP                                      GL1121
+0511 C*                                                                   GL1121
+0512 C*  TEST RECORD FOUND WITH RECORD ID D                               GL1121
+0513 C*  FOR DELETED                                                      GL1121
+0514 C*                                                                   GL1121
+0515 C   71      MCHTP     COMP 'D'                  717173               GL1121
+0516 C*                                                                   GL1121
+0517 C*  RECORD FOUND IS LIVE - MCHTP IS NOT D                            GL1121
+0518 C*                                                                   GL1121
+0519 C   71                GOTO RFLV                                      GL1121
+0520 C*                                                                   GL1121
+0521 C*  RECORD FOUND WITH RECORD ID D                                    GL1121
+0522 C*  AND MCHTP D - TEST FOR DELETED TODAY                             GL1121
+0523 C*                                                                   GL1121
+0524 C   73      MLCD      COMP LRUND                    73               GL1121
+0525 C*                                                                   GL1121
+0526 C*  RECORD FOUND WITH RECORD ID D HAS                                GL1121
+0527 C*  BEEN DELETED TODAY                                               GL1121
+0528 C*                                                                   GL1121
+0529 C   73                GOTO RFDT                                      GL1121
+0530 C*                                                                   GL1121
+0531 C*  IF PROCESSING REACHES HERE THEN THE RECORD FOUND MAY             GL1121
+0532 C*  BE IN ERROR, OR MAY BE THE HEADER OR TRAILER. IF IN ERROR,       GL1121
+0533 C*  OUTPUT THE SE SCREEN WITH 'CHANGE DETAILS', OR SF SCREEN.        GL1121
+0534 C*                                                                   GL1121
+0535 C           S         ADD  1         S                               GL1121
+0536 C                     SETOF                     88                   GL1121
+0537 C           MRECI     COMP 'A'                      96               GL1121
+0538 C  N96      MRECI     COMP 'Z'                      96               GL1121
+0539 C*                                                                   GL1121
+0540 C  N96                SETOF                     87    * CHNGE DETAILSGL1121
+0541 C  N96                EXSR SUBSE                                     GL1121
+0542 C  N96                MOVE ' 903'    ERCD,S                          GL1121
+0543 C  N96                MOVE ERCM,3    ERMSG                           GL1121
+0544 C   96                EXSR SUBSF                                     GL1121
+0545 C   96                MOVE ' 919'    ERCD,S                          GL1121
+0546 C   96                MOVE ERCM,16   ERMSG                           GL1121
+0547 C                     GOTO END                                       GL1121
+0548 C*                                                                   GL1121
+0549 C*  PROCESS SITUATIONS FOUND ON MASTER FILE                          GL1121
+0550 C*                                                                   GL1121
+0551 C*  NO RECORD FOUND                                                  GL1121
+0552 C*                                                                   GL1121
+0553 C           NORF      TAG                             ** NORF TAG    GL1121
+0554 C*                                                                   GL1121
+0555 C*  INSERT                                                           GL1121
+0556 C   66                EXSR SUBSI                                     GL1121
+0557 C   66                GOTO END                                       GL1121
+0558 C*                                                                   GL1121
+0559 C*  AMEND                                                            GL1121
+0560 C*  DELETE                                                           GL1121
+0561 C*  ENQUIRE                                                          GL1121
+0562 C                     EXSR SUBSF                                     GL1121
+0563 C                     SETOF                     88                   GL1121
+0564 C           S         ADD  1         S                               GL1121
+0565 C                     MOVE ' 908'    ERCD,S                          GL1121
+0566 C                     MOVE ERCM,8    ERMSG                           GL1121
+0567 C                     GOTO END                                       GL1121
+0568 C*                                                                   GL1121
+0569 C*  RECORD FOUND - MATURED. ONLY ENQUIRE                             GL1121
+0570 C*  ALLOWED. OTHERWISE OUTPUT SE SCREEN                              GL1121
+0571 C*  WITH A MESSAGE.                                                  GL1121
+0572 C*                                                                   GL1121
+0573 C           RFMA      TAG                             ** RFMA TAG    GL1121
+0574 C*                                                                   GL1121
+0575 C                     EXSR SUBSE                                     GL1121
+0576 C                     SETOF                     88                   GL1121
+0577 C           S         ADD  1         S                               GL1121
+0578 C*  INSERT                                                           GL1121
+0579 C   66                MOVE ' 904'    ERCD,S                          GL1121
+0580 C   66                MOVE ERCM,4    ERMSG                           GL1121
+0581 C*                                                                   GL1121
+0582 C*  AMEND                                                            GL1121
+0583 C   67                MOVE ' 909'    ERCD,S                          GL1121
+0584 C   67                MOVE ERCM,9    ERMSG                           GL1121
+0585 C*                                                                   GL1121
+0586 C*  DELETE                                                           GL1121
+0587 C   68                MOVE ' 911'    ERCD,S                          GL1121
+0588 C   68                MOVE ERCM,11   ERMSG                           GL1121
+0589 C*                                                                   GL1121
+0590 C*  ENQUIRE                                                          GL1121
+0591 C   69                MOVE ' 913'    ERCD,S                          GL1121
+0592 C   69                MOVE ERCM,13   ERMSG                           GL1121
+0593 C*                                                                   GL1121
+0594 C                     GOTO END                                       GL1121
+0595 C*                                                                   GL1121
+0596 C*  RECORD FOUND - DELETED TODAY                                     GL1121
+0597 C*                                                                   GL1121
+0598 C           RFDT      TAG                             ** RFDT TAG    GL1121
+0599 C*                                                                   GL1121
+0600 C*                                                                   GL1121
+0601 C*  FOR INSERT OVER DELETED RECORD ALLOWED,                          GL1121
+0602 C*  OUTPUT INSERT SCREEN                                             GL1121
+0603 C*                                                                   GL1121
+0604 C   66 65             EXSR SUBSI                                     GL1121
+0605 C   66 65             SETOF                     88                   GL1121
+0606 C   66 65   S         ADD  1         S                               GL1121
+0607 C   66 65             MOVE ' 905'    ERCD,S                          GL1121
+0608 C   66 65             MOVE ERCM,5    ERMSG                           GL1121
+0609 C   66 65             GOTO END                                       GL1121
+0610 C*                                                                   GL1121
+0611 C*  FOR OTHER CONDITIONS, OUTPUT SE SCREEN WITH MESSAGE              GL1121
+0612 C*                                                                   GL1121
+0613 C                     EXSR SUBSE                                     GL1121
+0614 C                     SETOF                     88                   GL1121
+0615 C           S         ADD  1         S                               GL1121
+0616 C*                                                                   GL1121
+0617 C*  INSERT OVER DELETED RECORD NOT ALLOWED                           GL1121
+0618 C*                                                                   GL1121
+0619 C   66N65             MOVE ' 906'    ERCD,S                          GL1121
+0620 C   66N65             MOVE ERCM,6    ERMSG                           GL1121
+0621 C*                                                                   GL1121
+0622 C*  AMEND                                                            GL1121
+0623 C   67                MOVE ' 910'    ERCD,S                          GL1121
+0624 C   67                MOVE ERCM,10   ERMSG                           GL1121
+0625 C*                                                                   GL1121
+0626 C*  DELETE                                                           GL1121
+0627 C   68                MOVE ' 912'    ERCD,S                          GL1121
+0628 C   68                MOVE ERCM,12   ERMSG                           GL1121
+0629 C*                                                                   GL1121
+0630 C*  ENQUIRE                                                          GL1121
+0631 C   69                MOVE ' 914'    ERCD,S                          GL1121
+0632 C   69                MOVE ERCM,14   ERMSG                           GL1121
+0633 C*                                                                   GL1121
+0634 C                     GOTO END                                       GL1121
+0635 C*                                                                   GL1121
+0636 C*  RECORD FOUND - DELETED PREVIOUSLY                                GL1121
+0637 C*                                                                   GL1121
+0638 C           RFDP      TAG                             ** RFDP TAG    GL1121
+0639 C*                                                                   GL1121
+0640 C*  INSERT ALLOWED, OTHERWISE OUTPUT                                 GL1121
+0641 C*  INITIAL SCREEN WITH MESSAGE - NOT ON FILE                        GL1121
+0642 C*                                                                   GL1121
+0643 C*  INSERT                                                           GL1121
+0644 C   66                EXSR SUBSI                                     GL1121
+0645 C   66                GOTO END                                       GL1121
+0646 C*  AMEND                                                            GL1121
+0647 C*  DELETE                                                           GL1121
+0648 C*  ENQUIRE                                                          GL1121
+0649 C   69 58             EXSR SUBSE                      * USEFUL DATA  GL1121
+0650 C  N69                                                               GL1121
+0651 CORN58                EXSR SUBSF                                     GL1121
+0652 C                     SETOF                     88                   GL1121
+0653 C           S         ADD  1         S                               GL1121
+0654 C                     MOVE ' 908'    ERCD,S                          GL1121
+0655 C                     MOVE ERCM,8    ERMSG                           GL1121
+0656 C                     GOTO END                                       GL1121
+0657 C*                                                                   GL1121
+0658 C*  RECORD FOUND - LIVE                                              GL1121
+0659 C*                                                                   GL1121
+0660 C           RFLV      TAG                             ** RFLV TAG    GL1121
+0661 C*                                                                   GL1121
+0662 C*  INSERT                                                           GL1121
+0663 C   66                EXSR SUBSE                                     GL1121
+0664 C   66                SETOF                     88                   GL1121
+0665 C   66      S         ADD  1         S                               GL1121
+0666 C   66                MOVE ' 907'    ERCD,S                          GL1121
+0667 C   66                MOVE ERCM,7    ERMSG                           GL1121
+0668 C   66                GOTO END                                       GL1121
+0669 C*                                                                   GL1121
+0670 C*  AMEND                                                            GL1121
+0671 C*  DELETE                                                           GL1121
+0672 C*  ENQUIRE                                                          GL1121
+0673 C   67                EXSR SUBSA                                     GL1121
+0674 C   68                EXSR SUBSD                                     GL1121
+0675 C   69                EXSR SUBSE                                     GL1121
+0676 C                     GOTO END                                       GL1121
+0677 C*                                                                   GL1121
+0678 C*  RECORD FOUND - BACKED OUT                                        GL1121
+0679 C*                                                                   GL1121
+0680 C           RFBO      TAG                             ** RFBO TAG    GL1121
+0681 C*                                                                   GL1121
+0682 C*  INSERT IS ALLOWED                                                GL1121
+0683 C   66                EXSR SUBSI                                     GL1121
+0684 C   66                GOTO END                                       GL1121
+0685 C*                                                                   GL1121
+0686 C*  OTHER ACTION CODES ARE INVALID -                                 GL1121
+0687 C*  OUTPUT MESSAGE - NOT ON FILE                                     GL1121
+0688 C*  AMEND                                                            GL1121
+0689 C*  DELETE                                                           GL1121
+0690 C*  ENQUIRE                                                          GL1121
+0691 C   69 58             EXSR SUBSE                      * USEFUL DATA  GL1121
+0692 C  N69                                                               GL1121
+0693 CORN58                EXSR SUBSF                                     GL1121
+0694 C                     SETOF                     88                   GL1121
+0695 C           S         ADD  1         S                               GL1121
+0696 C                     MOVE ' 908'    ERCD,S                          GL1121
+0697 C                     MOVE ERCM,8    ERMSG                           GL1121
+0698 C*                                                                   GL1121
+0699 C           END       TAG                             ** END TAG     GL1121
+0700 C*                                                                   GL1121
+0701 C*  SETOF OUTPUT INDS IF DATABASE ERROR                              GL1121
+0702 C*                                                                   GL1121
+0703 C   U7                SETOF                     818283               GL1121
+0704 C   U7                SETOF                     8485                 GL1121
+     C**
+     C**  BLANK OUT REF FIELD IF F12
+     C   KL                MOVE *BLANKS   SREFN
+     C   KL                MOVE *BLANKS   SACTN
+0705 C*                                                                   GL1121
+     C*  SETUP FIELDS FOR WSTRN
+     C*
+     C   83
+     COR 84                DO
+     C                     MOVE *BLANKS   WST200
+     C                     MOVE *BLANKS   WST400
+     C                     MOVE *BLANKS   WST600
+     C                     MOVE *BLANKS   WST800
+     C                     MOVE *BLANKS   WST860
+     C*********************MOVE OLD128    WST128                          CGL003
+     C**********           MOVE OLD134    WST134                                       CGL003 CGL029
+     C**********           MOVE OLD154    WST154                                       CGL029 CGL064
+     C                     MOVE OLD160    WST160                                              CGL064
+     C                     END
+     C*
+     C*   SET UP SCREEN FIELDS FOR OUTPUT
+     C*
+     C*
+     C*
+0706 C                     TIME           MTIME   60                      GL1121
+     C*
+     C*
+     C                     OUT  LDA
+     C                     OUT  WSTRN
+     C*
+0707 C*                                                                   GL1121
+0708 C********************************************************************GL1121
+0709 C**                                                                  GL1121
+0710 C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT                        GL1121
+0711 C**                                                                  GL1121
+0712 C           SUBSF     BEGSR                           ***  SUBSF  ***GL1121
+0713 C                     SETON                     81                   GL1121
+0714 C                     MOVE '1  '     LPROC                           GL1121
+0715 C                     MOVE 'SF'      SID                             GL1121
+0716 C                     ENDSR                                          GL1121
+0717 C********************************************************************GL1121
+0718 C**                                                                  GL1121
+0719 C**   SUBR. - TO SET UP INSERT SCREEN OUTPUT                         GL1121
+0720 C**                                                                  GL1121
+0721 C           SUBSI     BEGSR                           ***  SUBSI  ***GL1121
+0722 C                     SETON                     82LR                 GL1121
+0723 C                     MOVE '2  '     LPROC                           GL1121
+0724 C                     MOVE 'SI'      SID                             GL1121
+0725 C                     ENDSR                                          GL1121
+0726 C********************************************************************GL1121
+0727 C**                                                                  GL1121
+0728 C**   SUBR. - TO SET UP AMEND SCREEN OUTPUT                          GL1121
+0729 C**                                                                  GL1121
+0730 C           SUBSA     BEGSR                           ***  SUBSA  ***GL1121
+0731 C                     SETON                     83LR                 GL1121
+0732 C                     MOVE '3  '     LPROC                           GL1121
+0733 C                     MOVE 'SA'      SID                             GL1121
+0734 C                     EXSR FORMT                                     GL1121
+0736 C*                                                                   GL1121
+0737 C*  PROTECT NARRATIVE FIELDS IF SSF IS ON                            GL1121
+0738 C*                                                                   GL1121
+0739 C   79                SETON                     13                   GL1121
+0740 C*                                                                   GL1121
+     C/COPY WNCPYSRC,GLH00541
+     C/COPY OFCPYSRCZ,CGL141_012                                                              CGL141
+0741 C                     ENDSR                                          GL1121
+0742 C********************************************************************GL1121
+0743 C**                                                                  GL1121
+0744 C**   SUBR. - TO SET UP DELETE SCREEN OUTPUT                         GL1121
+0745 C**                                                                  GL1121
+0746 C           SUBSD     BEGSR                           ***  SUBSD  ***GL1121
+0747 C                     SETON                     84LR                 GL1121
+0748 C                     MOVE '4  '     LPROC                           GL1121
+0749 C                     MOVE 'SD'      SID                             GL1121
+     C                     MOVE *ZEROS    SASOC                                            AR851552A
+     C                     MOVE MASOC     SASOC                                            AR851552A
+0750 C                     EXSR FORMT                                     GL1121
+0752 C                     ENDSR                                          GL1121
+0753 C********************************************************************GL1121
+0754 C**                                                                  GL1121
+0755 C**   SUBR. - TO SET UP ENQUIRY SCREEN OUTPUT                        GL1121
+0756 C**                                                                  GL1121
+0757 C           SUBSE     BEGSR                           ***  SUBSE  ***GL1121
+0758 C                     SETON                     85                   GL1121
+0759 C                     MOVE '1  '     LPROC                           GL1121
+0760 C                     MOVE 'SE'      SID                             GL1121
+      *                                                                           CGL064
+     C                     MOVE '1'       *IN44            Protect mode           CGL064
+      *                                                                           CGL064
+     C           *IN60     IFEQ '1'                                               CGL064
+     C                     MOVE *BLANKS   SASOC                                   CGL064
+     C                     ELSE                                                   CGL064
+     C                     MOVE *ZEROS    SASOC                                   CGL064
+     C                     MOVE MASOC     SASOC                                   CGL064
+     C                     ENDIF                                                  CGL064
+      *                                                                           CGL064
+0761 C                     EXSR FORMT                                     GL1121
+0762 C*                                                                   GL1121
+0763 C*  CHECK FOR USEFUL DATA TO BE DISPLAYED.                           GL1121
+0764 C*                                                                   GL1121
+0765 C*  IF SO, ALSO DISPLAY CHANGE DETAILS.                              GL1121
+0766 C   58                SETOF                     8687                 GL1121
+     C/COPY WNCPYSRC,GL1121C004
+     C/COPY OFCPYSRCZ,CGL141_013                                                              CGL141
+0767 C*                                                                   GL1121
+0768 C                     ENDSR                                          GL1121
+0769 C********************************************************************GL1121
+0770 C**                                                                  GL1121
+0771 C**   SUBR. - TO CHAIN TO MASTER FILE                                GL1121
+0772 C**                                                                  GL1121
+0773 C           MASTCH    BEGSR                           *** MASTCH  ***GL1121
+0774 C                     MOVE 'A'       SREFT                           GL1121
+0775 C                     SETOF                     717374               GL1121
+0776 C                     SETOF                     75                   GL1121
+0777 C***********          MOVELDSMKEY    LKEY                            S01194
+0777 C                     MOVELDSMKEY    DBKEY                           S01194
+0778 C           DSMKEY    CHAINAMACC                75                   GL1121
+0779 C                     ENDSR                                          GL1121
+0780 C********************************************************************GL1121
+0781 C**                                                                  GL1121
+0782 C**   SUBR. - TO VALIDATE THE INITIAL SCREEN KEY FIELDS              GL1121
+0783 C**                                                                  GL1121
+0784 C           VALKEY    BEGSR                           *** VALKEY  ***GL1121
+0785 C*                                                                   GL1121
+0786 C*                                                                   GL1121
+0787 C*  VALIDATE REFERENCE NUMBER - MUST BE 1 TO 999998                  GL1121
+0788 C                     MOVELSREFN     NFLD7   70                      GL1121
+0789 C                     MOVELNFLD7     ALFD6   6                       GL1121
+0790 C*                                                                   GL1121
+0791 C           SREFN     COMP ALFD6                0202                 GL1121
+0792 C  N02      SREFN     COMP '000000'                 02               GL1121
+0793 C  N02      SREFN     COMP '999999'                 02               GL1121
+0794 C*                                                                   GL1121
+0795 C   02      S         ADD  1         S                               GL1121
+0796 C   02                MOVE ' 001'    ERCD,S                          GL1121
+0797 C*                                                                   GL1121
+0798 C                     ENDSR                                          GL1121
+0799 C********************************************************************GL1121
+0800 C**                                                                  GL1121
+0801 C**   SUBR. - TO FORMAT MASTER FILE RECORD DATA FOR SCREEN OUTPUT    GL1121
+0802 C**                                                                  GL1121
+0803 C           FORMT     BEGSR                           ***  FORMT  ***GL1121
+0804 C*                                                                   GL1121
+0805 C*  GET CURRENCY RECORD FOR DECIMAL PLACES                           GL1121
+0806 C*                                                                   GL1121
+0807 C***********          MOVE BLK200    TABKEY                          S01194
+0808 C***********          MOVE '20'      TAB2                            S01194
+0809 C***********          MOVE '1'       TAB1                            S01194
+0810 C***********          MOVE MCCY      TAB3A                           S01194
+0811 C***********          EXSR TABCHN                                    S01194
+0812 C***11******          GOTO FORMT1                                    S01194
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*DBERR ' @RTCD   7                       S01194
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM MCCY      @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+0813 C*                                                                   GL1121
+0814 C*  DATABASE ERROR IF CURRENCY NOT FOUND                             GL1121
+0815 C*                                                                   GL1121
+     C           @RTCD     IFNE *BLANKS                                   S01194
+0816 C***********          SETON                     U7LR                 S01117
+     C***********          MOVE 'TABLE'   LFILE                           S01194
+0818 C***********          MOVE BLK200    LKEY                            S01194
+0819 C***********          MOVELTABKEY    LKEY                            S01194
+0820 C***********          MOVE '01'      LDBNO            ** DB ERROR 01 S01194
+0816 C                     SETON                     U7U8LR               S01117
+     C                     MOVE 'SDCURRPD'DBFILE                          S01194
+0818 C                     MOVE BLK200    DBKEY                           S01194
+     C                     MOVELMCCY      DBKEY                           S01194
+     C                     MOVE @OPTN     DBOPTN  7                       S01194
+0820 C                     MOVE '01'      DBASE            ** DB ERROR 01 S01194
+     C                     EXSR *PSSR                                     S01194
+0821 C***********          GOTO FORMTE                                    S01194
+     C                     ELSE                                           S01194
+0822 C*                                                                   GL1121
+0823 C***********FORMT1    TAG                             ** FORMT1 TAG  S01194
+0824 C*                                                                   GL1121
+0825 C*  FORMAT REFERENCE AMOUNT                                          GL1121
+0826 C*                                                                   GL1121
+0827 C*                                                                   GL1121
+0828 C                     MOVE MAMNT     ZFIELD                          GL1121
+0829 C***********13        SUB  CDP       ZADIG                           S01194
+0830 C***********          Z-ADDCDP       ZADEC                           S01194
+0829 C           13        SUB  A6NBDP    ZADIG                           S01194
+0830 C                     Z-ADDA6NBDP    ZADEC                           S01194
+0831 C                     EXSR ZEDIT                                     GL1121
+0832 C                     MOVE ZFIELD    WAMNT  14                       GL1121
+0833 C*                                                                   GL1121
+0834 C*                                                                   GL1121
+0835 C*    CALCULATE AND FORMAT POSTED AMOUNT AND REMAINDER               GL1121
+0836 C*                                                                   GL1121
+0837 C           MAMNT     SUB  MAMPD     MAREM  130                      GL1121
+0838 C*                                                                   GL1121
+0839 C                     MOVE MAMPD     ZFIELD                          GL1121
+0840 C***********13        SUB  CDP       ZADIG                           S01194
+0841 C***********          Z-ADDCDP       ZADEC                           S01194
+0840 C           13        SUB  A6NBDP    ZADIG                           S01194
+0841 C                     Z-ADDA6NBDP    ZADEC                           S01194
+0842 C                     EXSR ZEDIT                                     GL1121
+0843 C                     MOVE ZFIELD    WAMPD  14                       GL1121
+0844 C*                                                                   GL1121
+0845 C                     MOVE MAREM     ZFIELD                          GL1121
+0846 C***********13        SUB  CDP       ZADIG                           S01194
+0847 C***********          Z-ADDCDP       ZADEC                           S01194
+0846 C           13        SUB  A6NBDP    ZADIG                           S01194
+0847 C                     Z-ADDA6NBDP    ZADEC                           S01194
+0848 C                     EXSR ZEDIT                                     GL1121
+0849 C                     MOVE ZFIELD    WAREM  14                       GL1121
+0850 C*                                                                   GL1121
+0851 C*  FORMAT DATES                                                     GL1121
+0852 C*                                                                   GL1121
+0853 C                     Z-ADDMSDAT     ZDAYNO                          GL1121
+0854 C                     EXSR ZDATE2                                    GL1121
+0855 C                     MOVE ZDATE     WSDAT   6                       GL1121
+0856 C                     Z-ADDMMDAT     ZDAYNO                          GL1121
+0857 C                     EXSR ZDATE2                                    GL1121
+0858 C                     MOVE ZDATE     WMDAT   6                       GL1121
+     C* Is Accrual Frequency on?                                          CGL003
+     C           CGL003    IFEQ 'Y'                                       CGL003
+     C           MAPDA     ANDNE*ZERO                                     CGL003
+     C                     Z-ADDMAPDA     ZDAYNO                          CGL003
+     C                     EXSR ZDATE2                                    CGL003
+     C                     MOVE ZDATE     WAPDA   6                       CGL003
+     C                     ENDIF                                          CGL003
+0859 C*                                                                   GL1121
+     C                     END                                            S01194
+0860 C           FORMTE    ENDSR                           ** FORMTE TAG  GL1121
+0874 C********************************************************************GL1121
+0875 C***********                                                         S01194
+0876 C*****SUBR.*-*TO*CHAIN TO TABLE FILE                                 S01194
+0877 C***********                                                         S01194
+0878 C***********TABCHN    BEGSR                           ***  TABCHN ***S01194
+0879 C***********                                                         S01194
+0880 C***********          SETOF                     101199               S01194
+0881 C***********                                                         S01194
+0882 C***********TABKEY    CHAINTABLE                99                   S01194
+0883 C***********                                                         S01194
+0884 C***********          ENDSR                                          S01194
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+0976 C********************************************************************GL1122
+     C*                                                                   S01117
+     C*   PRUSED --- SUBROUTINE TO FOR PROFIT CENTRE PROCESSING           S01117
+     C*                                                                   S01117
+     C*   CALLED FROM : 1ST CYCLE                                         S01117
+     C*                                                                   S01117
+     C*   CALLS : NOTHING                                                 S01117
+0976 C********************************************************************S01117
+     C*                                                                   S01117
+     C           PRUSED    BEGSR                           **** PRUSED    S01117
+     C*                                                                   S01117
+     C**********           CALL 'AOGELRR0'                                S01117              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01194              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01117
+0316 C                     SETON                     U7U8LR               S01117
+     C                     MOVEL'GL1121  'DBPGM                           S01117
+     C                     MOVEL'SDGELRPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBOPTN  7        ***************S01117
+     C                     MOVEL@OPTN     DBKEY            * DB ERROR 2  *S01117
+     C                     Z-ADD2         DBASE            ***************S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE                                           S01117
+0972 C*  CHECK IF 'PROFIT CENTRE USED' IN ICD IS OFF AND SETON 50        *S01117
+     C           BKPRCU    IFEQ 'Y'                                       S01117
+     C                     SETON                     50                   S01117
+     C                     END                                            S01117
+0972 C*  CHECK IF 'PROFIT CENTRE AMEND' IN ICD IS OFF AND SETON 51       *S01117
+     C           BKPRCA    IFEQ 'Y'                                       S01117
+     C                     SETON                     51                   S01117
+     C                     END                                            S01117
+0972 C*  CHECK IF 'PROFIT CENTRE DEFAULT' IN ICD IS OFF AND SETON 53     *S01117
+     C           BKPCDU    IFEQ 'Y'                                       S01117
+     C                     SETON                     53                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C* MBACTN --- SUBROUTINE TO CHECK IF THE USER HAS ANY AUTHORISATION  S01117
+     C*            TO THIS ACTION CODE WHEN MULTIBRANCHING INDICATOR IS   S01117
+     C*            ON                                                     S01117
+     C*                                                                   S01117
+     C* CALLED FROM: MAIN PROGRAM                                         S01117
+     C*                                                                   S01117
+     C* CALLS: SPF PROGRAM - ZVACTBU                                      S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           MBACTN    BEGSR                                          S01117
+     C*                                                                   S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM W@ACTN    @ACTN   1                       S01117
+     C                     PARM W@BRCA    @BRCA   3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C*                                                                   S01117
+     C                     MOVE @ERR      W@ERR   10                      S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C* SGACTN --- SUBROUTINE TO CHECK IF THE USER HAS ANY AUTHORISATION  S01117
+     C*            TO THIS ACTION CODE WHEN MULTIBRANCHING INDICATOR IS   S01117
+     C*            OFF                                                    S01117
+     C*                                                                   S01117
+     C* CALLED FROM: MAIN PROGRAM                                         S01117
+     C*                                                                   S01117
+     C* CALLS: SPF PROGRAM - ZVACTU                                       S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           SGACTN    BEGSR                                          S01117
+     C*                                                                   S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM W@ACTN    @ACTN   1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C*                                                                   S01117
+     C                     MOVE @ERR      W@ERR   10                      S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C* SPFERR --- SUBROUTINE TO OUTPUT THE CORRESPONDING ERROR CODE WHEN S01117
+     C*            THERE IS THE ERROR CODE RETURNED BY THE SPF PROGRAM IS S01117
+     C*            NOT EQUAL TO 0                                         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER CALLING A SPF PROGRAM AND THE ERROR RETURN     S01117
+     C*                 CODE <> 0                                         S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C* ERROR CODES SUMMARY:                                              S01117
+     C*  '921' - ACTION CODES NOT AUTHORISED FOR THIS USER/MENU ITEM -    S01117
+     C*          HIGHLIGHT ACTION CODE (SINGLE BRANCH ONLY)               S01117
+     C*  '922' - USER IS ALLOWED TO NO ACTIONS FOR THIS BRANCH/MENU       S01117
+     C*          ITEM - HIGHLIGHT BRANCH (MULTIBRANCHING ONLY)            S01117
+     C*  '923' - ACTION CODE NOT AUTHORISED FOR THIS USER/BRANCH/MENU     S01117
+     C*          ITEM - HIGHLIGHT BRANCH (MULTIBRANCHING ONLY)            S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           SPFERR    BEGSR                                          S01117
+     C*                                                                   S01117
+     C           S         ADD  1         S                               S01117
+     C           MBIN      IFEQ 'N'                                       S01117
+     C                     Z-ADD921       ECODE                           S01117
+     C                     Z-ADD18        INX                             S01117
+     C                     ELSE                                           S01117
+     C           W@ERR     ADD  921       ECODE   30                      S01117
+     C           W@ERR     ADD  18        INX     20                      S01117
+     C                     END                                            S01117
+     C                     MOVE *BLANKS   ERCD,S                          S01117
+     C                     MOVE ECODE     ERCD,S                          S01117
+     C*                                                                   S01117
+     C* IN ARRAY ERCM, ERROR CODES FOR SPF START FROM ENTRY 18 TO 20      S01117
+     C*                                                                   S01117
+     C                     MOVE ERCM,INX  ERMSG                           S01117
+     C*                                                                   S01117
+     C* REDISPLAY THE INITIAL SCREEN ON ERROR                             S01117
+     C*                                                                   S01117
+     C                     SETOF                     88                   S01117
+     C                     SETON                     89                   S01117
+     C                     EXSR SUBSF                                     S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+0169 C********************************************************************S01194
+     C*                                                                   S01194
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01194
+     C*                                                                   S01194
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01194
+     C*                                                                   S01194
+     C* CALLS: NOTHING                                                    S01194
+     C*                                                                   S01194
+     C********************************************************************S01194
+     C           *PSSR     BEGSR                                          S01194
+     C           @RUN      IFEQ *BLANKS                                   S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C                     ENDSR                                          S01194
+     C**                                                                  S01194
+     C********************************************************************S01194
+     C/EJECT                                                              S01194
+0885 C********************************************************************GL1121
+0886 C**                                                                 *GL1121
+0887 C**  ZEDIT SUBROUTINE TO INSERT A DECIMAL POINT INTO A NUMERIC FIELD*GL1121
+0888 C**  AND TO BLANK OUT LEADING ZEROES.                               *GL1121
+0889 C**      INPUT FIELDS:   ZFIELD 16/                                 *GL1121
+0890 C*                       ZADEC                                      *GL1121
+0891 C*                       ZADIG - NOT ACTUALLY USED                  *GL1121
+0892 C*                                                                  *GL1121
+0893 C*       ARRAYS    ZA1 ,ZA2   BOTH 16 ELEMENTS, EACH ONE BYTE LONG. *GL1121
+0894 C*                                                                  *GL1121
+0895 C*       OUTPUT FIELD   ZFIELD                                      *GL1121
+0896 C*                                                                  *GL1121
+0897 C           ZEDIT     BEGSR                           ***  ZEDIT  ***GL1121
+0898 C**                                                                 *GL1121
+0899 C*       SET UP WORK FIELDS                                         *GL1121
+0900 C**                                                                 *GL1121
+0901 C                     Z-ADDZADIG     ZADIG   20                     *GL1121
+0902 C                     Z-ADDZADEC     ZADEC   10                     *GL1121
+0903 C*                                                                  *GL1121
+0904 C                     MOVEA' '       ZA1                            *GL1121
+0905 C                     MOVEA' '       ZA2                            *GL1121
+0906 C*                                                                  *GL1121
+0907 C                     Z-ADD16        Z1      20                     *GL1121
+0908 C                     Z-ADD16        Z2      20                     *GL1121
+0909 C*                                                                  *GL1121
+0910 C           16        SUB  ZADEC     ZADEC2  20                     *GL1121
+0911 C*                                                                  *GL1121
+0912 C*                                                                  *GL1121
+0913 C                     MOVEAZFIELD    ZA1                            *GL1121
+0914 C*                                                                  *GL1121
+0915 C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES               *GL1121
+0916 C*                                                                  *GL1121
+0917 C           ZADEC     COMP 0                        91              *GL1121
+0918 C   91                GOTO ZT20                                     *GL1121
+0919 C**                                                                 *GL1121
+0920 C           ZT10      TAG                             ** ZT10 TAG ***GL1121
+0921 C**                                                                 *GL1121
+0922 C*                                                                  *GL1121
+0923 C*       SET UP DECIMALS                                            *GL1121
+0924 C*                                                                  *GL1121
+0925 C                     MOVE ZA1,Z1    ZA2,Z2                         *GL1121
+0926 C           Z1        SUB  1         Z1                             *GL1121
+0927 C           Z2        SUB  1         Z2                             *GL1121
+0928 C*                                                                  *GL1121
+0929 C           Z2        COMP 0                        90              *GL1121
+0930 C   90                GOTO ZT30                                     *GL1121
+0931 C*                                                                  *GL1121
+0932 C*       CHECK IF END OF DECIMALS                                   *GL1121
+0933 C**                                                                 *GL1121
+0934 C           Z2        COMP ZADEC2               90                  *GL1121
+0935 C   90                GOTO ZT10                                     *GL1121
+0936 C*                                                                  *GL1121
+0937 C**                                                                 *GL1121
+0938 C*       PUT IN DECIMAL PLACE                                       *GL1121
+0939 C*                                                                  *GL1121
+0940 C                     MOVE '.'       ZA2,Z2                         *GL1121
+0941 C           Z2        SUB  1         Z2                             *GL1121
+0942 C*                                                                  *GL1121
+0943 C           ZT20      TAG                             ** ZT20 TAG ***GL1121
+0944 C*                                                                  *GL1121
+0945 C*       SET UP INTEGERS                                            *GL1121
+0946 C*                                                                  *GL1121
+0947 C                     MOVE ZA1,Z1    ZA2,Z2                         *GL1121
+0948 C           Z1        SUB  1         Z1                             *GL1121
+0949 C           Z2        SUB  1         Z2                             *GL1121
+0950 C**                                                                 *GL1121
+0951 C           Z2        COMP 0                    90                  *GL1121
+0952 C   90                GOTO ZT20                                     *GL1121
+0953 C*                                                                  *GL1121
+0954 C*       PUT IN LEADING BLANKS                                      *GL1121
+0955 C*                                                                  *GL1121
+0956 C           ZT30      TAG                             ** ZT30 TAG ***GL1121
+0957 C**                                                                 *GL1121
+0958 C                     Z-ADD1         Z2                             *GL1121
+0959 C**                                                                 *GL1121
+0960 C           ZT40      TAG                             ** ZT40 TAG ***GL1121
+0961 C*                                                                  *GL1121
+0962 C           ZA2,Z2    COMP '0'                  9090                *GL1121
+0963 C   90      ZA2,Z2    COMP ' '                  9090                *GL1121
+0964 C*                                                                  *GL1121
+0965 C   90                GOTO ZT50                                     *GL1121
+0966 C*                                                                  *GL1121
+0967 C                     MOVE ' '       ZA2,Z2                         *GL1121
+0968 C           Z2        ADD  1         Z2                             *GL1121
+0969 C*                                                                  *GL1121
+0970 C           Z2        COMP 16                     90                *GL1121
+0971 C   90                GOTO ZT40                                     *GL1121
+0972 C*                                                                  *GL1121
+0973 C*       IF NO INTEGERS PUT IN LEADING ZERO                         *GL1121
+0974 C*                                                                  *GL1121
+0975 C           ZT50      TAG                             ** ZT50 TAG ***GL1121
+0976 C*                                                                  *GL1121
+0977 C                     Z-ADDZADEC2    Z2                             *GL1121
+0978 C  N91      Z2        SUB  1         Z2                             *GL1121
+0979 C           ZA2,Z2    COMP ' '                      90              *GL1121
+0980 C   90                MOVE '0'       ZA2,Z2                         *GL1121
+0981 C*                                                                  *GL1121
+0982 C*                                                                  *GL1121
+0983 C*       SET UP OUTPUT FIELD                                        *GL1121
+0984 C*                                                                  *GL1121
+0985 C           ZT60      TAG                             ** ZT60 TAG ***GL1121
+0986 C*                                                                  *GL1121
+0987 C                     MOVEAZA2       ZFIELD 16                      *GL1121
+0988 C**                                                                 *GL1121
+0989 C           ZEND      ENDSR                           ** ZEND **    *GL1121
+0990 C*                                                                  *GL1121
+0991 C********************************************************************GL1121
+0992 C**                                                                  GL1121
+0993 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.            GL1121
+0994 C**                                                                  GL1121
+0995 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.         GL1121
+0996 C**                                                                  GL1121
+0997 C           ZDATE2    BEGSR                           *** ZDATE2 *** GL1121
+0998 C**                                                                  GL1121
+0999 C**   CLEAR DATE FIELDS.                                             GL1121
+1000 C                     Z-ADD0         ZDATE   60                      GL1121
+1001 C                     MOVEL'       ' ZADATE  7                       GL1121
+1002 C**                                                                  GL1121
+1003 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.                        GL1121
+1004 C                     Z-ADDZDAYNO    ZDAYNO  50                      GL1121
+1005 C**                                                                  GL1121
+1006 C**   DETERMINE YEAR NUMBER.                                         GL1121
+1007 C**                                                                  GL1121
+1008 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.                    GL1121
+1009 C           ZDAYNO    SUB  1         ZDAYN1  50   99                 GL1121
+1010 C   99                GOTO ZDEND2                                    GL1121
+1011 C**                                                                  GL1121
+1012 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.             GL1121
+1013 C           ZDAYN1    DIV  1461      ZLYR    20                      GL1121
+1014 C                     MVR            ZDAYN1           SAVE REMAINING GL1121
+1015 C**                                                   DAYS           GL1121
+1016 C**   CALCULATE NUMBER OF REMAINING YEARS.                           GL1121
+1017 C                     Z-ADD1         ZWRK2   20                      GL1121
+1018 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *GL1121
+1019 C           ZDAYN1    COMP ZYDY,ZWRK2             90                 GL1121
+1020 C  N90      ZWRK2     ADD  1         ZWRK2                           GL1121
+1021 C  N90                GOTO ZDTAG1                                    GL1121
+1022 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON GL1121
+1023 C**                                                                  GL1121
+1024 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.                  GL1121
+1025 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          GL1121
+1026 C**                                                                  GL1121
+1027 C**   CALCULATE ACTUAL YEAR NUMBER.                                  GL1121
+1028 C           ZLYR      MULT 4         ZWRK3   30                      GL1121
+1029 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972   GL1121
+1030 C                     Z-ADDZWRK3     ZYEAR   20                      GL1121
+1031 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           GL1121
+1032 C**                                                                  GL1121
+1033 C**   DETERMINE MONTH NUMBER.                                        GL1121
+1034 C**                                                                  GL1121
+1035 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.         GL1121
+1036 C                     SETOF                     9293                 GL1121
+1037 C   91      ZDAYN1    COMP 59                     9293               GL1121
+1038 C   91N92   ZDAYN1    SUB  1         ZDAYN1                          GL1121
+1039 C**                                                                  GL1121
+1040 C**   CALCULATE MONTH NUMBER.                                        GL1121
+1041 C                     Z-ADD2         ZWRK2                           GL1121
+1042 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *GL1121
+1043 C           ZDAYN1    COMP ZMDY,ZWRK2             94                 GL1121
+1044 C  N94      ZWRK2     ADD  1         ZWRK2                           GL1121
+1045 C  N94                GOTO ZDTAG2                                    GL1121
+1046 C           ZWRK2     SUB  1         ZWRK2                           GL1121
+1047 C**                                                                  GL1121
+1048 C                     Z-ADDZWRK2     ZMTH    20       MONTH          GL1121
+1049 C**                                                                  GL1121
+1050 C**   DETERMINE DAY OF MONTH.                                        GL1121
+1051 C**                                                                  GL1121
+1052 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.                          GL1121
+1053 C           ZDAYN1    ADD  1         ZDAYN1                          GL1121
+1054 C**                                                                  GL1121
+1055 C**   CALCULATE DAY OF MONTH.                                        GL1121
+1056 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            GL1121
+1057 C**                                                                  GL1121
+1058 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.       GL1121
+1059 C   93      ZDAY      ADD  1         ZDAY                            GL1121
+1060 C**                                                                  GL1121
+1061 C**   FORMAT DATE, DDMMYY OR MMDDYY.                                 GL1121
+1062 C  N98                MOVELZDAY      ZWRK4   40                      GL1121
+1063 C   98                MOVE ZDAY      ZWRK4                           GL1121
+1064 C  N98                MOVE ZMTH      ZWRK4                           GL1121
+1065 C   98                MOVELZMTH      ZWRK4                           GL1121
+1066 C                     MOVELZWRK4     ZDATE                           GL1121
+1067 C                     MOVE ZYEAR     ZDATE                           GL1121
+1068 C**                                                                  GL1121
+1069 C**   FORMAT ALPHA DATE, DDMMMYY.                                    GL1121
+1070 C           ZDAY      COMP 10                     95                 GL1121
+1071 C                     MOVELZDAY      ZWRK5   5                       GL1121
+1072 C   95                MOVEL' '       ZWRK5                           GL1121
+1073 C                     MOVE ZMNM,ZMTH ZWRK5                           GL1121
+1074 C                     MOVELZWRK5     ZADATE                          GL1121
+1075 C                     MOVE ZYEAR     ZADATE                          GL1121
+1076 C**                                                                  GL1121
+1077 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*GL1121
+1078 C**                                                                  GL1121
+1079 C**                                                                  GL1121
+1080 C********************************************************************GL1121
+1081 O*  WORKSTATION - INITIAL SCREEN OUTPUT                              GL1121
+1082 O*                                                                   GL1121
+1083 OGL1120FMD        81                                                 GL1121
+1084 O                                   K8 'GL1120F1'                    GL1121
+1085 O                         SCNSF     25                               GL1121
+1086 O                         SID        9                               GL1121
+1087 O                         SPID      15                               GL1121
+     O                         SWID      18
+1089 O*  BLANK OUT KEY/ACTION CODE FOR F12 - REMOVED IN STANDARD PRO   G  GL1121
+1090 O                 KL      BLK7      25                               GL1121
+1091 O*  ERROR FIELDS                                                     GL1121
+1092 O                         ERMSG    104                               GL1121
+1093 O                         ERCD     183                               GL1121
+1094 O*                                                                   GL1121
+1095 O*  WORKSTATION - INSERT(82)/AMEND(83) SCREEN OUTPUT                 GL1121
+1096 O*                                                                   GL1121
+1097 O        D        82                                                 GL1121
+1098 O       OR        83                                                 GL1121
+1099 O                                   K8 'GL1120F2'                    GL1121
+1100 O                         SCNSF     25                               GL1121
+1101 O                         SID        9                               GL1121
+1102 O                         SPID      15                               GL1121
+     O                         WFDAY     64                               CGL003
+     O                         SASOC    170                                       CGL064
+1104 O*  ERROR FIELDS AND CHANGE DETAILS                                  GL1121
+1105 O*************************ERMSG    215                         GL1121CGL003
+1106 O*************************ERCD     294                         GL1121CGL003
+1107 O*************************DSCHDT   311                         GL1121CGL003
+1105 O**********               ERMSG    231                               CGL003  CGL064
+1106 O**********               ERCD     310                               CGL003  CGL064
+1107 O**********               DSCHDT   327                               CGL003  CGL064
+1105 O                         ERMSG    237                                       CGL064
+1106 O                         ERCD     316                                       CGL064
+1107 O                         DSCHDT   333                                       CGL064
+1108 O*                                                                   GL1121
+1109 O*  WORKSTATION - DELETE(84)/ENQUIRY(85) SCREEN OUTPUT               GL1121
+1110 O*                                                                   GL1121
+1111 O        D        84                                                 GL1121
+1112 O       OR        85                                                 GL1121
+1098 O       OR        83                                                 GL1121              197200
+1113 O                                   K8 'GL1120F3'                    GL1121
+1114 O                         SCNSF     25                               GL1121
+1115 O                         SID        9                               GL1121
+1116 O                         SPID      15                               GL1121
+1118 O*  OUTPUT DETAIL FIELDS                                             GL1121
+1119 O***********              MCCY      28                               S01117
+1120 O***********              WAMNT     42                               S01117
+1121 O***********              WSDAT     48                               S01117
+1122 O***********              WMDAT     54                               S01117
+1123 O***********              MDRAC     58                               S01117
+1124 O***********              MDRSQ     60                               S01117
+1125 O***********              MDRCN     66                               S01117
+1126 O***********              MCRAC     70                               S01117
+1127 O***********              MCRSQ     72                               S01117
+1128 O***********              MCRCN     78                               S01117
+1129 O***********              MNARR    108                               S01117
+1130 O***********              WAMPD    122                               S01117
+1131 O***********              WAREM    136                               S01117
+     O                         MBRCA     28                               S01117
+1119 O                         MCCY      31                               S01117
+1120 O                         WAMNT     45                               S01117
+     O                         MPRFC     49                               S01117
+1121 O                         WSDAT     55                               S01117
+1122 O                         WMDAT     61                               S01117
+     O                         MAPFQ     62                               CGL003
+     O                         MFDAY     64                               CGL003
+     O                         WAPDA     70                               CGL003
+1123 O*************************MDRAC     65                         S01117CGL003
+1124 O*************************MDRSQ     67                         S01117CGL003
+1125 O*************************MDRCN     73                         S01117CGL003
+1126 O*************************MCRAC     77                         S01117CGL003
+1127 O*************************MCRSQ     79                         S01117CGL003
+1128 O*************************MCRCN     85                         S01117CGL003
+1129 O*************************MNARR    115                         S01117CGL003
+1130 O*************************WAMPD    129                         S01117CGL003
+1131 O*************************WAREM    143                         S01117CGL003
+1123 O**********               MDRAC     74                                            CGL003 CGL029
+1124 O**********               MDRSQ     76                                            CGL003 CGL029
+1125 O**********               MDRCN     82                                            CGL003 CGL029
+1126 O**********               MCRAC     86                                            CGL003 CGL029
+1127 O**********               MCRSQ     88                                            CGL003 CGL029
+1128 O**********               MCRCN     94                                            CGL003 CGL029
+1129 O**********               MNARR    124                                            CGL003 CGL029
+1130 O**********               WAMPD    138                                            CGL003 CGL029
+1131 O**********               WAREM    152                                            CGL003 CGL029
+1132 O*  ERROR FIELDS AND CHANGE DETAILS
+1133 O***********              ERMSG    215                               S01117
+1134 O***********              ERCD     294                               S01117
+1135 O***********              DSCHDT   311                               S01117
+1133 O*************************ERMSG    222                         S01117CGL003
+1134 O*************************ERCD     301                         S01117CGL003
+1135 O*************************DSCHDT   318                         S01117CGL003
+     O**********               ERMSG    231                                            CGL003 CGL029
+     O**********               ERCD     310                                            CGL003 CGL029
+     O**********               DSCHDT   327                                            CGL003 CGL029
+     O                         MDRAC     80                                                   CGL029
+     O                         MDRSQ     82                                                   CGL029
+     O                         MDRCN     88                                                   CGL029
+     O                         MCRAC     98                                                   CGL029
+     O                         MCRSQ    100                                                   CGL029
+     O                         MCRCN    106                                                   CGL029
+     O                         MNARR    136                                                   CGL029
+     O                         WAMPD    150                                                   CGL029
+     O                         WAREM    164                                                   CGL029
+     O                         SASOC    170                                                   CGL064
+     O**********               ERMSG    243                                            CGL029 CGL064
+     O**********               ERCD     322                                            CGL029 CGL064
+     O**********               DSCHDT   339                                            CGL029 CGL064
+     O                         ERMSG    249                                                   CGL064
+     O                         ERCD     328                                                   CGL064
+     O                         DSCHDT   345                                                   CGL064
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ERROR MESSAGES
+ACTION CODE INVALID
+ACTION CODE ENTERED IS NOT ALLOWED
+THIS RECORD IS POSSIBLY IN ERROR - PLEASE TAKE A SCREEN PRINT AND INFORM OFFICE
+THIS IS A MATURED RECORD - INSERTION NOT ALLOWED
+THIS IS A RECORD DELETED TODAY - INSERTION IS ALLOWED
+THIS IS A RECORD DELETED TODAY - INSERTION IS NOT ALLOWED
+THIS IS A LIVE RECORD ALREADY ON FILE - INSERTION NOT ALLOWED
+RECORD NOT ON FILE
+THIS IS A MATURED RECORD - AMENDMENT NOT ALLOWED
+THIS IS A RECORD DELETED TODAY - AMENDMENT NOT ALLOWED
+THIS IS A MATURED RECORD - DELETION NOT ALLOWED
+THIS RECORD HAS ALREADY BEEN DELETED TODAY
+THIS IS A MATURED RECORD
+THIS IS A RECORD DELETED TODAY
+F10 KEY NOT ALLOWED NOW
+INVALID KEY FIELDS ENTERED
+MANDATORY KEY FIELD/S NOT ENTERED
+ACTION CODE NOT AUTHORISED FOR THIS USER/MENU ITEM
+USER IS AUTHORISED TO NO ACTIONS FOR THIS BRANCH/MENU ITEM
+ACTION CODE NOT AUTHORISED FOR THIS USER/BRANCH/MENU ITEM

@@ -1,0 +1,357 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Check spot trade entries completeness')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL2827 - Midas GL Check Spot Trade Entries Completeness      *
+      *                                                               *
+      *  Function:  This program will be called from GL0101R and      *
+      *             GL0102R to test for completeness of Fontis IAT    *
+      *             spot trade account entries                        *
+      *                                                               *
+      *                                                               *
+      *  Called By: GL0101R - Midas GL Edit Journal Header            *
+      *             GL0102R - Midas GL Edit Journal Header Abbreviated*
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *  Last Amend No. CGL009  *Create    Date 18May99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL009 - Midas-Fontis Inter-Account Transfers (IAT) and      *
+      *           Third Party Payments (TPP) Interface                *
+      *                                                               *
+      *****************************************************************
+     FGLJENPL5IF  E           K        DISK
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    60           Read Indicator for GLJENPL5                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /EJECT
+      *
+     IMULT        DS                        200
+      **  Multiple occurrence data structure for totals
+      *
+     I                                        1   3 PDCCY
+     I                                        4  160PDAMT
+     I                                       17  19 PCCCY
+     I                                       20  320PCAMT
+     I                                       33  35 SDCCY
+     I                                       36  480SDAMT
+     I                                       49  51 SCCCY
+     I                                       52  640SCAMT
+      /SPACE 3
+     ISDTRAD    E DSSDTRADPD
+      ** External DS for Trading Details
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     ILDA         DS                            256
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                      184 256 DBTXT
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                   Index to subroutines                        *
+      *  Main routine                                                 *
+      *  SRINIT  -  Initial processing                                *
+      *  SRDETL  -  Detail processing                                 *
+      *  SREND   -  End program                                       *
+      *  *PSSR   -  Error handling subroutine                         *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Main Program
+      *
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform different detailed processing
+      *
+     C                     EXSR SRDETL
+      *
+      ** Terminate program
+      *
+     C                     EXSR SREND
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT  -  Initial Processing                                *
+      *  Called by: Main routine                                      *
+      *  Calls    : AOTRADR0 - Access Trading Details                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PCODE   1
+     C                     PARM           PBTCH   3
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL2827'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBTXT
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** Retrieve Trading Details
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDTRADPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Clear Multiple occurrence data structure MULT
+      *
+     C                     Z-ADD1         X       30
+      *
+     C           X         DOWLE200
+     C           X         OCUR MULT
+     C                     MOVE *BLANKS   PDCCY
+     C                     Z-ADD0         PDAMT
+     C                     MOVE *BLANKS   PCCCY
+     C                     Z-ADD0         PCAMT
+     C                     MOVE *BLANKS   SDCCY
+     C                     Z-ADD0         SDAMT
+     C                     MOVE *BLANKS   SCCCY
+     C                     Z-ADD0         SCAMT
+     C                     ADD  1         X
+     C                     ENDDO
+      *
+      ** Access first occurrence of multi data structure
+      *
+     C                     Z-ADD1         X
+     C           X         OCUR MULT
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL  -  Detail Processing                                 *
+      *  Called by: Main routine                                      *
+      *  Calls    : SREND                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+     C                     MOVE *BLANKS   W#NARR 30
+     C                     Z-ADD0         W#SPOT  30
+     C                     Z-ADD0         W#POST  30
+      *
+      ** Read every record on GLJENPL5 with the same batch number as
+      ** entry-parm-batch number PBTCH
+      *
+     C           PBTCH     SETLLGLJENPL5
+     C           PBTCH     READEGLJENPL5                 60
+      *
+     C                     MOVE BTNRDC    W#NARR
+      *
+     C           *IN60     DOWEQ'0'
+      *
+     C                     ADD  1         W#POST
+      *
+      ** Test if record is spot trade
+      *
+     C                     SELEC
+     C           BTACCD    WHEQ BLSPTA
+      *
+     C           BTDCIN    IFEQ 'D'
+     C           SDCCY     IFEQ *BLANKS
+     C                     MOVE BTCYCD    SDCCY
+     C                     Z-ADDBTPTAM    SDAMT
+     C                     ELSE
+     C                     MOVE 'F'       PCODE
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           SCCCY     IFEQ *BLANKS
+     C                     MOVE BTCYCD    SCCCY
+     C                     Z-ADDBTPTAM    SCAMT
+     C                     ELSE
+     C                     MOVE 'F'       PCODE
+     C                     EXSR SREND
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Accumulate spot trade posting counter
+     C                     ADD  1         W#SPOT
+      *
+      ** Test if record is not spot trade
+      *
+     C           BTACCD    WHNE BLSPTA
+     C           BTDCIN    IFEQ 'D'
+     C           PDCCY     IFEQ *BLANKS
+     C                     MOVE BTCYCD    PDCCY
+     C                     Z-ADDBTPTAM    PDAMT
+     C                     ELSE
+     C                     MOVE 'F'       PCODE
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           PCCCY     IFEQ *BLANKS
+     C                     MOVE BTCYCD    PCCCY
+     C                     Z-ADDBTPTAM    PCAMT
+     C                     ELSE
+     C                     MOVE 'F'       PCODE
+     C                     EXSR SREND
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C           PBTCH     READEGLJENPL5                 60
+      *
+      ** Compare if record read belongs to same transaction
+      *
+     C           BTNRDC    IFNE W#NARR
+     C                     MOVE BTNRDC    W#NARR
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Check if transaction is complete and balanced
+      *
+     C                     Z-ADD1         X
+     C           X         DOWLE200
+     C           X         OCUR MULT
+      *
+     C           SDCCY     IFEQ *BLANKS
+     C           SDAMT     ANDEQ0
+     C           SCCCY     ANDEQ*BLANKS
+     C           SCAMT     ANDEQ0
+      *
+      ** Single Currency Transaction
+      *
+     C           PDCCY     IFNE PCCCY
+     C           PDAMT     ORNE PCAMT
+     C                     MOVE 'F'       PCODE
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Cross currency transaction
+      *
+     C           PDCCY     IFNE SCCCY
+     C           PCCCY     ORNE SDCCY
+     C           PDAMT     ORNE SCAMT
+     C           PCAMT     ORNE SDAMT
+     C                     MOVE 'F'       PCODE
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         X
+     C                     ENDDO
+      *
+      * Fontis batch tested complete, now check if potential
+      * addition of base currency postings for cross currency
+      * IATs will cause the maximum number of postings to be reached.
+      * If yes, do not allow batch acceptance.
+      *
+     C           W#POST    ADD  W#SPOT    COUNT   40
+     C           COUNT     IFGT 999
+     C                     MOVE 'X'       PCODE
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREND   -  End Program                                       *
+      *  Called by: Main routine, SRDETL                              *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREND     BEGSR
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  File Exception/Error Handling Subroutine          *
+      *  Called by: Various                                           *
+      *  Calls    : DBERRCTL - DB Error Control                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

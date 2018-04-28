@@ -1,0 +1,564 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT MULTIPLE AUTHORISATION PROGRAM')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas   FUNDS TRANSFER MODULE                            *
+     F*                                                               *
+     F*  FT0107 - MULTIPLE AUTHORISATION PROGRAM                      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 106483             Date 20Feb98               *
+      *                 S01494             Date 25May94               *
+     F*                 061008             DATE 21SEP93               *
+     F*                 S01435             DATE 22JUL93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,FTH00116                                 *
+      *             WNCPYSRC,FTH00117                                 *
+      *             WNCPYSRC,FTH00023                                 *
+      *             WNCPYSRC,FTH00024                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  106483 - When the user was authorised to action code 'E'     *
+     F*           only, he/she was still not able to enquire.         *
+     F*           Amended the program to check for action code 'E'    *
+     F*           after checking for 'X'.                             *
+     F*  S01494 - BLI Funds Transfer Enhancements                     *
+     F*  061008 - Missing functionality for FT Cheques processing     *
+     F*  S01435 - Incoming Message Management.                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FFT0107DFCF  E                    WORKSTN
+     F*
+     F****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F****************************************************************
+     F*                                                              *
+     F*       01        Command 3 pressed                            *
+     F*                                                              *
+     F*       20        On then redisplay screen                     *
+     F*       21        Used in 'LOKUP', on if ? found               *
+     F*                                                              *
+     F*       30        'Outgoing Payments' indicator                *
+     F*       31        'Incoming Payments' indicator                *
+     F*       32        'Cheques to be Collected' indicator          *
+     F*       33        'Cheques to be Paid' indicator               *
+     F*       34        'Nostro Transfers' indicator                 *
+     F*       35        'Incoming payments awaiting level 2'         *
+     F*       36        'Outgoing payments awaiting level 2'         *
+     F*       37        'Cheques to be paid awaiting level 2'        *
+     F*       38        'Outgoing payments awaiting completion'      *
+     F*       39        'Incoming payments awaiting completion'      *    S01435
+     F*       40        'Cheques for Collection awaiting completion' *    061008
+     F*       42        'Cheques to be Paid awaiting completion'     *    061008
+     F*       43        'Regular Payments Awaiting Authorisation'    *    S01494
+     F*       44        'Regular Payments Awaiting Level 2'          *    S01494
+     F*                                                              *
+     F*       41        Error found                                  *
+     F*       49        Error on branch code input                   *
+     F*                                                              *
+     F*       50        Originating branch switch 'ON'               *
+     F*       51        Error on B/O input                           *
+     F*                                                              *
+     F*             LR  Last record (terminate program).             *
+     F****************************************************************
+     F*
+     F/EJECT
+     F*
+     E                    CPY@    1   1 80
+     E*
+     E                    FLDQ       10  1
+     E**  TABLE
+     E*
+     E                    ERCD        3  4               ERROR CODES
+     E/EJECT
+     I*
+     ICPYR@#      DS
+     I*********************************************************
+     I* Data structure for compilation - copyright insertion  *
+     I*********************************************************
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IPSDS       SDS
+     I*
+     I**********************************************
+     I*       Data structure to retrieve WSID.     *
+     I**********************************************
+     I*
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I*
+     IRUNDAT      DS
+     I*
+     I**********************************************
+     I*       Data structure to retrieve           *
+     I*       multi branch indicator               *
+     I**********************************************
+     I*
+     I                                       13  13 @MBIN
+     I*
+     IZMUSER      DS
+     I*
+     I**********************************************
+     I*       Data structure to retrieve           *
+     I*       default branch and system level      *
+     I*       authority indicator                  *
+     I**********************************************
+     I*
+     I                                       11  13 DBRN
+     I                                       14  16 DPPT
+     I                                       17  17 BANK
+     I*
+     I            DS
+     I                                        1  12 ERCD
+     I                                        1  12 ERR1
+     I/COPY WNCPYSRC,FTH00116
+     I*
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     I*
+     ISDBANK    E DSSDBANKPD
+     ISDGELR    E DSSDGELRPD
+     ISDBRCH    E DSSDBRCHPD
+     I*
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C/EJECT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @PARM   1
+     C*
+     C           @CALL     PLIST
+     C                     PARM           SBRCA
+     C                     PARM           SBKOR
+     C                     PARM           @PCMD   1
+     C*                                                                   S01494
+     C** New parameter list to call FTC0110 and FTC0140                   S01494
+     C*                                                                   S01494
+     C           @CALL2    PLIST                                          S01494
+     C                     PARM           SBRCA                           S01494
+     C                     PARM           SBKOR                           S01494
+     C                     PARM           @PCMD                           S01494
+     C                     PARM           @RTYP   7                       S01494
+     C*
+     C                     EXSR INIT
+     C*
+     C**  Do until Command 3 pressed in called program
+     C*
+     C           *IN01     DOUEQ'1'
+     C           @MBIN     IFEQ 'Y'
+     C                     EXSR MAIN
+     C                     ELSE
+     C                     EXSR CALL
+     C                     END
+     C*
+     C**  If Command 3 pressed in called program return to menu
+     C*
+     C           @PCMD     IFEQ '*'
+     C                     SETON                     01
+     C                     END
+     C*
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+     C****************************************************************
+     C**  Subroutine 'INIT'                                          *
+     C****************************************************************
+     C*
+     C           INIT      BEGSR
+     C                     SETOF                     50
+     C                     MOVE 'N'       ZTRY    1                       106483
+     C*
+     C**  Access data area RUNDAT for multi branch indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C**  Access SDBANKPD for system date and single branch code
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR'  @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Check parameter received from menu and set on
+     C**  indicator to determine which program to call
+     C*
+     C           @PARM     IFEQ 'O'
+     C                     SETON                     30
+     C                     MOVEL'FTM2500' @RTYP                           S01494
+     C                     END
+     C*
+     C           @PARM     IFEQ 'I'
+     C                     SETON                     31
+     C                     END
+     C*
+     C           @PARM     IFEQ 'C'
+     C                     SETON                     32
+     C                     END
+     C*
+     C           @PARM     IFEQ 'P'
+     C                     SETON                     33
+     C                     END
+     C*
+     C           @PARM     IFEQ 'N'
+     C                     SETON                     34
+     C                     END
+     C*
+     C           @PARM     IFEQ 'W'
+     C                     SETON                     35
+     C                     END
+     C*
+     C           @PARM     IFEQ 'X'
+     C                     SETON                     36
+     C                     MOVEL'FTM2501' @RTYP                           S01494
+     C                     END
+     C*
+     C           @PARM     IFEQ 'Y'
+     C                     SETON                     37
+     C                     END
+     C*
+     C           @PARM     IFEQ 'Z'
+     C                     SETON                     38
+     C                     END
+      *                                                                   S01435
+     C           @PARM     IFEQ 'V'                                       S01435
+     C                     SETON                     39                   S01435
+     C                     END                                            S01435
+      *                                                                   061008
+     C           @PARM     IFEQ 'S'                                       061008
+     C                     SETON                     40                   061008
+     C                     END                                            061008
+      *                                                                   061008
+     C           @PARM     IFEQ 'T'                                       061008
+     C                     SETON                     42                   061008
+     C                     END                                            061008
+     C*                                                                   S01494
+     C           @PARM     IFEQ 'R'                                       S01494
+     C                     SETON                     43                   S01494
+     C                     MOVEL'FTM2502' @RTYP                           S01494
+     C                     END                                            S01494
+     C*                                                                   S01494
+     C           @PARM     IFEQ 'Q'                                       S01494
+     C                     SETON                     44                   S01494
+     C                     MOVEL'FTM2503' @RTYP                           S01494
+     C                     END                                            S01494
+     C/COPY WNCPYSRC,FTH00117
+     C*
+     C**  Set up parameters to be passed if not multi branched
+     C*
+     C           @MBIN     IFEQ 'N'
+     C                     MOVE BJSBRC    SBRCA
+     C                     MOVE 'N'       SBKOR   1
+     C*
+     C                     ELSE
+     C*
+     C**  Access SDGELRPD for originating branch used flag
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR'  P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C**  If Originating Branch Used flag is on,set on
+     C**  Indicator 50 (used to set up B/O screen field)
+     C*
+     C           BKOBRU    IFEQ 'Y'
+     C                     SETON                     50
+     C                     ELSE
+     C                     MOVE 'B'       SBKOR
+     C                     END
+     C*
+     C**  Set up date and time
+     C*
+     C                     TIME           TIME
+     C*
+     C**  Access ZMUSER for default branch and
+     C**  system level authority indicator
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C*
+     C                     END
+     C/COPY WNCPYSRC,FTH00023
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*   Subroutine 'MAIN'                                           *
+     C*   Set up input screen and validate entries made               *
+     C*   into SBRCA and (if originating branch used flag 'on'),SBKOR *
+     C*****************************************************************
+     C*
+     C           MAIN      BEGSR
+     C*
+     C**  Set up B/O screen format
+     C**  Validate SBKOR and SBRCA entries
+     C*
+     C  N41                MOVE *BLANKS   SBRCA
+     C  N41 50             MOVE *BLANKS   SBKOR
+     C/COPY WNCPYSRC,FTH00024
+     C                     EXFMTFT0107DS
+     C                     MOVEA*BLANKS   ERCD             ERROR CODES
+     C                     Z-ADD1         Z       20       SUBSCRIPT
+     C                     SETOF                     414951
+     C                     MOVE *BLANKS   @RTCD
+     C*
+     C**  Check for entry of ? if command 3 has not been pressed'
+     C*
+     C           *INKC     IFNE '1'                        (IF1)
+     C           *IN20     DOUEQ'0'                        (DO2)
+     C           *INKC     OREQ '1'
+     C                     EXSR FLDQRY
+     C                     END                             (ENDDO2)
+     C*
+     C           *INKC     IFNE '1'                        (IF2)
+     C*
+     C           *IN50     IFEQ '1'                        (IF3)
+     C*
+     C**  Move in default value if SBKOR blank
+     C*
+     C           SBKOR     IFEQ ' '                        (IF4)
+     C                     MOVE 'B'       SBKOR
+     C                     END                             (ENDIF4)
+     C*
+     C**  Validate value entered in SBKOR
+     C*
+     C           SBKOR     IFNE ' '                        (IF5)
+     C           SBKOR     ANDNE'B'
+     C           SBKOR     ANDNE'O'
+     C                     SETON                     4151
+     C                     MOVEA' 001'    ERCD,Z
+     C                     ADD  1         Z
+     C                     END                             (ENDIF5)
+     C*
+     C                     END                             (ENDIF3)
+     C*
+     C**  Check user has system level authority for 'ALL' entry
+     C*
+     C           SBRCA     IFEQ 'ALL'                      (IF6)
+     C           BANK      ANDEQ'N'
+     C                     SETON                     4149
+     C                     MOVEA' 002'    ERCD,Z
+     C                     ADD  1         Z
+     C                     END                             (ENDIF6)
+     C*
+     C**  Move default branch into SBRCA if blank
+     C*
+     C           SBRCA     IFEQ *BLANKS                    (IF7)
+     C                     MOVE DBRN      SBRCA
+     C                     END                             (ENDIF7)
+     C*
+     C**  Branch code validation
+     C*
+     C           SBRCA     IFNE 'ALL'                      (IF8)
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM SBRCA     @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C                     END                             (ENDIF8)
+     C*
+     C           @RTCD     IFNE *BLANKS                    (IF9)
+     C                     SETON                     4149
+     C                     MOVEA' 003'    ERCD,Z
+     C                     ADD  1         Z
+     C                     END                             (ENDIF9)
+     C*
+     C**  Check branch used switch (SBKOR).
+     C*
+     C           SBRCA     IFNE 'ALL'                      (IF10)
+     C           *IN49     ANDEQ'0'
+     C*
+     C           SBKOR     IFEQ 'B'                        (IF11)
+     C           *IN50     OREQ '0'
+     C*
+     C**  Use access program ZVACTBU to validate whether user
+     C**  is authorised to that booking branch and menu item
+     C**  Move appropriate action code into parameter to be passed.
+     C*
+     C           @PARM     IFEQ 'O'                        (IF12)
+     C           @PARM     OREQ 'I'
+     C           @PARM     OREQ 'C'
+     C           @PARM     OREQ 'P'
+     C           @PARM     OREQ 'N'
+     C                     MOVE 'X'       ZCODE   1
+     C                     MOVE 'Y'       ZTRY                            106483
+     C                     END                             (ENDIF12)
+     C           @PARM     IFEQ 'W'                        (IF13)
+     C           @PARM     OREQ 'X'
+     C           @PARM     OREQ 'Y'
+     C                     MOVE 'I'       ZCODE
+     C                     END                             (ENDIF13)
+     C           @PARM     IFEQ 'Z'                        (IF14)
+     C           @PARM     OREQ 'V'                                       S01435
+     C                     MOVE 'A'       ZCODE
+     C                     END                             (ENDIF14)
+     C           @PARM     IFEQ 'S'                                       061008
+     C           @PARM     OREQ 'T'                                       061008
+     C                     MOVE 'E'       ZCODE                           061008
+     C                     END                                            061008
+     C*
+     C                     CALL 'ZVACTBU'
+     C                     PARM ZCODE     ZACTN   1
+     C                     PARM SBRCA     ZBR     3
+     C                     PARM 0         ERR     10
+     C*
+     C           ERR       IFEQ 1                          (IF15)
+     C                     SETON                     4149
+     C                     MOVEA' 303'    ERCD,Z
+     C                     ADD  1         Z
+     C                     END                             (ENDIF15)
+     C*
+     C           ERR       IFEQ 2                          (IF16)
+     C           ZTRY      IFEQ 'Y'                                       106483
+     C                     MOVE 'E'       ZCODE                           106483
+     C                     CALL 'ZVACTBU'                                 106483
+     C                     PARM ZCODE     ZACTN                           106483
+     C                     PARM SBRCA     ZBR                             106483
+     C                     PARM 0         ERR                             106483
+     C           ERR       IFEQ 2                                         106483
+     C                     MOVEA' 304'    ERCD,Z
+     C                     SETON                     4149
+     C                     ADD  1         Z
+     C                     END                                            106483
+     C                     END                                            106483
+     C                     END                             (ENDIF16)
+     C*
+     C                     END                             (ENDIF11)
+     C*
+     C**  If branch used switch = 'O',
+     C**  and originating branch validation flag 'ON'
+     C*
+     C           SBKOR     IFEQ 'O'                        (IF17)
+     C           BKOBUV    ANDEQ'Y'
+     C           SBRCA     ANDNE'ALL'
+     C*
+     C**  Use access program ZVOBU to validate whether user
+     C**  is authorised to that originating branch
+     C*
+     C                     CALL 'ZVOBU'
+     C                     PARM SBRCA     ZOBRX   3
+     C                     PARM 0         ERR     10
+     C*
+     C           ERR       IFEQ 1                          (IF18)
+     C                     SETON                     4149
+     C                     MOVEA' 305'    ERCD,Z
+     C                     ADD  1         Z
+     C                     END                             (ENDIF18)
+     C*
+     C           ERR       IFEQ 2                          (IF19)
+     C                     SETON                     4149
+     C                     MOVEA' 306'    ERCD,Z
+     C                     ADD  1         Z
+     C                     END                             (ENDIF19)
+     C*
+     C                     END                             (ENDIF17)
+     C                     END                             (ENDIF10)
+     C*
+     C** If there have been no errors,call appropriate
+     C** authorisation program
+     C*
+     C  N41                EXSR CALL
+     C                     END                             (ENDIF2)
+     C                     END                             (ENDIF1)
+     C*
+     C           *INKC     IFEQ '1'
+     C                     SETON                     01
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*   Subroutine 'FLDQRY'                                         *
+     C*****************************************************************
+     C           FLDQRY    BEGSR
+      *----------------------------------------------------------------
+      * Subroutine to resolve entry of ? for standing data fields.
+      * Performed after function key validation and prior to field
+      * validation
+      *
+      * Indicators used:
+      *  20       on then redisplay screen
+      *  21       used in LOKUP, on if ? found
+      *----------------------------------------------------------------
+     C                     SETOF                     2021
+      *
+      * check branch for entry of ?
+     C                     MOVEA*BLANKS   FLDQ
+     C                     MOVEASBRCA     FLDQ
+     C           '?'       LOKUPFLDQ                     21
+      *
+      * if ? found seton redisplay ind and call access program
+     C           *IN21     IFEQ '1'
+     C                     SETON                     20
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM '?'       @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C* if selection made move value to screen field
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELA8BRCD    SBRCA
+     C                     END
+     C                     SETOF                     21
+     C                     END
+     C   20                EXFMTFT0107DS
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*  Subroutine 'CALL'. Calls authorisation program               *
+     C*  depending upon which parameter was input.                    *
+     C*  Pass SBRCA and SBKOR as parameters to called program.        *
+     C*****************************************************************
+     C*
+     C           CALL      BEGSR
+     C*
+     C***30******          CALL 'FTC0110' @CALL                           S01494
+     C   30                CALL 'FTC0110' @CALL2                          S01494
+     C   31                CALL 'FTC0115' @CALL
+     C   32                CALL 'FTC0120' @CALL
+     C   33                CALL 'FTC0125' @CALL
+     C   34                CALL 'FTC0130' @CALL
+     C   35                CALL 'FTC0135' @CALL
+     C***36******          CALL 'FTC0140' @CALL                           S01494
+     C   36                CALL 'FTC0140' @CALL2                          S01494
+     C   37                CALL 'FTC0145' @CALL
+     C   38                CALL 'FTC0150' @CALL
+     C   39                CALL 'FTC0180' @CALL                           S01435
+     C   40                CALL 'FTC0185' @CALL                           061008
+     C   42                CALL 'FTC0190' @CALL                           061008
+     C   43                CALL 'FTC0110' @CALL2                          S01494
+     C   44                CALL 'FTC0140' @CALL2                          S01494
+     C*
+     C                     ENDSR
+     C*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

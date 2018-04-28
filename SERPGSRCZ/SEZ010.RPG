@@ -1,0 +1,374 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Settlement amount calculation')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SEZ010 - Settlement Amount Calculation                       *
+      *                                                               *
+      *  Function:  This program calculates the settlement amount for *
+      *    (I/C)    a position including charges, commissions and     *
+      *    (COB)    taxes incurred.                                   *
+      *                                                               *
+      *  Called By: SE0170  - SE Position Settlements Input           *
+      *             SE2370  - SE Generate Depot Posns & Gen A/C Keys  *
+      *             SE2380  - SE Generate Cust. Posns & Gen A/C Keys  *
+      *             SE2390  - SE Gen. A/C Keys Posn Settles - Depots  *
+      *             SE2400  - SE Gen. A/C Keys Posn Settles - Custs   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR851833           Date 10Nov11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 29Aug00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC002             Date 15Sep96               *
+      *                 087178 *CREATE     Date 11May95               *
+      *                 000000             DATE 00XXX00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR851833 - Stamp tax amount is excluded in the computation   *
+      *             of settlement amount                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSE023 - Treaty Withholding Tax                              *
+      *  S01408 - Addition of Core Hook SEZ010IIP1 (DBAR2 only)       *
+      *  CAC002 - Profit Centre Accounting Development - Phase 2      *
+      *           If analytical accounting is installed, margin amount*
+      *           will be calculated and will be used to adjust the   *
+      *           settlement amount.                                  *
+      *  087178 - Calculate settlement amount including taxes incurred*
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *     F U N C T I O N   O F   I N D I C A T O R S               *
+      *                                                               *
+      *    U7-U8         Databaser error                              *
+      *    LR            End of program                               *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Array containing Copyright statement
+     E/COPY ZSRSRC,ZPOWERZ1
+     E** Copy of the POWERs for currency conversion
+     E*
+     I/EJECT
+     I*
+     ILDA         DS                            256
+     I** Local data area data structure
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDCURR    E DSSDCURRPD
+     I** Currency file Details
+     I*
+     ISDMMOD    E DSSDMMODPD                                              CAC002
+     I**  Modules File Details                                            CAC002
+     I*                                                                   CAC002
+     IDSFDY     E DSDSFDY                                                 CAC002
+     I** Short Data Structure                                             CAC002
+     I*                                                                   CAC002
+     IDSSDY     E DSDSSDY
+     I** Long Data Structure
+     I*
+     I***P@DATA******DS                            100                    CAC002
+     I/COPY WNCPYSRC,SEZ010I001
+     I***P@DATA*     DS                            128                               CAC002 AR851833
+     IP@DATA      DS                            141                                         AR851833
+     I/COPY WNCPYSRC,SEZ010I002
+     I** Data structure for the parameter
+     I                                        1   1 PCLAS
+     I                                        2   2 PPPRE
+     I                                        3  150PPAMD
+     I                                       16  280PPCHA
+     I                                       29  410PPCAM
+     I                                       42  540PTASO
+     I                                       55  670PTAUS
+     I                                       68  808PPSXR
+     I                                       81  81 PPMDI
+     I                                       82  84 PPNCY
+     I                                       85  87 PPSCU
+     I                                       88 1000PPSAT
+     I                                      101 1138PFXMR                 CAC002
+     I                                      114 1260PMAMT                 CAC002
+     I                                      127 128 PTDTP                 CAC002
+     I                                      129 1410PSTAM                                   AR851833
+     I/COPY WNCPYSRC,SEZ010IIP1                                           s01408
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  S U B R O U T I N E    I N D E X                             *
+     C*                                                               *
+     C*  Main routine                                                 *
+     C*  *PSSR   -  Error handling subroutine                         *
+     C*  ZCONV   -  Standard SR to convert an amount from one         *
+     C*             currency to another                               *
+     C*                                                               *
+     C*****************************************************************
+     C/SPACE 3
+     C*****************************************************************
+     C*             S T A R T   O F   P R O G R A M                   *
+     C*****************************************************************
+     C*
+     C** Receive entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           P@RCDE  7
+     C***********          PARM           P@DATA100                       CAC002
+     C/COPY WNCPYSRC,SEZ010C001
+     C**********           PARM           P@DATA128                                  CAC002 AR851833
+     C                     PARM           P@DATA141                                         AR851833
+     C/COPY WNCPYSRC,SEZ010C002
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C** Define LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*                                                                   CAC002
+     C**  Access MIDAS Modules.                                           CAC002
+     C*                                                                   CAC002
+     C                     CALL 'AOMMODR0'                                CAC002
+     C                     PARM '*MSG   ' @RTCD                           CAC002
+     C                     PARM '*FIRST'  @OPTN                           CAC002
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CAC002
+     C*                                                                   CAC002
+     C           @RTCD     IFNE *BLANKS                                   CAC002
+     C           *LOCK     IN   LDA                                       CAC002
+     C                     Z-ADD3         DBASE            ************** CAC002
+     C                     MOVEL'SDMMODPD'DBFILE           * DBASE 03 * * CAC002
+     C                     MOVE *BLANKS   DBKEY            ************** CAC002
+     C                     MOVEL'SEZ010'  DBPGM                           CAC002
+     C                     OUT  LDA                                       CAC002
+     C                     EXSR *PSSR                                     CAC002
+     C                     RETRN                                          CAC002
+     C                     ENDIF                                          CAC002
+      *                                                                   CSE023
+      *** Check Withholding tax is installed                              CSE023
+      *                                                                   CSE023
+     C                     CALL 'AOSARDR0'                                CSE023
+     C                     PARM *BLANKS   @RTCD   7                       CSE023
+     C                     PARM '*VERIFY' @OPTN   7                       CSE023
+     C                     PARM 'CSE023'  @SARD   6                       CSE023
+      *                                                                   CSE023
+     C           @RTCD     IFEQ *BLANK                                    CSE023
+     C                     MOVE 'Y'       CSE023  1                       CSE023
+     C                     ELSE                                           CSE023
+     C                     MOVE 'N'       CSE023                          CSE023
+     C                     END                                            CSE023
+     C/COPY WNCPYSRC,SEZ010C007
+     C*
+     C** Workout taxable amount to be added/subtracted
+     C*
+     C                     MOVE *BLANKS   P@RCDE
+     C                     Z-ADD*ZEROS    PPSAT
+     C                     Z-ADD*ZEROS    PMAMT                           CAC002
+     C           PTASO     ADD  PTAUS     WWTAX  130
+     C*
+     C** Calculate settlement amount including charges, commissions and taxes
+     C*
+     C           PCLAS     IFEQ 'S'
+     C           PCLAS     OREQ 'D'
+     C*
+     C           PPPRE     IFEQ 'R'
+     C           PPAMD     ADD  PPCHA     WRK130 130
+     C           WRK130    ADD  PPCAM     WRK130
+     C           WRK130    ADD  WWTAX     WRK130
+     C           WRK130    ADD  PSTAM     WRK130                                            AR851833
+     C/COPY WNCPYSRC,SEZ010C003
+     C                     ELSE
+     C           PPAMD     SUB  PPCHA     WRK130
+     C           WRK130    SUB  PPCAM     WRK130
+     C           WRK130    SUB  WWTAX     WRK130
+     C           WRK130    SUB  PSTAM     WRK130                                            AR851833
+     C/COPY WNCPYSRC,SEZ010C004
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           PPPRE     IFEQ 'R'
+     C           PPAMD     SUB  PPCHA     WRK130
+     C           WRK130    SUB  PPCAM     WRK130
+     C           CSE023    IFEQ 'N'                                       CSE023
+     C           WRK130    SUB  WWTAX     WRK130
+     C*                                                                   CSE023
+     C** If CSE023 is on, Depot only deduce Tax at source.                CSE023
+     C*                                                                   CSE023
+     C                     ELSE                                           CSE023
+     C           WRK130    SUB  PTASO     WRK130                          CSE023
+     C                     END                                            CSE023
+     C           WRK130    SUB  PSTAM     WRK130                                            AR851833
+     C/COPY WNCPYSRC,SEZ010C005
+     C                     ELSE
+     C           PPAMD     ADD  PPCHA     WRK130
+     C           WRK130    ADD  PPCAM     WRK130
+     C           CSE023    IFEQ 'N'                                       CSE023
+     C           WRK130    ADD  WWTAX     WRK130
+     C*                                                                   CSE023
+     C** If CSE023 is on, Depot only deduce Tax at source.                CSE023
+     C*                                                                   CSE023
+     C                     ELSE                                           CSE023
+     C           WRK130    ADD  PTASO     WRK130                          CSE023
+     C                     END                                            CSE023
+     C           WRK130    ADD  PSTAM     WRK130                                            AR851833
+     C/COPY WNCPYSRC,SEZ010C006
+     C                     END
+     C                     END
+     C*
+     C** Make WRK130 a positive amount for conversion to settlement currency
+     C*
+     C                     MOVE 'N'       WWNEG   1
+     C           WRK130    IFLT 0
+     C                     Z-SUBWRK130    WRK130
+     C                     MOVE 'Y'       WWNEG   1
+     C                     END
+     C*
+     C** Access value currency for decimal places
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM PPNCY     @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE                   ************
+     C                     MOVELPPNCY     DBKEY                    * DBERR 01 *
+     C                     Z-ADD1         DBASE                    ************
+     C                     MOVEL'SEZ010'  DBPGM
+     C                     OUT  LDA
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    ZCDPI
+     C*
+     C** Access settlement currency for decimal places
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM PPSCU     @AJCD
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE                   ************
+     C                     MOVELPPSCU     DBKEY                    * DBERR 02 *
+     C                     Z-ADD2         DBASE                    ************
+     C                     MOVEL'SEZ010'  DBPGM
+     C                     OUT  LDA
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    ZCDPO
+     C*
+     C** Convert settlement amount from value currency to settlement
+     C** currency
+     C*
+     C                     MOVE PPNCY     ZCCYI
+     C                     MOVE PPSCU     ZCCYO
+     C                     Z-ADDWRK130    ZAMTCI
+     C                     Z-ADDPPSXR     ZEXCH
+     C                     MOVE PPMDI     ZMD
+     C                     EXSR ZCONV
+     C*
+     C** Format settlement amount for output
+     C*
+     C           WWNEG     IFEQ 'Y'
+     C                     Z-SUBZAMTCO    ZAMTCO
+     C                     END
+     C                     Z-ADDZAMTCO    PPSAT
+      *                                                                   CAC002
+      **  If Analytical Accounting is installed...                        CAC002
+      *                                                                   CAC002
+     C           BGN0ST    IFEQ 'Y'                                       CAC002
+     C           PFXMR     ANDNE0                                         CAC002
+      *                                                                   CAC002
+      **  For Trade Purchase                                              CAC002
+      **     If mult/div ind = 'M',                                       CAC002
+      **        Marg Amt = Nom Amt*XRATE - Nom Amt*(XRATE-MARGIN)         CAC002
+      **        XRATE = XRATE - MARGIN                                    CAC002
+      **     otherwise,                                                   CAC002
+      **        Marg Amt = Nom Amt/XRATE - Non Amt/(XRATE+MARGIN)         CAC002
+      **        XRATE = XRATE + MARGIN                                    CAC002
+      **     Sett Amt = Sett Amt - Margin Amt                             CAC002
+      *                                                                   CAC002
+     C           PTDTP     IFEQ 'TP'                                      CAC002
+     C           PPMDI     IFEQ 'M'                                       CAC002
+     C           PPSXR     ADD  PFXMR     ZEXCH                           CAC002
+     C                     ELSE                                           CAC002
+     C           PPSXR     SUB  PFXMR     ZEXCH                           CAC002
+     C                     ENDIF                                          CAC002
+      *                                                                   CAC002
+     C                     Z-ADDWRK130    ZAMTCI                          CAC002
+     C                     EXSR ZCONV                                     CAC002
+     C                     Z-ADDZAMTCO    WCTRV  150                      CAC002
+     C           WCTRV     SUB  PPSAT     PMAMT                           CAC002
+     C                     ELSE                                           CAC002
+      *                                                                   CAC002
+      **  For Trade Sale                                                  CAC002
+      **     If mult/div ind = 'M',                                       CAC002
+      **        Marg Amt = Nom Amt*(XRATE+MARGIN) - Nom Amt*XRATE         CAC002
+      **        XRATE = XRATE + MARGIN                                    CAC002
+      **     otherwise,                                                   CAC002
+      **        Marg Amt = Nom Amt/(XRATE-MARGIN) - Non Amt/XRATE         CAC002
+      **        XRATE = XRATE - MARGIN                                    CAC002
+      **     Sett Amt = Sett Amt + Margin Amt                             CAC002
+      *                                                                   CAC002
+     C           PPMDI     IFEQ 'M'                                       CAC002
+     C           PPSXR     SUB  PFXMR     ZEXCH                           CAC002
+     C                     ELSE                                           CAC002
+     C           PPSXR     ADD  PFXMR     ZEXCH                           CAC002
+     C                     ENDIF                                          CAC002
+      *                                                                   CAC002
+     C                     Z-ADDWRK130    ZAMTCI                          CAC002
+     C                     EXSR ZCONV                                     CAC002
+     C                     Z-ADDZAMTCO    WCTRV                           CAC002
+     C           PPSAT     SUB  WCTRV     PMAMT                           CAC002
+     C                     ENDIF                                          CAC002
+     C                     ENDIF                                          CAC002
+     C*
+     C** End the program and return to calling program
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR - Subroutine to handle abnormal error conditions        *
+     C*                                                               *
+     C* Called from : After abnormal operation occurs                 *
+     C*                                                               *
+     C* Calls : None                                                  *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     MOVE '*ERROR*' P@RCDE
+     C                     SETON                     U7U8LR
+     C*
+     C                     ENDSR
+     C/EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  POWER - Array of powers for currency conversion
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

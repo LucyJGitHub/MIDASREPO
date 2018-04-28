@@ -1,0 +1,648 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Domestic MM brokerage paid - System')         *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module                                       *
+     F*                                                               *
+     F*     DL8104 - DOMESTIC MONEY MARKEY BROKERAGE PAID REPORT.     *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 AUS007             Date 15Jul92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*     AUS007 - AUSTRALIAN BROKERAGE                             *
+     F*                                                               *
+     F*****************************************************************
+     FDL8104P1O   E             18     PRINTER      KINFDS SPOOL      UC
+     FDL8104AUO   E                    PRINTER      KINFDS SPOOLU
+     F*
+     F*
+     FDEALALL IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F*
+     FBRKEY4  IF  E           K        DISK
+     F*
+     F/EJECT
+     F********************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F********************************************************************
+     F*
+     F*       10         AT LEAST 1 RECORD READ TO BE PROCESSED.
+     F*       18         OVERFLOW ON THE REPORT
+     F*       30         END OF FILE OR DB ERROR TO TERMINATE READ LOOP
+     F*       50         WORK INDICATOR.
+     F*       89         ERROR OCCURED WHEN FORMATTING OUTPUT FIELD
+     F*     90-99        STANDARD SUBROUTINE INDICATORS.
+     F*
+     F*
+     F/EJECT
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    ZAR1       20  1               AMOUNT ARRAY 1
+     E                    ZAR2       20  1               AMOUNT ARRAY 2
+     E                    CPY@    1   1 80
+     E*
+     E/EJECT
+     IBRKEYDPF
+     I              BRKC                            BRKCA
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* Bank Details Accesses Via Access Program
+     I*
+     ISDBROK    E DSSDBROKPD
+     I* Broker Details Accesses Via Access Program
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I* Customer Details Accesses Via Access Program
+     I*
+     IDSFDY     E DSDSFDY
+     I* First DS For Access Programs, Short Data Structure
+     I*
+     IDSSDY     E DSDSSDY
+     I* Second DS For Access Programs, Long Data Structure
+     I*
+     ISPOOL       DS
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     IRUNDT       DS                                                      S01390
+     I                                       13  13 MBIN                  S01390
+     I/EJECT
+     C********************************************************************
+     C*
+     C*    M A I N L I N E.
+     C*
+     C*    FIRST CYCLE PROCESSING
+     C*
+     C                     EXSR FIRSTC
+     C*
+     C*    SET UP LOOP TO READ FILE
+     C*
+     C                     MOVE OFF       *IN30
+     C                     READ BRKEY4                   30
+     C           *IN30     DOWEQOFF
+     C*
+     C*    ONLY READ IN PAID KEYS FOR BROKERAGE.
+     C*
+     C           KEY1      IFEQ 'P'
+     C           KEY2      ANDEQ'B'
+     C*
+     C*    TEST FOR NEW BROKER.
+     C*
+     C           OBRKCA    IFNE BRKCA
+     C                     EXSR NEWBRK
+     C                     ELSE
+     C*
+     C*    TEST OVERFLOW.
+     C*
+     C           *IN18     IFEQ ON
+     C                     WRITEP1HEAD
+     C                     MOVE OFF       *IN18
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*    RETRIEVE AND FORMAT OUTPUT INFORMATION.
+     C*
+     C                     EXSR STRUCT
+     C*
+     C*    WRITE OUT DETAIL LINE.
+     C*
+     C                     WRITEP1DLLN
+     C*
+     C*    SET ON RECORD READ INDICATOR.
+     C*
+     C                     MOVE ON        *IN10            1ST REC READ
+     C*
+     C*    READ NEXT RECORD.
+     C*
+     C                     READ BRKEY4                   30
+     C                     END
+     C*
+     C*    OUTPUT TOTAL LINE AND TERMINATE PROGRAM.
+     C*
+     C           *IN10     IFEQ ON
+     C*
+     C*    ADD PREVIOUS BROKER TOTAL TO GRAND TOTAL.
+     C*
+     C                     ADD  BBPTM     TBPTM
+     C*
+     C*    FORMAT BROKER TOTAL AMOUNTS.
+     C*
+     C                     MOVE BBPTM     ZNUMIN
+     C                     EXSR FORMAT
+     C                     MOVE ZNUMOT    BBPTMA
+     C*
+     C*    WRITE OUT BROKER TOTAL LINE.
+     C*
+     C                     WRITEP1BKTL
+     C*
+     C*    FORMAT TOTAL AMOUNTS.
+     C*
+     C                     MOVE TBPTM     ZNUMIN
+     C                     EXSR FORMAT
+     C                     MOVE ZNUMOT    TBPTMA
+     C*
+     C                     WRITEP1GTOT
+     C                     ELSE
+     C*
+     C                     WRITEAUHEAD
+     C                     WRITEAUNDTR
+     C*
+     C** Report printer file to RCF via ZSFILE
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   @ENT    3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error during ZSFILE processing, return to calling program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     END
+     C                     END
+     C*
+     C*    OUTPUT DATABASE IN ERROR MESSAGE
+     C*
+     C           *INU8     IFEQ ON
+     C                     WRITEAUHEAD
+     C                     WRITEAUERR
+     C*
+     C** Report printer file to RCF via ZSFILE
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   @ENT
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR
+     C*
+     C** Error during ZSFILE processing, return to calling program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     END
+     C                     END
+     C*
+     C           *IN10     IFEQ '1'
+     C                     WRITEP1END
+     C                     END
+     C                     MOVE ON        *INLR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*
+     C*      FIRST IS A SUBROUTINE TO PERFORM ALL FIRST CYCLE
+     C*      CALCULATIONS.
+     C*
+     C           FIRSTC    BEGSR                           *** FIRSTC ***
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01390
+     C                     IN   RUNDT                                     S01390
+     C           MBIN      IFEQ 'Y'                                       S01390
+     C                     MOVE '1'       *IN88                           S01390
+     C                     END                                            S01390
+     C*
+     C*    INITILIZE STANDARD VARIABLES & FIRST CYCLE AMOUNT
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL8104'  DBPGM
+     C                     OUT  LDA
+     C                     MOVE '1'       ON      1
+     C                     MOVE '0'       OFF     1
+     C*
+     C*    INITILIZE LEVEL BREAK FIELDS.
+     C*
+     C                     MOVE *BLANKS   OBRKCA  4
+     C*
+     C** READ BANK DETAILS VIA ACCESS PROGRAM
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' RTCD    7
+     C                     PARM '*FIRST ' OPTN    7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C*    INITILIZE PARAMETERS FOR FORMAT SUBROUTINE.
+     C*
+     C                     Z-ADD17        ZCHRO
+     C                     MOVE ' '       ZSIGNT
+     C                     MOVE ' '       ZSIGN
+     C                     MOVE 'Y'       ZCOMA
+     C                     Z-ADD2         ZDEC
+     C*
+     C           ENDFC     ENDSR                           *** ENDFC  ***
+     C*
+     C/EJECT
+     C********************************************************************
+     C*
+     C*      NEWBRK SR  RETRIEVE BROKER INFORMATION.
+     C*
+     C           NEWBRK    BEGSR                           *** NEWBRK ***
+     C*
+     C           *IN10     IFEQ ON
+     C*
+     C*    ADD PREVIOUS BROKER TOTAL TO GRAND TOTAL.
+     C*
+     C                     ADD  BBPTM     TBPTM  130
+     C*
+     C*    FORMAT BROKER TOTAL AMOUNTS.
+     C*
+     C                     MOVE BBPTM     ZNUMIN
+     C                     EXSR FORMAT
+     C                     MOVE ZNUMOT    BBPTMA
+     C*
+     C*    WRITE OUT BROKER TOTAL LINE.
+     C*
+     C                     WRITEP1BKTL
+     C                     ELSE
+     C                     OPEN DL8104P1
+     C*
+     C** Report printer file to RCF via ZSFILE
+     C*
+     C                     Z-ADDSFNUM     ZSNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   @ENT
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR
+     C*
+     C** Error during ZSFILE processing, return to calling program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     END
+     C                     END
+     C*
+     C*
+     C*    RESET BROKER TOTALS.
+     C*
+     C                     Z-ADD0         BBPTM  130
+     C*
+     C*    CHAIN TO BROKER INFORMATION.
+     C*
+     C                     CALL 'AOBROKR0'
+     C                     PARM *BLANKS   RTCD
+     C                     PARM '*KEY   ' OPTN
+     C                     PARM BRKC      KYBK    4
+     C           SDBROK    PARM SDBROK    DSFDY
+     C           RTCD      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBROKPD'DBFILE
+     C                     MOVELBRKC      DBKEY
+     C                     Z-ADD7         DBASE
+     C                     OUT  LDA
+     C                     MOVE ON        *INLR
+     C                     MOVE ON        *INU8
+     C                     MOVE ON        *IN30
+     C                     END
+     C                     MOVE BRKCA     OBRKCA
+     C*
+     C*    OUTPUT HEADINGS FOR NEXT BROKER
+     C*
+     C                     WRITEP1HEAD
+     C                     MOVE OFF       *IN18
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*
+     C*      STRUCT SR  FORMAT AND STRUCTURE OUTPUT INFORMATION.
+     C*
+     C           STRUCT    BEGSR                           *** SCRUCT ***
+     C*
+     C*    CHAIN TO DEALS FILE TO GET DEAL INFORMATION.
+     C*
+     C           DLNO      CHAINDEALALL              99
+     C           *IN99     IFEQ ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DEALS'   DBFILE
+     C                     MOVELDLNO      DBKEY
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     MOVE ON        *INLR
+     C                     MOVE ON        *INU8
+     C                     MOVE ON        *IN30
+     C                     END
+     C*
+     C*    ACCESS CUSTOMER DETAILS
+     C*
+     C                     MOVE CNUM      KYCNUM 10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   RTCD
+     C                     PARM '*KEY   ' OPTN
+     C                     PARM           KYCNUM
+     C                     PARM *BLANKS   KYST    7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           RTCD      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVELCNUM      DBKEY
+     C                     Z-ADD4         DBASE
+     C                     OUT  LDA
+     C                     MOVE ON        *INLR
+     C                     MOVE ON        *INU8
+     C                     MOVE ON        *IN30
+     C                     END
+     C*
+     C*    FORMAT DEAL DATE FOR OUTPUT.
+     C*
+     C                     Z-ADDDDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DDATE
+     C*
+     C*    FORMAT VALUE DATE FOR OUTPUT.
+     C*
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    VDATE
+     C*
+     C*    FORMAT MATURITY DATE FOR OUTPUT.
+     C*
+     C           MDAT      IFEQ 0
+     C                     MOVE *BLANKS   MDATE
+     C                     ELSE
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    MDATE
+     C                     END
+     C*
+     C*    FORMAL PRINCIPLE AMOUNT
+     C*
+     C                     MOVE PCPL      ZNUMIN
+     C                     EXSR FORMAT
+     C                     MOVE ZNUMOT    PCPLA
+     C*
+     C*    FORMAL BROKERAGE PAID AMOUNT
+     C*
+     C                     MOVE EAMT      ZNUMIN
+     C                     EXSR FORMAT
+     C                     MOVE ZNUMOT    BPTMA
+     C*
+     C*    ADD BROKERAGE PAID TO TOTAL.
+     C*
+     C                     ADD  EAMT      BBPTM
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C*
+     C*    FORMAT SR. FORMAT FIELDS FOR OUTPUT.
+     C*
+     C*  PARAMETERS IN;
+     C*              ZNUMIN : ALPHA FIELD CONTAINING THE NUMBER TO BE
+     C*                       CONVERTED. THE NUMBER IS RIGHT JUSTIFIED.
+     C*              ZDEC   : NUMBER OF DECIMAL PLACES
+     C*              ZSIGNT : THE SIGN REQUIRED
+     C*                        (ASSUME SIGN BLANK)
+     C*              ZSIGN  : WHETHER A SIGN SHOULD APPEAR
+     C*                        'A' = SIGN APPEARS AFTER THE NUMBER
+     C*                        'B' = SIGN APPEARS BEFORE THE NUMBER
+     C*                        ' ' = NO SIGN TO APPEAR.
+     C*                        (ASSUME SIGN IS NOT REQUIRED)
+     C*              ZCOMA  : WHETHER COMMA'S SHOULD APPEAR
+     C*                        (ASSUME COMMA'S ARE REQUIRED)
+     C*              ZCHRO  : MAXIMUM NUMBER OF OUTPUT CHARACTERS
+     C*                        (ASSUME 13 IE. 10 NUMBERS
+     C*                          WITH COMMA'S AND DECIMAL POINT)
+     C* * * * * * * * * * *  W A R N I N G  * * * * * * * * * * *
+     C*        ZSIGN, ZSIGNT, ZCOMA AND ZCHRO SHOULD BE INILILIZED
+     C*        WITH DEFAULT VALUES IN THE FIRST CYCLE SUBROUTINE.
+     C*
+     C*  PARAMETERS OUT;
+     C*              ZNUMOT : ARRAY CONTAINING FORMATTED NUMBER
+     C*                        THE NUMBER IS RIGHT JUSTIFIED.
+     C*              *IN89  : ERROR INDICATOR.
+     C*
+     C*  VARIABLES USED;
+     C*              U      : WORK.
+     C*              V      : USED TO CALCULATE IF A COMMA IS REQUIRED.
+     C*              W      : STARTING POSITION OF THE NUMBER IN ZAR1.
+     C*              X      : CURRENT ELEMENT IN ZAR1 BEING PROCESSED.
+     C*              Y      : NEXT ELEMENT AVAILABLE IN ZAR2.
+     C*              ZAR1   : ARRAY CONTAINING THE NUMBER TO BE
+     C*                        FORMATTED. RIGHT JUSTIFIED.
+     C*              ZAR2   : ARRAY CONTAINING THE FORMATTED NUMBER.
+     C*                        RIGHT JUSTIFIED.
+     C*
+     C*
+     C           FORMAT    BEGSR                           *** FORMAT ***
+     C*
+     C*    MOVE THE NUMBER COMING IN TO ARRAY 1.
+     C*
+     C                     MOVEA*BLANKS   ZAR1
+     C                     MOVEA*BLANKS   ZAR2
+     C                     MOVE *BLANKS   ZNUMOT 20
+     C                     Z-ADDZDEC      ZDEC    10
+     C                     MOVE OFF       *IN89
+     C*
+     C*    MOVE THE NUMBER COMING IN TO ARRAY 1.
+     C*
+     C                     MOVEAZNUMIN    ZAR1
+     C*
+     C*    FIND FIRST NUMBER IN INTEREST AMOUNT.
+     C*
+     C                     Z-ADD0         W       20
+     C           20        SUB  ZDEC      U       20
+     C                     MOVE OFF       *IN50
+     C           *IN50     DOUEQON
+     C                     ADD  1         W
+     C*
+     C*        FOUND FIRST NON '0' OR ' ' CHARACTER.
+     C*
+     C           ZAR1,W    IFNE ' '
+     C           ZAR1,W    ANDNE'0'
+     C                     MOVE ON        *IN50
+     C                     END
+     C*
+     C*        IF NO CHARACTERS FOUND THEN SET W TO DECIMAL
+     C*            PLACES + 1.
+     C*
+     C           W         IFEQ U
+     C                     MOVE ON        *IN50
+     C                     END
+     C                     END
+     C*
+     C*    MOVE SIGN INTO OUTPUT FIELD. (APPEARS AFTER THE NUMBER)
+     C*
+     C                     Z-ADD20        X       20
+     C                     Z-ADD20        Y       20
+     C           ZSIGN     IFEQ 'A'
+     C                     MOVE ZSIGNT    ZAR2,Y
+     C                     SUB  1         Y
+     C                     END
+     C*
+     C*    PROCESS NUMBER.
+     C*
+     C*    DECIMAL PORTION, (IF REQUIRED).
+     C*
+     C           ZDEC      IFGT 0
+     C                     DO   ZDEC                       LOOP
+     C                     MOVE ZAR1,X    ZAR2,Y
+     C                     SUB  1         X
+     C                     SUB  1         Y
+     C                     END
+     C                     MOVE '.'       ZAR2,Y
+     C                     SUB  1         Y
+     C                     END
+     C                     Z-ADD0         V
+     C*
+     C*    PROCESS REST OF NUMBER.
+     C*
+     C                     MOVE OFF       *IN50
+     C           *IN50     DOUEQON                         LOOP
+     C*
+     C*    COMMA'S.
+     C*
+     C           Y         IFGT 0
+     C           ZCOMA     IFEQ 'Y'
+     C           V         ANDGE3
+     C                     MOVE ','       ZAR2,Y
+     C                     SUB  1         Y
+     C                     Z-ADD0         V       20
+     C                     END
+     C                     END
+     C*
+     C*    MOVE NUMERICS.
+     C*
+     C           Y         IFGT 0
+     C                     MOVE ZAR1,X    ZAR2,Y
+     C                     SUB  1         X
+     C                     SUB  1         Y
+     C                     ADD  1         V
+     C                     END
+     C*
+     C           X         IFLT W                          PROCESSED
+     C                     MOVE ON        *IN50            ALL NUMBERS
+     C                     ELSE
+     C           Y         IFLE 0                          NUMBER IS
+     C                     MOVE ON        *IN50            TO BIG FOR
+     C                     MOVE ON        *IN89            OUTPUT
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*    MOVE SIGN INTO OUTPUT FIELD. (APPEARS BEFORE THE NUMBER)
+     C*
+     C           Y         IFGT 0
+     C           ZSIGN     IFEQ 'B'
+     C                     MOVE ZSIGNT    ZAR2,Y
+     C                     SUB  1         Y
+     C                     END
+     C                     ELSE
+     C                     MOVE ON        *IN89
+     C                     END
+     C*
+     C*    IS OUTPUT VALUE TO LARGE
+     C*
+     C           20        SUB  Y         U
+     C           U         IFGT ZCHRO
+     C                     MOVE ON        *IN89
+     C                     END
+     C*
+     C*    MOVE FORMATTED AMOUNT TO OUTPUT FIELD.
+     C*
+     C                     MOVEAZAR2      ZNUMOT 20
+     C*
+     C*    INITILIZE INPUT PARAMETERS.
+     C*
+     C                     Z-ADD17        ZCHRO   20
+     C                     MOVE *BLANKS   ZNUMIN 20
+     C                     MOVE ' '       ZSIGNT  1
+     C                     MOVE 'N'       ZSIGN   1
+     C                     MOVE 'Y'       ZCOMA   1
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C*  ERROR DUMP SUB-ROUTINE
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     OUT  LDA
+     C                     END
+     C                     ENDSR                           * *PSSR  ENDSR*
+     C*
+     C********************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/SPACE 3
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

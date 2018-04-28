@@ -1,0 +1,2505 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Matched & Unmatched Cashflow Rpt COB')        *
+/*OVRF*: OVRDBF FILE(PMPCFEP1) TOFILE(PMPCFEQ0) SHARE(*NO)          : *
+/*OVRF*: OVRDBF FILE(PMPCFUP0) TOFILE(PMPCFUPD) SHARE(*NO)          : *   097389
+/*OVRF*: OVRDBF FILE(PMPCFUP1) TOFILE(PMPCFUPD) SHARE(*NO)          : *   097389
+/*OVRF*: OVRDBF FILE(PMPCFUP2) TOFILE(PMPCFUPD) SHARE(*NO)          : *   097389
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM4211 - REPORT MATCHED AND UNMATCHED CASHFLOWS (COB)        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 110008             Date 24Oct96               *
+      *                 CPM005             Date 15JUL96               *
+     F*                 097389             DATE 02JUL96               *
+     F*                 101266             DATE 08FEB96               *
+     F*                 094891             DATE 23OCT95               *
+     F*                 082662             DATE 14SEP95               *
+     F*                 085871             DATE 16MAR95               *
+     F*                 085862             DATE 16MAR95               *
+     F*                 S01486             DATE 08DEC94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  110008 - Report Sequence should be the same for all reports  *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           PBFG/2 - CALCULATE & REPORT PERF. FOR ALL CUST.PORT *
+     F*  097389 - Matching is not done between transactions on reports*
+     F*           Output new report showing 'PROBABLE MATCHES'        *
+     F*  101266 - Bank Portfolios                                     *
+     F*  094891 - The temporary files in QTEMP have been renamed to   *
+     F*           make them unique and allow QTEMP to appear anywhere *
+     F*           in the library list - amend pgm to reference these  *
+     F*           files.                                              *
+     F*  082662 - Recompiled over printer file                        *
+     F*  085871 - RECOMPILED DUE TO CHANGE TO PF/PMPCFEQ0             *
+     F*  085862 - RECOMPILED DUE TO CHANGE TO PF/PMPCAAPD             *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*           (Program based on PM4210)                           *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F***OVRDBF FILE(PMPCFET0) TOFILE(PMPCFEQ0) SHARE(*NO)         094891 101266
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F** Portfolio capital flow events - 'CE' renamed to 'PC'
+     F***PMPCFEQ0UF  E           K        DISK                            094891
+     F***PMPCFET0UF  E           K        DISK                     094891 101266
+     FPMPCFEQ0UF  E           K        DISK                               101266
+     F                                              KINFSR *PSSR
+     F*
+     F***Portfolio*capital*flow*events*-*by*override*of*PMPCFEQ0          094891
+     F***Portfolio*capital*flow*events - by OVR of PMPCFEQ0 at runt094891 101266
+     F** Portfolio capital flow events - By override of PMPCFEQ0          101266
+     FPMPCFEP1UF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            PMPCFEPF                          KRENAMEPMPCFEPX
+     F*                                                                   097389
+     F** Portfolio capital flow events unmatched - 'CE'                   097389
+     FPMPCFUPDUF  E           K        DISK                      A        097389
+     F                                              KINFSR *PSSR          097389
+     F*                                                                   097389
+     F** Portfolio capital flow events - by override of PMPCFUPD          097389
+     FPMPCFUP1UF  E           K        DISK                               097389
+     F                                              KINFSR *PSSR          097389
+     F            PMPCFUPF                          KRENAMEPMPCFUPX       097389
+     F*                                                                   097389
+     F** Portfolio capital flow events - by override of PMPCFUPD          097389
+     FPMPCFUP2UF  E           K        DISK                               097389
+     F                                              KINFSR *PSSR          097389
+     F            PMPCFUPF                          KRENAMEPMPCFUPY       097389
+     F*
+     F** Portfolio Definition Details - 'PN
+     FPMPORTPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*                                                                   CPM005
+     F** Portfolio Customer definition detail - 'PN'                      CPM005
+     FPMCNSDLLIF  E           K        DISK         KINFSR *PSSR          CPM005
+     F*
+     F** Performance Events by Event - 'QS QU'
+     FPMPEVTLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F* Printer File.
+     FPM4211P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS DSPR1
+     F*
+     F* Printer File.
+     FPM4211P2O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS DSPR2
+     F*
+     F* Printer File.
+     FPM4211P3O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS DSPR3
+     F*                                                                   097389
+     F* Printer File.                                                     097389
+     FPM4211P4O   E                    PRINTER      KINFSR *PSSR      UC  097389
+     F                                              KINFDS DSPR4          097389
+     F**  Audit Printer File
+     FPM4211AUO   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOLU
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  50 -  Multibranching indicator                               *
+     F*  51 -  Record PMPCAAP0 read from PMPEVTLL                     *
+     F*  52 -  Record PMPTRAP0 read from PMPEVTLL                     *
+     F*                                                               *
+     F*  61 -  *OFF : mode 1    *ON : mode 2                          *
+     F*  62 -  *OFF : Change to capital 'Y' OUT                       *
+     F*        *ON  : Change to capital 'N' OUT                       *
+     F*  63 -  *OFF : Change to capital 'Y' IN                        *
+     F*        *ON  : Change to capital 'N' IN                        *
+     F*                                                               *
+     F***73*-**File*operations*indicator*-*PMPCFEQ0********************   094891
+     F***73*-**File operations indicator - PMPCFET0                094891 101266
+     F*  73 -  File operations indicator - PMPCFEQ0                   *   101266
+     F*  74 -  File operations indicator - PMPCFEP1                   *
+     F*  77 -  File operations indicator - PMPORTPD                   *
+     F*  78 -  File operaitons indicator - PMPEVTLL                   *
+     F*                                                               *
+     F*  98 -  Date format indicator left '0' for DDMMYY              *
+     F*                                                               *
+     F*  U7 -  Database error                                         *
+     F*  U8 -  Program error                                          *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   O F   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  MAIN   - Main processing routine                             *
+     F*  #HEADR - Format header details                               *
+     F*  #SPOOL - Control spool file names                            *
+     F*  #FORMT - Format cashflow details                             *
+     F*  #LZSFL - Call ZSFILE                                         *
+     F*  ZSEDIT - Inserting decimal point and sign into numeric field *
+     F*  ZDATE2 - CONVERT DAY NUMBER TO DATE FORMAT DDMMYY            *
+     F*  *PSSR  - File/program exeption handler                       *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E**  Array for copyright
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E**  Array 7.0 - Inflow references
+     E                    SENI        5  7 0
+     E*
+     E**  Array 7.0 - Outflow references
+     E                    SENO        5  7 0
+     E*
+     E**  Array 15.0 Inflow amounts
+     E                    SERI        5 15 0
+     E*
+     E**  Array 15.0 Outflow amounts
+     E                    SERO        5 15 0
+     E*
+     E**  Array for Performance Period
+     E                    PERI    1   3 17
+     E*                                                                   097389
+     E** Array of Unmatched Incoming Amounts and References               097389
+     E                    INCA       10 15 0                              097389
+     E                    INCR       10  7 0                              097389
+     E*                                                                   097389
+     E** Array of Unmatched Outgoing Amounts and References               097389
+     E                    OUTA       10 15 0                              097389
+     E                    OUTR       10  7 0                              097389
+     E*                                                                   097389
+     E** Array of Combined Incoming and Outgoing Amounts                  097389
+     E                    CMBI       50 15 0                              097389
+     E                    CMBO       50 15 0                              097389
+     E*                                                                   097389
+     E** Combined Incoming and Outgoing References                        097389
+     E                    RFI1       50  7 0                              097389
+     E                    RFI2       50  7 0                              097389
+     E                    RFO1       50  7 0                              097389
+     E                    RFO2       50  7 0                              097389
+     E*
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     I/EJECT
+     I*
+     I**  Record-identification indicators for LF/PMPCPTLL
+     IPMPCAAP0    51
+     I*
+     IPMPTRAP0    52
+     I*
+     I**  Rename PMPCFEP1 fields
+     IPMPCFEPX
+     I              CEACOF                          QWACOF
+     I              CECUST                          QWCUST
+     I              CEPTFR                          QWPTFR
+     I              CEPEPE                          QWPEPE
+     I              CEINTY                          QWINTY
+     I              CEEDAT                          QWEDAT
+     I              CEINOU                          QWINOU
+     I              CETOAM                          QWTOAM
+     I              CEFRID                          QWFRID
+     I              CEFROM                          QWFROM
+     I              CETOID                          QWTOID
+     I              CETORE                          QWTORE
+     I              CECPTC                          QWCPTC
+     I              CEEVN1                          QWEVN1
+     I              CEAMT1                          QWAMT1
+     I              CEEVN2                          QWEVN2
+     I              CEAMT2                          QWAMT2
+     I              CEEVN3                          QWEVN3
+     I              CEAMT3                          QWAMT3
+     I              CEEVN4                          QWEVN4
+     I              CEAMT4                          QWAMT4
+     I              CEEVN5                          QWEVN5
+     I              CEAMT5                          QWAMT5
+     I              CEDIFF                          QWDIFF
+     I              CEDPCD                          QWDPCD
+     I*
+     I**  Rename PMPCFEQ0 fields
+     IPMPCFEPF
+     I              CEACOF                          PCACOF
+     I              CECUST                          PCCUST
+     I              CEPTFR                          PCPTFR
+     I              CEPEPE                          PCPEPE
+     I              CEINTY                          PCINTY
+     I              CEEDAT                          PCEDAT
+     I              CEINOU                          PCINOU
+     I              CETOAM                          PCTOAM
+     I              CEFRID                          PCFRID
+     I              CEFROM                          PCFROM
+     I              CETOID                          PCTOID
+     I              CETORE                          PCTORE
+     I              CECPTC                          PCCPTC
+     I              CEEVN1                          PCEVN1
+     I              CEAMT1                          PCAMT1
+     I              CEEVN2                          PCEVN2
+     I              CEAMT2                          PCAMT2
+     I              CEEVN3                          PCEVN3
+     I              CEAMT3                          PCAMT3
+     I              CEEVN4                          PCEVN4
+     I              CEAMT4                          PCAMT4
+     I              CEEVN5                          PCEVN5
+     I              CEAMT5                          PCAMT5
+     I              CEDIFF                          PCDIFF
+     I              CEDPCD                          PCDPCD
+     I*                                                                   097389
+     I*  Rename PMPCFUPF fields                                           097389
+     IPMPCFUPF                                                            097389
+     I              CEACOF                          PCACOF                097389
+     I              CECUST                          PCCUST                097389
+     I              CEPTFR                          PCPTFR                097389
+     I              CEPEPE                          PCPEPE                097389
+     I              CEINTY                          PCINTY                097389
+     I              CEEDAT                          PCEDAT                097389
+     I              CEINOU                          PCINOU                097389
+     I              CETOAM                          PCTOAM                097389
+     I              CEFRID                          PCFRID                097389
+     I              CEFROM                          PCFROM                097389
+     I              CETOID                          PCTOID                097389
+     I              CETORE                          PCTORE                097389
+     I              CECPTC                          PCCPTC                097389
+     I              CEEVN1                          PCEVN1                097389
+     I              CEAMT1                          PCAMT1                097389
+     I              CEEVN2                          PCEVN2                097389
+     I              CEAMT2                          PCAMT2                097389
+     I              CEEVN3                          PCEVN3                097389
+     I              CEAMT3                          PCAMT3                097389
+     I              CEEVN4                          PCEVN4                097389
+     I              CEAMT4                          PCAMT4                097389
+     I              CEEVN5                          PCEVN5                097389
+     I              CEAMT5                          PCAMT5                097389
+     I              CEDIFF                          PCDIFF                097389
+     I              CEDPCD                          PCDPCD                097389
+     I              CECSRF                          PCCSRF                097389
+     I*                                                                   097389
+     I*  Rename PMPCFUP1 fields                                           097389
+     IPMPCFUPX                                                            097389
+     I              CEACOF                          QWACOF                097389
+     I              CECUST                          QWCUST                097389
+     I              CEPTFR                          QWPTFR                097389
+     I              CEPEPE                          QWPEPE                097389
+     I              CEINTY                          QWINTY                097389
+     I              CEEDAT                          QWEDAT                097389
+     I              CEINOU                          QWINOU                097389
+     I              CETOAM                          QWTOAM                097389
+     I              CEFRID                          QWFRID                097389
+     I              CEFROM                          QWFROM                097389
+     I              CETOID                          QWTOID                097389
+     I              CETORE                          QWTORE                097389
+     I              CECPTC                          QWCPTC                097389
+     I              CEEVN1                          QWEVN1                097389
+     I              CEAMT1                          QWAMT1                097389
+     I              CEEVN2                          QWEVN2                097389
+     I              CEAMT2                          QWAMT2                097389
+     I              CEEVN3                          QWEVN3                097389
+     I              CEAMT3                          QWAMT3                097389
+     I              CEEVN4                          QWEVN4                097389
+     I              CEAMT4                          QWAMT4                097389
+     I              CEEVN5                          QWEVN5                097389
+     I              CEAMT5                          QWAMT5                097389
+     I              CEDIFF                          QWDIFF                097389
+     I              CEDPCD                          QWDPCD                097389
+     I              CECSRF                          QWCSRF                097389
+     I*                                                                   097389
+     I*  Rename PMPCFUP2 fields                                           097389
+     IPMPCFUPY                                                            097389
+     I              CEACOF                          WGACOF                097389
+     I              CECUST                          WGCUST                097389
+     I              CEPTFR                          WGPTFR                097389
+     I              CEPEPE                          WGPEPE                097389
+     I              CEINTY                          WGINTY                097389
+     I              CEEDAT                          WGEDAT                097389
+     I              CEINOU                          WGINOU                097389
+     I              CETOAM                          WGTOAM                097389
+     I              CEFRID                          WGFRID                097389
+     I              CEFROM                          WGFROM                097389
+     I              CETOID                          WGTOID                097389
+     I              CETORE                          WGTORE                097389
+     I              CECPTC                          WGCPTC                097389
+     I              CEEVN1                          WGEVN1                097389
+     I              CEAMT1                          WGAMT1                097389
+     I              CEEVN2                          WGEVN2                097389
+     I              CEAMT2                          WGAMT2                097389
+     I              CEEVN3                          WGEVN3                097389
+     I              CEAMT3                          WGAMT3                097389
+     I              CEEVN4                          WGEVN4                097389
+     I              CEAMT4                          WGAMT4                097389
+     I              CEEVN5                          WGEVN5                097389
+     I              CEAMT5                          WGAMT5                097389
+     I              CEDIFF                          WGDIFF                097389
+     I              CEDPCD                          WGDPCD                097389
+     I              CECSRF                          WGCSRF                097389
+     I*
+     I**  Local data area for database error details
+     I*
+     ILDA         DS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**  Information area for PRTF (overflow + last line)
+     IDSPR1       DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890SSOF1
+     I                                    B 367 3680SSLS1
+     I*
+     I**  Information area for PRTF (overflow + last line)
+     IDSPR2       DS
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 188 1890SSOF2
+     I                                    B 367 3680SSLS2
+     I*
+     I**  Information area for PRTF (overflow + last line)
+     IDSPR3       DS
+     I                                       83  92 SFILE3
+     I                                    B 123 1240SFNUM3
+     I                                    B 188 1890SSOF3
+     I                                    B 367 3680SSLS3
+     I*                                                                   097389
+     I*  Information area for PRTF (overflow + last line)                 097389
+     IDSPR4       DS                                                      097389
+     I                                       83  92 SFILE4                097389
+     I                                    B 123 1240SFNUM4                097389
+     I                                    B 188 1890SSOF4                 097389
+     I                                    B 367 3680SSLS4                 097389
+     I*                                                                   097389
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I**  Data structure for compilation - copyright insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  Data structure for KLIST PORT
+     I            DS
+     I                                        1  10 PORTBB
+     I**********                              1   60PCCUST                                    CSD027
+     I                                        1   6 PCCUST                                    CSD027
+     I                                        7  10 PCPTFR
+     I*
+     IRUNDAT    E DS
+     I**  Standard Data Area Layout for system flags and run date
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Data structure for bank details
+     I*
+     ISDPORT    E DSSDPORTPD
+     I**  Data structure for portfolio management details
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I**  Data structure for customer details
+     I*
+     ISDACOF    E DSSDACOFPD
+     I**  Data structure for account officer details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access objects
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Long data structure for access objects
+     I*
+     I/COPY ZSRSRC,ZSEDITZ2
+     C/EJECT
+     C*================================================================
+     C*
+     C**  Copyright statement
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C**  Receive MODE parameter from calling program
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C*
+     C**  Define fields
+     C           *LIKE     DEFN PCCUST    WWCUST
+     C           *LIKE     DEFN PCPTFR    WWPTFR
+     C           *LIKE     DEFN PCPEPE    WWPEPE
+     C           *LIKE     DEFN PCACOF    WWACO3
+     C           *LIKE     DEFN PCCUST    WWCUS3
+     C           *LIKE     DEFN PCPTFR    WWPTF3
+     C           *LIKE     DEFN PCPEPE    WWPEP3
+     C           *LIKE     DEFN PCACOF    WWACO2
+     C           *LIKE     DEFN PCCUST    WWCUS2
+     C           *LIKE     DEFN PCPTFR    WWPTF2
+     C           *LIKE     DEFN PCPEPE    WWPEP2
+     C           *LIKE     DEFN PCACOF    WWACO1
+     C           *LIKE     DEFN PCCUST    WWCUS1
+     C           *LIKE     DEFN PCPTFR    WWPTF1
+     C           *LIKE     DEFN PCPEPE    WWPEP1
+     C           *LIKE     DEFN PCINOU    WWINOU
+     C           *LIKE     DEFN BBCUST    WWCUSN
+     C*
+     C**  Define key list to process PMPCFEP1
+     C           PCFE      KLIST
+     C                     KFLD           PCDPCD
+     C                     KFLD           PCACOF
+     C                     KFLD           PCCUST
+     C                     KFLD           PCPTFR
+     C                     KFLD           PCPEPE
+     C                     KFLD           PCEDAT
+     C                     KFLD           WWCPTC
+     C                     KFLD           WWINOU
+     C                     KFLD           PCTOAM
+     C                     KFLD           PCFRID
+     C                     KFLD           PCFROM
+     C                     KFLD           PCTOID
+     C                     KFLD           PCTORE
+     C*
+     C**  Define key list to process PMPORTPD
+     C           PORT      KLIST
+     C                     KFLD           PCCUST
+     C                     KFLD           PCPTFR
+     C*
+     C**  Prepare variables for database error
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'PM4211'  DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Get bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WLRTCD  7
+     C                     PARM '*FIRST'  WLOPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE            ***************
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Get PM ICD
+     C*
+     C                     CALL 'AOPORTR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*FIRST'  WLOPTN
+     C           SDPORT    PARM SDPORT    DSFDY
+     C*
+     C           WLRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE            ***************
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 02 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVE *OFF      *IN98
+     C*
+     C**  Edit code for every
+     C                     MOVE *BLANKS   ZECODE
+     C                     MOVE 'N'       WWCPTC  1
+     C*
+     C**  Set MODE indicator for PRTF use
+     C           MODE      IFEQ '2'
+     C                     SETON                     61
+     C                     ENDIF
+     C*
+     C**  Read in DTAARA/RUNDAT and set up multibranching indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN50
+     C                     END
+     C*
+     C**  Initialise work variables
+     C*
+     C                     MOVE 'Y'       WLFRS1  1
+     C                     MOVE 'Y'       WLFRS2  1
+     C                     MOVE 'Y'       WLFRS3  1
+     C                     MOVE 'Y'       WLFRS4  1                       097389
+     C                     MOVE *BLANKS   @RSEQ                           110008
+     C*
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C**  Read Portfolio Capital Flow Events
+     C***********          READ PMPCFEQ0                 73               094891
+     C***********          READ PMPCFET0                 73        094891 101266
+     C                     READ PMPCFEQ0                 73               101266
+     C*
+     C**  If no records
+     C           *IN73     IFEQ *ON                        B1
+     C*
+     C**  Open audit printer file and output 'No details to report'
+     C*
+     C                     OPEN PM4211AU
+     C                     WRITEPM4211HD
+     C                     WRITEPM4211ND
+     C*
+     C**  Ensure Audit Spool File recorded by RCF
+     C                     MOVE SFILEU    SFILE
+     C                     MOVE SFNUMU    ZSNUM
+     C                     EXSR #LZSFL
+     C                     CLOSEPM4211AU
+     C*
+     C                     ENDIF                           E1
+     C*
+     C**  Read Portfolio Capital Flow Events in loop
+     C           *IN73     DOWEQ*OFF                       B1
+     C*                                                                   097389
+     C** If there are unmatched items outstanding and any key fields heve 097389
+     C** changed perform routine to output unmatched items                097389
+     C           WWUMTC    IFEQ 'Y'                        B2             097389
+     C           PCDPCD    IFNE WSDPCD                     B3             097389
+     C           PCACOF    ORNE WSACOF                                    097389
+     C           PCCUST    ORNE WSCUST                                    097389
+     C           PCPTFR    ORNE WSPTFR                                    097389
+     C           PCPEPE    ORNE WSPEPE                                    097389
+     C           PCEDAT    ORNE WSEDAT                                    097389
+     C                     EXSR #UNMCH                                    097389
+     C                     END                             E3             097389
+     C                     END                             E2             097389
+     C*
+     C**  Print header
+     C           WWCUST    IFNE PCCUST                     B2
+     C           WWPTFR    ORNE PCPTFR
+     C           WWPEPE    ORNE PCPEPE
+     C                     EXSR #HEADR
+     C                     ENDIF                           E2
+     C*
+     C           PCCPTC    IFEQ 'Y'                        B2
+     C*
+     C**  If Report Capital Changes Separately - 'Y'
+     C           FCRCCS    IFEQ 'Y'                        B3
+     C                     MOVE 'PM4211P3'WWPRTF  8
+     C                     EXSR #SPOOL
+     C*
+     C**  Print header 1
+     C           WWACO3    IFNE PCACOF                     B4
+     C*
+     C                     MOVE PCACOF    RRACOF
+     C                     MOVE AZACON    RRACON
+     C                     WRITEHEAD31
+     C*
+     C                     MOVE PCACOF    WWACO3
+     C*
+     C                     ENDIF                           E4
+     C*
+     C**  Print header 2
+     C           WWCUS3    IFNE PCCUST                     B4
+     C           WWPTF3    ORNE PCPTFR
+     C           WWPEP3    ORNE PCPEPE
+     C*
+     C                     MOVE PCCUST    RRCUST
+     C                     MOVE BBCSSN    RRCSSN
+     C                     MOVE BBCRNM    RRCRNM
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           PCPTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    RRPTFR                          CPM005
+     C                     MOVE FCN997    RRPTFN                          CPM005
+     C           PCPTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    RRPTFR                          CPM005
+     C                     MOVE FCN998    RRPTFN                          CPM005
+     C           PCPTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    RRPTFR                          CPM005
+     C                     MOVE FCN999    RRPTFN                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVE PCPTFR    RRPTFR
+     C                     MOVE PNPTFN    RRPTFN
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVE PNPTCY    RRPTCY
+     C                     MOVE PNPTCY    RRPTCX
+     C*
+     C**  Check Overflow print line
+     C           SSOF3     SUB  SSLS3     WWREST  20
+     C           WWREST    IFLE 8                          B5
+     C                     WRITEHEAD31
+     C                     ENDIF                           E5
+     C*
+     C                     WRITEHEAD32
+     C*
+     C**  Save Cust. - Portf. - Perf.Per.
+     C**********           Z-ADDPCCUST    WWCUS3                                              CSD027
+     C                     MOVE PCCUST    WWCUS3                                              CSD027
+     C                     MOVE PCPTFR    WWPTF3
+     C                     MOVE PCPEPE    WWPEP3
+     C*
+     C                     ENDIF                           E4
+     C*
+     C**  Set up parameters for #FORMT
+     C*
+     C           PCINOU    IFEQ 'I'                        B4
+     C                     MOVE 'Y'       WWFCIN  1
+     C                     ELSE
+     C                     MOVE 'N'       WWFCIN
+     C                     ENDIF                           E4
+     C*
+     C           PCINOU    IFEQ 'O'                        B4
+     C                     MOVE 'Y'       WWFCOU  1
+     C                     ELSE
+     C                     MOVE 'N'       WWFCOU
+     C                     ENDIF                           E4
+     C*
+     C                     MOVE 'PMPCFEQ0'WWFOIU  8
+     C                     MOVE 'PMPCFEQ0'WWFOOU  8
+     C                     MOVE 'PM4211P3'WWPRTF
+     C*
+     C                     EXSR #FORMT
+     C*
+     C**  Details written to PM4211P3
+     C                     MOVE 'Y'       WWDET3  1
+     C*
+     C****Delete*record*from*PMPCFEQ0********************************     094891
+     C****Delete*record*from PMPCFET0                              094891 101266
+     C**  Delete record from PMPCFEQ0                                     101266
+     C                     DELETPMPCFEPF
+     C*
+     C                     ELSE                            X3
+     C*
+     C                     MOVE 'PM4211P2'WWPRTF
+     C                     EXSR #SPOOL
+     C*
+     C**  Print header 1
+     C           WWACO2    IFNE PCACOF                     B4
+     C*
+     C                     MOVE PCACOF    RRACOF
+     C                     MOVE AZACON    RRACON
+     C                     WRITEHEAD21
+     C*
+     C                     MOVE PCACOF    WWACO2
+     C*
+     C                     ENDIF                           E4
+     C*
+     C**  Print header 2
+     C           WWCUS2    IFNE PCCUST                     B4
+     C           WWPTF2    ORNE PCPTFR
+     C           WWPEP2    ORNE PCPEPE
+     C*
+     C                     MOVE PCCUST    RRCUST
+     C                     MOVE BBCSSN    RRCSSN
+     C                     MOVE BBCRNM    RRCRNM
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           PCPTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    RRPTFR                          CPM005
+     C                     MOVE FCN997    RRPTFN                          CPM005
+     C           PCPTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    RRPTFR                          CPM005
+     C                     MOVE FCN998    RRPTFN                          CPM005
+     C           PCPTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    RRPTFR                          CPM005
+     C                     MOVE FCN999    RRPTFN                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVE PCPTFR    RRPTFR
+     C                     MOVE PNPTFN    RRPTFN
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVE PNPTCY    RRPTCY
+     C                     MOVE PNPTCY    RRPTCX
+     C*
+     C**  Check Overflow print line
+     C           SSOF2     SUB  SSLS2     WWREST
+     C           WWREST    IFLE 8                          B5
+     C                     WRITEHEAD21
+     C                     ENDIF                           E5
+     C*
+     C                     WRITEHEAD22
+     C*
+     C**  Save Cust. - Portf. - Perf.Per.
+     C**********           Z-ADDPCCUST    WWCUS2                                              CSD027
+     C                     MOVE PCCUST    WWCUS2                                              CSD027
+     C                     MOVE PCPTFR    WWPTF2
+     C                     MOVE PCPEPE    WWPEP2
+     C*
+     C                     ENDIF                           E4
+     C*
+     C**  Set up parameters for #FORMT
+     C*
+     C           PCINOU    IFEQ 'I'                        B4
+     C                     MOVE 'Y'       WWFCIN
+     C                     ELSE
+     C                     MOVE 'N'       WWFCIN
+     C                     ENDIF                           E4
+     C*
+     C           PCINOU    IFEQ 'O'                        B4
+     C                     MOVE 'Y'       WWFCOU
+     C                     ELSE
+     C                     MOVE 'N'       WWFCOU
+     C                     ENDIF                           E4
+     C*
+     C                     MOVE 'PMPCFEQ0'WWFOIU
+     C                     MOVE 'PMPCFEQ0'WWFOOU
+     C                     MOVE 'PM4211P2'WWPRTF
+     C*
+     C                     EXSR #FORMT
+     C*
+     C**  Details written to PM4211P2
+     C                     MOVE 'Y'       WWDET2  1
+     C*
+     C****Delete*record*from*PMPCFEQ0***************************          094891
+     C****Delete*record*from PMPCFET0                              094891 101266
+     C**  Delete record from PMPCFEQ0                                     101266
+     C                     DELETPMPCFEPF
+     C*
+     C                     ENDIF                           E3
+     C*
+     C                     ELSE                            X2
+     C*
+     C**  Reverse In/Out indicator
+     C           PCINOU    IFEQ 'I'                        B3
+     C                     MOVE 'O'       WWINOU
+     C                     ELSE
+     C                     MOVE 'I'       WWINOU
+     C                     ENDIF                           E3
+     C*
+     C                     MOVE 'N'       WWCPTC                          097389
+     C           PCFE      CHAINPMPCFEPX             74
+     C*
+     C**  If details found on PMPCFEP1
+     C           *IN74     IFEQ *OFF                       B3
+     C*
+     C                     MOVE 'PM4211P1'WWPRTF
+     C                     EXSR #SPOOL
+     C*
+     C**  Print header 1
+     C           WWACO1    IFNE PCACOF                     B4
+     C*
+     C                     MOVE PCACOF    RRACOF
+     C                     MOVE AZACON    RRACON
+     C                     WRITEHEAD11
+     C*
+     C                     MOVE PCACOF    WWACO1
+     C*
+     C                     ENDIF                           E4
+     C*
+     C**  Print header 2
+     C           WWCUS1    IFNE PCCUST                     B4
+     C           WWPTF1    ORNE PCPTFR
+     C           WWPEP1    ORNE PCPEPE
+     C*
+     C                     MOVE PCCUST    RRCUST
+     C                     MOVE BBCSSN    RRCSSN
+     C                     MOVE BBCRNM    RRCRNM
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           PCPTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    RRPTFR                          CPM005
+     C                     MOVE FCN997    RRPTFN                          CPM005
+     C           PCPTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    RRPTFR                          CPM005
+     C                     MOVE FCN998    RRPTFN                          CPM005
+     C           PCPTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    RRPTFR                          CPM005
+     C                     MOVE FCN999    RRPTFN                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVE PCPTFR    RRPTFR
+     C                     MOVE PNPTFN    RRPTFN
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVE PNPTCY    RRPTCY
+     C                     MOVE PNPTCY    RRPTCX
+     C*
+     C**  Check Overflow print line
+     C           SSOF1     SUB  SSLS1     WWREST
+     C           WWREST    IFLE 8                          B5
+     C                     WRITEHEAD11
+     C                     ENDIF                           E5
+     C*
+     C                     WRITEHEAD12
+     C*
+     C**  Save Cust. - Portf. - Perf.Per.
+     C**********           Z-ADDPCCUST    WWCUS1                                              CSD027
+     C                     MOVE PCCUST    WWCUS1                                              CSD027
+     C                     MOVE PCPTFR    WWPTF1
+     C                     MOVE PCPEPE    WWPEP1
+     C*
+     C                     ENDIF                           E4
+     C*
+     C**  Set up parameters for #FORMT
+     C*
+     C                     MOVE 'Y'       WWFCIN
+     C                     MOVE 'Y'       WWFCOU
+     C           PCINOU    IFEQ 'I'                        B4
+     C                     MOVE 'PMPCFEQ0'WWFOIU
+     C                     ELSE
+     C                     MOVE 'PMPCFEP1'WWFOIU
+     C                     ENDIF                           E4
+     C*
+     C           PCINOU    IFEQ 'O'                        B4
+     C                     MOVE 'PMPCFEQ0'WWFOOU
+     C                     ELSE
+     C                     MOVE 'PMPCFEP1'WWFOOU
+     C                     ENDIF                           E4
+     C*
+     C                     MOVE 'PM4211P1'WWPRTF
+     C*
+     C                     EXSR #FORMT
+     C*
+     C**  Details written to PM4211P1
+     C                     MOVE 'Y'       WWDET1  1
+     C*
+     C****Delete*record*from*PMPCFEQ0*&*PMPCFEP1**********************    094891
+     C****Delete*record*from PMPCFET0 & PMPCFEP1                   094891 101266
+     C**  Delete record from PMPCFEQ0 & PMPCFEP1                          101266
+     C                     DELETPMPCFEPF
+     C                     DELETPMPCFEPX
+     C*
+     C                     ELSE                            X3
+     C*
+     C***********          MOVE 'PM4211P2'WWPRTF                          097389
+     C***********          EXSR #SPOOL                                    097389
+     C***                                                                 097389
+     C****Print*header*1                                                  097389
+     C***********WWACO2    IFNE PCACOF                     B4             097389
+     C***                                                                 097389
+     C***********          MOVE PCACOF    RRACOF                          097389
+     C***********          MOVE AZACON    RRACON                          097389
+     C***********          WRITEHEAD21                                    097389
+     C***                                                                 097389
+     C***********          MOVE PCACOF    WWACO2                          097389
+     C***                                                                 097389
+     C***********          ENDIF                           E4             097389
+     C***                                                                 097389
+     C****Print*header*2                                                  097389
+     C***********WWCUS2    IFNE PCCUST                     B4             097389
+     C***********WWPTF2    ORNE PCPTFR                                    097389
+     C***********WWPEP2    ORNE PCPEPE                                    097389
+     C***                                                                 097389
+     C***********          MOVE PCCUST    RRCUST                          097389
+     C***********          MOVE BBCSSN    RRCSSN                          097389
+     C***********          MOVE BBCRNM    RRCRNM                          097389
+     C***********          MOVE PCPTFR    RRPTFR                          097389
+     C***********          MOVE PNPTFN    RRPTFN                          097389
+     C***********          MOVE PNPTCY    RRPTCY                          097389
+     C***********          MOVE PNPTCY    RRPTCX                          097389
+     C***                                                                 097389
+     C****Check*Overflow*print*line                                       097389
+     C***********SSOF2     SUB  SSLS2     WWREST                          097389
+     C***********WWREST    IFLE 8                          B5             097389
+     C***********          WRITEHEAD21                                    097389
+     C***********          ENDIF                           E5             097389
+     C***                                                                 097389
+     C***********          WRITEHEAD22                                    097389
+     C***                                                                 097389
+     C****Save*Cust.*-*Portf.*-*Perf.Per.                                 097389
+     C***********          Z-ADDPCCUST    WWCUS2                          097389
+     C***********          MOVE PCPTFR    WWPTF2                          097389
+     C***********          MOVE PCPEPE    WWPEP2                          097389
+     C***                                                                 097389
+     C***********          ENDIF                           E4             097389
+     C***                                                                 097389
+     C****Set*up*parameters*for*#FORMT                                    097389
+     C***                                                                 097389
+     C***********PCINOU    IFEQ 'I'                        B4             097389
+     C***********          MOVE 'Y'       WWFCIN  1                       097389
+     C***********          ELSE                                           097389
+     C***********          MOVE 'N'       WWFCIN                          097389
+     C***********          ENDIF                           E4             097389
+     C***                                                                 097389
+     C***********PCINOU    IFEQ 'O'                        B4             097389
+     C***********          MOVE 'Y'       WWFCOU  1                       097389
+     C***********          ELSE                                           097389
+     C***********          MOVE 'N'       WWFCOU                          097389
+     C***********          ENDIF                           E4             097389
+     C***                                                                 097389
+     C***********          MOVE 'PMPCFEQ0'WWFOIU                          097389
+     C***********          MOVE 'PMPCFEQ0'WWFOOU                          097389
+     C***********          MOVE 'PM4211P2'WWPRTF                          097389
+     C***                                                                 097389
+     C***********          EXSR #FORMT                                    097389
+     C***                                                                 097389
+     C****Details*written*to*PM4211P2                                     097389
+     C***********          MOVE 'Y'       WWDET2                          097389
+     C*                                                                   097389
+     C** Save details of unmatched item for later checking and set        097389
+     C** unmatched item flag to 'Y'                                       097389
+     C           PCTOAM    IFNE 0                          B4             097389
+     C                     MOVE 'Y'       WWUMTC  1                       097389
+     C                     MOVE PCDPCD    WSDPCD  3                       097389
+     C                     MOVE PCACOF    WSACOF  2                       097389
+     C**********           Z-ADDPCCUST    WSCUST  60                                   097389 CSD027
+     C                     MOVE PCCUST    WSCUST  6                                           CSD027
+     C                     MOVE PCPTFR    WSPTFR  4                       097389
+     C                     MOVE PCPEPE    WSPEPE  1                       097389
+     C                     Z-ADDPCEDAT    WSEDAT  50                      097389
+     C                     ADD  1         WWCSRF  70                      097389
+     C*                                                                   097389
+     C           WSCSRF    IFEQ 0                                         097389
+     C                     Z-ADDWWCSRF    WSCSRF  70                      097389
+     C                     END                                            097389
+     C*                                                                   097389
+     C** Save amount to next empty element in array of Incoming /         097389
+     C** Outgoing unmatched amounts                                       097389
+     C                     Z-ADD1         I       30                      097389
+     C                     Z-ADD0         WWFIN0 150                      097389
+     C           PCINOU    IFEQ 'I'                        B5             097389
+     C           WWFIN0    LOKUPINCA,I                   64               097389
+     C           *IN64     IFEQ '1'                        B6             097389
+     C                     Z-ADDPCTOAM    INCA,I                          097389
+     C                     Z-ADDWWCSRF    INCR,I                          097389
+     C                     END                             E6             097389
+     C*                                                                   097389
+     C                     ELSE                            X5             097389
+     C           WWFIN0    LOKUPOUTA,I                   64               097389
+     C           *IN64     IFEQ '1'                        B6             097389
+     C                     Z-ADDPCTOAM    OUTA,I                          097389
+     C                     Z-ADDWWCSRF    OUTR,I                          097389
+     C                     END                             E6             097389
+     C                     END                             E5             097389
+     C*                                                                   097389
+     C** Write record to file of unmatched items                          097389
+     C                     Z-ADDWWCSRF    PCCSRF                          097389
+     C                     WRITEPMPCFUPF                                  097389
+     C                     END                             E4             097389
+     C*
+     C****Delete*record*from*PMPCFEQ0*&*PMPCFEP1***********************   094891
+     C****Delete*record*from PMPCFET0                              094891 101266
+     C**  Delete record from PMPCFEQ0                                     101266
+     C                     DELETPMPCFEPF
+     C*
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+     C*
+     C***********          READ PMPCFEQ0                 73               094891
+     C***********          READ PMPCFET0                 73        094891 101266
+     C                     READ PMPCFEQ0                 73               101266
+     C                     ENDDO                           E1
+     C*                                                                   097389
+     C** If there are unmatched items outstanding and any key fields heve 097389
+     C** changed perform routine to output unmatched items                097389
+     C           WWUMTC    IFEQ 'Y'                        B1             097389
+     C                     EXSR #UNMCH                                    097389
+     C                     END                             E1             097389
+     C*
+     C**  End of reports
+     C           WWDET1    IFEQ 'Y'                        B1
+     C*
+     C**  Check Overflow print line
+     C           SSOF1     SUB  SSLS1     WWREST
+     C           WWREST    IFLE 3                          B2
+     C                     WRITEHEAD11
+     C                     ENDIF                           E2
+     C*
+     C                     WRITEENDREP1
+     C                     CLOSEPM4211P1
+     C                     ENDIF                           E1
+     C*
+     C**  End of reports
+     C           WWDET2    IFEQ 'Y'                        B1
+     C*
+     C**  Check Overflow print line
+     C           SSOF2     SUB  SSLS2     WWREST
+     C           WWREST    IFLE 3                          B2
+     C                     WRITEHEAD21
+     C                     ENDIF                           E2
+     C*
+     C                     WRITEENDREP2
+     C                     CLOSEPM4211P2
+     C                     ENDIF                           E1
+     C*
+     C**  End of reports
+     C           WWDET3    IFEQ 'Y'                        B1
+     C*
+     C**  Check Overflow print line
+     C           SSOF3     SUB  SSLS3     WWREST
+     C           WWREST    IFLE 3                          B2
+     C                     WRITEHEAD31
+     C                     ENDIF                           E2
+     C*
+     C                     WRITEENDREP3
+     C                     CLOSEPM4211P3
+     C                     ENDIF                           E1
+     C*                                                                   097389
+     C*  End of reports                                                   097389
+     C           WWDET4    IFEQ 'Y'                        B1             097389
+     C*                                                                   097389
+     C*  Check Overflow print line                                        097389
+     C           SSOF4     SUB  SSLS4     WWREST                          097389
+     C           WWREST    IFLE 3                          B2             097389
+     C                     WRITEHEAD41                                    097389
+     C                     ENDIF                           E2             097389
+     C*                                                                   097389
+     C                     WRITEENDREP4                                   097389
+     C                     CLOSEPM4211P4                                  097389
+     C                     ENDIF                           E1             097389
+     C*
+     C**  Terminate program
+     C*
+     C                     SETON                         LR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C/EJECT
+     C*================================================================
+     C**
+     C** #HEADR - Subroutine to format header details
+     C**
+     C** Called from Main line
+     C**
+     C** Calls:  ZSEDIT - Edit with currency decimal
+     C**
+     C*================================================================
+     C*
+     C           #HEADR    BEGSR
+     C*
+     C**  New Account Officer?
+     C           PCACOF    IFNE AZACOC
+     C*
+     C                     CALL 'AOACOFR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C                     PARM PCACOF    WLACOF  2
+     C           SDACOF    PARM SDACOF    DSSDY
+     C*
+     C           WLRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'003'     DBASE            ***************
+     C                     MOVE 'SDACOFPD'DBFILE           * DB ERROR 03 *
+     C                     MOVELPCACOF    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C**  New Customer?
+     C                     MOVE PCCUST    WWCUSN
+     C           WWCUSN    IFNE BBCUST
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C                     PARM WWCUSN    WLCUST 10
+     C                     PARM           WLKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C           WLRTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'004'     DBASE            ***************
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 04 *
+     C                     MOVELPCCUST    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C**  New Customer & Portfolio?
+     C           PCCUST    IFNE PNCNUM
+     C           PCPTFR    ORNE PNPTFR
+      *                                                                   CPM005
+     C           PCPTFR    IFNE '9997'                                    CPM005
+     C           PCPTFR    ANDNE'9998'                                    CPM005
+     C           PCPTFR    ANDNE'9999'                                    CPM005
+      *                                                                   CPM005
+     C           PORT      CHAINPMPORTPD             7777
+     C*
+     C           *IN77     IFEQ *ON
+     C                     MOVEL'005'     DBASE            ***************
+     C                     MOVE 'PMPORTPD'DBFILE           * DB ERROR 05 *
+     C                     MOVELPORTBB    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CPM005
+     C                     ELSE                                           CPM005
+      *                                                                   CPM005
+      ** Acces PMCNSDLL for portfolio details                             CPM005
+      *                                                                   CPM005
+     C           PORT      CHAINPMCNSDLL             7777                 CPM005
+      *                                                                   CPM005
+     C           *IN77     IFEQ *ON                                       CPM005
+     C                     Z-ADD007       DBASE            ***************CPM005
+     C                     MOVE 'PMCNSDLL'DBFILE           * DB ERROR 07 *CPM005
+     C                     MOVELPORTBB    DBKEY            ***************CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+     C                     ENDIF
+     C*
+     C**  Edit Difference with Portfolio currency decimal
+     C           MODE      IFEQ '2'
+     C                     Z-ADDPCDIFF    ZFLD15
+     C                     Z-ADDPNPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRDIFF
+     C*
+     C*********************MOVE PCPEPE    I       10                      097389
+     C                     Z-ADD*ZEROS    I                               097389
+     C                     MOVE PCPEPE    I                               097389
+     C                     MOVE PERI,I    RRPERI
+     C                     ENDIF
+     C*
+     C**  Portfolio currency
+     C                     MOVE PNPTCY    RRPTCY
+     C                     MOVE PNPTCY    RRPTCX
+     C                     MOVE PNPTCY    RRCCY1
+     C                     MOVE PNPTCY    RRCCY2
+     C                     MOVE PNPTCY    RRCCY3
+     C                     MOVE PNPTCY    RRCCY4
+     C*
+     C**  Save Customer, Portfolio, Performance Period
+     C**********           Z-ADDPCCUST    WWCUST                                              CSD027
+     C                     MOVE PCCUST    WWCUST                                              CSD027
+     C                     MOVE PCPTFR    WWPTFR
+     C                     MOVE PCPEPE    WWPEPE
+     C*
+     C                     ENDSR
+     C*================================================================
+     C/EJECT
+     C*================================================================
+     C**
+     C** #SPOOL - Subroutine to control spool files
+     C**
+     C** Called from Main line
+     C**
+     C** Calls:  #LZSFL - Subroutine to call ZSFILE
+     C**
+     C*================================================================
+     C*
+     C           #SPOOL    BEGSR
+     C*
+     C                     SELEC
+     C*
+     C           WWPRTF    WHEQ 'PM4211P1'
+     C*
+     C**  Open printer file if first time through
+     C           WLFRS1    IFEQ 'Y'
+     C                     OPEN PM4211P1
+     C                     MOVE 'N'       WLFRS1
+     C*
+     C**  Ensure Report Spool File recorded by RCF
+     C                     MOVELSFILE1    SFILE
+     C                     Z-ADDSFNUM1    ZSNUM
+     C                     EXSR #LZSFL
+     C                     ENDIF
+     C*
+     C           WWPRTF    WHEQ 'PM4211P2'
+     C*
+     C**  Open printer file if first time through
+     C           WLFRS2    IFEQ 'Y'
+     C                     OPEN PM4211P2
+     C                     MOVE 'N'       WLFRS2
+     C*
+     C**  Ensure Report Spool File recorded by RCF
+     C                     MOVELSFILE2    SFILE
+     C                     Z-ADDSFNUM2    ZSNUM
+     C                     EXSR #LZSFL
+     C                     ENDIF
+     C*
+     C           WWPRTF    WHEQ 'PM4211P3'
+     C*
+     C**  Open printer file if first time through
+     C           WLFRS3    IFEQ 'Y'
+     C                     OPEN PM4211P3
+     C                     MOVE 'N'       WLFRS3
+     C*
+     C**  Ensure Report Spool File recorded by RCF
+     C                     MOVELSFILE3    SFILE
+     C                     Z-ADDSFNUM3    ZSNUM
+     C                     EXSR #LZSFL
+     C                     ENDIF
+     C*                                                                   097389
+     C           WWPRTF    WHEQ 'PM4211P4'                                097389
+     C*                                                                   097389
+     C**  Open printer file if first time through                         097389
+     C           WLFRS4    IFEQ 'Y'                                       097389
+     C                     OPEN PM4211P4                                  097389
+     C                     MOVE 'N'       WLFRS4                          097389
+     C*                                                                   097389
+     C**  Ensure Report Spool File recorded by RCF                        097389
+     C                     MOVELSFILE4    SFILE                           097389
+     C                     Z-ADDSFNUM4    ZSNUM                           097389
+     C                     EXSR #LZSFL                                    097389
+     C                     ENDIF                                          097389
+     C*
+     C                     ENDSL
+     C*
+     C                     ENDSR
+     C*================================================================
+     C/EJECT
+     C*================================================================
+     C**
+     C** #FORMT - Subroutine to format cashflow details
+     C**
+     C** Called from Main line
+     C**
+     C** Calls:  #EVENT
+     C**         ZDATE2 - Convert day number to date format DDMMYY
+     C**         ZSEDIT - Edit with currency decimal
+     C*================================================================
+     C*
+     C           #FORMT    BEGSR
+     C*
+     C                     Z-ADDPNPCDP    ZDECS
+     C*
+     C**  Format capital inflow
+     C           WWFCIN    IFEQ 'Y'
+     C*
+     C           WWFOIU    IFEQ 'PMPCFEQ0'
+     C                     Z-ADDPCTOAM    ZFLD15
+     C                     MOVE PCINTY    RRINTI
+     C**********           MOVE PCTORE    WWREFI 20                                           CGL029
+     C                     MOVE PCTORE    WWREFI 26                                           CGL029
+     C                     MOVE PCTOID    WWMODI  2
+     C                     MOVE PCTOID    RRFRII
+     C                     EXSR #REFMT
+     C                     MOVE WWREFO    RRREFI
+     C                     Z-ADDPCEDAT    ZDAYNO
+     C                     ELSE
+     C                     Z-ADDQWTOAM    ZFLD15
+     C                     MOVE QWINTY    RRINTI
+     C                     MOVE QWTORE    WWREFI
+     C                     MOVE QWTOID    WWMODI
+     C                     MOVE QWTOID    RRFRII
+     C                     EXSR #REFMT
+     C                     MOVE WWREFO    RRREFI
+     C                     Z-ADDQWEDAT    ZDAYNO
+     C                     ENDIF
+     C*
+     C**  Convert day number to date format DDMMYY
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRDATI
+     C*
+     C**  Edit Total amount with Portfolio currency decimal
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRTOAI
+     C                     ELSE
+     C                     MOVE *BLANKS   RRTOAI
+     C                     MOVE *BLANKS   RRINTI
+     C                     MOVE *BLANKS   RRREFI
+     C                     MOVE *BLANKS   RRFRII
+     C                     MOVE *BLANKS   RRDATI
+     C                     ENDIF
+     C*
+     C**  Format capital outflow
+     C           WWFCOU    IFEQ 'Y'
+     C*
+     C           WWFOOU    IFEQ 'PMPCFEQ0'
+     C                     Z-SUBPCTOAM    ZFLD15
+     C                     MOVE PCINTY    RRINTO
+     C                     MOVE PCFROM    WWREFI
+     C                     MOVE PCFRID    WWMODI
+     C                     MOVE PCFRID    RRFRIO
+     C                     EXSR #REFMT
+     C                     MOVE WWREFO    RRREFO
+     C                     Z-ADDPCEDAT    ZDAYNO
+     C                     ELSE
+     C                     Z-SUBQWTOAM    ZFLD15
+     C                     MOVE QWINTY    RRINTO
+     C                     MOVE QWFROM    WWREFI
+     C                     MOVE QWFRID    WWMODI
+     C                     MOVE QWFRID    RRFRIO
+     C                     EXSR #REFMT
+     C                     MOVE WWREFO    RRREFO
+     C                     Z-ADDQWEDAT    ZDAYNO
+     C                     ENDIF
+     C*
+     C**  Convert day number to date format DDMMYY
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRDATO
+     C                     MOVE ZADATE    RRDATX                          097389
+     C*
+     C**  Edit Total amount with Portfolio currency decimal
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRTOAO
+     C                     ELSE
+     C                     MOVE *BLANKS   RRTOAO
+     C                     MOVE *BLANKS   RRINTO
+     C                     MOVE *BLANKS   RRREFO
+     C                     MOVE *BLANKS   RRFRIO
+     C                     MOVE *BLANKS   RRDATO
+     C                     MOVE *BLANKS   RRDATX                          097389
+     C                     ENDIF
+     C*
+     C                     SELEC
+     C           WWPRTF    WHEQ 'PM4211P1'
+     C*
+     C**  Check Overflow print line
+     C           SSOF1     SUB  SSLS1     WWREST
+     C           WWREST    IFLE 6
+     C                     WRITEHEAD11
+     C                     WRITEHEAD12
+     C                     ENDIF
+     C*
+     C**  Write details
+     C                     WRITEDET11
+     C           WWPRTF    WHEQ 'PM4211P2'
+     C*
+     C**  Check Overflow print line
+     C           SSOF2     SUB  SSLS2     WWREST
+     C           WWREST    IFLE 6
+     C                     WRITEHEAD21
+     C                     WRITEHEAD22
+     C                     ENDIF
+     C*
+     C**  Write details
+     C                     WRITEDET21
+     C           WWPRTF    WHEQ 'PM4211P3'
+     C*
+     C**  Check Overflow print line
+     C           SSOF3     SUB  SSLS3     WWREST
+     C           WWREST    IFLE 6
+     C                     WRITEHEAD31
+     C                     WRITEHEAD32
+     C                     ENDIF
+     C*
+     C**  Write details
+     C                     WRITEDET31
+     C*                                                                   097389
+     C           WWPRTF    WHEQ 'PM4211P4'                                097389
+     C*                                                                   097389
+     C*  Check Overflow print line                                        097389
+     C           SSOF4     SUB  SSLS4     WWREST                          097389
+     C           WWREST    IFLE 6                                         097389
+     C                     WRITEHEAD41                                    097389
+     C                     WRITEHEAD42                                    097389
+     C                     ENDIF                                          097389
+     C*                                                                   097389
+     C*  Write details                                                    097389
+     C                     WRITEDET41                                     097389
+     C                     ENDSL
+     C*
+     C**  Clear work arrays inflow/outflow event references/amounts
+     C                     Z-ADD*ZERO     SENI
+     C                     Z-ADD*ZERO     SENO
+     C                     Z-ADD*ZERO     SERI
+     C                     Z-ADD*ZERO     SERO
+     C*
+     C**  Capital Inflow
+     C           WWFCIN    IFEQ 'Y'
+     C*
+     C           WWFOIU    IFEQ 'PMPCFEQ0'
+     C*
+     C                     Z-ADDPCEVN1    SENI,1
+     C                     Z-ADDPCEVN2    SENI,2
+     C                     Z-ADDPCEVN3    SENI,3
+     C                     Z-ADDPCEVN4    SENI,4
+     C                     Z-ADDPCEVN5    SENI,5
+     C*
+     C                     Z-ADDPCAMT1    SERI,1
+     C                     Z-ADDPCAMT2    SERI,2
+     C                     Z-ADDPCAMT3    SERI,3
+     C                     Z-ADDPCAMT4    SERI,4
+     C                     Z-ADDPCAMT5    SERI,5
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDQWEVN1    SENI,1
+     C                     Z-ADDQWEVN2    SENI,2
+     C                     Z-ADDQWEVN3    SENI,3
+     C                     Z-ADDQWEVN4    SENI,4
+     C                     Z-ADDQWEVN5    SENI,5
+     C*
+     C                     Z-ADDQWAMT1    SERI,1
+     C                     Z-ADDQWAMT2    SERI,2
+     C                     Z-ADDQWAMT3    SERI,3
+     C                     Z-ADDQWAMT4    SERI,4
+     C                     Z-ADDQWAMT5    SERI,5
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Capital outflow
+     C           WWFCOU    IFEQ 'Y'
+     C*
+     C           WWFOOU    IFEQ 'PMPCFEQ0'
+     C*
+     C                     Z-ADDPCEVN1    SENO,1
+     C                     Z-ADDPCEVN2    SENO,2
+     C                     Z-ADDPCEVN3    SENO,3
+     C                     Z-ADDPCEVN4    SENO,4
+     C                     Z-ADDPCEVN5    SENO,5
+     C*
+     C                     Z-ADDPCAMT1    SERO,1
+     C                     Z-ADDPCAMT2    SERO,2
+     C                     Z-ADDPCAMT3    SERO,3
+     C                     Z-ADDPCAMT4    SERO,4
+     C                     Z-ADDPCAMT5    SERO,5
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDQWEVN1    SENO,1
+     C                     Z-ADDQWEVN2    SENO,2
+     C                     Z-ADDQWEVN3    SENO,3
+     C                     Z-ADDQWEVN4    SENO,4
+     C                     Z-ADDQWEVN5    SENO,5
+     C*
+     C                     Z-ADDQWAMT1    SERO,1
+     C                     Z-ADDQWAMT2    SERO,2
+     C                     Z-ADDQWAMT3    SERO,3
+     C                     Z-ADDQWAMT4    SERO,4
+     C                     Z-ADDQWAMT5    SERO,5
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     DO   5         I
+     C*
+     C           SENI,I    IFEQ 0
+     C           SENO,I    ANDEQ0
+     C           SERI,I    ANDEQ0
+     C           SERO,I    ANDEQ0
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C                     MOVE *BLANKS   RRTRAO
+     C                     MOVE *BLANKS   RRCAPO
+     C                     MOVE *BLANKS   RREVNO
+     C                     MOVE *BLANKS   RRCATO
+     C                     MOVE *BLANKS   RREVAO
+     C                     MOVE *BLANKS   RREVAI
+     C                     MOVE *BLANKS   RRCATI
+     C                     MOVE *BLANKS   RREVNI
+     C                     MOVE *BLANKS   RRCAPI
+     C                     MOVE *BLANKS   RRTRAI
+     C*
+     C           SENI,I    IFNE 0
+     C           SERI,I    ORNE 0
+     C                     Z-ADDSENI,I    WWEVRE  70
+     C*
+     C**  Edit Event Amount with Portfolio currency decimal
+     C                     Z-ADDSERI,I    ZFLD15
+     C                     Z-ADDPNPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C*
+     C                     MOVE 'I'       WWEVTY  1
+     C                     EXSR #EVENT
+     C                     ENDIF
+     C*
+     C           SENO,I    IFNE 0
+     C           SERO,I    ORNE 0
+     C                     Z-ADDSENO,I    WWEVRE
+     C*
+     C**  Edit Event Amount with Portfolio currency decimal
+     C                     Z-ADDSERO,I    ZFLD15
+     C                     Z-ADDPNPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C*
+     C                     MOVE 'O'       WWEVTY
+     C                     EXSR #EVENT
+     C                     ENDIF
+     C*
+     C**  Write detail of second line
+     C*
+     C                     SELEC
+     C           WWPRTF    WHEQ 'PM4211P1'
+     C*
+     C**  Check Overflow print line
+     C           SSOF1     SUB  SSLS1     WWREST
+     C           WWREST    IFLE 2
+     C                     WRITEHEAD11
+     C                     WRITEHEAD12
+     C                     ENDIF
+     C*
+     C**  Write details
+     C                     WRITEDET12
+     C           WWPRTF    WHEQ 'PM4211P2'
+     C*
+     C**  Check Overflow print line
+     C           SSOF2     SUB  SSLS2     WWREST
+     C           WWREST    IFLE 2
+     C                     WRITEHEAD21
+     C                     WRITEHEAD22
+     C                     ENDIF
+     C*
+     C**  Highlight?
+     C           FCRCCS    IFEQ 'N'
+     C           RRCAPO    ANDEQ'N'
+     C                     SETON                     62
+     C                     ELSE
+     C                     SETOF                     62
+     C                     ENDIF
+     C*
+     C           FCRCCS    IFEQ 'N'
+     C           RRCAPI    ANDEQ'N'
+     C                     SETON                     63
+     C                     ELSE
+     C                     SETOF                     63
+     C                     ENDIF
+     C*
+     C**  Write details
+     C                     WRITEDET22
+     C           WWPRTF    WHEQ 'PM4211P3'
+     C*
+     C**  Check Overflow print line
+     C           SSOF3     SUB  SSLS3     WWREST
+     C           WWREST    IFLE 2
+     C                     WRITEHEAD31
+     C                     WRITEHEAD32
+     C                     ENDIF
+     C*
+     C**  Write details
+     C                     WRITEDET32
+     C           WWPRTF    WHEQ 'PM4211P4'                                097389
+     C*                                                                   097389
+     C*  Check Overflow print line                                        097389
+     C           SSOF4     SUB  SSLS4     WWREST                          097389
+     C           WWREST    IFLE 2                                         097389
+     C                     WRITEHEAD41                                    097389
+     C                     WRITEHEAD42                                    097389
+     C                     ENDIF                                          097389
+     C*                                                                   097389
+     C*  Write details                                                    097389
+     C                     WRITEDET42                                     097389
+     C                     ENDSL
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C*================================================================   097389
+      /EJECT                                                              097389
+     C*================================================================   097389
+      **                                                                  097389
+      ** #UNMCH  - Match Items not yet matched                            097389
+      **                                                                  097389
+      ** CALLED FROM MAIN LINE                                            097389
+      **                                                                  097389
+      ** CALLS -                                                          097389
+      **                                                                  097389
+     C*================================================================   097389
+     C*                                                                   097389
+     C           #UNMCH    BEGSR                                          097389
+     C*                                                                   097389
+     C** Read through arrays of Incoming and Outgoing amounts checking    097389
+     C** for single amounts matching                                      097389
+     C                     Z-ADD1         R       30                      097389
+     C           R         DOUEQ11                         B1             097389
+     C           INCA,R    OREQ 0                                         097389
+     C                     Z-ADD1         K                               097389
+     C           INCA,R    LOKUPOUTA,K                   64               097389
+     C*                                                                   097389
+     C           *IN64     IFEQ '1'                        B2             097389
+     C                     Z-ADDINCR,R    WWREF1  70                      097389
+     C                     Z-ADDOUTR,K    WWREF2  70                      097389
+     C                     Z-ADD0         WWREF3  70                      097389
+     C                     EXSR #UNMC1                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Set up arrays containing combined Incoming amounts and           097389
+     C** associated references                                            097389
+     C                     Z-ADD1         R       30                      097389
+     C                     Z-ADD1         K       30                      097389
+     C                     Z-ADD1         J       30                      097389
+     C*                                                                   097389
+     C           R         DOUEQ10                         B1             097389
+     C           R         ADD  1         J                               097389
+     C*                                                                   097389
+     C           J         DOUEQ11                         B2             097389
+     C           INCA,J    OREQ 0                                         097389
+     C           INCA,R    ADD  INCA,J    CMBI,K                          097389
+     C                     Z-ADDINCR,R    RFI1,K                          097389
+     C                     Z-ADDINCR,J    RFI2,K                          097389
+     C                     ADD  1         K                               097389
+     C                     ADD  1         J                               097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C                     ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Set up arrays containing combined Outgoing amounts and           097389
+     C** associated references                                            097389
+     C                     Z-ADD1         R       30                      097389
+     C                     Z-ADD1         K       30                      097389
+     C                     Z-ADD1         J       30                      097389
+     C*                                                                   097389
+     C           R         DOUEQ10                         B1             097389
+     C           R         ADD  1         J                               097389
+     C*                                                                   097389
+     C           J         DOUEQ11                         B2             097389
+     C           OUTA,J    OREQ 0                                         097389
+     C           OUTA,R    ADD  OUTA,J    CMBO,K                          097389
+     C                     Z-ADDOUTR,R    RFO1,K                          097389
+     C                     Z-ADDOUTR,J    RFO2,K                          097389
+     C                     ADD  1         K                               097389
+     C                     ADD  1         J                               097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C                     ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through array of single Incoming Events and search for      097389
+     C** combined outgoing event for the same amount. If combined outgoing097389
+     C** event found format for output via SR/#UNMC1                      097389
+     C                     Z-ADD1         R                               097389
+     C           R         DOUEQ11                         B1             097389
+     C           INCA,R    OREQ 0                                         097389
+     C                     Z-ADD1         K                               097389
+     C           INCA,R    LOKUPCMBO,K                   64               097389
+     C*                                                                   097389
+     C           *IN64     IFEQ '1'                        B2             097389
+     C                     Z-ADDINCR,R    WWREF1  70                      097389
+     C                     Z-ADDRFO1,K    WWREF2  70                      097389
+     C                     Z-ADDRFO2,K    WWREF3  70                      097389
+     C                     EXSR #UNMC1                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through array of single Outgoing Events and search for      097389
+     C** combined Incoming event for the same amount. If combined Incoming097389
+     C** event found format for output via SR/#UNMC1                      097389
+     C                     Z-ADD1         R                               097389
+     C           R         DOUEQ11                         B1             097389
+     C           OUTA,R    OREQ 0                                         097389
+     C                     Z-ADD1         K                               097389
+     C           OUTA,R    LOKUPCMBI,K                   64               097389
+     C*                                                                   097389
+     C           *IN64     IFEQ '1'                        B2             097389
+     C                     Z-ADDOUTR,R    WWREF1  70                      097389
+     C                     Z-ADDRFI1,K    WWREF2  70                      097389
+     C                     Z-ADDRFI2,K    WWREF3  70                      097389
+     C                     EXSR #UNMC1                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through array of Combined Incoming events adding 1 to each  097389
+     C** event (Processing to pickup probable matches with difference of  097389
+     C** 1 due to rounding erros)                                         097389
+     C                     Z-ADD1         R                               097389
+     C           R         DOUEQ51                         B1             097389
+     C           CMBI,R    OREQ 0                                         097389
+     C           CMBI,R    ADD  1         CMBI,R                          097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through array of single Outgoing Events and search for      097389
+     C** combined Incoming event one unit larger                          097389
+     C                     Z-ADD1         R                               097389
+     C           R         DOUEQ11                         B1             097389
+     C           OUTA,R    OREQ 0                                         097389
+     C                     Z-ADD1         K                               097389
+     C           OUTA,R    LOKUPCMBI,K                   64               097389
+     C*                                                                   097389
+     C           *IN64     IFEQ '1'                        B2             097389
+     C                     Z-ADDOUTR,R    WWREF1  70                      097389
+     C                     Z-ADDRFI1,K    WWREF2  70                      097389
+     C                     Z-ADDRFI2,K    WWREF3  70                      097389
+     C                     EXSR #UNMC1                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through array of Combined Incoming events subtracting 2 each097389
+     C** time (Processing to pickup probable matches with difference of   097389
+     C** 1 due to rounding erros)                                         097389
+     C                     Z-ADD1         R                               097389
+     C           R         DOUEQ51                         B1             097389
+     C           CMBI,R    OREQ 0                                         097389
+     C           CMBI,R    SUB  2         CMBI,R                          097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through array of single Outgoing Events and search for      097389
+     C** combined Incoming event one unit smaller                         097389
+     C                     Z-ADD1         R                               097389
+     C           R         DOUEQ11                         B1             097389
+     C           OUTA,R    OREQ 0                                         097389
+     C                     Z-ADD1         K                               097389
+     C           OUTA,R    LOKUPCMBI,K                   64               097389
+     C*                                                                   097389
+     C           *IN64     IFEQ '1'                        B2             097389
+     C                     Z-ADDOUTR,R    WWREF1  70                      097389
+     C                     Z-ADDRFI1,K    WWREF2  70                      097389
+     C                     Z-ADDRFI2,K    WWREF3  70                      097389
+     C                     EXSR #UNMC1                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through array of Combined Outgoing events adding 1 to each  097389
+     C** event (Processing to pickup probable matches with difference of  097389
+     C** 1 due to rounding erros)                                         097389
+     C                     Z-ADD1         R                               097389
+     C           R         DOUEQ51                         B1             097389
+     C           CMBO,R    OREQ 0                                         097389
+     C           CMBO,R    ADD  1         CMBO,R                          097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through array of single Incoming Events and search for      097389
+     C** combined outgoing event for the same amount. If combined outgoing097389
+     C** event found format for output via SR/#UNMC1                      097389
+     C                     Z-ADD1         R                               097389
+     C           R         DOUEQ11                         B1             097389
+     C           INCA,R    OREQ 0                                         097389
+     C                     Z-ADD1         K                               097389
+     C           INCA,R    LOKUPCMBO,K                   64               097389
+     C*                                                                   097389
+     C           *IN64     IFEQ '1'                        B2             097389
+     C                     Z-ADDINCR,R    WWREF1  70                      097389
+     C                     Z-ADDRFO1,K    WWREF2  70                      097389
+     C                     Z-ADDRFO2,K    WWREF3  70                      097389
+     C                     EXSR #UNMC1                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through array of Combined Outgoing events subtracting 1 each097389
+     C** time (Processing to pickup probable matches with difference of   097389
+     C** 1 due to rounding erros)                                         097389
+     C                     Z-ADD1         R                               097389
+     C           R         DOUEQ51                         B1             097389
+     C           CMBO,R    OREQ 0                                         097389
+     C           CMBO,R    SUB  2         CMBO,R                          097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through array of single Incoming Events and search for      097389
+     C** combined outgoing event for the same amount. If combined outgoing097389
+     C** event found format for output via SR/#UNMC1                      097389
+     C                     Z-ADD1         R                               097389
+     C           R         DOUEQ11                         B1             097389
+     C           INCA,R    OREQ 0                                         097389
+     C                     Z-ADD1         K                               097389
+     C           INCA,R    LOKUPCMBO,K                   64               097389
+     C*                                                                   097389
+     C           *IN64     IFEQ '1'                        B2             097389
+     C                     Z-ADDINCR,R    WWREF1  70                      097389
+     C                     Z-ADDRFO1,K    WWREF2  70                      097389
+     C                     Z-ADDRFO2,K    WWREF3  70                      097389
+     C                     EXSR #UNMC1                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           R         ADD  1         R                               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Read through remaining unmatched events and format for output    097389
+     C           WSCSRF    SETLLPMPCFUPD                                  097389
+     C                     READ PMPCFUPD                 65               097389
+     C*                                                                   097389
+     C           *IN65     DOWEQ'0'                        B1             097389
+     C*                                                                   097389
+     C           PCTOAM    IFNE 0                          B2             097389
+     C                     MOVE 'PM4211P2'WWPRTF                          097389
+     C                     EXSR #SPOOL                                    097389
+     C*                                                                   097389
+     C** Print header 1                                                   097389
+     C           WWACO2    IFNE PCACOF                     B3             097389
+     C*                                                                   097389
+     C                     MOVE PCACOF    RRACOF                          097389
+     C                     MOVE AZACON    RRACON                          097389
+     C                     WRITEHEAD21                                    097389
+     C*                                                                   097389
+     C                     MOVE PCACOF    WWACO2                          097389
+     C*                                                                   097389
+     C                     ENDIF                           E3             097389
+     C*                                                                   097389
+     C** Print header 2                                                   097389
+     C           WWCUS2    IFNE PCCUST                     B3             097389
+     C           WWPTF2    ORNE PCPTFR                                    097389
+     C           WWPEP2    ORNE PCPEPE                                    097389
+     C*                                                                   097389
+     C                     MOVE PCCUST    RRCUST                          097389
+     C                     MOVE BBCSSN    RRCSSN                          097389
+     C                     MOVE BBCRNM    RRCRNM                          097389
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           PCPTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    RRPTFR                          CPM005
+     C                     MOVE FCN997    RRPTFN                          CPM005
+     C           PCPTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    RRPTFR                          CPM005
+     C                     MOVE FCN998    RRPTFN                          CPM005
+     C           PCPTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    RRPTFR                          CPM005
+     C                     MOVE FCN999    RRPTFN                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVE PCPTFR    RRPTFR                          097389
+     C                     MOVE PNPTFN    RRPTFN                          097389
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVE PNPTCY    RRPTCY                          097389
+     C                     MOVE PNPTCY    RRPTCX                          097389
+     C*                                                                   097389
+     C** Check Overflow print line                                        097389
+     C           SSOF2     SUB  SSLS2     WWREST                          097389
+     C           WWREST    IFLE 8                          B4             097389
+     C                     WRITEHEAD21                                    097389
+     C                     ENDIF                           E4             097389
+     C*                                                                   097389
+     C                     WRITEHEAD22                                    097389
+     C*                                                                   097389
+     C** Save Cust. - Portf. - Perf.Per.                                  097389
+     C**********           Z-ADDPCCUST    WWCUS2                                       097389 CSD027
+     C                     MOVE PCCUST    WWCUS2                                              CSD027
+     C                     MOVE PCPTFR    WWPTF2                          097389
+     C                     MOVE PCPEPE    WWPEP2                          097389
+     C*                                                                   097389
+     C                     ENDIF                           E3             097389
+     C*                                                                   097389
+     C** Set up parameters for #FORMT                                     097389
+     C           PCINOU    IFEQ 'I'                        B3             097389
+     C                     MOVE 'Y'       WWFCIN  1                       097389
+     C                     ELSE                                           097389
+     C                     MOVE 'N'       WWFCIN                          097389
+     C                     ENDIF                           E3             097389
+     C*                                                                   097389
+     C           PCINOU    IFEQ 'O'                        B3             097389
+     C                     MOVE 'Y'       WWFCOU  1                       097389
+     C                     ELSE                                           097389
+     C                     MOVE 'N'       WWFCOU                          097389
+     C                     ENDIF                           E3             097389
+     C*                                                                   097389
+     C                     MOVE 'PMPCFEQ0'WWFOIU                          097389
+     C                     MOVE 'PMPCFEQ0'WWFOOU                          097389
+     C                     MOVE 'PM4211P2'WWPRTF                          097389
+     C*                                                                   097389
+     C                     EXSR #FORMT                                    097389
+     C*                                                                   097389
+     C** Details written to PM4211P2                                      097389
+     C                     MOVE 'Y'       WWDET2                          097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C                     READ PMPCFUPD                 65               097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Save fields and reset indicators                                 097389
+     C                     MOVE 'N'       WWUMTC                          097389
+     C                     MOVE PCDPCD    WSDPCD                          097389
+     C                     MOVE PCACOF    WSACOF                          097389
+     C**********           Z-ADDPCCUST    WSCUST                                       097389 CSD027
+     C                     MOVE PCCUST    WSCUST                                              CSD027
+     C                     MOVE PCPTFR    WSPTFR                          097389
+     C                     MOVE PCPEPE    WSPEPE                          097389
+     C                     Z-ADDPCEDAT    WSEDAT                          097389
+     C                     Z-ADD0         WSCSRF                          097389
+     C*                                                                   097389
+     C** Set arrays to zero                                               097389
+     C                     Z-ADD1         I                               097389
+     C           I         DOUEQ11                                        097389
+     C                     Z-ADD0         INCA                            097389
+     C                     Z-ADD0         INCR                            097389
+     C                     Z-ADD0         OUTA                            097389
+     C                     Z-ADD0         OUTR                            097389
+     C                     Z-ADD0         CMBI                            097389
+     C                     Z-ADD0         RFI1                            097389
+     C                     Z-ADD0         RFI2                            097389
+     C                     Z-ADD0         CMBO                            097389
+     C                     Z-ADD0         RFO1                            097389
+     C                     Z-ADD0         RFO2                            097389
+     C           I         ADD  1         I                               097389
+     C                     END                                            097389
+     C*                                                                   097389
+     C** Set file pointer before first record on PMPCFEQ0                 097389
+     C                     MOVE *LOVAL    PCDPCD                          097389
+     C                     MOVE *LOVAL    PCACOF                          097389
+     C**********           Z-ADD*LOVAL    PCCUST                          097389              CSD027
+     C                     MOVE *BLANKS   PCCUST                                              CSD027
+     C                     MOVE *LOVAL    PCPTFR                          097389
+     C                     MOVE *LOVAL    PCPEPE                          097389
+     C                     Z-ADD*LOVAL    PCEDAT                          097389
+     C                     MOVE *LOVAL    WWCPTC                          097389
+     C                     MOVE *LOVAL    WWINOU                          097389
+     C                     Z-ADD*LOVAL    PCTOAM                          097389
+     C                     MOVE *LOVAL    PCFRID                          097389
+     C                     MOVE *LOVAL    PCFROM                          097389
+     C                     MOVE *LOVAL    PCTOID                          097389
+     C                     MOVE *LOVAL    PCTORE                          097389
+     C           PCFE      SETLLPMPCFEQ0                                  097389
+     C                     READ PMPCFEQ0                 73               097389
+     C*                                                                   097389
+     C                     ENDSR                                          097389
+     C*================================================================   097389
+      /EJECT                                                              097389
+     C*================================================================   097389
+      **                                                                  097389
+      ** #UNMC1            PREPARE MATCHED VENT DETAILS FOR OUTPUT        097389
+      **                                                                  097389
+      ** CALLED FROM #FORM                                                097389
+      **                                                                  097389
+      ** CALLS - ZSEDIT : EDIT WITH CURRENCY DECIMAL                      097389
+      **                                                                  097389
+     C*================================================================   097389
+     C           #UNMC1    BEGSR                                          097389
+     C*                                                                   097389
+     C** Access 3 records from PMPCFUPD. Record not found branche to      097389
+     C** end of routine                                                   097389
+     C           WWREF1    CHAINPMPCFUPD             65                   097389
+     C           *IN65     CABEQ'1'       #UNMC9                          097389
+     C*                                                                   097389
+     C           WWREF2    CHAINPMPCFUP1             65                   097389
+     C           *IN65     IFEQ '1'                                       097389
+     C                     UPDATPMPCFUPF                                  097389
+     C                     GOTO #UNMC9                                    097389
+     C                     END                                            097389
+     C*                                                                   097389
+     C           WWREF3    IFNE 0                          B1             097389
+     C           WWREF3    CHAINPMPCFUP2             65                   097389
+     C           *IN65     IFEQ '1'                                       097389
+     C                     UPDATPMPCFUPF                                  097389
+     C                     UPDATPMPCFUPX                                  097389
+     C                     GOTO #UNMC9                                    097389
+     C                     END                                            097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** If all 3 records contain a module id of 'MD' or 'ML' output      097389
+     C** as a probable match                                              097389
+     C           WWREF3    IFNE 0                          B1             097389
+     C*                                                                   097389
+     C                     MOVE *BLANKS   WWMOD1  2                       097389
+     C                     MOVE *BLANKS   WWMOD2  2                       097389
+     C                     MOVE *BLANKS   WWMOD3  2                       097389
+     C*                                                                   097389
+     C           PCFRID    IFEQ 'MD'                       B2             097389
+     C           PCFRID    OREQ 'ML'                                      097389
+     C                     MOVE PCFRID    WWMOD1                          097389
+     C                     ELSE                                           097389
+     C                     MOVE PCTOID    WWMOD1                          097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           QWFRID    IFEQ 'MD'                       B2             097389
+     C           QWFRID    OREQ 'ML'                                      097389
+     C                     MOVE QWFRID    WWMOD2                          097389
+     C                     ELSE                                           097389
+     C                     MOVE QWTOID    WWMOD2                          097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           WGFRID    IFEQ 'MD'                       B2             097389
+     C           WGFRID    OREQ 'ML'                                      097389
+     C                     MOVE WGFRID    WWMOD3                          097389
+     C                     ELSE                                           097389
+     C                     MOVE WGTOID    WWMOD3                          097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           WWMOD1    IFEQ 'MD'                       B2             097389
+     C           WWMOD1    ANDEQWWMOD2                                    097389
+     C           WWMOD1    ANDEQWWMOD3                                    097389
+     C           WWMOD1    OREQ 'ML'                                      097389
+     C           WWMOD1    ANDEQWWMOD2                                    097389
+     C           WWMOD1    ANDEQWWMOD3                                    097389
+     C                     GOTO #UNMC0                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C** IF THE TO MODULE ID IS 'LE' CHECK FOR NOMINAL AND INTEREST       097389
+     C** COMBINED FOR POSTING                                             097389
+     C           PCTOID    IFEQ 'LE'                       B2             097389
+     C*                                                                   097389
+     C           PCINOU    IFEQ 'I'                        B3             097389
+     C                     MOVE PCFRID    WEFRID  2                       097389
+     C**********           MOVE PCFROM    WEFROM 20                                    097389 CGL029
+     C                     MOVE PCFROM    WEFROM 26                                           CGL029
+     C                     MOVE PCTOID    WETOID  2                       097389
+     C**********           MOVE PCTORE    WETORE 20                                    097389 CGL029
+     C                     MOVE PCTORE    WETORE 26                                           CGL029
+     C                     ELSE                            X3             097389
+     C                     MOVE PCFRID    WDFRID  2                       097389
+     C**********           MOVE PCFROM    WDFROM 20                                    097389 CGL029
+     C                     MOVE PCFROM    WDFROM 26                                           CGL029
+     C                     MOVE PCTOID    WDTOID  2                       097389
+     C**********           MOVE PCTORE    WDTORE 20                                    097389 CGL029
+     C                     MOVE PCTORE    WDTORE 26                                           CGL029
+     C                     END                             E3             097389
+     C*                                                                   097389
+     C           QWINOU    IFEQ 'I'                        B3             097389
+     C                     MOVE QWFRID    WEFRID  2                       097389
+     C**********           MOVE QWFROM    WEFROM 20                                    097389 CGL029
+     C                     MOVE QWFROM    WEFROM                                              CGL029
+     C                     MOVE QWTOID    WETOID  2                       097389
+     C**********           MOVE QWTORE    WETORE 20                                    097389 CGL029
+     C                     MOVE QWTORE    WETORE                                              CGL029
+     C                     ELSE                            X3             097389
+     C                     MOVE QWFRID    WDFRID  2                       097389
+     C**********           MOVE QWFROM    WDFROM 20                                    097389 CGL029
+     C                     MOVE QWFROM    WDFROM                                              CGL029
+     C                     MOVE QWTOID    WDTOID  2                       097389
+     C**********           MOVE QWTORE    WDTORE 20                                    097389 CGL029
+     C                     MOVE QWTORE    WDTORE                                              CGL029
+     C                     END                             E3             097389
+     C*                                                                   097389
+     C           WGINOU    IFEQ 'I'                        B3             097389
+     C                     MOVE WGFRID    WEFRID  2                       097389
+     C**********           MOVE WGFROM    WEFROM 20                                    097389 CGL029
+     C                     MOVE WGFROM    WEFROM                                              CGL029
+     C                     MOVE WGTOID    WETOID  2                       097389
+     C**********           MOVE WGTORE    WETORE 20                                    097389 CGL029
+     C                     MOVE WGTORE    WETORE                                              CGL029
+     C                     ELSE                            X3             097389
+     C                     MOVE WGFRID    WDFRID  2                       097389
+     C**********           MOVE WGFROM    WDFROM 20                                    097389 CGL029
+     C                     MOVE WGFROM    WDFROM                                              CGL029
+     C                     MOVE WGTOID    WDTOID  2                       097389
+     C**********           MOVE WGTORE    WDTORE 20                                    097389 CGL029
+     C                     MOVE WGTORE    WDTORE                                              CGL029
+     C                     END                             E3             097389
+     C*                                                                   097389
+     C           WEFRID    IFEQ WDFRID                     B3             097389
+     C           WEFROM    ANDEQWDFROM                                    097389
+     C           WETOID    ANDEQWDTOID                                    097389
+     C           WETORE    ANDEQWDTORE                                    097389
+     C                     GOTO #UNMC0                                    097389
+     C                     END                             E3             097389
+     C*                                                                   097389
+     C** IF NONE OF CONDITIONS MET UNLOCK RECORDS AND EXIT ROUTINE        097389
+     C                     UPDATPMPCFUPF                                  097389
+     C                     UPDATPMPCFUPX                                  097389
+     C                     UPDATPMPCFUPY                                  097389
+     C                     GOTO #UNMC9                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C**  For Depot Movement both sides must be module 'SE'               097389
+     C           WWREF3    IFEQ 0                          B1             097389
+     C*                                                                   097389
+     C           PCFRID    IFEQ 'SE'                       B2             097389
+     C           PCTOID    ANDEQ'  '                                      097389
+     C           QWFRID    ANDEQ'  '                                      097389
+     C           QWTOID    ANDEQ'SE'                                      097389
+     C           PCFRID    OREQ '  '                                      097389
+     C           PCTOID    ANDEQ'SE'                                      097389
+     C           QWFRID    ANDEQ'SE'                                      097389
+     C           QWTOID    ANDEQ'  '                                      097389
+     C                     GOTO #UNMC0                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C** If both sides contain the module id MD/ML and the instrument     097389
+     C** is the same output a probable match                              097389
+     C*                                                                   097389
+     C                     MOVE *BLANKS   WWMOD1  2                       097389
+     C                     MOVE *BLANKS   WWMOD2  2                       097389
+     C*                                                                   097389
+     C           PCFRID    IFEQ 'MD'                       B2             097389
+     C           PCFRID    OREQ 'ML'                                      097389
+     C                     MOVE PCFRID    WWMOD1                          097389
+     C                     ELSE                                           097389
+     C                     MOVE PCTOID    WWMOD1                          097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           QWFRID    IFEQ 'MD'                       B2             097389
+     C           QWFRID    OREQ 'ML'                                      097389
+     C                     MOVE QWFRID    WWMOD2                          097389
+     C                     ELSE                                           097389
+     C                     MOVE QWTOID    WWMOD2                          097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C           WWMOD1    IFEQ 'MD'                       B2             097389
+     C           WWMOD1    ANDEQWWMOD2                                    097389
+     C           PCINTY    ANDEQQWINTY                                    097389
+     C           WWMOD1    OREQ 'ML'                                      097389
+     C           WWMOD1    ANDEQWWMOD2                                    097389
+     C           PCINTY    ANDEQQWINTY                                    097389
+     C                     GOTO #UNMC0                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C** If both sides are Retail account movements accept as a           097389
+     C** probable match                                                   097389
+     C           PCFRID    IFEQ 'RE'                       B2             097389
+     C           PCTOID    ANDEQ'RE'                                      097389
+     C           QWFRID    ANDEQ'RE'                                      097389
+     C           QWTOID    ANDEQ'RE'                                      097389
+     C                     GOTO #UNMC0                                    097389
+     C                     END                             E2             097389
+     C*                                                                   097389
+     C** As conditions for probable match not met unlock records and      097389
+     C** branch to endof routine                                          097389
+     C                     UPDATPMPCFUPF                                  097389
+     C                     UPDATPMPCFUPX                                  097389
+     C                     GOTO #UNMC9                                    097389
+     C                     END                             E1             097389
+     C*                                                                   097389
+     C** Output details of probable matches                               097389
+     C           #UNMC0    TAG                                            097389
+     C*                                                                   097389
+     C** OPEN PRTF/PM4211P4 AS DETAILS TO OUTPUT                          097389
+     C                     MOVE 'PM4211P4'WWPRTF                          097389
+     C                     EXSR #SPOOL                                    097389
+     C*                                                                   097389
+     C*  Print header 1                                                   097389
+     C           WWACO4    IFNE PCACOF                     B1             097389
+     C*                                                                   097389
+     C                     MOVE PCACOF    RRACOF                          097389
+     C                     MOVE AZACON    RRACON                          097389
+     C                     WRITEHEAD41                                    097389
+     C*                                                                   097389
+     C                     MOVE PCACOF    WWACO4  2                       097389
+     C                     MOVE PCDPCD    WWDPC4  3                       097389
+     C*                                                                   097389
+     C                     ENDIF                           E1             097389
+     C*                                                                   097389
+     C*  Print header 2                                                   097389
+     C           WWCUS4    IFNE PCCUST                     B1             097389
+     C           WWPTF4    ORNE PCPTFR                                    097389
+     C           WWPEP4    ORNE PCPEPE                                    097389
+     C*                                                                   097389
+     C                     MOVE PCCUST    RRCUST                          097389
+     C                     MOVE BBCSSN    RRCSSN                          097389
+     C                     MOVE BBCRNM    RRCRNM                          097389
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           PCPTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    RRPTFR                          CPM005
+     C                     MOVE FCN997    RRPTFN                          CPM005
+     C           PCPTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    RRPTFR                          CPM005
+     C                     MOVE FCN998    RRPTFN                          CPM005
+     C           PCPTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    RRPTFR                          CPM005
+     C                     MOVE FCN999    RRPTFN                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVE PCPTFR    RRPTFR                          097389
+     C                     MOVE PNPTFN    RRPTFN                          097389
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVE PNPTCY    RRPTCY                          097389
+     C                     MOVE PNPTCY    RRPTCX                          097389
+     C*                                                                   097389
+     C*  Check Overflow print line                                        097389
+     C           SSOF4     SUB  SSLS4     WWREST                          097389
+     C           WWREST    IFLE 8                          B2             097389
+     C                     WRITEHEAD41                                    097389
+     C                     ENDIF                           E2             097389
+     C*                                                                   097389
+     C                     WRITEHEAD42                                    097389
+     C*                                                                   097389
+     C*  Save Cust. - Portf. - Perf.Per.                                  097389
+     C**********           Z-ADDPCCUST    WWCUS4  60                                   097389 CSD027
+     C                     MOVE PCCUST    WWCUS4  6                                           CSD027
+     C                     MOVE PCPTFR    WWPTF4  4                       097389
+     C                     MOVE PCPEPE    WWPEP4  4                       097389
+     C*                                                                   097389
+     C                     ENDIF                           E1             097389
+     C*                                                                   097389
+     C*  Set up parameters for #FORMT                                     097389
+     C*                                                                   097389
+     C                     MOVE 'Y'       WWFCIN                          097389
+     C                     MOVE 'Y'       WWFCOU                          097389
+     C           PCINOU    IFEQ 'I'                        B1             097389
+     C                     MOVE 'PMPCFEQ0'WWFOIU                          097389
+     C                     ELSE                                           097389
+     C                     MOVE 'PMPCFEP1'WWFOIU                          097389
+     C                     ENDIF                           E1             097389
+     C*                                                                   097389
+     C           PCINOU    IFEQ 'O'                        B1             097389
+     C                     MOVE 'PMPCFEQ0'WWFOOU                          097389
+     C                     ELSE                                           097389
+     C                     MOVE 'PMPCFEP1'WWFOOU                          097389
+     C                     ENDIF                           E1             097389
+     C*                                                                   097389
+     C                     MOVE 'PM4211P4'WWPRTF                          097389
+     C*                                                                   097389
+     C                     MOVE '0'       *IN66                           097389
+     C                     EXSR #FORMT                                    097389
+     C                     MOVE '1'       *IN66                           097389
+     C*                                                                   097389
+     C                     DELETPMPCFUPF                                  097389
+     C*                                                                   097389
+     C                     DELETPMPCFUPX                                  097389
+     C*                                                                   097389
+     C** move 'WG' fields into PC fields                                  097389
+     C           WWREF3    IFNE 0                                         097389
+     C                     MOVE WGDPCD    PCDPCD                          097389
+     C                     MOVE WGACOF    PCACOF                          097389
+     C**********           Z-ADDWGCUST    PCCUST                                       097389 CSD027
+     C                     MOVE WGCUST    PCCUST                                              CSD027
+     C                     MOVE WGPTFR    PCPTFR                          097389
+     C                     MOVE WGPEPE    PCPEPE                          097389
+     C                     MOVE WGINTY    PCINTY                          097389
+     C                     Z-ADDWGEDAT    PCEDAT                          097389
+     C                     MOVE WGINOU    PCINOU                          097389
+     C                     Z-ADDWGTOAM    PCTOAM                          097389
+     C                     MOVE WGFRID    PCFRID                          097389
+     C                     MOVE WGFROM    PCFROM                          097389
+     C                     MOVE WGTOID    PCTOID                          097389
+     C                     MOVE WGTORE    PCTORE                          097389
+     C                     MOVE WGCPTC    PCCPTC                          097389
+     C                     Z-ADDWGEVN1    PCEVN1                          097389
+     C                     Z-ADDWGAMT1    PCAMT1                          097389
+     C                     Z-ADDWGEVN2    PCEVN2                          097389
+     C                     Z-ADDWGAMT2    PCAMT2                          097389
+     C                     Z-ADDWGEVN3    PCEVN3                          097389
+     C                     Z-ADDWGAMT3    PCAMT3                          097389
+     C                     Z-ADDWGEVN4    PCEVN4                          097389
+     C                     Z-ADDWGAMT4    PCAMT4                          097389
+     C                     Z-ADDWGEVN5    PCEVN5                          097389
+     C                     Z-ADDWGAMT5    PCAMT5                          097389
+     C                     Z-ADDWGDIFF    PCDIFF                          097389
+     C                     Z-ADDWGCSRF    PCCSRF                          097389
+     C*                                                                   097389
+     C*  Set up parameters to write further line via SR/#FORMT            097389
+     C                     MOVE 'N'       WWFCIN                          097389
+     C                     MOVE 'N'       WWFCOU                          097389
+     C                     MOVE 'PMPCFEQ0'WWFOIU                          097389
+     C                     MOVE 'PMPCFEQ0'WWFOOU                          097389
+     C           WGINOU    IFEQ 'I'                                       097389
+     C                     MOVE 'Y'       WWFCIN                          097389
+     C                     ELSE                                           097389
+     C                     MOVE 'Y'       WWFCOU                          097389
+     C                     END                                            097389
+     C*                                                                   097389
+     C                     MOVE 'PM4211P4'WWPRTF                          097389
+     C*                                                                   097389
+     C                     MOVE '1'       *IN66                           097389
+     C                     EXSR #FORMT                                    097389
+     C                     MOVE '0'       *IN66                           097389
+     C*                                                                   097389
+     C                     DELETPMPCFUPY                                  097389
+     C                     END                                            097389
+     C*                                                                   097389
+     C*  Details written to PM4211P4                                      097389
+     C                     MOVE 'Y'       WWDET4  1                       097389
+     C*                                                                   097389
+     C           #UNMC9    ENDSR                                          097389
+     C*================================================================
+     C/EJECT
+     C*================================================================
+     C**
+     C** #EVENT - Subroutine to format event details for output
+     C**
+     C** Called from:  #FORM
+     C**
+     C** Calls:  ZSEDIT - Edit with currency decimal
+     C**
+     C*================================================================
+     C*
+     C           #EVENT    BEGSR
+     C*
+     C**  Acces PMPEVTLL
+     C           WWEVRE    CHAINPMPEVTLL             7878
+     C*
+     C           *IN78     IFEQ *ON
+     C                     MOVEL'006'     DBASE            ***************
+     C                     MOVE 'PMPEVTLL'DBFILE           * DB ERROR 06 *
+     C                     MOVELWWEVRE    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  If record read from PMPCAAPP
+     C           *IN51     IFEQ *ON
+     C                     SETOF                     51
+     C*
+     C           WWEVTY    IFEQ 'I'
+     C                     MOVE *BLANKS   RRTRAI
+     C                     MOVE QSCPTC    RRCAPI
+     C                     MOVE ZOUT21    RREVAI
+     C                     MOVE WWEVRE    RREVNI
+     C                     MOVE QSPFMC    RRCATI
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   RRTRAO
+     C                     MOVE QSCPTC    RRCAPO
+     C                     MOVE ZOUT21    RREVAO
+     C                     MOVE WWEVRE    RREVNO
+     C                     MOVE QSPFMC    RRCATO
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  If record read from PMPTRAPD
+     C           *IN52     IFEQ *ON
+     C                     SETOF                     52
+     C*
+     C           WWEVTY    IFEQ 'I'
+     C                     MOVE ZOUT21    RREVAI
+     C********** QUTRNB    IFNE 0                                                             CLE148
+     C           QUTRNB    IFNE *BLANKS                                                       CLE148
+     C                     MOVE QUTRNB    RRTRAI
+     C                     ELSE
+     C                     MOVE *BLANKS   RRTRAI
+     C                     END
+     C*
+     C                     MOVE QUCPTC    RRCAPI
+     C                     MOVE WWEVRE    RREVNI
+     C                     MOVE QUPFMC    RRCATI
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE ZOUT21    RREVAO
+     C*
+     C********** QUTRNB    IFNE 0                                                             CLE148
+     C           QUTRNB    IFNE *BLANKS                                                       CLE148
+     C                     MOVE QUTRNB    RRTRAO
+     C                     ELSE
+     C                     MOVE *BLANKS   RRTRAO
+     C                     END
+     C*
+     C                     MOVE QUCPTC    RRCAPO
+     C                     MOVE WWEVRE    RREVNO
+     C                     MOVE QUPFMC    RRCATO
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*
+     C*================================================================
+     C/EJECT
+     C*================================================================
+     C**
+     C** #REFMT - Subroutine to reformat from / to position details for
+     C**          output on screen
+     C**
+     C** Called from: #FORMT
+     C**
+     C** Calls
+     C**
+     C*================================================================
+     C*
+     C           #REFMT    BEGSR
+     C*
+     C**  Reformat realated references so that in standard 'Reference /
+     C**  Shortname' format
+     C**********           MOVE *BLANKS   WWREFO 20                                           CGL029
+     C                     MOVE *BLANKS   WWREFO 26                                           CGL029
+     C           WWMODI    IFEQ 'SE'
+     C                     MOVELWWREFI    WORK10 10
+     C                     MOVELWORK10    WWREFO
+     C                     ELSE
+     C                     MOVE WWREFI    WWREFO
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*================================================================
+     C**
+     C** #LZSFL S/R - Subroutine to call ZSFILE
+     C**
+     C** Called from:  Main line, #SPOOL, *PSSR
+     C**
+     C** Calls:
+     C**
+     C*================================================================
+     C           #LZSFL    BEGSR
+     C*
+     C                     CALL 'ZSFILE'
+     C***********          PARM *BLANKS   @RSEQ   5                       110008
+     C                     PARM           @RSEQ   5                       110008
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C*
+     C**  If an error occurred during ZSFILE processing,
+     C**  return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*================================================================
+     C**
+     C** *PSSR  -  Subroutine to handle abnormal error conditions
+     C**
+     C** Called from:  Main line, #HEADR, #EVENT
+     C**
+     C** Calls:  #LZSFL - Subroutine to call ZSFILE
+     C**
+     C*================================================================
+     C           *PSSR     BEGSR
+     C*
+     C**  Open audit printer file and report database error details
+     C*
+     C                     OPEN PM4211AU
+     C                     WRITEPM4211HD
+     C                     WRITEPM4211DB
+     C*
+     C** Ensure Audit Spool File recorded by RCF
+     C*
+     C                     MOVE SFILEU    SFILE
+     C                     MOVE SFNUMU    ZSNUM
+     C                     EXSR #LZSFL
+     C                     CLOSEPM4211AU
+     C*
+     C**  If printer file is open, output database error reference
+     C*
+     C           WWDET1    IFEQ 'Y'
+     C                     WRITEDBERR1
+     C                     END
+     C*
+     C           WWDET2    IFEQ 'Y'
+     C                     WRITEDBERR2
+     C                     END
+     C*
+     C           WWDET3    IFEQ 'Y'
+     C                     WRITEDBERR3
+     C                     END
+     C*                                                                   097389
+     C           WWDET4    IFEQ 'Y'                                       097389
+     C                     WRITEDBERR4                                    097389
+     C                     END                                            097389
+     C*
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*================================================================
+      /COPY ZSRSRC,ZSEDITZ3
+      /COPY ZSRSRC,ZDATE2Z2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** PERI  Array for Performance Period
+YEAR TO DATE
+TAX YEAR TO DATE
+ADDITIONAL PERIOD
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

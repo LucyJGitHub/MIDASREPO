@@ -1,0 +1,200 @@
+/*********************************************************************/
+/*S*D****CLPBASEMOD***************************************************/                 /*AR917384*/
+/*STD    CLPBASEBND                                                  */                 /*AR917384*/
+/*EXI    TEXT('Midas SC Restore Schemas/Libraries Monitor')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000203 - Restore Schemas/Libraries Monitor               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Prev Amend No. AR917384           Date 21Feb12              */
+/*                      AR913839           Date 14Feb12              */
+/*                      AR902788           Date 02Feb12              */
+/*                      AR892136           Date 11Jan12              */
+/*                      CBF002  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*       AR917384 - SCC1711 Error on Backup                          */
+/*                - Changed to *PGM to be included as adoption       */
+/*       AR913839 - Restore failed due to authority issues           */
+/*       AR902788 - Error on Recovery                                */
+/*       AR892136 - COB failed to backup Global Library              */
+/*       CBF002 - BF Infrastructure: Backup and Recovery             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFKY)
+ 
+             DCL        VAR(&PFKY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&BKTYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DEVC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DEVNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SCHLIBARR) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SAVFNMARR) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&TOLIBARR) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SQNMARR) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SCHLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVFNM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SQNM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SCHLIBCNT) TYPE(*DEC) LEN(4 0) VALUE(1)
+             DCL        VAR(&SAVFNMCNT) TYPE(*DEC) LEN(4 0) VALUE(1)
+             DCL        VAR(&TOLIBCNT) TYPE(*DEC) LEN(4 0) VALUE(1)
+             DCL        VAR(&SQNMCNT) TYPE(*DEC) LEN(4 0) VALUE(1)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&PFMT) TYPE(*CHAR) LEN(200)
+/**********  DCL        VAR(&MPHASVAL) TYPE(*CHAR) LEN(1)                     */ /*AR892136 CCB020*/
+             DCL        VAR(&RCV) TYPE(*CHAR) LEN(10)                                     /*CCB020*/
+             DCL        VAR(&SEQ) TYPE(*DEC) LEN(10 0)                                    /*CCB020*/
+             DCL        VAR(&CSTAT) TYPE(*CHAR) LEN(4)                                    /*CCB020*/
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/*********************************************************************                 */ /*CCB020*/
+/***Retrieve*MPHAS*Value**********************************************        */ /*AR892136 CCB020*/
+/*********************************************************************                 */ /*CCB020*/
+/**********  RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&MPHASVAL)                 */ /*AR892136 CCB020*/
+ 
+/** Check if Schemas/Libraries File is empty */
+ 
+             CALL       PGM(AOBKLBR0)  PARM(&PRTCD '*FIRST' &PFMT)
+ 
+/** Call AOBKLBR0 again to free the file */                                             /*AR902788*/
+                                                                                        /*AR902788*/
+             IF         COND(&PRTCD *EQ ' ') THEN(DO)                                   /*AR902788*/
+                CALL       PGM(AOBKLBR0) PARM(&PRTCD '*FREE' &PFMT)                     /*AR902788*/
+             ENDDO                                                                      /*AR902788*/
+                                                                                        /*AR902788*/
+             IF         COND(&PRTCD *EQ '*EMPTY') THEN(DO)
+                CALL       PGM(AOBKLBR0) PARM(&PRTCD '*FREE' &PFMT)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/** Retrieve backup type according to profile key */
+ 
+             CHGVAR     VAR(&PFMT) VALUE(' ')
+             CALL       PGM(AOSVPRMR0) PARM(&PRTCD '*KEY' &PFKY &PFMT)
+             IF         COND(&PRTCD *NE ' ') THEN(GOTO CMDLBL(ABNOR))
+/**********  CHGVAR     VAR(&BKTYPE) VALUE(%SST(&PFMT 4 10))                            /*AR892136*/
+                                                                                        /*AR902788*/
+/** Call AOSVPRMR0 again to free the file */                                            /*AR902788*/
+                                                                                        /*AR902788*/
+             CALL       PGM(AOSVPRMR0) PARM(&PRTCD '*FREE' &PFKY &PFMT)                 /*AR902788*/
+ 
+/** Retrieve device according to backup type */
+ 
+             CHGVAR     VAR(&PFMT) VALUE(' ')
+             CALL       PGM(AOSVOPTR0) PARM(&PRTCD &PFMT)
+             IF         COND(&PRTCD *NE ' ') THEN(GOTO CMDLBL(ABNOR))
+ 
+/** Check if BOB save event is succesful                                               */ /*CCB020*/
+ 
+             CALL       PGM(AOCOMSR0) PARM('SCC0410' '00001' &CSTAT)                      /*CCB020*/
+ 
+/**********  IF         COND(&BKTYPE *EQ 'BOB') THEN(DO)                                /*AR892136*/
+/**********  IF         COND(&MPHASVAL *EQ 'F') THEN(DO)                      */ /*AR892136 CCB020*/
+             IF         COND(&CSTAT *EQ 'C   ') THEN(DO)                                  /*CCB020*/
+                CHGVAR     VAR(&BKTYPE) VALUE('BOB')                                    /*AR892136*/
+                CHGVAR     VAR(&DEVC) VALUE(%SST(&PFMT 35 4))
+                CHGVAR     VAR(&DEVNAM) VALUE(%SST(&PFMT 39 10))
+             ENDDO
+ 
+             ELSE (DO)                                                                    /*CCB020*/
+ 
+/** Check if DBIC save event is succesful                                              */ /*CCB020*/
+ 
+             CALL       PGM(AOCOMSR0) PARM('SCC1711' '00001' &CSTAT)                      /*CCB020*/
+ 
+/**********  IF         COND(&BKTYPE *EQ 'ICT') THEN(DO)                                /*AR892136*/
+/**********  IF         COND(&MPHASVAL *EQ 'B') THEN(DO)                      */ /*AR892136 CCB020*/
+             IF         COND(&CSTAT *EQ 'C   ') THEN(DO)                                  /*CCB020*/
+                CHGVAR     VAR(&BKTYPE) VALUE('ICT')                                    /*AR892136*/
+                CHGVAR     VAR(&DEVC) VALUE(%SST(&PFMT 49 4))
+                CHGVAR     VAR(&DEVNAM) VALUE(%SST(&PFMT 53 10))
+             ENDDO
+ 
+             ELSE (DO)                                                                    /*CCB020*/
+ 
+             GOTO CMDLBL(END)                                                             /*CCB020*/
+ 
+             ENDDO                                                                        /*CCB020*/
+             ENDDO                                                                        /*CCB020*/
+ 
+/** Schemas/Libraries Restore Setup */
+ 
+             CALL       PGM(SC000203) PARM(&BKTYPE &DEVC &SCHLIBARR +
+                          &SAVFNMARR &TOLIBARR &SQNMARR)
+ 
+             IF         COND(&SCHLIBARR = ' ') THEN(GOTO CMDLBL(END))
+ 
+             CHGVAR     VAR(&SCHLIB) VALUE(%SST(&SCHLIBARR +
+                          &SCHLIBCNT 10))
+ 
+/** Process all libraries to be restored */
+ 
+LOOP:
+             CHGVAR     VAR(&SAVFNM) VALUE(%SST(&SAVFNMARR +
+                          &SAVFNMCNT 10))
+             CHGVAR     VAR(&TOLIB) VALUE(%SST(&TOLIBARR +
+                          &TOLIBCNT 10))
+             CHGVAR     VAR(&SQNM) VALUE(%SST(&SQNMARR +
+                          &SQNMCNT 10))
+ 
+/** Check if library exists, else create library */
+ 
+             IF         COND(&TOLIB *NE '*SAVLIB') THEN(DO)
+                CHKOBJ     OBJ(&TOLIB) OBJTYPE(*LIB)
+                MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+                   CRTLIB     LIB(&TOLIB)
+                ENDDO
+             ENDDO
+ 
+/************SBMJOB     CMD(CALL PGM(SCC000213) PARM(&DEVC &DEVNAM +
+/************             &SCHLIB &SAVFNM &TOLIB &SQNM)) +
+/************             JOB(SCC000213) JOBD(*USRPRF) JOBQ(QBATCH)                     /*AR913839*/
+                                                                                        /*AR913839*/
+             SBMJOB     CMD(CALL PGM(SCC000213) PARM(&DEVC &DEVNAM +
+                          &SCHLIB &SAVFNM &TOLIB &SQNM)) +
+                          JOB(SCC000213) JOBD(MBATCH) OUTQ(*JOBD) +
+                          USER(*JOBD) RTGDTA(*JOBD) INLLIBL(*JOBD)                      /*AR913839*/
+ 
+/** Retrieve next record */
+ 
+             CHGVAR     VAR(&SCHLIBCNT) VALUE(&SCHLIBCNT + 10)
+             CHGVAR     VAR(&SAVFNMCNT) VALUE(&SAVFNMCNT + 10)
+             CHGVAR     VAR(&TOLIBCNT) VALUE(&TOLIBCNT + 10)
+             CHGVAR     VAR(&SQNMCNT) VALUE(&SQNMCNT + 10)
+ 
+             CHGVAR     VAR(&SCHLIB) VALUE(%SST(&SCHLIBARR +
+                          &SCHLIBCNT 10))
+ 
+             IF         COND(&SCHLIBCNT *GT 200) THEN(GOTO +
+                          CMDLBL(END))
+ 
+             IF         COND(&SCHLIB *NE ' ') THEN(GOTO CMDLBL(LOOP))
+ 
+/** All libraries submitted for restoration */
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX1X)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000203 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+END:
+             ENDPGM
+ 

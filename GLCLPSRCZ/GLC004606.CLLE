@@ -1,0 +1,71 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas GL Submit Forward Account Transfer Job - COB')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - General Ledger Module                            */
+/*                                                                   */
+/*       GLC004606 - Midas GL Submit Forward Account Transfer Job    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27831A *CREATE  Date 03Aug10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27831A - Forward Account Transfer Processing             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/** Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GLC004606 - Submit Forward Account +
+                          Transfer Job') TOMSGQ(MRUNQ)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&JOBNAME) VALUE('FWDRATM_' *CAT &SYSID)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Check if the job is already running */
+ 
+             ALCOBJ     OBJ((GLFRATMLCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))
+             DLCOBJ     OBJ((GLFRATMLCK *DTAARA *EXCL))
+ 
+             CHGDTAARA  DTAARA(GLFRATMSTS) VALUE(' ')
+ 
+/** Submit Forward Transfer Report Job: GLC004605 */
+ 
+             SBMJOB     CMD(CALL PGM(GLC004605)) JOB(&JOBNAME) +
+                          JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +
+                          OUTQ(*JOBD) USER(*JOBD)
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC004606 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

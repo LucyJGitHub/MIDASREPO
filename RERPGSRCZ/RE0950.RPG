@@ -1,0 +1,4443 @@
+     H        1                                                                             AR807758
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('RE Retail Interest Summary Extract')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE0950 - Retail Interest Summary Extract                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. MD031034           Date 25Nov14               *
+      *  Prev Amend No. MD024292A          Date 19Mar14               *
+      *                 MD024292           Date 15Jan14               *
+      *                 AR847634           Date 23Nov11               *
+      *                 AR807782           Date 28Jul11               *
+      *                 AR807758           Date 28Jul11               *
+      *                 AR796787           Date 01Jul11               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23578 *CREATE   Date 24Mar09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031034 - REC0950 failed in COB with database error due to  *
+      *             closed customer.                                  *
+      *           - Do not throw error when customer is closed.       *
+      *  MD024292A - Cob Component REC0950 00002 ends in error        *
+      *  MD024292 - Cob Component REC0950 00002 ends in error         *
+      *  AR847634 - COB component CGC2050 000030 failed               *
+      *  AR807782 - Increase account field from 15 to 21              *
+      *             (Child:AR807783)                                  *
+      *  AR807758 - Dump on database error is missing (Child:AR807759)*
+      *  AR796787 - Database error on component REC0950 00001         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23578 - To generate Retail Interest Summary               *
+      *                                                               *
+      *****************************************************************
+     FRECAPML IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FREHISL  IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FREHISSL IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            REHISPSF                          KRENAMEREADJF
+      *
+     FREHPOPL IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            REHPOSPF                          KRENAMEREHPOPLF
+      *
+     FREHPOPH IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            REHPOSPF                          KRENAMEREHPOPHF
+      *
+     FACCRACJ IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FREHRCJ  IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FREHRDJ  IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FRECOM   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FRENOISL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FTABTBRE IF  E                    DISK
+     F                                              KINFSR *PSSR
+     FTABLEV4 IF  E                    DISK
+     F                                              KINFSR *PSSR
+      *
+     FACNUM   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACNUMTBF
+     F                                              KINFSR *PSSR
+      *
+     FRECCY   IF  E           K        DISK         KINFSR *PSSR
+     F            RECCYAF                           KIGNORE
+     F            RECCYZF                           KIGNORE
+      *
+     FEUACMLL2IF  E           K        DISK
+      *
+      ** Mapping file
+      *
+     FREINSDPDO   E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FRE0950AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      *
+     F/COPY WNCPYSRC,REF760F001
+      *
+      ** Extension file definition
+      *
+     FREINSHPDO   E           K        DISK                           UC
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F  I N D I C A T O R S                   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  01  Debit Capitalisation                                     *
+      *  02  Credit Capitalisation                                    *
+      *  50  Use with REHPOPL                                         *
+      *  52  Use with REHISL                                          *
+      *  60  Use with REHRDJ / REHRCJ                                 *
+      *  70  Used to read REINSDPD from START to FINISH               *
+      *  80  Number of decimal position with currency = 0             *
+      *  81  Number of decimal position with currency = 1             *
+      *  82  Number of decimal position with currency = 2             *
+      *  83  Number of decimal position with currency = 3             *
+      *  86  Turnover statements feature                              *
+      *  88  Multiple transactions feature                            *
+      *  98  Date format indicator                                    *
+      *  99  General error and chaining                               *
+      *                                                               *
+      *  U1  Mahagement statement print                               *
+      *  U7  Database error                                           *
+      *  U8  Database error                                           *
+      *  LR  End of Program                                           *
+      *                                                               *
+      *  DB Error number maximun 52 (include)                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #P01   - 1st cycle processing                                *
+      *  #P02   - Main detail processing                              *
+      *  #P03   - Total time processing                               *
+      *                                                               *
+      *  #P0201 - Detail processing for account                       *
+      *  #P0202 - 'Both' capitalisations processing                   *
+      *  #P0203 - Debit capitalisation processing                     *
+      *  #P0204 - Credit capitalisation processing                    *
+      *  #P0205 - Process backvalued postings                         *
+      *  #P0206 - Process posting records                             *
+      *  #P0207 - Both DR & CR totals and interest processing         *
+      *  #P0208 - DR day totals and interest numbers processing       *
+      *  #P0209 - CR day totals and interest numbers processing       *
+      *  #P0210 - Rate change detail processing                       *
+      *  #P0211 - Interest calculations processing                    *
+      *                                                               *
+      *  #SAVE  - Store key fields , set up currency indicators       *
+      *  #ALT   - Processing of alternative account numbers           *
+      *  #XRATE - Calculation of cross rates between two currencies   *
+      *  #CURR  - Accesses currency details                           *
+      *  #ADDR  - Validates adrress references                        *
+      *  #CLR   - Clear output record format, reset key fields        *
+      *  #INIT  - Initialise workfields                               *
+      *                                                               *
+      *  #CDR1  - Calculates DR interest amount (calc. method #1)     *
+      *  #CDR2  - Calculates DR interest amount (calc. method #2)     *
+      *  #COVR1 - Calculates overdraft amount                         *
+      *  #CCR1  - Calculates CR interest amount (calc. method #1)     *
+      *  #CCR2  - Calculates CR interest amount (calc. method #2)     *
+      *                                                               *
+      *  ZDATE2 - Converts a day number to date formats               *
+      *  #ZICD  - calculates number of days for interest calculation  *
+      *                                                               *
+      *  *PSSR  - Error subroutine for database errors                *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+     E                    CPY@    1   1 80
+     E                    ARR        10  1               ADDRESS ARRAY
+     E                    ZMDY   13  13  3 0
+     E                    ZYDY    4   4  4 0
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+      *
+     IREHISPSF
+      *
+      ** Rename REHISPSF format fields - REHISL file
+      *
+     I              RECI                            DRECI
+     I              HISD                            DHISD
+     I              HISB                            DHISB
+     I              MNBL                            DMNBL
+     I              STBL                            SSTBL
+     IREHISPPF
+      *
+      ** Rename REHISPPF format fields - REHISL file
+      *
+     I              RECI                            DRECI
+     I              HISD                            DHISD
+     I              HISB                            DHISB
+     I              MNBL                            DMNBL
+     IREHISPMF
+      *
+      ** Rename REHISPMF format fields - REHISL file
+      *
+     I              RECI                            DRECI
+     I              HISD                            DHISD
+     I              MNBL                            DMNBL
+     IRECAPMF
+      *
+      ** Rename RECAPMF format fields - RECAPML file
+      *
+     I              DRBR                            RDRBR
+     I              CRBR                            RCRBR
+     I              CHBR                            RCHBR
+     ICPYR@#      DS
+      *
+      ** Data sturcture for compilation - copyright insertion
+      *
+     I                                        1  80 CPY@
+     I            DS
+     I**********                              1  15 A15                                     AR807782
+     I**********                              7   9 A15CCY                                  AR807782
+     I**********                             11  15 A05                                     AR807782
+     I                                        1  21 A21                                     AR807782
+     I                                        7   9 A21CCY                                  AR807782
+     I                                       11  21 A11                                     AR807782
+     IRKEY2       DS
+     I                                        1  18 RKEY
+     I                                        1   3 FBRCA
+     I                                        4   9 FCNUM
+     I                                       10  12 FCCY
+     I                                       13  220FACOD
+     I                                       23  240FACSQ
+     I                                       25  290WDATE
+     I                                        1   3 FBRCA2
+     I            DS
+      *
+      ** Data structure for beginning date
+      *
+     I                                        1   60SRES
+     I                                        1   20ZISD
+     I                                        3   40ZISM
+     I                                        5   60ZISY
+     I            DS
+      *
+      ** Data structure for finishing date
+      *
+     I                                        1   60FRES
+     I                                        1   20ZIFD
+     I                                        3   40ZIFM
+     I                                        5   60ZIFY
+      *
+      **
+      ** Data structures for total fields to deal with
+      ** currency places
+      *
+     I            DS
+     I                                        1  150WSCRT0
+     I                                        1  151WSCRT1
+     I                                        1  152WSCRT2
+     I                                        1  153WSCRT3
+      *
+     I            DS
+     I                                        1  150WSDRT0
+     I                                        1  151WSDRT1
+     I                                        1  152WSDRT2
+     I                                        1  153WSDRT3
+      *
+     I            DS
+     I                                        1  150WTCIN0
+     I                                        1  151WTCIN1
+     I                                        1  152WTCIN2
+     I                                        1  153WTCIN3
+      *
+     I            DS
+     I                                        1  150WPCIN0
+     I                                        1  151WPCIN1
+     I                                        1  152WPCIN2
+     I                                        1  153WPCIN3
+      *
+     I            DS
+     I                                        1  150W1CIN0
+     I                                        1  151W1CIN1
+     I                                        1  152W1CIN2
+     I                                        1  153W1CIN3
+      *
+     I            DS
+     I                                        1  150WTDIN0
+     I                                        1  151WTDIN1
+     I                                        1  152WTDIN2
+     I                                        1  153WTDIN3
+      *
+     I            DS
+     I                                        1  150WPDIN0
+     I                                        1  151WPDIN1
+     I                                        1  152WPDIN2
+     I                                        1  153WPDIN3
+      *
+     I            DS
+     I                                        1  150W1DIN0
+     I                                        1  151W1DIN1
+     I                                        1  152W1DIN2
+     I                                        1  153W1DIN3
+      *
+     I            DS
+     I                                        1  150WTOVR0
+     I                                        1  151WTOVR1
+     I                                        1  152WTOVR2
+     I                                        1  153WTOVR3
+      *
+     I            DS
+     I                                        1  150WPOVR0
+     I                                        1  151WPOVR1
+     I                                        1  152WPOVR2
+     I                                        1  153WPOVR3
+      *
+     I            DS
+     I                                        1  150W1OVR0
+     I                                        1  151W1OVR1
+     I                                        1  152W1OVR2
+     I                                        1  153W1OVR3
+      *
+     I            DS
+     I                                        1  150WSDIN0
+     I                                        1  151WSDIN1
+     I                                        1  152WSDIN2
+     I                                        1  153WSDIN3
+      *
+     I            DS
+     I                                        1  150WSCIN0
+     I                                        1  151WSCIN1
+     I                                        1  152WSCIN2
+     I                                        1  153WSCIN3
+      *
+     I            DS
+     I                                        1  150W1HISB
+     I                                        1  150W1HIS0
+     I                                        1  151W1HIS1
+     I                                        1  152W1HIS2
+     I                                        1  153W1HIS3
+     I            DS
+     I                                        1  150W@HIS0
+     I                                        1  151W@HIS1
+     I                                        1  152W@HIS2
+     I                                        1  153W@HIS3
+     I            DS
+     I                                        1  150WBALA0
+     I                                        1  151WBALA1
+     I                                        1  152WBALA2
+     I                                        1  153WBALA3
+     I            DS
+     I                                        1  150WBALB0
+     I                                        1  151WBALB1
+     I                                        1  152WBALB2
+     I                                        1  153WBALB3
+     I            DS
+     I                                        1  150WMNBL
+     I                                        1  150WMNBL0
+     I                                        1  151WMNBL1
+     I                                        1  152WMNBL2
+     I                                        1  153WMNBL3
+     I            DS
+     I                                        1  12 CCYKEY
+     I                                        9  11 CCCY
+     I                                       12  12 CCYCON
+     ISPOOLU      DS
+      *
+      ** File information data structure - AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** Customer Group Data Area (8 Occurences)
+      *
+     ICGPDTA      DS                          8
+     I                                        1   1 WGRP
+     I                                        2   2 WDYSI
+     I            DS
+     I                                        1   1 CUCGRP
+     I                                        1   10CTYPNO
+     IRUNDT       DS
+      *
+      ** Data area RUNDAT
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     ILDA         DS                            256
+      *
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for bank details
+      *
+     I              BJURPT                          TITL
+      *
+     ISDRETL    E DSSDRETLPD
+      *
+      ** Retail Details
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Currency details
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Customer details
+      *
+     ISDALTN    E DSSDALTNPD
+      *
+      ** Alternative Names & Addresses Details
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** DS for access programs, long data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for access programs, short data structure
+      *
+     C/EJECT
+      *================================================================
+      *
+      ** Define LDA and LOAD copyright
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Parameter send by the CL: Component name and sequence number
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @CNAM  10
+     C                     PARM           @SQNO   5
+      *
+      ** Main Key list
+      *
+     C           KLIST1    KLIST
+     C                     KFLD           CBRCA
+     C                     KFLD           CCNUM
+     C                     KFLD           CCCY
+     C                     KFLD           CACOD
+     C                     KFLD           CACSQ
+      *
+      ** Klist to read REHISL for debit
+      *
+     C           KLIST2    KLIST
+     C                     KFLD           CBRCA
+     C                     KFLD           CCNUM
+     C                     KFLD           CCCY
+     C                     KFLD           CACOD
+     C                     KFLD           CACSQ
+     C                     KFLD           CLDID
+      *
+      ** Klist to read REHISL for credit
+      *
+     C           KLIST3    KLIST
+     C                     KFLD           CBRCA
+     C                     KFLD           CCNUM
+     C                     KFLD           CCCY
+     C                     KFLD           CACOD
+     C                     KFLD           CACSQ
+     C                     KFLD           CLCID
+      *
+      ** Klist to chain on REHRDJ / REHRCJ
+      *
+     C           KLIST4    KLIST
+     C                     KFLD           CBRCA
+     C                     KFLD           CCNUM
+     C                     KFLD           CCCY
+     C                     KFLD           CACOD
+     C                     KFLD           CACSQ
+     C                     KFLD           KDATE   50
+      *
+      ** REHPOPL Key list
+      *
+     C           KLIST7    KLIST
+     C                     KFLD           CBRCA
+     C                     KFLD           CCNUM
+     C                     KFLD           CCCY
+     C                     KFLD           CACOD
+     C                     KFLD           CACSQ
+     C                     KFLD           DHISD
+      *
+     C           KLIST8    KLIST
+     C                     KFLD           CBRCA
+     C                     KFLD           CCNUM
+     C                     KFLD           CCCY
+     C                     KFLD           CACOD
+     C                     KFLD           CACSQ
+     C                     KFLD           LCAPD
+      *
+     C           KLIST9    KLIST
+     C                     KFLD           CBRCA
+     C                     KFLD           CCNUM
+     C                     KFLD           CCCY
+     C                     KFLD           CACOD
+     C                     KFLD           CACSQ
+      *
+     C           KLIST5    KLIST
+     C                     KFLD           CBRCA
+     C                     KFLD           WCNUM
+     C                     KFLD           CCCY
+     C                     KFLD           CACOD
+     C                     KFLD           CACSQ
+      *
+     C           INACC     KLIST
+     C                     KFLD           CBRCA
+     C                     KFLD           CCNUM
+     C                     KFLD           CCCY
+     C                     KFLD           CACOD
+     C                     KFLD           CACSQ
+      *
+      *================================================================
+     C/EJECT
+      *================================================================
+      ** P R O G R A M     S T A R T
+      *================================================================
+      *
+      ** First cycle processing
+      *
+     C                     EXSR #P01
+      *
+      ** Main Processing
+      *
+     C                     EXSR #P02
+      *
+      ** Total Processing
+      *
+     C                     EXSR #P03
+      *
+      *================================================================
+      ** P R O G R A M     E N D
+      *================================================================
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P01 - Process Initialization                                *
+      *                                                               *
+      *  Called by - S T A R T                                        *
+      *                                                               *
+      *  Calls - PSSR                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P01      BEGSR
+      *
+      ** Define fields
+      *
+     C           *LIKE     DEFN RUND      ZIBEG
+     C           *LIKE     DEFN RUND      ZIBW1
+     C           *LIKE     DEFN RUND      ZIDREM
+     C           *LIKE     DEFN CICT      ZIDW1
+     C           *LIKE     DEFN RUND      ZIDW2
+     C           *LIKE     DEFN RUND      ZID1
+     C           *LIKE     DEFN RUND      ZID2
+     C           *LIKE     DEFN RUND      ZIEND
+     C           *LIKE     DEFN RUND      ZILPCP
+     C           *LIKE     DEFN CICT      ZIMAN
+     C           *LIKE     DEFN CICT      ZIM1
+     C           *LIKE     DEFN RUND      ZIREM
+     C           *LIKE     DEFN CICT      ZIY1
+      *
+     C                     Z-ADD*ZEROS    ZICALC  20
+      *
+      ** Prepare DBPGM, DBKEY and ERRDAT variables
+      *
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'RE0950'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        **DB ERROR 01**
+     C                     Z-ADD01        DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access the retail ICD Details
+      *
+     C                     CALL 'AORETLR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDRETL    PARM SDRETL    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDRETLPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        **DB ERROR 02**
+     C                     Z-ADD2         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,REF760C001
+      *
+     C                     MOVE *BLANKS   CER039  1
+      *
+      ** Test if CERO39 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CER039'  @SARD   8
+     C                     PARM *BLANKS   DSFDY
+      *
+      ** If CER039 is installed
+      *
+     C           @RTCD     IFEQ *BLANKS
+      *
+      ** Store indicator
+      *
+     C                     MOVE 'Y'       CER039  1
+      *
+      ** Open Correspondent file
+      *
+     C                     OPEN REINSHPD
+      *
+     C                     ENDIF
+      *
+      ** Check if CER016 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CER016'  @SARD   8
+     C                     PARM *BLANKS   DSFDY
+      *
+      ** If CER016 is installed
+      *
+     C           @RTCD     IFEQ *BLANKS
+      *
+      ** Store indicator
+      *
+     C                     MOVE 'Y'       CER016  1
+     C                     ELSE
+     C                     MOVE 'N'       CER016
+     C                     ENDIF
+      *
+      ** Set date Format indicator and print audit header
+      *
+     C                     MOVE BJMRDT    RUNA
+     C                     MOVE *OFF      *IN98
+     C                     WRITEAUHEAD
+      *
+      ** Access retail features file
+      *
+     C           1         CHAINTABTBRE              99
+      *
+     C           *IN99     IFEQ *ON
+     C           RECI      ORNE 'D'
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'TABTBRE' DBFILE           **DB ERROR 03**
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Multiple transactions feature
+      *
+     C           CMTR      IFEQ 'Y'
+     C                     MOVE *ON       *IN88
+     C                     ELSE
+     C                     MOVE *OFF      *IN88
+     C                     ENDIF
+      *
+      ** Turnover statement feature
+      *
+     C           TURN      IFEQ 'Y'
+     C                     MOVE *ON       *IN86
+     C                     ELSE
+     C                     MOVE *OFF      *IN86
+     C                     ENDIF
+      *
+      ** Access Customer Group TABLEV4 and read all recs into an array
+      *
+     C                     Z-ADD0         OCCUR   10
+      *
+     C                     MOVE *BLANKS   ZTABKY 12
+     C                     MOVEL'81'      ZTABKY
+      *
+     C                     SETOF                     63
+      *
+     C           1         SETLLTABLEV4
+     C                     DO   8                          B001
+     C                     ADD  1         OCCUR
+     C           OCCUR     OCUR CGPDTA
+     C                     MOVE OCCUR     ZTABKY
+     C                     READ TABLEV4                  64
+      *
+     C           *IN64     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C                     MOVE OCCUR     WGRP
+     C                     MOVE DYSI      WDYSI
+     C                     SETON                     63
+     C                     ENDIF
+      *
+     C                     ENDDO                           E001
+      *
+     C                     SETOF                     64
+      *
+     C           *IN63     IFEQ '0'
+     C                     MOVEL'RE0950'  DBPGM
+     C                     Z-ADD14        DBASE            ***************
+     C                     MOVEL'TABLEV4' DBFILE           * DB ERROR 14 *
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P02 - Main detail processing                                *
+      *                                                               *
+      *  Called by - S T A R T                                        *
+      *                                                               *
+      *  Calls - INIT, SAVE, P0201                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P02      BEGSR
+      *
+      ** Read capitalised accounts file until end.
+      *
+     C                     READ RECAPML                  70
+      *
+     C           *IN70     DOWEQ*OFF
+      *
+     C                     MOVE CCNUM     WCNUM   6
+     C                     EXSR #INIT
+     C                     EXSR #SAVE
+      *
+     C                     EXSR #P0201
+     C                     READ RECAPML                  70
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P03 - Total time processing                                 *
+      *                                                               *
+      *  Called by - S T A R T                                        *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P03      BEGSR
+      *
+      ** Write file totals for audit report, end program
+      *
+     C                     WRITEAUDETL
+     C                     WRITEAUEND
+      *
+     C                     MOVE *ON       *INLR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P0201 - Detail processing for account                       *
+      *                                                               *
+      *  Called by - P02                                              *
+      *                                                               *
+      *  Calls - PSSR, P0202, P0203, P0204                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0201    BEGSR
+      *
+      ** Access ACCRACJ (ACCNTAB, REIACD, REACRD) for account details
+      *
+     C           KLIST1    CHAINACCRACJ              99
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'ACCRACJ 'DBFILE           **DB ERROR 04**
+     C                     MOVELRKEY      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access RECOM record for commission details
+      *
+     C           KLIST1    CHAINRECOM                99
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'RECOM   'DBFILE           **DB ERROR 05**
+     C                     MOVELRKEY      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access number of statements file for that very reason
+      *
+     C           KLIST5    CHAINRENOISD0             99
+     C           *IN99     IFEQ *ON
+     C**********           Z-ADD13        DBASE            ***************                  MD024292
+     C**********           MOVEL'RENOISL1'DBFILE           **DB ERROR 13**                  MD024292
+     C**********           MOVELRKEY      DBKEY            ***************                  MD024292
+     C**********           EXSR *PSSR                                                       MD024292
+      *****************************************************************           MD024292 MD024292A
+     C**********           CLEARRENOISD0                                          MD024292 MD024292A
+      *                                                                                     MD024292
+     C                     Z-ADD13        DBASE            ***************                 MD024292A
+     C                     MOVEL'RENOISL1'DBFILE           **DB ERROR 13**                 MD024292A
+     C                     MOVELRKEY      DBKEY            ***************                 MD024292A
+     C                     EXSR *PSSR                                                      MD024292A
+      *                                                                                    MD024292A
+     C                     ENDIF
+      *
+      ** Access number of currency file for counting stat.charges
+      *
+     C                     MOVE 'D'       CCYCON
+     C           CCYKEY    CHAINRECCY                99
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD16        DBASE            ***************
+     C                     MOVEL'RECCY   'DBFILE           **DB ERROR 16**
+     C                     MOVELRKEY      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE CCNUM     WWCNM6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM WWCNM6    @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** If error, perform *PSSR, otherwise get retail customer group
+      ** Also allow processing when customer is closed.                                     MD031034
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD031034
+     C                     MOVEL'RE0950'  DBPGM
+     C                     Z-ADD15        DBASE            ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 15 *
+     C                     MOVEL@CNUM     DBKEY            ***************
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *
+     C                     MOVELBBCGRP    CUCGRP
+     C           CUCGRP    IFEQ *BLANKS
+     C                     MOVE '1'       CUCGRP
+     C                     ENDIF
+     C*
+     C           CTYPNO    OCUR CGPDTA
+      *
+     C                     ENDIF
+      *
+      ** Set indicators for DR & CR capitalisation
+      *
+     C                     MOVEA'00'      *IN,01
+      *
+     C           CDICI     IFNE *BLANKS
+     C                     MOVE *ON       *IN01
+     C                     ENDIF
+      *
+     C           CCICI     IFNE *BLANKS
+     C                     MOVE *ON       *IN02
+     C                     ENDIF
+      *
+      ** Set indicators for DR & CR capitalisation (management)
+      *
+     C                     MOVEA'00'      *IN,75
+      *
+     C           CDICI     IFEQ 'M'
+     C                     MOVE *ON       *IN75
+     C                     ENDIF
+      *
+     C           CCICI     IFEQ 'M'
+     C                     MOVE *ON       *IN76
+     C                     ENDIF
+      *
+      ** Initialise the accrued interest fields
+      *
+     C                     Z-ADD0         #TDAID 150
+     C                     Z-ADD0         #TCAID
+     C                     Z-ADD0         #TODIA 150
+      *
+      ** Both DR & CR cap. / last & next cap. dates same / management
+      *
+     C           CCICI     IFNE *BLANKS                    - B1
+     C           CDICI     ANDNE*BLANKS
+     C           LDID      ANDEQLCID
+     C           *IN75     ANDEQ*OFF
+     C           *IN76     ANDEQ*OFF
+      *
+     C           CCICI     ORNE *BLANKS
+     C           CDICI     ANDNE*BLANKS
+     C           LDID      ANDEQLCID
+     C           *IN75     ANDEQ*ON
+     C           *IN76     ANDEQ*ON
+      *
+     C                     EXSR #P0202
+     C                     ELSE
+      *
+     C           CDICI     IFNE *BLANKS
+     C                     EXSR #INIT
+     C                     EXSR #P0203
+     C                     ENDIF
+      *
+     C           CCICI     IFNE *BLANKS
+     C                     EXSR #INIT
+     C                     EXSR #P0204
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P0202 - 'Both' capitalisations processing                   *
+      *                                                               *
+      *  Called by - P0201                                            *
+      *                                                               *
+      *  Calls - PSSR, ADDR, CLR, P0205, P0206,                       *
+      *          P0207, P0210, CDR1, COVR1, ALT, ZICD.                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0202    BEGSR
+      *
+      ** Clear format and save fields , set up 'BOTH' flag &
+      ** credit flag
+      *
+     C                     EXSR #CLR
+      *
+     C                     MOVE 'Y'       @BFLG
+     C                     MOVE ' '       @CFLG
+      *
+      ** Set up DR capitalisation frequencies &types
+      *
+     C                     MOVE DRIF      FDRIF
+     C                     MOVE CRIF      FCRIF
+      *
+     C                     MOVE CCICI     FCICI
+     C                     MOVE CDICI     FDICI
+      *
+      ** Set up DR & CR capitalisation dates
+      ** If first day accrual and not a closure
+      *
+     C           BMLDAI    IFEQ 'N'
+     C           CDICI     ANDNE'C'
+     C           CHISD     SUB  1         FDCPD
+     C           CHISD     SUB  1         FCCPD
+     C                     ELSE
+     C                     MOVE CHISD     FDCPD
+     C                     MOVE CHISD     FCCPD
+     C                     ENDIF
+      *
+     C                     MOVE FCCPD     @CCPD   50
+     C                     MOVE FDCPD     @DCPD   50
+      *
+      ** Set up account name and retail number
+      *
+     C                     MOVE ANAM      FANAM
+     C                     MOVE ACNO      FACNO
+      *
+      ** Access mapping file for In Currency Retail Account Number
+      *
+     C           ACNO      IFEQ 0
+     C           INACC     CHAINEUACMLL2             98
+     C           *IN98     IFEQ '0'
+     C                     MOVE EUEACN    FACNO
+     C                     END
+     C                     END
+      *
+      ** Set up DR & CR capitalisation value Dates
+      *
+     C           BMLDAI    IFEQ 'N'
+     C           CDICI     ANDNE'C'
+     C                     MOVE FDCPD     FDCPV
+     C                     MOVE FCCPD     FCCPV
+      *
+     C                     ELSE
+     C                     MOVE CHISD     FDCPV
+     C                     MOVE CHISD     FCCPV
+     C                     ENDIF
+      *
+      ** Validate address references
+      *
+     C                     MOVE @DCPD     @CPD    50
+     C                     EXSR #ADDR
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+      ** Access REHISL from last DR capitalisation date
+      *
+     C                     EXSR #CLREH
+      *
+     C           CLDID     IFLE CLCID
+     C           KLIST2    SETLLREHISL
+     C                     ELSE
+     C           KLIST1    SETLLREHISL
+     C                     ENDIF
+      *
+     C                     READ REHISL                   52
+      *
+     C           *IN52     IFEQ *ON
+     C                     Z-ADDCLDID     WDATE
+     C                     Z-ADD7         DBASE
+     C                     MOVEL'REHISL  'DBFILE           ***************
+     C                     MOVELRKEY2     DBKEY            **DB ERROR 07**
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Store opening balance and change value dates
+      *
+     C           DRECI     IFEQ 'B'
+     C           DRECI     OREQ 'S'
+     C                     Z-ADDDHISB     W1HISB
+     C                     Z-ADDDHISD     W1HISD
+      *
+     C           DRCD      IFNE *ZEROS
+     C                     Z-ADDDRCD      WWDRCD  50
+     C                     ENDIF
+      *
+     C           CRCD      IFNE *ZEROS
+     C                     Z-ADDCRCD      WWCRCD  50
+     C                     ENDIF
+      *
+     C**********           ELSE                                                             AR796787
+      *
+     C**********           Z-ADDCLDID     WDATE                                             AR796787
+     C**********           Z-ADD8         DBASE                                             AR796787
+     C**********           MOVEL'REHISL  'DBFILE                                            AR796787
+     C**********           MOVELRKEY2     DBKEY                                             AR796787
+     C**********           EXSR *PSSR                                                       AR796787
+     C                     ENDIF
+      *
+      ** Process any backvalued postings
+      *
+     C           CLDID     IFLE CLCID
+     C                     Z-ADDCLDID     LCAPD   50
+     C                     ELSE
+     C                     Z-ADDCLCID     LCAPD
+     C                     ENDIF
+     C                     MOVE CHISD     NCAPD   50
+      *
+     C                     EXSR #P0205
+      *
+      ** Set flags and perform rate change processing
+      *
+     C                     MOVE *BLANKS   @DR1    1
+     C                     MOVE *BLANKS   @ORP    1
+     C                     MOVE *BLANKS   @CR1    1
+      *
+     C                     EXSR #P0210
+      *
+      ** Access retail history for next non-capitalisation record
+      *
+     C           DRECI     IFNE 'B'
+     C           DRECI     DOUNE'S'
+     C           *IN52     OREQ *ON
+     C           DRECI     OREQ 'S'
+     C           DHISD     ANDEQCHISD
+     C                     EXSR #CLREH
+     C           KLIST1    READEREHISL                   52
+     C                     ENDDO
+     C                     END
+      *
+      ** DR & CR day total and interest numbers
+      *
+     C           *IN52     IFEQ *OFF
+      *
+     C           DHISD     IFEQ W1HISD
+     C                     Z-ADDDHISB     W1HISB
+     C                     Z-ADDODRL      WODRL
+      *
+     C           DRCI      IFEQ 'Y'
+     C           DHISD     ANDGECLDID
+     C                     MOVE *BLANKS   @DR1
+     C                     Z-ADDDRCD      WWDRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+     C           CRCI      IFEQ 'Y'
+     C           DHISD     ANDGECLCID
+     C                     MOVE *BLANKS   @CR1
+     C                     Z-ADDCRCD      WWCRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           DRECI     IFNE 'S'
+      *
+     C                     EXSR #P0207
+      *
+      ** DR & CR rate chanhe processing
+      *
+     C           DRCI      IFEQ 'Y'
+     C           DHISD     ANDGECLDID
+     C                     Z-ADDDRCD      WWDRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C           CRCI      IFEQ 'Y'
+     C           DHISD     ANDGECLCID
+     C                     Z-ADDCRCD      WWCRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Retail history capital file
+      *
+     C           *IN52     DOWEQ*OFF
+     C           DHISD     ANDLTNCAPD
+      *
+      ** Retail history postings file
+      *
+     C           KLIST7    CHAINREHPOPL              50
+     C           *IN50     DOWEQ*OFF
+     C                     EXSR #P0206
+      *
+     C           KLIST7    READEREHPOPL                  50
+     C                     ENDDO
+      *
+     C                     EXSR #CLREH
+     C           KLIST1    READEREHISL                   52
+      *
+      ** If record for same account, history date <  next cap.date
+      *
+     C           *IN52     IFEQ *OFF
+     C           DHISD     ANDLENCAPD
+      *
+     C                     EXSR #P0207
+      *
+      ** DR & CR rate change processing
+      *
+     C           DRCI      IFEQ 'Y'
+     C           DHISD     ANDGECLDID
+     C                     Z-ADDDRCD      WWDRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C           CRCI      IFEQ 'Y'
+     C           DHISD     ANDGECLCID
+     C                     Z-ADDCRCD      WWCRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Calculate day number
+      ** If management capitalisation, do not test indicator *IN52
+      ** (As 'S' record does not exist and *IN52 = on).in this case
+      ** Last period till the next capitalisation date is never
+      ** calculated.
+      *
+     C           *IN52     IFEQ *OFF
+     C           *IN75     OREQ *ON
+     C           *IN76     ANDEQ*ON
+     C           W1HISB    IFGT 0
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDNCAPD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR1
+      *
+      ** Calculate overdraft interest
+      *
+     C                     EXSR #COVR1
+      *
+     C                     ELSE
+      *
+      ** Calculate day number
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDNCAPD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set rate change date work field and perform final
+      ** Rate Processing
+      *
+     C           CDICT     IFNE 00
+     C           DRECI     ANDEQ'S'
+     C                     Z-ADDDRIP      WPDIN0
+     C                     ENDIF
+      *
+     C           CCICT     IFNE 00
+     C           DRECI     ANDEQ'S'
+     C                     Z-ADDCRIP      WSCIN0
+     C                     ENDIF
+      *
+     C                     Z-ADDNCAPD     WWDRCD
+     C                     Z-ADDNCAPD     WWCRCD
+      *
+      ** Adjust WWDRCD for the last period (should be equal to the
+      ** Capitalisation date and not equal to the capitalis. date
+      ** - 1)
+      *
+     C                     ADD  1         WWDRCD
+     C                     ADD  1         WWCRCD
+     C                     EXSR #P0210
+      *
+      ** If DR alternative account is nin-blank, set spot rate
+      *
+     C           CSDACP    IFNE *BLANKS
+     C**********           MOVE CSDACP    A15                                               AR807782
+     C                     MOVE CSDACP    A21                                               AR807782
+     C                     EXSR #ALT
+     C                     MOVE @SPOT     FDSPT
+     C**********           MOVE CSDACP    FDACP                                             AR807782
+     C                     MOVE CSDACP    FDAC1                                             AR807782
+     C                     MOVE RDRBR     FDRBR
+     C                     ENDIF
+      *
+      ** If CR alternative account is non-blank, set spot rate
+      *
+     C           CSCACP    IFNE *BLANKS
+     C**********           MOVE CSCACP    A15                                               AR807782
+     C                     MOVE CSCACP    A21                                               AR807782
+     C                     EXSR #ALT
+     C                     MOVE @SPOT     FCSPT
+     C**********           MOVE CSCACP    FCACP                                             AR807782
+     C                     MOVE CSCACP    FCAC1                                             AR807782
+     C                     MOVE RCRBR     FCRBR
+     C                     ENDIF
+      *
+      ** If charges alternative account is non-blank, set spot rate
+      *
+     C           CSCHAC    IFNE *BLANKS
+     C**********           MOVE CSCHAC    A15                                               AR807782
+     C                     MOVE CSCHAC    A21                                               AR807782
+     C                     EXSR #ALT
+     C                     MOVE @SPOT     FCHSP
+     C**********           MOVE CSCHAC    FCHCP                                             AR807782
+     C                     MOVE CSCHAC    FCHC1                                             AR807782
+     C                     MOVE RCHBR     FCHBR
+     C                     ENDIF
+      *
+      ** Prepare total postings chargeable and total transaction
+      ** charges
+      *
+     C                     MOVE WSNPOC    FNPOC
+     C           CCHGP     IFNE *ZEROS
+     C                     Z-ADDCCHGP     FTOTC
+     C                     ELSE
+     C                     MOVE *ZEROS    FTOTC
+     C                     ENDIF
+      *
+      ** Prepare commissions from RECOM reocrd
+      *
+     C           ACCC      SUB  CACCC     FCTUR
+     C           CHDBC     SUB  CCHDBC    FCHOD
+     C           CMBC      SUB  CCMBC     FCMCB
+      *
+     C                     Z-ADDCDICA     FCDRI
+     C                     Z-ADDIACCC     FCINA
+     C                     Z-ADD0         FCEDS
+     C           CEXF      IFNE 'E'
+     C           WDYSI     ANDEQ'Y'
+      *
+     C           CEXF      IFNE *BLANKS
+     C                     Z-ADD0         NCEXF   70
+     C                     MOVE CEXF      NCEXF
+     C           NCEXF     MULT Z1NOIS    FCEDS
+     C                     ELSE
+     C           DSFC      MULT Z1NOIS    FCEDS
+     C                     ENDIF
+      *
+     C           FCEDS     ADD  CCINST    FCEDS
+     C                     ENDIF
+     C                     Z-ADDFXDC      FCFIX
+      *
+      ** Add commisiions to commissions totals
+      *
+     C                     ADD  FCHOD     WSTCOA
+     C                     ADD  FCTUR     WSTCOA
+     C                     ADD  FCDRI     WSTCOA
+     C                     ADD  FCINA     WSTCOA
+     C                     ADD  FCMCB     WSTCOA
+     C                     ADD  FCFIX     WSTCOA
+      *
+      ** Prepare extra daily statements charged
+      *
+     C                     ADD  Z1NOIS    FTEDS
+      *
+      ** Prepare statements amount and number, fixed charge
+      *
+     C                     MOVE WSTSTC    FTSTC
+     C                     MOVE WSSTCH    FSTCH
+     C                     MOVE WSCHFX    FCHFX
+      *
+      ** Add charges to charges totals
+      *
+     C                     ADD  FCEDS     WSTCHA
+     C                     ADD  FTOTC     WSTCHA
+     C                     ADD  FCHFX     WSTCHA
+     C                     ADD  FSTCH     WSTCHA
+      *
+      ** Prepare generated amounts , turnover amounts
+      *
+     C                     Z-ADDWSGADI    FGADI
+     C                     Z-ADDWSGACI    FGACI
+      *
+     C   80      WSDRT0    DIV  100       FDRTU     H
+     C   81      WSDRT1    DIV  1000      FDRTU     H
+     C   82      WSDRT2    DIV  10000     FDRTU     H
+     C   83      WSDRT3    DIV  100000    FDRTU     H
+      *
+     C   80      WSCRT0    DIV  100       FCRTU     H
+     C   81      WSCRT1    DIV  1000      FCRTU     H
+     C   82      WSCRT2    DIV  10000     FCRTU     H
+     C   83      WSCRT3    DIV  100000    FCRTU     H
+      *
+      ** Write extract file records
+      *
+     C                     Z-ADD1         Y@      20
+     C           Y@        DOWLEX@
+      *
+      ** Set key sequence fields
+      *
+     C                     MOVE Y@        FKEYS1
+     C                     MOVE @DCPD     FKEYS2
+     C                     Z-ADD2         FRECT
+      *
+      ** Write extract record
+      *
+     C                     WRITEREINSDD0
+     C                     ADD  1         AUREC
+     C                     ADD  1         Y@
+      *
+     C                     ENDDO
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+      ** Set totals for output
+      *
+     C                     Z-ADDWSTDRI    FTDRI
+     C                     Z-ADDWSTCRI    FTCRI
+     C                     Z-ADDWSTCOA    FTCOA
+     C                     Z-ADDWSTCHA    FTCHA
+     C           FTDRI     SUB  FTCRI     FTNTI
+      *
+      ** Write extract file records
+      *
+     C                     Z-ADD1         Y@
+     C           Y@        DOWLEX@
+      *
+      ** Set key sequence fields
+      *
+     C                     MOVE Y@        FKEYS1
+     C                     MOVE @DCPD     FKEYS2
+     C                     Z-ADD6         FRECT
+      *
+      ** Write extract record
+      *
+     C                     WRITEREINSDD0
+     C                     ADD  1         AUREC
+     C                     ADD  1         Y@
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P0203 - Debit capitalisation processing                     *
+      *                                                               *
+      *  Called by - P0201                                            *
+      *                                                               *
+      *  Calls - PSSR, CLR, ADDR, P0205, P0206, P0208                 *
+      *          P0210, CDR1, COVR1, ALT, ZICD.                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0203    BEGSR
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+     C                     MOVE ' '       @CFLG
+      *
+      ** Set up DR capitalisation frequency &type
+      *
+     C                     MOVE DRIF      FDRIF
+     C                     MOVE CDICI     FDICI
+      *
+      ** Set up DR capitalisation dates
+      *
+     C           BMLDAI    IFEQ 'N'
+     C           CDICI     ANDNE'C'
+     C           CHISD     SUB  1         FDCPD
+     C                     ELSE
+     C                     MOVE CHISD     FDCPD
+     C                     ENDIF
+      *
+     C                     MOVE FDCPD     @DCPD
+      *
+      ** Set up account name and retail number
+      *
+     C                     MOVE ANAM      FANAM
+     C                     MOVE ACNO      FACNO
+      *
+      ** Access mapping file for In Currency Retail Account Number
+      *
+     C           ACNO      IFEQ 0
+     C           INACC     CHAINEUACMLL2             98
+     C           *IN98     IFEQ '0'
+     C                     MOVE EUEACN    FACNO
+     C                     END
+     C                     END
+      *
+      ** Set up DR capitalisation value dates
+      *
+     C           BMLDAI    IFEQ 'N'
+     C           CDICI     ANDNE'C'
+     C                     MOVE FDCPD     FDCPV
+      *
+     C                     ELSE
+     C                     MOVE CHISD     FDCPV
+     C                     ENDIF
+      *
+      ** Validate address references
+      *
+     C                     MOVE @DCPD     @CPD
+     C                     EXSR #ADDR
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+      ** Access REHISL from last DR capitalisation date
+      *
+     C                     EXSR #CLREH
+     C           KLIST2    SETLLREHISL
+     C                     READ REHISL                   52
+      *
+     C           *IN52     IFEQ *ON
+     C                     Z-ADDCLDID     WDATE
+     C                     Z-ADD7         DBASE
+     C                     MOVEL'REHISL  'DBFILE           ***************
+     C                     MOVELRKEY2     DBKEY            **DB ERROR 07**
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Store opening balance and change value dates
+      *
+     C           DRECI     IFEQ 'B'
+     C           DRECI     OREQ 'S'
+     C                     Z-ADDDHISB     W1HISB
+     C                     Z-ADDDHISD     W1HISD
+      *
+     C           DRCD      IFNE *ZEROS
+     C                     Z-ADDCLDID     WWDRCD
+     C                     ENDIF
+      *
+     C**********           ELSE                                                             AR796787
+      *
+     C**********           Z-ADDCLDID     WDATE                                             AR796787
+     C**********           Z-ADD8         DBASE                                             AR796787
+     C**********           MOVEL'REHISL  'DBFILE                                            AR796787
+     C**********           MOVELRKEY2     DBKEY                                             AR796787
+     C**********           EXSR *PSSR                                                       AR796787
+     C                     ENDIF
+      *
+      ** Process any backwarded postings
+      *
+     C                     Z-ADDCLDID     LCAPD
+     C                     MOVE CHISD     NCAPD
+      *
+     C                     EXSR #P0205
+      *
+      ** Set flags and perform rate change processing
+      *
+     C                     MOVE *BLANKS   @DR1    1
+     C                     MOVE *BLANKS   @ORP    1
+      *
+     C                     EXSR #P0210
+      *
+      ** Access retail history for next non-capitalisation record
+      *
+     C           DRECI     IFNE 'B'
+     C           DRECI     DOUNE'S'
+     C           *IN52     OREQ *ON
+     C           DRECI     OREQ 'S'
+     C           DHISD     ANDEQCHISD
+     C                     EXSR #CLREH
+     C           KLIST1    READEREHISL                   52
+     C                     ENDDO
+     C                     END
+      *
+      ** DR & CR day total and interest numbers
+      *
+     C           *IN52     IFEQ *OFF
+      *
+     C           DHISD     IFEQ W1HISD
+     C                     Z-ADDDHISB     W1HISB
+     C                     Z-ADDODRL      WODRL
+      *
+     C           DRCI      IFEQ 'Y'
+     C                     MOVE *BLANKS   @DR1
+     C                     Z-ADDDRCD      WWDRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           DRECI     IFNE 'S'
+      *
+     C                     EXSR #P0208
+      *
+      ** DR & CR rate change processing
+      *
+     C           DRCI      IFEQ 'Y'
+     C                     Z-ADDDRCD      WWDRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Retail history capital file
+      *
+     C           *IN52     DOWEQ*OFF
+     C           DHISD     ANDLTNCAPD
+      *
+      ** Retail history postings file
+      *
+     C           DRECI     IFEQ 'D'
+      *
+     C           KLIST7    CHAINREHPOPL              50
+     C           *IN50     DOWEQ*OFF
+      *
+     C                     EXSR #P0206
+      *
+     C           KLIST7    READEREHPOPL                  50
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     EXSR #CLREH
+     C           KLIST1    READEREHISL                   52
+      *
+      ** If record for same account, history date <  next cap.date
+      *
+     C           *IN52     IFEQ *OFF
+     C           DHISD     ANDLENCAPD
+      *
+     C                     EXSR #P0208
+      *
+      ** DR & CR rate change processing
+      *
+     C           DRCI      IFEQ 'Y'
+     C                     Z-ADDDRCD      WWDRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Process day numbers
+      *
+      ** If management capitalisation, do not test indicator *IN52 (as 'S'
+      ** Record does not exist and *IN52 = on).in this case last period
+      ** Till the next capitalisation date is never calculated.
+      *
+     C           *IN52     IFEQ *OFF
+     C           *IN75     OREQ *ON
+     C           W1HISB    IFGT 0
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDNCAPD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR1
+      *
+      ** Calculate overdraft interest
+      *
+     C                     EXSR #COVR1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set Rate change date work field and perform final
+      ** Rate porcessing
+      *
+     C           CDICT     IFNE 00
+     C           DRECI     ANDEQ'S'
+     C                     Z-ADDDRIP      WPDIN0
+     C                     ENDIF
+      *
+     C                     Z-ADDNCAPD     WWDRCD
+     C                     EXSR #P0210
+      *
+      ** If DR alternative account is non-blank, set spot rate
+      *
+     C           CSDACP    IFNE *BLANKS
+     C**********           MOVE CSDACP    A15                                               AR807782
+     C                     MOVE CSDACP    A21                                               AR807782
+     C                     EXSR #ALT
+     C                     MOVE @SPOT     FDSPT
+     C**********           MOVE CSDACP    FDACP                                             AR807782
+     C                     MOVE CSDACP    FDAC1                                             AR807782
+     C                     MOVE RDRBR     FDRBR
+     C                     ENDIF
+      *
+      ** Set commissions from LF/RECOM
+      *
+     C           ACCC      SUB  CACCC     FCTUR
+     C           CHDBC     SUB  CCHDBC    FCHOD
+      *
+     C                     Z-ADDCDICA     FCDRI
+     C                     Z-ADDFXDC      FCFIX
+      *
+      ** Add commissions to commissions totals
+      *
+     C                     ADD  FCHOD     WSTCOA
+     C                     ADD  FCTUR     WSTCOA
+     C                     ADD  FCDRI     WSTCOA
+     C                     ADD  FCFIX     WSTCOA
+      *
+      ** Prepare DR generated amount , and turnover amounts
+      *
+     C                     Z-ADDWSGADI    FGADI
+      *
+     C   80      WSDRT0    DIV  100       FDRTU     H
+     C   81      WSDRT1    DIV  1000      FDRTU     H
+     C   82      WSDRT2    DIV  10000     FDRTU     H
+     C   83      WSDRT3    DIV  100000    FDRTU     H
+      *
+     C   80      WSCRT0    DIV  100       FCRTU     H
+     C   81      WSCRT1    DIV  1000      FCRTU     H
+     C   82      WSCRT2    DIV  10000     FCRTU     H
+     C   83      WSCRT3    DIV  100000    FCRTU     H
+      *
+      ** Write extract file records
+      *
+     C                     Z-ADD1         Y@
+     C           Y@        DOWLEX@
+      *
+      ** Set key sequence fields
+      *
+     C                     MOVE Y@        FKEYS1
+     C                     MOVE @DCPD     FKEYS2
+     C                     Z-ADD2         FRECT
+      *
+      ** Write extract record
+      *
+     C                     WRITEREINSDD0
+     C                     ADD  1         AUREC
+     C                     ADD  1         Y@
+      *
+     C                     ENDDO
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+      ** Set debit interest totals
+      *
+     C                     MOVE WSTDRI    FTDRI
+     C                     MOVE FTDRI     FTNTI
+      *
+      ** Write extract file records
+      *
+     C                     Z-ADD1         Y@
+     C           Y@        DOWLEX@
+      *
+      ** Set key sequence fields
+      *
+     C                     MOVE Y@        FKEYS1
+     C                     MOVE @DCPD     FKEYS2
+     C                     Z-ADD6         FRECT
+      *
+      ** Write extract record
+      *
+     C                     WRITEREINSDD0
+     C                     ADD  1         AUREC
+     C                     ADD  1         Y@
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P0204 - Credit capitalisation processing                    *
+      *                                                               *
+      *  Called by - P0201                                            *
+      *                                                               *
+      *  Calls -  PSSR, CLR, ADDR, P0205, P0206, P0208,               *
+      *           P0209, P0210, CRR1, ALT, ZICD.                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0204    BEGSR
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+     C                     MOVE 'Y'       @CFLG
+      *
+      ** Set up CR capitalisation frequency & type
+      *
+     C                     MOVE CRIF      FCRIF
+     C                     MOVE CCICI     FCICI
+      *
+      ** Set up DR capitalisation dates
+      *
+     C           BMLDAI    IFEQ 'N'
+     C           CCICI     ANDNE'C'
+     C           CHISD     SUB  1         FCCPD
+     C                     ELSE
+     C                     MOVE CHISD     FCCPD
+     C                     ENDIF
+      *
+     C                     MOVE FCCPD     @CCPD
+      *
+      ** Set up account name and retail number
+      *
+     C                     MOVE ANAM      FANAM
+     C                     MOVE ACNO      FACNO
+      *
+      ** Access mapping file for In Currency Retail Account Number
+      *
+     C           ACNO      IFEQ 0
+     C           INACC     CHAINEUACMLL2             98
+     C           *IN98     IFEQ '0'
+     C                     MOVE EUEACN    FACNO
+     C                     END
+     C                     END
+      *
+      ** Set up CR capitalisation value dates
+      *
+     C           BMLDAI    IFEQ 'N'
+     C           CCICI     ANDNE'C'
+     C                     MOVE FCCPD     FCCPV
+      *
+     C                     ELSE
+     C                     MOVE CHISD     FCCPV
+     C                     ENDIF
+      *
+      ** Validate address references
+      *
+     C                     MOVE @CCPD     @CPD
+     C                     EXSR #ADDR
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+      ** Access REHISL from last DR capitalisation date
+      *
+     C                     EXSR #CLREH
+     C           KLIST3    SETLLREHISL
+     C                     READ REHISL                   52
+      *
+     C           *IN52     IFEQ *ON
+     C                     Z-ADDCLCID     WDATE
+     C                     Z-ADD7         DBASE
+     C                     MOVEL'REHISL  'DBFILE           ***************
+     C                     MOVELRKEY2     DBKEY            **DB ERROR 07**
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Store opening balance and change value dates
+      *
+     C           DRECI     IFEQ 'B'
+     C           DRECI     OREQ 'S'
+     C                     Z-ADDDHISB     W1HISB
+     C                     Z-ADDDHISD     W1HISD
+      *
+     C           CRCD      IFNE *ZEROS
+     C                     Z-ADDCLCID     WWCRCD
+     C                     ENDIF
+      *
+     C**********           ELSE                                                             AR796787
+      *
+     C**********           Z-ADDCLCID     WDATE                                             AR796787
+     C**********           Z-ADD8         DBASE                                             AR796787
+     C**********           MOVEL'REHISL  'DBFILE                                            AR796787
+     C**********           MOVELRKEY2     DBKEY                                             AR796787
+     C**********           EXSR *PSSR                                                       AR796787
+     C                     ENDIF
+      *
+      ** Process any backwarded postings
+      *
+     C                     Z-ADDCLCID     LCAPD
+     C                     MOVE CHISD     NCAPD
+      *
+     C                     EXSR #P0205
+      *
+      ** Set flags and perform rate change processing
+      *
+     C                     MOVE *BLANKS   @CR1
+      *
+     C                     EXSR #P0210
+      *
+      ** Access retail history for next non-capitalisation record
+      *
+     C           DRECI     IFNE 'B'
+     C           DRECI     DOUNE'S'
+     C           DRECI     OREQ 'S'
+     C           DHISD     ANDEQCHISD
+     C           *IN52     OREQ *ON
+     C                     EXSR #CLREH
+     C           KLIST1    READEREHISL                   52
+     C                     ENDDO
+     C                     END
+      *
+      ** CR day total and interest numbers
+      *
+     C           *IN52     IFEQ *OFF
+      *
+     C           DHISD     IFEQ W1HISD
+     C                     Z-ADDDHISB     W1HISB
+      *
+     C           CRCI      IFEQ 'Y'
+     C                     MOVE *BLANKS   @CR1
+     C                     Z-ADDCRCD      WWCRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           DRECI     IFNE 'S'
+      *
+     C                     EXSR #P0209
+      *
+      ** DR & CR rate change processing
+      *
+     C           CRCI      IFEQ 'Y'
+     C                     Z-ADDCRCD      WWCRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Retail history capital file
+      *
+     C           *IN52     DOWEQ*OFF
+     C           DHISD     ANDLTNCAPD
+      *
+      ** Retail history postings file
+      *
+     C           DRECI     IFEQ 'D'
+      *
+     C           KLIST7    CHAINREHPOPL              50
+     C           *IN50     DOWEQ*OFF
+      *
+     C                     EXSR #P0206
+      *
+     C           KLIST7    READEREHPOPL                  50
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     EXSR #CLREH
+     C           KLIST1    READEREHISL                   52
+      *
+      ** If record for same account, history date <  next cap.date
+      *
+     C           *IN52     IFEQ *OFF
+     C           DHISD     ANDLENCAPD
+      *
+     C                     EXSR #P0209
+      *
+      ** CR rate change processing
+      *
+     C           CRCI      IFEQ 'Y'
+     C                     Z-ADDCRCD      WWCRCD
+     C                     EXSR #P0210
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Process day numbers
+      *
+     C           W1HISB    IFLT 0
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDNCAPD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR1
+      *
+     C                     ENDIF
+      *
+      ** Set rate change date work field and perform final
+      ** Rate processing
+      *
+     C           CCICT     IFNE 00
+     C           DRECI     ANDEQ'S'
+     C                     Z-ADDCRIP      WSCIN0
+     C                     ENDIF
+      *
+     C                     Z-ADDNCAPD     WWCRCD
+     C                     EXSR #P0210
+      *
+      ** If CR alternative account is non-blank, set spot rate
+      *
+     C           CSCACP    IFNE *BLANKS
+     C**********           MOVE CSCACP    A15                                               AR807782
+     C                     MOVE CSCACP    A21                                               AR807782
+     C                     EXSR #ALT
+     C                     MOVE @SPOT     FCSPT
+     C**********           MOVE CSCACP    FCACP                                             AR807782
+     C                     MOVE CSCACP    FCAC1                                             AR807782
+     C                     MOVE RCRBR     FCRBR
+     C                     ENDIF
+      *
+      ** If charges alternative account is non-blank, set spot rate
+      *
+     C           CSCHAC    IFNE *BLANKS
+     C**********           MOVE CSCHAC    A15                                               AR807782
+     C                     MOVE CSCHAC    A21                                               AR807782
+     C                     EXSR #ALT
+     C                     MOVE @SPOT     FCHSP
+     C**********           MOVE CSCHAC    FCHCP                                             AR807782
+     C                     MOVE CSCHAC    FCHC1                                             AR807782
+     C                     MOVE RCHBR     FCHBR
+     C                     ENDIF
+      *
+      ** Prepare total postings chargeable  and total
+      ** Transaction charges
+      *
+     C                     MOVE WSNPOC    FNPOC
+     C           CCHGP     IFNE *ZEROS
+     C                     Z-ADDCCHGP     FTOTC
+     C                     ELSE
+     C                     MOVE *ZEROS    FTOTC
+     C                     ENDIF
+      *
+      ** Set commissions from LF/RECOM
+      *
+     C           ACCC      SUB  CACCC     FCTUR
+     C           CHDBC     SUB  CCHDBC    FCHOD
+     C           CMBC      SUB  CCMBC     FCMCB
+      *
+     C                     Z-ADDCDICA     FCDRI
+     C                     Z-ADDIACCC     FCINA
+     C                     Z-ADD0         FCEDS
+     C           CEXF      IFNE 'E'
+     C           WDYSI     ANDEQ'Y'
+      *
+     C           CEXF      IFNE *BLANKS
+     C                     Z-ADD0         NCEXF   70
+     C                     MOVE CEXF      NCEXF
+     C           NCEXF     MULT Z1NOIS    FCEDS
+     C                     ELSE
+     C           DSFC      MULT Z1NOIS    FCEDS
+     C                     ENDIF
+      *
+     C           FCEDS     ADD  CCINST    FCEDS
+     C                     ENDIF
+     C                     Z-ADDFXDC      FCFIX
+      *
+      ** Add commissions to commissions totals
+      *
+     C                     ADD  FCHOD     WSTCOA
+     C                     ADD  FCTUR     WSTCOA
+     C                     ADD  FCDRI     WSTCOA
+     C                     ADD  FCINA     WSTCOA
+     C                     ADD  FCMCB     WSTCOA
+     C                     ADD  FCFIX     WSTCOA
+      *
+      ** Prepare extra daily statements charged
+      *
+     C                     ADD  Z1NOIS    FTEDS
+      *
+      ** Prepare statements amount and number, fixed charge
+      *
+     C                     MOVE WSTSTC    FTSTC
+     C                     MOVE WSSTCH    FSTCH
+     C                     MOVE WSCHFX    FCHFX
+      *
+      ** Add charges to charges totals
+      *
+     C                     ADD  FCEDS     WSTCHA
+     C                     ADD  FTOTC     WSTCHA
+     C                     ADD  FCHFX     WSTCHA
+     C                     ADD  FSTCH     WSTCHA
+      *
+      ** Prepare CR generated amount , turnover amounts
+      *
+     C                     Z-ADDWSGACI    FGACI
+      *
+     C   80      WSDRT0    DIV  100       FDRTU     H
+     C   81      WSDRT1    DIV  1000      FDRTU     H
+     C   82      WSDRT2    DIV  10000     FDRTU     H
+     C   83      WSDRT3    DIV  100000    FDRTU     H
+      *
+     C   80      WSCRT0    DIV  100       FCRTU     H
+     C   81      WSCRT1    DIV  1000      FCRTU     H
+     C   82      WSCRT2    DIV  10000     FCRTU     H
+     C   83      WSCRT3    DIV  100000    FCRTU     H
+      *
+      ** Write extract file records
+      *
+     C                     Z-ADD1         Y@
+     C           Y@        DOWLEX@
+      *
+      ** Set key sequence fields
+      *
+     C           Y@        ADD  10        FKEYSN  20
+     C                     MOVE FKEYSN    FKEYS1
+     C                     MOVE @CCPD     FKEYS2
+     C                     Z-ADD2         FRECT
+      *
+      ** Write extract record
+      *
+     C                     WRITEREINSDD0
+     C                     ADD  1         AUREC
+     C                     ADD  1         Y@
+      *
+     C                     ENDDO
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+      ** Set totals fields
+      *
+     C                     Z-ADDWSTCHA    FTCHA
+     C                     Z-ADDWSTCOA    FTCOA
+     C                     Z-ADDWSTCRI    FTCRI
+     C                     Z-ADDFTCRI     FTNTI
+      *
+      ** Write extract file records
+      *
+     C                     Z-ADD1         Y@
+     C           Y@        DOWLEX@
+      *
+      ** Set key sequence fields
+      *
+     C           Y@        ADD  10        FKEYSN
+     C                     MOVE FKEYSN    FKEYS1
+     C                     MOVE @CCPD     FKEYS2
+     C                     Z-ADD6         FRECT
+      *
+      ** Write extract record
+      *
+     C                     WRITEREINSDD0
+     C                     ADD  1         AUREC
+     C                     ADD  1         Y@
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+     ******************************************************************
+      *                                                               *
+      *  #P0205 - Process backvalued postings                         *
+      *                                                               *
+      *  Called by - P0202, P0203, P0204                              *
+      *                                                               *
+      *  Calls -  P0206                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0205    BEGSR
+      *
+      ** Process back value
+      *
+     C                     Z-ADD0         XPSTD   50
+     C                     Z-ADD*HIVAL    SVHISD  50
+     C                     Z-ADD*HIVAL    SVPSTD  50
+      *
+      ** Position file at last capitalisation date
+      *
+     C           KLIST8    SETLLREHPOPH
+     C           KLIST9    READEREHPOPH                  52
+      *
+     C           *IN52     DOWEQ*OFF
+     C           PSTD      ANDLENCAPD
+      *
+     C           HISD      IFLT LCAPD
+      *
+     C           HISD      IFLT SVHISD
+     C                     Z-ADDHISD      SVHISD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           *IN86     IFEQ *ON
+     C           STFQ      ANDEQ'E'
+     C           XPSTD     ANDNEPSTD
+     C                     ADD  1         WSTNST
+     C                     Z-ADDPSTD      XPSTD
+     C                     ENDIF
+      *
+     C           KLIST9    READEREHPOPH                  52
+     C                     ENDDO
+      *
+      ** Increment adjustments
+      *
+     C           KLIST1    READEREHISSL                  52
+     C           *IN52     DOWEQ*OFF
+     C                     ADD  DAIC      WSGADI
+     C                     ADD  CAIC      WSGACI
+     C           KLIST1    READEREHISSL                  52
+     C                     ENDDO
+      *
+      ** Position file at last stored history backwarded date
+      *
+     C                     Z-ADDSVHISD    DHISD
+      *
+     C           KLIST7    SETLLREHPOPL
+     C           KLIST9    READEREHPOPL                  52
+      *
+     C           *IN52     DOWEQ*OFF
+     C           VALD      ANDLTLCAPD
+      *
+     C           PSTD      IFGE LCAPD
+     C                     EXSR #P0206
+     C                     ENDIF
+      *
+     C           KLIST9    READEREHPOPL                  52
+     C                     ENDDO
+      *
+      ** Position file at last capitalisation date
+      *
+     C           KLIST8    SETGTREHPOPL
+     C           KLIST9    READEREHPOPL                  52
+      *
+      ** Position file at last capitalisation date
+      *
+     C                     EXSR #CLREH
+     C           KLIST8    SETLLREHISL
+     C           KLIST9    READEREHISL                   52
+      *
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #P0206 - Process posting records                             *
+      *                                                               *
+      *  Called by - P0202, P0203, P0204, P0205                       *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0206    BEGSR
+      *
+      ** Increment turnover
+      *
+     C           DRCR      IFEQ 1
+     C   80                ADD  PSTA      WSCRT0
+     C   81                ADD  PSTA      WSCRT1
+     C   82                ADD  PSTA      WSCRT2
+     C   83                ADD  PSTA      WSCRT3
+     C                     ELSE
+     C   80                ADD  PSTA      WSDRT0
+     C   81                ADD  PSTA      WSDRT1
+     C   82                ADD  PSTA      WSDRT2
+     C   83                ADD  PSTA      WSDRT3
+     C                     ENDIF
+      *
+      ** Process charge amount
+      *
+     C           CHGA      IFNE *ZEROS
+     C                     ADD  CHGA      WSTOTC
+      *
+     C           *IN88     IFEQ *ON
+     C           NITMS     ANDNE*ZEROS
+     C                     ADD  NITMS     WSNPOC
+     C                     ELSE
+     C                     ADD  1         WSNPOC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Increment total no. of statements and statement
+      ** Charges amount
+      *
+     C           TRAT      IFEQ 94052
+     C                     ADD  1         WSTSTC
+     C                     ADD  PSTA      WSSTCH
+     C                     ENDIF
+      *
+     C           TRAT      IFEQ 94055
+     C                     ADD  PSTA      WSCHFX
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     ******************************************************************
+     C/EJECT
+     ******************************************************************
+      *                                                               *
+      *  #P0207 - 'Both' DR & CR totals and interest processing       *
+      *                                                               *
+      *  Called by - P0202.                                           *
+      *                                                               *
+      *  Calls - CDR1, CDR2, CCR1, CCR2, COVR1, ZICD.                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0207    BEGSR
+      *
+      ** Check interest types
+      *
+     C           CDICT     IFLT 3
+     C           CCICT     ANDLT3
+      *
+      ** Calculate number of days
+      *
+     C           W1HISB    IFGT 0
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR1
+      *
+      ** Calcluate overdraft interest
+      *
+     C                     EXSR #COVR1
+      *
+     C                     ELSE
+      *
+      ** Process day number
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check interest tyoes and if monthly summary record
+      *
+     C           CDICT     IFGT 2
+     C           CCICT     ANDGT2
+      *
+     C           DRECI     IFEQ 'M'
+      *
+     C           DSDAT     IFNE 0
+     C           WMNBL     ANDGT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR2
+      *
+     C                     ENDIF
+      *
+      ** Calculate number of days
+      *
+     C           CSDAT     IFNE 0
+     C           WMNBL     ANDLT0
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR2
+      *
+     C                     ENDIF
+      *
+      ** Do while monthly summary records are processed for
+      ** this account
+      *
+     C           DRECI     DOWEQ'M'
+     C           *IN51     ANDEQ*OFF
+      *
+     C           KLIST1    READEREHISPSF                 51
+      *
+     C           DRECI     IFEQ 'M'
+      *
+      ** If debit start date non-zero, calculate debit interest
+      *
+     C           DSDAT     IFNE 0
+     C           WMNBL     ANDGT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR2
+      *
+     C                     ENDIF
+      *
+      ** If credit start date non-zero, calculate debit interest
+      *
+     C           CSDAT     IFNE 0
+     C           WMNBL     ANDLT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR2
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If a capitalisation record is processed
+      *
+     C           DRECI     IFEQ 'S'
+      *
+      ** If record is for debit capitalisation
+      *
+     C           *IN01     IFEQ *ON
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR2
+      *
+     C                     ENDIF
+      *
+      ** If record is for credit capitalisation
+      *
+     C           *IN02     IFEQ *ON
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR2
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** DR int. type greater than 2, CR int type less than 3
+      *
+     C           CDICT     IFGT 2
+     C           CCICT     ANDLT3
+      *
+     C           DRECI     IFEQ 'M'
+      *
+     C           DSDAT     IFNE 0
+     C           WMNBL     ANDGT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR2
+      *
+     C                     ENDIF
+      *
+      ** Do while monthly summary records are processed
+      ** for this account
+      *
+     C           DRECI     DOWEQ'M'
+     C           *IN51     ANDEQ*OFF
+      *
+     C           KLIST1    READEREHISPSF                 51
+      *
+     C           DRECI     IFEQ 'M'
+      *
+      ** If debit start date non-zero, calculate debit interest
+      *
+     C           DSDAT     IFNE 0
+     C           WMNBL     ANDGT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR2
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If a capitalisation record is processes
+      *
+     C           DRECI     IFEQ 'S'
+      *
+      ** If record is for debit capitalisation
+      *
+     C           *IN01     IFEQ *ON
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR2
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** If the work history balance is less than zero
+      *
+     C           W1HISB    IFLT 0
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR2
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check interest types
+      *
+     C           CDICT     IFLT 3
+     C           CCICT     ANDGT2
+      *
+      ** Calculate number of days
+      *
+     C           W1HISB    IFGT 0
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR1
+      *
+      ** Overdraft interest
+      *
+     C                     EXSR #COVR1
+      *
+     C                     ENDIF
+      *
+      ** If record processed is a monthly summary
+      *
+     C           DRECI     IFEQ 'M'
+      *
+     C           CSDAT     IFNE 0
+     C           WMNBL     ANDLT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR1
+      *
+     C                     ENDIF
+      *
+      ** Do while monthly summary records are processed
+      ** For this account
+      *
+     C           DRECI     DOWEQ'M'
+     C           *IN51     ANDEQ*OFF
+      *
+     C           KLIST1    READEREHISPSF                 51
+      *
+     C           DRECI     IFEQ 'M'
+      *
+      ** If credit start date non-zero, calculate credit interest
+      *
+     C           CSDAT     IFNE 0
+     C           WMNBL     ANDLT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR2
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If a capitalisation record is processed
+      *
+     C           DRECI     IFEQ 'S'
+      *
+      ** If record is for credit capitalisation
+      *
+     C           *IN02     IFEQ *ON
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR2
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Save history values for next calculation
+      *
+     C                     Z-ADDDHISB     W1HISB
+     C                     Z-ADDDHISD     W1HISD
+     C                     Z-ADDDMNBL     WMNBL
+      *
+     C           ODRL      IFNE *ZEROS
+     C                     Z-ADDODRL      WODRL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     ******************************************************************
+     C/EJECT
+     ******************************************************************
+      *                                                               *
+      *  #P0208 - DR day totals and interest numbers processing       *
+      *                                                               *
+      *  Called by - P0203                                            *
+      *                                                               *
+      *  Calls - #CDR1, #CDR2, #COVR1, ZICD.                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0208    BEGSR
+      *
+      ** If debit interest type is less than 3
+      *
+     C           CDICT     IFLT 3
+      *
+      ** Calculate number of days
+      *
+     C           W1HISB    IFGT 0
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR1
+      *
+      ** Overdraft interest
+      *
+     C                     EXSR #COVR1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check interest types and if monthly summary record
+      *
+     C           CDICT     IFGT 2
+      *
+     C           DRECI     IFEQ 'M'
+      *
+     C           DSDAT     IFNE 0
+     C           WMNBL     ANDGT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR2
+      *
+     C                     ENDIF
+      *
+      ** Do while monthly summary records are processed
+      ** For this account
+      *
+     C           DRECI     DOWEQ'M'
+     C           *IN51     ANDEQ*OFF
+      *
+     C           KLIST1    READEREHISPSF                 51
+      *
+     C           DRECI     IFEQ 'M'
+      *
+      ** If debit start date non-zero, calculate debit interest
+      *
+     C           DSDAT     IFNE 0
+     C           WMNBL     ANDGT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR2
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If a capitalisation record is processed
+      *
+     C           DRECI     IFEQ 'S'
+      *
+      ** If record is for debit capitalisation
+      *
+     C           *IN01     IFEQ *ON
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDDRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate debit interest
+      *
+     C                     EXSR #CDR2
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Save history values for next calculation
+      *
+     C                     Z-ADDDHISB     W1HISB
+     C                     Z-ADDDHISD     W1HISD
+     C                     Z-ADDDMNBL     WMNBL
+      *
+     C           ODRL      IFNE *ZEROS
+     C                     Z-ADDODRL      WODRL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     ******************************************************************
+     C/EJECT
+     ******************************************************************
+      *                                                               *
+      *  #P0209 - CR day totals and interest numbers processing       *
+      *                                                               *
+      *  Called by - P0204                                            *
+      *                                                               *
+      *  Calls - CCR1, CCR2, ZICD.                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0209    BEGSR
+      *
+      ** If  credit interest type is less than 3
+      *
+     C           CCICT     IFLT 3
+      *
+      ** Calculate number of days
+      *
+     C           W1HISB    IFLT 0
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check interest types and if monthly summary record
+      *
+     C           CCICT     IFGT 2
+      *
+     C           DRECI     IFEQ 'M'
+      *
+     C           CSDAT     IFNE 0
+     C           WMNBL     ANDLT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR2
+      *
+     C                     ENDIF
+      *
+      ** Do while monthly summary records are processed
+      ** For this account
+      *
+     C           DRECI     DOWEQ'M'
+     C           *IN51     ANDEQ*OFF
+      *
+     C           KLIST1    READEREHISPSF                 51
+      *
+     C           DRECI     IFEQ 'M'
+      *
+      ** If credit start date non-zero, calculate debit interest
+      *
+     C           CSDAT     IFNE 0
+     C           WMNBL     ANDLT0
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR2
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If a capitalisation record is processed
+      *
+     C           DRECI     IFEQ 'S'
+      *
+      ** If record is for credit capitalisation
+      *
+     C           *IN02     IFEQ *ON
+      *
+      ** Calculate number of days
+      *
+     C                     Z-ADDW1HISD    ZIBEG
+     C                     Z-ADDDHISD     ZIEND
+     C                     Z-ADDCRCB      ZICALC
+     C                     EXSR #ZICD
+     C                     Z-ADDZDAYN1    W1DAYS
+      *
+      ** Calculate credit interest
+      *
+     C                     EXSR #CCR2
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Save history values for next calculation
+      *
+     C                     Z-ADDDHISB     W1HISB
+     C                     Z-ADDDHISD     W1HISD
+     C                     Z-ADDDMNBL     WMNBL
+      *
+     C                     ENDSR
+      *
+     ******************************************************************
+     C/EJECT
+     ******************************************************************
+      *                                                               *
+      *  #P0210 - Rate change detail processing                       *
+      *                                                               *
+      *  Called by - P0202, P0203, P0204                              *
+      *                                                               *
+      *  Calls - CLR.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0210    BEGSR
+      *
+      ** If Current DR rate change value date work Field is Non-Zero
+      *
+     C           WWDRCD    IFNE *ZEROS
+      *
+      **
+      *
+     C           @DR1      IFEQ 'Y'
+      *
+      ** Include manual adjustment in the calculation of interest
+      *
+     C           DRECI     IFEQ 'D'
+     C           DAID      ADD  TMADI     DAID
+     C           CAID      ADD  TMACI     CAID
+      *
+     C           DAID      IFLT ODIA
+     C                     Z-ADDDAID      ODIA
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           DRIP      ADD  TMADI     DRIP
+     C           CCAIC     ADD  TMACI     CCAIC
+      *
+     C           DRIP      IFLT ODIA
+     C                     Z-ADDDRIP      ODIA
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Only do the overdraft if
+      ** an overdraft rate change
+      ** or a debit interest rate change
+      ** or a capitilisation record
+      *
+     C           DRECI     IFEQ 'D'
+     C           ODLI      ANDEQ'Y'
+     C           DRECI     OREQ 'D'
+     C           DRCI      ANDEQ'Y'
+     C           DRECI     OREQ 'S'
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+      ** Set overdraft fields
+      *
+     C                     MOVE PRAODR    FAODR
+     C                     MOVE PRAODV    FAODV
+      *
+     C           BMLDAI    IFEQ 'Y'
+     C           WWDRCD    SUB  1         FAOTD
+     C                     ELSE
+     C           DHISD     SUB  1         FAOTD
+     C                     ENDIF
+      *
+     C                     Z-ADDWTOVR0    FODIN
+      *
+      ** Write extract file records
+      *
+     C           ODF       IFEQ 'Y'
+      *
+     C                     MOVE 'Y'       ODF
+     C                     Z-ADD0         WTOVR0
+     C                     Z-ADD0         WPOVR0
+      *
+      ** Write extract file records
+      *
+     C                     Z-ADD1         Y@
+     C           Y@        DOWLEX@
+      *
+      ** Set key sequence fields
+      *
+     C                     MOVE Y@        FKEYS1
+     C                     MOVE PRDRIV    FKEYS2
+     C                     Z-ADD4         FRECT
+      *
+      ** Write extract record
+      *
+     C                     WRITEREINSDD0
+     C                     ADD  1         AUREC
+     C                     ADD  1         Y@
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDIF                           E003
+      *
+      ** Write the debit interest
+      *
+      ** If a rate change record or a capitalisation record
+      *
+     C           DRECI     IFEQ 'D'                        B003
+     C           DRCI      ANDEQ'Y'
+     C           DRECI     OREQ 'S'
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+      ** Set debit fields
+      *
+     C                     MOVE PRDICT    FDICT            Interest type
+     C                     MOVE PRDCST    FDCST            Sub-type
+     C                     MOVE PRDRRT    FDRRT            Interest rate
+     C                     MOVE PRDRIV    FDRIV            From date
+     C                     Z-ADDWTDIN0    FDRIN            Int numbers
+      *
+      ** Set the 'to' date
+      *
+     C           BMLDAI    IFEQ 'Y'
+     C           WWDRCD    SUB  1         FDRTD
+     C                     ELSE
+     C           DHISD     SUB  1         FDRTD
+     C                     ENDIF
+      *
+      ** Set the debit interest amount
+      *
+     C           DRECI     IFEQ 'D'                        B004
+     C                     ELSE                            X004
+     C           DRIP      SUB  #TDAID    FDRIA
+     C                     Z-ADD0         #TDAID
+     C                     ENDIF                           E004
+      *
+      ** Add the debit interest amount to the total
+      *
+     C                     ADD  FDRIA     WSTDRI
+      *
+      ** Write extract records
+      *
+     C                     Z-ADD1         Y@
+     C           Y@        DOWLEX@
+      *
+      ** Set key sequence fields
+      *
+     C                     MOVE Y@        FKEYS1
+     C                     MOVE PRDRIV    FKEYS2
+     C                     Z-ADD3         FRECT
+      *
+      ** Write extract record
+      *
+     C                     WRITEREINSDD0
+     C                     ADD  1         AUREC
+     C                     ADD  1         Y@
+      *
+     C                     ENDDO                           E004
+     C                     ENDIF                           E003
+     C                     ENDIF
+      *
+      ** Access the DR rate record from LF/REHRDJ
+      *
+     C                     Z-ADDWWDRCD    KDATE
+     C           KLIST4    CHAINREHRDJ               60
+      *
+     C           *IN60     IFEQ *ON
+     C           @DR1      IFEQ *BLANKS
+     C                     EXSR #LSTDJ
+     C                     ELSE
+      *
+     C                     MOVE *ZEROS    PRDICT  20
+     C                     MOVE *ZEROS    PRDCST  50
+     C                     MOVE *ZEROS    PRDRRT 117
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Set debit fields
+      *
+     C                     MOVE INRT      PRDRRT
+      *
+     C                     MOVE INTP      PRDICT
+     C                     MOVE INST      PRDCST
+     C                     MOVE VALD      PRDRIV
+     C           @DR1      IFEQ ' '
+     C                     Z-ADDCLDID     PRDRIV
+     C                     ENDIF
+      *
+      ** Set overdraft fields
+      *
+     C                     Z-ADDAODR      PRAODR 117
+     C                     MOVE VALD      PRAODV  50
+     C           @DR1      IFEQ ' '
+     C                     Z-ADDCLDID     PRAODV
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set the first DR rate change processed flag is 'Y'
+      *
+     C                     MOVE 'Y'       @DR1
+     C                     ENDIF
+      *
+      ** Write the credit interest
+      *
+     C           WWCRCD    IFNE *ZEROS
+     C           @CR1      IFEQ 'Y'
+      *
+      ** If a rate change record or a capitalisation record
+      *
+     C           DRECI     IFEQ 'D'
+     C           CRCI      ANDEQ'Y'
+     C           DRECI     OREQ 'S'
+      *
+      ** Clear format and save fields
+      *
+     C                     EXSR #CLR
+      *
+      ** Set credit fields
+      *
+     C                     MOVE PRCICT    FCICT            Interest type
+     C                     MOVE PRCCST    FCCST            Sub-type
+     C                     MOVE PRCRRT    FCRRT            Interest rate
+     C                     MOVE PRCRIV    FCRIV            From date
+     C                     Z-ADDWTCIN0    FCRIN            Int numbers
+      *
+      ** Set the 'to' date
+      *
+     C           BMLDAI    IFEQ 'Y'
+     C           WWCRCD    SUB  1         FCRTD
+     C                     ELSE
+     C           DHISD     SUB  1         FCRTD
+     C                     ENDIF
+      *
+      ** Set the credit interest amount
+      *
+     C           DRECI     IFEQ 'D'
+     C           CAID      SUB  #TCAID    FCRIA
+     C                     Z-ADDCAID      #TCAID 150
+     C                     ELSE
+     C           CCAIC     SUB  #TCAID    FCRIA
+     C                     Z-ADD0         #TCAID
+     C                     ENDIF
+      *
+      ** Add the debit interest amount to the total
+      *
+     C                     ADD  FCRIA     WSTCRI
+     C                     Z-ADD1         Y@
+     C           Y@        DOWLEX@
+      *
+      ** Set key sequence fields
+      *
+     C                     MOVE Y@        FKEYS1
+     C                     MOVE PRCRIV    FKEYS2
+     C                     Z-ADD5         FRECT
+      *
+      ** Write extract record
+      *
+     C                     WRITEREINSDD0
+     C                     ADD  1         AUREC
+     C                     ADD  1         Y@
+      *
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Access the CR rate record from LF/REHRCJ
+      *
+     C                     Z-ADDWWCRCD    KDATE   50
+     C           KLIST4    CHAINREHRCJ               60
+      *
+     C           *IN60     IFEQ *ON
+     C           @CR1      IFEQ ' '
+     C                     EXSR #LSTCJ
+     C                     ELSE
+      *
+     C                     MOVE *ZEROS    PRCICT  20
+     C                     MOVE *ZEROS    PRCCST  50
+     C                     MOVE *ZEROS    PRCRRT 117
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Set credit fields
+      *
+     C                     MOVE INRT      PRCRRT
+      *
+     C                     MOVE INTP      PRCICT
+     C                     MOVE INST      PRCCST
+     C                     MOVE VALD      PRCRIV
+     C           @CR1      IFEQ ' '
+     C                     Z-ADDCLCID     PRCRIV
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set the first CR rate change processed flag is 'Y'
+      *
+     C                     MOVE 'Y'       @CR1
+     C                     ENDIF
+      *
+     C                     MOVE *ZEROS    WWCRCD
+     C                     MOVE *ZEROS    WWDRCD
+      *
+      ** Clear format and reset key fields
+      *
+     C                     EXSR #CLR
+      *
+     C                     ENDSR
+      *
+     ******************************************************************
+     C/EJECT
+     ******************************************************************
+      *                                                               *
+      *  #P0211 - Interest calculations processing                    *
+      *                                                               *
+      *  Called by - CDR1, CDR2, OVR1                                 *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0211    BEGSR
+      *
+      ** Set interest amount
+      *
+     C           CDICT     IFEQ 00
+      *
+      ** Set up appropriate divide figure according to calc. basis
+      *
+     C           DRCB      IFEQ 2
+     C           DRCB      OREQ 3
+     C           DRCB      OREQ 5
+     C           DRCB      OREQ 7
+     C           DRCB      OREQ 0
+     C                     Z-ADD360       @DIV    30
+     C                     ENDIF
+      *
+     C           DRCB      IFEQ 1
+     C           DRCB      OREQ 4
+     C                     Z-ADD365       @DIV
+     C                     ENDIF
+      *
+     C           DRCB      IFEQ 6
+     C                     Z-ADD366       @DIV
+     C                     ENDIF
+      *
+      ** Calculate DR interest amount
+      *
+     C                     SELEC
+      *
+     C           *IN80     WHEQ *ON
+     C           W1DIN0    MULT XXRATE    WSDIN0
+     C                     DIV  @DIV      WSDIN0    H
+      *
+     C           *IN81     WHEQ *ON
+     C           W1DIN1    MULT XXRATE    WSDIN1
+     C                     DIV  @DIV      WSDIN1    H
+      *
+     C           *IN82     WHEQ *ON
+     C           W1DIN2    MULT XXRATE    WSDIN2
+     C                     DIV  @DIV      WSDIN2    H
+      *
+     C           *IN83     WHEQ *ON
+     C           W1DIN3    MULT XXRATE    WSDIN3
+     C                     DIV  @DIV      WSDIN3    H
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     ******************************************************************
+     C/EJECT
+     ******************************************************************
+      *                                                               *
+      *  #P0212 - Interest Calculations Processing                    *
+      *                                                               *
+      *  Called by - CCR1, CCR2                                       *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #P0212    BEGSR
+      *
+      ** Set interest amount
+      *
+     C           CCICT     IFEQ 00
+      *
+      ** Set up appropriate divide figure according to calc. basis
+      *
+     C           CRCB      IFEQ 2
+     C           CRCB      OREQ 3
+     C           CRCB      OREQ 5
+     C           CRCB      OREQ 7
+     C           CRCB      OREQ 0
+     C                     Z-ADD360       @DIV    30
+     C                     ENDIF
+      *
+     C           CRCB      IFEQ 1
+     C           CRCB      OREQ 4
+     C                     Z-ADD365       @DIV
+     C                     ENDIF
+      *
+     C           CRCB      IFEQ 6
+     C                     Z-ADD366       @DIV
+     C                     ENDIF
+      *
+      ** Calculate CR interest amount
+      *
+     C                     SELEC
+      *
+     C           *IN80     WHEQ *ON
+     C           W1CIN0    MULT XXRATE    WSCIN0
+     C                     DIV  @DIV      WSCIN0    H
+      *
+     C           *IN81     WHEQ *ON
+     C           W1CIN1    MULT XXRATE    WSCIN1
+     C                     DIV  @DIV      WSCIN1    H
+      *
+     C           *IN82     WHEQ *ON
+     C           W1CIN2    MULT XXRATE    WSCIN2
+     C                     DIV  @DIV      WSCIN2    H
+      *
+     C           *IN83     WHEQ *ON
+     C           W1CIN3    MULT XXRATE    WSCIN3
+     C                     DIV  @DIV      WSCIN3    H
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     ******************************************************************
+     C/EJECT
+     ******************************************************************
+      *                                                               *
+      *  #SAVE - Store key fields , set up currency indicators        *
+      *                                                               *
+      *  Called by - P02                                              *
+      *                                                               *
+      *  Calls - CURR                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #SAVE     BEGSR
+      *
+      ** Increment audit count , store kwy fields
+      *
+     C                     ADD  1         AUPRO
+     C                     MOVE CCCY      @CCY
+      *
+     C                     MOVE CBRCA     QBRCA   3
+     C**********           MOVE CCNUM     QCNUM   60                                        AR847634
+     C                     MOVE CCNUM     QCNUM   6                                         AR847634
+     C                     MOVE CCCY      QCCY    3
+     C                     MOVE CACOD     QACOD  100
+     C                     MOVE CACSQ     QACSQ   20
+      *
+      ** Set up currency indicators according to decimal places
+      *
+     C                     EXSR #CURR
+      *
+     C                     MOVEA'0000'    *IN,80
+     C                     Z-ADDA6NBDP    @NDP    10
+      *
+     C           @NDP      IFEQ 0
+     C                     MOVE *ON       *IN80
+     C                     ENDIF
+     C           @NDP      IFEQ 1
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+     C           @NDP      IFEQ 2
+     C                     MOVE *ON       *IN82
+     C                     ENDIF
+     C           @NDP      IFEQ 3
+     C                     MOVE *ON       *IN83
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #ALT - Subroutine to process alternative account             *
+      *                                                               *
+      *  Called by - P0202, P0203, P0204.                             *
+      *                                                               *
+      *  Calls - PSSR, CURR, XRATE.                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ALT      BEGSR
+      *
+      ** If retail account
+      *
+     C********** A05       IFEQ *BLANKS                                                     AR807782
+     C**********           MOVELA15       ACCK   100                                        AR807782
+     C           A11       IFEQ *BLANKS                                                     AR807782
+     C                     MOVELA21       ACCK   100                                        AR807782
+     C           ACCK      CHAINACNUM                85
+      *
+     C           *IN85     IFEQ *ON
+     C                     Z-ADD9         DBASE
+     C                     MOVEL'ACNUM   'DBFILE           ***************
+     C                     MOVELACCK      DBKEY            **DB ERROR 09**
+     C                     EXSR *PSSR                      ***************
+     C                     ELSE
+      *
+     C**********           MOVE CCY       A15CCY                                            AR807782
+     C                     MOVE CCY       A21CCY                                            AR807782
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set spot rate
+      *
+     C********** CCCY      IFEQ A15CCY                                                      AR807782
+     C           CCCY      IFEQ A21CCY                                                      AR807782
+     C                     Z-ADD1         @SPOT
+     C                     ELSE
+      *
+     C           CCCY      IFEQ BJCYCD
+     C**********           MOVE A15CCY    @CCY                                              AR807782
+     C                     MOVE A21CCY    @CCY                                              AR807782
+     C                     EXSR #CURR
+     C                     MOVE A6SPRT    @SPOT
+     C                     ELSE
+      *
+     C********** A15CCY    IFEQ BJCYCD                                                      AR807782
+     C           A21CCY    IFEQ BJCYCD                                                      AR807782
+     C                     MOVE CCCY      @CCY
+     C                     EXSR #CURR
+     C                     MOVE A6SPRT    @SPOT
+     C                     ELSE
+      *
+     C                     MOVE CCCY      @CCY
+     C                     EXSR #CURR
+     C                     MOVE A6SPRT    ZRATE1 138
+     C                     MOVE A6MDIN    ZMDI1   1
+      *
+     C**********           MOVE A15CCY    @CCY                                              AR807782
+     C                     MOVE A21CCY    @CCY                                              AR807782
+     C                     EXSR #CURR
+     C                     MOVE A6SPRT    ZRATE2 138
+     C                     MOVE A6MDIN    ZMDI2   1
+      *
+     C                     EXSR #XRATE
+     C                     MOVE ZRATEX    @SPOT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Ensure spot rate is greater than 1
+      *
+     C           @SPOT     IFLT 1
+     C           1         DIV  @SPOT     @SPOT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #XRATE - Subroutine to obtain a cross-exchange rate and      *
+      *           multiply/divide indicator between two currencies    *
+      *                                                               *
+      *  Called by - ALT.                                             *
+      *                                                               *
+      *  Calls -                                                      *
+      *                                                               *
+      *  INPUT   - ZRATE1 (13,8) base currency exchange rate 1        *
+      *            ZMDI1  (1)    ZRATE1 multiply/divide indicator     *
+      *            ZRATE2 (13,8) Base currency exchange rate 2        *
+      *            ZMDI2  (1)    ZRATE2 multiply/divide indicator     *
+      *                                                               *
+      *  OUTPUT  - ZRATEX (13,8) cross exchamge rate                  *
+      *            ZMDIX  (1)    cross multiply/divide indicator      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #XRATE    BEGSR
+      *
+     C                     Z-ADD*ZEROS    ZRATEX 138
+      *
+      ** Calculate cross rate
+      ** ..  If M/D indicators1 = M/D indicators2
+      *
+     C           ZMDI1     IFEQ ZMDI2
+     C           ZRATE2    IFNE *ZEROS
+     C           ZRATE1    DIV  ZRATE2    ZRATEX
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** ..  ELSE
+      *
+     C           ZRATE1    MULT ZRATE2    ZRATEX
+     C                     ENDIF
+      *
+      * Set cross M/D indicator
+      *
+     C                     MOVE ZMDI1     ZMDIX   1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #CURR - Subroutine to access currency details                *
+      *                                                               *
+      *  Called by - SAVE, ALT.                                       *
+      *                                                               *
+      *  Calls - PSSR                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CURR     BEGSR
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD10        DBASE
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVEL@CCY      DBKEY            **DB ERROR 10**
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #ADDR - Subroutine To Access Address References              *
+      *                                                               *
+      *  Called by - P0202, P0203, P0204                              *
+      *                                                               *
+      *  Calls - PSSR                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ADDR     BEGSR
+      *
+      ** Validate address references
+      *
+     C                     MOVELADREF1    SREF   10
+     C                     MOVE ADREF2    SREF
+      *
+     C                     MOVEA*BLANKS   ARR
+     C                     MOVEASREF      ARR,1
+     C                     Z-ADD1         X@      20
+      *
+     C           X@        DOWLE10
+     C           ARR,X@    ANDNE' '
+      *
+      ** If alternative address code is 'B', access SDCUSTPD
+      ** Using AOCUSTR0
+      *
+     C           ARR,X@    IFEQ 'B'
+     C                     MOVE CCNUM     WWCNM6  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM WWCNM6    @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** If error, perform *PSSR, otherwise set address
+      ** Fields for output
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*CUSCLS'                                                   MD031034
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'SDRETLPD'DBFILE           **DB ERROR 06**
+     C                     MOVEL@CNUM     DBKEY            ***************
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVE BBCNA1    FCNA1
+     C                     MOVE BBCNA2    FCNA2
+     C                     MOVE BBCNA3    FCNA3
+     C                     MOVE BBCNA4    FCNA4
+      *
+     C                     ENDIF
+      *
+      ** Else , access SDALTNPD using AOALTNR0
+      *
+     C                     ELSE
+      *
+     C                     MOVE CCNUM     AENB    6
+     C                     MOVE ARR,X@    AZCD    1
+      *
+     C                     CALL 'AOALTNR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM AENB      @CNUA   6
+     C                     PARM AZCD      @ADDR   1
+     C           SDALTN    PARM SDALTN    DSFDY
+      *
+      ** If error, perform *PSSR, otherwise set address
+      ** Fields for output
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVEL'SDALTNPD'DBFILE           **DB ERROR 07**
+     C                     MOVEL@CNUA     DBKEY            ***************
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVE BCCNA1    FCNA1
+     C                     MOVE BCCNA2    FCNA2
+     C                     MOVE BCCNA3    FCNA3
+     C                     MOVE BCCNA4    FCNA4
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Set key sequence fields. if credit , add 10
+      *
+     C                     MOVE X@        FKEYS1
+      *
+     C           @CFLG     IFEQ 'Y'
+     C           X@        ADD  10        FKEYSN
+     C                     MOVE FKEYSN    FKEYS1
+     C                     ENDIF
+      *
+     C                     MOVE @CPD      FKEYS2
+     C                     Z-ADD1         FRECT
+      *
+      ** Write extract record
+      *
+     C                     WRITEREINSDD0
+     C                     ADD  1         AUREC
+     C                     ADD  1         X@
+      *
+     C/COPY WNCPYSRC,REF760C002
+      *
+      ** If CER039 is installed
+      *
+     C           CER039    IFEQ 'Y'
+      *
+      ** If first address of customer ('01'= Both or DB, '11'= CR)
+      *
+     C           FKEYS1    IFEQ '01'
+     C           FKEYS1    OREQ '11'
+      *
+     C                     MOVE 'Y'       FSRQD
+     C                     WRITEREINSHD0
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     SUB  1         X@
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #INIT - Initialise workfields                                *
+      *                                                               *
+      *  Called by - P0202                                            *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      ** Zeroise all work fields
+      *
+     C                     Z-ADD0         W1DAYS  50
+     C                     Z-ADD0         W1HISB 150
+     C                     Z-ADD0         W1HISD  50
+     C                     Z-ADD0         WSDIN0
+     C                     Z-ADD0         WSCIN0
+      *
+     C                     Z-ADD0         WODRL  100
+     C                     Z-ADD0         WBALA0
+     C                     Z-ADD0         WBALB0
+     C                     Z-ADD0         WMNBL0
+      *
+     C                     Z-ADD0         WTCIN0
+     C                     Z-ADD0         WPCIN0
+     C                     Z-ADD0         W1CIN0
+     C                     Z-ADD0         WTDIN0
+     C                     Z-ADD0         WPDIN0
+     C                     Z-ADD0         W1DIN0
+     C                     Z-ADD0         WTOVR0
+     C                     Z-ADD0         WPOVR0
+     C                     Z-ADD0         W1OVR0
+     C                     Z-ADD0         WSCRT0
+     C                     Z-ADD0         WSDRT0
+      *
+     C                     Z-ADD0         SVHISD  50
+     C                     Z-ADD0         SVPSTD  50
+      *
+     C                     Z-ADD0         WSTNST  50
+      *
+     C                     Z-ADD0         WSGADI 150
+     C                     Z-ADD0         WSGACI 150
+     C                     Z-ADD0         WSNPOC  50
+     C                     Z-ADD0         WSTSTC  50
+     C                     Z-ADD0         WSSTCH 150
+     C                     Z-ADD0         WSCHFX 150
+     C                     Z-ADD0         WSDRIA 150
+      *
+     C                     Z-ADD0         WSTEDS  50
+     C                     Z-ADD0         WSTOTC 130
+      *
+     C                     Z-ADD0         WSTDRI 150
+     C                     Z-ADD0         WSTCRI 150
+     C                     Z-ADD0         WSTCOA 150
+     C                     Z-ADD0         WSTCHA 150
+      *
+     C                     MOVE *BLANKS   @BFLG   1
+     C                     MOVE *BLANKS   @CFLG   1
+     C                     Z-ADD0         @SPOT  138
+     C                     MOVE *BLANKS   ODF     1
+      *
+     C                     Z-ADD0         WWCRCD
+     C                     Z-ADD0         WWDRCD
+      *
+     C                     MOVE *BLANKS   @DR1
+     C                     MOVE *BLANKS   @ORP
+     C                     MOVE *BLANKS   @CR1
+      *
+     C                     MOVE *ZEROS    PRDICT
+     C                     MOVE *ZEROS    PRDCST
+     C                     MOVE *ZEROS    PRDRRT
+     C                     MOVE *ZEROS    PRAODR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #CLR - Clear output record formay, reset key fields          *
+      *                                                               *
+      *  Called by - P0202, P0203, P0204, P0210                       *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CLR      BEGSR
+      *
+      ** Clear record format , restore key fields
+      *
+     C                     CLEARREINSDD0
+      *
+     C                     MOVE QBRCA     FBRCA
+     C                     MOVE QCNUM     FCNUM
+     C                     MOVE QCCY      FCCY
+     C                     MOVE QACOD     FACOD
+     C                     MOVE QACSQ     FACSQ
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #CDR1 - Calculate DR interest no. #1                         *
+      *                                                               *
+      *  Called by - P0202, P0203, P0207, P0208                       *
+      *                                                               *
+      *  Calls - P0211.                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CDR1     BEGSR
+      *
+     C                     MOVE PRDRRT    XXRATE 117
+     C                     Z-ADD0         XXAMT  130
+      *
+      ** Calcualte debit interest numbers
+      *
+     C           PRAODR    IFEQ *ZEROS
+     C                     Z-ADDW1HISB    WBALA0
+     C                     Z-ADD0         WBALB0
+     C                     ELSE
+      *
+     C           *IN80     IFEQ *ON
+     C           W1HIS0    IFGE WODRL
+     C           W1HIS0    SUB  WODRL     WBALB0
+     C                     Z-ADDW1HIS0    WBALA0
+      *
+     C                     SELEC
+      *
+     C           *IN80     WHEQ *ON
+     C           WBALB0    MULT W1DAYS    W1DIN0
+     C                     DIV  100       W1DIN0    H
+     C                     ADD  W1DIN0    WTOVR0
+     C                     EXSR #P0211
+     C                     ADD  WSDIN0    WPOVR0
+      *
+     C           *IN81     WHEQ *ON
+     C           WBALB1    MULT W1DAYS    W1DIN1
+     C                     DIV  100       W1DIN1
+     C           W1DIN1    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTOVR0
+     C                     EXSR #P0211
+     C                     ADD  WSDIN1    WPOVR1
+      *
+     C           *IN82     WHEQ *ON
+     C           WBALB2    MULT W1DAYS    W1DIN2
+     C                     DIV  100       W1DIN2
+     C           W1DIN2    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTOVR0
+     C                     EXSR #P0211
+     C                     ADD  WSDIN2    WPOVR2
+      *
+     C           *IN83     WHEQ *ON
+     C           WBALB3    MULT W1DAYS    W1DIN3
+     C                     DIV  100       W1DIN3
+     C           W1DIN3    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTOVR0
+     C                     EXSR #P0211
+     C                     ADD  WSDIN3    WPOVR3
+      *
+     C                     ENDSL
+      *
+      ** Initialise work field WSDIN0 as it is used for all interest
+      ** Calculation (DR/overdraft). if it is not initialised,
+      ** Overdrsft interest are cumulated in DR interest due to the
+      ** Line 257700 which resets period totals
+      *
+     C                     Z-ADD0         WSDIN0
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #CDR2 - Calculate DR interest no. #2                         *
+      *                                                               *
+      *  Called by - P0207, P0208.                                    *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CDR2     BEGSR
+      *
+      ** Set interest amount
+      *
+     C           DRCI      IFEQ 'Y'
+     C   80      WSDIN0    SUB  WPDIN0    WPDIN0
+     C   81      WSDIN1    SUB  WPDIN1    WPDIN1
+     C   82      WSDIN2    SUB  WPDIN2    WPDIN2
+     C   83      WSDIN3    SUB  WPDIN3    WPDIN3
+     C                     ENDIF
+      *
+     C                     SELEC
+      *
+     C           *IN80     WHEQ *ON
+     C           W1DAYS    MULT WMNBL     W1DIN0
+     C                     DIV  100       W1DIN0    H
+     C                     ADD  W1DIN0    WTDIN0
+      *
+     C           *IN81     WHEQ *ON
+     C           W1DAYS    MULT WMNBL     W1DIN1
+     C                     DIV  100       W1DIN1
+     C           W1DIN1    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTDIN0
+      *
+     C           *IN82     WHEQ *ON
+     C           W1DAYS    MULT WMNBL     W1DIN2
+     C                     DIV  100       W1DIN2
+     C           W1DIN2    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTDIN0
+      *
+     C           *IN83     WHEQ *ON
+     C           W1DAYS    MULT WMNBL     W1DIN3
+     C                     DIV  100       W1DIN3
+     C           W1DIN3    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTDIN0
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #COVR1 - Calculates overdraft amount                         *
+      *                                                               *
+      *  Called by - P0202, P0203, P0207, P0208                       *
+      *                                                               *
+      *  Calls - P0211                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #COVR1    BEGSR
+      *
+     C                     MOVE PRAODR    XXRATE 117
+      *
+     C                     SELEC
+      *
+     C           *IN80     WHEQ *ON
+     C           WBALB0    MULT W1DAYS    W1DIN0
+     C                     DIV  100       W1DIN0    H
+     C                     ADD  W1DIN0    WTOVR0
+     C                     EXSR #P0211
+     C                     ADD  WSDIN0    WPOVR0
+      *
+     C           *IN81     WHEQ *ON
+     C           WBALB1    MULT W1DAYS    W1DIN1
+     C                     DIV  100       W1DIN1
+     C           W1DIN1    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTOVR0
+     C                     EXSR #P0211
+     C                     ADD  WSDIN1    WPOVR1
+      *
+     C           *IN82     WHEQ *ON
+     C           WBALB2    MULT W1DAYS    W1DIN2
+     C                     DIV  100       W1DIN2
+     C           W1DIN2    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTOVR0
+     C                     EXSR #P0211
+     C                     ADD  WSDIN2    WPOVR2
+      *
+     C           *IN83     WHEQ *ON
+     C           WBALB3    MULT W1DAYS    W1DIN3
+     C                     DIV  100       W1DIN3
+     C           W1DIN3    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTOVR0
+     C                     EXSR #P0211
+     C                     ADD  WSDIN3    WPOVR3
+      *
+     C                     ENDSL
+      *
+      ** Initialise work field WSDIN0 as it is used for all interest
+      ** Calculation (DR/overdraft). if it is not initialised,
+      ** Overdrsft interest are cumulated in DR interest due to the
+      ** Line 257700 which resets period totals
+      *
+     C                     Z-ADD0         WSDIN0
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #CCR1 - Calculates Credit interest                           *
+      *                                                               *
+      *  Called by - P0202, P0204, P0207, P0209                       *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CCR1     BEGSR
+      *
+     C                     MOVE PRCRRT    XXRATE
+     C                     Z-ADD0         XXAMT
+      *
+      ** Set interest amount
+      *
+     C           CRCI      IFEQ 'Y'
+     C           DRECI     IFEQ 'D'
+     C                     Z-ADDCAID      WSCIN0
+     C                     ELSE
+     C                     Z-ADDCRIP      WSCIN0
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Turn sign around for half-adjust
+      *
+     C           W1HIS0    IFGT 0
+     C                     Z-ADDW1HIS0    W@HIS0
+     C                     ELSE
+     C                     Z-SUBW1HIS0    W@HIS0
+     C                     ENDIF
+      *
+     C           CRCI      IFEQ 'Y'
+     C   80      WSCIN0    SUB  WPCIN0    WPCIN0
+     C   81      WSCIN1    SUB  WPCIN1    WPCIN1
+     C   82      WSCIN2    SUB  WPCIN2    WPCIN2
+     C   83      WSCIN3    SUB  WPCIN3    WPCIN3
+     C                     ENDIF
+      *
+     C                     SELEC
+      *
+     C           *IN80     WHEQ *ON
+     C           W@HIS0    MULT W1DAYS    W1CIN0
+     C                     DIV  100       W1CIN0    H
+     C                     ADD  W1CIN0    WTCIN0
+      *
+     C           *IN81     WHEQ *ON
+     C           W@HIS1    MULT W1DAYS    W1CIN1
+     C                     DIV  100       W1CIN1
+     C           W1CIN1    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTCIN0
+      *
+     C           *IN82     WHEQ *ON
+     C           W@HIS2    MULT W1DAYS    W1CIN2
+     C                     DIV  100       W1CIN2
+     C           W1CIN2    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTCIN0
+      *
+     C           *IN83     WHEQ *ON
+     C           W@HIS3    MULT W1DAYS    W1CIN3
+     C                     DIV  100       W1CIN3
+     C           W1CIN3    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTCIN0
+      *
+     C                     ENDSL
+      *
+      ** Set interest amount
+      *
+     C                     EXSR #P0212
+     C   80                ADD  WSCIN0    WPCIN0
+     C   81                ADD  WSCIN1    WPCIN1
+     C   82                ADD  WSCIN2    WPCIN2
+     C   83                ADD  WSCIN3    WPCIN3
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #CCR2 - Calculates Credit interest #2                        *
+      *                                                               *
+      *  Called by - P0207, P0209                                     *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CCR2     BEGSR
+      *
+      ** Set interest amount
+      *
+     C           CRCI      IFEQ 'Y'
+     C           DRECI     IFEQ 'D'
+     C                     Z-ADDCAID      WSCIN0
+     C                     ELSE
+     C                     Z-ADDCRIP      WSCIN0
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           CRCI      IFEQ 'Y'
+     C   80      WSCIN0    SUB  WPCIN0    WPCIN0
+     C   81      WSCIN1    SUB  WPCIN1    WPCIN1
+     C   82      WSCIN2    SUB  WPCIN2    WPCIN2
+     C   83      WSCIN3    SUB  WPCIN3    WPCIN3
+     C                     ENDIF
+      *
+     C                     SELEC
+      *
+     C           *IN80     WHEQ *ON
+     C           W1DAYS    MULT WMNBL     W1CIN0
+     C                     DIV  100       W1CIN0    H
+     C                     ADD  W1CIN0    WTCIN0
+      *
+     C           *IN81     WHEQ *ON
+     C           W1DAYS    MULT WMNBL     W1CIN1
+     C                     DIV  100       W1CIN1
+     C           W1CIN1    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTCIN0
+      *
+     C           *IN82     WHEQ *ON
+     C           W1DAYS    MULT WMNBL     W1CIN2
+     C                     DIV  100       W1CIN2
+     C           W1CIN2    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTCIN0
+      *
+     C           *IN83     WHEQ *ON
+     C           W1DAYS    MULT WMNBL     W1CIN3
+     C                     DIV  100       W1CIN3
+     C           W1CIN3    DIV  1         XXAMT     H
+     C                     ADD  XXAMT     WTCIN0
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LSTDJ - To Pick Up Debit Interest Rate                      *
+      *                                                               *
+      *  Called by - P0210                                            *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LSTDJ    BEGSR
+      *
+     C                     MOVE WWDRCD    PRDRIV  50
+      *
+     C                     Z-ADD99999     KDATE
+     C           KLIST4    SETLLREHRDJ
+     C           KLIST1    REDPEREHRDJ                   60
+      *
+     C           *IN60     IFEQ *ON
+     C                     MOVE *ZEROS    PRDICT
+     C                     MOVE *ZEROS    PRDCST
+     C                     MOVE *ZEROS    PRDRRT
+     C                     ELSE
+      *
+      ** Set debit fields
+      *
+     C                     MOVE INRT      PRDRRT
+     C                     MOVE INST      PRDCST
+     C                     MOVE INTP      PRDICT
+      *
+      ** Set overdraft fields
+      *
+     C                     Z-ADDAODR      PRAODR
+     C                     MOVE WWDRCD    PRAODV
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LSTCJ - To Pick Up Credit Interest Rate                     *
+      *                                                               *
+      *  Called by - P0210                                            *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LSTCJ    BEGSR
+      *
+     C                     MOVE WWCRCD    PRCRIV  50
+      *
+     C                     Z-ADD99999     KDATE
+     C           KLIST4    SETLLREHRCJ
+     C           KLIST1    REDPEREHRCJ                   60
+      *
+     C           *IN60     IFEQ *ON
+     C                     MOVE *ZEROS    PRCICT
+     C                     MOVE *ZEROS    PRCCST
+     C                     MOVE *ZEROS    PRCRRT
+     C                     Z-ADDCLCID     PRCRIV
+     C                     ELSE
+      *
+      ** Set credit fields
+      *
+     C                     MOVE INRT      PRCRRT
+     C                     MOVE INST      PRCCST
+     C                     MOVE INTP      PRCICT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #CLREH - Clear certain retail history fields that are used   *
+      *             in only one format of the set and cause problems  *
+      *                                                               *
+      *  Called by - P0202, P0203, P0204, P0205                       *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #CLREH    BEGSR
+      *
+     C                     Z-ADD0         DSDAT
+     C                     Z-ADD0         CSDAT
+     C                     Z-ADD0         DRCD
+     C                     Z-ADD0         DRIP
+     C                     Z-ADD0         CRCD
+     C                     Z-ADD0         CRIP
+     C                     Z-ADD0         ODRL
+     C                     Z-ADD0         CAID
+     C                     MOVE *BLANKS   DRCI
+     C                     MOVE *BLANKS   CRCI
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - To Process Data Base Errors                          *
+      *                                                               *
+      *  Called by - P01, P0201, P0202, P0203, P0204, ALT,            *
+      *              CURR, ADDR.                                      *
+      *                                                               *
+      *  Calls - None                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** Set on job switches for control program
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      ** Produce audit report
+      *
+     C                     WRITEAUERR
+     C                     WRITEAUEND
+      *
+     C                     MOVE *ON       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #ZICD - To Find Number Of Days To Calculate Interest         *
+      *           According To Calculation Basis.                     *
+      *                                                               *
+      *  Called by - P0202, P0203, P0204, P0207, P0208, P0209.        *
+      *                                                               *
+      *  Calls - ZDATE2                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ZICD     BEGSR
+      *
+      ** To determine number of days interest to be calculated
+      *
+     C           ZIEND     SUB  ZIBEG     ZDAYN1
+      *
+      ** Check for interest calculation basis
+      *
+     C           ZICALC    IFEQ 3                          - B1
+     C           ZICALC    OREQ 0
+      *
+     C           ZIEND     IFGT ZIBEG                      - B2
+      *
+      ** Calculating date from day number (beginning date)
+      *
+     C                     Z-ADDZIBEG     ZDAYNO
+     C                     EXSR ZDATE2
+      *
+     C                     Z-ADDZDATE     SRES
+      *
+      ** Calculating date from day number (finishing date)
+      *
+     C                     Z-ADDZIEND     ZDAYNO
+     C                     EXSR ZDATE2
+      *
+     C                     Z-ADDZDATE     FRES
+      *
+      ** In order for the finish year to be less than the start year
+      ** If ZIEND greater than ZIBEG, then the date ZIEND must be in
+      ** A different century to ZIBEG. if so add 100 years to it.
+      *
+     C           ZIFY      IFLT ZISY                       - B3
+     C           ZIFY      ADD  100       ZIFY2   30
+     C                     ELSE                            - X3
+     C                     Z-ADDZIFY      ZIFY2
+     C                     ENDIF                           - E3
+      *
+     C                     Z-ADDZISY      ZISY2   30
+      *
+      ** Determine whether start year is a leap year and if start month
+      ** Is february  then consider last day of februray as date 30ND.
+      ** Of the month
+      *
+     C           ZICALC    IFEQ 3
+     C           ZICALC    OREQ 0
+     C           CER016    ANDEQ'N'
+     C           ZISM      IFEQ 2
+     C           ZISY2     ADD  1900      ZLYCHK  40
+     C           ZLYCHK    DIV  4         ZLYCHK
+     C                     MVR            ZLYREM  20
+     C           ZLYREM    IFEQ 0                          - B4
+     C           ZISD      IFEQ 29                         - B5
+     C                     Z-ADD30        ZISD
+     C                     ENDIF                           - E5
+     C                     ELSE                            - X4
+     C           ZISD      IFEQ 28                         - B5
+     C                     Z-ADD30        ZISD
+     C                     ENDIF                           - E5
+     C                     ENDIF                           - E4
+     C                     ENDIF                           - E3
+      *
+     C                     ENDIF
+      *
+     C           30        SUB  ZISD      ZID1
+      *
+     C           ZID1      IFLT 0                          - B3
+     C                     Z-ADD*ZEROS    ZID1
+     C                     ENDIF                           - E3
+      *
+     C           ZISM      IFEQ 12                         - B3
+     C                     Z-ADD*ZEROS    ZISM
+     C                     ADD  1         ZISY
+     C                     ADD  1         ZISY2
+     C                     ENDIF                           - E3
+      *
+      ** Determine whether end year is a leap year and if end month
+      ** Is february
+      *
+     C           ZICALC    IFEQ 3
+     C           ZICALC    OREQ 0
+     C           CER016    ANDEQ'N'
+     C           ZIFM      IFEQ 2                          - B3
+     C           ZIFY2     ADD  1900      ZLYCHK  40
+     C           ZLYCHK    DIV  4         ZLYCHK
+     C                     MVR            ZLYREM  20
+     C           ZLYREM    IFEQ 0                          - B4
+     C           ZIFD      IFEQ 29                         - B5
+     C                     Z-ADD30        ZIFD
+     C                     ENDIF                           - E5
+     C                     ELSE                            - X4
+     C           ZIFD      IFEQ 28                         - B5
+     C                     Z-ADD30        ZIFD
+     C                     ENDIF                           - E5
+     C                     ENDIF                           - E4
+     C                     ENDIF                           - E3
+      *
+     C                     ENDIF
+      *
+     C           ZIFD      IFEQ 31                         - B3
+     C                     ADD  30        ZID1
+     C                     ELSE                            - X3
+     C                     ADD  ZIFD      ZID1
+     C                     ENDIF                           - E3
+      *
+     C                     SUB  1         ZIFM
+      *
+     C           ZISY      IFEQ ZIFY                       - B3
+     C           ZIFM      SUB  ZISM      ZINOM   30
+     C                     ELSE                            - X3
+     C           12        SUB  ZISM      ZIM1
+     C                     Z-ADD1         ZISM
+      *
+      ** Use enlarge fields that can handle 1999 onwards
+      *
+     C                     ADD  1         ZISY2
+     C           ZIFY2     SUB  ZISY2     ZIY1
+     C           ZIY1      MULT 12        ZIM2    30
+     C           ZIM2      ADD  ZIFM      ZIM2
+     C           ZIM2      ADD  ZIM1      ZINOM
+      *
+     C                     ENDIF                           - E3
+      *
+     C           ZINOM     MULT 30        ZID2
+     C           ZID2      ADD  ZID1      ZDAYN1
+      *
+     C                     ENDIF                           - E2
+      *
+     C                     ENDIF                           - E1
+      *
+     C           ZICALC    IFEQ 4                          - B1
+     C           ZICALC    OREQ 5
+      *
+      ** One day is subtracted from ZDAYN1 for each occurance of 29 FEB
+      ** In the interest calculation period inclusive of ZIBEG and
+      ** ZIEND find no of four year periods between dates
+      *
+     C           ZDAYN1    DIV  1461      ZIMAN
+     C                     MVR            ZIREM
+      *
+      ** Find next 29 feb day no. on or after ZIBEG.
+      *
+     C           ZIBEG     SUB  60        ZIBW1
+     C           ZIBW1     DIV  1461      ZIDW1
+     C                     MVR            ZIDREM
+      *
+     C           ZIDREM    IFEQ 0                          - B2
+     C                     Z-ADDZIBEG     ZIDW2
+     C                     ENDIF                           - E2
+      *
+      ** Round up result
+      *
+     C           ZIDW1     ADD  1         ZIDW2
+      *
+      ** Calculate next 29 feb.
+      *
+     C           ZIDW2     MULT 1461      ZIDW2
+     C           ZIDW2     ADD  60        ZIDW2
+      *
+      ** If this next 29 feb. dayno - ZIBEG is greater or equal to
+      ** ZIREM then add 1 to ZIMAN.
+      *
+     C           ZIDW2     SUB  ZIBEG     ZILPCP
+      *
+     C           ZIREM     IFGE ZILPCP                     - B2
+     C                     ADD  1         ZIMAN
+     C                     ENDIF                           - E2
+      *
+      ** Subtract ZIMAN from ZDAYN1 to give value of ZDAYN1 required
+      ** For this interest calculation
+      *
+     C           ZDAYN1    SUB  ZIMAN     ZDAYN1
+      *
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *
+      ****************************************************************
+** CPY@ OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2009
+** ZMDY
+000031059090120151181212243273304334365
+** ZYDY
+0366073110961461
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

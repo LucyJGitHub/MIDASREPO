@@ -1,0 +1,450 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Profitability extract for loans')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LER431 - Profitability Extract for Loans                     *
+      *                                                               *
+      *  Function:  This program outputs a new extract file wherein   *
+      *  (COB)      the facility customer is the agent customer.      *
+      *                                                               *
+      *  Called By: LERC430 - Midas LE Produce Profitablity File :    *
+      *                       Loans                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE075AK           Date 06Aug12               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 09May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 166037  *CREATE    Date 17Aug99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE075AK - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager                                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  166037 - Margin for risk participants reported against agent *
+      *                                                               *
+      *****************************************************************
+     FPELNJL0 IF  E                    DISK
+     FLBLOANL1IF  E           K        DISK
+     FMLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCLF                          KRENAMEMCLONCLF
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FFCLTY   IF  E           K        DISK
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+     FLEPRLNPDO   E                    DISK                      A
+      *
+      /EJECT                                                                                CLE075AK
+      ****************************************************************                      CLE075AK
+      *                                                              *                      CLE075AK
+      * ID F  C  H  L    FUNCTION OF INDICATORS                      *                      CLE075AK
+      * 01               EoF read on PELNJL0                         *                      CLE075AK
+      * 02               NRF on chain to loan files                  *                      CLE075AK
+      * 03               NRF on chain to FCLTY                       *                      CLE075AK
+      * 42               Cache hit for Account Officer array         *                      CLE075AK
+      *                                                              *                      CLE075AK
+      ****************************************************************                      CLE075AK
+      /EJECT
+      *                                                                                     CLE075AK
+      ** Account Officer Code (Key for Cache)                                               CLE075AK
+      *                                                                                     CLE075AK
+     E                    CDAO      200  2                                                  CLE075AK
+      *                                                                                     CLE075AK
+      ** Least recently used array and sorted LRU array                                     CLE075AK
+      *                                                                                     CLE075AK
+     E                    LRUA      200 13 0                                                CLE075AK
+     E                    LRUS      200 13 0                                                CLE075AK
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details
+      *
+     I***SDACOF*  DE DDSDACOFPD                                                             CLE075AK
+     ISDACOF    E DSSDACOFPD                200                                             CLE075AK
+      ** Account Officer Details
+      *
+     IDSSDY     E DSDSSDY
+      * Second DS for access programs, long data structure
+      *
+      *================================================================
+      *  M A I N   P R O C E S S I N G                                *
+      *================================================================
+      *
+     C                     EXSR SRINIT
+      *
+     C                     READ PELNJL0                  01
+      *
+     C           *IN01     DOWEQ'0'
+     C                     MOVE BRCA      WBRCA   3
+     C**********           Z-ADDLDFCUS    LDFACL                                              CSD027
+     C                     MOVE LDFCUS    LDFACL                                              CSD027
+      *
+     C           LDLNRF    CHAINLBLOANL1             02
+     C           *IN02     IFEQ '1'
+     C           LDLNRF    CHAINMCLONCLF             02
+     C                     ENDIF
+      *
+     C           *IN02     IFEQ '0'
+     C           KFCLT     CHAINFCLTY                03
+      *
+     C           *IN03     IFEQ '0'
+     C           SYIN      ANDEQ'Y'
+     C**********           Z-ADDANUM      LDFCUS                                              CSD027
+     C                     MOVE ANUM      LDFCUS                                              CSD027
+     C                     SELEC
+      *
+      ** Risk participants against an IPP must be reported on the
+      ** borrower
+      *
+     C           LPFI      WHEQ 'R'
+     C           LPFI      OREQ 'P'
+     C           PTYP      ANDEQ72
+     C           LPFI      OREQ 'S'                                                           CLE106
+     C           PTYP      ANDEQ72                                                            CLE106
+     C********** OLNO      CHAINLBLOANL1             02                                       CSD027
+     C**********           MOVE OLNO      OLNON   60                                   CSD027 CLE148
+     C********** OLNON     CHAINLBLOANL1             02                                CSD027 CLE148
+     C           OLNO      CHAINLBLOANL1             02                                       CLE148
+     C           *IN02     IFEQ '1'
+     C********** OLNO      CHAINMLOAN                02                                       CSD027
+     C********** OLNON     CHAINMLOAN                02                                CSD027 CLE148
+     C           OLNO      CHAINMLOAN                02                                       CLE148
+     C                     ENDIF
+     C           LPFI      IFEQ 'I'
+     C**********           Z-ADDFCUS      LDFCUS                                              CSD027
+     C                     MOVE FCUS      LDFCUS                                              CSD027
+     C                     Z-ADDPTFT      LDFTYP
+     C                     Z-ADDPTFN      LDFSEQ
+     C**********           Z-ADDPTFC      LDFACL                                              CSD027
+     C                     MOVE PTFC      LDFACL                                              CSD027
+     C                     ENDIF
+      *
+      ** Create another record for IPP loans to be reported on the
+      ** borrower
+      *
+     C           LPFI      WHEQ 'I'
+     C**********           Z-ADDFCUS      LDFCUS                                              CSD027
+     C                     MOVE FCUS      LDFCUS                                              CSD027
+     C                     Z-ADDPTFT      LDFTYP
+     C                     Z-ADDPTFN      LDFSEQ
+     C**********           Z-ADDPTFC      LDFACL                                              CSD027
+     C                     MOVE PTFC      LDFACL                                              CSD027
+      *                                                                                     CLE075AK
+      ** Retrieve customer details if facility customer changed,                            CLE075AK
+      ** reuse the details if not                                                           CLE075AK
+      *                                                                                     CLE075AK
+     C           LDFCUS    IFNE PFCUS                                                       CLE075AK
+     C                     MOVE LDFCUS    PFCUS                                             CLE075AK
+     C                     MOVE LDFCUS    WFCUS
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM WFCUS     PCUST
+     C                     PARM *BLANKS   PKYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C                     MOVE BBACOC    LDACOF
+      *
+     C                     ADD  1         RCSQ                                              CLE075AK
+     C                     MOVELBBACOC    KEYACO                                            CLE075AK
+     C                     EXSR CHKACO                                                      CLE075AK
+      *                                                                                     CLE075AK
+      ** Use details from array if BBACOC is found, otherwise,                              CLE075AK
+      ** retrieve details from program call and save to array                               CLE075AK
+      ** if detail retrieval is successful                                                  CLE075AK
+      *                                                                                     CLE075AK
+     C           AOFIC     IFEQ 'Y'                                                         CLE075AK
+      *                                                                                     CLE075AK
+      ** Set occurence to index found from CDAO array                                       CLE075AK
+      *                                                                                     CLE075AK
+     C           C         OCUR SDACOF                                                      CLE075AK
+      *                                                                                     CLE075AK
+     C                     ELSE                                                             CLE075AK
+      *                                                                                     CLE075AK
+     C                     EXSR PRPADD                                                      CLE075AK
+      *
+      ** Get department
+      *
+     C                     CALL 'AOACOFR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM BBACOC    PCUST
+     C           SDACOF    PARM SDACOF    DSSDY
+      *
+     C                     SELEC
+     C           PRTCD     WHEQ *BLANKS
+     C                     EXSR ADDACO                                                      CLE075AK
+     C                     MOVE AZDPCD    LDDEPT
+      *                                                                                     CLE075AK
+     C           PRTCD     WHEQ '*NRF'
+     C                     MOVE '**'      LDACOF
+     C                     MOVE '***'     LDDEPT
+     C                     ENDSL
+     C                     ENDIF                                                            CLE075AK
+     C                     ENDIF                                                            CLE075AK
+      *                                                                                     CLE075AK
+     C                     MOVE WBRCA     BRCA
+     C                     WRITELEPRLND0
+     C**********           Z-ADDANUM      LDFCUS                                              CSD027
+     C                     MOVE ANUM      LDFCUS                                              CSD027
+     C                     Z-ADDFTYP      LDFTYP
+     C                     Z-ADDFSEQ      LDFSEQ
+     C**********           Z-ADDFCUS      LDFACL                                              CSD027
+     C                     MOVE FCUS      LDFACL                                              CSD027
+     C                     ENDSL
+      *
+      ** Get account officer
+      *
+     C           LDFCUS    IFNE *BLANKS                                                     CLE075AK
+     C           LDFCUS    ANDNEPFCUS                                                       CLE075AK
+     C                     MOVE LDFCUS    PFCUS                                             CLE075AK
+     C                     MOVE LDFCUS    WFCUS   6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY    'POPTN   7
+     C                     PARM WFCUS     PCUST  10
+     C                     PARM *BLANKS   PKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C                     MOVE BBACOC    LDACOF
+     C                     ADD  1         RCSQ                                              CLE075AK
+     C                     MOVELBBACOC    KEYACO                                            CLE075AK
+     C                     EXSR CHKACO                                                      CLE075AK
+      *                                                                                     CLE075AK
+     C           AOFIC     IFEQ 'Y'                                                         CLE075AK
+     C           C         OCUR SDACOF                                                      CLE075AK
+     C                     MOVE *BLANKS   PRTCD                                             CLE075AK
+      *                                                                                     CLE075AK
+     C                     ELSE                                                             CLE075AK
+      *                                                                                     CLE075AK
+     C                     EXSR PRPADD                                                      CLE075AK
+      *
+      ** Get department
+      *
+     C                     CALL 'AOACOFR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM BBACOC    PCUST  10
+     C           SDACOF    PARM SDACOF    DSSDY
+      *
+     C                     SELEC
+     C           PRTCD     WHEQ *BLANKS
+     C                     EXSR ADDACO                                                      CLE075AK
+     C                     MOVE AZDPCD    LDDEPT
+     C           PRTCD     WHEQ '*NRF'
+     C                     MOVE '**'      LDACOF
+     C                     MOVE '***'     LDDEPT
+     C                     ENDSL
+     C                     ENDIF                                                            CLE075AK
+     C                     ENDIF                                                            CLE075AK
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE WBRCA     BRCA
+     C                     WRITELEPRLND0
+      *
+     C                     READ PELNJL0                  01
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************                     CLE075AK
+      *                                                               *                     CLE075AK
+      *  *INZSR - Initial Subroutine                                  *                     CLE075AK
+      *                                                               *                     CLE075AK
+      *****************************************************************                     CLE075AK
+     C           *INZSR    BEGSR                                                            CLE075AK
+      *                                                                                     CLE075AK
+      ** LRU element key and record arrival sequence                                        CLE075AK
+      *                                                                                     CLE075AK
+     C                     Z-ADD0         LEASTE 130                                        CLE075AK
+     C           *LIKE     DEFN LEASTE    RCSQ                                              CLE075AK
+      *                                                                                     CLE075AK
+      ** Set start index to upper limit of account officer arrays                           CLE075AK
+      ** Define current index and previous index as same with TIDX                          CLE075AK
+      ** Define KEYACO to be the same with SDCUSTPD.BBACOC                                  CLE075AK
+      *                                                                                     CLE075AK
+     C                     Z-ADD200       TIDX    40                                        CLE075AK
+     C           *LIKE     DEFN TIDX      PIDX                                              CLE075AK
+     C           *LIKE     DEFN TIDX      C                                                 CLE075AK
+     C           *LIKE     DEFN BBACOC    KEYACO                                            CLE075AK
+     C           *LIKE     DEFN LDFCUS    PFCUS                                             CLE075AK
+      *                                                                                     CLE075AK
+      ** Initialize work fields of account officer arrays routines                          CLE075AK
+      *                                                                                     CLE075AK
+     C                     MOVE *BLANK    AOFIC   1                                         CLE075AK
+     C                     MOVE *BLANKS   KEYACO                                            CLE075AK
+     C                     MOVE *BLANKS   PFCUS                                             CLE075AK
+     C                     Z-ADD200       PIDX                                              CLE075AK
+     C                     Z-ADD200       C                                                 CLE075AK
+     C                     ENDSR                                                            CLE075AK
+      *****************************************************************                     CLE075AK
+      *                                                               *                     CLE075AK
+      *  CHKACO - Check Account Officer details in array              *                     CLE075AK
+      *                                                               *                     CLE075AK
+      *****************************************************************                     CLE075AK
+     C           CHKACO    BEGSR                                                            CLE075AK
+      *                                                                                     CLE075AK
+      ** Reinitialize work fields                                                           CLE075AK
+      *                                                                                     CLE075AK
+     C                     MOVEL*BLANK    AOFIC                                             CLE075AK
+     C                     SETOF                         42                                 CLE075AK
+      *                                                                                     CLE075AK
+     C           KEYACO    IFNE *BLANKS                                                     CLE075AK
+      *                                                                                     CLE075AK
+      ** Check previous account officer details if                                          CLE075AK
+      ** same with current details                                                          CLE075AK
+      *                                                                                     CLE075AK
+     C                     Z-ADDPIDX      C                                                 CLE075AK
+      *                                                                                     CLE075AK
+      ** Defend against index being 0                                                       CLE075AK
+      ** Set current index to starting index                                                CLE075AK
+      *                                                                                     CLE075AK
+     C           C         IFEQ 0                                                           CLE075AK
+     C                     Z-ADDTIDX      C                                                 CLE075AK
+     C                     ENDIF                                                            CLE075AK
+      *                                                                                     CLE075AK
+      ** If the BBACOC being checked is the same then use the index                         CLE075AK
+      ** of the current detail rather than doing a LOKUP                                    CLE075AK
+      *                                                                                     CLE075AK
+     C           KEYACO    IFEQ CDAO,C                                                      CLE075AK
+     C                     SETON                         42                                 CLE075AK
+     C                     ELSE                                                             CLE075AK
+      *                                                                                     CLE075AK
+     C           TIDX      IFEQ 0                                                           CLE075AK
+     C                     Z-ADD1         C                                                 CLE075AK
+     C                     ELSE                                                             CLE075AK
+     C                     Z-ADDTIDX      C                                                 CLE075AK
+     C                     ENDIF                                                            CLE075AK
+      *                                                                                     CLE075AK
+     C           KEYACO    LOKUPCDAO,C                   42                                 CLE075AK
+     C                     ENDIF                                                            CLE075AK
+      *                                                                                     CLE075AK
+      ** Save the last accessed detail to PIDX                                              CLE075AK
+      ** Set the indicator to show the data was found                                       CLE075AK
+      *                                                                                     CLE075AK
+     C           *IN42     IFEQ *ON                                                         CLE075AK
+     C                     MOVE RCSQ      LRUA,C                                            CLE075AK
+     C                     Z-ADDC         PIDX                                              CLE075AK
+     C                     MOVEL'Y'       AOFIC                                             CLE075AK
+     C                     ENDIF                                                            CLE075AK
+      *                                                                                     CLE075AK
+     C                     ENDIF                                                            CLE075AK
+     C                     ENDSR                                                            CLE075AK
+      *****************************************************************                     CLE075AK
+      *                                                               *                     CLE075AK
+      *  PRPADD - Prepare adding Account Officer details to array     *                     CLE075AK
+      *                                                               *                     CLE075AK
+      *****************************************************************                     CLE075AK
+     C           PRPADD    BEGSR                                                            CLE075AK
+      *                                                                                     CLE075AK
+     C           TIDX      IFNE 0                                                           CLE075AK
+     C                     Z-ADDTIDX      C                                                 CLE075AK
+     C                     ELSE                                                             CLE075AK
+     C                     Z-ADD1         C                                                 CLE075AK
+     C                     MOVEALRUA      LRUS                                              CLE075AK
+     C                     SORTALRUS                                                        CLE075AK
+     C                     Z-ADDLRUS,1    LEASTE                                            CLE075AK
+     C           LEASTE    LOKUPLRUA,C                   42                                 CLE075AK
+     C                     ENDIF                                                            CLE075AK
+      *                                                                                     CLE075AK
+     C           C         OCUR SDACOF                                                      CLE075AK
+      *                                                                                     CLE075AK
+     C                     ENDSR                                                            CLE075AK
+      *****************************************************************                     CLE075AK
+      *                                                               *                     CLE075AK
+      *  ADDACO - Add Account Officer details to array                *                     CLE075AK
+      *                                                               *                     CLE075AK
+      *****************************************************************                     CLE075AK
+     C           ADDACO    BEGSR                                                            CLE075AK
+      *                                                                                     CLE075AK
+      ** If there is still room in the array then add the details                           CLE075AK
+      *                                                                                     CLE075AK
+     C           TIDX      IFNE 0                                                           CLE075AK
+     C                     SUB  1         TIDX                                              CLE075AK
+     C                     ENDIF                                                            CLE075AK
+      *                                                                                     CLE075AK
+     C                     MOVELBBACOC    CDAO,C                                            CLE075AK
+     C                     MOVE RCSQ      LRUA,C                                            CLE075AK
+      *                                                                                     CLE075AK
+      ** Set last accessed detail to PIDX so that CHKACO checks this                        CLE075AK
+      ** latest detail first                                                                CLE075AK
+      *                                                                                     CLE075AK
+     C                     Z-ADDC         PIDX                                              CLE075AK
+      *                                                                                     CLE075AK
+     C                     ENDSR                                                            CLE075AK
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           KFCLT     KLIST
+     C                     KFLD           FCUS
+     C                     KFLD           FTYP
+     C                     KFLD           FSEQ
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

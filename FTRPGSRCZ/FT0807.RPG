@@ -1,0 +1,415 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT De-select by transaction prompt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0807 - DE-SELECT Transaction from Authorisation Batch.     *
+      *                                                               *
+      *  Function:  This program prompts for the transaction that     *
+      *             the user wants to exclude in the authorisation    *
+      *             process.                                          *
+      *                                                               *
+      *  Called By: On Request                                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 221761             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 30May00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 185107             Date 17Oct00               *
+      *  Prev Amend No. CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT006             Date 26Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFT003  *CREATE    Date 24APR98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
+      *  221761 - Recompiled due to change made in PF/FT101HPD.       *
+      *  CFT009 - Addition of fields for FT fees and charges          *
+      *           Recompile                                           *
+      *  185107 - Mapping of details from swift message - Recompile   *
+      *  CFT014 - Straight-through Processing Phase 2 MT103 Messages  *
+      *           Generation for FT. Recompile only.                  *
+      *  CFT006 - Funds Transfer addition of MT101 and MT102 messages *
+      *  CFT003 - FT Batch Authorisation                              *
+      *           Based on FTH007 original reference HUB01B           *
+      *                                                               *
+      *****************************************************************
+     FOTPAYXL0UF  E           K        DISK
+     FINPAYXL0UF  E           K        DISK
+     FFTCONTL0UF  E           K        DISK
+     FFT101HL3UF  E           K        DISK                               CFT006
+     FFT102HL3UF  E           K        DISK                               CFT006
+     FFT0807DFCF  E                    WORKSTN
+      *****************************************************************
+     F/EJECT
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *       U7         System error, wrong status                   *
+      *       U8         Database error                               *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   INIT  - Initialisation processing                           *
+      *   DETL  - Process detail                                      *
+      *   TERM  - Terminate program                                   *
+      *   *PSSR - Error                                               *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E*
+     E                    CPY@    1   1 80                   COPYRIGHT
+     I/EJECT
+     IFT102HD0                                                            CFT006
+     I              SINST                           CSINST                CFT006
+     I**  CCT Header                                                      CFT006
+     I*                                                                   CFT006
+     ILDA         DS                            256
+     I**  Local data area data structure
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IDSRUN       DS                             13
+     I**  RUNDAT data area data structure (date format -ddmmmyy)
+     I*
+     I                                        1   7 RDAT
+     I                                        1   2 @DD
+     I                                        3   5 @MMM
+     I                                        6   7 @YY
+     I                                       12  12 DATF
+     I           SDS
+     I**  Program status data structure
+     I*
+     I                                     *PARMS   PGMPRM
+     I                                      244 253 PGMDEV
+     I                                      254 263 PGMUSR
+      *                                                                   CFT006
+     ISCSARD    E DSSCSARDPD                                              CFT006
+      * External data structure for SAR file details                      CFT006
+      *                                                                   CFT006
+     IDSFDY     E DSDSFDY                                                 CFT006
+      * DS for access program , short data structure                      CFT006
+     I*
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Establish the message file
+     C*
+     C                     MOVE *BLANK    ZAMSID 10
+     C                     MOVEL'GBFTUSR' @MSGF  10
+     C                     MOVE 'MSG'     @MSGF
+     C*
+     C** ZA0340 Error
+     C*
+     C           #AERR     PLIST
+     C                     PARM @MSGF     ZAMSGF 10        Message file
+     C                     PARM           ZAMSID 10        Message ID
+     C*
+     C                     MOVEL'FT0807'  PGMQ   10        Set Program ID
+     C                     MOVEL*BLANKS   MSGKEY  4
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   MAIN  :    Main process                                     *
+     C*   Calls :    INIT - Init process                              *
+     C*              DETL - Detail processing                         *
+     C*              TERM - Termination processing                    *
+     C*****************************************************************
+     C*
+     C**  Perform initial process
+     C*
+     C                     EXSR INIT
+     C*
+     C**  Perform detail process
+     C*
+     C                     EXSR DETL
+     C*
+     C**  Perform termination process
+     C*
+     C                     EXSR TERM
+     C/EJECT
+     C*****************************************************************
+     C*   INIT     : Initial processing                               *
+     C*   Called by: Main process                                     *
+     C*****************************************************************
+     C           INIT      BEGSR
+     C*
+     C**  Set up LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'FT0807'  DBPGM            Set Program ID
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+     C*
+     C**  Access data area DSRUN to find date
+     C*
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C                     IN   DSRUN
+     C*
+     C**  If data area not found then perform database error processing
+     C*
+     C           RDAT      IFEQ *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'RUNDAT'  DBFILE           * DBERR 001   *
+     C                     MOVEL'FIRST'   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Access SAR details file to determine if CFT006 is switched ON    CFT006
+      *                                                                   CFT006
+     C                     CALL 'AOSARDR0'                                CFT006
+     C                     PARM *BLANKS   @RTCD   7                       CFT006
+     C                     PARM '*VERIFY' @OPTN   7                       CFT006
+     C                     PARM 'CFT006'  @SARD   6                       CFT006
+     C           SCSARD    PARM SCSARD    DSFDY                           CFT006
+      *                                                                   CFT006
+      ** If CFT006 is switched ON                                         CFT006
+      *                                                                   CFT006
+     C           @RTCD     IFEQ *BLANKS                                   CFT006
+     C                     MOVE 'Y'       CFT006  1                       CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVE 'N'       CFT006                          CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      ** Access SAR details file to determine if CFT008 is switched ON    CFT006
+      *                                                                   CFT006
+     C                     CALL 'AOSARDR0'                                CFT006
+     C                     PARM *BLANKS   @RTCD   7                       CFT006
+     C                     PARM '*VERIFY' @OPTN   7                       CFT006
+     C                     PARM 'CFT008'  @SARD   6                       CFT006
+     C           SCSARD    PARM SCSARD    DSFDY                           CFT006
+      *                                                                   CFT006
+      ** If CFT008 is switched ON                                         CFT006
+      *                                                                   CFT006
+     C           @RTCD     IFEQ *BLANKS                                   CFT006
+     C                     MOVE 'Y'       CFT008  1                       CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVE 'N'       CFT008                          CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*   DETL     : Detail processing                                *
+     C*   Called by: Main process                                     *
+     C*   Calls    : INIT - Init process                              *
+     C*****************************************************************
+     C           DETL      BEGSR
+     C*
+     C                     SETON                         29
+     C*
+     C**  Do while not F3 or errors outstanding
+     C*
+     C           *INKC     DOWEQ'0'
+     C           *IN29     ANDEQ'1'
+     C*
+     C                     SETOF                     202111
+     C                     WRITEINITSCN
+     C                     WRITEFOOTER
+     C                     WRITESFLMSGC
+     C                     CALL 'ZA0250'
+     C                     EXFMTPROMPT
+     C*
+     C** Validate Transaction Reference Number.
+     C*
+     C                     MOVE '0'       *IN29
+     C*
+     C           *INKC     IFNE '1'
+     C*
+     C** Check if transaction exists om file.
+     C*
+     C           SPREF     CHAINOTPAYXL0             15    Rtv Record
+     C*
+     C           *IN15     IFEQ '1'
+     C           SPREF     CHAININPAYXL0             10    Rtv Record
+     C           *IN10     IFEQ '1'
+     C           CFT006    IFEQ 'Y'                                       CFT006
+     C           CFT008    OREQ 'Y'                                       CFT006
+     C           SPREF     CHAINFT101HL3             23    Rtv Record     CFT006
+     C           *IN23     IFEQ *ON                                       CFT006
+     C           SPREF     CHAINFT102HL3             24    Rtv Record     CFT006
+     C           *IN24     IFEQ *ON                                       CFT006
+     C                     MOVEL'U1B0020' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE '1'       *IN29                           CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELBATUSR    WKRUSR           Set Wrk Rpt UsrCFT006
+     C                     MOVE *ON       *IN26                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVELBATUSR    WKRUSR           Set Wrk Rpt UsrCFT006
+     C                     MOVE *ON       *IN25                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+      *                                                                   CFT006
+     C                     MOVEL'U1B0020' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN29
+     C                     ENDIF                                          CFT006
+     C                     ELSE
+     C                     MOVELINRUSR    WKRUSR           Set Wrk Rpt Usr
+     C                     SETON                     21
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVELOPRUSR    WKRUSR           Set Wrk Rpt Usr
+     C                     SETON                     20
+     C                     ENDIF
+     C*
+     C** If it exists, then check if it was selected for authorisation.
+     C*  WKRUSR field should not be blank.
+     C*
+     C           WKRUSR    IFEQ *BLANKS                    If Rpt Usr Blnk
+     C                     MOVEL'U1B0021' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     SETON                     1029
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  If no error, display confirmation screen.
+     C*
+     C           *IN29     IFNE '1'
+     C*
+     C           *INKF     DOWEQ'0'
+     C           *INKC     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C                     SETON                     11
+     C                     SETOF                     10
+     C                     WRITEFOOTER
+     C                     WRITEPROMPT
+     C                     WRITESFLMSGC
+     C                     EXFMTMSGDSP
+     C*
+     C** Save USER for later use.
+     C*
+     C                     MOVELWKRUSR    @USER  10        Set Save User
+     C*
+     C** If confirmed, blank out relevant file fields RUSR/WDID/BANO
+     C*
+     C           *INKF     IFEQ '1'
+     C                     MOVE *BLANKS   WKRUSR 10        Reset Wrk User
+     C           *IN20     IFEQ '1'
+     C                     MOVE *BLANKS   OPRUSR           Reset Rpt User
+     C                     MOVE *BLANKS   OPWSID           Reset Wrk Stn
+     C                     MOVE *BLANKS   OPBANO           Reset Batch Nbr
+     C                     UPDATOTPAYXDF                   Upd Record
+     C                     ENDIF
+     C           *IN21     IFEQ '1'
+     C                     MOVE *BLANKS   INRUSR           Reset Rpt User
+     C                     MOVE *BLANKS   INWSID           Reset Wrk Stn
+     C                     MOVE *BLANKS   INBANO           Reset Batch Nbr
+     C                     UPDATINPAYXDF                   Upd Record
+     C                     ENDIF
+      *                                                                   CFT006
+     C           CFT006    IFEQ 'Y'                                       CFT006
+     C           *IN25     IFEQ *ON                                       CFT006
+     C                     MOVE *BLANKS   BATUSR           Reset Rpt User CFT006
+     C                     MOVE *BLANKS   BAUTH            Reset Batch NbrCFT006
+     C                     UPDATFT101HD0                   Upd Record     CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           CFT008    IFEQ 'Y'                                       CFT006
+     C           *IN26     IFEQ *ON                                       CFT006
+     C                     MOVE *BLANKS   BATUSR           Reset Rpt User CFT006
+     C                     MOVE *BLANKS   BAUTH            Reset Batch NbrCFT006
+     C                     UPDATFT102HD0                   Upd Record     CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                          CFT006
+     C*
+     C** Update No of records in FTCONTDP
+     C*
+     C           @USER     CHAINFTCONTL0             35    Rtv Record
+     C*
+     C** If record not found return to calling program.
+     C*
+     C           *IN35     IFEQ '1'
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'FTCONTDP'DBFILE           * DBERR 002   *
+     C                     MOVEL'@USER'   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     SUB  1         CONREC           Decr Nbr Recs
+     C*
+     C           CONREC    IFEQ 0                          If Nbr Rec Zero
+     C                     MOVE *BLANKS   COBATN           Reset Batch Nbr
+     C                     MOVE *BLANKS   COTMID           Reset Terminal
+     C                     MOVE *BLANKS   COSTAT           Reset Status
+     C                     ENDIF
+     C*
+     C                     UPDAT@CONTPD                    Upd Record
+     C*
+     C                     MOVE *BLANKS   SPREF
+     C                     SETON                     29
+     C                     END
+     C*
+     C** If F12 re-display initial screen.
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE *BLANKS   SPREF
+     C                     SETON                     29
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*   TERM     : Termination Processing                           *
+     C*   Called by: Main Process                                     *
+     C*****************************************************************
+     C           TERM      BEGSR
+     C*
+     C                     SETON                     LR
+     C                     ENDSR
+     C/EJECT
+     C**************************************************************************
+     C*   *PSSR - error handling                                               *
+     C*   Called by - INIT initial process                                     *
+     C**************************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C/EJECT
+** CPY@   **      Object copyright
+(c) Misys International Banking Systems Ltd. 2001

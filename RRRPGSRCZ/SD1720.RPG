@@ -1,0 +1,611 @@
+0001 H            D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Prompt for recovery points')
+0002 F********************************************************************
+     F*  Midas - Restart Recovery Module
+0004 F*                                                                  *
+0005 F*     SD1720 - PROMPT FOR RECOVERY POINTS                          *
+0006 F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008 F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01375             Date 03APR92               *
+     F*                 S01199             Date 25APR90               *E13205
+     F*                    E13205             DATE 14/02/89              *E13205
+     F*                    S01127             DATE 10/06/88              *
+0009 F*                    E81132             DATE 13/11/86              *
+0010 F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01375 - Auto COB amendments                                 *
+     F*              Auto close of business saves. if VOLID is less      *
+     F*              than 'DB000' the save may now be from disk or       *
+     F*              tape.                                               *
+     F*     S01199 - HELP SYSTEM.                                        *
+     F*     E13205 - Recovery Error Fixing                               *E13205
+     F*              (a) Display all recovery points inclusive of        *E13205
+     F*                  'ER' --> 'IR', 'JS', and 'SV' pairs.            *E13205
+     F*              (b) Prevent selection of second entry of pair       *E13205
+     F*              (c) Improve validation                              *E13205
+     F*                  (i) Reset Current indicator on each loop        *E13205
+     F*                 (ii) Reintialise Recovery data                   *E13205
+     F*                (iii) Only set Recovery to current status         *E13205
+     F*                      if an 'X' in first subfile record           *E13205
+     F*                 (iv) Correct the selection of database save      *E13205
+     F*                      When looking for the last save skip         *E13205
+     F*                      to the coupled entry for JOENTT *eq 'ER'    *E13205
+     F*                  (v) Correct the validation of recovery type     *E13205
+     F*                 (vi) Pass back extra parameter containing        *E13205
+     F*                      the journal information associated with     *E13205
+     F*                      the save. Fields JINFO, JINFOn added.       *E13205
+     F*              (b) Prevent selection of receivers prior to         *E13205
+     F*                  Input cycle. Found by comparing SEQN1.          *E13205
+     F*     S01127 - FUTURES AND OPTIONS INCORPORATION                   *S01127
+     F**               CHANGE REFERENCE OF USER DEFINED JOURNAL ENTRY    *S01127
+     F**               'SR' TO 'IR'. ( 'SR' = SYSTEM DEFINED ENTRY       *S01127
+     F**               ENTRY 'START RMVJRNCHG' - NOW USED BY FF )        *S01127
+     F*     E81132 - REMOVE THE REFERENCES TO THE TABLE FILE AS IT       *E81132
+     F*              COULD HAVE BEEN CORRUPTED.                          *E81132
+     F*                                                                  *
+0011 F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0015 FSD1720FMCF  E                    WORKSTN
+     F                                        SFLRRNKSFILE SUBFIL1
+0017 FJRNEXS  IF  E           K        DISK
+0017 F*ABLE   IF  E           K        DISK                               E81132
+     F*           TABLETAF                          KIGNORE               E81132
+     F*           TABLETHF                          KIGNORE               E81132
+     F*           TABLETXF                          KIGNORE               E81132
+     F*           TABLETRF                          KIGNORE               E81132
+     F*           TABTB11F                          KIGNORE               E81132
+     F*           TABTB20F                          KIGNORE               E81132
+     F*           TABTB30F                          KIGNORE               E81132
+     F*           TABTB40F                          KIGNORE               E81132
+     F*           TABTB50F                          KIGNORE               E81132
+     F*           TABTB55F                          KIGNORE               E81132
+     F*           TABTE10F                          KIGNORE               E81132
+     F*           TABTE20F                          KIGNORE               E81132
+     F*           TABTG10F                          KIGNORE               E81132
+     F*           TABTG20F                          KIGNORE               E81132
+0021 F**
+0022 F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*       10         'SV'ENTRY TYPE WITH VOL ID 'DISK'
+     F*       30         ERROR INDICATOR-CHOSEN COMBINATION INVALID
+     F*       31         CONTROL DISPLAY OF SELECT FIELD                  E13205
+     F*       35         'SV'RECORD FOUND (SETUP OF PARAMETERS)
+     F*       40         COMMAND 3
+     F********41*********HELP KEY                                         S01199
+     F*       60         '+'SIGN ON SCREEN INDICATOR
+     F*       65         INDICATOR USED TO TEST FOR B.O.B. SAVE
+     F*    25            EOF ON SUBFILE
+     F*    45            EOF ON JRNEXS
+     F******90-99********STANDARD SUBROUTINE                              E81132
+     F*     U7&U8        DATABASE ERROR
+     F**
+     E********************TXT     1   6 35               TEXT             E13205
+     E********************TXT     1   7 35               TEXT       E13205S01375
+     E                    TXT     1   8 35               TEXT             S01375
+     E                    MSG     1   1 80               ERROR MESSAGE
+     E                    CPY@    1   1 80
+     I*
+     I* DATA STRUCTURE TO SUBDIVIDE INPUT FIELD INFO
+     I            DS
+     I                                        1  50 INFO
+     I                                        1  100SQNRTP
+     I                                        1   5 VOLID
+     I                                       26  29 DEVICE                S01375
+     I                                       16  23 JRCVNM                E13205
+     I*
+     I* DS TO STORE RECORDS CORRESPONDING TO REQUESTED RECOVERY PTS
+     I************DS                                                      E13205
+     IRCVPTS      DS                             94                       E13205
+     I                                        1  100JSEQN1
+     I                                       11  12 JENTT1
+     I                                       13  17 VL11
+     I                                       18  270JSEQN2
+     I                                       28  29 JENTT2
+     I                                       30  34 VL12
+     I                                       35  64 JINFO1                E13205
+     I                                       65  94 JINFO2                E13205
+     I*
+     I* DATA STRUCTURE TO SETUP TEXT FIELD
+     I            DS
+     I                                        1  35 TEXT
+     I                                       23  30 TIME
+     I                                       23  30 JRNRCV                E13205
+     I                                       24  28 VLID
+     I*
+     I* DATA STRUCTURES FOR EDITING TIME FIELD FOR INCLUSION IN TEXT
+     I            DS
+     I                                        1   60JOTIME
+     I                                        1   2 HOUR
+     I                                        3   4 MIN
+     I                                        5   6 SEC
+     I            DS
+     I                                        1   8 JTIME
+     I                                        1   2 MHOUR
+     I                                        3   3 PT1
+     I                                        4   5 MMIN
+     I                                        6   6 PT2
+     I                                        7   8 MSEC
+     I*
+     I* LOCAL DATA AREA FOR DATABASE ERROR                                E81132
+     I*DA        UDS                            256                       E81132
+     I*                                     134 138 DBFILE                E81132
+     I*                                     139 167 DBKEY                 E81132
+     I*                                     168 175 DBPGM                 E81132
+     I*                                     176 1770DBASE                 E81132
+     I* DATA STRUCTURE TO PICK UP WORKSTATION ID
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I*
+     C*****************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** MAIN PROCESSING
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQN1  100
+     C                     PARM           SEQN2  100
+     C                     PARM           VOL1    5
+     C                     PARM           FLAG    1
+     C                     PARM           CURIND  1
+     C                     PARM           JINFO  30
+     C*
+0350 C*****GET INSTALLATION CONTROL DATA RECORD AND RELEASE.              E81132
+0351 C***                  EXSR ZSYSTM                                    E81132
+0352 C***99                SETON                     U7U8  NOT FOUND,     E81132
+     C***99                MOVE 'SD1720  'DBPGM                           E81132
+     C***99                MOVE 'TABLE'   DBFILE                          E81132
+     C***99                MOVE 01        DBASE                           E81132
+     C***99                MOVE *BLANKS   DBKEY                           E81132
+     C***99                MOVELZTABKY    DBKEY                           E81132
+0353 C***99                GOTO END                        DATABASE ERROR.E81132
+     C*
+     C* SETUP TIME FIELD EDITING
+     C                     MOVE '.'       PT1
+     C                     MOVE '.'       PT2
+     C* SETON '+' SIGN INDICATOR
+     C                     SETON                     60
+     C* SETUP ERROR MESSAGE FIELD
+     C                     MOVE MSG,1     ERMSG  80
+     C* SETUP RELATIVE RECORD NO FIELD FOR SUBFILE
+     C                     MOVE 1         PAGRRN
+     C*
+     C* SETUP SUBFILE
+     C*
+     C                     READ JRNEXS                   45
+     C                     EXSR DSPSLT                                    E13205
+     C                     MOVE TXT,1     TEXT
+     C           SFLRRN    ADD  1         SFLRRN  30
+     C                     WRITESUBFIL1
+     C*
+     C* READ JRNEXS UNTIL END OF FILE
+     C                     READ JRNEXS                   45
+     C           *IN45     DOWEQ'0'
+     C                     EXSR DSPSLT                                    E13205
+     C*
+     C           JOENTT    CASEQ'ER'      ERTYP
+     C           JOENTT    CASEQ'JS'      JSTYP
+     C           JOENTT    CASEQ'SV'      SVTYP
+     C                     END
+     C*
+     C                     READ JRNEXS                   45
+     C                     END
+     C*                                                                   S01375
+     C* IF END OF FILE WRITE BEGIN BUSINESS SAVE FOR TAPE IF NEEDED       S01375
+     C           JOENTT    IFEQ 'SV'                                      S01375
+     C           *IN45     ANDEQ'1'                                       S01375
+     C                     EXSR SVTYP                                     S01375
+     C                     END                                            S01375
+     C* DISPLAY SCREEN
+     C           SCRN      TAG                             ** SCRN **
+     C                     WRITEDSPFIL
+     C                     EXFMTFILCTL
+     C**ALLOW*HELP*********                                               S01199
+     C************IN41*****IFEQ '1'                                       S01199
+     C*********************MOVE *BLANKS   HERCD  80                       S01199
+     C*********************MOVE 'RR1720'  HBPGM   6                       S01199
+     C*********************CALL 'MHELP'                                   S01199
+     C*********************PARM           HBPGM                           S01199
+     C*********************PARM           HERCD                           S01199
+     C*********************GOTO SCRN                                      S01199
+     C*********************END                                            S01199
+     C* VALIDATE SCREEN
+     C  N40      *IN30     DOUEQ'0'
+     C                     SETOF                     3025
+     C                     MOVE *BLANKS   COUNT   20
+     C*
+     C           *IN25     DOWEQ'0'
+     C                     READCSUBFIL1                  25
+     C*
+     C* IF RECOVER TO CURRENT STATUS REQUESTED, SET ON CURIND
+     C           SFLRRN    IFEQ 1
+     C           SELECT    ANDNE' '                                       E13205
+     C                     MOVE '1'       CURIND
+     C                     END
+     C*
+     C  N25                DO
+     C           SELECT    COMP ' '                  3030
+     C                     UPDATSUBFIL1
+     C*
+     C* CALCULATE NO OF CHANGED RECORDS IN SUBFILE
+     C           *IN30     IFEQ '1'
+     C           COUNT     ADD  1         COUNT
+     C* STORE FIELDS FOR FIRST TWO CHANGED RECORDS
+     C           COUNT     IFEQ 1
+     C                     MOVE JOSEQN    JSEQN2
+     C                     MOVE JOENTT    JENTT2
+     C                     MOVE VOLID     VL12
+     C                     MOVELJINFO     JINFO2                          E13205
+     C                     END
+     C*
+     C           COUNT     IFEQ 2
+     C                     MOVE JOSEQN    JSEQN1
+     C                     MOVE JOENTT    JENTT1
+     C                     MOVE VOLID     VL11
+     C                     MOVELJINFO     JINFO1                          E13205
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETOF                     30
+     C                     END
+     C* IF NEITHER ONE OR TWO RECOVERY PTS REQUESTED THEN ERROR
+     C           COUNT     IFEQ 2
+     C                     EXSR CORSEQ
+     C                     ELSE
+     C*
+     C           COUNT     IFNE 1
+     C                     SETON                     30
+     C                     END
+     C*
+     C                     END
+     C* REDISPLAY SCREEN IF IN ERROR
+     C           SCRN2     TAG                             ** SCRN2 **
+     C   30                WRITEDSPFIL
+     C   30                EXFMTFILCTL
+     C*                                                                   E13205
+     C* If indicator 40 is on CMD 3 pressed - initial fields and return   E13205
+     C*                                                                   E13205
+     C           *IN40     IFEQ '1'                                       E13205
+     C                     MOVEL*BLANK    CURIND                          E13205
+     C                     MOVEL*BLANKS   RCVPTS                          E13205
+     C                     MOVEL*BLANKS   JINFO                           E13205
+     C                     SETON                     LR                   E13205
+     C                     RETRN                                          E13205
+     C                     END                                            E13205
+     C*                                                                   E13205
+     C* Reset all fields if error indicated by *IN30                      E13205
+     C*                                                                   E13205
+     C           *IN30     IFEQ '1'                                       E13205
+     C                     MOVEL*BLANK    CURIND                          E13205
+     C                     MOVEL*BLANKS   RCVPTS                          E13205
+     C                     END                                            E13205
+     C**ALLOW*HELP*********                                               S01199
+     C***30*******IN41*****IFEQ '1'                                       S01199
+     C*********************MOVE *BLANKS   HERCD  80                       S01199
+     C*********************MOVE 'RR1720'  HBPGM   6                       S01199
+     C*********************CALL 'MHELP'                                   S01199
+     C*********************PARM           HBPGM                           S01199
+     C*********************PARM           HERCD                           S01199
+     C*********************GOTO SCRN2                                     S01199
+     C*********************END                                            S01199
+     C  N40                END
+     C*
+     C* SETUP PARAMETER FIELDS
+     C  N40      COUNT     IFEQ 2
+     C                     MOVE JSEQN1    SEQN1
+     C                     MOVE JSEQN2    SEQN2
+     C                     MOVE VL11      VOL1
+     C                     MOVE 'A'       FLAG
+     C                     MOVELJINFO1    JINFO                           E13205
+     C                     ELSE
+     C*
+     C           JENTT2    IFEQ 'SV'
+     C                     MOVE JSEQN2    SEQN1
+     C                     MOVE JSEQN2    SEQN2
+     C                     MOVE VL12      VOL1
+     C                     MOVE 'C'       FLAG
+     C                     MOVELJINFO2    JINFO                           E13205
+     C*
+     C* IF THE DATA BASE SAVE ('SV') IS B.O.B.MOVE 'D' TO FLAG
+     C* I.E. IF THE LAST THREE DIGITS ARE NOT NUMERIC, SV IS FROM BOB.
+     C* (BYPASS IF RESTORE IS FROM DISK)
+     C*
+     C***10*************** GOTO TAGD                                      E13205
+     C           VOL1      CABEQ'DISK'    TAGD                            E13205
+     C                     MOVE VL12      WRKA1   3
+     C                     MOVE WRKA1     WRKN    30
+     C                     MOVE WRKN      WRKA2   3
+     C           WRKA1     COMP WRKA2                6565
+     C   65                MOVE 'D'       FLAG
+     C           TAGD      TAG                             ** TAGD **
+     C*
+     C                     ELSE
+     C           JSEQN2    SETLLJRNEXS
+     C*
+     C* SEARCH FOR FIRST RECORD WITH ENTRY TYPE 'SV'
+     C           *IN35     DOWEQ'0'
+     C                     READ JRNEXS                   45
+     C           JOENTT    COMP 'SV'                     35
+     C*                                                                   E13205
+     C*  Check that if DISK save that it is the one in DBIC               E13205
+     C*                                                                   E13205
+     C           VOLID     IFEQ 'DISK'                                    E13205
+     C           JOSEQN    ANDNEDSKSEQ                                    E13205
+     C                     MOVEL'0'       *IN35                           E13205
+     C                     END                                            E13205
+     C*                                                                   E13205
+     C*  If an 'ER' entry then look for coupled entry thru SETLL          E13205
+     C*                                                                   E13205
+     C           JOENTT    IFEQ 'ER'                                      E13205
+     C           SQNRTP    SETLLJRNEXS                                    E13205
+     C                     MOVEL'0'       *IN35                           E13205
+     C                     END                                            E13205
+     C*                                                                   E13205
+     C                     END
+     C*
+     C                     MOVELINFO      JINFO                           E13205
+     C                     MOVE JOSEQN    SEQN1
+     C                     MOVE JSEQN2    SEQN2
+     C                     MOVE VOLID     VOL1
+     C                     MOVE 'B'       FLAG
+     C                     END
+     C*
+     C                     END
+     C*
+     C*   Check that database save is not to B.O.B. if FLAG *eq A or B    E13205
+     C*                                                                   E13205
+     C           FLAG      IFEQ 'A'                                       E13205
+     C           FLAG      OREQ 'B'                                       E13205
+     C           VOL1      IFNE 'DISK'                                    E13205
+     C                     MOVE VOL1      WRKA1   3                       E13205
+     C                     MOVE WRKA1     WRKN    30                      E13205
+     C                     MOVE WRKN      WRKA2   3                       E13205
+     C           WRKA1     COMP WRKA2                6565                 E13205
+     C   65                MOVE 'A'       FLAG                            E13205
+     C   65                Z-ADDAUTSEQ    SEQN1                           S01375
+     C  N65                MOVE 'B'       FLAG                            E13205
+     C                     ELSE                                           E13205
+     C                     MOVE 'B'       FLAG                            E13205
+     C                     END                                            E13205
+     C                     END                                            E13205
+     C                     SETON                     LR
+     C**         END       TAG                                            E81132
+     C**
+     C*****************************************************************
+     C*                 SUBROUTINES                                   *
+     C*****************************************************************
+     C**
+     C**   PROCESSING FOR 'ER' TYPE RECORDS IN SETUP OF SUBFILE
+     C**
+     C           ERTYP     BEGSR
+     C*
+     C                     MOVE JOTIME    STIME   60
+     C           SQNRTP    SETLLJRNEXS
+     C                     READ JRNEXS                   45
+     C*
+     C                     MOVE JOTIME    ETIME   60                      E13205
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE HOUR      MHOUR
+     C                     MOVE MIN       MMIN
+     C                     MOVE SEC       MSEC
+     C*
+     C                     MOVELINFO      JINFO                           E13205
+     C                     MOVE TXT,2     TEXT
+     C                     MOVE JTIME     TIME
+     C                     MOVE STIME     JOTIME
+     C           SFLRRN    ADD  1         SFLRRN
+     C                     WRITESUBFIL1
+     C*                                                                   E13205
+     C*                                                                   E13205
+     C*                                                                   E13205
+     C                     MOVEL*IN31     SAVIND  1                       E13205
+     C                     MOVE ETIME     JOTIME                          E13205
+     C                     MOVEL'1'       *IN31                           E13205
+     C           JOENTT    CASEQ'IR'      IRTYP                           E13205
+     C           JOENTT    CASEQ'JS'      JSTYP                           E13205
+     C           JOENTT    CASEQ'SV'      SVTYP                           E13205
+     C                     END                                            E13205
+     C                     MOVELSAVIND    *IN31                           E13205
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C**
+     C**   PROCESSING FOR 'JS' TYPE RECORDS IN SETUP OF SUBFILE
+     C**
+     C           JSTYP     BEGSR
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE TXT,6     TEXT
+     C                     MOVELJRCVNM    JRNRCV                          E13205
+     C           SFLRRN    ADD  1         SFLRRN
+     C                     WRITESUBFIL1
+     C                     ENDSR
+     C*****************************************************************   E13205
+     C**                                                                  E13205
+     C**   PROCESSING FOR 'IR' TYPE RECORDS IN SETUP OF SUBFILE           E13205
+     C**                                                                  E13205
+     C           IRTYP     BEGSR                                          E13205
+     C                     MOVE *BLANKS   TEXT                            E13205
+     C                     MOVE TXT,7     TEXT                            E13205
+     C           SFLRRN    ADD  1         SFLRRN                          E13205
+     C                     WRITESUBFIL1                                   E13205
+     C                     ENDSR                                          E13205
+     C*****************************************************************
+     C**
+     C**   PROCESSING FOR 'SV' TYPE RECORDS IN SETUP OF SUBFILE
+     C**
+     C           SVTYP     BEGSR
+     C*                                                                   E13205
+     C*  Save the journal information stored at save time                 E13205
+     C*                                                                   E13205
+     C                     MOVELINFO      JINFO                           E13205
+     C*
+     C           VOLID     IFEQ 'DISK'
+     C*
+     C  N10                DO
+     C                     SETON                     10
+     C                     Z-ADDJOSEQN    DSKSEQ 100                      E13205
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE TXT,3     TEXT
+     C           SFLRRN    ADD  1         SFLRRN
+     C                     WRITESUBFIL1
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           VOLID     IFGT 'DB000'
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE TXT,5     TEXT
+     C                     MOVE VOLID     VLID
+     C                     END
+     C*
+     C           VOLID     IFLE 'DB000'
+     C                     MOVE *BLANKS   TEXT
+     C                     MOVE TXT,4     TEXT
+     C*                                                                   S01375
+     C* If disk then check for tape and alter JINFO. Also output          S01375
+     C* Beginning of Business save.                                       S01375
+     C*                                                                   S01375
+     C           DEVICE    IFEQ 'DISK'                                    S01375
+     C*                                                                   S01375
+     C* If second time through for disk then print save file name         S01375
+     C*                                                                   S01375
+     C           $DISK     IFEQ 'Y'                                       S01375
+     C                     MOVE TXT,8     TEXT                            S01375
+     C                     MOVE VOLID     VLID                            S01375
+     C                     MOVEL'1'       *IN31                           S01375
+     C                     ELSE                                           S01375
+     C                     MOVE 'Y'       $DISK   1                       S01375
+     C                     END                                            S01375
+     C           $TAPE     IFEQ 'Y'                                       S01375
+     C                     MOVE 'TAPE'    DEVICE                          S01375
+     C                     MOVELINFO      JINFO                           E13205
+     C                     MOVE ' '       $TAPE                           S01375
+     C                     END                                            S01375
+     C                     ELSE                                           S01375
+     C                     MOVE 'Y'       $TAPE   1                       S01375
+     C*                                                                   S01375
+     C* Tape save indicated. If this was for a savefile output            S01375
+     C* savefile information.                                             S01375
+     C*                                                                   S01375
+     C                     MOVE *BLANKS   TEXT                            S01375
+     C           $DISK     IFEQ 'Y'                                       S01375
+     C                     MOVE TXT,8     TEXT                            S01375
+     C                     MOVE VOLID     VLID                            S01375
+     C                     MOVEL'1'       *IN31                           S01375
+     C                     ELSE                                           S01375
+     C*                                                                   S01375
+     C* Real tape save, output tape name inhibit if not end of file       S01375
+     C*                                                                   S01375
+     C           *IN45     IFEQ '0'                                       S01375
+     C                     MOVE TXT,5     TEXT                            S01375
+     C                     MOVE VOLID     VLID                            S01375
+     C                     MOVEL'1'       *IN31                           S01375
+     C                     ELSE                                           S01375
+     C*                                                                   S01375
+     C* Real tape save no more records => BOB save text                   S01375
+     C*                                                                   S01375
+     C                     MOVE TXT,4     TEXT                            S01375
+     C                     MOVEL'0'       *IN31                           S01375
+     C                     END                                            S01375
+     C                     END                                            S01375
+     C                     END                                            S01375
+     C                     END
+     C*
+     C           SFLRRN    ADD  1         SFLRRN
+     C                     WRITESUBFIL1
+     C*                                                                   S01375
+     C* Save sequence for tape recovery with disk save                    S01375
+     C*                                                                   S01375
+     C                     Z-ADDJOSEQN    AUTSEQ 100                      S01375
+     C                     END
+     C*
+     C****                 ENDSR                                          S01375
+     C           SVTYPX    ENDSR                                          S01375
+     C*****************************************************************   S01375
+     C/EJECT                                                              S01375
+     C**                                                                  E13205
+     C**   Check whether to display selection option                      E13205
+     C**                                                                  E13205
+     C**   If JOSEQN > SEQN1 then the user is allowed to select           E13205
+     C**   otherwise the user is limited to save selection only           E13205
+     C**                                                                  E13205
+     C           DSPSLT    BEGSR                                          E13205
+     C*                                                                   E13205
+     C           JOSEQN    IFGT SEQN1                                     E13205
+     C           SEQN1     ANDGT0                                         E13205
+     C                     MOVEL'0'       *IN31                           E13205
+     C                     ELSE                                           E13205
+     C           JOENTT    IFEQ 'SV'                                      E13205
+     C                     MOVEL'0'       *IN31                           E13205
+     C                     ELSE                                           E13205
+     C                     MOVEL'1'       *IN31                           E13205
+     C                     END                                            E13205
+     C                     END                                            E13205
+     C*                                                                   E13205
+     C                     ENDSR                                          E13205
+     C*****************************************************************   E13205
+     C*****************************************************************
+     C**
+     C**   PROCESSING TO CHECK RECOVERY PTS REQUESTED ARE IN CORRECT
+     C**   SEQUENCE
+     C**
+     C           CORSEQ    BEGSR
+     C*
+     C           JENTT1    COMP 'SV'                 3030
+     C*
+     C  N30                DO
+     C           JENTT2    COMP 'JS'                 3030
+     C***30******JENTT2    COMP 'SR'                 3030                 S01127
+     C   30      JENTT2    COMP 'IR'                 3030                 S01127
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+0815 C**********                                                          E81132
+0816 C*****ZSYSTM*SR.*TO*CHAIN*TO THE INSTALLATION CONTROL DATA RECORD.   E81132
+0817 C**********                                                          E81132
+0818 C*          ZSYSTM    BEGSR                           *** ZSYSTEM ***E81132
+0819 C**********                                                          E81132
+0820 C*****SET*UP KEY FOR INSTALLATION CONTROL RECORD.                    E81132
+0821 C*                    MOVEL'01      'ZTABKY 12                       E81132
+0822 C*                    MOVE '  10'    ZTABKY                          E81132
+0823 C**********                                                          E81132
+0824 C*          ZTABKY    CHAINTABLE                99    ON NOT THERE   E81132
+0825 C* N99      RECI      COMP 'D'                  9999  ON, IS DELETED E81132
+0826 C***********                                                         E81132
+0827 C*****CHECK*SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    E81132
+0828 C*          DATF      COMP 'M'                      98MMDDYY, 98 ON  E81132
+0829 C**********                                                          E81132
+0830 C*                    ENDSR                                          E81132
+0831 C**********                                                          E81132
+0832 C**********                                                          E81132
+     C*****************************************************************   E81132
+** TXT
+RECOVER TO CURRENT STATUS
+RECOVERY REQUESTED TO
+DATABASE SAVE TO DISK
+BEGINNING OF BUSINESS DATABASE SAVE
+DATABASE SAVE - VOL ID
+JOURNAL RECEIVER SAVE
+START RECOVERY POINT                                                      E13205
+NAME OF SAVE FILE IS -
+** MSG
+CHOSEN COMBINATION INVALID
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

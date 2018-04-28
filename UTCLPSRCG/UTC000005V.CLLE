@@ -1,0 +1,217 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT Validity checker for CHKOBJINF')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000005V - Validity checker for CHGOBJDWRK                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. BUG27980 *CREATE   Date 05Aug10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BUG27133 *CREATE   Date 04Feb08              */
+/*                      xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27980 - Remove DBGVIEW (Recompile).                      */
+/*       BUG27133 - CHGOBJINF utility - delivery to core.            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OBJLIB &TYPE &SRCF &SRCFLIB &SRCMBR +
+                          &SRCDATE &COMPILER &OBJLVL &LICPGM &PTF +
+                          &APAR &USRDFNATR &TEXT &USECOUNT +
+                          &PRDOPTLDID &PRDOPTID &CMPID &USEDATE +
+                          &CHGDATE &MBRUSECNT)
+ 
+             DCL        VAR(&OBJLIB) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCDATE) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&COMPILER) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&OBJLVL) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&LICPGM) TYPE(*CHAR) LEN(13)
+             DCL        VAR(&PTF) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&APAR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&USRDFNATR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&USECOUNT) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PRDOPTLDID) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&PRDOPTID) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&CMPID) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&USEDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CHGDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&MBRUSECNT) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&OBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CLASH) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2008')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Break down parameters. */
+             CHGVAR     VAR(&OBJ) VALUE(%SST(&OBJLIB 1 10))
+             CHGVAR     VAR(&LIB) VALUE(%SST(&OBJLIB 11 10))
+ 
+/* Check that the object / library / type combination exists. */
+             CHKOBJ     OBJ(&LIB/&OBJ) OBJTYPE(&TYPE)
+             MONMSG     MSGID(CPF9800) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Either the object / type does +
+                             not exist or the user does not have +
+                             authority to it.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Various combinations of changes are not valid. */
+             IF         COND(&CHGDATE *NE '*SAME') THEN(DO)
+                IF         COND(&SRCF *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&SRCFLIB *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&SRCMBR *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&SRCDATE *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&COMPILER *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&OBJLVL *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&LICPGM *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&PTF *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&APAR *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&USRDFNATR *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&TEXT *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&USECOUNT *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&PRDOPTLDID *NE '*S  ') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&PRDOPTID *NE '*S  ') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&CMPID *NE '*S  ') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&USEDATE *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+                IF         COND(&MBRUSECNT *NE '*SAME') THEN(DO)
+                   CHGVAR     VAR(&CLASH) VALUE('Y')
+                ENDDO
+             ENDDO
+             IF         COND(&CLASH *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Cannot change "Date and Time +
+                             Stamp" and any other value at the same +
+                             time.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* "Last used date" and 'Days used count' can not be changed at the same */
+/*  time.                                                                */
+             IF         COND(&USEDATE *NE '*SAME' *AND &USECOUNT *NE +
+                          '*SAME') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Cannot change "Last Used +
+                             Date" and "Days Used Count" at the same +
+                             time.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Using "Member's days used count" has various restictions, ... */
+             IF         COND(&MBRUSECNT *NE '*SAME') THEN(DO)
+/* ... it can't be used with "Last used date" ... */
+                IF         COND(&USEDATE *NE '*SAME') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Cannot change "Members Days +
+                                Used Count" and "Last Used Date" at the +
+                                same time.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* ... or "Days used count" ... */
+                IF         COND(&USECOUNT *NE '*SAME') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Cannot change "Members Days +
+                                Used Count" and "Days Used Count" at the +
+                                same time.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* ... and it can only be changed for files ... */
+                IF         COND(&TYPE *NE '*FILE') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000"Members Days Used Count" can +
+                                only be used with object type *FILE.') +
+                                MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+/* ... and the speciic member must exist. */
+                CHKOBJ     OBJ(&LIB/&OBJ) OBJTYPE(&TYPE) MBR(&MBRUSECNT)
+                MONMSG     MSGID(CPF9815) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Member' *BCAT &MBRUSECNT +
+                                *BCAT 'does not exist.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+/* "Days used count" and "Last used date" can not be changed for *DOC types. */
+             IF         COND(&TYPE *EQ '*DOC') THEN(DO)
+                IF         COND(&USECOUNT *NE '*SAME') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Cannot change "Days Used +
+                                Count" for object type *DOC.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                IF         COND(&USEDATE *NE '*SAME') THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Cannot change "Last Used +
+                                Date" for object type *DOC.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

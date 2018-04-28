@@ -1,0 +1,431 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Currency Conversion')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  GENERAL LEDGER MODULE
+     F*                                                                  *
+     F*  GL0765 - CURRENCY CONVERSION PROGRAM                            *
+     F*                                                                  *
+     F*  Function: This program Converts an Amount from one Currency  *
+     F*            to another using the spot rates as at a given Date *
+     F*            The amount must be passed, and is returned, in     *
+     F*            standard midas file format. ie the amount has its  *
+     F*            number of decimal places implied by its currency.  *
+     F*                                                               *
+     F*            The returned amount is rounded to an even amount   *
+     F*            whenever the even amount is equivalent to the      *
+     F*            given amount. ie GBP/ITL Cross Rate is 2193        *
+     F*            ITL between 2203 and 2183 will give GBP 1.00 and   *
+     F*            GBP 1.00 will give ITL 2200 (not 2193) being an    *
+     F*            even amount within the 2203 - 2183 range.          *
+     F*                                                               *
+     F*  Parameters: Return Code - Returns Blank if successfull       *
+     F*                            Returns SDCURR1 From Ccy Error     *
+     F*                            Returns SDCURR2 To Ccy Error       *
+     F*                            Returns SDCUHS1 From Ccy Date Error*
+     F*                            Returns SDCUHS2 To Ccy Date Error  *
+     F*              Currency 3A - From Currency                      *
+     F*              Currency 3A - To Currency                        *
+     F*              Date     5N - As at Date (Midas Day Number)      *
+     F*              Amount  19N - Amount to be Converted and Returned*
+     F*                                                               *
+     F*  Calls    : SDCURRR0 - Access program to Currencies.          *
+     F*             SDCUHSR0 - Access program to Historic Spot Rates  *
+     F*                                                               *
+     F*  Called By: Various Programs                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 099050             Date 04Feb98               *
+      *                 XXXXXX             Date DDMmmYY               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+     F*  099050 - Remove calls to rounding sub-routine, as it results    *
+     F*           in discrepancies in Balance Sheet totalling.           *
+     F*           The routine is not completely removed as it may be     *
+     F*           re-worked in future.                                   *
+     F*  XXXXXX - XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  *
+     F*                                                                  *
+     F********************************************************************
+     F*  P R O G R A M     C R E A T I O N     P A R A M E T E R S    *
+     F*                                                               *
+     F*                                                               *
+     F********************************************************************
+     F*                                                                  *
+     F*        D F C H L   FUNCTION INDICATOR                            *
+     F*                                                                  *
+     F*        90     SDCURRPD File Error for FROM Currency              *
+     F*        91     SDCUHSPD File Error for FROM Currency/Date         *
+     F*        92     SDCURRPD File Error for TO Currency                *
+     F*        93     SDCUHSPD File Error for TO Currency/Date           *
+     F*                                                                  *
+     F********************************************************************
+     E*ESTART
+      ****************************************************************
+     E                    POWER8  1   8  8 3             POWER ARRAY
+     E*
+     E* Description : Copyright notice for inclusion in all programs
+     E                    CPY@    1   1 80               Copyright     array
+      ****************************************************************
+     I*ISTART
+      ****************************************************************
+     I* Description : Copyright notice for inclusion in all programs
+     I*
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     I*
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     ISDCURR    E DSSDCURRPD
+      * @A6REA3 - Currency record format data structure
+      *
+     ISDCUHS    E DSSDCUHSPD
+      * SDCUHSD0 - Historic Exchange rates record format data structure
+      *
+     IP@FMT     E DSDSSDY
+     I* External Data structure to hold the outgoing record format
+     I* of the file.
+      *
+      ************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@CUR1  3        I:From Ccy
+     C                     PARM           P@CUR2  3        I:To Ccy
+     C                     PARM           P@DATE  50       I:As at Date
+     C                     PARM           P@AMT  190       B:Amount
+      *****************************************************
+     C*
+     C** Define work fields
+     C*
+     C           *LIKE     DEFN A6NBDP    FCDP
+     C           *LIKE     DEFN A6NBDP    TCDP
+     C           *LIKE     DEFN F@SPRT    FSPRT
+     C           *LIKE     DEFN F@SPRT    TSPRT
+     C           *LIKE     DEFN F@SPRT    WSPRT
+     C           *LIKE     DEFN F@SPRT    T@SPRT
+     C           *LIKE     DEFN F@SPRT    W1SPRT
+     C           *LIKE     DEFN F@SPRT    W2SPRT
+     C           *LIKE     DEFN W@AMT     WPAMT
+     C           *LIKE     DEFN W@AMT     W1AMT
+     C           *LIKE     DEFN W@AMT     W2AMT
+     C           *LIKE     DEFN W@AMT     W3AMT
+     C           *LIKE     DEFN P@DATE    @DAT3
+     C           *LIKE     DEFN P@DATE    @DAT4
+     C           *LIKE     DEFN P@CUR1    @CUR2
+     C           *LIKE     DEFN P@CUR1    @CUR3
+     C           *LIKE     DEFN P@CUR1    @CUR4
+     C           *LIKE     DEFN G2MDIN    FMDIN
+     C           *LIKE     DEFN G2MDIN    F@MDIN
+     C           *LIKE     DEFN G2MDIN    TMDIN
+     C           *LIKE     DEFN G2MDIN    T@MDIN
+      *****************************************************
+      *MAIN
+      *
+     C                     SETOF                     909192
+     C                     SETOF                     93
+      *
+      ** Access From Currency Decimal places
+      *
+     C           P@CUR1    IFNE @CUR1
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM P@CUR1    @CUR1   3
+     C           SDCURR    PARM SDCURR    P@FMT
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN90
+     C           *IN90     CABEQ'1'       DBERR          LR
+     C                     END
+     C*
+     C                     Z-ADDA6NBDP    FCDP
+     C                     END
+     C*
+      *
+      ** Access From Historic Spot Rate for new date
+      *
+     C           P@DATE    IFNE @DAT3
+     C           P@CUR1    ORNE @CUR3
+      *
+     C                     CALL 'AOCUHSR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM P@DATE    @DAT3
+     C                     PARM P@CUR1    @CUR3
+     C           SDCUHS    PARM SDCUHS    P@FMT
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN91
+     C           *IN91     CABEQ'1'       DBERR          LR
+     C                     END
+      *
+     C                     Z-ADDG2SPRT    F@SPRT 179
+     C                     MOVE G2MDIN    F@MDIN
+     C                     END
+      *
+      ** Access To Historic Spot Rate for new date
+      *
+     C           P@DATE    IFNE @DAT4
+     C           P@CUR2    ORNE @CUR4
+     C                     CALL 'AOCUHSR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM P@DATE    @DAT4
+     C                     PARM P@CUR2    @CUR4
+     C           SDCUHS    PARM SDCUHS    P@FMT
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN93
+     C           *IN93     CABEQ'1'       DBERR          LR
+     C                     END
+     C*
+     C                     Z-ADDG2SPRT    T@SPRT
+     C                     MOVE G2MDIN    T@MDIN
+     C                     END
+      *
+      ** Access To Currency Decimal places if changed
+      *
+     C           P@CUR2    IFNE @CUR2
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM P@CUR2    @CUR2
+     C           SDCURR    PARM SDCURR    P@FMT
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN92
+     C           *IN92     CABEQ'1'       DBERR          LR
+     C                     END
+     C*
+     C                     Z-ADDA6NBDP    TCDP
+     C                     END
+      *
+      ** Calculate the Cross Currency Decimal Places and Save Amount
+      *
+     C           FCDP      SUB  TCDP      DP      20
+     C                     ADD  4         DP
+     C                     Z-ADDP@AMT     WPAMT
+     C                     Z-ADDF@SPRT    FSPRT
+     C                     MOVE F@MDIN    FMDIN
+     C                     Z-ADDT@SPRT    TSPRT
+     C                     MOVE T@MDIN    TMDIN
+      *
+      ** Calculate Currency Cross Rate
+      *
+      ** Multiply/Divide indicators are the Same
+      *
+     C           FMDIN     IFEQ TMDIN
+      *
+      ** Determine the most accurate Cross Rate
+      *
+     C           TSPRT     DIV  FSPRT     W1SPRT    H
+     C                     MULT FSPRT     W1SPRT
+     C           W1SPRT    SUB  TSPRT     W2SPRT
+     C           FSPRT     DIV  TSPRT     W1SPRT    H
+     C                     MULT TSPRT     W1SPRT
+     C           W1SPRT    SUB  FSPRT     W1SPRT
+      *
+      ** Remove Sign from Rates
+      *
+     C           W1SPRT    IFLT 0
+     C                     Z-SUBW1SPRT    W1SPRT
+     C                     END
+      *
+     C           W2SPRT    IFLT 0
+     C                     Z-SUBW2SPRT    W2SPRT
+     C                     END
+      *
+      ** If the TO Rate divided by the FROM Rate is the most accurate,
+      *
+      *
+     C           W1SPRT    IFGT W2SPRT
+      *
+      ** Reverse Multiply/Divide indicator
+      *
+     C           FMDIN     IFEQ 'M'
+     C                     MOVE 'D'       FMDIN
+     C                     ELSE
+     C                     MOVE 'M'       FMDIN
+     C                     END
+     C*
+     C** And Reverse Exchange Rates
+     C*
+     C                     Z-ADDF@SPRT    TSPRT
+     C                     Z-ADDT@SPRT    FSPRT
+     C*
+     C                     END
+     C*
+     C** Convert Amount to REPORT currency Amount
+     C*
+     C           FMDIN     IFEQ 'M'
+     C*
+     C** Adjust the Amount for Currency Decimal Places
+     C*
+     C           DP        IFLT 4
+     C                     DIV  POWER8,DP FSPRT
+     C                     END
+     C*
+     C           WPAMT     MULT FSPRT     W@AMT  200H
+     C                     Z-ADDFSPRT     WSPRT
+     C**********           EXSR ROUND                                     099050
+     C                     DIV  TSPRT     W@AMT     H
+     C*
+     C** ELSE - Multiply/ Divide Indicator is 'D'
+     C*
+     C                     ELSE
+     C*
+     C** Adjust the TO RATE for Currency Decimal Places
+     C*
+     C           DP        IFLT 4
+     C                     DIV  POWER8,DP TSPRT
+     C                     END
+     C*
+     C           WPAMT     MULT TSPRT     W@AMT     H
+     C                     Z-ADDTSPRT     WSPRT
+     C**********           EXSR ROUND                                     099050
+     C                     DIV  FSPRT     W@AMT     H
+     C                     END
+     C*
+     C           FSPRT     DIV  TSPRT     WSPRT     H
+      *
+      ** ELSE  Multiply/Divide indicators are Different
+      *
+     C                     ELSE
+     C*
+     C** Convert Amount to REPORT currency Amount
+     C*
+     C           FMDIN     IFEQ 'M'
+     C*
+     C** Adjust the FROM RATE for Currency Decimal Places
+     C*
+     C           DP        IFLT 4
+     C                     DIV  POWER8,DP FSPRT
+     C                     END
+      *
+     C           WPAMT     MULT FSPRT     W@AMT     H
+     C                     Z-ADDFSPRT     WSPRT
+     C**********           EXSR ROUND                                     099050
+     C                     MULT TSPRT     W@AMT     H
+     C*
+     C** ELSE - Multiply/ Divide Indicator is 'D'
+     C*
+     C                     ELSE
+      *
+     C** Adjust the Amount for Currency Decimal Places
+     C*
+     C           DP        IFLT 4
+     C                     DIV  POWER8,DP WPAMT
+     C                     END
+      *
+     C           WPAMT     DIV  FSPRT     W@AMT     H
+     C                     Z-ADDFSPRT     WSPRT
+     C**********           EXSR ROUND                                     099050
+     C                     DIV  TSPRT     W@AMT     H
+     C                     END
+      *
+     C           TSPRT     MULT FSPRT     WSPRT     H
+      *
+     C                     END
+     C*
+     C** Round Answer
+     C*
+     C**********           EXSR ROUND                                     099050
+     C*
+     C** Adjust the Amount for Currency Decimal Places
+     C*
+     C           DP        IFGT 4
+     C                     DIV  POWER8,DP W@AMT     H
+     C                     END
+     C*
+     C** Output Converted Amount
+     C*
+     C                     Z-ADDW@AMT     P@AMT
+     C*
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           DBERR     TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE 'CURRPD1' P@RTCD           Ccy1 error
+     C   91                MOVE 'CUHSPD1' P@RTCD           Hsp1 error
+     C   92                MOVE 'CURRPD2' P@RTCD           Ccy2 error
+     C   93                MOVE 'CUHSPD2' P@RTCD           Hsp2 error
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  ROUND --- Subroutine to Round the result
+     C*
+     C*  CALLED FROM: Main
+     C*
+     C********************************************************************
+     C*
+     C           ROUND     BEGSR
+     C*
+     C** Round result if Rounded result is still correct
+     C*
+     C                     Z-ADD8         X       10
+     C*
+     C           X         DOWGT4
+     C           W@AMT     DIV  POWER8,X  W1AMT     H
+     C                     MULT POWER8,X  W1AMT     H
+     C*
+     C           W1AMT     DIV  WSPRT     W2AMT     H
+     C           W1AMT     MULT WSPRT     W3AMT     H
+     C*
+     C           W2AMT     IFEQ WPAMT
+     C           W3AMT     OREQ WPAMT
+     C                     Z-ADDW1AMT     W@AMT
+     C                     Z-ADD4         X
+     C                     END
+     C*
+     C                     SUB  1         X
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      *ENDMAIN
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

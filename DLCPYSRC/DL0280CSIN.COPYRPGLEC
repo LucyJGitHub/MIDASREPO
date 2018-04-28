@@ -1,0 +1,706 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  DL0280 - DL0280CSIN                                          *
+      *                                                               *
+      *  Last Amend No. CER069             Date 03Jul14               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG26877           Date 13Jan10               *
+      *                 BUG26037B          Date 12Oct09               *
+      *                 BUG25533           Date 19Aug09               *
+      *                 BUG24768           Date 07Jun09               *
+      *                 BUG24051           Date 27May09               *
+      *                 BUG23732           Date 23Apr09               *
+      *                 BUG23932A          Date 25May09               *
+      *                 BUG24053           Date 20May09               *
+      *                 CER054             Date 07Apr09               *
+      *                 BUG23123B          Date 17Apr09               *
+      *                 BUG23931           Date 11May09               *
+      *                 BUG23123           Date 09Mar09               *
+      *                 BUG23139           Date 03Mar09               *
+      *                 BUG23115A          Date 02Mar09               *
+      *                 BUG23009A          Date 27Feb09               *
+      *                 BUG23115           Date 26Feb09               *
+      *                 BUG23009           Date 19Feb09               *
+      *                 BUG22911           Date 17Feb09               *
+      *                 BUG22584           Date 16Feb09               *
+      *                 CER048A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 05May06               *
+      *                 CGL035             Date 01Mar05               *
+      *                 234650             Date 04Jul05               *
+      *                 234351             Date 22Jun05               *
+      *                 233277  *CREATE    Date 28Apr05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER069 - German Tax Enhancement                              *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26877 - Incorrect computation of tax for main customer    *
+      *             and member as shown in Deals inquiry              *
+      *  BUG26037B - Components DLC0606B seq 00001 and REC62N seq     *
+      *              00001 failed in COB                              *
+      *  BUG25533 - Non Generation of Withholding Tax per Federal     *
+      *             State Report during Input Cycle and after COB     *
+      *             (Applied BUG24714 fix)                            *
+      *  BUG24714 - Non Generation of Withholding Tax per Federal     *
+      *             State Report during Input Cycle and after COB     *
+      *  BUG24768 - Limit Util Enq's first screen should include      *
+      *             third tax                                         *
+      *  BUG24051 - Incorrect Threshold Utilisation Postings          *
+      *  BUG23732 - Joint Account threshold                           *
+      *  BUG23932A - Base currency amount conversion is incorrect     *
+      *  BUG24053 - Non taxable transaction generated third tax in    *
+      *             SDCSINPD                                          *
+      *  CER054 - German Features - Church Tax                        *
+      *  BUG23123B - Inaccurate Dates are being printed               *
+      *  BUG23931 - Int earned upto threshold figure incorrect on CCY *
+      *  BUG23123 - Report: Does not show Retail Account Number       *
+      *                     Date is not Midas Standard Date           *
+      *                     Period should be actual int. calc. period *
+      *                     Secondary Tax amount is not printed       *
+      *                     Added field TSSLID                        *
+      *  BUG23139- Populate the value of the field TITOUT(Utilisation)*
+      *            from base currency instead of original currency    *
+      *  BUG23115A - Reversal of 23115 to centralise fix on ZATXCLTH  *
+      *  BUG23009A- Seconday Tax Duducted from Net Interest Amount    *
+      *             in Tax Ccy                                        *
+      *  BUG23115 - Limit utilisation is not updating correctly       *
+      *  BUG23009- Seconday Tax Duducted from Net Interest Amount     *
+      *            in Tax Ccy                                         *
+      *  BUG22911 - Changes for Correct Tax Calculation               *
+      *  BUG22584- Component DLC0606B 00001 failed                    *
+      *  CER048A - German Features - Taxes                            *
+      *  CSD027A- Conversion of cust. no. to alpha                    *
+      *  CGL035 - EUSD Upgrade to Midasplus                           *
+      *  234650 - Tax amount does not appear on Projected A/c         *
+      *           Movement.                                           *
+      *  234351 - Tax double on Money Market transaction.             *
+      *  233277 - Output to SDCSINPD should be done in DL0280         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCSIN - Write record to Customer Income file                *
+      *                                                               *
+      *****************************************************************
+     C     SRCSIN        BEGSR
+      ***********                                                                      234351 234650
+      ***Skip*processing if not COB.                                                   234351 234650
+      ***********                                                                      234351 234650
+     C*****INU1          IFEQ      *OFF                                                234351 234650
+     C**********         GOTO      ENCSIN                                              234351 234650
+     C**********         ENDIF                                                         234351 234650
+      *
+      ** Write to Customer Income file only if status is TAXAB, DISCL or
+      ** SELF
+      *
+     C                   Z-ADD     *ZERO         TSTXSB                                     BUG24051
+     C                   Z-ADD     *ZERO         TSSTDB                                     BUG24051
+     C                   Z-ADD     *ZERO         TSGINB                                     BUG24051
+     C                   Z-ADD     *ZERO         TSNINB                                     BUG24051
+      *                                                                                     BUG24051
+     C     @@TOTO        IFNE      *ZERO                                                    BUG24051
+      *                                                                                     BUG24051
+     C     @@STAT        IFNE      'TAXAB'
+     C     @@STAT        ANDNE     'DISCL'
+     C     @@STAT        ANDNE     'SELF '
+     C                   GOTO      ENCSIN
+     C                   ENDIF
+      *
+     C                   Z-ADD     BJRDNB        TSRDNB
+     C                   Z-ADD     @@ENDD        TSEDAT
+      *
+      ** Convert Tax Calculation Date to friendly date.
+      *
+     C                   CALL      'ZDATE2'
+     C                   PARM      TSEDAT        PZDAYN            5 0
+     C                   PARM      BJDFIN        PZDATF            1
+     C                   PARM      *ZERO         PZDATE            6 0
+     C                   PARM      *BLANKS       PZADAT            7
+      *
+      ** Get year and month.
+      *
+     C                   MOVE      PZDATE        WYEAR             2
+     C                   MOVEL     PZDATE        WTEMP             4
+      *
+     C     BJDFIN        IFEQ      'D'
+     C                   MOVE      WTEMP         WMONTH            2
+     C                   ELSE
+     C                   MOVEL     WTEMP         WMONTH
+     C                   ENDIF
+      *
+      ** Derive the Tax Year.
+      *
+     C                   MOVEL     '20'          WTAXY             4
+     C                   MOVE      WYEAR         WTAXY
+     C                   MOVE      WTAXY         TSTAXY
+      *
+     C                   MOVE      WMONTH        TSTAXM
+      *
+     C                   MOVE      @@CTAX        TSCTRT
+     C                   MOVE      @@BRCA        TSBRCA
+     C                   MOVE      @@CUST        TSCUST
+      *
+     C     WTXJA         IFEQ      'Y'
+     C                   MOVE      @@JANO        TSJOIN
+     C                   MOVE      @@NARF        TSNAHO
+     C                   MOVE      @@INVP        TSINVP
+     C                   ELSE
+     C**********         Z-ADD     *ZERO         TSJOIN                                      CSD027A
+     C                   Eval      TSJOIN = *Blanks                                          CSD027A
+     C                   MOVE      *BLANKS       TSNAHO
+     C                   MOVE      *BLANKS       TSINVP
+     C                   ENDIF
+      *
+      ** Customer Status
+      *
+     C                   SELECT
+     C     @@STAT        WHENEQ    'DISCL'
+     C                   MOVE      'D'           TSSTAT
+     C     @@STAT        WHENEQ    'SELF '
+     C                   MOVE      'S'           TSSTAT
+     C     @@STAT        WHENEQ    'TAXAB'
+     C                   MOVE      'T'           TSSTAT
+     C                   ENDSL
+      *
+      ** Retrieve Customer Details
+      *
+     C                   EXSR      SRCUST
+      *
+     C     @@CUST        IFNE      *BLANKS
+     C                   MOVE      E5CNA1        TSFAMN
+     C                   MOVE      E5CNA2        TSFIRN
+     C     E5CNA3        CAT       E5CNA4        TSSTRT
+     C                   MOVE      E5ZIPC        TSZIPC
+     C                   MOVE      E5CITY        TSCITY
+     C                   MOVE      E5TINO        TSRTIN
+     C                   MOVE      E5DBTH        TSDBTH
+     C                   MOVE      E5BTHT        TSTBTH
+     C                   MOVE      E5BTHC        TSCBTH
+     C                   ENDIF
+      *
+     C     @@NARF        IFNE      *BLANKS
+     C                   MOVE      NHIDE1        TSFAMN
+     C                   MOVE      NHIDE2        TSFIRN
+     C     NHIDE3        CAT       NHIDE4        TSSTRT
+     C                   MOVE      NHZIPC        TSZIPC
+     C                   MOVE      NHCITY        TSCITY
+     C                   MOVE      NHTINO        TSRTIN
+     C                   MOVE      NHDBTH        TSDBTH
+     C                   MOVE      NHBTHT        TSTBTH
+     C                   MOVE      NHBTHC        TSCBTH
+     C                   ENDIF
+      *
+     C                   MOVE      @@COLC        TSRCTR
+      *
+      ** Convert the Interest Calculation End Date to YYYYMMDD format.
+      *
+     C                   Z-ADD     @@ENDD        @@DAYN            5 0
+     C                   EXSR      ZDATE9
+     C                   MOVE      @@VDT         TSIPDT
+      *
+     C                   MOVE      @@TXBS        TSTXBS
+     C                   MOVE      @@WTAC        TSWTAC
+      *
+     C**********         Z-ADD     @@STRD        @@DAYN            5 0            BUG23123 BUG23123B
+     C**********         EXSR      ZDATE9                                         BUG23123 BUG23123B
+     C**********         MOVE      @@VDT         TSSLID                           BUG23123 BUG23123B
+     C                   Z-ADD     @@STRD        TSSLID                                    BUG23123B
+                                                                                            BUG23123
+      ** Original Currency Details
+      *
+     C                   MOVE      PCCY          TSOCCY
+     C                   MOVE      PCCY          PPCCY
+     C                   EXSR      SRCURR
+     C     A6MDIN        IFEQ      'D'
+     C                   Z-ADD     A6SPRT        TSOCSR
+     C                   ELSE
+                                                                                           BUG23009A
+      ** If German Features - Taxes is on, use margin points                               BUG23009A
+     C                   IF        CER048 = 'Y'                                            BUG23009A
+     C     A6SPRT        SUB       A6TCMP        WSPRT            13 8                     BUG23009A
+     C     1             DIV(H)    WSPRT         TSOCSR                                    BUG23009A
+     C                   ELSE                                                              BUG23009A
+     C     1             DIV(H)    A6SPRT        TSOCSR
+     C                   ENDIF                                                             BUG23009A
+                                                                                           BUG23009A
+     C                   ENDIF
+     C                   MOVE      'D'           TSOCMD
+     C                   Z-ADD     A6NBDP        TSOCDP
+      *
+      ** Settlement Details
+      *
+     C                   MOVE      TSOCCY        TSSCCY
+     C                   MOVE      TSOCSR        TSSCSR
+     C                   MOVE      TSOCMD        TSSCMD
+     C                   MOVE      TSOCDP        TSSCDP
+      *
+      ** Tax Details
+      *
+     C                   MOVE      @@TXCY        TSTXCY
+     C                   MOVE      @@TXCY        PPCCY
+     C                   EXSR      SRCURR
+     C     A6MDIN        IFEQ      'D'
+     C                   Z-ADD     A6SPRT        TSTCSR
+     C                   ELSE
+                                                                                           BUG23009A
+      ** If German Features - Taxes is on, use margin points                               BUG23009A
+     C                   IF        CER048 = 'Y'                                            BUG23009A
+     C     A6SPRT        SUB       A6TCMP        WSPRT                                     BUG23009A
+     C     1             DIV(H)    WSPRT         TSTCSR                                    BUG23009A
+     C                   ELSE                                                              BUG23009A
+     C     1             DIV(H)    A6SPRT        TSTCSR
+     C                   ENDIF                                                             BUG23009A
+                                                                                           BUG23009A
+     C                   ENDIF
+     C                   MOVE      'D'           TSTCMD
+     C                   Z-ADD     A6NBDP        TSTCDP
+      *                                                                                    BUG23932A
+      ** Base currency details                                                             BUG23932A
+      *                                                                                    BUG23932A
+     C                   MOVE      BJCYCD        PPCCY                                     BUG23932A
+     C                   EXSR      SRCURR                                                  BUG23932A
+     C                   Z-ADD     A6NBDP        BJCDP             1 0                     BUG23932A
+      *
+      ** Exchange Rate
+      *
+     C                   Z-ADD     1             TSXROS
+     C                   Z-ADD     TSOCSR        ZRATE1           13 8
+     C                   MOVE      TSOCMD        ZMDI1             1
+     C                   Z-ADD     TSTCSR        ZRATE2           13 8
+     C                   MOVE      TSTCMD        ZMDI2             1
+     C**********         EXSR      ZXRATE                                                     CGL035
+     C                   CALL      'ZXRATE'                                                   CGL035
+     C                   PARM                    ZRATE1                                       CGL035
+     C                   PARM                    ZMDI1                                        CGL035
+     C                   PARM                    ZRATE2                                       CGL035
+     C                   PARM                    ZMDI2                                        CGL035
+     C                   PARM                    ZRATEX           13 8                        CGL035
+     C                   PARM                    ZMDIX             1                          CGL035
+     C                   Z-ADD     ZRATEX        TSXRST
+     C                   MOVE      'D'           TSOSMD
+     C                   MOVE      ZMDIX         TSSTMD
+      *
+     C                   MOVE      'D'           TSMODI
+     C                   MOVEL     'Deposit '    WWRK1            12
+     C                   MOVE      'No. '        WWRK1
+     C     WWRK1         CAT       WDLNO         WWRK2            18
+     C                   MOVEL     WWRK2         TSINST
+     C                   MOVEL     DTYP          TSTRTP
+     C                   MOVEL     DLST          TSTRST
+     C                   Z-ADD     DLNO          TSDLLN
+     C                   Z-ADD     *ZERO         TSACOD
+     C                   Z-ADD     *ZERO         TSACSQ
+     C                   Z-ADD     PAMT          TSPAMT
+      *                                                                                      CER048A
+     C                   EVAL      TSSTDO = WNSTXA                                           CER048A
+     C**********         EVAL      TSSTRA = @@STTR                                  CER048A BUG22911
+     C                   EVAL      TSSTRA = PSTTR                                           BUG22911
+     C                   EVAL      TSSTDS = TSSTDO                                           CER048A
+     C**********         EVAL      TSSTXB = @@STXB                                  CER048A BUG22911
+     C**********         EVAL      TSSTAC = @@STAC                                  CER048A BUG22911
+     C                   EVAL      TSSTXB = PSTXB                                           BUG22911
+     C                   EVAL      TSSTAC = PSTAC                                           BUG22911
+     C                   EVAL      TSTTDO = WNTTXA                                            CER054
+     C                   EVAL      TSTTRA = PTTTR                                             CER054
+     C                   EVAL      TSTTDS = TSTTDO                                            CER054
+     C                   EVAL      TSTTXB = PTTXB                                             CER054
+     C                   EVAL      TSTTAC = PTTAC                                             CER054
+     C                   IF        CER048 = 'Y'                                             BUG24714
+     C                   EVAL      TSSTCD = PSTCD                                           BUG24053
+     C                   ENDIF                                                              BUG24714
+     C                   EVAL      TSRLAF = PRLAF                                           BUG24053
+      *                                                                                      CER048A
+     C                   Z-ADD     @@TOTO        TSGINT
+     C                   Z-ADD     @@TXR1        TSTXRT
+     C                   Z-ADD     @@TAXA        TSTXSR
+     C*****TSGINT        SUB       TSTXSR        TSNINT                                      CER048A
+     C                   EVAL      TSNINT = TSGINT - TSTXSR - TSSTDO                         CER048A
+     C                             - TSTTDO                                                   CER054
+     C                   Z-ADD     TSPAMT        TSPAMS
+     C                   Z-ADD     TSGINT        TSGINS
+     C                   Z-ADD     TSTXSR        TSTXSS
+     C                   Z-ADD     TSNINT        TSNINS
+      *                                                                                      CER048A
+      ** Setting the value for portion of threshold used                                     CER048A
+      *                                                                                      CER048A
+     C**********         IF        EWTHMD = 'Y'                                     CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         Z-ADD     *ZEROS        WKUtil           15 0              CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********     KIPhl2        KLIST                                            CER048A BUG22911
+     C**********         KFLD                    WCNUM                              CER048A BUG22911
+     C**********         KFLD                    @@BRCA                             CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+      ***Read*Interest Payment History file                                         CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********     KIPhl2        CHAIN     SDINPHL2                               CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         IF        %FOUND(SDINPHL2)                                 CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+      ***Calculation for the portion of threshold used in org currency              CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         EVAL      WKUtil = TIUTTH + TSGINT                         CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         IF        WKUtil <= TICUTH                                 CER048A BUG22911
+     C**********         EVAL      TSPTHU = TSGINT                                  CER048A BUG22911
+     C**********         ELSE                                                       CER048A BUG22911
+     C**********         EVAL      TSPTHU = TICUTH - TIUTTH                         CER048A BUG22911
+     C**********         ENDIF                                                      CER048A BUG22911
+     C**********         ENDIF                                                      CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         ENDIF                                                      CER048A BUG22911
+      *                                                                                     BUG22911
+      ** Set the portion of threshold used (in base currency)                               BUG22911
+      *                                                                                     BUG22911
+     C                   EVAL      TSPTHU = PPORT                                           BUG22911
+      *                                                                                      CER048A
+      ** Secondary Tax Amount in Original Currency to tax Currency                           CER048A
+      *                                                                                      CER048A
+     C                   EVAL      TSSTDT = TSSTDO                                           CER048A
+     C                   IF        TSOCCY <> TSTXCY                                          CER048A
+      *                                                                                      CER048A
+     C                   EVAL      ZAMTCI =  TSSTDO                                          CER048A
+     C                   EVAL      ZEXCH  =  TSXRST                                          CER048A
+     C                   EVAL      ZMD    =  TSSTMD                                          CER048A
+     C                   EVAL      ZCDPI  =  TSOCDP                                          CER048A
+     C                   EVAL      ZCDPO  =  TSTCDP                                          CER048A
+      *                                                                                      CER048A
+     C                   EXSR      ZCONVN                                                    CER048A
+      *                                                                                      CER048A
+     C                   EVAL      TSSTDT = ZAMTCO                                           CER048A
+      *                                                                                      CER048A
+     C                   ENDIF                                                               CER048A
+      *                                                                                      CER048A
+      ** Secondary Tax Amount in Original Currency to base Currency                          CER048A
+      *                                                                                      CER048A
+     C                   EVAL      TSSTDB = TSSTDO                                           CER048A
+      *                                                                                      CER048A
+     C                   IF        TSOCCY <> BJCYCD                                          CER048A
+      *                                                                                      CER048A
+     C                   EVAL      ZAMTCI =  TSSTDO                                          CER048A
+     C                   EVAL      ZEXCH  =  TSOCSR                                          CER048A
+     C                   EVAL      ZMD    =  TSOCMD                                          CER048A
+     C                   EVAL      ZCDPI  =  TSOCDP                                          CER048A
+     C**********         EVAL      ZCDPO  =  ZCDPI                                 CER048A BUG23932A
+     C                   EVAL      ZCDPO  =  BJCDP                                         BUG23932A
+      *                                                                                      CER048A
+     C                   EXSR      ZCONVN                                                    CER048A
+      *                                                                                      CER048A
+     C                   EVAL      TSSTDB = ZAMTCO                                           CER048A
+      *                                                                                      CER048A
+     C                   ENDIF                                                               CER048A
+      *                                                                                       CER054
+      ** Third Tax Amount in Original Currency to tax Currency                                CER054
+      *                                                                                       CER054
+     C                   EVAL      TSTTDT = TSTTDO                                            CER054
+     C                   IF        TSOCCY <> TSTXCY                                           CER054
+                                                                                              CER054
+     C                   EVAL      ZAMTCI =  TSTTDO                                           CER054
+     C                   EVAL      ZEXCH  =  TSXRST                                           CER054
+     C                   EVAL      ZMD    =  TSSTMD                                           CER054
+     C                   EVAL      ZCDPI  =  TSOCDP                                           CER054
+     C                   EVAL      ZCDPO  =  TSTCDP                                           CER054
+                                                                                              CER054
+     C                   EXSR      ZCONVN                                                     CER054
+                                                                                              CER054
+     C                   EVAL      TSTTDT = ZAMTCO                                            CER054
+                                                                                              CER054
+     C                   ENDIF                                                                CER054
+      *                                                                                       CER054
+      ** Third Tax Amount in Original Currency to base Currency                               CER054
+      *                                                                                       CER054
+     C                   EVAL      TSTTDB = TSTTDO                                            CER054
+                                                                                              CER054
+     C                   IF        TSOCCY <> BJCYCD                                           CER054
+                                                                                              CER054
+     C                   EVAL      ZAMTCI =  TSTTDO                                           CER054
+     C                   EVAL      ZEXCH  =  TSOCSR                                           CER054
+     C                   EVAL      ZMD    =  TSOCMD                                           CER054
+     C                   EVAL      ZCDPI  =  TSOCDP                                           CER054
+     C                   EVAL      ZCDPO  =  ZCDPI                                            CER054
+                                                                                              CER054
+     C                   EXSR      ZCONVN                                                     CER054
+                                                                                              CER054
+     C                   EVAL      TSTTDB = ZAMTCO                                            CER054
+                                                                                              CER054
+     C                   ENDIF                                                                CER054
+      *
+      ** Principal Amount in Tax Currency
+      *
+     C                   Z-ADD     PAMT          TSPAMC
+     C     TSOCCY        IFNE      TSTXCY
+     C                   Z-ADD     PAMT          ZAMTCI
+     C                   Z-ADD     TSXRST        ZEXCH
+     C                   MOVE      TSSTMD        ZMD
+     C                   Z-ADD     TSOCDP        ZCDPI
+     C                   Z-ADD     TSTCDP        ZCDPO
+     C                   EXSR      ZCONVN
+     C                   Z-ADD     ZAMTCO        TSPAMC
+     C                   ENDIF
+      *
+      ** Gross Interest Amount in Tax Currency
+      *
+     C                   Z-ADD     @@TOTO        TSGINC
+     C     TSOCCY        IFNE      TSTXCY
+     C                   Z-ADD     @@TOTO        ZAMTCI
+     C                   Z-ADD     TSXRST        ZEXCH
+     C                   MOVE      TSSTMD        ZMD
+     C                   Z-ADD     TSOCDP        ZCDPI
+     C                   Z-ADD     TSTCDP        ZCDPO
+     C                   EXSR      ZCONVN
+     C                   Z-ADD     ZAMTCO        TSGINC
+     C                   ENDIF
+     C**********                                                                    CER048A BUG22911
+     C***Current threshold in tax currency                                          CER048A BUG22911
+     C**********                                                                    CER048A BUG22911
+     C**********         Z-ADD     TICUTH        WCUTHT           15 0              CER048A BUG22911
+     C**********         IF        TSOCCY <> TSTXCY                                 CER048A BUG22911
+     C**********         EVAL      ZAMTCI = TICUTH                                  CER048A BUG22911
+     C**********         EVAL      ZEXCH  = TSXRST                                  CER048A BUG22911
+     C**********         EVAL      ZMD    = TSSTMD                                  CER048A BUG22911
+     C**********         EVAL      ZCDPI  = TSOCDP                                  CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         EVAL      ZCDPO  = TSTCDP                                  CER048A BUG22911
+     C**********                                                                    CER048A BUG22911
+     C**********         EXSR      ZCONVN                                           CER048A BUG22911
+     C**********                                                                    CER048A BUG22911
+     C**********         EVAL      WCUTHT = ZAMTCO                                  CER048A BUG22911
+     C**********         ENDIF                                                      CER048A BUG22911
+     C**********                                                                    CER048A BUG22911
+     C***Utilisation up to threshold in Tax Currency                                CER048A BUG22911
+     C**********                                                                    CER048A BUG22911
+     C**********         Z-ADD     TIUTTH        WUTTHT           15 0              CER048A BUG22911
+     C**********         IF        TSOCCY <> TSTXCY                                 CER048A BUG22911
+     C**********         EVAL      ZAMTCI = TIUTTH                                  CER048A BUG22911
+     C**********         EVAL      ZEXCH  = TSXRST                                  CER048A BUG22911
+     C**********         EVAL      ZMD    = TSSTMD                                  CER048A BUG22911
+     C**********         EVAL      ZCDPI  = TSOCDP                                  CER048A BUG22911
+     C**********         EVAL      ZCDPO  = TSTCDP                                  CER048A BUG22911
+     C**********                                                                    CER048A BUG22911
+     C**********         EXSR      ZCONVN                                           CER048A BUG22911
+     C**********                                                                    CER048A BUG22911
+     C**********         EVAL      WUTTHT = ZAMTCO                                  CER048A BUG22911
+     C**********         ENDIF                                                      CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         IF        %FOUND(SDINPHL2)                                 CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+      ***Calculation for the portion of threshold used in tax currency              CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         EVAL      WKUtil = WUTTHT + TSGINC                         CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         IF        WKUtil <= WCUTHT                                 CER048A BUG22911
+     C**********         EVAL      TSPTUT = TSGINC                                  CER048A BUG22911
+     C**********         ELSE                                                       CER048A BUG22911
+     C**********         EVAL      TSPTUT = WCUTHT - WUTTHT                         CER048A BUG22911
+     C**********         ENDIF                                                      CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         ENDIF                                                      CER048A BUG22911
+      *                                                                                     BUG22911
+      ** Calculation for the portion of threshold used in tax currency                      BUG22911
+      *                                                                                     BUG22911
+     C                   Z-ADD     TSPTHU        TSPTUT                                     BUG22911
+      *                                                                                     BUG22911
+     C                   IF        BJCYCD <> TSTXCY                                         BUG22911
+      *                                                                                     BUG22911
+      ** Base currency details                                                              BUG22911
+      *                                                                                     BUG22911
+     C                   EVAL      PPCCY = BJCYCD                                           BUG22911
+     C                   EXSR      SRCURR                                                   BUG22911
+      *                                                                                     BUG22911
+      ** Base currency to tax currency conversion                                           BUG22911
+      *                                                                                     BUG22911
+     C                   Z-ADD     TSPTHU        ZAMTCI                                     BUG22911
+     C                   Z-ADD     TSXRST        ZEXCH                                      BUG22911
+     C                   MOVE      TSSTMD        ZMD                                        BUG22911
+     C                   Z-ADD     A6NBDP        ZCDPI                                      BUG22911
+     C                   Z-ADD     TSTCDP        ZCDPO                                      BUG22911
+     C                   EXSR      ZCONVN                                                   BUG22911
+     C                   Z-ADD     ZAMTCO        TSPTUT                                     BUG22911
+      *                                                                                     BUG22911
+     C                   ENDIF                                                              BUG22911
+      *
+      ** Tax Deducted at Source in Tax Currency
+      *
+     C                   Z-ADD     @@TAXA        TSTXSC
+     C     TSOCCY        IFNE      TSTXCY
+     C                   Z-ADD     @@TAXA        ZAMTCI
+     C                   Z-ADD     TSXRST        ZEXCH
+     C                   MOVE      TSSTMD        ZMD
+     C                   Z-ADD     TSOCDP        ZCDPI
+     C                   Z-ADD     TSTCDP        ZCDPO
+     C                   EXSR      ZCONVN
+     C                   Z-ADD     ZAMTCO        TSTXSC
+     C                   ENDIF
+      *
+     C*****TSGINC        SUB       TSTXSC        TSNINC                                     BUG23009
+     C                   EVAL      TSNINC = TSGINC - TSTXSC - TSSTDT                        BUG23009
+     C                             - TSTTDT                                                   CER054
+      *
+      ** Principal Amount in Base Currency
+      *
+     C                   Z-ADD     PAMT          TSPAMB
+     C     TSOCCY        IFNE      BJCYCD
+     C                   Z-ADD     PAMT          ZAMTCI
+     C                   Z-ADD     TSOCSR        ZEXCH
+     C                   MOVE      TSOCMD        ZMD
+     C                   Z-ADD     TSOCDP        ZCDPI
+     C**********         Z-ADD     ZCDPI         ZCDPO                                     BUG23932A
+     C                   Z-ADD     BJCDP         ZCDPO                                     BUG23932A
+     C                   EXSR      ZCONVN
+     C                   Z-ADD     ZAMTCO        TSPAMB
+     C                   ENDIF
+      *
+      ** Gross Interest Amount in Base Currency
+      *
+     C                   Z-ADD     @@TOTO        TSGINB
+     C     TSOCCY        IFNE      BJCYCD
+     C                   Z-ADD     @@TOTO        ZAMTCI
+     C**********         Z-ADD     TSOCSR        ZEXCH                                      BUG23931
+     C                   Z-ADD     TSXRST        ZEXCH                                      BUG23931
+     C                   MOVE      TSOCMD        ZMD
+     C                   Z-ADD     TSOCDP        ZCDPI
+     C**********         Z-ADD     ZCDPI         ZCDPO                                     BUG23932A
+     C                   Z-ADD     BJCDP         ZCDPO                                     BUG23932A
+     C                   EXSR      ZCONVN
+     C                   Z-ADD     ZAMTCO        TSGINB
+     C                   ENDIF
+      *
+      ** Tax Deducted at Source in Base Currency
+      *
+     C                   Z-ADD     @@TAXA        TSTXSB
+     C     TSOCCY        IFNE      BJCYCD
+     C                   Z-ADD     @@TAXA        ZAMTCI
+     C                   Z-ADD     TSOCSR        ZEXCH
+     C                   MOVE      TSOCMD        ZMD
+     C                   Z-ADD     TSOCDP        ZCDPI
+     C**********         Z-ADD     ZCDPI         ZCDPO                                     BUG23932A
+     C                   Z-ADD     BJCDP         ZCDPO                                     BUG23932A
+     C                   EXSR      ZCONVN
+     C                   Z-ADD     ZAMTCO        TSTXSB
+     C                   ENDIF
+      *
+     C*****TSGINB        SUB       TSTXSB        TSNINB                                      CER048A
+     C                   EVAL      TSNINB = TSGINB - TSTXSB - TSSTDB                         CER048A
+     C                             - TSTTDB                                                   CER054
+     C                   MOVE      'N'           TSINPR
+      *
+     C                   WRITE     SDCSINF0
+      *
+     C                   ENDIF                                                              BUG24051
+      *                                                                                      CER048A
+      ** Update Interest Payment History file                                                CER048A
+      *                                                                                      CER048A
+     C                   IF        EWTHMD = 'Y'                                              CER048A
+      *                                                                                      CER048A
+     C*****KIPhl2        KLIST                                                     BUG22911 BUG23732
+     C**********         KFLD                    WCNUM                             BUG22911 BUG23732
+     C**********         KFLD                    @@BRCA                            BUG22911 BUG23732
+      *                                                                                     BUG22911
+     C*****KIPhl2        CHAIN     SDINPHL2                                        BUG22911 BUG23732
+      *                                                                                     BUG22911
+     C**********         IF        %FOUND(SDINPHL2)                                BUG22584 BUG23732
+      *                                                                               BUG22584
+     C**********         EVAL      TITOUT = TITOUT + TSNINT                         CER048A BUG23139
+     C**********         EVAL      TITOUT = TITOUT + TSNINB                        BUG23139 BUG23732
+      *                                                                                      CER048A
+      **********                                                                    CER048A BUG22911
+     C**********         IF        TAXI = 'T'                                       CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         IF        WKUtil <= TICUTH                                 CER048A BUG22911
+     C**********         EVAL      TIUTTH = TIUTTH + TSGINT                         CER048A BUG22911
+     C**********         ELSE                                                       CER048A BUG22911
+     C**********         EVAL      TIUTTH = TICUTH                                  CER048A BUG22911
+     C**********         ENDIF                                                      CER048A BUG22911
+      **********                                                                    CER048A BUG22911
+     C**********         ENDIF                                                      CER048A BUG22911
+      *                                                                                      CER048A
+     C**********         IF        TAXI = 'T'                                     BUG23115 BUG23115A
+     C**********         EVAL      TIUTTH = PUTIL                                  BUG22911 BUG23732
+     C**********         ENDIF                                                    BUG23115 BUG23115A
+      *                                                                                     BUG22911
+     C**********         UPDATE    SDINPHD0                                         CER048A BUG23732
+      *                                                                                      CER048A
+     C**********         ENDIF                                                      CER048A BUG23732
+      *                                                                               BUG22584
+     C**********         EVAL      PTaxb = TSTXSB + TSSTDB                         BUG23732 BUG24768
+     C                   EVAL      PTaxb = TSTXSB + TSSTDB + TSTTDB                         BUG24768
+     C                   MOVE      CNUM          PCNUM             6                        BUG23732
+                                                                                           BUG26037B
+      ** Retrieve customer of location                                                     BUG26037B
+      *                                                                                    BUG26037B
+     C                   CALL      'AOCUSTR0'                                              BUG26037B
+     C                   PARM      *BLANKS       PRtnCode                                  BUG26037B
+     C                   PARM      '*KEY   '     POptn                                     BUG26037B
+     C                   PARM      PCNUM         PKey             10                       BUG26037B
+     C                   PARM                    PKyst             7                       BUG26037B
+     C     SDCUST        PARM      SDCUST        DSLDY                                     BUG26037B
+                                                                                           BUG26037B
+     C                   IF        PRtnCode <> *BLANKS                                     BUG26037B
+     C                   EVAL      DBFILE = 'SDCUSTPD'                                     BUG26037B
+     C                   EVAL      DBKEY = PCNUM                                           BUG26037B
+     C                   EVAL      DBASE = '075'                                           BUG26037B
+     C                   EXSR      *PSSR                                                   BUG26037B
+     C                   GOTO      ENCSIN                                                  BUG26037B
+     C                   ENDIF                                                             BUG26037B
+      *                                                                                    BUG26037B
+      ** Retrieve Customer by Country of tax details                                       BUG26037B
+      *                                                                                    BUG26037B
+     C     KLActx        KLIST                                                             BUG26037B
+     C                   KFLD                    KCNUM             6                       BUG26037B
+     C                   KFLD                    KCLOC             2                       BUG26037B
+                                                                                           BUG26037B
+     C                   EVAL      KCNUM = PCNUM                                           BUG26037B
+     C                   EVAL      KCLOC = BBCOLC                                          BUG26037B
+                                                                                           BUG26037B
+     C     KLActx        CHAIN     SDACTXL1                                                BUG26037B
+                                                                                           BUG26037B
+     C                   IF        %FOUND(SDACTXL1)                                        BUG26037B
+     C                   IF        AXETXS = 'S' OR AXETXS = 'D' OR                         BUG26037B
+     C                             AXETXS = 'T'                                            BUG26037B
+     C                             OR AXETXS = 'Y'                                            CER069
+      *                                                                                     BUG23732
+     C                   IF        @@JAMG <> '3' AND                                        BUG26877
+     C                             WTXJA = 'Y' AND                                          BUG26877
+     C                             @@CUST <> *BLANKS                                        BUG26877
+     C                   EVAL      PCNUM = @@CUST                                           BUG26877
+     C                   ENDIF                                                              BUG26877
+      *                                                                                     BUG26877
+     C                   CALL      'AOINPHU0'                                               BUG23732
+     C                   PARM      *BLANKS       PRtnCode          7                        BUG23732
+     C                   PARM                    PCNUM                                      BUG23732
+     C                   PARM      PUTIL         PThUtil          15 0                      BUG23732
+     C                   PARM      TSGINB        PGinb            15 0                      BUG23732
+     C                   PARM                    PTaxb            15 0                      BUG23732
+     C                   PARM      TSNINB        PNinb            15 0                      BUG23732
+     C                   PARM                    A6NBDP                                     BUG24051
+     C                   PARM                    @@JAMG                                     BUG26877
+      *                                                                                     BUG23732
+      ** If record does not exist in the file                                               BUG23732
+      *                                                                                     BUG23732
+     C                   IF        PRtnCode <> *BLANK                                       BUG23732
+     C                   EVAL      DBFILE = 'SDINPHPD'                                      BUG23732
+     C                   EVAL      DBASE = '95'                                             BUG23732
+     C                   EVAL      DBOPTN = PCNUM                                           BUG23732
+     C                   SETON                                        U7U8LR                BUG23732
+     C                   EXSR      *PSSR                                                    BUG23732
+     C                   ENDIF                                                              BUG23732
+      *                                                                                    BUG26037B
+     C                   ENDIF                                                             BUG26037B
+     C                   ENDIF                                                             BUG26037B
+      *                                                                                     BUG23732
+     C                   ENDIF                                                        BUG22584
+      *                                                                               BUG22584
+     C     ENCSIN        ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * End of /COPY DL0280CSIN                                       *
+      *****************************************************************

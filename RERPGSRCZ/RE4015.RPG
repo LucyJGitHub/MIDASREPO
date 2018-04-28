@@ -1,0 +1,518 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE T&N Threshold rate routine')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Retail T&N Accounts                              *
+      *                                                               *
+      *  RPG/RE4015  - Periods and Penalties                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CRE005             Date 18Jan10               *
+      *                 241299             Date 18Dec09               *
+      *                 218398             Date 18Dec09               *
+      *                 215298             Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *---------------------------------------------------------------*
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CRE005 - Changes to STRAN                                    *
+      *  241299 - Use "Previous Value Date"                           *
+      *           instead of "Last change date" on REINHSPD           *
+      *  218398 - When balance <= threshold should be same rate.      *
+      *  215298 - Correction to threshold rate processing.            *
+      *         - Term and Notice Threshold rates method (Amendment)  *
+      *           Use historic rates if value date before run date.   *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Function of indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     71 - CHAIN indicator for ACCNT                            *
+      *     80 - CHAIN indicator for SDBSHSPD                         *
+      *     81 - CHAIN indicator for SDBSRTPD                         *
+      *     82 - CHAIN indicator for REINTD                           *
+      *     83 - CHAIN indicator for REINHSPD                         *
+      *                                                               *
+      *  U7+U8 - Database error occurs                                *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Interest threshold rates
+      *
+     FREINT   IF  E           K        DISK
+     F            REINTAF                           KIGNORE
+     F            REINTZF                           KIGNORE
+      *
+     FREINHSL0IF  E           K        DISK
+      *
+      ** Base Rates
+      *
+     FSDBSRTL0IF  E           K        DISK
+      *
+     FSDBSHSL1IF  E           K        DISK
+      *
+      **  Account details
+      *
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F                                              KCOMIT
+      /SPACE 3
+      *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    BAL        11 15 0             BALANCES
+     E                    RAT        11 11 7             RATES
+      *
+      *****************************************************************
+      *
+     IREINTDF
+      *
+      ** Rename fields in REINTD
+      *
+     I              RECI                            HRECI                                     CRE005
+     I              BRT                             HBRT                                      CRE005
+     I              INTH                            HINTH
+     I              RAT2                            HRAT2
+     I              BAL2                            HBAL2
+      *
+      ** Program data structure
+      *
+     IPGMDS      SDS
+     I                                        1  10 SPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+      *
+      ** Parameters
+      *
+     IP@FMT     E DSDSSDY
+      *
+      ** Account details
+      *
+     IACFMT     E DSACCNTAB
+      *
+      ** Bank details
+      *
+     IBKFMT     E DSSDBANKPD
+      *
+      ** Base rates
+      *
+     IBRFMT     E DSSDBSRTPD
+      *
+      ** Ccy
+      *
+     ICYFMT     E DSSDCURRPD
+      *
+      ** RE tran types
+      *
+     ITTFMT     E DSSDRETRPD
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Key fields for REINTD
+      *
+     I            DS
+     I                                        1  12 HKEY
+     I                                        1   1 HBLANK
+     I                                        2   3 HTYPE
+     I                                        4   8 HSBTYP
+     I                                        9  11 HCURR
+     I                                       12  12 HD
+      *
+      ** Balance fields
+      *
+     I            DS
+     I                                        1  88 BALDS
+     I                                    P   1   80BAL1
+     I                                    P   9  160BAL2
+     I                                    P  17  240BAL3
+     I                                    P  25  320BAL4
+     I                                    P  33  400BAL5
+     I                                    P  41  480BAL6
+     I                                    P  49  560BAL7
+     I                                    P  57  640BAL8
+     I                                    P  65  720BAL9
+     I                                    P  73  800BAL10
+     I                                    P  81  880BAL11
+      *
+      ** Rate fields
+      *
+     I            DS
+     I                                        1  66 RATDS
+     I                                    P   1   67RAT1
+     I                                    P   7  127RAT2
+     I                                    P  13  187RAT3
+     I                                    P  19  247RAT4
+     I                                    P  25  307RAT5
+     I                                    P  31  367RAT6
+     I                                    P  37  427RAT7
+     I                                    P  43  487RAT8
+     I                                    P  49  547RAT9
+     I                                    P  55  607RAT10
+     I                                    P  61  667RAT11
+      *
+      *****************************************************************
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVEACPY@      MIS@   80
+      *
+      ** ACCNTAB key list
+      *
+     C           AKEY1     KLIST
+     C                     KFLD           ACNUM   6
+     C                     KFLD           ACCY    3
+     C                     KFLD           AACOD  100
+     C                     KFLD           AACSQ   20
+     C                     KFLD           ABRCA   3
+      *
+      ** Key fields for SDBRSTL0
+      *
+     C           BASKEY    KLIST
+     C                     KFLD           BSCCY   3
+     C                     KFLD           BSRAT   2
+      *
+      ** Key fields for SDBSHSL1
+      *
+     C           BASKE2    KLIST
+     C                     KFLD           HSCCY   3
+     C                     KFLD           HSRAT   20
+     C                     KFLD           HVDAT   50
+      *
+      ** Key fields for REINHSPD
+      *
+     C           H2KEY     KLIST
+     C                     KFLD           HKEY
+     C                     KFLD           H2VDPC  50
+      *
+      ** Global values
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PBRCA   3
+     C                     PARM           PCNUM   6
+     C                     PARM           PCCY    3
+     C                     PARM           PACOD  100
+     C                     PARM           PACSQ   20
+     C                     PARM           PBALN  150
+     C                     PARM           PINTY   20
+     C                     PARM           PINSB   50
+     C                     PARM           PVDAT   50
+     C                     PARM           PMODE   7
+     C                     PARM           PRATE  117
+      *
+      ** Main processing
+      *
+     C           PMODE     IFEQ '*ENQEFF'
+     C                     EXSR FETCH1
+     C                     ELSE
+     C                     EXSR FETCH2
+     C                     ENDIF
+      *
+      ** End processing
+      *
+     C                     EXSR END
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GETACC - Get account details                                 *
+      *                                                               *
+      *****************************************************************
+     C           GETACC    BEGSR
+      *
+     C                     Z-ADD0         CRIB
+     C                     Z-ADD0         CRIS
+     C                     Z-ADD0         CRIC
+     C                     Z-ADD0         CRCD
+     C                     MOVE *BLANKS   CRIF
+     C                     Z-ADD0         CRDY
+     C                     Z-ADD0         NCID
+     C                     Z-ADD0         DRIB
+     C                     Z-ADD0         DRIS
+     C                     Z-ADD0         DRIC
+     C                     Z-ADD0         DRCD
+     C                     MOVE *BLANKS   DRIF
+     C                     Z-ADD0         DRDY
+     C                     Z-ADD0         NDID
+      *
+     C           PMODE     IFNE 'INSER'
+     C                     MOVE PCNUM     ACNUM
+     C                     MOVE PCCY      ACCY
+     C                     Z-ADDPACOD     AACOD
+     C                     Z-ADDPACSQ     AACSQ
+     C                     MOVE PBRCA     ABRCA
+     C                     MOVE ' '       CLOSED  1
+     C                     CLEARACFMT
+     C           AKEY1     CHAINACCNT                87
+      *
+     C           *IN87     IFEQ '1'                                                           117540
+     C           ACST      OREQ 'C'                                                           117540
+     C                     MOVE 'Y'       CLOSED  1
+     C                     MOVE 'C'       ACST
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * FETCH1 - Fetch rate directly from account details             *
+      * Called by: None                                               *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           FETCH1    BEGSR
+      *
+      * Get account details
+      *
+     C                     EXSR GETACC
+      *
+      * Determine whether we need credit or debit rate.
+      *
+     C           PBALN     IFLT 0
+     C                     MOVE 'C'       DRCR    1
+     C                     Z-ADDCRIS      PRATE
+     C                     ELSE
+     C                     MOVE 'D'       DRCR
+     C                     Z-ADDDRIS      PRATE
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * FETCH2 - Fetch rate details for Interest type/subtype and     *
+      *          calculate correct rate based on balance.             *
+      * Called by: None                                               *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           FETCH2    BEGSR
+      *
+      ** Use positive sign for comparing balance
+      *
+     C           PBALN     IFLT 0
+     C                     Z-SUBPBALN     BALMOD 150
+     C                     ELSE
+     C                     Z-ADDPBALN     BALMOD
+     C                     ENDIF
+      *
+      ** Get Interest Details
+      *
+     C                     EXSR GETINT
+      *
+      ** Rate is zero if less than or equal to initial threshold
+      *
+     C                     Z-ADD0         PRATE
+     C           BALMOD    IFGT HINTH
+      *
+      ** Get Base rate
+      *
+     C                     EXSR GETBAS
+      *
+      ** Get threshold rate
+      *
+     C                     EXSR GETTHR
+      *
+      ** Final rate is Base rate + threshold rate
+      *
+     C           BASRAT    ADD  THRRAT    PRATE
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * GETINT - Get interest details                                 *
+      *                                                               *
+      *****************************************************************
+     C           GETINT    BEGSR
+      *
+     C                     MOVE *BLANKS   HBLANK
+     C                     MOVE PINTY     HTYPE     P
+     C                     MOVE PINSB     HSBTYP    P
+     C                     MOVE PCCY      HCURR     P
+     C                     MOVE 'D'       HD
+      *
+     C           HKEY      CHAINREINT                82
+      *
+      ** Move in balance fields and update records
+      *
+     C           *IN82     IFEQ '0'
+     C           VDPC      ANDLEPVDAT                                                         241299
+     C                     MOVELHBAL2     BALDS
+     C                     MOVELHRAT2     RATDS
+     C                     ELSE
+      *
+      ** If base rate
+      ** not found, or value date earlier, use historic base rate.
+      *
+     C                     Z-ADDPVDAT     H2VDPC                                              241299
+     C           H2KEY     SETGTREINHSL0             83
+     C           HKEY      REDPEREINHSL0                 83
+      *
+     C           *IN83     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'REINT   'DBFILE
+     C                     MOVELHKEY      DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** move in historic balance fields and update records
+      *
+     C                     MOVELH@BAL2    BALDS
+     C                     MOVELH@RAT2    RATDS
+     C                     Z-ADDH@INTH    HINTH
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADDBAL1      BAL,1
+     C                     Z-ADDBAL2      BAL,2
+     C                     Z-ADDBAL3      BAL,3
+     C                     Z-ADDBAL4      BAL,4
+     C                     Z-ADDBAL5      BAL,5
+     C                     Z-ADDBAL6      BAL,6
+     C                     Z-ADDBAL7      BAL,7
+     C                     Z-ADDBAL8      BAL,8
+     C                     Z-ADDBAL9      BAL,9
+     C                     Z-ADDBAL10     BAL,10
+     C                     Z-ADDBAL11     BAL,11
+      *
+     C                     Z-ADDRAT1      RAT,1
+     C                     Z-ADDRAT2      RAT,2
+     C                     Z-ADDRAT3      RAT,3
+     C                     Z-ADDRAT4      RAT,4
+     C                     Z-ADDRAT5      RAT,5
+     C                     Z-ADDRAT6      RAT,6
+     C                     Z-ADDRAT7      RAT,7
+     C                     Z-ADDRAT8      RAT,8
+     C                     Z-ADDRAT9      RAT,9
+     C                     Z-ADDRAT10     RAT,10
+     C                     Z-ADDRAT11     RAT,11
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * GETBAS - Get base Rate if specified                           *
+      *                                                               *
+      *****************************************************************
+     C           GETBAS    BEGSR
+      *
+     C                     Z-ADD0         BASRAT 117
+     C           HBRT      IFNE 0
+      *
+     C                     MOVE PCCY      BSCCY
+     C                     MOVE HBRT      BSRAT
+     C           BASKEY    CHAINSDBSRTL0             81
+      *
+      ** If base rate
+      ** not found, or value date earlier, use historic base rate.
+      *
+     C           *IN81     IFEQ '1'
+     C           BAVDNR    ORGT PVDAT
+      *
+     C                     MOVE PCCY      HSCCY
+     C                     MOVE HBRT      HSRAT
+     C                     Z-ADDPVDAT     HVDAT
+     C           BASKE2    SETLLSDBSHSL1             80
+     C           BASKE2    READESDBSHSL1                 80
+     C           *IN80     DOWEQ'0'
+     C           G0HIDT    ANDGTPVDAT
+     C           BASKE2    REDPESDBSHSL1                 80
+     C                     ENDDO
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBSRTL0'DBFILE
+     C                     MOVELBSCCY     DBKEY
+     C                     MOVE BSRAT     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDG0CBSR    BASRAT
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDBACBSR    BASRAT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * GETTHR - Get threshold rate                                   *
+      *                                                               *
+      *****************************************************************
+     C           GETTHR    BEGSR
+      *
+     C                     Z-ADD0         THRRAT 117
+     C                     Z-ADD1         Z       20
+      *
+      ** Go through through each threhold level until balance is within
+      ** threshold. The threshold rate will be the last rate stored.
+      *
+     C           Z         DOWLE11
+     C           BALMOD    ANDGTBAL,Z                                                         218398
+      *
+     C           BAL,Z     IFNE 0                                                             215298
+     C           Z         OREQ 1                                                             215298
+     C                     Z-ADDRAT,Z     THRRAT 117
+     C                     ENDIF
+      *
+     C                     ADD  1         Z
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE4015  'DBPGM     P
+     C                     OUT  LDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * END - Exit program and return to calling program.             *
+      *                                                               *
+      * Called by: None                                               *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           END       BEGSR
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *
+      *****************************************************************
+      *
+** CPY@ - Object Copyright
+(c) Copyright Misys International Banking Systems 2009

@@ -1,0 +1,116 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Utility for MD-23860A')                               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00401 - Utility for MD-23860A                           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD027435 *CREATE   Date 09Jun14              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD027435 - Conversion of utilities to upgrade program       */
+/*                  standards related to MD027279.                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SQL) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2014')
+ 
+/* Global monitor message.  */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SKXBRIDGE')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* The actual program function would appear here.  If additional */
+/*  programs need to be called then use switches (U7 and U8) to  */
+/*  denote error.  The shell program which controls the call of  */
+/*  Bridge Upgrade Programs (UPC9900) will check the switches.   */
+ 
+/** Update loans in CLOANCL with incorrect OMDB valueCL          */
+/* SELECT C.LNRF, C.OMDB, D.BRCA FROM CLOANCL C, ACCNTAB D              */
+/* WHERE C.RSTM = '14'                                                  */
+/* AND C.RONS=DIGITS(D.ACNO)                                            */
+/* AND C.OMDB <> D.BRCA                                                 */
+/* AND C.OMDB <> ' '                                                    */
+ 
+/* Set up the statement line-by-line....                 */
+             CHGVAR     VAR(&SQL) VALUE('SELECT C.LNRF, C.OMDB, +
+                          D.BRCA FROM CLOANCL C, ACCNTAB D')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
+             CHGVAR     VAR(&SQL) VALUE('WHERE C.RSTM = ''14''')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND C.RONS=DIGITS(D.ACNO)')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND C.OMDB <> D.BRCA')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND C.OMDB <> '' ''')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE) NAMING(*SYS)
+             MONMSG     MSGID(SQL9010)
+ 
+/* UPDATE CLOANCL A                                                     */
+/* SET OMDB = (SELECT B.BRCA FROM ACCNTAB B                             */
+/* WHERE A.RONS=DIGITS(B.ACNO))                                         */
+/* WHERE LNRF IN (SELECT C.LNRF FROM CLOANCL C, ACCNTAB D               */
+/* WHERE C.RSTM = '14'                                                  */
+/* AND C.RONS=DIGITS(D.ACNO)                                            */
+/* AND C.OMDB <> D.BRCA                                                 */
+/* AND C.OMDB <> ' ')                                                   */
+ 
+/* Set up the statement line-by-line....                 */
+             CHGVAR     VAR(&SQL) VALUE('UPDATE CLOANCL A')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
+             CHGVAR     VAR(&SQL) VALUE('SET OMDB = (SELECT B.BRCA +
+                          FROM ACCNTAB B')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('WHERE A.RONS=DIGITS(B.ACNO))')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('WHERE LNRF IN (SELECT +
+                          C.LNRF FROM CLOANCL C, ACCNTAB D')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('WHERE C.RSTM = ''14''')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND C.RONS=DIGITS(D.ACNO)')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND C.OMDB <> D.BRCA')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND C.OMDB <> '' '')')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE) NAMING(*SYS)
+             MONMSG     MSGID(SQL9010)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

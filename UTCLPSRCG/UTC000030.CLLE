@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT Validation List Objects Maintenance')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000030 - Midas UT Validation List Objects Maintenance    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27989A          Date 12Aug10              */
+/*       Prev Amend No. BUG27989*CREATE    Date 08Aug10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27989A - HATS should run with/without LDAP (Reopen)      */
+/*       BUG27989 - HATS should run with/without LDAP                */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                       /*BUG27989A*/
+             PGM        PARM(&VLDL)                                                    /*BUG27989A*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2010')
+                                                                                       /*BUG27989A*/
+             DCL        VAR(&VLDL) TYPE(*CHAR) LEN(20)                                 /*BUG27989A*/
+             DCL        VAR(&VLDLNAME) TYPE(*CHAR) LEN(10)                             /*BUG27989A*/
+             DCL        VAR(&VLDLLIB) TYPE(*CHAR) LEN(10)                              /*BUG27989A*/
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Start Commitment Control */
+                                                                                       /*BUG27989A*/
+             CHGVAR     VAR(&VLDLNAME) VALUE(%SST(&VLDL 1 10))                         /*BUG27989A*/
+             CHGVAR     VAR(&VLDLLIB) VALUE(%SST(&VLDL 11 10))                         /*BUG27989A*/
+ 
+/**********  DSPOBJD    OBJ(*ALL) OBJTYPE(*VLDL) OUTPUT(*OUTFILE) +                    /*BUG27989A*/
+             DSPOBJD    OBJ(&VLDLLIB/&VLDLNAME) OBJTYPE(*VLDL) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/VLDLPF)                       /*BUG27989A*/
+ 
+             CPYF       FROMFILE(QTEMP/VLDLPF) TOFILE(UTVLLOPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+ 
+/**********  CALL       PGM(UT000030)                                                  /*BUG27989A*/
+             CALL       PGM(UT000030) PARM(&VLDLLIB)                                   /*BUG27989A*/
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             CHGJOB     SWS(0XXXXXXX)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

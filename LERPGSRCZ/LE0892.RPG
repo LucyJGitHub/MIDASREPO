@@ -1,0 +1,1397 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Loan Exp by Cntry/Domicile Rpt Co.')          *
+      ********************************************************************
+      *                                                                  *
+      *  Midas  Customer Lending Module                                  *
+      *                                                                  *
+      *       LE0892 - PRINT LOAN EXPOSURE & REPAYMENT BY COUNTRY        *
+      *                      & REGION OF DOMICILE BY COMPANY             *
+      *                                                                  *
+      *       THIS PROGRAM HAS BEEN DERIVED FROM LE0890 TO INCORPORATE   *
+      *       COMPANY SELECTION FOR REPORT PRODUCTION                    *
+      *                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                                  *
+      *                                                                  *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG3644            Date 12Jul04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163486             Date 13Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU020             Date 13Mar98               *
+      *                 CLE005             Date 22May97               *
+      *                 CLE004             Date 02Dec96               *
+      *                 093584             DATE 28FEB96               *
+      *                 088124             DATE 23JUN95               *
+      *                      S01393           DATE 30OCT92               *E43239
+      *                      S01392           DATE 05OCT92               *S01392
+      *                      S01339           DATE 09APR92               *
+      *                      BHF127           DATE 17AUG90               *
+      *                                                                  *
+      ********************************************************************
+      *                                                                  *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE026 - Consumer Banking                                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                 )*
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+      *  163486 - Recompile due to changes in LVENTEL.                *
+      *  CEU020 - EMU Lending Multi-currency Rollover                 *
+     F*  CLE005 - Customer Lending Enhancements - Others (T3)         *
+     F*  CLE004 - Customer Lending Enhancements - Syndications        *
+     F*    093584 - Unable to change form length of spool file output    *
+     F*             by changing printer file - remove Line specs.        *
+     F*       088124  -  Amend heading on display file to say that all   *
+     F*                  amounts are in base currency equivalent.        *
+     F*               -  Output a warning if events not generated to End *
+     F*                  of Book, since the projected maturities will    *
+     F*                  not be correct if this is the case.             *
+      *       S01393  -  Recompiled for Strategic Risk Management        *
+      *       S01392  -  JAPANESE SUB MODULE ENHANCEMENTS                *S01392
+      *       S01339  -  REMOVE SYNDICATED LOANS PROCESSING, DUE TO      *
+      *                  MODULE REDUNDANCY.                              *
+      *       BHF127  -  EXCLUDE INTER-BRANCH EVENTS                     *
+      *                                                                  *
+      ********************************************************************
+      *                                                                  *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                                  *
+     F*LVN2L1*IP**E           K        DISK                               BHF127
+     FSLVN2L2 IP  E           K        DISK                               BHF127
+     F*CVN2L1*IS**E           K        DISK                           U1  BHF127
+     F*SCVN2L2*IS**E***********K        DISK                    U1  BHF127S01339
+     F*E0892P1O***F     132     OF    LPRINTER      KINFDS SPOOL      UC  093584
+     FLE0892P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  093584
+     FLE0892AUO   F     132            PRINTER      KINFDS SPOOLU
+      *
+      * 01            CUST.LENDING EVENTS FILE- HEADER
+      * 02                                    - DETAIL
+      **04************COMM.LOANS EVENTS FILE  - HEADER                    S01339
+      **05************                        - DETAIL                    S01339
+      *    20         REGION CODE BLANK
+      *    30         EVENT DATE ZERO (LE 61V1)
+      *       31      DETAILS TO REPORT
+      *       32      EVENT AMOUNT NEGATIVE
+      *       33      MULITBRANCHING INDICATOR
+      *       40      FIRST CYCLE
+      *       41      WORK
+      *       42      NEW LOAN
+      *       43      EVENT TYPE 70V1
+      ********45******O/S AMOUNT UPDATED FOR 'R1' EVENT ONCE THIS D/D     S01339
+      ********46****** "     "      "     "  'M1'   "    "    "    "      S01339
+      *       50      CURRENCY DECIMAL PLACES = 0
+      *       51                             = 1
+      *       52                             = 2
+      *       53                             = 3
+      *       60      OUTPUT MONTHS 2 - 12
+      *       61      OUTPUT MONTHS > 12
+      *       62      OUTPUT COUNTRY HEADING
+      *       63      OUTPUT COUNTRY TOTALS
+      *       64      OUTPUT REGION TOTALS
+      *       71      OUTPUT ALLOWED TO LE0892P1
+     F*       72      GENERATE EVENTS TO END OF BOOK FLAG IS 'N'          088124
+      *       80      MULTIPLY/DIVIDE INDICATOR = 0 (DIVIDE)
+      **************U1COMM. LOANS EVENTS FILE IS PRESENT                  S01339
+     E                    POWER   1   7  7 3             POWERS OF 10
+     E/COPY ZSRSRC,ZDATE2Z1                                               S01392
+     E                    MAT        13 13 0             MATURITIES BY MTH
+     E                    GAR        13 13 0             GUARANTEES BY MTH
+     E                    RUN        12  4 0             NEXT 12 MONTHS
+     E                    CPY@    1   1 80
+     L*E0892P1*66FL*49OL***                                               093584
+      **
+     ILVENTHHF    01
+      **
+      **   CUSTOMER LENDING EVENTS FILE - HEADER RECORD
+      **
+     ILVENTELF    02
+      **
+      **   DETAIL
+     I                                              EDAT            30
+     I                                              CDOM  L1M1
+     I                                              RDOM  L2M2      20
+     I              ECPY                            CMPYM L3M3
+      *
+      ************                                                        S01339
+     I*CEVNXCAF****04                                                     S01339
+      ************                                                        S01339
+      *****COMMERCIAL*LOANS*EVENTS*FILE*-*HEADER*RECORD******             S01339
+      ************                                                        S01339
+     I*CEVNXCCF****05                                                     S01339
+      ************                                                        S01339
+      *****DETAIL*RECORD                                                  S01339
+     I************  CLOC                            CDOM  L1M1            S01339
+     I************                                  RDOM  L2M2      20    S01339
+     I************                                  CMPYM L3M3            S01339
+     ILDA        UDS                            256
+      ***   LOCAL DATA AREA - FOR DATABASE INFORMATION
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **
+     ISPOOL       DS
+      **   FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      **
+      **
+     ISPOOLU      DS
+      **   FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      **
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     IDSSDY     E DSDSSDY
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      **
+     ISCSARD    E DSSCSARDPD                                              CLE004
+      ** SAR details                                                      CLE004
+      *                                                                   CLE004
+     ISDREGN    E DSSDREGNPD
+      ** REGION DETAILS
+     I              A3RGNM                          REGN
+      *
+     ISDCTRY    E DSSDCTRYPD
+      **   COUNTRY
+     I              A4CNNM                          CNM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** BANK DETAILS
+     I              BJURPT                          TITL
+     I              BJCYCD                          BCCY
+     I              BJDNWD                          DNWD
+      *                                                                   088124
+     ISDCLND    E DSSDCLNDPD                                              088124
+      ** LENDING ICD DETAILS                                              088124
+      *                                                                   088124
+     ISDCURR    E DSSDCURRPD
+      **   CURRENCY
+     I              A6NBDP                          CDP
+     I              A6TXND                          TNOT
+     I              A6DLCI                          DCCY
+     I              A6SPRT                          SPOT
+     I              A6MDIN                          MDIN
+      **
+     ISDCOMP    E DSSDCOMPPD
+      **  EXTERNAL DS FOR COMPANY
+     I              APCMNM                          CMNM
+      **
+     I            DS
+      **   DATASTRUCTURE TO SPLIT DATE INTO MONTH AND YEAR PARTS
+     I                                        1   40DAT4
+     I                                        1   20MTH
+     I                                        3   40YR
+      **
+      **   DATASTRUCTURE TO CONCATINATE LNNO & DDNO INTO LNDD
+     I            DS
+     I**********                              1   60LNNO                                      CLE148
+     I**********                              7  120DDNO                                      CLE148
+     I**********                              1  120LNDD                                      CLE148
+      **
+      **   DATASTRUCTURE TO SPLIT EVENT TYPE INTO TWO SUB-FIELDS.
+     I            DS
+     I                                        1   4 ETYP
+     I                                        1   2 PTP
+     I                                        3   4 ETP
+     I/SPACE 3
+      **
+      **
+     C                     MOVEACPY@      BIS@   80
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5         SEQUENCE
+     C                     PARM           BRNCH   3
+      **
+      **   FIRST CYCLE - ACCESS I.C.D.R.1
+     C   40                GOTO START
+      *
+     C                     SETON                     40
+     C                     MOVE ' '       BLANKS 44
+      **
+      **   STORE PROGRAM NAME IN CASE OF D/B ERROR & BLANK OUT LDA AREA
+     C                     MOVE 'LE0892'  DBPGM
+      **
+      **   EXECUTE ZSYSTM
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBOPTN
+     C                     Z-ADD1         DBASE
+     C                     GOTO END
+     C                     END
+      **
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      **
+     C**   ACCESS LE ICD TO OBTAIN VALUE OF 'GENERATE EVENTS TO END OF    088124
+     C**   BOOK' FLAG                                                     088124
+     C                     CALL 'AOCLNDR0'                                088124
+     C                     PARM '*MSG   ' @RTCD   7                       088124
+     C                     PARM '*FIRST ' @OPTN   7                       088124
+     C********** SDCLND    PARM SDCLND    DSFDY                                        088124 CLE134
+     C           SDCLND    PARM SDCLND    DSSDY                                               CLE134
+     C           @RTCD     IFNE *BLANKS                                   088124
+     C                     MOVE *BLANKS   DBKEY                           088124
+     C                     MOVE '*FIRST  'DBKEY                           088124
+     C                     MOVE 'SDCLNDPD'DBFILE              ************088124
+     C                     Z-ADD2         DBASE               * DBASE 02 *088124
+     C                     SETON                     U7U8LR   ************088124
+     C                     GOTO END                                       088124
+     C                     END                                            088124
+     C*                                                                   088124
+     C           BPGEEB    IFEQ 'Y'                                       088124
+     C                     SETOF                     72                   088124
+     C                     ELSE                                           088124
+     C                     SETON                     72                   088124
+     C                     END                                            088124
+     C*                                                                   088124
+      **   ACCESS CURRENCIES RECORD TO ASCERTAIN HOW MANY DEC.PLACES FOR
+      **   BASE CURRENCY
+     C                     MOVELBCCY      K101    3
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           K101    3                    A
+     C           SDCURR    PARM SDCURR    DSSDY                        B
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     MOVELK101      DBKEY
+     C                     SETON                     U7U8LR***************
+     C                     Z-ADD3         DBASE            ***   03    ***
+     C                     GOTO END                        ***************
+     C                     END
+      *
+     C                     MOVE CDP       BCDP    10
+     C           CDP       COMP 1                      5051
+     C  N50N51   CDP       COMP 2                    53  52
+      *                                                                   CLE004
+      ** Determine if Customer Lending Enhancements - Syndication         CLE004
+      ** feature is installed                                             CLE004
+      *                                                                   CLE004
+     C                     CALL 'AOSARDR0'                                CLE004
+     C                     PARM *BLANKS   @RTCD                           CLE004
+     C                     PARM '*KEY    '@OPTN                           CLE004
+     C                     PARM 'CLE004  '@SARD   6                       CLE004
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE004
+     C           @RTCD     IFEQ *BLANKS                                   CLE004
+     C                     MOVE 'Y'       CLE004  1                       CLE004
+     C                     ELSE                                           CLE004
+     C                     MOVE 'N'       CLE004                          CLE004
+     C           @RTCD     IFNE '*NRF    '                                CLE004
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE004
+     C                     Z-ADD8         DBASE            * DBERR 08 *   CLE004
+     C                     MOVEL'CLE004'  DBKEY            ************   CLE004
+     C                     SETON                     U7U8LR               CLE004
+     C                     GOTO END                                       CLE004
+     C                     ENDIF                                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CLE005
+      ** Determine if Customer Lending Enhancements - Others (T3)         CLE005
+      ** feature is installed                                             CLE005
+      *                                                                   CLE005
+     C                     CALL 'AOSARDR0'                                CLE005
+     C                     PARM *BLANKS   @RTCD                           CLE005
+     C                     PARM '*KEY    '@OPTN                           CLE005
+     C                     PARM 'CLE005  '@SARD   6                       CLE005
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE005
+     C           @RTCD     IFEQ *BLANKS                                   CLE005
+     C                     MOVE 'Y'       CLE005  1                       CLE005
+     C                     ELSE                                           CLE005
+     C                     MOVE 'N'       CLE005                          CLE005
+     C           @RTCD     IFNE '*NRF    '                                CLE005
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE005
+     C                     Z-ADD9         DBASE            * DBERR 09 *   CLE005
+     C                     MOVEL'CLE005'  DBKEY            ************   CLE005
+     C                     SETON                     U7U8LR               CLE005
+     C                     GOTO END                                       CLE005
+     C                     ENDIF                                          CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CEU020
+      ** Access SAR details file to see if EMU Lending                    CEU020
+      ** Multi-Ccy Rollover is switched on.                               CEU020
+      *                                                                   CEU020
+     C                     CALL 'AOSARDR0'                                CEU020
+     C                     PARM *BLANK    @RTCD   7                       CEU020
+     C                     PARM '*VERIFY' @OPTN   7                       CEU020
+     C                     PARM 'CEU020'  @SARD   6                       CEU020
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU020
+      *                                                                   CEU020
+     C           @RTCD     IFNE *BLANKS                                   CEU020
+     C           @RTCD     ANDNE'*NRF'                                    CEU020
+     C                     MOVEL'SDSARDPD'DBFILE           ************   CEU020
+     C                     MOVEL'CEU020'  DBKEY            * DBERR 10 *   CEU020
+     C                     Z-ADD10        DBASE            ************   CEU020
+     C                     SETON                     U7U8LR               CEU020
+     C                     GOTO END                                       CEU020
+     C                     ENDIF                                          CEU020
+      *                                                                   CEU020
+     C           @RTCD     IFEQ *BLANK                                    CEU020
+     C                     MOVE 'Y'       CEU020  1                       CEU020
+     C                     ELSE                                           CEU020
+     C                     MOVE 'N'       CEU020                          CEU020
+     C                     ENDIF                                          CEU020
+      **
+      **   SET UP ARRAY OF NEXT TWELVE MONTHS
+     C                     Z-ADDDNWD      ZDAYNO
+      *
+     C                     EXSR ZDATE2
+      **
+      **   USE ONLY MONTH AND YEAR PART
+     C                     MOVE ZYEAR     DAT4
+     C                     MOVELZMTH      DAT4
+     C                     Z-ADD1         X       20
+      *
+     C           FILL      TAG                             **  FILL TAG **
+      **   FILL ARRAY
+     C                     MOVE DAT4      RUN,X
+      **   IS ARRAY FULL?
+     C           X         COMP 12                       41
+     C   41                GOTO START
+      *
+     C           MTH       COMP 12                       41
+     C   41                Z-ADD1         MTH
+     C   41      YR        ADD  1         YR
+     C  N41      MTH       ADD  1         MTH
+      *
+     C           X         ADD  1         X
+     C                     GOTO FILL
+      *
+      **
+      **   MAIN PROCESSING
+     C           START     TAG                             ** START TAG **
+      *
+      **  IF THE REQUESTED COMPANY IS GREATER THAN THE ONE ON THE RECORD
+      **  SKIP THE CALCULATION
+      *
+     C           BRNCH     IFGT CMPYM
+     C           BRNCH     ANDNE'ALL'
+     C                     SETOF                     71
+     C                     GOTO END
+     C                     END
+      *
+      **  IF THE REQUESTED COMPANY IS LESS THAN THE ONE ON THE RECORD
+      **  SKIP THE CALCULATION
+      *
+     C           BRNCH     IFLT CMPYM
+     C           BRNCH     ANDNE'ALL'
+     C                     SETOF                     71
+     C                     SETON                     LR
+     C                     GOTO END
+     C                     END
+      *
+     C           *INL3     IFEQ '1'
+     C                     CLOSELE0892P1
+     C           BRNCH     IFEQ 'ALL'
+     C           BRNCH     OREQ CMPYM
+     C                     SETON                     71    ALLOW OUTPUT
+     C                     OPEN LE0892P1
+     C                     MOVE 'Y'       P1OP    1
+     C                     Z-ADD0         PAGE
+      **
+      ** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+      **
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     OUT  LDA
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+     C           ZSERR     IFEQ 'Y'
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      **
+      **   GET COMPANY NAME
+      **
+     C                     CALL 'AOCOMPR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CMPYM     @CENB   3
+     C           SDCOMP    PARM SDCOMP    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@CENB     DBKEY
+     C                     MOVEL'SDCOMPPD'DBFILE           ************
+     C                     Z-ADD7         DBASE            * DBASE 07 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     SETON                     U7U8LR
+     C   U8                GOTO END
+     C                     END
+      **
+     C                     ELSE
+     C                     SETOF                     71
+     C                     END
+     C                     END
+      **
+     C   01      COUNT1    ADD  1         COUNT1
+     C***04******COUNT2    ADD  1         COUNT2                          S01339
+     C**N02N05***          GOTO END                                       S01339
+     C  N02                GOTO END                                       S01339
+      **
+      **   IF CONTROL BREAK - ACCESS NEW INFORMATION
+     C   L1                EXSR LEVEL
+     C   U7                GOTO END
+      **
+0428 C*****PROCESS*EVENT*ACCORDING*TO*WHETHER*CUST.*LENDING*OR*COMM.LOAN  S01339
+0428 C**   PROCESS CUSTOMER LENDING DETAIL EVENT RECORDS.                 S01339
+     C   02                EXSR CUSTSR
+      *
+     C***05******          EXSR COMMSR                                    S01339
+      **
+      **   CONTROL BREAK PROCESSING
+     C           END       TAG                             ** END TAG  **
+      **
+      **   BYPASS IF NO EVENT DETAIL RECORDS READ
+     CL0 LRN31NU7          GOTO ENDL2
+     CL1         *INL1     IFEQ '1'
+     CL1 U7 U8             GOTO ENDL2
+      **
+      **   ON CHANGE OF COUNTRY,CALCULATE OVERALL EXPOSURE TOTALS
+     CL1                   XFOOTMAT       CMTOT  130
+     CL1         RMTOT     ADD  CMTOT     RMTOT  130
+     CL1                   XFOOTGAR       CGTOT  130
+     CL1         RGTOT     ADD  CGTOT     RGTOT  130
+     CL1         RGAMT     ADD  OAMT      RGAMT  130
+      **
+      **   OUTPUT COUNTRY DETAILS - MONTH1
+     CL1                   Z-ADD1         X          62
+     CL1                   EXCPT
+     CL1                   SETOF                     62
+      **
+      **   OUTPUT MONTHS 2 TO 12
+     CL1         LOOP1     TAG                             ** LOOP1 TAG **
+     CL1         X         ADD  1         X          60
+     CL1         X         COMP 10                   41  41
+     CL1                   MOVE BLANKS    MONTH
+     CL1N41                MOVE X         ADJUST  1
+     CL1N41                MOVELADJUST    MONTH   2
+     CL1 41                MOVE X         MONTH
+      *
+     CL1                   EXCPT
+      *
+     CL1         X         COMP 12                       41
+     CL1N41                GOTO LOOP1
+      *
+     CL1                   SETOF                     60
+      **
+      **   OUTPUT'MORE THAN 12 MTHS'
+     CL1         X         ADD  1         X          61
+     CL1                   EXCPT
+     CL1                   SETOF                     61
+      **
+      **   OUTPUT AGGREGATE AMOUNTS
+     CL1                   SETON                     63
+     CL1                   EXCPT
+     CL1                   SETOF                     63
+     CL1                   END
+      **
+      **   CHANGE OF REGION OUTPUT REGION TOTALS
+     CL2                   SETON                     64
+     CL2                   EXCPT
+     CL2                   SETOF                     64
+      **
+      **   COMPARE RUN CONTROLS - SLVNT
+     CL2         ENDL2     TAG                             ** ENDL2 TAG **
+      *
+      /SPACE 3
+      **
+      **    LAST RECORD PROCESSING
+      **
+      *
+      **   ENSURE TOTALS SPOOL FILE RECORDED BY RCF
+      *
+     CLR         *INLR     IFEQ '1'
+     CLR                   Z-ADDSFNUMU    ZSNUMU
+     CLR                   OUT  LDA
+      *
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANKS   SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU  60
+     CLR                   PARM           ZSERR   1
+     CLR         *LOCK     IN   LDA
+      *
+     CLR         ZSERR     IFEQ 'Y'
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     CLR                   SETON                     U7U8
+     CLR                   RETRN
+     CLR                   END
+      **
+      **    WHEN LR INDICATOR SET ON WITHOUT EXECUTING THE FIRST
+      **    CYCLE
+      **
+     CLR         P1OP      IFNE 'Y'
+     CLR                   EXSR #ZZ
+     CLR                   END
+      **
+     CLR U7 U8             EXSR *PSSR
+     CLR                   END
+      **
+      ********************************************************************
+      ********************************************************************
+      *    SUBROUTINE TO PROCESS CUSTOMER LENDING EVENTS
+      *
+      *    CUSTSR IS CALLED BY - MAIN PROCESSING
+      *
+      *              CALLS - GLZADD;ZDATE2;CONV;LEVEL;DATE
+      *
+      ***********
+     C           CUSTSR    BEGSR                           * CUSTSR BEGSR*
+      **
+      **   MAINTAIN COUNT OF DETAIL RECORDS
+     C           COUNT1    ADD  1         COUNT1  50
+      **
+      **   DETAILS TO REPORT
+     C                     SETON                     31
+      **
+      **   KEEP HASH TOTAL OF EVENT AMOUNTS
+     C           EAMT      DIV  1000      ZZAMT        32
+     C   32                Z-SUBZZAMT     ZZAMT
+     C                     Z-ADDZTOTI1    ZZTOTI
+     C                     Z-ADDZTOTD1    ZZTOTD
+      *
+     C                     EXSR GLZADD
+      *
+     C                     Z-ADDZZTOTI    ZTOTI1 150
+     C                     Z-ADDZZTOTD    ZTOTD1  30
+      **
+      **   IS THIS A NEW LOAN
+     C           LNRF      COMP LSLNRF               4242
+     C***42*****           Z-ADDLNRF      LSLNRF  60                                          CLE148
+     C   42                MOVELLNRF      LSLNRF  6                                           CLE148
+      **
+      **   FOR PART. SOLD EVENT CHECK IF WITH OR WITHOUT RECOURSE
+     C           PTP       COMP '66'                     41
+     C  N41      PTP       COMP '67'                     41
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C           *IN41     ANDEQ'0'                                       CLE005
+     C           PTP       IFEQ '69'                                      CLE005
+     C           PTP       OREQ '72'                                      CLE005
+     C                     MOVE '1'       *IN41                           CLE005
+     C                     ENDIF                                          CLE005
+     C                     ENDIF                                          CLE005
+      *
+     C  N41                GOTO ALL
+      **
+      **   IF WITH RECOURSE ,END
+     C           RCSI      COMP 'Y'                      41
+     C   41                GOTO ENDCUS
+      **
+      **   PARTS,SOLD WITHOUT RECOURSE - DO OPPOSITE CALCULATIONS
+     C                     Z-SUBBCEQ      BCEQ
+     C                     Z-SUBCPAM      CPAM
+      **
+      **   WHICH MONTH DOES EVENT FALL IN - CONVERT DAY NO.TO DATE FORM
+     C           ALL       TAG                             **  ALL TAG  **
+     C   30                Z-ADD1         X
+     C  N30                EXSR DATE
+      **
+      **   CONVERT EVENT AMOUNTS TO BASE CURRENCY
+     C                     EXSR CONV
+     C   U8                GOTO ENDCUS
+      **
+      **   PROCESS GUARANTEES
+     C           PTP       COMP '70'                     41
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C           *IN41     ANDEQ'0'                                       CLE005
+     C           PTP       ANDEQ'71'                                      CLE005
+     C                     MOVE '1'       *IN41                           CLE005
+     C                     ENDIF                                          CLE005
+     C  N41                GOTO NOTGAR
+      **
+      **   ONLY PROCESS MATURITY EVENT FOR GUARANTEES IF STARTED
+     C           ETYP      COMP '70M1'                   41
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C           *IN41     ANDEQ'0'                                       CLE005
+     C           ETYP      ANDEQ'71M1'                                    CLE005
+     C                     MOVE '1'       *IN41                           CLE005
+     C                     ENDIF                                          CLE005
+     C   41N43   GAR,X     ADD  BCEQ      GAR,X
+      **
+      **   USE INDICATOR 43 TO TELL WHEN GUARANTEE HAS NOT STARTED
+     C  N41      ETYP      COMP '70V1'                   43
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C           *IN41     ANDEQ'0'                                       CLE005
+     C           ETYP      ANDEQ'71V1'                                    CLE005
+     C                     MOVE '1'       *IN43                           CLE005
+     C                     ENDIF                                          CLE005
+      *
+     C   41                SETOF                     43
+     C                     GOTO ENDCUS
+      **
+      **   UPDATE AMOUNTS ACCORDING TO EVENT TYPE
+     C           NOTGAR    TAG                             ** NOTGAR TAG**
+      **
+      **   START EVENT
+     C           ETP       COMP 'V1'                     41
+     C  N41                GOTO PRIN
+     C           MAT,X     SUB  BCEQ      MAT,X
+     C           OAMT      SUB  BCEQ      OAMT   130
+     C                     GOTO ENDCUS
+      **
+      **   PRINC.INCREASE EVENT
+     C           PRIN      TAG                             ** PRIN TAG  **
+     C           ETP       COMP 'V3'                     41
+     C           CLE004    IFEQ 'Y'                                       CLE004
+     C           *IN41     ANDEQ'0'                                       CLE004
+     C           ETP       IFEQ 'V5'                                      CLE004
+     C           ETP       OREQ 'V7'                                      CLE004
+     C                     MOVE '1'       *IN41                           CLE004
+     C                     ENDIF                                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CEU020
+      ** If CEU020 is on, seton ind. if E. type is 'V7'.                  CEU020
+      *                                                                   CEU020
+     C           CEU020    IFEQ 'Y'                                       CEU020
+     C           *IN41     ANDEQ'0'                                       CEU020
+     C           ETP       ANDEQ'V7'                                      CEU020
+     C                     MOVE *ON       *IN41                           CEU020
+     C                     ENDIF                                          CEU020
+      *                                                                   CEU020
+     C  N41                GOTO PRMAT
+     C           MAT,X     SUB  BCEQ      MAT,X
+     C                     GOTO ENDCUS
+      **
+      **   PRINC.AT MATURITY EVENTS
+     C           PRMAT     TAG                             ** PRMAT TAG **
+     C           ETP       COMP 'M1'                     41
+     C  N41                GOTO PDUE
+     C           MAT,X     ADD  BCEQ      MAT,X
+     C           OAMT      ADD  CPAMB     OAMT
+     C                     GOTO ENDCUS
+      **
+      **   PAST DUE PRINCIPAL EVENTS
+     C           PDUE      TAG                             **  PDUE TAG **
+     C           ETP       COMP 'D1'                     41
+     C  N41                GOTO REPAY
+     C           OAMT      ADD  CPAMB     OAMT
+     C                     GOTO ENDCUS
+      **
+      **   PRINCIPAL REPAYMENT EVENTS
+     C           REPAY     TAG                             ** REPAY TAG **
+     C           ETP       COMP 'R1'                     41
+     C           CLE004    IFEQ 'Y'                                       CLE004
+     C           *IN41     ANDEQ'0'                                       CLE004
+     C           ETP       IFEQ 'R7'                                      CLE004
+     C           ETP       OREQ 'R9'                                      CLE004
+     C                     MOVE '1'       *IN41                           CLE004
+     C                     ENDIF                                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CEU020
+      ** If CEU020 is on, seton ind. if E. type is 'R9'.                  CEU020
+      *                                                                   CEU020
+     C           CEU020    IFEQ 'Y'                                       CEU020
+     C           *IN41     ANDEQ'0'                                       CEU020
+     C           ETP       ANDEQ'R9'                                      CEU020
+     C                     MOVE *ON       *IN41                           CEU020
+     C                     ENDIF                                          CEU020
+      *                                                                   CEU020
+     C  N41                GOTO ENDCUS
+     C           MAT,X     ADD  BCEQ      MAT,X
+      **
+      **   END OF SUBROUTINE
+     C           ENDCUS    ENDSR                           ** ENDCUS TAG**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *****SUBROUTINE*TO*PROCESS*COMMERCIAL*LOANS*EVENTS********          S01339
+      ***********                                                         S01339
+      *****COMMSR*IS*CALLED*BY*-*MAIN*PROCESSING****************          S01339
+      ***********                                                         S01339
+      ***************CALLS*-*GLZADD;ZDATE2;CONV;LEVEL;DATE******          S01339
+      ***********                                                         S01339
+      ********************************************************************S01339
+      ***********                                                         S01339
+     C***********COMMSR    BEGSR                           * COMMSR BEGSR*S01339
+      ***********                                                         S01339
+      *****MAINTAIN*COUNT*OF*DETAIL*RECORDS*****************              S01339
+     C***********COUNT2    ADD  1         COUNT2  50                      S01339
+      ***********                                                         S01339
+      *****DETAILS*TO*REPORT********************************              S01339
+     C***********          SETON                     31                   S01339
+      ***********                                                         S01339
+      *****KEEP*HASH*TOTAL*OF*EVENT*AMOUNTS*****************              S01339
+     C***********EAMT      DIV  1000      ZZAMT        32                 S01339
+     C***32******          Z-SUBZZAMT     ZZAMT                           S01339
+     C***********          Z-ADDZTOTI2    ZZTOTI                          S01339
+     C***********          Z-ADDZTOTD2    ZZTOTD                          S01339
+      ***********                                                         S01339
+     C***********          EXSR GLZADD                                    S01339
+      ***********                                                         S01339
+     C***********          Z-ADDZZTOTI    ZTOTI2 150                      S01339
+     C***********          Z-ADDZZTOTD    ZTOTD2  30                      S01339
+      ***********                                                         S01339
+      *****IS*THIS*A*NEW*DRAWDOWN*?**********************                 S01339
+     C***********LNDD      COMP LSLNDD               4242                 S01339
+     C***42******          Z-ADDLNDD      LSLNDD 120                      S01339
+     C***42******          SETOF                     4546                 S01339
+      ***********                                                         S01339
+      *****CONVERT*EVENT*AMOUNT*TO*BASE*CURRENCY*********                 S01339
+     C***********          EXSR CONV                                      S01339
+     C***U8******          GOTO ENDCOM                                    S01339
+      ***********                                                         S01339
+      *****WHICH*PERIOD*DOES*EVENT*FALL*IN?**************                 S01339
+     C***********          EXSR DATE                                      S01339
+      ***********                                                         S01339
+      *****START*EVENT***********************************                 S01339
+     C***********ETP       COMP 'S1'                     41               S01339
+     C**N41******          GOTO PRREP                                     S01339
+     C***********MAT,X     SUB  BCEQ      MAT,X                           S01339
+     C***********OAMT      SUB  BCEQ      OAMT                            S01339
+     C***********          GOTO ENDCOM                                    S01339
+      ***********                                                         S01339
+      *****PRINCIPAL*REPAYMENT*EVENT***********************               S01339
+     C***********PRREP     TAG                             ** PRREP TAG **S01339
+     C***********ETP       COMP 'M3'                     41               S01339
+     C**N41******ETP       COMP 'R4'                     41               S01339
+     C**N41******          GOTO ROLLO                                     S01339
+     C***********MAT,X     ADD  BCEQ      MAT,X                           S01339
+     C***********          GOTO ENDCOM                                    S01339
+      ***********                                                         S01339
+      *****ROLLOVER*EVENT**********************************               S01339
+     C***********ROLLO     TAG                             ** ROLLO TAG **S01339
+     C***********ETP       COMP 'R1'                     41               S01339
+     C**N41******          GOTO MATUR                                     S01339
+     C***45******          GOTO ENDCOM                                    S01339
+     C***********          SETON                     45                   S01339
+     C***********OAMT      ADD  OADDB     OAMT                            S01339
+     C***********          GOTO ENDCOM                                    S01339
+      ***********                                                         S01339
+      *****PRINCIPAL*AT*MATURITY*EVENT*********************               S01339
+     C***********MATUR     TAG                             ** MATUR TAG **S01339
+     C***********ETP       COMP 'M1'                     41               S01339
+     C**N41******                                                         S01339
+     C*OR*46*****           GOTO ENDCOM                                   S01339
+     C***********          SETON                     46                   S01339
+     C***********MAT,X     ADD  BCEQ      MAT,X                           S01339
+     C***********OAMT      ADD  OADDB     OAMT                            S01339
+      ***********                                                         S01339
+     C***********ENDCOM    ENDSR                           ** ENDCOM TAG**S01339
+      ***********                                                         S01339
+      ********************************************************************S01339
+      /EJECT
+      ********************************************************************
+      *    SUBROUTINE TO CONVERT AMOUNTS TO BASE CURRENCY
+      *
+      *    CONV IS CALLED BY - CUSTSR;COMMSR
+      *
+      *            CALLS - TABCHN
+      *
+      ********************************************************************
+      **
+     C           CONV      BEGSR                           * CONV BEGSR  *
+      **   CHAIN TO CURRENCIES RECORD TO GET EVENT CCY DEC.PLACES FOR COM
+      **   LOANS EVENTS
+     C                     MOVELECCY      K101    3
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           K101    3                    A
+     C           SDCURR    PARM SDCURR    DSSDY                        B
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     MOVELK101      DBKEY
+     C                     SETON                     U7U8LR***************
+     C                     Z-ADD4         DBASE            ***   04    ***
+     C                     GOTO ENDCON                     ***************
+     C                     END
+      *
+     C***05******          MOVE CDP       ECDP                            S01339
+      *
+     C           BCDP      SUB  ECDP      Z       10
+     C           Z         ADD  4         Z
+      **
+      **   CHECK MULTIPLY DIVIDE INDICATOR
+     C           MDIN      COMP 'D'                      80
+      **
+      **   DIVIDE
+     C   80      SPOT      DIV  POWER,Z   WORK   159H
+     C   80      1         DIV  WORK      WORK      H
+      **
+      **   MULTIPLY
+     C  N80      SPOT      MULT POWER,Z   WORK      H
+      **
+      **   AMOUNT IN BASE CURRENCY
+     C   02      CPAM      MULT WORK      CPAMB  130H
+      *
+     C***05******OADD      MULT WORK      OADDB  130H                     S01339
+      *
+     C           ENDCON    ENDSR                           ** ENDCON TAG**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *    SUBROUTINE TO DETERMINE IN WHICH PERIOD EVENT FALLS
+      *
+      *    DATE IS CALLED BY - CUSTSR;COMMSR
+      *
+      *            CALLS - ZDATE2
+      *
+      ********************************************************************
+      **
+     C           DATE      BEGSR                           * DATE BEGSR  *
+      *
+     C                     Z-ADDEDAT      ZDAYNO
+      *
+     C                     EXSR ZDATE2
+      **
+      *    USE ONLY MONTH AND YEAR PART TO LOOK UP ARRAY
+     C                     MOVE ZYEAR     DAT4
+     C                     MOVELZMTH      DAT4
+      *
+     C                     Z-ADD1         X
+     C           DAT4      LOKUPRUN,X                    41
+      **
+      **   NOT FOUND - DATE MUST BE > 12 MONTHS IN FUTURE
+     C  N41                Z-ADD13        X
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *    SUBROUTINE TO HANDLE LEVEL BREAK DETAIL TIME CALCULATIONS
+      *
+      *    LEVEL IS CALLED BY - CUSTSR;COMMSR
+      *
+     C           LEVEL     BEGSR                           * LEVEL BEGSR *
+      **
+      **   RESET ARRAYS AND CLEAR OUTSTANDING AMOUNT FIELD
+     C                     Z-ADD0         MAT
+     C                     Z-ADD0         GAR
+     C                     Z-ADD0         OAMT
+     C                     Z-ADD0         CMTOT
+     C                     Z-ADD0         CGTOT
+      **
+      **   CALL SDCTRYPD TO ACCESS COUNTRY NAME
+     C                     MOVELCDOM      CTRKEY  2
+     C                     CALL 'AOCTRYR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           CTRKEY
+     C           SDCTRY    PARM SDCTRY    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'SDCTRYPD'DBFILE
+     C                     MOVELCTRKEY    DBKEY
+     C                     SETON                     U7U8LR***************
+     C                     Z-ADD5         DBASE            ***   05    ***
+     C                     GOTO ENDLEV                     ***************
+     C                     END
+      **
+      **   IF REGION CHANGED - ACCESS REGION CODES A/O FOR REGION NAME
+     C  NL2
+     COR 20                GOTO ENDLEV
+      **
+      **   CLEAR TOTAL FIELDS
+     C                     Z-ADD0         RMTOT
+     C                     Z-ADD0         RGTOT
+     C                     Z-ADD0         RGAMT
+     C                     MOVE RDOM      REGKEY
+     C                     CALL 'AOREGNR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           REGKEY  2
+     C           SDREGN    PARM SDREGN    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'SDREGNPD'DBFILE
+     C                     MOVELREGKEY    DBKEY
+     C                     SETON                     U7U8LR***************
+     C                     Z-ADD6         DBASE               06
+     C                     END                             ***************
+      *
+     C           ENDLEV    ENDSR                           ** ENDLEV TAG**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      **   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+      **
+      ********************************************************************
+     C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+      **
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LRNOT FOUND
+     C                     SETON                     99
+     C                     ELSE
+      **   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C                     END
+      **
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      * SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+      *   IND '99' IS SET BY AN OVERFLOW ERROR
+      *
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+      *
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+      *
+      * SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+      * BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+      *
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      * SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+      *                        GLZADD, GLZSUB, GLZCMP.
+      *          PARAMETERS PASSED -
+      *                     I/P ZZAMTI ZZAMTD
+      *                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+      ********************************************************************
+      *
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+      *
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+      *
+      *    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+      *
+      *    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+      *
+      *    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+      *    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+      *
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+      *
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+      *
+      * IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+      *
+      * IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+      *
+      * THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+      * IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+      *
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+      *
+      * IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+      *
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+      * BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+      *
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+      *
+      * IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+      *
+      * IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+      *
+      *
+      * IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+      *
+      * REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+      **
+      **   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+      **
+      **   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      * SUBROUTINE : #ZZ
+      *
+      * CALLED BY MAIN PROCESSING DURING TOTAL TIME CALCULATIONS IF
+      * THE P1 FILES HAVE NOT ALREADY BEEN OPENED (IE, IF THERE ARE
+      * NO RECORDS READ AND THEREFORE FILES OPENING NOT PERFORMED)
+      ********************************************************************
+      *
+     C           #ZZ       BEGSR
+      *
+     C                     OPEN LE0892P1
+     C                     MOVE BRNCH     CMPYM
+     C                     MOVE *BLANKS   CMNM
+      *
+      *
+      ** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     MOVE *BLANKS   SENTY   3
+      *
+      **  CALL ZSFILE WITH ENTITY REQUESTED OR BLANK
+      *
+     C           BRNCH     IFNE 'ALL'
+     C                     MOVE BRNCH     SENTY
+     C                     END
+      *
+     C                     OUT  LDA
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+     C           ZSERR     IFEQ 'Y'
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** AND GET ENTITY DETAILS FOR REPORT HEADINGS
+      *
+     C           BRNCH     IFNE 'ALL'
+     C                     CALL 'AOCOMPR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRNCH     @CENB   3
+     C           SDCOMP    PARM SDCOMP    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@CENB     DBKEY
+     C                     MOVEL'SDCOMPPD'DBFILE           ************
+     C                     Z-ADD18        DBASE            * DBASE 18 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     SETON                     U7U8LR
+     C                     GOTO #ZZ9
+     C                     END
+     C                     END
+      *
+      ** OUTPUT 'NO DETAILS TO REPORT' IN P1
+      *
+     C                     EXCPTNODTL
+      *
+     C           #ZZ9      ENDSR
+      *
+      ********************************************************************
+     C/SPACE 3
+      ********************************************************************
+      *
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+      *
+      *  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS
+      *
+      *  CALLS: NOTHING
+      *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     ENDSR                           ** *PSSR **
+      *
+      ********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z4                                               S01392
+     C********************************************************************
+     C/EJECT
+     OLE0892P1H  203   OFNL2 71
+     O       OR        L2 71
+     O       OR        U7N31 71
+     O                                   24 'REFERENCE LE0892P1'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     113
+     O                                  122 'PAGE'
+     O                         PAGE  Z  129
+     O        H  1     OFNL2 71
+     O       OR        L2 71
+     O                                   48 'LOAN EXPOSURE AND MATUR'
+     O                                   70 'ITY BY COUNTRY AND REG'
+     O                                   85 'ION OF DOMICILE'
+     O                                   95 'COMPANY'
+     O                         CMPYM     99
+     O                                  100 '-'
+     O                         CMNM     130
+     O        H  2     OFNL2 71
+     O       OR        L2 71
+     O                                   49 '------------------------'
+     O                                   73 '------------------------'
+     O                                   85 '------------'
+     O        H  2     OFNL2 71
+     O       OR           L2 71
+     O************                       15 'CURRENCY'                    088124
+     O************             BCCY      20                               088124
+1060 O                                   19 'BASE CURRENCY'               088124
+1061 O                         BCCY      23                               088124
+1060 O                 72                86 'NOTE - EVENTS HAVE NOT'      088124
+1060 O                 72               108 'BEEN GENERATED TO END'       088124
+1060 O                 72               116 'OF BOOK'                     088124
+     O        H  2     OFNL2N20
+     O       AND       71
+     O       OR        L2N20 71
+     O                                   13 'REGION'
+     O                         REGN      45
+     O        H  1     OFNL2 71
+     O       OR        L2 71
+     O                                   24 'COUNTRY'
+     O                                   47 'OUTSTANDING'
+     O                                   86 'MATURITIES'
+     O                                  116 'GTEES ISSUED MATURITIES'
+     O        H  2     OFNL2 71
+     O       OR        L2 71
+     O                                   24 '-------'
+     O                                   47 '-----------'
+     O                                   86 '----------'
+     O                                  116 '-----------------------'
+     O        E  1     62 71
+     O                         CNM       31
+     O                    50   OAMT      51 ' ,   ,   ,   , 0 -'
+     O                    51   OAMT      51 '   ,   ,   , 0 . -'
+     O                    52   OAMT      51 '  ,   ,   , 0 .  -'
+     O                    53   OAMT      51 ' ,   ,   , 0 .   -'
+     O                                   66 'MONTH 1'
+     O                    50   MAT,X     91 ' ,   ,   ,   , 0 -'
+     O                    51   MAT,X     91 '   ,   ,   , 0 . -'
+     O                    52   MAT,X     91 '  ,   ,   , 0 .  -'
+     O                    53   MAT,X     91 ' ,   ,   , 0 .   -'
+     O                    50   GAR,X    112 ' ,   ,   ,   , 0 -'
+     O                    51   GAR,X    112 '   ,   ,   , 0 . -'
+     O                    52   GAR,X    112 '  ,   ,   , 0 .  -'
+     O                    53   GAR,X    112 ' ,   ,   , 0 .   -'
+     O        E  1     60 71
+     O                                   64 'MONTH'
+     O                         MONTH     67
+     O                    50   MAT,X     91 ' ,   ,   ,   , 0 -'
+     O                    51   MAT,X     91 '   ,   ,   , 0 . -'
+     O                    52   MAT,X     91 '  ,   ,   , 0 .  -'
+     O                    53   MAT,X     91 ' ,   ,   , 0 .   -'
+     O                    50   GAR,X    112 ' ,   ,   ,   , 0 -'
+     O                    51   GAR,X    112 '   ,   ,   , 0 . -'
+     O                    52   GAR,X    112 '  ,   ,   , 0 .  -'
+     O                    53   GAR,X    112 ' ,   ,   , 0 .   -'
+     O        E  2     61 71
+     O                                   71 'OVER 12 MTHS'
+     O                    50   MAT,X     91 ' ,   ,   ,   , 0 -'
+     O                    51   MAT,X     91 '   ,   ,   , 0 . -'
+     O                    52   MAT,X     91 '  ,   ,   , 0 .  -'
+     O                    53   MAT,X     91 ' ,   ,   , 0 .   -'
+     O                    50   GAR,X    112 ' ,   ,   ,   , 0 -'
+     O                    51   GAR,X    112 '   ,   ,   , 0 . -'
+     O                    52   GAR,X    112 '  ,   ,   , 0 .  -'
+     O                    53   GAR,X    112 ' ,   ,   , 0 .   -'
+     O        E        63 71
+     O                                   64 'TOTAL'
+     O                    50   CMTOT     91 ' ,   ,   ,   , 0 -'
+     O                    51   CMTOT     91 '   ,   ,   , 0 . -'
+     O                    52   CMTOT     91 '  ,   ,   , 0 .  -'
+     O                    53   CMTOT     91 ' ,   ,   , 0 .   -'
+     O                    50   CGTOT    112 ' ,   ,   ,   , 0 -'
+     O                    51   CGTOT    112 '   ,   ,   , 0 . -'
+     O                    52   CGTOT    112 '  ,   ,   , 0 .  -'
+     O                    53   CGTOT    112 ' ,   ,   , 0 .   -'
+     O        E 23     64 71
+     O                                   20 'REGION TOTALS'
+     O                    50   RGAMT     51 ' ,   ,   ,   , 0 -'
+     O                    51   RGAMT     51 '   ,   ,   , 0 . -'
+     O                    52   RGAMT     51 '  ,   ,   , 0 .  -'
+     O                    53   RGAMT     51 ' ,   ,   , 0 .   -'
+     O                    50   RMTOT     91 ' ,   ,   ,   , 0 -'
+     O                    51   RMTOT     91 '   ,   ,   , 0 . -'
+     O                    52   RMTOT     91 '  ,   ,   , 0 .  -'
+     O                    53   RMTOT     91 ' ,   ,   , 0 .   -'
+     O                    50   RGTOT    112 ' ,   ,   ,   , 0 -'
+     O                    51   RGTOT    112 '   ,   ,   , 0 . -'
+     O                    52   RGTOT    112 '  ,   ,   , 0 .  -'
+     O                    53   RGTOT    112 ' ,   ,   , 0 .   -'
+     OLE0892P1E  203           NODTL
+     O                                   24 'REFERENCE LE0892P1'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     113
+     O                                  122 'PAGE'
+     O                         PAGE  Z  129
+     O        E                NODTL
+     O                                   48 'LOAN EXPOSURE AND MATUR'
+     O                                   70 'ITY BY COUNTRY AND REG'
+     O                                   85 'ION OF DOMICILE'
+     O                                   95 'COMPANY'
+     O                         CMPYM     99
+     O                                  100 '-'
+     O                         CMNM     130
+     O        E                NODTL
+     O                                   49 '------------------------'
+     O                                   73 '------------------------'
+     O                                   85 '------------'
+     O        E 3      U7 U8   NODTL
+     O                                   51 '*** REFERENCE LE0892'
+     O                                   71 'DATABASE ERROR ***'
+     O        E 3        NU7   NODTL
+     O                                   63 '***   NO DETAILS TO REPO'
+     O                                   71 'RT   ***'
+     O        E 3              NODTL
+     O                                   66 '*** END OF REPORT FOR'
+     O                                   74 ' COMPANY'
+     O                         CMPYM     78
+     O                                   82 ' ***'
+     O        T 32     LR U7 U8
+     O       AND       71
+     O                                   51 '*** REFERENCE LE0892'
+     O                                   71 'DATABASE ERROR ***'
+     O        T 3      L3 71
+     O                                   66 '*** END OF REPORT FOR'
+     O                                   74 ' COMPANY'
+     O                         CMPYM     78
+     O                                   82 ' ***'
+     OLE0892AUT  203   LR
+     O                                   24 'REFERENCE LE0892AU'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE1 Z  127
+     O        T        LR
+     O                                   49 'LOAN EXPOSURE AND MATURI'
+     O                                   73 'TY BY COUNTRY AND REGION'
+     O                                   97 ' OF DOMICILE - FILE CONT'
+     O                                  101 'ROLS'
+     O        T  3     LR
+     O                                   49 '------------------------'
+     O                                   73 '------------------------'
+     O                                   97 '------------------------'
+     O                                  101 '----'
+     O        T        LR
+     O**********                         28 'S/SLVN2L1 RUN CONTROLS'      BHF127
+     O                                   28 'S/SLVN2L2 RUN CONTROLS'      BHF127
+     O                                   59 'NUMBER'
+     O                                   84 'VALUE'
+     O        T  2     LR
+     O                                   28 '----------------------'
+     O                                   59 'OF RECORDS'
+     O                                   84 'OF RECORDS'
+     O        T  3     LR
+     O                                   32 'TOTAL RECORDS ON FILE - '
+     O                                   42 'CALCULATED'
+     O                         COUNT13   59
+     O                         ZTOTI1Z   81
+     O                         ZTOTD1    84
+     O********T*       LR U1                                              S01339
+     O**********                         28 'S/SCVN2L1 RUN CONTROLS'      BHF127
+     O**********                   28 'S/SCVN2L2 RUN CONTROLS'      BHF127S01339
+     O********T* 2     LR U1                                              S01339
+     O**********                         28 '----------------------'      S01339
+     O********T*       LR U1                                              S01339
+     O**********                         32 'TOTAL RECORDS ON FILE - '    S01339
+     O**********                         42 'CALCULATED'                  S01339
+     O**********               COUNT23   59                               S01339
+     O**********               ZTOTI2Z   81                               S01339
+     O**********               ZTOTD2    84                               S01339
+     O        T 3      LRN31NU7
+     O                                   63 '***   NO DETAILS TO REPO'
+     O                                   71 'RT   ***'
+     O        T 32     LR U7 U8
+     O                                   51 '*** REFERENCE LE0892'
+     O                                   72 ' DATABASE ERROR AT'
+     O                         DBASE     78
+     O        T        LR U7 U8
+     O                                   37 'FILENAME'
+     O                         DBFILE    48
+     O                                   52 'KEY'
+     O                         DBKEY     82
+** POWR -- ARRAY OF POWERS
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   CPY@   **   OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

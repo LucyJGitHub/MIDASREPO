@@ -1,0 +1,1668 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Depot movements links maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  RPG/PM4100 - DEPOT MOVEMENTS LINKS MAINTENANCE               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027A            Date 16May06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01486             Date 30Nov94               *
+      *                 73957              Date 29Jul94               *
+     F*                 53103              DATE 07OCT93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*  73957  - PM INSTRUCTION MANUAL CORRECTIONS                   *
+     F*  53103  - FILE CREATED FOR PERFORMANCE RECONCILIATION CHANGES *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      /EJECT
+      *****************************************************************
+      *
+      *         FILE DEFINITIONS
+      *         ----------------
+      *
+     F***PM4100DDCF**E                    WORKSTN      KINFSR *PSSR       S01486
+     FPM4100DFCF  E                    WORKSTN      KINFSR *PSSR          S01486
+     F                                        WWRR  KSFILE PM4100S0
+      **  Display file - prefix DD
+      *
+     F***SDPORTPDIF**E           K        DISK         KINFSR *PSSR   UC  S01486
+      ****PM*I.C.D.*-*prefix*P9****************************************   S01486
+      *
+     F***SDBANKPDIF**E           K        DISK         KINFSR *PSSR   UC  S01486
+      ****Bank*details*-*prefix*BJ*************************************   S01486
+      *
+     FPMPORTLLIF  E           K        DISK         KINFSR *PSSR
+      **  Live portfolios - prefix PN (keys Cust.+Portf.)
+      *
+     FPMLKDML0IF  E           K        DISK         KINFSR *PSSR
+      **  Links - prefix LM (to seek mvmts in any column)
+      *
+     F***SDPLCSPDIF**E           K        DISK         KINFSR *PSSR       S01486
+      ****Portfolio*customers*-*prefix*QB*(key*Cust.)******************   S01486
+      *
+     F***SDCUSTL6IF**E           K        DISK         KINFSR *PSSR       S01486
+      ****Customers*-*prefix*BB*(key*Cust.*shortname)******************   S01486
+      *
+     F***SDCUSTL1IF**E           K        DISK         KINFSR *PSSR       S01486
+      ****Customers*-*prefix*BB*(key*Cust.*number)*********************   S01486
+      *
+     F***SDSECSL0IF**E           K        DISK         KINFSR *PSSR       S01486
+      ****Security*customers*-*prefix*BF*(key*Cust.)*******************   S01486
+      *
+     FDPTMV   IF  E           K        DISK         KINFSR *PSSR
+      **  Depot movements (keys Security+Reference)
+      *
+     F***PMLKDMPPUF**E           K        DISK         KINFSR *PSSR A     S01486
+     FPMLKDMPDUF  E           K        DISK         KINFSR *PSSR A        S01486
+      **  Depot movements links - prefix LM (keys Cust.+Portf.+Link)
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      * FUNCTION OF INDICATORS
+      *
+      *      03         F3
+      *      09         F9
+      *      12         F12
+      *
+      *******31*********EOF*or*error*on*SDBANKPD*or*SDPORTPD***********   S01486
+      *      32         EOF on DPTMVD
+      *******33*********EOF*on*PMLKDMPP********************************   S01486
+      *      33         EOF on PMLKDMPD                                   S01486
+      *******34*********EOF*on*SDSECSL0********************************   S01486
+      *******35*********EOF*on*SDPLCSPD********************************   S01486
+      *      36         EOF on PMPORTLL
+      *      37         EOF on PMLKDML0
+      *      38         EOF on SFL (readc)
+      *******39*********EOF*on*SDCUSTL1/SDCUSTL6***********************   S01486
+      *
+      *      41         Clear SFL (off = display)
+      *      42         Enable F12
+      *      43         Enable F9
+      *
+      *      51         Insert mode
+      *      52         No 'Review from' entered (insert mode only)
+      *      53         WO side (for #TSTRF)
+      *      54         Invalid number (output from #TSTNU)
+      *
+      *      70         Any error in 'Review from' parameters
+      *      71         Error in Customer
+      *      72         Error in Portfolio
+      *      73         Error in Security
+      *      74         Error in Reference
+      *
+      *      80         Any error in SFL records
+      *      81         Error in Out security 1
+      *      82         Error in Out reference 1
+      *      83         Error in Out security 2
+      *      84         Error in Out reference 2
+      *      85         Error in In security 1
+      *      86         Error in In reference 1
+      *      87         Error in In security 2
+      *      88         Error in In reference 2
+      *      89         Error in SFL line (output from TSTRE)
+      *
+      *      90         Error in Security (from #TSTRF)
+      *      91         Error in Reference (from #TSTRF)
+      *
+      *      99         ZSR errors
+      *      U7         Program/file exception/error
+      *      U8         Data base error
+      *      LR         End of program
+      *
+      *
+      *       DATABASE ERRORS
+      *       ---------------
+      *
+      *      no.     file          access
+      *      ............................................
+      *      001     SDBANKPD      OPEN or READ
+      *      002     SDPORTPD      OPEN or READ
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** FOR COMPILATION
+     E                    CPY@    1   1 80
+      *
+      *  For right justification of character field
+     E                    $AA         6  1
+      *****************************************************************
+      *
+      **  PROGRAM STATUS DATA STRUCTURE
+     IDSPGM     ESDSY2PGDSP
+      *
+      **  LOCAL DATA AREA FOR DATABASE ERRORS.
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *
+      **  LOCAL DATA AREA FOR PM STATUS
+     IPMSTAT    E DSPMSTAT
+     I*
+     I*    MIDAS 'Next Available Transaction No.' Data Area  MNATN .
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+      *
+      **  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  Constants
+     I              '0123456789'          C         C#DIGI
+     I*                                                                   S01486
+     IZMUSER      DS                             17                       S01486
+     I** Data area ZMUSER                                                 S01486
+     I                                       11  13 USRBCH                S01486
+     I*                                                                   S01486
+     IRUNDAT    E DS                                                      S01486
+     I**  Standard Data Area Layout for System flags and Run Date         S01486
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Data structure for bank details                                 S01486
+     I*                                                                   S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I**  Data structure for portfolio management details                 S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I**  Data structure for customer details                             S01486
+     I*                                                                   S01486
+     ISDSECS    E DSSDSECSPD                                              S01486
+     I**  Data structure for securities customer details                  S01486
+     I*                                                                   S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I**  Data structure for portfolio customer details                   S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I**  Long data structure for access objects                          S01486
+     I*                                                                   S01486
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *        INDEX OF SUBROUTINES
+      *        --------------------
+      *
+      *  #INIT        - Initialization
+      *  #RSTIN       - Reset DSPF indicators and clear message queue
+      *  #DSP1        - Display initial screen
+      *  #PRC1        - Process initial screen
+      *    #TSTNU       - Test numeric field
+      *    #TSTFM       - Test format of 'Review from' fields
+      *    #TSTFL       - Test inter-field relations
+      *    #TSTCP       - Test Customer/Portfolio
+      *    #TSTSR       - Test Security/Reference
+      *  #DSPAM       - Display Amend screen
+      *  #DSPIN       - Display Insert screen
+      *  #PRCAM       - Process Amend SFL
+      *    #TSTRE       - Test SFL record (locally)
+      *      #TSTRF       - Test Security/Reference pair
+      *        #TSTNU       - Test numeric field
+      *  #PRCIN       - Process Insert SFL
+      *    #TSTRE       - Test SFL record (locally)
+      *    #ZLKRF       - Get next link reference no.
+      *    #ZTNLU1      - Get next PM transaction no.
+      ***#DBERR*******-*Database*error*processing**********************   S01486
+      *  #SNDMS       - Send program message
+      *  *PSSR        - File/Program exception handler
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C*                                                                   S01486
+     C**  Copyright statement                                             S01486
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*                                                                   S01486
+     C**  Read in DTAARA/RUNDAT                                           S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           RUNDAT                          S01486
+     C                     IN   RUNDAT                                    S01486
+     C*                                                                   S01486
+     C**  Read in DTAARA/ZMUSER                                           S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           ZMUSER                          S01486
+     C                     IN   ZMUSER                                    S01486
+     C*                                                                   S01486
+      *  Key lists
+     C           KSR       KLIST
+     C                     KFLD           WWSECU 10
+     C                     KFLD           WWREFE  60
+      *
+     C           KSR#C     KLIST
+     C                     KFLD           WWSECU
+     C                     KFLD           WWRFCH  6
+      *
+     C           KCP       KLIST
+     C**********           KFLD           WWCUST  60                                         CSD027A
+     C                     KFLD           WWCUST  6                                          CSD027A
+     C                     KFLD           WWPORT  4
+      *
+     C           KCPL      KLIST
+     C                     KFLD           WWCUST
+     C                     KFLD           WWPORT
+     C                     KFLD           WWLKRF  70
+      *
+      /EJECT
+      *****************************************************************
+      *                    ~~~~~~~~~~~~
+      *                    MAIN PROGRAM
+      *                    ~~~~~~~~~~~~
+      *
+      *  Initialization
+     C                     EXSR #INIT
+      *
+      *  Loop over processing steps
+     C           *IN03     DOUEQ*ON
+      *
+      *    - Loop over initial screens
+     C           *IN70     DOUEQ*OFF
+      *
+      *      -- Display initial screen, clear message queue
+     C                     EXSR #DSP1
+     C                     EXSR #RSTIN
+      *
+      *      -- If not F3 , process init. screen
+     C           *IN03     IFEQ *OFF
+     C                     EXSR #PRC1
+     C                     ENDIF
+      *      --
+     C                     ENDDO
+      *
+      *    - If F3 , finish
+     C           *IN03     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      *    - Loop over Amend/Insert screens
+      *
+     C           *IN80     DOUEQ*OFF
+      *
+      *      -- Display Amend or Insert screen, clear message queue
+     C           *IN51     IFEQ *ON
+     C                     EXSR #DSPIN
+     C                     ELSE
+     C                     EXSR #DSPAM
+     C                     ENDIF
+     C                     EXSR #RSTIN
+      *
+      *      -- If not F3/ F12 , process changes/inserts
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           *IN51     IFEQ *ON
+     C                     EXSR #PRCIN
+     C                     ELSE
+     C                     EXSR #PRCAM
+     C                     ENDIF
+     C                     ENDIF
+      *      --
+     C                     ENDDO
+      *    -
+     C                     ENDDO
+      *
+      *  Return
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #INIT  - INITIALIZATION                                      *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      ***CALLS*********:*#DBERR****************************************   S01486
+      *  CALLS         : *PSSR                                        *   S01486
+      *                                                               *
+      *  in  : SDBANKPD                                               *
+      *  out : DDJOB,DDPGM,DDDATE,DBPGM,WWRDNB,WWD,WWM,WWY            *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      *  Assign fields from SDS
+     C                     MOVE ##JOB     DDJOB
+     C                     MOVEL##PGM     DDPGM
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA                                       S01486
+      *
+      *  Read in SDBANKPD for run date
+     C***********          OPEN SDBANKPD               31                 S01486
+     C***********          READ SDBANKPD               3131               S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD  7                       S01486
+     C                     PARM '*FIRST'  WLOPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C************IN31     IFEQ *ON                                       S01486
+     C           WLRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDBANKPD'DBFILE                          S01486
+     C***********          MOVEL'BANK'    DBKEY            *************  S01486
+     C                     MOVE 'SDBANKPD'DBFILE                          S01486
+     C                     MOVELWLOPTN    DBKEY            *************  S01486
+     C                     MOVE '001'     DBASE            * DBERR 001 *
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF
+      *
+      *  Assign its fields and close it
+     C                     MOVE BJRDNB    WWRDNB  50
+     C                     MOVE BJMRDT    DDDATE
+     C           2         SUBSTDDDATE:1  WW2     2
+     C                     MOVE WW2       WWD     20
+     C           3         SUBSTDDDATE:3  WWM     3
+     C           2         SUBSTDDDATE:6  WW2
+     C                     MOVE WW2       WWY     20
+     C***********          CLOSESDBANKPD               31                 S01486
+      *
+      *  Read in SDPORTPD for portfolio 9997 name
+     C***********          OPEN SDPORTPD               31                 S01486
+     C***********          READ SDPORTPD               3131               S01486
+     C*                                                                   S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD                          S01486
+     C                     PARM '*FIRST'  WLOPTN                          S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C*                                                                   S01486
+     C************IN31     IFEQ *ON                                       S01486
+     C           WLRTCD    IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDPORTPD'DBFILE                          S01486
+     C                     MOVE 'SDPORTPD'DBFILE                          S01486
+     C***********          MOVEL'PORT'    DBKEY            *************  S01486
+     C                     MOVELWLOPTN    DBKEY            *************  S01486
+     C                     MOVE '002'     DBASE            * DBERR 002 *
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF
+      *
+      *  Assign its fields and close it
+     C***********          MOVE P9R997    WW9997  4                       S01486
+     C                     MOVE FCR997    WW9997  4                       S01486
+     C***********          CLOSESDPORTPD               31                 S01486
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #RSRIN - RESET ERROR INDICATORS IN DSPF AND MESSAGE QUEUE    *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         :                                              *
+      *                                                               *
+      *  out : *IN70-74,*IN80-89,message queue,DDSFLN                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #RSTIN    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           DDPGM
+     C                     PARM '*SAME'   WWPGRL  5
+     C                     MOVE *OFF      *IN70
+     C                     MOVEA'0000'    *IN,71
+     C                     MOVE *OFF      *IN80
+     C                     MOVEA'00000000'*IN,81
+     C                     MOVE *OFF      *IN89
+      *
+     C                     Z-ADD0         DDSFLN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #DSP1  - DISPLAY INITIAL SCREEN                              *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         :                                              *
+      *                                                               *
+      *  in  : *IN70                                                  *
+      *  out : *IN03,*IN12,*IN51,DDCUST,DDCUSH,DDPORT,DDSECU,DDREFE   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #DSP1     BEGSR
+      *
+      *  If no errors, clear 'Review from' fields
+     C           *IN70     IFEQ *OFF
+     C                     CLEARDDCUST
+     C                     CLEARDDPORT
+     C                     CLEARDDSECU
+     C                     CLEARDDREFE
+     C                     ENDIF
+      *
+     C           DDCUST    IFEQ *BLANKS
+     C                     MOVE *BLANKS   DDCUSH
+     C                     ENDIF
+      *
+      *  Display
+     C                     MOVE *ON       *IN43
+     C                     WRITEPM4100F0
+     C                     WRITE#MSGCTL
+     C                     WRITEPM4100F1
+     C                     READ PM4100F0                 99
+     C                     MOVE *OFF      *IN43
+      *
+      *  Set *IN51 (insert/amend mode)
+     C           *IN09     IFEQ *ON
+     C                     MOVE *ON       *IN51
+     C                     MOVE 'I'       WLACTC  1                       S01486
+     C                     ELSE
+     C                     MOVE *OFF      *IN51
+     C                     MOVE 'A'       WLACTC                          S01486
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PRC1  - PROCESS INITIAL SCREEN                              *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         : #TSTFM,#TSTFL,#TSTCP,#TSTSR                  *
+      *                                                               *
+      *  out : *IN70-74                                               *
+      *****************************************************************
+      *
+     C           #PRC1     BEGSR
+     C*                                                                   S01486
+     C**  Check first if user is authorised to action code                S01486
+     C*                                                                   S01486
+     C           AGMBIN    IFNE 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  If single branch environment                                    S01486
+     C*                                                                   S01486
+     C                     CALL 'ZVACTU'                                  S01486
+     C                     PARM WLACTC    WLACTN  1                       S01486
+     C                     PARM *ZERO     WLERR   10                      S01486
+     C*                                                                   S01486
+     C           WLERR     IFNE *ZERO                                     S01486
+     C                     MOVE '1'       *IN70                           S01486
+     C                     MOVEL'PM51117' WWMSID                          S01486
+     C                     EXSR #SNDMS                                    S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ELSE                                           S01486
+     C*                                                                   S01486
+     C**  If multibranching environment                                   S01486
+     C*                                                                   S01486
+     C                     CALL 'ZVACTBU'                                 S01486
+     C                     PARM WLACTC    WLACTN  1                       S01486
+     C                     PARM USRBCH    WLBRCH  3                       S01486
+     C                     PARM *ZERO     WLERR   10                      S01486
+     C*                                                                   S01486
+     C           WLERR     IFEQ 1                                         S01486
+     C                     MOVE '1'       *IN70                           S01486
+     C                     MOVEL'PM51115' WWMSID                          S01486
+     C                     EXSR #SNDMS                                    S01486
+     C                     ELSE                                           S01486
+     C           WLERR     IFEQ 2                                         S01486
+     C                     MOVE '1'       *IN70                           S01486
+     C                     MOVEL'PM51116' WWMSID                          S01486
+     C                     EXSR #SNDMS                                    S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C           WLERR     IFEQ *ZERO                                     S01486
+      *
+      *  Test format of fields, convert from alfa to numeric
+     C                     EXSR #TSTFM
+     C           *IN70     CABEQ*ON       E#PR1
+      *
+      *  Test that all fields are present/empty as needed
+     C                     EXSR #TSTRL
+     C           *IN70     CABEQ*ON       E#PR1
+      *
+      *  Test semantics
+      *
+      *    - If Customer/Portfolio entered, test it
+     C           WWCUSH    IFNE *BLANKS
+     C                     EXSR #TSTCP
+      *
+      *    - Else test Security/Reference
+     C                     ELSE
+     C           WWSECU    IFNE *BLANKS
+     C                     EXSR #TSTSR
+     C                     ENDIF
+     C                     ENDIF
+     C*                                                                   S01486
+     C                     END                                            S01486
+      *
+     C           E#PR1     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #TSTFM - TEST FORMAT OF 'REVIEW FROM' FIELDS                 *
+      *                                                               *
+      *  CALLED BY     : #PRC1                                        *
+      *  CALLS         : #SNDMS                                       *
+      *                                                               *
+      *  in  : DDCUST,DDPORT,DDSECU,DDREFE                            *
+      *  out : WWCUSH,WWPORT,WWSECU,WWREFE,WWRFCH,*IN70-74,WWCSTN     *
+      *****************************************************************
+      *
+     C           #TSTFM    BEGSR
+      *
+      *  Move portolio and security to WW-variables
+     C                     MOVE DDPORT    WWPORT
+     C                     MOVE DDSECU    WWSECU
+      *
+      *  Portfolio 9997 :
+     C           DDPORT    IFEQ WW9997
+     C                     MOVE '9997'    WWPORT
+     C                     ENDIF
+      *
+      *  Test customer number/shortname , set WWCSTN
+      *
+      *    - Numeric or alfa ?
+     C                     MOVE *OFF      *IN54
+     C           C#DIGI    CHECKDDCUST    X
+     C           X         IFEQ 7
+     C                     MOVE *ON       WWCSTN  1
+     C                     MOVE DDCUST    WW4     4
+     C           WW4       IFNE *BLANKS
+     C                     MOVE *ON       *IN54
+     C                     ENDIF
+     C                     ELSE
+     C           X         IFEQ 1
+     C                     MOVE *OFF      WWCSTN
+     C                     ELSE
+     C                     MOVE *ON       *IN54
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *    - If error, indicate it
+     C           *IN54     IFEQ *ON
+     C                     MOVE 'PM41018' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN70
+      *
+      *    - Else assign WW-variable
+     C                     ELSE
+     C                     MOVE DDCUST    WWCUSH 10
+     C                     ENDIF
+      *
+      *  Convert reference to numeric
+      *
+      *    - Right justify and test DDREFE
+     C                     MOVE DDREFE    WWNUM   6
+     C                     EXSR #TSTNU
+     C                     MOVE WWNUM     DDREFE
+      *
+      *    - If error, indicate it
+     C           *IN54     IFEQ *ON
+     C****                 MOVE 'PM41018' WWMSID                          73957
+     C                     MOVE 'PM41022' WWMSID                          73957
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN74
+     C                     MOVE *ON       *IN70
+      *
+      *    - Else assign WW-variables
+     C                     ELSE
+     C                     MOVE DDREFE    WWREFE
+     C                     MOVE WWREFE    WWRFCH
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #TSTRL - TEST INTER-FIELDS RELATIONS                         *
+      *                                                               *
+      *  CALLED BY     : #PRC1                                        *
+      *  CALLS         : #SNDMS                                       *
+      *                                                               *
+      *  in  : WWCUSH,WWPORT,WWSECU,WWREFE,*IN51                      *
+      *  out : *IN70-74,*IN52                                         *
+      *****************************************************************
+      *
+     C           #TSTRL    BEGSR
+      *
+      *  If portfolio entered than customer must be entered too
+     C           WWCUSH    IFEQ *BLANKS
+     C           WWPORT    ANDNE*BLANKS
+     C                     MOVE 'PM41007' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSFL
+     C                     ENDIF
+      *
+      *  Security + reference either both or none
+     C           WWSECU    IFEQ *BLANKS
+     C           WWREFE    ANDNE0
+     C           WWSECU    ORNE *BLANKS
+     C           WWREFE    ANDEQ0
+     C                     MOVE 'PM41002' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN73
+     C                     MOVE *ON       *IN74
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSFL
+     C                     ENDIF
+      *
+      *  Both customer and security cannot be entered
+     C           WWCUSH    IFNE *BLANKS
+     C           WWSECU    ANDNE*BLANKS
+     C                     MOVE 'PM41001' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN73
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSFL
+     C                     ENDIF
+      *
+      *  If insert mode, no security can be entered
+     C           *IN51     IFEQ *ON
+     C           WWSECU    ANDNE*BLANKS
+     C                     MOVE 'PM41008' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN73
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSFL
+     C                     ENDIF
+      *
+      *  Nothing entered --> error for Amend, seton 52 for Insert
+     C                     MOVE *OFF      *IN52
+     C           WWCUSH    IFEQ *BLANKS
+     C           WWSECU    ANDEQ*BLANKS
+     C           *IN51     IFEQ *OFF
+     C                     MOVE 'PM41006' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN73
+     C                     MOVE *ON       *IN70
+     C                     ELSE
+     C                     MOVE *ON       *IN52
+     C                     ENDIF
+     C                     GOTO E#TSFL
+     C                     ENDIF
+      *
+     C           E#TSFL    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #TSTCP - TEST CUSTOMER/PORTFOLIO                             *
+      *                                                               *
+      *  CALLED BY     : #PRC1                                        *
+      *  CALLS         : #SNDMS                                       *
+      *                                                               *
+      *  in  : WWCUSH,WWPORT,WWCSTN                                   *
+      *  out : *IN70-74,WWLKRF,WWCUST,WWCSCH,DDCUST,DDCUSH            *
+      *****************************************************************
+      *
+     C           #TSTCP    BEGSR
+      *
+      *  Set Customer no. & Shortname
+      *
+      *    - If numeric --> Customer no.
+     C           WWCSTN    IFEQ *ON
+     C                     MOVELWWCUSH    WWCSCH  6
+     C***********WWCSCH    CHAINSDCUSTL1             39                   S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD                          S01486
+     C                     PARM '*KEY   ' WLOPTN                          S01486
+     C                     PARM WWCSCH    WLCUST 10                       S01486
+     C                     PARM           WLKYST  7                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*                                                                   S01486
+     C************IN39     IFEQ *ON                                       S01486
+     C           WLRTCD    IFNE *BLANK                                    S01486
+     C****                 MOVE 'PM41018' WWMSID                          73957
+     C                     MOVE 'PM41023' WWMSID                          73957
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSCP
+     C                     ENDIF
+     C                     MOVE WWCSCH    WWCUST
+     C                     MOVE BBCSSN    WWCUSH
+      *
+      *    - Else --> Shortname
+     C                     ELSE
+     C***********WWCUSH    CHAINSDCUSTL6             39                   S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD                          S01486
+     C                     PARM '*KEY   ' WLOPTN                          S01486
+     C                     PARM WWCUSH    WLCUST                          S01486
+     C                     PARM           WLKYST                          S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*                                                                   S01486
+     C************IN39     IFEQ *ON                                       S01486
+     C           WLRTCD    IFNE *BLANK                                    S01486
+     C****                 MOVE 'PM41018' WWMSID                           73957
+     C                     MOVE 'PM41024' WWMSID                           73957
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSCP
+     C                     ENDIF
+     C                     MOVE BBCUST    WWCSCH
+     C                     MOVE WWCSCH    WWCUST
+     C                     ENDIF
+      *
+     C                     MOVELWWCUST    DDCUST    P
+     C                     MOVELWWCUSH    DDCUSH
+      *
+      *  No portfolio entered :
+     C           WWPORT    IFEQ *BLANKS
+      *
+      *    - Customer must be Safe custody/Discretionary
+     C***********WWCSCH    CHAINSDSECSL0             34                   S01486
+     C*                                                                   S01486
+     C                     CALL 'AOSECSR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD                          S01486
+     C                     PARM '*KEY   ' WLOPTN                          S01486
+     C                     PARM WWCSCH    WLCUSN  6                       S01486
+     C           SDSECS    PARM SDSECS    DSFDY                           S01486
+     C*                                                                   S01486
+     C************IN34     IFEQ *ON                                       S01486
+     C           WLRTCD    IFNE *BLANK                                    S01486
+     C           BFCLAS    ORNE 'S'
+     C           BFCLAS    ANDNE'D'
+     C                     MOVE 'PM41010' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSCP
+     C                     ENDIF
+      *
+      *    - Customer must not be portfolio customer
+     C***********WWCSCH    CHAINSDPLCSPD             35                   S01486
+     C*                                                                   S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD                          S01486
+     C                     PARM '*KEY   ' WLOPTN                          S01486
+     C                     PARM WWCSCH    WLCUST                          S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C*                                                                   S01486
+     C************IN35     IFEQ *OFF                                      S01486
+     C           WLRTCD    IFEQ *BLANK                                    S01486
+     C                     MOVE 'PM41013' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSCP
+     C                     ENDIF
+      *
+      *  Portfolio 9997 :
+     C                     ELSE
+     C           WWPORT    IFEQ '9997'
+      *
+      *    - Customer must be portfolio customer
+     C***********WWCSCH    CHAINSDPLCSPD             35                   S01486
+     C*                                                                   S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD                          S01486
+     C                     PARM '*KEY   ' WLOPTN                          S01486
+     C                     PARM WWCSCH    WLCUST                          S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C*                                                                   S01486
+     C************IN35     IFEQ *ON                                       S01486
+     C           WLRTCD    IFNE *BLANK                                    S01486
+     C                     MOVE 'PM41011' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSCP
+     C                     ENDIF
+      *  Normal portfolio :
+     C                     ELSE
+      *
+      *    - It must be live portfolio
+     C           KCP       CHAINPMPORTLL             36
+     C           *IN36     IFEQ *ON
+     C                     MOVE 'PM41012' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN72
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSCP
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *  If amend and no link record for given portfolio, error
+     C           *IN51     IFEQ *OFF
+      *
+      *    - Find any live record for this portfolio
+     C           KCP       CHAINPMLKDMPF             33
+      *
+     C           *IN33     DOWEQ*OFF
+     C           LMRECI    IFNE '*'
+     C                     LEAVE
+     C                     ENDIF
+     C           KCP       READEPMLKDMPF                 33
+     C                     ENDDO
+      *
+      *    - If none, error
+     C           *IN33     IFEQ *ON
+     C                     MOVE 'PM41005' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN72
+     C                     MOVE *ON       *IN70
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WWLKRF
+      *
+     C           E#TSCP    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #TSTSR - TEST SECURITY/REFERENCE                             *
+      *                                                               *
+      *  CALLED BY     : #PRC1                                        *
+      *  CALLS         : #SNDMS                                       *
+      *                                                               *
+      *  in  : WWSECU,WWREFE                                          *
+      *  out : *IN70-74,WWLKRF,WWCUST,WWPORT                          *
+      *****************************************************************
+      *
+     C           #TSTSR    BEGSR
+      *
+      *  It must be live depot movement
+     C           KSR#C     CHAINDPTMV                32
+     C           *IN32     IFEQ *ON
+     C           RECI      OREQ '*'
+     C                     MOVE 'PM41003' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN73
+     C                     MOVE *ON       *IN74
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSSR
+     C                     ENDIF
+      *
+      *  It must be WO or WI
+     C           DPMV      IFNE 'WO'
+     C           DPMV      ANDNE'WI'
+     C                     MOVE 'PM41004' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN73
+     C                     MOVE *ON       *IN74
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSSR
+     C                     ENDIF
+      *
+      *  There must be some link for this depot mvmt
+     C           KSR       CHAINPMLKDML0             37
+     C           *IN37     IFEQ *ON
+     C           LMRECI    OREQ '*'
+     C                     MOVE 'PM41009' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN73
+     C                     MOVE *ON       *IN74
+     C                     MOVE *ON       *IN70
+     C                     GOTO E#TSSR
+     C                     ENDIF
+      *
+      *  Portfio and current link are set by this mvmt and link
+     C**********           Z-ADDDPBN      WWCUST                                             CSD027A
+     C                     MOVE DPBN      WWCUST                                             CSD027A
+     C                     MOVE PTFR      WWPORT
+     C                     Z-ADDLMLKRF    WWLKRF
+      *
+     C           E#TSSR    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #DSPAM - DISPLAY AMEND SCREEN                                *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         :                                              *
+      *                                                               *
+      *  in  : WWCUST,WWPORT,*IN52,WWLKRF                             *
+      *  i/o : DDSFLN                                                 *
+      *  out : SFL                                                    *
+      *****************************************************************
+      *
+     C           #DSPAM    BEGSR
+      *
+      *  If no errors before, read in SFL
+     C           *IN80     IFEQ *OFF
+      *
+      *    - Clear SFL
+     C                     MOVE *ON       *IN41
+     C                     WRITEPM4100C0
+     C                     MOVE *OFF      *IN41
+      *
+      *    - Fill SFL from link file
+     C                     Z-ADD0         WWRR    40
+     C***********KCP       CHAINPMLKDMPP             33                   S01486
+     C           KCP       CHAINPMLKDMPD             33                   S01486
+      *
+     C           *IN33     DOWEQ*OFF
+     C           LMRECI    IFNE '*'
+      *
+     C                     MOVE LMWOS1    DDWOS1
+     C                     MOVE LMWOR1    DDWOR1
+     C                     MOVE LMWOS2    DDWOS2
+     C           LMWOR2    IFNE 0
+     C                     MOVE LMWOR2    DDWOR2
+     C                     ELSE
+     C                     MOVE *BLANKS   DDWOR2
+     C                     ENDIF
+     C                     MOVE LMWIS1    DDWIS1
+     C                     MOVE LMWIR1    DDWIR1
+     C                     MOVE LMWIS2    DDWIS2
+     C           LMWIR2    IFNE 0
+     C                     MOVE LMWIR2    DDWIR2
+     C                     ELSE
+     C                     MOVE *BLANKS   DDWIR2
+     C                     ENDIF
+     C                     Z-ADDLMLKRF    DDLKRF
+     C                     Z-ADDLMTNLU    DDTNLU
+      *
+     C                     ADD  1         WWRR
+     C           LMLKRF    IFEQ WWLKRF
+     C                     Z-ADDWWRR      DDSFLN
+     C                     ENDIF
+     C                     WRITEPM4100S0
+      *
+     C                     ENDIF
+      *
+     C***********KCP       READEPMLKDMPP                 33               S01486
+     C           KCP       READEPMLKDMPD                 33               S01486
+     C                     ENDDO
+      *  -
+     C                     ENDIF
+      *
+      *  Display SFLCTL + SFL
+     C           DDSFLN    IFEQ 0
+     C                     Z-ADD1         DDSFLN
+     C                     ENDIF
+     C                     MOVE *ON       *IN42
+     C                     WRITEPM4100F0
+     C                     WRITE#MSGCTL
+     C                     WRITEPM4100C0
+     C                     WRITEPM4100F1
+     C                     READ PM4100C0                 99
+     C                     MOVE *OFF      *IN42
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #DSPIN - DISPLAY IMSERT SCREEN                               *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         :                                              *
+      *                                                               *
+      *  i/o : *IN80                                                  *
+      *  out : SFL,DDSFLN                                             *
+      *****************************************************************
+      *
+     C           #DSPIN    BEGSR
+      *
+      *  If no errors before, read in SFL
+     C           *IN80     IFEQ *OFF
+      *
+      *    - Clear SFL
+     C                     MOVE *ON       *IN41
+     C                     WRITEPM4100C0
+     C                     MOVE *OFF      *IN41
+      *
+      *    - Initialize 50 SFL records
+     C                     CLEARPM4100S0
+     C                     Z-ADD0         WWRR
+     C                     DO   50
+     C                     ADD  1         WWRR
+     C                     WRITEPM4100S0
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      *  Display insert screen
+     C           DDSFLN    IFEQ 0
+     C                     Z-ADD1         DDSFLN
+     C                     ENDIF
+     C                     MOVE *ON       *IN42
+     C                     WRITEPM4100F0
+     C                     WRITE#MSGCTL
+     C                     WRITEPM4100C0
+     C                     WRITEPM4100F1
+     C                     READ PM4100C0                 99
+     C                     MOVE *OFF      *IN42
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PRCAM - PROCESS AMEND  SFL                                  *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         : #TSTRE,ZTNLU1                                *
+      *                                                               *
+      *  in  : DDDATU,WWRDNB                                          *
+      *  i/o : SLF-rec.                                               *
+      ***out*:*PMLKDMPP,*IN80,DDSFLN***********************************   S01486
+      *  out : PMLKDMPD,*IN80,DDSFLN                                  *   S01486
+      *****************************************************************
+      *
+     C           #PRCAM    BEGSR
+      *
+      *  Prepare last update fields
+     C                     Z-ADDWWD       LMDLUP
+     C                     MOVE WWM       LMMLUP
+     C                     Z-ADDWWY       LMYLUP
+     C                     TIME           LMTLUP
+     C                     Z-ADDWWRDNB    LMLCD
+     C                     MOVE ##USR     LMUSER
+      *
+      *  Loop over changed SFL records
+     C                     MOVE *ON       *IN38
+      *
+     C           0         DOWEQ0
+      *
+     C           *IN38     IFEQ *OFF
+     C                     UPDATPM4100S0
+     C                     ENDIF
+     C                     READCPM4100S0                 38
+      *
+     C           *IN38     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+      *    - Test SFL record, if errors set *IN80 and DDSFLN ,iterate
+     C                     EXSR #TSTRE
+     C           *IN89     IFEQ *ON
+     C                     MOVE *ON       *IN80
+     C           DDSFLN    IFEQ 0
+     C                     Z-ADDWWRR      DDSFLN
+     C                     ENDIF
+     C                     ITER
+     C                     ENDIF
+      *
+      *      -- Chain to link rec.again, if not the same - error & iter
+     C                     Z-ADDDDLKRF    WWLKRF
+     C***********KCPL      CHAINPMLKDMPP             33                   S01486
+     C           KCPL      CHAINPMLKDMPD             33                   S01486
+      *
+     C           *IN33     IFEQ *ON
+     C           LMTNLU    ORNE DDTNLU
+     C                     MOVE 'PM41014' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN80
+     C                     MOVEA'11111111'*IN,81
+     C           DDSFLN    IFEQ 0
+     C                     Z-ADDWWRR      DDSFLN
+     C                     ENDIF
+     C                     ITER
+     C                     ENDIF
+      *
+      *      -- Empty record - delete (change LMRECI to *)
+     C           DDWOS1    IFEQ *BLANKS
+     C                     MOVE '*'       LMRECI
+     C                     MOVE 'D'       LMCHTP
+     C                     UPDATPMLKDMPF
+      *
+      *      -- Nonempty - update
+     C                     ELSE
+     C                     MOVE 'D'       LMRECI
+     C                     MOVE 'A'       LMCHTP
+      *
+      *        --- Set up movements
+     C                     MOVE DDWOS1    LMWOS1
+     C                     MOVE DDWOR1    LMWOR1
+     C                     MOVE DDWOS2    LMWOS2
+     C                     MOVE DDWOR2    LMWOR2
+     C                     MOVE DDWIS1    LMWIS1
+     C                     MOVE DDWIR1    LMWIR1
+     C                     MOVE DDWIS2    LMWIS2
+     C                     MOVE DDWIR2    LMWIR2
+      *
+      *        --- Set up transaction no.
+     C                     EXSR ZTNLU1
+     C                     Z-ADDNATN      LMTNLU
+      *
+      *********---*Update*record*to*PMLKDMPP***************************   S01486
+      *        --- Update record to PMLKDMPD                              S01486
+     C                     UPDATPMLKDMPF
+      *
+     C                     ENDIF
+      *    -
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #PRCIN - PROCESS INSERT SFL                                  *
+      *                                                               *
+      *  CALLED BY     : main pgm                                     *
+      *  CALLS         : #TSTRE,ZLKLU,ZTNLU1                          *
+      *                                                               *
+      *  in  : DDDATU,WWRDNB                                          *
+      *  i/o : SFL-rec.                                               *
+      ***out*:*PMLKDMPP,*IN80,DDSFLN***********************************   S01486
+      *  out : PMLKDMPD,*IN80,DDSFLN                                  *   S01486
+      *****************************************************************
+      *
+     C           #PRCIN    BEGSR
+      *
+      *  Prepare last update fields
+     C                     MOVE 'D'       LMRECI
+     C                     MOVE WWD       LMDLUP
+     C                     MOVE WWM       LMMLUP
+     C                     MOVE WWY       LMYLUP
+     C                     TIME           LMTLUP
+     C                     MOVE 'I'       LMCHTP
+     C                     Z-ADDWWRDNB    LMLCD
+     C                     MOVE ##USR     LMUSER
+      *
+      *  Loop over changed SFL records
+      *
+     C                     READCPM4100S0                 38
+      *
+     C           *IN38     DOWEQ*OFF
+      *
+      *    - Test SFL record, set WWCS,WWPF
+     C                     EXSR #TSTRE
+      *
+      *    - If no errors and nonempty, write record to link file
+     C           *IN89     IFEQ *OFF
+     C           DDWOS1    ANDNE*BLANKS
+      *
+      *      -- Set up key fields
+     C**********           Z-ADDWWCS      LMCNUM                                             CSD027A
+     C                     MOVE WWCS      LMCNUM                                             CSD027A
+     C                     MOVE WWPF      LMPTFR
+     C                     EXSR ZLKLU
+     C                     Z-ADDZLKRF     LMLKRF
+      *
+      *      -- Set up movements
+     C                     MOVE DDWOS1    LMWOS1
+     C                     MOVE DDWOR1    LMWOR1
+     C                     MOVE DDWOS2    LMWOS2
+     C                     MOVE DDWOR2    LMWOR2
+     C                     MOVE DDWIS1    LMWIS1
+     C                     MOVE DDWIR1    LMWIR1
+     C                     MOVE DDWIS2    LMWIS2
+     C                     MOVE DDWIR2    LMWIR2
+      *
+      *      -- Set up transaction no.
+     C                     EXSR ZTNLU1
+     C                     Z-ADDNATN      LMTNLU
+      *
+      *******--*Write*record*to*PMLKDMPP*******************************   S01486
+      *      -- Write record to PMLKDMPD
+     C                     WRITEPMLKDMPF
+      *
+     C                     ENDIF
+      *
+      *    - IF errors seton *IN80 and set DDSFLN
+     C           *IN89     IFEQ *ON
+     C                     MOVE *ON       *IN80
+     C           DDSFLN    IFEQ 0
+     C                     Z-ADDWWRR      DDSFLN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *    - Update and read next changed SFL record
+     C                     UPDATPM4100S0
+     C                     READCPM4100S0                 38
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #TSTRE   - TEST SFL RECORD                                             *
+      *                                                                        *
+      *  CALLED BY     : #PRCIN,#PRCAM                                *
+      *  CALLS         : #SNDMS                                       *
+      *                                                               *
+      *  in  : SFL-record                                             *
+      *  out : *IN81-89,WWCS,WWPF                                              *
+      **************************************************************************
+     C           #TSTRE    BEGSR
+      *
+      *  Reset error indicators
+     C                     MOVE *OFF      *IN89
+      *
+      *  If portfolio entered or implied in 'Review from', use it
+     C           *IN52     IFEQ *OFF
+     C**********           Z-ADDWWCUST    WWCS                                               CSD027A
+     C                     MOVE WWCUST    WWCS                                               CSD027A
+     C                     MOVE WWPORT    WWPF
+     C                     ELSE
+     C**********           Z-ADD0         WWCS                                               CSD027A
+     C                     MOVE *BLANKS   WWCS                                               CSD027A
+     C                     MOVE *BLANKS   WWPF
+     C                     ENDIF
+      *
+      *  Test WO no. 1 pair
+     C                     MOVE *ON       *IN53
+     C                     MOVE DDWOS1    WWSC   10
+     C                     MOVE DDWOR1    WWRF    6
+     C                     EXSR #TSTRF
+     C                     MOVE WWSC      DDWOS1
+     C                     MOVE WWRF      DDWOR1
+     C                     MOVE *IN90     *IN81
+     C                     MOVE *IN91     *IN82
+      *
+      *  Test WO no. 2 pair
+     C                     MOVE DDWOS2    WWSC
+     C                     MOVE DDWOR2    WWRF
+     C                     EXSR #TSTRF
+     C                     MOVE WWSC      DDWOS2
+     C                     MOVE WWRF      DDWOR2
+     C                     MOVE *IN90     *IN83
+     C                     MOVE *IN91     *IN84
+      *
+      *  Test WI no. 1 pair
+     C                     MOVE *OFF      *IN53
+     C                     MOVE DDWIS1    WWSC
+     C                     MOVE DDWIR1    WWRF
+     C                     EXSR #TSTRF
+     C                     MOVE WWSC      DDWIS1
+     C                     MOVE WWRF      DDWIR1
+     C                     MOVE *IN90     *IN85
+     C                     MOVE *IN91     *IN86
+      *
+      *  Test WI no. 2 pair
+     C                     MOVE DDWIS2    WWSC
+     C                     MOVE DDWIR2    WWRF
+     C                     EXSR #TSTRF
+     C                     MOVE WWSC      DDWIS2
+     C                     MOVE WWRF      DDWIR2
+     C                     MOVE *IN90     *IN87
+     C                     MOVE *IN91     *IN88
+      *
+      *  If no errors , left justify (if need be)
+     C           *IN89     IFEQ *OFF
+      *
+     C           DDWOS1    IFEQ *BLANKS
+     C           DDWOS2    ANDNE*BLANKS
+     C                     MOVE DDWOS2    DDWOS1
+     C                     MOVE DDWOR2    DDWOR1
+     C                     MOVE *BLANKS   DDWOS2
+     C                     MOVE *BLANKS   DDWOR2
+     C                     ENDIF
+      *
+     C           DDWIS1    IFEQ *BLANKS
+     C           DDWIS2    ANDNE*BLANKS
+     C                     MOVE DDWIS2    DDWIS1
+     C                     MOVE DDWIR2    DDWIR1
+     C                     MOVE *BLANKS   DDWIS2
+     C                     MOVE *BLANKS   DDWIR2
+     C                     ENDIF
+      *
+      *  If only one side entered, error
+     C           DDWOS1    IFEQ *BLANKS
+     C           DDWIS1    ANDNE*BLANKS
+     C                     MOVE 'PM41019' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN89
+     C                     MOVE *ON       *IN81
+     C                     MOVE *ON       *IN82
+     C                     ENDIF
+      *
+     C           DDWOS1    IFNE *BLANKS
+     C           DDWIS1    ANDEQ*BLANKS
+     C                     MOVE 'PM41019' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN89
+     C                     MOVE *ON       *IN85
+     C                     MOVE *ON       *IN86
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                               *        *
+      * #TSTRF   - TEST SECURITY/REFERENCE PAIR.                      *        *
+      *                                                               *        *
+      *  CALLED BY     : #TSTRE                                       *
+      *  CALLS         : #SNDMS                                       *
+      *                                                               *
+      *  in  : *IN52-53                                               *
+      *  i/o : WWSC,WWCS,WWPF,WWRF                                    *
+      *  out : *IN89,*IN90-91,WWREFE,WWSECU,WWRFCH                    *        *
+      **************************************************************************
+     C           #TSTRF    BEGSR
+      *
+     C                     MOVE *OFF      *IN90
+     C                     MOVE *OFF      *IN91
+      *
+      *  Both or none can be entered
+     C           WWSC      IFEQ *BLANKS
+     C           WWRF      ANDNE*BLANKS
+     C           WWSC      ORNE *BLANKS
+     C           WWRF      ANDEQ*BLANKS
+     C                     MOVE 'PM41002' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN89
+     C                     MOVE *ON       *IN90
+     C                     MOVE *ON       *IN91
+     C                     GOTO E#TSRF
+     C                     ENDIF
+      *
+      *  If nothing entered, return
+     C           WWSC      CABEQ*BLANKS   E#TSRF
+      *
+      *  Convert WWRF to numeric in WWREFE
+      *
+      *    - Right justify and test WWRF
+     C                     MOVE WWRF      WWNUM   6
+     C                     EXSR #TSTNU
+     C                     MOVE WWNUM     WWRF
+      *
+      *    - If error, indicate it and return
+     C           *IN54     IFEQ *ON
+     C                     MOVE 'PM41021' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN89
+     C                     MOVE *ON       *IN91
+     C                     GOTO E#TSRF
+     C                     ENDIF
+      *
+      *    - Assign WW-variables
+     C                     MOVE WWRF      WWREFE
+     C                     MOVE WWRF      WWRFCH
+      *
+      *  It must be live depot movement
+     C                     MOVE WWSC      WWSECU
+     C           KSR#C     CHAINDPTMV                32
+     C           *IN32     IFEQ *ON
+     C           RECI      OREQ '*'
+     C                     MOVE 'PM41003' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN89
+     C                     MOVE *ON       *IN90
+     C                     MOVE *ON       *IN91
+     C                     GOTO E#TSRF
+     C                     ENDIF
+      *
+      *  If *IN53 --> WO else WI
+     C           *IN53     IFEQ *ON
+     C           DPMV      ANDNE'WO'
+     C           *IN53     OREQ *OFF
+     C           DPMV      ANDNE'WI'
+     C                     MOVE 'PM41004' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN89
+     C                     MOVE *ON       *IN90
+     C                     MOVE *ON       *IN91
+     C                     GOTO E#TSRF
+     C                     ENDIF
+      *
+      *  CWDI must be 'N'
+     C           CWDI      IFNE 'N'
+     C                     MOVE 'PM41016' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN89
+     C                     MOVE *ON       *IN90
+     C                     MOVE *ON       *IN91
+     C                     GOTO E#TSRF
+     C                     ENDIF
+      *
+      *  The pair must not be already linked
+     C                     MOVE WWRFCH    WWREFE
+     C           KSR       CHAINPMLKDML0             37
+     C           *IN37     IFEQ *OFF
+     C           LMRECI    ANDNE'*'
+     C           LMLKRF    ANDNEDDLKRF
+     C                     MOVE 'PM41017' WWMSID
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN89
+     C                     MOVE *ON       *IN90
+     C                     MOVE *ON       *IN91
+     C                     GOTO E#TSRF
+     C                     ENDIF
+      *
+      *  If portfolio not fixed, use it , else test it
+     C********** WWCS      IFEQ 0                                                            CSD027A
+     C**********           Z-ADDDPBN      WWCS    60                                         CSD027A
+     C           WWCS      IFEQ *BLANKS                                                      CSD027A
+     C                     MOVE DPBN      WWCS    6                                          CSD027A
+     C                     MOVE PTFR      WWPF    4
+     C                     ELSE
+     C           DPBN      IFNE WWCS
+     C           PTFR      ORNE WWPF
+     C           *IN52     IFEQ *OFF
+     C                     MOVE 'PM41015' WWMSID
+     C                     ELSE
+     C                     MOVE 'PM41020' WWMSID
+     C                     ENDIF
+     C                     EXSR #SNDMS
+     C                     MOVE *ON       *IN89
+     C                     MOVE *ON       *IN90
+     C                     MOVE *ON       *IN91
+     C                     GOTO E#TSRF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+     C           E#TSRF    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                               *        *
+      * #TSTNU   - RIGT JUSTIFY AND TEST NUMERIC FIELD                *        *
+      *                                                               *        *
+      *  CALLED BY     : #PRC1,#TSTRF                                 *
+      *  CALLS         : no other subroutine                          *
+      *                                                               *
+      *  i/o : WWNUM                                                  *
+      *  out : *IN54                                                           *
+      **************************************************************************
+     C           #TSTNU    BEGSR
+      *
+     C                     MOVE *OFF      *IN54
+      *
+      *  Right justify, if trailing blanks
+     C           ' '       CHEKRWWNUM     X       20
+     C           X         IFLT 6
+     C           X         ANDGT0
+     C           7         SUB  X         X
+     C                     MOVEA*BLANKS   $AA
+     C                     MOVEAWWNUM     $AA,X
+     C                     MOVEA$AA       WWNUM
+     C                     ENDIF
+      *
+      *  Test, if field contains only spaces and then (maybe) digits
+     C                     TESTN          WWNUM      999999
+     C                     MOVE WWNUM     WW1     1
+     C                     TESTZ          WW1            98
+      *
+     C           *IN99     IFEQ *OFF
+     C           *IN98     OREQ *OFF
+     C                     MOVE *ON       *IN54
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * ZLKLU    - GET NEXT PM LINK REFERENCE NO.                              *
+      *                                                                        *
+      *  CALLED BY     : #PRCIN                                       *
+      *  CALLS         : no other subroutine                          *
+      *                                                               *
+      *  i/o : dtaara/PMSTAT                                          *
+      *  out : ZLKRF                                                           *
+      **************************************************************************
+     C           ZLKLU     BEGSR
+      *
+     C           *NAMVAR   DEFN           PMSTAT
+     C           *LOCK     IN   PMSTAT
+     C                     MOVE DAEVRF    ZZEVRF  70
+     C                     Z-ADDZZEVRF    ZLKRF   70
+     C                     ADD  1         ZZEVRF
+     C                     MOVE ZZEVRF    DAEVRF
+     C                     OUT  PMSTAT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * ZTNLU1   - TO LOCK AND ACCESS DATA AREA AND GET TRANSAC. NBR           *
+      *                                                                        *
+      *  CALLED BY     : #PRCIN                                       *
+      *  CALLS         : no other subroutine                          *
+      *                                                               *
+      *  i/o : dtaara/MNATN(DNATN)                                    *
+      *  out : NATN                                                            *
+      **************************************************************************
+     C           ZTNLU1    BEGSR
+     C**
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C**
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ***#DBERR*-*DATABASE*ERROR*SUBROUTINE****************************   S01486
+      *****************************************************************   S01486
+      ***CALLED*BY*****:***********************************************   S01486
+      ***CALLS*********:*no*other*subroutine***************************   S01486
+      *****************************************************************   S01486
+      ***out*:**INU7,*INU8*********************************************   S01486
+      *****************************************************************   S01486
+      ***********                                                         S01486
+     C***********#DBERR    BEGSR                                          S01486
+      ***********                                                         S01486
+     C***********          MOVE *ON       *INU7                           S01486
+     C***********          MOVE *ON       *INU8                           S01486
+     C***********          MOVE *ON       *INLR                           S01486
+     C***********          DUMP                                           S01486
+     C***********          RETRN                                          S01486
+      ***********                                                         S01486
+     C***********          ENDSR                                          S01486
+      ***********                                                         S01486
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #SNDMS - SEND PROGRAM MESSAGE                                *
+      *                                                               *
+      *  CALLED BY     : almost everywhere                            *
+      *  CALLS         : no other subroutine                          *
+      *
+      *  in : WWMSID
+      *****************************************************************
+      *
+     C           #SNDMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM DDPGM     ##PGM  10
+     C                     PARM *BLANK    WWPGRL  5
+     C                     PARM           WWMSID  7
+     C                     PARM 'PMUSRMSG'WWMSGF 10
+     C                     PARM *BLANK    WWMSDA132
+     C                     PARM *BLANK    WWMSTP  7
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - FILE/PROGRAM EXCEPTION HANDLER                      *
+      *                                                               *
+      *  CALLED BY     :                                              *
+      *  CALLS         : no other subroutine                          *
+      *  For file or program exception/error                          *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+     C                     MOVE *ON       *INLR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C*                                                                   S01486
+     C                     CALL 'DBERRCTL'                                S01486
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

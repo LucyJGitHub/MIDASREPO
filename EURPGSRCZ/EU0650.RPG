@@ -1,0 +1,213 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU Currency codes recalculation')
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Module                                           *
+      *                                                               *
+      *  EU0650 - EU Currency Codes Recalculation.                    *
+      *                                                               *
+      *  Function:  This program sets up the parameters for the call  *
+      *             to program SD0028.                                *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By: SCC0400 - Midas SC Calls Input Cycle Termination. *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. 167915             Date 05Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 16May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 152046  *CREATE    Date 07Jan99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  167915 - Object Lock at SCC0402 for File SDCURRPD.           *
+      *         - Close file by freeing AOCURRR0.                     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD006 - Add COMIT after the call to SD0028 to balance the   *
+      *           loss of the COMIT in SD0028.                        *
+      *  152046 - Ensure rates have been recalculated by the start    *
+      *           of the COB.                                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *                                     134 141 DBFILE
+      *                                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+      /SPACE 3
+     ISDBANK    E DSSDBANKPD
+     I** Bank details
+     ISDGELR    E DSSDGELRPD
+     I** General ledger details
+     ISDCURR    E DSSDCURRPD
+     I** General ledger details
+     IDSFDY     E DSDSFDY
+     I**  Short DS for access programs
+     IDSSDY     E DSDSSDY
+     I**  Second DS for access programs, Long Data Structure
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Retrieve Base Currency
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in file SDBANKPD
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Retrieve EURO Currency
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Data base error in file SDGELRPD
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDGELRPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check if Base Currency is an 'IN' Currency
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BJCYCD    @KEYCY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Data base error in file SDCURRPD
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 003 *
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Recalculate Euro rates
+      *
+     C           A6INCY    IFEQ 'Y'                        IF*1
+     C           A6TPSD    ANDLEBJRDNB                     **1
+     C                     MOVE 'Y'       INCCY   1
+     C                     ELSE                            X*1
+     C                     MOVE 'N'       INCCY
+     C                     ENDIF                           FI*1
+     C*
+     C                     CALL 'SD0028'
+     C                     PARM           BJCYCD
+     C                     PARM           BKEURO
+     C                     PARM           BKEUCP
+     C                     PARM           INCCY
+     C                     PARM 'Y'       INITN   1
+     C                     PARM *BLANKS   P0RTN
+      *                                                                   167915
+     C                     CALL 'AOCURRR0'                                167915
+     C                     PARM *BLANKS   @RTCD                           167915
+     C                     PARM '*FREE  ' @OPTN                           167915
+     C                     PARM           @KEYCY                          167915
+     C           SDCURR    PARM SDCURR    DSSDY                           167915
+      *                                                                   167915
+      ** Data base error in file SDCURRPD                                 167915
+      *                                                                   167915
+     C           @RTCD     IFNE *BLANKS                                   167915
+     C           @RTCD     ANDNE'*CLOSE'                                  167915
+     C           *LOCK     IN   LDA                                       167915
+     C                     SETON                       U7U8               167915
+     C                     Z-ADD004       DBASE            ***************167915
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 003 *167915
+     C                     MOVEL@OPTN     DBKEY            ***************167915
+     C                     OUT  LDA                                       167915
+     C                     EXSR *PSSR                                     167915
+     C                     ENDIF                                          167915
+      *                                                                                       CSD006
+     C                     COMIT                                                              CSD006
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

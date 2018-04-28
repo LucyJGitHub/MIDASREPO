@@ -1,0 +1,964 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Cust. Serv. Fees - Reverse of Accruals')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  RPG/GL1955 - Customer service Fees -                         *
+      *               Generate Fee Postings for Accrual Reversal(s)   *
+      *                                                               *
+      *  Function:  This Program generates postings (Reverse) for all *
+      *  (COB)      deleted Accruals adjustments customer fees.       *
+      *                                                               *
+      *  Called by: GLC1955 - Generate Postings for Accrual Reversals *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information (Recompile)                             *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     FGLFEACL0UF  E           K        DISK         KINFSR *PSSR
+      ** Fees Accrued - Deleted
+      *
+     FSDCFTPL0IF  E           K        DISK         KINFSR *PSSR
+      ** Fee type definition
+      *
+     FGLTAHIPDO   E                    DISK         KINFSR *PSSR A
+      ** Today Accruals on Holding items File
+      *
+     FGEFEPD  O   E           K        DISK         KINFSR *PSSR A
+      ** Customer Fees Posting file
+      *
+     FGEFEZZ  UF  E           K        DISK         KINFSR *PSSR A
+      ** Customer Fees Posting File - Trailer
+      *
+     FGL1955AUO   E                    PRINTER      KINFSR *PSSR
+      ** Fees Accrued Reversal Generation - Audit report
+     F                                              KINFDS SPOOLU
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   70  - End of File Indicator for PF/GEFEZZ                   *
+      *   80  - End of File Indicator                                 *
+      *   81  - Chain Failed Indicator for PF/SDCFTPPD                *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRACOD - Retrieve Account Details                            *
+      *  SRACCR - Routine to post Accrual Amount                      *
+      *  SRBRCH - Access Branch Code Details                          *
+      *  SRCHGD - Charging Details                                    *
+      *  SRCURR - Access Currency code details                        *
+      *  SRFETP - Retrieve fee definition details                     *
+      *  SRRTVD - Retrieve details for Fee Settlement Postings        *
+      *  SRWNSE - Write non suspense account entries                  *
+      *  SRWSHI - Write copy of Posting to History Holding File       *
+      *                                                               *
+      *  *INSZR - Initialisation routine                              *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array for copyright insertion
+      *
+     E                    POWER   1   7  7 3
+      ** Power array for SR/ZCCYCR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     ISDCFTPD0                                                                                CGL029
+     I              QQACAC                          QQACAX                                    CGL029
+      *                                                                                       CGL029
+      ** Texts for Narrative
+     I              'FEE ACR. RV'         C         WWNAR1
+      *
+     IDSNARR      DS
+      ** Data Structure for Posting Narrative
+      ** Fee Processing Type +  'Fee Accr.' + Fee type + CUStom
+      ** + '(' + Portfolio / ')' when Portfolio Level Fee
+     I                                        1   2 DSPRTP
+     I                                        4  14 DSTEXT
+     I                                       15  16 DSFETP
+     I                                       18  23 DSCNUM
+     I                                       25  25 DSLEFT
+     I                                       26  29 DSPTFR
+     I                                       30  30 DSRIGH
+     I                                        1  30 XFPNAR
+      *
+     ISPOOLU      DS
+      ** GL1955AU Spool details
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IRUNDT     E DSRUNDAT
+      ** DS for Rundate
+      *
+     ILDA       E DSLDA                         256
+      ** Local Data Area for Database Error details
+      *
+      ** Data structures for Standard Access Object calls
+      *
+     ISDBANK    E DSSDBANKPD
+      ** For Bank details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** General Ledger Details
+      *
+     ISDTRAD    E DSSDTRADPD
+      ** for Trading I.C.D. Details
+     I              QQACCD                          QQACCX                                    CGL029
+      *
+     IACCNT     E DSACCNTAB
+      ** For Account details
+     I              PRFC                            APRFC
+      *
+     ISDACOD    E DSSDACODPD
+      ** For Account Code Details
+     I              QQACCD                          QQACCY                                    CGL029
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** For Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** For Currency Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** For Customer Details
+     I              QQDFAC                          QQDFAX                                    CGL029
+      *
+     ISDACOF    E DSSDACOFPD
+      ** Midas  SD Account Officers details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short DS for access programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long DS for access programs
+      *
+     IDSCFTP      DS
+      ** Fee definition working DS
+     I                                        1   1 L1FEPC
+     I                                        2   60L1RETR
+     I                                        7   7 L1TAXE
+     I**********                              8  110L1IRAC                                    CGL029
+     I**********                             12  130L1VATC                                    CGL029
+     I**********                             14  170L1VATA                                    CGL029
+     I**********                             18  190L1VATS                                    CGL029
+     I**********                             20  230L1INAC                                    CGL029
+     I**********                             24  270L1ACAC                                    CGL029
+     I                                        8  170L1IRAC                                    CGL029
+     I                                       18  190L1VATC                                    CGL029
+     I                                       20  290L1VATA                                    CGL029
+     I                                       30  310L1VATS                                    CGL029
+     I                                       32  410L1INAC                                    CGL029
+     I                                       42  510L1ACAC                                    CGL029
+      *
+     IXFCFTP      DS
+      ** Fee definition working DS - Transfer
+     I                                        1   1 F1FEPC
+     I                                        2   60F1RETR
+     I                                        7   7 F1TAXE
+     I**********                              8  110F1IRAC                                    CGL029
+     I**********                             12  13 F1VATC                                    CGL029
+     I**********                             14  170F1VATA                                    CGL029
+     I**********                             18  190F1VATS                                    CGL029
+     I**********                             20  230F1INAC                                    CGL029
+     I**********                             24  270F1ACAC                                    CGL029
+     I                                        8  170F1IRAC                                    CGL029
+     I                                       18  19 F1VATC                                    CGL029
+     I                                       20  290F1VATA                                    CGL029
+     I                                       30  310F1VATS                                    CGL029
+     I                                       32  410F1INAC                                    CGL029
+     I                                       42  510F1ACAC                                    CGL029
+      *
+     I***DSACNT*     DS                             18                                        CGL029
+     IDSACNT      DS                             24                                           CGL029
+      ** Data structure For Account format : F2BRCA + WCBICN + F2ACCY + DSACAC
+     I                                        1   3 F2BRCA
+     I                                        4   9 WCBICN
+     I                                       10  12 F2ACCY
+     I**********                             13  160DSACAC                                    CGL029
+     I**********                             17  180DSACSQ                                    CGL029
+     I                                       13  220DSACAC                                    CGL029
+     I                                       23  240DSACSQ                                    CGL029
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                     M A I N L I N E S                         *
+      *****************************************************************
+      *
+      ** Read Accrued Fee File Until EOF
+      *
+     C           *LOVAL    SETLLGLFEACL0
+     C                     READ GLFEACL0                 80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Fill up work fields for Reversal Accrual Posting,
+      *
+     C                     EXSR SRRTVD
+      *
+      ** Select:-
+      ** If Record is Delete then,
+      ** Reverse Accruals of "deleted Accruals Fees".
+      *
+     C           F6RECI    IFEQ '*'
+     C           F6CHTP    ANDEQ'D'
+     C           F6ACDT    ADD  F6MACP    W#PSTA
+     C                     Z-ADD0         WWERR
+     C                     Z-SUBW#PSTA    WWPSTA
+     C                     EXSR SRACCR
+     C                     DELETGLFEACL0
+     C                     MOVE 'Y'       WWDOST
+     C                     ENDIF
+      *
+      ** Read next record
+      *
+     C                     READ GLFEACL0                 80
+      *
+     C                     ENDDO
+      *
+      ** Audit Processing - Trailer and/or Printer file
+      *
+     C                     EXSR SRAUDT
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                  P R O G R A M     E N D                      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRTVD - Retrieve details for Fee Settlement postings        *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *                                                               *
+      *  Calls     : SRFETP, SRCHGD                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRTVD    BEGSR
+      *
+      ** Access Fee Definition to Fill Up Correctly Posting details
+      *
+     C                     EXSR SRFETP
+      *
+      ** Retrieve Charging Details : Branch, Branch BICN, Currency, ....
+      *
+     C                     EXSR SRCHGD
+      *
+      ** Init work field
+      *
+     C                     Z-ADD0         W#PSTA 150
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFETP - Retrieve fee definition details                     *
+      *                                                               *
+      *  Called By : SRRTVD                                           *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFETP    BEGSR
+      *
+      ** Key definition
+      *
+     C           KFEET     KLIST
+     C                     KFLD           KFETP   2
+     C                     KFLD           KCHGR   2
+      *
+      ** Access the fee type default (fee type/charge group=blank)
+      *
+     C                     MOVE F6FETP    KFETP
+     C                     MOVE *BLANKS   KCHGR
+     C                     CLEARDSCFTP
+      *
+     C           KFEET     CHAINSDCFTPL0             81
+      *
+     C           *IN81     IFEQ *OFF
+     C           F1RECI    ANDNE'*'
+     C                     MOVELXFCFTP    DSCFTP
+     C                     ENDIF
+      *
+      ** Access the fee type/Charge group
+      *
+     C                     MOVE F6FETP    KFETP
+     C                     MOVE F6CHGR    KCHGR
+     C           KFEET     CHAINSDCFTPL0             81
+      *
+     C           *IN81     IFEQ *OFF
+     C           F1RECI    ANDNE'*'
+      *
+      ** Override the details of the defaults with Charge group details
+      *
+     C           F1RETR    IFNE *ZERO
+     C                     Z-ADDF1RETR    L1RETR
+     C                     ENDIF
+      *
+     C           F1TAXE    IFNE *BLANKS
+     C                     MOVE F1TAXE    L1TAXE
+     C                     Z-ADDF1IRAC    L1IRAC
+     C                     MOVE F1VATC    L1VATC
+     C                     Z-ADDF1VATA    L1VATA
+     C                     Z-ADDF1VATS    L1VATS
+     C                     ENDIF
+      *
+     C           F1INAC    IFNE *ZERO
+     C                     Z-ADDF1INAC    L1INAC
+     C                     ENDIF
+      *
+     C           F1INAC    IFNE *ZERO
+     C                     Z-ADDF1ACAC    L1ACAC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHGD - Charging Details                                    *
+      *                                                               *
+      *  Called By : SRRTVD                                           *
+      *                                                               *
+      *  Calls     : SRBRCH, SRCURR                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHGD    BEGSR
+      *
+      ** Retrieve Charging Customer Internal Branch Customer number
+      *
+     C           F6BRCA    IFNE WCBRCA
+     C                     MOVE F6BRCA    WWBRCA  3
+     C                     Z-ADD6         WWERR
+     C                     EXSR SRBRCH
+     C                     MOVE A8BICN    WCBICN  6
+     C**********           MOVE A8DFAC    WCDFAC  4                                           CGL029
+     C**********           MOVE A8DTAC    WCDTAC  4                                           CGL029
+     C                     MOVE A8DFAC    WCDFAC 10                                           CGL029
+     C                     MOVE A8DTAC    WCDTAC 10                                           CGL029
+     C                     MOVE F6BRCA    WCBRCA
+     C                     ENDIF
+      *
+      ** Retrieve Charging Currency details
+      *
+     C           F6ACCY    IFNE WCCCY
+     C                     MOVE F6ACCY    WWCURR  3
+     C                     Z-ADD7         WWERR
+     C                     EXSR SRCURR
+     C                     Z-ADDA6SPRT    WCSPRT 138
+     C                     Z-ADDA6NBDP    WCNBDP  10
+     C                     MOVE A6MDIN    WCMDIN  1
+     C                     MOVE A6SPAE    WCSPAE  40
+     C                     MOVE F6ACCY    WCCCY   3
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCURR - Access Currency code details                        *
+      *                                                               *
+      *  Called By : *INZSR,  SRCHGD                                  *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCURR    BEGSR
+      *
+      ** Retrieve Currency details with Access Object Program
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '       ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WWCURR    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADDWWERR     DBASE
+     C                     MOVEL'SDCURRPD'DBFILE    P
+     C                     MOVELWWCURR    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBRCH - Access Branch Code Details                          *
+      *                                                               *
+      *  Called By : *INZSR, SRCHGD                                   *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBRCH    BEGSR
+      *
+      ** Retrieve Branch details with Access Object Program
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '       ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WWBRCA    PBRCA   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADDWWERR     DBASE
+     C                     MOVEL'SDBRCHPD'DBFILE    P
+     C                     MOVELWWBRCA    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACCR - Routine to post Accrual amount                      *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *                                                               *
+      *  Calls     : SRACOD, SRWNSE                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACCR    BEGSR
+      *
+      ** Posting Text is ".. Fee Accru.  .. ...... (....)"
+      *
+     C                     MOVELWWNAR1    DSTEXT
+      *
+      ** Generate Adjustment Entry  D E B I T  (accruals)
+      *
+     C                     Z-ADDWWPSTA    PSTA
+     C                     MOVE WCBICN    CNUM
+     C                     MOVE WCCCY     CCY
+     C                     MOVE L1ACAC    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C           WWPSTA    IFGT 0
+     C                     Z-ADD0         DRCR
+     C                     ELSE
+     C                     Z-ADD1         DRCR
+     C           WWPSTA    IFLT 0
+     C                     Z-SUBPSTA      PSTA
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVE WCBRCA    BRCA
+     C                     Z-ADD0         RIND
+      *
+      ** DBASE = 100 --> Reverse of Deleted Accruals
+      *
+     C           WWERR     ADD  100       WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+      ** Write a record on PF/GEFEPD
+      *
+     C           PSTA      IFNE 0
+     C                     WRITEAPOSTPDF
+     C                     ADD  1         WWRCNT
+     C                     ADD  PSTA      WWHTOT
+     C                     EXSR SRWSHI
+     C                     ENDIF
+      *
+      ** Generate Adjustment Entry  C R E D I T (incomes)
+      *
+     C           DRCR      IFEQ 0
+     C                     Z-ADD1         DRCR
+     C                     ELSE
+     C                     Z-ADD0         DRCR
+     C                     ENDIF
+     C                     MOVE L1INAC    ACOD
+      *
+      ** DBASE = 100 --> Reverse of Deleted Accruals
+      *
+     C           WWERR     ADD  101       WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+      ** Write a record on PF/GEFEPD
+      *
+     C           PSTA      IFNE 0
+     C                     WRITEAPOSTPDF
+     C                     ADD  1         WWRCNT
+     C                     ADD  PSTA      WWHTOT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACOD - Retrieve Account Details                            *
+      *                                                               *
+      *  Called By : SRACCR                                           *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACOD    BEGSR
+      *
+      ** Retrieve Account Code Details with Access Object Program
+      *
+     C**********           MOVE ACOD      WAACOD  4                                           CGL029
+     C                     MOVE ACOD      WAACOD 10                                           CGL029
+     C                     CALL 'AOACODR0'
+     C                     PARM '       ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C**********           PARM WAACOD    PACOD   4                                           CGL029
+     C                     PARM WAACOD    PACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADDWWERR     DBASE
+     C                     MOVEL'SDACODPD'DBFILE    P
+     C                     MOVELWAACOD    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A5ACTY    ATYP
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRWNSE - Write non suspense Account Entries                  *
+      *                                                               *
+      *  Called By : SRACCR                                           *
+      *                                                               *
+      *  Calls     : SRWSHI                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWNSE    BEGSR
+      *
+     C                     MOVE 'P'       RECI
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVELDSNARR    PNAR
+     C                     MOVE F6CNUM    ASOC
+     C                     Z-ADD0         CHQN
+      *
+      ** Select Fee processing type to generate SPOS
+      *
+     C                     MOVEL'  GE-SC' SPOS
+     C                     MOVEL'SC'      OTTP
+      *
+     C                     SELEC
+     C           F6PRTP    WHEQ 'MG'
+     C                     MOVE '  GE-MG' SPOS
+     C                     MOVEL'MG'      OTTP
+      *
+     C           F6PRTP    WHEQ 'FI'
+     C                     MOVE '  GE-FI' SPOS
+     C                     MOVEL'FI'      OTTP
+      *
+     C           F6PRTP    WHEQ 'HM'
+     C                     MOVE '  GE-HM' SPOS
+     C                     MOVEL'HM'      OTTP
+      *
+     C           F6PRTP    WHEQ 'NA'
+     C                     MOVE '  GE-NA' SPOS
+     C                     MOVEL'NA'      OTTP
+     C                     ENDSL
+      *
+     C                     Z-ADD0         REJC
+     C                     MOVE *BLANK    DPMT
+     C                     Z-ADD0         RRNM
+     C                     MOVE '0'       EXIN
+     C                     BITOF'01234567'PRIN
+     C                     MOVE 'B'       GETP
+     C                     Z-ADD0         ACUM
+     C                     MOVELF6CNUM    OTRF
+     C                     MOVELF6PTFR    OTRF8   8
+     C                     MOVE OTRF8     OTRF
+     C                     MOVE *BLANK    SWCR
+     C                     MOVE *BLANK    DLREF
+     C                     MOVE *BLANK    FACO
+     C**********           Z-ADD0         DBCNUM                                              CSD027
+     C                     MOVE *BLANKS   DBCNUM                                              CSD027
+     C                     MOVE *BLANK    PREF
+     C                     MOVE *BLANK    OTST
+     C                     Z-ADD0         SDCB
+     C                     Z-ADD0         SDLB
+     C                     MOVE *BLANK    BOKC
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRWSHI - Write copy of Posting to History Holding File       *
+      *                                                               *
+      *  Called By : SRWNSE                                           *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWSHI    BEGSR
+      *
+      ** Write GLTAHIPD record '9' (Accrual Reversal)
+      *
+     C                     CLEARGLTAHID0
+      *
+     C                     MOVEL'7'       F2RECI
+     C                     Z-ADDBJRDNB    F2PSTD
+     C                     MOVE F6BRCA    F2BRCA
+     C                     MOVE F6PRTP    F2FEPT
+     C                     MOVE F6FETP    F2FETP
+     C                     MOVE F6CNUM    F2CNUM
+     C                     MOVE F6PTFR    F2PTFR
+     C                     MOVE F6CHGR    F2CHGR
+     C                     MOVE L1ACAC    DSACAC
+     C                     MOVELDSACNT    F2ADAC
+     C                     Z-ADDPSTA      F2ADAM
+      *
+     C                     WRITEGLTAHID0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Initial Subroutine                                  *
+      *                                                               *
+      *  Called By : At the start of pgm                              *
+      *                                                               *
+      *  Calls     : SRBRCH, SRCURR                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Copyright statement
+      *
+     C                     MOVEACPY@      CPY@2  80
+      *
+      ** Prepare LDA and RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBFILE
+     C                     MOVEL*BLANK    DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'GL1955'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Reset WWERR field to *zero
+      *
+     C                     Z-ADD0         WWERR   30
+      *
+      ** Call ZSFILE for Audit printer file GL1955AU
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   PPARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** Program Ends  abnormally
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Initialise Work field
+      *
+      ** SDBANKPD Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Keep Bank details (work fields Prefix 'WB')
+      *
+     C                     MOVE BJCYCD    WBCYCD  3
+     C                     MOVE BJSBRC    WBSBCD  3
+      *
+      ** Access Currency Details with WBCYCD
+      *
+     C                     MOVE WBCYCD    WWCURR  3
+     C                     Z-ADD2         WWERR
+     C                     EXSR SRCURR
+     C                     MOVE A6NBDP    WBNBDP  10
+     C                     MOVE A6SPRT    WBSPRT 138
+     C                     MOVE A6MDIN    WBMDIN  1
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ***  Read General Ledger I.C.D.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '       ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'SDGELRPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Retrieve Main Branch Details
+      *
+     C                     MOVE BKMABR    WWBRCA  3
+     C                     Z-ADD4         WWERR
+     C                     EXSR SRBRCH
+      *
+      ** Keep Main Branch Details (Fields prefix 'WM')
+      *
+     C                     MOVELA8BICN    WMBICN  6
+     C**********           MOVE A8DFAC    WMDFAC  4                                           CGL029
+     C**********           MOVE A8DTAC    WMDTAC  4                                           CGL029
+     C                     MOVE A8DFAC    WMDFAC 10                                           CGL029
+     C                     MOVE A8DTAC    WMDTAC 10                                           CGL029
+      *
+      ** Access Trading I.C.D.
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM '       ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE
+     C                     MOVEL'SDTRADPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Keep Spot trade account (work field prefix 'WT')
+      *
+     C**********           MOVE BLSPTA    WTACOD  4                                           CGL029
+     C                     MOVE BLSPTA    WTACOD 10                                           CGL029
+      *
+      ** Create Work field to Keep details
+      *
+     C                     MOVE *BLANKS   WCBRCA  6
+     C                     MOVE *BLANKS   WSBRCH  6
+     C                     MOVE *BLANKS   WCCCY   3
+     C                     MOVE *BLANKS   WSCCY   3
+      *
+      ** Other work fields
+      *
+     C           *LIKE     DEFN F6CNUM    SVCUST
+     C           *LIKE     DEFN BRCA      WKBRCA
+     C           *LIKE     DEFN F6CNUM    WKCUST
+     C           *LIKE     DEFN F6FETP    WKFETP
+      *
+     C                     MOVE *BLANK    WWSAPR  1
+      *
+     C                     Z-ADD0         WWHTOT 180
+     C                     Z-ADD0         WWHRWN 150
+     C                     Z-ADD0         WWHRDC  40
+     C                     Z-ADD0         WWRCNT  50
+     C                     Z-ADD0         WWCNUM  60
+     C**********           Z-ADD0         WWACOD  40                                          CGL029
+     C                     Z-ADD0         WWACOD 100                                          CGL029
+     C                     Z-ADD0         WWACSQ  20
+     C                     Z-ADD0         WWACNO 100
+     C                     Z-ADD0         WWRIND  10
+     C                     Z-ADD0         WWTRAT  50
+     C                     Z-ADD0         WWPSTA 150
+     C                     Z-ADD0         W#PSTA 150
+     C                     MOVE *BLANK    WWATYP  1
+     C                     Z-ADD01        DSACSQ
+     C                     MOVE 'N'       WWDOST  1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Audit Processing                                    *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+     C           WWDOST    IFEQ 'Y'
+      *
+      ** Update Trailer GEFEZZ
+      *
+     C           WWHTOT    DIV  1000      WWHRWN
+     C                     MVR            WWHRDC
+      *
+     C                     READ GEFEZZ                   70
+      *
+     C           *IN70     IFEQ *OFF
+     C                     ADD  WWRCNT    NORE1
+     C                     ADD  WWHRWN    HRWN
+     C           HRDC      ADD  WWHRDC    WWHRDC
+      *
+     C           WWHRDC    IFGT 1000
+     C           WWHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+     C                     ELSE
+     C                     Z-ADDWWHRDC    HRDC
+     C                     ENDIF
+      *
+     C                     UPDATAPOSTZZF
+     C                     ELSE
+      *
+     C                     MOVE 'T'       RECI
+     C                     Z-ADDWWRCNT    NORE1
+     C                     ADD  2         NORE1
+     C                     Z-ADDWWHRWN    HRWN
+     C                     Z-ADDWWHRDC    HRDC
+     C                     WRITEAPOSTZZF
+     C                     ENDIF
+      *
+      ** Print Audit report GL1955AU
+      *
+     C                     Z-ADDWWRCNT    RCOUNT
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+     C                     ELSE
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   - Abnormal End Routine                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WWRUN     IFNE 'Y'
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     DUMP
+     C                     MOVE 'Y'       WWRUN   1
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZCCYCN
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

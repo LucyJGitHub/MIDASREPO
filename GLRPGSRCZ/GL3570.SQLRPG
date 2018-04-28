@@ -1,0 +1,163 @@
+     H        1
+      *****************************************************************
+/**STD****RPGBASE******************************************************                     CGL127AA
+/*STD *  RPGSQL                                                       *                     CGL127AA
+/*EXI *  TEXT('Midas GL Account balances update')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas General Ledger Module
+     F*                                                                  *
+     F*   GL3570 - Retail Account Balances Update                        *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CGL127AA           Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 186340             Date 05Feb01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413 *CREATE     Date 17Feb94               *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CGL127AA - COB Restructure - GL COB Optimisation Phase 1     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  186340 - Balance is doubled when submitting real time        *
+      *           batches.  If account is not found in PF/GLACBTPD,   *
+      *           LDBL should be zero.  Same fix as 153738.           *
+     F*   S01413 - Update LDBL on Retail account balances extract file   *
+     F*            to remove update from Real-Time Batches.              *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***RABEXOR UP  F      80            DISK                                                CGL029
+     F***RABEXOR UP  F      90            DISK                                       CGL029 CGL127AA
+     F***GLACBTL0IF  E           K        DISK                                              CGL127AA
+     F*
+     F* ID F  C  M  L    FUNCTION OF INDICATORS
+     F*
+     F*       34         Update LDBL on RABEXOR
+     F*       35         No Record found on GLACBTL0
+     F*       50         First Cycle Indicator
+     E*
+     E                    CPY@    1   1 80
+     E*
+     I*
+     I*****Retail*Accounts*Opening*Balances*file**********************                      CGL127AA
+     I**********                                                                            CGL127AA
+     I***RABEXOR NS                                                                         CGL127AA
+     I**********                              1   1 RECI                                    CGL127AA
+     I**********                              2   4 BRCA                                    CGL127AA
+     I**********                              5  100CNUM                                      CSD027
+     I**********                              5  10 CNUM                             CSD027 CGL127AA
+     I**********                             11  13 CCY                                     CGL127AA
+     I**********                             14  170ACOD                                      CGL029
+     I**********                             14  170ACODQQ                           CGL029 CGL127AA
+     I**********                             18  190ACSQ                                    CGL127AA
+     I**********                             81  900ACOD                             CGL029 CGL127AA
+     I*
+     I***Start*of*Day*Account*Balances*********************************                     CGL127AA
+     I*
+     I***GLACBLF                                                                            CGL127AA
+     I**********    RECI                            RECISB                                  CGL127AA
+     I*
+     I* Standard Local Data Area Fields
+     I*
+     I*  Data Structure for Compilation  - Copyright Insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*
+     C*  First Cycle
+     C*
+     C           *IN50     IFEQ '0'
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVE '1'       *IN50
+     C                     END
+     C/EXEC SQL
+     C+  insert into RABEXOR                                                                CGL127AA
+     C+  (                                                                                  CGL127AA
+     C+    RECI                                                                             CGL127AA
+     C+  , BRCA                                                                             CGL127AA
+     C+  , CNUM                                                                             CGL127AA
+     C+  , CCY                                                                              CGL127AA
+     C+  , ACODQQ                                                                           CGL127AA
+     C+  , ACSQ                                                                             CGL127AA
+     C+  , ACNO                                                                             CGL127AA
+     C+  , LDBL                                                                             CGL127AA
+     C+  , ZZ043                                                                            CGL127AA
+     C+  , ACOD                                                                             CGL127AA
+     C+  )                                                                                  CGL127AA
+     C+  select                                                                             CGL127AA
+     C+   A.RECI                                                                            CGL127AA
+     C+  ,A.BRCA                                                                            CGL127AA
+     C+  ,A.CNUM                                                                            CGL127AA
+     C+  ,A.CCY                                                                             CGL127AA
+     C+  ,A.ACODQQ                                                                          CGL127AA
+     C+  ,A.ACSQ                                                                            CGL127AA
+     C+  ,A.ACNO                                                                            CGL127AA
+     C+  ,CASE WHEN B.LDBL IS NULL THEN 0 ELSE B.LDBL END                                   CGL127AA
+     C+  , ' '                                                                              CGL127AA
+     C+  ,A.ACOD                                                                            CGL127AA
+     C+   from ACCNTAB A                                                                    CGL127AA
+     C+ LEFT JOIN GLACBTPD B                                                                CGL127AA
+     C+ ON                                                                                  CGL127AA
+     C+  A.CNUM = B.CNUM  AND                                                               CGL127AA
+     C+  A.CCY  = B.CCY   AND                                                               CGL127AA
+     C+  A.ACOD = B.ACOD  AND                                                               CGL127AA
+     C+  A.ACSQ = B.ACSQ  AND                                                               CGL127AA
+     C+  A.BRCA = B.BRCA                                                                    CGL127AA
+     C+   where A.RECI = 'D' AND  ATYP= 'R' WITH NC                                         CGL127AA
+     C/END-EXEC                                                                             CGL127AA
+     C*                                                                                     CGL127AA
+     C                     SETON                     LR                                     CGL127AA
+     C                     RETRN                                                            CGL127AA
+     C*
+     C***Define*GLACBTL0*Keylist***************************************                     CGL127AA
+     C*                                                                                     CGL127AA
+     C********** KLIST     KLIST                                                            CGL127AA
+     C**********           KFLD           CNUM                                              CGL127AA
+     C**********           KFLD           CCY                                               CGL127AA
+     C**********           KFLD           ACOD                                              CGL127AA
+     C**********           KFLD           ACSQ                                              CGL127AA
+     C**********           KFLD           BRCA                                              CGL127AA
+     C**********                                                                            CGL127AA
+     C**Set*off*all*o/p*indicators*************************************                     CGL127AA
+     C**********                                                                            CGL127AA
+     C**********           SETOF                     3435                                   CGL127AA
+     C**********                                                                            CGL127AA
+     C**Main*calcs*only*if*a*live*account*record***********************                     CGL127AA
+     C***********                                                                           CGL127AA
+     C********** RECI      IFEQ 'D'                                                         CGL127AA
+     C**********                                                                            CGL127AA
+     C***Access*Start*of*business*Ledger*Balance*for*RABEX*************                     CGL127AA
+     C***to*get*balances*before*Real*Time*Postings*Applied.************                     CGL127AA
+     C**********                                                                            CGL127AA
+     C********** KLIST     CHAINGLACBLF              35                                     CGL127AA
+     C**********                                                                            CGL127AA
+     C* Update RABEXOR                                                                      CGL127AA
+     C**********                                                                            CGL127AA
+     C********** *IN35     IFEQ '0'                                                         CGL127AA
+     C**********           MOVE '1'       *IN34                                             CGL127AA
+     C**********           ELSE                                           186340            CGL127AA
+     C**********           Z-ADD0         LDBL                            186340            CGL127AA
+     C**********           MOVE '1'       *IN34                           186340            CGL127AA
+     C**********           END                                                              CGL127AA
+     C**********           END                                                              CGL127AA
+     O*
+     O*****Retail*Accounts*Opening*Balances*file***********************                     CGL127AA
+     O*
+     O***RABEXOR D        34                                                                CGL127AA
+     O**********               LDBL      37P                                                CGL127AA
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,592 @@
+     H        1
+      *****************************************************************
+/*OVR *  OVRDBF FILE(OUTPUT) TOFILE(HISTSAA)                          *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Initialise PF/HISTSAA for AUS006')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL9004 - Initialise Dealing History File for AUS006          *
+      *                                                               *
+      *  Function:  This program is a Midas version of the Migration  *
+      *             program MRHISTSAA.                                *
+      *             This utility will set up an 'Opening Balance'     *
+      *             for each deal on the system on the History File - *
+      *             HISTSAA. Failure to run this routine will render  *
+      *             it impossible to obtain sensible statements for   *
+      *             deals which were on the system prior to the       *
+      *             introduction of this switchable feature.          *
+      *                                                               *
+      *  Called By: DLC9004 - Override file for program DL9004        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER048             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CDL038             Date 10May05               *
+      *                 193905             Date 31May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 153617  *CREATE    Date 19Jan99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  193905 - Rename PRIN (1A) by PRINN (15.0)                    *
+      *           the field PRIN is a field from DEALSDC              *
+      *  153617 - New Program to be called by DLC9004                 *
+      *           when switching on AUS006                            *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *****************************************************************
+      *       05         ERROR IN CHAINING TO HIST3                   *
+      *       06         RECORD NOT FOUND ON HIST3                    *
+      *       07         END OF FILE FOR HIST3                        *
+      *       14         NO VALID HISTORY RECORD READ                 *
+      *       33         END OF FILE FOR DEALSDC                      *
+      *****************************************************************
+      *
+     FHIST3   IF  E           K        DISK
+      *
+     FDEALSDC IF  E                    DISK
+      *
+     FOUTPUT  O   E                    DISK
+     F            HISTSAAF                          KRENAMEOUTPUTF
+      *
+      *
+     E                    CPY@    1   1 80
+      *
+      *
+     IHISTSAAF
+     I              CNUM                            HCNUM
+     I              PCPL                            PPCPL
+     I              DLNO                            DDLNO
+     I              ICBS                            BCBS
+      *
+     IDEALSDCF
+     I              PCPL                            DPCPL
+     I              INTR                            INTE
+     I              ICBS                            DICBS
+      *
+     INREC        DS                            104
+      *
+      **   DATA STRUCTURE CONTAINING NEW RECORD
+      *
+     I                                        1   2 RTYP
+     I                                        3   70EDAT
+     I                                        8  130DLNM
+     I                                       14  280PCPA
+     I                                       29  418NRAT
+     I                                       42  548ORAT
+     I                                       55  57 BRCA
+     I                                       58  60 CCY
+     I                                       61  61 INTC
+     I                                       62  760EAMT
+     I                                       77  79 BRCC
+     I                                       80  87 CASK
+     I                                       88  88 BCBS
+     I                                       89  930MDAT
+     I                                       94  96 TERM
+     I**********                             97 1020CNUM                                      CSD027
+     I                                       97 102 CNUM                                      CSD027
+     I                                      103 104 DTYP
+      *
+     IOREC        DS                            104
+      *
+      **   DATA STRUCTURE CONTAINING OLD RECORD
+      *
+     I                                        1   2 ORTYP
+     I                                        3   70OEDAT
+     I                                        8  130ODLNO
+     I                                       14  280OPCPL
+     I                                       29  418ONRAT
+     I                                       42  548OORAT
+     I                                       55  57 OBRCA
+     I                                       58  60 OCCY
+     I                                       61  61 OINTC
+     I                                       62  760OEAMT
+     I                                       77  79 OBRCC
+     I                                       80  87 OCASK
+     I                                       88  88 OICBS
+     I                                       89  930OMDAT
+     I                                       94  96 OTERM
+     I**********                             97 1020OCNUM                                     CSD027
+     I                                       97 102 OCNUM                                     CSD027
+     I                                      103 104 ODTYP
+      *
+     ILDA         DS                            256
+      *
+      ** Local Data Area To Identify Database Errors
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I/EJECT
+      ********************************************************************
+      *                                                                  *
+      *     M A I N L I N E                                              *
+      *                                                                  *
+      ********************************************************************
+      *
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RETCDE  7
+     C                     PARM           PMODE   1
+      *
+      ** Switchable feature is not in delete mode
+      *
+     C           PMODE     IFNE '3'
+      *
+      **    INITIALISATION PROCESSING
+      *
+     C                     EXSR INIT
+      *
+      **    MAIN PROCESSING
+      *
+     C           *IN33     DOWNE'1'
+     C                     EXSR MAIN
+     C                     END
+     C                     END
+      *
+      **    END PROCESSING
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  INIT    - Initial Processing                                    *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Initialise Standard variables
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVE '1'       ON      1
+     C                     MOVE *ZERO     OFF     1
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MR'      DBPGM
+     C                     MOVE 'HISTSAA' DBPGM
+     C                     OUT  LDA
+      *
+      ** Read first deal record
+      *
+     C                     READ DEALSDC                  33
+      *
+      ** Only want live deal records
+      *
+     C           *IN33     DOWEQ'0'
+     C           RECI      ANDNE'D'
+     C                     READ DEALSDC                  33
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  MAIN    - Main Processing                                       *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           MAIN      BEGSR
+      *
+     C                     MOVE DLNO      TMDLN   60
+     C**********           Z-ADDDPCPL     PRIN   150                                          193905
+     C                     Z-ADDDPCPL     PRINN  150                                          193905
+     C                     Z-ADD0         RBAL   150
+     C                     Z-ADD0         INTE   117
+     C           DTYP      IFEQ 'IT'
+     C           DTYP      OREQ 'CD'
+     C           DTYP      OREQ 'TD'
+     C           DTYP      OREQ 'CI'
+     C                     MOVE 'D'       DLFLAG  1
+     C                     ELSE
+     C                     MOVE 'L'       DLFLAG
+     C                     ENDIF
+      *
+      ** Process History records until first record to be displayed
+      *
+     C                     EXSR FSTREC
+      *
+      ** If no history records exist, a single record is created
+      *
+     C           *IN14     IFEQ '1'
+     C                     EXSR PSOBR
+     C                     GOTO RDNEXT
+     C                     END
+      *
+      ** If the first record is an Opening Balance record or a
+      ** Lodgement record then no further processing required
+      *
+     C           RTYP      IFEQ 'LD'
+     C           RTYP      OREQ 'OB'
+     C                     GOTO RDNEXT
+     C                     END
+      *
+      ** Store first History record
+      *
+     C                     MOVE NREC      TNREC 104
+      *
+      ** Loop while valid History records read
+      *
+     C           *IN14     DOWEQOFF
+     C*
+      ** Read next valid History record
+      *
+     C                     EXSR READHR
+      *
+      ** Process previous History record
+      *
+     C                     EXSR PROCSS
+     C                     END
+     C                     MOVE OFF       *IN14
+      *
+     C********** PRIN      SUB  RBAL      OPBAL  150                                          193905
+     C           PRINN     SUB  RBAL      OPBAL  150                                          193905
+     C           OPBAL     IFNE 0
+     C                     EXSR PCOBR
+     C                     END
+     C           RDNEXT    TAG
+     C                     MOVE OFF       *IN14
+     C                     READ DEALSDC                  33
+      *
+      ** Only want live deal records
+      *
+     C           *IN33     DOWEQ'0'
+     C           RECI      ANDNE'D'
+     C                     READ DEALSDC                  33
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  PCOBR    - Create Opening Balance record for deal with some     *
+      *             history                                              *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           PCOBR     BEGSR
+      *
+     C                     MOVE TNREC     NREC
+     C                     MOVEL'OB'      RTYP
+     C                     Z-ADDOPBAL     PCPL
+     C                     Z-ADD0         NRAT
+     C                     Z-ADD0         ORAT
+     C                     SUB  1         SQNO
+     C                     Z-ADDOPBAL     EAMT
+     C                     WRITEOUTPUTF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  PSOBR    - Set up single Opening Balance record for deals       *
+      *             with no history                                      *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           PSOBR     BEGSR
+      *
+     C                     MOVEL'OB'      RTYP
+     C           IACD      IFGT 0
+     C                     Z-ADDIACD      EDAT
+     C                     ELSE
+     C                     Z-ADDVDAT      EDAT
+     C                     ENDIF
+     C**********           Z-ADDPRIN      PCPL                                                193905
+     C                     Z-ADDPRINN     PCPL                                                193905
+     C                     Z-ADD0         NRAT
+     C                     Z-ADD0         ORAT
+     C                     MOVE *BLANKS   TERM
+     C                     Z-ADD1         SQNO
+     C**********           Z-ADDPRIN      EAMT                                                193905
+     C                     Z-ADDPRINN     EAMT                                                193905
+     C                     MOVE *BLANKS   CHQI
+     C                     MOVE DICBS     ICBS
+     C                     WRITEOUTPUTF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  FSTREC  - Read through History records until first record to    *
+      *            be displayed is found                                 *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           FSTREC    BEGSR
+      *
+      ** Read next History record
+      *
+     C           DLNO      CHAINHIST3                0605
+      *
+      ** If error in reading file - database error
+      *
+     C           *IN05     IFEQ '1'
+     C                     MOVELDLNO      DBKEY
+     C                     MOVEL'HIST3'   DBFILE
+     C                     Z-ADD2         DBASE
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           DDLNO     IFNE DLNO
+     C                     SETON                         14
+     C                     END
+      *
+     C           FSTR99    ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  READHR  - Read next record from History file                    *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           READHR    BEGSR
+      *
+     C                     MOVE OFF       *IN07
+     C                     MOVE OFF       *IN14
+     C                     MOVE NREC      OREC
+      *
+     C                     READ HIST3                    07
+      *
+      ** If last record read then end read loop
+      *
+     C           DDLNO     IFNE DLNO
+     C           *IN07     OREQ '1'
+     C                     MOVE ON        *IN14
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  PROCSS  - Process history record                                *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           PROCSS    BEGSR                                       **
+      *
+      ** Loan Processing
+      *
+     C           DLFLAG    IFEQ 'L'
+      *
+      ** Processing for record type PI (Principal Increase)
+      *
+     C           ORTYP     IFEQ 'PI'
+     C                     EXSR PROCPI
+     C                     ELSE
+      *
+      ** Processing for record type PD (Principal Decrease)
+      *
+     C           ORTYP     IFEQ 'PD'
+     C                     EXSR PROCPD
+     C                     ELSE
+      *
+      ** Processing for record type IP (Interest Payment)
+      *
+     C           ORTYP     IFEQ 'IP'
+     C                     EXSR PROCIP
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** Deposit Processing
+      *
+     C           DLFLAG    IFEQ 'D'
+      *
+      ** Processing for record type PI (Principal Increase)
+      *
+     C           ORTYP     IFEQ 'PI'
+     C                     EXSR PRDCPI
+     C                     ELSE
+      *
+      ** Processing for record type PD (Principal Decrease)
+      *
+     C           ORTYP     IFEQ 'PD'
+     C                     EXSR PRDCPD
+     C                     ELSE
+      *
+      ** Processing for record type IP (Interest Payment)
+      *
+     C           ORTYP     IFEQ 'IP'
+     C                     EXSR PRDCIP
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  PROCPI  - Process Principal Increase record for Loan            *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           PROCPI    BEGSR
+      *
+      ** Update balance.
+      *
+     C                     ADD  OEAMT     RBAL
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      ********************************************************************
+      *                                                                  *
+      *  PROCPD  - Process Principal Decrease record for Loan            *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           PROCPD    BEGSR
+      *
+      ** Update balance
+      *
+     C                     SUB  OEAMT     RBAL
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      ********************************************************************
+      *                                                                  *
+      *  PROCIP  - Process Interest Due/Capitalisation record for Loan   *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           PROCIP    BEGSR
+      *
+      ** Capitalise Interest if OINTC = Y and deal not matured at
+      ** the time of this interest payment.
+      *
+     C           OINTC     IFEQ 'Y'
+     C           OMDAT     IFEQ 0
+     C           OMDAT     ORGT OEDAT
+     C                     ADD  OEAMT     RBAL
+     C                     END
+     C                     END
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      ********************************************************************
+      *                                                                  *
+      *  PRDCPI  - Process Principal Increase record for Deposit         *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           PRDCPI    BEGSR
+      *
+      ** Update balance
+      *
+     C                     ADD  OEAMT     RBAL
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      ********************************************************************
+      *                                                                  *
+      *  PRDCPD  - Process Principal Decrease record for Deposit         *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           PRDCPD    BEGSR
+      *
+      ** Update balance
+      *
+     C                     SUB  OEAMT     RBAL
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      ********************************************************************
+      *                                                                  *
+      *  PRDCIP  - Process Interest Due / Capitalisation record for      *
+      *            Deposit                                               *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           PRDCIP    BEGSR
+      *
+      ** Capitalise interest if OINTC = Y and deal not matured at the
+      ** time of this interest payment.
+      *
+     C           OINTC     IFEQ 'Y'
+     C           OMDAT     IFEQ 0
+     C           OMDAT     ORGT OEDAT
+     C                     ADD  OEAMT     RBAL
+     C                     END
+     C                     END
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *  *PSSR   - Error Dump subroutine                                 *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     OUT  LDA
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     MOVEL'FAILURE' RETCDE
+     C                     RETRN
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

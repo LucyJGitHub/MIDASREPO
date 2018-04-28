@@ -1,0 +1,1712 @@
+     H        1
+      *****************************************************************
+/*STD *: RPGBASE                                                    : *
+/*EXI *  TEXT('Midas RE T&N Accounts - Notify Future Mvts')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Retail T&N Accounts                              *
+      *                                                               *
+      *  RPG/RE4004  - Notify Future Movements                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. 203004             Date 18Dec09               *
+      *                 194009             Date 18Dec09               *
+      *                 BUG27460           DATE 18Dec09               *
+      *                 CRE015 *CREATE     DATE 18Dec09               *
+      *---------------------------------------------------------------*
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  203004 - Only allow the insertion of notifications for Term  *
+      *           and Notice Accounts.                                *
+      *  194009 - When amending termination notification, error msg   *
+      *           CPF4293 appears. Applied fix 192013.                *
+      *  BUG27460 - Applied client fix AS0001 AH0001                  *
+      *  AS0001 - Show terminated accounts as deleted                 *
+      *  AH0001 - Call RE4011 to update database files after rework   *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *****************************************************************
+     FRE4004DFCF  E                    WORKSTN
+     F                                        SRRN  KSFILE RE4004S1
+     FREPRPNPDIF  E           K        DISK
+      *                                                                                       194009
+      ** Array of QCMDEXC commands                                                            194009
+      *                                                                                       194009
+     E                    CMD@    1   1 80                                                    194009
+      *                                                                                       194009
+      ** Array of QCMDEXC command to edit                                                     194009
+      *                                                                                       194009
+     E                    EDT        80  1                                                    194009
+      *****************************************************************
+     IPGMDS      SDS
+      * Program data structure
+     I                                        1  10 SPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+     IP@FMT     E DSDSSDY
+      * Parameters
+     IACFMT     E DSACCNTAB
+      * Account details
+     IBKFMT     E DSSDBANKPD
+      * Bank details
+     ICYFMT     E DSSDCURRPD
+      * Ccy
+     I              '0123456789'          C         CDIGIT
+      *****************************************************************
+      *
+      ** Initialise
+     C                     EXSR INIT
+      *
+      ** Repeat until exit req'd
+     C           *IN03     DOUEQ'1'
+      *
+      ** Show selection screen
+     C                     EXSR SELECT
+     C                     END
+      *
+     C           ENDHRE    TAG
+      *
+     C                     CALL 'RE4012'
+     C                     PARM '*FREE   'PMODE   7
+     C                     PARM *BLANKS   PKEY1  24
+     C                     PARM *BLANKS   PTRR1   8
+     C                     PARM -1        PREAM  150
+     C                     PARM *BLANKS   PDC01   1
+     C                     PARM -1        PCAVL  150
+     C                     PARM *BLANKS   PDC02   1
+     C                     PARM WSPOS2    PDEFF   50
+     C                     PARM -1        PRECD   50
+     C                     PARM -1        PHISB  150
+     C                     PARM *BLANKS   PDC03   1
+     C                     PARM -2        PRTDE   20
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *                                                               *
+      *  SELECT: Process Selection                                    *
+      *                                                               *
+      *****************************************************************
+     C           SELECT    BEGSR
+      *
+      ** Get selection details if no previous errors
+     C           *IN30     IFEQ '0'
+      *
+      ** Refresh if req'd
+     C           *IN05     IFEQ '1'
+     C                     SETOF                     05
+     C                     MOVELS1POSN    WSPOS1
+     C                     Z-ADD0         WSPOS2
+     C                     MOVEL*LOVAL    WSPOS3
+      *
+      ** Clear subfile
+     C                     Z-ADD0         SRRN    40
+     C                     SETON                     80
+     C                     SETON                     83
+     C                     WRITERE4004C1
+     C                     SETOF                     83
+     C                     WRITERE4004C1
+     C                     SETOF                     80
+     C                     SETON                     28
+     C                     SETOF                     81
+     C                     END
+      *
+      ** Show records from next position
+     C           *IN28     IFEQ '1'
+     C                     SETOF                     28
+     C                     Z-ADD1         PCOUNT  40
+     C                     MOVEL*BLANKS   LLKEY1
+      *
+     C                     CALL 'RE4012'
+     C                     PARM '*ENQ    'PMODE   7
+     C                     PARM WSPOS1    PKEY1  24
+     C                     PARM WSPOS3    PTRR1   8
+     C                     PARM -1        PREAM  150
+     C                     PARM *BLANKS   PDC01   1
+     C                     PARM -1        PCAVL  150
+     C                     PARM *BLANKS   PDC02   1
+     C                     PARM WSPOS2    PDEFF   50
+     C                     PARM -1        PRECD   50
+     C                     PARM -1        PHISB  150
+     C                     PARM *BLANKS   PDC03   1
+     C                     PARM -2        PRTDE   20
+      *
+     C           PKEY1     DOWLT*HIVAL
+     C           PCOUNT    ANDLESFLPAG
+      *
+     C                     ADD  1         SRRN
+      *
+      ** Note first rcd
+     C           PCOUNT    IFEQ 1
+     C                     MOVELPKEY1     WSPOS1 24
+     C                     Z-ADDPDEFF     WSPOS2  50
+     C                     MOVELPTRR1     WSPOS3  8
+     C                     Z-ADDSRRN      S1POSR
+     C                     END
+      *
+      ** Note last rcd
+     C           PCOUNT    IFEQ SFLPAG
+     C                     MOVELPKEY1     WBPOS1 24
+     C                     Z-ADDPDEFF     WBPOS2  50
+     C                     MOVELPTRR1     WBPOS3  8
+     C                     END
+      *
+      ** Fill screen
+     C                     EXSR PRMSCR
+     C                     SETON                     81
+     C                     SETOF                     84
+     C                     MOVEL*BLANKS   S1ACTN
+     C                     WRITERE4004S1
+      *
+     C                     ADD  1         PCOUNT
+      *
+     C                     CALL 'RE4012'
+     C                     PARM '*ENQ    'PMODE
+     C                     PARM PKEY1     PKEY1
+     C                     PARM PTRR1     PTRR1
+     C                     PARM -1        PREAM
+     C                     PARM *BLANKS   PDC01
+     C                     PARM -1        PCAVL
+     C                     PARM *BLANKS   PDC02
+     C                     PARM PDEFF     PDEFF
+     C                     PARM -1        PRECD
+     C                     PARM -1        PHISB
+     C                     PARM *BLANKS   PDC03
+     C                     PARM -2        PRTDE
+     C                     END
+      *
+      ** Identify if following rcds
+     C                     SETOF                     82
+     C           PKEY1     IFEQ *HIVAL
+     C                     SETON                     82
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** No records shown
+     C           SRRN      IFEQ 0
+     C                     SETON                     30
+      *No details to display
+      */MSGID TNN0379GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0379' P@MSGI 10
+      **  (ensure subfile completely cleared)
+     C                     SETON                     80
+     C                     SETON                     83
+     C                     WRITERE4004C1
+     C                     SETOF                     83
+     C                     SETOF                     80
+     C                     SETOF                     81
+     C                     END
+      *
+      ** Show selection screen
+     C                     WRITERE4004HH
+     C                     WRITERE4004F1
+     C                     WRITEPMSGCTL
+     C                     EXFMTRE4004C1
+     C                     CALL 'ZA0250'
+     C           *IN03     CABEQ'1'       ENDHRE
+      *
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     36
+     C                     SETOF                     37
+      *
+      ** Refresh pressed
+     C           *IN05     IFEQ '1'
+     C                     MOVEL*BLANKS   S1POSN
+     C                     MOVEL*BLANKS   LLPOSN
+     C                     END
+      *
+      ** Enter pressed
+     C           *IN05     IFEQ '0'
+     C           *IN09     ANDEQ'0'
+     C           *IN28     ANDEQ'0'
+     C                     EXSR VALSEL
+     C                     END
+      *
+      ** New position entered
+     C           S1POSN    IFNE LLPOSN
+     C           *IN28     ANDEQ'0'
+     C                     SETOF                     09
+     C                     SETON                     05
+     C                     MOVELS1POSN    LLPOSN
+     C                     END
+      *
+      ** Rollup pressed
+     C           *IN28     IFEQ '1'
+     C                     MOVELWBPOS1    WSPOS1
+     C                     Z-ADDWBPOS2    WSPOS2
+     C                     MOVELWBPOS3    WSPOS3
+     C                     END
+      *
+      ** Insert
+     C           *IN09     IFEQ '1'
+     C                     SETOF                     09
+     C                     EXSR INSERT
+     C                     SETOF                     12
+     C                     SETON                     05
+     C           PKEY1     IFEQ *HIVAL
+     C                     MOVEL*BLANKS   PKEY1
+     C                     END
+     C                     MOVELPKEY1     S1POSN
+     C                     MOVELPKEY1     LLPOSN
+     C                     MOVELPKEY1     WSPOS1
+     C                     Z-ADD0         WSPOS2
+     C                     MOVEL*LOVAL    WSPOS3
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  VALSEL: Validate Selection                                   *
+      *                                                               *
+      *****************************************************************
+     C           VALSEL    BEGSR
+      *
+      ** Save end of subfile pointer
+     C                     Z-ADDSRRN      SVSRRN  40
+      *
+      ** Identify first error record
+     C                     Z-ADD-1        ERRRRN  40
+      *
+      ** Read changed actions
+     C                     SETOF                     84
+     C                     READCRE4004S1                 72
+     C           *IN72     DOWEQ'0'
+      *
+      ** Increment internal subfile position to last changed record
+     C           S1ACTN    IFNE *BLANKS
+     C                     Z-ADDSRRN      S1POSR
+     C                     END
+      *
+      ** Check and perform action, if so far so good
+     C           *IN30     IFEQ '0'
+     C                     SETOF                     52
+      **  Check user authorisation
+     C                     MOVELS1ACTN    ZACTN
+     C                     MOVELS1BRCA    ZBR
+     C                     CALL 'ZVACTBU'
+     C                     PARM           ZACTN   1
+     C                     PARM           ZBR     3
+     C                     PARM           ERR     10
+     C           ERR       IFEQ 1
+     C           ERR       OREQ 2
+     C                     SETON                     30
+     C                     SETON                     31
+      *User is not authorised to this action for the branch of the account
+      */MSGID TNN0407GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0407' P@MSGI 10
+     C                     END
+      **  Amend
+     C           S1ACTN    IFEQ 'A'
+     C           S1TRR1    ANDNE*ALL'*'
+     C           *IN30     ANDEQ'0'
+     C                     EXSR DETAIL
+     C                     END
+      **  Enquire
+     C           S1ACTN    IFEQ 'E'
+     C           S1TRR1    ANDNE*ALL'*'
+     C           *IN30     ANDEQ'0'
+     C                     SETON                     52
+     C                     EXSR DETAIL
+     C                     END
+      **  Delete
+     C           S1ACTN    IFEQ 'D'
+     C           S1TRR1    ANDNE*ALL'*'
+     C           S1TRR1    ANDNETRMREF
+     C           S1TRR1    ANDNEINTREF
+     C           *IN30     ANDEQ'0'
+     C                     SETON                     52
+     C                     EXSR DETAIL
+     C                     END
+      **  Invalid action
+     C           S1ACTN    IFNE 'A'
+     C           S1ACTN    ANDNE'E'
+     C           S1ACTN    ANDNE'D'
+     C           S1ACTN    ANDNE' '
+     C                     SETON                     30
+     C                     SETON                     31
+      *Action must be A, E or D
+      */MSGID TNN0380GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0380' P@MSGI 10
+     C                     END
+      **  Invalid action for specified notification
+     C           S1ACTN    IFEQ 'D'
+     C           S1TRR1    ANDEQTRMREF
+     C           S1ACTN    OREQ 'D'
+     C           S1TRR1    ANDEQINTREF
+     C           S1ACTN    ORNE ' '
+     C           S1TRR1    ANDEQ*ALL'*'
+     C                     SETON                     30
+     C                     SETON                     31
+      *The action is not allowed for the Notification
+      */MSGID TNN0381GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0381' P@MSGI 10
+     C                     END
+      **  Previous screen req'd
+     C           *IN12     IFEQ '1'
+     C                     SETOF                     12
+     C                     SETON                     30
+     C                     SETON                     31
+     C                     END
+     C                     END
+      **  Action OK
+     C           *IN30     IFEQ '0'
+     C           S1ACTN    IFEQ 'E'
+     C                     MOVEL*BLANKS   S1ACTN
+     C                     END
+     C           S1ACTN    IFEQ 'D'
+     C                     MOVEL*BLANKS   S1ACTN
+     C                     MOVELS2KEY1    S1KEY1
+     C                     MOVEL*ALL'*'   S1TRR1
+     C                     MOVE *BLANKS   S1RECD
+     C                     MOVE *BLANKS   S1DEFF
+     C                     MOVE *BLANKS   S1EARL
+     C                     MOVE *BLANKS   S1REAM
+     C                     MOVEL*BLANKS   S1DC01
+     C                     MOVE *BLANKS   S1CAVL
+     C                     MOVEL*BLANKS   S1DC02
+     C                     MOVE *BLANKS   S1HISB
+     C                     MOVEL*BLANKS   S1DC03
+     C                     MOVE *ZEROS    S1NBDP
+     C                     MOVEL*BLANKS   S1BRCA
+     C                     MOVEL*BLANKS   S1CNUM
+     C                     MOVEL*BLANKS   S1CCY
+     C                     MOVEL*ZEROS    S1ACOD
+     C                     MOVEL*ZEROS    S1ACSQ
+     C                     MOVEL*BLANKS   S1TEXT
+     C                     MOVE *BLANKS   S1DISP
+     C                     MOVE *BLANKS   S1HELD
+     C                     MOVE *BLANKS   S1OVER
+     C                     MOVE *BLANKS   S1PRJC
+     C                     MOVE *BLANKS   S1ACCR
+     C                     MOVE *BLANKS   S1WTAX
+     C                     MOVE *BLANKS   S1CHRG
+     C                     MOVE *BLANKS   S1CLOB
+     C                     MOVE *BLANKS   S1RTDE
+     C                     MOVE *ZEROS    S1TRMV
+     C                     END
+     C           S1ACTN    IFEQ 'A'
+     C                     MOVEL*BLANKS   S1ACTN
+     C                     MOVELS2KEY1    S1KEY1
+     C                     MOVELS2TRR1    S1TRR1
+     C                     MOVE S2RECD    S1RECD
+     C                     MOVE S2DEFF    S1DEFF
+     C                     MOVE S2EARL    S1EARL
+     C                     MOVE S2REAM    S1REAM
+     C                     MOVELS2DC01    S1DC01
+     C                     MOVE S2CAVL    S1CAVL
+     C                     MOVELS2DC02    S1DC02
+     C                     MOVE S2HISB    S1HISB
+     C                     MOVELS2DC03    S1DC03
+     C                     MOVE S2NBDP    S1NBDP
+     C                     MOVELS2BRCA    S1BRCA
+     C                     MOVELS2CNUM    S1CNUM
+     C                     MOVELS2CCY     S1CCY
+     C                     MOVELS2ACOD    S1ACOD
+     C                     MOVELS1ACSQ    S1ACSQ
+     C                     MOVELS2TEXT    S1TEXT
+     C                     MOVE S2DISP    S1DISP
+     C                     MOVE S2HELD    S1HELD
+     C                     MOVE S2OVER    S1OVER
+     C                     MOVE S2PRJC    S1PRJC
+     C                     MOVE S2ACCR    S1ACCR
+     C                     MOVE S2WTAX    S1WTAX
+     C                     MOVE S2CHRG    S1CHRG
+     C                     MOVE S2CLOB    S1CLOB
+     C                     MOVE S2RTDE    S1RTDE
+     C                     MOVE S2TRMV    S1TRMV
+     C                     END
+     C                     END
+      **  Error occurred
+     C           *IN30     IFEQ '1'
+     C                     SETON                     84
+      **  (note first error to position subfile)
+     C           ERRRRN    IFEQ -1
+     C                     Z-ADDSRRN      ERRRRN
+     C                     END
+     C                     END
+      *
+     C                     UPDATRE4004S1
+     C                     SETOF                     31
+      *
+     C                     READCRE4004S1                 72
+     C                     END
+      *
+      ** If error occurred, override internal subfile pos to this rcd
+     C           ERRRRN    IFGT 0
+     C                     Z-ADDERRRRN    S1POSR
+     C                     END
+      *
+      ** Restore end of subfile pointer
+     C                     Z-ADDSVSRRN    SRRN
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INSERT: Insert Details                                       *
+      *                                                               *
+      *****************************************************************
+     C           INSERT    BEGSR
+      *
+      ** Request account until valid
+     C                     MOVELS1POSN    S2KEY1
+      *
+     C           *IN30     DOUEQ'0'
+      *
+      ** Show insert a/c screen
+     C                     WRITERE4004HH
+     C                     WRITERE4004F2
+     C                     WRITEPMSGCTL
+     C                     EXFMTRE4004II
+     C                     CALL 'ZA0250'
+     C           *IN03     CABEQ'1'       ENDINS
+     C           *IN12     CABEQ'1'       ENDINS
+      *
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     36
+     C                     SETOF                     37
+      *
+      ** Check account and ccy
+     C                     CALL 'AOACCTR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY    'P@OPTN  7
+     C                     PARM S2KEY1    P@RETL 10
+     C                     PARM *BLANKS   P@CNUM  6
+     C                     PARM *BLANKS   P@CUCD  3
+     C                     PARM *BLANKS   P@ACCD 10
+     C                     PARM *BLANKS   P@ACSQ  2
+     C                     PARM *BLANKS   P@BRCA  3
+     C           ACFMT     PARM *BLANKS   P@FMT
+     C                     MOVE ACNO      ACNOA  10
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           ACFMT     OREQ *BLANKS
+     C           ACNOA     ORNE S2KEY1
+     C                     SETON                     30
+     C                     SETON                     32
+      *Account is invalid
+      */MSGID TNN0382GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0382' P@MSGI 10
+     C                     END
+      *
+     C           *IN30     IFEQ '0'
+      **  Check user authorisation
+     C                     MOVEL'I'       ZACTN
+     C                     MOVELBRCA      ZBR
+     C                     CALL 'ZVACTBU'
+     C                     PARM           ZACTN   1
+     C                     PARM           ZBR     3
+     C                     PARM           ERR     10
+     C           ERR       IFEQ 1
+     C           ERR       OREQ 2
+     C                     SETON                     30
+     C                     SETON                     32
+      *User is not authorised to this action for the branch of the account
+      */MSGID TNN0407GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0407' P@MSGI 10
+     C                     END
+     C                     END
+      *
+     C           *IN30     IFEQ '0'
+     C                     MOVE ACOD      PACCD
+     C                     CALL 'SD0031T'
+     C                     PARM           PACCD  10
+     C                     PARM           PATTY   1
+     C                     PARM           PCHIA   4
+     C                     PARM           PRTTY   5
+     C                     PARM           PNVCD   2
+     C                     PARM           PPRFC   4
+     C                     PARM           PRTDN   2
+     C                     PARM           PRTDI   2
+     C                     PARM           PRTCD   7
+      *                                                                                       203004
+     C           PATTY     IFNE 'P'                                                           203004
+     C                     SETON                     30                                       203004
+     C                     SETON                     32                                       203004
+     C                     CALL 'ZA0340'                                                      203004
+     C                     PARM 'REUSRMSG'P@MSGF                                              203004
+     C                     PARM 'TNN0424' P@MSGI                                              203004
+     C                     ELSE                                                               203004
+      *                                                                                       203004
+      ** (Insert always customer notif in this program)
+     C                     MOVELPRTDN     S2RTDE
+      *
+     C                     MOVELCCY       PCCY
+     C                     EXSR GETCCY
+     C                     Z-ADDA6NBDP    S2NBDP
+     C                     MOVELBRCA      S2BRCA
+     C                     MOVE CNUM      S2CNUM
+     C                     MOVELCCY       S2CCY
+     C                     MOVE ACOD      S2ACOD
+     C                     MOVE ACSQ      S2ACSQ
+      *
+     C                     MOVELANAM      S2TEXT    P
+      *
+     C                     CALL 'RE4014'
+     C                     PARM S2KEY1    PWKEY1 24
+     C                     PARM           PSODL  150
+     C                     PARM           PPRJL  150
+     C                     PARM           PSODC  150
+     C                     PARM           PPRJC  150
+     C                     PARM           PDISP  150
+     C                     PARM           PHELD  150
+     C                     PARM           POVER  150
+     C                     PARM           PACCR  150
+     C                     PARM           PCHRG  150
+     C                     PARM           PWTAX  150
+     C                     PARM           PRTCD   7
+      *
+     C           PDISP     IFLT 0
+     C                     MOVEL'CR'      PDISPS
+     C                     Z-SUBPDISP     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PDISPS  2
+     C                     Z-ADDPDISP     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S2NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S2DISP    P
+     C                     MOVE PDISPS    S2DISP
+      *
+     C           PHELD     IFLT 0
+     C                     MOVEL'CR'      PHELDS
+     C                     Z-SUBPHELD     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PHELDS  2
+     C                     Z-ADDPHELD     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S2NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S2HELD    P
+     C                     MOVE PHELDS    S2HELD
+      *
+     C           POVER     IFLT 0
+     C                     MOVEL'CR'      POVERS
+     C                     Z-SUBPOVER     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      POVERS  2
+     C                     Z-ADDPOVER     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S2NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S2OVER    P
+     C                     MOVE POVERS    S2OVER
+      *
+     C           PPRJC     IFLT 0
+     C                     MOVEL'CR'      PPRJCS
+     C                     Z-SUBPPRJC     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PPRJCS  2
+     C                     Z-ADDPPRJC     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S2NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S2PRJC    P
+     C                     MOVE PPRJCS    S2PRJC
+      *
+     C           PACCR     IFLT 0
+     C                     MOVEL'CR'      PACCRS
+     C                     Z-SUBPACCR     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PACCRS  2
+     C                     Z-ADDPACCR     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S2NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S2ACCR    P
+     C                     MOVE PACCRS    S2ACCR
+      *
+     C           PWTAX     IFLT 0
+     C                     MOVEL'CR'      PWTAXS
+     C                     Z-SUBPWTAX     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PWTAXS  2
+     C                     Z-ADDPWTAX     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S2NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S2WTAX    P
+     C                     MOVE PWTAXS    S2WTAX
+      *
+     C           PCHRG     IFLT 0
+     C                     MOVEL'CR'      PCHRGS
+     C                     Z-SUBPCHRG     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PCHRGS  2
+     C                     Z-ADDPCHRG     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S2NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S2CHRG    P
+     C                     MOVE PCHRGS    S2CHRG
+      *
+     C           PPRJC     ADD  PACCR     PCLOB  150
+     C                     ADD  PWTAX     PCLOB
+     C                     ADD  PCHRG     PCLOB
+     C           PCLOB     IFLT 0
+     C                     MOVEL'CR'      PCLOBS
+     C                     Z-SUBPCLOB     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PCLOBS  2
+     C                     Z-ADDPCLOB     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S2NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S2CLOB    P
+     C                     MOVE PCLOBS    S2CLOB
+      *
+      ** Get P+P details
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'Y'       INSRT   1
+     C                     EXSR GETPP
+     C                     MOVE ' '       INSRT
+     C                     END
+      *                                                                                       203004
+     C                     ENDIF                                                              203004
+      *                                                                                       203004
+     C                     END
+     C                     END
+      *
+     C                     SETON                     51
+     C                     SETOF                     52
+      *
+      ** Place initial insert dets into fields as if coming from subfile screen
+     C                     RESETRE4004S1
+      *
+     C                     MOVEL'I'       S1ACTN
+     C                     MOVELS2KEY1    S1KEY1
+     C                     MOVELS2NBDP    S1NBDP
+     C                     MOVELS2BRCA    S1BRCA
+     C                     MOVELS2CNUM    S1CNUM
+     C                     MOVELS2CCY     S1CCY
+     C                     MOVELS2ACOD    S1ACOD
+     C                     MOVELS2ACSQ    S1ACSQ
+     C                     MOVELS2TEXT    S1TEXT
+     C                     MOVE S2DISP    S1DISP
+     C                     MOVE S2HELD    S1HELD
+     C                     MOVE S2OVER    S1OVER
+     C                     MOVE S2PRJC    S1PRJC
+     C                     MOVE S2ACCR    S1ACCR
+     C                     MOVE S2WTAX    S1WTAX
+     C                     MOVE S2CHRG    S1CHRG
+     C                     MOVE S2CLOB    S1CLOB
+     C                     EXSR MORINS
+      *
+     C                     EXSR DETAIL
+     C                     SETOF                     51
+      *
+     C           ENDINS    ENDSR
+      *****************************************************************
+      *                                                               *
+      *  MORINS: Insert Additional Details                            *
+      *                                                               *
+      *****************************************************************
+     C           MORINS    BEGSR
+      *
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM           BJDFIN  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVELZDATE     S1RECD
+      *
+     C           E2TPRD    IFEQ 'T'
+     C           E2MDAT    ADD  1         ZDAYNO
+     C                     END
+     C           E2TPRD    IFEQ 'N'
+     C           BJRDNB    ADD  E2NDPD    ZDAYNO
+     C                     END
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM           BJDFIN  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVELZDATE     S1DEFF
+      *
+     C                     MOVEL*BLANKS   S1EARL
+     C           E2TPRD    IFEQ 'T'
+     C           E2MDAT    ADD  1         ZDAYNO
+     C                     END
+     C           E2TPRD    IFEQ 'N'
+     C           BJRDNB    ADD  E2NDPD    ZDAYNO
+     C                     END
+     C           ZDAYNO    IFGT TRMVAL
+     C                     Z-ADDTRMVAL    ZDAYNO
+     C                     END
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM           BJDFIN  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVELZDATE     S1EARL
+      *
+     C                     MOVE S2RTDE    S1RTDE
+     C                     Z-ADDTRMVAL    S1TRMV
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  GETPP: Get P+P details                                       *
+      *                                                               *
+      *****************************************************************
+     C           GETPP     BEGSR
+      *
+      ** Access termination P+P detail for this account
+     C                     MOVELBRCA      E2BRCA
+     C                     MOVE CNUM      E2CNUM
+     C                     MOVELCCY       E2CCY
+     C                     MOVE ACOD      E2ACOD
+     C                     MOVE ACSQ      E2ACSQ
+     C                     MOVEL'Z'       E2EVNT
+     C                     Z-ADD0         E2ITEM
+     C           KPRPN1    SETLLREPRPNPD
+     C           KPRPN3    READEREPRPNPD                 71
+     C           *IN71     IFEQ '0'
+     C                     Z-ADDE2VDAT    TRMVAL  50
+     C                     END
+      ** Access first P+P detail for this account
+     C                     MOVELBRCA      E2BRCA
+     C                     MOVE CNUM      E2CNUM
+     C                     MOVELCCY       E2CCY
+     C                     MOVE ACOD      E2ACOD
+     C                     MOVE ACSQ      E2ACSQ
+     C                     MOVEL*BLANKS   E2EVNT
+     C                     Z-ADD0         E2ITEM
+     C           KPRPN1    SETLLREPRPNPD
+     C           KPRPN3    READEREPRPNPD                 71
+     C           *IN71     IFEQ '0'
+     C           E2EVNT    ANDEQ'Z'
+     C                     SETON                     71
+     C                     END
+     C           *IN71     IFEQ '1'
+     C                     SETON                     30
+     C                     SETON                     32
+      *The account specified is not an active Term or Notice a/c
+      */MSGID TNN0383GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0383' P@MSGI 10
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DETAIL: Process Details                                      *
+      *                                                               *
+      *****************************************************************
+     C           DETAIL    BEGSR
+      *
+      ** Request details until valid
+     C           *IN30     DOUEQ'0'
+      *
+      ** Place selection fields into detail fields
+     C           *IN30     IFEQ '0'
+     C                     MOVELS1KEY1    S2KEY1
+     C                     MOVELS1REAM    S2REAM
+     C                     MOVELS1DC01    S2DC01
+     C                     MOVELS1CAVL    S2CAVL
+     C                     MOVELS1DC02    S2DC02
+     C                     MOVELS1TRR1    S2TRR1
+     C                     MOVELS1RECD    S2RECD
+     C                     MOVELS1DEFF    S2DEFF
+     C                     MOVELS1EARL    S2EARL
+     C                     MOVELS1HISB    S2HISB
+     C                     MOVELS1DC03    S2DC03
+     C                     Z-ADDS1NBDP    S2NBDP
+     C                     MOVELS1BRCA    S2BRCA
+     C                     MOVELS1CNUM    S2CNUM
+     C                     MOVELS1CCY     S2CCY
+     C                     MOVELS1ACOD    S2ACOD
+     C                     MOVELS1ACSQ    S2ACSQ
+     C                     MOVELS1TEXT    S2TEXT
+     C                     MOVE S1DISP    S2DISP
+     C                     MOVE S1HELD    S2HELD
+     C                     MOVE S1OVER    S2OVER
+     C                     MOVE S1PRJC    S2PRJC
+     C                     MOVE S1ACCR    S2ACCR
+     C                     MOVE S1WTAX    S2WTAX
+     C                     MOVE S1CHRG    S2CHRG
+     C                     MOVE S1CLOB    S2CLOB
+     C                     MOVELS1RTDE    S2RTDE
+     C                     MOVELS1TRMV    S2TRMV
+     C                     END
+      *
+      ** Show details screen
+     C                     WRITERE4004HH
+     C                     WRITERE4004F2
+     C                     WRITEPMSGCTL
+     C           S2TRR1    IFNE TRMREF
+     C           S2TRR1    ANDNEINTREF
+     C                     EXFMTRE4004DD
+     C                     END
+     C           S2TRR1    IFEQ TRMREF
+     C                     EXFMTRE4004D2
+     C                     END
+     C           S2TRR1    IFEQ INTREF
+     C                     EXFMTRE4004D3
+     C                     END
+     C                     CALL 'ZA0250'
+     C           *IN03     CABEQ'1'       ENDDET
+     C           *IN12     CABEQ'1'       ENDDET
+      *
+     C                     SETOF                     30
+      *
+      ** Delete function not allowed unless action was D
+     C           *IN10     IFEQ '1'
+     C           S1ACTN    ANDNE'D'
+     C                     SETOF                     10
+     C                     SETON                     30
+      *Confirm Delete is not allowed at this time
+      */MSGID TNN0384GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0384' P@MSGI 10
+     C                     END
+      *
+      ** Validate details
+     C           *IN30     IFEQ '0'
+     C           S1ACTN    IFEQ 'A'
+     C           S1ACTN    OREQ 'D'
+     C           *IN51     OREQ '1'
+     C                     EXSR VALDET
+     C           *IN03     CABEQ'1'       ENDDET
+     C                     END
+     C                     END
+     C                     END
+     C           ENDDET    ENDSR
+      *****************************************************************
+      *                                                               *
+      *  VALDET: Validate Details                                     *
+      *                                                               *
+      *****************************************************************
+     C           VALDET    BEGSR
+      *
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     36
+     C                     SETOF                     37
+      *
+      ** Force error if delete reqd without confirm delete
+     C           S1ACTN    IFEQ 'D'
+     C           *IN10     ANDEQ'0'
+     C                     SETON                     30
+      *Press Confirm Delete to delete this Notification
+      */MSGID TNN0385GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0385' P@MSGI 10
+     C                     END
+      *
+      ** Check first amount
+     C                     Z-ADD0         S2REAN
+     C           'BAL'     SCAN S2REAM                   76
+     C           *IN76     IFEQ '1'
+     C                     Z-ADD*ALL'9'   S2REAN
+     C                     MOVE 'BAL'     S2REAM    P
+     C                     END
+     C           S2REAM    IFEQ *BLANKS
+     C                     MOVE '0'       S2REAM
+     C                     MOVEL'D'       S2DC01
+     C                     SETON                     30
+     C                     END
+     C           S2REAM    IFNE *BLANKS
+     C           S2REAN    ANDNE*ALL'9'
+     C                     MOVE S2REAM    ZFIELD    P
+     C                     Z-ADD13        ZADIG
+     C                     Z-ADDS2NBDP    ZADEC
+     C                     EXSR NEDIT
+     C           ZRTN      IFNE *BLANKS
+     C                     SETON                     30
+     C                     SETON                     33
+      *Notification amount is invalid
+      */MSGID TNN0386GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0386' P@MSGI 10
+     C                     ELSE
+     C                     MOVE ZAFLD1    S2REAM
+     C                     MOVE ZAFLD     S2REAN
+     C                     END
+     C                     END
+     C           S2REAM    IFNE *BLANKS
+     C           S2REAN    ANDNE*ALL'9'
+     C           S2DC01    ANDNE'D'
+     C           S2DC01    ANDNE'C'
+     C           S2REAN    OREQ *ALL'9'
+     C           S2DC01    ANDNE' '
+     C           S2REAM    OREQ *BLANKS
+     C           S2DC01    ANDNE' '
+     C           S2DC01    ANDNE'D'
+     C                     SETON                     30
+     C                     SETON                     33
+      *Debit/ Credit for Notification amount is invalid
+      */MSGID TNN0387GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0387' P@MSGI 10
+     C                     END
+      *
+      ** Check second amount
+     C           *IN51     IFEQ '1'
+     C           *IN33     ANDEQ'0'
+     C                     MOVELS2REAM    S2CAVL
+     C                     MOVELS2DC01    S2DC02
+     C                     END
+      *
+     C                     Z-ADD0         S2CAVN
+     C           'BAL'     SCAN S2CAVL                   76
+     C           *IN76     IFEQ '1'
+     C                     Z-ADD*ALL'9'   S2CAVN
+     C                     MOVE 'BAL'     S2CAVL    P
+     C                     END
+     C           S2CAVL    IFEQ *BLANKS
+     C                     MOVE '0'       S2CAVL
+     C                     MOVEL'D'       S2DC02
+     C                     SETON                     30
+     C                     END
+     C           S2CAVL    IFNE *BLANKS
+     C           S2CAVN    ANDNE*ALL'9'
+     C                     MOVE S2CAVL    ZFIELD    P
+     C                     Z-ADD13        ZADIG
+     C                     Z-ADDS2NBDP    ZADEC
+     C                     EXSR NEDIT
+     C           ZRTN      IFNE *BLANKS
+     C                     SETON                     30
+     C                     SETON                     34
+      *Available amount is invalid
+      */MSGID TNN0388GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0388' P@MSGI 10
+     C                     ELSE
+     C                     MOVE ZAFLD1    S2CAVL
+     C                     MOVE ZAFLD     S2CAVN
+     C                     END
+     C                     END
+     C           S2CAVL    IFNE *BLANKS
+     C           S2CAVN    ANDNE*ALL'9'
+     C           S2DC02    ANDNE'D'
+     C           S2DC02    ANDNE'C'
+     C           S2CAVN    OREQ *ALL'9'
+     C           S2DC02    ANDNE' '
+     C           S2CAVL    OREQ *BLANKS
+     C           S2DC02    ANDNE' '
+     C           S2DC02    ANDNE'D'
+     C                     SETON                     30
+     C                     SETON                     34
+      *Debit/ Credit for Available amount is invalid
+      */MSGID TNN0389GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0389' P@MSGI 10
+     C                     END
+      *
+     C                     EXSR MORVAL
+      *
+      ** Put in D indicatore for zero amounts
+     C           *IN30     IFEQ '0'
+     C           S2REAN    IFEQ 0
+     C                     MOVEL'D'       S2DC01
+     C                     END
+     C           S2CAVN    IFEQ 0
+     C                     MOVEL'D'       S2DC02
+     C                     END
+     C           S2HISN    IFEQ 0
+     C                     MOVEL'D'       S2DC03
+     C                     END
+     C                     END
+      *
+      ** All Ok, so update
+     C           *IN30     IFEQ '0'
+     C                     EXSR UPDATE
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  MORVAL: Process Additional Validations                       *
+      *                                                               *
+      *****************************************************************
+     C           MORVAL    BEGSR
+      *
+      ** Notified/Received date
+     C                     Z-ADD0         S2RECN
+     C           S2RECD    IFEQ *BLANKS
+     C                     SETON                     30
+     C                     MOVEL'010180'  S2RECD
+     C                     END
+     C           S2RECD    IFNE *BLANKS
+     C                     MOVE S2RECD    ZDATE
+     C                     CALL 'ZDATE1'
+     C                     PARM           ZERR    7
+     C                     PARM           ZDATE   60
+     C                     PARM BJDFIN    ZDATFM  1
+     C                     PARM 0         ZDAYNO  50
+     C           ZERR      IFNE *BLANKS
+     C                     SETON                     30
+     C                     SETON                     35
+      *Notification date is invalid
+      */MSGID TNN0390GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0390' P@MSGI 10
+     C                     END
+     C                     Z-ADDZDAYNO    S2RECN
+     C                     END
+      *
+      ** Available/Effective date
+     C                     Z-ADD0         S2DEFN
+     C           S2DEFF    IFNE *BLANKS
+     C                     MOVE S2DEFF    ZDATE
+     C                     CALL 'ZDATE1'
+     C                     PARM           ZERR    7
+     C                     PARM           ZDATE   60
+     C                     PARM BJDFIN    ZDATFM  1
+     C                     PARM 0         ZDAYNO  50
+     C           ZERR      IFNE *BLANKS
+     C                     SETON                     30
+     C                     SETON                     36
+      *Available date is invalid
+      */MSGID TNN0391GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0391' P@MSGI 10
+     C                     END
+     C                     Z-ADDZDAYNO    S2DEFN
+     C                     END
+     C           S2DEFF    IFEQ *BLANKS
+     C           S2TRR1    ANDNEINTREF
+     C           *IN35     ANDEQ'0'
+     C           E2TPRD    IFEQ 'N'
+     C           S2RECN    ADD  E2NDPD    S2DEFN
+     C                     CALL 'ZDATE2'
+     C                     PARM S2DEFN    ZDAYNO  50
+     C                     PARM           BJDFIN  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVELZDATE     S2DEFF
+     C                     END
+     C           E2TPRD    IFEQ 'T'
+     C           E2MDAT    ADD  1         S2DEFN
+     C                     CALL 'ZDATE2'
+     C                     PARM S2DEFN    ZDAYNO  50
+     C                     PARM           BJDFIN  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVELZDATE     S2DEFF
+     C                     END
+     C                     SETON                     30
+     C                     END
+      *
+     C           *IN35     IFEQ '0'
+     C           S2DEFN    ANDGES2TRMV
+     C           S1TRR1    ANDNETRMREF
+     C                     SETON                     30
+     C                     SETON                     36
+      *Available date must be before termination
+      */MSGID TNN0392GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0392' P@MSGI 10
+     C                     END
+      *
+     C           *IN35     IFEQ '0'
+     C           *IN36     ANDEQ'0'
+     C           S2DEFN    IFLE BJRDNB
+     C           S2TRR1    ANDNEINTREF
+     C           S2DEFN    ORNE 0
+     C           S2TRR1    ANDEQINTREF
+     C                     SETON                     30
+     C                     SETON                     36
+      *Available date must be after run date
+      */MSGID TNN0393GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0393' P@MSGI 10
+     C                     END
+     C                     END
+      *
+     C                     Z-ADD0         S2HISN
+     C                     MOVEL'D'       S2DC03
+      *
+      ** Where BAL used, both notified and avail amts should have it
+     C           S2REAN    IFEQ *ALL'9'
+     C           S2CAVN    ANDNE*ALL'9'
+     C           S2CAVN    OREQ *ALL'9'
+     C           S2REAN    ANDNE*ALL'9'
+     C                     SETON                     30
+     C                     SETON                     33
+     C                     SETON                     34
+      *Both Notication and Available amounts must be BAL, where BAL is used
+      */MSGID TNN0394GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0394' P@MSGI 10
+     C                     END
+      *
+      ** Retention
+     C           S2RTDE    IFNE *BLANKS
+     C           CDIGIT    CHECKS2RTDE                   37
+     C           *IN37     IFEQ '1'
+     C                     SETON                     30
+      *Ret. days must be blanks, or 00 to 99 for specified notificationused
+      */MSGID TNN0420GBREUSRMSG
+     C                     CALL 'ZA0340'
+     C                     PARM 'REUSRMSG'P@MSGF 10
+     C                     PARM 'TNN0420' P@MSGI 10
+     C                     END
+     C                     END
+     C           S2RTDE    IFEQ *BLANKS
+     C                     Z-ADD-1        S2RTDZ  20
+     C                     ELSE
+     C                     MOVE S2RTDE    S2RTDZ
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  UPDATE: Update Details                                       *
+      *                                                               *
+      *****************************************************************
+     C           UPDATE    BEGSR
+      *
+      ** Insert
+     C           *IN51     IFEQ '1'
+     C                     CALL 'RE4012'
+     C                     PARM '*UPD    'PMODE
+     C                     PARM S2KEY1    PKEY1
+     C                     PARM *BLANKS   PTRR1
+     C                     PARM S2REAN    PREAM
+     C                     PARM S2DC01    PDC01
+     C                     PARM S2CAVN    PCAVL
+     C                     PARM S2DC02    PDC02
+     C                     PARM S2DEFN    PDEFF
+     C                     PARM S2RECN    PRECD
+     C                     PARM S2HISN    PHISB
+     C                     PARM S2DC03    PDC03
+     C                     PARM S2RTDZ    PRTDE
+     C                     END
+      *
+      ** Amend (not termination)
+     C           *IN51     IFEQ '0'
+     C           S1ACTN    ANDEQ'A'
+     C           S1TRR1    ANDNETRMREF
+     C                     CALL 'RE4012'
+     C                     PARM '*UPD    'PMODE
+     C                     PARM S2KEY1    PKEY1
+     C                     PARM S2TRR1    PTRR1
+     C                     PARM S2REAN    PREAM
+     C                     PARM S2DC01    PDC01
+     C                     PARM S2CAVN    PCAVL
+     C                     PARM S2DC02    PDC02
+     C                     PARM S2DEFN    PDEFF
+     C                     PARM S2RECN    PRECD
+     C                     PARM S2HISN    PHISB
+     C                     PARM S2DC03    PDC03
+     C                     PARM S2RTDZ    PRTDE
+     C                     END
+      *
+      ** Delete
+     C           *IN51     IFEQ '0'
+     C           S1ACTN    ANDEQ'D'
+     C                     CALL 'RE4012'
+     C                     PARM '*DLT    'PMODE
+     C                     PARM S2KEY1    PKEY1
+     C                     PARM S2TRR1    PTRR1
+     C                     PARM S2REAN    PREAM
+     C                     PARM S2DC01    PDC01
+     C                     PARM S2CAVN    PCAVL
+     C                     PARM S2DC02    PDC02
+     C                     PARM S2DEFN    PDEFF
+     C                     PARM S2RECN    PRECD
+     C                     PARM S2HISN    PHISB
+     C                     PARM S2DC03    PDC03
+     C                     PARM S2RTDZ    PRTDE
+     C                     END
+      *
+      ** Amend termination
+      *                                                                                       194009
+      ** Override file REPRPNPD to share(*NO)                                                 194009
+      *                                                                                       194009
+     C                     MOVEACMD@,1    EDT                                                 194009
+     C                     MOVEL'REPRPNPD'U#FILE 10                                           194009
+     C                     MOVEAU#FILE    EDT,17                                              194009
+     C                     MOVEAEDT       OVRDBF 80                                           194009
+     C                     Z-ADD80        CMDLEN 155                                          194009
+     C                     CALL 'QCMDEXC'                                                     194009
+     C                     PARM           OVRDBF                                              194009
+     C                     PARM           CMDLEN                                              194009
+     C           *IN51     IFEQ '0'
+     C           S1ACTN    ANDEQ'A'
+     C           S1TRR1    ANDEQTRMREF
+     C                     CALL 'RE4010U'
+     C                     PARM '*TERMIN 'PMODE   7
+     C                     PARM S2BRCA    PBRCA   3
+     C                     PARM S2CNUM    PCNUM   6
+     C                     PARM S2CCY     PCCY    3
+     C                     PARM S2ACOD    PACOD  10
+     C                     PARM S2ACSQ    PACSQ   2
+     C                     PARM S2DEFN    PDATE   50
+     C                     PARM *BLANKS   PEVNT   1
+     C                     PARM -1        PITEM   50
+     C                     PARM -1        PVDAT   50
+     C                     PARM -1        PMDAT   50
+     C                     PARM -1        PCEDE   50
+     C                     PARM *BLANKS   PFREQ   1
+     C                     PARM -1        PNDPD   30
+     C                     PARM -1        PNMPD   20
+     C                     PARM *BLANKS   PIRLI   1
+     C                     PARM *BLANKS   PTPRD   1
+     C                     PARM *BLANKS   PDRIB   2
+     C                     PARM -1        PDRIS  117
+     C                     PARM *BLANKS   PDICT   2
+     C                     PARM -1        PDCST   50
+     C                     PARM -1        PDRIC   10
+     C                     PARM *BLANKS   PDNIR   1
+     C                     PARM *BLANKS   PDRIF   1
+     C                     PARM *BLANKS   PDACP  18
+     C                     PARM -1        PNDID   50
+     C                     PARM -1        PDRDY   40
+     C                     PARM *BLANKS   PCRIB   2
+     C                     PARM -1        PCRIS  117
+     C                     PARM *BLANKS   PCICT   2
+     C                     PARM -1        PCCST   50
+     C                     PARM -1        PCRIC   10
+     C                     PARM *BLANKS   PCNIR   1
+     C                     PARM *BLANKS   PCRIF   1
+     C                     PARM *BLANKS   PCACP  18
+     C                     PARM -1        PNCID   50
+     C                     PARM -1        PCRDY   40
+     C                     PARM *BLANKS   PRTTD   5
+     C                     PARM *BLANKS   PDYBD   1
+     C                     PARM *BLANKS   PDRST   1
+     C                     PARM *BLANKS   PRTTC   5
+     C                     PARM *BLANKS   PDYBC   1
+     C                     PARM *BLANKS   PCRST   1
+     C                     PARM -1        PDAYM   20
+     C                     PARM *BLANKS   PKEY1  24
+     C                     PARM -1        PBALN  150
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM *BLANKS   PSTAT   1
+     C                     PARM *BLANKS   MAINT   7
+     C                     END
+      *
+     C                     COMIT
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  PRMSCR: Process Screen Fields                                *
+      *                                                               *
+      *****************************************************************
+     C           PRMSCR    BEGSR
+      *
+      ** Get account specific details
+     C           PKEY1     IFNE LLKEY1
+     C                     CALL 'AOACCTR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY    'P@OPTN  7
+     C                     PARM PKEY1     P@RETL 10
+     C                     PARM *BLANKS   P@CNUM  6
+     C                     PARM *BLANKS   P@CUCD  3
+     C                     PARM *BLANKS   P@ACCD 10
+     C                     PARM *BLANKS   P@ACSQ  2
+     C                     PARM *BLANKS   P@BRCA  3
+     C           ACFMT     PARM *BLANKS   P@FMT
+     C                     MOVE ACNO      ACNOA
+      *
+     C                     MOVELCCY       PCCY    3
+     C                     EXSR GETCCY
+     C                     Z-ADDA6NBDP    S1NBDP
+     C                     MOVELBRCA      S1BRCA
+     C                     MOVELCNUM      S1CNUM
+     C                     MOVELCCY       S1CCY
+     C                     MOVELACOD      S1ACOD
+     C                     MOVELACSQ      S1ACSQ
+     C                     MOVELPKEY1     LLKEY1 24
+      *
+     C                     MOVELANAM      S1TEXT    P
+      *
+     C                     CALL 'RE4014'
+     C                     PARM PKEY1     PWKEY1
+     C                     PARM           PSODL  150
+     C                     PARM           PPRJL  150
+     C                     PARM           PSODC  150
+     C                     PARM           PPRJC  150
+     C                     PARM           PDISP  150
+     C                     PARM           PHELD  150
+     C                     PARM           POVER  150
+     C                     PARM           PACCR  150
+     C                     PARM           PCHRG  150
+     C                     PARM           PWTAX  150
+     C                     PARM           PRTCD   7
+      *
+     C           PDISP     IFLT 0
+     C                     MOVEL'CR'      PDISPS
+     C                     Z-SUBPDISP     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PDISPS  2
+     C                     Z-ADDPDISP     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM S1NBDP    ZDECS
+     C                     PARM '3'       ZECODE
+     C                     PARM           ZOUT21
+     C           16        SUBSTZOUT21:5  S1DISP    P
+     C                     MOVE PDISPS    S1DISP
+      *
+     C           PHELD     IFLT 0
+     C                     MOVEL'CR'      PHELDS
+     C                     Z-SUBPHELD     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PHELDS  2
+     C                     Z-ADDPHELD     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S1NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S1HELD    P
+     C                     MOVE PHELDS    S1HELD
+      *
+     C           POVER     IFLT 0
+     C                     MOVEL'CR'      POVERS
+     C                     Z-SUBPOVER     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      POVERS  2
+     C                     Z-ADDPOVER     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S1NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S1OVER    P
+     C                     MOVE POVERS    S1OVER
+      *
+     C           PPRJC     IFLT 0
+     C                     MOVEL'CR'      PPRJCS
+     C                     Z-SUBPPRJC     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PPRJCS  2
+     C                     Z-ADDPPRJC     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S1NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S1PRJC    P
+     C                     MOVE PPRJCS    S1PRJC
+      *
+     C           PACCR     IFLT 0
+     C                     MOVEL'CR'      PACCRS
+     C                     Z-SUBPACCR     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PACCRS  2
+     C                     Z-ADDPACCR     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S1NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S1ACCR    P
+     C                     MOVE PACCRS    S1ACCR
+      *
+     C           PWTAX     IFLT 0
+     C                     MOVEL'CR'      PWTAXS
+     C                     Z-SUBPWTAX     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PWTAXS  2
+     C                     Z-ADDPWTAX     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S1NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S1WTAX    P
+     C                     MOVE PWTAXS    S1WTAX
+      *
+     C           PCHRG     IFLT 0
+     C                     MOVEL'CR'      PCHRGS
+     C                     Z-SUBPCHRG     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PCHRGS  2
+     C                     Z-ADDPCHRG     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S1NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S1CHRG    P
+     C                     MOVE PCHRGS    S1CHRG
+      *
+     C           PPRJC     ADD  PACCR     PCLOB  150
+     C                     ADD  PWTAX     PCLOB
+     C                     ADD  PCHRG     PCLOB
+     C           PCLOB     IFLT 0
+     C                     MOVEL'CR'      PCLOBS
+     C                     Z-SUBPCLOB     ZFLD15
+     C                     ELSE
+     C                     MOVEL'  '      PCLOBS  2
+     C                     Z-ADDPCLOB     ZFLD15
+     C                     END
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM S1NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+     C           16        SUBSTZOUT21:5  S1CLOB    P
+     C                     MOVE PCLOBS    S1CLOB
+      *
+      ** Get P+P details
+     C           *IN30     IFEQ '0'
+     C                     MOVELPKEY1     S1KEY1
+     C                     EXSR GETPP
+     C                     MOVEL' '       WTRMTD  1                                           AS0001
+     C           *IN30     IFEQ '1'                                                           AS0001
+     C                     SETOF                     30                                       AS0001
+     C           PTRR1     IFEQ TRMREF                                                        AS0001
+     C                     MOVEL'Y'       WTRMTD                                              AS0001
+     C                     END                                                                AS0001
+     C                     END                                                                AS0001
+     C                     END
+     C                     END
+      *
+      ** Convert Passed parm fields to screen fields
+      **  Account
+     C                     MOVELPKEY1     S1KEY1
+      **  First amount
+     C                     MOVEL*BLANKS   S1REAM
+     C                     MOVEL*BLANKS   S1DC01
+     C           PREAM     IFEQ *ALL'9'
+     C                     MOVE 'BAL'     S1REAM    P
+     C                     ELSE
+     C                     Z-ADDPREAM     ZFLD15
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM S1NBDP    ZDECS
+     C                     PARM '3'       ZECODE
+     C                     PARM           ZOUT21
+     C           14        SUBSTZOUT21:7  S1REAM
+     C                     MOVELPDC01     S1DC01
+     C                     END
+      **  Second amount
+     C                     MOVEL*BLANKS   S1CAVL
+     C                     MOVEL*BLANKS   S1DC02
+     C           PCAVL     IFEQ *ALL'9'
+     C                     MOVE 'BAL'     S1CAVL    P
+     C                     ELSE
+     C                     Z-ADDPCAVL     ZFLD15
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM S1NBDP    ZDECS
+     C                     PARM '3'       ZECODE
+     C                     PARM           ZOUT21
+     C           14        SUBSTZOUT21:7  S1CAVL
+     C                     MOVELPDC02     S1DC02
+     C                     END
+      **  Notification ref
+     C                     MOVELPTRR1     S1TRR1
+     C           WTRMTD    IFEQ 'Y'                                                           AS0001
+     C                     MOVEL*ALL'*'   S1TRR1                                              AS0001
+     C                     END                                                                AS0001
+      **  Date available
+     C                     MOVEL*BLANKS   S1DEFF
+     C           PDEFF     IFNE 0
+     C                     Z-ADDPDEFF     ZDAYNO
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM           BJDFIN  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVELZDATE     S1DEFF
+     C                     END
+      **  Maturity/Notice
+     C                     MOVEL*BLANKS   S1EARL
+     C           E2TPRD    IFEQ 'T'
+     C           E2MDAT    ADD  1         ZDAYNO
+     C                     END
+     C           E2TPRD    IFEQ 'N'
+     C           BJRDNB    ADD  E2NDPD    ZDAYNO
+     C                     END
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM           BJDFIN  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVELZDATE     S1EARL
+      **  Date notified/received
+     C                     MOVEL*BLANKS   S1RECD
+     C           PRECD     IFNE 0
+     C                     Z-ADDPRECD     ZDAYNO
+     C                     CALL 'ZDATE2'
+     C                     PARM           ZDAYNO  50
+     C                     PARM           BJDFIN  1
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+     C                     MOVELZDATE     S1RECD
+     C                     END
+      **  History bal
+     C                     MOVEL*BLANKS   S1HISB
+     C                     MOVEL*BLANKS   S1DC03
+     C           PHISB     IFEQ *ALL'9'
+     C                     MOVE 'BAL'     S1HISB    P
+     C                     ELSE
+     C                     Z-ADDPHISB     ZFLD15
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM S1NBDP    ZDECS
+     C                     PARM '3'       ZECODE
+     C                     PARM           ZOUT21
+     C           14        SUBSTZOUT21:7  S1HISB
+     C                     MOVELPDC03     S1DC03
+     C                     END
+      **  Retention
+     C                     MOVEL*BLANKS   S1RTDE
+     C           PRTDE     IFNE -1
+     C                     MOVE PRTDE     S1RTDE
+     C                     END
+     C                     Z-ADDTRMVAL    S1TRMV
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  GETCCY: Get Currency Details                                 *
+      *                                                               *
+      *****************************************************************
+     C           GETCCY    BEGSR
+      *
+      ** Get ccy details if new
+     C           PCCY      IFNE LLCCY
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY    'P@OPTN  7
+     C                     PARM PCCY      P@K101  3
+     C           CYFMT     PARM           P@FMT
+     C                     Z-ADD1         PWR10   90
+     C           A6NBDP    IFGT 0
+     C           1         DO   A6NBDP
+     C                     MULT 10        PWR10
+     C                     END
+     C                     END
+      *
+     C                     MOVELPCCY      LLCCY   3
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INIT: Program Initialization                                 *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           KPRPN1    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2EVNT
+     C                     KFLD           E2ITEM
+      *
+     C           KPRPN2    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+     C                     KFLD           E2EVNT
+      *
+     C           KPRPN3    KLIST
+     C                     KFLD           E2BRCA
+     C                     KFLD           E2CNUM
+     C                     KFLD           E2CCY
+     C                     KFLD           E2ACOD
+     C                     KFLD           E2ACSQ
+      *
+     C                     SETON                     05
+     C                     SETON                     28
+     C                     MOVEL*BLANKS   S1POSN
+     C                     MOVEL*BLANKS   LLPOSN 24
+     C                     Z-ADD15        SFLPAG  20
+     C                     Z-ADD1         S1POSR
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST  'P@OPTN  7
+     C           BKFMT     PARM *BLANKS   P@FMT
+      *
+     C                     MOVELBJMRDT    SRUNA
+      *
+     C                     MOVEL'N'       REFPFX  1
+      *
+     C                     MOVE *ALL'9'   TRMREF  8
+     C                     MOVEL'N'       TRMREF
+     C                     MOVE *ALL'0'   INTREF  8
+     C                     MOVEL'N'       INTREF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  NEDIT: Process Formats                                       *
+      *                                                               *
+      *****************************************************************
+     C           NEDIT     BEGSR
+      *
+      ** Use standard routine to check and format
+     C                     MOVE ZFIELD    ZAFLD1 16 P
+     C                     CALL 'ZALIGN'
+     C                     PARM *BLANKS   ZRTN    7
+     C                     PARM           ZFIELD 16
+     C                     PARM           ZADEC   10
+     C                     PARM           ZADIG   20
+     C                     PARM           ZAFLD  16
+     C           ZRTN      IFEQ *BLANKS
+     C                     MOVE ZAFLD     ZFLD15
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15
+     C                     PARM ZADEC     ZDECS
+     C                     PARM '3'       ZECODE
+     C                     PARM           ZOUT21
+     C           16        SUBSTZOUT21:5  ZAFLD1
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+** Command Array                                                                              194009
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)                                           194009

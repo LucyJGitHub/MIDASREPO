@@ -1,0 +1,53 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT Program to create DSPFFD *OUTFILE')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000004 - Program to create standard DSPFFD outfile       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27790  *CREATE  Date 18Jun10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27790 - New utility                                      */
+/*                                                                   */
+/********************************************************************/
+             PGM        PARM(&FILE &LIBRARY &OUTFILE &MBR &MBROPT)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBRARY) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OUTFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBROPT) TYPE(*CHAR) LEN(8)
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 RPG0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+/* Delete temporary file. */
+             DLTF       FILE(QTEMP/UTC000004F)
+             MONMSG     MSGID(CPF0000)
+/* Check if outfile already exists and if it doesn't create it. */
+             CHKOBJ     OBJ(QTEMP/&OUTFILE) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTDUPOBJ  OBJ(UPFFDSTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                             TOLIB(QTEMP) NEWOBJ(&OUTFILE)
+             ENDDO
+/* Display file field description. */
+             DSPFFD     FILE(&LIBRARY/&FILE) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/UTC000004F)
+             CPYF       FROMFILE(QTEMP/UTC000004F) +
+                          TOFILE(QTEMP/&OUTFILE) TOMBR(&MBR) +
+                          MBROPT(&MBROPT) FMTOPT(*MAP *DROP)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

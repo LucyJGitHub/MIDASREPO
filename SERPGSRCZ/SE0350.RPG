@@ -1,0 +1,510 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE FRN rate change warning report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE0350 - FRN RATE CHANGE WARNING REPORT                      *
+     F*                                                               *
+     F*  Function: This program sends a warning report for FRN rate   *
+     F*   change dates coming up within the next 5 days and rate      *
+     F*   change dates in the past for which a new rate change has    *
+     F*   been entered on the Security Diary.                         *
+     F*                                                               *
+     F*  Called By:  SEC0601 - Audit Reports - Close of Business      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 247678             Date 16May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 204118             Date 20Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 09Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 176692             Date 02Feb01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE005             Date 24Jan97               *
+      *                 CSE004             Date 28Nov96               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  247678 - Exclude securities with no current holdings.        *
+      *         - Do not include securities whose last interest rate  *
+      *           change date is determined as equal to initial date  *
+      *           or maturity date of the security.                   *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  204118 - Matured securities should not be included in the    *
+      *           SE0350P1 report.                                    *
+     F*  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+      *  176692 - Only select processing type 3 (FRN). Applied fix    *
+      *           141684.                                             *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  CSE004 - FRN Rate Change Warning Report                      *
+     F*                                                               *
+      *****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE0350P1O   E             65     PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FSE0350P2O   E             66     PRINTER                        UC
+     F                                              KINFDS SPOOL2
+     FSECTYD  IF  E           K        DISK
+     FSEDEV   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK                               176692
+     FCUDEPL0 IF  E           K        DISK                                                   247678
+      *
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   65-66    OVERFLOW INDICATOR FOR PRINTER FILES               *
+     F*   50-51    END OF INPUT FILE / FILE READ ERROR                *
+     F*   90-99    USED IN STANDARD SUB-ROUTINES                      *
+     F*   U7       DATABASE ERROR                                     *
+     F*   U8       DATABASE / CONTROL ERROR                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F* SUBROUTINE INDEX :-                                           *
+     F*                                                               *
+     F*   RCFP1  - RCF PROCESSING FOR P1 REPORT                       *
+     F*   RCFP2  - RCF PROCESSING FOR P2 REPORT                       *
+     F*   *PSSR  - ERROR HANDLING                                     *
+     F*   ZNCDZ1 - ENTER E SPECS FOR ZNCR & ZNCD                      *
+     F*   ZNCDZ2 - ENTER I SPECS FOR ZNCR & ZNCD                      *
+     F*   ZNCRZ1 - CALCULATE THE NEXT RATE CHANGE DATE                *
+     F*   ZLCRZ1 - CALCULATE THE LAST RATE CHANGE DATE                *
+     F*   ZEVCD  - CALCULATE ECD                                      *
+     F*   ZFWDT  - CALCULATE X NUMBER OF WORKING DAYS AHEAD           *
+     F*   ZDATE2 - CONVERT DAY NO. TO DATE FORMATS                    *
+     F*   ZDATE1 - CONVERT DATE TO DAY NO. FORMATS                    *
+     F*   ZACCH  - ACCESS RECORD FOR HOL FILE STD SR                  *
+     F*   ZHOLE  - ENTER E SPECS FOR HOL FILE STD SR                  *
+     F*   ZHOLI  - ENTER I SPECS FOR HOL FILE STD SR                  *
+     F*   ZHOLDS - SECOND DS FOR ACCESS PROGRAMS                      *
+     F*                                                               *
+     F*****************************************************************
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+     I                                      134 183 DBLOT
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+     I*  DS FOR LINE NO. TO HANDLE OVERFLOW
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I**
+     ISPOOL2      DS
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I**
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+      *
+     ISDBANK    E DSSDBANKPD
+     I** Bank details
+      *
+     ISDGELR    E DSSDGELRPD
+     I** General Ledger details
+      *
+     ISDSTRD    E DSSDSTRDPD
+     I** Securities tradings details
+      *
+     IDSFDY     E DSDSFDY
+     I**  Short DS for access programs
+      *
+      * PREPARE LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE0350'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      * INPUT PARAMETER :
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5                       S01117
+      *
+      *
+     C**   ACCESS BANK DETAILS, FOR TITLE
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**   ACCESS SECURITIES TRADING DETAIL
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SDSTRDPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C*
+     C**   ACCESS GENERAL LEDGER DETAILS
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SDGELRPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *================================================================
+      *  M A I N   P R O C E S S I N G
+      *================================================================
+      *
+     C*
+     C           DEV       KLIST
+     C                     KFLD           SESN
+     C                     KFLD           SDED
+     C                     KFLD           SDET
+      *                                                                   176692
+      ** Assemble key to access Investment Type record.                   176692
+      *                                                                   176692
+     C           INVTK     KLIST                                          176692
+     C                     KFLD           NMCY                            176692
+     C                     KFLD           SITP                            176692
+     C*
+     C*  Open and write headers on printer files.
+     C                     OPEN SE0350P1
+     C                     EXSR RCFP1
+     C                     WRITEHEADP1
+     C*
+     C                     OPEN SE0350P2
+     C                     EXSR RCFP2
+     C                     WRITEHEADP2
+     C*
+     C*  Initialise counter to check whether any records have been
+     C*  printed on report 1 or 2.
+     C                     Z-ADD0         CHECK1  10
+     C                     Z-ADD0         CHECK2  10
+     C*
+     C*  Read Securities file.
+     C                     READ SECTYD                   50
+     C           *IN50     DOWEQ*OFF
+      *                                                                                       204118
+      ** Check if record id is equal to 'D'                                                   204118
+      *                                                                                       204118
+     C           RECI      IFEQ 'D'                                                           204118
+     C*
+     C*  Check to see whether a coupon rate exists before proceeding.
+     C*          CPNR      IFNE *ZERO
+     C*          CD01      ANDNE*ZERO
+      *                                                                   176692
+      ** Check processing type of security.                               176692
+      *                                                                   176692
+     C           INVTK     CHAININVTP                40                   176692
+     C           *IN40     IFEQ '1'                                       176692
+     C                     MOVEL'INVTPD  'DBFILE                          176692
+     C                     MOVE SITP      DBKEY            ***************176692
+     C                     MOVELNMCY      DBOPTN  7        * DB ERROR 04 *176692
+     C                     Z-ADD4         DBASE            ***************176692
+     C                     OUT  LDA                                       176692
+     C                     EXSR *PSSR                                     176692
+     C                     ENDIF                                          176692
+      *                                                                   176692
+      ** Only take processing type 3 (FRN).                               176692
+      *                                                                   176692
+     C           PROT      IFEQ '3'                                       176692
+      *                                                                                       247678
+      ** Process security if current holdings exists                                          247678
+      *                                                                                       247678
+     C           SESN      SETLLCUDEPL0                                                       247678
+     C           SESN      READECUDEPL0                  01                                   247678
+      *                                                                                       247678
+     C           *IN01     IFEQ '0'                                                           247678
+     C*
+     C*  Subroutine to get Event Control Date.
+     C                     Z-ADDBJDNWD    ZZDNWD
+     C                     Z-ADDBKAPDT    ZZAPDT
+     C                     EXSR ZEVCD
+     C*
+     C*  Subroutine to calculate last Coupon/Rate change date.
+     C                     Z-ADDECD       ZECD
+     C                     EXSR ZLCR
+     C*
+     C*  If the last Coupon/Rate change date is greater than the
+     C*  original entry date, check if there is a record with event
+     C*  type 'IR' and event equal to the last Coupon/Rate change date.
+     C           ZZLCR     IFGT ORED
+     C           ZZLCR     ANDNEITLD                                                          247678
+     C           ZZLCR     ANDNEMATY                                                          247678
+     C                     MOVE 'IR'      SDET
+     C                     MOVE ZZLCR     SDED
+     C           DEV       CHAINSEDEV                51
+     C           *IN51     IFEQ *ON
+     C*
+     C*  If the record does not exist report it on SE0350P1 after
+     C*  converting day no. using subroutine ZDATE2.
+     C                     Z-ADDZZLCR     ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+     C                     WRITEDETLP1
+     C                     Z-ADD1         CHECK1
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C*  Subroutine to calculate next Coupon/Rate change date.
+     C                     EXSR ZNCR
+     C*
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     MOVE BJLCCY    ZCCY
+     C                     Z-ADD5         ZNRDYS
+     C                     MOVE *BLANKS   ZLOC
+     C*
+     C*  Subroutine to calculate 5 working days from today.
+     C                     EXSR ZFWDT
+     C*
+     C*  If the next Coupon/Rate change date is greater than the
+     C*  rundate but less than or equal to the calculated 5 working
+     C*  days, report it to SE0350P2 after converting day no. to
+     C*  date using subroutine ZDATE2.
+     C           NCR       IFGT BJRDNB
+     C           NCR       ANDLEZDYNBR
+     C                     Z-ADDNCR       ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN66     IFEQ *ON
+     C                     WRITEHEADP2
+     C                     MOVE *OFF      *IN66
+     C                     ENDIF
+     C                     WRITEDETLP2
+     C                     Z-ADD1         CHECK2
+     C                     ENDIF
+      *                                                                                       247678
+     C                     ENDIF                                                              247678
+      *                                                                   176692
+      ** If processing type is not equal to 3.                            176692
+      *                                                                   176692
+     C                     ENDIF                                          176692
+     C*
+     C*  If coupon rate did not exist then read next security file
+     C*  after ENDIF command.
+     C*                    ENDIF
+     C*
+     C                     ENDIF                                                              204118
+      *                                                                                       204118
+     C                     READ SECTYD                   50
+     C                     ENDDO
+     C*
+     C*  If no records have been printed then declare it and write
+     C*  the trailers otherwise just write the trailers.
+     C           CHECK1    IFEQ 0
+     C                     WRITENONEP1
+     C                     ELSE
+     C                     WRITETRAILP1
+     C                     ENDIF
+     C           CHECK2    IFEQ 0
+     C                     WRITENONEP2
+     C                     ELSE
+     C                     WRITETRAILP2
+     C                     ENDIF
+     C                     SETON                         LR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   RCFP2 -- SUBROUTINE TO REGISTER P2 PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFP2     BEGSR                            ** RCFP2 **
+     C*
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM2    ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+      *
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZLCRZ1
+      /EJECT
+     C/COPY ZSRSRC,ZNCRZ1
+      /EJECT
+     C/COPY ZSRSRC,ZFWDT
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

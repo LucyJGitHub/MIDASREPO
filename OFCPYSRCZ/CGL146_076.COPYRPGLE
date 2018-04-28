@@ -1,0 +1,57 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPGLE)                                 *
+      *                                                               *
+      *  CGL146_076 - Midas OF MT940 File Extract                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Last Amend No. MD024415           Date 20Jan14               *
+      *  Prev Amend No. CGL146A  *CREATE   Date 10Jul13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD024415 - Correct I/C generation of MT940/MT950             *
+      *  CGL146A - MT940/MT950 Production in Input Cycle              *
+      *                                                               *
+      *****************************************************************
+ 
+      ** Access Network extension details
+ 
+     C                   IF        CGL146 = 'Y'
+     C     EDNWRK        CHAIN     SDNWRKI0
+ 
+      ** Check if network allows generation of MT940
+ 
+     C                   IF        %FOUND
+ 
+     C**********         SELECT                                                             MD024415
+     C**********         WHEN      PHASE = 'A' AND EDP940 = 'Y'                             MD024415
+     C**********                   OR PHASE <> 'A' AND EDA940 = 'Y'                         MD024415
+     C**********         EVAL      *IN40 = *OFF                                             MD024415
+     C**********         WHEN      PHASE = 'A' AND EDP940 = 'N'                             MD024415
+     C**********                   OR PHASE <> 'A' AND EDA940 = 'N'                         MD024415
+     C**********         EVAL      *IN40 = *ON                                              MD024415
+     C**********         ENDSL                                                              MD024415
+ 
+      ** If the network does not allow production of more than one MT940/MT950              MD024415
+      ** per day, the MT940 is generated in I/C or in COB.                                  MD024415
+      *                                                                                     MD024415
+     C                   IF        EDA940 <> 'Y'                                            MD024415
+      *                                                                                     MD024415
+      ** If I/C generation (Mphas = 'A') and 'Not Produce MT940 on Manual Request'          MD024415
+      ** OR COB generation (Mphas <> 'A') and 'Produce MT940 on Manual Request'             MD024415
+      **   do not generate MT940.                                                           MD024415
+      *                                                                                     MD024415
+     C                   IF        PHASE =  'A' AND EDP940 <> 'Y' OR                        MD024415
+     C                             PHASE <> 'A' AND EDP940 =  'Y'                           MD024415
+     C                   EVAL      *IN40 = *ON                                              MD024415
+     C                   ENDIF                                                              MD024415
+      *                                                                                     MD024415
+     C                   ENDIF                                                              MD024415
+     C                   ENDIF
+     C                   ENDIF
+ 
+      *****************************************************************
+      * End of /COPY CGL146_076                                       *
+      *****************************************************************

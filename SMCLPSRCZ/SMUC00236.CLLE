@@ -1,0 +1,62 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update GLCOLAPD Front Office Trans. Id.')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00236 - Update GLCOLAPD Front Office Trans. Id.         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. AR815294*CREATE    Date 23Jun11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR815294 - A new logical (GLCOLAL7) was introduced with a   */
+/*                  unique key of the Front Office transaction Id.   */
+/*                  This can  cause the migration to fail as this    */
+/*                  field is usually blank.  The migration will      */
+/*                  remove the member for the logical so that the    */
+/*                  data is copied and this program will populate    */
+/*                  the Front Office transaction Id. and attempt to  */
+/*                  add the member back in.                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                            2011')
+ 
+/** Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+/** Check that GLCOLAPD exists before attempting to update it. */
+             CHKOBJ     OBJ(GLCOLAPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/** Call program to update Front Office transaction Id. */
+             CALL       PGM(SMU00236)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** Check if GLCOLAL7 has member and if it doesn't then add it back in. */
+             CHKOBJ     OBJ(GLCOLAL7) OBJTYPE(*FILE) MBR(GLCOLAL7)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                ADDLFM     FILE(GLCOLAL7) MBR(GLCOLAL7)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

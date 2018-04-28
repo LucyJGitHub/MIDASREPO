@@ -1,0 +1,134 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Create object in batch for ML DSPF')
+      *****************************************************************
+      *                                                               *
+      *  Midas UTILITIES MODULE                                   *
+      *                                                               *
+      *  UT0006 - CREATE FILE FOR DB JOB SUMBMISSION TO CREATE ANY    *
+      *           OBJECT                                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CPK018  *MOVED     Date 26Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 078080             Date 28Oct94               *
+      *                 074291             Date 08Aug94               *
+      *                 S01516             Date 18Jul94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK018 - MidasPlus packaging.  Move to global layer.         *
+      *  078080 - Add OWNER to command                                *
+      *  074291 - Add AUTL to command                                 *
+      *  S01516 - Incorporation of enhanced CRTOBJ into core          *
+      *                                                               *
+      *****************************************************************
+     FWORK    IF  F     600            DISK
+     FWORKB   O   F     768            DISK
+     IWORK    NS  01  13 C/
+     I                                       22  73 DATA
+     I        NS  02  13NC/
+     I                                       13  80 DATA68
+     I*   Program data structure  (WORKSTATION ID)
+     I*
+     IPSDS       SDS
+     I                                      244 253 WID
+     C*
+     C* CALCULATION STARTS
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           JLIB  253
+     C                     PARM           JLIB2  22
+     C                     PARM           TEXT1 256
+     C                     PARM           TEXT2 256
+     C                     PARM           TEXT3 256
+     C                     PARM           TEXT4 256
+     C                     PARM           TEXT5 256                       074291
+     C                     PARM           TEXT6 256                       074291
+     C                     PARM           TEXT7 256                       078080
+     C                     PARM           MEMB   10
+     C* WRITE OUT HEADER RECORD
+     C                     EXCPTLINE1
+     C* READ THROUGH WORK FILE & WRITE A RECORDS FOR EACH ONE READ
+     C           *IN99     DOUEQ'1'
+     C                     SETOF                     0102
+     C                     READ WORK                     99
+     C  N99 01             EXCPTLINE2
+     C  N99 02             EXCPTLINE0
+     C                     END
+     C* WRITE CREATION LINE
+     C                     EXCPTLINE3
+     C* WRITE CHANGE OBJECT LINE
+     C                     EXCPTLINE4
+      *                                                                   078080
+      **   Write CHGOBJOWN line                                           078080
+      *                                                                   078080
+     C           TEXT7     IFNE *BLANKS                                   078080
+     C                     EXCPTLINE10                                    078080
+     C                     ENDIF                                          078080
+      *                                                                   074291
+      **   Write GRTOBJAUT line                                           074291
+      *                                                                   074291
+     C           TEXT5     IFNE *BLANKS                                   074291
+     C                     EXCPTLINE8                                     074291
+     C                     EXCPTLINE9                                     074291
+     C                     ENDIF                                          074291
+     C* WRITE DLTOVR *ALL
+     C                     EXCPTLINE5
+     C* WRITE RMVMBR LINE
+     C                     EXCPTLINE6
+     C* WRITE DSPMSG LINE
+     C                     EXCPTLINE7
+     C* WRITE LAST LINE
+     C                     EXCPTLINE99
+     C                     SETON                         LR
+     OWORKB   E                LINE1
+     O                                   13 '//BCHJOB JOB('
+     O                         MEMB      23
+     O                                   24 ')'
+     O                                   37 'JOBD(UTJOBD)'
+     O***********                        52 'LOG(4 00 *MSG)'              074291
+     O                                   61 'INLLIBL('
+     O                         JLIB     314
+     O                         JLIB2    336
+     O                                  337 ')'
+     O                                  347 'MSGQ('
+     O                         WID      357
+     O                                  359 ')'
+     O*
+     O        E                LINE2
+     O                         DATA      52
+     O        E                LINE0
+     O                         DATA68    68
+     O        E                LINE3
+     O                         TEXT1    256
+     O                         TEXT2    512
+     O                         TEXT3    768
+     O        E                LINE4
+     O                         TEXT4    256
+     O        E                LINE8                                      074291
+     O                         TEXT5    256                               074291
+     O        E                LINE9                                      074291
+     O                         TEXT6    256                               074291
+     O        E                LINE10                                     078080
+     O                         TEXT7    256                               078080
+     O        E                LINE5
+     O                                   15 'DLTOVR *ALL'
+     O        E                LINE6
+     O                                   10 'RMVM FILE('
+     O                                   19 'MLDDSSRC)'
+     O                                   34 'MBR('
+     O                         MEMB      44
+     O                                   45 ')'
+     O        E                LINE7
+     O                                      'CALL UTC0022  '
+     O                                      'PARM(''CRTOBJ'')'
+     O        E                LINE99
+     O                                   11 '//ENDBCHJOB'

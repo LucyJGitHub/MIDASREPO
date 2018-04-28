@@ -1,0 +1,235 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Check trans type s/type for extra advice')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG4640  - Check Transaction Type Sub-type for extra advice   *
+     F*                                                               *
+     F*  Function:  This program will be called by CG4620             *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CFT003  *CREATE    Date 11Jun98               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  CFT003 - Settlement Method '14'                              *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   SRINIT   -  Initial Processing - On First Call              *
+     F*   SRMAIN   -  Main Processing                                 *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*
+     FCGDRCRPDIF  E           K        DISK         KINFSR SRFILE
+     E*
+     E**  Copyright array.
+     E                    CPY@    1   1 80
+     E/COPY CGCPYSRC,SRERRE
+     I/EJECT
+     ISDBANK    E DSSDBANKPD
+     I**  External DS for Bank details
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I**  External DS for Module details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Second DS for access programs, long data structure
+     I*
+     I/COPY CGCPYSRC,SRERRI
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process     :  MAINLINE                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C**  Parameter list for current program invocation.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           W#PYTP  2
+     C                     PARM           W#PYST  2
+     C                     PARM           ##OK    1
+     C                     PARM           W#SETM  2
+     C                     PARM           W#DRAD  1
+     C                     PARM           W#CRAD  1
+     C*
+     C**  Set up subroutine stack name.
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C**  Initial processing - Once Only.
+     C*
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+     C*
+     C**  Initialisation processing.
+     C*
+     C                     EXSR SRMAIN
+     C*
+     C**  Unwind subroutine stack name.
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C**  Terminate program.
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRMAIN                                        *
+     C*  Function    :  Main Processing                               *
+     C*                                                               *
+     C*  Called by   :  MAINLINE - Mainline Processing                *
+     C*  CALLS       :  LOANA  - Loan Associated Details              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRMAIN    BEGSR                           ** SRMAIN **
+     C*
+     C**  Set up subroutine stack name.
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+     C*
+     C                     MOVEL*BLANKS   ##OK
+     C                     MOVEL*BLANKS   W#DRAD
+     C                     MOVEL*BLANKS   W#CRAD
+     C**  Check if Transaction type subtype is on file
+     C*
+     C           KTRAN     KLIST
+     C                     KFLD           W#PYTP
+     C                     KFLD           W#PYST
+     C                     KFLD           W#SETM
+     C*
+     C           KTRAN     CHAIN@DRCRPD              90
+     C*
+     C* If record found set OK
+     C*
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL'Y'       ##OK
+     C                     MOVELDCDRAD    W#DRAD
+     C                     MOVELDCCRAD    W#CRAD
+     C                     ELSE
+      *
+      * Recheck for settlement method - not included
+      *
+     C                     MOVEL*BLANKS   W#SETM
+     C           KTRAN     CHAIN@DRCRPD              90
+     C           *IN90     IFEQ *OFF
+     C                     MOVEL'Y'       ##OK
+     C                     MOVELDCDRAD    W#DRAD
+     C                     MOVELDCCRAD    W#CRAD
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C**  Unwind subroutine stack name.
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C           EXMAIN    ENDSR                           ** SRMAIN **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine  :  SRINIT                                        *
+     C*  Function    :  Initial Processing - On First Call            *
+     C*                                                               *
+     C*  Called by   :  MAINLINE - Mainline Processing                *
+     C*  Calls       :  AOBANKR0 - Retrive Bank Details               *
+     C*                 AOMMODR0 - Retrive Midas Modules Details      *
+     C*                 AOMGMER0 - Retrive Message Management Details *
+     C*                 SRDCDT   - Determine Currency Details         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINIT    BEGSR                           ** SRINIT **
+     C*
+     C**  Set up subroutine stack name.
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C**  Retrieve Bank details.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL'SDBANKPD'W0FILE
+     C                     MOVEL'*FIRST'  W0KEY            ************
+     C                     Z-ADD5         W0ERNB           * DBERR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C**  Retrieve Midas Modules Details.
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*FIRST  '##OPTN
+     C           SDMMOD    PARM SDMMOD    DSSDY
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL'SDMMODPD'W0FILE
+     C                     MOVEL'*FIRST'  W0KEY            ************
+     C                     Z-ADD6         W0ERNB           * DBERR 06 *
+     C                     MOVEL'MEM5003' W0MSGD           ************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C**  Copyright Statement.
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C           EXINIT    TAG
+     C*
+     C**  Unwind subroutine stack name.
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C           SRINI9    ENDSR                           ** SRINI9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

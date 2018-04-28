@@ -1,0 +1,113 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas LE Initialisation program for CLE106 Wo Rprt')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Lending Module                                      */
+/*                                                                   */
+/*       LEC000106 - LE Initialisation CLP for CLE106                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/*       Last Amend No. AR740267           Date 31Mar11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BUG9575            Date 09Dec05              */
+/*                      CLE106  *CREATE    Date 01Aug04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR740267 - Errors encountered when switching off SW         */
+/*                  feature CLE106 (Child : AR740268)                */
+/*       BUG9575- Incprrect PMODE from Switchable Feature            */
+/*                Initialisation Program Maintenance.                */
+/*       CLE106 - Syndications Manager.                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCD &PMODE)
+ 
+/** Declare variables */
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2005')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CHGJOB     SWS(00000000)
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas SC LDA Module Status Dataarea'))
+/** Get the system prefix... **/
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+ 
+/** from Switchable Feature Initialisation Programs Maintenance */                       /*BUG9575*/
+                                                                                         /*BUG9575*/
+             IF         COND(&PMODE *EQ '1' *OR &PMODE *EQ '2') +
+                          THEN(CHGVAR VAR(&PMODE) VALUE('U'))                            /*BUG9575*/
+                                                                                         /*BUG9575*/
+/** Change the case of Run-Mode... **/
+ 
+             IF         COND(&PMODE *EQ 'u') THEN(CHGVAR VAR(&PMODE) +
+                          VALUE('U'))
+             IF         COND(&PMODE *EQ 'a') THEN(CHGVAR VAR(&PMODE) +
+                          VALUE('A'))
+ 
+/** If PMODE is not U or A goto ABNOR **/
+ 
+/**********  IF         COND(&PMODE *NE 'U' *AND &PMODE *NE 'A') +
+                          THEN(DO)                                    */                 /*BUG9575*/
+             IF         COND(&PMODE *NE 'U' *AND &PMODE *NE 'A' *AND +
+                          &PMODE *NE '3') THEN(DO)                                       /*BUG9575*/
+             SNDPGMMSG  MSG('Invalid parameter passed - LEC000106') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Invalid +
+                          parameter passed - LEC000106') +
+                          MSGTYPE(*ESCAPE)
+             GOTO       CMDLBL(END)
+             ENDDO
+             IF         COND(&PMODE *EQ 'U' *OR &PMODE *EQ 'A') +
+                          THEN(DO)
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+ 
+             CALL       PGM(LE000106) PARM(&PMODE)
+ 
+/** Database error processing */
+ 
+                IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                             CMDLBL(ABNOR))
+ 
+ /********** GOTO       CMDLBL(END) */                                                  /*AR740267*/
+             ENDDO
+                                                                                        /*AR740267*/
+             GOTO       CMDLBL(END)                                                     /*AR740267*/
+ 
+/** Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGVAR     VAR(&PRTCD) VALUE('*ERROR*')
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LEC000106 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End program */
+ 
+ END:
+             ENDPGM

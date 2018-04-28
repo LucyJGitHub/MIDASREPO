@@ -1,0 +1,263 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas ME Work Midas message manager server')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Message Management                                    */
+/*                                                                   */
+/*       MEC2100 - Work with Midas Message Manager Server            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. 231490             Date 01Dec06              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. 236309             Date 03Nov05              */
+/*                      214798             Date 11Feb03              */
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*                      211783             Date 13Nov02              */
+/* Midas Release 4.01.01 --------------------------------------------*/
+/*                      207006             Date 01Aug02              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CSW025 *CREATE     Date 26Mar02              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       231490 - Applied fix 225515. Re-occurred MEC0710 is stuck.  */
+/*                Do not wait for Meridian when all messages have    */
+/*                been processed (= queue empty).                    */
+/*       236309 - Change call to ME2100 to add new parameter.  Add   */
+/*                processing for new action code *MIDASCOB.          */
+/*       214798 - Change Midas to work with MMM version 2 (MLink 3)  */
+/*       211783 - Pass data queue name to ME2100                     */
+/*       207006 - Change STRMRDSVR to pick up stored job description */
+/*       CSW025 - Midas Message Manager                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ACTION)
+ 
+/* Parameters */
+             DCL        VAR(&ACTION) TYPE(*CHAR) LEN(9)
+ 
+/**Access*MG/ME ICD */                                                                    /*214798*/
+/*********** DCL        VAR(&ENMDSV) TYPE(*CHAR) LEN(10)                                  /*214798*/
+/***********                                                                              /*214798*/
+/**Paths*for startup */                                                                   /*214798*/
+/*********** DCL        VAR(&RUNMRDDIR) TYPE(*CHAR) LEN(256)                              /*214798*/
+/*********** DCL        VAR(&SCRIPTFILE) TYPE(*CHAR) LEN(256)                             /*214798*/
+/*********** DCL        VAR(&JARFILEDIR) TYPE(*CHAR) LEN(256)                             /*214798*/
+/*********** DCL        VAR(&LOGFILE) TYPE(*CHAR) LEN(256)                                /*214798*/
+/*********** DCL        VAR(&MRDJOBD) TYPE(*CHAR) LEN(10)                      /*207006*/ /*214798*/
+/*********** DCL        VAR(&MRDJOBDL) TYPE(*CHAR) LEN(10)                     /*207006*/ /*214798*/
+ 
+/* Termination Data Queue */
+/*   Currently this is hard coded here.  If it needs to be      */
+/*   parameterised that will require a maintenance function and */
+/*   database change as well as being retreived in this module  */
+             DCL        VAR(&TRMDQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('MS_MMMTRM')
+ 
+/* Library related fields */
+             DCL        VAR(&MERIDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CURLIB) TYPE(*CHAR) LEN(10)
+                                                                                          /*214798*/
+/* System value fields */                                                                 /*214798*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                   /*214798*/
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                  /*214798*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                  /*214798*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                                 /*214798*/
+             DCL        VAR(&DTAQ#1) TYPE(*DEC) LEN(9 0)                                  /*231490*/
+             DCL        VAR(&DTAQ#2) TYPE(*DEC) LEN(9 0)                                  /*231490*/
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(200)                                    /*231490*/
+ 
+/* Misc. */
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(MSMCIDPD)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Initialisation */
+             RTVJOBA    TYPE(&JOBTYPE) CURLIB(&CURLIB)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(00000000)
+ 
+/**Access*the*server definition for this Midas system. */                                 /*214798*/
+/************RTVDTAARA  DTAARA(MESTAT (39 10)) RTNVAR(&ENMDSV)                            /*214798*/
+ 
+/* Add in the relevant library. */
+             RTVDTAARA  DTAARA(MESTAT (51 10)) RTNVAR(&MERIDLIB)
+             CHGCURLIB  CURLIB(&MERIDLIB)
+ 
+             IF         COND(&ACTION = '*STARTUP') THEN(DO)
+/* Startup processing. */
+ 
+/**Access*the*path*information*needed*for*the server definition. */                       /*214798*/
+/***************CALL       PGM(MRGETMSPTH) PARM(&ENMDSV &RUNMRDDIR +                      /*207006*/
+/***************             &SCRIPTFILE &JARFILEDIR &LOGFILE)                            /*207006*/
+/***************CALL       PGM(MRGETMSFUL) PARM(&ENMDSV &RUNMRDDIR +                      /*214798*/
+/***************             &SCRIPTFILE &JARFILEDIR &LOGFILE +                           /*214798*/
+/***************             &MRDJOBD &MRDJOBDL)                               /*207006*/ /*214798*/
+/**Start*the*Meridian*server.**/                                                          /*214798*/
+/**********     STRMRDSVR  SERVERNAME(&ENMDSV) SCRIPTFILE(&SCRIPTFILE) +                  /*207006*/
+/**********                  JARFILEDIR(&JARFILEDIR) SBMJOB(*YES) +                       /*207006*/
+/**********                  LOGFILE(&LOGFILE) JOBD(MERIDIAN/MERIDIAN) +                  /*207006*/
+/**********                  RUNMRDDIR(&RUNMRDDIR)                                        /*207006*/
+/**********     STRMRDSVR  SERVERNAME(&ENMDSV) SCRIPTFILE(&SCRIPTFILE) +                  /*214798*/
+/**********                  JARFILEDIR(&JARFILEDIR) SBMJOB(*YES) +                       /*214798*/
+/**********                  LOGFILE(&LOGFILE) +                                          /*214798*/
+/**********                  JOBD(&MRDJOBDL/&MRDJOBD) +                                   /*214798*/
+/**********                  RUNMRDDIR(&RUNMRDDIR)                             /*207006*/ /*214798*/
+                                                                                          /*214798*/
+/* Start the Meridian server. */                                                          /*214798*/
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                                'StrSvrMMM' &SVAL1 &SVALK2 +
+                                &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                                &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                                &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                                &SVALK0 &SVAL10)                                          /*214798*/
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
+                                CMDLBL(ABNOR))                                            /*214798*/
+                                                                                          /*214798*/
+                CALL       PGM(QCMDEXC) PARM(&SVAL1 200)                                  /*214798*/
+             ENDDO
+ 
+             ELSE       CMD(DO)
+                                                                                          /*236309*/
+/* MIDASCOB processing */                                                                 /*236309*/
+             IF         COND(&ACTION = '*MIDASCOB') THEN(DO)                              /*236309*/
+LOOP02:                                                                                   /*236309*/
+                RCVF       RCDFMT(MSMCIDD0)                                               /*236309*/
+                MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDLOOP02))                    /*236309*/
+                                                                                          /*236309*/
+                IF         COND(&MCIPOP = 'O') THEN(DO)                                   /*236309*/
+             CALLPRC    PRC(ME2100) PARM((&MCMQQN) (&TRMDQ) ('Y'))                        /*236309*/
+                ENDDO                                                                     /*236309*/
+             GOTO       CMDLBL(LOOP02)                                                    /*236309*/
+ENDLOOP02:                                                                                /*236309*/
+             ENDDO                                                                        /*236309*/
+                                                                                          /*236309*/
+             ELSE       CMD(DO)                                                           /*236309*/
+/* Shutdown processing. */
+ 
+/* Processing is to send a Data Queue message to Meridian Link      */
+/*  marking the end of Input Cycle processing.                      */
+/* This message goes on the same Data Queue as the normal export to */
+/*  Meridian.  That export has already been stopped, hence this     */
+/*  will be after the data messages.                                */
+/* When the end of IC message is sent back to here, we know that    */
+/*  Meridian, has finished processing and so can be stopped.        */
+/*                                                                  */                    /*231490*/
+/* When all Midas SWIFT messages are processed (queue empty),       */                    /*231490*/
+/*  the program no longer checks Meridian to be active. When there  */                    /*231490*/
+/*  all still messages in the DTAQ, the program will check if       */                    /*231490*/
+/*  messages are still being processed (number of messages          */                    /*231490*/
+/*  decreased within 30seconds). If this is not the case, a message */                    /*231490*/
+/*  is sent to MOPERQ to inform the operator. The program will then */                    /*231490*/
+/*  wait for a feedback from Meridian. The MMM-jobs (Meridian) need */                    /*231490*/
+/*  to be re-started manually to process the messages from the      */                    /*231490*/
+/*  the queue and the COB will continue. The MMM-jobs will be ended */                    /*231490*/
+/*  again by the COb.                                               */                    /*231490*/
+ 
+/* Loop over the MSMCIDPD file and do the shutdown for each outgoing */
+/*  entry.                                                           */
+LOOP01:
+                RCVF       RCDFMT(MSMCIDD0)
+                MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDLOOP01))
+ 
+                IF         COND(&MCIPOP = 'O') THEN(DO)
+                   RTNDTAQD   DTAQ(&MCMQQN) NBRMSG(&DTAQ#1)                               /*231490*/
+                   IF (&DTAQ#1 > 0) THEN(DO)                                              /*231490*/
+                   DLYJOB     DLY(30)                                                     /*231490*/
+                   RTNDTAQD   DTAQ(&MCMQQN) NBRMSG(&DTAQ#2)                               /*231490*/
+                   IF (&DTAQ#2 >= &DTAQ#1) THEN(DO)                                       /*231490*/
+                   /* No messages processed within delay. Inform operator */              /*231490*/
+                   CHGVAR     VAR(&MSG) VALUE('Queue' *BCAT &MCMQQN *BCAT +
+                              'still contains messages currently not +
+                              being processed. Please verify if +
+                              Meridian jobs are active.')                                 /*231490*/
+                   SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA(&MSG) +
+                              TOMSGQ(MOPERQ)                                              /*231490*/
+                   ENDDO                                                                  /*231490*/
+/******************CALLPRC    PRC(ME2100) PARM(&MCMCID &TRMDQ)                            /*211783*/
+/***************** CALLPRC    PRC(ME2100) PARM(&MCMQQN &TRMDQ) */                  /*211783 236309*/
+             CALLPRC    PRC(ME2100) PARM((&MCMQQN) (&TRMDQ) (' '))                        /*236309*/
+                   ENDDO                                                                  /*231490*/
+                ENDDO
+             GOTO       CMDLBL(LOOP01)                                                    /*211783*/
+ENDLOOP01:
+/* All instances have been processed - end the Meridian server. */
+/***************ENDMRDSVR  SERVERNAME(&ENMDSV) OPTION(*CNTRLD) DELAY(30)                  /*214798*/
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                                'EndSvrMMM' &SVAL1 &SVALK2 +
+                                &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                                &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                                &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                                &SVALK0 &SVAL10)                                          /*214798*/
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
+                                CMDLBL(ABNOR))                                            /*214798*/
+                                                                                          /*214798*/
+                CALL       PGM(QCMDEXC) PARM(&SVAL1 200)                                  /*214798*/
+             ENDDO
+             ENDDO                                                                        /*236309*/
+ 
+/* Reset the current library. */
+                   IF         COND(&CURLIB *EQ '*NONE     ') THEN(DO)
+                      CHGCURLIB  CURLIB(*CRTDFT)
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGCURLIB  CURLIB(&CURLIB)
+                   ENDDO
+ 
+/* Database error processing. */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Normal end. */
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal end. */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                             MEC2100 ended abnormally - see job log') +
+                             TOMSGQ(MOPERQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ END:
+             ENDPGM

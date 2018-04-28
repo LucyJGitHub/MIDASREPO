@@ -1,0 +1,99 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Limit Utilisation Enquiry Control')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000796 - Midas SD Limit Utilisation Enquiry Control      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. MD024868           Date 11Feb14              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG23652           Date 19May09              */
+/*                      CER048  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD024868 - CGL035 in Limit Utilisatiion enquiry: Click F8   */
+/*                  sometimes (mostly at 2nd time) database error    */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG23652 - Limit Utilisation Enquiry - Print Option         */
+/*                  Function Keys Validation                         */
+/*       CER048 - German Features - Taxes                            */
+/*                                                                   */
+/*********************************************************************/
+ 
+/** Start Program. */
+ 
+             PGM
+ 
+/** Declare variable. */
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2008')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/** Monitor for Error Messages from System. */
+ 
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 MCH0000 +
+                          RPG0000) EXEC(GOTO CMDLBL(DUMP))
+ 
+/** Set external switches off. */
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(00000000)
+ 
+/** Create Temporary Data area (FKDTA)  **/                                             /*BUG23652*/
+                                                                                        /*BUG23652*/
+             CHKOBJ     OBJ(QTEMP/FKDTA) OBJTYPE(*DTAARA)                               /*BUG23652*/
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/FKDTA) TYPE(*CHAR) LEN(3) +
+                          AUT(*ALL))                                                    /*BUG23652*/
+                                                                                        /*BUG23652*/
+             CHGDTAARA  DTAARA(FKDTA) VALUE(' ')                                        /*BUG23652*/
+                                                                                        /*BUG23652*/
+/** Call program. */
+ 
+             CALL       PGM(SD000796)
+ 
+/** Monitor for database errors (U7 and U8 on). */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(DBE0011) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNORMAL)
+                ENDDO
+ 
+/** U7 on : program or file error. */
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO +
+                          CMDLBL(ABNORMAL))
+ 
+/** No errors. */
+ 
+/**********  GOTO       CMDLBL(NORMAL)                                                  /*MD024868*/
+             GOTO       CMDLBL(ENDPGM)                                                  /*MD024868*/
+ 
+/** Errors within SDC000796. */
+ 
+ DUMP:       DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+ 
+/** Send error message to screen. */
+ 
+ ABNORMAL:   SNDPGMMSG  MSG('Transaction failed, re-input necessary. +
+                          ENTER to continue.') TOPGMQ(*EXT)
+             MONMSG     MSGID(CPF0000)
+ 
+/** Reclaim resources, delete overrides and terminate component. */
+ 
+/*NORMAL:**   RCLRSC                                                                    /*MD024868*/
+/**********  MONMSG     MSGID(CPF0000)                                                  /*MD024868*/
+ 
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

@@ -1,0 +1,544 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Select region codes')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0191S - Midas SD Select region codes                       *
+      *                                                               *
+      *  Function:  This sub-file program allows the user to select   *
+      *             from a list of region codes                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      *                 S01459             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *                                                               *
+      *****************************************************************
+     FSD0191S#CF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+      * DSP: Select Region Codes       Select record
+      *
+     FSDREGNL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      * RTV: Region Codes              Retrieval index
+      *
+     FGPREGNL1IF  E           K        DISK                                                   CSD031
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright     array
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure.
+     IJBDTTM      DS
+      * Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure.
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure.
+      *
+     IRUNDAT      DS
+     I*********************                   1   7 AANA                  S01229
+     I*********************               P   8  100AKTX                  S01229
+     I*********************                  11  11 AUST                  S01229
+     I*********************                  12  12 E3ST                  S01229
+     I*********************                  13  13 F1ST                  S01229
+     I                                        1   7 MRDT                  S01229
+     I                                    P   8  100RDNB                  S01229
+     I                                       11  11 SUC                   S01229
+     I                                       12  12 DFF                   S01229
+     I                                       13  13 MBIN                  S01229
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+      /EJECT
+      * Parameter declarations.
+     IP1PARM      DS
+      * FLD: Region Codes
+      * B:MAP Region Code
+     I                                        1   2 P1RGCD
+      *                                                                                       CSD031
+     ISCSARD    E DSSCSARDPD                                                                  CSD031
+      ** Switchable feature file                                                              CSD031
+      *                                                                                       CSD031
+     IDSFDY     E DSDSFDY                                                                     CSD031
+      ** Short Data Structure                                                                 CSD031
+      *                                                                                       CSD031
+      /EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+     C           P1RGCD    PARM P1RGCD    WP0001  2        Region Code
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL                     DO
+      * Initialise & load subfile page.
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested:
+     C           W0RSF     DOWEQ'N'                        DOW
+      * Display screen.
+     C                     EXSR CAEXFM
+      *   Process response:
+      * Cancel & exit program.
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload.
+     C   05                CAS            FBRQRL
+      *   Display next SFL page.
+     C   27                CAS            BBLDSF
+      *   Process screen input.
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise & Load subfile page.
+      *================================================================
+      * Clear subfile.
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile.
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      *................................................................
+      * Position DBF file:
+     C           KPOS      KLIST
+     C                     KFLD           A3RGCD           Region Code
+      * Setup key.
+     C                     MOVEL#2RGCD    A3RGCD           Region Code
+     C           CSD031    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C           KPOS      SETLLSDREGND0                                                      CSD031
+     C                     READ SDREGND0               8782                                   CSD031
+     C                     ELSE                                                               CSD031
+     C           KPOS      SETLL@A3REBX
+     C                     READ @A3REBX                8782*82=EOF
+     C                     ENDIF                                                              CSD031
+      * Save previous selector values.
+     C           *LIKE     DEFN #2LCD     WZLCD
+     C                     MOVEL#2LCD     WZLCD            Last Change Dat
+     C           *LIKE     DEFN #2TYLC    WZTYLC
+     C                     MOVEL#2TYLC    WZTYLC           Type of Last Ch
+     C           *LIKE     DEFN #2RGCD    WZRGCD
+     C                     MOVEL#2RGCD    WZRGCD           Region Code
+     C           *LIKE     DEFN #2RGNM    WZRGNM
+     C                     MOVEL#2RGNM    WZRGNM           Region Name
+      * Translate search mask for text field.
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C           *LIKE     DEFN #2RGNM    WQRGNM           Region Name
+     C                     CALL 'QDCXLATE'
+     C                     PARM 30        WQA5N   50       Len
+     C                     PARM #2RGNM    WQRGNM           Region Name
+     C                     PARM           WQB10X           QSYSTRNTBL
+     C                     PARM 'QSYS'    WQC10X 10
+      * Load SFL page.
+     C                     Z-ADD*ZERO     ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page.
+      *================================================================
+      * Re-establish fields in read-ahead record.
+     C   27                DO
+     C           CSD031    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C           *IN82     ANDEQ*OFF                                                          CSD031
+     C                     READPSDREGND0                 90                                   CSD031
+     C                     READ SDREGND0                 90                                   CSD031
+     C                     ELSE                                                               CSD031
+     C  N82                READP@A3REBX                  90*
+     C  N82                READ @A3REBX                  90*
+     C                     ENDIF                                                              CSD031
+     C                     END
+      *
+      * Setof record error indicators.
+     C                     MOVE *ALL'0'   WKINDS  1
+     C                     MOVEAWKINDS    *IN,33
+      * Start at previous highest record in SFL.
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read.
+     C                     Z-ADD*ZERO     ##RRRD  50
+      *................................................................
+      * Load next SFL page until SFL page full,
+      * or scan limit reached,
+      * or end of file reached.
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFPG
+     C           ##RRRD    ANDLTW0SLM
+      * Check selection fields - if fail, read next record.
+     C           #2LCD     IFNE *ZERO                      Last Change Dat
+     C           A3LCD     CABNE#2LCD     CD020            Last Change Dat
+     C                     END
+     C           #2TYLC    IFNE *BLANK                     Type of Last Ch
+     C           A3TYLC    CABNE#2TYLC    CD020            Type of Last Ch
+     C                     END
+     C           #2RGNM    IFNE *BLANK                     Region Name
+      * Scan for search string.
+     C                     CALL 'QCLSCAN'
+     C                     PARM           A3RGNM           Region Name
+     C                     PARM 30        WQA3N   30       Length
+     C                     PARM 1         WQB3N   30       Start
+     C                     PARM           WQRGNM           Mask
+     C                     PARM 30        WQC3N   30       Length
+     C                     PARM '1'       WQD1    1        Translate
+     C                     PARM '1'       WQE1    1        Trim
+     C                     PARM '?'       WQF1    1        Wild
+     C                     PARM           WQG3N   30       Result
+     C           WQG3N     CABLT1         CD020
+     C                     END
+      * Load SFL fields.
+     C                     EXSR MBFL#1
+      * Output to subfile.
+     C                     ADD  1         ##RR       81    *
+     C                     ADD  1         ##RROK
+     C                     WRITE#SFLRCD
+      *
+     C           CD020     TAG
+      * Increment scan check count.
+     C                     ADD  1         ##RRRD
+      * Read next record.
+     C           CSD031    IFEQ 'Y'                                                           CSD031
+     C           *INU1     ANDEQ*ON                                                           CSD031
+     C                     READ SDREGND0               8782                                   CSD031
+     C                     ELSE                                                               CSD031
+     C                     READ @A3REBX                8782*82=EOF
+     C                     ENDIF                                                              CSD031
+     C                     END                             WOD
+      *................................................................
+      * If no DBF records found, display error message.
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+      *
+      * Save highest SFL record load can continue at end point.
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      *
+      * If scan limit reached, display error message.
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     Z-ADD*ZERO     ##RROK  50
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen.
+      *================================================================
+      * Update screen time.
+     C                     TIME           ##TME            Screen time.
+     C           W0HLP     DOUEQ'N'
+      * PUTOVR unless conditioned fields change.
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C                     MOVEL'N'       W0HLP   1        Reset help requ
+      * If help requested, display help text.
+     C   25                EXSR ZHHPKY                     Display help te
+     C                     END
+      * Update job time.
+     C                     TIME           ##JTM            Job time.
+      * Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8883*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input.
+      *================================================================
+      * Maintain subfile position where possible.
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      *
+     C           *IN81     IFEQ '1'
+      * Process subfile records.
+     C                     EXSR DBPRSF
+      * If error, exit subroutine:
+     C           *IN99     CABEQ'1'       DAEXIT
+     C                     END
+      * Change of position specified.
+     C           WZLCD     CASNE#2LCD     FBRQRL           Last Change Dat
+     C           WZTYLC    CASNE#2TYLC    FBRQRL           Type of Last Ch
+     C           WZRGCD    CASNE#2RGCD    FBRQRL           Region Code
+     C           WZRGNM    CASNE#2RGNM    FBRQRL           Region Name
+     C                     END
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile records.
+      *================================================================
+      * Read first changed record (if any).
+     C                     READC#SFLRCD                  88*
+     C           *IN88     DOWEQ'0'
+     C                     EXSR DCSFRC
+     C                     MOVEL*BLANK    #1SEL
+     C                     UPDAT#SFLRCD
+      * Read next record.
+     C                     READC#SFLRCD                  88*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCSFRC    BEGSR
+      *================================================================
+      * Process subfile record.
+      *================================================================
+      * Setof error indicators and SFLNXTCHG.
+     C                     MOVEAWKINDS    *IN,33
+     C                     SETOF                     84    *
+      * Check selection option
+     C           #1SEL     CASEQ'1'       DESLRC
+     C                     END
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         DESLRC    BEGSR
+      *================================================================
+      * Select record & return to calling program
+      *================================================================
+      * Move record values to parameters.
+     C                     MOVEL#1RGCD    P1RGCD           Region Code
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         DEEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload.
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @A3REBX fields to #SFLRCD
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     Z-ADDA3LCD     #1LCD            Last Change Dat
+     C                     MOVELA3TYLC    #1TYLC           Type of Last Ch
+     C                     MOVELA3RGCD    #1RGCD           Region Code
+     C                     MOVELA3RGNM    #1RGNM           Region Name
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control.
+      *================================================================
+     C                     Z-ADD*ZERO     #2LCD            Last Change Dat
+     C                     MOVEL*BLANK    #2TYLC           Type of Last Ch
+     C                     MOVELP1RGCD    #2RGCD           Region Code
+     C                     MOVEL*BLANK    #2RGNM           Region Name
+      * Drop ? from positioning key fields.
+     C                     MOVEL#2RGCD    W0X1    1
+     C           W0X1      IFEQ '?'
+     C           *LIKE     DEFN #2RGCD    W0RGCD- 1
+     C                     MOVE #2RGCD    W0RGCD
+     C                     MOVELW0RGCD    #2RGCD           Region Code
+     C                     MOVE ' '       #2RGCD
+     C                     END
+      *
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue.
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text.
+      *================================================================
+     C                     MOVEL'Y'       W0HLP   1        Signal help req
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Member name.
+     C                     PARM *BLANK    YYHPFL 10        *DFT text file.
+     C                     PARM *BLANK    YYHPLB 10        Help text lib.
+     C                     PARM           W0RTN   7        Return Code.
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program.
+      *================================================================
+      * Send message '*No value selected'
+     C                     MOVEL'Y2U0016' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     MOVEL'*PRV '   ZAPGRL           Pgmq rel.
+     C                     EXSR ZASNMS                     Send message
+     C                     MOVEL'Y2U0016' P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct.
+      *================================================================
+      * Terminate program.
+     C                     SETON                     LR
+      *
+      * Exit program.
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation.
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+      *                                                                                       CSD031
+      ** Check if Enhanced Centralised Static Data is installed                               CSD031
+      *                                                                                       CSD031
+     C                     CALL 'AOSARDR0'                                                    CSD031
+     C                     PARM *BLANKS   PRTCD   7                                           CSD031
+     C                     PARM '*VERIFY' POPTN   7                                           CSD031
+     C                     PARM 'CSD031'  PSAR    6                                           CSD031
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD031
+      *                                                                                       CSD031
+     C           PRTCD     IFEQ *BLANKS                                                       CSD031
+     C                     MOVE 'Y'       CSD031  1                                           CSD031
+     C                     ELSE                                                               CSD031
+     C                     MOVE 'N'       CSD031                                              CSD031
+     C                     ENDIF                                                              CSD031
+      *                                                                                       CSD031
+      * Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+     C                     MOVEL'SEL'     W0PMD   3        Program Mode
+      *
+     C                     Z-ADD13        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+     C                     Z-ADD*ZERO     ##RRMX           MAX RECNO
+     C                     Z-ADD500       W0SLM   50       SCAN LIMIT
+      * USER: Initialise program
+      * Standard RPG Creation PAR - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*********************MOVE AANA      ##AANA                          S01229
+     C*********************MOVE AANA      #OAANA                          S01229
+     C*********************MOVE AKTX      #OAKTX                          S01229
+     C*********************MOVE AUST      #OAUST                          S01229
+     C*********************MOVE E3ST      #OE3ST                          S01229
+     C*********************MOVE F1ST      #OF1ST                          S01229
+     C                     MOVE MRDT      ##MRDT           RUN DATE       S01229
+     C                     MOVE MRDT      WUMRDT                          S01229
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.     S01229
+     C                     MOVE SUC       WUSUC            SET UP COMPLT  S01229
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG   S01229
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND  S01229
+      * Copyright Statement - Standard Functions  * copyright
+      * Clear subfile control fields.
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

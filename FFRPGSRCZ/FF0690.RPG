@@ -1,0 +1,545 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Define Markets to have EOC in COB')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas FUTURES AND OPTIONS MODULE
+     F*                                                                  *
+     F*   FF0690  -  DEFINE MARKETS THAT ARE TO HAVE END OF CENTRE       *
+     F*              PROCESSING INCLUDED IN COB                          *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 241219             Date 13Mar07                  *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG12864           Date 08Dec06               *
+      *                 CCB014             Date 25Apr05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01456             Date 08Nov93               *
+     F*                  S01199             Date 27Feb90                 *
+     F*                  S01117             DATE  19JAN90                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  241219 - Applied fix BUG12864                                   *
+      *  BUG12864 - Remove condition when display file FF0690DF is    *
+      *             opened.                                           *
+      *  CCB014 - Pre-Scheduled Batch Close Of Business               *
+     F*   S01456  -  'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   S01199  -  HELP SYSTEM                                     *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF* E                    DISK                               S01117
+     FMKCTL   IF  E           K        DISK
+     FMARKT   IF  E           K        DISK
+     F***FF0690DFCF  E                    WORKSTN                                             CCB014
+     F**********                              RRN   KSFILE FF0690S0                           CCB014
+     FFF0690DFCF  E                    WORKSTN                        UC                      CCB014
+     F                                        RRN   KSFILE FF0690S0                           CCB014
+     F*
+     F/EJECT
+     F********************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       02     S/FF0690C0  SFLDSP
+     F*       02     S/FF0690C0  SFLDSPCTL
+     F*       03     S/FF0690C0  SFLEND
+     F********05*****HELP*requested***********************************    S01199
+     F*       09     S/FF0690C0  SFLNXTCHG
+     F*       10     S/FF0690C0  Condition error display
+     F*       16     Subfile record in error
+     F*       17     Conditions error display
+     F********40*****Failed*read*on*TABTB10*******************************S01117
+     F*       41     Error on LF/MKCTL
+     F*       42     Error on LF/MARKT
+     F*       50     Record written to subfile
+     F*       51     Unsuccessful chain to subfile
+     F*       52     Read of control record after help
+     F*     80-89    Reserved for Standard FF Subroutines
+     F*     90-99    Reserved for Standard MIDAS Subroutines
+     F*     U7+U8    DB ERROR
+     F*
+     F********************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E                    ERCD       19  4
+     E* ARRAY FOR  ERROR-CODES TO BE DISPLAYED
+     E                    FEOC       31  2
+     E*       ARRAY TO REDEFINE DATA AREA FFEOC
+     E                    FPRP       31  1
+     E*       ARRAY TO REDEFINE DATA AREA FFPRP
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*       ARRAY FOR SUBROUTINE ZDATE2
+     E********************************************************************
+     E/SPACE 3
+     I********************************************************************
+     I*
+     ILDA         DS                            256                       S01117
+     I*DA********UDS                            256                       S01117
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database handling.                                    S01117
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I                                      244 246 WSID
+     I*
+     IFFEOC      UDS                             62
+     I                                        1  62 FEOC
+     I*  DATA AREA FOR MARKET CENTRE CODES FOR EOC
+     I*
+     IFFPRP      UDS                             31
+     I                                        1  31 FPRP
+     I*  DATA AREA FOR PRICE PROMPTS FOR MARKETS IN FFEOC
+     I*
+     I            DS                             76
+     I                                        1  76 ERCD
+     I                                        1  76 SEMSG
+     I*
+     I** DATA STRUCTURE FOR ERROR MESSAGES TO SCREEN
+     I********************************************************************
+     I/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      **  Data-structure for DLYEOD                                                           CCB014
+     IDLYCOB      DS                            256                                           CCB014
+     I                                        2   2 SCHREQ                                    CCB014
+     C********************************************************************
+     C*
+     C**  M A I N   P R O C E S S I N G
+     C*
+     C*
+     C**   PUT PROGRAM-NAME INTO DATA-AREA FOR REPORTING D'BASE-ERRORS.
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'FF0690'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C           *NAMVAR   DEFN           DLYCOB                                              CCB014
+     C                     IN   *NAMVAR                                                       CCB014
+      *                                                                                       CCB014
+     C                     CALL 'AOSARDR0'                                                    CCB014
+     C                     PARM '       ' @RTCD   7                                           CCB014
+     C                     PARM '*VERIFY' @OPTN   7                                           CCB014
+     C                     PARM 'CCB014'  @SARD   6                                           CCB014
+      *                                                                                       CCB014
+     C           @RTCD     IFEQ *BLANKS                                                       CCB014
+     C                     MOVEL'Y'       CCB014  1                                           CCB014
+     C                     ELSE                                                               CCB014
+     C                     MOVEL'N'       CCB014                                              CCB014
+     C                     ENDIF                                                              CCB014
+     C***********                                                         S01117
+     C*******ACCESS ICD RECORD 1 FROM TABTB10                             S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10                  40               S01117
+     C***********                                                         S01117
+      ***********                                                         S01117
+      ***If*Record not found , or not live , Database Error 01            S01117
+      ***********                                                         S01117
+     C************IN40     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          SETON                     U7U8  ***************S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C***********          MOVEL'TABLE'   DBFILE           ***************S01117
+     C***********          MOVEL'TABTB10' DBKEY                           S01117
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      *
+      ** Determine date format
+      *
+     C           DATF      COMP 'M'                      98
+     C*
+     C** Initialise pointer and relative record number
+     C*
+     C                     Z-ADD1         X       20
+     C                     Z-ADD1         RRN     20
+     C*
+     C** Initialise error array with blanks
+     C*
+     C                     MOVE *BLANKS   ERCD
+     C*
+     C** Read market files and load subfile
+     C*
+     C                     EXSR PREAD
+     C*
+     C** If records have been written to the subfile - display
+     C** and validate subfile - write valid records to dtaaras
+     C*
+     C           *IN50     IFEQ '1'
+     C                     EXSR PDISP
+     C                     END
+     C*
+     C** End program
+     C*
+     C                     SETON                     LR
+      *
+     C/EJECT
+      *
+      *================================================================***
+      **                                                                 *
+      **             S  U  B  R  O  U  T  I  N  E  S                     *
+      **                                                                 *
+      *================================================================***
+      *
+      *================================================================
+      **
+      **        PREAD - READ MARKET FILES AND WRITES TO SUBFILE
+      **        PDISP - DISPLAYS AND VALIDATES SUBFILE
+      **        PWRDF - FORMATS AND WRITES DISPLAY FILE
+      **********HELP**-*CALLS*HELP*PROGRAM*IF*REQUESTED****************   S01199
+      **        ZDATE2- REFORMATS DATE
+      **
+      *================================================================
+     C/EJECT
+      *================================================================
+      *
+      *  S.R. PREAD - READS MARKET CONTROL AND MARKET DETAIL AND
+      *               WRITES TO SUBFILE OR DATA AREAS AS APPROPRIATE
+      *
+      *  CALLED BY PROGRAM MAIN
+      *  CALLS SR. PWRDF
+      *
+      *================================================================
+      *
+     C           PREAD     BEGSR
+     C*
+     C**  Initial read of market control file for market codes
+     C*
+     C                     READ MKCTL                    41
+     C*
+     C**  Do while records exist on market control file
+     C*
+     C           *IN41     DOWEQ'0'
+     C*
+     C**  If market is not involved in set-up (market status = S)
+     C**  then chain to market detail file using market code
+     C*
+     C           MKCI      IFNE 'S'
+     C           MRKT      CHAINMARKT                42
+     C  N42      RECI      COMP 'D'                  4242
+     C*
+     C**  If chain unsuccessful db-error02
+     C*
+     C           *IN42     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**S01117
+     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
+     C                     MOVEL'MARKT'   DBFILE           ***************
+     C                     MOVELMRKT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C**  If auto-EOC is blank write to data area - always run in COB
+     C*
+     C           AEOC      IFEQ *BLANKS
+     C           MKCI      ANDEQ'I'
+     C           CCB014    IFEQ 'Y'                                                           CCB014
+     C           SCHREQ    ANDEQ'Y'                                                           CCB014
+     C                     MOVE MRKT      FEOC,X                                              CCB014
+     C                     MOVE APRP      FPRP,X                                              CCB014
+     C                     ADD  1         X                                                   CCB014
+     C                     ELSE                                                               CCB014
+     C                     MOVE MRKT      FEOC,X
+     C                     MOVE APRP      FPRP,X
+     C*   Increment pointer
+     C                     ADD  1         X
+     C                     END
+     C*
+     C**  If auto-EOC is B (normally IC), check date and status...
+     C*
+     C           AEOC      IFEQ 'B'
+     C           BUSD      IFLE RUND
+     C           MKCI      ANDEQ'I'
+     C*
+     C**  ...write to subfile if required
+     C*
+     C                     EXSR PWRDF
+     C*
+     C**  "subfile contains record" indicator
+     C*
+     C                     SETON                     50
+     C                     END
+     C                     ENDIF                                                              CCB014
+     C                     END
+     C*
+     C**  If auto-EOC is A (normally IC), check date and status...
+     C*
+     C           AEOC      IFEQ 'A'
+     C           BUSD      IFLT RUND
+     C           MKCI      ANDEQ'I'
+     C           CCB014    IFEQ 'Y'                                                           CCB014
+     C           SCHREQ    ANDEQ'Y'                                                           CCB014
+     C                     MOVE MRKT      FEOC,X                                              CCB014
+     C                     MOVE APRP      FPRP,X                                              CCB014
+     C                     ADD  1         X                                                   CCB014
+     C                     ELSE                                                               CCB014
+     C*
+     C**  ...write to subfile if required
+     C*
+     C                     EXSR PWRDF
+     C                     SETON                     50
+     C                     ENDIF                                                              CCB014
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  Main driving read of MKCTL
+     C*
+     C                     READ MKCTL                    41
+     C*
+     C*   End of *IN42 DO loop
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+      *================================================================
+      *
+      *  S.R. PDISP - DISPLAYS AND VALIDATES SUBFILE / WRITES REQUIRED
+      *               ENTRIES TO DATA AREA
+      *
+      *  CALLED BY PROGRAM MAIN
+      *  CALLS SR. NONE
+      *
+      *================================================================
+      *
+     C           PDISP     BEGSR
+     C*
+     C** Set on indicator for invalid entry on subfile
+     C*
+     C                     SETON                     16
+     C*
+     C** Continue to process whilst errors exist on subfile
+     C*
+     C           *IN16     DOWEQ'1'
+     C*
+     C** If error occurs set up error message for screen
+     C*
+     C           *IN16     IFEQ '1'
+     C                     MOVEL' 001'    SEMSG
+     C                     END
+     C*
+     C** Display subfile , trailer , and error message if required
+     C*
+     C                     SETON                     0203
+     C                     WRITEFF0690F0
+     C                     EXFMTFF0690C0
+     C****************************************************************    S01199
+     C***If*HELP*pressed*,*call*standard*help*program*****************    S01199
+     C****************************************************************    S01199
+     C************IN05     DOWEQ'1'                                       S01199
+     C***********          EXSR HELP                                      S01199
+     C***********          READ FF0690C0                 52               S01199
+     C***********          END                                            S01199
+     C*
+     C**  read changed records
+     C*
+     C                     READCFF0690S0                 51
+     C                     SETOF                     16
+     C*
+     C** Validate all changed records
+     C*
+     C           *IN51     DOWEQ'0'
+     C*
+     C** If record is invalid ( entry is not Y or N )....
+     C*
+     C           SCOBI     IFNE 'Y'
+     C           SCOBI     ANDNE'N'
+     C*
+     C**.......set on SFLNXTCHG, reverse image and general error
+     C**   indicators and update subfile record with these attributes
+     C*
+     C                     SETON                     100916
+     C                     SETON                     17
+     C                     UPDATFF0690S0
+     C                     SETOF                     0910
+     C                     MOVEL' 001'    ERCD,1
+     C*
+     C                     ELSE
+     C*
+     C**......else set off reverse image and SFLNXTCHG indicators
+     C**   and update subfile record accordingly
+     C*
+     C                     SETOF                     0910
+     C                     UPDATFF0690S0
+     C*
+     C                     END
+     C*
+     C**  Read the next changed subfile record , processing till EOF
+     C*
+     C                     READCFF0690S0                 51
+     C*
+     C**  51 loop - while changed records
+     C*
+     C                     END
+     C*
+     C**  16 loop - while invalid subfile records
+     C*
+     C                     END
+     C*
+     C**  Validation complete
+     C**  Set RRN and make primary read of subfile
+     C*
+     C                     Z-ADD1         RRN
+     C           RRN       CHAINFF0690S0             51
+     C*
+     C**  Process till end of subfile
+     C*
+     C           *IN51     DOWEQ'0'
+     C*
+     C**  If COB-indicator is Y then move values to appropriate arrays
+     C**   and increment pointers
+     C*
+     C           SCOBI     IFEQ 'Y'
+     C                     MOVE SMRKT     FEOC,X
+     C                     MOVE SAPRP     FPRP,X
+     C                     ADD  1         X
+     C                     END
+     C*
+     C**  Increment relative record number
+     C*
+     C                     ADD  1         RRN
+     C*
+     C**  Driving read of subfile
+     C*
+     C           RRN       CHAINFF0690S0             51
+     C*
+     C                     END
+     C*
+     C*
+     C                     ENDSR
+     C/EJECT
+      *================================================================
+      *
+      *  S.R. PWRDF - FORMATS AND WRITES TO DISPLAY FILE
+      *
+      *  CALLED BY PROGRAM PREAD
+      *  CALLS SR. ZDATE2
+      *
+      *================================================================
+      *
+     C           PWRDF     BEGSR
+      *
+     C                     MOVE MRKT      SMRKT
+     C                     MOVE MKTN      SMKTN
+     C                     MOVE 'Y'       SCOBI
+     C                     MOVE APRP      SAPRP
+      *
+     C                     MOVE BUSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SDATE
+      *
+      *  Write subfile record and increment RRN
+      *
+     C********** CCB014    IFEQ 'Y'                                                  CCB014 BUG12864
+     C                     OPEN FF0690DF               99                                     CCB014
+     C**********           ENDIF                                                     CCB014 BUG12864
+      *                                                                                       CCB014
+     C                     WRITEFF0690S0
+     C                     ADD  1         RRN
+      *
+     C                     ENDSR
+      *================================================================
+     C*EJECT***********************************************************   S01199
+      *================================================================   S01199
+      *****************************************************************   S01199
+      ***S.R.*HELP**-*CALLS*HELP*PROGRAM*WHEN*HELP*KEY*PRESSED*********   S01199
+      *****************************************************************   S01199
+      ***CALLED*BY*PROGRAM*PDISP***************************************   S01199
+      ***CALLS*SR.*NONE************************************************   S01199
+      *****************************************************************   S01199
+      *================================================================   S01199
+      *****************************************************************   S01199
+     C***********HELP      BEGSR                                          S01199
+      ***********                                                         S01199
+     C***********          MOVEL'FF0690'  HBPGM   6                       S01199
+     C***********          MOVEAERCD      HERCD 160                       S01199
+     C***********          CALL 'MHELP'                                   S01199
+     C***********          PARM           HBPGM                           S01199
+     C***********          PARM           HERCD                           S01199
+      ***********                                                         S01199
+     C***********          ENDSR                                          S01199
+      *================================================================
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

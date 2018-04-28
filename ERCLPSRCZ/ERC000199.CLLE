@@ -1,0 +1,80 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ER BAIS Module Mapping Take-On')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - European Reporting Module                           */
+/*                                                                   */
+/*       ERC000199 - Midas ER BAIS Module Mapping Take-On            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. BUG25954 *CREATE   Date 09Sep09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG25954 - Duplicate records in populating file ERBMODPD    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCD &PMODE)
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2009')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('ERC000199 - Midas ER BAIS Module +
+                          Mapping Take-On') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Clear Physical Files */
+ 
+             IF         COND((&PMODE) *NE '3') THEN(DO)
+ 
+             CLRPFM     FILE(ERBMODPD)
+             MONMSG     MSGID(CPF3142 CPF3156) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Execute Initialisation Program */
+ 
+             CALL       PGM(ER000199)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          ERC000199 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd. 2009')
+ 
+             ENDPGM

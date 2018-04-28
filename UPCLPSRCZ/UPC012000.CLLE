@@ -1,0 +1,131 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Create MBATCHIC and add routing entry')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC012000 - Midas UP Create MBATCHIC and add routing entry  */
+/*                   to CBC000004.                                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1070153          Date 17Dec12              */
+/*       Prev Amend No. AR1060089A         Date 04Dec12              */
+/*                      AR1060089 *CREATE  Date 23Nov12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1070153 - No library list for MBATCHIC jobd. Create       */
+/*                   library list for MBATCHIC.                      */
+/*       AR1060089A - Geneva Drop 01 Build Issues - SMSETUPD         */
+/*                    delivery issues. Handle the authorization for  */
+/*                    MBATCHIC JOBD.                                 */
+/*       AR1060089 - Geneva Drop 01 Build Issues - SMSETUPD delivery */
+/*                   issues. Issue commands to add job description   */
+/*                   MBATCHIC and routing entry to CBC000004         */
+/*                   program.                                        */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&XPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ZONEPREF) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ADOPT) TYPE(*CHAR) LEN(10)                               /*AR1060089A*/
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(40)                                  /*AR1070153*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2012')
+ 
+/* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Get 'BrgMidasSystemPrefix' system value from file SDSVALPD. */
+ 
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'BrgMidasSystemPrefix' +
+                          &ZONEPREF &SVALK2 &SVAL2 &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)
+ 
+/* If the 'Zone prefix' system value is missing then end abnormally */
+ 
+             IF         COND(%SST(&ZONEPREF 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))
+             ELSE       CMD(DO)
+               CHGVAR     VAR(&PREFIX) VALUE(%SST(&ZONEPREF 1 2))
+             ENDDO
+ 
+             CHGVAR     VAR(&XLIB) VALUE(&PREFIX *CAT 'XLIB')
+             CHGVAR     VAR(&XPLIB) VALUE(&PREFIX *CAT 'XPLIB')
+             CHGVAR     VAR(&MSBS) VALUE('M' *CAT &PREFIX *CAT 'SBS')
+             CHGVAR     VAR(&OWNER) VALUE(&PREFIX *CAT 'OWNER')
+             CHGVAR     VAR(&ADOPT) VALUE(&PREFIX *CAT 'ADOPT')                       /*AR1060089A*/
+ 
+/* Create job description MBATCHIC */
+ 
+             CRTJOBD    JOBD(&XLIB/MBATCHIC) JOBQ(&XLIB/MICJOBQ) +
+                          OUTQ(&XPLIB/MPRINT) RTGDTA(MBATCHIC) +
+                          INLLIBL(*NONE) LOG(4 00 *SECLVL) +
+                          LOGCLPGM(*YES) TEXT('Midas SC Input Cycle +
+                          job description') USER(&OWNER)
+             MONMSG     MSGID(CPF1621)  EXEC(GOTO CMDLBL(ABNOR))
+                                                                                      /*AR1060089A*/
+             CHGOWNAUT  OBJ(&XLIB/MBATCHIC) OBJTYPE(*JOBD) +
+                          NEWOWN(&OWNER) CUROWNAUT(*REVOKE) +
+                          PUBAUT(*EXCLUDE) AUTL(&ADOPT)                               /*AR1060089A*/
+ 
+             CRTDTAARA  DTAARA(QTEMP/LAYER) TYPE(*CHAR) LEN(1) +
+                          VALUE('Z') TEXT('Temporary data area for +
+                          CHGJOBDLBL') AUT(*USE)                                       /*AR1070153*/
+                                                                                       /*AR1070153*/
+             CHGVAR     VAR(&CMD) VALUE('CALL (UPC0126) +
+                          PARM(' *TCAT &PREFIX *CAT ' *ALL)')                          /*AR1070153*/
+                                                                                       /*AR1070153*/
+             CALL       PGM(QCMDEXC) PARM(&CMD 40)                                     /*AR1070153*/
+                                                                                       /*AR1070153*/
+             MONMSG     MSGID(CPF6801)                                                 /*AR1070153*/
+             GOTO       CMDLBL(ENDPGM)                                                 /*AR1070153*/
+ 
+/* Add routing entry to CBC000004 */
+ 
+             ADDRTGE    SBSD(&XLIB/&MSBS) SEQNBR(99) +
+                          CMPVAL('NWDC') PGM(CBC000004) +
+                          CLS(&XLIB/MEODCLASS) MAXACT(1) +
+                          POOLID(2)
+             MONMSG     MSGID(CPF1619 CPF1691 CPF1697)  EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

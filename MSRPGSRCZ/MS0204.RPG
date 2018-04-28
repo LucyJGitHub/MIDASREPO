@@ -1,0 +1,216 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Swift direct link 2780 Transmis in')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  Midas/S.W.I.F.T. DIRECT LINK
+     F*                                                               *
+     F*  MS0204 - INCOMING MESSAGE TRANSMISSION (2780 PROTOCOL)       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*  1989,1990                                                    *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. S01117             DATE 2JAN90                *   S01117
+     F*  PREV AMEND NO. S01192             DATE 30/01/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  S01117 - UPDATE LDA                                          *   S01117
+     F*           CHANGE MS0204P1 TO  MS0204AU                        *   S01117
+     F*  S01192 - NEW PROGRAM FOR 2780 PROTOCOL LINK                  *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*
+     FTABTB10 IF  E                    DISK
+     FMS2780I O   E                    DISK
+     FMS2780  CF  E                    WORKSTN
+     F                                              KINFDS INFDS
+     F                                              KINFSR *PSSR
+     F                                              KNUM        1
+     F                                              KID    PGMDEV
+     F*MS0204P1O   F     132            PRINTER                        UC S01117
+     FMS0204AUO   F     132            PRINTER                        UC  S01117
+      *
+     F/SPACE 3
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*       01       FIRST CYCLE INDICATOR
+     F*       03       DUMMY INDICATOR FOR NON-EXECUTABLE WRITE
+     F*       40       END OF INCOMING RECORDS
+     F*       99       INSTALLATION CONTROL DATA RECORD NOT FOUND.
+     F*       U6       COMMUNICATIONS ERROR SWITCH
+      /EJECT
+     E                    CPY@    1   1 80               OBJECT COPYRIGHT
+     IPSDS       SDS
+      * Program Status data structure
+     I                                     *PROGRAM PGNAME
+     IINFDS       DS
+      * INFORMATION DATA STRUCTURE FOR COMMUNICATIONS FILE
+      *
+     I                                     *STATUS  ERR
+     I                                       38  45 FMTNM
+     I                                      273 282 PGMDEV
+     I                                      401 404 MAJMIN
+     I                                      401 402 MAJCOD
+     I* DATASTRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ILDA        UDS                            256
+      * Database error external Data Area data structure
+     I**************************************134 138 DBFILE                S01117
+     I**************************************139 167 DBKEY                 S01117
+     I**************************************168 175 DBPGM                 S01117
+     I**************************************176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+      /EJECT
+      *
+      ** CALL INITIAL SUBROUTINE TO ACCESS REPORT HEADER FROM TABTB10
+      *
+     C  N01                EXSR ZZINIT                     Initialise
+      *
+      ** READ ALL RECORDS FROM COMMS FILE FOR ST200 UNTIL END OF FILE
+      ** IS RECEIVED (SEE DDS FOR MS2780)
+      *
+     C                     READ MSINF                    LR
+     C   40                SETON                     LR
+     C  NLR                WRITEMS2780F
+      *
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *==================================================== CALLED BY:
+      * Initial Processing                                  *MAIN
+      *----------------------------------------------------                 ****
+      *
+      ** DUMMY WRITE TO COMMUNICATIONS FILE TO COMPILE PROGRAM
+      *
+     C           *IN03     IFEQ '1'
+     C                     WRITEMSOUTF
+     C                     SETOF                     03
+     C                     END
+      *
+      ** MOVE PROGRAM DEVICE NAME TO FILE STATUS DATA STRUCTURE
+      *
+     C                     MOVEL'MSPGMA'  PGMDEV
+      *
+      ** SET UP DATA BASE ERROR CONSTANT
+      *
+     C                     MOVELPGNAME    DBPGM            Program name
+      *
+      ** Obtain ICD/1 record :
+      *
+     C                     READ TABTB10                9999Read record
+      *
+      ** If data base error occured, output values to the local data
+      ** area, print error report and terminate program :
+      *
+     C           *IN99     IFEQ '1'                        IF ZZ.1 ERROR
+     C           RECI      ORNE 'D'                         OR     INVALID
+     C                     MOVE 'TABMS'   DBFILE           ***************
+     C                     MOVEL'01'      KEY    12        *             *
+     C                     MOVE '10'      KEY              * DB ERROR 01 *
+     C                     MOVELKEY       DBKEY            *             *
+     C                     Z-ADD01        DBASE            ***************
+     C                     SETON                     U7U8LR  Error inds.
+     C                     EXSR DARPRT                       Error log
+     C                     RETRN                             Exit program
+     C                     END                             FI ZZ.1
+      *
+     C                     SETON                     01    End init.
+     C           ZZEXIT    ENDSR
+      /EJECT
+     CSR         DARPRT    BEGSR
+      *==================================================== CALLED BY:
+      * Produce Error Report                                ZZINIT *MAIN
+      *    - Database error (U7): Print database error in error log
+      *   if required                                       *PSSR
+      *----------------------------------------------------                 ****
+      * Open error report :
+      *
+     C*********************OPEN MS0204P1                     Open printer S01117
+     C                     OPEN MS0204AU                     Open printer S01117
+     C                     EXCPT$HDR                         Headers
+     C                     EXCPT$DBERR                       Database error
+      *
+      *====================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *==================================================== CALLED BY:
+      * Error handling                                      *ERROR
+      *----------------------------------------------------                 ****
+      *
+     C                     MOVE '*CANCL'  W@OPTN  6        *PSSR Return
+     C                     SETON                     U6
+      *
+      ** WRITE ERROR REPORT
+      *
+     C*********************OPEN MS0204P1                     Open printer S01117
+     C                     OPEN MS0204AU                     Open printer S01117
+     C                     EXCPT$HDR
+     C                     EXCPT$TRANE
+     C                     EXCPT$LAST
+      *
+      *----------------------------------------------------                 ****
+      *
+      *====================================================
+     CSR         PSEXIT    ENDSRW@OPTN
+      /EJECT
+     O*MS0204P1E  203           $HDR                                      S01117
+     OMS0204AUE  203           $HDR                                       S01117
+     O                                   15 'REFERENCE'
+     O                         PGNAME  +  1
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA    +  1
+     O                                  122 'PAGE'
+     O                         PAGE  Z +  1
+      *
+     O        E  1             $HDR
+     O                                   66 'OUTGOING MESSAGE TRANSMI'
+     O                                 +  0 'SSION ERROR REPORT'
+      *
+     O        E  1             $HDR
+     O                                   66 '------------------------'
+     O                                 +  0 '------------------'
+      *
+     O        E 21             $DBERR
+     O                                   56 'DATABASE ERROR AT'
+     O                         DBASE   +  1
+     O                                 +  0 ', KEY'
+     O                         DBKEY   +  1
+      *
+     O        E  1             $DBERR
+     O                                   64 'FILE NAME'
+     O                         DBFILE  +  1
+      *
+     O        E 21             $TRANE
+     O                                 +  2 'COMMUNICATIONS ERROR'
+     O                                 +  0 ' OCCURED'
+     O        E  1             $TRANE
+     O                                 +  2 'PROGRAM STATUS'
+     O                         ERR     +  2
+     O                                 +  2 'IBM MAJOR/MINOR'
+     O                                 +  0 ' RETURN CODE'
+     O                         MAJMIN  +  2
+     O        E  1             $TRANE
+     O                                 +  2 'REFER TO DOCUMENTATION'
+      *
+     O        E   53           $LAST
+     O                                   74 '*** END OF REPORT ***'
+**  CPY@  ** OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

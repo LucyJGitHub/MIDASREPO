@@ -1,0 +1,449 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                /*AR1097467*/
+/*STD    CLPBASEBND                                                  */                /*AR1097467*/
+/*EXI    TEXT('Midas LE Facility History Update 2')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Customer Lending Module                         */
+/*                                                                   */
+/*       LERC30A - Facility history update 2                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*                                                                   */
+/*       Last Amend No. MD027718           Date 23Sep14              */
+/*       Prev Amend No. AR1097467          Date 02Apr13              */
+/*                      AR589217A          Date 01Aug12              */
+/*                      AR589217           Date 01Aug12              */
+/*                      AR567487           Date 01Aug12              */
+/*                      263413             Date 01Aug12              */
+/*                      AR398038           Date 01Aug12              */
+/*                      CLE134             Date 01Aug12              */
+/*                      CLE147             Date 28Oct11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. 246032             Date 12Apr07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CLE023             Date 19Nov01              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      157759             Date 14Apr99              */
+/*                      158934             Date 11Apr99              */
+/*                      S01408             DATE 22FEB95              */
+/*                      S01473             DATE 20JUL94              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD027718 - Include negative MRs from LEPK1DPD on copy to    */
+/*                  LKEY1DP during second COB -&RERUN is NEWCOB      */
+/*       AR1097467 - Expected 15% COB run optimization not met       */
+/*       AR589217A - Moved call to LE007053 on main processing so it */
+/*                   will be executed on normal run and on restart   */
+/*                   (Child: AR596051)                               */
+/*       AR589217 - Reversed facility record wasn't removed from     */
+/*                  FACACT (Child: AR596051)                         */
+/*       AR567487 - Negative Available amount in Outstanding         */
+/*                  Facilties by Customer Enquiry in AA test system  */
+/*                  (Child: AR567488)                                */
+/*       263413 - Issue with facility update for PDCLs loans and     */
+/*                  original loans                                   */
+/*       AR398038 - Mismatch between amount of current principal of O*/
+/*                  (Child: AR398039)                                */
+/*       CLE134 - Past Due Call Loan Processing                      */
+/*       CLE147 - Aggregate Facility                                 */
+/*       246032 - Override copy of HISUPD for use in LER032.         */
+/*                Apply R3.5 fix 213698.                             */
+/*       CLE023 - Lending Facility History Improvements.             */
+/*       157759 - Call LE0499 to correct participant share           */
+/*                percentages.                                       */
+/*       158934 - Need to take security copy of FCLTY*, newly added  */
+/*                update files in LER032                             */
+/*       S01408 - Addition of core hook LERC30AMPG                   */
+/*                Addition of core hook LERC30AIPG                   */
+/*                Addition of core hook LERC30AVDR                   */
+/*       S01473 - Midas Leo Integration.                             */
+/*                Addition of processing to update History Action    */
+/*                and Facilities Actioned file for LEO generated     */
+/*                actions using the PF/LEOACTPD. Add in a call to    */
+/*                a new program LER035 to update for Leo Actions     */
+/*                                                                   */
+/*********************************************************************/
+ 
+/**********PGM  PARM(&CNAM &CSEQ)   */                                                    /*CLE134*/
+             PGM        PARM(&CNAM &CSEQ &RERUN)                                          /*CLE134*/
+ 
+/* Declare the variables for rerun checking */
+ 
+     DCL VAR(&CNAM) TYPE(*CHAR) LEN(10)
+     DCL VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+     DCL VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+                                                                      /*S01473*/
+/* Declare the variables to check the enhancements file */            /*S01473*/
+     DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                         /*S01473*/
+     DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*VERIFY')        /*S01473*/
+     DCL        VAR(&SARD) TYPE(*CHAR) LEN(6) VALUE('S01473')         /*S01473*/
+     DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                        /*S01473*/
+     DCL        VAR(&S01473) TYPE(*CHAR) LEN(1)                       /*S01473*/
+     DCL        VAR(&CLE023) TYPE(*CHAR) LEN(1)                                           /*CLE023*/
+     DCL        VAR(&CLE147) TYPE(*CHAR) LEN(1)                                           /*CLE147*/
+     DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                                            /*CLE147*/
+     DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                           /*CLE147*/
+     DCL        VAR(&MODE) TYPE(*CHAR) LEN(6) VALUE('UPDATE')         /*157759*/
+/**********  DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +*/                /*AR1097467*/
+/**********               Misys International Banking Systems Ltd. + */                /*AR1097467*/
+/**********               2001')                                     */                /*AR1097467*/
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
+             DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)                                 /*CLE134*/
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)                                 /*CLE134*/
+             DCL        VAR(&PRE)  TYPE(*CHAR) LEN(2)                                     /*CLE134*/
+                                                                                          /*CLE134*/
+/* Journalling variables */                                                            /*AR1097467*/
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                 /*AR1097467*/
+             DCL        VAR(&JRNPF) TYPE(*CHAR) LEN(150)                               /*AR1097467*/
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(25)                                /*AR1097467*/
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)                               /*AR1097467*/
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)                                  /*AR1097467*/
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)                                  /*AR1097467*/
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)                                   /*AR1097467*/
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)                               /*AR1097467*/
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)                              /*AR1097467*/
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                             /*AR1097467*/
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                             /*AR1097467*/
+                                                                                       /*AR1097467*/
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')                                          /*AR1097467*/
+                                                                                       /*AR1097467*/
+/* */                                                                 /*S01408*/
+/*/COPY WNCPYSRC,LERC30AVDR                                           /*S01408*/
+/* */                                                                 /*S01408*/
+ 
+     SNDPGMMSG  MSG('Facility History Update Part 2') +
+                                       TOMSGQ(MRUNQ)
+/* Create data area LDA */                                                                /*CLE147*/
+                                                                                          /*CLE147*/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)                            /*CLE147*/
+             MONMSG     MSGID(CPF1023)                                                    /*CLE147*/
+                                                                                          /*CLE147*/
+/* Setup system prefix variable from SDSTAT data area */                                  /*CLE147*/
+                                                                                          /*CLE147*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                               /*CLE147*/
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)                         /*CLE147*/
+ 
+                                                                      /*S01473*/
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             RTVDTAARA  DTAARA(LEPDCL) RTNVAR(&LEPDCL)                                    /*CLE134*/
+                 IF         COND(%SUBSTRING(&LEPDCL 1 1) *EQ 'N') +
+                               THEN(GOTO CMDLBL(ENDPGM))                                  /*CLE134*/
+                 RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                                /*CLE134*/
+                 CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))                            /*CLE134*/
+                 CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')                         /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+                                                                      /*S01473*/
+/* Access switchable features file to see if feature S01473     */    /*S01473*/
+/* is installed  */                                                   /*S01473*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)    /*S01473*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&S01473) VALUE('Y'))                    /*S01473*/
+                                                                      /*S01473*/
+                                                                                          /*CLE023*/
+/* Access SAR file to determine if switchable feature CLE023 */                           /*CLE023*/
+/* is installed.                                             */                           /*CLE023*/
+                                                                                          /*CLE023*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CLE023*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CLE023*/
+             CHGVAR     VAR(&SARD) VALUE('CLE023')                                        /*CLE023*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*CLE023*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CLE023) VALUE('Y'))                                        /*CLE023*/
+                                                                                          /*CLE147*/
+/* Access SAR file to determine if switchable feature CLE147 */                           /*CLE147*/
+/* is installed.                                             */                           /*CLE147*/
+                                                                                          /*CLE147*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CLE147*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CLE147*/
+             CHGVAR     VAR(&SARD) VALUE('CLE147')                                        /*CLE147*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                        /*CLE147*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&CLE147) VALUE('Y'))                                        /*CLE147*/
+                                                                                          /*CLE147*/
+/* Start Journalling */                                                                /*AR1097467*/
+                                                                                       /*AR1097467*/
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)                                       /*AR1097467*/
+             CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                          *CAT &CSEQA)                                                 /*AR1097467*/
+             CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)                         /*AR1097467*/
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                          FLAG('S') TEXT(&STEXT)                                       /*AR1097467*/
+/* */                                                                 /*S01408*/
+/*/COPY WNCPYSRC,LERC30AIPG                                           /*S01408*/
+/* */                                                                 /*S01408*/
+ 
+/* Check the current status of this component */
+ 
+     CALL PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+/* Clear LEHISAPD - Actions file for PDCLs generated by the COB */                       /*CLE134*/
+             CLRPFM     FILE(LEHISAPD)                                                   /*CLE134*/
+             ENDDO                                                                       /*CLE134*/
+ 
+     IF COND(&STAT *EQ 'N') THEN(DO)
+ 
+/**IF*NOT*RERUN*Take*Security*Copy*of*History*Files*******************/                /*AR1097467*/
+ 
+/****CPYF**     FROMFILE(FACHISH) TOFILE(XFACHISH) MBROPT(*REPLACE)  */                /*AR1097467*/
+/****MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XFACHISH)) */              /*AR1097467*/
+/****CPYF**     FROMFILE(FACHISA) TOFILE(XFACHISA) MBROPT(*REPLACE)  */                /*AR1097467*/
+/****MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XFACHISA)) */              /*AR1097467*/
+/****CPYF**     FROMFILE(FACACT) TOFILE(XFACACT) MBROPT(*REPLACE)    */                /*AR1097467*/
+/****MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XFACACT)) */               /*AR1097467*/
+/****CPYF**     FROMFILE(HISACT) TOFILE(XHISACT) MBROPT(*REPLACE)    */                /*AR1097467*/
+/****MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(XHISACT)) */               /*AR1097467*/
+/**********  CPYF       FROMFILE(FCLTYFM) TOFILE(XFCLTYFM) +         */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*158934 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(XFCLTYFM))                            */         /*158934 AR1097467*/
+/**********  CPYF       FROMFILE(FCLTYFN) TOFILE(XFCLTYFN) +         */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*158934 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(XFCLTYFN))                            */         /*158934 AR1097467*/
+/**********  CPYF       FROMFILE(FCLTYZZ) TOFILE(XFCLTYZZ) +         */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*158934 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(XFCLTYZZ))                            */         /*158934 AR1097467*/
+                                                                      /*S01473*/
+                                                                      /*S01473*/
+/* */                                                                 /*S01408*/
+/*/COPY WNCPYSRC,LERC30AMPG                                           /*S01408*/
+/* */                                                                 /*S01408*/
+/**If*the*Leo*Midas*Integration*Switchable*Feature*is*on,*take**+*****/                /*AR1097467*/
+/**copies*of*the*Leo*files********************************************/         /*S01473 AR1097467*/
+/**********  IF         COND(&S01473 = 'Y') THEN(DO)                 */         /*S01473 AR1097467*/
+/**********  CPYF       FROMFILE(LEOACTPD) TOFILE(XLEOACTPD) +       */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*S01473 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(XLEOACTPD))                           */         /*S01473 AR1097467*/
+/**********  ENDDO                                                   */         /*S01473 AR1097467*/
+                                                                      /*S01473*/
+/**********  IF         COND(&CLE147 = 'Y') THEN(DO)                 */         /*CLE147 AR1097467*/
+/**********  DLTF       FILE(XLEFCLTQD)                              */         /*CLE147 AR1097467*/
+/**********  MONMSG     MSGID(CPF2105)                               */         /*CLE147 AR1097467*/
+/**********  CPYF       FROMFILE(LEFCLTQD) TOFILE(&DPLIB/XLEFCLTQD) +*/                /*AR1097467*/
+/**********               MBROPT(*REPLACE) CRTFILE(*YES)             */         /*CLE147 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(XLEFCLTQD))                           */         /*CLE147 AR1097467*/
+/**********  ENDDO                                                   */         /*CLE147 AR1097467*/
+                                                                      /*S01473*/
+     CHGDTAARA  DTAARA(LERSTS (1 3)) VALUE(NEW)
+ 
+/* Set the status to failed (&STAT = Y) in case the program fails */
+ 
+     CHGVAR VAR(&STAT) VALUE('Y')
+     CALL PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+     ENDDO
+/****ELSE*CMD(DO)                                                    */                /*AR1097467*/
+ 
+/**IF*RERUN*Copy*back*Security*Copy*of*History*Files******************/                /*AR1097467*/
+/****CPYF       FROMFILE(XFACHISH) TOFILE(FACHISH) MBROPT(*REPLACE)  */                /*AR1097467*/
+/****MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(FACHISH))*/                /*AR1097467*/
+/****CPYF       FROMFILE(XFACHISA) TOFILE(FACHISA) MBROPT(*REPLACE)  */                /*AR1097467*/
+/****MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(FACHISA))*/                /*AR1097467*/
+/****CPYF       FROMFILE(XFACACT) TOFILE(FACACT) MBROPT(*REPLACE)    */                /*AR1097467*/
+/****MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(FACACT)) */                /*AR1097467*/
+/****CPYF**     FROMFILE(XHISACT) TOFILE(HISACT) MBROPT(*REPLACE)    */                /*AR1097467*/
+/****MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(HISACT)) */                /*AR1097467*/
+/**********  CPYF       FROMFILE(XFCLTYFM) TOFILE(FCLTYFM) +         */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*158934 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(FCLTYFM))                             */         /*158934 AR1097467*/
+/**********  CPYF       FROMFILE(XFCLTYFN) TOFILE(FCLTYFN) +         */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*158934 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(FCLTYFN))                             */         /*158934 AR1097467*/
+/**********  CPYF       FROMFILE(XFCLTYZZ) TOFILE(FCLTYZZ) +         */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*158934 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM + */                /*AR1097467*/
+/**********               FILE(FCLTYZZ))                             */         /*158934 AR1097467*/
+                                                                      /*S01473*/
+                                                                      /*S01473*/
+/**If*the*Leo*Midas*Integration*Switchable*Feature*is*on,*take**+*****/                /*AR1097467*/
+/**copies*of*the*Leo*files********************************************/         /*S01473 AR1097467*/
+/**********  IF         COND(&S01473 = 'Y') THEN(DO)                 */         /*S01473 AR1097467*/
+/**********  CPYF       FROMFILE(XLEOACTPD) TOFILE(LEOACTPD) +       */                /*AR1097467*/
+/**********               MBROPT(*REPLACE)                           */         /*S01473 AR1097467*/
+/**********  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)               */         /*S01473 AR1097467*/
+/**********  ENDDO                                                   */         /*S01473 AR1097467*/
+                                                                      /*S01473*/
+/********************************************************************/        /*AR589217 AR589217A*/
+/**DELETE*REVERSED*FACILITIES*FROM*FACACT****************************/        /*AR589217 AR589217A*/
+/********************************************************************/        /*AR589217 AR589217A*/
+/********** CALL LE07053                                            */        /*AR589217 AR589217A*/
+/********** IF COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)             */        /*AR589217 AR589217A*/
+ 
+/****ENDDO*                                                         */                 /*AR1097467*/
+ 
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+/* Delete reversed facilities from FACACT */                                           /*AR589217A*/
+           CALL LE007053                                                               /*AR589217A*/
+           IF COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)                                 /*AR589217A*/
+           CRTDUPOBJ  OBJ(LKEY1DP) FROMLIB(&DPLIB) OBJTYPE(*FILE) +
+                        TOLIB(QTEMP) DATA(*YES)                                           /*CLE134*/
+/**********CPYF       FROMFILE(&DPLIB/LEPK1DPD) +                                       /*MD027718*/
+/**********             TOFILE(QTEMP/LKEY1DP) MBROPT(*ADD) +                            /*MD027718*/
+/**********             INCREL((*IF PAMT *GT 0) (*AND IAMT *EQ +                        /*MD027718*/
+/**********             0)) FMTOPT(*MAP *DROP)                                 /*AR567487 MD027718*/
+           CPYF       FROMFILE(&DPLIB/LEPK1DPD) +
+                        TOFILE(QTEMP/LKEY1DP) MBROPT(*ADD) +
+                        INCREL((*IF PAMT *NE 0) (*AND IAMT *EQ +
+                        0)) FMTOPT(*MAP *DROP)                                          /*MD027718*/
+ 
+           OVRDBF     FILE(LKEY1DP) TOFILE(QTEMP/LKEY1DP)                                 /*CLE134*/
+/*  Overidde to PDCL files */                                                             /*CLE134*/
+           OVRDBF     FILE(HISACT) TOFILE(LEHISAPD)                                       /*CLE134*/
+           OVRDBF     FILE(LEHISFL1) TOFILE(LEHISAL1)                                     /*CLE134*/
+           OVRDBF     FILE(LEHISFL0) TOFILE(LEHISAL0)                                     /*CLE134*/
+           ENDDO                                                                          /*CLE134*/
+  /* Call Generated Changes Extract Program */
+ 
+/**********  CALL LER031 */                                                               /*263413*/
+             CALL       PGM(LER031) PARM(&RERUN)                                          /*263413*/
+     IF COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
+ 
+/**/                                                                                      /*CLE023*/
+/* Call Update to History Amount for Rollovers if CLE023 is on */                         /*CLE023*/
+/**/                                                                                      /*CLE023*/
+     IF         COND(&CLE023 = 'Y') THEN(DO)                                              /*CLE023*/
+     CLRPFM LECAROPD                                                                      /*CLE023*/
+     CALL LER033                                                                          /*CLE023*/
+     IF COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)                                          /*CLE023*/
+     ENDDO                                                                                /*CLE023*/
+                                                                      /*S01473*/
+/* If the Leo Midas Integration Switchable Feature is on,  +
+   Update of History Actions file from LEO Actions  */                /*S01473*/
+                                                                      /*S01473*/
+             IF         COND(&S01473 = 'Y') THEN(DO)                  /*S01473*/
+             CALL       PGM(LER035)                                   /*S01473*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ERROR))                              /*S01473*/
+                                                                      /*S01473*/
+             CLRPFM     FILE(LEOACTPD)                                /*S01473*/
+             ENDDO                                                    /*S01473*/
+                                                                      /*S01473*/
+/* If CLE147 - Aggregate Facility Switchable Feature is on,  +
+   Update of History Actions file */                                                      /*CLE147*/
+                                                                                          /*CLE147*/
+             IF         COND(&CLE147 = 'Y') THEN(DO)                                      /*CLE147*/
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                       /*CLE147*/
+             MONMSG     MSGID(CPF8351)                                                    /*CLE147*/
+             CHGJOB     SWS(XXXXXX00)                                                     /*CLE147*/
+                                                                                          /*CLE147*/
+             CALL       PGM(LE000066)                                                     /*CLE147*/
+                                                                                          /*CLE147*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*CLE147*/
+                          ROLLBACK                                                        /*CLE147*/
+                          GOTO       CMDLBL(ERROR)                                        /*CLE147*/
+             ENDDO                                                                        /*CLE147*/
+             ENDDO                                                                        /*CLE147*/
+ 
+/*/COPY WNCPYSRC,LERC30A001                                          */
+  /* Call Update Extract Program */
+ 
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             OVRDBF     FILE(HISACTL2) TOFILE(LEHISAL2) SHARE(*NO)                        /*CLE134*/
+             OVRDBF     FILE(HISUPD) TOFILE(LEHISAL3) SHARE(*NO)                          /*CLE134*/
+             OVRDBF     FILE(HISUPD1) TOFILE(LEHISAL3) SHARE(*NO)                         /*CLE134*/
+             ENDDO
+             ELSE       CMD(DO)                                                           /*CLE134*/
+             OVRDBF     FILE(HISUPD1) TOFILE(HISUPD) SHARE(*NO)                           /*246032*/
+             OVRDBF     FILE(HISUPD) SHARE(*NO)                                           /*246032*/
+             ENDDO                                                                        /*CLE134*/
+ /********** CALL LER032  */                                                            /*AR398038*/
+             CALL       PGM(LER032) PARM(&RERUN)                                        /*AR398038*/
+             DLTOVR     FILE(HISUPD1 HISUPD)                                              /*246032*/
+             IF         COND(&RERUN *EQ '      ') THEN(DO)                                /*CLE134*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ERROR))                              /*157759*/
+             ENDDO                                                                        /*CLE134*/
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             DLTOVR     FILE(HISACT)                                                      /*CLE134*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ERROR))                                                  /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+/* delete PDCL overrides */
+                                                                      /*157759*/
+             CALL       PGM(LE0499) PARM(&MODE)                       /*157759*/
+             IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ERROR))                                                  /*CLE134*/
+ /* copy generated records from LEHISAPD to HISACT */                                     /*CLE134*/
+            CPYF       FROMFILE(LEHISAPD) TOFILE(HISACT) MBROPT(*ADD)                     /*CLE134*/
+            MONMSG     MSGID(CPF0000) EXEC(CHGJOB SWS(XXXXXX11))                          /*CLE134*/
+             ENDDO                                                                        /*CLE134*/
+ 
+  /* IF ERROR, SEND MSG & COPY BACK SECURITY FILES     */
+ERROR:
+     IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+             CALLSUBR   SUBR(JRNRECOVR)                                                /*AR1097467*/
+            SNDPGMMSG  MSG('Job terminated, database in error. +
+                          Contact Systems Department.') +
+                       TOMSGQ(MOPERQ MRUNQ)
+ 
+     ENDDO
+     ELSE  CMD(DO)
+/**********  IF         COND(&CLE147 = 'Y') THEN(DO)                 */         /*CLE147 AR1097467*/
+/**********  DLTF       FILE(XLEFCLTQD)                              */         /*CLE147 AR1097467*/
+/**********  MONMSG     MSGID(CPF2105)                               */         /*CLE147 AR1097467*/
+/**********  ENDDO                                                   */         /*CLE147 AR1097467*/
+     CHGVAR VAR(&STAT) VALUE('N')
+     CALL PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+     ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)                                                 /*AR1097467*/
+                                                                                       /*AR1097467*/
+/*********************************************************************/                /*AR1097467*/
+/*                                                                   */                /*AR1097467*/
+/*       JRNRECOVR - Removes changes to LENQ using journal           */                /*AR1097467*/
+/*                                                                   */                /*AR1097467*/
+/*********************************************************************/                /*AR1097467*/
+             SUBR       SUBR(JRNRECOVR)                                                /*AR1097467*/
+/* Begin recovery from error */                                                        /*AR1097467*/
+/* Retrieve attributes of current job */                                               /*AR1097467*/
+                                                                                       /*AR1097467*/
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)                                 /*AR1097467*/
+                                                                                       /*AR1097467*/
+/* Retrieve the most recent journal entry sequence number for the */                   /*AR1097467*/
+/* specific job. */                                                                    /*AR1097467*/
+                                                                                       /*AR1097467*/
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) +
+                          SEARCH(*DESCEND) JOB(&NBR/&USR/&JOB) +
+                          FROMENT(*LAST) TOENT(*FIRST) +
+                          RTNRCV(&SJRNRCVR) RTNSEQNBR(&START)                          /*AR1097467*/
+                                                                                       /*AR1097467*/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)                                /*AR1097467*/
+                CHGVAR     VAR(&START) VALUE(0)                                        /*AR1097467*/
+             ENDDO                                                                     /*AR1097467*/
+                                                                                       /*AR1097467*/
+/* Determine starting journal sequence number of current job. */                       /*AR1097467*/
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                          SEQ(&FINISH)                                                 /*AR1097467*/
+                                                                                       /*AR1097467*/
+/* Remove journal changes. */                                                          /*AR1097467*/
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                          THEN(DO)                                                     /*AR1097467*/
+                RMVJRNCHG  JRN(ICJRN) FILE((FACHISH) (FACHISA) (FACACT) +
+                             (HISACT) (FCLTYFM) (FCLTYFN) (FCLTYZZ) +
+                             (LEOACTPD) (LEFCLTQD)) RCVRNG(&SJRNRCVR +
+                             &FJRNRCVR) FROMENT(&START) TOENT(&FINISH)                 /*AR1097467*/
+                MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                      /*AR1097467*/
+             ENDDO                                                                     /*AR1097467*/
+                                                                                       /*AR1097467*/
+             ENDSUBR                                                                   /*AR1097467*/
+/* End JRNRECOVR subroutine. */                                                        /*AR1097467*/
+/**********  CHGVAR     VAR(&CPYFLD) VALUE('(c) +                    */                /*AR1097467*/
+/**********               Misys International Banking Systems Ltd.') */                /*AR1097467*/
+ 
+/**********ENDPGM  */                                                                     /*CLE134*/
+ENDPGM: ENDPGM                                                                            /*CLE134*/

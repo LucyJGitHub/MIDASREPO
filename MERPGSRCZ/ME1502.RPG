@@ -1,0 +1,812 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Generation Criteria Table Listing')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1502 - Generation Criteria Table Listing                   *
+      *                                                               *
+      *  Function:  To list all of the entries in the Generation      *
+      *             Criteria Table                                    *
+      *                                                               *
+      *  Called By: On Request                                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 13JUL00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 177671             Date 25Apr00               *
+      *                 CFT006             Date 09NOV99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT005             Date 08Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 162662             Date 23Jun99               *
+      *                 CFT002             Date 24Mar99               *
+      *                 CFT003  *Create    Date 07May98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CFT009 - FT Fees and Charge Development                      *
+      *  177671 - 'Header tag' missing from report                    *
+      *  CFT006 - Funds Transfer addition of MT101 and MT102 messages *
+      *           (recompile)                                         *
+      *  CFT005 - Straight Through Processing Phase 2                 *
+      *           Auto-authorisation of STP payments                  *
+      *  162662 - No page break after having printed repair details   *
+      *  CFT002 - Straight Through Processing Phase 1 Enhancement     *
+      *           Repair Criteria Report                              *
+      *                                                               *
+      *  CFT003 - Batch Authorisation                                 *
+      *           Based on MEH036 original references:                *
+      *           S01482/DBF112/HUB001                                *
+      *                                                               *
+      *****************************************************************
+     FMEGNCRL0IF  E           K        DISK
+     F**  Generation Criteria Header File
+     F*
+     FMEGNDTL0IF  E           K        DISK
+     F**  Generation Criteria Detail FIle - Retrieval Index
+     F*                                                                   CFT002
+     FMEURPRL0IF  E           K        DISK                               CFT002
+     F**  ME User Repair                                                  CFT002
+     F*
+     FME1502P1O   E                    PRINTER      KINFDS SPOOL
+     F**  Generation Criteria Table Listing - Printer File
+     F*
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   05    -  Repair record printed                              *   CFT002
+      *   10    -  Printed record indicator                           *
+      *   15    -  Compare value 4-6 indicator                        *
+      *   20    -  Printer overflow indicator                         *
+      *   25    -  First cycle indicator                              *
+      *   30    -  Read error on MEGNDTL0                             *
+      *   35    -  Read error on MEURPRL0                             *   CFT002
+      *   60    -  CSW209 Indicator                                   *                       CSW209
+      *                                                               *
+      *   U7    -  Database error                                     *
+      *   U8    -  Database error                                     *
+      *   LR    -  Last record indicator                              *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   #HINIT   - Initialisation processing                        *
+      *   #HCLHF   - Clear work fields (header)                       *
+      *   #HCLDF   - Clear work fields (detail)                       *
+      *   #HCLRF   - Clear work fields (repair)                       *   CFT002
+      *   #HMVHF   - Move header values to output fields              *
+      *   #HMVDF   - Move detail values to output fields              *
+      *   #HMVRF   - Move repair values to output fields              *   CFT002
+      *   #HPEND   - End the program processing                       *
+      *   *PSSR    - Handles abnormal error conditions                *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      * Copyright notice for inclusion in all programs
+     E*
+     I/EJECT
+     I*
+     ISPOOL       DS
+     I** File information data structure
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ILDA         DS                            256
+     I*
+     I**  Local data area
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IRUNDT       DS
+     I*
+     I**  Standard Data Area Layout for System Flags and Run Date
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Data Structure for Bank Details
+     I*
+     I              BJURPT                          TITL
+     I*
+     ISCSARD    E DSSCSARDPD                                              CFT005
+     I* External data structure for SAR file details                      CFT005
+     I*                                                                   CFT005
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     C/EJECT
+     C*================================================================
+     C*   M A I N   P R O C E S S I N G
+     C*================================================================
+     C*
+     C**  Initialisation process
+     C*
+     C                     EXSR #HINIT
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN15
+     C*
+     C           *INLR     DOUEQ'1'
+     C*
+     C**  Read header file
+     C*
+     C                     READ MEGNCRL0                 LR
+     C                     MOVE '0'       *IN30
+     C*
+     C           *INLR     IFEQ '0'
+     C*
+     C**  Print headings
+     C           #HMTPY    IFNE GNMTPY
+     C************IN05     OREQ *ON                                       CFT002162662
+     C                     WRITEHEADER
+     C                     END
+     C*
+     C**  Clear output fields (header)
+     C*
+     C                     EXSR #HCLHF
+     C*
+     C**  Prepare header fields for output
+     C*
+     C                     EXSR #HMVHF
+     C*
+     C**  Print header fields
+     C*
+     C                     WRITEHEADR2                 20
+     C*
+     C**  If overflow occurs, print headings and detail record
+     C**  on the next page
+     C*
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+      *
+      **  Print header fields
+      *
+     C                     WRITEHEADR2                 20
+     C                     MOVE '0'       *IN20
+     C                     END
+      *                                                                   CFT009
+      **  If core switchable featue CFT009 is present print out charges   CFT009
+      *                                                                   CFT009
+     C           CFT009    IFEQ 'Y'                                       CFT009
+      *                                                                   CFT009
+      **  Clear output fields (CHARGES)                                   CFT009
+      *                                                                   CFT009
+     C                     EXSR #HCLCF                                    CFT009
+      *                                                                   CFT009
+      **  Prepare Charges fields for output                               CFT009
+      *                                                                   CFT009
+     C                     EXSR #HMVCF                                    CFT009
+      *                                                                   CFT009
+      **  Print Charges fields                                            CFT009
+      *                                                                   CFT009
+     C                     WRITECHARGE                 20                 CFT009
+      *                                                                   CFT009
+      **  If overflow occurs, print headings and detail record            CFT009
+      **  on the next page                                                CFT009
+      *                                                                   CFT009
+     C           *IN20     IFEQ '1'                                       CFT009
+     C                     WRITEHEADER                                    CFT009
+     C                     WRITECHARGE                 20                 CFT009
+     C                     MOVE '0'       *IN20                           CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                   CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                   CFT009
+      *                                                                   CFT009
+     C                     MOVE '1'       *IN10
+     C*
+     C           #HKEYS    SETLLMEGNDTL0                   Postn File
+     C*
+     C**  Read details file
+     C*
+     C           #HKEYS    READEMEGNDTL0                 30Rtv Record
+      *                                                                   CFT009
+      **  Print detail record header                                      CFT009
+      *                                                                   CFT009
+      *                                                                   CFT009
+     C                     WRITEDETL                   20                 CFT009
+      *                                                                   CFT009
+      **  If overflow occurs, print headings and detail record            CFT009
+      **  on the next page                                                CFT009
+      *                                                                   CFT009
+     C           *IN20     IFEQ '1'                                       CFT009
+     C                     WRITEHEADER                                    CFT009
+     C                     WRITEDETL                   20                 CFT009
+     C                     MOVE '0'       *IN20                           CFT009
+     C                     ENDIF                                          CFT009
+     C*
+     C           *IN30     DOWEQ'0'                        DoWhile Eq Key
+     C*
+     C**  Clear output fields (detail)
+     C*
+     C                     EXSR #HCLDF
+     C*
+     C**  Prepare detail fields for output
+     C*
+     C                     EXSR #HMVDF
+      *                                                                   CFT009
+      ****Print*detail*record*                                            CFT009
+      **  Print detail record header                                      CFT009
+      *                                                                   CFT009
+     C                     WRITEDTLRCD                 20
+     C*
+     C**  If overflow occurs, print headings and detail record
+     C**  on the next page
+     C*
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+      *
+      **  Print header fields
+      *
+     C*******              WRITEHEADR2                 20                 CFT009
+     C                     WRITEDETL                   20                 CFT009
+     C                     MOVE '0'       *IN20
+     C                     END
+     C*
+     C**  Read details file
+     C*
+     C           #HKEYS    READEMEGNDTL0                 30 Rtv Record
+     C*
+     C                     ENDDO                           End Do
+     C*
+     C**  Position  repair file                                           CFT002
+     C*                                                                   CFT002
+     C           #HKEYS    SETLLMEURPRL0                                  CFT002
+     C*                                                                   CFT002
+     C**  Read repair file                                                CFT002
+     C*                                                                   CFT002
+     C           #HKEYS    READEMEURPRL0                 35               CFT002
+     C*                                                                   CFT002
+     C**  If repair records are present, print headings                   CFT002
+     C*                                                                   CFT002
+     C           *IN35     IFEQ *OFF                                      CFT002
+     C*********************WRITEHEADER                                    CFT002
+     C********             WRITEHEADR3                              CFT002CFT009
+     C                     WRITEHEADR3                 20           CFT002CFT009
+     C*********************MOVE *ON       *IN05                     CFT002162662
+     C*********************ELSE                                     CFT002162662
+     C*********************MOVE *OFF      *IN05                     CFT002162662
+      *                                                                   CFT009
+      **  If overflow occurs, print headings and repair record            CFT009
+      **  on the next page                                                CFT009
+      *                                                                   CFT009
+     C           *IN20     IFEQ *ON                                       CFT009
+     C                     WRITEHEADER                                    CFT009
+     C                     WRITEHEADR3                                    CFT009
+     C                     MOVE *OFF      *IN20                           CFT009
+     C                     ENDIF                                          CFT009
+     C                     ENDIF                                          CFT002
+      *                                                                   CFT002
+     C           *IN35     DOWEQ*OFF                                      CFT002
+     C*                                                                   CFT002
+     C**  Clear output fields (repair)                                    CFT002
+     C*                                                                   CFT002
+     C                     EXSR #HCLRF                                    CFT002
+     C*                                                                   CFT002
+     C**  Prepare repair fields for output                                CFT002
+     C*                                                                   CFT002
+     C                     EXSR #HMVRF                                    CFT002
+     C*                                                                   CFT002
+     C**  Print repair record                                             CFT002
+     C*                                                                   CFT002
+     C                     WRITEDTL2                   20                 CFT002
+     C*                                                                   CFT002
+     C**  If overflow occurs, print headings and repair record            CFT002
+     C**  on the next page                                                CFT002
+     C*                                                                   CFT002
+     C           *IN20     IFEQ *ON                                       CFT002
+     C                     WRITEHEADER                                    CFT002
+     C                     WRITEHEADR3                                    CFT002
+     C                     MOVE *OFF      *IN20                           CFT002
+     C                     ENDIF                                          CFT002
+     C*                                                                   CFT002
+     C**  Read repair file                                                CFT002
+     C*                                                                   CFT002
+     C           #HKEYS    READEMEURPRL0                 35               CFT002
+     C*                                                                   CFT002
+     C                     ENDDO                                          CFT002
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  End the program processing
+     C*
+     C                     EXSR #HPEND
+     C*
+     C*================================================================
+     C*   E N D   O F   M A I N   P R O C E S S I N G
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #HINIT  Subroutine to perform initial processing.            *
+     C*                                                               *
+     C*      Called by     Main Processing                            *
+     C*      Calls         DBSR                                       *
+     C*                                                               *
+     C*****************************************************************
+     C           #HINIT    BEGSR
+     C*
+     C** Receive entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ
+     C*
+     C** Copyright Insertion
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Key list
+     C*
+     C           #HKEYS    KLIST
+     C                     KFLD           #HMTPY
+     C                     KFLD           #HMSET
+     C*
+     C** Prepare LDA variables
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME1502'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*
+     C** In the data area RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** Get bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** Error in SDBANKPD
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Access SAR details file to see if CFT005 is installed.           CFT005
+     C*                                                                   CFT005
+     C                     CALL 'AOSARDR0'                                CFT005
+     C                     PARM *BLANKS   P@RTCD  7                       CFT005
+     C                     PARM '*VERIFY' P@OPTN  7                       CFT005
+     C                     PARM 'CFT005'  P@SARD  6                       CFT005
+     C           SCSARD    PARM *BLANKS   DSFDY                           CFT005
+     C*                                                                   CFT005
+     C** Allow Auto-authorising                                           CFT005
+     C*                                                                   CFT005
+     C           P@RTCD    IFEQ *BLANKS                                   CFT005
+     C                     MOVE 'Y'       CFT005  1                       CFT005
+     C                     SETON                     40                   CFT005
+     C                     ELSE                                           CFT005
+     C                     MOVE 'N'       CFT005                          CFT005
+     C                     END                                            CFT005
+      *                                                                   CFT009
+      ** Access SAR details file to see if CFT009 is installed.           CFT009
+      *                                                                   CFT009
+     C                     CALL 'AOSARDR0'                                CFT009
+     C                     PARM *BLANKS   P@RTCD  7                       CFT009
+     C                     PARM '*VERIFY' P@OPTN  7                       CFT009
+     C                     PARM 'CFT009'  P@SARD  6                       CFT009
+     C           SCSARD    PARM *BLANKS   DSFDY                           CFT009
+      *                                                                   CFT009
+      ** Allow Charges                                                    CFT009
+      *                                                                   CFT009
+     C           P@RTCD    IFEQ *BLANKS                                   CFT009
+     C                     MOVE 'Y'       CFT009  1                       CFT009
+     C                     ELSE                                           CFT009
+     C           P@RTCD    IFEQ '*NRF'                                    CFT009
+     C                     MOVE 'N'       CFT009                          CFT009
+     C                     ELSE                                           CFT009
+     C           *LOCK     IN   LDA                                       CFT009
+     C                     MOVEL'SCSARDPD'DBFILE           ***************CFT009
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 002 *CFT009
+     C                     Z-ADD002       DBASE            ***************CFT009
+     C                     OUT  LDA                                       CFT009
+     C                     EXSR *PSSR                                     CFT009
+     C                     ENDIF                                          CFT009
+     C                     ENDIF                                          CFT009
+      *                                                                   CFT009
+      *                                                                                       CSW209
+      ** Check if SWIFT 2009 feature is ON                                                    CSW209
+      *                                                                                       CSW209
+     C                     CALL 'SWIF2009'                                                    CSW209
+     C                     PARM *BLANKS   PRTCD   7                                           CSW209
+      *                                                                                       CSW209
+     C           PRTCD     IFEQ 'CSW2009'                                                     CSW209
+     C                     MOVE 'Y'       CSW209  1                                           CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVE 'N'       CSW209                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #HCLHF  Subroutine to clear output fields (header).          *
+     C*                                                               *
+     C*      Called by     Main Processing                            *
+     C*      Calls         Nothing                                    *
+     C*                                                               *
+     C*****************************************************************
+     C           #HCLHF    BEGSR
+     C*
+     C**  Initialise work fields (header)
+     C*
+     C                     MOVEL*BLANKS   #HMTPY
+     C                     Z-ADD*ZEROS    #HMSET
+     C                     MOVEL*BLANKS   #HNWRK
+     C                     MOVEL*BLANKS   #HPYTP
+     C                     Z-ADD*ZEROS    #HSETT
+     C                     MOVEL*BLANKS   #HEXCP
+     C                     MOVEL*BLANKS   #HBOKC
+     C                     MOVEL*BLANKS   #HPYST
+     C                     MOVEL*BLANKS   #HCSET
+     C                     MOVEL*BLANKS   #HDSET
+     C                     MOVEL*BLANKS   #HCLRT
+     C                     MOVEL*BLANKS   #HCSND
+     C                     MOVEL*BLANKS   #HC50
+     C                     MOVEL*BLANKS   #HC52
+     C                     MOVEL*BLANKS   #HC53
+     C                     MOVEL*BLANKS   #HC54
+     C                     MOVEL*BLANKS   #HC56
+     C                     MOVEL*BLANKS   #HC57
+     C                     MOVEL*BLANKS   #HC58
+     C                     MOVEL*BLANKS   #HC70
+     C                     MOVEL*BLANKS   #HC72
+     C                     MOVEL*BLANKS   #HDESC
+     C                     MOVEL*BLANKS   #HDES2
+     C                     MOVEL*BLANKS   #HBRCA
+     C                     MOVEL*BLANKS   #HAUTO                          CFT005
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************   CFT009
+      *                                                               *   CFT009
+      *  #HCLCF  Subroutine to clear output fields (Charges)          *   CFT009
+      *                                                               *   CFT009
+      *      Called by     Main Processing                            *   CFT009
+      *      Calls         Nothing                                    *   CFT009
+      *                                                               *   CFT009
+      *****************************************************************   CFT009
+      *                                                                   CFT009
+     C           #HCLCF    BEGSR                                          CFT009
+      *                                                                   CFT009
+      **  Initialise work fields (Charges)                                CFT009
+      *                                                                   CFT009
+     C                     MOVEL*BLANKS   P1FXSP                          CFT009
+     C                     MOVEL*BLANKS   P1PDOF                          CFT009
+     C                     MOVEL*BLANKS   P1TXCD                          CFT009
+     C                     MOVEL*BLANKS   P1CQCD                          CFT009
+     C                     MOVEL*BLANKS   P1CACD                          CFT009
+     C                     MOVEL*BLANKS   P1STCD                          CFT009
+     C                     MOVEL*BLANKS   P1SPCD                          CFT009
+     C                     MOVEL*BLANKS   P1MSCD                          CFT009
+     C                     MOVEL*BLANKS   P1M1CD                          CFT009
+     C                     MOVEL*BLANKS   P1M2CD                          CFT009
+     C                     MOVEL*BLANKS   P1M3CD                          CFT009
+     C                     MOVEL*BLANKS   P1M4CD                          CFT009
+     C                     MOVEL*BLANKS   P1M5CD                          CFT009
+     C                     MOVEL*BLANKS   P1TRCD                          CFT009
+     C                     MOVEL*BLANKS   P1FXCD                          CFT009
+     C                     MOVEL*BLANKS   P1ADCD                          CFT009
+     C                     MOVEL*BLANKS   P1TLCD                          CFT009
+     C                     MOVEL*BLANKS   P1COCD                          CFT009
+     C                     MOVEL*BLANKS   P1CRCD                          CFT009
+     C                     MOVEL*BLANKS   P1DECD                          CFT009
+      *                                                                   CFT009
+     C                     ENDSR                                          CFT009
+     C/EJECT                                                              CFT009
+     C*****************************************************************
+     C*                                                               *
+     C*  #HCLDF  Subroutine to clear output fields (detail).          *
+     C*                                                               *
+     C*      Called by     Main Processing                            *
+     C*      Calls         Nothing                                    *
+     C*                                                               *
+     C*****************************************************************
+     C           #HCLDF    BEGSR
+     C*
+     C**  Initialise work fields (detail)
+     C*
+     C                     Z-ADD*ZEROS    #HMSEQ
+     C                     MOVEL*BLANKS   #HMTAG
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVEL*BLANKS   #HMSQC                                              CSW209
+     C                     ENDIF                                                              CSW209
+     C                     MOVEL*BLANKS   #HHDRT                          177671
+     C                     MOVEL*BLANKS   #HOPER
+     C                     MOVEL*BLANKS   #HCMP1
+     C                     MOVEL*BLANKS   #HCMP2
+     C                     MOVEL*BLANKS   #HCMP3
+     C                     MOVEL*BLANKS   #HCMP4
+     C                     MOVEL*BLANKS   #HCMP5
+     C                     MOVEL*BLANKS   #HCMP6
+     C*
+     C                     ENDSR
+     C/EJECT                                                              CFT002
+     C*****************************************************************   CFT002
+     C*                                                               *   CFT002
+     C*  #HCLRF  Subroutine to clear output fields (repair).          *   CFT002
+     C*                                                               *   CFT002
+     C*      Called by     Main Processing                            *   CFT002
+     C*      Calls         Nothing                                    *   CFT002
+     C*                                                               *   CFT002
+     C*****************************************************************   CFT002
+     C           #HCLRF    BEGSR                                          CFT002
+     C*                                                                   CFT002
+     C**  Initialise work fields (repair)                                 CFT002
+     C*                                                                   CFT002
+     C                     Z-ADD*ZEROS    #HRSEQ                          CFT002
+     C                     MOVEL*BLANKS   #HRVAL                          CFT002
+     C                     MOVEL*BLANKS   #HITAG                          CFT002
+     C                     MOVEL*BLANKS   #HRTAG                          CFT002
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVEL*BLANKS   #HRSQ1                                              CSW209
+     C                     MOVEL*BLANKS   #HRSQ2                                              CSW209
+     C                     ENDIF                                                              CSW209
+     C*                                                                   CFT002
+     C                     ENDSR                                          CFT002
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #HMVHF  Subroutine to move header values to output fields.   *
+     C*                                                               *
+     C*      Called by     Main Processing                            *
+     C*      Calls         Nothing                                    *
+     C*                                                               *
+     C*****************************************************************
+     C           #HMVHF    BEGSR
+     C*
+     C**  Move header values to output fields
+     C*
+     C                     MOVELGNMTPY    #HMTPY
+     C                     Z-ADDGNMSET    #HMSET
+     C                     MOVELGNNWRK    #HNWRK
+     C                     MOVELGNPYTP    #HPYTP
+     C                     Z-ADDGNSETT    #HSETT
+     C                     MOVELGNEXCP    #HEXCP
+     C                     MOVELGNBOKC    #HBOKC
+     C                     MOVELGNPYST    #HPYST
+     C                     MOVELGNCSET    #HCSET
+     C                     MOVELGNDSET    #HDSET
+     C                     MOVELGNCLRT    #HCLRT
+     C                     MOVELGNCSND    #HCSND
+     C                     MOVELGNC50     #HC50
+     C                     MOVELGNC52     #HC52
+     C                     MOVELGNC53     #HC53
+     C                     MOVELGNC54     #HC54
+     C                     MOVELGNC56     #HC56
+     C                     MOVELGNC57     #HC57
+     C                     MOVELGNC58     #HC58
+     C                     MOVELGNC70     #HC70
+     C                     MOVELGNC72     #HC72
+     C                     MOVELGNDESC    #HDESC
+     C                     MOVELGNDES2    #HDES2
+     C                     MOVELGNBRCA    #HBRCA
+     C                     MOVELGNAUTO    #HAUTO                          CFT005
+     C*
+     C           GNMTPY    IFEQ '101'                                     177671
+     C           GNMTPY    OREQ '102'                                     177671
+     C                     MOVE *ON       *IN50                           177671
+     C                     ELSE                                           177671
+     C                     MOVE *OFF      *IN50                           177671
+     C                     ENDIF                                          177671
+      *                                                                   177671
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVE *ON       *IN60                                               CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVE *OFF      *IN60                                               CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************   CFT009
+      *                                                               *   CFT009
+      *  #HMVCF  Subroutine to move Charges values to output fields.  *   CFT009
+      *                                                               *   CFT009
+      *      Called by     Main Processing                            *   CFT009
+      *      Calls         Nothing                                    *   CFT009
+      *                                                               *   CFT009
+      *****************************************************************   CFT009
+      *                                                                   CFT009
+     C           #HMVCF    BEGSR                                          CFT009
+      *                                                                   CFT009
+      **  Move Charges values to output fields                            CFT009
+      *                                                                   CFT009
+     C                     MOVELFXSPRS    P1FXSP                          CFT009
+     C                     MOVELPDTOCD    P1PDOF                          CFT009
+     C                     MOVELTXCODE    P1TXCD                          CFT009
+     C                     MOVELCHEQCG    P1CQCD                          CFT009
+     C                     MOVELCABCCO    P1CACD                          CFT009
+     C                     MOVELSWSTRC    P1STCD                          CFT009
+     C                     MOVELSWPCHG    P1SPCD                          CFT009
+     C                     MOVELMISCCH    P1MSCD                          CFT009
+     C                     MOVELMICHG1    P1M1CD                          CFT009
+     C                     MOVELMICHG2    P1M2CD                          CFT009
+     C                     MOVELMICHG3    P1M3CD                          CFT009
+     C                     MOVELMICHG4    P1M4CD                          CFT009
+     C                     MOVELMICHG5    P1M5CD                          CFT009
+     C                     MOVELTFCOCH    P1TRCD                          CFT009
+     C                     MOVELFXCCCH    P1FXCD                          CFT009
+     C                     MOVELADVICH    P1ADCD                          CFT009
+     C                     MOVELTELPCH    P1TLCD                          CFT009
+     C                     MOVELCOLLCH    P1COCD                          CFT009
+     C                     MOVELCORRCH    P1CRCD                          CFT009
+     C                     MOVELDEDUCH    P1DECD                          CFT009
+      *                                                                   CFT009
+     C                     ENDSR                                          CFT009
+     C/EJECT                                                              CFT009
+     C*****************************************************************
+     C*                                                               *
+     C*  #HMVDF  Subroutine to move detail values to output fields.   *
+     C*                                                               *
+     C*      Called by     Main Processing                            *
+     C*      Calls         Nothing                                    *
+     C*                                                               *
+     C*****************************************************************
+     C           #HMVDF    BEGSR
+     C*
+     C**  Set up detail fields for printing
+     C*
+     C                     Z-ADDGDCSEQ    #HMSEQ
+     C                     MOVELGDMTAG    #HMTAG
+     C                     MOVELGDHDTG    #HHDRT                          177671
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C           *IN60     ANDEQ*ON                                                           CSW209
+     C                     MOVELGDMSEQ    #HMSQC                                              CSW209
+     C                     ENDIF                                                              CSW209
+     C                     MOVELGDOPER    #HOPER
+     C                     MOVELGDCMP1    #HCMP1
+     C                     MOVELGDCMP2    #HCMP2
+     C                     MOVELGDCMP3    #HCMP3
+     C                     MOVELGDCMP4    #HCMP4
+     C                     MOVELGDCMP5    #HCMP5
+     C                     MOVELGDCMP6    #HCMP6
+     C*
+     C                     MOVE '0'       *IN15
+     C           #HCMP4    IFNE *BLANK
+     C           #HCMP5    ORNE *BLANK
+     C           #HCMP6    ORNE *BLANK
+     C                     MOVE '1'       *IN15
+     C                     END
+     C*
+     C           GDMTPY    IFEQ '101'                                     177671
+     C           GDMTPY    OREQ '102'                                     177671
+     C                     MOVE *ON       *IN50                           177671
+     C                     ELSE                                           177671
+     C                     MOVE *OFF      *IN50                           177671
+     C                     ENDIF                                          177671
+      *                                                                   177671
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVE *ON       *IN60                                               CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVE *OFF      *IN60                                               CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C                     ENDSR
+     C/EJECT                                                              CFT002
+     C*****************************************************************   CFT002
+     C*                                                               *   CFT002
+     C*  #HMVRF  Subroutine to move repair values to output fields.   *   CFT002
+     C*                                                               *   CFT002
+     C*      Called by     Main Processing                            *   CFT002
+     C*      Calls         Nothing                                    *   CFT002
+     C*                                                               *   CFT002
+     C*****************************************************************   CFT002
+     C           #HMVRF    BEGSR                                          CFT002
+     C*                                                                   CFT002
+     C**  Set up repair fields for printing                               CFT002
+     C*                                                                   CFT002
+     C                     Z-ADDRPSQNO    #HRSEQ                          CFT002
+     C                     MOVELRPKVAL    #HRVAL                          CFT002
+     C                     MOVELRPITAG    #HITAG                          CFT002
+     C                     MOVELRPRTAG    #HRTAG                          CFT002
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C           *IN60     ANDEQ*ON                                                           CSW209
+     C                     MOVELRPIMSQ    #HRSQ1                                              CSW209
+     C                     MOVELRPRMSQ    #HRSQ2                                              CSW209
+     C                     ENDIF                                                              CSW209
+     C*                                                                   CFT002
+     C                     ENDSR                                          CFT002
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #HPEND  Subroutine to end program processing                 *
+     C*                                                               *
+     C*      Called by     Main Processing                            *
+     C*      Calls         Nothing                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #HPEND    BEGSR
+     C*
+     C** Write the footer with checks for the printer overflow and
+     C** checks for no details to report
+     C*
+     C           *IN20     IFEQ '1'
+     C           *IN10     OREQ '0'
+     C                     WRITEHEADER
+     C                     MOVE '0'       *IN20
+     C                     END
+     C                     WRITEFOOTER
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ    5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR   Subroutine to handle abnormal error conditions       *
+     C*                                                               *
+     C*       Called by    #HINIT                                     *
+     C*       Calls        Nothing                                    *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+** CPY@   **      Object Copyright
+(c) Misys International Banking Systems Ltd. 2001

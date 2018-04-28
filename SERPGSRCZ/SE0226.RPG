@@ -1,0 +1,2245 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trades and depot movements by security')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE0226 - Trades and Depot Movements by Security              *
+     F*                                                               *
+     F*  Function:  This program displays, for a requested Security,  *
+     F****(I/C)*****all*the*Trades*and*Depot*Movements*since*the*******    CSE041
+     F**************Trades*Retention*Period.**Details*given*are:*******    CSE041
+     F*   (I/C)     all the Trades, DVP/RVP and Depot Movements since *    CSE041
+     F*             the Trades Retention Period.  Details given are:  *    CSE041
+     F*             Trade and Value date of transactions; Purchase or *
+     F*             Sale; Branch; Book; Nominal and Trade Price; and  *
+     F*             additionally depot-in/depot-out amounts for Depot *
+     F*             Movements.  The Countervalue is shown in the      *
+     F*             Settlement currency.                              *
+     F*             Trades and Depot Movements can be selected for a  *
+     F*             specific Book and if in a Multi-branching environ-*
+     F*             ment, for a specified Branch.  Trades, DVP/RVP    *
+     F*             and Depot Movements are shown in Reverse Value    *
+     F*             Date order. Each option available from this enqui-*
+     F*             ry is held as a record on PF/SECOND - Linked      *
+     F*             Enquiry Control file with fields: Calling Program,*
+     F*             Option Selected, Called Program.                  *
+     F*                                                               *
+     F*  Calls:     F6 may be taken to call SE0240 - Security Report  *
+     F*             Name Enquiry.                                     *
+     F*             Additionally, options may be entered against a    *
+     F**************trade*to*call:                                    *    CSE041
+     F*             trade, Depot or DVP/RVP movement to call:         *    CSE041
+     F*             1) SE0245 - Security Details Enquiry              *
+     F*             2) SE0250 - Trade Details Enquiry.                *
+     F*             3) SEDPMVSIN - Depot Movements Enquiry            *    CSE041
+     F*             4) SEC025 - Movement Status Enquiry               *    CSE039
+     F*                                                               *
+     F*  Called By: SEC04 - CL Component to Control SE Enquiries      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 234300             Date 29Sep06               *
+      *  Prev Amend No. 159957             Date 06Jun06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 214953             Date 11Apr03               *
+      *                 211746             Date 12Nov02               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      *                 208241             Date 21Aug02               *
+      *                 180056             Date 18Oct00               *
+      *                 CSE039             Date 18Mar03               *
+      *                 CSE041             Date 11Mar03               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 09Nov01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 158448             Date 14Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CSE010             Date 21Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 139575             Date 27Apr99               *
+      *                 CAC005             Date 07Dec98               *
+      *                 130862             Date 18Oct98               *
+      *                 151945             DATE 06Jan99               *
+     F*                 135343             DATE 20MAY98               *
+     F*                 CEU017             Date 03Avr98               *
+     F*                 CSE007             Date 18AUG97               *
+     F*                 119153             DATE 23FEB98               *
+     F*                 CSE005             DATE 04FEB97               *
+     F*                 101773             DATE 10APR96               *
+     F*                 101772             DATE 10APR96               *
+     F*                 101771             DATE 10APR96               *
+     F*                 100228             DATE 30MAY96               *
+     F*                 100017             DATE 17APR96               *
+     F*                 092961             DATE 04OCT95               *
+     F*                 088896             DATE 22JUN95               *
+     F*                 086491             DATE 15JUN95               *
+     F*                 S01515 *CREATE     DATE 10AUG94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  159957 - Details are not being returned in LDA when          *
+      *           database error occurs when scrolling down.
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  214953 - Not able to enquire on depot movement details. Fix  *
+      *           is to call new pgm SE0071 when option '2' is entered*
+      *           against a WI/WO record transaction.                 *
+      *  211746 - retrieve complet record from SDCUSTPD (via AOCUSTR1)*
+      *           to avoid data base error if customer is closed      *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  180056 - Recompiled over changed in ZDYYRZ3.                 *
+     F*  CSE049 - Auto-Settlement of Trades                           *
+     F*           Include processing for option 4                     *
+     F*  CSE041 - DVP/RVP Processing                                  *
+     F*           Include outstanding DVP/RVP movements               *
+      *  206316 - Recompiled over changed ZLCDZ1.                     *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           (recompilation due to change to ZNCD/ZLCD)          *
+      *  180707 - No Position Settlements generated. Recompile over   *
+      *           changes in /COPY ZNCDZ3.                            *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+      *  158448 - When selecting a specific book for a security, a    *
+      *           diff book was also reflected when rollup is done.   *
+      *  CSE015 - Forward Valued Depot Movement                       *
+      *  CSE017 - Cum/Ex Indicator on Depot Movement (Recompile)      *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+      *  CSE010 - SE Transaction Enhancement                          *
+     F*  139575 - Cannot access further information screens Security  *
+     F*           Details and Trade Details using option 1 and 2      *
+     F*           respectively.                                       *
+      *  CAC005 - PCA-SE Enhancement.                                 *
+     F*  130862 - Recompiled over ZLCDZ1 & ZDAYSZ2 changes.           *
+     F*  151945 - Recompiled Over changed ZDYYRZ3 .                   *
+     F*  135343 - AS COUNTERVALUE AMOUNT IS IN SETTLEMENT CURRENCY,   *
+     F*           USE CORRESPONDING DECIMAL PLACES FOR EDITING        *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*  CSE007 - Corporate Actions                                   *
+     F*  119153 - Remove lock on LDA in SR FIRST to avoid problem     *
+     F*           in calling of SE0245.                               *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  101773 - db error in SDCUSTPD for incomp./grey market trades *
+     F*  101772 - Deleted trades and depot movements should not appear*
+     F*  101771 - Wrong countervalue for depot movements              *
+     F*  100228 - ADD STANDARD SR ZLCDZ1.                             *
+     F*           RECOMPILE OVER CHANGED ZDYYRZ3, ZLCDZ1 & ZNCDZ3.    *
+     F*  100017 - Position settlement unable to pick up day adj. on   *
+     F*           SECTYD. Change subroutine to use DADJN to stop      *
+     F*           interest day adjustment being used for amortisation.*
+     F*           Recompile over amended subroutine ZDAYS.            *
+     F*  092961 - Recompile over ZDAYSZ2 which was amended by 086491  *
+     F*           (Wrong number of days calculated for day basis 1    *
+     F*           when start or end day is last day of February)      *
+     F*  088896 - Correct trade price not shown for depot movements   *
+     F*  086491 - Wrong nbr of days calculated for day basis 1        *
+     F*           when start or end day is last day of February       *
+     F*           Recompiled for ZSRSRC/ZDAYSZ2 changes.              *
+     F*  S01515 - Trade/Customer Trades by Security Enquiries         *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSE0226DFCF  E                    WORKSTN      KINFDS SCRDS
+     F                                        SFLRECKSFILE SE0226S0
+     FTRADSDL3IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     F*INVTO***IF**E********   K        DISK                              101771
+     FSECOND  IF  E           K        DISK
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01         RETURN TO PREVIOUS PROGRAM                       *
+     F*                OR ERROR ON CALL TO AOBANKR0                   *
+     F*   02         CLEAR SUBFILE                                    *
+     F*   03         NO DETAILS INDICATOR                             *
+     F*   04         DISPLAY MESSAGE - NO DETAILS TO DISPLAY          *
+     F*   05         DETAILS COMPLETE FOR THIS SECURITY               *
+     F*   06         ROLLUP PAST END OF FILE - DISPLAY MESSAGE        *
+     F*   07         IN MULTIBRANCH MODE                              *
+     F*                                                               *
+     F*   10         VLDCMDKY INDICATOR FOR DISPLAY FILE              *
+     F*                                                               *
+     F*   20         ROLLUP                                           *
+     F*   21         HELP                                             *
+     F*                                                               *
+     F*   25         CHAIN FAIL ON ANY FILE                           *
+     F*   40         END OF FILE ON SUBFILE READ                      *
+     F*   41         REVERSE IMAGE SECURITY SHORTNAME FIELD           *
+     F*   42         DISPLAY ERROR MESSAGE                            *
+     F*   43         SECURITY SHORTNAME INVALID                       *
+     F*   44         BOOK INVALID                                     *
+     F*   45         BRANCH INVALID                                   *
+     F*   60         SEDVPRPD RECORD READ                             *   CSE041
+     F*   61         TRADSD RECORD READ                               *
+     F*   62         HSTTRD RECORD READ                               *
+     F*   63         DPTMVD RECORD READ                               *
+     F*   64         DISPLAY/NON DISPLAY CORPORATE ACTIONS FLAG       *   CSE007
+     F*                                                               *
+     F*   79         RESTRICTED FUNCTION INDICATOR FOR RESTRICTED     *
+     F*              LINKED ENQUORY                                   *
+     F*   80         END OF FILE ON TRADSDL3 OR END OF SUBFILE PAGE   *
+     F*   81         END OF FILE ON TRADSDL3 OR END OF SUBFILE PAGE   *
+     F*   82         WORK INDICATOR FOR SETTING SFLEND                *
+     F*   88         SUBFILE READ FAIL                                *
+     F*   87         END OF FILE ON TRADSDL3 OR END OF SUBFILE PAGE   *
+     F*   89         END OF FILE ON TRADSDL3 OR END OF SUBFILE PAGE   *
+     F*                                                               *
+     F*   90 - 99    WORK INDICATOR - STD SUBROUTINES                 *
+     F*                                                               *
+     F*   U7         WITH U8 FOR DATABASE ERROR                       *
+     F*   U8         WITH U7 FOR DATABASE ERROR                       *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ASCHGS  -  MOVES VALUES INTO AID - AS400 CONVERSION          *
+     F*  COMMD   -  PROCESS COMMAND KEYS, HELP AND ROLLUP/DOWN        *
+     F*  OPTION  -  CHECK VALIDITY OF ENTERED OPTION COMBINATIONS     *
+     F*  SECIN   -  PROCESS ENTERED SECURITY NAME                     *
+     F*  CLEAR   -  CLEAR FIELDS AND INDICATORS ON DISPLAY SCREEN     *
+     F*  ROLLUP  -  HANDLE ROLLUP                                     *
+     F*  DISP    -  ACCUMULATE DETAILS FOR DISPLAY                    *
+     F*  SUBFIL  -  WRITE ACCUMULATED DETAILS TO SUBFILE              *
+     F*  LINK    -  PROCESS REQUEST FOR LOWER LEVEL ENQUIRY           *
+     F*  RETSR   -  END OF PROGRAM PROCESSING                         *
+     F*  *PSSR   -  ERROR HANDLING                                    *
+     F*  FIRST   -  FIRST CYCLE PROCESSING                            *
+     F*  CHKSEL  -  CHECK FOR QUESTION MARKS.                         *
+     F*                                                               *
+     F*  ZCNSD   -  CALCULATE NOMINAL x PRICE                         *   101771
+     F*  ZCONV   -  CONVERT AMOUNT FROM ONE CURRENCY TO ANOTHER       *
+     F*  ZDATE1  -  DATE FORMATTER                                    *
+     F*  ZDATE2  -  DATE FORMATTER                                    *
+     F*  ZSDESC  -  FORMAT SECURITY REPORT DESCRIPTION FOR DISPLAY    *
+     F*  ZSEDIT  -  EDIT FIELDS FOR OUTPUT                            *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E********            MSG     1  14 79               Error Messages              CSE041
+     E********            MSG     1  16 79               Error Messages              CSE041 CSE039
+     E                    MSG     1  17 79               Error Messages              CSE039
+     E/COPY ZSRSRC,ZSDESCZ1
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZPOWERZ1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZPOWER8Z1                                              101771
+     I/EJECT
+     ITRADSDF     61
+     I*
+     IHSTTRDF     62
+     I** Rename fields used on DPTMVD to look like TRADSD & HSTTRD
+     I*
+     IDPTMVDF     63
+     I              DPBA                            TDBA
+     I              DPBN                            TCNR
+     I              DPSS                            TDSS
+     I              DPRN                            TDRF
+     I              DPNA                            NOML
+     I              MKTP                            PRIC
+     I              DPMV                            TDTP
+     I              DPBK                            TDBK
+     I              ORED                            TDDT
+     I              DPVD                            TDVD
+      ** Rename fields used on SEDVPRPD to look like TRADSD & HSTTRD                CSE041
+      *                                                                             CSE041
+     ISEDVPRD0    60                                                                CSE041
+     I              DVRECI                          RECI                            CSE041
+     I              DVBRCA                          TDBA                            CSE041
+     I              DVCNUM                          TCNR                            CSE041
+     I              DVSESN                          TDSS                            CSE041
+     I              DVREF                           TDRF                            CSE041
+     I              DVNOML                          NOML                            CSE041
+     I              DVPRIC                          PRIC                            CSE041
+     I              DVTYPE                          TDTP                            CSE041
+     I              DVBOOK                          TDBK                            CSE041
+     I              DVTDAT                          TDDT                            CSE041
+     I              DVVDAT                          TDVD                            CSE041
+     I*
+     ICPYR@#      DS
+     I** Data structure for compilation  - copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZSDESCZ2
+     I/COPY ZSRSRC,ZNCDZ2
+     I            DS
+     I                                        1  17 STPDY
+     I                                       17  17 SPERC
+     I*
+     ILDA         DS                            256
+     I*
+     I** Local data area for database error details
+     I** *LOCK IN LDA immediately before and OUT LDA immediately
+     I** after each database error handling.
+     I*
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** Link enquiry data area
+     ISESDS     E DS
+     IPSDS       SDS
+     I                                        1  10 PROGRM
+     I                                      244 246 WSID
+     ISCRDS       DS
+     I                                      287 288 AID
+     IRUNDT       DS
+     I** RUNDAT data area
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     IZMUSER      DS                             17
+     I** Menu user data area
+     I*
+     I                                       11  13 DFTBRC
+     I                                       17  17 BANKAU
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+     I*
+     ISDBOOK    E DSSDBOOKPD
+     I** Book Details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I** Branch Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** Currency Details
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+     I** Customer Details
+     I*
+     ISDSTRD    E DSSDSTRDPD
+     I** Securities Trading Data
+     I*
+     ISDGELR    E DSSDGELRPD
+     I              QQPLAC                          QQPLA1                                    CGL029
+     I** General Ledger Details
+     I*
+     IDSFDY     E DSDSFDY
+     I** Short data structure for access programs (200 long)
+     I*
+     IDSSDY     E DSDSSDY
+     I** Long data structure for access programs (800 long)
+     I*
+     IDSLDY     E DSDSLDY                                                                     211746
+     I** Very long data structure for access programs (2000 long)                             211746
+      *                                                                                       211746
+     I              'SEDPMVSIN'           C         DPPGM                           CSE041
+      ** Program name for Depot Movements API                                       CSE041
+      *                                                                             CSE041
+     I              'SEMVTSSIN'           C         MVPGM                           CSE039
+      ** Program name for Movement Status Enquiry                                   CSE039
+      *                                                                             CSE039
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C           *NAMVAR   DEFN           SESDS
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Define other like fields
+     C*
+     C           *LIKE     DEFN TDSS      ZZTDSS
+     C           *LIKE     DEFN TDBK      ZZTDBK
+     C           *LIKE     DEFN TDBA      ZZTDBA
+     C*
+     C** Do first cycle processing
+     C*
+     C                     MOVE '1'       *IN70                           158448
+     C                     EXSR FIRST
+     C*
+     C** Main processing - Do until end of job requested
+     C*
+     C           *IN01     DOWEQ'0'
+     C*
+     C** Display the screen
+     C*
+     C                     WRITESE0226F0
+     C                     EXFMTSE0226C0
+     C*
+     C           SSTDBK    IFNE CHTDBK                                    158448
+     C                     MOVE '1'       *IN70                           158448
+     C                     MOVE SSTDBK    CHTDBK  2
+     C                     END                                            158448
+     C************         MOVE *BLANKS   SSTDBK                          158448
+     C*
+     C** Check for '?' prompt and re-display until no more '?' found
+     C*
+     C                     EXSR CHKSEL
+     C           @SEL      IFEQ 'N'
+     C*
+     C** Call S/R to move values into AID
+     C*
+     C                     EXSR ASCHGS
+     C*
+     C** Clear the error messages unless HELP pressed
+     C*
+     C           AID       IFNE 'HP'
+     C                     MOVE *BLANKS   ERMSG  79
+     C                     MOVE '0'       *IN41
+     C                     MOVE '0'       *IN42
+     C                     MOVE '0'       *IN45
+     C                     END
+     C*
+     C** Check Command Keys
+     C*
+     C                     EXSR COMMD
+     C*
+     C** If Enter has been pressed check validity of options
+     C*
+     C           AID       IFEQ 'RA'
+     C*
+     C** Check Validity of Option Combinations
+     C*
+     C                     EXSR OPTION
+     C*
+     C           *IN42     IFEQ '0'
+     C*
+     C** Check if no lower level option selected
+     C*
+     C           SSTDSS    IFNE *BLANKS
+     C                     EXSR SECIN
+     C                     END
+     C*
+     C** Lower Level Enquiry Selected
+     C*
+     C           OPTN      IFNE *BLANK
+     C                     EXSR LINK
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C                     MOVE '0'       *IN70                           158448
+     C                     END
+     C*
+     C*================================================================
+     C*  Return to calling program                                    *
+     C*                                                               *
+     C                     EXSR RETSR
+     C*                                                               *
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    COMMD   SR   To process Command Keys                      *
+     C**                 ROLLUP and ROLLDOWN                          *
+     C**                                                              *
+     C**    Called  By   MAIN                                         *
+     C**    Calls   SR   ROLLUP, CLEAR, SECIN                         *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           COMMD     BEGSR                           ** COMMD **
+     C*
+     C** If Rollup key pressed
+     C*
+     C           AID       IFEQ 'UP'
+     C                     EXSR ROLLUP
+     C                     END
+     C*
+     C** If F3 then exit to menu - return code 1 and end
+     C*
+     C           AID       IFEQ '01'
+     C                     MOVE '1'       RTNC
+     C                     MOVE '1'       *IN01
+     C                     END
+     C*
+     C** If F12 then return to previous enquiry - return code 2
+     C** unless there is no previous enquiry
+     C*
+     C           AID       IFEQ '02'
+     C           ORIG      IFNE PGMNO
+     C                     MOVE '2'       RTNC
+     C                     MOVE '1'       *IN01
+     C                     ELSE
+     C                     MOVE '1'       *IN42
+     C                     MOVE MSG,7     ERMSG
+     C                     END
+     C                     END
+     C*
+     C** If F5 then refresh enquiry screen
+     C*
+     C           AID       IFEQ '05'
+     C                     EXSR CLEAR
+     C                     END
+     C*
+     C** If F6 then call Customer Shortname Enquiry
+     C**   in sideways mode
+     C**   on return check return code
+     C**   if 0 then Database Error and exit required
+     C**   if 1 then F3 and exit to menu required
+     C**   otherwise retrieve security shortname
+     C*
+     C           AID       IFEQ '06'
+     C                     MOVE *BLANKS   ERMSG  79
+     C                     SETOF                     404142
+     C                     MOVE '6'       RTNC
+     C                     OUT  SESDS
+     C                     CALL 'SE0240'
+     C           *LOCK     IN   SESDS
+     C           RTNC      IFEQ '0'
+     C           RTNC      OREQ '1'
+     C                     MOVE '1'       *IN01
+     C                     ELSE
+     C                     EXSR CLEAR
+     C                     MOVELRQSESN    SSTDSS
+     C                     MOVE *BLANKS   RQSESN
+      *                                                                   CAC005
+      ** If CAC005 is on, retrieve user book from AOBKPCR0.               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C           RQBOOK    ANDNE*BLANKS                                   CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD                           CAC005
+     C                     PARM '*USER  ' POPTN                           CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD                          CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC                          CAC005
+     C                     PARM RQBOOK    PMPSBK                          CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVE PMBKCD    CHTDBK                          CAC005
+     C                     MOVE PMBKCD    SSTDBK                          CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+     C           RQBOOK    IFNE *BLANKS
+     C                     MOVE RQBOOK    CHTDBK
+     C                     MOVE RQBOOK    SSTDBK
+     C                     END
+     C                     MOVE *BLANKS   RQBOOK
+     C                     END
+     C                     END
+     C*
+     C** If F9 then return to initial enquiry - return code 7
+     C** unless this is the initial program
+     C*
+     C           AID       IFEQ '07'
+     C           ORIG      IFNE PGMNO
+     C                     MOVE '7'       RTNC
+     C                     MOVE '1'       *IN01
+     C                     ELSE
+     C                     MOVE '1'       *IN42
+     C                     MOVE MSG,7     ERMSG
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*            ****** AS400 CONVERSION ******                     *
+     C*                                                               *
+     C*  ASCHGS S/R TO MOVE THE APPROPRIATE VALUES INTO FIELD AID,    *
+     C*  DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.            *
+     C*  CALLED FROM UPDATE                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ASCHGS    BEGSR
+     C*
+     C** If ENTER pressed, the VLDCMDKEY indicator will be off
+     C*
+     C           *IN10     IFEQ '0'
+     C                     MOVE 'RA'      AID
+     C                     END
+     C*
+     C** If F3
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE '01'      AID
+     C                     MOVE '0'       *INKC
+     C                     END
+     C*
+     C** If F5
+     C*
+     C           *INKE     IFEQ '1'
+     C                     MOVE '05'      AID
+     C                     MOVE '0'       *INKE
+     C                     END
+     C*
+     C** If F6
+     C*
+     C           *INKF     IFEQ '1'
+     C                     MOVE '06'      AID
+     C                     MOVE '0'       *INKF
+     C                     END
+     C*
+     C** If F9
+     C*
+     C           *INKI     IFEQ '1'
+     C                     MOVE '07'      AID
+     C                     MOVE '0'       *INKI
+     C                     END
+     C*
+     C** If F12
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE '02'      AID
+     C                     MOVE '0'       *INKL
+     C                     END
+     C*
+     C** If ROLLUP pressed
+     C*
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'UP'      AID
+     C                     MOVE '0'       *IN20
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    ROLLUP SR  When Rollup key is pressed load next page unless*
+     C*               last page already displayed when error message  *
+     C*                                                               *
+     C*    Called by  COMMD                                           *
+     C*    Calls  SR  DISP                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ROLLUP    BEGSR                           ** ROLLUP **
+     C*
+     C** If details Complete then Rollup is beyond last record
+     C*
+     C           *IN05     IFEQ '1'
+     C                     MOVE '1'       *IN06
+     C                     MOVE '0'       *IN70                           158448
+     C*
+     C                     ELSE
+     C*
+     C** Load next page of subfile
+     C*
+     C                     MOVE '1'       *IN70                           158448
+     C                     Z-ADDTOP       SFLREC
+     C                     EXSR DISP
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    OPTION SR  To check validity of option combinations        *
+     C*                                                               *
+     C*    Called by  MAIN                                            *
+     C*    Calls  SR  none                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           OPTION    BEGSR                            ** OPTION *
+     C*
+     C                     MOVE *BLANKS   OPTN
+     C*
+     C** If no subfile records the only possible entry is security
+     C*
+     C           *IN03     IFEQ '1'
+     C*
+     C           SSTDSS    IFEQ *BLANKS
+     C           *IN79     ANDEQ'0'
+     C                     MOVE '1'       *IN42
+     C                     MOVE MSG,2     ERMSG
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C                     READCSE0226S0                 40
+     C*
+     C** Check if any entry made
+     C**  If program has been called as a Restricted Linked Enquiry
+     C**  then option 2(Trade Details) is the only valid option
+     C**  When no entry made error message reflects this
+     C*
+     C           *IN40     IFEQ '1'
+     C           SSTDSS    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN42
+     C  N79                MOVE MSG,8     ERMSG
+     C           CSE041    IFEQ 'N'                                                 CSE041
+     C   79                MOVE MSG,10    ERMSG
+     C                     ELSE                                                     CSE041
+     C   79                MOVE MSG,16    ERMSG                                     CSE041
+     C                     ENDIF                                                    CSE041
+     C                     END
+     C*
+     C** Check if both Security Shortname and option entered
+     C*
+     C           *IN40     IFEQ '0'
+     C           SSTDSS    ANDNE*BLANKS
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN41
+     C                     MOVE MSG,3     ERMSG
+     C                     END
+     C*
+     C** Check if more than one option entered
+     C*
+     C           *IN40     IFEQ '0'
+     C                     MOVE SELECT    OPTN
+     C                     MOVELSTDRF     RQTDRF
+     C                     MOVE *BLANK    SELECT
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     MOVE *OFF      *IN64                           CSE007
+     C           DDCOAF    IFEQ 'Y'                                       CSE007
+     C                     MOVE *ON       *IN64                           CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     UPDATSE0226S0
+     C*
+     C** Check if Trades enquiry selected for Depot movement
+     C*
+     C/COPY WNCPYSRC,SE0226C003
+     C           OPTN      IFEQ ' 2'
+     C           STYPE     IFEQ 'WI '
+     C           CSE039    ANDEQ'N'                                                 CSE039
+     C           CSE041    ANDEQ'N'                                                 CSE041
+     C           STYPE     OREQ 'WO '
+     C           CSE039    ANDEQ'N'                                                 CSE039
+     C           CSE041    ANDEQ'N'                                                 CSE041
+     C           STYPE     OREQ 'DT '
+     C           STYPE     OREQ 'BL '
+     C           STYPE     OREQ 'BB '
+     C           STYPE     OREQ 'RP '
+     C           STYPE     OREQ 'RR '
+     C           STYPE     IFEQ 'WI '                                                         214953
+     C           STYPE     OREQ 'WO '                                                         214953
+     C                     MOVE '22'      OPTN                                                214953
+     C                     ELSE                                                               214953
+     C                     MOVE MSG,14    ERMSG
+     C                     SETON                     42
+     C                     ENDIF                                                              214953
+     C/COPY WNCPYSRC,SE0226C004
+     C                     END
+     C                     END
+     C*
+     C           *IN40     DOUEQ'1'
+     C                     READCSE0226S0                 40
+     C           *IN40     IFEQ '0'
+     C                     MOVE *BLANK    SELECT
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     MOVE *OFF      *IN64                           CSE007
+     C           DDCOAF    IFEQ 'Y'                                       CSE007
+     C                     MOVE *ON       *IN64                           CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+     C                     UPDATSE0226S0
+     C                     MOVE '1'       *IN42
+     C                     MOVE MSG,4     ERMSG
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    SECIN  SR  To process entered Security name                *
+     C*                                                               *
+     C*    Called by  MAIN, FIRST                                     *
+     C*    Calls  SR  SETUP                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SECIN     BEGSR                            ** SECIN  *
+     C                     SETOF                     434445
+     C*
+     C** Access security record -
+     C** error if not on file or deleted
+     C*
+     C           SSTDSS    CHAINSECTY                25
+     C           *IN25     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     25
+     C                     END
+     C                     END
+     C           *IN25     IFEQ '1'
+     C                     SETON                     414243
+     C                     MOVE MSG,6     ERMSG
+     C                     GOTO ESECIN
+     C                     END
+     C*
+     C** If book entered - Access Book record -
+     C*
+     C           CHTDBK    IFNE *BLANKS
+     C*
+     C** Access book details file SDBOOKPD via access object program
+     C*
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CHTDBK    @BKCD   2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     414244
+     C                     MOVE MSG,9     ERMSG
+     C                     GOTO ESECIN
+     C                     END
+     C                     END
+     C*
+     C** If multibranch environment -
+     C*
+     C           *IN07     IFEQ '1'
+     C*
+     C** If branch code entered, check branch is valid
+     C*
+     C           SSTDBA    IFNE 'ALL'
+     C*
+     C** If branch is left blank, use default user's branch
+     C*
+     C           SSTDBA    IFEQ *BLANKS
+     C                     MOVE DFTBRC    SSTDBA
+     C                     END
+     C*
+     C** Access branch codes file SDBRCHPD via access program
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SSTDBA    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     4245
+     C                     MOVE MSG,1     ERMSG
+     C                     GOTO ESECIN
+     C                     END
+     C*
+     C** Check user is authorised to valid branch
+     C*
+     C                     CALL 'ZVBBU'
+     C                     PARM SSTDBA    @ZBR    3
+     C                     PARM           @ERR    10
+     C           @ERR      IFEQ 1
+     C                     SETON                     4245
+     C                     MOVE MSG,11    ERMSG
+     C                     GOTO ESECIN
+     C                     END
+     C           @ERR      IFEQ 2
+     C                     SETON                     4245
+     C                     MOVE MSG,12    ERMSG
+     C                     GOTO ESECIN
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** 'ALL' Entered, check user Authority to Bank level
+     C*
+     C           BANKAU    IFNE 'Y'
+     C                     SETON                     4245
+     C                     MOVE MSG,13    ERMSG
+     C                     GOTO ESECIN
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** else system is not multi-branched use default user's branch
+     C*
+     C                     MOVE DFTBRC    SSTDBA
+     C                     END
+     C*
+     C** All fields valid - prepare to display details -
+     C*
+     C                     EXSR SETUP
+     C*
+     C           ESECIN    TAG                             ** ESECIN TAG**
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    DISP   SR  Accumulate details for screen display           *
+     C*                                                               *
+     C*    Called by  SETUP, ROLLUP                                   *
+     C*    Calls  SR  SUBFIL                                          *
+      *             SRPSBK - Convert Pseudo Book to User Book         *   CAC005
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DISP      BEGSR                           *** DISP ***
+     C*
+     C                     Z-ADD0         OUTREC  10
+     C                     SETOF                     8789
+     C                     SETOF                     616263
+     C                     MOVE *OFF      *IN60                           CSE041
+     C*
+     C** Read TRADSL3
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C           *IN81     IFEQ '0'
+     C                     SETOF                     616263
+     C                     MOVE *OFF      *IN60                           CSE041
+     C           ZZTDSS    READETRADSDL3                 81
+     C                     ELSE
+     C                     SETON                     89
+     C                     END
+     C*
+     C** Successful file read of an active record
+     C*
+     C                     EXSR SRPSBK                                    CAC005
+     C                     MOVE TDBK      CTDBK   2
+     C           CHTDBK    IFEQ *BLANKS
+     C                     MOVE *BLANKS   CTDBK
+     C                     END
+     C*
+     C           *IN81     IFEQ '0'
+     C           RECI      IFNE '*'
+     C           RECI      ANDNE'C'
+     C           RECI      ANDNE'R'                                       101772
+     C           CTDBK     ANDEQCHTDBK
+     C*
+     C** If correct security, branch and book, output the record
+     C*
+     C           TDSS      IFNE ZZTDSS
+     C                     SETON                     8981
+     C                     ELSE
+     C           ZZTDBA    IFNE 'ALL'
+     C           TDBA      ANDNEZZTDBA
+     C                     ELSE
+      *                                                                   CSE007
+      **  Display Corporate Action Flag if trade has been generated       CSE007
+      **  from a Corporate Action                                         CSE007
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     MOVE 'N'       DDCOAF                          CSE007
+     C                     MOVE *OFF      *IN64                           CSE007
+     C           COAF      IFEQ 'Y'                                       CSE007
+     C           *IN60     ANDEQ'0'                                       CSE041
+     C                     MOVE 'Y'       DDCOAF                          CSE007
+     C                     MOVE *ON       *IN64                           CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+     C                     EXSR SUBFIL
+     C                     ADD  1         OUTREC
+     C           OUTREC    IFEQ 7
+     C                     MOVE '1'       *IN89
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C***********          MOVE *BLANKS   CHTDBK                          158448
+     C*
+     C** Condition Display of message if no details for security
+     C*
+     C           SFLREC    IFEQ 0
+     C                     MOVE '1'       *IN04
+     C                     ELSE
+     C*
+     C** If records written - read next to check there are more
+     C*
+     C                     SETOF                     82
+     C           OUTREC    IFEQ 7
+     C           *IN05     ANDEQ'0'
+     C*
+     C           *IN81     IFEQ '0'
+     C           READNT    TAG                             ** READNT    **
+     C                     SETOF                     616263
+     C                     MOVE *OFF      *IN60                           CSE041
+     C*
+     C** Read Trades by Sec/Reverse Trade Date File for more records
+     C*
+     C           ZZTDSS    READETRADSDL3                 81
+     C           *IN81     IFEQ '0'
+      *                                                                   CSE007
+      **  Display Corporate Action Flag if trade has been generated       CSE007
+      **  from a Corporate Action                                         CSE007
+     C           CSE007    IFEQ 'Y'                                       CSE007
+     C           CEU017    OREQ 'Y'                                       CEU017
+     C                     MOVE 'N'       DDCOAF                          CSE007
+     C                     MOVE *OFF      *IN64                           CSE007
+     C           COAF      IFEQ 'Y'                                       CSE007
+     C           *IN60     ANDEQ'0'                                       CSE041
+     C                     MOVE 'Y'       DDCOAF                          CSE007
+     C                     MOVE *ON       *IN64                           CSE007
+     C                     ENDIF                                          CSE007
+     C                     ENDIF                                          CSE007
+      *                                                                   CSE007
+     C           RECI      IFNE '*'
+     C           RECI      ANDNE'C'
+     C           RECI      ANDNE'R'                                       101772
+     C           TDSS      IFEQ ZZTDSS
+     C           ZZTDBA    IFNE 'ALL'
+     C           TDBA      ANDNEZZTDBA
+     C                     GOTO READNT
+     C                     ELSE
+     C                     EXSR SRPSBK                                    CAC005
+     C           ZZTDBK    IFNE *BLANKS
+     C           TDBK      ANDNEZZTDBK
+     C                     GOTO READNT
+     C                     ELSE
+     C                     SETON                     82
+     C                     SETOF                     616263
+     C                     MOVE *OFF      *IN60                          CSE041
+     C                     READPTRADSDL3                 81
+     C                     END
+     C                     END
+     C                     ELSE
+     C                     SETON                     81
+     C                     END
+     C                     ELSE
+     C                     GOTO READNT
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN82     IFEQ '0'
+     C                     SETON                     05
+     C                     END
+     C                     MOVE '0'       *IN03
+     C                     END
+     C                     Z-ADDSFLREC    TOP
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    CLEAR  SR  Clear the screen display fields and indicators  *
+     C*                                                               *
+     C*    Called by  COMMD, SECIN                                    *
+     C*    Calls  SR  none                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CLEAR     BEGSR
+     C*
+     C** Setup fields and indicators to clear subfile
+     C*
+     C           *IN70     IFEQ '0'                                       158448
+     C                     MOVE *BLANKS   SSTDSS
+     C                     MOVE *BLANKS   SSTDBK
+     C                     END                                            158448
+     C                     MOVE *BLANKS   SSTDBA
+     C                     MOVE *BLANKS   SBRCA
+     C                     MOVE *BLANKS   SSESN
+     C                     MOVE *BLANKS   SSESN
+     C                     MOVE *BLANKS   SDESC
+     C                     MOVE *BLANKS   SNMCY
+     C*
+     C                     Z-ADD0         SFLREC  40
+     C                     Z-ADD0         TOP     40
+     C*
+     C                     SETON                       03
+     C                     SETOF                     800405
+     C                     SETOF                     818789
+     C                     SETOF                     434445
+     C/COPY WNCPYSRC,SE0226C007
+     C*
+     C** Clear the subfile
+     C*
+     C                     SETON                       02
+     C                     WRITESE0226C0
+     C                     SETOF                       02
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    SETUP  SR  To prepare for Screen Display                   *
+     C*                                                               *
+     C*    Called by  SECIN                                           *
+     C*    Calls  SR  CLEAR, DISP, ZSDESC                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SETUP     BEGSR                           ** SETUP **
+     C*
+     C                     MOVE SSTDSS    ZZTDSS
+     C                     MOVE CHTDBK    ZZTDBK
+     C                     MOVE SSTDBA    ZZTDBA
+     C*
+     C** Clear the Screen
+     C*
+     C                     EXSR CLEAR
+     C*
+     C** Move Security Details to output fields
+     C** (call ZSDESC to get description)
+     C*
+     C                     MOVE SESN      SSESN
+     C                     MOVE ZZTDBA    SBRCA
+     C                     MOVE NMCY      SNMCY
+     C                     MOVE *BLANKS   ZSFN1
+     C                     MOVE *BLANKS   ZSFN2
+     C                     MOVE SRPN      ZSRPN
+     C                     MOVE BVRIDF    ZRSFD
+     C                     EXSR ZSDESC
+     C                     MOVE ZRNME     SDESC
+     C/COPY WNCPYSRC,SE0226C008
+     C*
+     C** Position TRADSL3 at start of required security
+     C*
+     C           ZZTDSS    SETLLTRADSDL3
+     C*
+     C** Get details for display
+     C*
+     C                     EXSR DISP
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    SUBFIL SR  Write details to Subfile                        *
+     C*                                                               *
+     C*    Called by  DISP                                            *
+     C*    Calls  SR  RETSR, ZDATE2, ZSEDIT, ZPRCO, ZEVCD, ZNCD, ZCONV*
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SUBFIL    BEGSR                           ** SUBFIL **
+     C*
+     C                     MOVE TDBK      STDBK
+     C*
+     C** Format trade date
+     C*
+     C           CSE015    IFEQ 'Y'                                       CSE015
+     C           TDTP      ANDEQ'WI'                                      CSE015
+     C           CSE015    OREQ 'Y'                                       CSE015
+     C           TDTP      ANDEQ'WO'                                      CSE015
+     C                     Z-ADDDMTD      ZDAYNO                          CSE015
+     C                     ELSE                                           CSE015
+     C                     Z-ADDTDDT      ZDAYNO
+     C                     ENDIF                                          CSE015
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    STDDT
+     C*
+     C** Format value date
+     C*
+     C                     Z-ADDTDVD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    STDVD
+     C*                                                                   101771
+     C*  Access security if not already read, to find decimal places etc  101771
+     C*                                                                   101771
+     C           TDSS      IFNE SESN                                      101771
+     C           TDSS      CHAINSECTY                25                   101771
+     C           *IN25     IFEQ '0'                                       101771
+     C           RECI      IFEQ '*'                                       101771
+     C                     SETON                     25                   101771
+     C                     END                                            101771
+     C                     END                                            101771
+     C           *IN25     IFEQ '1'                                       101771
+     C           *LOCK     IN   LDA                                       101771
+     C                     MOVE '1'       *INU7                           101771
+     C                     MOVE 'SECTY'   DBFILE           ***************101771
+     C                     MOVELTDSS      DBKEY            ** DB ERROR 14 101771
+     C                     Z-ADD14        DBASE            ***************101771
+     C                     OUT  LDA                                       101771
+     C                     EXSR *PSSR                                     101771
+     C                     MOVE '0'       RTNC                            101771
+     C                     EXSR RETSR                                     101771
+     C                     END                                            101771
+     C                     END                                            101771
+     C*
+     C** Format nominal
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE NOML      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDTNMD      ZDECS
+     C           *IN63     IFEQ '1'
+     C                     Z-ADDNMDP      ZDECS
+     C                     END
+     C           *IN60     IFEQ '1'                                                 CSE041
+     C                     Z-ADDDVNMDP    ZDECS                                     CSE041
+     C                     ENDIF                                                    CSE041
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SNOML
+     C*
+     C***If*processing*type*'7',*nominal*must*consdier*the*decimal        101771
+     C***places*of*the*security*to*obtain*the*countervalue*********       101771
+     C***********                                                         101771
+     C************IN63     IFEQ '1'                                       101771
+     C***********SITP      CHAININVTO                90                   101771
+     C***********PROT      IFEQ '7'                                       101771
+     C***********NOML      DIV  10000     NOML                            101771
+     C***********          END                                            101771
+     C***********          END                                            101771
+     C*
+     C** Format trade price
+     C** For a depot movement, use market price in DPTMVD for trade price 088896
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C           *IN63     IFEQ '1'                                       088896
+     C           *IN60     OREQ '1'                                       CSE041
+     C                     MOVE PRIC      ZFLD15                          088896
+     C                     ELSE                                           088896
+     C                     MOVE TPDY      ZFLD15
+     C                     ENDIF                                          088896
+     C                     MOVE 'L'       ZECODE
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STPDY
+     C           SPBS      IFEQ 'P'
+     C                     MOVE '%'       SPERC
+     C                     ELSE
+     C                     MOVE ' '       SPERC
+     C                     END
+     C*
+     C** Format settlement currency
+     C**   If a trade or historic trade use setl ccy
+     C**   If a depot movement use nominal ccy on SECTY
+     C*
+     C           *IN61     IFEQ '1'
+     C           *IN62     OREQ '1'
+     C                     MOVE SETC      SSETC
+     C                     END
+     C           *IN60     IFEQ '1'                                                 CSE041
+     C                     MOVE DVSETC    SSETC                                     CSE041
+     C                     ENDIF                                                    CSE041
+     C           *IN63     IFEQ '1'
+     C                     MOVE NMCY      SSETC
+     C                     END
+     C*
+     C** If a trade or historic trade go to TAG01 to do special
+     C** countervalue processing
+     C*
+     C           *IN63     IFEQ '0'
+     C           *IN60     ANDEQ'0'                        CSE041
+     C                     GOTO TAG01
+     C                     END
+      *                                                                             CSE041
+      ** Calculate countervalue for Depot Movements                                 CSE041
+      *                                                                             CSE041
+     C           *IN63     IFEQ *ON                                                 CSE041
+     C*
+     C** Access AOCURRR0 to get the no. of dec places for nominal ccy
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM NMCY      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     MOVELNMCY      DBKEY            ** DB ERROR 05
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE '0'       RTNC
+     C                     EXSR RETSR
+     C                     ELSE
+     C*
+     C***So,*for*a*depot*movement,*just*multiply*nominal*by*price******   101771
+     C***to*obtain*countervalue:*********************************         101771
+     C***********                                                         101771
+     C***********NOML      MULT PRIC      ZAMTCI                          101771
+     C***********                                                         101771
+     C***********A6NBDP    IFEQ 0                                         101771
+     C***********ZAMTCI    DIV  100       ZAMTCI                          101771
+     C***********          END                                            101771
+     C***********                                                         101771
+     C***********SPBS      IFEQ 'U'                                       101771
+     C***********ZAMTCI    MULT 100       ZAMTCI                          101771
+     C***********          END                                            101771
+     C***********                                                         101771
+     C***If*repo*and*number*of*decimal*places*is*0,*divide*countervalue** 101771
+     C***by*100************                                               101771
+     C***********                                                         101771
+     C***********TDTP      IFEQ 'RR'                                      101771
+     C***********TDTP      OREQ 'RP'                                      101771
+     C***********NMDP      IFEQ 0                                         101771
+     C***********ZAMTCI    DIV  100       ZAMTCI                          101771
+     C***********          END                                            101771
+     C***********          END                                            101771
+     C*                                                                   101771
+     C* For depot movements, calculate countervalue via SR/ZCNSD          101771
+     C*                                                                   101771
+     C                     Z-ADDNOML      ZNOML                           101771
+     C                     Z-ADDPRIC      ZPRC                            101771
+     C                     Z-ADDA6NBDP    ZCDP                            101771
+     C                     EXSR ZCNSD                                     101771
+     C                     MOVE *BLANKS   ZFLD15
+     C**********           MOVE ZAMTCI    ZFLD15                          101771
+     C                     MOVE ZCONS     ZFLD15                          101771
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STCTR
+     C                     GOTO TAG02
+     C                     END
+     C                     ELSE                                                     CSE041
+      *                                                                             CSE041
+      ** Calculate Countervalue for DVP/RVP Movements                               CSE041
+      *                                                                             CSE041
+     C           *IN60     IFEQ *ON                                                 CSE041
+      *                                                                             CSE041
+      ** Access AOCURRR0 to get the no. of dec places for SET ccy                   CSE041
+      *                                                                             CSE041
+     C                     CALL 'AOCURRR0'                                          CSE041
+     C                     PARM '*DBERR'  @RTCD                                     CSE041
+     C                     PARM '*KEY   ' @OPTN                                     CSE041
+     C                     PARM DVSETC    @AJCD   3                                 CSE041
+     C           SDCURR    PARM SDCURR    DSSDY                                     CSE041
+     C           @RTCD     IFNE *BLANKS                                             CSE041
+     C                     MOVE '1'       *INU7                                     CSE041
+     C                     MOVE '1'       *INU8                                     CSE041
+     C                     MOVE 'SDCURRPD'DBFILE           ***************          CSE041
+     C                     MOVELDVSETC    DBKEY            ** DB ERROR 18           CSE041
+     C                     Z-ADD18        DBASE            ***************          CSE041
+     C                     MOVE '0'       RTNC                                      CSE041
+     C                     EXSR RETSR                                               CSE041
+     C                     ELSE                                                     CSE041
+     C                     MOVE *BLANKS   ZFLD15                                    CSE041
+     C                     MOVE DVSCVL    ZFLD15                                    CSE041
+     C                     MOVE 'J'       ZECODE                                    CSE041
+     C                     Z-ADDA6NBDP    ZDECS                                     CSE041
+     C                     EXSR ZSEDIT                                              CSE041
+     C                     MOVE ZOUT21    STCTR                                     CSE041
+     C                     GOTO TAG02                                               CSE041
+     C                     ENDIF                                                    CSE041
+     C                     ENDIF                                                    CSE041
+     C                     ENDIF                                                    CSE041
+      *                                                                             CSE041
+     C           TAG01     TAG                               **  TAG01  **
+     C*
+     C** Format countervalue  -
+     C** convert from nominal to settlement currency using ZCONV
+     C** Use Currencies File access object to fetch decimal places
+     C** for nominal currency, used in ZCONV
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM TNMC      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C                     MOVE A6NBDP    ZCDPI
+     C*
+     C** Use Currencies File access object to fetch decimal places
+     C** for settlement currency, used in ZCONV
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM SETC      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C                     MOVE A6NBDP    ZCDPO
+     C                     MOVE TNMC      ZCCYI
+     C                     MOVE SETC      ZCCYO
+     C                     MOVE TMDI      ZMD
+     C                     Z-ADDTDER      ZEXCH
+     C                     Z-ADDTCTR      ZAMTCI
+     C                     EXSR ZCONV
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE ZAMTCO    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C**********           Z-ADDZCDPI     ZDECS                           135343
+     C                     Z-ADDZCDPO     ZDECS                           135343
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STCTR
+     C           TAG02     TAG                               **  TAG02  **
+     C*
+     C** Format trade reference
+     C*
+     C                     MOVE TDRF      STDRF
+     C*
+     C** Format trade type
+     C*
+     C           TDTP      IFEQ 'TP'
+     C                     MOVE 'PUR'     STYPE
+     C                     ELSE
+     C           TDTP      IFEQ 'TS'
+     C                     MOVE 'SAL'     STYPE
+     C                     ELSE
+     C                     MOVE *BLANKS   STYPE
+     C                     MOVELTDTP      STYPE
+     C                     END
+     C                     END
+     C*
+     C** Format book
+     C*
+     C                     MOVE TDBK      STDBK
+     C*
+     C** Format customer name and town
+     C** Access customer details file SDCUSTPD via access object pgm
+     C*
+     C                     MOVELTCNR      @CKEY  10
+     C                     Z-ADD4         DBASE
+     C                     EXSR CHNCLT
+     C           @RTCD     IFEQ *BLANKS                                   101773
+     C                     MOVE TCNR      SCUST
+     C                     MOVE BBCSSN    SSHNM
+     C*EML                 MOVE BBCRNM    SCRNM
+     C                     MOVE BBCRTN    SCTWN
+     C                     ELSE                                           101773
+     C                     MOVE *BLANKS   SSHNM                           101773
+     C                     MOVE *BLANKS   SCTWN                           101773
+     C                     END                                            101773
+     C*
+     C** Set up depot-in & depot-out display fields with appropriate
+     C** customer short-names :
+     C*
+     C                     MOVE *BLANKS   SDPIN
+     C                     MOVE *BLANKS   SDPOUT
+     C*
+     C** If a trade purchase and deliver to field does not contain
+     C** a customer number, skip depot-in/depot-out processing:
+     C*
+     C           TDTP      IFEQ 'TP'
+     C********** DELT      ANDEQ*ZEROS                                                        CSD027
+     C           DELT      ANDEQ*BLANKS                                                       CSD027
+     C                     GOTO TAG03
+     C                     END
+     C*
+     C** If a trade sale and deliver from field does not contain
+     C** a customer number, skip depot-in/depot-out processing:
+     C*
+     C           TDTP      IFEQ 'TS'
+     C********** DELF      ANDEQ*ZEROS                                                        CSD027
+     C           DELF      ANDEQ*BLANKS                                                       CSD027
+     C                     GOTO TAG03
+     C                     END
+     C*
+     C** If a trade purchase, set up SDPIN with deliver to CUST
+     C*
+     C           TDTP      IFEQ 'TP'
+     C                     MOVELDELT      @CKEY
+     C                     Z-ADD6         DBASE
+     C                     EXSR CHNCLT
+     C           @RTCD     IFEQ *BLANKS                                   101773
+     C                     MOVE BBCSSN    SDPIN
+     C                     ELSE                                           101773
+     C                     MOVE *BLANKS   SDPIN                           101773
+     C                     END                                            101773
+     C                     ELSE
+     C*
+     C** If a trade sale, set up SDPOUT with deliver form CUST
+     C*
+     C           TDTP      IFEQ 'TS'
+     C                     MOVELDELF      @CKEY
+     C                     Z-ADD7         DBASE
+     C           @RTCD     IFEQ *BLANKS                                   101773
+     C                     EXSR CHNCLT
+     C                     MOVE BBCSSN    SDPOUT
+     C                     ELSE                                           101773
+     C                     MOVE *BLANKS   SDPOUT                          101773
+     C                     END                                            101773
+     C                     ELSE
+     C*
+     C** If a walk-in depot mov set up SDPIN with depot-in cust
+     C*
+     C           TDTP      IFEQ 'WI'
+     C                     MOVELDPID      @CKEY
+     C                     Z-ADD8         DBASE
+     C                     EXSR CHNCLT
+     C                     MOVE BBCSSN    SDPIN
+     C                     ELSE
+     C*
+     C** If a depot transfer set up SDPIN with depot-in custo
+     C*
+     C           TDTP      IFEQ 'DT'
+     C                     MOVELDPID      @CKEY
+     C                     Z-ADD9         DBASE
+     C                     EXSR CHNCLT
+     C                     MOVE BBCSSN    SDPIN
+     C                     MOVELDPOD      @CKEY
+     C                     Z-ADD13        DBASE
+     C                     EXSR CHNCLT
+     C                     MOVE BBCSSN    SDPOUT
+     C                     ELSE
+     C*
+     C** If a walk-out dep mov set up SDPOUT with depot-out cust
+     C*
+     C           TDTP      IFEQ 'WO'
+     C                     MOVELDPOD      @CKEY
+     C                     Z-ADD10        DBASE
+     C                     EXSR CHNCLT
+     C                     MOVE BBCSSN    SDPOUT
+     C                     ELSE
+      *                                                                              CSE041
+      ** If the rec is a 'RV' movement, set SDPIN to Our Depot                       CSE041
+      *                                                                              CSE041
+     C           TDTP      IFEQ 'RV'                                                 CSE041
+     C                     MOVELDVOUDP    @CKEY                                      CSE041
+     C                     Z-ADD16        DBASE                                      CSE041
+     C                     EXSR CHNCLT                                               CSE041
+     C                     MOVE BBCSSN    SDPIN                                      CSE041
+     C                     ELSE                                                      CSE041
+      *                                                                              CSE041
+      ** If the rec is a 'DP' movement, set SDPOUT to Our Depot                      CSE041
+      *                                                                              CSE041
+     C           TDTP      IFEQ 'DP'                                                 CSE041
+     C                     MOVELDVOUDP    @CKEY                                      CSE041
+     C                     Z-ADD17        DBASE                                      CSE041
+     C                     EXSR CHNCLT                                               CSE041
+     C                     MOVE BBCSSN    SDPOUT                                     CSE041
+     C                     ELSE                                                      CSE041
+     C*
+     C** If the rec is a BL,BB,RP OR RR depot movement, then both SDPIN
+     C** & SDPOUT must be set up with DPID & DPOD respectively:
+     C*
+     C                     MOVELDPID      @CKEY
+     C                     Z-ADD11        DBASE
+     C                     EXSR CHNCLT
+     C                     MOVE BBCSSN    SDPIN
+     C                     MOVELDPOD      @CKEY
+     C                     Z-ADD12        DBASE
+     C                     EXSR CHNCLT
+     C                     MOVE BBCSSN    SDPOUT
+     C                     END                                                       CSE041
+     C                     END                                                       CSE041
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           TAG03     TAG                               **  TAG03  **
+     C*
+     C** And output details to subfile
+     C*
+     C                     ADD  1         SFLREC
+     C                     WRITESE0226S0
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*    CHNCLT SR  Access AOCUSTRO for customer details
+     C*
+     C*    Called by  SUBFIL
+     C*
+     C*    Calls  SR  none
+     C*
+     C*****************************************************************
+     C*
+     C           CHNCLT    BEGSR                           *** CHNCLT  ***
+      *                                                    211746
+     C                     CALL 'AOCUSTR1'                 211746
+     C                     PARM 'BLANKS  '@RTCD            211746
+     C                     PARM '*KEY    '@OPTN            211746
+     C                     PARM           @CKEY            211746
+     C                     PARM *BLANKS   @KYST   7        211746
+     C           SDCUST    PARM SDCUST    DSLDY            211746
+     C****                                                 211746
+     C****                 CALL 'AOCUSTR0'                 211746
+     C****                 PARM *BLANKS   @RTCD   7        211746
+     C****                 PARM '*KEY   ' @OPTN   7        211746
+     C****                 PARM           @CKEY            211746
+     C****                 PARM *BLANKS   @KYST   7        211746
+     C****       SDCUST    PARM SDCUST    DSSDY            211746
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     IFEQ '*NRF   '                  211746
+     C           BBCLST    ANDEQ'Y'                        211746
+     C                     ELSE                            211746
+     C           *IN63     IFEQ '1'                                       101773
+     C           *IN63     OREQ '0'                                       101773
+     C           TINC      ANDEQ'C'                                       101773
+     C           TDMI      ANDNE'G'                                       101773
+     C                     Z-ADDDBASE     DBASEX  30                      159957
+     C           *LOCK     IN   LDA                                       159957
+     C           *LOCK     IN   SESDS                                     159957
+     C                     SETON                     U7U8
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     MOVEL@CKEY     DBKEY            ** DB ERROR 06*
+     C                     Z-ADDDBASEX    DBASE                           159957
+     C                     MOVEL'SE0226'  DBPGM                           159957
+     C                     OUT  LDA                                       159957
+     C                     EXSR *PSSR                                     159957
+     C                     MOVE '0'       RTNC             ** 07,08,09,10*
+     C                     EXSR RETSR                      ** 11 OR 12   *
+     C                     END                             ***************
+     C                     END                             211746
+     C                     END                                            101773
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    LINK   SR  Lower level Enquiry requested                   *
+     C*                                                               *
+     C*    Called by  MAIN                                            *
+     C*    Calls  SR  none                                            *
+     C*    Calls PGM  lower level enquiry obtained from SECOND        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LINK      BEGSR                           *** LINK ******
+     C*
+     C** Access Linked Enquiry Control File for program and option
+     C*
+     C           LKEY      KLIST
+     C                     KFLD           PGMNO
+     C                     KFLD           OPTN
+     C*
+     C                     MOVELOPTN      WOPTN   1                                           214953
+     C           WOPTN     IFEQ *BLANK                                                        214953
+     C                     MOVEL'0'       OPTN                            139575
+     C                     ENDIF                                                              214953
+     C           LKEY      CHAINSECONDF              42
+     C*
+     C** If record not found then entered option is invalid
+     C** If program has been called as a Restricted Linked Enquiry
+     C** then option 2(Trade Details) is the only valid option
+     C*
+     C           *IN79     IFEQ '1'
+     C***********OPTN      ANDNE' 2'                                      139575
+     C           OPTN      ANDNE'02'                                      139575
+     C                     SETON                     42
+     C                     END
+     C*
+     C           *IN42     IFEQ '1'
+     C           OPTN      ANDNE'04'                                      CSE039
+     C*                                                                   CSE041
+     C           CSE041    IFEQ 'N'                                       CSE041
+     C           CSE039    IFEQ 'N'                                       CSE039
+     C  N79                MOVE MSG,5     ERMSG
+     C                     ELSE                                           CSE039
+     C  N79                MOVE MSG,17    ERMSG                           CSE039
+     C                     ENDIF                                          CSE039
+     C   79                MOVE MSG,10    ERMSG
+     C                     ELSE                                           CSE041
+     C           CSE039    IFEQ 'N'                                       CSE039
+     C  N79                MOVE MSG,15    ERMSG                           CSE041
+     C                     ELSE                                           CSE039
+     C                     MOVE MSG,17    ERMSG                           CSE039
+     C                     ENDIF                                          CSE039
+     C   79                MOVE MSG,16    ERMSG                           CSE041
+     C                     ENDIF                                          CSE041
+     C*
+     C                     ELSE
+     C*
+     C** For valid option write out LDA and linked enquiry data area
+     C** and call the program name obtained from SECOND
+     C*
+     C                     MOVE SSESN     RQSESN
+     C                     OUT  SESDS
+      *                                                                   CSE039
+     C           OPTN      IFEQ '02'                                      CSE039
+      *                                                                   CSE041
+      ** If transaction is a WI/WO or DVP/RVP movement,                   CSE041
+      ** call their respectives APIs.                                     CSE041
+      *                                                                   CSE041
+     C                     SELEC                                          CSE041
+     C           STYPE     WHEQ 'WI'                                      CSE041
+     C           STYPE     OREQ 'WO'                                      CSE041
+     C                     MOVE *BLANKS   INTRNO                          CSE041
+     C                     MOVE STDRF     INTRNO  6                       CSE041
+     C                     CALL DPPGM                                     CSE041
+     C                     PARM STYPE     @TYPE   2                       CSE041
+     C                     PARM           @SETY  10                       CSE041
+     C                     PARM INTRNO    @TRNO   6                       CSE041
+     C                     PARM           @RTCD   7                       CSE041
+     C                     PARM 'SE0226'  @CALL  10                       CSE041
+     C           @RTCD     IFEQ 'Y2U9999'                                 CSE041
+     C                     MOVE *ON       *IN01                           CSE041
+     C                     ENDIF                                          CSE041
+      *                                                                   CSE041
+     C           STYPE     WHEQ 'RV'                                      CSE041
+     C           STYPE     WHEQ 'DP'                                      CSE041
+     C                     OTHER                                          CSE041
+     C                     CALL TPGM
+     C                     ENDSL                                          CSE041
+      *                                                                   CSE039
+     C                     ELSE                                           CSE039
+      *                                                                   CSE039
+     C           OPTN      IFEQ '04'                                      CSE039
+     C           STYPE     IFEQ 'WI'                                      CSE039
+     C           STYPE     OREQ 'WO'                                      CSE039
+     C           STYPE     OREQ 'PUR'                                     CSE039
+     C           STYPE     OREQ 'SAL'                                     CSE039
+     C           STYPE     OREQ 'RV'                                      CSE039
+     C           STYPE     OREQ 'DP'                                      CSE039
+      *                                                                   CSE039
+     C                     MOVE *OFF      *IN42                           CSE039
+     C                     SELEC                                          CSE039
+     C           STYPE     WHEQ 'WI'                                      CSE039
+     C           STYPE     OREQ 'WO'                                      CSE039
+     C                     MOVEL'W'       OPTYPE  1                       CSE039
+     C           STYPE     WHEQ 'RV'                                      CSE039
+     C           STYPE     OREQ 'DP'                                      CSE039
+     C                     MOVEL'D'       OPTYPE                          CSE039
+     C                     OTHER                                          CSE039
+     C                     MOVEL'T'       OPTYPE                          CSE039
+     C                     ENDSL                                          CSE039
+      *                                                                   CSE039
+     C                     MOVE *BLANKS   INTRNO                          CSE039
+     C                     MOVE STDRF     INTRNO                          CSE039
+     C                     CALL 'SEC025'                                  CSE039
+     C                     PARM MVPGM     PPROG  10                       CSE039
+     C                     PARM INTRNO    PTRNO   6                       CSE039
+     C                     PARM OPTYPE    PTTYP   1                       CSE039
+     C                     PARM 'E'       PMODE   1                       CSE039
+     C                     PARM           PEXIT   1                       CSE039
+     C                     PARM           PPREV   1                       CSE039
+      *                                                                   CSE039
+     C           PEXIT     IFEQ '1'                                       CSE039
+     C                     MOVE *ON       *IN01                           CSE039
+     C                     ENDIF                                          CSE039
+     C                     ELSE                                           CSE039
+     C                     MOVE MSG,14    ERMSG                           CSE039
+     C                     ENDIF                                          CSE039
+     C                     ENDIF                                          CSE039
+     C                     ENDIF                                          CSE039
+      *                                                                   CSE039
+     C           OPTN      IFEQ '01'                                      CSE039
+     C                     CALL TPGM                                      CSE039
+     C                     ENDIF                                          CSE039
+     C           *LOCK     IN   SESDS
+     C*
+     C** On return from lower level check return code
+     C*
+     C** If 0 (Database Error) or 1 (F3 to return to menu)
+     C** then exit to calling program
+     C*
+     C           RTNC      IFEQ '0'
+     C           RTNC      OREQ '1'
+     C                     MOVE '1'       *IN01
+     C                     END
+     C*
+     C** If Return code is 7 (F9 to return to inital enquiry)
+     C**   then check if this is the inital enquiry
+     C**   and if not return to calling program
+     C*
+     C           RTNC      IFEQ '7'
+     C           ORIG      ANDNEPGMNO
+     C                     MOVE '1'       *IN01
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    RETSR  SR  End of Program Processing                       *
+     C*               Write out LDA and linked enquiry data area      *
+     C*               and return to the calling program               *
+     C*                                                               *
+     C*    Called by  MAIN, FIRST, DISP                               *
+     C*    Calls  SR  none                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RETSR     BEGSR                           *** RETSR   ***
+     C*
+     C                     OUT  SESDS
+     C/COPY WNCPYSRC,SE0226C005
+     C***********          OUT  LDA                                       119153
+     C/COPY WNCPYSRC,SE0226C006
+     C*
+     C                     SETON                     LR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    FIRST  SR  First Cycle Processing                          *
+     C*                                                               *
+     C*    Called by  MAIN                                            *
+     C*    Calls  SR  RETSR, SECIN, OPTION                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+      *                                                                   CAC005
+      ***  Check if CAC005 - PCA-SE Enhancement is on.                    CAC005
+      *                                                                   CAC005
+     C                     MOVE 'N'       CAC005  1                       CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   @RTCD   7                       CAC005
+     C                     PARM '*VERIFY' @OPTN   7                       CAC005
+     C                     PARM 'CAC005'  @SARD   6                       CAC005
+      *                                                                   CAC005
+     C           @RTCD     IFEQ *BLANK                                    CAC005
+     C                     MOVE 'Y'       CAC005                          CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C** Access the LDA  and  Linked Enquiry Data Area
+     C*
+     C           *LOCK     IN   LDA
+     C           *LOCK     IN   SESDS
+     C                     MOVE RQBOOK    CHTDBK
+      *                                                                   CAC005
+      ** If CAC005 is on, retrieve user book from AOBKPCR0.               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C           RQBOOK    ANDNE*BLANKS                                   CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD   7                       CAC005
+     C                     PARM '*USER  ' POPTN   7                       CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD  2                       CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC  4                       CAC005
+     C                     PARM RQBOOK    PMPSBK  2                       CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVE PMBKCD    CHTDBK                          CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+     C                     OUT  LDA                                       119153
+     C*
+     C** Read in RUNDAT data area
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** Check system date format, DDMMYY or MMDDYY.
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+     C** Read in ZMUSER data area
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C/COPY WNCPYSRC,SE0226C001
+      *                                                                   CSE010
+      ** Check is CSE010 is installed                                     CSE010
+      *                                                                   CSE010
+     C                     MOVE 'N'       CSE010  1                       CSE010
+     C                     CALL 'AOSARDR0'                                CSE010
+     C                     PARM *BLANKS   PRTCD   7                       CSE010
+     C                     PARM '*VERIFY' POPTN   7                       CSE010
+     C                     PARM 'CSE010'  PSARD   6                       CSE010
+      *                                                                   CSE010
+     C           PRTCD     IFEQ *BLANK                                    CSE010
+     C                     MOVE 'Y'       CSE010                          CSE010
+     C                     ELSE                                           CSE010
+      *                                                                   CSE010
+      ** Database Error (return code other than *NRF)                     CSE010
+      *                                                                   CSE010
+     C           PRTCD     IFNE '*NRF   '                                 CSE010
+     C           *LOCK     IN   LDA                                       CSE010
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CSE010
+     C                     MOVEL'*VERIFY' DBKEY            * DBERR 15 *   CSE010
+     C                     Z-ADD15        DBASE            ************   CSE010
+     C                     OUT  LDA                                       CSE010
+     C                     MOVE *ON       *INU7                           CSE010
+     C                     MOVE *ON       *INU8                           CSE010
+     C                     MOVE *ON       *INLR                           CSE010
+     C                     EXSR *PSSR                                     CSE010
+     C                     ENDIF                                          CSE010
+     C                     ENDIF                                          CSE010
+     C*
+      **  Access SAR details file for Corporate Action Installation       CSE007
+     C                     MOVE 'N'       CSE007  1                       CSE007
+     C                     CALL 'AOSARDR0'                                CSE007
+     C                     PARM '       ' @RTCD                           CSE007
+     C                     PARM '*VERIFY' @OPTN                           CSE007
+     C                     PARM 'CSE007'  WSARD   6                       CSE007
+      *                                                                   CSE007
+     C           @RTCD     IFEQ *BLANK                                    CSE007
+     C                     MOVE 'Y'       CSE007                          CSE007
+     C                     END                                            CSE007
+      *                                                                   CSE007
+      **  Access SAR details file for Securities Redenomination           CEU017
+      **  is installed                                                    CEU017
+      *                                                                   CEU017
+     C                     MOVE 'N'       CEU017  1                       CEU017
+     C                     CALL 'AOSARDR0'                                CEU017
+     C                     PARM '       ' @RTCD                           CEU017
+     C                     PARM '*VERIFY' @OPTN                           CEU017
+     C                     PARM 'CEU017'  WSARD   6                       CEU017
+      *                                                                   CEU017
+     C           @RTCD     IFEQ *BLANK                                    CEU017
+     C                     MOVE 'Y'       CEU017                          CEU017
+     C                     ENDIF                                          CEU017
+      *                                                                   CEU017
+      **  Access SAR details file if Forward Valued Depot Movement        CSE015
+      **  is installed                                                    CSE015
+      *                                                                   CSE015
+     C                     MOVE 'N'       CSE015  1                       CSE015
+     C                     CALL 'AOSARDR0'                                CSE015
+     C                     PARM '       ' @RTCD                           CSE015
+     C                     PARM '*VERIFY' @OPTN                           CSE015
+     C                     PARM 'CSE015'  WSARD   6                       CSE015
+      *                                                                   CSE015
+     C           @RTCD     IFEQ *BLANK                                    CSE015
+     C                     MOVE 'Y'       CSE015                          CSE015
+     C                     ELSE                                           CSE015
+      *                                                                   CSE015
+      ** Database Error (return code other than *NRF)                     CSE015
+      *                                                                   CSE015
+     C           @RTCD     IFNE '*NRF   '                                 CSE015
+     C           *LOCK     IN   LDA                                       CSE015
+     C                     MOVEL'SCSARDPD'DBFILE                          CSE015
+     C                     MOVEL'CSE015'  DBKEY                           CSE015
+     C                     Z-ADD15        DBASE                           CSE015
+     C                     OUT  LDA                                       CSE015
+     C                     MOVE *ON       *INU7                           CSE015
+     C                     MOVE *ON       *INU8                           CSE015
+     C                     MOVE *ON       *INLR                           CSE015
+     C                     EXSR *PSSR                                     CSE015
+     C                     ENDIF                                          CSE015
+     C                     ENDIF                                          CSE015
+      *                                                                   CSE015
+      ** Check if CSE041 is installed                                     CSE041
+      *                                                                   CSE041
+     C                     CALL 'AOSARDR0'                                CSE041
+     C                     PARM *BLANKS   PRTCD                           CSE041
+     C                     PARM '*VERIFY' POPTN                           CSE041
+     C                     PARM 'CSE041'  PSARD                           CSE041
+      *                                                                   CSE041
+     C           PRTCD     IFEQ *BLANK                                    CSE041
+     C                     MOVE 'Y'       CSE041  1                       CSE041
+     C                     ELSE                                           CSE041
+     C                     MOVE 'N'       CSE041                          CSE041
+     C                     ENDIF                                          CSE041
+      *                                                                   CSE039
+      ** Check if CSE039 is installed                                     CSE039
+      *                                                                   CSE039
+     C                     CALL 'AOSARDR0'                                CSE039
+     C                     PARM *BLANKS   PRTCD                           CSE039
+     C                     PARM '*VERIFY' POPTN                           CSE039
+     C                     PARM 'CSE039'  PSARD                           CSE039
+      *                                                                   CSE039
+     C           PRTCD     IFEQ *BLANK                                    CSE039
+     C                     MOVE 'Y'       CSE039  1                       CSE039
+     C                     ELSE                                           CSE039
+     C                     MOVE 'N'       CSE039                          CSE039
+     C                     ENDIF                                          CSE039
+      *                                                                   CSE039
+     C/COPY WNCPYSRC,SE0226C009
+     C** Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** Access Securities Trading details
+     C*
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+     C*
+     C** Determine if Multibranch (set *in07 on if so)
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     07
+     C                     ELSE
+     C                     SETOF                     07
+     C                     END
+     C*
+     C** If called as a Restricted Linked Enquiry set on indicator 79
+     C** for restricted functionality and conditioned screen display
+     C*
+     C           ENQFLG    IFEQ 'Y'
+     C                     SETON                     79
+     C                     END
+     C*
+     C** Access General Ledger Details for Accruals/Profit Date
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C** If no security shortname found in request data
+     C**   clear screen fields
+     C**   else - process from this record
+     C**          check via OPTION that it is valid first
+     C*
+     C                     EXSR CLEAR
+     C           RQSESN    IFNE *BLANKS
+     C*
+     C                     MOVELRQSESN    SSTDSS
+     C                     MOVE *BLANKS   RQSESN
+     C*
+     C           RQBOOK    IFNE *BLANKS
+     C                     MOVELRQBOOK    SSTDBK
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C           RQBOOK    ANDNE*BLANKS                                   CAC005
+     C                     MOVE PMBKCD    SSTDBK                          CAC005
+     C                     ENDIF                                          CAC005
+     C                     MOVE *BLANKS   RQBOOK
+     C                     END
+     C*
+     C           RQBRCA    IFNE *BLANKS
+     C                     MOVELRQBRCA    SSTDBA
+     C                     MOVE *BLANKS   RQBRCA
+     C                     END
+     C*
+     C                     EXSR OPTION
+     C           *IN42     IFEQ '0'
+     C                     EXSR SECIN
+     C                     END
+     C                     END
+     C*
+     C** Access program name - for help and linked enquiries
+     C*
+     C                     MOVELPROGRM    PGMNO   8
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CHKSEL - Subroutine to check for question marks.              *
+     C*                                                               *
+     C* Called by: MAIN                                               *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CHKSEL    BEGSR
+     C*
+     C** Reset error indicators
+     C*
+     C                     SETOF                     424445
+     C*
+     C                     MOVE 'N'       @SEL    1
+     C/COPY WNCPYSRC,SE0226C002
+      *                                                                   CSE010
+      ** If CSE010 is installed, and a '?' is found anywhere in the       CSE010
+      ** Security Shortname field                                         CSE010
+      *                                                                   CSE010
+     C           CSE010    IFEQ 'Y'                                       CSE010
+     C                     MOVELSSTDSS    WQMK    1                       CSE010
+     C           WQMK      IFEQ '?'                                       CSE010
+     C                     MOVE 'Y'       @SEL                            CSE010
+     C                     MOVE SSTDSS    @SESN                           CSE010
+     C                     CALL 'SE0043'                                  CSE010
+     C                     PARM           @ACTN   1                       CSE010
+     C                     PARM           @SESN  10                       CSE010
+      *                                                                   CSE010
+     C           @SESN     IFNE *BLANKS                                   CSE010
+     C                     MOVE @SESN     SSTDSS                          CSE010
+     C                     ELSE                                           CSE010
+     C                     MOVE *BLANKS   SSTDSS                          CSE010
+     C                     ENDIF                                          CSE010
+     C                     ENDIF                                          CSE010
+     C                     ENDIF                                          CSE010
+     C*
+     C                     MOVELSSTDBK    @STP    1
+     C           @STP      IFEQ '?'
+     C                     MOVE 'Y'       @SEL
+     C*
+     C** Access book details file SDBOOKPD via access object program
+     C*
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM '? '      @BKCD   2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+     C                     MOVE *BLANKS   SSTDBK
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE BDBKCD    SSTDBK
+     C                     END
+     C                     END
+     C*
+     C                     MOVELSSTDBA    @STP    1
+     C           @STP      IFEQ '?'
+     C                     MOVE 'Y'       @SEL
+     C*
+     C** Access branch details file SDBRCHPD via access object program
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM '?  '     @BRCD   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C                     MOVE *BLANKS   SSTDBA
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE A8BRCD    SSTDBA
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - Error control subroutine                            *
+     C*                                                               *
+     C*  Called by: RETSR + any error                                 *
+     C*  Calls:                                                       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT                                                              CAC005
+      *****************************************************************   CAC005
+      *                                                               *   CAC005
+      *            SRPSBK - Convert Pseudo Book to User Book          *   CAC005
+      *                                                               *   CAC005
+      * CALLS                                                         *   CAC005
+      *                                                               *   CAC005
+      * CALLED BY  DISP   - Accumulate Details for Screen Display     *   CAC005
+      *                                                               *   CAC005
+      * FLDS USED         -                                           *   CAC005
+      *                                                               *   CAC005
+      *****************************************************************   CAC005
+     C           SRPSBK    BEGSR                                          CAC005
+      *                                                                   CAC005
+      ** If CAC005 is on, retrieve user book from AOBKPCR0.               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C           TDBK      ANDNE*BLANKS                                   CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD                           CAC005
+     C                     PARM '*USER  ' POPTN                           CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD                          CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC                          CAC005
+     C                     PARM TDBK      PMPSBK                          CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVE PMBKCD    TDBK                            CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+     C                     ENDSR                                          CAC005
+      ********************************************************************CAC005
+     C/EJECT                                                              101771
+     C/COPY ZSRSRC,ZCNSDZ1                                                101771
+     C/EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+     C/EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+     C/EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+     C/EJECT
+     C/COPY ZSRSRC,ZLCDZ1                                                 100228
+      /EJECT                                                              100228
+     C/COPY ZSRSRC,ZSDESCZ3
+     C/EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   MSG  - ERROR MESSAGES
+INVALID BRANCH - PLEASE RE-ENTER
+ENTER A SECURITY SHORTNAME OR TAKE F/6 FOR SHORTNAME ENQUIRY
+INVALID ENTRY - BOTH SECURITY SHORTNAME AND OPTION ENTERED
+INVALID ENTRY - ONLY ONE OPTION MAY BE SELECTED
+INVALID OPTION - ENTER OPTION 1(SECURITY DETAILS) OR 2(TRADE DETAILS)
+INVALID SECURITY SHORTNAME - PLEASE RE-ENTER
+THIS IS THE INITIAL ENQUIRY - F/3 WILL EXIT TO MENU
+ENTER A SECURITY SHORTNAME OR SELECT AN OPTION
+INVALID BOOK - PLEASE RE-ENTER
+INVALID OPTION - ENTER OPTION 2(TRADE DETAILS)
+USER NOT AUTHORISED TO ANY BRANCHES
+USER NOT AUTHORISED TO BRANCH - PLEASE RE-ENTER
+BANK LEVEL AUTHORITY IS NEEDED FOR ALL BRANCHES
+OPTION NOT VALID FOR DEPOT MOVEMENT
+INVALID OPTION - ENTER OPTION 1(SECURITY DETAILS) OR 2(MOVEMENT DETAILS)
+INVALID OPTION - ENTER OPTION 2(MOVEMENT DETAILS)
+INVALID OPTION - ENTER OPTION 1(SE DETAILS) 2(MOVEM DETAILS) OR 4(MOVEM STATUS)
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001                                                                  101771
+00000010                                                                  101771
+00000100                                                                  101771
+00001000                                                                  101771
+00010000                                                                  101771
+00100000                                                                  101771
+01000000                                                                  101771
+10000000                                                                  101771

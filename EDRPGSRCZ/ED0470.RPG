@@ -1,0 +1,688 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED MM deals special processing (i/c)')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0470 -  MM Deals Special Processing - Input Cycle          *
+      *                                                               *
+      *  Function: This program is one of the 'Special Processing     *
+      *            programs' that are called when the Drip Feed       *
+      *            process encounters a journal entry from a certain  *
+      *            file.                                              *
+      *                                                               *
+      *  Called By: ED0060 - Extract Journal entries within comit     *
+      *                                                               *
+      *  Calls:     *NONE                                             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER048             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 06Jul06               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 193909             Date 31May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU003             Date 05Nov97               *
+      *                 124473             Date 22Oct97               *
+      *                 CED007             Date 28Aug97               *
+      *                 CED004   *CREATE   DATE 05JUN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL014 - Collaterals Processing                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  193909 - This program can not compile due the fields REPI    *
+      *           AUTH FCGC FCGD FCGA & FCGT defined twice            *
+      *  CEU003 - EMU Dealing Settlement Ccy Conversion               *
+      *  124473 - Repo deal gives database error 008 in ED0060        *
+      *  CED007 - Midas ED Enhancements for GIB Repos                 *
+      *  CED004 - ED Special Processing Program                       *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDNEWJL4UF  E           K        DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDNEWJD4
+      * New journal entries by journal sequence
+      *
+     FEDOLDJL4UF  E           K        DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDOLDJD4
+      * Old journal entries by journal sequence
+      *
+     FEDJRNEPDO   E                    DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDJRNED1
+      *                                                                   CED007
+     FEDDEAML1IF  E           K        DISK         KINFSR *PSSR          CED007
+      * ED MM Deal Amendments                                             CED007
+      *
+     FEDBFRJPDIF  E           K        DISK         KINFSR *PSSR      UC  CED007
+     F            QJORDJE                           KRENAMEEDBFRJD1       CED007
+      * Journal Entries by sequence no.                                   CED007
+      *                                                                   CED007
+      *****************************************************************
+      /TITLE FUNCTION OF INCICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01  -  EoF EDNEWJL4 or EDOLDJL4                            *
+      *****40**-**Access*to*Facilities*files***************************   CED007
+      *    41  -  Call fail on QCMDEXC command                        *   CED007
+      *    42  -  EoF PF/EDBFRJPD                                     *   CED007
+      *    43  -  EoF LF/EDDEAML1                                     *   CED007
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  PROCES - Perform Detail Processing                           *
+      *  WRITE  - Write a EDJRNEPD record                             *
+      *  EXTRA  - Write a EDJRNEPD record and extra amendment records *   CED007
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E                    DATA1     125  1
+     E                    DATA2    3971  1
+     E                    D2        838  1                                CED007
+     I/TITLE I-SPECIFICATIONS
+      *-----------------------------------------------------------        CED007
+     IDEAMSDIF                                                            CED007
+      ** MM Deals amendments                                              CED007
+     I              RECI                            RECI2                 CED007
+     I              DLNO                            DLNO2                 CED007
+     I              VDAT                            VDAT2                 CED007
+     I              DASN                            DASN2                 CED007
+     I              DTYP                            DTYP2                 CED007
+     I              DLST                            DLST2                 CED007
+     I              BRTT                            BRTT2                 CED007
+     I              RTSP                            RTSP2                 CED007
+     I              CCY                             CCY2                  CED007
+     I              CNUM                            CNUM2                 CED007
+     I              FACO                            FACO2                 CED007
+     I              SPI                             SPI2                  CED007
+     I              BRCA                            BRCA2                 CED007
+     I              LSWC                            LSWC2                 CED007
+     I              ORED                            ORED2                 CED007
+     I              LCD                             LCD2                  CED007
+     I              CHTP                            CHTP2                 CED007
+     I              TNLU                            TNLU2                 CED007
+     I              RSTM                            RSTM2                 CED007
+     I              RONS                            RONS2                 CED007
+     I              RIBN                            RIBN2                 CED007
+     I              RIBA                            RIBA2                 CED007
+     I              ROBN                            ROBN2                 CED007
+     I              ROCN                            ROCN2                 CED007
+     I              PSTM                            PSTM2                 CED007
+     I              PONS                            PONS2                 CED007
+     I              PIBN                            PIBN2                 CED007
+     I              PIBA                            PIBA2                 CED007
+     I              POBN                            POBN2                 CED007
+     I              POCN                            POCN2                 CED007
+     I              RCRN                            RCRN2                 CED007
+     I              RCRA                            RCRA2                 CED007
+     I              RVNO                            RVNO2                 CED007
+     I              AWBN                            AWBN2                 CED007
+     I              AWBA                            AWBA2                 CED007
+     I              BENN                            BENN2                 CED007
+     I              BENA                            BENA2                 CED007
+     I              DTP1                            DTP12                 CED007
+     I              DTP2                            DTP22                 CED007
+     I              DTP3                            DTP32                 CED007
+     I              DTP4                            DTP42                 CED007
+     I              DCHG                            DCHG2                 CED007
+     I              BTB1                            BTB12                 CED007
+     I              BTB2                            BTB22                 CED007
+     I              BTB3                            BTB32                 CED007
+     I              BTB4                            BTB42                 CED007
+     I              BTB5                            BTB52                 CED007
+     I              BTB6                            BTB62                 CED007
+     I              CVMR                            CVMR2                 CED007
+     I              STCY                            STCY2                 CEU003
+     I              IC72                            IC722                 CEU003
+     I              FSRP                            FSRP2                 CED007
+     I              BRTE                            BRTE2                                     CGL014
+     I              CLAS                            CLAS2                                     CDL038
+     I              CNSP                            CNSP2                                     CRE073
+     I              CNSG                            CNSG2                                     CRE073
+     I              RDMT                            RDMT2                                     CRE073
+     I              RDFD                            RDFD2                                     CRE073
+     I              RBTB1                           RBTB12                                    CDL094
+     I              RBTB2                           RBTB22                                    CDL094
+     I              RBTB3                           RBTB32                                    CDL094
+     I              RBTB4                           RBTB42                                    CDL094
+     I              RBTB5                           RBTB52                                    CDL094
+     I              RBTB6                           RBTB62                                    CDL094
+      *-----------------------------------------------------------
+     IEDBFRJD1                                                            CED007
+      ** Journal entries by sequence                                      CED007
+     I              JOESD                           JOESD1                CED007
+     I              JOENTL                          JOENL1                CED007
+     I              JOSEQN                          JOSEQ1                CED007
+     I              JOCODE                          JOCOD1                CED007
+     I              JOENTT                          JOENT1                CED007
+     I              JODATE                          JODAT1                CED007
+     I              JOTIME                          JOTIM1                CED007
+     I              JOJOB                           JOJOB1                CED007
+     I              JOUSER                          JOUSE1                CED007
+     I              JONBR                           JONBR1                CED007
+     I              JOPGM                           JOPGM1                CED007
+     I              JOOBJ                           JOOBJ1                CED007
+     I              JOLIB                           JOLIB1                CED007
+     I              JOMBR                           JOMBR1                CED007
+     I              JOCTRR                          JOCTR1                CED007
+     I              JOFLAG                          JOFLA1                CED007
+     I              JOCCID                          JOCCI1                CED007
+     I              JORES                           JORES1                CED007
+     I***SDDEAL****E*DSDEALSDC                                            CED007
+     IDEALS     E DSDEALSDC                                               CED007
+      ** MM Deals
+      *
+     IDEAMS     E DSDEAMSDI                                               CED007
+     I              RECI                            RECI2                 CED007
+     I              DLNO                            DLNO2                 CED007
+     I              VDAT                            VDAT2                 CED007
+     I              DASN                            DASN2                 CED007
+     I              DTYP                            DTYP2                 CED007
+     I              DLST                            DLST2                 CED007
+     I              BRTT                            BRTT2                 CED007
+     I              RTSP                            RTSP2                 CED007
+     I              CCY                             CCY2                  CED007
+     I              CNUM                            CNUM2                 CED007
+     I              FACO                            FACO2                 CED007
+     I              SPI                             SPI2                  CED007
+     I              BRCA                            BRCA2                 CED007
+     I              LSWC                            LSWC2                 CED007
+     I              ORED                            ORED2                 CED007
+     I              LCD                             LCD2                  CED007
+     I              CHTP                            CHTP2                 CED007
+     I              TNLU                            TNLU2                 CED007
+     I              RSTM                            RSTM2                 CED007
+     I              RONS                            RONS2                 CED007
+     I              RIBN                            RIBN2                 CED007
+     I              RIBA                            RIBA2                 CED007
+     I              ROBN                            ROBN2                 CED007
+     I              ROCN                            ROCN2                 CED007
+     I              PSTM                            PSTM2                 CED007
+     I              PONS                            PONS2                 CED007
+     I              PIBN                            PIBN2                 CED007
+     I              PIBA                            PIBA2                 CED007
+     I              POBN                            POBN2                 CED007
+     I              POCN                            POCN2                 CED007
+     I              RCRN                            RCRN2                 CED007
+     I              RCRA                            RCRA2                 CED007
+     I              RVNO                            RVNO2                 CED007
+     I              AWBN                            AWBN2                 CED007
+     I              AWBA                            AWBA2                 CED007
+     I              BENN                            BENN2                 CED007
+     I              BENA                            BENA2                 CED007
+     I              DTP1                            DTP12                 CED007
+     I              DTP2                            DTP22                 CED007
+     I              DTP3                            DTP32                 CED007
+     I              DTP4                            DTP42                 CED007
+     I              DCHG                            DCHG2                 CED007
+     I              BTB1                            BTB12                 CED007
+     I              BTB2                            BTB22                 CED007
+     I              BTB3                            BTB32                 CED007
+     I              BTB4                            BTB42                 CED007
+     I              BTB5                            BTB52                 CED007
+     I              BTB6                            BTB62                 CED007
+     I              CVMR                            CVMR2                 CED007
+     I              STCY                            STCY2                 CEU003
+     I              IC72                            IC722                 CEU003
+     I              FSRP                            FSRP2                 CED007
+     I              FCGC                            FCGC2                 193909
+     I              FCGD                            FCGD2                 193909
+     I              FCGA                            FCGA2                 193909
+     I              FCGT                            FCGT2                 193909
+     I              REPI                            REPI2                 193909
+     I              AUTH                            AUTH2                 193909
+     I              RONSQQ                          #RONS1                                    CGL029
+     I              PONSQQ                          #PONS1                                    CGL029
+     I              BRTE                            BRTE2                                     CGL014
+     I              CLAS                            CLAS2                                     CDL038
+     I              CNSP                            CNSP2                                     CRE073
+     I              CNSG                            CNSG2                                     CRE073
+     I              RDMT                            RDMT2                                     CRE073
+     I              RDFD                            RDFD2                                     CRE073
+     I              RBTB1                           RBTB13                                    CDL094
+     I              RBTB2                           RBTB23                                    CDL094
+     I              RBTB3                           RBTB33                                    CDL094
+     I              RBTB4                           RBTB43                                    CDL094
+     I              RBTB5                           RBTB53                                    CDL094
+     I              RBTB6                           RBTB63                                    CDL094
+      ** MM Deals amendments                                              CED007
+      *-----------------------------------------------------------
+     I            DS
+      ** Data Structure for Journal record data parameter
+     I                                        1 125 IN1
+     I                                        1   50INENTL
+     I                                        6  150INSEQN
+     I                                        6  15 ALSEQN
+     I                                       16  16 INCODE
+     I                                       17  18 INENTT
+     I                                       19  24 INDATE
+     I                                       25  300INTIME
+     I                                       31  40 INJOB
+     I                                       41  50 INUSER
+     I                                       51  560INNBR
+     I                                       57  66 INPGM
+     I                                       67  76 INOBJ
+     I                                       77  86 INLIB
+     I                                       87  96 INMBR
+     I                                       97 1060INCTRR
+     I                                      107 107 INFLAG
+     I                                      108 1170INCCID
+     I                                      118 125 INRES
+      *
+      *-----------------------------------------------------------
+     I            DS
+      ** Data Structure for EDJRNEPD output
+     I                                        1 125 OUT1
+     I                                        1   50JOENTL
+     I                                        6  150JOSEQN
+     I                                       16  16 JOCODE
+     I                                       17  18 JOENTT
+     I                                       19  24 JODATE
+     I                                       25  300JOTIME
+     I                                       31  40 JOJOB
+     I                                       41  50 JOUSER
+     I                                       51  560JONBR
+     I                                       57  66 JOPGM
+     I                                       67  76 JOOBJ
+     I                                       77  86 JOLIB
+     I                                       87  96 JOMBR
+     I                                       97 1060JOCTRR
+     I                                      107 107 JOFLAG
+     I                                      108 1170JOCCID
+     I                                      108 1100#CCID                 CED007
+     I                                      118 125 JORES
+      *-----------------------------------------------------------        CED007
+     I            DS                                                      CED007
+      ** Data Structure for EDBFREPD output                               CED007
+     I                                        1 125 OUT2                  CED007
+     I                                        1   50JOENL1                CED007
+     I                                        6  150JOSEQ1                CED007
+     I                                       16  16 JOCOD1                CED007
+     I                                       17  18 JOENT1                CED007
+     I                                       19  24 JODAT1                CED007
+     I                                       25  300JOTIM1                CED007
+     I                                       31  40 JOJOB1                CED007
+     I                                       41  50 JOUSE1                CED007
+     I                                       51  560JONBR1                CED007
+     I                                       57  66 JOPGM1                CED007
+     I                                       67  76 JOOBJ1                CED007
+     I                                       77  86 JOLIB1                CED007
+     I                                       87  96 JOMBR1                CED007
+     I                                       97 1060JOCTR1                CED007
+     I                                      107 107 JOFLA1                CED007
+     I                                      108 1170JOCCI1                CED007
+     I                                      118 125 JORES1                CED007
+      *-----------------------------------------------------------        CED007
+     I            DS                                                      CED007
+      *                                                                   CED007
+     I                                        1   40COMID                 CED007
+      *-----------------------------------------------------------        CED007
+     IWOVR        DS                            125                       CED007
+      **  DS for QCMDEXC                                                  CED007
+     I******                                 61  700WDSEQN          CED007124473
+     I                                       62  710WDSEQN                124473
+     I******                                 80  890@SEQN           CED007124473
+      *                                                                   CED007
+      *-----------------------------------------------------------        CED007
+      **  Constant for QCMDEXC (DEAMSDI journal entries)                  CED007
+      *                                                                   CED007
+     I***********   'DSPJRN JRN(ICJRN) FI-C         QOVR            CED007124473
+     I***********   'LE((DEALSDC)) RCVRNG-                          CED007124473
+     I***********   '(*CURCHAIN) FROMENT(-                          CED007124473
+     I***********   'XXXXXXXXXX) OUTPUT(*-                          CED007124473
+     I***********   'OUTFILE) OUTFILE(EDB-                          CED007124473
+     I***********   'FRJPD)'                                        CED007124473
+     I              'DSPJRN JRN(ICJRN) FI-C         QOVR                  124473
+     I              'LE((DEALSDC)) RCVRNG-                                124473
+     I              '(*CURCHAIN) CMTCYCID-                                124473
+     I              '(XXXXXXXXXX) OUTPUT(-                                124473
+     I              '*OUTFILE) OUTFILE(ED-                                124473
+     I              'BFRJPD)'                                             124473
+      *-----------------------------------------------------------
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *-----------------------------------------------------------
+      **
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Parameter entry list
+     C           *ENTRY    PLIST
+      *IN PARAMETERS
+     C                     PARM           DATA1
+     C                     PARM           DATA2
+     C                     PARM           SRCF    1
+      *OUT PARAMETERS
+     C                     PARM JOOBJ     CDFILE  8
+     C                     PARM ALSEQN    CDBKEY 10
+     C                     PARM           WRTCD1  1
+     C                     PARM           RECCNT  50
+      *
+      ***  Copyright Statement and initialisation
+      *
+     C                     MOVEACPY@      MKI@   80
+     C                     Z-ADD*ZERO     RECCNT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR               *
+     C                     RETRN                                      *
+      *                                                               *
+      *================================================================
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *                                                                   CED007
+      ** Initialise Commitment ID for records                             CED007
+      *                                                                   CED007
+     C                     Z-ADD801       COMID                           CED007
+      *
+      *** Set-up the data from the input parameters so that it can be used.
+      *
+     C                     MOVEADATA1     IN1
+     C***********          MOVEADATA2     SDDEAL                          CED007
+     C                     MOVEADATA2     DEALS                           CED007
+      *
+     C                     MOVEADATA1     OUT1      P
+     C                     MOVEADATA2     JOESD     P
+     C                     MOVE INSEQN    JOCCID
+      *
+     C           DTYP      IFEQ 'IL'
+     C           DTYP      OREQ 'ID'
+     C***********          MOVE INSEQN    JOCCID
+     C***********          ENDIF                                          CED007
+      *
+      *****Write*to*the*batch*member***********************************   CED007
+      *
+     C***********          EXSR WRITE                                     CED007
+     C***********          ELSE                                           CED007
+      *                                                                   CED007
+      ***  Look for 'PT' or 'DL' types and write to EDJRNEPD              CED007
+      *                                                                   CED007
+     C           JOENTT    OREQ 'PT'                                      CED007
+     C           JOENTT    OREQ 'DL'                                      CED007
+     C                     EXSR WRITE                                     CED007
+     C                     ELSE                                           CED007
+      *                                                                   CED007
+      ** Produce before image journal entries from PF/DEALSDC in          CED007
+      ** PF/EDBFRJPD.                                                     CED007
+      *                                                                   CED007
+     C                     MOVELQOVR      WOVR                            CED007
+     C***********INSEQN    SUB  1         WDSEQN                    CED007124473
+     C                     Z-ADDINCCID    WDSEQN                          124473
+     C                     CALL 'QCMDEXC'                41               CED007
+     C                     PARM           WOVR                            CED007
+     C***********          PARM 106       QLEN   155                CED007124473
+     C                     PARM 107       QLEN   155                CED007124473
+     C           *IN41     IFEQ '1'                                       CED007
+     C                     Z-ADD03        DBASE            ***************CED007
+     C                     MOVEL'QCMDEXC 'DBFILE           * DB ERROR 03 *CED007
+     C                     MOVE WDSEQN    DBKEY            ***************CED007
+     C                     EXSR *PSSR                                     CED007
+     C                     ENDIF                                          CED007
+      *                                                                   CED007
+      ** Read EDBFRJPD file until come accross a 'UB' record              CED007
+      ** otherwise it is a database error.                                CED007
+      *                                                                   CED007
+     C*******              Z-ADD0         CHECK   10                CED007124473
+     C                     MOVE DRID      DRISAV  1                       CED007
+     C                     OPEN EDBFRJPD                                  CED007
+     C                     READ EDBFRJPD                 42               CED007
+     C           *IN42     DOWEQ*OFF                                      CED007
+     C***********JOENT1    IFNE 'UB'                                CED007124473
+     C           JOENT1    ANDNE'UB'                                      124473
+     C                     READ EDBFRJPD                 42               CED007
+     C***********          ELSE                                     CED007124473
+     C***********          MOVE *ON       *IN42                     CED007124473
+     C***********          Z-ADD1         CHECK                     CED007124473
+     C***********          ENDIF                                    CED007124473
+     C                     ENDDO                                          CED007
+      *                                                                   CED007
+     C***********CHECK     IFNE 1                                   CED007124473
+     C           *IN42     IFEQ *ON                                       124473
+     C                     Z-ADD04        DBASE            ***************CED007
+     C                     MOVEL'EDJRNEPD'DBFILE           * DB ERROR 04 *CED007
+     C                     MOVE WDSEQN    DBKEY            ***************CED007
+     C                     EXSR *PSSR                                     CED007
+     C                     ENDIF                                          CED007
+      *                                                                   CED007
+      ** Check if the Repo indicator flag is blank for the 'UB'           CED007
+      ** record and not blank for the 'UP' record or vice versa.          CED007
+      *                                                                   CED007
+     C***********          MOVELJOESD1    SDDEAL                          CED007
+     C                     MOVELJOESD1    DEALS                           CED007
+     C           DRISAV    IFEQ *BLANK                                    CED007
+     C           DRID      ANDNE*BLANK                                    CED007
+     C           DRISAV    ORNE *BLANK                                    CED007
+     C           DRID      ANDEQ*BLANK                                    CED007
+     C                     MOVE *BLANKS   OUT1                            CED007
+     C                     MOVE *BLANKS   JOESD                           CED007
+     C                     EXSR EXTRA                                     CED007
+     C                     ELSE                                           CED007
+     C                     EXSR WRITE                                     CED007
+     C                     ENDIF                                          CED007
+      *                                                                   CED007
+     C                     ENDIF                                          CED007
+      *
+      ***  Continue by deleting the record read in by ED0060.
+      ***  Use the journal sequence number from the incoming data parameter
+      ***  to delete the record from 'Old' or 'New' as appropriate.
+      *
+     C           SRCF      IFEQ 'N'                        B1
+      *
+     C           INSEQN    DELETEDNEWJD4             01
+      *
+     C           *IN01     IFEQ '1'                        B2
+     C                     Z-ADD01        DBASE            ***************
+     C                     MOVEL'EDNEWJL4'DBFILE           * DB ERROR 01 *
+     C                     MOVE INSEQN    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2
+      *
+     C                     ELSE                            X1
+      *
+     C           INSEQN    DELETEDOLDJD4             01
+      *
+     C           *IN01     IFEQ '1'                        B2
+     C                     Z-ADD02        DBASE            ***************
+     C                     MOVEL'EDOLDJL4'DBFILE           * DB ERROR 02 *
+     C                     MOVE INSEQN    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      *                                                                   CED007
+      *****************************************************************   CED007
+      /TITLE SR/EXTRA                                                     CED007
+      *****************************************************************   CED007
+      *                                                               *   CED007
+      *  EXTRA  - Subroutine to do the extra Deal amendments          *   CED007
+      *           record processing                                   *   CED007
+      *                                                               *   CED007
+      *  Called By: PROCES                                            *   CED007
+      *                                                               *   CED007
+      *****************************************************************   CED007
+      *                                                                   CED007
+     C           EXTRA     BEGSR                                          CED007
+      *                                                                   CED007
+      ***  Write BEGIN record to EDJRNEPD                                 CED007
+      ***  as required in the LHS of the JOOBJ field                      CED007
+      *                                                                   CED007
+     C                     MOVEL'BEGIN'   JOOBJ     P                     CED007
+     C                     EXSR WRITE                                     CED007
+      *                                                                   CED007
+      ***  Write record using 'UB' data from PF/EDBFREPD with             CED007
+      ***  JOENTT set to 'DL'                                             CED007
+      *                                                                   CED007
+     C                     MOVE JOESD1    JOESD                           CED007
+     C                     MOVE OUT2      OUT1                            CED007
+      *                                                                   CED007
+     C                     Z-ADDCOMID     #CCID                           CED007
+     C                     ADD  1         COMID                           CED007
+      *                                                                   CED007
+     C                     MOVE 'DL'      JOENTT                          CED007
+     C                     EXSR WRITE                                     CED007
+      *                                                                   CED007
+      ***  Write record using 'UP' data passed from calling               CED007
+      ***  program with JOENTT set to 'PT'                                CED007
+      *                                                                   CED007
+     C                     MOVEADATA1     OUT1      P                     CED007
+     C***********          MOVEADATA2     SDDEAL                          CED007
+     C                     MOVEADATA2     DEALS                           CED007
+     C                     MOVEADATA2     JOESD     P                     CED007
+     C                     MOVE 'PT'      JOENTT                          CED007
+      *                                                                   CED007
+     C                     Z-ADDCOMID     #CCID                           CED007
+      *                                                                   CED007
+     C                     EXSR WRITE                                     CED007
+      *                                                                   CED007
+      ***  Read LF/EDDEAML1 to get first record with type 'PI' or         CED007
+      ***  'PD' to write 'synthesised' record to PF/EDJRNEPD with         CED007
+      ***  JOENTT set to 'PT'                                             CED007
+      *                                                                   CED007
+     C           DLNO      SETLLEDDEAML1                                  CED007
+     C           DLNO      READEEDDEAML1                 43               CED007
+     C           *IN43     DOWEQ*OFF                                      CED007
+     C                     MOVEL'DEAMSDI' JOOBJ     P                     CED007
+     C                     MOVEL'DEAMSDI' JOMBR     P                     CED007
+     C                     MOVE 'PT'      JOENTT                          CED007
+     C                     MOVE *BLANKS   JOESD                           CED007
+     C                     MOVEADEAMS     D2                              CED007
+     C                     MOVEADRID      D2,838                          CED007
+     C                     MOVEAD2        JOESD                           CED007
+      *                                                                   CED007
+     C                     ADD  1         COMID                           CED007
+     C                     Z-ADDCOMID     #CCID                           CED007
+      *                                                                   CED007
+     C                     EXSR WRITE                                     CED007
+     C           DLNO      READEEDDEAML1                 43               CED007
+     C                     ENDDO                                          CED007
+      *                                                                   CED007
+      ***  Write END record to EDJRNEPD                                   CED007
+      *                                                                   CED007
+     C                     MOVE *BLANKS   OUT1                            CED007
+     C                     MOVE *BLANKS   JOESD                           CED007
+     C                     MOVEL'END'     JOOBJ     P                     CED007
+      *                                                                   CED007
+     C                     EXSR WRITE                                     CED007
+      *                                                                   CED007
+     C                     ENDSR                                          CED007
+      *
+      *****************************************************************
+      /TITLE SR/WRITE
+      *****************************************************************
+      *                                                               *
+      *  WRITE - Write a detail record to EDJRNEPD                    *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRITE     BEGSR
+      *
+     C                     WRITEEDJRNED1
+     C                     ADD  1         RECCNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+     C                     MOVE 'E'       WRTCD1
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK                     B1
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'ED0470'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     DUMP
+     C                     ENDIF                           E1
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

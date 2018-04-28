@@ -1,0 +1,565 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Cheques - Window control.')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  RPG/FT0090A   - CHEQUES TO BE PAID/COLLECT. AUTHORISATION    *
+      *                  WINDOW                                       *
+      *                                                               *
+      *  (phase(s)) Input Cycle                                       *
+      *                                                               *
+      *  Called By: FT0090  - FT PAYMENT                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001  *Create    Date 25Apr05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10    -  For 'ENQUIRY' mode to protect fields                *
+      *  12    -  Non display indicator                               *
+      *  89    -  Chain indicator                                     *
+      *  99    -  Read indicator                                      *
+      *  69    -  Database error                                      *
+      *  U7    -  Database error                                      *
+      *  U8    -  Database error                                      *
+      *  20-29 -  Error indicator                                     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRENQ  -  Routine to handle 'ENQUIRY' action                 *
+      *  SRSMSG -  Routine to send messages to message subfile.       *
+      *  SRCMSG -  Routine to clear program's message queue.          *
+      *  SRREC  -  Routine to access file via retrieve index          *
+      *  SRRTRN -  Routine to set up return code for calling program  *
+      *  SRDBER -  Routine to handle database errors                  *
+      *  SRSCRN -  Routine to handle screen and validation            *
+      *  SRFTOS -  Routine to move file fields to screen fields       *
+      *  SRINIT -  Routine to handle initial processing               *
+      *  *PSSR  -  Error handling                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FFTCCX1L0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      ** IBLC 2002 Cheques For Collect. Extended Idx
+      *
+     FFTCPX1L0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      ** IBLC 2002 Cheques To Be Paid Extended Index
+      *
+     FILICDRPDIF  E                    DISK
+     F                                              KINFSR *PSSR
+      *
+      ** IBLC 2002 ICD modules
+      *
+     FFT009ADFCF  E                    WORKSTN
+     F            FT009AF0                          KRENAMESCREEN
+      *
+     E                    CPY@    1   1 80               COPYRIGHT  ARRAY
+      *---------------------------------------------------------------
+     I           SDS
+      * Get program name from PSDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      /EJECT
+      *---------------------------------------------------------------
+     ISDBANK    E DSSDBANKPD
+     IDLDA        DS                            256
+      * Data structure for data-base processing
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I            DS
+     I                                        1  15 KPREF
+     I                                       12  13 TESTOI
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Rundat Data area
+      *
+     ISDMMOD    E DSSDMMODPD
+      *
+      ** Midas Modules Deatils
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** DS for access programs, long data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** DS for access programs, short data structure
+      *
+     ISCSARD    E DSSCSARDPD
+     IPDATA       DS                           1024
+     I                                        1  15 PREFX
+     I                                       16  17 CQSQX
+      /EJECT
+      *---------------------------------------------------------------
+      *
+      ** Get the data structure passed from calling program
+      *
+      /COPY QWINDSRC,FT0090DTA
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main processing                                               *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Execute initial routine
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRENQ
+      *
+      ** Execute routine to setup return code and exit program
+      *
+     C                     EXSR SRRTRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRENQ - Routine to handle 'ENQUIRY' action                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRENQ     BEGSR
+      *
+      ** Set indicators on for 'ENQUIRY' mode to protect fields
+      *
+     C                     MOVE '1'       *IN10
+      *
+      ** Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      ** If record not found,
+      ** set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '1'
+      *
+     C                     ELSE
+      *
+      ** Record found, set file fields to screen fields
+      *
+     C                     EXSR SRFTOS
+      *
+      ** Display and handle screen
+      *
+     C                     EXSR SRSCRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRSMSG - Routine to send messages to message subfile.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSMSG    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'STUSRMSG'ZAMSGF
+     C                     ENDIF
+     C                     CALL 'SNDERMSG'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+      ** Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRCMSG - Routine to clear program's message queue.            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCMSG    BEGSR
+      *
+     C                     CALL 'CLRERMSG'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRREC - Routine to access file via retrieve index             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREC     BEGSR
+      *
+     C           TESTOI    IFEQ 'CC'
+     C           KCHEQ     CHAINFTCCX1L0             89
+     C                     ENDIF
+      *
+     C           TESTOI    IFEQ 'CP'
+     C           KCHEQ     CHAINFTCPX1L0             89
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRRTRN - Routine to set up return code for calling program    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRTRN    BEGSR
+      *
+      ** DBF update error
+      *
+     C           *IN69     IFEQ '1'
+     C                     MOVE 'Y2U0004' WWRTRN
+     C                     ELSE
+      *
+      ** F12 pressed
+      *
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'USR0790' WWRTRN
+     C                     ELSE
+      *
+      ** F3 pressed
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'Y2U9999' WWRTRN
+     C                     ELSE
+      *
+      ** No errors
+      *
+     C                     MOVE *BLANKS   WWRTRN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Exit program
+      *
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRDBER - Routine to handle database errors                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDBER    BEGSR
+      *
+      ** Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       DLDA
+     C           *LOCK     IN   DLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  DLDA
+      *
+      ** Set on data-base error indicators
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *IN69
+      *
+      ** Dump program
+      *
+     C                     DUMP
+      *
+      ** Call standard DB error handler
+      *
+     C                     CALL 'DBERRCTL'             81
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRSCRN - Routine to handle screen and validation              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSCRN    BEGSR
+      *
+      ** Display messages
+      *
+     C                     WRITE#MSGCTL
+      *
+      ** Display main screen
+      *
+     C                     EXFMTSCREEN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRFTOS - Routine to move file fields to screen fields         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFTOS    BEGSR
+      *
+     C           *IN12     IFEQ '1'
+      *
+     C           TESTOI    IFEQ 'CC'
+     C                     MOVELCCORTY    #0ORTY
+     C                     MOVELCCBETY    #0BETY
+     C                     MOVELCCOPCO    #0OPCO
+     C                     MOVELCCCOCO    #0COCO
+     C                     MOVELCCIDCO    #0IDCO
+     C                     MOVELCCIDEN    #0IDEN
+     C                     ENDIF
+      *
+     C           TESTOI    IFEQ 'CP'
+     C                     MOVELCPORTY    #0ORTY
+     C                     MOVELCPBETY    #0BETY
+     C                     MOVELCPOPCO    #0OPCO
+     C                     MOVELCPCOCO    #0COCO
+     C                     MOVELCPIDCO    #0IDCO
+     C                     MOVELCPIDEN    #0IDEN
+     C                     ENDIF
+      *
+     C           #0ORTY    IFEQ *ZEROS
+     C                     MOVE *BLANKS   #0ORTY
+     C                     ENDIF
+      *
+     C           #0BETY    IFEQ *ZEROS
+     C                     MOVE *BLANKS   #0BETY
+     C                     ENDIF
+      *
+     C           #0OPCO    IFEQ *ZEROS
+     C                     MOVE *BLANKS   #0OPCO
+     C                     ENDIF
+      *
+     C           #0COCO    IFEQ *ZEROS
+     C                     MOVE '0'       #0COCO
+     C                     ENDIF
+      *
+     C           #0IDCO    IFEQ *ZEROS
+     C                     MOVE *BLANKS   #0IDCO
+     C                     ENDIF
+      *
+     C           #0IDEN    IFEQ *ZEROS
+     C                     MOVE *BLANKS   #0IDEN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Routine to handle initial processing                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Key list to access nostro details
+      *
+     C           KKEY1     KLIST
+     C                     KFLD           KCYCD   3
+     C                     KFLD           KNONB   2
+      *
+      ** Get parameters from calling program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+     C                     PARM           PDATA
+     C                     PARM           WWRTRN  7
+      *
+      *** The following parameter is needed from PTF16 on.
+      *** Every PTF level below should omit this parameter
+      *
+     C                     PARM           SPARE 256
+      *
+      ** Setup key values using transaction data passed from caller
+      *
+     C           KCHEQ     KLIST
+     C                     KFLD           KPREF  15
+     C                     KFLD           KCQSQ   20
+      *
+     C                     MOVE PREFX     KPREF
+     C                     MOVE CQSQX     KCQSQ
+      *
+      ** Redefine data-base error fields for program
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Setup file value used in database error during access to
+      ** retrieval index
+      *
+     C           *LIKE     DEFN DBFILE    WWEXTF
+      *
+     C           TESTOI    IFEQ 'CC'
+     C                     MOVEL'FTCCX1L0'WWEXTF
+     C                     ENDIF
+      *
+     C           TESTOI    IFEQ 'CP'
+     C                     MOVEL'FTCPX1L0'WWEXTF
+     C                     ENDIF
+      *
+      ** Read Midas Run Date
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD             7
+     C                     PARM '*FIRST'  @OPTN             7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C                     MOVELBJMRDT    SRUNA
+      *
+      ** Initialise non-display indicators
+      *
+     C                     MOVEL*OFF      *IN12
+      *
+      ** Initialise error indicators
+      *
+     C                     MOVEA'00000'   *IN,20
+     C                     MOVEA'00000'   *IN,25
+     C                     MOVEL*OFF      *IN75
+      *
+      ** Access ICD Modules
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDMMODPD'WWBFIL
+     C                     MOVEL'6'       WWBKEY
+     C                     Z-ADD03        WWBASE
+     C                     EXSR SRDBER
+     C                     ENDIF
+      *
+      ** Verify that ULX043 - IBLC 2002 is activated
+      *
+     C                     MOVE 'N'       ULX043  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'ULX043'  @SARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*NRF   '
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     MOVEL@SARD     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       ULX043
+      *
+      ** Access ICD for IBLC 2002
+      *
+     C           1         SETLLILICDRPD
+     C                     READ ILICDRPD                 99
+     C           *IN99     IFEQ *ON
+     C                     MOVEL'ILICDRPD'WWBFIL
+     C                     MOVEL'ICDR'    WWBKEY
+     C                     Z-ADD04        WWBASE
+     C                     EXSR SRDBER
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Check if IBLC Returns module installed
+      ** and if window must be displayed
+      *
+     C           BGNWST    IFEQ 'Y'
+     C           ULX043    ANDEQ'Y'
+     C           AGRDNB    ANDGEICACTD
+     C           BGNWST    OREQ 'Y'
+     C           ULX043    ANDEQ'Y'
+     C           AGRDNB    ANDGT10958
+     C                     MOVE '1'       *IN12
+      *
+     C                     MOVELSPARE     SP246 246
+     C                     MOVE SP246     F12     1
+      *
+     C                     MOVE *BLANK    F12
+     C                     MOVE F12       SP246
+     C                     MOVELSP246     SPARE
+      *
+     C                     ELSE
+      *
+     C                     MOVEL*OFF      *IN12
+      *
+     C                     MOVELSPARE     SP246 246
+     C                     MOVE SP246     F12     1
+      *
+     C           F12       IFEQ 'R'
+     C                     MOVE 'USR0790' WWRTRN
+     C                     MOVE *BLANK    F12
+     C                     MOVE F12       SP246
+     C                     MOVELSP246     SPARE
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

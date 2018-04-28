@@ -1,0 +1,709 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF FX deals generated on exercise report')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Futures and Options Module                           *
+     F*                                                               *
+     F*  FF0392  -  FX DEALS GENERATED ON EXERCISE REPORT             *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CCB023             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF003   *CREATE   Date 03Apr97               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CFF003 - ENHANCED OTC PROCESSING - PHASE II                  *
+     F*           UPGRADE FROM BLI LBL001                             *
+     F*                                                               *
+     F*****************************************************************
+     FFFOTFXPDIF  E           K        DISK
+     FSDCUSTL1IF  E           K        DISK
+     F*  Client Details
+     FSDCNSTL1IF  E           K        DISK
+     F*  Counterparty Nostros
+     FFF0392P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FFF0392AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   99  - END OF FILE                                           *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U7  - DATABASE ERROR                                        *
+     F*   U8  - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - OBTAINS ICD INFO                                    *
+     F*  FDDETL - FORMAT DEAL DETAILS                                 *
+     F*  CVTA   - Convert customer number to shortname                *
+     F*  CVTB   - Convert counterparty to shortname                   *
+     F*  AUDIT  - OUTPUTS CONTROL REPORT                              *
+     F*  *PSSR  - Error handling                                      *
+     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *
+     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E                    CPY@    1   1 80
+     I/COPY ZSRSRC,ZSEDITZ2
+     I***SDBANK*   E DSSDBANKPD                                                               CCB023
+     ISDBANK    E DSSDSBNKTD                                                                  CCB023
+     I** BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDBRCH    E DSSDBRCHPD
+     I** BRANCH DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDCURR    E DSSDCURRPD
+     I** CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISPOOL       DS
+     I*
+     I**  DS FOR P1 SPOOL FILE NAME
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I**
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS
+     I*
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           ENT     3
+     C*
+     C**  PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'FF0392'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*
+     C** IN THE DATAAREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** RCF Processing for Audit File
+     C*
+     C                     EXSR RCFAU
+     C*
+     C**  FIRST CYCLE PROCESS
+     C*
+     C                     EXSR FIRST
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C                     Z-ADD0         LINCNT  50
+     C                     Z-ADD0         IREC    50
+     C*
+     C** IF A PARTICULAR BRANCH REQUEST THEN POSITION FILE TO FIRST
+     C** RECORD FOR THIS BRANCH
+     C*
+     C           ENT       IFNE 'ALL'
+     C           ENT       ANDNE*BLANKS
+     C           ENT       SETLLFXSTDDP0
+     C                     END
+     C*
+     C**  READ FFOTFXPD TO END
+     C*
+     C                     READ FXSTDDP0                 99
+     C*
+     C** IF THE BRANCH READ IS NOT THE BRANCH REQUESTED STOP PROCESSING
+     C*
+     C           *IN99     IFEQ '0'
+     C           MBIN      ANDEQ'Y'
+     C           ENT       ANDNE'ALL'
+     C           ENT       ANDNEF3MBCA
+     C                     SETON                     99
+     C                     END
+     C*
+     C**  DO UNTIL EOF
+     C*
+     C           *IN99     DOWEQ'0'
+     C*
+     C**  INCREMENT COUNT
+     C*
+     C                     ADD  1         IREC    50
+     C*
+     C** IF A RECORD PREVIOUSLY READ
+     C*
+     C           *IN81     IFEQ '1'
+     C*
+     C**  IF BRANCH CHANGED THEN START NEW REPORT
+     C*
+     C           F3MBCA    IFNE L3MBCA
+     C*
+     C**  WRITE END OF REPORT MESSAGE
+     C*
+     C                     WRITETRAILP1
+     C                     CLOSEFF0392P1
+     C                     OPEN FF0392P1
+     C                     Z-ADD70        LINCNT
+     C                     Z-ADD0         PAGE
+     C*
+     C** RCF Processing for Detail Printer File
+     C*
+     C                     EXSR RCFP1
+     C                     END
+     C                     END
+     C*
+     C**  If new branch, get description
+     C*
+     C           F3MBCA    IFNE L3MBCA
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM F3MBCA    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD10        DBASE            ***************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 10 *
+     C                     MOVELF3MBCA    DBKEY            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     GOTO EAUDIT
+     C                     END
+     C                     END
+     C*
+     C**  Store new values of fields
+     C*
+     C                     MOVE F3MBCA    L3MBCA
+     C*
+     C**  Open printer file if first time
+     C*
+     C           *IN81     IFEQ '0'
+     C                     OPEN FF0392P1
+     C                     Z-ADD70        LINCNT
+     C*
+     C** RCF Processing for Detail Printer File
+     C*
+     C                     EXSR RCFP1
+     C                     END
+     C*
+     C**  Output headings if required
+     C*
+     C           LINCNT    IFGT 54
+     C                     WRITEHEADP1
+     C                     Z-ADD13        LINCNT
+     C                     END
+     C*
+     C**  F O R M A T    D E A L   D E T A I L S
+     C*
+     C                     EXSR FDDETL
+     C*
+     C**  O U T P U T    D E A L   D E T A I L S
+     C**
+     C                     WRITEDETAIL
+     C**
+     C                     Z-ADD60        LINCNT
+     C*
+     C**  Record processed
+     C*
+     C                     SETON                     81
+     C*
+     C**  READ NEXT RECORD
+     C*
+     C                     READ FXSTDDP0                 99
+     C*
+     C** IF THE BRANCH READ IS NOT THE BRANCH REQUESTED STOP PROCESSING
+     C*
+     C           *IN99     IFEQ '0'
+     C           MBIN      ANDEQ'Y'
+     C           ENT       ANDNE'ALL'
+     C           ENT       ANDNEF3MBCA
+     C                     SETON                     99
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If at least one record processed
+     C*
+     C           *IN81     IFEQ '1'
+     C*
+     C** Output headings if required
+     C*
+     C           LINCNT    IFGT 54
+     C                     WRITEHEADP1
+     C                     Z-ADD13        LINCNT
+     C                     END
+     C*
+     C**  WRITE END OF REPORT MESSAGE
+     C*
+     C                     WRITETRAILP1
+     C                     END
+     C*
+     C**  OUTPUT CONTROL REPORT AND WRITE AUDIT RECORD
+     C*
+     C                     Z-ADD0         PAGE
+     C           EAUDIT    TAG                             ** EAUDIT **
+     C*
+     C                     EXSR AUDIT
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C*
+     C                     SETON                     LR
+      /EJECT
+      *****************************************************************
+      *
+      *  FIRST  - Subroutine to access ICD Information.
+      *
+      *  Called by: Main Processing.
+      *  Calls: ZSYSTM, ZICDSE
+      *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C**********           CALL 'AOBANKR0'                                                    CCB023
+     C                     CALL 'AOSBNKR0'                                                    CCB023
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error occurs...
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     SETOF                     98
+     C*
+     C* BASE CURRENCY
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BJCYCD    @AJCD
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 02 *
+     C                     MOVELBJCYCD    DBKEY            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     Z-ADDA6NBDP    BCNBDP  10
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  FDDETL - FORMAT DEAL DETAILS
+      *
+      *****************************************************************
+      *
+     C           FDDETL    BEGSR                           ** FDDETL **
+     C*
+     C* DEAL DATE
+     C*
+     C                     Z-ADDF3DDDN    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RDDAT
+     C*
+     C* VALUE DATE
+     C*
+     C                     Z-ADDF3VDDN    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RVDAT
+     C*
+     C* BUY AMOUNT
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM F3CCY1    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD20        DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 20 *
+     C                     MOVELF3CCY1    DBKEY            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     GOTO EAUDIT
+     C                     END
+     C                     Z-ADDF3DAM1    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    RBUYA
+     C*
+     C* EXCHANGE RATE
+     C*
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE F3DXRT    ZFLD15
+     C                     MOVE ' '       ZECODE
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RXRATE
+     C*
+     C* SELL AMOUNT
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM F3CCY2    @AJCD
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD21        DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 21 *
+     C                     MOVELF3CCY2    DBKEY            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     GOTO EAUDIT
+     C                     END
+     C                     Z-ADDF3DAM2    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    RSELA
+     C*
+     C* BASE CURRENCY EQUIVALENT
+     C*
+     C                     Z-ADDF3BCAE    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCNBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    RBASA
+     C*
+     C* S E T T L E M E N T   I N S T R U C T I O N S
+     C*
+     C* REC SETTLE METHOD
+     C                     MOVELF3RSTM    RRSTM
+     C*
+     C* PAY SETTLE METHOD
+     C                     MOVELF3PSTM    RPSTM
+     C*
+     C* REC SETTLE A/C
+     C           F3RSTM    IFEQ 05
+     C                     MOVELF3ROBR    RRONS
+     C                     MOVE F3RONS    RRONS
+     C                     ELSE
+     C                     MOVEL*BLANK    RRONS
+     C                     MOVELF3RONS    RRONS
+     C                     END
+     C*
+     C* PAY SETTLE A/C
+     C           F3PSTM    IFEQ 05
+     C                     MOVELF3POBR    RPONS
+     C                     MOVE F3PONS    RPONS
+     C                     ELSE
+     C                     MOVEL*BLANK    RPONS
+     C                     MOVELF3PONS    RPONS
+     C                     END
+     C*
+     C*  RECIPIENT OF PAYMENT INSTRUCTION
+     C                     MOVELF3RVNO    @FLD8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    RRVNO
+     C*
+     C*  RECEIPT ORDERING CUSTOMER
+     C                     MOVELF3ROCN    @FLD6   6
+     C                     EXSR CVTA
+     C                     MOVEL@FLD10    RROCN
+     C*
+     C*  PAYMENT ORDERING CUSTOMER
+     C                     MOVELF3POCN    @FLD6
+     C                     EXSR CVTA
+     C                     MOVEL@FLD10    RPOCN
+     C*
+     C*  RECEIPT ORDERING BANK
+     C                     MOVELF3ROBN    @FLD6
+     C                     EXSR CVTA
+     C                     MOVEL@FLD10    RROBN
+     C*
+     C*  PAYMENT ORDERING BANK
+     C                     MOVELF3POBN    @FLD6
+     C                     EXSR CVTA
+     C                     MOVEL@FLD10    RPOBN
+     C*
+     C*  PAYMENT RECIPIENT'S CORRESPONDENT
+     C                     MOVELF3RCRN    @FLD8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    RRCRN
+     C*
+     C*  RECEIPT INTERMEDIARY BANK
+     C                     MOVELF3RIBN    @FLD8   8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    RRIBN
+     C*
+     C*  PAYMENT INTERMEDIARY BANK
+     C                     MOVELF3PIBN    @FLD8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    RPIBN
+     C*
+     C*  ACCOUNT WITH BANK
+     C                     MOVELF3AWBN    @FLD8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    RAWBN
+     C*
+     C*  BENNEFICIARY
+     C                     MOVELF3BENN    @FLD8
+     C                     EXSR CVTB
+     C                     MOVEL@FLD10    RBENN
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CVTA - Convert customer number to shortname                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CVTA      BEGSR
+     C*
+     C                     MOVEL*BLANKS   @FLD10 10
+     C*
+     C           @FLD6     IFNE *ZEROS
+     C           @FLD6     ANDNE*BLANKS
+     C           @FLD6     CHAINSDCUSTL1             90
+     C           *IN90     IFEQ '0'
+     C                     MOVELBBCSSN    @FLD10
+     C                     ELSE
+     C                     MOVEL*BLANK    @FLD10
+     C                     MOVEL'*MISSING'@FLD10
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* CVTB  -  Convert counterparty number to shortname (by         *
+     C*          chaining to Counterparty NOSTRO file)                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CVTB      BEGSR
+     C*
+     C                     MOVEL*BLANKS   @FLD10 10
+     C*
+     C           @FLD8     IFNE *ZEROS
+     C           @FLD8     ANDNE*BLANKS
+     C           @FLD8     CHAINSDCNSTL1             90
+     C           *IN90     IFEQ '0'
+     C                     MOVEL@FLD8     @FLD10
+     C                     ELSE
+     C                     MOVEL@FLD8     @FLD6
+     C                     EXSR CVTA
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*********************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *  AUDIT  - Subroutine to Output Audit Report.
+      *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C**  OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADR
+     C           *INU8     IFEQ '0'
+     C*
+     C           IREC      IFEQ 0
+     C                     WRITENONE
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     END
+     C*
+     C                     ELSE
+     C                     WRITEERROR
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C**
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C**
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM F3MBCA    SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFAU     BEGSR                            ** RCFAU **
+     C*
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      ***
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

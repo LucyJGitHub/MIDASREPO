@@ -1,0 +1,330 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas ME MT94x Production Job Start up/Shutdown')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Management Module                           */
+/*                                                                   */
+/*       GLC001410 - MT94x Production Job Start up/Shutdown          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CSC023             Date 29Jan04              */
+/*       Prev Amend No. CGL013  *CREATE    Date 19Feb02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
+/*                OUTQ must always be *JOBD.                         */
+/*       CGL013 - MT94x Message Generation                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OPER &MODE &RTCD)
+ 
+             DCL        VAR(&OPER)    TYPE(*CHAR) LEN(6)
+             DCL        VAR(&MODE)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTCD)    TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RETRY)   TYPE(*DEC)  LEN(1 0) VALUE(0)
+             DCL        VAR(&DA94X)   TYPE(*CHAR) LEN(256) VALUE(' ')
+             DCL        VAR(&RTRN)    TYPE(*CHAR) LEN(200)
+             DCL        VAR(&LENG)    TYPE(*CHAR) LEN(4)   VALUE(X'0110')
+             DCL        VAR(&INPT)    TYPE(*CHAR) LEN(8)   VALUE('JOBI0200')
+             DCL        VAR(&QUAL)    TYPE(*CHAR) LEN(26)
+             DCL        VAR(&INTR)    TYPE(*CHAR) LEN(16)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNUM)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MSGID)   TYPE(*CHAR) LEN(10)
+ 
+             DCLF       FILE(GLNWKAPD)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global Error Trap */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLC001410 - MT94x Background processing +
+                          start/stop') TOMSGQ(MRUNQ)
+ 
+/* Reset Job Switches and return code */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&RTCD) VALUE(' ')
+ 
+/* Retrieve background job id */
+ 
+             RTVDTAARA  DTAARA(GLM94XDA) RTNVAR(&DA94X)
+ 
+/*********************/
+/* Operation 'START' */
+/*********************/
+ 
+             IF         COND(&OPER *NE '*START') +
+               THEN(GOTO CMDLBL(ENDJOB))
+ 
+/* The processing is not allowed to start if it was stopped by an user */
+ 
+             IF         COND(%SST(&DA94X 33 1) = 'Y') +
+               THEN(DO)
+                 SNDPGMMSG  MSG('(GLC001410) ***  WARNING - Job is not +
+                             allowed to start - Previously stopped by +
+                             an user ***') TOMSGQ(MOPERQ)
+                 CHGVAR     VAR(&RTCD) VALUE('*S_FAIL')
+                 GOTO CMDLBL(ENDPGM)
+               ENDDO
+ 
+/* The processing will not start if no network is active */
+ 
+ LOOP1:      RCVF
+               MONMSG     MSGID(CPF0864) +
+                 EXEC(DO)
+                   SNDPGMMSG  MSG('(GLC001410) ***  WARNING - Job not +
+                               started - No network is active ***') +
+                               TOMSGQ(MOPERQ)
+                   CHGVAR     VAR(&RTCD) VALUE('*S_FAIL')
+                   GOTO CMDLBL(ENDPGM)
+                 ENDDO
+ 
+             IF         COND(&MTSSTS *NE 'A') +
+               THEN(GOTO CMDLBL(LOOP1))
+ 
+/* If the processing has been already started, check if still active */
+ 
+             IF         COND(%SST(&DA94X 1 26) *NE ' ') +
+               THEN(DO)
+                 CHGVAR     VAR(&QUAL) VALUE(%SST(&DA94X 1 26))
+                 CHGVAR     VAR(&RETRY) VALUE(0)
+ 
+/* Get job status */
+ 
+  RETRY1:        CHGVAR     VAR(&MSGID) VALUE(' ')
+                 CALL       PGM(QUSRJOBI) PARM(&RTRN &LENG &INPT +
+                              &QUAL &INTR)
+                   MONMSG     MSGID(CPF3C53 CPF3C55 CPF3C58) +
+                                EXEC(CHGVAR VAR(&RTRN) VALUE(' '))
+                   MONMSG     MSGID(CPF3C54) EXEC(RCVMSG MSGID(&MSGID))
+ 
+/* Job is not available */
+ 
+                 IF         COND(&MSGID *EQ 'CPF3C54') +
+                   THEN(DO)
+                     CHGVAR     VAR(&RETRY) VALUE(&RETRY + 1)
+                     IF         COND(&RETRY *LT 5) +
+                       THEN(DO)
+                         DLYJOB     DLY(30)
+                         GOTO       CMDLBL(RETRY1)
+                       ENDDO
+                   ENDDO
+ 
+                 IF         COND(&RETRY *GE 5) +
+                   THEN(CHGVAR VAR(%SST(&RTRN 51 8)) VALUE(' '))
+ 
+/* Job is on queue */
+ 
+                 IF         COND(%SST(&RTRN 51 8) *EQ '*JOBQ   ') +
+                   THEN(DO)
+                     SNDPGMMSG MSG('(GLC001410) ***  WARNING - job is +
+                                 on queue  ***') TOMSGQ(MOPERQ)
+                     CHGVAR     VAR(&RTCD) VALUE('*S_FAIL')
+                     GOTO CMDLBL(ENDPGM)
+                   ENDDO
+ 
+/* Job is already active */
+ 
+                 IF         COND(%SST(&RTRN 51 8) *EQ '*ACTIVE') +
+                   THEN(DO)
+                     SNDPGMMSG MSG('(GLC001410) ***  WARNING - job is +
+                                 already active  ***') TOMSGQ(MOPERQ)
+                     GOTO CMDLBL(ENDPGM)
+                   ENDDO
+               ENDDO
+ 
+/* Submit the background job */
+ 
+/************SBMJOB     JOB(GLC001400) JOBD(MBATCH) JOBQ(INTERFACE) +                     /*CSC023*/
+/************             USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +                        /*CSC023*/
+/************             GLC001400') INLLIBL(*JOBD) MSGQ(MOPERQ)                         /*CSC023*/
+             SBMJOB     JOB(GLC001400) JOBD(MBATCH) JOBQ(INTERFACE) +
+                          USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +
+                          GLC001400') INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)             /*CSC023*/
+ 
+/* Save the background job reference */
+ 
+             RCVMSG     MSGTYPE(*LAST) WAIT(*MAX) MSGDTA(&MSGDTA) +
+                          MSGID(&MSGID)
+ 
+             IF         COND(&MSGID *EQ 'CPC1221') +
+               THEN(CHGDTAARA  DTAARA(GLM94XDA (1 26)) +
+                                 VALUE(%SST(&MSGDTA 1 26)))
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/*******************/
+/* Operation 'END' */
+/*******************/
+ 
+ ENDJOB:     IF         COND(&OPER *NE '*END') +
+               THEN(GOTO CMDLBL(ENDPGM))
+ 
+/* Job has not be started or already stopped */
+ 
+             IF         COND(%SST(&DA94X 1 26) *EQ ' ') +
+               THEN(DO)
+                 SNDPGMMSG  MSG('(GLC001410) ***  WARNING - job is not +
+                              active  ***') TOMSGQ(MOPERQ)
+                 GOTO       CMDLBL(ENDPGM)
+               ENDDO
+ 
+             CHGVAR     VAR(&QUAL) VALUE(%SST(&DA94X 1 26))
+             CHGVAR     VAR(&JOBNAME) VALUE(%SST(&QUAL 1 10))
+             CHGVAR     VAR(&JOBUSER) VALUE(%SST(&QUAL 11 10))
+             CHGVAR     VAR(&JOBNUM) VALUE(%SST(&QUAL 21 6))
+             CHGVAR     VAR(&RETRY) VALUE(0)
+ 
+/* Get job status */
+ 
+ RETRY2:     CHGVAR     VAR(&MSGID) VALUE(' ')
+             CALL       PGM(QUSRJOBI) PARM(&RTRN &LENG &INPT &QUAL +
+                          &INTR)
+               MONMSG     MSGID(CPF3C53 CPF3C55 CPF3C58) +
+                            EXEC(CHGVAR VAR(&RTRN) VALUE(' '))
+               MONMSG     MSGID(CPF3C54) EXEC(RCVMSG MSGID(&MSGID))
+ 
+/* Job is not available */
+ 
+             IF         COND(&MSGID *EQ 'CPF3C54') +
+               THEN(DO)
+                 CHGVAR     VAR(&RETRY) VALUE(&RETRY + 1)
+                 IF         COND(&RETRY *LT 5) +
+                   THEN(DO)
+                     DLYJOB     DLY(30)
+                     GOTO       CMDLBL(RETRY2)
+                   ENDDO
+               ENDDO
+ 
+             IF         COND(&RETRY *GE 5) +
+               THEN(CHGVAR VAR(%SST(&RTRN 51 8)) VALUE(' '))
+ 
+/* If the job is on queue, it must be ended immediately */
+ 
+             IF         COND(%SST(&RTRN 51 5) *EQ '*JOBQ') +
+               THEN(DO)
+                 ENDJOB     JOB(&JOBNUM/&JOBUSER/&JOBNAME) OPTION(*IMMED)
+                 GOTO       CMDLBL(SYNCH)
+               ENDDO
+ 
+/* Job is not active */
+ 
+             IF         COND(%SST(&RTRN 51 8) *NE '*ACTIVE') +
+               THEN(DO)
+                 SNDPGMMSG  MSG('(GLC001410) ***  WARNING - Background +
+                              job already finished  ***') TOMSGQ(MOPERQ)
+                 GOTO       CMDLBL(ENDPGM)
+               ENDDO
+ 
+/* If the job is active with a status of: */
+/*    . END / EOJ   The job is ending     */
+/* there is nothing to do                 */
+ 
+             IF         COND(%SST(&RTRN 108 4) *EQ 'END ' *OR +
+                             %SST(&RTRN 108 4) *EQ 'EOJ ')    +
+               THEN(DO)
+                 SNDPGMMSG  MSG('(GLC001410) ***  WARNING - Background +
+                              job is already finishing ***') TOMSGQ(MOPERQ)
+                 GOTO       CMDLBL(SYNCH)
+               ENDDO
+ 
+/* If the job is active with a status of:                                   */
+/*    . HLDT        Held due to suspended thread                            */
+/*    . LCKW        Waiting for a lock                                      */
+/*    . MSGW        Waiting for a message from a message queue              */
+/*    . INEL        Ineligible and not currently in the pool activity level */
+/* it must be stopped immediately                                           */
+ 
+             IF         COND(%SST(&RTRN 108 4) *EQ 'HLDT' *OR +
+                             %SST(&RTRN 108 4) *EQ 'LCKW' *OR +
+                             %SST(&RTRN 108 4) *EQ 'MSGW' *OR +
+                             %SST(&RTRN 108 4) *EQ 'INEL')    +
+               THEN(DO)
+                 ENDJOB     JOB(&JOBNUM/&JOBUSER/&JOBNAME) OPTION(*IMMED)
+                 GOTO       CMDLBL(SYNCH)
+               ENDDO
+ 
+/* Stop the job */
+ 
+             CALL       PGM(QSNDDTAQ) PARM(GLM94XDQ *LIBL X'00001F' T)
+ 
+/* If the job is held, it must be released to allow it to stop */
+ 
+             IF         COND(%SST(&RTRN 108 4) *EQ 'HLD ') +
+               THEN(RLSJOB JOB(&JOBNUM/&JOBUSER/&JOBNAME))
+ 
+/* If the processing should wait the end; &MODE = '*SYNCH' */
+ 
+ SYNCH:      IF         COND(&MODE *EQ '*SYNCH') +
+               THEN(DO)
+ 
+/* Delay the job to give the time to job GLC001400 to stop */
+ 
+                 DLYJOB     DLY(5)
+ 
+/* Get job status */
+ 
+ RETRY3:         CHGVAR     VAR(&MSGID) VALUE(' ')
+                 CALL       PGM(QUSRJOBI) PARM(&RTRN &LENG &INPT +
+                              &QUAL &INTR)
+                   MONMSG     MSGID(CPF3C53 CPF3C55 CPF3C58) +
+                                EXEC(CHGVAR VAR(&RTRN) VALUE(' '))
+                   MONMSG     MSGID(CPF3C54) EXEC(RCVMSG MSGID(&MSGID))
+ 
+                 IF         COND(&MSGID *EQ 'CPF3C54') +
+                   THEN(DO)
+                     CHGVAR     VAR(&RETRY) VALUE(&RETRY + 1)
+                     IF         COND(&RETRY *LT 5) +
+                       THEN(DO)
+                         DLYJOB     DLY(30)
+                         GOTO       CMDLBL(RETRY3)
+                       ENDDO
+                   ENDDO
+ 
+                 IF         COND(&RETRY *GE 5) +
+                   THEN(CHGVAR VAR(%SST(&RTRN 51 8)) VALUE(' '))
+ 
+                 IF         COND(%SST(&RTRN 51 8) *EQ '*ACTIVE') +
+                   THEN(DO)
+                     DLYJOB     DLY(60)
+                     GOTO       CMDLBL(RETRY3)
+                   ENDDO
+ 
+               ENDDO
+ 
+/* Remove the background job reference */
+ 
+             CHGDTAARA  DTAARA(GLM94XDA (1 26)) VALUE(' ')
+ 
+/* If U7 or U8 are ON, perform standard database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX1X) *OR %SWITCH(XXXXXXX1)) +
+               THEN(DO)
+ 
+ ABNOR:          CHGJOB     SWS(XXXXXX11)
+                   MONMSG     MSGID(CPF0000 MCH0000)
+                 SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                              GLC001410 ended abnormally - see job +
+                              log') TOMSGQ(MOPERQ MRUNQ)
+                   MONMSG     MSGID(CPF0000 MCH0000)
+ 
+               ENDDO
+ 
+ ENDPGM:
+ 
+             ENDPGM

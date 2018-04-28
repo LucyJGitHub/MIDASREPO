@@ -1,0 +1,116 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD Cmplnce watch lst msg status engn ctl pgm')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Standing Data Module                             */
+/*                                                                   */
+/*       SDCWSENG - Compliance Watch List Message Status Engine      */
+/*                  Control Program                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CSD015  *CREATE    Date 03Mar03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSD015 - Midas Compliance Watch - Watch List Checking       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Begin commitment control */
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+ 
+/** Check if CSW025 (Midas Message Manager is installed) */
+ 
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('CSW025')
+ 
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+ 
+             IF         COND(&PRTCD *NE '       ' *AND &PRTCD *NE +
+                          '*NRF   ') THEN(DO)
+                GOTO      CMDLBL(ABNOR)
+             ENDDO
+ 
+/** If CSW025 is installed, exit from the program */
+ 
+             IF         COND(PRTCD *EQ '       ') THEN(DO)
+                GOTO      CMDLBL(END)
+             ENDDO
+ 
+/** Allocate dataarea SDWLSENG */
+ 
+             ALCOBJ     OBJ((SDWLSENG *DTAARA *EXCL)) WAIT(30)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                            MSGDTA('SDCWSENG - Attempt to start +
+                            Compliance Watch List Message Status +
+                            Engine has failed. Engine +
+                            is active already') TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+               CHGJOB     LOG(*SAME *SAME *NOLIST)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+/** Compliance Watch List Message Status Engine has started */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('SDCWSENG - Compliance Watch List +
+                          Message Engine Status has started.') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Call Compliance Watch List Message Status Engine Feeder */
+ 
+             CALL       PGM(SDRWSENG)
+ 
+/** Compliance Watch List Message Status Engine has ended */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('SDCWSENG - Compliance Watch List +
+                          Message Status Engine is now terminating') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Deallocate dataarea SDWLSENG */
+ 
+             DLCOBJ     OBJ((SDWLSENG *DTAARA *EXCL))
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDCWSENG ended abnormally - see previous +
+                          job log for details') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End program */
+ 
+ END:
+ 
+             ENDPGM

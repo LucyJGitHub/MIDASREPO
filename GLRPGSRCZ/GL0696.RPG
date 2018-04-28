@@ -1,0 +1,312 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Spot Rate History File Purge')                   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Standing Data Module                               *
+     F*                                                               *
+     F*  GL0696 - SPOT RATE HISTORY FILE PURGE                        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Last Amend No. AR1074030           Date 29Dec12               *
+      * Prev Amend No. CGL127AE            Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 186231             Date 13Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 064250             Date 09Feb94               *
+      *                 S01267             Date 19Sep99               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  AR1074030 - Database error_GLC0696                           *
+      *  CGL127AE - COB Restructure - GL COB Optimisation Phase 1     *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  186231 - If CSE023 is installed, ensure spot rate will not   *
+      *           be dropped for at least 18 months.                  *
+      *           (CSE023 - Treaty Withholding Tax)                   *
+     F*  064250 - Ensure that at least one day's records (ie. today's)*
+     F*           is not dropped during purge.                        *
+     F*  S01267 - RECOMPILED FOR MIS RELEASE 2.2 CHANGES.             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator Summary                                            *
+      *                                                               *
+      *  05  Data base Error in LF/SDCUHSL0, PF/SDCUHSPA              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ** Files used
+      *
+     FSDCUHSL0UF  E           K        DISK
+     FSDCUHSPAUF  E                    DISK
+     FGL0696AUO   E                    PRINTER
+     F/COPY WNCPYSRC,GL0696F001
+      *
+      *
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**     Local Data Area
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+      *
+      ** Data Structure for Work Station Id
+      *
+     I**
+     ISDBANK    E DSSDBANKPD
+     I** BANK DETAILS
+      *
+     I*
+     ISDGELR    E DSSDGELRPD
+     I** GENERAL LEDGER DETAILS
+      *
+     I*
+     IDSFDY     E DSDSFDY
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I**
+      *
+     C**   Define Local Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+     C/COPY WNCPYSRC,GL0696C001
+      *
+     C** USE ACCESS PROGRAM AOBANKR0 TO
+     C** RETRIEVE HEADER INFORMATION FOR REPORT
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C** If error found by access program exit
+     C** program via database error subroutine
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'GL0696'  DBPGM            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C** USE ACCESS PROGRAM AOGELRR0 TO
+     C** RETRIEVE SPOT RATE RETENTION MONTHS.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C** If error found by access program exit
+     C** program via database error subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL'GL0696'  DBPGM            * DBERROR 002 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+      *                                                                   186231
+      **  Access SAR details file to see if Withholding Tax SAR           186231
+      **  is installed                                                    186231
+      *                                                                   186231
+     C                     CALL 'AOSARDR0'                                186231
+     C                     PARM '       ' @RTCD   7                       186231
+     C                     PARM '*VERIFY' @OPTN   7                       186231
+     C                     PARM 'CSE023'  WSARD   6                       186231
+      *                                                                   186231
+     C                     MOVE 'N'       CSE023  1                       186231
+     C           @RTCD     IFEQ *BLANK                                    186231
+     C                     MOVE 'Y'       CSE023  1                       186231
+     C                     END                                            186231
+     C/COPY WNCPYSRC,GL0696C002
+      *
+      **Set Number of Records Deleted work field to Zero.
+      *
+     C                     Z-ADD0         NRCD   150
+      *
+      **Multiply Spot Rate Retention Months by 31 to get
+      **Retention Days.
+      *
+      ** If CSE023 is installed, the records should be kept for           186231
+      ** at least 18 months.                                              186231
+      *                                                                   186231
+     C           BKSRRP    IFLT 18                                        186231
+     C           CSE023    ANDEQ'Y'                                       186231
+     C                     Z-ADD18        BKSRRP                          186231
+     C                     ENDIF                                          186231
+      *                                                                   186231
+     C           BKSRRP    MULT 31        RTDY   150
+     C*                                                                   064250
+     C** If RTDY is 0 set it to 1 so today's records are not dropped      064250
+     C*                                                                   064250
+     C           RTDY      IFEQ 0                                         064250
+     C                     Z-ADD1         RTDY                            064250
+     C                     END                                            064250
+      *
+      **Subtract Retention Days from Run Day Number to obtain
+      **Target Date.
+      *
+     C           BJRDNB    SUB  RTDY      TRDT    50
+      *
+      **********                                                                            CGL127AE
+      **Read*First Record on LF/SDCUHSL0.                                                   CGL127AE
+      **********                                                                            CGL127AE
+     C**********           READ SDCUHSL0                 05                                 CGL127AE
+      *                                                                                     CGL127AE
+      ** Read Last Relevant Record on LF/SDCUHSL0 using TRDT                                CGL127AE
+      *                                                                                     CGL127AE
+     C           TRDT      SETGTSDCUHSL0                                                    CGL127AE
+     C                     READPSDCUHSL0                 05                                 CGL127AE
+      *
+      **If Record does not exist report a database error
+      *
+     C********** *IN05     IFEQ '1'                                                        AR1074030
+     C********** *LOCK     IN   LDA                                                        AR1074030
+     C**********           MOVEL'01'      DBKEY                                            AR1074030
+     C**********           MOVEL'SDCUHSL0'DBFILE           ***************                 AR1074030
+     C**********           MOVE 'GL0696'  DBPGM            * DBERR  003  *                 AR1074030
+     C**********           Z-ADD003       DBASE            ***************                 AR1074030
+     C**********           EXSR DBERR                                                      AR1074030
+     C**********           END                                                             AR1074030
+      *
+      **********                                                                            CGL127AE
+      **If*History Date is less than or equal to Target Date,                               CGL127AE
+      **Delete*record.                                                                      CGL127AE
+      **********                                                                            CGL127AE
+      *                                                                                     CGL127AE
+      **If not end of file delete record no need to check if                                CGL127AE
+      **G2HIDT is less than TRDT                                                            CGL127AE
+      *                                                                                     CGL127AE
+     C           *IN05     DOWEQ'0'
+      *
+     C********** G2HIDT    IFLE TRDT                                                        CGL127AE
+     C                     DELETSDCUHSL0
+     C/COPY WNCPYSRC,GL0696C003
+      *
+      **Add one to Number of Records Deleted
+      *
+     C                     ADD  1         NRCD
+     C**********           END                                                              CGL127AE
+      **********                                                                            CGL127AE
+      ***Read*ahead for LF/SDCURRL0                                                         CGL127AE
+      **********                                                                            CGL127AE
+      *                                                                                     CGL127AE
+      ** Read Previous Record from LF/SDCUHSL0                                              CGL127AE
+      *                                                                                     CGL127AE
+     C**********           READ SDCUHSL0                 05                                 CGL127AE
+     C                     READPSDCUHSL0                 05                                 CGL127AE
+     C                     END
+      *
+      *
+      ** If number of record deleted is greater than Zero.
+      *
+     C           NRCD      IFGT *ZERO
+      ** Reads PF/SDCUHSPA and if record not found reports
+      ** a Data base error.
+      *
+     C           1         CHAINSDCUHSPA             05
+      *
+      ** If record does not exist report a data base error
+      *
+     C           *IN05     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'01'      DBKEY
+     C                     MOVEL'SDCUHSPA'DBFILE           **************
+     C                     MOVE 'GL0696'  DBPGM            * DBERR 004  *
+     C                     Z-ADD004       DBASE            **************
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Subtract Number of Records Deleted from Count of Records
+      ** from PF/SDCUHSPA.
+      *
+     C           G3CORC    SUB  NRCD      G3CORC
+      *
+      ** Update PF/SDCUHSPA
+      *
+     C                     UPDATSDCUHSA0
+     C                     END
+      *
+      ** Write out Report Heading, Detail and End of report texts.
+      *
+     C                     WRITEGL0696H
+     C                     WRITEGL0696D
+     C                     WRITEGL0696T
+      *
+      *
+      **  Set on LR
+      *
+     C                     SETON                         LR
+      *
+      *
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DBERR - Database Error Processing. Performed when SDCUHSL0       *
+      *         SDCUHSPA, SDBANKPD and SDGELRPD in error.                *
+      *                                                                  *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+      ** Write out Header and Error Texts.
+      *
+     C                     WRITEGL0696H
+     C                     WRITEGL0696E
+      *
+      ** Seton Data base Error inds, Dump Program and Return control
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     OUT  LDA
+     C                     RETRN
+      *
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

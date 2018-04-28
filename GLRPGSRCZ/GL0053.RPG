@@ -1,0 +1,522 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas A/C Keys Report for FF')
+      ********************************************************************
+      *                                                                  *
+      *  Midas - General Ledger Module                                *
+      *                                                                  *
+      *      GL0053 - Account Keys Report For Futures And Options        *
+      *                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CFF004             Date 02OCT96               *
+      *                 E29343             Date 09OCT91               *
+      *                    S01304             DATE 26SEP91               *
+      *                    RT0094             DATE 14MAY91               *
+      *                    XXXXXX             DATE XXXXXXX               *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *      CFF004 - Increase in size of Price Fields,(Recompiled Only) *
+      *      E29343 - Check overflow before writing headings.            *
+      *      S01304 - Output blanks to report instead of zeroes.         *
+      *      RT0094 - Recompiled over changed PRTF/GL0053P1              *
+      *                                                                  *
+      ********************************************************************
+     F*
+     FFACKYL1 IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     FGL0053P1O   E             99     PRINTER      KINFDS SPOOL
+     FGL0053AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F*
+     F********************************************************************
+     F*
+     F*  Function of Indicators
+     F*
+     F*  10 - No records in file FACKYL1 read
+     F*  20 - Chain to LF/INTYP has failed
+     F*  30 - Description Indicator
+     F*  50 - First record in file FACKYL1
+     F*  60 - Remaining lines on pg < than lines required for headings    E29343
+     F*  70 - Output '*Continued*'
+     F*  99 - Overflow indicator
+     F*
+     F********************************************************************
+     F/EJECT
+     E*
+     E                    CPY@    1   1 80
+     E** Copyright Array
+     E*
+     E                    TABA    1   6  1 0 TAB1   18
+     E** Description Tables
+     E*
+     E                    DESC    1   1 18
+     E** Description Array
+     E*
+     E********************************************************************
+     E/EJECT
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** Data Structure for Compilation  - Copyright Insertion
+     I*
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 152 1530SFLIN
+     I                                    B 188 1890OFLLN                 E29343
+     I                                    B 367 3680PRTLN                 E29343
+     I** P1 printer file information data structure
+     I*
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I** AU printer file information data structure
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** Local Data Area
+     I*
+     IFFKY        DS
+     I                                        6   7 MKTCC
+     I                                        8  10 INSTY
+     I                                        6  10 MCCINS
+     I** Account Key Data Structure
+     I*
+     I********************************************************************
+     I/EJECT
+     C*
+     C** Receive entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQNO   5        RPT SEQ NO.
+     C*
+     C** Define Local Data Area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Use access program AOBANKR0 to retrieve header details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0053'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DBERROR 001 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** Write report headings
+     C*
+     C                     WRITEFMTW01
+     C*
+     C** Ensure totals spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C** Call ZSFILE for GL0053P1
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO   5
+     C                     PARM *BLANKS   ENTY    3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C** If error in ZSFILE, exit via DBERR subroutine
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** Initialise work fields for Instrument Type and Market
+     C** Centre Code
+     C*
+     C                     MOVE *BLANKS   PRVMCC  2
+     C                     MOVE *BLANKS   PRVINS  3
+     C*
+     C** Set record counter to zero
+     C*
+     C                     Z-ADD0         RECCNT
+     C*
+     C** Read first record for Fackyl1
+     C*
+     C                     READ FACKYL1                  10
+     C*
+     C** Seton first record indicator
+     C*
+     C                     MOVE '1'       *IN50
+     C*
+     C** Output 'No records to report'
+     C*
+     C           *IN10     IFEQ '1'
+     C                     WRITEFMTW02
+     C                     ELSE
+     C*
+     C** Add one to record counter
+     C*
+     C                     ADD  1         RECCNT
+     C                     END
+     C*
+     C** Do while record in Fackyl1
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C** Instrument Type/Market Centre Code same as previous
+     C** Instrument Type/Market Centre Code
+     C*
+     C           INSTY     IFEQ PRVINS
+     C           MKTCC     ANDEQPRVMCC
+     C*
+     C** Consider the case when first record has both the
+     C** Instrument Type/Market Centre Code fields blank
+     C*
+     C           *IN50     IFEQ '1'
+     C                     MOVE DESC,1    DESTYP
+     C                     MOVE *BLANKS   ISTN
+     C                     WRITEFMTW03
+     C                     WRITEFMTW04
+     C                     MOVE '0'       *IN50
+     C                     END
+     C*
+     C                     EXSR ALPHA                                     S01304
+     C                     WRITEFMTW05
+     C                     ELSE
+     C*
+     C** Instrument Type/Market Centre Code different to previous
+     C** Instrument Type/Market Centre Code
+     C** Chain to LF/INTYP to retrieve Instrument Name concatenating
+     C** Market Centre Code and Instrument Type
+     C*
+     C                     MOVE *BLANKS   ISPT    10
+     C                     MOVE *BLANKS   DESTYP
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN30
+     C           MCCINS    CHAININTYPDF              20
+     C*
+     C           *IN20     IFEQ '0'
+     C           ISPT      LOKUPTABA      TAB1           30
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE TAB1      DESTYP
+     C                     END
+     C*
+     C           MCCINS    IFEQ *BLANKS
+     C                     MOVE DESC,1    DESTYP
+     C                     MOVE *BLANKS   ISTN
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   ISTN
+     C                     END
+     C*                                                                   E29343
+     C**  Check enough lines remaining on page before printing headings   E29343
+     C*                                                                   E29343
+     C                     Z-ADD10        RQDLN   20                      E29343
+     C                     EXSR OFLW                                      E29343
+     C*                                                                   E29343
+     C**  If not enough lines available on page, start new page &         E29343
+     C**  write main headings                                             E29343
+     C*                                                                   E29343
+     C           *IN60     IFEQ '1'                                       E29343
+     C                     MOVE '1'       *IN99                           E29343
+     C                     WRITEFMTW01                                    E29343
+     C                     MOVE '0'       *IN99                           E29343
+     C                     END                                            E29343
+     C*
+     C                     WRITEFMTW03
+     C                     WRITEFMTW04
+     C                     EXSR ALPHA                                     S01304
+     C                     WRITEFMTW05
+     C*
+     C** Move Instrument Type and Market Centre Code into previous
+     C** Instrument Type and previous Market Centre Code
+     C*
+     C                     MOVE INSTY     PRVINS
+     C                     MOVE MKTCC     PRVMCC
+     C                     END
+     C*
+     C** Read record for Fackyl1
+     C*
+     C                     READ FACKYL1                  10
+     C*
+     C** Overflow
+     C*
+     C           *IN99     IFEQ '1'
+     C                     WRITEFMTW01
+     C*
+     C           *IN10     IFEQ '0'
+     C*
+     C           INSTY     IFEQ PRVINS
+     C           MKTCC     ANDEQPRVMCC
+     C                     MOVE '1'       *IN70
+     C                     WRITEFMTW03
+     C                     MOVE '0'       *IN70
+     C                     WRITEFMTW04
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     MOVE '0'       *IN99
+     C*
+     C** Output End of Report
+     C*
+     C           *IN10     IFEQ '1'
+     C                     WRITEFMTEND
+     C                     ELSE
+     C*
+     C** Add one to record counter
+     C*
+     C                     ADD  1         RECCNT
+     C                     END
+     C*
+     C                     END
+     C                     SETON                         LR
+     C********************************************************************S01304
+     C/EJECT                                                              S01304
+     C********************************************************************S01304
+     C*                                                                  *S01304
+     C* ALPHA:      Subroutine to move numeric file fields to alpha      *S01304
+     C*             report fields, and ensure that if file field         *S01304
+     C*             is zero then blanks are printed.                     *S01304
+     C*                                                                  *S01304
+     C* CALLED BY:  Main                                                 *S01304
+     C*                                                                  *S01304
+     C* CALLS:                                                           *S01304
+     C*                                                                  *S01304
+     C********************************************************************S01304
+     C*                                                                   S01304
+     C           ALPHA     BEGSR                                          S01304
+     C*                                                                   S01304
+     C** Set up Account Codes                                             S01304
+     C*                                                                   S01304
+     C           ACD1      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA1                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD1      ACDA1                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           ACD2      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA2                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD2      ACDA2                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           ACD3      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA3                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD3      ACDA3                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           ACD4      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA4                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD4      ACDA4                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           ACD5      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA5                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD5      ACDA5                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           ACD6      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA6                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD6      ACDA6                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C** Set up Narrative Codes                                           S01304
+     C*                                                                   S01304
+     C           NRC1      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   NCDA1                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE NRC1      NCDA1                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           NRC2      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   NCDA2                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE NRC2      NCDA2                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           NRC3      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   NCDA3                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE NRC3      NCDA3                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           NRC4      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   NCDA4                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE NRC4      NCDA4                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           NRC5      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   NCDA5                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE NRC5      NCDA5                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           NRC6      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   NCDA6                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE NRC6      NCDA6                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C** Set up Posting References                                        S01304
+     C*                                                                   S01304
+     C           PRF1      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA1                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF1      PRFA1                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           PRF2      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA2                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF2      PRFA2                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           PRF3      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA3                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF3      PRFA3                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           PRF4      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA4                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF4      PRFA4                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           PRF5      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA5                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF5      PRFA5                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           PRF6      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA6                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF6      PRFA6                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C                     ENDSR                                          S01304
+     C*                                                                   S01304
+     C********************************************************************E29343
+     C/EJECT                                                              E29343
+     C*****************************************************************   E29343
+     C*                                                               *   E29343
+     C* OFLW:       Subroutine to check remaining lines on page       *   E29343
+     C*                                                               *   E29343
+     C* CALLED BY:  P03                                               *   E29343
+     C*                                                               *   E29343
+     C* CALLS:                                                        *   E29343
+     C*                                                               *   E29343
+     C*****************************************************************   E29343
+     C*                                                                   E29343
+     C           OFLW      BEGSR                                          E29343
+     C*                                                                   E29343
+     C           OFLLN     SUB  PRTLN     REMLN   20                      E29343
+     C           REMLN     IFLT RQDLN                                     E29343
+     C                     MOVE '1'       *IN60                           E29343
+     C                     ELSE                                           E29343
+     C                     MOVE '0'       *IN60                           E29343
+     C                     END                                            E29343
+     C*                                                                   E29343
+     C                     ENDSR                                          E29343
+     C*                                                                   E29343
+     C********************************************************************
+     C/EJECT
+     C*                                                                  *
+     C* DBERR:      Database error processing subroutine                 *
+     C*                                                                  *
+     C* CALLED BY:  Main                                                 *
+     C*                                                                  *
+     C* CALLS:                                                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** Release the LDA
+     C*
+     C                     OUT  LDA
+     C*
+     C** Open file GL0053AU
+     C*
+     C                     OPEN GL0053AU
+     C*
+     C** Ensure totals spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM
+     C*
+     C** Call ZSFILE for GL0053AU
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+     C*
+     C** Write header
+     C*
+     C                     WRITEFIRST
+     C*
+     C** Write database error details
+     C*
+     C                     WRITEDBERROR
+     C*
+     C** Write 'End of Report'
+     C*
+     C                     WRITELAST
+     C*
+     C** Set on database error indicators and exit program
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**
+1*INTEREST FUTURE*
+2*FOREX FUTURE*
+3*COMMODITY FUTURE*
+4*INTEREST OPTION*
+5*FOREX OPTION*
+6*COMMODITY OPTION*
+**
+*OVER THE COUNTER*

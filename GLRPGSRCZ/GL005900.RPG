@@ -1,0 +1,1408 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Transfer Update FXDEALPP')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL005900 - Midas GL Account Transfer Update FXDEALPP         *
+      *                                                               *
+      *  Function:  This program updates the Midas FX Deals File with *
+      *             the new account detail from the Account Transfer  *
+      *             Selected Accounts File, GLSLACPD.                 *
+      *             It will also write an audit trail record for each *
+      *             update of FXDEALL4, FXDEALL5, FXDEALL6, FXDEALL7, *
+      *             FXDEALL8 and FXDEALL9.                            *
+      *                                                               *
+      *  Called By: GL003600                                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      *  Prev Amend No. CSW212             Date 03May12               *
+      *                 BUG27903           Date 13Jul10               *
+      *                 BUG27769           Date 09Jun10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CGL114  *CREATE    Date 04Jan10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  BUG27903 - Unable to transfer account with setl 01 and 08    *
+      *  BUG27769 - Incorrect error code                              *
+      *  CGL114 - Account Transfer Utility                            *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *****************************************************************
+      *
+     FFXDEALL9UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FFXDEALL4UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     F            FXDEALP0                          KRENAMEFXDEALP4
+     FFXDEALL5UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     F            FXDEALP0                          KRENAMEFXDEALP5
+     FFXDEALL6UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     F            FXDEALP0                          KRENAMEFXDEALP6
+     FFXDEALL7UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     F            FXDEALP0                          KRENAMEFXDEALP7
+     FFXDEALL8UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     F            FXDEALP0                          KRENAMEFXDEALP8
+     FFXDEALLAUF  E           K        DISK         KINFSR *PSSR                            BUG27903
+     F                                              KCOMIT                                  BUG27903
+     F            FXDEALP0                          KRENAMEFXDEALPA                         BUG27903
+     FFXDEALLBUF  E           K        DISK         KINFSR *PSSR                            BUG27903
+     F                                              KCOMIT                                  BUG27903
+     F            FXDEALP0                          KRENAMEFXDEALPB                         BUG27903
+     FFXDEALLCUF  E           K        DISK         KINFSR *PSSR                            BUG27903
+     F                                              KCOMIT                                  BUG27903
+     F            FXDEALP0                          KRENAMEFXDEALPC                         BUG27903
+     FFXDEALLDUF  E           K        DISK         KINFSR *PSSR                            BUG27903
+     F                                              KCOMIT                                  BUG27903
+     F            FXDEALP0                          KRENAMEFXDEALPD                         BUG27903
+     FFXDEALLEUF  E           K        DISK         KINFSR *PSSR                            BUG27903
+     F                                              KCOMIT                                  BUG27903
+     F            FXDEALP0                          KRENAMEFXDEALPE                         BUG27903
+     FFXDEALLFUF  E           K        DISK         KINFSR *PSSR                            BUG27903
+     F                                              KCOMIT                                  BUG27903
+     F            FXDEALP0                          KRENAMEFXDEALPF                         BUG27903
+     FGLAUTFPDO   E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FGLSLACL1IF  E           K        DISK         KINFSR *PSSR
+      /EJECT
+     E                    CPY@    1   1 80
+     I              '0000000000  '        C         WKZERO
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *                                                                                     BUG27903
+     INOSTD     E DSNOSTD                         8                                         BUG27903
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     IDSFDY     E DSDSFDY
+      *
+     IDSFRAC      DS
+     I                                        1   6 DSFCNU
+     I                                        7   9 DSFCCY
+     I                                       10  19 DSFACO
+     I                                       20  21 DSFACS
+     I                                       22  24 DSFBRC
+      *
+     IDSTOAC      DS
+     I                                        1   6 DSTCNU
+     I                                        7   9 DSTCCY
+     I                                       10  19 DSTACO
+     I                                       20  21 DSTACS
+     I                                       22  24 DSTBRC
+      *
+     IDSKITE      DS                             90
+     I                                        1  18 KDLIN
+     I                                       19  21 KCCY
+     I                                       22  24 KBRCA
+      *
+     IDSKIT2      DS                             90
+     I                                        1  18 KDLIN2
+     I                                       19  21 KCCY2
+     I                                       22  24 KBRCA2
+      *
+     IDSKIT3      DS                             90
+     I                                        1   6 KSFCNU
+     I                                        7   9 KSFCCY
+     I                                       10  19 KSFACO
+     I                                       20  21 KSFACS
+     I                                       22  24 KSFBRC
+     I                                       25  34 KSRFNO
+      *                                                                                     BUG27903
+     IWNOST       DS                                                                        BUG27903
+      * External Data Area for Nostro Details                                               BUG27903
+     I                                        1   3 WWCCY                                   BUG27903
+     I                                        4   5 WWNOSN                                  BUG27903
+     I                                        6   8 WWBRCH                                  BUG27903
+      *
+     I            DS
+     I                                        1   60FHDN38
+     I                                        1   6 WKDN38
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@PRCD  4
+     C                     PARM           P@RFNO 10
+     C           DSFRAC    PARM           P@FRAC 24
+     C           DSTOAC    PARM           P@TOAC 24
+     C                     PARM           P@RTCD  1
+      *
+     C                     EXSR SRINIT
+      *
+     C           P@PRCD    IFEQ '*LR '
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     EXSR XSIV01
+     C                     EXSR XMFXDL
+      *
+     C           DSTBRC    IFNE DSFBRC
+     C           KDLIN2    ANDNE*BLANKS
+     C           KDLIN2    ANDNEWKZERO
+     C                     EXSR XMFXD2
+     C                     ENDIF
+      *                                                                                     BUG27903
+     C           WNOST     IFNE *BLANKS                                                     BUG27903
+     C                     EXSR XMFXD3                                                      BUG27903
+     C                     ENDIF                                                            BUG27903
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMFXDL - Maintain Midas FX deals.                            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     XSAUDT                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XMFXDL    BEGSR
+      *
+     C           KDEAL     SETLLFXDEALP0
+     C           KDEAL     READEFXDEALP0               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE
+     C                     MOVEL'FXDEALL9'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Account
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE
+     C                     MOVEL'FXDEALL9'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHROBR
+     C                     CLEARFHCCY1
+     C                     CLEARFHMORI
+     C                     MOVELDSTBRC    FHROBR
+     C                     MOVELDSTCCY    FHCCY1
+     C                     MOVELWKDLIN    FHMORI
+      *
+     C                     WRITEFXDEALP0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'003'     DBASE
+     C                     MOVEL'FXDEALL9'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL9'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KDEAL     READEFXDEALP0               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'004'     DBASE
+     C                     MOVEL'FXDEALL9'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KDEAL     SETLLFXDEALP4
+     C           KDEAL     READEFXDEALP4               2122
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'005'     DBASE
+     C                     MOVEL'FXDEALL4'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP4               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'006'     DBASE
+     C                     MOVEL'FXDEALL4'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHROBR
+     C                     CLEARFHCCY1
+     C                     CLEARFHDORI
+     C                     MOVELDSTBRC    FHROBR
+     C                     MOVELDSTCCY    FHCCY1
+     C                     MOVELWKDLIN    FHDORI
+      *
+     C                     WRITEFXDEALP4               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'007'     DBASE
+     C                     MOVEL'FXDEALL4'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL4'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KDEAL     READEFXDEALP4               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'008'     DBASE
+     C                     MOVEL'FXDEALL4'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KDEAL     SETLLFXDEALP5
+     C           KDEAL     READEFXDEALP5               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'009'     DBASE
+     C                     MOVEL'FXDEALL5'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP5               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'010'     DBASE
+     C                     MOVEL'FXDEALL5'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHROBR
+     C                     CLEARFHCCY1
+     C                     CLEARFHRONS
+     C                     MOVELDSTBRC    FHROBR
+     C                     MOVELDSTCCY    FHCCY1
+     C                     MOVELWKDLIN    FHRONS
+      *
+     C                     WRITEFXDEALP5               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'011'     DBASE
+     C                     MOVEL'FXDEALL5'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL5'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KDEAL     READEFXDEALP5               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'012'     DBASE
+     C                     MOVEL'FXDEALL5'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KDEAL     SETLLFXDEALP6
+     C           KDEAL     READEFXDEALP6               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'013'     DBASE
+     C                     MOVEL'FXDEALL6'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP6               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'014'     DBASE
+     C                     MOVEL'FXDEALL6'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHPOBR
+     C                     CLEARFHCCY1
+     C                     CLEARFHMOPI
+     C                     MOVELDSTBRC    FHPOBR
+     C                     MOVELDSTCCY    FHCCY2
+     C                     MOVELWKDLIN    FHMOPI
+      *
+     C                     WRITEFXDEALP6               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'015'     DBASE
+     C                     MOVEL'FXDEALL6'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL6'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KDEAL     READEFXDEALP6               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'016'     DBASE
+     C                     MOVEL'FXDEALL6'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KDEAL     SETLLFXDEALP7
+     C           KDEAL     READEFXDEALP7               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'017'     DBASE
+     C                     MOVEL'FXDEALL7'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP7               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'018'     DBASE
+     C                     MOVEL'FXDEALL7'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHPOBR
+     C                     CLEARFHCCY2
+     C                     CLEARFHDOPI
+     C                     MOVELDSTBRC    FHPOBR
+     C                     MOVELDSTCCY    FHCCY2
+     C                     MOVELWKDLIN    FHDOPI
+      *
+     C                     WRITEFXDEALP7               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'019'     DBASE
+     C                     MOVEL'FXDEALL7'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL7'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KDEAL     READEFXDEALP7               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'020'     DBASE
+     C                     MOVEL'FXDEALL7'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KDEAL     SETLLFXDEALP8
+     C           KDEAL     READEFXDEALP8               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'021'     DBASE
+     C                     MOVEL'FXDEALL8'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP8               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'022'     DBASE
+     C                     MOVEL'FXDEALL8'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHPOBR
+     C                     CLEARFHCCY2
+     C                     CLEARFHPONS
+     C                     MOVELDSTBRC    FHPOBR
+     C                     MOVELDSTCCY    FHCCY2
+     C                     MOVELWKDLIN    FHPONS
+      *
+     C                     WRITEFXDEALP8               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'023'     DBASE
+     C                     MOVEL'FXDEALL8'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL8'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KDEAL     READEFXDEALP8               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'024'     DBASE
+     C                     MOVEL'FXDEALL8'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMFXD2 - Maintain Midas FX deals.                            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XMFXD2    BEGSR
+      *
+     C           KDEAL2    SETLLFXDEALP0
+     C           KDEAL2    READEFXDEALP0               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'025'     DBASE
+     C                     MOVEL'FXDEALL9'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Account
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'026'     DBASE
+     C                     MOVEL'FXDEALL9'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHROBR
+     C                     MOVELDSTBRC    FHROBR
+      *
+     C                     WRITEFXDEALP0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'027'     DBASE
+     C                     MOVEL'FXDEALL9'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set fields for audit file and write an audit record.
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL0'AULFIL
+     C                     EXSR XSAUDT
+      *
+      ** Read FX DEAL
+      *
+     C           KDEAL2    READEFXDEALP0               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'028'     DBASE
+     C                     MOVEL'FXDEALL9'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KDEAL2    SETLLFXDEALP4
+     C           KDEAL2    READEFXDEALP4               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'029'     DBASE
+     C                     MOVEL'FXDEALL4'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Acct
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP4               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'030'     DBASE
+     C                     MOVEL'FXDEALL4'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHROBR
+     C                     MOVELDSTBRC    FHROBR
+      *
+     C                     WRITEFXDEALP4               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'031'     DBASE
+     C                     MOVEL'FXDEALL4'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set fields for audit file and write a audit record.
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL4'AULFIL
+     C                     EXSR XSAUDT
+      *
+      ** Read FX DEAL
+      *
+     C           KDEAL2    READEFXDEALP4               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'032'     DBASE
+     C                     MOVEL'FXDEALL4'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KDEAL2    SETLLFXDEALP5
+     C           KDEAL2    READEFXDEALP5               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'033'     DBASE
+     C                     MOVEL'FXDEALL5'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Acct
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP5               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'034'     DBASE
+     C                     MOVEL'FXDEALL5'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHROBR
+     C                     MOVELDSTBRC    FHROBR
+      *
+     C                     WRITEFXDEALP5               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'035'     DBASE
+     C                     MOVEL'FXDEALL5'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set fields for audit file and write a audit record.
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL5'AULFIL
+     C                     EXSR XSAUDT
+      *
+      ** Read FX DEALS.
+      *
+     C           KDEAL2    READEFXDEALP5               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'036'     DBASE
+     C                     MOVEL'FXDEALL5'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KDEAL2    SETLLFXDEALP6
+     C           KDEAL2    READEFXDEALP6               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'037'     DBASE
+     C                     MOVEL'FXDEALL6'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Acct
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP6               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'038'     DBASE
+     C                     MOVEL'FXDEALL6'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHPOBR
+     C                     MOVELDSTBRC    FHPOBR
+      *
+     C                     WRITEFXDEALP6               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'039'     DBASE
+     C                     MOVEL'FXDEALL6'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set fields for audit file and write a audit record.
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL6'AULFIL
+     C                     EXSR XSAUDT
+      *
+      ** Read FX DEAL
+      *
+     C           KDEAL2    READEFXDEALP6               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'040'     DBASE
+     C                     MOVEL'FXDEALL6'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KDEAL2    SETLLFXDEALP7
+     C           KDEAL2    READEFXDEALP7               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'041'     DBASE
+     C                     MOVEL'FXDEALL7'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Acct
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP7               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'042'     DBASE
+     C                     MOVEL'FXDEALL7'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHPOBR
+     C                     MOVELDSTBRC    FHPOBR
+      *
+     C                     WRITEFXDEALP7               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'043'     DBASE
+     C                     MOVEL'FXDEALL7'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set fields for audit file and write a audit record.
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL7'AULFIL
+     C                     EXSR XSAUDT
+      *
+      ** Read FX DEAL
+      *
+     C           KDEAL2    READEFXDEALP7               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'044'     DBASE
+     C                     MOVEL'FXDEALL7'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KDEAL2    SETLLFXDEALP8
+     C           KDEAL2    READEFXDEALP8               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'045'     DBASE
+     C                     MOVEL'FXDEALL8'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Acct
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETFXDEALP8               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'046'     DBASE
+     C                     MOVEL'FXDEALL8'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARFHPOBR
+     C                     MOVELDSTBRC    FHPOBR
+      *
+     C                     WRITEFXDEALP8               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'047'     DBASE
+     C                     MOVEL'FXDEALL8'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set fields for audit file and write a audit record.
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'FXDEALL8'AULFIL
+     C                     EXSR XSAUDT
+      *
+      ** Read FX DEAL
+      *
+     C           KDEAL2    READEFXDEALP8               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'048'     DBASE
+     C                     MOVEL'FXDEALL8'DBFILE
+     C                     MOVELDSKIT2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************                     BUG27903
+      /EJECT                                                                                BUG27903
+      *****************************************************************                     BUG27903
+      *                                                               *                     BUG27903
+      *  XMFXD3 - Maintain Midas FX deals.                            *                     BUG27903
+      *                                                               *                     BUG27903
+      *  Called By: Main Processing                                   *                     BUG27903
+      *                                                               *                     BUG27903
+      *  Calls:     None                                              *                     BUG27903
+      *                                                               *                     BUG27903
+      *****************************************************************                     BUG27903
+      *                                                                                     BUG27903
+     C           XMFXD3    BEGSR                                                            BUG27903
+      *                                                                                     BUG27903
+     C                     MOVE *BLANKS   KDLIN3 18                                         BUG27903
+     C                     MOVELWWNOSN    KDLIN3                                            BUG27903
+     C                     MOVELWNOST     WNOST2  5                                         BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    SETLLFXDEALPA                                                    BUG27903
+     C           KDEAL3    READEFXDEALPA               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'052'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLA'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Update Records until End of File for Selected Acct                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN22     DOWEQ*OFF                                                        BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARFHROBR                                                      BUG27903
+     C                     MOVELWWBRCH    FHROBR                                            BUG27903
+      *                                                                                     BUG27903
+     C                     UPDATFXDEALPA               21                                   BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'053'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLA'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Set fields for audit file and write a audit record.                                BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARGLAUTFD0                                                    BUG27903
+     C                     MOVEL'FXDEALLA'AULFIL                                            BUG27903
+     C                     EXSR XSAUDT                                                      BUG27903
+      *                                                                                     BUG27903
+      ** Read FX DEAL                                                                       BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    READEFXDEALPA               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C                     ENDDO                                                            BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    SETLLFXDEALPB                                                    BUG27903
+     C           KDEAL3    READEFXDEALPB               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'054'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLB'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Update Records until End of File for Selected Acct                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN22     DOWEQ*OFF                                                        BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARFHROBR                                                      BUG27903
+     C                     MOVELWWBRCH    FHROBR                                            BUG27903
+      *                                                                                     BUG27903
+     C                     UPDATFXDEALPB               21                                   BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'055'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLB'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Set fields for audit file and write a audit record.                                BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARGLAUTFD0                                                    BUG27903
+     C                     MOVEL'FXDEALLB'AULFIL                                            BUG27903
+     C                     EXSR XSAUDT                                                      BUG27903
+      *                                                                                     BUG27903
+      ** Read FX DEALS.                                                                     BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    READEFXDEALPB               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C                     ENDDO                                                            BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    SETLLFXDEALPC                                                    BUG27903
+     C           KDEAL3    READEFXDEALPC               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'056'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLC'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Update Records until End of File for Selected Acct                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN22     DOWEQ*OFF                                                        BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARFHPOBR                                                      BUG27903
+     C                     MOVELWWBRCH    FHPOBR                                            BUG27903
+      *                                                                                     BUG27903
+     C                     UPDATFXDEALPC               21                                   BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'057'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLC'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Set fields for audit file and write a audit record.                                BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARGLAUTFD0                                                    BUG27903
+     C                     MOVEL'FXDEALLC'AULFIL                                            BUG27903
+     C                     EXSR XSAUDT                                                      BUG27903
+      *                                                                                     BUG27903
+      ** Read FX DEAL                                                                       BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    READEFXDEALPC               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C                     ENDDO                                                            BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    SETLLFXDEALPD                                                    BUG27903
+     C           KDEAL3    READEFXDEALPD               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'058'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLD'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Update Records until End of File for Selected Acct                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN22     DOWEQ*OFF                                                        BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARFHPOBR                                                      BUG27903
+     C                     MOVELWWBRCH    FHPOBR                                            BUG27903
+      *                                                                                     BUG27903
+     C                     UPDATFXDEALPD               21                                   BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'059'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLD'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Set fields for audit file and write a audit record.                                BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARGLAUTFD0                                                    BUG27903
+     C                     MOVEL'FXDEALLD'AULFIL                                            BUG27903
+     C                     EXSR XSAUDT                                                      BUG27903
+      *                                                                                     BUG27903
+      ** Read FX DEAL                                                                       BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    READEFXDEALPD               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C                     ENDDO                                                            BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    SETLLFXDEALPE                                                    BUG27903
+     C           KDEAL3    READEFXDEALPE               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'060'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLE'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Update Records until End of File for Selected Acct                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN22     DOWEQ*OFF                                                        BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARFHPOBR                                                      BUG27903
+     C                     MOVELWWBRCH    FHPOBR                                            BUG27903
+      *                                                                                     BUG27903
+     C                     UPDATFXDEALPE               21                                   BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'061'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLE'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Set fields for audit file and write a audit record.                                BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARGLAUTFD0                                                    BUG27903
+     C                     MOVEL'FXDEALLE'AULFIL                                            BUG27903
+     C                     EXSR XSAUDT                                                      BUG27903
+      *                                                                                     BUG27903
+      ** Read FX DEAL                                                                       BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    READEFXDEALPE               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C                     ENDDO                                                            BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    SETLLFXDEALPF                                                    BUG27903
+     C           KDEAL3    READEFXDEALPF               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'062'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLF'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Update Records until End of File for Selected Account                              BUG27903
+      *                                                                                     BUG27903
+     C           *IN22     DOWEQ*OFF                                                        BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARFHROBR                                                      BUG27903
+     C                     MOVELWWBRCH    FHROBR                                            BUG27903
+      *                                                                                     BUG27903
+     C                     UPDATFXDEALPF               21                                   BUG27903
+      *                                                                                     BUG27903
+     C           *IN21     IFEQ *ON                                                         BUG27903
+     C           *LOCK     IN   LDA                                                         BUG27903
+     C                     MOVEL'063'     DBASE                                             BUG27903
+     C                     MOVEL'FXDEALLF'DBFILE                                            BUG27903
+     C                     MOVELWNOST2    DBKEY                                             BUG27903
+     C                     OUT  LDA                                                         BUG27903
+     C                     EXSR *PSSR                                                       BUG27903
+     C                     ENDIF                                                            BUG27903
+      *                                                                                     BUG27903
+      ** Set fields for audit file and write an audit record.                               BUG27903
+      *                                                                                     BUG27903
+     C                     CLEARGLAUTFD0                                                    BUG27903
+     C                     MOVEL'FXDEALLF'AULFIL                                            BUG27903
+     C                     EXSR XSAUDT                                                      BUG27903
+      *                                                                                     BUG27903
+      ** Read FX DEAL                                                                       BUG27903
+      *                                                                                     BUG27903
+     C           KDEAL3    READEFXDEALPF               2122                                 BUG27903
+      *                                                                                     BUG27903
+     C                     ENDDO                                                            BUG27903
+      *                                                                                     BUG27903
+     C                     ENDSR                                                            BUG27903
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSAUDT - Set Audit records                                   *
+      *                                                               *
+      *  Called By: XMFXDL, XMFXD2                                    *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XSAUDT    BEGSR
+      *
+     C                     MOVELP@RFNO    AURFNO
+     C                     MOVEL'FXDEALPP'AUFILE
+     C                     MOVELDSFBRC    AUFBRC
+     C                     MOVELDSFCNU    AUFCNU
+     C                     MOVELDSFACO    AUFACO
+     C                     MOVELDSFACS    AUFACS
+     C                     MOVELDSTBRC    AUTBRC
+     C                     MOVELDSTCNU    AUTCNU
+     C                     MOVELDSTACO    AUTACO
+     C                     MOVELDSTACS    AUTACS
+     C           WKDN38    CAT  FHSPEC:1  AUTEXT 50 P
+     C                     MOVELWKDFMT    AUCRTD
+     C                     WRITEGLAUTFD0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'049'     DBASE
+     C                     MOVEL'GLAUTFPD'DBFILE
+     C                     MOVELAURFNO    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSIV01 - Set up initial values                               *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XSIV01    BEGSR
+      *
+     C                     MOVELDSFCCY    KCCY
+     C                     MOVELDSFBRC    KBRCA
+     C           DSFCNU    CAT  DSFACO:0  KDLIN
+     C                     CAT  DSFACS:0  KDLIN
+     C                     MOVELDSFCNU    KSFCNU
+     C                     MOVELDSFCCY    KSFCCY
+     C                     MOVELDSFACO    KSFACO
+     C                     MOVELDSFACS    KSFACS
+     C                     MOVELDSFBRC    KSFBRC
+     C                     MOVELP@RFNO    KSRFNO
+      *
+     C           KSLAC     CHAINGLSLACL1             3031
+      *
+     C           *IN30     IFEQ *ON
+     C           *IN31     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'050'     DBASE
+     C                     MOVEL'GLSLACL1'DBFILE
+     C                     MOVELDSKIT3    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELDSFCCY    KCCY2
+     C                     MOVELDSFBRC    KBRCA2
+     C                     MOVELSLACNO    KDLIN2
+      *
+     C           DSTCNU    CAT  DSTACO:0  WKDLIN 18
+     C                     CAT  DSTACS:0  WKDLIN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialise and define fields                        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           NOSTD                                             BUG27903
+      *                                                                                     BUG27903
+      ** Check nostro account changes                                                       BUG27903
+      *                                                                                     BUG27903
+     C                     MOVE *BLANKS   WNOST                                             BUG27903
+     C           *LOCK     IN   NOSTD                                                       BUG27903
+     C                     MOVE DANOST    WNOST                                             BUG27903
+     C                     OUT  NOSTD                                                       BUG27903
+      *
+      ** Retrieve Run Date.
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If return with an error (LR seton in called program) then
+      ** process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C********** @RTCD     OREQ '*ERROR*'                                                   BUG27769
+     C           @RTCD     ORNE *BLANKS                                                     BUG27769
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOBANKR0'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD051       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBJMRDT    WKDFMT  9
+     C                     MOVE BJMRDT    WKYEAR  20
+      *
+     C           WKYEAR    IFLT 72
+     C           WKYEAR    ADD  2000      WKCCYY  40
+     C                     ELSE
+     C           WKYEAR    ADD  1900      WKCCYY
+     C                     ENDIF
+      *
+     C                     MOVE WKCCYY    WKDFMT  9
+     C                     MOVE *BLANKS   KDLIN
+     C                     MOVE *BLANKS   WKDLIN
+      *
+     C           KDEAL     KLIST
+     C                     KFLD           KDLIN
+     C                     KFLD           KCCY
+     C                     KFLD           KBRCA
+      *
+     C           KDEAL2    KLIST
+     C                     KFLD           KDLIN2
+     C                     KFLD           KCCY2
+     C                     KFLD           KBRCA2
+      *                                                                                     BUG27903
+     C           KDEAL3    KLIST                                                            BUG27903
+     C                     KFLD           KDLIN3                                            BUG27903
+     C                     KFLD           WWCCY                                             BUG27903
+      *
+     C           KSLAC     KLIST
+     C                     KFLD           KSFBRC
+     C                     KFLD           KSFCNU
+     C                     KFLD           KSFCCY
+     C                     KFLD           KSFACO
+     C                     KFLD           KSFACS
+     C                     KFLD           KSRFNO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE 'F'       P@RTCD
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2010

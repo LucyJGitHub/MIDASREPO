@@ -1,0 +1,159 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB End Of Year (Financial) Check')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of business Module
+     F*                                                               *
+     F*  SD2001 - End of Year (Financial) check                       *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 111983             DATE 14MAR97               *
+     F*  PREV AMEND NO. S01411             DATE 05MAY93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  111983 - End of year date should strictly less than date of  *
+     F*           next working day.                                   *
+     F*  S01411 - New program for Business Transaction Statistics     *
+     F*           Switchable Feature.                                 *
+     F*                                                               *
+     F*****************************************************************
+     F**---------------------------------------------------------------
+     F**  STANDARD SUB-ROUTINES
+     F*----------------------------------------------------------------
+     F*
+     F*
+     F*----------------------------------------------------------------
+     F**  FUNCTION OF INDICATORS
+     F*
+     F*
+     F*  U7 & U8  Standard database error indicators
+     F*  LR       Last Record - End of Program
+     F**---------------------------------------------------------------
+      *
+      *
+      /EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      * Define layout of SDBANKPD for AOBANKR0 call return string
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * Define Access Object call output string
+      *
+     I@FMT      E DSDSFDY
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Program Initiation Processing:                                *
+      *                                                               *
+      * Sets up the copyright statement.                              *
+      * Obtains Year End Date.                                        *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Define End of Year Parameter
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           FEOY
+     C                     PARM           ERROR
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Obtain End of Year date from SDBANKPD
+      *
+     C                     MOVEL'*FIRST ' BANKOP  7
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   BANKRC  7        Return code
+     C                     PARM           BANKOP           Option
+     C           SDBANK    PARM SDBANK    @FMT             Format
+      *
+      ** Check for error in SDBANKPD
+      *
+     C           BANKRC    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'Y'       ERROR   1                       S01194
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SD4101'  DBPGM            **************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001*
+     C                     MOVEL'BANK'    DBKEY            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * If it is Financial end of Year set flag to 'Y'
+      *
+     C***********BJEYD     IFLE BJDNWD                                    111983
+     C           BJEYD     IFLT BJDNWD                                    111983
+     C                     MOVE 'Y'       FEOY    1
+     C                     END
+      *
+      * End program
+      *
+     C                     MOVE '1'       *INLR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

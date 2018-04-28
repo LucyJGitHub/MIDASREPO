@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Set up initial History and Audit Facility')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000095 - Set up initial History and Audit Facility       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *CREATE    Date 06Oct10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFX &ERRPGM)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if HAF is switched on - file SDMMODPD. */
+             CALL       PGM(AOMMODR0) PARM(&RTNCODE '*FIRST' &FMT)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('AOMMODR0')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(%SST(&FMT 94 1) *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('*NOT ON')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Clear relevant files. */
+             CLRPFM     FILE(HFBSEQPD)
+             CLRPFM     FILE(HFSCANPD)
+ 
+/* Initialise the HAF files HFBSEQPD and HFSCANPD. */
+             CALL       PGM(HF0000)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('HF0000')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                IF         COND(&ERRPGM *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SMC000095')
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

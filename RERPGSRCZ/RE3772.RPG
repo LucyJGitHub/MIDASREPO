@@ -1,0 +1,1040 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Retail account balances report')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE3772 - RETAIL ACCOUNT BALANCES REPORT                      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. MD024325A          Date 06Mar14               *
+      *  Prev Amend No. MD024325           Date 15Jan14               *
+      *                 MD021144           Date 08Jul13               *
+      *                 AR1097467          Date 08Apr13               *
+      *                 CRE083BW           Date 06Aug12               *
+      *                 AR1048918          Date 26Oct12               *
+      *                 CRE083AF           Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27045A          Date 13Apr10               *
+      *                 BUG27045           Date 18Feb10               *
+      *                 CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CRE024             Date 07Oct05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 179400             Date 28Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 17May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 095794             Date 10Nov95               *
+     F*                 S01408             DATE 07OCT94               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD024325A - COB Report RE3772P1 Retail Account Balances; has *
+      *              the amount without any decimal (ALLOWED O/DRAFT) *
+      *  MD024325 - COB Report RE3772P1 Retail Account Balances; has  *
+      *             the amount without any decimal                    *
+      *  MD021144 - REC3772 performance issue with STOPCSD            *
+      *  AR1097467 - Expected 15% COB run optimisation not met        *
+      *  CRE083BW - COB Restructure - RE COB Optimisation Phase 1     *
+      *  AR1048918 - RE3772P3 did not generate (Recompile)            *
+      *  CRE083AF - COB Restructure - RE COB Optimisation Phase 1     *
+      *  BUG27045A - Override the fix of Bug 27045 (Recompile)        *
+      *  BUG27045 - Amend via SOAP removes Document Linkage           *
+      *             (Recompile)                                       *
+      *  CSC042 - COB Performance fix                                 *
+      *           AOCURRR* is called 120K times for 17 records at RZB *
+      *           Sofia. Cache data as it is read from SDCURRPD       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CRE024 -  Country Level Switchable Feature :                 *
+     F*            Security Features for Restricted Accounts.         *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  179400 -  Increase the size of variable BRTOT to 5,0 for     *
+      *            correct number of records in RE3772P1.             *
+     F*  CSD006 -  Use DSSDY for call to AOCURRR0.                    *
+     F*  095794 -  STOPCL now keyed on Branch                         *
+     F*  S01408 -  Addition of core hook RE3772FFPG                   *
+     F*            Addition of core hook RE3772CCPG                   *
+     F*            Addition of core hook RE3772OOP1                   *
+     F*            Addition of core hook RE3772OOP2                   *
+     F*  S01413 -  Retail 3 Incorporation                             *
+     F*            and changes for Release 10 standards               *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSTOPCL  IF  E           K        DISK
+     F/COPY WNCPYSRC,RE3772F001
+     F***RETACOQ IF  E           K        DISK                                              CRE083AF
+     F***RETACL1 IF  E           K        DISK                                     CRE083AF CRE083BW
+     FRETACOQ IF  E                    DISK                                                 CRE083BW
+     F/COPY WNCPYSRC,RE3772FFPG                                           S01408
+     FSFRACRPAIF  E           K        DISK                           UC  CRE024
+     FRETACRPAUF  E                    DISK                      A    UC  CRE024
+     F            RETACREF                          KRENAMERETACRP0       CRE024
+     FSDCURRL1IF  E           K        DISK                                                AR1097467
+      ** File to load currency cache                                                       AR1097467
+     FRE3772P2O   F     132     OA    LPRINTER      KINFDS SPOOL2     UC  CRE024
+     FRE3772P1O   F     132     OF    LPRINTER      KINFDS SPOOL      UC
+     FRE3772AUO   F     132     OV     PRINTER      KINFDS SPOOLU
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       05      RETACOQ FILE - DETAIL.                          *
+     F*       20      ACNO ON RETACOQ DETAIL - BLANK.                 *
+     F*       21      PRINT INDICATOR                                 *
+     F*                                                               *
+     F*       30      THIS CURRENCY HAS 0 DECIMAL POSITIONS.          *
+     F*       31      THIS CURRENCY HAS 1 DECIMAL POSITIONS.          *
+     F*       32      THIS CURRENCY HAS 2 DECIMAL POSITIONS.          *
+     F*       33      THIS CURRENCY HAS 3 DECIMAL POSITIONS.          *
+     F*                                                               *
+     F*       40      CONTROL 1ST CYCLE PROCESSING.                   *
+     F*       45      OVERDRAFT EXPIRED                               *
+     F*       50-55   REFERRAL INDICATORS                             *
+     F*                                                               *
+     F*       58      MULTIBRANCHING OUTPUT INDICATOR                 *
+     F*       76      NO DETAILS TO REPORT                            *
+     F*       88      MBIN = 'Y'                                      *
+     F*       93      RETAIL ACCOUNT INDICATOR                        *
+     F*                                                               *
+     F*       U7      DATABASE ERROR                                  *
+     F*       L1      CHANGE OF CURRENCY.                             *
+     F*       L2      CHANGE OF BRANCH.                               *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ZRACNI - Checks if retail account numbers are supported      *
+     F*  CCYDEP - Determines number of decimal places of a currency   *
+     F*  *PSSR  - Handles Abnormal Error Conditions                   *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E**  Copyright insertion
+     E*
+     E**********          CURR      150  3               ALL CCYS                   CSC042 AR1097467
+     E**********          #CDP      150  1 0             Decimal Places             CSC042 AR1097467
+     E                    CYCD      250  3                                                 AR1097467
+      ** Currency Code (Key for Cache)                                                     AR1097467
+     E/SPACE 3
+     L*
+     L/COPY WNCPYSRC,RE3772L001
+     LRE3772P2 66FL 56OL                                                  CRE024
+     LRE3772P1 66FL 56OL
+     L/COPY WNCPYSRC,RE3772L002
+     L*
+     I/EJECT
+     I*
+     ISPOOL       DS
+     I*
+     I**  Data structure for detail spool file information
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I*
+     I**  Data structure for audit spool file information
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISPOOL2      DS                                                      CRE024
+      *                                                                   CRE024
+      * Data structure for detail spool file information                  CRE024
+     I                                       83  92 SFILE2                CRE024
+     I                                    B 123 1240SFNUM2                CRE024
+      *                                                                   CRE024
+      * Data Structure for outputting range details to RETACRPA           CRE024
+     I            DS                                                      CRE024
+     I                                        1  20 ZZ020                 CRE024
+     I                                        1  10 MFRAC                 CRE024
+     I                                       11  20 MTOAC                 CRE024
+      *                                                                   CRE024
+     I              'CLRPFM RETACRPA'     C         UMTXT                 CRE024
+     I/COPY WNCPYSRC,RE3772I001
+     I*
+     IRUNDT       DS
+     I*
+     I** Data area RUNDAT
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     ILDA         DS                            256
+     I*
+     I**  Local Data Area
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *                                                                                    AR1097467
+      ** Data structure to overlay single character named                                  AR1097467
+      *                                                                                    AR1097467
+     ICACFLD      DS                                                                       AR1097467
+     I                                        1   30A                                      AR1097467
+     I                                        1   30CXCYCD                                 AR1097467
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** External DS for Bank Details
+     I*
+     I              BJURPT                          TITL
+     I              BJDNWD                          DNWD
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I*
+     I** External DS for Branch Details
+     I*
+     I              A8BRNM                          BRNM
+     I*
+     ISDRETL    E DSSDRETLPD
+     I*
+     I** External DS for Retail Details
+     I*
+     I              BMRANR                          RACN
+     I*
+     I***SDCURR*   E DSSDCURRPD                                                            AR1097467
+     ISDCYCD    E DSSDCURRPD                250                                            AR1097467
+     I*
+     I** External DS for Currency Code Details
+     I*
+     I**********    A6NBDP                          DCP                                     MD024325
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** Short Data Structure for Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Long Data Structure for Access Programs
+     I*
+     C/EJECT
+     C*
+     C** Copyright Statement
+     C*
+     C**********           MOVEACPY@      BIS@   80                                           CSC042
+     C/COPY WNCPYSRC,RE3772C010
+     C*
+     C**  Key List
+     C*
+     C           STOPK     KLIST
+     C                     KFLD           BRCA                            095794
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C*
+     C           *LIKE     DEFN BRCA      XBRCA
+     C*
+     C********************************************************************
+     C*   M A I N   R O U T I N E
+     C********************************************************************
+     C*
+     C**  First Cycle Processing
+     C*
+     C           *IN40     IFEQ '0'
+     C                     SETON                         40
+     C*
+     C** Copyright Statement                                                                  CSC042
+     C*                                                                                       CSC042
+     C                     MOVEACPY@      BIS@   80                                           CSC042
+     C*****************************************************************             CSC042 AR1097467
+      **Set*up*index*used*by*ccy*arrays********************************             CSC042 AR1097467
+     C**********           Z-ADD0         ##QNDX                                    CSC042 AR1097467
+      *                                                                                    AR1097467
+      ** Define Full Cache Fields (Currency Cache)                                         AR1097467
+      *                                                                                    AR1097467
+     C                     Z-ADD250       SZCYCD  30                                       AR1097467
+     C           *LIKE     DEFN SZCYCD    TXCYCD                                           AR1097467
+     C           *LIKE     DEFN A6CYCD    KYCYCD                                           AR1097467
+      *                                                                                    AR1097467
+      ** Load Full Cache <cache name>                                                      AR1097467
+      *                                                                                    AR1097467
+     C                     Z-ADDSZCYCD    CXCYCD                                           AR1097467
+     C           CXCYCD    OCUR SDCYCD                                                     AR1097467
+      *                                                                                    AR1097467
+     C           *LOVAL    SETLLSDCURRL1                                                   AR1097467
+     C                     READ SDCURRL1                 42                                AR1097467
+      *                                                                                    AR1097467
+     C           *IN42     DOWEQ*OFF                                                       AR1097467
+     C           CXCYCD    ANDGT1                                                          AR1097467
+     C                     MOVE A6CYCD    CYCD,A                                           AR1097467
+     C                     SUB  1         CXCYCD                                           AR1097467
+     C           CXCYCD    OCUR SDCYCD                                                     AR1097467
+     C                     READ SDCURRL1                 42                                AR1097467
+      *                                                                                    AR1097467
+     C                     ENDDO                                                           AR1097467
+      *                                                                                    AR1097467
+      ** If count less than array size                                                     AR1097467
+      *                                                                                    AR1097467
+     C           *IN42     IFEQ *ON                                                        AR1097467
+     C           CXCYCD    ANDLTSZCYCD                                                     AR1097467
+     C                     ADD  1         CXCYCD                                           AR1097467
+     C                     ENDIF                                                           AR1097467
+      *                                                                                    AR1097467
+      ** If count is at least equal to array size                                          AR1097467
+      *                                                                                    AR1097467
+     C           CXCYCD    IFEQ 1                                                          AR1097467
+     C                     MOVE A6CYCD    CYCD,A                                           AR1097467
+     C                     ENDIF                                                           AR1097467
+      *                                                                                    AR1097467
+      ** Update trailer index                                                              AR1097467
+      *                                                                                    AR1097467
+     C                     Z-ADDCXCYCD    TXCYCD                                           AR1097467
+      *                                                                                    AR1097467
+      *                                                                                       CSC042
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE 'RE3772  'DBPGM
+     C*
+     C**  Access data area RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** Access Bank Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 001*
+     C                     Z-ADD001       DBASE            ************
+     C                     OUT  LDA
+     C                     SETON                     U7LR
+     C                     END
+     C*
+     C** Test for Multibraching
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN88
+     C                     END
+     C*
+     C                     EXSR ZRACNI
+      *                                                                                     MD021144
+     C                     SETOF                     56                                     MD021144
+     C           *LOVAL    SETLLSTOPCL                                                      MD021144
+     C                     READ STOPCL                   56                                 MD021144
+     C                     END
+     C*
+     C**  Accumulate total records & records per branch.
+     C*
+     C/COPY WNCPYSRC,RE3772C007
+     C**********           READ RETACOQ                  LR                                 CRE083AF
+     C**********           READ RETACL1                  LR                        CRE083AF CRE083BW
+     C                     READ RETACOQ                  LR                                 CRE083BW
+     C/COPY WNCPYSRC,RE3772C002
+     C*
+     C           *INLR     IFEQ '0'
+     C/COPY WNCPYSRC,RE3772C003
+     C                     SETON                     05
+     C           TOTREC    ADD  1         TOTREC  50       TOTAL NO. RECS
+     C                     ELSE
+     C                     SETOF                     05
+     C                     GOTO END
+     C                     END
+     C*
+     C/COPY WNCPYSRC,RE3772CCPG                                           S01408
+     C                     SETON                     21
+     C*
+     C           ACNO      IFEQ 0
+     C                     SETON                     20
+     C                     ELSE
+     C                     SETOF                     20
+     C                     END
+     C*
+     C           BRCA      IFNE XBRCA
+     C                     MOVE XBRCA     PBRCA   3
+     C                     MOVE BRCA      XBRCA
+     C                     SETON                     L2
+     C/COPY WNCPYSRC,RE3772C005
+     C                     ELSE
+     C                     SETOF                     L2
+     C                     END
+     C*
+     C           *INL2     IFEQ '1'
+     C                     EXCPT
+     C                     Z-ADD0         BRTOT
+     C/COPY WNCPYSRC,RE3772C008
+     C                     CLOSERE3772P1
+     C                     SETON                     58
+     C                     OPEN RE3772P1
+     C*
+     C                     Z-ADD0         PAGE
+     C*
+     C** Ensure report spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C/COPY WNCPYSRC,RE3772C011
+     C                     PARM *BLANK    SEQ
+     C/COPY WNCPYSRC,RE3772C012
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  Error during ZSFILE processing, return to calling program
+     C*
+     C                     SETON                     U7LR
+     C                     RETRN
+     C                     END
+     C/COPY WNCPYSRC,RE3772C009
+     C*
+     C           MBIN      IFEQ 'Y'
+     C*
+     C** Get branch name (in BRNM)
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL@DSNB     DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DBERROR 002 *
+     C                     OUT  LDA                        ***************
+     C                     SETON                     U7LR
+     C                     GOTO END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *INL2     IFEQ '1'                                       CRE024
+      * Access SAR file to see if feature is on                           CRE024
+     C           CRE024    IFEQ *BLANKS                                   CRE024
+     C                     CALL 'AOSARDR0'                                CRE024
+     C                     PARM *BLANKS   UMRTCD  7                       CRE024
+     C                     PARM '*VERIFY' UMOPTN  7                       CRE024
+     C                     PARM 'CRE024'  UMKEY   6                       CRE024
+     C                     PARM *BLANKS   DSFDY                           CRE024
+      *                                                                   CRE024
+      * If feature on, set indicators and open files                      CRE024
+     C           UMRTCD    IFEQ *BLANKS                                   CRE024
+     C                     MOVE 'Y'       CRE024  1                       CRE024
+     C                     MOVE '1'       *IN07                           CRE024
+     C                     OPEN SFRACRPA                                  CRE024
+      *                                                                   CRE024
+      * Clear RETACRPA here to avoid modifying also CLP                   CRE024
+     C                     CALL 'QCMDEXC'                9090             CRE024
+     C                     PARM UMTXT     UMCMD  15                       CRE024
+     C                     PARM 15        UMLEN  155                      CRE024
+      *                                                                   CRE024
+     C                     OPEN RETACRPA                                  CRE024
+      *                                                                   CRE024
+      * Perform dummy read to allow rename of file format                 CRE024
+     C  N90 90             READ RETACRPA                 90               CRE024
+     C                     ELSE                                           CRE024
+     C                     MOVE 'N'       CRE024                          CRE024
+     C                     END                                            CRE024
+     C                     END                                            CRE024
+      *                                                                   CRE024
+      * If feature on, open P2 report file and initialise work fields     CRE024
+     C           CRE024    IFEQ 'Y'                                       CRE024
+     C                     CLOSERE3772P2                                  CRE024
+     C                     OPEN RE3772P2                                  CRE024
+      *                                                                   CRE024
+     C                     Z-ADD0         BRTOT2                          CRE024
+     C                     Z-ADD0         PAGE2                           CRE024
+      *                                                                   CRE024
+      * Ensure report spool file recorded by RCF                          CRE024
+     C                     Z-ADDSFNUM2    ZSNUM   60                      CRE024
+      *                                                                   CRE024
+     C                     CALL 'ZSFILE'                                  CRE024
+     C                     PARM *BLANK    SEQ                             CRE024
+     C                     PARM BRCA      SENTY   3                       CRE024
+     C                     PARM           SFILE2                          CRE024
+     C                     PARM           ZSNUM                           CRE024
+     C                     PARM           ZSERR   1                       CRE024
+      *                                                                   CRE024
+      * Error during ZSFILE processing, return to calling program         CRE024
+     C           ZSERR     IFEQ 'Y'                                       CRE024
+     C                     SETON                     U7LR                 CRE024
+     C                     RETRN                                          CRE024
+     C                     END                                            CRE024
+     C                     END                                            CRE024
+     C                     END                                            CRE024
+      *                                                                   CRE024
+      * If feature on, check if account restricted                        CRE024
+     C           CRE024    IFEQ 'Y'                                       CRE024
+     C                     MOVE ACOD      UMACOD 10                       CRE024
+     C           UMACOD    SETGTSFRACRP0                                  CRE024
+     C                     READPSFRACRP0                 90               CRE024
+      *                                                                   CRE024
+      * If account restricted, adjust branch totals and condition         CRE024
+      * output indicators (06 = restricted account detail)                CRE024
+     C           *IN90     IFEQ '0'                        B4             CRE024
+     C           UMACOD    ANDLEMTOAC                                     CRE024
+     C           BRTOT     SUB  1         BRTOT                           CRE024
+     C           BRTOT2    ADD  1         BRTOT2  40                      CRE024
+     C                     MOVEA'01'      *IN,05                          CRE024
+     C                     WRITERETACRP0                                  CRE024
+     C                     ELSE                                           CRE024
+     C                     MOVE '0'       *IN06                           CRE024
+     C                     END                                            CRE024
+     C                     END                                            CRE024
+     C/COPY WNCPYSRC,RE3772C001
+     C********** BRTOT     ADD  1         BRTOT   40       RECS PER BRANCH                    179400
+     C           BRTOT     ADD  1         BRTOT   50       REC PER BRANCH                     179400
+     C*
+     C**  On change of CCY find no. dec. positions for this CCY.
+     C*
+     C           CCY       IFNE XCCY
+     C                     MOVE CCY       XCCY    3
+     C                     SETON                     L1
+     C                     EXSR CCYDEP
+     C           XDECP     COMP 1                      3031
+     C           XDECP     COMP 2                    33  32
+     C                     ELSE
+     C                     SETOF                     L1
+     C                     END
+     C*
+     C**  Test referral indicators.
+     C*
+     C                     TESTB'4'       RETB           50
+     C                     TESTB'2'       RETB           51
+     C                     TESTB'3'       RETB           52
+     C                     TESTB'0'       RETB           53
+     C                     TESTB'1'       RETB           54
+     C********** STOPK     SETLLSTOPCL                   55                                 MD021144
+     C  N56      STOPK     SETLLSTOPCL                   55                                 MD021144
+     C*
+     C** Only output allowed overdraft it it is current
+     C*
+     C           ODLN      IFNE 0
+     C*
+     C           ODED      COMP DNWD                   45
+     C*
+     C           *IN45     IFEQ '1'
+     C                     Z-ADD0         ODLN
+     C                     SETOF                     45
+     C                     END
+     C*
+     C                     END
+     C*
+     C           END       TAG
+     C*
+     C**  Ensure total spool file recorded by RCF
+     C*
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     CLR                   CALL 'ZSFILE'
+     C/COPY WNCPYSRC,RE3772C013
+     CLR                   PARM *BLANK    SEQ     5
+     C/COPY WNCPYSRC,RE3772C014
+     CLR                   PARM *BLANK    SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU
+     CLR                   PARM           ZSERR   1
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C*
+     C**  Error during ZSFILE processing, return to calling program
+     C*
+     CLR                   SETON                     U7
+     CLR                   RETRN
+     CLR                   END
+     C*
+     CLR U7                EXSR *PSSR
+     C********************************************************************
+     C*  E N D   O F   M A I N   R O U T I N E
+     C********************************************************************
+     C*
+     C*  ZRACNI   Subroutine to set indicator 93 if Retail Account
+     C*           Numbers are supported.  If RACN is not 'Y' or 'N'
+     C*           indicator 99 will be set on.
+     C*
+     C*  CALLED BY:      MAIN
+     C*  CALLS    :      Nothing
+     C*
+     C********************************************************************
+     C*
+     C           ZRACNI    BEGSR                           ***  ZRACNI  **
+     C*
+     C** Access Retail Details
+     C*
+     C                     CALL 'AORETLR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDRETL    PARM SDRETL    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDRETLPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 003*
+     C                     Z-ADD003       DBASE            ************
+     C                     OUT  LDA
+     C                     SETON                     U7LR
+     C                     GOTO END
+     C*
+     C                     ELSE
+     C*
+     C           RACN      COMP 'Y'                      93
+     C  N93      RACN      COMP 'N'                  9999
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C*
+     C*  CCYDEP   Subroutine to obtain the number of decimal places
+     C*           for a currency.
+     C*
+     C*  CALLED BY:      MAIN
+     C*  CALLS    :      None
+     C*
+     C********************************************************************
+     C*
+     C           CCYDEP    BEGSR                           *** CCYDEP  ***
+     C*
+     C**  Access Currency Code Details
+     C*
+      * Are the details for this CCY already stored in the arrays                             CSC042
+     C**********           MOVELXCCY      ##KC                                      CSC042 AR1097467
+     C**********           EXSR ##CHKC                                              CSC042 AR1097467
+     C********** ##FIC     IFEQ 'Y'                                                 CSC042 AR1097467
+     C                     MOVELXCCY      KYCYCD                                           AR1097467
+     C                     Z-ADDTXCYCD    CXCYCD                                           AR1097467
+     C           KYCYCD    LOKUPCYCD,A                   42                                AR1097467
+      *                                                                                    AR1097467
+      * Found in the arrays so use the details from there                                     CSC042
+     C           *IN42     IFEQ *ON                                                        AR1097467
+     C           CXCYCD    OCUR SDCYCD                                                     AR1097467
+     C**********           EXSR ##SETC                                              CSC042 AR1097467
+     C                     ELSE                                                               CSC042
+     C                     Z-ADDTXCYCD    CXCYCD                                           AR1097467
+     C                     MOVE KYCYCD    CYCD,A                                           AR1097467
+     C           CXCYCD    OCUR SDCYCD                                                     AR1097467
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM XCCY      @CCY    3
+     C***********SDCURR    PARM SDCURR    DSFDY                           CSD006
+     C********** SDCURR    PARM SDCURR    DSSDY                                     CSD006 AR1097467
+     C           SDCYCD    PARM SDCYCD    DSSDY                                            AR1097467
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL@CCY      DBKEY
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD004       DBASE            * DBERROR 004 *
+     C                     OUT  LDA                        ***************
+     C                     SETON                     U7LR
+     C                     GOTO END
+     C*
+     C**********           ELSE                                                            AR1097467
+      **Found*on*the*DB*and*not*in*the*array*so*add*to*the*array*******             CSC042 AR1097467
+     C**********           EXSR ##ADDC                                              CSC042 AR1097467
+     C*
+     C**********           Z-ADDDCP       XDECP   10                                          CSC042
+     C*
+     C                     END
+     C                     ENDIF                                                              CSC042
+     C**********           Z-ADDDCP       XDECP   10                                 CSC042 MD024325
+     C                     Z-ADDA6NBDP    XDECP   10                                        MD024325
+     C*
+     C                     ENDSR
+     C/COPY WNCPYSRC,RE3772C004
+     C********************************************************************
+      /EJECT                                                                                  CSC042
+     C********************************************************************                    CSC042
+     C*****************************************************************             CSC042 AR1097467
+     C***##CHKC**-*Check*the*currency*details**************************             CSC042 AR1097467
+     C*****************************************************************             CSC042 AR1097467
+     C********************************************************************                    CSC042
+     C********** ##CHKC    BEGSR                                                    CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+     C********** *LIKE     DEFN BJCYCD    ##KC                                      CSC042 AR1097467
+     C********** *LIKE     DEFN Q         ##QSV                                     CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+      **Set*off*the*currency*found*indicator***************************             CSC042 AR1097467
+     C**********           MOVEL*BLANK    ##FIC   1                                 CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+      **Save*the*state*of*indicator*87*so*it*can*be*reset*at*the*end***             CSC042 AR1097467
+      **of*the*SR*as*it*may*be*used*elsewhere*in*the*code**************             CSC042 AR1097467
+     C********** *IN87     IFEQ *ON                                                 CSC042 AR1097467
+     C**********           MOVEL'Y'       #IN87   1                                 CSC042 AR1097467
+     C**********           ELSE                                                     CSC042 AR1097467
+     C**********           MOVEL'N'       #IN87                                     CSC042 AR1097467
+     C**********           ENDIF                                                    CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+     C**********           SETOF                         87                         CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+      **Restore*Q*from*##QSV*in*case*Q*is*used*elsewhere*in*the*code***             CSC042 AR1097467
+     C**********           Z-ADD##QSV     Q       40                                CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+      **Are*we*looking*for*the*same*details*as*the*last*time*this******             CSC042 AR1097467
+      **subroutine*was*called*i.e.*is*Q*already*set*correctly?*********             CSC042 AR1097467
+      **If*so*then*use*the*data*rather*than*do*another*LOKUP***********             CSC042 AR1097467
+      **First*make*sure*that*we*don't*reference*the*0th*array*element**             CSC042 AR1097467
+     C********** Q         IFEQ 0                                                   CSC042 AR1097467
+     C**********           Z-ADD1         Q                                         CSC042 AR1097467
+     C**********           ENDIF                                                    CSC042 AR1097467
+      **Now*see*if*this*search*is*same*as*last*one*performed***********             CSC042 AR1097467
+      **If*we*have*a*match*then*seton*87*so*the*code*after*this********             CSC042 AR1097467
+      **subroutine*knows*it*can*use*Q*directly*************************             CSC042 AR1097467
+     C********** ##KC      IFEQ CURR,Q                                              CSC042 AR1097467
+     C**********           SETON                         87                         CSC042 AR1097467
+     C**********           ELSE                                                     CSC042 AR1097467
+      **Otherwise*hunt*in*the*array*and*seton*87*if*found**************             CSC042 AR1097467
+     C**********           Z-ADD1         Q                                         CSC042 AR1097467
+     C********** ##KC      LOKUPCURR,Q                   87                         CSC042 AR1097467
+     C**********           ENDIF                                                    CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+      **Save*Q*for*next*time*******************************************             CSC042 AR1097467
+     C********** *IN87     IFEQ *ON                                                 CSC042 AR1097467
+     C**********           Z-ADDQ         ##QSV                                     CSC042 AR1097467
+      **Set*the*indicator*to*show*the*data*was*found*******************             CSC042 AR1097467
+     C**********           MOVEL'Y'       ##FIC                                     CSC042 AR1097467
+     C**********           ENDIF                                                    CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+      **Reset*the*state*of*indicator*87.*******************************             CSC042 AR1097467
+     C********** #IN87     IFEQ 'Y'                                                 CSC042 AR1097467
+     C**********           MOVEL*ON       *IN87                                     CSC042 AR1097467
+     C**********           ELSE                                                     CSC042 AR1097467
+     C**********           MOVEL*OFF      *IN87                                     CSC042 AR1097467
+     C**********           ENDIF                                                    CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+     C**********           ENDSR                                                    CSC042 AR1097467
+      *                                                                                       CSC042
+     C********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+     C********************************************************************                    CSC042
+      *****************************************************************             CSC042 AR1097467
+      ***##SETC**-*Set*up*the*SDCURRPD*fields*as*expected*by*this*program           CSC042 AR1097467
+      *************from*the*array*fields*******************************             CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+     C********************************************************************                    CSC042
+     C********** ##SETC    BEGSR                                                    CSC042 AR1097467
+     C*****************************************************************             CSC042 AR1097467
+     C**********           MOVELCURR,Q    A6CYCD                                    CSC042 AR1097467
+     C**********           Z-ADD#CDP,Q    DCP                                       CSC042 AR1097467
+     C*****************************************************************             CSC042 AR1097467
+     C**********           ENDSR                                                    CSC042 AR1097467
+     C********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+      *****************************************************************             CSC042 AR1097467
+      **##ADDC*-*Adds*the*SDCURRPD*fields*used*in*the*code*to*the******             CSC042 AR1097467
+      **arrays*********************************************************             CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+     C********** ##ADDC    BEGSR                                                    CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+     C********** *LIKE     DEFN Q         ##QNDX                                    CSC042 AR1097467
+      **If*there*is*still*room*in*the*array*then*add*the*details*******             CSC042 AR1097467
+     C********** ##QNDX    IFLT 150                                                 CSC042 AR1097467
+     C**********           ADD  1         ##QNDX                                    CSC042 AR1097467
+     C**********           Z-ADD##QNDX    Q                                         CSC042 AR1097467
+     C**********           MOVELA6CYCD    CURR,Q                                    CSC042 AR1097467
+     C**********           Z-ADDDCP       #CDP,Q                                    CSC042 AR1097467
+     C**********           ENDIF                                                    CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+      **Update*##QSV*so*next*call*to*##CHKC*checks*this*latest*adddition            CSC042 AR1097467
+      **to*the*array*firss*********************************************             CSC042 AR1097467
+     C**********           Z-ADDQ         ##QSV                                     CSC042 AR1097467
+      *****************************************************************             CSC042 AR1097467
+     C**********           ENDSR                                                    CSC042 AR1097467
+      ********************************************************************                    CSC042
+      /EJECT                                                                                  CSC042
+      ********************************************************************                    CSC042
+     C*
+     C*  *PSSR    Subroutine to handle abnormal error conditions
+     C*
+     C*  CALLED BY:   After abnormal operation occurs
+     C*
+     C*  CALLS    :   Nothing
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                            ** PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                            ** PSSR **
+     C********************************************************************
+     C/COPY WNCPYSRC,RE3772C006
+     ORE3772P1H    3   L2 58
+     O       OR        OFNL2 58
+     O/COPY WNCPYSRC,RE3772O003
+     O                                   25 'REFERENCE RE3772P1'
+     O                         TITL      92
+     O                                  122 'DATE              PAGE'
+     O                         RUNA     113
+     O                         PAGE  Z  127
+     O        H 2      L2 58
+     O       OR        OFNL2 58
+     O/COPY WNCPYSRC,RE3772O004
+     O                                   74 'RETAIL ACCOUNT BALANCES'
+     O                 88                84 'BRANCH'
+     O                 88      BRCA      88
+     O                 88                89 '-'
+     O                 88      BRNM     119
+     O        H 1      L2 58
+     O       OR        OFNL2 58
+     O/COPY WNCPYSRC,RE3772O005
+     O                                   74 '-----------------------'
+     O/COPY WNCPYSRC,RE3772O007
+     O        H 2      L2 58
+     O       OR        OFNL2 58
+     O/COPY WNCPYSRC,RE3772O006
+     O                                   25 'CUSTOMER NAME          '
+     O                                   39 '    ACCOUNT NO'
+     O/COPY WNCPYSRC,RE3772OOP1                                           S01408
+     O        H 1      L2 58
+     O       OR        OFNL2 58
+     O                                   32 'CCY    TYPE        LEDGE'
+     O                                   56 'R BALANCE         CLEARE'
+     O                                   80 'D BALANCE            HEL'
+     O                                  104 'D AMOUNT    ALLOWED O/DR'
+     O                                  125 'AFT     REFERRAL INDS'
+     O        D 2      05 58
+     O                         CRNM      22
+     O                         ACNO      39
+     O                       20          42 '-   -    -'
+     O                       20CNUM      32
+     O                       20CCY       36
+     O**********             20ACOD      41                                                   CGL029
+     O**********             20ACSQ      44                                                   CGL029
+     O                       20ACOD      47                                                   CGL029
+     O                       20ACSQ      51                                                   CGL029
+     O/COPY WNCPYSRC,RE3772OOP2                                           S01408
+     O        D 1      05 58
+     O                         CCY       11
+     O                         STYP      17
+     O                       30GRBL      43 '   ,   ,   ,   , 0 CR'
+     O                       31GRBL      43 '  ,   ,   ,   , 0 . CR'
+     O                       32GRBL      43 ' ,   ,   ,   , 0 .  CR'
+     O                       33GRBL      43 '   ,   ,   , 0 .   CR'
+     O                       30NETBL     67 '   ,   ,   ,   , 0 CR'
+     O                       31NETBL     67 '  ,   ,   ,   , 0 . CR'
+     O                       32NETBL     67 ' ,   ,   ,   , 0 .  CR'
+     O                       33NETBL     67 '   ,   ,   , 0 .   CR'
+     O                       30HELD      89 '   ,   ,   ,   , 0 CR'
+     O                       31HELD      89 '  ,   ,   ,   , 0 . CR'
+     O                       32HELD      89 ' ,   ,   ,   , 0 .  CR'
+     O                       33HELD      89 '   ,   ,   , 0 .   CR'
+     O**********               ODLN  1  108                                                MD024325A
+     O                       30ODLN     108 '   ,   ,   ,   , 0 CR'                        MD024325A
+     O                       31ODLN     108 '  ,   ,   ,   , 0 . CR'                       MD024325A
+     O                       32ODLN     108 ' ,   ,   ,   , 0 .  CR'                       MD024325A
+     O                       33ODLN     108 '   ,   ,   , 0 .   CR'                        MD024325A
+     O                       50         112 'IN'
+     O                       51         115 'BD'
+     O                       52         118 'BC'
+     O                       53         121 'RD'
+     O                       54         124 'RC'
+     O                       55         127 'SC'
+     O/COPY WNCPYSRC,RE3772O002
+     O        E 3      L2 21 58
+     O       AND       88
+     O                                   61 'BRANCH TOTALS '
+     O        E 2      L2 21 58
+     O       AND       88
+     O                                   61 'NO OF RECORDS '
+     O**********               BRTOT 3   66                                                   179400
+     O                         BRTOT 3   67                                                   179400
+     O        E 3      L2 58
+     O                 88                66 '*** END OF REPORT FOR'
+     O                 88                74 ' BRANCH '
+     O                 88      PBRCA     77
+     O                 88                81 ' ***'
+     O        T 3      L2 21 58
+     O       AND       88
+     O                                   61 'BRANCH TOTALS '
+     O        T 2      L2 21 58
+     O       AND       88
+     O                                   61 'NO OF RECORDS '
+     O**********               BRTOT 3   66                                                   179400
+     O                         BRTOT 3   67                                                   179400
+     O        T 32     L2 U7 58
+     O                                   74 '*** DATABASE ERROR ***'
+     O        T 3      L2 58
+     O                 88                66 '*** END OF REPORT FOR'
+     O                 88                74 ' BRANCH '
+     O                 88      BRCA      77
+     O                 88                81 ' ***'
+     O                N88                76 '*** END OF REPORT ***'
+     O/COPY WNCPYSRC,RE3772O001
+     ORE3772P2H    3   L2 58 07                                           CRE024
+     O       OR        OANL2 58                                           CRE024
+     O       AND       07                                                 CRE024
+     O                                   25 'REFERENCE RE3772P2'          CRE024
+     O                         TITL      92                               CRE024
+     O                                  122 'DATE              PAGE'      CRE024
+     O                         RUNA     113                               CRE024
+     O                         PAGE2 Z  127                               CRE024
+     O        H 2      L2 58 07                                           CRE024
+     O       OR        OANL2 58                                           CRE024
+     O       AND       07                                                 CRE024
+     O                                   51 'RESTRICTED '                 CRE024
+     O                                   74 'RETAIL ACCOUNT BALANCES'     CRE024
+     O                 88                84 'BRANCH'                      CRE024
+     O                 88      BRCA      88                               CRE024
+     O                 88                89 '-'                           CRE024
+     O                 88      BRNM     119                               CRE024
+     O        H 1      L2 58 07                                           CRE024
+     O       OR        OANL2 58                                           CRE024
+     O       AND       07                                                 CRE024
+     O                                   51 '-----------'                 CRE024
+     O                                   74 '-----------------------'     CRE024
+     O        H 2      L2 58 07                                           CRE024
+     O       OR        OANL2 58                                           CRE024
+     O       AND       07                                                 CRE024
+     O                                   25 'CUSTOMER NAME          '     CRE024
+     O                                   39 '    ACCOUNT NO'              CRE024
+     O        H 1      L2 58 07                                           CRE024
+     O       OR        OANL2 58                                           CRE024
+     O       AND       07                                                 CRE024
+     O                                   32 'CCY    TYPE        LEDGE'    CRE024
+     O                                   56 'R BALANCE         CLEARE'    CRE024
+     O                                   80 'D BALANCE            HEL'    CRE024
+     O                                  104 'D AMOUNT    ALLOWED O/DR'    CRE024
+     O                                  125 'AFT     REFERRAL INDS'       CRE024
+     O        D 2      06 58NLR                                           CRE024
+     O                         CRNM      22                               CRE024
+     O                         ACNO      39                               CRE024
+     O                       20          48 '-   -          -'            CRE024
+     O                       20CNUM      32                               CRE024
+     O                       20CCY       36                               CRE024
+     O                       20ACOD      47                               CRE024
+     O                       20ACSQ      50                               CRE024
+     O        D 1      06 58NLR                                           CRE024
+     O                         CCY       11                               CRE024
+     O                         STYP      17                               CRE024
+     O                       30GRBL      43 '   ,   ,   ,   , 0 CR'       CRE024
+     O                       31GRBL      43 '  ,   ,   ,   , 0 . CR'      CRE024
+     O                       32GRBL      43 ' ,   ,   ,   , 0 .  CR'      CRE024
+     O                       33GRBL      43 '   ,   ,   , 0 .   CR'       CRE024
+     O                       30NETBL     67 '   ,   ,   ,   , 0 CR'       CRE024
+     O                       31NETBL     67 '  ,   ,   ,   , 0 . CR'      CRE024
+     O                       32NETBL     67 ' ,   ,   ,   , 0 .  CR'      CRE024
+     O                       33NETBL     67 '   ,   ,   , 0 .   CR'       CRE024
+     O                       30HELD      89 '   ,   ,   ,   , 0 CR'       CRE024
+     O                       31HELD      89 '  ,   ,   ,   , 0 . CR'      CRE024
+     O                       32HELD      89 ' ,   ,   ,   , 0 .  CR'      CRE024
+     O                       33HELD      89 '   ,   ,   , 0 .   CR'       CRE024
+     O**********               ODLN  1  108                                         CRE024 MD024325A
+     O                       30ODLN     108 '   ,   ,   ,   , 0 CR'                        MD024325A
+     O                       31ODLN     108 '  ,   ,   ,   , 0 . CR'                       MD024325A
+     O                       32ODLN     108 ' ,   ,   ,   , 0 .  CR'                       MD024325A
+     O                       33ODLN     108 '   ,   ,   , 0 .   CR'                        MD024325A
+     O                       50         112 'IN'                          CRE024
+     O                       51         115 'BD'                          CRE024
+     O                       52         118 'BC'                          CRE024
+     O                       53         121 'RD'                          CRE024
+     O                       54         124 'RC'                          CRE024
+     O                       55         127 'SC'                          CRE024
+     O        E 3      L2 21 58                                           CRE024
+     O       AND       88 07                                              CRE024
+     O                                   61 'BRANCH TOTALS '              CRE024
+     O        E 2      L2 21 58                                           CRE024
+     O       AND       88 07                                              CRE024
+     O                                   61 'NO OF RECORDS '              CRE024
+     O                         BRTOT23B  66                               CRE024
+     O        E 3      L2 58 07                                           CRE024
+     O                 88                66 '*** END OF REPORT FOR'       CRE024
+     O                 88                74 ' BRANCH '                    CRE024
+     O                 88      PBRCA     77                               CRE024
+     O                 88                81 ' ***'                        CRE024
+     O        T 3      L2 21 58                                           CRE024
+     O       AND       88 07                                              CRE024
+     O                                   61 'BRANCH TOTALS '              CRE024
+     O        T 2      L2 21 58                                           CRE024
+     O       AND       88 07                                              CRE024
+     O                                   61 'NO OF RECORDS '              CRE024
+     O                         BRTOT23   66                               CRE024
+     O        T 32     L2 U7 58                                           CRE024
+     O                                   74 '*** DATABASE ERROR ***'      CRE024
+     O        T 3      L2 58 07                                           CRE024
+     O                 88                66 '*** END OF REPORT FOR'       CRE024
+     O                 88                74 ' BRANCH '                    CRE024
+     O                 88      BRCA      77                               CRE024
+     O                 88                81 ' ***'                        CRE024
+     O                N88                76 '*** END OF REPORT ***'       CRE024
+     ORE3772AUT    3   LR
+     O                                   25 'REFERENCE RE3772AU'
+     O                         TITL      92
+     O                                  122 'DATE              PAGE'
+     O                         RUNA     113
+     O                         PAGE1 Z  127
+     O        T    5   LR
+     O                                   74 'RETAIL ACCOUNT BALANCES'
+     O                                   89 '   RUN CONTROLS'
+     O        T    6   LR
+     O                                   74 '-----------------------'
+     O        T   15   LR
+     O                                   60 'FILE CONTROLS'
+     O        T 2      LR
+     O                                   66 'RETAIL A/C BALANCES'
+     O                                   79 ' FILE - RETAC'
+     O        T 2      LR
+     O                                   61 'NO OF RECORDS '
+     O                         TOTREC3   67
+     O*
+     O** Database error output
+     O*
+     O        T 32     LR U7
+     O                                   58 'DATABASE ERROR '
+     O                         DBASE     61
+     O                                   75 'IN PROGRAM '
+     O                         DBPGM     85
+     O        T  2     LR U7
+     O                                   48 'FILE '
+     O                         DBFILE    56
+     O                                   62 ', KEY '
+     O                         DBKEY     91
+     O*
+     O** No details output
+     O*
+     O        T 3      LRN58
+     O                                   70 '***   NO DETAILS TO REPO'
+     O                                   78 'RT   ***'
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,216 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Update SDCUSTPD PB indicator initialisat.')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data                                        *
+      *                                                               *
+      *  Program name: SD0420                                         *
+      *                                                               *
+      *  Function:  This program initialises the 'Private Banking     *
+      *             Customer' flag to 'N' on SDCUSTPD for existing    *
+      *             customers.                                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CER001             Date 25Apr05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 175680             Date 03Mar00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP034  *CREATE    Date 07OCT99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *           Applied ML0001 and FS0001 from Lux                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  175680 - PB Customer Maintenance - Fields protection         *
+      *  CSD007 - Customer Closing (Recompiled over SDCUSTL5)         *
+      *  CDL008 - Continuous Linked Settlement (recompile SDCUSTPD)   *
+      *  CAP034 - Midas / ToF Interface                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDCUSTL5UF  E           K        DISK
+      * UPD : Midas SD Private Banking Details
+     FSDPBDSL0UF  E           K        DISK                      A
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+     E** Array containing Copyright statement
+      *
+      /SPACE 3
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *                                                                                       CER001
+     ITIMDS       DS                                                                          CER001
+     I                                        1   4 RETYE                                     CER001
+     I                                        5   5 INZ1                                      CER001
+     I                                        6   7 RETMT                                     CER001
+     I                                        8   8 INZ2                                      CER001
+     I                                        9  10 RETDY                                     CER001
+     I                                       11  11 INZ3                                      CER001
+     I                                       12  13 RETHR                                     CER001
+     I                                       14  14 INZ4                                      CER001
+     I                                       15  16 RETMN                                     CER001
+     I                                       17  17 INZ5                                      CER001
+     I                                       18  19 RETSC                                     CER001
+     I                                       20  20 INZ6                                      CER001
+     I                                       21  23 RETMI                                     CER001
+     I                                       24  26 INZ7                                      CER001
+      *
+      *****************************************************************
+      *
+      *** MAIN
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C           PMODE     PARM           PMODE   1
+      *
+      *** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *** If the Processing Mode is '1' for feature being set on
+      *
+     C           PMODE     IFEQ '1'
+     C                     EXSR PROC1
+     C                     END
+     C                     SETON                         LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *
+      *** This program can be called with a parameter of '2' when the
+      *** switchable feature is being reset on or '3' if being set off
+      *** No processing will take place in those cases                 .
+      *
+      *****************************************************************
+      *                                                               *
+      * PROC1 - Subroutine                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROC1     BEGSR
+     C                     READ SDCUSTL5                 04
+     C           *IN04     DOWEQ'0'
+      *
+      *** Set the customer PB Customer flag to 'N'
+      *
+     C           BBPRBA    IFEQ ' '                                                           CER001
+     C                     MOVE 'N'       BBPRBA
+     C                     ENDIF                                                              CER001
+     C                     UPDAT@CUSTFT
+     C*
+     C                     EXSR ADDPBD
+     C*
+     C                     READ SDCUSTL5                 04
+     C                     END
+      *
+     CSR         EPROC1    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * ADDPBD - Subroutine                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ADDPBD    BEGSR
+      *
+     C**********           Z-ADD0         PBCNUM                                              CSD027
+     C                     MOVE *BLANKS   PBCNUM                                              CSD027
+     C                     MOVE BBCUST    PBCNUM
+     C           PBCNUM    CHAINSDPBDSL0             90
+     C           *IN90     IFEQ '1'
+      *
+      *** Set the customer PB DETAILS IN FILE SDPBDSL0
+      *
+     C                     MOVE 'D'       PBRECI
+     C                     MOVE 'N'       PBHOLD
+     C                     MOVE 'N'       PBNUAC
+     C                     MOVE 'N'       PBCOUN
+     C                     Z-ADD0         PBAGEN
+     C                     MOVE 'N'       PBREPB
+     C                     Z-ADD0         PBPBST
+     C                     Z-ADD0         PBLCHD
+     C                     MOVE ' '       PBCHTP
+     C*
+     C                     MOVEL'0001'    RETYE                                               CER001
+     C                     MOVEL'01'      RETMT                                               CER001
+     C                     MOVEL'01'      RETDY                                               CER001
+     C                     MOVEL'00'      RETHR                                               CER001
+     C                     MOVEL'00'      RETMN                                               CER001
+     C                     MOVEL'00'      RETSC                                               CER001
+     C                     MOVEL'000'     RETMI                                               CER001
+     C                     MOVEL'-'       INZ1                                                CER001
+     C                     MOVEL'-'       INZ2                                                CER001
+     C                     MOVEL'-'       INZ3                                                CER001
+     C                     MOVEL'.'       INZ4                                                CER001
+     C                     MOVEL'.'       INZ5                                                CER001
+     C                     MOVEL'.'       INZ6                                                CER001
+     C                     MOVEL'000'     INZ7                                                CER001
+     C                     MOVELTIMDS     PBTMES                                              CER001
+      *                                                                                       CER001
+     C                     WRITESDPBDSD0
+      *
+     C                     END
+      *
+     CSR         EADDPB    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

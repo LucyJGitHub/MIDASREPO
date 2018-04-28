@@ -1,0 +1,2271 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Incoming Messages enquiry')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT DIRECT LINK                               *
+      *                                                               *
+      *   MS5015 - INCOMING MESSAGES ENQUIRY                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR567569           Date 27Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 124673             Date 04Jun98               *
+      *                 105223             Date 01Aug96               *
+      *                  CSW095            DATE 10APR95               *
+      *                  S01310            DATE 06DEC90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR567569 - MT950 with multiple messages can cause array      *
+      *             index error.  Fix is to report multiple and       *
+      *             duplicate messages individually.                  *
+      *  CRE026 - Consumer Banking                                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *   124673 - Add Century field to key lists and use for         *
+      *            selection purposes.                                *
+      *   105223 - Array index error on line 140000. There are dup.   *
+      *            messages which system unable to trap, treating all *
+      *            these messages as single message (not enough for   *
+      *            array IMSG to accomodate).                         *
+      *   CSW095 - S.W.I.F.T 1995 Message Changes.                    *
+      *            Increase arrays to handle a 10,000 character       *
+      *            message.                                           *
+      *   S01310 - SWIFT RATIONALISATION                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *****************************************************************
+     FMS5015DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE MS5015F3
+     F*ABTB10*IF**E********   K        DISK                               S01310
+     FMUSER   IF  E           K        DISK                               S01310
+     FSDBRCHL0IF  E           K        DISK                               S01310
+     FMSMSI2L0IF  E           K        DISK                           UC
+     F            MSMSI2D0                          KRENAMEMSMSI20F
+     FMSMSI2L1IF  E           K        DISK                           UC
+     F            MSMSI2D0                          KRENAMEMSMSI21F
+     FMSMSI2L2IF  E           K        DISK                           UC
+     F            MSMSI2D0                          KRENAMEMSMSI22F
+     FMSMSI2L3IF  E           K        DISK                           UC
+     F            MSMSI2D0                          KRENAMEMSMSI23F
+     FMSMSI2LBIF  E           K        DISK                           UC  S01310
+     F            MSMSI2D0                          KRENAMEMSMSI2BF       S01310
+     FMSMSI2LCIF  E           K        DISK                           UC  S01310
+     F            MSMSI2D0                          KRENAMEMSMSI2CF       S01310
+     FMSMSI2LDIF  E           K        DISK                           UC  S01310
+     F            MSMSI2D0                          KRENAMEMSMSI2DF       S01310
+     FMSMSI2LEIF  E           K        DISK                           UC  S01310
+     F            MSMSI2D0                          KRENAMEMSMSI2EF       S01310
+      *
+      * ID C  F  H  L    FUNCTION OF INDICATORS
+      * 20               SFLDSP
+      * 21               SFLDSPCTL
+      * 22               SFLEND
+      * 30               Error
+      * 31               Message type error
+      * 32               Message priority error
+      * 33               Start message ouput date error
+      * 34               Start message output time error
+      * 35               End message output date error
+      * 36               End message output time error
+      * 37               Branch error                                     S01310
+      * 40               HELP
+      * 41               Multibranching on                                S01310
+      * 50               MSMSI2L0 open
+      * 51               MSMSI2L1 open
+      * 52               MSMSI2L2 open
+      * 53               MSMSI2L2 open
+      * 54               MSMSI2LB open                                    S01310
+      * 55               MSMSI2LC open                                    S01310
+      * 56               MSMSI2LD open                                    S01310
+      * 57               MSMSI2LE open                                    S01310
+      * 88               EOF SDBRCHL0                                     S01310
+      * 89               EOF MUSER                                        S01310
+      **89***************EOF TABTB10                                      S01310
+      * KC               F3
+      * KH               F8
+      * KI               F9
+      * KL               F12
+      * U7U8LR           DB error
+      *
+     E                    ERCD       19  4
+     E***********         IMSG     3072  1                                CSW095
+     E                    IMSG     9999  1                                CSW095
+     E                    LINE      130  1
+     E                    MSGA    1   3 78
+     E                    HDGA    1   9 78
+     E                    CPY@    1   1 80                                S01310
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID                 S01310
+      **  Workstation ID
+      *
+     IDSRUN       DS                             13                       S01310
+     I                                        1   7 RUNA                  S01310
+     I                                       13  13 MBIN                  S01310
+      **  RUNDAT data area                                                S01310
+      *
+     I            DS
+     I                                        1   6 SOSD
+     I                                        7  10 SOST
+      *
+     I                                        1   2 SDYY
+     I                                        3   4 SDMM
+     I                                        5   6 SDDD
+      *
+     I                                        7   8 STHH
+     I                                        9  10 STMM
+      *
+     I                                       11  16 SOED
+     I                                       17  20 SOET
+      *
+     I                                       11  12 EDYY
+     I                                       13  14 EDMM
+     I                                       15  16 EDDD
+      *
+     I                                       17  18 ETHH
+     I                                       19  20 ETMM
+      **  Subdivide screen fields for validation
+      *
+     I            DS
+     I                                        1 114 @HDR
+     I                                        7  18 @RAD
+     I                                       19  22 @SNN
+     I                                       23  28 @SQN
+     I                                       34  36 @MTP
+     I                                       37  40 @ITM
+     I                                       41  68 @MIR
+     I                                       69  74 @ODT
+     I                                       75  78 @OTM
+     I                                       79  79 @MPY
+     I                                       81  83 @WK3
+      **  Subdivide message header
+      *
+     I            DS
+     I                                        1  78 RCD1
+     I                                        1  12 ORAD
+     I                                       14  17 OSNN
+     I                                       26  31 OSQN
+     I                                       72  74 BRCA                  S01310
+      **  Format basic header data
+      *
+     I            DS
+     I                                        1  78 RCD2
+     I                                        1   3 OMTP
+     I                                       11  14 OITM
+     I                                       23  50 OMIR
+     I                                       53  58 OODT
+     I                                       66  69 OOTM
+     I                                       72  78 OPTY
+      **  Format application header data
+      *
+     I            DS
+     I                                        1  78 RCD3
+     I/COPY WNCPYSRC,MS5015I001
+     I                                        1   4 OBPY
+     I                                       24  39 OMUR
+     I/COPY WNCPYSRC,MS5015I002
+      **  Format user header data
+      *
+     C           KEY0      KLIST
+     C                     KFLD           MTPY
+     C                     KFLD           MPRY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEY1      KLIST
+     C                     KFLD           MTPY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEY2      KLIST
+     C                     KFLD           MPRY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEY3      KLIST
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEYB      KLIST                                          S01310
+     C                     KFLD           BRCA                            S01310
+     C                     KFLD           MTPY                            S01310
+     C                     KFLD           MPRY                            S01310
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE                            S01310
+     C                     KFLD           MOTM                            S01310
+     C                     KFLD           MOR                             S01310
+      *                                                                   S01310
+     C           KEYC      KLIST                                          S01310
+     C                     KFLD           BRCA                            S01310
+     C                     KFLD           MTPY                            S01310
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE                            S01310
+     C                     KFLD           MOTM                            S01310
+     C                     KFLD           MOR                             S01310
+      *                                                                   S01310
+     C           KEYD      KLIST                                          S01310
+     C                     KFLD           BRCA                            S01310
+     C                     KFLD           MPRY                            S01310
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE                            S01310
+     C                     KFLD           MOTM                            S01310
+     C                     KFLD           MOR                             S01310
+      *                                                                   S01310
+     C           KEYE      KLIST                                          S01310
+     C                     KFLD           BRCA                            S01310
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE                            S01310
+     C                     KFLD           MOTM                            S01310
+     C                     KFLD           MOR                             S01310
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   VSEL  - validate selection                                  *
+      *   ENQY0 - enquire by type,priority,date,time                  *
+      *   ENQY1 - enquire by type,date,time                           *
+      *   ENQY2 - enquire by priority,date,time                       *
+      *   ENQY3 - enquire by date,time                                *
+      *   ENQYB - enquire by branch,type,priority,date,time           *   S01310
+      *   ENQYC - enquire by branch,type,date,time                    *   S01310
+      *   ENQYD - enquire by branch,priority,date,time                *   S01310
+      *   ENQYE - enquire by branch,date,time                         *   S01310
+      *   SFLE  - format message for display                          *
+      *   VRCD  - validate record                                     *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      ************MHELP*MIDAS help program                            *   S01310
+      *           VSEL validate selection                             *
+      *           ENQY0 enquire by type,priority,date,time            *
+      *           ENQY1 enquire by type,date,time                     *
+      *           ENQY2 enquire by priority,date,time                 *
+      *           ENQY3 enquire by date,time                          *
+      *           ENQYB enquire by branch,type,priority,date,time     *   S01310
+      *           ENQYC enquire by branch,type,date,time              *   S01310
+      *           ENQYD enquire by branch,priority,date,time          *   S01310
+      *           ENQYE enquire by branch,date,time                   *   S01310
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+      **  Display selection screen until F3 pressed
+     C           *INKC     DOWEQ'0'
+      *
+      **  If no errors clear input fields
+     C           *IN30     IFEQ '0'
+     C                     MOVE *BLANKS   SBCH                            S01310
+     C                     MOVE *BLANKS   STYP
+     C                     MOVE *BLANKS   SPTY
+     C                     MOVE *BLANKS   SOSD
+     C                     MOVE *BLANKS   SOED
+     C                     MOVE *BLANKS   SOST
+     C                     MOVE *BLANKS   SOET
+     C                     END
+      *
+     C                     WRITEMS5015F2
+     C                     WRITEMS5015F1
+      *
+      ****Do*while*HELP*pressed                                           S01310
+     C************IN40*****DOUEQ'0'                                       S01310
+     C                     READ MS5015F2                 40
+      *
+     C************IN40*****IFEQ '1'                                       S01310
+     C*********************MOVEAERCD      HERCD 160                       S01310
+     C*********************MOVEL'MSSWII'  HBPGM   8                       S01310
+     C*********************CALL 'MHELP'                                   S01310
+     C*********************PARM           HBPGM                           S01310
+     C*********************PARM           HERCD                           S01310
+     C*********************END                                            S01310
+     C*********************END                                            S01310
+      *
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C*********************SETOF                     36                   S01310
+     C                     SETOF                     3637                 S01310
+      *
+      **  If F3 not pressed validate selection
+     C           *INKC     IFEQ '0'
+     C                     EXSR VSEL
+      *
+      **  If selection valid
+     C           *IN30     IFEQ '0'
+      *
+     C                     MOVE SBCH      BRCA                            S01310
+     C                     MOVE STYP      MTPY
+     C                     MOVE SPTY      MPRY
+     C                     MOVE @OSDC     MODEC                           124673
+     C                     MOVE SOSD      MODE
+     C                     MOVE SOST      MOTM
+     C                     MOVE SOSD      @OSD    60
+     C                     MOVE SOST      @OST    40
+     C                     MOVE SOED      @OED    60
+     C                     MOVE SOET      @OET    40
+      *
+     C           MBIN      IFEQ 'Y'                                       S01310
+     C           SBCH      ANDNE'ALL'                                     S01310
+      **  If type & priority entered enquiry by type,priority,date,time   S01310
+     C           MTPY      IFNE *BLANK                                    S01310
+     C           MPRY      IFNE *BLANK                                    S01310
+     C                     EXSR ENQYB                                     S01310
+      **  If type entered enquiry by type,date,time                       S01310
+     C                     ELSE                                           S01310
+     C                     EXSR ENQYC                                     S01310
+     C                     END                                            S01310
+      **  If priority entered enquiry by priority,date,time               S01310
+     C                     ELSE                                           S01310
+     C           MPRY      IFNE *BLANK                                    S01310
+     C                     EXSR ENQYD                                     S01310
+      **  Enquiry by date,time                                            S01310
+     C                     ELSE                                           S01310
+     C                     EXSR ENQYE                                     S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ELSE                                           S01310
+      **  If type & priority entered report by type,priority,date,time
+     C           MTPY      IFNE *BLANK
+     C           MPRY      IFNE *BLANK
+     C                     EXSR ENQY0
+      **  If type entered report by type,date,time
+     C                     ELSE
+     C                     EXSR ENQY1
+     C                     END
+      **  If priority entered report by priority,date,time
+     C                     ELSE
+     C           MPRY      IFNE *BLANK
+     C                     EXSR ENQY2
+      **  Report by date,time
+     C                     ELSE
+     C                     EXSR ENQY3
+     C                     END
+     C                     END
+      *
+     C                     END                                            S01310
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Calls - *PSSR error process                                 *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80                       S01310
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MS5015  'DBPGM
+     C                     OUT  LDA
+     C/COPY WNCPYSRC,MS5015C006
+      *
+      **  Initialise 'CR' and 'LF' fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+     C                     MOVE *LOVAL    ETX     1
+     C                     BITON'67'      ETX
+      *
+      ****Access*TABTB10*to find run date                                 S01310
+     C*********************READ TABTB10                  89               S01310
+      *********************                                               S01310
+     C************IN89*****IFEQ '1'                                       S01310
+     C***********RECI******ORNE 'D'                                       S01310
+     C************LOCK*****IN   LDA                                       S01310
+     C*********************MOVE '01'      DBASE                           S01310
+     C*********************MOVE 'FIRST'   DBKEY            * DB ERROR 01 *S01310
+     C*********************MOVE 'TABTB10' DBFILE                          S01310
+     C*********************OUT  LDA                                       S01310
+     C*********************EXSR *PSSR                                     S01310
+     C*********************END                                            S01310
+      *                                                                   S01310
+      **  Access RUNDAT to find run date & multibranching indicator       S01310
+     C           *NAMVAR   DEFN RUNDAT    DSRUN                           S01310
+     C                     IN   DSRUN                                     S01310
+      *                                                                   S01310
+      **  Access MUSER for user's authority                               S01310
+     C           USRID     CHAINMUSER                89                   S01310
+      *                                                                   S01310
+     C           *IN89     IFEQ '1'                                       S01310
+     C           RECI      ORNE 'D'                                       S01310
+     C           *LOCK     IN   LDA                                       S01310
+     C                     MOVE '01'      DBASE                           S01310
+     C                     MOVE USRID     DBKEY            * DB ERROR 01 *S01310
+     C                     MOVE 'MUSER'   DBFILE                          S01310
+     C                     OUT  LDA                                       S01310
+     C                     EXSR *PSSR                                     S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Seton multibranching indicator                                  S01310
+     C           MBIN      IFEQ 'Y'                                       S01310
+     C                     SETON                     41                   S01310
+     C                     END                                            S01310
+      *
+      **  Seton SFLEND
+     C                     SETON                     22
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VSEL - validate selection                                   *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           VSEL      BEGSR
+      *
+      **  Blank out error codes array
+     C                     MOVE *BLANKS   ERCD
+     C                     Z-ADD0         W       20
+      *
+      **  Message type must be blank or numeric
+     C           STYP      IFNE *BLANK
+     C                     TESTN          STYP       60
+     C           *IN60     IFNE '1'
+     C                     SETON                     3031
+     C                     ADD  1         W
+     C                     MOVE '001'     ERCD,W
+     C                     END
+     C                     END
+      *
+      **  Message priority must be blank,'N' or 'U'.
+     C           SPTY      IFNE *BLANK
+     C           SPTY      ANDNE'N'
+     C           SPTY      ANDNE'U'
+     C                     SETON                     3032
+     C                     ADD  1         W
+     C                     MOVE '009'     ERCD,W
+     C                     END
+      *
+      ** Initialise Century indicator.                                    124673
+     C                     MOVE *BLANKS   @OSDC   2                       124673
+      *                                                                   124673
+      ****Start*year*must*be*blank*or*01-99****************************** 124673
+      **  Start year must be blank or 00-99                               124673
+     C           SOSD      IFNE *BLANK
+      *
+     C***********SDYY      IFLT '01'                                      124673
+     C           SDYY      IFLT '00'                                      124673
+     C           SDYY      ORGT '99'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '003'     ERCD,W
+     C                     ELSE                                           124673
+      *                                                                   124673
+      ** Allocate century to start date entered.                          124673
+     C           SDYY      IFLT '72'                                      124673
+     C                     MOVE '20'      @OSDC                           124673
+     C                     ELSE                                           124673
+     C                     MOVE '19'      @OSDC                           124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     END
+      *
+      **  Start month must be blank or 01-12
+     C           SDMM      IFLT '01'
+     C           SDMM      ORGT '12'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '004'     ERCD,W
+     C                     END
+      *
+      **  Start day must be blank or 01-31
+     C           SDDD      IFLT '01'
+     C           SDDD      ORGT '31'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '005'     ERCD,W
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **  Start time must not be entered if day is not entered
+     C           SOSD      IFEQ *BLANKS
+     C           SOST      ANDNE*BLANKS
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '006'     ERCD,W
+     C                     END
+      *
+      **  Start hours must be blank or 00-23
+     C           SOST      IFNE *BLANK
+      *
+     C           STHH      IFLT '00'
+     C           STHH      ORGT '23'
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '007'     ERCD,W
+     C                     END
+      *
+      **  Start minutes must be blank or 00-59
+     C           STMM      IFLT '00'
+     C           STMM      ORGT '59'
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '008'     ERCD,W
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** Initialise Century indicator.                                    124673
+     C                     MOVE *BLANKS   @OEDC   2                       124673
+      *                                                                   124673
+      ****End*year*must*be*blank*or*01-99******************************** 124673
+      **  End year must be blank or 00-99                                 124673
+     C           SOED      IFNE *BLANK
+      *
+     C***********EDYY      IFLT '01'                                      124673
+     C           EDYY      IFLT '00'                                      124673
+     C           EDYY      ORGT '99'
+     C                     SETON                     3035
+     C                     ADD  1         W
+     C                     MOVE '003'     ERCD,W
+     C                     ELSE                                           124673
+      *                                                                   124673
+      ** Allocate century to end date entered.                            124673
+     C           EDYY      IFLT '72'                                      124673
+     C                     MOVE '20'      @OEDC                           124673
+     C                     ELSE                                           124673
+     C                     MOVE '19'      @OEDC                           124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     END
+      *
+      **  End month must be blank or 01-12
+     C           EDMM      IFLT '01'
+     C           EDMM      ORGT '12'
+     C                     SETON                     3035
+     C                     ADD  1         W
+     C                     MOVE '004'     ERCD,W
+     C                     END
+      *
+      **  End day must be blank or 01-31
+     C           EDDD      IFLT '01'
+     C           EDDD      ORGT '31'
+     C                     SETON                     3035
+     C                     ADD  1         W
+     C                     MOVE '005'     ERCD,W
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **  Time must not be entered if day is not entered
+     C           SOED      IFEQ *BLANKS
+     C           SOET      ANDNE*BLANKS
+     C                     SETON                     3036
+     C                     ADD  1         W
+     C                     MOVE '006'     ERCD,W
+     C                     END
+      *
+      **  End hours must be blank or range 00-23
+     C           SOET      IFNE *BLANK
+      *
+     C           ETHH      IFLT '00'
+     C           ETHH      ORGT '23'
+     C                     SETON                     3036
+     C                     ADD  1         W
+     C                     MOVE '007'     ERCD,W
+     C                     END
+      *
+      **  End minutes must be blank or 00-59
+     C           ETMM      IFLT '00'
+     C           ETMM      ORGT '59'
+     C                     SETON                     3036
+     C                     ADD  1         W
+     C                     MOVE '008'     ERCD,W
+      *
+     C                     END
+     C                     END
+      *
+      **  If multibranching active                                        S01310
+     C           MBIN      IFEQ 'Y'                                       S01310
+      *                                                                   S01310
+      **  If branch blank substitute user's default branch                S01310
+     C           SBCH      IFEQ *BLANK                                    S01310
+     C                     MOVE DBRN      SBCH                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Is branch code valid                                            S01310
+     C           SBCH      IFNE 'ALL'                                     S01310
+     C           SBCH      CHAINSDBRCHL0             88                   S01310
+      *                                                                   S01310
+     C           *IN88     IFEQ '1'                                       S01310
+     C                     ADD  1         W                               S01310
+     C                     MOVE '025'     ERCD,W                          S01310
+     C                     SETON                     3037                 S01310
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+     C           BANK      IFNE 'Y'                                       S01310
+     C           ROUF      ANDNE'Y'                                       S01310
+     C                     MOVE SBCH      ZBR     3                       S01310
+     C                     Z-ADD0         ZERR    10                      S01310
+     C                     CALL 'ZVBBU'                                   S01310
+     C                     PARM           ZBR                             S01310
+     C                     PARM           ZERR                            S01310
+      *                                                                   S01310
+     C           ZERR      IFNE 0                                         S01310
+     C                     ADD  1         W                               S01310
+     C                     MOVE '026'     ERCD,W                          S01310
+     C                     SETON                     3037                 S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If branch 'ALL' user must have bank level authority             S01310
+      **  or be system routing officer                                    S01310
+     C           SBCH      IFEQ 'ALL'                                     S01310
+     C           BANK      IFNE 'Y'                                       S01310
+     C           ROUF      ANDNE'Y'                                       S01310
+     C                     ADD  1         W                               S01310
+     C                     MOVE '027'     ERCD,W                          S01310
+     C                     SETON                     3037                 S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *
+      **  move error codes to message line
+     C                     MOVEAERCD      SFMG
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQY0 - enquire by type,priority,date,time                  *
+      *   Calls - VRCD validate record                                *
+      *           SFLE format message for display                     *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           ENQY0     BEGSR
+      *
+      **  Open file & read first record
+     C           *IN50     IFEQ '0'
+     C                     OPEN MSMSI2L0
+     C                     SETON                     50
+     C                     END
+      *
+     C           KEY0      SETLLMSMSI2L0
+     C                     READ MSMSI2L0                 10
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'No records match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,1    SFMG
+     C                     SETON                     30
+     C                     ELSE
+     C                     Z-ADD0         WDUP    50                                        AR567569
+      *
+      **  Do until F3 or F12 pressed
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  If new message to process
+     C           *IN10     IFEQ '0'
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMS5015F4
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  Move all records which match key into array
+     C***********          Z-ADD1         X       40                      CSW095
+     C                     Z-ADD1         X       50                      CSW095
+     C                     Z-ADD0         WPASS   10                                        AR567569
+     C                     Z-ADD0         WEOF    10                                        AR567569
+     C           *IN10     DOWEQ'0'
+      *                                                                                     AR567569
+      ** If "{1:" has been repeated, it's a multiple or duplicate                           AR567569
+     C                     MOVELMDTA      WSTRT                                             AR567569
+     C           WSTRT     IFEQ '{1:'                                                       AR567569
+     C           X         ANDNE1                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     LEAVE                                                            AR567569
+     C                     ELSE                                                             AR567569
+      *                                                                                     AR567569
+     C           WPASS     IFEQ 1                                                           AR567569
+     C                     Z-ADD0         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                                     AR567569
+     C                     MOVEAMDTA      IMSG,X
+     C           KEY0      READEMSMSI2L0                 10
+     C                     ADD  256       X
+     C                     Z-ADD1         WPASS                                             AR567569
+      *                                                                                     AR567569
+     C           *IN10     IFEQ *ON                                                         AR567569
+     C           WDUP      ANDNE0                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     Z-ADD1         WEOF                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     END
+     C                     SETOF                     10
+     C                     EXSR SFLE
+     C                     END
+      *
+      **  Write Subfile
+     C                     WRITEMS5015F1
+     C                     EXFMTMS5015F4
+     C                     MOVEL*OFF      *IN10                                             AR567569
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     30
+      *
+      **  If Cmd 8 process next message
+     C           *INKH     IFEQ '1'
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEY0      SETGTMSMSI2L0
+     C                     READ MSMSI2L0                 10
+     C                     ELSE                                                             AR567569
+     C           WEOF      IFEQ 1                                                           AR567569
+     C                     MOVE *ON       *IN10                                             AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'EOF or next message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,2    SFMG
+     C                     SETON                     30
+     C                     END
+      *
+      **  If Cmd 9 process previous message
+     C                     ELSE
+     C           *INKI     IFEQ '1'
+     C           KEY0      SETLLMSMSI2L0
+      *                                                                                     AR567569
+     C           WDUP      IFLE 1                                                           AR567569
+     C                     READPMSMSI2L0                 10
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                                     AR567569
+     C                     ELSE                                                             AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     Z-ADD0         WCTR    50                                        AR567569
+      *                                                                                     AR567569
+     C           WCTR      DOWNEWDUP                                                        AR567569
+     C           KEY0      READEMSMSI2L0                 10                                 AR567569
+     C                     ADD  1         WCTR                                              AR567569
+     C                     ENDDO                                                            AR567569
+      *                                                                                     AR567569
+     C           WDUP      IFNE 0                                                           AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *
+      **  Write 'TOF or previous message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,3    SFMG
+     C                     SETON                     30
+     C           WDUP      IFEQ 1                                                           AR567569
+     C           KEY0      SETLLMSMSI2L0                                                    AR567569
+     C           KEY0      READEMSMSI2L0                 10                                 AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ELSE
+      *
+      **  Read first record of previous message
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEY0      SETLLMSMSI2L0
+     C                     READ MSMSI2L0                 10
+     C                     ENDIF                                                            AR567569
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'TOF or previous message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,3    SFMG
+     C                     SETON                     30
+     C                     END
+     C                     END
+      *
+      **  If ENTER redisplay subfile
+     C                     ELSE
+     C                     SETON                     10
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQY1 - enquire by type,date,time                           *
+      *   Calls - VRCD validate record                                *
+      *           SFLE format message for display                     *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           ENQY1     BEGSR
+      *
+      **  Open file & read first record
+     C           *IN51     IFEQ '0'
+     C                     OPEN MSMSI2L1
+     C                     SETON                     51
+     C                     END
+      *
+     C           KEY1      SETLLMSMSI2L1
+     C                     READ MSMSI2L1                 10
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'No records match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,1    SFMG
+     C                     SETON                     30
+     C                     ELSE
+     C                     Z-ADD0         WDUP                                              AR567569
+      *
+      **  Do until F3 or F12 pressed
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  If new message to process
+     C           *IN10     IFEQ '0'
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMS5015F4
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  Move all records which match key into array
+     C***********          Z-ADD1         X       40                      CSW095
+     C                     Z-ADD1         X                               CSW095
+     C                     Z-ADD0         WPASS                                             AR567569
+     C                     Z-ADD0         WEOF                                              AR567569
+     C           *IN10     DOWEQ'0'
+      *                                                                                     AR567569
+      ** If "{1:" has been repeated, it's a multiple or duplicate                           AR567569
+     C                     MOVELMDTA      WSTRT                                             AR567569
+     C           WSTRT     IFEQ '{1:'                                                       AR567569
+     C           X         ANDNE1                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     LEAVE                                                            AR567569
+     C                     ELSE                                                             AR567569
+      *                                                                                     AR567569
+     C           WPASS     IFEQ 1                                                           AR567569
+     C                     Z-ADD0         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                                     AR567569
+     C                     MOVEAMDTA      IMSG,X
+     C           KEY1      READEMSMSI2L1                 10
+     C                     ADD  256       X
+     C                     Z-ADD1         WPASS                                             AR567569
+      *                                                                                     AR567569
+     C           *IN10     IFEQ *ON                                                         AR567569
+     C           WDUP      ANDNE0                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     Z-ADD1         WEOF                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     END
+     C                     SETOF                     10
+     C                     EXSR SFLE
+     C                     END
+      *
+      **  Write Subfile
+     C                     WRITEMS5015F1
+     C                     EXFMTMS5015F4
+     C                     MOVEL*OFF      *IN10                                             AR567569
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     30
+      *
+      **  If Cmd 8 process next message
+     C           *INKH     IFEQ '1'
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEY1      SETGTMSMSI2L1
+     C                     READ MSMSI2L1                 10
+     C                     ELSE                                                             AR567569
+     C           WEOF      IFEQ 1                                                           AR567569
+     C                     MOVE *ON       *IN10                                             AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'EOF or next message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,2    SFMG
+     C                     SETON                     30
+     C                     END
+      *
+      **  If Cmd 9 process previous message
+     C                     ELSE
+     C           *INKI     IFEQ '1'
+     C           KEY1      SETLLMSMSI2L1
+      *                                                                                     AR567569
+     C           WDUP      IFLE 1                                                           AR567569
+     C                     READPMSMSI2L1                 10
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                                     AR567569
+     C                     ELSE                                                             AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     Z-ADD0         WCTR                                              AR567569
+      *                                                                                     AR567569
+     C           WCTR      DOWNEWDUP                                                        AR567569
+     C           KEY1      READEMSMSI2L1                 10                                 AR567569
+     C                     ADD  1         WCTR                                              AR567569
+     C                     ENDDO                                                            AR567569
+      *                                                                                     AR567569
+     C           WDUP      IFNE 0                                                           AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *
+      **  Write 'TOF or previous message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,3    SFMG
+     C                     SETON                     30
+     C           WDUP      IFEQ 1                                                           AR567569
+     C           KEY1      SETLLMSMSI2L1                                                    AR567569
+     C           KEY1      READEMSMSI2L1                 10                                 AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ELSE
+      *
+      **  Read first record of previous message
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEY1      SETLLMSMSI2L1
+     C                     READ MSMSI2L1                 10
+     C                     ENDIF                                                            AR567569
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'TOF or previous message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,3    SFMG
+     C                     SETON                     30
+     C                     END
+     C                     END
+      *
+      **  If ENTER redisplay subfile
+     C                     ELSE
+     C                     SETON                     10
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQY2 - enquire by priority,date,time                       *
+      *   Calls - VRCD validate record                                *
+      *           SFLE format message for display                     *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           ENQY2     BEGSR
+      *
+      **  Open file & read first record
+     C           *IN52     IFEQ '0'
+     C                     OPEN MSMSI2L2
+     C                     SETON                     52
+     C                     END
+      *
+     C           KEY2      SETLLMSMSI2L2
+     C                     READ MSMSI2L2                 10
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'No records match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,1    SFMG
+     C                     SETON                     30
+     C                     ELSE
+     C                     Z-ADD0         WDUP                                              AR567569
+      *
+      **  Do until F3 or F12 pressed
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  If new message to process
+     C           *IN10     IFEQ '0'
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMS5015F4
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  Move all records which match key into array
+     C***********          Z-ADD1         X       40                      CSW095
+     C                     Z-ADD1         X                               CSW095
+     C                     Z-ADD0         WPASS                                             AR567569
+     C                     Z-ADD0         WEOF                                              AR567569
+     C           *IN10     DOWEQ'0'
+      *                                                                                     AR567569
+      ** If "{1:" has been repeated, it's a multiple or duplicate                           AR567569
+     C                     MOVELMDTA      WSTRT                                             AR567569
+     C           WSTRT     IFEQ '{1:'                                                       AR567569
+     C           X         ANDNE1                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     LEAVE                                                            AR567569
+     C                     ELSE                                                             AR567569
+      *                                                                                     AR567569
+     C           WPASS     IFEQ 1                                                           AR567569
+     C                     Z-ADD0         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                                     AR567569
+     C                     MOVEAMDTA      IMSG,X
+     C           KEY2      READEMSMSI2L2                 10
+     C                     ADD  256       X
+     C                     Z-ADD1         WPASS                                             AR567569
+      *                                                                                     AR567569
+     C           *IN10     IFEQ *ON                                                         AR567569
+     C           WDUP      ANDNE0                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     Z-ADD1         WEOF                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     END
+     C                     SETOF                     10
+     C                     EXSR SFLE
+     C                     END
+      *
+      **  Write Subfile
+     C                     WRITEMS5015F1
+     C                     EXFMTMS5015F4
+     C                     MOVEL*OFF      *IN10                                             AR567569
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     30
+      *
+      **  If Cmd 8 process next message
+     C           *INKH     IFEQ '1'
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEY2      SETGTMSMSI2L2
+     C                     READ MSMSI2L2                 10
+     C                     ELSE                                                             AR567569
+     C           WEOF      IFEQ 1                                                           AR567569
+     C                     MOVE *ON       *IN10                                             AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'EOF or next message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,2    SFMG
+     C                     SETON                     30
+     C                     END
+      *
+      **  If Cmd 9 process previous message
+     C                     ELSE
+     C           *INKI     IFEQ '1'
+     C           KEY2      SETLLMSMSI2L2
+      *                                                                                     AR567569
+     C           WDUP      IFLE 1                                                           AR567569
+     C                     READPMSMSI2L2                 10
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                                     AR567569
+     C                     ELSE                                                             AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     Z-ADD0         WCTR                                              AR567569
+      *                                                                                     AR567569
+     C           WCTR      DOWNEWDUP                                                        AR567569
+     C           KEY2      READEMSMSI2L2                 10                                 AR567569
+     C                     ADD  1         WCTR                                              AR567569
+     C                     ENDDO                                                            AR567569
+      *                                                                                     AR567569
+     C           WDUP      IFNE 0                                                           AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *
+      **  Write 'TOF or previous message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,3    SFMG
+     C                     SETON                     30
+     C           WDUP      IFEQ 1                                                           AR567569
+     C           KEY2      SETLLMSMSI2L2                                                    AR567569
+     C           KEY2      READEMSMSI2L2                 10                                 AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ELSE
+      *
+      **  Read first record of previous message
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEY2      SETLLMSMSI2L2
+     C                     READ MSMSI2L2                 10
+     C                     ENDIF                                                            AR567569
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'TOF or previous message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,3    SFMG
+     C                     SETON                     30
+     C                     END
+     C                     END
+      *
+      **  If ENTER redisplay subfile
+     C                     ELSE
+     C                     SETON                     10
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQY3 - enquire by date,time                                *
+      *   Calls - VRCD validate record                                *
+      *           SFLE format message for display                     *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           ENQY3     BEGSR
+      *
+      **  Open file & read first record
+     C           *IN53     IFEQ '0'
+     C                     OPEN MSMSI2L3
+     C                     SETON                     53
+     C                     END
+      *
+     C           KEY3      SETLLMSMSI2L3
+     C                     READ MSMSI2L3                 10
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'No records match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,1    SFMG
+     C                     SETON                     30
+     C                     ELSE
+     C                     Z-ADD0         WDUP                                              AR567569
+      *
+      **  Do until F3 or F12 pressed
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  If new message to process
+     C           *IN10     IFEQ '0'
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMS5015F4
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  Move all records which match key into array
+     C***********          Z-ADD1         X       40                      CSW095
+     C                     Z-ADD1         X                               CSW095
+     C                     Z-ADD0         WPASS                                             AR567569
+     C                     Z-ADD0         WEOF                                              AR567569
+     C           *IN10     DOWEQ'0'
+      *                                                                                     AR567569
+      ** If "{1:" has been repeated, it's a multiple or duplicate                           AR567569
+     C                     MOVELMDTA      WSTRT                                             AR567569
+     C           WSTRT     IFEQ '{1:'                                                       AR567569
+     C           X         ANDNE1                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     LEAVE                                                            AR567569
+     C                     ELSE                                                             AR567569
+      *                                                                                     AR567569
+     C           WPASS     IFEQ 1                                                           AR567569
+     C                     Z-ADD0         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                                     AR567569
+     C                     MOVEAMDTA      IMSG,X
+     C           KEY3      READEMSMSI2L3                 10
+     C                     ADD  256       X
+     C                     Z-ADD1         WPASS                                             AR567569
+      *                                                                                     AR567569
+     C           *IN10     IFEQ *ON                                                         AR567569
+     C           WDUP      ANDNE0                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     Z-ADD1         WEOF                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     END
+     C                     SETOF                     10
+     C                     EXSR SFLE
+     C                     END
+      *
+      **  Write Subfile
+     C                     WRITEMS5015F1
+     C                     EXFMTMS5015F4
+     C                     MOVEL*OFF      *IN10                                             AR567569
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     30
+      *
+      **  If Cmd 8 process next message
+     C           *INKH     IFEQ '1'
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEY3      SETGTMSMSI2L3
+     C                     READ MSMSI2L3                 10
+     C                     ELSE                                                             AR567569
+     C           WEOF      IFEQ 1                                                           AR567569
+     C                     MOVE *ON       *IN10                                             AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'EOF or next message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,2    SFMG
+     C                     SETON                     30
+     C                     END
+      *
+      **  If Cmd 9 process previous message
+     C                     ELSE
+     C           *INKI     IFEQ '1'
+     C           KEY3      SETLLMSMSI2L3
+      *                                                                                     AR567569
+     C           WDUP      IFLE 1                                                           AR567569
+     C                     READPMSMSI2L3                 10
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                                     AR567569
+     C                     ELSE                                                             AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     Z-ADD0         WCTR                                              AR567569
+      *                                                                                     AR567569
+     C           WCTR      DOWNEWDUP                                                        AR567569
+     C           KEY3      READEMSMSI2L3                 10                                 AR567569
+     C                     ADD  1         WCTR                                              AR567569
+     C                     ENDDO                                                            AR567569
+      *                                                                                     AR567569
+     C           WDUP      IFNE 0                                                           AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *
+      **  Write 'TOF or previous message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,3    SFMG
+     C                     SETON                     30
+     C           WDUP      IFEQ 1                                                           AR567569
+     C           KEY3      SETLLMSMSI2L3                                                    AR567569
+     C           KEY3      READEMSMSI2L3                 10                                 AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ELSE
+      *
+      **  Read first record of previous message
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEY3      SETLLMSMSI2L3
+     C                     READ MSMSI2L3                 10
+     C                     ENDIF                                                            AR567569
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'TOF or previous message does not match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,3    SFMG
+     C                     SETON                     30
+     C                     END
+     C                     END
+      *
+      **  If ENTER redisplay subfile
+     C                     ELSE
+     C                     SETON                     10
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT                                                              S01310
+      *****************************************************************   S01310
+      *   ENQYB - enquire by branch,type,priority,date,time           *   S01310
+      *   Calls - VRCD validate record                                *   S01310
+      *           SFLE format message for display                     *   S01310
+      *   Called by - main process                                    *   S01310
+      *****************************************************************   S01310
+      *                                                                   S01310
+     C           ENQYB     BEGSR                                          S01310
+      *                                                                   S01310
+      **  Open file & read first record                                   S01310
+     C           *IN54     IFEQ '0'                                       S01310
+     C                     OPEN MSMSI2LB                                  S01310
+     C                     SETON                     54                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C           KEYB      SETLLMSMSI2LB                                  S01310
+     C                     READ MSMSI2LB                 10               S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'No records match selection criteria'                     S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,1    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     ELSE                                           S01310
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                   S01310
+      **  Do until F3 or F12 pressed                                      S01310
+     C           *INKC     DOWEQ'0'                                       S01310
+     C           *INKL     ANDEQ'0'                                       S01310
+      *                                                                   S01310
+      **  If new message to process                                       S01310
+     C           *IN10     IFEQ '0'                                       S01310
+      *                                                                   S01310
+      **  Clear subfile                                                   S01310
+     C                     SETOF                     2021                 S01310
+     C                     WRITEMS5015F4                                  S01310
+     C                     SETON                     2021                 S01310
+     C                     Z-ADD1         RRN     50                      S01310
+      *                                                                   S01310
+      **  Move all records which match key into array                     S01310
+     C***********          Z-ADD1         X       40               S01310 CSW095
+     C                     Z-ADD1         X                               CSW095
+     C                     Z-ADD0         WPASS                                             AR567569
+     C                     Z-ADD0         WEOF                                              AR567569
+     C           *IN10     DOWEQ'0'                                       S01310
+      *                                                                                     AR567569
+      ** If "{1:" has been repeated, it's a multiple or duplicate                           AR567569
+     C                     MOVELMDTA      WSTRT                                             AR567569
+     C           WSTRT     IFEQ '{1:'                                                       AR567569
+     C           X         ANDNE1                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     LEAVE                                                            AR567569
+     C                     ELSE                                                             AR567569
+      *                                                                                     AR567569
+     C           WPASS     IFEQ 1                                                           AR567569
+     C                     Z-ADD0         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                                     AR567569
+     C                     MOVEAMDTA      IMSG,X                          S01310
+     C           KEYB      READEMSMSI2LB                 10               S01310
+     C                     ADD  256       X                               S01310
+     C                     Z-ADD1         WPASS                                             AR567569
+      *                                                                                     AR567569
+     C           *IN10     IFEQ *ON                                                         AR567569
+     C           WDUP      ANDNE0                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     Z-ADD1         WEOF                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     END                                            S01310
+     C                     SETOF                     10                   S01310
+     C                     EXSR SFLE                                      S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Write Subfile                                                   S01310
+     C                     WRITEMS5015F1                                  S01310
+     C                     EXFMTMS5015F4                                  S01310
+     C                     MOVEL*OFF      *IN10                                             AR567569
+     C                     MOVE *BLANKS   SFMG                            S01310
+     C                     SETOF                     30                   S01310
+      *                                                                   S01310
+      **  If Cmd 8 process next message                                   S01310
+     C           *INKH     IFEQ '1'                                       S01310
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEYB      SETGTMSMSI2LB                                  S01310
+     C                     READ MSMSI2LB                 10               S01310
+     C                     ELSE                                                             AR567569
+     C           WEOF      IFEQ 1                                                           AR567569
+     C                     MOVE *ON       *IN10                                             AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'EOF or next message does not match selection criteria'   S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,2    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If Cmd 9 process previous message                               S01310
+     C                     ELSE                                           S01310
+     C           *INKI     IFEQ '1'                                       S01310
+     C           KEYB      SETLLMSMSI2LB                                  S01310
+      *                                                                                     AR567569
+     C           WDUP      IFLE 1                                                           AR567569
+     C                     READPMSMSI2LB                 10               S01310
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                                     AR567569
+     C                     ELSE                                                             AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     Z-ADD0         WCTR                                              AR567569
+      *                                                                                     AR567569
+     C           WCTR      DOWNEWDUP                                                        AR567569
+     C           KEYB      READEMSMSI2LB                 10                                 AR567569
+     C                     ADD  1         WCTR                                              AR567569
+     C                     ENDDO                                                            AR567569
+      *                                                                                     AR567569
+     C           WDUP      IFNE 0                                                           AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+      **  Write 'TOF or previous message does not match selection criteria'01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,3    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C           WDUP      IFEQ 1                                                           AR567569
+     C           KEYB      SETLLMSMSI2LB                                                    AR567569
+     C           KEYB      READEMSMSI2LB                 10                                 AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  Read first record of previous message                           S01310
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEYB      SETLLMSMSI2LB                                  S01310
+     C                     READ MSMSI2LB                 10               S01310
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'TOF or previous message does not match selection criteria'01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,3    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If ENTER redisplay subfile                                      S01310
+     C                     ELSE                                           S01310
+     C                     SETON                     10                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR                                          S01310
+     C/EJECT                                                              S01310
+      *****************************************************************   S01310
+      *   ENQYC - enquire by branch,type,date,time                    *   S01310
+      *   Calls - VRCD validate record                                *   S01310
+      *           SFLE format message for display                     *   S01310
+      *   Called by - main process                                    *   S01310
+      *****************************************************************   S01310
+      *                                                                   S01310
+     C           ENQYC     BEGSR                                          S01310
+      *                                                                   S01310
+      **  Open file & read first record                                   S01310
+     C           *IN55     IFEQ '0'                                       S01310
+     C                     OPEN MSMSI2LC                                  S01310
+     C                     SETON                     55                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C           KEYC      SETLLMSMSI2LC                                  S01310
+     C                     READ MSMSI2LC                 10               S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'No records match selection criteria'                     S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,1    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     ELSE                                           S01310
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                   S01310
+      **  Do until F3 or F12 pressed                                      S01310
+     C           *INKC     DOWEQ'0'                                       S01310
+     C           *INKL     ANDEQ'0'                                       S01310
+      *                                                                   S01310
+      **  If new message to process                                       S01310
+     C           *IN10     IFEQ '0'                                       S01310
+      *                                                                   S01310
+      **  Clear subfile                                                   S01310
+     C                     SETOF                     2021                 S01310
+     C                     WRITEMS5015F4                                  S01310
+     C                     SETON                     2021                 S01310
+     C                     Z-ADD1         RRN     50                      S01310
+      *                                                                   S01310
+      **  Move all records which match key into array                     S01310
+     C***********          Z-ADD1         X       40               S01310 CSW095
+     C                     Z-ADD1         X                               CSW095
+     C                     Z-ADD0         WPASS                                             AR567569
+     C                     Z-ADD0         WEOF                                              AR567569
+     C           *IN10     DOWEQ'0'                                       S01310
+      *                                                                                     AR567569
+      ** If "{1:" has been repeated, it's a multiple or duplicate                           AR567569
+     C                     MOVELMDTA      WSTRT                                             AR567569
+     C           WSTRT     IFEQ '{1:'                                                       AR567569
+     C           X         ANDNE1                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     LEAVE                                                            AR567569
+     C                     ELSE                                                             AR567569
+      *                                                                                     AR567569
+     C           WPASS     IFEQ 1                                                           AR567569
+     C                     Z-ADD0         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                                     AR567569
+     C                     MOVEAMDTA      IMSG,X                          S01310
+     C           KEYC      READEMSMSI2LC                 10               S01310
+     C                     ADD  256       X                               S01310
+     C                     Z-ADD1         WPASS                                             AR567569
+      *                                                                                     AR567569
+     C           *IN10     IFEQ *ON                                                         AR567569
+     C           WDUP      ANDNE0                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     Z-ADD1         WEOF                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     END                                            S01310
+     C                     SETOF                     10                   S01310
+     C                     EXSR SFLE                                      S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Write Subfile                                                   S01310
+     C                     WRITEMS5015F1                                  S01310
+     C                     EXFMTMS5015F4                                  S01310
+     C                     MOVEL*OFF      *IN10                                             AR567569
+     C                     MOVE *BLANKS   SFMG                            S01310
+     C                     SETOF                     30                   S01310
+      *                                                                   S01310
+      **  If Cmd 8 process next message                                   S01310
+     C           *INKH     IFEQ '1'                                       S01310
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEYC      SETGTMSMSI2LC                                  S01310
+     C                     READ MSMSI2LC                 10               S01310
+     C                     ELSE                                                             AR567569
+     C           WEOF      IFEQ 1                                                           AR567569
+     C                     MOVE *ON       *IN10                                             AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'EOF or next message does not match selection criteria'   S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,2    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If Cmd 9 process previous message                               S01310
+     C                     ELSE                                           S01310
+     C           *INKI     IFEQ '1'                                       S01310
+     C           KEYC      SETLLMSMSI2LC                                  S01310
+      *                                                                                     AR567569
+     C           WDUP      IFLE 1                                                           AR567569
+     C                     READPMSMSI2LC                 10               S01310
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                                     AR567569
+     C                     ELSE                                                             AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     Z-ADD0         WCTR                                              AR567569
+      *                                                                                     AR567569
+     C           WCTR      DOWNEWDUP                                                        AR567569
+     C           KEYC      READEMSMSI2LC                 10                                 AR567569
+     C                     ADD  1         WCTR                                              AR567569
+     C                     ENDDO                                                            AR567569
+      *                                                                                     AR567569
+     C           WDUP      IFNE 0                                                           AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+      **  Write 'TOF or previous message does not match selection criteria'01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,3    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C           WDUP      IFEQ 1                                                           AR567569
+     C           KEYC      SETLLMSMSI2LC                                                    AR567569
+     C           KEYC      READEMSMSI2LC                 10                                 AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  Read first record of previous message                           S01310
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEYC      SETLLMSMSI2LC                                  S01310
+     C                     READ MSMSI2LC                 10               S01310
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'TOF or previous message does not match selection criteria'01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,3    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If ENTER redisplay subfile                                      S01310
+     C                     ELSE                                           S01310
+     C                     SETON                     10                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR                                          S01310
+     C/EJECT                                                              S01310
+      *****************************************************************   S01310
+      *   ENQYD - enquire by branch,priority,date,time                *   S01310
+      *   Calls - VRCD validate record                                *   S01310
+      *           SFLE format message for display                     *   S01310
+      *   Called by - main process                                    *   S01310
+      *****************************************************************   S01310
+      *                                                                   S01310
+     C           ENQYD     BEGSR                                          S01310
+      *                                                                   S01310
+      **  Open file & read first record                                   S01310
+     C           *IN56     IFEQ '0'                                       S01310
+     C                     OPEN MSMSI2LD                                  S01310
+     C                     SETON                     56                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C           KEYD      SETLLMSMSI2LD                                  S01310
+     C                     READ MSMSI2LD                 10               S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'No records match selection criteria'                     S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,1    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     ELSE                                           S01310
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                   S01310
+      **  Do until F3 or F12 pressed                                      S01310
+     C           *INKC     DOWEQ'0'                                       S01310
+     C           *INKL     ANDEQ'0'                                       S01310
+      *                                                                   S01310
+      **  If new message to process                                       S01310
+     C           *IN10     IFEQ '0'                                       S01310
+      *                                                                   S01310
+      **  Clear subfile                                                   S01310
+     C                     SETOF                     2021                 S01310
+     C                     WRITEMS5015F4                                  S01310
+     C                     SETON                     2021                 S01310
+     C                     Z-ADD1         RRN     50                      S01310
+      *                                                                   S01310
+      **  Move all records which match key into array                     S01310
+     C***********          Z-ADD1         X       40               S01310 CSW095
+     C                     Z-ADD1         X                               CSW095
+     C                     Z-ADD0         WPASS                                             AR567569
+     C                     Z-ADD0         WEOF                                              AR567569
+     C           *IN10     DOWEQ'0'                                       S01310
+      *                                                                                     AR567569
+      ** If "{1:" has been repeated, it's a multiple or duplicate                           AR567569
+     C                     MOVELMDTA      WSTRT                                             AR567569
+     C           WSTRT     IFEQ '{1:'                                                       AR567569
+     C           X         ANDNE1                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     LEAVE                                                            AR567569
+     C                     ELSE                                                             AR567569
+      *                                                                                     AR567569
+     C           WPASS     IFEQ 1                                                           AR567569
+     C                     Z-ADD0         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                                     AR567569
+     C                     MOVEAMDTA      IMSG,X                          S01310
+     C           KEYD      READEMSMSI2LD                 10               S01310
+     C                     ADD  256       X                               S01310
+     C                     Z-ADD1         WPASS                                             AR567569
+      *                                                                                     AR567569
+     C           *IN10     IFEQ *ON                                                         AR567569
+     C           WDUP      ANDNE0                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     Z-ADD1         WEOF                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     END                                            S01310
+     C                     SETOF                     10                   S01310
+     C                     EXSR SFLE                                      S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Write Subfile                                                   S01310
+     C                     WRITEMS5015F1                                  S01310
+     C                     EXFMTMS5015F4                                  S01310
+     C                     MOVEL*OFF      *IN10                                             AR567569
+     C                     MOVE *BLANKS   SFMG                            S01310
+     C                     SETOF                     30                   S01310
+      *                                                                   S01310
+      **  If Cmd 8 process next message                                   S01310
+     C           *INKH     IFEQ '1'                                       S01310
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEYD      SETGTMSMSI2LD                                  S01310
+     C                     READ MSMSI2LD                 10               S01310
+     C                     ELSE                                                             AR567569
+     C           WEOF      IFEQ 1                                                           AR567569
+     C                     MOVE *ON       *IN10                                             AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'EOF or next message does not match selection criteria'   S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,2    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If Cmd 9 process previous message                               S01310
+     C                     ELSE                                           S01310
+     C           *INKI     IFEQ '1'                                       S01310
+     C           KEYD      SETLLMSMSI2LD                                  S01310
+      *                                                                                     AR567569
+     C           WDUP      IFLE 1                                                           AR567569
+     C                     READPMSMSI2LD                 10               S01310
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                                     AR567569
+     C                     ELSE                                                             AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     Z-ADD0         WCTR                                              AR567569
+      *                                                                                     AR567569
+     C           WCTR      DOWNEWDUP                                                        AR567569
+     C           KEYD      READEMSMSI2LD                 10                                 AR567569
+     C                     ADD  1         WCTR                                              AR567569
+     C                     ENDDO                                                            AR567569
+      *                                                                                     AR567569
+     C           WDUP      IFNE 0                                                           AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+      **  Write 'TOF or previous message does not match selection criteria'01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,3    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C           WDUP      IFEQ 1                                                           AR567569
+     C           KEYD      SETLLMSMSI2LD                                                    AR567569
+     C           KEYD      READEMSMSI2LD                 10                                 AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  Read first record of previous message                           S01310
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEYD      SETLLMSMSI2LD                                  S01310
+     C                     READ MSMSI2LD                 10               S01310
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'TOF or previous message does not match selection criteria'01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,3    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If ENTER redisplay subfile                                      S01310
+     C                     ELSE                                           S01310
+     C                     SETON                     10                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR                                          S01310
+     C/EJECT                                                              S01310
+      *****************************************************************   S01310
+      *   ENQYE - branch,enquire by date,time                         *   S01310
+      *   Calls - VRCD validate record                                *   S01310
+      *           SFLE format message for display                     *   S01310
+      *   Called by - main process                                    *   S01310
+      *****************************************************************   S01310
+      *                                                                   S01310
+     C           ENQYE     BEGSR                                          S01310
+      *                                                                   S01310
+      **  Open file & read first record                                   S01310
+     C           *IN57     IFEQ '0'                                       S01310
+     C                     OPEN MSMSI2LE                                  S01310
+     C                     SETON                     57                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C           KEYE      SETLLMSMSI2LE                                  S01310
+     C                     READ MSMSI2LE                 10               S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'No records match selection criteria'                     S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,1    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     ELSE                                           S01310
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                   S01310
+      **  Do until F3 or F12 pressed                                      S01310
+     C           *INKC     DOWEQ'0'                                       S01310
+     C           *INKL     ANDEQ'0'                                       S01310
+      *                                                                   S01310
+      **  If new message to process                                       S01310
+     C           *IN10     IFEQ '0'                                       S01310
+      *                                                                   S01310
+      **  Clear subfile                                                   S01310
+     C                     SETOF                     2021                 S01310
+     C                     WRITEMS5015F4                                  S01310
+     C                     SETON                     2021                 S01310
+     C                     Z-ADD1         RRN     50                      S01310
+      *                                                                   S01310
+      **  Move all records which match key into array                     S01310
+     C***********          Z-ADD1         X       40               S01310 CSW095
+     C                     Z-ADD1         X                               CSW095
+     C                     Z-ADD0         WPASS                                             AR567569
+     C                     Z-ADD0         WEOF                                              AR567569
+     C           *IN10     DOWEQ'0'                                       S01310
+      *                                                                   105223
+      **  If "{1:" has been repeated, it's a duplicate message            105223
+     C                     MOVELMDTA      WSTRT   3                       105223
+     C           WSTRT     IFEQ '{1:'                                     105223
+     C           X         ANDNE1                                         105223
+     C                     ADD  1         WDUP                                              AR567569
+     C                     LEAVE                                          105223
+     C                     ELSE                                                             AR567569
+      *                                                                                     AR567569
+     C           WPASS     IFEQ 1                                                           AR567569
+     C                     Z-ADD0         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                          105223
+      *                                                                   105223
+     C                     MOVEAMDTA      IMSG,X                          S01310
+     C           KEYE      READEMSMSI2LE                 10               S01310
+     C                     ADD  256       X                               S01310
+     C                     Z-ADD1         WPASS                                             AR567569
+      *                                                                                     AR567569
+     C           *IN10     IFEQ *ON                                                         AR567569
+     C           WDUP      ANDNE0                                                           AR567569
+     C                     ADD  1         WDUP                                              AR567569
+     C                     Z-ADD1         WEOF                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     END                                            S01310
+     C                     SETOF                     10                   S01310
+     C                     EXSR SFLE                                      S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Write Subfile                                                   S01310
+     C                     WRITEMS5015F1                                  S01310
+     C                     EXFMTMS5015F4                                  S01310
+     C                     MOVEL*OFF      *IN10                                             AR567569
+     C                     MOVE *BLANKS   SFMG                            S01310
+     C                     SETOF                     30                   S01310
+      *                                                                   S01310
+      **  If Cmd 8 process next message                                   S01310
+     C           *INKH     IFEQ '1'                                       S01310
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEYE      SETGTMSMSI2LE                                  S01310
+     C                     READ MSMSI2LE                 10               S01310
+     C                     ELSE                                                             AR567569
+     C           WEOF      IFEQ 1                                                           AR567569
+     C                     MOVE *ON       *IN10                                             AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'EOF or next message does not match selection criteria'   S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,2    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If Cmd 9 process previous message                               S01310
+     C                     ELSE                                           S01310
+     C           *INKI     IFEQ '1'                                       S01310
+     C           KEYE      SETLLMSMSI2LE                                  S01310
+      *                                                                                     AR567569
+     C           WDUP      IFLE 1                                                           AR567569
+     C                     READPMSMSI2LE                 10               S01310
+     C                     Z-ADD0         WDUP                                              AR567569
+      *                                                                                     AR567569
+     C                     ELSE                                                             AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     Z-ADD0         WCTR                                              AR567569
+      *                                                                                     AR567569
+     C           WCTR      DOWNEWDUP                                                        AR567569
+     C           KEYE      READEMSMSI2LE                 10                                 AR567569
+     C                     ADD  1         WCTR                                              AR567569
+     C                     ENDDO                                                            AR567569
+      *                                                                                     AR567569
+     C           WDUP      IFNE 0                                                           AR567569
+     C                     SUB  1         WDUP                                              AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+      **  Write 'TOF or previous message does not match selection criteria'01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,3    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C           WDUP      IFEQ 1                                                           AR567569
+     C           KEYE      SETLLMSMSI2LE                                                    AR567569
+     C           KEYE      READEMSMSI2LE                 10                                 AR567569
+     C                     ENDIF                                                            AR567569
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  Read first record of previous message                           S01310
+     C           WDUP      IFEQ 0                                                           AR567569
+     C           KEYE      SETLLMSMSI2LE                                  S01310
+     C                     READ MSMSI2LE                 10               S01310
+     C                     ENDIF                                                            AR567569
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'TOF or previous message does not match selection criteria'01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,3    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If ENTER redisplay subfile                                      S01310
+     C                     ELSE                                           S01310
+     C                     SETON                     10                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR                                          S01310
+     C/EJECT
+      *****************************************************************
+      *   VRCD - validate record                                      *
+      *   Called by - ENQY0 enquire by type,priority,date,time        *
+      *               ENQY1 enquire by type,date,time                 *
+      *               ENQY2 enquire by priority,date,time             *
+      *               ENQY3 enquire by date,time                      *
+      *               ENQYB enquire by branch,type,priority,date,time *   S01310
+      *               ENQYC enquire by branch,type,date,time          *   S01310
+      *               ENQYD enquire by branch,priority,date,time      *   S01310
+      *               ENQYE enquire by branch,date,time               *   S01310
+      *****************************************************************
+      *
+     C           VRCD      BEGSR
+      *
+      **  If message type does not match parameter
+     C           STYP      IFNE *BLANKS
+     C           STYP      ANDNEMTPY
+     C                     SETON                     10
+     C                     END
+      *
+      **  If priority does not match parameter
+     C           SPTY      IFNE *BLANKS
+     C           SPTY      ANDNEMPRY
+     C                     SETON                     10
+     C                     END
+      *
+      **  If start date entered & greater than message output date
+     C           SOSD      IFNE *BLANKS
+      *                                                                   124673
+     C           @OSDC     IFGT MODEC                                     124673
+     C           @OSDC     OREQ MODEC                                     124673
+     C           @OSD      ANDGTMODE
+     C                     SETON                     10
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     END
+      *
+      **  If start date equal to message output date,
+      **  start time entered & greater than message output time
+     C           @OSD      IFEQ MODE
+     C           @OSDC     ANDEQMODEC                                     124673
+     C           SOST      ANDNE*BLANKS
+     C           @OST      ANDGTMOTM
+     C                     SETON                     10
+     C                     END
+      *
+      **  If end date entered & less than message output date
+     C           SOED      IFNE *BLANKS
+      *                                                                   124673
+     C           @OEDC     IFLT MODEC                                     124673
+     C           @OEDC     OREQ MODEC                                     124673
+     C           @OED      ANDLTMODE
+     C                     SETON                     10
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     END
+      *
+      **  If end date equal to message output date,
+      **  end time entered & less than message output time
+     C           @OED      IFEQ MODE
+     C           @OEDC     ANDEQMODEC                                     124673
+     C           SOET      ANDNE*BLANKS
+     C           @OET      ANDLTMOTM
+     C                     SETON                     10
+     C                     END
+      *
+     C           MBIN      IFEQ 'Y'                                       S01310
+     C           SBCH      ANDNE'ALL'                                     S01310
+     C           SBCH      ANDNEBRCA                                      S01310
+     C                     SETON                     10                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SFLE - format message for display                           *
+      *   Called by - ENQY0 enquire by type,priority,date,time        *
+      *               ENQY1 enquire by type,date,time                 *
+      *               ENQY2 enquire by priority,date,time             *
+      *               ENQY3 enquire by date,time                      *
+      *               ENQYB enquire by branch,type,priority,date,time *   S01310
+      *               ENQYC enquire by branch,type,date,time          *   S01310
+      *               ENQYD enquire by branch,priority,date,time      *   S01310
+      *               ENQYE enquire by branch,date,time               *   S01310
+      *****************************************************************
+      *
+     C           SFLE      BEGSR
+      *
+      **  Analyse message headers using data structure
+     C                     MOVEAIMSG,1    @HDR  114
+     C                     Z-ADD86        X
+      *
+      **  Write basic header (block 1)
+     C                     MOVE HDGA,1    RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+     C                     MOVE HDGA,2    RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+      *
+     C                     MOVE @RAD      ORAD
+     C                     MOVE @SNN      OSNN
+     C                     MOVE @SQN      OSQN
+     C                     MOVE RCD1      RCD
+     C                     WRITEMS5015F3
+     C                     ADD  2         RRN
+      *
+      **  Write application header (block 2)
+     C                     MOVE HDGA,3    RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+     C                     MOVE HDGA,4    RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+      *
+     C                     MOVE @MTP      OMTP
+     C                     MOVE @ITM      OITM
+     C                     MOVE @MIR      OMIR
+     C                     MOVE @ODT      OODT
+     C                     MOVE @OTM      OOTM
+     C           @MPY      IFEQ 'N'
+     C                     MOVEL'NORMAL'  OPTY
+     C                     ELSE
+     C                     MOVEL'URGENT'  OPTY
+     C                     END
+     C                     MOVE RCD2      RCD
+     C                     WRITEMS5015F3
+     C                     ADD  2         RRN
+      *
+      **  If user header present
+     C/COPY WNCPYSRC,MS5015C001
+     C           @WK3      IFEQ '{3:'
+     C                     MOVE *BLANKS   OBPY
+     C                     MOVE *BLANKS   OMUR
+     C/COPY WNCPYSRC,MS5015C007
+     C                     Z-ADD84        X
+      *
+      **  Write user header (block 3)
+     C                     MOVE HDGA,5    RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+     C                     MOVE HDGA,6    RCD
+     C/COPY WNCPYSRC,MS5015C009
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+     C/COPY WNCPYSRC,MS5015C002
+      *
+      **  If banking priority present
+     C                     MOVEAIMSG,X    @WK5    5
+     C           @WK5      IFEQ '{113:'
+     C                     ADD  5         X
+     C                     Z-ADD1         Z       30
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     END
+     C                     MOVEALINE      OBPY
+     C                     MOVEA*BLANKS   LINE
+     C                     ADD  1         X
+     C                     END
+      *
+      **  If message user reference (MUR) present
+     C                     MOVEAIMSG,X    @WK5
+     C           @WK5      IFEQ '{108:'
+     C                     ADD  5         X
+     C                     Z-ADD1         Z
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     END
+     C                     MOVEALINE      OMUR
+     C                     MOVEA*BLANKS   LINE
+     C                     ADD  1         X
+     C                     END
+     C/COPY WNCPYSRC,MS5015C008
+      *
+     C                     MOVE RCD3      RCD
+     C/COPY WNCPYSRC,MS5015C010
+     C                     WRITEMS5015F3
+     C                     ADD  2         RRN
+     C/COPY WNCPYSRC,MS5015C004
+     C                     ADD  6         X
+     C                     END
+     C/COPY WNCPYSRC,MS5015C005
+      *
+      **  Write message text (block 4) headings
+     C                     MOVE HDGA,7    RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+      *
+      **  Do until end of message
+     C           @WK2      DOUEQ'-}'
+     C                     Z-ADD5         Z
+      *
+      **  If tag is present indent by 5 characters
+     C           IMSG,X    IFEQ ':'
+     C                     Z-ADD1         Z
+     C                     END
+      *
+      **  Do until Carriage return/Line feed
+     C           @WK2      DOUEQCRLF
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     MOVEAIMSG,X    @WK2    2
+     C                     END
+      *
+      **  Write out detail line
+     C                     MOVEALINE      RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     ADD  2         X
+     C                     MOVEAIMSG,X    @WK2
+     C                     END
+      *
+     C                     ADD  2         X
+     C                     MOVEAIMSG,X    @WL3    3
+      *
+      **  If message trailer present
+     C           @WL3      IFEQ '{5:'
+     C                     ADD  4         X
+      **  Write trailer (block 5)
+     C                     ADD  1         RRN
+     C                     MOVE HDGA,8    RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+      *
+     C           @WK2      DOUEQ'}}'
+     C                     Z-ADD1         Z
+      *
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         Z
+     C                     ADD  1         X
+     C                     END
+      *
+      **  Write out detail line
+     C                     MOVEALINE      RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     MOVEAIMSG,X    @WK2
+     C                     ADD  2         X
+     C                     END
+     C                     END
+      *
+     C                     MOVEAIMSG,X    @WL3
+      *
+      **  If STS trailer present
+     C           @WL3      IFEQ '{S:'
+     C                     ADD  4         X
+      **  Write STS trailer (S block)
+     C                     ADD  1         RRN
+     C                     MOVE HDGA,9    RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+      *
+     C           @WK2      DOUEQ'}}'
+     C                     Z-ADD1         Z
+      *
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         Z
+     C                     ADD  1         X
+     C                     END
+      *
+      **  Write out detail line
+     C                     MOVEALINE      RCD
+     C                     WRITEMS5015F3
+     C                     ADD  1         RRN
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     MOVEAIMSG,X    @WK2
+     C                     ADD  2         X
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *   Called by - INIT initial process                            *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,MS5015C003
+**  Messages
+No records match selection criteria
+EOF or next message does not match selection criteria
+TOF or previous message does not match selection criteria
+**  Headings
+Basic header  (block 1)
+Recipient    Session no  Sequence number                               Branch
+Application header  (block 2)
+Msg type  Input time  MIR                           Output date  Time  Pty
+User header  (block 3)
+Banking priority 113:  M.U.R. 108:
+Text  (block 4)
+Trailer  (block 5)
+STS trailer  (block 6)
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+     X/COPY WNCPYSRC,MS5015X001

@@ -1,0 +1,2124 @@
+0001 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Deposits ladder report')                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *     DL2685 -  DEPOSITS LADDER REPORT                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 248796             Date 06Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 242206A            Date 06Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242206             Date 19Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 210563             Date 07Apr03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 193945             Date 27Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 136242             Date 10Nov00               *
+      *                 136229             Date 10Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163486             Date 14Oct99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 139958             Date 03Aug98               *
+      *                 130913             Date 17Jun98               *
+     F*                 CEU011             Date 11Mar98               *
+     F*                 CLE005             Date 22May97               *
+     F*                 066679             Date 25Apr96               *
+     F*                  S01473             Date 06Jul94              *
+     F*                    042463             DATE 25MAR93               *
+     F*                    S01393             DATE 16MAR93               *
+     F*                    E34885             DATE 16MAR93               *
+     F*                    048943             DATE 22JAN93               *
+     F*                    046947             DATE 17NOV92               *
+     F*                    S01354             DATE 03MAR92               *
+0010 F*                    E25515             DATE 14AUG91               *
+0010 F*                    E24016             DATE 27JUN91               *S01270
+0010 F*                    S01270             DATE 07JUN91               *S01270
+     F*                    E20252             DATE 26FEB90               *
+     F*                    E20169             DATE 10SEP90               *
+0010 F*                    E156               DATE  6DEC89               *E156
+0010 F*                    E00097             DATE 28NOV89               *E00097
+0010 F*                    E58                DATE 20NOV89               *E58
+     F*                    S01194             DATE 22/08/89              *
+     F*                    S01117             DATE 22/08/89              *
+     F*                    E15226             DATE 13/02/89              *
+     F*                    E15828             DATE 07/02/89              *
+     F*                    E13332             DATE 07/02/89              *
+     F*                    E12724             DATE 19/04/88              *
+     F*                    E11996             DATE 14/03/88              *
+0010 F*                    E11631             DATE 28/09/87              *
+0010 F*                    S01116             DATE 14/08/86              *
+0011 F*                                                                  *
+      *****************************************************************
+      *                                                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *            (Recompile)                                        *
+      *  248796 - Move write of LNRF from ROL array to DLROLPF file.  *
+      *  242206A - Increase size of ROL index R.                      *
+      *  242206 - Increase ROL array to accomodate events > 999.      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  210563 - Include LE Rollover events. If one is processed     *
+      *           ignore the Maturity event for that loan.            *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  193945 - Do not include Risk Parts. Sold                     *
+      *  136242 - Internal Arbitrage deals should only be incorpo-    *
+      *           rated in the FX Ladder but not the Deposit Ladder   *
+      *           since these entries are not supported by external   *
+      *           deals. Removed processing for Internal Contracts.   *
+      *  136229 - Loans OUT amount is separated from the Deposits IN  *
+      *           amount. Previously, Loans OUT amount was mistakenly *
+      *           added to the Deposits IN amount.                    *
+      *           Applied fix 123646.                                 *
+     F*  163486 - Recompile due to changes in LVENTEL.                *
+      *  CDL006 - Dealing Fiduciary.                                  *
+     F*  139958 - Some of the figures in the Deposit Ladder report -  *
+     F*           Consolidated report are still shown in original ccy.*
+     F*  130913 - First currency missing from print .                 *
+     F*  CEU011 - Position/Risk Reporting.                            *
+     F*  CLE005 - Customer Lending Enhancements - Tranche 3           *
+     F*     066679 - PRINCIPAL INCREASES FOR TERM LOAN NOT PROCESSED.
+     F*     S01473 - Midas Leo Integration Project. Add in processing    *
+     F*              to handle the Leo Dl events. These have been        *
+     F*              selected from the extract file via a new logical    *
+     F*              EVDLSL2. If the switchable feature number is on     *
+     F*              the file, the old file is overridden to the new     *
+     F*              file in the calling CL                              *
+     F*     042463 - Deposits ladder wrongly shows INTERBANK-PLACING     *
+     F*              amounts. IP amounts appear under 'DEPOSITS IN'      *
+     F*              instead of 'LOANS IN' in the DEPOSITS LADDER        *
+     F*              REPORT.                                             *
+     F*     S01393 - Recompiled for Strategic Risk Management            *
+     F*              Book Code added to PF/EVNTXED                       *
+     F*     E34885 - REMOVAL OF CUSTOMER LENDING CHANGES (S01270)        *
+     F*     048943 - CONSOLIDATE REPORTING                               *
+     F*     046947 - No headings for DL2685P1 for first branch 001,      *
+     F*              second page printed as page 1.                      *
+     F*     E25515 - REMOVAL OF SYNDICATED LOANS                         *
+     F*     S01354 - Internal Funding Deals                              *
+     F*     E24016 - INTEREST AMOUNT OF INTERNAL CONTRACTS ARE INCLUDED  *
+     F*              IN "DEPOSITS IN" COLUMN.                            *
+     F*     S01270 - CUSTOMER LENDING ENHANCEMENTS                       *S01270
+     F*     E20252 - In addition to E15828 below, restrict change to     *
+     F*              only affect swaps (20V1/20V2), not loans/deposits.  *
+     F*     E20169 - (BHF349) FOR ETYP 62M1 SETON INDICATOR 58 SO THAT   *
+     F*              THE INTEREST AT MATURITY (OTHA) WILL BE INCLUDED IN *
+     F*              THE NET INTEREST.                                   *
+     F*     E156   - DOES NOT PRODUCE HEADINGS FOR 1ST PAGE OF DL2685P1  *E156
+     F*     E00097 - SHOULD ONLY PRODUCE A P1 REPORT IF  DETAILS         *E00097
+     F*     E58    - SHOULD RECEIVE SEQ. NO. AS AN ENTRY PARAMETER       *E58
+     F*     S01194 - NEW STANDING DATA                                   *E12724
+     F*     S01117 - RELEASE 10 - MULTIBRANCHING                         *E12724
+     F*     E15226 - TO OUTPUT FACE VALUE AND INTEREST AMOUNT ON         *E15226
+     F*              MATURITY DATE OF CD PURCHASED - SECONDARY MARKET    *E15226
+     F*     E15828 - TO OUTPUT CORRECTLY THE LOAN AMOUNT OF AN           *E15828
+     F*              INTERNAL CONTRACT                                   *E15828
+     F*     E13332 - FIELD INTERNAL CONTRACT AMOUNT (ICAM) DEFINED       *E13332
+     F*              WRONGLY IN 'I' SPEC                                 *E13332
+     F*     E12724 - Additions to E11996 to ensure that negative signs   *E12724
+     F*              of NET column are not overwritten.                  *E12724
+     F*     E11996 - End position of net interest total for currency     *E11996
+     F*              with three decimal places was incorrect in          *E11996
+     F*              Report DL2685P1.                                    *E11996
+     F*              Last position of NET column was overwritten on      *E11996
+     F*              both reports for ccy of one dec place.              *E11996
+0011 F*     E11631 - Check for number of decimal places for              *E11631
+0011 F*              currency performed in wrong place.                  *E11631
+0011 F*                                                                  *
+0012 F********************************************************************
+0013 F***EVDLS***IP  F     320  1AI     1 DISK                            CEU011
+      *                                                                   CEU011
+     FDLEVDLL0IP  F     320  1AI     1 DISK                               CEU011
+      *                                                                   CEU011
+      ** Events for Deposit Ladder by Branch                              CEU011
+      *                                                                   CEU011
+     FSDCURRL1IF  E           K        DISK                               CEU011
+      *                                                                   CEU011
+      ** Currencies File                                                  CEU011
+      *                                                                   CEU011
+     FDLEVEUPDO   E                    DISK                           UC  CEU011
+     FDLROLLF IF  E           K        DISK                                                   248796
+      *                                                                   CEU011
+      ** DL Events File for EMU Deposits Ladder Report                    CEU011
+      *                                                                   CEU011
+0014 F***TABLE   IF  F      96 12AI     2 DISK                            S01194
+0015 F*L2685P2O***F*****132            PRINTER                      S01124S01117
+0015 F*L2685P1O***F*****132            PRINTER                      S01124S01117
+0015 FDL2685P2O   F     132            PRINTER      KINFDS SPOOL1         S01117
+0015 FDL2685P1O   F     132            PRINTER      KINFDS SPOOL2         S01117
+     F/COPY WNCPYSRC,DL2685F001
+0016 F*
+0017 F*
+0018 F*            U S E   O F   I N D I C A T O R S
+0019 F*
+0020 F*            01        EVDLM - HEADER
+0021 F*            02              - DEALS RECORD
+0022 F*************03**************-*TRAILER******************************E25515
+0023 F*            04              - CATCHALL
+0024 F*****        05        TABLES FILE - ICDR 1                         S01194
+0025 F*****        06        TABLES FILE - CURRENCIES RECORD 1            S01194
+0026 F*****        07        TABLES FILE - ICDR 5                         S01194
+     F*            08        EVDLS - CUST.LENDING RECORD                  S01116
+     F*            09        First page indicator                         046947
+     F*            10        EVDLSL2 Leo LC Record                        S01473
+     F*            15        SUPPRESS ZEROS OF DECIMALS IN DEPOSITS IN    S01116
+     F*            16        SUPPRESS ZEROS OF DECIMALS IN LOANS IN       S01116
+     F*            17        SUPPRESS ZEROS OF DECIMALS IN DEPOSIT OUT    S01116
+     F*            18        SUPPRESS ZEROS OF DECIMALS IN LOANS OUT      S01116
+     F*            19        SUPPRESS ZEROS OF DECIMALS IN NET INTEREST   S01116
+0027 F*            20        FIRST CYCLE INDICATOR
+0028 F*            21        CNMB = ZERO
+0028 F*            24        L1 BREAK DOES NOT REPRESENT NEW REPORT LINE  BM0010
+0028 F*            25        ZERO DEPOSITS IN TODAY                       BM0010
+0028 F*            26        ZERO LOANS IN TODAY                          BM0010
+0028 F*            27        ZERO DEPOSITS OUT TODAY                      BM0010
+0028 F*            28        ZERO LOANS OUT TODAY                         BM0010
+0028 F*            29        ZERO NET INTEREST TODAY                      BM0010
+0029 F*            30-33     DECIMAL PLACES OF CURRENCY
+     F*            34        OVERFLOW                                     S01116
+     F*            35        NOTICE/CALL EVENT                            S01116
+     F*            36        WORK                                         S01116
+     F*            37        WORK                                         S01116
+0030 F*            38        NEXT DAY TO BE PRINTED HAS NO EVENTS
+0031 F*            39        NEXT DAY TO BE PRINTED HAS EVENTS
+0032 F*            40        LAST DAY OF MONTH
+     F*            45        OUTPUT OF SUMMARY HEADINGS                   S01116
+     F*            46        OUTPUT OF SUMMARY DETAIL                     S01116
+     F*            47        OUTPUT OF SUMMARY TOTALS                     S01116
+     F*            48        NO DETAILS TO BE PRINTED IF OFF              E00097
+0033 F*************50********EVENT*IS*20V1*OR*20V2*********************   136242
+0034 F*            51        PURCHASE EVENT
+0035 F*            52        SALE EVENT
+     F*            53        PRIN.AMT. = 0;   INT.AMT. = EAMT
+     F*************54********PRIN.AMT.*=*OTHA;**INT.AMT.*=*EAMT***********E25515
+     F*            55        PRIN.AMT. = EAMT
+     F*            58        INT.AMT. = OTHA
+0036 F*            60        DAILY NET TOTAL IS < 0
+0037 F*            61        MONTHLY NET IS < 0
+     F*            67        WORK                                         S01116
+     F*            68        WORK                                         S01116
+     F*            69        WRIT ZERO                                    E00097
+0038 F*            70        MONTH HAS 30 DAYS OR FILE CONTROLS OUT
+0039 F*            72        MONTH IS FEBRUARY
+     F*            76        SDCURRL1 EOF Indicator                       CEU011
+     F*            77        Currencies array LOKUP indicator             CEU011
+0040 F*            78        YEAR IS NOT A LEAP YEAR
+0041 F*            79        YEAR IS A LEAP YEAR
+     F*            85        LOAN
+     F*            86        LOKUP work indicator                                             210563
+0042 F*************U7********CHAIN FAIL TO TABLES FILE                    S01194
+0042 F*            U7        CHAIN FAIL                                   S01194
+0043 F*            U8        FILE CONTROLS OUT OF BALANCE
+     E                    CPY@    1   1 80
+     E                    @EURO   1   1 26                                CEU011
+0044 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+0045 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+0046 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+0047 E**
+0048 E                    MONTHT  3  12  9
+     E**********          ROL       999  6 0                                           210563 242206
+     E                    ROL      9999  6 0                                                  242206
+      *                                                                   CEU011
+     E                    CUR       200  3   INC     1                    CEU011
+      *                                                                   CEU011
+      **  Array to store Ccy and 'In' ccy indicator                       CEU011
+      *                                                                   CEU011
+0049 I***EVDLS***NS  01   1 CA                                            CEU011
+     IDLEVDLL0NS  01   1 CA                                               CEU011
+0050 I************                           28  30 ECCY  L4       S01116 048943
+0050 I                                       28  30 ECCY  L3              048943
+0051 I        NS  02   1 CD
+     I                                        1   1 RECI                  CEU011
+     I                                        2   70DLNO                  CEU011
+     I                                        8  13 CUNR                  CEU011
+0053 I                                       14  17 ETYP
+0054 I                                    P  18  200EDAT  L1
+0055 I                                    P  21  270EAMT
+0056 I************                           28  30 ECCY  L4       S01116 048943
+     I*****                                  31  330BRCD  L3        S01116S01117
+     I************                           31  33 BRCA  L3       S01117 048943
+0050 I                                       28  30 ECCY  L3              048943
+     I                                       31  33 BRCA                  048943
+0057 I                                       34  35 DTYP                  S01116
+0058 I                                    P  36  420OTHA                  S01116
+0059 I                                       43  430FSLI                  S01116
+0060 I************************************P  44  440ICAM           S01116 E13332
+0060 I                                    P  44  500ICAM                  E13332
+     I                                       51  51 IBRE                  CEU011
+0061 I************************************P  51  570CNI            S01116 CDL038
+     I                                       56  59 CLAS                  CDL038
+0062 I                                       63  630CNMB                  BM0010
+     I***********                                                   S01116E25515
+0051 I********NS**03   1 CC                                         S01116E25515
+0053 I************************************   14  17 ETYP            S01116E25515
+0054 I************************************P  18  200EDAT  L1        S01116E25515
+0055 I************************************P  21  270EAMT            S01116E25515
+0056 I************************************   28  30 ECCY  L4        S01116E25515
+     I*****                                  31  330BRCD  L3        S01116S01117
+     I************************************   31  33 BRCA  L3        S01117E25515
+0058 I************************************P  55  610OTHA            S01116E25515
+     I***                                                                 S01116
+0051 I        NS  08   1 CL                                               BS1565
+     I                                        1   1 RECI                  BS1565
+     I**********                              2   70LNRF                               BS1565 CLE148
+     I                                        2   7 LNRF                                      CLE148
+     I***********                             8  130CNUM                  BS1565              CSD027
+     I                                        8  13 CNUM                                      CSD027
+     I                                       14  17 ETYP                  BS1565
+     I                                    P  18  200EDAT  L1              BS1565
+     I                                    P  21  270EAMT                  BS1565
+     I************                           28  30 ECCY  L4       S01116 048943
+     I*****                                  31  330BRCD  L3        S01116S01117
+     I************                           31  33 BRCA  L3       S01117 048943
+     I                                       28  30 ECCY  L3              048943
+     I                                       31  33 BRCA                  048943
+     I                                       34  53 PRNM                  S01116
+     I                                       54  54 INOI                  S01116
+     I                                    P  55  610OTHA                  BS1565
+     I                                       62  62 IBRE                  CEU011
+      *                                                                   S01473
+      ** For Leo Events                                                   S01473
+     I        NS  10   1 CB                                               S01473
+     I                                       14  17 ETYP                  S01473
+     I                                    P  18  200EDAT  L1              S01473
+     I                                    P  21  270EAMT                  S01473
+     I                                       28  30 ECCY  L3              S01473
+     I                                       33  36 EPRO                  S01473
+     I                                       37  39 BRCA                  S01473
+     I                                    P  43  490OTHA                  S01473
+      *                                                                   S01473
+0063 I        NS  04   1 CT
+0064 I                                        2   60NORE
+0065 I                                    P   7  140HRWN
+0066 I                                    P  15  160HRDC
+0067 I        NS
+0068 I* LOOK AHEAD DATE AND CURRENCY FIELDS
+0069 I        NS  **
+0070 I                                    P  18  200LADT1
+0071 I                                       28  30 LACY
+     I*****                                  31  330LABC            S01116S01117
+     I                                       31  33 LABC                  S01117
+0072 I                                       63  630LACN                  S01116
+0073 I**TABLE***NS  05   2 C0   3 C1  12 C1                               S01194
+0074 I*****  AND      13 C0                                               S01194
+0075 I*****                                   1   1 RECI                  S01194
+0076 I*****                                  14  66 TITL                  S01194
+0077 I*****                                  67  67 DATF                  S01194
+0078 I*****                               P  77  790RUND                  S01194
+0079 I*****                                  80  86 RUNA                  S01194
+0080 I**ICDR 5                                                            S01194
+0081 I*****   NS  07   1 CD   2 C0   3 C1                                 S01194
+0082 I*****  AND      12 C4  13 C0                                        S01194
+0083 I*****                                  47  49 USCY                  S01194
+0084 I*****   NS  06   1 CD   2 C2   3 C0                                 S01194
+0085 I*****                                  10  12 CCY                   S01194
+0086 I*****                                  13  13 RECT                  S01194
+0087 I*****                                  38  380CDP                   S01194
+0088 I*****                                  14  27 CCNM                  S01194
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01194
+     I*                                                                   S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01194
+     I*                                                                   S01194
+     ISCSARD    E DSSCSARDPD                                              S01473
+     I** External DS for Switchable Feature Details                       S01473
+     I*                                                                   S01473
+     ISDGELR    E DSSDGELRPD                                              CEU011
+      ** General ledger details                                           CEU011
+      *                                                                   CEU011
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I/COPY WNCPYSRC,DL2685I001
+0089 I*
+0090 I            DS
+0091 I                                        1  53 DATA
+0092 I                                        1   4 ETYP
+     I                                        3   4 ETYP2
+0093 I                                        5   90EDAT
+0094 I                                       10  220EAMT
+0095 I                                       23  25 ECCY
+0096 I                                       26  27 DTYP
+0097 I                                       28  400OTHA
+0098 I                                       41  530CNI
+0099 I* DATA STRUCTURE FOR ALPHAMERIC FORMAT OF EVENT DATE
+0100 I*
+0101 I            DS
+0102 I                                        1   7 ZADATE
+0103 I                                        1   20DAYS
+0104 I                                        3   5 MONTH
+0105 I                                        6   70YEAR
+0106 I                                        3   7 MONYR
+      *                                                                   CDL006
+     ILDA         DS                            256                       CDL006
+      ** Local data area for database error handling                      CDL006
+      *                                                                   CDL006
+     I                                      134 143 DBFILE                CDL006
+     I                                      142 170 DBKEY                 CDL006
+     I                                      171 180 DBPGM                 CDL006
+     I                                      181 183 DBASE                 CDL006
+     I**                                                                  S01117
+     ISPOOL1      DS                                                      S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I                                       83  92 SFILE1                S01117
+     I                                    B 123 1240SFNUM1                S01117
+     I                                    B 243 2460SWRIT                 E00097
+     I@BINRY      DS                                                      E00097
+     I** DEFINE A BLANK BINARY FIELD FOR USE WITH SWRIT                   E00097
+     I                                    B   1   40@BKBIN                E00097
+     I**                                                                  S01117
+     ISPOOL2      DS                                                      S01117
+     I**   FILE INFORMATION DATA STRUCTURE                                S01117
+     I                                       83  92 SFILE2                S01117
+     I                                    B 123 1240SFNUM2                S01117
+0110 C* FIRST CYCLE
+     C**                                                                  S01115
+     C           *ENTRY    PLIST                                          E58
+     C                     PARM           SEQ     5        SEQUENCE NO.   E58
+      *                                                                   CDL006
+      ** Set up LDA                                                       CDL006
+      *                                                                   CDL006
+     C           *NAMVAR   DEFN           LDA                             CDL006
+0111 C*
+0112 C   20                GOTO DETAIL
+     C*                                                                   046947
+     C** Signal first page                                                046947
+     C*                                                                   046947
+     C                     MOVE '1'       *IN09                           046947
+     C           LACY      IFNE *BLANKS                                   130913
+     C                     MOVE 'YES'     FIRST   3                       130913
+     C                     ENDIF                                          130913
+     C*                                                                   046947
+0113 C*********************SETON                     20                   E00097
+0113 C                     SETON                     204869               E00097
+     C                     MOVEACPY@      BIS@   80                       E156
+     C**********           Z-ADD1         R       30                                  210563 242206A
+     C                     Z-ADD1         R       40                                         242206A
+0114 C*****                EXSR ZSYSTM                                    S01194
+0115 C*****                                                               S01194
+0116 C*****                MOVEL'20'      ZTABKY                          S01194
+0117 C*****                MOVE '1'       TABKYR  4                       S01194
+     C*                                                                   S01194
+     C** OBTAIN BANK DETAILS VIA ACCESS PROGRAM                           S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDBANKPD'DBFILE 10        ************   S01194
+     C                     MOVEL'01'      DBASE   3        * DBERR 01 *   S01194
+     C                     MOVEL@OPTN     DBOPTN  7        ************   S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     GOTO ENDOUT                                    S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C** TEST DATE FORMAT VALUE                                           S01194
+0951 C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON  S01194
+     C**                                                                  S01194
+      *                                                                   S01473
+      ** Check the switchable features file for the presence of S01473    S01473
+      ** Set a flag to say if it is switched on                           S01473
+     C                     CALL 'AOSARDR0'                                S01473
+     C                     PARM *BLANKS   @RTCD                           S01473
+     C                     PARM '*VERIFY' @OPTN                           S01473
+     C                     PARM 'S01473'  @KEY    6                       S01473
+     C                     PARM *BLANKS   DSFDY                           S01473
+      *                                                                   S01473
+     C           @RTCD     IFEQ *BLANKS                                   S01473
+     C                     MOVE 'Y'       S01473  1                       S01473
+     C                     END                                            S01473
+      *                                                                   S01473
+     C                     CALL 'AOSARDR0'                                CLE005
+     C                     PARM *BLANKS   @RTCD                           CLE005
+     C                     PARM '*VERIFY' @OPTN                           CLE005
+     C                     PARM 'CLE005'  @KEY    6                       CLE005
+     C                     PARM *BLANKS   DSFDY                           CLE005
+      *                                                                   CLE005
+     C           @RTCD     IFEQ *BLANKS                                   CLE005
+     C                     MOVE 'Y'       CLE005  1                       CLE005
+     C                     ELSE                                           CLE005
+     C                     MOVE 'N'       CLE005                          CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C           @RTCD     IFNE *BLANKS                                   CLE005
+     C           @RTCD     ANDNE'*NRF  '                                  CLE005
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE005
+     C                     MOVEL'06'      DBASE            * DBERR 06 *   CLE005
+     C                     MOVEL@OPTN     DBKEY            ************   CLE005
+     C                     SETON                     U7U8LR               CLE005
+     C                     EXSR *PSSR                                     CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+      ** Check if Position/Risk Enquiries & Reports feature (CEU011)      CEU011
+      ** is on.                                                           CEU011
+      *                                                                   CEU011
+     C                     CALL 'AOSARDR0'                                CEU011
+     C                     PARM *BLANKS   @RTCD                           CEU011
+     C                     PARM '*VERIFY' @OPTN                           CEU011
+     C                     PARM 'CEU011'  @KEY    6                       CEU011
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFEQ *BLANKS                                   CEU011
+     C                     MOVE 'Y'       CEU011  1                       CEU011
+     C                     ELSE                                           CEU011
+     C                     MOVE 'N'       CEU011                          CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFNE *BLANKS                                   CEU011
+     C           @RTCD     ANDNE'*NRF  '                                  CEU011
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CEU011
+     C                     MOVEL'04'      DBASE            * DBERR 04 *   CEU011
+     C                     MOVEL'CEU011  'DBKEY            ************   CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CDL006
+      ** Access Switchable Features file to check if Dealing Fiducia      CDL006
+      ** ry is installed.                                                 CDL006
+      *                                                                   CDL006
+     C                     MOVE 'N'       CDL006  1                       CDL006
+     C                     CALL 'AOSARDR0'                                CDL006
+     C                     PARM *BLANKS   WRTCD   7                       CDL006
+     C                     PARM '*VERIFY' WOPTN   7                       CDL006
+     C                     PARM 'CDL006'  WSARD   6                       CDL006
+     C           SCSARD    PARM SCSARD    DSFDY                           CDL006
+      *                                                                   CDL006
+     C           WRTCD     IFNE *BLANKS                                   CDL006
+     C           WRTCD     ANDNE'*NRF   '                                 CDL006
+     C           *LOCK     IN   LDA                                       CDL006
+     C                     MOVEL'012'     DBASE             ************* CDL006
+     C                     MOVEL'SCSARDPD'DBFILE            * DBERR 012 * CDL006
+     C                     MOVELWRTCD     DBKEY             ************* CDL006
+     C                     MOVE *ON       *INU7                           CDL006
+     C                     MOVE *ON       *INU8                           CDL006
+     C                     MOVE *ON       *INLR                           CDL006
+     C                     OUT  LDA                                       CDL006
+     C                     EXSR *PSSR                                     CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C           WRTCD     IFEQ *BLANK                                    CDL006
+     C                     MOVEL'Y'       CDL006                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                                       CLE028
+      ** Determine if CLE028 enhancement is installed                                         CLE028
+      *                                                                                       CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   PRTCD   7                                           CLE028
+     C                     PARM '*VERIFY 'POPTN   7                                           CLE028
+     C                     PARM 'CLE028'  PSARD   6                                           CLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFNE *BLANKS                                                       CLE028
+     C           PRTCD     ANDNE'*NRF '                                                       CLE028
+     C           *LOCK     IN   LDA                                                           CLE028
+     C                     MOVEL'016'     DBASE                                               CLE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE028
+     C                     MOVELPSARD     DBKEY                                               CLE028
+     C                     OUT  LDA                                                           CLE028
+     C                     MOVE *ON       *INU7                                               CLE028
+     C                     MOVE *ON       *INU8                                               CLE028
+     C                     MOVE *ON       *INLR                                               CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028  1                                           CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE 'N'       CLE028                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                   CEU011
+      ** Retrieve general ledger details                                  CEU011
+      *                                                                   CEU011
+     C**********           CALL 'AOGELRR0'                                CEU011              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                           CEU011
+     C                     PARM '*FIRST ' @OPTN                           CEU011
+     C********** SDGELR    PARM SDGELR    DSFDY                           CEU011              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   CEU011
+     C           @RTCD     IFNE *BLANKS                                   CEU011
+     C           @RTCD     ANDNE'*NRF   '                                 CEU011
+     C                     MOVEL'SDGELRPD'DBFILE           ************   CEU011
+     C                     MOVEL'05'      DBASE            * DBERR 05 *   CEU011
+     C                     MOVEL'*FIRST'  DBKEY            ************   CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C           CEU011    IFEQ 'Y'                                       CEU011
+     C                     OPEN DLEVEUPD                                  CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+      ** Retrieve 'In' ccy field indicator and store into                 CEU011
+      ** array for later use.                                             CEU011
+      *                                                                   CEU011
+     C           CEU011    IFEQ 'Y'                                       CEU011
+     C                     Z-ADD1         S       30                      CEU011
+     C           *LOVAL    SETLLSDCURRL1                                  CEU011
+     C           *IN76     DOUEQ'1'                                       CEU011
+     C                     READ SDCURRL1                 76               CEU011
+     C           *IN76     IFEQ '0'                                       CEU011
+     C                     MOVE A6CYCD    CUR,S                           CEU011
+     C                     MOVE A6INCY    INC,S                           CEU011
+     C                     ADD  1         S                               CEU011
+     C                     ENDIF                                          CEU011
+     C                     ENDDO                                          CEU011
+     C                     ENDIF                                          CEU011
+     C/COPY WNCPYSRC,DL2685C001
+0118 C           DETAIL    TAG
+0119 C**N02N03N08**        GOTO ENDOUT                              BS1565E25515
+     C/COPY WNCPYSRC,DL2685C002
+      *                                                                   CDL006
+      ** If a fiduciary transaction, skip all processing (Until ENDOUT    CDL006
+      ** tag)                                                             CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'N'                                       CDL006
+     C           CDL006    OREQ 'Y'                                       CDL006
+     C           DTYP      ANDNE'FL'                                      CDL006
+     C           DTYP      ANDNE'DP'                                      CDL006
+     C           DTYP      ANDNE'LP'                                      CDL006
+     C           DTYP      ANDNE'FT'                                      CDL006
+     C           DTYP      ANDNE'DT'                                      CDL006
+     C           DTYP      ANDNE'LT'                                      CDL006
+      *                                                                   S01473
+      ** If the Leo Midas switchable feature is off                       S01473
+     C           S01473    IFEQ 'N'                                       S01473
+     C           S01473    OREQ ' '                                       S01473
+     C  N02N08             GOTO ENDOUT                                    E25515
+      *                                                                   S01473
+      ** If the Midas Leo Integration Switchable Feature is on            S01473
+     C                     ELSE                                           S01473
+     C           *IN02     IFEQ '0'                                       S01473
+     C           *IN08     ANDEQ'0'                                       S01473
+     C           *IN10     ANDEQ'0'                                       S01473
+     C                     GOTO ENDOUT                                    S01473
+     C                     END                                            S01473
+     C                     END                                            S01473
+     C*                                                                   BM0010
+     C   L2                                                               BM0010
+     COR L3                SETOF                     24                   BM0010
+     C*                                                                   BM0010
+0120 C   L1N24             Z-ADD0         DTOTI  130
+0121 C   L1N24             Z-ADD0         DTOTO  130
+0122 C   L1N24             Z-ADD0         DNET   130
+0123 C   L1N24             Z-ADD0         DNINT  130
+0124 C   L1N24             Z-ADD0         DTOTIC 130
+0125 C   L1N24             Z-ADD0         DTOTOC 130
+0126 C   L1N24             Z-ADD0         DINTI  130
+0127 C   L1N24             Z-ADD0         DINTO  130
+0128 C   L2                Z-ADD0         MINTI  130
+0129 C   L2                Z-ADD0         MINTO  130
+0130 C   L2                Z-ADD0         MNINT  130
+0131 C   L2                Z-ADD0         MTOTI  130
+0132 C   L2                Z-ADD0         MTOTIC 130
+0133 C   L2                Z-ADD0         MTOTO  130
+0134 C   L2                Z-ADD0         MTOTOC 130
+0135 C   L2                Z-ADD0         MNET   130
+0138 C* SELECT RECORDS FOR DIFFERENT TOTALS
+0139 C*
+0140 C                     SETOF                     505152
+0141 C***********          SETOF                     535455               E25515
+     C                     SETOF                     5355                 E25515
+0142 C                     SETOF                     565758
+0143 C                     SETOF                     597080
+0144 C                     SETOF                     818285
+0145 C                     SETOF                     247475
+0146 C                     SETOF                     7160
+     C                     SETOF                     83                   E15828
+     C/COPY WNCPYSRC,DL2685C003
+0147 C                     EXSR EVNT
+0148 C  N70N80             GOTO ENDOUT
+0149 C*
+0150 C* ADD APPROPRIATE AMOUNTS TO DAILY TOTALS
+0151 C*
+0152 C  N80                GOTO OUTEVN
+0153 C**N85********************                                     S01116E15226
+0153 C  N85N75                                                            E15226
+0154 C***ANN52N53N54EAMT      ADD  DTOTI     DTOTI  130                   E25515
+     CANN52N53   EAMT      ADD  DTOTI     DTOTI  130                      E25515
+0155 C***85N53N54EAMT      ADD  DTOTIC    DTOTIC                          E25515
+     C   85N53   EAMT      ADD  DTOTIC    DTOTIC                          E25515
+     C   75      OTHA      ADD  DTOTI     DTOTI                           E15226
+     C   75      OTHA      SUB  EAMT      DINTI                           E15226
+0156 C***52******ICAM******ADD  DTOTI     DTOTI                           E15226
+0156 C***52******EAMT******ADD  DTOTIC    DTOTI                     E15828E24016
+0156 C   52      ICAM      ADD  DTOTIC    DTOTI                           E24016
+0157 C   52      DINTI     ADD  EAMT      DINTI  130
+0158 C   52      DINTI     SUB  ICAM      DINTI
+0159 C***60******                                                         E25515
+0160 C*R*54N85***OTHA      ADD  DTOTI     DTOTI                           E25515
+     C   60      OTHA      ADD  DTOTI     DTOTI                           E25515
+0161 C***54*85***OTHA      ADD  DTOTIC    DTOTIC 130                      E25515
+0162 C***53******                                                         E25515
+0163 C*R*54******EAMT      ADD  DINTI     DINTI                           E25515
+     C   53      EAMT      ADD  DINTI     DINTI                           E25515
+0164 C***75****************                                               E15226
+0165 C*R*57******CNI*******ADD  DINTI     DINTI                           E15226
+0165 C   57      CNI       ADD  DINTI     DINTI                           E15226
+0166 C   58
+0167 COR 56N57N75OTHA      ADD  DINTI     DINTI
+0168 C                     GOTO ENDOUT
+0169 C           OUTEVN    TAG
+0170 C  N85                                                               S01116
+0171 C***ANN52N53N54EAMT      ADD  DTOTO     DTOTO  130                   E25515
+     CANN52N53   EAMT      ADD  DTOTO     DTOTO  130                      E25515
+     C   85N08                                                            BS1565
+      *                                                                   S01473
+      ** Check the Leo File Indicator (10)                                S01473
+     COR 85 10 55                                                         S01473
+0172 COR 85 08 55EAMT      ADD  DTOTOC    DTOTOC 130                      BS1565
+0173 C   60      OTHA      ADD  DTOTO     DTOTO
+0174 C***52******ICAM******ADD  DTOTO     DTOTO                           E15828
+0175 C***52******DINTO*****ADD  EAMT      DINTO  130                      E15828
+0176 C***52******DINTO*****SUB  ICAM      DINTO                           E15828
+0174 C   52      EAMT      ADD  DTOTOC    DTOTOC                          E15828
+0175 C**N52******DINTO     ADD  EAMT      DINTO  130               E15828 E20252
+0176 C**N52******DINTO     SUB  ICAM      DINTO                    E15828 E20252
+0175 C  N52 50   DINTO     ADD  EAMT      DINTO  130                      E20252
+0176 C  N52 50   DINTO     SUB  ICAM      DINTO                           E20252
+0177 C   53      EAMT      ADD  DINTO     DINTO
+0178 C   57      CNI       ADD  DINTO     DINTO
+0179 C   56N57
+0180 COR 58      OTHA      ADD  DINTO     DINTO
+0187 C*                                                                   E00097
+0188 C*    INCREMENT COUNT OF LINES WRITTEN                               E00097
+0189 C***********WRIT      ADD  1         WRIT    50               E00097 CEU011
+     C                     ENDIF                                          CDL006
+0181 C           ENDOUT    TAG                             *** ENDOUT ***
+     C/COPY WNCPYSRC,DL2685C004
+      *                                                                   CEU011
+      ** Convert event amounts to its Euro Equivalent                     CEU011
+      ** for 'In' ccy and write record to PF/DLEVEUPD when                CEU011
+      ** Position/Risk Enquiries & Reports feature is on.                 CEU011
+      *                                                                   CEU011
+     C           CEU011    IFEQ 'Y'                                       CEU011
+     C           *IN48     ANDEQ*ON                                       CEU011
+     C           *IN69     ANDEQ*OFF                                      CEU011
+     C           *INU1     ANDEQ*OFF                                      CEU011
+     C           EAMT      ANDNE*ZEROS                                    CEU011
+     C                     Z-ADD1         S                               CEU011
+     C           ECCY      LOKUPCUR,S                    77               CEU011
+     C           *IN77     IFEQ *OFF                                      CEU011
+     C                     MOVEL'SDCURRPD'DBFILE           ************   CEU011
+     C                     MOVEL'07'      DBASE            * DBERR 07 *   CEU011
+     C                     MOVELECCY      DBKEY            ************   CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ELSE                                           CEU011
+     C           INC,S     IFEQ 'Y'                                       CEU011
+     C           ECCY      OREQ BKEURO                                    CEU011
+     C                     EXSR SREVED                                    CEU011
+     C                     ENDIF                                          CEU011
+     C                     ENDIF                                          CEU011
+     C                     ENDIF                                          CEU011
+     C/COPY WNCPYSRC,DL2685C005
+      *                                                                   CEU011
+      ** Access Euro ccy number of decimal places                         CEU011
+      ** on second run (*INU1 is on) and move Euro                        CEU011
+      ** Consolidated Ccy name to work field to be                        CEU011
+      ** used on report.                                                  CEU011
+      *                                                                   CEU011
+     C           *INL3     IFEQ *ON                                       CEU011
+     C           *IN09     ANDEQ*ON                                       CEU011
+      *                                                                   CEU011
+     C           CEU011    ANDEQ'Y'                                       CEU011
+     C           *INU1     ANDEQ*ON                                       CEU011
+     C                     MOVE BKEURO    @AJCD                           CEU011
+     C                     MOVEA@EURO     WCYNM  17                       CEU011
+      *                                                                   CEU011
+     C                     CALL 'AOCURRR0'                                CEU011
+     C                     PARM '*MSG   ' @RTCD   7                       CEU011
+     C                     PARM '*KEY   ' @OPTN   7                       CEU011
+     C                     PARM           @AJCD   3                       CEU011
+     C           SDCURR    PARM SDCURR    DSSDY                           CEU011
+     C           @RTCD     IFNE *BLANK                                    CEU011
+     C                     MOVEL'SDCURRPD'DBFILE           ************   CEU011
+     C                     MOVEL'09'      DBASE            * DBERR 09 *   CEU011
+     C                     MOVEL@OPTN     DBOPTN  7        ************   CEU011
+     C                     MOVEL@AJCD     DBKEY  29                       CEU011
+     C                     SETON                     U7LR                 CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C                     SELEC                                          CEU011
+     C           A6NBDP    WHLT 1                                         CEU011
+     C                     MOVE *ON       *IN30                           CEU011
+     C           A6NBDP    WHEQ 1                                         CEU011
+     C                     MOVE *ON       *IN31                           CEU011
+     C           A6NBDP    WHEQ 2                                         CEU011
+     C                     MOVE *ON       *IN32                           CEU011
+     C                     OTHER                                          CEU011
+     C           A6NBDP    IFGT 2                                         CEU011
+     C                     MOVE *ON       *IN33                           CEU011
+     C                     ENDIF                                          CEU011
+     C                     ENDSL                                          CEU011
+     C                     ENDIF                                          CEU011
+     CL1         *INLR     IFEQ '1'                                       CEU011
+     CL1         *IN09     ANDEQ'1'                                       CEU011
+     CL1                   MOVE '1'       *IN69                           CEU011
+     CL1                   ELSE                                           CEU011
+     C*                                                                   E00097
+     CL1                   SETOF                     69                   E00097
+     CL1                   ENDIF                                          CEU011
+0224 C***1*******WRIT      COMP 0                        69        E00097 CEU011
+0182 C**
+0183 CL1                   Z-ADDLADT1     LADT    50
+0187 C*
+0188 CL1                   SETOF                     88
+     C*                                                                   S01116
+     CL1                   SETOF                     6768                 S01116
+     CL1                   SETOF                     3637                 S01116
+     CL1N35                SETON                     67                   S01116
+     CL1 35                SETON                     36                   S01116
+     C**                                                                  S01116
+     C**  DETERMINE IF EVENT A CALL/NOTICE TYPE                           S01116
+     CL1         LADT      COMP 999                    3535               S01116
+     C**  FORMAT CALL/NOTICE DAYS
+     CL1         *IN35     IFEQ '1'                        B001
+     CL1                   MOVE LADT      DATE    4                       S01116
+     CL1                   MOVEL' '       DATE
+     CL1         LADT      IFLT 10                         B002
+     CL1                   MOVEL'   '     DATE
+     CL1                   ELSE                            X002
+     CL1         LADT      IFLT 100                        B003
+     CL1                   MOVEL'  '      DATE
+     CL1                   END                             E003
+     CL1                   END                             E002
+     CL1         LADT      IFEQ 0                          B002
+     CL1                   MOVEL'CALL'    DATE
+     CL1                   END                             E002
+     CL1                   END                             E001
+     CL1 36N35             SETON                       37                 S01116
+     CL1 67 35             SETON                       68                 S01116
+     C**                                                                  S01116
+     C**  IF LADT NOT CALL/NOTICE THEN SETOF IN36 TO ENSURE L2 IS SETON   S01116
+     C**  FOR HEADINGS AND OUTPUT OF EMPTY DAYS                           S01116
+     CL1 37                SETOF                       36                 S01116
+     C*                                                                   S01116
+0189 CL1         LADT      COMP 99999                    49
+0190 CL1 49                SETON                     L2
+0191 CL1N49                MOVE LADT      ZDAYNO
+0192 CL1N49                EXSR ZDATE2
+0193 CL1NL2N49                                                            S01116
+     CANN36      MONYR     COMP TMONY                L2L288               S01116
+     C*                                                                   BM0010
+     CL1N24      ZDATE     COMP TZDATE                   24               BM0010
+     CL1                   Z-ADDZDATE     TZDATE  60                      BM0010
+     CL1NL2NL3                                                            BM0010
+0194 CAN 24                GOTO OUTL1                                     BM0010
+0195 C* SET ON L2 FOR CHANGE OF MONTH , 88 FOR SAME MONTH
+0196 CL1         DTOTI     SUB  DTOTO     DNET
+0197 CL1         DNET      ADD  DTOTIC    DNET
+0198 CL1         DNET      SUB  DTOTOC    DNET
+0199 CL1         DINTI     SUB  DINTO     DNINT
+     CL1                   ADD  DNET      DCUM                            S01116
+0201 CL1         DTOTI     ADD  MTOTI     MTOTI
+0202 CL1         DTOTIC    ADD  MTOTIC    MTOTIC
+0203 CL1         DTOTOC    ADD  MTOTOC    MTOTOC
+0204 CL1         DTOTO     ADD  MTOTO     MTOTO
+0205 CL1         DINTI     ADD  MINTI     MINTI
+0206 CL1         DINTO     ADD  MINTO     MINTO
+0207 CL1 44                SETON                     41
+0208 CL1 44                SETOF                     646566
+0209 CL1 44 41   TDAY      COMP 2                    636162
+0210 CL1 44 41 63TDAY      COMP 4                    656364
+0211 CL1 44 41 65TDAY      COMP 6                      6566
+     C*                                                                   BM0010
+     CL1                   Z-ADDDTOTI     DTOTI          25               BM0010
+     CL1                   Z-ADDDTOTIC    DTOTIC         26               BM0010
+     CL1                   Z-ADDDTOTO     DTOTO          27               BM0010
+     CL1                   Z-ADDDTOTOC    DTOTOC         28               BM0010
+     CL1                   Z-ADDDNINT     DNINT          29               BM0010
+     C**                                                                  BM0010
+     CL1         *IN44     IFEQ '1'                        B001
+     CL1         *IN48     ANDEQ'1'                                       E00097
+     CL1         *IN69     ANDEQ'0'                                       E00097
+     CL1    37             MOVE '1'       *IN35                           S01116
+     C**  FORMAT CALL/NOTICE DAYS
+     CL1         *IN35     IFEQ '1'                        B001
+     CL1                   MOVE EDAT      DATE    4                       S01116
+     CL1                   MOVEL' '       DATE
+     CL1         EDAT      IFLT 10                         B002
+     CL1                   MOVEL'   '     DATE
+     CL1                   ELSE                            X002
+     CL1         EDAT      IFLT 100                        B003
+     CL1                   MOVEL'  '      DATE
+     CL1                   END                             E003
+     CL1                   END                             E002
+     CL1         EDAT      IFEQ 0                          B002
+     CL1                   MOVEL'CALL'    DATE
+     CL1                   END                             E002
+     CL1                   END                             E001
+     CL1    68             MOVE '0'       *IN35                           S01116
+     C*                                                                   S01116
+0212 CL1                   EXCPT
+     C*                                                                   S01116
+     CL1    37             MOVE '0'       *IN35                           S01116
+     CL1    68             MOVE '1'       *IN35                           S01116
+0213 CL1                   SETOF                     41
+     C/COPY WNCPYSRC,DL2685C006
+     CL1                   END                             E001
+     C*
+0214 CL1                   Z-ADDTDAY      LDO     20
+0215 CL1 49                GOTO OUTL1
+0216 CL1 88      LDO       ADD  1         DNUM2   20
+0217 CL1 88 44             Z-ADDDAYS      DNUM1   20                      S01116
+0218 CL1 88 44N35          EXSR OUTPUT                                    S01116
+0219 CL1                   MOVE DAYS      TDAY    20
+0220 CL1 88 44   DAYS      SUB  1         LDO
+0221 CL1         OUTL1     TAG
+0222 C* OUTPUT EMPTY DAYS BETWEEN LAST DAY OUTPUT AND END OF MONTH
+0223 C*
+0224 CL2 44      LIMIT     ADD  1         DNUM1
+0225 CL2 44      LDO       ADD  1         DNUM2
+     CL2 44 37             SETON                     35                   S01116
+     CL2 44 68             MOVE '0'       *IN35                           S01116
+0226 CL2 44N35             EXSR OUTPUT                                    S01116
+     CL2 44 37             SETOF                     35                   S01116
+     CL2 44 68             MOVE '1'       *IN35                           S01116
+0227 C*
+0228 C* OUTPUT MONTHLY TOTALS
+0229 C*
+0230 CL2         MTOTI     SUB  MTOTO     MNET
+0231 CL2         MNET      ADD  MTOTIC    MNET
+0232 CL2         MNET      SUB  MTOTOC    MNET
+0233 CL2         MINTI     SUB  MINTO     MNINT
+     CL2         *IN48     IFEQ '1'                                       E00097
+     CL2         *IN69     ANDEQ'0'                                       E00097
+0235 CL2 44                SETON                     42
+0236 CL2 44                EXCPT
+0237 CL2 44                SETOF                     42
+     CL2                   END                                            E00097
+     C**                                                                  S01116
+     C**  ACCUMULATE SUMMARY TOTALS                                       S01116
+     CL2 44                ADD  MTOTI     TTOTI  130                      S01116
+     CL2 44                ADD  MTOTIC    TTOTIC 130                      S01116
+     CL2 44                ADD  MTOTO     TTOTO  130                      S01116
+     CL2 44                ADD  MTOTOC    TTOTOC 130                      S01116
+     CL2 44                ADD  MNET      TNET   130                      S01116
+     CL2 44                ADD  MNINT     TNINT  130                      S01116
+     C*                                                                   S01116
+     CL2 44                Z-ADDMTOTI     MTOTI          15               S01116
+     CL2 44                Z-ADDMTOTIC    MTOTIC         16               S01116
+     CL2 44                Z-ADDMTOTO     MTOTO          17               S01116
+     CL2 44                Z-ADDMTOTOC    MTOTOC         18               S01116
+     CL2 44                Z-ADDMNINT     MNINT          19               S01116
+     C**                                                                  S01116
+     C**  OUTPUT SUMMARY DETAIL AND CHECK OVERFLOW. CHECK FOR CALL/       S01116
+     C**  NOTICE OUTPUT                                                   S01116
+     CL2         *IN48     IFEQ '1'                                       E00097
+     CL2         *IN69     ANDEQ'0'                                       E00097
+     C*                                                                   046947
+     C** If first page, print header.                                     046947
+     C*                                                                   046947
+     C***2*44*****IN09     IFEQ '1'                                046947 CEU011
+     C***2*44****          MOVE '1'       *IN45                    046947 CEU011
+     C***2*44****          EXCPT                                   046947 CEU011
+     C***2*44****          MOVE '0'       *IN45                    046947 CEU011
+     C***2*44****          MOVE '0'       *IN09                    046947 CEU011
+     C***2*******          END                                     046947 CEU011
+     C*                                                                   046947
+     CL2 44                MOVE '1'       *IN46                           S01116
+     CL2 44 37             MOVE '1'       *IN39                           S01116
+     CL2 44                EXCPT                                          S01116
+     CL2 44 37             MOVE '0'       *IN39                           S01116
+     CL2 44                ADD  1         COUNT   20                      S01116
+     CL2 44                MOVE '0'       *IN46                           S01116
+     CL2                   END                                            E00097
+0238 C*                                                                   S01116
+     CL2         *IN48     IFEQ '1'                                       E00097
+     CL2         *IN69     ANDEQ'0'                                       E00097
+     CL2 44      COUNT     COMP 30                       34               S01116
+     CL2 44 34             ADD  DCUM      ACCBAL 140                      S01116
+     CL2 44 34             MOVE '1'       *IN45                           S01116
+     CL2 44 34             EXCPT                                          S01116
+     CL2 44 34             MOVE '0'       *IN45                           S01116
+     CL2 44 34             Z-ADD0         COUNT                           S01116
+     C/COPY WNCPYSRC,DL2685C007
+     CL2                   END                                            E00097
+0238 C*                                                                   S01116
+     CL2         LACY      IFNE *BLANKS                                   130913
+     CL2         FIRST     ANDEQ'YES'                                     130913
+0258 CL2                   SETON                     48                   130913
+0258 CL2                   SETOF                     69                   130913
+     CL2                   MOVE 'NO '     FIRST                           130913
+     CL2                   ENDIF                                          130913
+      *                                                                   130913
+0239 CL2 49                GOTO OUTL3
+0240 C**ON*CHANGE*OF*CURRENCY*CHAIN*TO*TABLES*FILE*FOR*CCY*NAME*AND***    S01194
+0241 C**DECIMAL*PLACES****                                                S01194
+0242 C*L2*L3**              SETOF                     06                  S01194
+0243 C*L2*L3**              MOVELLACY      TABKYR                         S01194
+0244 C*L2*L3**              MOVE TABKYR    ZTABKY                         S01194
+0245 C*L2*L3**    ZTABKY    CHAINTABLE                99                  S01194
+0246 C*L2*L3*99                                                           S01194
+0247 C*OR*L3N06             SETON                     U7LR                S01194
+0240 C*                                                                   S01194
+0240 C** ON CHANGE OF CURRENCY ACCESS FILE FOR CCY NAME AND DEC. PLACES   S01194
+0240 CL2         *INL3     IFEQ '1'                                       S01194
+      *                                                                   CEU011
+     CL2         CEU011    IFEQ 'Y'                                       CEU011
+     CL2         *INU1     ANDEQ*ON                                       CEU011
+     CL2                   MOVE BKEURO    @AJCD                           CEU011
+     CL2                   ELSE                                           CEU011
+     CL2                   MOVE LACY      @AJCD                           CEU011
+     CL2                   ENDIF                                          CEU011
+      *                                                                   CEU011
+     CL2                   CALL 'AOCURRR0'                                S01194
+     CL2                   PARM '*MSG   ' @RTCD   7                       S01194
+     CL2                   PARM '*KEY   ' @OPTN   7                       S01194
+     C***L2******          PARM LACY      @AJCD   3                S01194 CEU011
+     CL2                   PARM           @AJCD   3                       CEU011
+     CL2         SDCURR    PARM SDCURR    DSSDY                           S01194
+     CL2         @RTCD     IFNE *BLANK                                    S01194
+     CL2                   MOVEL'SDCURRPD'DBFILE           ************   S01194
+     CL2                   MOVEL'02'      DBASE            * DBERR 02 *   S01194
+     CL2                   MOVEL@OPTN     DBOPTN  7        ************   S01194
+     CL2                   MOVEL@AJCD     DBKEY  29                       S01194
+     CL2                   SETON                     U7LR                 S01194
+     CL2                   EXSR *PSSR                                     S01194
+     CL2                   END                                            S01194
+     CL2                   END                                            S01194
+0951 C*                                                                N  S01194
+0248 C*2 L3      CDP       COMP 1                      3031               E11631
+0249 C*2 L3      CDP       COMP 2                    33  32               E11631
+0250 C*
+0251 CL2         OUTL3     TAG
+     C**                                                                  S01116
+     C**  BRANCH CODE FOR TITLE                                           S01116
+     C*2*L3**              MOVE LABC      BRCD                      S01116S01117
+     CL2 L3                MOVE LABC      BRCA                            S01117
+     C**                                                                  S01116
+     C**  OUTPUT SUMMARY TOTALS                                           S01116
+     CL2         *IN48     IFEQ '1'                                       E00097
+     CL2         *IN69     ANDEQ'0'                                       E00097
+     CL2 L3                MOVE *ON       *IN40                           CEU011
+     CL2 L3 40             MOVE '1'       *IN47                           S01116
+     C*2*L3*40*************EXCPT                                    S01116E156
+     CL2 L3 40 44          EXCPT                                          E156
+     CL2 L3 40             MOVE '0'       *IN47                           S01116
+     CL2                   END                                            E00097
+     C*                                                                   S01116
+     C**   OUTPUT THE SUMMARY TOTALS IN CORRECT DEC PLACES                E11631
+0248 C*L2*L3***   CDP       COMP 1                      3031        E11631S01194
+0249 C*L2*L3***   CDP       COMP 2                    33  32        E11631S01194
+0248 CL2 L3      A6NBDP    COMP 1                      3031               S01194
+0249 CL2 L3      A6NBDP    COMP 2                    33  32               S01194
+     C*2*L3****************MOVE '1'       *IN40                     S01116E156
+     C***2*L3*20*          MOVE '1'       *IN40                      E156 CEU011
+0252 C* OUTPUT HEADINGS FOR NEXT MONTH
+0253 CL2 49                GOTO OUTL2
+0254 C*
+     CL3                   Z-ADD0         DCUM                            S01116
+0255 CL2N35                EXSR DAYMON                                    S01116
+     CL2         *IN48     IFEQ '1'                                       E00097
+     CL2         *IN69     ANDEQ'0'                                       E00097
+0256 CL2                   SETON                     4344
+0257 CL2                   EXCPT
+0258 CL2                   SETOF                     43
+     CL2                   MOVE *OFF      *IN09                           CEU011
+     CL2                   END                                            E00097
+     C**                                                                  S01116
+     C**  SET UP DATES FOR SUMMARY REPORT                                 S01116
+     CL2                   MOVE MONTH     SMONTH  3                       S01116
+     CL2                   Z-ADDYEAR      SYEAR   20                      S01116
+     CL2                   Z-ADD0         ACCBAL                          S01116
+     C*                                                                   S01116
+     CL1 L2 L3             Z-ADD0         DCUM   140                      S01116
+     C**                                                                  S01116
+     C**  OUTPUT HEADINGS FOR SUMMARY REPORT NEXT MONTH                   S01116
+     CL1         *IN48     IFEQ '1'                                       E00097
+     CL1         *IN69     ANDEQ'0'                                       E00097
+     CL1 L2 L3             Z-ADD0         COUNT                           S01116
+     CL1 L2 L3             MOVE '1'       *IN45                           S01116
+     CL1 L2 L3             EXCPT                                          S01116
+     CL1 L2 L3             MOVE '0'       *IN45                           S01116
+     CL1                   END                                            E00097
+     CL1 L2 L3             Z-ADD0         TTOTI                           S01116
+     CL1 L2 L3             Z-ADD0         TTOTIC                          S01116
+     CL1 L2 L3             Z-ADD0         TTOTO                           S01116
+     CL1 L2 L3             Z-ADD0         TTOTOC                          S01116
+     CL1 L2 L3             Z-ADD0         TNET                            S01116
+     CL1 L2 L3             Z-ADD0         TNINT                           S01116
+0259 C*
+0260 C* OUTPUT EMPTY DAYS BETWEEN BEGINNING OF NEXT MONTH AND NEXT EVENT
+0261 C* DATE
+0262 C*
+0263 CL2                   Z-ADDDAYS      DNUM1
+0264 CL2                   Z-ADD1         DNUM2
+0265 CL2N35                EXSR OUTPUT                                    S01116
+0266 CL2         DAYS      SUB  1         LDO
+0267 CL2                   MOVE MONYR     TMONY   5
+0268 CL2         OUTL2     TAG
+     C*                                                                   E00097
+     CLR         *IN48     IFEQ '1'                                       E00097
+     CLR         *IN69     ANDEQ'1'                                       E00097
+     CLR         *IN48     OREQ '0'                                       E00097
+     C*                                                                   E00097
+     C** OBTAIN BANK DETAILS VIA ACCESS PROGRAM                           E00097
+     CLR                   CALL 'AOBANKR0'                                E00097
+     CLR                   PARM '*MSG   ' @RTCD   7                       E00097
+     CLR                   PARM '*FIRST ' @OPTN   7                       E00097
+     CLR         SDBANK    PARM SDBANK    DSFDY                           S01194
+     CLR         @RTCD     IFNE *BLANK                                    E00097
+     CLR                   MOVEL'SDBANKPD'DBFILE 10        ************   E00097
+     CLR                   MOVEL'03'      DBASE   3        * DBERR 03 *   E00097
+     CLR                   MOVEL@OPTN     DBOPTN  7        ************   E00097
+     CLR                   SETON                     U7U8LR               E00097
+     CLR                   EXSR *PSSR                                     E00097
+     CLR                   GOTO END2                                      E00097
+     CLR                   END                                            E00097
+     CLR                   MOVE '1'       *IN45                           E00097
+     CLR                   EXCPT                                          E00097
+     CLR                   MOVE '0'       *IN45                           E00097
+     CLR                   END                                            E00097
+     C*                                                                   E00097
+     C** ENSURE SPOOL FILE RECORDED BY RCF ONCE - ONLY IF P2 IS WRITTEN   E00097
+     C** TO. SWRIT IS INCREMENTED FOR EVERY SUCCESSFUL WRITE TO THE       E00097
+     C** FILE - IF IT IS BLANK (OR 0) THEN NOTHING HAS BEEN WRITTEN TO    E00097
+     C** THE FILE. UNABLE TO COMPARE SWRIT TO *BLANKS SO USE @BKBIN -     E00097
+     C** AN UNITIALISED BINARY FIELD.                                     E00097
+     CLR         *IN69     IFEQ '0'                                       E00097
+     CLR         *IN48     ANDEQ'1'                                       E00097
+     CLR         SWRIT     IFNE 0                                         E00097
+     CLR         SWRIT     ANDNE@BKBIN                                    E00097
+     C**                                                                  E00097
+     C***CALL*ZSFILE*FOR*P1*FILE***ONCE*ONLY************************S01117E00097
+     C** CALL ZSFILE FOR P2 FILE - ONCE ONLY                              E00097
+     CLR                   Z-ADDSFNUM1    ZSNUM   60                      S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     C*R*******************PARM *BLANKS   SEQ     5                S01117 E58
+     CLR                   PARM           SEQ                             E58
+     CLR                   PARM *BLANKS   @PARM   3                       S01117
+     CLR                   PARM           SFILE1                          S01117
+     CLR                   PARM           ZSNUM                           S01117
+     CLR                   PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     C** Error during ZSFILE processing, return to calling program        S01117
+     CLR                   SETON                     U7U8LR               S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+     CLR                   END                                            E00097
+     CLR                   END                                            E00097
+     C**                                                                  S01117
+     C***CALL*ZSFILE*FOR*P2*FILE***ONCE*ONLY************************S01117E00097
+     C** CALL ZSFILE FOR P1 FILE - ONCE ONLY                              E00097
+     CLR                   Z-ADDSFNUM2    ZSNUM   60                      S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     C*R*******************PARM *BLANKS   SEQ     5                S01117 E58
+     CLR                   PARM           SEQ                             E58
+     CLR                   PARM *BLANKS   @PARM   3                       S01117
+     CLR                   PARM           SFILE2                          S01117
+     CLR                   PARM           ZSNUM                           S01117
+     CLR                   PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     C** Error during ZSFILE processing, return to calling program        S01117
+     CLR                   SETON                     U7U8LR               S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+     CLR         END2      TAG                             *** END2 ***   E00097
+     C**                                                                  S01117
+0269 C********************************************************************
+0270 C*
+0271 C*
+0272 C           DAYMON    BEGSR
+0273 C*TO FIND NUMBER OF DAYS IN MONTH
+0274 C*
+0275 C           MONTH     COMP 'FEB'                    72
+0276 C*
+0277 C* IF FEBRUARY,FIND IF YEAR IS A LEAP YEAR
+0278 C*
+0279 C   72      YEAR      DIV  4         TEST1   20
+0280 C   72                MVR            TEST2   10 787879
+0281 C   79                Z-ADD29        LIMIT   20
+0282 C   78                Z-ADD28        LIMIT
+0283 C   72                GOTO NAME
+0284 C           MONTH     COMP 'APR'                    70
+0285 C  N70      MONTH     COMP 'JUN'                    70
+0286 C  N70      MONTH     COMP 'SEP'                    70
+0287 C  N70      MONTH     COMP 'NOV'                    70
+0288 C   70                Z-ADD30        LIMIT
+0289 C  N70                Z-ADD31        LIMIT
+0290 C                     SETOF                       70
+0291 C           NAME      TAG
+0292 C*
+0293 C* FIND FULL NAME OF MONTH
+0294 C*
+0295 C                     Z-ADD1         X       20
+0296 C           MONTH     LOKUPZMNM,X                   88
+0297 C   88                MOVE MONTHT,X  MONTHN  9
+0298 C   72                SETOF                     727879
+0299 C                     ENDSR
+0300 C********************************************************************
+0301 C* SUBROUTINE TO OUTPUT LINES FOR EMPTY DAY
+0302 C*
+0303 C           OUTPUT    BEGSR
+     C           *IN48     IFEQ '1'                                       E00097
+     C           *IN69     ANDEQ'0'                                       E00097
+0304 C           LOPOUT    TAG
+0305 C           DNUM2     COMP DNUM1                  38
+0306 C           DNUM2     COMP 3                    73
+0307 C                     SETOF                     646566
+0308 C           DNUM2     COMP 2                    636162
+0309 C   63      DNUM2     COMP 4                    656364
+0310 C   65      DNUM2     COMP 6                      6566
+0311 C   38                EXCPT
+0312 C   38      DNUM2     ADD  1         DNUM2
+0313 C   38                GOTO LOPOUT
+     C                     END                                            E00097
+0314 C                     ENDSR
+0315 C********************************************************************
+0316 C*
+0317 C* SUBROUTINE EVNT TO ALLOT EVENT TYPES TO VARIOUS CLASSES FOR TOTALS
+0318 C*
+0319 C           EVNT      BEGSR
+0320 C* 'IN'  EVENTS
+0321 C*
+0322 C           ETYP      COMP '15I2'                   80
+0323 C**N80******ETYP      COMP '15M1'                   80               042463
+0324 C  N80      ETYP      COMP '15M4'                   80
+0325 C  N80      ETYP      COMP '16V1'                   80
+0326 C  N80      ETYP      COMP '16V3'                   80
+0327 C  N80      ETYP      COMP '17I2'                   80
+0328 C  N80      ETYP      COMP '17M1'                   74
+0329 C   74      DTYP      COMP 'C1'                     80
+0330 C  N80      ETYP      COMP '17M3'                   80
+0331 C  N80      ETYP      COMP '18M1'                   80
+0333 C**N80******ETYP      COMP '41I2'                   85               E25515
+0334 C**N85******ETYP      COMP '41M3'                   85               E25515
+0335 C**N85******ETYP      COMP '41R2'                   85               E25515
+0336 C**N85******ETYP      COMP '41M1'                   85               E25515
+0337 C**N80N85***ETYP      COMP '42M1'                   85               E25515
+0337 C**N80N85***ETYP      COMP '61I2'                   85         S01116E25515
+     C  N80      ETYP      COMP '61I2'                   85               E25515
+0337 C  N80N85   ETYP      COMP '61R1'                   85               BS1565
+     C           ETYP      IFEQ '61R5'                                                        210563
+     C                     MOVE '1'       *IN85                                               210563
+     C                     CALL 'DL2683A'                                                     248796
+     C                     PARM           LNRF                                                248796
+     C**********           MOVE LNRF      ROL,R                                        210563 248796
+     C**********           ADD  1         R                                            210563 248796
+     C                     ENDIF                                                              210563
+0337 C**N80N85** ETYP      COMP '61M1'                   85                            BS1565 210563
+     C           ETYP      IFEQ '61M1'                                                        210563
+     C********** LNRF      LOKUPROL                      86                            210563 248796
+     C**N86*****           MOVE '1'       *IN85                                        210563 248796
+     C           LNRF      CHAINDLROLPF0             86                                       248796
+     C   86                MOVE '1'       *IN85                                               248796
+     C                     MOVE '0'       *IN86                                               210563
+     C                     ENDIF                                                              210563
+0337 C  N80N85   ETYP      COMP '62I2'                   85               BS1565
+0337 C  N80N85   ETYP      COMP '62R1'                   85               BS1565
+     C           ETYP      IFEQ '62R5'                                                        210563
+     C                     MOVE '1'       *IN85                                               210563
+     C                     CALL 'DL2683A'                                                     248796
+     C                     PARM           LNRF                                                248796
+     C**********           MOVE LNRF      ROL,R                                        210563 248796
+     C**********           ADD  1         R                                            210563 248796
+     C                     ENDIF                                                              210563
+0337 C**N80N85** ETYP      COMP '62M1'                   85                            BS1565 210563
+     C           ETYP      IFEQ '62M1'                                                        210563
+     C********** LNRF      LOKUPROL                      86                            210563 248796
+     C**N86*****           MOVE '1'       *IN85                                        210563 248796
+     C           LNRF      CHAINDLROLPF0             86                                       248796
+     C   86                MOVE '1'       *IN85                                               248796
+     C                     MOVE '0'       *IN86          86                                   210563
+     C                     ENDIF                                                              210563
+     C           ETYP      IFEQ '63R5'                                                        210563
+     C                     MOVE '1'       *IN85                                               210563
+     C                     CALL 'DL2683A'                                                     248796
+     C                     PARM           LNRF                                                248796
+     C**********           MOVE LNRF      ROL,R                                        210563 248796
+     C**********           ADD  1         R                                            210563 248796
+     C                     ENDIF                                                              210563
+0337 C**N80N85** ETYP      COMP '63M1'                   85                            BS1565 210563
+     C           ETYP      IFEQ '63M1'                                                        210563
+     C********** LNRF      LOKUPROL                      86                            210563 248796
+     C**N86*****           MOVE '1'       *IN85          85                            210563 248796
+     C           LNRF      CHAINDLROLPF0             86                                       248796
+     C   86                MOVE '1'       *IN85                                               248796
+     C                     MOVE '0'       *IN86                                               210563
+     C                     ENDIF                                                              210563
+0337 C  N80N85   ETYP      COMP '65M1'                   85               BS1565
+0337 C  N80N85   ETYP      COMP '64I2'                   85               BS1565
+0337 C  N80N85   ETYP      COMP '64R1'                   85               BS1565
+     C           ETYP      IFEQ '64R5'                                                        210563
+     C                     MOVE '1'       *IN85                                               210563
+     C                     CALL 'DL2683A'                                                     248796
+     C                     PARM           LNRF                                                248796
+     C**********           MOVE LNRF      ROL,R                                        210563 248796
+     C**********           ADD  1         R                                            210563 248796
+     C                     ENDIF                                                              210563
+0337 C**N80N85** ETYP      COMP '64M1'                   85                            BS1565 210563
+     C           ETYP      IFEQ '64M1'                                                        210563
+     C********** LNRF      LOKUPROL                      86                            210563 248796
+     C**N86*****           MOVE '1'       *IN85                                        210563 248796
+     C           LNRF      CHAINDLROLPF0             86                                       248796
+     C   86                MOVE '1'       *IN85                                               248796
+     C                     MOVE '0'       *IN86                                               210563
+     C                     ENDIF                                                              210563
+0337 C  N80N85   ETYP      COMP '66V1'                   85               BS1565
+0337 C  N80N85   ETYP      COMP '67V1'                   85               BS1565
+0323 C  N80N85   ETYP      COMP '15M1'                   85               042463
+      *                                                                   S01473
+      **  Add a check for Leo events                                      S01473
+     C           *IN80     IFEQ '0'                                       S01473
+     C           *IN85     ANDEQ'0'                                       S01473
+     C           EPRO      IFEQ 'LAE '                                    S01473
+     C           S01473    ANDEQ'Y'                                       S01473
+     C           ETYP      COMP '81M1'                   85               S01473
+     C                     END                                            S01473
+     C                     END                                            S01473
+      *                                                                   S01473
+      **  Compare the following Event Type if CLE005 enhancement is       CLE005
+      **  present                                                         CLE005
+      *                                                                   CLE005
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C           *IN80     ANDEQ'0'                                       CLE005
+     C           *IN85     ANDEQ'0'                                       CLE005
+     C           ETYP      IFEQ '68I2'                                    CLE005
+     C           ETYP      OREQ '68R1'                                    CLE005
+     C           ETYP      OREQ '68M1'                                    CLE005
+     C           ETYP      OREQ '69V1'                                    CLE005
+     C********** ETYP      OREQ '72V1'                             CLE005 193945
+     C                     MOVE '1'       *IN85                           CLE005
+     C                     ENDIF                                          CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                                       CLE028
+      ** When CLE028 is installed                                                             CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           *IN80     ANDEQ'0'                                                           CLE028
+     C           *IN85     ANDEQ'0'                                                           CLE028
+     C           ETYP      OREQ '80R1'                                                        CLE028
+     C           ETYP      OREQ '80R2'                                                        CLE028
+     C           ETYP      OREQ '80M1'                                                        CLE028
+     C                     MOVE '1'       *IN85                                               CLE028
+     C                     ENDIF                                                              CLE028
+     C/COPY WNCPYSRC,DL2685C008
+      *                                                                   CLE005
+0338 C   85                SETON                     80
+0339 C   80                GOTO NEXT1                                     BM0010
+0340 C**N70***** ETYP      COMP '15V1'                   70               136229
+0341 C  N70      ETYP      COMP '15V3'                   70
+0342 C  N70      ETYP      COMP '16I2'                   70
+0343 C  N70      ETYP      COMP '16M1'                   70
+0344 C  N70      ETYP      COMP '16M4'                   70
+0345 C  N70      ETYP      COMP '17V1'                   71
+0346 C   71      DTYP      COMP 'C1'                     70
+0347 C  N70      ETYP      COMP '17V3'                   70
+0348 C**N70***** ETYP      COMP '20V1'                   70               136242
+0348 C**N70***** ETYP      COMP '20V2'                   70        BM0010 136242
+0349 C**N70******ETYP      COMP '41S1'                   85               E25515
+0350 C**N70N85***ETYP      COMP '42S8'                   85               E25515
+0350 C**N70N85***ETYP      COMP '61V1'                   85         BS1565E25515
+     C  N70      ETYP      COMP '61V1'                   85               E25515
+0350 C  N70N85   ETYP      COMP '62V1'                   85               BS1565
+0350 C  N70N85   ETYP      COMP '63V1'                   85               BS1565
+0350 C  N70N85   ETYP      COMP '64V1'                   85               BS1565
+0350 C  N70N85   ETYP      COMP '66I2'                   85               BS1565
+0350 C  N70N85   ETYP      COMP '66R1'                   85               BS1565
+     C           ETYP      IFEQ '64R5'                                                        210563
+     C                     MOVE '1'       *IN85                                               210563
+     C                     CALL 'DL2683A'                                                     248796
+     C                     PARM           LNRF                                                248796
+     C**********           MOVE LNRF      ROL,R                                        210563 248796
+     C**********           ADD  1         R                                            210563 248796
+     C                     ENDIF                                                              210563
+0350 C**N70N85** ETYP      COMP '66M1'                   85                            BS1565 210563
+     C           ETYP      IFEQ '66M1'                                                        210563
+     C********** LNRF      LOKUPROL                      86                            210563 248796
+     C**N86*****           MOVE '1'       *IN85                                        210563 248796
+     C           LNRF      CHAINDLROLPF0             86                                       248796
+     C   86                MOVE '1'       *IN85                                               248796
+     C                     MOVE '0'       *IN86                                               210563
+     C                     ENDIF                                                              210563
+0350 C  N70N85   ETYP      COMP '67M1'                   85               BS1565
+0350 C  N70N85   ETYP      COMP '65V1'                   85               BS1565
+0350 C  N70N85   ETYP      COMP '61V3'                   85               066679
+0350 C  N70N85   ETYP      COMP '62V3'                   85               066679
+0350 C  N70N85   ETYP      COMP '64V3'                   85               066679
+0350 C  N70N85   ETYP      COMP '66V3'                   85               066679
+0340 C  N70N85   ETYP      COMP '15V1'                   85               136229
+     C***********                                                  S01270 E34885
+     C****ADDITION OF '62R3' AND '62R4' EVENTS FOR S.A.R. S01270   S01270 E34885
+     C***********                                                  S01270 E34885
+     C************IN70     IFEQ '0'                                S01270 E34885
+     C************IN85     ANDEQ'0'                                S01270 E34885
+     C***********                                                  S01270 E34885
+     C***********ETYP      IFEQ '62R3'                             S01270 E34885
+     C***********          MOVE '1'       *IN85                    S01270 E34885
+     C***********          END                                     S01270 E34885
+     C***********                                                  S01270 E34885
+     C***********ETYP      IFEQ '62R4'                             S01270 E34885
+     C***********          MOVE '1'       *IN85                    S01270 E34885
+     C***********          END                                     S01270 E34885
+     C***********                                                  S01270 E34885
+     C***********          END                                     S01270 E34885
+     C***********                                                  S01270 E34885
+      *                                                                   S01473
+      ** If the Midas/Leo Integration Switchable Feature is on, check     S01473
+      ** the event type                                                   S01473
+     C           S01473    IFEQ 'Y'                                       S01473
+     C           *IN70     ANDEQ'0'                                       S01473
+     C           *IN85     ANDEQ'0'                                       S01473
+     C           ETYP      COMP '81A2'                   85               S01473
+     C                     END                                            S01473
+      *                                                                   S01473
+      **  Compare the following Event Type if CLE005 enhancement is       CLE005
+      *   present                                                         CLE005
+      *                                                                   CLE005
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C           *IN70     ANDEQ'0'                                       CLE005
+     C           *IN85     ANDEQ'0'                                       CLE005
+     C           ETYP      IFEQ '68V1'                                    CLE005
+     C           ETYP      OREQ '69I2'                                    CLE005
+     C           ETYP      OREQ '69R1'                                    CLE005
+     C           ETYP      OREQ '69M1'                                    CLE005
+     C********** ETYP      OREQ '72I2'                             CLE005 193945
+     C********** ETYP      OREQ '72R1'                             CLE005 193945
+     C********** ETYP      OREQ '72M1'                             CLE005 193945
+     C                     MOVE '1'       *IN85                           CLE005
+     C                     ENDIF                                          CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                                       CLE028
+      ** When CLE028 is installed                                                             CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           *IN70     ANDEQ'0'                                                           CLE028
+     C           *IN85     ANDEQ'0'                                                           CLE028
+     C           ETYP      OREQ '80V1'                                                        CLE028
+     C                     MOVE '1'       *IN85                                               CLE028
+     C                     ENDIF                                                              CLE028
+     C/COPY WNCPYSRC,DL2685C009
+      *                                                                   CLE005
+0351 C   85                SETON                     70
+0352 C  N70                GOTO ENDEVN
+     C   08                GOTO NEXT1                                     BS1565
+0354 C*
+0355 C* FIND EVENTS WHERE
+0355 C**I.C.*20V1*LEG2/20V2*LEG1*-*'IN'**20V1*LEG1/20V2*LEG2*-*'OUT*BM0010E15828
+     C**I.C.*20V1*-*'OUT';*20V2*-*'IN'*****************************E15828 136242
+0356 C*
+0357 C********** ETYP      COMP '20V1'                   50               136242
+     C***50******FSLI******COMP 2                      7080        BM0010 E15828
+     C***50*80*************SETON                         52        BS1565 E15828
+     C***50***** FSLI      COMP 2                        83        E15828 136242
+     C***50N83**           SETON                         52        E15828 136242
+     C***50*****           SETON                         70        E15828 136242
+     C***50*****           GOTO ENDEVN                             BM0010 136242
+0358 C**N50***** ETYP      COMP '20V2'                   50               136242
+     C***50******FSLI******COMP 2                      8070        BM0010 E15828
+     C***50*70*************SETON                         52        BS1565 E15828
+     C***50***** FSLI      COMP 2                        83        E15828 136242
+     C***50*83**           SETON                         52        E15828 136242
+     C***50*****           SETON                         80        E15828 136242
+     C***50*****           GOTO ENDEVN                             BM0010 136242
+0362 C           NEXT1     TAG
+0363 C           ETYP2     COMP 'I2'                     53
+0364 C**N53******ETYP      COMP '41R2'                   54               E25515
+0365 C***53******                                                         E25515
+0366 C*R*54******          GOTO ENDEVN                                    E25515
+     C   53                GOTO ENDEVN                                    E25515
+0367 C                     SETON                     55
+0368 C           ETYP      COMP '15M1'                   56
+0369 C  N56      ETYP      COMP '16M1'                   56
+0370 C   56      DTYP      COMP 'CL'                     60
+0371 C   56N60   DTYP      COMP 'DL'                     60
+0372 C   56N60   DTYP      COMP 'CD'                     60
+0372 C   56N60   DTYP      COMP 'IL'                     60               S01354
+0372 C   56N60   DTYP      COMP 'ID'                     60               S01354
+0373 C   56      CNMB      COMP 1                        57
+0374 C   57                GOTO ENDEVN
+0375 C   56                SETON                     58
+0376 C           ETYP      COMP '17M1'                   58
+0377 C**N58*85***ETYP      COMP '41M3'                   58               E25515
+0378 C**N58*85***ETYP      COMP '41M1'                   58               E25515
+     C*                                                                   E20169
+     C* SETON 58 FOR ETYP 62M1 SO THAT OTHA IS ADDED TO NET INTEREST      E20169
+     C  N58 85   ETYP      COMP '62M1'                   58               E20169
+     C*                                                                   E20169
+0378 C  N58 85   ETYP2     COMP 'R1'                     58               BS1565
+0379 C  N58                SETON                     59
+0380 C           ETYP      COMP '17M3'                   75
+0381 C           ENDEVN    ENDSR                           *** ENDEVN ***
+      *****************************************************************   CEU011
+      *                                                               *   CEU011
+      *  SR/SREVED - Output record to PF/DLEVEUPD                     *   CEU011
+      *                                                               *   CEU011
+      *****************************************************************   CEU011
+      *                                                                   CEU011
+     C           SREVED    BEGSR                                          CEU011
+      *                                                                   CEU011
+     C           ECCY      IFNE BKEURO                                    CEU011
+      *                                                                   CEU011
+     C                     MOVE *BLANKS   PRTCD                           CEU011
+     C                     Z-ADDEAMT      PFRAM                           CEU011
+     C                     MOVE ECCY      PFRCY                           CEU011
+     C                     MOVE BKEURO    PTOCY                           CEU011
+     C                     Z-ADD0         POUTA                           CEU011
+     C                     Z-ADD0         PINTA                           CEU011
+     C                     Z-ADD0         PEXRT                           CEU011
+     C                     MOVE *BLANKS   PMDIN                           CEU011
+      *                                                                   CEU011
+     C                     CALL 'EU0200'               8383               CEU011
+     C                     PARM           PRTCD   7                       CEU011
+     C                     PARM           PFRAM  183                      CEU011
+     C                     PARM           PFRCY   3                       CEU011
+     C                     PARM           PTOCY   3                       CEU011
+     C                     PARM           POUTA  150                      CEU011
+     C                     PARM           PINTA  183                      CEU011
+     C                     PARM           PEXRT  159                      CEU011
+     C                     PARM           PMDIN   1                       CEU011
+      *                                                                   CEU011
+     C           PRTCD     IFEQ *BLANKS                                   CEU011
+     C                     Z-ADDPOUTA     EAMT                            CEU011
+     C                     ELSE                                           CEU011
+     C                     MOVEL'*CALL   'DBFILE                          CEU011
+     C                     MOVEL'EU0200  'DBKEY             ************  CEU011
+     C                     MOVEL'08'      DBASE             * DBERR 08 *  CEU011
+     C                     EXSR *PSSR                       ************  CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   139958
+     C           OTHA      IFNE 0                                         139958
+      *                                                                   139958
+     C                     MOVE *BLANKS   PRTCD                           139958
+     C                     Z-ADDOTHA      PFRAM                           139958
+     C                     MOVE ECCY      PFRCY                           139958
+     C                     MOVE BKEURO    PTOCY                           139958
+     C                     Z-ADD0         POUTA                           139958
+     C                     Z-ADD0         PINTA                           139958
+     C                     Z-ADD0         PEXRT                           139958
+     C                     MOVE *BLANKS   PMDIN                           139958
+      *                                                                   139958
+     C                     CALL 'EU0200'                                  139958
+     C                     PARM           PRTCD                           139958
+     C                     PARM           PFRAM                           139958
+     C                     PARM           PFRCY                           139958
+     C                     PARM           PTOCY                           139958
+     C                     PARM           POUTA                           139958
+     C                     PARM           PINTA                           139958
+     C                     PARM           PEXRT                           139958
+     C                     PARM           PMDIN                           139958
+      *                                                                   139958
+     C           PRTCD     IFEQ *BLANKS                                   139958
+     C                     Z-ADDPOUTA     OTHA                            139958
+     C                     ELSE                                           139958
+     C                     MOVEL'*CALL   'DBFILE                          139958
+     C                     MOVEL'EU0200  'DBKEY            ************   139958
+     C                     MOVEL'11'      DBASE            * DBERR 11 *   139958
+     C                     SETON                     U7U8LR************   139958
+     C                     EXSR *PSSR                                     139958
+     C                     ENDIF                                          139958
+      *                                                                   139958
+     C                     ENDIF                                          139958
+      *                                                                   139958
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C                     MOVE ECCY      WECCY   3                       CEU011
+     C                     MOVE BKEUCP    ECCY                            CEU011
+     C                     WRITEDLEVEUD0                                  CEU011
+     C                     MOVE WECCY     ECCY                            CEU011
+      *                                                                   CEU011
+     C                     ENDSR                                          CEU011
+      *                                                                   CEU011
+0382 C********************************************************************
+0383 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+0384 C**
+0385 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+0386 C**
+0387 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+0388 C**
+0389 C**   CLEAR DATE FIELDS.
+0390 C                     Z-ADD0         ZDATE   60
+0391 C                     MOVEL'       ' ZADATE  7
+0392 C**
+0393 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+0394 C                     Z-ADDZDAYNO    ZDAYNO  50
+0395 C**
+0396 C**   DETERMINE YEAR NUMBER.
+0397 C**
+0398 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+0399 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+0400 C   99                GOTO ZDEND2
+0401 C**
+0402 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+0403 C           ZDAYN1    DIV  1461      ZLYR    20
+0404 C                     MVR            ZDAYN1           SAVE REMAINING
+0405 C**                                                   DAYS
+0406 C**   CALCULATE NUMBER OF REMAINING YEARS.
+0407 C                     Z-ADD1         ZWRK2   20
+0408 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+0409 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+0410 C  N90      ZWRK2     ADD  1         ZWRK2
+0411 C  N90                GOTO ZDTAG1
+0412 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+0413 C**
+0414 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+0415 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+0416 C**
+0417 C**   CALCULATE ACTUAL YEAR NUMBER.
+0418 C           ZLYR      MULT 4         ZWRK3   30
+0419 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+0420 C                     Z-ADDZWRK3     ZYEAR   20
+0421 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+0422 C**
+0423 C**   DETERMINE MONTH NUMBER.
+0424 C**
+0425 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+0426 C                     SETOF                     9293
+0427 C   91      ZDAYN1    COMP 59                     9293
+0428 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+0429 C**
+0430 C**   CALCULATE MONTH NUMBER.
+0431 C                     Z-ADD2         ZWRK2
+0432 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+0433 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+0434 C  N94      ZWRK2     ADD  1         ZWRK2
+0435 C  N94                GOTO ZDTAG2
+0436 C           ZWRK2     SUB  1         ZWRK2
+0437 C**
+0438 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+0439 C**
+0440 C**   DETERMINE DAY OF MONTH.
+0441 C**
+0442 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+0443 C           ZDAYN1    ADD  1         ZDAYN1
+0444 C**
+0445 C**   CALCULATE DAY OF MONTH.
+0446 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+0447 C**
+0448 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+0449 C   93      ZDAY      ADD  1         ZDAY
+0450 C**
+0451 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+0452 C  N98                MOVELZDAY      ZWRK4   40
+0453 C   98                MOVE ZDAY      ZWRK4
+0454 C  N98                MOVE ZMTH      ZWRK4
+0455 C   98                MOVELZMTH      ZWRK4
+0456 C                     MOVELZWRK4     ZDATE
+0457 C                     MOVE ZYEAR     ZDATE
+0458 C**
+0459 C**   FORMAT ALPHA DATE, DDMMMYY.
+0460 C           ZDAY      COMP 10                     95
+0461 C                     MOVELZDAY      ZWRK5   5
+0462 C   95                MOVEL' '       ZWRK5
+0463 C                     MOVE ZMNM,ZMTH ZWRK5
+0464 C                     MOVELZWRK5     ZADATE
+0465 C                     MOVE ZYEAR     ZADATE
+0466 C**
+0467 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+0468 C**
+0469 C**
+0470 C********************************************************************
+     C*                                                                   S01194
+     C           *PSSR     BEGSR                                          S01194
+     C*                                                                   S01194
+     C           @RUN      IFEQ *BLANK                                    S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     ENDSR                                          S01194
+0590 C********************************************************************S01194
+0471 C********************************************************************S01194
+0472 C*****                                                               S01194
+0473 C*****ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   S01194
+0474 C*****                                                               S01194
+0475 C*****      ZSYSTM    BEGSR                           *** ZSYSTM *** S01194
+0476 C*****                                                               S01194
+0477 C*****SET UP KEY FOR INSTALLATION CONTROL RECORD.                    S01194
+0478 C*****                MOVEL'01      'ZTABKY 12                       S01194
+0479 C*****                MOVE '  10'    ZTABKY                          S01194
+0480 C*****                                                               S01194
+0481 C*****      ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0482 C**N99      RECI      COMP 'D'                  9999  ON, IS DELETED S01194
+0483 C*****                                                               S01194
+0484 C*****CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
+0485 C*****      DATF      COMP 'M'                      98MMDDYY, 98 ON  S01194
+0486 C*****                                                               S01194
+0487 C*****                ENDSR                                          S01194
+0488 C*****                                                               S01194
+0489 C*****                                                               S01194
+0490 C********************************************************************
+     C/COPY WNCPYSRC,DL2685C010
+0491 ODL2685P2E   03   43                                                 S01124
+0492 O*****                              22 'REFERENCE DL2685'      S01116S01117
+0492 O                                   24 'REFERENCE DL2685P2'          S01117
+0493 O*****                    TITL      89                               S01194
+0493 O                         BJURPT    89                               S01194
+0494 O                                  104 'DATE'
+0495 O*****                    RUNA     112                               S01194
+0495 O                         BJMRDT   112                               S01194
+0496 O                                  122 'PAGE'
+0497 O                         PAGE  Z  127
+0498 O        E   05   43
+0499 O                                   72 'DEPOSITS LADDER'
+0500 O        E   06   43
+0501 O                                   72 '---------------'
+0502 O        E   08   43
+0503 O*****                    CCNM      20                               S01194
+0503 O***********              A6CYNM    20                        S01194 CEU011
+     O                NU1      A6CYNM    20                               CEU011
+     O                 U1      WCYNM     23                               CEU011
+0504 O                N35      MONTHN    64                               S01116
+0505 O                N35      YEAR      67                               S01116
+0504 O                 35                66 'CALL/NOTICE'                 S01116
+     O**************                    113 'BRANCH'                S01116048943
+     O                                  113 'CONSOLIDATED'                048943
+     O*****                    BRCD     117                         S01116S01117
+     O**************           BRCA     117                         S01117048943
+0506 O        E   09   43
+0507 O***********                        20 '--------------'              CEU011
+     O                NU1                20 '--------------'              CEU011
+     O                 U1                23 '-----------------'           CEU011
+0508 O                N35                67 '------------'                S01116
+0508 O                 35                66 '-----------'                 S01116
+0509 O        E   12   43
+0510 O                N35                 6 'DATE'                        S01116
+0510 O                 35                11 'NOTICE DAYS'                 S01116
+0511 O*                                  26 'DEPOSITS IN'         S01116  E12724
+0512 O*                                  43 'LOANS IN'            S01116  E12724
+0513 O*                                  60 'DEPOSITS OUT'        S01116  E12724
+0514 O*                                  77 'LOANS OUT'           S01116  E12724
+0516 O*                                  94 'NET'                 S01116  E12724
+0511 O                                   25 'DEPOSITS IN'                 E12724
+0512 O                                   42 'LOANS IN'                    E12724
+0513 O                                   59 'DEPOSITS OUT'                E12724
+0514 O                                   76 'LOANS OUT'                   E12724
+0516 O                                   93 'NET'                         E12724
+     O**                                112 'CUMULATIVE'          S01116  E11996
+0515 O**                                131 'NET INTEREST'        S01116  E11996
+     O                                  113 'CUMULATIVE'                  E11996
+0515 O                                  132 'NET INTEREST'                E11996
+0517 O        E  213   43                                                 S01116
+0510 O                N35                 6 '----'                        S01116
+0510 O                 35                11 '-----------'                 S01116
+0511 O*                                  26 '-----------'         S01116  E12724
+0512 O*                                  43 '--------'            S01116  E12724
+0513 O*                                  60 '------------'        S01116  E12724
+0514 O*                                  77 '---------'           S01116  E12724
+0516 O*                                  94 '---'                 S01116  E12724
+0511 O                                   25 '-----------'                 E12724
+0512 O                                   42 '--------'                    E12724
+0513 O                                   59 '------------'                E12724
+0514 O                                   76 '---------'                   E12724
+0516 O                                   93 '---'                         E12724
+     O**                                112 '----------'                  E11996
+0515 O**                                131 '------------'                E11996
+     O                                  113 '----------'                  E11996
+0515 O                                  132 '------------'                E11996
+0525 O        E  1     43                                                 S01116
+0549 O**                  30   DCUM     113 '  ,   ,   ,   ,  0-' S01116  E11996
+0550 O**                  31   DCUM     113 ' ,   ,   ,   , 0 . -'S01116  E11996
+0551 O**                  32   DCUM     113 '   ,   ,   , 0 .  -' S01116  E11996
+0552 O**                  33   DCUM     113 '  ,   ,   , 0 .   -' S01116  E11996
+0549 O                    30   DCUM     114 '  ,   ,   ,   ,  0-'         E11996
+0550 O                    31   DCUM     114 ' ,   ,   ,   , 0 . -'        E11996
+0551 O                    32   DCUM     114 '   ,   ,   , 0 .  -'         E11996
+0552 O                    33   DCUM     114 '  ,   ,   , 0 .   -'         E11996
+0525 O        E 1      38                                                 S01116
+0526 O                N35      DNUM2      5                               S01116
+0527 O        E 1      41
+0528 O                N35      TDAY       5                               S01116
+0528 O                 35      DATE       7                               S01116
+0529 O*                   30   DTOTI     26 ' ,   ,   ,   ,  0'    S01116 E12724
+0550 O*               N25 31   DTOTI     26 '   ,   ,   , 0 . '    S01116 E12724
+0551 O*               N25 32   DTOTI     26 '  ,   ,   , 0 .  '    S01116 E12724
+0552 O*               N25 33   DTOTI     26 ' ,   ,   , 0 .   '    S01116 E12724
+0533 O*                   30   DTOTIC    43 ' ,   ,   ,   ,  0'    S01116 E12724
+0550 O*               N26 31   DTOTIC    43 '   ,   ,   , 0 . '    S01116 E12724
+0551 O*               N26 32   DTOTIC    43 '  ,   ,   , 0 .  '    S01116 E12724
+0552 O*               N26 33   DTOTIC    43 ' ,   ,   , 0 .   '    S01116 E12724
+0537 O*                   30   DTOTO     60 ' ,   ,   ,   ,  0'    S01116 E12724
+0550 O*               N27 31   DTOTO     60 '   ,   ,   , 0 . '    S01116 E12724
+0551 O*               N27 32   DTOTO     60 '  ,   ,   , 0 .  '    S01116 E12724
+0552 O*               N27 33   DTOTO     60 ' ,   ,   , 0 .   '    S01116 E12724
+0541 O*                   30   DTOTOC    77 ' ,   ,   ,   ,  0'    S01116 E12724
+0550 O*               N28 31   DTOTOC    77 '   ,   ,   , 0 . '    S01116 E12724
+0551 O*               N28 32   DTOTOC    77 '  ,   ,   , 0 .  '    S01116 E12724
+0552 O*               N28 33   DTOTOC    77 ' ,   ,   , 0 .   '    S01116 E12724
+0549 O*                   30   DNET      95 ' ,   ,   ,   ,  0-'   S01116 E12724
+0550 O*                   31   DNET      95 '   ,   ,   , 0 . -'   S01116 E12724
+0551 O*                   32   DNET      95 '  ,   ,   , 0 .  -'   S01116 E12724
+0552 O*                   33   DNET      95 ' ,   ,   , 0 .   -'   S01116 E12724
+0529 O                    30   DTOTI     25 ' ,   ,   ,   ,  0'           E12724
+0550 O                N25 31   DTOTI     25 '   ,   ,   , 0 . '           E12724
+0551 O                N25 32   DTOTI     25 '  ,   ,   , 0 .  '           E12724
+0552 O                N25 33   DTOTI     25 ' ,   ,   , 0 .   '           E12724
+0533 O                    30   DTOTIC    42 ' ,   ,   ,   ,  0'           E12724
+0550 O                N26 31   DTOTIC    42 '   ,   ,   , 0 . '           E12724
+0551 O                N26 32   DTOTIC    42 '  ,   ,   , 0 .  '           E12724
+0552 O                N26 33   DTOTIC    42 ' ,   ,   , 0 .   '           E12724
+0537 O                    30   DTOTO     59 ' ,   ,   ,   ,  0'           E12724
+0550 O                N27 31   DTOTO     59 '   ,   ,   , 0 . '           E12724
+0551 O                N27 32   DTOTO     59 '  ,   ,   , 0 .  '           E12724
+0552 O                N27 33   DTOTO     59 ' ,   ,   , 0 .   '           E12724
+0541 O                    30   DTOTOC    76 ' ,   ,   ,   ,  0'           E12724
+0550 O                N28 31   DTOTOC    76 '   ,   ,   , 0 . '           E12724
+0551 O                N28 32   DTOTOC    76 '  ,   ,   , 0 .  '           E12724
+0552 O                N28 33   DTOTOC    76 ' ,   ,   , 0 .   '           E12724
+0549 O                    30   DNET      94 ' ,   ,   ,   ,  0-'          E12724
+0550 O                    31   DNET      94 '   ,   ,   , 0 . -'          E12724
+0551 O                    32   DNET      94 '  ,   ,   , 0 .  -'          E12724
+0552 O                    33   DNET      94 ' ,   ,   , 0 .   -'          E12724
+0549 O**                  30   DCUM     113 '  ,   ,   ,   ,  0-' S01116  E11996
+0550 O**                  31   DCUM     113 ' ,   ,   ,   , 0 . -'S01116  E11996
+0551 O**                  32   DCUM     113 '   ,   ,   , 0 .  -' S01116  E11996
+0552 O**                  33   DCUM     113 '  ,   ,   , 0 .   -' S01116  E11996
+0545 O**                  30   DNINT    131 ' ,   ,   ,   ,  0-'  S01116  E11996
+0550 O**              N29 31   DNINT    131 '   ,   ,   , 0 . -'  S01116  E11996
+0551 O**              N29 32   DNINT    131 '  ,   ,   , 0 .  -'  S01116  E11996
+0552 O**              N29 33   DNINT    131 ' ,   ,   , 0 .   -'  S01116  E11996
+0549 O                    30   DCUM     114 '  ,   ,   ,   ,  0-'         E11996
+0550 O                    31   DCUM     114 ' ,   ,   ,   , 0 . -'        E11996
+0551 O                    32   DCUM     114 '   ,   ,   , 0 .  -'         E11996
+0552 O                    33   DCUM     114 '  ,   ,   , 0 .   -'         E11996
+0545 O                    30   DNINT    132 ' ,   ,   ,   ,  0-'          E11996
+0550 O                N29 31   DNINT    132 '   ,   ,   , 0 . -'          E11996
+0551 O                N29 32   DNINT    132 '  ,   ,   , 0 .  -'          E11996
+0552 O                N29 33   DNINT    132 ' ,   ,   , 0 .   -'          E11996
+0553 O        E   50   42
+0554 O*                                   7 'TOTAL'               S01116  E12724
+0555 O*                                  26 '---------------'     S01116  E12724
+0556 O*                                  43 '---------------'     S01116  E12724
+0557 0*                                  60 '---------------'     S01116  E12724
+0558 O*                                  77 '---------------'     S01116  E12724
+0559 O*                                  95 '----------------'    S01116  E12724
+0560 O**                                131 '----------------'    S01116  E11996
+0554 O                                    6 'TOTAL'                       S01116
+0555 O                                   25 '---------------'             S01116
+0556 O                                   42 '---------------'             S01116
+0557 O                                   59 '---------------'             S01116
+0558 O                                   76 '---------------'             S01116
+0559 O                                   94 '----------------'            S01116
+0560 O                                  132 '----------------'            E11996
+0561 O        E   51   42
+0562 O*                                   8 'MONTHLY'              S01116 E12724
+0563 O*                   30   MTOTI     26 ' ,   ,   ,   , 0 '    S01116 E12724
+0564 O*                   31   MTOTI     26 '   ,   ,   , 0 . '    S01116 E12724
+0565 O*                   32   MTOTI     26 '  ,   ,   , 0 .  '    S01116 E12724
+0566 O*                   33   MTOTI     26 ' ,   ,   , 0 .   '    S01116 E12724
+0567 O*                   30   MTOTIC    43 ' ,   ,   ,   , 0 '    S01116 E12724
+0568 O*                   31   MTOTIC    43 '   ,   ,   , 0 . '    S01116 E12724
+0569 O*                   32   MTOTIC    43 '  ,   ,   , 0 .  '    S01116 E12724
+0570 O*                   33   MTOTIC    43 ' ,   ,   , 0 .   '    S01116 E12724
+0571 O*                   30   MTOTO     60 ' ,   ,   ,   , 0 '    S01116 E12724
+0572 O*                   31   MTOTO     60 '   ,   ,   , 0 . '    S01116 E12724
+0573 O*                   32   MTOTO     60 '  ,   ,   , 0 .  '    S01116 E12724
+0574 O*                   33   MTOTO     60 ' ,   ,   , 0 .   '    S01116 E12724
+0575 O*                   30   MTOTOC    77 ' ,   ,   ,   , 0 '    S01116 E12724
+0576 O*                   31   MTOTOC    77 '   ,   ,   , 0 . '    S01116 E12724
+0577 O*                   32   MTOTOC    77 '  ,   ,   , 0 .  '    S01116 E12724
+0578 O*                   33   MTOTOC    77 ' ,   ,   , 0 .   '    S01116 E12724
+0583 O*                   30   MNET      95 ' ,   ,   ,   , 0 -'   S01116 E12724
+0584 O*                   31   MNET      95 '   ,   ,   , 0 . -'   S01116 E12724
+0585 O*                   32   MNET      95 '  ,   ,   , 0 .  -'   S01116 E12724
+0586 O*                   33   MNET      95 ' ,   ,   , 0 .   -'   S01116 E12724
+0579 O**                  30   MNINT    131 ' ,   ,   ,   , 0 -'   S01116 E11996
+0580 O**                  31   MNINT    131 '   ,   ,   , 0 . -'   S01116 E11996
+0581 O**                  32   MNINT    131 '  ,   ,   , 0 .  -'   S01116 E11996
+0582 O**                  33   MNINT    131 ' ,   ,   , 0 .   -'   S01116 E11996
+0562 O                                    7 'MONTHLY'                     E12724
+0563 O                    30   MTOTI     25 ' ,   ,   ,   , 0 '           E12724
+0564 O                    31   MTOTI     25 '   ,   ,   , 0 . '           E12724
+0565 O                    32   MTOTI     25 '  ,   ,   , 0 .  '           E12724
+0566 O                    33   MTOTI     25 ' ,   ,   , 0 .   '           E12724
+0567 O                    30   MTOTIC    42 ' ,   ,   ,   , 0 '           E12724
+0568 O                    31   MTOTIC    42 '   ,   ,   , 0 . '           E12724
+0569 O                    32   MTOTIC    42 '  ,   ,   , 0 .  '           E12724
+0570 O                    33   MTOTIC    42 ' ,   ,   , 0 .   '           E12724
+0571 O                    30   MTOTO     59 ' ,   ,   ,   , 0 '           E12724
+0572 O                    31   MTOTO     59 '   ,   ,   , 0 . '           E12724
+0573 O                    32   MTOTO     59 '  ,   ,   , 0 .  '           E12724
+0574 O                    33   MTOTO     59 ' ,   ,   , 0 .   '           E12724
+0575 O                    30   MTOTOC    76 ' ,   ,   ,   , 0 '           E12724
+0576 O                    31   MTOTOC    76 '   ,   ,   , 0 . '           E12724
+0577 O                    32   MTOTOC    76 '  ,   ,   , 0 .  '           E12724
+0578 O                    33   MTOTOC    76 ' ,   ,   , 0 .   '           E12724
+0583 O                    30   MNET      94 ' ,   ,   ,   , 0 -'          E12724
+0584 O                    31   MNET      94 '   ,   ,   , 0 . -'          E12724
+0585 O                    32   MNET      94 '  ,   ,   , 0 .  -'          E12724
+0586 O                    33   MNET      94 ' ,   ,   , 0 .   -'          E12724
+0579 O                    30   MNINT    132 ' ,   ,   ,   , 0 -'          E11996
+0580 O                    31   MNINT    132 '   ,   ,   , 0 . -'          E11996
+0581 O                    32   MNINT    132 '  ,   ,   , 0 .  -'          E11996
+0582 O                    33   MNINT    132 ' ,   ,   , 0 .   -'          E11996
+0587 O        E   52   42
+0588 O*                                   9 'POSITION'             S01116 E12724
+0555 O*                                  26 '---------------'      S01116 E12724
+0556 O*                                  43 '---------------'      S01116 E12724
+0557 O*                                  60 '---------------'      S01116 E12724
+0558 O*                                  77 '---------------'      S01116 E12724
+0559 O*                                  95 '----------------'     S01116 E12726
+0560 O**                                131 '----------------'     S01116 E11996
+0588 O                                    8 'POSITION'                    E12724
+0555 O                                   25 '---------------'             E12724
+0556 O                                   42 '---------------'             E12724
+0557 O                                   59 '---------------'             E12724
+0558 O                                   76 '---------------'             E12724
+0559 O                                   94 '----------------'            E12726
+0560 O                                  132 '----------------'            E11996
+     O*
+     O/COPY WNCPYSRC,DL2685O001
+0595 O********T   60   LR                                                 E00097
+0595 O        T   60   LR 48N69                                           E00097
+0596 O                                   70 '*** END OF REPORT ***'
+     O*                                                                   S01116
+0491 ODL2685P1E   03   45                                                 S01124
+0492 O*****                              22 'REFERENCE DL2685'      S01116S01117
+0492 O                                   24 'REFERENCE DL2685P1'          S01117
+0493 O*****                    TITL      89                         S01116S01194
+0493 O                         BJURPT    89                               S01194
+0494 O                                  104 'DATE'                        S01116
+0495 O*****                    RUNA     112                         S01116S01194
+0495 O                         BJMRDT   112                               S01194
+0496 O                                  122 'PAGE'                        S01116
+0497 O                         PAGE1 Z  127                               S01116
+0498 O        E   05   45                                                 S01116
+0499 O                                   65 'DEPOSITS LADDER'             S01116
+     O                                   80 'SUMMARY REPORT'              S01116
+0500 O        E   06   45                                                 S01116
+0501 O                                   65 '---------------'             S01116
+     O                                   80 '---------------'             S01116
+0502 O********E   08   45                                           S01116E00097
+0502 O        E   08   45 48N69                                           E00097
+0503 O*****                    CCNM      20                         S01116S01194
+0503 O***********              A6CYNM    20                        S01194 CEU011
+     O                NU1      A6CYNM    20                               CEU011
+     O                 U1      WCYNM     23                               CEU011
+     O**************                    113 'BRANCH'                S01116048943
+     O                                  113 'CONSOLIDATED'                048943
+     O*****                    BRCD     117                         S01116S01117
+     O**************           BRCA     117                         S01117048943
+0506 O********E   09   45                                           S01116E00097
+0506 O        E   09   45 48N69                                           E00097
+0507 O***********                        20 '--------------'       S01116 CEU011
+     O                NU1                20 '--------------'              CEU011
+     O                 U1                23 '-----------------'           CEU011
+0509 O        E   12   45                                                 S01116
+0510 O                                    6 'DATE'                        S01116
+0511 O*                                  26 'DEPOSITS IN'         S01116  E12724
+0512 O*                                  43 'LOANS IN'            S01116  E12724
+0513 O*                                  60 'DEPOSITS OUT'        S01116  E12724
+0514 O*                                  77 'LOANS OUT'           S01116  E12724
+0516 O*                                  94 'NET'                 S01116  E12724
+0511 O                                   25 'DEPOSITS IN'                 E12724
+0512 O                                   42 'LOANS IN'                    E12724
+0513 O                                   59 'DEPOSITS OUT'                E12724
+0514 O                                   76 'LOANS OUT'                   E12724
+0516 O                                   93 'NET'                         E12724
+     O**                                112 'CUMULATIVE'          S01116  E11996
+0515 O**                                131 'NET INTEREST'        S01116  E11996
+     O                                  113 'CUMULATIVE'                  E11996
+0515 O                                  132 'NET INTEREST'                E11996
+0517 O        E  213   45                                                 S01116
+0510 O                                    6 '----'                        S01116
+0511 O*                                  26 '-----------'         SO1116  E12724
+0512 O*                                  43 '--------'            SO1116  E12724
+0513 O*                                  60 '------------'        SO1116  E12724
+0514 O*                                  77 '---------'           SO1116  E12724
+0516 O*                                  94 '---'                 SO1116  E12724
+0511 O                                   25 '-----------'                 E12724
+0512 O                                   42 '--------'                    E12724
+0513 O                                   59 '------------'                E12724
+0514 O                                   76 '---------'                   E12724
+0516 O                                   93 '---'                         E12724
+     O**                                112 '----------'          S01116  E11996
+0515 O**                                131 '------------'        S01116  E11996
+     O                                  113 '----------'                  E11996
+0515 O                                  132 '------------'                E11996
+     O        E   21   45N48                                              E00097
+     O       OR   21   45 48 69                                           E00097
+     O                                   58 '*** NO DETAILS TO '          E00097
+     O                                   69 'REPORT ***'                  E00097
+0527 O        E 1      46                                                 S01116
+     O                N39      SMONTH     4                               S01116
+0528 O                N39      SYEAR      7                               S01116
+     O                 39                 7 'NOTICE'                      S01116
+0529 O*                   30   MTOTI     26 ' ,   ,   ,   ,  0'   S01116  E12724
+0550 O*               N15 31   MTOTI     26 '   ,   ,   , 0 . '   S01116  E12724
+0551 O*               N15 32   MTOTI     26 '  ,   ,   , 0 .  '   S01116  E12724
+0552 O*               N15 33   MTOTI     26 ' ,   ,   , 0 .   '   S01116  E12724
+0533 O*                   30   MTOTIC    43 ' ,   ,   ,   ,  0'   S01116  E12724
+0550 O*               N16 31   MTOTIC    43 '   ,   ,   , 0 . '   S01116  E12724
+0551 O*               N16 32   MTOTIC    43 '  ,   ,   , 0 .  '   S01116  E12724
+0552 O*               N16 33   MTOTIC    43 ' ,   ,   , 0 .   '   S01116  E12724
+0537 O*                   30   MTOTO     60 ' ,   ,   ,   ,  0'   S01116  E12724
+0550 O*               N17 31   MTOTO     60 '   ,   ,   , 0 . '   S01116  E12724
+0551 O*               N17 32   MTOTO     60 '  ,   ,   , 0 .  '   S01116  E12724
+0552 O*               N17 33   MTOTO     60 ' ,   ,   , 0 .   '   S01116  E12724
+0541 O*                   30   MTOTOC    77 ' ,   ,   ,   ,  0'   S01116  E12724
+0550 O*               N18 31   MTOTOC    77 '   ,   ,   , 0 . '   S01116  E12724
+0551 O*               N18 32   MTOTOC    77 '  ,   ,   , 0 .  '   S01116  E12724
+0552 O*               N18 33   MTOTOC    77 ' ,   ,   , 0 .   '   S01116  E12724
+0549 O*                   30   MNET      95 ' ,   ,   ,   ,  0-'  S01116  E12724
+0550 O*                   31   MNET      95 '   ,   ,   , 0 . -'  S01116  E12724
+0551 O*                   32   MNET      95 '  ,   ,   , 0 .  -'  S01116  E12724
+0552 O*                   33   MNET      95 ' ,   ,   , 0 .   -'  S01116  E12724
+0529 O                    30   MTOTI     25 ' ,   ,   ,   ,  0'           E12724
+0550 O                N15 31   MTOTI     25 '   ,   ,   , 0 . '           E12724
+0551 O                N15 32   MTOTI     25 '  ,   ,   , 0 .  '           E12724
+0552 O                N15 33   MTOTI     25 ' ,   ,   , 0 .   '           E12724
+0533 O                    30   MTOTIC    42 ' ,   ,   ,   ,  0'           E12724
+0550 O                N16 31   MTOTIC    42 '   ,   ,   , 0 . '           E12724
+0551 O                N16 32   MTOTIC    42 '  ,   ,   , 0 .  '           E12724
+0552 O                N16 33   MTOTIC    42 ' ,   ,   , 0 .   '           E12724
+0537 O                    30   MTOTO     59 ' ,   ,   ,   ,  0'           E12724
+0550 O                N17 31   MTOTO     59 '   ,   ,   , 0 . '           E12724
+0551 O                N17 32   MTOTO     59 '  ,   ,   , 0 .  '           E12724
+0552 O                N17 33   MTOTO     59 ' ,   ,   , 0 .   '           E12724
+0541 O                    30   MTOTOC    76 ' ,   ,   ,   ,  0'           E12724
+0550 O                N18 31   MTOTOC    76 '   ,   ,   , 0 . '           E12724
+0551 O                N18 32   MTOTOC    76 '  ,   ,   , 0 .  '           E12724
+0552 O                N18 33   MTOTOC    76 ' ,   ,   , 0 .   '           E12724
+0549 O                    30   MNET      94 ' ,   ,   ,   ,  0-'          E12724
+0550 O                    31   MNET      94 '   ,   ,   , 0 . -'          E12724
+0551 O                    32   MNET      94 '  ,   ,   , 0 .  -'          E12724
+0552 O                    33   MNET      94 ' ,   ,   , 0 .   -'          E12724
+0549 O**                  30   DCUM     113 '  ,   ,   ,   ,  0-' S01116  E11996
+0550 O**                  31   DCUM     113 ' ,   ,   ,   , 0 . -'S01116  E11996
+0551 O**                  32   DCUM     113 '   ,   ,   , 0 .  -' S01116  E11996
+0552 O**                  33   DCUM     113 '  ,   ,   , 0 .   -' S01116  E11996
+0545 O**                  30   MNINT    131 ' ,   ,   ,   ,  0-'  S01116  E11996
+0550 O**              N19 31   MNINT    131 '   ,   ,   , 0 . -'  S01116  E11996
+0551 O**              N19 32   MNINT    131 '  ,   ,   , 0 .  -'  S01116  E11996
+0552 O**              N19 33   MNINT    131 ' ,   ,   , 0 .   -'  S01116  E11996
+0549 O                    30   DCUM     114 '  ,   ,   ,   ,  0-'         E11996
+0550 O                    31   DCUM     114 ' ,   ,   ,   , 0 . -'        E11996
+0551 O                    32   DCUM     114 '   ,   ,   , 0 .  -'         E11996
+0552 O                    33   DCUM     114 '  ,   ,   , 0 .   -'         E11996
+0545 O                    30   MNINT    132 ' ,   ,   ,   ,  0-'          E11996
+0550 O                N19 31   MNINT    132 '   ,   ,   , 0 . -'          E11996
+0551 O                N19 32   MNINT    132 '  ,   ,   , 0 .  -'          E11996
+0552 O                N19 33   MNINT    132 ' ,   ,   , 0 .   -'          E11996
+0553 O        E   50   47                                                 S01116
+0554 O*                                   7 'TOTAL'                S01116 E12724
+0555 O*                                  26 '---------------'      S01116 E12724
+0556 O*                                  43 '---------------'      S01116 E12724
+0557 O*                                  60 '---------------'      S01116 E12724
+0558 O*                                  77 '---------------'      S01116 E12724
+0559 O*                                  95 '----------------'     S01116 E12724
+0560 O**                                131 '----------------'     S01116 E11996
+0554 O                                    6 'TOTAL'                       E12724
+0555 O                                   25 '---------------'             E12724
+0556 O                                   42 '---------------'             E12724
+0557 O                                   59 '---------------'             E12724
+0558 O                                   76 '---------------'             E12724
+0559 O                                   94 '----------------'            E12724
+0560 O                                  132 '----------------'            E11996
+0561 O        E   51   47                                                 S01116
+0588 O*                                   9 'POSITION'             S01116 E12724
+0563 O*                   30   TTOTI     26 ' ,   ,   ,   , 0 '    S01116 E12724
+0564 O*                   31   TTOTI     26 '   ,   ,   , 0 . '    S01116 E12724
+0565 O*                   32   TTOTI     26 '  ,   ,   , 0 .  '    S01116 E12724
+0566 O*                   33   TTOTI     26 ' ,   ,   , 0 .   '    S01116 E12724
+0567 O*                   30   TTOTIC    43 ' ,   ,   ,   , 0 '    S01116 E12724
+0568 O*                   31   TTOTIC    43 '   ,   ,   , 0 . '    S01116 E12724
+0569 O*                   32   TTOTIC    43 '  ,   ,   , 0 .  '    S01116 E12724
+0570 O*                   33   TTOTIC    43 ' ,   ,   , 0 .   '    S01116 E12724
+0571 O*                   30   TTOTO     60 ' ,   ,   ,   , 0 '    S01116 E12724
+0572 O*                   31   TTOTO     60 '   ,   ,   , 0 . '    S01116 E12724
+0573 O*                   32   TTOTO     60 '  ,   ,   , 0 .  '    S01116 E12724
+0574 O*                   33   TTOTO     60 ' ,   ,   , 0 .   '    S01116 E12724
+0575 O*                   30   TTOTOC    77 ' ,   ,   ,   , 0 '    S01116 E12724
+0576 O*                   31   TTOTOC    77 '   ,   ,   , 0 . '    S01116 E12724
+0577 O*                   32   TTOTOC    77 '  ,   ,   , 0 .  '    S01116 E12724
+0578 O*                   33   TTOTOC    77 ' ,   ,   , 0 .   '    S01116 E12724
+0583 O*                   30   TNET      95 ' ,   ,   ,   , 0 -'   S01116 E12724
+0584 O*                   31   TNET      95 '   ,   ,   , 0 . -'   S01116 E12724
+0585 O*                   32   TNET      95 '  ,   ,   , 0 .  -'   S01116 E12724
+0586 O*                   33   TNET      95 ' ,   ,   , 0 .   -'   S01116 E12724
+0579 O**                  30   TNINT    131 ' ,   ,   ,   , 0 -'   S01116 E11996
+0580 O**                  31   TNINT    131 '   ,   ,   , 0 . -'   S01116 E11996
+0581 O**                  32   TNINT    131 '  ,   ,   , 0 .  -'   S01116 E11996
+0582 O**                  33   TNINT    121 ' ,   ,   , 0 .   -'   S01116 E11996
+0588 O                                    8 'POSITION'                    E12724
+0563 O                    30   TTOTI     25 ' ,   ,   ,   , 0 '           E12724
+0564 O                    31   TTOTI     25 '   ,   ,   , 0 . '           E12724
+0565 O                    32   TTOTI     25 '  ,   ,   , 0 .  '           E12724
+0566 O                    33   TTOTI     25 ' ,   ,   , 0 .   '           E12724
+0567 O                    30   TTOTIC    42 ' ,   ,   ,   , 0 '           E12724
+0568 O                    31   TTOTIC    42 '   ,   ,   , 0 . '           E12724
+0569 O                    32   TTOTIC    42 '  ,   ,   , 0 .  '           E12724
+0570 O                    33   TTOTIC    42 ' ,   ,   , 0 .   '           E12724
+0571 O                    30   TTOTO     59 ' ,   ,   ,   , 0 '           E12724
+0572 O                    31   TTOTO     59 '   ,   ,   , 0 . '           E12724
+0573 O                    32   TTOTO     59 '  ,   ,   , 0 .  '           E12724
+0574 O                    33   TTOTO     59 ' ,   ,   , 0 .   '           E12724
+0575 O                    30   TTOTOC    76 ' ,   ,   ,   , 0 '           E12724
+0576 O                    31   TTOTOC    76 '   ,   ,   , 0 . '           E12724
+0577 O                    32   TTOTOC    76 '  ,   ,   , 0 .  '           E12724
+0578 O                    33   TTOTOC    76 ' ,   ,   , 0 .   '           E12724
+0583 O                    30   TNET      94 ' ,   ,   ,   , 0 -'          E12724
+0584 O                    31   TNET      94 '   ,   ,   , 0 . -'          E12724
+0585 O                    32   TNET      94 '  ,   ,   , 0 .  -'          E12724
+0586 O                    33   TNET      94 ' ,   ,   , 0 .   -'          E12724
+0579 O                    30   TNINT    132 ' ,   ,   ,   , 0 -'          E11996
+0580 O                    31   TNINT    132 '   ,   ,   , 0 . -'          E11996
+0581 O                    32   TNINT    132 '  ,   ,   , 0 .  -'          E11996
+0582 O                    33   TNINT    132 ' ,   ,   , 0 .   -'          E11996
+0587 O        E   52   47                                                 S01116
+0555 O*                                  26 '---------------'      S01116 E12724
+0556 O*                                  43 '---------------'      S01116 E12724
+0557 O*                                  60 '---------------'      S01116 E12724
+0558 O*                                  77 '---------------'      S01116 E12724
+0559 O*                                  95 '----------------'     S01116 E12724
+0560 O**                                131 '----------------'     S01116 E11996
+0555 O                                   25 '---------------'             E12724
+0556 O                                   42 '---------------'             E12724
+0557 O                                   59 '---------------'             E12724
+0558 O                                   76 '---------------'             E12724
+0559 O                                   94 '----------------'            E12724
+0560 O                                  132 '----------------'            E11996
+     O/COPY WNCPYSRC,DL2685O002
+0595 O        T   60   LR                                                 S01116
+0596 O                                   70 '*** END OF REPORT ***'       S01116
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** @EURO  **      EURO CONSLIDATED CCY NAME
+Euro Consolidated
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   MONTHT - FULL NAMES OF MONTHS
+JANUARY  FEBRUARY MARCH
+APRIL    MAY      JUNE
+JULY     AUGUST   SEPTEMBER
+OCTOBER  NOVEMBER DECEMBER

@@ -1,0 +1,1350 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Display Related Customer Number')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD4370D - Midas SD Related Cust Numbers - Cust Identifiers   *
+      *                                                               *
+      *  Function:  This program displays Customer Identifiers that   *
+      *             have been defined to the system.                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 255430             Date 31Jul08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 160591             Date 28Jul01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD001             Date 12AUG96               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  255430 - Recompiled due to changes in DSPF/SD4370D#.         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  160591 - Re-compiled over amended dspf SD4370D#.             *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CSD001 - Related Customer Details.                           *
+      *           New function.                                       *
+      *                                                               *
+      *****************************************************************
+     F*Related Cust Numbers 1   Initialise Program F-Spec
+     F/COPY WNCPYSRC,SD4370DFPG
+     FSD4370D#CF  E                    WORKSTN                        UC
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Miads SD Display Related Customer Number
+      *
+     FSDRELCL2IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RSQ : Midas SD Related cust number by cust id & cust no
+      *
+     FSDCUSTL5IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RSQ : Midas SD Live customers
+      *
+     FSDCUSTL2IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RSQ : Midas SD Customer details by unique shortname
+      *
+     FSDRELCL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Related customer number details retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*Related Cust Numbers 1   Initialise Program E-Spec
+     E/COPY WNCPYSRC,SD4370DEPG
+     I@CUSTD5
+      * Midas SD Customer details by unique shortname
+      * Renamed input format fields
+     I              BBCUST                          WACUST
+     I              BBCSSN                          WACSSN
+     I              BBCNA1                          WACNA1
+     I              BBCNA2                          WACNA2
+     I              BBCNA3                          WACNA3
+     I              BBCNA4                          WACNA4
+     I              BBCRTN                          WACRTN
+     I              BBPAIN                          WAPAIN
+     I              BBCRNM                          WACRNM
+     I              BBDRCS                          WADRCS
+     I              BBLCCD                          WALCCD
+     I              BBACOC                          WAACOC
+     I              BBCNCZ                          WACNCZ
+     I              BBCOLC                          WACOLC
+     I              BBSSDT                          WASSDT
+     I              BBDOIC                          WADOIC
+     I              BBPCNB                          WAPCNB
+     I              BBCASC                          WACASC
+     I              BBBRCD                          WABRCD
+     I              BBBNBI                          WABNBI
+     I              BBLINC                          WALINC
+     I              BBLICD                          WALICD
+     I              BBCTNB                          WACTNB
+     I              BBREID                          WAREID
+     I              BBBSIN                          WABSIN
+     I              BBCSTY                          WACSTY
+     I              BBTAIN                          WATAIN
+     I              BBCSID                          WACSID
+     I              BBSTAD                          WASTAD
+     I              BBTXA1                          WATXA1
+     I              BBTXA2                          WATXA2
+     I              BBTXA3                          WATXA3
+     I              BBTXA4                          WATXA4
+     I              BBTXA5                          WATXA5
+     I              BBCHID                          WACHID
+     I              BBCHSC                          WACHSC
+     I              BBCABA                          WACABA
+     I              BBBFIC                          WABFIC
+     I              BBBLCD                          WABLCD
+     I              BBFWCD                          WAFWCD
+     I              BBLCD                           WALCD
+     I              BBTYLC                          WATYLC
+     I              BBLALD                          WALALD
+     I              BBLDHD                          WALDHD
+     I              BBLRLD                          WALRLD
+     I              BBDTDL                          WADTDL
+     I              BBLETI                          WALETI
+     I              BBCMTI                          WACMTI
+     I              BBGSFM                          WAGSFM
+     I              BBSTFG                          WASTFG
+     I              BBRWCD                          WARWCD
+     I              BBNG01                          WANG01
+     I              BBNG02                          WANG02
+     I              BBNG03                          WANG03
+     I              BBNG04                          WANG04
+     I              BBNG05                          WANG05
+     I              BBNG06                          WANG06
+     I              BBNG07                          WANG07
+     I              BBNG08                          WANG08
+     I              BBNG09                          WANG09
+     I              BBNG10                          WANG10
+     I              BBNG11                          WANG11
+     I              BBNG12                          WANG12
+     I              BBNG13                          WANG13
+     I              BBNG14                          WANG14
+     I              BBNG15                          WANG15
+     I              BBDS01                          WADS01
+     I              BBDS02                          WADS02
+     I              BBDS03                          WADS03
+     I              BBDS04                          WADS04
+     I              BBDS05                          WADS05
+     I              BBDS06                          WADS06
+     I              BBDS07                          WADS07
+     I              BBDS08                          WADS08
+     I              BBDS09                          WADS09
+     I              BBDS10                          WADS10
+     I              BBDS11                          WADS11
+     I              BBDS12                          WADS12
+     I              BBDS13                          WADS13
+     I              BBDS14                          WADS14
+     I              BBDS15                          WADS15
+     I              BBDNW1                          WADNW1
+     I              BBDNW2                          WADNW2
+     I              BBDNW3                          WADNW3
+     I              BBDNW4                          WADNW4
+     I              BBDNW5                          WADNW5
+     I              BBDNW6                          WADNW6
+     I              BBDNW7                          WADNW7
+     I              BBDNW8                          WADNW8
+     I              BBDNW9                          WADNW9
+     I              BBCGRP                          WACGRP
+     I              BBCDEL                          WACDEL
+     I              BBABA2                          WAABA2
+     I              BBOGID                          WAOGID
+     I              BBSSDL                          WASSDL
+     I              BBORED                          WAORED
+     I              BBMCAC                          WAMCAC
+     I              BBCRPC                          WACRPC
+     I              BBPSWC                          WAPSWC
+     I              BBMGTP                          WAMGTP
+     I              BBNET                           WANET
+     I              BBNTGP                          WANTGP
+     I              BBNTCP                          WANTCP
+     I              BBNTND                          WANTND
+     I              BBNTMM                          WANTMM
+     I              BBTICS                          WATICS
+     I              BBSWFI                          WASWFI
+      *
+     I@RELCL1
+      * Midas SD Related customer number details retrieval
+      * Renamed input format fields
+     I              F4CUST                          WBCUST
+     I              F4CSSN                          WBCSSN
+     I              F4CRNM                          WBCRNM
+     I              F4CRID                          WBCRID
+     I              F4LCD                           WBLCD
+     I              F4TYLC                          WBTYLC
+      *
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I*Related Cust Numbers 1   Initialise Program I-Spec
+     I/COPY WNCPYSRC,SD4370DIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+      * Outward parameters
+     IPARC        DS                             26
+      * KEY : Midas SD Related cust number by cust id & cust no
+      * I : MAP Customer Identifier
+     I                                        1  20 PACRID
+      *
+      * Outward parameters
+     IPBRC        DS                             26
+      * KEY : Midas SD Related cust number by cust id & cust no
+      * I : MAP Customer Identifier
+     I                                        1  20 PBCRID
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I :  Display file mode
+     I                                        1   1 P1DFMD
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Cust no. does not exist'
+      * Customer  Screen Fld
+     I                                        1  10 ZA0001
+      * Message data for 'Related Customer Numb NF'
+      * Customer  Screen Fld
+     I                                        1  10 ZA0002
+      * Message data for 'Related Cust Number Enqry'
+      * Message data for 'Related Cust Number Maint'
+      * Message data for 'STD FTR:DSPFIL Enquiry/3'
+      * Message data for 'STD FTR:DSPFIL Maint/3'
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C           P1DFMD    PARM           WP0001  1        Display file mo
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested
+     C           W0RSF     DOWEQ'N'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload
+     C   05                CAS            FBRQRL
+      * Display next SFL page
+     C   27                CAS            BBLDSF
+      * Process screen input
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise and load subfile page
+      *================================================================
+      * Clear subfile
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * USER: Initialize subfile control
+     C                     MOVEL*BLANK    WUSCID           Saved Customer
+      * 00/Copy Member SD4370DISC - Related Cust Number Dtls  *
+     C*Related Cust Numbers 1   Initialise Subf Control
+     C/COPY WNCPYSRC,SD4370DISC
+      * Position DBF file
+     C           KPOS      KLIST
+     C                     KFLD           F4CRID           Customer Identi
+     C                     KFLD           F4CUST           Customer Number
+      * Setup key
+     C                     MOVEL#2CRID    F4CRID           Customer Identi
+     C                     MOVEL#2CUST    F4CUST           Customer Number
+     C           KPOS      SETLL@RELCL2
+     C                     READ @RELCL2                8782*82=EOF
+      * Save previous selector values
+     C           *LIKE     DEFN #2CUST    WZCUST
+     C                     MOVEL#2CUST    WZCUST           Customer Number
+     C           *LIKE     DEFN #2CRID    WZCRID
+     C                     MOVEL#2CRID    WZCRID           Customer Identi
+      * Load subfile page
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page
+      *================================================================
+      * Re-establish fields in read-ahead record
+     C   27                DO
+     C  N82                READP@RELCL2                  90*
+     C  N82                READ @RELCL2                  90*
+     C                     END
+      *
+      * Setof record error indicators
+     C                     MOVEL*ALL'0'   WKIND0  1
+     C                     MOVEAWKIND0    *IN,33
+      * Start at previous highest record in SFL
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read
+     C                     Z-ADD0         ##RRRD  50
+      * Set required pages based on *Set Cursor or *Subfile Pages
+     C           W0RR0     IFGT 0
+     C           W0RR0     DIV  ##SFPG    ##SPG   30
+     C                     MVR            ##SLIN  30
+     C           ##SLIN    IFGT 0
+     C                     ADD  1         ##SPG
+     C                     END
+     C           W0SPG     IFGT ##SPG
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+     C                     ELSE
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+      * Compute lines required based on pages
+     C           ##SPG     MULT ##SFPG    ##SFLN  90
+     C           ##SFLN    IFGT 999
+     C                     Z-ADD999       ##SFLN
+     C                     END
+      *................................................................
+      * Load next SFL page until SFL page full, or
+      * Scan limit reached
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFLN
+     C           ##RRRD    ANDLTW0SLM
+      * Check selection fields - if fail, read next record
+     C           #2CRID    IFEQ *BLANK                     Customer Identi
+     C           #2CUST    IFNE *BLANK                     Customer Number
+     C           F4CUST    CABNE#2CUST    BB020            Customer Number
+     C                     END
+     C                     END
+      * Load SFL fields
+     C                     EXSR MBFL#1
+      * Allow for possible *Set Cursor processing
+     C                     ADD  1         ##RR
+     C                     EXSR MC#1FN
+     C                     SUB  1         ##RR
+     C                     MOVEL'Y'       W0RSL   1
+      * Allow for possible *Set Cursor processing
+     C                     ADD  1         ##RR
+      * USER: Initialize subfile record from DBF record
+      * CASE: DB1.Customer Identifier EQ WRK.Saved Customer Identifier
+     C           F4CRID    IFEQ WUSCID                     *IF
+     C                     MOVEL'N'       W0RSL            *Record selecte
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'Y'       W0RSL            *Record selecte
+     C                     MOVELF4CRID    WUSCID           Saved Customer
+     C                     END                             *FI
+      * 00/Copy Member SD4370DISR - Related Cust Number Dtls  *
+     C*Related Cust Numbers 1   Initialise Subfile Rcd
+     C/COPY WNCPYSRC,SD4370DISR
+     C                     SUB  1         ##RR
+      * DBF record not selected
+     C           W0RSL     CABNE'Y'       BB020
+      * Output to subfile
+     C                     ADD  1         ##RR
+     C                     ADD  1         ##RROK     81    *
+      * If SFLRCD invalid, note that errors present
+     C   98N99             SETON                     99    *
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      * Increment scan check count
+     C                     ADD  1         ##RRRD
+     C                     READ @RELCL2                  82*82=EOF
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+     C           BB900     TAG
+      *................................................................
+      * If no DBF records found, display error message
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point
+     C           ##RR      IFGT ##RRMX
+      * Calculate top line
+     C           ##RROK    DIV  ##SFPG    ##SPG
+     C                     MVR            ##SLIN
+     C           ##SLIN    IFGT 0
+     C           ##RR      SUB  ##SLIN    ##SFRC
+     C                     ELSE
+     C           ##RR      SUB  ##SFPG    ##SFRC
+     C                     END
+     C                     ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      * If scan limit reached, display error message
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen
+      *================================================================
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Update screen time
+     C                     TIME           ##TME
+      * PUTOVR unless conditioned fields change
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+      * Maintain subfile position where possible
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8392*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      *
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * CALC: Subfile control function fields
+      * 00/Copy Member SD4370DSCF - Related Cust Number Dtls  *
+     C*Related Cust Numbers 1 Calculate Control Fields
+     C/COPY WNCPYSRC,SD4370DSCF
+     C*
+      * Change of position specified
+     C           WZCRID    CASNE#2CRID    FBRQRL
+     C                     END
+      * USER: Process subfile control (Pre-confirm)
+      * If Customer Number/Shortname has been input
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : CTL.Customer Identifier is Blank
+      *   |- c2    : CTL.Customer  Screen Fld is Not Blank
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           #2CRID    IFEQ *BLANK                     *IF
+     C           #CCUSN    IFNE *BLANK                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+      * Either Customer number or shortname has be input
+      * First check if Customer number exists on Client file
+     C                     MOVEL#CCUSN    #2CUST           Customer Number
+      * Check if Customer Number - Client Details  *
+     C                     EXSR SARVGN
+      * CASE: PGM.*Return code is *Record already exists
+     C           W0RTN     IFEQ 'Y2U0003'                  *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * If Customer number is not found
+      * Check if Customer shortname exists on client file
+     C                     MOVEL#CCUSN    WUCSSN           Customer Shortn
+      * check if cust shortname - Client Details  *
+     C                     EXSR SBRVGN
+     C                     END                             *FI
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#CCUSN    ZA0001           Customer  Scree
+      * Send message 'Cust no. does not exist'
+     C                     MOVEL'USR2970' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check if customer number exists as 'Related Customer' and
+      * retrieve Customer Id
+      * Check Rel Cust Numb - Related Cust Number Dtls  *
+     C                     EXSR SCRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#CCUSN    ZA0002           Customer  Scree
+      * Send message 'Related Customer Numb NF'
+     C                     MOVEL'USR3034' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Disp Customer Id Group - Related Cust Number Dtls  *
+     C                     CLEARPARC
+     C                     MOVELWUCRID    PACRID           Customer Identi
+      *
+     C                     CALL 'SD4371D'              90  Disp Customer I
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Related Cu
+     C                     PARM 'E'       WQ0001  1        Action Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD4371D' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     MOVEL*BLANK    #CCUSN           Customer  Scree
+     C                     MOVEL*BLANK    #2CUST           Customer Number
+     C                     MOVEL*BLANK    #2CRID           Customer Identi
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+      * Previous Return Code
+      * CASE:
+      *  - c1 OR c2
+      *   |- c1    : PGM.*Return code is *Previous Screen
+      *   |- c2    : WRK.Duplicate Return Code is *Previous Screen
+      *   '-
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C           WUDRTC    OREQ 'USR0790'                  *OR
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     END                             *FI
+      * Quit Return Code
+      * CASE:
+      *  - c1 OR c2
+      *   |- c1    : PGM.*Return code is *User QUIT requested
+      *   |- c2    : WRK.Duplicate Return Code is *User QUIT requested
+      *   '-
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C           WUDRTC    OREQ 'Y2U9999'                  *OR
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD4370DPSC - Related Cust Number Dtls  *
+     C*Related Cust Numbers 1   Process Subfile Control
+     C/COPY WNCPYSRC,SD4370DPSC
+      * Reload subfile requested
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records
+     C                     EXSR DBPRSF
+     C                     END
+      * USER: Final processing (Pre-confirm)
+      * 00/Copy Member SD4370DFPR - Related Cust Number Dtls  *
+     C*Related Cust Numbers 1   Final Processing
+     C/COPY WNCPYSRC,SD4370DFPR
+      * If error, quit processing
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: Process command keys
+      * CASE: PAR.Display file mode is Maintenance mode
+     C           P1DFMD    IFEQ 'M'                        *IF
+      * CASE: CTL.*CMD key is *Add
+     C           *IN09     IFEQ '1'                        *IF
+      * Related Cust Numb Key Scr - Related Cust Number Dtls  *
+     C                     CALL 'SD4371V'              90  Related Cust Nu
+     C                     PARM *BLANK    W0RTN   7
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD4371V' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD4370DPCK - Related Cust Number Dtls  *
+     C*Related Cust Numbers 1   Process Command Keys
+     C/COPY WNCPYSRC,SD4370DPCK
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile record
+      *================================================================
+     C                     READC#SFLRCD                  92*
+     C           *IN92     DOWEQ'0'
+      * Process subfile record
+     C                     EXSR DCPRSR
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record
+      *================================================================
+      * Setof error indicators and SFLNXTCHG
+     C                     MOVEAWKIND0    *IN,33
+     C                     SETOF                     98    *
+     C                     EXSR MC#1FN
+      * USER: Process subfile record (Pre-confirm)
+      * CASE: RCD.*SFLSEL is Blank
+     C           #1SEL     IFEQ *BLANK                     *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE:
+      *  - c1 OR c2 OR c3
+      *   |- c1    : RCD.*SFLSEL is *Enquire
+      *   |- c2    : RCD.*SFLSEL is *Amend
+      *   |- c3    : RCD.*SFLSEL is *Delete#1
+      *   '-
+     C           #1SEL     IFEQ 'E'                        *IF
+     C           #1SEL     OREQ 'A'                        *OR
+     C           #1SEL     OREQ 'D'                        *OR
+      * Enquiry
+      * CASE: RCD.*SFLSEL is *Enquire
+     C           #1SEL     IFEQ 'E'                        *IF
+      * Disp Customer Id Group - Related Cust Number Dtls  *
+     C                     CLEARPARC
+     C                     MOVEL#1CRID    PACRID           Customer Identi
+      *
+     C                     CALL 'SD4371D'              90  Disp Customer I
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Related Cu
+     C                     PARM 'E'       WQ0002  1        Action Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD4371D' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+      * Maintenance
+      * CASE: PAR.Display file mode is Maintenance mode
+     C           P1DFMD    IFEQ 'M'                        *IF
+      * Amend requested
+      * CASE: RCD.*SFLSEL is *Amend
+     C           #1SEL     IFEQ 'A'                        *IF
+      * Edit Customer Id - Related Cust Number Dtls  *
+     C                     CLEARPBRC
+     C                     MOVEL#1CRID    PBCRID           Customer Identi
+      *
+     C                     CALL 'SD4371M'              90  Edit Customer I
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PBRC             KEY: Related Cu
+     C                     PARM 'A'       WQ0003  1        Action Code
+     C           WUDRTC    PARM *BLANK    WQ0004  7        Duplicate Retur
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD4371M' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+      * Delete requested
+      * CASE: RCD.*SFLSEL is *Delete#1
+     C           #1SEL     IFEQ 'D'                        *IF
+      * Disp Customer Id Group - Related Cust Number Dtls  *
+     C                     CLEARPARC
+     C                     MOVEL#1CRID    PACRID           Customer Identi
+      *
+     C                     CALL 'SD4371D'              90  Disp Customer I
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Related Cu
+     C                     PARM 'D'       WQ0005  1        Action Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD4371D' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL'Y'       W0RSF            *Reload subfile
+     C                     END                             *FI
+     C                     END                             *FI
+      * Return Code is *Previous Screen
+      * CASE:
+      *  - c1 OR c2
+      *   |- c1    : PGM.*Return code is *Previous Screen
+      *   |- c2    : WRK.Duplicate Return Code is *Previous Screen
+      *   '-
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C           WUDRTC    OREQ 'USR0790'                  *OR
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     END                             *FI
+      * Return Code is *User Quit requested
+      * CASE:
+      *  - c1 OR c2
+      *   |- c1    : PGM.*Return code is *User QUIT requested
+      *   |- c2    : WRK.Duplicate Return Code is *User QUIT requested
+      *   '-
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C           WUDRTC    OREQ 'Y2U9999'                  *OR
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD4370DPSR - Related Cust Number Dtls  *
+     C*Related Cust Numbers 1   Process Subfile Record
+     C/COPY WNCPYSRC,SD4370DPSR
+     C           *IN98     IFEQ '1'
+      * SFLRCD invalid
+     C  N99                Z-ADD##RR      ##SFRC     99    *
+      * SFLNXTCHG
+     C                     SETON                     84
+     C                     ELSE
+      * SFLRCD valid
+      * SFLNXTCHG
+     C                     SETOF                     84
+     C                     MOVEL*BLANK    #1SEL
+     C                     END                             FI *IN98
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @RELCL2 fields to subfile
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     MOVELF4CUST    #1CUST           Customer Number
+     C                     MOVELF4CSSN    #1CSSN           Customer Shortn
+     C                     MOVELF4CRNM    #1CRNM           Customer Report
+     C                     Z-ADDF4LCD     #1LCD            Last Change Dat
+     C                     MOVELF4TYLC    #1TYLC           Type of Last Ch
+     C                     MOVELF4CRID    #1CRID           Customer Identi
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MC#1FN    BEGSR
+      *================================================================
+      * CALC: Subfile record function fields
+      *================================================================
+      * CALC: Subfile record function fields
+      * 00/Copy Member SD4370DRFF - Related Cust Number Dtls  *
+     C*Related Cust Numbers 1   Calculate Record Funcs
+     C/COPY WNCPYSRC,SD4370DRFF
+      *================================================================
+     CSR         MCEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control
+      *================================================================
+     C                     MOVEL*BLANK    #2CUST           Customer Number
+     C                     MOVEL*BLANK    #2CRID           Customer Identi
+     C                     MOVEL*BLANK    #CCUSN           Customer  Scree
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Check if Customer Number - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields
+     C           *LIKE     DEFN BBCUST    WQSA01           Customer Number
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           WQSA01           Customer Number
+      * Move fields to key list
+     C                     MOVEL#2CUST    WQSA01           Customer Number
+     C           KRSSA     SETLL@CUSTFT                    *
+     C           KRSSA     READE@CUSTFT                  90*
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+     C           KRSSA     READE@CUSTFT                  90*
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * check if cust shortname - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields
+     C           *LIKE     DEFN WACSSN    WQSB01           Customer Shortn
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           WQSB01           Customer Shortn
+      * Move fields to key list
+     C                     MOVELWUCSSN    WQSB01           Customer Shortn
+     C           KRSSB     SETLL@CUSTD5                    *
+     C           KRSSB     READE@CUSTD5                  90*
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELWACUST    #2CUST           Customer Number
+     C                     MOVELWATYLC    WUTYLC           Type of Last Ch
+     C           KRSSB     READE@CUSTD5                  90*
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Check Rel Cust Numb - Related Cust Number Dtls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           WBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVEL#2CUST    WBCUST           Customer Number
+     C           KRSSC     CHAIN@RELCL1              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR2940' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+     C                     MOVELWBCRID    WUCRID           Customer Identi
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         UASUBR    BEGSR
+      *================================================================
+      * Set up Display file Header Title
+      *================================================================
+      * CASE: PAR.Display file mode is Enquiry mode
+     C           P1DFMD    IFEQ 'E'                        *IF
+      * Setup message data for message
+      * Retrieve message Related Cust Number Enqry
+     C                     MOVELZADFMF    ZAMSGF
+     C                     CALL 'Y2RVMGC'              90  *
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C                     PARM 'USR3032' ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C           WUDFTL    PARM           W0MTX 132        Returned messag
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     ELSE
+      * CASE: PAR.Display file mode is Maintenance mode
+     C           P1DFMD    IFEQ 'M'                        *IF
+      * Setup message data for message
+      * Retrieve message Related Cust Number Maint
+     C                     MOVELZADFMF    ZAMSGF
+     C                     CALL 'Y2RVMGC'              90  *
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C                     PARM 'USR3033' ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C           WUDFTL    PARM           W0MTX 132        Returned messag
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     END                             *FI
+     C                     END                             *FI
+      * Move to Header Title - Standard Functions  *
+     C                     MOVELWUDFTL    ##URPT
+      *================================================================
+     CSR         UAEXIT    ENDSR
+      /EJECT
+     CSR         UBSUBR    BEGSR
+      *================================================================
+      * Set up Display file Footers
+      *================================================================
+      * CASE: PAR.Display file mode is Enquiry mode
+     C           P1DFMD    IFEQ 'E'                        *IF
+      * Setup message data for message
+      * Retrieve message STD FTR:DSPFIL Enquiry/3
+     C                     MOVELZADFMF    ZAMSGF
+     C                     CALL 'Y2RVMGC'              90  *
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C                     PARM 'USR3006' ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C           WUSFT1    PARM           W0MTX 132        Returned messag
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     ELSE
+      * CASE: PAR.Display file mode is Maintenance mode
+     C           P1DFMD    IFEQ 'M'                        *IF
+      * Setup message data for message
+      * Retrieve message STD FTR:DSPFIL Maint/3
+     C                     MOVELZADFMF    ZAMSGF
+     C                     CALL 'Y2RVMGC'              90  *
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C                     PARM 'USR3007' ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C           WUSFT1    PARM           W0MTX 132        Returned messag
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     END                             *FI
+     C                     END                             *FI
+      * Move to Single Footer - Standard Functions  *
+     C                     MOVELWUSFT1    ##CTX1                          S01229
+      *================================================================
+     CSR         UBEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+      * Send if first error message or not an error message
+     C           ZAMSTP    IFNE *BLANK
+     C           ZAFSMS    ORNE 'N'
+     C           ZAMSTP    IFEQ *BLANK
+      * Signal first error message sent
+     C                     MOVEL'N'       ZAFSMS
+     C                     END
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+     C                     END
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM 'SDS0DFR' W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      * 00/Copy Member SD4370DEPP - Related Cust Number Dtls  *
+     C*Related Cust Numbers 1   Exit Program Processing
+     C/COPY WNCPYSRC,SD4370DEPP
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field Saved Customer Identifier
+     C                     MOVEL*BLANK    WUSCID 20
+      * Define work field Customer Shortname
+     C                     MOVEL*BLANK    WUCSSN 10
+      * Define work field Type of Last Change
+     C                     MOVEL*BLANK    WUTYLC  1
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Customer Identifier
+     C                     MOVEL*BLANK    WUCRID 20
+      * Define work field Duplicate Return Code
+     C                     MOVEL*BLANK    WUDRTC  7
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Display File Title
+     C                     MOVEL*BLANK    WUDFTL 53
+      * Define work field STD FTR 1
+     C                     MOVEL*BLANK    WUSFT1 78
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Signal first error message outstanding
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD4370D#
+     C                     OPEN SDRELCL2
+     C                     OPEN SDCUSTL5
+     C                     OPEN SDCUSTL2
+     C                     OPEN SDRELCL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     Z-ADD13        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      * Maximum record number
+     C                     Z-ADD*ZERO     ##RRMX
+      * Scan limit
+     C                     Z-ADD500       W0SLM   50
+      * Subfile pages
+     C                     Z-ADD1         W0SPG   30
+      * Processed Subfile record
+     C                     Z-ADD0         W0RR0   40
+      *................................................................
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD4370D precompiler - Related Cust Number Dtls  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Copyright Statement 1996 - Standard Functions  *
+      * Set up Display file Header Title
+     C                     EXSR UASUBR                     Set up Display
+      * Set up Display file Footers
+     C                     EXSR UBSUBR                     Set up Display
+     C                     Z-ADD99999     W0SLM            *Scan limit
+      * 00/Copy Member SD4370DFPG - Related Cust Number Dtls  *
+      * 00/Copy Member SD4370DEPG - Related Cust Number Dtls  *
+      * 00/Copy Member SD4370DIPG - Related Cust Number Dtls  *
+      * 00/Copy Member SD4370DCPG - Related Cust Number Dtls  *
+     C*Related Customer Numbs 1 Initialise Program C-Spec
+     C/COPY WNCPYSRC,SD4370DCPG
+      * 00/Copy Member SD4370DOPG - Related Cust Number Dtls  *
+      * Initialise subfile control
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD4370DPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD4370DPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD4370DPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*Related Cust Numbers 1   Initialise Program O-Spec
+     O/COPY WNCPYSRC,SD4370DOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,993 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Basic Rate Tax I.C.D. Maintenance')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Standing Data Module
+     F*                                                                  *
+     F*     SD2463  -  BASIC RATE TAX (BRT) I.C.D. MAINTENANCE           *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01MAR99               *
+      *                 CTI002             Date 23SEP98               *
+     F*                NO. S01383             DATE 27APR92               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*     S01383  -  BASIC RATE TAX INCORPORATION                      *
+     F*                NEW PROGRAM                                       *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSDBRTDL1UF  E           K        DISK         KCOMIT       A
+      * Display File
+     FSD2463DFCF  E                    WORKSTN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N    O F   I N D I C A T O R S               *
+      *    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~               *
+      *         03         CMD/3 PRESSED                              *
+      *         10         CMD/10 PRESSED                             *
+      *         12         END OF FILE - SDBRTDPD                     *
+      *         21         ENABLE COMMAND 10                          *
+      *         30         ERROR FOUND                                *
+      *         31         ACTION CODE IN ERROR                       *
+      *         32         ACCOUNT CODE IN ERROR                      *
+      *         33         BRT RATE IN ERROR                          *
+      *         34         DATE EFFECTIVE FROM IN ERROR               *
+      *         35         INLAND REVENUE REFERENCE NO. IN ERROR      *
+      *         36         BANKS ON S17 NEXT YEAR IN ERROR            *
+      *         48         AMEND MODE FOR VALIDATION (VALID2)         *
+      *         50         INITIAL SCREEN DISPLAYED                   *
+      *         51         AMEND SCREEN DISPLAYED                     *
+      *         52         ENQUIRY SCREEN DISPLAYED                   *
+      *       60-67        IRRN IS IN CORRECT FORMAT                  *
+      *         80         READ OF SCREEN/WRITE TO SDBRTDPD FAILS     *
+      *         90-99      STANDARD SUBROUTINE INDICATORS             *
+      *         LR         END OF PROGRAM                             *
+      *                                                               *
+      *****************************************************************
+      *
+      /EJECT
+     E                    ERNO       38  4               ERROR CODES
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+     I*
+     I* DATA AREA FOR PROGRAM STATUS DATA AREA
+     I*
+     IPSDS       SDS
+     I                                      244 253 WID
+     I                                      254 263 USRID
+     I**
+     ISCRMSG      DS
+     I                                        1 152 ERNO
+     I                                        1  76 ERCD
+     I                                       77 152 ERMSG
+     I**
+     I** DATA SRUCTURE TO REFORMAT BRT RATE
+     I**
+     I            DS
+     I                                        1   7 BRTRX
+     I                                        1   70BRTRN
+     I                                        1   75BRTRD
+     I**
+     I** DATA SRUCTURE TO FORMAT NUMERIC FIELD AS CHAR. FIELD WITH
+     I** DEC. POINT (TO OUTPUT TO SCREEN)
+     I**
+     I            DS
+     I                                        1   70WNUM
+     I                                        1   20WDIG
+     I                                        3   70WDEC
+      *
+      *  DATA STRUCTURE TO UPDATE LAST TRANSACTION NO. DTAARA
+      *
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I**
+     I** DATA SRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     I**
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USIDX
+      **
+      ** DATA SRUCTURE TO VALIDATE INLAND REVENUE REFERENCE NUMBER
+      **
+     IIRRNDS      DS
+     I                                        1   1 IRRN1
+     I                                        2   2 IRRN2
+     I                                        3   3 IRRN3
+     I                                        4   4 IRRN4
+     I                                        5   5 IRRN5
+     I                                        6   6 IRRN6
+     I                                        7   7 IRRN7
+     I                                        8   8 IRRN8
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I**
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      ** Second DS for Access Programs, Long Data Structure                                   CGL029
+      *                                                                                       CGL029
+     ISDACOD    E DSSDACODPD
+     I**  EXTERNAL DS FOR ACCOUNT CODES
+     I**
+     ISDBANK    E DSSDBANKPD
+     I**  EXTERNAL DS FOR BANK DETAILS
+     I**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   MAIN CONTROL                                                *
+     C*                                                               *
+     C*   CALLS INIT   -  INITIAL PROCESSING                          *
+     C*         VALID1 -  INITIAL SCREEN VALIDATION                   *
+     C*                                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C**  Perform initial processing
+     C*
+     C                     EXSR INIT
+     C*
+     C**  Display initial screen
+     C*
+     C           *IN03     DOUEQ'1'
+     C*
+     C                     SETOF                     21
+     C                     SETON                     50
+     C                     EXFMTSD2463F1
+     C                     SETOF                     50
+     C*
+     C**  Exit program if CMD/3 pressed
+     C*
+     C           *IN03     IFEQ '1'
+     C                     GOTO ENDPGM
+     C                     END
+     C*
+     C**  Validate initial screen
+     C*
+     C                     EXSR VALID1
+     C*
+     C**  If initial screen valid, process as required
+     C*
+     C           *IN30     IFEQ '0'
+     C*
+     C           ACTC      CASEQ'I'       INSERT
+     C           ACTC      CASEQ'A'       AMEND
+     C           ACTC      CASEQ'E'       ENQUIR
+     C           ACTC      CASEQ'D'       DELETE
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  If action code is 'A', record has been updated by another W/S
+     C**  Set screen-error indicator on
+     C*
+     C           ACTC      IFEQ 'A'
+     C                     SETON                     30
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDPGM    TAG
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*          I N D E X   O F   S U B R O U T I N E S              *
+     C*          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~              *
+     C*          INIT   -  INITIAL PROCESSING                         *
+     C*          INSERT -  INSERT SCREEN PROCESS                      *
+     C*          AMEND  -  AMEND SCREEN PROCESS                       *
+     C*          ENQUIR -  ENQUIRY SCREEN PROCESS                     *
+     C*          DELETE -  DELETE SCREEN PROCESS                      *
+     C*          VALID1 -  INITIAL SCREEN VALIDATION                  *
+     C*          VALID2 -  DETAIL SCREEN VALIDATION                   *
+     C*                                                               *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   INIT - INITIAL PROCESSING                                   *
+     C*                                                               *
+     C*   CALLED BY  :  MAIN PROCESS                                  *
+     C*                                                               *
+     C*   CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C**  Prepare COMIT text
+     C*
+     C                     MOVEL'SD'      MDID
+     C                     MOVEL'SD2463'  PGMN
+     C                     MOVELWID       WSIDX
+     C                     MOVELUSRID     USIDX
+     C**
+     C**  ACCESS BANK DETAILS
+     C**
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           BJDFIN    COMP 'M'                      98* DATE FORMAT
+     C*
+     C*  Fetch and reformat Run date for calculating tax year
+     C*
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     YY      20
+     C                     MOVELZDATE     WRK4    40
+     C*
+     C           *IN98     IFEQ '0'
+     C                     MOVELWRK4      DD      20
+     C                     MOVE WRK4      MM      20
+     C                     ELSE
+     C                     MOVE WRK4      DD
+     C                     MOVELWRK4      MM
+     C                     END
+     C*
+     C*  Calculate Current & Next tax year from Run date
+     C*
+     C           MM        IFLE 03
+     C           MM        ANDGE01
+     C           MM        OREQ 04
+     C           DD        ANDLE05
+     C           YY        ADD  1         NXTY
+     C                     Z-ADDYY        THTY
+     C*
+     C                     ELSE
+     C           YY        ADD  2         NXTY
+     C           YY        ADD  1         THTY
+     C                     END
+     C*
+     C*  Set up key for chain to BRDTDL1
+     C*
+     C                     MOVE 'D'       KRECI   1
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   INSERT - INSERT SCREEN PROCESS                              *
+     C*                                                               *
+     C*   CALLED BY  :  MAIN PROCESS                                  *
+     C*                                                               *
+     C*   CALLS      :                                                *
+     C*   CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INSERT    BEGSR
+     C*
+     C* Blank out display fields
+     C*
+     C                     MOVE *BLANKS   ACODSC
+     C                     MOVE *BLANKS   IRRNSC
+     C                     MOVE *BLANKS   BRTRSC
+     C                     MOVE *BLANKS   DEFFSC
+     C                     MOVE *BLANKS   PBRTRS
+     C                     MOVE *BLANKS   BNXYSC
+     C*
+     C* Display insert screen
+     C*
+     C           *IN30     DOUEQ'0'
+     C*
+     C                     EXFMTSD2463F1
+     C*
+     C**  Exit program if CMD/3 pressed
+     C*
+     C           *IN03     IFEQ '1'
+     C                     GOTO ENDPR1
+     C                     END
+     C*
+     C**  Validate insert screen
+     C*
+     C                     EXSR VALID2
+     C*
+     C** If insert screen valid,  check that rec. doesn't already exist
+     C*
+     C           *IN30     IFEQ '0'
+     C*
+     C           KRECI     CHAINSDBRTDD0             12
+     C*
+     C** Record found - Error
+     C*
+     C           *IN12     IFEQ '0'
+     C                     ADD  1         Z       20
+     C                     MOVE ' 921'    ERNO,Z
+     C                     SETON                     50
+     C                     MOVE 'A'       ACTC
+     C*
+     C                     ELSE
+     C*
+      **  Obtain last transaction No. and prepare standard
+      **  information for CMTTXT Data Structure
+      *
+     C                     EXSR ZTNLU1
+      *
+     C                     TIME           MTIME   60
+     C                     MOVE ACTC      ACTNX
+     C*
+     C** Setup output fields for new SDBRTDPD rec.
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE ACODSC    ACOD
+     C                     MOVE IRRNSC    IRRN
+     C                     MOVE BRTRN     BRTR
+     C                     MOVE *BLANKS   PBRTR
+     C                     Z-ADDZDAYNO    DEFF
+     C                     Z-ADDBJRDNB    LCD
+     C                     Z-ADDMTIME     LCT
+     C                     MOVE 'I'       CHTP
+     C                     MOVE BNXYSC    BNXY
+     C*
+     C** Insert new SDBRTDPD record
+     C*
+     C                     WRITESDBRTDD0               80
+     C*
+     C** Write failed - Rec. has been inserted by another wrkstn.
+     C*
+     C           *IN80     IFEQ '1'
+     C                     ADD  1         Z       20
+     C                     MOVE ' 921'    ERNO,Z
+     C                     SETON                     50
+     C                     MOVE 'A'       ACTC
+     C*
+     C                     ELSE
+     C*
+     C** End of commitment cycle
+     C*
+     C           CMTTXT    COMIT
+     C                     MOVE ' '       ACTC
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDPR1    TAG
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*   AMEND - AMENDMENT SCREEN PROCESSING                         *
+     C*                                                               *
+     C*   CALLED BY  :  MAIN PROCESS                                  *
+     C*                                                               *
+     C*   CALLS      :                                                *
+     C*   CALLS      :                                                *
+     C*   CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AMEND     BEGSR
+     C*
+     C* Store last change date, time & type
+     C*
+     C                     Z-ADDLCD       WLCD    50
+     C                     Z-ADDLCT       WLCT    70
+     C                     MOVE CHTP      WCHTP   1
+     C*
+     C* Reformat SDBRTDPD fields for output to screen
+     C*
+     C                     EXSR FORMAT
+     C*
+     C* Display amend screen until error-free
+     C*
+     C           *IN30     DOUEQ'0'
+     C*
+     C                     SETON                     51
+     C                     EXFMTSD2463F1
+     C                     SETOF                     51
+     C*
+     C**  Exit program if CMD/3 pressed
+     C*
+     C           *IN03     IFEQ '1'
+     C                     GOTO ENDPR2
+     C                     END
+     C*
+     C**  Validate amend screen
+     C*
+     C                     MOVE '1'       *IN48
+     C                     EXSR VALID2
+     C*
+     C** If insert screen valid,  check that rec. doesn't already exist
+     C*
+     C           *IN30     IFEQ '0'
+     C*
+     C           KRECI     CHAINSDBRTDD0             12
+     C*
+     C** Check for update by another workstation
+     C*
+     C           LCD       IFNE WLCD
+     C           LCT       ORNE WLCT
+     C           CHTP      ORNE WCHTP
+     C                     MOVE ' 921'    ERNO,Z
+     C                     SETON                     50
+     C                     MOVE 'A'       ACTC
+     C*
+     C                     ELSE
+      *
+      **  Obtain last transaction No. and prepare standard
+      **  information for CMTTXT Data Structure
+      *
+     C                     EXSR ZTNLU1
+      *
+     C                     TIME           MTIME   60
+     C                     MOVE ACTC      ACTNX
+     C*
+     C** Setup output fields to update SDBRTDPD rec.
+     C*
+     C                     MOVE ACODSC    ACOD
+     C                     MOVE IRRNSC    IRRN
+     C                     Z-ADDZDAYNO    DEFF
+     C                     MOVE BNXYSC    BNXY
+     C*
+     C** If BRT rate changed, prev. BRT rate becomes old value
+     C** BRTR
+     C*
+     C           BRTRD     IFNE BRTR
+     C                     Z-ADDBRTR      PBRTR
+     C                     END
+     C*
+     C                     MOVE BRTRN     BRTR
+     C                     Z-ADDBJRDNB    LCD
+     C                     Z-ADDMTIME     LCT
+     C                     MOVE 'A'       CHTP
+     C*
+     C** Amend SDBRTDPD record
+     C*
+     C                     UPDATSDBRTDD0
+     C*
+     C** End of commitment cycle
+     C*
+     C           CMTTXT    COMIT
+     C                     MOVE ' '       ACTC
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDPR2    TAG
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*   ENQUIR - ENQUIRY SCREEN PROCESSING                          *
+     C*                                                               *
+     C*   CALLED BY  :  MAIN PROCESS                                  *
+     C*                                                               *
+     C*   CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ENQUIR    BEGSR
+     C*
+     C* Reformat SDBRTDPD fields for output to screen
+     C*
+     C                     EXSR FORMAT
+     C*
+     C                     SETON                     52
+     C                     EXFMTSD2463F1
+     C                     SETOF                     52
+     C*
+     C**  Exit program if CMD/3 pressed
+     C*
+     C           *IN03     IFEQ '1'
+     C                     GOTO ENDPR3
+     C                     END
+     C*
+     C                     MOVE ' '       ACTC
+     C*
+     C           ENDPR3    TAG
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*   DELETE - DELETE RECORD PROCESSING                           *
+     C*                                                               *
+     C*   CALLED BY  :  MAIN PROCESS                                  *
+     C*                                                               *
+     C*   CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DELETE    BEGSR
+     C*
+     C* Store last change date, time & type
+     C*
+     C                     Z-ADDLCD       WLCD
+     C                     Z-ADDLCT       WLCT
+     C                     MOVE CHTP      WCHTP
+     C*
+     C* Reformat SDBRTDPD fields for output to screen
+     C*
+     C                     EXSR FORMAT
+     C*
+     C* Display amend screen until error-free
+     C*
+     C           *IN30     DOUEQ'0'
+     C*
+     C* Set on 21 to enable CMD 10
+     C*
+     C                     SETON                     21
+     C                     SETON                     51
+     C                     EXFMTSD2463F1
+     C                     SETOF                     51
+     C*
+     C**  Exit program if CMD/3 pressed
+     C*
+     C           *IN03     IFEQ '1'
+     C                     GOTO ENDPR4
+     C                     END
+     C*
+     C**  Dummy read to enable subsequent update
+     C*
+     C           KRECI     CHAINSDBRTDD0             12
+     C*
+     C           LCT       IFNE WLCT
+     C                     MOVE ' 921'    ERNO,Z
+     C                     SETON                     50
+     C                     MOVE 'A'       ACTC
+     C                     END
+     C*
+     C**  If CMD 10 has been pressed
+     C*
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'D'       CHTP
+     C                     MOVE '*'       RECI
+     C*
+     C** Amend SDBRTDPD record
+     C*
+     C                     UPDATSDBRTDD0
+     C*
+     C** End of commitment cycle
+     C*
+     C           CMTTXT    COMIT
+     C                     MOVE ' '       ACTC
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDPR4    TAG
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*   VALID1 - VALIDATE INITIAL SCREEN                            *
+     C*                                                               *
+     C*   CALLED BY  :  MAIN PROCESS                                  *
+     C*                                                               *
+     C*   CALLS      :  NONE                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALID1    BEGSR
+     C*
+     C** Blank out error codes before revalidating screen
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE *BLANKS   ERMSG
+     C                     MOVEA*BLANKS   ERNO
+     C                     SETOF                     3031
+     C                     END
+     C*
+     C** Validate action code
+     C*
+     C* AMEND OR DELETE ONLY PERMITTED IF SYTEM SET UP FLAG OFF
+     C*
+     C           ACTC      IFEQ 'A'                        B1
+     C           ACTC      OREQ 'D'
+     C*
+     C           BJSUC     IFEQ 'Y'                        B2
+     C                     MOVE ' 904'    ERNO,1
+     C                     SETON                     3031
+     C                     GOTO ENDV1
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C** Check that code has been entered
+     C*
+     C           ACTC      IFEQ ' '
+     C                     MOVE ' 900'    ERNO,1
+     C                     SETON                     3031
+     C*
+     C                     ELSE
+     C*
+     C** Check for invalid entry
+     C*
+     C           ACTC      IFNE 'A'
+     C           ACTC      ANDNE'I'
+     C           ACTC      ANDNE'E'
+     C           ACTC      ANDNE'D'
+     C                     MOVE ' 901'    ERNO,1
+     C                     SETON                     3031
+     C*
+     C                     ELSE
+     C*
+     C           KRECI     CHAINSDBRTDD0             12
+     C*
+     C           *IN12     IFEQ '0'
+      *
+      **  Record found so release it
+      *
+     C                     EXCPTRELBRT
+     C*
+     C** If action code is 'I' but a record has been found - ERROR 902
+     C*
+     C           ACTC      IFEQ 'I'
+     C                     MOVE ' 902'    ERNO,1
+     C                     SETON                     3031
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** If action code is 'A' or 'E' & no rec. exists - ERROR 903
+     C*
+     C           ACTC      IFNE 'I'
+     C                     MOVE ' 903'    ERNO,1
+     C                     SETON                     3031
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDV1     TAG
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*   VALID2 - VALIDATE DETAIL SCREEN                             *
+     C*                                                               *
+     C*   CALLED BY  :  INSERT                                        *
+     C*                 AMEND                                         *
+     C*                                                               *
+     C*   CALLS      :  ZALIGN                                        *
+     C*                 ZDATE1                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALID2    BEGSR
+     C*
+     C** Blank out error codes before revalidating screen
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE *BLANKS   ERMSG
+     C                     MOVEA*BLANKS   ERNO
+     C*
+     C** Setof display file indicators
+     C*
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     36
+     C                     SETOF                     606162
+     C                     SETOF                     636465
+     C                     SETOF                     6667
+     C                     END
+     C*
+     C                     Z-ADD0         Z
+     C*
+     C** Validate account code
+     C*
+     C           ACODSC    IFEQ *BLANKS
+     C                     ADD  1         Z
+     C                     MOVE ' 910'    ERNO,Z
+     C                     SETON                     3032
+     C                     ELSE
+     C*
+     C** Check account code is on SDACODPD
+     C*
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C**********           PARM ACODSC    @AFNB   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM ACODSC    @AFNB  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     ADD  1         Z
+     C                     MOVE ' 911'    ERNO,Z
+     C                     SETON                     3032
+     C                     ELSE
+     C                     MOVE A5ACCD    ACODSC
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE BRTRSC    ZFIELD
+     C                     Z-ADD5         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZALIGN
+     C*
+     C           *IN99     IFEQ '1'
+     C                     ADD  1         Z
+     C                     MOVE ' 912'    ERNO,Z
+     C                     SETON                     3033
+     C                     SETOF                     99
+     C                     ELSE
+     C*
+     C                     MOVE ZFIELD    BRTRX   7
+     C                     END
+      *
+      ** Validate Inland Revenue Reference Number
+      *
+     C                     MOVE IRRNSC    IRRNDS
+      *
+     C           IRRNSC    IFEQ *BLANKS
+     C                     ADD  1         Z
+     C                     MOVE ' 916'    ERNO,Z
+     C                     SETON                     3035
+     C                     ELSE
+      *
+     C           IRRN1     IFGE 'A'
+     C           IRRN1     ANDLE'Z'
+     C                     MOVE '1'       *IN60
+     C                     END
+      *
+     C           IRRN2     IFGE '0'
+     C           IRRN2     ANDLE'9'
+     C                     MOVE '1'       *IN61
+     C                     END
+      *
+     C           IRRN3     IFGE '0'
+     C           IRRN3     ANDLE'9'
+     C                     MOVE '1'       *IN62
+     C                     END
+      *
+     C           IRRN4     IFGE '0'
+     C           IRRN4     ANDLE'9'
+     C                     MOVE '1'       *IN63
+     C                     END
+      *
+     C           IRRN5     IFGE '0'
+     C           IRRN5     ANDLE'9'
+     C                     MOVE '1'       *IN64
+     C                     END
+      *
+     C           IRRN6     IFEQ '/'
+     C                     MOVE '1'       *IN65
+     C                     END
+      *
+     C           IRRN7     IFGE '0'
+     C           IRRN7     ANDLE'9'
+     C                     MOVE '1'       *IN66
+     C                     END
+      *
+     C           IRRN8     IFGE '0'
+     C           IRRN8     ANDLE'9'
+     C                     MOVE '1'       *IN67
+     C                     END
+      *
+     C           *IN60     IFEQ '0'
+     C           *IN61     OREQ '0'
+     C           *IN62     OREQ '0'
+     C           *IN63     OREQ '0'
+     C           *IN64     OREQ '0'
+     C           *IN65     OREQ '0'
+     C           *IN66     OREQ '0'
+     C           *IN67     OREQ '0'
+     C                     ADD  1         Z
+     C                     MOVE ' 917'    ERNO,Z
+     C                     SETON                     3035
+     C                     END
+      *
+     C                     END
+      *
+     C*
+     C** Validate 'date effective from'
+     C*
+     C** Date must be entered
+     C*
+     C           DEFFSC    IFEQ *BLANKS
+     C                     ADD  1         Z
+     C                     MOVE ' 913'    ERNO,Z
+     C                     SETON                     3034
+     C*
+     C                     ELSE
+     C*
+     C** Date must be numeric
+     C*
+     C                     MOVE DEFFSC    WDAT7N  70
+     C                     MOVE WDAT7N    WDAT6A  6
+     C           WDAT6A    IFNE DEFFSC
+     C                     SETON                     99
+     C                     END
+     C*
+     C** Must be a valid date (ZDATE1 also gives day No. (ZDAYNO))
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVE DEFFSC    ZDATE
+     C                     EXSR ZDATE1
+     C                     END
+     C*
+     C** Invalid date format (99 ON)
+     C*
+     C           *IN99     IFEQ '1'
+     C                     ADD  1         Z
+     C                     MOVE ' 914'    ERNO,Z
+     C                     SETON                     3034
+     C*
+     C                     ELSE
+     C*
+     C*  If the Rate or the Date EFF. has changed then
+     C** Date EFF. must  not be less than run date
+     C*
+     C           BRTR      IFNE BRTRD
+     C           ZDAYNO    ORNE DEFF
+     C           ZDAYNO    IFLT BJRDNB
+     C                     ADD  1         Z
+     C                     MOVE ' 915'    ERNO,Z
+     C                     SETON                     3034
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           BNXYSC    IFEQ ' '
+     C                     MOVE 'N'       BNXYSC
+     C                     ELSE
+     C           BNXYSC    IFNE 'Y'
+     C           BNXYSC    ANDNE'N'
+     C                     ADD  1         Z
+     C                     MOVE ' 918'    ERNO,Z
+     C                     SETON                     3036
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C*   FORMAT - REFORMAT SDBRTDPD FIELDS FOR OUTPUT                *
+     C*            TO THE SCREEN                                      *
+     C*                                                               *
+     C*   CALLED BY  :  AMEND                                         *
+     C*                 ENQUIR                                        *
+     C*                                                               *
+     C*   CALLS      :  ZDATE2                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FORMAT    BEGSR
+     C*
+     C                     MOVE ACOD      ACODSC
+     C                     MOVE IRRN      IRRNSC
+     C                     MOVE BNXY      BNXYSC
+     C*
+     C** Format BRT rate (3,4 numeric field) for screen
+     C*
+     C                     MOVE BRTR      WNUM
+     C                     MOVELWDIG      WFLD1   3
+     C                     MOVE '.'       WFLD1
+     C                     MOVELWFLD1     BRTRSC
+     C                     MOVE WDEC      BRTRSC
+     C*
+     C** Format date effective from (DEFF) for screen
+     C*
+     C                     Z-ADDDEFF      ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ '0'
+     C                     MOVE ZDATE     DEFFSC
+     C                     END
+     C*
+     C** Format prev. BRT rate (PBRTR) for screen
+     C*
+     C                     MOVE PBRTR     WNUM
+     C                     MOVELWDIG      WFLD1   3
+     C                     MOVE '.'       WFLD1
+     C                     MOVELWFLD1     PBRTRS
+     C                     MOVE WDEC      PBRTRS
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C********************************************************************
+     C           ZTNLU1    BEGSR
+      *
+      * GO TO DATA AREA FOR NEXT AVAILABLE TRANSACTION NUMBER
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+      *****************************************************************
+     OSDBRTDD0E                RELBRT
+      ********************************************************************
+      /EJECT
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

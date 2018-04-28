@@ -1,0 +1,417 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Request for transfer/cust CR tfer prompt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0570 - Request for Transfer/Customer Credit Transfer Prompt*
+      *                                                               *
+      *  Function:  This program allows the user to print a Request   *
+      *  (I/C)      for Transfer or Customer Credit Transfer report.  *
+      *                                                               *
+      *  Called By: None                                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. 229420             Date 07Sep04               *
+      *  Prev Amend No. 226942             Date 21May04               *
+      *                 221652             Date 20Jan04               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT006   *CREATE   Date 15Sep99               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  229420 - Branch 'ALL' request doesn't work (recompiled       *
+      *           due to changes in Ft0570DF)                         *
+      *  226942 - Make RFT/CCT Authorised/Unauthorised reports        *
+      *           available in the system.                            *
+      *  221652 - Make this report available for request in the       *
+      *           system.                                             *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFT006 - Funds Transfer/Swift Messages MT101/MT102           *
+      *                                                               *
+      *****************************************************************
+      *                                                                                       226942
+      ** FUNCTION OF INDICATORS                                                               226942
+      *                                                                                       226942
+      *  26 - Menu is from RFT. Otherwise, menu is from CCT.                                  226942
+      *                                                                                       226942
+      *****************************************************************                       226942
+     FFT0570DFCF  E                    WORKSTN
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE1Z1
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ***  External data structures for Branch Details
+      *
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+      *
+     I@PARM       DS                            100                                           221652
+     I*******************************************************                                 221652
+     I*       Data structure for input/output parameter     *                                 221652
+     I*******************************************************                                 221652
+     I                                        5   6 PTYPE                                     221652
+     I**********                              7   9 PBRCA                              221652 226942
+     I                                       10  140PSTRT                                     221652
+     I                                       15  190PENDT                                     221652
+     I                                       20  22 PMENU                                     226942
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ***  Perform Processing.
+      *
+     C                     EXSR SRPROC
+      *
+     C                     SETON                     LR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initial Processing                                  *
+      *                                                               *
+      *  Called by   :  Main Processing                               *
+      *  Calls       :  None                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *                                                                                       221652
+      ***  Receive Parameter List.                                                            221652
+      *                                                                                       221652
+     C           *ENTRY    PLIST                                                              221652
+     C                     PARM           @PSEQ   5                                           221652
+     C                     PARM           @PLEV   1                                           221652
+     C                     PARM           @PENT   3                                           221652
+     C                     PARM           @PARM 100                                           221652
+     C                     PARM           @PACT   1                                           221652
+     C                     PARM           @PCMD   1                                           221652
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     MOVELUSER      SUSER
+     C                     MOVE AGMRDT    SRUNA
+     C                     MOVELWSID      SWSID
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Process Screen Details                              *
+      *                                                               *
+      *  Called by   :  Main Processing                               *
+      *  Calls       :  SRMCLR - Clears Message File                  *
+      *                 SRVALD - Validates all Screen Inputs          *
+      *                 SRCLRS - Clears all Screen Fields             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+     C                     EXSR SRCLRS
+     C                     MOVEL'FTUSRMSG'ZAMSGF
+     C                     MOVE 'N'       WVALID  1
+      *                                                                                       226942
+     C           PMENU     IFEQ 'RFT'                                                         226942
+     C                     MOVE '1'       *IN26                                               226942
+     C                     ELSE                                                               226942
+     C                     MOVE '0'       *IN26                                               226942
+     C                     ENDIF                                                              226942
+      *
+     C           *INKC     DOWEQ'0'
+     C           WVALID    ANDEQ'N'
+     C                     MOVE 'Y'       WVALID
+     C                     WRITEFT0570F0
+     C                     WRITEFT0570F1
+     C                     WRITEFT0570C0
+     C                     EXFMTFT0570F2
+     C                     EXSR SRMCLR
+      *
+     C           *INKC     IFEQ '0'
+     C                     EXSR SRVALD
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Calls FT0572 to print authorised request for transfer/customer
+      ** credit transfer list
+      *
+     C           WVALID    IFEQ 'Y'
+     C           *INKC     ANDNE'1'
+     C**********           CALL 'FT0572'                                                      221652
+     C**********           PARM STYPE     PTYPE   2                                           221652
+     C**********           PARM SBRCA     PBRCA   3                                           221652
+     C**********           PARM WSTRT     PSTRT   50                                          221652
+     C**********           PARM WENDT     PENDT   50                                          221652
+     C                     MOVELSTYPE     PTYPE                                               221652
+     C**********           MOVELSBRCA     PBRCA                                        221652 226942
+     C                     Z-ADDWSTRT     PSTRT                                               221652
+     C                     Z-ADDWENDT     PENDT                                               221652
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVALD - Validates all Screen Inputs
+      *                                                               *
+      *  Called by   :  SRPROC - Process Screen Details               *
+      *  Calls       :  ZASNMS - Send Message to Program Message Queue*
+      *                                                               *
+      *****************************************************************
+     C           SRVALD    BEGSR
+      *
+     C                     SETOF                     212223
+     C                     SETOF                     24
+      *
+      ** Validate Type (RI/RO/BI/BO/*Blanks)
+      *
+     C           *IN26     IFEQ '1'                                                           226942
+     C           STYPE     IFNE 'RI'
+     C           STYPE     ANDNE'RO'
+     C           STYPE     ANDNE*BLANKS                                                       226942
+     C                     MOVEL'1'       *IN21                                               226942
+     C                     MOVEL'RFV0039' ZAMSID                                              226942
+     C                     EXSR ZASNMS                                                        226942
+     C                     MOVE 'N'       WVALID                                              226942
+     C                     ENDIF                                                              226942
+     C                     ELSE                                                               226942
+     C********** STYPE     ANDNE'BI'                                                          226942
+     C           STYPE     IFNE 'BI'                                                          226942
+     C           STYPE     ANDNE'BO'
+     C           STYPE     ANDNE*BLANKS
+     C                     MOVEL'1'       *IN21
+     C                     MOVEL'RFV0040' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WVALID
+     C                     ENDIF
+     C                     ENDIF                                                              226942
+      **********                                                                              226942
+      ***Validate*Branch***********************************************                       226942
+      **********                                                                              226942
+     C********** SBRCA     IFNE *BLANKS                                                       226942
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C**********           CALL 'AOBRCHR1'                                             CGL029 226942
+     C**********           PARM *BLANKS   PRTCD   7                                           226942
+     C**********           PARM '*KEY   ' POPTN   7                                           226942
+     C**********           PARM SBRCA     PBRCH   3                                           226942
+     C********** SDBRCH    PARM SDBRCH    DSSDY                                               226942
+      **********                                                                              226942
+     C********** PRTCD     IFNE *BLANKS                                                       226942
+     C**********           MOVEL'1'       *IN22                                               226942
+     C**********           MOVEL'RFV0041' ZAMSID                                              226942
+     C**********           EXSR ZASNMS                                                        226942
+     C**********           MOVE 'N'       WVALID                                              226942
+     C**********           ELSE                                                               226942
+     C**********           MOVELA8BRCD    SBRCA                                               226942
+     C**********           ENDIF                                                              226942
+      **********                                                                              226942
+     C**********           ENDIF                                                              226942
+      *
+      ** Validate Start Date
+      *
+     C           SSTRT     IFNE *BLANKS
+     C                     MOVE SSTRT     ZDATE
+     C                     EXSR ZDATE1                                    125557
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'1'       *IN23
+     C                     MOVEL'RFV0042' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WVALID
+     C                     ELSE
+     C                     Z-ADDZDAYNO    WSTRT   50
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate End Date
+      *
+     C           SENDT     IFNE *BLANKS
+     C                     MOVE SENDT     ZDATE
+     C                     EXSR ZDATE1                                    125557
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'1'       *IN24
+     C                     MOVEL'RFV0043' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WVALID
+     C                     ELSE
+     C                     Z-ADDZDAYNO    WENDT   50
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Start Date must not be later than End Date
+      *
+     C           SENDT     IFNE *BLANKS
+     C           *IN24     ANDEQ'0'
+     C           SSTRT     ANDNE*BLANKS
+     C           *IN23     ANDEQ'0'
+     C           WSTRT     ANDGTWENDT
+     C                     SETON                     2324
+     C                     MOVEL'RFV0044' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WVALID
+     C                     ENDIF
+      *
+      ** End Date must not be later than todays date
+      *
+     C           SENDT     IFNE *BLANKS
+     C           *IN24     ANDEQ'0'
+     C           WENDT     ANDGTAGRDNB
+     C                     MOVEL'1'       *IN24
+     C                     MOVEL'RFV0046' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WVALID
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLRS - Clears All Screen Fields                            *
+      *                                                               *
+      *  Called by   :  SRPROC  - Process screen details              *
+      *  Calls       :  None                                          *
+      *                                                               *
+      *****************************************************************
+     C           SRCLRS    BEGSR
+      *
+     C                     MOVEL*BLANKS   STYPE
+     C**********           MOVEL*BLANKS   SBRCA                                               226942
+     C                     MOVEL*BLANKS   SSTRT
+     C                     MOVEL*BLANKS   SENDT
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMCLR - Clear Message Subfile                               *
+      *                                                               *
+      *  Called by   :  SRPROC  - Process screen details              *
+      *  Calls       :  Y2CLMSC - Clear Program Message Queue         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMCLR    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM PGM       ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Send Message to Program Message Queue               *
+      *                                                               *
+      *  Called by   :  SRVALD  - Validates Screen Inputs             *
+      *  Calls       :  Y2SNMGC - Send a Message                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVELPGM       ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

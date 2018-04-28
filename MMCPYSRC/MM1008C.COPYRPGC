@@ -1,0 +1,518 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  MM1008C - C-specs for MM1008 subroutine                      *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 242286             Date 27Sep06               *
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. 191870             Date 28Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 140931             Date 17Aug98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  242286 - Enhance calculation of interest for calc basis 6.   *
+      *  191870 - Calculation basis 6 processing.                     *
+      *  140931 - Purch/sale price not correct if multi-period deal.  *
+      *                                                               *
+      *****************************************************************
+      *   MM1008 - NEGOTIABLE ASSETS PRICE CALCS - BACK OFFICE        *
+      *                                                               *
+      *  CALLED BY    - #ZI                                           *
+      *                                                               *
+      *  CALLS        -                                               *
+      *                                                               *
+      *  MM1004       - CALCULATE NEXT INTEREST DATE                  *
+      *  MM1030       - CALCULATE INTEREST                            *   E17051
+      *  ZINTDY       - CALCULATE INTEREST DAYS                       *   056095
+      *  MM1011       - FIND NO. OF DAYS IN A YEAR                    *
+      *  ZDAT10       - CONVERT DATE TO MIDAS DAY NUMBER              *   056095
+      *                                                               *
+      *  FIELDS INPUT -                                               *
+      *                                                               *
+      *  @@MDAT  8,0  - MATURITY DATE                                 *
+      *  @@VDAT  8,0  - VALUE DATE                                    *
+      *  @@IDAT  8,0  - NEXT INTEREST REPAYMENT DATE                  *
+      *  @@SDAT  8,0  - START DATE                                    *
+      *  @@DRAT 11,7  - DISCOUNT/YIELD RATE                           *
+      *  @@FACR 11,7  - FACE/INTEREST RATE                            *
+      *  @@FVAL 15,0  - FACE VALUE                                    *
+      *  ZZCALC  1    - DEFAULT INTEREST CALCULATION METHOD           *   056095
+      *  @@TYPE  2    - DEAL TYPE - BILL OR CD                        *
+      *  @@FREQ  1    - INTEREST PAYMENT FREQUENCY                    *
+      *  @@MDAY  2,0  - INTEREST PAYMENT DATE IN MONTH                *
+      *  @@CCY   3    - CURRENCY                                      *
+      *                                                               *
+      *  FIELDS OUTPUT                                                *
+      *                                                               *
+      *  @@PRIC 15,0  - PRICE                                         *
+      *                                                               *
+      *  WORK FIELDS                                                  *
+      *                                                               *
+      *  @@PRIN 15,4  - PRICE WORK FIELD                              *
+      *  @@RPDS 20,4  - DATA STRUCTURE HOLDING REPAY DATE + FUNDS DUE *
+      *  @@FDUE 15,4  - FUNDS DUE (INTEREST)                          *
+      *  ZZDTIN  8,0  - INPUT FOR S/R ZDAT10                          *   056095
+      *  ZZMDNO  5,0  - MIDAS DAY NO. OUTPUT FROM S/R ZDAT10          *   056095
+      *  @@MTNO  5,0  - MATURITY DATE IN DAY NO FORMAT                *
+      *  @@VDNO  5,0  - VALUE DATE IN DAY NO FORMAT                   *
+      *  @@SDNO  5,0  - START DATE IN DAY NO FORMAT                   *
+      *  @@LDNO  5,0  - LIFE OF CD IN DAY NO FORMAT                   *
+      *  ZZBEG   5,0  - INPUT TO S/R MM1004                           *   056095
+      *  ZZEND   5,0  - INPUT TO S/R MM1004                           *   056095
+      *  @@NDAT  5,0  - NEXT INTEREST DATE - OUTPUT FROM MM1004       *
+      *  @@DTM   5,0  - DAYS TO MATURITY                              *
+      *  @@DAYO  3,0  - NO OF DAYS IN A YEAR - OUTPUT FROM MM1011     *
+      *  @@DAY1  5,0  - NO OF DAYS IN A YEAR * 100                    *
+      *  @@DISC 15,4  - DISCOUNTED AMOUNT                             *
+      *  @@OCUR  3,0  - OCUR COUNT WORK FIELD                         *
+      *  @@RATE 11,7  - INPUT TO MM1007                               *
+      *  @@AMT  15,0  - INPUT TO MM1007                               *
+      *  @@INTR 15,0  - INTEREST OUTPUT BY MM1007                     *
+      *  @@DAYN  5,0  - INPUT TO ZDATE9                               *   056095
+      *  @@DAYS  5,0  - NO OF DAYS IN AN INTEREST PERIOD              *
+      *  ZZINDY  5,0  - NO OF DAYS IN AN INTEREST PERIOD              *   056095
+      *  @@STRT  8,0  - INPUT TO MM1004                               *
+      *  @@VDT   8,0  - OUTPUT FROM ZDATE9                            *   056095
+      *  @@W121 15,5  - WORK FIELD                                    *
+      *  @@W122 15,5  - WORK FIELD                                    *
+      *  @@W123 15,5  - WORK FIELD                                    *
+      *  @@W124 15,6  - WORK FIELD                                    *
+      *  @@WYLD 15,5  - YIELD WORK FIELD                              *
+      *                                                               *
+      *****************************************************************
+     C     MM1008        BEGSR
+     C*
+     C**  CLEAR PRICE
+     C                   Z-ADD     *ZERO         @@PRIC
+     C*
+     C**  CONVERT MATURITY DATE TO MIDAS DAY NUMBER
+     C*
+     C                   Z-ADD     @@MDAT        ZZDTIN
+     C                   CALLB     'ZDATE10'
+     C                   PARM                    ZZDTIN
+     C                   PARM                    ZZMDNO
+     C                   Z-ADD     ZZMDNO        @@MTNO            5 0
+     C*
+     C**  CONVERT VALUE DATE TO MIDAS DAY NUMBER
+     C                   MOVE      @@VDAT        ZZDTIN
+     C                   CALLB     'ZDATE10'
+     C                   PARM                    ZZDTIN
+     C                   PARM                    ZZMDNO
+     C                   Z-ADD     ZZMDNO        @@VDNO            5 0
+     C*
+     C**  FIND DAYS TO MATURITY
+     C                   Z-ADD     @@VDNO        ZZBEG
+     C                   Z-ADD     @@MTNO        ZZEND
+ 
+     C                   CALLB     'ZINTDY'
+     C                   PARM                    RetCodeOut
+      ** Number of interest days (5,0P, returned to caller)
+     C                   PARM                    ZZINDY
+      ** Beginning date (5,0P, from caller)
+     C                   PARM                    ZZBEG
+      ** Ending date (5,0P, from caller)
+     C                   PARM                    ZZEND
+      ** Calculation method (1A, from caller)
+     C                   PARM                    ZZCALC
+     C**********         PARM                    INT6DY           15 7                 191870 242286
+     C                   PARM                    INT6DY           15 9                        242286
+ 
+     C     ZZCALC        IFEQ      '6'                                                        191870
+     C**********         Z-ADD     INT6DY        @@DTM6           15 7                 191870 242286
+     C                   Z-ADD     INT6DY        @@DTM6           15 9                        242286
+     C                   ELSE                                                                 191870
+     C                   Z-ADD     ZZINDY        @@DTM             5 0
+     C                   ENDIF                                                                191870
+     C*
+     C**  FIND DAYS IN A YEAR
+     C                   CALLB     'MM1011'
+     C                   PARM                    RetCodeOut
+      ** Number of days in year for calculation method (3,0P, returned
+      ** to caller)
+     C                   PARM                    @@DAYO
+      ** Default interest calculation method (1A, from caller)
+     C                   PARM                    ZZCALC
+     C*
+     C**  MULTIPLY DAYS IN A YEAR BY 100
+     C     @@DAYO        MULT      100           @@DAY1            5 0
+     C/EJECT
+     C*****************  BILL CALCULATIONS  ***************************
+     C*
+     C**  IF TYPE IS TA TB DA PERFORM BILL PROCESSING
+     C     @@TYPE        IFEQ      'TB'
+     C     @@TYPE        OREQ      'TA'
+     C***        @@TYPE    OREQ 'BA'                       *1
+     C     @@TYPE        OREQ      'DA'
+     C*
+     C**  CALCULATE PRICE  **  PRICE = FACE VALUE - DISCOUNTED AMOUNT
+     C*
+     C**  CALCULATE DISCOUNTED AMOUNT
+     C                   Z-ADD     @@VDNO        ZZBEG
+     C                   Z-ADD     @@MTNO        ZZEND
+     C                   Z-ADD     @@FVAL        @@AMT
+     C                   Z-ADD     @@DRAT        @@RATE
+ 
+     C                   CALLB     'MM1030'
+      *         Input field ZZBEG - Start date of period
+     C                   PARM                    ZZBEG
+      *         Input field ZZEND - End date of period
+     C                   PARM                    ZZEND
+      *         Input field ZZCALC - Interest Calculation Method
+     C                   PARM                    ZZCALC
+      *         Input field @@AMT - Principal amount
+     C                   PARM                    @@AMT
+      *         Input field @@RATE - Interest Rate
+     C                   PARM                    @@RATE
+      *         Input field @@RDFC - Round Down Facility Indicator
+     C                   PARM                    @@RDFC
+      *         Output field @@INTR - Calculated Interest
+     C                   PARM                    @@INTR
+ 
+     C**  FIND PRICE
+     C     @@FVAL        SUB       @@INTR        @@PRIC           15 0
+     C*
+     C                   GOTO      M10089
+     C*
+     C                   END
+     C*
+     C/EJECT
+     C*
+     C**  **************  SHORT TERM CD CALCS  ************************
+     C*
+     C**  IF NEXT INTEREST REPAYMENT DATE IS GREATER OR EQUAL MATURITY
+     C**  DATE PERFORM SHORT TERM CD CALCS
+     C     @@IDAT        IFGE      @@MDAT
+     C     @@IDAT        OREQ      *ZERO
+     C*
+     C**  CALCULATE PRICE
+     C*
+     C**  CONVERT START DATE TO MIDAS DAY NUMBER
+     C                   Z-ADD     @@SDAT        ZZDTIN
+     C                   CALLB     'ZDATE10'
+     C                   PARM                    ZZDTIN
+     C                   PARM                    ZZMDNO
+     C                   Z-ADD     ZZMDNO        @@SDNO            5 0
+     C*
+     C**  FIND LIFE OF CD IN DAYS
+     C                   Z-ADD     @@SDNO        ZZBEG
+     C                   Z-ADD     @@MTNO        ZZEND
+ 
+     C                   CALLB     'ZINTDY'
+     C                   PARM                    RetCodeOut
+      ** Number of interest days (5,0P, returned to caller)
+     C                   PARM                    ZZINDY
+      ** Beginning date (5,0P, from caller)
+     C                   PARM                    ZZBEG
+      ** Ending date (5,0P, from caller)
+     C                   PARM                    ZZEND
+      ** Calculation method (1A, from caller)
+     C                   PARM                    ZZCALC
+     C                   PARM                    INT6DY                                       191870
+ 
+     C     ZZCALC        IFEQ      '6'                                                        191870
+     C**********         Z-ADD     INT6DY        @@LDNO6          15 7                 191870 242286
+     C                   Z-ADD     INT6DY        @@LDNO6          15 9                        242286
+     C                   ELSE                                                                 191870
+     C                   Z-ADD     ZZINDY        @@LDNO            5 0
+     C                   ENDIF                                                                191870
+     C*
+     C**  MULTIPLY LIFE OF CD IN DAYS BY FACE RATE & ADD DAYS IN A YEAR
+     C**  AND MULTIPLY BY FACE VALUE
+      *                                                                                       191870
+     C     ZZCALC        IFEQ      '6'                                                        191870
+     C     @@LDNO6       MULT      @@FACR        @@W121                                       191870
+     C                   ELSE                                                                 191870
+     C     @@LDNO        MULT      @@FACR        @@W121           15 5
+     C                   END                                                                  191870
+     C                   ADD       @@DAY1        @@W121
+     C     @@FVAL        MULT      @@W121        @@PRIC
+     C*
+     C**  MULTIPLY YIELD RATE BY DAYS TO MATURITY & ADD DAYS IN A YEAR
+      *                                                                                       191870
+     C     ZZCALC        IFEQ      '6'                                                        191870
+     C     @@DRAT        MULT      @@DTM6        @@W123                                       191870
+     C                   ELSE                                                                 191870
+     C     @@DRAT        MULT      @@DTM         @@W123
+     C                   END                                                                  191870
+     C                   ADD       @@DAY1        @@W123           15 5
+     C*
+     C**  DIVIDE PRICE BY @@W123 TO FIND FINAL PRICE
+     C                   DIV(H)    @@W123        @@PRIC
+     C*
+     C                   GOTO      M10089
+     C*
+     C                   END
+     C*
+     C/EJECT
+     C**************  MEDIUM TERM PRICE CALCS  ************************
+     C*
+     C                   Z-ADD     *ZERO         @@DAYS
+     C                   Z-ADD     @@FACR        @@RATE           11 7
+     C                   Z-ADD     @@FVAL        @@AMT            15 0
+     C*
+     C**  CONVERT NEXT INTEREST REPAYMENT DATE TO 5,0 FORMAT
+     C                   Z-ADD     @@IDAT        ZZDTIN
+     C                   CALLB     'ZDATE10'
+     C                   PARM                    ZZDTIN
+     C                   PARM                    ZZMDNO
+     C                   Z-ADD     ZZMDNO        ZZEND             5 0
+     C*
+     C**  CONVERT START/LAST INTEREST DATE TO 5,0 FORMAT
+     C                   Z-ADD     @@SDAT        ZZDTIN
+     C                   CALLB     'ZDATE10'
+     C                   PARM                    ZZDTIN
+     C                   PARM                    ZZMDNO
+     C                   Z-ADD     ZZMDNO        ZZBEG
+     C*
+     C**  CALCULATE INTEREST
+     C                   CALLB     'MM1024'
+     C                   PARM                    RetCodeIn
+      ** Number of interest days (5,0P, returned to caller)
+     C                   PARM                    ZZINDY            5 0
+      ** Interest to 2 extra d.p.s                                              140931
+     C                   PARM                    @@W154           15 4          140931
+      ** Beginning date (5,0P, from caller)
+     C                   PARM                    ZZBEG             5 0
+      ** Ending date (5,0P, from caller)
+     C                   PARM                    ZZEND             5 0
+      ** Calculation method (1A, from caller)
+     C                   PARM                    ZZCALC            1
+      ** Intereset rate
+     C                   PARM                    @@RATE           11 7
+      ** Amount
+     C                   PARM                    @@AMT
+     C*
+     C**  SET DATA STRUCTURE TO FIRST OCCUR
+     C                   Z-ADD     1             @@OCUR            3 0
+     C*
+     C     @@OCUR        OCCUR     @@RPDS
+     C*
+     C**  SET INTEREST AND NUMBER OF INTEREST DAYS
+     C                   Z-ADD     @@W154        @@FDUE
+     C                   Z-ADD     @@VDNO        ZZBEG
+ 
+     C                   CALLB     'ZINTDY'
+     C                   PARM                    RetCodeOut
+      ** Number of interest days (5,0P, returned to caller)
+     C                   PARM                    ZZINDY
+      ** Beginning date (5,0P, from caller)
+     C                   PARM                    ZZBEG
+      ** Ending date (5,0P, from caller)
+     C                   PARM                    ZZEND
+      ** Calculation method (1A, from caller)
+     C                   PARM                    ZZCALC
+     C                   PARM                    INT6DY                                       191870
+ 
+     C     ZZCALC        IFEQ      '6'                                                        191870
+     C**********         Z-ADD     INT6DY        @@DAYS6          15 7                 191870 242286
+     C                   Z-ADD     INT6DY        @@DAYS6          15 9                        242286
+     C                   ELSE                                                                 191870
+     C                   Z-ADD     ZZINDY        @@DAYS
+     C                   ENDIF                                                                191870
+     C*
+     C**  FIND NEXT INTEREST DATE
+     C                   Z-ADD     @@IDAT        @@STRT
+ 
+     C                   CALLB     'MM1004'
+      ** Incoming return code (10A, returned to caller)
+     C                   PARM                    RetCodeOut
+      ** Next payment date (8,0P, returned to caller)
+     C                   PARM                    @@NDAT
+      ** Start date (8,0P, from caller)
+     C                   PARM                    @@STRT
+      ** Payment frequency (1A, from caller)
+     C                   PARM                    @@FREQ
+      ** Currency (3A, from caller)
+     C                   PARM                    @@CCY
+      ** Interest payment day in the month (2,0P from caller)
+     C                   PARM                    @@MDAY
+      ** Maturity date (8,0P, from caller)
+     C                   PARM                    @@MDAT
+      ** Nostro location (2,0P, from caller)
+     C                   PARM                    @@RSTM
+      ** Receipt - our nostro (2A, from caller)
+     C                   PARM                    @@RONS
+ 
+     C**  DO WHILE NEXT INTEREST DATE IS LESS THAN MATURITY DATE
+     C     ZZEND         DOWNE     @@MTNO
+     C                   ADD       1             @@OCUR
+     C     @@OCUR        OCCUR     @@RPDS
+     C                   Z-ADD     @@NDAT        ZZDTIN
+     C                   CALLB     'ZDATE10'
+     C                   PARM                    ZZDTIN
+     C                   PARM                    ZZMDNO
+     C                   Z-ADD     ZZEND         ZZBEG             5 0
+     C                   Z-ADD     ZZMDNO        ZZEND             5 0
+      *
+      **  FIND NUMBER OF INTEREST DAYS AND INTEREST
+                                                                                140931
+     C                   CALLB     'ZINTDY'                                     140931
+     C                   PARM                    RetCodeOut                     140931
+      ** Number of interest days (5,0P, returned to caller)                     140931
+     C                   PARM                    ZZINDY                         140931
+      ** Beginning date (5,0P, from caller)                                     140931
+     C                   PARM                    ZZBEG                          140931
+      ** Ending date (5,0P, from caller)                                        140931
+     C                   PARM                    ZZEND                          140931
+      ** Calculation method (1A, from caller)                                   140931
+     C                   PARM                    ZZCALC                         140931
+     C                   PARM                    INT6DY                                       191870
+ 
+     C                   CALLB     'MM1030'
+      *         Input field ZZBEG - Start date of period
+     C                   PARM                    ZZBEG
+      *         Input field ZZEND - End date of period
+     C                   PARM                    ZZEND
+      *         Input field ZZCALC - Interest Calculation Method
+     C                   PARM                    ZZCALC
+      *         Input field @@AMT - Principal amount
+     C                   PARM                    @@AMT
+      *         Input field @@RATE - Interest Rate
+     C                   PARM                    @@RATE
+      *         Input field @@RDFC - Round Down Facility Indicator
+     C                   PARM                    @@RDFC
+      *         Output field @@INTR - Calculated Interest
+     C                   PARM                    @@INTR
+ 
+     C     ZZCALC        IFEQ      '6'                                                        191870
+     C**********         Z-ADD     INT6DY        @@DAYS6          15 7                 191870 242286
+     C                   Z-ADD     INT6DY        @@DAYS6          15 9                        242286
+     C                   ELSE                                                                 191870
+     C                   Z-ADD     ZZINDY        @@DAYS
+     C                   ENDIF                                                                191870
+     C**********           Z-ADD@@INTR    @@FDUE           *1
+      *  E20866 - OUTPUT FIELD IN MM1030 IS @@INTR
+     C                   Z-ADD     @@INTR        @@FDUE
+      *
+      **  FIND NEXT INTEREST DATE
+     C                   Z-ADD     ZZEND         @@DAYN
+ 
+     C                   CALLB     'ZDATE9'
+     C                   PARM                    @@DAYN
+     C                   PARM                    @@VDT
+     C                   PARM                    @@RTN
+ 
+     C                   Z-ADD     @@VDT         @@STRT
+ 
+     C                   CALLB     'MM1004'
+      ** Incoming return code (10A, returned to caller)
+     C                   PARM                    RetCodeOut
+      ** Next payment date (8,0P, returned to caller)
+     C                   PARM                    @@NDAT
+      ** Start date (8,0P, from caller)
+     C                   PARM                    @@STRT
+      ** Payment frequency (1A, from caller)
+     C                   PARM                    @@FREQ
+      ** Currency (3A, from caller)
+     C                   PARM                    @@CCY
+      ** Interest payment day in the month (2,0P from caller)
+     C                   PARM                    @@MDAY
+      ** Maturity date (8,0P, from caller)
+     C                   PARM                    @@MDAT
+      ** Nostro location (2,0P, from caller)
+     C                   PARM                    @@RSTM
+      ** Receipt - our nostro (2A, from caller)
+     C                   PARM                    @@RONS
+      *
+      **  IF MATURITY DATE IS PASSED SET END DATE TO MATURITY DATE
+      **  AND CALCULATE NO OF INTEREST DAYS & INTEREST
+     C     ZZEND         IFGT      @@MTNO
+     C                   Z-ADD     @@MTNO        ZZEND
+                                                                                140931
+     C                   CALLB     'ZINTDY'                                     140931
+     C                   PARM                    RetCodeOut                     140931
+      ** Number of interest days (5,0P, returned to caller)                     140931
+     C                   PARM                    ZZINDY                         140931
+      ** Beginning date (5,0P, from caller)                                     140931
+     C                   PARM                    ZZBEG                          140931
+      ** Ending date (5,0P, from caller)                                        140931
+     C                   PARM                    ZZEND                          140931
+      ** Calculation method (1A, from caller)                                   140931
+     C                   PARM                    ZZCALC                         140931
+     C                   PARM                    INT6DY                                       191870
+ 
+     C                   CALLB     'MM1030'
+      *         Input field ZZBEG - Start date of period
+     C                   PARM                    ZZBEG
+      *         Input field ZZEND - End date of period
+     C                   PARM                    ZZEND
+      *         Input field ZZCALC - Interest Calculation Method
+     C                   PARM                    ZZCALC
+      *         Input field @@AMT - Principal amount
+     C                   PARM                    @@AMT
+      *         Input field @@RATE - Interest Rate
+     C                   PARM                    @@RATE
+      *         Input field @@RDFC - Round Down Facility Indicator
+     C                   PARM                    @@RDFC
+      *         Output field @@INTR - Calculated Interest
+     C                   PARM                    @@INTR
+ 
+     C     ZZCALC        IFEQ      '6'                                                        191870
+     C**********         Z-ADD     INT6DY        @@DAYS6          15 7                 191870 242286
+     C                   Z-ADD     INT6DY        @@DAYS6          15 9                        242286
+     C                   ELSE                                                                 191870
+     C                   Z-ADD     ZZINDY        @@DAYS
+     C                   ENDIF                                                                191870
+     C**********           Z-ADD@@INTR    @@FDUE           **2
+      * E20866 - OUTPUT FIELD IN MM1030 IS @@INTR
+     C                   Z-ADD     @@INTR        @@FDUE
+     C                   END
+      *
+     C                   END
+      *
+      **  SET PRINCIPAL TO FACE VALUE
+     C                   Z-ADD     @@FVAL        @@PRIN           15 4
+      *
+      **  DISCOUNT BACK TO FIRST INTEREST DATE
+     C     @@OCUR        DOWGT     *ZERO
+     C     @@OCUR        OCCUR     @@RPDS
+      *
+      **  ADD INTEREST TO FACE VALUE
+     C                   ADD       @@FDUE        @@PRIN
+      *
+      **  MULTIPLY YIELD RATE BY INTEREST DAYS
+      *                                                                                       191870
+     C     ZZCALC        IFEQ      '6'                                                        191870
+     C     @@DRAT        MULT      @@DAYS6       @@W159                                       191870
+     C                   ELSE                                                                 191870
+     C     @@DRAT        MULT      @@DAYS        @@W159           15 9
+     C                   END                                                                  191870
+     C                   DIV(H)    @@DAY1        @@W159
+     C                   ADD       1             @@W159
+      *
+      **  DIVIDE PRINCIPAL BY WORK FIELD
+     C                   DIV(H)    @@W159        @@PRIN
+     C                   SUB       1             @@OCUR
+     C                   END
+      *
+      **  SET PRICE = PRINCIPAL
+     C                   Z-ADD     @@PRIN        @@PRIC
+      *
+     C                   GOTO      M10089
+      *
+      **  UNEXECUTED CODE TO DEFINE FIELDS
+     C                   Z-ADD     @@MDAT        @@MDAT            8 0
+     C                   Z-ADD     @@VDAT        @@VDAT            8 0
+     C                   Z-ADD     @@IDAT        @@IDAT            8 0
+     C                   Z-ADD     @@SDAT        @@SDAT            8 0
+     C                   Z-ADD     @@DRAT        @@DRAT           11 7
+     C                   Z-ADD     @@FACR        @@FACR           11 7
+     C                   Z-ADD     @@FVAL        @@FVAL           15 0
+     C                   MOVEL     ZZCALC        ZZCALC            1
+     C                   MOVEL     @@TYPE        @@TYPE            2
+     C                   MOVEL     @@FREQ        @@FREQ            1
+     C                   Z-ADD     @@MDAY        @@MDAY            2 0
+     C                   MOVEL     @@CCY         @@CCY             3
+      *
+     C     M10089        ENDSR                                                  ***M10089***
+      *
+      *****************************************************************
+      * End of /COPY MM1008C                                          *
+      *****************************************************************

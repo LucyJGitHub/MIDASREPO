@@ -1,0 +1,173 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                     MD022112
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  CB000130 - Reset Retail Account Movements Enquiry Flag       *
+      *                                                               *
+      *  Function:  This program will reset the flags of COB          *
+      *             components defined in CBRAMEPD.                   *
+      *                                                               *
+      *  Called By: SCC07   - Midas SC Re-open input cycle            *
+      *             SCC0700 - Reopen input cycle from phase B         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. MD022112*REDUNDANT Date 05Sep13               *
+      *  Prev Amend No. BUG27914*CREATE    Date 21Jul10               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD022112 - SCC1711 performance improvement                   *
+      *  BUG27914 - RAME Design Changes                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * *PSSR - Error processing                                      *
+      * *INZSR - Initialise                                           *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).  Similarly        *
+      *    D-spec initialisation only happens the first time.  Use    *
+      *    RESET for subsequent passes.                               *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+     FCBRAMEPD  UF   E             DISK    INFSR(*PSSR)
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+      *
+     D/COPY ZACPYSRC,PSDS
+      *
+      ** Program Status Data Structure
+      *
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+      *
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+      *
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+     D @RUN            S              1
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+      *
+     C     1             SETLL     CBRAMED0
+     C                   READ      CBRAMED0
+      *
+      ** Reset flag to 'Y'
+      *
+     C                   DOW       NOT %EOF
+     C                   EVAL      REFLAG = 'Y'
+     C                   UPDATE    CBRAMED0
+      *
+     C                   READ      CBRAMED0
+     C                   ENDDO
+      *
+      ** Update downloaded data
+      *
+     C                   CALL      'GO000130'
+      *
+      ** End program
+      *
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *INZSR        BEGSR
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+      *
+     C                   CALL      'DBERRCTL'
+      *
+     C                   ENDIF
+      *
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *
+     C                   ENDSR
+      *

@@ -1,0 +1,382 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Load Spread Journal Postings')                *
+     H/TITLE Create Journal Postings From Spread Jnl File
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     F*  Midas  GENERAL LEDGER MODULE
+     F*                                                               *
+     F*   GL0181U - LOAD SPREAD POSTING DETAILS                       *
+     F*                                                               *
+     F*  Function: This program provides user defined processing for  *
+     F*            Spread Journal Synon programs. Once the Jrnal Hdr  *
+     F*            file has been updated (GLJENHPD), this program is  *
+     F*            called to write Spread Postings to the Journal     *
+     F*            Entry Posting file (GLJENPPD).  Field values vary  *
+     F*            depending on methods used for Spread Journals:     *
+     F*            a) Spread Profile Code or b) Spread Total & No.    *
+     F*                                                  of Items.    *
+     F*                                                               *
+     F*  Called by: GL0163R - Edit Spread Journal Header              *
+     F*                                                               *
+     F*  Calls: None                                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  Last Amend No. AR1093096          Date 30Sep13               *
+      *  Prev Amend No. CAP207             Date 10Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP032             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 136704             Date 11May99               *
+      *                 111990             Date 11Aug97               *
+     F*                                    Date                       *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  AR1093096 - ABC - Reservations not removed for JRNE          *
+      *              (Child: AR1093097) (Recompile)                   *
+      *  CAP207 - Account Balance Check extended to other APIs        *
+      *           (Recompile)                                         *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  CAP032 - Conversion of Journal Batch Entry inputs into       *
+      *           modular structure to use as APIs. Recompiled        *
+      *           due to changes in file.                             *
+     F*   136704 - VALUE DATE WAS SETTED AS ZERO.                     *
+     F*   111990 - Array index size not big enough, change variables  *
+     F*            X and Y from 1,0 to 2,0                            *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FGLJENHL1IF  E           K        DISK
+      * RTV: GL Journal Entry Header File  Retrieval index
+      *
+     FGLSPDTL1IF  E           K        DISK
+      * RTV: GL Spread Profile Detail File  Retrieval index
+      *
+     FGLJENPL0O   E           K        DISK                      A
+      * UPD: GL Batch Posting          Update index
+     F/COPY WNCPYSRC,GL0181UF01
+      *
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  86  -  End of File General Ledger Batch Header               *
+      *  88  -  End of File Spread Profile Detail file                *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80               Copyright     array
+     E                    PCCD      100  4
+     E                    AMOT      100  8 0
+      /SPACE 3
+     IA@CPY       DS
+      *
+      **  Copyright array
+      *
+     I                                        1  80 CPY@
+     ISPDT        DS
+      *
+      **  Key fields for LF/GLSPDTL1
+      *
+     I                                        1   4 KSPRF
+     I                                        5   8 KPCCD
+      *
+      **  RUNDAT
+      *
+     IRUNDAT    E DS
+      *
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P@BHNO  3        Batch No
+     C                     PARM           P@NRTV 30        Narrative
+     C                     PARM           P@VLDT  50       Value Date
+     C                     PARM           P@SPCU  1        Spd Pfl Code used
+      *
+      **  Key List for GLPERDL3
+      *
+     C           SPDKY     KLIST
+     C                     KFLD           KSPRF
+     C                     KFLD           KPCCD
+      *
+      **  Locate Header Details using Batch Number
+      *
+     C           P@BHNO    SETLL@BRREAH
+     C                     READ @BRREAH                  86
+      *
+      **  Initialise Fields on Posting Record
+      *
+     C                     EXSR INITRC
+      *
+     C           *IN86     IFEQ '0'
+      *
+      **  Once Jnl Header Record found Write 'FROM' Posting to GL Batch
+      **  Posting File with Batch Number and Batch Item No. = 1 as key.
+      *
+     C                     MOVE BRBTNB    BTBTNB
+     C                     Z-ADD1         BTBINB
+     C                     MOVE BRDCIN    BTDCIN
+     C                     Z-ADDBRAMTF    BTPTAM
+     C                     MOVE BRIBCF    BTIBCA
+     C                     MOVE BRCUSF    BTCUST
+     C                     MOVE BRCYCF    BTCYCD
+     C                     MOVE BRACCF    BTACCD
+     C                     MOVE BRACSF    BTACSN
+     C                     MOVE BRPRCF    BTPRCN
+     C                     MOVE BRBCDA    BTBCBH
+     C                     Z-ADDBRSPTT    BTSPFC
+     C                     Z-ADDP@VLDT    BTVLDT
+     C                     EXSR RUNDTE
+     C                     EXSR CHKNAR
+     C*                                                                   136704
+     C           BTVLDT    IFEQ *ZERO                                     136704
+     C                     MOVELAGRDNB    BTVLDT                          136704
+     C                     END                                            136704
+     C*                                                                   136704
+      *
+      **  Write posting record to Postings file
+      *
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREAK
+     C/COPY WNCPYSRC,GL0181UC01
+      *
+      **  Initialise Fields on Posting Record
+      *
+     C                     EXSR INITRC
+      *
+      **  Prepare 'TO' Postings details
+      *
+     C           BRDCIN    IFEQ 'C'
+     C                     MOVE 'D'       BTDCIN
+     C                     ELSE
+     C                     MOVE 'C'       BTDCIN
+     C                     END
+     C                     MOVE BRBTNB    BTBTNB
+     C                     MOVE BRIBCT    BTIBCA
+     C                     MOVE BRCNAT    BTCUST
+     C                     MOVE BRCYCT    BTCYCD
+     C                     MOVE BRACCT    BTACCD
+     C                     MOVE BRASNT    BTACSN
+     C                     MOVE BRBCDA    BTBCBH
+     C                     Z-ADDP@VLDT    BTVLDT
+     C                     EXSR RUNDTE
+     C                     EXSR CHKNAR
+     C*                                                                   136704
+     C           BTVLDT    IFEQ *ZERO                                     136704
+     C                     MOVELAGRDNB    BTVLDT                          136704
+     C                     END                                            136704
+     C*                                                                   136704
+     C*
+     C**  Set Batch Item no. for 1st 'TO' posting & count for DOU loop
+     C*
+     C                     Z-ADD1         BTBINB
+     C                     Z-ADD0         COUNT   20
+      *
+      **  If Spread Profile method used, read Spread Profile Details
+      **  for Spread Factor & Profit Centre
+      **  Calculate Posting amount = From Amt x Spread Factor
+      **                                        -------------
+      **                                        Spread Total
+      *
+     C           P@SPCU    IFEQ 'Y'
+     C                     EXSR LDARR
+     C*********************Z-ADD1         X       10                      111990
+     C*********************Z-ADD1         Y       10                      111990
+     C                     Z-ADD1         X       20                      111990
+     C                     Z-ADD1         Y       20                      111990
+      *
+     C           COUNT     DOUEQBRNIST
+     C                     MOVEAPCCD,X    BTPRCN
+     C                     Z-ADDAMOT,Y    BTSPFC
+     C           AMOT,Y    DIV  BRSPTT    SPRAMT  99
+     C           SPRAMT    MULT BRAMTF    BTPTAM    H
+     C                     ADD  BTPTAM    WRKTOT 130
+     C                     ADD  1         X
+     C                     ADD  1         Y
+     C                     ADD  1         COUNT
+     C                     ADD  1         BTBINB
+      *
+      **  If last posting record,
+      **  Calc difference = FROM Posting amt - Total TO Posting amts
+      **  Add difference to last posting amt
+      *
+     C           COUNT     ADD  1         WRKCNT  20
+     C           COUNT     IFEQ BRNIST
+     C           BRAMTF    SUB  WRKTOT    WRKREM 130
+     C           WRKREM    ADD  BTPTAM    BTPTAM
+     C                     END
+      *
+      **  Write posting record to Postings file
+      *
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREAK
+     C/COPY WNCPYSRC,GL0181UC02
+     C                     END
+      *
+     C                     ELSE
+      *
+      **  Spread Total + No. of Items method used
+      *
+     C           COUNT     DOUEQBRNIST
+     C                     ADD  1         COUNT
+     C                     ADD  1         BTBINB
+     C                     MOVEASTAMP,1   BTTMST           Default Timestamp                  CPK015
+     C                     WRITE@BTREAK
+     C/COPY WNCPYSRC,GL0181UC03
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INITRC - SR TO INITIALISE GLJENPPD FIELDS TO ZERO/BLANK      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INITRC    BEGSR
+      *
+      **  Initialise Fields used on GLJENPPD record format to blanks/0
+      *
+     C                     MOVE *BLANKS   BTBTNB
+     C                     Z-ADD0         BTBINB
+     C                     MOVE *BLANKS   BTIBCA
+     C                     MOVE *BLANKS   BTCUST
+     C                     MOVE *BLANKS   BTCYCD
+     C                     MOVE *BLANKS   BTACCD
+     C                     MOVE *BLANKS   BTACSN
+     C                     MOVE *BLANKS   BTNNBI
+     C                     Z-ADD0         BTRACN
+     C                     MOVE *BLANKS   BTRINO
+     C                     MOVE *BLANKS   BTRINE
+     C                     MOVE *BLANKS   BTTRTY
+     C                     Z-ADD0         BTPTAM
+     C                     MOVE *BLANKS   BTDCIN
+     C                     Z-ADD0         BTPTDT
+     C                     Z-ADD0         BTVLDT
+     C                     MOVE *BLANKS   BTNVCD
+     C                     MOVE *BLANKS   BTNRDC
+     C                     MOVE *BLANKS   BTACTY
+     C                     MOVE *BLANKS   BTACNB
+     C                     MOVE *BLANKS   BTCQNB
+     C                     MOVE *BLANKS   BTCOIN
+     C                     MOVE *BLANKS   BTSWCR
+     C                     MOVE *BLANKS   BTPRCN
+     C                     MOVE *BLANKS   BTBCBH
+     C                     MOVE *BLANKS   BTRADP
+     C                     MOVE *BLANKS   BTSHPI
+     C                     Z-ADD0         BTRRNM
+     C                     MOVE *BLANKS   BTRNBE
+     C                     MOVE *BLANKS   BTRARC
+     C                     MOVE *BLANKS   BTTSTY
+     C                     MOVE *BLANKS   BTBKCD
+     C                     Z-ADD0         BTSPFC
+     C                     MOVE *BLANKS   BTRVDI
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RUNDTE - SR TO GET RUNDATE FOR POSTING DATE                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RUNDTE    BEGSR
+      *
+      ** In the Dataarea RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVELAGRDNB    BTPTDT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CHKNAR - SR TO CHECK NARRATIVE FOR NARRATIVE CODE            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHKNAR    BEGSR
+      *
+     C**  Check Narrative for Narrative code
+     C*
+     C                     MOVELP@NRTV    URNARR 28
+      *
+     C           P@NRTV    IFNE *BLANK
+     C           URNARR    IFEQ *BLANK
+     C                     MOVELP@NRTV    BTNVCD
+     C/COPY WNCPYSRC,GL0181UC04
+     C                     ELSE
+     C                     MOVELP@NRTV    BTNRDC
+     C/COPY WNCPYSRC,GL0181UC05
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  LDARR - SR TO LOAD ARRAYS WITH DATA FROM SPREAD PROFILE      *
+      *           DETAIL FILE                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LDARR     BEGSR
+      *
+     C                     Z-ADD1         X
+     C                     Z-ADD1         Y
+     C                     MOVE BRSPRF    KSPRF
+     C                     MOVE *BLANKS   KPCCD
+     C           SPDKY     SETLL@D9REJN
+     C                     READ @D9REJN                  88
+     C           D9SPRF    DOWEQBRSPRF
+     C           *IN88     ANDEQ'0'
+     C                     MOVE D9PCCD    PCCD,X
+     C                     Z-ADDD9AMOT    AMOT,Y
+     C                     ADD  1         X
+     C                     ADD  1         Y
+     C                     READ @D9REJN                  88
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C**********************************************************************
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

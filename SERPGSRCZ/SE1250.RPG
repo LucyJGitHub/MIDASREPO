@@ -1,0 +1,566 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Euclid Backlog Prompt')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1250 - EUCLID BACKLOG PROMPT                               *
+     F*                                                               *
+     F*  Function: To find from the user the sequence of reports      *
+     F*   (I/C)    required for reporting the EUCLID backlog file.    *
+     F*            The user may also request that some or all details *
+     F*            are listed.                                        *
+     F*                                                               *
+     F*  Called by: SEC1203 - Euclid Backlog Reports CL Program       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CAAA03             Date 06May04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 052254             Date 10Jan94               *
+      *                 S01117             Date 02Nov90               *
+     F*                 S01199             DATE 02/08/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CAAA03 - Webfacing Changes (recompile)                       *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01117 - Release 10 Multibranching                           *
+     F*  S01199 -  HELP SYSTEM                                     *   S01199
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE1250DFCF  E                    WORKSTN
+     FEBKL1   UF  E                    DISK         KINFDS INFDS
+     F                                              KINFSR INFSR
+     F            EBKLGDBF                          KIGNORE
+     F            EBKLGTBF                          KIGNORE
+     F*TABSE***IF* E           K        DISK                              S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F**ICD*1**** TABTB10F                          KIGNORE               S01117
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETJF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F*********** TABLETKF                          KIGNORE               S01117
+     F*********** TABLETNF                          KIGNORE               S01117
+     F*********** TABLETPF                          KIGNORE               S01117
+     F*********** TABLET3F                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - CMD/1 PRESSED                                         *
+     F*   20  - INVALID SEQUENCE SELECTED                             *
+     F****40  - HELP KEY PRESSED                                      *   S01199
+     F*   50  - AT LEAST ONE SEQUENCE SELECTED                        *
+     F* 60-65 - INVALID STATUS SELECTION                              *
+     F*   66  - INVALID SECURITY REFERENCE                            *
+     F*   67  - INVALID SECURITY NAME                                 *
+     F*   68  - INVALID COUNTERPARTY NUMBER                           *
+     F*   69  - INVALID COUNTERPARTY NAME                             *
+     F*   70  - IF ON SHOW ERROR CODES                                *
+     F*   71  - ALL DETECTED                                          *
+     F*                                                               *
+     F*   U1  - SECURITY REFERENCE  SEQUENCE SELECTED                 *
+     F*   U2  - SECURITY NAME       SEQUENCE SELECTED                 *
+     F*   U3  - COUNTERPARTY NUMBER SEQUENCE SELECTED                 *
+     F*   U4  - COUNTERPARTY NAME   SEQUENCE SELECTED                 *
+     F* U7+U8 - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  VALID  - VALIDATES SCREEN INPUT                              *
+     F*  BKHEAD - READS HEADER FROM EUCLID BACKLOG FILE               *
+     F*  FIRST  - ACCESSES ICD INFO AND READS HEADER BACKLOG FILE     *
+     F*  LAST   - UPDATES HEADER FROM EUCLID BACKLOG FILE             *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    SSQ     8   8  3               SELT. SEQUENCES
+     E                    SIN         6  3               INPUT SEQUENCES
+     E                    ERR         7  4               ERROR CODES
+     E/COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+     I*
+     I**  DATA STRUCTURES TO MANIPULATE INPUT ARRAYS
+     I*
+     I            DS
+     I                                        1  18 SINP
+     I                                        1  18 SIN
+     I            DS
+     I                                        1  76 ERRS
+     I                                        1  28 ERR
+     I            DS
+     I                                        1  18 SSCR
+     I                                        1   3 SSEQ1
+     I                                        4   6 SSEQ2
+     I                                        7   9 SSEQ3
+     I                                       10  12 SSEQ4
+     I                                       13  15 SSEQ5
+     I                                       16  18 SSEQ6
+     I           SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*
+     I**  LOCAL DATA AREA
+     I*
+     I*LDA********UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IRUNDT       DS                                                      S01117
+      **  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C**  CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE1250  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C**  OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C           *INU7     CABEQ'1'       ENDLP
+     C*
+     C**  OUTPUT SCREEN TO WORKSTATION
+     C**   - VALIDATE INPUT RECEIVED
+     C**   - END PROGRAM IF DATABASE ERRORS OR F3 PRESSED OR VALID
+     C**     SCREEN RETURNED
+     C*
+     C           *IN01     DOUEQ'1'
+     C           *INU7     OREQ '1'
+     C*
+     C                     EXFMTSE1250D1
+     C*
+     C*****HELP*PRESSED*
+     C********** *IN40     DOWEQ'1'                                       S01199
+     C**********           READ SE1250D1                 40               S01199
+     C********** *IN40     IFEQ '1'                                       S01199
+     C**********           MOVEAERR       HERCD 160                       S01199
+     C**********           MOVEL'SE1250'  HBPGM   6                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C**********           END                                            S01199
+     C**********           END                                            S01199
+     C** - F3 PRESSED
+     C*
+     C           *IN01     IFEQ '1'
+     C                     MOVE '0'       *INU1
+     C                     MOVE '0'       *INU2
+     C                     MOVE '0'       *INU3
+     C                     MOVE '0'       *INU4
+     C                     ELSE
+     C*
+     C** - ENTER PRESSED
+     C*
+     C                     EXSR VALID
+     C*
+     C** - INPUT DETAILS VALID
+     C*
+     C           ES        IFEQ 0
+     C                     EXSR LAST
+     C                     GOTO ENDLP
+     C                     ELSE
+     C                     MOVE '1'       *IN70
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDLP     TAG
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C*
+     C                     SETON                     LR
+     C*
+      /EJECT
+     C**********************************************************************
+     C*
+     C*  VALID  - SUBROUTINE TO VALIDATE SCREEN INPUT
+     C*
+     C**********************************************************************
+     C*
+     C           VALID     BEGSR                           ** VALID **
+     C*
+     C**  RESET ALL INDICATORS AND WORKFIELDS
+     C*
+     C                     Z-ADD0         ES      20
+     C                     MOVEA*BLANKS   SIN
+     C                     MOVE *BLANKS   ERRS
+     C                     MOVEA'00000000'*IN,60
+     C                     MOVEA'0000'    *IN,68
+     C                     MOVEA'0'       *IN,50
+     C*
+     C**  VALIDATE SELECTED SEQUENCES
+     C*
+     C**  MOVE INPUT SEQUENCES TO ARRAY
+     C*
+     C                     MOVE SSCR      SINP
+     C*
+     C                     Z-ADD1         A       20
+     C                     Z-ADD59        Z       20
+     C*
+     C** - CHECK FOR NO INPUT
+     C*
+     C           SINP      IFEQ *BLANKS
+     C                     ADD  1         ES
+     C                     MOVE '423'     ERR,ES
+     C                     SETON                     60
+     C                     ELSE
+     C*
+     C** - CHECK FOR VALID SEQUENCE
+     C*
+     C           1         DO   6         A
+     C*
+     C                     ADD  1         Z
+     C                     Z-ADD1         X       20
+     C           SIN,A     LOKUPSSQ,X                    20
+      *
+      **  If it is not a valid sequence, error it.
+      *
+     C           *IN20     IFEQ '0'
+     C                     MOVE '1'       *IN,Z
+     C                     ADD  1         ES
+     C                     MOVE '420'     ERR,ES
+     C                     ELSE
+     C*
+     C**  SHOW ALL DETECTED
+     C*
+     C           X         IFEQ 7
+     C                     SETON                     71
+     C                     Z-ADDZ         SV      20
+     C                     END
+     C*
+     C*
+     C**   - CHECK PRECEEDING ENTRIES FOR DUPLICATES
+     C**     (EXCEPT IF ENTRY IS BLANKS)
+     C*
+     C           X         IFLT 8
+     C           X         IFNE 7
+     C                     MOVE '1'       *IN50
+     C                     END
+     C           A         IFGT 1
+     C           A         SUB  1         Y       20
+     C                     DO   Y         Y1      20
+     C           SIN,A     IFEQ SIN,Y1
+     C                     MOVE '1'       *IN,Z
+     C                     ADD  1         ES
+     C                     MOVE '421'     ERR,ES
+     C                     Z-ADD7         Y1
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  SHOW ERROR IF ALL & ANOTHER CODE ENTERED
+     C*
+     C           *IN71     IFEQ '1'
+     C           *IN50     ANDEQ'1'
+     C                     MOVE '1'       *IN,SV
+     C                     ADD  1         ES
+     C                     MOVE '422'     ERR,ES
+     C                     END
+     C*
+     C*
+     C**  CHECK SECURITY REFERENCE
+     C*
+     C           SSREF     IFNE 'Y'
+     C           SSREF     ANDNE' '
+     C                     ADD  1         ES
+     C                     MOVE '424'     ERR,ES
+     C                     MOVE '1'       *IN66
+     C                     END
+     C*
+     C**  CHECK ONLY 1 OPTION ENTERED
+     C*
+     C                     MOVE '0'       *IN30
+     C*
+     C           SSREF     IFNE *BLANKS
+     C           SSNAM     IFNE *BLANKS
+     C           SCPTY     ORNE *BLANKS
+     C           SCNAM     ORNE *BLANKS
+     C                     MOVE '1'       *IN30
+     C                     END
+     C                     END
+     C*
+     C*
+     C           SSNAM     IFNE *BLANKS
+     C           SSREF     IFNE *BLANKS
+     C           SCPTY     ORNE *BLANKS
+     C           SCNAM     ORNE *BLANKS
+     C                     MOVE '1'       *IN30
+     C                     END
+     C                     END
+     C*
+     C*
+     C           SCPTY     IFNE *BLANKS
+     C           SSNAM     IFNE *BLANKS
+     C           SSREF     ORNE *BLANKS
+     C           SCNAM     ORNE *BLANKS
+     C                     MOVE '1'       *IN30
+     C                     END
+     C                     END
+     C*
+     C*
+     C           SCNAM     IFNE *BLANKS
+     C           SSNAM     IFNE *BLANKS
+     C           SCPTY     ORNE *BLANKS
+     C           SSREF     ORNE *BLANKS
+     C                     MOVE '1'       *IN30
+     C                     END
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C           SSREF     IFNE *BLANKS
+     C                     MOVE '1'       *IN66
+     C                     END
+     C*
+     C           SSNAM     IFNE *BLANKS
+     C                     MOVE '1'       *IN67
+     C                     END
+     C*
+     C           SCPTY     IFNE *BLANKS
+     C                     MOVE '1'       *IN68
+     C                     END
+     C*
+     C           SCNAM     IFNE *BLANKS
+     C                     MOVE '1'       *IN69
+     C                     END
+     C*
+     C                     ADD  1         ES
+     C                     MOVE '425'     ERR,ES
+     C                     END
+     C*
+     C           VALIDX    TAG                                            S01117
+     C                     ENDSR
+     C*
+      /EJECT
+     C**********************************************************************
+     C*
+     C*  BKHEAD  - SUBROUTINE TO ACCESS BACKLOG HEADER FILE
+     C*
+     C**********************************************************************
+     C*
+     C           BKHEAD    BEGSR                           ** BKHEAD **
+     C*
+     C           1         CHAINEBKLGHBF             99
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'A'                        *****************
+     C           *LOCK     IN   LDA                         **************S01117
+     C                     MOVEL'EBKL1'   DBFILE           ** DB ERROR 02 **
+     C                     MOVEL'HDR'     DBKEY            *****************
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C**********************************************************************
+     C*
+     C*  FIRST  - SUBROUTINE TO ACCESS ICD INFO AND PF/EBKLGHB FOR
+     C*           SELECTED OPTIONS
+     C*
+     C**********************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C***********          EXSR ZSYSTM                                    S01117
+     C***********                                                         S01117
+     C**ERROR*IN*ZSYSTM                                                   S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVEL'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELZTABKY    DBKEY            ** DB ERROR 01 S01117
+     C***********          Z-ADD1         DBASE            ***************S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE '1'       *INU8                           S01117
+     C***********          ELSE                                           S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C**  ACCESS OPTIONS
+     C*
+     C                     EXSR BKHEAD
+     C           *INU7     IFEQ '0'
+     C                     MOVE REPS      SSCR
+     C                     Z-ADDBDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SBDAT
+     C                     EXCPTBREL
+     C                     END
+     C***********          END                                            S01117
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C**********************************************************************
+     C*
+     C*  LAST  - SUBROUTINE TO UPDATE BACKLOG HEADER RECORD
+     C*
+     C**********************************************************************
+     C*
+     C           LAST      BEGSR                           ** LAST **
+     C*
+     C**  SETOF ALL EXTERNAL SWITCHES
+     C*
+     C                     SETOF                     U1U2U3
+     C                     SETOF                     U4
+     C*
+     C**  SETON EXTERNAL SWITCHES ACCORDING TO INPUT RECEIVED
+     C*
+     C           SSREF     IFNE *BLANKS
+     C                     MOVE '1'       *INU1
+     C                     END
+     C           SSNAM     IFNE *BLANKS
+     C                     MOVE '1'       *INU2
+     C                     END
+     C           SCPTY     IFNE *BLANKS
+     C                     MOVE '1'       *INU3
+     C                     END
+     C           SCNAM     IFNE *BLANKS
+     C                     MOVE '1'       *INU4
+     C                     END
+     C*
+     C**  ACCESS BACKLOG HEADER RECORD
+     C*
+     C                     EXSR BKHEAD
+     C           *INU7     CABEQ'1'       ELAST
+     C*
+     C**  UPDATE BACKLOG HEADER FILE RECORD
+     C*
+     C                     MOVE SSCR      REPS
+     C                     UPDATEBKLGHBF
+     C*
+     C           ELAST     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*   INFSR  - SUBROUTINE FOR ERROR HANDLING OF EBKLGHB
+     C*
+     C*****************************************************************
+     C*
+     C           INFSR     BEGSR                           **  INFSR **
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'EBKLG'   DBFILE           *****************
+     C                     MOVEL'HDR'     DBKEY            ** DB ERROR 90 **
+     C                     Z-ADD90        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C*COPY*ZSRSRC,ZSYSTMZ1**                                             S01117
+     O/EJECT
+     OEBKLGHBFE                BREL
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  VALID STATUS SELECTIONS
+ACTPROUNMSECFUTCXLALL
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

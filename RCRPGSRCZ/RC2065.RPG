@@ -1,0 +1,720 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RC II - Ledger details report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Autorecs II Module                                   *
+      *                                                               *
+      *  RC2065 - Ledger Details Report - Report                      *
+      *                                                               *
+      *  Function:  This program allows users of Automatic            *
+      *             Reconciliations II to report on General           *
+      *             Ledger details.                                   *
+      *  I/C                                                          *
+      *                                                               *
+      *  Called By: RCF                                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01449             Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  S01449 - Autorecs II module.                                 *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FRCLDGRL1IF  E           K        DISK
+     F            RCLDGRD0                          KRENAMERCLDGRD1
+     FRCLDGDL0IF  E           K        DISK
+     FRC2065AUO   E                    PRINTER      KINFDS SPOOLA     UC
+     FRC2065P1O   E             61     PRINTER      KINFDS SPOOLP     UC
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      *                                                               *
+      *   10        Multibranching Indicator                          *
+      *   11        Record on RCLDGDL0                                *
+      *   12        System level report                               *
+      *   13        Supress Branch output on title page               *
+      *                                                               *
+      *   49        EOF RCLDGRL1                                      *
+      *   50        Matching Record Found                             *
+      *                                                               *
+      *   61        Overflow                                          *
+      *                                                               *
+      *   U7 & U8   Database error                                    *
+      *                                                               *
+      *****************************************************************
+     E                    TXT     1   3 20
+     E                    CPY@    1   1 80
+     ISPOOLA      DS
+     I                                       83  92 AFILE
+     I                                    B 123 1240AFNUM
+     ISPOOLP      DS
+     I                                       83  92 PFILE
+     I                                    B 123 1240PFNUM
+      **  File information data structure
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IDSRUN       DS
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      **  RUNDAT data area data structure (date format -ddmmmyy)
+      *
+     I            DS
+     I**********                              1  18 R1ACID                                    CGL029
+     I                                        1  24 R1ACID                                    CGL029
+     I                                        1   6 @HCUST
+     I                                        7   9 @HCCY
+     I                                       10  19 @HACOD                                    CGL029
+     I                                       20  21 @HACSQ                                    CGL029
+     I**********                             10  13 @HACOD                                    CGL029
+     I**********                             14  15 @HACSQ                                    CGL029
+      **  DS to break up account details
+      *
+     I@RPARM      DS                            100
+     I                                        1   50@SDAT
+     I                                        6  100@EDAT
+     I                                       11  11 @STS1
+     I                                       12  12 @STS2
+     I                                       13  13 @STS3
+      **  Parameters for &RPARM - 100 long string passed to RCF
+      *
+     I            DS
+     I                                        1 256 @DRCD
+     I                                        1   4 @TAG4
+     I                                        1   5 @TAG5
+     I                                        4   4 @COL4
+     I                                        5   5 @COL5
+     I                                        5 256 @DAT4
+     I                                        6 256 @DAT5
+      **  DS to break up data record
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     IDSFDY     E DSDSFDY
+      **  First data structure for access program, Short data structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Long data structure for access programs
+      *
+     C/EJECT
+      *
+      **  Parameters passed from RCF & RC2060
+     C           *ENTRY    PLIST
+     C                     PARM           @@RSEQ  5
+     C           @@LVL     PARM           @@LVLP  1
+     C           @@BCH     PARM           @@BCHP  3
+     C                     PARM           @RPARM100
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN   - Main process                                       *
+      *   INIT   - Initial process                                    *
+      *   DETLP  - Detail processing                                  *
+      *   SYSLVL - System level processing                            *
+      *   ALLBCH - All branches processing                            *
+      *   SNGBCH - Single branch processing                           *
+      *   TEXT   - Format message text                                *
+      *   SPLF   - Printer error handling processing                  *
+      *   GETR   - Get next valid record                              *
+      *   *PSSR  - Error handling                                     *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  MAIN                                           *
+      * Function    :  Main Process                                   *
+      *                                                               *
+      * Called by   :  -                                              *
+      * Calls       :  INIT  Initial processing                       *
+      *                DETLP Detail processing                        *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Perform detail process
+     C                     EXSR DETLP
+      *
+      **  Set on LR
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  INIT                                           *
+      * Function    :  Initial process                                *
+      *                                                               *
+      * Called by   :  MAIN Main Process                              *
+      * Calls       :  -                                              *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+      *
+      **  Set up LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'RC2065'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD for bank information
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** If the multibranching indicator is on, set on indicator 10
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN10
+     C                     END
+      *
+      ** For report purposes only seton *IN12 if it is a system
+      ** level report. (Supress Branch info on the heading).
+     C           *IN10     IFEQ '1'
+     C           @@LVL     ANDEQ'S'
+     C                     MOVE '1'       *IN12
+     C                     END
+      *
+      ** Format the dates for the option record on the report from
+      ** Midas date to DDMMMYY format. (If dates are *zero, use
+      ** rundate)
+     C           @SDAT     IFEQ *ZERO
+     C                     Z-ADDBJRDNB    @SDAT
+     C                     END
+     C                     CALL 'ZA0140'
+     C                     PARM @SDAT     ZMDAY   50
+     C                     PARM DATF      ZDATF   1
+     C                     PARM           ZMDATE  60
+     C           @SDATE    PARM           ZMDAT7  7
+     C                     PARM           ZMNU2   1
+     C                     PARM           ZMNU3   80
+      *
+     C           @EDAT     IFEQ *ZERO
+     C                     Z-ADDBJRDNB    @EDAT
+     C                     END
+     C                     CALL 'ZA0140'
+     C                     PARM @EDAT     ZMDAY   50
+     C                     PARM DATF      ZDATF   1
+     C                     PARM           ZMDATE  60
+     C           @EDATE    PARM           ZMDAT7  7
+     C                     PARM           ZMNU2   1
+     C                     PARM           ZMNU3   80
+      *
+      ** Set up Key lists
+     C           KEY1      KLIST
+     C                     KFLD           @@BCH
+     C                     KFLD           @SDAT
+      *
+      **  Set lower limits on the appropriate file
+     C           KEY1      SETLLRCLDGRL1
+      *
+      **  Read outgoing message file PF/RCLDGRPD
+     C                     EXSR GETR
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  DETLP                                          *
+      * Function    :  Detail processing                              *
+      *                                                               *
+      * Called by   :  MAIN    Main processing                        *
+      * Calls       :  SPLF    Printer error handling                 *
+      *                SYSLVL  System level processing                *
+      *                ALLBCH  All branches processing                *
+      *                SNGBCH  Single branch processing               *
+      *****************************************************************
+     C           DETLP     BEGSR
+      *
+      **  If no record found on the file PF/RCLDGRPD
+     C           *IN49     IFEQ '1'
+      *
+      **  Open Audit printer file PRTF/RC2065AU & call ZSFILE via SPLF
+     C                     OPEN RC2065AU
+     C                     MOVE AFILE     SFILE  10
+     C                     Z-ADDAFNUM     ZSNUM   60
+      *
+     C                     EXSR SPLF
+      *
+      **  Write 'no records to report'
+     C                     WRITERC2065A1
+     C                     WRITERC2065A2
+      *
+     C                     WRITERC2065A1
+     C                     WRITERC2065A3
+      *
+      **  Close Audit printer file PRTF/RC2065AU
+     C                     CLOSERC2065AU
+      *
+      **  Else records present to process
+     C                     ELSE
+      *
+      **  If level selected is system ( @@LVL = 'S')
+      **  Process messages at system level
+     C           @@LVL     IFEQ 'S'
+     C                     EXSR SYSLVL
+     C                     END
+      *
+      **  If level selected is branch ( @@LVL = 'B')
+      **  and selected branch is 'ALL' ( @@BCH = 'ALL')
+      **  Process messages for all branches
+     C           @@LVL     IFEQ 'B'
+     C           @@BCH     ANDEQ'ALL'
+     C                     EXSR ALLBCH
+     C                     END
+      *
+      **  If level selected is branch ( @@LVL = 'B')
+      **  and selected branch is  NOT 'ALL' ( @@BCH NOT = 'ALL')
+      **  Process messages as for single branch
+     C           @@LVL     IFEQ 'B'
+     C           @@BCH     ANDNE'ALL'
+     C                     EXSR SNGBCH
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  SYSLVL                                         *
+      * Function    :  System Level Processing                        *
+      *                                                               *
+      * Called by   :  DETLP Detail Processing                        *
+      * Calls       :  SPLF  Printer error handling                   *
+      *                TEXT  Format message text                      *
+      *                GETR  Get next valid record                    *
+      *****************************************************************
+     C           SYSLVL    BEGSR
+      *
+      **  Open printer file PRTF/RC2065P1
+     C                     OPEN RC2065P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+      *
+      **  Call ZSFILE via SPLF
+     C                     EXSR SPLF
+      *
+      **  Print report title ( *IN13 supresses branch on title page)
+     C                     MOVE '0'       *IN13
+     C                     WRITERC2065F1
+     C                     WRITERC2065F2
+     C                     MOVE '1'       *IN13
+      *
+      **  Save the current branch
+     C                     MOVE R1BRCA    SAVBRC
+      *
+      **  Do while NOT = eof (RCLDGRL0)
+     C           *IN49     DOWEQ'0'
+      *
+      **  Do until branch (BRCA ON PF/RCLDGRPD) changes
+     C           R1BRCA    DOWEQSAVBRC
+     C           *IN49     ANDEQ'0'
+      *
+      **  Print message processing
+     C                     EXSR TEXT
+      *
+      **  Read next record from PF/RCLDGRPD
+     C                     EXSR GETR
+      *
+     C                     END
+      *
+      **  Write end of report for Branch - RC2065F3
+     C           MBIN      IFEQ 'Y'
+      *
+     C                     WRITERC2065F1
+     C                     WRITERC2065F3
+     C                     END
+      *
+     C                     MOVE R1BRCA    SAVBRC
+      *
+     C                     END
+      *
+      **  Write end of report - RC2065F4
+     C           MBIN      IFEQ 'N'
+     C                     WRITERC2065F1
+     C                     WRITERC2065F4
+     C                     END
+      *
+      **  Close printer file PRTF/RC2065P1
+     C                     CLOSERC2065P1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  ALLBCH                                         *
+      * Function    :  All branches Processing                        *
+      *                                                               *
+      * Called by   :  DETLP Detail Processing                        *
+      * Calls       :  SPLF Printer error handling                    *
+      *                TEXT Format message text                       *
+      *                GETR Get next valid record                     *
+      *****************************************************************
+     C           ALLBCH    BEGSR
+      *
+      **  Do while NOT = eof (RCLDGRPD)
+     C           *IN49     DOWEQ'0'
+      *
+      **  Open printer file PRTF/RC2065P1
+     C                     OPEN RC2065P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+      *
+      **  Call ZSFILE via SPLF
+     C                     EXSR SPLF
+      *
+      **  Save the branch for use on the report
+     C                     MOVE R1BRCA    SAVBRC
+      *
+      **  Print report title ( *IN13 supresses branch on title page)
+     C                     MOVE '0'       *IN13
+     C                     WRITERC2065F1
+     C                     WRITERC2065F2
+     C                     MOVE '1'       *IN13
+      *
+      **  Do until branch (BRCA ON PF/RCLDGRPD) changes
+     C           R1BRCA    DOWEQSAVBRC
+     C           *IN49     ANDEQ'0'
+      *
+      **  Print message processing
+     C                     EXSR TEXT
+      *
+      **  Read next record from PF/RCLDGRPD
+     C                     EXSR GETR
+      *
+     C                     END
+      *
+      **  Write end of report for Branch - RC2065F3
+     C           MBIN      IFEQ 'Y'
+     C           *IN61     IFEQ '1'
+     C                     WRITERC2065F1
+     C                     END
+     C                     WRITERC2065F3
+     C                     END
+      *
+     C                     MOVE R1BRCA    SAVBRC
+      *
+      **  Close printer file PRTF/RC2065P1
+     C                     CLOSERC2065P1
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  SNGBCH                                         *
+      * Function    :  Single Branch Processing                       *
+      *                                                               *
+      * Called by   :  DETLP Detail Processing                        *
+      * Calls       :  SPLF  Printer error handling                   *
+      *                TEXT  Format message text                      *
+      *                GETR  Get next valid record                    *
+      *****************************************************************
+     C           SNGBCH    BEGSR
+      *
+      **  Open printer file PRTF/RC2065P1
+     C                     OPEN RC2065P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+      *
+      **  Call ZSFILE via SPLF
+     C                     EXSR SPLF
+      *
+      **  Save the Branch for use on the report
+     C                     MOVE @@BCH     SAVBRC
+      *
+      **  Print report title ( *IN13 supresses branch on title page)
+     C                     MOVE '0'       *IN13
+     C                     WRITERC2065F1
+     C                     WRITERC2065F2
+     C                     MOVE '1'       *IN13
+      *
+      **  Do until branch (BRCA ON PF/RCLDGRPD) changes
+     C           *IN49     DOWEQ'0'
+      *
+      **  Print message processing
+     C                     EXSR TEXT
+      *
+      **  Read next record from PF/RCLDGRPD
+     C                     EXSR GETR
+      *
+     C                     END
+      *
+      **  Write end of report for Branch
+     C           MBIN      IFEQ 'Y'
+     C                     WRITERC2065F1
+     C                     WRITERC2065F3
+      *
+      **  Write end of report
+     C                     ELSE
+     C                     WRITERC2065F1
+     C                     WRITERC2065F4
+     C                     END
+      *
+      **  Close printer file PRTF/RC2065P1
+     C                     CLOSERC2065P1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  TEXT                                           *
+      * Function    :  Format message text                            *
+      *                                                               *
+      * Called by   :  SYSLVL System Level Processing                 *
+      *                ALLBCH All Branches Processing                 *
+      *                SNGBCH Single Branch Processing                *
+      * Calls       :  *PSSR  Error Processing                        *
+      *****************************************************************
+      *
+     C           TEXT      BEGSR
+      *
+      **  Format current status
+     C           R1RPTS    SCAN 'CRD'     Q       20
+     C                     MOVELTXT,Q     @HSTAT
+      *
+      **  If status not Created, output download information
+     C                     SETOF                     71
+     C           R1RPTS    IFNE 'C'
+     C                     SETON                     71
+     C                     CALL 'ZA0140'
+     C                     PARM R1RDAT    ZMDAY   50
+     C                     PARM DATF      ZDATF   1
+     C                     PARM           ZMDATE  60
+     C           @HDATD    PARM           ZMDAT7  7
+     C                     PARM           ZMNU2   1
+     C                     PARM           ZMNU3   80
+      *
+     C                     MOVE R1RTIM    @HTIMD
+     C                     MOVE R1DSEQ    @H1SEQ
+      *
+     C                     ENDIF
+      *
+      **  Format creation date
+     C                     CALL 'ZA0140'
+     C                     PARM R1CDAT    ZMDAY   50
+     C                     PARM DATF      ZDATF   1
+     C                     PARM           ZMDATE  60
+     C           @HDATC    PARM           ZMDAT7  7
+     C                     PARM           ZMNU2   1
+     C                     PARM           ZMNU3   80
+      *
+      **  Write Headings
+     C                     MOVE '0'       *IN61
+     C                     WRITERC2065F1
+     C                     WRITERC2065F5
+      *
+      **  Access first field
+     C           R1REFR    CHAINRCLDGDL0             11
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVELR1REFR    DBKEY            * DB ERROR 02 *
+     C                     MOVEL'RCLDGDL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  For each field
+     C           *IN11     DOWEQ'0'
+      *
+      **  Break up field into tag and data using data structure
+     C                     MOVELR2DATA    @DRCD
+      *
+      **  Move field details to screen fields
+     C                     CLEAR@DTAG
+     C                     CLEAR@DDAT
+     C           @COL5     IFEQ ':'
+     C                     MOVEL@TAG5     @DTAG
+     C                     MOVEL@DAT5     @DDAT
+     C                     ELSE
+     C           @COL4     IFEQ ':'
+     C                     MOVEL@TAG4     @DTAG
+     C                     MOVEL@DAT4     @DDAT
+     C                     ELSE
+     C                     MOVEL*BLANKS   @DTAG
+     C                     MOVELR2DATA    @DDAT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Check for overflow
+     C           *IN61     IFEQ '1'
+     C                     WRITERC2065F1
+     C                     WRITERC2065F5
+     C                     MOVE '0'       *IN61
+     C                     END
+      *
+      **  Output line of message detail
+     C                     WRITERC2065F6
+      *
+      **  Read next record
+     C           R1REFR    READERCLDGDL0                 11
+     C                     ENDDO
+      *
+     C                     ENDSR                           TEXT
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SPLF                                           *
+      * Function    :  Printer Error Handling                         *
+      *                                                               *
+      * Called by   :  DETLP  Detail Processing                       *
+      *                SYSLVL System Level Processing                 *
+      *                ALLBCH All Branches Processing                 *
+      *                SNGBCH Single Branch Processing                *
+      * Calls       :  *PSSR  Error handling                          *
+      *****************************************************************
+      *
+     C           SPLF      BEGSR
+      *
+      **  Set up key
+     C           @@BCH     IFEQ 'ALL'
+     C                     MOVE *BLANKS   BRCA2   3
+     C                     ELSE
+     C                     MOVE @@BCH     BRCA2
+     C                     END
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           @@RSEQ
+     C                     PARM BRCA2     @PARM   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  GETR                                           *
+      * Function    :  Get next valid record                          *
+      *                                                               *
+      * Called by   :  INIT   Initial Processing                      *
+      *                SYSLVL System Level Processing                 *
+      *                ALLBCH All Branches Processing                 *
+      *                SNGBCH Single Branch Processing                *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           GETR      BEGSR
+      *
+      **  Do until EOF or matching record found
+     C           *IN49     DOUEQ'1'
+     C           *IN50     OREQ '0'
+     C                     SETOF                         50
+      *
+      **  Read reference file
+     C                     READ RCLDGRL1                 49
+      *
+      **  If there is a record....
+     C           *IN49     IFEQ '0'
+      *
+      **  If branch entered check for upper limit
+     C           MBIN      IFEQ 'Y'
+     C           @@BCH     ANDNE'ALL'
+     C           @@BCH     ANDNER1BRCA
+     C           @@LVL     ANDNE'S'
+     C                     SETON                     49
+     C                     END
+      *
+      **  If end date entered check for upper limit
+     C           R1CDAT    IFGT @EDAT
+     C                     MOVE '1'       *IN49
+     C                     ENDIF
+      *
+      **  Check that the Start Date is in the range
+     C           R1CDAT    IFLT @SDAT
+     C                     SETON                     50
+     C                     ELSE
+      *
+      **  Match status selection against record
+     C           R1RPTS    IFEQ 'C'
+     C           @STS1     ANDNE'X'
+     C                     SETON                     50
+     C                     END
+      *
+     C           R1RPTS    IFEQ 'R'
+     C           @STS2     ANDNE'X'
+     C                     SETON                     50
+     C                     END
+      *
+     C           R1RPTS    IFEQ 'D'
+     C           @STS3     ANDNE'X'
+     C                     SETON                     50
+     C                     END
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  *PSSR                                          *
+      * Function    :  Error handling                                 *
+      *                                                               *
+      * Called by   :  INIT Initial Process                           *
+      *                TEXT Format Message Text                       *
+      *                SPLF Printer Error Handling                    *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Write database error to report
+     C                     OPEN RC2065AU
+     C                     WRITERC2065A1
+     C                     WRITERC2065A4
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C/EJECT
+**  TXT
+Created
+Flagged For re-send
+Downloaded to PC
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Exemption Threshold History Update')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000813 - Midas SD Exemption Threshold History Update     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. CER048  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER048 - German Features - Taxes                            */
+/*                                                                   */
+/*********************************************************************/
+ 
+/** Start Program */
+             PGM
+ 
+/** Declare variable. */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                        Misys International Banking Systems Ltd. 2008')
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/** Monitor for Error Messages from System. */
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 MCH0000 +
+                          RPG0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+/** Reset Error values - switches and LDA. */
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Send execution message. */
+             SNDPGMMSG  MSG('SDC000813 - Exemption Threshold History +
+                          Update') TOMSGQ(MRUNQ)
+ 
+/** Call customer threshold history file drop program. */
+             CALL       PGM(SD000813)
+ 
+/** U7 and U8 on : database error. */
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                    RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             SNDPGMMSG  MSG('SD000813 - JOB TERMINATED - DATABASE +
+                          ERROR') TOMSGQ(MRUNQ MOPERQ)
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:      DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSG('SDC000813 - JOB TERMINATED - PROGRAM +
+                          ERROR') TOMSGQ(MRUNQ MOPERQ)
+             MONMSG     MSGID(CPF0000)
+ 
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                        Misys International Banking Systems Ltd.')
+             RCLRSC
+             ENDPGM

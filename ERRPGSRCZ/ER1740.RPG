@@ -1,0 +1,276 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Save parameters maintenance')
+/*OVRF*: OVRDBF TABLE TABICD                                        : *
+     F********************************************************************
+     F**                                                                **
+     F**                  MIDAS/ABS  STANDING DATA MODULE.              **
+     F**                                                                **
+     F**   ER1740 - SAVE PARAMETERS MAINTENANCE                         **
+     F**                                                                **
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+     F**   NEW PROGRAM CREATED FOR 50314 ADI   DATE 28MAY93             **
+     F**                                                                **
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 03May06               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX004             Date 14Nov97               *
+     F**                                                                **
+     F**----------------------------------------------------------------**
+      *  CSD027A - Conversion of customer number to alpha (post       *
+      *            build 103). Recompiled.                            *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     F**   ULX004  -  CAPITAL ADEQUACY AND RUN IML TOGETHER             **
+     F**                                                                **
+     F********************************************************************
+     FER1740FMCF  E                    WORKSTN
+     FTABLE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB30F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTB50F                          KIGNORE
+     F            TABTB55F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F**
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01               INITIAL SET UP IND.BLANK
+     F* 70               ERROR ON SCREEN
+     F* 71               ERROR ON B.O.B. SAVE DEVICE
+     F* 72               ERROR ON B.O.B. SAVE DEVICE NAME
+     F* 73               ERROR ON  I/C   SAVE DEVICE
+     F* 74               ERROR ON  I/C   SAVE DEVICE NAME
+     F* 90-99            STANDARD SUBROUTINE
+     F* U7&U8            DATABASE ERROR
+     E                    CMD    37  37  1               CHK OBJ COMMAND
+     IERCTLD     UDS                            260
+     I                                        8  12 WESDT1
+     I                                       13  22 WESDN1
+     I                                       24  28 WESDT2
+     I                                       29  38 WESDN2
+     I* LOCAL DATA AREA FOR DATABASE ERROR
+     ILDA        UDS                            256
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+     IPSDS       SDS
+     I                                      244 246 WSID
+      * Get program name from PSDS
+     I                                     *PROGRAM WWPGM
+     C*****************************************************************
+     C*
+     C** MAIN PROCESSING
+     C*
+     C**   GET INSTALLATION CONTROL DATA RECORD
+     C                     EXSR ZSYSTM
+     C   99                SETON                     U7U8  NOT FOUND,
+     C   99                MOVE 'ER1740  'DBPGM
+     C   99                MOVE 'TABLE'   DBFILE
+     C   99                MOVE 01        DBASE
+     C   99                MOVE *BLANKS   DBKEY
+     C   99                MOVELZTABKY    DBKEY
+     C   99                GOTO ENDD                       DATABASE ERROR.
+     C*
+     C* OUTPUT & READ SCREEN UNTIL VALID
+     C*
+     C                     EXSR FILL
+     C           *IN70     DOUEQ'0'
+     C                     TIME           FTIME   60
+     C           SCRN      TAG                             ** SCRN **
+      * Display screen
+     C                     EXFMTER1740F1
+     C*
+     C   KC                GOTO ENDD
+     C                     EXSR VALID
+     C                     END
+     C* UPDATE ERSTAT WITH VALUES FROM THE SCREEN
+     C*
+     C                     EXSR UPDAT
+     C           ENDD      TAG
+     C                     SETON                         LR
+     C*****************************************************************
+     C*
+     C** SCREEN VALIDATION SUBROUTINE
+     C*  CALLED FROM MAIN PROCESSING
+     C*
+     C           VALID     BEGSR
+     C                     EXSR SRCMSG
+     C                     SETOF                     707172
+     C                     SETOF                     7374
+     C*VALIDATE FIRST DEVICE
+     C           BOBD      IFNE 'TAPE'
+     C           BOBD      ANDNE'SAVF'
+     C                     MOVEL'ER99901' ZAMSID
+     C                     EXSR SNDMSG
+     C                     MOVE '1'       *IN70
+     C                     MOVE '1'       *IN71
+     C                     END
+     C*
+     C*VALIDATE FIRST DEVICE NAME
+     C           BOBD      IFEQ 'SAVF'
+     C                     MOVE *BLANKS   BOBN
+     C*********************MOVEL'ERSAVF1' BOBN                            ULX004
+     C                     MOVEL'ERSAVF3' BOBN                            ULX004
+     C                     END
+     C           BOBD      IFEQ 'TAPE'
+     C                     Z-ADD37        MSGLEN 155
+     C                     MOVEABOBN      CMD,12
+     C                     CALL 'QCMDEXC'              10
+     C                     PARM           CMD
+     C                     PARM           MSGLEN
+     C           BOBN      IFEQ *BLANKS
+     C           *IN10     OREQ '1'
+     C                     MOVEL'ER99902' ZAMSID
+     C                     EXSR SNDMSG
+     C                     MOVE '1'       *IN70
+     C                     MOVE '1'       *IN72
+     C                     END
+     C                     END
+     C*
+     C*VALIDATE SECOND DEVICE
+     C           INCD      IFNE 'TAPE'
+     C           INCD      ANDNE'SAVF'
+     C                     MOVEL'ER99901' ZAMSID
+     C                     EXSR SNDMSG
+     C                     MOVE '1'       *IN70
+     C                     MOVE '1'       *IN73
+     C                     END
+     C*
+     C*VALIDATE SECOND DEVICE NAME
+     C           INCD      IFEQ 'SAVF'
+     C                     MOVE *BLANKS   INCN
+     C******************** MOVEL'ERSAVF2' INCN                            ULX004
+     C                     MOVEL'ERSAVF4' INCN                            ULX004
+     C                     END
+     C           INCD      IFEQ 'TAPE'
+     C                     Z-ADD37        MSGLEN 155
+     C                     MOVEAINCN      CMD,12
+     C                     CALL 'QCMDEXC'              10
+     C                     PARM           CMD
+     C                     PARM           MSGLEN
+     C           INCN      IFEQ *BLANKS
+     C           *IN10     OREQ '1'
+     C                     MOVEL'ER99902' ZAMSID
+     C                     EXSR SNDMSG
+     C                     MOVE '1'       *IN70
+     C                     MOVE '1'       *IN74
+     C                     END
+     C                     END
+     C*
+     C           *IN70     IFEQ '1'
+     C                     EXSR SRSCRN
+     C                     WRITEER1740F1
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C**  UPDATE SUBROUTINE
+     C*   MOVES SCREEN FIELDS TO JNSTAT
+     C*   CALLED FROM MAIN PROCESSING
+     C*
+     C           UPDAT     BEGSR
+     C*
+     C                     MOVEL'*'       WESDT1
+     C                     MOVE BOBD      WESDT1
+     C                     MOVE BOBN      WESDN1
+     C                     MOVEL'*'       WESDT2
+     C                     MOVE INCD      WESDT2
+     C                     MOVE INCN      WESDN2
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C**  FILL SCREEN FIELD
+     C*   CALLED FROM MAIN PROCESSING
+     C*
+     C           FILL      BEGSR
+     C*
+     C                     MOVE WESDT1    BOBD
+     C                     MOVE WESDN1    BOBN
+     C                     MOVE WESDT2    INCD
+     C                     MOVE WESDN2    INCN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C**
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C**
+     C           ZSYSTM    BEGSR                           *** ZSYSTEM ***
+     C**
+     C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+     C                     MOVEL'01      'ZTABKY 12
+     C                     MOVE '  10'    ZTABKY
+     C**
+     C           ZTABKY    CHAINTABLE                99    ON NOT THERE
+     C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C********************************************************************
+      *================================================================
+     C           SNDMSG    BEGSR
+      *================================================================
+      * Send message to program's message queue.
+      *================================================================
+     C**********           MOVEL'ERUSRMSG'ZAMSGF                                              CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF                                              CER001
+     C                     CALL 'SNDERMSG'
+     C                     PARM WWPGM     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     ENDSR
+      *================================================================
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRCMSG - Routine to clear program's message queue.
+      *-------------------------------------------------------------------------
+      *
+     C           SRCMSG    BEGSR
+      *
+     C                     CALL 'CLRERMSG'
+     C                     PARM WWPGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SRSCRN - Routine to handle screen and validation
+      *-------------------------------------------------------------------------
+      *
+     C           SRSCRN    BEGSR
+      *
+      * Display messages
+     C                     WRITE#MSGCTL
+      *
+     C                     ENDSR
+      /EJECT
+      *================================================================
+**   CMD - OVERRIDE MSGF COMMANDS
+CHKOBJ OBJ(          ) OBJTYPE(*DEVD)

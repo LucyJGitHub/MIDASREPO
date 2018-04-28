@@ -1,0 +1,1783 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Monthly Profitability Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0925 - MONTHLY PROFITABILITY REPORT                        *
+     F*                                                               *
+     F*  Function: To print the Monthly Profitability Report from the *
+     F*   (COB)    extract file produced in SE0920.                   *
+     F*                                                               *
+     F*  Called by: SEC0903 - Monthly Profitability Report            *
+     F*                                                               *
+     F*            Frequency:                                         *
+     F*            - On request during COB                            *
+     F*            - Automatically at end of month using Value Date   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CGL035             Date 01Mar05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 BUG7985            Date 07Jul05               *
+      *                 CPK016             Date 04Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE006             Date 30Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 16Dec98               *
+      *                 S01502             Date 08Jul94               *
+      *                 052254             Date 10Jan94               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E37493             DATE 02APR92               *
+     F*                 E37680             DATE 27MAR92               *
+     F*                 E35515             DATE 11FEB92               *
+     F*                 E33030             DATE 09DEC91               *
+     F*                 E31197             DATE 04NOV91               *
+     F*                 E29170             DATE 08OCT91               *
+     F*                 S01117             DATE 20MAY91               *
+     F*                 S01269             DATE 01AUG90               *
+     F*                 E20240             DATE 23NOV89               *
+     F*                 E20085             DATE 06NOV89               *
+     F*                 E20125             DATE 06NOV89               *
+     F*                 E18009             DATE 27/04/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL035 - EUSD Upgrade to MidasPlus                           *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  BUG7985- Several components failed due to accessing TABLETR  *
+      *  CPK016 - Release 5 packaging.  Clash of field names.         *
+      *  CSE006 - Repurchase Agreements (REPOs) enhancement           *
+      *  CAC005 - PCA-SE Enhancement.                                 *
+     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+     F*           in length of SESTAT, 133 long.                      *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E37493 - Recompiled over changed printer file                *
+     F*  E37680 - Requested Branch checking is only applicable if the *
+     F*           System is in Multibranched Mode.                    *
+     F*  E35515 - Wrong branch on report on overflow                  *
+     F*  E33030 - Should only do diffence processing for 'ALL' reports*
+     F*  E31197 - Should report no details on Audit printer file      *
+     F*  E29170 - RCF CHANGES                                         *
+     F*  S01117 - Multibranching                                      *
+     F*  S01269 - Trade authorisation: recompile over changed file    *
+     F*           TABSE                                               *
+     F*  E20240 - Remove NET INC/EXP figures as no lomger to be       *   E20240
+     F*           included in TOTAL INC/EXP figures                   *   E20240
+     F*  E20085 - Interest and Coupon Calculations Rewrite:           *   E20085
+     F*          - 'Interest Received/Accrued' figure renamed to be   *   E20085
+     F*            'Interest Earned' which is more accurate.          *   E20085
+     F*  E20125 - USE OF ZDATE2 IN SR/FIRST SETS ON *IN99, CAUSING    *   E20125
+     F*           FILE CONTROLS OUT OF BALANCE.                       *   E20125
+     F*  E18009 - RECOMPILE OVER CORRECT SESTAT, 128 LONG.            *   E18009
+     F*                                                               *
+     F*****************************************************************
+      *
+     FMPREX   IF  E           K        DISK
+     FMPREXA  IF  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F*           TABTB11F                          KIGNORE
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F* CCY       TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F* BRANCH    TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     FBOOKD   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FBSPOSDL2IF  E           K        DISK                               CSE006
+     FSECTY   IF  E           K        DISK                               CSE006
+     FTRADS   IF  E           K        DISK                               CSE006
+     FSE0925AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     FSE0925P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL          E29170
+     FSE0925P2O   E                    PRINTER                        UC  CSE006
+     F                                              KINFDS SPOOL2         CSE006
+     F/COPY WNCPYSRC,SE0925F001
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Error on Chain.                                       *
+      *   30  - CAC005 ON                                             *   CAC005
+     F*   37  - MULTIBRANCHING ON                                     *   E29170
+     F*   40  - PRINT 'TRADE BASIS'                                   *
+     F*  N40  - PRINT 'VALUE BASIS'                                   *
+     F*   41  - PRINT 'AS AT END'                                     *
+     F*  N41  - PRINT 'INTERIM, AS AT'                                *
+     F*   43  - PRINT '(TOTAL) NET INC/EXP'                           *
+     F*   45  - CONTROLS PRINTING OF  ()'S                            *
+     F*   46  - PRINT 'GREY'                                          *
+     F*   47  - PRINT 'PRIMARY'                                       *
+     F*   48  - PRINT 'SECONDARY'                                     *
+     F*   80  - END OF FILE ON MPREX                                  *
+     F*   81  - ON AFTER OUTPUT TO P1 FILE                            *
+     F*   82  - ON IF DIFFERENT KEY FOR TOTAL PRINT                   *
+     F*   83  - ON IF DIFFERENT KEY FOR PAGE THROW                    *
+     F*   84  - ON AFTER OUTPUT TO SE0925P2                           *   CSE006
+     F*   85  - EOF ON BSPOSDL2                                       *   CSE006
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U7  - Database Error.                                       *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - FIRST TIME PROCESSING                               *
+      *  SELBS  - Subroutine to read buy/sell positions file          *   CSE006
+      *  BYSELL - Subroutine to calculate and print details           *   CSE006
+      *  ITOTL  - Subroutine to initialise total work fields          *   CSE006
+      *  BSFST  - Subroutine to set up spool file                     *   CSE006
+      *  PTOT   - Subroutine to print total line                      *   CSE006
+     F*  AUDIT  - AUDIT TIME PROCESSING                               *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+      *  RCFP2  - Subroutine to register P2 printer file via RCF      *   CSE006
+     F*                                                               *
+     F*  ZDATE2 - DATE CONVERSION                                     *
+     F*  ZSEDIT - AMOUNT EDIT                                         *
+     F*  ZSYSTM - ACCESS ICD1 RECORD                                  *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY WNCPYSRC,SE0925E001
+      /EJECT
+     IINVTPDF                                                                                 CPK016
+     I              SFLG                            INSFLG                                    CPK016
+     ITRADSDF                                                                                 CGL035
+     I              EUTX                            TEUTX                                     CGL035
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+      ***  Local Data Area for DB Error Information
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     I*                                                                   CSE006
+     ISPOOL2      DS                                                      CSE006
+     I*                                                                   CSE006
+     I**  DS FOR P2 SPOOL FILE NAME                                       CSE006
+     I*                                                                   CSE006
+     I                                       83  92 SFILE2                CSE006
+     I                                    B 123 1240SFNUM2                CSE006
+     I                                    B 188 1890OFLLN2                CSE006
+     I                                    B 367 3680PRTLN2                CSE006
+      *
+     I*    SESTAT DATA STRUCTURE                                          SD1730
+     I*                                                                   SD1730
+     IDTAARA    E DSSESTAT                                                SD1730
+     I*
+     ITABKEY      DS
+     I                                        1  12 KEY
+     I                                        1   2 TYPE
+     I                                        9  11 KCCY
+     IIKEYDS      DS
+     I                                        1   3 MPNC
+     I                                        4   6 MPIN
+      *                                                                   CAC005
+     ISDPRFC    E DSSDPRFCPD                                              CAC005
+      ** Profit Centre Accounting                                         CAC005
+      *
+     IDSFDY     E DSDSFDY                                                 CAC005
+      ** Short DS for Access Programs                                     CAC005
+      *                                                                   CAC005
+     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
+     I              A8BRNM                          BRNM                                     BUG7985
+      ** Midas SD Branch Codes                                                               BUG7985
+      *                                                                                      BUG7985
+     IDSSDY     E DSDSSDY                                                                    BUG7985
+      ** Second Data structure for access programs                                           BUG7985
+      *                                                                                      BUG7985
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                   CSE006
+      *** Data structure for run date                                     CSE006
+      *                                                                   CSE006
+     I            DS                                                      CSE006
+     I                                        1   7 RUNA                  CSE006
+     I                                        1   2 RDAY                  CSE006
+     I                                        3   5 RMTH                  CSE006
+     I                                        6   7 RYR                   CSE006
+      *                                                                   CSE006
+      *** Data structure for maturity date                                CSE006
+      *                                                                   CSE006
+     I            DS                                                      CSE006
+     I                                        1   7 BSDAT                 CSE006
+     I                                        1   2 WMDAY                 CSE006
+     I                                        3   5 WMMTH                 CSE006
+     I                                        6   7 WMYR                  CSE006
+     I/COPY WNCPYSRC,SE0925I001
+     I*
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C* FIELD DEFINITIONS
+     C************LIKE     DEFN MPBR      LMPBR                           S01117
+     C************LIKE     DEFN MPBA      LMPBA                     S01117E35515
+     C           *LIKE     DEFN MPBK      LMPBK
+     C           *LIKE     DEFN MPNC      LMPNC
+     C           *LIKE     DEFN MPMK      LMPMK
+     C           *LIKE     DEFN MPIN      LMPIN
+     C           *LIKE     DEFN MPSS      LMPSS
+     C           *LIKE     DEFN CDP       NOMDP
+     C/COPY WNCPYSRC,SE0925C001
+      *
+      ***  Key List for Extract File
+     C           IKEY      KLIST
+     C                     KFLD           MPNC
+     C                     KFLD           MPIN
+     C*
+      ***  Receive Parameters
+     C           *ENTRY    PLIST
+     C                     PARM           TVTYP   1
+     C                     PARM           RUNTYP  1
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           ENT     3                       S01117
+     C*
+     C           TVTYP     IFEQ 'T'
+     C                     SETON                     40
+     C                     END
+     C*
+     C* ACCESS ICD INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT                           S01117
+     C                     MOVE 'SE0925  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *IN99     CABEQ'1'       EAUDIT
+     C*
+     C* SET HEADINGS ON PRINT
+     C           RUNTYP    IFEQ 'Y'
+     C                     SETON                     41
+     C                     END
+     C           COBP      IFEQ 'Y'
+     C           CBAP      OREQ 'Y'
+     C                     SETON                     43
+     C                     END
+     C*
+     C                     MOVEL'**NOT FO'WNFND  15
+     C                     MOVE 'UND**  ' WNFND
+     C*
+     C** READ EACH EXTRACT RECORD
+     C*
+     C                     READ MPREXDF                  80
+     C/COPY WNCPYSRC,SE0925C002
+     C           *IN80     IFEQ '0'                                       E29170
+     C           ENT       ANDNE'ALL'                                     E29170
+     C           ENT       ANDNEMPBA                                      E29170
+     C           MBIN      ANDEQ'Y'                                       E37680
+     C                     SETON                     80                   E29170
+     C                     END                                            E29170
+     C           *IN80     DOWNE'1'
+     C*
+     C** Maintain count of records input
+     C                     ADD  1         ZRIN
+     C                     SETOF                     8283
+     C*
+     C** If new branch access branch table record
+     C** if multibranching is on                                          E29170
+     C***********MPBR      IFNE LMPBR                                     S01117
+     C           MPBA      IFNE LMPBA                                     S01117
+     C                     SETON                     8283
+     C           *IN37     IFEQ '1'                                       E29170
+     C**********           MOVE *BLANKS   KEY                                                BUG7985
+     C**********           MOVEL'10      'KEY                                                BUG7985
+     C***********          MOVE MPBR      KEY                             S01117
+     C**********           MOVE MPBA      KEY                                         S01117 BUG7985
+     C********** TABKEY    CHAINTABLETRF             10                                      BUG7985
+     C********** *IN10     IFEQ '0'                                                          BUG7985
+     C********** RECI      IFEQ '*'                                                          BUG7985
+     C**********           SETON                     10                                      BUG7985
+     C**********           END                                                               BUG7985
+     C**********           END                                                               BUG7985
+      *                                                                                      BUG7985
+     C                     CALL 'AOBRCHR1'                                                   BUG7985
+     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
+     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
+     C                     PARM MPBA      PBRCH   3                                          BUG7985
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
+      *
+     C           PRTCD     IFNE *BLANKS                                                      BUG7985
+     C********** *IN10     IFEQ '1'                                                          BUG7985
+     C           *LOCK     IN   LDA                                       S01117
+     C**********           MOVE 'TABLE'   DBFILE           ***************                   BUG7985
+     C**********           MOVELTABKEY    DBKEY            * DB ERROR 04 *                   BUG7985
+     C                     MOVE 'SDBRCHPD'DBFILE                                             BUG7985
+     C                     MOVELMPBA      DBKEY                                              BUG7985
+     C                     Z-ADD4         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     99U7U8
+     C                     MOVE WNFND     BRNM
+     C                     END
+     C                     END                                            E29170
+     C                     END
+      *                                                                   CAC005
+      ** If CAC005 is on, retrieve user book from AOBKPCR0.               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD   7                       CAC005
+     C                     PARM '*USER  ' POPTN   7                       CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD  2                       CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC  4                       CAC005
+     C                     PARM MPBK      PMPSBK  2                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPMBKCD    MPBK                            CAC005
+     C                     MOVE PMPRFC    PPRFC                           CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVEL*BLANKS   PPRFC                           CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C** If new book, access book record
+     C           MPBK      IFNE LMPBK
+     C                     SETON                     8283
+     C           MPBK      CHAINBOOKD                10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+      *
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BOOKD'   DBFILE
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVELMPBK      DBKEY            * DB ERROR 05 *
+     C                     Z-ADD5         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     99U7U8
+     C                     MOVE WNFND     BOKD
+     C                     END
+     C                     END
+      *                                                                   CAC005
+      ** Change in Profit Centre                                          CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C           PPRFC     ANDNEWPRFC                                     CAC005
+     C                     MOVE *ON       *IN82                           CAC005
+     C                     MOVE *ON       *IN83                           CAC005
+     C                     CALL 'AOPRFCR0'                                CAC005
+     C                     PARM           @RTCD                           CAC005
+     C                     PARM '*KEY   ' @OPTN                           CAC005
+     C                     PARM PPRFC     @PRFC   4                       CAC005
+     C           SDPRFC    PARM SDPRFC    DSFDY                           CAC005
+      *                                                                   CAC005
+     C           @RTCD     IFNE *BLANKS                                   CAC005
+     C           *LOCK     IN   LDA                                       CAC005
+     C                     SETON                       U7U8               CAC005
+     C                     Z-ADD09        DBASE                           CAC005
+     C                     MOVEL'SDPRFCPD'DBFILE           ************   CAC005
+     C                     MOVE *BLANKS   DBKEY            * DBERR 09 *   CAC005
+     C                     MOVELPPRFC     DBKEY            ************   CAC005
+     C                     OUT  LDA                                       CAC005
+     C                     EXSR *PSSR                                     CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE DSPCDS    PPCDS  30                       CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+     C                     ENDIF                                          CAC005
+     c*
+     C** If new nominal currency access currency table record
+     C           MPNC      IFNE LMPNC
+     C                     SETON                     8283
+     C                     MOVE *BLANKS   KEY
+     C                     MOVEL'20      'KEY
+     C                     MOVE MPNC      KCCY
+     C                     MOVE '1'       KEY
+     C           TABKEY    CHAINTABTG10F             10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+      *
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY            * DB ERROR 06 *
+     C                     Z-ADD6         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     99U7U8
+      *
+     C                     ELSE
+      *
+      ***  Set CDP Edit for first time only, else wait until after the
+      ***  Totals have been formatted.
+      *
+     C           *IN81     IFEQ '0'
+     C                     MOVE CDP       NOMDP
+     C                     END
+      *
+     C                     END
+     C                     END
+     C*
+     C** If new Market set on indicator to print market
+     C           MPMK      IFNE LMPMK
+     C                     SETON                     8283
+     C                     SETOF                     464748
+     C           MPMK      COMP 'G'                      46
+     C           MPMK      COMP 'P'                      47
+     C           MPMK      COMP 'S'                      48
+     C                     END
+     C*
+     C** If new investment type access investment type record
+      *
+     C           MPIN      IFNE LMPIN
+      *
+     C                     SETON                     8283
+     C           IKEY      CHAININVTP                10
+     C           *IN10     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     10
+     C                     END
+     C                     END
+      *
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'INVTP'   DBFILE           ***************
+     C                     MOVELIKEYDS    DBKEY            * DB ERROR 07 *
+     C                     Z-ADD7         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     99U7U8
+     C                     MOVE WNFND     INAM
+     C                     END
+      *
+     C/COPY WNCPYSRC,SE0925C012
+     C                     END
+     C/COPY WNCPYSRC,SE0925C017
+     C*
+     C** If previous output & new branch/book/cur/market/invest typ-
+     C*        output total line
+     C           *IN81     IFEQ '1'
+     C           *IN82     ANDEQ'1'
+     C*
+     C** Reformat all totals ready for output
+     C*
+     C** Realised profit/loss
+     C                     Z-ADDW1TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTRPT
+     C*
+     C** Un-Realised profit/loss
+     C                     Z-ADDW2TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WUPLT
+     C*
+     C***Interest*received/accrued*************************************   E20085
+      ***  Interest Earned                                                E20085
+     C                     Z-ADDW3TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WIRAT
+     C*
+     C** Reallowance
+     C                     Z-ADDW4TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WRAMT
+     C*
+     C** Total income expense
+     C                     Z-ADDW5TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WCCPTT
+     C/COPY WNCPYSRC,SE0925C003
+     C*
+     C** Net income expense
+     C***Printed*if*Comm/Chg*in*banks*avg*price*inds*=*'Y'                E20240
+     C***********          Z-ADDW7TOT     ZFLD15                          E20240
+     C***********          MOVE 'J'       ZECODE                          E20240
+     C***********          Z-ADDNOMDP     ZDECS                           E20240
+     C***********          EXSR ZSEDIT                                    E20240
+     C***********          MOVE ZOUT21    WCCPTN                          E20240
+     C*
+     C** Total Income/expense
+     C                     Z-ADDW6TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTEET
+     C           LINCNT    IFGT 55
+     C                     WRITEHEADP1
+     C                     Z-ADD14        LINCNT
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     ADD  1         LINCNT                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+     C                     END
+     C                     WRITETOTAL
+     C***********          Z-ADD0         ZZTOT                           E20240
+     C*
+     C** Zeroise total fields
+     C                     Z-ADD0         W1TOT
+     C                     Z-ADD0         W2TOT
+     C                     Z-ADD0         W3TOT
+     C                     Z-ADD0         W4TOT
+     C                     Z-ADD0         W5TOT
+     C                     Z-ADD0         W6TOT
+     C***********          Z-ADD0         W7TOT                           E20240
+     C/COPY WNCPYSRC,SE0925C004
+      *
+      ** Set DPs for edit (from TABTG10) after formatting totals for
+      ** previous record.
+      *
+     C                     MOVE CDP       NOMDP
+      *
+      ***  End of *IN81/82 = '1'
+     C                     END
+      *
+     C           *IN81     IFEQ '1'
+     C*
+     C** If previous output and new branch end that report
+     C***********MPBR      IFNE LMPBR                                     S01117
+     C           MPBA      IFNE LMPBA                                     S01117
+     C*
+     C** Output headings if required
+     C           LINCNT    IFGT 55
+     C                     WRITEHEADP1
+     C                     END
+      *
+     C                     WRITETRAILP1
+     C                     CLOSESE0925P1
+     C                     OPEN SE0925P1
+     C                     Z-ADD70        LINCNT  20
+     C                     Z-ADD0         PAGE
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C*
+     C** If previous output and new page required
+     C                     ELSE
+     C           *IN83     IFEQ '1'
+     C                     Z-ADD70        LINCNT  20
+     C                     MOVE '0'       *IN83
+     C                     END
+      *
+     C                     END
+     C                     END
+     C*
+     C** Open printer file if first time or new branch
+     C           *IN81     IFEQ '0'
+     C                     OPEN SE0925P1
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     Z-ADD70        LINCNT  20
+     C                     SETON                     81
+     C                     END
+     C*
+     C** Store new values of fields
+     C***********          MOVE MPBR      LMPBR                           S01117
+     C                     MOVE MPBA      LMPBA                           S01117
+     C                     MOVE BRNM      LBRNM                           E35515
+     C                     MOVE MPBK      LMPBK
+     C                     MOVE MPMK      LMPMK
+     C                     MOVE MPIN      LMPIN
+     C                     MOVE MPSS      LMPSS
+     C                     MOVE MPNC      LMPNC
+      *                                                                   CAC005
+      ** Save printer-profit centre to a workfield to be used in chec-    CAC005
+      ** king any change in profit centre                                 CAC005
+      *                                                                   CAC005
+     C                     MOVE PPRFC     WPRFC   4                       CAC005
+     C*
+     C** Output headings if required
+     C           LINCNT    IFGT 55
+     C                     WRITEHEADP1
+     C                     Z-ADD14        LINCNT
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     ADD  1         LINCNT                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+     C                     END
+     C*
+     C** Set up and output detail line
+     C*
+     C** Perform all calculations required
+     C*
+     C**  IF TRADES VALUES REQUIRED
+     C           TVTYP     IFEQ 'T'
+     C                     Z-ADDTTRP      WREAL  150
+     C*
+     C                     Z-ADDTUPN      WUREAL 150
+     C           WUREAL    SUB  TUPL      WUREAL
+     C*
+     C                     Z-ADDTPSN      WINTR  150
+     C           WINTR     SUB  TECP      WINTR
+     C           WINTR     SUB  TTIP      WINTR
+     C           WINTR     ADD  TCDM      WINTR
+     C           WINTR     SUB  TPIM      WINTR
+     C           WINTR     ADD  TSIM      WINTR
+     C           WINTR     SUB  TPST      WINTR
+     C*
+     C/COPY WNCPYSRC,SE0925C013
+     C                     Z-ADDTRAM      WREALL 150
+     C/COPY WNCPYSRC,SE0925C014
+     C*
+     C                     Z-ADDTCMT      WCCPT  150
+     C           WCCPT     ADD  TCCT      WCCPT
+     C                     ADD  TCMD      WCCPT
+     C                     ADD  TCCD      WCCPT
+     C/COPY WNCPYSRC,SE0925C005
+     C*
+     C***********COBP      IFEQ 'Y'                                       E20240
+     C***********CBAP      OREQ 'Y'                                       E20240
+     C***********          Z-ADDTCMD      WCCPN  150                      E20240
+     C***********          ADD  TCCD      WCCPN                           E20240
+     C***********COBP      IFEQ 'Y'                                       E20240
+     C***********          ADD  TCMT      WCCPN                           E20240
+     C***********          END                                            E20240
+     C***********CBAP      IFEQ 'Y'                                       E20240
+     C***********          ADD  TCCT      WCCPN                           E20240
+     C***********          END                                            E20240
+     C***********          END                                            E20240
+     C* ELSE
+     C                     ELSE
+     C                     Z-ADDVTRP      WREAL  150
+     C*
+     C                     Z-ADDVUPN      WUREAL 150
+     C           WUREAL    SUB  VUPL      WUREAL
+     C*
+     C                     Z-ADDVPSN      WINTR  150
+     C           WINTR     SUB  VECP      WINTR
+     C           WINTR     SUB  VTIP      WINTR
+     C           WINTR     ADD  VCDM      WINTR
+     C           WINTR     SUB  VPIM      WINTR
+     C           WINTR     ADD  VSIM      WINTR
+     C           WINTR     SUB  TPSV      WINTR
+     C*
+     C/COPY WNCPYSRC,SE0925C015
+     C                     Z-ADDVRAM      WREALL 150
+     C/COPY WNCPYSRC,SE0925C016
+     C*
+     C                     Z-ADDVCMT      WCCPT  150
+     C           WCCPT     ADD  VCCT      WCCPT
+     C                     ADD  VCMD      WCCPT
+     C                     ADD  VCCC      WCCPT
+     C/COPY WNCPYSRC,SE0925C006
+     C*
+     C                     SETOF                         43
+     C           COBP      IFEQ 'Y'
+     C           CBAP      OREQ 'Y'
+     C                     SETON                         43
+     C***********          Z-ADDVCMD      WCCPN  150                      E20240
+     C***********          ADD  VCCC      WCCPN                           E20240
+     C***********COBP      IFEQ 'Y'                                       E20240
+     C***********          ADD  VCMT      WCCPN                           E20240
+     C***********          END                                            E20240
+     C***********CBAP      IFEQ 'Y'                                       E20240
+     C***********          ADD  VCCT      WCCPN                           E20240
+     C***********          END                                            E20240
+     C                     END
+     C                     END
+     C*
+     C* CALCULATE TOTAL
+     C                     Z-ADDWREAL     WTOTAL 150
+     C                     ADD  WUREAL    WTOTAL
+     C                     ADD  WINTR     WTOTAL
+     C           RBAP      IFNE 'Y'
+     C                     ADD  WREALL    WTOTAL
+     C                     END
+     C           COBP      IFNE 'Y'
+     C           CBAP      ANDNE'Y'
+     C                     ADD  WCCPT     WTOTAL
+     C***********          ELSE                                           E20240
+     C***********          ADD  WCCPN     WTOTAL                          E20240
+     C                     END
+     C*
+     C** ADD VALUES INTO TOTAL LINE
+     C/COPY WNCPYSRC,SE0925C018
+     C                     ADD  WREAL     W1TOT  150
+     C                     ADD  WUREAL    W2TOT  150
+     C/COPY WNCPYSRC,SE0925C019
+     C                     ADD  WINTR     W3TOT  150
+     C                     ADD  WREALL    W4TOT  150
+     C***********COBP      IFNE 'Y'                                       E20240
+     C***********CBAP      ANDNE'Y'                                       E20240
+     C                     ADD  WCCPT     W5TOT  150
+     C/COPY WNCPYSRC,SE0925C007
+     C***********          ELSE                                           E20240
+     C***********          ADD  WCCPT     W5TOT  150                      E20240
+     C***********          ADD  WCCPN     W7TOT  150                      E20240
+     C***********          END                                            E20240
+     C                     ADD  WTOTAL    W6TOT  150
+     C*
+     C**  Format Realised profit/loss
+     C/COPY WNCPYSRC,SE0925C020
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WREAL     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTRP
+     C**
+     C**  Format Unrealised Profit/loss
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WUREAL    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WUPL
+     C/COPY WNCPYSRC,SE0925C021
+     C**
+     C****Format*Interest*Received/accured*****************************   E20085
+      ***  Format Interest Earned                                         E20085
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WINTR     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WIRA
+     C**
+     C**  Format Reallowance
+     C                     Z-ADDWREALL    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WRAM
+     C**
+     C** *Format*Net*income/expense************************************   E20240
+     C***********          Z-ADDWCCPN     ZZTOT  150                      E20240
+     C***********          Z-ADDWCCPN     ZFLD15                          E20240
+     C***********          MOVE 'J'       ZECODE                          E20240
+     C***********          Z-ADDNOMDP     ZDECS                           E20240
+     C***********          EXSR ZSEDIT                                    E20240
+     C***********          MOVE ZOUT21    WCCPRN                          E20240
+     C**
+     C**  Format Total Income/expense
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WCCPT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WCCPRT
+     C/COPY WNCPYSRC,SE0925C008
+     C**
+     C**  Format TOTAL  COLUMN
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WTOTAL    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTEE
+     C*
+     C** Output record
+     C           LINCNT    IFGT 55
+     C                     WRITEHEADP1
+     C                     Z-ADD14        LINCNT
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     ADD  1         LINCNT                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+     C                     END
+     C                     WRITEDETAIL
+     C                     ADD  2         LINCNT
+     C*
+     C** Read next input record
+     C                     READ MPREXDF                  80
+     C/COPY WNCPYSRC,SE0925C009
+     C           *IN80     IFEQ '0'                                       E29170
+     C           ENT       ANDNE'ALL'                                     E29170
+     C           ENT       ANDNEMPBA                                      E29170
+     C           MBIN      ANDEQ'Y'                                       E37680
+     C                     SETON                     80                   E29170
+     C                     END                                            E29170
+     C                     END
+     C*
+     C*  END OF INPUT FILE -
+     C** If previous output - output total line
+     C           *IN81     IFEQ '1'
+     C*
+     C** Reformat all totals ready for output
+     C*
+     C** Realised profit/loss
+     C                     Z-ADDW1TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTRPT
+     C*
+     C** Un-Realised profit/loss
+     C                     Z-ADDW2TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WUPLT
+     C*
+     C***Interest*received/accrued*************************************   E20085
+      ***  Interest Earned                                                E20085
+     C                     Z-ADDW3TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WIRAT
+     C*
+     C** Reallowance
+     C                     Z-ADDW4TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WRAMT
+     C*
+     C** Net income expense
+     C                     Z-ADDW5TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WCCPTT
+     C/COPY WNCPYSRC,SE0925C010
+     C*
+     C** Net income expense
+     C** Printed*if*Comm/Chg*in*banks*avg*price*inds*=*'Y'*************   E20240
+     C***********          Z-ADDW7TOT     ZFLD15                          E20240
+     C***********          MOVE 'J'       ZECODE                          E20240
+     C***********          Z-ADDNOMDP     ZDECS                           E20240
+     C***********          EXSR ZSEDIT                                    E20240
+     C***********          MOVE ZOUT21    WCCPTN                          E20240
+     C*
+     C** Total Income/expense
+     C                     Z-ADDW6TOT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDNOMDP     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WTEET
+     C           LINCNT    IFGT 55
+     C                     WRITEHEADP1
+     C                     END
+     C                     WRITETOTAL
+      *                                                                   CSE006
+     C           CSE006    IFEQ 'Y'                                       CSE006
+     C                     EXSR SELBS                                     CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     WRITETRAILP1
+     C                     END
+     C*
+     C           EAUDIT    TAG                             *** EAUDIT ***
+     C*
+     C* OUTPUT RUN CONTROL REPORT
+     C*
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST  - Subroutine to access ICD Information.               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           *** FIRST  ***
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C* ACCESS ICD
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVEL'ICDR1'   DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+     C* ACCESS ICD2
+     C*
+     C                     EXSR ZICD2
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVEL'ICDR2'   DBKEY            * DB ERROR 02 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+      *                                                                   CAC005
+      ** Check if CAC005 - PCA-SE Enhancement is on.                      CAC005
+      *                                                                   CAC005
+     C                     MOVE 'N'       CAC005  1                       CAC005
+     C                     MOVE *OFF      *IN30                           CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   @RTCD   7                       CAC005
+     C                     PARM '*VERIFY' @OPTN   7                       CAC005
+     C                     PARM 'CAC005'  @SARD   6                       CAC005
+      *                                                                   CAC005
+     C           @RTCD     IFEQ *BLANK                                    CAC005
+     C                     MOVE 'Y'       CAC005                          CAC005
+     C                     MOVE *ON       *IN30                           CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CSE006
+      ** Check if CSE006 is on                                            CSE006
+      *                                                                   CSE006
+     C                     MOVE 'N'       CSE006  1                       CSE006
+     C                     CALL 'AOSARDR0'                                CSE006
+     C                     PARM *BLANKS   @RTCD   7                       CSE006
+     C                     PARM '*VERIFY' @OPTN   7                       CSE006
+     C                     PARM 'CSE006'  @SARD   6                       CSE006
+      *                                                                   CSE006
+     C           @RTCD     IFEQ *BLANK                                    CSE006
+     C                     MOVE 'Y'       CSE006                          CSE006
+     C                     ENDIF                                          CSE006
+     C*                                                                   E29170
+     C**  TEST FOR MULTIBRANCHING                                         E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     37                   E29170
+     C                     END                                            E29170
+     C*
+     C* ACCESS ICD FOR SE (TABTB36)
+     C*
+     C                     EXSR ZICDSE
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVEL'ICDSE'   DBKEY            * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+      *
+      ***  Reallowance-Bank Average Price
+     C           RBAP      IFEQ 'Y'
+     C                     SETON                         45
+     C                     END
+     C*
+     C* If Monthly run (Passed Parm = 'Y')
+     C* Get Data area SESTAT and set report data = This EOM date
+     C           RUNTYP    IFEQ 'Y'
+     C*                                                                   SD1730
+     C           *NAMVAR   DEFN SESTAT    DTAARA
+     C                     IN   DTAARA                                    SD1730
+     C*                                                                   SD1730
+     C                     MOVELEOPT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     SETOF                     99                   E20125
+     C                     MOVELZADATE    EOMDA
+     C*
+     C* Else  use P/ZEVCD and set Report date = Event Control Date
+     C                     ELSE
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     EXSR ZEVCD
+     C                     Z-ADDECD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RUNDT
+     C                     END
+     C/COPY WNCPYSRC,SE0925C011
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                              CSE006
+      *****************************************************************   CSE006
+      *                                                               *   CSE006
+      *  SELBS  - Subroutine to read buy/sell positions file          *   CSE006
+      *                                                               *   CSE006
+      *****************************************************************   CSE006
+      *                                                                   CSE006
+     C           SELBS     BEGSR                                          CSE006
+      *                                                                   CSE006
+     C                     MOVE *OFF      *IN85                           CSE006
+      *                                                                   CSE006
+      *** Set up last branch, book and security                           CSE006
+      *                                                                   CSE006
+     C                     MOVE *BLANKS   @LBRCH  3                       CSE006
+     C                     MOVE *BLANKS   @LBOK   2                       CSE006
+     C                     MOVE *BLANKS   @LSEC  10                       CSE006
+      *                                                                   CSE006
+      *** Initialise total work fields                                    CSE006
+      *                                                                   CSE006
+     C                     EXSR ITOTL                                     CSE006
+      *                                                                   CSE006
+      *** Do while a record is found                                      CSE006
+      *                                                                   CSE006
+     C           *IN85     DOWEQ*OFF                                      CSE006
+     C                     READ BSPOSD0                  85               CSE006
+      *                                                                   CSE006
+      *** If not end of file                                              CSE006
+      *                                                                   CSE006
+     C           *IN85     IFEQ *OFF                                      CSE006
+      *                                                                   CSE006
+      *** Calculate if maturity date is within this month                 CSE006
+      *                                                                   CSE006
+     C                     Z-ADDBSVD2     ZDAYNO                          CSE006
+     C                     EXSR ZDATE2                                    CSE006
+     C                     MOVE ZADATE    BSDAT                           CSE006
+      *                                                                   CSE006
+      *** If value date is within this month, calculate and print         CSE006
+      *** details                                                         CSE006
+      *                                                                   CSE006
+     C           RMTH      IFEQ WMMTH                                     CSE006
+     C           RYR       ANDEQWMYR                                      CSE006
+     C                     EXSR BYSELL                                    CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     ENDIF                                          CSE006
+     C                     ENDDO                                          CSE006
+      *                                                                   CSE006
+     C           *IN84     IFEQ *ON                                       CSE006
+      *                                                                   CSE006
+      *** Print total line                                                CSE006
+      *                                                                   CSE006
+     C                     EXSR PTOT                                      CSE006
+      *                                                                   CSE006
+      *** Print trailer for end of report                                 CSE006
+      *                                                                   CSE006
+     C                     WRITETRAIL2                                    CSE006
+     C                     CLOSESE0925P2                                  CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     ENDSR                                          CSE006
+      /EJECT                                                              CSE006
+      *****************************************************************   CSE006
+      *                                                               *   CSE006
+      *  BYSELL - Subroutine to calculate and print details           *   CSE006
+      *                                                               *   CSE006
+      *****************************************************************   CSE006
+      *                                                                   CSE006
+     C           BYSELL    BEGSR                                          CSE006
+      *                                                                   CSE006
+      *** Chain to TRADS using Buy/Sell Trade Reference                   CSE006
+      *                                                                   CSE006
+     C           BSPRF     CHAINTRADS                10                   CSE006
+      *                                                                   CSE006
+      *** Handle database error if record not found                       CSE006
+      *                                                                   CSE006
+     C           *IN10     IFEQ *ON                                       CSE006
+     C           RECI      OREQ '*'                                       CSE006
+     C                     MOVEL'SE0925'  DBPGM                           CSE006
+     C                     MOVELBSPRF     DBKEY            ***************CSE006
+     C                     MOVE 'TRADS'   DBFILE           * DB ERROR 10 *CSE006
+     C                     Z-ADD10        DBASE            ***************CSE006
+     C                     SETON                       U7U8               CSE006
+     C                     EXSR *PSSR                                     CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+      *** Calculate purchase interest for first trade                     CSE006
+      *                                                                   CSE006
+     C           ITRA      ADD  TINA      WPINT1 130                      CSE006
+      *                                                                   CSE006
+      *** Calculate reallowance for first trade                           CSE006
+      *                                                                   CSE006
+     C           NOML      MULT RALL      W1RAL  150                      CSE006
+      *                                                                   CSE006
+      *** Calculate total charge and commission for first trade           CSE006
+      *                                                                   CSE006
+     C                     Z-ADDTCCA      WTCC1  130                      CSE006
+     C                     ADD  TCA1      WTCC1                           CSE006
+     C                     ADD  TCA2      WTCC1                           CSE006
+     C                     ADD  TCA3      WTCC1                           CSE006
+     C                     ADD  TCA4      WTCC1                           CSE006
+     C                     ADD  TCA5      WTCC1                           CSE006
+     C                     ADD  TCA6      WTCC1                           CSE006
+     C                     ADD  TCA7      WTCC1                           CSE006
+      *                                                                   CSE006
+      *** Chain to TRADS using Link Reference                             CSE006
+      *                                                                   CSE006
+     C           LKRF      CHAINTRADS                10                   CSE006
+      *                                                                   CSE006
+      *** Handle database error if record not found                       CSE006
+      *                                                                   CSE006
+     C           *IN10     IFEQ *ON                                       CSE006
+     C           RECI      OREQ '*'                                       CSE006
+     C                     MOVEL'SE0925'  DBPGM                           CSE006
+     C                     MOVELLKRF      DBKEY            ***************CSE006
+     C                     MOVE 'TRADS'   DBFILE           * DB ERROR 11 *CSE006
+     C                     Z-ADD11        DBASE            ***************CSE006
+     C                     SETON                       U7U8               CSE006
+     C                     EXSR *PSSR                                     CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+      *** Obtain currency details                                         CSE006
+      *                                                                   CSE006
+     C                     MOVE *BLANKS   KEY                             CSE006
+     C                     MOVEL'20      'KEY                             CSE006
+     C                     MOVE SETC      KCCY                            CSE006
+     C                     MOVE '1'       KEY                             CSE006
+     C           TABKEY    CHAINTABTG10F             10                   CSE006
+      *                                                                   CSE006
+     C           *IN10     IFEQ *ON                                       CSE006
+     C           RECI      OREQ '*'                                       CSE006
+     C                     MOVEL'SE0925'  DBPGM                           CSE006
+     C                     MOVELSETC      DBKEY            ***************CSE006
+     C                     MOVE 'TABTG10' DBFILE           * DB ERROR 12 *CSE006
+     C                     Z-ADD12        DBASE            ***************CSE006
+     C                     SETON                       U7U8               CSE006
+     C                     EXSR *PSSR                                     CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+      *** If new security, obtain new security details                    CSE006
+      *                                                                   CSE006
+     C           @LSEC     IFNE BSSEN                                     CSE006
+     C           BSSEN     CHAINSECTY                10                   CSE006
+      *                                                                   CSE006
+     C           *IN10     IFEQ *ON                                       CSE006
+     C           RECI      OREQ '*'                                       CSE006
+     C                     MOVEL'SE0925'  DBPGM                           CSE006
+     C                     MOVELBSSEN     DBKEY            ***************CSE006
+     C                     MOVE 'SECTY'   DBFILE           * DB ERROR 13 *CSE006
+     C                     Z-ADD13        DBASE            ***************CSE006
+     C                     SETON                       U7U8               CSE006
+     C                     EXSR *PSSR                                     CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+      *** If new book, obtain new book details                            CSE006
+      *                                                                   CSE006
+     C           @LBOK     IFNE BSBOK                                     CSE006
+     C           BSBOK     CHAINBOOKD                10                   CSE006
+      *                                                                   CSE006
+     C           *IN10     IFEQ *ON                                       CSE006
+     C           RECI      OREQ '*'                                       CSE006
+     C                     MOVEL'SE0925'  DBPGM                           CSE006
+     C                     MOVELBSBOK     DBKEY            ***************CSE006
+     C                     MOVE 'BOOKD'   DBFILE           * DB ERROR 14 *CSE006
+     C                     Z-ADD14        DBASE            ***************CSE006
+     C                     SETON                       U7U8               CSE006
+     C                     EXSR *PSSR                                     CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+      *** If new branch, obtain new branch details                        CSE006
+      *                                                                   CSE006
+     C           @LBRCH    IFNE BSBCH                                     CSE006
+     C**********           MOVE *BLANKS   KEY                                         CSE006 BUG7985
+     C**********           MOVEL'10      'KEY                                         CSE006 BUG7985
+     C**********           MOVE BSBCH     KEY                                         CSE006 BUG7985
+      *                                                                   CSE006
+     C********** TABKEY    CHAINTABLETRF             10                               CSE006 BUG7985
+      *                                                                                      BUG7985
+     C                     CALL 'AOBRCHR1'                                                   BUG7985
+     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
+     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
+     C                     PARM BSBCH     PBRCH   3                                          BUG7985
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
+      *                                                                   CSE006
+     C           PRTCD     IFNE *BLANKS                                                      BUG7985
+     C********** *IN10     IFEQ *ON                                                   CSE006 BUG7985
+     C********** RECI      OREQ '*'                                                   CSE006 BUG7985
+     C**********           MOVEL'SE0925'  DBPGM                                       CSE006 BUG7985
+     C**********           MOVELBSBCH     DBKEY            ***************            CSE006 BUG7985
+     C                     MOVEL'SDBRCHPD'DBPGM                                       CSE006 BUG7985
+     C                     MOVELBSBCH     DBKEY                                       CSE006 BUG7985
+     C                     MOVE 'TABLETR' DBFILE           * DB ERROR 15 *CSE006
+     C                     Z-ADD15        DBASE            ***************CSE006
+     C                     SETON                       U7U8               CSE006
+     C                     EXSR *PSSR                                     CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+      *** Check if this is the first time or there is a change of         CSE006
+      *** branch so that spool file can be set up                         CSE006
+      *                                                                   CSE006
+     C                     EXSR BSFST                                     CSE006
+      *                                                                   CSE006
+      *** If last book code is not equal to book code                     CSE006
+      *                                                                   CSE006
+     C           @LBOK     IFNE BSBOK                                     CSE006
+      *                                                                   CSE006
+     C           *IN84     IFEQ *ON                                       CSE006
+      *                                                                   CSE006
+      *** Print total line                                                CSE006
+      *                                                                   CSE006
+     C                     EXSR PTOT                                      CSE006
+      *                                                                   CSE006
+      *** Add 1 to page count                                             CSE006
+      *                                                                   CSE006
+     C                     ADD  1         DPAGE                           CSE006
+      *                                                                   CSE006
+      *** Print headers                                                   CSE006
+      *                                                                   CSE006
+     C                     WRITEHEADP2                                    CSE006
+     C                     WRITEHEADD1                                    CSE006
+     C                     WRITEHEADD2                                    CSE006
+      *                                                                   CSE006
+     C                     MOVE BSBOK     @LBOK                           CSE006
+     C                     MOVE BSSEN     @LSEC                           CSE006
+      *                                                                   CSE006
+     C                     ENDIF                                          CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+      *** If last security is not equal to security                       CSE006
+      *                                                                   CSE006
+     C           @LSEC     IFNE BSSEN                                     CSE006
+      *                                                                   CSE006
+     C           *IN84     IFEQ *ON                                       CSE006
+      *                                                                   CSE006
+      *** Print total line                                                CSE006
+      *                                                                   CSE006
+     C                     EXSR PTOT                                      CSE006
+      *                                                                   CSE006
+      *** Check for end of page                                           CSE006
+      *                                                                   CSE006
+     C                     Z-ADD12        @LND    20                      CSE006
+     C           OFLLN2    SUB  PRTLN2    @LRM    20                      CSE006
+      *                                                                   CSE006
+     C           @LRM      IFLT @LND                                      CSE006
+      *                                                                   CSE006
+      *** Add 1 to page count                                             CSE006
+      *                                                                   CSE006
+     C                     ADD  1         DPAGE                           CSE006
+      *                                                                   CSE006
+      *** Print headers                                                   CSE006
+      *                                                                   CSE006
+     C                     WRITEHEADP2                                    CSE006
+     C                     WRITEHEADD1                                    CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     WRITEHEADD2                                    CSE006
+      *                                                                   CSE006
+     C                     MOVE BSSEN     @LSEC                           CSE006
+     C                     ENDIF                                          CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+      *** Realised profit/loss                                            CSE006
+      *                                                                   CSE006
+     C                     Z-ADDBSPL      ZFLD15                          CSE006
+     C                     MOVE 'J'       ZECODE                          CSE006
+     C                     Z-ADDCDP       ZDECS                           CSE006
+     C                     EXSR ZSEDIT                                    CSE006
+     C                     MOVE ZOUT21    RPL                             CSE006
+      *                                                                   CSE006
+      *** Add to total profit/loss                                        CSE006
+      *                                                                   CSE006
+     C                     ADD  BSPL      @TPL                            CSE006
+      *                                                                   CSE006
+      *** Interest earned = purchase interest from the sale - purchase    CSE006
+      *** interest from the purchase                                      CSE006
+      *                                                                   CSE006
+     C           ITRA      ADD  TINA      WPINT2 130                      CSE006
+      *                                                                   CSE006
+     C           TDTP      IFEQ 'TS'                                      CSE006
+     C           WPINT2    SUB  WPINT1    WINT   130                      CSE006
+     C                     ELSE                                           CSE006
+     C           WPINT1    SUB  WPINT2    WINT   130                      CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     Z-ADDWINT      ZFLD15                          CSE006
+     C                     EXSR ZSEDIT                                    CSE006
+     C                     MOVE ZOUT21    INTE                            CSE006
+      *                                                                   CSE006
+      *** Add to total interest                                           CSE006
+      *                                                                   CSE006
+     C                     ADD  WINT      @TINT                           CSE006
+      *                                                                   CSE006
+      *** Reallowance = reallowance from the purchase - reallowance       CSE006
+      *** from the sale                                                   CSE006
+      *                                                                   CSE006
+     C           NOML      MULT RALL      W2RAL  150                      CSE006
+      *                                                                   CSE006
+     C           TDTP      IFEQ 'TS'                                      CSE006
+     C           W1RAL     SUB  W2RAL     WRAL   150                      CSE006
+     C                     ELSE                                           CSE006
+     C           W2RAL     SUB  W1RAL     WRAL   150                      CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     Z-ADDWRAL      ZFLD15                          CSE006
+     C                     EXSR ZSEDIT                                    CSE006
+     C                     MOVE ZOUT21    RAL                             CSE006
+      *                                                                   CSE006
+      *** Add to total reallowance                                        CSE006
+      *                                                                   CSE006
+     C                     ADD  WRAL      @TRL                            CSE006
+      *                                                                   CSE006
+      *** Charges and commission is the total charge and commission       CSE006
+      *** from both trades                                                CSE006
+      *                                                                   CSE006
+     C                     Z-ADDTCCA      WTCC2  130                      CSE006
+     C                     ADD  TCA1      WTCC2                           CSE006
+     C                     ADD  TCA2      WTCC2                           CSE006
+     C                     ADD  TCA3      WTCC2                           CSE006
+     C                     ADD  TCA4      WTCC2                           CSE006
+     C                     ADD  TCA5      WTCC2                           CSE006
+     C                     ADD  TCA6      WTCC2                           CSE006
+     C                     ADD  TCA7      WTCC2                           CSE006
+     C           WTCC1     ADD  WTCC2     WTCC   130                      CSE006
+      *                                                                   CSE006
+     C                     Z-ADDWTCC      ZFLD15                          CSE006
+     C                     EXSR ZSEDIT                                    CSE006
+     C                     MOVE ZOUT21    CCOM                            CSE006
+      *                                                                   CSE006
+      *** Add to total charges and commission                             CSE006
+      *                                                                   CSE006
+     C                     ADD  WTCC      @TCC                            CSE006
+      *                                                                   CSE006
+      *** Income/expense = profit/loss + interest + reallowance -         CSE006
+      *** charges/commission                                              CSE006
+      *                                                                   CSE006
+     C                     Z-ADDBSPL      WIE    150                      CSE006
+     C                     ADD  WINT      WIE                             CSE006
+     C                     ADD  WRAL      WIE                             CSE006
+     C                     SUB  WTCC      WIE                             CSE006
+      *                                                                   CSE006
+     C                     Z-ADDWIE       ZFLD15                          CSE006
+     C                     EXSR ZSEDIT                                    CSE006
+     C                     MOVE ZOUT21    INPS                            CSE006
+      *                                                                   CSE006
+      *** Add to total income/expense                                     CSE006
+      *                                                                   CSE006
+     C                     ADD  WIE       @TIE                            CSE006
+      *                                                                   CSE006
+      *** Check for end of page                                           CSE006
+      *                                                                   CSE006
+     C                     Z-ADD7         @LND    20                      CSE006
+     C           OFLLN2    SUB  PRTLN2    @LRM    20                      CSE006
+      *                                                                   CSE006
+     C           @LRM      IFLT @LND                                      CSE006
+      *                                                                   CSE006
+      *** Add 1 to page count                                             CSE006
+      *                                                                   CSE006
+     C                     ADD  1         DPAGE                           CSE006
+      *                                                                   CSE006
+      *** Print headers                                                   CSE006
+      *                                                                   CSE006
+     C                     WRITEHEADP2                                    CSE006
+     C                     WRITEHEADD1                                    CSE006
+     C                     WRITEHEADD2                                    CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+      *** Print details                                                   CSE006
+      *                                                                   CSE006
+     C                     WRITEBSLINE                                    CSE006
+      *                                                                   CSE006
+     C                     ENDSR                                          CSE006
+      /EJECT                                                              CSE006
+      *****************************************************************   CSE006
+      *                                                               *   CSE006
+      *  ITOTL  - Subroutine to initialise total work fields          *   CSE006
+      *                                                               *   CSE006
+      *****************************************************************   CSE006
+      *                                                                   CSE006
+     C           ITOTL     BEGSR                                          CSE006
+      *                                                                   CSE006
+      *** Total profit/loss                                               CSE006
+      *                                                                   CSE006
+     C                     Z-ADD0         @TPL   150                      CSE006
+      *                                                                   CSE006
+      *** Total interest                                                  CSE006
+      *                                                                   CSE006
+     C                     Z-ADD0         @TINT  150                      CSE006
+      *                                                                   CSE006
+      *** Total reallowance                                               CSE006
+      *                                                                   CSE006
+     C                     Z-ADD0         @TRL   150                      CSE006
+      *                                                                   CSE006
+      *** Total charges/commission                                        CSE006
+      *                                                                   CSE006
+     C                     Z-ADD0         @TCC   150                      CSE006
+      *                                                                   CSE006
+      *** Total income/expense                                            CSE006
+      *                                                                   CSE006
+     C                     Z-ADD0         @TIE   150                      CSE006
+      *                                                                   CSE006
+     C                     ENDSR                                          CSE006
+      /EJECT                                                              CSE006
+      *****************************************************************   CSE006
+      *                                                               *   CSE006
+      *  BSFST  - Subroutine to set up spool file                     *   CSE006
+      *                                                               *   CSE006
+      *****************************************************************   CSE006
+      *                                                                   CSE006
+     C           BSFST     BEGSR                                          CSE006
+      *                                                                   CSE006
+      *** If last branch code is not equal to branch code                 CSE006
+      *                                                                   CSE006
+     C           @LBRCH    IFNE BSBCH                                     CSE006
+      *                                                                   CSE006
+     C           *IN84     IFEQ *ON                                       CSE006
+      *                                                                   CSE006
+      *** Print total line                                                CSE006
+      *                                                                   CSE006
+     C                     EXSR PTOT                                      CSE006
+      *                                                                   CSE006
+      *** Print trailer for end of report                                 CSE006
+      *                                                                   CSE006
+     C                     WRITETRAIL2                                    CSE006
+      *                                                                   CSE006
+     C                     CLOSESE0925P2                                  CSE006
+     C                     MOVE *OFF      *IN84                           CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C           *IN84     IFEQ *OFF                                      CSE006
+     C                     OPEN SE0925P2                                  CSE006
+      *                                                                   CSE006
+      *** Register P2 printer file via RCF                                CSE006
+      *                                                                   CSE006
+     C                     EXSR RCFP2                                     CSE006
+      *                                                                   CSE006
+      *** Page number starts at 1                                         CSE006
+      *                                                                   CSE006
+     C                     Z-ADD1         DPAGE                           CSE006
+      *                                                                   CSE006
+      *** Print headers                                                   CSE006
+      *                                                                   CSE006
+     C                     WRITEHEADP2                                    CSE006
+     C                     WRITEHEADD1                                    CSE006
+     C                     WRITEHEADD2                                    CSE006
+      *                                                                   CSE006
+     C                     MOVE *ON       *IN84                           CSE006
+      *                                                                   CSE006
+     C                     MOVE BSBCH     @LBRCH                          CSE006
+     C                     MOVE BSSEN     @LSEC                           CSE006
+     C                     MOVE BSBOK     @LBOK                           CSE006
+     C                     ENDIF                                          CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     ENDSR                                          CSE006
+      /EJECT                                                              CSE006
+      *****************************************************************   CSE006
+      *                                                               *   CSE006
+      *  PTOT   - Subroutine to print total line                      *   CSE006
+      *                                                               *   CSE006
+      *****************************************************************   CSE006
+      *                                                                   CSE006
+     C           PTOT      BEGSR                                          CSE006
+      *                                                                   CSE006
+      *** Total profit/loss                                               CSE006
+      *                                                                   CSE006
+     C                     Z-ADD@TPL      ZFLD15                          CSE006
+     C                     EXSR ZSEDIT                                    CSE006
+     C                     MOVE ZOUT21    TRPL                            CSE006
+      *                                                                   CSE006
+      *** Total interest                                                  CSE006
+      *                                                                   CSE006
+     C                     Z-ADD@TINT     ZFLD15                          CSE006
+     C                     EXSR ZSEDIT                                    CSE006
+     C                     MOVE ZOUT21    TINT                            CSE006
+      *                                                                   CSE006
+      *** Total reallowance                                               CSE006
+      *                                                                   CSE006
+     C                     Z-ADD@TRL      ZFLD15                          CSE006
+     C                     EXSR ZSEDIT                                    CSE006
+     C                     MOVE ZOUT21    TRAL                            CSE006
+      *                                                                   CSE006
+      *** Total charges/commission                                        CSE006
+      *                                                                   CSE006
+     C                     Z-ADD@TCC      ZFLD15                          CSE006
+     C                     EXSR ZSEDIT                                    CSE006
+     C                     MOVE ZOUT21    TCC                             CSE006
+      *                                                                   CSE006
+      *** Total income/expense                                            CSE006
+      *                                                                   CSE006
+     C                     Z-ADD@TIE      ZFLD15                          CSE006
+     C                     EXSR ZSEDIT                                    CSE006
+     C                     MOVE ZOUT21    TINPS                           CSE006
+      *                                                                   CSE006
+      *** Print total line                                                CSE006
+      *                                                                   CSE006
+     C                     WRITETOTL                                      CSE006
+      *                                                                   CSE006
+      *** Initialise total work fields                                    CSE006
+      *                                                                   CSE006
+     C                     EXSR ITOTL                                     CSE006
+      *                                                                   CSE006
+     C                     ENDSR                                          CSE006
+      /EJECT                                                              CSE006
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Control Report.                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Access Extract Audit Record
+     C                     READ MPREXA                   10
+     C           *IN10     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MPREX'   DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 08 **
+     C                     Z-ADD8         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C* Check for file control imbalance
+      ***  But not for Single Branch request in Multibranched system.     E37680
+      *                                                                   E37680
+     C           MBIN      IFEQ 'N'                                       E37680
+     C           ENT       OREQ 'ALL'                                     E37680
+     C           *INU8     IFEQ '0'
+     C           NORE      IFNE ZRIN
+     C***********ENT       ANDEQ'ALL'                              E33030 E37680
+     C                     SETON                     U857
+     C                     END
+     C                     END
+     C                     END                                            E37680
+     C*
+     C* OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEERROR
+     C                     ELSE
+     C                     WRITECONTROL
+     C*                                                                   E31197
+     C** If no records read then print 'No Details' on                    E31197
+     C** Audit Printer File                                               E31197
+     C*                                                                   E31197
+     C           ZRIN      IFEQ 0                                         E31197
+     C                     WRITENONE                                      E31197
+     C                     END                                            E31197
+     C                     END
+     C*
+     C***********          WRITETRAILAU                                   E29170
+     C***********                                                         E29170
+     C                     ENDSR
+     C*
+      *****************************************************************   S01169
+      /SPACE 3                                                            S01169
+      *****************************************************************   S01169
+      *                                                                   S01169
+      *  *PSSR  - Program Exception/Error.                            *   S01169
+      *                                                               *   S01169
+      *****************************************************************   S01169
+      *                                                                   S01169
+     C           *PSSR     BEGSR                           *** *PSSR ***  S01169
+      *                                                                   S01169
+     C           EPSW      IFNE '1'                                       S01169
+     C                     MOVE '1'       EPSW    1                       S01169
+     C*                                                                   S01169
+     C***********EPFLAG    IFNE 'F'                                S01169 S01117
+     C***********                                                  S01169 S01117
+     C***********          CALL 'SDC2505'                          S01169 S01117
+     C***********          PARM           EPPDS1                   S01169 S01117
+     C***********          PARM           EPPDS2                   S01169 S01117
+     C***********                                                  S01169 S01117
+     C***********          ELSE                                    S01169 S01117
+     C***********                                                  S01169 S01117
+     C***********          CALL 'SDC2500'                          S01169 S01117
+     C***********          PARM           EPFDS1                   S01169 S01117
+     C***********          PARM           EPFDS2                   S01169 S01117
+     C***********          PARM           EPPP                     S01169 S01117
+     C***********          PARM           EPPPL                    S01169 S01117
+     C***********                                                  S01169 S01117
+     C***********          END                                     S01169 S01117
+     C***********                                                  S01169 S01117
+     C                     DUMP                                           S01169
+     C                     END                                            S01169
+     C*                                                                   S01169
+     C***********          SETON                     LR            S01169 S01117
+     C***********          RETRN                                   S01169 S01117
+     C*                                                                   S01169
+     C                     ENDSR                                          S01169
+      *                                                                   S01169
+     C*****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM MPBA      SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM *BLANKS   ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+     C/EJECT                                                              CSE006
+     C********************************************************************CSE006
+     C*                                                                   CSE006
+     C*  RCFP2 -- Subroutine to register P2 printer file via RCF          CSE006
+     C*                                                                   CSE006
+     C********************************************************************CSE006
+     C*                                                                   CSE006
+     C           RCFP2     BEGSR                                          CSE006
+      *                                                                   CSE006
+      *** Ensure report spool file is recoreded by RCF                    CSE006
+      *                                                                   CSE006
+     C                     Z-ADDSFNUM2    ZSNUM2  60                      CSE006
+      *                                                                   CSE006
+     C                     CALL 'ZSFILE'                                  CSE006
+     C                     PARM           SEQ                             CSE006
+     C                     PARM MPBA      SENTY   3                       CSE006
+     C                     PARM           SFILE2                          CSE006
+     C                     PARM           ZSNUM2                          CSE006
+     C                     PARM *BLANKS   ZSERR   1                       CSE006
+      *                                                                   CSE006
+     C           ZSERR     IFEQ 'Y'                                       CSE006
+      *                                                                   CSE006
+      *** Error during ZSFILE processing, return to calling program       CSE006
+      *                                                                   CSE006
+     C                     SETON                     U7U8LR               CSE006
+     C                     RETRN                                          CSE006
+     C                     END                                            CSE006
+      *                                                                   CSE006
+     C                     ENDSR                                          CSE006
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                       #DATE
+0366073110961461                                                           #DATE
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                         #DATE
+000031059090120151181212243273304334365                                    #DATE
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+     X/COPY WNCPYSRC,SE0925X001

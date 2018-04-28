@@ -1,0 +1,833 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  DL0280 - DL0280MADT                                          *
+      *                                                               *
+      *  Last Amend No. MD024874A          Date 19Aug14               *
+      *  Prev Amend No. MD024093           Date 17Dec13               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG26326           Date 12Oct09               *
+      *                 250190  *CREATE    Date 04Oct07               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD024874A - Prevent imbalance caused by rolled-over IT deal. *
+      *              Make sure that Euro Withholding tax will only    *
+      *              apply to appropriate deal types.                 *
+      *            - MM deal tax calculated twice for Maturity Date.  *
+      *              Move MDAT to WEVDAT which is the key to new file *
+      *              SDCSINL10.                                       *
+      *  MD024093 - Missing Account Keys due to incorrect generation  *
+      *             of account keys                                   *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26326 - Apply fix of GF1 bug Bug25943/A. This will fix    *
+      *             the Taxes errors of GF2 bugs, as follows:         *
+      *               - 26326    - 26329    - 26397                   *
+      *               - 26328    - 26331                              *
+      *  250190 - Incorrect postings generated for deals rolled over  *
+      *           to EUR currency.  SR/MADAT was externalised.        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MADAT - Process Maturity Date.                               *
+      *                                                               *
+      *****************************************************************
+     C     MADAT         BEGSR                                                  *** MADAT   ***08060
+     C/COPY WNCPYSRC,DL0280C497
+     C*                                                                   080603
+     C** Accrual at Maturity to Post                                      080603
+     C*                                                                   080603
+     C                   Z-ADD     WORKTP        KYAMT                                         08060
+     C                   MOVE      'A'           AKY(3)                                        08060
+     C                   MOVE      'A'           AKY(10)                                       08060
+      *                                                                   CEU015
+      * Mat-Rollover-Prin-A/c-Key-set workfield                           CEU015
+     C                   MOVE      *BLANKS       @MRPAK            1                           CEU01
+      *                                                                   CEU015
+     C                   EXSR      EXCP                                                        08060
+     C*                                                                   080603
+     C                   ADD       WORKTP        AIPD                                          08060
+      *                                                                                       CAS005
+     C     CAS005        IFEQ      'Y'
+     C                   ADD       WKNTRP        FSAIPN
+     C                   ENDIF
+     C*                                                                   080603
+     C** Set Maturity Report details                                      080603
+     C*                                                                   080603
+     C                   MOVE      '1'           *IN71                                         08060
+     C                   Z-ADD     PAMT          NRRPUR                                        08060
+     C                   Z-ADD     *ZERO         NRRSAL                                        08060
+     C/COPY WNCPYSRC,DL0280C035
+     C*                                                                   080603
+     C**  Gross Interest Due at Maturity                                  080603
+     C*                                                                   080603
+     C     IPFR          IFNE      'N'                                          B 001          08060
+     C     FUID          ANDNE     'Y'                                                         08060
+      *                                                                                       237602
+     C*****IPDS*         IFNE      'Y'                                              237602 AR1034532
+      *                                                                                       237602
+     C                   Z-ADD     WORKD         KYAMT                                         08060
+     C                   MOVE      'M'           AKY(3)                                        08060
+     C                   MOVE      'I'           AKY(10)                                       08060
+     C/COPY WNCPYSRC,DL0280C720
+     C*                                                                   080603
+     C** If Taxable, modify key                                           080603
+     C*                                                                   080603
+     C     S01460        IFEQ      'Y'                                          B 002          08060
+     C     *IN23         ANDEQ     *ON                                                         08060
+     C                   MOVE      'T'           AKY(9)                                        08060
+     C                   ENDIF                                                  E 002          08060
+     C*                                                                   080603
+     C     CDL013        IFEQ      '1'                                                        CDL013
+     C     BBCSTY        IFEQ      'C'                                                        CDL013
+     C     S01460        ANDEQ     'Y'                                                      MD024093
+     C     *IN23         ANDEQ     *ON                                                      MD024093
+     C                   MOVE      'C'           AKY(6)                                       CDL013
+     C                   ELSE                                                                 CDL013
+     C                   MOVE      ' '           AKY(6)                                       CDL013
+     C                   ENDIF                                                                CDL013
+     C                   ENDIF                                                                CDL013
+     C/COPY WNCPYSRC,DL0280C122                                           S01408
+     C*                                                                   S01408
+     C     WORKD         SUB       TAXA          NRRSAL                                        08060
+     C/COPY WNCPYSRC,DL0280C164                                           S01408
+     C                   EXSR      EXCP                                                        08060
+     C                   MOVE      ' '           AKY(9)                                        08060
+      *                                                                                       237602
+     C**********         ENDIF                                                      237602 AR1034532
+     C*                                                                   080603
+     C     CDL013        IFEQ      '1'                                                        CDL013
+     C                   MOVE      ' '           AKY(6)                                       CDL013
+     C                   ENDIF                                                                CDL013
+     C/COPY WNCPYSRC,DL0280C123                                           S01408
+     C*                                                                   S01408
+     C**  Settlement Net Interest, if Interest Paid Separately            080603
+     C*                                                                   080603
+     C     IPDS          IFEQ      'Y'                                          B 002          08060
+     C/COPY WNCPYSRC,DL0280C167                                           S01408
+     C     WORKD         SUB       TAXA          KYAMT                                         08060
+     C/COPY WNCPYSRC,DL0280C168                                           S01408
+     C                   MOVE      'R'           AKY(3)                                        08060
+     C                   MOVE      'I'           AKY(10)                                       08060
+     C*                                                                   080603
+     C** Use Interest Settlement Instructions                             080603
+     C*                                                                   080603
+     C     IMET          IFNE      *BLANKS                                      B 003          08060
+     C     IMET          ANDNE     *ZEROS                                                      08060
+     C                   MOVE      IMET          KYSETL                                        08060
+     C                   MOVEL     INSA          KYOSTL                                        08060
+     C                   ENDIF                                                  E 003          08060
+      *                                                                   145116
+      **  If Interest Settlement Currency is defined, pass this currency  145116
+      **  as settlement currency for this account key. (but first,        145116
+      **  save currently  defined settlement currency.                    145116
+      *                                                                   145116
+     C                   MOVE      *BLANKS       SVCCY             3                           14511
+     C     CEU003        IFEQ      'Y'                                                         14511
+     C     ISCY          ANDNE     *BLANKS                                                     14511
+     C                   MOVE      KYSCY         SVCCY             3                           14511
+     C                   MOVE      ISCY          KYSCY                                         14511
+     C                   ENDIF                                                                 14511
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL0280C209                                           S01408
+      *                                                                   148100
+      ** Save the original value of settlement branch.                    148100
+      *                                                                   148100
+     C                   MOVE      KYSTBR        @STBR             3                           14810
+      *                                                                   148100
+      ** replace original codes with SR INTACC                                                239550
+     C                   EXSR      INTACC                                                     239550
+      *                                                                   148100
+     C                   EXSR      EXCP                                                        08060
+      *                                                                   148100
+      ** Return the previous value of settlement branch.                  148100
+      *                                                                   148100
+     C                   MOVE      @STBR         KYSTBR                                        14810
+      *                                                                   145116
+      **  Bring back saved settlement currency                            145116
+      *                                                                   145116
+     C     CEU003        IFEQ      'Y'                                                         14511
+     C     ISCY          ANDNE     *BLANKS                                                     14511
+     C                   MOVE      SVCCY         KYSCY                                         14511
+     C                   ENDIF                                                                 14511
+      *                                                                   145116
+     C                   ENDIF                                                  E 002          08060
+     C                   ENDIF                                                  E 001          08060
+     C/COPY WNCPYSRC,DL0280C498
+     C*                                                                   080603
+     C**  Maturing Principal                                              080603
+     C*                                                                   080603
+     C                   Z-ADD     MDST          KYSETL                                        08060
+     C                   MOVE      OMDA          KYOSTL                                        08060
+     C                   Z-ADD     PAMT          KYAMT                                         08060
+      *                                                                   S01408
+     C/COPY WNCPYSRC,DL0280C210                                           S01408
+      *                                                                   S01408
+     C     S01434        IFNE      'Y'                                          B 001          08060
+     C     RBDN          OREQ      *ZERO                                                       08060
+     C     FUID          OREQ      'Y'                                                         08060
+     C                   MOVE      'M'           AKY(3)                                        08060
+     C                   MOVE      'A'           AKY(10)                                       08060
+     C                   ELSE                                                   X 001          08060
+     C                   MOVE      'R'           AKY(3)                                        08060
+     C                   MOVE      'A'           AKY(10)                                       08060
+      *                                                                   CEU015
+     C     CEU015        IFEQ      'Y'                                                         CEU01
+     C     RTFC          ANDNE     *BLANKS                                                     CEU01
+     C                   MOVE      'X'           AKY(9)                                        CEU01
+     C                   MOVE      'Y'           @MRPAK                                        CEU01
+     C                   ENDIF                                                                 CEU01
+      *                                                                   CEU015
+     C                   ENDIF                                                  E 001          08060
+     C*                                                                   080603
+     C                   EXSR      EXCP                                                        08060
+     C*                                                                   CEU015
+     C                   MOVE      ' '           AKY(9)                                        CEU01
+     C*                                                                   080603
+     C**  Rollover Processing                                             080603
+     C*                                                                   080603
+      * Convert RBDA to deal currency equivalent                          CEU015
+     C     *LIKE         DEFINE    RBDA          @RBDA                                         CEU01
+     C                   Z-ADD     RBDA          @RBDA                                         CEU01
+      *                                                                   CEU015
+     C     RBDN          IFNE      *ZERO                                        B 001          08060
+      *                                                                   CEU015
+     C     CEU015        IFEQ      'Y'                                                         CEU01
+     C     RTFC          ANDNE     *BLANKS                                                     CEU01
+      *                                                                   CEU015
+     C** Output Rollover To/From Currency to GEDLPD record.  This will    CEU015
+     C** trigger spot trade accounting entries to be produced for         CEU015
+     C** maturing deals rolled over from an 'In' currency to Euros.       CEU015
+     C                   MOVEL     RTFC          @RTFC             3                           CEU01
+      *                                                                   CEU015
+     C                   ENDIF                                                                 CEU01
+     C*                                                                   080603
+     C**  New Principal/Settlement                                        080603
+     C*                                                                   080603
+     C                   Z-ADD     @RBDA         KYAMT                                         CEU01
+     C                   MOVE      'M'           AKY(3)                                        08060
+     C                   MOVE      'R'           AKY(10)                                       08060
+      *                                                                                       250190
+      ** If deal was rolled over to a different currency, need to                             250190
+      ** convert RBDA to the original currency to get the correct                             250190
+      ** KYAMT.                                                                               250190
+      *                                                                                       250190
+     C     *LIKE         DEFINE    RBDA          W#RBDA                                       250190
+     C                   Z-ADD     RBDA          W#RBDA                                       250190
+     C     CEU015        IFEQ      'Y'                                                        250190
+     C     RTFC          ANDNE     *BLANKS                                                    250190
+      *                                                                                       250190
+     C                   CALL      'EU0200'                                                   250190
+     C                   PARM      *BLANKS       P@RTCD                                       250190
+     C                   PARM      RBDA          P@FRAM                                       250190
+     C                   PARM      RTFC          P@FRCY                                       250190
+     C                   PARM      PCCY          P@TOCY                                       250190
+     C                   PARM                    P@OUTA                                       250190
+     C                   PARM                    P@INTA                                       250190
+     C                   PARM                    P@EXRT                                       250190
+     C                   PARM                    P@MDIN                                       250190
+      *                                                                                       250190
+     C     P@RTCD        IFEQ      '*ERROR*'                                                  250190
+     C                   MOVEL     'EU0200'      DBFILE                                       250190
+     C                   MOVEL     '56'          DBASE                                        250190
+     C                   MOVE      *BLANKS       DBOPTN                                       250190
+     C                   MOVEL     RTFC          DBKEY                                        250190
+     C                   SETON                                        U7U8                    250190
+     C                   EXSR      *PSSR                                                      250190
+     C                   ELSE                                                                 250190
+     C                   Z-ADD     P@OUTA        KYAMT                                        250190
+     C                   Z-ADD     P@OUTA        W#RBDA                                       250190
+     C                   ENDIF                                                                250190
+     C                   ENDIF                                                                250190
+     C*                                                                   080603
+     C** For Up front interest, Rollover is Principal Less Interest       080603
+     C*                                                                   080603
+     C     FUID          IFEQ      'Y'                                          B 002          08060
+     C*                                                                   080603
+     C     RBDN          CHAIN     DEALS                              32                       13462
+     C     RECR2         IFNE      'D'                                          B 003          08060
+     C     RECR2         ANDNE     'E'                                                         08060
+     C     RECR2         ANDNE     'M'                                                         08060
+     C     RECR2         ANDNE     'R'                                                         08060
+     C     *IN32         OREQ      *ON                                                         13462
+     C                   SETON                                        LRU7U8                   08060
+     C                   GOTO      ENDMAD                                                      08060
+     C                   END                                                    E 003          08060
+     C*                                                                   080603
+     C     CEU015        IFEQ      'Y'                                                         CEU01
+     C     RTFC          ANDNE     *BLANKS                                                     CEU01
+      *                                                                   CEU015
+     C                   CALL      'EU0200'                                                    CEU01
+     C                   PARM      *BLANKS       P@RTCD            7            RETURN CODE    CEU01
+     C                   PARM      TOTI2         P@FRAM           18 3          TRANS AMT      CEU01
+     C                   PARM      RTFC          P@FRCY            3            FROM CCY       CEU01
+     C                   PARM      PCCY          P@TOCY            3            TO   CCY       CEU01
+     C                   PARM                    P@OUTA           15 0          AMOUNT         CEU01
+     C                   PARM                    P@INTA           18 3          INT SET AMT    CEU01
+     C                   PARM                    P@EXRT           15 9          EXCH RATE      CEU01
+     C                   PARM                    P@MDIN            1            M/D IND        CEU01
+      *                                                                   CEU015
+     C     P@RTCD        IFEQ      '*ERROR*'                                                   CEU01
+     C                   MOVEL     'EU0200'      DBFILE           10             ************* CEU01
+     C                   MOVEL     '20'          DBASE             3             *DBERROR 020* CEU01
+     C                   MOVE      *BLANKS       DBOPTN            7             ************* CEU01
+     C                   MOVEL     RTFC          DBKEY                                         CEU01
+     C                   SETON                                        U7U8                     CEU01
+     C                   EXSR      *PSSR                                                       CEU01
+     C                   ELSE                                                                  CEU01
+     C                   SUB       P@OUTA        KYAMT                                         CEU01
+     C                   ENDIF                                                                 CEU01
+     C                   ELSE                                                                  CEU01
+     C                   SUB       TOTI2         KYAMT                                         08060
+     C                   ENDIF                                                                 CEU01
+     C                   END                                                    E 002          08060
+     C*                                                                   080603
+     C                   EXSR      EXCP                                                        08060
+      **********                                                                       233319 234421
+      ***Calculate EU Tax Amount                                                       233319 234421
+      **********                                                                       233319 234421
+     C*****CGL031        IFEQ      'Y'                                                 233319 234421
+     C*****CGL032        OREQ      'Y'                                                 233319 234421
+     C**********         MOVE      'ROL'         WTYP              3                   233319 234421
+     C**********         EXSR      SREUTX                                              233319 234421
+      **********                                                                       233324 234421
+      ***Run*Money Market & Loans processing if necessary.                             233324 234421
+      **********                                                                       233324 234421
+     C******IN03         IFEQ      *ON                                                 233324 234421
+     C*****WNTAMT        ANDNE     *ZERO                                               233324 234421
+     C**********         EXSR      SRETDC                                              233324 234421
+     C**********         ENDIF                                                         233324 234421
+     C**********         ENDIF                                                         233319 234421
+      **********                                                                       233319 234421
+      ***Generate EU Withholding Tax Account Keys at rollover date                     233319 234421
+      **********                                                                       233319 234421
+     C*****CGL031        IFEQ      'Y'                                                 233319 234421
+     C******IN21         ANDEQ     *ON                                                 233319 234421
+     C**********         EXSR      SEUMCT                                              233319 234421
+     C**********         EXSR      SEUMGK                                              233319 234421
+     C**********         ENDIF                                                         233319 234421
+     C*                                                                   CEU015
+     C**  Blank out @RTFC as this is meant to be output only for a/c      CEU015
+     C**  key  ..M.....R.                                                 CEU015
+     C                   MOVE      *BLANKS       @RTFC                                         CEU01
+     C*                                                                   080603
+     C**  Principal Difference                                            080603
+     C*                                                                   080603
+     C     PAMT          SUB       @RBDA         KYAMT                                         CEU01
+     C                   Z-ADD     DLNO          DLNO1             6 0                         08060
+     C*                                                                   080603
+     C** If Principal Decrease, for Enhanced Rollover Processing          080603
+     C*                                                                   080603
+     C     S01434        IFEQ      'Y'                                          B 002          08060
+     C     FUID          ANDNE     'Y'                                                         08060
+     C     @MRPAK        ANDNE     'Y'                                                         CEU01
+     C*                                                                   080603
+     C     KYAMT         IFGE      0                                            B 003          08060
+     C                   MOVE      'R'           AKY(3)                                        08060
+     C                   MOVE      'C'           AKY(10)                                       08060
+     C*                                                                   080603
+     C                   ELSE                                                   X 003          08060
+     C** Otherwise Principal Increase, Use Start Date Instructions        080603
+     C*                                                                   080603
+     C     RBDN          CHAIN     DEALS                              32                       13462
+     C     RECR2         IFNE      'D'                                          B 004          08060
+     C     RECR2         ANDNE     'E'                                                         08060
+     C     RECR2         ANDNE     'M'                                                         08060
+     C     RECR2         ANDNE     'R'                                                         08060
+     C     *IN32         OREQ      *ON                                                         13462
+     C                   SETON                                        LRU7U8                   08060
+     C                   GOTO      ENDMAD                                                      08060
+     C                   END                                                    E 004          08060
+     C*                                                                   080603
+     C                   MOVE      'R'           AKY(3)                                        08060
+     C                   MOVE      'B'           AKY(10)                                       08060
+     C                   Z-SUB     KYAMT         KYAMT                                         08060
+     C                   END                                                    E 003          08060
+     C*                                                                   080603
+     C                   EXSR      EXCP                                                        08060
+     C                   ENDIF                                                  E 002          08060
+     C                   ENDIF                                                  E 001          08060
+      *                                                                   CDL006
+      ** If Feature CDL006 is installed.                                  CDL006
+      *                                                                   CDL006
+     C     CDL006        IFEQ      'Y'                                                         CDL00
+      *                                                                   CDL006
+      ** If Fiduciary Deposits.                                           CDL006
+      *                                                                   CDL006
+     C     WUFIDE        IFEQ      'D'                                                         CDL00
+     C     WUFIDE        OREQ      'L'                                                         CDL00
+      *                                                                   CDL006
+      ** Save Interest amount previously calculated.                      CDL006
+      *                                                                   CDL006
+     C                   Z-ADD     WORKD         WUINTA                                        CDL00
+      *                                                                   CDL006
+      ** If Commission is accrued (Only for Time deposits).               CDL006
+      *                                                                   CDL006
+     C     BNACCO        IFEQ      'Y'                                                         CDL00
+     C     DTYP          ANDEQ     'FT'                                                        CDL00
+     C     FCMC          ANDNE     *BLANKS                                                     CDL00
+      *                                                                   CDL006
+      ** Build Accrued commission Account Key.                            CDL006
+      *                                                                   CDL006
+     C                   MOVE      'A'           AKY(3)                                        CDL00
+     C                   MOVEA     DLST          AKY(4)                                        CDL00
+     C                   MOVEA     '    '        AKY(6)                                        CDL00
+     C                   MOVE      'C'           AKY(10)                                       CDL00
+      *                                                                   CDL006
+      **  Calculate accrued commission to post : FCMA - FACPD.            CDL006
+      *                                                                   CDL006
+     C     FCMA          SUB       FACPD         KYAMT                                         CDL00
+      *                                                                   CDL006
+      ** Generate Accrued commission Account Key.                         CDL006
+      *                                                                   CDL006
+     C                   EXSR      EXCP                                                        CDL00
+      *                                                                   CDL006
+      ** Update "Accrued Commission posted to date".                      CDL006
+      *                                                                   CDL006
+     C                   Z-ADD     FCMA          FACPD                                         CDL00
+     C                   MOVE      'Y'           WUDXUP                                        CDL00
+     C                   ENDIF                                                                 CDL00
+      *                                                                   CDL006
+      ** Initialize Commission on commission used to                      CDL006
+      ** calculate Net amount to be settled.                              CDL006
+      *                                                                   CDL006
+     C                   Z-ADD     0             W0FCMA                                        CDL00
+      *                                                                   CDL006
+      ** If Commission due on the Deal.                                   CDL006
+      *                                                                   CDL006
+     C     BNCOTK        IFEQ      'Y'                                                         CDL00
+     C     FCMC          ANDNE     *BLANKS                                                     CDL00
+      *                                                                   CDL006
+      ** Build Commission Account Key.                                    CDL006
+      *                                                                   CDL006
+     C                   MOVE      'M'           AKY(3)                                        CDL00
+     C                   MOVEA     DLST          AKY(4)                                        CDL00
+     C                   MOVEA     '    '        AKY(6)                                        CDL00
+     C                   MOVEA     'OC'          AKY(9)                                        CDL00
+      *                                                                   CDL006
+      ** If Call Deposit.                                                 CDL006
+      *                                                                   CDL006
+     C     DTYP          IFEQ      'DT'                                                        CDL00
+     C     DTYP          OREQ      'LT'                                                        CDL00
+      *                                                                   CDL006
+      **  Calculate Commission amount due.                                CDL006
+      *                                                                   CDL006
+      **        PAMT                                                      CDL006
+      **  (------------) x (MDAT - IACD) x (% current range) + FACTC      CDL006
+      **   Days of year                                      - FCPRD      CDL006
+      *                                                                   CDL006
+     C                   Z-ADD     IACD          WUDBEG                                        CDL00
+     C                   Z-ADD     MDAT          WUDEND                                        CDL00
+      *                                                                   CDL006
+     C                   EXSR      COMCAL                                                      CDL00
+      *                                                                   CDL006
+     C     WUACSC        ADD       FACTC         WORKTD                                        CDL00
+      *                                                                   CDL006
+      ** If Original entry date less than Run date, update                CDL006
+      ** "Commission amount" held on Deals file.                          CDL006
+      *                                                                   CDL006
+     C     ORED          IFLT      BJRDNB                                                      CDL00
+     C                   Z-ADD     WORKTD        FCMA                                          CDL00
+     C                   MOVE      'Y'           WUDXUP                                        CDL00
+     C                   ENDIF                                                                 CDL00
+     C                   ENDIF                                                                 CDL00
+      *                                                                   CDL006
+      ** If Fixed term deposit.                                           CDL006
+      *                                                                   CDL006
+     C     DTYP          IFEQ      'FT'                                                        CDL00
+      *                                                                   CDL006
+      **  Calculate Commission amount due : FCMA - FCPRD.                 CDL006
+      *                                                                   CDL006
+     C                   Z-ADD     FCMA          WORKTD                                        CDL00
+      *                                                                   CDL006
+     C                   ENDIF                                                                 CDL00
+      *                                                                   CDL006
+     C     WORKTD        SUB       FCPRD         WORKD                                         CDL00
+     C                   Z-ADD     WORKD         KYAMT                                         CDL00
+     C                   Z-ADD     WORKD         W0FCMA                                        CDL00
+      *                                                                   CDL006
+      ** Generate Commission Account Key.                                 CDL006
+      *                                                                   CDL006
+     C                   EXSR      EXCP                                                        CDL00
+     C                   MOVEA     ' '           AKY(9)                                        CDL00
+      *                                                                   CDL006
+      ** Update "Commission paid/received to date".                       CDL006
+      *                                                                   CDL006
+     C                   Z-ADD     WORKTD        FCPRD                                         CDL00
+     C                   MOVE      'Y'           WUDXUP                                        CDL00
+      *                                                                   CDL006
+      ** If commission due to agent.                                      CDL006
+      *                                                                   CDL006
+     C     BBAGNT        IFNE      *BLANKS                                                     CDL00
+      *                                                                   CDL006
+      ** Build account key for "Commission due to agent".                 CDL006
+     C                   MOVE      'M'           AKY(3)                                        CDL00
+     C                   MOVEA     DLST          AKY(4)                                        CDL00
+     C                   MOVEA     '    '        AKY(6)                                        CDL00
+     C                   MOVEA     'AC'          AKY(9)                                        CDL00
+      *                                                                   CDL006
+     C     W0FCMA        MULT      BBAGNP        W018D3                                        CDL00
+     C     W018D3        DIV       100           KYAMT                                         CDL00
+      *                                                                   CDL006
+      ** Generate Commission due to agent Account Key.                    CDL006
+      *                                                                   CDL006
+     C                   EXSR      EXCP                                                        CDL00
+     C                   MOVEA     ' '           AKY(9)                                        CDL00
+      *                                                                   CDL006
+     C                   ENDIF                                                                 CDL00
+      *                                                                   CDL006
+     C                   ENDIF                                                                 CDL00
+      *                                                                   CDL006
+      ** Restore Interest amount previously calculated.                   CDL006
+      *                                                                   CDL006
+     C                   Z-ADD     WUINTA        WORKD                                         CDL00
+      *                                                                   CDL006
+     C                   ENDIF                                                                 CDL00
+     C                   ENDIF                                                                 CDL00
+     C/COPY WNCPYSRC,DL0280C045
+     C*                                                                   080603
+     C** Settlement Amount                                                080603
+     C*                                                                   080603
+     C                   MOVE      'M'           AKY(3)                                        08060
+     C                   MOVE      'B'           AKY(10)                                       08060
+     C*                                                                   080603
+     C     CEU015        IFEQ      'Y'                                                        250190
+     C     RTFC          ANDNE     *BLANKS                                                    250190
+     C     PAMT          SUB       W#RBDA        KYAMT                                        250190
+     C                   ELSE                                                                 250190
+     C     PAMT          SUB       @RBDA         KYAMT                                         CEU01
+     C                   ENDIF                                                                250190
+      *                                                                                       250190
+     C                   Z-ADD     DLNO          DLNO1             6 0                         08060
+     C*                                                                   080603
+     C     FUID          IFEQ      'Y'                                          B 001          08060
+     C     RBDN          ANDNE     *ZERO                                                       08060
+     C                   ADD       TOTI2         KYAMT                                         08060
+     C                   END                                                    E 001          08060
+     C*                                                                   080603
+     C     IPDS          IFEQ      'Y'                                          B 001          08060
+     C     IPFR          OREQ      'N'                                                         08060
+     C     FUID          OREQ      'Y'                                                         08060
+     C*                                                                   080603
+     C                   ELSE                                                   X 001          08060
+     C*                                                                   080603
+     C                   ADD       WORKD         KYAMT                          + Interest     08060
+     C/COPY WNCPYSRC,DL0280C169                                           S01408
+     C                   SUB       TAXA          KYAMT                          - TAX          08060
+     C/COPY WNCPYSRC,DL0280C170                                           S01408
+      **********                                                                       234421 234765
+     C*****GL031         IFEQ      'Y'                                                 234421 234765
+     C**********         SUB       WNTAMT        KYAMT                                 234421 234765
+     C**********         ENDIF                                                         234421 234765
+      **********                                                                       234421 234765
+      ** Moved to include EU taxes in getting NET tax                                       BUG26326
+      ** prior to account key generation                                                    BUG26326
+      *                                                                                     BUG26326
+      ** Calculate EU Tax Amount                                                            BUG26326
+      *                                                                                     BUG26326
+     C     CGL031        IFEQ      'Y'                                                      BUG26326
+     C     CGL032        OREQ      'Y'                                                      BUG26326
+     C     DTYP          IFEQ      'CD'                                                    MD024874A
+     C     DTYP          OREQ      'TD'                                                    MD024874A
+     C     DTYP          OREQ      'DT'                                                    MD024874A
+     C     CDL006        ANDEQ     'Y'                                                     MD024874A
+     C     DTYP          OREQ      'FT'                                                    MD024874A
+     C     CDL006        ANDEQ     'Y'                                                     MD024874A
+      *                                                                                    MD024874A
+     C     WORKD         IFGT      *ZERO                                                    BUG26326
+     C                   MOVE      'MAT'         WTYP                                       BUG26326
+     C                   EXSR      SREUTX                                                   BUG26326
+      *                                                                                     BUG26326
+      ** Run Money Market & Loans processing if necessary.                                  BUG26326
+      *                                                                                     BUG26326
+     C     *IN03         IFEQ      *ON                                                      BUG26326
+     C     WNTAMT        ANDNE     *ZERO                                                    BUG26326
+     C                   Z-ADD     @@ENDD        WEVDAT                                    MD024874A
+     C                   EXSR      SRETDC                                                   BUG26326
+     C                   IF        RBDN <> *ZEROS                                           BUG26326
+     C                   Eval      KYAMT = KYAMT - (WKTSRS + WKStxo + WKTtxo)               BUG26326
+     C                   ENDIF                                                              BUG26326
+     C                   ENDIF                                                              BUG26326
+     C                   ENDIF                                                              BUG26326
+     C                   ENDIF                                                             MD024874A
+     C                   ENDIF                                                              BUG26326
+      *                                                                                     BUG26326
+     C                   ENDIF                                                  E 001          08060
+      *                                                                   CDL006
+      ** If feature CDL006 is installed.                                  CDL006
+      *                                                                   CDL006
+     C     CDL006        IFEQ      'Y'                                                         CDL00
+      *                                                                   CDL006
+      ** If Fiduciary Deposit.                                            CDL006
+     C     WUFIDE        IFEQ      'D'                                                         CDL00
+     C     WUFIDE        OREQ      'L'                                                         CDL00
+      *                                                                                       CGL020
+     C     CGL020        IFEQ      'Y'
+     C                   MOVE      'N'           F1FFLG
+     C                   Z-ADD     W0FCMA        F1FVAL
+     C                   Z-ADD     0             WKAMT
+     C     KYAMT         IFNE      0
+     C     W0FCMA        DIV(H)    KYAMT         WKAMT
+     C     WKAMT         MULT      100           F1FPCT
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                       CGL020
+     C                   SUB       W0FCMA        KYAMT                                         CDL00
+     C                   ENDIF                                                                 CDL00
+      *                                                                   CDL006
+     C                   ENDIF                                                                 CDL00
+     C/COPY WNCPYSRC,DL0280C046                                           BUG4426
+      *                                                                   BUG4426
+      ** If a penalty fee has been charged due to early maturity          BUG4426
+      ** then include penalty fee in net settlement amount.               BUG4426
+     C     PENA          IFNE      *ZERO                                                       BUG44
+     C     FSCAND        ANDNE     *ZERO                                                       BUG44
+     C     FSPNPR        IFEQ      'P'                                                         BUG44
+     C                   ADD       PENA          KYAMT                                         BUG44
+     C                   ELSE                                                                  BUG44
+     C                   SUB       PENA          KYAMT                                         BUG44
+     C                   ENDIF                                                                 BUG44
+     C                   ENDIF                                                                 BUG44
+     C*                                                                   080603
+     C     KYAMT         IFLT      *ZERO                                        B 001          08060
+     C     RBDN          ANDNE     *ZERO                                                       08060
+     C                   Z-ADD     RBDN          DLNO                                          08060
+     C                   MOVE      SDST2         KYSETL                                        08060
+     C                   MOVE      OSDA2         KYOSTL                                        08060
+      *                                                                                       CGL020
+     C     CGL020        IFEQ      'Y'
+     C                   MOVE      'RD'          STINFO
+     C                   ENDIF
+      *                                                                                       CGL020
+     C                   END                                                    E 001          08060
+     C*                                                                   080603
+     C                   Z-ADD     KYAMT         WZAMT                                        233565
+      *****************************************************************                235040 240667
+     C*****RBDN          IFEQ      *ZERO                                               235040 240667
+     C                   EXSR      EXCP                                                        08060
+     C**********         ENDIF                                                         235040 240667
+      *                                                                                       CAS009
+     C                   MOVE      'MAMT'        WCFTP                                        CAS009
+     C                   EXSR      SRMMCF                                                     CAS009
+     C/COPY WNCPYSRC,DL0280C199                                           S01408
+      *                                                                                       CGL020
+     C     CGL020        IFEQ      'Y'
+     C                   MOVE      *BLANKS       F1FFLG
+     C                   Z-ADD     0             F1FVAL
+     C                   Z-ADD     0             F1FPCT
+     C                   ENDIF
+      *                                                                                       CGL020
+     C                   Z-ADD     DLNO1         DLNO                                          08060
+     C*                                                                   080603
+     C** If Deal and System is Taxable                                    080603
+     C*                                                                   080603
+     C/COPY WNCPYSRC,DL0280C479
+     C     *IN19         IFEQ      *ON                                          B 001          08060
+     C     *IN21         ANDEQ     *ON                                                         11703
+     C     *IN23         ANDEQ     *ON                                                         08060
+     C     IPFR          ANDNE     'N'                                                         08060
+     C*****IPDS*         ANDNE     'Y'                                              237602 AR1034532
+     C/COPY WNCPYSRC,DL0280C674
+     C*                                                                   080603
+     C** Convert BRT AMOUNT                                               080603
+     C*                                                                   080603
+     C     S01383        IFEQ      'Y'                                          B 002          08060
+     C*                                                                   117033
+     C     PCCY          IFEQ      BLCYCD                                                      11703
+     C                   MOVE      'B'           AKY(9)                                        11703
+     C                   END                                                                   11703
+     C                   Z-ADD     TAXA          KYAMT                                         11703
+     C                   MOVE      'M'           AKY(3)                                        11703
+     C                   MOVE      'T'           AKY(10)                                       11703
+     C                   EXSR      EXCP                                                        11703
+     C                   MOVE      ' '           AKY(9)                                        11703
+     C*                                                                   117033
+     C     PCCY          IFNE      BLCYCD                                                      11703
+     C                   Z-ADD     TAXA          CYBRAM                                        11703
+     C                   EXSR      GENBRT                                                      11703
+     C   U8              GOTO      ENDMAD                                                      11703
+     C                   END                                                                   11703
+     C*                                                                   117033
+     C     BJCYCD        IFNE      BLCYCD                                                      11703
+     C                   Z-ADD     TAXA          CYBRAM                                        08060
+     C                   EXSR      CNVBRT                                                      08060
+     C   U8              GOTO      ENDMAD                                                      08060
+     C                   END                                                    E 002          08060
+     C                   ELSE                                                                  11703
+     C*                                                                   080603
+     C**   Generate Tax Amount Key                                        080603
+     C*                                                                   080603
+     C                   MOVE      'M'           AKY(3)                                        08060
+     C                   MOVE      'T'           AKY(10)                                       08060
+     C/COPY WNCPYSRC,DL0280C171                                           S01408
+     C                   Z-ADD     TAXA          KYAMT                                         08060
+     C*                                                                   S01408
+     C     CDL013        IFEQ      '1'                                                        CDL013
+     C     BBCSTY        IFEQ      'C'                                                        CDL013
+     C     S01460        ANDEQ     'Y'                                                      MD024093
+     C     *IN23         ANDEQ     *ON                                                      MD024093
+     C                   MOVE      'C'           AKY(6)                                       CDL013
+     C                   ELSE                                                                 CDL013
+     C                   MOVE      ' '           AKY(6)                                       CDL013
+     C                   ENDIF                                                                CDL013
+     C                   ENDIF                                                                CDL013
+     C/COPY WNCPYSRC,DL0280CP12                                           S01408
+     C*                                                                   S01408
+     C                   EXSR      EXCP                                                        08060
+     C                   END                                                                   11703
+     C*                                                                   S01408
+     C     CDL013        IFEQ      '1'                                                        CDL013
+     C                   MOVE      ' '           AKY(6)                                       CDL013
+     C                   ENDIF                                                                CDL013
+     C/COPY WNCPYSRC,DL0280C124                                           S01408
+     C*                                                                   S01408
+     C                   END                                                    E 001          08060
+      *                                                                                       233277
+      ** This portion (marked with Start/End) was moved to include                          BUG26326
+      ** EU taxes in getting NET tax prior to account key generation                        BUG26326
+      ** --- Start ---                                                                      BUG26326
+      ***Calculate*EU*Tax*Amount*                                                    233277 BUG26326
+      **********                                                                     233277 BUG26326
+     C*****CGL031        IFEQ      'Y'                                               233277 BUG26326
+     C*****CGL032        OREQ      'Y'                                               233277 BUG26326
+     C*****WORKD         IFGT      *ZERO                                             233277 BUG26326
+     C**********         MOVE      'MAT'         WTYP                                233277 BUG26326
+     C**********         EXSR      SREUTX                                            233277 BUG26326
+      **********                                                                     233324 BUG26326
+      ***Run*Money*Market*&*Loans*processing*if*necessary.*                          233324 BUG26326
+      **********                                                                     233324 BUG26326
+     C******IN03         IFEQ      *ON                                               233324 BUG26326
+     C*****WNTAMT        ANDNE     *ZERO                                             233324 BUG26326
+     C**********         EXSR      SRETDC                                            233324 BUG26326
+     C**********         ENDIF                                                       233324 BUG26326
+     C**********         ENDIF                                                       233277 BUG26326
+     C**********         ENDIF                                                       233277 BUG26326
+      * --- End ---                                                                         BUG26326
+      *                                                                                       CGL031
+      ** Generate EU Withholding Tax Account Keys at maturity date.                           CGL031
+      *                                                                                       CGL031
+     C     CGL031        IFEQ      'Y'                                                        CGL031
+      *                                                                                       233565
+     C     DTYP          IFEQ      'CD'                                                       233565
+     C     DTYP          OREQ      'TD'                                                       233565
+     C                   EXSR      SEUMCT                                                     233565
+     C                   EXSR      SEUMGK                                                     233565
+     C                   ENDIF                                                                233565
+      *                                                                                       233565
+     C     CDL006        IFEQ      'Y'                                                        233565
+     C     DTYP          IFEQ      'DT'                                                       233565
+     C     DTYP          OREQ      'FT'                                                       233565
+     C                   EXSR      SEUMCT                                                     233565
+     C                   EXSR      SEUMGK                                                     233565
+     C                   ENDIF                                                                233565
+     C                   ENDIF                                                                233565
+      *                                                                                       233565
+     C******IN21         ANDEQ     *ON                                                 CGL031 233565
+     C**********         EXSR      SEUMCT                                              CGL031 233565
+     C*****WEUTXM        IFEQ      'Y'                                                 CGL031 233316
+     C**********         EXSR      SEUMGK                                              CGL031 233565
+     C**********         ENDIF                                                         CGL031 233316
+     C                   ENDIF                                                                CGL031
+      *                                                                                       CGL031
+     C/COPY WNCPYSRC,DL0280C480
+      *                                                                   CAC001
+      ** Generate Maturity Date Account Keys for Loans/Deposits           CAC001
+      *                                                                   CAC001
+     C     BGN0ST        IFEQ      'Y'                                                         CAC00
+     C     FPRC          ANDNE     *BLANKS                                                     CAC00
+      *                                                                   CAC001
+      ** Update Accrued COF Posted to date                                CAC001
+      *                                                                   CAC001
+     C                   ADD       WRKTP         ACPD                                          CAC00
+      *                                                                   CAC001
+      ** Cost of Fund Accrued not yet posted - Transaction Profit Centre  CAC001
+      *                                                                   CAC001
+     C                   MOVE      'A'           AKY(3)                                        CAC00
+     C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C                   MOVE      'A'           AKY(10)                                       CAC00
+     C                   Z-ADD     WRKTP         KYAMT                                         CAC00
+     C                   MOVE      PRFC          OPPRFC                                        CAC00
+     C                   EXSR      EXCP                                                        CAC00
+      *                                                                   CAC001
+      ** Cost of Fund Accrued not yet posted - Funding Profit Centre      CAC001
+      *                                                                   CAC001
+     C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C                   MOVE      FPRC          OPPRFC                                        CAC00
+     C                   EXSR      EXCP                                                        CAC00
+      *                                                                   CAC001
+      ** Principal - Transaction Profit Centre                            CAC001
+      *                                                                   CAC001
+     C                   MOVE      'M'           AKY(3)                                        CAC00
+     C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C                   MOVE      'A'           AKY(10)                                       CAC00
+     C                   Z-ADD     PAMT          KYAMT                                         CAC00
+     C                   MOVE      PRFC          OPPRFC                                        CAC00
+     C                   EXSR      EXCP                                                        CAC00
+      *                                                                   CAC001
+      ** Principal - Funding Profit Centre                                CAC001
+      *                                                                   CAC001
+     C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C                   MOVE      FPRC          OPPRFC                                        CAC00
+     C                   EXSR      EXCP                                                        CAC00
+      *                                                                   CAC001
+      ** Cost of Funds Due at Maturity - Transaction Profit Centre        CAC001
+      *                                                                   CAC001
+     C                   MOVE      'M'           AKY(3)                                        CAC00
+     C                   MOVEA     'T   '        AKY(6)                                        CAC00
+     C                   MOVE      'I'           AKY(10)                                       CAC00
+     C                   Z-ADD     WRKD          KYAMT                                         CAC00
+     C                   MOVE      PRFC          OPPRFC                                        CAC00
+     C                   EXSR      EXCP                                                        CAC00
+      *                                                                   CAC001
+      ** Cost of Funds Due at Maturity - Funding Profit Centre            CAC001
+      *                                                                   CAC001
+     C                   MOVEA     'F   '        AKY(6)                                        CAC00
+     C                   MOVE      FPRC          OPPRFC                                        CAC00
+     C                   EXSR      EXCP                                                        CAC00
+     C                   MOVEA     '    '        AKY(6)                                        CAC00
+     C                   MOVE      PRFC          OPPRFC                                        CAC00
+      *                                                                   CAC001
+     C                   ENDIF                                                  -BGN0ST=Y      CAC00
+     C/COPY WNCPYSRC,DL0280C570
+     C*                                                                   080603
+     C     CGL020        IFEQ      'Y'
+     C                   MOVE      *BLANKS       STINFO
+     C                   ENDIF
+      *                                                                   BUG4426
+      ** If a penalty fee has been charged due to early maturity          BUG4426
+      ** then generate additional account key for penalty fee             BUG4426
+     C     PENA          IFNE      *ZERO                                                       BUG44
+     C     FSCAND        ANDNE     *ZERO                                                       BUG44
+      *                                                                   BUG4426
+      **  Get settlement instructions from deal amendment                 BUG4426
+     C     DLNO          CHAIN     DLEMDAPD                           90                       BUG44
+     C     *IN90         IFEQ      *OFF                                                        BUG44
+     C                   Z-ADD     SETP          KYSETL                                        BUG44
+     C                   MOVE      OSAC          KYOSTL                                        BUG44
+     C                   MOVE      OSBR          KYSTBR                                        BUG44
+     C                   MOVE      PRFC          OPPRFC                                        BUG44
+     C   U1              DELETE    DLEMDAD0                                                    BUG44
+     C  NU1              UNLOCK    DLEMDAPD                                                    BUG44
+     C                   ENDIF                                                                 BUG44
+      *                                                                   BUG4426
+      **  Output account key                                              BUG4426
+     C                   MOVE      'M'           AKY(3)                                        BUG44
+     C                   MOVEA     '    '        AKY(6)                                        BUG44
+     C                   MOVE      FSPNPR        AKY(8)                                        BUG44
+     C                   MOVE      'P'           AKY(9)                                        BUG44
+     C                   MOVE      'A'           AKY(10)                                       BUG44
+     C                   Z-ADD     PENA          KYAMT                                         BUG44
+     C                   EXSR      EXCP                                                        BUG44
+      *                                                                   BUG4426
+     C                   ENDIF                                                                 BUG44
+      *                                                                   BUG4426             CGL020
+     C     ENDMAD        ENDSR                                                                 08060
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * End of /COPY DL0280MDT                                        *
+      *****************************************************************

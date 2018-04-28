@@ -1,0 +1,137 @@
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Check/update invalid PRTO and NDEC')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Securities Trading Module                           */
+/*                                                                   */
+/*       UTC9008 - Check/update invalid PRTO and NDEC.               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1076145          Date 26Jan13              */
+/*       Prev Amend No. AR317764 *CREATE   Date 22Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1076145 - Convert to PGMA - audit and update as one.      */
+/*                   Will convert bad data to 0 value                */
+/*       AR317764 - Unable to extract data from some fields of RUDWH */
+/*                  library tables - Securities. Initialise PRTO and */
+/*                  NDEC fields to zero. (Child: AR317765)           */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&MODE) */                                                 /*AR1076145*/
+             PGM                                                                       /*AR1076145*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+/**********  DCL        VAR(&MODE) TYPE(*CHAR) LEN(1) */                               /*AR1076145*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNORMAL)
+ 
+             SNDPGMMSG  MSG('UTC9008 - Check/update invalid PRTO +
+                           and NDEC') TOMSGQ(MRUNQ MOPERQ)
+ 
+/**********  IF         COND((&MODE *NE 'U') *AND (&MODE *NE 'u') + */                 /*AR1076145*/
+/**********                *AND (&MODE *NE 'A') *AND (&MODE *NE + */                   /*AR1076145*/
+/**********                'a')) THEN(DO) */                                           /*AR1076145*/
+/**********    SNDPGMMSG  MSG('Invalid parameter passed - UTC9008') + */               /*AR1076145*/
+/**********                  TOMSGQ(MOPERQ MRUNQ) */                                   /*AR1076145*/
+/**********    SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) + */                            /*AR1076145*/
+/**********                  MSGDTA('Invalid parameter + */                            /*AR1076145*/
+/**********                  passed - UTC9008') MSGTYPE(*ESCAPE) */                    /*AR1076145*/
+/**********    GOTO       CMDLBL(ABNORMAL) */                                          /*AR1076145*/
+/**********  ENDDO */                                                                  /*AR1076145*/
+ 
+/* Get system prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+ 
+             CHGVAR     VAR(&DMLIB) VALUE(&PREF *TCAT 'DMLIB')
+             CHGVAR     VAR(&DLIB) VALUE(&PREF *TCAT 'DPLIB')
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+               CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+ 
+             DLTF       FILE(&DLIB/INVTPDXX)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Duplicate Object */
+ 
+/**********  IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) + */                 /*AR1076145*/
+/**********                THEN(DO) */                                                 /*AR1076145*/
+               CRTDUPOBJ  OBJ(INVTPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                             TOLIB(&DLIB) NEWOBJ(INVTPDXX) DATA(*YES)
+               MONMSG     MSGID(CPF0678 CPF2109 CPF2110 CPF2113 +
+                             CPF2116 CPF2122 CPF2151 CPF2162 +
+                             CPF2176 CPF2182) EXEC(DO)
+                 SNDPGMMSG  MSG('Error in CRTDUPOBJ of file INVTPD -- +
+                               UTC9008') TOMSGQ(MRUNQ MOPERQ)
+                 GOTO       CMDLBL(ABNORMAL)
+               ENDDO
+/**********  ENDDO */                                                                  /*AR1076145*/
+ 
+             CHGJOB     SWS(XXXXXX00)
+/**********  CALL       PGM(UT09008) PARM(&MODE) */                                    /*AR1076145*/
+             CALL       PGM(UT09008)                                                   /*AR1076145*/
+ 
+             IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(DO)
+               SNDPGMMSG  MSG('JOB TERMINATED - DATABASE ERROR') +
+                             TOMSGQ(MOPERQ MRUNQ)
+ 
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+ 
+/* Restore if Database Error */
+ 
+/**********    IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) + */               /*AR1076145*/
+/**********                  THEN(DO) */                                               /*AR1076145*/
+                 CPYF       FROMFILE(&DLIB/INVTPDXX) +
+                               TOFILE(&DMLIB/INVTPD) MBROPT(*REPLACE)
+                 MONMSG     MSGID(CPF0000) EXEC(DO)
+                   SNDPGMMSG  MSG('Error in RESTORE of file INVTPD -- +
+                                 UTC9008. Please do manually.') +
+                                 TOMSGQ(MRUNQ MOPERQ)
+                   GOTO       CMDLBL(ABNORMAL)
+                 ENDDO
+                 DLTF       FILE(&DLIB/INVTPDXX)
+/**********    ENDDO */                                                                /*AR1076145*/
+               GOTO       CMDLBL(ABNORMAL)
+             ENDDO
+ 
+/* Program completed normally */
+ 
+/**********  IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) + */                 /*AR1076145*/
+/**********                THEN(DO) */                                                 /*AR1076145*/
+               DLTF       FILE(&DLIB/INVTPDXX)
+/**********  ENDDO */                                                                  /*AR1076145*/
+             SNDPGMMSG  MSG('Program UTC9008 completed normally') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+ABNORMAL:
+             RCLRSC     LVL(*)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSG('Program UTC9008 ended abnormally') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                           UTC9008 ended abnormally') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ ENDCLPGM:   RCLRSC     LVL(*)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Misys International Banking Systems Ltd.')
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDPGM

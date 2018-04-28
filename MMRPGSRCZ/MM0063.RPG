@@ -1,0 +1,691 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Deals file monthly reorganization')           *
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - MM Dealer Module
+     F*                                                              *
+     F*     MM0063    - MONTHLY DEALS FILE REORGANIZATION.           *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 AR407323           Date 04Dec12               *
+      *                 AR970738           Date 04Dec12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 AR588416           Date 19Aug10               *
+      *                 252554A            Date 11Feb09               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL033             Date 10Feb05               *
+      *                 CLE040             Date 05Jul04               *
+      *                 228542             Date 10Aug04               *
+      *                 BUG3822            Date 27Jul04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CDL022             Date 03Feb04               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 222727             Date 05Nov03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date   21Apr95             *
+      *                 E23819             Date   25Jun91             *
+     F*                    E20774             DATE   15MAR90         *
+     F*                    S01218             DATE   11/08/89        *
+     F*                    S01136             DATE   09/12/87        *
+     F*                                                              *
+     F****************************************************************
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR407323 - Extension file of Deleted or Matured deals is     *
+      *             purged together with MMDELDPP.  Fix is to remove  *
+      *             purging of extension files since it will be       *
+      *             redundant to the purging done by DL1070.          *
+      *           - Applied for AR991584 (Child: AR991586)            *
+      *  AR970738 - Drop credit lines extension records only for      *
+      *             non-authorized deleted deals. Apply fix 263291A.  *
+      *             (Child: AR970741)                                 *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  AR588416 - Parameter type mismatch on calling MMDELUDF.      *
+      *  252554A - Delete the corresponding record in the UDF files   *
+      *            during COB.                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *  CLE040 - Collateralised Lending Phase 2 (Recompile)          *
+      *  228542 - RGZPFM command has changed at V5R3                  *
+      *           - Note: array physically deleted:                   *
+      *             RGZPFM FILE(XXXXXXXX)                             *
+      *  BUG3822 - Drop credit lines extension records                *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  CDL022 - Deal Amendment Changes (Recompile)                  *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+     F*  CDL010 - Prevent last user that actioned the trade from      *
+     F*           authorising it.Recompile due to changes in MMDEAMPP *
+     F*           , MMDELDPP, MMDENBPP AND MMDENSPP.                 *
+      *     CAS001 - Net Present Value (NPV) Accounting (recompile). *
+     F*     S01408 - Core hook MM0063CDBU added                      *
+     F*            - Core hook MM0063CDB1 added                      *
+     F*            - Core hook MM0063CDAU added                      *
+     F*            - Core hook MM0063EEPG added                      *
+     F*     E23819 - The maintenance of MMDEAMPP is inconsistent     *
+     F*              with that of DEAMSDI for deleted DEAMS.         *
+     F*              Deleted DEAMS remain on DEAMS until value date; *
+     F*              however this program removes them from MMDEAMPP *
+     F*              at End of Month, so it is possible to have      *
+     F*              records on DEAMSDI which are not on MMDEAMPP.   *
+     F*              This causes an error when attempting a DEAM     *
+     F*              which has the same value date as a deleted      *
+     f*              DEAM which is on DEAMSDI but not on MMDEAMPP.   *
+     F*              This is because tHE DEAM sequence is assigned   *
+     F*              based on what is already on MMDEAMPP, leading   *
+     F*              to an attempted duplicate write to DEAMSDI in   *
+     F*              MM0081.  This fix removes the delete of         *
+     F*              MMDEAMPP, which will be covered by the daily    *
+     F*              maintenance done in MM0101, which checks the    *
+     F*              DEAM has been dropped from DEAMSDI before       *
+     F*              deleting it from MMDEAMPP.                      *
+     F*                                                              *
+     F*     E20774 - Replace QCAEXEC with QCMDEXC                    *    E20774
+     F*                                                              *
+     F*     S01218 - Recompiled to include new file layouts for      *
+     F*              capital markets dealing interface               *
+     F*                                                              *
+     F*     AMEND NO. S01136                                         *
+     F*               PROGRAM TRIES TO REORGANISE FILES EVEN IF THEY *
+     F*               ARE EMPTY                                      *
+     F*                                                              *
+     F*                                                              *
+     F****************************************************************
+     F/EJECT
+     F****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*      60          General indicator
+      *      61          Work indicator                              *                        CDL033
+     F*
+     F****************************************************************
+     F/EJECT
+     F/COPY WNCPYSRC,MM0063F002
+      *                                                                                       CER020
+      ** Midas MM Deals File for Live Rollover Deals                                          CER020
+      *                                                                                       CER020
+     FMMDELD11IF  E           K        DISK         KINFSR *PSSR                              CER020
+     F            MMDELDP0                          KRENAMEMMDELD                             CER020
+      *                                                                                       CER020
+      ** Midas MM Deals File for Live Original Deals                                          CER020
+      *                                                                                       CER020
+     FMMDELDLMIF  E           K        DISK         KINFSR *PSSR                              CER020
+     F            MMDELDP0                          KRENAMEMMDELL                             CER020
+     FMMDELDPPUF  E           K        DISK         KINFSR *PSSR      UC
+     FMMDENBPPUF  E           K        DISK         KINFSR *PSSR      UC
+     FMMDENSPPUF  E           K        DISK         KINFSR *PSSR      UC
+     F*MMDEAMPPUF*E***********K********DISK         KINFSR *PSSR      UC  E23819
+     FMMDEAMPPIF  E           K        DISK         KINFSR *PSSR      UC  E23819
+     F***DLDEALL5UF  E           K        DISK         KINFSR *PSSR      UC         BUG3822 AR407323
+     F/COPY WNCPYSRC,MM0063F001
+     FDLFRSCL0UF  E           K        DISK                           UC                      CDL033
+      ** Midas DL FRCD Issued Date Schedule update file                                       CDL033
+      *                                                                                       CDL033
+     E********************@P     21  21  1               QCAEXEC COMMAND  E20774
+     E**********          @P     21  21  1               QCMDEXC COMMAND               E20774 228542
+     E                    CPY@    1   1 80                                S01194
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,MM0063EEPG                                           S01408
+     E*                                                                   S01408
+     E                    FXT     5   5  2                                                    CDL033
+      ****************************************************************                        CDL033
+      /EJECT                                                                                  CDL033
+      ****************************************************************                        CDL033
+     E/COPY WNCPYSRC,MMH00135
+      *                                                                                       CDL033
+      ** Local data area for database error details.                                          CDL033
+      *                                                                                       CDL033
+     ILDA         DS                            256                                           CDL033
+     I                                      134 141 DBFILE                                    CDL033
+     I                                      142 170 DBKEY                                     CDL033
+     I                                      171 180 DBPGM                                     CDL033
+     I                                      181 1830DBASE                                     CDL033
+      *                                                                                       CDL033
+      ** Short DS for access programs.                                                        CDL033
+      *                                                                                       CDL033
+     IDSFDY     E DSDSFDY                                                                     CDL033
+      *                                                                                       CDL033
+      ** Externally described DS for SAR Details                                              CDL033
+      *                                                                                       CDL033
+     ISCSARD    E DSSCSARDPD                                                                  CDL033
+      *                                                                                       CDL033
+      ****************************************************************                        CDL033
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN     - control process                                    *
+      *                                                               *
+      * CALLS    #A       - Reorganize MMDELDPP                       *
+      *          #B       - Reorganize MMDENBPP                       *
+      *          #C       - Reorganize MMDENSPP                       *
+      *          #D       - Reorganize MMDEAMPP                       *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     E/COPY WNCPYSRC,MM0063E001
+      *                                                                                       CDL033
+      ** Define local data area.                                                              CDL033
+      *                                                                                       CDL033
+     C           *NAMVAR   DEFN           LDA                                                 CDL033
+      *                                                                                       CDL033
+     C           *LOCK     IN   LDA                                                           CDL033
+     C                     MOVEL'MM0063'  DBPGM                                               CDL033
+     C                     OUT  LDA                                                           CDL033
+      *                                                                                       CDL033
+      ** Determine if Floating Rate CD Issued feature is                                      CDL033
+      ** switched on.                                                                         CDL033
+      *                                                                                       CDL033
+     C                     MOVE *BLANK    CDL033  1                                           CDL033
+     C                     CALL 'AOSARDR0'                                                    CDL033
+     C                     PARM *BLANKS   PRTCD   7                                           CDL033
+     C                     PARM '*VERIFY' POPTN   7                                           CDL033
+     C                     PARM 'CDL033'  PSARD   6                                           CDL033
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL033
+      *                                                                                       CDL033
+     C           PRTCD     IFEQ *BLANKS                                                       CDL033
+     C                     MOVE 'Y'       CDL033                                              CDL033
+     C                     OPEN DLFRSCL0                                                      CDL033
+     C                     ELSE                                                               CDL033
+     C           PRTCD     IFNE '*NRF   '                                                     CDL033
+     C           *LOCK     IN   LDA                                                           CDL033
+     C                     MOVE '001'     DBASE                                               CDL033
+     C                     MOVEL'CDL033'  DBKEY                                               CDL033
+     C                     MOVEL'SCSARDPD'DBFILE                                              CDL033
+     C                     OUT  LDA                                                           CDL033
+     C                     EXSR *PSSR                                                         CDL033
+     C                     MOVE *ON       *INU7                                               CDL033
+     C                     MOVE *ON       *INU8                                               CDL033
+     C                     MOVE *ON       *INLR                                               CDL033
+     C                     RETRN                                                              CDL033
+     C                     ENDIF                                                              CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+      ** Access SAR Details file to check whether CER020 feature                              CER020
+      ** is installed                                                                         CER020
+      *                                                                                       CER020
+     C                     MOVE *BLANKS   CER020  1                                           CER020
+      *                                                                                       CER020
+     C                     CALL 'AOSARDR0'                                                    CER020
+     C                     PARM *BLANKS   PRTCD                                               CER020
+     C                     PARM '*VERIFY' POPTN                                               CER020
+     C                     PARM 'CER020'  PSARD                                               CER020
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER020
+      *                                                                                       CER020
+     C           PRTCD     IFEQ *BLANKS                                                       CER020
+      *                                                                                       CER020
+     C                     MOVE 'Y'       CER020                                              CER020
+      *                                                                                       CER020
+     C                     ELSE                                                               CER020
+      *                                                                                       CER020
+     C           PRTCD     IFNE '*NRF   '                                                     CER020
+      *                                                                                       CER020
+     C           *LOCK     IN   LDA                                                           CER020
+     C                     MOVE '002'     DBASE                                               CER020
+     C                     MOVEL'CER020'  DBKEY                                               CER020
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER020
+     C                     OUT  LDA                                                           CER020
+     C                     EXSR *PSSR                                                         CER020
+     C                     MOVE *ON       *INU7                                               CER020
+     C                     MOVE *ON       *INU8                                               CER020
+     C                     MOVE *ON       *INLR                                               CER020
+     C                     RETRN                                                              CER020
+      *                                                                                       CER020
+     C                     ENDIF                                                              CER020
+      *                                                                                       CER020
+     C                     ENDIF                                                              CER020
+      *                                                                                       CER020
+     C                     EXSR #A
+     C                     EXSR #B
+     C                     EXSR #C
+     C                     EXSR #D
+      *
+     C                     MOVE '1'       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SUBROUTINES USED                                              *
+      *                                                               *
+      *  01  #A       - Reorganize MMDELDPP                           *
+      *  02  #B       - Reorganize MMDENBPP                           *
+      *  03  #C       - Reorganize MMDENSPP                           *
+      *  04  #D       - Reorganize MMDEAMPP                           *
+      *  05  *PSSR    - error processing                              *
+      *                                                               *
+      * EXTERNAL ROUTINE                                              *
+      ***06**QCAEXEC**-*execute*CL*command                            *   E20774
+      ***06**QCMDEXC* - execute CL command                            *                E20774 228542
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #A       - Delete MMDELDPP deleted records                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      *****************************************************************
+     C           #A        BEGSR
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MM0063CDBU                                           S01408
+     C*                                                                   S01408
+      *
+     C                     MOVEACPY@      BIS@   80                       S01194
+      *                                                                                       CDL033
+      ** Initialise flags for processing floating rate CD issued deals.                       CDL033
+      *                                                                                       CDL033
+     C           CDL033    IFEQ 'Y'                                                           CDL033
+     C                     MOVE *BLANK    WFRCD2  1                                           CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+     C                     OPEN MMDELDPP
+     C**********           OPEN DLDEALL5                                            BUG3822 AR407323
+     C/COPY WNCPYSRC,MM0063C001
+     C                     READ MMDELDP0                 60
+      *
+     C           *IN60     IFEQ '1'                        B1             S01136
+     C                     MOVE 'Y'       @NOREC  1        *1             S01136
+     C                     END                             E1             S01136
+     C/COPY WNCPYSRC,MM0063C005
+      *
+      ** Process all the records in the file
+     C           *IN60     DOWEQ'0'                        B1
+      *                                                                                       CER020
+      ** Initialize Delete flag                                                               CER020
+      *                                                                                       CER020
+     C                     MOVE 'Y'       WDELET  1                                           CER020
+      *
+      ** If matured, deleted, or logically deleted then physically del
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MM0063CDB1                                           S01408
+     C*                                                                   S01408
+     C           HKDSTS    IFEQ 'M'                        B*2
+     C           HKDDLT    OREQ 'D'                        X*2
+     C           HKDLTF    OREQ '*'                        X*2
+     C           CER020    IFEQ 'Y'                                                           CER020
+     C                     MOVE HKDN38    WDEAL   6                                           CER020
+      *                                                                                       CER020
+      ** Check if Deal to be deleted is an Original Deal                                      CER020
+      ** of a rolled over deal                                                                CER020
+      *                                                                                       CER020
+     C           WDEAL     CHAINMMDELD11             99                                       CER020
+     C           *IN99     IFEQ *OFF                                                          CER020
+     C                     MOVE 'N'       WDELET                                              CER020
+     C                     ENDIF                                                              CER020
+      *                                                                                       CER020
+     C           *IN99     IFEQ *ON                                                           CER020
+     C           WDELET    ANDNE'N'                                                           CER020
+      *                                                                                       CER020
+     C           WDEAL     CHAINMMDELDLM             99                                       CER020
+     C           *IN99     IFEQ *OFF                                                          CER020
+     C                     MOVE 'N'       WDELET                                              CER020
+     C                     ENDIF                                                              CER020
+      *                                                                                       CER020
+     C                     ENDIF                                                              CER020
+      *                                                                                       CER020
+     C                     ENDIF                                                              CER020
+      *                                                                                       CER020
+     C           WDELET    IFEQ 'Y'                                                           CER020
+      *                                                                                       CER020
+     C                     DELETMMDELDP0                   **2
+      *                                                                                      252554A
+      ** Delete the corresponding record in the UDF files.                                   252554A
+      *                                                                                      252554A
+     C                     Z-ADDHKDN38    PDDLNO  60                                        AR588416
+     C                     CALL 'MMDELUDF'                                                   252554A
+     C**********           PARM           HKDN38                                    252554A AR588416
+     C                     PARM           PDDLNO                                            AR588416
+     C                     PARM 'LDNI'    #API    4                                          252554A
+      *                                                                                      252554A
+     C**********           MOVELHKDN38    F1DLNO                                    BUG3822 AR407323
+     C********** HKDSTS    IFEQ 'C'                                                AR970738 AR407323
+     C********** HKDDLT    ANDEQ'D'                                                AR970738 AR407323
+     C********** F1DLNO    CHAINDLDLDCD0             99    *                        BUG3822 AR407323
+     C**N99*****           DELETDLDLDCD0                   *                        BUG3822 AR407323
+     C**********           ENDIF                                                   AR970738 AR407323
+     C/COPY WNCPYSRC,MM0063C002
+      *                                                                                       CDL033
+      ** Remove records of deleted CF deal in file DLFRSCL0.                                  CDL033
+      *                                                                                       CDL033
+     C           CDL033    IFEQ 'Y'                                                           CDL033
+     C                     EXSR CKDEAL                                                        CDL033
+     C           @FXT      IFEQ *ON                                                           CDL033
+     C           HKMTYP    OREQ 'CF'                                                          CDL033
+      *                                                                                       CDL033
+     C           HKDN38    SETLLDLFRSCL0                                                      CDL033
+     C           HKDN38    READEDLFRSCL0                 61                                   CDL033
+     C           *IN61     DOWEQ*OFF                                                          CDL033
+     C                     DELETDLFRSCL0                                                      CDL033
+     C                     MOVE 'Y'       WFRCD2                                              CDL033
+     C           HKDN38    READEDLFRSCL0                 61                                   CDL033
+     C                     ENDDO                                                              CDL033
+      *                                                                                       CDL033
+     C                     ENDIF                                                              CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+     C                     ENDIF                                                              CER020
+      *                                                                                       CER020
+     C                     END                             E*2
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MM0063CDAU                                           S01408
+     C*                                                                   S01408
+      *
+     C                     READ MMDELDP0                 60*1
+     C                     END                             E1
+      ** close the file
+     C                     CLOSEMMDELDPP
+     C/COPY WNCPYSRC,MM0063C003
+      *                                                                                       CDL033
+      ** Close file DLFRSCL0.                                                                 CDL033
+      *                                                                                       CDL033
+     C           CDL033    IFEQ 'Y'                                                           CDL033
+     C                     CLOSEDLFRSCL0                                                      CDL033
+     C                     ENDIF                                                              CDL033
+      *
+      ** reorganize the physical file member
+     C           @NOREC    IFNE 'Y'                        B1             S01136
+     C**********           MOVEA'MMDELDPP'@P,13            *1                                 228542
+     C*********************CALL 'QCAEXEC'                  *1             E20774
+     C**********           CALL 'QCMDEXC'                  *1                          E20774 228542
+     C**********           PARM           @P               *1                                 228542
+     C**********           PARM 21        @P2    155       *1                                 228542
+     C                     MOVEL'SCC00'   PGM    10                                           228542
+     C                     MOVE '0060 '   PGM                                                 228542
+     C                     MOVEL'MMDELDPP'RGZFIL 10                                           228542
+     C                     MOVEL'*FIRST'  RGZMBR 10                                           228542
+     C                     CALL PGM                                                           228542
+     C                     PARM           RGZFIL                                              228542
+     C                     PARM           RGZMBR                                              228542
+     C/COPY WNCPYSRC,MM0063C010
+      *                                                                                       CDL033
+      ** Reorganise DLFRSCL0 if necessary.                                                    CDL033
+      *                                                                                       CDL033
+     C           CDL033    IFEQ 'Y'                                                           CDL033
+     C           WFRCD2    IFEQ 'Y'                                                           CDL033
+     C                     MOVEL'SCC00'   PGM                                                 CDL033
+     C                     MOVE '0060 '   PGM                                                 CDL033
+     C                     MOVEL'DLFRSCPD'RGZFIL                                              CDL033
+     C                     MOVEL'*FIRST'  RGZMBR                                              CDL033
+     C                     CALL PGM                                                           CDL033
+     C                     PARM           RGZFIL                                              CDL033
+     C                     PARM           RGZMBR                                              CDL033
+     C                     ENDIF                                                              CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+     C                     ELSE                            X1             S01136
+     C                     MOVE ' '       @NOREC           *1             S01136
+     C                     END                             E1             S01136
+      *
+     C/COPY WNCPYSRC,MM0063C006
+     C                     ENDSR
+      *****************************************************************
+     C/COPY WNCPYSRC,MM0063C011
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #B       - Delete MMDENBPP deleted records                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+     C/COPY WNCPYSRC,MM0063C012
+      *
+     C                     OPEN MMDENBPP
+     C                     READ MMDENBP0                 60
+      *
+     C           *IN60     IFEQ '1'                        B1             S01136
+     C                     MOVE 'Y'       @NOREC  1        *1             S01136
+     C                     END                             E1             S01136
+     C/COPY WNCPYSRC,MM0063C007
+      *
+      ** Process all the records in the file
+     C           *IN60     DOWEQ'0'                        B1
+      *
+      ** If matured, deleted, or logically deleted then physically del
+     C           HLDSTS    IFEQ 'M'                        B*2
+     C           HLDDLT    OREQ 'D'                        X*2
+     C           HLDLTF    OREQ '*'                        X*2
+     C                     DELETMMDENBP0                   **2
+      *                                                                                      252554A
+      ** Delete the corresponding record in the UDF files.                                   252554A
+      *                                                                                      252554A
+     C                     Z-ADDHLDN38    PDDLNO                                            AR588416
+     C                     CALL 'MMDELUDF'                                                   252554A
+     C**********           PARM           HLDN38                                    252554A AR588416
+     C                     PARM           PDDLNO                                            AR588416
+     C                     PARM 'NASP'    #API                                               252554A
+      *                                                                                      252554A
+     C/COPY WNCPYSRC,MM0063C008
+     C                     END                             E*2
+      *
+     C                     READ MMDENBP0                 60*1
+     C                     END                             E1
+      ** close the file
+     C                     CLOSEMMDENBPP
+      *
+      ** reorganize the physical file member
+     C           @NOREC    IFNE 'Y'                        B1             S01136
+     C**********           MOVEA'MMDENBPP'@P,13            *1                                 228542
+     C*********************CALL 'QCAEXEC'                  *1             E20774
+     C**********           CALL 'QCMDEXC'                  *1                          E20774 228542
+     C**********           PARM           @P               *1                                 228542
+     C**********           PARM 21        @P2    155       *1                                 228542
+     C                     MOVEL'SCC00'   PGM    10                                           228542
+     C                     MOVE '0060 '   PGM                                                 228542
+     C                     MOVEL'MMDENBPP'RGZFIL 10                                           228542
+     C                     MOVEL'*FIRST'  RGZMBR 10                                           228542
+     C                     CALL PGM                                                           228542
+     C                     PARM           RGZFIL                                              228542
+     C                     PARM           RGZMBR                                              228542
+     C/COPY WNCPYSRC,MM0063C013
+     C                     ELSE                            X1             S01136
+     C                     MOVE ' '       @NOREC           *1             S01136
+     C                     END                             E1             S01136
+     C/COPY WNCPYSRC,MM0063C009
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #C       - Delete MMDENSPP deleted records                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      *****************************************************************
+     C           #C        BEGSR
+      *
+     C                     OPEN MMDENSPP
+     C                     READ MMDENSP0                 60
+      *
+     C           *IN60     IFEQ '1'                        B1             S01136
+     C                     MOVE 'Y'       @NOREC  1        *1             S01136
+     C                     END                             E1             S01136
+      *
+      ** Process all the records in the file
+     C           *IN60     DOWEQ'0'                        B1
+      *
+      ** If matured, deleted, or logically deleted then physically del
+     C           HMDSTS    IFEQ 'M'                        B*2
+     C           HMDDLT    OREQ 'D'                        X*2
+     C           HMDLTF    OREQ '*'                        X*2
+     C                     DELETMMDENSP0                   **2
+      *                                                                                      252554A
+      ** Delete the corresponding record in the UDF files.                                   252554A
+      *                                                                                      252554A
+     C                     Z-ADDHMDN38    PDDLNO                                            AR588416
+     C                     CALL 'MMDELUDF'                                                   252554A
+     C**********           PARM           HMDN38                                    252554A AR588416
+     C                     PARM           PDDLNO                                            AR588416
+     C                     PARM 'NASS'    #API                                               252554A
+      *                                                                                      252554A
+     C                     END                             E*2
+      *
+     C                     READ MMDENSP0                 60*1
+     C                     END                             E1
+      ** close the file
+     C                     CLOSEMMDENSPP
+      *
+      ** reorganize the physical file member
+     C           @NOREC    IFNE 'Y'                        B1             S01136
+     C**********           MOVEA'MMDENSPP'@P,13            *1                                 228542
+     C*********************CALL 'QCAEXEC'                  *1             E20774
+     C**********           CALL 'QCMDEXC'                  *1                          E20774 228542
+     C**********           PARM           @P               *1                                 228542
+     C**********           PARM 21        @P2    155       *1                                 228542
+     C                     MOVEL'SCC00'   PGM    10                                           228542
+     C                     MOVE '0060 '   PGM                                                 228542
+     C                     MOVEL'MMDENSPP'RGZFIL 10                                           228542
+     C                     MOVEL'*FIRST'  RGZMBR 10                                           228542
+     C                     CALL PGM                                                           228542
+     C                     PARM           RGZFIL                                              228542
+     C                     PARM           RGZMBR                                              228542
+     C                     ELSE                            X1             S01136
+     C                     MOVE ' '       @NOREC           *1             S01136
+     C                     END                             E1             S01136
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #D       - Delete MMDEAMPP deleted records                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - control process                           *
+      *                                                               *
+      *****************************************************************
+     C           #D        BEGSR
+      *
+     C                     OPEN MMDEAMPP
+     C                     READ MMDEAMP0                 60
+      *
+     C           *IN60     IFEQ '1'                        B1             S01136
+     C                     MOVE 'Y'       @NOREC  1        *1             S01136
+     C                     END                             E1             S01136
+      ********************************************************************E23819
+      ***Process*all*the*records*in*the*file******************************E23819
+     C************IN60*****DOWEQ'0'                        B1             E23819
+      ********************************************************************E23819
+      ***If*matured,*deleted,*or*logically*deleted*then*physically*del****E23819
+     C***********HNDSTS****IFEQ 'M'                        B*2            E23819
+     C***********HNDDLT****OREQ 'D'                        X*2            E23819
+     C***********HNDLTF****OREQ '*'                        X*2            E23819
+     C*********************DELETMMDEAMP0                   **2            E23819
+     C*********************END                             E*2            E23819
+      ********************************************************************E23819
+     C*********************READ MMDEAMP0                 60*1             E23819
+     C*********************END                             E1             E23819
+      ** close the file
+     C                     CLOSEMMDEAMPP
+      *
+      ** reorganize the physical file member
+     C           @NOREC    IFNE 'Y'                        B1             S01136
+     C**********           MOVEA'MMDEAMPP'@P,13            *1                                 228542
+     C*********************CALL 'QCAEXEC'                  *1             E20774
+     C**********           CALL 'QCMDEXC'                  *1                          E20774 228542
+     C**********           PARM           @P               *1                                 228542
+     C**********           PARM 21        @P2    155       *1                                 228542
+     C                     MOVEL'SCC00'   PGM    10                                           228542
+     C                     MOVE '0060 '   PGM                                                 228542
+     C                     MOVEL'MMDEAMPP'RGZFIL 10                                           228542
+     C                     MOVEL'*FIRST'  RGZMBR 10                                           228542
+     C                     CALL PGM                                                           228542
+     C                     PARM           RGZFIL                                              228542
+     C                     PARM           RGZMBR                                              228542
+     C                     ELSE                            X1             S01136
+     C                     MOVE ' '       @NOREC           *1             S01136
+     C                     END                             E1             S01136
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C/COPY WNCPYSRC,MM0063C004
+      *****************************************************************
+      *                                                               *
+      * *PSSR    - error processing                                   *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+      *
+     C           #PSSR9    ENDSR                           #PSSR9 TAG
+      *****************************************************************
+      /EJECT
+      *****************************************************************                       CDL033
+      * CKDEAL - Check if Deal Type is included in validations        *                       CDL033
+      *****************************************************************                       CDL033
+     C           CKDEAL    BEGSR                                                              CDL033
+      *                                                                                       CDL033
+     C           HKMTYP    IFNE 'CF'                                                          CDL033
+     C                     MOVE *OFF      @FXT    1                                           CDL033
+     C                     MOVE *IN49     TVAR    1                                           CDL033
+     C           HKMTYP    LOKUPFXT                      49                                   CDL033
+     C           *IN49     IFEQ *ON                                                           CDL033
+     C                     MOVE *ON       @FXT                                                CDL033
+     C                     ENDIF                                                              CDL033
+     C                     MOVE TVAR      *IN49                                               CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+     C                     ENDSR                                                              CDL033
+      *****************************************************************                       CDL033
+      /EJECT                                                                                  CDL033
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** FXT                                                                                        CDL033
+ITIPTDTICI                                                                                    CDL033

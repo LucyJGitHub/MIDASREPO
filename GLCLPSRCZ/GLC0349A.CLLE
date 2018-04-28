@@ -1,0 +1,105 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Cleared Balance Upd')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC0349A - GL Cleared Balance Update                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CGL120  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &MEMBER)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LDA)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
+ 
+             SNDPGMMSG  MSG('GLC0349A - GL Cleared Balance') +
+                        TOMSGQ(MRUNQ)
+ 
+             OVRDBF     FILE(GLCBUSPD) TOFILE(GLCBUSPD) MBR(&MEMBER) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+ 
+             IF         COND(&POSTNUM *EQ '1') THEN(DO)
+             CHGJOB     SWS(XXXXX100)
+             OVRDBF     FILE(SACPO) TOFILE(ACPO1) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             ENDDO
+ 
+             IF         COND(&POSTNUM *EQ '2') THEN(DO)
+             CHGJOB     SWS(XXXXX000)
+             OVRDBF     FILE(SACPO) TOFILE(ACPO2) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             ENDDO
+ 
+             IF         COND(&POSTNUM *EQ '3') THEN(DO)
+             CHGJOB     SWS(XXXXX000)
+             OVRDBF     FILE(SACPO) TOFILE(ACPO3) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             ENDDO
+ 
+             IF         COND(&POSTNUM *EQ '4') THEN(DO)
+             CHGJOB     SWS(XXXXX000)
+             OVRDBF     FILE(SACPO) TOFILE(ACPO4) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             ENDDO
+ 
+             IF         COND(&POSTNUM *EQ '5') THEN(DO)
+             CHGJOB     SWS(XXXXX100)
+             OVRDBF     FILE(SACPO) TOFILE(ACPO5) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             ENDDO
+ 
+             CALL       PGM(GL0349)
+             DLTOVR     FILE(GLCBUSPD SACPO)
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+/* Database Error                                                  */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+             CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+             IF         COND(%SWITCH(XXXXXX01)) THEN(DO)
+             SNDPGMMSG  MSG('JOB TERMINATED - FILE CONTROLS OUT OF +
+                          BALANCE') TOMSGQ(MRUNQ)
+             SNDPGMMSG  MSG('JOB TERMINATED - FILE CONTROLS OUT OF +
+                          BALANCE') TOMSGQ(MOPERQ)
+ 
+             ENDDO
+             ELSE       CMD(DO)
+             CHGJOB     SWS(XXXXXX01)
+ 
+             SNDPGMMSG  MSG('JOB TERMINATED - FILE CONTROLS OUT OF +
+                          BALANCE') TOMSGQ(MRUNQ)
+             SNDPGMMSG  MSG('JOB TERMINATED - FILE CONTROLS OUT OF +
+                          BALANCE') TOMSGQ(MOPERQ)
+ 
+             ENDDO
+             ENDDO
+             ENDDO
+ 
+ENDPGM:
+             RETURN
+             ENDPGM

@@ -1,0 +1,627 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Collateral details file purge audit rept')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL3350 - Collateral Details File Purge Audit Report          *
+      *                                                               *
+      *  Function:  This program is a housekeeping program for the    *
+      *  (COB)      Collateral Details File and its two extensions,   *
+      *             the Collateral Allocation File and the Collateral *
+      *             Narrative File. This program is used to purge all *
+      *             reversed records (immediately after reversal) and *
+      *             purge all expired records which have gone beyond  *
+      *             its retention period. After a Collateral Detail   *
+      *             record is purged, its corresponding allocation    *
+      *             and narrative records are also deleted (if there  *
+      *             are any).                                         *
+      *                                                               *
+      *  Called By: GLC3350 - Collateral Details File Purge           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CAP205             Date 06Mar10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11623           Date 27Jun06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE040             Date 05Jul04               *
+      *                 CGL014             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CGL018             Date 30Sep02               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL011  *CREATE    Date 20Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CAP205 - Retail Account Balance Check                        *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  BUG11623 - Sequence No. column should be included (Recompile)*
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE040 - Collateralised Lending Phase 2 (Recompile)          *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  CGL018 - Risk Weighted Assets                                *
+      *  CGL011 - Collateral Processing for Midas DBA                 *
+      *                                                               *
+      *****************************************************************
+     FSDCOTPL1IF  E           K        DISK         KCOMIT
+      ** Collateral Types Retrieval File
+      *
+     FGLCOLLLBUF  E           K        DISK         KCOMIT
+      ** Collateral Details by Collateral Reference,
+      ** All Reversed and Expired
+      *
+     FGLCOLLQ0UF  E           K        DISK         KCOMIT                                    CAP205
+      ** Collateral Details Extension File                                                    CAP205
+      *                                                                                       CAP205
+     FGLCOLAL0UF  E           K        DISK         KCOMIT
+      ** Collateral Allocation Update File
+      *
+     FGLCOLNL0UF  E           K        DISK         KCOMIT
+      ** Collateral Narrative Update File
+     F/COPY WNCPYSRC,GL3350F001
+      *
+     FGLORWAL0UF  E           K        DISK         KCOMIT                          CGL018
+      * Collateral Risk Weighted Assets Codes                                       CGL018
+      *                                                                             CGL018
+     FGL3350AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   60  - Report Collateral RWA file GLORWAPD                   *             CGL018
+      *   70  - End of File on GLCOLLLB                               *
+      *   71  _ No record found on Chain to SDCOTPL1                  *
+      *   72  - End of File on GLCOLAL0                               *
+      *   73  - End of File on GLCOLNL0                               *
+      *   74  - End of File on GLORWAL0                               *             CGL018
+      *   80  - Error on deletion of GLCOLLLB record                  *
+      *   81  - Error on deletion of GLCOLAL0 record                  *
+      *   82  - Error on deletion of GLCOLNL0 record                  *
+      *   84  - Error on deletion of GLORWAL0 record                  *             CGL018
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report Routine                        *
+      *  SRDELA - Allocations Deletion Routine                        *
+      *  SRDELN - Narrative Deletion Routine                          *
+      *  SREXPI - Expired Record File Purge Routine                   *
+      *  SREVRS - Reversed Records File Purge Routine                 *
+      *  SRINIT - Initialisation Routine                              *
+      *  RWA    - Collateral Risk Weight Assets - Delete Records      *             CGL018
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     IGLCOLQD0                                                                                CAP205
+     I              CDXREF                          CDQREF                                    CAP205
+      *                                                                                       CAP205
+      /SPACE 3
+     E/COPY WNCPYSRC,GL3350E001
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for GL3350AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISCSARD    E DSSCSARDPD                                                        CGL018
+      *                                                                             CGL018
+      ** SAR descriptions                                                           CGL018
+     IDSSDY     E DSDSSDY
+      ** Long data structure for Access Objects
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** For each record in GLCOLLLB
+      *
+     C                     READ GLCOLLLB                 70
+      *
+     C           *IN70     DOWEQ*OFF
+      *
+     C           CDRECI    IFEQ 'R'
+     C                     EXSR SREVRS
+     C                     ELSE
+     C                     EXSR SREXPI
+     C                     ENDIF
+      *                                                                             CGL018
+      ** If feature CGL018 is present,                                              CGL018
+      ** delete any records from file GLORWAPD                                      CGL018
+      *                                                                             CGL018
+     C           CGL018    IFEQ 'Y'                                                 CGL018
+     C                     EXSR RWA                                                 CGL018
+     C                     END                                                      CGL018
+      *
+     C                     READ GLCOLLLB                 70
+      *
+     C                     ENDDO
+      *
+      ** Print the Audit Report.
+      *
+     C           OPENAU    IFEQ 'Y'
+     C                     OPEN GL3350AU
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** End the program.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialisation Routine.                             *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *  Calls     : *PSSR, AOBANKR0                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL3350'  DBPGM
+     C                     OUT  LDA
+      *
+     C                     MOVE 'N'       OPENAU  1
+      *
+      ** Call Access Program for Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format: *IN98 is on if MMDDYY.
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Initialise work fields.
+      *
+     C                     Z-ADD0         RCOLL
+     C                     Z-ADD0         RCOLA
+     C                     Z-ADD0         RCOLN
+     C/COPY WNCPYSRC,GL3350C002
+     C                     Z-ADD0         RCOLR                                     CGL018
+      *
+      *                                                                             CGL018
+      ** Access details file to determine if CGL018 is on.                          CGL018
+      *                                                                             CGL018
+     C                     CALL 'AOSARDR0'                                          CGL018
+     C                     PARM *BLANKS   @RTCD   7                                 CGL018
+     C                     PARM '*VERIFY' @OPTN   7                                 CGL018
+     C                     PARM 'CGL018'  @SARD   6                                 CGL018
+     C           SCSARD    PARM SCSARD    DSSDY                                     CGL018
+      *                                                                             CGL018
+      ** Database Error                                                             CGL018
+      *                                                                             CGL018
+     C           @RTCD     IFNE *BLANKS                                             CGL018
+     C           @RTCD     ANDNE'*NRF   '                                           CGL018
+     C                     MOVEL'SCSARDPD'DBFILE           ***************          CGL018
+     C                     Z-ADD8         DBASE            * DB ERROR 08 *          CGL018
+     C                     MOVEL'CGL018'  DBKEY            ***************          CGL018
+     C                     EXSR *PSSR                                               CGL018
+     C                     END                                                      CGL018
+      *                                                                             CGL018
+     C           @RTCD     IFEQ *BLANK                                              CGL018
+     C                     MOVE 'Y'       CGL018  1                                 CGL018
+     C                     MOVE *ON       *IN60                                     CGL018
+     C                     ELSE                                                     CGL018
+     C                     MOVE 'N'       CGL018                                    CGL018
+     C                     MOVE *OFF      *IN60                                     CGL018
+     C                     END                                                      CGL018
+      *
+      ** Access details file to determine if CAP205 is on.                                    CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   @RTCD   7                                           CAP205
+     C                     PARM '*VERIFY' @OPTN   7                                           CAP205
+     C                     PARM 'CAP205'  @SARD   6                                           CAP205
+     C           SCSARD    PARM SCSARD    DSSDY                                               CAP205
+      *                                                                                       CAP205
+      ** Database Error                                                                       CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFNE *BLANKS                                                       CAP205
+     C           @RTCD     ANDNE'*NRF   '                                                     CAP205
+     C                     MOVEL'SCSARDPD'DBFILE           ***************                    CAP205
+     C                     Z-ADD9         DBASE            * DB ERROR 09 *                    CAP205
+     C                     MOVEL'CAP205'  DBKEY            ***************                    CAP205
+     C                     EXSR *PSSR                                                         CAP205
+     C                     END                                                                CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANK                                                        CAP205
+     C                     MOVE 'Y'       CAP205  1                                           CAP205
+     C                     ELSE                                                               CAP205
+     C                     MOVE 'N'       CAP205                                              CAP205
+     C                     END                                                                CAP205
+      *                                                                                       CAP205
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SREVRS
+      *****************************************************************
+      *                                                               *
+      *  SREVRS - Reversed Records File Purge Routine.                *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *  Calls     : SRDELA, SRDELN, *PSSR                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREVRS    BEGSR
+      *
+     C                     EXSR SRDELA
+     C                     EXSR SRDELN
+      *                                                                                       CAP205
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     EXSR SRDELC                                                        CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C/COPY WNCPYSRC,GL3350C001
+      *
+     C                     DELETGLCOLLLB               80
+      *
+      ** If error occurred on deletion, do DB Error processing.
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLCOLLPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     MOVELCDCREF    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+      ** Otherwise if no error occured on deletion, open Audit Report.
+      *
+     C                     ELSE
+     C                     ADD  1         RCOLL
+     C           OPENAU    IFEQ 'N'
+     C                     MOVE 'Y'       OPENAU
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SREXPI
+      *****************************************************************
+      *                                                               *
+      *  SREXPI - Expired Record File Purge Routine.                  *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *  Calls     : SRDELA, SRDELN, *PSSR                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREXPI    BEGSR
+      *
+     C           CDCOLT    CHAINSDCOTPL1             71
+      *
+      ** If Collateral Type is not found on the Collateral Types File,
+      ** do DB Error processing.
+      *
+     C           *IN71     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCOTPPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     MOVELCDCOLT    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+      ** Otherwise if Collateral Type was found
+      *
+     C                     ELSE
+     C           CTRTNP    MULT 31        WPRDCT  40
+     C           WPRDCT    ADD  CDEDAT    @DRPDT  50
+      *
+      ** If retention period had passed, purge Collateral Allocation,
+      ** Narrative and Detail records.
+      *
+     C           @DRPDT    IFLT BJRDNB
+     C                     EXSR SRDELA
+     C                     EXSR SRDELN
+      *                                                                                       CAP205
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     EXSR SRDELC                                                        CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C                     DELETGLCOLLLB               80
+      *
+      ** If error occurred on deletion of Collateral Details File,
+      ** do DB Error processing.
+      *
+     C           *IN80     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLCOLLPD'DBFILE           ***************
+     C                     Z-ADD004       DBASE            * DB ERROR 04 *
+     C                     MOVELCDCREF    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+      ** Otherwise if no error occurred on deletion, open Audit Report.
+      *
+     C                     ELSE
+     C                     ADD  1         RCOLL
+     C           OPENAU    IFEQ 'N'
+     C                     MOVE 'Y'       OPENAU
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRDELA
+      *****************************************************************
+      *                                                               *
+      *  SRDELA - Allocations Deletion Routine.                       *
+      *                                                               *
+      *  Called By : SREVRS, SREXPI                                   *
+      *  Calls     : *PSSR                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDELA    BEGSR
+      *
+     C           CDCREF    SETLLGLCOLAL0
+     C           CDCREF    READEGLCOLAL0                 72
+      *
+     C           *IN72     DOWEQ*OFF
+     C                     DELETGLCOLAL0               81
+      *
+      ** If error occurred on deletion, do DB Error processing.
+      *
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLCOLAPD'DBFILE           ***************
+     C                     Z-ADD005       DBASE            * DB ERROR 05 *
+     C                     MOVELCDCREF    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+      ** Otherwise if no error occurred, increment counter.
+      *
+     C                     ELSE
+     C                     ADD  1         RCOLA
+     C                     ENDIF
+      *
+     C           CDCREF    READEGLCOLAL0                 72
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRDELN
+      *****************************************************************
+      *                                                               *
+      *  SRDELN - Narrative Deletion Routine.                         *
+      *                                                               *
+      *  Called By : SREVRS, SREXPI                                   *
+      *  Calls     : *PSSR                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDELN    BEGSR
+      *
+     C           CDCREF    SETLLGLCOLNL0
+     C           CDCREF    READEGLCOLNL0                 73
+      *
+     C           *IN73     DOWEQ*OFF
+     C                     DELETGLCOLNL0               82
+      *
+      ** If error occurred on deletion, do DB Error processing.
+      *
+     C           *IN82     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLCOLNPD'DBFILE           ***************
+     C                     Z-ADD006       DBASE            * DB ERROR 06 *
+     C                     MOVELCDCREF    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+      ** Otherwise if no error occurred, increment counter.
+      *
+     C                     ELSE
+     C                     ADD  1         RCOLN
+     C                     ENDIF
+      *
+     C           CDCREF    READEGLCOLNL0                 73
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                       CAP205
+      /TITLE SR/SRDELC                                                                        CAP205
+      *****************************************************************                       CAP205
+      *                                                               *                       CAP205
+      *  SRDELC - Delete record from collateral details extension file*                       CAP205
+      *                                                               *                       CAP205
+      *  Called By : SREVRS, SREXPI                                   *                       CAP205
+      *  Calls     : *PSSR                                            *                       CAP205
+      *                                                               *                       CAP205
+      *****************************************************************                       CAP205
+      *                                                                                       CAP205
+     C           SRDELC    BEGSR                                                              CAP205
+      *                                                                                       CAP205
+     C           KCOLLQ    KLIST                                                              CAP205
+     C                     KFLD           CDBRCA                                              CAP205
+     C                     KFLD           CDCREF                                              CAP205
+      *                                                                                       CAP205
+     C           KCOLLQ    CHAINGLCOLLQ0             75                                       CAP205
+      *                                                                                       CAP205
+     C           *IN75     IFEQ *OFF                                                          CAP205
+     C                     DELETGLCOLLQ0               75                                     CAP205
+      *                                                                                       CAP205
+     C           *IN75     IFEQ *ON                                                           CAP205
+     C           *LOCK     IN   LDA                                                           CAP205
+     C                     MOVEL'GLCOLLQD'DBFILE           ***************                    CAP205
+     C                     Z-ADD010       DBASE            * DB ERROR 10 *                    CAP205
+     C                     MOVELCDCREF    DBKEY            ***************                    CAP205
+     C                     OUT  LDA                                                           CAP205
+     C                     EXSR *PSSR                                                         CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C                     ENDSR                                                              CAP205
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *******************************************************************           CGL018
+      * RWA       : Delete any records from GLORWAPD                    *           CGL018
+      * ---                                                             *           CGL018
+      * Called By : Main                                                *           CGL018
+      * Calls     : None                                                *           CGL018
+      *******************************************************************           CGL018
+     C           RWA       BEGSR                                                    CGL018
+     C           CDCREF    SETLLGLORWAD0                                            CGL018
+     C           CDCREF    READEGLORWAD0                 74                         CGL018
+     C           *IN74     DOWEQ'0'                                                 CGL018
+     C                     DELETGLORWAD0               84                           CGL018
+     C           *IN84     IFEQ '1'                                                 CGL018
+      *                                                                             CGL018
+      ** If delete not OK, database error.                                          CGL018
+      *                                                                             CGL018
+     C           *LOCK     IN   LDA                                                 CGL018
+     C                     MOVEL'GLORWAPD'DBFILE                                    CGL018
+     C                     Z-ADD007       DBASE                                     CGL018
+     C                     MOVELCDCREF    DBKEY            ***************          CGL018
+     C                     OUT  LDA                        * DB ERROR 07 *          CGL018
+     C                     EXSR *PSSR                      ***************          CGL018
+     C                     ELSE                                                     CGL018
+      *                                                                             CGL018
+     C                     ADD  1         RCOLR                                     CGL018
+     C           CDCREF    READEGLORWAD0                 74                         CGL018
+     C                     ENDIF                                                    CGL018
+     C                     ENDDO                                                    CGL018
+     C                     ENDSR                                                    CGL018
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Produce Audit Report Routine.                       *
+      *                                                               *
+      *  Called By : Main Processing, *PSSR                           *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header.
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C           *INU8     OREQ *ON
+     C                     WRITEDBERROR
+      *
+      ** Otherwise, output File Control.
+      *
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     CLOSEGL3350AU
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  Called By : Main Processing, SRINIT                          *
+      *  Calls     : SRAUDT                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVE 'Y'       OPENAU
+     C                     OPEN GL3350AU
+     C                     EXSR SRAUDT
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

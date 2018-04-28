@@ -1,0 +1,114 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SD FATCA Indicia Search Tool Staging Module')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data                                       */
+/*                                                                   */
+/*       SDC000731 - Midas SD FATCA Indicia Search Tool Staging      */
+/*                    Module                                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD027682           Date 28Aug14              */
+/*       Prev Amend No. MD027355A          Date 06Jun14              */
+/*                      MD027315           Date 06Jun14              */
+/*                      CGL132  *CREATE    Date 01May13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD027682 - Reporting Type is not Reflected During           */
+/*                  Information and Update Mode in USIT.             */
+/*                  Apply Fix MD028682                               */
+/*       MD027355A - 'US Indicia Changed' header is not displayed    */
+/*       MD027315 - Classification changed during info mode error    */
+/*       CGL132 - FATCA Phase 1 - Customers' Identification and      */
+/*                Classification - Master                            */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&INFO &UPDAT) */                                          /*MD027355A*/
+             PGM        PARM(&INFO &UPDAT &UPDT2)                                      /*MD027355A*/
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&INFO) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&UPDAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&UPDT2) TYPE(*CHAR) LEN(1)                                 /*MD027355A*/
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Determine full DPLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CPYF       FROMFILE(SDFCLSPD) TOFILE(&DPLIB/SDFCLSXPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             IF         COND(&INFO *EQ 'Y') THEN(DO)
+             CPYF       FROMFILE(SDFCBKPD) TOFILE(&DPLIB/SDFTCSPD) +
+                        MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(SDFNBKPD) TOFILE(&DPLIB/SDFTNHPD) +
+                        MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CHGVAR     VAR(&INFO) VALUE(' ')
+             ENDDO
+ 
+/* Call Report Program */
+/**********  CALL       PGM(SD000731) */                                                /*MD027315*/
+/**********  CALL       PGM(SD000731) PARM(&UPDAT) */                         /*MD027315 MD027355A*/
+             CALL       PGM(SD000731) PARM(&UPDT2)                                     /*MD027355A*/
+             RCLACTGRP  ACTGRP(SD000731)
+ 
+             IF         COND(&UPDAT *EQ 'Y') THEN(DO)
+ /********** CPYF       FROMFILE(SDFTCSPD) TOFILE(&DPLIB/SDFCBKPD) +
+                        MBROPT(*REPLACE)                                        */    /* MD028682 */
+ /********** MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                          */    /* MD028682 */
+ /********** CPYF       FROMFILE(SDFTNHPD) TOFILE(&DPLIB/SDFNBKPD) +
+                        MBROPT(*REPLACE)                                        */    /* MD028682 */
+ /********** MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                          */    /* MD028682 */
+             CHGVAR     VAR(&UPDAT) VALUE(' ')
+             ENDDO
+ 
+             CPYF       FROMFILE(SDFCLSPD) TOFILE(SDFCL1PD) +
+                             MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CPYF       FROMFILE(SDFCLSXPD) TOFILE(SDFCLSPD) +
+                             MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             DLTF       FILE(SDFCLSXPD)
+             MONMSG     MSGID(CPF2105)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('SDC000733 Midas SD FATCA Indicia +
+                          Search Tool +
+                          ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+END:
+             ENDPGM

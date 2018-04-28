@@ -1,0 +1,285 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+      *****************************************************************
+/*S*D ***RPGBASEMOD****************************************************                       CPK019
+/*STD *  RPGBASEBND                                                   *                       CPK019
+/*EXI *  TEXT('Midas UP Deliverables list logicals check')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade Module                                       *
+      *                                                               *
+      *  UP0093 - (ILE module name)                                   *
+      *                                                               *
+      *  Function:  This module checks that associated logicals have  *
+      *             been delivered.                                   *
+      *                                                               *
+      *  Component of: UP0093  (program name)                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CPK019             Date 17Jun04               *
+      *  Prev Amend No. CPK018             Date 25Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CUP007             Date 14Mar00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CUP006  *CREATE    Date 16Dec99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK019 - Removal of SP8UT0001.                               *
+      *  CPK018 - MidasPlus packaging.  Handle SQL member types.      *
+      *  CUP007 - Recompiled over changed UP0092P1                    *
+      *  CUP006 - Delivered logicals test                             *
+      *                                                               *
+      *****************************************************************
+ 
+     FUP0092P1  O    E             PRINTER USROPN OFLIND(*IN37)
+ 
+     FUPDLVCL1  IF   E           K DISK    USROPN INFSR(*PSSR)
+ 
+     FUPDLVCL0  IF   E           K DISK    INFSR(*PSSR) PREFIX(C)
+ 
+      *****************************************************************
+     D USERSPACE       DS
+     D  NAME                   1     20A
+     D  US                     1     10A   INZ('DATARELAT')
+     D  USLIB                 11     20A   INZ('QTEMP')
+     D  ATTR                  21     30A   INZ('          ')
+     D  SIZE                  31     34B 0
+     D  IVAL                  35     35A
+     D  AUT                   36     45A   INZ('*USE')
+     D  DESC                  46     95
+     D  REPL                  96    105A   INZ('*YES')
+     D  ERRP                 106    130A
+     D  ERR1                 106    109B 0
+     D  ERR2                 110    113B 0
+     D  ERR3                 114    120
+     D  ERR4                 121    121
+     D  ERR5                 122    131
+ 
+     D USHEAD          DS
+     D  ALLDTA                 1    140
+     D  OFFLST               125    128B 0
+     D  NOENTS               133    136B 0
+     D  ENTSIZ               137    140B 0
+ 
+      * Parameters for retrieval of user space list data
+     D  USLIST         DS
+     D   LOGNAM               21     30
+     D   LIBNAM               31     40
+ 
+     D                 DS
+     D  USSTRT                 1      4B 0
+     D  USLEN                  5      8B 0
+ 
+     D COUNT           S              3  0
+     D ER1             S              3  0 INZ(0)
+     D WLOGNAM         S             10    INZ('          ')
+     D MODULE          S             10
+     D MBRNAM          S             10    INZ(*LOVAL)
+     D MBRTYP          S             10    INZ(*LOVAL)
+ 
+     D QUALFILE        DS            20
+     D  AUMBNM                 1     10
+     D  LIB                   11     20    INZ('*LIBL')
+ 
+      *****************************************************************
+ 
+     C                   Z-ADD     100000        SIZE
+     C                   Z-ADD     8             ERR1
+     C                   EVAL      *IN93 = '1'
+ 
+     C     LOGKEY        KLIST
+     C                   KFLD                    MBRNAM
+     C                   KFLD                    MBRTYP
+      *
+     C                   CALL      'QUSCRTUS'
+     C                   PARM                    NAME
+     C                   PARM                    ATTR
+     C                   PARM                    SIZE
+     C                   PARM                    IVAL
+     C                   PARM                    AUT
+     C                   PARM                    DESC
+     C                   PARM                    REPL
+     C                   PARM                    ERRP
+ 
+      *   While there are records, check if they are physical files and
+      *   if they are call QDBLDBR to display database relations.
+ 
+     C                   OPEN      UPDLVCL1
+     C                   DOU       *IN80
+ 
+     C                   IF        AUMBTP = 'PF'
+     C                             or AUMBTP = 'SQLTBL'                                       CPK018
+     C                             or AUMBTP = 'SQLVIEW'                                      CPK018
+     C                   CALL      'QDBLDBR'
+     C                   PARM                    NAME
+     C                   PARM      'DBRL0100'    FILEINFO          8
+     C                   PARM                    QUALFILE
+     C                   PARM      '           ' DUMMY            10
+     C                   PARM      '           ' RECF             10
+     C                   PARM                    ERRD              1
+      *
+     C                   Z-ADD     1             USSTRT
+     C                   Z-ADD     140           USLEN
+ 
+      * Retrieve header information
+ 
+     C                   CALL      'QUSRTVUS'
+     C                   PARM                    NAME
+     C                   PARM                    USSTRT
+     C                   PARM                    USLEN
+     C                   PARM                    USHEAD
+ 
+      * If no entries then skip further processing
+     C                   IF        NOENTS <> 0
+ 
+     C                   EXSR      GETDTA
+     C                   ENDIF
+ 
+     C                   ENDIF
+ 
+     C     LOGKEY        SETGT     UPDLVCL1                             69
+     C                   READ      UPDLVCL1                             6980
+ 
+     C                   EVAL      MBRNAM = AUMBNM
+     C                   EVAL      MBRTYP = AUMBTP
+ 
+     C                   ENDDO
+ 
+      ** If any records, call UPC0092 to send message to screen.
+     C                   IF        ER1 > 0
+     C                   WRITE     TRAILPY                              69
+     C                   EVAL      MODULE = 'UP0093'
+     C**********         CALLB     'UPC0092'                                                  CPK019
+     C                   CALL      'UPC0092'                                                  CPK019
+     C                   PARM                    MODULE
+ 
+      ** Close Printer file
+     C                   CLOSE     UP0092P1
+     C                   ENDIF
+ 
+     C                   EVAL      *IN93 = '0'
+ 
+     C                   SETON                                        LR
+     C                   RETURN
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C     GETDTA        BEGSR
+ 
+     C                   EVAL      COUNT = 1
+     C                   EVAL      USLEN = ENTSIZ
+     C                   EVAL      USSTRT = OFFLST + 1
+ 
+     C                   DOW       COUNT <= NOENTS
+     C                   CLEAR                   LOGNAM
+     C                   CLEAR                   LIBNAM
+     C                   EVAL      USLIST = *BLANKS
+ 
+      * Retrieve detail information from user space
+ 
+     C                   CALL      'QUSRTVUS'
+     C                   PARM                    NAME
+     C                   PARM                    USSTRT
+     C                   PARM                    USLEN
+     C                   PARM                    USLIST
+ 
+     C                   IF        LOGNAM <> '*NONE'
+     C     LOGNAM        SETLL     UPDLVCL0
+     C     LOGNAM        CHAIN     UPDLVCL0                           81
+ 
+     C                   IF        *IN81 = '1'
+ 
+      *  If logical has more than one format based on same physical, no need to
+      *  repeat processing
+     C                   IF        LOGNAM <> WLOGNAM
+ 
+     C                   EVAL      ER1 = ER1 + 1
+     C                   EXSR      NTFND
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+ 
+     C                   EVAL      COUNT = COUNT + 1
+     C                   EVAL      USSTRT = USSTRT + ENTSIZ
+     C                   EVAL      WLOGNAM = LOGNAM
+ 
+     C                   ENDDO
+ 
+      *  For some unknown reason, the pointer in the first file is getting lost
+      *  while the second file is being chained.  Therefore close & reopen file
+      *  in order to reposition the pointer.
+     C                   CLOSE     UPDLVCL1
+     C                   OPEN      UPDLVCL1
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      *                                                               *
+      *  NTFND  - SUBROUTINE TO DO PRINT FILES NOT FOUND IN DELIVERY  *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     NONE                                              *
+      *                                                               *
+      *****************************************************************
+     C     NTFND         BEGSR
+      *
+      ** If the first time writing to report or new page, write header.
+     C                   IF        ER1 = 1
+      ** Open Printer file
+     C                   OPEN      UP0092P1                             69
+     C                   WRITE     HEADPY                               69
+     C                   IF        *IN69
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * If overflow on then write header
+     C                   IF        *IN37
+     C                   WRITE     HEADPY                               69
+     C                   IF        *IN69
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   EVAL      *IN37 = '0'
+     C                   ENDIF
+      *
+     C                   WRITE     DETAIL                               69
+     C                   IF        *IN69
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+     C                   ENDSR

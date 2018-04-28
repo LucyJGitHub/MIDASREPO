@@ -1,0 +1,1646 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Print Lend Portfolio Consolid.BHF305')           *
+     H***********
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas Customer Lending Module
+     F*                                                                  *
+     F*     LE0747  -  CUSTOMER LENDING PORTFOLIO - PRINT                *
+     F*         THIS PROGRAM WAS GENERATED FROM LE0748                   *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Prev Amend No. AR814485           Date 15Aug11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 091807             Date 15Aug95               *
+      *                 S01473             Date 01Aug94               *
+     F*                     S01392          DATE  01OCT92                *S01392
+     F*                     S01339          DATE  03JUN92                *
+     F*                     E26745 BHF929   DATE  22AUG91                *
+     F*                     BHF728          DATE  06OCT90                *BHF305
+     F*                     BHF305          DATE  12SEP90                *BHF305
+     F*                     LN0284          DATE  05JUN90                *LN0284
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR814485 - Align total amount of the report and apply        *
+      *             fix 261364 (Child:AR814486)                       *
+      *  261364 - Report LE0747P1 shows incorrect loan number format  *
+      *           in "TRANS" column                                   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     091807 - REMOVE FILE CONTROL CHECK AS NOT ALL DETAIL         *
+     F*              RECORDS ARE PROCESSED BY THE PROGRAM.               *
+     F*     S01473 - SUPPORT INPUT FROM LEO LC TRANSACTIONS              *
+     F*     S01392 - JAPANESE SUB MODULE ENHANCEMENTS                    *S01392
+     F*     S01339 - REMOVE SYNDICATED LOANS PROCESSING, DUE TO          *
+     F*              MODULE REDUNDANCY.                                  *
+     F*     E26745 - INCORRECT CHECK ON RECOURSE IND - IT IS NOW Y/N     *
+     F*     BHF728 - ADD FIELD 'EXPIRY DATE' ON THE PARENT'S CREDIT      *BHF728
+     F*              LINE SUMMARY TOTALS ON THE REPORT.                  *BHF728
+     F*     BHF305 - SET MDIN INDICATOR FOR FOREIGN CURRENCY             *
+     F*              ALSO FIX OVERFLOW PROBLEM                           *
+     F*     LN0284 - DATABASE ERROR MESSAGE NEEDS KEY TO BE SET UP        LN0284
+     F********************************************************************LN0284
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***PORTL5* IP  F      96 33AI     2 DISK                                                CGL029
+     F*PORTL5**IP**F*****122 33AI     2 DISK                                           CGL029 CLE042
+     FPORTL5  IP  F     126 33AI     2 DISK                                                   CLE042
+     F/COPY WNCPYSRC,LE0747F001
+     FLE0747AUO   F     132            PRINTER      KINFDS SPOOLU
+     FLE0747P1O   F     132     OF     PRINTER      KINFDS SPOOL
+0018 F* ID F  C  H  L    FUNCTION OF INDICATORS
+0019 F* 01            SFPOR - DETAIL RECORD
+0020 F* 02                  - TRAILER
+0026 F*    20         S/SFPOR - PARENT NO. ZERO
+0027 F*    21         A/C OFFICER CODE BLANK
+0028 F*    22        GRANTED/UTILISED AMOUNT NEGATIVE
+0029 F*    23         CHILD/PARENT IND BLANK - REC. RELATES TO PARENT
+0030 F*       25      LINE SPACING
+0031 F*       30      FIRST CYCLE INDICATOR
+0032 F*       31      GRANTED RECORD
+0033 F*       32      UTILISED RECORD
+0034 F*       33      PARENT DETAILS
+0035 F*       34      DETAILS TO REPORT INDICATOR
+0036 F*       35      CREDIT LINE TYPE - 1 - RET.
+0037 F*       36                       - 2 - FAC.
+0038 F********37******                 - 3 - COM.                         S01339
+0039 F*       38                       - 4 - LIMIT
+0040 F*       39      EXPIRY DATE LESS THAN OR EQUAL TO RUNDATE
+0041 F*       40      UTILISED AMOUNT EXCEEDED AMOUNT GRANTED- FOR REF.TYP
+0042 F*       41                                             - FOR CUST.
+0043 F*       42                                 -FOR PARENT CR LINE TYPE
+0044 F*       43      WORK INDICATOR
+0045 F*       44      FOR PARENT - OVERALL TOTAL - EXCEEDED AMOUNT
+0046 F*       45 46   CONTROL OF HEADINGS ON NORMAL OF
+0047 F*       47      CREDIT LINE TYPE - 5 - GTE
+0048 F*       48      RECORD SOURCE B
+0049 F*       49      PARTICIPATION SOLD
+0050 F*       50      NO RECOURSE
+0051 F*       51      OUTPUT HEADINGS ONCE IF NO DETAILS TO REPORT
+0052 F*       52      CREDIT LINE TYPE - 6 - FCL.
+0053 F*       53      LINE SPACING
+     F*       54      SUPPRESS O/P OF RETAIL HEADINGS
+     F*       55      OUTPUT CUSTOMER NAME AND TOWN
+0053 F*       56      CREDIT LINE TYPE - 7 - LC
+0053 F********57******COMMERCIAL*LOANS*IS*ON*THE*SYSTEM****************   S01339
+0053 F*       58      PRINT SECURITY HOLDINGS TOTAL FOR CHILD
+0053 F*       59      PRINT SECURITY HOLDINGS TOTAL FOR PARENT
+0054 F*       61      FACILITY GRANTED TO PARENT
+0055 F*       62      FACILITY TO PARENT UTILIZED
+0055 F*       65      FETCH OVERFLOW CONDITION, NOT AFTER TOTAL OUTPUT
+0056 F*       70      NO DETAILS TO REPORT
+0056 F*       71      LEO LC CREDIT                                       S01473
+0056 F*       72      LEO LC PARTICIPATION                                S01473
+0056 F*       73      LEO LC NEGOTIATION                                  S01473
+0056 F*       75      MULTIBRANCHING (MBIN = 'Y')
+0056 F*       76      A6MDIN D - US CCY
+0057 F*       77      A6MDIN D - G/U CCY
+0056 F*       78      LEO LC THIS HAS A TRANSFER REFERENCE                S01473
+0058 F*       90-99   STANDARD SUBROUTINES
+0059 F*       U7,U8   STANDARD MIDAS USAGE
+0060 F*             L1REFERENCE TYPE CHANGE
+0061 F*             L2CREDIT LINE TYPE CHANGE
+0062 F*             L3CUST. NO. CHANGE
+0063 F*             L4PARENT NO. CHANGE
+0064 F*             L5A/C OFFICER CHANGE
+     E/COPY ZSRSRC,ZDATE2Z1                                               S01392
+     E                    CPY@    1   1 80
+0069 E**
+0070 I*
+0071 I*    LOANS PORTFOLIO SORTED FILE - DETAIL RECORD
+0072 I*
+     IPORTL5  NS  01   1 CD
+0074 I                                        1   1 RECI
+0075 I                                        2   3 ACOC  L5        21
+0076 I**********                              4   90PARN  L4        20                        CSD027
+0077 I**********                             10  150CNUM  L3                                  CSD027
+0076 I                                        4   9 PARN  L4        20                        CSD027
+0077 I                                       10  15 CNUM  L3                                  CSD027
+0078 I                                       16  16 PCIN
+0079 I                                       17  17 CRLT  L2
+0080 I                                       18  18 GUIN
+0081 I                                       19  21 GUCY
+0082 I                                    P  23  290GUAM          22
+0083 I**********                             30  35 REFT  L1                                  CGL029
+0083 I                                       30  35 REFTQQ                                    CGL029
+0084 I                                    P  36  380EXPD
+0085 I**********                             39  46 TRRF                                      CGL029
+0085 I                                       39  46 TRRFQQ                                    CGL029
+0086 I                                       47  47 RECS
+0087 I                                       48  50 BRCA
+0088 I**********                             51  560PSLN                                      CLE148
+     I                                       51  56 PSLN                                      CLE148
+0089 I                                       57  57 RCSI
+0090 I                                       58  62 LTST
+0091 I                                       63  63 CPIN            23
+     I                                       71  73 ORBR
+     I                                       77  79 LBRA
+     I                                       83  83 LCTYP                 S01473
+     I                                       84  84 LMTNO                 S01473
+     I                                       85  86 LNNO                  S01473
+     I                                       87  89 LMCAT                 S01473
+     I                                       90  90 LMEXPA                S01473
+     I                                       91  91 RVLVNG                S01473
+0083 I                                       97 108 REFT  L1                                  CGL029
+0085 I                                      109 122 TRRF                                      CGL029
+     I                                      123 126 CLAS                                      CLE042
+0092 I**
+     I**  PORTL5- TRAILER RECORD
+0094 I        NS  02   1 CT
+0095 I                                    P   2   40NORE
+0096 I                                    P   5  120HRWN
+0097 I                                    P  13  140HRDC
+0098 I**
+     I**  PORTL5 CATCHALL
+0100 I        NS
+0238 I**   LOCAL DATA AREA FOR DATABASE ERROR IDENTIFICATION
+0239 ILDA        UDS                            256
+0353 I                                      134 141 DBFILE
+0354 I                                      142 170 DBKEY
+0355 I                                      171 180 DBPGM
+0356 I                                      181 1830DBASE
+     I**
+     I**   FILE INFORMATION DATA STRUCTURE
+     I**
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I**
+     I**   FILE INFORMATION DATA STRUCTURE
+     I**
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I**
+     IRUNDT       DS
+      **  DATA AREA RUNDAT
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     ISDACOF    E DSSDACOFPD
+      **  EXTERNAL DS FOR ACCOUNT OFFICER DETAILS
+     I              AZACON                          ACON
+     I**
+     I*
+     ISDBANK    E DSSDBANKPD
+      **  EXTERNAL DS FOR BANK DETAILS
+     I              BJURPT                          TITL
+     I              BJCYCD                          BCCY                  S01339
+     I**
+     I*
+     ISDCURR    E DSSDCURRPD
+      **  EXTERNAL DS FOR CURRENCY DETAILS
+     I              A6SPRT                          SPOT
+     I              A6NBDP                          CDP
+     I**
+     I*
+     ISDCUST    E DSSDCUSTPD
+      **  EXTERNAL DS FOR CUSTOMER DETAILS
+     I              BBCRNM                          CRNM
+     I              BBCRTN                          CTWN
+     I**
+     ISDGELR    E DSSDGELRPD
+      **  EXTERNAL DS FOR GENERAL LEDGER DETAILS
+     I              BKOBRU                          OBUU
+     I*
+     I***SDMMOD****E DSSDMMODPD                                           S01339
+      ****EXTERNAL*DS*FOR*MIDAS*MODULE*DETAILS*************************   S01339
+     I**
+     I*
+     I***SDSYLN****E DSSDSYLNPD                                           S01339
+     I**************BOCYCD                          CLRC                  S01339
+     I***SDTRAD****E DSSDTRADPD                                           S01339
+      ****EXTERNAL*DS*FOR*TRADING*DETAILS******************************   S01339
+     I**************BLUSCY                          USCY                  S01339
+     I**
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I/EJECT
+     C**
+     C* RCF sequence number of report
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ    5
+0244 C**
+0245 C**  FIRST CYCLE CALCULATIONS
+     C                     MOVEACPY@      BIS@   80
+0246 C   30                GOTO ENDFC
+0247 C                     SETON                     30
+0247 C                     SETON                     70
+0248 C**
+     C**   IN THE DATAAREA RUNDAT
+     C**
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C           *NAMVAR   DEFN           LDA
+     C**
+     C*     IF MBIN=Y, SET ON *IN75
+     C**
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     75
+     C                     END
+0189 C**
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C                     MOVEL'SDGELRPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 001 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     GOTO END
+     C                     END
+     C*
+     C           OBUU      IFEQ 'Y'
+0250 C                     SETON                     74
+0250 C                     END
+     C**
+     C**   ACCESS BANK DETAILS
+     C**
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C                     SETON                     OF45  O/P HEADINGS
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 002 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     GOTO END
+     C                     ELSE
+0260 C**
+0261 C**  CHECK SYSTEM DATE FORMAT DDMMYY OR MMDDYY
+0262 C           DATF      COMP 'M'                      98DDMMYY 98 ON
+     C                     END
+     C**
+     C***ACCESS*TRADING*DATA*******************************************   S01339
+     C**
+     C***********          CALL 'AOTRADR0'                                S01339
+     C***********          PARM '*MSG   ' @RTCD   7                       S01339
+     C***********          PARM '*FIRST ' @OPTN   7                       S01339
+     C***********SDTRAD    PARM SDTRAD    DSFDY                           S01339
+     C***********@RTCD     IFNE *BLANK                                    S01339
+     C***********          SETON                     U7U8LR               S01339
+     C***********          SETON                     OF45  O/P HEADINGS   S01339
+     C***********          MOVEL'SDTRADPD'DBFILE                          S01339
+     C***********          MOVEL@OPTN     DBKEY            ***************S01339
+     C***********          MOVEL@OPTN     DBOPTN  7        * DBERROR 003 *S01339
+     C***********          Z-ADD3         DBASE            ***************S01339
+     C***********          GOTO END                                       S01339
+     C***********          END                                            S01339
+0275 C***********                                                         S01339
+     C***********                                                         S01339
+     C***ACCESS*MIDAS*MODULE*DETAILS***********************************   S01339
+     C***********                                                         S01339
+     C***********          CALL 'AOMMODR0'                                S01339
+     C***********          PARM '*MSG   ' @RTCD   7                       S01339
+     C***********          PARM '*FIRST ' @OPTN   7                       S01339
+     C***********SDMMOD    PARM SDMMOD    DSFDY                           S01339
+     C***********@RTCD     IFNE *BLANKS                                   S01339
+     C***********          SETON                     U7U8LR               S01339
+     C***********          MOVEL'SDMMODPD'DBFILE             *************S01339
+     C***********          Z-ADD4         DBASE              * DBERR 004 *S01339
+     C***********          MOVEL@OPTN     DBOPTN             *************S01339
+     C***********          MOVEL@OPTN     DBKEY                           S01339
+     C***********          GOTO END                                       S01339
+     C***********          END                                            S01339
+     C****IF*COMMERCIAL*LOANS*HAS*BEEN*SET*UP*ON*THE*SYSTEM*THEN*******   S01339
+     C****USE*SPOT*RATE*AND*NO.*OF*DECIMAL*PLACES*FOR*CL*CCY*OTHERWISE*   S01339
+     C****USE*USD*CURRENCY.********************************************   S01339
+     C***********BGSYLN    IFEQ 'Y'                                       S01339
+     C***********          SETON                     57                   S01339
+     C***********          MOVE CLRC      CCY     3                       S01339
+     C***********          ELSE                                           S01339
+     C***********          MOVE USCY      CCY                             S01339
+     C***********          END                                            S01339
+     C*                                                                   S01339
+     C** USE BASE CURRENCY FOR ACCOUNTING FROM BANK DETAILS.              S01339
+     C*                                                                   S01339
+     C                     MOVE BCCY      CCY     3                       S01339
+     C**
+     C**   ACCESS CURRENCY DETAILS
+     C**
+     C                     MOVE '0'       *IN77
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       TBKEY   3                    A
+     C           SDCURR    PARM SDCURR    DSSDY                        B
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     MOVELCCY       DBKEY            ***************
+     C                     Z-ADD5         DBASE            * DBERROR 005 *
+     C                     SETON                     U7U8LR***************
+     C                     SETON                     OF45  O/P HEADINGS
+     C                     GOTO END
+     C***********          ELSE                                           BHF305
+     C***********A6MDIN    IFEQ 'D'                                       BHF305
+     C***********          SETON                     77                   BHF305
+     C***********          END                                            BHF305
+     C                     END
+0282 C**                                                   USD CCY CODE
+0289 C                     Z-ADDSPOT      USSPOT 138
+0290 C                     Z-ADDCDP       USCDP   10
+0291 C           A6MDIN    COMP 'D'                      76
+0293 C                     MOVE ' '       BLANKS 30
+     C                     SETON                     OF    ALLOW OUTPUTPUT
+0294 C           ENDFC     TAG                             * ENDFC TAG
+     C**
+0296 C**CONTROL OF 'OF' PRINT
+     C**
+     C                     SETOF                     55
+     C                     SETON                     65
+     C**
+     C*    ALLOWS OUTPUT
+     C**
+0297 C   45 46             SETOF                     4546
+0298 C   OF                SETON                     46
+0299 C**  SKIP PROCESSING FOR UN-IDENTIFIED RECORDS
+0300 C           TOTREC    ADD  1         TOTREC  50
+0301 C  N01N02             GOTO END
+0302 C**  IF TRAILER SKIP TO TRAILER CONTROLS
+0303 C   02                GOTO TOTRA
+     C                     SETOF                     70
+      /SPACE 5
+     C**  START PROCESSING DETAIL RECORD
+     C/COPY WNCPYSRC,LE0747C001
+      /SPACE 3
+     C** IF CREDIT LINE TYPE IS 9 (SECURITIES TRADING REL 2)
+     C** DO NOT PRINT THE RECORD -
+     C*
+0382 C*   CONVERT GRANTED/UTILISED AMOUNT TO REPORTING CURRENCY
+0383 C**  OBTAIN NO. OF DECIMAL PLACES AND SPOT OF FOREIGN CURRENCY
+     C           CRLT      IFEQ '9'
+0384 C                     MOVE GUCY      CCY
+     C**
+     C**   ACCESS CURRENCY DETAILS
+     C**
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       TBKEY                        A
+     C           SDCURR    PARM SDCURR    DSSDY                        B
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     MOVELCCY       DBKEY            ***************
+     C                     Z-ADD6         DBASE            * DBERROR 006 *
+     C                     SETON                     U7U8LR***************
+     C                     GOTO END
+     C                     END
+0386 C**
+0392 C**
+0392 C**                                                                  BHF305
+0392 C**   SET UP MDIN INDICATOR FOR FOREIGN CURRENCY                     BHF305
+0392 C**                                                                  BHF305
+     C           A6MDIN    COMP 'D'                      77               BHF305
+0392 C**                                                                  BHF305
+0393 C                     Z-ADDGUAM      FCAMT
+0394 C                     EXSR CCYUS2
+0392 C**
+0392 C** ADD CONVERTED AMOUNT TO TOTAL HOLDINGS FIELDS
+0393 C                     DIV  1000      USAMT     H
+0393 C                     ADD  USAMT     CUSSHT 150
+     C                     END
+     C**
+     C                     SETOF                     54
+0304 C**
+0305 C   46                SETON                     OF45
+     C**
+0306 C*    FORCE L1 ON FOR RETAIL RECORDS
+0307 C                     SETOF                     53
+0308 C  NL1      CRLT      COMP '1'                      53
+0309 C   53                SETON                     L1
+0310 C**
+0311 C**   ZEROISE FACILITY TOTAL FIELD.
+0312 C   L2                Z-ADD0         FCTOT
+0313 C**
+0314 C**  ACCUMULATE COUNT AND HASH OF DETAIL RECORDS
+0315 C                     SETON                     34
+0316 C                     Z-ADDTOTWHN    ZZTOTI
+0317 C                     Z-ADDTOTDC     ZZTOTD
+0318 C                     MOVE GUAM      ZZAMT
+0319 C   22                Z-SUBZZAMT     ZZAMT
+0320 C                     EXSR GLZADD
+0321 C**
+0322 C                     Z-ADDZZTOTI    TOTWHN 150
+0323 C                     Z-ADDZZTOTD    TOTDC   30
+0324 C**  CHANGE OF A/C OFFICER CODE - OBTAIN A/C OFFICER NAME
+     C           *INL5     IFEQ '1'
+0325 C                     SETON                     OF4546
+0326 C      21             MOVE BLANKS    ACON             BLANK A/C OFF.
+0327 C      21             GOTO LAB1
+     C                     CALL 'AOACOFR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ACOC      ACOKEY  2
+     C           SDACOF    PARM SDACOF    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     U7U8LR
+     C                     MOVEL'SDACOFPD'DBFILE
+     C************         MOVEL@OPTN     DBKEY            ***************LN0284
+     C                     MOVELACOKEY    DBKEY            ***************LN0284
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 007 *
+     C                     Z-ADD7         DBASE            ***************
+     C                     GOTO END
+     C                     END
+     C                     END
+0332 C**
+0338 C**
+0339 C           LAB1      TAG                             * LAB1 TAG
+0342 C**
+0343 C** CHANGE OF PARENT OBTAIN PARENT NAME IF NON-ZERO
+     C           *INL4     IFEQ '1'
+     C           *IN20     ANDEQ'0'
+0344 C                     MOVELPARN      CLNKEY 10
+0345 C                     EXSR CLNCHN
+0346 C**
+0351 C        N03          GOTO END
+0352 C        NOF          SETON                     OF4546
+0353 C**  SAVE PARENT DETAILS IF RECORD FOUND
+0354 C                     MOVE CRNM      PRNM   20
+0355 C                     MOVE CTWN      PTWN   10
+     C                     END
+0356 C**
+0357 C**   SET ON INDICATOR FOR PRINT SPACING
+0358 C**
+0359 C**  IF CUST. NO. CHANGE, OBTAIN CUST. DETAILS IF NOT A PARENT
+0360 C********** CNUM      COMP 999999                   33                                   CSD027
+0360 C           CNUM      COMP '999999'                 33                                   CSD027
+0361 C   33                GOTO PARENT
+0362 C**
+     C           *INL3     IFEQ '1'
+0363 C                     MOVELCNUM      CLNKEY
+0364 C                     EXSR CLNCHN
+0365 C**  CUST. NOT FOUND D/B ERROR
+0370 C     N03             GOTO END
+     C**
+     C     NOFN33          SETON                     55
+     C**
+     C                     END
+0372 C   31 32             SETOF                     31
+0373 C  N31      GUIN      COMP 'G'                  323231
+0374 C   31      GUIN      COMP 'U'                      32
+0375 C                     SETOF                     39
+     C**  SETON IND TO SUPPRESS O/P OF RETAIL HEADINGS
+     C**
+     C   31 32             SETON                     54
+0376 C**  CONVERT EXPIRY DATE TO DDMMMYY FOR GRANTED RECORDS
+0377 C   31N32             Z-ADDEXPD      ZDAYNO
+0378 C   31N32             EXSR ZDATE2
+0379 C   31N32   EXPD      COMP RUND                   3939EXPIRED
+0380 C   31N32 39EXPD      COMP 0                    3939  EXPD=0,NOT EXP
+0382 C****CONVERT*AMOUNT*TO*COMM*LOANS*CCY*EQUIV.**********************   S01339
+     C*                                                                   S01339
+     C**  CONVERT AMOUNT TO BASE CURRENCY EQUIVALENT.                     S01339
+0383 C**  OBTAIN NO. OF DECIMAL PLACES AND SPOT OF FOREIGN CURRENCY
+0384 C                     MOVE GUCY      CCY
+     C**
+     C**   ACCESS CURRENCY DETAILS
+     C**
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       TBKEY                        A
+     C           SDCURR    PARM SDCURR    DSSDY                        B
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     MOVELCCY       DBKEY            ***************
+     C                     Z-ADD8         DBASE            * DBERROR 008 *
+     C                     SETON                     U7U8LR***************
+     C                     GOTO END
+     C                     END
+0386 C**
+0392 C**
+0392 C**                                                                  BHF305
+0392 C**   SET UP MDIN INDICATOR FOR FOREIGN CURRENCY                     BHF305
+0392 C**                                                                  BHF305
+     C           A6MDIN    COMP 'D'                      77               BHF305
+0392 C**                                                                  BHF305
+0393 C                     Z-ADDGUAM      FCAMT
+0394 C                     EXSR CCYUS2
+0395 C**
+0397 C*****CONVERT*TO*'000'S*OF*COMM*LOANS*REPORTING*CCY***************   S01339
+     C*                                                                   S01339
+     C** CONVERT TO '000'S OF BASE CURRENCY                               S01339
+     C*                                                                   S01339
+0398 C           USAMT     DIV  1000      TUSD   130H
+0399 C**
+0400 C**  ACCUMULATE GRANTED AND UTILISED AMOUNTS FOR CUSTOMER
+0401 C   31N32   CUSGRA    ADD  TUSD      CUSGRA 130
+0402 C**
+0403 C**  SAVE GRANTED AMOUNT FOR REF TYPE
+0404 C   31N32   GAMT      ADD  TUSD      GAMT   130
+0405 C**
+0406 C** ACCUMULATE UTILISED AMOUNT FOR CUSTOMER AND REFERENCE TYPE
+0407 C**   DEPENDING ON RECORD SOURCE AND TRANS REF.
+0408 C**
+0409 C                     SETOF                     4950
+0410 C           RECS      COMP 'B'                      48
+0411 C  N48                GOTO NOTLE
+0412 C                     MOVE TRRF      TR2     2
+0413 C           TR2       COMP 'SO'                     49
+0414 C***49******RCSI      COMP ' '                      50               E26745
+0414 C   49      RCSI      COMP 'Y'                  5050                 E26745
+0415 C**
+0416 C**   REFORMAT TRANS REF.
+0417 C**
+0418 C                     MOVELTRRF      TR6     6
+0418 C                     MOVELTRRF      TR6     6
+     C                     MOVE *BLANKS   TR6A    8                                           261364
+     C                     MOVE *BLANKS   TRRF1  14                                           261364
+     C                     MOVEL'LE'      TR6A                                                261364
+     C  N49                MOVE TR6       TR6A                                                261364
+     C   49                MOVE PSLN      TR6A                                                261364
+     C                     MOVELTR6A      TRRF1                                               261364
+     C                     MOVELTRRF1     TRRF                                                261364
+0419 C**N49*****           MOVE TR6       TRRF                                                261364
+0420 C***49*****           MOVE PSLN      TRRF                                                261364
+0421 C**********           MOVEL'LE'      TRRF                                                261364
+     C/COPY WNCPYSRC,LE0747C002
+0422 C**
+0423 C**   ADJUST ACCUMULATORS
+0424 C**
+0425 C           NOTLE     TAG                             ** NOTLE TAG **
+     C                     SETOF                     78                   S01473
+     C                     SETOF                     717273               S01473
+     C           RECS      IFEQ 'X'                        IF LEO LC      S01473
+     C           LCTYP     COMP 'L'                      71               S01473
+     C           LCTYP     COMP 'P'                      72PARTICIPATION  S01473
+     C           LCTYP     COMP 'N'                      73NEGOTIATION    S01473
+     C   72                SETON                     49    NO COUNT PARTS S01473
+     C   73      LMEXPA    COMP 'Y'                      49NO COUNT EXP ADS01473
+     C   73N49N50RVLVNG    COMP 'Y'                      50RVRSE NEGS RVLVS01473
+     C           LMTNO     COMP *BLANKS              7878  SHOW DASH      S01473
+     C                     END                                            S01473
+0426 C   32N49   UTCTOT    ADD  TUSD      UTCTOT 130       CUST. TOTAL
+0427 C   32N49   UTRTOT    ADD  TUSD      UTRTOT 130       REF.TYPE TOTAL
+0428 C**
+0429 C   32 50   UTCTOT    SUB  TUSD      UTCTOT
+0430 C   32 50   UTRTOT    SUB  TUSD      UTRTOT
+0431 C**
+0432 C**  TEST FOR CREDIT LINE TYPE
+0433 C           CRLT      COMP '1'                      35
+0434 C           CRLT      COMP '2'                      36
+0435 C***********CRLT      COMP '3'                      37               S01339
+0436 C           CRLT      COMP '4'                      38
+0437 C           CRLT      COMP '5'                      47
+0438 C           CRLT      COMP '6'                      52
+0438 C           CRLT      COMP '7'                      56
+     C   52      RECS      IFEQ 'X'                        IF LEO LC      S01473
+     C                     SETOF                     52                   S01473
+     C                     SETON                     56                   S01473
+     C                     END                                            S01473
+0439 C**
+0440 C**   PRINT SPACING UNNECESSARY ON FIRST UTILISATION RECORD.
+0441 C   53 31 32          SETOF                     53
+0442 C**
+0443 C**  END OF PROCESSING FOR LONER/CHILD REPORTING
+0444 C                     GOTO END
+0445 C**
+0446 C*******************
+0447 C**  PARENT PROCESSING/REPORTING
+0448 C**
+0449 C           PARENT    TAG                             * PARENT TAG
+0450 C                     SETOF                     3132
+0451 C**
+0452 C**  SUMMARY REPORTING FOR CREDIT LINE TYPES 1,3,4,5
+0453 C   L2      CRLT      COMP '1'                      35
+0454 C   L2      CRLT      COMP '2'                      36
+0455 C***L2******CRLT      COMP '3'                      37               S01339
+0456 C   L2      CRLT      COMP '4'                      38
+0457 C   L2      CRLT      COMP '5'                      47
+0458 C   L2      CRLT      COMP '6'                      52
+0458 C   L2      CRLT      COMP '7'                      56
+     C   L2 52   RECS      IFEQ 'X'                        IF LEO LC      S01473
+     C                     SETOF                     52                   S01473
+     C                     SETON                     56                   S01473
+     C                     END                                            S01473
+0459 C**
+0460 C**   FACILITIES RELATING TO PARENTS - CHECK GRANTED/UTILIZED
+0461 C**
+0462 C  N23
+0463 CORN52                GOTO NOTLEF
+0464 C**
+0465 C   61 62             SETOF                     61
+0466 C  N61      GUIN      COMP 'G'                  626261
+0467 C   61      GUIN      COMP 'U'                      62
+0468 C**
+     C           NOTLEF    TAG                             ** NOTLEF TAG *
+     C**
+0469 C                     SETOF                     39
+     C   L1                Z-ADDEXPD      ZDAYNO
+     C   L1                EXSR ZDATE2
+     C   L1      EXPD      COMP RUND                   3939
+     C   39      EXPD      COMP 0                    3939
+0475 C**
+0477 C**
+0478 C**  FACILITY DETAILS -PRINT GRANTED LINE SUMMARISE UTILISED DETAILS
+0479 C           GUIN      COMP 'G'                      31
+0480 C**
+0481 C**   CHECK FOR GRANTED DETAILS IF CRLT ='2'
+0483 C**
+0485 C****CONVERT*AMOUNT*TO*COMM*LOANS*CCY*FROM*FOREIGN*CCY************   S01339
+0483 C*                                                                   S01339
+0485 C**  CONVERT AMOUNT TO BASE CURRENCY FROM FOREIGN CURRENCY.          S01339
+0483 C*                                                                   S01339
+0486 C                     MOVE GUCY      CCY
+     C**
+     C**   ACCESS CURRENCY DETAILS
+     C**
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       TBKEY                        A
+     C           SDCURR    PARM SDCURR    DSSDY                        B
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     MOVELCCY       DBKEY            ***************
+     C                     Z-ADD9         DBASE            * DBERROR 009 *
+     C                     SETON                     U7U8LR***************
+     C                     GOTO END
+     C                     END
+0488 C**
+0494 C**
+0392 C**                                                                  BHF305
+0392 C**   SET UP MDIN INDICATOR FOR FOREIGN CURRENCY                     BHF305
+0392 C**                                                                  BHF305
+     C           A6MDIN    COMP 'D'                      77               BHF305
+0392 C**                                                                  BHF305
+0495 C                     Z-ADDGUAM      FCAMT
+0496 C                     EXSR CCYUS2
+0497 C**   CHECK FOR PART SOLD AND ADJUST ACCUMULATOR
+0498 C**
+0499 C                     SETOF                     4950
+0500 C           RECS      COMP 'B'                      48
+0501 C  N48                GOTO NOTLEP
+0502 C                     MOVE TRRF      TR2     2
+0503 C           TR2       COMP 'SO'                     49
+0504 C***49******RCSI      COMP ' '                      50              E26745
+0504 C   49      RCSI      COMP 'Y'                  5050                E26745
+0505 C**
+0506 C**   REFORMAT TRANS REF.
+0507 C**
+0508 C                     MOVELTRRF      TR6     6
+     C                     MOVE *BLANKS   TR6A    8                                           261364
+     C                     MOVE *BLANKS   TRRF1  14                                           261364
+     C                     MOVEL'LE'      TR6A                                                261364
+     C  N49                MOVE TR6       TR6A                                                261364
+     C   49                MOVE PSLN      TR6A                                                261364
+     C                     MOVELTR6A      TRRF1                                               261364
+     C                     MOVELTRRF1     TRRF                                                261364
+0509 C**N49*****           MOVE TR6       TRRF                                                261364
+0510 C***49*****           MOVE PSLN      TRRF                                                261364
+0511 C**********           MOVEL'LE'      TRRF                                                261364
+     C/COPY WNCPYSRC,LE0747C003
+0512 C**
+0513 C           NOTLEP    TAG                             ** NOTLEP TAG *
+0514 C**
+0515 C           USAMT     DIV  1000      TUSD      H
+0516 C   31N36   PGTOT     ADD  TUSD      PGTOT  130
+0517 C   31 36   FCTOT     ADD  TUSD      FCTOT  130
+0518 C  N31N49   PUTOT     ADD  TUSD      PUTOT  130
+0519 C  N31 50   PUTOT     SUB  TUSD      PUTOT
+0520 C**
+0521 C**  ACCUMULATE GRANTED AND UTILISED AMOUNTS FOR A PARENT
+0522 C   31      PARGT     ADD  TUSD      PARGT  130
+0523 C  N31N49   PARUT     ADD  TUSD      PARUT  130
+0524 C  N31 50   PARUT     SUB  TUSD      PARUT
+0525 C**
+0526 C**  CREDIT LINE TYPE 2 CONVERT GRANTED AMOUNT TO '000'S USD
+0527 C**
+0528 C                     GOTO END
+0529 C*****************
+0530 C**  ACCUMULATE TRAILER CONTROLS
+0531 C           TOTRA     TAG                             * TOTRA TAG
+0532 C                     SETOF                     32
+0533 C  N34N51             SETON                     OF4551
+0534 C**
+     C                     SETOF                     525361
+     C                     SETOF                     62
+     C**
+0535 C***********TNORE     ADD  NORE      TNORE   50                      091807
+0536 C***********          Z-ADDTHRWN     ZZTOTI                          091807
+0537 C***********          Z-ADDTHRDC     ZZTOTD                          091807
+0538 C***********          Z-ADDHRWN      ZZAMTI                          091807
+0539 C***********          Z-ADDHRDC      ZZAMTD                          091807
+0540 C***********          EXSR GLZSUM                                    091807
+0541 C***********                                                         091807
+0542 C***********          Z-ADDZZTOTI    THRWN  150                      091807
+0543 C***********          Z-ADDZZTOTD    THRDC   30                      091807
+0544 C**
+0545 C           END       TAG                             * END TAG
+0546 C*****************
+0547 C**  ********   TOTAL TIME CALCULATIONS   ********
+0547 CL1                   SETOF                     65
+0547 C**
+0548 C**  TOTAL TIME CALCULATIONS FOR REFERENCE TYPE CHANGE - L1
+0549 C**  WORK OUT IF UTILISED AMOUNT HAS EXCEEDED THE AMOUNT GRANTED
+0550 CL1         UTRTOT    SUB  GAMT      EXDAMT 130 40
+0551 C**
+0552 C**  ZEROISE TOTAL FIELDS
+0553 CL1                   Z-ADD0         UTRTOT
+0554 CL1                   Z-ADD0         GAMT
+0555 C**
+0556 C**  CHANGE OF CREDIT LINE TYPE - WORK OUT EXCEEDED AMOUNT
+0557 CL2 33N36   PUTOT     SUB  PGTOT     PETOT  130 42
+0558 CL2 33 36   PUTOT     SUB  FCTOT     PETOT      42
+0559 C**
+0560 C**  TOTAL TIME CALCULATIONS FOR CUSTOMER NO. CHANGE - L3
+0561 C**  WORK OUT CUSTOMERS EXCEEDED AMOUNT
+0562 CL3N33      UTCTOT    SUB  CUSGRA    CEXAMT 130 41
+0559 C**
+0397 C*    ROUND TOTAL SECURITY HOLDINGS TO NEAREST 1000
+0397 C*    REVERSE SIGN
+0397 C*    SET INDICATOR TO PRINT ONLY IF GREATER THAN ZERO
+     CL3                   ADD  CUSSHT    PARSHT 150
+     CL3                   SETOF                     58
+     CL3         CUSSHT    MULT -1        CUSSHT
+     CL3         CUSSHT    COMP 0                    5858
+0563 C**
+0564 C**   WORK OUT EXCEEDED PARENT AMOUNT
+0565 CL4 33      PARUT     SUB  PARGT     PARET  130 44
+0559 C**
+0397 C*    ROUND TOTAL SECURITY HOLDINGS TO NEAREST 1000
+0397 C*    REVERSE SIGN
+0397 C*    SET INDICATOR TO PRINT ONLY IF GREATER THAN ZERO
+0398 CL4 33      PARSHT    DIV  1000      PARSHT    H
+     CL4 33                SETOF                     58
+     CL4 33      PARSHT    MULT -1        PARSHT
+     CL4 33      PARSHT    COMP 0                    5959
+0566 C**
+0567 C**
+0568 C**  LR CALCULATIONS - FILE BALANCE CHECK
+0569 C**
+0570 C*RNU8******TOTREC    COMP TNORE                U8U8                 091807
+0571 C*RNU8******TOTWHN    COMP THRWN                U8U8                 091807
+0572 C*RNU8******TOTDC     COMP THRDC                U8U8                 091807
+     C**
+     C*    ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C**
+     CLR                   Z-ADDSFNUM     ZSNUM
+     C                     OUT  LDA
+     C**
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           @SEQ
+     CLR                   PARM *BLANKS   SENTY   3
+     CLR                   PARM           SFILE
+     CLR                   PARM           ZSNUM   60
+     CLR                   PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+     CLR         ZSERR     IFEQ 'Y'
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     CLR                   SETON                     U7U8LR
+     CLR                   RETRN
+     CLR                   END
+     C*
+     CLR                   Z-ADD0         PAGE1
+     C*
+     C**   ENSURE TOTALS SPOOL FILE RECORDED BY RCF
+     C*
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     OUT  LDA
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           @SEQ
+     CLR                   PARM *BLANKS   SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU
+     CLR                   PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+     CLR         ZSERR     IFEQ 'Y'
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     CLR                   SETON                     U7U8
+     CLR                   RETRN
+     CLR                   END
+     C*
+0573 CLR U7                MOVE 'LE0747'  DBPGM
+     CLR U7 U8             EXSR *PSSR
+0574 C**
+0575 C********************************************************************
+0576 C**  CLNCHN SUBR. TO RANDOM ACCESS SDCUSTPD
+0577 CSR         CLNCHN    BEGSR                           **   CLNCHN  **
+     C                     SETOF                       03
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           CLNKEY
+     C                     PARM '*CNUM  ' KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     U7U8LR
+     C                     MOVE CLNKEY    DBKEY            ***************
+     C                     MOVE 'SDCUSTPD'DBFILE           * DBERROR 010 *
+     C                     Z-ADD10        DBASE            ***************
+     C                     ELSE
+     C                     SETON                     03
+     C                     END
+0581 C**
+0582 C                     ENDSR
+0583 C**
+0597 C********************************************************************
+0598 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0599 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0600 C*
+0601 CSR         GLZADD    BEGSR                           *** GLZADD ****
+0602 C*
+0603 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+0604 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+0605 C*
+0606 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+0607 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+0608 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+0609 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0610 C*
+0611 CSR                   EXSR GLZSUM
+0612 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+0613 C*
+0614 C********************************************************************
+0615 C********************************************************************
+0616 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+0617 C*                        GLZADD, GLZSUB, GLZCMP.
+0618 C*          PARAMETERS PASSED -
+0619 C*                     I/P ZZAMTI ZZAMTD
+0620 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0621 C*
+0622 CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+0623 C*
+0624 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+0625 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+0626 CSR                   SETOF                     919293
+0627 CSR                   SETOF                     949599
+0628 C*
+0629 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+0630 CSR         ZZAMTI    COMP 0                      9293
+0631 CSR 93      ZZAMTD    COMP 0                      9293
+0632 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0633 C*
+0634 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+0635 CSR         ZZTOTI    COMP 0                      9193
+0636 CSR 93      ZZTOTD    COMP 0                      9193
+0637 C*
+0638 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+0639 CSR 93                Z-ADDZZAMTI    ZZTOTI
+0640 CSR 93                Z-ADDZZAMTD    ZZTOTD
+0641 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0642 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+0643 CSR 91N92
+0644 CORN91 92             GOTO ZZOFPS
+0645 C*
+0646 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+0647 CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+0648 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+0649 C*
+0650 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+0651 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+0652 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+0653 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+0654 C*
+0655 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+0656 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+0657 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+0658 CSRN99                Z-ADDZZWK2     ZZTOTD
+0659 CSRN99                Z-ADDZZWK3     ZZTOTI
+0660 C*
+0661 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+0662 CSR 99                Z-ADD0         ZZAMT  153
+0663 CSR                   GOTO ZZSEND
+0664 C*
+0665 C* THE 'SIGNS' ARE DIFFERENT
+0666 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+0667 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+0668 C*
+0669 CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+0670 CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+0671 C*
+0672 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+0673 C*
+0674 CSR 91                Z-SUBZZTOTI    ZZTOTI
+0675 CSR 91                Z-SUBZZTOTD    ZZTOTD
+0676 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+0677 C*
+0678 CSR         ZZTOTI    COMP ZZAMTI               93  95
+0679 CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+0680 C*
+0681 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+0682 CSR 95                Z-ADD0         ZZTOTI
+0683 CSR 95                Z-ADD0         ZZTOTD
+0684 CSR 95                GOTO ZZSEND
+0685 C*
+0686 C* IF ZZTOT GT. ZZAMT.
+0687 CSR 93      ZZAMTD    COMP ZZTOTD               94
+0688 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+0689 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+0690 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+0691 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+0692 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+0693 C*
+0694 C*
+0695 C* IF ZZAMT GT. ZZTOT.
+0696 CSRN93      ZZTOTD    COMP ZZAMTD               94
+0697 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+0698 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+0699 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+0700 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+0701 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+0702 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+0703 C*
+0704 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+0705 CSR                   SETOF                     94
+0706 CSR 93 91
+0707 CORN93 92             SETON                     94
+0708 CSR 94                Z-SUBZZTOTI    ZZTOTI
+0709 CSR 94                Z-SUBZZTOTD    ZZTOTD
+0710 C**
+0711 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+0712 CSR 92                Z-SUBZZAMTI    ZZAMTI
+0713 CSR 92                Z-SUBZZAMTD    ZZAMTD
+0714 CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+0715 C**
+0716 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+0717 CSR                   SETOF                     96
+0718 CSR         ZZTOTD    COMP 0                        91
+0719 CSR 91      ZZTOTI    COMP 0                      96
+0720 CSR 96                MOVE '.000-'   ZZNEGD  5
+0721 CSR                   ENDSR                             ** ENDSR **
+0722 C********************************************************************
+0723 C********************************************************************
+0724 C**
+0726 C*****SR.*TO*OBTAIN*COMM*LOANS*CCY*EQUIV.*OF*FOREIGN*CURRENCY*****   S01339
+0727 C***********                                                         S01339
+0728 C*****PARAMETERS.*I/P*-*FCAMT*-*THE*AMOUNT*IN*FOREIGN*CURRENCY****   S01339
+0730 C*****************I/P*-*CLRC*-*COMM*LOANS*REPORTING*CCY***********   S01339
+0732 C*****************I/P*-*USSPOT*-*SPOT*RATE*FOR*COMM*LOANS*CCY*****   S01339
+0734 C*****************O/P*-*USAMT*-*THE*AMOUNT*IN*COMM*LOANS*CCY******   S01339
+0736 C*
+0736 C** SUBROUTINE TO CONVERT AMOUNT INTO BASE CURRENCY                  S01339
+     C*                                                                   S01339
+     C** PARAMETERS:  INPUT- FCAMT  = AMOUNT IN FOREIGN CURRENCY          S01339
+     C**              INPUT- USSPOT = BASE CURRENCY SPOT RATE             S01339
+     C**              INPUT- SPOT   = FOREIGN CURRENCY SPOT RATE          S01339
+     C**              INPUT- CDP    = FOREIGN CURRENCY DECIMAL PLACES     S01339
+     C**              INPUT- *IN76  = M/DIV IND=0 FOR BASE CCY IF ON      S01339
+     C**              INPUT- *IN77  = M/DIV IND=0 FOR FOREIGN CCY IF ON   S01339
+     C**              OUTPUT- USAMT = AMOUNT IN BASE CURRENCY             S01339
+0736 C*
+0737 C           CCYUS2    BEGSR                           *** CCYUS2  ***
+0738 C*
+0739 C*    TO DEFINE INPUT FIELDS
+0740 C                     Z-ADDFCAMT     FCAMT  150
+0741 C                     Z-ADDUSSPOT    USSPOT 138
+0742 C*
+0744 C*****BY-PASS*IF*AMOUNT*ALREADY*IN*COMM*LOANS*CCY*****************   S01339
+0745 C***********CCY       COMP CLRC                     97               S01339
+0746 C***97******          Z-ADDFCAMT     USDOL                           S01339
+0747 C***97******          GOTO ENDUS                                     S01339
+0747 C***********                                                         S01339
+0750 C*****CONVERT*TO*COMM*LOANS*EQUIV.********************************   S01339
+     C*                                                                   S01339
+0750 C**   CONVERT TO BASE CURRENCY EQUIVALENT.                           S01339
+     C*                                                                   S01339
+0751 C   76 77
+0752 CORN76N77   SPOT      DIV  USSPOT    DIVD   159H
+0753 C   76N77
+0754 CORN76 77   SPOT      MULT USSPOT    DIVD      H
+0755 C  N77      FCAMT     MULT DIVD      USDOL  150H
+0756 C   77      FCAMT     DIV  DIVD      USDOL     H
+0757 C*
+0758 C***********ENDUS     TAG                             * ENDUS TAG    S01339
+0759 C*    CONVERT FOR NO. OF DEC. POSITIONS
+0760 C           CDP       COMP 1                      9495
+0761 C           CDP       COMP 2                    97  96
+0762 C   94                Z-ADDUSDOL     USAMT  130
+0763 C   95      USDOL     DIV  10        USAMT     H
+0764 C   96      USDOL     DIV  100       USAMT     H
+0765 C   97      USDOL     DIV  1000      USAMT     H
+0766 C*
+0767 C                     ENDSR
+0768 C*
+0769 C********************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C*
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C*  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS
+     C*
+     C*  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     ENDSR                           ** *PSSR **
+     C*
+     C********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z4                                               S01392
+     C********************************************************************S01392
+     C/EJECT
+     O**
+     OLE0747P1H  201   OF 45
+     O       OR        OF 55 65
+0861 O                                   24 'REFERENCE LE0747P1'
+0862 O                         TITL      89
+0863 O                                  104 'DATE'
+0864 O                         RUNA     112
+0865 O                                  122 'PAGE'
+0866 O                         PAGE  3  127
+0867 O        H  1     OF 45
+     O       OR        OF 55 65
+0868 O                                   70 'LENDING PORTFOLIO BY CUS'
+0869 O                                   83 'TOMER - 000''S'
+0870 O****************    57   CLRC      87                               S01339
+     O****************   N57   USCY      87                               S01339
+     O                         BCCY      84                               S01339
+     O                 75                89 '-'
+     O                 75               102 'CONSOLIDATED'
+0871 O        H  2     OF 45
+     O       OR        OF 55 65
+0872 O                                   70 '------------------------'
+0873 O                                   87 '-----------------'
+0871 O        H  2     OF 45
+     O       OR        OF 55 65
+0877 O                                   17 'A/C OFFICER'
+0878 O                         ACON      49
+0879 O********H**1*****OF 45N20                                           BHF305
+0880 O*******AND*******34N70                                              BHF305
+0881 O*****************                   7 'PARENT'                      BHF305
+0882 O*****************        PARN      14                               BHF305
+0883 O*****************     NL4          23 '-CONT''D'                    BHF305
+0884 O********H**1*****OF 45N20                                           BHF305
+0880 O*******AND*******34N70                                              BHF305
+0886 O*****************                   7 '------'                      BHF305
+0887 O********H**2*****OF 45                                              BHF305
+0888 O*****************   34N20PRNM      21                               BHF305
+0889 O*****************   34N20PTWN      33                               BHF305
+0887 O        H  2     OF 45N70
+     O       OR        OF 55 65
+0880 O       AND      N70
+     O***********                        43 '--'                          S01473
+0891 O***********                        67 '- CREDIT LINES GRANTED -'    S01473
+0892 O***********                        87 '--- ---------------- UTI'    S01473
+0893 O***********                       109 'LISED ----------------'      S01473
+     O                                   30 '--'                          S01473
+0891 O                                   54 '- CREDIT LINES GRANTED -'    S01473
+0892 O                                   57 '---'                         S01473
+0892 O                                   67 '---------'                   S01473
+0892 O                                   87 '----------- UTILISED'        S01473
+0893 O                                  109 ' ---------------------'      S01473
+0894 O        H  1     OF 45N70
+     O       OR        OF 55 65
+0880 O       AND      N70
+0895 O                                    9 'CUSTOMER'
+     O***********                        25 'TYPE'                        S01473
+     O***********      75 74             33 'ORG'                         S01473
+     O***********      75                36 'BK'                          S01473
+     O***********                        54 'CCY       AMOUNT'            S01473
+0897 O***********                        85 'EXPIRY  TRANS   TYPE/ CC'    S01473
+     O***********                        86 'Y'                           S01473
+     O                                   20 'TYPE'                        S01473
+     O                    75 74          27 'ORG'                         S01473
+     O                       75          26 'BK'                          S01473
+     O**********                         31 'CCY'                                    S01473 AR814485
+     O**********                         44 'AMOUNT'                                 S01473 AR814485
+0897 O**********                         56 'EXPIRY'                                 S01473 AR814485
+0897 O**********                         63 'TRANS'                                  S01473 AR814485
+     O                                   37 'CCY'                                           AR814485
+     O                                   54 'AMOUNT'                                        AR814485
+     O                                   63 'EXPIRY'                                        AR814485
+     O                                   69 'TRANS'                                         AR814485
+0897 O***********************************81 'TYPE/'                                    S01473 CLE042
+0897 O***********************************85 'CCY'                                      S01473 CLE042
+     O********************75*************93 'BRANCH'                                          CLE042
+     O**********************************105 'AMOUNT'                                          CLE042
+     O                                   87 'TYPE/'                                           CLE042
+     O                                   96 'CCY'                                             CLE042
+     O                    75            100 'BRN'                                             CLE042
+     O**********                        112 'AMOUNT'                                 CLE042 AR814485
+     O                                  114 'AMOUNT'                                        AR814485
+0899 O                                  132 'EXCEEDED   EXPD'
+0900 O        H  1     OF 45N70
+     O       OR        OF 55 65
+0880 O       AND      N70
+     O***********      75 74             33 'BR'                          S01473
+     O***********      75                36 'BR'                          S01473
+0901 O***********************************80 'SUB'                                             CLE042
+     O                                   86 'SUB'                                             CLE042
+     O                 75 74             26 'BR'                          S01473
+     O                 75                26 'BR'                          S01473
+0902 O        H  1     OFN33 45
+0903 O       AND       34N70
+     O       OR        55N70
+0905 O                         CNUM       7
+0906 O                    OFNL3          16 '-CONT''D'
+0907 O        H  1     OFN33 45
+0908 O       AND       34N70
+     O       OR        55N70
+0910 O                         CRNM      21
+0911 O                         CTWN      33
+0912 O**
+0913 O        DF 0     L4
+0914 O        DF 0     45NL4
+0915 O        DF10     35 53N33
+0916 O        DF 0     01 L1N33
+     O       AND      NU7
+     O**************     N54 35          22 'RET'                         S01473
+     O**************         36          22 'FAC'                         S01473
+     O**************         37          22 'COM'                         S01339
+     O**************         38          22 'LIM'                         S01473
+     O**************         47          22 'GTE'                         S01473
+     O**************         52          22 'FCL'                         S01473
+     O***********            56          22 'LC '                         S01473
+     O***********        N35   REFT      29                               S01473
+0924 O****GRANTED LINE FROM GRANTED DETAILS                               S01473
+     O***********      75 74   ORBR      33                               S01473
+     O***********      75      BRCA      37                               S01473
+0925 O***********         31N32GUCY      41                               S01473
+0926 O***********         31N32TUSD  K   59                               S01473
+0927 O***********         31N32ZADATE    67                               S01473
+0994 O**************         37          25 'COM'                         S01339
+     O                   N54 35          16 'RET'                         S01473
+     O                       36          16 'FAC'                         S01473
+     O                       38          16 'LIM'                         S01473
+     O                       47          16 'GTE'                         S01473
+     O                       52          16 'FCL'                         S01473
+     O                       56          16 'LC '                         S01473
+     O**********         N35   REFT      23                                            S01473 CGL029
+     O**********          75 74ORBR      27                                            S01473 CGL029
+     O**********          75   BRCA      27                                            S01473 CGL029
+     O**********          31N32GUCY      31                                            S01473 CGL029
+     O**********          31N32TUSD  K   49                                            S01473 CGL029
+     O**********          31N32ZADATE    57                                            S01473 CGL029
+     O                   N35   REFT      29                                                   CGL029
+     O                    75 74ORBR      33                                                   CGL029
+     O                    75   BRCA      33                                                   CGL029
+     O                    31N32GUCY      37                                                   CGL029
+     O                    31N32TUSD  K   55                                                   CGL029
+     O                    31N32ZADATE    63                                                   CGL029
+0928 O                 31N32 39         132 '***'
+0929 O**
+0930 O**  UTILISED LINE IF NO GRANTED DETAILS
+0931 O***********         32N31TRRF      76                               S01473
+0931 O**********          32N31TRRF      66                                            S01473 CGL029
+0931 O**********          32N31TRRF      72                                          CGL029 AR814485
+     O                    32N31TRRF      78                                                 AR814485
+     O/COPY WNCPYSRC,LE0747O001
+0931 O**********       78 32N31          67 '-'                                        S01473 CGL029
+0931 O**********       78 32N31LMTNO     68                                            S01473 CGL029
+0931 O**********       72 32N31          69 '-'                                        S01473 CGL029
+0931 O**********       73 32N31          69 '-'                                        S01473 CGL029
+0931 O**********       72 32N31LNNO      71                                            S01473 CGL029
+0931 O**********       73 32N31LNNO      71                                            S01473 CGL029
+0931 O**********       71 32N31LMCAT     75                                            S01473 CGL029
+0931 O**********       72 32N31LMCAT     75                                            S01473 CGL029
+0931 O**********       73 32N31LMCAT     75                                            S01473 CGL029
+0932 O**********          32N31LTST      82                                                   CGL029
+0933 O**********          32N31GUCY      86                                                   CGL029
+     O**********       75 32N31LBRA      91                                                   CGL029
+0934 O**********          32N31TUSD  K  109                                                   CGL029
+     O**********       32N31 50         110 '-'                                               CGL029
+0931 O**********       78 32N31          73 '-'                                      CGL029 AR814485
+0931 O**********       78 32N31LMTNO     74                                          CGL029 AR814485
+0931 O**********       72 32N31          75 '-'                                      CGL029 AR814485
+0931 O**********       73 32N31          75 '-'                                      CGL029 AR814485
+0931 O**********       72 32N31LNNO      77                                          CGL029 AR814485
+0931 O**********       73 32N31LNNO      77                                          CGL029 AR814485
+0931 O**********       71 32N31LMCAT     81                                          CGL029 AR814485
+0931 O**********       72 32N31LMCAT     81                                          CGL029 AR814485
+0931 O**********       73 32N31LMCAT     81                                          CGL029 AR814485
+     O                 78 32N31          65 '-'                                             AR814485
+     O                 78 32N31LMTNO     66                                                 AR814485
+     O                 72 32N31          67 '-'                                             AR814485
+     O                 73 32N31          67 '-'                                             AR814485
+     O                 72 32N31LNNO      69                                                 AR814485
+     O                 73 32N31LNNO      69                                                 AR814485
+     O                 71 32N31LMCAT     73                                                 AR814485
+     O                 72 32N31LMCAT     73                                                 AR814485
+     O                 73 32N31LMCAT     73                                                 AR814485
+0932 O                    32N31LTST      88                                                   CGL029
+0932 O                    32N31CLAS      92                                                   CLE042
+     O                    32N31GUCY      96                                                   CLE042
+0933 O********************32N31GUCY      92                                            CGL029 CLE042
+     O*****************75*32N31LBRA     102                                            CGL029 CLE042
+0934 O                    32N31TUSD  K  115                                                   CGL029
+     O                 75 32N31LBRA     100                                                   CLE042
+     O                 32N31 50         116 '-'                                               CGL029
+0935 O**
+0936 O**  PRINT FIRST UTILISED LINE AFTER GRANTED LINE
+0937 O        D  0     01 31 32
+0938 O***********              TRRF      76                               S01473
+0931 O**********               TRRF      66                                            S01473 CGL029
+0931 O**********               TRRF      72                                          CGL029 AR814485
+     O                         TRRF      78                                                 AR814485
+     O/COPY WNCPYSRC,LE0747O002
+0931 O**********       78                67 '-'                                        S01473 CGL029
+0931 O**********       78      LMTNO     68                                            S01473 CGL029
+0931 O**********       72                69 '-'                                        S01473 CGL029
+0931 O**********       73                69 '-'                                        S01473 CGL029
+0931 O**********       72      LNNO      71                                            S01473 CGL029
+0931 O**********       73      LNNO      71                                            S01473 CGL029
+0931 O**********       71      LMCAT     75                                            S01473 CGL029
+0931 O**********       72      LMCAT     75                                            S01473 CGL029
+0931 O**********       73      LMCAT     75                                            S01473 CGL029
+0939 O**********               LTST      82                                                   CGL029
+0940 O**********               GUCY      86                                                   CGL029
+     O**********       75      LBRA      91                                                   CGL029
+0941 O**********               TUSD  K  109                                                   CGL029
+     O**********             50         110 '-'                                               CGL029
+0931 O**********       78                73 '-'                                      CGL029 AR814485
+0931 O**********       78      LMTNO     74                                          CGL029 AR814485
+0931 O**********       72                75 '-'                                      CGL029 AR814485
+0931 O**********       73                75 '-'                                      CGL029 AR814485
+0931 O**********       72      LNNO      77                                          CGL029 AR814485
+0931 O**********       73      LNNO      77                                          CGL029 AR814485
+0931 O**********       71      LMCAT     81                                          CGL029 AR814485
+0931 O**********       72      LMCAT     81                                          CGL029 AR814485
+0931 O**********       73      LMCAT     81                                          CGL029 AR814485
+     O                 78                65 '-'                                             AR814485
+     O                 78      LMTNO     66                                                 AR814485
+     O                 72                67 '-'                                             AR814485
+     O                 73                67 '-'                                             AR814485
+     O                 72      LNNO      69                                                 AR814485
+     O                 73      LNNO      69                                                 AR814485
+     O                 71      LMCAT     73                                                 AR814485
+     O                 72      LMCAT     73                                                 AR814485
+     O                 73      LMCAT     73                                                 AR814485
+0939 O                         LTST      88                                                   CGL029
+     O                         CLAS      92                                                   CLE042
+     O                         GUCY      96                                                   CLE042
+0940 O*************************GUCY      92                                            CGL029 CLE042
+     O*****************75******LBRA      97                                            CGL029 CLE042
+0941 O                         TUSD  K  115                                                   CGL029
+     O                 75      LBRA     100                                                   CLE042
+     O                       50         116 '-'                                               CGL029
+0942 O**
+0943 O**  PRINT UTILISED DETAILS IF MORE THAN ONE UTILISED LINE
+0944 O        D 10     32N31NL1
+0945 O***********              TRRF      76                               S01473
+0931 O**********               TRRF      66                                            S01473 CGL029
+0931 O**********               TRRF      72                                          CGL029 AR814485
+     O                         TRRF      78                                                 AR814485
+     O/COPY WNCPYSRC,LE0747O003
+0931 O**********       78                67 '-'                                        S01473 CGL029
+0931 O**********       78      LMTNO     68                                            S01473 CGL029
+0931 O**********       72                69 '-'                                        S01473 CGL029
+0931 O**********       73                69 '-'                                        S01473 CGL029
+0931 O**********       72      LNNO      71                                            S01473 CGL029
+0931 O**********       73      LNNO      71                                            S01473 CGL029
+0931 O**********       71      LMCAT     75                                            S01473 CGL029
+0931 O**********       72      LMCAT     75                                            S01473 CGL029
+0931 O**********       73      LMCAT     75                                            S01473 CGL029
+0946 O**********               LTST      82                                                   CGL029
+0947 O**********               GUCY      86                                                   CGL029
+     O**********       75      LBRA      91                                                   CGL029
+0948 O**********               TUSD  K  109                                                   CGL029
+     O**********             50         110 '-'                                               CGL029
+0931 O**********       78                73 '-'                                      CGL029 AR814485
+0931 O**********       78      LMTNO     74                                          CGL029 AR814485
+0931 O**********       72                75 '-'                                      CGL029 AR814485
+0931 O**********       73                75 '-'                                      CGL029 AR814485
+0931 O**********       72      LNNO      77                                          CGL029 AR814485
+0931 O**********       73      LNNO      77                                          CGL029 AR814485
+0931 O**********       71      LMCAT     81                                          CGL029 AR814485
+0931 O**********       72      LMCAT     81                                          CGL029 AR814485
+0931 O**********       73      LMCAT     81                                          CGL029 AR814485
+     O                 78                65 '-'                                             AR814485
+     O                 78      LMTNO     66                                                 AR814485
+     O                 72                67 '-'                                             AR814485
+     O                 73                67 '-'                                             AR814485
+     O                 72      LNNO      69                                                 AR814485
+     O                 73      LNNO      69                                                 AR814485
+     O                 71      LMCAT     73                                                 AR814485
+     O                 72      LMCAT     73                                                 AR814485
+     O                 73      LMCAT     73                                                 AR814485
+0946 O                         LTST      88                                                   CGL029
+     O                         CLAS      92                                                   CLE042
+     O                         GUCY      96                                                   CLE042
+0947 O*************************GUCY      92                                            CGL029 CLE042
+     O*****************75******LBRA      97                                            CGL029 CLE042
+0948 O                         TUSD  K  115                                                   CGL029
+     O                 75      LBRA     100                                                   CLE042
+     O                       50         116 '-'                                               CGL029
+0949 O**  PARENT'S DETAIL REPORTING
+0950 O        D 11     33 L3
+0951 O       OR        33 OFNL3
+     O       AND       45 46                                              BHF305
+0952 O                         PARN       7
+0953 O                                   27 '*** PARENT ***'
+0954 O                    OFNL3          37 '-CONT"D'
+0953 O                                   84 '******** PARENT ********'    BHF305
+0955 O        D  0     33 L3
+0956 O       OR        33 OFNL3
+     O       AND       45 46                                              BHF305
+0957 O                         PRNM      21
+0958 O                         PTWN      33
+0959 O**
+0960 O**  PARENT'S FACILITY CREDIT LINE TYPE
+0961 O**
+0962 O**
+0963 O        D 1      33 52 31
+0964 O       AND       23
+0965 O***********                        23 'FCL'                         S01473
+0966 O***********              REFT      29                               S01473
+0967 O***********              GUCY      41                               S01473
+0968 O***********              TUSD  K   59                               S01473
+0969 O***********              ZADATE    65                               S01473
+     O                                   16 'FCL'                         S01473
+     O**********               REFT      23                                            S01473 CGL029
+     O**********               GUCY      31                                            S01473 CGL029
+     O**********               TUSD  K   49                                            S01473 CGL029
+     O**********               ZADATE    57                                            S01473 CGL029
+     O                         REFT      29                                                   CGL029
+     O                         GUCY      37                                                   CGL029
+     O                         TUSD  K   55                                                   CGL029
+     O                         ZADATE    63                                                   CGL029
+0970 O                       39         132 '***'
+0971 O**
+0971 O**   PRINT FIRST UTILISED LINE AFTER GRANTED LINE
+0972 O        D  0     23 61 62
+     O       AND       33 52
+0974 O***********              TRRF      76                               S01473
+0931 O**********               TRRF      66                                            S01473 CGL029
+0931 O**********               TRRF      72                                          CGL029 AR814485
+     O                         TRRF      78                                                 AR814485
+     O/COPY WNCPYSRC,LE0747O004
+0931 O**********       78                67 '-'                                        S01473 CGL029
+0931 O**********       78      LMTNO     68                                            S01473 CGL029
+0931 O**********       72                69 '-'                                        S01473 CGL029
+0931 O**********       73                69 '-'                                        S01473 CGL029
+0931 O**********       72      LNNO      71                                            S01473 CGL029
+0931 O**********       73      LNNO      71                                            S01473 CGL029
+0931 O**********       71      LMCAT     75                                            S01473 CGL029
+0931 O**********       72      LMCAT     75                                            S01473 CGL029
+0931 O**********       73      LMCAT     75                                            S01473 CGL029
+0975 O**********               LTST      82                                                   CGL029
+0976 O**********               GUCY      86                                                   CGL029
+     O**********       75      LBRA      91                                                   CGL029
+0977 O**********               TUSD  K  109                                                   CGL029
+     O**********             50         110 '-'                                               CGL029
+0931 O**********       78                73 '-'                                      CGL029 AR814485
+0931 O**********       78      LMTNO     74                                          CGL029 AR814485
+0931 O**********       72                75 '-'                                      CGL029 AR814485
+0931 O**********       73                75 '-'                                      CGL029 AR814485
+0931 O**********       72      LNNO      77                                          CGL029 AR814485
+0931 O**********       73      LNNO      77                                          CGL029 AR814485
+0931 O**********       71      LMCAT     81                                          CGL029 AR814485
+0931 O**********       72      LMCAT     81                                          CGL029 AR814485
+0931 O**********       73      LMCAT     81                                          CGL029 AR814485
+     O                 78                65 '-'                                             AR814485
+     O                 78      LMTNO     66                                                 AR814485
+     O                 72                67 '-'                                             AR814485
+     O                 73                67 '-'                                             AR814485
+     O                 72      LNNO      69                                                 AR814485
+     O                 73      LNNO      69                                                 AR814485
+     O                 71      LMCAT     73                                                 AR814485
+     O                 72      LMCAT     73                                                 AR814485
+     O                 73      LMCAT     73                                                 AR814485
+0975 O                         LTST      88                                                   CGL029
+     O                         CLAS      92                                                   CLE042
+     O                         GUCY      96                                                   CLE042
+0976 O*************************GUCY      92                                            CGL029 CLE042
+     O*****************75******LBRA      97                                            CGL029 CLE042
+0977 O                         TUSD  K  115                                                   CGL029
+     O                 75      LBRA     100                                                   CLE042
+     O                       50         116 '-'                                               CGL029
+0978 O**
+0971 O**   PRINT UTILESED DETAILS IF MORE THAN ONE UTILISED LINE
+0979 O        D 10     62N61NL1
+     O       AND       23 33 52
+0981 O***********              TRRF      76                               S01473
+0931 O**********               TRRF      66                                            S01473 CGL029
+0931 O**********               TRRF      72                                          CGL029 AR814485
+     O                         TRRF      78                                                 AR814485
+     O/COPY WNCPYSRC,LE0747O005
+0931 O**********       78                67 '-'                                        S01473 CGL029
+0931 O**********       78      LMTNO     68                                            S01473 CGL029
+0931 O**********       72                69 '-'                                        S01473 CGL029
+0931 O**********       73                69 '-'                                        S01473 CGL029
+0931 O**********       72      LNNO      71                                            S01473 CGL029
+0931 O**********       73      LNNO      71                                            S01473 CGL029
+0931 O**********       71      LMCAT     75                                            S01473 CGL029
+0931 O**********       72      LMCAT     75                                            S01473 CGL029
+0931 O**********       73      LMCAT     75                                            S01473 CGL029
+0982 O**********               LTST      82                                                   CGL029
+0983 O**********               GUCY      86                                                   CGL029
+     O**********       75      LBRA      91                                                   CGL029
+0984 O**********               TUSD  K  109                                                   CGL029
+     O**********             50         110 '-'                                               CGL029
+0931 O**********       78                73 '-'                               S01473 CGL029 AR814485
+0931 O**********       78      LMTNO     74                                   S01473 CGL029 AR814485
+0931 O**********       72                75 '-'                               S01473 CGL029 AR814485
+0931 O**********       73                75 '-'                               S01473 CGL029 AR814485
+0931 O**********       72      LNNO      77                                   S01473 CGL029 AR814485
+0931 O**********       73      LNNO      77                                   S01473 CGL029 AR814485
+0931 O**********       71      LMCAT     81                                   S01473 CGL029 AR814485
+0931 O**********       72      LMCAT     81                                   S01473 CGL029 AR814485
+0931 O**********       73      LMCAT     81                                   S01473 CGL029 AR814485
+     O                 78                65 '-'                                             AR814485
+     O                 78      LMTNO     66                                                 AR814485
+     O                 72                67 '-'                                             AR814485
+     O                 73                67 '-'                                             AR814485
+     O                 72      LNNO      69                                                 AR814485
+     O                 73      LNNO      69                                                 AR814485
+     O                 71      LMCAT     73                                                 AR814485
+     O                 72      LMCAT     73                                                 AR814485
+     O                 73      LMCAT     73                                                 AR814485
+0982 O                         LTST      88
+     O                         CLAS      92                                                   CLE042
+     O                         GUCY      96                                                   CLE042
+0983 O*************************GUCY      92                                                   CLE042
+     O*****************75******LBRA      97                                                   CLE042
+0984 O                         TUSD  K  115
+     O                 75      LBRA     100                                                   CLE042
+     O                       50         116 '-'
+0985 O**
+0986 O**  TOTAL L1 LINE - REFERENCE TYPE CHANGE
+0987 O        T  1     L1 34N33
+0988 O**********          40   EXDAMTKB 127                                                 AR814485
+     O                    40   EXDAMTKB 132                                                 AR814485
+0989 O**
+0990 O**  PARENT'S CREDIT LINE SUMMARY TOTALS
+0991 O        T 10     L2 33 34
+0992 O***********            35          25 'RET'                         S01473
+0993 O***********            36          25 'FAC'                         S01473
+0994 O***********************37          25 'COM'                         S01339
+0995 O***********            38          25 'LIM'                         S01473
+0996 O***********            47          25 'GTE'                         S01473
+0997 O***********            52          25 'FCL'                         S01473
+0922 O***********            56          25 'LC '                         S01473
+0998 O***********           N36PGTOT KB  55                               S01473
+0999 O***********            36FCTOT KB  55                               S01473
+0969 O***********              ZADATE    67                               S01473
+0992 O                       35          16 'RET'                         S01473
+0993 O                       36          16 'FAC'                         S01473
+0995 O                       38          16 'LIM'                         S01473
+0996 O                       47          16 'GTE'                         S01473
+0997 O                       52          16 'FCL'                         S01473
+0922 O                       56          16 'LC '                         S01473
+0998 O**********            N36PGTOT KB  49                                          S01473 AR814485
+0999 O**********             36FCTOT KB  49                                          S01473 AR814485
+0969 O**********               ZADATE    67                                          S01473 AR814485
+1000 O**********               PUTOT KB 109                                                 AR814485
+1001 O**********             42PETOT KB 127                                                 AR814485
+     O                      N36PGTOT KB  55                                                 AR814485
+     O                       36FCTOT KB  55                                                 AR814485
+     O                         ZADATE    63                                                 AR814485
+     O                         PUTOT KB 115                                                 AR814485
+     O                       42PETOT KB 132                                                 AR814485
+1002 O**
+1003 O**  L3 CUSTOMER TOTAL LINE OUTPUT
+1004 O        T 12     L3 34N33
+     O       AND      N70NU7
+1005 O***********                        32 'TOTAL'                       S01473
+1006 O***********              CUSGRAJB  59                               S01473
+1005 O                                   23 'TOTAL'                       S01473
+1006 O**********               CUSGRAJB  49                                          S01473 AR814485
+1007 O**********               UTCTOTJB 109                                                 AR814485
+1008 O**********          41   CEXAMTKB 127                                                 AR814485
+     O                         CUSGRAJB  55                                                 AR814485
+     O                         UTCTOTJB 115                                                 AR814485
+     O                    41   CEXAMTKB 132                                                 AR814485
+1002 O**
+1003 O**  L3 CUSTOMER TOTAL LINE OUTPUT - SECURITY HOLDINGS
+1004 O        T  2     L3 34N70
+1004 O       AND       58
+1005 O                                   58 'VALUE OF SECURITY HOLDIN'
+1005 O                                   60 'GS'
+1006 O                         CUSSHTJB  88
+1009 O**
+1010 O**  PARENT TOTAL UTILISED AND GRANTED TOTALS
+1011 O********T*21***  L4 33 34                                           BHF305
+1011 O        T 22     L4 33 34                                           BHF305
+1012 O***********                        32 'TOTAL'                       S01473
+1013 O***********              PARGT JB  59                               S01473
+1012 O                                   23 'TOTAL'                       S01473
+1013 O**********               PARGT JB  49                                          S01473 AR814485
+1014 O**********               PARUT JB 109                                                 AR814485
+1015 O**********             44PARET KB 127                                                 AR814485
+     O                         PARGT JB  55                                                 AR814485
+     O                         PARUT JB 115                                                 AR814485
+     O                       44PARET KB 132                                                 AR814485
+1002 O**
+1003 O**  L4 PARENT TOTAL LINE OUTPUT - SECURITY HOLDINGS
+1004 O        T  2     L4 33 34
+1004 O       AND       59N70
+1005 O                                   58 'VALUE OF SECURITY HOLDIN'
+1005 O                                   60 'GS'
+1006 O                         PARSHTJB  88
+1016 O**
+0646 O**
+0647 O**   HEADINGS IF NO DETAILS TO REPORT OR D/B ERROR IN FIRST CYCLE
+0648 O**
+     O        T   17   LR 70
+0675 O                                   76 '*** NO DETAILS TO REPORT'
+0675 O                                   80 '***'
+     O        T 32     LR U7
+1023 O                                   51 '*** REFERENCE LE0747'
+1024 O                                   72 'DATABASE ERROR ***'
+1019 O**
+     O        T 3      LR
+     O                                   76 '*** END OF REPORT ***'
+1020 O**   CONTROL REPORT
+1021 O**
+1031 OLE0747AUT   03   LR
+1032 O                                   24 'REFERENCE LE0747AU'
+1033 O                         TITL      89
+1034 O                                  104 'DATE'
+1035 O                         RUNA     112
+1036 O                                  122 'PAGE'
+1037 O                         PAGE1 3  127
+1038 O        T 2      LR
+1039 O                                   68 'LENDING PORTFOLIO BY CUS'
+1040 O                                   89 'TOMER - FILE CONTROLS'
+1041 O        T 1      LR
+1042 O                                   68 '------------------------'
+1043 O                                   89 '---------------------'
+1044 O        T 3      LR
+1045 O                                   29 'S/PORTL5 - RUN CONTROLS'
+1046 O                                   59 'NUMBER'
+1047 O                                   84 'VALUE'
+1048 O        T 1      LR
+1049 O                                   28 '----------------------'
+1050 O                                   59 'OF RECORDS'
+1051 O                                   84 'OF RECORDS'
+1052 O********T*2      LR                                                 091807
+1053 O***********                        29 'TOTAL RECORDS ON FILE'       091807
+1054 O***********           NU7TNORE 3   59                               091807
+1055 O***********           NU7THRWN 4   81                               091807
+1056 O***********           NU7THRDC     84                               091807
+1057 O        T 2      LR
+1058 O                                   29 'TOTAL RECORDS ON FILE'
+1059 O                                   42 '- CALCULATED'
+1060 O                         TOTREC3   59
+1061 O                         TOTWHN4   81
+1062 O                         TOTDC     84
+1063 O***********        NU7 U8         111 '***   DIFFERENCE   ***'      091807
+     O        T 32     LR U7
+1023 O                                   51 '*** REFERENCE LE0747'
+1024 O                                   71 'DATABASE ERROR AT'
+1025 O                         DBASE     75
+1026 O        T        LR U7
+1027 O                                   39 'FILENAME'
+1028 O                         DBFILE    48
+1029 O                                   52 'KEY'
+1030 O                         DBKEY     82
+     O        T   17   LR 70
+0675 O                                   76 '*** NO DETAILS TO REPORT'
+0675 O                                   80 '***'
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

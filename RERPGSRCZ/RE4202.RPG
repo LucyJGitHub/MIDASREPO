@@ -1,0 +1,3211 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Online Transaction Journal Print')
+/*OVRF*: OVRDBF FILE(TTRANL0) TOFILE(TTRANL1)                       : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4202 - On-Line Transaction Journal Print                   *
+     F*                                                               *
+     F*  Function:  This program prints the On-Line Transaction       *
+     F***(I/C)******Journal*for*all*tellers,*one*teller,*all*batches,**   107264
+     F*  (I/C, COB) Journal for all tellers, one teller, all batches, *   107264
+     F*             one batch or the one teller reprint.  The report  *
+     F*             is available at branch and system level.          *
+     F*                                                               *
+     F*  Called By: REC4202 - Teller/Batch Transaction Journal Print  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 237757             Date 20Jun06               *
+      *  Prev Amend No. BUG9062            Date 20Jun06               *
+      *                 CRT026             Date 23May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG8972            Date 17Oct05               *
+      *                 BUG8510            Date 05Oct05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRT012             Date 26Nov02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 169719             Date 14Aug00               *
+      *                 166074             Date 21Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 098181             Date 05May98               *
+     F*                 107264             DATE 05FEB98               *
+     F*                 103131             DATE 17SEP97               *
+     F*                 106653             DATE 13MAY97               *
+     F*                 CRT002             DATE 01DEC95               *
+     F*                 S01408             DATE 06SEP95               *
+     F*                 091241             DATE 17JUL95               *
+     F*                 CRT001  *CREATE    DATE 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  237757 - Do not add the cheque reference in the description  *
+      *           as this becomes redundant in the report.            *
+      *  BUG9062 - Include CR amount for Hse Cheque a/cs in Teller    *
+      *            Transaction Totals                                 *
+      *            And include cheque no. in transaction description. *
+      *  CRT026 - Retail Teller Password Change                       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG8972 - REC4202 on MSGW during COB. Attempted WRITE        *
+      *            operation on RE4202P1 while the file was closed.   *
+      *  BUG8510- Include House Cheque Account Number in report       *
+      *           RE4202P1.                                           *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CRT012 - Recompile over changed TTRANPD                      *
+     F*  169719 - SR/JRNTU changed to perform teller totalling        *
+     F*           only once for cash-in/out transactions, so that     *
+     F*           results are the same with RE4111.                   *
+     F*           (Applied fix 151313)                                *
+     F*  166074 - Addition of Profit centre to report if PCA is on    *
+     F*  098181 - If teller branch changed, can't reprint all         *
+     F*           transactions for teller.                            *
+     F*  107264 - This report is now mandatory at COB at least for    *
+     F*           Teller Transaction Journal. Report is generated by  *
+     F*           branch for ALL branches and for ALL tellers.        *
+     F*         - If the Batch Transaction Journal is to be made      *
+     F*           mandatory in COB also, similar report component     *
+     F*           can be added to CBCMPNPD.                           *
+     F*         Text change only.                                     *
+     F*  103131 - Recompile due to changes in ZSRSRC/RTTOTSC1         *
+     F*  106653 - Re-compile only over changed printer file.          *
+     F*           (Add Reversal Trans Number for FX transaction.)     *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*  S01408 - Addition of hook RE4202CCP1.                        *
+     F*           Addition of hook RE4202CCP2.                        *
+     F*           Addition of hook RE4202CCP3.                        *
+     F*           Addition of hook RE4202FFP1.                        *
+     F*  091241 - ATM Interface.  Recompiled.                         *
+     F*  CRT001 - Retail Teller System                                *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FTTRNT   UF  E           K        DISK         KINFSR *PSSR
+      ** Teller Controls/Totals
+      *
+     FTTRANL0 IF  E           K        DISK         KINFSR *PSSR
+      ** Teller/Batch Transaction file with keys(TBRI+TBID+TBTN)
+      ** Please Override TTRANL0 by TTRANL1 before compilation
+      ** (Command) OVRDBF TTRANL0 TTRANL1
+      *
+     FTTRANL1 IF  E           K        DISK         KINFSR *PSSR
+     F            TTRANPDF                          KRENAMETTRANL1F
+     F            TTRANPTF                          KRENAMETTRANLTF
+      ** Teller Transaction Logical file
+      *
+     FMUSERL3 IF  E           K        DISK         KINFSR *PSSR                              CRT026
+      ** Midas users by Teller ID                                                             CRT026
+      *                                                                                       CRT026
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,RE4202FFP1                                           S01408
+     F*                                                                   S01408
+     F***RE4202P1O***E*************11*****PRINTER******KINFDS*SPOOL******UC***               BUG8972
+     FRE4202P1O   E             11     PRINTER      KINFDS SPOOL                             BUG8972
+     F** Teller Identifier list
+     F*
+     FRE4202AUO   E             10     PRINTER      KINFDS SPOOLU     UC
+     F** Teller Identifier list - audit
+     F*
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Overflow indicator (AU)                               *
+     F*   11  - Overflow indicator (P1)                               *
+     F*                                                               *
+     F*   13  - Teller indicator                                      *
+     F*   14  - Batch indicator                                       *
+     F*   15  - Closure                                               *
+     F*   16  - Reversal                                              *
+     F*   33  - Multibranching indicator                              *
+     F*   34  - Branch level                                          *
+     F*   35  - End of file indicator                                 *
+     F*                                                               *
+     F*   50  - Profit Centre Accounting ON (print Profit Centre)     *                       166074
+     F*   51  - Override teller id / user id                          *                       CRT026
+     F*   55  - Print setting indicator                               *
+     F*   68  - Array lokup indicator                                 *
+     F*   69  - General error indicator                               *
+     F*                                                               *
+     F*   71  - General Indicator Used For CHAIN                      *
+     F*                                                               *
+     F* 80-89 - Standard RTS subroutines                              *
+     F*                                                               *
+     F* 90-99 - Standard MIDAS subroutines                            *
+     F*                                                               *
+     F*   KC  - Exit Program                                          *
+     F*   KL  - Refresh Screen                                        *
+     F*   KM  - Print Record                                          *
+     F*                                                               *
+     F*   LR  - Last Record Indicator                                 *
+     F*                                                               *
+     F*   U1  - Teller/Reprint Report                                 *
+     F* U7+U8 - Set on if database error occurs                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Control Processing                                  *
+     F*  HEDST  - Header setup                                        *
+     F*  HEDPR  - Header print                                        *
+     F*  PRTOT  - Print Totals                                        *
+     F*  INTPR  - Initialise print variables                          *
+     F*  DETST  - Details setup                                       *
+     F*  DETPR  - Details print                                       *
+     F*  JRNTU  - Journal Totals update                               *
+     F*  UPDATE - Update journal file                                 *
+     F*  PRDET  - Detail processing                                   *
+     F*  GCURR  - Get decimals for currencies                         *
+     F*  WRNPR  - Warning print                                       *
+     F*  TRTYST - Transaction type setup                              *
+     F*  MTOARR - Move accumulated values to array                    *
+     F*  MTOART - Move journal values to array                        *
+     F*  MTOAR2 - Move earlier saved values to appropriate arrays     *
+     F*  MPRT   - Detail line print of slip                           *
+     F*  INITRT - Initialise work variables                           *
+     F*  FIRST  - Initialisation process                              *
+     F*  IFLDS  - Initialise work fields                              *
+     F*  RTTOTS - Teller totals update                                *
+     F*  RTTOTA - Teller total accumulation                           *
+     F*  FINAL  - Final Processing                                    *
+     F*  #RCFAU - Record audit spool file in RCF                      *
+     F*                                                               *
+     F*  *PSSR  - Program error                                       *
+     F*  ZDATE2 - Convert day number to date format                   *
+     F*  ZFRPED - Edit numeric field                                  *
+     F*  DBERR  - Database Error Handling :                           *
+     F*           Terminates program                                  *
+     F*                                                               *
+     F*****************************************************************
+      *
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZFRPEDZ1
+      ** Array for SR.ZFRPED
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      ** Array for SR.ZDATE1, SR.ZDATE2
+      *
+     E                    MSG        18  8
+      ** Array for storing warning messages
+      *
+     E                    TR         50  5
+     E                    DC         50  1
+     E                    CS         50  1
+     E                    CL         50  1
+      ** Array for storing transaction types & indicators
+      *
+     E                    @CY        24  3
+      ** Teller currencies array
+      *
+     E                    NCR        24  5 0
+     E                    NDR        24  5 0
+     E                    VCR        24 15 0
+     E                    VDR        24 15 0
+     E                    VCA        24 15 0
+     E                    VCK        24 15 0
+     E                    WCA        24 15 0
+     E                    WCK        24 15 0
+      ** Array for storing journal values to ease print coding
+      *
+      /EJECT
+      *****************************************************************
+      *
+     ITTRANPDF
+      ** Renamed fields in LF/TTRANL0
+      *
+     I              TBID                            TTBID
+     I              TIME                            TTIME
+      *
+     ITTRANL1F
+      ** Renamed fields in LF/TTRANL1
+      *
+     I              FNCD                            RFNCD
+      *
+     ITTRNTM2F                                                                               166074
+      ** Renamed fields in LF/TTRNT                                                          166074
+      *                                                                                      166074
+     I              PRFC                            PRFC4                                    166074
+     ITTRNTM4F
+      ** Renamed fields in LF/TTRNT
+      *
+     I              RECI                            RECI4
+      *
+     I            DS                              5
+      ** Data structure to hold key fields of LF/TTRNT
+     I                                        1   5 @TTRNT
+     I                                        1   1 KTBRI
+     I                                        2   4 KTBID
+     I                                        5   5 KRCTP
+     I            DS                             10
+      ** Data structure to hold key fields of LF/TTRANL1
+     I                                        1   1 KTBRI1
+     I                                        2   4 KBRCA
+     I                                        5   7 KTBID1
+     I                                    P   8  100KTBTN
+     I            DS                             12
+      ** Data structure to hold key fields of LF/TTRANL1
+     I                                        1  12 @TTRAN
+     I                                        1   1 KTBRI2
+     I                                        2   4 KBRCA2
+     I                                        5   7 KTBID2
+     I                                        8  120KTBTN2
+     I            DS                            144
+      ** Data structure for message array
+      *
+     I                                        1 144 MSG
+     I                                        1  72 MSGA
+     I                                       73 144 MSGB
+     IENUM        DS                             19
+      ** Data structure for splitting the edited numeric which
+      ** has a value with 2 spaces to the right (CR,-)
+      *
+     I                                        1  17 @EN
+     I                                       18  19 @FL
+     I*
+     I** FILE INFORMATION DATA STRUCTURE
+     I*
+     ISPOOL       DS
+     I                                        9   9 OPEN
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I                                        9   9 OPENU
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I            DS
+      ** Number of credits data structure
+     I                                    P   1   30@ANC1
+     I                                    P   4   60@ANC2
+     I                                    P   7   90@ANC3
+     I                                    P  10  120@ANC4
+     I                                    P  13  150@ANC5
+     I                                    P  16  180@ANC6
+     I                                    P  19  210@ANC7
+     I                                    P  22  240@ANC8
+     I                                    P  25  270@ANC9
+     I                                    P  28  300@ANC10
+     I                                    P  31  330@ANC11
+     I                                    P  34  360@ANC12
+     I                                    P  37  390@ANC13
+     I                                    P  40  420@ANC14
+     I                                    P  43  450@ANC15
+     I                                    P  46  480@ANC16
+     I                                    P  49  510@ANC17
+     I                                    P  52  540@ANC18
+     I                                    P  55  570@ANC19
+     I                                    P  58  600@ANC20
+     I                                    P  61  630@ANC21
+     I                                    P  64  660@ANC22
+     I                                    P  67  690@ANC23
+     I                                    P  70  720@ANC24
+     I                                        1  24 @ANCA
+     I                                       25  48 @ANCB
+     I                                       49  72 @ANCC
+      *
+     I            DS
+      ** Value of credits data structure
+     I                                    P   1   80@AVC1
+     I                                    P   9  160@AVC2
+     I                                    P  17  240@AVC3
+     I                                    P  25  320@AVC4
+     I                                    P  33  400@AVC5
+     I                                    P  41  480@AVC6
+     I                                    P  49  560@AVC7
+     I                                    P  57  640@AVC8
+     I                                    P  65  720@AVC9
+     I                                    P  73  800@AVC10
+     I                                    P  81  880@AVC11
+     I                                    P  89  960@AVC12
+     I                                    P  97 1040@AVC13
+     I                                    P 105 1120@AVC14
+     I                                    P 113 1200@AVC15
+     I                                    P 121 1280@AVC16
+     I                                    P 129 1360@AVC17
+     I                                    P 137 1440@AVC18
+     I                                    P 145 1520@AVC19
+     I                                    P 153 1600@AVC20
+     I                                    P 161 1680@AVC21
+     I                                    P 169 1760@AVC22
+     I                                    P 177 1840@AVC23
+     I                                    P 185 1920@AVC24
+     I                                        1  64 @AVCA
+     I                                       65 128 @AVCB
+     I                                      129 192 @AVCC
+      *
+     I            DS
+      ** Number of debits data structure
+     I                                    P   1   30@AND1
+     I                                    P   4   60@AND2
+     I                                    P   7   90@AND3
+     I                                    P  10  120@AND4
+     I                                    P  13  150@AND5
+     I                                    P  16  180@AND6
+     I                                    P  19  210@AND7
+     I                                    P  22  240@AND8
+     I                                    P  25  270@AND9
+     I                                    P  28  300@AND10
+     I                                    P  31  330@AND11
+     I                                    P  34  360@AND12
+     I                                    P  37  390@AND13
+     I                                    P  40  420@AND14
+     I                                    P  43  450@AND15
+     I                                    P  46  480@AND16
+     I                                    P  49  510@AND17
+     I                                    P  52  540@AND18
+     I                                    P  55  570@AND19
+     I                                    P  58  600@AND20
+     I                                    P  61  630@AND21
+     I                                    P  64  660@AND22
+     I                                    P  67  690@AND23
+     I                                    P  70  720@AND24
+     I                                       25  48 @ANDB
+     I                                       49  72 @ANDC
+      *
+     I            DS
+      ** Value of debits data structure
+     I                                    P   1   80@AVD1
+     I                                    P   9  160@AVD2
+     I                                    P  17  240@AVD3
+     I                                    P  25  320@AVD4
+     I                                    P  33  400@AVD5
+     I                                    P  41  480@AVD6
+     I                                    P  49  560@AVD7
+     I                                    P  57  640@AVD8
+     I                                    P  65  720@AVD9
+     I                                    P  73  800@AVD10
+     I                                    P  81  880@AVD11
+     I                                    P  89  960@AVD12
+     I                                    P  97 1040@AVD13
+     I                                    P 105 1120@AVD14
+     I                                    P 113 1200@AVD15
+     I                                    P 121 1280@AVD16
+     I                                    P 129 1360@AVD17
+     I                                    P 137 1440@AVD18
+     I                                    P 145 1520@AVD19
+     I                                    P 153 1600@AVD20
+     I                                    P 161 1680@AVD21
+     I                                    P 169 1760@AVD22
+     I                                    P 177 1840@AVD23
+     I                                    P 185 1920@AVD24
+     I                                       65 128 @AVDB
+     I                                      129 192 @AVDC
+      *
+     I            DS
+      ** Value of cash data structure
+     I                                    P   1   80@AVS1
+     I                                    P   9  160@AVS2
+     I                                    P  17  240@AVS3
+     I                                    P  25  320@AVS4
+     I                                    P  33  400@AVS5
+     I                                    P  41  480@AVS6
+     I                                    P  49  560@AVS7
+     I                                    P  57  640@AVS8
+     I                                    P  65  720@AVS9
+     I                                    P  73  800@AVS10
+     I                                    P  81  880@AVS11
+     I                                    P  89  960@AVS12
+     I                                    P  97 1040@AVS13
+     I                                    P 105 1120@AVS14
+     I                                    P 113 1200@AVS15
+     I                                    P 121 1280@AVS16
+     I                                    P 129 1360@AVS17
+     I                                    P 137 1440@AVS18
+     I                                    P 145 1520@AVS19
+     I                                    P 153 1600@AVS20
+     I                                    P 161 1680@AVS21
+     I                                    P 169 1760@AVS22
+     I                                    P 177 1840@AVS23
+     I                                    P 185 1920@AVS24
+     I                                       65 128 @AVSB
+     I                                      129 192 @AVSC
+      *
+     I            DS
+      ** Value of cheques data structure
+     I                                    P   1   80@AVQ1
+     I                                    P   9  160@AVQ2
+     I                                    P  17  240@AVQ3
+     I                                    P  25  320@AVQ4
+     I                                    P  33  400@AVQ5
+     I                                    P  41  480@AVQ6
+     I                                    P  49  560@AVQ7
+     I                                    P  57  640@AVQ8
+     I                                    P  65  720@AVQ9
+     I                                    P  73  800@AVQ10
+     I                                    P  81  880@AVQ11
+     I                                    P  89  960@AVQ12
+     I                                    P  97 1040@AVQ13
+     I                                    P 105 1120@AVQ14
+     I                                    P 113 1200@AVQ15
+     I                                    P 121 1280@AVQ16
+     I                                    P 129 1360@AVQ17
+     I                                    P 137 1440@AVQ18
+     I                                    P 145 1520@AVQ19
+     I                                    P 153 1600@AVQ20
+     I                                    P 161 1680@AVQ21
+     I                                    P 169 1760@AVQ22
+     I                                    P 177 1840@AVQ23
+     I                                    P 185 1920@AVQ24
+     I                                       65 128 @AVQB
+     I                                      129 192 @AVQC
+      *
+     I            DS
+      ** Value of cash data structure  TTRNTM3
+     I                                        1 192 VCAA1
+     I                                    P   1   80@CH1
+     I                                    P   9  160@CH2
+     I                                    P  17  240@CH3
+     I                                    P  25  320@CH4
+     I                                    P  33  400@CH5
+     I                                    P  41  480@CH6
+     I                                    P  49  560@CH7
+     I                                    P  57  640@CH8
+     I                                    P  65  720@CH9
+     I                                    P  73  800@CH10
+     I                                    P  81  880@CH11
+     I                                    P  89  960@CH12
+     I                                    P  97 1040@CH13
+     I                                    P 105 1120@CH14
+     I                                    P 113 1200@CH15
+     I                                    P 121 1280@CH16
+     I                                    P 129 1360@CH17
+     I                                    P 137 1440@CH18
+     I                                    P 145 1520@CH19
+     I                                    P 153 1600@CH20
+     I                                    P 161 1680@CH21
+     I                                    P 169 1760@CH22
+     I                                    P 177 1840@CH23
+     I                                    P 185 1920@CH24
+      *
+     I            DS
+      ** Value of cash data structure  TTRNTM3
+     I                                        1 192 VCKA1
+     I                                    P   1   80@CK1
+     I                                    P   9  160@CK2
+     I                                    P  17  240@CK3
+     I                                    P  25  320@CK4
+     I                                    P  33  400@CK5
+     I                                    P  41  480@CK6
+     I                                    P  49  560@CK7
+     I                                    P  57  640@CK8
+     I                                    P  65  720@CK9
+     I                                    P  73  800@CK10
+     I                                    P  81  880@CK11
+     I                                    P  89  960@CK12
+     I                                    P  97 1040@CK13
+     I                                    P 105 1120@CK14
+     I                                    P 113 1200@CK15
+     I                                    P 121 1280@CK16
+     I                                    P 129 1360@CK17
+     I                                    P 137 1440@CK18
+     I                                    P 145 1520@CK19
+     I                                    P 153 1600@CK20
+     I                                    P 161 1680@CK21
+     I                                    P 169 1760@CK22
+     I                                    P 177 1840@CK23
+     I                                    P 185 1920@CK24
+      *
+      /COPY ZSRSRC,ZTNLU1Z1
+      **  Data structure to update last transaction number
+      *
+      /COPY ZSRSRC,ZFRPEDZ2
+      ** Data structure for SR.ZFRPED
+      *
+      /COPY ZSRSRC,RTTOTSI2
+      ** Data structures definitions for SR.RTTOTS
+     IRUNDAT    E DS
+     I**  Standard Data Area Layout for System flags and Run Date
+     I*
+     IPPARM       DS                            100
+     I** Data structure for input/output parameter
+     I*
+     I                                        1   1 POPT
+     I                                        2   4 PTLBT
+     I                                        5   9 WFSTN
+     I                                       10  14 WLSTN
+     I                                       15  17 PBRCA
+     IPSDS       SDS
+      **  Program Status Data Structure
+      *
+     I                                        1  10 @PGM
+      **  Field containing Program name
+     I                                      244 253 @JOB
+      **  Field containing Workstation ID
+     I                                      254 263 @USER
+      *
+     ILDA         DS                            256
+      **  Field combining the following fields
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+     I                                      171 180 DBPGM
+      **  Number of database error
+     I                                      181 1830DBASE
+      *
+     ISDMMOD    E DSSDMMODPD                                                                  166074
+      * External data structure for Midas Module Details                                      166074
+     ISCSARD    E DSSCSARDPD
+     I** External data structure for SAR Details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** External data structure for Bank Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** External data structure for Currency Codes
+     I*
+     ISDFNCD    E DSSDFNCDPD
+     I** External data structure for Function Codes Details
+     I*
+     ISDRETR    E DSSDRETRPD
+     I** External data structure for Retail Transaction Types
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I**  Data structure for branch details
+     I*
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, Long data structure
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, Short data structure
+     I*
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      FIRST  - Initial Processing                        *
+      *            INTPR  - Initialise print variables                *
+      *            FINAL  - Final Processing                          *
+      *            UPDATE - Update journal file                       *
+      *            PRTOT  - Print Totals                              *
+      *            PRDET  - Detail processing                         *
+      *            DBERR  - Database error processing      (01)       *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      ** Initial Processing
+     C                     EXSR FIRST
+      *
+      ** If selective print of teller/batch set lower limit
+     C           PTLBT     IFNE 'ALL'
+      *
+      ** Set lower limit for selective printing
+     C           POPT      IFEQ 'R'
+     C                     MOVEL'T'       KTBRI1
+     C                     ELSE
+     C                     MOVELPOPT      KTBRI1
+     C                     END
+      *
+     C                     MOVELPTLBT     KTBID1
+     C                     Z-ADDPFSTN     KTBTN
+      *                                                                   098181
+      ** File is now positioned using OPNQRYF.                            098181
+      ***********                                                         098181
+     C***********          MOVELPBRCA     KBRCA                           098181
+     C***********KLTRAN    SETLLTTRANPDF                 71               098181
+     C************IN71     IFEQ '0'                                       098181
+      *
+     C************LOCK     IN   LDA                                       098181
+     C***********          MOVEL'TTRANL0 'DBFILE           ***************098181
+     C***********          Z-ADD1         DBASE            ** DB ERR 01 **098181
+     C***********          MOVELPTLBT     KTBID2           ***************098181
+     C***********          MOVELKTBRI1    KTBRI2                          098181
+     C***********          MOVELPBRCA     KBRCA2                          098181
+     C***********          Z-ADDPFSTN     KTBTN2                          098181
+     C***********          MOVEL@TTRAN    DBKEY                           098181
+     C***********          EXSR DBERR                                     098181
+     C***********          END                                            098181
+      *
+     C                     END
+     C*
+     C** Set file pointer if branch is selected and an ALL teller/batch
+     C** report is requested
+     C*
+     C           PRENT     IFNE 'ALL'
+     C           PRENT     ANDNE*BLANKS
+     C           PTLBT     ANDEQ'ALL'
+     C           POPT      IFEQ 'R'
+     C                     MOVEL'T'       KTBRI1
+     C                     ELSE
+     C                     MOVELPOPT      KTBRI1
+     C                     END
+     C                     MOVELPRENT     KBRCA
+     C           KLTRAN    SETLLTTRANPDF             71
+     C                     END
+      *
+      ** Read transaction file and process until EOF
+     C                     READ TTRANPDF                 35               098181
+      *                                                                   098181
+      * Dbase error if selective print and no records.                    098181
+     C           PTLBT     IFNE 'ALL'                                     098181
+     C           *IN35     ANDEQ'1'                                       098181
+     C           *LOCK     IN   LDA                                       098181
+     C                     MOVEL'TTRANL0 'DBFILE           ***************098181
+     C                     Z-ADD1         DBASE            ** DB ERR 01 **098181
+     C                     MOVELPTLBT     KTBID2           ***************098181
+     C                     MOVELKTBRI1    KTBRI2                          098181
+     C                     Z-ADDPFSTN     KTBTN2                          098181
+     C                     MOVEL@TTRAN    DBKEY                           098181
+     C                     EXSR DBERR                                     098181
+     C                     END                                            098181
+      *                                                                   098181
+     C           *IN35     DOWNE'1'
+     C***********          READ TTRANL0                  35               098181
+     C/COPY WNCPYSRC,RE4202C001
+     C*
+     C** Report only tellers/batches in the selected branch (for an ALL
+     C** teller/batch report request and a specific branch is selected)
+     C*
+     C           PRENT     IFNE 'ALL'
+     C           PRENT     ANDNE*BLANKS
+     C           PTLBT     ANDEQ'ALL'
+     C           PRENT     ANDNEITLB
+     C                     MOVE '1'       *IN35
+     C                     END
+     C*
+     C           *IN35     IFEQ '0'
+      *
+     C                     MOVELTWID      PWSID
+     C                     EXSR PRDET
+      *
+     C                     END
+      *
+     C                     READ TTRANL0                  35               098181
+     C                     END
+      *
+      ** Print totals
+     C                     EXSR PRTOT
+     C*
+     C** Print heading on overflow
+     C*
+     C           *IN11     IFEQ '1'
+     C                     WRITEHEADNG
+     C                     END
+     C*
+     C** Print report footer
+     C*
+     C           OPEN      IFEQ '1'
+     C                     WRITELAST
+     C                     END
+      *
+      ** If selected option is 'T' update ttrntm4
+      ** Do not update if new report type
+     C           POPT      IFEQ 'T'
+     C           PTLBT     ANDNE'ALL'
+     C                     EXSR UPDATE
+     C                     END
+      *
+      ** End of run process
+     C                     EXSR FINAL
+      *
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRDET  - Detail processing                         *
+      *                                                               *
+      * CALLS -    HEDST  - Header setup                              *
+      *            HEDPR  - Header print                              *
+      *            PRTOT  - Print Totals                              *
+      *            INTPR  - Initialise print variables                *
+      *            DETST  - Details setup                             *
+      *            DETPR  - Details print                             *
+      *            JRNTU  - Journal Totals update                     *
+      *            DBERR  - Database error processing (08) (09)       *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRDET     BEGSR                           ** PRDET  **
+      *
+      ** If not full print set EOF if exceeds Last transaction no.
+     C           PTLBT     IFNE 'ALL'
+      *
+     C           TBTN      IFGT PLSTN
+     C                     SETON                     35
+     C                     END
+      *
+     C                     END
+      *
+      ** If not EOF do furthur processing
+     C           *IN35     IFEQ '0'
+      *
+      ** On change of Teller/batch Id
+     C           WSTBID    IFNE '   '
+     C           TTBID     ANDNEWSTBID
+      *
+      ** Print totals
+     C                     EXSR PRTOT
+      *
+      ** Initialise print variables
+     C                     EXSR INTPR
+      *
+      ** Header setup
+     C                     EXSR HEDST
+      *
+      ** Header print
+     C                     EXSR HEDPR
+      *
+     C                     END
+      *
+      ** If header setup not yet done
+     C           @SETUP    IFEQ '0'
+     C                     EXSR HEDST
+     C                     END
+      *
+      ** If header is not printed
+     C           *IN11     IFEQ '1'
+      *
+      ** Header setup only be done when necessary
+      *
+      ** Header print
+     C                     EXSR HEDPR
+      *
+     C                     END
+      *
+      ** Detail setup
+     C                     EXSR DETST
+      *
+      ** Detail print
+     C                     EXSR DETPR
+      *
+      ** For journal totals update
+     C                     MOVELFNCD      @FNCD   3
+     C                     EXSR JRNTU
+      *
+     C           FNCD      IFEQ '0JD'
+      *
+      ** Setup key for lf/ttranl1
+     C                     MOVELTBRI      KTBRI1
+     C                     MOVELTTBID     KTBID1
+     C                     MOVELITLB      KBRCA
+     C                     Z-ADDCRTN      KTBTN
+      *
+      ** Access Teller transaction logical file
+     C           KLTRAN    CHAINTTRANL1F             71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TTRANL1F'DBFILE           ***************
+     C                     Z-ADD2         DBASE            ** DB ERR 02 **
+     C                     MOVELKTBID1    KTBID2           ***************
+     C                     MOVELITLB      KBRCA2
+     C                     MOVELKTBRI1    KTBRI2
+     C                     Z-ADDKTBTN     KTBTN2
+     C                     MOVEL@TTRAN    DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Get Function Code Details
+     C*
+     C                     CALL 'AOFNCDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM RFNCD     @FNCD   3
+     C           SDFNCD    PARM SDFNCD    DSFDY
+      *
+      ** Record not found.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD3         DBASE            ** DB ERR 03 **
+     C                     MOVE 'SDFNCDPD'DBFILE           ***************
+     C                     MOVELRFNCD     DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Journal totals update
+     C                     MOVELRFNCD     @FNCD   3
+     C                     EXSR JRNTU
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            INTPR  - Initialise print variables                *
+      *                                                               *
+      * CALLS      INITRT - Initialise work variables                 *
+      *                                                               *
+      * CALLED BY  PRDET  - Detail Processing                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           INTPR     BEGSR                           ** INTPR  **
+      *
+     C                     DO   24        @A
+      *
+     C                     MOVEL*ZEROS    NCR,@A
+     C                     MOVEL*ZEROS    NDR,@A
+     C                     MOVEL*ZEROS    VCR,@A
+     C                     MOVEL*ZEROS    VDR,@A
+     C                     MOVEL*ZEROS    VCA,@A
+     C                     MOVEL*ZEROS    VCK,@A
+     C                     MOVEL*ZEROS    WCA,@A
+     C                     MOVEL*ZEROS    WCK,@A
+      *
+     C                     END
+      *
+     C                     MOVELTTBID     WSTBID  3
+      *
+     C                     EXSR INITRT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            HEDST  - Header Setup                              *
+      *                                                               *
+      * CALLS      DBERR  - Database error processing (02) (03)       *
+      *                                                               *
+      * CALLED BY  PRDET  - Detail Processing                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           HEDST     BEGSR                           ** HEDST  **
+      *
+      * Define Keylist (ttrnt)
+     C           KLTRNT    KLIST
+     C                     KFLD           KTBRI
+     C                     KFLD           KTBID
+     C                     KFLD           KRCTP
+      * Define Keylist (ttranl1)
+     C           KLTRAN    KLIST
+     C                     KFLD           KTBRI1
+     C                     KFLD           KBRCA
+     C                     KFLD           KTBID1
+     C                     KFLD           KTBTN
+      *
+      * Move fields to key list.
+     C           *INU1     IFEQ '1'
+     C                     MOVEL'T'       KTBRI
+     C                     ELSE
+     C                     MOVEL'B'       KTBRI
+     C                     END
+     C                     MOVELTTBID     KTBID
+     C                     MOVEL'1'       KRCTP
+      *
+      ** Access Controls records from teller totals file
+     C           KLTRNT    CHAINTTRNTM2F             71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TTRNTM2F'DBFILE           ***************
+     C                     Z-ADD4         DBASE            ** DB ERR 04 **
+     C                     MOVEL@TTRNT    DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     MOVEACCYR1     @CY,1
+      *
+      ** Access Teller journal total record if option is 'T'
+     C           POPT      IFEQ 'T'
+     C                     MOVEL'3'       KRCTP
+      *
+     C           KLTRNT    CHAINTTRNTM4F             71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TTRNTM4F'DBFILE           ***************
+     C                     Z-ADD5         DBASE            ** DB ERR 05 **
+     C                     MOVEL@TTRNT    DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Store Teller cash and cheque totals if non-selective print
+      *
+     C           PTLBT     IFEQ 'ALL'
+     C                     MOVEL'2'       KRCTP
+     C           KLTRNT    CHAINTTRNTM3F             71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TTRNTM3F'DBFILE           ***************
+     C                     Z-ADD6         DBASE            ** DB ERR 06 **
+     C                     MOVEL@TTRNT    DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     Z-ADD@CH1      WCA,1
+     C                     Z-ADD@CH2      WCA,2
+     C                     Z-ADD@CH3      WCA,3
+     C                     Z-ADD@CH4      WCA,4
+     C                     Z-ADD@CH5      WCA,5
+     C                     Z-ADD@CH6      WCA,6
+     C                     Z-ADD@CH7      WCA,7
+     C                     Z-ADD@CH8      WCA,8
+     C                     Z-ADD@CH9      WCA,9
+     C                     Z-ADD@CH10     WCA,10
+     C                     Z-ADD@CH11     WCA,11
+     C                     Z-ADD@CH12     WCA,12
+     C                     Z-ADD@CH13     WCA,13
+     C                     Z-ADD@CH14     WCA,14
+     C                     Z-ADD@CH15     WCA,15
+     C                     Z-ADD@CH16     WCA,16
+     C                     Z-ADD@CH17     WCA,17
+     C                     Z-ADD@CH18     WCA,18
+     C                     Z-ADD@CH19     WCA,19
+     C                     Z-ADD@CH20     WCA,20
+     C                     Z-ADD@CH21     WCA,21
+     C                     Z-ADD@CH22     WCA,22
+     C                     Z-ADD@CH23     WCA,23
+     C                     Z-ADD@CH24     WCA,24
+      *
+     C                     Z-ADD@CK1      WCK,1
+     C                     Z-ADD@CK2      WCK,2
+     C                     Z-ADD@CK3      WCK,3
+     C                     Z-ADD@CK4      WCK,4
+     C                     Z-ADD@CK5      WCK,5
+     C                     Z-ADD@CK6      WCK,6
+     C                     Z-ADD@CK7      WCK,7
+     C                     Z-ADD@CK8      WCK,8
+     C                     Z-ADD@CK9      WCK,9
+     C                     Z-ADD@CK10     WCK,10
+     C                     Z-ADD@CK11     WCK,11
+     C                     Z-ADD@CK12     WCK,12
+     C                     Z-ADD@CK13     WCK,13
+     C                     Z-ADD@CK14     WCK,14
+     C                     Z-ADD@CK15     WCK,15
+     C                     Z-ADD@CK16     WCK,16
+     C                     Z-ADD@CK17     WCK,17
+     C                     Z-ADD@CK18     WCK,18
+     C                     Z-ADD@CK19     WCK,19
+     C                     Z-ADD@CK20     WCK,20
+     C                     Z-ADD@CK21     WCK,21
+     C                     Z-ADD@CK22     WCK,22
+     C                     Z-ADD@CK23     WCK,23
+     C                     Z-ADD@CK24     WCK,24
+     C                     END
+      *
+     C                     END
+     C*
+     C** On change of branch...
+     C*
+     C           ITLB      IFNE WITLB
+     C*
+     C** If printer file is open and entity is not blank, print footer
+     C*
+     C           OPEN      IFEQ '1'
+     C           PRENT     ANDNE*BLANKS
+     C                     WRITELAST
+     C**********           CLOSERE4202P1                                                     BUG8972
+     C                     END
+     C*
+     C**  Open printer file RE4202P1 if entity is not blank
+     C**  or the printer file is not yet open
+     C*
+     C           PRENT     IFNE *BLANKS
+     C           OPEN      ORNE '1'
+     C*
+     C           PRENT     IFNE *BLANKS
+     C                     MOVE ITLB      @PARM
+     C                     END
+     C*
+     C                     MOVE ITLB      WITLB   3
+     C*
+     C**  Get branch name using access object
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ITLB      P@BRCA  3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C**  Check if error occurred
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD12        DBASE            * DBERROR 012
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVELITLB      DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     MOVE A8BRNM    RBRNM
+     C                     MOVE ITLB      RBRCA
+     C*
+     C**********           OPEN RE4202P1
+     C*                                                                                      BUG8972
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ
+     C                     PARM           @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+      *
+     C                     MOVEL'1'       @SETUP
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DETST             - Details setup                             *
+      *                                                               *
+      * CALLS      DBERR  - Database error processing (04)            *
+      *                                                               *
+      * CALLED BY  PRDET  - Detail Processing                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DETST     BEGSR                           ** DETST  **
+      *
+      ** Setup value date for printing
+     C                     Z-ADDVLDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PVLDT
+      *
+     C                     MOVELTTIME     PTIME
+     C                     MOVE TBTN      PTRNO
+      *
+      *
+      ** Get Function Code Details
+      *
+     C*
+     C                     CALL 'AOFNCDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FNCD      @FNCD
+     C           SDFNCD    PARM SDFNCD    DSFDY
+      *
+      ** Record not found.
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD11        DBASE            ** DB ERR 11 **
+     C                     MOVE 'SDFNCDPD'DBFILE           ***************
+     C                     MOVELFNCD      DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Move function code description
+     C                     MOVELFQRNNR    PDESC
+      ** Include Cheque No. in the description.                                              BUG9062
+     C           CQNF      IFNE *BLANK                                                       BUG9062
+     C           POPT      ANDNE'B'                                                           237757
+     C                     MOVELCQNF      CQNF9   9                                          BUG9062
+     C                     MOVE CQNF9     PDESC                                              BUG9062
+     C                     ENDIF                                                             BUG9062
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DETPR             - Details Print                             *
+      *                                                               *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY  PRDET  - Detail Processing                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DETPR     BEGSR                           ** DETPR  **
+      *
+     C                     MOVELMSG1      MSGA
+     C                     MOVELMSG2      MSGB
+     C                     MOVELMSG,1     PWRCD
+     C                     MOVELMSG,2     PWRCD2
+     C                     MOVELACNO      PACNO
+     C                     MOVELTTAC      PTTAC
+     C                     MOVELCCY1      PCCY1
+     C                     MOVELCCY2      PCCY2
+     C                     MOVELRTLI      PTLID
+     C                     MOVELCUS1      PCUS1
+     C                     MOVELCUS2      PCUS2
+     C                     MOVELACD1      PACD1
+     C                     MOVELACD2      PACD2
+     C                     MOVELACSQ1     PACSQ1
+     C                     MOVELACSQ2     PACSQ2
+     C                     MOVELPRFC      PPRFC                                               166074
+     C                     Z-ADD1         @B      20
+      *
+     C           CCY1      IFNE '   '
+     C                     MOVELCCY1      PCCY
+     C                     EXSR GCURR
+     C                     END
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PAMT1
+     C                     Z-ADDAMT1      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PAMT1
+      *
+     C           CCY2      IFNE '   '
+     C                     MOVELCCY2      PCCY
+     C                     EXSR GCURR
+     C                     END
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PAMT2
+     C                     Z-ADDAMT2      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PAMT2
+      *
+     C                     Z-ADDEXCR      PEXCR
+      *
+     C                     MOVELTTP1      PTTP1
+     C                     MOVELTTP2      PTTP2
+     C                     MOVELCQNF      PCQNF
+      *
+      ** If successful closure then seton 'CLOSURE' print indicator
+     C           CLOS      IFEQ 'Y'
+     C                     SETON                     15
+     C                     ELSE
+     C                     SETOF                     15
+     C                     END
+      *
+     C           CRTN      IFGT 0
+     C                     SETON                     16
+     C                     END
+      *
+     C                     MOVELCRTN      PCRTN
+      *                                                                                       CRT026
+      ** If CRT026 is switch on retrieve obtain the override user id                          CRT026
+      ** by attached teller id                                                                CRT026
+      *                                                                                       CRT026
+     C           CRT026    IFEQ 'Y'                                                           CRT026
+     C           OVTI      IFNE *BLANKS                                                       CRT026
+     C           OVTI      CHAINMUSERL3              71                                       CRT026
+     C           *IN71     IFEQ *OFF                                                          CRT026
+     C                     MOVELUSRP      POVUR                                               CRT026
+     C                     ENDIF                                                              CRT026
+     C                     ELSE                                                               CRT026
+     C                     MOVE *BLANKS   POVUR                                               CRT026
+     C                     ENDIF                                                              CRT026
+      *                                                                                       CRT026
+     C                     ELSE                                                               CRT026
+     C                     MOVELOVTI      POVTI
+     C                     ENDIF                                                              CRT026
+      *                                                                                       CRT026
+     C                     MOVELANAM      PACNM
+     C*
+     C** Do not write override teller ID if there is no override code
+     C           PWRCD     IFEQ *BLANKS
+     C           PWRCD2    ANDEQ*BLANKS
+     C                     MOVEL*BLANKS   POVTI
+     C                     MOVEL*BLANKS   POVUR                                               CRT026
+     C                     END
+     C*
+      *
+      ** Write detail lines as per the function
+      ** printing treasury in/out line
+     C           FNCD      IFEQ '0JE'
+     C           FNCD      OREQ '0JF'
+     C                     WRITEDETL1
+     C                     END
+      *
+      ** printing teller in/out line
+     C           FNCD      IFEQ '00E'
+     C           FNCD      OREQ '00F'
+     C                     WRITEDETL2
+     C                     END
+      *
+      ** printing a/c closure line
+     C           FNCD      IFEQ 'MJM'
+     C                     WRITEDETL3
+     C                     END
+      *
+      ** printing cash withdrawal & cash deposit line in a/c ccy
+     C           FNCD      IFEQ '00O'
+     C           FNCD      OREQ '00N'
+     C                     WRITEDETL4
+     C                     END
+      *
+      ** printing cash withdrawal & cash deposit line in NAC ccy
+     C           FNCD      IFEQ '0JO'
+     C           FNCD      OREQ '0JN'
+     C                     WRITEDETL5
+     C                     END
+      *
+      ** printing cheque withdrawal & cheque deposit line in a/c ccy
+     C           FNCD      IFEQ '00L'
+     C           FNCD      OREQ '00W'                                     CRT002
+     C           FNCD      OREQ '00K'
+     C           FNCD      OREQ '00Q'
+     C           FNCD      OREQ '00R'                                     CRT002
+     C                     WRITEDETL6
+     C           HCAC      IFNE *BLANKS                                                      BUG8510
+     C                     MOVELHCAC      PHCAC                                              BUG8510
+     C                     WRITEDETL17                                                       BUG8510
+     C                     ENDIF                                                             BUG8510
+     C                     END
+      *
+      ** printing cheque withdrawal & cheque deposit line in NAC ccy
+     C           FNCD      IFEQ '0JL'
+     C           FNCD      OREQ '0JW'                                     CRT002
+     C           FNCD      OREQ '0JK'
+     C           FNCD      OREQ '0JQ'
+     C           FNCD      OREQ '0JR'                                     CRT002
+     C                     WRITEDETL7
+     C           HCAC      IFNE *BLANKS                                                      BUG8510
+     C                     MOVELHCAC      PHCAC                                              BUG8510
+     C                     WRITEDETL17                                                       BUG8510
+     C                     ENDIF                                                             BUG8510
+     C                     END
+      *
+      ** printing cash/cheque deposit line in a/c ccy
+     C           FNCD      IFEQ '00H'
+     C           FNCD      OREQ '00P'
+     C                     ADD  1         @B
+     C                     WRITEDETL8
+     C           HCAC      IFNE *BLANKS                                                      BUG8510
+     C                     MOVELHCAC      PHCAC                                              BUG8510
+     C                     WRITEDETL17                                                       BUG8510
+     C                     ENDIF                                                             BUG8510
+     C                     END
+      *
+      ** printing cash/cheque deposit line in NAC ccy
+     C           FNCD      IFEQ '0JH'
+     C           FNCD      OREQ '0JP'
+     C                     ADD  1         @B
+     C                     WRITEDETL9
+     C           HCAC      IFNE *BLANKS                                                      BUG8510
+     C                     MOVELHCAC      PHCAC                                              BUG8510
+     C                     WRITEDETL17                                                       BUG8510
+     C                     ENDIF                                                             BUG8510
+     C                     END
+      *
+      ** printing retail account transfer line
+     C           FNCD      IFEQ '00A'
+     C                     ADD  1         @B
+     C                     WRITEDETL10
+     C                     END
+      *
+      ** printing GL transfer line
+     C           FNCD      IFEQ '0JA'
+     C           FNCD      OREQ '0JT'
+     C           FNCD      OREQ '00X'                                     CRT002
+     C           FNCD      OREQ '0JV'
+     C           FNCD      OREQ '00S'                                     CRT002
+     C                     ADD  1         @B
+     C                     WRITEDETL11
+     C                     END
+      *
+      ** printing charges/credit line
+     C           FNCD      IFEQ '00I'
+     C                     ADD  1         @B
+     C                     WRITEDETL12
+     C                     END
+      *
+      ** printing foreign exchange input line
+     C           FNCD      IFEQ '0JI'
+     C           FNCD      OREQ '0JS'                                     CRT002
+     C           FNCD      OREQ '0JX'                                     CRT002
+     C                     ADD  1         @B
+     C                     WRITEDETL13
+     C                     END
+      *
+      ** printing transaction reversal line
+     C           FNCD      IFEQ '0JD'
+     C                     WRITEDETL14
+     C                     END
+      *
+      ** printing clearing/payroll(batch) line
+     C           FNCD      IFEQ '***'
+     C                     ADD  1         @B
+     C                     WRITEDETL15
+     C                     END
+      *
+      ** printing fixed deposit line
+     C           FNCD      IFEQ '01A'
+     C           FNCD      OREQ '01B'
+     C           FNCD      OREQ '01C'
+     C           FNCD      OREQ '01D'
+     C           FNCD      OREQ '01E'
+     C           FNCD      OREQ '01F'
+     C           FNCD      OREQ '01G'
+     C                     WRITEDETL16
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4202CCP1                                           S01408
+     C*                                                                   S01408
+      *
+      ** Printing of rest of the warning messages
+     C                     EXSR WRNPR
+      *
+     C                     ENDSR
+      *****************************************************************
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4202CCP2                                           S01408
+     C*                                                                   S01408
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WRNPR             - Warning print                             *
+      *                                                               *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY  PRDET  - Detail Processing                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           WRNPR     BEGSR                           ** WRNPR  **
+      *
+      ** to print rest of the warning messages
+     C           @B        DOWLE18
+     C                     ADD  1         @B
+      *
+     C           MSG,@B    IFNE *BLANKS
+      *
+      ** check for overflow before printing warning
+     C           *IN11     IFEQ '1'
+      *
+      ** Header setup only be done when necessary
+      *
+      ** Header print
+     C                     EXSR HEDPR
+      *
+     C                     END
+      *
+     C                     MOVELMSG,@B    PWRCD2
+     C                     WRITEWRNLIN
+     C                     ELSE
+     C                     Z-ADD20        @B
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * JRNTU             - Journal totals update                     *
+      *                                                               *
+      * CALLS      RTTOTS - Teller totals update                      *
+      *            RTTOTA - Teller totals accumulation                *
+      *            TRTYST - Transaction type setup                    *
+      *                                                               *
+      * CALLED BY  PRDET  - Detail Processing                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           JRNTU     BEGSR                           ** JRNTU  **
+      *
+      ** Initialise counter if previous transaction was a reversal
+     C                     Z-ADD1         @COUNT
+      *
+      ** for cash/clearing/House deposits a/c & NAC ccy
+     C           @FNCD     IFEQ '00N'
+     C           @FNCD     OREQ '0JN'
+     C           @FNCD     OREQ '00K'
+     C           @FNCD     OREQ '00R'                                     CRT002
+     C           @FNCD     OREQ '0JK'
+     C           @FNCD     OREQ '0JR'                                     CRT002
+     C           @FNCD     OREQ '00Q'
+     C           @FNCD     OREQ '0JQ'
+      *
+     C                     MOVELFQCRC1    @TRTY   5
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT  150
+     C                     MOVELCCY1      @CCY    3
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C           FNCD      IFEQ '00Q'                                                        BUG9062
+     C           HCAC      ANDNE*BLANKS                                                      BUG9062
+     C           FNCD      OREQ '0JQ'                                                        BUG9062
+     C           HCAC      ANDNE*BLANKS                                                      BUG9062
+     C                     MOVELFQDRC1    @TRTY                                              BUG9062
+     C                     EXSR TRTYST                                                       BUG9062
+      *                                                                                      BUG9062
+     C                     Z-ADDAMT1      @TAMT                                              BUG9062
+     C                     MOVELCCY1      @CCY                                               BUG9062
+     C                     MOVELDC,@A     @DCIN                                              BUG9062
+     C                     MOVELCS,@A     @CSIN                                              BUG9062
+     C                     MOVELCL,@A     @CLIN                                              BUG9062
+     C                     Z-ADD1         @COUNT                                             BUG9062
+     C                     EXSR RTTOTS                                                       BUG9062
+     C                     EXSR RTTOTA                                                       BUG9062
+     C                     END                                                               BUG9062
+      *                                                                                      BUG9062
+     C                     END
+      *
+      ** for cash/cheque withdrawals a/c & NAC ccy
+     C           @FNCD     IFEQ '00O'
+     C           @FNCD     OREQ '0JO'
+     C           @FNCD     OREQ '00L'
+     C           @FNCD     OREQ '00W'                                     CRT002
+     C           @FNCD     OREQ '0JL'
+     C           @FNCD     OREQ '0JW'                                     CRT002
+      *
+     C                     MOVELFQDRC1    @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C                     END
+      *
+      ** for cash/clearing & cash/house cheque deposits a/c & NAC ccy
+     C           @FNCD     IFEQ '00H'
+     C           @FNCD     OREQ '0JH'
+     C           @FNCD     OREQ '00P'
+     C           @FNCD     OREQ '0JP'
+      *
+     C                     MOVELFQCRC1    @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C                     MOVELFQCRC2    @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT2      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C           FNCD      IFEQ '00P'                                                        BUG9062
+     C           HCAC      ANDNE*BLANKS                                                      BUG9062
+     C           FNCD      OREQ '0JP'                                                        BUG9062
+     C           HCAC      ANDNE*BLANKS                                                      BUG9062
+     C                     MOVELFQDRC1    @TRTY                                              BUG9062
+     C                     EXSR TRTYST                                                       BUG9062
+      *                                                                                      BUG9062
+     C                     Z-ADDAMT2      @TAMT                                              BUG9062
+     C                     MOVELCCY1      @CCY                                               BUG9062
+     C                     MOVELDC,@A     @DCIN                                              BUG9062
+     C                     MOVELCS,@A     @CSIN                                              BUG9062
+     C                     MOVELCL,@A     @CLIN                                              BUG9062
+     C                     Z-ADD1         @COUNT                                             BUG9062
+     C                     EXSR RTTOTS                                                       BUG9062
+     C                     EXSR RTTOTA                                                       BUG9062
+     C                     END                                                               BUG9062
+      *                                                                                      BUG9062
+     C                     END
+      *
+      ** for retail/G.L. account transfer
+     C           @FNCD     IFEQ '00A'
+     C           @FNCD     OREQ '0JA'
+     C           FNCD      OREQ '0JT'
+     C           FNCD      OREQ '00X'                                     CRT002
+     C           FNCD      OREQ '0JV'
+     C           FNCD      OREQ '00S'                                     CRT002
+      *
+      ** Do not do for cash-in                                            169719
+      *                                                                   169719
+     C           FNCD      IFNE '0JT'                                     169719
+     C                     MOVELFQDRC1    @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+     C                     END                                            169719
+      *
+      ** Do not do for cash-out                                           169719
+      *                                                                   169719
+     C           FNCD      IFNE '0JV'                                     169719
+     C                     MOVELFQCRC1    @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+     C                     END                                            169719
+      *
+     C                     END
+      *
+      ** for charges and credits
+     C           @FNCD     IFEQ '00I'
+      *
+     C                     MOVELTTP1      @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C           AMT2      IFNE *ZEROS
+     C                     Z-ADD1         @COUNT
+     C                     MOVELTTP2      @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT2      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+     C                     END
+      *
+     C                     END
+      *
+      ** for foreign exchange transactions
+     C           @FNCD     IFEQ '0JI'
+     C           @FNCD     OREQ '0JS'                                     CRT002
+     C           @FNCD     OREQ '0JX'                                     CRT002
+      *
+     C                     MOVELTTP1      @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C                     MOVELTTP2      @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT2      @TAMT
+     C                     MOVELCCY2      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C                     END
+      *
+      ** Teller in from treasury and Teller cross-in
+     C           @FNCD     IFEQ '0JE'
+     C           @FNCD     OREQ '00E'
+      *
+     C                     MOVELFQCRC1    @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C                     END
+      *
+      ** for Teller out from treasury and Teller cross-out
+     C           @FNCD     IFEQ '0JF'
+     C           @FNCD     OREQ '00F'
+      *
+     C                     MOVELFQDRC1    @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C                     END
+      *
+      ** for clearing/payroll
+     C           @FNCD     IFEQ '***'
+      *
+     C                     MOVELTRANI     @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C                     END
+      *
+      ** for Fixed deposits open and close
+     C           FNCD      IFEQ '01A'
+     C           FNCD      OREQ '01B'
+     C           FNCD      OREQ '01C'
+     C           FNCD      OREQ '01D'
+     C           FNCD      OREQ '01E'
+     C           FNCD      OREQ '01F'
+     C           FNCD      OREQ '01G'
+      *
+     C                     MOVELTTP1      @TRTY
+     C                     EXSR TRTYST
+      *
+     C                     Z-ADDAMT1      @TAMT
+     C                     MOVELCCY1      @CCY
+     C                     MOVELDC,@A     @DCIN
+     C                     MOVELCS,@A     @CSIN
+     C                     MOVELCL,@A     @CLIN
+     C                     Z-ADD1         @COUNT
+     C                     EXSR RTTOTS
+     C                     EXSR RTTOTA
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            TRTYST - Transaction type setup                    *
+      *                                                               *
+      * CALLS      DBERR  - Database error processing (05)            *
+      *                                                               *
+      * CALLED BY  PRDET  - Detail Processing                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           TRTYST    BEGSR                           ** TRTYST **
+      *
+     C                     Z-ADD1         @A      20
+      *
+      ** Look up array to pick dr/cr cash/clearing indicators for the
+      ** pariticular transaction type
+     C           @TRTY     LOKUPTR,@A                    69
+      *
+      ** If the transaction type exists in the array other elements
+      ** are retrieved using the @A the index
+      *
+      ** If transaction type is not found in the array
+     C           *IN69     IFEQ '0'
+      *
+      ** Get transaction type info through access object
+     C*
+     C                     CALL 'AORETRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM @TRTY     @RETR   5
+     C           SDRETR    PARM SDRETR    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDRETRPD'DBFILE           ***************
+     C                     Z-ADD7         DBASE            ** DB ERR 07 **
+     C                     MOVEL@TRTY     DBKEY            ***************
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+      ** look up for blank array element of trans. type and fill up
+     C                     Z-ADD1         @A
+      *
+     C           '     '   LOKUPTR,@A                    68
+      *
+      ** If array already filled up fill up the first element
+     C           *IN68     IFEQ '0'
+     C                     Z-ADD1         @A
+     C                     END
+      *
+      ** Fill up the array
+     C                     MOVEL@TRTY     TR,@A
+     C                     MOVELA1DCIN    DC,@A
+     C                     MOVELA1CIND    CS,@A
+     C                     MOVELA1CLIN    CL,@A
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** If function code is '0JD'(Reversal) set @RVIN to 'Y'
+     C           FNCD      IFEQ '0JD'
+     C                     MOVEL'Y'       @RVIN
+     C                     ELSE
+     C                     MOVEL'N'       @RVIN
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PRTOT             - Print Totals                              *
+      *                                                               *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY  PRDET  - Detail Processing                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRTOT     BEGSR                           ** PRTOT  **
+      *
+     C           POPT      IFEQ 'T'
+     C           PTLBT     ANDEQ'ALL'
+     C                     EXSR MTOARR
+      ** Move teller details to array
+     C                     EXSR MTOAR2
+     C                     ELSE
+      *
+      ** Move journal details to array
+     C           POPT      IFNE 'R'
+     C                     EXSR MTOART
+     C                     ELSE
+     C                     EXSR MTOARR
+     C                     END
+      *
+     C                     END
+      *
+     C           POPT      IFNE 'B'
+     C                     MOVELWSTBID    PTLID
+     C                     ELSE
+     C                     MOVELWSTBID    PTLID
+     C                     END
+      *
+     C                     SETON                     11
+     C                     WRITEHEADNG
+      *
+     C           POPT      IFEQ 'R'
+     C           PTLBT     ANDNE'ALL'
+     C                     WRITERHEAD
+     C                     END
+      *
+     C                     WRITEHEAD1
+     C                     SETOF                     11
+      *
+     C           1         DO   24        @ARR    20
+      *
+     C           @CY,@ARR  IFNE '   '
+      *
+     C                     EXSR MPRT
+      *
+     C                     WRITEDETAIL1
+      *
+     C                     END
+      *
+     C                     END  1
+      *
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MTOARR - Move accumulated values to array          *
+      *                                                               *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY  PRTOT  - Print totals                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MTOARR    BEGSR                           ** MTOARR **
+      *
+     C                     Z-ADD@ANC1     NCR,1
+     C                     Z-ADD@AND1     NDR,1
+     C                     Z-ADD@AVC1     VCR,1
+     C                     Z-ADD@AVD1     VDR,1
+     C                     Z-ADD@AVS1     VCA,1
+     C                     Z-ADD@AVQ1     VCK,1
+      *
+     C                     Z-ADD@ANC2     NCR,2
+     C                     Z-ADD@AND2     NDR,2
+     C                     Z-ADD@AVC2     VCR,2
+     C                     Z-ADD@AVD2     VDR,2
+     C                     Z-ADD@AVS2     VCA,2
+     C                     Z-ADD@AVQ2     VCK,2
+      *
+     C                     Z-ADD@ANC3     NCR,3
+     C                     Z-ADD@AND3     NDR,3
+     C                     Z-ADD@AVC3     VCR,3
+     C                     Z-ADD@AVD3     VDR,3
+     C                     Z-ADD@AVS3     VCA,3
+     C                     Z-ADD@AVQ3     VCK,3
+      *
+     C                     Z-ADD@ANC4     NCR,4
+     C                     Z-ADD@AND4     NDR,4
+     C                     Z-ADD@AVC4     VCR,4
+     C                     Z-ADD@AVD4     VDR,4
+     C                     Z-ADD@AVS4     VCA,4
+     C                     Z-ADD@AVQ4     VCK,4
+      *
+     C                     Z-ADD@ANC5     NCR,5
+     C                     Z-ADD@AND5     NDR,5
+     C                     Z-ADD@AVC5     VCR,5
+     C                     Z-ADD@AVD5     VDR,5
+     C                     Z-ADD@AVS5     VCA,5
+     C                     Z-ADD@AVQ5     VCK,5
+      *
+     C                     Z-ADD@ANC6     NCR,6
+     C                     Z-ADD@AND6     NDR,6
+     C                     Z-ADD@AVC6     VCR,6
+     C                     Z-ADD@AVD6     VDR,6
+     C                     Z-ADD@AVS6     VCA,6
+     C                     Z-ADD@AVQ6     VCK,6
+      *
+     C                     Z-ADD@ANC7     NCR,7
+     C                     Z-ADD@AND7     NDR,7
+     C                     Z-ADD@AVC7     VCR,7
+     C                     Z-ADD@AVD7     VDR,7
+     C                     Z-ADD@AVS7     VCA,7
+     C                     Z-ADD@AVQ7     VCK,7
+      *
+     C                     Z-ADD@ANC8     NCR,8
+     C                     Z-ADD@AND8     NDR,8
+     C                     Z-ADD@AVC8     VCR,8
+     C                     Z-ADD@AVD8     VDR,8
+     C                     Z-ADD@AVS8     VCA,8
+     C                     Z-ADD@AVQ8     VCK,8
+      *
+     C                     Z-ADD@ANC9     NCR,9
+     C                     Z-ADD@AND9     NDR,9
+     C                     Z-ADD@AVC9     VCR,9
+     C                     Z-ADD@AVD9     VDR,9
+     C                     Z-ADD@AVS9     VCA,9
+     C                     Z-ADD@AVQ9     VCK,9
+      *
+     C                     Z-ADD@ANC10    NCR,10
+     C                     Z-ADD@AND10    NDR,10
+     C                     Z-ADD@AVC10    VCR,10
+     C                     Z-ADD@AVD10    VDR,10
+     C                     Z-ADD@AVS10    VCA,10
+     C                     Z-ADD@AVQ10    VCK,10
+      *
+     C                     Z-ADD@ANC11    NCR,11
+     C                     Z-ADD@AND11    NDR,11
+     C                     Z-ADD@AVC11    VCR,11
+     C                     Z-ADD@AVD11    VDR,11
+     C                     Z-ADD@AVS11    VCA,11
+     C                     Z-ADD@AVQ11    VCK,11
+      *
+     C                     Z-ADD@ANC12    NCR,12
+     C                     Z-ADD@AND12    NDR,12
+     C                     Z-ADD@AVC12    VCR,12
+     C                     Z-ADD@AVD12    VDR,12
+     C                     Z-ADD@AVS12    VCA,12
+     C                     Z-ADD@AVQ12    VCK,12
+      *
+     C                     Z-ADD@ANC13    NCR,13
+     C                     Z-ADD@AND13    NDR,13
+     C                     Z-ADD@AVC13    VCR,13
+     C                     Z-ADD@AVD13    VDR,13
+     C                     Z-ADD@AVS13    VCA,13
+     C                     Z-ADD@AVQ13    VCK,13
+      *
+     C                     Z-ADD@ANC14    NCR,14
+     C                     Z-ADD@AND14    NDR,14
+     C                     Z-ADD@AVC14    VCR,14
+     C                     Z-ADD@AVD14    VDR,14
+     C                     Z-ADD@AVS14    VCA,14
+     C                     Z-ADD@AVQ14    VCK,14
+      *
+     C                     Z-ADD@ANC15    NCR,15
+     C                     Z-ADD@AND15    NDR,15
+     C                     Z-ADD@AVC15    VCR,15
+     C                     Z-ADD@AVD15    VDR,15
+     C                     Z-ADD@AVS15    VCA,15
+     C                     Z-ADD@AVQ15    VCK,15
+      *
+     C                     Z-ADD@ANC16    NCR,16
+     C                     Z-ADD@AND16    NDR,16
+     C                     Z-ADD@AVC16    VCR,16
+     C                     Z-ADD@AVD16    VDR,16
+     C                     Z-ADD@AVS16    VCA,16
+     C                     Z-ADD@AVQ16    VCK,16
+      *
+     C                     Z-ADD@ANC17    NCR,17
+     C                     Z-ADD@AND17    NDR,17
+     C                     Z-ADD@AVC17    VCR,17
+     C                     Z-ADD@AVD17    VDR,17
+     C                     Z-ADD@AVS17    VCA,17
+     C                     Z-ADD@AVQ17    VCK,17
+      *
+     C                     Z-ADD@ANC18    NCR,18
+     C                     Z-ADD@AND18    NDR,18
+     C                     Z-ADD@AVC18    VCR,18
+     C                     Z-ADD@AVD18    VDR,18
+     C                     Z-ADD@AVS18    VCA,18
+     C                     Z-ADD@AVQ18    VCK,18
+      *
+     C                     Z-ADD@ANC19    NCR,19
+     C                     Z-ADD@AND19    NDR,19
+     C                     Z-ADD@AVC19    VCR,19
+     C                     Z-ADD@AVD19    VDR,19
+     C                     Z-ADD@AVS19    VCA,19
+     C                     Z-ADD@AVQ19    VCK,19
+      *
+     C                     Z-ADD@ANC20    NCR,20
+     C                     Z-ADD@AND20    NDR,20
+     C                     Z-ADD@AVC20    VCR,20
+     C                     Z-ADD@AVD20    VDR,20
+     C                     Z-ADD@AVS20    VCA,20
+     C                     Z-ADD@AVQ20    VCK,20
+      *
+     C                     Z-ADD@ANC21    NCR,21
+     C                     Z-ADD@AND21    NDR,21
+     C                     Z-ADD@AVC21    VCR,21
+     C                     Z-ADD@AVD21    VDR,21
+     C                     Z-ADD@AVS21    VCA,21
+     C                     Z-ADD@AVQ21    VCK,21
+      *
+     C                     Z-ADD@ANC22    NCR,22
+     C                     Z-ADD@AND22    NDR,22
+     C                     Z-ADD@AVC22    VCR,22
+     C                     Z-ADD@AVD22    VDR,22
+     C                     Z-ADD@AVS22    VCA,22
+     C                     Z-ADD@AVQ22    VCK,22
+      *
+     C                     Z-ADD@ANC23    NCR,23
+     C                     Z-ADD@AND23    NDR,23
+     C                     Z-ADD@AVC23    VCR,23
+     C                     Z-ADD@AVD23    VDR,23
+     C                     Z-ADD@AVS23    VCA,23
+     C                     Z-ADD@AVQ23    VCK,23
+      *
+     C                     Z-ADD@ANC24    NCR,24
+     C                     Z-ADD@AND24    NDR,24
+     C                     Z-ADD@AVC24    VCR,24
+     C                     Z-ADD@AVD24    VDR,24
+     C                     Z-ADD@AVS24    VCA,24
+     C                     Z-ADD@AVQ24    VCK,24
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MTOART - Move journal values to array              *
+      *                                                               *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY  PRTOT  - Print totals                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MTOART    BEGSR                           ** MTOART **
+      *
+     C                     Z-ADD@NC1      NCR,1
+     C                     Z-ADD@ND1      NDR,1
+     C                     Z-ADD@VC1      VCR,1
+     C                     Z-ADD@VD1      VDR,1
+     C                     Z-ADD@VS1      VCA,1
+     C                     Z-ADD@VQ1      VCK,1
+      *
+     C                     Z-ADD@NC2      NCR,2
+     C                     Z-ADD@ND2      NDR,2
+     C                     Z-ADD@VC2      VCR,2
+     C                     Z-ADD@VD2      VDR,2
+     C                     Z-ADD@VS2      VCA,2
+     C                     Z-ADD@VQ2      VCK,2
+      *
+     C                     Z-ADD@NC3      NCR,3
+     C                     Z-ADD@ND3      NDR,3
+     C                     Z-ADD@VC3      VCR,3
+     C                     Z-ADD@VD3      VDR,3
+     C                     Z-ADD@VS3      VCA,3
+     C                     Z-ADD@VQ3      VCK,3
+      *
+     C                     Z-ADD@NC4      NCR,4
+     C                     Z-ADD@ND4      NDR,4
+     C                     Z-ADD@VC4      VCR,4
+     C                     Z-ADD@VD4      VDR,4
+     C                     Z-ADD@VS4      VCA,4
+     C                     Z-ADD@VQ4      VCK,4
+      *
+     C                     Z-ADD@NC5      NCR,5
+     C                     Z-ADD@ND5      NDR,5
+     C                     Z-ADD@VC5      VCR,5
+     C                     Z-ADD@VD5      VDR,5
+     C                     Z-ADD@VS5      VCA,5
+     C                     Z-ADD@VQ5      VCK,5
+      *
+     C                     Z-ADD@NC6      NCR,6
+     C                     Z-ADD@ND6      NDR,6
+     C                     Z-ADD@VC6      VCR,6
+     C                     Z-ADD@VD6      VDR,6
+     C                     Z-ADD@VS6      VCA,6
+     C                     Z-ADD@VQ6      VCK,6
+      *
+     C                     Z-ADD@NC7      NCR,7
+     C                     Z-ADD@ND7      NDR,7
+     C                     Z-ADD@VC7      VCR,7
+     C                     Z-ADD@VD7      VDR,7
+     C                     Z-ADD@VS7      VCA,7
+     C                     Z-ADD@VQ7      VCK,7
+      *
+     C                     Z-ADD@NC8      NCR,8
+     C                     Z-ADD@ND8      NDR,8
+     C                     Z-ADD@VC8      VCR,8
+     C                     Z-ADD@VD8      VDR,8
+     C                     Z-ADD@VS8      VCA,8
+     C                     Z-ADD@VQ8      VCK,8
+      *
+     C                     Z-ADD@NC9      NCR,9
+     C                     Z-ADD@ND9      NDR,9
+     C                     Z-ADD@VC9      VCR,9
+     C                     Z-ADD@VD9      VDR,9
+     C                     Z-ADD@VS9      VCA,9
+     C                     Z-ADD@VQ9      VCK,9
+      *
+     C                     Z-ADD@NC10     NCR,10
+     C                     Z-ADD@ND10     NDR,10
+     C                     Z-ADD@VC10     VCR,10
+     C                     Z-ADD@VD10     VDR,10
+     C                     Z-ADD@VS10     VCA,10
+     C                     Z-ADD@VQ10     VCK,10
+      *
+     C                     Z-ADD@NC11     NCR,11
+     C                     Z-ADD@ND11     NDR,11
+     C                     Z-ADD@VC11     VCR,11
+     C                     Z-ADD@VD11     VDR,11
+     C                     Z-ADD@VS11     VCA,11
+     C                     Z-ADD@VQ11     VCK,11
+      *
+     C                     Z-ADD@NC12     NCR,12
+     C                     Z-ADD@ND12     NDR,12
+     C                     Z-ADD@VC12     VCR,12
+     C                     Z-ADD@VD12     VDR,12
+     C                     Z-ADD@VS12     VCA,12
+     C                     Z-ADD@VQ12     VCK,12
+      *
+     C                     Z-ADD@NC13     NCR,13
+     C                     Z-ADD@ND13     NDR,13
+     C                     Z-ADD@VC13     VCR,13
+     C                     Z-ADD@VD13     VDR,13
+     C                     Z-ADD@VS13     VCA,13
+     C                     Z-ADD@VQ13     VCK,13
+      *
+     C                     Z-ADD@NC14     NCR,14
+     C                     Z-ADD@ND14     NDR,14
+     C                     Z-ADD@VC14     VCR,14
+     C                     Z-ADD@VD14     VDR,14
+     C                     Z-ADD@VS14     VCA,14
+     C                     Z-ADD@VQ14     VCK,14
+      *
+     C                     Z-ADD@NC15     NCR,15
+     C                     Z-ADD@ND15     NDR,15
+     C                     Z-ADD@VC15     VCR,15
+     C                     Z-ADD@VD15     VDR,15
+     C                     Z-ADD@VS15     VCA,15
+     C                     Z-ADD@VQ15     VCK,15
+      *
+     C                     Z-ADD@NC16     NCR,16
+     C                     Z-ADD@ND16     NDR,16
+     C                     Z-ADD@VC16     VCR,16
+     C                     Z-ADD@VD16     VDR,16
+     C                     Z-ADD@VS16     VCA,16
+     C                     Z-ADD@VQ16     VCK,16
+      *
+     C                     Z-ADD@NC17     NCR,17
+     C                     Z-ADD@ND17     NDR,17
+     C                     Z-ADD@VC17     VCR,17
+     C                     Z-ADD@VD17     VDR,17
+     C                     Z-ADD@VS17     VCA,17
+     C                     Z-ADD@VQ17     VCK,17
+      *
+     C                     Z-ADD@NC18     NCR,18
+     C                     Z-ADD@ND18     NDR,18
+     C                     Z-ADD@VC18     VCR,18
+     C                     Z-ADD@VD18     VDR,18
+     C                     Z-ADD@VS18     VCA,18
+     C                     Z-ADD@VQ18     VCK,18
+      *
+     C                     Z-ADD@NC19     NCR,19
+     C                     Z-ADD@ND19     NDR,19
+     C                     Z-ADD@VC19     VCR,19
+     C                     Z-ADD@VD19     VDR,19
+     C                     Z-ADD@VS19     VCA,19
+     C                     Z-ADD@VQ19     VCK,19
+      *
+     C                     Z-ADD@NC20     NCR,20
+     C                     Z-ADD@ND20     NDR,20
+     C                     Z-ADD@VC20     VCR,20
+     C                     Z-ADD@VD20     VDR,20
+     C                     Z-ADD@VS20     VCA,20
+     C                     Z-ADD@VQ20     VCK,20
+      *
+     C                     Z-ADD@NC21     NCR,21
+     C                     Z-ADD@ND21     NDR,21
+     C                     Z-ADD@VC21     VCR,21
+     C                     Z-ADD@VD21     VDR,21
+     C                     Z-ADD@VS21     VCA,21
+     C                     Z-ADD@VQ21     VCK,21
+      *
+     C                     Z-ADD@NC22     NCR,22
+     C                     Z-ADD@ND22     NDR,22
+     C                     Z-ADD@VC22     VCR,22
+     C                     Z-ADD@VD22     VDR,22
+     C                     Z-ADD@VS22     VCA,22
+     C                     Z-ADD@VQ22     VCK,22
+      *
+     C                     Z-ADD@NC23     NCR,23
+     C                     Z-ADD@ND23     NDR,23
+     C                     Z-ADD@VC23     VCR,23
+     C                     Z-ADD@VD23     VDR,23
+     C                     Z-ADD@VS23     VCA,23
+     C                     Z-ADD@VQ23     VCK,23
+      *
+     C                     Z-ADD@NC24     NCR,24
+     C                     Z-ADD@ND24     NDR,24
+     C                     Z-ADD@VC24     VCR,24
+     C                     Z-ADD@VD24     VDR,24
+     C                     Z-ADD@VS24     VCA,24
+     C                     Z-ADD@VQ24     VCK,24
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MTOAR2 - Move earlier saved values to appropriate  *
+      *                     arrays                                    *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY  PRTOT  - Print totals                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MTOAR2    BEGSR                           ** MTOAR2 **
+      *
+     C                     Z-ADDWCA,1     VCA,1
+     C                     Z-ADDWCA,2     VCA,2
+     C                     Z-ADDWCA,3     VCA,3
+     C                     Z-ADDWCA,4     VCA,4
+     C                     Z-ADDWCA,5     VCA,5
+     C                     Z-ADDWCA,6     VCA,6
+     C                     Z-ADDWCA,7     VCA,7
+     C                     Z-ADDWCA,8     VCA,8
+     C                     Z-ADDWCA,9     VCA,9
+     C                     Z-ADDWCA,10    VCA,10
+     C                     Z-ADDWCA,11    VCA,11
+     C                     Z-ADDWCA,12    VCA,12
+     C                     Z-ADDWCA,13    VCA,13
+     C                     Z-ADDWCA,14    VCA,14
+     C                     Z-ADDWCA,15    VCA,15
+     C                     Z-ADDWCA,16    VCA,16
+     C                     Z-ADDWCA,17    VCA,17
+     C                     Z-ADDWCA,18    VCA,18
+     C                     Z-ADDWCA,19    VCA,19
+     C                     Z-ADDWCA,20    VCA,20
+     C                     Z-ADDWCA,21    VCA,21
+     C                     Z-ADDWCA,22    VCA,22
+     C                     Z-ADDWCA,23    VCA,23
+     C                     Z-ADDWCA,24    VCA,24
+      *
+     C                     Z-ADDWCK,1     VCK,1
+     C                     Z-ADDWCK,2     VCK,2
+     C                     Z-ADDWCK,3     VCK,3
+     C                     Z-ADDWCK,4     VCK,4
+     C                     Z-ADDWCK,5     VCK,5
+     C                     Z-ADDWCK,6     VCK,6
+     C                     Z-ADDWCK,7     VCK,7
+     C                     Z-ADDWCK,8     VCK,8
+     C                     Z-ADDWCK,9     VCK,9
+     C                     Z-ADDWCK,10    VCK,10
+     C                     Z-ADDWCK,11    VCK,11
+     C                     Z-ADDWCK,12    VCK,12
+     C                     Z-ADDWCK,13    VCK,13
+     C                     Z-ADDWCK,14    VCK,14
+     C                     Z-ADDWCK,15    VCK,15
+     C                     Z-ADDWCK,16    VCK,16
+     C                     Z-ADDWCK,17    VCK,17
+     C                     Z-ADDWCK,18    VCK,18
+     C                     Z-ADDWCK,19    VCK,19
+     C                     Z-ADDWCK,20    VCK,20
+     C                     Z-ADDWCK,21    VCK,21
+     C                     Z-ADDWCK,22    VCK,22
+     C                     Z-ADDWCK,23    VCK,23
+     C                     Z-ADDWCK,24    VCK,24
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * MPRT              - detail line print of slip                 *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLED BY  PRTOT  - Print totals                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MPRT      BEGSR                           ** MPRT   **
+      *
+      ** Get decimal digits for the currency
+     C                     MOVEL@CY,@ARR  PCCY    3
+     C                     EXSR GCURR
+      *
+     C                     MOVE @CY,@ARR  SCCYR
+     C                     Z-ADDNCR,@ARR  SNCRA
+     C                     Z-ADDNDR,@ARR  SNDRA
+      *
+      ** Convert amount fields (VDRA,VCRA,VCAA,VCKA) to
+      ** edited numerics with decimal point
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVDRA
+     C                     Z-ADDVDR,@ARR  ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVDRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCRA
+     C                     Z-ADDVCR,@ARR  ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCRA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCAA
+     C                     Z-ADDVCA,@ARR  ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+      *
+      ** If Cash value is (+ve - 'DR') (-ve - 'CR') (0 - '  ')
+     C           VCA,@ARR  IFGT 0
+     C                     MOVE 'DR'      @FL
+     C                     END
+     C                     MOVE ENUM      PVCAA
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PVCKA
+     C                     Z-ADDVCK,@ARR  ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PVCKA
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * HEDPR             - Header Print                              *
+      *                                                               *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY  PRDET  - Detail Processing                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           HEDPR     BEGSR                           ** HEDPR  **
+      *
+     C                     MOVELTTBID     WSTBID  3
+     C                     MOVELTLBC      PBRCH
+      *
+     C           POPT      IFEQ 'B'
+      *
+     C                     MOVELTTBID     PBTID
+     C                     MOVELBRCAI     PUSBR
+     C                     MOVELCCYR1     PCCY
+     C                     MOVELTRANI     PTRTP
+     C                     MOVELDEPTI     PDEPT
+      *
+     C                     ELSE
+      *
+     C*          NATN      SUB  1         TOTRN
+     C                     MOVELPFSTN     FRMTRN
+     C                     MOVELPLSTN     TOTRN
+     C                     MOVELTTBID     PTLID
+      *
+     C                     END
+      *
+     C           PTLBT     IFEQ 'ALL'
+     C                     Z-ADD1         FRMTRN
+     C           NATN      SUB  1         TOTRN
+     C                     END
+      *
+     C                     SETON                     11
+     C                     WRITEHEADNG
+     C                     WRITEHEAD2
+     C                     SETOF                     11
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            INITRT - Initialise work variables                 *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  HEDST  - Header setup                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           INITRT    BEGSR                           ** INITRT **
+      *
+     C                     Z-ADD0         @ANC1
+     C                     Z-ADD0         @AND1
+     C                     Z-ADD0         @AVC1
+     C                     Z-ADD0         @AVD1
+     C                     Z-ADD0         @AVS1
+     C                     Z-ADD0         @AVQ1
+      *
+     C                     Z-ADD0         @ANC2
+     C                     Z-ADD0         @AND2
+     C                     Z-ADD0         @AVC2
+     C                     Z-ADD0         @AVD2
+     C                     Z-ADD0         @AVS2
+     C                     Z-ADD0         @AVQ2
+      *
+     C                     Z-ADD0         @ANC3
+     C                     Z-ADD0         @AND3
+     C                     Z-ADD0         @AVC3
+     C                     Z-ADD0         @AVD3
+     C                     Z-ADD0         @AVS3
+     C                     Z-ADD0         @AVQ3
+      *
+     C                     Z-ADD0         @ANC4
+     C                     Z-ADD0         @AND4
+     C                     Z-ADD0         @AVC4
+     C                     Z-ADD0         @AVD4
+     C                     Z-ADD0         @AVS4
+     C                     Z-ADD0         @AVQ4
+      *
+     C                     Z-ADD0         @ANC5
+     C                     Z-ADD0         @AND5
+     C                     Z-ADD0         @AVC5
+     C                     Z-ADD0         @AVD5
+     C                     Z-ADD0         @AVS5
+     C                     Z-ADD0         @AVQ5
+      *
+     C                     Z-ADD0         @ANC6
+     C                     Z-ADD0         @AND6
+     C                     Z-ADD0         @AVC6
+     C                     Z-ADD0         @AVD6
+     C                     Z-ADD0         @AVS6
+     C                     Z-ADD0         @AVQ6
+      *
+     C                     Z-ADD0         @ANC7
+     C                     Z-ADD0         @AND7
+     C                     Z-ADD0         @AVC7
+     C                     Z-ADD0         @AVD7
+     C                     Z-ADD0         @AVS7
+     C                     Z-ADD0         @AVQ7
+      *
+     C                     Z-ADD0         @ANC8
+     C                     Z-ADD0         @AND8
+     C                     Z-ADD0         @AVC8
+     C                     Z-ADD0         @AVD8
+     C                     Z-ADD0         @AVS8
+     C                     Z-ADD0         @AVQ8
+      *
+     C                     Z-ADD0         @NC1
+     C                     Z-ADD0         @NC2
+     C                     Z-ADD0         @NC3
+     C                     Z-ADD0         @NC4
+     C                     Z-ADD0         @NC5
+     C                     Z-ADD0         @NC6
+     C                     Z-ADD0         @NC7
+     C                     Z-ADD0         @NC8
+      *
+     C                     Z-ADD0         @ND1
+     C                     Z-ADD0         @ND2
+     C                     Z-ADD0         @ND3
+     C                     Z-ADD0         @ND4
+     C                     Z-ADD0         @ND5
+     C                     Z-ADD0         @ND6
+     C                     Z-ADD0         @ND7
+     C                     Z-ADD0         @ND8
+      *
+     C                     Z-ADD0         @VC1
+     C                     Z-ADD0         @VC2
+     C                     Z-ADD0         @VC3
+     C                     Z-ADD0         @VC4
+     C                     Z-ADD0         @VC5
+     C                     Z-ADD0         @VC6
+     C                     Z-ADD0         @VC7
+     C                     Z-ADD0         @VC8
+      *
+     C                     Z-ADD0         @VD1
+     C                     Z-ADD0         @VD2
+     C                     Z-ADD0         @VD3
+     C                     Z-ADD0         @VD4
+     C                     Z-ADD0         @VD5
+     C                     Z-ADD0         @VD6
+     C                     Z-ADD0         @VD7
+     C                     Z-ADD0         @VD8
+      *
+     C                     Z-ADD0         @VS1
+     C                     Z-ADD0         @VS2
+     C                     Z-ADD0         @VS3
+     C                     Z-ADD0         @VS4
+     C                     Z-ADD0         @VS5
+     C                     Z-ADD0         @VS6
+     C                     Z-ADD0         @VS7
+     C                     Z-ADD0         @VS8
+      *
+     C                     Z-ADD0         @VQ1
+     C                     Z-ADD0         @VQ2
+     C                     Z-ADD0         @VQ3
+     C                     Z-ADD0         @VQ4
+     C                     Z-ADD0         @VQ5
+     C                     Z-ADD0         @VQ6
+     C                     Z-ADD0         @VQ7
+     C                     Z-ADD0         @VQ8
+      *
+      * Initialise work variables 9 to 24
+     C                     MOVE @ANCA     @ANCB
+     C                     MOVE @ANCA     @ANCC
+     C                     MOVE @ANCA     @ANDB
+     C                     MOVE @ANCA     @ANDC
+     C                     MOVE @AVCA     @AVCB
+     C                     MOVE @AVCA     @AVCC
+     C                     MOVE @AVCA     @AVDB
+     C                     MOVE @AVCA     @AVDC
+     C                     MOVE @AVCA     @AVSB
+     C                     MOVE @AVCA     @AVSC
+     C                     MOVE @AVCA     @AVQB
+     C                     MOVE @AVCA     @AVQC
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * FIRST             - Initialize                                *
+      *                                                               *
+      * CALLS -    IFLDS  - Initialize Work Flds                      *
+      *            INTPR  - Initialise print variables                *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Input parameter(s) :
+     C           *ENTRY    PLIST                           Entry parameter list
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRLEV   1
+     C                     PARM           PRENT   3
+     C                     PARM           PPARM 100
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE4202CCP3                                           S01408
+     C*                                                                   S01408
+      *
+      ** Define program work fields
+     C           *LIKE     DEFN TNLU      @TNLU
+      *
+      * Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+      *
+     C*
+     C**  Check report level
+     C*
+     C           PRLEV     IFEQ 'B'
+     C                     MOVE '1'       *IN34
+     C                     END
+     C*
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN33
+     C                     ELSE
+     C*
+     C**  Else, setup appropriate level and entity
+     C*
+     C                     MOVE 'S'       PRLEV
+     C                     MOVE *BLANKS   PRENT
+     C                     MOVE '0'       *IN34
+     C                     END
+     C*
+     C**  Set up first and last transaction numbers based from the
+     C**  passed parameters
+     C*
+     C                     MOVELWFSTN     PFSTN   50
+     C                     MOVELWLSTN     PLSTN   50
+      *
+      ** Clear variables
+     C                     EXSR IFLDS
+      *
+      ** Initialise work variables
+     C                     EXSR INTPR
+     C*
+     C** Use access program AOBANKR0 to retrieve header details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVE @OPTN     DBKEY            ** DB ERR 08 **
+     C                     Z-ADD8         DBASE            **************
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+     C                     MOVELBJSUC     @SCI    1
+      *
+     C                     END
+      *
+      ** Set up date format indicator
+     C           BJDFIN    IFEQ 'D'
+     C                     SETOF                     98
+     C                     ELSE
+     C                     SETON                     98
+     C                     END
+      *
+      ** Setting up print indicators for Batch or Teller
+     C           POPT      IFEQ 'B'
+      *
+     C                     SETON                     14
+     C                     SETOF                     13
+     C                     ELSE
+     C                     SETON                     13
+     C                     SETOF                     14
+      *
+     C                     END
+     C**  Check if Analytical Accounting is installed.                                        166074
+     C*                                                                                       166074
+     C                     CALL 'AOMMODR0'                                                    166074
+     C                     PARM '*DBERR ' @RTCD                                               166074
+     C                     PARM '*FIRST ' @OPTN                                               166074
+     C           SDMMOD    PARM SDMMOD    DSFDY                                               166074
+     C*                                                                                       166074
+     C** IF Analytical Accounting installed print profit centre on                            166074
+     C*     report P1                                                                         166074
+     C           BGN0ST    IFEQ 'Y'                        --- B001                           166074
+     C                     MOVE *ON       *IN50                                               166074
+     C                     ENDIF                           --- E001                           166074
+     C*                                                                                       166074
+     C                     SETON                     11
+     C                     Z-ADD1         @COUNT  10
+     C                     MOVEL'0'       @SETUP  1
+      *                                                                                       CRT026
+      ** Check if CRT026 is switched on                                                       CRT026
+      *                                                                                       CRT026
+     C                     CALL 'AOSARDR0'                                                    CRT026
+     C                     PARM *BLANKS   @RTCD                                               CRT026
+     C                     PARM '*VERIFY' @OPTN                                               CRT026
+     C                     PARM 'CRT026'  @SARD   6                                           CRT026
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRT026
+      *                                                                                       CRT026
+     C           @RTCD     IFNE *BLANKS                                                       CRT026
+     C           @RTCD     ANDNE'*NRF   '                                                     CRT026
+     C           *LOCK     IN   LDA                                                           CRT026
+     C                     MOVEL'SCSARDPD'DBFILE           ***************                    CRT026
+     C                     Z-ADD13        DBASE            ** DB ERR 13 **                    CRT026
+     C                     MOVEL'CRT026'  DBKEY            ***************                    CRT026
+     C                     EXSR DBERR                                                         CRT026
+     C                     ENDIF                                                              CRT026
+      *                                                                                       CRT026
+     C           @RTCD     IFEQ *BLANKS                                                       CRT026
+     C                     MOVE 'Y'       CRT026  1                                           CRT026
+     C                     MOVE *ON       *IN51                                               CRT026
+     C                     ELSE                                                               CRT026
+     C                     MOVE 'N'       CRT026                                              CRT026
+     C                     MOVE *OFF      *IN51                                               CRT026
+     C                     ENDIF                                                              CRT026
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * IFLDS             - Initialize Work fields                    *
+      *                                                               *
+      * CALLS -                                                       *
+      *                                                               *
+      * CALLED BY  FIRST  - Initialise                                *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+      *
+     C                     SETOF                     686971
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DBERR    - Database Error Handling : Terminates program       *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing             (01)       *
+      *            HEDST  - Header setup                   (02) (03)  *
+      *            DETST  - Details setup                  (04)       *
+      *            TRTYST - Transaction type setup         (05)       *
+      *            GCURR  - Get decimals for currencies    (07)       *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     EXSR #RCFAU
+     C                     MOVEL@PGM      DBPGM
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSERE4202AU
+      *
+     C           OPEN      IFEQ '1'
+     C                     WRITEERRLINE
+     C**********           CLOSERE4202P1                                                     BUG8972
+     C                     END
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FINAL  - Terminate                                 *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  MAIN   - Control process                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FINAL     BEGSR                           ** FINAL  **
+      *
+     C                     MOVE '1'       *INLR
+     C*
+     C** Close open files
+     C*
+     C           OPEN      IFEQ '1'
+     C**********           CLOSERE4202P1                                                     BUG8972
+     C                     END
+     C*
+     C           OPENU     IFEQ '1'
+     C                     CLOSERE4202AU
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error                             *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY                                                     *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      ** Transaction failed.  Re-input necessary.
+     C                     CLOSE*ALL
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPDATE - Update journal file                       *
+      *                                                               *
+      * CALLS      DBERR  - Database error routine (02)               *
+      *                                                               *
+      * CALLED BY  MAIN   - Control process                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           UPDATE    BEGSR                           ** UPDATE **
+      *
+      ** Update teller journal record
+     C                     Z-ADDTOTRN     JUTN
+      *
+     C                     UPDATTTRNTM4F
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLS      DBERR  - Database error routine (07)               *
+      *                                                               *
+      * CALLED BY  MPRT   - detail line print of slip                 *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           GCURR     BEGSR                           ** GCURR  **
+      *
+      ** Access currency file for no.of decimal places of local curr.
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM PCCY      @CURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If record not found.
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELPCCY      DBKEY            ** DB ERR 09 **
+     C                     Z-ADD9         DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,RTTOTSC1
+      ** Calculate teller totals updates
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RTTOTA - Teller total accumulation                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED                                                     *
+      *                                                               *
+      *****************************************************************
+     C           RTTOTA    BEGSR                           ** RTTOTA **
+      *
+     C                     Z-ADD0         @ANC    50
+     C                     Z-ADD0         @AND    50
+     C                     Z-ADD0         @AVC   150
+     C                     Z-ADD0         @AVD   150
+     C                     Z-ADD0         @AVS   150
+     C                     Z-ADD0         @AVQ   150
+      *
+      ** If debit transaction?
+     C           @DCIN     IFEQ 'D'
+      *
+     C                     ADD  @COUNT    @ANC
+     C                     ADD  @TAMT     @AVC
+      *
+     C           @CSIN     IFEQ 'Y'
+     C                     SUB  @TAMT     @AVS
+     C                     END
+     C           @CLIN     IFEQ 'Y'
+     C                     SUB  @TAMT     @AVQ
+     C                     END
+      *
+     C                     ELSE
+      *
+      ** If credit transaction?
+     C                     ADD  @COUNT    @AND
+     C                     ADD  @TAMT     @AVD
+      *
+     C           @CSIN     IFEQ 'Y'
+     C                     ADD  @TAMT     @AVS
+     C                     END
+     C           @CLIN     IFEQ 'Y'
+     C                     ADD  @TAMT     @AVQ
+     C                     END
+      *
+     C                     END
+      **
+      ** Update data structure from work field
+      **
+     C           @Y        IFEQ 1
+     C                     ADD  @ANC      @ANC1
+     C                     ADD  @AND      @AND1
+     C                     ADD  @AVC      @AVC1
+     C                     ADD  @AVD      @AVD1
+     C                     ADD  @AVS      @AVS1
+     C                     ADD  @AVQ      @AVQ1
+     C                     END
+      *
+     C           @Y        IFEQ 2
+     C                     ADD  @ANC      @ANC2
+     C                     ADD  @AND      @AND2
+     C                     ADD  @AVC      @AVC2
+     C                     ADD  @AVD      @AVD2
+     C                     ADD  @AVS      @AVS2
+     C                     ADD  @AVQ      @AVQ2
+     C                     END
+      *
+     C           @Y        IFEQ 3
+     C                     ADD  @ANC      @ANC3
+     C                     ADD  @AND      @AND3
+     C                     ADD  @AVC      @AVC3
+     C                     ADD  @AVD      @AVD3
+     C                     ADD  @AVS      @AVS3
+     C                     ADD  @AVQ      @AVQ3
+     C                     END
+      *
+     C           @Y        IFEQ 4
+     C                     ADD  @ANC      @ANC4
+     C                     ADD  @AND      @AND4
+     C                     ADD  @AVC      @AVC4
+     C                     ADD  @AVD      @AVD4
+     C                     ADD  @AVS      @AVS4
+     C                     ADD  @AVQ      @AVQ4
+     C                     END
+      *
+     C           @Y        IFEQ 5
+     C                     ADD  @ANC      @ANC5
+     C                     ADD  @AND      @AND5
+     C                     ADD  @AVC      @AVC5
+     C                     ADD  @AVD      @AVD5
+     C                     ADD  @AVS      @AVS5
+     C                     ADD  @AVQ      @AVQ5
+     C                     END
+      *
+     C           @Y        IFEQ 6
+     C                     ADD  @ANC      @ANC6
+     C                     ADD  @AND      @AND6
+     C                     ADD  @AVC      @AVC6
+     C                     ADD  @AVD      @AVD6
+     C                     ADD  @AVS      @AVS6
+     C                     ADD  @AVQ      @AVQ6
+     C                     END
+      *
+     C           @Y        IFEQ 7
+     C                     ADD  @ANC      @ANC7
+     C                     ADD  @AND      @AND7
+     C                     ADD  @AVC      @AVC7
+     C                     ADD  @AVD      @AVD7
+     C                     ADD  @AVS      @AVS7
+     C                     ADD  @AVQ      @AVQ7
+     C                     END
+      *
+     C           @Y        IFEQ 8
+     C                     ADD  @ANC      @ANC8
+     C                     ADD  @AND      @AND8
+     C                     ADD  @AVC      @AVC8
+     C                     ADD  @AVD      @AVD8
+     C                     ADD  @AVS      @AVS8
+     C                     ADD  @AVQ      @AVQ8
+     C                     END
+      *
+     C           @Y        IFGT 8
+      *
+     C           @Y        IFEQ 9
+     C                     ADD  @ANC      @ANC9
+     C                     ADD  @AND      @AND9
+     C                     ADD  @AVC      @AVC9
+     C                     ADD  @AVD      @AVD9
+     C                     ADD  @AVS      @AVS9
+     C                     ADD  @AVQ      @AVQ9
+     C                     END
+      *
+     C           @Y        IFEQ 10
+     C                     ADD  @ANC      @ANC10
+     C                     ADD  @AND      @AND10
+     C                     ADD  @AVC      @AVC10
+     C                     ADD  @AVD      @AVD10
+     C                     ADD  @AVS      @AVS10
+     C                     ADD  @AVQ      @AVQ10
+     C                     END
+      *
+     C           @Y        IFEQ 11
+     C                     ADD  @ANC      @ANC11
+     C                     ADD  @AND      @AND11
+     C                     ADD  @AVC      @AVC11
+     C                     ADD  @AVD      @AVD11
+     C                     ADD  @AVS      @AVS11
+     C                     ADD  @AVQ      @AVQ11
+     C                     END
+      *
+     C           @Y        IFEQ 12
+     C                     ADD  @ANC      @ANC12
+     C                     ADD  @AND      @AND12
+     C                     ADD  @AVC      @AVC12
+     C                     ADD  @AVD      @AVD12
+     C                     ADD  @AVS      @AVS12
+     C                     ADD  @AVQ      @AVQ12
+     C                     END
+      *
+     C           @Y        IFEQ 13
+     C                     ADD  @ANC      @ANC13
+     C                     ADD  @AND      @AND13
+     C                     ADD  @AVC      @AVC13
+     C                     ADD  @AVD      @AVD13
+     C                     ADD  @AVS      @AVS13
+     C                     ADD  @AVQ      @AVQ13
+     C                     END
+      *
+     C           @Y        IFEQ 14
+     C                     ADD  @ANC      @ANC14
+     C                     ADD  @AND      @AND14
+     C                     ADD  @AVC      @AVC14
+     C                     ADD  @AVD      @AVD14
+     C                     ADD  @AVS      @AVS14
+     C                     ADD  @AVQ      @AVQ14
+     C                     END
+      *
+     C           @Y        IFEQ 15
+     C                     ADD  @ANC      @ANC15
+     C                     ADD  @AND      @AND15
+     C                     ADD  @AVC      @AVC15
+     C                     ADD  @AVD      @AVD15
+     C                     ADD  @AVS      @AVS15
+     C                     ADD  @AVQ      @AVQ15
+     C                     END
+      *
+     C           @Y        IFEQ 16
+     C                     ADD  @ANC      @ANC16
+     C                     ADD  @AND      @AND16
+     C                     ADD  @AVC      @AVC16
+     C                     ADD  @AVD      @AVD16
+     C                     ADD  @AVS      @AVS16
+     C                     ADD  @AVQ      @AVQ16
+     C                     END
+      *
+     C           @Y        IFEQ 17
+     C                     ADD  @ANC      @ANC17
+     C                     ADD  @AND      @AND17
+     C                     ADD  @AVC      @AVC17
+     C                     ADD  @AVD      @AVD17
+     C                     ADD  @AVS      @AVS17
+     C                     ADD  @AVQ      @AVQ17
+     C                     END
+      *
+     C           @Y        IFEQ 18
+     C                     ADD  @ANC      @ANC18
+     C                     ADD  @AND      @AND18
+     C                     ADD  @AVC      @AVC18
+     C                     ADD  @AVD      @AVD18
+     C                     ADD  @AVS      @AVS18
+     C                     ADD  @AVQ      @AVQ18
+     C                     END
+      *
+     C           @Y        IFEQ 19
+     C                     ADD  @ANC      @ANC19
+     C                     ADD  @AND      @AND19
+     C                     ADD  @AVC      @AVC19
+     C                     ADD  @AVD      @AVD19
+     C                     ADD  @AVS      @AVS19
+     C                     ADD  @AVQ      @AVQ19
+     C                     END
+      *
+     C           @Y        IFEQ 20
+     C                     ADD  @ANC      @ANC20
+     C                     ADD  @AND      @AND20
+     C                     ADD  @AVC      @AVC20
+     C                     ADD  @AVD      @AVD20
+     C                     ADD  @AVS      @AVS20
+     C                     ADD  @AVQ      @AVQ20
+     C                     END
+      *
+     C           @Y        IFEQ 21
+     C                     ADD  @ANC      @ANC21
+     C                     ADD  @AND      @AND21
+     C                     ADD  @AVC      @AVC21
+     C                     ADD  @AVD      @AVD21
+     C                     ADD  @AVS      @AVS21
+     C                     ADD  @AVQ      @AVQ21
+     C                     END
+      *
+     C           @Y        IFEQ 22
+     C                     ADD  @ANC      @ANC22
+     C                     ADD  @AND      @AND22
+     C                     ADD  @AVC      @AVC22
+     C                     ADD  @AVD      @AVD22
+     C                     ADD  @AVS      @AVS22
+     C                     ADD  @AVQ      @AVQ22
+     C                     END
+      *
+     C           @Y        IFEQ 23
+     C                     ADD  @ANC      @ANC23
+     C                     ADD  @AND      @AND23
+     C                     ADD  @AVC      @AVC23
+     C                     ADD  @AVD      @AVD23
+     C                     ADD  @AVS      @AVS23
+     C                     ADD  @AVQ      @AVQ23
+     C                     END
+      *
+     C           @Y        IFEQ 24
+     C                     ADD  @ANC      @ANC24
+     C                     ADD  @AND      @AND24
+     C                     ADD  @AVC      @AVC24
+     C                     ADD  @AVD      @AVD24
+     C                     ADD  @AVS      @AVS24
+     C                     ADD  @AVQ      @AVQ24
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #RCFAU -  Record audit spool file in RCF                      *
+     C*                                                               *
+     C* Calls:  None                                                  *
+     C*                                                               *
+     C* Called from: Main processing, DBERR                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #RCFAU    BEGSR                           *** #RCFAU ***
+     C*
+     C** Ensure Audit Spool File recorded by RCF
+     C*
+     C                     OPEN RE4202AU
+     C                     Z-ADDSFNUMU    ZSNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ
+     C                     PARM *BLANK    @PARM
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM2
+     C                     PARM           ZSERR
+     C*
+     C** If an error occurred during ZSFILE processing,
+     C** return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+      ** SR.ZDATE2 subroutine
+      /COPY ZSRSRC,ZDATE2Z2
+      *
+     C/EJECT
+      ** SR.ZFRPED Subroutine
+     C/COPY ZSRSRC,ZFRPEDZ3
+      *
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - Years in days cumulative, four year span
+0366073110961461
+**   ZMDY - Months in days cumulative through year
+000031059090120151181212243273304334365
+**   ZMNM - Months short names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

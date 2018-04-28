@@ -1,0 +1,792 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Profitability Format Parameters Aud/List')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module                            *
+     F*                                                               *
+     F*  LER420 - Profitability Format Parameters Audit/Listing       *
+     F*                                                               *
+     F*  Function:  This program produces a report of Account Codes   *
+     F*             against which Fees/Charges are reported; it also  *
+     F*             produces a report of Fee-Bearing Business Groups. *
+     F*                                                               *
+     F*  Called By: LERC42  - Profitability Format Audit/Listing      *
+     F*                                                               *
+     F*  (COB)                                                        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 09Mar99               *
+      *                 CTI002 EM / TI Interface 23/09/98             *
+     F*                 061054             DATE 23FEB94               *
+     F*                 000005             DATE 15APR92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CSD005 - Addition of Standing Data Account Narrative field   *
+     F*           on condition of switchable feature CSD005 to        *
+     F*           replace current account name/description.           *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  061054 - DB error at 003 due to LNST array *GT 1000. Also    *
+     F*           corrected DB key values not passed properly.        *
+     F*  000005 - COMMERCIAL BANKING SYSTEM TEST                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FPEFMTD  IF  E           K        DISK
+      * Profitability Format Detail
+      *
+     FPEXREF  UF  E           K        DISK                           UC
+      * Profitability Cross Reference File
+      *
+     FPEFMTC  UF  E                    DISK
+      * Profitability Format control
+      *
+     FSDLOANL1IF  E           K        DISK
+      * Loan types/Sub-types
+      *
+     FLER420P1O   E             80     PRINTER      KINFDS SPOOL      UC
+      * Profitability Format Parameters Audit/Listing Section 1
+      *
+     FLER420P2O   E             81     PRINTER      KINFDS SPOOL1     UC
+      * Profitability Format Parameters Audit/Listing Section 2
+      *
+     FLER420AUO   E                    PRINTER      KINFDS SPOOL2
+      * Profitability Format Parameters Audit/Listing Section 2
+      *
+      /EJECT
+     F*******************************************************************
+     F*                                                                 *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                    *
+     F*                                                                 *
+     F*   11  - READ fail PEFMTD.                                       *
+     F*   12  - READ fail PEXREF.                                       *
+     F*                                                                 *
+     F*   13  - Loan Type/Sub-Type found on LNST array                  *
+     F*   15  - Loan Type/Sub-Type found on LNST array                  *
+     F*                                                                 *
+     F*   14  - READ fail SDLOANL1.                                     *
+     F*                                                                 *
+     F*   50  - 'X' equals '1' on AR2 array.                            *
+     F*                                                                 * CSD005
+     F*   73  - Switchable feature- account narrative                   * CSD005
+     F*                                                                 *
+     F*   80  - Overflow indicator - LER420P1                           *
+     F*   81  - Overflow indicator - LER420P2                           *
+     F*                                                                 *
+     F*   89  - CHAIN fail PEFMTC.                                      *
+     F*                                                                 *
+     F*   90  - File controls out of balance.                           *
+     F*                                                                 *
+     F*   U7  - Database error                                          *
+     F*   U8  - Database error                                          *
+     F*                                                                 *
+     F*******************************************************************
+      /SPACE 3
+     F*******************************************************************
+     F*                                                                 *
+     F*  S U B R O U T I N E   I N D E X                                *
+     F*                                                                 *
+     F*  B0000  - Initial processing.                                   *
+     F*  C0000  - Section 1 Report                                      *
+     F*  D0000  - Create Table of Loan types/sub-types                  *
+     F*  E0000  - Section 2 report                                      *
+     F*  *PSSR  - Error handling                                        *
+     F*  DBERR  - WRITE of error details to Audit Report                *
+     F*                                                                 *
+     F*******************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E********************AR2         5  4               Charges/Fee codesALIEN1
+     E**********          AR2        32  4               Charges/Fee codes             ALIEN1 CGL029
+     E                    AR2        32 10               Charges/Fee codes                    CGL029
+     E                    AR4        15  8               Loan/Sub-types                       CLE042
+     E********************AR4        15  4               Loan/Sub-types                       CLE042
+     E********************LNST     1000  4                                061054
+     E********************OCUR     1000  5 0                              061054
+     E********************LNST     1500  4                                             061054 CLE042
+     E                    LNST     1500  8                                                    CLE042
+     E                    OCUR     1500  5 0                              061054
+     E/COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+     I            DS
+      *  File Charges/Fees A/C Codes
+     I****************************************1  20 AR2                   ALIEN1
+     I**********                              1 128 AR2                                ALIEN1 CGL029
+     I**********                              1   40PCACD1                                    CGL029
+     I**********                              5   80PCACD2                                    CGL029
+     I**********                              9  120PCACD3                                    CGL029
+     I**********                             13  160PCACD4                                    CGL029
+     I**********                             17  200PCACD5                                    CGL029
+     I**********                             21  240PCACD6                             ALIEN1 CGL029
+     I**********                             25  280PCACD7                             ALIEN1 CGL029
+     I**********                             29  320PCACD8                             ALIEN1 CGL029
+     I**********                             33  360PCACD9                             ALIEN1 CGL029
+     I**********                             37  400PCAC10                             ALIEN1 CGL029
+     I**********                             41  440PCAC11                             ALIEN1 CGL029
+     I**********                             45  480PCAC12                             ALIEN1 CGL029
+     I**********                             49  520PCAC13                             ALIEN1 CGL029
+     I**********                             53  560PCAC14                             ALIEN1 CGL029
+     I**********                             57  600PCAC15                             ALIEN1 CGL029
+     I**********                             61  640PCAC16                             ALIEN1 CGL029
+     I**********                             65  680PCAC17                             ALIEN1 CGL029
+     I**********                             69  720PCAC18                             ALIEN1 CGL029
+     I**********                             73  760PCAC19                             ALIEN1 CGL029
+     I**********                             77  800PCAC20                             ALIEN1 CGL029
+     I**********                             81  840PCAC21                             ALIEN1 CGL029
+     I**********                             85  880PCAC22                             ALIEN1 CGL029
+     I**********                             89  920PCAC23                             ALIEN1 CGL029
+     I**********                             93  960PCAC24                             ALIEN1 CGL029
+     I**********                             97 1000PCAC25                             ALIEN1 CGL029
+     I**********                            101 1040PCAC26                             ALIEN1 CGL029
+     I**********                            105 1080PCAC27                             ALIEN1 CGL029
+     I**********                            109 1120PCAC28                             ALIEN1 CGL029
+     I**********                            113 1160PCAC29                             ALIEN1 CGL029
+     I**********                            117 1200PCAC30                             ALIEN1 CGL029
+     I**********                            121 1240PCAC31                             ALIEN1 CGL029
+     I**********                            125 1280PCAC32                             ALIEN1 CGL029
+     I                                        1 320 AR2                                       CGL029
+     I                                        1  100PCACD1                                    CGL029
+     I                                       11  200PCACD2                                    CGL029
+     I                                       21  300PCACD3                                    CGL029
+     I                                       31  400PCACD4                                    CGL029
+     I                                       41  500PCACD5                                    CGL029
+     I                                       51  600PCACD6                                    CGL029
+     I                                       61  700PCACD7                                    CGL029
+     I                                       71  800PCACD8                                    CGL029
+     I                                       81  900PCACD9                                    CGL029
+     I                                       91 1000PCAC10                                    CGL029
+     I                                      101 1100PCAC11                                    CGL029
+     I                                      111 1200PCAC12                                    CGL029
+     I                                      121 1300PCAC13                                    CGL029
+     I                                      131 1400PCAC14                                    CGL029
+     I                                      141 1500PCAC15                                    CGL029
+     I                                      151 1600PCAC16                                    CGL029
+     I                                      161 1700PCAC17                                    CGL029
+     I                                      171 1800PCAC18                                    CGL029
+     I                                      181 1900PCAC19                                    CGL029
+     I                                      191 2000PCAC20                                    CGL029
+     I                                      201 2100PCAC21                                    CGL029
+     I                                      211 2200PCAC22                                    CGL029
+     I                                      221 2300PCAC23                                    CGL029
+     I                                      231 2400PCAC24                                    CGL029
+     I                                      241 2500PCAC25                                    CGL029
+     I                                      251 2600PCAC26                                    CGL029
+     I                                      261 2700PCAC27                                    CGL029
+     I                                      271 2800PCAC28                                    CGL029
+     I                                      281 2900PCAC29                                    CGL029
+     I                                      291 3000PCAC30                                    CGL029
+     I                                      301 3100PCAC31                                    CGL029
+     I                                      311 3200PCAC32                                    CGL029
+      *
+     I            DS
+      * File loan Type/Sub-Types
+     I                                        1 120 AR4                                       CLE042
+     I                                        1   8 PDLS01                                    CLE042
+     I                                        9  16 PDLS02                                    CLE042
+     I                                       17  24 PDLS03                                    CLE042
+     I                                       25  32 PDLS04                                    CLE042
+     I                                       33  40 PDLS05                                    CLE042
+     I                                       41  48 PDLS06                                    CLE042
+     I                                       49  56 PDLS07                                    CLE042
+     I                                       57  64 PDLS08                                    CLE042
+     I                                       65  72 PDLS09                                    CLE042
+     I                                       73  80 PDLS10                                    CLE042
+     I                                       81  88 PDLS11                                    CLE042
+     I                                       89  96 PDLS12                                    CLE042
+     I                                       97 104 PDLS13                                    CLE042
+     I                                      105 112 PDLS14                                    CLE042
+     I                                      113 120 PDLS15                                    CLE042
+     I*************************************** 1  60 AR4                                       CLE042
+     I*************************************** 1   4 PDLS01                                    CLE042
+     I*************************************** 5   8 PDLS02                                    CLE042
+     I*************************************** 9  12 PDLS03                                    CLE042
+     I***************************************13  16 PDLS04                                    CLE042
+     I***************************************17  20 PDLS05                                    CLE042
+     I***************************************21  24 PDLS06                                    CLE042
+     I***************************************25  28 PDLS07                                    CLE042
+     I***************************************29  32 PDLS08                                    CLE042
+     I***************************************33  36 PDLS09                                    CLE042
+     I***************************************37  40 PDLS10                                    CLE042
+     I***************************************41  44 PDLS11                                    CLE042
+     I***************************************45  48 PDLS12                                    CLE042
+     I***************************************49  52 PDLS13                                    CLE042
+     I***************************************53  56 PDLS14                                    CLE042
+     I***************************************57  60 PDLS15                                    CLE042
+     I@LNST       DS
+     I                                        1   2 AYLNTY
+     I                                        3   4 AYLNST
+     I                                        5   8 AYLNCL                                    CLE042
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ISPOOL       DS
+      ** File information data structure
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+     ISPOOL1      DS
+      ** File information data structure
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 367 3680LINE1
+     ISPOOL2      DS
+      ** File information data structure
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 367 3680LINE2
+      *
+     ISPOOLU      DS
+      ** File information data structure
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Standard data area layout for system flags & run date.
+      *
+     ILDA       E DSLDA
+      * DATABASE ERROR DS
+      *
+     ISDACOD    E DSSDACODPD
+      ** ACCOUNT CODE DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+      *                                                                   CSD005
+     ISCSARD    E DSSCSARDPD                                              CSD005
+      * Switchable Features File Details                                  CSD005
+      *                                                                   CSD005
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      ** Second DS for access programs, long data structure                                   CGL029
+      *                                                                                       CGL029
+     C/EJECT
+      *
+     C************ENTRY    PLIST                                          000005
+     C***********          PARM           AUDR    1                       000005
+      *
+     C                     EXSR B0000
+      *
+     C***********AUDR      IFEQ 'A'                                       000005
+     C           *IN73     IFEQ *OFF                                      CSD005
+     C                     MOVEL'- AUDIT' @AORL
+     C                     ELSE                                           CSD005
+     C                     MOVEL'- AUDIT' @AORL2                          CSD005
+     C                     ENDIF                                          CSD005
+      *
+     C***********          ELSE                                           000005
+     C***********          MOVEL'INTERIM' @AORL                           000005
+     C***********          END                                            000005
+     C                     OPEN PEXREF
+      *
+      ** Setup LER420P1 for output
+     C                     SETOF                     80
+     C                     CLOSELER420P1
+      *
+      ** File has been opened field
+     C                     MOVE 'Y'       P1OP    1
+     C                     OPEN LER420P1
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM     ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C** Setup LER420P2 for output
+     C                     SETOF                     81
+     C                     CLOSELER420P2
+      *
+      ** File has been opened field
+     C                     MOVE 'Y'       P2OP    1
+     C                     OPEN LER420P2
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM1    ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM           SENTY
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+      ** Setup LER420AU for output
+     C                     CLOSELER420AU
+      *
+      ** File has been opened field
+     C                     MOVE 'Y'       AUOP    1
+     C                     OPEN LER420AU
+      *
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM2    ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM           SENTY
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     WRITELER420H1
+     C                     WRITELER421H1
+     C                     WRITELER422H1
+     C           1         CHAINPEFMTC               89
+      *
+     C***********AUDR      IFEQ 'A'
+     C***********PCAUDR    ANDEQ' '
+     C           PCAUDR    IFEQ ' '
+     C           *IN89     OREQ '1'
+     C                     WRITELER420T1
+     C                     WRITELER421T1
+     C                     WRITELER422T3
+      *
+     C           *IN89     IFEQ '1'
+     C                     WRITELER420T3
+     C                     WRITELER421T3
+     C                     WRITELER422T2
+     C                     END
+      *
+     C                     END
+      *
+     C           *IN89     IFEQ '0'
+      *
+     C***********AUDR      IFEQ 'A'                                       000005
+     C***********PCAUDR    ANDEQ'Y'                                       000005
+     C***********AUDR      OREQ ' '                                       000005
+     C           PCAUDR    IFEQ 'Y'                                       000005
+     C                     EXSR C0000
+     C                     END
+      *
+     C                     EXSR D0000
+      *
+     C***********AUDR      IFEQ 'A'                                       000005
+     C***********PCAUDR    ANDEQ'Y'                                       000005
+     C***********AUDR      OREQ ' '                                       000005
+     C           PCAUDR    IFEQ 'Y'                                       000005
+     C                     EXSR E0000
+     C                     END
+      *
+     C                     WRITELER420T3
+     C                     WRITELER421T3
+     C                     WRITELER422T2
+      *
+     C***********AUDR      IFEQ 'A'                                       000005
+     C                     MOVE ' '       PCAUDR
+     C*
+     C                     UPDATPEFMTCF
+     C***********          END                                            000005
+     C                     CLOSEPEXREF
+      *
+     C                     END
+      *
+     C                     SETON                     LR
+      *
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * B0000  - Initial processing                                   *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, DBERR                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           B0000     BEGSR
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVEL'LER420'  DBPGM
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *                                                    **************
+     C           @RTCD     IFNE *BLANKS                    * DBERROR 01 *
+     C                     SETON                       89  **************
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL' LER420 'DBPGM
+     C                     MOVEL'BANK    'DBKEY
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CSD005
+      *** Obtain switchable feature CSD005 status.                        CSD005
+      *                                                                   CSD005
+     C                     CALL 'AOSARDR0'                                CSD005
+     C                     PARM *BLANKS   @RTCD   7                       CSD005
+     C                     PARM '*VERIFY' @OPTN   7                       CSD005
+     C                     PARM 'CSD005'  @SARD   6                       CSD005
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD005
+      *                                                                   CSD005
+     C                     SELEC                                          CSD005
+     C           @RTCD     WHEQ *BLANK                                    CSD005
+     C                     MOVE *ON       *IN73                           CSD005
+     C           @RTCD     WHEQ '*NRF'                                    CSD005
+     C                     MOVE *OFF      *IN73                           CSD005
+     C                     OTHER                                          CSD005
+      *                                                                   CSD005
+      *** Process error                                                   CSD005
+      *                                                                   CSD005
+     C           *LOCK     IN   LDA                                       CSD005
+     C                     MOVEL'SCSARDPD'DBFILE            ************* CSD005
+     C                     MOVEL'005'     DBASE             *DBERROR 005* CSD005
+     C                     MOVEL@OPTN     DBKEY             ************* CSD005
+     C                     SETON                     U7U8LR               CSD005
+     C                     OUT  LDA                                       CSD005
+     C                     EXSR *PSSR                                     CSD005
+     C                     ENDSL                                          CSD005
+      *                                                                   CSD005
+      *                                                                   CSD005
+     C*************        SETON                     LR                   CSD005
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * C0000  - Section 1 Report                                     *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, DBERR                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           C0000     BEGSR
+      *
+     C*********************DO   5         X       20                      ALIEN1
+     C                     DO   32        X       20                      ALIEN1
+      *
+     C           X         IFEQ 1
+     C                     SETON                     50
+     C                     END
+      *
+     C           AR2,X     IFNE *ALL'0'
+     C                     MOVE AR2,X     ACACD
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           ACACD
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *                                                    **************
+     C           @RTCD     IFNE *BLANKS                    * DBERROR 02 *
+     C           *LOCK     IN   LDA                        **************
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'SDACODPD'DBFILE
+     C                     MOVEL' LER420 'DBPGM
+     C                     MOVELACACD     DBKEY
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     SETON                         89
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ACACD
+     C           *IN73     IFEQ *OFF                                      CSD005
+     C                     MOVE *BLANKS   A5ACCN
+     C                     ELSE                                           CSD005
+     C                     MOVE *BLANKS   A5NARR                          CSD005
+     C                     ENDIF                                          CSD005
+     C                     END
+      *
+     C                     WRITELER420D1
+     C                     END
+      *
+     C                     WRITELER420H2
+     C                     READ PEFMTD                   11
+      *
+     C           *IN11     DOWEQ'0'
+     C                     ADD  1         @TOT
+     C*
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                         98MMDDYY, 98 ON
+     C                     END
+     C*
+     C                     Z-ADDBJRDNB    ZDAYNO
+      *
+     C                     EXSR ZDATE2
+      *
+     C           ZADATE    IFEQ *BLANKS
+     C           ZDATE     OREQ 0
+     C           *LOCK     IN   LDA                        ***************
+     C                     MOVEL'*READ   'DBKEY            *  DBERR 04   *
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'ZDATE2  'DBFILE
+     C                     MOVEL' LER420 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE ZADATE    @LCD
+     C*
+     C                     MOVE *BLANKS   @TYPE
+     C           PDLCTP    IFEQ 'A'
+     C                     MOVEL'AMEND'   @TYPE
+     C                     ELSE
+     C           PDLCTP    IFEQ 'I'
+     C                     MOVE 'INSERT'  @TYPE
+     C                     END
+     C                     END
+      *
+     C           *IN80     IFEQ '1'
+     C                     WRITELER420H1
+     C                     WRITELER420H2
+     C                     SETOF                     80
+     C                     END
+     C                     WRITELER420D2
+     C                     READ PEFMTD                   11
+     C                     END
+      *
+     C           @TOT      IFNE PCNREC
+     C                     SETOF                     90
+     C                     END
+     C*
+     C                     WRITELER422T1
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * D0000  - Create Table of Loan Types/Sub-Types.                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, DBERR                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           D0000     BEGSR
+      *
+     C                     READ PEXREF                   12
+      *
+     C***********          Z-ADD1000      Y       40                      061054
+     C                     Z-ADD1500      Y       40                      061054
+      *
+     C           *IN12     DOWEQ'0'
+     C                     Z-ADDY         Z       40
+     C           PXLNST    LOKUPLNST,Z                   13
+      *
+     C           *IN13     IFEQ '0'
+     C                     MOVE PXLNST    LNST,Y
+     C                     Z-ADD1         OCUR,Y
+     C                     SUB  1         Y
+      *
+     C           Y         IFEQ 0
+     C           *LOCK     IN   LDA                        **************
+     C                     Z-ADD3         DBASE            * DBERROR 03 *
+     C                     MOVEL'PEXREF'  DBFILE           **************
+     C                     MOVEL' LER420 'DBPGM
+     C***********          MOVEL'PXLNST  'DBKEY                           061054
+     C                     MOVELPXLNST    DBKEY                           061054
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ELSE
+     C                     ADD  1         OCUR,Z
+      *
+     C***********AUDR      IFEQ 'A'                                       000005
+     C                     MOVE 'Y'       PXDUPF
+     C*
+     C                     UPDATPEXREFF
+     C***********          END                                            000005
+     C                     END
+      *
+     C                     READ PEXREF                   12
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * E0000  - Section 2 Report                                     *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, DBERR                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           E0000     BEGSR
+     C                     READ SDLOANL1                 14
+      *
+     C           *IN14     DOWEQ'0'
+     C                     Z-ADDY         Z
+     C           @LNST     LOKUPLNST,Z                   15
+      *
+     C           *IN15     IFEQ '0'
+     C                     MOVE @LNST     LNST,Y
+     C                     SUB  1         Y
+     C           Y         IFEQ 0
+     C           *LOCK     IN   LDA                        **************
+     C                     Z-ADD4         DBASE            * DBERROR 04 *
+     C                     MOVEL'SDLOANL1'DBFILE           **************
+     C                     MOVEL' LER420 'DBPGM
+     C***********          MOVEL'@LNST   'DBKEY                           061054
+     C                     MOVEL@LNST     DBKEY                           061054
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     Z-ADD0         OCUR,Y
+     C                     END
+      *
+     C                     READ SDLOANL1                 14
+     C                     END
+      *
+     C                     ADD  1         Y
+      *
+     C***********Y         DO   1000      Z                               061054
+     C           Y         DO   1500      Z                               061054
+      *
+     C           OCUR,Z    IFNE 1
+     C                     MOVE *BLANKS   @NARR
+     C                     MOVELLNST,Z    AYLNTY
+     C*********************MOVE LNST,Z    AYLNST                                              CLE042
+     C                     MOVE LNST,Z    WKSTCL  6                                           CLE042
+     C                     MOVELWKSTCL    AYLNST                                              CLE042
+     C                     MOVE WKSTCL    AYLNCL                                              CLE042
+      *
+     C           OCUR,Z    IFEQ 0
+     C                     MOVEL'MISSING' @NARR
+     C                     Z-ADD0         @OCUR
+     C                     END
+      *
+     C           OCUR,Z    IFGT 1
+     C                     MOVEL'DUPLICAT'@NARR
+     C                     MOVE 'E'       @NARR
+     C                     Z-ADDOCUR,Z    @OCUR
+     C                     END
+      *
+     C           *IN81     IFEQ '1'
+     C                     WRITELER421H1
+     C                     SETOF                     81
+     C                     END
+      *
+     C                     WRITELER421D1
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DBERR  - Writes database error format on Audit Report         *
+      *                                                               *
+      * Called by: Main Processing, D0000, E0000.                     *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+     C                     WRITEDBFMT
+     C                     ENDSR
+      *
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    * P S S R -  T O   H A N D L E   A B N O R M A L I T I E S *
+     C*    ~~~~~~~~~    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
+     C*    CALLED FROM     :   ALL ABNORMAL CONDITIONS / ERRORS       *
+     C*    CALLS           :   AUDIT                                  *
+     C*                                                               *
+     C*    THIS PROGRAM HANDLES ABNORMAL CONDITIONS SUCH AS READ FAIL *
+     C*    CHAIN FAIL ETC, AND PRODUCES A FORMATTED RPG DUMP          *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C/EJECT
+     C/TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

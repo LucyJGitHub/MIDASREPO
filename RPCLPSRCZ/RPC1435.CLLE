@@ -1,0 +1,150 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas RP PB Private Banking Customers selection.')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Private Banking Module                              */
+/*                                                                   */
+/*       RPC1435 - Private Banking Customers selection for take on.  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. BG18886            Date 26May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*       Prev Amend No. CPB002  *CREATE    Date 01Jun99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       CPB002 - Meridian DBA Middleware Replication Customization. */
+/*                Midas/TOF Interface.                               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*-------------------------------------------------------------------*/
+/*  Variables declaration.                                           */
+/*-------------------------------------------------------------------*/
+ 
+             DCL        VAR(&Sws)        TYPE(*CHAR) LEN(8)
+ 
+             DCL        VAR(&ReturnCode) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FromCustNo) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ToCustNo)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AccOffRef)  TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CustBranch) TYPE(*CHAR) LEN(3)
+ 
+             DCL        VAR(&Qryslt)     TYPE(*CHAR) LEN(128)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/*-------------------------------------------------------------------*/
+/*  Global Monitor Message.                                          */
+/*-------------------------------------------------------------------*/
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*-------------------------------------------------------------------*/
+/*  Set switches U7 and U8 off.                                      */
+/*-------------------------------------------------------------------*/
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*-------------------------------------------------------------------*/
+/*  Get job switches.                                                */
+/*-------------------------------------------------------------------*/
+ 
+             RTVJOBA    SWS(&Sws)
+ 
+/*-------------------------------------------------------------------*/
+/*  Get customer selection from Customer Selection Data Area.        */
+/*-------------------------------------------------------------------*/
+ 
+             RTVDTAARA  DTAARA(RPCUST (21 6))  RTNVAR(&FromCustNo)
+             RTVDTAARA  DTAARA(RPCUST (31 6))  RTNVAR(&ToCustNo)
+             RTVDTAARA  DTAARA(RPCUST (41 2))  RTNVAR(&AccOffRef)
+             RTVDTAARA  DTAARA(RPCUST (43 3))  RTNVAR(&CustBranch)
+ 
+/*-------------------------------------------------------------------*/
+/*  Delete previous Clients file override and close file.            */
+/*-------------------------------------------------------------------*/
+ 
+             DLTOVR     FILE(SDCUSTPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             CLOF       OPNID(SDCUSTPD)
+             MONMSG     MSGID(CPF0000)
+ 
+/*-------------------------------------------------------------------*/
+/*  Select live Private Banking Customers that satisfy required      */
+/*  selection according to whether required selection was done for   */
+/*  Private Banking take on or Gateway to Private Banking take on.   */
+/*-------------------------------------------------------------------*/
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE('(BBDTDL = 0) *AND')
+ 
+             IF         COND(%SST(&SWS 1 1) = '1') THEN(DO) /* Private Banking */
+                   CHGVAR     VAR(&QRYSLT) VALUE(&Qryslt *BCAT '(BBPRBA = ''N'')')
+             ENDDO
+             ELSE       CMD(DO)                             /* Gateway to Private Banking */
+                   CHGVAR     VAR(&QRYSLT) VALUE(&Qryslt *BCAT  '(BBPRBA = ''Y'')')
+             ENDDO
+ 
+/************IF         COND(&AccOffRef *= ' ') THEN(DO)             */ /*BG18886*/
+             IF         COND(&AccOffRef *NE ' ') THEN(DO)               /*BG18886*/
+                   CHGVAR     VAR(&Qryslt) +
+                                VALUE(&qryslt *TCAT +
+                                      ' *AND (BBACOC *EQ ''' *CAT &AccOffRef *TCAT ''')')
+             ENDDO
+             ELSE       CMD(DO)
+/******************IF         COND(&FromCustNo *= 'ALL') THEN(DO)   */ /*BG18886*/
+                   IF         COND(&FromCustNo *NE 'ALL') THEN(DO)     /*BG18886*/
+                         CHGVAR     VAR(&Qryslt) +
+                                      VALUE(&qryslt *TCAT +
+                                            ' *AND (BBCUST *GE ''' *CAT &FromCustNo *TCAT +
+                                             ''') *AND (BBCUST *LE ''' *CAT &ToCustNo *TCAT ''')')
+                   ENDDO
+             ENDDO
+/************IF         COND(&CustBranch *= 'ALL') THEN(DO)          */ /*BG18886*/
+             IF         COND(&CustBranch *NE 'ALL') THEN(DO)            /*BG18886*/
+                   CHGVAR     VAR(&Qryslt) +
+                                VALUE(&qryslt *TCAT +
+                                      ' *AND (BBBRCD *EQ ''' *CAT &CustBranch *TCAT ''')')
+             ENDDO
+ 
+             OPNQRYF    FILE((SDCUSTPD)) OPTION(*ALL) FORMAT(*FILE) +
+                          QRYSLT(&QRYSLT) KEYFLD((BBCUST)) +
+                          OPNSCOPE(*ACTGRP)
+ 
+/*-------------------------------------------------------------------*/
+/*  Share open data path for take on programs.                       */
+/*-------------------------------------------------------------------*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/*-------------------------------------------------------------------*/
+/*  Abnormal Termination.                                            */
+/*-------------------------------------------------------------------*/
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             CHGDTAARA  DTAARA(RPCUST (1 10)) VALUE('AbnormlEnd')
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*-------------------------------------------------------------------*/
+/*  End processing.                                                  */
+/*-------------------------------------------------------------------*/
+ 
+ ENDPGM:
+             ENDPGM

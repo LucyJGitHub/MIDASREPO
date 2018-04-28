@@ -1,0 +1,702 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1701 - Report Action File for TABLETZ                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      *  Prev Amend No. CUP003  *CREATE    Date 06Aug10               *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP003 - New Action File                                     *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file indicator
+      *       37      Overflow indicator
+      *       69      Read or write errors
+      *       60      Amended records
+      *       61      No amended records to report
+      *       62      Amended records headers
+      *       63      Print field description for Amend
+      *       64      Print 'before' for Amend
+      *       65      Print 'after' for Amend
+      *       70      Deleted records
+      *       71      No deleted records to report
+      *       72      Deleted records headers
+      *       80      Inserted records
+      *       81      No inserted records to report
+      *       82      Inserted records headers
+      *
+     FUPTBTZL0  IF   E           K DISK    INFSR(*PSSR)
+     FUP0799P1  O    E             PRINTER INFDS(SPOOL)
+     F                                     OFLIND(*IN37)
+     F                                     USROPN
+      *
+      /EJECT
+      *
+      * File information data structure for P1 file; used for page end
+      *   handling
+     D SPOOL           DS
+     D  SFILE                 83     92
+     D  SFNUM                123    124B 0
+     D  OFLLN                188    189B 0
+     D  PRTLN                367    368B 0
+      *
+     D                 DS
+     D KEYHDR                  1    132
+     D  HDR1                  10     13    INZ('Type')
+     D  HDR2                  17     20
+      *
+     D                 DS
+     D KEYDTA                  1    132
+     D  DTA1                  10     14
+     D  DTA1n                 10     14  0
+     D  DTA2                  17     46
+      *
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      * Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     D HDR2C           C                   'Name'
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    HDRTXT
+      *
+     C                   OPEN      UP0799P1
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     *LOVAL        SETLL     UPTBTZD0
+      *
+     C                   READ      UPTBTZL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * If there are no records at all write 'no records'.
+     C     *IN20         IFEQ      *ON
+     C                   WRITE     NORECS                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   WRITE     TRAILP                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   ENDIF
+      *
+     C     A1ACTC        IFNE      'A'
+     C                   EVAL      HDR2 = HDR2C
+     C                   SETON                                        61
+     C                   WRITE     DTL1
+     C                   SETOFF                                       61
+     C                   ELSE
+     C                   EVAL      HDR2 = *blanks
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       62
+     C                   ENDIF
+      *
+     C     A1ACTC        DOWEQ     'A'
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       6237
+     C                   ENDIF
+      *
+     C                   EXSR      AMEND
+      *
+     C                   READ      UPTBTZL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        70
+     C                   WRITE     DTL2
+     C                   SETOFF                                       70
+      *
+     C     A1ACTC        IFNE      'D'
+     C                   SETON                                        71
+     C                   WRITE     DTL2
+     C                   SETOFF                                       71
+     C                   ELSE
+     C                   EVAL      HDR2 = HDR2C
+     C                   SETON                                        72
+     C                   WRITE     DTL2
+     C                   SETOFF                                       72
+     C                   ENDIF
+      *
+     C     A1ACTC        DOWEQ     'D'
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        70
+     C                   WRITE     DTL2
+     C                   SETOFF                                       70
+     C                   SETON                                        72
+     C                   WRITE     DTL2
+     C                   SETOFF                                       7237
+     C                   ENDIF
+      *
+     C                   EXSR      DELETE
+      *
+     C                   READ      UPTBTZL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        80
+     C                   WRITE     DTL3
+     C                   SETOFF                                       80
+      *
+     C     A1ACTC        IFNE      'I'
+     C                   SETON                                        81
+     C                   WRITE     DTL3
+     C                   SETOFF                                       81
+     C                   ELSE
+     C                   EVAL      HDR2 = HDR2C
+     C                   SETON                                        82
+     C                   WRITE     DTL3
+     C                   SETOFF                                       82
+     C                   ENDIF
+      *
+     C     A1ACTC        DOWEQ     'I'
+     C     *IN20         ANDNE     *ON
+      *
+      * Write headers if overflow on.
+     C     *IN37         IFEQ      *ON
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   SETON                                        80
+     C                   WRITE     DTL3
+     C                   SETOFF                                       80
+     C                   SETON                                        82
+     C                   WRITE     DTL3
+     C                   SETOFF                                       8237
+     C                   ENDIF
+      *
+     C                   EXSR      INSERT
+      *
+     C                   READ      UPTBTZL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+      *
+     C                   WRITE     TRAILP                               69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     ENDPGM        TAG
+     C                   CLOSE     UP0799P1
+     C                   SETON                                        LR
+     C                   RETURN
+      *****************************************************************
+      *                                                               *
+      * AMEND subroutine - process amended records                    *
+      *                                                               *
+      *****************************************************************
+     C     AMEND         BEGSR
+      * Move key fields to print file fields
+     C                   EVAL      DTA1n = TRAT
+      *
+      * Check values for first and second amended records of pair
+     C                   MOVEL     RECI          RECI1             1
+     C                   MOVEL     RECT          RECT1             2
+     C                   MOVEL     TRAN          TRAN1            30
+     C                   MOVEL     CUOR          CUOR1             1
+     C                   MOVEL     DCIN          DCIN1             1
+     C                   MOVEL     REVI          REVI1             1
+     C                   MOVEL     ADVI          ADVI1             1
+     C                   MOVEL     ACCOM         ACCOM1            1
+      *
+      * Read next record so that values can be compared.
+     C                   READ      UPTBTZL0                             6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * Move fields to be compared into work fields
+     C                   MOVEL     RECI          RECI2             1
+     C                   MOVEL     RECT          RECT2             2
+     C                   MOVEL     TRAN          TRAN2            30
+     C                   MOVEL     CUOR          CUOR2             1
+     C                   MOVEL     DCIN          DCIN2             1
+     C                   MOVEL     REVI          REVI2             1
+     C                   MOVEL     ADVI          ADVI2             1
+     C                   MOVEL     ACCOM         ACCOM2            1
+      *
+      * Compare values and write records to report.
+      *
+      * Record ID
+     C     RECI1         IFNE      RECI2
+     C                   MOVEL     'RECI'        FIELD
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Write description of field.
+     C                   MOVEL     *BLANKS       #VALUE
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+     C                   MOVEL     #FDESC        #VALUE
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     RECI1         #VALUE
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     RECI2         #VALUE
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Record Type
+     C     RECT1         IFNE      RECT2
+     C                   MOVEL     'RECT'        FIELD
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Write description of field.
+     C                   MOVEL     *BLANKS       #VALUE
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+     C                   MOVEL     #FDESC        #VALUE
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     RECT1         #VALUE
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     RECT2         #VALUE
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Retail Transaction Name
+     C     TRAN1         IFNE      TRAN2
+     C                   MOVEL     'TRAN'        FIELD
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Write description of field.
+     C                   MOVEL     *BLANKS       #VALUE
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+     C                   MOVEL     #FDESC        #VALUE
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     TRAN1         #VALUE
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     TRAN2         #VALUE
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Customer Originated Ind.
+     C     CUOR1         IFNE      CUOR2
+     C                   MOVEL     'CUOR'        FIELD
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Write description of field.
+     C                   MOVEL     *BLANKS       #VALUE
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+     C                   MOVEL     #FDESC        #VALUE
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     CUOR1         #VALUE
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     CUOR2         #VALUE
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Debit/Credit Indicator
+     C     DCIN1         IFNE      DCIN2
+     C                   MOVEL     'DCIN'        FIELD
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Write description of field.
+     C                   MOVEL     *BLANKS       #VALUE
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+     C                   MOVEL     #FDESC        #VALUE
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     DCIN1         #VALUE
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     DCIN2         #VALUE
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Reversal Indicator
+     C     REVI1         IFNE      REVI2
+     C                   MOVEL     'REVI'        FIELD
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Write description of field.
+     C                   MOVEL     *BLANKS       #VALUE
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+     C                   MOVEL     #FDESC        #VALUE
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     REVI1         #VALUE
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     REVI2         #VALUE
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Print Advices Indicator
+     C     ADVI1         IFNE      ADVI2
+     C                   MOVEL     'ADVI'        FIELD
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Write description of field.
+     C                   MOVEL     *BLANKS       #VALUE
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+     C                   MOVEL     #FDESC        #VALUE
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ADVI1         #VALUE
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ADVI2         #VALUE
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Account Commission Ind
+     C     ACCOM1        IFNE      ACCOM2
+     C                   MOVEL     'ACCOM'       FIELD
+      * Find description of field.
+     C                   CALL      'UPC0890'
+     C                   PARM                    FIELD            10
+     C                   PARM                    #FDESC           50
+      * Write description of field.
+     C                   MOVEL     *BLANKS       #VALUE
+      * Check overflow before writing next lines.
+     C                   EXSR      OFLOW
+     C                   MOVEL     #FDESC        #VALUE
+     C                   SETON                                        63
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       63
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'before' value of field.
+     C                   EVAL      KEYDTA = *blanks
+     C                   MOVEL     *BLANKS       FIELD
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ACCOM1        #VALUE
+     C                   SETON                                        64
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       64
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      * Write 'after' value of field.
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   MOVEL     ACCOM2        #VALUE
+     C                   SETON                                        65
+     C                   WRITE     DTL1                                 69
+     C                   SETOFF                                       65
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * DELETE subroutine - process deleted records                   *
+      *                                                               *
+      *****************************************************************
+     C     DELETE        BEGSR
+      * Move key fields to print file fields
+     C                   EVAL      DTA1n = TRAT
+     C                   EVAL      DTA2 = TRAN
+      *
+     C                   WRITE     DTL2                                 69
+     C     *IN69         IFEQ      *ON
+     C                   SETON                                        U7U8
+     C                   DUMP
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * INSERT subroutine - process inserted records                  *
+      *                                                               *
+      *****************************************************************
+     C     INSERT        BEGSR
+      * Move key fields to print file fields
+     C                   EVAL      DTA1n = TRAT
+     C                   EVAL      DTA2 = TRAN
+      *
+     C                   WRITE     DTL3                                 69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      *                                                               *
+      * OFLOW subroutine - handle overflow for print of field details *
+      *                                                               *
+      *****************************************************************
+     C     OFLOW         BEGSR
+      *
+     C     OFLLN         SUB       PRTLN         RMLN              2 0
+     C     3             IFGE      RMLN
+      *
+     C                   WRITE     HEADH                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   SETON                                        60
+     C                   WRITE     DTL1
+     C                   SETOFF                                       60
+     C                   SETON                                        62
+     C                   WRITE     DTL1
+     C                   SETOFF                                       62
+      * Move key fields to print file fields
+     C                   EVAL      DTA1n = TRAT
+     C                   MOVEL     *BLANKS       #VALUE
+     C                   ENDIF
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      ********************************************************************

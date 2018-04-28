@@ -1,0 +1,1151 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE French ticket d'agios print')                 *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE3764 - INTEREST STMT PRINT (TICKET D'AGIOS)                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CRE083             Date 06Aug12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 241340             Date 30Nov06               *
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL013             Date 11Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CDE002             Date 21Dec99               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CPB002             Date 25Aug00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT004             Date 26Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CRE001             Date 09OCT97               *
+     F*                 118758             Date 03JUN97               *
+     F*                 S01408             Date 16APR96               *
+     F*                 087284             DATE 04MAY95               *
+     F*                 084174             DATE 02MAR95               *
+     F*                 069667             DATE 19APR94               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CRE083 - COB Restructure - RE COB Restructure Phase 1        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  241340 - Increased the length of the ff fields: ACODO,       *
+      *           ACSQO, ACNOO, BRCAO.                                *
+      *  CRE026 - Consumer Banking                                    *
+      *  CDL013 - Tiered Withholding Tax                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CDE002 - Revenue Analysis - Recompiled due to changes in     *
+      *           PF/RETAXJL.                                         *
+     F*  CPB002 - Meridian DBA Middleware Replication Customization.  *
+     F*         - Recompiled over changes in LF/REACR                 *
+      *  CFT004 - Straight Through Processing Phase 2                 *
+      *           International Bank Account Numbers (IBAN)           *
+     F*  CRE001 - Overdraft Interest Calculations                     *
+     F*         - Recompiled over changes in LF/REACR                 *
+     F*  118758 - OPEN was issued to closed file RE3764AG.            *
+     F*         - Replaced *IN85 with *IN21                           *
+     F*  S01408 - Addition of hook RE3764CCP2                         *
+     F*           Addition of hook RE3764CCP1                         *
+     F*  087284 - Use AOCUSTR0 to retrieve address reference B        *
+     F*  084174 - Use AOALTNR0 to retrieve alternative addresses      *
+     F*  069667 - Renamed AGIOSFRF to RE3764AG due to failure         *
+     F*           in ZSFILE.                                          *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     FABSFI101IF  E                    DISK
+     FSDCURRL1IF  E           K        DISK
+     F            @A6REA3                           KRENAMESDCURRD0
+     F/COPY WNCPYSRC,RE3764F001
+     FRECAPML IF  E           K        DISK
+     FREACR   IF  E           K        DISK
+     F            REACRAF                           KIGNORE
+     F            REACRZF                           KIGNORE
+     FREIAC   IF  E           K        DISK
+     F            REIACAF                           KIGNORE
+     F            REIACZF                           KIGNORE
+     FRECOM   IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F*********** CLINT   IF  E           K        DISK                   084174
+     F*********** CLINTCBF                          KIGNORE               084174
+     F*********** CLINTCAF                          KIGNORE               084174
+     F*********** CLINTC1F                          KIGNORE               084174
+     F*********** CLINTSEF                          KIGNORE               084174
+     FSDMMODPDIF  E                    DISK
+     FRETAXJL IF  E           K        DISK
+     FTABTBRE IF  E                    DISK
+     F*GIOSFRFO***F     132     OF     PRINTER      KINFDS SPOOL      UC  069667
+     FRE3764AGO   F     132     OF     PRINTER      KINFDS SPOOL      UC  069667
+     E                    CURR      150  3               ALL CCYS
+     E                    CSPT      150 13 8             SPOT RATES/CCY
+     E                    MTDV      150  1               M/D INDICATOR/CCY
+     E                    CCDP      150  1 0             DEC PLACES/CCY
+     E                    CSNO      150  2 0             SORT SEQ.NO/CCY
+     E                    POWR    1   7  7 3             POWERS OF 10
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 MON NAMES
+     E                    CPY@    1   1 80
+     E/COPY WNCPYSRC,RE3764E001
+     IREIACDF
+     I*
+     I** RENAME REIACDF FORMAT FIELDS
+     I*
+     I              RECI                            RRECI
+     I              CNUM                            RCNUM
+     I              CCY                             RCCY
+     I              ACOD                            RACOD
+     I              ACSQ                            RACSQ
+     I              DICT                            RDICT
+     I              DCST                            RDCST
+     I              DACP                            RDACP
+     I              DICP                            RDICP
+     I              CICT                            RCICT
+     I              CCST                            RCCST
+     I              CACP                            RCACP
+     I              CICP                            RCICP
+     I              CHGT                            RCHGT
+     I              CHST                            RCHST
+     I              CHAC                            RCHAC
+     I              PTRA                            RPTRA
+     I              PRCH                            RPRCH
+     I              NRCA                            RNRCA
+     I              RCA                             RRCA
+     I              MCLB                            RMCLB
+     I*
+     ISDCURRD0
+     I*
+     I** Rename SDCURRL1 format fields
+     I*
+     I              A6RECI                          RECI
+     I              A6CYCD                          CCY
+     I              A6SPRT                          SPOT
+     I              A6NBDP                          CDP
+     I              A6SSNB                          SSNO
+     I              A6MDIN                          MDIN
+     I*
+     I            DS
+     I                                        1  13 DSAMT
+     I                                        1  130AMT0
+     I                                        1  131AMT1
+     I                                        1  132AMT2
+     I                                        1  133AMT3
+     I            DS
+     I**********                              1  15 NCTAC                                     CGL029
+     I                                        1  21 NCTAC                                     CGL029
+     I                                        1   60CNUMC
+     I                                        7   9 CCYC
+     I**********                             10  130ACODC                                     CGL029
+     I**********                             14  150ACSQC                                     CGL029
+     I                                       10  190ACODC                                     CGL029
+     I                                       20  210ACSQC                                     CGL029
+     I            DS
+     I**********                              1  15 NCTAD                                     CGL029
+     I                                        1  21 NCTAD                                     CGL029
+     I                                        1   60CNUMD
+     I                                        7   9 CCYD
+     I**********                             10  130ACODD                                     CGL029
+     I**********                             14  150ACSQD                                     CGL029
+     I                                       10  190ACODD                                     CGL029
+     I                                       20  210ACSQD                                     CGL029
+     I            DS
+     I**********                              1  15 NCTAT                                     CGL029
+     I                                        1  21 NCTAT                                     CGL029
+     I                                        1   60CNUMT
+     I                                        7   9 CCYT
+     I**********                             10  130ACODT                                     CGL029
+     I**********                             14  150ACSQT                                     CGL029
+     I                                       10  190ACODT                                     CGL029
+     I                                       20  210ACSQT                                     CGL029
+     I            DS
+     I                                        1  13 DSCINW
+     I                                        1  130CINW0
+     I                                        1  131CINW1
+     I                                        1  132CINW2
+     I                                        1  133CINW3
+     I**
+     I/COPY WNCPYSRC,RE3764I001
+     ISDBANK    E DSSDBANKPD
+     I              BJCYCD                          BCCY
+     I**  EXTERNAL DS FOR BANK DETAILS
+     I**
+     ISCSARD    E DSSCSARDPD                                              CFT004
+      ** MIDAS Switchable Features Accessed Via Access Program            CFT004
+      *                                                                   CFT004
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*                                                                   084174
+     I*___________________________________________________________________084174
+     I* 084174                                                            084174
+     I*                                                                   084174
+     I***P#CORR    E DSCGCORRPD                                     084174087284
+     I*                                                                   087284
+     I* Data structure for returned values from AOALTNR0 --               087284
+     I*  alternative names and addresses                                  087284
+     I*                                                                   087284
+     IDSSDY     E DSDSSDY                                                 087284
+     I*                                                                   087284
+     I* Data Structures used by Access Programs                           087284
+     I*                                                                   087284
+     IP#ALTN    E DSSDALTNPD                                              087284
+     I*                                                                   087284
+     I* Data structure for returned values from AOALTNR0 --               087284
+     I*  alternative names and addresses                                  087284
+     I*                                                                   087284
+     IP#CUSD    E DSSDCUSTPD                                              087284
+     I*                                                                   087284
+     I* Data structure for returned values from AOCUSTR0 --               087284
+     I*  alternative names and addresses                                  087284
+     I*                                                                   087284
+     I* 084174                                                            084174
+     I*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~084174
+     I*
+     I** DATA AREA RUNDAT
+     I**
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     ILDA         DS                            256
+     I*
+     I** Local Data Area
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     C*-----------------------
+     C                     MOVEACPY@      BIS@   80
+     C           ACCKEY    KLIST
+     C                     KFLD           CNUMO
+     C                     KFLD           CCYO
+     C                     KFLD           ACODO
+     C                     KFLD           ACSQO
+     C                     KFLD           BRCAO
+     C*-----------------------
+     C********** KCLINT    KLIST                                          084174
+     C***********          KFLD           CNUMO                           084174
+     C***********          KFLD           RCDT                            084174
+     C*-----------------------
+     C           KRETAX    KLIST
+     C                     KFLD           BRCAO
+     C                     KFLD           CNUMO
+     C                     KFLD           CCYO
+     C                     KFLD           ACODO
+     C                     KFLD           ACSQO
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3764CCP1                                           S01408
+      *                                                                                       CDL013
+      ***   Check if CAR CDL013 is installed                                                  CDL013
+     C                     CALL 'AOSARDR0'                                                    CDL013
+     C                     PARM *BLANKS   @RTCD   7                                           CDL013
+     C                     PARM '*VERIFY' @OPTN   7                                           CDL013
+     C                     PARM 'CDL013'  @SARD   6                                           CDL013
+      *                                                                                       CDL013
+      ** If call to program fails perform standard database error                             CDL013
+      ** processing                                                                           CDL013
+     C           @RTCD     IFNE *BLANK                                                        CDL013
+     C           @RTCD     ANDNE'*NRF   '                                                     CDL013
+     C                     MOVEL'SCSARDPD'DBFILE                                              CDL013
+     C                     MOVEL@RTCD     DBKEY                                               CDL013
+     C                     Z-ADD03        DBASE                                               CDL013
+     C                     OUT  LDA                                                           CDL013
+     C                     EXSR DBERR                                                         CDL013
+     C                     END                                                                CDL013
+      *                                                                                       CDL013
+      ***   CAR CDL013 is installed                                                           CDL013
+     C           @RTCD     IFEQ *BLANKS                                                       CDL013
+     C                     MOVE '1'       CDL013  1                                           CDL013
+     C                     ENDIF                                                              CDL013
+     C*                                                                   S01408
+     C*
+     C** Access LDA.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C**
+     C** READ INITIAL RECORD
+     C**
+     C           1         SETLLTABTBRE
+     C                     READ TABTBRE                  70
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE3116'  DBPGM
+     C                     MOVEL'TABTBRE' DBFILE           ************
+     C                     MOVEL'       1'DBKEY            * DBERR 01 *
+     C                     Z-ADD01        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C** -------------------------------------------------------------
+     C**   ACCESS ABSFI101  RECUP DE :
+     C**          XTVA           5  4       TEXT('TAUX TVA      ')
+     C**          BQCTVA         1          TEXT('TVA BANQUE O=OUI N=NON')
+     C**
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C           DATF      IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C**
+     C**   Access bank details
+     C**
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C/COPY WNCPYSRC,RE3764C003
+     C*
+     C           VATP      IFEQ 'Y'
+     C           1         CHAINABSFI1F1             99
+     C                     END
+     C*
+     C                     Z-ADD0         X       30
+     C                     Z-ADD*ZEROS    WWCINW 130
+     C                     MOVEL*BLANK    #JITAX  1
+      *                                                                   CFT004
+      **  Access SAR details file to see if CFT004 is installed.          CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOSARDR0'                                CFT004
+     C                     PARM *BLANKS   PRTCD   7                       CFT004
+     C                     PARM '*VERIFY' POPTN   7                       CFT004
+     C                     PARM 'CFT004'  PSARD   6                       CFT004
+     C           SCSARD    PARM SCSARD    DSSDY                           CFT004
+      *                                                                   CFT004
+     C                     MOVE 'N'       CFT004                          CFT004
+     C           PRTCD     IFEQ *BLANKS                                   CFT004
+     C                     MOVE 'Y'       CFT004  1                       CFT004
+     C                     ENDIF                                          CFT004
+     C/COPY WNCPYSRC,RE3764C008
+     C*
+     C           READC     TAG                             ** READC TAG **
+     C*
+     C                     READ SDCURRL1                 11
+     C   11                GOTO ENDRDC
+     C*
+     C           RECI      COMP 'D'                      70
+     C  N70                GOTO READC
+     C**
+     C**   VALID CURRENCY RECORD - STORE DETAILS
+     C           X         ADD  1         X
+     C*
+     C                     MOVE CCY       CURR,X
+     C                     Z-ADDSPOT      CSPT,X
+     C                     MOVE MDIN      MTDV,X
+     C                     Z-ADDCDP       CCDP,X
+     C                     Z-ADDSSNO      CSNO,X
+     C**
+     C**   CHECK IF ARRAY IS FULL
+     C           X         COMP 150                      70
+     C  N70                GOTO READC
+     C*
+     C           ENDRDC    TAG                             ** ENDRDC TAG**
+     C*----------------------------------------------------------------***
+     C           *INLR     DOWEQ'0'
+     C                     READ RECAPMF                  LR
+     C/COPY WNCPYSRC,RE3764C009
+     C   LR                RETRN
+     C           OBRCA     IFNE CBRCA
+     C************IN85     IFEQ *ON                                       118758
+     C           *IN21     IFEQ *ON                                       118758
+     C***********          CLOSEAGIOSFRF                                  069667
+     C                     CLOSERE3764AG                                  069667
+     C                     ENDIF
+     C***********          SETON                     85                   118758
+     C                     SETON                     21                   118758
+     C***********          OPEN AGIOSFRF                                  069667
+     C                     OPEN RE3764AG                                  069667
+     C                     Z-ADDSFNUM     ZSNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM CBRCA     SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C** DBASE, DBFILE AND DBKEY SET WITHIN ZSFILE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE3764'  DBPGM
+     C***********          MOVEL'AGIOSFRF'DBFILE           ************   069667
+     C                     MOVEL'RE3764AG'DBFILE           ************   069667
+     C                     MOVEL'OPEN    'DBKEY            * DBERR 02 *
+     C                     Z-ADD02        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     RETRN
+     C                     END
+     C                     MOVELCBRCA     OBRCA   3
+     C/COPY WNCPYSRC,RE3764C001
+     C                     ENDIF
+     C*
+     C/COPY WNCPYSRC,RE3764C002
+     C                     MOVE CBRCA     BRCAO   3
+     C**********           MOVE CCNUM     CNUMO   60                                          CSD027
+     C                     MOVE CCNUM     CNUMO   6                                           CSD027
+     C                     MOVE CCCY      CCYO    3
+     C**********           MOVE CACOD     ACODO   40                                          CGL029
+     C                     MOVE CACOD     ACODO  100                                          CGL029
+     C                     MOVE CACSQ     ACSQO   20
+     C           ACCKEY    CHAINREACRDF              01
+     C           *IN01     CABEQ'1'       FINTIC
+     C           KRETAX    CHAINRECOMDF              01
+     C           *IN01     CABEQ'1'       FINTIC
+     C           ACCKEY    CHAINACCNTABF             01
+     C           *IN01     CABEQ'1'       FINTIC
+     C           ACCKEY    CHAINREIACDF              01
+     C           *IN01     CABEQ'1'       FINTIC
+     C                     MOVE ACNO      ACNOO  100
+     C***********          MOVELADREF1    RCDT                            084174
+     C********** KCLINT    CHAINCLINTCCF             01                   084174
+     C********** *IN01     CABEQ'1'       FINTIC                          084174
+     C*                                                                   084174
+     C* Retrieve correspondent details from CGCORRPD via AOALTNR0:        084174
+     C*                                                                   084174
+     C                     MOVELCNUMO     P#CUST                          084174
+     C                     MOVEL*BLANKS   P#CUS1                          087284
+     C                     MOVELCNUMO     P#CUS1                          087284
+     C                     MOVELADREF1    P#ADCD                          084174
+      *                                                                   087284
+      * If address reference is B use AOCUSTRO else AOALTNR0              087284
+      *                                                                   087284
+     C           P#ADCD    IFEQ 'B'                                       087284
+      *                                                                                       CRE083
+      ** No need to access customer details if the current                                    CRE083
+      ** customer number is the same as the previous one PCNUM                                CRE083
+      *                                                                                       CRE083
+     C           P#CUST    IFNE PCNUM                                                         CRE083
+      *                                                                                       CRE083
+     C                     CALL 'AOCUSTR0'             9090               087284
+     C                     PARM *BLANKS   P#RTCD  7                       087284
+     C                     PARM '*KEY   ' P#OPTN  7                       087284
+     C                     PARM           P#CUS1 10                       087284
+     C                     PARM *BLANKS   P#KYST  7                       087284
+     C           P#CUSD    PARM *BLANKS   DSSDY                           087284
+      *                                                                                       CRE083
+     C                     MOVE P#CUST    PCNUM   6                                           CRE083
+     C                     ENDIF                                                              CRE083
+      *                                                                   087284
+     C           *IN90     IFEQ '1'                                       087284
+     C                     GOTO FINTIC                                    087284
+     C                     END                                            087284
+     C                     ELSE                                           087284
+      *                                                                                       CRE083
+     C           P#CUST    IFNE PCNUM                                                         CRE083
+     C*                                                                   084174
+     C                     CALL 'AOALTNR0'                                084174
+     C                     PARM *BLANKS   P#RTCD  7        B:Return code  084174
+     C                     PARM '*KEY   ' P#OPTN  7        I:Option       084174
+     C                     PARM           P#CUST  6        I:Customer no. 084174
+     C                     PARM           P#ADCD  1        I:Address code 084174
+     C***********P#CORR    PARM P#CORR    DSFDY            O:Format 084174087284
+     C           P#ALTN    PARM P#ALTN    DSFDY            O:Format       087284
+      *                                                                                       CRE083
+     C                     MOVE P#CUST    PCNUM   6                                           CRE083
+     C                     ENDIF                                                              CRE083
+     C*                                                                   084174
+     C                     ENDIF                                          087284
+      *                                                                   087284
+     C           P#RTCD    IFNE *BLANKS                                   084174
+     C                     GOTO FINTIC                                    084174
+     C                     ELSE                                           084174
+     C***********          MOVELCDADD1    CNA1   35                 084174087284
+     C***********          MOVELCDADD2    CNA2   35                 084174087284
+     C***********          MOVELCDADD3    CNA3   35                 084174087284
+     C***********          MOVELCDADD4    CNA4   35                 084174087284
+     C/COPY WNCPYSRC,RE3764C010
+      *                                                                   087284
+      * Move in address fields                                            087284
+      *                                                                   087284
+     C           P#ADCD    IFEQ 'B'                                       087284
+     C                     MOVELBBCNA1    CNA1                            087284
+     C                     MOVELBBCNA2    CNA2                            087284
+     C                     MOVELBBCNA3    CNA3                            087284
+     C                     MOVELBBCNA4    CNA4                            087284
+     C                     ELSE                                           087284
+     C                     MOVELBCCNA1    CNA1   35                       087284
+     C                     MOVELBCCNA2    CNA2   35                       087284
+     C                     MOVELBCCNA3    CNA3   35                       087284
+     C                     MOVELBCCNA4    CNA4   35                       087284
+     C                     ENDIF                                          087284
+     C                     ENDIF                                          084174
+     C*                                                                   084174
+     C**    SWISS TAXES INSTALLED
+     C           1         SETLLSDMMODPD
+     C                     READ SDMMODPD                 99
+     C           *IN99     CABEQ'1'       FINTIC
+     C*
+     C**  ACCESS RETAXJL (REARCD, ACCNTBX0)
+     C           BGNTST    IFEQ 'Y'
+     C*
+     C           KRETAX    CHAINRETAXJL              99
+     C           *IN99     IFEQ '1'
+     C                     GOTO FINTIC
+     C                     ELSE
+     C           #JITAX    IFEQ 'Y'
+      *                                                                                       CDL013
+      ** If Tiered Withholding Tax feature is switched ON                                     CDL013
+     C           CDL013    OREQ '1'                                                           CDL013
+     C           #JITAX    ANDNE'0'                                                           CDL013
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3764CCP2                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADD#JCINW    WWCINW
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WWCINW
+     C                     MOVEL*BLANK    #JITAX
+     C                     END
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,RE3764C004
+     C**    VAT
+     C                     Z-ADD0         CUSVAT 130
+     C                     Z-ADD0         AMTTVA
+     C                     Z-ADD0         AMTVAT 130
+     C                     Z-ADD0         NET    130
+     C                     Z-ADD0         CHARG  130
+     C                     Z-ADD0         NETD   130
+     C                     Z-ADD0         AMT0   130
+     C**   ********************
+     C**   ** A/C CHARGE     **
+     C**   ********************
+     C           CSCHGI    IFEQ 'Y'
+     C           CSCHGI    OREQ 'I'
+     C           CSCHGI    OREQ 'A'
+     C                     Z-ADDCCHGP     PAMT   130 71
+     C   71                ADD  CCHGP     NET
+     C   71                ADD  CCHGP     CHARG
+     C**   VAT
+     C           VATP      IFEQ 'Y'
+     C   71                EXSR CUMVAT
+     C                     END
+     C                     END
+     C*
+     C**   ********************
+     C**   ** A/C COMMISSION **
+     C**   ********************
+     C           ACCC      ADD  CACCC     PAMT   130
+     C           ACCC      ADD  CACCC     ACCC       71
+     C   71                ADD  ACCC      NET
+     C   71                ADD  ACCC      CHARG
+     C**   VAT
+     C           VATP      IFEQ 'Y'
+     C           TCDTO     ANDEQ'Y'
+     C   71                EXSR CUMVAT
+     C                     END
+     C*
+     C**   **********************
+     C**   ** FIXED COMMISSION **
+     C**   **********************
+     C           ACST      IFNE 'C'
+     C                     Z-ADDFXDC      PAMT       71
+     C**   VAT
+     C           VATP      IFEQ 'Y'
+     C           TFXAC     ANDEQ'Y'
+     C   71                EXSR CUMVAT
+     C                     END
+     C   71                ADD  FXDC      NET
+     C   71                ADD  FXDC      CHARG
+     C                     END
+     C**   *******************************
+     C**   ** COMMISSION ON DR INTEREST **
+     C**   *******************************
+     C           CDICA     ADD  CCDIC     PAMT       71
+     C                     Z-ADDPAMT      CDRINT 130
+     C**   VAT
+     C           VATP      IFEQ 'Y'
+     C           TCDRI     ANDEQ'Y'
+     C   71                EXSR CUMVAT
+     C                     END
+     C   71                ADD  CDRINT    NET
+     C   71                ADD  CDRINT    CHARG
+     C**   ***************************************
+     C**   ** COMMISSION FOR HIGHEST DR BALANCE **
+     C**   ***************************************
+     C           CHDBC     ADD  CCHDBC    PAMT       71
+     C           CSDCI     IFEQ 'S'
+     C           CSDCI     OREQ 'O'
+     C           CSDCI     OREQ 'L'
+     C                     Z-ADD*ZEROS    PAMT       71
+     C                     END
+     C                     Z-ADDPAMT      PFD    130
+     C   71                ADD  PFD       NET
+     C   71                ADD  PFD       CHARG
+     C**   VAT ON COMMISSION FOR HIGHEST DR BALANCE **
+     C           VATP      IFEQ 'Y'
+     C           TCHOV     ANDEQ'Y'
+     C   71                EXSR CUMVAT
+     C                     END
+     C*
+     C**
+     C**   2 FURTHER SETS OF POSTINGS ARE POSSIBLE FOR
+     C**   'NON-MANAGEMENT' CR CAPITALISATION
+     C*
+     C**   *****************************
+     C**   ** INACTIVE A/C COMMISSION **
+     C**   *****************************
+     C           IACCC     ADD  CIACC     PAMT       71
+     C           IACCC     ADD  CIACC     CIACC
+     C**   VAT
+     C           VATP      IFEQ 'Y'
+     C           TCINA     ANDEQ'Y'
+     C   71                EXSR CUMVAT
+     C                     END
+     C   71                ADD  CIACC     NET
+     C   71                ADD  CIACC     CHARG
+     C*
+     C**   *********************************************
+     C**   ** COMMISSION ON NUMBER OF DAILY STATEMENT **
+     C**   *********************************************
+     C           NOIP      ADD  CCINST    PAMT       71
+     C           NOIP      ADD  CCINST    CCINST
+     C**   VAT
+     C           VATP      IFEQ 'Y'
+     C           TCNDS     ANDEQ'Y'
+     C   71                EXSR CUMVAT
+     C                     END
+     C   71                ADD  CCINST    NET
+     C   71                ADD  CCINST    CHARG
+     C*
+     C**   ***************************************
+     C**   ** COMMISSION ON MINIMUM BALANCE **
+     C**   ***************************************
+     C*
+     C           CHISB     IFGT *ZEROS
+     C* CHECK IF BALANCE IS CREDIT ENOUGH
+     C                     Z-ADD*ZEROS    TOTISB 150
+     C           CHISB     SUB  AMTVAT    TOTISB
+     C* CHECK IF BALANCE IS CREDIT WITH THE COMMISSION
+     C           TOTISB    IFGT *ZEROS
+     C           CMBC      ADD  CCMBC     PAMT       71
+     C           CMBC      ADD  CCMBC     CMBC
+     C**   VAT
+     C           VATP      IFEQ 'Y'
+     C           TCMBL     ANDEQ'Y'
+     C   71                EXSR CUMVAT
+     C                     END
+     C   71                ADD  CMBC      NET
+     C   71                ADD  CMBC      CHARG
+     C                     END
+     C                     END
+     C*
+     C**   VAT
+     C           VATP      IFEQ 'Y'
+     C           AMTVAT    IFGT 0
+     C           BQCTVA    IFEQ 'Y'                         AUTO-POST
+     C           AMTVAT    MULT XTVA      AMTTVA 130H71
+     C   71                ADD  AMTTVA    NET
+     C   71                ADD  AMTTVA    CHARG
+     C                     END
+     C                     END
+     C                     END
+     C*----------------------------------------------------------------
+     C* CALCUL   DU NET  AGIOS
+     C* INTERETS DEBITEURS      ET REGUL TEG
+     C           CDAIC     ADD  TEGLIS    TDINTN 130
+     C           CSDCI     IFEQ 'Y'
+     C           CSDCI     OREQ 'I'
+     C           CSDCI     OREQ 'A'
+     C                     ADD  TDINTN    NET
+     C                     MOVE '   '     DEBS
+     C                     Z-ADDNET       NETD
+     C                     ELSE
+     C                     MOVE '***'     DEBS    3
+     C                     END
+     C*----------------------------------------------------------------
+     C* INTERETS CREDITEURS
+     C           CSCCI     IFEQ 'Y'
+     C           CSCCI     OREQ 'I'
+     C           CSCCI     OREQ 'A'
+     C                     SUB  CCAIC     NET
+     C                     MOVE '   '     CRES
+     C                     ADD  WWCINW    NET
+     C/COPY WNCPYSRC,RE3764C005
+     C                     ELSE
+     C                     MOVE '***'     CRES    3
+     C                     END
+     C*----------------------------------------------------------------
+     C*
+     C                     SETOF                         99
+     C*
+     C                     Z-ADD1         X       30
+     C           CCY       LOKUPCURR,X                   70
+     C  N70                GOTO FINTIC
+     C                     Z-ADDCCDP,X    WCDP    10
+     C           WCDP      COMP 0                        80
+     C           WCDP      COMP 1                        81
+     C           WCDP      COMP 2                        82
+     C           WCDP      COMP 3                        83
+     C           CSCCI     IFEQ 'Y'
+     C           CSCCI     OREQ 'I'
+     C           CSCCI     OREQ 'A'
+     C           CCAIC     IFGT 0
+     C                     MOVE CCAIC     DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLCINT
+     C                     END
+     C           WWCINW    IFNE 0
+     C                     MOVE WWCINW    DSCINW
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLCINW
+     C                     END
+     C/COPY WNCPYSRC,RE3764C006
+     C                     END
+     C           CSDCI     IFEQ 'Y'
+     C           CSDCI     OREQ 'I'
+     C           CSDCI     OREQ 'A'
+     C           TDINTN    IFGT 0
+     C                     MOVE TDINTN    DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLDINT
+     C                     END
+     C                     END
+     C           ACCC      IFGT 0
+     C                     MOVE ACCC      DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLACCC
+     C                     END
+     C           FXDC      IFGT 0
+     C                     MOVE FXDC      DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLFXDC
+     C                     END
+     C           CDRINT    IFGT 0
+     C                     MOVE CDRINT    DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLCDRI
+     C                     END
+     C           PFD       IFGT 0
+     C                     MOVE PFD       DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLPFD
+     C                     END
+     C           CIACC     IFGT 0
+     C                     MOVE CIACC     DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLCIAC
+     C                     END
+     C           CCINST    IFGT 0
+     C                     MOVE CCINST    DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLCNDS
+     C                     END
+     C           CMBC      IFGT 0
+     C                     MOVE CMBC      DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLCMB
+     C                     END
+     C           CSCHGI    IFEQ 'Y'
+     C           CSCHGI    OREQ 'I'
+     C           CSCHGI    OREQ 'A'
+     C           CCHGP     IFGT 0
+     C                     MOVE CCHGP     DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLCHG
+     C                     END
+     C                     END
+     C           AMTTVA    IFGT 0
+     C                     MOVE AMTTVA    DSAMT
+     C                     SETOF                     85
+     C           CCY       IFNE BCCY
+     C                     SETON                     85
+     C                     MOVE CCY       MCCY    3        CCY TVA
+     C                     EXSR CONVER
+     C                     END
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLTVA
+     C                     END
+     C           NET       IFNE 0
+     C                     Z-ADDCHISD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZVALD   7        DDMMMYY
+     C*
+     C                     SETOF                     8687
+     C           NET       IFGT 0
+     C                     SETON                     86     DEBIT
+     C                     END
+     C           NET       IFLT 0
+     C                     SETON                     87     CREDIT
+     C                     END
+     C                     MOVE NET       DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLNET
+     C                     END
+     C           NETD      IFGT 0
+     C           TEGRT     IFGT 0
+     C           TEGRT     DIV  100       TEGEDI  42
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLTEGL
+     C                     END
+     C                     END
+     C           CCAIC     IFGT 0
+     C           CSCCI     IFEQ 'A'
+     C                     MOVE CSCACP    NCTAC
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLNETAC
+     C           WWCINW    IFNE 0
+     C                     EXCPTLTAX
+     C                     END
+     C/COPY WNCPYSRC,RE3764C007
+     C                     END
+     C                     END
+     C           TDINTN    IFGT 0
+     C           CSDCI     IFEQ 'A'
+     C                     MOVE CSDACP    NCTAD
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLNETAD
+     C                     ELSE
+     C           RDACP     IFNE *BLANKS
+     C                     MOVE RDACP     NCTAD
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLNETAD
+     C                     END
+     C                     END
+     C                     END
+     C           CHARG     IFGT 0
+     C           CSDCI     IFEQ 'A'
+     C                     MOVE CSCHAC    NCTAT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLNETCA
+     C                     END
+     C                     END
+     C           GADI      IFGT 0
+     C                     MOVE GADI      DSAMT
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     EXCPTLGAD
+     C                     END
+     C           GACI      IFGT 0
+     C  N99                EXCPTTICKET
+     C                     SETON                       99
+     C                     MOVE GACI      DSAMT
+     C                     EXCPTLGAC
+     C                     END
+     C                     SETOF                       99
+      *                                                                   CFT004
+     C                     MOVEL*BLANKS   RIBAN                           CFT004
+     C                     MOVE '0'       *IN88                           CFT004
+      *                                                                   CFT004
+      ** Format International Bank Account Numbers                        CFT004
+      *                                                                   CFT004
+     C           CFT004    IFEQ 'Y'                                       CFT004
+     C           IBAN      ANDNE*BLANKS                                   CFT004
+     C                     CALL 'AOIBANR3'                                CFT004
+     C                     PARM *BLANKS   PRTCD   7                       CFT004
+     C                     PARM IBAN      PIBAN  47                       CFT004
+     C                     PARM *BLANKS   PIWITH 47                       CFT004
+     C                     PARM *BLANKS   PINOBL 34                       CFT004
+      *                                                                   CFT004
+     C           PRTCD     IFEQ *BLANKS                                   CFT004
+     C                     MOVE '1'       *IN88                           CFT004
+     C                     MOVELPIWITH    RIBAN  47                       CFT004
+     C                     EXCPTIBANNO                                    CFT004
+     C                     ENDIF                                          CFT004
+     C                     ENDIF                                          CFT004
+     C*
+     C           FINTIC    TAG
+     C                     END                              FIN READ
+     C*----------------------------------------------------------------***
+     C*
+     C**   VAT
+     C           CUMVAT    BEGSR
+     C           PAMT      IFGT 0
+     C                     Z-ADDPAMT      Z13VAT 130
+     C                     ELSE
+     C                     Z-SUBPAMT      Z13VAT
+     C                     END
+     C                     ADD  Z13VAT    AMTVAT
+     C                     ENDSR
+     C********************************************************************
+     C           CONVER    BEGSR
+     C                     Z-ADD1         X       30
+     C           BCCY      LOKUPCURR,X                   70
+     C  N70                GOTO CONEND
+     C*
+     C                     Z-ADDCSNO,X    FSNO    20
+     C                     Z-ADDCCDP,X    FCDP    10
+     C                     Z-ADDCSPT,X    FSPT   138
+     C                     MOVE MTDV,X    FMDI    1      78
+     C*
+     C                     Z-ADD1         X
+     C           MCCY      LOKUPCURR,X                   70
+     C  N70                GOTO CONEND
+     C*
+     C                     Z-ADDCSPT,X    ESPT   138
+     C                     MOVE MTDV,X    EMDI    1      79
+     C                     Z-ADDCCDP,X    ECDP    10
+     C*
+     C**
+     C**   CALCULATE CROSS RATE
+     C   78N79
+     CORN78 79   FSPT      MULT ESPT      ESPT      H
+     C   78 79
+     CORN78N79   FSPT      DIV  ESPT      ESPT      H
+     C**
+     C**   ADJUST EXCHANGE RATE FOR DECIMAL PLACES
+     C           FCDP      SUB  ECDP      CX      10
+     C           CX        ADD  4         CX
+     C*
+     C  N78      ESPT      DIV  POWR,CX   EXRATE 159H
+     C  N78      1         DIV  EXRATE    EXRATE 159H
+     C   78      ESPT      MULT POWR,CX   EXRATE    H
+     C**
+     C**   CONVERT  AMOUNTS
+     C           AMTTVA    MULT EXRATE    TVAF   130H
+     C           TVAF      DIV  100       TVAFRF 132
+     C*
+     C           CONEND    ENDSR                           ** CONEND TAG**
+     C*****************************************************************
+     C           DBERR     BEGSR                           *** DBERR ***
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+     O*GIOSFRFE*1101           TICKET                                     069667
+     ORE3764AGE 1101           TICKET                                     069667
+     O                         PNOBQE
+     O                                   57 'LE'
+     O                         RUNA      66
+     O        E  1             TICKET
+     O                         PR1BQE
+     O        E  1             TICKET
+     O                         PVIBQE
+     O        E   07           TICKET
+     O                         CNA1      75
+     O        E 1              TICKET
+     O                         CNA2      75
+     O        E 1              TICKET
+     O                         CNA3      75
+     O        E 1              TICKET
+     O                                   23 'TICKET D''AGIOS    '
+     O                         CNA4      75
+     O        E 1              TICKET
+     O        E 1              TICKET
+     O                                   10 'Compte'
+     O                         CNUMO     17
+     O                         CCYO      21
+     O**********               ACODO     26                                                   241340
+     O**********               ACSQO     29                                                   241340
+     O**********               ACNOO     40                                                   241340
+     O**********               BRCAO     45                                                   241340
+     O                         ACODO     32                                                   241340
+     O                         ACSQO     35                                                   241340
+     O                         ACNOO     46                                                   241340
+     O                         BRCAO     51                                                   241340
+     O        E 1              LCINT
+     O                                   23 'Int{rets Cr{diteurs'
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O                         CRES      58
+     O        E 1              LCINW
+     O                                   19 'Withholding Tax'
+     O                 80      CINW0     53 ' .   .   .   . 0 '
+     O                 81      CINW1     53 '   .   .   . 0 , '
+     O                 82      CINW2     53 '  .   .   . 0 ,  '
+     O                 83      CINW3     53 ' .   .   . 0 ,   '
+     O/COPY WNCPYSRC,RE3764O001
+     O        E 1              LDINT
+     O                                   23 'Int{rets D{biteurs '
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O                         DEBS      58
+     O        E 1              LACCC
+     O                                   23 'Commission Compte  '
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O        E 1              LFXDC
+     O                                   23 'Commission Fixe    '
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O        E 1              LCDRI
+     O                                   23 'Commission Int{rets'
+     O                                   33 'D{biteurs'
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O        E 1              LPFD
+     O                                   23 'Commission Plus For'
+     O                                   34 't D{couvert'
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O        E 1              LCIAC
+     O                                   23 'Commission Compte i'
+     O                                   34 'nactif     '
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O        E 1              LCNDS
+     O                                   23 'Com.sur nbre d''extr'
+     O                                   34 'aits suppl.'
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O        E 1              LCMB
+     O                                   23 'Com.sur Balance min'
+     O                                   34 'imum Cr{dit'
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O        E 1              LCHG
+     O                                   23 'Charges            '
+     O                                   34 '           '
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O        E 1              LTVA
+     O                                   23 'T.V.A. sur Commissi'
+     O                                   34 'ons        '
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O                 85                58 'soit'
+     O                 85      TVAFRF    75 '  .   .   . 0 ,  '
+     O                 85      BCCY      79
+     O        E 1              LNET
+     O                                   12 'Net Agios'
+     O                 80      AMT0      30 ' .   .   .   . 0 '
+     O                 81      AMT1      30 '   .   .   . 0 , '
+     O                 82      AMT2      30 '  .   .   . 0 ,  '
+     O                 83      AMT3      30 ' .   .   . 0 ,   '
+     O                 86                46 '@ votre d{bit '
+     O                 87                46 '@ votre cr{dit'
+     O                                 +  2 'Valeur'
+     O                         ZVALD   +  2
+     O        E 1              LNETAC
+     O                                   23 'Int{rets Cr{diteurs'
+     O                                 +  1 'au Cr{dit du Cpte'
+     O                         NCTAC     68
+     O                         CRBR      72
+     O        E 1              LTAX
+     O                                   22 'Withholding Tax au'
+     O                                 +  1 'D{bit du Cpte'
+     O                         CNUMC     56
+     O                         CCYC      60
+     O                         ACODC     65
+     O                         ACSQC     68
+     O/COPY WNCPYSRC,RE3764O002
+     O        E 1              LNETAD
+     O                                   22 'Int{rets D{biteurs'
+     O                                 +  1 'au D{bit du Cpte '
+     O                         NCTAD     68
+     O                         DRBR      72
+     O        E 1              LNETCA
+     O                                   23 'Commissions + Taxes'
+     O                                 +  1 'au D{bit du Cpte '
+     O                         NCTAT     68
+     O                         CHBR      72
+     O        E 1              LTEGL
+     O                                   23 'Taux Effectif Globa'
+     O                                   24 'l'
+     O                         TEGEDI    30 '0 ,  '
+     O                                   31 '%'
+     O        E 1              LGAD
+     O                                   23 'Ajustement Int{rets'
+     O                                   34 ' d{biteurs '
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+     O        E 1              LGAC
+     O                                   23 'Ajustement Int{rets'
+     O                                   34 ' Cr{diteurs'
+     O                 80      AMT0      53 ' .   .   .   . 0 '
+     O                 81      AMT1      53 '   .   .   . 0 , '
+     O                 82      AMT2      53 '  .   .   . 0 ,  '
+     O                 83      AMT3      53 ' .   .   . 0 ,   '
+      *                                                                   CFT004
+     O        E 1              IBANNO                                     CFT004
+     O                 88      RIBAN     49                               CFT004
+** POWR -- ARRAY OF POWERS
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM - MONTH SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

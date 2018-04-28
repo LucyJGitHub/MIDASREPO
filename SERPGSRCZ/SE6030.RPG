@@ -1,0 +1,2719 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Cust/Inst Fee Codes Maintenance')
+/*OVRF*: OVRDBF FILE(SECICFXX) TOFILE(SECICFPD) SHARE(*NO)          : *   S01464
+     F*****************************************************************
+     F**                                                              *
+     F**   Midas  SAFE CUSTODY FEES MODULE                        *
+     F**                                                              *
+     F**   SE6030 - CUST/INST FEE CODES MAINTENANCE                   *
+     F**                                                              *
+     F**   FUNCTION:  This program allows the maintenance of Fee      *
+     F**              structures to be charged per customer or        *
+     F**              custody fee group for security positions and    *
+     F**              precious metal balances.                        *
+     F**                                                              *
+     F**   CALLED BY: SEC02 - Input Cycle Processing                  *
+     F**                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F**                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01464             Date 04Apr94               *
+      *                 S01355             Date 11Dec92               *
+     F**                                                              *
+     F**--------------------------------------------------------------*
+     F**                                                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F**    S01464 - SAFE CUSTODY FEES                                *
+     F**    S01355  - RELEASE 3 INCORPORATION                         *
+     F**                                                              *
+     F*****************************************************************
+     F** C R E A T I O N     P A R A M E T E R S                      *
+     F**                                                              *
+     F**                                                              *
+     F** OVRDBF FILE(SCCICFXX) TOFILE(SCCICFPD) SHARE(*NO)          : *   S01464
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F**   WORKSTATION FILE
+     F*SE6030DDCF  E                    WORKSTN      KINFSR *PSSR         S01464
+     FSE6030DFCF  E                    WORKSTN      KINFSR *PSSR          S01464
+     F                                        DD1RRNKSFILE SE6030S1
+     F                                        DD2RRNKSFILE SE6030S2
+     F                                              KINFDS ERF1DS
+     F*
+     F**   BANK DETAILS FILE. PREFIX BJ.
+     FSDBANKPDIF  E                    DISK         KINFSR *PSSR
+     F*
+     F**   CUST/INST FEE CODES DETAILS (PRIMARY SEQUENCE). PREFIX SC.
+     F***SCCICFXXIF**E***********K********DISK*********KINFSR *PSSR       S01464
+     FSECICFXXIF  E           K        DISK         KINFSR *PSSR          S01464
+     F************SCCICFP0**************************KRENAMESCCICFX0       S01464
+     F            SECICFP0                          KRENAMESECICFX0       S01464
+     F*
+     F**   CUST/INST FEE CODES DETAILS ($HECKING SEQUENCE). PREFIX SC.
+     F***SCCICFL1IF**E***********K********DISK*********KINFSR *PSSR       S01464
+     FSECICFL1IF  E           K        DISK         KINFSR *PSSR          S01464
+     F************SCCICFP0**************************KRENAMESCCICFP1       S01464
+     F            SECICFP0                          KRENAMESECICFP1       S01464
+     F*
+     F**   CUSTODY FEE CHARGE CODE DETAILS. PREFIX SF.
+     F***SCCGCDPDIF**E***********K********DISK*********KINFSR *PSSR       S01464
+     FSECGCDPDIF  E           K        DISK         KINFSR *PSSR          S01464
+     F*
+     F*****CUSTOMER*MASTER*FILE*(SHORTNAME SEQUENCE).*PREFIX BB.          S01464
+     F***SDCUSTL6IF**E***********K********DISK*********KINFSR *PSSR       S01464
+     F*
+     F*****SECURITY*CLIENT*FILE*(NUMBER*SEQUENCE).*PREFIX*BF.             S01464
+     F***SDSECSL1IF**E***********K********DISK*********KINFSR**PSSR       S01464
+     F*
+     F**   SECURITY DEFINITIONS. NO PREFIX.
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**   INVESTMENT TYPES DEFINITIONS. NO PREFIX.
+     FINVTPC  IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F*****CURRENCY*DETAILS*EXTENSION.*PREFIX*A6*&*CY.                    S01464
+     F***SDCURRJ0IF**E***********K********DISK*********KINFSR**PSSR       S01464
+     F*
+     F**   CUSTODY FEE GROUPS FILE. PREFIX SB.
+     F***SCCFGRPDIF**E***********K********DISK*********KINFSR *PSSR       S01464
+     FSECFGRPDIF  E           K        DISK         KINFSR *PSSR          S01464
+     F*
+     F**   CUST/INST FEE CODES TRAILER . PREFIX SC.
+     F***SCCICFZZUF**E********************DISK*********KINFSR *PSSR       S01464
+     FSECICFPAUF  E                    DISK         KINFSR *PSSR          S01464
+     F                                              KCOMIT
+     F*
+     F**   CUST/INST FEE CODES DETAILS . PREFIX SC.
+     F***SCCICFPDUF**E***********K********DISK*********KINFSR *PSSR A     S01464
+     FSECICFPDUF  E           K        DISK         KINFSR *PSSR A        S01464
+     F                                              KINFDS ERF2DS
+     F                                              KCOMIT
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**                                                              *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F**                 ------------------------                     *
+     F**                                                              *
+     F**       21         READ ON DISPLAY FILE - SE6030DF             *
+     F**                                                              *
+     F**       22         ACCESS TO SDBANKPD                          *
+     F*********23*********ACCESS TO SCCICFXX                          *   S01464
+     F**       23         ACCESS TO SECICFXX                          *   S01464
+     F*********24*********ACCESS TO SCCICFL1                          *   S01464
+     F**       24         ACCESS TO SECICFL1                          *   S01464
+     F*********25*********ACCESS TO SCCGCDPD                          *   S01464
+     F**       25         ACCESS TO SECGCDPD                          *   S01464
+     F*********26*********ACCESS TO SDCUSTL6                          *   S01464
+     F*********27*********ACCESS TO SDSECSL1                          *   S01464
+     F**       28         ACCESS TO SECTY                             *
+     F**       29         ACCESS TO INVTPC                            *
+     F*********30*********ACCESS TO SDCURRJ0                          *   S01464
+     F*********31*********ACCESS TO SCCFGRPD                          *   S01464
+     F**       31         ACCESS TO SECFGRPD                          *   S01464
+     F**                                                              *
+     F*********32*********ACCESS TO SCCICFZZ                          *   S01464
+     F**       32         ACCESS TO SECICFPA                          *   S01464
+     F*********33*********ACCESS TO SCCICFPD                          *   S01464
+     F**       33         ACCESS TO SECICFPD                          *   S01464
+     F**                                                              *
+     F**       40         SFLEND (MESSAGE SUBFILE)                    *
+     F**       41         ROLLDOWN                                    *
+     F**       42         ROLLUP                                      *
+     F**                                                              *
+     F**       43         SFLDSP                                      *
+     F**       44         SFLDSPCTL                                   *
+     F**       45         SFLCLR                                      *
+     F**       46         SFLEND                                      *
+     F**       47         SFLNXTCHG                                   *
+     F**                                                              *
+     F**                  CHANGE SCREEN                               *
+     F**                  -------------                               *
+     F**       50         ACTION 'RI PC'                              *
+     F**       51         FEE CODE 'RI PC'                            *
+     F**       52         REVIEW FROM CUSTOMER NO./SHORTNAME 'RI PC'  *
+     F**       53         REVIEW FROM FEE GROUP 'RI PC'               *
+     F**       54         REVIEW FROM SECURITY 'RI PC'                *
+     F**       55         REVIEW FROM CURRENCY 'RI PC'                *
+     F**       56         REVIEW FROM INVESTMENT TYPE 'RI PC'         *
+     F**       63         FEE CODE 'PR'                               *
+     F**       71         ACTION CODE 'PR'                            *
+     F**                                                              *
+     F**                  INPUT SCREEN                                *
+     F**                  ------------                                *
+     F**       57         CUSTOMER 'RI PC'                            *
+     F**       58         FEE GROUP 'RI PC'                           *
+     F**       59         SECURITY 'RI PC'                            *
+     F**       60         CURRENCY 'RI PC'                            *
+     F**       61         INVESTMENT TYPE 'RI PC'                     *
+     F**       62         FEE CODE 'RI PC'                            *
+     F**                                                              *
+     F**       64         SUBFILE RECORD IN ERROR                     *
+     F**                                                              *
+     F**       67         NUMBER/SHORTNAME NOT VALID                  *
+     F*********68*********LOKUP ON ALPHANUMERIC ARRAY                 *   S01464
+     F*********69*********LOKUP ON NUMERIC ARRAY                      *   S01464
+     F**                                                              *
+     F**       70         CLEAR SUBFILE REQUIRED                      *
+     F**                                                              *
+     F**       88         MULTI-BRANCH INDICATOR                      *   S01464
+     F**       90         FILE ERROR                                  *
+     F**                                                              *
+     F**       98         DATE FORMAT ON ZDATE2                       *
+     F**       99         INVALID DATE ON ZDATE1                      *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     E*****************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E***********                                                         S01464
+     E*****ARRAY*OF*ALPHANUMERICS                                         S01464
+     E***********                                                         S01464
+     E***********         ALPNU  37  37  1                                S01464
+     E***********                                                         S01464
+     E*****ARRAY*OF*NUMBERS                                               S01464
+     E***********                                                         S01464
+     E***********         NUM    10  10  1                                S01464
+     E***********                                                         S01464
+     E*****ARRAY*TO*SPLIT*CUSTOMER*FIELD*INTO*INDIVIDUAL*CHARACTERS       S01464
+     E***********                                                         S01464
+     E***********         CUS        10  1                                S01464
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*****************************************************************
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*****************************************************************
+     I/EJECT
+     I*****************************************************************
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 DDWSID
+     I                                      254 263 USER
+     I*
+     I** FILE INFORMATION DATA STRUCTURE - WORKSTN FILE
+     IERF1DS      DS
+     I                                    B 378 3790ER1SRN
+     I*
+     I** FILE INFORMATION DATA STRUCTURE - SECICFPD
+     IERF2DS      DS
+     I                                     *STATUS  STATUS
+     I*                                                                   S01464
+     IRUNDT       DS                             13                       S01464
+     I** Rundate data area                                                S01464
+     I                                       13  13 MBIN                  S01464
+     I*
+     I** LOCAL DATA AREA
+     I*LDA        UDS                            256                      S01464
+     ILDA         DS                            256                       S01464
+     I***                                   132 141 DBFILE                S01464
+     I                                      134 141 DBFILE                S01464
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01464
+     I** Data Area of menu user                                           S01464
+     IZMUSER      DS                             17                       S01464
+     I                                       11  13 USRBCH                S01464
+     I*
+     I** DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I** DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     ICMTTXT      DS                             55
+     I                                        1   50WWNATN
+     I                                        6   7 MDID
+     I                                        8  17 PGMN
+     I                                       18  27 WSIDX
+     I                                       28  330MTIME
+     I                                       34  34 ACTCDX
+     I                                       35  42 USIDX
+     I                                       43  48 DD3CN
+     I                                       49  55 DD3SD
+     I***********                                                         S01464
+     I***DATA*STRUCTURE*TO*SPLIT*CUSTOMER*NUMBER/SHORTNAME                S01464
+     I*********** DS                                                      S01464
+     I***********                             1  10 WWSCNS                S01464
+     I***********                             1  10 CUS                   S01464
+     I***********                             1   1 WWCCH1                S01464
+     I***********                             1   6 WWC16                 S01464
+     I***********                             7  10 WWC710                S01464
+     I*
+     I** DAY, MONTH & YEAR OF LAST UPDATE
+     IWWDATE      DS
+     I                                        1   7 WWDAT
+     I                                        1   20SCDLUP
+     I                                        3   5 SCMLUP
+     I                                        6   70SCYLUP
+     I*                                                                   S01464
+     ISDCURR    E DSSDCURRPD                                              S01464
+     I** Currency Details                                                 S01464
+     ISDCUST    E DSSDCUSTPD                                              S01464
+     I** Customer Details                                                 S01464
+     ISDSTRD    E DSSDSTRDPD                                              S01464
+     I** Securities Trading ICD                                           S01464
+     ISDSECS    E DSSDSECSPD                                              S01464
+     I** Securities Clients file                                          S01464
+     I**                                                                  S01464
+     IDSSDY     E DSDSSDY                                                 S01464
+     I*  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE               S01464
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**   KEYS USED BY PROGRAM
+     C**   --------------------
+     C*
+     C*****KEY*TO*ACCESS*SCCICFPD                                         S01464
+     C**   KEY TO ACCESS SECICFPD                                         S01464
+     C*
+     C           WWCFPD    KLIST
+     C                     KFLD           WWCFGD
+     C                     KFLD           WWCNUD
+     C                     KFLD           WWCKSD
+     C                     KFLD           WWSESD
+     C                     KFLD           WWCCYD
+     C                     KFLD           WWSITD
+     C*
+     C*****KEY*TO*ACCESS*SCCICFXX                                         S01464
+     C**   KEY TO ACCESS SCCICFXX                                         S01464
+     C*
+     C           WWCFXX    KLIST
+     C                     KFLD           WWCFGX
+     C                     KFLD           WWCNUX
+     C                     KFLD           WWCKSX
+     C                     KFLD           WWSESX
+     C                     KFLD           WWCCYX
+     C                     KFLD           WWSITX
+     C*
+     C*****KEY*TO*ACCESS*SCCICFL1                                         S01464
+     C**   KEY TO ACCESS SECICFL1                                         S01464
+     C*
+     C           WWCFL1    KLIST
+     C                     KFLD           WWCKS1
+     C                     KFLD           WWSES1
+     C                     KFLD           WWCCY1
+     C                     KFLD           WWSIT1
+     C                     KFLD           WWCFG1
+     C                     KFLD           WWCNU1
+     C*
+     C**   KEY TO ACCESS INVTPC
+     C*
+     C           WWNVTP    KLIST
+     C                     KFLD           WWINVT
+     C                     KFLD           WWCCYI
+     C*
+     C*****************************************************************
+     C*
+     C**   INITIAL PROCESSING
+     C**   ------------------
+     C*
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C**   ---------------
+     C*
+     C**   DO WHILE NOT CMD-3
+     C*
+     C           *INKC     DOWEQ'0'
+     C*
+     C           WWSCID    CASEQ'CHANGE'  #B
+     C           WWSCID    CASEQ'INPUT '  #C
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   END PROGRAM
+     C**   -----------
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**     INDEX TO SUBROUTINES                                     *
+     C**    ----------------------                                    *
+     C**                                                              *
+     C**   #A       - INITIAL PROCESSING                              *
+     C**   #B       - CHANGE SCREEN PROCESSING                        *
+     C**   #BA      - VALIDATE CHANGE SCREEN                          *
+     C**   #BB      - PROCESS AMEND/DELETE                            *
+     C**   #BC      - DETERMINE NEXT SCREEN                           *
+     C**   #BCA     - LOAD PAGE OF CHANGE SCREEN SUBFILE (SECICFL1)   *
+     C**   #C       - INPUT SCREEN PROCESSING                         *
+     C**   #CA      - VALIDATE INPUT SCREEN                           *
+     C**   #CB      - PROCESS INSERT                                  *
+     C**   #CC      - LOAD PAGE OF INPUT SCREEN SUBFILE               *
+     C**                                                              *
+     C**   #ZA      - LOAD PAGE OF CHANGE SCREEN SUBFILE (SECICFXX)   *
+     C**   #ZB      - UPDATE TRAILER FILE (SECICFPA)                  *
+     C**                                                              *
+     C**   ZTNLU1   - RETRIEVE/UPDATE TRANS. NO. LAST UPDATE          *
+     C**   ZASNMS   - SEND MESSAGE TO PROGRAMS MESSAGE QUEUE          *
+     C**   *PSSR    - ERROR HANDLING                                  *
+     C**                                                              *
+     C**                                                              *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #A          - THIS SUBROUTINE PERFORMS INITIAL PROCESSING  *
+     C**                                                              *
+     C**   CALLS       - NONE                                         *
+     C**                                                              *
+     C**   CALLED BY   - MAINLINE                                     *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*                                                                   S01464
+     C**   LDA DEFINITION.                                                S01464
+     C*                                                                   S01464
+     C           *NAMVAR   DEFN           LDA                             S01464
+     C*
+     C**   INITIALISE DB ERROR FIELDS AND STORE PROGRAM NAME FOR
+     C**   DB ERROR FIELD.
+     C*
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE6030'  DBPGM
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C*
+     C**   SET INITIAL SCREEN-ID TO 'CHANGE'
+     C*
+     C                     MOVE 'CHANGE'  WWSCID  6
+     C*
+     C**   DEFINE WORK FIELDS
+     C*
+     C           *LIKE     DEFN SCCFGC    WWCFGD
+     C           *LIKE     DEFN SCCNUM    WWCNUD
+     C           *LIKE     DEFN SCCKSQ    WWCKSD
+     C           *LIKE     DEFN SCSESN    WWSESD
+     C           *LIKE     DEFN SCCCY     WWCCYD
+     C           *LIKE     DEFN SCSITP    WWSITD
+     C*
+     C           *LIKE     DEFN SCCFGC    WWCFGX
+     C           *LIKE     DEFN SCCNUM    WWCNUX
+     C           *LIKE     DEFN SCCKSQ    WWCKSX
+     C           *LIKE     DEFN SCSESN    WWSESX
+     C           *LIKE     DEFN SCCCY     WWCCYX
+     C           *LIKE     DEFN SCSITP    WWSITX
+     C*
+     C           *LIKE     DEFN SCCKSQ    WWCKS1
+     C           *LIKE     DEFN SCSESN    WWSES1
+     C           *LIKE     DEFN SCCCY     WWCCY1
+     C           *LIKE     DEFN SCSITP    WWSIT1
+     C           *LIKE     DEFN SCCFGC    WWCFG1
+     C           *LIKE     DEFN SCCNUM    WWCNU1
+     C*
+     C           *LIKE     DEFN CCYI      WWCCYI
+     C           *LIKE     DEFN INVT      WWINVT
+     C*
+     C           *LIKE     DEFN SCNORE    WWNORD
+     C           *LIKE     DEFN SCNORE    WWNORI
+     C*
+     C           *LIKE     DEFN SCCKSQ    WWCKSQ
+     C           *LIKE     DEFN SCTNLU    WWDSTN
+     C*
+     C**   INITIALISE WORK FIELDS
+     C*
+     C                     Z-ADD0         LSTRR2  40
+     C                     MOVE 'Y'       WWVALD  1
+     C                     MOVE 'N'       WWUPDR  1
+     C*
+     C                     Z-ADD*ZEROS    WWSFLC  40
+     C                     Z-ADD*ZEROS    WWSFRN  40
+     C                     Z-ADD*ZEROS    WWFRRN  40
+     C*
+     C                     MOVE *BLANKS   WWCNUM  6
+     C                     MOVE *BLANKS   DDUNDR
+     C*
+     C                     MOVE *BLANKS   WWTPGQ 10
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR  5
+     C                     MOVEL'*PRV'    WWPGQR
+     C*
+     C**   SET OFF ALL INDICATORS
+     C*
+     C                     MOVEA'00000000'*IN,21           OFF 21-28
+     C                     MOVEA'0000'    *IN,29           OFF 29-32
+     C                     MOVEA'00000000'*IN,40           OFF 40-47
+     C                     MOVEA'00000000'*IN,50           OFF 50-57
+     C                     MOVEA'0000000' *IN,58           OFF 58-64
+     C                     MOVEA'0000'    *IN,67           OFF 67-70
+     C                     MOVEA'00'      *IN,98           OFF 98-99
+     C*
+     C**   ACCESS ICD RECORD 1 TO GET RUN DATE & TITLE
+     C*
+     C           1         SETLLSDBANKPD
+     C                     READ SDBANKPD                 22
+     C*
+     C**   IF RECORD NOT FOUND OR LAST-CHANGE-TYPE = 'D' (DELETED)
+     C*
+     C           *IN22     IFEQ '1'
+     C           BJTYLC    OREQ 'D'
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           *             *
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 001 *
+     C                     MOVE *BLANKS   DBKEY            *             *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     OUT  LDA                                       S01464
+     C                     RETRN
+     C                     END
+     C*
+     C**   SET UP DATE FORMAT INDICATOR
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98            ON-98
+     C                     ELSE
+     C                     MOVE '0'       *IN98            0FF-98
+     C                     END
+     C*
+     C**   INITIALISE SCREEN MESSAGE QUEUE
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C**   SET ON SUBFILE END INDICATOR
+     C*
+     C                     MOVE '1'       *IN40
+     C*                                                                   S01464
+     C**   ACCESS SECURITIES TRADING ICD.                                 S01464
+     C*                                                                   S01464
+     C                     CALL 'AOSTRDR0'                                S01464
+     C                     PARM '*DBERR ' @RTCD   7                       S01464
+     C                     PARM '*FIRST ' @OPTN   7                       S01464
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01464
+     C*                                                                   S01464
+     C**   CHECK IF SAFE CUSTODY FEES IS NOT SET ON                       S01464
+     C*                                                                   S01464
+     C           BVCUIN    IFNE 'Y'                                       S01464
+     C*                                                                   S01464
+     C**   SEND MESSAGE TO SCREEN                                         S01464
+     C*                                                                   S01464
+     C                     MOVEL'SE02100' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C                     EXFMTSE6030C3                                  S01464
+     C                     SETON                     LR                   S01464
+     C                     RETRN                                          S01464
+      *                                                                   S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C** In the data area RUNDAT                                          S01464
+     C*                                                                   S01464
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01464
+     C                     IN   RUNDT                                     S01464
+     C*                                                                   S01464
+     C**   Read in ZMUSER                                                 S01464
+     C*                                                                   S01464
+     C           *NAMVAR   DEFN           ZMUSER                          S01464
+     C                     IN   ZMUSER                                    S01464
+     C*                                                                   S01464
+     C** Test for multibranching                                          S01464
+     C*                                                                   S01464
+     C           MBIN      IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *IN88                           S01464
+     C                     ELSE                                           S01464
+     C                     MOVE '0'       *IN88                           S01464
+     C                     END                                            S01464
+     C*
+     C           #A0       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #B          - CHANGE SCREEN PROCESSING                       *
+     C**                                                              *
+     C** CALLS       - #BA , #BB , #BC , #ZA                          *
+     C**                                                              *
+     C** CALLED BY   - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*                                                                   S01464
+     C**   CHECK BEFORE DISPLAYING IF USER IS AUTHORISED TO ACTION 'A'    S01464
+     C*                                                                   S01464
+     C           *IN88     IFEQ '0'                                       S01464
+     C                     CALL 'ZVACTU'                                  S01464
+     C                     PARM 'A'       @ZACTN  1                       S01464
+     C                     PARM           @ERR    10                      S01464
+     C*                                                                   S01464
+     C**   MULTI-BRANCH ENVIRONMENT                                       S01464
+     C*                                                                   S01464
+     C                     ELSE                                           S01464
+     C*                                                                   S01464
+     C                     CALL 'ZVACTBU'                                 S01464
+     C                     PARM 'A'       @ZACTN  1                       S01464
+     C                     PARM USRBCH    @BRNCH  3                       S01464
+     C                     PARM           @ERR    10                      S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C**   IF ACTION INVALID FOR USER, PROTECT FEE CODE FIELD             S01464
+     C*                                                                   S01464
+     C           @ERR      IFNE *ZERO                                     S01464
+     C                     MOVE 'Y'       @PRTCT  1                       S01464
+     C                     END                                            S01464
+     C*
+     C**   SET UP KEY FIELDS
+     C*
+     C                     MOVE *BLANKS   WWCFGX
+     C                     MOVE *BLANKS   WWCNUX
+     C                     Z-ADD*ZEROS    WWCKSX
+     C                     MOVE *BLANKS   WWSESX
+     C                     MOVE *BLANKS   WWCCYX
+     C                     MOVE *BLANKS   WWSITX
+     C*
+     C*****ACCESS*SCCICFXX                                                S01464
+     C**   ACCESS SECICFXX                                                S01464
+     C*
+     C***********WWCFXX    SETLLSCCICFXX                                  S01464
+     C           WWCFXX    SETLLSECICFXX                                  S01464
+     C***********          READ SCCICFXX                 23               S01464
+     C                     READ SECICFXX                 23               S01464
+     C*
+     C**   LOAD A PAGE OF SUBFILE RECORDS - SECICFXX
+     C*
+     C                     MOVE '1'       *IN70
+     C                     EXSR #ZA
+     C*
+     C**   SET REVIEW FROM FIELDS TO BLANK
+     C*
+     C                     MOVE *BLANKS   DD1RNS
+     C                     MOVE *BLANKS   DD1RFG
+     C                     MOVE *BLANKS   DD1RSE
+     C                     MOVE *BLANKS   DD1RCY
+     C                     MOVE *BLANKS   DD1RIT
+     C*
+     C**   DOWHILE NOT CMD-3 & SCREEN-ID = 'CHANGE'
+     C*
+     C           *INKC     DOWEQ'0'
+     C           WWSCID    ANDEQ'CHANGE'
+     C*
+     C**   WRITE CHANGE SCREEN FOOTING FORMAT
+     C*
+     C                     WRITESE6030F1
+     C*
+     C**   WRITE CHANGE SCREEN CONTROL FORMAT
+     C*
+     C                     WRITESE6030C1
+     C*
+     C**   IF ERRORS EXIST - DISPLAY MESSAGE SUBFILE
+     C*
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESE6030C3
+     C                     END
+     C*
+     C**   READ CHANGE SCREEN CONTROL FORMAT
+     C*
+     C                     READ SE6030C1                 21
+     C*
+     C**   IF NOT CMD-3
+     C*
+     C           *INKC     IFEQ '0'
+     C*
+     C**   ROLLUP
+     C*
+     C           *IN42     IFEQ '1'
+     C*
+     C**   LOAD NEXT PAGE OF SUBFILE RECORDS - CHANGE SCREEN
+     C*
+     C                     MOVE '0'       *IN70
+     C                     EXSR #ZA
+     C*
+     C                     ELSE
+     C*
+     C**   VALIDATE CHANGE SCREEN
+     C*
+     C                     EXSR #BA
+     C*
+     C**   IF VALID & RECORDS AMENDED/DELETED
+     C*
+     C           WWVALD    IFEQ 'Y'
+     C           WWUPDR    ANDEQ'Y'
+     C*
+     C**   PROCESS AMEND/DELETE
+     C*
+     C                     EXSR #BB
+     C*
+     C                     END
+     C*
+     C**   IF VALID SO FAR
+     C*
+     C           WWVALD    IFEQ 'Y'
+     C*
+     C**   DETERMINE NEXT SCREEN
+     C*
+     C                     EXSR #BC
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #B0       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #BA         - VALIDATE CHANGE SCREEN                         *
+     C**                                                              *
+     C** CALLS       - #BAA , ZASNMS                                  *
+     C**                                                              *
+     C** CALLED BY   - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C**   CLEAR SCREEN MESSAGE QUEUE
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*
+     C**   SET OF ERROR INDICATORS
+     C*
+     C                     MOVE '0'       *IN52
+     C                     MOVE '0'       *IN53
+     C                     MOVE '0'       *IN54
+     C                     MOVE '0'       *IN55
+     C                     MOVE '0'       *IN56
+     C                     MOVEA'00'      *IN,63           OFF 63-64
+     C                     MOVE '0'       *IN71                           S01464
+     C*
+     C**   SET OF UPDATE REQUIRED FLAG
+     C*
+     C                     MOVE 'N'       WWUPDR
+     C*
+     C**   SET ON VALID FLAG
+     C*
+     C                     MOVE 'Y'       WWVALD
+     C*
+     C**   DONT VALIDATE FIELDS IF BLANK SUBFILE DISPLAYED
+     C*
+     C           *IN43     IFEQ '1'
+     C*
+     C**   VALIDATE REVIEW FROM FIELDS
+     C**   ---------------------------
+     C*
+     C**   AT LEAST ONE REVIEW FIELD ENTERED
+     C*
+     C           DD1RNS    IFNE *BLANKS
+     C           DD1RFG    ORNE *BLANKS
+     C           DD1RSE    ORNE *BLANKS
+     C           DD1RCY    ORNE *BLANKS
+     C           DD1RIT    ORNE *BLANKS
+     C*
+     C**   IF CUSTOMER & FEE GROUP ENTERED
+     C*
+     C           DD1RNS    IFNE *BLANKS
+     C           DD1RFG    ANDNE*BLANKS
+     C*
+     C**   IF SECURITY,CURRENCY OR INSTRUMENT ENTERED - ERROR
+     C*
+     C           DD1RSE    IFNE *BLANKS
+     C           DD1RCY    ORNE *BLANKS
+     C           DD1RIT    ORNE *BLANKS
+     C*
+     C                     MOVE '1'       *IN52
+     C                     MOVE '1'       *IN53
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03001' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   IF CUSTOMER ENTERED
+     C*
+     C           DD1RNS    IFNE *BLANKS
+     C*
+     C**   VALIDATE CUSTOMER NUMBER/SHORTNAME
+     C*
+     C                     EXSR #BAA
+     C*
+     C                     END
+     C*
+     C**   IF ? ENTERED ON CURRENCY FIELD                                 S01464
+     C*                                                                   S01464
+     C           DD1RCY    IFEQ '?'                                       S01464
+     C                     CALL 'AOCURRR0'                                S01464
+     C                     PARM '*BLANKS' @RTCD   7                       S01464
+     C                     PARM '*KEY   ' @OPTN   7                       S01464
+     C                     PARM DD1RCY    @AJCD   3                       S01464
+     C           SDCURR    PARM SDCURR    DSSDY                           S01464
+     C           @RTCD     IFNE *BLANKS                                   S01464
+     C           @RTCD     ANDNE'*NOSEL '                                 S01464
+     C*                                                                   S01464
+     C                     MOVE '1'       *IN55                           S01464
+     C                     MOVE 'N'       WWVALD                          S01464
+     C                     MOVEL'SE03004' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C*                                                                   S01464
+     C                     ELSE                                           S01464
+     C                     MOVE A6CYCD    DD1RCY                          S01464
+     C           @RTCD     IFEQ '*NOSEL '                                 S01464
+     C                     MOVE *BLANKS   DD1RCY                          S01464
+     C                     END                                            S01464
+     C                     END                                            S01464
+     C                     END                                            S01464
+     C*
+     C**   IF SECURITY ENTERED
+     C*
+     C           DD1RSE    IFNE *BLANKS
+     C*
+     C**   IF INVESTMENT TYPE ENTERED - ERROR
+     C*
+     C           DD1RIT    IFNE *BLANKS
+     C*
+     C                     MOVE '1'       *IN54
+     C                     MOVE '1'       *IN56
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03003' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C**   IF CURRENCY ENTERED - ERROR
+     C*
+     C           DD1RCY    IFNE *BLANKS
+     C*
+     C                     MOVE '1'       *IN54
+     C                     MOVE '1'       *IN55
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03004' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   SET UP CHECKING SEQUENCE
+     C*
+     C                     Z-ADD*ZEROS    WWCKSQ
+     C*
+     C           DD1RSE    IFNE *BLANKS
+     C*
+     C                     Z-ADD1         WWCKSQ
+     C*
+     C                     ELSE
+     C*
+     C           DD1RCY    IFNE *BLANKS
+     C           DD1RIT    ANDNE*BLANKS
+     C*
+     C                     Z-ADD2         WWCKSQ
+     C*
+     C                     ELSE
+     C*
+     C           DD1RIT    IFNE *BLANKS
+     C*
+     C                     Z-ADD3         WWCKSQ
+     C*
+     C                     ELSE
+     C*
+     C           DD1RCY    IFNE *BLANKS
+     C*
+     C                     Z-ADD4         WWCKSQ
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   VALIDATE SUBFILE RECORDS
+     C**   ------------------------
+     C*
+     C**   READ FIRST CHANGED RECORD
+     C*
+     C                     READCSE6030S1                 21
+     C*
+     C**   SET ON SFLNXTCHG INDICATOR (ALSO PROCESSED FOR FILE UPDATE)
+     C*
+     C                     MOVE '1'       *IN47
+     C*
+     C**   DOWHILE CHANGED RECORDS EXIST
+     C*
+     C           *IN21     DOWEQ'0'
+     C*
+     C**   SET OF ERROR INDICATORS
+     C*
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C*
+     C**   IF ACTION IS NON-BLANK OR FEE CODE HAS CHANGED
+     C*
+     C           DD1ACT    IFNE *BLANKS
+     C           DD1FEC    ORNE HH1FEC
+     C*
+     C**   SET ON UPDATE REQUIRED FLAG
+     C*
+     C                     MOVE 'Y'       WWUPDR
+     C*
+     C**   ACTION - IF ENTERED MUST BE = 'D'
+     C*
+     C           DD1ACT    IFNE *BLANKS
+     C           DD1ACT    ANDNE'D'
+     C*
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN63                           S01464
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03005' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*                                                                   S01464
+     C** DO SPF VALIDATION FOR BRANCH/ACTION CODE AUTHORITY               S01464
+     C*                                                                   S01464
+     C           DD1ACT    IFEQ 'D'                                       S01464
+     C           *IN88     IFNE '1'                                       S01464
+     C                     CALL 'ZVACTU'                                  S01464
+     C                     PARM DD1ACT    @ZACTN  1                       S01464
+     C                     PARM           @ERR    10                      S01464
+     C*                                                                   S01464
+     C** If action invalid for user (single entity)                       S01464
+     C*                                                                   S01464
+     C           @ERR      IFEQ 1                                         S01464
+     C                     MOVE '1'       *IN50                           S01464
+     C                     MOVEL'N'       WWVALD                          S01464
+     C                     MOVEL'SEM1019' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C                     ELSE                                           S01464
+     C                     CALL 'ZVACTBU'                                 S01464
+     C                     PARM DD1ACT    @ZACTN  1                       S01464
+     C                     PARM USRBCH    @BRNCH  3                       S01464
+     C                     PARM           @ERR    10                      S01464
+     C*                                                                   S01464
+     C** If action invalid for user (multientity)                         S01464
+     C*                                                                   S01464
+     C           @ERR      IFEQ 1                                         S01464
+     C                     MOVE '1'       *IN50                           S01464
+     C                     MOVEL'N'       WWVALD                          S01464
+     C                     MOVEL'SEM1020' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C           @ERR      IFEQ 2                                         S01464
+     C                     MOVE '1'       *IN50                           S01464
+     C                     MOVEL'N'       WWVALD                          S01464
+     C                     MOVEL'SEM1021' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C                     END                                            S01464
+     C                     END                                            S01464
+     C                     END                                            S01464
+     C*
+     C**   IF FEE CODE HAS CHANGED
+     C*
+     C           DD1FEC    IFNE HH1FEC
+     C*
+     C*****FEE*CODE*MUST*EXIST*ON*SCCGCDPD                                S01464
+     C**   FEE CODE MUST EXIST ON SECGCDPD                                S01464
+     C*
+     C***********DD1FEC    CHAINSCCGCDPD             25                   S01464
+     C           DD1FEC    CHAINSECGCDPD             25                   S01464
+     C*
+     C           *IN25     IFEQ '1'
+     C           SFRECI    OREQ '*'
+     C*
+     C                     MOVE '1'       *IN51
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03006' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   STORE RRN OF FIRST RECORD IN ERROR
+     C*
+     C           WWVALD    IFEQ 'N'
+     C           *IN64     ANDEQ'0'
+     C                     Z-ADDDD1RRN    WWFRRN
+     C                     MOVE '1'       *IN64
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   UPDATE SUBFILE
+     C*
+     C                     UPDATSE6030S1
+     C*
+     C**   READ NEXT CHANGED RECORD
+     C*
+     C                     READCSE6030S1                 21
+     C*
+     C                     END
+     C*
+     C**   IF ERROR ON SUBFILE - RELOAD RRN OF FIRST RECORD IN ERROR
+     C*
+     C           *IN64     IFEQ '1'
+     C                     Z-ADDWWFRRN    DD1RRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #BA0      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BAA        - VALIDATE CUSTOMER NUMBER/SHORTNAME           *
+     C**                                                              *
+     C**   CALLS       - ZASNMS                                       *
+     C**                                                              *
+     C**   CALLED BY   - #BA                                          *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BAA      BEGSR
+     C***********                                                         S01464
+     C*****SPLIT*CUSTOMER*FIELD                                           S01464
+     C***********                                                         S01464
+     C***********          MOVE DD1RNS    WWSCNS                          S01464
+     C*
+     C**   SET OFF VALID CUST NUMBER/SHORTNAME INDICATOR
+     C*
+     C                     MOVE '0'       *IN67
+     C***********                                                         S01464
+     C*****FIRST*CHARACTER*MUST*BE*ALPHANUMERIC*OR*BLANK                  S01464
+     C***********                                                         S01464
+     C***********WWCCH1    LOKUPALPNU                    68               S01464
+     C***********                                                         S01464
+     C*****IF*NOT*VALID*IE*CHARACTER*NOT*FOUND*IN*ARRAY                   S01464
+     C***********                                                         S01464
+     C************IN68     IFEQ '0'                                       S01464
+     C***********          MOVE '1'       *IN67                           S01464
+     C***********          ELSE                                           S01464
+     C***********                                                         S01464
+     C*****CHECK*IF*THE*FIRST*CHARACTER*IS*NUMERIC                        S01464
+     C***********                                                         S01464
+     C***********WWCCH1    LOKUPNUM                      69               S01464
+     C***********                                                         S01464
+     C*****IF*NOT*FOUND*IN*ARRAY*IE*SHORTNAME*ENTERED                     S01464
+     C***********                                                         S01464
+     C************IN69     IFEQ '0'                                       S01464
+     C*
+     C*****ACCESS*CLIENT*MASTER*FILE*TO*CHECK*IF*SHORTNAME*EXISTS         S01464
+     C**   ACCESS AOCUSTR0 TO CHECK IF CUST NUMBER/SHORTNAME EXISTS       S01464
+     C*
+     C***********WWSCNS    SETLLSDCUSTL6                                  S01464
+     C***********WWSCNS    READESDCUSTL6                 26               S01464
+     C                     CALL 'AOCUSTR0'                                S01464
+     C                     PARM *BLANKS   @RTCD   7                       S01464
+     C                     PARM '*KEY   ' @OPTN   7                       S01464
+     C                     PARM DD1RNS    @KEY1  10                       S01464
+     C                     PARM *BLANKS   @KYST   7                       S01464
+     C           SDCUST    PARM SDCUST    DSSDY                           S01464
+     C*
+     C************IN26     IFEQ '1'                                       S01464
+     C           @RTCD     IFNE *BLANKS                                   S01464
+     C           @RTCD     ANDNE'*NOSEL '                                 S01464
+     C           @KYST     OREQ 'ERROR  '                                 S01464
+     C                     MOVE '1'       *IN67
+     C                     ELSE
+     C                     MOVE BBCUST    WWCNUM
+     C           @RTCD     IFEQ '*NOSEL '                                 S01464
+     C                     MOVE *BLANKS   WWCNUM                          S01464
+     C                     END                                            S01464
+     C                     END
+     C***********                                                         S01464
+     C*****ELSE*CUSTOMER*NUMBER*ENTERED                                   S01464
+     C***********                                                         S01464
+     C***********          ELSE                                           S01464
+     C***********                                                         S01464
+     C*****CHECK*NEXT*5*CHARACTERS*ARE*NUMERIC                            S01464
+     C***********                                                         S01464
+     C***********          MOVE '1'       *IN69                           S01464
+     C***********          Z-ADD1         WWFLD1  20                      S01464
+     C***********WWFLD1    DOWLT6                                         S01464
+     C************IN69     ANDEQ'1'                                       S01464
+     C***********          ADD  1         WWFLD1                          S01464
+     C***********CUS,WWFLD1LOKUPNUM                      69               S01464
+     C***********          END                                            S01464
+     C***********                                                         S01464
+     C************IN69     IFEQ '0'                                       S01464
+     C***********          MOVE '1'       *IN67                           S01464
+     C***********          ELSE                                           S01464
+     C***********                                                         S01464
+     C*****LAST*4*CHARACTERS*MUST*BE*BLANK                                S01464
+     C***********                                                         S01464
+     C***********WWC710    IFNE *BLANKS                                   S01464
+     C***********          MOVE '1'       *IN67                           S01464
+     C***********          ELSE                                           S01464
+     C***********                                                         S01464
+     C*****SET*UP*CUSTOMER*NUMBER                                         S01464
+     C***********                                                         S01464
+     C***********          MOVE WWC16     WWCNUM                          S01464
+     C***********                                                         S01464
+     C***********          END                                            S01464
+     C***********                                                         S01464
+     C***********          END                                            S01464
+     C***********                                                         S01464
+     C***********          END                                            S01464
+     C***********                                                         S01464
+     C***********          END                                            S01464
+     C*
+     C           *IN67     IFEQ '1'
+     C*
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE '1'       *IN52
+     C                     MOVEL'SE03002' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C           #BAA0     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BB         - PROCESS AMEND/DELETE                         *
+     C**                                                              *
+     C**   CALLS       - #ZB , ZTNLU1 , ZASNMS                        *
+     C**                                                              *
+     C**   CALLED BY   - #B                                           *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C**   READ FIRST CHANGED RECORD
+     C*
+     C                     READCSE6030S1                 21
+     C*
+     C**   INITIALISE NO OF RECORDS DELETED COUNT
+     C*
+     C                     Z-ADD*ZEROS    WWNORD
+     C*
+     C**   DOWHILE CHANGED RECORDS EXIST
+     C*
+     C           *IN21     DOWEQ'0'
+     C*
+     C**   IF RECORD HAS NOT BEEN CHANGED - IGNORE
+     C*
+     C           DD1ACT    IFNE *BLANKS
+     C           DD1FEC    ORNE HH1FEC
+     C*
+     C**   GET TRANSACTION NO. OF LAST UPDATE
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C*****ACCESS*SCCICFPD                                                S01464
+     C**   ACCESS SECICFPD                                                S01464
+     C*
+     C                     MOVE DD1CFG    WWCFGD
+     C                     MOVE DD1CUS    WWCNUD
+     C                     Z-ADDHH1CKS    WWCKSD
+     C                     MOVE DD1SEC    WWSESD
+     C                     MOVE DD1CCY    WWCCYD
+     C                     MOVE DD1INT    WWSITD
+     C*
+     C***********WWCFPD    CHAINSCCICFPD             33                   S01464
+     C           WWCFPD    CHAINSECICFPD             33                   S01464
+     C*
+     C**   SET UP DAY,MONTH,YEAR OF LAST UPDATE
+     C*
+     C                     MOVE BJMRDT    WWDAT
+     C*
+     C**   IF A RECORD NOT FOUND OR TNLU HAS CHANGED
+     C*
+     C           *IN33     IFEQ '1'
+     C           SCTNLU    ORNE HH1NLU
+     C*
+     C**   HIGHLIGHT INPUT CAPABLE FIELDS & SETON SFLNXTCHG INDICATOR
+     C*
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN51
+     C                     MOVE '1'       *IN47
+     C*
+     C**   LOAD ERROR MESSAGE
+     C*
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03007' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C**   IF RECORD FOUND
+     C*
+     C           *IN33     IFEQ '0'
+     C*
+     C**   SET UP SUBFILE WITH VALUES FROM FILE
+     C*
+     C                     MOVELSCCNUM    DD1CUS
+     C                     MOVELSCCFGC    DD1CFG
+     C                     MOVELSCSESN    DD1SEC
+     C                     MOVELSCCCY     DD1CCY
+     C                     MOVELSCSITP    DD1INT
+     C                     MOVELSCCGCO    DD1FEC
+     C                     MOVELSCCGCO    HH1FEC
+     C                     Z-ADDSCCKSQ    HH1CKS
+     C                     Z-ADDSCTNLU    HH1NLU
+     C*
+     C**   RELEASE RECORD
+     C*
+     C                     EXCPTSCCICF
+     C*
+     C                     END
+     C*
+     C**   UPDATE SUBFILE
+     C*
+     C                     UPDATSE6030S1
+     C*
+     C**   ELSE - UPDATE RECORD
+     C*
+     C                     ELSE
+     C*
+     C**   IF ACTION = BLANKS - AMENDMENT REQUIRED
+     C*
+     C           DD1ACT    IFEQ *BLANKS
+     C*
+     C                     MOVELDD1CUS    SCCNUM
+     C                     MOVELDD1CFG    SCCFGC
+     C                     MOVELDD1SEC    SCSESN
+     C                     MOVELDD1CCY    SCCCY
+     C                     MOVELDD1INT    SCSITP
+     C                     MOVELDD1FEC    SCCGCO
+     C                     Z-ADDHH1CKS    SCCKSQ
+     C                     Z-ADDWWDSTN    SCTNLU
+     C*
+     C           SCLCD     IFNE BJRDNB
+     C                     MOVE 'A'       SCCHTP
+     C                     END
+     C*
+     C                     Z-ADDBJRDNB    SCLCD
+     C                     TIME           SCTLUP
+     C*
+     C***********          UPDATSCCICFP0                                  S01464
+     C                     UPDATSECICFP0                                  S01464
+     C*
+     C**   ELSE - DELETE RECORD
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE '*'       SCRECI
+     C*
+     C                     Z-ADDWWDSTN    SCTNLU
+     C                     MOVE 'D'       SCCHTP
+     C                     Z-ADDBJRDNB    SCLCD
+     C                     TIME           SCTLUP
+     C*
+     C***********          UPDATSCCICFP0                                  S01464
+     C                     UPDATSECICFP0                                  S01464
+     C*
+     C                     ADD  1         WWNORD
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   READ NEXT CHANGED RECORD
+     C*
+     C                     READCSE6030S1                 21
+     C*
+     C                     END
+     C*
+     C**   IF NO ERROR
+     C*
+     C           WWVALD    IFEQ 'Y'
+     C*
+     C**   IF NO OF RECORDS DELETED > 0
+     C*
+     C           WWNORD    IFGT 0
+     C*
+     C**   UPDATE TRAILER FILE
+     C*
+     C                     EXSR #ZB
+     C*
+     C                     END
+     C*
+     C**   COMIT UPDATES
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     END
+     C*
+     C           #BB0      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BC         - DETERMINE NEXT SCREEN                        *
+     C**                                                              *
+     C**   CALLS       - #BCA , #ZA                                   *
+     C**                                                              *
+     C**   CALLED BY   - #B                                           *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BC       BEGSR
+     C*
+     C**   IF CMD-9 PRESSED - DISPLAY INPUT SCREEN
+     C*
+     C           *INKI     IFEQ '1'
+     C*
+     C                     MOVE 'INPUT '  WWSCID
+     C*                                                                   S01464
+     C** DO SPF VALIDATION FOR BRANCH/ACTION CODE AUTHORITY               S01464
+     C*                                                                   S01464
+     C           *IN88     IFNE '1'                                       S01464
+     C                     CALL 'ZVACTU'                                  S01464
+     C                     PARM 'I'       @ZACTN  1                       S01464
+     C                     PARM           @ERR    10                      S01464
+     C*                                                                   S01464
+     C** If action invalid for user (single entity)                       S01464
+     C*                                                                   S01464
+     C           @ERR      IFEQ 1                                         S01464
+     C                     MOVEL'N'       WWVALD                          S01464
+     C                     MOVEL'CHANGE'  WWSCID                          S01464
+     C                     MOVEL'SEM1019' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C                     ELSE                                           S01464
+     C                     CALL 'ZVACTBU'                                 S01464
+     C                     PARM 'I'       @ZACTN  1                       S01464
+     C                     PARM USRBCH    @BRNCH  3                       S01464
+     C                     PARM           @ERR    10                      S01464
+     C*                                                                   S01464
+     C** If action invalid for user (multientity)                         S01464
+     C*                                                                   S01464
+     C           @ERR      IFEQ 1                                         S01464
+     C                     MOVEL'N'       WWVALD                          S01464
+     C                     MOVEL'CHANGE'  WWSCID                          S01464
+     C                     MOVEL'SEM1020' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C           @ERR      IFEQ 2                                         S01464
+     C                     MOVEL'N'       WWVALD                          S01464
+     C                     MOVEL'CHANGE'  WWSCID                          S01464
+     C                     MOVEL'SEM1021' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C                     END                                            S01464
+     C                     END                                            S01464
+     C*
+     C**   ELSE ENTER PRESSED
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE 'CHANGE'  WWSCID
+     C*
+     C**   IF ALL REVIEW FROM FIELDS ARE BLANK
+     C*
+     C           DD1RNS    IFEQ *BLANKS
+     C           DD1RFG    ANDEQ*BLANKS
+     C           DD1RSE    ANDEQ*BLANKS
+     C           DD1RCY    ANDEQ*BLANKS
+     C           DD1RIT    ANDEQ*BLANKS
+     C*
+     C**   IF ANY RECORDS HAVE BEEN DELETED
+     C*
+     C           WWUPDR    IFEQ 'Y'
+     C*
+     C**   SET UP KEY FIELDS
+     C*
+     C                     MOVE *BLANKS   WWCFGX
+     C                     MOVE *BLANKS   WWCNUX
+     C                     Z-ADD*ZEROS    WWCKSX
+     C                     MOVE *BLANKS   WWSESX
+     C                     MOVE *BLANKS   WWCCYX
+     C                     MOVE *BLANKS   WWSITX
+     C*
+     C*****ACCESS*SCCICFXX                                                S01464
+     C**   ACCESS SECICFXX                                                S01464
+     C*
+     C***********WWCFXX    SETLLSCCICFXX                                  S01464
+     C           WWCFXX    SETLLSECICFXX                                  S01464
+     C***********          READ SCCICFXX                 23               S01464
+     C                     READ SECICFXX                 23               S01464
+     C*
+     C**   REBUILD SUBFILE - SECICFXX
+     C*
+     C                     MOVE '1'       *IN70
+     C                     EXSR #ZA
+     C*
+     C                     END
+     C*
+     C**   ELSE - AT LEAST ONE REVIEW FROM FIELD ENTERED
+     C*
+     C                     ELSE
+     C*
+     C**   IF REVIEW FROM CUSTOMER AND FEE GROUP BLANK
+     C*
+     C           DD1RNS    IFEQ *BLANKS
+     C           DD1RFG    ANDEQ*BLANKS
+     C*
+     C**   SET UP KEY FIELDS
+     C*
+     C                     Z-ADDWWCKSQ    WWCKS1
+     C                     MOVE DD1RSE    WWSES1
+     C                     MOVE DD1RCY    WWCCY1
+     C                     MOVE DD1RIT    WWSIT1
+     C                     MOVE *BLANKS   WWCFG1
+     C                     MOVE *BLANKS   WWCNU1
+     C*
+     C*****ACCESS*SCCICFL1                                                S01464
+     C**   ACCESS SECICFL1                                                S01464
+     C*
+     C***********WWCFL1    SETLLSCCICFL1                                  S01464
+     C           WWCFL1    SETLLSECICFL1                                  S01464
+     C***********          READ SCCICFL1                 24               S01464
+     C                     READ SECICFL1                 24               S01464
+     C*
+     C**   REBUILD SUBFILE - SECICFL1
+     C*
+     C                     MOVE '1'       *IN70
+     C                     EXSR #BCA
+     C*
+     C**   ELSE - CUSTOMER OR FEE GROUP ENTERED
+     C*
+     C                     ELSE
+     C*
+     C**   SET UP KEY FIELDS
+     C*
+     C                     MOVELDD1RFG    WWCFGX
+     C           DD1RFG    IFNE *BLANKS
+     C                     MOVE *BLANKS   WWCNUX
+     C                     ELSE
+     C                     MOVE WWCNUM    WWCNUX
+     C                     END
+     C                     Z-ADDWWCKSQ    WWCKSX
+     C                     MOVE DD1RSE    WWSESX
+     C                     MOVE DD1RCY    WWCCYX
+     C                     MOVE DD1RIT    WWSITX
+     C*
+     C*****ACCESS*SCCICFXX                                                S01464
+     C**   ACCESS SECICFXX                                                S01464
+     C*
+     C***********WWCFXX    SETLLSCCICFXX                                  S01464
+     C           WWCFXX    SETLLSECICFXX                                  S01464
+     C***********          READ SCCICFXX                 23               S01464
+     C                     READ SECICFXX                 23               S01464
+     C*
+     C**   REBUILD SUBFILE - SECICFXX
+     C*
+     C                     MOVE '1'       *IN70
+     C                     EXSR #ZA
+     C*
+     C                     END
+     C*
+     C**   IF REVIEW FROM CUSTOMER ONLY ENTERED
+     C*
+     C           DD1RNS    IFNE *BLANKS
+     C           DD1RFG    ANDEQ*BLANKS
+     C           DD1RSE    ANDEQ*BLANKS
+     C           DD1RCY    ANDEQ*BLANKS
+     C           DD1RIT    ANDEQ*BLANKS
+     C*
+     C**   ACCESS SDSECSL1 TO GET CUSTODY FEE GROUP CODE
+     C*
+     C***********WWCNUM    CHAINSDSECSL1             27                   S01464
+     C                     CALL 'AOSECSR0'                                S01464
+     C                     PARM *BLANKS   @RTCD   7                       S01464
+     C                     PARM '*KEY   ' @OPTN   7                       S01464
+     C                     PARM WWCNUM    @KEY2   6                       S01464
+     C           SDSECS    PARM SDSECS    DSSDY                           S01464
+     C***********                                                         S01464
+     C*****IF*RECORD*FOUND*WITH*NON*BLANK*FEE*GROUP                       S01464
+     C********-*SET*UP*REVIEW*FROM*CUSTOMER*AND*FEE*GROUP                 S01464
+     C*
+     C************IN27     IFEQ '0'                                       S01464
+     C           @RTCD     IFEQ *BLANKS                                   S01464
+     C           BFTYLC    ANDNE'D'
+     C           BFCFGC    ANDNE*BLANKS
+     C*
+     C                     MOVELBFCUST    DD1RNS
+     C                     MOVE BFCFGC    DD1RFG
+     C*
+     C**   ELSE - SET ALL REVIEW FIELDS TO BLANKS
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   DD1RNS
+     C                     MOVE *BLANKS   DD1RFG
+     C                     MOVE *BLANKS   DD1RSE
+     C                     MOVE *BLANKS   DD1RCY
+     C                     MOVE *BLANKS   DD1RIT
+     C*
+     C                     END
+     C*
+     C**   ELSE - SET ALL REVIEW FIELDS TO BLANKS
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   DD1RNS
+     C                     MOVE *BLANKS   DD1RFG
+     C                     MOVE *BLANKS   DD1RSE
+     C                     MOVE *BLANKS   DD1RCY
+     C                     MOVE *BLANKS   DD1RIT
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #BC0      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BCA        - LOAD PAGE OF SUBFILE ( SECICFL1 )            *
+     C**                                                              *
+     C**   CALLS       - NONE                                         *
+     C**                                                              *
+     C**   CALLED BY   - #BC                                          *
+     C**                                                              *
+     C*****************************************************************
+     C           #BCA      BEGSR
+     C*
+     C**   IF REQUIRED INITIALISE VARIABLES & CLEAR SUBFILE
+     C*
+     C           *IN70     IFEQ '1'
+     C*
+     C**   INITIALISE SUBFILE RRN ETC.
+     C*
+     C                     Z-ADD0         DD1RRN
+     C                     Z-ADD0         WWSFRN
+     C                     Z-ADD0         WWSFLC
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN47
+     C*
+     C**   CLEAR CHANGE SCREEN SUBFILE
+     C*
+     C                     MOVEA'001'     *IN,43           OFF 43-44 ON-45
+     C                     WRITESE6030C1
+     C                     MOVEA'000'     *IN,43           OFF 43-45
+     C*
+     C                     MOVE '0'       *IN70
+     C*
+     C**   SET ON SFLDSP & SFLDSPCTL INDICATORS
+     C*
+     C                     MOVEA'11'      *IN,43           ON 43-44
+     C*
+     C                     END
+     C*
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C*
+     C                     Z-ADDWWSFRN    DD1RRN
+     C*
+     C**   DO WHILE NOT EOF AND 12 RECORDS NOT YET LOADED
+     C*
+     C           *IN24     DOWEQ'0'
+     C           WWSFLC    ANDLT12
+     C*
+     C                     ADD  1         WWSFLC
+     C                     ADD  1         WWSFRN
+     C                     ADD  1         DD1RRN
+     C*
+     C**   IF RECORDS IS DELETED - PROTECT FIELDS
+     C*
+     C           SCRECI    IFEQ '*'
+     C                     MOVE '1'       *IN63
+     C                     MOVE '1'       *IN71                           S01464
+     C                     MOVE 'D'       DD1STS
+     C                     ELSE
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN71                           S01464
+     C                     MOVE *BLANKS   DD1STS
+     C                     END
+     C*                                                                   S01464
+     C***  PROTECT FEE CODE AND REMOVE UNDERLINE                          S01464
+     C*                                                                   S01464
+     C           @PRTCT    IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *IN63                           S01464
+     C                     END                                            S01464
+     C*
+     C                     MOVE *BLANKS   DD1ACT
+     C********** SCCNUM    IFEQ *ZEROS                                                        CSD027
+     C           SCCNUM    IFEQ *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   DD1CUS
+     C                     ELSE
+     C                     MOVE SCCNUM    DD1CUS
+     C                     END
+     C                     MOVE SCCFGC    DD1CFG
+     C                     MOVE SCSESN    DD1SEC
+     C                     MOVE SCCCY     DD1CCY
+     C                     MOVE SCSITP    DD1INT
+     C                     MOVE SCCGCO    DD1FEC
+     C*
+     C                     MOVE SCCGCO    HH1FEC
+     C                     Z-ADDSCTNLU    HH1NLU
+     C                     Z-ADDSCCKSQ    HH1CKS
+     C*
+     C**   WRITE A SUBFILE RECORD
+     C*
+     C                     WRITESE6030S1
+     C*
+     C*****READ*NEXT*RECORD*ON*SCCICFL1                                   S01464
+     C**   READ NEXT RECORD ON SECICFL1                                   S01464
+     C*
+     C***********          READ SCCICFL1                 24               S01464
+     C                     READ SECICFL1                 24               S01464
+     C*
+     C                     END
+     C*
+     C**   INITIALISE COUNTER
+     C*
+     C                     Z-ADD*ZEROS    WWSFLC
+     C*
+     C**   IF EOF - SETON SFLEND INDICATOR
+     C*
+     C           *IN24     IFEQ '1'
+     C                     MOVE '1'       *IN46
+     C                     END
+     C*
+     C**   IF NO RECORDS WRITTEN TO SUBFILE
+     C*
+     C           WWSFRN    IFEQ 0
+     C                     MOVEL'SE03018' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE '0'       *IN43
+     C                     END
+     C*
+     C           #BCA0     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #C          - INPUT SCREEN PROCESSING                      *
+     C**                                                              *
+     C**   CALLS       - #CA , #CB , #CC                              *
+     C**                                                              *
+     C**   CALLED BY   - MAINLINE                                     *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C**   LOAD A BLANK PAGE OF SUBFILE RECORDS
+     C*
+     C                     MOVE '1'       *IN70
+     C                     EXSR #CC
+     C*
+     C**   SET REVIEW FROM FIELDS TO BLANK
+     C*
+     C                     MOVE *BLANKS   DD2RNS
+     C                     MOVE *BLANKS   DD2RFG
+     C                     MOVE *BLANKS   DD2RSE
+     C                     MOVE *BLANKS   DD2RCY
+     C                     MOVE *BLANKS   DD2RIT
+     C*
+     C**   DOWHILE NOT CMD-3 & SCREEN-ID = 'INPUT '
+     C*
+     C           *INKC     DOWEQ'0'
+     C           WWSCID    ANDEQ'INPUT '
+     C*
+     C**   WRITE INPUT SCREEN FOOTING FORMAT
+     C*
+     C                     WRITESE6030F2
+     C*
+     C**   WRITE INPUT SCREEN CONTROL FORMAT
+     C*
+     C                     WRITESE6030C2
+     C*
+     C**   IF ERRORS EXIST - DISPLAY MESSAGE SUBFILE
+     C*
+     C           WWVALD    IFEQ 'N'
+     C                     WRITESE6030C3
+     C                     END
+     C*
+     C**   READ INPUT SCREEN CONTROL FORMAT
+     C*
+     C                     READ SE6030C2                 22
+     C*
+     C**   IF NOT CMD-3
+     C*
+     C           *INKC     IFEQ '0'
+     C*
+     C**   ROLLUP
+     C*
+     C           *IN42     IFEQ '1'
+     C*
+     C**   LOAD NEXT PAGE OF BLANK SUBFILE RECORDS
+     C*
+     C                     MOVE '0'       *IN70
+     C                     EXSR #CC
+     C*
+     C                     ELSE
+     C*
+     C**   VALIDATE INPUT SCREEN
+     C*
+     C                     EXSR #CA
+     C*
+     C**   IF VALID & RECORDS INSERTED
+     C*
+     C           WWVALD    IFEQ 'Y'
+     C           WWUPDR    ANDEQ'Y'
+     C*
+     C**   PROCESS INSERT
+     C*
+     C                     EXSR #CB
+     C*
+     C                     END
+     C*
+     C**   IF VALID SO FAR
+     C*
+     C           WWVALD    IFEQ 'Y'
+     C*
+     C**   IF CMD-9 PRESSED - DISPLAY CHANGE SCREEN
+     C*
+     C           *INKI     IFEQ '1'
+     C*
+     C                     MOVE '1'       *IN70
+     C                     MOVE 'CHANGE'  WWSCID
+     C*
+     C**   ELSE - DISPLAY BLANK INPUT SCREEN
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE '1'       *IN70
+     C                     EXSR #CC
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #C0       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** #CA         - VALIDATE INPUT SCREEN                          *
+     C**                                                              *
+     C** CALLS       - ZASNMS                                         *
+     C**                                                              *
+     C** CALLED BY   - #C                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #CA       BEGSR
+     C*
+     C**   CLEAR SCREEN MESSAGE QUEUE
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*
+     C**   SET OF UPDATE REQUIRED FLAG
+     C*
+     C                     MOVE 'N'       WWUPDR
+     C*
+     C**   SET ON VALID FLAG
+     C*
+     C                     MOVE 'Y'       WWVALD
+     C*
+     C                     MOVE '0'       *IN64
+     C*
+     C**   VALIDATE SUBFILE RECORDS
+     C**   ------------------------
+     C*
+     C**   READ FIRST CHANGED RECORD
+     C*
+     C                     READCSE6030S2                 21
+     C*
+     C**   SET ON SFLNXTCHG INDICATOR (ALSO PROCESSED FOR FILE UPDATE)
+     C*
+     C                     MOVE '1'       *IN47
+     C*
+     C**   DOWHILE CHANGED RECORDS EXIST
+     C*
+     C           *IN21     DOWEQ'0'
+     C*
+     C**   SET OF ERROR INDICATORS
+     C*
+     C                     MOVE '0'       *IN57
+     C                     MOVE '0'       *IN58
+     C                     MOVE '0'       *IN59
+     C                     MOVE '0'       *IN60
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN62
+     C*
+     C**   IF RECORD NON-BLANK
+     C*
+     C           DD2CUS    IFNE *BLANKS
+     C           DD2CFG    ORNE *BLANKS
+     C           DD2SEC    ORNE *BLANKS
+     C           DD2CCY    ORNE *BLANKS
+     C           DD2INT    ORNE *BLANKS
+     C           DD2FEC    ORNE *BLANKS
+     C*
+     C**   SET ON UPDATE REQUIRED FLAG
+     C*
+     C                     MOVE 'Y'       WWUPDR
+     C*                                                                   S01464
+     C**   IF CUSTOMER ENTERED                                            S01464
+     C*                                                                   S01464
+     C           DD2CUS    IFNE *BLANKS                                   S01464
+     C*                                                                   S01464
+     C**   CUSTOMER MUST EXIST ON SDSECSL1                                S01464
+     C*                                                                   S01464
+     C                     CALL 'AOSECSR0'                                S01464
+     C                     PARM *BLANKS   @RTCD   7                       S01464
+     C                     PARM '*KEY   ' @OPTN   7                       S01464
+     C                     PARM DD2CUS    @KEY2   6                       S01464
+     C           SDSECS    PARM SDSECS    DSSDY                           S01464
+     C*                                                                   S01464
+     C           @RTCD     IFNE *BLANKS                                   S01464
+     C           @RTCD     ANDNE'*NOSEL '                                 S01464
+     C           BFTYLC    OREQ 'D'                                       S01464
+     C           BFSBJF    ORNE 'Y'                                       S01464
+     C           @RTCD     ANDNE'*NOSEL '                                 S01464
+     C*                                                                   S01464
+     C                     MOVE BFCUST    DD2CUS                          S01464
+     C                     MOVE '1'       *IN57                           S01464
+     C                     MOVE 'N'       WWVALD                          S01464
+     C                     MOVEL'SE03008' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C*                                                                   S01464
+     C                     ELSE                                           S01464
+     C                     MOVE BFCUST    DD2CUS                          S01464
+     C           @RTCD     IFEQ '*NOSEL '                                 S01464
+     C                     MOVE *BLANKS   DD2CUS                          S01464
+     C                     END                                            S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C                     END                                            S01464
+     C*
+     C**   IF CUSTOMER AND FEE GROUP NOT ENTERED
+     C*
+     C           DD2CUS    IFEQ *BLANKS
+     C           DD2CFG    ANDEQ*BLANKS
+     C*
+     C                     MOVE '1'       *IN57
+     C                     MOVE '1'       *IN58
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03010' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     ELSE
+     C*
+     C**   IF CUSTOMER AND FEE GROUP ENTERED
+     C*
+     C           DD2CUS    IFNE *BLANKS
+     C           DD2CFG    ANDNE*BLANKS
+     C*
+     C                     MOVE '1'       *IN57
+     C                     MOVE '1'       *IN58
+     C                     MOVE 'N'       WWVALD
+     C****                 MOVEL'SE03001' ZAMSID                          S01355
+     C                     MOVEL'SE03020' ZAMSID                          S01355
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C                     END
+     C***********                                                         S01464
+     C*****IF*CUSTOMER*ENTERED                                            S01464
+     C************                                                        S01464
+     C***********DD2CUS    IFNE *BLANKS                                   S01464
+     C***********                                                         S01464
+     C*****CUSTOMER*MUST*EXIST*ON*SDSECSL1                                S01464
+     C***********                                                         S01464
+     C***********DD2CUS    CHAINSDSECSL1             27                   S01464
+     C***********                                                         S01464
+     C************IN27     IFEQ '1'                                       S01464
+     C***********BFTYLC    OREQ 'D'                                       S01464
+     C***********BFSBJF    ORNE 'Y'                                       S01464
+     C***********                                                         S01464
+     C***********          MOVE '1'       *IN57                           S01464
+     C***********          MOVE 'N'       WWVALD                          S01464
+     C***********          MOVEL'SE03008' ZAMSID                          S01464
+     C***********          EXSR ZASNMS                                    S01464
+     C***********                                                         S01464
+     C***********          END                                            S01464
+     C***********                                                         S01464
+     C***********          END                                            S01464
+     C*
+     C**   IF FEE GROUP ENTERED
+     C*
+     C           DD2CFG    IFNE *BLANKS
+     C*
+     C*****FEE*GROUP*MUST*EXIST*ON*SCCFGRPD                               S01464
+     C**   FEE GROUP MUST EXIST ON SECFGRPD                               S01464
+     C*
+     C***********DD2CFG    CHAINSCCFGRPD             31                   S01464
+     C           DD2CFG    CHAINSECFGRPD             31                   S01464
+     C*
+     C           *IN31     IFEQ '1'
+     C           SBRECI    OREQ '*'
+     C*
+     C                     MOVE '1'       *IN58
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03009' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   IF SECURITY ENTERED
+     C*
+     C           DD2SEC    IFNE *BLANKS
+     C*
+     C**   IF INVESTMENT TYPE ENTERED - ERROR
+     C*
+     C           DD2INT    IFNE *BLANKS
+     C*
+     C                     MOVE '1'       *IN59
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03003' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C**   IF CURRENCY ENTERED - ERROR
+     C*
+     C           DD2CCY    IFNE *BLANKS
+     C*
+     C                     MOVE '1'       *IN59
+     C                     MOVE '1'       *IN60
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03004' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C**   SECURITY MUST EXIST ON SECTY
+     C*
+     C           DD2SEC    CHAINSECTY                28
+     C*
+     C           *IN28     IFEQ '1'
+     C           RECI      OREQ '*'
+     C*
+     C                     MOVE '1'       *IN59
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03011' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   IF INVESTMENT TYPE ENTERED
+     C*
+     C           DD2INT    IFNE *BLANKS
+     C*
+     C**   INVESTMENT TYPE MUST EXIST ON INVTPC
+     C*
+     C           DD2INT    CHAININVTPC               29
+     C*
+     C           *IN29     IFEQ '1'
+     C*
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03013' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C**   IF CURRENCY ENTERED
+     C*
+     C           DD2CCY    IFNE *BLANKS
+     C*
+     C**   INVESTMENT TYPE & CURRENCY MUST EXIST ON INVTPC
+     C*
+     C                     MOVE DD2INT    WWINVT
+     C                     MOVE DD2CCY    WWCCYI
+     C           WWNVTP    CHAININVTPC               29
+     C*
+     C           *IN29     IFEQ '1'
+     C*
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03013' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   IF CURRENCY ENTERED
+     C*
+     C           DD2CCY    IFNE *BLANKS
+     C           DD2CCY    ANDNE'ALL'                                     S01464
+     C*
+     C*****CURRENCY*MUST*EXIST*ON*SCCURRJ0                                S01464
+     C***  CURRENCY MUST EXIST ON SDCURRPD                                S01464
+     C*
+     C                     CALL 'AOCURRR0'                                S01464
+     C                     PARM '*BLANKS' @RTCD   7                       S01464
+     C                     PARM '*KEY   ' @OPTN   7                       S01464
+     C                     PARM DD2CCY    @AJCD   3                       S01464
+     C           SDCURR    PARM SDCURR    DSSDY                           S01464
+     C***********DD2CCY    CHAINSDCURRJ0             30                   S01464
+     C***********                                                         S01464
+     C************IN30     IFEQ '1'                                       S01464
+     C***********A6TYLC    OREQ 'D'                                       S01464
+     C           @RTCD     IFNE *BLANKS                                   S01464
+     C           @RTCD     ANDNE'*NOSEL '                                 S01464
+     C*
+     C                     MOVE '1'       *IN60
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03015' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     ELSE
+     C*                                                                   S01464
+     C                     MOVE A6CYCD    DD2CCY                          S01464
+     C           @RTCD     IFEQ '*NOSEL '                                 S01464
+     C                     MOVE *BLANKS   DD2CCY                          S01464
+     C                     END                                            S01464
+     C*
+     C**   IF INVESTMENT TYPE IS NOT ENTERED
+     C**      PRECIOUS METAL INDICATOR MUST = 'Y'
+     C*
+     C           DD2INT    IFEQ *BLANKS
+     C***********CYPMRT    ANDNE'Y'                                       S01464
+     C           A6PMRT    ANDNE'Y'                                       S01464
+     C*
+     C                     MOVE '1'       *IN60
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03015' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C                     END
+     C*                                                                   S01464
+     C**   IF ONLY CURRENCY FIELD ENTERED                                 S01464
+     C*                                                                   S01464
+     C           DD2CCY    IFEQ 'ALL'                                     S01464
+     C           DD2SEC    ANDNE*BLANKS                                   S01464
+     C           DD2INT    ANDNE*BLANKS                                   S01464
+     C                     MOVE '1'       *IN60                           S01464
+     C                     MOVE 'N'       WWVALD                          S01464
+     C                     MOVEL'SE03015' ZAMSID                          S01464
+     C                     EXSR ZASNMS                                    S01464
+     C                     END                                            S01464
+     C*
+     C                     END
+     C*
+     C**   IF SECURITY , INVESTMENT TYPE & CCY NOT ENTERED
+     C*
+     C           DD2SEC    IFEQ *BLANKS
+     C           DD2INT    ANDEQ*BLANKS
+     C           DD2CCY    ANDEQ*BLANKS
+     C*
+     C                     MOVE '1'       *IN59
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03016' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C*****FEE*CODE*MUST*EXIST*ON*SCCGCDPD                                S01464
+     C**   FEE CODE MUST EXIST ON SECGCDPD                                S01464
+     C*
+     C***********DD2FEC    CHAINSCCGCDPD             25                   S01464
+     C           DD2FEC    CHAINSECGCDPD             25                   S01464
+     C*
+     C           *IN25     IFEQ '1'
+     C           SFRECI    OREQ '*'
+     C*
+     C                     MOVE '1'       *IN62
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03006' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C**   SET UP CHECKING SEQUENCE
+     C*
+     C                     Z-ADD*ZEROS    HH2CKS
+     C           DD2SEC    IFNE *BLANKS
+     C                     Z-ADD1         HH2CKS
+     C                     ELSE
+     C           DD2CCY    IFNE *BLANKS
+     C           DD2INT    ANDNE*BLANKS
+     C                     Z-ADD2         HH2CKS
+     C                     ELSE
+     C           DD2INT    IFNE *BLANKS
+     C                     Z-ADD3         HH2CKS
+     C                     ELSE
+     C           DD2CCY    IFNE *BLANKS
+     C                     Z-ADD4         HH2CKS
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**   CHECK RECORD DOES NOT ALREADY EXIST
+     C*
+     C                     MOVE DD2CFG    WWCFGX
+     C                     MOVE DD2CUS    WWCNUX
+     C                     Z-ADDHH2CKS    WWCKSX
+     C                     MOVE DD2SEC    WWSESX
+     C                     MOVE DD2CCY    WWCCYX
+     C                     MOVE DD2INT    WWSITX
+     C*
+     C***********WWCFXX    CHAINSCCICFXX             23                   S01464
+     C           WWCFXX    CHAINSECICFXX             23                   S01464
+     C*
+     C**   IF RECORD FOUND
+     C*
+     C           *IN23     IFEQ '0'
+     C*
+     C**   IF RECORD NOT DELETED - ERROR
+     C*
+     C           SCRECI    IFNE '*'
+     C*
+     C                     MOVE '1'       *IN57
+     C                     MOVE '1'       *IN58
+     C                     MOVE '1'       *IN59
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03017' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     ELSE
+     C*
+     C**   SAVE TRANSACTION NUMBER OF LAST UPDATE
+     C*
+     C                     Z-ADDSCTNLU    HH2NLU
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   STORE RRN OF FIRST RECORD IN ERROR
+     C*
+     C           WWVALD    IFEQ 'N'
+     C           *IN64     ANDEQ'0'
+     C                     Z-ADDDD2RRN    WWFRRN
+     C                     MOVE '1'       *IN64
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   UPDATE SUBFILE
+     C*
+     C                     UPDATSE6030S2
+     C*
+     C**   READ NEXT CHANGED RECORD
+     C*
+     C                     READCSE6030S2                 21
+     C*
+     C                     END
+     C*
+     C**   IF ERROR - RELOAD RRN OF FIRST RECORD IN ERROR
+     C*
+     C           *IN64     IFEQ '1'
+     C                     Z-ADDWWFRRN    DD2RRN
+     C                     END
+     C*
+     C           #CA0      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #CB         - PROCESS INSERT                               *
+     C**                                                              *
+     C**   CALLS       - #ZB , ZASNMS                                 *
+     C**                                                              *
+     C**   CALLED BY   - #C                                           *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #CB       BEGSR
+     C*
+     C**   READ FIRST CHANGED RECORD
+     C*
+     C                     READCSE6030S2                 21
+     C*
+     C**   INITIALISE NO OF RECORDS INSERTED COUNT
+     C*
+     C                     Z-ADD*ZEROS    WWNORI
+     C*
+     C**   DOWHILE CHANGED RECORDS EXIST
+     C*
+     C           *IN21     DOWEQ'0'
+     C*
+     C**   CHECK THAT RECORD NOT BLANKS
+     C*
+     C           DD2CFG    IFNE *BLANKS
+     C           DD2CUS    ORNE *BLANKS
+     C           DD2SEC    ORNE *BLANKS
+     C           DD2CCY    ORNE *BLANKS
+     C           DD2INT    ORNE *BLANKS
+     C*
+     C**   GET TRANSACTION NO. OF LAST UPDATE
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C*****ACCESS*SCCICFPD                                                S01464
+     C**   ACCESS SECICFPD                                                S01464
+     C*
+     C                     MOVE DD2CFG    WWCFGD
+     C                     MOVE DD2CUS    WWCNUD
+     C                     Z-ADDHH2CKS    WWCKSD
+     C                     MOVE DD2SEC    WWSESD
+     C                     MOVE DD2CCY    WWCCYD
+     C                     MOVE DD2INT    WWSITD
+     C*
+     C***********WWCFPD    CHAINSCCICFPD             33                   S01464
+     C           WWCFPD    CHAINSECICFPD             33                   S01464
+     C*
+     C**   SET UP DAY,MONTH,YEAR OF LAST UPDATE
+     C*
+     C                     MOVE BJMRDT    WWDAT
+     C*
+     C**   IF A RECORD ALREADY EXISTS
+     C*
+     C           *IN33     IFEQ '0'
+     C*
+     C**   IF TNLU HAS CHANGED
+     C*
+     C           SCTNLU    IFNE HH2NLU
+     C*
+     C**   HIGHLIGHT INPUT CAPABLE FIELDS & SETON SFLNXTCHG INDICATOR
+     C*
+     C                     MOVE '1'       *IN57
+     C                     MOVE '1'       *IN58
+     C                     MOVE '1'       *IN59
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN62
+     C                     MOVE '1'       *IN47
+     C*
+     C**   UPDATE SUBFILE WITH VALUES FROM FILE
+     C*
+     C                     MOVELSCCNUM    DD2CUS
+     C                     MOVELSCCFGC    DD2CFG
+     C                     MOVELSCSESN    DD2SEC
+     C                     MOVELSCCCY     DD2CCY
+     C                     MOVELSCSITP    DD2INT
+     C                     MOVELSCCGCO    DD2FEC
+     C                     Z-ADDSCCKSQ    HH2CKS
+     C                     Z-ADDSCTNLU    HH2NLU
+     C*
+     C                     UPDATSE6030S2
+     C*
+     C**   LOAD MESSAGE & RELEASE RECORD
+     C*
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03007' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     EXCPTSCCICF
+     C*
+     C**   ELSE - UPDATE RECORD
+     C*
+     C                     ELSE
+     C*
+     C                     MOVEL'D'       SCRECI
+     C                     MOVELDD2CUS    SCCNUM
+     C                     MOVELDD2CFG    SCCFGC
+     C                     MOVELDD2SEC    SCSESN
+     C                     MOVELDD2CCY    SCCCY
+     C                     MOVELDD2INT    SCSITP
+     C                     MOVELDD2FEC    SCCGCO
+     C                     Z-ADDHH2CKS    SCCKSQ
+     C                     Z-ADDWWDSTN    SCTNLU
+     C                     MOVE 'I'       SCCHTP
+     C*
+     C                     Z-ADDBJRDNB    SCLCD
+     C                     TIME           SCTLUP
+     C*
+     C***********          UPDATSCCICFP0                                  S01464
+     C                     UPDATSECICFP0                                  S01464
+     C*
+     C                     ADD  1         WWNORI
+     C*
+     C                     END
+     C*
+     C**   ELSE - RECORD DOES NOT EXIST
+     C*
+     C                     ELSE
+     C*
+     C                     MOVEL'D'       SCRECI
+     C                     MOVELDD2CUS    SCCNUM
+     C                     MOVELDD2CFG    SCCFGC
+     C                     MOVELDD2SEC    SCSESN
+     C                     MOVELDD2CCY    SCCCY
+     C                     MOVELDD2INT    SCSITP
+     C                     MOVELDD2FEC    SCCGCO
+     C                     Z-ADDHH2CKS    SCCKSQ
+     C*
+     C                     Z-ADDWWDSTN    SCTNLU
+     C                     MOVE 'I'       SCCHTP
+     C*
+     C                     Z-ADDBJRDNB    SCLCD
+     C                     TIME           SCTLUP
+     C*
+     C***********          WRITESCCICFP0               32                 S01464
+     C                     WRITESECICFP0               32                 S01464
+     C*
+     C**   IF DUPLICATE KEY ERROR
+     C*
+     C           *IN32     IFEQ '1'
+     C*
+     C           STATUS    IFEQ 01021
+     C*
+     C                     ROLBK
+     C*
+     C**   CLEAR MESSAGES CAUSED BY STATUS ERROR
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C                     MOVE 'N'       WWVALD
+     C                     MOVEL'SE03007' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     ELSE
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ADD  1         WWNORI
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   READ NEXT CHANGED RECORD
+     C*
+     C                     READCSE6030S2                 21
+     C*
+     C                     END
+     C*
+     C**   IF NO ERROR
+     C*
+     C           WWVALD    IFEQ 'Y'
+     C*
+     C**   IF NO OF RECORDS INSERTED > 0
+     C*
+     C           WWNORI    IFGT 0
+     C*
+     C**   UPDATE TRAILER FILE
+     C*
+     C                     EXSR #ZB
+     C*
+     C                     END
+     C*
+     C**   COMIT UPDATES
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     END
+     C*
+     C           #CB0      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #CC         - LOAD PAGE OF INPUT SCREEN SUBFILE            *
+     C**                                                              *
+     C**   CALLS       - NONE                                         *
+     C**                                                              *
+     C**   CALLED BY   - #C                                           *
+     C**                                                              *
+     C*****************************************************************
+     C           #CC       BEGSR
+     C*
+     C**   IF REQUIRED INITIALISE VARIABLES & CLEAR SUBFILE
+     C*
+     C           *IN70     IFEQ '1'
+     C*
+     C**   INITIALISE SUBFILE RRN ETC.
+     C*
+     C                     Z-ADD0         DD2RRN
+     C                     Z-ADD0         WWSFRN
+     C                     Z-ADD0         WWSFLC
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN47
+     C*
+     C**   CLEAR INPUT SCREEN SUBFILE
+     C*
+     C                     MOVEA'001'     *IN,43           OFF 43-44 ON-45
+     C                     WRITESE6030C2
+     C                     MOVEA'000'     *IN,43           OFF 43-45
+     C*
+     C                     MOVE '0'       *IN70
+     C*
+     C**   SET ON SFLDSP & SFLDSPCTL INDICATORS
+     C*
+     C                     MOVEA'11'      *IN,43           ON 43-44
+     C*
+     C                     END
+     C*
+     C                     Z-ADDWWSFRN    DD2RRN
+     C*
+     C                     MOVE '0'       *IN57
+     C                     MOVE '0'       *IN58
+     C                     MOVE '0'       *IN59
+     C                     MOVE '0'       *IN60
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN62
+     C*
+     C**   DO WHILE 12 BLANK RECORDS NOT YET LOADED
+     C*
+     C           WWSFLC    DOWLT12
+     C*
+     C                     ADD  1         WWSFLC
+     C                     ADD  1         WWSFRN
+     C                     ADD  1         DD2RRN
+     C*
+     C                     MOVE *BLANKS   DD2CUS
+     C                     MOVE *BLANKS   DD2CFG
+     C                     MOVE *BLANKS   DD2SEC
+     C                     MOVE *BLANKS   DD2CCY
+     C                     MOVE *BLANKS   DD2INT
+     C                     MOVE *BLANKS   DD2FEC
+     C*
+     C**   WRITE A SUBFILE RECORD
+     C*
+     C                     WRITESE6030S2
+     C*
+     C                     END
+     C*
+     C**   INITIALISE COUNTER
+     C*
+     C                     Z-ADD*ZEROS    WWSFLC
+     C*
+     C           #CC0      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZA         - LOAD PAGE OF SUBFILE ( SECICFXX )            *
+     C**                                                              *
+     C**   CALLS       - NONE                                         *
+     C**                                                              *
+     C**   CALLED BY   - #B , #BC                                     *
+     C**                                                              *
+     C*****************************************************************
+     C           #ZA       BEGSR
+     C*
+     C**   IF REQUIRED INITIALISE VARIABLES & CLEAR SUBFILE
+     C*
+     C           *IN70     IFEQ '1'
+     C*
+     C**   INITIALISE SUBFILE RRN ETC.
+     C*
+     C                     Z-ADD0         DD1RRN
+     C                     Z-ADD0         WWSFRN
+     C                     Z-ADD0         WWSFLC
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN47
+     C*
+     C**   CLEAR CHANGE SCREEN SUBFILE
+     C*
+     C                     MOVEA'001'     *IN,43           OFF 43-44 ON-45
+     C                     WRITESE6030C1
+     C                     MOVEA'000'     *IN,43           OFF 43-45
+     C*
+     C                     MOVE '0'       *IN70
+     C*
+     C**   SET ON SFLDSP & SFLDSPCTL INDICATORS
+     C*
+     C                     MOVEA'11'      *IN,43           ON 43-44
+     C*
+     C                     END
+     C*
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C*
+     C                     Z-ADDWWSFRN    DD1RRN
+     C*
+     C**   DO WHILE NOT EOF AND 12 RECORDS NOT YET LOADED
+     C*
+     C           *IN23     DOWEQ'0'
+     C           WWSFLC    ANDLT12
+     C*
+     C                     ADD  1         WWSFLC
+     C                     ADD  1         WWSFRN
+     C                     ADD  1         DD1RRN
+     C*
+     C**   IF RECORDS IS DELETED - PROTECT FIELDS
+     C*
+     C           SCRECI    IFEQ '*'
+     C                     MOVE '1'       *IN63
+     C                     MOVE '1'       *IN71                           S01464
+     C                     MOVE 'D'       DD1STS
+     C                     ELSE
+     C                     MOVE '0'       *IN63
+     C                     MOVE '0'       *IN71                           S01464
+     C                     MOVE *BLANKS   DD1STS
+     C                     END
+     C*                                                                   S01464
+     C***  PROTECT FEE CODE AND REMOVE UNDERLINE                          S01464
+     C*                                                                   S01464
+     C           @PRTCT    IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *IN63                           S01464
+     C                     END                                            S01464
+     C*
+     C                     MOVE *BLANKS   DD1ACT
+     C********** SCCNUM    IFEQ *ZEROS                                                        CSD027
+     C           SCCNUM    IFEQ *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   DD1CUS
+     C                     ELSE
+     C                     MOVE SCCNUM    DD1CUS
+     C                     END
+     C                     MOVE SCCFGC    DD1CFG
+     C                     MOVE SCSESN    DD1SEC
+     C                     MOVE SCCCY     DD1CCY
+     C                     MOVE SCSITP    DD1INT
+     C                     MOVE SCCGCO    DD1FEC
+     C*
+     C                     MOVE SCCGCO    HH1FEC
+     C                     MOVE SCTNLU    HH1NLU
+     C                     MOVE SCCKSQ    HH1CKS
+     C*
+     C**   WRITE A SUBFILE RECORD
+     C*
+     C                     WRITESE6030S1
+     C*
+     C*****READ*NEXT*RECORD*ON*SCCICFXX                                   S01464
+     C**   READ NEXT RECORD ON SECICFXX                                   S01464
+     C*
+     C***********          READ SCCICFXX                 23               S01464
+     C                     READ SECICFXX                 23               S01464
+     C*
+     C                     END
+     C*
+     C**   INITIALISE COUNTER
+     C*
+     C                     Z-ADD*ZEROS    WWSFLC
+     C*
+     C**   IF EOF - SETON SFLEND INDICATOR
+     C*
+     C           *IN23     IFEQ '1'
+     C                     MOVE '1'       *IN46
+     C                     END
+     C*
+     C**   IF NO RECORDS WRITTEN TO SUBFILE
+     C*
+     C           WWSFRN    IFEQ 0
+     C                     MOVEL'SE03018' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'N'       WWVALD
+     C                     MOVE '0'       *IN43
+     C                     END
+     C*
+     C           #ZA0      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZB         - UPDATE TRAILER FILE                          *
+     C**                                                              *
+     C**   CALLS       - NONE                                         *
+     C**                                                              *
+     C**   CALLED BY   - #BB , #CB                                    *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZB       BEGSR
+     C*
+     C**   ACCESS CUST/INST FEE CODES TRAILER
+     C*
+     C***********1         CHAINSCCICFZZ             32                   S01464
+     C           1         CHAINSECICFPA             32                   S01464
+     C*
+     C           *IN32     IFEQ '1'
+     C           SCRECI    ORNE 'Z'
+     C                     ROLBK
+     C           *LOCK     IN   LDA                                       S01464
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           *             *
+     C***********          MOVEL'SCCICFZZ'DBFILE           * DBERROR 002 *S01464
+     C                     MOVEL'SECICFPA'DBFILE           * DBERROR 002 *S01464
+     C                     MOVEL*BLANKS   DBKEY            *             *
+     C                     OUT  LDA                        ***************S01464
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C**   IF ACTION = 'D' , SUBTRACT NO OF RECORDS
+     C*
+     C           WWNORD    IFGT 0
+     C*
+     C                     SUB  WWNORD    SCNORE
+     C*
+     C**   ELSE - ACTION MUST BE INSERT , ADD TO NO OF RECORDS
+     C*
+     C                     ELSE
+     C*
+     C                     ADD  WWNORI    SCNORE
+     C*
+     C                     END
+     C*
+     C**   UPDATE TRAILER FILE
+     C*
+     C***********          UPDATSCCICFZ0
+     C                     UPDATSECICFZ0
+     C*
+     C**   SET UP COMMITMENT TEXT
+     C*
+     C                     MOVEL'SE'      MDID
+     C                     MOVEL'SE6030'  PGMN
+     C                     MOVELDDWSID    WSIDX
+     C                     MOVELUSER      USIDX
+     C                     MOVE *BLANKS   ACTCDX
+     C                     TIME           MTIME
+     C*
+     C           #ZB0      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   ZTNLU1    - RETREIVE/UPDATE TRANS NO. OF LAST UPDATE       *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #BB , #CB                                      *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     Z-ADDFNATN     WWDSTN
+     C                     Z-ADDFNATN     WWNATN
+     C                     ADD  1         FNATN
+     C                     OUT  DNATN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   ZASNMS    - SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE        *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #BA , #BAA , #BB , #CA , #CB                   *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           ZASNMS    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR       - PROGRAM ERROR HANDLING ROUTINE               *
+     C**                                                              *
+     C**   CALLS       - NONE                                         *
+     C**                                                              *
+     C**   CALLED BY   - #CB                                          *
+     C**                                                              *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     ROLBK
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     O*****************************************************************
+     O*
+     O*****RELEASE*THE*RECORD*FROM*SCCICFPD                               S01464
+     O**   RELEASE THE RECORD FROM SCCICFPD                               S01464
+     O*
+     O*SCCICFP0E                SCCICF                                    S01464
+     OSECICFP0E                SCCICF                                     S01464
+     O*****************************************************************
+     O/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

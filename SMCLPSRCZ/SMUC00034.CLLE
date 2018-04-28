@@ -1,0 +1,52 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Run various SQL scripts')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00034 - Run various SQL scripts                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Last Amend No. BG26933            Date 26Jan10              */
+/*       Prev Amend No. 248506  *CREATE    Date 03Aug07              */
+/*                      xxxxxx             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed UPGSQLC01.                                */
+/*       248506  - CL Program to amend CLOANCL.                      */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Build string to delete record. */
+             CHGVAR     VAR(&STM_STR) VALUE('update LEFEED set +
+                          FEINDC =' *BCAT &QUOTE *TCAT 'Y' *TCAT +
+                          &QUOTE)
+/* Call standard program to write to source file ... */
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:         ENDPGM

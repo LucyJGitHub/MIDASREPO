@@ -1,0 +1,113 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM CAP210 Migration Utility for STRANF File')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00216 - CAP210 Migration Utility for STRANF File        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD025682           Date 19Aug14              */
+/*       Prev Amend No. MD020444           Date 24Jun13              */
+/*                      MD019954           Date 09Apr13              */
+/*                      AR1096788 *CREATE  Date 18Mar13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD025682 - STRANF should be copied to *ADD else overwrites  */
+/*                  existing records.                                */
+/*                - AAJTN is in DPLIB not DMLIB.                     */
+/*       MD020444 - Data Area AAJTN should be included in migration  */
+/*       MD019954 - DLSTRANFPD error during migration                */
+/*       AR1096788 - DLAA details should be written in core STRANF   */
+/*                   file instead of the new DLSTRANFPD file         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FLIB)
+ 
+             DCL        VAR(&FLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                                 /*MD025682*/
+             DCL        VAR(&AAJTNDTA) TYPE(*CHAR) LEN(6)                               /*MD020444*/
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             SNDPGMMSG  MSG('SMUC00216 - CAP210 Migration Program +
+                          for STRANF File') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Check if 'from' file exists; if not then end */
+ 
+             CHKOBJ     OBJ(&FLIB/STRANF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CHGVAR     VAR(&DPLIB) VALUE(%SUBSTRING(&FLIB 1 2) +
+                          *TCAT 'DPLIB')                                                /*MD025682*/
+/**********  CHKOBJ     OBJ(&FLIB/AAJTN) OBJTYPE(*DTAARA)   */                 /*MD020444 MD025682*/
+             CHKOBJ     OBJ(&DPLIB/AAJTN) OBJTYPE(*DTAARA)                              /*MD025682*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD020444*/
+                GOTO       CMDLBL(ENDPGM)                                               /*MD020444*/
+             ENDDO                                                                      /*MD020444*/
+                                                                                        /*MD020444*/
+/** Copy value of data area, if blanks do not process migration */                      /*MD020444*/
+                                                                                        /*MD020444*/
+/**********  RTVDTAARA  DTAARA(&FLIB/AAJTN *ALL) RTNVAR(&AAJTNDTA) */          /*MD020444 MD025682*/
+             RTVDTAARA  DTAARA(&DPLIB/AAJTN *ALL) RTNVAR(&AAJTNDTA)                     /*MD025682*/
+             IF         COND(&AAJTNDTA *EQ ' ') THEN(DO)                                /*MD020444*/
+                GOTO       CMDLBL(ENDPGM)                                               /*MD020444*/
+             ENDDO                                                                      /*MD020444*/
+                                                                                        /*MD020444*/
+/* Copy 'from' file to template. If empty, do not process migration */
+ 
+/**********  CPYF       FROMFILE(&FLIB/STRANF) TOFILE(STRANF) +     */                  /*MD019954*/
+/**********               MBROPT(*REPLACE) FMTOPT(*MAP *DROP)       */                  /*MD019954*/
+/**********  CPYF       FROMFILE(&FLIB/DLSTRANFPD) TOFILE(STRANF) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)       */         /*MD019954 MD025682*/
+             CPYF       FROMFILE(STRANF) TOFILE(QTEMP/STRANFX) +
+                          MBROPT(*ADD) CRTFILE(*YES) INCREL((*IF +
+                          RECI *NE ' '))                                                /*MD025682*/
+             CPYF       FROMFILE(QTEMP/STRANFX) TOFILE(STRANF) +
+                          MBROPT(*REPLACE) CRTFILE(*NO) INCREL((*IF +
+                          RECI *NE ' '))                                                /*MD025682*/
+             MONMSG     MSGID(CPF2869 CPF2817) EXEC(CLRPFM +
+                          FILE(STRANF))                                                 /*MD025682*/
+             CPYF       FROMFILE(&FLIB/DLSTRANFPD) TOFILE(STRANF) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)                               /*MD025682*/
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                                                                                        /*MD020444*/
+             CHGDTAARA  DTAARA(AAJTN *ALL) VALUE(&AAJTNDTA)                             /*MD020444*/
+ 
+/* Process migration program */
+ 
+             CALL       PGM(SMU000216)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             SNDPGMMSG  MSG('Program SMUC00216 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             DLTF       FILE(QTEMP/STRANFX)                                             /*MD025682*/
+             ENDPGM

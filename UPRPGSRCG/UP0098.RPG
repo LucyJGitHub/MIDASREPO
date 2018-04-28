@@ -1,0 +1,296 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UP Merge two driving files')
+/*OVR *  OVRDBF UPDLVCB UPDLVCL0                                      *
+/*OVR *  OVRDBF UPDLVCM UPDLVCL0                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP0098 - Merge two driving files                             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *  Last Amend No. CUP005 *CREATE     Date 29Oct99               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP005  -  Changes for DBA R3.02                             *
+      *                                                               *
+      *****************************************************************
+      *  Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write or chain fail
+      *       70 - 76 Indicators for changed fields
+      *
+     FUPDLVCB UF  E           K        DISK         KINFSR *PSSR A
+     FUPDLVCM IF  E                    DISK         KINFSR *PSSR
+     F            @DLVCL0                           KRENAMEUPDLVCF
+     FUP0098P1O   E             37     PRINTER
+      *
+      /EJECT
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      * Fields with the same name will need to be renamed.
+      *
+     IUPDLVCF
+     I              AUMBNM                          MBNM
+     I              AUMBTP                          MBTP
+     I              AUMBTX                          MBTX
+     I              AUCAPR                          CAPR
+     I              AUIPTY                          IPTY
+     I              AUDTYP                          DTYP
+     I              AUCPYO                          CPYO
+     I              AUFMTO                          FMTO
+     I              AUSRCF                          SRCF
+     I              AUDTLB                          DTLB
+     I              AUPROJ                          PROJ
+     I              AUEXIN                          EXIN
+     I              AUUSTS                          USTS
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PTITLE 45
+      *
+     C           ITEM      KLIST
+     C                     KFLD           MBNM
+     C                     KFLD           MBTP
+      *
+      * Write header of print file
+     C                     WRITEHEADH
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Begin reading the merge version of the driving file
+     C           1         SETLLUPDLVCF
+     C                     READ UPDLVCF                6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN20     DOWEQ'0'
+      *
+      * See if item exists on the base file
+     C           ITEM      CHAINUPDLVCB              3069
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * If record not found then write record to base file
+     C           *IN30     IFEQ *ON
+     C                     MOVE MBNM      AUMBNM
+     C                     MOVE MBTP      AUMBTP
+     C                     MOVE MBTX      AUMBTX
+     C                     MOVE IPTY      AUIPTY
+     C                     MOVE DTYP      AUDTYP
+     C                     MOVE CPYO      AUCPYO
+     C                     MOVE FMTO      AUFMTO
+     C                     MOVE SRCF      AUSRCF
+     C                     MOVE DTLB      AUDTLB
+     C                     MOVE PROJ      AUPROJ
+     C                     MOVE EXIN      AUEXIN
+     C                     WRITE@DLVCL0                69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * If record found then assume base is correct but report differences (if any)
+     C                     ELSE
+     C                     MOVE *BLANKS   PMBNM
+     C                     MOVE *BLANKS   PMBTP
+     C                     MOVE MBNM      PMBNM
+     C                     MOVE MBTP      PMBTP
+     C                     MOVE *BLANKS   PMBTX
+     C                     MOVE *BLANKS   PCAPR
+     C                     MOVE *BLANKS   PIPTY
+     C                     MOVE *BLANKS   PDTYP
+     C                     MOVE *BLANKS   PCPYO
+     C                     MOVE *BLANKS   PSRCF
+     C                     MOVE *BLANKS   PEXIN
+     C                     MOVE *BLANKS   DIFF    1
+     C                     MOVE *BLANKS   UPDAT   1
+     C                     MOVEA'0000000' *IN,70
+      *
+     C           MBTX      IFNE AUMBTX
+     C                     MOVELAUMBTX    PMBTX
+     C                     SETON                     70
+     C                     ENDIF
+      *
+     C           CAPR      IFNE AUCAPR
+     C                     MOVELAUCAPR    PCAPR
+     C                     SETON                     71
+     C                     ENDIF
+      *
+     C           IPTY      IFNE AUIPTY
+     C           IPTY      IFLT AUIPTY
+     C                     Z-ADDIPTY      AUIPTY
+     C                     MOVE 'Y'       UPDAT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           DTYP      IFNE AUDTYP
+     C           DTYP      IFEQ 'I'
+     C           AUDTYP    OREQ 'I'
+     C                     MOVE 'I'       AUDTYP
+     C                     MOVE 'Y'       UPDAT
+     C                     ELSE
+     C                     MOVE AUDTYP    PDTYP
+     C                     SETON                     72
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           CPYO      IFNE AUCPYO
+     C                     MOVELAUCPYO    PCPYO
+     C                     SETON                     73
+     C                     ENDIF
+      *
+     C           SRCF      IFNE AUSRCF
+     C                     MOVELAUSRCF    PSRCF
+     C                     SETON                     74
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   UPROJ
+      *
+     C           PROJ      IFNE AUPROJ
+     C           PROJ      ANDNE*BLANKS
+     C           AUPROJ    ANDNE*BLANKS
+     C           AUEXIN    IFEQ *BLANKS
+     C                     MOVELPROJ      AUEXIN
+     C                     MOVE 'Y'       UPDAT
+     C                     MOVEL'Y'       UPROJ   1
+     C                     ELSE
+     C                     MOVEL'********'PEXIN
+     C                     SETON                     75
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           EXIN      IFNE AUEXIN
+     C           UPROJ     ANDNE'Y'
+     C                     MOVEL'********'PEXIN
+     C                     SETON                     76
+     C                     ENDIF
+      *
+      * If UPDAT flagged then update deliverables list
+     C           UPDAT     IFEQ 'Y'
+     C                     UPDAT@DLVCL0
+     C                     ENDIF
+      *
+      * If difference found then write record to print file
+     C                     MOVEA*IN,70    INTEST  7
+     C                     MOVE INTEST    INTNUM  70
+     C           INTNUM    IFNE 0
+      *
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH
+     C                     SETOF                     37
+     C                     ENDIF
+      *
+     C                     WRITEDTL
+     C                     MOVE 'Y'       WRITE   1
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Write second line
+     C                     MOVE *BLANKS   PMBNM
+     C                     MOVE *BLANKS   PMBTP
+     C           *IN70     IFEQ *ON
+     C                     MOVELMBTX      PMBTX
+     C                     ENDIF
+      *
+     C           *IN71     IFEQ *ON
+     C                     MOVELCAPR      PCAPR
+     C                     ENDIF
+      *
+     C           *IN72     IFEQ *ON
+     C                     MOVELDTYP      PDTYP
+     C                     ENDIF
+      *
+     C           *IN73     IFEQ *ON
+     C                     MOVELCPYO      PCPYO
+     C                     ENDIF
+      *
+     C           *IN74     IFEQ *ON
+     C                     MOVELSRCF      PSRCF
+     C                     ENDIF
+      *
+     C                     WRITEDTL
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ UPDLVCF                6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           WRITE     IFNE 'Y'
+     C                     WRITENORECS
+     C                     ENDIF
+      *
+     C                     WRITETRAILP
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

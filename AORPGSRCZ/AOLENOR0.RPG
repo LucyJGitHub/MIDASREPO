@@ -1,0 +1,321 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Loan number ranges')                          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Access Objects Module                                *
+      *                                                               *
+      *  AOLENOR0 - Loan number ranges                                *
+      *                                                               *
+      *  Function:  This is a new access object that will be used     *
+      *             to retrieve the next available                    *
+      *             loan number to be used during loans input.        *
+      *             The program is the same as aolenou0 except that   *
+      *             it will not perform any update;                   *
+      *             it will return the same loan number.              *
+      *                                                               *
+      *  Called By: LE2030* - Various loan input programs             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR1070602A         Date 23Dec12               *
+      *  Prev Amend No. AR1070602          Date 19Dec12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 121855  *CREATE    Date 19Aug97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1070602A - A serious Midas error has occurred appeared upon*
+      *              click of confirm complete                        *
+      *  AR1070602 - A serious Midas error has occurred appeared upon *
+      *              click of confirm complete                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile only                                      *
+      *  121855 - Customer Lending Enhancements - Syndications.       *
+      *                                                               *
+      *****************************************************************
+     FSDLENOL1IF  E           K        DISK                           UC
+     F            @LENOL1                           KRENAMESDLENOD1
+     FCLOANL3 IF  E           K        DISK                           UC
+      /EJECT
+     E*ESTART
+      ************************************************************
+     E                    @MG     1   1 50
+     E*
+      * Description     : Copyright notice for inclusion in all programs
+     E********************************************************************
+     E                    CPY@    1   1 80
+      ***System*values*array                                                    AR1070602 AR1070602A
+     E**********          SVAL    1   1 20                                      AR1070602 AR1070602A
+      ************************************************************
+      /EJECT
+      ************************************************************
+      * Description     : Copyright notice for inclusion in all programs
+      *
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+      *
+     IP@MGDA      DS
+     I                                        1  50 @MG
+      *
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     ID@FMT     E DSSDLENOPD
+      ** SDLENOD0 - Loan number ranges record format data structure
+      *
+     IP@FMT     E DSDSFDY
+      ** External Data structure to hold the outgoing record format
+      ** of the file.
+      *
+      ************************************************************
+      /EJECT
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@RGNB  2        I:Range number
+     C                     PARM           P@FMT            O:Format
+      *****************************************************
+      *MAIN
+      *
+     C           P@OPTN    IFEQ '*SAME  '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     ENDIF
+      *
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     939495 ¦ error
+     C                     SETOF                     969798 ¦ indicators
+      *
+      ** First call - open file :
+      *
+     C           *IN01     IFEQ '0'                             FIRST TIME
+     C                     SETON                     01      Set ind.
+     C                     OPEN SDLENOL1               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     ENDIF
+      *
+      ** Last call - close file and terminate program :
+      *
+     C           P@OPTN    IFEQ '*FREE  '                       FREE PGM
+     C                     CLOSESDLENOL1               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C                     SETON                     LR      Set ind.
+     C                     ENDIF
+      *
+      ** Caller requests first record :
+      *
+     C           P@OPTN    IFEQ '*FIRST '                       FIRST REC
+     C           *LOVAL    SETLLSDLENOL1             9390    Set file
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next
+     C                     ENDIF
+      *
+      ** Caller requests next record :
+      *
+     C           P@OPTN    IFEQ '*NEXT  '                       NEXT REC
+     C                     READ SDLENOL1               9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     ENDIF
+      *
+      ** Caller requests last record :
+      *
+     C           P@OPTN    IFEQ '*LAST  '                       LAST REC
+     C           *HIVAL    SETGTSDLENOL1               90    Set file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev
+     C                     ENDIF
+      *
+      ** Caller requests previous record :
+      *
+     C           P@OPTN    IFEQ '*PREV  '                       PREV.REC
+     C                     READPSDLENOL1               9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     ENDIF
+      *
+      ** Caller requests record indicated by key :
+      *
+     C           P@OPTN    IFEQ '*KEY   '                       KEY ACCESS
+     C           P@OPTN    OREQ '*VERIFY'
+     C           P@RGNB    CHAINSDLENOL1             9590    Get record
+     C           *IN95     CABEQ'1'       T@SKIP             No rec found
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     ENDIF
+      *
+      ** Get next available loan number
+      *
+     C           P@OPTN    IFEQ '*KEY   '
+     C                     OPEN CLOANL3
+     C                     SETOF                     89                                       CLE148
+     C********** *IN89     DOUEQ'1'                                                           CLE148
+     C**********           Z-ADDF9NALN    WFLON   60                                          CLE148
+     C           *IN89     DOWEQ'0'                                                           CLE148
+     C                     MOVELF9NALA    WFLON   6                                           CLE148
+     C                     MOVE F9RGNB    WRANG   2
+     C********** *IN89     DOUEQ'1'                                                           CLE148
+     C********** WFLON     ORGT F9LRAN                                                        CLE148
+     C           *IN89     DOWEQ'0'                                                           CLE148
+     C           WFLON     ANDLEF9LRAA                                                        CLE148
+     C           WFLON     CHAINCLOANL3              8990
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C           *IN89     IFEQ '0'
+     C**********           ADD  1         WFLON                                               CLE148
+     C********** WALPHA    IFEQ 'Y'                                             AR1070602 AR1070602A
+     C                     CALL 'LENXTLN'                                                     CLE148
+     C                     PARM WFLON     BEGIN   6                                           CLE148
+     C                     PARM F9LRAA    ENDNUM  6                                           CLE148
+     C                     PARM           NXTONE  6                                           CLE148
+     C                     PARM *BLANKS   RTNCOD  7                                           CLE148
+      *                                                                                       CLE148
+     C                     MOVELNXTONE    WFLON                                               CLE148
+     C**********           ENDIF                                                AR1070602 AR1070602A
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Go to the next range if all loan numbers for the current
+      ** range have been been used
+      *
+     C           *IN89     IFEQ '0'
+     C                     READ SDLENOL1               9095
+     C           *IN95     CABEQ'1'       T@SKIP             No rec found
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Return next available loan number
+     C           *IN89     IFEQ '1'
+     C********** WFLON     ANDNEF9NALN                                                        CLE148
+     C           WFLON     ANDNEF9NALA                                                        CLE148
+     C**********           Z-ADDWFLON     F9NALN                                              CLE148
+     C                     MOVELWFLON     F9NALA                                              CLE148
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           P@OPTN    IFNE '*KEY   '                       NOT KEYED
+     C           P@OPTN    ANDNE'*NEXT  '                       NOT SEQ.
+     C           P@OPTN    ANDNE'*PREV  '
+     C           P@OPTN    ANDNE'*VERIFY'
+     C           P@OPTN    ANDNE'*FREE  '
+     C                     SETON                       96    Parm error
+     C                     END
+      *
+      ** No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     CLOSECLOANL3
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No record found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*NOSEL ' P@RTCD           No selection
+     C   98                MOVE '*CALL  ' P@RTCD           Called Pgm.err.
+      *
+      ** Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SEND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   94                MOVE 'ACO1005' P@MGID             End of file
+     C   95                MOVE 'ACO1006' P@MGID             No rec found
+     C   96                MOVE 'ACO1007' P@MGID             Option error
+     C   97                MOVE 'ACO1009' P@MGID             No selection
+     C   98                MOVE 'ACO1010' P@MGID             Call error
+     C                     CALL 'ZASNMG'                     <SEND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Pgm name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Message ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Message key
+     C                     PARM           P@MGDA             I:Msg data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 9
+      *
+      ** Caller requests DB error handling
+      *
+     C           W@RTCD    IFEQ '*DBERR '
+     C           P@RTCD    ANDNE*BLANK
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C           P@OPTN    IFNE '*VERIFY'
+     C           P@OPTN    ANDNE'*FREE  '
+     C           P@RTCD    ANDNE'*OPTION'
+     C                     MOVELD@FMT     P@FMT
+     C                     END
+      *
+      ** Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+      **********                                                                AR1070602 AR1070602A
+     C********** *INZSR    BEGSR                                                AR1070602 AR1070602A
+     C**********           CALL 'AOSVALR0'                                      AR1070602 AR1070602A
+     C**********           PARM *BLANKS   RTNCOD                                AR1070602 AR1070602A
+     C**********           PARM SVAL,1    P@OP01 20                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@VL01200                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@OP02 20                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@VL02200                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@OP03 20                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@VL03200                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@OP04 20                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@VL04200                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@OP05 20                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@VL05200                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@OP06 20                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@VL06200                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@OP07 20                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@VL07200                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@OP08 20                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@VL08200                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@OP09 20                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@VL09200                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@OP10 20                             AR1070602 AR1070602A
+     C**********           PARM *BLANKS   P@VL10200                             AR1070602 AR1070602A
+      **********                                                                AR1070602 AR1070602A
+     C**********           MOVELP@VL01    WALPHA  1                             AR1070602 AR1070602A
+      **********                                                                AR1070602 AR1070602A
+     C**********           ENDSR                                                AR1070602 AR1070602A
+**
+SDLENOPD  AOLENOU0  Loan Number Range
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

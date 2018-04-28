@@ -1,0 +1,630 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+      *****************************************************************
+/*S*D****RPGBASEMOD****************************************************                      CCB023A
+      *****************************************************************
+      *                                                               *
+      *  Midas - APIs module                                          *
+      *                                                               *
+      *  APCHKTRNS - Check API transactions on valid/invalid files    *
+      *                                                               *
+      *  Function:  This module checks whether transactions exist on  *
+      *             the valid/invalid API transaction files.          *
+      *             Depending on the value of ICD flags the close of  *
+      *             business is then halted if transactions exist on  *
+      *             either or both of these sets of files.            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CCB023A *REDUNDANT Date 06Aug12               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CFT039             Date 28Sep12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER045             Date 20Jul09               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 249071             Date 31Jul07               *
+      *                 247695             Date 09May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241919             Date 22Dec06               *
+      *                 243070             Date 10Jul06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 04Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG9711            Date 26Jan06               *
+      *                 CAP183             Date 05Jan06               *
+      *                 BUG9691            Date 22Dec05               *
+      *                 CGL035             Date 01Mar05               *
+      *                 233708             Date 02Jun05               *
+      *                 CDL038             Date 10May05               *
+      *                 CAS011             Date 16May05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 BUG8205            Date 27Aug05               *
+      *                 BUG8233            Date 23Aug05               *
+      *                 BUG7166            Date 12May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CLE025             Date 20Oct03               *
+      *                 BUG2254            Date 06May04               *
+      *                 TDA011             Date 31Mar04               *
+      *                 TDA023             Date 22Mar04               *
+      *                 222727             Date 05Nov03               *
+      *                 CAP079             Date 19Aug02               *
+      *                 CAP077             Date 19Aug02               *
+      *                 CAP076             Date 24May02               *
+      *                 CAP075             Date 12Aug02               *
+      *                 CAP074             Date 26Mar02               *
+      *                 CAP073             Date 14May02               *
+      *                 CAS006             Date 26Aug03               *
+      *                 CAS005             Date 26Aug03               *
+      *                 CSE040             Date 01Apr03               *
+      *                 CAP182             Date 14Mar03               *
+      *                 CSE039             Date 07Mar03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP055             Date 13Mar02               *
+      *                 CAP072             Date 28Mar02               *
+      *                 CAP071             Date 22Mar02               *
+      *                 CAP068             Date 22Mar02               *
+      *                 CPK015             Date 14May02               *
+      *                 CAP069             Date 22Mar02               *
+      *                 CAP070             Date 11Mar02               *
+      *                 201988             Date 06Mar02               *
+      *                 CAS001             Date 23Nov01               *
+      *                 CAP166             Date 15Oct01               *
+      *                 CAP067             Date 24Sep01               *
+      *                 CSW024             Date 31Aug01               *
+      *                 196570             Date 20Jul01               *
+      *                 CSE031             Date 15Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CAP057             Date 01Nov00               *
+      *                 CAP042             Date 08Jan01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP039             Date 14JUL00               *
+      *                 CAP137             Date 07Feb00               *
+      *                 CAP136             Date 15Nov99               *
+      *                 CIR005             Date 21Jan00               *
+      *                 175479             Date 23May00               *
+      *                 167486             Date 25Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP034             Date 31Jan
+      *                 CAP032             Date 26Apr99               *
+      *                 167354             Date 15Nov99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP006  *CREATE    Date 15Jan99               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CCB023A - COB Restructure - Input Cycle Termination          *
+      *            Restructuring (Redundant)                          *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CFT039 - SWIFT Mapping of Field Ordering Bank (Recompile)    *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  249071 - CSE097 problems in BYSL(Recompile)                  *
+      *  247695 - Add CDL010, CAS005, CGL014, CDL016, CDL017, CDL019, *
+      *           CDL018, CDL033 AND CAP086 fields.                   *
+      *  241919 - Recompiled due to recompiled APVTRANL0/APVTRANL1.   *
+      *  243070 - Recompile over changed PF/SDVSECDPD.                *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  BUG9711- Changes to MMVNASPPD/MMVNASSPD (re-compile)         *
+      *  CAP183 - Conversion of Market Prices Input into modular      *
+      *           structure to use APIs (Recompile)                   *
+      *  BUG9691- Include CAS011 changes in GZCLOANCL to align valids *
+      *           file format.(Recompile)                             *
+      *  CGL035 - EUSD Upgrade to Midasplus                           *
+      *  233708 - Recompile over changes for CGL032 EU Saving Tax     *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CAS011 - EIR/AC Accounting Upgrade to MP1                    *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  BUG8205 - Recompiled due to changes in file SDVSPTRPD        *
+      *            Applied fix 209061                                 *
+      *  BUG8233- Error in Forward Rates upload via File Adapter API  *
+      *           (Recompile)                                         *
+      *  BUG7166- Recompiled over changed APVTRANL0/L1                *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL014 - Collaterals Processing                              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  BUG2254 - Recompile over changed PF/SDISECDPD                *
+      *  TDA023 - Increase Maturity Date Account to 18 Digits         *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+/*    *  CAP079 - Lending API enhancements - Repayments schedule      *
+/*    *  CAP077 - Lending API enhancements - Manual payments          *
+/*    *  CAP076 - Lending API enhancements - Rollover Instructions    *
+/*    *  CAP075 - Lending API enhancements - Loan amendments          *
+/*    *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CAP073 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Facility input Transaction Details     *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *  CSE040 - Securities Statement Processing                     *
+      *  CAP182 - Auto Settlement of Trades                           *
+      *         - Conversion of SE Trade Settlement Input maintence   *
+      *           function to modular structure to use as APIs.       *
+      *         - Recompiled                                          *
+      *  CSE039 - Automatic Settlement of Trades                      *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it. Recompile du to changes in FXVFXDLPD*
+      *           ,MMVLDNIPD,MMVDEAMPD,MMVNASPPD and MMVNASSPD .      *
+      *  CAP055 - APIs for FRA/IRS Caps/Collars/Floors                *
+      *  CAP072 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Fee Settlement and Adjustment input    *
+      *  CAP071 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Facility Amendment.                    *
+      *  CAP068 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Funding Participants.                  *
+      *  CPK015 - New logical members required as max no of formats   *
+      *           reached (32).                                       *
+      *  CAP069 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Risk Participants.                     *
+      *  CAP070 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs.                                        *
+      *  201988 - CAP060 & CAP038 code inadvertently commented out    *
+      *           in APITRANL0/APVTRANL0. Recompile                   *
+      *  CAS001 - Net Present Value (NPV) Accounting. Recompile       *
+      *  CAP166 - API for Non-Currency OTC. Recompile                 *
+      *  CAP067 - Repurchase Agreements API. Recompile                *
+      *  CSW024 - S.W.I.F.T. MT3xx Field 82/83/87. (Recompiled)       *
+      *  196570 - Patch for Market Data Feed (recompile)              *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes               *
+      *         - Recompiled due to changes in SEISECSPD.             *
+      *         - Fields renamed to avoid conflicts                   *
+      *  CAP057 - Midas Spot Rates API                                *
+      *  CAP042 - Conversion of Internal Funding Deal inputs into     *
+      *           modular structure to use as APIs.                   *
+      *  CFT014 - Straight-through Processing Phase 2 MT103           *
+      *           Messages Generation for FT. Recompile only.         *
+      *  CAP039 - Addition of SECD format to APITRANL0 (recompile)    *
+      *  CAP137 - Conversion of SE Security inputs into modular       *
+      *           structure to use as APIs to APITRANL0 (recompile)   *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs. (Recompile)       *
+      *  CIR005 - FRA/IRS Business Day Conventions. (Recompile)       *
+      *  175479 - Recompile over changes in outgoing payment file     *
+      *  167486 - Repurchase Agreements (REPOS) enhancement (CSE006). *
+      *           Missing fields added (Patterned from DPTMVD).       *
+      *           Recompiled over changes in SEVDPMVPD (APVTRANL0)    *
+      *  CSE015 - Forward Valued Depot Movements (Recompiled)         *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements  (Recompiled)   *
+      *  CAP035 - Addition of AMAD format to APITRANL0 (recompile)    *
+      *  CAP034 - Midas / ToF Interface                               *
+      *  CAP032 - Conversion of Journal Batch Entry inputs into       *
+      *           modular structure to use as APIs. Recompiled        *
+      *           due to changes in physical file SDAPIPD.            *
+      *  167354 - Recompiled over changed APVTRANL0.                  *
+      *  CDL006 - Dealing Fiduciary (recompiled for changed APVTRANL0)*
+      *  CAP006 - Conversion of Midas inputs to modular API structure *
+      *                                                               *
+      *****************************************************************
+     F*
+     F**  Indicator Function Summary
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     F*
+     F*       U6         Program exception/error condition has occurred
+     F*       U7         Set on with U8 to signify file handling error.
+     F*       U8         Set on with U7 to signify file handling error.
+     F*
+     F*
+     F*
+      /EJECT
+     F*****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+ 
+     FAPVTRANL0 IF   E           K DISK    INFSR(INFSR)
+     FAPVTRANL1 IF   E           K DISK    INFSR(INFSR)                                       CPK015
+ 
+     FAPITRANL0 IF   E           K DISK    INFSR(INFSR)
+     FAPITRANL1 IF   E           K DISK    INFSR(INFSR)                                       CPK015
+ 
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+      **--------------------------------------------------------------------------------------------
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes all the defined fields in the
+      ** Program Status Data Structures.  They have meaningful
+      ** names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+      **--------------------------------------------------------------------------------------------
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+     D SDAPI         E DS                  EXTNAME(SDAPIPD)
+      ** External DS for API ICD
+ 
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      ** Short data structure for access programs
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *****************************************************************
+     I*
+     I** Rename fields with common names that have different attributes
+     IMMILDNID0
+     I              DDAMNP                      @@AMNP
+     I              DDSPRT                      @@SPRT                                        CAP057
+     I              DDLQPR                      @@LQPR                                        CAS005
+     I              DDISDT                      @@ISDT                                        CER043
+     IMMINASPD0                                                                               CAS005
+     I              DDLQPR                      P@LQPR                                        CAS005
+     ISEIDPMVD0                                                                               CGL035
+     I              DDOPIN                      @@OPIN                                        CGL035
+     ISEITRADD0                                                                               CAS006
+     I              DDLQPR                      T@LQPR                                        CAS006
+     ISEIBYSLD0                                                                               CAS006
+     I              DDLQPR                      Y@LQPR                                        CAS006
+     I*
+     IMMINASSD0
+     I              DDBRKG                      @@BRKG
+     I*
+     IFTIIPAYD0                                                                               CAP136
+     I              DDPREF                      @@PREF                                        CAP136
+     I              DDRATE                      @@RATE                                        CAP136
+     I              DDNWRK                      @@NWRK                                        CER059
+     I*                                                                                       CAP136
+     ISDISECDD0                                                                               CAP137
+     I              DDADCD                      @@ADCD                                        CAP137
+     I              DDTXCD                      @@TXCD                                        CAP137
+     I              DDCLAS                      @@CLAS                                        CDL038
+     I*                                                                                       CAP137
+     IABIFUNDD0                                                                               CAP042
+     I              #1AMNP                      @@PAMN                                        CAP042
+     I              #1TOTI                      @@TOTI                                        CAP042
+     ISEISECSD0                                                                               CSE031
+     I              DDBR01                      @@BR01                                        CSE031
+     I              DDBR02                      @@BR02                                        CSE031
+     I              DDBR03                      @@BR03                                        CSE031
+     I              DDBR04                      @@BR04                                        CSE031
+     I              DDBR05                      @@BR05                                        CSE031
+     I              DDBR06                      @@BR06                                        CSE031
+     I              DDBR07                      @@BR07                                        CSE031
+     I              DDBR08                      @@BR08                                        CSE031
+     I              DDBR09                      @@BR09                                        CSE031
+     I              DDBR10                      @@BR10                                        CSE031
+     IMMIRPLDD0                                                                               CSE031
+     I              DDAMNP                      @@AMNP2                                       CSE031
+     I              DDSPRT                      @@SPRT2                                       CSE031
+     I              DDTRTP                      @@TRTP                                        CSE031
+     ISEIMVTSD0                                                                               CSE039
+     I              DDNARR                      MVTS_NARR                                     CSE039
+     ISEITRSMD0                                                                               CAP182
+     I              DDTDFA                      TRSM_TDFA                                     CAP182
+     I              DDSREF                      TRSM_SREF                                     CAP182
+     ISEISTPRD0                                                                               CSE040
+     I              DDCUST                      STPR_CUST                                     CSE040
+     ILEICLIPD0                                                                               CAP073
+     I              DDPTFN                      @APTFN                                        CAP073
+     I              DDPTFT                      @APTFT                                        CAP073
+     I              DDRAMT                      @ARAMT                                        CAP073
+     I              DDCRSK                      @ACRSK                                        CAP074
+     ILEIFCIPD0                                                                               CAP073
+     I              DDCRSK                      FCCRSK                                        CAP073
+     ILEILOAMD0                                                                               CAP075
+     I              DDBRAT                      @BBRAT                                        CAP075
+     IDLIDLFED0                                                                               CAS011
+     I              DDCUST                      DL_DDCUST                                     CAS011
+     I              DDFAMT                      DL_FAMT                                       CAS011
+     ISDIACUDD0                                                                               CGL035
+     I              DDCUST                      @@CUST                                        CGL035
+     I              DDCNA1                      @@CNA1                                        CGL035
+     I              DDCNA2                      @@CNA2                                        CGL035
+     I              DDISDT                      @DISDT                                        CER043
+     ISDICCTXD0                                                                               CGL035
+     I              DDCUST                      @@CUST                                        CGL035
+     ISDIJACMD0                                                                               CGL035
+     I              DDCUST                      @@CUST                                        CGL035
+     ISDINAHLD0                                                                               CER043
+     I              DDISDT                      @AISDT                                        CER043
+     I              DDSREF                      @@SREF                                        CER043
+     I              DDMDNM                      @@MDNM                                        CER043
+      /EJECT
+     C*
+     C     Start         TAG
+      ** Note: the above tag is only there to force the first comments in
+      ** the C-specs to appear after the D- or I-specs in compiled listings.
+ 
+     C**  Initial processing.
+     C                   EXSR      #A
+     C*
+     C**  Main processing
+     C                   EXSR      #B
+     C*
+     C**  Termination processing
+     C                   EXSR      #C
+     C*
+     C     ENDPGM        TAG                                                    **ENDPGM**
+      /EJECT
+     C*****************************************************************
+     C* SUBROUTINES USED                                              *
+     C*                                                               *
+     C*  01  #B       - Main processing.                              *
+     C*  02  #A       - Initial processing.                           *
+     C*  03  #C       - Termination processing.                       *
+     C*  04  INFSR    - Error handling SR for file errors.            *
+     C*  05  *PSSR    - Error handling SR for pgm errors.             *
+     C*                                                               *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #B     - Main Processing.                        *
+     C*                                                               *
+     C* FLDS USED  GHHTIN - Halt ICT if invalid transactions outstanding
+     C*            GHHTVL - Halt ICT if valid transactions outstanding*
+     C*            @OKVAL - Valid transactions   flag.                *
+     C*            @OKINV - Invalid transactions flag.                *
+     C*                                                               *
+     C*  CALLED BY :           MAIN PROGRAM                           *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C     #B            BEGSR
+     C*
+     C** Check for invalid records.
+     C     GHHTIN        IFEQ      'Y'
+     C*
+     C                   MOVEL     'APITRANL0'   DBFILE
+     C                   READ      APITRANL0                              LR    *1
+     C*
+     C** If a record exists set OK for after hours flag to 'N'.
+     C     *INLR         IFNE      '1'                                          B1
+     C                   MOVE      'N'           @OKINV
+     C                   END                                                    E**3
+     C                                                                                        CPK015
+     C                   MOVEL     'APITRANL1'   DBFILE                                       CPK015
+     C                   READ      APITRANL1                              LR    *1            CPK015
+     C*                                                                                       CPK015
+     C** If a record exists set OK for after hours flag to 'N'.                               CPK015
+     C     *INLR         IFNE      '1'                                          B1            CPK015
+     C                   MOVE      'N'           @OKINV                                       CPK015
+     C                   END                                                    E**3          CPK015
+     C*
+     C                   END                                                    E**3
+     C*
+     C** Check for valid records.
+     C     GHHTVL        IFEQ      'Y'
+     C*
+     C                   MOVEL     'APVTRANL0'   DBFILE
+     C                   READ      APVTRANL0                              LR    *1
+     C*
+     C** If a record exists set OK for after hours flag to 'N'.
+     C     *INLR         IFNE      '1'                                          B1
+     C                   MOVE      'N'           @OKVAL
+     C                   END                                                    E**3
+     C*                                                                                       CPK015
+     C                   MOVEL     'APVTRANL1'   DBFILE                                       CPK015
+     C                   READ      APVTRANL1                              LR    *1            CPK015
+     C*                                                                                       CPK015
+     C** If a record exists set OK for after hours flag to 'N'.                               CPK015
+     C     *INLR         IFNE      '1'                                          B1            CPK015
+     C                   MOVE      'N'           @OKVAL                                       CPK015
+     C                   END                                                    E**3          CPK015
+     C*
+     C                   END                                                    E**3
+     C*
+     C**  Terminate processing.
+     C     @OKVAL        IFEQ      'Y'
+     C     @OKINV        OREQ      'Y'
+     C                   MOVE      '1'           *INLR
+     C                   END                                                    E**3
+     C*
+     C     #B9           ENDSR                                                  **#B9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A     - Initial processing.                    *
+     C*                                                               *
+     C* FLDS USED  @OKVAL - Valid transactions   flag.                *
+     C*            @OKINV - Invalid transactions flag.                *
+     C*            @FRUN  - First time through cycle flag.            *
+     C*                                                               *
+     C*  CALLED BY :          MAIN PROGRAM                            *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C     #A            BEGSR
+     C*
+     C**  Parameter list for returning the 'OK for after hours' flag.
+     C     *ENTRY        PLIST
+     C                   PARM                    @OKVAL            1
+     C                   PARM                    @OKINV            1
+     C*
+     C**  Default 'OK after hours' flags.
+     C                   MOVE      'Y'           @OKVAL
+     C                   MOVE      'Y'           @OKINV
+     C*
+     C**  Set @FRUN to 'N'.
+     C                   MOVE      'N'           @FRUN             1
+     C*
+     C** Define data area LDA to Program
+     C*
+     C     *LOCK         IN        LDA
+     C*
+     C**  Move program name into *LDA field.
+     C                   MOVEL     'APCHKTRANS'  DBPGM
+     C                   OUT       LDA                                                         DT018
+     C*
+     C**  Check ICD flag to determine whether valid, invalid or both
+     C**  types of outstanding transactions are to be checked.
+     C
+     C                   CALLB     'AOAPIR0'
+     C                   PARM      '*DBERR '     @RTCD
+     C                   PARM      '*FIRST '     @OPTN
+     C     SDAPI         PARM      SDAPI         DSFDY
+ 
+     C     #A9           ENDSR                                                  **#A9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #C     - Terminates program.                     *
+     C*                                                               *
+     C*  FIELDS USED:       NONE.                                     *
+     C*                                                               *
+     C*  CALLED BY :          Main processing                         *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C     #C            BEGSR
+     C*
+     C                   MOVE      '1'           *INLR
+     C*
+     C                   RETURN
+     C*
+     C     #C9           ENDSR                                                  **#C9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: INFSR  - Handle error on file handling.          *
+     C*                                                               *
+     C*  FIELDS USED:        @ERR2  - Field to prevent looping.       *
+     C*                      @OKVAL - Valid transactions   flag.      *
+     C*                      @OKINV - Invalid transactions flag.      *
+     C*                                                               *
+     C*  CALLED BY :                                                  *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C     INFSR         BEGSR
+     C*
+     C**  Set @ERR2 to 'Y' to prevent looping if further errors occur.
+     C     @ERR2         IFNE      'Y'                                          B1
+     C*
+     C                   MOVE      'Y'           @ERR2             1            *1
+     C                   MOVE      '1'           *INU7                          *1
+     C                   MOVE      '1'           *INU8                          *1
+     C*
+     C**  Set 'OK for after hours' flags to 'N'.
+     C                   MOVE      'N'           @OKVAL
+     C                   MOVE      'N'           @OKINV
+     C*
+     C**  Set up fields in local data area.
+     C     *LOCK         IN        LDA                                                         DT018
+     C                   MOVEL     'APCHKTRANS'  DBPGM                          *1
+     C                   MOVEL     '992'         DBASE                          *1
+     C                   OUT       LDA                                                         DT018
+     C                   DUMP                                                   *1
+     C*
+     C                   END                                                    E1
+     C*
+     C**  Terminate processing immediately.
+     C                   MOVE      '1'           *INLR
+     C*
+     C                   RETURN
+     C*
+     C     INFSR9        ENDSR                                                  **INFSR9**
+     C*                                                               *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: *PSSR - Error handling subroutine.               *
+     C*                                                               *
+     C*  FIELDS USED:        @ERR1  - Field to prevent looping.       *
+     C*                      @OKVAL - Valid transactions   flag.      *
+     C*                      @OKINV - Invalid transactions flag.      *
+     C*                                                               *
+     C*  CALLED BY : This routine is called if there are any program  *
+     C*                      errors.                                  *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C     *PSSR         BEGSR
+     C*
+     C**  Set @ERR1 to 'Y' to prevent looping if further errors occur.
+     C     @ERR1         IFNE      'Y'                                          B1
+     C*
+     C                   MOVE      'Y'           @ERR1             1            *1
+     C                   MOVE      '1'           *INU6                          *1
+     C*
+     C**  Set up fields in local data area.
+     C     *LOCK         IN        LDA                                                         DT018
+     C                   MOVEL     'APCHKTRANS'  DBPGM                          *1
+     C                   MOVEL     '991'         DBASE                          *1
+     C                   OUT       LDA                                                         DT018
+     C                   DUMP                                                   *1
+     C*
+     C**  Set 'OK for after hours' flags to 'N'.
+     C                   MOVE      'N'           @OKVAL
+     C                   MOVE      'N'           @OKINV
+     C*
+     C                   END                                                    E1
+     C*
+     C**  Terminate processing immediately.
+     C                   MOVE      '1'           *INLR
+     C*
+     C                   RETURN
+     C*
+     C     #PSSR9        ENDSR                                                   ***PSSR9**
+     C*
+**CTDATA CPY@
+(c) Misys International Banking Systems Ltd. 2001

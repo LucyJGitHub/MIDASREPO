@@ -1,0 +1,230 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Customer Exchange Historic Proces & Purge')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE0405 - Customer Exchanges Historic Processing & Purging    *
+      *                                                               *
+      *  Function:  This program performs the following functions:    *
+      *                                                               *
+      *             1. Delete cancelled Customer Exchanges.           *
+      *             2. Change Record ID of all live Customer          *
+      *                Exchanges to 'H'.                              *
+      *             3. Delete all Historic Customer Exchanges past    *
+      *                the Journal Entry Retention period.            *
+      *                                                               *
+      *  Called By: SCC0411 - Input cycle initiation                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CRE041  *CREATE    Date 28Sep12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE041 - Enhancements to Customer Exchanges                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FCUSEXEL8UF  E           K        DISK         KINFSR *PSSR
+      ** Midas RE All Customer Exchanges (Incl. Historic)
+      *
+     FRE0405AUO   E                    PRINTER
+      ** Midas RE Customer Exchanges Historic Processing & Purging - Audit
+      *
+     E                    CPY@    1   1 80               Copyright array
+      ** Array containing Copyright statement
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Data Structure to receive SDBANKPD details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** Data Structure to receive SDGELRPD details
+      *
+     ILDA       E DSLDA                         256
+      ** Data Structure for LDA
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Structure for RUNDAT
+      *
+     IDSFDY     E DSDSFDY
+      ** Data Structure to pass parameters to Access programs (Short)
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Perform Initial Processing
+      *
+     C                     EXSR #INIT
+      *
+      ** Perform Main Processing
+      *
+     C                     EXSR #MAIN
+      *
+      ** Perform Audit Processing
+      *
+     C                     EXSR #AUDT
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #MAIN - Main Program Processing                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #MAIN     BEGSR
+      *
+      ** Read All Customer exchanges
+      *
+     C           *LOVAL    SETLLCUSEXEL8
+     C                     READ CUSEXEL8                 50
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      ** Delete cancelled customer exchange
+      *
+     C           RECI      IFEQ 'C'
+     C                     DELETCUSEXCEF
+     C                     ENDIF
+      *
+      ** Make current customer exchange historic
+      *
+     C           RECI      IFEQ 'D'
+     C                     MOVE 'H'       RECI
+     C                     UPDATCUSEXCEF
+     C                     ENDIF
+      *
+      ** Delete Customer Exchanges past their retension period
+      *
+     C           VALD      IFLT RTDT
+     C                     ADD  1         RCOUNT
+     C                     DELETCUSEXCEF
+     C                     ENDIF
+      *
+     C                     READ CUSEXEL8                 50
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #AUDT - Audit Processing                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #AUDT     BEGSR
+      *
+      ** Output Audit Header
+      *
+     C                     WRITERE0405HA
+      *
+      ** If there is a DB Error, Output the DB Error Information
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITERE0405EA
+     C                     ELSE
+      *
+      ** Else Output File Controls
+      *
+     C                     WRITERE0405CA
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #INIT - Initial Program Processing                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      ** Define program work fields
+      *
+     C           *LIKE     DEFN DBFILE    @BFILE
+     C           *LIKE     DEFN DBASE     @BASE
+     C           *LIKE     DEFN DBKEY     @BKEY
+      *
+      ** Set up copyright
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Get Rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Call access program AOBANKR0
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           SDBANK    PARM *BLANKS   DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'@BFILE
+     C                     Z-ADD1         @BASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Call access program AOGELRR0
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM '*BLANKS' P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C           SDGELR    PARM *BLANKS   DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE 'SDGELRPD'@BFILE
+     C                     Z-ADD2         @BASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Multiply Journal Retention months by 31 (= Retention days)
+      *
+     C           BKJREP    MULT 31        RTDY    30
+      *
+      ** Subtract Retention days from Run Day Number (= Retention Date)
+      *
+     C           BJRDNB    SUB  RTDY      RTDT    50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program Exception Error Routine                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE0405'  DBPGM
+     C                     MOVEL@BFILE    DBFILE
+     C                     MOVEL@BASE     DBASE
+     C                     MOVEL@BKEY     DBKEY
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     EXSR #AUDT
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2012

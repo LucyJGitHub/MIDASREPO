@@ -1,0 +1,199 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                     MD022112
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GP004000 - Download data control - Enquiry                   *
+      *                                                               *
+      *  Function:  This program will update the new downloaded data  *
+      *             from zone AcctMoveEnqAvailable to inform the user *
+      *             the availability of the enquiry.                  *
+      *                                                               *
+      *  Called By: GO000130 - Update component status                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. MD022112*REDUNDANT Date 05Sep13               *
+      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *                 CCB023             Date 06Aug12               *
+      *                 BUG27914E*CREATE   Date 18Aug10               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD022112 - SCC1711 performance improvement                   *
+      *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring (Recompile)                           *
+      *  BUG27914 - RAME Design Changes                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * *PSSR - Error processing                                      *
+      * *INZSR - Initialise                                           *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).  Similarly        *
+      *    D-spec initialisation only happens the first time.  Use    *
+      *    RESET for subsequent passes.                               *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+     FGPDWNLL0  UF A E           K DISK    INFSR(*PSSR)
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+      *
+     D/COPY GPCPYSRCG,PSDS
+      *
+      ** Program Status Data Structure
+      *
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+      *
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+      *
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+     D PZone           S              2
+     D PParm           S              1
+     D KZone           S              2
+     D KKeyD           S             20
+     D @RUN            S              1
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+      *
+     C                   EVAL      KZone = PZone
+     C                   EVAL      KKeyD = 'AcctMoveEnqAvailable'
+      *
+     C     DWNKEY        CHAIN     GPDWNLL0
+      *
+      ** If record found, Update downloaded data
+      *
+     C                   IF        %FOUND(GPDWNLL0)
+     C                   EVAL      DLVAL = PParm
+     C                   UPDATE    @DWNLL0
+      *
+      ** Else, write new record
+      *
+     C                   ELSE
+     C                   EVAL      DLMSID = KZone
+     C                   EVAL      DLKEYD = KKeyD
+     C                   EVAL      DLVAL  = 'Y'
+     C                   EVAL      DLMPGM = '*NONE'
+     C                   EVAL      DLMPRM = *BLANKS
+     C                   EVAL      DLEPGM = '*NONE'
+     C                   EVAL      DLEPRM = *BLANKS
+     C                   WRITE     @DWNLL0
+     C                   ENDIF
+      *
+      ** End program
+      *
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *INZSR        BEGSR
+      *
+     C     *ENTRY        PLIST
+      *
+     C                   PARM                    PZone
+     C                   PARM                    PParm
+      *
+     C     DWNKEY        KLIST
+     C                   KFLD                    KZone
+     C                   KFLD                    KKeyD
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+      *
+     C                   CALL      'DBERRCTL'
+      *
+     C                   ENDIF
+      *
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *
+     C                   ENDSR
+      *

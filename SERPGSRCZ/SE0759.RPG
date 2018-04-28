@@ -1,0 +1,701 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Mat Securities Rpt (No Positions)')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0759 - MATURED SECURITIES REPORT (NO POSITIONS)            *
+     F*                                                               *
+     F*  Function: Report all Maturing Securities with no Positions.  *
+     F*   (COB)    Branch is equal to blank.                          *
+     F*                                                               *
+     F*  Called by: SEC0613E - Matured Securities                     *
+     F*                                                               *
+     F*            Frequency:                                         *
+     F*            - during COB following a Security Maturity Date    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 S01502             DATE 08JUL94               *
+     F*                 E48923             DATE 30APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+     F*           in length of SESTAT, 133 long.                      *
+     F*  E48923 - New program generated so that matured securities    *
+     F*           with no positions are produced on separate reports  *
+     F*           (Matured securities with positions are produced     *
+     F*           in SE0760 )                                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FMATEX   IF  E           K        DISK
+     FMATEXAU IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FSE0759P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FSE0759AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  -   First cycle indicator                               *
+     F*   11  -   Detail line printed                                 *
+     F*                                                               *
+     F*   20  -   Book Position record found                          *
+     F*   21  -   Customer Position record found                      *
+     F*   22  -   Branch zero (No positions)                          *
+     F*   23  -   Audit record count difference                       *
+     F*                                                               *
+     F*   50  -   File chain fail indicator                           *
+     F*   52  -   Printer overflow indicator                          *
+     F*                                                               *
+     F*   90  -   End main processing indicator                       *
+     F*                                                               *
+     F*   U7  -   Data base error                                     *
+     F*   U8  -   Data base error/Audit record count difference       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  BAINIT - Initialisation routine                              *
+     F*  BBMAIN - Main-line processing                                *
+     F*  BCCLOS - Closing routine                                     *
+     F*  CCOUNT - Set extract record ID's & control count             *
+     F*  FASECT - Access Security file                                *
+     F*  PAUDIT - Print audit details                                 *
+     F*  PRHEAD - Print header for new branch details                 *
+     F*  PNOPOS - Process securities with no positions                *
+     F*  *PSSR  - Error handling                                      *
+     F*                                                               *
+     F*  ZDATE2 - Convert MIDAS Date.                                 *
+     F*  ZICDSE - Access ICD record 3 for securities trading          *
+     F*  ZSDESC - Access Security description                         *
+     F*  ZSEDIT - Edit Numeric fields with dec. point, blanks, commas.*
+     F*  ZSYSTM - Chain to the installation control data record       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZSDESCZ1
+     E                    CPY@    1   1 80
+      /EJECT
+     I*
+     I*  Local data area
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I*  Date structure used in ZSEDIT routine
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*  Program status data structure
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      254 263 USRID
+      *
+      ***  Data Structure for SESTAT
+     ISESTAT    E DS
+      *
+     I/COPY ZSRSRC,ZSDESCZ2
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     ISPOOL       DS
+     I*
+     I**  DS FOR SPOOL FILE NAME
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I**
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS
+     I*
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C**  Initialisation routine
+     C*
+     C                     EXSR BAINIT
+     C*
+     C*  Mainline processing
+     C*
+     C                     EXSR BBMAIN
+     C*
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+      *  Closing routine                                              *
+      *                                                               *
+     C                     EXSR BCCLOS
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BAINIT - Initialisation Subroutine.                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BAINIT    BEGSR
+     C*
+     C**  Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SE0759'  DBPGM
+     C                     OUT  LDA
+     C*
+     C** IN THE DATAAREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C**  Define fields
+     C*
+     C           *LIKE     DEFN RECI      MRECI
+     C*
+     C**  Initialise fields
+     C*
+     C                     Z-ADD*ZEROS    CBOKN   50
+     C                     Z-ADD*ZEROS    CCUSN   50
+     C                     Z-ADD*ZEROS    PAGE
+     C                     Z-ADD*ZEROS    CTOTL   50
+     C                     MOVEA'0000'    *IN,20
+     C*
+     C** RCF Processing for Audit File
+     C*
+     C                     EXSR RCFAU
+     C*
+     C**  Get Installation Control Data record 1
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C**  If error in ZSYSTM, abort program
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'TABLE'   DBFILE           * DB ERROR 01 *
+     C                     MOVELZTABKY    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C*
+     C                     END
+     C*
+     C**  Get Installation Control Data record 3
+     C*
+     C                     EXSR ZICDSE
+     C*
+     C**  If error in ZICDSE, abort program
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'TABLE'   DBFILE           * DB ERROR 02 *
+     C                     MOVELZTABKY    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C*
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C                     END
+      *
+      **  Define Data Area SESTAT.
+      *
+     C           *NAMVAR   DEFN           SESTAT
+     C                     IN   SESTAT
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BBMAIN - Main Processing.                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BBMAIN    BEGSR
+     C*
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     GOTO BBEND
+     C                     END
+     C*
+     C**  Perform main processing for each Maturity Extract record ...
+     C*
+     C           *LOVAL    SETLLMATEXDF
+     C                     READ MATEXDF                  90
+     C*
+     C**  If no records found print audit & end program
+     C*
+     C           *IN90     IFEQ '1'
+     C                     EXSR PAUDIT
+     C                     GOTO BBEND
+     C                     END
+     C*
+     C**   else process extract records until end of file
+     C*
+     C           *IN90     DOWEQ'0'
+     C           RECI      IFEQ 'B'
+     C           BHBA      ANDEQ*BLANKS
+     C           RECI      OREQ 'C'
+     C           BHBA      ANDEQ*BLANKS
+     C                     MOVE RECI      MRECI
+     C*
+     C**  First Cycle
+     C*
+     C           *IN10     IFEQ '0'
+     C                     EXSR PRHEAD
+     C                     SETON                     10
+     C                     END
+     C*
+     C**  Determine record type and control count
+     C*
+     C                     EXSR CCOUNT
+     C*
+     C**  If change of Security, access name & print side headings
+     C*
+     C           BHSC      IFNE SESN
+     C                     EXSR FASECT
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     GOTO BBEND
+     C                     END
+     C                     SETOF                     11
+     C                     END
+     C*
+     C**   ... print text line
+     C*
+     C                     EXSR PNOPOS
+     C*
+     C                     ELSE
+     C                     ADD  1         CTOTL
+     C                     END
+     C*
+     C                     READ MATEXDF                  90
+     C                     END
+     C*
+     C                     WRITETRAIL                  52
+     C*
+     C**  Print audit report
+     C*
+     C                     EXSR PAUDIT
+     C*
+     C           BBEND     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BBCLOS - Closing Subroutine.                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BCCLOS    BEGSR
+     C*
+     C                     CLOSESE0759P1
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CCOUNT - Subroutine to set Record ID Types and Control Count.*
+      *                                                               *
+      *****************************************************************
+      *
+     C           CCOUNT    BEGSR
+     C*
+     C           BHSC      IFNE SESN
+     C                     SETOF                     2021
+     C                     END
+     C*
+     C**  Maturing Book Position
+     C*
+     C           MRECI     IFEQ 'B'
+     C*
+     C**  No Book Position
+     C*
+     C                     ADD  1         CBOKN
+     C                     ADD  1         CTOTL
+     C           *IN20     IFEQ '1'
+     C                     SETOF                     20
+     C                     ELSE
+     C                     SETON                     20
+     C                     END
+     C*
+     C                     SETOF                     21
+     C*
+     C                     ELSE
+     C*
+     C**  Maturing Customer Position
+     C*
+     C           MRECI     IFEQ 'C'
+     C*
+     C**  No Customer Position
+     C*
+     C                     ADD  1         CCUSN
+     C                     ADD  1         CTOTL
+     C           *IN21     IFEQ '1'
+     C                     SETOF                     21
+     C                     ELSE
+     C                     SETON                     21
+     C                     END
+     C*
+     C                     SETOF                     20
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FASECT - Subroutine to access Security file and              *
+      *           print side Headings.                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FASECT    BEGSR
+     C*
+     C**  Access Security details
+     C*
+     C           BHSC      CHAINSECTY                50
+     C*
+     C**  If record found ....
+     C*
+     C           *IN50     IFEQ '0'
+     C           RECI      ANDNE'*'
+     C*
+     C**    ... Print side headings (+ Branch headings if overflow)
+     C*
+     C           *IN52     IFEQ '1'
+     C                     WRITEHEAD1                  52
+     C                     END
+     C*
+     C**    ... get Security description
+     C*
+     C                     MOVE *BLANKS   ZSRPN
+     C                     MOVE *BLANKS   ZSFN1
+     C                     MOVE *BLANKS   ZSFN2
+     C                     MOVELSRPN      ZSRPN
+     C                     MOVELSFN1      ZSFN1
+     C                     MOVELSFN2      ZSFN2
+     C                     MOVE RSFD      ZRSFD
+     C*
+     C                     EXSR ZSDESC
+     C                     MOVELZRNME     SDES
+     C                     WRITEHEAD2                  52
+     C*
+     C**  Else database error if not found
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   DBKEY
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'SECTY'   DBFILE           * DB ERROR 03 *
+     C                     MOVELBHSC      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C*
+     C                     END
+     C*
+     C           FAEND     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PAUDIT - Subroutine to print Audit details.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PAUDIT    BEGSR
+     C*
+     C**  Access Extract audit file
+     C*
+     C                     MOVE 'B'       RECI
+     C           RECI      CHAINMATEXAU              50
+      *
+     C           *IN50     IFEQ '0'
+     C                     Z-ADDNORE      XNORE   50
+      *
+     C           PFPL      IFEQ 'Y'
+     C                     MOVE 'C'       RECI
+     C           RECI      CHAINMATEXAU              50
+     C           *IN50     IFEQ '0'
+     C                     ADD  NORE      XNORE
+     C                     END
+     C                     END
+      *
+     C                     END
+     C*
+     C**   ... data base error if not found
+     C*
+     C           *IN50     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD7         DBASE            ***************
+     C                     MOVEL'MATEX'   DBFILE           * DB ERROR 07 *
+     C                     MOVEL'AUDIT'   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C*
+     C                     ELSE
+     C*
+     C**  Check difference in no. records
+     C*
+     C           XNORE     IFNE CTOTL
+     C                     SETON                     U823
+     C                     END
+     C                     WRITEHEADAU
+     C                     WRITEDETLAU
+     C*
+     C** If no records read then print 'No Details' on
+     C** Audit Printer File
+     C*
+     C           CTOTL     IFEQ 0
+     C                     WRITENONE
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PNOPOS - Subroutine to print Securities with zero Positions. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PNOPOS    BEGSR
+     C*
+     C**  Print line if 1st Branch or Customer
+     C*
+     C           *IN20     IFEQ '1'
+     C           *IN21     OREQ '1'
+     C*
+     C**  Print headings if overflow
+     C*
+     C           *IN52     IFEQ '1'
+     C                     WRITEHEAD1                  52
+     C                     WRITEHEAD2                  52
+     C                     END
+     C*
+     C**  Print text
+     C*
+     C                     WRITETEXT                   52
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRHEAD - Subroutine to Print Headings.                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRHEAD    BEGSR
+     C*
+     C**  Print headings
+     C*
+     C           *IN10     IFEQ '1'
+     C                     CLOSESE0759P1
+     C                     END
+     C                     OPEN SE0759P1
+     C                     Z-ADD*ZEROS    PAGE
+     C                     WRITEHEAD1                  52
+     C                     EXSR RCFP1
+     C*
+     C**  Print side headings if Security has not changed
+     C*
+     C           BHSC      IFEQ SESN
+     C                     WRITEHEAD2                  52
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C**
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C**
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     C*
+     C********************************************************************
+     C*
+     C           RCFAU     BEGSR                            ** RCFAU **
+     C*
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSDESCZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

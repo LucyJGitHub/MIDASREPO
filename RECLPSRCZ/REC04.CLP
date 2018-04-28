@@ -1,0 +1,89 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI    TEXT('Midas RE Customer exchanges file creation')           */
+/********************************************************************/
+/*                                                                  */
+/*        Midas     - Retail Module                                 */
+/*                                                                  */
+/*        REC04 - CUSTOMER EXCHANGES FILE CREATION                  */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CRE041             Date 28Sep12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CER001              Date 25Apr05             */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      S01408              Date 22Feb95             */
+/*                      S01194              Date 09Mar90             */
+/*                                                                  */
+/********************************************************************/
+/*       CRE041 - Enhancements to Customer Exchanges                 */
+/*       CER001 - LUX Upgrade to MidasPlus                           */
+/*        S01408 - ADDITION OF CORE HOOK REC04MPS                   */
+/*        S01194 - NEW STANDING DATA                                */
+/********************************************************************/
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/*/COPY WNCPYSRC,REC04002                                            */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CER001*/
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)                                      /*CER001*/
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)                                      /*CER001*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CER001*/
+             DCL        VAR(&ULX043) TYPE(*CHAR) LEN(1)                                   /*CER001*/
+             DCL        VAR(&CRE041) TYPE(*CHAR) LEN(1)                                   /*CRE041*/
+/*/COPY WNCPYSRC,REC04001                                            */
+             SNDPGMMSG  MSG('REC04 - Customer Exchanges File +
+                          Creation') TOMSGQ(MRUNQ)
+                                                                                          /*CER001*/
+             CHGVAR     VAR(&SARD) VALUE('ULX043')                                        /*CER001*/
+             CHGVAR     VAR(&RTN) VALUE('       ')                                        /*CER001*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                        /*CER001*/
+             CHGVAR     VAR(&ULX043) VALUE('N')                                           /*CER001*/
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                         /*CER001*/
+             IF         COND(&RTN *EQ '       ') THEN(CHGVAR +
+                        VAR(&ULX043) VALUE('Y'))                                          /*CER001*/
+                                                                                          /*CRE041*/
+             CHGVAR     VAR(&SARD) VALUE('CRE041')                                        /*CRE041*/
+             CHGVAR     VAR(&RTN) VALUE('       ')                                        /*CRE041*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                        /*CRE041*/
+             CHGVAR     VAR(&CRE041) VALUE('N')                                           /*CRE041*/
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                         /*CRE041*/
+             IF         COND(&RTN *EQ '       ') THEN(CHGVAR +
+                        VAR(&CRE041) VALUE('Y'))                                          /*CRE041*/
+/**/
+/*/COPY WNCPYSRC,REC04003                                            */
+             CLRPFM FILE(CUSEXH1)
+             IF         COND(&CRE041 *EQ 'N') THEN(DO)                                    /*CRE041*/
+             CLRPFM FILE(CUSEXCE)
+             ENDDO                                                                        /*CRE041*/
+             CLRPFM FILE(CUSEXZ1)
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,REC04MPS                                             /*S01408*/
+             IF         COND(&ULX043 *EQ 'Y') THEN(DO)                                    /*CER001*/
+                        CLRPFM FILE(RECEX1PD)                                             /*CER001*/
+                        MONMSG     MSGID(CPF0000)                                         /*CER001*/
+             ENDDO                                                                        /*CER001*/
+/**/                                                                  /*S01408*/
+/**/
+/*           OVRDBF FILE(TABLE) TOFILE(TABRE2)            */          /*S01194*/
+/**/
+             CALL PGM(RE0404)
+/**/
+/*           DLTOVR FILE(TABLE)                           */          /*S01194*/
+/**/
+               IF COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                  SNDPGMMSG MSG('FILE OUT OF BALANCE - RE0404') TOMSGQ(MOPERQ)
+               ENDDO
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

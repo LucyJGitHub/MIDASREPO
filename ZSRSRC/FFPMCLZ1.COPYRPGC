@@ -1,0 +1,229 @@
+     C****************************************************************    AUS022
+     C****************************************************************    AUS022
+     C****SR:FFPMCL***-*CALCULATES*PREMIUM*PAYABLE********************    AUS022
+     C******************ON*A*GIVEN*NUMBER*OF*CONTRACTS****************    AUS022
+     C******************AT*A*GIVEN*CONTRACT*PRICE*********************    AUS022
+     C****************************************************************    AUS022
+     C****INPUTS*     - FFNOC   (5,0P) NUMBER OF CONTRACTS           *    AUS022
+     C***********       FFPRIC (11,7P) PRICE                         *    AUS022
+     C***********       FFTKDM  (3,0P) TICKS DENOMINATOR             *    AUS022
+     C***********       FFMNPF (11,7P) MINIMUM PRICE FLUCTUATION     *    AUS022
+     C***********       FFTKVL (14,5P) TICK VALUE                    *    AUS022
+     C****OUTPUTS     - FFPREM (13,0P) PREMIUM (HALF ADJUSTED)       *    AUS022
+     C***********                                                    *    AUS022
+     C****************************************************************    AUS022
+     C***********                                                         AUS022
+      ****************************************************************    AUS022
+      *                                                              *    AUS022
+      * FFPMCLZ1 - Subroutine to calculate premium payable on a      *    AUS022
+      *            given number of contracts at a given contract     *    AUS022
+      *            price.                                            *    AUS022
+      *                                                              *    AUS022
+      *  Last Amend No. AR746662           Date 03May11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 247517             Date 09May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241147A            Date 07Nov06               *
+      *                 241147             Date 26Oct06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 215528             Date 21Mar03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 140455             Date 19Apr00               *
+      *                 140017             Date 19Apr00               *
+      *                 136056             Date 13Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 21AUG96               *
+      *                 E30422             Date 23MAR93               *
+      *                 AUS022             DATE 04FEB91               *   AUS022
+      *                                                              *    AUS022
+      ****************************************************************    AUS022
+      *                                                               *
+      *  AR746662 - Discrepancy in premium amount in Currency OTC     *
+      *             screen and Projected Available Balance Enquiry    *
+      *             Applied fix 249171.                               *
+      *             (Child: Artf746663)                               *
+      *  249171 - UAT-DCI Entries error in posting of currency option *
+      *         - premium entries of DCI deals are found in UAT.      *
+      *         - Divide premium by 100 if processing type is 5.      *
+      *  247517 - Reversed fix 241147.                                *
+      *  241147A - Use old processing for computation of p/l.         *
+      *  241147 - Correct the computation of p/l.                     *
+      *  215528 - System is associating a wrong premium amount.       *
+      *  CFF006 - Fractional Ticks Enhancement.                       *
+      *  140455 - 140017 should only affect bank bill options         *
+      *  140017 - Remove rounding error in premium calculation        *
+      *  136056 - Calculate premium bases on .01 change in yield      *
+      *           (DBA Version)                                       *
+      *  CFF004 - Increase in size of Price Fields                    *
+      *  E30422 - Premium calculations appear to be incorrect on      *
+      *           options. To fix the error,  the Strike Price is     *
+      *           used instead of the Contract Price in the tick      *
+      *           values computation. To obtain YIELDY, subtract      *
+      *           0.01 from the PRICEY instead of 0.001.              *
+      * AUS022 - AUSTRALIAN PRODUCT - FUTURES AND OPTIONS            *    AUS022
+      ****************************************************************    AUS022
+      *                                                              *    AUS022
+      * Any program to use this subroutine will also require the     *    AUS022
+      * use of the /COPY ZSRSRC,ZYLDZ1 for necessary I-specs         *    AUS022
+      *            /COPY ZSRSRC,FFYTOPZ1 for necessary C-specs       *    AUS022
+      *            /COPY ZSRSRC,FFTVCLZ2 for necessary CI-specs      *    AUS022
+      *                                                              *    AUS022
+      ****************************************************************    AUS022
+      *                                                                   AUS022
+     C           FFPMCL    BEGSR
+      ***********                                                         AUS022
+     C***********          Z-ADDFFNOC     FFNOC   50                      AUS022
+     C***********          Z-ADDFFPRIC    FFPRIC 117                      AUS022
+     C***********          Z-ADDFFTKDM    FFTKDM  30                      AUS022
+     C***********          Z-ADDFFMNPF    FFMNPF 117                      AUS022
+     C***********          Z-ADDFFTKVL    FFTKVL 145                      AUS022
+     C***********                                                         AUS022
+     C***********          Z-ADD0         FFPREM 130                      AUS022
+     C***********                                                         AUS022
+     C****Calculate the Transaction Value                                 AUS022
+     C*                                                                   AUS022
+     C***********          Z-ADD*ZERO     YIELDX 117                AUS022CFF004
+     C***********          Z-ADD*ZERO     YIELDY 117                AUS022CFF004
+     C                     Z-ADD*ZERO     YIELDX 158                      CFF004
+     C                     Z-ADD*ZERO     YIELDY 158                      CFF004
+     C                     Z-ADD*ZERO     PRICEX 159                      AUS022
+     C                     Z-ADD*ZERO     PRICEY 159                      AUS022
+     C                     Z-ADD*ZERO     FFPREM 130                      AUS022
+     C                     Z-ADDFFSTRP    FFSTRP 158                      136056
+     C                     Z-ADD*ZERO     FFTKV2 158                      CFF006
+     C           *LIKE     DEFN TKVL      FFTKVL                          AUS022
+     C           *LIKE     DEFN YIELDX    FFYLD                           AUS022
+      *                                                                   AUS022
+      * If processing type is in range 1 through 6                        AUS022
+      *                                                                   AUS022
+     C           ISPT      IFLE 6                                         AUS022
+      *                                                                   AUS022
+      * Calculate the transaction value
+      *
+     C                     EXSR FFTVCL
+     C***********                                                         AUS022
+     C****Calculate*Premium Payable by multiplying                        AUS022
+     C****the*Transaction Value by the Tick Value                         AUS022
+     C***********                                                         AUS022
+     C***********FFTNVL    MULT FFTKVL    FFPREM    H                     AUS022
+     C***********                                                         AUS022
+      *****************************************************************               CFF006 241147A
+      ***If*enhancement*CFF006*is*installed,*the*Ticks*Denominator*is*not             CFF006 241147A
+      ***equal*to*100,*and*the*Minimum*Price*Fulctuation*is*not*equal*to              CFF006 241147A
+      ***blanks,*then*perform*new*processing.**************************               CFF006 241147A
+      *****************************************************************               CFF006 241147A
+     C********** FFTKDM    IFNE 100                                                   CFF006 241147A
+     C********** FFMNPF    ANDNE0                                                     CFF006 241147A
+     C********** FFTKVL    MULT FFMNPF    FFTKV2                                       CFF006 241147
+     C********** FFTKVL    DIV  FFMNPF    FFTKV2                                      241147 241147A
+     C**********           DIV  100       FFTKV2                                      241147 241147A
+     C********** FFTNVL    MULT FFTKV2    FFPREM    H                                 CFF006 241147A
+      *                                                                   CFF006
+      ** Otherwise, use old processing.                                   CFF006
+     C**********           ELSE                                                       CFF006 241147A
+      *                                                                                       247517
+      ** If enhancement CFF006 is installed, the Ticks Denominator is not                     247517
+      ** equal to 100, and the Minimum Price Fulctuation is not equal to                      247517
+      ** blanks, then perform new processing.                                                 247517
+      *                                                                                       247517
+     C           FFTKDM    IFNE 100                                                           247517
+     C           FFMNPF    ANDNE0                                                             247517
+     C           FFTKVL    MULT FFMNPF    FFTKV2                                              247517
+     C           FFTNVL    MULT FFTKV2    FFPREM    H                                         247517
+      *                                                                                       247517
+      ** Otherwise, use old processing.                                                       247517
+     C                     ELSE                                                               247517
+      *                                                                   AUS022
+      * Calculate premium payable by multiplying the transaction value    AUS022
+      * by the tick value                                                 AUS022
+      *                                                                   AUS022
+     C********** FFTNVL    MULT FFTKVL    FFPREM                                       AUS022 215528
+     C           FFTNVL    MULT FFTKVL    FFPREM    H                                         215528
+     C           ISPT      IFEQ 5                                                             249171
+     C           FFPREM    DIV  100       FFPREM    H                                         249171
+     C                     ENDIF                                                              249171
+      *                                                                   CFF006
+     C**********           ENDIF                                                      CFF006 241147A
+     C                     ENDIF                                                              247517
+      *                                                                   AUS022
+      * If processing type is in range 7 through 8                        AUS022
+      *                                                                   AUS022
+     C                     ELSE                            IF ISPT<= 6    AUS022
+      *                                                                   AUS022
+      * Calculate YieldX and YieldY                                       AUS022
+      * That is, YieldX = 100 - FFPRIC, and                               AUS022
+      *          YieldY = (100 - FFPRIC) + (FFMNPF / 100)                 AUS022
+      *                                                                   AUS022
+     C***********100       SUB  FFPRIC    YIELDX                   AUS022 136056
+     C***********100       SUB  FFPRIC    W117   117                AUS022CFF004
+     C***********100       SUB  FFPRIC    W158   158               CFF004 136056
+     C           100       SUB  FFSTRP    YIELDX                          136056
+     C           100       SUB  FFSTRP    W158   158                      136056
+     C***********FFMNPF    DIV  100       W119   119H              AUS022 E30422
+     C***********W119      ADD  W117      YIELDY                   AUS022 E30422
+     C***********FFMNPF    ADD  W117      YIELDY                    E30422CFF004
+     C***********FFMNPF    ADD  W158      YIELDY                   CFF004 136056
+     C           W158      ADD  .01       YIELDY                          136056
+      *                                                                   AUS022
+      * Calculate PriceX and PriceY by executing subroutine FFYTOP with   AUS022
+      * YieldX and YieldY.                                                AUS022
+      *                                                                   AUS022
+     C                     Z-ADDYIELDX    FFYLD                           AUS022
+     C                     EXSR FFYTOP                                    AUS022
+     C                     Z-ADDPRICEC    PRICEX                          AUS022
+      *                                                                   AUS022
+     C                     Z-ADDYIELDY    FFYLD                           AUS022
+     C                     EXSR FFYTOP                                    AUS022
+     C                     Z-ADDPRICEC    PRICEY                          AUS022
+      *                                                                   AUS022
+      * Calculate premium.                                                AUS022
+      * That is, Premium = (PriceX - PriceY) x FFCTAM x FFNOC             AUS022
+      *                                                                   AUS022
+     C********   PRICEY    SUB  PRICEX    W159   159                      AUS022
+     C***********PRICEY    SUB  PRICEX    W309   309               AUS022 E30422
+     C***********PRICEX    SUB  PRICEY    W309   309               E30422 140017
+     C********             MULT FFCTAM    W159   159                      AUS022
+     C***********          MULT FFCTAM    W309                     AUS022 140017
+     C********   W159      MULT FFNOC     FFPREM    H                     AUS022
+     C***********W309      MULT FFNOC     FFPREM    H              AUS022 136056
+     C*                                                                   140017
+     C*   Convert % price to fraction                                     140017
+     C*                                                                   140017
+     C           FFCNTT    IFEQ 1                                         140455
+     C                     DIV  100       PRICEX                          140017
+     C                     DIV  100       PRICEY                          140017
+     C*                                                                   140017
+     C*   Calculate premium for price X                                   140017
+     C*                                                                   140017
+     C           PRICEX    MULT FFCTAM    W300   300H                     140017
+     C           W300      MULT FFNOC     FFPREM 130H                     140017
+     C                     MULT FFPRIC    FFPREM 130H                     140017
+     C                     MULT 100       FFPREM                          140017
+     C*                                                                   140017
+     C*   Calculate premium for price Y                                   140017
+     C*                                                                   140017
+     C           PRICEY    MULT FFCTAM    W300      H                     140017
+     C           W300      MULT FFNOC     WW130  130H                     140017
+     C                     MULT FFPRIC    WW130  130H                     140017
+     C                     MULT 100       WW130                           140017
+     C*                                                                   140017
+     C*   Final premium id the difference between the two                 140017
+     C*                                                                   140017
+     C                     SUB  WW130     FFPREM                          140017
+     C                     ELSE                                           140455
+     C           PRICEX    SUB  PRICEY    W309   309                      140455
+     C                     MULT FFCTAM    W309                            140455
+     C           W309      MULT FFPRIC    WW130  130H                     140455
+     C           WW130     MULT FFNOC     FFPREM    H                     140455
+     C                     ENDIF                                          140455
+      *                                                                   AUS022
+     C                     END                             IF ISPT<= 6    AUS022
+      *
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT

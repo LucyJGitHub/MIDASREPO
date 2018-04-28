@@ -1,0 +1,1810 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Securities details creation')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7524 - Securities Redenomination Security Details Creation *
+      *                                                               *
+      *  Function:  This program creates security details when action *
+      *             code S is entered on the Securities Redenomination*
+      *             Bulk Main Subfile.  The status of the Securities  *
+      *             Redenomination Bulk becomes G (Securities Details *
+      *             Generated) afterwards.                            *
+      *                                                               *
+      *  Called by: SE7521  -  Securities Redenomination Bulk Maint.  *
+      *                                                               *
+      *  Calls    : AOBANKR0 - Access Program for Bank Details        *
+      *             AOSTRDR0 - Access Program for Securities Trading  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027A            Date 17May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CER001             Date 25Apr05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 01Jul02               *
+      *                 CSE031             Date 13Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 17JAN01               *
+      *                 CAP060             Date 17JAN01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP137             Date 07Feb00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 19Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 08Mar99               *
+      *                 153279             Date 21JAN99               *
+      *                 151138             Date 23DEC98               *
+      *                 147531             Date 12Nov98               *
+      *                 146501             Date 05Nov98               *
+      *                 138962             Date 28Aug98               *
+      *                 137879             Date 02Jul98               *
+      *                 136428             Date 15Jun98               *
+      *                 136419             Date 05Jun98               *
+      *                 CEU017  *CREATE    Date 26Feb98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CER001 - Midas Upgrade to MidasPlus                          *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           Recompiled due to changes in SECTYD.                *
+      *  CSD006 - Market Data Feed (RECOMPILE)                        *
+      *  CAP060 - Midas APIs, Security Prices (recompile)             *
+      *  CSE023 - Treaty Withholding Tax (Recompiled)                 *
+      *  CAP137 - Conversion of SE Security inputs into modular       *
+      *           structure to use as APIs.                           *
+      *           Recompiled over changed in PF/SECTYD.               *
+      *  CPB001 - 'Private Banking' Module                            *
+      *  CPL002 - Midas-Plato Interface                               *
+      *  153279 - DEFAULT ORIGINAL ENTRY DATE OF NEW SECURITY WITH    *
+      *           RUNDATE TO ALLOW SE2100 TO CREATE INITIAL VALUE     *
+      *           EVENTS                                              *
+      *  151138 - CORRECTLY SETUP NEW MARKET PRICE WITH CORRECT RATE  *
+      *  147531 - EMU: Fields such as Fee Currency and related        *
+      *           amounts, payment currency, Market Price, Exchange   *
+      *           Rate ... must also be changed due to redenomination *
+      *  146501 - EMU: Add auto generation of a record in the         *
+      *           'Security Witholding Tax details' file for the 'new'*
+      *           Security. Details will be the same than the 'old'   *
+      *           Security.                                           *
+      *  138962 - EMU: Avoid locking problems with PF/SECORBPD        *
+      *  137879 - Add the ability to change (with a function key)     *
+      *           the order of selection in the bulk input screen     *
+      *           from security shortname to report name.             *
+      *           Just recompile due to change in LF/SECORSL1         *
+      *  136428 - Add Days Basis and Div. Basis in the Bulk Input     *
+      *           Screen to be used for the generation of new         *
+      *           Securities.                                         *
+      *  136419 - Multiple securities can be redenominated in one     *
+      *           New Security. Input of Currency Events (CC) now     *
+      *           not allowed in 'Corporate Action Events Maintenance'*
+      *           program                                             *
+      *  CEU017- Securities Redenomination Euro Changes               *
+      *                                                               *
+      *****************************************************************
+      *
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+      **  Investment Types
+      *
+     FSECORSL1IF  E           K        DISK         KINFSR *PSSR
+      **  Securities Redenomination Bulk Securities
+      *
+     FSECTY   UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  Security Details Master File - Detail
+      *
+     FSECTYA  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      **  Security Details Master File - Audit
+      *
+     FEXVALD  UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  Extel Price Validation - Detail
+      *
+     FEXVALZ  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      **  Extel Price Validation - Audit
+      *
+     FSECORBL0UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      **  Securities Redenomination Bulk Details
+      *
+     FSESWHTL0UF  E           K        DISK         KINFSR *PSSR A        146501
+     F                                              KCOMIT                146501
+      **  Security Withholding Tax Details                                146501
+      *                                                                   146501
+     FSE7524AUO   E                    PRINTER      KINFSR *PSSR
+      ** Audit Report
+     F/COPY WNCPYSRC,SE7524F001
+     FSESDX3PDUF  E           K        DISK         KINFSR *PSSR A    UC                      CER001
+     F                                              KCOMIT                                    CER001
+      *                                                                                       CER001
+      ** Security extension file - Luxembourg Returns                                         CER001
+      *                                                                                       CER001
+     FSESDX1PDUF  E           K        DISK         KINFSR *PSSR A    UC                      CER001
+     F                                              KCOMIT                                    CER001
+      *                                                                                       CER001
+      ** Security extension file - IBLC                                                       CER001
+      *                                                                                       CER001
+     FSESDX2PDUF  E           K        DISK         KINFSR *PSSR A    UC                      CER001
+     F                                              KCOMIT                                    CER001
+      *                                                                                       CER001
+      ** Security extension file - European Reporting                                         CER001
+      *                                                                                       CER001
+     FERGUARL5UF  E           K        DISK         KINFSR *PSSR                              CER001
+     F                                              KCOMIT                                    CER001
+      *                                                                                       CER001
+      ** ER Guarantees/Collaterals/Provisions                                                 CER001
+      *                                                                                       CER001
+     FERGUARL6UF  E           K        DISK         KINFSR *PSSR                              CER001
+     F                                              KCOMIT                                    CER001
+     F            ERGUARD0                          KRENAMEERGUARD1                           CER001
+      *                                                                                       CER001
+      ** ER Guarantees/Collaterals/Provisions                                                 CER001
+      *                                                                                       CER001
+     FERGUARL7UF  E           K        DISK         KINFSR *PSSR                              CER001
+     F                                              KCOMIT                                    CER001
+     F            ERGUARD0                          KRENAMEERGUARD2                           CER001
+      *                                                                                       CER001
+      ** ER Guarantees/Collaterals/Provisions                                                 CER001
+      *                                                                                       CER001
+     FSE7524P1O   E                    PRINTER      KINFDS SPOOL1                             CER001
+      *                                                                                       CER001
+      ** SE EMU Security Details Creation report                                              CER001
+      *                                                                                       CER001
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N    O F    I N D I C A T O R S                *
+      *                                                               *
+      *  80    Chain indicator                                        *
+      *  81    Read indicator for SECORSPD                            *
+      *  82    Read indicator for EXVALZ                              *
+      *  83    Read indicator for SECTYA                              *
+      *                                                               *
+      *  LR    Last record indicator                                  *
+      *  U7-U8 Database error indicator                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E    I N D E X                             *
+      *                                                               *
+      *  SRADD  - Moves work variables to fields and added to file    *
+      *  SRAUDT - Generates Audit report                              *
+      *  SRINIT - Program Initialisation                              *
+      *  SRIVAL - Insert Validation records                           *
+      *  SROLD  - Moves old security details to work variables        *
+      *  SRPROC - Process records from SECORSPD                       *
+      *                                                               *
+      *  *PSSR  - Error routine                                       *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+      **  Copyright array.
+      *
+     E                    POWER4  1   4  5 0             POWER ARRAY
+     E                    POWER   1   7  7 3             Power Array      147531
+     E/COPY WNCPYSRC,SE7524E001
+     E/COPY ZSRSRC,ZSEDITZ1                                                                   CER001
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IRUNDAT    E DS
+      **  Standard Data Area Layout for System flags and Run Date
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IZMUSER      DS                             17
+      ** Data area ZMUSER
+      *
+     I                                       11  13 BVBRCD
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+     I** Currency details
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ** Securites Trading ICD
+      *
+     I/COPY WNCPYSRC,SE7524I001
+     ISDMMOD    E DSSDMMODPD                                                                  CER001
+      *                                                                                       CER001
+      ** Module Settings Details                                                              CER001
+      *                                                                                       CER001
+     ISCSARD    E DSSCSARDPD                                                                  CER001
+      *                                                                                       CER001
+      ** Switchable features file                                                             CER001
+      *                                                                                       CER001
+     IDSFDY     E DSDSFDY                                                                     CER001
+      *                                                                                       CER001
+      ** Short Data Structure                                                                 CER001
+      *                                                                                       CER001
+     IPGMDS     ESDSY2PGDSP                                                                   CER001
+     ISDGELR    E DSSDGELRPD                                                                  CER001
+      *                                                                                       CER001
+      ** External data structures for General Ledger ICD Details                              CER001
+      *                                                                                       CER001
+     ISPOOL1      DS                                                                          CER001
+      *                                                                                       CER001
+      ** File Information Data Structure for SE7524P1.                                        CER001
+      *                                                                                       CER001
+     I                                       83  92 SFILE1                                    CER001
+     I                                    B 123 1240SFNUM1                                    CER001
+     I                                    B 188 1890OFLLN1                                    CER001
+     I                                    B 367 3680PRTLN1                                    CER001
+      *                                                                                       CER001
+     IDSSBYR      DS                                                                          CER001
+      *                                                                                       CER001
+      ** Data Structure for Field Secured by reference                                        CER001
+      *                                                                                       CER001
+     I                                        1  21 RRSBYR                                    CER001
+     I                                        4  13 RCNSEC                                    CER001
+     I            DS                                                                          CER001
+     I                                        1  150WORK15                                    CER001
+     I                                        1  150ZS1                                       CER001
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+     I/COPY ZSRSRC,ZTNLU1Z1
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Routine.                             *
+      *                                                               *
+      * CALLS      SRAUDT - Generates Audit Report                    *
+      *            SRINIT - Program Initialisation                    *
+      *            SRPROC - Process records from SECORSPD             *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST                           ** Main **
+     C                     PARM           PBLKR   60
+     C                     PARM           PRETRN  1        Return code
+      *
+      **  Perform Initialisation
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRPROC
+      *
+     C                     EXSR SRAUDT
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINIT - Program Initialisation                    *
+      *                                                               *
+      * CALLS      AOBANKR0 - Access Program for Bank Details         *
+      *            AOSTRDR0 - Access Program for Securities Trading   *
+      *            *PSSR  - Error routine                             *
+      *            SRAUDT - Generates Audit report                    *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR                           ** SRINIT **
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      WCPY   80
+      *
+      **  Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE7524'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     OUT  LDA
+      *
+      **  Read in DTAARA/ZMUSER
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  Read in DTAARA/RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Access the Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **   Access to Securities Trading Data
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST'  POPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+      **   If Record not found
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE
+     C                     MOVE 'SDSTRDPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   146501
+      **  Check if S01447 (Withholding Tax) is active                     146501
+     C                     CALL 'AOSARDR0'                                146501
+     C                     PARM '       ' WLRTCD  7                       146501
+     C                     PARM '*VERIFY' WLOPTN  7                       146501
+     C                     PARM 'S01447'  @SARD   6                       146501
+      *                                                                   146501
+     C           WLRTCD    IFEQ *BLANK                                    146501
+     C                     MOVE 'Y'       S01447  1                       146501
+     C                     ELSE                                           146501
+     C                     MOVE 'N'       S01447                          146501
+     C                     ENDIF                                          146501
+     C/COPY WNCPYSRC,SE7524C002
+      *                                                                                       CER001
+      ** Access Module Setting Details                                                        CER001
+      *                                                                                       CER001
+     C                     CALL 'AOMMODR0'                                                    CER001
+     C                     PARM *BLANKS   WLRTCD                                              CER001
+     C                     PARM '*FIRST ' WLOPTN                                              CER001
+     C           SDMMOD    PARM SDMMOD    DSFDY                                               CER001
+      *                                                                                       CER001
+     C           WLRTCD    IFNE *BLANKS                                                       CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     Z-ADD016       DBASE                                               CER001
+     C                     MOVEL'SDMMODPD'DBFILE                                              CER001
+     C                     MOVEL'*FIRST'  DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     END                                                                CER001
+      *                                                                                       CER001
+      ** Check if feature ULX043 is present                                                   CER001
+      *                                                                                       CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD                                               CER001
+     C                     PARM '*VERIFY' POPTN                                               CER001
+     C                     PARM 'ULX043'  PSARD   6                                           CER001
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER001
+      *                                                                                       CER001
+     C                     SELEC                                                              CER001
+     C           PRTCD     WHEQ *BLANKS                                                       CER001
+     C                     MOVE 'Y'       ULX043  1                                           CER001
+     C           PRTCD     WHEQ '*NRF'                                                        CER001
+     C                     MOVE 'N'       ULX043                                              CER001
+     C                     OTHER                                                              CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     Z-ADD018       DBASE                                               CER001
+     C                     MOVELPOPTN     DBKEY                                               CER001
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER001
+     C                     SETON                     U7U8LR                                   CER001
+     C                     OUT  LDA                                                           CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDSL                                                              CER001
+      *                                                                                       CER001
+      **  Access Switchable SAR details for the existence of ULX004                           CER001
+      *                                                                                       CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD                                               CER001
+     C                     PARM '*VERIFY' POPTN                                               CER001
+     C                     PARM 'ULX004'  PSARD                                               CER001
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER001
+      *                                                                                       CER001
+     C                     SELEC                                                              CER001
+     C           PRTCD     WHEQ *BLANK                                                        CER001
+     C                     MOVE 'Y'       ULX004  1                                           CER001
+     C           PRTCD     WHEQ '*NRF'                                                        CER001
+     C                     MOVE 'N'       ULX004                                              CER001
+     C                     OTHER                                                              CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     Z-ADD019       DBASE                                               CER001
+     C                     MOVELWLOPTN    DBKEY                                               CER001
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER001
+     C                     SETON                     U7U8LR                                   CER001
+     C                     OUT  LDA                                                           CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDSL                                                              CER001
+      *                                                                                       CER001
+     C                     CALL 'AOGELRR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD   7                                           CER001
+     C                     PARM '*FIRST ' POPTN   7                                           CER001
+     C           SDGELR    PARM SDGELR    DSFDY                                               CER001
+      *                                                                                       CER001
+     C           PRTCD     IFNE *BLANKS                                                       CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     Z-ADD020       DBASE                                               CER001
+     C                     MOVEL'SDGELRPD'DBFILE                                              CER001
+     C                     MOVEL'*FIRST'  DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     SETON                     U7U8                                     CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     Z-ADD0         RQDLN1  30                                          CER001
+     C                     Z-ADD0         DIFLN1  30                                          CER001
+     C                     MOVE 'N'       WWTITL  1                                           CER001
+     C*                                                                   CPL002
+     C** Define Work fields                                               CPL002
+     C*                                                                   CPL002
+     C           *LIKE     DEFN PLPGCD    WPGCD                           CPL002
+     C           *LIKE     DEFN PLRGCD    WRGCD                           CPL002
+     C           *LIKE     DEFN PLICCD    WICCD                           CPL002
+     C           *LIKE     DEFN PLDINM    WDINM                           CPL002
+      *
+     C           *LIKE     DEFN CCRK      WCCRK                                               CAS006
+     C           *LIKE     DEFN CLQP      WCLQP                                               CAS006
+     C           *LIKE     DEFN CPNN      WCPNN                                               CAS006
+     C           *LIKE     DEFN MKPN      WMKPN                                               CAS006
+     C           *LIKE     DEFN MCRK      WMCRK                                               CAS006
+     C           *LIKE     DEFN MLQP      WMLQP                                               CAS006
+      *                                                                                       CAS006
+     C           PBLKR     SETLLSECORSD0
+     C           PBLKR     READESECORSD0                 81
+      *
+     C           *IN81     IFEQ '1'
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRPROC - Process records from SECORSPD             *
+      *                                                               *
+      * CALLS      *PSSR  - Error routine                             *
+      *            SRADD  - Moves work variables to fields and added  *
+      *                     to file                                   *
+      *            SROLD  - Moves old securities details to work      *
+      *                     variables                                 *
+      *                                                               *
+      * CALLED BY  MAIN   - Main routine                              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRPROC    BEGSR                           ** SRINIT **
+      *
+     C***********PBLKR     CHAINSECORBD0             80                   138962
+     C           PBLKR     CHAINSECORBD0            N80                   138962
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'SECORBPD'DBFILE
+     C                     MOVELPBLKR     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN81     DOWEQ'0'
+      *
+     C           NCOSEC    CHAINSECTYDF              80
+      *
+     C                     MOVE NMCY      WONMCY  3                       147531
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE
+     C                     MOVEL'SECTYDF 'DBFILE
+     C                     MOVELNCOSEC    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     EXSR SROLD
+      *
+     C           NCNSEC    CHAINSECTYDF              80
+      *
+     C********   *IN80     IFEQ '0'                                       136419
+     C********   *LOCK     IN   LDA                                       136419
+     C********             Z-ADD005       DBASE                           136419
+     C********             MOVEL'SECTYDF 'DBFILE                          136419
+     C********             MOVELNCNSEC    DBKEY                           136419
+     C********             OUT  LDA                                       136419
+     C********             EXSR *PSSR                                     136419
+     C********             ENDIF                                          136419
+      *
+     C           *IN80     IFEQ *OFF                                                          CER001
+     C                     MOVE 'Y'       WFOUND  1                                           CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE 'N'       WFOUND                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     EXSR SRADD
+      *
+     C***********          ADD  1         WTOTAL  50                      136419
+      *
+     C           PBLKR     READESECORSD0                 81
+      *
+     C                     ENDDO
+      *
+     C           PBLKR     CHAINSECORBD0             80                   138962
+     C                     MOVE 'G'       NBSTAT
+     C                     UPDATSECORBD0
+      *
+     C           1         CHAINSECTYAF              83
+      *
+     C           *IN83     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD006       DBASE
+     C                     MOVEL'SECTYDF 'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ADD  WTOTAL    SINS
+     C                     ADD  WTOTAL    NORE
+      *
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'A'       CHTP
+     C                     MOVELNATN      TNLU
+     C                     UPDATSECTYAF
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SROLD  - Moves old security details to work        *
+      *                     variables                                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRPROC - Process records from SECORSPD             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SROLD     BEGSR                           ** SROLD  **
+      *
+     C           WKEY1     KLIST
+     C                     KFLD           NBNCCY
+     C                     KFLD           SITP
+      *
+     C           WKEY1     CHAININVTPDF              80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD007       DBASE
+     C                     MOVEL'INVTP   'DBFILE
+     C                     MOVELNBNCCY    DBKEY
+     C                     MOVE SITP      DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELINCS      WINCS   1
+     C                     MOVELSRPN      WSRPN  20
+     C                     MOVELSFN1      WSFN1  30
+     C                     MOVELSFN2      WSFN2  30
+     C                     MOVELNBNCCY    WNCCY   3
+      *
+     C                     SELEC
+      *
+      **  Nominal decimal places - 4  if processing type = 7
+      **       - Obtain from SDCURRPD if processing type = 8
+     C           PROT      WHEQ '7'
+     C                     Z-ADD4         WNMDP   10
+      *
+     C           PROT      WHEQ '8'
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM NBNCCY    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C                     Z-ADDA6NBDP    WNMDP
+      *
+     C                     OTHER
+     C                     Z-ADDNBNDCP    WNMDP
+      *
+     C                     ENDSL
+      *
+     C                     MOVELSITP      WSITP   3
+     C**********           Z-ADDSIDY      WSIDY   30                                          CER020
+     C                     MOVELLOIC      WLOIC   3                                           CER020
+     C                     MOVELNBVCCY    WVCCY   3
+     C                     MOVELMLTI      WMLTI   1
+     C                     MOVELSSEC      WSSEC   2
+     C                     MOVELQLTY      WQLTY   3
+     C                     MOVELMKTI      WMKTI   1
+     C                     MOVELSCOR      WSCOR   2
+     C                     MOVELSRET      WSRET   5
+     C                     MOVELSREF      WSREF   7
+     C                     MOVELT2RF      WT2RF  12
+     C                     MOVELCSPN      WCSPN   9
+     C                     MOVELISNO      WISNO  12
+     C                     MOVELPPDI      WPPDI   1
+     C                     Z-ADDSLCA      WSLCA   50
+     C**********           Z-ADDISSR      WISSR   60                                          CSD027
+     C                     MOVE ISSR      WISSR   6                                           CSD027
+     C                     MOVELERPY      WERPY   1
+     C                     MOVELVDFT      WVDFT   3
+     C                     MOVELEDFT      WEDFT   3
+     C                     Z-ADDIDIV      WIDIV   50
+     C                     Z-ADDCD01      WCD01   40
+     C                     Z-ADDCD02      WCD02   40
+     C                     Z-ADDCD03      WCD03   40
+     C                     Z-ADDCD04      WCD04   40
+     C                     Z-ADDCD05      WCD05   40
+     C                     Z-ADDCD06      WCD06   40
+     C                     Z-ADDCD07      WCD07   40
+     C                     Z-ADDCD08      WCD08   40
+     C                     Z-ADDCD09      WCD09   40
+     C                     Z-ADDCD10      WCD10   40
+     C                     Z-ADDCD11      WCD11   40
+     C                     Z-ADDCD12      WCD12   40
+     C                     MOVELCR01      WCR01   1
+     C                     MOVELCR02      WCR02   1
+     C                     MOVELCR03      WCR03   1
+     C                     MOVELCR04      WCR04   1
+     C                     MOVELCR05      WCR05   1
+     C                     MOVELCR06      WCR06   1
+     C                     MOVELCR07      WCR07   1
+     C                     MOVELCR08      WCR08   1
+     C                     MOVELCR09      WCR09   1
+     C                     MOVELCR10      WCR10   1
+     C                     MOVELCR11      WCR11   1
+     C                     MOVELCR12      WCR12   1
+     C                     Z-ADDLCPN      WLCPN   50
+     C                     Z-ADDCPNR      WCPNR  117
+     C                     Z-ADDBASC      WBASC   20
+     C                     Z-ADDBASS      WBASS  117
+     C                     MOVELSPRI      WSPRI   1
+     C                     Z-ADDMCPN      WMCPN  117
+     C                     Z-ADDMATY      WMATY   50
+     C                     MOVELMDTI      WMDTI   1
+     C                     MOVELLTMI      WLTMI   1
+     C                     MOVELDYBS      WDYBS   1
+     C                     MOVELDVBS      WDVBS   1
+     C                     MOVELCNLI      WCNLI   1
+     C**********           Z-ADDRSKC      WRSKC   60                                          CSD027
+     C                     MOVE RSKC      WRSKC   6                                           CSD027
+     C                     MOVELDRWR      WDRWR  10
+     C                     Z-ADDIADJ      WIADJ   30
+     C                     Z-ADDITLD      WITLD   50
+     C                     Z-ADDFCPN      WFCPN   50
+     C                     MOVELRCFQ      WRCFQ   1
+     C                     Z-ADDNCHD      WNCHD   50
+     C                     MOVELDASR      WDASR  12
+     C                     MOVELDCSR      WDCSR  12
+     C                     MOVELDDSR      WDDSR  12
+     C                     MOVELSMCC      WSMCC   2
+     C                     MOVELSCVI      WSCVI   1
+     C                     MOVELSPBS      WSPBS   1
+     C                     MOVELSTBS      WSTBS   1
+     C                     MOVELSYBS      WSYBS   2
+     C                     Z-ADDSINP      WSINP  150
+     C                     Z-ADDISSD      WISSD   50
+     C                     Z-ADDISSP      WISSP  158
+     C**********           Z-ADDLMGR      WLMGR   60                                          CSD027
+     C                     MOVE LMGR      WLMGR   6                                           CSD027
+     C                     Z-ADDISSA      WISSA  110
+     C                     Z-ADDTOTU      WTOTU  110
+     C                     Z-ADDALRQ      WALRQ  110
+     C                     Z-ADDALRC      WALRC  110
+     C                     Z-ADDMGFD      WMGFD  110
+     C                     Z-ADDMGRC      WMGRC  110
+     C                     Z-ADDUNFD      WUNFD  110
+     C                     Z-ADDUNFR      WUNFR  110
+     C                     MOVELFECY      WFECY   3
+     C                     Z-ADDDCOM      WDCOM   50
+     C                     Z-ADDMKPR      WMKPR  158
+     C                     MOVELZZ005     WZZ005  5
+     C                     Z-ADDORED      WORED   50
+     C                     Z-ADDNDVD      WNDVD   50
+     C                     MOVELSPYC      WSPYC   3
+     C                     Z-ADDSEXR      WSEXR  138
+     C                     MOVELSMDI      WSMDI   1
+     C                     Z-ADDLPRU      WLPRU   50
+     C                     Z-ADDCPDP      WCPDP  150
+     C                     Z-ADDTPHD      WTPHD  150
+     C                     MOVELSCPI      WSCPI   1
+     C                     Z-ADDSCPP      WSCPP  158
+     C                     Z-ADDSCPD      WSCPD   50
+     C                     MOVELRFDI      WRFDI   1
+     C                     Z-ADDCMFQ      WCMFQ   20
+     C                     MOVELDSLC      WDSLC   1
+     C                     MOVELDSCB      WDSCB   1
+     C                     MOVELSWTP      WSWTP   3
+     C                     MOVELISIN      WISIN  12
+     C                     Z-ADDCFCT      WCFCT  109
+     C                     MOVELSMAI      WSMAI   1
+     C                     Z-ADDSDNM      WSDNM   74
+     C**********           Z-ADDPPAG      WPPAG   60                                   CPB001 CSD027
+     C**********           Z-ADDGUAR      WGUAR   60                                   CPB001 CSD027
+     C                     MOVE PPAG      WPPAG   6                                           CSD027
+     C                     MOVE GUAR      WGUAR   6                                           CSD027
+     C                     Z-ADDWEIC      WWEIC   20                      CPB001
+     C                     MOVE NATU      WNATU   3                       CPB001
+      *
+     C           NEXD      IFNE *ZEROS
+      *
+      ** Next expected dividend is based on decimal places from Value
+      ** currency (Nominal if blank)
+     C           NBVCCY    IFNE *BLANKS
+     C                     MOVELNBVCCY    @AJCD
+     C                     ELSE
+     C                     MOVELNBNCCY    @AJCD
+     C                     ENDIF
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           A6NBDP    IFNE NMDP
+     C           A6NBDP    SUB  NMDP      XX      10
+     C           XX        IFGT *ZEROS
+     C           NEXD      MULT POWER4,XX NEXD
+     C                     ELSE
+     C                     Z-SUBXX        XX
+     C           NEXD      DIV  POWER4,XX NEXD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDNEXD      WNEXD  130
+      *
+     C           SFPP      IFNE *ZEROS
+      *
+     C           PROT      IFEQ '4'
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM NBNCCY    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     ELSE
+     C                     Z-ADD3         A6NBDP
+     C                     ENDIF
+      *
+     C           A6NBDP    IFNE NMDP
+     C           A6NBDP    SUB  NMDP      XX      10
+     C           XX        IFGT *ZEROS
+     C           SFPP      MULT POWER4,XX SFPP
+     C                     ELSE
+     C                     Z-SUBXX        XX
+     C           SFPP      DIV  POWER4,XX SFPP
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDSFPP      WSFPP  150
+     C                     MOVE PLPGCD    WPGCD                           CPL002
+     C                     MOVE PLRGCD    WRGCD                           CPL002
+     C                     MOVE PLICCD    WICCD                           CPL002
+     C                     MOVE PLDINM    WDINM                           CPL002
+      *
+     C                     Z-ADDCCRK      WCCRK                                               CAS006
+     C                     Z-ADDCLQP      WCLQP                                               CAS006
+     C                     Z-ADDCPNN      WCPNN                                               CAS006
+     C                     Z-ADDMKPN      WMKPN                                               CAS006
+     C                     Z-ADDMCRK      WMCRK                                               CAS006
+     C                     Z-ADDMLQP      WMLQP                                               CAS006
+      *                                                                                       CAS006
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRADD  - Moves work variables to fields and added  *
+      *                     to file                                   *
+      *                                                               *
+      * CALLS      SRIVAL - Error routine                             *
+      *            ZTNLU1 - Retrieves next available transaction no.  *
+      *                                                               *
+      * CALLED BY  SRPROC - Process records from SECORSPD             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRADD     BEGSR                           ** SRADD  **
+      *
+     C           *IN80     IFEQ '1'                                       136419
+     C                     MOVELNCNSEC    SESN
+     C                     MOVELWINCS     INCS
+     C                     MOVELWSRPN     SRPN
+     C                     MOVELWSFN1     SFN1
+     C                     MOVELWSFN2     SFN2
+     C                     MOVELWNCCY     NMCY
+     C                     Z-ADDWNMDP     NMDP
+      *
+     C                     MOVELWSITP     SITP
+     C**********           Z-ADDWSIDY     SIDY                                                CER020
+     C                     MOVELWLOIC     LOIC                                                CER020
+     C                     MOVELWVCCY     VLCY
+     C                     MOVELWMLTI     MLTI
+     C                     MOVELWSSEC     SSEC
+     C                     MOVELWQLTY     QLTY
+     C                     MOVELWMKTI     MKTI
+     C                     MOVELWSCOR     SCOR
+     C                     MOVELWSRET     SRET
+     C                     MOVELWSREF     SREF
+     C                     MOVELWT2RF     T2RF
+     C                     MOVELWCSPN     CSPN
+     C                     MOVELWISNO     ISNO
+     C                     MOVELWPPDI     PPDI
+     C                     Z-ADDWSLCA     SLCA
+     C**********           Z-ADDWISSR     ISSR                                                CSD027
+     C                     MOVE WISSR     ISSR                                                CSD027
+     C                     MOVELWERPY     ERPY
+     C                     MOVELWVDFT     VDFT
+     C                     MOVELWEDFT     EDFT
+     C                     Z-ADDWIDIV     IDIV
+     C                     Z-ADDWCD01     CD01
+     C                     Z-ADDWCD02     CD02
+     C                     Z-ADDWCD03     CD03
+     C                     Z-ADDWCD04     CD04
+     C                     Z-ADDWCD05     CD05
+     C                     Z-ADDWCD06     CD06
+     C                     Z-ADDWCD07     CD07
+     C                     Z-ADDWCD08     CD08
+     C                     Z-ADDWCD09     CD09
+     C                     Z-ADDWCD10     CD10
+     C                     Z-ADDWCD11     CD11
+     C                     Z-ADDWCD12     CD12
+     C                     MOVELWCR01     CR01
+     C                     MOVELWCR02     CR02
+     C                     MOVELWCR03     CR03
+     C                     MOVELWCR04     CR04
+     C                     MOVELWCR05     CR05
+     C                     MOVELWCR06     CR06
+     C                     MOVELWCR07     CR07
+     C                     MOVELWCR08     CR08
+     C                     MOVELWCR09     CR09
+     C                     MOVELWCR10     CR10
+     C                     MOVELWCR11     CR11
+     C                     MOVELWCR12     CR12
+     C                     Z-ADDWLCPN     LCPN
+     C                     Z-ADDWCPNR     CPNR
+     C                     Z-ADDWBASC     BASC
+     C                     Z-ADDWBASS     BASS
+     C                     MOVELWSPRI     SPRI
+     C                     Z-ADDWMCPN     MCPN
+     C                     Z-ADDWMATY     MATY
+     C                     MOVELWMDTI     MDTI
+     C                     MOVELWLTMI     LTMI
+     C*                                                                   136428
+     C** Check if Days basis and Divisor Basis need to be changed         136428
+     C*                                                                   136428
+     C           NBDYBS    IFEQ *BLANK                                    136428
+     C           WDYBS     OREQ *BLANK                                    136428
+     C                     MOVELWDYBS     DYBS
+     C                     ELSE                                           136428
+     C                     MOVE NBDYBS    DYBS                            136428
+     C                     END                                            136428
+     C*                                                                   136428
+     C           NBDVBS    IFEQ *BLANK                                    136428
+     C           WDVBS     OREQ *BLANK                                    136428
+     C                     MOVELWDVBS     DVBS
+     C                     ELSE                                           136428
+     C                     MOVE NBDVBS    DVBS                            136428
+     C                     END                                            136428
+     C*                                                                   136428
+     C                     MOVELWCNLI     CNLI
+     C**********           Z-ADDWRSKC     RSKC                                                CSD027
+     C                     MOVE WRSKC     RSKC                                                CSD027
+     C                     MOVELWDRWR     DRWR
+     C                     Z-ADDWIADJ     IADJ
+     C                     Z-ADDWITLD     ITLD
+     C                     Z-ADDWFCPN     FCPN
+     C                     MOVELWRCFQ     RCFQ
+     C                     Z-ADDWNCHD     NCHD
+     C                     MOVELWDASR     DASR
+     C                     MOVELWDCSR     DCSR
+     C                     MOVELWDDSR     DDSR
+     C                     MOVELWSMCC     SMCC
+     C                     MOVELWSCVI     SCVI
+     C                     MOVELWSPBS     SPBS
+     C                     MOVELWSTBS     STBS
+     C                     MOVELWSYBS     SYBS
+     C                     Z-ADDWSINP     SINP
+     C                     Z-ADDWISSD     ISSD
+     C                     Z-ADDWISSP     ISSP
+     C**********           Z-ADDWLMGR     LMGR                                                CSD027
+     C                     MOVE WLMGR     LMGR                                                CSD027
+     C                     Z-ADDWISSA     ISSA
+     C                     Z-ADDWTOTU     TOTU
+     C                     Z-ADDWALRQ     ALRQ
+     C                     Z-ADDWALRC     ALRC
+     C                     Z-ADDWMGFD     MGFD
+     C                     Z-ADDWMGRC     MGRC
+     C                     Z-ADDWUNFD     UNFD
+     C                     Z-ADDWUNFR     UNFR
+     C                     MOVELWFECY     FECY
+     C                     Z-ADDWDCOM     DCOM
+     C                     Z-ADDWMKPR     MKPR
+     C                     MOVELWZZ005    ZZ005
+     C*********            Z-ADDWORED     ORED                            153279
+     C                     Z-ADDBJRDNB    ORED                            153279
+     C                     Z-ADDWNDVD     NDVD
+     C                     MOVELWSPYC     SPYC
+     C                     Z-ADDWSEXR     SEXR
+     C                     MOVELWSMDI     SMDI
+     C                     Z-ADDWLPRU     LPRU
+     C                     Z-ADDWCPDP     CPDP
+     C                     Z-ADDWTPHD     TPHD
+     C                     MOVELWSCPI     SCPI
+     C                     Z-ADDWSCPP     SCPP
+     C                     Z-ADDWSCPD     SCPD
+     C                     MOVELWRFDI     RFDI
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVEL'I'       CHTP
+     C                     EXSR ZTNLU1
+     C                     MOVELNATN      TNLU
+     C                     Z-ADDWCMFQ     CMFQ
+     C                     MOVELWDSLC     DSLC
+     C                     MOVELWDSCB     DSCB
+     C                     MOVELWSWTP     SWTP
+     C                     MOVELWISIN     ISIN
+     C                     Z-ADDWCFCT     CFCT
+     C                     MOVELWSMAI     SMAI
+     C                     Z-ADDWSDNM     SDNM
+     C                     Z-ADDWNEXD     NEXD
+     C                     Z-ADDWSFPP     SFPP
+     C                     MOVE *BLANKS   SRRB
+     C**********           Z-ADD0         SRBK                                               CSD027A
+     C                     MOVE *BLANKS   SRBK                                               CSD027A
+     C                     MOVE WPGCD     PLPGCD                          CPL002
+     C                     MOVE WRGCD     PLRGCD                          CPL002
+     C                     MOVE WICCD     PLICCD                          CPL002
+     C                     MOVE WDINM     PLDINM                          CPL002
+     C                     Z-ADDWCCRK     CCRK                                                CAS006
+     C                     Z-ADDWCLQP     CLQP                                                CAS006
+     C                     Z-ADDWCPNN     CPNN                                                CAS006
+     C                     Z-ADDWMKPN     MKPN                                                CAS006
+     C                     Z-ADDWMCRK     MCRK                                                CAS006
+     C                     Z-ADDWMLQP     MLQP                                                CAS006
+     C**********           Z-ADDWPPAG     PPAG                                         CPB001 CSD027
+     C**********           Z-ADDWGUAR     GUAR                                         CPB001 CSD027
+     C                     MOVE WPPAG     PPAG                                                CSD027
+     C                     MOVE WGUAR     GUAR                                                CSD027
+     C                     Z-ADDWWEIC     WEIC                            CPB001
+     C                     MOVE WNATU     NATU                            CPB001
+      *
+     C           BVEXOP    IFEQ 'Y'
+     C                     EXSR SRIVAL
+     C                     ENDIF
+      *                                                                   147531
+      ** Fetch nominal currency                                           147531
+     C                     CALL 'AOCURRR0'                                147531
+     C                     PARM '*DBERR ' @RTCD                           147531
+     C                     PARM '*KEY   ' @OPTN                           147531
+     C                     PARM NMCY      @AJCD                           147531
+     C           SDCURR    PARM SDCURR    DSSDY                           147531
+      *                                                                   147531
+      **   If Record not found                                            147531
+      *                                                                   147531
+     C           @RTCD     IFNE *BLANKS                                   147531
+     C           *LOCK     IN   LDA                                       147531
+     C                     Z-ADD011       DBASE                           147531
+     C                     MOVE 'SDCURRPD'DBFILE                          147531
+     C                     MOVELNMCY      DBKEY                           147531
+     C                     OUT  LDA                                       147531
+     C                     EXSR *PSSR                                     147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+     C                     MOVE NMCY      ZCCYT                           147531
+     C                     Z-ADDA6SPRT    ZRATET                          147531
+     C                     MOVELA6MDIN    ZMDINT                          147531
+     C                     Z-ADDA6NBDP    ZCDPT                           147531
+      *                                                                   147531
+     C                     Z-ADDA6SPRT    ZRATE1 138                      147531
+     C           A6MDIN    IFEQ 'D'                                       147531
+     C                     MOVE 'D'       ZMDI1   1                       147531
+     C                     ELSE                                           147531
+     C                     MOVE 'M'       ZMDI1                           147531
+     C                     END                                            147531
+      *                                                                   147531
+      **  Fetch Fee currency decimal places for subsequent translations   147531
+     C           FECY      IFNE *BLANKS                                   147531
+     C                     CALL 'AOCURRR0'                                147531
+     C                     PARM '*DBERR ' @RTCD                           147531
+     C                     PARM '*KEY   ' @OPTN                           147531
+     C                     PARM FECY      @AJCD                           147531
+     C           SDCURR    PARM SDCURR    DSSDY                           147531
+      *                                                                   147531
+      **   If Record not found                                            147531
+     C           @RTCD     IFNE *BLANKS                                   147531
+     C           *LOCK     IN   LDA                                       147531
+     C                     Z-ADD012       DBASE                           147531
+     C                     MOVE 'SDCURRPD'DBFILE                          147531
+     C                     MOVELFECY      DBKEY                           147531
+     C                     OUT  LDA                                       147531
+     C                     EXSR *PSSR                                     147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+     C           A6INCY    IFEQ 'Y'                                       147531
+      *                                                                   147531
+     C                     MOVE FECY      ZCCYF                           147531
+     C                     Z-ADDA6SPRT    ZRATEF                          147531
+     C                     MOVELA6MDIN    ZMDINF                          147531
+     C                     Z-ADDA6NBDP    ZCDPF                           147531
+      *                                                                   147531
+      **  Management Fees Due                                             147531
+     C           MGFD      IFNE *ZEROS                                    147531
+     C                     Z-ADDMGFD      ZAMTF                           147531
+     C                     EXSR ZCCYCN                                    147531
+     C                     Z-ADDZAMTT     MGFD                            147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+      **  Management Fees Received                                        147531
+     C           MGRC      IFNE *ZEROS                                    147531
+     C                     Z-ADDMGRC      ZAMTF                           147531
+     C                     EXSR ZCCYCN                                    147531
+     C                     Z-ADDZAMTT     MGRC                            147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+      **  Underwriting Fees Due                                           147531
+     C           UNFD      IFNE *ZEROS                                    147531
+     C                     Z-ADDUNFD      ZAMTF                           147531
+     C                     EXSR ZCCYCN                                    147531
+     C                     Z-ADDZAMTT     UNFD                            147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+      **  Underwriting Fees Received                                      147531
+     C           UNFR      IFNE *ZEROS                                    147531
+     C                     Z-ADDUNFR      ZAMTF                           147531
+     C                     EXSR ZCCYCN                                    147531
+     C                     Z-ADDZAMTT     UNFR                            147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+      **  Fee Currency                                                    147531
+     C                     MOVE NMCY      FECY                            147531
+     C                     ENDIF                                          147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+     C           SPYC      IFNE *BLANKS                                   147531
+     C                     CALL 'AOCURRR0'                                147531
+     C                     PARM '*DBERR ' @RTCD                           147531
+     C                     PARM '*KEY   ' @OPTN                           147531
+     C                     PARM SPYC      @AJCD                           147531
+     C           SDCURR    PARM SDCURR    DSSDY                           147531
+      *                                                                   147531
+      **   If Record not found                                            147531
+     C           @RTCD     IFNE *BLANKS                                   147531
+     C           *LOCK     IN   LDA                                       147531
+     C                     Z-ADD013       DBASE                           147531
+     C                     MOVE 'SDCURRPD'DBFILE                          147531
+     C                     MOVELSPYC      DBKEY                           147531
+     C                     OUT  LDA                                       147531
+     C                     EXSR *PSSR                                     147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+     C           A6INCY    IFEQ 'Y'                                       147531
+     C                     MOVE VLCY      SPYC                            147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+     C                     ELSE                                           147531
+      *                                                                   147531
+      ** Payment currency defaults to value currency                      147531
+     C                     MOVE VLCY      SPYC                            147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+      ** Fetch cross-exchange rate (Nominal to currency)                  147531
+     C                     Z-ADD*ZEROS    SEXR                            147531
+     C                     MOVE *BLANKS   SMDI                            147531
+      *                                                                   147531
+      ** Fetch value currency                                             147531
+     C                     CALL 'AOCURRR0'                                147531
+     C                     PARM '*DBERR ' @RTCD                           147531
+     C                     PARM '*KEY   ' @OPTN                           147531
+     C                     PARM VLCY      @AJCD                           147531
+     C           SDCURR    PARM SDCURR    DSSDY                           147531
+      *                                                                   147531
+      **   If Record not found                                            147531
+     C           @RTCD     IFNE *BLANKS                                   147531
+     C           *LOCK     IN   LDA                                       147531
+     C                     Z-ADD014       DBASE                           147531
+     C                     MOVE 'SDCURRPD'DBFILE                          147531
+     C                     MOVELVLCY      DBKEY                           147531
+     C                     OUT  LDA                                       147531
+     C                     EXSR *PSSR                                     147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+     C                     Z-ADDA6SPRT    ZRATE2 138                      147531
+     C           A6MDIN    IFEQ 'D'                                       147531
+     C                     MOVE 'D'       ZMDI2   1                       147531
+     C                     ELSE                                           147531
+     C                     MOVE 'M'       ZMDI2                           147531
+     C                     END                                            147531
+      *                                                                   147531
+      ** Calculate cross-exchange rate                                    147531
+     C                     EXSR ZXRATE                                    147531
+     C                     Z-ADDZRATEX    SEXR                            147531
+     C                     MOVE ZMDIX     SMDI                            147531
+      *                                                                   147531
+     C           SPBS      IFEQ 'U'                                       147531
+      *                                                                   147531
+      ** Fetch 'old' Nominal Currency                                     147531
+     C                     CALL 'AOCURRR0'                                147531
+     C                     PARM '*DBERR ' @RTCD                           147531
+     C                     PARM '*KEY   ' @OPTN                           147531
+     C                     PARM WONMCY    @AJCD                           147531
+     C           SDCURR    PARM SDCURR    DSSDY                           147531
+      *                                                                   147531
+      **   If Record not found                                            147531
+     C           @RTCD     IFNE *BLANKS                                   147531
+     C           *LOCK     IN   LDA                                       147531
+     C                     Z-ADD015       DBASE                           147531
+     C                     MOVE 'SDCURRPD'DBFILE                          147531
+     C                     MOVELWONMCY    DBKEY                           147531
+     C                     OUT  LDA                                       147531
+     C                     EXSR *PSSR                                     147531
+     C                     ENDIF                                          147531
+      *                                                                   147531
+     C**********           MOVE WONMCY    ZCCYF                     147531151138
+     C**********           Z-ADDA6SPRT    ZRATEF                    147531151138
+     C**********           MOVELA6MDIN    ZMDINF                    147531151138
+     C**********           Z-ADDA6NBDP    ZCDPF                     147531151138
+      *                                                             147531151138
+     C********** ZCDPF     IFEQ 1                                   147531151138
+     C********** MKPR      MULT 10        ZAMTF                     147531151138
+     C**********           ELSE                                     147531151138
+     C********** ZCDPF     IFEQ 2                                   147531151138
+     C********** MKPR      MULT 100       ZAMTF                     147531151138
+     C**********           ELSE                                     147531151138
+     C********** ZCDPF     IFEQ 3                                   147531151138
+     C********** MKPR      MULT 1000      ZAMTF                     147531151138
+     C**********           ELSE                                     147531151138
+     C**********           Z-ADDMKPR      ZAMTF                     147531151138
+     C**********           ENDIF                                    147531151138
+     C**********           ENDIF                                    147531151138
+     C**********           ENDIF                                    147531151138
+      *                                                             147531151138
+     C**********           EXSR ZCCYCN                              147531151138
+      *                                                             147531151138
+     C********** ZCDPT     IFEQ 1                                   147531151138
+     C********** ZAMTT     DIV  10        MKPR                      147531151138
+     C**********           ELSE                                     147531151138
+     C********** ZCDPT     IFEQ 2                                   147531151138
+     C********** ZAMTT     DIV  100       MKPR                      147531151138
+     C**********           ELSE                                     147531151138
+     C********** ZCDPT     IFEQ 3                                   147531151138
+     C********** ZAMTT     DIV  1000      MKPR                      147531151138
+     C**********           ELSE                                     147531151138
+     C**********           Z-ADDZAMTT     MKPR                      147531151138
+     C**********           ENDIF                                    147531151138
+     C**********           ENDIF                                    147531151138
+     C**********           ENDIF                                    147531151138
+     C           A6EUMD    IFEQ 'D'                                       151138
+     C           MKPR      DIV  A6EUER    MKPR                            151138
+     C                     ELSE                                           151138
+     C           MKPR      MULT A6EUER    MKPR                            151138
+     C                     ENDIF                                          147531
+     C                     ENDIF                                          147531
+      *
+     C                     WRITESECTYDF
+     C                     ADD  1         WTOTAL  50                      136419
+     C/COPY WNCPYSRC,SE7524C006
+     C                     ENDIF                                          136419
+      *
+     C           NCOSEC    CHAINSECTYDF              80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD008       DBASE
+     C                     MOVEL'SECTYDF 'DBFILE
+     C                     MOVELNCOSEC    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELNCNSEC    SRRB
+     C                     Z-ADDPBLKR     SRBK
+      *
+     C                     UPDATSECTYDF
+      *                                                                   146501
+      **  If Witholding Tax installed in the system                       146501
+     C           S01447    IFEQ 'Y'                                       146501
+      *                                                                   146501
+      **  Access Security Witholding Tax Details with 'old' Security      146501
+     C           NCOSEC    CHAINSESWHTL0             80                   146501
+      *                                                                   146501
+      **  If record found                                                 146501
+     C           *IN80     IFEQ '0'                                       146501
+      *                                                                   146501
+      **  Access Security Witholding Tax Details with 'new' Security      146501
+     C           NCNSEC    CHAINSESWHTL0             80                   146501
+      *                                                                   146501
+      **  If record not found, write a record for 'new' security with     146501
+      **  same details than the 'old' security                            146501
+     C           *IN80     IFEQ '1'                                       146501
+     C                     MOVE NCNSEC    S1SESN                          146501
+     C                     WRITESESWHTD0                                  146501
+     C                     ENDIF                                          146501
+     C                     ENDIF                                          146501
+     C                     ENDIF                                          146501
+     C/COPY WNCPYSRC,SE7524C001
+     C           ULX004    IFEQ 'Y'                                                           CER001
+     C           WFOUND    ANDEQ'N'                                                           CER001
+      *                                                                                       CER001
+      ** Update extension file depending on feature present                                   CER001
+      ** Luxembourg Returns                                                                   CER001
+      *                                                                                       CER001
+     C           BGLRIN    IFEQ 'Y'                                                           CER001
+     C                     OPEN SESDX3PD                                                      CER001
+     C           NCOSEC    CHAINSESDX3PD             89                                       CER001
+     C           *IN89     IFEQ *OFF                                                          CER001
+     C           NCNSEC    CHAINSESDX3PD             89                                       CER001
+     C           *IN89     IFEQ *ON                                                           CER001
+     C                     MOVELNCNSEC    VVSESN                                              CER001
+     C                     WRITESECTYDF6                                                      CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+     C                     CLOSESESDX3PD                                                      CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C           ULX043    IFEQ 'Y'                                                           CER001
+     C                     OPEN SESDX1PD                                                      CER001
+     C           NCOSEC    CHAINSESDX1PD             89                                       CER001
+     C           *IN89     IFEQ *OFF                                                          CER001
+     C           NCNSEC    CHAINSESDX1PD             89                                       CER001
+     C           *IN89     IFEQ *ON                                                           CER001
+     C                     MOVELNCNSEC    VVSESN                                              CER001
+     C                     WRITESECTYDDL                                                      CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+     C                     CLOSESESDX1PD                                                      CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** Update extension file depending on feature present                                   CER001
+      ** European Reporting                                                                   CER001
+      *                                                                                       CER001
+     C           BGLRIN    IFEQ 'Y'                                                           CER001
+     C           BGBRIN    OREQ 'Y'                                                           CER001
+     C                     OPEN SESDX2PD                                                      CER001
+     C           NCOSEC    CHAINSESDX2PD             89                                       CER001
+     C           *IN89     IFEQ *OFF                                                          CER001
+     C           NCNSEC    CHAINSESDX2PD             89                                       CER001
+     C           *IN89     IFEQ *ON                                                           CER001
+     C                     MOVELNCNSEC    VXSESN                                              CER001
+     C                     WRITESECTYDF4                                                      CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+     C                     CLOSESESDX2PD                                                      CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      **  If the feature ULX004 is 'OFF', then end of processing                              CER001
+      *                                                                                       CER001
+     C           ULX004    IFEQ 'Y'                                                           CER001
+     C                     CALL 'AOCURRR0'                                                    CER001
+     C                     PARM *BLANKS   WRTCD   7                                           CER001
+     C                     PARM '*KEY   ' WOPTN   7                                           CER001
+     C                     PARM NMCY      WK101   3                                           CER001
+     C           SDCURR    PARM SDCURR    DSSDY                                               CER001
+      *                                                                                       CER001
+     C           WRTCD     IFNE *BLANKS                                                       CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     MOVEL*BLANKS   DBKEY                                               CER001
+     C                     MOVEL##PGM     DBPGM                                               CER001
+     C                     MOVEL'SDCURRPD'DBFILE                                              CER001
+     C                     Z-ADD021       DBASE                                               CER001
+     C                     MOVELNMCY      DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     SETON                     U7U8                                     CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C           WNCCY     IFEQ BKEURO                                                        CER001
+     C           A6INCY    ANDEQ'Y'                                                           CER001
+      *                                                                                       CER001
+     C           NCOSEC    SETLLERGUARL5                                                      CER001
+     C           NCOSEC    READEERGUARL5                 87                                   CER001
+      *                                                                                       CER001
+     C           *IN87     DOWEQ*OFF                                                          CER001
+      *                                                                                       CER001
+     C                     MOVELNCNSEC    RRUTSR    P                                         CER001
+      *                                                                                       CER001
+     C                     UPDATERGUARD0                                                      CER001
+      *                                                                                       CER001
+     C                     EXSR SRSETU                                                        CER001
+      *                                                                                       CER001
+      ** Read next record.                                                                    CER001
+      *                                                                                       CER001
+     C           NCOSEC    READEERGUARL5                 87                                   CER001
+     C                     ENDDO                                                              CER001
+      *                                                                                       CER001
+     C           NCOSEC    SETLLERGUARL6                                                      CER001
+     C           NCOSEC    READEERGUARL6                 87                                   CER001
+      *                                                                                       CER001
+     C           *IN87     DOWEQ*OFF                                                          CER001
+      *                                                                                       CER001
+     C                     MOVELNCNSEC    RRSBYR    P                                         CER001
+      *                                                                                       CER001
+     C           RRSBYI    IFEQ 'N'                                                           CER001
+     C           RRGCCY    ANDNEWNCCY                                                         CER001
+     C           RRGCCY    ANDNE*BLANKS                                                       CER001
+      *                                                                                       CER001
+     C                     CALL 'AOCURRR0'                                                    CER001
+     C                     PARM *BLANKS   WRTCD   7                                           CER001
+     C                     PARM '*KEY   ' WOPTN   7                                           CER001
+     C                     PARM RRGCCY    WK101   3                                           CER001
+     C           SDCURR    PARM SDCURR    DSSDY                                               CER001
+      *                                                                                       CER001
+      **  Handle Database Error.                                                              CER001
+      *                                                                                       CER001
+     C           WRTCD     IFNE *BLANKS                                                       CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     MOVEL*BLANKS   DBKEY                                               CER001
+     C                     MOVEL##PGM     DBPGM                                               CER001
+     C                     MOVE 'SDCURRPD'DBFILE                                              CER001
+     C                     Z-ADD022       DBASE                                               CER001
+     C                     MOVELRRGCCY    DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     SETON                     U7U8                                     CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     MOVE A6CYCD    ZCCYF                                               CER001
+     C                     Z-ADDA6SPRT    ZRATEF                                              CER001
+     C                     MOVELA6MDIN    ZMDINF                                              CER001
+     C                     Z-ADDA6NBDP    ZCDPF                                               CER001
+      *                                                                                       CER001
+     C                     CALL 'AOCURRR0'                                                    CER001
+     C                     PARM *BLANKS   WRTCD   7                                           CER001
+     C                     PARM '*KEY   ' WOPTN   7                                           CER001
+     C                     PARM WNCCY     WK101   3                                           CER001
+     C           SDCURR    PARM SDCURR    DSSDY                                               CER001
+      *                                                                                       CER001
+      ** Handle Database Error.                                                               CER001
+      *                                                                                       CER001
+     C           WRTCD     IFNE *BLANKS                                                       CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     MOVEL*BLANKS   DBKEY                                               CER001
+     C                     MOVEL##PGM     DBPGM                                               CER001
+     C                     MOVE 'SDCURRPD'DBFILE                                              CER001
+     C                     Z-ADD023       DBASE                                               CER001
+     C                     MOVELWNCCY     DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     SETON                     U7U8                                     CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     MOVE A6CYCD    ZCCYT                                               CER001
+     C                     Z-ADDA6SPRT    ZRATET                                              CER001
+     C                     MOVELA6MDIN    ZMDINT                                              CER001
+     C                     Z-ADDA6NBDP    ZCDPT                                               CER001
+      *                                                                                       CER001
+     C                     Z-ADDRRGAMT    ZAMTF                                               CER001
+      *                                                                                       CER001
+     C                     EXSR ZCCYCN                                                        CER001
+      *                                                                                       CER001
+     C                     Z-ADDZAMTT     RRGAMT                                              CER001
+     C                     MOVE WNCCY     RRGCCY                                              CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     UPDATERGUARD1                                                      CER001
+      *                                                                                       CER001
+     C                     EXSR SRSETU                                                        CER001
+      *                                                                                       CER001
+      ** Read next record.                                                                    CER001
+      *                                                                                       CER001
+     C           NCOSEC    READEERGUARL6                 87                                   CER001
+     C                     ENDDO                                                              CER001
+      *                                                                                       CER001
+     C           *LOVAL    SETLLERGUARL7                                                      CER001
+     C                     READ ERGUARL7                 87                                   CER001
+      *                                                                                       CER001
+     C           *IN87     DOWEQ*OFF                                                          CER001
+      *                                                                                       CER001
+     C           RCNSEC    IFEQ NCOSEC                                                        CER001
+     C                     MOVE NCNSEC    RCNSEC                                              CER001
+      *                                                                                       CER001
+     C                     UPDATERGUARD2                                                      CER001
+      *                                                                                       CER001
+     C                     EXSR SRSETU                                                        CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** Read next record.                                                                    CER001
+      *                                                                                       CER001
+     C                     READ ERGUARL7                 87                                   CER001
+     C                     ENDDO                                                              CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C/COPY WNCPYSRC,SE7524C003
+      *            SRSETU - Setup and Write detail line in printer    *                       CER001
+      *                     file SE7524P1                             *                       CER001
+      *                                                               *                       CER001
+      *****************************************************************                       CER001
+      * CALLED BY  SRADD  - Moves work variables to field and added to*                       CER001
+     C           SRSETU    BEGSR                           ** SRSETU **                       CER001
+      *                                                                                       CER001
+      **  Print header of printer the first time                                              CER001
+      *                                                                                       CER001
+     C           WWTITL    IFEQ 'N'                                                           CER001
+     C                     WRITEHEADP1                                                        CER001
+     C                     MOVE 'Y'       WWTITL                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      **  Clear detail of printer file before setup                                           CER001
+      *                                                                                       CER001
+     C                     CLEARDETAIL                                                        CER001
+      *                                                                                       CER001
+      **  Setup                                                                               CER001
+      *                                                                                       CER001
+     C                     MOVE NCOSEC    QNCOSE                                              CER001
+     C********** RRRCUS    IFNE *ZEROS                                                CER001 CSD027A
+     C           RRRCUS    IFNE *BLANKS                                                      CSD027A
+     C                     MOVE RRRCUS    QRRCUS                                              CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE *BLANKS   QRRCUS                                              CER001
+     C                     ENDIF                                                              CER001
+     C                     MOVE RRUTSI    QRUTSI                                              CER001
+     C                     MOVE RRUTSR    QRUTSR                                              CER001
+     C                     MOVE RRSBYI    QRSBYI                                              CER001
+     C                     MOVE RRSBYR    QRSBYR                                              CER001
+     C********** RRGVBY    IFNE *ZEROS                                                CER001 CSD027A
+     C           RRGVBY    IFNE *BLANKS                                                      CSD027A
+     C                     MOVE RRGVBY    QRGVBY                                              CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE *BLANKS   QRGVBY                                              CER001
+     C                     ENDIF                                                              CER001
+     C           RRGCOD    IFNE *ZEROS                                                        CER001
+     C                     MOVE RRGCOD    QRGCOD                                              CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE *BLANKS   QRGCOD                                              CER001
+     C                     ENDIF                                                              CER001
+     C           RRGSEQ    IFNE *ZEROS                                                        CER001
+     C                     MOVE RRGSEQ    QRGSEQ                                              CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE *BLANKS   QRGSEQ                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     MOVE *BLANKS   ZECODE                                              CER001
+     C                     MOVE RRGPER    WWGPER 150                                          CER001
+     C                     Z-ADD*ZERO     ZDECS                                               CER001
+     C                     Z-ADDWWGPER    ZFLD15                                              CER001
+     C                     EXSR ZSEDIT                                                        CER001
+      *                                                                                       CER001
+     C                     MOVE ZOUT21    QRGPER                                              CER001
+      *                                                                                       CER001
+     C           RRGAMT    IFNE *ZERO                                                         CER001
+      *                                                                                       CER001
+     C                     CALL 'AOCURRR0'                                                    CER001
+     C                     PARM *BLANKS   WRTCD   7                                           CER001
+     C                     PARM '*KEY   ' WOPTN   7                                           CER001
+     C                     PARM RRGCCY    WK101   3                                           CER001
+     C           SDCURR    PARM SDCURR    DSSDY                                               CER001
+      *                                                                                       CER001
+      **  Handle Database Error.                                                              CER001
+      *                                                                                       CER001
+     C           WRTCD     IFNE *BLANKS                                                       CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     MOVEL*BLANKS   DBKEY                                               CER001
+     C                     MOVEL##PGM     DBPGM                                               CER001
+     C                     MOVE 'SDCURRPD'DBFILE                                              CER001
+     C                     Z-ADD024       DBASE                                               CER001
+     C                     MOVELRRGCCY    DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     SETON                     U7U8                                     CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     MOVE 'J'       ZECODE                                              CER001
+     C                     MOVE RRGAMT    WWGAMT 150                                          CER001
+     C                     Z-ADDA6NBDP    ZDECS                                               CER001
+     C                     Z-ADDWWGAMT    ZFLD15                                              CER001
+     C                     EXSR ZSEDIT                                                        CER001
+      *                                                                                       CER001
+     C                     MOVE ZOUT21    QRGAMT                                              CER001
+      *                                                                                       CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE *BLANKS   QRGAMT                                              CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     Z-ADD1         RQDLN1                                              CER001
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              CER001
+     C           DIFLN1    IFLE RQDLN1                                                        CER001
+     C                     WRITEHEADP1                                                        CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      **  Write out Detail Record.                                                            CER001
+      *                                                                                       CER001
+     C                     WRITEDETAIL                                                        CER001
+      *                                                                                       CER001
+     C                     ENDSR                                                              CER001
+      *****************************************************************
+      *                                                               *
+      *            SRIVAL - Insert Validation records                 *
+      *                                                               *
+      * CALLS      *PSSR  - Error routine                             *
+      *                                                               *
+      * CALLED BY  SRADD  - Moves work variables to field and added to*
+      *                     file                                      *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRIVAL    BEGSR                           ** SRIVAL **
+      *
+      ** Access validation details
+      ** If record already exists - error
+      *
+     C           NCNSEC    CHAINEXVALD               80
+      *
+     C           *IN80     IFEQ '0'
+     C           RECI      ANDEQ'D'
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD009       DBASE
+     C                     MOVEL'EXVALD  'DBFILE
+     C                     MOVELNCNSEC    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *
+      ** Write validation details
+      *
+     C                     MOVE 'D'       RECI
+     C                     MOVE SREF      A1P
+     C                     MOVE 'Y'       EXAP
+     C                     Z-ADD0         UPBD
+     C                     Z-ADD0         LPBD
+     C                     Z-ADD0         PMOV
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'I'       CHTP
+     C                     MOVELNATN      TNLU
+     C                     MOVEASTAMP,1   PRTMST           Default Timestamp                  CPK015
+     C                     WRITEEXVALDF
+      *
+      ** Check trailer exists
+     C           1         CHAINEXVALZ               82
+      *
+     C           *IN82     IFEQ '1'
+     C           RECI      ORNE 'Z'
+      *
+      **     DB Error if no record found.
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD010       DBASE
+     C                     MOVEL'EXVALZ  'DBFILE
+     C                     MOVEL'MISSING 'DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *  Update trailer
+     C           NINS      ADD  1         NINS
+     C           NORE      ADD  1         NORE
+      *
+     C                     UPDATEXVALZF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRAUDT - Generates Audit Report                    *
+      *                                                               *
+      * CALLS      *PSSR  - Error routine                             *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *            SRINIT - Program Initialisation                    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRAUDT    BEGSR                           ** SRAUDT **
+      *
+      **  If there is a DB Error, Output the DB Error Information.
+      *
+     C                     SELEC
+      *
+     C           *INU7     WHEQ '1'
+     C           *INU8     OREQ '1'
+      *
+     C                     WRITESE7524A1
+     C                     WRITESE7524A2
+     C                     WRITESE7524A5
+     C                     WRITESE7524A6
+      *
+     C           *INU7     WHEQ '0'
+     C           *INU8     ANDEQ'0'
+      *
+      **  Or, if no records read, Output "No Details" message.
+      *
+     C           WTOTAL    IFEQ 0
+      *
+     C                     WRITESE7524A1
+     C                     WRITESE7524A2
+     C                     WRITESE7524A4
+     C                     WRITESE7524A6
+      *
+     C                     ELSE
+      *
+     C                     MOVE WTOTAL    RRPROG
+     C                     WRITESE7524A1
+     C                     WRITESE7524A2
+     C                     WRITESE7524A3
+     C                     WRITESE7524A6
+      *
+     C                     ENDIF
+      *
+     C                     ENDSL
+     C/COPY WNCPYSRC,SE7524C004
+      *                                                                                       CER001
+      ** Midas Guarantees for EMU                                                             CER001
+      *                                                                                       CER001
+      **  If the feature ULX004 is 'OFF', then end of processing                              CER001
+      *                                                                                       CER001
+     C           ULX004    IFEQ 'Y'                                                           CER001
+      *                                                                                       CER001
+      **  Print END OF REPORT                                                                 CER001
+      **  Check that sufficient lines remain for the Format. If not,                          CER001
+      **  write out the Main Headings on a new page.                                          CER001
+      *                                                                                       CER001
+     C                     Z-ADD4         RQDLN1                                              CER001
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              CER001
+     C           DIFLN1    IFLE RQDLN1                                                        CER001
+     C                     WRITEHEADP1                                                        CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      **  Write out Total Format.                                                             CER001
+      *                                                                                       CER001
+     C                     WRITETRAILP1                                                       CER001
+     C                     ENDIF                                                              CER001
+      *
+      **  End Program and Return.
+      *
+     C                     CLOSE*ALL
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program Exception Error Routine.          *
+      *                                                               *
+      * CALLS      SRAUDT - Generates Audit report                    *
+      *                                                               *
+      * CALLED BY  SRINIT - Program initialisation                    *
+      *            SRPROC - Process records from SECORSPD             *
+      *            SROLD  - Moves old security details to work        *
+      *                     Variables                                 *
+      *            SRIVAL - Insert Validation records                 *
+      *            SRAUDT - Generates audit report                    *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** PSSR **
+      *
+     C                     MOVE 'E'       PRETRN           Return code
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'SE7524'  DBPGM
+      *
+      ** Dump and return to the calling program
+      *
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+     C                     ROLBK
+     C                     DUMP
+     C                     EXSR SRAUDT
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/COPY ZSRSRC,ZTNLU1Z2
+     C/COPY ZSRSRC,ZXRATEZ1                                               147531
+     C/COPY ZSRSRC,ZCCYCN                                                 147531
+     C/COPY WNCPYSRC,SE7524C005
+      *                                                                                       CER001
+      ** ULX004 - Midas Guarantees for EMU                                                    CER001
+      *                                                                                       CER001
+     C/COPY ZSRSRC,ZSEDITZ3                                                                   CER001
+      *****************************************************************
+      *
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  POWER4 - ARRAY OF POWERS FOR NOMINAL DP TO CURRENCY DP CONVERSION
+00010
+00100
+01000
+10000
+**  POWER                                                                 147531
+0000001                                                                   147531
+0000010                                                                   147531
+0000100                                                                   147531
+0001000                                                                   147531
+0010000                                                                   147531
+0100000                                                                   147531
+1000000                                                                   147531

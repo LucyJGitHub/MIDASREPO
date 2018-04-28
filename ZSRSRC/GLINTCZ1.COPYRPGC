@@ -1,0 +1,296 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member                                         *
+      *                                                               *
+      *  GLINTCZ1 - Calculate Interest Between Any Two Day Numbers    *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER016A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CIR013             Date 08Apr05               *
+      *                 218899             Date 18Jun03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 192780             Date 18Jul01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 121768  SL         Date 19Feb98               *
+      *                 126017             Date 17Nov97               *
+      *                 066550             Date 03Feb94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *           to Midas Plus                                       *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *  218899 - Wrap the call to AOSARDR0 in this subroutine to     *
+      *           avoid muliple calls as it slow down the close       *
+      *           of business.                                        *
+      *  192780 - Change the sequence of operation in computing the   *
+      *           interest in SR/GLINTC (i.e. MULT first before DIV)  *
+      *           to get a more precise interest amount.              *
+      *           Note: This fix was done as part of DBA04 packaging  *
+      *           so all objects that use it were recompiled as part  *
+      *           of the packaging process. Therefore this fix number *
+      *           does not appear in the headerboxes of those objects.*
+      *  CIR004 - Dealing Calculation Method Change                   *
+      *  121768 - First digit from interest is lost because work      *
+      *           field is too short (for big amounts in TRL)         *
+      *  126017 - Amendment to calculation method 6 to allow for the  *
+      *           fact that not every day in the period falls in a    *
+      *           leap year, so cannot just divide by 366. Fix is to  *
+      *           amend SR/ZINTDY to adjust the no. of non-leap year  *
+      *           days by 366/365 to give a factored no. of days in   *
+      *           the interest period.   This avoids the rounding     *
+      *           errors which could result from doing many seperate  *
+      *           calculations.                                       *
+      *  066550 - Changed to used standard subroutine ZINTDY to       *
+      *           correctly calculate number of days for the          *
+      *           calculation method.                                 *
+      *                                                               *
+      *****************************************************************
+     C**
+     C**   CALCULATION METHODS ARE -
+     C**   1  ACTUAL/365
+     C**   2  ACTUAL/360
+     C**   3  360/360 (SOMETIMES CALLED 30/360)
+     C**   4  365/365 (EXCLUDING 29/02)
+     C**   5  365/360 (EXCLUDING 29/02)
+     C**   6  ACTUAL/366
+     C**   9  Actual/365, 366 for Feb 29 period                                               CIR013
+     C**   0  ACR/366                                                                        CER016A
+     C**
+     C**   REQUIRES SUBRS. - ZDATE2, ZSAVE, & ZRSTOR.
+     C**
+     C**
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. 192780             Date 18Jul01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 121768  SL         Date 19Feb98               *
+      *                 126017             Date 17Nov97               *
+     C**                 066550              DATE   03FEB94
+     C**                 000000              DATE   00XXX00
+     C**
+     C*****************************************************************
+     C**                                                              *
+      *  192780 - Change the sequence of operation in computing the   *
+      *           interest in SR/GLINTC (i.e. MULT first before DIV)  *
+      *           to get a more precise interest amount.              *
+      *           Note: This fix was done as part of DBA04 packaging  *
+      *           so all objects that use it were recompiled as part  *
+      *           of the packaging process. Therefore this fix number *
+      *           does not appear in the headerboxes of those objects.*
+      *  CIR004 - Dealing Calculation Method Change                   *
+     C**     121768 - First digit from interest is lost because work
+     C**              field is too short (for big amounts in TRL)
+     C*  126017 - Amendment to calculation method 6 to allow for the  *
+     C*           fact that not every day in the period falls in a    *
+     C*           leap year, so cannot just divide by 366. Fix is to  *
+     C*           amend SR/ZINTDY to adjust the no. of non-leap year  *
+     C*           days by 366/365 to give a factored no. of days in   *
+     C*           the interest period.   This avoids the rounding     *
+     C*           errors which could result from doing many seperate  *
+     C*           calculations.                                       *
+     C*  066550 - Changed to used standard subroutine ZINTDY to       *
+     C*           correctly calculate number of days for the          *
+     C*           calculation method.                                 *
+     C*                                                               *
+     C*****************************************************************
+     C**
+     CSR         GLINTC    BEGSR                           ** GLINTC  **
+     C**
+     C**   CALCULATIONS TO DEFINE INPUT FIELDS.
+     CSR                   Z-ADDZIBEG     ZIBEG   50       STARTING DATE
+     CSR                   Z-ADDZIEND     ZIEND   50       FINISHING DATE
+     CSR                   Z-ADDZICALC    ZICALC  10       CALC. BASIS
+     CSR                   Z-ADDZIAMT     ZIAMT  150       PRINCIPAL
+     CSR                   Z-ADDZIRATE    ZIRATE 117       RATE OF INTRST
+      *                                                                   CIR004
+      ** Check if Dealing Calculation Method is installed                 CIR004
+      ** (only if the access object has not been called previously)                           218899
+      *                                                                   CIR004
+     C           IR004C    IFNE 'Y'                                                           218899
+     C                     CALL 'AOSARDR0'                                CIR004
+     C                     PARM *BLANKS   @RTCD   7                       CIR004
+     C                     PARM '*VERIFY' @OPTN   7                       CIR004
+     C                     PARM 'CIR004'  @SARD   6                       CIR004
+     C           @RTCD     IFEQ *BLANKS                                   CIR004
+     C                     MOVE 'Y'       CIR004  1                       CIR004
+     C                     ELSE                                           CIR004
+     C                     MOVE 'N'       CIR004                          CIR004
+     C                     ENDIF                                          CIR004
+     C                     MOVE *BLANKS   @RTCD                           CIR004
+     C                     MOVE 'Y'       IR004C  1                                           218899
+     C                     ENDIF                                                              218899
+     C**
+     C****TO*DETERMINE*NUMBER*OF*DAYS*INTEREST*TO*BE*CALCULATED***********066550
+     C***********ZIEND     SUB  ZIBEG     ZDAYN1  50                      066550
+     C***********                                                         066550
+     C****CHECK*FOR INTEREST CALCULATION BASIS                            066550
+     C*****USE*OF INDICATRS                                               066550
+     C*****1,92**2,90  3,91  4,97  5,96  6,95                             066550
+     C***********          SETOF                     959697               066550
+     C***********ZICALC    COMP 2                    919290               066550
+     C**N91******          GOTO ZICAL                                     066550
+     C***********ZICALC    COMP 5                    959796               066550
+     C***97******ZICALC    COMP 3                    97  91               066550
+     C***95******                                                         066550
+     C*R*96******          SETOF                     91                   066550
+     C**N91******          GOTO ZILPCK                                    066550
+     C***********                                                         066550
+     C*****THIS*CODING*WILL*CALCULATE*THE*NUMBER*OF*DAYS*TO*USE*WHEN******066550
+     C*****USING*THE*30/360*BASIS*-*METHOD*3.*****************************066550
+     C***********          EXSR ZSAVE                                     066550
+     C***********          Z-ADDZIBEG     ZDAYNO                          066550
+     C***********          EXSR ZDATE2                                    066550
+     C***********          MOVE ZDAY      ZISD    20                      066550
+     C***********          MOVE ZMTH      ZISM    20                      066550
+     C***********          MOVE ZYEAR     ZISY    20                      066550
+     C***********          Z-ADDZIEND     ZDAYNO                          066550
+     C***********          EXSR ZDATE2                                    066550
+     C***********          MOVE ZDAY      ZIFD    20                      066550
+     C***********          MOVE ZMTH      ZIFM    20                      066550
+     C***********          MOVE ZYEAR     ZIFY    20                      066550
+     C***********          EXSR ZRSTOR                                    066550
+     C***********          SETOF                     93                   066550
+     C****IN*ORDER*FOR*THE*FINISH*YEAR*TO*BE*LESS*THAN*THE*START*YEAR*IF**066550
+     C****ZIEND*IS*GREATER*THAN*ZIBEG,THEN*THE*DATE*ZIEND*MUST*BE*IN*A****066550
+     C****DIFFERENT*CENTURY*TO*ZIBEG.IF*SO*ADD*100*YEARS*TO*IT.***********066550
+     C***********ZIEND     COMP ZIBEG                93                   066550
+     C***93******ZIFY      COMP ZISY                   93                 066550
+     C***********          Z-ADDZISY      ZISY2   30                      066550
+     C**N93******          Z-ADDZIFY      ZIFY2   30                      066550
+     C***93******ZIFY      ADD  100       ZIFY2                           066550
+     C***********30        SUB  ZISD      ZID1    50   93                 066550
+     C***93******          Z-ADD0         ZID1                            066550
+     C***********ZISM      COMP 12                       93               066550
+     C***93******          Z-ADD0         ZISM                            066550
+     C***93******ZISY      ADD  1         ZISY                            066550
+     C***93******ZISY2     ADD  1         ZISY2                           066550
+     C***********                                                         066550
+     C***********ZIFD      COMP 31                       93               066550
+     C***93******ZID1      ADD  30        ZID1                            066550
+     C**N93******ZID1      ADD  ZIFD      ZID1                            066550
+     C***********ZIFM      SUB  1         ZIFM                            066550
+     C***********ZISY      COMP ZIFY                     93               066550
+     C***93******ZIFM      SUB  ZISM      ZINOM   30                      066550
+     C***93******          GOTO ZIOUT                                     066550
+     C***********12        SUB  ZISM      ZIM1    20                      066550
+     C***********          Z-ADD1         ZISM                            066550
+     C*****USE*ENLARGED*FIELDS*THAT*CAN*HANDLE*1999*ONWARDS***************066550
+     C***********ZISY2     ADD  1         ZISY2                           066550
+     C***********ZIFY2     SUB  ZISY2     ZIY1    20                      066550
+     C***********ZIY1      MULT 12        ZIM2    30                      066550
+     C***********ZIM2      ADD  ZIFM      ZIM2                            066550
+     C***********ZIM1      ADD  ZIM2      ZINOM                           066550
+     C***********ZIOUT     TAG                             * ZIOUT TAG *  066550
+     C***********ZINOM     MULT 30        ZID2    50                      066550
+     C***********ZID2      ADD  ZID1      ZDAYN1                          066550
+     C***********          SETOF                     93                   066550
+     C***********ZILPCK    TAG                             * ZILPCK TAG * 066550
+     C**N96N97***          GOTO ZICAL                                     066550
+     C*****THE*FOLLOWING*CODING*APPLIES*FOR*METHODS*4*AND*5*ONLY.*********066550
+     C*****1*DAY*IS*SUBTRACTED*FROM*ZDAYN1*FOR*EACH*OCCURANCE*OF*29*FEB***066550
+     C*****IN*THE*INTEREST*CALCULATION*PERIOD*INCLUSIVE*OF*ZIBEG,*&*ZIEND.066550
+     C***********                                                         066550
+     C*****FIND*NO*OF*4*YEAR*PERIODS*BETWEEN*DATES************************066550
+     C***********ZDAYN1    DIV  1461      ZIMAN   20                      066550
+     C***********          MVR            ZIREM   50                      066550
+     C*****FIND*NEXT*29*FEB*DAY*NO.*ON*OR*AFTER*ZIBEG.********************066550
+     C***********ZIBEG     SUB  60        ZIBW1   50                      066550
+     C***********ZIBW1     DIV  1461      ZIDW1   20                      066550
+     C***********          MVR            ZIDREM  50                      066550
+     C***********ZIDREM    COMP 0                        94               066550
+     C***94******          Z-ADDZIBEG     ZIDW2   50                      066550
+     C***94******          GOTO ZILP1                                     066550
+     C*****ROUND*UP*RESULT************************************************066550
+     C***********ZIDW1     ADD  1         ZIDW2                           066550
+     C*****CALCULATE*NEXT*29*FEB.*****************************************066550
+     C***********ZIDW2     MULT 1461      ZIDW2                           066550
+     C***********ZIDW2     ADD  60        ZIDW2                           066550
+     C***********ZILP1     TAG                             * ZILP1 TAG *  066550
+     C*****IF*THIS*NEXT*29*FEB.*DAYNO*-*ZIBEG*IS*GR.*TH.*OR*EQ.*TO********066550
+     C*****ZIREM*THEN*ADD*1*TO*ZIMAN.*************************************066550
+     C***********ZIDW2     SUB  ZIBEG     ZILPCP  50                      066550
+     C***********ZIREM     COMP ZILPCP               94  94               066550
+     C***94******ZIMAN     ADD  1         ZIMAN                           066550
+     C*****SUBTRACT*ZIMAN*FROM*ZDAYN1*TO*GIVE*VALUE*OF*ZDAYN1*************066550
+     C*****REQUIRED*FOR*THIS*INTEREST*CALCULATION.************************066550
+     C***********ZDAYN1    SUB  ZIMAN     ZDAYN1                          066550
+     C***********          SETOF                     94                   066550
+     C***********ZICAL     TAG                             * ZICAL TAG *  066550
+     C*                                                                   066550
+     C**  CALCULATE NUMBER OF DAYS OF THE CALCULATION METHOD USED         066550
+     C*                                                                   066550
+     C                     Z-ADDZIBEG     ZZBEG                           066550
+     C                     Z-ADDZIEND     ZZEND                           066550
+     C                     MOVE ZICALC    ZZCALC                          066550
+     C                     EXSR ZINTDY                                    066550
+     C**
+     C**  CALCULATE INTEREST
+     C***90******                                                         066550
+     C*R*91******                                                         066550
+     C*R*96******ZIAMT     DIV  36000     ZIWRK1 155H                     066550
+     C***92******                                                         066550
+     C*R*97******ZIAMT     DIV  36500     ZIWRK1    H                     066550
+     C***95******ZIAMT     DIV  36600     ZIWRK1    H                     066550
+      *                                                                                       192780
+      ** Multiply Rate & Day No. first                                                        192780
+      *                                                                                       192780
+     C           ZIAMT     MULT ZIRATE    ZIWRK1 309                                          192780
+     C           ZICALC    IFEQ 6                                                             192780
+     C           ZICALC    OREQ 9                                                             CIR013
+     C           #29FEB    ANDEQ'Y'                                                           CIR013
+     C           ZIWRK1    MULT INT6DY    ZIWRK2                                              192780
+     C                     ELSE                                                               192780
+     C           ZIWRK1    MULT ZZINDY    ZIWRK2 309                                          192780
+     C                     END                                                                192780
+      *                                                                                       192780
+     C           ZICALC    IFEQ 2                                         066550
+     C           ZICALC    OREQ 3                                         066550
+     C           ZICALC    OREQ 5                                         066550
+     C           ZICALC    OREQ 7                                         CIR004
+     C           CIR004    ANDEQ'Y'                                       CIR004
+     C           ZICALC    OREQ 0                                                            CER016A
+     C********** ZIAMT     DIV  36000     ZIWRK1 155H                     066550              192780
+     C           ZIWRK2    DIV  36000     ZINTR  309H                                         192780
+     C                     END                                            066550
+     C           ZICALC    IFEQ 1                                         066550
+     C           ZICALC    OREQ 4                                         066550
+     C           ZICALC    OREQ 9                                                             CIR013
+     C           #29FEB    ANDEQ'N'                                                           CIR013
+     C********** ZIAMT     DIV  36500     ZIWRK1    H                     066550              192780
+     C           ZIWRK2    DIV  36500     ZINTR     H                                         192780
+     C                     END                                            066550
+     C           ZICALC    IFEQ 6                                         066550
+     C           ZICALC    OREQ 9                                                             CIR013
+     C           #29FEB    ANDEQ'Y'                                                           CIR013
+     C********** ZIAMT     DIV  36600     ZIWRK1    H                     066550              192780
+     C           ZIWRK2    DIV  36600     ZINTR     H                                         192780
+     C                     END                                            066550
+     C***********ZIWRK1    MULT ZIRATE    ZIWRK2 155H                     121768
+     C*SR******* ZIWRK1    MULT ZIRATE    ZIWRK2 185H                     121768              192780
+     C***********ZIWRK2    MULT ZDAYN1    ZINTR  152H      AMT. OF INTRST 066550
+     C*                                                                   126017
+     C***If*calculation*method 6, multiply by No of Days factored to      126017              192780
+     C***take*account*of*non-leap year days.                              126017              192780
+     C***For*other*calculation methods, multiply by No of Interest Days.  126017              192780
+     C********** ZICALC    IFEQ 6                                         126017              192780
+     C********** ZIWRK2    MULT INT6DY    ZINTR  152H      AMT. OF INTRST 126017              192780
+     C**********           ELSE                                           126017              192780
+     C********** ZIWRK2    MULT ZZINDY    ZINTR  152H      AMT. OF INTRST 066550              192780
+     C**********           END                                            126017              192780
+     C**
+     C***********          SETOF                     909192               066550
+     C***********          SETOF                     959697               066550
+     CSR                   ENDSR
+     C**
+      *****************************************************************
+      * End of /COPY GLINTCZ1                                         *
+      *****************************************************************

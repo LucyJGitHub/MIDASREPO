@@ -1,0 +1,134 @@
+      *****************************************************************
+/*STD *  PGMBASE                                                      *
+/*EXI *  MODULE(MMDEAMVU) ACTGRP(*CALLER)                             *
+/*EXI *  TEXT('Midas MM Deal amendments validate and update')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas  - Money Market                                        *
+      *                                                               *
+      *  MMDEAMVU - Transaction validate and update program           *
+      *                                                               *
+      *  Function:  This program validates and updates transactions   *
+      *             received from the front end                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 30May14               *
+      *                 MD027598           Date 24Jun14               *
+      *                 CSD095             Date 08Apr14               *
+      *                 MD022624           Date 04Oct13               *
+      *                 AR1096000          Date 14Mar13               *
+      *                 AR1092035          Date 28Feb13               *
+      *                 AR971184A          Date 22Jun12               *
+      *                 AR971184           Date 28May12               *
+      *                 CSC054             Date 23Feb12               *
+      *                 AR736874           Date 06Apr11               *
+      *                 CSF011A            Date 28Nov11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 AR792037           Date 27Jun11               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256564             Date 17Sep08               *
+      *                 249910             Date 24Oct07               *
+      *                 250357             Date 27Sep07               *
+      *                 244537             Date 17Aug05               *
+      *                 BUG13071           Date 18Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 239400             Date 26Jun06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10727           Date 28Feb06               *
+      *                 CLE031             Date 26Apr05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSC024             Date 07Feb05               *
+      *                 BUG8119            Date 20Oct05               *
+      *                 BUG6534            Date 08Apr05               *
+      *                 BUG4963            Date 25Jan05               *
+      *                 BUG4907            Date 21Jan05               *
+      *                 BUG4808            Date 16Nov04               *
+      *                 BUG4728            Date 05Nov04               *
+      *                 BUG4482            Date 29Sep04               *
+      *                 BUG4146            Date 01Sep04               *
+      *                 BUG2774            Date 25May04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 NAD002             Date 26Mar04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CDL022             Date 03Feb04               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CAP084  *CREATE    Date 20Oct03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompile)                                         *
+      *  MD027598 - DEAM Input (Type SI): Settlement Receipt Instr.   *
+      *             not defaulted from the original deal for Deal     *
+      *             Types IP, IT and CL (Recompile)                   *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  MD022624 - Data from EXSS were not defaulted to Settlements  *
+      *             tab of DEAM (Recompile)                           *
+      *  AR1096000 - The following system error occurred: 45011352:   *
+      *              A Serious Midas error has occurred (Recompile)   *
+      *  AR1092035 - Customer may not be amended (Field:Customer      *
+      *              Shortname or Number) (Recompile)                 *
+      *  AR971184A- During Amend Front Ofc Id must be updated with the*
+      *             new one (Recompile)                               *
+      *  AR971184 - For some JMS APIs (CUSD, AMAD, DPMV, OPAY), Front *
+      *             Office Id is no more updated in master database   *
+      *             files which provokes some big problems in third   *
+      *             party product such as TOF.(Child:AR971185)        *
+      *             (Recompile)                                       *
+      *  CSC054 - Period End Adjustments (Recompile)                  *
+      *  AR736874 - Recompile due to changes in MMDEAMVU.             *
+      *             (Child: AR736875)                                 *
+      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+      *            (Recompile)                                        *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  AR792037 - Default settlement method for type 'BC' to        *
+      *             zero (Recompile)                                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  256564 - Recompile due to PF changes done by fix 256330      *
+      *  249910 - Default both payment and receipt settlement details *
+      *           for EM amendment type.                              *
+      *  250357 - Check and default deal's settlement details first   *
+      *           before using Extended Settlement defaults.          *
+      *  244537 - To avoid overriding front office identifier.        *
+      *  BUG13071 - Recompile only                                    *
+      *  239400 - Add Front Office ID to be used by SOAP Interface    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10727 - Fiduciary Taking warning not displayed on Insert  *
+      *             and Reverse (Recompile)                           *
+      *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSC024 - Open Month End                                      *
+      *  BUG8119 - Fields returned incorrectly from API if update     *
+      *            flag set to 'Y' but data is invalid.               *
+      *  BUG6534 - set to Y and data is invalidn or deposit.          *
+      *  BUG4963 - Recompiled due to changes in MODULE/MMDEAMVU       *
+      *  BUG4907 - Error when inserting transactions with Settlement  *
+      *             method 04                                         *
+      *  BUG4808 - Unable to authorise transaction because WIP do     *
+      *            not have correct Timestamp.                        *
+      *  BUG4728 - Serious Midas error with blank timestamp when      *
+      *            authorising insert of transaction.                 *
+      *  BUG4482- Authorise should call Validate to show all the      *
+      *           warning errors.                                     *
+      *  BUG4146 - Stopping two users to update the same record at the*
+      *            same time.                                         *
+      *  BUG2774 - Recompiled due to changes in MODULE/MMDEAMVU.      *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  NAD002 - 10-Digit Account Code Errors                        *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CDL022 - Deal Amendment Changes (Recompile)                  *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CAP084 - Creation of wrappers for use with front end.        *
+      *                                                               *
+      *****************************************************************

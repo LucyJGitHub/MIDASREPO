@@ -1,0 +1,889 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas FT Incoming payments level 1 scrn display')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  DSPF/FTIPAY1DF - Incoming Payments Level 1 Screen Display    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 257074             Date 24Oct08               *
+      *  Prev Amend No. 256586             Date 18Sep08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 241002             Date 18Jul06               *
+      *                 220180             Date 06Jun06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 14Dec00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136  *CREATE    Date 15Nov99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  257074 - Re-position field 'Ref Rate' to bottom right of     *
+      *           screen.                                             *
+      *  256586 - Missing field Ref Rate in webfaced FT maintenance.  *
+      *  241002 - Cannot amend booking branch. Applied 227458.        *
+      *           Fix already catered by fix 220180.                  *
+      *  227458 - Allow booking branch to be amendable.  Applied part *
+      *          of 219713.                                           *
+      *  220180 - Do not protect the booking branch.                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFT009 - Fees and Charges Development                        *
+      *  CFT014 - Straight-through processing Phase 2 MT103           *
+      *           Messages Generation for FT.                         *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *                                                               *
+      *****************************************************************
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A                                      MSGLOC(22)
+     A                                      REF(MFRFL)
+     A                                      INDARA
+      *
+      ** Details Screen
+      *
+     A          R FTIPAYD1                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+      *
+     A                                      CF03
+     A                                      CF12
+     A  71                                  CF05
+     A  72                                  CF07
+     A  73                                  CF08
+     A  74                                  CF10
+     A  75                                  CF15
+     A  76                                  CF18
+     A  77                                  CF21
+     A  79                                  CF04 CF16
+      *
+     A                                      FRCDTA
+     A                                      OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+      *
+     A*/COPY WNCPYSRC,FTIPAY1D01
+      *
+     A            PSUSER        10A  O  1  2TEXT('User Name')
+     A                                      OVRDTA
+     A                                  1 13'FTIPY1F2'
+     A                                  1 25'Level 1'
+     A                                  1 33'INCOMING PAYMENTS +
+     A                                      MAINTENANCE'
+     A                                      DSPATR(HI)
+     A                                  1 66'Date:'
+     A            BJMRDT         7A  O  1 73TEXT('Midas Rundate')
+     A                                      OVRDTA
+     A            PSJOBNAME     10A  O  2  2TEXT('Workstation Id')
+     A                                      OVRDTA
+     A                                  2 66'Time:'
+     A            DDTIME         6Y 0O  2 72TEXT('Current Time')
+     A                                      EDTWRD('  :  :  ')
+     A                                      OVRDTA
+      *
+     A                                  3  6'Enter Action code'
+     A            DDACTN         1A  O  3 25OVRDTA
+     A N10                                  DSPATR(HI)
+     A  10                                  DSPATR(RI)
+     A  68
+     AO 10                                  DSPATR(PC)
+      *
+     A                                  3 29'Payment reference'
+     A            DDPREF        15A  O  3 48OVRDTA
+     A N11                                  DSPATR(HI)
+     A  11                                  DSPATR(RI PC)
+      *
+     A            DDSTAT        10A  O  3 71OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                  4  2'Booking branch'
+     A N80                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDBRCA    R        B  4 17REFFLD(BRCA)
+     A                                      OVRDTA
+     A N80                                  DSPATR(ND)
+     A  12                                  DSPATR(RI PC)
+     A*N70*78***                            DSPATR(UL)                                        220180
+     A N70                                  DSPATR(UL)                                        220180
+     A N80
+     A***ON78***                                                                              220180
+     AO 70                                  DSPATR(PR)
+     A N12                                  DSPATR(HI)
+      *
+     A                                  4 29'SWIFT reference'
+     A  78                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDSWTN        28A  O  4 48OVRDTA
+     A  78                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *
+     A                                  5 29'Sequence number'
+     A  78                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDSEQNO        2A  O  5 48OVRDTA
+     A  78                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *
+     A                                  5  2'Orig. branch'
+     A N81                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDORBR    R        B  5 17REFFLD(ORBR)
+     A                                      OVRDTA
+     A N81                                  DSPATR(ND)
+     A  13                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A N81
+     AO 70                                  DSPATR(PR)
+     A N13                                  DSPATR(HI)
+      *
+     A                                  6  2'Payment type'
+     A            DDPYTP         2A  O  6 16OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                  6 21'Payment sub-type'
+     A            DDPYST         2A  B  6 39OVRDTA
+     A  14                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A N14                                  DSPATR(HI)
+      *
+     A                                  6 44'SWIFT priority code'
+     A            DDSWPC         1A  B  6 65OVRDTA
+     A  15                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A N15                                  DSPATR(HI)
+      *
+     A                                  7  2'Sender'
+      *                                              Begin /CFT014/
+     A*********** DDSND1        35A  B  8  2OVRDTA
+     A            DDSND1        35A  B  7  9OVRDTA
+      *                                              End   /CFT014/
+     A  16                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A N16                                  DSPATR(HI)
+      *                                              Begin /CFT014/
+     A*********** DDSND2        35A  B  8 45OVRDTA
+     A            DDSND2        35A  B  7 45OVRDTA
+      *                                              End   /CFT014/
+     A  17                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A N17                                  DSPATR(HI)
+      *                                              Begin /CFT014/
+     A*********** DDSND3        35A  B  9  2OVRDTA
+     A            DDSND3        35A  B  8  9OVRDTA
+      *                                              End   /CFT014/
+     A  18                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A N18                                  DSPATR(HI)
+      *                                              Begin /CFT014/
+     A*********** DDSND4        35A  B  9 45OVRDTA
+     A            DDSND4        35A  B  8 45OVRDTA
+      *                                              End   /CFT014/
+     A  19                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A N19                                  DSPATR(HI)
+      *
+      *                                              Begin /CFT014/
+     A***********                      11  2'Receiver''s correspondent'
+     A*********** DDRCCO        10A  B 11 31OVRDTA
+     A**20*******                           DSPATR(RI PC)
+     A                                  9  2'Receiver''s correspondent'
+     A            DDRCO1        35A  B  9 45OVRDTA
+     A  41                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N20*******                           DSPATR(HI)
+     A N41                                  DSPATR(HI)
+      *
+     A            DDRCO2        35A  B 10  9OVRDTA
+     A  42                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A N42                                  DSPATR(HI)
+     A            DDRCO3        35A  B 10 45OVRDTA
+     A  43                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A N43                                  DSPATR(HI)
+     A            DDRCO4        35A  B 11  9OVRDTA
+     A  44                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A N44                                  DSPATR(HI)
+     A            DDRCO5        35A  B 11 45OVRDTA
+     A  45                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A N45                                  DSPATR(HI)
+      *
+     A                                 12  2'3rd Rmbrsmt'
+     A N87                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDTRIB        34A  B 12 14OVRDTA
+     A  46                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A N87
+     AO 70                                  DSPATR(PR)
+     A N46                                  DSPATR(HI)
+     A N87                                  DSPATR(ND)
+      *                                              End   /CFT014/
+      *
+      *                                              Begin /CFT014/
+     A***********                      11 44'A/c with bank'
+     A*********** DDACBK        12A  B 11 61OVRDTA
+     A**21*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********                       12 50'A/c with bank'                                   CGL029
+     A**********  DDACBK        12A  B 12 64OVRDTA                                            CGL029
+     A                                 13  2'A/c with bank'
+     A            DDACBK        18A  B 13 17OVRDTA
+     A**End of change CGL029
+     A  20                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N21*******                           DSPATR(HI)
+     A N20                                  DSPATR(HI)
+     A**80******* DDACBB    R        B 11 74OVRDTA   REFFLD(ACBB)
+     A**22*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**80******  DDACBB    R        B 12 77OVRDTA   REFFLD(ACBB)                             CGL029
+     A  80        DDACBB    R        B 13 37OVRDTA   REFFLD(ACBB)
+     A**End of change CGL029
+     A  21                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N22*******                           DSPATR(HI)
+     A N21                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+      **Start of change 256586
+      **Start of change 257074
+     A**********                       13 55'Ref. Rate'                                       257074
+     A                                 21 55'Ref. Rate'
+      **End of change 257074
+     A N85                                  DSPATR(ND)
+      **Start of change 257074
+     A**********  DDRRAT        14A  B 13 66                                                  257074
+     A            DDRRAT        14A  B 21 66
+      **End of change 257074
+     A N85                                  DSPATR(ND)
+     A  89                                  DSPATR(RI PC)
+     A N89                                  DSPATR(HI)
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+     A                                      OVRDTA
+      **End of change 256586
+      *                                              Begin /CFT014/
+     A***********                      12  2'Beneficiary'
+     A*********** DDBNC1        35A  B 12 45OVRDTA
+     A**23********                          DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********                       13  2'Beneficiary'                                     CGL029
+     A**********  DDBNC1        35A  B 13 45OVRDTA                                            CGL029
+     A                                 14  2'Beneficiary'
+     A            DDBNC1        35A  B 14 45OVRDTA
+     A**End of change CGL029
+     A  22                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N23*******                           DSPATR(HI)
+     A N22                                  DSPATR(HI)
+     A*********** DDBNC2        35A  B 13  2OVRDTA
+     A**24*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********  DDBNC2        35A  B 14  9OVRDTA                                            CGL029
+     A            DDBNC2        35A  B 15  9OVRDTA
+     A**End of change CGL029
+     A  23                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N24*******                           DSPATR(HI)
+     A N23                                  DSPATR(HI)
+     A*********** DDBNC3        35A  B 13 45OVRDTA
+     A**25*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********  DDBNC3        35A  B 14 45OVRDTA                                            CGL029
+     A            DDBNC3        35A  B 15 45OVRDTA
+     A**End of change CGL029
+     A  24                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N25*******                           DSPATR(HI)
+     A N24                                  DSPATR(HI)
+     A*********** DDBNC4        35A  B 14  2OVRDTA
+     A**26*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********  DDBNC4        35A  B 15  9OVRDTA                                            CGL029
+     A            DDBNC4        35A  B 16  9OVRDTA
+     A**End of change CGL029
+     A  25                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N26*******                           DSPATR(HI)
+     A N25                                  DSPATR(HI)
+     A*********** DDBNC5        35A  B 14 45OVRDTA
+     A**27*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********  DDBNC5        35A  B 15 45OVRDTA                                            CGL029
+     A            DDBNC5        35A  B 16 45OVRDTA
+     A**End of change CGL029
+     A  26                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N27*******                           DSPATR(HI)
+     A N26                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+      *                                              Begin /CFT014/
+     A***********                      15  2'Book Code'
+     A*********** DDBOKC    R        B 15 12REFFLD(BOKC MFRFL)
+     A**Start of change CGL029
+     A**********                       16  2'Book Code'                                       CGL029
+     A**********  DDBOKC    R        B 16 12REFFLD(BOKC MFRFL)                                CGL029
+     A                                 17  2'Book Code'
+     A            DDBOKC    R        B 17 12REFFLD(BOKC MFRFL)
+     A**End of change CGL029
+      *                                              End   /CFT014/
+     A                                      OVRDTA
+      *                                              Begin /CFT014/
+     A**28*******                           DSPATR(RI PC)
+     A  27                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N28*******                           DSPATR(HI)
+     A N27                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+      *                                              Begin /CFT014/
+     A***********                      15 15'Profit Centre'
+     A**Start of change CGL029
+     A**********                       16 15'Profit Centre'                                   CGL029
+     A                                 17 15'Profit Centre'
+     A**End of change CGL029
+      *                                              End   /CFT014/
+     A N83                                  DSPATR(ND)
+     A                                      OVRATR
+      *                                              Begin /CFT014/
+     A*********** DDPRFC    R        B 15 29REFFLD(PRFC MFRFL)
+     A**Start of change CGL029
+     A**********  DDPRFC    R        B 16 29REFFLD(PRFC MFRFL)                                CGL029
+     A            DDPRFC    R        B 17 29REFFLD(PRFC MFRFL)
+     A**End of change CGL029
+      *                                              End   /CFT014/
+     A                                      OVRDTA
+     A N83                                  DSPATR(ND)
+      *                                              Begin /CFT014/
+     A**29*******                           DSPATR(RI PC)
+     A  28                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A N83
+     AO 70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N29*******                           DSPATR(HI)
+     A N28                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+      *                                              Begin /CFT014/
+     A***********                      16  2'Notified Delivery currency/amount'
+     A*N84*******                           DSPATR(ND)
+     A**Start of change CGL029
+     A**********                       17  2'Instructed Currency/Amount'                      CGL029
+     A                                 18  2'Instructed Currency/Amount'
+     A**End of change CGL029
+     A N84N87                               DSPATR(ND)
+      *                                              End   /CFT014
+     A                                      OVRATR
+      *                                              Begin /CFT014/
+     A*********** DDNDCY         3A  B 16 37OVRDTA
+     A*N84*******                           DSPATR(ND)
+     A**30*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********  DDNDCY         3A  B 17 37OVRDTA                                            CGL029
+     A**Start of change 257074
+     A**********  DDNDCY         3A  B 18 37OVRDTA                                            257074
+     A            DDNDCY         3A  B 18 36OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+     A N84N87                               DSPATR(ND)
+     A  29                                  DSPATR(RI PC)
+      *                                              End   /CFT014
+     A N70                                  DSPATR(UL)
+      *                                              Begin /CFT014/
+     A*N84*******
+     A N84N87
+      *                                              End   /CFT014
+     AO 70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N30*******                           DSPATR(HI)
+     A N29                                  DSPATR(HI)
+     A*********** DDNDAM        14A  B 16 42OVRDTA
+     A*N84*******                           DSPATR(ND)
+     A**31*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********  DDNDAM        14A  B 17 42OVRDTA                                            CGL029
+     A**Start of change 257074
+     A**********  DDNDAM        14A  B 18 42OVRDTA                                            257074
+     A            DDNDAM        14A  B 18 40OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+     A N84N87                               DSPATR(ND)
+     A  30                                  DSPATR(RI PC)
+      *                                              End   /CFT014
+     A N70                                  DSPATR(UL)
+      *                                              Begin /CFT014/
+     A*N84*******
+     A N84N87
+      *                                              End   /CFT014
+     AO 70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N31*******                           DSPATR(HI)
+     A N30                                  DSPATR(HI)
+      *
+     A**Start of change CGL029
+     A**********                       17 57'Org Rate'                                        CGL029
+     A                                 18 57'Org Rate'
+     A**End of change CGL029
+     A N87                                  DSPATR(ND)
+     A                                      OVRATR
+     A**Start of change CGL029
+     A**********  DDOEXR        14A  B 17 66OVRDTA                                            CGL029
+     A            DDOEXR        14A  B 18 66OVRDTA
+     A**End of change CGL029
+     A N87                                  DSPATR(ND)
+     A  47                                  DSPATR(RI PC)
+     A N70                                  DSPATR(UL)
+     A N87
+     AO 70                                  DSPATR(PR)
+     A N47                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+      *                                              Begin /CFT014/
+     A***********                      17  2'Settle currency/amount/value date'
+     A*********** DDSMCY         3A  B 17 37OVRDTA
+     A**32*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********                       18  2'Settle currency/amount/value date'               CGL029
+     A**********  DDSMCY         3A  B 18 37OVRDTA                                            CGL029
+     A                                 19  2'Settle currency/amount/value date'
+     A**Start of change 257074
+     A**********  DDSMCY         3A  B 19 37OVRDTA                                            257074
+     A            DDSMCY         3A  B 19 36OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+     A  31                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N32*******                           DSPATR(HI)
+     A N31                                  DSPATR(HI)
+     A*********** DDSMAM        14A  B 17 42OVRDTA
+     A**33*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********  DDSMAM        14A  B 18 42OVRDTA                                            CGL029
+     A**Start of change 257074
+     A**********  DDSMAM        14A  B 19 42OVRDTA                                            257074
+     A            DDSMAM        14A  B 19 40OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+     A  32                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N33*******                           DSPATR(HI)
+     A N32                                  DSPATR(HI)
+     A*********** DDSLDT         6A  B 17 64OVRDTA
+     A**34*******                           DSPATR(RI PC)
+      *                                              Start /CFT009/
+     A************DDSLDT         6A  B 18 64OVRDTA
+     A**Start of change CGL029
+     A**********  DDSLDT         6A  B 18 57OVRDTA                                            CGL029
+     A**Start of change 257074
+     A**********  DDSLDT         6A  B 19 57OVRDTA                                            257074
+     A            DDSLDT         6A  B 19 55OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+      *                                              End   /CFT009/
+     A  33                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N34*******                           DSPATR(HI)
+     A N33                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+      *                                              Begin /CFT014/
+     A***********                      18  2'Pay currency/amount/value date'
+     A*********** DDPCCY         3A  B 18 37OVRDTA
+     A**35*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********                       19  2'Pay currency/amount/value date'                  CGL029
+     A**********  DDPCCY         3A  B 19 37OVRDTA                                            CGL029
+     A                                 20  2'Pay currency/amount/value date'
+     A**Start of change 257074
+     A**********  DDPCCY         3A  B 20 37OVRDTA                                            257074
+     A            DDPCCY         3A  B 20 36OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+     A  34                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N35*******                           DSPATR(HI)
+     A N34                                  DSPATR(HI)
+     A*********** DDPYAM        14A  B 18 42OVRDTA
+     A**36*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********  DDPYAM        14A  B 19 42OVRDTA                                            CGL029
+     A**Start of change 257074
+     A**********  DDPYAM        14A  B 20 42OVRDTA                                            257074
+     A            DDPYAM        14A  B 20 40OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+     A  35                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N36*******                           DSPATR(HI)
+     A N35                                  DSPATR(HI)
+     A*********** DDPYDT         6A  B 18 64OVRDTA
+     A**37*******                           DSPATR(RI PC)
+      *                                              Start /CFT009/
+     A************DDPYDT         6A  B 19 64OVRDTA
+     A**Start of change CGL029
+     A**********  DDPYDT         6A  B 19 57OVRDTA                                            CGL029
+     A**Start of change 257074
+     A**********  DDPYDT         6A  B 20 57OVRDTA                                            257074
+     A            DDPYDT         6A  B 20 55OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+      *                                              End   /CFT009/
+     A  36                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                             Begin /CFT014/
+     A*N37*******                           DSPATR(HI)
+     A N36                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+      *                                              Begin /CFT014/
+     A***********                      15 34'Dealer''s Ref. '
+     A**Start of change CGL029
+     A**********                       16 34'Dealer''s Ref. '                                 CGL029
+     A                                 17 34'Dealer''s Ref. '
+     A**End of change CGL029
+      *                                              End   /CFT014/
+     A N86                                  DSPATR(ND)
+     A                                      OVRATR
+      *                                              Begin /CFT014/
+     A*********** DDFDLR        30A  B 15 49OVRDTA
+     A**Start of change CGL029
+     A**********  DDFDLR        30A  B 16 49OVRDTA                                            CGL029
+     A            DDFDLR        30A  B 17 49OVRDTA
+     A**End of change CGL029
+      *                                              End   /CFT014/
+     A N86                                  DSPATR(ND)
+      *                                              Begin /CFT014/
+     A**41*******                           DSPATR(RI PC)
+     A  40                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A**70*******                           DSPATR(PR)
+     A N86                                  DSPATR(PR)
+      *                                              End   /CFT009/
+      *                                              Begin /CFT014/
+     A*N41*******                           DSPATR(HI)
+     A N40                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+     A*/COPY WNCPYSRC,FTIPAY1D02
+      *                                              Begin /CFT009/
+     A**Start of change CGL029
+     A**********                       18 68'Offset'                                          CGL029
+     A                                 19 68'Offset'
+     A**End of change CGL029
+     A N88                                  DSPATR(ND)
+     A                                      OVRATR
+     A**Start of change CGL029
+     A**********  SOFCD          5A  B 18 75                                                  CGL029
+     A            SOFCD          5A  B 19 75
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N88                                  DSPATR(ND)
+     A N88
+     AO 70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A N49                                  DSPATR(HI)
+     A  49 88                               DSPATR(PC)
+     A  49                                  DSPATR(RI)
+      *
+     A**Start of change CGL029
+     A**********                       20  2'Spread set'                                      CGL029
+     A                                 21  2'Spread set'
+     A**End of change CGL029
+     A N88                                  DSPATR(ND)
+     A                                      OVRATR
+     A**Start of change CGL029
+     A**********  SPDSET         5A  B 20 13                                                  CGL029
+     A            SPDSET         5A  B 21 13
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N88                                  DSPATR(ND)
+     A N88
+     AO 70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A N48                                  DSPATR(HI)
+     A  48 88                               DSPATR(PC)
+     A  48                                  DSPATR(RI)
+      *                                              End   /CFT009/
+      *                                              Begin /CFT014/
+     A***********                      20 11'Rate'
+     A*********** DDRATE        14A  B 20 17OVRDTA
+     A**38*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********                       20 21'Rate'                                            CGL029
+     A**********  DDRATE        14A  B 20 26OVRDTA                                            CGL029
+     A**Start of change 257074
+     A**********                       21 21'Rate'                                            257074
+     A**********  DDRATE        14A  B 21 26OVRDTA                                            257074
+     A                                 20 62'Rate'
+     A            DDRATE        14A  B 20 67OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+     A  37                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N38*******                           DSPATR(HI)
+     A N37                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+      *                                              Begin /CFT014/
+     A***********                      20 33'Override'
+     A*********** DDOVRD         1A  B 20 44OVRDTA
+     A**39*******                           DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********                       20 42'Override'                                        CGL029
+     A**********  DDOVRD         1A  B 20 51OVRDTA                                            CGL029
+     A**Start of change 257074
+     A**********                       21 42'Override'                                        257074
+     A**********  DDOVRD         1A  B 21 51OVRDTA                                            257074
+     A                                 21 19'Override'
+     A            DDOVRD         1A  B 21 28OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+     A  38                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N39*******                           DSPATR(HI)
+     A N38                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+     A**Start of change CGL029
+     A**********                       20 55'Add/deduct charges ind'                          CGL029
+     A**********  DDADDC         1A  B 20 78OVRDTA                                            CGL029
+     A**Start of change 257074
+     A**********                       21 55'Add/deduct charges ind'                          257074
+     A**********  DDADDC         1A  B 21 78OVRDTA                                            257074
+     A                                 21 30'Add/deduct charges ind'
+     A            DDADDC         1A  B 21 53OVRDTA
+     A**End of change 257074
+     A**End of change CGL029
+      *                                              Begin /CFT014/
+     A**40*******                           DSPATR(RI PC)
+     A  39                                  DSPATR(RI PC)
+      *                                              End   /CFT014/
+     A N70                                  DSPATR(UL)
+     A  70                                  DSPATR(PR)
+      *                                              Begin /CFT014/
+     A*N40*******                           DSPATR(HI)
+     A N39                                  DSPATR(HI)
+      *                                              End   /CFT014/
+      *
+     A          R FTIPAYD2                  TEXT('Extra Info window')
+     A                                      CF03
+     A                                      CF12
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      WINDOW(07 16 14 61)
+     A                                  2 22'ADDITIONAL INFORMATION'
+     A                                      DSPATR(HI)
+     A                                  5  2'Input User 1'
+     A            DDUSRP1   R        O  5 23REFFLD(INUSR1)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A            DDUSER1   R        O  5 35REFFLD(USER1)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6  2'Input User 2'
+     A            DDUSRP2   R        O  6 23REFFLD(INUSR2)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A            DDUSER2   R        O  6 35REFFLD(USER1)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A                                  7  2'Authorising User 1'
+     A            DDAUP1    R        O  7 23REFFLD(AUP1)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A            DDAUT1    R        O  7 35REFFLD(USER1)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A                                  8  2'Authorising User 2'
+     A            DDAUP2    R        O  8 23REFFLD(AUP2)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A            DDAUT2    R        O  8 35REFFLD(USER1)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A                                  9  2'Network Message MIR'
+     A            DDNMIR        28A  O  9 23OVRDTA
+     A                                      DSPATR(HI)
+     A                                 10  2'Network Message MOR'
+     A            DDNMOR        28A  O 10 23OVRDTA
+     A                                 13  2'F3=Exit  F12=Previous'
+      *
+      ** Screen Footer
+      *
+     A          R FTIPAYF1                  TEXT('Screen Footer')
+     A                                      CF03
+     A                                      CF12
+     A  71                                  CF05
+     A  72                                  CF07
+     A  73                                  CF08
+     A  74                                  CF10
+     A  75                                  CF15
+     A  76                                  CF18
+     A  77                                  CF21
+     A  79                                  CF04 CF16
+     A                                      OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A                                      CLRL(23)
+      *
+     A N71 72 73
+     AA 74 75N76
+     AAN77                             23  2'F3=Exit  F7=Previous  F8=Next  +
+     A                                       F10=Delete  F12=Cancel  F15=Select'
+      *
+     A  71 72 73
+     AAN74 75N76
+     AAN77                             23  2'F3=Exit  F5=Refresh  F7=Previous  +
+     A                                       F8=Next  F12=Cancel  F15=Select'
+      *
+     A N71 72 73
+     AAN74 75N76
+     AA 77                             23  2'F3=Exit  F7=Previous  F8=Next  +
+     A                                       F12=Cancel  F15=Select  +
+     A                                       F21=Additional Info'
+      *
+     A N71N72N73
+     AA 74N75 76
+     AAN77                             23  2'F3=Exit  F10=Delete  F12=Cancel  +
+     A                                       F18=Next Payment'
+      *
+     A  71N72N73
+     AAN74N75 76
+     AAN77                             23  2'F3=Exit  F5=Refresh  F12=Cancel  +
+     A                                       F18=Next Payment'
+      *
+     A N71N72N73
+     AAN74N75 76
+     AA 77                             23  2'F3=Exit  F12=Cancel  F18=Next +
+     A                                       Payment  F21=Additional Info'
+      *
+     A N71N72N73
+     AA 74N75N76
+     AAN77                             23  2'F3=Exit  F10=Delete  F12=Cancel'
+      *
+     A  71N72N73
+     AAN74N75N76
+     AAN77                             23  2'F3=Exit  F5=Refresh  F12=Cancel'
+      *
+     A N71N72N73
+     AAN74N75N76
+     AA 77                             23  2'F3=Exit  F12=Cancel  +
+     A                                       F21=Additional Info'
+      *
+     A N71N72N73
+     AAN74N75N76
+     AAN77                             23  2'F3=Exit  F12=Cancel'
+      *
+     A  79                             24  2'F4=Prompt  F16=Search'
+      *
+      *
+      ** Message Subfile Format
+      *
+     A          R FTIPAYS1                  TEXT('Message Subfile')
+     A                                      SFL
+     A                                      SFLMSGRCD(22)
+     A            DDSFKY                    SFLMSGKEY
+     A            DDPGMQ                    SFLPGMQ
+      *
+      ** Message Subfile Control
+      *
+     A          R FTIPAYS0                  TEXT('MSG Subfile Control')
+     A                                      CF03
+     A                                      CF12
+     A  71                                  CF05
+     A  72                                  CF07
+     A  73                                  CF08
+     A  74                                  CF10
+     A  75                                  CF15
+     A  76                                  CF18
+     A  77                                  CF21
+     A  79                                  CF04 CF16
+     A                                      SFLCTL(FTIPAYS1)
+     A N96                                  SFLDSPCTL
+     A                                      SFLINZ
+     A                                      SFLDSP
+     A  97                                  SFLEND
+     A                                      SFLSIZ(5)
+     A                                      SFLPAG(1)
+     A                                      OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A            DDPGMQ                    SFLPGMQ

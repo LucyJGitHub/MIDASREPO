@@ -1,0 +1,170 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas RE Cash Management Hierarchy Validation -INT')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail module                                       */
+/*                                                                   */
+/*       REC100411 - Cash Management Hierarchy Validation            */
+/*                   - INTERACTIVE                                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. BG18886              Date 28May08            */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BUG6417              Date 23Mar05            */
+/*                      CRE008 *CREATE       Date 19Feb02            */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       BUG6417- Cash management components are missing in MidasPlus*/
+/*       CRE008 - Cash Management                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&HIER &HTYP &FLDNAME &MSGID &MSGDTA +
+                          &MSGFIL &ERROR)                                                /*BUG6417*/
+/***                      &ERROR)                                       **/              /*BUG6417*/
+ 
+             DCL        VAR(&HIER) TYPE(*DEC)  LEN(9 0)
+             DCL        VAR(&HTYP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&FLDNAME) TYPE(*CHAR) LEN(750 )
+             DCL        VAR(&MSGID)   TYPE(*CHAR) LEN(525 )
+             DCL        VAR(&MSGDTA)  TYPE(*CHAR) LEN(3375)
+             DCL        VAR(&MSGFIL) TYPE(*CHAR) LEN(50)                                 /*BUG6417*/
+             DCL        VAR(&ERROR)  TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&MEM)    TYPE(*CHAR) LEN(70)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1) VALUE('I')
+             DCL        VAR(&IX)      TYPE(*DEC)  LEN(3 0)
+ 
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+                                                                                         /*BUG6417*/
+             CHGVAR     VAR(&MSGFIL) VALUE('REUSRMSG')                                   /*BUG6417*/
+ 
+/* Check if this job is already active */
+ 
+             ALCOBJ     OBJ((RELCMHDPD *FILE *EXCLRD)) WAIT(10)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Clear 'new' cash management hierarchy files */
+ 
+             CLRPFM     FILE(RELCMHDPD)
+             CLRPFM     FILE(RELCMHLPD)
+             CLRPFM     FILE(RELZSHDPD)
+             CLRPFM     FILE(RELZSHLPD)
+             CLRPFM     FILE(RELGAHDPD)
+             CLRPFM     FILE(RELGAHLPD)
+ 
+ 
+/* Cash Management Hierarchy Validation */
+/*======================================*/
+ 
+             CALL       PGM(RE100400) PARM(&MODE &HIER &HTYP +
+                          &FLDNAME &MSGID &MSGDTA &IX)
+ 
+/* Abnormal ending: */
+ 
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+/* Errors */
+             IF         COND(&IX *NE 0) THEN(DO)
+                GOTO       CMDLBL(NORMAL)
+             ENDDO
+ 
+ 
+/* Cash Management Hierarchy Chain Validation */
+/*============================================*/
+ 
+/* Overrides */
+ 
+             OVRDBF     FILE(RECMHLL1) TOFILE(RELCMHLL1)
+             OVRDBF     FILE(RECMHLL0) TOFILE(RELCMHLL0)
+             OVRDBF     FILE(RECMHLL4) TOFILE(RELCMHLL4)
+             OVRDBF     FILE(REZSHLL0) TOFILE(RELZSHLL0)
+             OVRDBF     FILE(REGAHLL0) TOFILE(RELGAHLL0)
+ 
+             CALL       PGM(RE100403) PARM(&MODE &HIER &HTYP +
+                          &FLDNAME &MSGID &MSGDTA &IX)
+ 
+/* Abnormal ending: */
+ 
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+/* Errors */
+/************IF         COND(&IX**= 0) THEN(DO)                                       */ /*BG18886*/
+             IF         COND(&IX *NE 0) THEN(DO)                                         /*BG18886*/
+                GOTO       CMDLBL(NORMAL)
+             ENDDO
+ 
+ 
+/* Cash Management Hierarchy Relationship Validation */
+/*===================================================*/
+ 
+/* Overrides */
+ 
+             OVRDBF     FILE(RELCMHDL0X) TOFILE(RELCMHDL0) SHARE(*NO)
+             OVRDBF     FILE(RECMHLL1) TOFILE(RELCMHLL1)
+             OVRDBF     FILE(RECMHLL0) TOFILE(RELCMHLL0)
+             OVRDBF     FILE(RECMHLL4) TOFILE(RELCMHLL4)
+             OVRDBF     FILE(REZSHLL0) TOFILE(RELZSHLL0)
+             OVRDBF     FILE(REGAHLL0) TOFILE(RELGAHLL0)
+ 
+             CALL       PGM(RE100404) PARM(&MODE &HIER &HTYP +
+                          &FLDNAME &MSGID &MSGDTA &IX)
+ 
+/* Abnormal ending: */
+ 
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+/* Errors */
+             IF         COND(&IX *NE 0) THEN(DO)
+                GOTO       CMDLBL(NORMAL)
+             ENDDO
+ 
+ 
+/* Normal ending: */
+/*================*/
+ 
+NORMAL:
+             DLCOBJ     OBJ((RELCMHDPD *FILE *EXCLRD))
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+ 
+             DLCOBJ     OBJ((RELCMHDPD *FILE *EXCLRD))
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             ENDPGM

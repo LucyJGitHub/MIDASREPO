@@ -1,0 +1,417 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Deal amendments enquiry')                     *
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM2100 - Deal Amendments Enquiry                             *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             DATE 11JUL96               *
+     F*                 CPM004             DATE 03MAR96               *
+     F*                 085817             DATE 13MAR95               *
+     F*                 081239             DATE 02FEB95               *
+     F*                 S01486             DATE 12JUL94               *
+     F*                 S01313             DATE 06NOV92               *
+     F*                 SA9108             DATE 06NOV91               *
+     F*                 049467             DATE 28JAN93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CDL038 - Extended Deal Sub Type (Recompile)                  *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*  CPM004 - Bank Portfolios (RECOMPILED)                        *
+     F*  085817 - Recompile due to changes in PMLDAPD                 *
+     F*  081239 - R10 Private Banking Rework                          *
+     F*  S01486 - Portfolio Management Incorporation                  *
+     F*  S01313 - RECOMPILED DUE TO PORTFOLIO PERFORMANCE             *
+     F*  SA9108 - POOL SECURITIES TRANSACTIONS (ONLY RECOMPILED       *
+     F*           FOR DTAARA/LDA)                                     *
+     F*  049467 - RECOMPILED FOR RELEASE 3 PTF 02                     *
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       02         CHAIN FAIL ON DEAMS
+     F********03*********CHAIN*FAIL*ON*SDCURRL0************************** S01486
+     F*       U7         DATABASE ERROR (JOB SWITCH).
+     F*       U8         DATABASE ERROR (JOB SWITCH).
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***PM2100DDCF**E*                   WORKSTN                         S01486
+     FPM2100DFCF  E                    WORKSTN                            S01486
+     FDEAMS   IF  E           K        DISK
+     F            DEAMSDHF                          KIGNORE
+     F*           DEAMSDIF                          KIGNORE
+     F            DEAMSDJF                          KIGNORE
+     F                                              KINFSR *PSSR
+     F***SDCURRL0IF**E*          K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     E*********************************************************************
+     E*  TABLES AND ARRAYS
+     E*    ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E*****ARRAY*TO*ENABLE*ATTENTION*KEY********************************* S01486
+     E***********         ATN     1   1 22                                S01486
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZSEDITZ1
+     E/EJECT
+     I*
+     I*    RENAME COMMON INPUT FIELDS ON CLOANCKF.
+     I*
+     I*****GROUP*DATA*AREA*********************************************** S01486
+     I***WWGDA*****E*DSPMGRDAPP                                           S01486
+     I*
+     I***WWLDA*****E*DSPMLDAPP                                            S01486
+     IWWLDA     E DSPMLDAPD                                               S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** DUMMY RECORD FORMATS FOR ACCESS TO CURRENCIES DETAILS            S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short DS for access programs                                    S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* Second DS For Access Programs, Long Data Structure                S01486
+     I*
+     I*    PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     I**
+     I** DATA STRUCTURE FOR SUBROUTINE ZSEDIT
+     I**
+     I            DS
+     I                                        1  150ZFLD15
+     I                                        1  15 ZFLDA
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I*    DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*    L.D.A. DATA AREA TO HOLD INFORMATION ON DATABASE ERROR.
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * ACCESS   - ACCESS DEAMS DETAILS                                  *
+      * #INIT    - INITIAL PROCESS                                       *
+      * ZDATE2   - CONVERSION SUBROUTINE (DAY NUMBER TO DATE)            *
+      * ZSEDIT   - EDITION SUBROUTINE FOR NUMERIC FIELDS                 *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      **PMC1000**-*UPDATE*GROUP*JOB*DATA*AREA*****************************S01486
+      **PMC1010**-*READ*GROUP*JOB*DATA*AREA*******************************S01486
+      **QCMDEXC**-*EXEC*AS/400*COMMAND************************************S01486
+      **PMC1020**-*TERMINATE*GROUP*JOB*IF*DATABASE*ERROR******************S01486
+      * PMC1003  - TO RETRIEVE DATA AREA *LDA                            *S01486
+      * PMC1001  - TO UPDATE DATA AREA *LDA                              *S01486
+      * DBERRCTL - DATABASE ERROR PROCESSING                             *S01486
+      *                                                                  *
+      ********************************************************************
+     C/EJECT
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C*   Initial processing.
+     C                     EXSR #INIT
+     C*
+     C*   Details access processing
+     C                     EXSR ACCESS
+     C*
+     C*   Termination processing
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ACCESS   - ACCESS DEAL AMENDMENTS DETAILS                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      * ZDATE2   - CONVERSION SUBROUTINE (DAY NUMBER TO DATE)            *
+      * ZSEDIT   - EDITION SUBROUTINE FOR NUMERIC FIELDS                 *
+      **PMC1000**-*UPDATE*GROUP*JOB*DATA*AREA*****************************S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRETC   - RETURN CODE PARAMETER PASSED TO PROGRAM               *
+      * WWDLNO   - DEAL NUMBER PARAMETER PASSED TO PROGRAM               *
+      * WWVDAT   - VALUE DATE PARAMETER PASSED TO PROGRAM                *
+      * WWDASN   - SEQUENCE NUMBER PARAMETER PASSED TO PROGRAM           *
+      * WWPARM   - GROUP JOB DATA STRUCTURE                              *
+      *                                                                  *
+      ********************************************************************
+     C           ACCESS    BEGSR
+     C*
+     C*   ACCESS DEAMS DETAILS
+     C           DMSKEY    CHAINDEAMS                02
+     C           *IN02     IFEQ '1'
+     C                     Z-ADD2         QMERRN
+     C                     MOVEL'DEAMS'   QMFILE
+     C                     MOVE WWDASN    WW08    8
+     C                     MOVELWWVDAT    WW08
+     C                     MOVELWWDLNO    WWKEY  14
+     C                     MOVE WW08      WWKEY
+     C                     MOVELWWKEY     QMKEY
+     C***********          MOVE '9'       WWRETC  1                       081239
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C****ACCESS*CURRENCY*CODES*FILE************************************* S01486
+     C*   READ CURRENCY CODES DETAILS VIA ACCESS PROGRAM          R10036  S01486
+     C***********CCY       CHAINSDCURRL0             03                   S01486
+     C************IN03     IFEQ '1'                                       S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   @RTCD   7                       S01486
+     C                     PARM '*KEY   ' @OPTN   7                       S01486
+     C                     PARM CCY       @K101   3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C                     Z-ADD3         QMERRN
+     C                     MOVEL'SDCURR'  QMFILE
+     C                     MOVELCCY       QMKEY
+     C***********          MOVE '9'       WWRETC  1                       081239
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C*    INITIALISE DISPLAY ZONES
+     C                     MOVELQMCNUM    DDCNUM           CUSTOMER NUMBER
+     C                     MOVELQMCRNM    DDCRNM           CUSTOMER NAME
+     C                     MOVELQMPTF2    DDPTFR           PORTFOLIO REF
+     C                     MOVELQMPTFN    DDPTFN              "      NARR
+     C                     MOVELWWDLNO    DDDLNO           DEAL NUMBER
+     C                     Z-ADDVDAT      ZDAYNO           VALUE DATE
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     DDVDAT
+     C                     MOVELDASN      DDDASN           SEQUENCE NUMBER
+     C                     MOVELAMTP      DDAMTP           AMENDMENT TYPE
+     C           RTSP      IFNE 0
+     C                     Z-ADD0         ZFLD15           RATE/SPREAD
+     C                     MOVE RTSP      ZFLDA
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDRTSP
+     C                     ELSE
+     C                     MOVE *BLANKS   DDRTSP
+     C                     END
+     C                     MOVELCCY       DDCCY            CURRENCY CODE
+     C           DAAM      IFNE 0
+     C                     Z-ADDDAAM      ZFLD15           DEAL AMENDMENT AMOUNT
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDDAAM
+     C                     ELSE
+     C                     MOVE *BLANKS   DDDAAM
+     C                     END
+     C                     MOVELSETP      DDSETP           SETTLEMENT TYPE
+     C                     MOVELOSAC      DDOSAC           OUR SETTLEMENT A/C
+     C                     MOVELTSEN      DDTSEN           THEIR SETTLE NOSTRO
+     C                     MOVELFACO      DDFACO           FOR ACCOUNT OF
+     C                     MOVELSPI       DDSPI            SPECIAL INSTRUCTIONS
+     C*
+     C*   LOOP UNTIL QUIT REQUESTED
+     C************INKC     DOUEQ'1'                                       081239
+     C************INKL     OREQ '1'                                       081239
+     C************INKV     OREQ '1'                                 S01486081239
+     C           QMENQT    DOUEQ'Y'                                       081239
+     C           QMENQT    OREQ 'C'                                       081239
+     C           QMENQT    OREQ 'P'                                       081239
+     C           QMENQT    OREQ 'D'                                       081239
+     C           *INKL     OREQ '1'                                       081239
+     C*
+     C*   DISPLAY CORRECT SCREEN
+     C                     EXFMTPM2100F1
+     C*                                                                   081239
+     C** If F3  pressed, exit program                                     081239
+     C*                                                                   081239
+     C           *INKC     IFEQ '1'                                       081239
+     C                     MOVE 'Y'       QMENQT                          081239
+     C                     CALL 'PMC1001'                                 081239
+     C                     PARM           WWLDA                           081239
+     C                     END                                            081239
+     C**********                                                    081239CPM005
+     C***If*F22*pressed, access Enquiry selection screen            081239CPM005
+     C**********                                                    081239CPM005
+     C********** *INKW     IFEQ '1'                                 081239CPM005
+     C**********           CALL 'PMC0610'                           081239CPM005
+     C**********                                                    081239CPM005
+     C***Retrieve *LDA values                                       081239CPM005
+     C**********                                                    081239CPM005
+     C**********           CALL 'PMC1003'                           081239CPM005
+     C**********           PARM           WWLDA                     081239CPM005
+     C**********           END                                      081239CPM005
+     C*
+     C                     END
+     C***********                                                         081239
+     C****EXIT*PROGRAM****************************************************081239
+     C************INKC     IFEQ '1'                                       081239
+     C***********          MOVE '1'       WWRETC                          081239
+     C***********          MOVE 'Y'       QMENQT                          081239
+     C***********          CALL 'PMC1002'                                 S01486
+     C***********          PARM           WWGDA                           S01486
+     C***********          CALL 'PMC1001'                           S01486081239
+     C***********          PARM           WWLDA                     S01486081239
+     C***********          END                                            081239
+     C*
+     C                     ENDSR
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESS                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **PMC1010**-*READ*GROUP*JOB*DATA*AREA*******************************S01486
+      **QCMDEXC**-*EXEC*AS/400*COMMAND************************************S01486
+      * PMC1003  - TO RETRIEVE DATA AREA *LDA                            *S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRETC   - RETURN CODE PARAMETER PASSED TO PROGRAM               *
+      * WWDLNO   - DEAL NUMBER PARAMETER PASSED TO PROGRAM               *
+      * WWVDAT   - VALUE DATE PARAMETER PASSED TO PROGRAM                *
+      * WWDASN   - SEQUENCE NUMBER PARAMETER PASSED TO PROGRAM           *
+      * WWPARM   - GROUP JOB DATA STRUCTURE                              *
+      **WWFLD****-*COMMAND*PART*OF*QCMDEXEC*PARAMETER*********************S01486
+      **WWNUMB***-*LENGHT*PART*OF*QCMDEXEC*PARAMETER**********************S01486
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           WWRETC  1
+     C                     PARM           WWDEAL  6
+     C                     PARM           WWVDAT  50
+     C                     PARM           WWSEQN  3
+     C*
+     C                     MOVELWWDEAL    WWDLNO  60
+     C                     MOVELWWSEQN    WWDASN  30
+     C*
+     C                     MOVEA'0'       *IN
+     C                     MOVE '0'       *INKC
+     C                     MOVE '0'       *INKL
+     C                     MOVE '0'       *INKV                           S01486
+     C*
+     C*    RECEIVE PARAMETERS FROM DATA AREA *GDA
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+     C                     MOVELQMRUNA    DDRUNA
+     C*
+     C*****IF*ATTENTION*KEY*ENABLED*SET*THE*ATTENTION*PROGRAM*TO********* S01486
+     C*****PMC0610******************************************************* S01486
+     C***********QMATTN    IFEQ 'Y'                                       S01486
+     C***********          MOVEAATN       WWFLD  22                       S01486
+     C***********          Z-ADD22        WWNUMB 155                      S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM           WWFLD                           S01486
+     C***********          PARM           WWNUMB                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C*
+     C*    INIT KEY LIST
+     C           DMSKEY    KLIST                           DEAMS KEY
+     C                     KFLD           WWDLNO
+     C                     KFLD           WWVDAT
+     C                     KFLD           WWDASN
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **PMC1000**-*UPDATE*GROUP*JOB*DATA*AREA*****************************S01486
+      **PMC1020**-*TERMINATE*GROUP*JOB*IF*DATABASE*ERROR******************S01486
+      * PMC1001  - TO UPDATE DATA AREA *LDA                              *S01486
+      * DBERRCTL - DATABASE ERROR PROCESSING                             *S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * ACCESS   - ACCESS LOAN DETAILS                                   *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      **WWPARM***-*GROUP*JOB*DATA*STRUCTURE*******************************S01486
+      **WWEND****-*GROUP*JOB*TERMINATION*VALUE****************************S01486
+      **WWGRPJ***-*GROUP*JOB*VALUE****************************************S01486
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'PM2100'  QMPGM
+     C                     MOVEL'Y'       QMENQT
+     C*
+     C*****UPDATE**GDA*************************************************** S01486
+     C***********          CALL 'PMC1002'                                 S01486
+     C***********          PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C*
+     C                     DUMP
+     C*
+     C***********          CALL 'PMC1020'                                 S01486
+     C                     CALL 'DBERRCTL'                                S01486
+     C                     RETRN                                          S01486
+     C**
+     C                     ENDSR
+     C**
+     C** **  ATN - ARRAY TO ENABLE ATTN KEY****************************** S01486
+     C** SETATNPGM PGM(PMC0610) ***************************************** S01486
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**  ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

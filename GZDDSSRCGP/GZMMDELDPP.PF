@@ -1,0 +1,623 @@
+      *****************************************************************
+/*STD *  PFBASE                                                       *
+/*EXS *  PF_15WF                                                      *
+/*EXI *  REUSEDLT(*YES)                                               *                       CGP016
+/*EXI *  TEXT('Midas GZ Loan/deposit/CD issued')                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  PF/GZMMDELDPP - Loan/Deposit/CD Issued                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 30May14               *
+      *                 CGP016  *MOVED     Date 06Aug12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 30Mar06               *
+      *                 CSD027             Date 05Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL033             Date 10Feb05               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      *                 CGP001  *CREATE    Date 23May03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           Add Receive Bank To Bank Info Line 1 - 6.           *
+      *  CGP016 - Global database - Re-use deleted records            *
+      *         - Moved from GZDDSSRCGM                               *
+      *  CRE073 - Interest Rate Rounding                              *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CDL049 - Addition of a Reference Rate field                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *  CGL014 - Collaterals Processing                              *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposit       *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *  CDL016 - Automatic Rollover of Fixed Term Loan/Deposit       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors (missing field)                 *
+      *  CGP001 - Global Processing                                   *
+      *           - New file - Global version of MMDELDPP.            *
+      *                                                               *
+      *****************************************************************
+     A                                      REF(MFRFL)
+      *
+     A          R MMDELDP0                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2003')
+      *
+     A            HKRCID    R               REFFLD(RCID)
+     A            HKDLTF    R               REFFLD(DLTF)
+     A            HKDLUP    R               REFFLD(DLUP)
+     A            HKMLUP    R               REFFLD(MLUP)
+     A            HKYLUP    R               REFFLD(YLUP)
+     A            HKTLUP    R               REFFLD(TLUP)
+     A            HKCHTP    R               REFFLD(CHTP)
+     A            HKLCD     R               REFFLD(LCD)
+     A            HKLUID    R               REFFLD(LUID)
+     A            HKPCDN    R               REFFLD(DLPC)
+     A            HKDN38    R               REFFLD(DN38)
+     A            HKDADN    R               REFFLD(DADN)
+     A            HKBKCD    R               REFFLD(BKCD)
+     A            HKCCY     R               REFFLD(CCY)
+     A            HKCYDP    R               REFFLD(CYDP)
+     A            HKVDYY    R               REFFLD(VDYY)
+     A            HKVDMM    R               REFFLD(VDMM)
+     A            HKVDDD    R               REFFLD(VDDD)
+     A            HKDTYY    R               REFFLD(DTYY)
+     A            HKDTMM    R               REFFLD(DTMM)
+     A            HKDTDD    R               REFFLD(DTDD)
+     A            HKDDLT    R               REFFLD(DDLT)
+     A            HKDSTS    R               REFFLD(DSTS)
+     A            HKMTYP    R               REFFLD(MDTY)
+     A            HKRBSI    R               REFFLD(RBSI)
+     A            HKTYPE    R               REFFLD(DTPE)
+     A            HKSTYP    R               REFFLD(DLST)
+     A            HKCSNM    R               REFFLD(CSNM)
+      * Begin /CSD027/
+     A**********  HKCNUM    R               REFFLD(CNUM)                                      CSD027
+     A            HKCNUM         6A
+     A                                      TEXT('Customer number')
+     A                                      COLHDG('Customer            ' +
+     A                                      'Number')
+      * End /CSD027/
+     A            HKAMNP    R               REFFLD(AMNP)
+     A            HKINTR    R               REFFLD(INTR)
+     A            HKBRCA    R               REFFLD(MBCA)
+     A            HKDBRC    R               REFFLD(DBRC)
+     A            HKDDYY    R               REFFLD(DDYY)
+     A            HKDDMM    R               REFFLD(DDMM)
+     A            HKDDDD    R               REFFLD(DDDD)
+     A            HKBRKG    R               REFFLD(BRKG)
+     A            HKBKCY    R               REFFLD(BKCY)
+     A            HKBCDP    R               REFFLD(BKDP)
+     A            HKFEDF    R               REFFLD(FEDF)
+     A            HKCDRF    R               REFFLD(CDRF)
+     A            HKPCTN    R               REFFLD(PCTN)
+     A            HKCDRP    R               REFFLD(CDRP)
+     A            HKLACT    R               REFFLD(LACT)
+     A            HKTIME    R               REFFLD(TIME)
+     A            HKDUSC    R               REFFLD(DUSC)
+     A            HKAOFR    R               REFFLD(AOFR)
+     A            HKLDAT    R               REFFLD(DACT)
+     A            HKSLYY    R               REFFLD(SLYY)
+     A            HKSLMM    R               REFFLD(SLMM)
+     A            HKSLDD    R               REFFLD(SLDD)
+     A            HKROBY    R               REFFLD(ROBY)
+     A            HKSPRD    R               REFFLD(SPRD)
+     A            HKIIRT    R               REFFLD(IIRT)
+     A            HKNIYY    R               REFFLD(NIYY)
+     A            HKNIMM    R               REFFLD(NIMM)
+     A            HKNIDD    R               REFFLD(NIDD)
+     A            HKIPFQ    R               REFFLD(IPFQ)
+     A            HKICMT    R               REFFLD(ICMT)
+     A            HKIPDM    R               REFFLD(IPDM)
+     A            HKCPTI    R               REFFLD(CPTI)
+     A            HKCNTI    R               REFFLD(CNTI)
+     A            HKACSQ    R               REFFLD(ACSQ)
+     A            HKNGVI    R               REFFLD(NGVI)
+     A            HKMTTI    R               REFFLD(MTTI)
+     A            HKMTAX    R               REFFLD(MTAX)
+      * Begin /CSD027/
+     A**********  HKMCDH    R               REFFLD(MCDH)                                      CSD027
+     A            HKMCDH         6A
+     A                                      TEXT('Midas cd held by')
+     A                                      COLHDG('Midas               ' +
+     A                                      'cd                  ' +
+     A                                      'hld by')
+      * End /CSD027/
+     A            HKIAYY    R               REFFLD(IAYY)
+     A            HKIAMM    R               REFFLD(IAMM)
+     A            HKIADD    R               REFFLD(IADD)
+     A            HKBSRC    R               REFFLD(MRBC)
+     A            HKDBSR    R               REFFLD(DBSR)
+     A            HKMDYY    R               REFFLD(MDYY)
+     A            HKMDMM    R               REFFLD(MDMM)
+     A            HKMDDD    R               REFFLD(MDDD)
+     A            HKNTCE    R               REFFLD(NTCE)
+     A            HKFCLY    R               REFFLD(FCLY)
+     A            HKIMAT    R               REFFLD(IMAT)
+     A            HKBRAT    R               REFFLD(BCYR)
+     A            HKMMDI    R               REFFLD(MMDI)
+     A            HKDORM    R               REFFLD(DORM)
+     A            HKORCM    R               REFFLD(ORCM)
+     A**Start of change CGL029
+     A**********  HKDORI    R               REFFLD(DORI)                                      CGL029
+     A**********  HKMORI    R               REFFLD(MORI)                                      CGL029
+     A            QQDORI        12A
+     A            QQMORI        12A
+     A**End of change CGL029
+     A            HKDCPI    R               REFFLD(DCPI)
+     A            HKMCPI    R               REFFLD(MCPI)
+     A            HKDOPM    R               REFFLD(DOPM)
+     A            HKMOPM    R               REFFLD(MOPM)
+     A**Start of change CGL029
+     A**********  HKDOPI    R               REFFLD(DOPI)                                      CGL029
+     A**********  HKMOPI    R               REFFLD(MOPI)                                      CGL029
+     A            QQDOPI        12A
+     A            QQMOPI        12A
+     A**End of change CGL029
+     A            HKDCRI    R               REFFLD(DCRI)
+     A            HKMCRI    R               REFFLD(MTDT)
+     A            HKDFAC    R               REFFLD(DFAC)
+     A            HKMFAO    R               REFFLD(MFAC)
+     A            HKSPEC    R               REFFLD(SPEC)
+     A            HKBOKC    R               REFFLD(BOKC)
+     A            HKLNKN    R               REFFLD(LNKDN)
+     A            HKRSTM    R               REFFLD(RSTM)
+     A**Start of change CGL029
+     A**********  HKRONS    R               REFFLD(RONS)                                      CGL029
+     A            QQRONS        12A
+     A**End of change CGL029
+     A            HKRIBN    R               REFFLD(RIBN)
+     A            HKRIBA    R               REFFLD(RIBA)
+      * Begin /CSD027/
+     A**********  HKROBN    R               REFFLD(ROBN)                                      CSD027
+     A**********  HKROCN    R               REFFLD(ROCN)                                      CSD027
+     A            HKROBN         6A
+     A                                      TEXT('receipt - ordering bank no')
+     A                                      COLHDG('rcpt                ' +
+     A                                      'ord                 ' +
+     A                                      'bank')
+     A            HKROCN         6A
+     A                                      TEXT('receipt - ordering customer +
+     A                                      no')
+     A                                      COLHDG('rcpt                ' +
+     A                                      'ord                 ' +
+     A                                      'cust')
+      * End /CSD027/
+     A            HKPSTM    R               REFFLD(PSTM)
+     A**Start of change CGL029
+     A**********  HKPONS    R               REFFLD(PONS)                                      CGL029
+     A            QQPONS        12A
+     A**End of change CGL029
+     A            HKPIBN    R               REFFLD(PIBN)
+     A            HKPIBA    R               REFFLD(PIBA)
+      * Begin /CSD027/
+     A**********  HKPOBN    R               REFFLD(POBN)                                      CSD027
+     A**********  HKPOCN    R               REFFLD(POCN)                                      CSD027
+     A            HKPOBN         6A
+     A                                      TEXT('pay - ordering bank no')
+     A                                      COLHDG('pay                 ' +
+     A                                      'ord                 ' +
+     A                                      'bank')
+     A            HKPOCN         6A
+     A                                      TEXT('pay - ordering customer no')
+     A                                      COLHDG('pay                 ' +
+     A                                      'ord                 ' +
+     A                                      'cust')
+      * End /CSD027/
+     A            HKRCRN    R               REFFLD(RCRN)
+     A            HKRCRA    R               REFFLD(RCRA)
+     A            HKRVNO    R               REFFLD(RVNO)
+     A            HKAWBN    R               REFFLD(AWBN)
+     A            HKAWBA    R               REFFLD(AWBA)
+     A            HKBENN    R               REFFLD(BENN)
+     A            HKBENA    R               REFFLD(BENA)
+     A            HKDTP1    R               REFFLD(DTP1)
+     A            HKDTP2    R               REFFLD(DTP2)
+     A            HKDTP3    R               REFFLD(DTP3)
+     A            HKDTP4    R               REFFLD(DTP4)
+     A            HKDCHG    R               REFFLD(DCHG)
+     A            HKBTB1    R               REFFLD(BTB1)
+     A            HKBTB2    R               REFFLD(BTB2)
+     A            HKBTB3    R               REFFLD(BTB3)
+     A            HKBTB4    R               REFFLD(BTB4)
+     A            HKBTB5    R               REFFLD(BTB5)
+     A            HKBTB6    R               REFFLD(BTB6)
+     A            HKORBR    R               REFFLD(ORBR)
+     A            HKPRFC    R               REFFLD(PRFC)
+     A            HKPOBR    R               REFFLD(POBR)
+     A            HKROBR    R               REFFLD(ROBR)
+     A            HKDRID    R               REFFLD(DRID)
+     A            HKDDMR    R               REFFLD(DDMR)
+     A            HKCVMR    R               REFFLD(CVMR)
+     A            HKRDFC    R               REFFLD(JRDFC)
+     A            HKFLID    R               REFFLD(JFLID)
+     A            HKFUID    R               REFFLD(FUID)
+     A            HKAURO    R               REFFLD(AURO)
+     A            HKIPDS    R               REFFLD(IPDS)
+     A            HKROFQ    R               REFFLD(ROFQ)
+     A            HKRLDN    R               REFFLD(RLDN)
+     A            HKCNNA    R               REFFLD(CNNA)
+     A            HKIMET    R               REFFLD(IMET)
+     A**Start of change CGL029
+     A**********  HKINSA    R               REFFLD(INSA)                                      CGL029
+     A            QQINSA        15A
+     A**End of change CGL029
+     A            HKINOS    R               REFFLD(INOS)
+     A            HKWRPI    R               REFFLD(WRPI)
+     A            HKPTFR    R               REFFLD(PTFR)
+     A            HKFSRP    R               REFFLD(RTSP)
+     A                                      TEXT('Funding Spread/Rate')
+     A                                      COLHDG('Funding' +
+     A                                             'Spread' +
+     A                                             'Rate')
+      *
+     A            HKFSGN    R               REFFLD(SPIN)
+     A                                      TEXT('Funding Spread Sign')
+     A                                      COLHDG('Funding' +
+     A                                             'Spread' +
+     A                                             'Sign')
+      *
+     A            HKFPRC    R               REFFLD(PRFC)
+     A                                      TEXT('Funding Profit Centre')
+     A                                      COLHDG('Funding' +
+     A                                             'Profit' +
+     A                                             'Centre')
+     A            HKSTCY         3          TEXT('Settlement Currency')
+     A                                      COLHDG('Settlement' +
+     A                                             'Currency')
+     A            HKIC72         3          TEXT('In Currency in +
+     A                                           Field 72')
+     A                                      COLHDG('In Currency in' +
+     A                                             'Field 72')
+     A            HKISCY         3          TEXT('Interest Currency')
+     A                                      COLHDG('Interest' +
+     A                                             'Currency')
+     A            HKII72         3          TEXT('Interest In Ccy in +
+     A                                           Field 72')
+     A                                      COLHDG('Interest In Ccy' +
+     A                                             'in Field 72')
+     A            HKDVSD    R               REFFLD(DVSD)
+     A            HKDDND    R               REFFLD(DDND)
+     A            HKNIPD    R               REFFLD(NIPD)
+     A            HKSLID    R               REFFLD(SLID)
+     A            HKMATD    R               REFFLD(MATD)
+     A            HKRBAT    R               REFFLD(RBAT)
+     A            HKRACD         1A         TEXT('Brok. Rate/Amount ind.')
+     A                                      COLHDG('Brok Rate/Amount ind')
+     A            HKFRNT    R               REFFLD(FOTRNID)
+     A            HKAFRT    R               REFFLD(FOTRNID)
+     A                                      TEXT('Associated Front +
+     A                                            Office Transaction Id')
+     A                                      COLHDG('Associated' +
+     A                                             'Front Office' +
+     A                                             'Transaction Id')
+     A            HKREPA    R               REFFLD(RPRLOC)
+      ** Timestamp
+     A            HKTMST    R               REFFLD(TIMESTMP)
+     A            HKRTFC         3          TEXT('Rollover To/From Currency')
+     A                                      COLHDG('Rollover To/From' +
+     A                                             'Currency')
+     A            HKORDA    R               REFFLD(RBDA)
+     A                                      TEXT('Original Rollover Amount')
+     A                                      COLHDG('Original Rollover' +
+     A                                             'Amount')
+     A            HKFCGC         2          TEXT('Fiduciary Charge Code')
+     A                                      COLHDG('Fiduciary Charge' +
+     A                                             'Code')
+     A            HKFCGD        20          TEXT('Fiduciary Charge Code +
+     A                                      Description')
+     A                                      COLHDG('Fiduciary Charge' +
+     A                                             'Code Description')
+     A            HKFCGA        13  0       TEXT('Fiduciary Charge Amount')
+     A                                      COLHDG('Fiduciary' +
+     A                                             'Charge Amount')
+     A            HKFCGT         9  0       TEXT('Fiduciary Tax on Charge +
+     A                                      Amount')
+     A                                      COLHDG('Fiduciary Tax on' +
+     A                                             'Charge Amount')
+     A            HKFCMC         2          TEXT('Fiduciary Commission code')
+     A                                      COLHDG('Fiduciary Commission' +
+     A                                             'Code')
+     A            HKFCMD        20          TEXT('Fiduciary Commission Code +
+     A                                      Description')
+     A                                      COLHDG('Fiduciary Commission' +
+     A                                             'Code Description')
+     A            HKFCMA        13  0       TEXT('Fiduciary  +
+     A                                           Commission Amount')
+     A                                      COLHDG('Fiduciary' +
+     A                                             'Commission Amount')
+     A            HKFCMT         9  0       TEXT('Fiduciary Tax on +
+     A                                           Commission  Amount')
+     A                                      COLHDG('Fiduciary Tax on' +
+     A                                             'Commission Amount')
+     A            HKFTST         1A         TEXT('Fiduciary Trust +
+     A                                           Agreement Status')
+     A                                      COLHDG('Fiduciary Trust' +
+     A                                             'Agreement Status')
+     A            HKFRN1        60A         TEXT('Restriction  +
+     A                                           Narrative 1')
+     A                                      COLHDG('Restriction' +
+     A                                             'Narrative 1')
+     A            HKFRN2        60A         TEXT('Restriction  +
+     A                                           Narrative 2')
+     A                                      COLHDG('Restriction' +
+     A                                             'Narrative 2')
+     A            HKFRN3        60A         TEXT('Restriction  +
+     A                                           Narrative 3')
+     A                                      COLHDG('Restriction' +
+     A                                             'Narrative 3')
+     A            HKFRN4        60A         TEXT('Restriction  +
+     A                                           Narrative 4')
+     A                                      COLHDG('Restriction' +
+     A                                             'Narrative 4')
+     A            HKREPI         1          TEXT('Replication Indicator')
+     A                                      COLHDG('Replication' 'Indicator')
+     A            HKOMDT         5P 0       TEXT('Original Maturity Date')
+     A                                      COLHDG('Original' 'Maturity Date')
+     A            HKPENA        13P 0       TEXT('Penalty Charged')
+     A                                      COLHDG('Penalty' 'Charged')
+     A            HKBUSR        10A         TEXT('Breakdown User Id')
+     A                                      COLHDG('Breakdown' 'User Id')
+     A            HKPRIN         1          TEXT('Record Printed')
+     A                                      COLHDG('Record' 'Printed')
+     A            HKAUTH         1          TEXT('Automatic Authorisation')
+     A                                      COLHDG('Automatic' 'Authorisation')
+     A            HKTRTP         2          TEXT('Transaction Type')
+     A                                      COLHDG('Transaction'          +
+     A                                             'Type')
+     A            HKCOLF         1          TEXT('Collateral Flag')
+     A                                      COLHDG('Collateral Flag')
+     A            HKCOLA        15P 0       TEXT('Collateral Amount')
+     A                                      COLHDG('Collateral Amount')
+     A            HKOYLC         5          TEXT('Our/Buy Yield Curve')
+     A                                      COLHDG('Our/Buy' +
+     A                                             'Yield Curve')
+     A            HKUSER        10          TEXT('Last Amd/Ins User')
+     A                                      COLHDG('Last Amd/Ins User')
+     A            HKLQPR        11P 7       TEXT('Liquidity/Premium Rate')
+     A                                      COLHDG('Liquidity/Premium' +
+     A                                      'Rate')
+     A            HKLQPS         1A         TEXT('Liquidity/Premium Sign')
+     A                                      COLHDG('Liquidity/Premium' +
+     A                                      'Sign')
+     A**Start of change 222727
+     A            HKTNTR    R               REFFLD(MTTI)
+     A                                      TEXT('Interest using NTR')
+     A                                      COLHDG('Interest using NTR')
+     A**End of change 222727
+     A**Start of change CGL029
+     A            HKDORI        18A
+     A            HKMORI        18A
+     A            HKDOPI        18A
+     A            HKMOPI        18A
+     A            HKRONS        18A
+     A            HKPONS        18A
+     A            HKINSA        21A
+     A**End of change CGL029
+      **Start of change CGL014
+     A            HKBCAM        15P 0       TEXT('Blocked Collateral Amount')
+     A                                      COLHDG('Blocked Collateral' +
+     A                                             '      Amount')
+      **End of change CGL014
+      **Start of change CDL016
+     A            HKROLI         1A         TEXT('Rollover Indicator')
+     A                                      COLHDG('Rollover' 'Indicator')
+     A            HKSOFD        20A         TEXT('Source of Funds')
+     A                                      COLHDG('Source of Funds')
+     A            HKBLKA         1A         TEXT('Blocked Indicator')
+     A                                      COLHDG('Blocked' 'Indicator')
+      **End of change CDL016
+      **Start of change CDL017
+     A            HKCAND         5P 0       TEXT('Cancellation Date')
+     A                                      COLHDG('Cancellation' 'Date')
+     A            HKPNPR         1A         TEXT('Penalty Pay/Receive')
+     A                                      COLHDG('Penalty' 'Pay/Receive')
+      **End of change CDL017
+      **Start of change CDL019
+     A            HKFBRT         1A         TEXT('Fix Base Rate')
+     A                                      COLHDG('Fix' 'Base' 'Rate')
+      **End of change CDL019
+      **Start of change CDL018
+     A            HKRMAC         1A         TEXT('Receipt - More A/C')
+     A                                      COLHDG('Receipt' 'More A/C')
+     A            HKPMAC         1A         TEXT('Pay - More A/C')
+     A                                      COLHDG('Pay' 'More A/C')
+      **End of change CDL018
+     A**Start of change CDL033
+     A            HKRCDT    R               REFFLD(LCD)
+     A                                      TEXT('Rate Change Date')
+     A                                      COLHDG('Rate Change Date')
+     A            HKRCFR         1A         TEXT('Rate Change Frequency')
+     A                                      COLHDG('Rate Change Freq.')
+     A            HKRCDM    R               REFFLD(DLUP)
+     A                                      TEXT('Rate Change Days')
+     A                                      COLHDG('Rate Change Days')
+     A            HKSTRF         1A         TEXT('Short Term Rate Flag')
+     A                                      COLHDG('Short Term Rate' +
+     A                                             'Flag')
+     A            HKSTRT    R               REFFLD(INTR)
+     A                                      TEXT('Short Term Rate')
+     A                                      COLHDG('Short Term Rate')
+     A            HKAILC    R               REFFLD(AITC)
+     A                                      TEXT('Accrd Int as of +
+     A                                            Last Int Pymnt/Chg +
+     A                                            Date')
+     A                                      COLHDG('Accrd Int as of' +
+     A                                             'Last Int Pymnt/Chg' +
+     A                                             'Date')
+     A            HKACDA    R               REFFLD(AITC)
+     A                                      TEXT('Accrd COF as of +
+     A                                            Last Int Pymnt/Chg +
+     A                                            Date')
+     A                                      COLHDG('Accrd COF as of' +
+     A                                             'Last Int Pymnt/Chg' +
+     A                                             'Date')
+     A            HKSTVF         1A         TEXT('Short Term Rate on +
+     A                                            Value Date Flag')
+     A                                      COLHDG('Short Term Rate' +
+     A                                             'on Value Date' 'Flag')
+     A            HKBSVF         1A         TEXT('Fixed Base Rate Applied +
+     A                                            on Value Date Flag')
+     A                                      COLHDG('Fixed Base Rate' +
+     A                                             'Applied on' +
+     A                                             'Value Date Flag')
+     A            HKFXDM    R               REFFLD(DLUP)
+     A                                      TEXT('Rate Fix Days')
+     A                                      COLHDG('Rate Fix Days')
+     A            HKINFD    R               REFFLD(UINFD)
+     A                                      TEXT('Rate Fix Date')
+     A                                      COLHDG('Rate Fix Date')
+     A            HKINFF         1A         TEXT('Rate Fix Date Processed Flag')
+     A                                      COLHDG('Rate Fix Date' +
+     A                                             'Processed Flag')
+     A            HKBSRF    R               REFFLD(INTR)
+     A                                      TEXT('Fixed Base Rate')
+     A                                      COLHDG('Fixed Base Rate')
+     A            HKFRCI    R               REFFLD(CNFI)
+     A                                      TEXT('Floating Rate CD Indicator')
+     A                                      COLHDG('FRCD' 'Ind')
+      *
+      **                                    Bit 0 - interest advice already gen'd
+      **                                            for current interest period
+      *
+     A            HKFYLD         5A
+     A                                      TEXT('Forward Yield Curve')
+     A                                      COLHDG('Forward Yield Curve')
+      **End of change CDL033
+      **Start of change CDL038
+     A            HKCLAS         4A         TEXT('Deal Class')
+     A                                      COLHDG('Deal' 'Class')
+      **End of change CDL038
+     A**Start of change CDL049
+     A            HKRRAT        13P 8       TEXT('Reference Rate')
+     A                                      COLHDG('Reference Rate')
+     A**End of change CDL049
+     A*                                              End   /CDL038/
+      **Start of change CER020
+     A            HKAUT1         1A         TEXT('Automatic Authorisation')
+     A                                      COLHDG('Automatic' 'Authorisation')
+      *
+     A            HKISDT    R               REFFLD(DVSD)
+     A                                      TEXT('Initial Start Date')
+     A                                      COLHDG('Initial Start' +
+     A                                             'Date')
+      *
+     A            HKFMDT    R               REFFLD(DVSD)
+     A                                      TEXT('Final Maturity Date')
+     A                                      COLHDG('Final Maturity' +
+     A                                             'Date')
+      *
+     A            HKORDN    R               REFFLD(DADN)
+     A                                      TEXT('Original Deal +
+     A                                            Number')
+     A                                      COLHDG('Original Deal' +
+     A                                             'Number')
+      **End of change CER020
+      **Start of change CRE073
+     A            HKCNSP        11P 7       TEXT('Contractual Spread')
+     A                                      COLHDG('Contractual' 'Spread')
+     A            HKRDMT         7A         TEXT('Rounding Method')
+     A                                      COLHDG('Rounding' 'Method')
+     A            HKRDFD         4A         TEXT('Rounding Fraction/Decimal')
+     A                                      COLHDG('Rounding' 'Fraction/+
+     A                                      Decimal')
+      **End of change CRE073
+      ** Start of change CDL094
+     A            HKRBB1        35          TEXT('Recv Bank to Bank Info 1')
+     A                                      COLHDG('Recv Bank' 'to Bank Info 1')
+     A            HKRBB2        35          TEXT('Recv Bank to Bank Info 2')
+     A                                      COLHDG('Recv Bank' 'to Bank Info 2')
+     A            HKRBB3        35          TEXT('Recv Bank to Bank Info 3')
+     A                                      COLHDG('Recv Bank' 'to Bank Info 3')
+     A            HKRBB4        35          TEXT('Recv Bank to Bank Info 4')
+     A                                      COLHDG('Recv Bank' 'to Bank Info 4')
+     A            HKRBB5        35          TEXT('Recv Bank to Bank Info 5')
+     A                                      COLHDG('Recv Bank' 'to Bank Info 5')
+     A            HKRBB6        35          TEXT('Recv Bank to Bank Info 6')
+     A                                      COLHDG('Recv Bank' 'to Bank Info 6')
+      ** End of change CDL094
+      ** Start of change CDL096
+     A            HKC1PC    R               REFFLD(CCYD)
+     A                                      TEXT('Currency 1 for Payment +
+     A                                            Convention')
+     A                                      COLHDG('Currency 1 for' +
+     A                                             'Payment Convention')
+     A            HKC2PC    R               REFFLD(CCYD)
+     A                                      TEXT('Currency 2 for Payment +
+     A                                            Convention')
+     A                                      COLHDG('Currency 2 for' +
+     A                                             'Payment Convention')
+     A            HKC3PC    R               REFFLD(CCYD)
+     A                                      TEXT('Currency 3 for Payment +
+     A                                            Convention')
+     A                                      COLHDG('Currency 3 for' +
+     A                                             'Payment Convention')
+     A            HKC4PC    R               REFFLD(CCYD)
+     A                                      TEXT('Currency 4 for Payment +
+     A                                            Convention')
+     A                                      COLHDG('Currency 4 for' +
+     A                                             'Payment Convention')
+     A            HKC5PC    R               REFFLD(CCYD)
+     A                                      TEXT('Currency 5 for Payment +
+     A                                            Convention')
+     A                                      COLHDG('Currency 5 for' +
+     A                                             'Payment Convention')
+     A            HKC6PC    R               REFFLD(CCYD)
+     A                                      TEXT('Currency 6 for Payment +
+     A                                            Convention')
+     A                                      COLHDG('Currency 6 for' +
+     A                                             'Payment Convention')
+     A            HKC7PC    R               REFFLD(CCYD)
+     A                                      TEXT('Currency 7 for Payment +
+     A                                            Convention')
+     A                                      COLHDG('Currency 7 for' +
+     A                                             'Payment Convention')
+     A            HKC8PC    R               REFFLD(CCYD)
+     A                                      TEXT('Currency 8 for Payment +
+     A                                            Convention')
+     A                                      COLHDG('Currency 8 for' +
+     A                                             'Payment Convention')
+     A            HKC9PC    R               REFFLD(CCYD)
+     A                                      TEXT('Currency 9 for Payment +
+     A                                            Convention')
+     A                                      COLHDG('Currency 9 for' +
+     A                                             'Payment Convention')
+     A            HKC0PC    R               REFFLD(CCYD)
+     A                                      TEXT('Currency 10 for Payment +
+     A                                            Convention')
+     A                                      COLHDG('Currency 10 for' +
+     A                                             'Payment Convention')
+     A            HKPYDC    R               REFFLD(PYTP)
+     A                                      TEXT('Payment Date +
+     A                                            Convention')
+     A                                      COLHDG('Payment Date' +
+     A                                             'Convention')
+     A            HKAMTC    R               REFFLD(PYTP)
+     A                                      TEXT('Amount +
+     A                                            Convention')
+     A                                      COLHDG('Amount' +
+     A                                             'Convention')
+      ** End of change CDL096

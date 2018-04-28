@@ -1,0 +1,1482 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Input cycle netting pay/receives')            *
+      *****************************************************************
+      *                                                               *
+      *     Midas - Dealing Module                                    *
+      *                                                               *
+      *     DL0350  - Midas PAY/RECEIVE Netting Extract               *
+      *                                                               *
+      *  Function:  This program will produce netting messages        *
+      *             for any Confirmed Nets                            *
+      *  (phase(s)) I/C                                               *
+      *                                                               *
+      *  Called By: mmCnnnn - (program name)                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *                                                               *
+      *  Last Amend No. 258429             Date 29Apr14               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247400             Date 25Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 240603B            Date 16Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 239845             Date 31Aug06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CDL025             Date 25Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CDL002  *CREATE    Date 14Apr97               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  258429 - If Telex Notice days is zero, calculate no. of      *
+      *           working days from next working date minus 1.        *
+      *           Reverse 247400.                                     *
+      *         - Applied for MD023368                                *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  247400 -  Placed an additional validation that will check    *
+      *            if the value date of the deal is a holiday on the  *
+      *            local currency if the telex notice days of the     *
+      *            currency is zero.                                  *
+      *  240603B - Correct calculation of WFTXDY for COB.             *
+      *  239845 - Correct the calculation of telex notice period.     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CDL025 - FX Netting Payment Generation                       *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *     CDL002 - FX Netting                                       *
+      *                                                               *
+      *****************************************************************
+      *
+      *  Basic Logic:
+      *
+      *   The net master file (FXNETMPD) is checked to identify
+      *   any nets that require production of Pay/Receive
+      *   instructions, any that are found output a record to the
+      *   extract file (PREXPH)
+      *
+      *
+      *****************************************************************
+     FFXNETML2IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            FXNETMD0                          KRENAMEFXNETL2
+      *  Net master file by currency/value date/net ref
+     FFXNETML3UF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *  Net master file by net reference
+     FFXNETSL0UF  E           K        DISK                                              CDL025
+     F                                              KINFSR *PSSR                         CDL025
+      ** FX Confirmed split nets master file                                             CDL025
+     FPREXPH  O   E                    DISK
+     F                                              KINFSR *PSSR
+      *  Pay/Receive extract details
+     FPREXHH  O   E                    DISK
+     F                                              KINFSR *PSSR
+      *  Pay/Receive extract header
+     FPREXZZ  O   E                    DISK
+     F                                              KINFSR *PSSR
+      *  Pay/Receive extract trailer
+     FSDCGRPL2IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F/COPY WNCPYSRC,DL0350F001
+      *  Netting Group Code Table
+     FDL0350AUO   E                    PRINTER
+      *  Audit trail
+      *
+      * ID C  F  H  L    Function of indicators
+      *    25            Error processing
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      *
+     E/COPY ZSRSRC,ZHOLE
+     E/COPY ZSRSRC,ZF2CE
+     E/COPY ZSRSRC,ZDATE9Z1
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+     I/COPY ZSRSRC,ZF2CI
+     I/COPY ZSRSRC,ZDATE9Z2
+      *
+     IDSNETR      DS                             19
+      *   Datastructure for net reference
+     I                                        1  19 AMNETR
+     I                                        1   3 DSNMOD
+     I                                        4   7 DSNVDN
+     I                                        8  10 DSNCCY
+     I                                       11  16 DSNCUS
+     I                                       11  14 DSNGRP
+     I                                       15  16 DSNG
+     I                                       17  19 DSNSEQ
+      *
+      *
+      *
+     ILCLDTA     UDS
+      **  Local data area for PGM-TO-PGM info
+     I                                      101 111 CALPGM
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *
+     IDSPREX    E DSPREXPH
+      ** PAY/RECEIVE EXTRACT DETAILS
+      *
+     ISDMMOD    E DSSDMMODPD
+      * MODULE DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDTRAD    E DSSDTRADPD
+      * TRADING DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDCUST    E DSSDCUSTPD
+      * CUSTOMER DETAILS ACCESSED VIA ACCESS PROGRAM
+      *
+     ISDNOST    E DSSDNOSTPD
+      * NOSTRO DETAILS ACCESSED VIA ACCESS PROGRAM
+     I              QQACCD                          QQACCX                                    CGL029
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** BRANCH DETAILS ACCESSED VIA ACCESS PROGRAM
+     I              QQDFAC                          QQDFAX                                    CGL029
+      *
+     I@BANK     E DSSDBANKPD
+      * DATA STRUCTURE FOR BANK DETAILS
+      *
+     I@CURR     E DSSDCURRPD
+      * DATA STRUCTURE FOR CURRENCIES
+      *
+     ISCSARD    E DSSCSARDPD                                                             CDL025
+     I* SAR FILE DETAILS ACCESSED VIA ACCESS PROGRAM  AOSARDR0                           CDL025
+      *                                                                                  CDL025
+     I***MPHAS*******DS                                                                239845 CCB020
+     I**********                              1   1 STATUS                             239845 CCB020
+      **  Data structure to check MPHAS for Close of Business                                 239845
+      *                                                                                       239845
+     I/COPY WNCPYSRC,DL0350I001
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+      *   Retrieve UsrId From Programme Status Data Structure
+     IPSDS       SDS
+     I                                        1  10 ##PGM
+     I                                     *PARMS   NOPARM
+     I                                      244 253 WRKSID
+     I                                      254 263 USERID
+     I                                      264 269 JOBNBR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *   initial processing
+     C                     EXSR SRINIT
+      *
+      *
+      *   M A I N   P R O C E S S I N G
+      *-------------------------------------------------------------------
+      *
+      **  Read all relevant net master records
+      *
+     C                     READ FXNETML2                 LR
+     C           *INLR     DOWEQ'0'
+      *
+      **  if currency has changed recalculate its telex notice date
+      *
+     C           AMCCYD    IFNE SVCCY
+     C           *LIKE     DEFN AMCCYD    SVCCY
+     C                     MOVE AMCCYD    SVCCY
+     C                     EXSR SRTNDY
+     C                     ENDIF
+      *****************************************************************                247400 258429
+      **If*telex*notice*days*is*zero,**********************************                247400 258429
+      **Check*if*the*value*date*is*a*holiday*in*the*local*currency*****                247400 258429
+     C********** ZNRDYS    IFEQ 0                                                      247400 258429
+     C**********           Z-ADD*ZEROS    ZINDY   30                                   247400 258429
+     C********** AMVALD    SUB  DGJDNB    ZINDY                                        247400 258429
+     C**********           ADD  1         ZINDY                                        247400 258429
+     C********** ZHLA,ZINDYDOWEQ'X'                                                    247400 258429
+     C********** AMVALD    SUB  1         AMVALD                                       247400 258429
+     C**********           SUB  1         ZINDY                                        247400 258429
+     C**********           ENDDO                                                       247400 258429
+     C**********           ENDIF                                                       247400 258429
+      *
+      ** Check for split settlements                                                     CDL025
+     C           CDL025    IFEQ 'Y'                                                      CDL025
+     C           AMNETR    SETLLFXNETSL0                                                 CDL025
+     C           AMNETR    READEFXNETSL0                 99                              CDL025
+     C                     ELSE                                                          CDL025
+     C                     SETON                     99                                  CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      ** Not Split                                                                       CDL025
+     C           *IN99     IFEQ '1'                                                      CDL025
+      **  create a PREXPH record if net is confirmed,
+      **  within telex notice period and has not yet produced
+      **  pay/receives.
+      *
+     C           AMRECI    IFEQ 'C'
+     C           AMPRGI    ANDEQ*BLANK
+     C           BJRDNB    ANDLEAMVALD
+     C           AMVALD    ANDLEWFTXDY
+      *
+      **  create a PREXPH record if net is confirmed, within
+      **  telex notice period, and has produced pay/receives
+      **  but has been subsequently amended.
+      *
+     C           AMRECI    OREQ 'C'
+     C           AMPRGI    ANDEQ'A'
+     C           BJRDNB    ANDLEAMVALD
+     C           AMVALD    ANDLEWFTXDY
+      *
+      **  create a PREXPH record if net is a reversal of a
+      **  confirmed net, and has not yet produced pay/receives
+      **  for the reversal.
+      *
+     C           AMRECI    OREQ 'R'
+     C           AMPRGI    ANDEQ'G'
+     C           BJRDNB    ANDLEAMVALD
+      *
+     C                     EXSR SRIPRX
+     C                     ENDIF
+      ** Is Split                                                                        CDL025
+     C                     ELSE                                                          CDL025
+     C           *IN99     DOWEQ'0'                                                      CDL025
+      **  create a PREXPH record if net is confirmed,                                    CDL025
+      **  within telex notice period and has not yet produced                            CDL025
+      **  pay/receives.                                                                  CDL025
+      *                                                                                  CDL025
+     C           ASRECI    IFEQ 'C'                                                      CDL025
+     C           ASPRGI    ANDEQ*BLANK                                                   CDL025
+     C           BJRDNB    ANDLEASVALD                                                   CDL025
+     C           ASVALD    ANDLEWFTXDY                                                   CDL025
+      *                                                                                  CDL025
+      **  create a PREXPH record if net is confirmed, within                             CDL025
+      **  telex notice period, and has produced pay/receives                             CDL025
+      **  but has been subsequently amended.                                             CDL025
+      *                                                                                  CDL025
+     C           ASRECI    OREQ 'C'                                                      CDL025
+     C           ASPRGI    ANDEQ'A'                                                      CDL025
+     C           BJRDNB    ANDLEASVALD                                                   CDL025
+     C           ASVALD    ANDLEWFTXDY                                                   CDL025
+      *                                                                                  CDL025
+      **  create a PREXPH record if net is a reversal of a                               CDL025
+      **  confirmed net, and has not yet produced pay/receives                           CDL025
+      **  for the reversal.                                                              CDL025
+      *                                                                                  CDL025
+     C           ASRECI    OREQ 'R'                                                      CDL025
+     C           ASPRGI    ANDEQ'G'                                                      CDL025
+     C           BJRDNB    ANDLEASVALD                                                   CDL025
+      *                                                                                  CDL025
+     C                     EXSR SRIPRY                                                   CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C           AMNETR    READEFXNETSL0                 99                              CDL025
+     C                     ENDDO                                                         CDL025
+      *                                                                                  CDL025
+     C                     ENDIF                                                         CDL025
+      **  check next net to process, skip to next currency
+      **  when value date passes telex notice date
+      *
+     C           FXKEY     KLIST
+     C                     KFLD           AMCCYD
+     C                     KFLD           AMVALD
+     C                     KFLD           AMNETR
+     C           AMVALD    IFGT WFTXDY
+     C           FXKEY     SETGTFXNETML2
+     C                     ENDIF
+      *
+     C                     READ FXNETML2                 LR
+      *
+     C                     ENDDO
+      *
+      *-------------------------------------------------------------------
+      *
+      **  termination processing
+      *
+     C                     EXSR SRTERM
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRIPRX   - creates an output record for PREXPH from the       *
+      *            net master file FXNETMPD                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRIPRX    BEGSR
+      *
+      **  Set up KEY to access customer groups file SDCGRP2
+      *
+     C           CUKEY     KLIST
+     C                     KFLD           SETNO   1
+     C                     KFLD           DSNGRP
+     C                     MOVE '*'       SETNO
+      *
+      **  if settlement type not one of following do not output
+      **  if net amount is zero do not output
+      **  update pay/rec generated indicator
+      **  and end process
+      *
+     C           AMSETM    IFNE 01
+     C           AMSETM    ANDNE02
+     C           AMSETM    ANDNE07
+     C           AMSETM    ANDNE08
+     C           AMSETM    ANDNE12
+     C           AMDBUY    OREQ 0
+     C                     EXSR SRUPDP
+     C                     GOTO ENIPRX
+     C                     ENDIF
+      *
+      **  reset output fields
+      *
+     C                     CLEARDSPREX
+      *
+      **  set message type indicator
+      *
+     C                     EXSR SRMTIN
+      *
+      **  if error message type
+      **  if not SWIFT message type and a reversed confirmed net
+      **  update pay/rec generated indicator
+      **  and end process
+      *
+     C           MTIN      IFEQ 99
+     C           MTIN      ORNE 01
+     C           AMRECI    ANDEQ'R'
+     C                     EXSR SRUPDP
+     C                     GOTO ENIPRX
+     C                     ENDIF
+      *
+     C                     MOVE 'D'       RECI
+     C           AMBSIN    IFEQ 'B'
+     C                     MOVE 'R'       PYRC
+     C                     ELSE
+     C                     MOVE 'P'       PYRC
+     C                     ENDIF
+     C                     MOVE AMSETM    SETP
+     C                     Z-ADD0         PROD
+     C                     MOVE AMCCYD    CCY
+     C                     MOVE AMOURN    OSAC
+      *
+      ** If SWIFT then Our settlement a/c
+      ** is customer no/----/nostrono.
+      *
+     C           MTIN      IFEQ 01
+     C                     MOVE *BLANKS   OSAC
+     C                     MOVE A7NONB    OSAC
+     C                     MOVELBBCUST    OSAC
+     C                     ENDIF
+      *
+     C                     MOVE AMONOB    OSBR
+      *
+      ** ignore federal funds ??uses bits 2&3 of DSTI
+      ** on deals file if either are on FFIN=1 else =2 USD only
+      *
+     C                     Z-ADD0         FFIN
+     C                     Z-ADDAMVALD    VDAT
+      *
+      **  for buy use intermediary bank, for sale use account
+      **  with bank.
+      *
+     C           AMBSIN    IFEQ 'B'
+     C                     MOVELAMIBNK    TSEN
+     C                     ELSE
+     C                     MOVELAMAWBN    TSEN
+     C                     ENDIF
+      *
+      **  if SWIFT default their settlement nostro to ours
+      *
+     C           MTIN      IFEQ 01
+      *
+     C           TSEN      IFEQ *BLANKS
+     C                     MOVELOSAC      TSEN
+     C                     ENDIF
+      *
+      **  if SWIFT customer no. is ordering bank else
+      **  ordering customer
+      *
+     C********** AMOBNK    IFNE 0                                                             CSD027
+     C           AMOBNK    IFNE *BLANKS                                                       CSD027
+     C                     MOVE AMOBNK    CNUM
+     C                     ELSE
+     C                     MOVE AMORDC    CNUM
+     C                     END
+     C                     ELSE
+      *
+      **  if not SWIFT
+      **  if net is for netting group use its settlement customer
+      **  or AO on shortname
+      **  otherwise take from net ref
+      *
+     C           DSNG      IFEQ '##'
+     C           CUKEY     CHAIN@CGRPL2              25
+     C           *IN25     IFEQ '0'
+     C                     MOVE D6NTCU    CNUM
+     C                     ELSE
+     C                     MOVE *BLANKS   CNUM
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE DSNCUS    CNUM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADDAMNTNO    DLNO
+     C                     Z-ADDAMDBUY    EAMT
+     C                     MOVE 'N'       RCDT
+     C                     Z-ADD0         DASN
+     C                     MOVELAMBENN    FACO
+      *
+      **  if receiver number set up primary cover message
+      *
+     C           AMRVNO    IFNE *BLANKS
+     C           AMBSIN    ANDEQ'S'
+     C                     MOVE 'P'       CVMI
+     C                     ELSE
+     C                     MOVE *BLANK    CVMI
+     C                     ENDIF
+      *
+     C                     MOVE AMBTB1    SPI
+      *
+     C           AMBSIN    IFEQ 'B'
+     C                     MOVE '1'       PRI1
+     C                     MOVE '0'       PRI3
+     C                     ELSE
+     C                     MOVE '0'       PRI1
+     C                     MOVE '1'       PRI3
+     C                     ENDIF
+      *
+     C                     MOVE '0'       PRI2
+      *
+      **  if branch code change get internal customer number
+      *
+     C           *LIKE     DEFN AMBRCA    SVBRCA
+     C           AMBRCA    IFNE SVBRCA
+     C                     MOVE AMBRCA    SVBRCA
+     C**********           CALL 'AOBRCHR0'                 **2                                CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD            **2
+     C                     PARM '*KEY   ' @OPTN            **2
+     C                     PARM AMBRCA    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFEQ *BLANKS                    B**3
+     C                     MOVE A8BICN    BICN
+     C                     ELSE
+     C                     MOVE *BLANKS   BICN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   DTYP
+     C                     MOVE *BLANKS   DLST
+     C                     MOVE AMBRCA    BRCA
+     C                     Z-ADD0         RCPI
+     C                     Z-ADD0         RRDN
+     C           AMBSIN    IFEQ 'B'
+     C                     MOVE 'V'       MTEX
+     C                     ELSE
+     C                     MOVE 'M'       MTEX
+     C                     ENDIF
+      *
+     C           AMBSIN    IFEQ 'S'
+     C                     MOVE AMOBNK    POBK
+     C                     MOVE AMRCRN    RCRD
+     C                     ENDIF
+      *
+     C                     MOVE AMNETR    NTRF
+      *
+      ** MT100 part of MT100/supplementary MT202,
+      ** our nostro currently set up in our settlement account
+      ** moves to senders correspondent and our settlement account
+      ** is now receiver
+      *
+     C           CVMI      IFEQ 'P'
+     C                     MOVELOSAC      SDRN
+     C           *LIKE     DEFN OSAC      SVOSAC
+     C                     MOVE OSAC      SVOSAC
+     C                     MOVE *BLANKS   OSAC
+     C                     MOVELAMRVNO    OSAC
+     C                     ENDIF
+      *
+      ** output extract record to PREXPH
+      *
+     C                     EXSR SRWRTP
+      *
+      ** produce MT202 part of MT100/supplementary MT202 if required
+      *
+     C           CVMI      IFEQ 'P'
+     C           AMCVMR    ANDEQ'Y'
+     C           MTIN      ANDEQ01
+     C                     EXSR SRCOVM
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL0350C001
+      *
+     C           ENIPRX    ENDSR
+      *
+      *****************************************************************
+     C/COPY WNCPYSRC,DL0350C002
+      /EJECT
+      *****************************************************************                  CDL025
+      *                                                               *                  CDL025
+      * SRIPRY   - creates an output record for PREXPH from the       *                  CDL025
+      *            Split Netting File FXNETSPD                        *                  CDL025
+      *                                                               *                  CDL025
+      *****************************************************************                  CDL025
+      *                                                                                  CDL025
+     C           SRIPRY    BEGSR                                                         CDL025
+      *                                                                                  CDL025
+      **  Set up KEY to access customer groups file SDCGRP2                              CDL025
+     C                     MOVE '*'       SETNO                                          CDL025
+      *                                                                                  CDL025
+      **  if settlement type not one of following do not output                          CDL025
+      **  if net amount is zero do not output                                            CDL025
+      **  update pay/rec generated indicator                                             CDL025
+      **  and end process                                                                CDL025
+      *                                                                                  CDL025
+     C           ASSETM    IFNE 01                                                       CDL025
+     C           ASSETM    ANDNE02                                                       CDL025
+     C           ASSETM    ANDNE07                                                       CDL025
+     C           ASSETM    ANDNE08                                                       CDL025
+     C           ASSETM    ANDNE12                                                       CDL025
+     C           ASDBUY    OREQ 0                                                        CDL025
+     C                     EXSR SRUPDY                                                   CDL025
+     C                     GOTO ENIPRY                                                   CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      **  reset output fields                                                            CDL025
+      *                                                                                  CDL025
+     C                     CLEARDSPREX                                                   CDL025
+      *                                                                                  CDL025
+      **  set message type indicator                                                     CDL025
+      *                                                                                  CDL025
+     C                     EXSR SRMTIN                                                   CDL025
+      *                                                                                  CDL025
+      **  if error message type                                                          CDL025
+      **  if not SWIFT message type and a reversed confirmed net                         CDL025
+      **  update pay/rec generated indicator                                             CDL025
+      **  and end process                                                                CDL025
+      *                                                                                  CDL025
+     C           MTIN      IFEQ 99                                                       CDL025
+     C           MTIN      ORNE 01                                                       CDL025
+     C           AMRECI    ANDEQ'R'                                                      CDL025
+     C                     EXSR SRUPDY                                                   CDL025
+     C                     GOTO ENIPRY                                                   CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     MOVE 'D'       RECI                                           CDL025
+     C           ASBSIN    IFEQ 'B'                                                      CDL025
+     C                     MOVE 'R'       PYRC                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE 'P'       PYRC                                           CDL025
+     C                     ENDIF                                                         CDL025
+     C                     MOVE ASSETM    SETP                                           CDL025
+     C                     Z-ADD0         PROD                                           CDL025
+     C                     MOVE ASCCYD    CCY                                            CDL025
+     C                     MOVE ASOURN    OSAC                                           CDL025
+      *                                                                                  CDL025
+      ** If SWIFT then Our settlement a/c                                                CDL025
+      ** is customer no/----/nostrono.                                                   CDL025
+      *                                                                                  CDL025
+     C           MTIN      IFEQ 01                                                       CDL025
+     C                     MOVE *BLANKS   OSAC                                           CDL025
+     C                     MOVE A7NONB    OSAC                                           CDL025
+     C                     MOVELBBCUST    OSAC                                           CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     MOVE ASONOB    OSBR                                           CDL025
+      *                                                                                  CDL025
+      ** ignore federal funds ??uses bits 2&3 of DSTI                                    CDL025
+      ** on deals file if either are on FFIN=1 else =2 USD only                          CDL025
+      *                                                                                  CDL025
+     C                     Z-ADD0         FFIN                                           CDL025
+     C                     Z-ADDASVALD    VDAT                                           CDL025
+      *                                                                                  CDL025
+      **  for buy use intermediary bank, for sale use account                            CDL025
+      **  with bank.                                                                     CDL025
+      *                                                                                  CDL025
+     C           ASBSIN    IFEQ 'B'                                                      CDL025
+     C                     MOVELASIBNK    TSEN                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVELASAWBN    TSEN                                           CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      **  if SWIFT default their settlement nostro to ours                               CDL025
+      *                                                                                  CDL025
+     C           MTIN      IFEQ 01                                                       CDL025
+      *                                                                                  CDL025
+     C           TSEN      IFEQ *BLANKS                                                  CDL025
+     C                     MOVELOSAC      TSEN                                           CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      **  if SWIFT customer no. is ordering bank else                                    CDL025
+      **  ordering customer                                                              CDL025
+      *                                                                                  CDL025
+     C********** ASOBNK    IFNE 0                                                      CDL025 CSD027
+     C           ASOBNK    IFNE *BLANKS                                                       CSD027
+     C                     MOVE ASOBNK    CNUM                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE ASORDC    CNUM                                           CDL025
+     C                     END                                                           CDL025
+     C                     ELSE                                                          CDL025
+      *                                                                                  CDL025
+      **  if not SWIFT                                                                   CDL025
+      **  if net is for netting group use its settlement customer                        CDL025
+      **  or AO on shortname                                                             CDL025
+      **  otherwise take from net ref                                                    CDL025
+      *                                                                                  CDL025
+     C           DSNG      IFEQ '##'                                                     CDL025
+     C           CUKEY     CHAIN@CGRPL2              25                                  CDL025
+     C           *IN25     IFEQ '0'                                                      CDL025
+     C                     MOVE D6NTCU    CNUM                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE *BLANKS   CNUM                                           CDL025
+     C                     ENDIF                                                         CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE DSNCUS    CNUM                                           CDL025
+     C                     ENDIF                                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     Z-ADDASNTNO    DLNO                                           CDL025
+     C                     Z-ADDASDBUY    EAMT                                           CDL025
+     C                     MOVE 'N'       RCDT                                           CDL025
+     C                     Z-ADD0         DASN                                           CDL025
+     C                     MOVELASBENN    FACO                                           CDL025
+      *                                                                                  CDL025
+      **  if receiver number set up primary cover message                                CDL025
+      *                                                                                  CDL025
+     C           ASRVNO    IFNE *BLANKS                                                  CDL025
+     C           ASBSIN    ANDEQ'S'                                                      CDL025
+     C                     MOVE 'P'       CVMI                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE *BLANK    CVMI                                           CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     MOVE ASBTB1    SPI                                            CDL025
+      *                                                                                  CDL025
+     C           ASBSIN    IFEQ 'B'                                                      CDL025
+     C                     MOVE '1'       PRI1                                           CDL025
+     C                     MOVE '0'       PRI3                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE '0'       PRI1                                           CDL025
+     C                     MOVE '1'       PRI3                                           CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     MOVE '0'       PRI2                                           CDL025
+      *                                                                                  CDL025
+      **  if branch code change get internal customer number                             CDL025
+      *                                                                                  CDL025
+     C           ASBRCA    IFNE SVBRCA                                                   CDL025
+     C                     MOVE ASBRCA    SVBRCA                                         CDL025
+     C                     CALL 'AOBRCHR1'                                               CDL025
+     C                     PARM *BLANKS   @RTCD                                          CDL025
+     C                     PARM '*KEY   ' @OPTN                                          CDL025
+     C                     PARM ASBRCA    @DSNB   3                                      CDL025
+     C           SDBRCH    PARM SDBRCH    DSSDY                                          CDL025
+     C           @RTCD     IFEQ *BLANKS                                                  CDL025
+     C                     MOVE A8BICN    BICN                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE *BLANKS   BICN                                           CDL025
+     C                     ENDIF                                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     MOVE *BLANKS   DTYP                                           CDL025
+     C                     MOVE *BLANKS   DLST                                           CDL025
+     C                     MOVE ASBRCA    BRCA                                           CDL025
+     C                     Z-ADD0         RCPI                                           CDL025
+     C                     Z-ADD0         RRDN                                           CDL025
+     C           ASBSIN    IFEQ 'B'                                                      CDL025
+     C                     MOVE 'V'       MTEX                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE 'M'       MTEX                                           CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C           ASBSIN    IFEQ 'S'                                                      CDL025
+     C                     MOVE ASOBNK    POBK                                           CDL025
+     C                     MOVE ASRCRN    RCRD                                           CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     MOVE ASNETR    NTRF                                           CDL025
+     C                     Z-ADDASSQNO    SSEQ                                           CDL025
+      *                                                                                  CDL025
+      ** MT100 part of MT100/supplementary MT202,                                        CDL025
+      ** our nostro currently set up in our settlement account                           CDL025
+      ** moves to senders correspondent and our settlement account                       CDL025
+      ** is now receiver                                                                 CDL025
+      *                                                                                  CDL025
+     C           CVMI      IFEQ 'P'                                                      CDL025
+     C                     MOVELOSAC      SDRN                                           CDL025
+     C                     MOVE OSAC      SVOSAC                                         CDL025
+     C                     MOVE *BLANKS   OSAC                                           CDL025
+     C                     MOVELASRVNO    OSAC                                           CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      ** output extract record to PREXPH                                                 CDL025
+      *                                                                                  CDL025
+     C                     EXSR SRWRTP                                                   CDL025
+      *                                                                                  CDL025
+      ** produce MT202 part of MT100/supplementary MT202 if required                     CDL025
+      *                                                                                  CDL025
+     C           CVMI      IFEQ 'P'                                                      CDL025
+     C           ASCVMR    ANDEQ'Y'                                                      CDL025
+     C           MTIN      ANDEQ01                                                       CDL025
+     C                     EXSR SRCOVM                                                   CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C           ENIPRY    ENDSR                                                         CDL025
+      *                                                                                  CDL025
+      *****************************************************************                  CDL025
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRUPDP   - updates the pay/receive generation flag on the     *
+      *            net master file for nets that do not produce an    *
+      *            extract record. This will prevent them being       *
+      *            processed in the next pay/receive run              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDP    BEGSR
+      *
+      **  save record id of previous access
+      *
+     C           *LIKE     DEFN AMRECI    SVRECI
+     C                     MOVE AMRECI    SVRECI
+      *
+     C           DSNETR    CHAINFXNETML3             25
+     C           *IN25     IFEQ '1'
+     C                     MOVE '001'     DBASE                 **********
+     C                     MOVEL'FXNETML3'DBFILE                * 001    *
+     C                     MOVE *BLANKS   DBKEY                 *        *
+     C                     MOVELDSNETR    DBKEY                 * DBERR  *
+     C                     EXSR *PSSR                           **********
+     C                     ENDIF
+      *
+      ** confirmed net: set indicator to 'G'enerated
+      *
+     C           SVRECI    IFEQ 'C'
+     C                     MOVE 'G'       AMPRGI
+     C                     ENDIF
+      *
+      ** reversed confirmed net: set indicator to 'R'eversal
+      ** generated
+      *
+     C           SVRECI    IFEQ 'R'
+     C                     MOVE 'R'       AMPRGI
+     C                     ENDIF
+      *
+     C                     MOVELWFDTCH    AMDTCH    P
+     C                     TIME           AMCHTI
+     C                     MOVE 'A'       AMCHTY
+     C                     MOVE USERID    AMCHUS
+     C                     MOVE WRKSID    AMCHWS
+      *
+      ** update net master record to PREXPH
+      *
+     C                     UPDATFXNETMD0               25
+      *
+     C           *IN25     IFEQ '1'
+     C                     MOVE '002'     DBASE                 **********
+     C                     MOVEL'FXNETML3'DBFILE                * 002    *
+     C                     MOVE *BLANKS   DBKEY                 *        *
+     C                     MOVELDSNETR    DBKEY                 * DBERR  *
+     C                     EXSR *PSSR                           **********
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************                  CDL025
+      *                                                               *                  CDL025
+      * SRUPDY   - updates the pay/receive generation flag on the     *                  CDL025
+      *            Split Nets file for nets that do not produce an    *                  CDL025
+      *            extract record. This will prevent them being       *                  CDL025
+      *            processed in the next pay/receive run              *                  CDL025
+      *                                                               *                  CDL025
+      *****************************************************************                  CDL025
+      *                                                                                  CDL025
+     C           SRUPDY    BEGSR                                                         CDL025
+      *                                                                                  CDL025
+      ** confirmed net: set indicator to 'G'enerated                                     CDL025
+      *                                                                                  CDL025
+     C           AMRECI    IFEQ 'C'                                                      CDL025
+     C                     MOVE 'C'       ASRECI                                         CDL025
+     C                     MOVE 'G'       ASPRGI                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      ** reversed confirmed net: set indicator to 'R'eversal                             CDL025
+      ** generated                                                                       CDL025
+      *                                                                                  CDL025
+     C           AMRECI    IFEQ 'R'                                                      CDL025
+     C                     MOVE 'R'       ASRECI                                         CDL025
+     C                     MOVE 'R'       ASPRGI                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     MOVELWFDTCH    ASDTCH    P                                    CDL025
+     C                     TIME           ASCHTI                                         CDL025
+     C                     MOVE 'A'       ASCHTY                                         CDL025
+     C                     MOVE USERID    ASCHUS                                         CDL025
+     C                     MOVE WRKSID    ASCHWS                                         CDL025
+      *                                                                                  CDL025
+      ** update Split net record                                                         CDL025
+      *                                                                                  CDL025
+     C                     UPDATFXNETSD0               25                                CDL025
+      *                                                                                  CDL025
+     C           *IN25     IFEQ '1'                                                      CDL025
+     C                     MOVE '009'     DBASE                 **********               CDL025
+     C                     MOVEL'FXNETSL0'DBFILE                * 009    *               CDL025
+     C                     MOVE *BLANKS   DBKEY                 *        *               CDL025
+     C                     MOVELDSNETR    DBKEY                 * DBERR  *               CDL025
+     C                     EXSR *PSSR                           **********               CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     ENDSR                                                         CDL025
+      *                                                                                  CDL025
+      *****************************************************************                  CDL025
+      /EJECT                                                                             CDL025
+      *****************************************************************
+      *                                                               *
+      * SRCOVM   - produces the extract for the MT202 part of an      *
+      *            MT100/supplementary MT202 message                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCOVM    BEGSR
+      *
+      **  fields have been set for the MT100 part so change relevant
+      **  fields for this MT202
+      *
+     C                     MOVE SVOSAC    OSAC
+     C           *IN99     IFEQ '1'                                                      CDL025
+     C                     MOVELAMRCRN    TSEN
+     C                     MOVE *BLANKS   FACO
+     C                     MOVELAMRVNO    FACO
+     C                     ELSE                                                          CDL025
+     C                     MOVELASRCRN    TSEN                                           CDL025
+     C                     MOVE *BLANKS   FACO                                           CDL025
+     C                     MOVELASRVNO    FACO                                           CDL025
+     C                     ENDIF                                                         CDL025
+     C                     MOVE 'S'       CVMI
+     C                     MOVE *BLANKS   SDRN
+     C                     MOVE *BLANKS   RCRD
+      *
+      ** output extract record to PREXPH
+      *
+     C                     EXSR SRWRTP
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRWRTP   - writes a record to the extract file PREXPH and     *
+      *            updates hash totals                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRTP    BEGSR
+      *
+     C                     WRITEPREXPHF                25
+     C           *IN25     IFEQ '1'
+     C                     MOVE '003'     DBASE                 **********
+     C                     MOVEL'PREXPH  'DBFILE                * 003    *
+     C                     MOVE *BLANKS   DBKEY                 *        *
+      *                                                         **********
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     EXSR HASH
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      ********************************************************************
+      *
+     C           HASH      BEGSR                           ***  HASH  ***
+     C                     Z-ADDINT       ZZTOTI
+     C                     Z-ADDDEC       ZZTOTD
+     C           EAMT      DIV  1000      ZZAMT
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    INT    150
+     C                     Z-ADDZZTOTD    DEC     30
+      *
+     C                     ADD  1         ROP     50
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRANOS   - access object to Nostros table                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRANOS    BEGSR
+      *
+     C                     MOVEL'*BLANKS' RTCD    7
+     C                     MOVEL'*KEY'    OPTN    7
+     C                     MOVE *BLANKS   KEYA    6
+     C                     MOVE AMCCYD    KEYB    3
+     C**********           MOVE *BLANKS   KEYC    4                                           CGL029
+     C                     MOVE *BLANKS   KEYC   10                                           CGL029
+     C                     MOVE *BLANKS   KEYD    2
+     C                     MOVELAMOURN    KEYE    2
+      *
+     C           *IN99     IFEQ '0'                                                      CDL025
+     C                     MOVE ASCCYD    KEYB                                           CDL025
+     C                     MOVELASOURN    KEYE                                           CDL025
+     C                     ENDIF                                                         CDL025
+      *
+     C                     CALL 'AONOSTR0'             90
+     C                     PARM           RTCD
+     C                     PARM           OPTN
+     C                     PARM           KEYA
+     C                     PARM           KEYB
+     C                     PARM           KEYC
+     C                     PARM           KEYD
+     C                     PARM           KEYE
+     C                     PARM *BLANKS   @KEYG   3
+     C                     PARM *BLANKS   @KEYH  10
+     C                     PARM *BLANKS   @KEYI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+     C           RTCD      IFNE *BLANK
+     C                     MOVE '008'     DBASE                 **********
+     C                     MOVEL'SDNOSTPD'DBFILE                * 008    *
+     C                     MOVE *BLANKS   DBKEY                 *        *
+     C           *IN99     IFEQ '1'                                                      CDL025
+     C                     MOVELAMCCYD    DBKEY                 * DBERR  *
+     C                     MOVE AMOURN    DBKEY                 **********
+     C                     ELSE                                                          CDL025
+     C                     MOVELASCCYD    DBKEY                 * DBERR  *               CDL025
+     C                     MOVE ASOURN    DBKEY                 **********               CDL025
+     C                     ENDIF                                                         CDL025
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRMTIN   - calculates MTIN value                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMTIN    BEGSR
+      *
+      ** Not Split                                                                       CDL025
+     C           *IN99     IFEQ '1'                                                      CDL025
+      *                                                                                  CDL025
+     C                     SELEC
+      *
+     C           AMSETM    WHEQ 07
+     C           AMBSIN    IFEQ 'B'
+     C           BGCHDL    ANDEQ'N'                                     INTRANET
+      *
+      ** INTRANET incomplete receive instructions for CHIPS
+      ** are selected
+      *
+     C           AMIBNK    ANDEQ*BLANKS
+     C           AMBSIN    OREQ 'S'
+     C           AMAWBN    ANDEQ*BLANKS
+     C                     MOVE '10'      MTIN
+     C                     ELSE
+     C                     MOVE '09'      MTIN
+      *
+      **  If CHIPS dealing activated; for payments in USD for today
+      **  set to CHIPS extract file
+      *
+     C           BGCHDL    IFEQ 'Y'
+     C           AMCCYD    ANDEQBLUSCY
+     C           AMVALD    ANDEQBJRDNB
+     C                     MOVE '02'      MTIN
+     C                     ELSE
+     C                     MOVE '99'      MTIN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           AMSETM    WHEQ 08
+     C                     MOVE '09'      MTIN
+     C           BGSWDL    IFEQ 'Y'
+     C                     EXSR SWADDR
+     C           *IN80     IFEQ '1'
+     C                     MOVE '01'      MTIN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           AMSETM    WHEQ 01
+     C           AMCCYD    IFEQ BJLCCY
+     C           BLLCTB    ANDEQ'B'
+     C                     MOVE '11'      MTIN
+     C                     ELSE
+     C           AMBSIN    IFEQ 'B'
+     C           AMIBNK    ANDEQ*BLANKS
+     C           AMBSIN    OREQ 'S'
+     C           AMAWBN    ANDEQ*BLANKS
+     C                     MOVE '10'      MTIN
+     C                     ELSE
+     C                     MOVE '09'      MTIN
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           AMSETM    WHEQ 02
+     C           AMSETM    OREQ 12
+     C                     MOVE '11'      MTIN
+      *
+     C                     OTHER
+     C                     MOVE '12'      MTIN
+      *
+     C                     ENDSL
+      *
+     C                     ELSE
+      ** Split                                                                           CDL025
+     C                     SELEC                                                         CDL025
+      *                                                                                  CDL025
+     C           ASSETM    WHEQ 07                                                       CDL025
+     C           ASBSIN    IFEQ 'B'                                                      CDL025
+     C           BGCHDL    ANDEQ'N'                                     INTRANET         CDL025
+      *                                                                                  CDL025
+      ** INTRANET incomplete receive instructions for CHIPS                              CDL025
+      ** are selected                                                                    CDL025
+      *                                                                                  CDL025
+     C           ASIBNK    ANDEQ*BLANKS                                                  CDL025
+     C           ASBSIN    OREQ 'S'                                                      CDL025
+     C           ASAWBN    ANDEQ*BLANKS                                                  CDL025
+     C                     MOVE '10'      MTIN                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE '09'      MTIN                                           CDL025
+      *                                                                                  CDL025
+      **  If CHIPS dealing activated; for payments in USD for today                      CDL025
+      **  set to CHIPS extract file                                                      CDL025
+      *                                                                                  CDL025
+     C           BGCHDL    IFEQ 'Y'                                                      CDL025
+     C           ASCCYD    ANDEQBLUSCY                                                   CDL025
+     C           ASVALD    ANDEQBJRDNB                                                   CDL025
+     C                     MOVE '02'      MTIN                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE '99'      MTIN                                           CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C           ASSETM    WHEQ 08                                                       CDL025
+     C                     MOVE '09'      MTIN                                           CDL025
+     C           BGSWDL    IFEQ 'Y'                                                      CDL025
+     C                     EXSR SWADDR                                                   CDL025
+     C           *IN80     IFEQ '1'                                                      CDL025
+     C                     MOVE '01'      MTIN                                           CDL025
+     C                     ENDIF                                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C           ASSETM    WHEQ 01                                                       CDL025
+     C           ASCCYD    IFEQ BJLCCY                                                   CDL025
+     C           BLLCTB    ANDEQ'B'                                                      CDL025
+     C                     MOVE '11'      MTIN                                           CDL025
+     C                     ELSE                                                          CDL025
+     C           ASBSIN    IFEQ 'B'                                                      CDL025
+     C           ASIBNK    ANDEQ*BLANKS                                                  CDL025
+     C           ASBSIN    OREQ 'S'                                                      CDL025
+     C           ASAWBN    ANDEQ*BLANKS                                                  CDL025
+     C                     MOVE '10'      MTIN                                           CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE '09'      MTIN                                           CDL025
+     C                     ENDIF                                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+     C           ASSETM    WHEQ 02                                                       CDL025
+     C           ASSETM    OREQ 12                                                       CDL025
+     C                     MOVE '11'      MTIN                                           CDL025
+      *                                                                                  CDL025
+     C                     OTHER                                                         CDL025
+     C                     MOVE '12'      MTIN                                           CDL025
+      *                                                                                  CDL025
+     C                     ENDSL                                                         CDL025
+      *                                                                                  CDL025
+     C                     ENDIF                                                         CDL025
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *    SWADDR - SUBROUTINE TO CHECK SETTLEMENT INSTRUCTIONS
+      *
+     C           SWADDR    BEGSR
+      *
+     C                     SETOF                     80
+      *
+      ** If settlement account is non blank it may be a nostro
+      ** customer number or customer shortname or a retail account
+      ** number
+      *
+      **  Check for empty field
+      *
+     C           *IN99     IFEQ '1'                                                           CDL025
+     C           AMOURN    CABEQ*BLANKS   SAEND
+     C                     ELSE                                                               CDL025
+     C           ASOURN    CABEQ*BLANKS   SAEND                                               CDL025
+     C                     ENDIF                                                              CDL025
+      *
+      ** Check for 2 digit NOSTRO code
+      *
+     C**********           MOVE AMOURN    CHK10  10                                           CGL029
+     C           *IN99     IFEQ '1'                                                           CDL025
+     C                     MOVE AMOURN    CHK10  16                                           CGL029
+     C                     ELSE                                                               CDL025
+     C                     MOVE ASOURN    CHK10                                               CDL025
+     C                     ENDIF                                                              CDL025
+      *
+     C           CHK10     IFEQ *BLANKS
+     C                     EXSR SRANOS
+      *
+      ** If NOSTRO not found skip to end of subroutine
+      *
+     C           @RTCD     CABNE*BLANK    SAEND
+      *
+      ** Move NOSTRO customer number to key for AOCUSTR0
+      *
+     C                     MOVELA7CUST    @KEYF
+      *
+      ** If not a NOSTRO 2 digit code set up key for AOCUSTR0
+      *
+     C                     ELSE
+     C           *IN99     IFEQ '1'                                                           CDL025
+     C                     MOVELAMOURN    @KEYF
+     C                     ELSE                                                               CDL025
+     C                     MOVELASOURN    @KEYF                                               CDL025
+     C                     ENDIF                                                              CDL025
+      *
+     C                     END
+      *
+      ** Now the details may be CUST No. or SHORTNAME
+      ** ACCESS program works for both
+      *
+      ** Call ACCESS prog. for Customer details.
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEYF  10
+     C                     PARM           @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      ** If record found check SW ID and SW MSG format flags
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           BBCSID    COMP *BLANKS              8080
+     C           BBGSFM    COMP 'Y'                      80
+      *
+      ** If SWIFT address BIC code do not output
+      *
+     C           '1'       SCAN BBCSID:8  X       10
+     C           BBGSFM    IFEQ 'Y'
+     C           X         ANDEQ8
+     C           *IN99     ANDEQ'1'                                                      CDL025
+     C           AMSETM    ANDEQ08
+     C           BBTXA1    ANDEQ*BLANKS
+     C           BBSTAD    ANDEQ*BLANKS
+     C           BBGSFM    OREQ 'Y'                                                      CDL025
+     C           X         ANDEQ8                                                        CDL025
+     C           *IN99     ANDEQ'0'                                                      CDL025
+     C           ASSETM    ANDEQ08                                                       CDL025
+     C           BBTXA1    ANDEQ*BLANKS                                                  CDL025
+     C           BBSTAD    ANDEQ*BLANKS                                                  CDL025
+     C                     SETOF                     80
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,DL0350C003
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '009'     DBASE                 **********
+     C                     MOVEL'SDCUSTPD'DBFILE                * 009    *
+     C                     MOVE *BLANKS   DBKEY                 *        *
+     C                     MOVEL@KEYF     DBKEY                 * DBERR  *
+     C                     EXSR *PSSR                           **********
+     C                     END
+      *
+     C           SAEND     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRTNDY   - calculates the date of a currency's telex notice   *
+      *            days in advance      (SR/#BBAB FX0380)             *
+      *                                                               *
+      *  Input                                                        *
+      *    AMCCYD   (3) - currency                                    *
+      *    BJDNWD (5,0) - day no. of next working day                 *
+      *                                                               *
+      *  Output                                                       *
+      *    WFTXDY (5,0) -  Midas day no. of telex notice days forward *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTNDY    BEGSR
+      *
+      **  Retrieve telex notice days for the currency
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM AMCCYD    @AJCD   3
+     C           @CURR     PARM @CURR     DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '004'     DBASE                 **********
+     C                     MOVEL'SDCURRPD'DBFILE                * 004    *
+     C                     MOVE *BLANKS   DBKEY                 *        *
+     C                     MOVELAMCCYD    DBKEY                 * DBERR  *
+     C                     EXSR *PSSR                           **********
+     C                     END
+      *
+      **  Calculate no. of working days forward from date
+      **  of next working day minus 1
+      *
+     C********** COB       IFEQ 'A'                                                    239845 CCB020
+     C           @RTPHS    IFEQ '*NO'                                                         CCB020
+     C                     Z-ADDBJRDNB    ZDAYNO                                              239845
+      *                                                                                       258429
+      ** If Telex Notice Days is zero, calculate working days                                 258429
+      ** from date of next working day minus 1                                                258429
+      *                                                                                       258429
+     C           A6TXND    IFEQ 0                                                             258429
+     C           BJDNWD    SUB  1         ZDAYNO                                              258429
+     C                     ENDIF                                                              258429
+     C                     ELSE                                                               239845
+     C********** BJDNWD    SUB  1         ZDAYNO                                             240603B
+     C                     Z-ADDBJDNWD    ZDAYNO                                             240603B
+     C                     ENDIF                                                              239845
+     C                     MOVE BJLCCY    ZCCY1
+     C                     MOVE BJSLCD    ZLOC1
+     C                     MOVE AMCCYD    ZCCY2
+     C                     MOVE *BLANKS   ZLOC2
+     C**********           MOVE A6TXND    ZNRDYS                                              239845
+     C                     Z-ADDA6TXND    ZNRDYS                                              239845
+     C                     EXSR ZF2C
+     C           *LIKE     DEFN BJRDNB    WFTXDY
+     C                     MOVE ZDYNBR    WFTXDY
+      *
+      *
+     C           #BBAB9    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRTERM     Termination processing                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR
+      *
+      ** output header record
+      *
+     C                     MOVE 'A'       RECI
+     C                     WRITEPREXHHF                25
+     C           *IN25     IFEQ '1'
+     C                     MOVE '005'     DBASE                 **********
+     C                     MOVEL'PREXHH  'DBFILE                *        *
+     C                     MOVE *BLANKS   DBKEY                 * 005    *
+      *                                                         **********
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** output trailer record
+      *
+     C                     MOVE 'T'       RECI
+     C           ROP       ADD  2         NORE
+     C                     Z-ADDINT       HRWN
+     C                     Z-ADDDEC       HRDC
+     C                     WRITEPREXZZF                25
+     C           *IN25     IFEQ '1'
+     C                     MOVE '006'     DBASE                 **********
+     C                     MOVEL'PREXZZ  'DBFILE                *        *
+     C                     MOVE *BLANKS   DBKEY                 * 006    *
+      *                                                         **********
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  produce audit report
+      *
+     C                     WRITEDL0350AH
+     C                     WRITEDL0350AD
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT     initial processing                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      **  access bank details for run date, next working day
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           @BANK     PARM @BANK     DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     MOVEL'900'     DBASE            * DBERR 900 *
+     C                     MOVEL@OPTN     DBOPTN  7        *************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  convert Midas run day number to YYYYMMDD
+      *
+     C                     Z-ADDBJRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C           *LIKE     DEFN AMDTCH    WFDTCH
+     C                     MOVE @@VDT     WFDTCH
+      *
+      * Call module prog. for module details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDMMODPD'DBFILE           * * * * * * *
+     C                     MOVEL'006'     DBASE            * DBERR 006 *
+     C                     MOVEL@OPTN     DBOPTN  7        * * * * * * *
+     C                     MOVEL'FIRST  ' DBKEY
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Call ACCESS program for trading details.
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDTRADPD'DBFILE           * * * * * * *
+     C                     MOVEL'007'     DBASE            * DBERR 007 *
+     C                     MOVEL@OPTN     DBOPTN  7        * * * * * * *
+     C                     MOVEL'FIRST  ' DBKEY
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Check if CDL025 is switched *ON.                                                CDL025
+     C                     CALL 'AOSARDR0'                                               CDL025
+     C                     PARM *BLANKS   @RTCD                                          CDL025
+     C                     PARM '*VERIFY' @OPTN                                          CDL025
+     C                     PARM 'CDL025'  @SARD   6                                      CDL025
+     C           SCSARD    PARM SCSARD    DSFDY                                          CDL025
+      *                                                                                  CDL025
+     C           @RTCD     IFNE *BLANKS                                                  CDL025
+     C                     MOVE 'N'       CDL025  1                                      CDL025
+     C                     ELSE                                                          CDL025
+     C                     MOVE 'Y'       CDL025                                         CDL025
+     C                     ENDIF                                                         CDL025
+      *                                                                                  CDL025
+      **  Set up MPHAS data area                                                              239845
+      *                                                                                       239845
+     C********** *NAMVAR   DEFN           MPHAS                                        239845 CCB020
+     C********** *LOCK     IN   MPHAS                                                  239845 CCB020
+     C**********           MOVE STATUS    COB     1                                    239845 CCB020
+     C**********           OUT  MPHAS                                                  239845 CCB020
+     C                     MOVEL'CBC00100'@CLPRM  9                                           CCB020
+     C                     MOVE '1'       @CLPRM                                              CCB020
+     C                     CALL @CLPRM                                                        CCB020
+     C                     PARM *BLANKS   @RTPHS  4                                           CCB020
+      *                                                                                       239845
+     C/COPY WNCPYSRC,DL0350C004
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZZADDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZF2C
+      /EJECT
+     C/COPY ZSRSRC,ZDATE9Z3
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE: *PSSR - Error handling subroutine.               *
+      *                                                               *
+      *  FIELDS USED:                                                 *
+      *                                                               *
+      *  CALLED BY : This routine is called if there are any program  *
+      *              or file errors.                                  *
+      *  CALLS :                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Set @ERR1 to 'Y' to prevent looping if further errors
+      *
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+      *
+     C                     MOVEL'DL0350'  DBPGM            *1
+     C                     MOVE '1'       *INU6            *1
+     C           DBASE     IFEQ *BLANKS
+     C                     MOVE '991'     DBASE            *1
+     C                     END
+      *
+      ** output details to report
+      *
+     C                     WRITEDL0350AH
+     C                     WRITEDL0350DB
+      *
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C           #PSSR9    ENDSR                                     *
+      *
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+  366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+    0000310005900090001200015100181002120024300273003040033400365

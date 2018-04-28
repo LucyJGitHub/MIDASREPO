@@ -1,0 +1,139 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/********************************************************************/
+/*                                                                  */
+/*       Midas       FUNDS TRANSFER MODULE                      */
+/*                                                                  */
+/*       FTC0000 - FUNDS TRANSFER module instalation                */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. S01117            DATE     17JUL90          *  S01117*/
+/*                                                                  */
+/********************************************************************/
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*       S01117 - MULTIBRANCHING CHANGES                            *  S01117*/
+/********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/************DCL        VAR(&USER) TYPE(*CHAR) LEN(10)               /*S01117*/
+             DCL        VAR(&LIBID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LIBL) TYPE(*CHAR) LEN(7)
+/************DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)                /*S01117*/
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)                /*S01117*/
+ 
+             DCL        VAR(&END) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FAIL) TYPE(*CHAR) LEN(1)
+ 
+/**/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
+/************DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)              /*S01117*/
+/**/
+/*       IF THE SYSTEM PHASE IS NOT 'D' TERMINATE                   */
+/**/
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
+             IF         COND(%SST(&MPHAS 1 1) *NE 'D') THEN(DO)
+             SNDPGMMSG  MSG('System must be in phase ''D''') +
+                          TOPGMQ(*EXT)
+                 GOTO       CMDLBL(TERM)
+             ENDDO
+/**/
+/*       OBTAIN THE SYSTEM LIBRARY PREFIX FROM SDSAT                */
+/**/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&LIBID)
+             CHGVAR     VAR(&LIBL) VALUE(&LIBID *TCAT 'DMLIB')
+/**/
+             CHGDTAARA  DTAARA(&LIBL/FTSTAT) VALUE('OLDNNN')
+             CHGDTAARA  DTAARA(&LIBL/FTTEMP) VALUE('OLDNNN')
+             CHGDTAARA  DTAARA(&LIBL/OTPAYDA) VALUE('0001')
+             CHGDTAARA  DTAARA(&LIBL/INPAYDA) VALUE('0001')
+             CHGDTAARA  DTAARA(&LIBL/RGPAYDA) VALUE('0001')
+             CHGDTAARA  DTAARA(&LIBL/CQCOLDA) VALUE('0001')
+             CHGDTAARA  DTAARA(&LIBL/CQPAYDA) VALUE('0001')
+             CHGDTAARA  DTAARA(&LIBL/NTRANDA) VALUE('0001')
+ 
+/**/
+/*    CHECK TO SEE IF FILE SET UP HAS BEEN RUN BEFORE              */
+/**/
+             CALL FT0001 (&FAIL)
+             IF         COND(&FAIL *EQ 'Y') THEN(DO)
+             SNDUSRMSG  MSG('The Funds Transfer file set up has been +
+                          run before, do you wish to continue? +
+                          (Y/N)') VALUES(Y N) DFT(N) TOMSGQ(*EXT) +
+                          MSGRPY(&END)
+             IF         COND((&END *EQ ('N')) *OR (&END *EQ ('n'))) +
+                          THEN(GOTO CMDLBL(TERM))
+             CLRPFM     FILE(OTPAYZZ)
+             CLRPFM     FILE(INPAYZZ)
+             CLRPFM     FILE(NTRANZZ)
+             CLRPFM     FILE(CQCODZZ)
+             CLRPFM     FILE(CQPACZZ)
+             CLRPFM     FILE(CQCOCZZ)
+             CLRPFM     FILE(CQREGZZ)
+             CLRPFM     FILE(CQPADZZ)
+             CLRPFM     FILE(PYCHGDD)
+             ENDDO
+FIRST:
+ 
+/**/
+/*       SET UP FILE TRAILERS                                       */
+/**/
+             CLRPFM     FILE(TABTG40)
+             CHGJOB SWS(XXXXXX00)
+             CALL       PGM(FT0000)
+/**/
+/*    DATABASE ERROR HANDLING                                      */
+/**/
+             IF   COND(%SWITCH(XXXXXX11))   THEN(DO)
+/*****************RTVDTAARA   DTAARA(LDA (134 44))   RTNVAR(&MEM)    /*S01117*/
+                  RTVDTAARA   DTAARA(LDA (134 50))   RTNVAR(&MEM)    /*S01117*/
+                  SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                  TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                  GOTO       CMDLBL(TERM)
+             ENDDO
+/**********************                                              /*S01117*/
+/********CALL*PAYMENT*CHARGES MAINTENANCE                            /*S01117*/
+/**********************                                              /*S01117*/
+/************CHGVAR**** VAR(&LIBL) VALUE(&LIBID *TCAT 'JLIB ')       /*S01117*/
+/**********************                                              /*S01117*/
+/*TRAIL:***STRJRNPF****FILE(TABTB10 PYCHGDD TABTB11 TABTB20 TABTG10 +/*S01117*/
+/**********************   TABTG20 TABLETJ TABLETL TABLETP TABLETR +  /*S01117*/
+/**********************   TABLET5 TABLETH TABTE10 TABTG40 MMODF)  +  /*S01117*/
+/**********************   JRN(ICJRN) IMAGES(*BOTH)                   /*S01117*/
+/**********************                                              /*S01117*/
+/**********************                                              /*S01117*/
+/********FT0030*SETS*ON POSN 57 IN MMOD AND BIT4 OF MODI4            /*S01117*/
+/**********************                                              /*S01117*/
+/************CALL****** PGM(FTC0030)                                 /*S01117*/
+/**********************                                              /*S01117*/
+/************ENDJRNPF** FILE(TABTB10 PYCHGDD TABTB11 TABTB20 TABTG10 +*S01117*/
+/**********************   TABTG20 TABLETJ TABLETL TABLETP TABLETR +  /*S01117*/
+/**********************   TABLET5 TABLETH TABTE10 TABTG40 MMODF) +   /*S01117*/
+/**********************   JRN(ICJRN)                                 /*S01117*/
+/**********************                                              /*S01117*/
+/********IF*FUNDS*TRANSFER MODULE IND IS NOT 'Y' GO BACK TO          /*S01117*/
+/********PAYMENT*CHARGES MAINTENANCE                                 /*S01117*/
+/**********************                                              /*S01117*/
+/************RTVDTAARA* DTAARA(MMOD) RTNVAR(&MMOD)                   /*S01117*/
+/************IF******** COND(%SST(&MMOD 57 1) *NE 'Y') THEN(DO)      /*S01117*/
+/************SNDPGMMSG* MSG('Warning - the funds transfer module +   /*S01117*/
+/**********************   indicator has not been set on') TOPGMQ(*EXT)*S01117*/
+/****************GOTO**     CMDLBL(TRAIL)                            /*S01117*/
+/************ENDDO*****                                              /*S01117*/
+/**********************                                              /*S01117*/
+/*       END OF PROGRAM                                             */
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ TERM:       ENDPGM
+/**/

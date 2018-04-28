@@ -1,0 +1,244 @@
+/*******************************************************************************
+/*                                                                             *
+/*       Midas - Global Processing                                             *
+/*                                                                             *
+/*       V_#FEEBRWR - Global Fee Details                                       *
+/*                                                                             *
+/*       (c) Misys International Banking Systems Ltd. 2008                     *
+/*                                                                             *
+/*       Last Amend No. CLE134             Date 01Aug12                        */
+/*       Prev Amend No. CLE148             Date 23Jul12                        *
+/*                      AR858231           Date 05Dec11                        */
+/*                      CSF011             Date 12Sep11                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CLE143             Date 06Dec10                        */
+/*                      CLE139             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      257127  *CREATE    Date 17Oct08                        */
+/*                                                                             *
+/*-----------------------------------------------------------------------------*
+/*                                                                             *
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CLE148 - Alpha Loan Reference                                         *
+/*       AR858231 - Error 500 is being displayed when All Columns is used      */
+/*                  as filter in the main list view                            */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           *
+/*       CLE143 - Original Loan Contract Date & Effective Interest             *
+/*                Rate (Recompile)                                             *
+/*       CLE139 - Lending Fee Capitalisation.                                  */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi (Recompile)                  */
+/*       257127 - Global processing. Patterned from V_#FEEMAST.                *
+/*                                                                             *
+/*******************************************************************************
+  CREATE VIEW
+  **********/**********
+  AS
+  SELECT
+  CASE WHEN L.PTYP IN (64,65,68,71) AND L.OLNO IS NOT NULL THEN
+  (select CGGLOB from GPGLCUSL where CGCNUM = L.OLNO and
+  CGZONE = GZSDBRCHPD.A8ZONE) ELSE GPGLCUSL.CGGLOB END AS CGGLOB,
+  FERECI, FEBRCA, FEACOF, FEFCCY, FEPYON, FEAUTO, FESTTL, FEOURS, FETHER,
+  FECALT, FEFRT1, FEFRT2, FEFRT3, FEFRT4, FEFRT5, FECALC, FEERAT, FEMDIN,
+  FEFREQ, FEDYIM, FEPIND, FEDIND, FELTYP, FESUTP,FECLAS,FESPTI,FEPPTI,FEEPTI,
+  FESBTI, FEPBTI, FEEBTI, FELCHT, FEOSBR, FETNLU, A.FSTS, A.IUSR, A.AUSR,
+  A.XUSR, A.PCRF, PTFI, SHFI, A.OSDB, A.OMDB, A.RSTM, A.RONS, A.RIBN, A.RIBA,
+  A.ROBN, A.ROCN, A.PSTM, A.PONS, A.PIBN, A.PIBA, A.POBN, A.POCN, A.RCRN,
+  A.RCRA, A.RVNO, A.AWBN, A.AWBA, A.BENN, A.BENA, A.DTP1, A.DTP2, A.DTP3,
+  A.DTP4, A.DCHG, A.BTB1, A.BTB2, A.BTB3, A.BTB4, A.BTB5, A.BTB6, A.CVMR,
+  GFPT, PTAI, SMAC, A.PCOB, FEPRFC, A.LSWC, A.LSWS, FESCCY, FEICCY, FEINDC,
+  FESWRI, FEREXR, FEREXI, FEPSCY,  FEPEXR, FEPEXI, A.FRNT, A.AFRT, A.REPA,
+  A.STMP, FESTAL, FEMASF,
+  CASE WHEN L.PTYP IN (64,65,68,71) AND L.OLNO IS NOT NULL THEN L.OLNO ELSE
+  FECNUM END AS PADCNUM,
+  DIGITS(FEFACL) AS PADFACL,
+  DIGITS(FEFSEQ) AS PADFSEQ,
+  DIGITS(FEFCOD) AS PADFCOD,
+  DIGITS(FESTTL) AS PADSTTL,
+  DIGITS(FEDYIM) AS PADDYIM,
+  DIGITS(FETNLU) AS PADTNLU,
+  DIGITS(A.RSTM) AS PADRSTM,
+  DIGITS(A.PSTM) AS PADPSTM,
+  CASE SUBSTR(DIGITS(FEFACL),1,3) WHEN '000' THEN ' ' ELSE
+    SUBSTR(DIGITS(FEFACL),1,3) END AS FCLTYTYPE,
+  CASE WHEN SUBSTR(DIGITS(FEFACL),4,2)= '00' THEN ' ' ELSE
+    SUBSTR(DIGITS(FEFACL),4,2) END AS FCLTYNO,
+**CASE*WHEN*FELOAN*=*0*THEN*'*'*ELSE*DIGITS(FELOAN)*END*AS*PADLOAN,*********                  CLE148
+**CASE*WHEN*FELOAN*=*0*THEN*F.BRCA*ELSE*K.BRCA*END*AS*FBRC,*****************                  CLE148
+**CASE*WHEN*FELOAN*=*0*THEN*F.CNUM*ELSE*K.CNUM*END*AS*FCUS,*****************                  CLE148
+**CASE*WHEN*FELOAN*=*0*THEN*F.FACT*ELSE*K.FACT*END*AS*FTYP,*****************                  CLE148
+**CASE*WHEN*FELOAN*=*0*THEN*F.FCNO*ELSE*K.FCNO*END*AS*FSQN,*****************                  CLE148
+  FELOAN AS PADLOAN,                                                                          CLE148
+  CASE WHEN FELOAN = '' THEN F.BRCA ELSE K.BRCA END AS FBRC,                                  CLE148
+  CASE WHEN FELOAN = '' THEN F.CNUM ELSE K.CNUM END AS FCUS,                                  CLE148
+  CASE WHEN FELOAN = '' THEN F.FACT ELSE K.FACT END AS FTYP,                                  CLE148
+  CASE WHEN FELOAN = '' THEN F.FCNO ELSE K.FCNO END AS FSQN,                                  CLE148
+  CASE WHEN A.ROBN = '' THEN ' ' ELSE      A.ROBN  END AS PADROBN,
+  CASE WHEN A.ROCN = '' THEN ' ' ELSE      A.ROCN  END AS PADROCN,
+  CASE WHEN A.POBN = '' THEN ' ' ELSE      A.POBN  END AS PADPOBN,
+  CASE WHEN A.POCN = '' THEN ' ' ELSE      A.POCN  END AS PADPOCN,
+  CASE WHEN SMAC = '' THEN ' ' ELSE        SMAC  END AS PADSMAC,
+  CASE WHEN A.LSWC = 0 THEN ' ' ELSE DIGITS(A.LSWC) END AS PADLSWC,
+  CASE WHEN A.LSWS = 0 THEN ' ' ELSE DIGITS(A.LSWS) END AS PADLSWS,
+  CASE WHEN FEPSTD=0 THEN NULL ELSE DATE(FEPSTD+719892) END AS FFEPSTD,
+  CASE WHEN FEPEND=0 THEN NULL ELSE DATE(FEPEND+719892) END AS FFEPEND,
+  CASE WHEN FENPYD=0 THEN NULL ELSE DATE(FENPYD+719892) END AS FFENPYD,
+  CASE WHEN FESDAT=0 THEN NULL ELSE DATE(FESDAT+719892) END AS FFESDAT,
+  CASE WHEN FELPDT=0 THEN NULL ELSE DATE(FELPDT+719892) END AS FFELPDT,
+  CASE WHEN FELADT=0 THEN NULL ELSE DATE(FELADT+719892) END AS FFELADT,
+  CASE WHEN FEDDAT=0 THEN NULL ELSE DATE(FEDDAT+719892) END AS FFEDDAT,
+  CASE WHEN FEORED=0 THEN NULL ELSE DATE(FEORED+719892) END AS FFEORED,
+  CASE WHEN FEPLPD=0 THEN NULL ELSE DATE(FEPLPD+719892) END AS FFEPLPD,
+  CASE WHEN FELCHD=0 THEN NULL ELSE DATE(FELCHD+719892) END AS FFELCHD,
+  CASE WHEN CGDTDL=0 THEN NULL ELSE DATE(CGDTDL+719892) END AS FCGDTDL,
+  FEFAMT AS SFEFAMT,
+  FEAMT1 AS SFEAMT1,
+  FEAMT2 AS SFEAMT2,
+  FEAMT3 AS SFEAMT3,
+  FEAMT4 AS SFEAMT4,
+  FEAMT5 AS SFEAMT5,
+  FEAMTP AS SFEAMTP,
+  FEAMTA AS SFEAMTA,
+  FEAMTS AS SFEAMTS,
+  FEADAT AS SFEADAT,
+  FEAMTO AS SFEAMTO,
+  FELPAM AS SFELPAM,
+  FEPAMS AS SFEPAMS,
+  FEPAMP AS SFEPAMP,
+  FEADBP AS SFEADBP,
+  FETADJ AS SFETADJ,
+  FEWOFF AS SFEWOFF,
+  FEAMTW AS SFEAMTW,
+  CASE WHEN FEFACL=0 THEN 'LF' ELSE 'FF' END AS FEECLASS,
+  CASE WHEN TRIM(FECALT)='' THEN 'F' ELSE 'C' END AS FEETYPE,
+  CASE WHEN A.PCRF LIKE '%0001' OR TRIM(A.PCRF)='' THEN 'N' ELSE 'Y' END
+  AS AUTGEN,
+  A8ZONE AS CUSTZONE,
+  GPGLCUSL.CGCSSN,GPGLCUSL.CGRNM,GPGLCUSL.CGRTN,
+  GPGLCUSL.CGICD,GPGLCUSL.CGACO,GPGLCUSL.CGCNCZ,GPGLCUSL.CGCOLC,
+  GPGLCUSL.CGBRCD,GPGLCUSL.CGCUST,GPGLCUSL.CGZONE,
+  F.PCRF AS FPCRF, L.PCRF AS LPCRF, F.LAID AS LAID,
+**CASE*WHEN*FELOAN*=*0**THEN F.SYIN****************************************                   CLE148
+  CASE WHEN FELOAN = '' THEN F.SYIN                                                           CLE148
+  WHEN ((L.PTFC = '' AND L.PTFT = 0 AND L.PTFN = 0) OR
+  (L.PTFC = '000000' AND L.PTFT = 0 AND L.PTFN = 0)) THEN K.SYIN
+  WHEN ((L.PTFC <> '' AND L.PTFT<> 0 AND L.PTFN <> 0) OR
+  (L.PTFC <> '000000' AND L.PTFT<> 0 AND L.PTFN <> 0)) THEN Z.SYIN
+  END AS SYIN,
+**CASE*WHEN*FELOAN*=*0**THEN F.PRTR****************************************                   CLE148
+  CASE WHEN FELOAN = '' THEN F.PRTR                                                           CLE148
+  WHEN ((L.PTFC = '' AND L.PTFT = 0 AND L.PTFN = 0) OR
+  (L.PTFC = '000000' AND L.PTFT = 0 AND L.PTFN = 0)) THEN K.PRTR
+  WHEN ((L.PTFC <> '' AND L.PTFT<> 0 AND L.PTFN <> 0) OR
+  (L.PTFC <> '000000' AND L.PTFT<> 0 AND L.PTFN <> 0)) THEN Z.PRTR
+**END*AS*PRTR********************************************************************             CLE139
+**END*AS*PRTR,*FECAPI************************************************************    CLE139 AR858231
+  END AS PRTR, O.FQTAX, O.FQHFLF, O.FQHDTE,                                                 AR858231
+  CASE WHEN O.FQDCST = '' THEN '' ELSE CONCAT(CONCAT(CONCAT(CONCAT(                         AR858231
+    O.FQDBRC, O.FQDCST), O.FQDCCY), DIGITS(O.FQDACD)), DIGITS(O.FQDASC))                    AR858231
+  END AS FQDACCN, O.FQSTAF, FECAPI                                                          AR858231
+  FROM GZLEFEED A
+ LEFT JOIN GZSDBRCHPD ON FEBRCA = A8BRCD
+ LEFT JOIN GPGLCUSL GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = FECNUM
+  LEFT JOIN
+  GZFCLTYFM F ON FEBRCA = F.BRCA AND FECNUM = F.CNUM AND
+  SUBSTR(DIGITS(FEFACL),1,3) = DIGITS(F.FACT) AND
+  SUBSTR(DIGITS(FEFACL),4,5) = DIGITS(F.FCNO)
+  LEFT JOIN GZCLOANCL L ON FELOAN = L.LNRF AND FEBRCA=L.BRCA
+  LEFT JOIN GZFCLTYFM K ON L.FCUS = K.CNUM
+  AND L.FTYP = K.FACT
+  AND L.FSEQ = K.FCNO
+  AND FEBRCA = K.BRCA
+  LEFT JOIN GZLEFEEDQD O ON FECNUM = O.FQCNUM AND FELOAN = O.FQLOAN                         AR858231
+  AND FEFSEQ = O.FQFSEQ AND FEFACL = O.FQFACL                                               AR858231
+  LEFT OUTER JOIN GZFCLTYFM Z
+  ON  Z.BRCA = L.BRCA AND Z.CNUM = L.PTFC
+  AND Z.FACT = L.PTFT AND Z.FCNO = L.PTFN;
+ 
+ 
+   LABEL ON COLUMN **********/**********
+    (FCLTYTYPE    IS 'Facility            Type',
+     FCLTYNO      IS 'Facility            Number',
+     FFEPLPD      IS 'Previous Last       Payment Date',
+     FESPTI       IS 'Start pay/receive   telex               indicator',
+     FEPPTI       IS 'Payment pay/receive telex               indicator',
+     FEEPTI       IS 'End pay/receive     telex               indicator',
+     FESBTI       IS 'Start customer      bill/telex          indicator',
+     FEPBTI       IS 'Paument customer    bill/telex          indicator',
+     FEEBTI       IS 'End Customer        bill/telex          indicator',
+     FEECLASS     IS 'Fee                 Class',
+     FEETYPE      IS 'Fee                 Type',
+     AUTGEN       IS 'Auto                Generated                    ');
+ 
+   LABEL ON COLUMN **********/**********
+    (FCLTYTYPE    TEXT IS 'Facility Type',
+     FCLTYNO      TEXT IS 'Facility Number',
+     FFEPLPD      TEXT IS 'Previous Last Payment Date',
+     FESPTI       TEXT IS 'Start pay/receive telex indicator',
+     FEPPTI       TEXT IS 'Payment pay/receive telex indicator',
+     FEEPTI       TEXT IS 'End pay/receive telex indicator',
+     FESBTI       TEXT IS 'Start customer bill/telex indicator',
+     FEPBTI       TEXT IS 'Paument customer bill/telex indicator',
+     FEEBTI       TEXT IS 'End Customer bill/telex indicator',
+     FEECLASS     TEXT IS 'Fee Class',
+     FEETYPE      TEXT IS 'Fee Type',
+     AUTGEN       TEXT IS 'Auto Generated');
+ 
+ * DESCRIBESTART
+ * DESCRIBEFIELD PADCNUM    AS FECNUM     USING GZLEFEED
+ * DESCRIBEFIELD PADFACL    AS FEFACL     USING GZLEFEED
+ * DESCRIBEFIELD PADLOAN    AS FELOAN     USING GZLEFEED
+ * DESCRIBEFIELD PADFSEQ    AS FEFSEQ     USING GZLEFEED
+ * DESCRIBEFIELD PADFCOD    AS FEFCOD     USING GZLEFEED
+ * DESCRIBEFIELD PADSTTL    AS FESTTL     USING GZLEFEED
+ * DESCRIBEFIELD PADDYIM    AS FEDYIM     USING GZLEFEED
+ * DESCRIBEFIELD PADTNLU    AS FETNLU     USING GZLEFEED
+ * DESCRIBEFIELD PADRSTM    AS RSTM       USING GZLEFEED
+ * DESCRIBEFIELD PADROBN    AS ROBN       USING GZLEFEED
+ * DESCRIBEFIELD PADROCN    AS ROCN       USING GZLEFEED
+ * DESCRIBEFIELD PADPSTM    AS PSTM       USING GZLEFEED
+ * DESCRIBEFIELD PADPOBN    AS POBN       USING GZLEFEED
+ * DESCRIBEFIELD PADPOCN    AS POCN       USING GZLEFEED
+ * DESCRIBEFIELD PADSMAC    AS SMAC       USING GZLEFEED
+ * DESCRIBEFIELD PADLSWC    AS LSWC       USING GZLEFEED
+ * DESCRIBEFIELD PADLSWS    AS LSWS       USING GZLEFEED
+ * DESCRIBEFIELD FFEPSTD    AS FEPSTD     USING GZLEFEED
+ * DESCRIBEFIELD FFEPEND    AS FEPEND     USING GZLEFEED
+ * DESCRIBEFIELD FFENPYD    AS FENPYD     USING GZLEFEED
+ * DESCRIBEFIELD FFESDAT    AS FESDAT     USING GZLEFEED
+ * DESCRIBEFIELD FFELPDT    AS FELPDT     USING GZLEFEED
+ * DESCRIBEFIELD FFELADT    AS FELADT     USING GZLEFEED
+ * DESCRIBEFIELD FFEDDAT    AS FEDDAT     USING GZLEFEED
+ * DESCRIBEFIELD FFEORED    AS FEORED     USING GZLEFEED
+ * DESCRIBEFIELD FFELCHD    AS FELCHD     USING GZLEFEED
+ * DESCRIBEFIELD FCGDTDL    AS CGDTDL     USING GZLEFEED
+ * DESCRIBEFIELD SFEFAMT    AS FEFAMT     USING GZLEFEED
+ * DESCRIBEFIELD SFEAMT1    AS FEAMT1     USING GZLEFEED
+ * DESCRIBEFIELD SFEAMT2    AS FEAMT2     USING GZLEFEED
+ * DESCRIBEFIELD SFEAMT3    AS FEAMT3     USING GZLEFEED
+ * DESCRIBEFIELD SFEAMT4    AS FEAMT4     USING GZLEFEED
+ * DESCRIBEFIELD SFEAMT5    AS FEAMT5     USING GZLEFEED
+ * DESCRIBEFIELD SFEAMTP    AS FEAMTP     USING GZLEFEED
+ * DESCRIBEFIELD SFEAMTA    AS FEAMTA     USING GZLEFEED
+ * DESCRIBEFIELD SFEAMTS    AS FEAMTS     USING GZLEFEED
+ * DESCRIBEFIELD SFEADAT    AS FEADAT     USING GZLEFEED
+ * DESCRIBEFIELD SFEAMTO    AS FEAMTO     USING GZLEFEED
+ * DESCRIBEFIELD SFELPAM    AS FELPAM     USING GZLEFEED
+ * DESCRIBEFIELD SFEPAMS    AS FEPAMS     USING GZLEFEED
+ * DESCRIBEFIELD SFEPAMP    AS FEPAMP     USING GZLEFEED
+ * DESCRIBEFIELD SFEADBP    AS FEADBP     USING GZLEFEED
+ * DESCRIBEFIELD SFETADJ    AS FETADJ     USING GZLEFEED
+ * DESCRIBEFIELD SFEWOFF    AS FEWOFF     USING GZLEFEED
+ * DESCRIBEFIELD SFEAMTW    AS FEAMTW     USING GZLEFEED
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD
+ * DESCRIBEEND
+ 
+/*******************************************************************************
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Fee Details - GZLEFEED                   ';                     :
+                                                                                :

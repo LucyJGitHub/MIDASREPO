@@ -1,0 +1,252 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Action File control program for UTMENU')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC000900 - Action File control program for UTMENU          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. BUG27776           Date 10Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUP034  *CREATE    Date 03Oct06              */
+/*                      xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27776 - Missing Overridable Errors for RATM and RABC     */
+/*       CUP034 - Reduce size of implementation library.             */
+/*                                                                   */
+/*********************************************************************/
+/*       Position in &PARM parameter                                 */
+/*       Position 1 - Reset                                          */
+/*       Position 2 - Build                                          */
+/*       Position 3 - Review                                         */
+/*       Position 4 - Process                                        */
+/*       Position 5 - Conflict Report                                */
+/*       Position 6 - Review Type                                    */
+/*********************************************************************/
+             PGM        PARM(&PARM &FILE)
+ 
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&CMDPMT) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RESET) TYPE(*CHAR) LEN(4) VALUE(*NO)
+             DCL        VAR(&BUILD) TYPE(*CHAR) LEN(4) VALUE(*NO)
+             DCL        VAR(&REVIEW) TYPE(*CHAR) LEN(4) VALUE(*NO)
+             DCL        VAR(&CONFLICT) TYPE(*CHAR) LEN(4) VALUE(*NO)
+             DCL        VAR(&PROCESS) TYPE(*CHAR) LEN(4) VALUE(*NO)
+             DCL        VAR(&SAVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMDSTR) TYPE(*CHAR) LEN(150)
+             DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(150)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&UPGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&REPLY1) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&SDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UTPROC) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SVAL) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&AORTN) TYPE(*CHAR) LEN(7)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create data area /MIDASMSG in QTEMP. */
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Get system prefix. */
+             CALL       PGM(GPAOSVALR0) PARM(&AORTN +
+                          'BrgMidasGlobalPrefix' &SVAL ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ')
+             IF         COND(&AORTN *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&PREFIX) VALUE(%SST(&SVAL 1 2))
+             ENDDO
+ 
+             CALL       PGM(GPC000016) PARM(&PREFIX)
+ 
+/* Set &CMD as 'ACTIONFILE filename'. */
+             CHGVAR     VAR(&CMD) VALUE('ACTIONFILE' *BCAT +
+                          'FILE(' *TCAT &FILE *TCAT ')')
+ 
+/* Set &CMDPMT as ACTIONFILE for prompt. */
+             CHGVAR     VAR(&CMDPMT) VALUE('ACTIONFILE' *BCAT +
+                          '?*FILE(' *TCAT &FILE *TCAT ')')
+ 
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&SDTALIB)
+ 
+/* Override for zone action file. */                                                    /*BUG27776*/
+             OVRDBF     FILE(UPACTFL0) TOFILE(UPGPACTFL0) +
+                          OVRSCOPE(*JOB)                                                /*BUG27776*/
+                                                                                        /*BUG27776*/
+/* Choose required processing option. */
+             IF         COND(%SST(&PARM 1 1) *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&RESET) VALUE('*YES')
+                GOTO       CMDLBL(RESET)
+             ENDDO
+ 
+             IF         COND(%SST(&PARM 2 1) *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&BUILD) VALUE('*YES')
+                GOTO       CMDLBL(BUILD)
+             ENDDO
+ 
+             IF         COND(%SST(&PARM 3 1) *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&REVIEW) VALUE('*YES')
+                IF         COND(%SST(&PARM 6 1) *EQ 'Y') THEN(DO)
+                   GOTO       CMDLBL(REVIEW2)
+                ENDDO
+                GOTO       CMDLBL(REVIEW)
+             ENDDO
+ 
+             IF         COND(%SST(&PARM 4 1) *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&PROCESS) VALUE('*YES')
+                GOTO       CMDLBL(PROCESS)
+             ENDDO
+ 
+             IF         COND(%SST(&PARM 5 1) *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&CONFLICT) VALUE('*YES')
+                GOTO       CMDLBL(CONFLICT)
+             ENDDO
+ 
+ RESET:
+/* Set up messages for Midas Information Screen  */
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&UPGLIB)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&FILE *BCAT +
+                          'in library' *BCAT &UPGLIB *BCAT 'will be upgraded.')
+             CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE('If it is +
+                          incorrect, select "N" and change the')
+             CHGDTAARA  DTAARA(MIDASMSG (401 50)) VALUE('library +
+                          list, else select "Y" to continue.')
+ 
+             CALL       PGM(SCC0010) PARM('UPC000900' 'OPTION2' &REPLY1)
+             IF         COND(&REPLY1 *EQ 'N') THEN(GOTO CMDLBL(END))
+ 
+/* Save ggGTALIB data to ggGPLIB prior to any processing. */
+             CHGVAR     VAR(&SAVFILE) VALUE('@' *CAT &FILE)
+             CHGVAR     VAR(&SAVLIB) VALUE(&PREFIX *CAT 'GPLIB')
+             DLTF       FILE(&SAVLIB/&SAVFILE)
+             MONMSG     MSGID(CPF2105)
+             CPYF       FROMFILE(&FILE) TOFILE(&SAVLIB/&SAVFILE) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+ 
+             CHGVAR     VAR(&CMDSTR) VALUE(&CMD *BCAT 'RESET(*YES)')
+             CALL       PGM(QCMDEXC) PARM(&CMDSTR &CMDLEN)
+             MONMSG     MSGID(CPF6801)
+             GOTO       CMDLBL(END)
+ 
+/* Build processing */
+ BUILD:
+ 
+/* Carry out command using parameters required for BUILD operation. */
+/* If review type ='Y', prompt review type as well. */
+             IF         COND(%SST(&PARM 6 1) *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&CMDSTR) VALUE(&CMDPMT *BCAT +
+                             '?*BUILD(*YES) ??REVIEW(*NO) ??OLDLIB(' +
+                             *TCAT &SDTALIB *TCAT ') +
+                             ??NEWLIB(ggGTALIB) ??REVTYP(*ALL)')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&CMDSTR) VALUE(&CMDPMT *BCAT +
+                             '?*BUILD(*YES) ??REVIEW(*NO) ??OLDLIB(' +
+                             *TCAT &SDTALIB *TCAT ') ??NEWLIB(ggGTALIB)')
+             ENDDO
+             CALL       PGM(QCMDEXC) PARM(&CMDSTR &CMDLEN)
+             MONMSG     MSGID(CPF6801)
+             GOTO       CMDLBL(END)
+ 
+ REVIEW:
+             CHGVAR     VAR(&CMDSTR) VALUE(&CMD *BCAT 'REVIEW(*YES)')
+             CALL       PGM(QCMDEXC) PARM(&CMDSTR &CMDLEN)
+             MONMSG     MSGID(CPF6801)
+             GOTO       CMDLBL(END)
+ 
+ REVIEW2:
+             CHGVAR     VAR(&CMDSTR) VALUE(&CMDPMT *BCAT +
+                          '?*REVIEW(*YES) ??REVTYP(*ALL)')
+             CALL       PGM(QCMDEXC) PARM(&CMDSTR &CMDLEN)
+             MONMSG     MSGID(CPF6801)
+             GOTO       CMDLBL(END)
+ 
+ CONFLICT:
+             CHGVAR     VAR(&CMDSTR) VALUE(&CMD *BCAT 'CONFLICT(*YES)')
+             CALL       PGM(QCMDEXC) PARM(&CMDSTR &CMDLEN)
+             MONMSG     MSGID(CPF6801)
+             GOTO       CMDLBL(END)
+ 
+ PROCESS:
+/* Save ggGTALIB data to ggGPLIB prior to any processing. */
+             CHGVAR     VAR(&SAVFILE) VALUE('@' *CAT &FILE)
+             CHGVAR     VAR(&SAVLIB) VALUE(&PREFIX *CAT 'GPLIB')
+             DLTF       FILE(&SAVLIB/&SAVFILE)
+             MONMSG     MSGID(CPF2105)
+             CPYF       FROMFILE(&FILE) TOFILE(&SAVLIB/&SAVFILE) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+ 
+/* Special processing for UTMENUPD as this is likely to be locked. */
+             IF         COND(&FILE *EQ 'UTMENUPD') THEN(DO)
+/* Copy to a temporary file first and override to it so it can be updated. */
+                CPYF       FROMFILE(UTMENUL0) TOFILE(QTEMP/UTMENUQT) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                OVRDBF     FILE(UTMENUL0) TOFILE(QTEMP/UTMENUQT)
+                CHGDTAARA  DTAARA(UPSTAT (55 1)) VALUE('Y')
+                CHGVAR     VAR(&UTPROC) VALUE('Y')
+             ENDDO
+             CHGVAR     VAR(&CMDSTR) VALUE(&CMD *BCAT 'PROCESS(*YES)')
+ 
+ CALL:
+             RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&UPGLIB)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&FILE *BCAT +
+                          'in library' *BCAT &UPGLIB *BCAT 'will be upgraded.')
+             CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE('If it is +
+                          incorrect, select "N" and change the')
+             CHGDTAARA  DTAARA(MIDASMSG (401 50)) VALUE('library +
+                          list, else select "Y" to continue.')
+             CALL       PGM(SCC0010) PARM('UPC000900' 'OPTION2' &REPLY1)
+             IF         COND(&REPLY1 *EQ 'N') THEN(GOTO CMDLBL(END))
+ 
+             CALL       PGM(QCMDEXC) PARM(&CMDSTR &CMDLEN)
+             MONMSG     MSGID(CPF6801)
+ 
+/* If UTMENUPD is being updated, delete overrides. */
+             IF         COND(&UTPROC *EQ 'Y') THEN(DO)
+                DLTOVR     FILE(UTMENUL0)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/* Copy back save-file if error occurred (U7 & U8 on). */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CPYF       FROMFILE(&SAVLIB/&SAVFILE) TOFILE(&FILE) +
+                          MBROPT(*REPLACE) CRTFILE(*NO)
+                MONMSG     MSGID(CPF0000)
+                CHGJOB     SWS(XXXXXX00)
+             ENDDO
+ 
+             SNDPGMMSG  MSGID(UT00001) MSGF(*LIBL/UTMSGF) +
+                          MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+ 
+END:
+             DLTOVR     FILE(UPACTFL0) LVL(*JOB)                                        /*BUG27776*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG27776*/
+                                                                                        /*BUG27776*/
+             ENDPGM

@@ -1,0 +1,705 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF LINK BRANCHES TO TRAM SYSTEMS.')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - CONFIRMATION MATCHING
+     F*                                                               *
+     F*       CF0010 - LINK BRANCH TO TRAM SYSTEM                     *
+     F*       (CALLS CFC0010)                                         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01310             Date 17MAY91               *
+     F*                 S01304             Date 13SEP90               *
+     F*                      S01184            DATE 15DEC89           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01310 - SWIFT RATIONALISATION                               *
+     F*  S01304 - CHANGES MADE DURING CONFIRMATION MATCHING           *
+     F*           INCORPORATION.                                      *
+     F*  S01184 - CREATED FOR CONFIRMATION MATCHING                   *
+     F*                                                               *
+     F*****************************************************************
+     FCF0010DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE CF0010F2
+     FSDBANKPDIF  E                    DISK
+     FSDBRCHL0IF  E           K        DISK
+     FCFBRCHL1IF  E           K        DISK
+     F            CFBRCHD0                          KRENAMECFBRCHE0
+     FCFBRCHL0UF  E           K        DISK                      A
+     FCFBREXPDO   E                    DISK
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*
+     F* ID C  F  H  L    FUNCTION OF INDICATORS
+     F* 20               SFLDSP, SFLDSPCTL
+     F* 21               SFLEND
+     F* 22               SFLNXTCHG
+     F* 23               PROTECT TRAM ID & ACTION CODE
+     F* 24               PROTECT BRANCH
+     F* 25               DELETION
+     F* 30               ERROR SDBANKPD
+     F* 31               EMPTY CFBRCHPD
+     F* 32               ERROR SDBRCHPD
+     F* 33               BRANCH NOT LINKED ON CFFBRCHL1
+     F* 34               END OF CHANGED RECORDS IN SUB-FILE
+     F* 40               SCREEN ERROR
+     F* 41               TRAM ID ERROR
+     F* 42               ACTION CODE ERROR
+     F* 43               BRANCH ERROR
+     F* 60               QCMDEXC ERROR
+     F* U7U8LR           DATABASE ERROR
+     F* KC               F3
+     F* KJ               F10
+     F* KL               F12
+     F*****************************************************************
+     E                    MSGA    1  11 80
+     E**  Screen Messages
+     E                    CMDA    1   2 80
+     E**  QCMDEXC Command
+     E                    ARY       101  6
+     E**  BRANCH entries (Original/New) from SUB-FILE (SFLE size = 100)
+     F*****************************************************************
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**  LOCAL DATA AREA - DATABASE ERRORS
+     I*
+     I           SDS
+     I                                      244 253 WSID
+     I**  WORKSTATION ID
+     I*
+     IDSRUN       DS                             13                       S01310
+     I                                        1   7 RUNA                  S01310
+     I                                       13  13 MBIN                  S01310
+      **  RUNDAT data area                                                S01310
+      *
+     I            DS
+     I                                        1   6 @BRC
+     I                                        1   3 SFBR
+     I                                        4   6 SHBR
+     I**  PREVIOUS BRANCH CODE AND AMENDMENT OR INSERTION
+     I*
+     ICMD         DS
+     I                                        1  80 @CMD1
+     I                                       81 101 @CMD2
+     I                                       91 100 @WID
+     I**  QCMDEXC COMMAND DATA STRUCTURE
+     I*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*               INDEX TO SUBROUTINES                            *
+     C*        MAIN - MAIN PROCESS                                    *
+     C*        INIT - INITIAL PROCESS                                 *
+     C*        VSEL - VALIDATE SELECTION                              *
+     C*        SFLE - SUB-FILE PROCESS                                *
+     C*        INSR - INSERTION PROCESS                               *
+     C*        AMND - AMENDMENT PROCESS                               *
+     C*        DELT - DELETION PROCESS                                *
+     C*        VSFL - VALIDATE SUB-FILE ENTRIES                       *
+     C*       *PSSR - ERROR HANDLING                                  *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*        MAIN - MAIN PROCESS                                    *
+     C*                                                               *
+     C*        CALLS   INIT - INITIAL PROCESS                         *
+     C*                VSEL - VALIDATE SELECTION                      *
+     C*                SFLE - SUBFILE PROCESS                         *
+     C*                                                               *
+     C*        CALLED BY                                              *
+     C*****************************************************************
+     C*
+     C                     EXSR INIT
+     C*
+     C**  SEND MESSAGE IF SYSTEM NOT MULTIBRANCHED AND EXIT
+     C**  (No changes allowed)                                            S01304
+     C***********BJFLST    IFNE 'Y'                                       S01304
+     C***********BJMBDI    IFNE 'Y'                                       S01310
+     C           MBIN      IFNE 'Y'                                       S01310
+     C                     MOVELCMDA,1    @CMD1
+     C                     MOVELCMDA,2    @CMD2
+     C                     MOVELWSID      @WID
+     C                     CALL 'QCMDEXC'              60
+     C                     PARM           CMD
+     C                     PARM 101       @LEN   155
+     C                     ELSE
+     C*
+     C**  DISPLAY SELECTION SCREEN UNTIL F3 PRESSED
+     C           *INKC     DOWEQ'0'
+     C*
+     C**  IF NO ERRORS CLEAR INPUT FIELDS (TRAM ID and ACTION CODE)
+     C           *IN40     IFEQ '0'
+     C                     MOVE *BLANKS   SFTI
+     C                     MOVE *BLANKS   SFAC
+     C                     END
+     C*
+     C**  IF SYSTEM SET UP? FLAT IS ON, DEFAULT ACTION CODE TO 'E'
+     C***********BJAUST    IFEQ 'Y'                                       S01304
+     C           BJSUC     IFEQ 'Y'                                       S01304
+     C                     MOVE 'E'       SFAC
+     C                     END
+     C*
+     C**  CLEAR SFL DISPLAY, PROTECT INPUT AND DELETION INDS AND
+     C**  DISPLAY HEADER AND TRAILER
+     C                     SETOF                     202325
+     C                     WRITECF0010F4
+     C                     EXFMTCF0010F1
+     C                     MOVE *BLANKS   SFMG
+     C*
+     C**  CLEAR ERRORS
+     C                     SETOF                     404142
+     C                     MOVE 'Y'       @VLD    1
+     C*
+     C**  IF F3 NOT PRESSED VALIDATE SELECTION
+     C           *INKC     IFEQ '0'
+     C                     EXSR VSEL
+     C*
+     C**  IF SELECTION VALID DISPLAY SUBFILE
+     C           @VLD      IFEQ 'Y'
+     C                     EXSR SFLE
+     C                     END
+     C                     END
+     C*
+     C**  IF USER HAS DELETED ALL TRAM SYSTEMS, DISPLAY WARNING
+     C**  (MUST EXIT AND RE-ENTER PROGRAM TO RECREATED DEFAULTS)
+     C           @WRN      IFNE 'Y'
+     C           *LOVAL    SETLLCFBRCHL0
+     C                     READ CFBRCHL0                 31
+     C           *IN31     IFEQ '1'
+     C                     MOVELMSGA,11   SFMG
+     C                     SETON                     40
+     C                     MOVE 'Y'       @WRN    1
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*        INIT - INITIAL PROCESS                                 *
+     C*                                                               *
+     C*        CALLS        *PSSR - ERROR HANDLING                    *
+     C*                                                               *
+     C*        CALLED BY    MAIN - MAIN PROCESS                       *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C**  DEFINE KEY LIST FOR CFBRCHL0
+     C           CFKY      KLIST
+     C                     KFLD           IMID
+     C                     KFLD           IMBR
+     C*
+     C**  DEFINE LOCAL DATA AREA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CF0010  'DBPGM
+     C                     OUT  LDA
+      *
+      **  Access RUNDAT for multibranching indicator                      S01310
+     C           *NAMVAR   DEFN RUNDAT    DSRUN                           S01310
+     C                     IN   DSRUN                                     S01310
+     C*
+     C**  READ SDBANKPD FOR SYSTEM SETUP?, RUN DATE, MB INDICATOR
+     C                     READ SDBANKPD                 30
+     C           *IN30     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE            * DB ERROR 01 *
+     C                     MOVEL'FIRST'   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  IF NO TRAM ID/BRANCHES EXIST DEFAULT ALL BRANCHES TO 'XXX'
+     C**  (DEFAULT FOLDER SUFFIX) - INCLUDE ONE BLANK BRANCH
+     C                     READ CFBRCHL0                 31
+     C           *IN31     IFEQ '1'
+     C                     MOVE 'XXX'     IMID
+     C           *IN32     DOWEQ'0'
+     C                     MOVE WSID      LCBY
+     C*
+     C****S*=*DEFAULT INSTALLED, A8DSNB = BRANCH CODE                     S01304
+     C**  S = DEFAULT INSTALLED, A8BRCD = BRANCH CODE                     S01304
+     C                     MOVE 'S'       LCTP
+     C***********          MOVE BJAKTX    LCDA                            S01304
+     C                     MOVE BJRDNB    LCDA                            S01304
+     C                     WRITECFBRCHD0
+     C                     WRITECFBREXD0
+     C                     READ SDBRCHL0                 32
+     C***********          MOVE A8DSNB    IMBR                            S01304
+     C                     MOVE A8BRCD    IMBR                            S01304
+     C                     END
+     C                     END
+     C*
+     C**  SET SFLEND INDICATOR TO ENSURE "+" DISPLAYED AT END OF PAGE
+     C                     SETON                     21
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*        VSEL - VALIDATE SELECTION                              *
+     C*                                                               *
+     C*        CALLS        CFC0010 - CHECK TRAM ID EXISTS AS FOLDER  *
+     C*                                                               *
+     C*        CALLED BY    MAIN - MAIN PROCESS                       *
+     C*****************************************************************
+     C*
+     C           VSEL      BEGSR
+     C*
+     C**  ACTION CODE MUST BE A, D, E OR I
+     C           SFAC      IFNE 'A'
+     C           SFAC      ANDNE'D'
+     C           SFAC      ANDNE'E'
+     C           SFAC      ANDNE'I'
+     C                     MOVE MSGA,6    SFMG
+     C                     SETON                     4042
+     C                     MOVE 'N'       @VLD
+     C*
+     C**  TRAM ID MUST NOT BE 'XXX' OR BLANKS
+     C                     ELSE
+     C           SFTI      IFEQ *BLANKS
+     C           SFTI      OREQ 'XXX'
+     C                     MOVE MSGA,5    SFMG
+     C                     SETON                     4041
+     C                     MOVE 'N'       @VLD
+     C*
+     C**  AMEND, INSERT, DELETE NOT ALLOWED WHEN SYSTEM SETUP FLAG
+     C**  IS ON
+     C                     ELSE
+     C***********BJAUST    IFEQ 'Y'                                       S01304
+     C           BJSUC     IFEQ 'Y'                                       S01304
+     C           SFAC      ANDNE'E'
+     C                     MOVE MSGA,1    SFMG
+     C                     MOVE 'N'       @VLD
+     C*
+     C**  TRAM ID MUST EXIST FOR AMEND, DELETE OR ENQUIRE
+     C                     ELSE
+     C           SFTI      CHAINCFBRCHL0             31
+     C           *IN31     IFEQ '1'
+     C           SFAC      IFEQ 'A'
+     C           SFAC      OREQ 'D'
+     C           SFAC      OREQ 'E'
+     C                     MOVE MSGA,7    SFMG
+     C                     SETON                     404142
+     C                     MOVE 'N'       @VLD
+     C                     END
+     C                     ELSE
+     C*
+     C**  TRAM ID MUST NOT EXIST FOR INSERT
+     C           SFAC      IFEQ 'I'
+     C                     MOVE MSGA,7    SFMG
+     C                     SETON                     404142
+     C                     MOVE 'N'       @VLD
+     C*
+     C**  TRAM ID MUST EXIST AS A FOLDER SUFFIX
+     C                     ELSE
+     C           SFAC      IFEQ 'I'
+     C                     CALL 'CFC0010'
+     C                     PARM           SFTI
+     C           @VLD      PARM           @VLD
+     C                     END
+     C           @VLD      IFEQ 'N'
+     C                     MOVE MSGA,5    SFMG
+     C                     SETON                     4041
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*        SFLE - SUBFILE                                         *
+     C*                                                               *
+     C*        CALLS        AMND - AMEND PROCESS                      *
+     C*                     DELT - DELETE PROCESS                     *
+     C*                     INSR - INSERT PROCESS                     *
+     C*                                                               *
+     C*        CALLED BY    MAIN - MAIN PROCESS                       *
+     C*****************************************************************
+     C*
+     C           SFLE      BEGSR
+     C*
+     C**  INITIALISE SUBFILE
+     C                     Z-ADD1         RRN     50
+     C                     Z-ADD1         DSPREC
+     C                     SETOF                     2024
+     C                     WRITECF0010F3
+     C*
+     C**  IF DELETE OR ENQUIRE PROTECT SUBFILE FIELDS
+     C           SFAC      IFEQ 'D'
+     C           SFAC      OREQ 'E'
+     C                     SETON                     24
+     C                     END
+     C*
+     C**  CHANGING BRANCH DETAILS MAY CAUSE TIME-OUTS - WARNING
+     C           SFAC      IFEQ 'A'
+     C                     MOVE MSGA,2    SFMG
+     C                     END
+     C*
+     C**  DELETION WILL DISRUPT CONFIRMATION MATCHING SYSTEM - WARNING
+     C**  DISPLAY "F10-CONFIRM..."
+     C           SFAC      IFEQ 'D'
+     C                     MOVE MSGA,3    SFMG
+     C                     SETON                     25
+     C                     END
+     C*
+     C**  IF AMEND, DELETE OR ENQUIRE
+     C**  LOAD SUB-FILE WITH ALL BRANCHES FOR TRAM ID (ASSUMPTION MADE
+     C**  THAT THERE WILL NOT BE MORE THAN 100 BRANCHES)
+     C           SFAC      IFEQ 'A'
+     C           SFAC      OREQ 'D'
+     C           SFAC      OREQ 'E'
+     C                     MOVE SFTI      @MID    3
+     C           SFTI      SETLLCFBRCHL0
+     C                     READ CFBRCHL0                 31
+     C           *IN31     DOWEQ'0'
+     C           IMID      ANDEQ@MID
+     C                     MOVE IMBR      SFBR
+     C                     MOVE IMBR      SHBR
+     C                     WRITECF0010F2
+     C                     ADD  1         RRN
+     C                     READ CFBRCHL0                 31
+     C                     END
+     C                     END
+     C*
+     C**  IF AMEND OR INSERT FILL REST OF SUB-FILE WITH BLANK RECORDS
+     C           SFAC      IFEQ 'A'
+     C           SFAC      OREQ 'I'
+     C                     MOVE *BLANKS   SFBR
+     C                     MOVE *BLANKS   SHBR
+     C           RRN       DOWLT100
+     C                     WRITECF0010F2
+     C                     ADD  1         RRN
+     C                     END
+     C                     END
+     C*
+     C**  DISPLAY SUBFILE UNTIL NO ERRORS
+     C           @VLD      DOUEQ'Y'
+     C*
+     C**  PROTECT TRAM ID AND ACTION CODE FIELDS FROM INPUT
+     C                     SETON                     2023
+     C                     WRITECF0010F4
+     C                     WRITECF0010F1
+     C                     EXFMTCF0010F3
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     40
+     C                     MOVE 'Y'       @VLD
+     C*
+     C**  IF F3 OR F12 NOT PRESSED ..
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C**  PROCESS INSERTION
+     C           SFAC      IFEQ 'I'
+     C                     EXSR INSR
+     C                     END
+     C*
+     C**  PROCESS AMENDMENT
+     C           SFAC      IFEQ 'A'
+     C                     EXSR AMND
+     C                     END
+     C*
+     C**  PROCESS DELETION
+     C           SFAC      IFEQ 'D'
+     C                     EXSR DELT
+     C                     END
+     C*
+     C**  PROCESS ENQUIRY (KEEP RE-DISPLAYING SCREEN IF ENTER PRESSED)
+     C           SFAC      IFEQ 'E'
+     C                     MOVE *BLANKS   @VLD
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*        INSR - INSERTION                                       *
+     C*                                                               *
+     C*        CALLS        VSFL - VALIDATE SUB-FILE ENTRIES          *
+     C*                                                               *
+     C*        CALLED BY    SFLE - SUB-FILE PROCESS                   *
+     C*****************************************************************
+     C*
+     C           INSR      BEGSR
+     C*
+     C**  DELETE DEFAULT SYSTEM
+     C           'XXX'     SETLLCFBRCHL0
+     C                     READ CFBRCHL0                 31
+     C           *IN31     DOWEQ'0'
+     C           IMID      ANDEQ'XXX'
+     C                     DELETCFBRCHD0
+     C                     MOVE WSID      LCBY
+     C*
+     C**  R = DEFAULT SYSTEM REMOVED
+     C                     MOVE 'R'       LCTP
+     C***********          MOVE BJAKTX    LCDA                            S01304
+     C                     MOVE BJRDNB    LCDA                            S01304
+     C                     WRITECFBREXD0
+     C                     READ CFBRCHL0                 31
+     C                     END
+     C*
+     C**  VALIDATE SUB-FILE ENTRIES
+     C                     EXSR VSFL
+     C*
+     C           @VLD      IFEQ 'Y'
+     C                     Z-ADD1         X
+     C*
+     C**  PROCESS ALL INSERTIONS IN ARRAY (EXCEPT BLANK ENTRIES)
+     C           ARY,X     DOWNE'EOFEOF'
+     C                     MOVE ARY,X     @BRC
+     C           SFBR      IFNE *BLANKS
+     C                     MOVE SFTI      IMID
+     C                     MOVE SFBR      IMBR
+     C           CFKY      CHAINCFBRCHL0             31
+     C*
+     C**  IF NEW TRAM ID/BRANCH NOT ON FILE WRITE IT
+     C           *IN31     IFEQ '1'
+     C                     MOVE WSID      LCBY
+     C                     MOVE 'I'       LCTP
+     C***********          MOVE BJAKTX    LCDA                            S01304
+     C                     MOVE BJRDNB    LCDA                            S01304
+     C                     WRITECFBRCHD0
+     C                     WRITECFBREXD0
+     C                     END
+     C                     END
+     C                     ADD  1         X
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*        AMND - AMENDMENT PROCESS (ADD OR REMOVE BRANCHES)      *
+     C*                                                               *
+     C*        CALLS        VSFL - VALIDATE SUB-FILE ENTRIES          *
+     C*                                                               *
+     C*        CALLED BY    SFLE - SUB-FILE PROCESS                   *
+     C*****************************************************************
+     C*
+     C           AMND      BEGSR
+     C*
+     C**  VALIDATE SUB-FILE ENTRIES
+     C                     EXSR VSFL
+     C*
+     C**  IF ALL ENTRIES VALID, PROCESS ALL AMENDMENTS IN ARRAY
+     C           @VLD      IFEQ 'Y'
+     C                     Z-ADD1         X
+     C           ARY,X     DOWNE'EOFEOF'
+     C                     MOVE ARY,X     @BRC
+     C                     MOVE SFTI      IMID
+     C                     MOVE SHBR      IMBR
+     C*
+     C**  CHAIN WITH ORIGINAL (HIDDEN) BRANCH
+     C           CFKY      CHAINCFBRCHL0             31
+     C*
+     C**  SET UP NEW BRANCH KEY
+     C                     MOVE SFBR      IMBR
+     C*
+     C**  SET UP AUDIT FIELDS
+     C                     MOVE WSID      LCBY
+     C                     MOVE 'A'       LCTP
+     C***********          MOVE BJAKTX    LCDA                            S01304
+     C                     MOVE BJRDNB    LCDA                            S01304
+     C*
+     C**  ORIGNIAL BRANCH ON FILE => UPDATE OR DELETION
+     C**  SET UP AUDIT FIELDS
+     C           *IN31     IFEQ '0'
+     C*
+     C**  NEW BRANCH BLANK => REMOVAL
+     C           SFBR      IFEQ *BLANKS
+     C                     DELETCFBRCHD0
+     C                     ELSE
+     C*
+     C**  NEW BRANCH NOT BLANK => AMENDMENT
+     C                     UPDATCFBRCHD0
+     C                     END
+     C*
+     C**  AUDIT
+     C                     WRITECFBREXD0
+     C*
+     C**  ORIGINAL BRANCH NOT ON FILE (IE. BLANK) => NEW BRANCH
+     C**  ADDED ON SUB-FILE LINE - IF NOT DUPLICATE ENTRY WRITE NEW
+     C**  TRAM ID/BRANCH RECORD
+     C                     ELSE
+     C           SFBR      IFNE *BLANKS
+     C           CFKY      CHAINCFBRCHL0             31
+     C           *IN31     IFEQ '1'
+     C                     WRITECFBRCHD0
+     C*
+     C**  AUDIT
+     C                     WRITECFBREXD0
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     ADD  1         X
+     C                     END
+     C*
+     C**  CHECK IF TRAM SYSTEM NO LONGER LINKED TO ANY BRANCHES
+     C                     MOVE *BLANKS   IMBR
+     C           CFKY      SETLLCFBRCHL0
+     C                     READ CFBRCHL0                 31
+     C           SFTI      IFNE IMID
+     C                     MOVELMSGA,10   SFMG
+     C                     SETON                     40
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*        DELT - DELETION                                        *
+     C*                                                               *
+     C*        CALLS        NONE                                      *
+     C*                                                               *
+     C*        CALLED BY    SFLE - SUB-FILE PROCESS                   *
+     C*****************************************************************
+     C*
+     C           DELT      BEGSR
+     C*
+     C**  IF NOT F10, ENTER HAS BEEN PRESSED (MUST BE F3, F12 OR F10)
+     C           *INKJ     IFEQ '0'
+     C                     MOVELMSGA,4    SFMG
+     C                     MOVE 'N'       @VLD
+     C*
+     C**  PROCESS ALL BRANCHES FOR TRAM ID
+     C                     ELSE
+     C           SFTI      SETLLCFBRCHL0
+     C                     READ CFBRCHL0                 31
+     C           *IN31     DOWEQ'0'
+     C           SFTI      ANDEQIMID
+     C                     DELETCFBRCHD0
+     C                     MOVE WSID      LCBY
+     C                     MOVE 'D'       LCTP
+     C***********          MOVE BJAKTX    LCDA                            S01304
+     C                     MOVE BJRDNB    LCDA                            S01304
+     C                     WRITECFBREXD0
+     C                     READ CFBRCHL0                 31
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*        VSFL - VALIDATE SUB-FILE ENTRIES                       *
+     C*                                                               *
+     C*        CALLS        NONE                                      *
+     C*                                                               *
+     C*        CALLED BY    INSR - INSERT PROCESS                     *
+     C*                     AMND - AMEND PROCESS                      *
+     C*****************************************************************
+     C*
+     C           VSFL      BEGSR
+     C*
+     C                     MOVE *BLANKS   ARY
+     C                     Z-ADD1         X       30
+     C*
+     C**  SET ON MODIFIED DATA TAG FOR SUB-FILE ERRORS
+     C                     SETON                     22
+     C*
+     C**  PROCESS ALL CHANGED SUBFILE RECORDS
+     C                     READCCF0010F2                 34
+     C           *IN34     DOWEQ'0'
+     C*
+     C**  CHECK BRANCH ON BRANCH CODES FILE
+     C**  (N.B. ONLY THE FIRST ERROR MESSAGE OF SUB-FILE DISPLAYED)
+     C           SFBR      IFNE *BLANKS
+     C           SFBR      CHAINSDBRCHL0             32
+     C           *IN32     IFEQ '1'
+     C           @VLD      IFEQ 'Y'
+     C                     MOVE MSGA,8    SFMG
+     C                     END
+     C                     SETON                     4043
+     C                     MOVE 'N'       @VLD
+     C                     ELSE
+     C*
+     C**  CHECK BRANCH NOT ALREADY LINKED TO ANOTHER TRAM SYSTEM
+     C**  (OK IF ALREADY LINKED TO THIS TRAM SYSTEM)
+     C           SFBR      CHAINCFBRCHL1             33
+     C           *IN33     IFEQ '0'
+     C           SFTI      ANDNEIMID
+     C           @VLD      IFEQ 'Y'
+     C                     MOVE MSGA,9    SFMG
+     C                     END
+     C                     SETON                     4043
+     C                     MOVE 'N'       @VLD
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  UPDATE SUB-FILE RECORD WITH ANY ERRORS, AND STORE ORIGINAL
+     C**  AND AMENDMENT IN ARRAY
+     C                     UPDATCF0010F2
+     C                     MOVE @BRC      ARY,X
+     C                     ADD  1         X
+     C                     SETOF                     43
+     C                     READCCF0010F2                 34
+     C                     END
+     C*
+     C                     MOVE 'EOFEOF'  ARY,X
+     C                     SETOF                     22
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*       *PSSR - ERROR HANDLING                                  *
+     C*                                                               *
+     C*        CALLS        NONE                                      *
+     C*                                                               *
+     C*        CALLED BY    INIT - INITIAL PROCESS                    *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+**  MESSAGES (MSGA)                                            *****
+NO CHANGES CAN BE MADE WHEN SET UP IS COMPLETE
+CHANGING BRANCH DETAILS MAY CAUSE TIME-OUTS
+DELETION WILL DISRUPT YOUR CONFIRMATION MATCHING SYSTEM - See Instruction Manual
+PRESS F10 TO DELETE LINKS, F3 OR F12 TO EXIT
+001  SYSTEM MUST EXIST AS FOLDER SUFFIX OTHER THAN 'XXX'
+002  ACTION CODE MUST BE I, A, D OR E
+003  ACTION CODE I FOR NEW SYSTEM, A, D, OR E FOR EXISTING SYSTEM
+004  BRANCH MUST BE ON BRANCH CODES FILE
+005  BRANCH ENTERED IN ANOTHER TRAM SYSTEM
+006  TRAM SYSTEM NO LONGER LINKED TO ANY BRANCHES
+007  NO TRAM SYSTEMS EXIST (EXIT AND RE-ENTER PROGRAM TO RE-CREATE DEFAULT)
+**  QCMDEXC COMMANDS (CMDA)                                    *****
+SNDBRKMSG MSG('SYSTEM NOT MULTIBRANCHED, ALL DETAILS ARE SENT TO THE SAME SYSTEM
+') TOMSGQ(XXXXXXXXXX)

@@ -1,0 +1,620 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD BSPL Structures Report Prompt')
+      *****************************************************************
+      *                                                               *
+      *  Midas STANDING DATA MODULE                                   *
+      *                                                               *
+      *  SD1324 - Reporting Structures Report Prompt                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  LAST AMEND NO. 053729             DATE 05AUG93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  053729 - Pgm terminates abnormally when user tries to amend  *
+      *           or delete a periodic report.  The Seq No field is   *
+      *           not valid to chain to FCPARDPD (incorrect length)   *
+      *           and the data required isnt held there anyway.  Pgm  *
+      *           amended to use the Set Number from the report       *
+      *           parameters to access the reporting sets file to     *
+      *           obtain the Set Shortname to display on the screen   *
+      *           for amend, delete and enquire functions. All        *
+      *           references to FCPARDPD are removed.                 *
+      *                                                               *
+      ********************************************************************
+     F*
+     FSDRPSTL0IF  E           K        DISK
+     FSDRPSTL2IF  E           K        DISK
+     F***FCPARDL1IF**E           K        DISK                            053729
+     FSD1324DFCF  E                    WORKSTN
+     F*
+     F*****************************************************************
+     F*
+     F*  ID  F  C  H  L     Function of Indicators
+     F*
+     F*  03      Exit program indicator
+     F*  10      Delete Report Request
+     F*  12      Exit program (Previous) indicator
+     F*  27      Message subfile end indicator
+     F*  30      Chain fail on SDRPSTL0
+     F*  30      Chain fail on SDRPSTL2
+     F*  31      LOKUP on array SETNUM successful
+     F***35******Chain*fail*on*FCPARDL1********************************** 053729
+     F*  70      Screen valid
+     F*  80      Ensure Set Number field is output only
+     F*  90      Display footer with 'F10=Delete'
+     F*  U7      Database Error indicator
+     F*  U8      Database Error indicator
+     F*
+     F*****************************************************************
+     F/EJECT
+     E*
+     E                    SETNUM  9   9  3
+     E** Set number array
+     E*
+     E                    CPY@    1   1 80
+     E** Copyright array
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** Data Structure for Compilation  - Copyright Insertion
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I** Data Structure to retrieve User and Workstation ID.
+     I*
+     IRUNDAT      DS                             13
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 @MBIN
+     I** Rundate Data Area
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      142 151 DBKEY1
+     I                                      152 156 DBKEY2
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** Local Data Area
+     I*
+     I******************************************************************
+     I/EJECT
+     I******************************************************************
+     C*
+     C* INDEX OF SUBROUTINES
+     C*
+     C* AMEND  - Amend Set Number on Report Request.
+     C* INSRT  - Insert Report Request.
+     C* DELET  - Delete Report Request.
+     C* ENQRE  - Enquire on Report Request.
+     C* VALID  - Validation for Set Number entered.
+     C**PARMS**-*Retrieve*Set*Number*parameter*from*FCPARDL1.************ 053729
+     C* SETNAM - Retrieve BSPL Set Shortname.                             053729
+     C* CMDKY  - Inform RCF if program ended via Command Key :
+     C*            F3, F12 or F10.
+     C* ZASNMS - Send message to program message queue.
+     C* *PSSR  - Database Error subroutine.
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C*  Initial Processing                                              *
+     C*                                                                  *
+     C* CALLS:   AMEND  subroutine                                       *
+     C*          INSRT  subroutine                                       *
+     C*          DELET  subroutine                                       *
+     C*          ENQRE  subroutine                                       *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C** Receive entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           NXSEQ   5        RPT SEQ NO.
+     C                     PARM           LEVEL   1        LEVEL
+     C                     PARM           ENTTY   3        ENTITY
+     C                     PARM           PARAS   1        PARAMETERS
+     C                     PARM           ACTIO   1        ACTION
+     C                     PARM           COMMD   1        COMMAND
+     C*
+     C***KLIST*for*FCPARDL1********************************************** 053729
+     C***********                                                         053729
+     C***********REPKEY    KLIST                                          053729
+     C***********          KFLD           REPNAM 10                       053729
+     C***********          KFLD           REPSEQ  5                       053729
+     C*
+     C** Define Rundat Data Area
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C** Define Local Data Area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Clear all fields to send messages to message queue.
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C                     MOVE *BLANKS   SPGMQ            Program queue
+     C                     MOVEL'SD1324'  SPGMQ            Program queue
+     C*
+     C** Write Screen Header
+     C*
+     C                     WRITEHDRFMT1
+     C*
+     C** Determine the program mode.
+     C*
+     C           ACTIO     CASEQ'A'       AMEND
+     C           ACTIO     CASEQ'I'       INSRT
+     C           ACTIO     CASEQ'D'       DELET
+     C           ACTIO     CASEQ'E'       ENQRE
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* AMEND :     Amend Report Request                                 *
+     C*                                                                  *
+     C* CALLED BY:  Initial processing                                   *
+     C*                                                                  *
+     C* CALLS:      PARMS subroutine.                                    *
+     C*             Y2CLMSC clears message queue.                        *
+     C*             VALID subroutine.                                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           AMEND     BEGSR
+     C***********                                                         053729
+     C***Retrieve*Set*Number*from*FCPARDL1.****************************** 053729
+     C***********                                                         053729
+     C***********          EXSR PARMS                                     053729
+     C***********          MOVELPARAS     SET                             053729
+     C*                                                                   053729
+     C** Retrieve BSPL Set Shortname from Reporting Sets file.            053729
+     C                     EXSR SETNAM                                    053729
+     C                     MOVE G5RSSN    SET                             053729
+     C*
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+     C           *IN70     ANDEQ'0'
+     C*
+     C** Display Prompt screen.
+     C*
+     C                     WRITE#MSGCTL
+     C                     EXFMTKEYFMT
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C                     EXSR VALID
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* INSRT :     Insert Report Request Subroutine                     *
+     C*                                                                  *
+     C* CALLED BY:  Initial processing                                   *
+     C*                                                                  *
+     C* CALLS:      Y2CLMSC clears message queue.                        *
+     C*             VALID subroutine.                                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INSRT     BEGSR
+     C*
+     C                     MOVE *BLANKS   SET
+     C*
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+     C           *IN70     ANDEQ'0'
+     C*
+     C** Display Prompt screen.
+     C*
+     C                     WRITE#MSGCTL
+     C                     EXFMTKEYFMT
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C                     EXSR VALID
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* DELET :     Delete request for Report                            *
+     C*                                                                  *
+     C* CALLED BY:  Initial processing                                   *
+     C*                                                                  *
+     C* CALLS:      PARMS subroutine.                                    *
+     C*             CMDKY subroutine.                                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DELET     BEGSR
+     C***********                                                         053729
+     C***Retrieve*Set*Number*from*FCPARDL1.****************************** 053729
+     C***********                                                         053729
+     C***********          EXSR PARMS                                     053729
+     C*                                                                   053729
+     C** Retrieve Set Shortname from Reporting Sets file.                 053729
+     C                     EXSR SETNAM                                    053729
+     C***********                                                         053729
+     C***Display*Prompt*with*Set*Number*(output*only)*containing*value*** 053729
+     C***from*parameter*on*FCPARDPD.*Footer*allows*'F10=Delete'.********* 053729
+     C***********                                                         053729
+     C*                                                                   053729
+     C** Display Prompt with retrieved Set Shortname (output only)        053729
+     C** Footer allows 'F10 - Delete'                                     053729
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN90
+     C***********          MOVELPARAS     SETOUT                          053729
+     C                     MOVE G5RSSN    SETOUT                          053729
+     C*
+     C** Display Prompt screen.
+     C*
+     C                     WRITE#MSGCTL
+     C                     EXFMTKEYFMT
+     C*
+     C** Inform RCF how program has ended:
+     C*
+     C                     EXSR CMDKY
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* ENQRE :     Enquire on Report Request                            *
+     C*                                                                  *
+     C* CALLED BY:  Initial processing                                   *
+     C*                                                                  *
+     C* CALLS:      PARMS subroutine.                                    *
+     C*             Y2CLMSC clears message queue.                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ENQRE     BEGSR
+     C***********                                                         053729
+     C***Retrieve*Set*Number*from*FCPARDL1.****************************** 053729
+     C***********                                                         053729
+     C***********          EXSR PARMS                                     053729
+     C*                                                                   053729
+     C** Retrieve Set Shortname from Reporting Sets file.                 053729
+     C                     EXSR SETNAM                                    053729
+     C***********                                                         053729
+     C***Display*Prompt*with*Set*Number*(output*only)*containing*value*** 053729
+     C***from*parameter*on*FCPARDPD.************************************* 053729
+     C***********                                                         053729
+     C*
+     C** Display prompt with retrieved Set Shortname                      053729
+     C                     MOVE '1'       *IN80
+     C***********          MOVELPARAS     SETOUT                          053729
+     C                     MOVE G5RSSN    SETOUT                          053729
+     C*
+     C** Display Prompt screen.
+     C*
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+     C           *IN70     ANDEQ'0'
+     C                     WRITE#MSGCTL
+     C                     EXFMTKEYFMT
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C** Inform RCF how program has ended:
+     C*
+     C*
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C           *IN10     ANDEQ'0'
+     C                     MOVE '1'       *IN70
+     C*
+     C                     ELSE
+     C*
+     C                     EXSR CMDKY
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C***********                                                         053729
+     C**PARMS*:*****Retrieve*Set*Number*Parameter*from*FCPARDPD.********* 053729
+     C***********                                                         053729
+     C**CALLED*BY:**AMEND**subroutine************************************ 053729
+     C**************DELET**subroutine************************************ 053729
+     C**************ENQRE**subroutine************************************ 053729
+     C***********                                                         053729
+     C**CALLS:*******PSSR*subroutine************************************* 053729
+     C***********                                                         053729
+     C********************************************************************
+     C*
+     C***********PARMS     BEGSR                                          053729
+     C***********                                                         053729
+     C***Retrieve*Set*Number*for*Report*Name*&*Sequeunce*Number,********* 053729
+     C***held*on*FCPARDPD.*********************************************** 053729
+     C***********                                                         053729
+     C***********          MOVEL'SD1325'  REPNAM                          053729
+     C***********          MOVE NXSEQ     REPSEQ                          053729
+     C***********REPKEY    CHAINFCPARDL1             35                   053729
+     C************IN35     IFEQ '0'                                       053729
+     C***********          MOVELD7PARM    PARAS                           053729
+     C***********                                                         053729
+     C***If*record*not*found,*exit*with*DB*error************************* 053729
+     C***********                                                         053729
+     C***********          ELSE                                           053729
+     C************LOCK     IN   LDA                                       053729
+     C***********          MOVE *BLANKS   DBFILE                          053729
+     C***********          MOVE *BLANKS   DBKEY                           053729
+     C***********          Z-ADD0         DBASE                           053729
+     C***********          MOVE *BLANKS   DBPGM                           053729
+     C***********          MOVEL'FCPARDL1'DBFILE                          053729
+     C***********          MOVELREPNAM    DBKEY1                          053729
+     C***********          MOVELREPSEQ    DBKEY2           ***************053729
+     C***********          Z-ADD001       DBASE            ** DBERR 001 **053729
+     C***********          MOVEL'SD1324'  DBPGM            ***************053729
+     C***********          OUT  LDA                                       053729
+     C***********          EXSR *PSSR                                     053729
+     C***********          END                                            053729
+     C***********
+     C***********          ENDSR                                          053729
+     C***********
+     C********************************************************************
+     C/EJECT                                                              053729
+     C********************************************************************053729
+     C*                                                                  *053729
+     C* SETNAM:     Retrieve Set Name from SDRPSTPD.                     *053729
+     C*                                                                  *053729
+     C* CALLED BY:  AMEND  subroutine                                    *053729
+     C*             DELET  subroutine                                    *053729
+     C*             ENQRE  subroutine                                    *053729
+     C*                                                                  *053729
+     C* CALLS:       PSSR subroutine                                     *053729
+     C*                                                                  *053729
+     C********************************************************************053729
+     C*                                                                   053729
+     C           SETNAM    BEGSR                                          053729
+     C*                                                                   053729
+     C** Use the set number passed into this pgm as a parameter to        053729
+     C** retrieve the Set Shortname from SDRPSTPD.                        053729
+     C*                                                                   053729
+     C                     MOVE PARAS     SETN    1                       053729
+     C           SETN      CHAINSDRPSTL0             30                   053729
+     C*                                                                   053729
+     C** If record not found, exit with DB error                          053729
+     C*                                                                   053729
+     C           *IN30     IFEQ '1'                                       053729
+     C           *LOCK     IN   LDA                                       053729
+     C                     MOVE *BLANKS   DBFILE                          053729
+     C                     MOVE *BLANKS   DBKEY                           053729
+     C                     MOVE *BLANKS   DBPGM                           053729
+     C                     MOVEL'SDRPSTL0'DBFILE                          053729
+     C                     MOVELSETN      DBKEY            ***************053729
+     C                     Z-ADD002       DBASE            ** DBERR 002 **053729
+     C                     MOVEL'SD1324'  DBPGM            ***************053729
+     C                     OUT  LDA                                       053729
+     C                     EXSR *PSSR                                     053729
+     C                     END                                            053729
+     C*                                                                   053729
+     C                     ENDSR                                          053729
+     C*                                                                   053729
+     C********************************************************************053729
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* VALID :     Validate Set Number Subroutine                       *
+     C*                                                                  *
+     C* CALLED BY:  AMEND subroutine.                                    *
+     C*             INSRT subroutine.                                    *
+     C*                                                                  *
+     C* CALLS:      ZASNMS to send error message to program queue.       *
+     C*             CMDKY subroutine.                                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           VALID     BEGSR
+     C*
+     C** Check whether Set No. entered is integer or shortname.
+     C*
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C           *IN10     ANDEQ'0'
+     C                     MOVELSET       @SET1   1
+     C           SET       LOKUPSETNUM                   31
+     C*
+     C** If value entered is between 1 and 9:
+     C*
+     C           *IN31     IFEQ '1'
+     C           @SET1     CHAINSDRPSTL0             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE @SET1     PARAS
+     C                     MOVE '1'       *IN70            Exit program
+     C                     ELSE
+     C*
+     C** Error message sent if Set Number not in System.
+     C*
+     C                     MOVEL'USR4200' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C*
+     C** Value entered is shortname:
+     C*
+     C                     ELSE
+     C*
+     C           SET       CHAINSDRPSTL2             30
+     C           *IN30     IFEQ '0'
+     C                     MOVE G5RSNO    PARAS
+     C                     MOVE '1'       *IN70            Exit program
+     C                     ELSE
+     C*
+     C** Error message sent if Shortname not in System.
+     C*
+     C                     MOVEL'USR4200' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Inform RCF how program has ended.
+     C*
+     C                     ELSE
+     C*
+     C                     EXSR CMDKY
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* CMDKY :     Inform RCF if program ended via Command Key.         *
+     C*                                                                  *
+     C* CALLED BY:  DELET subroutine                                     *
+     C*             ENQRE subroutine                                     *
+     C*             VALID subroutine                                     *
+     C*                                                                  *
+     C* CALLS:      ZASNMS to send error message to program queue.       *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           CMDKY     BEGSR
+     C*
+     C** Inform RCF how program has ended:
+     C*
+     C           *IN03     IFEQ '1'                        F3 pressed
+     C                     MOVE 'E'       COMMD
+     C                     END
+     C*
+     C           *IN12     IFEQ '1'                        F12 pressed
+     C                     MOVE 'F'       COMMD
+     C                     END
+     C*
+     C** CF10 only allowed in Delete Mode, otherwise error message sent
+     C*
+     C           *IN10     IFEQ '1'                        F10 pressed
+     C           ACTIO     IFEQ 'D'
+     C                     MOVE 'D'       COMMD
+     C                     ELSE
+     C                     MOVEL'USR4205' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     MOVE '0'       *IN10
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* ZASNMS:     Send message to program message queue                *
+     C*                                                                  *
+     C* CALLED BY:  VALID subroutine                                     *
+     C*             CMDKY subroutine                                     *
+     C*                                                                  *
+     C* CALLS:      Y2SNMGC                                              *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ZASNMS    BEGSR
+     C*
+     C** Declare message file name
+     C*
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* *PSSR:      Database error processing subroutine                 *
+     C*                                                                  *
+     C* CALLED BY:  PARMS subroutine                                     *
+     C*                                                                  *
+     C* CALLS:                                                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+      ** Seton Database error inds, dump program and return control
+     C*
+     C                     SETON                     U7U8
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+**  SETNUM
+1  2  3  4  5  6  7  8  9
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

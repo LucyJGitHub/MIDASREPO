@@ -1,0 +1,227 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Leo facility update')                         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - LEO/Midas Lending Integration                        *
+      *                                                               *
+      *  LE0025 - LEO Facility Update                                 *
+      *                                                               *
+      *  Function: This program allows the file FCLTY to be           *
+      *  (COB)     updated with parameters passed to it.              *
+      *                                                               *
+      *  Called By: RPG/CMIU50                                        *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE029             Date 04Sep02               *
+      *                 CAP073             Date 08Aug02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP068             Date 25JUN02               *
+      *                 CLE023             Date 19Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01473             Date 17Aug94               *
+      *                 999999             Date 99XXX99               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE029 - Addition of Severity code and Limit ID to FCLTYFM   *
+      *  CAP073 - Conversion of MN inputs into modular structure to   *
+      *           use as APIs. Facility input Transaction Details     *
+      *  CAP068 - Recompiled for changes to FCLTYFM and FCLTYFN.      *
+      *  CLE023 - Lending Facility History Improvements. (Recompiled) *
+      *     S01473 - New program created for Midas/Leo Integration    *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     FFCLTY   UF  E           K        DISK
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFMF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+     F                                              KCOMIT
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    99  - Error in Chain to Facility File                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Program Initialisation                              *
+     F*  UPDATE - Update File                                         *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+      *
+     I/EJECT
+     I*
+     I@DETL       DS
+     I** Data structure for parameters passed from calling program
+     I                                        1  130@CAMD
+     I                                       14  260@OAM1
+     I                                       27  390@OAM2
+     I                                       40  520@OAM3
+     I                                       53  650@OAM4
+     I                                       66  780@OAM5
+     I                                       79  910@OAM6
+     I                                       92 1040@OAM7
+     I                                      105 1170@OAM8
+     I                                      118 1300@OAM9
+     I                                      131 1430@OA10
+     I                                      144 1480@LCD
+     I                                      149 149 @CHTP
+     I*
+     ILDA       E DSLDA
+      ** Database error Data Structure
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Update File  Processing.
+      *
+     C                     EXSR UPDATE
+      *
+      ***  End Program.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - SUBROUTINE TO DO PROGRAM INITIALISATION.            *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RTCD    7        RETURN CODE
+     C**********           PARM           @CNUM   60       CUSTOMER                           CSD027
+     C                     PARM           @CNUM   6        CUSTOMER                           CSD027
+     C                     PARM           @FCTY   30       FACILITY TYPE
+     C                     PARM           @FCNO   20       FACILITY NO
+     C                     PARM           @RCTY   1        RECORD TYPE
+     C                     PARM           @DETL 149        DETAILS
+     C*
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /TITLE SR/UPDATE
+      *****************************************************************
+      *                                                               *
+      *  UPDATE - SUBROUTINE TO UPDATE FILE FCLTY.                    *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPDATE    BEGSR
+      *
+      ** KLIST for Facility File.
+      *
+     C           FCLTKY    KLIST
+     C                     KFLD           @CNUM
+     C                     KFLD           @FCTY
+     C                     KFLD           @FCNO
+     C                     KFLD           @RCTY
+     C*
+     C*
+     C** Retrieve Facility record
+     C*
+     C           FCLTKY    CHAINFCLTYFNF             99
+     C           *IN99     IFEQ '1'                                    ***
+     C           RECI      ORNE 'D'
+     C                     MOVE '*ERROR ' RTCD                         4 *
+     C                     ELSE
+     C*
+     C** Move input parameters to output fields
+     C*
+     C                     Z-ADD@CAMD     CAMD
+     C                     Z-ADD@OAM1     OAM1
+     C                     Z-ADD@OAM2     OAM2
+     C                     Z-ADD@OAM3     OAM3
+     C                     Z-ADD@OAM4     OAM4
+     C                     Z-ADD@OAM5     OAM5
+     C                     Z-ADD@OAM6     OAM6
+     C                     Z-ADD@OAM7     OAM7
+     C                     Z-ADD@OAM8     OAM8
+     C                     Z-ADD@OAM9     OAM9
+     C                     Z-ADD@OA10     OA10
+     C                     Z-ADD@LCD      LCD
+     C                     MOVE @CHTP     CHTP
+     C*
+     C** Update file FCLTY
+     C*
+     C                     EXCPT
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+     O*
+     O** Update facility file
+     O*
+     OFCLTYFNFE
+     O                         CAMD
+     O                         OAM1
+     O                         OAM2
+     O                         OAM3
+     O                         OAM4
+     O                         OAM5
+     O                         OAM6
+     O                         OAM7
+     O                         OAM8
+     O                         OAM9
+     O                         OA10
+     O                         LCD
+     O                         CHTP
+     O*
+      /EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

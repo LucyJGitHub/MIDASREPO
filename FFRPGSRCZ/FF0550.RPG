@@ -1,0 +1,721 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF COB audit reports')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas FUTURES AND OPTIONS MODULE
+     F*                                                                  *
+     F*   FF0550  -  COB AUDIT REPORTS                                   *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+     F*  Last Amend No. CPK015             Date 29Apr02                  *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  Prev Amend No. CAP006             Date 17May99                  *
+     F*                 CAP004             Date 07Nov98                  *
+     F*                 119511             Date 19Jun97                  *
+     F*                  073714             DATE 01MAR95                 *
+     F*                  E21147             DATE 20FEB90                 *
+     F*                  S01117             DATE 10JAN90                 *
+     F*                  E18137             DATE 25/04/89                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*  CPK015 - Release 4.01 packaging:                                *
+     F*           - Replace the SP520FFDB reference with SP8FF0001.      *
+     F*  CAP006 - APIs Phase IV                                          *
+     F*           Service program introduction                           *
+     F*  CAP004 - Added new authorised update programs because of        *
+     F*           creation of FF API.  INTYPD records can be created by  *
+     F*           OTC input.  The following three programs were added    *
+     F*           to record 4 of the MAP array: FFTRANUPP, FFOTCCSIN     *
+     F*           and FFOTCCRPR; and the array size was extended to 70.  *
+     F*           The MPX array was extended to cope with 7 entries to   *
+     F*           match this.                                            *
+     F*  119511 - File Out of Balance for Instrument Types in FF0550     *
+     F*         - Changed Position of Last Change Type due to PF/INTYPD  *
+     F*           from 163 to 165.                                       *
+     F*   073714  -  OTC ENHANCEMENTS                                    *
+     F*   E21147  -  REPLACE QCAEXEC CALL WITH QCMDEXC FOR AS400         *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   E18137  -  INCLUDE PROGRAM 'FOCLT' AS AUTHORISED UPDATE        *
+     F*              PROGRAM, THIS BEING BACKGROUND RPG PROGRAM          *
+     F*              FOR NEW SYNON CLIENT INPUT PROGRAM.                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F******IGNDECERR(*NO)                                               *073714
+     F*     IGNDECERR(*YES)                                              *073714
+     F*                                                                  *
+     F********************************************************************
+     F*ABTB10*IF* E           K        DISK                           UC  S01117
+     FFFAUD   IF  E           K        DISK
+     FJRNIM1  IF  E           K        DISK
+     F            QJORDJE                           KRENAMEQJORDJEX
+     FJRNIM   IF  E           K        DISK
+     FJRNCGD  O   E                    DISK                      A    UC
+     FJRNCG   UF  E           K        DISK                           UC
+     F            JRNCGDF                           KRENAMEJRNCGDFX
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       30         END OF FILE
+     F*       99         WORK INDICATOR
+     F*       U3         SWITCH FOR AUDIT REPORT ( EXTERNALLY SET )
+     F*
+     E                    CPY@    1   1 80
+     E*
+     E                    AUD     7   7  8
+     E** ARRAY OF AUDIT FILES
+     E*
+     E                    MST     7   7 10
+     E** ARRAY OF MASTER FILES
+     E*
+     E                    MEK     7   7  3 0
+     E** ARRAY OF MASTER FILE END POSITION OF KEY
+     E*
+     E                    MSP     7   7  3 0
+     E** ARRAY OF MASTER FILE POSITION OF LAST CHANGE TYPE
+     E*
+     E                    MSN     1   7 30
+     E** ARRAY OF MASTER FILE NAMES
+     E*
+     E                    RPG     7   7 10
+     E** ARRAY OF MASTER FILE REPORT PGMS
+     E*
+     E**************      MAP     1   7 40                                CAP004
+     E**************      MPX         4 10                                CAP004
+     E                    MAP     1   7 70                                CAP004
+     E                    MPX         7 10                                CAP004
+     E** ARRAY OF MASTER FILE AUTHORIZED UPDATE PROGRAMS
+     E*
+     E                    MFK        29  1
+     E** ARRAY FOR JOURNAL CHANGES FILE MASTER FILE KEY
+     E*
+     E                    DAT       512  1
+     E** ARRAY FOR JOURNAL CHANGES FILE DATA
+     E*
+     E                    CMD    80  80  1
+     E***ARRAY*FOR*CMD*TO*BE*EXECUTED*BY*QCAEXEC********                  E21147
+     E** ARRAY FOR CMD TO BE EXECUTED BY QCMDEXC                          E21147
+     E*
+     E                    SWS         8  1
+     E** ARRAY FOR SWITCH SETTINGS
+     E*
+     IJOESD       DS
+     I*
+     I** JOURNAL ENTRY SPECIFIC DATA
+     I*
+     I                                        1 512 DAT
+     I                                        1   1 RECI
+     I                                        1  10 STPTA
+     IJRNCHG      DS
+     I*
+     I** JOURNAL CHANGE MASTER FILE KEY
+     I*
+     I                                        2  30 MFK
+     I                                        1  30 MFKX
+     I*DA******** DS                            256                       S01117
+     I***********                                                         S01117
+     I***LOCAL*DATA*AREA*FOR*DATABASE*ERROR*DETAILS***********************S01117
+     I***********                                                         S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I*                                                                   S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      /EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*================================================================
+     C*
+     C** CALCULATION SPECIFICATIONS:KEY LISTS
+     C*
+     C**  DEFINE KEY LIST FOR CHAINING TO JRNCG ON COMMIT ID/JRN TYPE
+     C*
+     C           JRNCGK    KLIST
+     C                     KFLD           JOCCID
+     C                     KFLD           JOENTT
+     C*================================================================
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C** FIRST TIME PROCESSING
+     C*
+     C                     EXSR INIT
+     C*
+     C** MAIN BODY PROCESSING
+     C*
+     C                     EXSR MAIN
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     SETON                         LR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      /EJECT
+     C*================================================================
+      ** INDEX OF SUBROUTINES
+      **
+      ***INIT**************ACCESS*TABTB10*&*DETERMINE*LAST*RECOV*POINTS***S01117
+      ** INIT              ACCESS RUNDAT & DETERMINE LAST RECOV POINTS    S01117
+      **
+      ** MAIN              MAIN BODY PROCESSING
+      **
+      ** DEFPRM            DEFINE PROCESSING PARAMETERS OF AUDIT FILE
+      **
+      ** SRCJRN            SEARCH THE JOURNAL FOR MASTER FILE CHANGES
+      **
+      ** FILUPD            PROCESS FILE UPDATE JOURNAL ENTRIES
+      **
+      ** ROLBCK            PROCESS ROLLBACK JOURNAL ENTRIES
+      **
+      ** REPRTS            PRODUCE AUDIT REPORTS
+      **
+      ** TOTAL             MAINTAIN PROGRAM TOTALS OF RECORD CHANGES
+      **
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ***INIT*S/R*-*TO*ACCESS*TABTB10*AND*DETERMINE*LAST*RECOV*POINTS*****S01117
+      ** INIT S/R - TO ACCESS RUNDAT AND DETERMINE LAST RECOV POINTS      S01117
+      ** CALLED ONCE AT START OF PROGRAM FROM MAIN LINE
+      ** CALLS NO OTHER ROUTINES
+      **
+     C*================================================================
+     C*
+     C           INIT      BEGSR                           ** INIT BSR  **
+     C*
+     C***********          MOVEL'FF0550  'DBPGM                           S01117
+     C***********          MOVE *BLANK    DBKEY                           S01117
+     C*
+     C**     ACCEPT INPUT PARAMETER
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ERRPGM
+     C*
+     C**     SET UP SWITCH SETTINGS
+     C*
+     C                     MOVE *INU1     SWS,1
+     C                     MOVE *INU2     SWS,2
+     C                     MOVE *INU3     SWS,3
+     C                     MOVE *INU4     SWS,4
+     C                     MOVE *INU5     SWS,5
+     C                     MOVE *INU6     SWS,6
+     C                     MOVE *INU7     SWS,7
+     C                     MOVE *INU8     SWS,8
+     C*                                                                   S01117
+     C**     IN THE DATAAREA RUNDAT                                       S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C*******ACCESSING*ICD1*OFF*TABLE*************************************S01117
+     C***********                                                         S01117
+     C***********          OPEN TABTB10                                   S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10                  99               S01117
+     C**N99******RECI      COMP 'D'                  9999                 S01117
+     C***********                                                         S01117
+     C***********          CLOSETABTB10                                   S01117
+     C***********                                                         S01117
+     C*********IF*RECORD*NOT*FOUND****************************************S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********                                                         S01117
+     C*********UPDATING*LDA***********************************************S01117
+     C***********                                                         S01117
+     C***********          SETON                     U7U8LR               S01117
+     C************NAMVAR   DEFN           LDA                             S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVE '01'      DBASE            ***************S01117
+     C***********          MOVE 'TABFF'   DBFILE           **DB ERROR 01**S01117
+     C***********          MOVEL'01    '  TABKY  12        ***************S01117
+     C***********          MOVE '    10'  TABKY                           S01117
+     C***********          MOVELTABKY     DBKEY                           S01117
+     C***********          OUT  LDA                                       S01117
+     C***********          RETRN                                          S01117
+     C***********          END                                            S01117
+     C*
+     C**       GET LAST RECOVERY ENTRY
+     C*
+     C                     READ JRNIM1                   30
+     C*
+     C**       SET START/END POINT OF ENTRIES EXCLUDED FROM RECOVERY
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVELSTPTA     STPT   100
+     C                     Z-ADDJOSEQN    EDPT   100
+     C                     END
+     C*
+     C*********SET*CMD*LENGTH*FOR*QCAEXEC****************************     E21147
+     C**       SET CMD LENGTH FOR QCMDEXC                                 E21147
+     C*
+     C                     Z-ADD13        CMDLEN 155
+     C*
+     C                     ENDSR                           ** INIT ESR ***
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** MAIN S/R - MAIN BODY PROCESSING
+      ** CALLED ONCE AT START OF PROGRAM
+      ** CALLS DEFPRM , SRCJRN  , REPRTS
+      **
+     C*================================================================
+     C*
+     C           MAIN      BEGSR                           ** MAIN BSR  **
+     C*
+     C**  READ FIRST AUDIT FILE
+     C*
+     C                     READ FFAUD                    30
+     C*
+     C**  DO WHILE END OF AUDIT FILE NOT REACHED
+     C*
+     C           *IN30     DOWEQ'0'
+     C*
+     C**  ONLY PROCESS IF LAST AUDIT DATE LESS THAN RUN DATE
+     C*
+     C           LARD      IFLT RUND
+     C*
+     C**  OPEN JOURNAL CHANGES FILE(S)
+     C*
+     C                     OPEN JRNCG
+     C                     OPEN JRNCGD
+     C*
+     C**  DEFINE PROCESSING PARAMETERS FOR AUDIT FILE
+     C*
+     C                     EXSR DEFPRM
+     C*
+     C**  SEARCH JOURNAL IMAGES FILE FOR JOURNAL ENTRIES
+     C**  INVOLVING THE MASTER FILE BEING PROCESSED
+     C*
+     C                     EXSR SRCJRN
+     C*
+     C**  OUTPUT AUDIT REPORT , UNAUTHORIZED UPDATES REPORT
+     C**  ( IF REQUIRED ) AND AUDIT RECONCILIATION REPORT
+     C*
+     C                     EXSR REPRTS
+     C*
+     C**  CLOSE JOURNAL CHANGES FILE(S)
+     C*
+     C                     CLOSEJRNCG
+     C                     CLOSEJRNCGD
+     C*
+     C**  CLEAR PF MEMBER OF JOURNAL CHANGES FILE
+     C*
+     C**********           CALL 'QCAEXEC'                                 E21147
+     C                     CALL 'QCMDEXC'                                 E21147
+     C                     PARM           CMD
+     C                     PARM           CMDLEN
+     C*
+     C                     END
+     C*
+     C**  READ NEXT AUDIT FILE
+     C*
+     C                     READ FFAUD                    30
+     C                     END
+     C*
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** DEFPRM S/R -TO DEFINE PROCESSING PARAMETERS FOR THE AUDIT FILE
+      ** CALLED ONCE FOR EACH AUDIT FILE ACCESSED OFF LF/FFAUD
+      ** CALLS NO OTHER ROUTINES
+      **
+     C*================================================================
+     C*
+     C           DEFPRM    BEGSR
+     C*
+     C**  SET UP PROCESSING PARAMETERS RELEVANT TO AUDIT FILE
+     C*
+     C                     Z-ADD1         X       20
+     C           AUDF      LOKUPAUD,X                    99
+     C                     MOVELMST,X     MSTFIL 10
+     C                     MOVELMEK,X     MK      30
+     C                     MOVELMSP,X     MP      30
+     C                     MOVELMSN,X     FILDES 30
+     C                     MOVELRPG,X     REPPRG 10
+     C                     MOVEAMAP,X     MPX
+     C*
+     C**  RESET UNAUTHORIZED UPDATE COUNT FOR THIS AUDIT FILE
+     C**  AND RECORD UPDATE COUNTS
+     C*
+     C                     Z-ADD*ZERO     UNAUCG
+     C                     Z-ADD*ZERO     TNINS
+     C                     Z-ADD*ZERO     TNAMD
+     C                     Z-ADD*ZERO     TNDEL
+     C*
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** SRCJRN S/R -TO SEARCH THE JOURNAL FOR MASTER FILE JRNL CHANGES
+      ** CALLED ONCE FOR EACH AUDIT FILE ACCESSED OFF LF/FFAUD
+      ** CALLS FILUPD , ROLBCK
+      **
+     C*================================================================
+     C*
+     C           SRCJRN    BEGSR
+     C*
+     C**  READ ALL RECORDS ON JOURNAL FOR MASTER FILE
+     C*
+     C           MSTFIL    SETLLJRNIM
+     C                     READ JRNIM                    30
+     C*
+     C           *IN30     DOWEQ'0'
+     C           MSTFIL    ANDEQJOOBJ
+     C*
+     C** PROCESS STANDARD FILE UPDATE JOURNAL ENTRIES
+     C*
+     C           JOENTT    IFEQ 'UB'
+     C           JOENTT    OREQ 'UP'
+     C           JOENTT    OREQ 'PT'
+     C           JOENTT    OREQ 'DL'
+     C*
+     C                     EXSR FILUPD
+     C*
+     C                     END
+     C*
+     C** PROCESS ROLLBACK JOURNAL ENTRIES
+     C*
+     C           JOENTT    IFEQ 'BR'
+     C           JOENTT    OREQ 'UR'
+     C           JOENTT    OREQ 'DR'
+     C*
+     C                     EXSR ROLBCK
+     C*
+     C                     END
+     C*
+     C** READ NEXT RECORD
+     C*
+     C                     READ JRNIM                    30
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** FILUPD S/R -TO PROCESS FILE UPDATE ENTRIES ON THE JOURNAL
+      ** CALLED ONCE FOR EACH RELEVANT JOURNAL ENTRY OFF LF/JRNIM
+      ** CALLS TOTAL
+      **
+     C*================================================================
+     C*
+     C           FILUPD    BEGSR
+     C*
+     C** IS THIS AN AUTHORIZED UPDATE ?
+     C*
+     C                     Z-ADD1         X
+     C           JOPGM     LOKUPMPX,X                    99
+     C*
+     C           *IN,99    IFEQ '1'
+     C                     MOVEL'Y'       AUTU
+     C                     ELSE
+     C                     MOVEL'N'       AUTU
+     C                     END
+     C*
+     C** HAS THIS UPDATE NOT BEEN FWD RECOVERED (IF FWD RECOVERY DONE)
+     C*
+     C           JOSEQN    IFGT STPT
+     C           JOSEQN    ANDLTEDPT
+     C                     MOVEL'Y'       NRFC
+     C                     ELSE
+     C                     MOVEL'N'       NRFC
+     C                     END
+     C*
+     C** OUTPUT IMAGE TO JRNCG  ( 'UB' 'UP' 'PT' & 'DL' TYPE RECORDS )
+     C*
+     C                     MOVEL'D'       RECI
+     C                     MOVEADAT       MFKX
+     C                     MOVEA*BLANK    MFK,MK
+     C                     MOVEAMFK       MFLK
+     C                     WRITEJRNCGDF
+     C*
+     C** PROCESS 'UP' TYPES
+     C*
+     C           JOENTT    IFEQ 'UP'
+     C*
+     C** MAINTAIN AUDIT COUNT  ( FOR CHANGE TYPES 'I' 'A' OR 'D' )
+     C*
+     C                     Z-ADD1         COUNT   50
+     C                     EXSR TOTAL
+     C                     MOVEL'UB'      JOENTT
+     C*
+     C** IF AFTER IMAGE IS INSERT OR DELETE,REMOVE BEFORE IMAGE
+     C*
+     C           DAT,MP    IFEQ 'I'
+     C           DAT,MP    OREQ 'D'
+     C*
+     C           JRNCGK    CHAINJRNCGDFX             99
+     C           *IN,99    IFEQ '0'
+     C                     MOVEL'*'       RECI
+     C                     UPDATJRNCGDFX
+     C                     END
+     C*
+     C** IF AFTER IMAGE IS AMEND UPDATE BEFORE IMAGE  ( CHTP = A )
+     C*
+     C                     ELSE
+     C           JRNCGK    CHAINJRNCGDFX             99
+     C           *IN,99    IFEQ '0'
+     C                     MOVEL'A'       DAT,MP
+     C                     UPDATJRNCGDFX
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** PROCESS 'PT' TYPES
+     C*
+     C           JOENTT    IFEQ 'PT'
+     C*
+     C** MAINTAIN AUDIT COUNT  ( SHOULD ONLY BE CHANGE TYPE 'I' )
+     C*
+     C                     Z-ADD1         COUNT
+     C                     EXSR TOTAL
+     C                     END
+     C*
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** ROLBCK S/R -TO PROCESS ROLLBACK ENTRIES ON THE JOURNAL
+      ** CALLED ONCE FOR EACH RELEVANT JOURNAL ENTRY OFF LF/JRNIM
+      ** CALLS TOTAL
+      **
+     C*================================================================
+     C*
+     C           ROLBCK    BEGSR
+     C*
+     C           JOENTT    IFEQ 'BR'
+     C*
+     C** REMOVE PREVIOUS 'UB' IMAGE OUTPUT TO JRNCG
+     C*
+     C                     MOVEL'UB'      JOENTT
+     C           JRNCGK    CHAINJRNCGDFX             99
+     C           *IN,99    IFEQ '0'
+     C                     MOVEL'*'       RECI
+     C                     UPDATJRNCGDFX
+     C                     END
+     C                     END
+     C*
+     C           JOENTT    IFEQ 'UR'
+     C*
+     C** REMOVE PREVIOUS 'UP' IMAGE OUTPUT TO JRNCG
+     C*
+     C                     MOVEL'UP'      JOENTT
+     C           JRNCGK    CHAINJRNCGDFX             99
+     C           *IN,99    IFEQ '0'
+     C                     MOVEL'*'       RECI
+     C*
+     C** MAINTAIN AUDIT COUNT  ( FOR CHANGE TYPES 'I' 'A' OR 'D' )
+     C*
+     C                     Z-SUB1         COUNT
+     C                     EXSR TOTAL
+     C                     UPDATJRNCGDFX
+     C                     END
+     C                     END
+     C*
+     C           JOENTT    IFEQ 'DR'
+     C*
+     C** DELETE PREVIOUS 'PT' IMAGE OUTPUT TO JRNCG
+     C*
+     C                     MOVEL'PT'      JOENTT
+     C           JRNCGK    CHAINJRNCGDFX             99
+     C           *IN,99    IFEQ '0'
+     C                     MOVEL'*'       RECI
+     C*
+     C** MAINTAIN AUDIT COUNT  ( SHOULD ONLY BE CHANGE TYPE 'I' )
+     C*
+     C                     Z-SUB1         COUNT
+     C                     EXSR TOTAL
+     C                     UPDATJRNCGDFX
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** REPRTS S/R -TO RUN AUDIT REPORTS
+      ** CALLED ONCE FOR EACH AUDIT FILE ACCESSED OFF LF/FFAUD
+      ** CALLS 3 RPG PROGRAMS  'REPPRG' FF0555 FF0560
+      **
+     C*================================================================
+     C*
+     C           REPRTS    BEGSR
+     C*
+     C** REPORT JOURNAL CHANGES IN APPROPRIATE AUDIT REPORT
+     C*
+     C                     CALL REPPRG
+     C                     PARM           SWS
+     C                     PARM *BLANKS   SEQ     5                       S01117
+     C*
+     C** IF U8 IS ON THEN A DB ERROR HAS OCCURRED IN CALLED
+     C** PROGRAM . RESET SWITCHES AND TERMINATE .
+     C*
+     C           SWS,8     IFEQ '1'
+     C                     MOVE SWS,1     *INU1
+     C                     MOVE SWS,2     *INU2
+     C                     MOVE SWS,3     *INU3
+     C                     MOVE SWS,4     *INU4
+     C                     MOVE SWS,5     *INU5
+     C                     MOVE SWS,6     *INU6
+     C                     MOVE SWS,7     *INU7
+     C                     MOVE SWS,8     *INU8
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C** REPORT UNAUTHORIZED CHANGES ( IF ANY )
+     C*
+     C           UNAUCG    IFGT *ZERO
+     C                     CALL 'FF0555'
+     C                     PARM           FILDES
+     C                     PARM           SWS
+     C*
+     C** IF U8 IS ON THEN A DB ERROR HAS OCURRED IN FF0555. RESET
+     C** SWITCHES AND TERMINATE PROCESSING
+     C*
+     C           SWS,8     IFEQ '1'
+     C                     MOVE SWS,1     *INU1
+     C                     MOVE SWS,2     *INU2
+     C                     MOVE SWS,3     *INU3
+     C                     MOVE SWS,4     *INU4
+     C                     MOVE SWS,5     *INU5
+     C                     MOVE SWS,6     *INU6
+     C                     MOVE SWS,7     *INU7
+     C                     MOVE SWS,8     *INU8
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C                     END
+     C*
+     C** REPORT AUDIT TOTALS , UPDATE AUDIT FILE ( IF RECONCILED )
+     C*
+     C                     CALL 'FF0560'
+     C                     PARM           AUDF
+     C                     PARM           FILDES
+     C                     PARM           TNINS
+     C                     PARM           TNAMD
+     C                     PARM           TNDEL
+     C                     PARM           SWS
+     C*
+     C** IF U8 IS ON THEN FILE CONTROL IS OUT OF BALANCE OR DB ERROR
+     C** PASS FILE IN ERROR BACK TO CONTROL PROGRAM AND TERMINATE
+     C*
+     C           SWS,8     IFEQ '1'
+     C                     MOVE AUDF      ERRPGM  8
+     C                     MOVE SWS,1     *INU1
+     C                     MOVE SWS,2     *INU2
+     C                     MOVE SWS,3     *INU3
+     C                     MOVE SWS,4     *INU4
+     C                     MOVE SWS,5     *INU5
+     C                     MOVE SWS,6     *INU6
+     C                     MOVE SWS,7     *INU7
+     C                     MOVE SWS,8     *INU8
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*================================================================
+      /EJECT
+     C*================================================================
+      **
+      ** TOTAL S/R -TO MAINTAIN PROGRAM TOTALS OF RECORD CHANGES
+      ** CALLED FOR EACH RELEVANT JOURNAL ENTRY OFF LF/JRNIM
+      ** CALLS NO OTHER S/R
+      **
+     C*================================================================
+     C*
+     C           TOTAL     BEGSR
+     C*
+     C           AUTU      IFEQ 'Y'
+     C*
+     C** MAINTAIN AUDIT CONTROL (AUTHORIZED) UPDATE COUNTS
+     C*
+     C           DAT,MP    IFEQ 'I'
+     C                     ADD  COUNT     TNINS   40
+     C                     END
+     C           DAT,MP    IFEQ 'A'
+     C                     ADD  COUNT     TNAMD   40
+     C                     END
+     C           DAT,MP    IFEQ 'D'
+     C                     ADD  COUNT     TNDEL   40
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** MAINTAIN UNAUTHORIZED UPDATE COUNT
+     C*
+     C                     ADD  COUNT     UNAUCG  40
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*================================================================
+      *================================================================   S01117
+      * COMPILE-TIME TABLE BEFORE CHANGE                                  S01117
+      * MSP                                                               S01117
+      **056113135163066060097**************************************S01117 119511
+      * 059116135163069060097                                             119511
+      *================================================================   S01117
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** AUD
+MARKTA  FOCLTA  CHGCMA  INTYPA  DEFLTA  TRNORA  FACKYA
+** MST
+MARKTD    FOCLTD    CHGCMD    INTYPD    DEFLTD    TRNORD    FACKYD
+** MEK
+003007006006012003015
+** MSP
+059116135165069060097                                                     119511
+** MSN
+Market Centres
+F&O Clients
+Charges and Commissions
+Instrument Types
+Defaults
+Trade Number Ranges
+F&O Account Keys
+** RPG
+FF1110    FF1120    FF1130    FF1140    FF1160    FF1170    FF1180
+** MAP
+FFC0201   FF0110
+FFC0201   FF0120    FOCLT
+FFC0201   FF0130
+FFC0201   FF0140    FF0150    FF0020    FFTRANUPP FFOTCCSIN SP8FF0001    CAP006 CAP004 073714 CAP015
+FFC0201   FF0160
+FFC0201   FF0170
+FFC0201   FF0180
+** CMD
+CLRPFM JRNCGD

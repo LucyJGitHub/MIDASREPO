@@ -1,0 +1,1429 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Format MT950 subfields')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module
+     F*                                                               *
+     F*  FT0325 - FT Format MT950 subfields                           *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. BUG15201           Date 30Oct07               *
+      *                 GBO028             Date 22Aug06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSC022             Date 24Feb04               *
+      *                 215066             DATE 20Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             DATE 01JUN00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 175479             Date 08FEB00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 145199             DATE 16OCT98               *
+     F*                 S01408             DATE 04NOV96               *
+     F*                 073158             DATE 21MAY96               *
+     F*                 073157             DATE 21MAY96               *
+     F*                 078189             DATE 22NOV94               *
+     F*                 069250             DATE 03MAY94               *
+     F*                 065886             DATE 07JAN94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  CSW209 - Swift 2009 Changes (Recompile)                      *
+      *  BUG15201 - Encounter Database Errors (Recompile)             *
+      *  GBO028 - MT940 Field 86 and sorting enhancement              *
+      *           Added core hooks:                                   *
+      *             FT0325CC01, FT0325CC02, FT0325C052                *
+      *           Used core hooks:                                    *
+      *             FT0325DEPG, FT0325IIP1, FT0325INPY, FT0325OTPY    *
+      *             FT0325DFPG                                        *
+      *  CFT032 - Account Line in Field 50X in MT103                  *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  215066 - Check only two first two bytes of input parameter.  *
+      *  CFT009 - FT Fees and Charge Development-Recompiled           *
+      *  CFT014 - Straight-through Processing Phase 2 MT103           *
+      *           Messages Generation for FT. Recompile only.         *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *           Recompiled over changed PF/INPAYDD.                 *
+      *  175479 - Recompiled over changes in INPAYDD & OTPAYDD        *
+     F*  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+     F*           in Year 2000 fix 124673.                            *
+     F*  S01408 - Addition of core hook FT0325IIP1                    *
+     F*           Addition of core hook FT0325CCP1                    *
+     F*  073158 - Format subfield 9 for debits on INPAY and OTPAY     *
+     F*           with :54 defined to show sender of message          *
+     F*  073157 - Clear formats as datastructures and not files       *
+     F*  078189 - Reinstate the creation parameters inadvertently     *
+     F*           removed by 069250                                   *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  065886 - Format MT950 subfields                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    General work indicator                                 *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FOTPAY   IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      * RSQ : Outgoing Payments Transactions
+      *
+     FINPAY   IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      * RSQ : Incoming Payments Transactions
+      *
+     FCQCOD   IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      * RSQ : Cheques for Collection
+      *
+     FCQPAC   IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      * RSQ : Cheques to be Paid
+      *
+     FMEINCRL1IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      * RSQ : Incoming Message Control Details
+      *
+     FMEINMPL1IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      * RSQ : Incoming Message Part Details
+      *
+     FMEINDTS2IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      * RSQ : Incoming Message Details
+      *
+     F/COPY WNCPYSRC,FT0325DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,FT0325DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+      *
+     ICQPACDDF    18
+     ICQPADDDF    19
+     ICQCODDDF    18
+     ICQCOCDDF    19
+     I@IN35S2     20
+     I@INDTS2     21
+     I              DTMTG                           DSMTG
+      *
+     I/COPY WNCPYSRC,FT0325DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     I@INCR     E DSMEINCRPD                                              073157
+      *                                                                   073157
+      *  Define Control record layout                                     073157
+      *                                                                   073157
+     I@INMP     E DSMEINMPPD                                              073157
+      *                                                                   073157
+      *  Define Parts record layout                                       073157
+      *                                                                   073157
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      *  Define rundat data area
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+     I/COPY FTCPYSRC,SFTADDRI
+      *
+     IW8FT        DS                            128
+      *
+      * Address data structure
+      *
+      * Currency
+     I                                        1   3 W8CCY
+      * Settlement Type
+     I                                        4   5 W8STMT
+      * Mandatory Text - convert BIC identifiers
+     I                                        6   6 W8MTXT
+      * Message Tag
+     I                                        7  11 W8MTAG
+      * Construct of data in field
+     I                                       12  12 W8TYPE
+      * Number of Lines available
+     I                                       13  140W8NLIN
+      * Network and Message Type
+     I                                       15  20 W8NWRK
+     I                                       21  23 W8MTPY
+      * Calling Program
+     I                                       24  33 W8CPGM
+      * Action *PRINT/*ENQ/*MSG GEN
+     I                                       34  41 W8ACT
+      * Critical reporting - Database error if 'Y'
+      * If no BIC directory and BIC entered no error
+     I                                       42  42 W8CRIT
+      * Force Midas Address - where possible
+     I                                       43  43 W8MADD
+      * If Retail get first address from account
+     I                                       44  44 W8RTAD
+      * Alternative Address
+     I                                       45  45 W8ALTN
+      * Address type selected in W0MSG
+     I                                       46  46 W8ADTP
+      /EJECT
+      *
+      *  Define parameter data structure
+      *
+     IW1DATA      DS                            256
+      *
+     I                                        1  15 W1PREF
+      *
+     I                                       16  19 W1SBF6
+      *
+     I                                       21  36 W1SBF7
+      *
+     I                                       37  52 W1SBF8
+      *
+     I                                       53  86 W1SBF9
+      *
+     I                                       87  88 W1DRCR
+      *
+     I                                       89  90 W1CQSQ
+      *                                                                   S01408
+     I/COPY WNCPYSRC,FT0325IIP1                                           S01408
+      *                                                                   S01408
+      *
+      /EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           W1DATA
+     C/COPY WNCPYSRC,FT0325CC01
+      *                                                                                       GBO028
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELW1PREF    W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Clear working fields
+      *
+     C                     EXSR SRCLR
+      *
+      * Calculate default charges
+      *
+     C********** W0ACT     CASEQ'OP'      SROTPY           Outgoing                           215066
+     C********** W0ACT     CASEQ'IN'      SRINPY           Incoming                           215066
+     C********** W0ACT     CASEQ'CC'      SRCCPY           Chq Collected                      215066
+     C********** W0ACT     CASEQ'CP'      SRCPPY           Chq to be Paid                     215066
+     C********** W0ACT     CASEQ'NT'      SRNTPY           Nostro Transfer                    215066
+     C                     MOVELW0ACT     W0ACT2  2                                           215066
+     C           W0ACT2    CASEQ'OP'      SROTPY           Outgoing                           215066
+     C           W0ACT2    CASEQ'IN'      SRINPY           Incoming                           215066
+     C           W0ACT2    CASEQ'CC'      SRCCPY           Chq Collected                      215066
+     C           W0ACT2    CASEQ'CP'      SRCPPY           Chq to be Paid                     215066
+     C           W0ACT2    CASEQ'NT'      SRNTPY           Nostro Transfer                    215066
+     C                     CAS            SRACT
+     C                     ENDCS
+      *
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMAIN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C/COPY WNCPYSRC,FT0325C052
+      *                                                                                       GBO028
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLR    : Clear work fields                                 *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCLR     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCLR '  @STK,Q
+      *
+      *  /Copy point for Clear of work fields
+      *
+     C/COPY WNCPYSRC,FT0325CLR
+      *
+      *  Clear return information
+      *
+     C                     MOVEL*BLANKS   W1SBF6
+     C                     MOVEL*BLANKS   W1SBF7
+     C                     MOVEL*BLANKS   W1SBF8
+     C                     MOVEL*BLANKS   W1SBF9
+      *
+      *  Clear file formats
+      *
+     C                     CLEAROTPAYDDF
+     C                     CLEARCQCOCDDF
+     C                     CLEARCQCODDDF
+     C***********          CLEAR@INCRL1
+     C***********          CLEAR@INMPL1
+     C                     CLEAR@INCR                                     073157
+     C                     CLEAR@INMP                                     073157
+     C                     CLEAR@INDTS2
+     C                     CLEAR@IN35S2
+     C                     MOVEL*BLANKS   ##54    1                       073158
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCLR     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROTPY   : FT Set up Outgoing Payments subfields             *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SROTPY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SROTPY'  @STK,Q
+      *
+      *  Get Details
+      *
+     C           W1PREF    CHAINOTPAY                90
+      *
+      *  If not found exit
+      *
+     C           *IN90     IFEQ '1'
+     C                     GOTO EXOTPY
+     C                     END
+      *
+      *  Get Message Details
+      *
+     C           OPMSGR    IFNE 0
+      *
+      *  Define klist for message detail
+      *
+     C           OPKEY     KLIST
+     C                     KFLD           OPMSGR
+     C                     KFLD           OPKPRT
+      *
+     C           OPMSGR    CHAINMEINCRL1             90
+     C           OPKEY     CHAINMEINMPL1             90
+      *
+      *  If SWIFT then get field 20: and 21:
+      *
+     C           CRNWRK    IFEQ 'SWIFT '
+      *
+      * Set up key
+      *
+     C                     Z-ADDOPMSGR    DSMSGR
+     C                     Z-ADDOPKPRT    DSPART
+     C                     MOVEL':20:'    DSMTG
+      *
+     C                     MOVEA'00'      *IN,20
+     C           MKEY      CHAINMEINDTS2             90
+     C                     MOVEL*BLANKS   ##F20  16
+     C           *IN90     IFEQ '0'
+     C           *IN20     IFEQ '1'
+     C                     MOVELDSMF35    ##F20
+     C                     END
+     C           *IN21     IFEQ '1'
+     C                     MOVELDTMFLD    ##F20
+     C                     END
+     C                     END
+      *
+      * Set up key
+      *
+     C                     Z-ADDOPMSGR    DSMSGR
+     C                     Z-ADDOPKPRT    DSPART
+     C                     MOVEL':21:'    DSMTG
+      *
+     C                     MOVEA'00'      *IN,20
+     C           MKEY      CHAINMEINDTS2             90
+     C                     MOVEL*BLANKS   ##F21  16
+     C           *IN90     IFEQ '0'
+     C           *IN20     IFEQ '1'
+     C                     MOVELDSMF35    ##F21
+     C                     END
+     C           *IN21     IFEQ '1'
+     C                     MOVELDTMFLD    ##F21
+     C                     END
+     C                     END
+      *
+      * Check to see if :54* exits                                        073158
+      *                                                                   073158
+     C                     MOVEL*BLANKS   DSMTG                           073158
+     C                     MOVEL':54'     DSMTG                           073158
+     C                     MOVEA'00'      *IN,20                          073158
+     C           MKEY      SETLLMEINDTS2                                  073158
+     C           MKEY      READEMEINDTS2                 90               073158
+      *                                                                   073158
+      * :54 exits                                                         073158
+      *                                                                   073158
+     C           *IN90     IFEQ '0'                                       073158
+     C                     MOVEL'Y'       ##54                            073158
+     C                     END                                            073158
+      *                                                                   073158
+     C                     END
+      *
+     C                     END
+      *
+      *  If SWIFT then Subfield 6 is the message type
+      *
+     C                     MOVEL*BLANKS   W1SBF6
+     C           CRNWRK    IFEQ 'SWIFT '
+     C           W1DRCR    ANDEQ'DR'
+     C                     MOVEL'S'       W1SBF6
+     C                     MOVE CRMTPY    W1SBF6
+     C                     ELSE
+     C                     MOVEL'NMSC'    W1SBF6
+     C                     END
+      *
+      *  Set Subfield 7 to Releted Reference
+      *
+     C                     MOVEL*BLANKS   W1SBF7
+     C                     MOVELRLPR      W1SBF7
+      *
+      *  If SWIFT then Subfield 7 should contain 20: if debit
+      *  else 21: if credit
+      *
+     C           CRNWRK    IFEQ 'SWIFT '
+     C           W1DRCR    IFEQ 'DR'
+     C                     MOVEL##F20     W1SBF7
+     C                     END
+     C           W1DRCR    IFEQ 'CR'
+     C                     MOVEL##F21     W1SBF7
+      *
+      *  If no 21 then quote 20 instead
+      *
+     C           ##F21     IFEQ *BLANKS
+     C                     MOVEL##F20     W1SBF7
+     C                     END
+     C                     END
+     C                     END
+      *
+      *  Subfield 7 should say NONREF if still blank
+      *
+     C           W1SBF7    IFEQ *BLANKS
+     C                     MOVEL'NONREF'  W1SBF7
+     C                     END
+      *
+      *  Subfield 8 is the Funds Transfer reference
+      *
+     C                     MOVEL*BLANKS   W1SBF8
+     C                     MOVELW1PREF    W1SBF8
+      *
+      *  Subfield 9 should contain order bank name from transaction
+      *
+      *  If necessary translate via FT0315
+      *
+     C                     MOVEL*BLANKS   W1SBF9
+     C                     SELEC
+      *                                                                   073158
+      *  If debit and :54 exists then use sender of message               073158
+      *                                                                   073158
+     C           W1DRCR    WHEQ 'DR'                                      073158
+     C           ##54      ANDEQ'Y'                                       073158
+     C                     MOVELCRSNDR    W1SBF9                          073158
+      *
+      *  If debit then use beneficary information
+      *
+     C           W1DRCR    WHEQ 'DR'
+      *
+      *  Set up general parameters
+      *
+     C                     CLEARW8FT
+     C                     MOVELSTMT      W8STMT
+     C                     MOVELPCCY      W8CCY
+     C                     MOVEL##PGM     W8CPGM
+     C                     MOVEL'*PRINT'  W8ACT
+     C                     Z-ADD5         W8NLIN
+      *
+      *  Beneficiary
+      *
+     C                     MOVELBNCT      W8TYPE
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELBNC1      ADCHK1
+     C                     MOVELBNC2      ADCHK2
+     C                     MOVELBNC3      ADCHK3
+     C                     MOVELBNC4      ADCHK4
+     C                     MOVELBNC5      ADCHK5
+     C                     MOVELORC5      ADCHK5                                              CFT032
+     C                     MOVELADDRSS    W8LINS
+      *
+      * Call expansion program
+      *
+     C                     CALL 'FT0315'
+     C                     PARM           W8RTN   7
+     C                     PARM           W8FT
+     C                     PARM           W8LINS256
+     C                     PARM           W8RPT 256
+     C                     PARM           W8MSG 256
+     C                     PARM           W8SCR 256
+      *
+     C                     MOVELW8MSG     ADDRSS
+     C           ADSLSH    IFEQ '/'
+     C                     MOVELADCHK2    W1SBF9
+     C                     ELSE
+     C                     MOVELADCHK1    W1SBF9
+     C                     END
+      *
+      *  If credit and order customer used, use it
+      *
+     C           W1DRCR    WHEQ 'CR'
+     C           ORCT      ANDNE*BLANKS
+     C           ORC1      ANDNE#MT202
+      *
+      *  Set up general parameters
+      *
+     C                     CLEARW8FT
+     C                     MOVELSTMT      W8STMT
+     C                     MOVELSMCY      W8CCY
+     C                     MOVEL##PGM     W8CPGM
+     C                     MOVEL'*PRINT'  W8ACT
+     C                     Z-ADD5         W8NLIN
+      *
+      *  Ordering Customer
+      *
+     C                     MOVELORCT      W8TYPE
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELORC1      ADCHK1
+     C                     MOVELORC2      ADCHK2
+     C                     MOVELORC3      ADCHK3
+     C                     MOVELORC4      ADCHK4
+     C                     MOVELADDRSS    W8LINS
+      *
+      * Call expansion program
+      *
+     C                     CALL 'FT0315'
+     C                     PARM           W8RTN
+     C                     PARM           W8FT
+     C                     PARM           W8LINS
+     C                     PARM           W8RPT
+     C                     PARM           W8MSG
+     C                     PARM           W8SCR
+      *
+     C                     MOVELW8MSG     ADDRSS
+     C                     MOVELADCHK1    W1SBF9
+      *
+      *  If credit and order bank (internal) set use it
+      *
+     C           W1DRCR    WHEQ 'CR'
+     C           OPORBT    ANDNE*BLANKS
+     C                     MOVELOPORB1    W1SBF9
+      *
+      *  If credit and order bank set use it
+      *
+     C           W1DRCR    WHEQ 'CR'
+     C           ORBT      ANDNE*BLANKS
+      *
+      *  Set up general parameters
+      *
+     C                     CLEARW8FT
+     C                     MOVELSTMT      W8STMT
+     C                     MOVELSMCY      W8CCY
+     C                     MOVEL##PGM     W8CPGM
+     C                     MOVEL'*PRINT'  W8ACT
+     C                     Z-ADD5         W8NLIN
+      *
+      *  Ordering Bank
+      *
+     C                     MOVELORBT      W8TYPE
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELORBK      ADCHK1
+     C                     MOVELORBB      ADPBRC
+     C                     MOVELADDRSS    W8LINS
+      *
+      * Call expansion program
+      *
+     C                     CALL 'FT0315'
+     C                     PARM           W8RTN
+     C                     PARM           W8FT
+     C                     PARM           W8LINS
+     C                     PARM           W8RPT
+     C                     PARM           W8MSG
+     C                     PARM           W8SCR
+      *
+     C                     MOVELW8MSG     ADDRSS
+     C                     MOVELADCHK1    W1SBF9
+      *
+      *  No match check for NONREF in field 7
+      *  If NONREF then set subfield 7 to blanks
+      *
+     C                     OTHER
+     C           W1SBF7    IFEQ 'NONREF'
+     C                     MOVEL*BLANKS   W1SBF7
+     C                     MOVELW1SBF8    W1SBF7
+     C                     MOVEL*BLANKS   W1SBF8
+     C                     END
+     C                     ENDSL
+      *
+      *  /Copy point for Outgoing Payments
+      *
+     C/COPY WNCPYSRC,FT0325OTPY
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXOTPY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINPY   : FT Set up Incoming Payments subfields             *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINPY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINPY'  @STK,Q
+      *
+      *  Get Details
+      *
+     C           W1PREF    CHAININPAY                90
+      *
+      *  If not found exit
+      *
+     C           *IN90     IFEQ '1'
+     C                     GOTO EXINPY
+     C                     END
+      *
+      *  Get Message Details
+      *
+     C           INMSGR    IFNE 0
+      *
+      *  Define klist for message detail
+      *
+     C           INKEY     KLIST
+     C                     KFLD           INMSGR
+     C                     KFLD           INKPRT
+      *
+     C           INMSGR    CHAINMEINCRL1             90
+     C           INKEY     CHAINMEINMPL1             90
+      *
+      *  If SWIFT then get field 20: and 21:
+      *
+     C           CRNWRK    IFEQ 'SWIFT '
+      *
+     C           MKEY      KLIST
+     C                     KFLD           DSMSGR
+     C                     KFLD           DSPART
+     C                     KFLD           DSMTG
+      *
+      * Set up key
+      *
+     C                     Z-ADDINMSGR    DSMSGR
+     C                     Z-ADDINKPRT    DSPART
+     C                     MOVEL':20:'    DSMTG
+      *
+     C                     MOVEA'00'      *IN,20
+     C           MKEY      CHAINMEINDTS2             90
+     C                     MOVEL*BLANKS   ##F20
+     C           *IN90     IFEQ '0'
+     C           *IN20     IFEQ '1'
+     C                     MOVELDSMF35    ##F20
+     C                     END
+     C           *IN21     IFEQ '1'
+     C                     MOVELDTMFLD    ##F20
+     C                     END
+     C                     END
+      *
+      * Set up key
+      *
+     C                     Z-ADDINMSGR    DSMSGR
+     C                     Z-ADDINKPRT    DSPART
+     C                     MOVEL':21:'    DSMTG
+      *
+     C                     MOVEA'00'      *IN,20
+     C           MKEY      CHAINMEINDTS2             90
+     C                     MOVEL*BLANKS   ##F21
+     C           *IN90     IFEQ '0'
+     C           *IN20     IFEQ '1'
+     C                     MOVELDSMF35    ##F21
+     C                     END
+     C           *IN21     IFEQ '1'
+     C                     MOVELDTMFLD    ##F21
+     C                     END
+     C                     END
+      *
+      * Check to see if :54* exits                                        073158
+      *                                                                   073158
+     C                     MOVEL*BLANKS   DSMTG                           073158
+     C                     MOVEL':54'     DSMTG                           073158
+     C                     MOVEA'00'      *IN,20                          073158
+     C           MKEY      SETLLMEINDTS2                                  073158
+     C           MKEY      READEMEINDTS2                 90               073158
+      *                                                                   073158
+      * :54 exits                                                         073158
+      *                                                                   073158
+     C           *IN90     IFEQ '0'                                       073158
+     C                     MOVEL'Y'       ##54                            073158
+     C                     END                                            073158
+      *                                                                   073158
+     C                     END
+      *
+     C                     END
+      *
+      *  If SWIFT then Subfield 6 is the message type
+      *
+     C                     MOVEL*BLANKS   W1SBF6
+     C           CRNWRK    IFEQ 'SWIFT '
+     C           W1DRCR    ANDEQ'DR'
+     C                     MOVEL'S'       W1SBF6
+     C                     MOVE CRMTPY    W1SBF6
+     C                     ELSE
+     C                     MOVEL'NMSC'    W1SBF6
+     C                     END
+      *
+      *  Set Subfield 7 to Releted Reference
+      *
+     C                     MOVEL*BLANKS   W1SBF7
+     C                     MOVELRLPR      W1SBF7
+      *
+      *  If SWIFT then Subfield 7 should contain 20: if debit
+      *  else 21: if credit
+      *
+     C           CRNWRK    IFEQ 'SWIFT '
+     C           W1DRCR    IFEQ 'DR'
+     C                     MOVEL##F20     W1SBF7
+     C                     END
+     C           W1DRCR    IFEQ 'CR'
+     C                     MOVEL##F21     W1SBF7
+      *
+      *  If no 21 then quote 20 instead
+      *
+     C           ##F21     IFEQ *BLANKS
+     C                     MOVEL##F20     W1SBF7
+     C                     END
+     C                     END
+     C                     END
+      *
+      *  Subfield 7 should say NONREF if still blank
+      *
+     C           W1SBF7    IFEQ *BLANKS
+     C                     MOVEL'NONREF'  W1SBF7
+     C                     END
+      *
+      *  Subfield 8 is the Funds Transfer reference
+      *
+     C                     MOVEL*BLANKS   W1SBF8
+     C                     MOVELW1PREF    W1SBF8
+      *
+      *  Subfield 9 should contain order bank name from transaction
+      *
+     C                     MOVEL*BLANKS   W1SBF9
+     C                     SELEC
+      *                                                                   073158
+      *  If debit and :54 exists then use sender of message               073158
+      *                                                                   073158
+     C           W1DRCR    WHEQ 'DR'                                      073158
+     C           ##54      ANDEQ'Y'                                       073158
+     C                     MOVELCRSNDR    W1SBF9                          073158
+      *
+      *  If debit then use beneficary information
+      *
+     C           W1DRCR    WHEQ 'DR'
+      *
+      *  Set up general parameters
+      *
+     C                     CLEARW8FT
+     C                     MOVEL*BLANKS   W8STMT
+     C                     MOVELPCCY      W8CCY
+     C                     MOVEL##PGM     W8CPGM
+     C                     MOVEL'*PRINT'  W8ACT
+     C                     Z-ADD5         W8NLIN
+      *
+      *  Beneficiary
+      *
+     C                     MOVELBNCT      W8TYPE
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELBNC1      ADCHK1
+     C                     MOVELBNC2      ADCHK2
+     C                     MOVELBNC3      ADCHK3
+     C                     MOVELBNC4      ADCHK4
+     C                     MOVELBNC5      ADCHK5
+     C                     MOVELORC5      ADCHK5                                              CFT032
+     C                     MOVELADDRSS    W8LINS
+      *
+      * Call expansion program
+      *
+     C                     CALL 'FT0315'
+     C                     PARM           W8RTN
+     C                     PARM           W8FT
+     C                     PARM           W8LINS
+     C                     PARM           W8RPT
+     C                     PARM           W8MSG
+     C                     PARM           W8SCR
+      *
+     C                     MOVELW8MSG     ADDRSS
+     C           ADSLSH    IFEQ '/'
+     C                     MOVELADCHK2    W1SBF9
+     C                     ELSE
+     C                     MOVELADCHK1    W1SBF9
+     C                     END
+      *
+      *  If credit and order customer used, use it
+      *
+     C           W1DRCR    WHEQ 'CR'
+     C           ORCT      ANDNE*BLANKS
+     C           ORC1      ANDNE#MT202
+      *
+      *  Set up general parameters
+      *
+     C                     CLEARW8FT
+     C                     MOVELSTMT      W8STMT
+     C                     MOVELSMCY      W8CCY
+     C                     MOVEL##PGM     W8CPGM
+     C                     MOVEL'*PRINT'  W8ACT
+     C                     Z-ADD5         W8NLIN
+      *
+      *  Ordering Customer
+      *
+     C                     MOVELORCT      W8TYPE
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELORC1      ADCHK1
+     C                     MOVELORC2      ADCHK2
+     C                     MOVELORC3      ADCHK3
+     C                     MOVELORC4      ADCHK4
+     C                     MOVELADDRSS    W8LINS
+      *
+      * Call expansion program
+      *
+     C                     CALL 'FT0315'
+     C                     PARM           W8RTN
+     C                     PARM           W8FT
+     C                     PARM           W8LINS
+     C                     PARM           W8RPT
+     C                     PARM           W8MSG
+     C                     PARM           W8SCR
+      *
+     C                     MOVELW8MSG     ADDRSS
+     C                     MOVELADCHK1    W1SBF9
+      *
+      *  If credit and order bank set use it
+      *
+     C           W1DRCR    WHEQ 'CR'
+     C           ORBT      ANDNE*BLANKS
+      *
+      *  Set up general parameters
+      *
+     C                     CLEARW8FT
+     C                     MOVEL*BLANKS   W8STMT
+     C                     MOVELSMCY      W8CCY
+     C                     MOVEL##PGM     W8CPGM
+     C                     MOVEL'*PRINT'  W8ACT
+     C                     Z-ADD5         W8NLIN
+      *
+      *  Ordering Bank
+      *
+     C                     MOVELORBT      W8TYPE
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELORB1      ADCHK1
+     C                     MOVELORB2      ADCHK2
+     C                     MOVELORB3      ADCHK3
+     C                     MOVELORB4      ADCHK4
+     C                     MOVELORB5      ADCHK5
+     C                     MOVELADDRSS    W8LINS
+      *
+      * Call expansion program
+      *
+     C                     CALL 'FT0315'
+     C                     PARM           W8RTN
+     C                     PARM           W8FT
+     C                     PARM           W8LINS
+     C                     PARM           W8RPT
+     C                     PARM           W8MSG
+     C                     PARM           W8SCR
+      *
+     C                     MOVELW8MSG     ADDRSS
+     C                     MOVELADCHK1    W1SBF9
+      *
+      *  If credit and linked to network message use sender
+      *
+     C           W1DRCR    WHEQ 'CR'
+     C           INMSGR    ANDNE0
+     C                     MOVELCRSNDR    W1SBF9
+      *
+      *  If credit then use sender information
+      *
+     C           W1DRCR    WHEQ 'CR'
+      *
+      *  Set up general parameters
+      *
+     C                     CLEARW8FT
+     C                     MOVEL*BLANKS   W8STMT
+     C                     MOVELSMCY      W8CCY
+     C                     MOVEL##PGM     W8CPGM
+     C                     MOVEL'*PRINT'  W8ACT
+     C                     Z-ADD5         W8NLIN
+      *
+      *  Sender
+      *
+     C                     MOVELSNTP      W8TYPE
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELSND1      ADCHK1
+     C                     MOVELSND2      ADCHK2
+     C                     MOVELSND3      ADCHK3
+     C                     MOVELSND4      ADCHK4
+     C*********************MOVEL*BLANKS   ADDRSS
+     C                     MOVELADDRSS    W8LINS
+      *
+      * Call expansion program
+      *
+     C                     CALL 'FT0315'
+     C                     PARM           W8RTN
+     C                     PARM           W8FT
+     C                     PARM           W8LINS
+     C                     PARM           W8RPT
+     C                     PARM           W8MSG
+     C                     PARM           W8SCR
+      *
+     C                     MOVELW8MSG     ADDRSS
+     C                     MOVELADCHK1    W1SBF9
+      *
+      *  No match check for NONREF in field 7
+      *  If NONREF then set subfield 7 to blanks
+      *
+     C                     OTHER
+     C           W1SBF7    IFEQ 'NONREF'
+     C                     MOVEL*BLANKS   W1SBF7
+     C                     MOVELW1SBF8    W1SBF7
+     C                     MOVEL*BLANKS   W1SBF8
+     C                     END
+     C                     ENDSL
+      *
+      *  /Copy point for Incoming Payments
+      *
+     C/COPY WNCPYSRC,FT0325INPY
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINPY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCCPY   : FT Set up Cheques for Collection Subfields        *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCCPY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCCPY'  @STK,Q
+      *
+      *  Define key to cheque details
+      *
+     C           KCQCOD    KLIST
+     C                     KFLD           W1PREF
+     C                     KFLD           CQSQ
+      *
+      *  Get Details of debit side
+      *
+     C                     Z-ADD0         CQSQ
+     C           KCQCOD    CHAINCQCODDDF             90
+      *
+      *  If not found exit
+      *
+     C           *IN90     IFEQ '1'
+     C                     GOTO EXCCPY
+     C                     END
+      *
+      *  Get Details of credit side if CQSQ > 0
+      *
+     C                     MOVELW1CQSQ    CQSQ
+     C           CQSQ      IFGT 0
+     C           KCQCOD    CHAINCQCOCDDF             90
+      *
+      *  If not found exit
+      *
+     C           *IN90     IFEQ '1'
+     C                     GOTO EXCCPY
+     C                     END
+     C                     END
+      *
+      *  Subfield 7 is first 16 characters of narrative 1 if credit
+      *
+     C                     MOVEL*BLANKS   W1SBF7
+     C           W1DRCR    IFEQ 'CR'
+     C           CQSQ      ANDGT0
+     C                     MOVELNAR1      W1SBF7
+     C                     END
+      *
+      *  Subfield 7 set to NONREF if blank
+      *
+     C           W1SBF7    IFEQ *BLANKS
+     C                     MOVEL'NONREF'  W1SBF7
+     C                     END
+      *
+      *  Subfield 8 is the Funds Transfer reference
+      *
+     C                     MOVEL*BLANKS   W1SBF8
+     C                     MOVELW1PREF    W1SBF8
+      *
+      *  Subfield 9 is cheque sequence and first 32 characters of
+      *  narrative line 2 if a credit
+      *
+     C                     MOVEL*BLANKS   W1SBF9
+     C           W1DRCR    IFEQ 'CR'
+     C           CQSQ      ANDGT0
+     C                     MOVELW1CQSQ    W1SBF9
+     C           32        SUBSTNAR2:1    ##032  32
+     C                     MOVE ##032     W1SBF9
+     C                     END
+      *
+      *  Subfield 9 is blank then use Collecting bank
+      *
+     C           W1SBF9    IFEQ *BLANKS
+      *
+      *  Set up general parameters
+      *
+     C                     CLEARW8FT
+     C                     MOVEL*BLANKS   W8STMT
+     C                     MOVELSMCY      W8CCY
+     C                     MOVEL##PGM     W8CPGM
+     C                     MOVEL'*PRINT'  W8ACT
+     C                     Z-ADD4         W8NLIN
+      *
+      *  Collecting Bank
+      *
+     C                     MOVELCOBT      W8TYPE
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELCOB1      ADCHK1
+     C                     MOVELCOB2      ADCHK2
+     C                     MOVELCOB3      ADCHK3
+     C                     MOVELCOB4      ADCHK4
+     C*********************MOVEL*BLANKS   ADDRSS
+     C                     MOVELADDRSS    W8LINS
+      *
+      * Call expansion program
+      *
+     C                     CALL 'FT0315'
+     C                     PARM           W8RTN
+     C                     PARM           W8FT
+     C                     PARM           W8LINS
+     C                     PARM           W8RPT
+     C                     PARM           W8MSG
+     C                     PARM           W8SCR
+      *
+     C                     MOVELW8MSG     ADDRSS
+     C                     MOVELADCHK1    W1SBF9
+     C                     END
+      *
+      *  No match check for NONREF in field 7
+      *  If NONREF then set subfield 7 to blanks
+      *
+     C           W1SBF7    IFEQ 'NONREF'
+     C           W1SBF9    ANDEQ*BLANKS
+     C                     MOVEL*BLANKS   W1SBF7
+     C                     MOVELW1SBF8    W1SBF7
+     C                     MOVEL*BLANKS   W1SBF8
+     C                     END
+      *
+      *  /Copy point for Cheques for Collection
+      *
+     C/COPY WNCPYSRC,FT0325CCPY
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCCPY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCPPY   : FT Set up Cheques to be Paid Subfields            *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCPPY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCPPY'  @STK,Q
+      *
+      *  Define key to cheque details
+      *
+     C           KCQPAC    KLIST
+     C                     KFLD           W1PREF
+     C                     KFLD           CQSQ
+      *
+      *  Get Details of debit side
+      *
+     C                     MOVELW1CQSQ    ##CQSQ  2
+     C                     MOVEL'00'      W1CQSQ
+     C                     Z-ADD0         CQSQ
+     C           KCQPAC    CHAINCQPACDDF             90
+      *
+      *  If not found exit
+      *
+     C           *IN90     IFEQ '1'
+     C                     GOTO EXCPPY
+     C                     END
+      *
+      *  Get Details of credit side if CQSQ > 0
+      *
+     C                     MOVELW1CQSQ    CQSQ
+     C           CQSQ      IFGT 0
+     C           KCQPAC    CHAINCQPADDDF             90
+      *
+      *  If not found exit
+      *
+     C           *IN90     IFEQ '1'
+     C                     GOTO EXCPPY
+     C                     END
+     C                     END
+      *
+      *  Subfield 7 is Remitting Bank reference if credit
+      *
+     C                     MOVEL*BLANKS   W1SBF7
+     C           W1DRCR    IFEQ 'CR'
+     C           CQSQ      ANDEQ0
+     C                     MOVELRBKR      W1SBF7
+     C                     END
+      *
+      *  Subfield 7 set to NONREF if blank
+      *
+     C           W1SBF7    IFEQ *BLANKS
+     C                     MOVEL'NONREF'  W1SBF7
+     C                     END
+      *
+      *  Subfield 8 is the Funds Transfer reference
+      *
+     C                     MOVEL*BLANKS   W1SBF8
+     C                     MOVELW1PREF    W1SBF8
+      *
+      *  Subfield 9 is cheque sequence and first 32 characters of
+      *  Remitting Bank if debit
+      *
+     C                     MOVEL*BLANKS   W1SBF9
+     C           W1DRCR    IFEQ 'DR'
+     C           CQSQ      ANDGT0
+     C                     MOVELW1CQSQ    W1SBF9
+      *
+      *  Set up general parameters
+      *
+     C                     CLEARW8FT
+     C                     MOVEL*BLANKS   W8STMT
+     C                     MOVELPCCY      W8CCY
+     C                     MOVEL##PGM     W8CPGM
+     C                     MOVEL'*PRINT'  W8ACT
+     C                     Z-ADD4         W8NLIN
+      *
+      *  Remitting Bank
+      *
+     C                     MOVELRBKT      W8TYPE
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVELRBK1      ADCHK1
+     C                     MOVELRBK2      ADCHK2
+     C                     MOVELRBK3      ADCHK3
+     C                     MOVELRBK4      ADCHK4
+     C*********************MOVEL*BLANKS   ADDRSS
+     C                     MOVELADDRSS    W8LINS
+      *
+      * Call expansion program
+      *
+     C                     CALL 'FT0315'
+     C                     PARM           W8RTN
+     C                     PARM           W8FT
+     C                     PARM           W8LINS
+     C                     PARM           W8RPT
+     C                     PARM           W8MSG
+     C                     PARM           W8SCR
+      *
+     C           32        SUBSTW8MSG:1   ##033  32
+     C                     MOVE ##032     W1SBF9
+     C                     END
+      *
+      *  Subfield 9 is blank then use Bank to bank first line
+      *  if a credit
+      *
+     C           W1SBF9    IFEQ *BLANKS
+     C           CQSQ      ANDEQ0
+     C                     MOVELBBI1      W1SBF9
+     C                     END
+      *
+      *  No match check for NONREF in field 7
+      *  If NONREF then set subfield 7 to blanks
+      *
+     C           W1SBF7    IFEQ 'NONREF'
+     C           W1SBF9    ANDEQ*BLANKS
+     C                     MOVEL*BLANKS   W1SBF7
+     C                     MOVELW1SBF8    W1SBF7
+     C                     MOVEL*BLANKS   W1SBF8
+     C                     END
+      *
+      *  /Copy point for Cheques to be Paid
+      *
+     C/COPY WNCPYSRC,FT0325CPPY
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCPPY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCCPY   : FT Set up Nostro Transfers Subfields              *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNTPY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRNTPY'  @STK,Q
+      *
+      *  Subfield 7 is the Funds Transfer reference
+      *
+     C                     MOVEL*BLANKS   W1SBF7
+     C                     MOVELW1PREF    W1SBF7
+      *
+      *  /Copy point for Nostro transfers
+      *
+     C/COPY WNCPYSRC,FT0325NTPY
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXNTPY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 15 *
+     C                     Z-ADD15        W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Open file
+      *
+     C                     OPEN OTPAY
+     C                     OPEN INPAY
+     C                     OPEN CQCOD
+     C                     OPEN CQPAC
+     C                     OPEN MEINCRL1
+     C                     OPEN MEINMPL1
+     C                     OPEN MEINDTS2
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   @RTCD   7        B:Return code
+     C                     PARM '*FIRST ' @OPTN   7        I:Option
+     C           SDBANK    PARM *BLANKS   DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD16        W0ERNB           * DB ERROR 16 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Define MT202 keyword
+      *
+     C           *LIKE     DEFN ORC1      #MT202
+     C                     MOVEL'MT202'   #MT202
+      *                                                                   S01408
+     C/COPY WNCPYSRC,FT0325CCP1                                           S01408
+      *                                                                   S01408
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,FT0325DCPG
+      *
+     C/COPY WNCPYSRC,FT0325CC02
+      *                                                                                       GBO028
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+     C/EJECT
+     O/COPY WNCPYSRC,FT0325DOPG
+      *
+      *  /Copy point for Outputs
+      *
+     O/EJECT
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

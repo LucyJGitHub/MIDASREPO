@@ -1,0 +1,145 @@
+     C*****************************************************************
+     C**                                                              *
+     C**  SR:FFAVPR   - CALCULATES AVERAGE PRICE FOR A                *
+     C**                POSITION (CUSTOMER,BROKER OR BOOK )           *
+     C**  CALLED FROM -                                               *
+     C**  CALLS       -                                               *
+     C**                                                              *
+     C**  INPUTS      - FFSHRT  (7,0P) SHORT OPEN POSITION            *
+     C**                FFLONG  (7,0P) LONG OPEN POSITION             *
+     C**                FFCUTV (13,0P) CURRENT TOTAL VALUE            *
+     C******************FFMNPF (11,7P) MINIMMUM PRICE FLUCTUATION     *
+     C**                FFMNPF (15,8P) MINIMMUM PRICE FLUCTUATION     *
+     C**                FFTKDM  (3,0P) TICKS DENOMINATOR              *
+     C**                                                              *
+     C****OUTPUTS*****- FFAVER (11,7P) AVERAGE PRICE                  *
+     C**  OUTPUTS     - FFAVER (15,8P) AVERAGE PRICE                  *
+     C**                                                              *
+     C*****************************************************************
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. CFF006             Date 28Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CFF004             Date 21Aug96               *
+      *                 XXXXXX             Date DDMMMYY               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CFF006 - Fractional Ticks Enhancement.                       *
+      * CFF004 - Increase in size of Price Fields                     *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           FFAVPR    BEGSR                           ** FFAVPR SR **
+     C*
+     C                     Z-ADDFFSHRT    FFSHRT  70
+     C                     Z-ADDFFLONG    FFLONG  70
+     C                     Z-ADDFFCUTV    FFCUTV 130
+     C                     Z-ADDFFTKDM    FFTKDM  30
+     C***********          Z-ADDFFMNPF    FFMNPF 117                      CFF004
+     C                     Z-ADDFFMNPF    FFMNPF 158                      CFF004
+      *                                                                   CFF006
+     C                     Z-ADDFFDEN1    FFDEN1 118                      CFF006
+     C                     Z-ADDFFND2     FFND2   99                      CFF006
+     C*
+     C**  Calculate Current Position
+     C**  CURRENT POSITION = MAGNITUDE (SHORT OPEN POSITION
+     C**                                    - LONG OPEN POSITION)
+     C*
+     C           FFSHRT    SUB  FFLONG    FFCUPN  70
+     C           FFCUPN    IFLT 0
+     C                     MULT -1        FFCUPN
+     C                     END
+     C           FFCUTV    IFLT 0
+     C                     MULT -1        FFCUTV
+     C                     END
+     C*
+     C**  Determine the Average Price
+     C*
+     C**  IF FFCUPN=0
+     C**       FFTMP:=0
+     C**  ELSE
+     C**       FFTMP:=FFCUTV/FFCUPN
+     C**  END
+     C*
+     C           FFCUPN    IFEQ 0
+     C***********          Z-ADD0         FFTMP  130                      CFF004
+     C                     Z-ADD0         FFTMP  150                      CFF004
+     C                     Z-ADD0         FFTMPR  99
+     C                     ELSE
+     C           FFCUTV    DIV  FFCUPN    FFTMP
+     C***********          MVR            FFTMP1 130                      CFF004
+     C                     MVR            FFTMP1 150                      CFF004
+     C           FFTMP1    DIV  FFCUPN    FFTMPR
+     C                     END
+     C*
+     C**   IF FFTKDM=100
+     C**         AVERAGE PRICE:= FFTMP X FFMNPF
+     C**   ELSE
+     C*
+     C           FFTKDM    IFEQ 100
+     C           FFTKDM    ORNE 100                                       CFF006
+     C           FFMNPF    ANDNE0                                         CFF006
+     C***********FFTMP     MULT FFMNPF    FFAVER 117                      CFF004
+     C           FFTMP     MULT FFMNPF    FFAVER 158                      CFF004
+     C           FFTMPR    MULT FFMNPF    FFTMPR
+     C           FFAVER    ADD  FFTMPR    FFAVER
+      *                                                                   CFF006
+     C           FFTKDM    IFNE 100                                       CFF006
+     C           FFMNPF    ANDNE0                                         CFF006
+     C           FFAVER    DIV  FFTKDM    FFNUM                           CFF006
+     C                     MVR            FFDEN1                          CFF006
+      *                                                                   CFF006
+     C                     SELEC                                          CFF006
+     C           FFTKDM    WHLE 10                                        CFF006
+     C           FFDEN1    DIV  10        FFND2                           CFF006
+     C           FFTKDM    WHGE 11                                        CFF006
+     C           FFTKDM    ANDLE99                                        CFF006
+     C           FFDEN1    DIV  100       FFND2                           CFF006
+     C           FFTKDM    WHGT 100                                       CFF006
+     C           FFDEN1    DIV  1000      FFND2                           CFF006
+     C                     ENDSL                                          CFF006
+      *                                                                   CFF006
+     C           FFNUM     ADD  FFND2     FFAVER                          CFF006
+      *                                                                   CFF006
+     C                     ENDIF                                          CFF006
+      *                                                                   CFF006
+     C                     ELSE
+     C*
+     C**         AVERAGE PRICE:= FFTMP/FFTKDM
+     C*
+     C***********FFTMP     DIV  FFTKDM    FFNUM   40                      CFF004
+     C           FFTMP     DIV  FFTKDM    FFNUM   80                      CFF004
+     C                     MVR            FFDEN   30
+     C*
+     C**    Determine No of Decimal Pplaces
+     C*
+     C           FFTKDM    IFLE 10
+     C           FFDEN     DIV  10        FFND    33
+     C                     END
+     C*
+     C           FFTKDM    IFGT 10
+     C           FFTKDM    ANDLT100
+     C*
+     C           FFDEN     DIV  100       FFND
+     C                     END
+     C*
+     C           FFTKDM    IFGT 100
+     C*
+     C           FFDEN     DIV  1000      FFND
+     C                     END
+     C*
+     C           FFNUM     ADD  FFND      FFAVER
+     C*
+     C**  END(ELSE)
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C***************************************************************

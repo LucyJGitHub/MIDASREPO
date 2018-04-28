@@ -1,0 +1,826 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME SWIFT ISO country codes report')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1741 - SWIFT ISO Country Codes Report                      *
+      *                                                               *
+      *  Function:  This program will list details of each of the     *
+      *  (I/C)      ISO Country Codes that have been defined to the   *
+      *             system at the time of request.                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD022777           Date 17Oct13               *
+      *  Prev Amend No. MD022111A          Date 04Sep13               *
+      *                 CSW213             Date 03Jun13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CSW207             Date 07Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CFT017             Date 12Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014  *CREATE    Date 25May00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD022777 - Field "IBAN Required in MT103+" should not be     *
+      *             dependent on CFT050.
+      *  MD022111A - MEC1741 seq 10001 failed in Day 2 COB in I2      *
+      *  CSW213 - SWIFT Changes 2013                                  *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CSW207 - SWIFT 2007 Standard Changes                         *
+      *  CFT032 - Account line in field 50X in MT103                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CFT017 - Multilateral Inter-bank Exchange Fee.               *
+      *  CFT014 - Straight-through Processing Phase 2 MT103 Messages  *
+      *           Generation for FT.                                  *
+      *                                                               *
+      *****************************************************************
+     FMEISOCL1IF  E           K        DISK
+     FME1741AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FME1741P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     F            ME1741F1                          KRENAMEME1741R1
+     F            ME1741F2                          KRENAMEME1741R2
+     F            ME1741F3                          KRENAMEME1741R3
+     F            ME1741F4                          KRENAMEME1741R4                           CSW213
+     F            ME1741F5                          KRENAMEME1741R5                           CSW213
+     FMEBICCL1IF  E           K        DISK                                                   CSW213
+     F                                              KINFSR *PSSR                              CSW213
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *   60  - Read Indicator for MEISOCL1                           *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *   41  - For CFT050 and CSW213 feature                         *                       CSW213
+      *       - Write new fields introduced by CSW213 in ME1741P1     *                       CSW213
+      *   42  - For CFT004 feature                                    *                       CSW213
+      *       - Write new fields introduced by CSW213 in ME1741P1     *                       CSW213
+      *   43  - For CFT008 feature                                    *                       CSW213
+      *       - Write new fields introduced by CSW213 in ME1741P1     *                       CSW213
+      *   44  - SWIFTREF Country Code Indication                      *                       CSW213
+      *   90  - Read indicator for MEBICCL1                           *                       CSW213
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Details Processing                                  *
+      *  SRREPT - Process Report Lines                                *
+      *                                                               *
+      *  SP1REC - Format and Write a Detail Record to the Report      *
+      *  SP2REC - Format and Write the Second Detail Record to the    *                       CSW213
+      *           Report                                              *                       CSW213
+      *  SP3REC - Format and Write the Third Detail Record to the     *                       CSW213
+      *           Report                                              *                       CSW213
+      *  SP1END - Write End of Report                                 *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  SRCFP1 - RCF Processing for P1 Report                        *
+      *  SRCFAU - RCF Processing for Audit Report                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Rundate
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      *
+      ** File Information Data Structure for M17019P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      *
+      ** File Information Data Structure for ME1711AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CFT017
+      ** SAR Details Accessed via access program                                              CFT017
+      *                                                                                       CFT017
+     IDSFDY     E DSDSFDY
+      *
+      **  First DS for access programs, short data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External data structures for Bank Details
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      ***  Output Audit Report and End Program.
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    :                                                   *
+      *  SRCFAU - RCF Processing for Audit Report                     *
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+     C                     MOVE USER      RUSER
+      *
+      ** Receive Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      ** Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME1741'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *                                                                                       CFT017
+      ** Call access object to find out if switchable feature CFT017 is installed             CFT017
+      *                                                                                       CFT017
+     C                     MOVEL'N'       CFT017  1                                           CFT017
+     C                     MOVEL*OFF      *IN38                                               CFT017
+     C                     CALL 'AOSARDR0'                                                    CFT017
+     C                     PARM *BLANKS   @RTCD   7                                           CFT017
+     C                     PARM '*VERIFY' @OPTN   7                                           CFT017
+     C                     PARM 'CFT017'  @SARD   6                                           CFT017
+     C           SCSARD    PARM SCSARD    DSFDY                                               CFT017
+      *                                                                                       CFT017
+     C           @RTCD     IFNE *BLANKS                                                       CFT017
+     C           @RTCD     ANDNE'*NRF'                                                        CFT017
+     C           *LOCK     IN   LDA                                                           CFT017
+     C                     MOVEL'CFT017'  DBKEY                                               CFT017
+     C                     MOVEL'SCSARDPD'DBFILE                                              CFT017
+     C                     Z-ADD2         DBASE                                               CFT017
+     C                     OUT  LDA                                                           CFT017
+     C                     EXSR *PSSR                                                         CFT017
+     C                     ELSE                                                               CFT017
+      *                                                                                       CFT017
+     C           @RTCD     IFEQ *BLANKS                                                       CFT017
+     C                     MOVEL'Y'       CFT017                                              CFT017
+     C                     MOVE *ON       *IN38                                               CFT017
+     C                     ENDIF                                                              CFT017
+      *                                                                                       CFT017
+     C                     ENDIF                                                              CFT017
+      *                                                                                       CSW207
+      ** If SWIF2007 changes is installed                                                     CSW207
+      *                                                                                       CSW207
+     C                     CALL 'SWIF2007'                                                    CSW207
+     C                     PARM *BLANKS   @RTCD                                               CSW207
+      *                                                                                       CSW207
+     C           @RTCD     IFEQ 'CSW2007'                                                     CSW207
+     C                     MOVE 'Y'       CSW207  1                                           CSW207
+     C                     MOVE *ON       *IN39                                               CSW207
+     C                     ELSE                                                               CSW207
+     C                     MOVE 'N'       CSW207                                              CSW207
+     C                     MOVE *OFF      *IN39                                               CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW209
+      ** Check if SWIFT Changes 2009 (CSW209) is installed                                    CSW209
+      *                                                                                       CSW209
+     C                     CALL 'SWIF2009'                                                    CSW209
+     C                     PARM *BLANKS   @RTCD                                               CSW209
+      *                                                                                       CSW209
+     C           @RTCD     IFEQ 'CSW2009'                                                     CSW209
+     C                     MOVE 'Y'       CSW209  1                                           CSW209
+     C                     MOVEL*ON       *IN40                                               CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVE 'N'       CSW209                                              CSW209
+     C                     MOVEL*OFF      *IN40                                               CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW213
+      ** Call access object to find out if switchable feature CFT004 is installed             CSW213
+      *                                                                                       CSW213
+     C                     CALL 'AOSARDR0'                                                    CSW213
+     C                     PARM *BLANKS   @RTCD                                               CSW213
+     C                     PARM '*VERIFY' @OPTN                                               CSW213
+     C                     PARM 'CFT004'  @SARD                                               CSW213
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSW213
+      *                                                                                       CSW213
+     C           @RTCD     IFNE *BLANKS                                                       CSW213
+     C           @RTCD     ANDNE'*NRF'                                                        CSW213
+     C           *LOCK     IN   LDA                                                           CSW213
+     C                     MOVEL'CFT004'  DBKEY                                               CSW213
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSW213
+     C                     Z-ADD3         DBASE                                               CSW213
+     C                     OUT  LDA                                                           CSW213
+     C                     EXSR *PSSR                                                         CSW213
+     C                     ELSE                                                               CSW213
+      *                                                                                       CSW213
+     C           @RTCD     IFEQ *BLANKS                                                       CSW213
+     C                     MOVEL'Y'       CFT004  1                                           CSW213
+     C                     MOVE *ON       *IN42                                               CSW213
+     C                     ELSE                                                               CSW213
+     C                     MOVEL'N'       CFT004                                              CSW213
+     C                     MOVE *OFF      *IN42                                               CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+      ** Call access object to find out if switchable feature CFT050 is installed             CSW213
+      *                                                                                       CSW213
+     C                     CALL 'AOSARDR0'                                                    CSW213
+     C                     PARM *BLANKS   @RTCD                                               CSW213
+     C                     PARM '*VERIFY' @OPTN                                               CSW213
+     C                     PARM 'CFT050'  @SARD                                               CSW213
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSW213
+      *                                                                                       CSW213
+     C           @RTCD     IFNE *BLANKS                                                       CSW213
+     C           @RTCD     ANDNE'*NRF'                                                        CSW213
+     C           *LOCK     IN   LDA                                                           CSW213
+     C                     MOVEL'CFT050'  DBKEY                                               CSW213
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSW213
+     C                     Z-ADD4         DBASE                                               CSW213
+     C                     OUT  LDA                                                           CSW213
+     C                     EXSR *PSSR                                                         CSW213
+     C                     ELSE                                                               CSW213
+      *                                                                                       CSW213
+     C           @RTCD     IFEQ *BLANKS                                                       CSW213
+     C                     MOVEL'Y'       CFT050  1                                           CSW213
+     C                     ELSE                                                               CSW213
+     C                     MOVEL'N'       CFT050                                              CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+      ** Call access object to find out if switchable feature CFT008 is installed             CSW213
+      *                                                                                       CSW213
+     C                     CALL 'AOSARDR0'                                                    CSW213
+     C                     PARM *BLANKS   @RTCD                                               CSW213
+     C                     PARM '*VERIFY' @OPTN                                               CSW213
+     C                     PARM 'CFT008'  @SARD                                               CSW213
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSW213
+      *                                                                                       CSW213
+     C           @RTCD     IFNE *BLANKS                                                       CSW213
+     C           @RTCD     ANDNE'*NRF'                                                        CSW213
+     C           *LOCK     IN   LDA                                                           CSW213
+     C                     MOVEL'CFT008'  DBKEY                                               CSW213
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSW213
+     C                     Z-ADD5         DBASE                                               CSW213
+     C                     OUT  LDA                                                           CSW213
+     C                     EXSR *PSSR                                                         CSW213
+     C                     ELSE                                                               CSW213
+      *                                                                                       CSW213
+     C           @RTCD     IFEQ *BLANKS                                                       CSW213
+     C                     MOVEL'Y'       CFT008  1                                           CSW213
+     C                     MOVE *ON       *IN43                                               CSW213
+     C                     ELSE                                                               CSW213
+     C                     MOVEL'N'       CFT008                                              CSW213
+     C                     MOVE *OFF      *IN43                                               CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+      ** Check if SWIFT Changes 2013 (CSW213) is installed                                    CSW213
+      *                                                                                       CSW213
+     C                     CALL 'SWIF2013'                                                    CSW213
+     C                     PARM *BLANKS   @RTCD                                               CSW213
+      *                                                                                       CSW213
+     C           @RTCD     IFEQ 'CSW2013'                                                     CSW213
+     C                     MOVE 'Y'       CSW213  1                                           CSW213
+     C                     MOVE *ON       *IN45                                             MD022777
+     C                     ELSE                                                               CSW213
+     C                     MOVE 'N'       CSW213                                              CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C           CSW213    IFEQ 'Y'                                                           CSW213
+     C           CFT050    OREQ 'Y'                                                           CSW213
+     C                     MOVE *ON       *IN41                                               CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C           *LOVAL    SETLLMEBICCL1                                                      CSW213
+     C                     READ MEBICCL1                 90                                   CSW213
+     C           *IN90     IFEQ *ON                                                           CSW213
+     C                     MOVEL'Y'       BEMPTY  1                                           CSW213
+     C                     ENDIF                                                              CSW213
+      *
+      ** Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'M'
+     C                     MOVE *ON       *IN37
+     C                     END
+      *
+      ** RCF Processing for Audit File.
+      *
+     C                     EXSR SRCFAU
+      *
+      ** Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+      ** Register GL3300P1 to RCF
+      *
+     C                     CLOSEME1741P1
+     C                     OPEN ME1741P1
+     C                     EXSR SRCFP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    :                                                   *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  SRREPT - Process Report Lines                                *
+      *  SRBRCH - Process Branch Details                              *
+      *  SRCFP1 - RCF Processing for P1 Report/s                      *
+      *  SP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+     C           *LOVAL    SETLLMEISOCL1
+      *
+      ** Read Bilateral Agreements Type Logical File
+      *
+     C                     READ MEISOCL1                 60
+      *
+      ** If end of records, generate audit reporting to report
+      ** no records found.
+      *
+     C           *IN60     IFEQ *ON
+     C                     EXSR SRAUDT
+     C                     ELSE
+      *
+     C           *IN60     DOWEQ*OFF
+      *
+      ** RCF Processing for Printer File.
+      *
+     C                     ADD  1         RCOUNT  50
+      *
+      ** Process Report Lines.
+      *
+     C                     EXSR SRREPT
+      *
+      ** Read next record.
+      *
+     C                     READ MEISOCL1                 60
+      *
+      ** End of Do While not End of File.
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** Write final records and Totals to Report.
+      *
+     C                     EXSR SP1END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRREPT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    :                                                   *
+      *  SP1REC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREPT    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEME1741R1
+     C                     ENDIF
+      *
+     C                     EXSR SP1REC
+      *
+     C                     Z-ADD2         RQDLN1                                              CSW213
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              CSW213
+     C           DIFLN1    IFLE RQDLN1                                                        CSW213
+     C                     WRITEME1741R1                                                      CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C           *IN41     IFEQ *ON                                                           CSW213
+     C           *IN42     ANDEQ*ON                                                           CSW213
+     C                     EXSR SP2REC                                                        CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C                     Z-ADD10        RQDLN1                                              CSW213
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              CSW213
+     C           DIFLN1    IFLE RQDLN1                                                        CSW213
+     C                     WRITEME1741R1                                                      CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+     C           *IN41     IFEQ *ON                                                           CSW213
+     C           *IN42     ANDEQ*ON                                                           CSW213
+     C           M3IBAC    ANDNE*BLANKS                                                       CSW213
+     C                     EXSR SP3REC                                                        CSW213
+     C                     ENDIF                                                              CSW213
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SP1REC
+      *****************************************************************
+      *                                                               *
+      *  SP1REC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SP1REC    BEGSR
+      *
+      ** SWIFT ISO Country Code
+      *
+     C                     MOVE M3ISOC    RM3SOC
+      *
+      ** SWIFT ISO Country Code Description
+      *
+     C                     MOVE M3ISOD    RM3SOD
+      *
+      ** Supports Charge Transparency
+      *
+     C                     MOVE M3SCHT    RM3SCH
+      *                                                                                       CFT017
+      ** EEA Member                                                                           CFT017
+      *                                                                                       CFT017
+     C           CFT017    IFEQ 'Y'                                                           CSW213
+     C                     MOVE M3EEAM    RM3EEA                                              CFT017
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CFT032
+     C**********           MOVE M3FATF    RM3FAF                                       CFT032 CSW213
+      *
+     C           CSW207    IFEQ 'Y'                                                           CSW207
+     C                     MOVE M3MFID    RM3FID                                              CSW207
+     C                     MOVE M3FATF    RM3FAF                                              CSW213
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+      ** Support MT205                                                                        CSW209
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVELM3M205    RM3205                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+      ** IBAN Country Code                                                                    CSW213
+      *                                                                                       CSW213
+     C           *IN41     IFEQ *ON                                                           CSW213
+     C           *IN42     ANDEQ*ON                                                           CSW213
+     C                     MOVE M3IBAC    RM3IBC                                              CSW213
+     C                     ENDIF                                                              CSW213
+      ** Support SEPA                                                                         CSW213
+     C           *IN41     IFEQ *ON                                                           CSW213
+     C                     MOVE M3SEPA    RM3SEP                                              CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+      ** Write out Detail Record.
+      *
+     C                     WRITEME1741R2
+      *
+     C                     ENDSR
+      *                                                                                       CSW213
+      *****************************************************************                       CSW213
+      /TITLE SR/SP2REC                                                                        CSW213
+      *****************************************************************                       CSW213
+      *                                                               *                       CSW213
+      *  SP2REC - Subroutine to Write second Detail record to the     *                       CSW213
+      *           Report.                                             *                       CSW213
+      *  Called By: SRPROC                                            *                       CSW213
+      *  Calls    : None                                              *                       CSW213
+      *                                                               *                       CSW213
+      *****************************************************************                       CSW213
+      *                                                                                       CSW213
+     C           SP2REC    BEGSR                                                              CSW213
+      *                                                                                       CSW213
+     C                     MOVE M3IBAR    RM3IBR                                              CSW213
+      *                                                                                    MD022111A
+     C                     Z-ADD3         RQDLN1                                           MD022111A
+     C           DIFLN1    IFLE RQDLN1                                                     MD022111A
+     C                     WRITEME1741R1                                                   MD022111A
+     C                     ENDIF                                                           MD022111A
+      *                                                                                    MD022111A
+     C                     WRITEME1741R4                                                      CSW213
+      *                                                                                       CSW213
+     C                     ENDSR                                                              CSW213
+      *                                                                                       CSW213
+      *****************************************************************                       CSW213
+      /TITLE SR/SP3REC                                                                        CSW213
+      *****************************************************************                       CSW213
+      *                                                               *                       CSW213
+      *  SP3REC - Subroutine to Write third Detail record to the      *                       CSW213
+      *           Report.                                             *                       CSW213
+      *  Called By: SRPROC                                            *                       CSW213
+      *  Calls    : None                                              *                       CSW213
+      *                                                               *                       CSW213
+      *****************************************************************                       CSW213
+      *                                                                                       CSW213
+     C           SP3REC    BEGSR                                                              CSW213
+      *                                                                                       CSW213
+     C                     MOVE *OFF      *IN44                                               CSW213
+     C                     MOVE *OFF      *IN90                                               CSW213
+     C           BEMPTY    IFNE 'Y'                                                           CSW213
+      *                                                                                       CSW213
+      ** Get Country Code Description of the country as extracted from Country Code File      CSW213
+      *                                                                                       CSW213
+     C           M3IBAC    CHAINMEBICCL1             90                                       CSW213
+     C           *IN90     IFEQ *OFF                                                          CSW213
+     C                     MOVE *ON       *IN44                                               CSW213
+     C                     MOVE BCCNTY    RM3BID                                              CSW213
+     C                     ENDIF                                                              CSW213
+     C                     ENDIF                                                              CSW213
+      *                                                                                       CSW213
+      ** Third detail Record                                                                  CSW213
+      *                                                                                       CSW213
+     C                     MOVE M3OCDT    RM3OCD                                              CSW213
+     C                     MOVE M3MCDT    RM3MCD                                              CSW213
+     C                     MOVE M3CCSP    RM3CSP                                              CSW213
+     C                     MOVE M3CCLN    RM3CLN                                              CSW213
+     C                     MOVE M3ICSP    RM3ICS                                              CSW213
+     C                     MOVE M3ICLN    RM3ICL                                              CSW213
+     C                     MOVE M3BBSP    RM3BBS                                              CSW213
+     C                     MOVE M3BBLN    RM3BBL                                              CSW213
+     C                     MOVE M3TILN    RM3TIN                                              CSW213
+     C                     MOVE M3BISP    RM3BIS                                              CSW213
+     C                     MOVE M3BILN    RM3BIL                                              CSW213
+     C                     MOVE M3TBLN    RM3TBL                                              CSW213
+     C                     MOVE M3BRSP    RM3BRS                                              CSW213
+     C                     MOVE M3BRLN    RM3BRL                                              CSW213
+     C                     MOVE M3INLN    RM3INL                                              CSW213
+     C                     MOVE M3ACSP    RM3APS                                              CSW213
+     C                     MOVE M3ACLN    RM3APL                                              CSW213
+      *                                                                                       CSW213
+     C                     WRITEME1741R5                                                      CSW213
+      *                                                                                       CSW213
+     C                     ENDSR                                                              CSW213
+      *
+      *****************************************************************
+      /TITLE SR/SP1END
+      *****************************************************************
+      *                                                               *
+      *  SP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SP1END    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEME1741R1
+     C                     ENDIF
+      *
+      ** Write out Total Format.
+      *
+     C                     WRITEME1741R3
+      *
+     C                     CLOSEME1741P1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, SRPROC, *PSSR                    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Display user
+      *
+     C                     MOVELUSER      RUSER
+      *
+     C                     WRITEME1741F1
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEME1741F4
+     C                     ELSE
+      *
+      ** If no records read, output no details to report.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITEME1741F3
+     C                     ELSE
+      *
+      ** Output no. of records processed.
+      *
+     C                     MOVELRCOUNT    RPROC
+     C                     WRITEME1741F2
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** End Program and Return.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     EXSR SRAUDT
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCFP1
+      *****************************************************************
+      *                                                               *
+      *  SRCFP1 - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFP1    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCFAU
+      *****************************************************************
+      *                                                               *
+      *  SRCFAU - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFAU    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

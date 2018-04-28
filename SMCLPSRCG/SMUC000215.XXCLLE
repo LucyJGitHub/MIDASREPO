@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                     AR808720
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC000215 - Midas SM API Configuration Initialisation      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No.AR808720 *REDUNDANT Date 20Jul11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CAP204  *CREATE    Date 15Mar10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR808720 - Remove prompt for authority change               */
+/*       CAP204 - Teller Related APIs - Account Transfer             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             SNDPGMMSG  MSG('SMUC000215 - Midas SM API Configuration +
+                             Initialisation') TOMSGQ(MRUNQ MOPERQ)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/* Call initialisation program */
+ 
+             CALL       PGM(SMU000215)
+ 
+/* Database error processing. */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/* Abnormal termination */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             ROLLBACK
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program SMUC000215 -
+                            ended abnormally - see joblog')  +
+                            TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDCMTCTL
+             ENDPGM

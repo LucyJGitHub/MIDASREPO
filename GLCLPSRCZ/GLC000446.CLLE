@@ -1,0 +1,111 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Upd Nost Proj with Con Bank Nost Proj Control')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Midas - General Ledger Module                       */
+/*                                                                   */
+/*       CLLE/ GLC000446 - Update Nostro Projections with            */
+/*                         Consumer Banking Foreign Nostro           */
+/*                         Projections Control                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. BG12067            Date 17Nov06              */
+/*       Prev Amend No. CRE026  *CREATE    Date 24May06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BG12067 - Apply missing codes                               */
+/*       CRE026 - Consumer Banking                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*/COPY WNCPYSRC,GLC000446INT                                        */
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2006')
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10) VALUE(*BLANK)                   /*BG12067*/
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*/COPY WNCPYSRC, GLC000446MPS                                       */
+ 
+/* Create LDA for job in QTEMP if it does not already exist */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+ 
+             SNDPGMMSG  MSG('GLC000446 - Update Nostro Projections with +
+                            Consumer Banking Nostro Projections Control ') +
+                            TOMSGQ(MRUNQ)
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Start commitment control for batch jobs with file updates */
+ 
+/**********  IF         COND(&JOBTYPE = '0') THEN(DO)                       **********/  /*BG12067*/
+/**********     STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))               **********/  /*BG12067*/
+/**********  ENDDO                                                          **********/  /*BG12067*/
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)                                  /*BG12067*/
+ 
+             ALCOBJ     OBJ((GLNOSTPD *FILE *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Call Update Nostro Projections */
+ 
+             CALL       PGM(GL000446)
+ 
+             CHGDTAARA  DTAARA(GLNOSTCTL (1 4)) VALUE('    ')
+ 
+             DLCOBJ     OBJ((GLNOSTPD *FILE *EXCL))
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ 
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+/*/COPY WNCPYSRC, GLC000446MPE                                       */
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+/*/COPY WNCPYSRC, GLC000446EER                                       */
+ 
+/* Abnormal termination - batch job */
+ 
+              SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                           GLC000446 ended abnormally - see job log') +
+                           TOMSGQ(MOPERQ MRUNQ)
+              MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd. 2006')
+ 
+/*/COPY WNCPYSRC, GLC000446END                                       */
+ 
+ 
+             ENDPGM

@@ -1,0 +1,679 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Transfer Create Balancing Entries')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas   -  General Ledger Module                             *
+      *                                                               *
+      *  GL009200  -  Generate Balancing Entries                      *
+      *                                                               *
+      *  Function:  This program reads through the Account Postings   *
+      *             file (GLIPOSPD) and for each record (that do not  *
+      *             balance),then update both the "Cleared and Ledger *
+      *             fields on file (ACCNTAB).                         *
+      *             Also the Hash Totals on file (ACCNTAC)            *
+      *             the Trailer Record will be updated.               *
+      *                                                               *
+      *  (C) Copyright Midas-Kapiti International Ltd. 1997           *
+      *                                                               *
+      *  Last Amend No. CRE090             Date 14Feb14               *
+      *  Prev Amend No. AR1095876          Date 30Sep13               *
+      *                 AR899028           Date 25Jan12               *
+      *                 AR847269           Date 09Nov11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER042             Date 11May11               *
+      *                 CRE075             Date 06Dec10               *
+      *                 BUG27769           Date 09Jun10               *
+      *                 BUG27442           Date 14May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CGL114  *CREATE    Date 04Jan10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
+      *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
+      *             RUND (Child: AR1095877) (Recompile)               *
+      *  AR899028 - NOSTRO AMAD System errors occured; applied        *
+      *             fix AR847269                                      *
+      *  AR847269 - Column F1DACN not in specified tables (Recompile) *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER042 - Interest Scale Report Correspondence                *
+      *           (Upgrade of FGE178/179) (Recompile)                 *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  BUG27769 - Incorrect error code                              *
+      *  BUG27442 - LERC30A 00001 failed                              *
+      *  CGL114 - Account Transfer Utility                            *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLIPOSPDIP  E                    DISK         KINFSR *PSSR
+     FGLIPDFPDIF  E           K        DISK         KINFSR *PSSR
+     FACCNT   UF  E           K        DISK         KCOMIT
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTABF                          KIGNORE
+     FACCNTL0 UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FAPOSTL1 O   E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FGLACNTQDO   E           K        DISK         KINFSR *PSSR A                          BUG27442
+     F                                              KCOMIT                                  BUG27442
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    STAMP   1   1 26
+      ** Array containing dummy timestamp
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details for RunDate
+      *
+     I              'INTERBRANCH ACCOUNT 'C         NAME
+      *
+     IDSSDY     E DSDSSDY
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Definition: First DS for Access Programs, Short Data Structure
+      *
+     ISDACOD    E DSSDACODPD
+      *
+      ** Definition: Account Code Details Accessed Via Access Program
+      *
+     ID@FMT     E DSACCNTAB
+      *
+      ** Definition: GL A/C Master Detail Record format data structure
+      *
+     IDSFRAC      DS
+     I                                        1   6 DSFCNU
+     I                                        7   9 DSFCCY
+     I                                       10  19 DSFACO
+     I                                       20  21 DSFACS
+     I                                       22  24 DSFBRC
+     IDSTOAC      DS
+     I                                        1   6 DSTCNU
+     I                                        7   9 DSTCCY
+     I                                       10  19 DSTACO
+     I                                       20  21 DSTACS
+     I                                       22  24 DSTBRC
+      *
+     IDSKITA      DS                             90
+     I                                        1   6 KCNUM
+     I                                        7   9 KCCY
+     I                                       10  190KACOD
+     I                                       20  210KACSQ
+     I                                       22  24 KBRCA
+      *
+     IDSKITE      DS                             90
+     I                                        1   3 KBRCH
+     I                                        4   9 KCNMR
+     I                                       10  12 KCCYC
+     I                                       13  220KACDE
+     I                                       23  240KACSN
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C                     EXSR XMAPOS
+      *
+     C                     EXSR XVACCN
+      *
+      ** Commit the Updatedand Created Records.
+      *
+     CLR                   COMIT
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMAPOS - Maintain Midas GL Account Postings Detail, APOSTPD  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: XRACOD                                                *
+      *                                                               *
+      *****************************************************************
+     C           XMAPOS    BEGSR
+      *
+     C                     CLEARAPOSTPDF
+      *
+      ** Set-up and Write posting Record
+      *
+     C                     MOVEL'P'       RECI
+     C                     MOVELBICUST    CNUM
+     C                     MOVELBICYCD    CCY
+     C                     MOVELBIACCD    ACOD
+     C                     MOVELBIACSN    ACSQ
+     C                     MOVELBIRACN    ACNO
+     C                     Z-ADDBIVLDT    PSTD
+     C                     Z-ADDBIVLDT    VALD
+     C                     MOVELBINRDC    PNAR
+     C                     Z-ADDBIPTAM    PSTA
+      *
+     C           BIDCIN    IFEQ 'C'
+     C                     Z-ADD1         DRCR
+     C                     ELSE
+     C                     Z-ADD0         DRCR
+     C                     ENDIF
+      *
+     C                     MOVE 'Bal-Ent' SPOS
+     C                     MOVELBIBCBH    BRCA
+      *
+     C           BIRACN    IFNE 0
+     C                     MOVELBDTRTY    TRAT
+     C                     Z-ADD1         RIND
+     C                     ELSE
+     C                     MOVEL'     '   TRAT
+     C                     Z-ADD0         RIND
+     C                     ENDIF
+      *
+     C                     MOVE BDDPCD    DPMT
+     C                     MOVE ' '       GETP
+     C                     MOVE '  '      ACSC
+      *
+      ** Retrieve Account Code Record.
+      *
+     C                     EXSR XRACOD
+      *
+     C                     MOVE A5ACTY    ATYP
+     C                     MOVE A5ACSC    ACSC
+     C                     MOVE A5ACST    STYP
+      *
+      ** Write a Record to Posting Detail File.
+      *
+     C                     WRITEAPOSTPDF               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL009200'DBPGM
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'APOSTL1 'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XVACCN- Validate Midas GL Accounts Master Detail File,       *
+      *          ACCNTAB                                              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: XSIV01, XMAC01, XMAC02                                *
+      *                                                               *
+      *****************************************************************
+     C           XVACCN    BEGSR
+      *
+      ** Check if 'To' details already exist on ACCNTAB
+      *
+     C                     MOVELCNUM      KCNUM
+     C                     MOVELCCY       KCCY
+     C                     MOVELACOD      KACOD
+     C                     MOVELACSQ      KACSQ
+     C                     MOVELBRCA      KBRCA
+      *
+     C           KACCN     CHAINACCNTABF             2221
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL009200'DBPGM
+     C                     Z-ADD002       DBASE
+     C                     MOVEL'ACCNTL0 'DBFILE
+     C                     MOVELDSKITA    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Process both (ACCNTAB and ACCNTAC) files and update totals.
+      *
+     C           *IN22     IFEQ *ON
+      *
+     C                     CLEARACCNTABF
+      *
+      ** Get Run Date - Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL009200'DBPGM
+     C                     MOVEL'999'     DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **Write record
+      *
+     C                     MOVE 'D'       RECI
+     C                     MOVELKCNUM     CNUM
+     C                     MOVELKCCY      CCY
+     C                     MOVELKACOD     ACOD
+     C                     MOVELKACSQ     ACSQ
+     C                     MOVELKBRCA     BRCA
+     C                     MOVELNAME      ANAM
+     C                     MOVE 'G'       ATYP
+     C                     Z-ADDBJRDNB    DACO
+     C                     Z-ADDBJRDNB    NSTD
+     C                     Z-ADDBJRDNB    LSTD
+     C                     MOVE 'B'       STFQ
+     C                     Z-ADDBJRDNB    ORED
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'I'       CHTP
+     C                     MOVEASTAMP,1   TMST
+      *
+     C                     WRITEACCNTABF
+      *                                                                                     BUG27442
+      ** Write new record in Accounts Master Extension File                                 BUG27442
+      *                                                                                     BUG27442
+     C                     CLEARGLACNTD0                                                    BUG27442
+     C                     MOVELKCNUM     F1CNUM                                            BUG27442
+     C                     MOVELKCCY      F1CCY                                             BUG27442
+     C                     MOVELKACOD     F1ACOD                                            BUG27442
+     C                     MOVELKACSQ     F1ACSQ                                            BUG27442
+     C                     MOVELKBRCA     F1BRCA                                            BUG27442
+     C                     WRITEGLACNTD0                                                    BUG27442
+      *
+      ** Calculate Trailer
+      *
+     C                     ADD  1         WRK1
+      *
+     C                     SETOF                     22
+     C                     ENDIF
+      *
+     C           *IN22     IFEQ *OFF
+     C                     EXSR XSIV01
+     C                     EXSR XMAC01
+     C                     EXSR XMAC02
+      *
+     C                     ELSE
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL009200'DBPGM
+     C                     Z-ADD003       DBASE
+     C                     MOVE 'ACCNT   'DBFILE
+     C                     MOVELDSKITA    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMAC01- Maintain Midas GL Accounts Master Detail File,       *
+      *          ACCNTAB                                              *
+      *                                                               *
+      *  Called By: XVACCN                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XMAC01    BEGSR
+      *
+     C           KACCN     CHAINACCNTL0              2221
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL009200'DBPGM
+     C                     Z-ADD004       DBASE
+     C                     MOVEL'ACCNTL0 'DBFILE
+     C                     MOVELDSKITA    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Update Record with Posting Details.
+      *
+     C           *IN22     IFEQ *ON
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL009200'DBPGM
+     C                     Z-ADD005       DBASE
+     C                     MOVE 'ACCNT   'DBFILE
+     C                     MOVELDSKITA    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *
+      ** Save ledger balance before updated with posting amount, and
+      ** save DR/CR before indicator
+      *
+     C                     Z-ADD*ZERO     LDBLWK 150
+     C                     MOVE *BLANK    CDBLBE  2
+     C                     MOVE *BLANK    CDBLAF  2
+     C                     Z-ADDLDBL      LDBLWK
+      *
+     C           LDBL      IFLT 0
+     C                     MOVE 'CR'      CDBLBE
+     C                     ELSE
+     C                     MOVE 'DR'      CDBLBE
+     C                     ENDIF
+      *
+     C           BIDCIN    IFEQ 'C'
+     C                     SUB  BIPTAM    LDBL
+     C                     SUB  BIPTAM    CLBL
+     C                     ELSE
+     C                     ADD  BIPTAM    LDBL
+     C                     ADD  BIPTAM    CLBL
+     C                     ENDIF
+      *
+     C                     UPDATACCNTABF               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL009200'DBPGM
+     C                     Z-ADD006       DBASE
+     C                     MOVEL'ACCNTL0 'DBFILE
+     C                     MOVELDSKITA    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set CR/DR indicator after ledger bal updated,
+      ** Update ACCNTAC hash totals
+      *
+     C           LDBL      IFLT 0
+     C                     MOVE 'CR'      CDBLAF
+     C                     ELSE
+     C                     MOVE 'DR'      CDBLAF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMAC02- Maintain Midas GL Accounts Master Trailer File,      *
+      *          ACCNTAC                                              *
+      *                                                               *
+      *  Called By: XVACCN                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XMAC02    BEGSR
+      *
+     C                     MOVE '999999'  KCNUM
+     C                     MOVEL'9  '     KCCY
+     C                     MOVEL*ZEROS    KACOD
+     C                     MOVEL*ZEROS    KACSQ
+     C                     MOVE *BLANK    KBRCA
+      *
+     C           KACCN     CHAINACCNT                2221
+      *
+     C           *IN22     IFNE '0'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL009200'DBPGM
+     C                     Z-ADD007       DBASE
+     C                     MOVE 'ACCNT   'DBFILE
+     C                     MOVELDSKITA    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** Check if account Balance has changed from being DR or CR Balance
+      *
+     C           CDBLBE    IFNE CDBLAF
+      *
+      ** Take saved Ledger Balance from (ACCNTAC) Hash Total and add new
+      ** Ledger Balance to other Hash Total
+      *
+     C           CDBLBE    IFEQ 'CR'
+     C                     Z-ADD0         ZZAMT
+     C           LDBLWK    DIV  1000      ZZAMT
+     C                     Z-ADDHWNC      ZZTOTI
+     C                     Z-ADDHDCC      ZZTOTD
+     C                     EXSR ZZSUB
+     C                     Z-ADDZZTOTI    HWNC
+     C                     Z-ADDZZTOTD    HDCC
+     C                     Z-ADD0         ZZAMT
+     C           LDBL      DIV  1000      ZZAMT
+     C                     Z-ADDHWND      ZZTOTI
+     C                     Z-ADDHDCD      ZZTOTD
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    HWND
+     C                     Z-ADDZZTOTD    HDCD
+      *
+     C                     ELSE
+     C                     Z-ADD0         ZZAMT
+     C           LDBLWK    DIV  1000      ZZAMT
+     C                     Z-ADDHWND      ZZTOTI
+     C                     Z-ADDHDCD      ZZTOTD
+     C                     EXSR ZZSUB
+     C                     Z-ADDZZTOTI    HWND
+     C                     Z-ADDZZTOTD    HDCD
+     C                     Z-ADD0         ZZAMT
+     C           LDBL      DIV  1000      ZZAMT
+     C                     Z-ADDHWNC      ZZTOTI
+     C                     Z-ADDHDCC      ZZTOTD
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    HWNC
+     C                     Z-ADDZZTOTD    HDCC
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Add posting amount to ACCNTAC hash Totals depending on A/c Bal
+      *
+     C                     Z-ADD0         ZZAMT
+     C           PSTA      DIV  1000      ZZAMT
+     C           LDBLWK    IFGT LDBL
+     C           CDBLBE    IFEQ 'DR'
+     C                     Z-ADDHWND      ZZTOTI
+     C                     Z-ADDHDCD      ZZTOTD
+     C                     EXSR ZZSUB
+     C                     Z-ADDZZTOTI    HWND
+     C                     Z-ADDZZTOTD    HDCD
+      *
+     C                     ELSE
+     C                     Z-ADDHWNC      ZZTOTI
+     C                     Z-ADDHDCC      ZZTOTD
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    HWNC
+     C                     Z-ADDZZTOTD    HDCC
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           CDBLBE    IFEQ 'DR'
+     C                     Z-ADDHWND      ZZTOTI
+     C                     Z-ADDHDCD      ZZTOTD
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    HWND
+     C                     Z-ADDZZTOTD    HDCD
+      *
+     C                     ELSE
+     C                     Z-ADDHWNC      ZZTOTI
+     C                     Z-ADDHDCC      ZZTOTD
+     C                     EXSR ZZSUB
+     C                     Z-ADDZZTOTI    HWNC
+     C                     Z-ADDZZTOTD    HDCC
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ADD  WRK1      NORE
+     C                     ADD  WRK1      NINU                                              BUG27442
+     C                     ADD  WRK1      NOAU                                              BUG27442
+     C                     UPDATACCNTACF
+     C                     Z-ADD0         WRK1
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSIV01 - Set Up Initial Values for ACCNTAB                   *
+      *                                                               *
+      *  Called By: XVACCN                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XSIV01    BEGSR
+      *
+     C                     MOVELBIBCBH    KBRCA
+     C                     MOVELBICUST    KCNUM
+     C                     MOVELBICYCD    KCCY
+     C                     MOVELBIACCD    KACOD
+     C                     MOVELBIACSN    KACSQ
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XRACOD - Retrieve Account Code Details                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: XMAPOS                                                *
+      *                                                               *
+      *****************************************************************
+     C           XRACOD    BEGSR
+      *
+      ** Retrieve Account Code Details.
+      *
+     C                     MOVE ACOD      #010   10
+     C                     CALL 'AOACODR0'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM #010      @DSBN  10
+     C           SDACOD    PARM *BLANKS   DSSDY
+      *
+     C           *IN90     IFEQ '1'
+     C********** @RTCD     OREQ '*ERROR*'                                                   BUG27769
+     C           @RTCD     ORNE *BLANKS                                                     BUG27769
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL009200'DBPGM
+     C                     Z-ADD008       DBASE
+     C                     MOVEL'SDACODPD'DBFILE
+     C                     MOVELACOD      DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR -  Initialise and define fields                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Initialise parameters, work fields, etc.
+      *
+     C                     MOVEACPY@      MKI@@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           KACCN     KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCA
+      *
+     C                     Z-ADD0         WRK1    50
+      *
+     C                     READ GLIPDFPD               2120
+      *
+     C           *IN20     IFEQ *ON
+     C           *IN21     OREQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLOSEGLIPDFPD
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called By: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not been called yet
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     ROLBK
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZZADDZ1
+     C/COPY ZSRSRC,ZZSUBZ1
+** CPY@
+(c) Misys International Banking Systems Ltd. 2010
+** STAMP - Dummy timestamp
+0001-01-01-00.00.00.000000

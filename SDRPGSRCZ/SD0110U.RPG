@@ -1,0 +1,71 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Final Check For Deal Number Ranges')
+     F********************************************************************S01230
+     F*                                                                  *S01230
+     F*  Midas Standing Data Module                                   S01230
+     F*                                                                  *S01230
+     F*     SD0110U - FINAL CHECK FOR DEAL NUMBER RANGES                 *S01230
+     F*                                                                  *S01230
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *S01230
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01230             Date 29/03/90              *S01230
+     F*                 S01229             Date 18/12/89              *S01230
+     F*                                                                  *S01230
+     F********************************************************************S01230
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01230  - STANDARDISE PROGRAM                                *S01230
+     F*     S01229  - FIELD NAME CHANGES                                 *S01230
+     F********************************************************************S01230
+     F*  P R O G R A M     C R E A T I O N     P A R A M E T E R S    *   S01230
+     F*                                                               *   S01230
+     F*                                                               *   S01230
+     F********************************************************************S01230
+     FSDDLNOL4IF  E           K        DISK
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           RNGNO   2
+     C                     PARM           SFSTN   60
+     C                     PARM           SLSTN   60
+      *
+     C                     MOVE *BLANK    P0RTN
+      *
+      * Position file pointer at highest date on file greater than
+      * input date and read previous record
+      *
+     C           SLSTN     SETGT@DLNOGH
+     C                     READP@DLNOGH                  88
+      *
+      * If not EOF, then check that range retrieved is not the current
+      * one we are working with
+      *
+     C           *IN88     IFEQ '0'                        IF 1
+      *
+     C***********RNGNO*****IFNE ARCFNB                      IF 2          S01229
+     C           RNGNO     IFNE ARRGNB                      IF 2          S01229
+      *
+      * If not current range, then range input must not span the one
+      * just found
+      * NOTE: All other possible overlaps have already been checked in
+      * the SYNON program
+      *
+     C***********SFSTN*****IFLT ARCGNB                       IF 3         S01229
+     C***********SLSTN*****ANDGTARCHNB                        AND         S01229
+     C           SFSTN     IFLT ARFDIR                       IF 3         S01229
+     C           SLSTN     ANDGTARLDIR                        AND         S01229
+     C                     MOVE 'OVERLAP' P0RTN
+     C                     END                               FI 3
+      *
+     C                     END                              FI 2
+      *
+     C                     END                             FI 1
+      *
+     C                     MOVE '1'       *INLR

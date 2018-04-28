@@ -1,0 +1,1707 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Interbranch entries at item level')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0263 - Batch Transactions File Split Report.               *
+      *                                                               *
+      *  Function:  This program produces the Batch Transactions      *
+      *             Report. No file updates are undertaken.           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *                                                               *
+      *  Last Amend No. AR1097467B         Date 19Apr13               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CAP208             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 172408             Date 02Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01MAR99               *
+      *                 CTI002             Date 23Sep98               *
+      *                 CCB003 *Create     Date 10Oct96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1097467B - Expected 15% COB run optimization not met       *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CAP208 - F&O Market Instrument API (Recompile)               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c             *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  172408 - Amounts are not shown in the report if the currency *
+      *           has 2 decimal places.  Indicator used for Printer   *
+      *           File not the same as of the indicator used in RPG.  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *           This program is essentially a copy of GL0260 with   *
+      *           all file updates removed.                           *
+      *           Management Accounts Enhancement for PCA included:   *
+      *           Do not produce report details if CMC001 feature is  *
+      *           installed.                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLJENHL2IF  E           K        DISK
+     FGLJENPL0IF  E           K        DISK
+     FSDNARRL1IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FSDBRCHL1IF  E           K        DISK                                               AR1097467B
+     FSDCURRL1IF  E           K        DISK                                               AR1097467B
+     FGL0263AUO   F     132     OF     PRINTER      KINFDS SPOOLU
+     FGL0263P1O   E             10     PRINTER      KINFDS SPOOL      UC
+      *
+      *****************************************************************
+      *
+      *     02 - NO RECORD FOUND ON CHAIN TO ACCNT
+      *     08 - CONDITIONS OUTPUT OF DETAILS
+      *     10 - OVERFLOW INDICATOR
+      *     40 - POSTING CURRENCY HAS ZERO DECIMAL POINTS
+      *     41 - POSTING CURRENCY HAS ONE DECIMAL POINTS
+      ******42*-*POSTING*CURRENCY*HAS*TWO*DECIMAL*POINTS***************   172408
+      *     43 - POSTING CURRENCY HAS THREE DECIMAL POINTS
+      *     44 - POSTING CURRENCY HAS TWO DECIMAL POINTS                  172408
+      *     46 - DISCREPANCY BETWEEN NO. OF ITEMS READ AND CALCULATED
+      *     47 - NEGATIVE HASH TOTAL.
+      *     48 - ARRAY WORK IND IN SR/TOTREP
+      *     49 - Cache Hit for Branch Codes                                               AR1097467B
+      *     50 - END OF GLJENHL2 FILE
+      *     51 - PRINT HEADING AND OUTPUT MANPO HEADER.
+      *     52 - Cache Hit for Narrative Codes                                            AR1097467B
+      *     53 - Cache Hit for Currency Codes                                             AR1097467B
+      *     54 - Cache Hit for Account Codes                                              AR1097467B
+      *     64 - END OF GLJENPL0 FILE
+      *     65 - UNSUCCESSFUL CHAIN TO NARRATIVE CODES FILE
+      *     70 - MULTIBRANCHED ENVIRONMENT
+      *     71 - ERROR ON ACCESSING GENERAL LEDGER DETAILS
+      *     72 - REPORT JOURNAL INTER-BRANCH ENTERIES AT ITEM LEVEL
+      *     73 - BATCH PROCESSED IS MULTIBRANCHED
+      *     74 - REPORT INTERBRANCH ENTERIES VIA MAIN BRANCH
+      *     76 - POSTING BRANCH *NE MAIN BRANCH
+      *     77 - GENERATED ENTRY IS DEBIT
+      *
+      *  U7+U8 - DATABASE ERROR
+      *     U8 - ONE OR MORE BATCHES HAVE DISCREPANCY.
+      *
+      *****************************************************************
+      *
+     E                    DELT    1   1 17
+      ** Array to pick up narrative deleted message
+      *
+     E                    NARR    1   5 30
+      ** Array to pick up narrative for interbranch
+      *
+     E                    BRCY      500  6
+     E                    BCDR      500 15 0
+     E                    BCCR      500 15 0
+      ** Arrays to process branch ccy totals
+      *
+     E                    #BCH      900  3                                                AR1097467B
+     E                    #NAR      300  2                                                AR1097467B
+     E                    #CCY      250  3                                                AR1097467B
+      ** Arrays to process full caches                                                    AR1097467B
+      *
+     E                    #ACD      300 13 0             Account Codes Array              AR1097467B
+     E                    #ACS      300 13 0             Account Codes Sorted             AR1097467B
+     E                    #ACK      300 10               Account Codes Cache Key          AR1097467B
+      ** Arrays to process LRU caches                                                     AR1097467B
+      *
+     E                    CCCY      100  3
+     E                    CCDR      100 15 0
+     E                    CCCR      100 15 0
+      ** Arrays to process ccy totals
+      *
+     E                    CPY@    1   1 80
+      ** Array for Object Copyright Statement
+      *
+      *****************************************************************
+      *
+     I@BRTHCJ
+     I              BRBTNB                          BNUMH
+     I              BRHINC                          NII
+     I              BRDPCD                          DPMT
+     I              BRBTSF                          STAT
+      *
+     I@BTREAK
+     I              BTBTNB                          BNUM
+     I              BTBINB                          ITEM
+     I              BTCUST                          CNUMA
+     I              BTCYCD                          CCY
+     I              BTACCD                          ACODA
+     I              BTACSN                          ACSQA
+     I              BTVLDT                          VALD
+     I              BTNVCD                          NARC
+     I              BTTRTY                          TRATA
+     I              BTNRDC                          PNAR
+     I              BTPTAM                          PSTA
+     I              BTACNB                          ASOCA
+     I              BTCQNB                          CHQNA
+     I              BTACTY                          ATYP
+     I              BTSWCR                          SWCR
+     I              BTTSTY                          OTST
+     I              BTPRCN                          PRFCA
+     I              BTBKCD                          BOKCA
+     I              BTNITM                          NITMS
+      *
+     I@ALREC0
+     I              ALDON                           PNAR1
+      *
+     IACCNTABF
+     I              RECI                            CRECI
+     I              CNUM                            CCNUM
+     I              CCY                             CCYC
+     I              ACOD                            CACOD
+     I              ACSQ                            CACSQ
+     I              BRCA                            CBRCA
+     I              ATYP                            CATYP
+     I              ACST                            CACST
+     I              PRFC                            CPRFC
+     I              RRNM                            CRRNM
+      *
+     ISPOOL       DS
+     I                                       83  90 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     ISPOOLU      DS
+     I                                       83  90 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I***CURLOD*     DS                        100                                        AR1097467B
+      ***DS*to*store*Currency*details**********************************                   AR1097467B
+     I**********                              1   3 CURC                                  AR1097467B
+     I**********                              4   4 NODEC                                 AR1097467B
+      *
+     ILDA       E DSLDA                         256
+      *
+     IW0BITM      DS                              6
+      ** DS for source of posting
+     I                                        1   3 BNUMSP
+     I                                        4   60ITEMSP
+      *
+     ID@OTST      DS
+      ** DS to split OTST for input length
+     I                                        1  10 OTST
+     I                                        3  10 OTST2
+      *
+     ID@LOAN    E DSSDLOANPD
+      ** Loan Types/Sub-Types DS for validation of Transaction Type
+      *
+     ID@INTY    E DSINTYPD
+      ** Instrument Type  DS for validation of Transaction Type
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Module details
+      *
+     I***SDBRCH*   E DSSDBRCHPD                                                           AR1097467B
+     ISDBRCH    E DSSDBRCHPD                900                                           AR1097467B
+      ** Branch code
+      *
+     ISDGELR    E DSSDGELRPD
+      ** General ledger details
+      *
+     I***SDACOD*   E DSSDACODPD                                                           AR1097467B
+     ISDACOD    E DSSDACODPD                300                                           AR1097467B
+      ** Account code
+     I              A5ACTY                          ATYP
+     I              A5ACSC                          ACSC
+     I              QQACCD                          QQACCX                                    CGL029
+      *
+     I***SDCURR*   E DSSDCURRPD                                                           AR1097467B
+     ISDCURR    E DSSDCURRPD                250                                           AR1097467B
+     ISDNARR    E DSSDNARRPD                300                                           AR1097467B
+      *
+     ISCSARD    E DSSCSARDPD
+      ** Switchable Features Details
+     I              LCD                             LCDX
+      *
+     IDSFDY     E DSDSFDY
+      ** Short DS for Access programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long DS for Access programs
+     I/COPY WNCPYSRC,GL0263I001
+      *
+      *================================================================
+     C                     EXSR INIT
+      *
+     C                     EXSR MAIN
+      *
+     C                     EXSR END
+      *****************************************************************
+      * MAIN - Main processing
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      ** Read batch header record
+     C                     READ GLJENHL2                 50
+     C/COPY WNCPYSRC,GL0263C001
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      ** Batch status flag of A or S.
+     C           STAT      IFEQ 'A'
+     C           STAT      OREQ 'S'
+      *
+      ** OBTAIN THE HEADER BRANCH DETAILS
+     C                     Z-ADDBCHARR    B                                               AR1097467B
+     C           BRBCDA    LOKUP#BCH,B                   49                               AR1097467B
+     C           *IN49     IFEQ '1'                                                       AR1097467B
+     C           B         OCUR SDBRCH                                                    AR1097467B
+     C                     ELSE                                                           AR1097467B
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRBCDA    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE
+     C                     MOVEL@DSNB     DBKEY
+     C                     Z-ADD2         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                                                          AR1097467B
+      *
+      ** SAVE INTERNAL CUSTOMER NO., Due To & Due From ACCOUNT CODE
+      ** FOR HEADER BRANCH
+     C**********           MOVE A8BICN    BICNHD  60                                          CSD027
+     C                     MOVE A8BICN    BICNHD  6                                           CSD027
+     C**********           MOVE A8DTAC    ADTOH   40                                          CGL029
+     C**********           MOVE A8DFAC    ADFRH   40                                          CGL029
+     C                     MOVE A8DTAC    ADTOH  100                                          CGL029
+     C                     MOVE A8DFAC    ADFRH  100                                          CGL029
+      *
+      ** INCREMENT BATCHES COUNT.
+     C                     ADD  1         COUNT   40
+      *
+      ** CHECK IF BATCH IS MULTIBRANCHED
+     C           BGMBIN    COMP 'Y'                      73
+      *
+      ** RESET THE NUMBER OF POSTINGS READ AND PROCESSED TO 0
+     C                     Z-ADD0         BTCH    50
+      *
+      ** CHECK IF BATCH IN FILE AND SET IND08 ACCORDINGLY
+     C           DPMT      COMP '   '                0808
+      *
+     C           BNUMH     CHAINGLJENPL0             64
+      *
+      ** LOOP TO EXTRACT ITEMS FROM BATCH TRANSACTION FILE.
+      *
+     C           *IN64     DOWEQ'0'
+      *
+     C           NARC      IFNE '  '
+      *
+     C                     Z-ADDNARARR    C                                               AR1097467B
+     C           NARC      LOKUP#NAR,C                   52                               AR1097467B
+     C           *IN52     IFEQ '1'                                                       AR1097467B
+     C                     MOVELALDON     PNAR                                            AR1097467B
+     C                     ELSE                                                           AR1097467B
+     C                     MOVELDELT,1    PNAR                                            AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C********** NARC      CHAINSDNARRL1             65                                   AR1097467B
+     C********** *IN65     IFEQ '1'                                                       AR1097467B
+     C**********           MOVELDELT,1    PNAR                                            AR1097467B
+     C**********           ELSE                                                           AR1097467B
+     C**********           MOVELPNAR1     PNAR                                            AR1097467B
+     C**********           ENDIF                                                          AR1097467B
+      *
+     C                     ENDIF
+      *
+      ** Store the value of PNAR
+     C                     MOVE PNAR      NARA   30 P
+      *
+     C           *IN64     IFEQ '0'
+      *
+      ** Format Original Transaction Type
+     C                     MOVE *BLANK    OTTP
+     C                     MOVE *BLANK    WUAPRC  7
+      *
+      ** If account is Retail, chain to ACCNT to check that account
+      ** exists and is not closed.
+      *
+      ** Key fields to be used for CHAIN
+     C           KEYFLD    KLIST
+     C**********           KFLD           NUM     60                                          CSD027
+     C                     KFLD           NUM     6                                           CSD027
+     C                     KFLD           CY      3
+     C**********           KFLD           COD     40                                          CGL029
+     C                     KFLD           COD    100                                          CGL029
+     C                     KFLD           ASQ     20
+     C                     KFLD           BRC     3
+      *
+     C                     MOVE CNUMA     NUM
+     C                     MOVE CCY       CY
+     C                     MOVE ACODA     COD
+     C                     MOVE ACSQA     ASQ
+     C                     MOVE BTIBCA    BRC
+      *
+     C           KEYFLD    CHAINACCNTABF             02
+      *
+     C           *IN02     IFEQ '0'
+     C           CATYP     ANDEQ'R'
+     C           CRECI     ANDNE'D'
+     C           *IN02     OREQ '1'
+     C           ATYP      ANDEQ'R'
+      *
+      ** Read posting branch information for batch item.
+     C                     Z-ADDBCHARR    B                                               AR1097467B
+     C           BTIBCA    LOKUP#BCH,B                   49                               AR1097467B
+     C           *IN49     IFEQ '1'                                                       AR1097467B
+     C           B         OCUR SDBRCH                                                    AR1097467B
+     C                     ELSE                                                           AR1097467B
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BTIBCA    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE
+     C                     MOVEL@DSNB     DBKEY
+     C                     Z-ADD9         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                                                          AR1097467B
+      *
+      ** Change account of posting to suspense account, and change
+      ** narrative to show the original account number.
+      ** Note - this assumes that the suspense account is type 'G'
+      *
+     C                     MOVELCNUMA     STOR1   9
+     C                     MOVE CCY       STOR1
+     C**********           MOVELACODA     STOR2   6                                           CGL029
+     C                     MOVELACODA     STOR2  12                                           CGL029
+     C                     MOVE ACSQA     STOR2
+     C**********           MOVELSTOR1     STOR   15                                           CGL029
+     C                     MOVELSTOR1     STOR   21                                           CGL029
+     C                     MOVE STOR2     STOR
+     C                     MOVE *BLANK    PNAR
+     C                     MOVELNARR,1    PNAR
+     C                     MOVE STOR      PNAR
+     C                     MOVE CNUMA     ASOCA
+     C                     MOVE A8BICN    CNUMA
+     C                     MOVE BKACCD    ACODA
+     C                     MOVE '01'      ACSQA
+     C                     MOVE '00000'   TRATA
+     C                     MOVE '00000000'CHQNA
+     C                     Z-ADD0         RRNM
+     C                     MOVE 'G'       ATYP
+     C                     Z-ADD0         BTRACN
+     C                     MOVE *BLANK    BTCOIN
+      *
+     C                     ENDIF
+      *
+      ** FORMAT SOURCE OF POSTING DATA STRUCTURE
+     C                     MOVE BNUM      BNUMSP
+     C                     Z-ADDITEM      ITEMSP
+      *
+      ** AND SETTING UP SOURCE OF POSTING
+     C                     MOVE BTIBCA    BRCA
+     C                     ADD  1         ACTOT
+     C                     EXSR ACTYPE
+      *
+      ** Restore values of PNAR
+     C                     MOVE NARA      PNAR      P
+      *
+      ** IF ENVIRONMENT IS MULTIBRANCHED AND IF WE ARE REPORTING
+      ** INTER-BRANCH ENTERIES AT ITEM LEVEL AND IF MULTIBRANCHED
+      ** BATCHES ARE USED, REPORT INTER-BRANCH ENTERIES
+      *
+     C           *IN70     IFEQ '1'
+     C           *IN72     ANDEQ'1'
+     C           *IN73     ANDEQ'1'
+      *
+      ** CHECK THAT HEADER BRANCH IS NOT EQUAL TO POSTING BRANCH
+      *
+     C           BRBCDA    ANDNEBTIBCA
+      *
+     C                     EXSR HDPSBR
+      *
+      ** IF REPORTING INTER-BRANCH ENTERIES VIA MAIN BRANCH AND IF
+      ** BATCH BRANCH NOT THE SAME AS MAIN BRANCH AND IF POSTING BRANCH
+      ** DIFFERENT TO MAIN BRANCH, REPORT ADDITIONAL ENTRIES
+      *
+     C           *IN74     IFEQ '1'
+     C           BRBCDA    ANDNEMAINB
+     C           BTIBCA    ANDNEMAINB
+      *
+     C                     EXSR GENR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** OUTPUT RECORD
+     C           PSTA      DIV  1000      ZZAMT
+     C                     EXSR GLZADD
+     C                     ADD  1         BTCH
+     C                     END
+      *
+     C           BNUMH     READEGLJENPL0                 64
+      *
+     C                     ENDDO
+      *
+      ** TEST FOR DISCREPANCY
+     C                     SETOF                     46
+     C           BTCH      IFNE NII
+     C           NII       ANDNE0
+     C                     SETON                     46U8
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Read next batch header record
+     C                     READ @BRTHCJ                  50
+      *
+     C                     ENDDO
+      *
+      ** TOTAL TIME CALCULATIONS
+     C                     EXSR LRSR
+      *
+     C                     ENDSR
+      *****************************************************************
+      * HDPSBR - IF HEADER BRANCH NOT EQUAL TO POSTING BRANCH
+      *          PRODUCE ONE POSTINGS FOR EACH BRANCH
+      *****************************************************************
+     C           HDPSBR    BEGSR
+      *
+      ** READ POSTING BRANCH INFORMATION
+     C                     Z-ADDBCHARR    B                                               AR1097467B
+     C           BTIBCA    LOKUP#BCH,B                   49                               AR1097467B
+     C           *IN49     IFEQ '1'                                                       AR1097467B
+     C           B         OCUR SDBRCH                                                    AR1097467B
+     C                     ELSE                                                           AR1097467B
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BTIBCA    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE
+     C                     MOVEL@DSNB     DBKEY
+     C                     Z-ADD3         DBASE
+     C                     EXSR *PSSR
+      *
+     C**********           ELSE                                                           AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *
+      ** SAVE INTERNAL CUSTOMER NO., Due To & Due From ACCOUNT CODE
+      ** FOR POSTING BRANCH
+     C**********           MOVE A8BICN    BICNPD  60                                          CSD027
+     C                     MOVE A8BICN    BICNPD  6                                           CSD027
+     C**********           MOVE A8DTAC    ADTOP   40                                          CGL029
+     C**********           MOVE A8DFAC    ADFRP   40                                          CGL029
+     C                     MOVE A8DTAC    ADTOP  100                                          CGL029
+     C                     MOVE A8DFAC    ADFRP  100                                          CGL029
+      *
+     C**********           ENDIF                                                          AR1097467B
+      *
+      ** READ MAIN BRANCH INFORMATION
+     C                     Z-ADDBCHARR    B                                               AR1097467B
+     C           MAINB     LOKUP#BCH,B                   49                               AR1097467B
+     C           *IN49     IFEQ '1'                                                       AR1097467B
+     C           B         OCUR SDBRCH                                                    AR1097467B
+     C                     ELSE                                                           AR1097467B
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM MAINB     @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE
+     C                     MOVEL@DSNB     DBKEY
+     C                     Z-ADD4         DBASE
+     C                     EXSR *PSSR
+      *
+     C**********           ELSE                                                           AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *
+      ** SAVE INTERNAL CUSTOMER NO., Due To & Due From ACCOUNT CODE
+      ** FOR MAIN BRANCH
+     C**********           MOVE A8BICN    BICNMD  60                                          CSD027
+     C                     MOVE A8BICN    BICNMD  6                                           CSD027
+     C**********           MOVE A8DTAC    ADTOM   40                                          CGL029
+     C**********           MOVE A8DFAC    ADFRM   40                                          CGL029
+     C                     MOVE A8DTAC    ADTOM  100                                          CGL029
+     C                     MOVE A8DFAC    ADFRM  100                                          CGL029
+      *
+     C**********           ENDIF                                                          AR1097467B
+      *
+     C           *IN74     IFEQ '0'
+     C           BRBCDA    OREQ MAINB
+     C           BTIBCA    OREQ MAINB
+     C                     MOVE BICNHD    CNUMA
+     C                     ELSE
+     C                     MOVE BICNMD    CNUMA
+     C                     ENDIF
+      *
+     C                     MOVE '01'      ACSQA
+      *
+     C           BTDCIN    IFEQ 'C'
+     C                     MOVE ADFRP     ACODA
+     C                     MOVE '1'       *IN77
+     C                     ELSE
+     C                     MOVE ADTOP     ACODA
+     C                     MOVE '0'       *IN77
+     C                     ENDIF
+      *
+      ** AND SETTING UP SOURCE OF POSTING
+     C                     ADD  1         ACTOT
+     C                     EXSR ACTYPE
+      *
+      ** Setup the posting narrative for interbranch entries for
+      ** entries branch level with NARR,1
+     C                     MOVELNARR,1    PNAR
+     C                     MOVE W0BITM    PNAR
+      *
+     C           CMC001    IFNE 'Y'
+     C           CMC001    OREQ 'Y'
+     C           STAT      ANDNE'S'
+      *
+      ** FOR EACH NEW BRANCH PRODUCE A SEPARATE REPORT
+      *
+     C           BRBCDA    IFNE BRCBX
+      *
+      ** WRITE CCY TOTALS IF APPLICABLE TO GL0263P1
+     C                     SETON                     10
+      *
+     C                     MOVE CCY       @CCY    3
+     C                     EXSR TOTREP
+     C                     MOVE @CCY      CCY
+      *
+     C                     CLOSEGL0263P1
+     C                     SETON                     10
+     C                     OPEN GL0263P1
+      *
+     C                     MOVE BRBCDA    BRCBX   3
+      *
+      ** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C                     Z-ADDSFNUM     SFNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ     5
+     C                     PARM BRBCDA    SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR   1
+      *
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     Z-ADD0         PAGE1
+      *
+     C                     ENDIF
+      *
+      ** CHECK CORRECT NO. OF DECIMALS FOR POSTING AMOUNT BY CHECKING
+      ** TO SEE IF CURRENCY INPUT HAS BEEN ENTERED PREVIOUSLY
+      *
+     C**********           Z-ADD1         V       30                                      AR1097467B
+      *****************************************************************                   AR1097467B
+     C********** V         DOWLEW                                                         AR1097467B
+     C********** *IN96     ANDNE'1'                                                       AR1097467B
+      *****************************************************************                   AR1097467B
+     C********** V         OCUR CURLOD                                                    AR1097467B
+     C********** CCY       IFEQ CURC                                                      AR1097467B
+     C**********           MOVE NODEC     A6NBDP                                          AR1097467B
+     C**********           SETON                     96                                   AR1097467B
+     C**********           ENDIF                                                          AR1097467B
+     C**********           ADD  1         V                                               AR1097467B
+      *****************************************************************                   AR1097467B
+     C**********           ENDDO                                                          AR1097467B
+      *****************************************************************                   AR1097467B
+      ***IF*A*NEW*CCY*CODE,*THEN*OBTAIN*AND*LOAD*IN*DATA*STRUCTURE*****                   AR1097467B
+      *****************************************************************                   AR1097467B
+     C********** *IN96     IFEQ '0'                                                       AR1097467B
+      *
+     C           CCY       IFNE PRVCCY                                                    AR1097467B
+     C                     Z-ADDCURARR    A                                               AR1097467B
+     C           CCY       LOKUP#CCY,A                   53                               AR1097467B
+     C           *IN53     IFEQ '1'                                                       AR1097467B
+     C           A         OCUR SDCURR                                                    AR1097467B
+     C                     ELSE                                                           AR1097467B
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM           CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD6         DBASE
+     C                     EXSR *PSSR
+      *
+     C**********           ELSE                                                           AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *
+     C**********           ADD  1         W       30                                      AR1097467B
+     C********** W         OCUR CURLOD                                                    AR1097467B
+     C**********           MOVE CCY       CURC                                            AR1097467B
+     C**********           MOVE A6NBDP    NODEC                                           AR1097467B
+     C**********           ENDIF                                                          AR1097467B
+     C                     MOVELCCY       PRVCCY                                          AR1097467B
+     C                     ENDIF
+      *
+     C           A6NBDP    COMP 1                      4041
+     C***********A6NBDP    COMP 2                    43  42               172408
+     C           A6NBDP    COMP 2                    43  44               172408
+      *
+     C           *IN40     IFEQ '1'
+     C                     MOVE PSTA      PSTAA
+     C                     ENDIF
+      *
+     C           *IN41     IFEQ '1'
+     C                     MOVE PSTA      PSTAB
+     C                     ENDIF
+      *
+     C*********  *IN42     IFEQ '1'                                       172408
+     C           *IN44     IFEQ '1'                                       172408
+     C                     MOVE PSTA      PSTAC
+     C                     ENDIF
+      *
+     C           *IN43     IFEQ '1'
+     C                     MOVE PSTA      PSTAD
+     C                     ENDIF
+      *
+      ** PRINT AN AUDIT OF THE OPERATION
+      *
+     C                     EXSR OVRF
+     C                     WRITED001
+     C                     EXSR OVRF
+     C                     WRITED002
+      *
+     C                     MOVE BTIBCA    BRCA
+      *
+     C                     EXSR AUDIT
+      *
+     C                     ENDIF
+      *
+     C           BTDCIN    IFEQ 'C'
+     C                     MOVE '0'       *IN77
+     C                     MOVE ADTOH     ACODA
+     C                     ELSE
+     C                     MOVE ADFRH     ACODA
+     C                     MOVE '1'       *IN77
+     C                     ENDIF
+      *
+     C           *IN74     IFEQ '0'
+     C           BRBCDA    OREQ MAINB
+     C           BTIBCA    OREQ MAINB
+     C                     MOVE BICNPD    CNUMA
+     C                     ELSE
+     C                     MOVE BICNMD    CNUMA
+     C                     ENDIF
+      *
+     C                     MOVE BRBCDA    BRCA
+      *
+     C                     ADD  1         ACTOT
+     C                     EXSR ACTYPE
+      *
+      ** Setup the posting narrative for interbranch entries for
+      ** batch branch level with NARR,2
+      *
+     C                     MOVELNARR,2    PNAR
+     C                     MOVE W0BITM    PNAR
+      *
+     C           CMC001    IFNE 'Y'
+     C           CMC001    OREQ 'Y'
+     C           STAT      ANDNE'S'
+      *
+      ** PRINT AN AUDIT OF THE OPERATION
+      *
+     C                     EXSR AUDIT
+      *
+     C                     ENDIF
+      *
+      ** ADD POSTING AMOUNT TO HASH TOTAL
+      *
+     C           PSTA      ADD  PSTA      PSTA2  150
+     C           PSTA2     DIV  1000      ZZAMT  153
+     C                     EXSR GLZADD
+      *
+     C           ENDHD     ENDSR
+      *****************************************************************
+      * GENR - SET UP INFORMATION FOR REPORT OF INTERBRANCH ENTRIES
+      *****************************************************************
+     C           GENR      BEGSR
+      *
+     C                     MOVE BICNPD    CNUMA
+     C                     MOVE MAINB     BRCA
+      *
+      ** Set Debit/Credit Indicator AND ACCOUNT CODE FOR BATCH BRANCH
+     C           BTDCIN    IFEQ 'C'
+     C                     MOVE '0'       *IN77
+     C                     MOVE ADTOM     ACODA
+     C                     ELSE
+     C                     MOVE '1'       *IN77
+     C                     MOVE ADFRM     ACODA
+     C                     ENDIF
+      *
+     C                     ADD  1         ACTOT
+     C                     EXSR ACTYPE
+      *
+      ** Setup the posting narrative for interbranch entries for
+      ** main/entries branch level with NARR,3
+      *
+     C                     MOVELNARR,3    PNAR
+     C                     MOVE W0BITM    PNAR
+      *                                                                   CMC001
+     C           CMC001    IFNE 'Y'
+     C           CMC001    OREQ 'Y'
+     C           STAT      ANDNE'S'
+      *
+      ** PRINT AN AUDIT OF THE OPERATION
+      *
+     C                     EXSR AUDIT
+      *
+     C                     ENDIF
+      *
+     C                     MOVE BICNHD    CNUMA
+      *
+      ** Set Debit/Credit Indicator AND ACCOUNT CODE
+     C           BTDCIN    IFEQ 'C'
+     C                     MOVE '1'       *IN77
+     C                     MOVE ADFRM     ACODA
+     C                     ELSE
+     C                     MOVE '0'       *IN77
+     C                     MOVE ADTOM     ACODA
+     C                     ENDIF
+      *
+     C                     ADD  1         ACTOT
+     C                     EXSR ACTYPE
+      *
+      ** Setup the posting narrative for interbranch entries for
+      ** main/batch branch level with NARR,4
+      *
+     C                     MOVELNARR,4    PNAR
+     C                     MOVE W0BITM    PNAR
+      *
+     C           CMC001    IFNE 'Y'
+     C           CMC001    OREQ 'Y'
+     C           STAT      ANDNE'S'
+      *
+      ** PRINT AN AUDIT OF THE OPERATION
+      *
+     C                     EXSR AUDIT
+      *
+     C                     ENDIF
+      *
+      ** ADD POSTING AMOUNT TO HASH TOTAL
+     C           PSTA      ADD  PSTA      PSTA2
+     C           PSTA2     DIV  1000      ZZAMT  153
+     C                     EXSR GLZADD
+      *
+     C                     ENDSR
+      *****************************************************************
+      * AUDIT - TO PRINT A REPORT OF THE RECORDS PROCESSED
+      *
+      * Called by: HDPSBR, GENR
+      *****************************************************************
+     C           AUDIT     BEGSR
+      *
+     C                     EXSR OVRF
+      *
+     C                     WRITED003
+      *
+      ** UPDATE BRANCH CCY TOTALS
+     C                     MOVELBRCA      BRCYKY  6
+     C                     MOVE CCY       BRCYKY
+      *
+     C                     Z-ADD1         B       30
+     C           BRCYKY    LOKUPBRCY,B                   48
+     C           *IN48     IFEQ '0'
+     C                     Z-ADD1         B
+     C           *BLANK    LOKUPBRCY,B                   48
+     C           *IN48     IFEQ '1'
+     C                     MOVE BRCYKY    BRCY,B
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN48     IFEQ '1'
+     C           *IN77     IFEQ '1'
+     C                     ADD  PSTA      BCDR,B
+     C                     ELSE
+     C                     ADD  PSTA      BCCR,B
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * OVRF - HANDLE OVERFLOW
+      *****************************************************************
+     C           OVRF      BEGSR
+      *
+     C           *IN10     IFEQ '1'
+     C                     WRITEH001
+     C                     SETOF                     10
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * TOTREP - HANDLE END OF BRANCH TOTAL REPORTING
+      *****************************************************************
+     C           TOTREP    BEGSR
+      *
+     C                     Z-ADD1         B
+      *
+     C           BRCY,B    DOWNE*BLANK
+     C           B         ANDLE500
+      *
+     C           BCDR,B    IFNE 0
+     C           BCCR,B    ORNE 0
+      *
+     C                     MOVE BRCY,B    CCY
+     C                     MOVELBRCY,B    BRCA
+     C**********           Z-ADD1         V       30                                      AR1097467B
+     C**********           SETOF                     96                                   AR1097467B
+      *****************************************************************                   AR1097467B
+     C********** V         DOWLEW                                                         AR1097467B
+     C********** *IN96     ANDNE'1'                                                       AR1097467B
+      *****************************************************************                   AR1097467B
+     C********** V         OCUR CURLOD                                                    AR1097467B
+     C********** CCY       IFEQ CURC                                                      AR1097467B
+     C**********           MOVE NODEC     A6NBDP                                          AR1097467B
+     C**********           SETON                     96                                   AR1097467B
+     C**********           ENDIF                                                          AR1097467B
+     C**********           ADD  1         V                                               AR1097467B
+      *****************************************************************                   AR1097467B
+     C**********           ENDDO                                                          AR1097467B
+     C           CCY       IFNE PRVCCY                                                    AR1097467B
+     C                     Z-ADDCURARR    A                                               AR1097467B
+     C           CCY       LOKUP#CCY,A                   53                               AR1097467B
+     C           *IN53     IFEQ '1'                                                       AR1097467B
+     C           A         OCUR SDCURR                                                    AR1097467B
+     C                     ELSE                                                           AR1097467B
+     C                     CALL 'AOCURRR0'                                                AR1097467B
+     C                     PARM *BLANK    @RTCD                                           AR1097467B
+     C                     PARM '*KEY    '@OPTN                                           AR1097467B
+     C                     PARM           CCY                                             AR1097467B
+     C           SDCURR    PARM SDCURR    DSSDY                                           AR1097467B
+     C           @RTCD     IFNE *BLANKS                                                   AR1097467B
+     C           *LOCK     IN   LDA                                                       AR1097467B
+     C                     MOVEL'SDCURRPD'DBFILE                                          AR1097467B
+     C                     MOVEL@OPTN     DBKEY                                           AR1097467B
+     C                     Z-ADD6         DBASE                                           AR1097467B
+     C                     EXSR *PSSR                                                     AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C                     MOVELCCY       PRVCCY                                          AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *
+     C           A6NBDP    COMP 1                      4041
+     C***********A6NBDP    COMP 2                    43  42               172408
+     C           A6NBDP    COMP 2                    43  44               172408
+      *
+     C           *IN40     IFEQ '1'
+     C                     MOVE BCDR,B    TDRAA
+     C                     MOVE BCCR,B    TCRAA
+     C                     ENDIF
+      *
+     C           *IN41     IFEQ '1'
+     C                     MOVE BCDR,B    TDRAB
+     C                     MOVE BCCR,B    TCRAB
+     C                     ENDIF
+      *
+     C*********  *IN42     IFEQ '1'                                       172408
+     C           *IN44     IFEQ '1'                                       172408
+     C                     MOVE BCDR,B    TDRAC
+     C                     MOVE BCCR,B    TCRAC
+     C                     END
+      *
+     C           *IN43     IFEQ '1'
+     C                     MOVE BCDR,B    TDRAD
+     C                     MOVE BCCR,B    TCRAD
+     C                     ENDIF
+      *
+     C           *IN10     IFEQ '1'
+     C                     EXSR OVRF
+     C                     WRITET001
+     C                     ENDIF
+      *
+     C                     WRITET002
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD1         C       30
+     C           CCY       LOKUPCCCY,C                   48
+     C           *IN48     IFEQ '0'
+     C                     Z-ADD1         C
+     C           *BLANK    LOKUPCCCY,C                   48
+     C           *IN48     IFEQ '1'
+     C                     MOVE CCY       CCCY,C
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN48     IFEQ '1'
+     C                     ADD  BCDR,B    CCDR,C
+     C                     ADD  BCCR,B    CCCR,C
+     C                     ENDIF
+      *
+     C                     ADD  1         B
+      *
+     C                     ENDDO
+      *
+     C                     Z-ADD0         BCDR
+     C                     Z-ADD0         BCCR
+     C                     MOVE *BLANK    BRCY
+     C*                                                                   172408
+     C** Move back the value of *IN96 for later processing.               172408
+     C*                                                                   172408
+     C                     MOVE '0'       *IN96                           172408
+      *
+     C                     ENDSR
+      *****************************************************************
+      * FINREP - HANDLE END OF REPORT TOTAL REPORTING
+      *****************************************************************
+     C           FINREP    BEGSR
+      *
+     C                     XFOOTCCCR      CCCRT  150
+      *
+     C           CCCRT     IFNE 0
+      *
+     C                     CLOSEGL0263P1
+     C                     SETON                     10
+     C                     OPEN GL0263P1
+      *
+      ** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C                     Z-ADDSFNUM     SFNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR   1
+      *
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     Z-ADD0         PAGE1
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD1         C
+     C           CCCY,C    DOWNE*BLANK
+     C           C         ANDLE100
+      *
+     C           CCDR,C    IFNE 0
+     C           CCCR,C    ORNE 0
+     C                     MOVE CCCY,C    CCY
+     C**********           Z-ADD1         V       30                                      AR1097467B
+     C**********           SETOF                     96                                   AR1097467B
+      **********8******************************************************                   AR1097467B
+     C********** V         DOWLEW                                                         AR1097467B
+     C********** *IN96     ANDNE'1'                                                       AR1097467B
+      *****************************************************************                   AR1097467B
+     C********** V         OCUR CURLOD                                                    AR1097467B
+     C********** CCY       IFEQ CURC                                                      AR1097467B
+     C**********           MOVE NODEC     A6NBDP                                          AR1097467B
+     C**********           SETON                     96                                   AR1097467B
+     C**********           ENDIF                                                          AR1097467B
+      *****************************************************************                   AR1097467B
+     C**********           ADD  1         V                                               AR1097467B
+      *****************************************************************                   AR1097467B
+     C**********           ENDDO                                                          AR1097467B
+     C           CCY       IFNE PRVCCY                                                    AR1097467B
+     C                     Z-ADDCURARR    A                                               AR1097467B
+     C           CCY       LOKUP#CCY,A                   53                               AR1097467B
+     C           *IN53     IFEQ '1'                                                       AR1097467B
+     C           A         OCUR SDCURR                                                    AR1097467B
+     C                     ELSE                                                           AR1097467B
+     C                     CALL 'AOCURRR0'                                                AR1097467B
+     C                     PARM *BLANK    @RTCD                                           AR1097467B
+     C                     PARM '*KEY    '@OPTN                                           AR1097467B
+     C                     PARM           CCY                                             AR1097467B
+     C           SDCURR    PARM SDCURR    DSSDY                                           AR1097467B
+     C           @RTCD     IFNE *BLANKS                                                   AR1097467B
+     C           *LOCK     IN   LDA                                                       AR1097467B
+     C                     MOVEL'SDCURRPD'DBFILE                                          AR1097467B
+     C                     MOVEL@OPTN     DBKEY                                           AR1097467B
+     C                     Z-ADD6         DBASE                                           AR1097467B
+     C                     EXSR *PSSR                                                     AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C                     MOVELCCY       PRVCCY                                          AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *
+     C           A6NBDP    COMP 1                      4041
+     C***********A6NBDP    COMP 2                    43  42               172408
+     C           A6NBDP    COMP 2                    43  44               172408
+      *
+     C           *IN40     IFEQ '1'
+     C                     MOVE CCDR,C    FDRAA
+     C                     MOVE CCCR,C    FCRAA
+     C                     ENDIF
+      *
+     C           *IN41     IFEQ '1'
+     C                     MOVE CCDR,C    FDRAB
+     C                     MOVE CCCR,C    FCRAB
+     C                     ENDIF
+      *
+     C*********  *IN42     IFEQ '1'                                       172408
+     C           *IN44     IFEQ '1'                                       172408
+     C                     MOVE CCDR,C    FDRAC
+     C                     MOVE CCCR,C    FCRAC
+     C                     ENDIF
+      *
+     C           *IN43     IFEQ '1'
+     C                     MOVE CCDR,C    FDRAD
+     C                     MOVE CCCR,C    FCRAD
+     C                     ENDIF
+      *
+     C           *IN10     IFEQ '1'
+     C                     EXSR OVRF
+     C                     WRITEF001
+     C                     ENDIF
+      *
+     C                     WRITEF002
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         C
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      * BANKD - OBTAIN THE BANK DETAILS
+      *****************************************************************
+     C           BANKD     BEGSR
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * GELRD - OBTAIN THE GENERAL LEDGER DETAILS
+      *****************************************************************
+     C           GELRD     BEGSR
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     71
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDGELRPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD7         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * *PSSR - Terminate the program
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     MOVEL'GL0263'  DBPGM     P
+     C                     OUT  LDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      * LRSR - Total time calculations when LR is ON
+      *****************************************************************
+     C           LRSR      BEGSR
+      *
+      ** ENSURE TOTALS SPOOL FILE RECORDED BY RCF
+     C                     Z-ADDSFNUMU    SFNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ
+     C                     PARM *BLANK    SENTY
+     C                     PARM           SFILEU
+     C                     PARM           SFNUM2
+     C                     PARM           ZSERR
+      *
+      ** ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** IF NOT INITIALISED OUTPUT HEADER RECORD
+     C           *IN50     IFEQ '0'
+      *
+     C                     EXSR BANKD
+      *
+      ** WRITE HEADING FOR REPORT
+     C                     SETON                     51
+      *
+     C                     ENDIF
+      *
+      ** WRITE CCY TOTALS IF APPLICABLE TO GL0263P1
+     C                     SETON                     10
+     C                     EXSR TOTREP
+     C                     SETON                     10
+     C                     EXSR FINREP
+      *
+      *    TOTAL TIME CALCULATIONS.
+     C           ACTOT     ADD  2         RECS    50
+     C           ZZTOTD    MULT 10        TOTD    40   47
+     C  N47      ZZTOTI    COMP 0                      47
+      *
+     C                     ENDSR
+      *****************************************************************
+      * SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+      *   IND '99' IS SET BY AN OVERFLOW ERROR
+      *****************************************************************
+     C           GLZADD    BEGSR
+      *
+     C                     Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     C   91                GOTO ZZAEND                     AMT = 0.BYPASS
+      *
+      * SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+      *
+     C                     Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     C                     Z-ADDZZAMT     ZZWK1   33
+     C                     MOVE ZZWK1     ZZAMTD  30       DECIMAL FIELD
+      *
+      * BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+      *
+     C                     EXSR GLZSUM
+      *
+     C           ZZAEND    ENDSR
+      *****************************************************************
+      * GLZSUM - Calculate hash total of records                      *
+      *                                                               *
+      * Input  : ZZAMTI, ZZAMTD                                       *
+      * Output : ZZTOTI, ZZTOTD, ZZNEGD, *IN96, *IN99                 *
+      *****************************************************************
+     C           GLZSUM    BEGSR
+      *
+     C                     Z-ADDZZTOTI    ZZTOTI 150
+     C                     Z-ADDZZTOTD    ZZTOTD  30
+     C                     SETOF                     919293
+     C                     SETOF                     949599
+      *
+      ** Determine sign of ZZAMTI and ZZAMTD
+     C           ZZAMTI    COMP 0                      9293
+     C   93      ZZAMTD    COMP 0                      9293
+     C   93                GOTO ZZSEND
+      *
+      ** Determine sign of ZZTOTI and ZZTOTD
+     C           ZZTOTI    COMP 0                      9193
+     C   93      ZZTOTD    COMP 0                      9193
+      *
+      ** If ZZTOTAL is 0, return ZZAMOUNT.
+     C   93                Z-ADDZZAMTI    ZZTOTI
+     C   93                Z-ADDZZAMTD    ZZTOTD
+     C   93                GOTO ZZSEND
+      *
+      ** If signs differ, bypass overflow checks.
+     C   91N92
+     CORN91 92             GOTO ZZOFPS
+      *
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     C           ZZWK2     COMP 999                  93
+     C  N93      ZZWK2     COMP -999                   93
+      *
+     C   93N92   ZZAMTI    ADD  1         ZZWK3  150
+     C      93 92ZZAMTI    SUB  1         ZZWK3
+     C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+      *
+      ** If the modulus of ZZWK3 is < modulus of ZZTOTI, then overflow.
+      ** If overflow, then *IN99 set ON, fields ZZTOTI and ZZTOTD left
+      ** intact and ZZAMT zeroized.
+     C  N92      ZZWK3     COMP ZZTOTI                 99
+     C   92      ZZWK3     COMP ZZTOTI               99
+     C  N99                Z-ADDZZWK2     ZZTOTD
+     C  N99                Z-ADDZZWK3     ZZTOTI
+      *
+     C   99                Z-ADD0         ZZAMT  153
+     C                     GOTO ZZSEND
+      *
+      ** The signs are different
+     C           ZZOFPS    TAG
+      *
+      ** If ZZAMTI or ZZAMTD were negative, make them positive
+     C   92                Z-SUBZZAMTI    ZZAMTI 150
+     C   92                Z-SUBZZAMTD    ZZAMTD  30
+      *
+      ** If ZZTOTI or ZZTOTD were negative, make them positive
+     C   91                Z-SUBZZTOTI    ZZTOTI
+     C   91                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** All ZZAMTI, ZZAMTD, ZZTOTI and ZZTOTD are now positive.
+     C           ZZTOTI    COMP ZZAMTI               93  95
+     C   95      ZZTOTD    COMP ZZAMTD               93  95
+      *
+      ** If ZZTOT = ZZAMT, return 0.
+     C   95                Z-ADD0         ZZTOTI
+     C   95                Z-ADD0         ZZTOTD
+     C   95                GOTO ZZSEND
+      *
+      ** If ZZTOT > ZZAMT
+     C   93      ZZAMTD    COMP ZZTOTD               94
+     C   93 94   ZZTOTI    SUB  1         ZZTOTI
+     C   93 94   ZZTOTD    ADD  1000      ZZWK2
+     C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+      *
+      ** If ZZTOT < ZZAMT
+     C  N93      ZZTOTD    COMP ZZAMTD               94
+     C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+     C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+     C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+      *
+      ** Reverse sign of ZZTOT if larger input fields were negative
+     C                     SETOF                     94
+     C   93 91
+     CORN93 92             SETON                     94
+     C   94                Z-SUBZZTOTI    ZZTOTI
+     C   94                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** Restore sign of ZZAMTI & ZZAMTD if it was reversed.
+     C   92                Z-SUBZZAMTI    ZZAMTI
+     C   92                Z-SUBZZAMTD    ZZAMTD
+     C           ZZSEND    TAG
+      *
+      ** If ZZTOTD = 0 and ZZTOTI < 0, set up ZZNEGD.
+     C                     SETOF                     96
+     C           ZZTOTD    COMP 0                        91
+     C   91      ZZTOTI    COMP 0                      96
+     C   96                MOVE '.000-'   ZZNEGD  5
+      *
+     C                     ENDSR
+      *****************************************************************
+      * ACTYPE - OBTAIN RETAIL INDICATOR FROM ACCOUNT CODE
+      *****************************************************************
+     C           ACTYPE    BEGSR
+      *
+      ** Move account code to ACALFA via a numeric field to re-instate
+      ** leading zeros if missing.
+      *
+     C**********           MOVE ACODA     @TACN   40                                          CGL029
+     C**********           MOVE @TACN     ACALFA  4                                           CGL029
+     C                     MOVE ACODA     @TACN  100                                          CGL029
+     C                     MOVE @TACN     ACALFA 10                                           CGL029
+      *
+     C                     MOVE @TACN     KEYACD                                          AR1097467B
+     C                     ADD  1         ACDSEQ                                          AR1097467B
+     C                     EXSR CHKACD                                                    AR1097467B
+      *                                                                                   AR1097467B
+      ** Use details from array if ACDKEY is found, otherwise,                            AR1097467B
+      ** retrieve details from program call                                               AR1097467B
+      *                                                                                   AR1097467B
+     C           ACDIC     IFEQ 'Y'                                                       AR1097467B
+      *                                                                                   AR1097467B
+      ** Set occurence to index found from #ACK array                                     AR1097467B
+      *                                                                                   AR1097467B
+     C           P         OCUR SDACOD                                                    AR1097467B
+      *                                                                                   AR1097467B
+     C                     ELSE                                                           AR1097467B
+      *                                                                                   AR1097467B
+     C           ACDIDX    IFNE 0                                                         AR1097467B
+     C                     Z-ADDACDIDX    P                                               AR1097467B
+     C                     ELSE                                                           AR1097467B
+     C                     Z-ADD1         P                                               AR1097467B
+     C                     MOVEA#ACD      #ACS                                            AR1097467B
+     C                     SORTA#ACS                                                      AR1097467B
+     C                     Z-ADD#ACS,1    ACDKEY                                          AR1097467B
+     C           ACDKEY    LOKUP#ACD,P                   54                               AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *                                                                                   AR1097467B
+     C           P         OCUR SDACOD                                                    AR1097467B
+      *                                                                                   AR1097467B
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           ACALFA
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     EXSR ADDACD                                                    AR1097467B
+     C           ATYP      IFNE 'R'
+     C                     Z-ADD0         ACNO
+     C                     ENDIF
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDACODPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD5         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                                                          AR1097467B
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  INIT - Initial processing                                    *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Copyright statement
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     Z-ADD0         SDLB   150
+     C                     Z-ADD0         SDCB   150
+     C                     MOVE *BLANKS   OTRF   15
+     C                     MOVE *BLANKS   OTTP   10
+     C                     MOVE *BLANKS   OTST   10
+     C                     MOVE *BLANKS   PRVCCY  3                                       AR1097467B
+      *
+     C                     Z-ADD0         ZERO5   50
+      *
+     C                     Z-ADD0         ACTOT   50
+     C                     Z-ADD0         RRNM    50
+     C**********           Z-ADD0         DBCNUM  60                                          CSD027
+      *                                                                                   AR1097467B
+      ** LRU element key and record arrival sequence                                      AR1097467B
+      *                                                                                   AR1097467B
+     C                     Z-ADD0         ACDKEY 130                                      AR1097467B
+     C           *LIKE     DEFN ACDKEY    ACDSEQ                                          AR1097467B
+      *                                                                                   AR1097467B
+      ** Set start index to upper limit of LRU Caching arrays                             AR1097467B
+      *                                                                                   AR1097467B
+     C                     Z-ADD300       ACDIDX  40                                      AR1097467B
+     C           *LIKE     DEFN ACDIDX    ACDPRV                                          AR1097467B
+     C           *LIKE     DEFN ACDIDX    P                                               AR1097467B
+      *                                                                                   AR1097467B
+      ** Initialize work fields of LRU array routines                                     AR1097467B
+      *                                                                                   AR1097467B
+     C                     MOVE *BLANK    ACDIC   1                                       AR1097467B
+     C                     MOVE *BLANKS   KEYACD 10                                       AR1097467B
+     C                     Z-ADD300       ACDPRV                                          AR1097467B
+     C                     Z-ADD300       P                                               AR1097467B
+      *
+     C                     EXSR BANKD
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDMMODPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD8         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** MULTIBRANCHED ENVIRONMENT?
+     C           BGMBIN    COMP 'Y'                      70
+      *
+     C                     EXSR GELRD
+      *
+      ** REPORT INTERBRANCH ENTERIES?
+     C           BKIEBI    COMP 'I'                      72
+     C           BKIEMB    COMP 'Y'                      74
+     C                     MOVE BKMABR    MAINB   3
+      *
+      **  Check if Management Accounts Enhancement is installed
+      *
+     C                     MOVE 'N'       CMC001  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CMC001'  @SARN   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     IFNE '*NRF'
+     C                     MOVE *ON       *IN42
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SCSARDPD'DBFILE
+     C                     MOVEL@SARN     DBKEY
+     C                     MOVEL'010'     DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'Y'       CMC001  1
+     C                     ENDIF
+      *                                                                                   AR1097467B
+      ** Full Cache SDBRCHPD                                                              AR1097467B
+      *                                                                                   AR1097467B
+     C           *LOVAL    SETLLSDBRCHL1                                                  AR1097467B
+     C                     Z-ADD900       B       30                                      AR1097467B
+     C           B         OCUR SDBRCH                                                    AR1097467B
+     C                     READ SDBRCHL1                 13                               AR1097467B
+     C                     MOVE A8BRCD    #BCH,B                                          AR1097467B
+     C           *IN13     DOWEQ'0'                                                       AR1097467B
+     C           B         ANDGT0                                                         AR1097467B
+     C                     SUB  1         B                                               AR1097467B
+     C           B         OCUR SDBRCH                                                    AR1097467B
+     C                     READ SDBRCHL1                 13                               AR1097467B
+     C                     MOVE A8BRCD    #BCH,B                                          AR1097467B
+     C                     ENDDO                                                          AR1097467B
+     C           B         IFEQ 0                                                         AR1097467B
+     C                     MOVEL'SDBRCHPD'DBFILE                                          AR1097467B
+     C                     MOVEL'OVRFLOW' DBKEY                                           AR1097467B
+     C                     SETON                     U7U8LR                               AR1097467B
+     C                     EXSR *PSSR                                                     AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C                     Z-ADDB         BCHARR  30                                      AR1097467B
+      *                                                                                   AR1097467B
+      ** Full Cache SDNARRPD                                                              AR1097467B
+      *                                                                                   AR1097467B
+     C           *LOVAL    SETLLSDNARRL1                                                  AR1097467B
+     C                     Z-ADD300       C       30                                      AR1097467B
+     C           C         OCUR SDNARR                                                    AR1097467B
+     C                     READ SDNARRL1                 13                               AR1097467B
+     C                     MOVE ALNVCD    #NAR,C                                          AR1097467B
+     C                     MOVE PNAR1     ALDON                                           AR1097467B
+     C           *IN13     DOWEQ'0'                                                       AR1097467B
+     C           C         ANDGT0                                                         AR1097467B
+     C                     SUB  1         C                                               AR1097467B
+     C           C         OCUR SDNARR                                                    AR1097467B
+     C                     READ SDNARRL1                 13                               AR1097467B
+     C                     MOVE ALNVCD    #NAR,C                                          AR1097467B
+     C                     MOVE PNAR1     ALDON                                           AR1097467B
+     C                     ENDDO                                                          AR1097467B
+     C           C         IFEQ 0                                                         AR1097467B
+     C                     MOVEL'SDNARRPD'DBFILE                                          AR1097467B
+     C                     MOVEL'OVRFLOW' DBKEY                                           AR1097467B
+     C                     SETON                     U7U8LR                               AR1097467B
+     C                     EXSR *PSSR                                                     AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C                     Z-ADDC         NARARR  30                                      AR1097467B
+      *                                                                                   AR1097467B
+      ** Full Cache SDCURRPD                                                              AR1097467B
+      *                                                                                   AR1097467B
+     C           *LOVAL    SETLLSDCURRL1                                                  AR1097467B
+     C                     Z-ADD250       A       30                                      AR1097467B
+     C           A         OCUR SDCURR                                                    AR1097467B
+     C                     READ SDCURRL1                 13                               AR1097467B
+     C                     MOVE A6CYCD    #CCY,A                                          AR1097467B
+     C           *IN13     DOWEQ'0'                                                       AR1097467B
+     C           A         ANDGT0                                                         AR1097467B
+     C                     SUB  1         A                                               AR1097467B
+     C           A         OCUR SDCURR                                                    AR1097467B
+     C                     READ SDCURRL1                 13                               AR1097467B
+     C                     MOVE A6CYCD    #CCY,A                                          AR1097467B
+     C                     ENDDO                                                          AR1097467B
+     C           A         IFEQ 0                                                         AR1097467B
+     C                     MOVEL'SDCURRPD'DBFILE                                          AR1097467B
+     C                     MOVEL'OVRFLOW' DBKEY                                           AR1097467B
+     C                     SETON                     U7U8LR                               AR1097467B
+     C                     EXSR *PSSR                                                     AR1097467B
+     C                     ENDIF                                                          AR1097467B
+     C                     Z-ADDA         CURARR  30                                      AR1097467B
+      *
+     C                     ENDSR
+      *****************************************************************
+      * END - Final processing
+      *****************************************************************
+     C           END       BEGSR
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *                   AR1097467B
+      *  CHKACD - Check Account Codes details to array                *                   AR1097467B
+      *                                                               *                   AR1097467B
+      *****************************************************************                   AR1097467B
+     C           CHKACD    BEGSR                                                          AR1097467B
+      *                                                                                   AR1097467B
+      ** Reinitialize work fields                                                         AR1097467B
+      *                                                                                   AR1097467B
+     C                     MOVEL*BLANK    ACDIC                                           AR1097467B
+     C                     MOVE *OFF      *IN54                                           AR1097467B
+      *                                                                                   AR1097467B
+      ** Check previous base rate details if it's                                         AR1097467B
+      ** same with current details                                                        AR1097467B
+      *                                                                                   AR1097467B
+     C                     Z-ADDACDPRV    P                                               AR1097467B
+      *                                                                                   AR1097467B
+      ** Defend against index being 0                                                     AR1097467B
+      ** Set current index to starting index                                              AR1097467B
+      *                                                                                   AR1097467B
+     C           P         IFEQ 0                                                         AR1097467B
+     C                     Z-ADDACDIDX    P                                               AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *                                                                                   AR1097467B
+      ** If the KEYACD being checked is the same then use the index                       AR1097467B
+      ** of the current detail rather than doing a LOKUP                                  AR1097467B
+      *                                                                                   AR1097467B
+     C           KEYACD    IFEQ #ACK,P                                                    AR1097467B
+     C                     MOVE *ON       *IN54                                           AR1097467B
+     C                     ELSE                                                           AR1097467B
+      *                                                                                   AR1097467B
+     C           ACDIDX    IFEQ 0                                                         AR1097467B
+     C                     Z-ADD1         P                                               AR1097467B
+     C                     ELSE                                                           AR1097467B
+     C                     Z-ADDACDIDX    P                                               AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *                                                                                   AR1097467B
+     C           KEYACD    LOKUP#ACK,P                   54                               AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *                                                                                   AR1097467B
+      ** Save the last accessed detail to ACDPRV                                          AR1097467B
+      ** Set the indicator to show the data was found                                     AR1097467B
+      *                                                                                   AR1097467B
+     C           *IN48     IFEQ *ON                                                       AR1097467B
+     C                     MOVE ACDSEQ    #ACS,P                                          AR1097467B
+     C                     Z-ADDP         ACDPRV                                          AR1097467B
+     C                     MOVEL'Y'       ACDIC                                           AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *                                                                                   AR1097467B
+     C                     ENDSR                                                          AR1097467B
+      *****************************************************************                   AR1097467B
+      *                                                               *                   AR1097467B
+      *  ADDACD - Add Account Codes details to array                  *                   AR1097467B
+      *                                                               *                   AR1097467B
+      *****************************************************************                   AR1097467B
+     C           ADDACD    BEGSR                                                          AR1097467B
+      *                                                                                   AR1097467B
+      *                                                                                   AR1097467B
+     C           ACDIDX    IFNE 0                                                         AR1097467B
+     C                     SUB  1         ACDIDX                                          AR1097467B
+     C                     ENDIF                                                          AR1097467B
+      *                                                                                   AR1097467B
+     C                     MOVELKEYACD    #ACK,P                                          AR1097467B
+     C                     ADD  ACDSEQ    #ACS,P                                          AR1097467B
+      *                                                                                   AR1097467B
+      ** Set last accessed detail to ACDIDX So that CHKACD checks this                    AR1097467B
+      ** latest detail first                                                              AR1097467B
+      *                                                                                   AR1097467B
+     C                     Z-ADDP         ACDPRV                                          AR1097467B
+      *                                                                                   AR1097467B
+     C                     ENDSR                                                          AR1097467B
+      *****************************************************************                   AR1097467B
+      *
+     OGL0263AUD  203   51
+     O       OR        OF
+     O                                   24 'REFERENCE GL0263AU'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   113
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        D  1     51
+     O       OR        OF
+     O                                   70 'BATCH TRANSACTIONS FILE'
+     O                                   76 'SPLIT'
+     O        D  2     51
+     O       OR        OF
+     O                                   70 '-----------------------'
+     O                                   76 '------'
+     O        D  2     08 64
+     O                                   19 'BATCH NO.-'
+     O                         BNUM      23
+     O                                   34 'ACTUAL -'
+     O                         BTCH  3   39
+     O                                   53 'PROCESSED -'
+     O                         NII   3   58
+     O                 46                75 '*** NO OF ITEMS'
+     O                 46                92 'DISCREPANCY ***'
+      *
+     O        T  203   LR U7 U8
+     O       OR        LRN50
+     O                                   24 'REFERENCE GL0263AU'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   113
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        T  1     LR U7 U8
+     O       OR        LRN50
+     O                                   70 'BATCH TRANSACTIONS FILE'
+     O                                   76 'SPLIT'
+     O        T  2     LR U7 U8
+     O       OR        LRN50
+     O                                   70 '-----------------------'
+     O                                   76 '------'
+     O        T  2     LRNU7
+     O                                   26 'NUMBER OF BATCHES'
+     O                                   36 'PROCESSED'
+     O                         COUNT 1   67
+     O        T  2     LRNU7
+     O                                   26 'NUMBER OF ACCOUNT'
+     O                                   43 'POSTINGS WRITTEN'
+     O                         ACTOT 1   67
+     O        T  2     LRNU7
+     O                                   26 'VALUE OF ACCOUNT '
+     O                                   43 'POSTINGS WRITTEN'
+     O                         ZZTOTIZ   64
+     O                         TOTD      68
+     O                                   68 ' '
+     O                 47                68 '-'
+     O        T 3      LR U7 U8
+     O                                   44 '*** REFERENCE'
+     O                         DBPGM     53
+     O                                   71 '-DATABASE ERROR AT'
+     O                         DBASE     75
+     O        T 1      LR U7 U8
+     O                                   37 'FILE NAME'
+     O                         DBFILE    48
+     O                                   52 'KEY'
+     O                         DBKEY     82
+     O        T 3      LR
+      *****************************************************************
+** DELT
+NARRATIVE DELETED
+** NARR
+INTERBRANCH-ENTRY BRNCH
+INTERBRANCH-BATCH BRNCH
+INTERBRC-MAIN/ENTRY BRC
+INTERBRC-MAIN/BATCH BRC
+ENTRY FOR A/C
+** CPY@ - Object Copyright
+(c) Misys International Banking Systems Ltd. 2001

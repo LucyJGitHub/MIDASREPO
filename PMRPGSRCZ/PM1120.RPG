@@ -1,0 +1,2278 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Upd. Portfolio Pos. if backvaluation')        *
+/*OVRF*: OVRDBF FILE(PMRPSXLL) TOFILE(PMRPSTLL) SHARE(*NO)          : *
+/*OVRF*: OVRDBF FILE(CAPRALX) TOFILE(PMCAPRL0) SHARE(*NO)           : *   S01486
+     H**********                                                          S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                             *
+     F*                                                               *
+     F*  PM1110 - UPDATE PORTFOLIO POSITIONS IF BACKVALUATION         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CPB002             Date 13Dec99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 130862             Date 16Oct98               *
+     F*                 CSE005             Date 04Feb97               *
+     F*                 CPM005             Date 06Aug96               *
+     F*                 CFF004             DATE 02OCT96               *
+     F*                 078956             DATE 01DEC95               *
+     F*                 081374             DATE 16DEC94               *
+     F*                 S01486             DATE 14JUL94               *
+     F*                 049421             DATE 22JAN93               *
+     F*                 059983             DATE 27SEP93               *
+     F*                 059063             DATE 11AUG93               *
+     F*                 056469             DATE 03JUN93               *
+     F*                 S01313             DATE 06NOV92               *
+     F*                 042719     ADI     DATE 28JUL92               *
+     F*                 48219              DATE 19OCT92               *
+     F*                 B08253             DATE 20OCT91               *
+     F*                 B08040             DATE 29AUG91               *
+     F*                 B07933             DATE 06JUN91               *
+     F*                 R05794             DATE 05APR91               *
+     F*                 R05785             DATE 04APR91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CPB002 - New Private Banking Customer Processing.            *
+     F*  130862 - Recompiled over changed ZLCDZ1.                     *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET / LIABILITY SPLIT         *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  078956 - IF NEW NOMINAL POSITION REMAINS 0 DO NOT DELETE     *
+     F*           RECORD ON PMMFHLPD BUT UPDATE 'DATE LAST EXTRACTED' *
+     F*  081374 - PLCUS BADLY SETUP                                   *
+     F*  S01486 - Private Banking upgrade to Release 10               *
+     F*  049421 - HEADER BOX STANDARDISATION                          *
+     F*  059983 - FOR CHANGE OF AVERAGE PRICE RECALCULATE FX AP       *
+     F*           NUMERATOR                                           *
+     F*  059063 - PREVENT ROUNDING PROBELMS WHEN CALCULATING NEW      *
+     F*           AP NUMERATOR FOR A POSITION BECOMING LESS LONG OR   *
+     F*           LESS SHORT                                          *
+     F*  056469 - IF DATE OF REWORK POSITION BEFORE FIRST ACTION FOR  *
+     F*           POSITION SET UP AS STARTING POSITION                *
+     F*  S01313 - RECOMPILED DUE TO PORTFOLIO PERFORMANCE             *
+     F*  042719 - CHECK IF PORTFOLIO CURRENCY AND BASE CURRENCY ARE   *
+     F*           THE SAME (SETUP FIELD QAAPBC IN PMCPOSPP)           *
+     F*  48219  - CHANGE TO KEEP PM POSITIONS TO TRADE RETENTION DATE *
+     F*  B08253 - FOR EACH NEW POSITION OUTPUT DELETE ANY DETAILS     *
+     F*           FOR POSITION ON PMMFHLPP                            *
+     F*  B08040 - SUNDRY FIXES TO SPEED UP COB PROCESSING             *
+     F*  B07933 - IF DIVIDEND EVENT HAS OCCURRED RESET EX-COUPON NOM. *
+     F*  R05794 - INCORRECT FIELDS UPDATED                            *
+     F*  R05785 - RECORDS ON CAPRHD WITH A PM TRADE / VALUE DATE      *
+     F*           RECORD ID OF 'A' SHOULD ALSO BE PROCESSED           *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*: OVRDBF FILE(CAPRALX) TOFILE(CAPRALT) SHARE(*NO)            : *   S01486
+     F*                                                               *
+     F*****************************************************************
+     FPM1120AUO   E                    PRINTER
+     F                                              KINFSR *PSSR
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SDPORTPDIF**E           K        DISK                      B08253S01486
+     F***********                                    KINFSR *PSSR   B08253S01486
+     F***PMCPOSZZUF**E           K        DISK                            S01486
+     FPMCPOSPAIF  E           K        DISK                               S01486
+     F**  Prefix QA
+     F                                              KINFSR *PSSR
+     F***SDCURRL0IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     FPMMFHLL2UF  E           K        DISK                               B08253
+     F**  Prefix QF                                                       B08253
+     F                                              KINFSR *PSSR          B08253
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F***SDPLCSL0IF**E           K        DISK                            S01486
+     F****Prefix*QB*******************************************************S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SDSECSL0IF**E           K        DISK                      B08040S01486
+     F****Prefix*BF*************************************************B08040S01486
+     F***********                                   KINFSR *PSSR    B08040S01486
+     F***PMPORTPPIF**E           K        DISK                            S01486
+     FPMPORTPDIF  E           K        DISK                               S01486
+     F**  Prefix PN
+     F                                              KINFSR *PSSR
+     FPMIPOSLLUF  E           K        DISK
+     F**  Prefix QA
+     F            PMCPOSP0                          KRENAMEPMCPOSL0
+     FPMHPOSLLIF  E           K        DISK
+     F**  Prefix QA
+     F            PMCPOSP0                          KRENAMEPMCPOSL1
+     FPMCPOSLLUF  E           K        DISK                               B08040
+     F**  Prefix RA                                                       B08040
+     F            PMCPOSP0                          KRENAMEPMCPOSL3       B08040
+     F***PMCPOSPPO***E           K        DISK                            S01486
+     FPMCPOSPDO   E           K        DISK                               S01486
+     F**  Prefix QA
+     FCAPRALX UF  E           K        DISK
+     FPMRPSXLLUF  E           K        DISK
+     F**  Prefix QA
+     F            PMCPOSP0                          KRENAMEPMCPOSL2
+     FSECET   IF  E           K        DISK         KINFSR *PSSR          B07933
+     F*
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR          B07933
+     F*
+     F*
+      /EJECT
+     F*================================================================
+     F*
+     F* ID F  C  H  L    Function of indiCAtors
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  05  06  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  20
+     F*       21  22  23  24  25  26  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       41  42  43  44  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       61  62  63  64  65  66  67  68  69  70
+     F*       ..  ..  ..  ..  75  76  77  78  79  80
+     F*       81  82  83  84  85  86  87  88  89  90
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*
+     F*
+     F*       U7&U8      Database error
+     F*       U8         Run control error
+     F*       LR         End of program
+     F*
+     F*       71         End of reworking positions file indicator
+     F*       72         Files access indicator
+     F*       73         Historic or interim position found
+     F*       74         Live action to be processed
+     F*       90-99      Standard subroutines indicator
+     F*
+      /EJECT
+     E*================================================================
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+     E*
+      /COPY ZSRSRC,ZNCDZ1
+     E*
+      /COPY ZSRSRC,ZPOWER8Z1
+     E*
+     E**   Array for copyright
+     E                    CPY@    1   1 80
+     E*
+      /EJECT
+     I*================================================================
+     I*
+     I**   Customer average prices
+     ICAPRHDF
+     I              RECI                            WWRECI
+     I*
+     I**   Current positions record format (physical file)
+     IPMCPOSL2
+     I              QARECI                          CARECI
+     I              QACNUM                          CACNUM
+     I              QAPTFR                          CAPTFR
+     I              QATDSS                          CATDSS
+     I              QATVDA                          CATVDA
+     I              QAPDAT                          CAPDAT
+     I              QANOML                          CANOML
+     I              QACSEX                          CACSEX
+     I              QAAPNM                          CAAPNM
+     I              QAAYNM                          CAAYNM
+     I              QAFXAP                          CAFXAP
+     I              QAPILP                          CAPILP
+     I              QAACDI                          CAACDI
+     I              QABVLD                          CABVLD
+     I              QATNMC                          CATNMC
+     I              QATNMD                          CATNMD
+     I              QAPTCY                          CAPTCY
+     I              QAPCDP                          CAPCDP
+     I              QACSBY                          CACSBY                B08040
+     I              QABYDP                          CABYDP                B08040
+     I              QACLAS                          CACLAS                B08040
+     I              QAACOC                          CAACOC                B08040
+     I              QAOTNM                          CAOTNM                B08040
+     I              QAOTEX                          CAOTEX                B08040
+     I              QAAPBC                          CAAPBC                B08253
+     I              QAFLEX                          CAFLEX                B08253
+     I              QACOLC                          CACOLC                B08040
+     I              QABRCD                          CABRCD                B08040
+     I              QANPDT                          CANPDT                B08040
+     I              QAPFMR                          QPPFMR                CPM005
+     I              QAPFM8                          QPPFM8                CPM005
+     I              QAPFM9                          QPPFM9                CPM005
+     I*
+     I**   Interim positions record format
+     IPMCPOSL0
+     I              QARECI                          IARECI
+     I              QACNUM                          IACNUM
+     I              QAPTFR                          IAPTFR
+     I              QATDSS                          IATDSS
+     I              QATVDA                          IATVDA
+     I              QAPDAT                          IAPDAT
+     I              QANOML                          IANOML
+     I              QACSEX                          IACSEX
+     I              QAAPNM                          IAAPNM
+     I              QAAYNM                          IAAYNM
+     I              QAFXAP                          IAFXAP
+     I              QAPILP                          IAPILP
+     I              QAACDI                          IAACDI
+     I              QABVLD                          IABVLD
+     I              QATNMC                          IATNMC
+     I              QATNMD                          IATNMD
+     I              QAPTCY                          IAPTCY
+     I              QAPCDP                          IAPCDP
+     I              QACSBY                          IACSBY                B08040
+     I              QABYDP                          IABYDP                B08040
+     I              QACLAS                          IACLAS                B08040
+     I              QAACOC                          IAACOC                B08040
+     I              QAOTNM                          IAOTNM                B08040
+     I              QAOTEX                          IAOTEX                B08040
+     I              QAAPBC                          IAAPBC                B08253
+     I              QAFLEX                          IAFLEX                B08253
+     I              QACOLC                          IACOLC                B08040
+     I              QABRCD                          IABRCD                B08040
+     I              QANPDT                          IANPDT                B08040
+     I*
+     I**   Historic positions record format
+     IPMCPOSL1
+     I              QARECI                          IARECI
+     I              QACNUM                          IACNUM
+     I              QAPTFR                          IAPTFR
+     I              QATDSS                          IATDSS
+     I              QATVDA                          IATVDA
+     I              QAPDAT                          IAPDAT
+     I              QANOML                          IANOML
+     I              QACSEX                          IACSEX
+     I              QAAPNM                          IAAPNM
+     I              QAAYNM                          IAAYNM
+     I              QAFXAP                          IAFXAP
+     I              QAPILP                          IAPILP
+     I              QAACDI                          IAACDI
+     I              QABVLD                          IABVLD
+     I              QATNMC                          IATNMC
+     I              QATNMD                          IATNMD
+     I              QAPTCY                          IAPTCY
+     I              QAPCDP                          IAPCDP
+     I              QACSBY                          IACSBY                B08040
+     I              QABYDP                          IABYDP                B08040
+     I              QACLAS                          IACLAS                B08040
+     I              QAACOC                          IAACOC                B08040
+     I              QAOTNM                          IAOTNM                B08040
+     I              QAOTEX                          IAOTEX                B08040
+     I              QAAPBC                          IAAPBC                B08253
+     I              QAFLEX                          IAFLEX                B08253
+     I              QACOLC                          IACOLC                B08040
+     I              QABRCD                          IABRCD                B08040
+     I              QANPDT                          IANPDT                B08040
+     I*                                                                   B08040
+     I**   Current positions record format                                B08040
+     IPMCPOSL3                                                            B08040
+     I              QARECI                          RARECI                B08040
+     I              QACNUM                          RACNUM                B08040
+     I              QAPTFR                          RAPTFR                B08040
+     I              QATDSS                          RATDSS                B08040
+     I              QATVDA                          RATVDA                B08040
+     I              QAPDAT                          RAPDAT                B08040
+     I              QANOML                          RANOML                B08040
+     I              QACSEX                          RACSEX                B08040
+     I              QAAPNM                          RAAPNM                B08040
+     I              QAAYNM                          RAAYNM                B08040
+     I              QAFXAP                          RAFXAP                B08040
+     I              QAPILP                          RAPILP                B08040
+     I              QAACDI                          RAACDI                B08040
+     I              QABVLD                          RABVLD                B08040
+     I              QATNMC                          RATNMC                B08040
+     I              QATNMD                          RATNMD                B08040
+     I              QAPTCY                          RAPTCY                B08040
+     I              QAPCDP                          RAPCDP                B08040
+     I              QACSBY                          RACSBY                B08040
+     I              QABYDP                          RABYDP                B08040
+     I              QACLAS                          RACLAS                B08040
+     I              QAACOC                          RAACOC                B08040
+     I              QAOTNM                          RAOTNM                B08040
+     I              QAOTEX                          RAOTEX                B08040
+     I              QAAPBC                          RAAPBC                B08253
+     I              QAFLEX                          RAFLEX                B08253
+     I              QACOLC                          RACOLC                B08040
+     I              QABRCD                          RABRCD                B08040
+     I              QANPDT                          RANPDT                B08040
+     I*
+      /COPY ZSRSRC,ZNCDZ2
+     I*
+     I**   Local data area for database error details
+     I***LDA********UDS                            256                    S01486
+     I************                          132 183 DBLOT                 S01486
+     I************                          132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   078956
+     IPMSTAT    E DS                                                      078956
+     I                                        1   50WWECD                 078956
+     I*
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I** EXTERNAL DS FOR CUSTOMER DETAILS                                 S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I** EXTERNAL DS FOR PORTFOLIO MANAGEMENT CUSTOMER DETAILS            S01486
+     ISDPLIN    E DSSDPLINPD                                              S01486
+     I** EXTERNAL DS FOR INTRUMENT TYPES DETAILS                          S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I** EXTERNAL DS FOR PORTFOLIO MANAGEMENT ICD DETAILS                 S01486
+     ISDSECS    E DSSDSECSPD                                              S01486
+     I** EXTERNAL DS FOR SECURITY TRADING CUSTOMER DETAILS                S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01486
+     ISDMMOD    E DSSDMMODPD                                              CPB002
+     I**  MIDAS MODULES details                                           CPB002
+     IDSLDY     E DSDSLDY                                                 CPB002
+     I** Third DS for access programs, very long data structure           CPB002
+     I*                                                                   CPB002
+      /EJECT
+     C*****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           WWTVDA  1        Trade/value basis
+     C*
+     C**   To include copyright statement in object
+     C***********          MOVEACPY@      BIS@   80                       S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*****************************************************************
+     C*   K E Y   L I S T S
+     C*================================================================
+     C*
+     C**   Key to access the portfolio details
+     C           P1KEY     KLIST
+     C                     KFLD           CACNUM
+     C                     KFLD           CAPTFR
+     C*
+     C**   Key to access the interim portfolio position details
+     C           P2KEY     KLIST
+     C                     KFLD           CACNUM
+     C                     KFLD           CAPTFR
+     C                     KFLD           CATDSS
+     C                     KFLD           CATVDA
+     C                     KFLD           CABVLD
+     C*
+     C**   Key to position on average prices file
+     C           P3KEY     KLIST
+     C                     KFLD           IACNUM
+     C                     KFLD           IAPTFR
+     C                     KFLD           IATDSS
+     C                     KFLD           IAPDAT
+     C*
+     C**   Key to access the historic portfolio position details
+     C           P4KEY     KLIST
+     C                     KFLD           CACNUM
+     C                     KFLD           CAPTFR
+     C                     KFLD           CATDSS
+     C                     KFLD           CATVDA
+     C*                                                                   B07933
+     C**   Key to diary event details                                     B07933
+     C           P5KEY     KLIST                                          B07933
+     C                     KFLD           WWSDSN                          B07933
+     C                     KFLD           WWSDET                          B07933
+     C                     KFLD           SDED                            B07933
+     C*                                                                   B07933
+     C**   Key to investment type details                                 B07933
+     C           P6KEY     KLIST                                          B07933
+     C                     KFLD           NMCY                            B07933
+     C                     KFLD           SITP                            B07933
+     C*                                                                   B07933
+     C**   Key to current position information                            B07933
+     C           P7KEY     KLIST                                          B07933
+     C                     KFLD           RACNUM                          B07933
+     C                     KFLD           RAPTFR                          B07933
+     C                     KFLD           RATDSS                          B07933
+     C                     KFLD           RATVDA                          B07933
+     C*                                                                   056469
+     C**   Key to CAPRHD                                                  056469
+     C           P8KEY     KLIST                                          056469
+     C                     KFLD           IACNUM                          056469
+     C                     KFLD           IAPTFR                          056469
+     C                     KFLD           IATDSS                          056469
+     C*                                                                   B08253
+     C           MFHLKY    KLIST                                          B08253
+     C                     KFLD           QFCNUM                          B08253
+     C                     KFLD           QFPTFR                          B08253
+     C                     KFLD           QFTDSS                          B08253
+     C*
+      /EJECT
+     C*================================================================
+     C*   M A I N   P R O C E S S I N G
+     C*================================================================
+     C*
+     C**   Perform initial processing
+     C                     EXSR #INIT
+     C*
+     C**   Perform main processing
+     C                     EXSR #MAIN
+     C*
+     C**   Perform final processing
+     C                     EXSR #FINAL
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**   I N D E X   O F   S U B R O U T I N E S
+     C*================================================================
+     C**
+     C**   #B       Main processing
+     C**
+     C**   #BA      Access portfolio details
+     C**
+     C**   #BB      Access security details
+     C**
+     C**   #BC      Write a record to the current portfolio positions
+     C**            file
+     C**
+     C**   #BD      Access current position details
+     C**
+     C**   #BE      Process the action
+     C**
+     C**   #BEA     Trades processing
+     C**
+     C**   #BEB     Depot movement processing
+     C**
+     C**   #BEC     Price changes processing
+     C**
+     C**   #ZAPNUM  To calculate average price numerator
+     C**
+     C**   #ZAYNUM  To calculate average yield numerator
+     C**
+     C**   #ZFXAPN  To calculate FX average price numerator
+     C**
+     C**   #ZLCD    To calculate last coupon date prior the
+     C**            event date
+     C**
+     C**   #ZDATE1  To validate date submittted and convert
+     C**            to a number of days
+     C**
+     C**   #ZDATE2  To convert a day number to a date format
+     C**
+     C**   #A       Initial processing
+     C**
+     C**   #C       Final processing
+     C**
+     C**   *PSSR    File error handling
+     C**
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #MAIN     - detail processing
+     C**
+     C**   CALLED BY - main processing
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #MAIN     BEGSR                           * #MAIN BEGSR *
+     C*
+     C**   Read positions for reworking file
+     C                     READ PMRPSXLL                 71
+     C*
+     C**   Perform processing until end of file reached
+     C           *IN71     DOWEQ'0'
+     C*
+     C**   Access portfolio details when change of customer or portfolio
+     C           CACNUM    CASNEWWCNUM    #PORT
+     C           CAPTFR    CASNEWWPTFR    #PORT
+     C                     END
+     C*
+     C**   Access security details when change of security
+     C           CATDSS    CASNEWWTDSS    #SECT
+     C                     END
+     C*
+     C**   Save previous position details
+     C**********           Z-ADDCACNUM    WWCNUM                                              CSD027
+     C                     MOVE CACNUM    WWCNUM                                              CSD027
+     C                     MOVE CAPTFR    WWPTFR
+     C                     MOVE CATDSS    WWTDSS
+     C*
+     C**   Rework the position
+     C                     EXSR #P01
+     C*
+     C**   Read positions for reworking file
+     C                     READ PMRPSXLL                 71
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           * #MAIN ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #PORT            -  access portfolio details
+     C**
+     C**   CALLED BY #MAIN  -  detail processing
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #PORT     BEGSR                           * #PORT BEGSR *
+     C*                                                                   B08040
+     C** If change of customer access customer details and set up         B08040
+     C***customer*details*for*output*to*PMCPOSPP********************B08040S01486
+     C** customer details for output to PMCPOSPD                          S01486
+     C           CACNUM    IFNE WWCNU1                                    B08040
+     C                     MOVE CACNUM    WCNUM   6                       B08040
+     C**********           MOVE CACNUM    WWCNU1  60                                   B08040 CSD027
+     C                     MOVE CACNUM    WWCNU1  6                                           CSD027
+     C***********          MOVE CACNUM    PLCUS                    S01486 081374
+     C                     MOVE *BLANKS   PLCUS                           081374
+     C                     MOVELCACNUM    PLCUS                           081374
+     C***********WCNUM     CHAINSDPLCSL0             72             B08040S01486
+     C*****                CALL 'AOPLCSR0'                          S01486CPB002
+     C*****                PARM *BLANKS   PRTCD   7                 S01486CPB002
+     C*****                PARM '*KEY'    POPTN   7                 S01486CPB002
+     C*****                PARM           PLCUS  10                 S01486CPB002
+     C*****      SDPLCS    PARM SDPLCS    DSFDY                     S01486CPB002
+     C*****                                                         B08040CPB002
+     C*****Perform database in error processing if no record found  B08040CPB002
+     C************IN72     IFEQ '1'                                 B08040S01486
+     C*****      PRTCD     IFNE *BLANKS                             S01486CPB002
+     C*****      *LOCK     IN   LDA                                 S01486CPB002
+     C*****                Z-ADD02        DBASE            *********B08040CPB002
+     C***********          MOVEL'SDPLCSL0'DBFILE     * DB ERROR 02 *B08040S01486
+     C*****                MOVEL'SDPLCSPD'DBFILE           * DB ERROS01486CPB002
+     C*****                MOVELCACNUM    DBKEY            *********B08040CPB002
+     C*****                OUT  LDA                                 S01486CPB002
+     C*****                EXSR *PSSR                               B08040CPB002
+     C*****                                                         S01486CPB002
+     C*****                ELSE                                     S01486CPB002
+     C*****                CALL 'AOCUSTR0'                          S01486CPB002
+     C                     CALL 'AOCUSTR1'                                CPB002
+     C                     PARM *BLANKS   PRTCD   7                       S01486
+     C                     PARM '*KEY'    POPTN   7                       S01486
+     C                     PARM           PLCUS  10                       S01486
+     C                     PARM *BLANKS   PLKYST  7                       S01486
+     C*****      SDCUST    PARM SDCUST    DSSDY                     S01486CPB002
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB002
+     C*                                                                   S01486
+     C**   Perform database in error processing if no record found        S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD7         DBASE            ***************S01486
+     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 07 *S01486
+     C                     MOVELPLCUS     DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*****                END                                      B08040CPB002
+     C*                                                                   CPB002
+     C                     CALL 'AOPLCSR0'                                CPB002
+     C                     PARM *BLANKS   PRTCD   7                       CPB002
+     C                     PARM '*KEY'    POPTN   7                       CPB002
+     C                     PARM           PLCUS  10                       CPB002
+     C           SDPLCS    PARM SDPLCS    DSFDY                           CPB002
+     C*                                                                   CPB002
+     C**   Perform database in error processing if no record found        CPB002
+     C           PRTCD     IFNE *BLANKS                                   CPB002
+     C           BBPRBA    ANDNE'Y'                                       CPB002
+     C           *LOCK     IN   LDA                                       CPB002
+     C                     Z-ADD02        DBASE            ***************CPB002
+     C                     MOVEL'SDPLCSPD'DBFILE           * DB ERROR 02 *CPB002
+     C                     MOVELCACNUM    DBKEY            ***************CPB002
+     C                     OUT  LDA                                       CPB002
+     C                     EXSR *PSSR                                     CPB002
+     C                     END                                            CPB002
+     C*                                                                   B08040
+     C                     MOVE QBCSBY    WACSBY  3                       B08040
+     C                     MOVE QBBYDP    WABYDP  1                       B08040
+     C                     MOVE BBACOC    WAACOC  2                       B08040
+     C                     MOVE BBCOLC    WACOLC  2                       B08040
+     C                     MOVE BBBRCD    WABRCD  3                       B08040
+     C*                                                                   B08040
+     C***********WCNUM     CHAINSDSECSL0             72             B08040S01486
+     C                     CALL 'AOSECSR0'                                S01486
+     C                     PARM *BLANKS   PRTCD                           S01486
+     C                     PARM '*KEY    'POPTN                           S01486
+     C                     PARM WCNUM     PAENB   6                       S01486
+     C           SDSECS    PARM SDSECS    DSSDY                           S01486
+     C*                                                                   B08040
+     C**   Perform database in error processing if no record found        B08040
+     C************IN72     IFEQ '1'                                 B08040S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD52        DBASE            ***************B08040
+     C***********          MOVEL'SDSECSL0'DBFILE     * DB ERROR 52 *B08040S01486
+     C                     MOVEL'SDSECSPD'DBFILE           * DB ERROR 52 *S01486
+     C                     MOVELCACNUM    DBKEY            ***************B08040
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08040
+     C                     END                                            B08040
+     C*                                                                   B08040
+     C                     MOVE BFCLAS    WACLAS  1                       B08040
+     C*                                                                   B08040
+     C                     END                                            B08040
+     C*
+     C** IF PORTFOLIO IS 'UNASSIGNED' PORTFOLIO
+     C*
+     C           CAPTFR    IFEQ '9997'
+     C           BGN4ST    ANDNE'Y'                                       CPB002
+     C****                                                                B08040
+     C**** Access the customer details file using the customer number     B08040
+     C****                                                                B08040
+     C****                 MOVE CACNUM    WCNUM   6                       B08040
+     C****       WCNUM     CHAINSDPLCSL0             72                   B08040
+     C****                                                                B08040
+     C**** Perform database in error processing if no record found        B08040
+     C****       *IN72     IFEQ '1'                                       B08040
+     C****                 Z-ADD02        DBASE            ***************B08040
+     C****                 MOVEL'SDPLCSL0'DBFILE           * DB ERROR 02 *B08040
+     C****                 MOVELCACNUM    DBKEY            ***************B08040
+     C****                 EXSR *PSSR                                     B08040
+     C****                 END                                            B08040
+     C*
+     C                     MOVELQBCSBY    PNPTCY
+     C                     Z-ADDQBBYDP    PNPCDP
+     C*
+     C                     ELSE
+     C*
+     C**   Access the portfolio details file using the customer number
+     C**   and portfolio reference
+     C***********P1KEY     CHAINPMPORTPP             72                   S01486
+     C           P1KEY     CHAINPMPORTPD             72                   S01486
+     C*
+     C**   Perform database in error processing if no record found
+     C           *IN72     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD03        DBASE            ***************
+     C***********          MOVEL'PMPORTPP'DBFILE           * DB ERROR 03 *S01486
+     C                     MOVEL'PMPORTPD'DBFILE           * DB ERROR 03 *S01486
+     C                     MOVELCACNUM    DBKY10 10        ***************
+     C                     MOVE CAPTFR    DBKY10
+     C                     MOVELDBKY10    DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+     C*
+     C**   Save previous portfolio details
+     C                     MOVE PNPTCY    WWPTCY
+     C                     Z-ADDPNPCDP    WWPCDP
+     C*                                                                   CPB002
+     C           BGN4ST    IFEQ 'Y'                                       CPB002
+     C           BBPRBA    ANDEQ'Y'                                       CPB002
+     C                     MOVE PNPTCY    WACSBY                          CPB002
+     C                     MOVE PNPCDP    WABYDP                          CPB002
+     C                     ENDIF                                          CPB002
+     C*
+     C                     ENDSR                           * #PORT ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #SECT             -  access security details
+     C**
+     C**   CALLED BY #MAIN   -  detail processing
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #SECT     BEGSR                           * #SECT BEGSR *
+     C*
+     C**   Access the security details file using the security shortname
+     C           CATDSS    CHAINSECTY                72
+     C*
+     C**   Perform database in error processing if no live record found
+     C           *IN72     IFEQ '0'
+     C           RECI      ANDEQ'*'
+     C                     MOVE '1'       *IN72
+     C                     END
+     C*
+     C           *IN72     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD04        DBASE            ***************
+     C                     MOVEL'SECTY   'DBFILE           * DB ERROR 04 *
+     C                     MOVELCATDSS    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   B07933
+     C**   Access the investment details file using the nominal currency  B07933
+     C**   and investment type from SECTYD                                B07933
+     C           P6KEY     CHAININVTP                72                   B07933
+     C*                                                                   B07933
+     C**   Perform database in error processing if no live record found   B07933
+     C           *IN72     IFEQ '0'                                       B07933
+     C           RECI      ANDEQ'*'                                       B07933
+     C                     MOVE '1'       *IN72                           B07933
+     C                     END                                            B07933
+     C*                                                                   B07933
+     C           *IN72     IFEQ '1'                                       B07933
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD14        DBASE            ***************B07933
+     C                     MOVEL'INVTP   'DBFILE           * DB ERROR 04 *B07933
+     C                     MOVELSITP      DBKEY            ***************B07933
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B07933
+     C                     END                                            B07933
+     C*
+     C*****Access*the currency details file using the nominal currency
+     C***********NMCY      CHAINSDCURRL0             72                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   PRTCD   7                       S01486
+     C                     PARM '*KEY  '  POPTN   7                       S01486
+     C                     PARM NMCY      PAJCD   3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*
+     C**   Perform database in error processing if no record found
+     C************IN72     IFEQ '1'                                       S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD05        DBASE            ***************
+     C***********          MOVEL'SDCURRL0'DBFILE           * DB ERROR 05 *S01486
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 05 *S01486
+     C                     MOVELNMCY      DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**   Save previous security details
+     C                     MOVE NMCY      WWNMCY
+     C                     Z-ADDNMDP      WWNMDP
+     C                     Z-ADDA6NBDP    WWNBDP
+     C*
+     C                     ENDSR                           * #SECT ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #P01             -  to rework positions
+     C**
+     C**   CALLED BY #MAIN  -  detail processing
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #P01      BEGSR                           ** #P01 BEGSR *
+     C*
+     C**   Delete the portfolio position details after (and at) the
+     C**   backvaluation date
+     C                     MOVE '0'       *IN72
+     C           P2KEY     SETLLPMIPOSLL
+     C           P4KEY     READEPMIPOSLL                 72
+     C*
+     C**   Perform processing until end of file not reached and no
+     C**   change of customer, portfolio, security and basis
+     C           *IN72     DOWEQ'0'
+     C                     DELETPMIPOSLL
+     C           P4KEY     READEPMIPOSLL                 72
+     C                     END
+     C*
+     C**   Access the portfolio position prior to the backvaluation
+     C**   date
+     C                     MOVE '0'       *IN72
+     C                     MOVE '0'       *IN73
+     C           P2KEY     SETLLPMIPOSLL
+     C                     READPPMIPOSLL                 72
+     C*
+     C**   Check if record found for the same customer, portfolio,
+     C**   security and basis
+     C           *IN72     IFEQ '0'
+     C*
+     C           CACNUM    IFNE IACNUM
+     C           CAPTFR    ORNE IAPTFR
+     C           CATDSS    ORNE IATDSS
+     C           CATVDA    ORNE IATVDA
+     C*
+     C**   If change, access historic file
+     C****       P4KEY     CHAINPMHPOSLL             72                   48219
+     C*                                                                   48219
+     C*    Obtain last 'historic' position details                        48219
+     C                     Z-ADDCABVLD    W1BVLD                          48219
+     C                     Z-ADD*HIVAL    CABVLD                          48219
+     C           P2KEY     SETGTPMHPOSLL                                  48219
+     C           P4KEY     REDPEPMHPOSLL                 72               48219
+     C                     Z-ADDW1BVLD    CABVLD                          48219
+     C*
+     C**   If found on  historic, position work indicator
+     C           *IN72     IFEQ '0'
+     C                     MOVE '1'       *IN73
+     C                     END
+     C*
+     C**   If found on  interim, position work indicator
+     C                     ELSE
+     C                     MOVE '1'       *IN73
+     C                     END
+     C*
+     C**   If no interim record found, access historic position
+     C                     ELSE
+     C****       P4KEY     CHAINPMHPOSLL             72                   48219
+     C*                                                                   48219
+     C*    Obtain last 'historic' position details                        48219
+     C                     Z-ADDCABVLD    W1BVLD  50                      48219
+     C                     Z-ADD*HIVAL    CABVLD                          48219
+     C           P2KEY     SETGTPMHPOSLL                                  48219
+     C           P4KEY     REDPEPMHPOSLL                 72               48219
+     C                     Z-ADDW1BVLD    CABVLD                          48219
+     C*
+     C**   If found on  historic, position work indicator
+     C           *IN72     IFEQ '0'
+     C                     MOVE '1'       *IN73
+     C                     END
+     C                     END
+     C*                                                                   056469
+     C** IF NO HISTORIC POSITION OF INTERIM POSITION FOUND CHECK          056469
+     C** WHETHER POSITION FLAGGED FOR REWORK HAS DATE BEFORE              056469
+     C** FIRST ACTION ON CAPRHD FOR POSITION                              056469
+     C           *IN73     IFEQ '0'                        B1             056469
+     C**********           Z-ADDCACNUM    IACNUM                                       056469 CSD027
+     C                     MOVE CACNUM    IACNUM                                              CSD027
+     C                     MOVE CAPTFR    IAPTFR                          056469
+     C                     MOVE CATDSS    IATDSS                          056469
+     C           P8KEY     SETLLCAPRALX                                   056469
+     C           P8KEY     READECAPRALX                  75               056469
+     C*                                                                   056469
+     C** IF FIRST ACTION READ HAS DATE *LE 'R' POSITION RECORD READ       056469
+     C** THEN STARTING POSITION SHOULD BE RESET TO 0                      056469
+     C           *IN75     IFEQ '1'                        B2             056469
+     C           *IN75     OREQ '0'                                       056469
+     C           CSDA      ANDLECAPDAT                                    056469
+     C                     MOVE '0'       *IN73                           056469
+     C*                                                                   056469
+     C** IF AN ACTION IS READ USE THE DATE ON THIS ACTION AS THE          056469
+     C** STARTING DATE FOR THE CALCULATION OF THE POSITION                056469
+     C           *IN75     IFEQ '0'                        B3             056469
+     C                     Z-ADDCSDA      CABVLD                          056469
+     C                     END                             E3             056469
+     C*                                                                   056469
+     C** ... OTHERWISE IF ACTION AFTER 'R' POSITION DATE SAVE 'R'         056469
+     C** POSITION AS INITIAL POSITION                                     056469
+     C                     ELSE                            X2             056469
+     C                     MOVE '1'       *IN73                           056469
+     C                     MOVE CARECI    IARECI                          056469
+     C**********           Z-ADDCACNUM    IACNUM                                       056469 CSD027
+     C                     MOVE CACNUM    IACNUM                                              CSD027
+     C                     MOVE CAPTFR    IAPTFR                          056469
+     C                     MOVE CATDSS    IATDSS                          056469
+     C                     MOVE CATVDA    IATVDA                          056469
+     C                     Z-ADDCAPDAT    IAPDAT                          056469
+     C                     Z-ADDCANOML    IANOML                          056469
+     C                     Z-ADDCACSEX    IACSEX                          056469
+     C                     Z-ADDCAAPNM    IAAPNM                          056469
+     C                     Z-ADDCAAYNM    IAAYNM                          056469
+     C                     Z-ADDCAFXAP    IAFXAP                          056469
+     C                     Z-ADDCAPILP    IAPILP                          056469
+     C                     Z-ADDCAACDI    IAACDI                          056469
+     C                     Z-ADDCABVLD    IABVLD                          056469
+     C                     MOVE CATNMC    IATNMC                          056469
+     C                     Z-ADDCATNMD    IATNMD                          056469
+     C                     MOVE CAPTCY    IAPTCY                          056469
+     C                     Z-ADDCAPCDP    IAPCDP                          056469
+     C                     MOVE CACSBY    IACSBY                          056469
+     C                     Z-ADDCABYDP    IABYDP                          056469
+     C                     MOVE CACLAS    IACLAS                          056469
+     C                     MOVE CAACOC    IAACOC                          056469
+     C                     Z-ADDCAOTNM    IAOTNM                          056469
+     C                     Z-ADDCAOTEX    IAOTEX                          056469
+     C                     MOVE CAAPBC    IAAPBC                          056469
+     C                     MOVE CAFLEX    IAFLEX                          056469
+     C                     MOVE CACOLC    IACOLC                          056469
+     C                     MOVE CABRCD    IABRCD                          056469
+     C                     Z-ADDCANPDT    IANPDT                          056469
+     C*                                                                   056469
+     C** SAVE DETAILS TO ENSURE STARTING POSITION WRITTEN                 056469
+     C**********           Z-ADDCACNUM    WWCSCN                                       056469 CSD027
+     C                     MOVE CACNUM    WWCSCN                                              CSD027
+     C                     MOVE CAPTFR    WWPTFC                          056469
+     C                     MOVE CATDSS    WWCSSC                          056469
+     C                     Z-ADDCAPDAT    WWCSDA                          056469
+     C                     END                             E2             056469
+     C                     END                             E1             056469
+     C*
+     C**   If no interim or historic position found, initialize
+     C**   fields
+     C           *IN73     IFEQ '0'
+     C**********           Z-ADDCACNUM    IACNUM                                              CSD027
+     C                     MOVE CACNUM    IACNUM                                              CSD027
+     C                     MOVE CAPTFR    IAPTFR
+     C                     MOVE CATDSS    IATDSS
+     C           CABVLD    SUB  1         IAPDAT
+     C                     Z-ADD*ZEROS    IANOML
+     C                     Z-ADD*ZEROS    IACSEX
+     C                     Z-ADD*ZEROS    IAAPNM
+     C                     Z-ADD*ZEROS    IAAYNM
+     C                     Z-ADD*ZEROS    IAFXAP
+     C                     Z-ADD*ZEROS    IAPILP
+     C                     Z-ADD*ZEROS    IAACDI
+     C                     MOVE *BLANKS   IAAPBC                          B08253
+     C                     MOVE *BLANKS   IAFLEX                          B08253
+     C                     END
+     C*
+     C**   Process actions
+     C           P3KEY     SETGTCAPRALX
+     C                     READ CAPRALX                  72
+     C*
+     C**   Initialize output fields
+     C                     Z-ADDIANOML    QANOML
+     C                     Z-ADDIACSEX    QACSEX
+     C                     Z-ADDIAAPNM    QAAPNM
+     C                     Z-ADDIAAYNM    QAAYNM
+     C                     Z-ADDIAFXAP    QAFXAP
+     C                     Z-ADDIAPILP    QAPILP
+     C*
+     C           *IN72     DOWEQ'0'
+     C           CACNUM    ANDEQCSCN
+     C           CAPTFR    ANDEQPTFR
+     C           CATDSS    ANDEQCSSC
+     C                     EXSR #P02
+     C*
+     C**   Save previous action details
+     C**********           Z-ADDCSCN      WWCSCN                                              CSD027
+     C                     MOVE CSCN      WWCSCN                                              CSD027
+     C                     MOVE PTFR      WWPTFC
+     C                     MOVE CSSC      WWCSSC
+     C                     Z-ADDCSDA      WWCSDA
+     C*
+     C                     READ CAPRALX                  72
+     C*
+     C                     END
+     C*
+     C                     EXSR #U01
+     C*
+     C                     ENDSR                           ** #P01 ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #P02           -  to check if the action is to be processed
+     C**
+     C**   CALLED BY #P01 -  detail processing
+     C**
+     C**   CALLS #W01     -  to write a new position record
+     C**         #P03     -  trades processing
+     C**         #P04     -  depot movements processing
+     C**         #P05     -  price changes processing
+     C**
+     C*=========================================================================
+     C*
+     C           #P02      BEGSR                           ** #P02 BEGSR *
+     C*
+     C**   If deleted today, move '*' into the trade date record ID
+     C**   according to the calculation basis
+     C           WWTVDA    IFEQ 'T'
+     C*
+     C           PMTI      IFEQ 'C'
+     C                     MOVE '*'       PMTI
+     C*
+     C**   Update the action processed
+     C                     UPDATCAPRHDF
+     C                     END
+     C*
+     C                     ELSE
+     C           PMVI      IFEQ 'C'
+     C                     MOVE '*'       PMVI
+     C*
+     C**   Update the action processed
+     C                     UPDATCAPRHDF
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVE '0'       *IN74
+     C*
+     C**   Check if the appropriate PM record ID is 'C' or 'H'
+     C           WWTVDA    IFEQ 'T'
+     C*
+     C           PMTI      IFEQ 'D'
+     C           PMTI      OREQ 'H'
+     C           PMTI      OREQ 'A'                                       R05785
+     C                     MOVE '1'       *IN74
+     C                     MOVE 'H'       PMTI
+     C                     END
+     C*
+     C                     ELSE
+     C           PMVI      IFEQ 'D'
+     C           PMVI      OREQ 'H'
+     C           PMVI      OREQ 'A'                                       R05785
+     C                     MOVE '1'       *IN74
+     C                     MOVE 'H'       PMVI
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   If live record found, process PF/CAPRHD action
+     C           *IN74     IFEQ '1'
+     C*****                                                               R05794
+     C*****If action date being processed different than last processed   R05794
+     C*****for the same customer, portfolio and security, calculate       R05794
+     C*****the last coupon date                                           R05794
+     C*****      CSDA      IFNE WWCSDA                                    R05794
+     C*****      CSCN      ANDEQWWCSCN                                    R05794
+     C*****      PTFR      ANDEQWWPTFC                                    R05794
+     C*****      CSSC      ANDEQWWCSSC                                    R05794
+     C*****                Z-ADDCSDA      ZECD                            R05794
+     C*****                EXSR ZLCD                                      R05794
+     C*****                                                               R05794
+     C*****If the last coupon date is greater or equal to the last date   R05794
+     C*****processed, set the ex-coupon nominal and purchased interest    R05794
+     C*****to zero for this position                                      R05794
+     C*****      ZZLCD     IFGE WWCSDA                                    R05794
+     C***********          Z-ADD0         CACSEX                          R05794
+     C***********          Z-ADD0         CAPILP                          R05794
+     C*****                Z-ADD0         QACSEX                          R05794
+     C*****                Z-ADD0         QAPILP                          R05794
+     C*****                END                                            R05794
+     C*****                                                               R05794
+     C*****                END                                            R05794
+     C*****                                                               R05794
+     C*****If new customer, security and portfolio, calculate last        R05794
+     C*****coupon date                                                    R05794
+     C*****      CSCN      IFNE WWCSCN                                    R05794
+     C*****      PTFR      ORNE WWPTFC                                    R05794
+     C*****      CSSC      ORNE WWCSSC                                    R05794
+     C*****                Z-ADDCSDA      ZECD                            R05794
+     C*****                EXSR ZLCD                                      R05794
+     C*****                                                               R05794
+     C*****If the last coupon date is greater or equal to the current     R05794
+     C*****position date, set the ex-coupon nominal and purchased         R05794
+     C*****interest to zero for this position                             R05794
+     C*****      ZZLCD     IFGE IAPDAT                                    R05794
+     C***********          Z-ADD0         CACSEX                          R05794
+     C***********          Z-ADD0         CAPILP                          R05794
+     C*****                Z-ADD0         QACSEX                          R05794
+     C*****                Z-ADD0         QAPILP                          R05794
+     C*****                END                                            R05794
+     C*****                                                               R05794
+     C*****                END                                            R05794
+     C*
+     C**   If same customer, security and portfolio and different
+     C**   action date, create an interim position
+     C           CSCN      IFEQ WWCSCN
+     C           PTFR      ANDEQWWPTFC
+     C           CSSC      ANDEQWWCSSC
+     C           CSDA      ANDNEWWCSDA
+     C                     EXSR #W01
+     C                     END
+     C*                                                                   R05794
+     C**   If action date being processed different than last processed   R05794
+     C**   for the same customer, portfolio and security, calculate       R05794
+     C**   the last coupon date                                           R05794
+     C           CSDA      IFNE WWCSDA                                    R05794
+     C           CSCN      ANDEQWWCSCN                                    R05794
+     C           PTFR      ANDEQWWPTFC                                    R05794
+     C           CSSC      ANDEQWWCSSC                                    R05794
+     C*                                                                   B07933
+     C** For shares obtain date of previous dividend from diary events    B07933
+     C** file                                                             B07933
+     C           PROT      IFEQ '4'                                       B07933
+     C                     MOVELCSSC      WWSDSN 10                       B07933
+     C                     MOVE 'DV'      WWSDET  2                       B07933
+     C                     Z-ADDCSDA      SDED                            B07933
+     C           P5KEY     SETGTSECET                                     B07933
+     C                     READPSECET                    72               B07933
+     C*                                                                   B07933
+     C           *IN72     IFEQ '0'                                       B07933
+     C           SDSN      ANDEQWWSDSN                                    B07933
+     C           SDET      ANDEQWWSDET                                    B07933
+     C                     Z-ADDSDED      ZZLCD                           B07933
+     C                     ELSE                                           B07933
+     C                     Z-ADD0         ZZLCD                           B07933
+     C                     END                                            B07933
+     C*                                                                   B07933
+     C** For all other instruments obtain last coupon date using detail   B07933
+     C** from LF/SECTY                                                    B07933
+     C                     ELSE                                           B07933
+     C                     Z-ADDCSDA      ZECD                            R05794
+     C                     EXSR ZLCD                                      R05794
+     C                     END                                            B07933
+     C*                                                                   R05794
+     C**   If the last coupon date is greater or equal to the last date   R05794
+     C**   processed, set the ex-coupon nominal and purchased interest    R05794
+     C**   to zero for this position                                      R05794
+     C           ZZLCD     IFGE WWCSDA                                    R05794
+     C***********          Z-ADD0         CACSEX                          R05794
+     C***********          Z-ADD0         CAPILP                          R05794
+     C                     Z-ADD0         QACSEX                          R05794
+     C                     Z-ADD0         QAPILP                          R05794
+     C                     END                                            R05794
+     C*                                                                   R05794
+     C                     END                                            R05794
+     C*                                                                   R05794
+     C**   If new customer, security and portfolio, calculate last        R05794
+     C**   coupon date                                                    R05794
+     C           CSCN      IFNE WWCSCN                                    R05794
+     C           PTFR      ORNE WWPTFC                                    R05794
+     C           CSSC      ORNE WWCSSC                                    R05794
+     C*                                                                   B07933
+     C** For shares obtain date of previous dividend from diary events    B07933
+     C** file                                                             B07933
+     C           PROT      IFEQ '4'                                       B07933
+     C                     MOVELCSSC      WWSDSN 10                       B07933
+     C                     MOVE 'DV'      WWSDET  2                       B07933
+     C                     Z-ADDCSDA      SDED                            B07933
+     C           P5KEY     SETGTSECET                                     B07933
+     C                     READPSECET                    72               B07933
+     C*                                                                   B07933
+     C           *IN72     IFEQ '0'                                       B07933
+     C           SDSN      ANDEQWWSDSN                                    B07933
+     C           SDET      ANDEQWWSDET                                    B07933
+     C                     Z-ADDSDED      ZZLCD                           B07933
+     C                     ELSE                                           B07933
+     C                     Z-ADD0         ZZLCD                           B07933
+     C                     END                                            B07933
+     C*                                                                   B07933
+     C** For all other instruments obtain last coupon date using detail   B07933
+     C** from LF/SECTY                                                    B07933
+     C                     ELSE                                           B07933
+     C                     Z-ADDCSDA      ZECD                            R05794
+     C                     EXSR ZLCD                                      R05794
+     C                     END                                            B07933
+     C*                                                                   R05794
+     C**   If the last coupon date is greater or equal to the current     R05794
+     C**   position date, set the ex-coupon nominal and purchased         R05794
+     C**   interest to zero for this position                             R05794
+     C           ZZLCD     IFGE IAPDAT                                    R05794
+     C***********          Z-ADD0         CACSEX                          R05794
+     C***********          Z-ADD0         CAPILP                          R05794
+     C                     Z-ADD0         QACSEX                          R05794
+     C                     Z-ADD0         QAPILP                          R05794
+     C                     END                                            R05794
+     C*                                                                   R05794
+     C                     END                                            R05794
+     C*
+     C**   Process the trades, depot movements and price changes
+     C**   according to the sort sequence
+     C           CSSE      CASEQ'1'       #P03
+     C           CSSE      CASEQ'3'       #P04
+     C           CSSE      CASEQ'5'       #P05
+     C                     END
+     C*
+     C**   Update the action processed
+     C                     UPDATCAPRHDF
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           ** #P02 ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #W01           -  to write a record to the current positions file
+     C**
+     C**   CALLED BY P01  -  detail processing
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #W01      BEGSR                           ** #W01 BEGSR *
+     C*
+     C                     MOVE 'I'       QARECI
+     C**********           Z-ADDCACNUM    QACNUM                                              CSD027
+     C                     MOVE CACNUM    QACNUM                                              CSD027
+     C                     MOVE CAPTFR    QAPTFR
+     C                     MOVE CATDSS    QATDSS
+     C                     MOVE CATVDA    QATVDA
+     C                     Z-ADDWWCSDA    QAPDAT
+     C                     Z-ADD*ZEROS    QAACDI
+     C                     Z-ADD*ZEROS    QABVLD
+     C                     MOVE WWNMCY    QATNMC
+     C                     Z-ADDWWNMDP    QATNMD
+     C                     MOVE WWPTCY    QAPTCY
+     C                     Z-ADDWWPCDP    QAPCDP
+     C*
+     C                     MOVE WACSBY    QACSBY
+     C                     MOVE WABYDP    QABYDP
+     C                     MOVE WACLAS    QACLAS
+     C                     MOVE WAACOC    QAACOC
+     C                     MOVE WACOLC    QACOLC                          B08040
+     C                     MOVE WABRCD    QABRCD                          B08040
+     C           QACSBY    IFNE QAPTCY                                    042719
+     C                     MOVE 'N'       QAAPBC                          042719
+     C                     ELSE                                           042719
+     C                     MOVE ' '       QAAPBC                          042719
+     C                     END                                            042719
+     C*
+     C                     WRITEPMCPOSP0
+     C*
+     C                     ENDSR                           ** #W01 ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #U01           -  to update a record to the position read
+     C**
+     C**   CALLED BY P01  -  detail processing
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #U01      BEGSR                           ** #W01 BEGSR *
+     C*
+     C                     MOVE 'D'       CARECI
+     C                     Z-ADDQANOML    CANOML
+     C                     Z-ADDQACSEX    CACSEX
+     C                     Z-ADDQAAPNM    CAAPNM
+     C                     Z-ADDQAAYNM    CAAYNM
+     C                     Z-ADDQAFXAP    CAFXAP
+     C                     Z-ADDQAPILP    CAPILP
+     C                     Z-ADDWWCSDA    CAPDAT
+     C                     Z-ADD*ZEROS    CAACDI
+     C                     MOVE WWNMCY    CATNMC
+     C                     Z-ADDWWNMDP    CATNMD
+     C                     MOVE WWPTCY    CAPTCY
+     C                     Z-ADDWWPCDP    CAPCDP
+     C*                                                                   B08040
+     C                     MOVE WACSBY    CACSBY                          B08040
+     C                     MOVE WABYDP    CABYDP                          B08040
+     C                     MOVE WACLAS    CACLAS                          B08040
+     C                     MOVE WAACOC    CAACOC                          B08040
+     C                     MOVE WACOLC    CACOLC                          B08040
+     C                     MOVE WABRCD    CABRCD                          B08040
+     C*
+     C                     MOVE *BLANKS   CAAPBC
+     C                     MOVE *BLANKS   CAFLEX
+     C*                                                                   B08040
+     C** Obtain other position details                                    B08040
+     C           WWTVDA    IFEQ 'T'                                       B08040
+     C                     MOVE 'V'       RATVDA                          B08040
+     C                     ELSE                                           B08040
+     C                     MOVE 'T'       RATVDA                          B08040
+     C                     END                                            B08040
+     C*                                                                   B08040
+     C                     MOVE CACNUM    RACNUM                          B08040
+     C                     MOVE CAPTFR    RAPTFR                          B08040
+     C                     MOVE CATDSS    RATDSS                          B08040
+     C*                                                                   B08040
+     C                     Z-ADD0         CAOTNM                          B08040
+     C                     Z-ADD0         CAOTEX                          B08040
+     C*                                                                   B08040
+     C           P7KEY     CHAINPMCPOSLL             72                   B08040
+     C*                                                                   B08040
+     C           *IN72     IFEQ '0'                                       B08040
+     C                     Z-ADDRANOML    CAOTNM                          B08040
+     C                     Z-ADDRACSEX    CAOTEX                          B08040
+     C                     END                                            B08040
+     C*                                                                   B08040
+     C                     UPDATPMCPOSL2
+     C*                                                                   B08040
+     C** Update other position with details of new position               B08040
+     C           *IN72     IFEQ '0'                                       B08040
+     C                     Z-ADDCANOML    RAOTNM                          B08040
+     C                     Z-ADDCACSEX    RAOTEX                          B08040
+     C                     UPDATPMCPOSL3                                  B08040
+     C                     END                                            B08040
+     C*                                                                   B08253
+     C** Delete details of all flat positions on PMMFHLL2                 B08253
+     C***********WWTVDA    IFEQ P9TVPS                              B08253S01486
+     C           WWTVDA    IFEQ FCTVPS                                    S01486
+     C                     EXSR #U02                                      B08253
+     C                     END                                            B08253
+     C*
+     C                     ENDSR                           ** #U01 ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C********************************************************************B08253
+     C**                                                                  B08253
+     C**   #U02           -  Remove mature / flat positions               B08253
+     C**                                                                  B08253
+     C**   CALLED BY #U01 -  Update position details                      B08253
+     C**                                                                  B08253
+     C**   CALLS                                                          B08253
+     C**                                                                  B08253
+     C*===================================================================B08253
+     C*                                                                   B08253
+     C           #U02      BEGSR                           ** #U02 BEGSR *B08253
+     C*                                                                   B08253
+     C** Set up key fields and check whether flat positions exist for     B08253
+     C** portfolio                                                        B08253
+     C                     MOVE CACNUM    QFCNUM                          B08253
+     C                     MOVE CAPTFR    QFPTFR                          B08253
+     C                     MOVE CATDSS    QFTDSS                          B08253
+     C*                                                                   B08253
+     C           MFHLKY    CHAINPMMFHLL2             60                   B08253
+     C           *IN60     IFEQ '0'                                       B08253
+     C           QANOML    IFNE 0                                         078956
+     C           QAOTNM    ORNE 0                                         078956
+     C                     DELETPMHOLDP0                                  B08253
+     C                     ELSE                                           078956
+     C                     Z-ADDWWECD     QFDXTR                          078956
+     C                     UPDATPMHOLDP0                                  078956
+     C                     END                                            078956
+     C                     END                                            B08253
+     C*                                                                   B08253
+     C** Check whether record exists for '9998' portfolio                 B08253
+     C                     MOVE '9998'    QFPTFR                          B08253
+     C*                                                                   B08253
+     C           MFHLKY    CHAINPMMFHLL2             60                   B08253
+     C           *IN60     IFEQ '0'                                       B08253
+     C           QANOML    IFNE 0                                         078956
+     C           QAOTNM    ORNE 0                                         078956
+     C                     DELETPMHOLDP0                                  B08253
+     C                     ELSE                                           078956
+     C                     Z-ADDWWECD     QFDXTR                          078956
+     C                     UPDATPMHOLDP0                                  078956
+     C                     END                                            078956
+     C                     END                                            B08253
+     C*                                                                   B08253
+     C** Check whether record exists for '9999' portfolio                 B08253
+     C                     MOVE '9999'    QFPTFR                          B08253
+     C*                                                                   B08253
+     C           MFHLKY    CHAINPMMFHLL2             60                   B08253
+     C           *IN60     IFEQ '0'                                       B08253
+     C           QANOML    IFNE 0                                         078956
+     C           QAOTNM    ORNE 0                                         078956
+     C                     DELETPMHOLDP0                                  B08253
+     C                     ELSE                                           078956
+     C                     Z-ADDWWECD     QFDXTR                          078956
+     C                     UPDATPMHOLDP0                                  078956
+     C                     END                                            078956
+     C                     END                                            B08253
+     C*                                                                   B08253
+     C                     ENDSR                           ** #U02 ENDSR *B08253
+     C*                                                                   B08253
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #P03           -  trades processing
+     C**
+     C**   CALLED BY #P02 -  detail processing
+     C**
+     C**   CALLS ZAPNUM   -  calculate AP numerator
+     C**         ZAYNUM   -  calculate AY numerator
+     C**         ZFXAPN   -  calculate FX AP numerator
+     C**
+     C*=========================================================================
+     C*
+     C           #P03      BEGSR                           ** #P03 BEGSR *
+     C*
+     C**   Set up AP numerator according to the value or trade indic.
+     C           WWTVDA    IFEQ 'T'
+     C                     Z-ADDCSTB      WWCAPN
+     C                     ELSE
+     C                     Z-ADDCSVB      WWCAPN
+     C                     END
+     C*
+     C**   Calculate AY (Average Yield) Numerator
+     C                     Z-ADDCSNL      ZNOML
+     C                     Z-ADDCYLD      ZAVYD
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     EXSR ZAYNUM
+     C                     Z-ADDZVALU     WWCAYN
+     C*
+     C**   Save original value of nominal
+     C                     Z-ADDQANOML    WWNOML
+     C*
+     C**   Calculate absolute value of nominal
+     C           QANOML    IFLT *ZEROS
+     C                     Z-SUBQANOML    WWNOMA
+     C                     ELSE
+     C                     Z-ADDQANOML    WWNOMA
+     C                     END
+     C*-------------------------------------------------------------------------
+     C**   1. Update fields for trades sale
+     C*-------------------------------------------------------------------------
+     C           CSOA      IFEQ 'TS'
+     C*
+     C**   Update nominal
+     C                     ADD  CSNL      QANOML
+     C*
+     C**   Update the ex-coupon nominal and purchased interest
+     C           ACIN      IFEQ 'X'
+     C                     ADD  CSNL      QACSEX
+     C                     SUB  ITRA      QAPILP
+     C                     ELSE
+     C                     ADD  ITRA      QAPILP
+     C                     END
+     C*
+     C**   Update the AP,AY & FX AP numerator
+     C           WWNOML    IFEQ *ZEROS
+     C                     Z-ADDWWCAPN    QAAPNM
+     C                     Z-ADDWWCAYN    QAAYNM
+     C                     Z-ADDCFAP      QAFXAP
+     C                     END
+     C*
+     C           WWNOML    IFGT *ZEROS
+     C                     ADD  WWCAPN    QAAPNM
+     C                     ADD  WWCAYN    QAAYNM
+     C                     ADD  CFAP      QAFXAP
+     C                     END
+     C*
+     C           WWNOML    IFLT *ZEROS
+     C*
+     C           WWNOMA    IFGT CSNL
+     C****       QANOML    DIV  WWNOML    WWRSLT 157H                     059063
+     C****       WWRSLT    MULT QAAPNM    QAAPNM    H                     059063
+     C****       WWRSLT    MULT QAAYNM    QAAYNM    H                     059063
+     C****       WWRSLT    MULT QAFXAP    QAFXAP    H                     059063
+     C           QANOML    MULT QAAPNM    WWTEMP 307H                     059063
+     C           WWTEMP    DIV  WWNOML    QAAPNM    H                     059063
+     C           QANOML    MULT QAAYNM    WWTEMP    H                     059063
+     C           WWTEMP    DIV  WWNOML    QAAYNM    H                     059063
+     C           QANOML    MULT QAFXAP    WWTEMP    H                     059063
+     C           WWTEMP    DIV  WWNOML    QAFXAP    H                     059063
+     C                     END
+     C*
+     C           WWNOMA    IFLT CSNL
+     C*
+     C**   Calculate AP (Average Price) Numerator
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDCSCP      ZAVPR
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     MOVE SPBS      ZPRCB
+     C                     EXSR ZAPNUM
+     C                     Z-ADDZVALU     QAAPNM
+     C*
+     C**   Calculate AY (Average Yield) Numerator
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDCYLD      ZAVYD
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     EXSR ZAYNUM
+     C                     Z-ADDZVALU     QAAYNM
+     C*
+     C**   Calculate FX AP (Average Price) Numerator
+     C                     Z-ADDQAAPNM    ZAPNM
+     C                     Z-ADDCFXR      ZAVFX
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     Z-ADDPNPCDP    ZPTCD
+     C                     EXSR ZFXAPN
+     C                     Z-ADDZFXAP     QAFXAP
+     C                     END
+     C*
+     C           WWNOMA    IFEQ CSNL
+     C                     Z-ADD*ZEROS    QAAPNM
+     C                     Z-ADD*ZEROS    QAAYNM
+     C                     Z-ADD*ZEROS    QAFXAP
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*-------------------------------------------------------------------------
+     C**   2. Update fields for trades purchased
+     C*-------------------------------------------------------------------------
+     C           CSOA      IFEQ 'TP'
+     C*
+     C**   Update nominal
+     C                     SUB  CSNL      QANOML
+     C*
+     C**   Update the ex-coupon nominal and purchased interest
+     C           ACIN      IFEQ 'X'
+     C                     SUB  CSNL      QACSEX
+     C                     ADD  ITRA      QAPILP
+     C                     ELSE
+     C                     SUB  ITRA      QAPILP
+     C                     END
+     C*
+     C**   Update the AP,AY & FX AP numerator
+     C           WWNOML    IFEQ *ZEROS
+     C                     Z-SUBWWCAPN    QAAPNM
+     C                     Z-SUBWWCAYN    QAAYNM
+     C                     Z-SUBCFAP      QAFXAP
+     C                     END
+     C*
+     C           WWNOML    IFLT *ZEROS
+     C                     SUB  WWCAPN    QAAPNM
+     C                     SUB  WWCAYN    QAAYNM
+     C                     SUB  CFAP      QAFXAP
+     C                     END
+     C*
+     C           WWNOML    IFGT *ZEROS
+     C*
+     C           WWNOML    IFGT CSNL
+     C****       QANOML    DIV  WWNOML    WWRSLT 157H                     059063
+     C****       WWRSLT    MULT QAAPNM    QAAPNM    H                     059063
+     C****       WWRSLT    MULT QAAYNM    QAAYNM    H                     059063
+     C****       WWRSLT    MULT QAFXAP    QAFXAP    H                     059063
+     C           QANOML    MULT QAAPNM    WWTEMP 307H                     059063
+     C           WWTEMP    DIV  WWNOML    QAAPNM    H                     059063
+     C           QANOML    MULT QAAYNM    WWTEMP    H                     059063
+     C           WWTEMP    DIV  WWNOML    QAAYNM    H                     059063
+     C           QANOML    MULT QAFXAP    WWTEMP    H                     059063
+     C           WWTEMP    DIV  WWNOML    QAFXAP    H                     059063
+     C                     END
+     C*
+     C           WWNOML    IFLT CSNL
+     C*
+     C**   Calculate AP (Average Price) Numerator
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDCSCP      ZAVPR
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     MOVE SPBS      ZPRCB
+     C                     EXSR ZAPNUM
+     C                     Z-ADDZVALU     QAAPNM
+     C*
+     C**   Calculate AY (Average Yield) Numerator
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDCYLD      ZAVYD
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     EXSR ZAYNUM
+     C                     Z-ADDZVALU     QAAYNM
+     C*
+     C**   Calculate FX AP (Average Price) Numerator
+     C                     Z-ADDQAAPNM    ZAPNM
+     C                     Z-ADDCFXR      ZAVFX
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     Z-ADDPNPCDP    ZPTCD
+     C                     EXSR ZFXAPN
+     C                     Z-ADDZFXAP     QAFXAP
+     C*
+     C                     END
+     C*
+     C           WWNOML    IFEQ CSNL
+     C                     Z-ADD*ZEROS    QAAPNM
+     C                     Z-ADD*ZEROS    QAAYNM
+     C                     Z-ADD*ZEROS    QAFXAP
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           ** #P03 ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #P04           -  depot movement processing
+     C**
+     C**   CALLED BY #P02 -  detail processing
+     C**
+     C**   CALLS ZAPNUM   -  calculate AP numerator
+     C**         ZAYNUM   -  calculate AY numerator
+     C**         ZFXAPN   -  calculate FX AP numerator
+     C**
+     C*=========================================================================
+     C*
+     C           #P04      BEGSR                           ** #P04 BEGSR *
+     C*
+     C**   Set up AP numerator according to the value or trade indic.
+     C           WWTVDA    IFEQ 'T'
+     C                     Z-ADDCSTB      WWCAPN
+     C                     ELSE
+     C                     Z-ADDCSVB      WWCAPN
+     C                     END
+     C*
+     C**   Calculate AY (Average Yield) Numerator
+     C                     Z-ADDCSNL      ZNOML
+     C                     Z-ADDCYLD      ZAVYD
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     EXSR ZAYNUM
+     C                     Z-ADDZVALU     WWCAYN
+     C*
+     C**   Save original value of nominal
+     C                     Z-ADDQANOML    WWNOML
+     C*
+     C**   Calculate absolute value of nominal
+     C           QANOML    IFLT *ZEROS
+     C                     Z-SUBQANOML    WWNOMA
+     C                     ELSE
+     C                     Z-ADDQANOML    WWNOMA
+     C                     END
+     C*-------------------------------------------------------------------------
+     C**   1. Update fields for source of action 'CI'
+     C*-------------------------------------------------------------------------
+     C           CSOA      IFEQ 'CI'
+     C*
+     C**   Update nominal
+     C                     ADD  CSNL      QANOML
+     C/COPY WNCPYSRC,PM1120C001
+     C*
+     C**   Update the AP,AY & FX AP numerator
+     C           WWNOML    IFEQ *ZEROS
+     C                     Z-ADDWWCAPN    QAAPNM
+     C                     Z-ADDWWCAYN    QAAYNM
+     C                     Z-ADDCFAP      QAFXAP
+     C                     END
+     C*
+     C           WWNOML    IFGT *ZEROS
+     C                     ADD  WWCAPN    QAAPNM
+     C                     ADD  WWCAYN    QAAYNM
+     C                     ADD  CFAP      QAFXAP
+     C                     END
+     C*
+     C           WWNOML    IFLT *ZEROS
+     C*
+     C           WWNOMA    IFGT CSNL
+     C****       QANOML    DIV  WWNOML    WWRSLT 157H                     059063
+     C****       WWRSLT    MULT QAAPNM    QAAPNM    H                     059063
+     C****       WWRSLT    MULT QAAYNM    QAAYNM    H                     059063
+     C****       WWRSLT    MULT QAFXAP    QAFXAP    H                     059063
+     C           QANOML    MULT QAAPNM    WWTEMP 307H                     059063
+     C           WWTEMP    DIV  WWNOML    QAAPNM    H                     059063
+     C           QANOML    MULT QAAYNM    WWTEMP    H                     059063
+     C           WWTEMP    DIV  WWNOML    QAAYNM    H                     059063
+     C           QANOML    MULT QAFXAP    WWTEMP    H                     059063
+     C           WWTEMP    DIV  WWNOML    QAFXAP    H                     059063
+     C                     END
+     C*
+     C           WWNOMA    IFLT CSNL
+     C*
+     C**   Calculate AP (Average Price) Numerator
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDCSCP      ZAVPR
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     MOVE SPBS      ZPRCB
+     C                     EXSR ZAPNUM
+     C                     Z-ADDZVALU     QAAPNM
+     C*
+     C**   Calculate AY (Average Yield) Numerator
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDCYLD      ZAVYD
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     EXSR ZAYNUM
+     C                     Z-ADDZVALU     QAAYNM
+     C*
+     C**   Calculate FX AP (Average Price) Numerator
+     C                     Z-ADDQAAPNM    ZAPNM
+     C                     Z-ADDCFXR      ZAVFX
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     Z-ADDPNPCDP    ZPTCD
+     C                     EXSR ZFXAPN
+     C                     Z-ADDZFXAP     QAFXAP
+     C                     END
+     C*
+     C           WWNOMA    IFEQ CSNL
+     C                     Z-ADD*ZEROS    QAAPNM
+     C                     Z-ADD*ZEROS    QAAYNM
+     C                     Z-ADD*ZEROS    QAFXAP
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*-------------------------------------------------------------------------
+     C**   2. Update fields for source of action 'CO'
+     C*-------------------------------------------------------------------------
+     C           CSOA      IFEQ 'CO'
+     C*
+     C**   Update nominal
+     C                     SUB  CSNL      QANOML
+     C/COPY WNCPYSRC,PM1120C002
+     C*
+     C**   Update the AP,AY & FX AP numerator
+     C           WWNOML    IFEQ *ZEROS
+     C                     Z-SUBWWCAPN    QAAPNM
+     C                     Z-SUBWWCAYN    QAAYNM
+     C                     Z-SUBCFAP      QAFXAP
+     C                     END
+     C*
+     C           WWNOML    IFLT *ZEROS
+     C                     SUB  WWCAPN    QAAPNM
+     C                     SUB  WWCAYN    QAAYNM
+     C                     SUB  CFAP      QAFXAP
+     C                     END
+     C*
+     C           WWNOML    IFGT *ZEROS
+     C*
+     C           WWNOML    IFGT CSNL
+     C****       QANOML    DIV  WWNOML    WWRSLT 157H                     059063
+     C****       WWRSLT    MULT QAAPNM    QAAPNM    H                     059063
+     C****       WWRSLT    MULT QAAYNM    QAAYNM    H                     059063
+     C****       WWRSLT    MULT QAFXAP    QAFXAP    H                     059063
+     C           QANOML    MULT QAAPNM    WWTEMP 307H                     059063
+     C           WWTEMP    DIV  WWNOML    QAAPNM    H                     059063
+     C           QANOML    MULT QAAYNM    WWTEMP    H                     059063
+     C           WWTEMP    DIV  WWNOML    QAAYNM    H                     059063
+     C           QANOML    MULT QAFXAP    WWTEMP    H                     059063
+     C           WWTEMP    DIV  WWNOML    QAFXAP    H                     059063
+     C                     END
+     C*
+     C           WWNOML    IFLT CSNL
+     C*
+     C**   Calculate AP (Average Price) Numerator
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDCSCP      ZAVPR
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     MOVE SPBS      ZPRCB
+     C                     EXSR ZAPNUM
+     C                     Z-ADDZVALU     QAAPNM
+     C*
+     C**   Calculate AY (Average Yield) Numerator
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDCYLD      ZAVYD
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     EXSR ZAYNUM
+     C                     Z-ADDZVALU     QAAYNM
+     C*
+     C**   Calculate FX AP (Average Price) Numerator
+     C                     Z-ADDQAAPNM    ZAPNM
+     C                     Z-ADDCFXR      ZAVFX
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     Z-ADDPNPCDP    ZPTCD
+     C                     EXSR ZFXAPN
+     C                     Z-ADDZFXAP     QAFXAP
+     C*
+     C                     END
+     C*
+     C           WWNOML    IFEQ CSNL
+     C                     Z-ADD*ZEROS    QAAPNM
+     C                     Z-ADD*ZEROS    QAAYNM
+     C                     Z-ADD*ZEROS    QAFXAP
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           ** #P04 ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #P05           -  price changes processing
+     C**
+     C**   CALLED BY #P02 -  detail processing
+     C**
+     C**   CALLS ZAPNUM   -  calculate AP numerator
+     C**         ZAYNUM   -  calculate AY numerator
+     C**         ZFXAPN   -  calculate FX AP numerator
+     C**
+     C*=========================================================================
+     C*
+     C           #P05      BEGSR                           ** #P05 BEGSR *
+     C*
+     C*                                                                   059983
+     C** IF ONLY AVERAGE PRICE RESET CALCULATE CURRENT AVERAGE FX      TOR059983
+     C** RATE FOR THE POSITION USING SR/ZFXAVP                         TOR059983
+     C           CSAP      IFNE *ZEROS                                    059983
+     C           CAVR      ANDEQ0                                         059983
+     C                     Z-ADDQAAPNM    ZAPNM                           059983
+     C                     Z-ADDQAFXAP    ZFXAP                           059983
+     C                     Z-ADDA6NBDP    ZNMCD                           059983
+     C                     Z-ADDPNPCDP    ZPTCD                           059983
+     C                     EXSR ZFXAVP                                    059983
+     C                     Z-ADDZAVFX     WWBFXR 138                      059983
+     C                     END                                            059983
+     C*                                                                   059983
+     C** IF CHANGE OF AVERAGE PRICE CALCULATE NEW AP NUMERATOR            059983
+     C           CSAP      IFNE *ZEROS
+     C*
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDCSAP      ZAVPR
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     MOVE SPBS      ZPRCB
+     C                     EXSR ZAPNUM
+     C                     Z-ADDZVALU     QAAPNM
+     C*                                                                   059983
+     C** IF FX AVERAGE PRICE HAS NOT CHANGED CALCULATE NEW FX AP          059983
+     C** NUMERATOR                                                        059983
+     C           CAVR      IFEQ 0                                         059983
+     C                     Z-ADDQAAPNM    ZAPNM                           059983
+     C                     Z-ADDWWBFXR    ZAVFX                           059983
+     C                     Z-ADDA6NBDP    ZNMCD                           059983
+     C                     Z-ADDPNPCDP    ZPTCD                           059983
+     C                     EXSR ZFXAPN                                    059983
+     C                     Z-ADDZFXAP     QAFXAP                          059983
+     C                     END                                            059983
+     C*
+     C                     END
+     C*
+     C           CYLD      IFNE *ZEROS
+     C*
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDCYLD      ZAVYD
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     EXSR ZAYNUM
+     C                     Z-ADDZVALU     QAAYNM
+     C*
+     C                     END
+     C*
+     C** IF CHANGE OF AVERAGE FX RATE CALCULATE NEW FX AP NUMERATOR       059983
+     C           CAVR      IFNE *ZEROS
+     C*
+     C                     Z-ADDQAAPNM    ZAPNM
+     C                     Z-ADDCAVR      ZAVFX
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     Z-ADDPNPCDP    ZPTCD
+     C                     EXSR ZFXAPN
+     C                     Z-ADDZFXAP     QAFXAP
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           ** #P05 ENDSR *
+     C*
+     C*************************************************************************
+      /EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZAPNUM - CALCULATE AP NUMERATOR                                       *
+     C*                                                                        *
+     C*  PURPOSE : TO MULTIPLY A NOMINAL POSITION BY THE PRICE OF THE          *
+     C*  POSITION TO GIVE A VALUE OF THE POSITION WITH THE CORRECT NUMBER      *
+     C*  OF DECIMAL PLACES FOR THE NOMINAL CURRENCY                            *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZNOML  11 0     NOMINAL                                          *
+     C*       ZAVPR  15 8     AVERAGE PRICE                                    *
+     C*       ZNMDP   1 0     NOMINAL DECIMAL PLACES (0-4)                     *
+     C*       ZNMCD   1 0     NOMINAL CURRENCY DECIMAL PLACES (0-3)            *
+     C*       ZPRCB   1 A     PRICE BASIS (P/U)                                *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZVALU  15 0     VALUE                                            *
+     C*                                                                        *
+     C*  ALSO REQUIRED                                                         *
+     C*       POWER8 ARRAY OF MULTIPLYING FACTORS FOR NOMINAL DECIMAL PLACES   *
+     C*                                                                        *
+     C*  WORK FIELDS:                                                          *
+     C*       ZVAL0  15 0 - AVERAGE PRICE WITH 0 DECIMAL PLACES                *
+     C*       ZVAL1  15 1 - --------------- '' ----------------                *
+     C*       ZVAL2  15 2 - --------------- '' ----------------                *
+     C*       ZVAL3  15 3 - --------------- '' ----------------                *
+     C*       ZI      1 0 - POWER ARRAY                                        *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                        *
+     C*************************************************************************
+     C           ZAPNUM    BEGSR                           *** ZAPNUM ***
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDZNOML     ZNOML  110
+     C                     Z-ADDZAVPR     ZAVPR  158
+     C                     Z-ADDZNMDP     ZNMDP   10
+     C                     Z-ADDZNMCD     ZNMCD   10
+     C                     MOVE ZPRCB     ZPRCB   1
+     C                     Z-ADDZVALU     ZVALU  150
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 0
+     C           ZNMCD     IFEQ 0
+     C           ZNOML     MULT ZAVPR     ZVAL0  150H
+     C                     MOVE ZVAL0     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 1
+     C           ZNMCD     IFEQ 1
+     C           ZNOML     MULT ZAVPR     ZVAL1  151H
+     C                     MOVE ZVAL1     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 2
+     C           ZNMCD     IFEQ 2
+     C           ZNOML     MULT ZAVPR     ZVAL2  152H
+     C                     MOVE ZVAL2     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 3
+     C           ZNMCD     IFEQ 3
+     C           ZNOML     MULT ZAVPR     ZVAL3  153H
+     C                     MOVE ZVAL3     ZVALU
+     C                     END
+     C*
+     C** SET INDEX ZI EQUAL TO 5 -. NOMINAL DECIMAL PLACES )
+     C           5         SUB  ZNMDP     ZI      10
+     C*
+     C** MULTIPLY ZVALU BY  POWER8,ZI TO GET AMOUNT WITH NOMINAL DECIMAL PLACES
+     C           ZVALU     MULT POWER8,ZI ZVALU
+     C*
+     C** PRICE BASIS IF = PERCENTAGE
+     C           ZPRCB     IFEQ 'P'
+     C           ZVALU     DIV  100       ZVALU     H
+     C                     END
+     C*
+     C                     ENDSR
+     C*************************************************************************
+      /EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZAYNUM - CALCULATE AY NUMERATOR                                       *
+     C*                                                                        *
+     C*  PURPOSE : TO MULTIPLY A NOMINAL POSITION BY THE YIELD ON THE          *
+     C*  POSITION TO GIVE A 'YIELD' VALUE OF THE POSITION WITH THE CORRECT     *
+     C*  NUMBER OF DECIMAL PLACES FOR THE NOMINAL CURRENCY                     *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZNOML  11 0     NOMINAL                                          *
+     C*       ZAVYD  11 7     AVERAGE YIELD                                    *
+     C*       ZNMDP   1 0     NOMINAL DECIMAL PLACES (0-4)                     *
+     C*       ZNMCD   1 0     NOMINAL CURRENCY DECIMAL PLACES (0-3)            *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZVALU  15 0     VALUE                                            *
+     C*                                                                        *
+     C*  ALSO REQUIRED                                                         *
+     C*       POWER8 ARRAY OF MULTIPLYING FACTORS FOR NOMINAL DECIMAL PLACES   *
+     C*                                                                        *
+     C*  WORK FIELDS:                                                          *
+     C*       ZVAL0  15 0 - AVERAGE YIELD WITH 0 DECIMAL PLACES                *
+     C*       ZVAL1  15 1 - --------------- '' ----------------                *
+     C*       ZVAL2  15 2 - --------------- '' ----------------                *
+     C*       ZVAL3  15 3 - --------------- '' ----------------                *
+     C*       ZI      1 0 - POWER ARRAY                                        *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                        *
+     C*************************************************************************
+     C           ZAYNUM    BEGSR                           *** ZAYNUM ***
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDZNOML     ZNOML  110
+     C                     Z-ADDZAVYD     ZAVYD  117
+     C                     Z-ADDZNMDP     ZNMDP   10
+     C                     Z-ADDZNMCD     ZNMCD   10
+     C                     Z-ADDZVALU     ZVALU  150
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 0
+     C           ZNMCD     IFEQ 0
+     C           ZNOML     MULT ZAVYD     ZVAL0  150H
+     C                     MOVE ZVAL0     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 1
+     C           ZNMCD     IFEQ 1
+     C           ZNOML     MULT ZAVYD     ZVAL1  151H
+     C                     MOVE ZVAL1     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 2
+     C           ZNMCD     IFEQ 2
+     C           ZNOML     MULT ZAVYD     ZVAL2  152H
+     C                     MOVE ZVAL2     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 3
+     C           ZNMCD     IFEQ 3
+     C           ZNOML     MULT ZAVYD     ZVAL3  153H
+     C                     MOVE ZVAL3     ZVALU
+     C                     END
+     C*
+     C** SET INDEX ZI EQUAL TO 5 -. NOMINAL DECIMAL PLACES )
+     C           5         SUB  ZNMDP     ZI      10
+     C*
+     C** MULTIPLY ZVALU BY  POWER8,ZI TO GET AMOUNT WITH NOMINAL DECIMAL PLACES
+     C           ZVALU     MULT POWER8,ZI ZVALU
+     C*
+     C                     ENDSR
+     C*************************************************************************
+      /EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZFXAPN - CALCULATE FX AP NUMERATOR                                    *
+     C*                                                                        *
+     C*  PURPOSE : TO CALCULATE AN FX AP NUMERATOR  (NOMINAL X FX RATE)        *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZAPNM  15 0     AP (AVERAGE PRICE) NUMERATOR                     *
+     C*       ZAVFX  13 8     FX RATE                                          *
+     C*       ZNMCD   1 0     NOMINAL CURRENCY DECIMAL PLACES (0-3)            *
+     C*       ZPTCD   1 0     PORTFOLIO CURRENCY DECIMAL PLACES (0-3)          *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZFXAP  15 0     FX AP NUMERATOR                                  *
+     C*                                                                        *
+     C*  ALSO REQUIRED                                                         *
+     C*       POWER8 ARRAY    ARRAY FOR CURRENCY CONVERSIONS                   *
+     C*                                                                        *
+     C*  WORK FIELDS:                                                          *
+     C*       ZVAL0  15 0     FIELDS FOR CURRENCY CONVERSIONS                  *
+     C*       ZVAL1  15 1                                                      *
+     C*       ZVAL2  15 2                                                      *
+     C*       ZVAL3  15 3                                                      *
+     C*       ZI      1 0     INDEX TO POWER ARRAY                             *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                        *
+     C**************************************************************************
+     C           ZFXAPN    BEGSR                           *** ZFXAPN ***
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDZAPNM     ZAPNM  150
+     C                     Z-ADDZAVFX     ZAVFX  138
+     C                     Z-ADDZNMCD     ZNMCD   10
+     C                     Z-ADDZPTCD     ZPTCD   10
+     C                     Z-ADDZFXAP     ZFXAP  150
+     C*
+     C** IF NUMBER OF PORTFOLIO  CURRENCY DECIMAL PLACES I = 0
+     C           ZPTCD     IFEQ 0
+     C           ZAPNM     MULT ZAVFX     ZVAL0  150H
+     C                     MOVE ZVAL0     ZFXAP
+     C                     END
+     C*
+     C** IF NUMBER OF PORTFOLIO CURRENCY DECIMAL PLACES I = 1
+     C           ZPTCD     IFEQ 1
+     C           ZAPNM     MULT ZAVFX     ZVAL1  151H
+     C                     MOVE ZVAL1     ZFXAP
+     C                     END
+     C*
+     C** IF NUMBER OF PORTFOLIO CURRENCY DECIMAL PLACES I = 2
+     C           ZPTCD     IFEQ 2
+     C           ZAPNM     MULT ZAVFX     ZVAL2  152H
+     C                     MOVE ZVAL2     ZFXAP
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 3
+     C           ZPTCD     IFEQ 3
+     C           ZAPNM     MULT ZAVFX     ZVAL3  153H
+     C                     MOVE ZVAL3     ZFXAP
+     C                     END
+     C*
+     C** SET INDEX ZI EQUAL TO 5 -. NOMINAL CURRENCY DECIMAL PLACES )
+     C           5         SUB  ZNMCD     ZI      10
+     C*
+     C** MULTIPLY ZFXAP BY  POWER8,ZI
+     C           ZFXAP     MULT POWER8,ZI ZFXAP     H
+     C*
+     C**
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZLCDZ1
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZFXAVP                                                 059983
+      /EJECT                                                              059983
+     C**************************************************************************
+     C**
+     C**   #INIT     - to initialize static fields and access bank details
+     C**
+     C**   CALLED BY - main processing
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #INIT     BEGSR                           * #INIT BEGSR *
+     C*
+     C**   Define work fields
+     C           *LIKE     DEFN QACNUM    WWCNUM           Customer
+     C           *LIKE     DEFN CSCN      WWCSCN           Customer
+     C           *LIKE     DEFN CSSE      WWCSSE           Customer
+     C           *LIKE     DEFN QAPTFR    WWPTFR           Portfolio
+     C           *LIKE     DEFN QAPTFR    WWPTFC           Portfolio
+     C           *LIKE     DEFN QATDSS    WWTDSS           Security
+     C           *LIKE     DEFN CSSC      WWCSSC           Security
+     C           *LIKE     DEFN CSDA      WWCSDA           Action date
+     C           *LIKE     DEFN NMCY      WWNMCY           Nominal ccy
+     C           *LIKE     DEFN NMDP      WWNMDP           Ccy dec. pl.
+     C           *LIKE     DEFN PNPTCY    WWPTCY           Portfolio ccy
+     C           *LIKE     DEFN PNPCDP    WWPCDP           Ccy dec. pl.
+     C           *LIKE     DEFN A6NBDP    WWNBDP           Ccy dec. pl.
+     C           *LIKE     DEFN CSTB      WWCAPN           AP numerator
+     C           *LIKE     DEFN CSTB      WWCAYN           AY numerator
+     C           *LIKE     DEFN QANOML    WWNOML           Position nominal
+     C           *LIKE     DEFN QANOML    WWNOMA           Pos. nom. (abs.)
+     C*
+     C**   Initialize database error fields
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'PM1120'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*
+     C**   Access bank details to get run date
+     C***********          READ SDBANKL1                 72*ON=NOT THERE  S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*MSG   ' PRTCD                           S01486
+     C                     PARM '*FIRST ' POPTN                           S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*
+     C************IN72     IFEQ '1'                                       S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD01        DBASE            ***************
+     C                     MOVEL'SDBANKL1'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**   Check system date format, DDMMYY or MMDDYY.
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98            ** MMDDYY **
+     C                     END
+     C*                                                                   CPB002
+     C**   Access MIDAS MODULES                                           CPB002
+     C                     CALL 'AOMMODR0'                                CPB002
+     C                     PARM '*MSG   ' PRTCD   7                       CPB002
+     C                     PARM '*FIRST ' @OPTN   7                       CPB002
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPB002
+     C*                                                                   B08253
+     C**   Obtain portfolio management ICD                                B08253
+     C***********          READ SDPORTPD           72*ON=NOT THERE  B08253S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM '*MSG   ' PRTCD                           S01486
+     C                     PARM '*FIRST ' POPTN                           S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C*                                                                   B08253
+     C************IN72     IFEQ '1'                                 B08253S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD21        DBASE            ***************B08253
+     C                     MOVEL'SDPORTPD'DBFILE           * DB ERROR 21 *B08253
+     C                     MOVE *BLANKS   DBKEY            ***************B08253
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08253
+     C                     END                                            B08253
+     C*                                                                   078956
+     C** DEFINE DATA AREA PMSTAT                                          078956
+     C           *NAMVAR   DEFN           PMSTAT                          078956
+     C                     IN   PMSTAT                                    078956
+     C*
+     C                     ENDSR                           * #INIT ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #FINAL    - final processing
+     C**
+     C**   CALLED BY - main processing
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #FINAL    BEGSR                           * #FINAL BEGSR*
+     C*
+     C                     READ PMCPOSZ0                 72*ON=NOT THERE
+     C*
+     C           *IN72     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD06        DBASE            ***************
+     C***********          MOVEL'PMCPOSZZ'DBFILE           * DB ERROR 06 *S01486
+     C                     MOVEL'PMCPOSPA'DBFILE           * DB ERROR 06 *S01486
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADDQANORE    R1NORE
+     C*
+     C           WWTVDA    IFEQ 'T'
+     C                     MOVE 'TRADE'   RRNARR
+     C                     ELSE
+     C                     MOVE 'VALUE'   RRNARR
+     C                     END
+     C*
+     C                     WRITEAUDIT
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR                           * #FINAL ENDSR*
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   *PSSR            -  file exception error handling subroutine
+     C**
+     C**   CALLED BY #PORT  -  access portfolio details
+     C**             #SECT  -  access seurity details
+     C**             #INIT  -  initial processing
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C           *PSSR     BEGSR                           * *PSSR BEGSR *
+     C*
+     C           WWERRO    IFEQ ' '
+     C                     MOVE 'Y'       WWERRO  1
+     C*
+     C           DBASE     IFNE 0
+     C*
+     C**  PRINT ERROR MESSAGE:
+     C                     WRITEERRORAU
+     C                     ELSE
+     C                     Z-ADD999       DBASE
+     C                     END
+     C*
+     C                     DUMP
+     C                     END
+     C*
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     RETRN
+     C*
+     C                     ENDSR                           * *PSSR ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,501 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Customer advices for conv. facilities')       *
+      *****************************************************************
+      *
+      *  Midas   -  Lending Module
+      *
+      *  LE3680  -  Customer Advices for Converted Facilities
+      *
+      *  Function:  This Close of Business program will produce
+      *             advices for the selected facilities. It will
+      *             detail original and converted information for
+      *             all selected facilities.
+      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU021  *CREATE    Date 08Apr98
+      *
+      *-------------------------------------------------------------------
+      *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00219                                 *
+      *             WNCPYSRC,LEH00220                                 *
+      *             WNCPYSRC,LEH00221                                 *
+      *             WNCPYSRC,LEH00222                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD006 - Use long DS with SDCURRPD.                          *
+      *  176443 - Avoid MCH3601 to be sent.                           *
+      *           Pass correct parameter to AOCUSTR0.                 *
+      *  CEU021 - EMU LE Facility Currency Conversion
+      *
+      *****************************************************************
+      *  Indicator    Description
+      *  ¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯
+      *  01 - 19      Input Control.
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)
+      *   20          Record Not Found
+      *   21          File Error Occurred
+      *   22          Start/End Of File Reached
+      *   25          Lookup/Scan.
+      *  30 - 39      Program Work Indicators
+      *  40 - 49      Output Control.
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)
+      *  90 - 99      Error Control.
+      *
+      *-------------------------------------------------------------------
+      *  Routine      Description
+      *  ¯¯¯¯¯¯¯      ¯¯¯¯¯¯¯¯¯¯¯
+      *  PIFCUP       Process Facilities Selected for Conversion
+      *  XSFCLT       Retrieve Facility Data
+      *  XSP1D1       Set Details For Customer Advice
+      *  XUFCLT       Update Facility Data
+      *  XWP1W1       Write Customer Advice
+      *  *INZSR       Initial Routine
+      *  *PSSR        Program Error Routine
+      *  @DEFN        Definition Routine (Not Called)
+      *
+      *-------------------------------------------------------------------
+      *  File         Description
+      *  ¯¯¯¯         ¯¯¯¯¯¯¯¯¯¯¯
+      *  LEFCUPL2     Midas LE Fac. Selected for Cy Conv. Branch/Fac.
+      *  FCLTY        Midas LE Facilities.
+      *  LE3680P1     Midas LE Customer Advices.
+      *
+      *===================================================================
+     F/EJECT
+      *===================================================================
+     FLEFCUPL2UP  E           K        DISK         KINFSR *PSSR
+      *
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR
+      *
+     FLE3680P1O   E             81     PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOL1
+     F/COPY WNCPYSRC,LEH00219
+      *===================================================================
+     E/EJECT
+      *===================================================================
+     E                    CPY@    1   1 80               Object Copyright
+      /COPY ZSRSRC,ZFRPEDZ1
+      *===================================================================
+     I/EJECT
+      *===================================================================
+     I/COPY WNCPYSRC,LEH00220
+     IPSDS       SDS
+     I                                        1  10 D@PGMN
+      * Program Name
+      *-------------------------------------------------------------------
+     ILDA       E DSLDA                         256
+      * Dataarea: Local Data Area.
+      *-------------------------------------------------------------------
+     IDSFDY     E DSDSFDY
+      *First DS for Access Programs, short data structure.
+      *-------------------------------------------------------------------
+     IDSSDY     E DSDSSDY
+      *Second DS for Access Programs, long data structure.
+      *-------------------------------------------------------------------
+     IDSBANK    E DSSDBANKPD
+      * Definition: Bank Details Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSGELR    E DSSDGELRPD
+      * Definition: General Ledger Details Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSFACT    E DSSDFACTPD
+      * Definition: Facility Types Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSCURR    E DSSDCURRPD
+      * Definition: Currencies Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSCUST    E DSSDCUSTPD
+      * Definition: Customers Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSBRCH    E DSSDBRCHPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      * Definition: Branches Accessed Via Access Program.
+      *-------------------------------------------------------------------
+     IDSKITE      DS                             90
+      * Datastructure: Key - FCLTY.
+     I**********                              1   60KCNUM                                     CSD027
+     I                                        1   6 KCNUM                                     CSD027
+     I                                        7   90KFTYP
+     I                                       10  110KFSEQ
+     I                                       12  12 KRTYP
+      *-------------------------------------------------------------------
+     ISPOOL1      DS
+      * File information data structure.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I            DS
+     I**********                              1   60FSCNUM                                    CSD027
+     I                                        1   6 FSCNUM                                    CSD027
+     I                                        1   6 WCNUM
+      *-------------------------------------------------------------------
+      /COPY ZSRSRC,ZFRPEDZ2
+      *===================================================================
+     C/EJECT
+      *===================================================================
+      * Main Processing Control.
+      *
+      *-------------------------------------------------------------------
+      * Process Selected Facilities.
+      *
+     C                     EXSR PIFCUP                     Rtv Record
+     C                     EXSR XSFCLT                     Rtv Record
+      *
+     C           *IN22     IFEQ *OFF                       If Fclty Found
+     C           FSADVP    ANDNE'Y'                        And not printed
+     C                     EXSR XSP1D1                      Set Advice
+     C                     EXSR XWP1W1                      Wrt Advice
+     C                     MOVE 'Y'       FSADVP            Set Print Flag
+     C                     EXSR XUFCLT                      Upd Facility
+     C                     ENDIF                           End If
+      *===================================================================
+     C/EJECT
+     C           PIFCUP    BEGSR
+      *===================================================================
+      * PIFCUP: Process Facilities selected for conversion.
+      *
+      *-------------------------------------------------------------------
+      * Set up key for FACHSAL2.
+      *
+     C                     MOVE FSCNUM    KCNUM            Set Cust No
+     C                     MOVE FSFACT    KFTYP            Set Fac type
+     C                     MOVE FSFCNO    KFSEQ            Set Fac Seq
+     C                     MOVE 'A'       KRTYP            Set Rcd Type
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XSFCLT    BEGSR
+      *===================================================================
+      * XSFCLT: Retrieve Facility Data.
+      *
+      *-------------------------------------------------------------------
+      * Retrieve Facility Data.
+      *
+     C           KFCLT     CHAINFCLTY                2221  Rtv Record
+      *
+     C           *IN21     IFEQ *ON                        If Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm Nm
+     C                     MOVEL'FCLTY'   DBFILE    P       Set File Nm
+     C                     MOVELDSKITE    DBKEY     P       Set Key
+     C                     Z-ADD010       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XSP1D1    BEGSR
+      *===================================================================
+      * XSP1D1: Set Advice Details.
+      *
+      *-------------------------------------------------------------------
+      * Retrieve Branch Name.
+      *
+     C**********           CALL 'AOBRCHR0'             2121Rtv Brch name                      CGL029
+     C                     CALL 'AOBRCHR1'             2121                                   CGL029
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return Code
+     C                     PARM '*FIRST ' P@OPTN  7        -I:Option
+     C                     PARM BRCA      P@BRCD  3        -I:Branch Code
+     C********** DSBRCH    PARM *BLANKS   DSFDY            -O:Format                          CGL029
+     C           DSBRCH    PARM *BLANKS   DSSDY                                               CGL029
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    OREQ '*ERROR*'                  Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'AOBRCHR0'DBFILE    P       Set File
+     C                     MOVEL'*FIRST'  DBKEY     P       Set Key
+     C                     Z-ADD020       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *
+     C                     MOVE BRCA      P1BRCA           Set Brch Code
+     C                     MOVE A8BRNM    P1BRCN           Set Brch Name
+      *
+     C                     MOVE FSCNUM    P1CNUM           Set Customer
+     C                     MOVE FSFACT    P1FACT           Set Facility
+     C                     MOVE FSFCNO    P1FCNO           Set Sequence
+     C/COPY WNCPYSRC,LEH00221
+      *-------------------------------------------------------------------
+      * Retrieve Currency.
+      *
+     C                     CALL 'AOCURRR0'             2121Rtv Currencies
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        -I:Option
+     C                     PARM FSOCCY    P@CYCD  3        -I:Currency
+     C********** DSCURR    PARM *BLANKS   DSFDY            -O:Format            CSD006
+     C           DSCURR    PARM *BLANKS   DSSDY            -O:Format            CSD006
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    OREQ '*ERROR*'                  Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'AOCURRR0'DBFILE    P       Set File
+     C                     MOVEL'*FIRST'  DBKEY     P       Set Key
+     C                     Z-ADD030       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *
+     C                     MOVE FSOCCY    P1OCCY           Set Orig Ccy
+     C                     MOVE A6CYNM    P1OCYN           Set Orig Name
+      *
+     C                     Z-ADDFSOAMT    ZFLD15           Set amount
+     C                     Z-ADDA6NBDP    ZDECS            Set dec pl
+     C                     MOVE *BLANKS   ZECODE           Clr Edit cde
+     C                     EXSR ZFRPED                     Edit amount
+     C                     MOVE ZOUT25    P1OAMT           Set Prt Amt
+      *
+      *-------------------------------------------------------------------
+      * Retrieve Currency.
+      *
+     C                     CALL 'AOCURRR0'             2121Access Currencies
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        -I:Option
+     C                     PARM BKEURO    P@CYCD  3        -I:Currency
+     C********** DSCURR    PARM *BLANKS   DSFDY            -O:Format            CSD006
+     C           DSCURR    PARM *BLANKS   DSSDY            -O:Format            CSD006
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    OREQ '*ERROR*'                  Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'AOCURRR0'DBFILE    P       Set File
+     C                     MOVEL'*FIRST'  DBKEY     P       Set Key
+     C                     Z-ADD040       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *
+     C                     MOVE BKEURO    P1CCCY           Set To Ccy
+     C                     MOVE A6CYNM    P1CCYN           Set To Ccy Name
+      *
+     C                     Z-ADDFAMT      ZFLD15           Set Amount
+     C                     Z-ADDA6NBDP    ZDECS            Set Dec Pos
+     C                     MOVE *BLANKS   ZECODE           Clr Edit Cde
+     C                     EXSR ZFRPED                     Edit Amount
+     C                     MOVE ZOUT25    P1CAMT           Set Prt Amt
+      *-------------------------------------------------------------------
+      * Retrieve Customer Details.
+      *
+     C                     MOVELWCNUM     WKCNUM 10 P      Set Cust No
+      *
+     C                     CALL 'AOCUSTR0'             2121Rtv Customer
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        -I:Option
+     C                     PARM WKCNUM    P@KEY1 10        -I:Cust No
+     C                     PARM           P@STS   7        -O:Cust Type
+     C***********DSCUST    PARM *BLANKS   DSFDY            -O:Format      176443
+     C           DSCUST    PARM *BLANKS   DSSDY                           176443
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    OREQ '*ERROR*'                  Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'AOCUSTR0'DBFILE    P       Set File
+     C                     MOVEL'*FIRST'  DBKEY     P       Set Key
+     C                     Z-ADD050       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *
+     C                     MOVE BBCNA1    P1CST1           Set Cust 1
+     C                     MOVE BBCNA2    P1CST2           Set Cust 2
+     C                     MOVE BBCNA3    P1CST3           Set Cust 3
+     C                     MOVE BBCNA4    P1CST4           Set Cust 4
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XUFCLT    BEGSR
+      *===================================================================
+      * XUFCLT: Update Facility Data.
+      *
+      *-------------------------------------------------------------------
+      * Update Facility Data.
+      *
+     C                     UPDATLEFCUPD0               21  Upd Record
+      *
+     C           *IN21     IFEQ *ON                        If Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm Nm
+     C                     MOVEL'FCLTY'   DBFILE    P       Set File Nm
+     C                     MOVELDSKITE    DBKEY     P       Set Key
+     C                     Z-ADD0100      DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           XWP1W1    BEGSR
+      *===================================================================
+      * XWP1W1: Print Advice Details.
+      *
+      *-------------------------------------------------------------------
+      * Print Advice Details.
+      *
+     C                     WRITEP1D010                 21  Wrt Details
+      *
+     C           *IN21     IFEQ *ON                        If File Error
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'LE3680P1'DBFILE    P       Set File
+     C                     MOVEL'P1D010'  DBKEY     P       Set Key
+     C                     Z-ADD060       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+      /COPY ZSRSRC,ZFRPEDZ3
+     C/EJECT
+     C           *INZSR    BEGSR
+      *===================================================================
+      * *INZSR: Initialization Routine.
+      *
+      *-------------------------------------------------------------------
+      * Initialise parameters, work fields, etc.
+      *
+     C                     MOVEACPY@      MKI@@  80        Set Copyright
+      *-------------------------------------------------------------------
+      * Retrieve Bank Details.
+      *
+     C                     CALL 'AOBANKR0'             2121Access Bank
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        -I:Option
+     C           DSBANK    PARM *BLANKS   DSFDY            -O:Format
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    OREQ '*ERROR*'                  Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'AOBANKR0'DBFILE    P       Set File
+     C                     MOVEL'*FIRST'  DBKEY     P       Set Key
+     C                     Z-ADD070       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Retrieve General Ledger Details (suspense account code).
+      *
+     C**********           CALL 'AOGELRR0'             2121Rtv GL ICD Dtl                     CGL029
+     C                     CALL 'AOGELRR1'             2121                                   CGL029
+     C                     PARM *BLANKS   P@RTCD  7        -O:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        -I:Option
+     C********** DSGELR    PARM *BLANK    DSFDY            -O:Format                          CGL029
+     C           DSGELR    PARM *BLANK    DSSDY                                               CGL029
+      *
+     C           *IN21     IFEQ *ON                        If Call Error
+     C           P@RTCD    ORNE *BLANKS                    Or Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'SDGELRPD'DBFILE    P       Set File
+     C                     MOVELP@OPTN    DBKEY     P       Set Key
+     C                     Z-ADD080       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * Set Spool File Number and CALL ZSFILE.
+      *
+     C                     Z-ADDSFNUM1    SPLNO            Set Spool No
+      *
+     C                     CALL 'ZSFILE'                   Call RCF
+     C                     PARM           P@RSEQ           -IO:Rpt Seq
+     C                     PARM *BLANKS   RENT    3        -I:Entity
+     C                     PARM           SFILE1           -I:Spool Name
+     C                     PARM           SPLNO   60       -I:Spool Number
+     C                     PARM *BLANKS   ZERR    1        -O:Return Code
+      *
+     C           ZERR      IFEQ 'Y'                        If Rtn Error
+     C           *LOCK     IN   LDA                         Rtv LDA
+     C                     MOVELD@PGMN    DBPGM     P       Set Pgm
+     C                     MOVEL'ZSFILE  'DBFILE    P       Set File
+     C                     MOVELSFILE1    DBKEY     P       Set Key
+     C                     Z-ADD090       DBASE             Set Ref Point
+     C                     OUT  LDA                         Wrt Record
+     C                     EXSR *PSSR                       Proc Error
+     C                     ENDIF                           End If
+     C/COPY WNCPYSRC,LEH00222
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           *PSSR     BEGSR
+      *===================================================================
+      * *PSSR: Error Handling.
+      *
+      *-------------------------------------------------------------------
+      * Check to see that *PSSR has not been called yet.
+      *
+     C           WKRUN     IFEQ *BLANK                     If Not Exec
+     C                     MOVE 'Y'       WKRUN   1         Set Off Ind
+     C                     DUMP                             Dmp Pgm
+     C                     ENDIF                           End If
+      *-------------------------------------------------------------------
+      * If *PSSR already run, then just end the program here
+      *
+     C                     MOVE *ON       *INU7            Set U7 Ind
+     C                     MOVE *ON       *INU8            Set U8 Ind
+     C                     MOVE *ON       *INLR            Set EndPgm Ind
+     C                     RETRN                           Exit Program
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+     C           @DEFN     BEGSR
+      *===================================================================
+      * @DEFN: Definition Routine (Not Called).
+      *
+      *-------------------------------------------------------------------
+      * Dataareas...
+      *
+     C           *NAMVAR   DEFN           LDA              Dcl LDA
+      *-------------------------------------------------------------------
+      * Lists...
+      *
+     C           KFCLT     KLIST                           Key: FCLTY
+     C                     KFLD           KCNUM            -Customer No
+     C                     KFLD           KFTYP            -Fac Type
+     C                     KFLD           KFSEQ            -Fac Seq
+     C                     KFLD           KRTYP            -Rcd Type
+      *
+     C           *ENTRY    PLIST                           Prg: Entry
+     C                     PARM           P@RSEQ  5        -Report Seq
+      *===================================================================
+     C                     ENDSR
+     C/EJECT
+** CPY@: Object Copyright
+(c) Misys International Banking Systems Ltd. 2001

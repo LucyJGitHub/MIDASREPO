@@ -1,0 +1,237 @@
+     H                                                                    SD1721
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Setup recovery areas')
+     F********************************************************************SD1721
+     F*                                                                  *SD1721
+     F*  Midas - Restart Recovery Module
+     F*                                                                  *SD1721
+     F*   SD1721 - SET-UP RECOVERY AREAS                                 *SD1721
+     F*                                                                  *SD1721
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *SD1721
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*    LAST AMEND NO E20346              DATE 25NOV89                *
+     F*    PREV AMEND NO E13205              DATE 14FEB89                *
+     F*                  S01127              DATE 10JUN88                *
+     F*                                                                  *SD1721
+     F*------------------------------------------------------------------*S01127
+     F*                                                                  *
+     F*    E20346  -  ADD SUBROUTINE TO MERGE ADJACENT 'EJ' ENTRIES      *
+     F*               THUS AVOIDING UNNECESSARY PROCESSING FOR THESE     *
+     F*               ENTRY TYPES.                                       *
+     F*                                                                  *
+     F*    E13205  -  Stop program after SEQN1 passed                    *E13205
+     F*                                                                  *E13205
+     F*    S01127  -  FUTURES AND OPTIONS INCORPORATION                  *
+     F*                CHANGE REFERENCE OF USER DEFINED JOURNAL ENTRY    *S01127
+     F*                'SR' TO 'IR'. ( 'SR' = SYSTEM DEFINED ENTRY       *S01127
+     F*                'START RMVJRNCHG' - NOW USED BY FF PROJECT )      *S01127
+     F*         CURRENT PROCESSING WILL HANDLE FF SINGLE MEMBER FILES    *S01127
+     F*         AS THE NEW FF JOURNAL CODES WILL NOT BE FOUND IN         *S01127
+     F*         ASSOCIATION WITH NON MULTIMEMBER FILES                   *S01127
+     F*         ( NEW PGM SD1741 TO HANDLE FF MULTIMEMBER FILES )        *S01127
+     F*                                                                  *S01127
+     F********************************************************************SD1721
+     F*                                                                   SD1721
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FJRNEXS  IF  E           K        DISK                               SD1721
+     FRCVRY   O   E                    DISK                               SD1721
+     E                    CPY@    1   1 80
+     I*                                                                   SD1721
+     I*    DATA STRUCTURE FOR FIELD DEFINITION FOR ENTRY TYPE 'ER'        SD1721
+     I*                                                                   SD1721
+     I            DS                                                      SD1721
+     I                                        1  50 INFO                  SD1721
+     I                                        1  100SQNRTP                SD1721
+     C                     MOVEACPY@      BIS@   80
+     C**                                                                  SD1721
+     C**   MOVE PARAMETERS FROM CALLING PROGRAM                           SD1721
+     C**                                                                  SD1721
+     C           *ENTRY    PLIST                                          SD1721
+     C                     PARM           SEQN1  100                      SD1721
+     C                     PARM           SEQN2  100                      SD1721
+     C**                                                                  SD1721
+     C**   SAVE PARAMETER SEQN2                                           SD1721
+     C**                                                                  SD1721
+     C                     MOVE SEQN2     SAVTO  100                      SD1721
+     C**                                                                  SD1721
+     C           SEQN2     SUB  1         TOPNT  100                      SD1721
+     C           TOPNT     SETLLJRNEXS
+     C                     READ JRNEXS                   LR               SD1721
+     C**                                                                  SD1721
+     C**   STARTING FROM THE 'RECOVER TO' POINT, READ THROUGH THE         SD1721
+     C**   JOURNAL IN DESCENDING SEQUENCE & CHECK EACH ENTRY TYPE         SD1721
+     C**                                                                  SD1721
+     C           *INLR     DOWNE'1'                                       SD1721
+     C**                                                                  SD1721
+     C           JOSEQN    IFGT SEQN1                                     SD1721
+     C           JOENTT    CASEQ'ER'      REC1                            SD1721
+     C           JOENTT    CASEQ'AY'      REC2                            SD1721
+     C           JOENTT    CASEQ'EJ'      REC2                            SD1721
+     C           JOENTT    CASEQ'MR'      REC2                            SD1721
+     C           JOENTT    CASEQ'SA'      REC2                            SD1721
+     C                     CAS            OTHER                           SD1721
+     C                     END                                            SD1721
+     C**                                                                  SD1721
+     C                     READ JRNEXS                   LR               SD1721
+     C**                                                                  SD1721
+     C                     ELSE                                           SD1721
+     C**                                                                  SD1721
+     C**   'RECOVER FROM' POINT REACHED. OUTPUT RECORD TO RCVRY           SD1721
+     C**                                                                  SD1721
+     C           SEQN1     ADD  1         FRPNT  100                      SD1721
+     C**                                                                  SD1721
+     C           FRPNT     IFLE SAVTO                                     SD1721
+     C                     MOVE SAVTO     TOPNT                           SD1721
+     C                     EXCPT                                          SD1721
+     C                     SETON                     LR                   SD1721
+     C                     END                                            SD1721
+     C**                                                                  SD1721
+     C*                                                                   E13205
+     C*   Terminate program as SEQN1 greater than points calculated       E13205
+     C*                                                                   E13205
+     C                     SETON                     LR                   E13205
+     C*                                                                   E13205
+     C                     END                                            SD1721
+     C**                                                                  SD1721
+     C                     END                                            SD1721
+     C**                                                                  SD1721
+     C**                                                                  SD1721
+     C********************************************************************SD1721
+     C********************************************************************SD1721
+     C**                                                                  SD1721
+     C**   REC1 SUB-ROUTINE : FOR ENTRY TYPE 'ER'                         SD1721
+     C**                                                                  SD1721
+     C           REC1      BEGSR                                          SD1721
+     C**                                                                  SD1721
+     C**   JOURNAL ENTRY IMMEDIATELY FOLLOWING 'ER' ENTRY BEING           SD1721
+     C**   PROCESSED WILL BE 'FROM POINT' OF RECOVERY AREA                SD1721
+     C**                                                                  SD1721
+     C           JOSEQN    ADD  1         FRPNT  100                      SD1721
+     C**                                                                  SD1721
+     C**   OUTPUT RECORD TO RCVRY DELIMITING RECOVERY AREA IDENTIFIED     SD1721
+     C**                                                                  SD1721
+     C           FRPNT     IFLE SAVTO                                     SD1721
+     C                     MOVE SAVTO     TOPNT                           SD1721
+     C                     EXCPT                                          SD1721
+     C                     END                                            SD1721
+     C**                                                                  SD1721
+     C*****OBTAIN*SEQUENCE*NO.*OF*CORRESP.*'SR'*ENTRY*FOR*'TO*POINT'***   S01127
+     C**   OBTAIN SEQUENCE NO. OF CORRESP. 'IR' ENTRY FOR 'TO POINT'      S01127
+     C**   OF NEXT RECOVERY AREA AND RESUME SEARCH OF JOURNAL FROM        SD1721
+     C**   THIS POINT                                                     SD1721
+     C**                                                                  SD1721
+     C                     MOVE SQNRTP    JOSEQN                          SD1721
+     C           JOSEQN    SETLLJRNEXS                                    SD1721
+     C                     READ JRNEXS                   LR               SD1721
+     C           JOSEQN    SUB  1         TOPNT                           SD1721
+     C           JOSEQN    SUB  1         SAVTO                           SD1721
+     C**                                                                  SD1721
+     C** IF THE TO POINT IS NOW LESS THAN THE ORIGINAL LIMIT,             S01127
+     C**    END THE PROGRAM.                                              S01127
+     C**                                                                  S01127
+     C           TOPNT     IFLT SEQN1                                     S01127
+     C                     SETON                     LR                   S01127
+     C                     RETRN                                          S01127
+     C                     END                                            S01127
+     C**                                                                  S01127
+     C                     ENDSR                                          SD1721
+     C**                                                                  SD1721
+     C********************************************************************SD1721
+     C**                                                                  SD1721
+     C**   REC2 SUB-ROUTINE : FOR ENTRY TYPES 'AY' 'EJ' 'MR' 'SA'         SD1721
+     C**                                                                  SD1721
+     C           REC2      BEGSR                                          SD1721
+     C**                                                                  SD1721
+     C**   JOURNAL ENTRY IMMEDIATELY FOLLOWING ENTRY BEING                SD1721
+     C**   PROCESSED WILL BE 'FROM POINT' OF RECOVERY AREA                SD1721
+     C**                                                                  SD1721
+     C           JOSEQN    ADD  1         FRPNT  100                      SD1721
+     C**                                                                  SD1721
+     C**   OUTPUT RECORD TO RCVRY DELIMITING RECOVERY AREA IDENTIFIED     SD1721
+     C**                                                                  SD1721
+     C           FRPNT     IFLE SAVTO                                     SD1721
+     C                     MOVE SAVTO     TOPNT                           SD1721
+     C                     EXCPT                                          SD1721
+     C                     END                                            SD1721
+     C**                                                                  SD1721
+     C**   RESET PARAMETERS & RESUME SEARCH OF JOURNAL                    SD1721
+     C**                                                                  SD1721
+     C           JOSEQN    SUB  1         TOPNT                           SD1721
+     C           JOSEQN    SUB  1         SAVTO                           SD1721
+     C*                                                                   E20346
+      **     If an 'EJ' entry try to merge recovery points.               E20346
+     C*                                                                   E20346
+     C           JOENTT    IFEQ 'EJ'                                      E20346
+     C                     EXSR PRCEJ                                     E20346
+     C                     END                                            E20346
+     C**                                                                  SD1721
+     C                     ENDSR                                          SD1721
+     C**                                                                  SD1721
+     C********************************************************************SD1721
+     C**                                                                  SD1721
+     C**   OTHER SUB-ROUTINE: FOR OTHER ENTRY TYPES                       SD1721
+     C**                                                                  SD1721
+     C           OTHER     BEGSR                                          SD1721
+     C**                                                                  SD1721
+     C           JOSEQN    SUB  1         TOPNT                           SD1721
+     C**                                                                  SD1721
+     C                     ENDSR                                          SD1721
+     C**                                                                  SD1721
+     C********************************************************************SD1721
+     C**                                                                  E20346
+     C**         PRCEJ SUB-ROUTINE: MERGE ADJ. EJ ENTRIES                 E20346
+     C**                                                                  E20346
+     C           PRCEJ     BEGSR                                          E20346
+     C*                                                                   E20346
+     C*          DO WHILE EJ ENTRIES READ                                 E20346
+     C*                                                                   E20346
+     C                     MOVEL'Y'       PRCEJF  1                       E20346
+     C           PRCEJF    DOWEQ'Y'                                       E20346
+     C                     MOVEL'N'       PRCEJF                          E20346
+     C*                                                                   E20346
+     C*   READ JRNEXS FOR NEXT JOURNAL ENTRY TO BE PROCESSED              E20346
+     C*                                                                   E20346
+     C                     READ JRNEXS                   80               E20346
+     C*                                                                   E20346
+     C*    END SEARCH IF (A) EOF                                          E20346
+     C*                  (B) EJ ENTRY NOT READ                            E20346
+     C*                  (C) SEQUENCE NUMBER OUTSIDE RANGE                E20346
+     C*                  (D) SEQUENCE NUMBER DIFFERENCE GT 1              E20346
+     C*                                                                   E20346
+     C           *IN80     IFEQ '0'                                       E20346
+     C           JOENTT    ANDEQ'EJ'                                      E20346
+     C           JOSEQN    ANDGTSEQN1                                     E20346
+     C           TOPNT     SUB  JOSEQN    JODIFF 100                      E20346
+     C           JODIFF    IFEQ 1                                         E20346
+     C*                                                                   E20346
+     C*  CONTINUE SEARCH AND INITIALISE RECOVERY POINT DATA               E20346
+     C*                                                                   E20346
+     C                     MOVEL'Y'       PRCEJF                          E20346
+     C           JOSEQN    SUB  1         TOPNT                           E20346
+     C           JOSEQN    SUB  1         SAVTO                           E20346
+     C                     END                                            E20346
+     C                     END                                            E20346
+     C*                                                                   E20346
+     C                     END                                            E20346
+     C*                                                                   E20346
+     C*    READ PROIR ON JRNEXS TO REPOSITION POINTER                     E20346
+     C*                                                                   E20346
+     C                     READPJRNEXS                   80               E20346
+     C*                                                                   E20346
+     C                     ENDSR                                          E20346
+     C**                                                                  E20346
+     C********************************************************************E20346
+     ORCVRYF  E                                                           SD1721
+     O                         *ALL                                       SD1721
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1810 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Fontis TPP nostro defauts maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME2006 - Midas-Fontis TPP Nostro Defaults Maintenance        *
+      *                                                               *
+      *  Function:  This program maintaines the Nostro Defaults which *
+      *             is used to identify the destination of payment    *
+      *             for Outgoing Fontis TPP instructions.             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 174569             Date 17Jan00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL009  *CREATE    Date 18May99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  174569 - Euro nostro equivalent                              *
+      *  CGL009 - Midas-Fontis Inter-Account Transfers (IAT) and      *
+      *           Third Party Payments (TPP) Interface                *
+      *                                                               *
+      *****************************************************************
+     FMEFNODL1IF  E           K        DISK         KINFSR *PSSR      UC
+     F            MGFNODD0                          KRENAMEMEFNODD1
+     FMEFNODL0UF  E           K        DISK         KINFSR *PSSR A    UC
+     F            MGFNODD0                          KRENAMEMEFNODD0
+     F                                              KCOMIT
+     FME2006DFCF  E                    WORKSTN                        UC
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    03           Exit Function Key F3                          *
+      *    05           Refresh Function Key F5                       *
+      *    09           Insert Function Key F9                        *
+      *    25           Help Requested                                *
+      *    27           Rollup/Rolldown Key                           *
+      *    32           Invalid Selection                             *
+      *    33           Invalid Currency of Payment                   *
+      *    34           Invalid Nostro Number                         *
+      *    35           Invalid Euro Payment                          *
+      *    36           Invalid Euro Nostro equivalent                *   174569
+      *    60           Help Document                                 *
+      *    70           TESTN Indicator                               *
+      *    78           Protect Currency of Payment Field             *
+      *    79           Protect Selection Field                       *
+      *    80           Subfile Clear                                 *
+      *    81           Subfile Display                               *
+      *    82           Subfile End                                   *
+      *    84           Subfile Next Change                           *
+      *    86           Overlay                                       *
+      *    87           Enable Key Screen                             *
+      *    88           Protect Key Fields                            *
+      *    89           Add Mode                                      *
+      *    90           Read Indicator                                *
+      *    91           Read Indicator                                *
+      *    92           Readc Indicator                               *
+      *    94           Cursor DDS Indicator                          *
+      *    98           Force Input Format                            *
+      *    99           Global Error Indicator                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /EJECT
+      *
+     IPGMDS     ESDSY2PGDSP
+      ** Program data structure
+      *
+     IJBDTTM      DS
+      ** Job date/time
+      *
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      *
+      ** Message data for Currency
+      *
+     I            DS
+     I                                        1 132 ZAMSDA
+     I                                        1   3 ZA0001
+      *
+     ISCSARD    E DSSCSARDPD
+      ** External DS for SAR Details
+      *
+     ISDGELR    E DSSDGELRPD                                              174569
+      ** External DS for General Ledger Details                           174569
+      *                                                                   174569
+     ISDCURR    E DSSDCURRPD
+      ** External DS for Currency Details
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** External DS with Midas Module Details
+      *
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QQACC1                                    CGL029
+      ** External DS for Nostro Details
+      *
+     IINFDS#    E DSY2I#DSP
+      ** Display file information data structure
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     I@1DBRC    E DSMEFNODL0
+      ** Current/previous master file format fields for change control
+      *
+     IYCRDCS      DS                             35
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      *
+     ILDA         DS                            256
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                      184 256 DBTXT
+      *                                                                   174569
+      ** Defined constants                                                174569
+     I              '0123456789'          C         NUMBER                174569
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                   Index to subroutines                        *
+      *  Main routine                                                 *
+      *  SRINIT  -  Initial processing                                *
+      *  SRBDSF  -  Initialise and load subfile page                  *
+      *  SRLOAD  -  Load subfile page                                 *
+      *  SRDISP  -  Display subfile                                   *
+      *  SR8TST  -  Test cursor                                       *
+      *  SRHELP  -  Display HELP text                                 *
+      *  SRPROC  -  Process screen input                              *
+      *  SRSUBF  -  Process modified subfile record                   *
+      *  SRPOPS  -  Process subfile record                            *
+      *  SRNLRC  -  Check for null record                             *
+      *  SRVDRC  -  Validate subfile record                           *
+      *  SRVALS  -  Validate subfile record relations                 *
+      *  SRUPSF  -  Update records from subfile                       *
+      *  SRPRSR  -  Process action requested                          *
+      *  SRADDR  -  Process add request                               *
+      *  SRDELR  -  Process delete request                            *
+      *  SRUDAT  -  Process update request                            *
+      *  SRMODE  -  Switch between *ADD and *CHANGE modes             *
+      *  SRPOST  -  Request subfile reload                            *
+      *  SRPROT  -  Set display attributes for subfile record         *
+      *  SRCLRS  -  Initialise subfile record                         *
+      *  SRMOVE  -  Transfer records from MEFNODL1 to subfile         *
+      *  SRWRIT  -  Create TPP Nostro Defaults                        *
+      *  SRDLET  -  Delete TPP Nostro Defaults                        *
+      *  SRUPDT  -  Update TPP Nostro Defaults                        *
+      *  SRVAL1  -  Validate currency of payment and nostro number    *
+      *  SRVAL2  -  Validate euro payment                             *
+      *  SRVLEN  -  Validate Euro Nostro                              *   174569
+      *  SREND   -  End program                                       *
+      *  ZASNMS  -  Message handling subroutine                       *
+      *  *PSSR   -  Error handling subroutine                         *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Main Program
+      *
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+     C                     DO   *HIVAL
+      *
+      ** Initialise and load subfile page
+      *
+     C                     EXSR SRBDSF
+      *
+     C                     MOVEL'N'       W0RSF   1
+      *
+      ** Display screen until reload requested
+      *
+     C           W0RSF     DOWEQ'N'
+      *
+      ** Display screen
+      *
+     C                     EXSR SRDISP
+      *
+      ** Process response
+      *
+     C   03                CAS            SREND
+      *
+     C   05                CAS            SRPOST
+      *
+     C   27                CAS            SRLOAD
+      *
+     C                     CAS            SRPROC
+     C                     ENDCS
+      *
+     C                     ENDDO
+     C                     ENDDO
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT  -  Initial Processing                                *
+      *  Called by: Main routine                                      *
+      *  Calls    : Y2BGCMC - Begin Commit Control                    *
+      *             Y2QLVNR - Qualify a Name                          *
+      *             AOMMODR0 - Access Midas Modules Details           *
+      *             AOSARDR0 - Access Switchable Features Details     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialisation
+      *
+     C           W0ICL     IFEQ *BLANKS
+     C                     MOVEL'Y'       W0ICL   1
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     ENDIF
+      *
+     C                     MOVE *BLANK    WCSRLC  3
+     C                     MOVEL*BLANKS   W0RSL   1
+     C                     MOVEL*BLANKS   W0RSF   1
+     C                     MOVEL0         W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      *
+      ** Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C                     MOVEL*BLANKS   WUSFLS  1
+     C                     MOVEL*BLANKS   WUTQKF  1
+     C                     MOVEL*BLANKS   WUIVKF  1
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME2006'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBTXT
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      *
+     C                     Z-ADD0         WURDNB  50
+      *
+      ** Signal first error message outstanding
+      *
+     C                     MOVEL'Y'       ZAFSMS  1
+      *
+      ** Begin commit control
+      *
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           PRTCD   7
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           PRTCD     ANDNE'CPF8351'
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+      ** Define *Synon program work fields
+      *
+     C                     MOVEL*BLANKS   W0CFL  10
+     C                     Z-ADD*ZEROS    W0CRW   50
+     C                     Z-ADD*ZEROS    W0CCL   50
+      *
+      ** Move main file information to JOB context
+      *
+     C                     MOVE @1FFL     ZZFFL  10
+     C                     MOVE @1FLB     ZZFLB  10
+     C                     MOVE @1FMB     ZZFMB  10
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+      *
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21
+      *
+      ** Open files for update
+      *
+     C                     OPEN ME2006DF
+     C                     OPEN MEFNODL0
+     C                     OPEN MEFNODL1
+      *
+     C                     MOVEL'N'       W0PMT   1
+      *
+     C                     Z-ADD14        ##SFPG  30
+     C                     Z-ADD1         ##SFRC
+      *
+      ** Maximum record number
+      *
+     C                     Z-ADD0         ##RRMX
+      *
+      ** Scan limit
+      *
+     C                     Z-ADD500       W0SLM   50
+      *
+      ** Subfile pages
+      *
+     C                     Z-ADD1         W0SPG   30
+      *
+      ** Processed Subfile record
+      *
+     C                     Z-ADD0         W0RR0   40
+      *
+      ** Set to *CHANGE mode
+      *
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     MOVEL*BLANKS   W0GRP   1
+      *
+      ** Define rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7
+     C                     MOVE RDNB      WURDNB
+      *
+      ** Retrieve Midas Module Details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDMMODPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check if CEU006 is installed
+      *
+     C                     MOVE *BLANKS   CEU006  1
+      *
+     C                     CALL 'AOSARDR0'               90
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CEU006'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CEU006
+     C                     MOVE '1'       *IN50
+     C                     ENDIF
+      *
+      ** Initialise subfile control
+      *
+     C                     MOVEL*BLANKS   #2LCCD
+      *                                                                   174569
+      ** Extract general ledger details from SDGELRPD                     174569
+      *                                                                   174569
+     C**********           CALL 'AOGELRR0'             90                 174569              CGL029
+     C                     CALL 'AOGELRR1'             90                                     CGL029
+     C                     PARM *BLANKS   PRTCD                           174569
+     C                     PARM '*FIRST ' POPTN                           174569
+     C********** SDGELR    PARM SDGELR    DSFDY                           174569              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   174569
+      *  If return with an error (LR seton in called program) then        174569
+      *  process for database error.                                      174569
+      *                                                                   174569
+     C           *IN90     IFEQ '1'                                       174569
+     C           PRTCD     OREQ '*ERROR*'                                 174569
+     C           *LOCK     IN   LDA                                       174569
+     C                     Z-ADD2         DBASE            ***************174569
+     C                     MOVEL'SDGELRPD'DBFILE           *DB ERROR 002 *174569
+     C                     MOVEL'*FIRST  'DBKEY            ***************174569
+     C                     OUT  LDA                                       174569
+     C                     EXSR *PSSR                                     174569
+     C                     END                                            174569
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBDSF  -  Initialise and Load Subfile Page                  *
+      *  Called by: Main routine                                      *
+      *  Calls    : SRLOAD, ZASNMS                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBDSF    BEGSR
+      *
+      ** Initialise & load subfile page
+      *
+     C                     MOVE '1'       *IN80
+     C                     WRITE#SFLCTL
+     C                     MOVE '0'       *IN80
+      *
+      ** Reset no of records in subfile
+      *
+     C                     Z-ADD0         ##RRMX  50 81
+      *
+      ** If CHANGE mode, then position file
+      *
+     C           W0PMD     IFNE 'ADD'
+     C                     MOVEL#2LCCD    WZLCCD  3
+     C                     MOVEL#2LCCD    FHCYCD
+      *
+      ** Setup key
+      *
+     C           #2LCCD    SETLLMEFNODD1             82
+      *
+     C  N82                READ MEFNODD1               9182
+     C                     ELSE
+     C                     MOVE '0'       *IN82
+     C                     ENDIF
+      *
+      ** Load subfile page
+      *
+     C                     EXSR SRLOAD
+      *
+      ** If no records found, display error message
+      *
+     C   82      ##RR      IFEQ 0
+     C                     MOVEL'MEN0001' ZAMSID
+     C                     MOVEL'MEMSG   'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD  -  Load Subfile Page                                 *
+      *  Called by: Main routine, SRBDSF                              *
+      *  Calls    : SRCLRS, SRMOVE, SRVALS, SRPROT                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+      ** Load subfile page but write empty page if add mode
+      *
+     C                     MOVE '0'       *IN84
+      *
+      ** Re-establish fields in read-ahead record
+      *
+     C   27      W0PMD     IFNE 'ADD'
+     C  N82                READPMEFNODD1                 90
+     C  N82                READ MEFNODD1                 90
+     C                     ENDIF
+      *
+      ** Start at previous highest record in SFL
+      *
+     C                     Z-ADD##RRMX    ##RR    50
+     C                     Z-ADD0         ##RROK  50
+      *
+      ** Set required pages based on *Set Cursor or *Subfile Pages
+      *
+     C           W0RR0     IFGT 0
+     C           W0RR0     DIV  ##SFPG    ##SPG   30
+     C                     MVR            ##SLIN  30
+      *
+     C           ##SLIN    IFGT 0
+     C                     ADD  1         ##SPG
+     C                     ENDIF
+      *
+     C           W0SPG     IFGT ##SPG
+     C                     Z-ADDW0SPG     ##SPG
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADDW0SPG     ##SPG
+     C                     ENDIF
+      *
+      ** Compute lines required based on pages
+      *
+     C           ##SPG     MULT ##SFPG    ##SFLN  90
+     C           ##SFLN    IFGT 999
+     C                     Z-ADD999       ##SFLN
+     C                     ENDIF
+      *
+      ** Load next subfile page
+      *
+     C  N82      ##RROK    DOWLT##SFLN
+     C                     ADD  1         ##RR
+     C                     MOVEA'0000'    *IN,32
+     C                     MOVE '0'       *IN36
+     C                     MOVE '0'       *IN87
+      *
+      ** Clear subfile fields
+      *
+     C                     EXSR SRCLRS
+      *
+      ** If CHANGE mode, load subfile fields
+      *
+     C           W0PMD     IFNE 'ADD'
+     C                     EXSR SRMOVE
+      *
+      ** Record will be selected unless overridden
+      *
+     C                     MOVEL'Y'       W0RSL   1
+      *
+     C                     MOVELFHCYCD    #RLCFF
+     C                     MOVEL'Y'       WUSFLS
+      *
+      ** If record dropped...
+      *
+     C                     SUB  1         ##RR
+     C           W0RSL     CABNE'Y'       BB020
+     C                     ADD  1         ##RR
+      *
+      ** Validate subfile record and calculate derived fields
+      *
+     C                     EXSR SRVALS
+     C                     ELSE
+      *
+      ** Initialize subfile record
+      *
+     C                     MOVEL'N'       WUSFLS
+     C                     ENDIF
+      *
+      ** Output to subfile
+      *
+     C                     ADD  1         ##RROK     81
+      *
+      ** If SFLRCD invalid, note that errors present
+      *
+     C   98N99             MOVE '1'       *IN99
+      *
+      ** Set screen conditioning indicators
+      *
+     C                     EXSR SRPROT
+     C                     WRITE#SFLRCD
+      *
+      ** End of File
+      *
+     C           BB020     TAG
+     C           W0PMD     IFNE 'ADD'
+     C                     READ MEFNODD1                 82
+     C                     ENDIF
+      *
+     C  N82                ENDDO
+      *
+      ** Save highest SFL record load can continue at end point
+      *
+     C           ##RR      IFGT ##RRMX
+      *
+      ** Calculate top line
+      *
+     C           ##RROK    DIV  ##SFPG    ##SPG
+     C                     MVR            ##SLIN
+      *
+     C           ##SLIN    IFGT 0
+     C           ##RR      SUB  ##SLIN    ##SFRC
+     C                     ELSE
+     C           ##RR      SUB  ##SFPG    ##SFRC
+     C                     ENDIF
+      *
+     C                     ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDISP  -  Display Subfile                                   *
+      *  Called by: Main routine                                      *
+      *  Calls    : SR8TST, SRHELP,                                   *
+      *             Y2CLMSC - Clear specified program message queue   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDISP    BEGSR
+      *
+      ** Set screen conditioning indicators
+      *
+     C           W0PMD     COMP 'ADD'                    89
+      *
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      *
+      ** PUTOVR unless conditioned fields change
+      *
+     C                     MOVE '1'       *IN86
+     C           *IN89     IFNE CAIN89
+     C           *IN81     ORNE CAIN81
+     C                     MOVE '0'       *IN86
+     C                     ENDIF
+      *
+     C                     MOVE *IN89     CAIN89  1
+     C                     MOVE *IN81     CAIN81  1
+      *
+      ** Set cursor by *SET CURSOR data
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+      *
+      ** Maintain subfile position where possible
+      *
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     ENDIF
+      *
+      ** Test cursor
+      *
+     C                     EXSR SR8TST
+      *
+      ** Clear set cursor DDS indicator
+      *
+     C           WCSRLC    IFEQ 'OFF'
+     C                     MOVE '0'       *IN94
+     C                     ENDIF
+     C                     MOVE *BLANK    WCSRLC
+      *
+      ** If help requested, display help text
+      *
+     C   25                EXSR SRHELP
+     C                     ENDDO
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Reset first message only flag
+      *
+     C                     MOVEL'Y'       ZAFSMS  1      99
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR8TST  -  Test cursor                                       *
+      *  Called by: SRDISP                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+     C           SR8TST    BEGSR
+      *
+      ** Test cursor
+      *
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHELP  -  Display HELP Text                                 *
+      *  Called by: SRDISP                                            *
+      *  Calls    : YDDSHPR - Help Text Control                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRHELP    BEGSR
+      *
+      ** Signal help request
+      *
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+      *
+     C           @#RWCL    DIV  256       ZHCSRW  50
+     C                     MVR            ZHCSCL  50
+      *
+      ** Save cursor position for redisplay
+      *
+     C                     Z-ADDZHCSRW    ZZCSRW  30
+     C                     Z-ADDZHCSCL    ZZCSCL  30
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10
+     C                     PARM *BLANK    YYHPFL 10
+     C                     PARM *BLANK    YYHPLB 10
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10
+     C                     PARM '*NORMAL' YYUSOP 10
+     C                     PARM ZHCSRW    YYRW    50
+     C                     PARM ZHCSCL    YYCL    50
+     C                     PARM *ZERO     YYLGCT  50
+     C                     PARM *BLANK    YYLGVN 10
+      *
+      ** Clear set cursor DDS indicator
+      *
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                MOVE '1'       *IN94
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC  -  Process Screen Input                              *
+      *  Called by: Main routine                                      *
+      *  Calls    : SRPOST, SRSUBF, SRUPSF, SRMODE                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ** Change of position specified
+      *
+     C           W0PMD     IFNE 'ADD'
+     C           WZLCCD    CASNE#2LCCD    SRPOST
+     C                     ENDCS
+     C                     ENDIF
+      *
+      ** Quit if reload requested
+      *
+     C           W0RSF     CABEQ'Y'       DAEXIT
+      *
+     C   81                DO
+     C                     MOVEL'N'       WKIPIN  1
+      *
+      ** Process subfile records
+      *
+     C                     EXSR SRSUBF
+      *
+     C           *IN99     CABEQ'1'       DAEXIT
+      *
+     C           WKIPIN    IFEQ 'Y'
+      *
+      ** Update DBF from subfile
+      *
+     C                     EXSR SRUPSF
+      *
+      ** Exit if error during update
+      *
+     C           *IN99     CABEQ'1'       DAEXIT
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Switch between *ADD/*CHANGE modes
+      *
+     C   09                EXSR SRMODE
+      *
+     C           DAEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSUBF  -  Process Modified Subfile Record                   *
+      *  Called by: SRPROC                                            *
+      *  Calls    : SRPOPS, SRPROT                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSUBF    BEGSR
+      *
+      ** Process modified subfile record
+      *
+     C                     READC#SFLRCD                  92
+      *
+     C           *IN92     DOWEQ'0'
+     C                     EXSR SRPOPS
+     C                     MOVE '0'       *IN87
+     C                     EXSR SRPROT
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPOPS  -  Process Subfile Record                            *
+      *  Called by: SRSUBF                                            *
+      *  Calls    : SRNLRC, SRVDRC                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPOPS    BEGSR
+      *
+      ** Set off error indicators
+      *
+     C                     MOVEA'0000'    *IN,32
+     C                     MOVE '0'       *IN36                           174569
+     C                     MOVE '0'       *IN84
+     C                     MOVE '0'       *IN98
+      *
+     C           W0PMD     IFEQ 'ADD'
+      *
+      ** Check for null record
+      *
+     C                     EXSR SRNLRC
+      *
+     C           W0NLR     IFEQ 'Y'
+     C                     GOTO DCEXIT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If not null record, continue
+      *
+     C                     MOVEL'Y'       WKIPIN
+      *
+     C                     MOVE '1'       *IN84
+      *
+      ** If delete request, bypass validation
+      *
+     C           #1SEL     IFEQ 'D'
+     C                     GOTO DCEXIT
+     C                     ENDIF
+      *
+      ** Validate subfile record
+      *
+     C                     EXSR SRVDRC
+      *
+      ** If SFLRCD invalid, note the fact
+      *
+     C   98N99             Z-ADD##RR      ##SFRC     99
+      *
+     C           DCEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNLRC  -  Check for Null Record                             *
+      *  Called by: SRPOPS, SRPRSR                                    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRNLRC    BEGSR
+      *
+     C                     MOVEL'N'       W0NLR   1
+     C           #RLCFF    CABNE*BLANKS   DDEXIT
+     C           #1LCNM    CABNE*BLANKS   DDEXIT
+     C           #1CNCD    CABNE*BLANKS   DDEXIT
+     C           #1EUNO    CABNE*BLANKS   DDEXIT                          174569
+     C                     MOVEL'Y'       W0NLR
+      *
+     C           DDEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVDRC  -  Validate Subfile Record                           *
+      *  Called by: SRPOPS                                            *
+      *  Calls    : ZASNMS, SRVALS                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVDRC    BEGSR
+      *
+      ** In Add mode, need to move screen value to hidden file field
+      *
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEL#RLCFF    #1LCCD
+     C                     MOVEL'N'       WUSFLS
+      *
+      ** Currency of Payment is blank
+      *
+     C           #RLCFF    IFEQ *BLANKS
+     C                     MOVEL'MEN0002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVEL'Y'       WUSFLS
+     C                     ENDIF
+      *
+      ** Nostro Number is zero
+      *
+     C           #1LCNM    IFEQ *BLANKS
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'MEN0003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Validate subfile record relations
+      *
+     C                     EXSR SRVALS
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVALS  -  Validate Subfile Record Relations                 *
+      *  Called by: SRLOAD, SRVDRC                                    *
+      *  Calls    : SRVAL1, SRVAL2                                    *
+      *             SRVLEN                                            *   174569
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALS    BEGSR
+      *
+      ** Validate subfile record relations
+      *
+     C                     EXSR SRVAL1
+      *
+      ** Validate Euro Payment
+      *
+     C                     EXSR SRVAL2
+      *                                                                   174569
+      ** Validate Euro Nostro                                             174569
+      *                                                                   174569
+     C                     EXSR SRVLEN                                    174569
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPSF  -  Update Records from Subfile                       *
+      *  Called by: SRPROC                                            *
+      *  Calls    : SRPRSR, SRPROT                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPSF    BEGSR
+      *
+      ** Initialise subfile reload flag
+      *
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEL'Y'       W0RSF
+     C                     ELSE
+     C                     MOVEL'N'       W0RSF
+     C                     ENDIF
+      *
+      ** Process all modified subfile records
+      *
+     C                     READC#SFLRCD                  92
+      *
+     C           *IN92     DOWEQ'0'
+     C                     EXSR SRPRSR
+      *
+      ** Rollback any DBF changes if error occur
+      *
+     C           W#EROR    IFNE *BLANKS
+     C                     ROLBK
+     C                     ELSE
+     C                     COMIT
+     C                     ENDIF
+      *
+      ** Set screen conditioning indicators
+      *
+     C                     MOVEL*BLANKS   #1SEL
+     C                     EXSR SRPROT
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  92
+     C                     ENDDO
+      *
+      ** Cancel reload if errors occur
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'N'       W0RSF   1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPRSR  -  Process action requested                          *
+      *  Called by: SRUPSF                                            *
+      *  Calls    : SRNLRC, SRADDR, SRDELR, SRUDAT                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPRSR    BEGSR
+      *
+      ** Set off error indicators
+      *
+     C                     MOVEA'0000'    *IN,32
+     C                     MOVE '0'       *IN36                           174569
+     C                     MOVE '0'       *IN98
+      *
+      ** Process add request
+      *
+     C           W0PMD     IFEQ 'ADD'
+      *
+     C           #1SEL     IFNE 'D'
+     C                     EXSR SRNLRC
+     C           W0NLR     IFNE 'Y'
+     C                     EXSR SRADDR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Process delete request
+      *
+     C           #1SEL     IFEQ 'D'
+     C                     EXSR SRDELR
+     C                     ELSE
+      *
+      ** Process change request
+      *
+     C                     EXSR SRUDAT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If error occurred on update, note the fact
+      *
+     C           *IN98     IFEQ '1'
+     C           *IN99     ANDEQ'0'
+     C                     Z-ADD##RR      ##SFRC     99
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRADDR  -  Process Add Request                               *
+      *  Called by: SRPRSR                                            *
+      *  Calls    : SRWRIT                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRADDR    BEGSR
+      *
+      ** Create TPP Nostro Defaults
+      *
+     C                     EXSR SRWRIT
+      *
+      ** Error detected
+      *
+     C           W#EROR    IFNE *BLANKS
+     C                     MOVEA'111'     *IN,33
+     C                     MOVE '1'       *IN84
+     C                     MOVE '0'       *IN87
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN84
+     C                     MOVE '1'       *IN87
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDELR  -  Process Delete Request                            *
+      *  Called by: SRPRSR                                            *
+      *  Calls    : SRDLET, SRMOVE, SRCLRS                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDELR    BEGSR
+      *
+      ** Delete TPP Nostro Defaults
+      *
+     C                     EXSR SRDLET
+      *
+     C           W#EROR    IFNE *BLANKS
+      *
+      ** Delete unsuccessful
+      *
+     C                     MOVEA'1111'    *IN,32
+     C                     MOVE '1'       *IN36                          174569
+     C                     MOVE '1'       *IN84
+     C                     MOVE '0'       *IN87
+     C                     MOVE '1'       *IN98
+     C           W#EROR    CASEQ'Y'       SRMOVE
+     C                     ENDCS
+     C                     ELSE
+      *
+      ** Blank out record and protect from entry
+      *
+     C                     EXSR SRCLRS
+     C                     MOVE '0'       *IN84
+     C                     MOVE '1'       *IN87
+      *
+      ** Reload subfile
+      *
+     C                     MOVEL'Y'       W0RSF   1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUDAT  -  Process Update Request                            *
+      *  Called by: SRPRSR                                            *
+      *  Calls    : SRUPDT, SRMOVE                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUDAT    BEGSR
+      *
+      ** Change TPP Nostro Defaults
+      *
+     C                     EXSR SRUPDT
+     C           W#EROR    IFNE *BLANKS
+      *
+      ** Screen errors
+      *
+     C                     MOVEA'1111'    *IN,32
+     C                     MOVE '1'       *IN36                           174569
+     C                     MOVE '1'       *IN84
+     C                     MOVE '0'       *IN87
+     C                     MOVE '1'       *IN98
+      *
+      ** Reset subfile record if changed record
+      *
+     C           W#EROR    CASEQ'Y'       SRMOVE
+     C                     ENDCS
+     C                     ELSE
+      *
+      ** Enable entry
+      *
+     C                     MOVE '0'       *IN84
+     C                     MOVE '0'       *IN87
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMODE  -  Switch Between *ADD and *CHANGE Modes             *
+      *  Called by: SRPROC                                            *
+      *  Calls    : SRPOST                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMODE    BEGSR
+      *
+      ** Switch between *ADD/*CHANGE modes
+      *
+     C           W0PMD     IFNE 'ADD'
+     C                     MOVEL'ADD'     W0PMD
+     C                     ELSE
+     C                     MOVEL'CHG'     W0PMD
+     C                     ENDIF
+      *
+     C                     EXSR SRPOST
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPOST  -  Request Subfile Reload                            *
+      *  Called by: Main routine, SRPROC, SRMODE                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPOST    BEGSR
+      *
+      ** Request subfile reload
+      *
+     C                     MOVEL'Y'       W0RSF
+      *
+     C   05                MOVE *BLANKS   #2LCCD
+     C   05                MOVE *BLANKS   #1SEL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROT  -  Set Display Attributes for Subfile Record         *
+      *  Called by: SRLOAD, SRSUBF, SRUPSF                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROT    BEGSR
+      *
+     C           W0PMD     COMP 'ADD'                    89
+      *
+      ** Protect keys if change mode or updated record
+      *
+     C                     MOVE '1'       *IN88
+     C   89N87             MOVE '0'       *IN88
+     C                     MOVEL*IN87     *IN79
+      *
+     C           WUSFLS    IFEQ 'N'
+     C                     MOVEL'1'       *IN79
+     C                     ENDIF
+      *
+     C                     MOVEL*IN87     *IN78
+     C           W0PMD     IFEQ 'CHG'
+     C                     MOVEL'1'       *IN78
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLRS  -  Initialise Subfile Record                         *
+      *  Called by: SRLOAD, SRDELR                                    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCLRS    BEGSR
+      *
+      ** Initialise subfile record
+      *
+     C                     MOVEL*BLANKS   #1DBRC
+     C                     MOVEL*BLANKS   #1LCCD
+     C                     MOVEL*BLANKS   #1RECI
+     C                     MOVEL*BLANKS   #1AJOB
+     C                     MOVEL*BLANKS   #1AUSR
+     C                     Z-ADD0         #1ATIM
+     C                     MOVEL*BLANKS   #1ADTE
+     C                     MOVEL*BLANKS   #1CHTP
+     C                     MOVEL*BLANKS   #1SEL
+     C                     MOVEL*BLANKS   #RLCFF
+     C                     MOVEL*BLANKS   #1LCNM
+     C                     MOVEL*BLANKS   #1CNCD
+     C                     MOVEL*BLANKS   #1EUNO                          174569
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMOVE  -  Transfer Records from MEFNODL1 to Subfile         *
+      *  Called by: SRLOAD, SRDELR, SRUDAT                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMOVE    BEGSR
+      *
+      ** Move MEFNODL1 fields to subfile
+      *
+     C                     MOVELFHRECI    #1RECI
+     C                     MOVELFHCYCD    #1LCCD
+     C                     MOVELFHNOSN    #1LCNM
+     C                     MOVELFHEURO    #1CNCD
+     C                     MOVELFHAJOB    #1AJOB
+     C                     MOVELFHAUSR    #1AUSR
+     C                     Z-ADDFHATIM    #1ATIM
+     C                     MOVELFHADTE    #1ADTE
+     C                     MOVELFHCHTP    #1CHTP
+     C                     MOVELFHEUNO    #1EUNO                          174569
+      *
+      ** Hold current record image for change detection
+      *
+     C                     MOVEL@1DBRC    #1DBRC
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRWRIT  -  Create TPP Nostro Defaults                        *
+      *  Called by: SRADDR                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR
+      *
+     C                     MOVEL*BLANKS   W#EROR
+      *
+      ** Create TPP Nostro Defaults
+      *
+     C                     MOVE 'D'       FHRECI
+     C                     MOVEL#1LCCD    FHCYCD
+     C                     MOVEL#1LCNM    FHNOSN
+     C                     MOVEL#1CNCD    FHEURO
+     C                     MOVEL#1EUNO    FHEUNO                          174569
+     C                     MOVEL##JOB     FHAJOB
+     C                     MOVEL##USR     FHAUSR
+     C                     Z-ADD##ETM     FHATIM
+     C                     Z-ADD##SDT     FHADTE
+     C                     MOVE 'I'       FHCHTP
+      *
+      ** Check for duplicate primary key
+      *
+     C           FHCYCD    SETLLMEFNODD0                 90
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR  1
+     C                     MOVEL'MEN0005' ZAMSID
+     C                     MOVELFHCYCD    ZA0001
+     C                     EXSR ZASNMS
+     C                     GOTO SAEXIT
+     C                     ENDIF
+      *
+     C                     WRITEMEFNODD0               91
+      *
+      ** Write error detected
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     ENDIF
+      *
+     C           SAEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDLET  -  Delete TPP Nostro Defaults                        *
+      *  Called by: SRDELR                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDLET    BEGSR
+      *
+      ** Delete TPP Nostro Defaults
+      *
+     C                     MOVEL*BLANKS   W#EROR
+      *
+      ** Move key fields to MEFNODL0
+      *
+     C                     MOVEL#RLCFF    FHCYCD
+      *
+     C           FHCYCD    CHAINMEFNODD0             9091
+      *
+      ** Record already deleted
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     MOVEL'MEN0006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     ENDIF
+      *
+      ** Record locked
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     MOVEL'MEN0007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     ENDIF
+      *
+      ** Check for changed record
+      *
+     C           #1DBRC    IFNE @1DBRC
+     C                     MOVEL'Y'       W#EROR
+     C                     MOVEL'MEN0008' ZAMSID
+     C                     EXSR ZASNMS
+      *
+      ** Release record lock
+      *
+     C           FHCYCD    SETLLMEFNODD0             9091
+     C                     GOTO SCEXIT
+     C                     ENDIF
+      *
+     C                     DELETMEFNODD0               91
+      *
+      ** Delete error detected
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     ENDIF
+      *
+      ** Error detected
+      *
+     C           W#EROR    IFNE *BLANKS
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+     C           SCEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUPDT  -  Update TPP Nostro Defaults                        *
+      *  Called by: SRUDAT                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUPDT    BEGSR
+      *
+      ** Change TPP Nostro Defaults
+      *
+     C                     MOVEL*BLANKS   W#EROR
+      *
+      ** Set record data changed flag
+      *
+     C                     MOVE 'N'       YCRDC   1
+      *
+      ** Move key fields to MEFNODL0
+      *
+     C                     MOVEL#1LCCD    FHCYCD
+      *
+     C           FHCYCD    CHAINMEFNODD0             9091
+      *
+      ** Record not found
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     MOVEL'MEN0009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SEEXIT
+     C                     ENDIF
+      *
+      ** Record locked
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     GOTO SEEXIT
+     C                     ENDIF
+      *
+      ** Check for changed record
+      *
+     C           #1DBRC    IFNE @1DBRC
+     C                     MOVEL'Y'       W#EROR
+     C                     MOVEL'MEN0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     UNLCKMEFNODL0               91
+     C                     GOTO SEEXIT
+     C                     ENDIF
+      *
+      ** Store record data for null update check
+      *
+     C                     MOVE @1DBRC    YCRDCS
+      *
+      ** Move non-key fields to MEFNODL0
+      *
+     C                     MOVE 'D'       FHRECI
+     C                     MOVEL#1LCCD    FHCYCD
+     C                     MOVEL#1LCNM    FHNOSN
+     C                     MOVEL#1CNCD    FHEURO
+     C                     MOVEL#1EUNO    FHEUNO                          174569
+     C                     MOVEL##JOB     FHAJOB
+     C                     MOVEL##USR     FHAUSR
+     C                     Z-ADD##ETM     FHATIM
+     C                     Z-ADD##SDT     FHADTE
+     C                     MOVE 'A'       FHCHTP
+      *
+     C           @1DBRC    IFNE YCRDCS
+     C                     MOVE 'Y'       YCRDC
+     C                     ENDIF
+      *
+      ** If changed update record otherwise release record
+      *
+     C           YCRDC     IFEQ 'Y'
+     C                     UPDATMEFNODD0               91
+     C                     ELSE
+     C                     UNLCKMEFNODL0               91
+     C                     ENDIF
+      *
+      ** Change error detected
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y'       W#EROR
+     C                     ELSE
+      *
+      ** Update saved record image
+      *
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     ENDIF
+      *
+     C           SEEXIT    ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVAL1  -  Validate Currency of Payment and Nostro Number    *
+      *  Called by: SRVALS                                            *
+      *  Calls    : AOCURRR0 - Access Currency Details                *
+      *             AONOSTR0 - Access Nostro Details                  *
+      *             ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVAL1    BEGSR
+      *
+      ** Check Currency Codes
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #RLCFF    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'MEN0010' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      ** Validate Nostro Code
+      *
+     C                     TESTN          #1LCNM     70
+      *
+     C           *IN70     IFEQ '0'
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'MEN0011' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      *
+      ** Check Currency with Nostro Code
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM *BLANKS   PCUSN   6
+     C                     PARM #RLCFF    PCURR
+     C**********           PARM *BLANKS   PACCD   4                                           CGL029
+     C                     PARM *BLANKS   PACCD  10                                           CGL029
+     C                     PARM *BLANKS   PACSN   2
+     C                     PARM #1LCNM    PNONB   2
+     C                     PARM *BLANKS   PBRCA   3
+     C                     PARM *BLANKS   PCSSN  10
+     C                     PARM *BLANKS   PPNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'MEN0012' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVAL2  -  Validate Euro Payment                             *
+      *  Called by: SRVALS                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVAL2    BEGSR
+      *
+     C           CEU006    IFEQ 'Y'
+      *
+     C           #1CNCD    IFNE *BLANKS
+     C           #1CNCD    ANDNE'Y'
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'MEN0004' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+     C           #1CNCD    IFEQ 'Y'
+      *
+     C***********'EUR'     CHAINMEFNODL0             95                   174569
+     C************IN95     IFEQ '1'                                       174569
+     C*********************MOVE '1'       *IN35                           174569
+     C*********************MOVE '1'       *IN98                           174569
+     C*********************MOVEL'MEN0014' ZAMSID                          174569
+     C*********************EXSR ZASNMS                                    174569
+     C*********************ELSE                                           174569
+     C           A6INCY    IFNE 'Y'
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN98
+     C                     MOVEL'MEN0013' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C*********************ENDIF                                          174569
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************   174569
+      *                                                               *   174569
+      *  SRVLEN  -  Validate Euro Nostro                              *   174569
+      *  Called by: SRVALS                                            *   174569
+      *  Calls    : ZASNMS                                            *   174569
+      *                                                               *   174569
+      *****************************************************************   174569
+      *                                                                   174569
+     C           SRVLEN    BEGSR                                          174569
+      *                                                                   174569
+     C           CEU006    IFNE 'Y'                                       174569
+     C                     GOTO EXVLEN                                    174569
+     C                     ENDIF                                          174569
+      *                                                                   174569
+      * Euro nostro equivalent is mandatory when  euro flag is  set to Y  174569
+     C           #1EUNO    IFEQ *BLANKS                                   174569
+     C           #1CNCD    ANDEQ'Y'                                       174569
+     C                     MOVE '1'       *IN36                           174569
+     C                     MOVE '1'       *IN98                           174569
+     C                     MOVEL'MEN0016' ZAMSID                          174569
+     C                     MOVEL'Y'       ZAFSMS                          174569
+     C                     EXSR ZASNMS                                    174569
+     C                     GOTO EXVLEN                                    174569
+     C                     ENDIF                                          174569
+      *                                                                   174569
+      * Euro nostro equivalent can be entered only if euro flag is        174569
+      * is set to Y                                                       174569
+     C           #1EUNO    IFNE *BLANKS                                   174569
+     C           #1CNCD    ANDNE'Y'                                       174569
+     C                     MOVE '1'       *IN36                           174569
+     C                     MOVE '1'       *IN98                           174569
+     C                     MOVEL'MEN0015' ZAMSID                          174569
+     C                     MOVEL'Y'       ZAFSMS                          174569
+     C                     EXSR ZASNMS                                    174569
+     C                     GOTO EXVLEN                                    174569
+     C                     ENDIF                                          174569
+      *                                                                   174569
+      * Field must be numeric                                             174569
+     C           #1EUNO    IFNE *BLANKS                                   174569
+     C           NUMBER    CHECK#1EUNO                   70               174569
+     C           *IN70     IFEQ '1'                                       174569
+     C                     MOVE '1'       *IN36                           174569
+     C                     MOVE '1'       *IN98                           174569
+     C                     MOVEL'MEN0011' ZAMSID                          174569
+     C                     MOVEL'Y'       ZAFSMS                          174569
+     C                     EXSR ZASNMS                                    174569
+     C                     GOTO EXVLEN                                    174569
+     C                     ENDIF                                          174569
+     C                     ENDIF                                          174569
+      *                                                                   174569
+      ** Check Currency with Nostro Code                                  174569
+      *                                                                   174569
+     C           #1EUNO    IFNE *BLANKS                                   174569
+     C                     CALL 'AONOSTR0'                                174569
+     C                     PARM *BLANKS   PRTCD                           174569
+     C                     PARM '*KEY    'POPTN                           174569
+     C                     PARM *BLANKS   PCUSN   6                       174569
+     C                     PARM BKEURO    PCURR                           174569
+     C**********           PARM *BLANKS   PACCD   4                                    174569 CGL029
+     C                     PARM *BLANKS   PACCD                                               CGL029
+     C                     PARM *BLANKS   PACSN   2                       174569
+     C                     PARM #1EUNO    PNONB   2                       174569
+     C                     PARM *BLANKS   PBRCA   3                       174569
+     C                     PARM *BLANKS   PCSSN  10                       174569
+     C                     PARM *BLANKS   PPNOI   1                       174569
+     C           SDNOST    PARM SDNOST    DSFDY                           174569
+      *                                                                   174569
+     C           PRTCD     IFNE *BLANKS                                   174569
+     C                     MOVE '1'       *IN36                           174569
+     C                     MOVE '1'       *IN98                           174569
+     C                     MOVEL'MEN0012' ZAMSID                          174569
+     C                     MOVEL'Y'       ZAFSMS                          174569
+     C                     EXSR ZASNMS                                    174569
+     C                     GOTO EXVLEN                                    174569
+     C                     ENDIF                                          174569
+     C                     ENDIF                                          174569
+      *                                                                   174569
+     C           EXVLEN    ENDSR                                          174569
+      *                                                                   174569
+      /EJECT                                                              174569
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS  -  Message Handling Subroutine                       *
+      *  Called by: Various                                           *
+      *  Calls    : Y2SNMGC - Send a message                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+      ** Send if first error message or not an error message
+      *
+     C           ZAMSTP    IFNE *BLANKS
+     C           ZAFSMS    ORNE 'N'
+     C           ZAMSTP    IFEQ *BLANKS
+      *
+      ** Signal first error message sent
+      *
+     C                     MOVEL'N'       ZAFSMS
+     C                     ENDIF
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     MOVEL'MEMSG   'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+     C                     ENDIF
+      *
+      ** Clear all fields for default mechanism next time
+      *
+     C                     MOVEL*BLANKS   ZAPGMQ
+     C                     MOVEL*BLANKS   ZAPGRL
+     C                     MOVEL*BLANKS   ZAMSID
+     C                     MOVEL*BLANKS   ZAMSGF
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     MOVEL*BLANKS   ZAMSTP
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREND   -  End Program                                       *
+      *  Called by: Various                                           *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREND     BEGSR
+      *
+      ** Rollback any uncommitted DBF changes
+      *
+     C                     ROLBK                       90
+      *
+      ** Terminate program
+      *
+     C                     MOVE '1'       *INLR
+      *
+      ** Exit program
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  Error Handling Subroutine                         *
+      *  Called by: Various                                           *
+      *  Calls    : DBERRCTL - Database Error Control                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

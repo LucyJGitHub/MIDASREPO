@@ -1,0 +1,350 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('WHT History Update')                                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0203 - WHT History Update                                  *
+      *                                                               *
+      *  Function:  This report runs at end of month during COB to    *
+      *  (COB)      reset the monthly interest and WHT fields on      *
+      *             'WHT by Customer/Deal History' file GLWHTCL0.     *
+      *             In addition, at the end of year it will clear     *
+      *             down the year to date interest and drop records   *
+      *             for which deal or account no longer exists.       *
+      *                                                               *
+      *  Called By: GLC0203  - WHT by Customer/Deals control          *
+      *                                                               *
+      *  Calls    : ZDATE2   - Convert  Midas day number to date      *
+      *             AOACCTR0 - Retrieve Account details               *
+      *             AOBANKR0 - Retrieve Bank details                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 AR787620           Date 10Jun11               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL013  *CREATE    Date 08Jun06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,GLH00313                                 *
+      *             WNCPYSRC,GLH00314                                 *
+      *             WNCPYSRC,GLH00315                                 *
+      *             WNCPYSRC,GLH00316                                 *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CDL013 - Tired Withholding Tax                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLWHTCL0UF  E           K        DISK         KINFSR *PSSR
+      ** WHT deductions by Customer/Deal History
+      *
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+      ** Deals file
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDCF                          KRENAMEDEALSF
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+      *
+     FDEALSH  IF  E           K        DISK         KINFSR *PSSR
+      ** Matured deals file
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDCF                          KRENAMEMDEALSF
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DLBHISD0                          KIGNORE
+     F            DLCHISD0                          KIGNORE
+     F            DLDHISD0                          KIGNORE
+     F            DLEHISD0                          KIGNORE
+     F            DLGHISD0                          KIGNORE
+      *
+     FGL0203AUO   E                    PRINTER                        UC
+      ** WHT History Update audit
+     F/COPY WNCPYSRC,GLH00605
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Function of indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     69 - Deal/Account Details to be deleted                   *
+      *     70 - Record not found                                     *
+      *     71 - Record not found                                     *
+      *     98 - Date Format Indicator                                *
+      *                                                               *
+      *  U7+U8 - Database error occurs                                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Subroutines                                                  *
+      *  -----------                                                  *
+      *  #EMAIN - Main processing                                     *
+      *  #EINIT - Initial Processing                                  *
+      *  *PSSR  - Program error                                       *
+      *                                                               *
+      *****************************************************************
+     E/COPY ZSRSRC,ZDATE2Z1
+      ** Compile-time arrays for subroutine ZDATE2
+      *
+     E                    CPY@    1   1 80
+      ** Array for Object Copyright Statement
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E/COPY WNCPYSRC,GLH00616
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDACCT    E DSACCNTAB
+      ** Account Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure for access programs
+     I/COPY WNCPYSRC,GLH00313
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            #EMAIN - Main Control Processing                   *
+      *                                                               *
+      *  Calls     #EINIT - Initial Processing                        *
+      *                                                               *
+      *****************************************************************
+      ** Initial Processing
+     C                     EXSR #EINIT
+      *
+      ** Go to the first record
+     C           *LOVAL    SETLLGLWHTCL0
+      *
+      ** Read the record from Tax History file
+     C                     READ GLWHTCL0                 70
+      *
+      ** Do while READ succesful
+     C           *IN70     DOWEQ*OFF
+      *
+      ** Reset the interest and WHT fields for this month to zero
+     C                     Z-ADD0         ECRTM
+     C                     Z-ADD0         EWTTM
+     C/COPY WNCPYSRC,GLH00314
+      *
+      ** If NOT End of Year, reset month fields
+     C           BJMRDT    IFNE WEOY
+     C                     UPDATGLWHTCD0
+      ** If End of Year, reset year fields or drop the records
+     C                     ELSE
+     C                     EXSR #EDROP
+     C                     ENDIF
+      *
+      ** Read next record from tax details file
+     C                     READ GLWHTCL0                 70
+      *
+     C                     ENDDO
+      *
+      ** Update LDA & Terminate the program
+     C/COPY WNCPYSRC,GLH00319
+     C                     OUT  LDA
+     C/COPY WNCPYSRC,GLH00320
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EINIT - Initial processing                                  *
+      *                                                               *
+      *  Calls    AOBANKR0 - Retrieve run date                        *
+      *           ZDATE2   - Convert Midas day number to date         *
+      *           *PSSR    - Program error                            *
+      *                                                               *
+      *****************************************************************
+     C           #EINIT    BEGSR
+      *
+      ** Define LDA
+     C/COPY WNCPYSRC,GLH00321
+     C           *NAMVAR   DEFN           LDA
+     C/COPY WNCPYSRC,GLH00322
+      *
+      ** Retrieve Run Date & End of Year Date via AOBANKR0
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      ** If error occured, terminate the program
+     C           @RTCD     IFNE *BLANK
+     C/COPY WNCPYSRC,GLH00323
+     C           *LOCK     IN   LDA
+     C/COPY WNCPYSRC,GLH00324
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD01        DBASE
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,GLH00315
+      *
+      ** Set Date Format Indicator *IN98
+     C                     MOVE *OFF      *IN98
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Convert EOY Date to Midas day number
+     C                     MOVE BJEYD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WEOY    7
+      *
+      ** Copyright statement
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EDROP - Drop the records for which deal or account          *
+      *           no longer exists                                    *
+      *                                                               *
+      *****************************************************************
+     C           #EDROP    BEGSR
+      *
+      ** Set Delete indicator *IN69 OFF
+     C                     MOVE *OFF      *IN69
+      *
+      ** If Deal, extract Deal No & acces deals file
+     C           EDAIN     IFEQ 'D'
+      *
+     C                     MOVE EDLAC     WDLNUM  60
+     C           WDLNUM    CHAINDEALSF               71
+      *
+      ** If Deal NOT found in deals file, acces matured deals file
+     C           *IN71     IFEQ *ON
+      *
+     C           WDLNUM    CHAINMDEALSF              71
+      ** If Deal NOT found in matured deals file, set *IN69 ON
+     C           *IN71     IFEQ *ON
+     C                     MOVE *ON       *IN69
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If NOT Deal, access Account details via AOACCTR0
+     C                     ELSE
+     C                     MOVE EDLAC     WRETL  10
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WRETL     @RETL  10
+     C                     PARM *BLANKS   @CNUM   6
+     C                     PARM *BLANKS   @CUCD   3
+     C                     PARM *BLANKS   @ACCD  10
+     C                     PARM *BLANKS   @ACSQ   2
+     C                     PARM *BLANKS   @BRCA   3
+     C           SDACCT    PARM SDACCT    DSSDY
+      ** If error occured, terminate the program
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*NRF   '
+     C/COPY WNCPYSRC,GLH00325
+     C           *LOCK     IN   LDA
+     C/COPY WNCPYSRC,GLH00326
+     C                     MOVEL'ACCNTAB 'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD02        DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** If Record NOT found, set *IN69 ON
+     C           @RTCD     IFEQ '*NRF   '
+     C                     MOVE *ON       *IN69
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If *IN69 ON, delete the record
+     C           *IN69     IFEQ *ON
+     C                     DELETGLWHTCD0
+      ** If *IN69 OFF, reset the interest and WHT fields for year
+      ** to zero & update the record
+     C                     ELSE
+     C                     Z-ADD0         ECRYD
+     C                     Z-ADD0         EWTYD
+     C/COPY WNCPYSRC,GLH00316
+     C                     UPDATGLWHTCD0
+     C                     ENDIF
+     C/COPY WNCPYSRC,GLH00606
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program error                                       *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Update LDA
+     C                     MOVEL'GL0203'  DBPGM     P
+     C/COPY WNCPYSRC,GLH00327
+     C                     OUT  LDA
+     C/COPY WNCPYSRC,GLH00328
+      *
+      ** Open audit file & print standard DBERR printout
+     C                     OPEN GL0203AU
+     C                     WRITEAUHEAD
+     C                     WRITEDBERROR
+     C                     CLOSEGL0203AU
+      *
+      ** If *PSSR has not been called yet, dump the program
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Compile-time arrays for subroutine ZDATE2
+     O/COPY ZSRSRC,ZDATE2Z3
+** CPY@ - Object copyright
+(c) Misys International Banking Systems Ltd. 2006

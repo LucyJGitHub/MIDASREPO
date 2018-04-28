@@ -1,0 +1,288 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Book code/Investment type - Report')
+     H*****************************************************************
+     H*                                                               *
+     H*   MIDAS/ABS  EUROPEAN REPORTING                               *
+     H*                                                               *
+     H*   ER0050P- BOOK CODE / INVESTMENT TYPE - REPORT PROGRAM       *
+     H*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+     H*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. 132893             Date 20Apr98               *
+      *                 ER_R10             Date 11May95               *
+     H*                  ERL370 TLI        DATE 02SEP93               *
+     H*                                                               *
+     F********************************************************************
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     F*   132893 - RCF ON DBA2.3                                         *
+     F*   ER_R10 - IML INCORPORATION IN R10                              *
+     F*   ERL370 - BOOK CODE / INVESTMENT TYPE DEVELOPMENT               *
+     F********************************************************************
+     FERBKIVL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FERBANKPDIF  E                    DISK
+     F                                              KINFSR *PSSR
+      * RTV: Bank Details              Retrieval index
+      *
+     F****ER0050P$O   E             97     PRINTER                          1328
+     F****                                          KINFDS INFDS$           1328
+     FER0050P1O   E                    PRINTER                              1328
+     F                                              KINFDS SPOOL1           1328
+      *
+     E                    CPY@    1   1 80               BIS Copyright array
+     ICPYR@#      DS
+     I* BIS Copyright array
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      * Program data structure.
+     IJBDTTM      DS
+      * Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     I*****************************************************************
+     I*
+     ILDA        UDS                            256
+     I*  DATA AREA DATA STRUCTURE FOR HANDLING DB ERRORS
+     I*
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I*
+     I*  INFORMATION AREAS FOR PRTF (OVERFLOW LINE, LAST LINE WRITTEN)
+     I*
+      ** File Information Data Structure for MMNNNNPY.                    132893
+     ISPOOL1      DS                                                      132893
+     I                                       83  92 SFILE1                132893
+     I                                    B 123 1240SFNUM1                132893
+     I****INFDS$      DS                                                  132893
+     I                                    B 188 1890S#OVL
+     I                                    B 367 3680S#LSTL
+      *                                                                   132893
+     I*****************************************************************
+     C*
+     C*****************************************************************
+     C*  MAIN PROGRAM                                                 *
+     C*****************************************************************
+     C*
+     C*  INITIAL PROCESSING
+     C*
+     C                     EXSR P01
+     C*
+     C*  PRINT HEAD
+     C*
+     C                     WRITEZZPAGHDR
+     C*
+     C*  FIRST READ
+     C*
+     C                     READ ERBKIVL1               9998
+     C*
+     C*  TEST FOR DATABASE ERROR
+     C*
+     C           *IN99     IFNE '0'
+     C                     MOVE 001       DBASE
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE 'ERBKIVL1'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     EXSR DBER
+     C                     ENDIF
+     C*
+     C           *IN98     IFNE '0'
+     C                     EXSR NODET
+     C           ENDTAG    TAG
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C*  SET RECORD COUNTER
+     C*
+     C                     Z-ADD0         ZTNCRC
+     C                     WRITEZZCOLHDG
+     C*
+     C*  READING AND PRINTING IN LOOP
+     C*
+     C           *IN98     DOWEQ'0'
+     C*
+     C                     ADD  1         ZTNCRC
+     C*
+     C*  FILL  DETAIL LINE
+     C*
+     C                     MOVE BIBOKC    XRBOKC
+     C                     MOVE BIINVT    XRINVT
+     C                     MOVE BITIFA    XRTIFA
+     C                     MOVE BIEVAM    XREVAM
+     C*
+     C*  PRINT DETAIL LINE
+     C*
+     C           S#OVL     SUB  S#LSTL    V#REST  30
+     C           V#REST    IFLE 2
+     C                     WRITEZZPAGHDR
+     C                     WRITEZZCOLHDG
+     C                     ENDIF
+     C                     WRITEZZDTLRCD
+     C*
+     C*  NEXT READ
+     C*
+     C                     READ ERBKIVL1               9998
+     C*
+     C*  TEST FOR DATABASE ERROR
+     C*
+     C           *IN99     IFNE '0'
+     C                     MOVE 002       DBASE
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE 'ERBKIVL1'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     EXSR DBER
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C*  END PGM
+     C*
+     C           S#OVL     SUB  S#LSTL    V#REST
+     C           V#REST    IFLE 2
+     C                     WRITEZZPAGHDR
+     C                     ENDIF
+     C                     WRITEZZFINTTL
+     C                     WRITEZZENDRPT
+     C                     SETON                     LR
+     C                     RETRN
+     C*---------------------------------------------------------------*
+     C*  SUBROUTINE 01 : INITIAL PROCESSING                           *
+     C*                  CALLED FROM MAIN PROGRAM                     *
+     C*---------------------------------------------------------------*
+     C*
+     C           P01       BEGSR                           * ZSYSTEM **
+      *                                                            132893
+      ** Receive Parameter List.                                   132893
+     C           *ENTRY    PLIST                                   132893
+     C                     PARM           SEQ     5                132893
+     C                     PARM           RLEV    1                132893
+     C                     PARM           RENT    3                132893
+      *                                                            132893
+      * RCF processing                                             132893
+      *                                                            132893
+     C                     EXSR RCFP1                              132893
+      *                                                            132893
+      *                                                            132893
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Work Converted Date
+     C                     Z-ADD*ZERO     WUWCDT  60
+      * Define Keylist.
+     C*          KRSSC     KLIST
+     C*                    KFLD           BJBANK           Bank
+      * Move fields to key list.
+     C*                    MOVEL'BANK'    BJBANK           Bank
+     C*          KRSSC     CHAIN@BJREEF              9090  *
+     C                     READ ERBANKPD                 90*
+     C*
+     C*  TEST FOR DATABASE ERROR
+     C*
+     C           *IN90     IFNE '0'
+     C                     MOVE 003       DBASE
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE 'ERBANKPD'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C*                    MOVE BJBANK    DBKEY
+     C                     EXSR DBER
+     C                     ENDIF
+     C*
+     C***********          MOVE TITL      ##URPT                          ER_R10
+     C                     MOVELBJURPT    ##URPT                          ER_R10
+     C           P01END    ENDSR
+     C*
+     C*---------------------------------------------------------------*
+     C*  SUBROUTINE 02 : DATA BASE ERROR                              *
+     C*---------------------------------------------------------------*
+     C*
+     C           DBER      BEGSR
+     C*
+     C                     WRITEZZPAGHDR
+     C                     WRITEZZERROR
+     C                     WRITEZZENDRPT
+     C*
+     C                     SETON                     LRU7U8
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*---------------------------------------------------------------*
+     C*---------------------------------------------------------------*
+     C*  SUBROUTINE 03 : DATA BASE ERROR                              *
+     C*---------------------------------------------------------------*
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C           ERREND    ENDSR
+     C*
+     C*---------------------------------------------------------------*
+     C*  SUBROUTINE NODET : NO DETAIL PROCESSING                      *
+     C*                  CALLED FROM MAIN PROGRAM                     *
+     C*---------------------------------------------------------------*
+     C*
+     C           NODET     BEGSR
+     C*
+     C                     SETON                     76
+     C                     WRITEZZFINTTL
+     C                     WRITEZZENDRPT
+     C*
+     C                     ENDSR
+     C*
+      ***************************************************************** 132893
+      /TITLE SR/RCFP1                                                   132893
+      ***************************************************************** 132893
+      *                                                               * 132893
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. * 132893
+      *                                                               * 132893
+      ***************************************************************** 132893
+     C           RCFP1     BEGSR                                        132893
+      *                                                                 132893
+      ** Ensure Report Spool File recorded by RCF.                      132893
+     C                     Z-ADDSFNUM1    ZSNUM   60                    132893
+      *                                                                 132893
+     C                     CALL 'ZSFILE'                                132893
+     C                     PARM           SEQ                           132893
+     C                     PARM           SENTY   3                     132893
+     C                     PARM           SFILE1                        132893
+     C                     PARM           ZSNUM                         132893
+     C                     PARM           ZSERR   1                     132893
+      *                                                                 132893
+      ** If Error occurs during ZSFILE processing, then return to the   132893
+      ** Calling Program.                                               132893
+     C           ZSERR     IFEQ 'Y'                                     132893
+     C                     SETON                     U7U8LR             132893
+     C                     RETRN                                        132893
+     C                     ENDIF                                        132893
+      *                                                                 132893
+     C                     ENDSR                                        132893
+     C******************************************************************132893
+      *                                                                 132893
+** CPY@     : Copyright notice for inclusion in all BIS programs
+(c) Misys International Banking Systems Ltd. 2005

@@ -1,0 +1,84 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                /*AR1089863*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GPC210700 - Non Authorised Deal Adjustments to Accrued      */
+/*                   Interest COB Check                              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Called By: GOC210700                                        */
+/*                                                                   */
+/*       Last Amend No. AR1089863*REDUNDANTDate 19Feb13              */
+/*       Prev Amend No. CAP210   *CREATE   Date 28Sep12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1089863 - Merging issues of 2.0 and 2.1 releases          */
+/*       CAP210 - Adjustment to Accrued Interests API                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTNCD)
+ 
+             DCL        VAR(&PRTNCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MZONE) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2012')
+ 
+             DCLF       FILE(GPZONEPD) OPNID(A)
+             DCLF       FILE(V_UNDLAA) ALWVARLEN(*YES)
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GOC210700 - Non Authorised Deal +
+                          Adjustments to Accrued Interest Check') +
+                          TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Retrieve System info from SDSTAT */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSTEM)
+ 
+/* Get zone name from GPZONEPD */
+ 
+ READ1:      RCVF       RCDFMT(GPZONED0) OPNID(A)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+ 
+             IF         COND(&SYSTEM *EQ &A_ZOMSYS) THEN(CHGVAR +
+                          VAR(&ZONE) VALUE(&A_ZOZONE))
+             ELSE       CMD(GOTO CMDLBL(READ1))
+ 
+/** Check for unauthorised DLAA              */
+ 
+ READ2:      RCVF       RCDFMT(V_UNDLAA)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+             CHGVAR     VAR(&MZONE) VALUE(%SST(&MSWZONE 3 10))
+ 
+             IF         COND(&ZONE *EQ &MZONE) THEN(DO)
+             CHGJOB     SWS('XXXXXX11')
+             CHGVAR     VAR(&PRTNCD) VALUE('*ERROR')
+             GOTO       CMDLBL(END)
+             ENDDO
+             ELSE       CMD(GOTO CMDLBL(READ2))
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             CHGVAR     VAR(&PRTNCD) VALUE('*ERROR')
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDMSG     MSG('Non Authorised Deal Adjustments to Accrued +
+                          Interest COB Check Terminated +
+                          Abnormally') TOMSGQ(MOPERQ)
+ 
+ END:
+ 
+             ENDPGM

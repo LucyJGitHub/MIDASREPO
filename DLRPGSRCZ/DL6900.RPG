@@ -1,0 +1,897 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Interest and Cost of Funds Accrual Rept')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL6900 - Dealing Interest and Cost of Funds Accruals Report  *
+      *                                                               *
+      *  Function:  This program will list interest and cost of funds *
+      *  (COB)      accruals for directly funded deals (ie. deals     *
+      *             whose funding spread/rate have been defined). The *
+      *             deals will be reported in booking branch, ccy,    *
+      *             deal type and deal sub-type order.  The accrued   *
+      *             interest and accrued cost of funds figures will   *
+      *             will be sub-totalled at each level.               *
+      *                                                               *
+      *  Called By: DLC6900 - Dealing Interest and Cost of Funds      *
+      *                       Accruals Report Control Program         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC001  *CREATE    Date 01Feb96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAC001 - Profit Centre Accounting Development:               *
+      *           New report program.                                 *
+      *                                                               *
+      *****************************************************************
+     FDLDEALL0IF  E           K        DISK         KINFSR *PSSR
+      **  Deals by branch, ccy, deal type, subtype
+      *
+     FDL6900AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      **  Dealing Interest and Cost of Funds Report - Audit
+      *
+     FDL6900P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+      **  Dealing Interest and Cost of Funds Report
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   31  - Change in Deal Subtype                                *
+      *   32  - Change in Deal Type                                   *
+      *   33  - Change in Currency                                    *
+      *   34  - Change in Booking Branch                              *
+      *                                                               *
+      *   35  - Amount is from PF/DEALSDC (e.g. PCPL)                 *
+      *   36  - Amount is from PF/DEALSDD (e.g. PUPR)                 *
+      *   37  - Multibranching ON                                     *
+      *   38  - System level requested                                *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SRREPT - Process Report Lines                                *
+      *                                                               *
+      *  SRCHST - Process a Change in Deal Subtype                    *
+      *  SRCHDT - Process a Change in Deal Type                       *
+      *  SRCHCY - Process a Change in Currency                        *
+      *  SRCHBR - Process a Change in Booking Branch                  *
+      *                                                               *
+      *  SRTOTL - Write a Subtotal Line                               *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  SRRCFP - RCF Processing for P1 Report                        *
+      *  SRRCFA - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZSEDIT - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      **  Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+      /SPACE 3
+      *
+     ILDA       E DSLDA
+      *
+      **  Local data area for database error details
+      **  *LOCK IN LDA immediately before and OUT LDA immediately
+      **  after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      **  Data Area giving Installation Control Details
+      *
+     ISPOOL1      DS
+      **  File Information Data Structure for DL6900P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for DL6900AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISDBANK    E DSSDBANKPD
+      **  External data structure for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  External data structure for Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  External data structure for Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      **  First data structure for Access Programs, short DS
+      *
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      **  Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      **  Output Audit Report and End Program.
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *  Calls    :  SRRCFA - RCF Processing for Audit Report         *
+      *              *PSSR  - Error control subroutine                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      **  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQN   5
+     C                     PARM           PLEVL   1
+     C                     PARM           PENTY   3
+      *
+      **  Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL6900'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+      **  RCF Processing for Audit File.
+      *
+     C                     EXSR SRRCFA
+      *
+      **  Call Access Program for Bank Details - Title, Run Date and
+      **  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **   Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN37
+     C                     ENDIF
+      *
+      **  System level requested.
+      *
+     C           PLEVL     IFEQ 'S'
+     C                     MOVE *ON       *IN38
+     C                     ENDIF
+      *
+      **  Initialise Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         RCOUNT
+     C                     Z-ADD0         WTAIP1 150
+     C                     Z-ADD0         WTAIP2 150
+     C                     Z-ADD0         WTAIP3 150
+     C                     Z-ADD0         WTAIPD 150
+     C                     Z-ADD0         WTACP1 150
+     C                     Z-ADD0         WTACP2 150
+     C                     Z-ADD0         WTACP3 150
+     C                     Z-ADD0         WTACPD 150
+     C                     MOVE 'N'       WOPEN   1
+     C                     MOVEL*BLANKS   WSVBR   3
+     C                     MOVEL*BLANKS   WSVCY   3
+     C                     MOVEL*BLANKS   WSVDT   2
+     C                     MOVEL*BLANKS   WSVST   2
+     C                     MOVEL*BLANKS   WSVCL   4                                           CDL038
+     C                     MOVE *OFF      *IN31
+     C                     MOVE *OFF      *IN32
+     C                     MOVE *OFF      *IN33
+     C                     MOVE *OFF      *IN34
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *  Calls    :  SRAUDT - Produce Audit Report and End Program    *
+      *              SRREPT - Process Report Lines                    *
+      *              SRCHST - Process a Change in Deal Subtype        *
+      *              SRCHDT - Process a Change in Deal Type           *
+      *              SRCHCY - Process a Change in Currency            *
+      *              SRCHBR - Process a Change in Branch              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR                           *** SRPROC ***
+      *
+      **  Read first record
+      *
+     C           *LOVAL    SETLLDLDEALL0
+     C                     READ DLDEALL0                 89
+      *
+      **  If End of Records, (*IN89), Perform: Audit Reporting (No
+      **  Records).
+      *
+     C           *IN89     IFEQ *ON
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      **  Do Until End of File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+      **  Check if branch, ccy, deal type, and subtype has changed
+      *
+     C                     SELEC
+      *
+     C           BRCA      WHNE WSVBR
+     C                     MOVE 'Y'       WCHBR
+     C                     MOVE 'Y'       WCHCY
+     C                     MOVE 'Y'       WCHDT
+     C                     MOVE 'Y'       WCHST
+      *
+     C           CCY       WHNE WSVCY
+     C                     MOVE 'Y'       WCHCY
+     C                     MOVE 'Y'       WCHDT
+     C                     MOVE 'Y'       WCHST
+      *
+     C           DTYP      WHNE WSVDT
+     C                     MOVE 'Y'       WCHDT
+     C                     MOVE 'Y'       WCHST
+      *
+     C           DLST      WHNE WSVST
+     C           CLAS      ORNE WSVCL                                                         CDL038
+     C                     MOVE 'Y'       WCHST
+      *
+     C                     ENDSL
+      *
+      **  Process Report Lines
+      *
+     C                     EXSR SRREPT
+      *
+      **  Count records processed.
+      *
+     C           WOPEN     IFEQ 'Y'
+     C                     ADD  1         RCOUNT
+     C                     ENDIF
+      *
+      **  Read next record.
+      *
+     C                     READ DLDEALL0                 89
+      *
+      **  End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+      *
+      **  Write Sub-Totals to Report.
+      *
+     C                     EXSR SRCHST
+     C                     EXSR SRCHDT
+     C                     EXSR SRCHCY
+     C                     EXSR SRCHBR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRREPT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By:  SRPROC - Perform Detail Processing               *
+      *  Calls       SRCHST - Process a Change in Deal Subtype        *
+      *              SRCHDT - Process a Change in Deal Type           *
+      *              SRCHCY - Process a Change in Currency            *
+      *              SRCHBR - Process a Change in Branch              *
+      *              ZSEDIT - Format an Amount                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREPT    BEGSR                           *** SRREPT ***
+      *
+      **  Process a change in deal subtype, deal type, currency, and
+      **  booking branch
+      *
+     C           WCHST     IFEQ 'Y'
+     C                     EXSR SRCHST
+     C                     ENDIF
+     C           WCHDT     IFEQ 'Y'
+     C                     EXSR SRCHDT
+     C                     ENDIF
+     C           WCHCY     IFEQ 'Y'
+     C                     EXSR SRCHCY
+     C                     ENDIF
+     C           WCHBR     IFEQ 'Y'
+     C                     EXSR SRCHBR
+     C                     ENDIF
+      *
+      **  If printer file is open, proceed in printing details
+      *
+     C           WOPEN     IFEQ 'Y'
+      *
+      **  If branch, ccy, deal type or deal subtype has changed,
+      **  print on a new page
+      *
+     C           WCHBR     IFEQ 'Y'
+     C           WCHCY     OREQ 'Y'
+     C           WCHDT     OREQ 'Y'
+     C           WCHST     OREQ 'Y'
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      **  Initialise change flags
+      *
+     C                     MOVE *BLANK    WCHBR   1
+     C                     MOVE *BLANK    WCHCY   1
+     C                     MOVE *BLANK    WCHDT   1
+     C                     MOVE *BLANK    WCHST   1
+      *
+      **  Accumulate accrued interest amounts for sub-totalling
+      *
+     C                     ADD  AIPD      WTAIP1 150
+     C                     ADD  AIPD      WTAIP2 150
+     C                     ADD  AIPD      WTAIP3 150
+      *
+      **  Accumulate cost of funds accrual amounts for sub-totalling
+      *
+     C                     ADD  ACPD      WTACP1 150
+     C                     ADD  ACPD      WTACP2 150
+     C                     ADD  ACPD      WTACP3 150
+      *
+      **  Format report details
+      *
+     C                     MOVE DLNO      RDLNO
+     C                     MOVE CCY       RCCY
+     C                     MOVE DTYP      RDTYP
+     C                     MOVE DLST      RDLST
+     C                     MOVE CLAS      RCLAS                                               CDL038
+      *
+      **  Format principal amount
+      *
+     C                     MOVE *OFF      *IN35
+     C                     MOVE *OFF      *IN36
+      *
+     C           RCDT      IFEQ 'C'
+     C                     Z-ADDPCPL      ZFLD15
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RPCPL
+     C                     MOVE *ON       *IN35
+     C                     ENDIF
+      *
+     C           RCDT      IFEQ 'D'
+     C                     Z-ADDPUPR      ZFLD15
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RPUPR
+     C                     MOVE *ON       *IN36
+     C                     ENDIF
+      *
+      **  Format Accrued Interest
+      *
+     C                     Z-ADDAIPD      ZFLD15
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RAIPD
+      *
+      **  Format Accrued Cost of Funds
+      *
+     C                     Z-ADDACPD      ZFLD15
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RACPD
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      **  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCHST
+      *****************************************************************
+      *                                                               *
+      *  SRCHST - Subroutine to Process a Change in Deal Subtype.     *
+      *                                                               *
+      *  Called By:  SRREPT - Process Report Lines                    *
+      *              SRPROC - Detail Processing                       *
+      *  Calls    :  SRTOTL - Write a Subtotal Record                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHST    BEGSR                           *** SRCHST ***
+      *
+      **  Write deal subtype subtotals if printer file is open
+      *
+     C                     MOVE DLST      WSVST
+     C                     MOVE CLAS      WSVCL                                               CDL038
+     C           WOPEN     IFEQ 'Y'
+     C                     MOVE *ON       *IN31
+     C                     Z-ADDWTAIP1    WTAIPD 150
+     C                     Z-ADDWTACP1    WTACPD 150
+     C                     EXSR SRTOTL
+     C                     MOVE *OFF      *IN31
+     C                     Z-ADD*ZEROS    WTAIP1
+     C                     Z-ADD*ZEROS    WTACP1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SRCHDT
+      *****************************************************************
+      *                                                               *
+      *  SRCHDT - Subroutine to Process a Change in Deal Type.        *
+      *                                                               *
+      *  Called By:  SRREPT - Process Report Lines                    *
+      *              SRPROC - Detail Processing                       *
+      *  Calls    :  SRTOTL - Write a Subtotal Record                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHDT    BEGSR                           *** SRCHDT ***
+      *
+      **  Write deal type subtotals if printer file is open
+      *
+     C                     MOVE DTYP      WSVDT
+     C           WOPEN     IFEQ 'Y'
+     C                     MOVE *ON       *IN32
+     C                     Z-ADDWTAIP2    WTAIPD
+     C                     Z-ADDWTACP2    WTACPD
+     C                     EXSR SRTOTL
+     C                     MOVE *OFF      *IN32
+     C                     Z-ADD*ZEROS    WTAIP2
+     C                     Z-ADD*ZEROS    WTACP2
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SRCHCY
+      *****************************************************************
+      *                                                               *
+      *  SRCHCY - Subroutine to Process a Change in Currency.         *
+      *                                                               *
+      *  Called By:  SRREPT - Process Report Lines                    *
+      *              SRPROC - Detail Processing                       *
+      *  Calls    :  SRTOTL - Write a Subtotal Record                 *
+      *              *PSSR  - Error control subroutine                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHCY    BEGSR                           *** SRCHCY ***
+      *
+      **  Write currency subtotals if printer file is open
+      *
+     C                     MOVE CCY       WSVCY
+     C           WOPEN     IFEQ 'Y'
+     C                     MOVE *ON       *IN33
+     C                     Z-ADDWTAIP3    WTAIPD
+     C                     Z-ADDWTACP3    WTACPD
+     C                     EXSR SRTOTL
+     C                     MOVE *OFF      *IN33
+     C                     Z-ADD*ZEROS    WTAIP3
+     C                     Z-ADD*ZEROS    WTACP3
+     C                     ENDIF
+      *
+      **  Get currency decimal place
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM CCY       WCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  Handle database error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     MOVELCCY       DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    WDECP   10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SRCHBR
+      *****************************************************************
+      *                                                               *
+      *  SRCHBR - Subroutine to Process a Change in Booking Branch.   *
+      *                                                               *
+      *  Called By:  SRREPT - Process Report Lines                    *
+      *              SRPROC - Detail Processing                       *
+      *  Calls    :  SRTOTL - Write a Subtotal Record                 *
+      *              SRRCFP - RCF Processing for Audit Report         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHBR    BEGSR                           *** SRCHBR ***
+      *
+      **  If printer file is open
+      *
+     C                     MOVE BRCA      WSVBR
+     C           WOPEN     IFEQ 'Y'
+      *
+      **  Print report footer for previous branch or if end of file
+      *
+     C           PENTY     IFNE *BLANK
+     C           *IN89     OREQ *ON
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      **  Write out Total Format.
+      *
+     C                     WRITETRAILP1
+     C                     CLOSEDL6900P1
+     C                     MOVE 'N'       WOPEN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  If not yet end of file
+      *
+     C           *IN89     IFNE *ON
+      *
+      **  Get branch details using access object
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM BRCA      WBRCD   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      **  Handle database error
+      *
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVELBRCA      DBKEY            * DB ERROR 03 *
+     C                     Z-ADD003       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA8BRCD    RBRCA
+     C                     MOVELA8BRNM    RBRNM
+      *
+      **  Open printer file DL6900P1 if entity not blank
+      **  or the printer file is not yet open
+      *
+     C           PLEVL     IFEQ 'S'
+     C           WOPEN     ANDNE'Y'
+     C           PENTY     OREQ 'ALL'
+     C           WOPEN     ANDNE'Y'
+     C           PENTY     OREQ BRCA
+     C           WOPEN     ANDNE'Y'
+     C                     OPEN DL6900P1
+     C                     MOVE 'Y'       WOPEN
+      *
+      **  Ensure Report Spool File recorded by RCF
+      *
+     C           PENTY     IFNE *BLANK
+     C                     MOVE BRCA      SENTY
+     C                     ELSE
+     C                     MOVE *BLANKS   SENTY
+     C                     ENDIF
+      *
+     C                     EXSR SRRCFP
+     C                     ENDIF
+      *
+      **  End of if not end of file
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTOTL
+      *****************************************************************
+      *                                                               *
+      *  SRTOTL - Subroutine to Write a Subtotal record to the Report *
+      *                                                               *
+      *  Called By:  SRCHST - Process a Change in Deal Subtype        *
+      *              SRCHDT - Process a Change in Deal Type           *
+      *              SRCHCY - Process a Change in Currency            *
+      *              SRCHBR - Process a Change in Branch              *
+      *  Calls    :  ZSEDIT - Format an Amount                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTOTL    BEGSR                           *** SRTOTL ***
+      *
+      **  Format Total Accrued Interest
+      *
+     C                     Z-ADDWTAIPD    ZFLD15
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RTAIPD
+      *
+      **  Format Total Accrued Cost of Funds
+      *
+     C                     Z-ADDWTACPD    ZFLD15
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RTACPD
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD2         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      **  Write out Subtotal Record.
+      *
+     C                     WRITESUBTTL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *              SRPROC - Perform Detail Processing               *
+      *              *PSSR  - Error control subroutine                *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                           *** SRAUDT ***
+      *
+      **  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      **  If there is a DB Error, output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+      *
+      **  If P1 report is open, output the DB Error reference.
+     C           WOPEN     IFEQ 'Y'
+     C                     WRITEDBERRF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      **  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ *ZEROS
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *  Called By:  SRINIT - Perform Initialisation Processing       *
+      *              SRCHCY - Process a Change in Currency            *
+      *              SRCHBR - Process a Change in Booking Branch      *
+      *  Calls    :  SRAUDT - Produce Audit Report and End Program    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      **  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRCFP
+      *****************************************************************
+      *                                                               *
+      *  SRRCFP - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *  Called By:  SRCHBR - Process a Change in Branch              *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFP    BEGSR                            *** SRRCFP ***
+      *
+      **  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRCFA
+      *****************************************************************
+      *                                                               *
+      *  SRRCFA - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *  Called By:  SRINIT - Perform Initialisation Processing       *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFA    BEGSR                            *** SRRCFA ***
+      *
+      **  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZSEDIT
+     C/COPY ZSRSRC,ZSEDITZ3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,356 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ABS ER Guarantees Update for MM Rollovers')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - European Reporting                               *
+      *                                                               *
+      *  RPG/ER0965 - Guarantees Update for MM Rollovers              *
+      *                                                               *
+      *  Function: This program runs to update the secured by         *
+      *            reference, last change date and type of last       *
+      *            change on the guarantee masters file.              *
+      *                                                               *
+      *  Called By: CLP/ERC0965                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 06May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ERL463     PT      Date 24Dec97               *
+      *                 ULX004     DMC     Date 26FEB97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD027A - Conversion Of Customer Number to Alpha (Recompile) *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ERL463 - 'Secured by Reference' wrongly redefined             *
+      *  ULX004 - European Reporting Capital Adequacy                 *
+      *                                                               *
+      *****************************************************************
+      *
+      ***  Deal Amendments extract header
+     FDAMEXDH IF  E           K        DISK         KINFSR *PSSR
+      ***  MM Deals
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+      *
+      ***  Guarantees/Collateral                                    Prefix RR
+     FERGUARL0UF  E           K        DISK         KINFSR *PSSR
+      *
+     FER0965AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR - Program Initialisation                              *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+      *
+      ***  Array for copyright, fields validations
+     E                    CPY@    1   1 80               Copyright
+      *
+      *----------------------------------------------------------------------
+      *
+      ***  Local data area for database error details
+     ILDA         DS                            256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+     IDBERR       DS
+     I                                      134 141 WBFILE
+     I                                      142 170 WBKEY
+     I                                      171 180 WBPGM
+     I                                      181 1830WBASE
+     I                                      184 256 WFILL
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for MMNNNNAU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      **  Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+     I***RRSBYR      DS                                                   ERL463
+     I***                                     1   60DBRREF                ERL463
+      ** Copyright array
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      *
+      ***  DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      ***  DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      ***  External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * AUDIT    - SR AUDIT PROCESSING                                   *
+      * *PSSR    - SR DATA BASE ERROR PROCESSING                         *
+      * *INZSR   - SR INITIAL PROCESSING                                 *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * AOBANKR0 - PGM ACCESS BANK DETAILS INFORMATIONS                  *
+      *                                                                  *
+      ********************************************************************
+     C           'D'       SETLLERGUARL0
+     C           'D'       READEERGUARL0                 89
+      *
+     C           *IN89     DOWEQ*OFF                       B1
+      *
+      ***  Check record change type & expired ind.
+     C           RRCHTP    IFNE 'D'                        B2
+     C           RRRVEX    ANDNE'E'
+      *
+      ***  Retrieve transaction detail
+      *
+     C                     MOVELRRSBYR    DBRREF  60                      ERL463
+     C           DBRREF    CHAINDEALS                89
+      *
+      ***  If a live deal with a rollover, and the maturity date less
+      ***  than thedealing event control date
+      *
+     C           *IN89     IFEQ *OFF                       B3
+     C           RECI      ANDEQ'D'
+     C           MDAT      ANDNE0
+     C           MDAT      ANDLEEVCD
+     C           RBDN      ANDNE0
+     C*********************MOVE RBDN      DBRREF                          ERL463
+     C                     MOVELRBDN      RRSBYR                          ERL463
+      *
+      ***  Check if the deal exist
+      *
+     C           RBDN      CHAINDEALS                89
+     C           *IN89     IFEQ *OFF                       B4
+     C           RECI      ANDEQ'D'
+      *
+      ***  Reaplace the 'Secured By' reference by the new deal number
+      *
+     C                     Z-ADDBJRDNB    RRLCD
+     C                     MOVE 'A'       RRCHTP
+     C                     UPDATERGUARD0
+     C                     ADD  1         RCOUNT
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+      ***  Read next record
+     C           'D'       READEERGUARL0                 89
+      *
+     C                     ENDDO                           E1
+      *
+     C                     EXSR AUDIT
+      *
+      ***  End of program
+     C                     MOVE *ON       *INLR
+      *
+     C                     RETRN
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, *PSSR                            *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***ULX004
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      ULX004
+      *
+     C                     CALL 'ZSFILE'                                  ULX004
+     C                     PARM *BLANKS   SEQ     5                       ULX004
+     C                     PARM *BLANKS   SENTY   3                       ULX004
+     C                     PARM           SFILEU                          ULX004
+     C                     PARM           ZSNUMU                          ULX004
+     C                     PARM *BLANK    ZSERR   1                       ULX004
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'                                       ULX004
+     C                     SETON                     U7U8LR               ULX004
+     C                     RETRN                                          ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     ENDSR                                          ULX004
+      *
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - SR DATA BASE ERROR PROCESSING                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * *INZSR   - SR INITIAL PROCESSING                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WBFILE   - WORK FIELD DATABASE ERROR                             *
+      * WBKEY    - WORK FIELD DATABASE ERROR                             *
+      * WBASE    - WORK FIELD DATABASE ERROR                             *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVE DBERR     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *INZSR   - SR INITIAL PROCESSING                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * AOBANKR0 - PGM ACCESS BANK DETAILS INFORMATIONS                  *
+      * *PSSR    - SR DATA BASE ERROR PROCESSING                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+     C                     MOVEL'ER0965'  WBPGM
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'*FIRST'  WBKEY            ***************
+     C                     Z-ADD001       WBASE            * DB ERROR 01 *
+     C                     MOVE 'SDBANKPD'WBFILE           ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Get the event control date
+      *
+     C                     READ DAMEXDH                  89
+      *
+      ***  Handle Database Error.
+      *
+     C           *IN89     IFEQ *ON
+     C           RECI      ORNE 'A'
+     C                     MOVEL'DAMEXDH 'WBFILE           ***************
+     C                     Z-ADD002       WBASE            * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  WBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

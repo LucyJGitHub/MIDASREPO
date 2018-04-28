@@ -1,0 +1,101 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. 194978             Date 28Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CRT001  *CREATE    Date 28Feb95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+      *  194978 - Error in reversing Exchange Cash transaction '0JI'  *
+      *           (Cashier).                                          *
+     C*  CRT001 - Retail Teller System                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *            RTODCK - Exceed overdraft check                    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  Input                                              *
+      *            @TNAM  - Transaction amount                        *
+      *            @CLBL  - Cleared balance                           *
+      *            @ACST  - Account status                            *
+      *            @STYP  - Account sub-type                          *
+      *            @LDBL  - Ledger balance                            *
+      *            @TCHG  - Charge amount to debit in A/C currency    *
+      *                                                               *
+      * FLDS USED  Output                                             *
+      *            @TI    - Terminal error index                      *
+      *            @T     - Terminal error message array              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RTODCK    BEGSR                           ** RTODCK **
+      *
+      ** Define parameters
+     C                     Z-ADD@TI       @TI     20
+     C                     Z-ADD@TNAM     @TNAM  130
+     C                     Z-ADD@CLBL     @CLBL  150
+     C                     MOVEL@ACST     @ACST   1
+     C                     MOVEL@STYP     @STYP   1
+     C                     Z-ADD@TCHG     @TCHG  150
+      *
+      ** Add transaction amount to cleared-balance
+     C                     ADD  @TNAM     @CLBL
+      *
+      ** Include charge in check if transaction is withdrawal
+     C********** PFNCD     IFEQ '00L'                                                         194978
+     C********** PFNCD     OREQ '0JL'                                                         194978
+     C********** PFNCD     OREQ '0JO'                                                         194978
+     C********** PFNCD     OREQ '00O'                                                         194978
+     C           @FNCD     IFEQ '00L'                                                         194978
+     C           @FNCD     OREQ '0JL'                                                         194978
+     C           @FNCD     OREQ '0JO'                                                         194978
+     C           @FNCD     OREQ '00O'                                                         194978
+     C                     ADD  @TCHG     @CLBL
+     C                     END
+      *
+      ** If result is positive (i.e. overdrawn)
+     C           @CLBL     IFGT 0
+      *
+      ** If account-status is 'C' (flagged as closing)
+     C           @ACST     IFEQ 'C'
+     C                     ADD  1         @TI
+     C                     MOVEL'CLS.O/D' @T,@TI
+     C                     END
+      *
+      ** If account sub-type is 'S' (saving a/c)
+     C           @STYP     IFEQ 'S'
+     C*
+     C** Check first if transaction is from Clearing Chq Dep A/c ccy
+     C           FNCD      IFEQ '00K'
+     C                     Z-ADD@LDBL     @LDBL  150
+      *
+      ** Add transaction amount to ledger balance
+     C                     ADD  @TNAM     @LDBL
+      *
+      ** If result is positive (i.e. overdrawn)
+     C           @LDBL     IFGT 0
+     C                     ADD  1         @TI
+     C                     MOVEL'SVG.O/D' @T,@TI
+     C                     END
+     C*
+     C** Else transaction is not from Clearing Chq Dep A/c ccy
+     C                     ELSE
+     C                     ADD  1         @TI
+     C                     MOVEL'SVG.O/D' @T,@TI
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************

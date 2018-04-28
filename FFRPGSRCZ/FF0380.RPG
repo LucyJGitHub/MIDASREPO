@@ -1,0 +1,3509 @@
+     H        1
+     F********************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Transn update I  (charges/comms)')
+      *****************************************************************
+     F*                                                                  *
+     F*  Midas FUTURES AND OPTIONS MODULE
+     F*                                                                  *
+     F*   FF0380  -  TRANSACTIONS UPDATE PHASE I                         *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 246526             Date 21Mar07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 245463             Date 08Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 222165             Date 26May06               *
+      *                 237133             Date 26May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 083196             Date 25Apr05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CFF007             Date 05Mar01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 136059             Date 23Mar00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP003             Date 18Aug98               *
+      *                 CAC003             Date 25Feb97                  *
+      *                  CFF004             Date 02OCT96                 *
+     F*                  S71062             DATE 12DEC95                 *
+     F*                  S01408             DATE 06OCT95                 *
+     F*                  073714             DATE 01MAR95                 *
+     F*                  077563             DATE 06JUN95                 *
+     F*                  S01456             DATE 08NOV93                 *
+     F*                  S01455             DATE 05NOV93                 *
+     F*                  S01411             DATE 08APR93                 *
+     F*                  S01393             DATE 30OCT92                 *
+     F*                  FUJI-FF0011        DATE 21SEP92                 *
+     F*                  AUS022             DATE 07AUG92                 *
+     F*                  FO0017             DATE 07JAN91                 *
+     F*                  S01117             DATE 19APR90                 *
+     F*                  S01240             DATE 12/04/89                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  246526 - Recompiled due to change in FFSETLZ4.               *
+      *  245463 - Applied fix 241735.                                 *
+      *  241735 - Future commission fee profit centre is not right.   *
+      *           Fix is to use book profit centre entered during the *
+      *           trade instead of the ICD default.                   *
+      *  237133 - Remove fix S083196 to prevent incoorect account     *
+      *           keys being generated.                               *
+      *  222165 - Fix to avoid reversal of comms & charges twice.     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  083196 -  Add field Market in the Ac/k for IML requirement.  *
+      *         -  Fix applied by CER001.                             *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information.                                        *
+      *  CFF007 - Futures and Options Enhancement for Private Banking *
+      *  136059 - For settle trades (TNBR negative), include the open *
+      *            contract count (after charge processing), so as    *
+      *            not to miss processing when matched open contracts *
+      *            are non-zero while matched closed ones are zero.   *
+      *  CAP003 - Conversion of Midas inputs to modular API structure *
+      *           (phase 2) - recompiled                              *
+     F*  CAC003 - Profit Centre Accounting Development Phase 3.          *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  S71062 - FF/PM Interface - Initial margin                    *
+     F*  S01408 - Addition of Core Hooks FF0380FFP1                   *
+     F*                                  FF0380EEP1                   *
+     F*                                  FF0380CCP1                   *
+     F*                                  FF0380CCP2                   *
+     F*  073714 - OTC ENHANCEMENTS                                       *
+     F*  077563 - If a DBE occured in an FF/EOC, reopen was not          *
+     F*           possible because PF/PRONOM  & MEMOSM were allocated.   *
+     F*  S01456 - 'FF' MONTHLY P&L ENHANCEMENTS.                         *
+     F*           Recompiled due to change to PF/MKCTLD.                 *
+     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                         *
+     A*   S01411 - RECOMPILED BECAUSE 'ORIGINAL ENTRY DATE' HAS BEEN     *
+     A*            ADDED TO TRANSD.                                      *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   AUS022  -  AUSTRALIAN CHANGE : Introduction of Processing      *
+     F*              Types 7 and 8.                                      *
+     F*   FO0017  -  UPDATE BRCA WITH SETTLEMENT ACCOUNT BRANCH IN S/R   *
+     F*              WACMVD (USED TO ACCESS A/C MOVEMENTS FILE FFACVD).  *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   S01240  -  ADDITION OF REAL-TIME STATEMENTS                    *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F******IGNDECERR(*NO )                                              *073714
+     F*     IGNDECERR(*YES)                                              *073714
+     F*                                                                  *
+     F*****************************************************************
+     F/COPY WNCPYSRC,FF0380FFP1                                           S01408
+     FFFCOCHL0UF  E           K        DISK                      A        CFF007
+     FACCNT   IF  E           K        DISK                           U2
+     FACNUM   IF  E           K        DISK                           U2
+     F            ACCNTABF                          KRENAMEACNUMABF
+     FMKCTL   IF  E           K        DISK                           UC
+     FMARKT   IF  E           K        DISK                           UC
+     FTABFF   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB10F                          KIGNORE               S01117
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB11F                          KIGNORE               S01117
+     F* ICD 3     TABTB20F                          KIGNORE
+     F* ICD 5     TABTB40F                          KIGNORE
+     F* ICD-FF    TABTB80F                          KIGNORE
+     F* A/C 1     TABTE10F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F* NOSTROS   TABLETLF                          KIGNORE
+     F* BRANCH    TABLETRF                          KIGNORE
+     F            TABLETRF                          KIGNORE               S01117
+     F            TABLET2F                          KIGNORE
+     FCHGCM   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     F*MEMOSM**UF  E           K        DISK                      A    U2 077563
+     F*PRONOM**UF  E           K        DISK                      A    U6 077563
+     FMEMOSM  UF  E           K        DISK                      A    UC  077563
+     FPRONOM  UF  E           K        DISK                      A    UC  077563
+     FFFACMVD O   E           K        DISK                      A    U6  S01240
+     FFOKEYA  UF  E                    DISK
+     FTRANS3  IF  E           K        DISK
+     FTRSET   UF  E           K        DISK
+     FFOKEYD  O   E                    DISK                      A
+     FCCREVPD O   E                    DISK                      A                            222165
+     FPOCHGTC O   E                    DISK                      A
+     FPOCHGTK O   E                    DISK                      A
+     FFF0380AUO   E                    PRINTER
+     F*
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       01         READ TRANS3
+     F*       10         MEMOSM NOT FOUND
+     F*       11         PRONOM NOT FOUND
+     F*       79         DB ERRORS
+     F*
+     F*     80-89       Reserved for Standard FF Subroutines
+     F*     90-99       Reserved for Standard MIDAS Subroutines
+     F*
+     F*     U7+U8       Database Errors
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    TXT     1   1 20
+     E*  ARRAY FOR PROGRAM TEXT HANDLING
+     E                    RNG         9  5 0
+     E** ARRAY TO STORE THE RANGES
+     E*
+     E                    AMT         9 13 0
+     E** ARRAY TO STORE THE AMOUNTS FOR THE RESPECTIVE RANGES
+     E*
+     E                    FULA       34  1
+     E** ARRAY FOR UNDERLINING
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E** ARRAYS FOR SR ZDATE2
+     E*  (NB. ARRAY ZMNM ALSO USED BY PROGRAM TO DETERMINE MONTH NAME)
+     E*
+     E/COPY ZSRSRC,FFFMTZ1
+     E*
+     E*  FFFMT - TO FORMAT NAME AND DATE FIELD FOR OUTPUT TO REPORT
+     E*
+     E/COPY WNCPYSRC,FF0380EEP1                                           S01408
+      /EJECT
+     ICHGCMDF                                                             CAC003
+     I              PRFC                            PRFCC                 CAC003
+     I*
+     I/COPY ZSRSRC,FFSETLZ1
+     I*
+     I/COPY ZSRSRC,FFFMTZ2
+     I*
+     I**  DATA STRUCTURE FOR FFFMT TO REDEFINE ARRAY FFA AS OUTPUT
+     I**  FIELD FFTXT
+     I*
+     IFFKY        DS                             14
+     I** FO ACCOUNT KEY
+     I****************************************1   3 FOKEY1                S01455
+     I                                        1   1 FKEY11                S01455
+     I                                        3   3 FKEY13                S01455
+     I                                        2   2 INVA                  S01455
+     I                                        4   5 BOKC
+     I                                        6  10 TISTT
+     I/COPY WNCPYSRC,FF0380I003
+     I                                       11  14 FOKEY2
+     I*
+     IWRNG        DS                             45
+     I** DATA STRUCTURE TO STORE ALL CHRG/COMS LOWER RNGE LIMIT
+     I                                        1  450RNG
+     I                                        1   50LR01
+     I                                        6  100LR02
+     I                                       11  150LR03
+     I                                       16  200LR04
+     I                                       21  250LR05
+     I                                       26  300LR06
+     I                                       31  350LR07
+     I                                       36  400LR08
+     I                                       41  450LR09
+     I*
+     IWAMT        DS                            117
+     I** DATA STRUCTURE TO STORE ALL CHRG/COMS AMOUNT
+     I                                        1 1170AMT
+     I                                        1  130CA01
+     I                                       14  260CA02
+     I                                       27  390CA03
+     I                                       40  520CA04
+     I                                       53  650CA05
+     I                                       66  780CA06
+     I                                       79  910CA07
+     I                                       92 1040CA08
+     I                                      105 1170CA09
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      134 180 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I/COPY WNCPYSRC,FF0380I001
+     I*                                                                   CFF007
+     I** DS for Switchable Features Access Object                         CFF007
+     I*                                                                   CFF007
+     ISCSARD    E DSSCSARDPD                                              CFF007
+     I*                                                                   CFF007
+     I** DS for Extended Client Details                                   CFF007
+     I*                                                                   CFF007
+     ISDCUST    E DSSDCUSTPD                                              CFF007
+     I*                                                                   CFF007
+     I** Long data structure for access objects                           CFF007
+     I*                                                                   CFF007
+     I@DSSDY    E DSDSSDY                                                 CFF007
+     I*                                                                   CFF007
+     I** Very long data structure for access objects                      CFF007
+     I*                                                                   CFF007
+     I@DSLDY    E DSDSLDY                                                 CFF007
+     I*
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISDMMOD    E DSSDMMODPD                                              CAC003
+      ** Module Details Accessed via Access Program                       CAC003
+     ISDFODA    E DSSDFODAPD                                              CAC003
+      ** External Data Structure for Futures and Options                  CAC003
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+     I**    EXTERNAL DATA STRUCTURE FOR BRANCH DETAILS                    S01117
+     I              QQDFAC                          DFACQQ                                    CGL029
+     I              A8BICN                          BICN                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I**    EXTERNAL DATA STRUCTURE FOR BANK DETAILS                      S01117
+     I              BJURPT                          TITL                  S01117
+     ISDGELR    E DSSDGELRPD                                              073714
+     I**  GENERAL LEDGER DETAILS DATA STRUCTURE                           073714
+     I              QQACCD                          QQACD1                                    CGL029
+     I@DSFDY    E DSDSFDY                                                 S01117
+     I**    FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE            S01117
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      ** Second DS for Access Programs, Long Data Structure                                   CGL029
+     I              SDY1                            SDYZ1                                     CGL029
+     I              SDY2                            SDYZ2                                     CGL029
+     I              SDY3                            SDYZ3                                     CGL029
+     I              SDY4                            SDYZ4                                     CGL029
+      *                                                                                       CGL029
+     ISDACOD    E DSSDACODPD                                                                  CGL029
+      ** External data structure for account code                                             CGL029
+     I              QQACCD                          QQACD2                                    CGL029
+      *                                                                                       CGL029
+     IBRIS        DS                              8
+     I** DATA STRUCTURE TO STORE BRANCH AND BROKER CODE
+     I***********                             1   30BRCD                  S01117
+     I                                        1   3 BRCA                  S01117
+     I                                        4   8 ISTT
+     I*
+     IPBRIS       DS                              8
+     I** DATA STRUCTURE TO STORE BRANCH AND BROKER CODE
+     I***********                             1   30PBRCD                 S01117
+     I                                        1   3 PBRCA                 S01117
+     I                                        4   8 PISTT
+      /EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                                       CGL020
+     I            DS                                                                          CGL020
+     I**********                              1   60PCBCD                              CGL020 CSD027
+     I                                        1   6 PCBCD                                     CSD027
+      ** Customer Broker Code Parameter for ZAAMLSETFF                                        CGL020
+      *                                                                                       CGL020
+     I              'ZAAMLSETFF'          C         WZAAML                                    CGL020
+      ** Futures and Options Settlement Fields Extractor Program Name                         CGL020
+      *                                                                                       CGL020
+     I/COPY WNCPYSRC,FF0380I002
+     C********************************************************************
+     C*
+      ** The Market is passed to the program as a parameter
+     C*
+     C           *LIKE     DEFN MRKT      PMRKT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PMRKT
+     C*
+     C/COPY ZSRSRC,FFSETLZ2
+     C*
+      **  DEFINE KEY LIST FOR CHAINING TO CHGCM FILE
+     C*
+     C           CHGCMK    KLIST
+     C                     KFLD           ISCY
+     C                     KFLD           CGCM
+     C*
+      ****DEFIME*KEU*FOR*LF/MEMOSM****************************************S01117
+      **  DEFINE KEY FOR LF/MEMOSM                                        S01117
+     C*
+     C           MEMKEY    KLIST
+     C                     KFLD           FFBRCB                          S01117
+     C                     KFLD           FFCNUM
+     C                     KFLD           FFCCY
+     C                     KFLD           FFACOD
+     C                     KFLD           FFACSQ
+     C*
+      **  DEFINE KEY FOR LF/PRONOM
+     C*
+     C           PROKEY    KLIST
+     C                     KFLD           FFCCY
+     C                     KFLD           FFNOSN
+     C*
+      **  DEFINE THE FIELDS LENGTH OF SOME WORK FIELDS
+     C*
+     C           *LIKE     DEFN RECI      TRECI
+     C           *LIKE     DEFN NUCO      WCONO
+     C           *LIKE     DEFN NUCO      TCONO
+     C           *LIKE     DEFN NUCO      SNUCO
+     C           *LIKE     DEFN EAMT      WRATA
+     C           *LIKE     DEFN EAMT      TRATA
+     C           *LIKE     DEFN CPSB      XCPSB
+     C           *LIKE     DEFN CPDB      XCPDB
+     C           *LIKE     DEFN CPSC      XCPSC
+     C           *LIKE     DEFN CPDC      XCPDC
+     C           *LIKE     DEFN BCHP      PBCHP
+     C           *LIKE     DEFN BCMP      PBCMP
+     C           *LIKE     DEFN CCHP      PCCHP
+     C           *LIKE     DEFN CCMP      PCCMP
+     C           *LIKE     DEFN LDBL      BCHCM
+     C           *LIKE     DEFN LDBL      CCHCM
+     C           *LIKE     DEFN LDBL      PBCHCM
+     C           *LIKE     DEFN LDBL      PCCHCM
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+      ** START PROCESS - THE INITIAL DATA RETRIEVALS
+     C*
+     C                     EXSR START
+     C*
+      ** MAIN PROCESS - THE MAIN PROGRAM LOGIC
+     C*
+     C                     EXSR MAIN
+     C*
+      ** END PROCESS - UPDATE FOKEYA AND OUTPUT RUN CONTROL FILE
+     C*
+     C                     EXSR EXIT
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      /EJECT
+      ********************************************************************
+      ** INDEX OF SUBROUTINES
+      **
+      ** START             ACCESS VARIOUS FILES AND INITIALIZE DATA
+      **
+      ** MAIN              THE MAIN LOGIC
+      **
+      ** EXIT              UPDATE AUDIT FILE AND OUTPUT RUN CONTROL REPORT
+      **
+      ** ACTIVE            PROCESS THE ACTIVE TRANSACTION
+      **
+      ** DELETE            PROCESS THE DELETED TRANSACTION
+      **
+      ** BPSTCH            POST BROKER CHARGES
+      **
+      ** CPSTCH            POST CUSTOMER CHARGES
+      **
+      ** BCOSHE            DETERMINING BROKER-CHARGES-PATTERN S/H/E
+      **
+      ** CCOSHE            DETERMINING CUSTOMER-CHARGES-PATTERN S/H/E
+      **
+      ** BPTCOA            BROKER COMMISSION BASED ON
+      **                     BROKER-CHARGES-PATTERN = 'A'
+      **
+      ** CPTCOA            CUSTOMER COMMISSION BASED ON
+      **                     CUST-CHARGES-PATTERN = 'A'
+      **
+      ** BPTCOS            BROKER COMMISSION WAS TO BE PAID IF THE
+      **                     TRANSACTION WAS USED TO OPEN A POSITION
+      **
+      ** CPTCOS            CUSTOMER COMMISSION WAS TO BE PAID IF THE
+      **                     TRANSACTION WAS USED TO OPEN A POSITION
+      **
+      ** BPTCOH            BROKER COMMISSION WAS TO BE PAID IF THE
+      **                     TRANSACTION WAS USED TO OPEN OR CLOSE A
+      **                     POSITION
+      **
+      ** BPTCOH            CUSTOMER COMMISSION WAS TO BE PAID IF THE
+      **                     TRANSACTION WAS USED TO OPEN OR CLOSE A
+      **                     POSITION
+      **
+      ** BPTCOE            BROKER COMMISSION WAS TO BE PAID IF THE
+      **                     TRANSACTION WAS USED TO CLOSE A POSITION
+      **
+      ** CPTCOE            CUSTOMER COMMISSION WAS TO BE PAID IF THE
+      **                     TRANSACTION WAS USED TO CLOSE A POSITION
+      **
+      ** BREVCH            REVERSE BROKER CHARGES
+      **
+      ** CREVCH            REVERSE CUSTOMER CHARGES
+      **
+      ** BREVCO            REVERSE BROKER COMMISSION
+      **
+      ** CREVCO            REVERSE CUSTOMER COMMISSION
+      **
+      ** TTFCAL            CALCULATE TIER, THRESHOLD OR FLAT RATE
+      **
+      ** WRITER            WRITE FOKEYD, POCHGTC, POCHGTK
+      **
+      ** UMEMPR            DETERMINE IF MEMOSM OR PRONOM NEEDS UPDATING,
+      **                   PREPARE THE PARAMETERS BEFORE CALLING FOR
+      **                   FFSETL
+      **
+      ** ZDATE2            CONVERT DAY NUMBER TO DATE FORMAT
+      **
+      ** FFFMT             FORMAT REPORT HEADING NAME & DATE
+      **
+      ** FFSETL            THE STANDARD SUBROUTINE TO DETERMINE PRONOM
+      **                   OR PRONOM NEEDS UPDATING
+      **
+      ** UMEMO             UPDATE MEMOSM FOR CUSTOMER OR BROKER
+      **
+      ** UPRON             UPDATE PRONOM FOR CUSTOMER OR BROKER
+      **                                                                  S01240
+      ** WACMVD            WRITE RECORD TO PF/FFACMVD                     S01240
+      **
+      ** *PSSR             HANDLE ABNORMAL ERROR CONDITIONS               S01117
+      **                                                                  S01117
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      **
+      ** START S/R - TO INITIALISE STATIC FIELDS AND ACCESS STANDING DATA
+      ** CALLED ONCE AT START OF PROGRAM
+      ** CALLS NO OTHER ROUTINES
+      **
+      ********************************************************************
+     C*
+     C           START     BEGSR                           * START BEGSR *
+     C*
+      ** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'FF0380'  DBPGM
+     C                     Z-ADD0         DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+      ** INITIALIZE INDICATORS TO BE WRITTEN TO POCHGTC AND POCHGTK
+     C*
+     C                     MOVE 'N'       AOSI
+     C                     MOVE 'N'       ATCI
+     C                     MOVE 'N'       PUPI
+     C*
+     C/COPY ZSRSRC,FFSETLZ3
+     C*
+     C***********                                                         S01117
+      ***GET*INSTALLATION*CONTROL*DATA*RECORD*1*FOR*RUN*DATE**************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 79               S01117
+      ***DB*ERROR*********************************************************S01117
+     C***********                                                         S01117
+     C************IN79     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          SETON                     U7U8  ***************S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C***********          MOVEL'TABFF'   DBFILE           ***************S01117
+     C***********          MOVEL'01'      ZTABKY 12                       S01117
+     C***********          MOVE '10'      ZTABKY                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C***********          EXSR EXIT                                      S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C**   DETERMINE DATE FORMAT DDMMYY OR MMDDYY
+     C**   ( *IN98 ON IF MMDDYY )
+     C*
+     C           DATF      COMP 'M'                      98
+     C***********                                                         S01117
+      ***GET*INSTALLATION*CONTROL*DATA*RECORD*2***************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB11F                 79               S01117
+     C*                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+      ** DB ERROR
+     C*
+     C************IN79     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**S01117
+     C***********          Z-ADD2         DBASE            **DB ERRS01117 073714
+     C                     Z-ADD01        DBASE            **DB ERROR 01**073714
+     C***********          MOVEL'TABFF'   DBFILE           ***************S01117
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01117
+     C***********          MOVEL'01'      ZTABKY                          S01117
+     C***********          MOVE '11'      ZTABKY                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C                     MOVEL@OPTN     DBKEY                           S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR EXIT
+     C                     END
+     C*                                                                   073714
+      ** GET INSTALLATION CONTROL DATA RECORD 2                           073714
+     C*                                                                   073714
+     C**********           CALL 'AOGELRR0'                                             073714 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD                           073714
+     C                     PARM '*FIRST  '@OPTN                           073714
+     C********** SDGELR    PARM SDGELR    @DSFDY                                       073714 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   073714
+      ** DB ERROR                                                         073714
+     C*                                                                   073714
+     C           @RTCD     IFNE *BLANK                                    073714
+     C                     SETON                     U7U8                 073714
+     C           *LOCK     IN   LDA                        ***************073714
+     C                     Z-ADD02        DBASE            * DB ERROR 02 *073714
+     C                     MOVEL'SDGELRPD'DBFILE           ***************073714
+     C                     MOVEL@OPTN     DBKEY                           073714
+     C                     MOVEL@OPTN     DBOPTN                          073714
+     C                     OUT  LDA                                       073714
+     C                     EXSR *PSSR                                     073714
+     C                     EXSR EXIT                                      073714
+     C                     END                                            073714
+     C*                                                                   CAC003
+     C** Access Module Details File using AOMMODR0                        CAC003
+     C*                                                                   CAC003
+     C                     CALL 'AOMMODR0'                                CAC003
+     C                     PARM '*MSG   ' @RTCD                           CAC003
+     C                     PARM '*FIRST  '@OPTN                           CAC003
+     C           SDMMOD    PARM SDMMOD    @DSFDY                          CAC003
+     C*                                                                   CAC003
+     C           @RTCD     IFNE *BLANK                                    CAC003
+     C                     SETON                     U7U8                 CAC003
+     C           *LOCK     IN   LDA                        ***************CAC003
+     C                     Z-ADD13        DBASE            * DB ERROR 13 *CAC003
+     C                     MOVEL'SDMMODPD'DBFILE           ***************CAC003
+     C                     MOVEL@OPTN     DBKEY                           CAC003
+     C                     MOVEL@OPTN     DBOPTN                          CAC003
+     C                     OUT  LDA                                       CAC003
+     C                     EXSR *PSSR                                     CAC003
+     C                     EXSR EXIT                                      CAC003
+     C                     END                                            CAC003
+     C*                                                                   CAC003
+     C** Check if SAR CAC003 is installed                                 CAC003
+     C*                                                                   CAC003
+     C                     CALL 'AOSARDR0'                                CAC003
+     C                     PARM '       ' @RTCD   7                       CAC003
+     C                     PARM '*VERIFY' @OPTN   7                       CAC003
+     C                     PARM 'CAC003'  @SARD   6                       CAC003
+     C*                                                                   CAC003
+     C           @RTCD     IFEQ *BLANK                                    CAC003
+     C           BGN0ST    ANDEQ'Y'                                       CAC003
+     C                     MOVE '1'       *IN20                           CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C** Access the F&O ICD file using AOFODAR0                           CAC003
+     C*                                                                   CAC003
+     C                     CALL 'AOFODAR0'                                CAC003
+     C                     PARM '*MSG   ' @RTCD                           CAC003
+     C                     PARM '*FIRST  '@OPTN                           CAC003
+     C           SDFODA    PARM SDFODA    @DSFDY                          CAC003
+     C*                                                                   CAC003
+     C           @RTCD     IFNE *BLANK                                    CAC003
+     C                     SETON                     U7U8                 CAC003
+     C           *LOCK     IN   LDA                        ***************CAC003
+     C                     Z-ADD14        DBASE            * DB ERROR 14 *CAC003
+     C                     MOVEL'SDFODAPD'DBFILE           ***************CAC003
+     C                     MOVEL@OPTN     DBKEY                           CAC003
+     C                     MOVEL@OPTN     DBOPTN                          CAC003
+     C                     OUT  LDA                                       CAC003
+     C                     EXSR *PSSR                                     CAC003
+     C                     EXSR EXIT                                      CAC003
+     C                     END                                            CAC003
+     C/COPY WNCPYSRC,FF0380C012
+      *                                                                   CFF007
+      ** Check if switchable feature CFF007 is installed                  CFF007
+      *                                                                   CFF007
+     C                     CALL 'AOSARDR0'                                CFF007
+     C                     PARM *BLANKS   @RTCD   7                       CFF007
+     C                     PARM '*VERIFY' @OPTN   7                       CFF007
+     C                     PARM 'CFF007'  @SARD   6                       CFF007
+     C           SCSARD    PARM SCSARD    @DSSDY                          CFF007
+      *                                                                   CFF007
+     C           @RTCD     IFNE *BLANKS                                   CFF007
+     C           @RTCD     ANDNE'*NRF   '                                 CFF007
+     C           *LOCK     IN   LDA                                       CFF007
+     C                     Z-ADD15        DBASE             **************CFF007
+     C                     MOVE 'SCSARDPD'DBFILE            *DB ERROR 015*CFF007
+     C                     MOVEL@SARD     DBKEY             **************CFF007
+     C                     EXSR *PSSR                                     CFF007
+     C                     EXSR EXIT                                      CFF007
+     C                     ELSE                                           CFF007
+      *                                                                   CFF007
+     C           @RTCD     IFEQ *BLANKS                                   CFF007
+     C                     MOVE 'Y'       CFF007  1                       CFF007
+     C                     ELSE                                           CFF007
+     C                     MOVE 'N'       CFF007                          CFF007
+     C                     ENDIF                                          CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                                       CGL020
+      ** Access SAR Details to see if Midas Compliance Watch-Additional                       CGL020
+      ** A/C Posting Information(CGL020) is installed.                                        CGL020
+      *                                                                                       CGL020
+     C                     MOVEL'N'       CGL020  1                                           CGL020
+     C                     CALL 'AOSARDR0'                                                    CGL020
+     C                     PARM *BLANKS   @RTCD                                               CGL020
+     C                     PARM '*VERIFY '@OPTN                                               CGL020
+     C                     PARM 'CGL020'  @SARD                                               CGL020
+     C           SCSARD    PARM SCSARD    @DSSDY                                              CGL020
+      *                                                                                       CGL020
+     C           @RTCD     IFNE *BLANKS                                                       CGL020
+     C           @RTCD     ANDNE'*NRF   '                                                     CGL020
+     C           *LOCK     IN   LDA                                                           CGL020
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL020
+     C                     MOVEL'CGL020'  DBKEY                                               CGL020
+     C                     Z-ADD22        DBASE                                               CGL020
+     C                     OUT  LDA                                                           CGL020
+     C                     EXSR *PSSR                                                         CGL020
+     C                     EXSR EXIT                                                          CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C           @RTCD     IFEQ *BLANKS                                                       CGL020
+     C                     MOVEL'Y'       CGL020                                              CGL020
+     C                     ENDIF                                                              CGL020
+     C*
+      ** GET INSTALLATION CONTROL DATA RECORD 3
+     C*
+     C                     READ TABTB20F                 79
+      ** DB ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+     C                     Z-ADD3         DBASE            **DB ERROR 03**S01117
+     C                     MOVEL'TABFF'   DBFILE           ***************
+     C***********          MOVEL'01'      ZTABKY                          S01117
+     C                     MOVEL'01'      ZTABKY 12                       S01117
+     C                     MOVE '20'      ZTABKY
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR EXIT
+     C                     END
+     C*
+      ** GET INSTALLATION CONTROL DATA RECORD 4
+     C*
+     C                     READ TABTB40F                 79
+      ** DB ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'04'      DBASE            **DB ERROR 04**S01117
+     C                     Z-ADD4         DBASE            **DB ERROR 04**S01117
+     C                     MOVEL'TABFF'   DBFILE           ***************
+     C                     MOVEL'01'      ZTABKY
+     C                     MOVE '40'      ZTABKY
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR EXIT
+     C                     END
+     C*
+      ** ACCESS TABTB80 FOR CUSTIOMER CHARGES COMPOUNDED INDIATOR
+     C*
+     C                     READ TABTB80F                 79
+      ** DB ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'05'      DBASE            **DB ERROR 05**S01117
+     C                     Z-ADD5         DBASE            **DB ERROR 05**S01117
+     C                     MOVEL'TABFF'   DBFILE           ***************
+     C                     MOVEL'01'      ZTABKY
+     C                     MOVE '80'      ZTABKY
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR EXIT
+     C                     END
+     C*
+     C**   SET UP THE MARKET CENTRE NAME AND
+     C**   THE BUSINESS DATE FOR THE REPORT
+     C*
+     C           PMRKT     IFEQ *BLANK
+     C*
+     C**   IF THE MARKET CENTRE IS 'OVER THE COUNTER', USE THE RUN DATE
+     C**   & "OVER THE COUNTER" AS THE BUSINESS DATE & MARKET NAME,
+     C*
+     C**   "OVER THE COUNTER"
+     C*
+     C           *LIKE     DEFN MKTN      RMKTN
+     C                     MOVEATXT,1     RMKTN
+     C*
+     C**   RUN DATE - DDMMMYY
+     C*
+     C           *LIKE     DEFN RUNA      RBUSD
+     C                     MOVE RUNA      RBUSD
+     C           *LIKE     DEFN RUND      CBUSD
+     C                     MOVE RUND      CBUSD
+     C**
+     C                     ELSE
+     C*
+     C                     OPEN MKCTL
+     C*
+     C**   OTHERWISE IF A MARKET CENTRE CODE IS RECEIVED,
+     C**   ACCESS LF/MKCTL FOR THE BUSINESS DATE
+     C*
+     C           PMRKT     CHAINMKCTL                79
+      ** DB ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'06'      DBASE            **DB ERROR 06**S01117
+     C                     Z-ADD6         DBASE            **DB ERROR 06**S01117
+     C                     MOVEL'MKCTL'   DBFILE           ***************
+     C                     MOVELPMRKT     DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR EXIT
+     C                     END
+     C*
+     C**   FORMAT BUSINESS DATE AS DDMMMYY FOR OUTPUT TO REPORT
+     C*
+     C                     MOVE BUSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RBUSD
+     C                     MOVE BUSD      CBUSD
+     C*
+     C                     OPEN MARKT
+     C*
+     C**   ACCESS LF/MARKT FOR THE MARKET NAME
+     C*
+     C           MRKT      CHAINMARKT                79
+      ** DB ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'07'      DBASE            **DB ERROR 07**S01117
+     C                     Z-ADD7         DBASE            **DB ERROR 07**S01117
+     C                     MOVEL'MARKT'   DBFILE           ***************
+     C                     MOVELPMRKT     DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR EXIT
+     C                     END
+     C*
+     C                     MOVE MKTN      RMKTN
+     C**
+     C                     END
+     C*                                                                   073714
+      ** DETERMINE EVENT CONTROL DATE                                     073714
+     C*                                                                   073714
+     C           PMRKT     IFEQ *BLANK                                    073714
+     C           BKAPDT    IFLT BJDNWD                                    073714
+     C                     Z-ADDBKAPDT    EVCD    50                      073714
+     C                     ELSE                                           073714
+     C           BJDNWD    SUB  1         EVCD                            073714
+     C                     END                                            073714
+     C                     ELSE                                           073714
+     C                     Z-ADDBUSD      EVCD                            073714
+     C                     END                                            073714
+     C**
+     C/SPACE 5
+     C*
+     C**   USE FF STANDARD SUBROUTINE FFFMT TO FORMAT THE MARKET CENTRE
+     C**   NAME AND BUSINESS DATE FOR OUTPUT ON THE REPORT HEADING
+     C*
+     C                     MOVE RMKTN     FFNAM
+     C                     MOVE RBUSD     FFDAT
+     C                     EXSR FFFMT
+     C                     MOVE FFTXT     RFFTXT
+     C*
+     C**  Set up underlining for heading
+     C**  Initialise array index
+     C                     Z-ADD0         X       20
+     C*
+     C**  FFULIN returned from SR. FFFMT contains number of characters
+     C**  for underline
+     C           X         DOUEQFFULIN
+     C                     ADD  1         X
+     C                     MOVEA'-'       FULA,X
+     C                     END
+     C*
+     C**  Move underline array to output field
+     C                     MOVEAFULA      FULINE
+     C*
+     C/COPY WNCPYSRC,FF0380CCP1                                           S01408
+     C*
+     C           XTSTAR    ENDSR                           ** XTSTAR ESR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      ** EXIT   S/R TO UPDATE FOKEYA, OUTPUT RUN CONTROL REPORT, SETON
+      **               DB ERROR INDICATORS AND TERMINATES THE PROGRAM
+      ** CALLED FROM START, MAIN, TTFCAL
+      ** CALLS  NO S/R
+      **
+     C********************************************************************
+     C*
+     C           EXIT      BEGSR                           ** EXIT  SR **
+     C*
+     C           *INU7     IFEQ '0'
+     C           *INU8     ANDEQ'0'
+     C*
+      ** ACCESS FOKEYA AND UPDATE FOKEYA ONLY IF THERE IS NO DB ERROR
+     C*
+     C                     READ FOKEYAF                  79
+      ** DB ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'T'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'08'      DBASE            **DB ERROR 08**S01117
+     C                     Z-ADD8         DBASE            **DB ERROR 08**S01117
+     C                     MOVEL'FOKEY'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C                     ELSE
+      ** UPDATE FOKEYA ONLY IF THERE IS FOKEYD RECORD WRITTEN OUT
+     C*
+     C           COUNT     IFNE 0
+     C*
+      ** ADD HASH TOTAL TO FILE CONTROL TOTAL, ACCOMODATING OVERFLOW
+     C*
+     C                     ADD  ZZTOTI    HRWN
+     C           HRDC      ADD  ZZTOTD    TEMP    30
+     C*
+     C           TEMP      IFLT HRDC
+     C                     ADD  1         HRWN
+     C                     END
+     C*
+     C                     Z-ADDTEMP      HRDC
+     C*
+     C                     ADD  COUNT     NORE
+     C                     MOVE 'T'       RECI
+     C*
+     C                     UPDATFOKEYAF
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+      ** OUTPUT RUN CONTROL REPORT, ONE PAGE ONLY
+     C*
+     C                     WRITEFMTP101
+     C*
+     C   U7 U8             WRITEFMTP102
+     C*
+     C***********          WRITEFMTP103                                   S01117
+     C*
+      ** TERMINATES THE PROGRAM
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C           XTEXIT    ENDSR                           ** XTEXIT ESR**
+     C*
+     C********************************************************************
+      /EJECT
+      ********************************************************************
+      **
+      ** MAIN  S/R TO PROCESS TRANS3 RECORD
+      ** CALLED ONCE AT START OF THE PROGRAM
+      ** CALLS: ACTIVE TO PROCESS ACTIVE TRANSACTION
+      **        DELETE TO PROCESS DELETED TRANSACTION
+      **
+      ********************************************************************
+     C*
+     C           MAIN      BEGSR                           ** MAIN  BSR **
+     C*
+      ** READ FIRST TRANS3 RECORD
+     C*
+     C                     READ TRANS3                   01
+     C                     MOVE RECI      TRECI
+     C                     MOVELPTFR      WWPTFR  4                       S71062
+     C*
+      ** DO WHILE NOT EOF
+     C*
+     C           *IN01     DOWEQ'0'
+     C*
+     C***********          MOVE BRCD      PBRCD                           S01117
+     C                     MOVE BRCA      PBRCA                           S01117
+     C*
+     C***********          MOVEL'10'      ZTABKY                          S01117
+     C***********          MOVE BRCD      ZTABKY                          S01117
+     C***********ZTABKY    CHAINTABLETRF             79                   S01117
+     C*                                                                   S01117
+     C**    ACCESS BRANCH DETAILS THROUGH ACCESS OBJECT                   S01117
+     C*                                                                   S01117
+     C**********           CALL 'AOBRCHR0'                                             S01117 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    @DSFDY                                       S01117 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      ** DB ERROR
+     C*
+     C************IN79     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'09'      DBASE            **DB ERROR 09**S01117
+     C                     Z-ADD9         DBASE            **DB ERROR 09**S01117
+     C***********          MOVEL'TABFF'   DBFILE           ***************S01117
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C                     MOVELBRCA      DBKEY                           S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR EXIT
+     C                     END
+     C*
+      ** DO WHILE NOT END OF FILE AND SAME BRANCH
+     C*
+     C           *IN01     DOWEQ'0'
+     C***********BRCD      ANDEQPBRCD                                     S01117
+     C           BRCA      ANDEQPBRCA                                     S01117
+     C*
+     C                     MOVE ISTT      PISTT
+     C*
+     C           ISTT      CHAININTYP                79
+      ** DB ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'10'      DBASE            **DB ERROR 10**S01117
+     C                     Z-ADD10        DBASE            **DB ERROR 10**S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELISTT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR EXIT
+     C                     END
+     C*
+      ** DOW SAME INSTRUMENT TYPE ,SAME BRANCH CODE AND NOT EOF
+     C*
+     C           BRIS      DOWEQPBRIS
+     C           *IN01     ANDEQ'0'
+     C/COPY WNCPYSRC,FF0380C013
+      *                                                                   CFF007
+     C           CFF007    IFEQ 'Y'                                       CFF007
+     C                     MOVE 'N'       WCMCB   1                       CFF007
+     C                     MOVE 'N'       WCHCB   1                       CFF007
+     C                     MOVE 'N'       WCMCC   1                       CFF007
+     C                     MOVE 'N'       WCHCC   1                       CFF007
+     C                     ENDIF                                          CFF007
+     C*
+      ** ACCESS TRSET FOR TRANSACTION SETTLEMENT DETAILS
+     C*
+     C           TNBR      CHAINTRSET                79
+     C*
+      ** IF TRSET RECORD ID IS NOT EQUAL TO THE TRANS RECORD ID
+      ** THEN ERROR  ( BOTH MUST BE 'D' OR '*' )
+     C*
+     C           *IN79     IFEQ '0'
+     C           RECI      IFNE TRECI
+     C                     SETON                     79
+     C                     END
+     C                     MOVEL'D'       RECI
+     C                     END
+      ** DB ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'11'      DBASE            **DB ERROR 11**S01117
+     C                     Z-ADD11        DBASE            **DB ERROR 11**S01117
+     C                     MOVEL'TRSET'   DBFILE           ***************
+     C                     MOVELTNBR      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR EXIT
+     C                     END
+     C*                                                                   073714
+      ** VALUE DATE FOR MARKET TRADES AND EXERCISES IS TRANSACTION DATE   073714
+     C/COPY WNCPYSRC,FF0380C001
+     C*                                                                   073714
+     C           ISTI      IFEQ 'N'                                       073714
+     C           TRTY      OREQ 'E'                                       073714
+     C                     Z-ADDTRSD      VALD                            073714
+     C                     END                                            073714
+     C/COPY WNCPYSRC,FF0380C002
+     C*
+      ** STORE VALUE OF CUSTOMER/BROKER CHARGES/COMMISSIONS INORDER TO
+      ** REVERSE OUT THE OLD FIGURE FOR THE UPDATING OF MEMOSM FILE AND
+      ** PRONOM FILE
+     C*
+     C                     Z-ADDBCHP      PBCHP
+     C                     Z-ADDBCMP      PBCMP
+     C                     Z-ADDCCHP      PCCHP
+     C                     Z-ADDCCMP      PCCMP
+     C*                                                                   073714
+      ** ONLY PROCESS IF VALUE DATE HAS FALLEN DUE                        073714
+     C*                                                                   073714
+     C           VALD      IFLE EVCD                                      073714
+     C/COPY WNCPYSRC,FF0380C003
+     C*
+      ** FOR ACTIVE AND DELETED RECORDS
+     C*
+     C           TRECI     IFEQ 'D'
+     C                     EXSR ACTIVE
+     C                     ELSE
+      *                                                                                       222165
+      ** Initialise reversal variables                                                        222165
+      *                                                                                       222165
+     C           CFF007    IFEQ 'Y'                                                           222165
+     C                     MOVE 'N'       CCHR                                                222165
+     C                     MOVE 'N'       CCOR                                                222165
+     C                     MOVE 'N'       BCHR                                                222165
+     C                     MOVE 'N'       BCOR                                                222165
+     C                     ENDIF                                                              222165
+      *                                                                                       222165
+     C                     EXSR DELETE
+      *                                                                                       222165
+     C           CFF007    IFEQ 'Y'                                                           222165
+     C                     Z-ADDTNBR      TRNR                                                222165
+     C                     WRITECCREVPDF                                                      222165
+     C                     ENDIF                                                              222165
+      *                                                                                       222165
+     C                     END
+     C*
+      ** DETERMIME IF MEMOSM AND PRONOM NEED UPDATING
+     C*
+     C                     EXSR UMEMPR
+     C                     END                                            073714
+     C*
+      ** READ NEXT TRANS3 RECORD
+     C*
+      ** UPDATE TRANSACTION SETTLEMENT DETAILS
+     C*
+     C                     EXCPTUTRSET
+     C/COPY WNCPYSRC,FF0380C014
+      *                                                                   CFF007
+     C           CFF007    IFEQ 'Y'                                       CFF007
+     C           BGN4ST    ANDEQ'Y'                                       CFF007
+     C********** CUSC      ANDNE*ZERO                                     CFF007              CSD027
+     C           CUSC      ANDNE*BLANKS                                   CFF007              CSD027
+      *                                                                   CFF007
+     C           WCMCB     IFEQ 'Y'                                       CFF007
+     C           WCHCB     OREQ 'Y'                                       CFF007
+     C           WCMCC     OREQ 'Y'                                       CFF007
+     C           WCHCC     OREQ 'Y'                                       CFF007
+      *                                                                   CFF007
+      ** Access Extended Client Details                                   CFF007
+      *                                                                   CFF007
+     C                     MOVELCUSC      @KEY1  10 P                     CFF007
+     C                     CALL 'AOCUSTR1'                                CFF007
+     C                     PARM *BLANKS   @RTCD                           CFF007
+     C                     PARM '*KEY   ' @OPTN                           CFF007
+     C                     PARM           @KEY1                           CFF007
+     C                     PARM *BLANKS   @KYST   7                       CFF007
+     C           SDCUST    PARM SDCUST    @DSLDY                          CFF007
+      *                                                                   CFF007
+     C           @RTCD     IFNE *BLANK                                    CFF007
+     C           *LOCK     IN   LDA                                       CFF007
+     C                     Z-ADD21        DBASE            ************   CFF007
+     C                     MOVE 'SDCUSTPD'DBFILE           *DB ERR 021*   CFF007
+     C                     MOVEL@KEY1     DBKEY            ************   CFF007
+     C                     MOVEL@OPTN     DBOPTN                          CFF007
+     C                     EXSR *PSSR                                     CFF007
+     C                     EXSR EXIT                                      CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+      ** If customer is a PB client,                                      CFF007
+      ** access Commissions and Charges Details                           CFF007
+      *                                                                   CFF007
+     C           BBPRBA    IFEQ 'Y'                                       CFF007
+     C           TNBR      CHAINFFCOCHD0             89                   CFF007
+      *                                                                   CFF007
+     C           WCMCB     IFEQ 'Y'                                       CFF007
+     C                     MOVE WBCMC     CCBCMC                          CFF007
+     C                     MOVE WBCMS     CCBCMS                          CFF007
+     C                     MOVE WBCMP     CCBCMA                          CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C           WCHCB     IFEQ 'Y'                                       CFF007
+     C                     MOVE WBCHC     CCBCHC                          CFF007
+     C                     MOVE WBCHP     CCBCHA                          CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C           WCMCC     IFEQ 'Y'                                       CFF007
+     C                     MOVE WCCMC     CCCCMC                          CFF007
+     C                     MOVE WCCMS     CCCCMS                          CFF007
+     C                     MOVE WCCMP     CCCCMA                          CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C           WCHCC     IFEQ 'Y'                                       CFF007
+     C                     MOVE WCCHC     CCCCHC                          CFF007
+     C                     MOVE WCCHP     CCCCHA                          CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     MOVE 'Y'       CCREPI                          CFF007
+     C           *IN89     IFEQ '0'                                       CFF007
+     C                     UPDATFFCOCHD0                                  CFF007
+      *                                                                   CFF007
+     C                     ELSE                                           CFF007
+     C**********           Z-ADDCUSC      CCCUST                          CFF007              CSD027
+     C                     MOVE CUSC      CCCUST                          CFF007              CSD027
+     C                     Z-ADDTNBR      CCTNBR                          CFF007
+     C                     WRITEFFCOCHD0                                  CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     ENDIF                                          CFF007
+     C                     ENDIF                                          CFF007
+     C                     ENDIF                                          CFF007
+     C*
+      ** READ NEXT TRANSACTION RECORD
+     C*
+     C                     READ TRANS3                   01
+     C                     MOVE RECI      TRECI
+     C                     MOVELPTFR      WWPTFR                          S71062
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           XTMAIN    ENDSR                           ** XTMAIN ESR**
+     C*===================================================================
+      /EJECT
+     C********************************************************************
+      **
+      ** ACTIVE S/R TO PROCESS ACTIVE TRANSACTION
+      ** CALLED FROM MAIN S/R
+      ** CALLS: BPSTCH TO POST BROKER CHARGES
+      **        CPSTCH TO POST CUSTOMER CHARGES
+      **        BCOSHE TO DETERMINE BROKER-CHARGES-PATTERN S/H/E
+      **        CCOSHE TO DETERMINE CUSTOMER-CHARGES-PATTERN S/H/E
+      **        BPTCOA TO POST BROKER COMMISSION BASED ON
+      **                  BROKER-CHARGES-PATTERN = 'A'
+      **        CPTCOA TO POST CUSTOMER COMMISSION BASED ON
+      **                  CUST-CHARGES-PATTERN = 'A'
+      **
+     C********************************************************************
+     C*
+     C           ACTIVE    BEGSR                           ** ACTIVE BSR**
+     C*
+      ** IF THIS TRANSACTION HAS NOT BEEN THRU AN EOC
+     C*
+     C           ECPI      IFEQ 'N'
+     C*
+      ** IF A BROKER IS INVOLVED
+     C*
+     C********** BOCO      IFNE 0                                                             CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+     C                     MOVE 'B'       BROCUS  1
+     C*
+     C** FOR FUTURES TRADES AT MATURITY
+     C** USE TOTAL OF BROKER CONTRACTS AS NUMBER OF CONTRACTS
+     C*
+     C           ISPT      IFLE 3
+     C           TNBR      ANDLT*ZERO
+     C           ISPT      OREQ 7                                         AUS022
+     C           TNBR      ANDLT*ZERO                                     AUS022
+     C                     Z-ADDNUCO      SNUCO
+     C           CCSB      ADD  CCDB      NUCO
+     C                     END
+     C*                                                                   CAC003
+     C** Move Broker Charge Code to WCGCM                                 CAC003
+     C*                                                                   CAC003
+     C           *LIKE     DEFN CGCM      WCGCM                           CAC003
+     C                     MOVE BCHC      WCGCM                           CAC003
+     C*
+      ** BROKER CHARGES
+     C*
+     C                     EXSR BPSTCH
+     C*                                                                   CAC003
+     C** Move Broker Commission Code to WCGCM                             CAC003
+     C*                                                                   CAC003
+     C                     MOVE BCMC      WCGCM                           CAC003
+     C*
+      ** BROKER COMMISSIONS
+     C*
+     C           BCPT      IFEQ 'A'
+     C                     EXSR BPTCOA
+     C                     ELSE
+     C                     EXSR BCOSHE
+     C                     END
+     C*                                                                   136059
+     C** FOR FUTURES TRADES AT MATURITY                                   136059
+     C** RESTORE ORIGINAL NUMBER OF CONTRACTS (CHANGED ABOVE)             136059
+     C*                                                                   136059
+     C           ISPT      IFLE 3                                         136059
+     C           TNBR      ANDLT*ZERO                                     136059
+     C           ISPT      OREQ 7                                         136059
+     C           TNBR      ANDLT*ZERO                                     136059
+     C                     Z-ADDSNUCO     NUCO                            136059
+     C                     END                                            136059
+     C*
+      ** WRITE BROKER POSITION CHANGE RECORD  (QUANTITY)
+      ** (IF NUMBER OF CONTRACTS IS NON ZERO)
+     C*
+     C           NUCO      IFNE *ZERO
+     C                     MOVE BOCO      CBCD
+     C*********************MOVE TRSD      POCD                            073714
+     C                     MOVE VALD      POCD                            073714
+     C/COPY WNCPYSRC,FF0380C004
+     C                     MOVE *BLANK    PCGT
+     C           TRTY      IFEQ 'E'
+     C                     Z-SUBNUCO      POCQ
+     C                     ELSE
+     C                     Z-ADDNUCO      POCQ
+     C                     END
+     C*
+     C                     MOVE *ZERO     PCGA
+     C                     MOVE '0'       PAYI
+     C                     MOVE '0'       REVI
+     C                     WRITEPOCHGTCF
+     C                     END
+     C***********                                                         136059
+     C***FOR*FUTURES TRADES AT MATURITY                                   136059
+     C***RESTORE*ORIGINAL NUMBER OF CONTRACTS (CHANGED ABOVE)             136059
+     C***********                                                         136059
+     C***********ISPT      IFLE 3                                         136059
+     C***********TNBR      ANDLT*ZERO                                     136059
+     C***********ISPT      OREQ 7                                   AUS022136059
+     C***********TNBR      ANDLT*ZERO                               AUS022136059
+     C***********          Z-ADDSNUCO     NUCO                            136059
+     C***********          END                                            136059
+     C*
+     C                     END
+     C*
+      ** IF A CUSTOMER IS INVOLVED
+     C*
+     C********** CUSC      IFNE 0                                                             CSD027
+     C           CUSC      IFNE *BLANKS                                                       CSD027
+     C                     MOVE 'C'       BROCUS
+     C*                                                                   CAC003
+     C** Move Customer Charge Code to WCGCM                               CAC003
+     C*                                                                   CAC003
+     C                     MOVE CCHC      WCGCM                           CAC003
+     C*
+      ** CUSTOMER CHARGES
+     C*
+     C                     EXSR CPSTCH
+     C*                                                                   CAC003
+     C** Move Customer Commission Code to WCGCM                           CAC003
+     C*                                                                   CAC003
+     C                     MOVE CCMC      WCGCM                           CAC003
+     C*
+      ** CUSTOMER COMMISSIONS
+     C*
+     C           CCPT      IFEQ 'A'
+     C                     EXSR CPTCOA
+     C                     ELSE
+     C                     EXSR CCOSHE
+     C                     END
+     C*
+      ** WRITE CUSTOMER POSITION CHANGE RECORD (QUANTITY)
+     C*
+     C                     MOVE CUSC      CBCD
+     C*********************MOVE TRSD      POCD                            073714
+     C                     MOVE VALD      POCD                            073714
+     C/COPY WNCPYSRC,FF0380C005
+     C                     MOVE *BLANK    PCGT
+     C           TRTY      IFEQ 'E'
+     C                     Z-SUBNUCO      POCQ
+     C                     ELSE
+     C                     Z-ADDNUCO      POCQ
+     C                     END
+     C*
+     C                     MOVE *ZERO     PCGA
+     C                     MOVE '0'       PAYI
+     C                     MOVE '0'       REVI
+     C                     WRITEPOCHGTCF
+     C*
+     C                     END
+     C*
+      ** THIS IS A BOOKS TRANSACTION IF
+      ** EITHER BROKER OR CUSTOMER DOES NOT EXIST
+     C*
+     C********** BOCO      IFEQ 0                                                             CSD027
+     C********** CUSC      OREQ 0                                                             CSD027
+     C           BOCO      IFEQ *BLANKS                                                       CSD027
+     C           CUSC      OREQ *BLANKS                                                       CSD027
+     C*
+      ** WRITE BOOK POSITION CHANGE RECORD (QUANTITY)
+     C*
+     C*********************MOVE TRSD      POCD                            073714
+     C                     MOVE VALD      POCD                            073714
+     C/COPY WNCPYSRC,FF0380C006
+     C                     MOVE *BLANK    PCGT
+     C           TRTY      IFEQ 'E'
+     C                     Z-SUBNUCO      POCQ
+     C                     ELSE
+     C                     Z-ADDNUCO      POCQ
+     C                     END
+     C*
+     C                     MOVE *ZERO     PCGA
+     C                     MOVE '0'       REVI
+     C                     MOVE *BLANK    CCPR
+     C                     WRITEPOCHGTKF
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+      ** IF THIS TRANSACTION HAS ALREADY BEEN THRU AN EOC
+     C*
+     C*
+      ** IF A BROKER IS INVOLVED AND THE BROKER SIDE IS NOT CLOSED OUT
+      ** DETERMINE IF ANY BROKER COMMISSION REPOSTING IS REQUIRED
+     C*
+     C********** BOCO      IFNE 0                                                             CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+     C           FBIN      ANDEQ'N'
+     C                     MOVE 'B'       BROCUS
+     C*                                                                   CAC003
+     C** Move Broker Commision Code to WCGCM                              CAC003
+     C*                                                                   CAC003
+     C                     MOVE BCMC      WCGCM                           CAC003
+     C*                                                                   CAC003
+     C                     EXSR BCOSHE
+     C                     END
+     C*
+      ** IF A CUSTOMER IS INVOLVED AND THE CUSTOMER SIDE IS NOT CLOSED
+      ** DETERMINE IF ANY CUSTOMER COMMISSION REPOSTING IS REQUIRED
+     C*
+     C********** CUSC      IFNE 0                                                             CSD027
+     C           CUSC      IFNE *BLANKS                                                       CSD027
+     C           FCIN      ANDEQ'N'
+     C                     MOVE 'C'       BROCUS
+     C*                                                                   CAC003
+     C** Move Customer Commission Code to WCGCM                           CAC003
+     C*                                                                   CAC003
+     C                     MOVE CCMC      WCGCM                           CAC003
+     C*                                                                   CAC003
+     C                     EXSR CCOSHE
+     C                     END
+     C*
+     C                     END
+     C*
+     C           XTACTI    ENDSR                           ** XTACTI ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** DELETE S/R TO REVERSE OUT CHARGES AND COMMISSIONS FOR DELETED
+      **               TRANSACTION
+      ** CALLED FROM MAIN S/R
+      ** CALLS  BREVCH TO REVERSE BROKER CHARGES
+      **        CREVCH TO REVERSE CUSTOMER CHARGES
+      **        BREVCO TO REVERSE BROKER COMMISSION
+      **        CREVCO TO REVERSE CUSTOMER COMMISSION
+      **
+     C********************************************************************
+     C*
+     C           DELETE    BEGSR                           ** DELETE BSR**
+     C*
+      ** IF A BROKER IS INVOLVED
+     C*
+     C********** BOCO      IFNE 0                                                             CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+     C*
+     C                     MOVE 'B'       BROCUS
+     C*                                                                   CAC003
+     C** Move Broker Charge Code to WCGCM                                 CAC003
+     C*                                                                   CAC003
+     C                     MOVE BCHC      WCGCM                           CAC003
+     C*
+      ** REVERSE BROKER CHARGES AND COMMISSIONS
+     C*
+     C                     EXSR BREVCH
+     C*                                                                   CAC003
+     C** Move Broker Commission Code to WCGCM                             CAC003
+     C*                                                                   CAC003
+     C                     MOVE BCMC      WCGCM                           CAC003
+     C*                                                                   CAC003
+     C                     EXSR BREVCO
+     C*
+      ** WRITE BROKER POSITION CHANGE RECORD (QUANTITY REVERSAL)
+     C*
+     C                     MOVE BOCO      CBCD
+     C*********************MOVE TRSD      POCD                            073714
+     C                     MOVE VALD      POCD                            073714
+     C/COPY WNCPYSRC,FF0380C007
+     C                     MOVE *BLANK    PCGT
+     C           TRTY      IFEQ 'E'
+     C                     Z-SUBNUCO      POCQ
+     C                     ELSE
+     C                     Z-ADDNUCO      POCQ
+     C                     END
+     C*
+     C                     MOVE *ZERO     PCGA
+     C                     MOVE '0'       PAYI
+     C                     MOVE '1'       REVI
+     C                     WRITEPOCHGTCF
+     C*
+     C                     END
+     C*
+      ** IF A CUSTOMER IS INVOLVED
+     C*
+     C********** CUSC      IFNE 0                                                             CSD027
+     C           CUSC      IFNE *BLANKS                                                       CSD027
+     C*
+     C                     MOVE 'C'       BROCUS
+     C*                                                                   CAC003
+     C** Move Customer Charge Code to WCGCM                               CAC003
+     C*                                                                   CAC003
+     C                     MOVE CCHC      WCGCM                           CAC003
+     C*
+      ** REVERSE CUSTOMER CHARGES AND COMMISSIONS
+     C*
+     C                     EXSR CREVCH
+     C*                                                                   CAC003
+     C** Move Customer Commission Code to WCGCM                           CAC003
+     C*                                                                   CAC003
+     C                     MOVE CCMC      WCGCM                           CAC003
+     C*                                                                   CAC003
+     C                     EXSR CREVCO
+     C*
+      ** WRITE CUSTOMER POSITION CHANGE RECORD (QUANTITY REVERSAL)
+     C*
+     C                     MOVE CUSC      CBCD
+     C*********************MOVE TRSD      POCD                            073714
+     C                     MOVE VALD      POCD                            073714
+     C/COPY WNCPYSRC,FF0380C008
+     C                     MOVE *BLANK    PCGT
+     C           TRTY      IFEQ 'E'
+     C                     Z-SUBNUCO      POCQ
+     C                     ELSE
+     C                     Z-ADDNUCO      POCQ
+     C                     END
+     C*
+     C                     MOVE *ZERO     PCGA
+     C                     MOVE '0'       PAYI
+     C                     MOVE '1'       REVI
+     C                     WRITEPOCHGTCF
+     C*
+     C                     END
+     C*
+     C*
+      ** THIS IS A BOOKS TRANSACTION IF
+      ** EITHER BROKER OR CUSTOMER DOES NOT EXIST
+     C*
+     C********** BOCO      IFEQ 0                                                             CSD027
+     C********** CUSC      OREQ 0                                                             CSD027
+     C           BOCO      IFEQ *BLANKS                                                       CSD027
+     C           CUSC      OREQ *BLANKS                                                       CSD027
+     C*
+      ** WRITE BOOK POSITION CHANGE RECORD (QUANTITY REVERSAL)
+     C*
+     C*********************MOVE TRSD      POCD                            073714
+     C                     MOVE VALD      POCD                            073714
+     C/COPY WNCPYSRC,FF0380C009
+     C                     MOVE *BLANK    PCGT
+     C           TRTY      IFEQ 'E'
+     C                     Z-SUBNUCO      POCQ
+     C                     ELSE
+     C                     Z-ADDNUCO      POCQ
+     C                     END
+     C*
+     C                     MOVE *ZERO     PCGA
+     C                     MOVE '1'       REVI
+     C                     MOVE *BLANK    CCPR
+     C                     WRITEPOCHGTKF
+     C*
+     C                     END
+     C*
+     C           XTDELE    ENDSR                           ** XTDELE ESR**
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** BCOSHE S/R TO DETERMINE THE BROKER CHARGE PATTERN
+      ** CALLED FROM S/R ACTIVE
+      ** CALLS  BPTCOS FOR BROKER COMMISSION ARE TO BE PAID ON OPENING
+      **                   A POSITION
+      **        BPTCOH FOR BROKER COMMISSION ARE TO BE PAID ON EITHER
+      **                   OPENING OR CLOSING A POSITION
+      **        BPTCOE FOR BROKER COMMISSION ARE TO BE PAID ON CLOSING
+      **                   A POSITION
+      **
+     C********************************************************************
+     C*
+     C           BCOSHE    BEGSR                           ** BCOSHE BSR**
+     C*
+     C           BCPT      IFEQ 'S'
+     C                     EXSR BPTCOS
+     C                     END
+     C*
+     C           BCPT      IFEQ 'H'
+     C                     EXSR BPTCOH
+     C                     END
+     C*
+     C           BCPT      IFEQ 'E'
+     C                     EXSR BPTCOE
+     C                     END
+     C*
+     C           XTBCOS    ENDSR                           ** XTBCOS ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** CCOSHE S/R TO DETERMINE THE CUSTOMER CHARGE PATTERN
+      ** CALLED FROM S/R ACTIVE
+      ** CALLS  CPTCOS FOR CUSTOMER COMMISSION ARE TO BE PAID ON OPENING
+      **                   A POSITION
+      **        CPTCOH FOR CUSTOMER COMMISSION ARE TO BE PAID ON EITHER
+      **                   OPENING OR CLOSING A POSITION
+      **        CPTCOE FOR CUSTOMER COMMISSION ARE TO BE PAID ON CLOSING
+      **                   A POSITION
+      **
+     C********************************************************************
+     C*
+     C           CCOSHE    BEGSR                           ** CCOSHE BSR**
+     C*
+     C           CCPT      IFEQ 'S'
+     C                     EXSR CPTCOS
+     C                     END
+     C*
+     C           CCPT      IFEQ 'H'
+     C                     EXSR CPTCOH
+     C                     END
+     C*
+     C           CCPT      IFEQ 'E'
+     C                     EXSR CPTCOE
+     C                     END
+     C*
+     C           XTCCOS    ENDSR                           ** XTCCOS ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** BPSTCH S/R TO POST BROKER CHARGES
+      ** CALLED FROM ACTIVE S/R
+      ** CALLS  TTFCAL TO CALCULATE THE RATE AMOUNT
+      **        WRITER TO WRITE RECORDS
+      **
+     C********************************************************************
+     C*
+     C           BPSTCH    BEGSR                           ** BPSTCH BSR**
+     C*
+      ** IF THE BROKER CHARGE AMOUNT IS NON ZERO , USE THAT AMOUNT
+     C*
+     C           BCHA      IFNE 0
+     C                     Z-ADDBCHA      EAMT
+     C                     ELSE
+     C*
+      ** OTHERWISE IF A BROKER CHARGE RATE IS DEFINED
+      ** CALCULATE THE BROKER CHARGE AMOUNT
+     C*
+     C                     Z-ADDNUCO      WCONO
+     C                     Z-ADDBCHC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C                     END
+     C*
+      ** GENERATE BROKER CHARGE ACCOUNT KEY AND POSITION CHANGE
+     C*
+     C           EAMT      IFNE 0
+     C***********          MOVE 'F H'     FOKEY1                          S01455
+     C                     MOVE 'F'       FKEY11                          S01455
+     C                     MOVE 'H'       FKEY13                          S01455
+     C                     MOVE ' B B'    FOKEY2
+     C                     MOVE '0'       PAYI
+     C                     MOVE '0'       REVI
+     C                     MOVE 'A'       PCGT
+     C                     MOVE 'P'       CCPR
+     C*
+     C                     EXSR WRITER
+     C/COPY WNCPYSRC,FF0380C015
+      *                                                                   CFF007
+     C           CFF007    IFEQ 'Y'                                       CFF007
+     C           CHCB      ANDNE'Y'                                       CFF007
+     C                     MOVE 'Y'       WCHCB                           CFF007
+     C                     Z-ADDBCHC      WBCHC   20                      CFF007
+     C                     MOVE EAMT      WBCHP  130                      CFF007
+     C                     MOVE EAMT      BCHA                            CFF007
+     C                     MOVE 'Y'       CHCB                            CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     END
+     C*
+     C                     MOVE EAMT      BCHP
+     C           XTBPST    ENDSR                           ** XTBPST ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** CPSTCH S/R TO POST CUSTOMER CHARGES
+      ** CALLED FROM ACTIVE S/R
+      ** CALLS  TTFCAL TO CALCULATE THE RATE AMOUNT
+      **        WRITER
+      **
+     C********************************************************************
+     C*
+     C           CPSTCH    BEGSR                           ** CPSTCH BSR**
+     C*
+      ** IF THE CUSTOMER CHARGE AMOUNT IS NON ZERO , USE THAT AMOUNT
+     C*
+     C           CCHA      IFNE 0
+     C                     Z-ADDCCHA      EAMT
+     C                     ELSE
+     C*
+      ** OTHERWISE IF A CUSTOMER CHARGE RATE IS DEFINED
+      ** CALCULATE THE CUSTOMER CHARGE AMOUNT
+     C*
+     C                     Z-ADDNUCO      WCONO
+     C                     Z-ADDCCHC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C                     END
+     C*
+      ** IF CUSTOMER CHARGES ARE COMPOUNDED
+     C*
+     C           CCCI      IFEQ 'Y'
+     C*
+      ** IF THE BROKER CHARGE AMOUNT IS NON ZERO
+      ** ADD THAT AMOUNT TO THE CUSTOMER CHARGE AMOUNT
+     C*
+     C           BCHA      IFNE 0
+     C                     ADD  BCHA      EAMT
+     C                     ELSE
+     C*
+      ** OTHERWISE IF A BROKER CHARGE RATE IS DEFINED , CALCULATE THE
+      ** BROKER CHARGE AMOUNT AND ADD IT TO THE CUSTOMER CHARGE AMOUNT
+     C*
+     C                     Z-ADDNUCO      WCONO
+     C                     Z-ADDBCHC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C                     END
+     C*
+      ** GENERATE CUSTOMER CHARGE ACCOUNT KEY AND POSITION CHANGE
+     C*
+     C           EAMT      IFNE 0
+     C**********           MOVE 'F H'     FOKEY1                          S01455
+     C                     MOVE 'F'       FKEY11                          S01455
+     C                     MOVE 'H'       FKEY13                          S01455
+     C                     MOVE ' C C'    FOKEY2
+     C                     MOVE '0'       PAYI
+     C                     MOVE '0'       REVI
+     C                     MOVE 'A'       PCGT
+     C                     MOVE 'R'       CCPR
+     C*
+     C                     EXSR WRITER
+     C/COPY WNCPYSRC,FF0380C016
+      *                                                                   CFF007
+     C           CFF007    IFEQ 'Y'                                       CFF007
+     C           CHCC      ANDNE'Y'                                       CFF007
+     C                     MOVE 'Y'       WCHCC                           CFF007
+     C                     Z-ADDCCHC      WCCHC   20                      CFF007
+      *                                                                   CFF007
+     C           CCCI      IFEQ 'Y'                                       CFF007
+      *                                                                   CFF007
+     C           BCHA      IFNE *ZERO                                     CFF007
+     C           EAMT      SUB  BCHA      WCCHP  130                      CFF007
+     C                     ELSE                                           CFF007
+     C           EAMT      SUB  WRATA     WCCHP                           CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     ELSE                                           CFF007
+     C                     MOVE EAMT      WCCHP                           CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     MOVE 'Y'       CHCC                            CFF007
+     C                     Z-ADDWCCHP     CCHA                            CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     END
+     C*
+     C                     MOVE EAMT      CCHP
+     C*
+     C           XTCPST    ENDSR                           ** XTCPST ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** BPSTCO S/R TO POST BROKER COMMISSIONS
+      ** CALLED FROM BPTCOA, BPTCOS, BPTCOH, BPTCOE
+      ** CALLS  WRITER S/R
+      **
+     C********************************************************************
+     C*
+     C           BPSTCO    BEGSR                           ** BPSTCO BSR**
+     C*
+     C           EAMT      IFNE 0
+     C**********           MOVE 'F C'     FOKEY1                          S01455
+     C                     MOVE 'F'       FKEY11                          S01455
+     C                     MOVE 'C'       FKEY13                          S01455
+     C                     MOVE ' B B'    FOKEY2
+     C                     MOVE '0'       PAYI
+     C                     MOVE '0'       REVI
+     C                     MOVE 'B'       PCGT
+     C                     MOVE 'P'       CCPR
+     C*
+     C                     EXSR WRITER
+     C/COPY WNCPYSRC,FF0380C017
+      *                                                                   CFF007
+     C           CFF007    IFEQ 'Y'                                       CFF007
+     C           CMCB      ANDNE'Y'                                       CFF007
+     C                     MOVE 'Y'       WCMCB                           CFF007
+     C                     Z-ADDBCMC      WBCMC   20                      CFF007
+     C                     Z-ADDBCMS      WBCMS   20                      CFF007
+     C                     Z-ADDEAMT      WBCMP  130                      CFF007
+     C                     MOVE EAMT      BCMA                            CFF007
+     C                     MOVE 'Y'       CMCB                            CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     END
+     C*
+     C                     MOVE EAMT      BCMP
+     C*
+     C           XTBPCO    ENDSR                           ** XTBPCO ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** CPSTCO S/R TO POST CUSTOMER COMMISSIONS
+      ** CALLED FROM CPTCOA, CPTCOS, CPTCOH, CPTCOE
+      ** CALLS  WRITER
+      **
+     C********************************************************************
+     C*
+     C           CPSTCO    BEGSR                           ** CPSTCO BSR**
+     C*
+     C           EAMT      IFNE 0
+     C**********           MOVE 'F C'     FOKEY1                          S01455
+     C                     MOVE 'F'       FKEY11                          S01455
+     C                     MOVE 'C'       FKEY13                          S01455
+     C                     MOVE ' C C'    FOKEY2
+     C                     MOVE '0'       PAYI
+     C                     MOVE '0'       REVI
+     C                     MOVE 'B'       PCGT
+     C                     MOVE 'R'       CCPR
+     C*
+     C                     EXSR WRITER
+     C/COPY WNCPYSRC,FF0380C018
+      *                                                                   CFF007
+     C           CFF007    IFEQ 'Y'                                       CFF007
+     C           CMCC      ANDNE'Y'                                       CFF007
+     C                     MOVE 'Y'       WCMCC                           CFF007
+     C                     Z-ADDCCMC      WCCMC   20                      CFF007
+     C                     Z-ADDCCMS      WCCMS   20                      CFF007
+      *                                                                   CFF007
+     C           CCCI      IFEQ 'Y'                                       CFF007
+      *                                                                   CFF007
+     C           BCMA      IFNE *ZERO                                     CFF007
+     C           EAMT      SUB  BCMA      WCCMP  130                      CFF007
+     C                     ELSE                                           CFF007
+     C           EAMT      SUB  WRATA     WCCMP                           CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     ELSE                                           CFF007
+     C                     MOVE EAMT      WCCMP                           CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     MOVE 'Y'       CMCC                            CFF007
+     C                     Z-ADDWCCMP     CCMA                            CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     END
+     C*
+     C                     MOVE EAMT      CCMP
+     C*
+     C           XTCPCO    ENDSR                           ** XTCPCO ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** BREVCH S/R TO REVERSE BROKER CHARGES
+      ** CALLED FROM DELETE S/R
+      ** CALLS  WRITER
+      **
+     C********************************************************************
+     C*
+     C           BREVCH    BEGSR                           ** BREVCH BSR**
+     C*
+     C           PBCHP     IFNE 0
+     C                     Z-ADDPBCHP     EAMT
+     C**********           MOVE 'F H'     FOKEY1                          S01455
+     C                     MOVE 'F'       FKEY11                          S01455
+     C                     MOVE 'H'       FKEY13                          S01455
+     C                     MOVE ' B B'    FOKEY2
+     C                     MOVE '0'       PAYI
+     C                     MOVE '1'       REVI
+     C                     MOVE 'A'       PCGT
+     C                     MOVE 'P'       CCPR
+     C*
+     C                     EXSR WRITER
+     C*
+      *                                                                                       222165
+      ** Tag broker CHARGES Reversal                                                          222165
+      *                                                                                       222165
+     C           CFF007    IFEQ 'Y'                                                           222165
+     C                     MOVE 'Y'       BCHR                                                222165
+     C                     ENDIF                                                              222165
+      *                                                                                       222165
+     C                     END
+     C*
+     C           XTBRCH    ENDSR                           ** XTBRCH ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** CREVCH S/R TO REVERSE CUSTOMER CHARGES
+      ** CALLED FROM DELETE S/R
+      ** CALLS  WRITER
+      **
+     C********************************************************************
+     C*
+     C           CREVCH    BEGSR                           ** CREVCH BSR**
+     C*
+     C           PCCHP     IFNE 0
+     C                     Z-ADDPCCHP     EAMT
+     C**********           MOVE 'F H'     FOKEY1                          S01455
+     C                     MOVE 'F'       FKEY11                          S01455
+     C                     MOVE 'H'       FKEY13                          S01455
+     C                     MOVE ' C C'    FOKEY2
+     C                     MOVE '0'       PAYI
+     C                     MOVE '1'       REVI
+     C                     MOVE 'A'       PCGT
+     C                     MOVE 'R'       CCPR
+     C*
+     C                     EXSR WRITER
+     C*
+      *                                                                                       222165
+      ** Tag customer CHARGES reversal                                                        222165
+      *                                                                                       222165
+     C           CFF007    IFEQ 'Y'                                                           222165
+     C                     MOVE 'Y'       CCHR                                                222165
+     C                     ENDIF                                                              222165
+      *                                                                                       222165
+     C                     END
+     C*
+     C           XTCRCH    ENDSR                           ** XTCRCH ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** BREVCO S/R TO REVERSE BROKER COMMISSIONS
+      ** CALLED FROM DELETE S/R
+      ** CALLS  WRITER
+      **
+     C********************************************************************
+     C*
+     C           BREVCO    BEGSR                           ** BREVCH BSR**
+     C*
+     C           PBCMP     IFNE 0
+     C                     Z-ADDPBCMP     EAMT
+     C**********           MOVE 'F C'     FOKEY1                          S01455
+     C                     MOVE 'F'       FKEY11                          S01455
+     C                     MOVE 'C'       FKEY13                          S01455
+     C                     MOVE ' B B'    FOKEY2
+     C           TRECI     IFEQ '*'
+     C                     MOVE '0'       PAYI
+     C                     ELSE
+     C                     MOVE '1'       PAYI
+     C                     END
+     C*
+     C                     MOVE '1'       REVI
+     C                     MOVE 'B'       PCGT
+     C                     MOVE 'P'       CCPR
+     C*
+     C                     EXSR WRITER
+     C*
+      *                                                                                       222165
+      ** Tag broker COMMS reversal                                                            222165
+      *                                                                                       222165
+     C           CFF007    IFEQ 'Y'                                                           222165
+     C                     MOVE 'Y'       BCOR                                                222165
+     C                     ENDIF                                                              222165
+      *                                                                                       222165
+     C                     END
+     C*
+     C           XTBRCO    ENDSR                           ** XTBRCO ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** CREVCO S/R TO REVERSE CUSTOMER COMMISSIONS
+      ** CALLED FROM DELETE S/R
+      ** CALLS  WRITER
+      **
+     C********************************************************************
+     C*
+     C           CREVCO    BEGSR                           ** CREVCH BSR**
+     C*
+     C           PCCMP     IFNE 0
+     C                     Z-ADDPCCMP     EAMT
+     C**********           MOVE 'F C'     FOKEY1                          S01455
+     C                     MOVE 'F'       FKEY11                          S01455
+     C                     MOVE 'C'       FKEY13                          S01455
+     C                     MOVE ' C C'    FOKEY2
+     C           TRECI     IFEQ '*'
+     C                     MOVE '0'       PAYI
+     C                     ELSE
+     C                     MOVE '1'       PAYI
+     C                     END
+     C*
+     C                     MOVE '1'       REVI
+     C                     MOVE 'B'       PCGT
+     C                     MOVE 'R'       CCPR
+     C*
+     C                     EXSR WRITER
+     C*
+      *                                                                                       222165
+      ** Tag customer COMMS reversal                                                          222165
+      *                                                                                       222165
+     C           CFF007    IFEQ 'Y'                                                           222165
+     C                     MOVE 'Y'       CCOR                                                222165
+     C                     ENDIF                                                              222165
+      *                                                                                       222165
+     C                     END
+     C*
+     C           XTCRCO    ENDSR                           ** XTCRCO ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** BPTCOA S/R TO POST BROKER COMMISSIONS TYPE A
+      ** CALLED FROM ACTIVE S/R
+      ** CALLS  TTFCAL TO CALCULATE THE RATE AMOUNT
+      **
+     C********************************************************************
+     C*
+     C           BPTCOA    BEGSR                           ** BPTCOA BSR**
+     C*
+      ** IF THE BROKER COMMISSION AMOUNT IS NON ZERO , USE THAT AMOUNT
+     C*
+     C           BCMA      IFNE 0
+     C                     Z-ADDBCMA      EAMT
+     C*
+      ** POST THE BROKER COMMISSION AMOUNT
+     C*
+     C                     EXSR BPSTCO
+     C*
+     C                     ELSE
+     C*
+      ** OTHERWISE IF A BROKER COMMISSION RATE IS DEFINED
+      ** CALCULATE THE BROKER COMMISSION AMOUNT
+     C*
+     C                     EXSR BPTCOH
+     C*
+     C                     END
+     C*
+     C           XTBPCA    ENDSR                           ** XTBPCA ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** CPTCOA S/R TO POST CUSTOMER COMMISSIONS TYPE A
+      ** CALLED FROM ACTIVE S/R
+      ** CALLS  TTFCAL TO CALCULATE THE RATE AMOUNT
+      **
+     C********************************************************************
+     C*
+     C           CPTCOA    BEGSR                           ** CPTCOA BSR**
+     C*
+      ** IF THE CUSTOMER COMMISSION AMOUNT IS NON ZERO ,USE THAT AMOUNT
+     C*
+     C           CCMA      IFNE 0
+     C                     Z-ADDCCMA      EAMT
+     C*
+      ** IF CUSTOMER CHARGES ARE COMPOUNDED
+     C*
+     C           CCCI      IFEQ 'Y'
+     C*
+      ** IF THE BROKER COMMISSION AMOUNT IS NON ZERO
+      ** ADD THAT AMOUNT TO THE CUSTOMER COMMISSION AMOUNT
+     C*
+     C           BCMA      IFNE 0
+     C                     ADD  BCMA      EAMT
+     C                     ELSE
+     C*
+      ** OTHERWISE IF A BROKER COMMISSION RATE IS DEFINED ,
+      ** CALCULATE THE BROKER COMMISSION AMOUNT AND
+      ** ADD IT TO THE CUSTOMER COMMISSION AMOUNT
+     C*
+     C                     Z-ADDNUCO      WCONO
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C*
+     C                     END
+     C*
+      ** POST THE CUSTOMER COMMISSION AMOUNT
+     C*
+     C                     EXSR CPSTCO
+     C*
+     C                     ELSE
+     C*
+      ** OTHERWISE IF A CUSTOMER COMMISSION RATE IS DEFINED
+      ** CALCULATE THE CUSTOMER COMMISSION AMOUNT
+     C*
+     C                     EXSR CPTCOH
+     C*
+     C                     END
+     C*
+     C           XTCPCA    ENDSR                           ** XTCPCA ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** BPTCOS S/R TO POST BROKER COMMISSIONS TYPE S
+      ** CALLED FROM BCOSHE S/R
+      ** CALLS  TTFCAL TO CALCULATE THE RATE AMOUNT
+      **        BPSTCO TO POST BROKER COMMISSIONS
+      **        BREVCO TO REVERSE BROKER COMMISSIONS
+      **
+     C********************************************************************
+     C*
+     C           BPTCOS    BEGSR                           ** BPTCOS BSR**
+     C*
+      ** CHECK WHETHER BROKER CALCULATION BASIS HAS CHANGED IE
+      ** THE NUMBER OF STANDARD AND SAME DAY CONTRACTS FOR METHOD 'S'
+     C*
+     C           NOBO      ADD  OCSB      XCPSB
+     C                     Z-ADDOCDB      XCPDB
+     C           XCPSB     IFEQ CPSB
+     C           XCPDB     ANDEQCPDB
+     C                     GOTO XTBPCS
+     C                     ELSE
+     C                     Z-ADDXCPSB     CPSB
+     C                     Z-ADDXCPDB     CPDB
+     C                     END
+     C*
+      ** BROKER CONTRACTS OPENING A POSITION  (NOBO,OCSB + OCDB)
+     C*
+     C           NOBO      ADD  OCSB      WCONO
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS EQUAL TO BROKER COMMISSION
+      ** CODE SAME DAY
+     C*
+     C           BCMC      IFEQ BCMS
+     C                     ADD  OCDB      WCONO
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C                     ELSE
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS DIFFERENT FROM BROKER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C                     Z-ADDOCDB      WCONO
+     C                     Z-ADDBCMS      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C*
+      ** IF THE COMMISSION CALCULATED IS DIFFERENT FROM THAT PREVIOUSLY
+      ** POSTED , POST THE AMOUNT AND REVERSE OUT ANY PREVIOUSLY POSTED
+     C*
+     C           PBCMP     IFNE EAMT
+     C                     EXSR BPSTCO
+     C                     Z-ADDPBCMP     EAMT
+     C                     EXSR BREVCO
+     C                     END
+     C*
+     C           XTBPCS    ENDSR                           ** XTBPCS ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** CPTCOS S/R TO POST CUSTOMER COMMISSIONS TYPE S
+      ** CALLED FROM CCOSHE S/R
+      ** CALLS  TTFCAL TO CALCULATE THE RATE AMOUNT
+      **        CPSTCO TO POST CUSTOMER COMMISSIONS
+      **        CREVCO TO REVERSE CUSTOMER COMMISSIONS
+      **
+     C********************************************************************
+     C*
+     C           CPTCOS    BEGSR                           ** CPTCOS BSR**
+     C*
+      ** CHECK WHETHER CUSTOMER CALCULATION BASIS HAS CHANGED IE
+      ** THE NUMBER OF STANDARD AND SAME DAY CONTRACTS FOR METHOD 'S'
+     C*
+     C           NOCO      ADD  OCSC      XCPSC
+     C                     Z-ADDOCDC      XCPDC
+     C           XCPSC     IFEQ CPSC
+     C           XCPDC     ANDEQCPDC
+     C                     GOTO XTCPCS
+     C                     ELSE
+     C                     Z-ADDXCPSC     CPSC
+     C                     Z-ADDXCPDC     CPDC
+     C                     END
+     C*
+      ** CUSTOMER CONTRACTS OPENING A POSITION  (NOCO,OCSC + OCDC)
+     C*
+     C           NOCO      ADD  OCSC      WCONO
+     C*
+      ** CUSTOMER COMMISSION CODE STANDARD IS EQUAL TO CUSTOMER COMMISSION
+      ** CODE SAME DAY
+     C*
+     C           CCMC      IFEQ CCMS
+     C                     ADD  OCDC      WCONO
+     C                     Z-ADDCCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C                     ELSE
+     C*
+      ** CUSTOMER COMMISSION CODE STANDARD IS DIFFERENT FROM CUSTOMER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C                     Z-ADDCCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C                     Z-ADDOCDC      WCONO
+     C                     Z-ADDCCMS      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C*
+      ** ADD BROKER COMMISSION TO CUSTOMER COMMISSION IF CUSTOMER CHARGES
+      ** ARE COMPOUNDED
+     C*
+     C           CCCI      IFEQ 'Y'
+     C*
+      ** IF THE BROKER COMMISSION AMOUNT IS NON ZERO , USE THAT AMOUNT
+     C*
+     C           BCMA      IFNE 0
+     C                     ADD  BCMA      EAMT
+     C                     ELSE
+     C*
+      ** OTHERWISE IF BROKER COMMISSION RATES ARE DEFINED
+      ** CALCULATE THE BROKER COMMISSION AMOUNT
+     C*
+     C           NOCO      ADD  OCSC      WCONO
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS EQUAL TO BROKER COMMISSION
+      ** CODE SAME DAY
+     C*
+     C           BCMC      IFEQ BCMS
+     C                     ADD  OCDC      WCONO
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C*
+     C                     ELSE
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS DIFFERENT FROM BROKER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C*
+     C                     Z-ADDOCDC      WCONO
+     C                     Z-ADDBCMS      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C                     END
+     C                     END
+     C*
+      ** IF THE COMMISSION CALCULATED IS DIFFERENT FROM THAT PREVIOUSLY
+      ** POSTED , POST THE AMOUNT AND REVERSE OUT ANY PREVIOUSLY POSTED
+     C*
+     C           PCCMP     IFNE EAMT
+     C                     EXSR CPSTCO
+     C                     Z-ADDPCCMP     EAMT
+     C                     EXSR CREVCO
+     C                     END
+     C*
+     C           XTCPCS    ENDSR                           ** XTCPCS ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** BPTCOH S/R TO POST BROKER COMMISSIONS TYPE H
+      ** CALLED FROM BCOSHE S/R
+      ** CALLS  TTFCAL TO CALCULATE THE RATE AMOUNT
+      **        BPSTCO TO POST BROKER COMMISSIONS
+      **        BREVCO TO REVERSE BROKER COMMISSIONS
+      **
+     C********************************************************************
+     C*
+     C           BPTCOH    BEGSR                           ** BPTCOH BSR**
+     C*
+      ** CHECK WHETHER BROKER CALCULATION BASIS HAS CHANGED IE
+      ** THE NUMBER OF STANDARD AND SAME DAY CONTRACTS FOR METHOD 'H'
+     C*
+     C           NOBO      ADD  OCSB      XCPSB
+     C                     ADD  CCSB      XCPSB
+     C           OCDB      ADD  CCDB      XCPDB
+     C           XCPSB     IFEQ CPSB
+     C           XCPDB     ANDEQCPDB
+     C                     GOTO XTBPCH
+     C                     ELSE
+     C                     Z-ADDXCPSB     CPSB
+     C                     Z-ADDXCPDB     CPDB
+     C                     END
+     C*
+     C           NOBO      ADD  OCSB      WCONO
+     C                     ADD  CCSB      WCONO
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS EQUAL TO BROKER COMMISSION
+      ** CODE SAME DAY
+     C*
+     C           BCMC      IFEQ BCMS
+     C                     ADD  OCDB      WCONO
+     C                     ADD  CCDB      WCONO
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C                     ELSE
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS DIFFERENT FROM BROKER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C           OCDB      ADD  CCDB      WCONO
+     C                     Z-ADDBCMS      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C*
+      ** IF THE COMMISSION CALCULATED IS DIFFERENT FROM THAT PREVIOUSLY
+      ** POSTED , POST THE AMOUNT AND REVERSE OUT ANY PREVIOUSLY POSTED
+     C*
+     C           PBCMP     IFNE EAMT
+     C                     EXSR BPSTCO
+     C                     Z-ADDPBCMP     EAMT
+     C                     EXSR BREVCO
+     C                     END
+     C*
+     C           XTBPCH    ENDSR                           ** XTBPCH ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** CPTCOH S/R TO POST CUSTOMER COMMISSIONS TYPE H
+      ** CALLED FROM CCOSHE S/R
+      ** CALLS  TTFCAL TO CALCULATE THE RATE AMOUNT
+      **        CPSTCO TO POST CUSTOMER COMMISSIONS
+      **        CREVCO TO REVERSE CUSTOMER COMMISSIONS
+      **
+     C********************************************************************
+     C*
+     C           CPTCOH    BEGSR                           ** CPTCOH BSR**
+     C*
+      ** CHECK WHETHER CUSTOMER CALCULATION BASIS HAS CHANGED IE
+      ** THE NUMBER OF STANDARD AND SAME DAY CONTRACTS FOR METHOD 'H'
+     C*
+     C           NOCO      ADD  OCSC      XCPSC
+     C                     ADD  CCSC      XCPSC
+     C           OCDC      ADD  CCDC      XCPDC
+     C           XCPSC     IFEQ CPSC
+     C           XCPDC     ANDEQCPDC
+     C                     GOTO XTCPCH
+     C                     ELSE
+     C                     Z-ADDXCPSC     CPSC
+     C                     Z-ADDXCPDC     CPDC
+     C                     END
+     C*
+     C           NOCO      ADD  OCSC      WCONO
+     C                     ADD  CCSC      WCONO
+     C*
+      ** CUSTOMER COMMISSION CODE STANDARD IS EQUAL TO CUSTOMER COMMISSION
+      ** CODE SAME DAY
+     C*
+     C           CCMC      IFEQ CCMS
+     C                     ADD  OCDC      WCONO
+     C                     ADD  CCDC      WCONO
+     C                     Z-ADDCCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+      ** CUSTOMER COMMISSION CODE STANDARD IS DIFFERENT FROM CUSTOMER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C                     ELSE
+     C                     Z-ADDCCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C           OCDC      ADD  CCDC      WCONO
+     C                     Z-ADDCCMS      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C*
+      ** ADD BROKER COMMISSION TO CUSTOMER COMMISSION IF CUSTOMER CHARGES
+      ** ARE COMPOUNDED
+     C*
+     C           CCCI      IFEQ 'Y'
+     C*
+      ** IF THE BROKER COMMISSION AMOUNT IS NON ZERO , USE THAT AMOUNT
+     C*
+     C           BCMA      IFNE 0
+     C                     ADD  BCMA      EAMT
+     C                     ELSE
+     C*
+      ** OTHERWISE IF BROKER COMMISSION RATES ARE DEFINED
+      ** CALCULATE THE BROKER COMMISSION AMOUNT
+     C*
+     C           NOCO      ADD  OCSC      WCONO
+     C                     ADD  CCSC      WCONO
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS EQUAL TO BROKER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C           BCMC      IFEQ BCMS
+     C                     ADD  OCDC      WCONO
+     C                     ADD  CCDC      WCONO
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     ELSE
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS DIFFERENT FROM BROKER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C*
+     C           OCDC      ADD  CCDC      WCONO
+     C                     Z-ADDBCMS      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C                     END
+     C                     END
+     C*
+      ** IF THE COMMISSION CALCULATED IS DIFFERENT FROM THAT PREVIOUSLY
+      ** POSTED , POST THE AMOUNT AND REVERSE OUT ANY PREVIOUSLY POSTED
+     C*
+     C           PCCMP     IFNE EAMT
+     C                     EXSR CPSTCO
+     C                     Z-ADDPCCMP     EAMT
+     C                     EXSR CREVCO
+     C                     END
+     C*
+     C           XTCPCH    ENDSR                           ** XTCPCH ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** BPTCOE S/R TO POST BROKER COMMISSIONS TYPE E
+      ** CALLED FROM BCOSHE S/R
+      ** CALLS  TTFCAL TO CALCULATE THE RATE AMOUNT
+      **        BPSTCO TO POST BROKER COMMISSIONS
+      **        BREVCO TO REVERSE BROKER COMMISSIONS
+      **
+     C********************************************************************
+     C*
+     C           BPTCOE    BEGSR                           ** BPTCOE BSR**
+     C*
+      ** CHECK WHETHER BROKER CALCULATION BASIS HAS CHANGED IE
+      ** THE NUMBER OF STANDARD AND SAME DAY CONTRACTS FOR METHOD 'E'
+     C*
+     C                     Z-ADDCCSB      XCPSB
+     C                     Z-ADDCCDB      XCPDB
+     C           XCPSB     IFEQ CPSB
+     C           XCPDB     ANDEQCPDB
+     C                     GOTO XTBPCE
+     C                     ELSE
+     C                     Z-ADDXCPSB     CPSB
+     C                     Z-ADDXCPDB     CPDB
+     C                     END
+     C*
+      ** BROKER CONTRACTS CLOSING A POSITION  (CCSB + CCDB)
+     C*
+     C                     Z-ADDCCSB      WCONO
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS EQUAL TO BROKER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C           BCMC      IFEQ BCMS
+     C                     ADD  CCDB      WCONO
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C                     ELSE
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS DIFFERENT FROM BROKER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C                     Z-ADDCCDB      WCONO
+     C                     Z-ADDBCMS      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C*
+      ** IF THE COMMISSION CALCULATED IS DIFFERENT FROM THAT PREVIOUSLY
+      ** POSTED , POST THE AMOUNT AND REVERSE OUT ANY PREVIOUSLY POSTED
+     C*
+     C           PBCMP     IFNE EAMT
+     C                     EXSR BPSTCO
+     C                     Z-ADDPBCMP     EAMT
+     C                     EXSR BREVCO
+     C                     END
+     C*
+     C           XTBPCE    ENDSR                           ** XTBPCE ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** CPTCOE S/R TO POST CUSTOMER COMMISSIONS TYPE E
+      ** CALLED FROM CCOSHE S/R
+      ** CALLS  TTFCAL TO CALCULATE THE RATE AMOUNT
+      **        CPSTCO TO POST CUSTOMER COMMISSIONS
+      **        CREVCO TO REVERSE CUSTOMER COMMISSIONS
+      **
+     C********************************************************************
+     C*
+     C           CPTCOE    BEGSR                           ** CPTCOE BSR**
+     C*
+      ** CHECK WHETHER CUSTOMER CALCULATION BASIS HAS CHANGED IE
+      ** THE NUMBER OF STANDARD AND SAME DAY CONTRACTS FOR METHOD 'E'
+     C*
+     C                     Z-ADDCCSC      XCPSC
+     C                     Z-ADDCCDC      XCPDC
+     C           XCPSC     IFEQ CPSC
+     C           XCPDC     ANDEQCPDC
+     C                     GOTO XTCPCE
+     C                     ELSE
+     C                     Z-ADDXCPSC     CPSC
+     C                     Z-ADDXCPDC     CPDC
+     C                     END
+     C*
+      ** CUSTOMER CONTRACTS CLOSING A POSITION  (CCSC + CCDC)
+     C*
+     C                     Z-ADDCCSC      WCONO
+     C*
+      ** CUSTOMER COMMISSION CODE STANDARD IS EQUAL TO CUSTOMER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C           CCMC      IFEQ CCMS
+     C                     ADD  CCDC      WCONO
+     C                     Z-ADDCCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C                     ELSE
+     C*
+      ** CUSTOMER COMMISSION CODE STANDARD IS DIFFERENT FROM CUSTOMER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C                     Z-ADDCCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     Z-ADDWRATA     EAMT
+     C*
+     C                     Z-ADDCCDC      WCONO
+     C                     Z-ADDCCMS      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C*
+      ** ADD BROKER COMMISSION TO CUSTOMER COMMISSION IF CUSTOMER CHARGES
+      ** ARE COMPOUNDED
+     C*
+     C           CCCI      IFEQ 'Y'
+     C*
+      ** IF THE BROKER COMMISSION AMOUNT IS NON ZERO , USE THAT AMOUNT
+     C*
+     C           BCMA      IFNE 0
+     C                     ADD  BCMA      EAMT
+     C                     ELSE
+     C*
+      ** OTHERWISE IF BROKER COMMISSION RATES ARE DEFINED
+      ** CALCULATE THE BROKER COMMISSION AMOUNT
+     C*
+     C                     Z-ADDCCSC      WCONO
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS EQUAL TO BROKER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C           BCMC      IFEQ BCMS
+     C                     ADD  CCDC      WCONO
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C*
+     C                     ELSE
+     C*
+      ** BROKER COMMISSION CODE STANDARD IS DIFFERENT FROM BROKER
+      ** COMMISSION CODE SAME DAY
+     C*
+     C                     Z-ADDBCMC      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C*
+     C                     Z-ADDCCDC      WCONO
+     C                     Z-ADDBCMS      CGCM
+     C                     Z-ADD0         WRATA
+     C           WCONO     IFNE 0
+     C           CGCM      ANDNE0
+     C                     EXSR TTFCAL
+     C                     END
+     C                     ADD  WRATA     EAMT
+     C                     END
+     C                     END
+     C                     END
+     C*
+      ** IF THE COMMISSION CALCULATED IS DIFFERENT FROM THAT PREVIOUSLY
+      ** POSTED , POST THE AMOUNT AND REVERSE OUT ANY PREVIOUSLY POSTED
+     C*
+     C           PCCMP     IFNE EAMT
+     C                     EXSR CPSTCO
+     C                     Z-ADDPCCMP     EAMT
+     C                     EXSR CREVCO
+     C                     END
+     C*
+     C           XTCPCE    ENDSR                           ** XTCPCE ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** TTFCAL S/R - TO CALCULATE TIER, THRESHOLD OR FLAT RATE
+      ** CALLED FROM BPTCHA, BPTCHS, BPTCHH, BPTCHE,
+      **             CPTCHA, CPTCHS, CPTCHH, CPTCHE
+      ** CALLS NO S/R
+      **
+     C********************************************************************
+     C*
+     C           TTFCAL    BEGSR
+     C*
+      ** ACCESS CHGCM FOR CHARGES AND COMMISSIONS DETAIL
+     C*
+     C           CHGCMK    CHAINCHGCM                79
+      ** DB ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'12'      DBASE            **DB ERROR 12**S01117
+     C                     Z-ADD12        DBASE            **DB ERROR 12**S01117
+     C                     MOVEL'CHGCM'   DBFILE           ***************
+     C                     MOVELISCY      CHGCMT  5
+     C                     MOVE CGCM      CHGCMT
+     C                     MOVELCHGCMT    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     EXSR EXIT
+     C                     END
+     C*
+      ** LOCATE THE HIGHEST VALUED CHARGED RANGE LOWER LIMIT ON CHGCM
+      ** WHOSE VALUE IS LESS THAN OR EQUAL TO THE CONTRACT NUMBER
+     C*
+     C                     Z-ADD9         Y       10
+     C                     MOVE 'N'       FOUND   1
+     C*
+     C           FOUND     DOWEQ'N'
+     C           Y         ANDGT1
+     C*
+     C           RNG,Y     IFNE 0
+     C           RNG,Y     ANDLEWCONO
+     C                     MOVE 'Y'       FOUND
+     C                     ELSE
+     C                     SUB  1         Y
+     C                     END
+     C*
+     C                     END
+     C*
+      ** IF CHARGES ARE TIERED
+     C*
+     C           TTFI      IFEQ 'T'
+     C           WCONO     SUB  RNG,Y     TCONO
+     C                     ADD  1         TCONO
+     C           TCONO     MULT AMT,Y     WRATA
+     C*
+     C           Y         DOWGE2
+     C           Y         SUB  1         Z       10
+     C           RNG,Y     SUB  RNG,Z     TCONO
+     C           TCONO     MULT AMT,Z     TRATA
+     C                     ADD  TRATA     WRATA
+     C                     SUB  1         Y
+     C                     END
+     C                     END
+     C*
+      ** IF CHARGES ARE THRESHOLD
+     C*
+     C           TTFI      IFEQ 'X'
+     C           WCONO     MULT AMT,Y     WRATA
+     C                     END
+     C*
+      ** IF CHARGES ARE FLAT
+     C*
+     C           TTFI      IFEQ 'F'
+     C                     Z-ADDAMT,Y     WRATA
+     C                     END
+     C*
+      ** IF RATE AMOUNT < MIN CHARGE COMMSSION
+     C*
+     C           WRATA     IFLT MINC
+     C           MINC      ANDNE0
+     C                     Z-ADDMINC      WRATA
+     C                     END
+     C*
+      ** IF RATE AMOUNT > MAX CHARGE COMMSSION
+     C*
+     C           WRATA     IFGT MAXC
+     C           MAXC      ANDNE0
+     C                     Z-ADDMAXC      WRATA
+     C                     END
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C********************************************************************
+      ** WRITER S/R TO POST CUSTOMER/BROKER/BOOK DETAILS
+      ** CALLED FROM BPSTCH, CPSTCH, BPSTCO, CPSTCO, BREVCH, CREVCH
+      **             BREVCO, CREVCO
+      ** CALLS  NO S/R
+      **
+     C********************************************************************
+     C*
+     C           WRITER    BEGSR                           ** WRITER BSR**
+     C*
+      ** ACCUMULATE TOTALS FOR AUDIT FILE FOKEYA
+     C*
+     C                     ADD  1         COUNT
+     C           EAMT      DIV  1000      ZZAMT
+     C                     EXSR ZZADD
+     C*
+     C           BROCUS    IFEQ 'B'
+     C                     MOVE BOCO      CBCD
+     C                     MOVEL*BLANKS   PTFR                            S71062
+     C                     ELSE
+     C                     MOVE CUSC      CBCD
+     C                     MOVELWWPTFR    PTFR                            S71062
+     C                     END
+     C*                                                                   CAC003
+     C** Check if *IN20 is on                                             CAC003
+     C*                                                                   CAC003
+     C           *IN20     IFEQ '1'                                       CAC003
+     C*                                                                   CAC003
+     C                     MOVE WCGCM     CGCM                            CAC003
+     C           CGCM      IFEQ *ZEROS                                    CAC003
+     C*                                                                   CAC003
+     C           BROCUS    IFEQ 'B'                                       CAC003
+     C**********           MOVE BXFOPC    PRFC                                         CAC003 241735
+     C                     MOVE BPRC      PRFC                                                241735
+     C                     ELSE                                           CAC003
+     C                     MOVE TPRC      PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ELSE                                           CAC003
+     C*                                                                   CAC003
+     C           CHGCMK    CHAINCHGCM                60                   CAC003
+     C           *IN60     IFEQ '1'                                       CAC003
+     C           RECI      ORNE 'D'                                       CAC003
+     C                     SETON                     U7U8                 CAC003
+     C           *LOCK     IN   LDA                        ***************CAC003
+     C                     Z-ADD15        DBASE            **DB ERROR 15**CAC003
+     C                     MOVEL'CHGCM'   DBFILE           ***************CAC003
+     C                     MOVELCHGCMT    DBKEY                           CAC003
+     C                     OUT  LDA                                       CAC003
+     C                     EXSR *PSSR                                     CAC003
+     C                     EXSR EXIT                                      CAC003
+     C                     END                                            CAC003
+     C*                                                                   CAC003
+     C           BOTR      IFEQ ' '                                       CAC003
+     C                     MOVE PRFCC     PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C           BOTR      IFEQ 'B'                                       CAC003
+     C                     MOVE BPRC      PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C           BOTR      IFEQ 'T'                                       CAC003
+     C           BROCUS    IFEQ 'B'                                       CAC003
+     C                     MOVE BXFOPC    PRFC                            CAC003
+     C                     ELSE                                           CAC003
+     C                     MOVE TPRC      PRFC                            CAC003
+     C                     ENDIF                                          CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C*
+      ** GENERATE FO ACCOUNTS KEY
+      ** IF OTC, BLANK OFF THE MARKET CENTER AND INSTRUMENT TYPE IN FFKY
+     C*
+     C           ISTY      IFEQ 'Y'                        BEG            S01455
+     C           ISTI      IFEQ 'Y'
+     C                     MOVE *BLANKS   TISTT
+     C                     ELSE
+     C                     MOVE ISTT      TISTT
+     C                     MOVELMRKT      TISTT                           S01455
+     C                     END
+     C                     ELSE                            X--            S01455
+     C**********           MOVE '     '   TISTT                                        S01455 083196
+     C**********           END                             END                         S01455 083196
+     C********   ISTI      IFEQ 'Y'                                       083196              237133
+     C********             MOVEL*BLANK    TISTT                           083196              237133
+     C********             ELSE                                           083196              237133
+     C********             MOVELMRKT      TISTT                           083196              237133
+     C                     MOVEL*BLANKS   TISTT                                               237133
+     C                     ENDIF                                                              083196
+     C*                                                                   S01455
+      ** The processing type is only valid if indicator is 'Y'            S01455
+      ** on I.C.D. "TABTB80"                                              S01455
+     C*                                                                   S01455
+     C           PROT      IFEQ 'Y'                                       S01455
+     C                     MOVE ISPT      INVA                            S01455
+     C                     ELSE                                           S01455
+     C                     MOVE *BLANKS   INVA                            S01455
+     C                     END                                            S01455
+     C********             ENDIF                                          083196              237133
+     C********                                                            083196              237133
+     C*
+     C                     MOVE RUND      EDAT
+     C                     MOVE ISCY      CCY
+     C*********************MOVE TRSD      VDAT                            073714
+     C                     MOVE VALD      VDAT                            073714
+     C/COPY WNCPYSRC,FF0380C010
+     C*
+     C           BROCUS    IFEQ 'B'
+     C                     MOVE BSLT      SETP
+     C                     MOVE BSLA      SETA
+     C                     MOVE BSBR      SEBR                            S01117
+     C                     ELSE
+     C                     MOVE CSLT      SETP
+     C                     MOVE CSLA      SETA
+     C                     MOVE BRSC      SEBR                            S01117
+     C                     END
+     C*
+     C/COPY WNCPYSRC,FF0380CCP2                                           S01408
+     C*
+     C*
+      *                                                                                       CGL020
+      ** Initialize Fee Flag, Fee Value and Fee Percent                                       CGL020
+      *                                                                                       CGL020
+     C           CGL020    IFEQ 'Y'                                                           CGL020
+     C                     MOVE 'F'       F1FFLG                                              CGL020
+     C                     Z-ADDEAMT      F1FVAL                                              CGL020
+     C                     Z-ADD100       F1FPCT                                              CGL020
+     C           BROCUS    IFEQ 'B'                                                           CGL020
+     C                     MOVELBFAO      SEFA   10                                           CGL020
+     C                     MOVELBCPN      SECP    8                                           CGL020
+     C                     ELSE                                                               CGL020
+     C                     MOVELCFAO      SEFA                                                CGL020
+     C                     MOVELCCPN      SECP                                                CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C**********           Z-ADDCBCD      PCBCD                                        CGL020 CSD027
+     C                     MOVE CBCD      PCBCD                                               CSD027
+      *                                                                                       CGL020
+     C                     CALL WZAAML                                                        CGL020
+     C                     PARM           PCBCD                                               CGL020
+     C                     PARM           SETA                                                CGL020
+     C                     PARM           SEBR                                                CGL020
+     C                     PARM           SEFA                                                CGL020
+     C                     PARM           SECP                                                CGL020
+     C                     PARM           CCY                                                 CGL020
+     C                     PARM           F1RACT                                              CGL020
+     C                     PARM           F1RCTY                                              CGL020
+     C                     PARM           F1RBNK                                              CGL020
+     C                     PARM           F1RCDE                                              CGL020
+     C                     PARM           F1PACT                                              CGL020
+     C                     PARM           F1PCTY                                              CGL020
+     C                     PARM           F1PBNK                                              CGL020
+     C                     PARM           F1PCDE                                              CGL020
+     C                     PARM           F1DACT                                              CGL020
+     C                     PARM           F1DCTY                                              CGL020
+     C                     PARM           F1DBNK                                              CGL020
+      *                                                                                       CGL020
+     C                     Z-ADDFCDA      F1SDAT                                              CGL020
+      *                                                                                       CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C                     WRITEFOKEYDF
+      *                                                                                       CGL020
+     C           CGL020    IFEQ 'Y'                                                           CGL020
+     C                     MOVE *BLANKS   F1FFLG                                              CGL020
+     C                     Z-ADD*ZERO     F1FVAL                                              CGL020
+     C                     Z-ADD*ZERO     F1FPCT                                              CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C*
+      ** WRITE A CUSTOMER/BROKER CHANGE POSITION RECORD
+     C*
+      ** IF COMMISSION RECALCULATION USE CURRENT BUSINESS DATE
+      ** OTHERWISE TRANSACTION DATE
+     C*
+     C           TRECI     IFEQ 'D'
+     C           ECPI      ANDEQ'Y'
+     C                     MOVE CBUSD     POCD
+     C                     ELSE
+     C*********************MOVE TRSD      POCD                            073714
+     C                     MOVE VALD      POCD                            073714
+     C/COPY WNCPYSRC,FF0380C011
+     C                     END
+     C*
+     C                     Z-ADD0         POCQ
+     C           BROCUS    IFEQ 'B'
+     C                     Z-SUBEAMT      PCGA
+     C                     ELSE
+     C                     Z-ADDEAMT      PCGA
+     C                     END
+     C*
+     C                     WRITEPOCHGTCF
+     C*
+      ** WRITE A BOOK CHANGE POSITION RECORD
+     C*
+     C           CCPR      IFEQ 'R'
+     C                     Z-SUBEAMT      PCGA
+     C                     ELSE
+     C                     Z-ADDEAMT      PCGA
+     C                     END
+     C                     WRITEPOCHGTKF
+     C           XTWRIT    ENDSR                           ** XTWRIT ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** UMEMPR S/R TO DETERMINE IF MEMOSM AND PRONOM UPDATING IS
+      **               REQUIRED
+      ***CALLED*FROM*ACTIVE***********************************************S01117
+      ** CALLED FROM MAIN                                                 S01117
+      ** CALLS  STD SUBTOUTINE FFSETL
+      **        SR. WACMVD                                                S01240
+      **
+     C********************************************************************
+     C*
+     C           UMEMPR    BEGSR                           ** UMEMPR BSR**
+      *                                                                   077563
+     C   U2                OPEN MEMOSM                                    077563
+     C   U6                OPEN PRONOM                                    077563
+     C*
+      ** PREPARE PARAMETER TO BE INPUT TO STANDARD SUBROUTINE FFSETL
+     C*
+     C***********          Z-ADDBRCD      FFBRCD                          S01117
+     C                     MOVELBRCA      FFBRCA                          S01117
+     C*
+     C                     MOVE ISCY      FFCCY
+     C***********                                                         S01117
+      ***IF*IT*IS*A*MULTI-BRANCHING*SYSTEM,*THE*DEFAULT*ACCOUNT*SEQUENCE**S01117
+      ***WILL*BE*THE*START*ACCOUNT*SEQUENCE*FOR*THE*BRANCH*INVOLVED*******S01117
+      ***OTHERWISE*SET*IT*TO*01*******************************************S01117
+     C***********                                                         S01117
+     C***********MBIN      IFEQ 'Y'                                       S01117
+     C***********          Z-ADDNSACS     FFDASQ                          S01117
+     C***********          ELSE                                           S01117
+     C***********          Z-ADD01        FFDASQ                          S01117
+     C***********          END                                            S01117
+     C*
+      ** DETERMINE IF MEMOSM AND/OR PRONOM NEED UPDATING WHEN CUSTOMER
+      ** EXISTS
+     C*
+     C********** CUSC      IFNE 0                                                             CSD027
+     C           CUSC      IFNE *BLANKS                                                       CSD027
+     C*
+     C                     MOVE 'C'       BROCUS
+     C*
+     C**********           Z-ADDCUSC      FFCBCD                                              CSD027
+     C                     MOVE CUSC      FFCBCD                                              CSD027
+     C                     MOVE 'N'       FFBRKI
+     C                     MOVE CSLT      FFSETP
+     C                     MOVE CSLA      FFSETA
+     C                     MOVE BRSC      FFSETB                          S01117
+     C*
+     C                     EXSR FFSETL
+     C*
+      **  LF/MEMOSM needs updating
+     C*
+     C           FFMIND    IFEQ 'Y'
+     C                     EXSR UMEMO
+     C*                                                                   S01240
+      **  Set MEMOS/PRONO Update Indicator to 'M'                         S01240
+     C*                                                                   S01240
+     C                     MOVE 'M'       MPIND   1                       S01240
+     C*                                                                   S01240
+      **  Write record to PF/FFACMVD                                      S01240
+     C*                                                                   S01240
+     C                     EXSR WACMVD                                    S01240
+     C*                                                                   S01240
+     C                     END
+     C*
+      **  LF/PRONOM needs updating
+     C*
+     C           FFPIND    IFEQ 'Y'
+     C                     EXSR UPRON
+     C*                                                                   S01240
+     C           FFMIND    IFNE 'Y'                                       S01240
+     C*                                                                   S01240
+      **  Set MEMOS/PRONO Update Indicator to 'P'                         S01240
+     C*                                                                   S01240
+     C                     MOVE 'P'       MPIND                           S01240
+     C*                                                                   S01240
+      **  Write record to PF/FFACMVD                                      S01240
+     C*                                                                   S01240
+     C                     EXSR WACMVD                                    S01240
+     C                     END                                            S01240
+     C*                                                                   S01240
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+      ** DETERMINE IF MEMOSM AND/OR PRONOM NEED UPDATING WHEN BROKER
+      ** EXISTS
+     C*
+     C********** BOCO      IFNE 0                                                             CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+     C*
+     C                     MOVE 'B'       BROCUS
+     C*
+     C**********           Z-ADDBOCO      FFCBCD                                              CSD027
+     C                     MOVE BOCO      FFCBCD                                              CSD027
+     C                     MOVE 'Y'       FFBRKI
+     C                     MOVE BSLT      FFSETP
+     C                     MOVE BSLA      FFSETA
+     C                     MOVE BSBR      FFSETB                          S01117
+     C*
+     C                     EXSR FFSETL
+     C*
+      **  LF/MEMOSM needs updating
+     C*
+     C           FFMIND    IFEQ 'Y'
+     C                     EXSR UMEMO
+     C*                                                                   S01240
+      **  Set MEMOS/PRONO Update Indicator to 'M'                         S01240
+     C*                                                                   S01240
+     C                     MOVE 'M'       MPIND                           S01240
+     C*                                                                   S01240
+      **  Write record to PF/FFACMVD                                      S01240
+     C*                                                                   S01240
+     C                     EXSR WACMVD                                    S01240
+     C*                                                                   S01240
+     C                     END
+     C*
+      **  LF/PRONOM needs updating
+     C*
+     C           FFPIND    IFEQ 'Y'
+     C                     EXSR UPRON
+     C*                                                                   S01240
+     C           FFMIND    IFNE 'Y'                                       S01240
+     C*                                                                   S01240
+      **  Set MEMOS/PRONO Update Indicator to 'P'                         S01240
+     C*                                                                   S01240
+     C                     MOVE 'P'       MPIND                           S01240
+     C*                                                                   S01240
+      **  Write record to PF/FFACMVD                                      S01240
+     C*                                                                   S01240
+     C                     EXSR WACMVD                                    S01240
+     C                     END                                            S01240
+     C*                                                                   S01240
+     C                     END
+     C*
+     C                     END
+      *                                                                   077563
+     C   U2                CLOSEMEMOSM                                    077563
+     C   U6                CLOSEPRONOM                                    077563
+     C*
+     C           XUMEMP    ENDSR                           ** XUMEMP ESR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      ** UMEMO  S/R TO UPDATE LF/MEMOSM FOR BROKER OR CUSTOMER
+      ** CALLED FROM UMEMPR
+      ** CALLS  NO S/R
+      **
+     C********************************************************************
+     C*
+     C           UMEMO     BEGSR
+     C*
+      **  Access record off LF/MEMOSM
+     C*
+     C           MEMKEY    CHAINMEMOSMEF             10
+     C*
+     C           *IN10     IFEQ '1'
+     C                     Z-ADD0         LDBL
+     C                     Z-ADD0         CLBL
+     C                     END
+     C*                                                                   S01240
+     C** STORE LEDGER BALANCE FOR USE IN SR. WACMVD                       S01240
+     C*                                                                   S01240
+     C                     Z-ADDLDBL      WLDBL  150                      S01240
+     C*
+      ** IF IT IS AN MEMOSM UPDATE FOR CUSTOMER
+     C*
+     C           BROCUS    IFEQ 'C'
+     C*
+     C           CCHP      ADD  CCMP      CCHCM
+     C           PCCHP     ADD  PCCMP     PCCHCM
+     C*
+      ** ADD THE SUM OF NEW CUSTOMER CHARGES AND COMMISSIONS TO THE
+      ** LEDGER BALANCE AND CLEARED BALANCE IF IT IS AN ACTIVE
+      ** TRANSACTION
+     C*
+     C           TRECI     IFNE '*'
+     C                     ADD  CCHCM     LDBL
+     C                     ADD  CCHCM     CLBL
+     C                     END
+     C*
+      ** REVERSE OUT THE OLD FIGURES BY SUBTRACTING THE SUM OF THE OLD
+      ** CUSTOMER CHARGES AND COMMISSIONS POSTED FROM THE LEDGER
+      ** BALANCE AND CLEARED BALANCE
+     C*
+     C                     SUB  PCCHCM    LDBL
+     C                     SUB  PCCHCM    CLBL
+     C*
+     C                     ELSE
+     C*
+      ** IF IT IS AN MEMOSM UPDATE FOR BROKER
+     C*
+     C           BCHP      ADD  BCMP      BCHCM
+     C           PBCHP     ADD  PBCMP     PBCHCM
+     C*
+      ** SUBTRACT THE SUM OF NEW BROKER CHARGES AND COMMISSIONS FROM
+      ** THE LEDGER BALANCE AND CLEARED BALANCE IF IT IS AN ACTIVE
+      ** TRANSACTION
+     C*
+     C           TRECI     IFNE '*'
+     C                     SUB  BCHCM     LDBL
+     C                     SUB  BCHCM     CLBL
+     C                     END
+     C*
+      ** REVERSE OUT THE OLD FIGURES BY ADDING THE SUM OF THE OLD
+      ** BROKER CHARGES AND COMMISSIONS POSTED TO THE LEDGER
+      ** BALANCE AND CLEARED BALANCE
+     C*
+     C                     ADD  PBCHCM    LDBL
+     C                     ADD  PBCHCM    CLBL
+     C*
+     C                     END
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE FFBRCB    BRCA                            S01117
+     C                     MOVE FFCNUM    CNUM
+     C                     MOVE FFCCY     CCY
+     C                     MOVE FFACOD    ACOD
+     C                     MOVE FFACSQ    ACSQ
+     C*
+      **  If record already existed update it
+     C*
+     C           *IN10     IFEQ '0'
+     C                     EXCPTMEMOSU
+     C*
+     C                     ELSE
+     C*
+      **  Write out new record
+     C*
+     C                     WRITEMEMOSMEF
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C****************************************************************
+     C/EJECT
+     C********************************************************************
+      ** UPRON  S/R TO UPDATE LF/PRONOM FOR BROKER OR CUSTOMER
+      ** CALLED FROM UMEMPR
+      ** CALLS  NO S/R
+      **
+     C********************************************************************
+     C*
+     C           UPRON     BEGSR
+     C*
+      **  Access record off LF/PRONOM
+     C*
+     C           PROKEY    CHAINPRONOMEF             11
+     C*
+     C           *IN11     IFEQ '1'
+     C                     Z-ADD0         PNBL
+     C                     END
+     C*                                                                   S01240
+     C** STORE PROJECTED NOSTRO BALANCE FOR USE IN SR. WACMVD             S01240
+     C*                                                                   S01240
+     C                     Z-ADDPNBL      WPNBL  150                      S01240
+     C*
+      ** IF IT IS AN PRONOM UPDATE FOR CUSTOMER
+     C*
+     C           BROCUS    IFEQ 'C'
+     C*
+     C           CCHP      ADD  CCMP      CCHCM
+     C           PCCHP     ADD  PCCMP     PCCHCM
+     C*
+      ** ADD THE SUM OF NEW CUSTOMER CHARGES AND COMMISSIONS TO THE
+      ** PROJECTED NOSTRO BALANCE IF IT IS AN ACTIVE TRANSACTION
+     C*
+     C           TRECI     IFNE '*'
+     C                     ADD  CCHCM     PNBL
+     C                     END
+     C*
+      ** REVERSE OUT THE OLD FIGURES BY SUBTRACTING THE SUM OF THE OLD
+      ** CUSTOMER CHARGES AND COMMISSIONS POSTED FROM THE PROJECTED
+      ** NOSTRO BALANCE
+     C*
+     C                     SUB  PCCHCM    PNBL
+     C*
+     C                     ELSE
+     C*
+      ** IF IT IS AN PRONOM UPDATE FOR BROKER
+     C*
+     C           BCHP      ADD  BCMP      BCHCM
+     C           PBCHP     ADD  PBCMP     PBCHCM
+     C*
+      ** SUBTRACT THE SUM OF NEW BROKER CHARGES AND COMMISSIONS FROM
+      ** THE PROJECTED NOSTRO BALANCE IF IT IS AN ACTIVE TRANSACTION
+     C*
+     C           TRECI     IFNE '*'
+     C                     SUB  BCHCM     PNBL
+     C                     END
+     C*
+      ** REVERSE OUT THE OLD FIGURES BY ADDING THE SUM OF THE OLD
+      ** BROKER CHARGES AND COMMISSIONS POSTED TO THE PROJECTED
+      ** NOSTROL BALANCE
+     C*
+     C                     ADD  PBCHCM    PNBL
+     C*
+     C                     END
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE FFCCY     CCY
+     C                     MOVE FFNOSN    NOSN
+     C*
+      **  If record already existed update it
+     C*
+     C           *IN11     IFEQ '0'
+     C                     EXCPTPRONOU
+     C*
+     C                     ELSE
+     C*
+      **  Write out new record
+     C*
+     C                     WRITEPRONOMEF
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C****************************************************************
+     C/EJECT
+     C********************************************************************S01240
+     C**                                                                 *S01240
+     C**   WACMVD SR. -  Write record to PF/FFACMVD                      *S01240
+     C**   ~~~~~~~~~~                                                    *S01240
+     C**      Called From                  Calls                         *S01240
+     C**       SR. UMEMPR                                                *S01240
+     C**                                                                 *S01240
+     C********************************************************************S01240
+     C**                                                                  S01240
+     C           WACMVD    BEGSR                           ** WACMVD SR **S01240
+     C**                                                                  S01240
+     C**   Set up fields for output to PF/FFACMVD                         S01240
+     C**                                                                  S01240
+     C**   Branch Code                                                    S01240
+     C***********          MOVE *BLANK    BRCA                            FO0017
+     C                     MOVE FFBRCB    BRCA                            FO0017
+     C**                                                                  S01240
+     C**   Customer Number                                                S01240
+     C**********           Z-ADDFFCNUM    CUSN                            S01240              CSD027
+     C                     MOVE FFCNUM    CUSN                            S01240              CSD027
+     C**                                                                  S01240
+     C**   Currency Code                                                  S01240
+     C                     MOVE FFCCY     CCYD                            S01240
+     C**                                                                  S01240
+     C**   Account Code                                                   S01240
+     C                     Z-ADDFFACOD    ACDE                            S01240
+     C**                                                                  S01240
+     C**   Account Sequence                                               S01240
+     C                     Z-ADDFFACSQ    ASNC                            S01240
+     C**                                                                  S01240
+     C**   Posting Date                                                   S01240
+     C                     Z-ADDRUND      PTDT                            S01240
+     C**                                                                  S01240
+     C**   Value Date                                                     S01240
+     C                     Z-ADDRUND      VUDT                            S01240
+     C**                                                                  S01240
+     C**   Transaction Type                                               S01240
+     C                     MOVE TRTY      TRYP                            S01240
+     C**                                                                  S01240
+     C**   Narrative Code                                                 S01240
+     C                     Z-ADD0         NRTC                            S01240
+     C**                                                                  S01240
+     C**   Narrative Description                                          S01240
+     C                     MOVELISTN      NRTD                            S01240
+     C**                                                                  S01240
+     C**   Transaction Number                                             S01240
+     C                     MOVE TNBR      TNMR                            S01240
+     C**                                                                  S01240
+     C**   Cheque Number                                                  S01240
+     C                     Z-ADD*ZERO     CQNR                            S01240
+     C**                                                                  S01240
+     C**   Movement Amount = change in Ledger Balance/Projected           S01240
+     C**                     Nostro Balance                               S01240
+     C           MPIND     IFEQ 'M'                                       S01240
+     C           LDBL      SUB  WLDBL     WMVAM  130                      S01240
+     C                     Z-ADDWMVAM     MVAM                            S01240
+     C                     END                                            S01240
+     C*                                                                   S01240
+     C           MPIND     IFEQ 'P'                                       S01240
+     C           PNBL      SUB  WPNBL     WMVAM                           S01240
+     C                     Z-ADDWMVAM     MVAM                            S01240
+     C                     END                                            S01240
+     C**                                                                  S01240
+     C           MVAM      IFNE *ZERO                                     S01240
+     C**                                                                  S01240
+     C**   Debit or Credit                                                S01240
+     C           MPIND     IFEQ 'M'                                       S01240
+     C           LDBL      IFGE WLDBL                                     S01240
+     C                     Z-ADD0         DORC                            S01240
+     C                     ELSE                                           S01240
+     C                     Z-SUBMVAM      MVAM                            S01240
+     C                     Z-ADD1         DORC                            S01240
+     C                     END                                            S01240
+     C                     END                                            S01240
+     C**                                                                  S01240
+     C           MPIND     IFEQ 'P'                                       S01240
+     C           PNBL      IFGE WPNBL                                     S01240
+     C                     Z-ADD0         DORC                            S01240
+     C                     ELSE                                           S01240
+     C                     Z-SUBMVAM      MVAM                            S01240
+     C                     Z-ADD1         DORC                            S01240
+     C                     END                                            S01240
+     C                     END                                            S01240
+     C**                                                                  S01240
+     C**  Write record to PF/FFACMVD                                      S01240
+     C                     WRITEFFACMVDF                                  S01240
+     C**                                                                  S01240
+     C                     END                                            S01240
+     C**                                                                  S01240
+     C                     ENDSR                                          S01240
+     C**                                                                  S01240
+     C********************************************************************S01240
+     C/EJECT                                                              S01240
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,FFFMTZ3
+     C/EJECT
+     C/COPY ZSRSRC,FFSETLZ4
+     C/EJECT
+     C/COPY ZSRSRC,ZZADDZ1
+     C/EJECT
+     C********************************************************************S01117
+      ** *PSSR  S/R TO HANDLE ABNORMAL ERROR CONDITIONS                   S01117
+      ** CALLED FROM AFTER ABNORMAL OPERATION OCCURS                      S01117
+      ** CALLS  NO S/R                                                    S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                                          S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANK                                    S01117
+     C                     MOVEL'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C/COPY WNCPYSRC,FF0380C019
+     C/EJECT                                                              S01117
+     O*
+     O** UPDATE TRSET
+     O*
+     OTRSETDF E                UTRSET
+     O                         CPSB
+     O                         CPDB
+     O                         CPSC
+     O                         CPDC
+     O                         BCHP
+     O                         BCMP
+     O                         CCHP
+     O                         CCMP
+     O                         BCHA                                       CFF007
+     O                         BCMA                                       CFF007
+     O                         CCHA                                       CFF007
+     O                         CCMA                                       CFF007
+     O                         CMCB                                       CFF007
+     O                         CHCB                                       CFF007
+     O                         CMCC                                       CFF007
+     O                         CHCC                                       CFF007
+     O/COPY WNCPYSRC,FF0380O001
+     O*
+     O** UPDATE MEMOSME
+     O*
+     OMEMOSMEFE                MEMOSU
+     O                         LDBL
+     O                         CLBL
+     O*
+     O** UPDATE PRONOME
+     O*
+     OPRONOMEFE                PRONOU
+     O                         PNBL
+     O*
+     O*****************************************************************
+     O/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   TXT - PROGRAM TEXT HANDLING
+OVER THE COUNTER
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+     X/COPY WNCPYSRC,FF0380X001

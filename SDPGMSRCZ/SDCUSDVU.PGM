@@ -1,0 +1,259 @@
+      *****************************************************************
+/*STD *: PGMBASE                                                    : *
+/*EXI *: MODULE(SDCUSDVU) ACTGRP(*CALLER)                           : *
+/*EXI *  TEXT('Midas SD Validate & Update')                           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SDCUSDVU - Transaction validate and update program            *
+      *                                                               *
+      *  Function:  This program validates and updates transactions   *
+      *             recieved from the front end                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER070             Date 28Nov14               *
+      *  Prev Amend No. CSW214             Date 28Nov14               *
+      *                 MD030956           Date 09Oct14               *
+      *                 MD029805           Date 05Sep14               *
+      *                 MD027584           Date 17Jun14               *
+      *                 MD027213           Date 05Jun14               *
+      *                 TI010338           Date 21May13               *
+      *                 TI010224           Date 16May13               *
+      *                 MD027296           Date 02Jun14               *
+      *                 MD026997           Date 29May14               *
+      *                 MD026753B          Date 29May14               *
+      *                 MD026705           Date 29May14               *
+      *                 MD026693           Date 22May14               *
+      *                 MD026550A          Date 22May14               *
+      *                 MD026550           Date 22May14               *
+      *                 MD026497           Date 27Apr14               *
+      *                 MD026540           Date 12May14               *
+      *                 MD026519           Date 12May14               *
+      *                 MD026458           Date 24Apr14               *
+      *                 CGL132             Date 01May13               *
+      *                 MD026253           Date 08Apr14               *
+      *                 MD024991           Date 23Mar14               *
+      *                 AR811594           Date 10Aug11               *
+      *                 AR1086546          Date 25Jun13               *
+      *                 MD021617           Date 08Aug13               *
+      *                 MD022463           Date 27Sep13               *
+      *                 CSW213             Date 03Jun13               *
+      *                 AR1093456          Date 04Mar13               *
+      *                 262859B            Date 01Aug12               *
+      *                 263079             Date 01Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 AR971184A          Date 13Jun12               *
+      *                 AR971184           Date 28May12               *
+      *                 AR971167           Date 16May12               *
+      *                 AR970389           Date 15May12               *
+      *                 AR917747           Date 27Feb12               *
+      *                 AR913994           Date 15Feb11               *
+      *                 AR855391           Date 27Oct11               *
+      *                 CER049             Date 06Dec10               *
+      *                 CSD090             Date 06Dec10               *
+      *                 AR784700           Date 07Jun11               *
+      *                 AR745923           Date 12May11               *
+      *                 AR743761           Date 16Apr11               *
+      *                 AR741363           Date 15Apr11               *
+      *                 AR740758           Date 04Apr11               *
+      *                 AR740196           Date 03Apr11               *
+      *                 AR739736           Date 01Apr11               *
+      *                 AR739532           Date 30Mar11               *
+      *                 AR728530           Date 07Mar11               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23518           Date 30Mar09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG22143           Date 14Jan09               *
+      *                 BUG21091           Date 25Sep08               *
+      *                 256330             Date 01Sep08               *
+      *                 BUG16705           Date 04Mar08               *
+      *                 BUG15872           Date 12Feb08               *
+      *                 BUG15049           Date 19Oct07               *
+      *                 BUG15314           Date 22Nov07               *
+      *                 CSW207A            Date 02Aug07               *
+      *                 CSW207             Date 09Jul07               *
+      *                 BUG14803           Date 06Sep07               *
+      *                 BUG14485           Date 31Jul07               *
+      *                 BUG14161           Date 15Jun07               *
+      *                 BUG14104A          Date 09Jun07               *
+      *                 BUG13595           Date 20Mar07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 BUG13525           Date 05Mar07               *
+      *                 CSD079             Date 05Feb07               *
+      *                 BG12238            Date 30Oct06               *
+      *                 BG12033            Date 19Sep06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD028             Date 22Aug05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG5870            Date 14Feb05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 04Feb05               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG5082            Date 02Dec04               *
+      *                 BUG4728            Date 05Nov04               *
+      *                 BUG4196            Date 08Sep04               *
+      *                 BUG3362            Date 30Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 222373             Date 05Nov03               *
+      *                 CAP084  *CREATE    Date 20Nov01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
+      *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
+      *  MD030956 - Additional changes to BFM-TI enhancement          *
+      *             (Recompile)                                       *
+      *  MD029805 - GIIN number validation (Recompile)                *
+      *  MD027584 - Validation issues with Override comments          *
+      *             (Recompile)                                       *
+      *  MD027213 - GIIN is not populated on Input (Recompile)        *
+      *  TI010338 - Validation is expected when Parent Indicator is   *
+      *             set to 'P' and TI tab is filled (Recompile)       *
+      *             Applied for MD026906.                             *
+      *  TI010224 - Amended fields were being deleted after clicking  *
+      *             confirm authorize (Recompile). Applied for        *
+      *             MD026906.                                         *
+      *  MD027296 - Serious MIDAS Error on Confirm Authorise of Newly *
+      *             Inserted Customers (Recompile)                    *
+      *  MD026997 - Only check US TIN if subject to reporting is 'Y'  *
+      *             for Customers/Non-Account Holders created after   *
+      *             FATCA Effective Date (Recompile)                  *
+      *  MD026753B - FAUTIN not updated properly (Recompile)          *
+      *  MD026705 - Authority Holder Indicia (Recompile)              *
+      *  MD026693 - FATCA Info complete flag error (Recompile)        *
+      *  MD026550A - Fix parameters on call to SDFTCS5VL (Recompile)  *
+      *  MD026550 - Require US TIN when Subject to Reporting is 'Y'   *
+      *             for all new FATCA Customers/Non-Account Holders   *
+      *             (Recompile)                                       *
+      *  MD026497 - Inappropriate Exception Message appears upon      *
+      *             Customer/Non-Account Holder Insert (Recompile)    *
+      *  MD026540 - Validate Country of TIN againsts Country of       *
+      *             Domicile passed (Recompile)                       *
+      *  MD026519 - US Indicia Auto Update (Recompile)                *
+      *  MD026458 - Parameter mismatch on SDCUSDVU (Recompile)        *
+      *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
+      *           Classification - Master (Recompile)                 *
+      *  MD026253 - Added Authority Holder is not displayed after     *
+      *             Amendment Authorisation (Recompile)               *
+      *  MD024991 - Error appears upon deleting customer.             *
+      *           - Do not perform defaulting if action code is 'D'.  *
+      *           - Do not perform validation if action code is 'D'.  *
+      *             (Recompiled)                                      *
+      *  AR811594 - Defaulf entry of Customer details by Country of   *
+      *             Tax for a taxable customer is not automatically   *
+      *             generated (Child: AR811595) (Recompile)           *
+      *  AR1086546 - Upgrade of CDL025 to MP 1.4 (Child: AR1086547).  *
+      *              Applied for MD021813 (Recompile)                 *
+      *  MD021617 - A serious Midas error has occurred on amending    *
+      *             transactions (Recompile)                          *
+      *  MD022463 - No screen is displayed to show Bank Directory     *
+      *             Plus Detail Screen on Linked Customers during     *
+      *             Amend and Enquire (Recompile)                     *
+      *  CFT050 - SWIFT Changes 2013 (Recompile)                      *
+      *  AR1093456 - Basel II Customer field defaults to N (Recompile)*
+      *  262859B- Decimal data error encountered in SDCUSDUPD. Fix is *
+      *           to initialize ValidCufn to prevent error.(Recompile)*
+      *  263079 - Past due flag - allow blank, Y and N to be accepted *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  AR971184A - Additional Coding. V_PBFRNT should not be blank  *
+      *              during amend. (Recompile)                        *
+      *            - Applied fix for AR989192 (Child:AR989193)        *
+      *            - During Amend Front Ofc Id must be updated with   *
+      *              the new one                                      *
+      *  AR971184 - For some JMS APIs (CUSD, AMAD, DPMV, OPAY), Front *
+      *             Office Id is no more updated in master database   *
+      *             files which provokes some big problems in third   *
+      *             party product such as TOF.(Child:AR971185)        *
+      *             (Recompile)                                       *
+      *  AR971167 - Invalid parameters for call of SDCUSDCVT          *
+      *             This provokes some decimal data error when send   *
+      *             of customer from external system through JMS API  *
+      *             (Child:AR971168) (Recompile)
+      *  AR970389 - No validation should be made if there are no      *
+      *             changes made under Portfolio Management tab       *
+      *             (Child:AR970392) (Recompile)                      *
+      *  AR917747 - CUSD returning multiple warning message for the   *
+      *             same error in IBEI. (Recompile)                   *
+      *  AR913994 - Cannot input Customer if Joint Acct Type is       *
+      *             Y or I (Recompile)                                *
+      *  AR855391 - CUSD Overridable Errors not found in EN System    *
+      *             (CSD091 - Overrideable Errors Configurability     *
+      *             Enabler Phase 2 (Recompile))                      *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  CSD090 - Customer Segmentation (Recompile)                   *
+      *  AR784700  - REC62N 00001 failed (Recompile)                  *
+      *  AR745923 - Tax not collected on joint customer with no       *
+      *             member/s (Child: AR745924) (Recompile)            *
+      *  AR743761  - The pay/rec confirmation job DLC0211 encountered *
+      *              a DB Error (Child:AR743762) (Recompile)          *
+      *  AR741363 - Cannot close or delete customer (Child: AR741364) *
+      *             (Recompile)                                       *
+      *  AR740758 - System does not validate customer's individual    *
+      *             threshold in CUSD against Country of Tax Code     *
+      *             definition (Child: AR740759) (Rrecompile)         *
+      *  AR740196  - Cannot enquire on deal for non-resident using    *
+      *              Deals Enquiry (Child:AR740197) (Recompile)       *
+      *  AR739736 - USR4761: Joint Account Type cannot be "I"         *
+      *             Customer is a Bank (Child:AR739761) (Recompile)   *
+      *  AR739532 - CUSD Error issued if State code has value         *
+      *             (Child : AR739533) (Recompile)                    *
+      *  AR728530 - Country of Tax should be not available when joint *
+      *             account type = 'N' (Child:AR728531) (Recompile)   *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *         - LT073: upgrade ACU3, ACU4, CUAH and CCTX to CUSD    *
+      *           (Recompile)                                         *
+      *  BUG23518 - Produce Annual Tax Deducted Statement upon        *
+      *             Customer Closure (Recompile)                      *
+      *  BUG22143 - Missing authorization field in repository.        *
+      *  BUG21091 - Error occurs when encoding "SWIFT" in the default *
+      *             network                                           *
+      *  256330 - Recompiled due to change in SDCUSDVU module.        *
+      *  BUG16705 - The system should automatically generate customer *
+      *             number if field is blank (Recompile)              *
+      *  BUG15872 - Applied fix BUG14992                              *
+      *  BUG14992 - Some of CSW207 fields not completely upgraded     *
+      *             (Recompile)                                       *
+      *  BUG15314 - A "serious Midas error" occurred upon clicking    *
+      *             Confirm authorise in CUSD (Recompile)             *
+      *  BUG15049 - program signature violation due to swift changes  *
+      *             recompiled due to amended SP6SD0001               *
+      *  CSW207A - SWIFT 2007 Changes (Recompile)                     *
+      *  CSW207 - SWIFT 2007 Changes (Recompile)                      *
+      *  BUG14803 - XML Input falls into Repair Queue due             *
+      *             to field mismatched.                              *
+      *  BUG14485 - MidasPlus Definition for CUSD is not in synch     *
+      *             with that of API XML definition (Recompile)       *
+      *  BUG14161 - MidasPlus error encountered when authorising a    *
+      *             new Wholesale Customer (Recompile)                *
+      *  BUG14104A - MidasPlus error encountered when authorising a   *
+      *             new Wholesale Customer (Recompile)                *
+      *  BUG13595 - European Reporting fields not being populated     *
+      *             properly during edit mode                         *
+      *  BUG13525 - ECSD Mismatch between XML and RPG (Recompile)     *
+      *  BG12238 - Recompile over changed SDCUSDVU module             *
+      *  BG12033 - Changes done to Customer Retrieve module           *
+      *  CSD079 - Enhanced Customer Maintenance API                   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD028 - KYC (Standing Data Authorizations )                 *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG5870- Insertion of missing extension data processing      *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG5082 - Fix to Bug3362                                     *
+      *  BUG4728 - Serious Midas error with blank timestamp when      *
+      *            authorising insert of transaction.                 *
+      *  BUG4196- Stop changes being overwrite by other users         *
+      *  BUG3362 - Recompiled due to changed module SDCUSDVU.         *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  222373 - Parameter Mismatch                                  *
+      *  CAP084 - Creation of wrappers for use with front end.        *
+      *                                                               *
+      *****************************************************************

@@ -1,0 +1,118 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Check for beginning of month')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing                     *
+     F*                                                               *
+     F*  CB0812 - Check for beginning of month                        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 111543             DATE 26FEB97               *
+     F*  PREV AMEND NO. 091191             DATE 21JUL95               *
+     F*                 S01488             DATE 18APR94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  111543 - COMPLETE FIX 091191                                 *
+     F*  091191 - INCORRECT CALC OF PREVIOUS DATE                     *
+     F*  S01488 - Created for CoB run conditions enhancements         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+      /COPY ZSRSRC,ZHOLE
+      /COPY ZSRSRC,ZHOLI
+      *
+      /COPY ZSRSRC,ZHOLDS
+     ISDBANK    E DSSDBANKPD
+      *
+      *  EXTERNAL DATA STRUCTURE FOR ACCESS PROGRAM FORMAT
+      *
+     IDSFDY     E DSDSFDY
+      *
+     I** FIRST DATA STRUCTURE FOR ACCESS PROGRAM, SHORT DATA STRUCTURE
+     I*
+     ILDA       E DSLDA                         256
+     I            DS
+      *
+      *    Month of run date
+      *
+     I                                        1   7 RUNDAT
+     I                                        3   5 MON1
+     I            DS
+      *
+      *    Month of previous working day
+      *
+     I                                        1   7 ZADATE
+     I                                        3   5 MON2
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RUN     1
+     C                     PARM           RTN     1
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+      *
+      *    Use access program to obtain record from SDBANKPD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *    Database error if blank return code not received from access pgm
+      *
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 01  *
+     C                     MOVEL'CB0812'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     RETRN
+     C                     ENDIF
+      *
+      *    Check if previous working day was in previous month
+      *
+     C                     MOVE BJMRDT    RUNDAT
+     C                     MOVE BJLCCY    ZCCY                            091191
+     C                     Z-ADD1         ZNRDYS                          091191
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     EXSR ZBKDT
+     C                     CALL 'ZDATE2'
+     C******************** PARM           ZDAYNO  50       Value date     111543
+     C                     PARM           ZDYNBR  50       Value date     111543
+     C                     PARM BJDFIN    ZDATFM  1        Date format ind
+     C                     PARM           ZDATE   60       Value date
+     C                     PARM           ZADATE  7        Run-date in DDM
+      *
+      *    Set run value if conditions met
+      *
+     C           MON1      IFNE MON2
+     C                     MOVE 'Y'       RUN
+     C                     ELSE
+     C                     MOVE 'N'       RUN
+     C                     ENDIF
+      *
+      *    Set blank return code, close files and end program
+      *
+     C                     MOVE '*FREE  ' ZOPTN
+     C                     EXSR ZACCH
+     C                     MOVE ' '       RTN
+     C                     SETON                     LR
+     C                     RETRN
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZBKDT
+** CPY@   OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

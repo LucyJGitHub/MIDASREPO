@@ -1,0 +1,1156 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Securities clients aud/req report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - STANDING DATA MODULES                            *
+     F*                                                               *
+     F*  SD0340P - SECURITIES CLIENTS Aud/Req Report                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSE042             Date 14Feb03               *
+      *                 CSE041             Date 14Feb03               *
+      *                 CSE039             Date 14Feb03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE022             Date 29Mar01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 178635             Date 30May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 07Aug96               *
+     F*                 101276             DATE 20APR96               *
+     F*                 081440             DATE 30JAN95               *
+     F*                 S01408             DATE 17MAY94               *
+     F*                 S01464             DATE 04APR94               *
+     F*                 050731             DATE 04JUN93               *
+     F*                 S01117             DATE 25MAY90               *
+     F*                 S01117             DATE 03MAY90               *
+     F*                 S01117             DATE 20APR90               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSE042 - Auto Feed of Trades and Movements                   *
+      *  CSE041 - DVP/RVP Processing                                  *
+      *  CSE039 - Automatic Settlement of Trades                      *
+      *  CSE022 - Depository Definition Enhancement                   *
+     F*  178635 - Field RCFGC should be 2A not 1A. (Recompile only)   *
+     F*  S01408 - Core hook SD0340PCP1 added                          *
+     F*  101276 - Report always runs in full mode regardless, due to  *
+     F*           an extra field in SDCUSTPD - data structure P@FMT2  *
+     F*           was overwriting data structure P1PARM and hence     *
+     F*           P1ARSI. Pgm therefore run in full mode as it only   *
+     F*           checks for audit mode (P1ARSI=A). Recompile program.*
+     F*  081440 - List does not show PB SE Enhancement fields         *
+     F*  S01408 - Core hook SD0340PFPG added                          *
+     F*           Core hook SD0340PCPG added                          *
+     F*  S01464 - Safe Custody Fees.                                  *
+     F*  050731 - Report identifies customer by number only.          *
+     F*           Print also customer report name to make the report  *
+     F*           more useful.                                        *
+     F*  S01117 - Include Dummy Parameter                             *
+     F*  S01117 - Rel 10 Multi-branching changes                      *
+     F*                                                               *
+     F********************************************************************
+      *================================================================
+     M* Maintenance   :
+      *================================================================
+     FSDSECSL1IF  E           K        DISK
+      * RTV: Securities Clients        Retrieval index
+     FSDCSDRL0IF  E           K        DISK                               CSE022
+      ** Customer Depository Reference File by Customer                   CSE022
+      *                                                                   CSE022
+     F*                                                                   S01408
+     F** Core hook for externalisation.                                   S01408
+     F/COPY WNCPYSRC,SD0340PFPG                                           S01408
+     F*                                                                   S01408
+      *
+     FSDFCTLL1IF  E           K        DISK
+      * RTV: Standing Data Controls    Retrieval index
+      *
+     FSDBANKL1IF  E           K        DISK
+      * RTV: Bank Details              Retrieval index
+      *                                                                   S01464
+     FSDSTRDPDIF  E                    DISK                               S01464
+      * RTV: Securities Trading ICD                                       S01464
+      *
+     FSDFCTLL0UF  E           K        DISK
+      * UPD: Standing Data Controls    Update index
+      *
+     F*SD0340P$O   E             97     PRINTER                           S01117
+     FSD0340PMO   E             97     PRINTER                            S01117
+     F                                              KINFDS INFDS$
+      * PRT: Securities Clients Reques Print file
+      *
+     E                    UAR        53  1
+     E                    ULN        53  1
+     E                    UARRAY  1   2 26
+      *
+      ** SAVE INDICATOR *IN 99
+      *
+     E********************@CN     1  11 25               Long constants.  S01464
+     E                    @CN     1  12 25               Long constants.  S01464
+      /EJECT
+      * Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure.
+     IJBDTTM      DS
+      * Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS$    E DSY2I$DSP
+      * Printer file information data structure.
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IP@FMT2    E DSSDCUSTPD                                              050731
+     I*                                                                   050731
+      /EJECT
+      * Parameter declarations.
+     IP1PARM      DS
+      * I:    Audit/Request Status Ind
+     I                                        1   1 P1ARSI
+     I*                                                                   S01117
+     IP2PARM      DS                                                      S01117
+     I* I:    Sequence number                                             S01117
+     I                                        1   5 P2RSQN                S01117
+     I*                                                                   S01117
+     IP3PARM      DS                                                      S01117
+     I* I:    Entity                                                      S01117
+     I                                        1   3 P3ENTY                S01117
+     I*                                                                   S01117
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0001
+     ISCSARD    E DSSCSARDPD                                              081440
+     I** EXTERNAL DS FOR SAR DETAILS                                      081440
+     I*                                                                   081440
+     IDSFDY     E DSDSFDY                                                 081440
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                081440
+      /EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+     C           P1ARSI    PARM           WP0001  1        Audit/Request S
+     C           P2RSQN    PARM           WP0002  5        Sequence numberS01117
+     C                     PARM           @@PARM  1        Dummy Parm     S01117
+     C           P3ENTY    PARM           WP0003  3        Entity         S01117
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+      * Clear overflow indicator.
+     C                     SETOF                     97
+      * Establish starting position.
+     C           *LOVAL    SETLL@BFREDQ                    *
+      * Read first record.
+     C                     READ @BFREDQ                  90*
+     C                     MOVEL*IN90     W0EOF   1
+      * Print null report headings.
+     C           W0EOF     IFEQ '1'
+     C                     WRITEZZPAGHDR
+     C                     WRITEZZENDRPT
+     C                     ELSE
+      * Request all headings.
+     C                     MOVEL'Y'       L0      1        Page headings
+      * Initialise final totals.
+     C                     MOVEL*BLANK    ZTCON            *CON (Screen co
+     C                     Z-ADD*ZERO     ZTNCRC           No of Calculate
+      * Print report body.
+     C           W0EOF     DOWEQ'0'
+      * Print headings.
+     C                     EXSR BAPRHD
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SD0340PCPG                                           S01408
+     C*                                                                   S01408
+      * Print report detail line.
+     C                     EXSR CAPRDT
+      *                                                                   CSE022
+      ** Print other depot references if CSE022 is installed.             CSE022
+      *                                                                   CSE022
+     C           *IN67     IFEQ *ON                                       CSE022
+     C                     EXSR SROTHR                                    CSE022
+     C                     ENDIF                                          CSE022
+      * Hold current values.
+      * Read next record.
+     C                     READ @BFREDQ                  90*
+     C                     MOVEL*IN90     W0EOF
+      * Determine level changes.
+     C                     EXSR DALVCH
+      * Print totals.
+     C                     EXSR EAPRTT
+      * Process necessary heading requests
+     C                     EXSR FASGHD
+     C                     END
+     C                     WRITEZZENDRPT
+     C                     END
+      * Exit program.
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BAPRHD    BEGSR
+      *================================================================
+      * Print report Headers.
+      *================================================================
+      * Clear column headings control flag.
+     C                     MOVEL*BLANK    BAPR    1
+      *
+     C           L0        IFEQ 'Y'
+     C                     WRITEZZPAGHDR
+     C                     MOVEL'Y'       BAPR
+     C                     END
+      *
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         CAPRDT    BEGSR
+      *================================================================
+      * Print report detail line.
+      *================================================================
+      * Retrieve customer shortname.                                      050731
+     C                     CALL 'AOCUSTR0'             90                 050731
+     C                     PARM *BLANKS   P@RTCD  7                       050731
+     C                     PARM '*KEY'    P@OPTN  7                       050731
+     C                     PARM BFCUST    P@KEY1 10                       050731
+     C                     PARM *BLANKS   P@ANY   7                       050731
+     C                     PARM           P@FMT2                          050731
+      *                                                                   050731
+     C           *IN90     IFEQ '1'                                       050731
+      * Call to program ended in error.                                   050731
+     C                     MOVEL'Y2U0021' W0RTN   7                       050731
+     C                     END                                            050731
+      *                                                                   050731
+      * Load detail line.
+     C                     Z-ADDBFNSDT    XRNSDT           Next Statement
+     C                     Z-ADDBFLCD     XRLCD            Last Change Dat
+     C                     MOVELBFTYLC    XRTYLC           Type of Last Ch
+     C                     MOVELBFCUST    XRCUST           Customer Number
+     C                     MOVELBBCRNM    XRNAME           Customer RName 050731
+     C                     MOVELBFACCD    XRACCD           Account Code
+     C*********************MOVELBFPCYP    XRPCYP           Currency code  S01117
+     C                     MOVELBFPCYC    XRPCYP           Currency code  S01117
+     C**********           MOVELBFDRF1    XRDRF1          Depot Reference CSE022
+     C                     MOVELBFPNP1    XRPNP1           Part./Non-part.
+     C                     MOVEL*BLANK    XRACDT           alpha change da
+     C                     MOVEL*BLANK    XRALCH           alpha of last c
+     C                     Z-ADDBFACSN    XRACSN           Account sequenc
+     C                     MOVELBFCYCD    XRCYCD           Currency Code
+     C**********           MOVELBFDRF2    XRDRF2          Depot Reference CSE022
+     C                     MOVELBFPNP2    XRPNP2           Part./Non-part.
+     C                     MOVELBFADCD    XRADCD           Address Code
+     C                     MOVELBFPLAG    XRPLAG           Pledge Agreemen
+     C**********           MOVELBFDRF3    XRDRF3          Depot Reference CSE022
+     C                     MOVELBFPNP3    XRPNP3           Part./Non-part.
+     C                     MOVELBFCLAS    XRCLAS           Classification
+     C                     MOVELBFTCD     XRTCD            Tax Code
+     C**********           MOVELBFDRF4    XRDRF4          Depot Reference CSE022
+     C                     MOVELBFPNP4    XRPNP4           Part./Non-part.
+     C                     MOVELBFSRCD    XRSRCD           statutory retur
+     C                     MOVELBFASIN    XRASIN           Auto-Settle Ind
+     C**********           MOVELBFDRF5    XRDRF5          Depot Reference CSE022
+     C                     MOVELBFPNP5    XRPNP5           Part./Non-part.
+     C                     Z-ADDBFNTFC    XRNTFC           No. of Trades f
+     C                     MOVELBFCFIN    XRCFIN           Cedel Fungibili
+     C**********           MOVELBFDRF6    XRDRF6          Depot Reference CSE022
+     C                     MOVELBFPNP6    XRPNP6           Part./Non-part.
+     C                     MOVELBFSTFQ    XRSTFQ           Statement Frequ
+     C**********           MOVELBFDRF7    XRDRF7          Depot Reference CSE022
+     C                     MOVELBFPNP7    XRPNP7           Part./Non-part.
+     C                     MOVEL*BLANK    XRALP1           alpha 1
+     C**********           MOVELBFDRF8    XRDRF8          Depot Reference CSE022
+     C                     MOVELBFPNP8    XRPNP8           Part./Non-part.
+     C                     Z-ADDBFSBDM    XRSBDM           Stat.Base Date
+     C**********           MOVELBFDRF9    XRDRF9          Depot Reference CSE022
+     C                     MOVELBFPNP9    XRPNP9           Part./Non-part.
+     C                     MOVELBFNARR    XRNARR           Narrative
+     C**********           MOVELBFDRF0    XRDRF0          Depot Reference CSE022
+     C                     MOVELBFPNP0    XRPNP0           Part./Non-part.
+      *                                                                   CSE039
+      ** Output new fields from SDSECSPD depending of features            CSE039
+      ** CSE039, CSE041 & CSE042                                          CSE039
+      *                                                                   CSE039
+      ** IF CSE039 is ON, output:Settlement Advice Required.              CSE039
+     C           CSE039    IFEQ 'Y'                                       CSE039
+      *                                                                   CSE039
+      ** Settlement Advice Required.                                      CSE039
+     C                     MOVELBFSARQ    XRSARQ                          CSE039
+     C                     ENDIF                                          CSE039
+      *                                                                   CSE039
+      *                                                                   CSE039
+      ** IF CSE041 is ON, output:                                         CSE041
+     C           CSE041    IFEQ 'Y'                                       CSE041
+      *                                                                   CSE041
+      ** Contractual Settlement Cust Group                                CSE041
+     C                     MOVELBFCSCG    XRCSCG                          CSE041
+      *                                                                   CSE041
+      ** Contractual Settlement Required for DVP/RVP                      CSE041
+     C                     MOVELBFCSVP    XRCSVP                          CSE041
+      *                                                                   CSE041
+     C                     ENDIF                                          CSE041
+      *                                                                   CSE041
+      *                                                                   CSE042
+      ** IF CSE042 is ON, output:                                         CSE042
+     C           CSE042    IFEQ 'Y'                                       CSE042
+      *                                                                   CSE042
+      ** Error/Warning on validation                                      CSE042
+     C                     MOVELBFEWVF    XREWVF                          CSE042
+      *                                                                   CSE042
+      ** Auto Forward unmatched Trades Msg                                CSE042
+     C                     MOVELBFAFUM    XRAFUM                          CSE042
+      *                                                                   CSE042
+      ** Auto Forward failed Trades Msg                                   CSE042
+     C                     MOVELBFAFFM    XRAFFM                          CSE042
+      *                                                                   CSE042
+      ** Authorised Required for STP Trades                               CSE042
+     C                     MOVELBFARST    XRARST                          CSE042
+     C                     ENDIF                                          CSE042
+      *                                                                   CSE042
+      *
+      ** If the switchable feature CSE022 is not present, then only the   CSE022
+      ** first 6 characters from the depot reference fields will be       CSE022
+      ** printed.                                                         CSE022
+      *                                                                   CSE022
+     C           *IN67     IFEQ *ON                                       CSE022
+      *                                                                   CSE022
+     C                     MOVELBFNDR1    XRNDR1                          CSE022
+     C                     MOVELBFNDR2    XRNDR2                          CSE022
+     C                     MOVELBFNDR3    XRNDR3                          CSE022
+     C                     MOVELBFNDR4    XRNDR4                          CSE022
+     C                     MOVELBFNDR5    XRNDR5                          CSE022
+     C                     MOVELBFNDR6    XRNDR6                          CSE022
+     C                     MOVELBFNDR7    XRNDR7                          CSE022
+     C                     MOVELBFNDR8    XRNDR8                          CSE022
+     C                     MOVELBFNDR9    XRNDR9                          CSE022
+     C                     MOVELBFNDR0    XRNDR0                          CSE022
+      *                                                                   CSE022
+     C                     ELSE                                           CSE022
+      *                                                                   CSE022
+     C                     MOVELBFNDR1    XRDRF1                          CSE022
+     C                     MOVELBFNDR2    XRDRF2                          CSE022
+     C                     MOVELBFNDR3    XRDRF3                          CSE022
+     C                     MOVELBFNDR4    XRDRF4                          CSE022
+     C                     MOVELBFNDR5    XRDRF5                          CSE022
+     C                     MOVELBFNDR6    XRDRF6                          CSE022
+     C                     MOVELBFNDR7    XRDRF7                          CSE022
+     C                     MOVELBFNDR8    XRDRF8                          CSE022
+     C                     MOVELBFNDR9    XRDRF9                          CSE022
+     C                     MOVELBFNDR0    XRDRF0                          CSE022
+      *                                                                   CSE022
+     C                     ENDIF                                          CSE022
+     C*                                                                   S01464
+     C** If safe custody fees is set on, display the fields subject to    S01464
+     C** custody fees and custody fees group code                         S01464
+     C*                                                                   S01464
+     C           *IN12     IFEQ '1'                                       S01464
+     C                     MOVELBFSBJF    RSBJF                           S01464
+     C                     MOVELBFCFGC    RCFGC                           S01464
+     C                     END                                            S01464
+     C*                                                                   S01464
+     C           *IN50     IFEQ '1'                                       081440
+     C                     MOVELBFTDCG    XRTDCG           Trd Charge Grp 081440
+     C                     MOVELBFPSCG    XRPSCG           Pos Settl ChGrp081440
+     C                     END                                            081440
+     C/COPY WNCPYSRC,SD0340PC03
+     C*                                                                   081440
+     C                     MOVEL'Y'       W0PFM
+      * USER: Process detail record
+     C                     MOVELP1ARSI    WUARSI           Audit/Request S
+      * Process Detail Rec PRTFIL
+     C                     ADD  1         WUWKNB           work number
+      *CASE:     PAR.Audit/Request Status Ind is Audit Mode
+     C           WUARSI    IFEQ @CN,01                     *IF
+      *CASE:     PAR.Last Change Date NE WRK.run day number
+     C           XRLCD     IFNE WURDNB                     *IF
+     C                     MOVEL@CN,02    W0PFM            *Print format
+     C                     END                             *FI
+     C                     END                             *FI
+      *CASE:     PGM.*Print format is Print format
+     C           W0PFM     IFEQ @CN,03                     *IF
+     C                     ADD  1         ZTNCRC           No of Calculate
+      *CASE:     PAR.No of Calculated Recs is Equal 1
+     C           ZTNCRC    IFEQ 1                          *IF
+      * Change Print Control to Y - Standing Data Controls  *
+     C*
+     C* Set Print Control To Y To Enable Column Headers To Be
+     C*             Printed On First Record..
+     C*
+     C                     MOVEL'Y'       BAPR    1
+     C                     END                             *FI
+     C                     END                             *FI
+      * Check File Date - Rundate  *
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM XRLCD     WQ0001  50       Work Midas Date
+     C                     PARM WUDFF     WQ0002  1        date format fla
+     C           WUWCDT    PARM *ZERO     WQ0003  60       Work Converted
+     C           XRACDT    PARM *BLANK    WQ0004  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * PAR.alpha of last change = Condition name of PAR.Type of Last Change
+     C                     CALL 'Y2RVCNR'              90  *
+     C                     PARM           W0RTN   7        Return code
+     C                     PARM 1100584   Y2LSNO  70       List number
+     C                     PARM XRTYLC    W0INVL 20        Type of Last Ch
+     C                     PARM ' '       W0VLMP  1        Value mapped?
+     C           XRALCH    PARM           W0CNNM 25        alpha of last c
+      *
+      * Check File Date - Rundate  *
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM BFNSDT    WQ0005  50       Work Midas Date
+     C                     PARM WUDFF     WQ0006  1        date format fla
+     C           WUWCDT    PARM *ZERO     WQ0007  60       Work Converted
+     C           XRALP1    PARM *BLANK    WQ0008  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+     C           W0PFM     IFEQ 'Y'
+      * Print column headings if required.
+     C           BAPR      IFEQ 'Y'
+     C                     WRITEZZCOLHDG
+     C                     MOVEL*BLANK    BAPR
+     C                     END
+      * Convert fields to external form.
+      * Print detail line.
+     C                     WRITEZZDTLRCD
+     C/COPY WNCPYSRC,SD0340PC01
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DALVCH    BEGSR
+      *================================================================
+      * Detect level changes.
+      *================================================================
+      * Clear all level breaks.
+     C                     MOVEL*BLANK    L0               Page headings
+      * Clear heading length to print.
+     C                     Z-ADD*ZERO     @$HDL
+      *
+      * End of file - Signal all level breaks.
+     C           W0EOF     IFEQ '1'
+     C                     ELSE
+      * Adjust for column headings.
+     C           @$HDL     IFGT *ZERO
+     C                     ADD  3         @$HDL
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         EAPRTT    BEGSR
+      *================================================================
+      * Print report Totals.
+      *================================================================
+      * Print level break totals as required
+      * End of file - Print final totals.
+     C           W0EOF     IFEQ '1'
+     C                     MOVEL'Y'       W0PFM
+      * USER: Process End of Report
+      *CASE:     CUR.No of Calculated Recs is Compare to Zero
+     C           ZTNCRC    IFEQ *ZERO                      *IF
+     C                     MOVEL@CN,04    WUALZR           Alpha Zero
+     C                     END                             *FI
+      *CASE:     PAR.Audit/Request Status Ind is Audit Mode
+     C           P1ARSI    IFEQ @CN,01                     *IF
+      * Audit/On-Req RTV on FCTL - Standing Data Controls  *
+     C                     EXSR SARVGN
+      *CASE:     WRK.work number NE WRK.No of Records on file
+     C           WUWKNB    IFNE WUNORF                     *IF
+     C                     MOVEL@CN,02    WUWFLG           work flag
+     C                     END                             *FI
+      * Audit printfile override - Standing Data Controls  *
+     C                     CALL 'SDC540P'              90  Audit printfile
+     C                     PARM @CN,07    WQ0009 10        *PROGRAM
+     C                     PARM WUWFLG    WQ0010  1        work flag
+     C                     PARM WUNORI    WQ0011  50       No of Records I
+     C                     PARM WUNORA    WQ0012  50       No of Records A
+     C                     PARM WUNORD    WQ0013  50       No of records D
+     C                     PARM WUWKNB    WQ0014  50       work number
+     C                     PARM WUNORF    WQ0015  50       No of Records o
+     C                     PARM WUARTL    WQ0016 53        Audit/Request T
+     C                     PARM WUUNDL    WQ0017 53        Underline
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      *CASE:     PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ @CN,06                     *IF
+      * Database Error U7 U8 - Standing Data Controls  *
+     C*
+     C** DATABASE ERROR, SET ON SWITHES U7 AND U8
+     C*
+     C                     SETON                     U7U8
+     C*
+     C                     ELSE
+      *CASE:     WRK.work flag is Incorrect
+     C           WUWFLG    IFEQ @CN,02                     *IF
+      * File Control Error U8 - Standing Data Controls  *
+     C*
+     C** FILE CONTROLS OUT OF BALANCE SETON U8
+     C*
+     C                     SETON                         U8
+     C*
+     C                     ELSE
+      *CASE:     PGM.*Return code is *Field attribute types EX
+     C           W0RTN     IFEQ @CN,08                     *IF
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SBCHRC
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C           W0PFM     IFEQ 'Y'
+      * If there is not enough space on the
+      * physical page for this format:-
+     C           @$PGL     SUB  @$CLN     @$WRK
+     C           @$WRK     IFLE 5
+      * Signal artificial overflow.
+     C                     SETON                     97
+      * Print page headers.
+     C                     WRITEZZPAGHDR
+     C                     END
+     C                     MOVEL'0'       *IN79
+     C           WUALZR    IFEQ @CN,04                     *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+      * Print format.
+     C                     WRITEZZFINTTL
+     C                     END
+     C                     END
+      *
+      *================================================================
+     CSR         EAEXIT    ENDSR
+      /EJECT
+     CSR         FASGHD    BEGSR
+      *================================================================
+      * Signal required header formats.
+      *================================================================
+      * Cascade skip to new page requests upwards.
+      *
+     C           *IN97     IFNE '1'
+     C           L0        ANDNE'Y'
+      * Signal overflow if requested headings would cause
+      * detail format to start past the overflow line.
+     C           W0OFL     SUB  @$CLN     @$WRK
+     C           @$WRK     IFLE @$HDL
+     C                     SETON                     97
+     C                     ELSE
+      * Signal overflow if requested headings would cause
+      * detail format to be printed past end of page
+     C           *IN50     IFEQ '0'                                       081440
+     C                     ADD  11        @$HDL
+     C                     ELSE                                           081440
+     C                     ADD  12        @$HDL                           081440
+     C                     END                                            081440
+     C           W0PGL     SUB  @$CLN     @$WRK
+     C           @$WRK     IFLE @$HDL
+     C                     SETON                     97
+     C                     END
+     C                     END
+     C                     END
+      * Overflow detected.
+     C           *IN97     IFEQ '1'
+      * Request page headings.
+     C                     MOVEL'Y'       L0
+      * Request all formats which print on overflow.
+     C                     SETOF                     97
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Audit/On-Req RTV on FCTL - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define Keylist.
+     C           KRSSA     KLIST
+     C                     KFLD           AHFLNM           Filename
+      * Move fields to key list.
+     C                     MOVEL@CN,05    AHFLNM           Filename
+     C           KRSSA     CHAIN@AHREAV              90    *
+     C           *IN90     IFEQ '1'
+      * DBF Record not found.
+     C                     MOVEL'USR0020' W0RTN   7
+      * USER: Processing if DBF record not found
+     C                     MOVEL@CN,06    W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process DBF record
+      * PAR = DB1 By name
+     C                     Z-ADDAHNORC    WUNORF           No. of Records
+     C                     Z-ADDAHNOIN    WUNORI           No. of Inserts
+     C                     Z-ADDAHNOAM    WUNORA           No. of Amends
+     C                     Z-ADDAHNODL    WUNORD           No. of Deletes
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @AHREAU
+     C                     MOVEL@CN,05    AHFLNM           Filename
+      *
+     C           KLCHSB    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSB    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found.
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      * USER: Processing after DBF read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move Non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADD*ZERO     AHNOIN           No. of Inserts
+     C                     Z-ADD*ZERO     AHNOAM           No. of Amends
+     C                     Z-ADD*ZERO     AHNODL           No. of Deletes
+      *
+     C                     UPDAT@AHREAU                91  *
+     C           *IN91     IFEQ '1'
+      * Change error detected.
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF Change successful.
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Get Bank Title - Bank Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define Keylist.
+     C           KRSSC     KLIST
+     C                     KFLD           BJBANK           Bank
+      * Move fields to key list.
+     C                     MOVEL@CN,09    BJBANK           Bank
+     C           KRSSC     CHAIN@BJREEF              90    *
+     C           *IN90     IFEQ '1'
+      * DBF Record not found.
+     C                     MOVEL'USR0197' W0RTN   7
+      * USER: Processing if DBF record not found
+     C                     MOVEL@CN,06    W0RTN            *Return code
+      * Setup message data for message.
+     C                     MOVEL@CN,10    ZA0001           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     99    *
+      *
+     C                     GOTO SCEXIT                     *QUIT
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process DBF record
+      * PAR = DB1 By name
+     C                     MOVELBJURPT    WUURPT           User Report Tit
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue.
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified use default.
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program
+      *================================================================
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct.
+      *================================================================
+      * Terminate program.
+     C                     SETON                     LR
+      *
+      * Exit program.
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation.
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+      * Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      * Define work field Audit/Request Status Ind
+     C                     MOVEL*BLANK    WUARSI  1
+      * Define work field work number
+     C                     Z-ADD*ZERO     WUWKNB  50
+      * Define work field run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Work Converted Date
+     C                     Z-ADD*ZERO     WUWCDT  60
+      * Define work field Alpha Zero
+     C                     MOVEL*BLANK    WUALZR  1
+      * Define work field No of Records on file
+     C                     Z-ADD*ZERO     WUNORF  50
+      * Define work field No of Records Inserted
+     C                     Z-ADD*ZERO     WUNORI  50
+      * Define work field No of Records Amended
+     C                     Z-ADD*ZERO     WUNORA  50
+      * Define work field No of records Deleted
+     C                     Z-ADD*ZERO     WUNORD  50
+      * Define work field work flag
+     C                     MOVEL*BLANK    WUWFLG  1
+      * Define work field Audit/Request Title
+     C                     MOVEL*BLANK    WUARTL 53
+      * Define work field Underline
+     C                     MOVEL*BLANK    WUUNDL 53
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      * Define work field midas rundate
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field User Report Title
+     C                     MOVEL*BLANK    WUURPT 53
+     C* Define work field ZSFILE error                                    S01117
+     C                     MOVEL*BLANK    WUZSER  1                       S01117
+      * Obtain default message file.
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+     C                     MOVEL*BLANK    W0PFM   1
+     C                     Z-ADD*ZERO     @$WRK   40
+     C                     Z-ADD*ZERO     @$HDL   40
+      * Adjust page length and overflow as necessary.
+     C           @$PGL     SUB  2         W0PGL   40
+     C           @$OFL     IFGE W0PGL
+     C           W0PGL     SUB  2         W0OFL   40
+     C                     ELSE
+     C                     Z-ADD@$OFL     W0OFL
+     C                     END
+      * USER: Initialise program
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB
+     C                     MOVE SUC       WUSUC
+     C                     MOVE DFF       WUDFF
+     C                     MOVE MBIN      WUMBIN
+      * Get Title
+      * Get Bank Title - Bank Details  *
+     C                     EXSR SCRVGN
+      * Move title to header - *Standard header/footer  *
+     C* 7.10.89 Missing Source - Inserted During Incorporation            S01216
+     C* Move User Report Title into Header Field in DDS for PRTF          S01216
+     C*                                                                   S01216
+     C                     MOVE WUURPT    ##URPT                          S01216
+      * Get Narrative Title - Narrative Codes  *
+     C           *IN99     IFEQ '1'
+     C                     MOVE 1         UIND    10
+     C                     SETOF                         99
+     C                     ELSE
+     C                     MOVE 0         UIND
+     C                     END
+      *
+      ** CALCULATE END OF TEXT POINT
+     C                     Z-ADD1         U       20
+     C                     MOVEA@CN,11    UAR,U
+     C*
+     C           *IN99     DOWEQ'0'
+     C           ' '       LOKUPUAR,U                    99
+     C                     ADD  1         U
+     C           UAR,U     COMP ' '                      99
+     C                     END
+      *
+     C**
+     C*
+     C*          P1LSST    IFEQ 'A'                                       S01216
+     C           P1ARSI    IFEQ 'A'                                       S01216
+     C                     MOVELUARRAY,1  UTEMP  26
+     C                     MOVEAUTEMP     UAR,U
+     C                     ADD  26        U
+     C                     ELSE
+      *
+     C                     MOVEAUARRAY,2  UAR,U            * IF A THIRD
+     C                     ADD  7         U                OPTION TO ARRAY
+     C                     END                             IS ADDED A
+      *                                                    TEMP STORAGE
+      *                                                    * IS REQUIRED.
+      **  STORE  TEXT IN USTORE FIELD
+      *
+     C                     MOVEAUAR       USTORE 53
+     C                     MOVE *BLANKS   UAR
+      *
+      *
+      *
+     C           53        SUB  U         UB      20
+     C           UB        DIV  2         UB
+     C                     MVR            UR      10
+     C           UB        ADD  U         U
+     C           U         SUB  1         U
+      *
+      *
+      **  INSERT UNDERLINE TO ARRAY
+      **
+     C                     MOVEA*ALL'-'   ULN,UB
+     C                     MOVEA*BLANKS   ULN,U
+      *
+      *
+     C           UB        IFGT 0
+     C                     MOVEAUSTORE    UAR,UB
+     C                     ELSE
+     C                     MOVEAUSTORE    UAR
+     C                     END
+      *
+      **  MOVE ARRAY VALUE  TO SCREEN TEXT FIELD
+      *
+     C*                    MOVEAUAR       ##EYTX                          S01216
+     C                     MOVEAUAR       ##ARTL 53                       S01216
+     C*                    MOVEAUAR       WUEYTX
+     C                     MOVEAUAR       WUARTL
+     C*                    MOVEAULN       ##BJNA                          S01216
+     C                     MOVEAULN       ##UNDL 53                       S01216
+     C                     MOVEAULN       WUUNDL
+      *
+      *
+      ** RESET INDICATOR *IN 99
+      *
+     C           UIND      IFEQ 1
+     C                     SETON                         99
+     C                     ELSE
+     C                     SETOF                         99
+     C                     END
+     C*                                                                   S01464
+     C** Access Securities Trading ICD to determine if Safe Custody       S01464
+     C** Fees is active                                                   S01464
+     C*                                                                   S01464
+     C                     MOVE '0'       *IN12                           S01464
+     C           1         SETLLSDSTRDPD                                  S01464
+     C                     READ SDSTRDPD                 13               S01464
+     C*                                                                   S01464
+     C** Record is not found                                              S01464
+     C*                                                                   S01464
+     C           *IN13     IFEQ '1'                                       S01464
+     C                     MOVEL@CN,6     W0RTN   7                       S01464
+     C                     MOVEL@CN,12    ZA0001           Filename       S01464
+     C                     MOVEL'USR0239' ZAMSID           Message id.    S01464
+     C                     EXSR ZASNMS                     Send message   S01464
+     C                     ELSE                                           S01464
+     C*                                                                   S01464
+     C** Record exists, determine if securities trading is active         S01464
+     C*                                                                   S01464
+     C           BVCUIN    IFEQ 'Y'                                       S01464
+     C                     MOVE '1'       *IN12                           S01464
+     C                     END                                            S01464
+     C                     END                                            S01464
+     C*                                                                   081440
+     C**   Check if Private Banking SE Enhancements installed             081440
+     C*                                                                   081440
+     C                     CALL 'AOSARDR0'                                081440
+     C                     PARM '*MSG   ' @RTCD   7                       081440
+     C                     PARM '*KEY   ' @OPTN   7                       081440
+     C                     PARM 'S01496'  @SARD   6                       081440
+     C           SCSARD    PARM SCSARD    DSFDY                           081440
+     C*                                                                   081440
+     C           @RTCD     IFEQ *BLANKS                                   081440
+     C                     SETON                     50                   081440
+     C                     ENDIF                                          081440
+      *                                                                   CSE022
+      ** Check if Depository Definition Enhancement is installed.         CSE022
+      *                                                                   CSE022
+     C                     CALL 'AOSARDR0'                                CSE022
+     C                     PARM '*MSG   ' PRTCD   7                       CSE022
+     C                     PARM '*KEY   ' POPTN   7                       CSE022
+     C                     PARM 'CSE022'  PSARD   6                       CSE022
+     C           SCSARD    PARM SCSARD    DSFDY                           CSE022
+      *                                                                   CSE022
+     C           PRTCD     IFEQ *BLANKS                                   CSE022
+      *                                                                   CSE022
+     C                     MOVE *ON       *IN67                           CSE022
+      *                                                                   CSE022
+     C                     ELSE                                           CSE022
+      *                                                                   CSE022
+     C                     MOVE *OFF      *IN67                           CSE022
+      *                                                                   CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+      ** Check if CSE039, CSE041 & CSE042 ARE ON                          CSE039
+      *                                                                   CSE039
+     C                     CALL 'AOSARDR0'                                CSE039
+     C                     PARM '*MSG   ' PRTCD   7                       CSE039
+     C                     PARM '*KEY   ' POPTN   7                       CSE039
+     C                     PARM 'CSE039'  PSARD   6                       CSE039
+     C           SCSARD    PARM SCSARD    DSFDY                           CSE039
+      *                                                                   CSE039
+     C           PRTCD     IFEQ *BLANKS                                   CSE039
+     C                     MOVE *ON       *IN42                           CSE039
+     C                     MOVE 'Y'       CSE039  1                       CSE039
+     C                     ELSE                                           CSE039
+     C                     MOVE *OFF      *IN42                           CSE039
+     C                     MOVE 'N'       CSE039                          CSE039
+     C                     ENDIF                                          CSE039
+      *                                                                   CSE039
+      *                                                                   CSE041
+     C                     CALL 'AOSARDR0'                                CSE041
+     C                     PARM '*MSG   ' PRTCD   7                       CSE041
+     C                     PARM '*KEY   ' POPTN   7                       CSE041
+     C                     PARM 'CSE041'  PSARD   6                       CSE041
+     C           SCSARD    PARM SCSARD    DSFDY                           CSE041
+      *                                                                   CSE041
+     C           PRTCD     IFEQ *BLANKS                                   CSE041
+     C                     MOVE *ON       *IN43                           CSE039
+     C                     MOVE 'Y'       CSE041  1                       CSE041
+     C                     ELSE                                           CSE041
+     C                     MOVE *OFF      *IN43                           CSE039
+     C                     MOVE 'N'       CSE041                          CSE041
+     C                     ENDIF                                          CSE041
+      *                                                                   CSE041
+      *                                                                   CSE042
+     C                     CALL 'AOSARDR0'                                CSE042
+     C                     PARM '*MSG   ' PRTCD   7                       CSE042
+     C                     PARM '*KEY   ' POPTN   7                       CSE042
+     C                     PARM 'CSE042'  PSARD   6                       CSE042
+     C           SCSARD    PARM SCSARD    DSFDY                           CSE042
+      *                                                                   CSE042
+     C           PRTCD     IFEQ *BLANKS                                   CSE042
+     C                     MOVE *ON       *IN44                           CSE039
+     C                     MOVE 'Y'       CSE042  1                       CSE042
+     C                     ELSE                                           CSE042
+     C                     MOVE *OFF      *IN44                           CSE039
+     C                     MOVE 'N'       CSE042                          CSE042
+     C                     ENDIF                                          CSE042
+      *                                                                   CSE042
+     C/COPY WNCPYSRC,SD0340PC02
+     C*
+     C** Set up spool file number - Standard functions *                  S01117
+     C*                                                                   S01117
+     C                     Z-ADD@$FNB     WUSFNB  60                      S01117
+     C*                                                                   S01117
+     C** ZSFILE - write report rqs - Standard functions *                 S01117
+     C*                                                                   S01117
+     C                     CALL 'ZSFILE'               90                 S01117
+     C                     PARM P2RSQN    UURSQN  5        RCF seq no.    S01117
+     C                     PARM P3ENTY    UUENTY  3        Entity         S01117
+     C                     PARM @$FVN     UUSFNM 10        Spool file nameS01117
+     C                     PARM WUSFNB    UUSFNB  60       Spool file no. S01117
+     C           WUZSER    PARM *BLANK    UUZSER  1        ZSFILE error   S01117
+     C*                                                                   S01117
+     C** Call to program ended in error                                   S01117
+     C*                                                                   S01117
+     C           *IN90     IFEQ '1'                                       S01117
+     C                     MOVEL'Y2U0021' W0RTN   7                       S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C** CASE: WRK.ZSFILE is error occurred                               S01117
+     C*                                                                   S01117
+     C           WUZSER    IFEQ 'Y'                                       S01117
+     C                     MOVEL'Y2U0004' P0RTN                           S01117
+     C                     EXSR ZYEXPG                                    S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0340PCP1                                           S01408
+     C*                                                                   S01408
+      *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      *                                                                   CSE022
+      *****************************************************************   CSE022
+      *                                                               *   CSE022
+      * SROTHR - Other Depot Reference Details                        *   CSE022
+      *                                                               *   CSE022
+      * Called by: Main Processing                                    *   CSE022
+      *                                                               *   CSE022
+      * Calls: ZSEDIT                                                 *   CSE022
+      *                                                               *   CSE022
+      *****************************************************************   CSE022
+      *                                                                   CSE022
+     C           SROTHR    BEGSR                                          CSE022
+      *                                                                   CSE022
+     C           BFCUST    SETLLSDCSDRD0                 14               CSE022
+      *                                                                   CSE022
+     C           *IN14     IFEQ *ON                                       CSE022
+     C           BFCUST    READESDCSDRD0                 15               CSE022
+     C                     ELSE                                           CSE022
+     C                     MOVE *ON       *IN15                           CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+     C           *IN15     IFEQ *OFF                                      CSE022
+     C                     Z-ADD10        WCOUNT  30                      CSE022
+      *                                                                   CSE022
+     C           *IN97     IFEQ *OFF                                      CSE022
+     C           W0OFL     SUB  @$CLN     @$WRK                           CSE022
+      *                                                                   CSE022
+     C           @$WRK     IFLE 1                                         CSE022
+     C                     MOVE *ON       *IN97                           CSE022
+      *                                                                   CSE022
+     C                     ELSE                                           CSE022
+     C           W0PGL     SUB  @$CLN     @$WRK                           CSE022
+      *                                                                   CSE022
+     C           @$WRK     IFLE 1                                         CSE022
+     C                     MOVE *ON       *IN97                           CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+     C           *IN15     DOWEQ*OFF                                      CSE022
+      *                                                                   CSE022
+     C           *IN97     IFEQ *ON                                       CSE022
+     C                     WRITEZZPAGHDR                                  CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+     C           *IN97     IFEQ *ON                                       CSE022
+     C           WCOUNT    OREQ 10                                        CSE022
+     C                     WRITEOTHRDEPH                                  CSE022
+     C                     MOVE *OFF      *IN97                           CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+     C                     ADD  1         WCOUNT                          CSE022
+     C                     Z-ADDWCOUNT    PCOUNT                          CSE022
+     C                     Z-ADD0         PDECS                           CSE022
+      *                                                                   CSE022
+     C                     CALL 'ZSEDIT'                                  CSE022
+     C                     PARM           PCOUNT 150                      CSE022
+     C                     PARM           PDECS   10                      CSE022
+     C                     PARM *BLANKS   PECODE  1                       CSE022
+     C                     PARM           POTHDP 21                       CSE022
+      *                                                                   CSE022
+     C                     MOVE POTHDP    WNOREC  4                       CSE022
+     C                     MOVELWNOREC    NOREC                           CSE022
+      *                                                                   CSE022
+     C                     WRITEOTHRDEPD                                  CSE022
+     C           BFCUST    READESDCSDRD0                 15               CSE022
+      *                                                                   CSE022
+     C                     ENDDO                                          CSE022
+      *                                                                   CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+     C                     ENDSR                                          CSE022
+      *                                                                   CSE022
+      *****************************************************************   CSE022
+**   ARRAY ENTRIES FOR REPORT TITLE
+MAINTENANCE - AUDIT REPORT
+LISTING
+** @CN Long constants used in program.
+A
+N
+Y
+0
+SDSECSPD
+Y2U0005
+SD0340AU                                                                  S01117
+Y2U0021
+BANK
+SDBANKPD
+SECURITIES CLIENTS
+SDSTRDPD

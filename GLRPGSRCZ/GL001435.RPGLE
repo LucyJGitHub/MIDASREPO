@@ -1,0 +1,213 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas GL Reset Network Activity Control File')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL001435 - Midas GL Reset Network Activity Control File.     *
+      *                                                               *
+      *  Function:  This module set the network activity according    *
+      *             the network definition.                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CGL013  *CREATE    Date 31Apr02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL013 - MT94x Messages Generation                           *
+      *                                                               *
+      *****************************************************************
+ 
+     FGLNWKAPD  UF A E           K DISK                   INFSR(*PSSR)
+      ** Midas GL Network Activity Control File
+ 
+      *****************************************************************
+      *                                                               *
+      * Use of Indicators                                             *
+      *                                                               *
+      * Database Access Indicators                                    *
+      *                                                               *
+      *                                                               *
+      * Database Error Indicators                                     *
+      *                                                               *
+      * U7 - Abnormal Completion                                      *
+      * U8 - File Out of Balance                                      *
+      * U7 + U8 - Database Error                                      *
+      *                                                               *
+      * Other Indicators                                              *
+      *                                                               *
+      * 99 - Multi-purpose                                            *
+      *                                                               *
+      *****************************************************************
+ 
+      ** Automatically included D-specs
+      ** ==============================
+ 
+      ** The following /COPY line includes the LDA layout,
+      ** the copyright array definition,
+      ** and the following named constants:
+      **    True       logical = *on (for indcator processing)
+      **    False      logical = *off (for indcator processing)
+      **    DBErrCtl   10A     = 'DBERRCTL' (the name of the database error
+      **                                    handler)
+      ** and the following variables:
+      **    RunBefore  1A (for the PSSR)
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+     D/COPY ZACPYSRC,PSDS
+ 
+      ** Manually included D-specs
+      ** =========================
+ 
+      ** Named constants
+      ** ---------------
+ 
+      ** Arrays and Data Structures
+      ** --------------------------
+ 
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      **  Data Structure for Bank Details.
+ 
+     D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
+      **  Data Structure for Network Details.
+ 
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+      **  First DS for access programs, long data structure.
+ 
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      **  Second DS for access programs, short data structure.
+ 
+     D DSLDY         E DS                  EXTNAME(DSLDY)
+      **  Third DS for access programs, very long data structure.
+ 
+      ** Declared variables
+      ** ------------------
+ 
+     D P@RTCD          S              7A                                        Return Code
+     D P@OPTN          S              7A                                        Option
+     D P@NWRK          S              6A                                        Network
+ 
+      ** Input Specs
+      ** -----------
+ 
+      *------------------------------------------------------------------------*
+      ** C Spec. Declaratives
+      ** ====================
+ 
+      *========================================================================*
+      *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
+      *========================================================================*
+ 
+      ** Init processing uses the standard *INZSR subroutine
+ 
+     C                   EVAL      P@OPTN = '*FIRST'                            Option
+ 
+     C                   DOU       P@RTCD <> *BLANKS
+ 
+      **  Access Networks.
+ 
+     C                   CALLB     'AONWRKR1'
+     C                   PARM      *BLANKS       P@RTCD                         Return Code
+     C                   PARM                    P@OPTN                         Option
+     C                   PARM      *BLANKS       P@NWRK                         Network
+     C     SDNWRK        PARM      SDNWRK        DSLDY
+ 
+     C                   IF        P@RTCD = *BLANKS
+ 
+      **  Access Network Activity Control File.
+ 
+     C     EDNWRK        CHAIN     GLNWKAPD                           99
+ 
+      ** If prevent automatic submission at start of business.
+ 
+     C                   IF        EDPASS = 'Y'
+     C                   EVAL      MTSSTS = 'I'                                 Inactive
+     C                   ELSE
+     C                   EVAL      MTSSTS = 'A'                                 Active
+     C                   ENDIF
+ 
+      ** If prevent automatic submission if non-working day.
+ 
+     C                   IF        EDPASN = 'Y'
+     C                             AND BJDNWD > BJRDNB + 1
+     C                   EVAL      MTSSTS = 'I'                                 Inactive
+     C                   ENDIF
+ 
+      ** If the network is in delete mode.
+ 
+     C                   IF        EDTYLC = 'D'
+     C                   EVAL      MTSSTS = 'I'                                 Inactive
+     C                   ENDIF
+ 
+      **  Update Network Activity Control File.
+ 
+     C   99              EVAL      MTNWRK = EDNWRK
+     C   99              WRITE     GLNWKAD0
+     C  N99              UPDATE    GLNWKAD0
+ 
+     C                   ENDIF
+     C                   ENDDO
+ 
+     C                   EVAL      *INLR = *On
+     C                   RETURN
+ 
+      *========================================================================*
+      * *INZSR    : Init Processing                                            *
+      *------------------------------------------------------------------------*
+ 
+     C     *INZSR        BEGSR
+      *    ------        -----
+ 
+      ** Initialise Copyright Array
+     C                   MOVEA     CPY@          CPY@@            80
+ 
+      ** Initialise LDA
+ 
+     C     *LOCK         IN        LDA
+     C                   MOVEL     PSProcPgm     DBpgm
+     C                   OUT       LDA
+ 
+      ** Retrieve Bank details.
+ 
+     C                   CALLB     'AOBANKR0'
+     C                   PARM      '*DBERR '     P@RTCD                         Return Code
+     C                   PARM      '*FIRST '     P@OPTN                         Option
+     C     SDBANK        PARM      SDBANK        DSFDY
+ 
+      *    ------        -----
+     C     @INZSR        ENDSR
+ 
+      *========================================================================*
+      * *PSSR     : Program exception error subroutine                         *
+      *------------------------------------------------------------------------*
+ 
+     C     *PSSR         BEGSR
+      *    ----------    ------
+ 
+     C                   DUMP
+     C                   ROLBK
+ 
+     C                   EVAL      *INU7 = *On
+     C                   EVAL      *INU8 = *On
+     C                   EVAL      *INLR = *On
+ 
+     C                   RETURN
+ 
+      *    ----------    ------
+     C     @PSSR         ENDSR
+ 
+      *========================================================================*
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2002

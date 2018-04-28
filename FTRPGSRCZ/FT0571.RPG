@@ -1,0 +1,1455 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Unauth Request for Transfer/Cust CR Tfer')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0571 - Unauthorised Request for Transfer/Customer Credit   *
+      *           Transfer List                                       *
+      *                                                               *
+      *  Function:  This program generates reports for unauthorised   *
+      *  (I/C &     request for transfer or customer credit transfer. *
+      *   COB)                                                        *
+      *                                                               *
+      *  Called By: FTC0230 - FT Non-Authorised Payments Report       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. BUG25160           Date 23Jul09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 221761             Date 01Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 185107             Date 17Oct00               *
+      *                 184060             Date 22Sep00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT006  *CREATE    Date 13Sep99               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BUG25160 - Apply core fix 229420, 226942 and 221761.         *
+      *  229420 - Branch 'ALL' request doesn't work.                  *
+      *  226942 - Make RFT/CCT Authorised/Unauthorised reports        *
+      *           available in the system.                            *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  221761 - Recompiled due to change made in PF/FT101HPD.       *
+      *  185107 - Mapping of details from swift message - Recompile   *
+      *  184060 - No transaction type code in detail screen -Recompile*
+      *  CFT006 - Funds Transfer/Swift Messages MT101/MT102           *
+      *                                                               *
+      *****************************************************************
+     F*FT101HLAIF**E********************DISK***                                               226942
+     F**FT101HLFIF**E                  DISK                                            226942 229420
+     FFT101HLFIF  E           K        DISK                                                   229420
+     F*FT102HL9IF**E********************DISK***                                               226942
+     F**FT102HLFIF  E                  DISK                                            226942 229420
+     FFT102HLFIF  E           K        DISK                                                   229420
+     FFT101DL0IF  E           K        DISK
+     FFT102DL0IF  E           K        DISK
+     FFT0571AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     F*FT0571P1O***E********************PRINTER***                                            226942
+     FFT0571P1O   E             05     PRINTER                        UC                      226942
+     F                                              KINFDS SPOOL1
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - End of file for FT101HLA                              *
+      *   02  - No record found equal for FT101DL0                    *
+      ****03**-*End*of*file*for*FT102HL9*******************************                       226942
+      *   03  - End of file for FT102HLF                              *                       226942
+      *   04  - No record found equal for FT102DL0                    *
+      ****10**-*FT102HL9*record*read***********************************                       226942
+      *   10  - FT102HLF record read                                  *                       226942
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SRRPRT - Process Report Lines                                *
+      *                                                               *
+      *  SRWRIT - Format and Write a Detail Record to the Report      *
+      *  SRPEND - Write End of Report                                 *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  SRRP1  - RCF Processing for P1 Report                        *
+      *  SRRAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZEDIT  - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE2Z1                                                                   226942
+     E/COPY ZSRSRC,ZEDITZ1
+      /SPACE 3
+      *
+      ** Rename Field
+      *
+     IFT101HD0
+     I              SINST                           SINSTX
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for FT0571P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for FT0571AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      **  First data structure for Access Programs, short DS
+      *
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+      *
+      /TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *                                                                                       226942
+     C                     EXSR SRRP1                                                         226942
+      *
+      ***  Output Audit Report and End Program.
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : SRRAU  - RCF Processing for Audit Report          *
+      *             AOBANKR0 Access Program                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+     C                     Z-ADD0         DBASE
+      *                                                                                       226942
+      ***  Receive Parameter List.                                                            226942
+      *                                                                                       226942
+     C           *ENTRY    PLIST                                                              226942
+     C                     PARM           PTYPE   2                                           226942
+     C                     PARM           PSTRT   50                                          226942
+     C                     PARM           PENDT   50                                          226942
+     C                     PARM           PMENU   3                                           226942
+     C                     PARM           PRNTP   1                                           226942
+     C                     PARM           @RSEQ   5                                           226942
+     C                     PARM           @RLEV   1                                           226942
+     C                     PARM           @RENT   3                                           226942
+     C*                                                                                       229420
+     C           @RLEV     IFEQ 'B'                                                           229420
+     C                     MOVE *ON       *IN20                                               229420
+     C                     ELSE                                                               229420
+     C                     MOVE *OFF      *IN20                                               229420
+     C                     ENDIF                                                              229420
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVELUSER      RUSER
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     MOVEL'*FIRST ' DBKEY            ***************
+     C                     MOVEL'FT0571'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                       226942
+      ** Check if enhancement CSW201 is on                                                    226942
+      *                                                                                       226942
+     C                     CALL 'SWIF2001'                                                    226942
+     C                     PARM *BLANKS   PRTCD                                               226942
+      *                                                                                       226942
+     C           PRTCD     IFEQ 'CSW2001'                                                     226942
+     C                     MOVE 'Y'       CSW201  1                                           226942
+     C                     MOVE '1'       *IN11                                               226942
+     C                     ELSE                                                               226942
+     C                     MOVE 'N'       CSW201                                              226942
+     C                     MOVE '0'       *IN11                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+      ** Check System Date Format, DDMMYY (*IN98 off)                                         226942
+      **                           MMDDYY (*IN98 on).                                         226942
+      *                                                                                       226942
+     C           BJDFIN    IFEQ 'M'                                                           226942
+     C                     SETON                     98                                       226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR SRRAU
+     C                     MOVEL'Y'       WFRST   1                                           226942
+      *
+      ***  Report Work fields.
+      *
+     C**********           Z-ADD0         RQDLN1  30                                          226942
+     C**********           Z-ADD0         DIFLN1  30                                          226942
+     C**********           MOVEL*BLANKS   WREF                                                226942
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : SRAUDT - Produce Audit Report and End Program     *
+      *             SRRPRT - Process Report Lines                     *
+      *             SRPEND - Write End of Report                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ***  Read first record from File.
+      *
+     C                     Z-ADD0         RCNT1                                               226942
+     C                     Z-ADD0         RCNT2                                               226942
+     C                     MOVEL'N'       WRFT    1
+     C                     MOVEL'N'       WCCT    1
+     C                     MOVEL*BLANKS   PBRCA   3                                           226942
+      *                                                                                       226942
+     C           @RLEV     IFNE 'S'                                                           226942
+     C           @RENT     ANDNE*BLANKS                                                       226942
+     C                     MOVE @RENT     PBRCA                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C           PMENU     IFEQ 'RFT'                                                         226942
+     C**********           READ FT101HLA                 01                                   226942
+     C           *LOVAL    SETLLFT101HLF                                                      229420
+     C                     READ FT101HLF                 01                                   226942
+     C*                                                                                       229420
+     C                     MOVE BRCA      WBRCA                                               229420
+     C*                                                                                       229420
+      *
+      ***  Do While End of File.
+      *
+     C           *IN01     DOWEQ'0'
+      *
+     C           PTYPE     IFEQ *BLANKS                                                       226942
+     C           PBRCA     ANDEQ*BLANKS                                                       226942
+      *                                                                                       226942
+     C           PTYPE     OREQ *BLANKS                                                       226942
+     C           PBRCA     ANDEQBRCA                                                          226942
+      *                                                                                       226942
+     C           PTYPE     OREQ PYTP                                                          226942
+     C           PBRCA     ANDEQ*BLANKS                                                       226942
+      *                                                                                       226942
+     C           PTYPE     OREQ PYTP                                                          226942
+     C           PBRCA     ANDEQBRCA                                                          226942
+      *                                                                                       229420
+     C           PTYPE     OREQ *BLANKS                                                       229420
+     C           PBRCA     ANDEQ'ALL'                                                         229420
+      *                                                                                       229420
+     C           PTYPE     OREQ PYTP                                                          229420
+     C           PBRCA     ANDEQ'ALL'                                                         229420
+      *                                                                                       226942
+     C           RFTID     CHAINFT101DL0             02
+     C**********           ADD  1         RCNT1                                               226942
+     C                     MOVE 'Y'       WHDR    1                                           226942
+      *
+     C           *IN02     DOWEQ'0'
+      *
+      ***  Count records read.
+      *
+     C***********          ADD  1         RCNT1                                        226942 229420
+     C           PSTRT     IFEQ 0                                                             226942
+     C           PENDT     ANDEQ0                                                             226942
+      *                                                                                       226942
+     C           PSTRT     ORLE INDATE                                                        226942
+     C           PENDT     ANDEQ0                                                             226942
+      *                                                                                       226942
+     C           PSTRT     ORLE INDATE                                                        226942
+     C           PENDT     ANDGEINDATE                                                        226942
+     C*                                                                                       229420
+     C                     ADD  1         RCNT1                                               229420
+     C*                                                                                       229420
+     C                     MOVEL'Y'       WRFT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR SRRPRT
+      *
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C           RFTID     READEFT101DL0                 02
+      *
+     C                     ENDDO
+     C                     ENDIF                                                              226942
+      *
+      ***  Read next record.
+      *
+     C**********           READ FT101HLA                 01                                   226942
+     C                     READ FT101HLF                 01                                   226942
+      *
+     C           *IN01     IFEQ '1'
+     C           WFRST     ANDEQ'N'                                                           226942
+     C                     EXSR SRPEND
+     C                     ENDIF
+     C*                                                                                       229420
+     C*  Create a new spoolfile on change of branch if branch = ALL                           229420
+     C           PBRCA     IFEQ 'ALL'                                                         229420
+     C                     EXSR CHGBRC                                                        229420
+     C                     ENDIF                                                              229420
+      *
+     C                     ENDDO
+     C                     ELSE                                                               226942
+      *
+     C**********           READ FT102HL9                 03                                   226942
+     C           *LOVAL    SETLLFT102HLF                                                      229420
+     C                     READ FT102HLF                 03                                   226942
+     C*                                                                                       229420
+     C                     MOVE BRCA      WBRCA                                               229420
+     C*                                                                                       229420
+      *
+      ***  Do While End of File.
+      *
+     C           *IN03     DOWEQ'0'
+      *
+      *                                                                                       226942
+     C           PTYPE     IFEQ *BLANKS                                                       226942
+     C           PBRCA     ANDEQ*BLANKS                                                       226942
+      *                                                                                       226942
+     C           PTYPE     OREQ *BLANKS                                                       226942
+     C           PBRCA     ANDEQBRCA                                                          226942
+      *                                                                                       226942
+     C           PTYPE     OREQ CCTTYP                                                        226942
+     C           PBRCA     ANDEQ*BLANKS                                                       226942
+      *                                                                                       226942
+     C           PTYPE     OREQ CCTTYP                                                        226942
+     C           PBRCA     ANDEQBRCA                                                          226942
+      *                                                                                       229420
+     C           PTYPE     OREQ *BLANKS                                                       229420
+     C           PBRCA     ANDEQ'ALL'                                                         229420
+      *                                                                                       229420
+     C           PTYPE     OREQ CCTTYP                                                        229420
+     C           PBRCA     ANDEQ'ALL'                                                         229420
+      *                                                                                       229420
+     C           CCTID     CHAINFT102DL0             04
+     C**********           ADD  1         RCNT2                                               226942
+     C                     MOVE 'Y'       WHDR                                                226942
+      *
+     C           *IN04     DOWEQ'0'
+      *
+      ***  Count records read.
+      *
+     C***********          ADD  1         RCNT2                                        226942 229420
+     C           PSTRT     IFEQ 0                                                             226942
+     C           PENDT     ANDEQ0                                                             226942
+      *                                                                                       226942
+     C           PSTRT     ORLE INDATE                                                        226942
+     C           PENDT     ANDEQ0                                                             226942
+      *                                                                                       226942
+     C           PSTRT     ORLE INDATE                                                        226942
+     C           PENDT     ANDGEINDATE                                                        226942
+     C*                                                                                       229420
+     C                     ADD  1         RCNT2                                               229420
+     C*                                                                                       229420
+     C                     MOVEL'Y'       WCCT
+     C                     MOVE '1'       *IN10
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR SRRPRT
+      *                                                                                       226942
+     C                     ENDIF                                                              226942
+      *
+     C           CCTID     READEFT102DL0                 04
+      *
+     C                     ENDDO
+     C                     ENDIF                                                              226942
+      *
+      ***  Read next record.
+      *
+     C**********           READ FT102HL9                 03                                   226942
+     C                     READ FT102HLF                 03                                   226942
+      *
+     C           *IN03     IFEQ '1'
+     C           WFRST     ANDEQ'N'                                                           226942
+     C           RCNT2     ANDNE0                                                             226942
+     C                     EXSR SRPEND
+     C                     ENDIF
+     C*                                                                                       229420
+     C*  Create a new spoolfile on change of branch if branch = ALL                           229420
+     C           PBRCA     IFEQ 'ALL'                                                         229420
+     C                     EXSR CHGBRC                                                        229420
+     C                     ENDIF                                                              229420
+      *
+     C                     ENDDO
+     C                     ENDIF                                                              226942
+      *
+     C           WRFT      IFEQ 'N'
+     C           WCCT      ANDEQ'N'
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRPRT
+      *****************************************************************
+      *                                                               *
+      *  SRRPRT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: SRPROC - Detail Processing                        *
+      *  Calls:     SRWRIT - Write Deatil Record                      *
+      *             SRCURR - Calls AOCURRR0 Access Program            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRPRT    BEGSR
+      *
+     C                     MOVEL*BLANKS   RTRID                                               226942
+     C                     MOVEL*BLANKS   RTID                                                226942
+     C                     MOVEL*BLANKS   RSNDRF
+     C                     MOVEL*BLANKS   RTYPE
+     C**********           MOVEL*BLANKS   RBRCA                                               226942
+     C                     MOVEL*BLANKS   RSTYP                                               226942
+     C                     MOVEL*BLANKS   RBBRC                                               226942
+     C                     MOVEL*BLANKS   ROBRC                                               226942
+     C                     MOVEL*BLANKS   RBOKC                                               226942
+     C                     MOVEL*BLANKS   RPRFC                                               226942
+     C**********           MOVEL*BLANKS   RCSTRF                                              226942
+     C**********           MOVEL*BLANKS   RODRCT                                              226942
+     C**********           MOVEL*BLANKS   RBENN                                               226942
+     C**********           MOVEL*BLANKS   RAMT                                                226942
+     C**********           MOVEL*BLANKS   RCCY                                                226942
+     C                     MOVEL*BLANKS   RCSRF                                               226942
+     C                     MOVEL*BLANKS   RBOCD                                               226942
+     C                     MOVEL*BLANKS   RINPY                                               226942
+     C                     MOVEL*BLANKS   RDEST                                               226942
+     C                     MOVEL*BLANKS   ROCS1                                               226942
+     C                     MOVEL*BLANKS   ROCS2                                               226942
+     C                     MOVEL*BLANKS   ROCS3                                               226942
+     C                     MOVEL*BLANKS   ROCS4                                               226942
+     C                     MOVEL*BLANKS   ROCS5                                               226942
+     C                     MOVEL*BLANKS   ROI35                                               226942
+     C                     MOVEL*BLANKS   ROI11                                               226942
+     C                     MOVEL*BLANKS   RAT35                                               226942
+     C                     MOVEL*BLANKS   RAT11                                               226942
+     C                     MOVEL*BLANKS   RSINT                                               226942
+     C                     MOVEL*BLANKS   RSWPR                                               226942
+     C                     Z-ADD0         REXDT                                               226942
+     C                     Z-ADD0         RDRVD                                               226942
+     C                     MOVEL*BLANKS   RAUTH                                               226942
+     C                     MOVEL*BLANKS   RHDCH                                               226942
+     C                     MOVEL*BLANKS   RCCCY                                               226942
+     C                     MOVEL*BLANKS   RACNT                                               226942
+     C                     MOVEL*BLANKS   RTRNRF                                              226942
+     C                     MOVEL*BLANKS   RTYCD                                               226942
+     C                     MOVEL*BLANKS   RFXDRF                                              226942
+     C                     MOVEL*BLANKS   RDIPY                                               226942
+     C                     MOVEL*BLANKS   RINS1                                               226942
+     C                     MOVEL*BLANKS   RINS2                                               226942
+     C                     MOVEL*BLANKS   RINS3                                               226942
+     C                     MOVEL*BLANKS   RINS4                                               226942
+     C                     MOVEL*BLANKS   RINS5                                               226942
+     C                     MOVEL*BLANKS   RINS6                                               226942
+     C                     MOVEL*BLANKS   RINS7                                               226942
+     C                     MOVEL*BLANKS   RTRAM                                               226942
+     C                     MOVEL*BLANKS   RTRCY                                               226942
+     C                     MOVEL*BLANKS   RPYAM                                               226942
+     C                     MOVEL*BLANKS   RPYCY                                               226942
+     C                     Z-ADD0         RCRVD                                               226942
+     C                     MOVEL*BLANKS   ROTFL                                               226942
+     C                     MOVEL*BLANKS   RDOC1                                               226942
+     C                     MOVEL*BLANKS   RDOC2                                               226942
+     C                     MOVEL*BLANKS   RDOC3                                               226942
+     C                     MOVEL*BLANKS   RDOC4                                               226942
+     C                     MOVEL*BLANKS   RDOC5                                               226942
+     C                     MOVEL*BLANKS   RDOI1                                               226942
+     C                     MOVEL*BLANKS   RDOI2                                               226942
+     C                     MOVEL*BLANKS   RRGR1                                               226942
+     C                     MOVEL*BLANKS   RRGR2                                               226942
+     C                     MOVEL*BLANKS   RRGR3                                               226942
+     C                     MOVEL*BLANKS   RTTCD                                               226942
+     C                     Z-ADD0         RTTVD                                               226942
+     C                     MOVEL*BLANKS   RTSAM                                               226942
+     C                     MOVEL*BLANKS   RSAMTS                                              226942
+     C                     MOVEL*BLANKS   RSDCHG                                              226942
+     C                     MOVEL*BLANKS   RRCCHG                                              226942
+     C                     MOVEL*BLANKS   RTSCY                                               226942
+     C                     MOVEL*BLANKS   RCHG                                                226942
+     C                     MOVEL*BLANKS   REXRT                                               226942
+     C                     MOVEL*BLANKS   RSCOR                                               226942
+     C                     MOVEL*BLANKS   RRCOR                                               226942
+     C                     MOVEL*BLANKS   RADIN1                                              226942
+     C                     MOVEL*BLANKS   RADIN2                                              226942
+     C                     MOVEL*BLANKS   RADIN3                                              226942
+     C                     MOVEL*BLANKS   RADIN4                                              226942
+     C                     MOVEL*BLANKS   RADIN5                                              226942
+     C                     MOVEL*BLANKS   RADIN6                                              226942
+     C                     MOVEL*BLANKS   RDAT3                                               226942
+     C                     MOVEL*BLANKS   RDAT1                                               226942
+     C                     MOVEL*BLANKS   RINM1                                               226942
+     C                     MOVEL*BLANKS   RINM2                                               226942
+     C                     MOVEL*BLANKS   RINM3                                               226942
+     C                     MOVEL*BLANKS   RINM4                                               226942
+     C                     MOVEL*BLANKS   RINM5                                               226942
+     C                     MOVEL*BLANKS   RAWI1                                               226942
+     C                     MOVEL*BLANKS   RAWI2                                               226942
+     C                     MOVEL*BLANKS   RAWI3                                               226942
+     C                     MOVEL*BLANKS   RAWI4                                               226942
+     C                     MOVEL*BLANKS   RAWI5                                               226942
+     C                     MOVEL*BLANKS   RAW11                                               226942
+     C                     MOVEL*BLANKS   RBEN1                                               226942
+     C                     MOVEL*BLANKS   RBEN2                                               226942
+     C                     MOVEL*BLANKS   RBEN3                                               226942
+     C                     MOVEL*BLANKS   RBEN4                                               226942
+     C                     MOVEL*BLANKS   RBEN5                                               226942
+     C                     MOVEL*BLANKS   RREM1                                               226942
+     C                     MOVEL*BLANKS   RREM2                                               226942
+     C                     MOVEL*BLANKS   RREM3                                               226942
+     C                     MOVEL*BLANKS   RREM4                                               226942
+     C                     MOVEL*BLANKS   RREG1                                               226942
+     C                     MOVEL*BLANKS   RREG2                                               226942
+     C                     MOVEL*BLANKS   RREG3                                               226942
+     C                     MOVEL*BLANKS   RORAM                                               226942
+     C                     MOVEL*BLANKS   RORCY                                               226942
+     C                     MOVEL*BLANKS   RCHRG                                               226942
+     C                     MOVEL*BLANKS   RCHAM                                               226942
+     C                     MOVEL*BLANKS   RCCY                                                226942
+     C                     MOVEL*BLANKS   RPCHCY                                              226942
+     C                     MOVEL*BLANKS   RPCHAM                                              226942
+     C                     MOVEL*BLANKS   RTCHCY                                              226942
+     C                     MOVEL*BLANKS   RTCHAM                                              226942
+     C                     MOVEL*BLANKS   RPCCCY                                              226942
+     C                     MOVEL*BLANKS   RTCCCY                                              226942
+     C                     MOVEL*BLANKS   RSCCY                                               226942
+     C                     MOVEL*BLANKS   RSCHAM                                              226942
+     C                     MOVEL*BLANKS   RPSCCY                                              226942
+     C                     MOVEL*BLANKS   RTSCCY                                              226942
+     C                     MOVEL*BLANKS   RSCCY2                                              226942
+     C                     MOVEL*BLANKS   RSCHA2                                              226942
+     C                     MOVEL*BLANKS   RPSCY2                                              226942
+     C                     MOVEL*BLANKS   RTSCY2                                              226942
+     C                     MOVEL*BLANKS   RSCCY3                                              226942
+     C                     MOVEL*BLANKS   RSCHA3                                              226942
+     C                     MOVEL*BLANKS   RPSCY3                                              226942
+     C                     MOVEL*BLANKS   RTSCY3                                              226942
+     C                     MOVEL*BLANKS   RSCCY4                                              226942
+     C                     MOVEL*BLANKS   RSCHA4                                              226942
+     C                     MOVEL*BLANKS   RPSCY4                                              226942
+     C                     MOVEL*BLANKS   RTSCY4                                              226942
+     C                     MOVEL*BLANKS   RSCCY5                                              226942
+     C                     MOVEL*BLANKS   RSCHA5                                              226942
+     C                     MOVEL*BLANKS   RPSCY5                                              226942
+     C                     MOVEL*BLANKS   RTSCY5                                              226942
+     C                     MOVEL*BLANKS   RRATE                                               226942
+     C                     MOVEL*BLANKS   RRTIN                                               226942
+     C                     MOVEL*BLANKS   RCHAT                                               226942
+     C                     MOVEL*BLANKS   RCQNO                                               226942
+     C                     MOVEA'0000'    *IN,12                                              226942
+      *
+     C           *IN10     IFEQ '0'
+      *                                                                                       226942
+     C           WHDR      IFEQ 'Y'                                                           226942
+     C                     MOVELRFTID     RTRID                                               226942
+     C                     MOVELSNDREF    RSNDRF
+     C                     MOVELPYTP      RTYPE
+     C**********           MOVELBRCA      RBRCA                                               226942
+     C**********           MOVELCUSTRF    RCSTRF                                              226942
+     C                     MOVELCUSTRF    RCSRF                                               226942
+     C                     MOVELPYST      RSTYP                                               226942
+     C                     MOVELBRCA      RBBRC                                               226942
+     C                     MOVELORBR      ROBRC                                               226942
+     C                     MOVELBOKC      RBOKC                                               226942
+     C                     MOVELPRFC      RPRFC                                               226942
+     C********** HOCUS1    IFNE *BLANKS                                                       226942
+     C**********           MOVELHOCUS1    RODRCT                                              226942
+     C**********           ELSE                                                               226942
+     C**********           MOVELTOCUS1    RODRCT                                              226942
+     C**********           ENDIF                                                              226942
+     C**********           MOVELTBNA35    RBENN                                               226942
+     C**********                                                                              226942
+     C**********           MOVELTRNCCY    WCCY    3                                           226942
+     C********** WCCY      IFNE *BLANKS                                                       226942
+     C**********           EXSR SRCURR                                                        226942
+     C**********           MOVEL*BLANKS   ZFIELD                                              226942
+     C**********           MOVE TRNAMT    ZFIELD                                              226942
+     C**********           Z-ADDA6NBDP    ZADEC                                               226942
+     C**********           EXSR ZEDIT                                                         226942
+     C**********           MOVELZFIELD    RAMT                                                226942
+     C**********                                                                              226942
+     C**********           MOVELTRNCCY    RCCY                                                226942
+     C**********           ENDIF                                                              226942
+     C                     MOVELHINPTY    RINPY                                               226942
+     C                     MOVELHOCUS1    ROCS1                                               226942
+     C                     MOVELHOCUS2    ROCS2                                               226942
+     C                     MOVELHOCUS3    ROCS3                                               226942
+     C                     MOVELHOCUS4    ROCS4                                               226942
+     C                     MOVELHOCUS5    ROCS5                                               226942
+     C                     MOVELHACSV1    RAT35                                               226942
+     C                     MOVELHACSV2    RAT11                                               226942
+     C                     MOVELSINSTX    RSINT                                               226942
+     C                     MOVELSWPRIO    RSWPR                                               226942
+      *                                                                                       226942
+     C                     Z-ADDEXDATE    ZDAYNO                                              226942
+     C                     EXSR ZDATE2                                                        226942
+     C                     Z-ADDZDATE     REXDT                                               226942
+     C                     Z-ADDDBTVDT    ZDAYNO                                              226942
+     C                     EXSR ZDATE2                                                        226942
+     C                     Z-ADDZDATE     RDRVD                                               226942
+      *                                                                                       226942
+     C                     MOVELAUTHTX    RAUTH                                               226942
+      *                                                                                       226942
+     C                     MOVELHANDCY    WCCY    3                                           226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE HANDCG    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RHDCH                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELHANDCY    RCCCY                                               226942
+     C                     MOVELHANDAC    RACNT                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELRFTID     RTID                                                226942
+     C                     MOVELTRNSID    RTRNRF                                              226942
+     C                     MOVELFXDREF    RFXDRF                                              226942
+     C                     MOVELTINPTY    RDIPY                                               226942
+     C                     MOVELINSCA4    RINS1                                               226942
+     C                     MOVELINSCB4    RINS2                                               226942
+     C                     MOVELINSCC4    RINS3                                               226942
+     C                     MOVELINSCD4    RINS4                                               226942
+     C                     MOVELINSCE4    RINS5                                               226942
+     C                     MOVELINSA31    RINS6                                               226942
+     C                     MOVELINSB31    RINS7                                               226942
+      *                                                                                       226942
+     C                     MOVELTRNCCY    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE TRNAMT    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RTRAM                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELTRNCCY    RTRCY                                               226942
+     C                     MOVELPAYCCY    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE PAYAMT    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RPYAM                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELPAYCCY    RPYCY                                               226942
+     C                     Z-ADDCRDVDT    ZDAYNO                                              226942
+     C                     EXSR ZDATE2                                                        226942
+     C                     Z-ADDZDATE     RCRVD                                               226942
+     C                     MOVELGOPFLG    ROTFL                                               226942
+     C                     MOVELTOCUS1    RDOC1                                               226942
+     C                     MOVELTOCUS2    RDOC2                                               226942
+     C                     MOVELTOCUS3    RDOC3                                               226942
+     C                     MOVELTOCUS4    RDOC4                                               226942
+     C                     MOVELTOCUS5    RDOC5                                               226942
+     C                     MOVELTASI35    RDAT3                                               226942
+     C                     MOVELTACC11    RDAT1                                               226942
+     C                     MOVELTINST1    RINM1                                               226942
+     C                     MOVELTINST2    RINM2                                               226942
+     C                     MOVELTINST3    RINM3                                               226942
+     C                     MOVELTINST4    RINM4                                               226942
+     C                     MOVELTINST5    RINM5                                               226942
+     C                     MOVELTINSTA    RINM6                                               226942
+     C                     MOVELTACA35    RAWI1                                               226942
+     C                     MOVELTACB35    RAWI2                                               226942
+     C                     MOVELTACC35    RAWI3                                               226942
+     C                     MOVELTACD35    RAWI4                                               226942
+     C                     MOVELTACE35    RAWI5                                               226942
+     C                     MOVELTACA11    RAW11                                               226942
+     C                     MOVELTBNA35    RBEN1                                               226942
+     C                     MOVELTBNB35    RBEN2                                               226942
+     C                     MOVELTBNC35    RBEN3                                               226942
+     C                     MOVELTBND35    RBEN4                                               226942
+     C                     MOVELTBNE35    RBEN5                                               226942
+     C                     MOVELTRMA35    RREM1                                               226942
+     C                     MOVELTRMB35    RREM2                                               226942
+     C                     MOVELTRMC35    RREM3                                               226942
+     C                     MOVELTRMD35    RREM4                                               226942
+     C                     MOVELTRGA35    RREG1                                               226942
+     C                     MOVELTRGB35    RREG2                                               226942
+     C                     MOVELTRGC35    RREG3                                               226942
+      *                                                                                       226942
+     C                     MOVELTOCCY     WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE TOOAMT    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RORAM                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELTOCCY     RORCY                                               226942
+     C                     MOVELTDCHGS    RCHRG                                               226942
+      *                                                                                       226942
+     C                     MOVELRCHCCY    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE RCVCHG    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RCHAM                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELRCHCCY    RCCY                                                226942
+      *                                                                                       226942
+     C                     MOVELRCPCCY    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE RCPCHG    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RPCHAM                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELRCPCCY    RPCHCY                                              226942
+     C                     MOVELRCTCCY    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE RCTCHG    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RTCHAM                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELRCTCCY    RTCHCY                                              226942
+      *                                                                                       226942
+     C           XRATE     IFNE 0                                                             226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE XRATE     ZFIELD                                              226942
+     C                     Z-ADD8         ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVELZFIELD    RRATE                                               226942
+     C                     ENDIF                                                              226942
+     C                     MOVELXRATEO    RRTIN                                               226942
+     C                     MOVELCHGACC    RCHAT                                               226942
+      *                                                                                       226942
+     C           CHQNUM    IFNE 0                                                             226942
+     C                     MOVELCHQNUM    RCQNO                                               226942
+     C                     ENDIF                                                              226942
+      *
+     C                     ELSE
+      *
+     C           WHDR      IFEQ 'Y'                                                           226942
+     C                     MOVELCCTID     RTRID                                               226942
+     C                     MOVELFILREF    RSNDRF
+     C                     MOVELCCTTYP    RTYPE
+     C**********           MOVELBRCA      RBRCA                                               226942
+     C********** TOCUS1    IFNE *BLANKS                                                       226942
+     C**********           MOVELTOCUS1    RODRCT                                              226942
+     C**********           ELSE                                                               226942
+     C**********           MOVELORDCU1    RODRCT                                              226942
+     C**********           ENDIF                                                              226942
+     C**********           MOVELBENF1     RBENN                                               226942
+     C**********                                                                              226942
+     C**********           MOVELCCTCCY    WCCY                                                226942
+     C********** WCCY      IFNE *BLANKS                                                       226942
+     C**********           EXSR SRCURR                                                        226942
+     C**********           MOVEL*BLANKS   ZFIELD                                              226942
+     C**********           MOVE CCTAMT    ZFIELD                                              226942
+     C**********           Z-ADDA6NBDP    ZADEC                                               226942
+     C**********           EXSR ZEDIT                                                         226942
+     C**********           MOVELZFIELD    RAMT                                                226942
+     C**********                                                                              226942
+     C**********           MOVELCCTCCY    RCCY                                                226942
+     C**********           ENDIF                                                              226942
+     C                     MOVELCCTTST    RSTYP                                               226942
+     C                     MOVELBRCA      RBBRC                                               226942
+     C                     MOVELORBR      ROBRC                                               226942
+     C                     MOVELBOKC      RBOKC                                               226942
+     C                     MOVELPRFC      RPRFC                                               226942
+     C                     MOVELCCTBOC    RBOCD                                               226942
+     C                     MOVELCCTDST    RDEST                                               226942
+     C                     MOVELTOCUS1    ROCS1                                               226942
+     C                     MOVELTOCUS2    ROCS2                                               226942
+     C                     MOVELTOCUS3    ROCS3                                               226942
+     C                     MOVELTOCUS4    ROCS4                                               226942
+     C                     MOVELOINST3    ROI35                                               226942
+     C                     MOVELOINST1    ROI11                                               226942
+     C                     MOVELREGRP1    RRGR1                                               226942
+     C                     MOVELREGRP2    RRGR2                                               226942
+     C                     MOVELREGRP3    RRGR3                                               226942
+     C                     MOVELSINST     RSINT                                               226942
+     C                     MOVELSWPRIO    RSWPR                                               226942
+     C                     MOVELTRNSTP    RTTCD                                               226942
+      *                                                                                       226942
+     C                     Z-ADDDBTVDT    ZDAYNO                                              226942
+     C                     EXSR ZDATE2                                                        226942
+     C                     Z-ADDZDATE     RDRVD                                               226942
+      *                                                                                       226942
+     C                     Z-ADDTTVDTE    ZDAYNO                                              226942
+     C                     EXSR ZDATE2                                                        226942
+     C                     Z-ADDZDATE     RTTVD                                               226942
+      *                                                                                       226942
+     C                     MOVELCCTCCY    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE CCTAMT    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RTSAM                                               226942
+      *                                                                                       226942
+     C                     MOVE SUMCCT    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RSAMTS                                              226942
+      *                                                                                       226942
+     C                     MOVE SUMSCG    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RSDCHG                                              226942
+      *                                                                                       226942
+     C                     MOVE SUMRCH    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RRCCHG                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELCCTCCY    RTSCY                                               226942
+     C                     MOVELCCTCHG    RCHG                                                226942
+      *                                                                                       226942
+     C           CCTRTE    IFNE 0                                                             226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE CCTRTE    ZFIELD                                              226942
+     C                     Z-ADD8         ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVELZFIELD    REXRT                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELSNDCOR    RSCOR                                               226942
+     C                     MOVELRCVCOR    RRCOR                                               226942
+     C                     MOVELADNLI1    RADIN1                                              226942
+     C                     MOVELADNLI2    RADIN2                                              226942
+     C                     MOVELADNLI3    RADIN3                                              226942
+     C                     MOVELADNLI4    RADIN4                                              226942
+     C                     MOVELADNLI5    RADIN5                                              226942
+     C                     MOVELADNLI6    RADIN6                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELCCTID     RTID                                                226942
+     C                     MOVELTRNSID    RTRNRF                                              226942
+     C                     MOVELCCTCCY    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE CCTAMT    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RTRAM                                               226942
+      *                                                                                       226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SNDCTF    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RTSCCY                                              226942
+      *                                                                                       226942
+     C           CSW201    IFEQ 'Y'                                                           226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDCTF2    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RTSCY2                                              226942
+      *                                                                                       226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDCTF3    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RTSCY3                                              226942
+      *                                                                                       226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDCTF4    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RTSCY4                                              226942
+      *                                                                                       226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDCTF5    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RTSCY5                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE RCVCTF    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RTCCCY                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELCCTCCY    RTRCY                                               226942
+     C                     Z-ADDCRDVDT    ZDAYNO                                              226942
+     C                     EXSR ZDATE2                                                        226942
+     C                     Z-ADDZDATE     RCRVD                                               226942
+      *                                                                                       226942
+     C                     MOVELORDCU1    RDOC1                                               226942
+     C                     MOVELORDCU2    RDOC2                                               226942
+     C                     MOVELORDCU3    RDOC3                                               226942
+     C                     MOVELORDCU4    RDOC4                                               226942
+     C                     MOVELORDI35    RDOI1                                               226942
+     C                     MOVELORDI11    RDOI2                                               226942
+     C                     MOVELACCI35    RAWI1                                               226942
+     C                     MOVELACCI11    RAWI2                                               226942
+     C                     MOVELBENF1     RBEN1                                               226942
+     C                     MOVELBENF2     RBEN2                                               226942
+     C                     MOVELBENF3     RBEN3                                               226942
+     C                     MOVELBENF4     RBEN4                                               226942
+     C                     MOVELBENF5     RBEN5                                               226942
+     C                     MOVELREMI1     RREM1                                               226942
+     C                     MOVELREMI2     RREM2                                               226942
+     C                     MOVELREMI3     RREM3                                               226942
+     C                     MOVELREMI4     RREM4                                               226942
+     C                     MOVELREGRP1    RREG1                                               226942
+     C                     MOVELREGRP2    RREG2                                               226942
+     C                     MOVELREGRP3    RREG3                                               226942
+      *                                                                                       226942
+     C                     MOVELPAYCCY    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE PAYAMT    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RPYAM                                               226942
+      *                                                                                       226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SNDOCG    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RPSCCY                                              226942
+      *                                                                                       226942
+     C           CSW201    IFEQ 'Y'                                                           226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDOCG2    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RPSCY2                                              226942
+      *                                                                                       226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDOCG3    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RPSCY3                                              226942
+      *                                                                                       226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDOCG4    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RPSCY4                                              226942
+      *                                                                                       226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDOCG5    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RPSCY5                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE RCVOCG    ZFIELD                                              226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RPCCCY                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELPAYCCY    RPYCY                                               226942
+     C                     MOVELCCYCHG    RCHRG                                               226942
+      *                                                                                       226942
+     C                     MOVELRCVCCY    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE RCVCHG    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RCHAM                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELRCVCCY    RCCY                                                226942
+     C                     MOVELSNDCCY    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SNDCHG    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RSCHAM                                              226942
+     C                     ENDIF                                                              226942
+     C                     MOVELSNDCCY    RSCCY                                               226942
+      *                                                                                       226942
+      ** If CSW201 is ON, output new set of Senders Charges fields                            226942
+      *                                                                                       226942
+     C           CSW201    IFEQ 'Y'                                                           226942
+      *                                                                                       226942
+     C                     MOVELSDCCY2    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     MOVE '1'       *IN12                                               226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDCHG2    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RSCHA2                                              226942
+     C                     MOVE SDCCY2    RSCCY2                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELSDCCY3    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     MOVE '1'       *IN13                                               226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDCHG3    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RSCHA3                                              226942
+     C                     MOVE SDCCY3    RSCCY3                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELSDCCY4    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     MOVE '1'       *IN14                                               226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDCHG4    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RSCHA4                                              226942
+     C                     MOVE SDCCY4    RSCCY4                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELSDCCY5    WCCY                                                226942
+     C           WCCY      IFNE *BLANKS                                                       226942
+     C                     MOVE '1'       *IN15                                               226942
+     C                     EXSR SRCURR                                                        226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE SDCHG5    ZFIELD                                              226942
+     C                     Z-ADDA6NBDP    ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVE ZFIELD    RSCHA5                                              226942
+     C                     MOVE SDCCY5    RSCCY5                                              226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C           XRATE     IFNE 0                                                             226942
+     C                     MOVEL*BLANKS   ZFIELD                                              226942
+     C                     MOVE XRATE     ZFIELD                                              226942
+     C                     Z-ADD8         ZADEC                                               226942
+     C                     EXSR ZEDIT                                                         226942
+     C                     MOVELZFIELD    RRATE                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVELGOPFLG    ROTFL                                               226942
+     C           CHQNUM    IFNE 0                                                             226942
+     C                     MOVELCHQNUM    RCQNO                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     ENDIF
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCURR
+      *****************************************************************
+      *                                                               *
+      *  SRCURR - Calls AOCURRR0 Access Program                       *
+      *                                                               *
+      *  Called By: SRRPRT - Process Detail Lines                     *
+      *  Calls:     AOCURRR0 - Currency Access Program                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCURR    BEGSR
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM WCCY      PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     MOVELWCCY      DBKEY            ***************
+     C                     MOVEL'FT0571'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRWRIT
+      *****************************************************************
+      *                                                               *
+      *  SRWRIT - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: SRRPRT - Process Detail Lines                     *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR
+      *
+      *****Check*that*sufficient*lines*remain*for*the*Format.*If*not,**                       226942
+      *****write*out*the*Main*Headings*on*a*new*page.******************                       226942
+      **********                                                                              226942
+     C**********           Z-ADD4         RQDLN1                                              226942
+     C********** OFLLN1    SUB  PRTLN1    DIFLN1                                              226942
+     C********** DIFLN1    IFLE RQDLN1                                                        226942
+     C********** RSNDRF    ORNE WREF                                                          226942
+     C********** *IN10     OREQ *ON                                                           226942
+     C********** *IN10     OREQ *ON                                                           226942
+      ********** RCNT2     ANDEQ1                                                             226942
+      **********                                                                              226942
+      *****Wirte*out*Header*Record*************************************                       226942
+     C**********                                                                              226942
+     C**********           WRITEHEADP1                                                        226942
+     C**********           WRITEHEADP2                                                        226942
+     C**********           ENDIF                                                              226942
+     C**********                                                                              226942
+     C**********           WRITEHEADP3                                                        226942
+      **********                                                                              226942
+      *****Write*out*Detail*Record*************************************                       226942
+     C**********                                                                              226942
+     C********** RSNDRF    IFNE WREF                                                          226942
+     C********** DIFLN1    ORLE RQDLN1                                                        226942
+     C********** *IN10     OREQ *ON                                                           226942
+     C********** RCNT2     ANDEQ1                                                             226942
+     C**********           WRITEDETAIL1                                                       226942
+     C**********           ENDIF                                                              226942
+     C**********                                                                              226942
+     C**********           WRITEDETAIL3                                                       226942
+     C**********           MOVELRSNDRF    WREF   16                                           226942
+     C           WFRST     IFEQ 'Y'                                                           226942
+     C                     OPEN FT0571P1                                                      226942
+     C                     MOVEL'N'       WFRST                                               226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+      ** Write record                                                                         226942
+      *                                                                                       226942
+     C           WHDR      IFEQ 'Y'                                                           226942
+     C                     WRITEHEADP1                                                        226942
+     C                     WRITEHEADP2                                                        226942
+     C                     WRITEDETAIL1                                                       226942
+     C                     WRITEDETAIL2                                                       226942
+     C           CSW201    IFEQ 'Y'                                                           226942
+     C           *IN10     ANDEQ'1'                                                           226942
+     C                     WRITEHEADP1                                                        226942
+     C                     WRITEDETAIL4                                                       226942
+     C                     ENDIF                                                              226942
+     C                     WRITEDETAIL3                                                       226942
+     C                     ELSE                                                               226942
+     C                     WRITEHEADP1                                                        226942
+     C                     WRITEDETAIL4                                                       226942
+     C                     WRITEDETAIL3                                                       226942
+     C                     ENDIF                                                              226942
+      *                                                                                       226942
+     C                     MOVE 'N'       WHDR                                                226942
+      *                                                                                       226942
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPEND
+      *****************************************************************
+      *                                                               *
+      *  SRPEND - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPEND    BEGSR
+      *
+      ****Check*that*sufficient*lines*remain*for*the*Format.*If*not,**                        226942
+      ****write*out*the*Main*Headings*on*a*new*page.******************                        226942
+      *********                                                                               226942
+     C*********            Z-ADD4         RQDLN1                                              226942
+     C*********  OFLLN1    SUB  PRTLN1    DIFLN1                                              226942
+     C*********  DIFLN1    IFLE RQDLN1                                                        226942
+     C*********            WRITEHEADP1                                                        226942
+     C*********            ENDIF                                                              226942
+      *
+      ***  Write out Trailer
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *             SRPROC - Detail Processing                        *
+      *             *PSSR  - Error Control                            *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C           RCNT1     IFNE 0
+     C           RCNT2     ORNE 0
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           DBASE     IFNE 0
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCNT1     IFEQ 0
+     C           RCNT2     ANDEQ0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRP1
+      *****************************************************************
+      *                                                               *
+      *  SRRP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRP1     BEGSR
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C**********           MOVEL'00001'   PSEQ    5                                           226942
+      *
+     C                     CALL 'ZSFILE'
+     C**********           PARM PSEQ      SEQ     5                                           226942
+     C**********           PARM           SENTY   3                                           226942
+     C                     PARM @RSEQ     SEQ     5                                           226942
+     C                     PARM @RENT     SENTY   3                                           226942
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRAU
+      *****************************************************************
+      *                                                               *
+      *  SRRAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRAU     BEGSR
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C**********           PARM PSEQ      SEQ                                                 226942
+     C                     PARM @RSEQ     SEQ                                                 226942
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CHGBRC                                                                        229420
+      *****************************************************************                       229420
+      *                                                               *                       229420
+      *  CHGBRC - Create new spoolfile for branch 'ALL' requests      *                       229420
+      *                                                               *                       229420
+      *****************************************************************                       229420
+      *                                                                                       229420
+     C           CHGBRC    BEGSR                                                              229420
+     C*                                                                                       229420
+     C           PTYPE     IFEQ *BLANKS                                                       229420
+     C           BRCA      ANDNEWBRCA                                                         229420
+      *                                                                                       229420
+     C           PMENU     OREQ 'RFT'                                                         229420
+     C           PTYPE     ANDEQPYTP                                                          229420
+     C           BRCA      ANDNEWBRCA                                                         229420
+      *                                                                                       229420
+     C           PMENU     OREQ 'CCT'                                                         229420
+     C           PTYPE     ANDEQCCTTYP                                                        229420
+     C           BRCA      ANDNEWBRCA                                                         229420
+      *                                                                                       229420
+     C           WFRST     IFEQ 'N'                                                           229420
+     C*  Write end of report for this branch                                                  229420
+     C                     WRITETRAILP1                                                       229420
+     C*  Close spool file, open a new one and call ZSFILE                                     229420
+     C                     MOVE BRCA      @RENT                                               229420
+     C                     CLOSEFT0571P1                                                      229420
+     C                     OPEN FT0571P1                                                      229420
+     C                     EXSR SRRP1                                                         229420
+     C                     ENDIF                                                              229420
+     C*                                                                                       229420
+     C                     MOVE BRCA      WBRCA   3                                           229420
+      *                                                                                       229240
+     C                     END                                                                229420
+     C*                                                                                       229420
+     C                     ENDSR                                                              229420
+      *****************************************************************                       229420
+      /TITLE SR/ZDATE2                                                                        226942
+     C/COPY ZSRSRC,ZDATE2Z2                                                                   226942
+      /TITLE SR/ZEDIT
+     C/COPY ZSRSRC,ZEDITZ2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                                          226942
+0366073110961461                                                                              226942
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                                            226942
+000031059090120151181212243273304334365                                                       226942
+**   ZMNM - MONTHS SHORT NAMES                                                                226942
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC                                                          226942

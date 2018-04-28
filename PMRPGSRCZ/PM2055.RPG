@@ -1,0 +1,1283 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Portfolio Movements Enquiry')                 *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM2050 - Portfolio Movements (SE) Enquiry                    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 234300             Date 29Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 102506             Date 18Oct98               *
+      *                 CPM005             Date 11Jul96               *
+     F*                 CPM004             Date 08Feb96               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  102506 - Recompiled over ZSRSRC/ZDAYSZ2 changes.             *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET/LIABILITY SPLIT           *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  CPM004 - Bank Portfolios (NEW PROGRAM)                       *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       01         SUBFILE DISPLAY
+     F*       02         SUBFILE DISPLAY CONTROL
+     F*       03         SUBFILE END
+     F*       04         SUBFILE EMPTY
+     F*       70         HIGLIGHT SUBFILE LINE
+     F*       71         NOMINAL IN ERROR
+     F*       72         AP NUMERATOR IN ERROR
+     F*       73         FX AP NUMERATOR IN ERROR
+     F*       74         ENABLE ACTION CODE
+     F*****************************************************************
+     FPM2055DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE PM2055S1
+     F                                              KINFSR *PSSR
+     FBKPOS   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FBKPHD   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FBPACH   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FINVTP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+     FTRADHS  IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E**  Headings
+     E                    ##H     1   4 80
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     IWWLDA     E DSPMLDAPD
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I*
+     I            DS
+     I                                        1  21 ZOUT21
+     I                                        1  18 ZOUT18
+     ISDSTRD    E DSSDSTRDPD
+     I** Securities Trading ICD
+     ISDBOOK    E DSSDBOOKPD
+     I** Book details
+     ISDCURR    E DSSDCURRPD
+     I**  Midas  Currencies details
+     IDSFDY     E DSDSFDY
+     I**  Short data structure
+     IDSSDY     E DSDSSDY
+     I**  Long data structure
+     I/COPY ZSRSRC,ZSEDITZ2
+     IPSDS       SDS
+     I                                     *STATUS  ERROR
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     C*
+     C* COPYRIGHT
+     C                     MOVEA##CPY     ##CPY2 80
+     C*
+     C* INITIAL PROCESSING
+     C*
+     C                     EXSR INIT
+     C*
+     C* ACCESS SECURITY DETAILS
+     C*
+     C                     EXSR ACSSEC
+     C*
+     C* FILL UP SUBFILE
+     C*
+     C                     EXSR FILSB
+     C*
+     C* DISPLAY THE SUBFILE UNTIL END REQUESTED (ER = 0)
+     C*
+     C                     Z-ADD99        ER      20
+     C           ER        DOWNE*ZERO
+     C                     EXSR DSPLAY
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*****************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* DSPLY  - DISPLAY THE SUBFILE SCREEN
+     C********************************************************************
+     C           DSPLAY    BEGSR
+     C*
+     C                     WRITEPM2055C1
+     C                     WRITEPM2055F1
+     C                     READ PM2055C1                 99*
+     C*
+     C* CK/3 - END
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'Y'       QMENQT
+     C                     CALL 'PMC1001'                  * UPDATE
+     C                     PARM           WWLDA            * *LDA
+     C                     Z-ADD*ZERO     ER
+     C                     END
+     C*
+     C* CK/9 - RELOAD SUBFILE (SWAP FROM TRADE TO VALUE, OR VICE VERSA)
+     C*
+     C           *INKI     IFEQ '1'
+     C           BPTV      IFEQ 'V'
+     C                     MOVE 'T'       BPTV
+     C                     MOVEL##H,1     DDHED1
+     C                     MOVEL##H,2     DDHED2
+     C                     ELSE
+     C                     MOVE 'V'       BPTV
+     C                     MOVEL##H,3     DDHED1
+     C                     MOVEL##H,4     DDHED2
+     C                     END
+     C                     EXSR FILSB
+     C                     END
+     C*
+     C* CK/12 - ABANDON
+     C*
+     C           *INKL     IFEQ '1'
+     C                     Z-ADD*ZERO     ER
+     C                     END
+     C**********                                                          CPM005
+     C**CK/22*-*ENQUIRY SELECTION SCREEN                                  CPM005
+     C**********                                                          CPM005
+     C********** *INKW     IFEQ '1'                                       CPM005
+     C**********                                                          CPM005
+     C**********           CALL 'PMC0610'                                 CPM005
+     C**********                                                          CPM005
+     C**********           CALL 'PMC1003'                  * RETRIEVE     CPM005
+     C**********           PARM           WWLDA            * *LDA         CPM005
+     C**********           END                                            CPM005
+     C*
+     C*  ENTER PRESSED - POSITION SUBFILE TO PAGE WITH FIRST 'LIVE' ACTION
+     C*
+     C                     Z-ADDSRRN      CRRN
+     C*
+     C*  TRADE ENQUIRY REQUESTED
+     C*
+     C           *IN,4     IFEQ '0'
+     C                     READCPM2055S1                 99*
+     C           *IN99     DOWEQ'0'
+     C                     MOVE *BLANKS   DDACTN
+     C                     MOVEA'00001'   *IN,70
+     C                     UPDATPM2055S1
+     C                     CALL 'PM2060'                   * TRADE
+     C                     PARM '0'       ##RETC  1        * ENQUIRY
+     C                     PARM           BCTR
+     C                     CALL 'PMC1003'                  * RETRIEVE
+     C                     PARM           WWLDA            * *LDA
+     C                     Z-ADDRRN       CRRN
+     C                     READCPM2055S1                 99*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* FILSB  - FILL THE SUBFILE
+     C********************************************************************
+     C           FILSB     BEGSR
+     C*
+     C* INITIALIZE SUBFILE
+     C*
+     C                     MOVEA'000'     *IN,1
+     C                     MOVEA'1'       *IN,4
+     C                     Z-ADD*ZERO     RRN
+     C                     Z-ADD1         CRRN
+     C                     Z-ADD1         SRRN    50
+     C                     WRITEPM2055C1
+      *
+      **   Initialize Totals
+      *
+     C                     Z-ADD0         TNML   150
+     C                     Z-ADD0         TNEX   150
+     C                     Z-ADD0         TAPN   150
+     C                     Z-ADD0         TFAP   150
+     C                     Z-ADD0         TPIN   150
+     C                     Z-ADD0         AVPR   158
+      *
+      ***  Obtain the position prior to the back-value period
+      *
+     C                     Z-ADD##SDAT    BPPD
+     C           KBKPO1    SETGTBKPOS
+     C           KBKPO2    REDPEBKPOS                    99*
+      *
+      *** Starting values of Totals
+      *
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDNPSN      TNML
+     C                     Z-ADDECNP      TNEX
+     C                     Z-ADDAPNC      TAPN
+     C                     Z-ADDFXAP      TFAP
+     C                     Z-ADDPILP      TPIN
+     C                     Z-ADDAPPB      AVPR
+     C                     END
+      *
+      * READ FROM AFTER THE STARTING POSITION
+      *
+     C           KBPAC1    SETGTBPACH
+      *
+      * READ THE NEXT HISTORIC ACTION
+      *
+     C           KBPAC2    READEBPACH                    99*
+      *
+     C           *IN99     DOWEQ'0'
+     C           BCAS      ANDNE'05'                       * PART PAY
+     C           BCAS      ANDNE'30'                       * COUPON
+     C           BCAS      ANDNE'35'                       * DIVIDEND
+     C           BCAS      ANDNE'40'                       * TRADE
+     C           BCAS      ANDNE'60'                       * PRICE CHANGE
+     C           KBPAC2    READEBPACH                    99*
+     C                     END
+     C*
+     C                     Z-ADDBPPD      ##AMTT  50
+     C                     Z-ADDBPPD      ##BCAD  50
+     C                     Z-ADDBPPD      ##FPDT  50
+     C*
+     C* LOAD UP SUBFILE UNTIL END OF FILE
+     C*
+     C           *IN99     DOWEQ'0'
+     C*
+     C* IF DATE CHANGE - OUTPUT POSITION LINE
+     C*
+     C           BCAD      IFNE ##BCAD
+     C                     EXSR FMTPOS
+     C                     ADD  1         RRN            04*
+     C                     WRITEPM2055S1
+      *
+     C                     EXSR AMORT                      AMORTIZATION
+      *
+     C                     Z-ADDBCAD      ##BCAD
+     C                     END
+     C*
+     C* PROCESS THE MOVEMENT (SET SUBFILE FIELDS/UPDATE POSITION DETAILS)
+     C*
+     C                     EXSR PROMOV
+     C*
+     C* FIRST 'LIVE' ACTION
+     C*
+     C           CRRN      IFEQ 1
+     C           *IN,74    ANDEQ'1'
+     C           RRN       ADD  1         CRRN
+     C           RRN       ADD  1         SRRN
+     C                     END
+     C*
+     C                     ADD  1         RRN            04*
+     C                     WRITEPM2055S1
+      *
+      * READ THE NEXT HISTORIC ACTION
+      *
+     C           KBPAC2    READEBPACH                    99*
+      *
+     C           *IN99     DOWEQ'0'
+     C           BCAS      ANDNE'05'                       * PART PAY
+     C           BCAS      ANDNE'30'                       * COUPON
+     C           BCAS      ANDNE'35'                       * DIVIDEND
+     C           BCAS      ANDNE'40'                       * TRADE
+     C           BCAS      ANDNE'60'                       * PRICE CHANGE
+     C           KBPAC2    READEBPACH                    99*
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO MOVEMENTS, OUTPUT BROUGHT FORWARD LINE
+     C*
+     C           *IN,4     IFEQ '1'
+     C                     EXSR FMTPOS
+     C                     ADD  1         RRN            04*
+     C                     WRITEPM2055S1
+     C                     END
+     C*
+     C* OUTPUT CARRIED FORWARD LINE
+     C*
+     C                     Z-ADD99999     ##BCAD
+     C                     EXSR FMTPOS
+     C                     ADD  1         RRN            04*
+     C                     WRITEPM2055S1
+     C*
+     C* RESET SUBFILE
+     C*
+     C           *IN,4     IFEQ '1'
+     C                     MOVEA'010'     *IN,1
+     C                     ELSE
+     C                     MOVEA'111'     *IN,1
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* FMTPOS - FORMAT POSITION DETAILS FOR OUTPUT
+     C********************************************************************
+     C           FMTPOS    BEGSR
+      *
+     C                     Z-ADD*ZERO     NPSN
+     C                     Z-ADD*ZERO     APNC
+     C                     Z-ADD*ZERO     FXAP
+      *
+      * GET LATEST POSITION
+      *
+     C                     Z-ADD##BCAD    BPPD
+     C           KBKPO1    SETGTBKPOS
+     C           KBKPO2    REDPEBKPOS                    99*
+      *
+      * IF CURRENT POSITION
+      * USE AVERAGE PRICE AND FX AP NUMERATOR ON BOOK POSITION HEADER
+      *
+     C           ##BCAD    IFEQ 99999
+     C                     Z-ADD*ZERO     LAVP
+     C           KBKPO2    CHAINBKPHD                99    *
+     C                     Z-ADDNPSN      ZNOML
+     C                     Z-ADDLAVP      ZPRC
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     APNC
+     C                     Z-ADDLFXP      FXAP
+      *
+     C                     EXSR AMORT                      AMORTIZATION
+      *
+     C                     END
+      *
+      * VALIDATE POSITION DETAILS
+      * - BLINK FIELDS IF THEY DIFFER FROM CALCULATED
+      *
+     C                     MOVEA'10000'   *IN,70
+     C           TNML      IFNE NPSN
+     C                     MOVE '1'       *IN71
+     C                     END
+     C*
+     C           TAPN      ADD  5000      TAPNP5 150
+     C           TAPN      SUB  5000      TAPNM5 150
+     C*
+     C           APNC      IFGT TAPNP5
+     C           APNC      ORLT TAPNM5
+     C                     MOVE '1'       *IN72
+     C                     END
+     C           TFAP      ADD  5000      TFAPP5 150
+     C           TFAP      SUB  5000      TFAPM5 150
+     C           FXAP      IFGT TFAPP5
+     C           FXAP      ORLT TFAPM5
+     C                     MOVE '1'       *IN73
+     C                     END
+     C*
+     C* DATE
+     C*
+     C           ##BCAD    IFEQ 99999
+     C                     MOVEL'C/F    ' DDACDT
+     C                     ELSE
+     C           ##BCAD    IFEQ ##FPDT
+     C                     MOVEL'B/F    ' DDACDT
+     C                     ELSE
+     C                     Z-ADD##BCAD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    DDACDT
+     C                     END
+     C                     END
+     C*
+     C* REFERENCE
+     C*
+     C                     MOVEL'----->'  DDBCTR
+     C*
+     C* NOMINAL
+     C*
+     C                     Z-ADDTNML      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDNML
+     C*
+     C* AVERAGE PRICE
+     C*
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE AVPR      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT18    DDPRC
+     C*
+     C* VALUE IN NOMINAL CURRENCY
+     C*
+     C                     Z-ADDTAPN      ZFLD15
+     C                     Z-ADDNCDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDAPN
+     C*
+     C* VALUE IN PORTFOLIO CURRENCY
+     C*
+     C                     Z-ADDTFAP      ZFLD15
+     C                     Z-ADDPCDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDFAP
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* PROMOV - PROCESS MOVEMENT DETAILS (FROM BPACHD)
+     C********************************************************************
+     C           PROMOV    BEGSR
+     C*
+     C                     MOVEA'00000'   *IN,70
+     C*
+     C* ACTION DATE
+     C*
+     C                     Z-ADDBCAD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    DDACDT
+     C*
+     C* GET THE PARTLY PAID PRICE FROM THE SECURITY DIARY
+     C* AT THE DATE OF THE MOVEMENT
+     C*
+     C                     Z-ADD1         WCPPPR  96
+     C           PPDI      IFEQ 'Y'
+     C                     Z-ADD0         CPPPR   63
+     C                     Z-ADDBCAD      EDAT
+     C                     EXSR GETPPP
+     C           CPPPR     DIV  100       WCPPPR
+     C                     END
+     C*
+     C* GET THE CURRENT FACTOR FROM THE SECURITY DIARY
+     C* AT THE DATE OF THE MOVEMENT
+     C*
+     C                     Z-ADD1         WCURFA  98
+     C           PROT      IFEQ '8'
+     C                     Z-ADDBCAD      EDAT
+     C                     EXSR GETCUF
+     C                     END
+     C*
+     C* SET NOMINAL
+     C*
+     C                     Z-ADDBCNL      NML    110
+     C*
+     C* SET PRICE
+     C*
+     C                     Z-ADDCNTP      PRC    158
+     C*
+     C* SET CONSIDERATION
+     C*
+     C                     Z-ADDBCCN      CNS    150
+     C*
+     C* COMM
+     C*
+     C           BVCMBP    IFEQ 'Y'
+     C                     ADD  BCCT      CNS
+     C                     END
+     C*
+     C* CHARG
+     C*
+     C           BVCBAP    IFEQ 'Y'
+     C                     ADD  BCCC      CNS
+     C                     END
+     C*
+     C* SET ALL CHARGES/COMMISSIONS TO OUTGOING
+     C*
+     C           BCPS      IFEQ 'P'
+     C                     Z-SUBBCCT      BCCT
+     C                     Z-SUBBCCC      BCCC
+     C                     END
+     C*
+     C* SET INTEREST
+     C*
+     C           PCHI      SUB  INAJ      INT    150
+     C*
+     C*  PART PAYMENT
+     C*
+     C           BCAS      IFEQ '05'
+     C                     MOVEL'PARTPY'  BCTR
+     C*
+     C* ADJUST CALL AMOUNT TO REFLECT CHANGE IN AVERAGE PRICE
+     C*
+     C           PROT      IFNE '4'
+     C           BCCP      DIV  100000    ZPRC
+     C                     ELSE
+     C           BCCP      DIV  100000000 ZPRC
+     C                     END
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       ZPRC
+     C                     END
+     C                     Z-ADDZPRC      PRC
+     C*
+     C* UPDATE AVERAGE PRICE
+     C*
+     C                     ADD  ZPRC      AVPR
+     C*
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADDAVPR      ZPRC
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     TAPN
+     C                     END
+     C*
+     C*  INTEREST
+     C*
+     C           BCAS      IFEQ '30'
+     C*
+     C                     Z-ADD*ZERO     TNEX
+     C                     Z-ADD*ZERO     TPIN
+     C*
+     C                     MOVEL'INTRST'  BCTR
+     C                     Z-ADDBCUN      PRC
+     C                     Z-ADDBCDV      CNS
+     C                     END
+     C*
+     C*  DIVIDEND
+     C*
+     C           BCAS      IFEQ '35'
+     C                     MOVEL'DIVIDN'  BCTR
+     C                     Z-ADDBCUN      PRC
+     C                     Z-ADDBCDV      CNS
+     C                     END
+     C*
+     C* MARK TO MARKET
+     C*
+     C           BCAS      IFEQ '60'
+     C                     MOVEL'MK-MKT'  BCTR
+     C*
+     C** PORTFOLIO CURRENCY RATE
+     C*
+     C           TAPN      IFNE *ZERO
+     C           TFAP      DIV  TAPN      ##FACT
+     C                     ELSE
+     C                     Z-ADD*ZERO     ##FACT
+     C                     END
+     C*
+     C* SET PRICE REPORTED
+     C*
+     C                     Z-ADDBCAT      PRC
+     C*
+     C* UPDATE AVERAGE PRICE
+     C*
+     C                     Z-ADDBCAT      AVPR
+     C*
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADDAVPR      ZPRC
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     TAPN
+     C           TAPN      MULT ##FACT    TFAP
+     C                     END
+     C*
+     C* EDIT MOVEMENT NOMINAL
+     C*
+     C           NML       IFNE *ZERO
+     C                     Z-ADD*ZERO     ZFLD15
+     C           BCPS      IFEQ 'S'
+     C                     Z-SUBNML       ZFLD15
+     C                     ELSE
+     C                     Z-ADDNML       ZFLD15
+     C                     END
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDNML
+     C                     ELSE
+     C                     MOVE *BLANK    DDNML
+     C                     END
+     C*
+     C* EDIT MOVEMENT PRICE
+     C*
+     C           PRC       IFNE *ZERO
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE PRC       ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT18    DDPRC
+     C                     ELSE
+     C                     MOVE *BLANK    DDPRC
+     C                     END
+     C*
+     C* EDIT MOVEMENT CONSIDERATION
+     C*
+     C           CNS       IFNE *ZERO
+     C                     Z-ADD*ZERO     ZFLD15
+     C           BCPS      IFEQ 'S'
+     C                     Z-SUBCNS       ZFLD15
+     C                     ELSE
+     C                     Z-ADDCNS       ZFLD15
+     C                     END
+     C                     Z-ADDNCDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDAPN
+     C                     ELSE
+     C                     MOVE *BLANK    DDAPN
+     C                     END
+     C*
+     C* EDIT MOVEMENT FX COST
+     C*
+     C           CFAP      IFNE *ZERO
+     C                     Z-ADD*ZERO     ZFLD15
+     C           BCPS      IFEQ 'S'
+     C                     Z-SUBCFAP      ZFLD15
+     C                     ELSE
+     C                     Z-ADDCFAP      ZFLD15
+     C                     END
+     C                     Z-ADDPCDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDFAP
+     C                     ELSE
+     C                     MOVE *BLANK    DDFAP
+     C                     END
+     C*
+     C* UPDATE POSITION DETAILS
+     C*
+     C           BCAS      IFEQ '40'
+     C                     EXSR UPDPOS
+     C*
+     C* CHECK IF TRADE AVAILABLE FOR ENQUIRY
+     C*
+     C           BCTR      CHAINTRADHS               99    *
+     C  N99                MOVE '1'       *IN,74
+     C                     END
+     C*
+     C* CALCULATE AVERAGE PRICE (TAPN/TNML)
+     C*
+     C           TNML      IFNE *ZERO
+     C                     EXSR CALAVP
+     C                     ELSE
+     C                     Z-ADD*ZERO     AVPR
+     C                     END
+     C*
+     C* REFERENCE
+     C*
+     C                     MOVELBCTR      DDBCTR
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* AMORT - DO AMORTIZATION
+     C********************************************************************
+     C           AMORT     BEGSR
+     C*
+     C* ONLY AMORTIZE IF REQUIRED AND IF VALUE DATE POSITION
+     C*
+     C           BDSTAM    IFNE 'Y'
+     C           BPTV      ORNE 'V'
+     C                     GOTO EAMORT
+     C                     END
+     C*
+     C* ONLY AMORTIZE INTEREST-BEARING SECURITIES
+     C*
+     C           PROT      IFEQ '2'
+     C           PROT      OREQ '4'
+     C           PROT      OREQ '7'
+     C           MATY      OREQ 99999
+     C                     GOTO EAMORT
+     C                     END
+     C*
+     C** PORTFOLIO CURRENCY RATE
+     C*
+     C           TAPN      IFNE *ZERO
+     C           TFAP      DIV  TAPN      ##FACT
+     C                     ELSE
+     C                     Z-ADD*ZERO     ##FACT 238
+     C                     END
+     C*
+     C** DATE LAST AMORTIZED FROM
+     C*
+     C           ##BCAD    IFEQ 99999
+     C                     Z-ADD##AMTT    ##AMTF  50
+     C                     ELSE
+     C                     Z-ADD##BCAD    ##AMTF
+     C                     END
+     C*
+     C** DATE TO AMORTIZE TO
+     C*
+     C           ##BCAD    IFEQ 99999
+     C                     Z-ADDLATD      ##AMTT  50
+     C                     ELSE
+     C                     Z-ADDBCAD      ##AMTT
+     C                     END
+     C*
+     C* GET THE PARTLY PAID PRICE FROM THE SECURITY DIARY
+     C* AT THE AMORTIZATION FROM DATE
+     C*
+     C                     Z-ADD1         WCPPPR
+     C           PPDI      IFEQ 'Y'
+     C                     Z-ADD0         CPPPR
+     C                     Z-ADD##AMTF    EDAT
+     C                     EXSR GETPPP
+     C           CPPPR     DIV  100       WCPPPR
+     C                     END
+     C*
+     C* GET THE CURRENT FACTOR FROM THE SECURITY DIARY
+     C* AT THE AMORTIZATION FROM DATE
+     C*
+     C                     Z-ADD1         WCURFA
+     C           PROT      IFEQ '8'
+     C                     Z-ADD##AMTF    EDAT
+     C                     EXSR GETCUF
+     C                     END
+     C*
+     C* UNAMORTIZED DISCOUNT/PREMIUM
+     C*
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADD100       ZPRC
+     C                     MULT WCPPPR    ZNOML     H
+     C                     EXSR ZCNSD
+     C           ZCONS     SUB  TAPN      ##BUDU 150
+     C*
+     C* AMORTIZE DISCOUNT/PREMIUM
+     C*
+     C           ##BUDU    IFNE 0
+     C           ##AMTF    ANDLT##AMTT
+     C*
+     C*   - CALCULATE DAYS TO MATURITY
+     C*
+     C                     Z-ADD##AMTF    ZSDATE
+     C                     Z-ADDMATY      ZEDATE
+     C                     Z-ADD0         NCD     50                      102506
+     C                     EXSR ZDAYS
+     C                     Z-ADDZDDAYS    ##DAYM  50
+     C*
+     C*   - CALCULATE DAYS TO AMORTISE
+     C*
+     C                     Z-ADD##AMTF    ZSDATE
+     C                     Z-ADD##AMTT    ZEDATE
+     C                     EXSR ZDAYS
+     C                     Z-ADDZDDAYS    ##DAYA  50
+     C*
+     C*   - CALCULATE EARNED DISC/PREM SINCE LATEST POSN DATE
+     C*
+     C           ##DAYM    IFEQ 0
+     C           ##DAYM    ORLT ##DAYA
+     C                     Z-ADD##BUDU    ##ADP
+     C                     ELSE
+     C                     Z-ADD##DAYM    ZPNPSN
+     C                     Z-ADD##DAYA    ZNPSN
+     C                     Z-ADD##BUDU    ZAPIN
+     C                     EXSR ZAPORT
+     C                     Z-ADDZAPOUT    ##ADP  130
+     C                     END
+     C*
+     C*  - Update book cost
+     C*
+     C                     ADD  ##ADP     TAPN
+     C*
+     C*  - Update portfolio currency equivalent
+     C*
+     C           TAPN      MULT ##FACT    TFAP
+     C*
+     C* CALCULATE AVERAGE PRICE (TAPN/TNML)
+     C*
+     C           TNML      IFNE *ZERO
+     C                     EXSR CALAVP
+     C                     ELSE
+     C                     Z-ADD*ZERO     AVPR
+     C                     END
+     C*
+     C                     END
+     C*
+     C           EAMORT    ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* CALAVP - CALCULATE AVERAGE PRICE
+     C********************************************************************
+     C           CALAVP    BEGSR
+     C*
+     C* CALCULATE AVERAGE PRICE (TAPN/TNML)
+     C*
+     C           5         ADD  NCDP      DC      10
+     C                     SUB  NMDP      DC
+     C           DC        IFLT 5
+     C           TAPN      DIV  POWER8,DC ZZAPNC 150H
+     C                     ELSE
+     C                     Z-ADDTAPN      ZZAPNC
+     C                     END
+     C                     DIV  WCURFA    ZZAPNC    H
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       ZZAPNC
+     C                     END
+     C           ZZAPNC    DIV  TNML      AVPR      H
+     C           DC        IFGE 5
+     C                     DIV  POWER8,DC AVPR   158H
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* UPDPOS - UPDATE POSITION DETAILS
+     C********************************************************************
+     C           UPDPOS    BEGSR
+     C*
+     C**   STORE PREVIOUS NOMINAL, AP NUMERATOR, AND PURCHASED INTEREST
+     C*
+     C                     Z-ADDTNML      PTNML  110
+     C                     Z-ADDTAPN      PTAPN  150
+     C                     Z-ADDTFAP      PTFAP  150
+     C                     Z-ADDTPIN      PTPIN  150
+     C*
+     C**   Set up AP Numerator
+     C*
+     C                     Z-ADDCNS       WWCAPN 150
+     C*
+     C**   Set up FX AP Numerator
+     C*
+     C                     Z-ADDCFAP      WWCFAP 150
+     C*
+     C**   Set up Purchased interest
+     C*
+     C                     Z-ADDINT       WWCPIN 150
+     C*
+     C**   Save original value of nominal
+     C*
+     C                     Z-ADDTNML      WWNOML 110
+     C*
+     C**   Calculate absolute value of nominal
+     C*
+     C           TNML      IFLT *ZEROS
+     C                     Z-SUBTNML      WWNOMA 110
+     C                     ELSE
+     C                     Z-ADDTNML      WWNOMA
+     C                     END
+     C*-------------------------------------------------------------------------
+     C**   1. Update fields for MOVEMENT IN
+     C*-------------------------------------------------------------------------
+     C           BCPS      IFEQ 'P'
+     C*
+     C**   Update nominal
+     C                     ADD  NML       TNML
+     C*
+     C**   Update the ex-coupon nominal and purchased interest
+     C           ACRI      IFEQ 'X'
+     C                     ADD  NML       TNEX
+     C                     END
+     C*
+     C**   Update the AP numerator
+     C*
+     C           WWNOML    IFEQ *ZEROS
+     C                     Z-ADDWWCAPN    TAPN
+     C                     Z-ADDWWCFAP    TFAP
+     C                     Z-ADDWWCPIN    TPIN
+     C                     END
+     C*
+     C           WWNOML    IFGT *ZEROS
+     C                     ADD  WWCAPN    TAPN
+     C                     ADD  WWCFAP    TFAP
+     C                     ADD  WWCPIN    TPIN
+     C                     END
+     C*
+     C           WWNOML    IFLT *ZEROS
+     C*
+     C           WWNOMA    IFGT NML
+     C           TNML      DIV  WWNOML    WWRSLT 158H
+     C           WWRSLT    MULT TAPN      TAPN      H
+     C           WWRSLT    MULT TFAP      TFAP      H
+     C           WWRSLT    MULT TPIN      TPIN      H
+     C                     END
+     C*
+     C           WWNOMA    IFLT NML
+     C*
+     C**   Calculate AP (Average Price) Numerator
+     C*
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADDPRC       ZPRC
+     C                     EXSR ZCNSD
+     C*
+     C                     MULT WCURFA    ZCONS     H
+     C*
+     C                     Z-ADDZCONS     TAPN
+     C*
+     C**   Calculate FX AP Numerator and Purchased Interest
+     C*
+     C           WWNOMA    DIV  NML       WWRSLT    H
+     C           1         SUB  WWRSLT    WWRSLT
+     C           WWRSLT    MULT WWCFAP    TFAP      H
+     C           WWRSLT    MULT WWCPIN    TPIN      H
+     C*
+     C                     END
+     C*
+     C           WWNOMA    IFEQ NML
+     C                     Z-ADD*ZEROS    TAPN
+     C                     Z-ADD*ZEROS    TFAP
+     C                     Z-ADD*ZEROS    TPIN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*-------------------------------------------------------------------------
+     C**   2. Update fields for MOVEMENTS OUT
+     C*-------------------------------------------------------------------------
+     C           BCPS      IFEQ 'S'
+     C*
+     C**   Update nominal
+     C*
+     C                     SUB  NML       TNML
+     C*
+     C**   Update the ex-coupon nominal
+     C*
+     C           ACRI      IFEQ 'X'
+     C                     SUB  NML       TNEX
+     C                     END
+     C*
+     C**   Update the AP numerator
+     C*
+     C           WWNOML    IFEQ *ZEROS
+     C                     Z-SUBWWCAPN    TAPN
+     C                     Z-SUBWWCFAP    TFAP
+     C                     Z-SUBWWCPIN    TPIN
+     C                     END
+     C*
+     C           WWNOML    IFLT *ZEROS
+     C                     SUB  WWCAPN    TAPN
+     C                     SUB  WWCFAP    TFAP
+     C                     SUB  WWCPIN    TPIN
+     C                     END
+     C*
+     C           WWNOML    IFGT *ZEROS
+     C*
+     C           WWNOML    IFGT NML
+     C           TNML      DIV  WWNOML    WWRSLT 158H
+     C           WWRSLT    MULT TAPN      TAPN      H
+     C           WWRSLT    MULT TFAP      TFAP      H
+     C           WWRSLT    MULT TPIN      TPIN      H
+     C                     END
+     C*
+     C           WWNOML    IFLT NML
+     C*
+     C**   Calculate AP (Average Price) Numerator
+     C*
+     C                     Z-ADDTNML      ZNOML
+     C                     Z-ADDPRC       ZPRC
+     C                     EXSR ZCNSD
+     C*
+     C                     MULT WCURFA    ZCONS     H
+     C*
+     C                     Z-ADDZCONS     TAPN
+     C*
+     C**   Calculate FX AP Numerator and Purchased Interest
+     C*
+     C           WWNOML    DIV  NML       WWRSLT    H
+     C           WWRSLT    SUB  1         WWRSLT
+     C           WWRSLT    MULT WWCFAP    TFAP      H
+     C           WWRSLT    MULT WWCPIN    TPIN      H
+     C*
+     C                     END
+     C*
+     C           WWNOML    IFEQ NML
+     C                     Z-ADD*ZEROS    TAPN
+     C                     Z-ADD*ZEROS    TFAP
+     C                     Z-ADD*ZEROS    TPIN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* GETPPP - GET PARTY PAID PRICE
+     C********************************************************************
+     C           GETPPP    BEGSR
+     C           SEDDOK    KLIST
+     C                     KFLD           BPSC
+     C                     KFLD           ETYP    2
+     C                     KFLD           EDAT    50
+     C                     MOVE 'PP'      ETYP
+     C           SEDDOK    SETLLSEDEVDO
+     C                     READ SEDEVDO                  99
+     C*
+     C* GET THE TOTAL PARTLY PAID PRICE AT THE ACTION DATE FROM THE
+     C* SECURITY DIARY. IF NO DETAILS ARE PRESENT, USE THE CURRENT PARTLY
+     C* PAID PRICE FROM THE SECURITY.
+     C*
+     C           *IN99     IFEQ '0'
+     C           SDSN      ANDEQBPSC
+     C           SDET      ANDEQ'PP'
+     C           SDTP      IFEQ *ZERO
+     C                     MOVE SDTA      CPPPR
+     C                     ELSE
+     C                     MOVE SDTP      CPPPR
+     C                     END
+     C                     ELSE
+     C                     MOVE CPDP      CPPPR
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* GETCUF - GET CURRENT FACTOR
+     C********************************************************************
+     C           GETCUF    BEGSR
+     C                     MOVE 'MP'      ETYP
+     C           SEDDOK    SETLLSEDEVDO
+     C                     READ SEDEVDO                  99
+     C           *IN99     IFEQ '0'
+     C           SDSN      ANDEQBPSC
+     C           SDET      ANDEQ'MP'
+     C                     Z-ADDSDCP      WCURFA
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* ACSSEC - ACCESS SECURITY DETAILS
+     C********************************************************************
+     C           ACSSEC    BEGSR
+     C*
+     C** ACCESS SECURITY DETAILS
+     C*
+     C           BPSC      CHAINSECTYDF              99    *
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD01        QMERRN           ***************
+     C                     MOVE 'SECTY   'QMFILE           * DB ERROR 01 *
+     C                     MOVELBPSC      QMKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** ACCESS NOMINAL CURRENCY DETAILS
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY  '  P@OPTN  7
+     C                     PARM NMCY      P@CYCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD02        QMERRN           ***************
+     C                     MOVE 'SDCURRPD'QMFILE           * DB ERROR 02 *
+     C                     MOVELNMCY      QMKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADDA6NBDP    NCDP    10
+     C                     Z-ADDA6NBDP    ZCDP    10
+     C*
+     C** ACCESS INVESTMENT TYPE DETAILS
+     C*
+     C           INVTPK    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C           INVTPK    CHAININVTPDF              99    *
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD03        QMERRN           ***************
+     C                     MOVE 'INVTP   'QMFILE           * DB ERROR 03 *
+     C                     MOVELSITP      QMKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVELSESN      DDSESN           SECURITY SHORTNAME
+     C                     MOVELSFN1      DDSFN1           SECURITY FULL NAME -1
+     C                     MOVELNMCY      DDNMCY           NOMINAL CURRENCY
+     C*
+     C                     MOVE MKTI      BPMK             MARKET
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* INIT   - INITIAL PROCESSING
+     C********************************************************************
+     C           INIT      BEGSR
+     C*
+     C*   ENTRY LIST
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           BPSC
+     C                     PARM           BPBA
+     C                     PARM           BPBK
+     C                     PARM           BPMK
+     C                     PARM           ##TVDA  1
+     C*
+     C*    TRADE/VALUE DATE POSITIONS
+     C*
+     C                     MOVEL##TVDA    BPTV
+     C           BPTV      IFEQ 'T'
+     C                     MOVEL##H,1     DDHED1
+     C                     MOVEL##H,2     DDHED2
+     C                     ELSE
+     C                     MOVEL##H,3     DDHED1
+     C                     MOVEL##H,4     DDHED2
+     C                     END
+     C*
+     C*    RECEIVE PARAMETERS FROM DATA AREA *LDA
+     C*
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+     C*
+     C*    SCREEN FIELDS
+     C*
+     C                     MOVELQMRUNA    DDRUNA
+     C                     MOVELQMCNUM    DDCNUM
+     C                     MOVELQMCRNM    DDCRNM
+     C                     MOVELQMPTF2    DDPTFR
+     C                     MOVELQMPTFN    DDPTFN
+     C*
+     C*   PORTFOLIO CURRENCY DECIMAL PLACES
+     C*
+     C                     Z-ADDQMPCDP    PCDP    10
+     C*
+     C*   ACCESS SECURITIES TRADING DETAILS
+     C*
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C                     Z-ADD04        QMERRN           ***************
+     C                     MOVE 'SDSTRDPD'QMFILE           * DB ERROR 04 *
+     C                     MOVEL@OPTN     QMKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Start Date of review
+      *
+     C           31        MULT BVROST    WK5N    50
+     C           QMRDNB    SUB  WK5N      ##SDAT  50
+      *
+     C                     MOVE '1'       *IN98
+     C*
+     C*   ACCESS BOOK DETAILS
+     C*
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BPBK      @BOOK   2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     Z-ADD05        QMERRN           ***************
+     C                     MOVE 'SDBOOKPD'QMFILE           * DB ERROR 05 *
+     C                     MOVELBPBK      QMKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Book Position Full Key.
+      *
+     C           KBKPO1    KLIST
+     C                     KFLD           BPSC
+     C                     KFLD           BPBA
+     C                     KFLD           BPBK
+     C                     KFLD           BPMK
+     C                     KFLD           BPTV
+     C                     KFLD           BPPD
+      *
+      ***  Book Position Partial Key.
+      *
+     C           KBKPO2    KLIST
+     C                     KFLD           BPSC
+     C                     KFLD           BPBA
+     C                     KFLD           BPBK
+     C                     KFLD           BPMK
+     C                     KFLD           BPTV
+      *
+      ***  Book Position Action Full Key.
+      *
+     C           KBPAC1    KLIST
+     C                     KFLD           BPSC
+     C                     KFLD           BPBA
+     C                     KFLD           BPMK
+     C                     KFLD           BPBK
+     C                     KFLD           BPTV
+     C                     KFLD           BPPD
+      *
+      ***  Book Position Action Partial Key.
+      *
+     C           KBPAC2    KLIST
+     C                     KFLD           BPSC
+     C                     KFLD           BPBA
+     C                     KFLD           BPMK
+     C                     KFLD           BPBK
+     C                     KFLD           BPTV
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C********************************************************************
+     C* *PSSR  - ERROR PROCESSING
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVEL'PM2055  'QMPGM
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'Y'       QMENQT
+     C*
+     C                     CALL 'PMC1001'                  * UPDATE
+     C                     PARM           WWLDA            * *LDA
+     C*
+     C                     DUMP
+     C*
+     C                     CALL 'DBERRCTL'
+     C                     RETRN
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+     C/COPY ZSRSRC,ZAPORTZ1
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/SPACE 5
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/SPACE 5
+     C/COPY ZSRSRC,ZCNSDZ1
+     C/SPACE 5
+     C** ##H                                                              CPM005
+     C*F3=Exit F9=Value Date F12=Previous F22=Enquiry Selection Rollup/RolCPM005
+     C*F3=Exit F9=Trade Date F12=Previous F22=Enquiry Selection Rollup/RolCPM005
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+** ##H
+Portfolio Movements - Trade Date
+F3=Exit F9=Value Date F12=Previous Rollup/Rolldown
+Portfolio Movements - Value Date
+F3=Exit F9=Trade Date F12=Previous Rollup/Rolldown
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

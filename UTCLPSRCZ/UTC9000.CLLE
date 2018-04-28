@@ -1,0 +1,90 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas UT Timestamp generator')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC9000 - Timestamp generator                               */
+/*                                                                   */
+/*                 This program generates a timestamp value and      */
+/*                 returns it to the calling function.               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Last Amend No. CPK009             Date 27Jul99              */
+/*       Prev Amend No. CAP002             Date 10OCT97              */
+/*                      CAA006             Date 07AUG96              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CPK009 - DBA R3 packaging:                                  */
+/*              - Change initialisation of UTSTAMPPD because of      */
+/*                changes to STDCRTPARM                              */
+/*       CAP002 - Conversion of Midas inputs to modular API structure*/
+/*       CAA006 - Created for the hooks automation process, but may  */
+/*                be used whenever a timestamp field is required.    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RETURNCODE &TIMESTAMP)
+ 
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+ 
+             DCLF       FILE(UTSTAMPPD)
+ 
+/*/COPY WNCPYSRC,UTC9000INT                                          */
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,UTC9000MPS                                          */
+ 
+/** +
+    The file UTSTAMPPD is only used to generate time stamps; first +
+    step is to clear it.  It is then initialised; this will add a  +
+    record to it.  As the record only contains a timestamp field,  +
+    the timestamp will be generated and placed in that field.      +
+**/
+             CLRPFM     FILE(UTSTAMPPD)
+ 
+/************INZPFM     FILE(UTSTAMPPD)                            */ /*CPK009*/
+             INZPFM     FILE(UTSTAMPPD) TOTRCDS(1)                    /*CPK009*/
+ 
+/** +
+    Reading the record is all that is necessary, as the returned  +
+    parameter has the same name as the database field.            +
+**/
+             RCVF
+ 
+/*/COPY WNCPYSRC,UTC9000MPE                                          */
+ 
+             RETURN
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,UTC9000ERR                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             CHGVAR     VAR(&RETURNCODE) VALUE('ERROR')
+ 
+ END:
+ 
+/*/COPY WNCPYSRC,UTC9000END                                          */
+ 
+             ENDPGM

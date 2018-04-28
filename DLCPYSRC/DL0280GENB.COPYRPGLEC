@@ -1,0 +1,90 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280GENB                           *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG6293            Date 04Oct04               *
+      *  Prev Amend No. BUG3012            Date 01Jun04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BUG6293- Move subroutine to a /COPY to free up space in      *
+      *           DL0280 for other changes.                           *
+      *  BUG3012- Account keys are not being output for multiple      *
+      *           settlement accounts.                                *
+      *                                                               *
+      *****************************************************************
+     C*                                                                   117028
+     C*  SR/GENBRT - GENERATE BRT TAX ENTRIES                             117028
+     C*              BRT TAX ENTRIES ARE ADDITIONALLY GENERATED FOR       117028
+     C*              TAXABLE DEALS                                        117028
+     C*                                                                   117028
+     C*  CALLS :     SR/CNVERT                                            117028
+     C*                                                                   117028
+     C********************************************************************117028
+     C*                                                                   117028
+     C     GENBRT        BEGSR                                                                 11702
+     C*                                                                   117028
+     C** CONVERT CURRENCY BRT AMOUNT TO STERLING                          117028
+     C** FROM VALUES                                                      117028
+     C*                                                                   117028
+     C                   Z-ADD     1             I                 3 0                         11702
+     C     PCCY          LOOKUP    CY(I)                                  14                   11702
+     C*                                                                   117028
+     C     *IN14         IFEQ      '0'                                                         11702
+     C                   SETON                                        80LRU8                   11702
+     C                   MOVE      PCCY          XCCY              3                           11702
+     C                   GOTO      GENBR9                                                      11702
+     C*                                                                   117028
+     C                   ELSE                                                                  11702
+     C*                                                                   117028
+     C                   MOVE      CYD(I)        CYDDS                                         11702
+     C                   Z-ADD     CYBRAM        XAMNT1                                        11702
+     C                   Z-ADD     SPOT          XSPOT1                                        11702
+     C                   Z-ADD     MDIN          XMDIN1                                        11702
+     C                   Z-ADD     CDP           XCDP1                                         11702
+     C*                                                                   117028
+     C** TO VALUES                                                        117028
+     C*                                                                   117028
+     C                   Z-ADD     0             XAMNT2                                        11702
+     C                   Z-ADD     SSPOT         XSPOT2                                        11702
+     C                   Z-ADD     SMDIN         XMDIN2                                        11702
+     C                   Z-ADD     SCDP          XCDP2                                         11702
+     C*                                                                   117028
+     C                   EXSR      CNVERT                                                      11702
+     C*                                                                   117028
+     C                   MOVE      'S'           AKY(9)                                        11702
+     C                   MOVE      'T'           AKY(10)                                       11702
+     C                   Z-ADD     XAMNT2        KYAMT                                         11702
+     C                   Z-ADD     XAMNT2        WKBRSG           13 0                         11702
+     C                   MOVE      BLCYCD        KYCCY                                         11702
+     C                   EXSR      EXCP                                                        11702
+     C*                                                                   117028
+     C** CONVERT CURRENCY BRT AMOUNT TO BASE CCY EQUIVALENT               117028
+     C** TO VALUES                                                        117028
+     C*                                                                   117028
+     C                   Z-ADD     0             XAMNT2                                        11702
+     C                   Z-ADD     BSPOT         XSPOT2                                        11702
+     C                   Z-ADD     BMDIN         XMDIN2                                        11702
+     C                   Z-ADD     BCDP          XCDP2                                         11702
+     C*                                                                   117028
+     C                   EXSR      CNVERT                                                      11702
+     C*                                                                   117028
+     C                   MOVEA     PCCY          AKY(6)                                        11702
+     C                   MOVE      ' '           AKY(9)                                        11702
+     C                   MOVE      'T'           AKY(10)                                       11702
+     C                   Z-ADD     XAMNT2        KYAMT                                         11702
+     C                   Z-ADD     XAMNT2        WKBRBC           13 0                         11702
+     C                   MOVE      BJCYCD        KYCCY                                         11702
+     C                   EXSR      EXCP                                                        11702
+     C*                                                                   117028
+     C** RESTORE FIELDS                                                   117028
+     C*                                                                   117028
+     C                   MOVE      PCCY          KYCCY                                         11702
+     C                   MOVEA     '   '         AKY(6)                                        11702
+     C                   END                                                                   11702
+     C*                                                                   117028
+     C     GENBR9        ENDSR                                                                 11702

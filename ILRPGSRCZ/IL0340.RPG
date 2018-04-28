@@ -1,0 +1,653 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Routing Keys Lists')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0340 - IBLC 2002 ROUTING KEYS LISTS                    *
+      *                                                               *
+      *  Function: This program list IBLC Routing keys for one module *
+      *            or all modules depending option selected.          *
+      *            Two report can be product :                        *
+      *            - Full list = All routing keys                     *
+      *            - Audit list = Routing keys amended, inserted      *
+      *                           during the day                      *
+      *                                                               *
+      *  Phase(s): Input cycle                                        *
+      *            Close of business                                  *
+      *                                                               *
+      *  Called By: CLP/ILC0340 - IBLC ROUTING KEYS LISTS             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. ULX043             Date 28Jun01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FILRKXXPDIF  F      70 22AI     1 DISK         KINFSR *PSSR      UC
+      ***  IBLC Routing keys all modules                         Prefix RK
+      *
+     FIL0340AUO   E                    PRINTER      KINFDS SPOOLU
+     FIL0340P1O   E             70     PRINTER      KINFDS SPOOL1
+      *
+      /EJECT
+      *****************************************************************
+      ***  Compile Time Arrays
+      *****************************************************************
+      *
+     E                    CRI     1   7  2   CNA    35
+      ***  Arrays for Criterias & associated narratives.
+      *
+     E                    OVR    10  10  5
+      ***  Arrays for OVERRIDE Of ILRKxxPD file
+      *
+     E                    DLTOVR  1   1 21
+      ***  Arrays for DELETE OVERRIDE of ILRKxxPD file
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *****************************************************************
+      ***  Data Read specification
+     IILRKXXPDNS  01
+      ***  Routing keys file Data Structure (ALL RKs)
+     I                                        1   2 RKMODI
+     I                                        1  22 RKRKEY
+     I                                        3   4 WWDTYP
+     I                                       23  25 RKDOC1
+     I                                       26  28 RKDOC2
+     I                                       29  31 RKDOC3
+     I                                       32  34 RKCOC1
+     I                                       35  37 RKCOC2
+     I                                       38  40 RKCOC3
+     I                                       41  42 RKDLUP
+     I                                       43  45 RKMLUP
+     I                                       46  47 RKYLUP
+     I                                    P  48  500RKLCD
+     I                                       51  560RKTLUP
+     I                                       57  66 RKULUP
+     I                                       67  67 RKCHTP
+     I                                    P  68  700RKTNLU
+      *
+      ***  Working Data Structure
+      *
+     IPSDS       SDS
+      ***  Program status data structure for WS/user ID'S
+     I                                     *PROGRAM PGM
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+      ***  Data Structure to received details through Access Object programs
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Standing Data - Bank Details
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short DS
+      *
+      ***  Data Structure for RCF
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure - AU report
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISPOOL1      DS
+      **  File Information Data Structure - P1 report
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNUM1
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      ***  Define input parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMOD    2
+     C                     PARM           PTYPE   1
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+      *
+      ***  Process list
+      *
+     C           PTYPE     IFEQ 'F'                        Full list
+     C           PTYPE     OREQ 'A'                        Audit list
+      *
+      ***  Do only the module selectionned
+      *
+     C           PMOD      IFNE '**'                       not ALL Modules
+      *
+      ***  Prepare override to print only choosen module
+      ***  Special case for Negotiables Assets (RK file is ILRKDLPD)
+      *
+     C           PMOD      IFEQ 'DN'
+     C                     MOVE 'DL'      OVR,7
+     C                     ELSE
+     C                     MOVE PMOD      OVR,7
+     C                     ENDIF
+      *
+      ***  Override ILRKXXPD with ILRK(PMOD)PD (User Control)
+      *
+     C                     CALL 'QCMDEXC'              16
+     C                     PARM           OVR
+     C                     PARM 50        WLEN   155
+      *
+      ***  Open file ILRKXXPD
+      *
+     C                     OPEN ILRKXXPD               82
+      *
+      ***  Handle database error
+      *
+     C           *IN82     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 001 *
+     C                     MOVEL'ILRKXXPD'DBFILE           ****************
+     C                     MOVEL'OPEN'    DBKEY     P
+     C           DBKEY     CAT  'ILRK':1  DBKEY     P
+     C           DBKEY     CAT  PMOD:1    DBKEY     P
+     C           DBKEY     CAT  'PD':1    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  List module routing keys
+      *
+     C                     EXSR #LIST
+      *
+      ***  Close overriden file
+      *
+     C                     CLOSEILRKXXPD               82
+      *
+      ***  Handle database error
+      *
+     C           *IN82     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 002 *
+     C                     MOVEL'ILRKXXPD'DBFILE           ****************
+     C                     MOVEL'CLOSE'   DBKEY     P
+     C           DBKEY     CAT  'ILRK':1  DBKEY     P
+     C           DBKEY     CAT  PMOD:1    DBKEY     P
+     C           DBKEY     CAT  'PD':1    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Delete override
+      *
+     C                     CALL 'QCMDEXC'              16
+     C                     PARM           DLTOVR
+     C                     PARM 21        WLEN   155
+      *
+     C                     ELSE
+      *
+      ***  Do all modules list : Loop with the 7 modules ID in CRI array --.
+      ***                        Override each file ILRKxxPD               :
+      ***                        OPEN file + DB error if necessary         :
+      ***                        Execute subroutine #LIST                  :
+      ***                        CLOSE file + DB error if necessary        :
+      ***                        Delete Override                           :
+      ***                        end of LOOP                             --'
+      *
+     C                     Z-ADD1         #A      20
+     C           #A        DOWLE6
+      *
+      ***  Negotiable Assets already done with Deals file ILRKDLPD  (#LIST)
+      *
+     C           CRI,#A    IFEQ 'DN'
+     C                     ADD  1         #A
+     C                     ENDIF
+      *
+     C                     MOVE CRI,#A    OVR,7
+      *
+     C                     CALL 'QCMDEXC'              16
+     C                     PARM           OVR
+     C                     PARM 50        WLEN   155
+      *
+      ***  Open file ILRKXXPD
+      *
+     C                     OPEN ILRKXXPD               82
+      *
+      ***  Handle database error
+      *
+     C           *IN82     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 003 *
+     C                     MOVEL'ILRKXXPD'DBFILE           ****************
+     C                     MOVEL'OPEN'    DBKEY     P
+     C           DBKEY     CAT  'ILRK':1  DBKEY     P
+     C           DBKEY     CAT  CRI,#A:1  DBKEY     P
+     C           DBKEY     CAT  'PD':1    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  List module routing keys
+      *
+     C                     EXSR #LIST
+      *
+      ***  Close overriden file
+      *
+     C                     CLOSEILRKXXPD               82
+      *
+      ***  Handle Databse error
+      *
+     C           *IN82     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 004 *
+     C                     MOVEL'ILRKXXPD'DBFILE           ****************
+     C                     MOVEL'CLOSE'   DBKEY     P
+     C           DBKEY     CAT  'ILRK':1  DBKEY     P
+     C           DBKEY     CAT  CRI,#A:1  DBKEY     P
+     C           DBKEY     CAT  'PD':1    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Delete override
+      *
+     C                     CALL 'QCMDEXC'              16
+     C                     PARM           DLTOVR
+     C                     PARM 21        WLEN   155
+      *
+      ***  Next module
+      *
+     C                     ADD  1         #A
+      *
+     C                     ENDDO
+     C                     ENDIF                           PMOD
+      *
+      ***  Print list trailer
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ELSE
+      *
+      *** If type of report not equal to 'F' or 'A' process database error
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 005 *
+     C                     MOVEL'PTYPE '  DBFILE           ****************
+     C                     MOVELPTYPE     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Process audit
+      *
+     C                     EXSR #AUDIT
+      *
+      ***  Program end
+      *
+     C           *IN50     IFEQ *ON
+     C                     WRITEHEADAU
+     C                     WRITENODTAU
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *  #LIST  - Subroutine to print list.                           *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     : #TYPE, #MFLD                                     *
+      *****************************************************************
+      *
+     C           #LIST     BEGSR
+      *
+      ***  Print list header
+      *
+     C           PTYPE     IFEQ 'F'                        Full list
+     C                     MOVEL*ON       *IN41
+     C                     MOVEL*OFF      *IN42
+     C                     ELSE                            Audit List
+     C                     MOVEL*OFF      *IN41
+     C                     MOVEL*ON       *IN42
+     C                     ENDIF
+      *
+     C                     WRITEHEADP1
+      *
+      ***  Access to file
+      *
+     C                     MOVEL*LOVAL    RKRKEY
+      *
+      ***  as ILRKDLPD as 2 "Modules" id, fo DN, position cursor
+      *
+     C           PMOD      IFEQ 'DN'                       base of Choosen
+     C                     MOVELPMOD      RKRKEY              details
+     C                     ENDIF
+      *
+     C           RKRKEY    SETLLILRKXXPD
+     C                     READ ILRKXXPD                 81
+      *
+      ***  If no records, seton 'No details to report' Ind
+      *
+     C           *IN81     IFEQ *ON
+     C                     MOVE *ON       *IN50
+     C                     ENDIF
+      *
+      ***  So long as EOF not reached
+      *
+     C           *IN81     DOWEQ*OFF
+      *
+      ***  Execute page overflow
+      *
+     C           *IN70     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVEL*OFF      *IN70
+     C                     ENDIF
+      *
+      ***  Considere record depending type of list
+      *
+     C           PTYPE     IFEQ 'A'                        Audit and
+     C           BJRDNB    ANDEQRKLCD                       changed today
+     C           PTYPE     OREQ 'F'                        Full
+      *
+      ***  Add 1 to number of record read
+      *
+     C                     ADD  1         WWNORE  50
+      *
+      ***  Determine change type and compute records
+      *
+     C                     EXSR #TYPE
+      *
+      ***  Transfer file and work fields to printer fields
+      *
+     C                     EXSR #MFLD
+      *
+      ***  Print detail lines
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDIF
+      *
+      ***  Access to file again
+      *
+     C                     READ ILRKXXPD                 81
+      *
+      ***  Test for file ILRKDLPD : contain DL and DN records
+      ***  so stop when no more 'DL' records
+      *
+     C           PMOD      IFEQ 'DL'
+     C           RKMODI    IFEQ 'DN'
+     C                     MOVE *ON       *IN81            EOF
+     C                     ENDIF                           RKMODI
+     C                     ELSE
+      *
+      ***  For ALL Module criteria
+      *
+     C           PMOD      IFEQ '**'
+      *
+      ***  If Listing of ILRKDLPD and FIRST 'DN' Record, Force new page (*IN70)
+      ***  *IB40 = 'DN' not yet encountered, When *ON, Encountered.
+      *
+     C           RKMODI    IFEQ 'DN'
+     C           *IN40     ANDEQ*OFF
+     C                     SETON                     4070
+     C                     ENDIF                           RKMODI
+     C                     ENDIF                           PMOD = '**'
+     C                     ENDIF                           PMOD = 'DL'
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #TYPE  - Subroutine to determine change type and compute     *
+      *  -----    record.                                             *
+      *  Called by : #LIST                                            *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #TYPE     BEGSR
+     C                     SELEC
+     C           RKCHTP    WHEQ 'I'
+      *
+      ***  If the last change type is 'I', add 1 to number of inserts:
+      *
+     C                     ADD  1         WWNOIN  50
+     C                     MOVEL'INSERT'  WWCHTP  6
+      *
+     C           RKCHTP    WHEQ 'A'
+      *
+      ***  If the last change type is 'A', add 1 to number of amends:
+      *
+     C                     ADD  1         WWNOAM  50
+     C                     MOVEL'AMEND '  WWCHTP
+      *
+     C           RKCHTP    WHEQ 'D'
+      *
+      ***  If the last change type is 'D', add 1 to number of deletes:
+      *
+     C                     ADD  1         WWNODE  50
+     C                     MOVEL'DELETE'  WWCHTP
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #MFLD -  Subroutine to move file and work fields to printer  *
+      *  -----    fields.                                             *
+      *  Called by : #LIST                                            *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #MFLD     BEGSR
+      *
+      ***  Fill in Report Fields
+      *
+     C                     MOVELRKRKEY    RMODI            Module
+     C                     MOVE RKRKEY    RRKEY            Routing key
+     C                     MOVE RKDOC1    RDOC1            DEBIT ope. code 1
+     C                     MOVE RKDOC2    RDOC2                            2
+     C                     MOVE RKDOC3    RDOC3                            3
+     C                     MOVE RKCOC1    RCOC1            credit op. code 1
+     C                     MOVE RKCOC2    RCOC2                            2
+     C                     MOVE RKCOC3    RCOC3                            3
+     C                     MOVE WWCHTP    RCHTP            Last chg type
+     C                     MOVE RKDLUP    RDLUP                     day
+     C                     MOVE RKMLUP    RMLUP                     month
+     C                     MOVE RKYLUP    RYLUP                     year
+     C                     MOVE RKULUP    RULUP                     user
+     C                     Z-ADDRKTLUP    RTLUP                     Type
+      *
+      ***  Exception for Negotiable Assets using DN in file, replace DN by
+      ***  DL for the list
+      *
+     C           RMODI     IFEQ 'DN'
+     C                     MOVEL'DL'      RMODI
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #AUDIT - Subroutine to print Audit report.                   *
+      *  ------                                                       *
+      *  Called by :  Mainlines                                       *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #AUDIT    BEGSR
+      *
+     C                     Z-ADDWWNOIN    RNOIN            INSERTED
+     C                     Z-ADDWWNOAM    RNOAM            AMENDED
+     C                     Z-ADDWWNODE    RNODE            DELETED
+     C                     Z-ADDWWNORE    RNORE            NB of Records
+      *
+      ***  Print audit report
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *ÏNZSR - Subroutine to initialize static fields and access   *
+      *  ------   standing data.                                      *
+      *  Called by : Automatically                                    *
+      *  calls     :                                                  *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Copyright Statement.
+      *
+     C                     MOVEACPY@      CPY@2  80
+      *
+      ***  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVELPGM       DBPGM     P
+      *
+      ***  Initialize indicators
+      *
+     C                     MOVEL*OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 006 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     ENDIF
+      *
+      ***  Retrieve criteria narrative
+      *
+     C           PMOD      IFEQ '**'
+     C                     MOVEL'AL'      LKP     2
+     C                     ELSE
+     C                     MOVELPMOD      LKP
+     C                     ENDIF
+      *
+     C                     Z-ADD1         IX      20
+     C           LKP       LOKUPCRI,IX                   99
+     C           *IN99     IFEQ *ON
+     C                     MOVELCNA,IX    RCRIT
+     C                     ELSE
+     C                     MOVEL*ALL'*'   RCRIT
+     C                     ENDIF
+      *
+      ***  Start RCF for Printer files
+      *
+     C                     Z-ADDSFNUMU    ZSNUM            IL0340AU
+     C                     MOVELSFILEU    SFILE
+     C                     EXSR SRZSFL
+      *
+     C                     Z-ADDSFNUM1    ZSNUM            IL0340P1
+     C                     MOVELSFIL1     SFILE
+     C                     EXSR SRZSFL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRZSFL - Subroutine to call ZSFILE (Record in RCF)            *
+      * ------                                                        *
+      * Called by : *INZSR                                            *
+      * Calls     :                                                   *
+      *****************************************************************
+      *
+     C           SRZSFL    BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRENT   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Subroutine to handle Abnormal Errors.               *
+      *  ------                                                       *
+      *  Called by : In case of error                                 *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANKS
+     C                     MOVEL'Y'       WRUN    1
+      *
+     C           DBASE     IFNE 0
+     C                     MOVE *ON       *IN41
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ELSE
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVEL*ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+**  CRI - CRITERIAS
+DL Dealing module
+DN Dealing - Negotiable Assets module
+LE Customer Lending module
+SE Securities Trading module
+FT Funds Transfers module
+FF Futures & Options module
+AL All modules
+**  OVR
+OVRDBF FILE(ILRKXXPD) TOFILE(ILRKxxPD) SHARE(*NO)
+**  DLTOVR
+DLTOVR FILE(ILRKXXPD)
+**  CPY@ - OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2005

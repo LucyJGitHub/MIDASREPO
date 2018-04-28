@@ -1,0 +1,614 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU Statement balance in EUROs update')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - (module name) Module                                 *
+      *                                                               *
+      *  EU0420 - (Program Name)                                      *
+      *                                                               *
+      *  Function:  This program helps to automate the update of the  *
+      *             flag 'Statement Balances in Euros' on ACCNTAB.    *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By: EUC0420 - EMU Update of Statement Balance in Euros*
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 148893             Date 07Dec98               *
+      *                 CEU013  *CREATE    Date 10Jul98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  148893 - Run Date should be allowed equal to Transition      *
+      *           Start Date.                                         *
+      *  CEU013 - Emu A/C Posting Narrative Enhancements              *
+      *                                                               *
+      *****************************************************************
+     FEU0420DFCF  E                    WORKSTN      KINFSR *PSSR
+      ** Account Master Details
+     FACCNTL3 UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     ISDGELR    E DSSDGELRPD
+     I*
+     I** General Ledger Details
+     I*
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** Currency Details
+     I*
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          QQACCX                                    CGL029
+     I*
+     I** Account Code Details
+     I*
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I*
+     I** Customer Details
+     I*
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access programs, long data structure
+     I*
+     I*
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     I*    MIDAS 'Next Available Relative rec No.' ACCNT/MEMOS
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C*
+      *
+      *                M A I N        P R O C E S S I N G
+      *
+      * ===============================================================
+      *
+     C                     EXSR INIT
+     C           W#FMT     DOWNE*BLANK
+     C           W#FMT     CASEQ'F0'      #P10F0
+     C                     ENDCS
+     C                     ENDDO
+      *
+     C                     EXSR END
+      *
+      *****************************************************************
+     C           #P10F0    BEGSR                           ** #P10F0 BSR *
+     C           W#FMT     DOWEQ'F0'
+     C                     WRITEEU0420C1
+     C                     EXFMTEU0420F0
+     C                     MOVEA'0'       *IN,27
+     C                     MOVEA'000'     *IN,31
+     C                     MOVEA'0000'    *IN,70
+     C                     MOVE ' '       W#WRNG  1
+     C           WRNG      IFEQ 'Y'
+     C           ERR       ANDNE'Y'
+     C                     MOVE 'Y'       W#WRNG
+     C                     ENDIF
+     C                     MOVE ' '       ERR     1
+     C                     MOVE *BLANK    WRNG
+     C                     MOVE *BLANK    W#PROC  1
+     C                     CALL 'ZA0250'
+     C           *INKC     IFEQ '1'
+     C           *INKL     OREQ '1'
+     C                     MOVE *BLANKS   W#FMT
+     C                     ELSE
+     C                     EXSR VALSC1
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C                     ENDSR
+      *****************************************************************
+     C           VALSC1    BEGSR
+     C           K@AKEY    KLIST
+     C**********           KFLD           SAACOD  40                                          CGL029
+     C                     KFLD           SAACOD 100                                          CGL029
+     C                     KFLD           SACCY   3
+     C**********           KFLD           SACNUM  60                                          CSD027
+     C                     KFLD           SACNUM  6                                           CSD027
+     C*
+     C           CEU013    IFNE 'Y'
+     C                     MOVEL'RE71933' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       ERR
+     C                     ENDIF
+     C*
+     C                     MOVE ' '       QUES1   1
+     C                     MOVE ' '       QUES2   1
+     C                     MOVE ' '       QUES3   1
+     C*
+     C*  If all the 3 fields are blank, send a warning message and
+     C*    update the accounts when the user acknowledges the message.
+     C*
+     C           S1ACOD    IFEQ *BLANKS
+     C           S1CCY     ANDEQ*BLANKS
+     C           S1CNUM    ANDEQ*BLANKS
+     C                     MOVEL'RE71934' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       WRNG    1
+     C                     ENDIF
+     C*
+     C           S1ACOD    IFNE *BLANKS
+     C**********           MOVE S1ACOD    SACOD   4                                           CGL029
+     C                     MOVE S1ACOD    SACOD  10                                           CGL029
+     C                     EXSR VLACOD
+     C                     ENDIF
+     C           *IN70     IFEQ *ON
+     C                     MOVEL'RE71037' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       ERR
+     C                     MOVE *ON       *IN31
+     C                     ENDIF
+     C           S1CCY     IFNE *BLANKS
+     C                     MOVE S1CCY     SCCY    3
+     C                     EXSR VLCURR
+     C                     ENDIF
+     C                     SELEC
+     C           *IN71     WHEQ *ON
+     C                     MOVEL'RE71033' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       ERR
+     C                     MOVE *ON       *IN32
+     C           *IN72     WHEQ *ON
+     C                     MOVEL'RE71932' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       ERR
+     C                     MOVE *ON       *IN32
+     C           *IN73     WHEQ *ON
+     C                     MOVEL'RE71931' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       ERR
+     C                     MOVE *ON       *IN32
+     C                     ENDSL
+     C           S1CNUM    IFNE *BLANKS
+     C                     MOVE S1CNUM    SCNUM   6
+     C                     EXSR VLCNUM
+     C                     ENDIF
+     C           *IN74     IFEQ *ON
+     C                     MOVEL'RE71031' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       ERR
+     C                     MOVE *ON       *IN33
+     C                     ENDIF
+     C*
+     C           W#WRNG    IFEQ 'Y'
+     C           WRNG      ANDEQ'Y'
+     C           ERR       ANDEQ' '
+     C                     MOVE 'Y'       W#PROC  1
+     C                     ENDIF
+     C           ERR       IFEQ ' '
+     C           QUES1     ANDEQ' '
+     C           QUES2     ANDEQ' '
+     C           QUES3     ANDEQ' '
+     C           WRNG      ANDEQ' '
+     C           W#PROC    OREQ 'Y'
+     C                     EXSR PROCES
+     C                     MOVE *BLANKS   W#FMT
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+     C           PROCES    BEGSR
+     C                     MOVELS1ACOD    SAACOD
+     C                     MOVELS1CCY     SACCY
+     C                     MOVELS1CNUM    SACNUM
+     C                     MOVE *BLANKS   SVCCY   3
+     C*
+     C           K@AKEY    SETLLACCNTL3
+     C           *IN90     DOUEQ*ON
+     C*
+     C                     READ ACCNTL3                  90
+     C*
+     C           *IN90     IFEQ *OFF
+     C*  Closed Account
+     C           ACST      IFEQ 'C'
+     C           RECI      OREQ 'C'
+     C                     ITER
+     C                     ENDIF
+     C*
+     C* Account code selected and if changed, end the process.
+     C           S1ACOD    IFNE *BLANKS
+     C           SAACOD    ANDNEACOD
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C* Account code and Currency were selected and if Currency changed
+     C*  end the process.
+     C           S1ACOD    IFNE *BLANKS
+     C           S1CCY     IFNE *BLANKS
+     C           S1CCY     ANDNECCY
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           S1CCY     IFNE *BLANKS
+     C           S1CCY     ANDNECCY
+     C                     ITER
+     C                     ENDIF
+     C*
+     C* Account code, Currency and Customer were selected and if
+     C*  Customer changed, end the process.
+     C           S1ACOD    IFNE *BLANKS
+     C           S1CCY     ANDNE*BLANKS
+     C           S1CNUM    ANDNE*BLANKS
+     C           SACNUM    ANDNECNUM
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C           S1CNUM    IFNE *BLANKS
+     C           SACNUM    ANDNECNUM
+     C                     ITER
+     C                     ENDIF
+     C*
+     C           SVCCY     IFNE CCY
+     C                     MOVE CCY       SCCY
+     C                     EXSR VLCURR
+     C                     MOVE CCY       SVCCY
+     C                     ENDIF
+     C*
+     C           CEU013    IFEQ 'Y'
+     C           *IN27     ANDEQ*ON
+     C                     MOVE 'Y'       EUSB
+     C                     UPDATACCNTABF
+     C                     COMIT
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDSR
+      *****************************************************************
+     C           VLACOD    BEGSR
+     C                     MOVE *OFF      *IN70
+     C                     MOVE ' '       QUES1   1
+     C                     Z-ADD0         X       10
+     C           '?'       SCAN SACOD:1   X
+     C           X         IFGT 0
+     C                     MOVE 'Y'       QUES1
+     C                     ENDIF
+     C**
+     C** ACCOUNT CODE MUST BE LIVE
+     C                     CALL 'AOACODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C**********           PARM SACOD     @ACOD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM SACOD     @ACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C*
+     C                     MOVE '1'       *IN70
+     C*
+     C                     ELSE
+     C**
+     C** LOAD ACCOUNT TYPE FOR FURTHER PROCESS
+     C**
+     C                     MOVE A5ACCD    SACOD
+     C           QUES1     IFEQ 'Y'
+     C                     MOVE A5ACCD    S1ACOD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+     C           VLCURR    BEGSR
+     C                     MOVEA'000'     *IN,71
+     C                     MOVEA'0'       *IN,27
+     C                     MOVE ' '       QUES2   1
+     C                     Z-ADD0         X
+     C           '?'       SCAN SCCY:1    X
+     C           X         IFGT 0
+     C                     MOVE 'Y'       QUES2
+     C                     ENDIF
+     C**
+     C** CURRENCY MUST BE LIVE ON SDCURRPD
+     C**
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM SCCY      @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C*
+     C                     MOVE '1'       *IN71
+      *
+     C                     ELSE
+     C                     MOVE A6CYCD    SCCY
+     C           QUES2     IFEQ 'Y'
+     C                     MOVE A6CYCD    S1CCY
+     C                     ENDIF
+     C           A6INCY    IFNE 'Y'
+     C                     MOVE *ON       *IN72
+     C                     ELSE
+     C********** BJRDNB    IFLE A6TPSD                                    148893
+     C           BJRDNB    IFLT A6TPSD                                    148893
+     C                     MOVE *ON       *IN73
+     C                     ELSE
+     C                     MOVE *ON       *IN27
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+     C           VLCNUM    BEGSR
+     C                     MOVE *OFF      *IN74
+     C                     MOVE ' '       QUES3   1
+     C                     Z-ADD0         X
+     C           '?'       SCAN SCNUM:1   X
+     C           X         IFGT 0
+     C                     MOVE 'Y'       QUES3
+     C                     ENDIF
+     C**
+     C** CUSTOMER MUST BE LIVE ON SDCUSTPD
+     C**
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM SCNUM     @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    SCNUM
+     C           QUES3     IFEQ 'Y'
+     C                     MOVE BBCUST    S1CNUM
+     C                     ENDIF
+     C                     END
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN74
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+     C           END       BEGSR
+     C*
+     C                     SETON                         LR
+     C                     RETRN
+     C                     ENDSR
+     C********************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C*
+     C           ZASNM9    ENDSR                           ZASNM9 TAG
+     C*
+      ********************************************************************
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C**   Fill in fields for subroutine ZASNMS
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'REUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C** PREPARE LDA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'EU0420'  DBPGM
+     C                     OUT  LDA
+     C*
+     C** PREPARE COMIT TEXT
+     C*
+     C                     MOVEL'EU'      MDID
+     C                     MOVEL'EU0420'  PGMN
+     C                     MOVELWSID      WSIDX
+     C*
+     C** Get Bank Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFEQ *BLANK
+     C*
+     C** IF FOUND CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           BJDFIN    IFEQ 'M'                        MMDDYY, 98 ON B2
+     C                     MOVE '1'       *IN98
+     C                     END                             E2
+     C*
+     C** OTHERWISE DB ERROR
+     C*
+     C                     ELSE
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD3         DBASE            **DB ERROR 03**
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             E1
+     C*
+      **  Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Check system date format, DDMMYY(98 off) or MMDDYY(98 on)
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Access General Ledger details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Access Switchable Features Access Program
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CEU013'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CEU013  1
+     C                     MOVE *OFF      *IN26
+     C                     ELSE
+     C                     MOVE 'N'       CEU013
+     C                     MOVE *ON       *IN26
+     C                     MOVEL'RE71933' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'E'       ERR
+     C                     ENDIF
+      *
+     C                     MOVE 'F0'      W#FMT   2
+      *
+     C* SET RUNA for screen
+     C                     MOVE BJMRDT    S#RUNA
+     C                     MOVE USER      S#USER
+     C                     MOVE WSID      S#WSID
+      *
+     C                     MOVEL*BLANKS   S1ACOD
+     C                     MOVEL*BLANKS   S1CCY
+     C                     MOVEL*BLANKS   S1CNUM
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C**
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     ROLBK
+     C**
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      /EJECT
+      /COPY ZSRSRC,ZTNLU1Z2
+      /EJECT
+      *
+      ********************************************************************
+     O*ACCNTABFE
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

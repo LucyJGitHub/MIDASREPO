@@ -1,0 +1,1030 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Update global data for zone')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Plus - Bridge                                         */
+/*                                                                   */
+/*       UPC003006 - Update global data for zone from restored       */
+/*                    temporary library                              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CSC033    *CREATE  Date 01May07              */
+/*       Prev Amend No. XXXxxxx            Date                      */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC033 - Include global libraries in backups.               */
+/*                                                                   */
+/*********************************************************************/
+/**/
+             PGM        PARM(&ZONEID &RSTGMLIB)
+/**/
+/*/COPY WNCPYSRC,UPC3006INT                                                                       */
+/**/
+/*  Copyright statement definition                                                                */
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2007')
+/**/
+/*   Declare variables                                                                            */
+/**/
+             DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RSTGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RSTGTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(128)
+/* Parameters passed to UP008010 */
+             DCL        VAR(&GENPGM)   TYPE(*CHAR) LEN(10) VALUE(UPC003006)
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FULLCHECK) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ZOZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOSHTC) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZORDNB) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&ZODNWD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&ZOBCCY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ZONJOB) TYPE(*DEC) LEN(1 0)
+             DCLF       FILE(UPRFRFPD)
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+/**/
+/*/COPY WNCPYSRC,UPC3006001                                                                       */
+/**/
+/*  Global Monitor Message                                                                        */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
+/**/
+/*/COPY WNCPYSRC,UPC3006002                                                                       */
+/**/
+/*  Copyright statement definition - at runtime                                                   */
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+/**/
+             SNDPGMMSG  MSG('UPC003006 copy global data for zone' +
+                          *BCAT &ZONEID *BCAT 'from temporary +
+                          library' *BCAT &RSTGMLIB *TCAT '.') +
+                          TOMSGQ(MRUNQ)
+/**/
+/* Create temporary file to hold error messages.                                                  */
+/**/
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')
+/**/
+/*  Calculate name of restored GTALIB.                                                            */
+/**/
+             CHGVAR     VAR(&RSTGTALIB) VALUE(&RSTGMLIB)
+             CHGVAR     VAR(%SST(&RSTGTALIB 4 1)) VALUE('T')
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('UPC003006 copy global +
+                          data for zone' *BCAT &ZONEID *BCAT 'from +
+                          temporary libraries' *BCAT &RSTGMLIB +
+                          *BCAT 'and' *BCAT &RSTGTALIB *TCAT '.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+/*           Set up library list for the zone.                                                    */
+/**/
+             CALL       PGM(UPC0014) PARM(&ZONEID)
+/**/
+/*  Call AOMMODR0 to determine modules present.                                                   */
+/**/
+             CALL       PGM(AOMMODR0) PARM(&RTCD '*FIRST' &MMOD)
+/**/
+/*  Database error                                                                                */
+/**/
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+/**/
+              SNDPGMMSG  MSG('Error on access to ICD file SDMMODPD') +
+                          TOMSGQ(MOPERQ)
+              CHGJOB     JOB(XXXXXX11)
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  Create the data area LDA in QTEMP, if it does not exist already.                              */
+/**/
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000 MCH0000)
+/**/
+/*           Call program GOGETZONE to retrieve zone details.                                     */
+/**/
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
+                          &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY +
+                          &ZONJOB)
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+/*  Call program to rebuild T_WIPCF for the zone.                                                 */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild T_WIPCF.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003004) PARM(&ZOZONE &RSTGTALIB 'T_WIPCF' 'WC_ZONE')
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+              CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild T_WIPCF +
+                          ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+              CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild T_WIPCF +
+                          completed successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild T_MSWIP for the zone.                                                 */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild T_MSWIP.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003002) PARM(&ZOZONE &RSTGMLIB)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+              CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild T_MSWIP +
+                          ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+              CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild T_MSWIP +
+                          completed successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild T_MSWIP_H for the zone.                                               */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild T_MSWIP_H.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003003) PARM(&ZOZONE &RSTGMLIB)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+              CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild T_MSWIP_H +
+                          ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+              CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild T_MSWIP_H +
+                          completed successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild UDF extension files for the zone.                                     */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild UDF extension files.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UPC003009) PARM(&ZOZONE &RSTGMLIB)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+              CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild UDF extension files +
+                          ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+              CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild UDF extension files +
+                          completed successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild global standing data cross reference files for the zone.              */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild global +
+                          standing data cross reference files for +
+                          the zone.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003006) PARM(&ZOZONE &RSTGMLIB)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild global +
+                          standing data cross reference files for +
+                          the zone ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild global +
+                          standing data cross reference files for +
+                          the zone completed successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call programs to rebuild global standing data files.                                          */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild global +
+                          standing data files.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+/*  GPACODPD - global account codes.                                                              */
+/*  Perform a file comparison.                                                                    */
+/**/
+             CMPPFM     NEWFILE(GPACODPD) +
+                          OLDFILE(&RSTGMLIB/*NEWFILE) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+/**/
+             CALL       PGM(UP003008) PARM(&RSTGMLIB GPACODPD ACGACD)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Update global account +
+                          codes file GPACODPD ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  GPCUSTPD - global customers.                                                                  */
+/*  Perform a file comparison.                                                                    */
+/**/
+             CMPPFM     NEWFILE(GPCUSTPD) +
+                          OLDFILE(&RSTGMLIB/*NEWFILE) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+/**/
+             CALL       PGM(UP003008) PARM(&RSTGMLIB GPCUSTPD CUGCUS)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Update global +
+                          customers file GPCUSTPD ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  GPINDSPD - global industry codes.                                                             */
+/*  Perform a file comparison.                                                                    */
+/**/
+             CMPPFM     NEWFILE(GPINDSPD) +
+                          OLDFILE(&RSTGMLIB/*NEWFILE) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+/**/
+             CALL       PGM(UP003008) PARM(&RSTGMLIB GPINDSPD IDGIND)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Update global industry +
+                          codes file GPINDSPD ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  GPPRFCPD - global profit centre codes.                                                        */
+/*  Perform a file comparison.                                                                    */
+/**/
+             CMPPFM     NEWFILE(GPPRFCPD) +
+                          OLDFILE(&RSTGMLIB/*NEWFILE) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+/**/
+             CALL       PGM(UP003008) PARM(&RSTGMLIB GPPRFCPD PCGPRF)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Update global profit +
+                          centre codes file GPPRFCPD ENDED +
+                          ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  GPPRODPD - global product codes.                                                              */
+/*  Perform a file comparison.                                                                    */
+/**/
+             CMPPFM     NEWFILE(GPPRODPD) +
+                          OLDFILE(&RSTGMLIB/*NEWFILE) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+/**/
+             CALL       PGM(UP003008) PARM(&RSTGMLIB GPPRODPD PDGPRD)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Update global product +
+                          codes file GPPRODPD ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  GPINSTPD - global institution codes.                                                          */
+/*  Perform a file comparison.                                                                    */
+/**/
+             CMPPFM     NEWFILE(GPINSTPD) +
+                          OLDFILE(&RSTGTALIB/*NEWFILE) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+/**/
+             CALL       PGM(UP003008) PARM(&RSTGTALIB GPINSTPD INGINS)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Update global account +
+                          codes file GPINSTPD ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild global customer cross reference files for the zone.                   */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild global +
+                          customer cross reference files for the +
+                          zone.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003007) PARM(&ZOZONE &RSTGMLIB +
+                          GPCUSTXPD CUBRCD)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild global +
+                          customer cross reference files for the +
+                          zone ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild global +
+                          customer cross reference files for the +
+                          zone completed successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild global branch extension file for the zone.                            */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild global branch +
+                          extension file for the zone.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003007) PARM(&ZOZONE &RSTGMLIB +
+                          GPBRCHEXPD BXBRCD)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild global branch +
+                          extension file for the zone ENDED +
+                          ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild global +
+                          branch extension file for the +
+                          zone completed successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild authorisation limits system maintenance file.                         */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild authorisation +
+                          limits system maintenance file for the +
+                          zone.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003004) PARM(&ZOZONE &RSTGMLIB +
+                          'T_ALSYSPD' 'ASZONE')
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild authorisation +
+                          limits system maintenance file for the +
+                          zone ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild authorisation +
+                          limits system maintenance file for the +
+                          zone completed successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild customer security file.                                               */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild customer +
+                          security file for the zone.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003007) PARM(&ZOZONE &RSTGMLIB +
+                          'T_CUSSEC' 'CSBRCA')
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild customer +
+                          security file for the zone ENDED +
+                          ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild customer +
+                          security file for the zone completed +
+                          successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild FRS account key mapping file.                                         */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild FRS account +
+                          key mapping file for the zone.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003004) PARM(&ZOZONE &RSTGMLIB +
+                          'T_FRSAMAP' 'ZONE')
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild FRS account +
+                          key mapping file for the zone ENDED +
+                          ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild FRS account +
+                          key mapping file for the zone completed +
+                          successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild FRS event mapping file.                                               */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild FRS event +
+                          mapping file for the zone.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003004) PARM(&ZOZONE &RSTGMLIB +
+                          'T_FRSEMAP' 'ZONE')
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild FRS event +
+                          mapping file for the zone ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild FRS event +
+                          mapping file for the zone completed +
+                          successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild subscriber status file.                                               */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild subscriber +
+                          status file for the zone.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003004) PARM(&ZOZONE &RSTGMLIB +
+                          'T_LGSUBS' 'ZONE')
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild subscriber +
+                          status file for the zone ENDED ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild subscriber +
+                          status file for the zone completed +
+                          successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call program to rebuild Management Limits end of day file.                                    */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild Management +
+                          Limits end of day file for the zone.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             CALL       PGM(UP003004) PARM(&ZOZONE &RSTGMLIB +
+                          'T_MLENDDAY' 'EDZONE')
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild Management +
+                          Limits end of day file for the zone ENDED +
+                          ABNORMALLY.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+              GOTO       CMDLBL(ABNOR)
+/**/
+             ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+             ELSE       CMD(DO)
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild Management +
+                          Limits end of day file for the zone +
+                          completed successfully.')
+              CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  Call programs to rebuild user-defined files listed on physical file UPRFRFPD.                 */
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild user-defined +
+                          files listed on PF/UPRFRFPD for the zone.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+              GOTO       CMDLBL(ABNOR)
+             ENDDO
+McLOOPSTER:
+/**/
+/*  Read a record from UPRFRFPD.                                                                  */
+/**/
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+              GOTO       CMDLBL(END)
+             ENDDO
+/**/
+             SELECT
+/**/
+/*  If key field is a zone,                                                                       */
+/**/
+             WHEN       COND(&UPZOBR *EQ 'Z') THEN(DO)
+/**/
+/*  call program UP003004 to update the file.                                                     */
+/**/
+              CALL       PGM(UP003004) PARM(&ZOZONE &RSTGMLIB &UPGFIL +
+                          &UPKFLD)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+               CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild user-defined +
+                          file' *BCAT &UPGFIL *BCAT 'for the zone +
+                          ENDED ABNORMALLY.')
+               CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+               IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+               ENDDO
+/**/
+               GOTO       CMDLBL(ABNOR)
+/**/
+              ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+              ELSE       CMD(DO)
+/**/
+               CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild user-defined +
+                          file' *BCAT &UPGFIL *BCAT 'for the zone +
+                          completed successfully.')
+               CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+               IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+               ENDDO
+/**/
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  If key field is a branch,                                                                     */
+/**/
+             WHEN       COND(&UPZOBR *EQ 'B') THEN(DO)
+/**/
+/*  call program UP003007 to update the file.                                                     */
+/**/
+              CALL       PGM(UP003007) PARM(&ZOZONE &RSTGMLIB &UPGFIL +
+                          &UPKFLD)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+               CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild user-defined +
+                          file' *BCAT &UPGFIL *BCAT 'for the zone +
+                          ENDED ABNORMALLY.')
+               CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+               IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+               ENDDO
+/**/
+               GOTO       CMDLBL(ABNOR)
+/**/
+              ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+              ELSE       CMD(DO)
+/**/
+               CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild user-defined +
+                          file' *BCAT &UPGFIL *BCAT 'for the zone +
+                          completed successfully.')
+               CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+               IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+               ENDDO
+/**/
+              ENDDO
+/**/
+             ENDDO
+/**/
+/*  If file is a global static data file,                                                         */
+/**/
+             WHEN       COND(&UPZOBR *EQ 'S') THEN(DO)
+/**/
+/*  call program UP003008 to update the file.                                                     */
+/**/
+             CALL       PGM(UP003008) PARM(&RSTGMLIB &UPGFIL &UPKFLD)
+/**/
+/*  If error, send an error message line and terminate.                                           */
+/**/
+              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+/**/
+               CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild user-defined +
+                          file' *BCAT &UPGFIL *BCAT 'for the zone +
+                          ENDED ABNORMALLY.')
+               CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+               IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+               ENDDO
+/**/
+               GOTO       CMDLBL(ABNOR)
+/**/
+              ENDDO
+/**/
+/*  If successful, send a message line.                                                           */
+/**/
+              ELSE       CMD(DO)
+/**/
+               CHGVAR     VAR(&ERRORMSG) VALUE('Rebuild user-defined +
+                          file' *BCAT &UPGFIL *BCAT 'for the zone +
+                          completed successfully.')
+               CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+               IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+               ENDDO
+/**/
+              ENDDO
+/**/
+             ENDDO
+/**/
+             ENDSELECT
+/**/
+             GOTO       CMDLBL(McLOOPSTER)
+/**/
+/*  Error processing                                                                              */
+/**/
+ABNOR:
+             SNDPGMMSG  MSG('UPC003006 Copy global data for zone +
+                          from temporary library' *BCAT &RSTGMLIB +
+                          *BCAT 'ENDED ABNORMALLY.') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ MRUNQ)
+/**/
+/*  Send a message line                                                                           */
+/**/
+             CHGVAR     VAR(&ERRORMSG) VALUE('UPC003006 Copy global +
+                          data for zone from temporary library' +
+                          *BCAT &RSTGMLIB *BCAT 'ENDED ABNORMALLY.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &ERRORMSG)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+/*/COPY WNCPYSRC,UPC3006ERR                                                                       */
+/**/
+             CHGJOB     SWS(XXXXXX1X)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+END:
+/**/
+/* Call program to produce report.                                                                */
+/**/
+             CALL       PGM(UP008010) PARM(*REPORT &GENPGM ' ')
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) USRDTA(&GENPGM)
+/**/
+/*/COPY WNCPYSRC,UPC3006END                                                                       */
+/**/
+/*  Delete message file override.                                                                 */
+/**/
+             DLTOVR     FILE(MIDAS)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+             RETURN
+             ENDPGM
+/* */

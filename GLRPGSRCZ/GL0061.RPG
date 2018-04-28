@@ -1,0 +1,2338 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Customer account balances enquiry')           *
+/******: OVRDBF FILE(MEMO) TOFILE(MEMOS)                            : *   CCB002
+      *===============================================================*
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0061 - CUSTOMER ACCOUNT BALANCES ENQUIRY.                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD018447           Date 30Sep13               *
+      *  Prev Amend No. MD021858           Date 17Aug13               *
+      *                 263362             Date 30Apr13               *
+      *                 MD020159           Date 22Apr13               *
+      *                 CGL140             Date 12Dec12               *
+      *                 CGL131             Date 28Sep12               *
+      *                 AR792734A          Date 19Sep11               *
+      *                 AR802820           Date 22Jul11               *
+      *                 AR813329           Date 10Aug11               *
+      *                 AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 250630             Date 04Oct07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 243811             Date 20Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11679           Date 05Jul06               *
+      *                 CRE024             Date 07Oct05               *
+      *                 CSD031             Date 10Apr06               *
+      *                 BUG5334            Date 10Sep04               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CRE023             Date 29Jul05               *
+      *                 CGL037             Date 14Jul04               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG4738            Date 17Nov04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAAA03             Date 16Apr04               *
+      *                 CGL025             Date 14Aug03               *
+      *                 TDA075             Date 25Mar04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 149835             Date 30Apr99               *
+      *                 098241             Date 24Feb98               *
+      *                 CCB002          DATE 26JUL96                  *
+      *                 S01408          DATE 06MAR96                  *
+      *                 S01408          DATE 20FEB96                  *
+      *                 089625          DATE 12JUL95                  *
+      *                 S01408          DATE 13SEP95                  *
+      *                 S01408          DATE 24JUL95                  *
+      *                 S01408          DATE 09JUN95                  *
+      *                 077563          DATE 06JUN95                  *
+      *                 074576          DATE 19AUG94                  *
+      *                 047133          DATE 14JUN93                  *
+      *                 E41816          DATE 01JUL92                  *
+      *                 E38492          DATE 14APR92                  *
+      *                 S01311          DATE 21JAN91                  *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD018447 - Wrong balance shown for account                   *
+      *  MD021858 - Reinstate Account Details enquiry option          *
+      *  263362 - Incorrect Disposable Balance is displayed. Increase *
+      *           the size of ODLNB to avoid high order truncation.   *
+      *           Pattern fix after 257682.                           *
+      *  MD020159 - Incorrect cleared and available balance reflected *
+      *             on customer account balance enquiry               *
+      *  CGL140   - Online Statement                                  *
+      *           - Added Hooks: CGL140_003 to CGL140_019             *
+      *  CGL131 - Customer Account Balance Enquiry (with available    *
+      *           balance)                                            *
+      *  AR792734A - Projected Account movement show incorrect        *
+      *              Available Balance when posting Cash Deposit.     *
+      *              Applied fix 261330A. (Child: AR792735A)          *
+      *  AR802820 - System displays incorrect available balance in    *
+      *             Customer Account Balances Enquiry screen. Amended *
+      *             the program such that when CRE023 feature is      *
+      *             switched ON the program must consider Held Items, *
+      *             Block collateral and Overdraft Line in computing  *
+      *             the Available Balance. (Child: AR802821)          *
+      *  AR813329 - Omit account details enquiry option as this is    *
+      *             already upgraded into accounts maintenance thin   *
+      *             client screen (Child: AR813709)                   *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,GLH00024                                 *
+      *             WNCPYSRC,GLH00025                                 *
+      *             WNCPYSRC,GLH00026                                 *
+      *             WNCPYSRC,GLH00027                                 *
+      *             WNCPYSRC,GLH00028                                 *
+      *             WNCPYSRC,GLH00029                                 *
+      *             WNCPYSRC,GLH00030                                 *
+      *             WNCPYSRC,GLH00031                                 *
+      *             WNCPYSRC,GLH00032                                 *
+      *             WNCPYSRC,GLH00033                                 *
+      *  250630 - Check CGL014 if switched on instead of CLE025       *
+      *  243811 - Remove 'Cleared' text from init. screen (recompile) *
+      *  BUG11679 - Additional Conversion of Customer Number to Alpha *
+      *  CRE024 - Country Level Switchable Feature :                  *
+      *           Security Features for Restricted Accounts.          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG5334- Retail Account Balance Check. Fix for CRE010.       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CRE023 - 2 O'clock Flag Upgrade to MidasPlus                 *
+      *  CGL037 - Account Access Security                             *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG4738- 987 Customer balance enquiry do not have carried    *
+      *           forward balance (Recompile for webfacing)           *
+      *  CLE025 - Credit Lines                                        *
+      *  CAAA03 - Webfacing Changes (Recompile)                       *
+      *  CGL025 - Statement of Accounts for a Specified Period.       *
+      *  TDA075 - Correct validation of Customer key.                 *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD007 - Customer Closing                                    *
+      *  149835 - Check user has authority to branch. If not, don't   *
+      *           display balances on ALL branch display.             *
+      *  098241 - Subfile is being reloaded, thereby clearing user    *
+      *           selections against other accounts, when user returns*
+      *           from the first account selected for enquiry or uses *
+      *           '?' to select account. Add processing to correctly  *
+      *           determine when to reload the subfile.               *
+      *         - Remove PARM from call to pgm GLC2074, as the        *
+      *           parameter no longer required by the pgm.            *
+      *  CCB002 - COB Performance Enhancements                        *
+      *           Access now via access object                        *
+      *           Change MEMOS processing to use access objects.      *
+      *  S01408 - Addition of core hook GL0061CCP7.                   *
+      *           Addition of core hook GL0061CCP8.                   *
+      *           Addition of core hook GL0061CCP9.                   *
+      *           Addition of core hook GL0061CP10.                   *
+      *           Addition of core hook GL0061CP11.                   *
+      *           Addition of core hook GL0061CP12.                   *
+      *           Addition of core hook GL0061CP13.                   *
+      *  S01408 - Addition of core hook GL0061CCP5.                   *
+      *           Addition of core hook GL0061CCP6.                   *
+      *  089625 - CCY, ACOD, ACSQ and BRCA should be stored so that   *
+      *           upon doing a page up after displaying the details   *
+      *           of an account, the CCY, ACOD, ASCQ, and BRCA of the *
+      *           first record will be correct.                       *
+      *  S01408 - Addition of core hook GL0061CCP2.                   *
+      *           Addition of core hook GL0061CCP3.                   *
+      *           Addition of core hook GL0061CCP4.                   *
+      *           Addition of core hook GL0061IIP1.                   *
+      *  S01408 - Addition of core hook GL0061FFPG.                   *
+      *           Addition of core hook GL0061IIPG.                   *
+      *           Addition of core hook GL0061CCPG.                   *
+      *           Addition of core hook GL0061CCP1.                   *
+      *  S01408 - Addition of core hook GL0061EEPG.                   *
+      *           Addition of core hook GL0061OOPG.                   *
+      *  077563 - If a DBE occured in an FF/EOC, reopen was not       *
+      *           possible because PF/MEMOSM1 was allocated           *
+      *  074576 - When take option '1' against an account, database   *
+      *           error. GLC2074 no longer has a parameter.           *
+      *  047133 - DO NOT DISPLAY LIST OF VALID CUSTOMERS WHEN INPUT   *
+      *           ? AFTER TAKING 1 FROM THE CUSTOMER LIST.            *
+      *  E41816 - CORRECT E38492 - DO NOT CONDITION 'CLEARED' NARR    *
+      *           ON RETAIL A/C NUMBERS PRESENT.                      *
+      *  E38492 - RETAIL ACCOUNT SHOULD NOT SHOW WHEN RETAIL IS NOT   *
+      *           ON OR RETAIL ACCOUNT NUMBERS ARE NOT USED           *
+      *  S01311 - R10 EXPOSURE MANAGEMENT ENHANCEMENTS.               *
+      *           Program rewritten to allow enquiry to be called     *
+      *           directly from a Midas menu or indirectly via a      *
+      *           linked enquiry. Replaces GL0060.                    *
+      *                                                               *
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *  I N D I C A T O R S                                          *
+      *                                                               *
+      *  01 - F1 (Initial Enquiry) from screen                        *
+      *  03 - F3 (Exit) from screen                                   *
+      *  12 - F12 (Previous) from screen                              *
+      *  25 - Rollup from screen                                      *
+      *  26 - Rolldown from screen                                    *
+      *                                                               *
+      *  30 - Display subfile control                                 *
+      *  31 - Display subfile and column headers                      *
+      *  32 - Display customer details in screen header               *
+      *  33 - First subfile page displayed (Rolldown suppressed)      *
+      *  34 - Last subfile page displayed (Rollup suppressed)         *
+      *  35 - Activate modified data flag                             *
+      *  39 - Called as Linked Enquiry (F1 and F12 available)         *
+      *  40 - Retail in system (Retail column headers displayed)      *
+      *                                                               *
+      *  43 - Accounts master file start of file indicator            *
+      *  44 - Accounts master file end of file indicator              *
+      *                                                               *
+      *  55 - Linked enquiry option in error                          *
+      *  56 - Customer prompt in error                                *
+      *  57 - Branch prompt in error                                  *
+      *                                                               *
+      *  58 - Multi-branching environment (process branch prompt)     *
+      *                                                               *
+      *  60 - General file access error indicator                     *
+      *  61 - End of subfile indicator for READC                      *
+      *  62 - F1 F3 or F12 pressed in lower enquiry                   *
+      *                                                               *
+      *  65 - User authorised to see branch? (1 = no)                 *
+      *                                                               *
+      *  70 - Display error message                                   *
+      *                                                               *
+      *  88 - Retail Account balances from previous day               *
+      *  89 - Display message warning of balances from previous day   *
+      *                                                               *
+      *  U1 - Midas Retail Module in system                           *
+      *  U2 - Midas Futures and Options Module in system              *
+      *  U7 - Database error                                          *
+      *                                                               *
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *  S U B R O U T I N E S                                        *
+      *                                                               *
+      *  MAIN   - Main Control Processing                             *
+      *  NXTRCD - Retreive Next Valid Account Record                  *
+      *  PRVRCD - Retreive Previous Valid Account Record              *
+      *  SFLRCD - Write Subfile Record                                *
+      *  ZFRPED - Format Amount for Output (Standard Subroutine)      *
+      *  LODSFL - Load Subfile Page                                   *
+      *  LINK   - Linked Enquiry Processing                           *
+      *  NEWDTL - Process New Details                                 *
+      *  ROLL   - Process Rollup/Rolldown                             *
+      *  INITL  - Initial Processing                                  *
+      *                                                               *
+      *===============================================================*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  NB: Files declared in reverse order of usage for efficiency  *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     F*MEMOSM1*IF**E           K        DISK         KINFSR *PSSR      U2 077563
+     FMEMOSM1 IF  E           K        DISK         KINFSR *PSSR      UC  077563
+      *
+     F*MEMO    IF  F     40            DISK         KINFSR *PSSR      U1  CCB002
+      *
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,GL0061FFPG                                           S01408
+     F*                                                                   S01408
+      *
+     FGL0061FMCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        SFRN  KSFILE GL0061SF
+      *                                                                                       CGL131
+     F                                        SFRN  KSFILE GL0061SA                           CGL131
+      *                                                                                       CGL131
+     F/COPY WNCPYSRC,GL0061F001
+      *                                                                                       CRE023
+     FRE2CLKL0IF  E           K        DISK         KINFSR *PSSR      UC                      CRE023
+      *                                                                                       CRE023
+      ** 2 O'clock Flag                                                                       CRE023
+      *                                                                                       CRE023
+     FREMEMLL0IF  E           K        DISK         KINFSR *PSSR      UC                      CRE023
+      *                                                                                       CRE023
+      ** MEMOS-L File                                                                         CRE023
+      *
+     E*---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *
+     E                    CPY@    1   1 80
+      * Copyright Array
+      *
+     E/COPY WNCPYSRC,GL0061E001
+     E/COPY OFCPYSRCZ,CGL140_003                                                              CGL140
+     E***********         ERR     1   9 78                                                    CGL025
+     E***********         ERR     1  10 78                                            CGL025 BUG5334
+     E                    ERR     1  12 78                                                   BUG5334
+     E*                                                                   S01408
+     E/COPY OFCPYSRCZ,CGL140_004                                                              CGL140
+     E/COPY WNCPYSRC,GL0061EEPG                                           S01408
+     E*                                                                   S01408
+      * Error Messages Array
+      *
+     E/COPY ZSRSRC,ZFRPEDZ1
+      *
+     I*---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,GL0061IIPG                                           S01408
+     I*                                                                   S01408
+      *
+     I*MEMO****NS*******1 CH                                              CCB002
+      **MEMOS*File*Header                                                 CCB002
+     I******************                      3   3 DUBH                  CCB002
+     I********NS*******1 CD                                               CCB002
+      **MEMOS*File*Detail                                                 CCB002
+     I******************                     32  32 DUBD                  CCB002
+     I******************                      2  160LEDGBL                CCB002
+     I******************                     17  310CLRDBL                CCB002
+     I********NS********                                                  CCB002
+      *
+     IMEMOSMEF                                                            S01127
+     I              LDBL                            LDBLFF                S01127
+     I              CLBL                            CLBLFF                S01127
+      *
+     IEMSDS     E DSEMDTA
+      * External Data Area for Linked Enquiry Processing
+     I                                      141 146 CNUMP
+     I                                      147 149 CURRP
+     I**********                            150 153 ACODP                                     CGL029
+     I**********                            154 155 ACSQP                                     CGL029
+     I**********                            156 158 BRCHP                                     CGL029
+     I**********                            159 160 LINKP                                     CGL029
+     I                                      150 159 ACODP                                     CGL029
+     I                                      160 161 ACSQP                                     CGL029
+     I                                      162 164 BRCHP                                     CGL029
+     I                                      165 166 LINKP                                     CGL029
+      *
+     IZMUSER      DS
+      * External Data Area containing Midas User Details
+      * (Default Branch, Bank Level Authority)
+     I                                       11  13 BRC
+     I                                       17  17 BANK
+     IDSMEMS    E DSMEMOS                                                 CCB002
+     I** External data structure for MEMOS Details                        CCB002
+      *
+     ISDBANK    E DSSDBANKPD
+      * Data Structure for Bank Details Access Program
+      *
+     ISDMMOD    E DSSDMMODPD
+      * Data Structure for Midas Module Details Access Program
+     I*                                                                   E38492
+     ISDRETL    E DSSDRETLPD                                              E38492
+      * Data Structure for Retail Data Access Program                     E38492
+      *
+     ISDCURR    E DSSDCURRPD
+      * Data Structure for Currency Details Access Program
+      *
+     ISDBRCH    E DSSDBRCHPD
+      * Data Structure for Branch Details Access Program
+      *
+     ISDCUST    E DSSDCUSTPD
+      * Data Structure for Customer Details Access Program
+      *
+     I              QQDFAC                          QQDFC1                                    CGL029
+     ISCSARD    E DSSCSARDPD                                              CSD007
+      ** External Data Structure for Switchable Features                  CSD007
+      *                                                                   CSD007
+     IDSFDY     E DSDSFDY
+      * Short Data Structure for Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      * Long Data Structure for Access Programs
+      *
+     IDSLDY     E DSDSLDY                                                 CSD007
+      ** Third DS for access programs, very long data structure           CSD007
+      *                                                                   CSD007
+     IPSDS       SDS
+      * Program Status Data Structure
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IDBERR       DS                            256
+      * Data Structure used in Database Error Processing
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IREFLDS      DS                                                                          CGL131
+     I                                        1  150PACTBA                                    CGL131
+     I                                        1  150PAVLBA                                    CGL131
+      *                                                                                       CGL131
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,GL0061IIP1                                           S01408
+     I/COPY OFCPYSRCZ,CGL140_005                                                              CGL140
+     I*                                                                   S01408
+     I              'NO AUTH. TO BRANCH'  C         AUTMSG                149835
+      *                                                                   149835
+      * Named constant for error message.                                 149835
+      *                                                                   149835
+     I              'COLLATERAL'          C         WSTATS                                    CLE025
+     C*---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MAIN       -  MAIN CONTROL PROCESSING                        *
+      *                                                               *
+      *  CALLS      -  INITL   Initial Processing                     *
+      *             -  ROLL    Process Rollup/Rolldown                *
+      *             -  NEWDTL  Process New Details                    *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+      * Perform Initial Processing
+      *
+     C                     EXSR INITL
+      *
+      * Dowhile Return Code is blank
+      *
+ B1  C           RETND     DOWEQ*BLANK
+      *
+      * If direct call from menu
+      *    Bypass screen input processing and output initial screen
+      *
+ B2  C           DIRECT    IFEQ 'Y'
+     C                     MOVE 'N'       DIRECT
+ X2  C                     ELSE
+      *
+      * If rollup or rolldown requested
+      *    Perform Roll Processing
+      * Else
+      *    If prompt fields have changed
+      *       Store new prompts
+      *       Perform New Details Processing
+      *    Else
+      *       If subfile is currently displayed
+      *          Perform Linked Enquiry Processing
+      *
+ B3  C           *IN25     IFEQ '1'
+ B3  C           *IN26     OREQ '1'
+     C                     EXSR ROLL
+ X3  C                     ELSE
+     C                     MOVELCUSTD     TEST1                           047133
+ B4  C           CUSTD     IFNE CUSTX
+ B4  C           TEST1     OREQ '?'                                       047133
+ B4  C           BRCHD     ORNE BRCHX
+     C/COPY WNCPYSRC,GL0061C030
+     C                     MOVE CUSTD     CUSTX  10
+     C                     MOVE BRCHD     BRCHX   3
+     C/COPY WNCPYSRC,GL0061C015
+     C                     EXSR NEWDTL
+ E4  C                     ELSE
+ B5  C           *IN31     IFEQ '1'
+     C                     EXSR LINK
+ E5  C                     END
+ E4  C                     END
+     C/COPY WNCPYSRC,GL0061C016
+ E3  C                     END
+      *
+ E2  C                     END
+      *
+      * If the return code is blank
+      *    Display screen
+      *
+ B2  C           RETND     IFEQ *BLANK
+     C/COPY WNCPYSRC,GL0061C025
+      *                                                                   098241
+ B3  C           #CYCLE    IFNE 'FIRST'                    Blank          098241
+ B3  C           #CYCLE    ANDNE'RESET'                                   098241
+     C/COPY WNCPYSRC,GL0061C001
+      *                                                                                       CGL131
+     C           CGL131    IFEQ 'Y'                                                           CGL131
+     C                     WRITEGL0061FA                                                      CGL131
+     C                     EXFMTGL0061SB                                                      CGL131
+     C                     ELSE                                                               CGL131
+      *                                                                                       CGL131
+     C                     WRITEGL0061F1
+     C                     EXFMTGL0061SC
+     C/COPY WNCPYSRC,GL0061C002
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+ X3  C                     ELSE                                           098241
+ B4  C           #CYCLE    IFEQ 'RESET'                    Re-Set/Clear   098241
+     C                     MOVE 'FIRST'   #CYCLE  5                       098241
+ X4  C                     ELSE                            2nd Time in    098241
+     C                     MOVE 'SECND'   #CYCLE                          098241
+ E4  C                     ENDIF                                          098241
+ E3  C                     ENDIF                                          098241
+      *                                                                   098241
+ E2  C                     END
+      *
+      * If an exit key has been pressed
+      *    Set up return code in Linked Enquiry Data Area
+      *
+ B2  C           *IN01     IFEQ '1'
+ B2  C           *IN03     OREQ '1'
+ B2  C           *IN12     OREQ '1'
+     C           *LOCK     IN   EMSDS
+ B3  C           *IN01     IFEQ '1'
+     C                     MOVE 'S'       RETND
+ E3  C                     END
+ B3  C           *IN03     IFEQ '1'
+     C                     MOVE 'Q'       RETND
+ E3  C                     END
+ B3  C           *IN12     IFEQ '1'
+     C                     MOVE 'U'       RETND
+ E3  C                     END
+     C                     OUT  EMSDS
+ E2  C                     END
+      *
+ E1  C                     END
+     C/COPY WNCPYSRC,GL0061C031
+      *
+      * Set on LR and return to calling program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  NXTRCD     -  RETRIEVE NEXT VALID RECORD                     *
+      *                                                               *
+      *  CALLED BY  -  LODSFL  Load Subfile Page                      *
+      *             -  NEWDTL  Process New Details                    *
+      *             -  ROLL    Process Rollup/Rolldown                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           NXTRCD    BEGSR
+      *
+      * Read records until
+      *   EITHER  end of file
+      *       OR  customer number changes (set on eof indicator)
+      *       OR  RECI is 'D' and branch code equals prompt branch
+      *       OR  RECI is 'D' and prompt branch is 'ALL'
+      *
+     C                     SETOF                     44
+     C                     MOVE 'N'       VLDRCD  1
+ B1  C           *IN44     DOWEQ'0'
+ B1  C           VLDRCD    ANDEQ'N'
+     C                     READ ACCNT                    44
+ B2  C           *IN44     IFEQ '0'
+ B3  C           CNUM      IFNE CNUMX
+     C                     SETON                     44
+ E3  C                     END
+ E2  C                     END
+ B2  C           *IN44     IFEQ '0'
+ B3  C           BRCA      IFEQ BRCHX
+ B3  C           BRCHX     OREQ 'ALL'
+ B4  C           RECI      IFEQ 'D'
+     C                     MOVE 'Y'       VLDRCD
+     C           CGL037    IFEQ 'Y'                                                           CGL037
+     C           *INU5     IFEQ '0'                                                           CGL037
+     C           ATYP      IFEQ 'R'                                                           CGL037
+     C           STYP      ANDNE'V'                                                           CGL037
+     C           STYP      ANDNE'I'                                                           CGL037
+     C                     MOVE 'Y'       VLDRCD                                              CGL037
+     C                     ELSE                                                               CGL037
+     C                     MOVE 'N'       VLDRCD                                              CGL037
+     C                     ENDIF                                                              CGL037
+     C                     ELSE                                                               CGL037
+     C           ATYP      IFNE 'R'                                                           CGL037
+     C           ATYP      OREQ 'R'                                                           CGL037
+     C           STYP      ANDEQ'V'                                                           CGL037
+     C           ATYP      OREQ 'R'                                                           CGL037
+     C           STYP      ANDEQ'I'                                                           CGL037
+     C                     MOVE 'Y'       VLDRCD                                              CGL037
+     C                     ELSE                                                               CGL037
+     C                     MOVE 'N'       VLDRCD                                              CGL037
+     C                     ENDIF                                                              CGL037
+     C                     ENDIF                                                              CGL037
+     C                     ENDIF                                                              CGL037
+     C/COPY WNCPYSRC,GL0061C035
+ E4  C                     END
+ E3  C                     END
+ E2  C                     END
+ E1  C                     END
+      *
+     C                     ENDSR
+      *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  PRVRCD     -  RETRIEVE PREVIOUS VALID RECORD                 *
+      *                                                               *
+      *  CALLED BY  -  ROLL    Process Rollup/Rolldown                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           PRVRCD    BEGSR
+      *
+      * Read previous record until
+      * EITHER  start of file
+      *     OR  customer number changes (set on sof indicator)
+      *     OR  RECI is 'D' and branch code equals prompt branch
+      *     OR  RECI is 'D' and prompt branch is 'ALL'
+      *
+     C                     SETOF                     43
+     C                     MOVE 'N'       VLDRCD
+ B1  C           *IN43     DOWEQ'0'
+ B1  C           VLDRCD    ANDEQ'N'
+     C                     READPACCNT                    43
+ B2  C           *IN43     IFEQ '0'
+ B3  C           CNUM      IFNE CNUMX
+     C                     SETON                     43
+ E3  C                     END
+ E2  C                     END
+ B2  C           *IN43     IFEQ '0'
+ B3  C           BRCA      IFEQ BRCHX
+ B3  C           BRCHX     OREQ 'ALL'
+ B4  C           RECI      IFEQ 'D'
+     C                     MOVE 'Y'       VLDRCD
+     C           CGL037    IFEQ 'Y'                                                           CGL037
+     C           *INU5     IFEQ '0'                                                           CGL037
+     C           ATYP      IFEQ 'R'                                                           CGL037
+     C           STYP      ANDNE'V'                                                           CGL037
+     C           STYP      ANDNE'I'                                                           CGL037
+     C                     MOVE 'Y'       VLDRCD                                              CGL037
+     C                     ELSE                                                               CGL037
+     C                     MOVE 'N'       VLDRCD                                              CGL037
+     C                     ENDIF                                                              CGL037
+     C                     ELSE                                                               CGL037
+     C           ATYP      IFNE 'R'                                                           CGL037
+     C           ATYP      OREQ 'R'                                                           CGL037
+     C           STYP      ANDEQ'V'                                                           CGL037
+     C           ATYP      OREQ 'R'                                                           CGL037
+     C           STYP      ANDEQ'I'                                                           CGL037
+     C                     MOVE 'Y'       VLDRCD                                              CGL037
+     C                     ELSE                                                               CGL037
+     C                     MOVE 'N'       VLDRCD                                              CGL037
+     C                     ENDIF                                                              CGL037
+     C                     ENDIF                                                              CGL037
+     C                     ENDIF                                                              CGL037
+      * Check user authority to account code if feature not off                               CRE024
+     C           CRE024    IFNE 'N'                                                           CRE024
+     C                     CALL 'SF0930'                                                      CRE024
+     C                     PARM           CRE024  1                                           CRE024
+     C                     PARM *BLANKS   UMAUTH  1                                           CRE024
+     C                     PARM ACOD      UMACOD 100                                          CRE024
+     C**********           PARM *ZEROS    UMCNUM  60                                 CRE024 BUG11679
+     C                     PARM *BLANKS   UMCNUM  6                                         BUG11679
+     C                     PARM *BLANKS   UMCCY   3                                           CRE024
+     C                     PARM *ZEROS    UMACSQ  20                                          CRE024
+     C                     PARM *BLANKS   UMBRCA  3                                           CRE024
+     C                     PARM *BLANKS   UMPGM  10                                           CRE024
+     C                     PARM *BLANKS   UMOPTN  5                                           CRE024
+     C                     PARM *BLANKS   UMEMSG 50                                           CRE024
+      *                                                                                       CRE024
+      * If user not authorised, set valid record field to 'N' to force                        CRE024
+      * read of next record                                                                   CRE024
+     C           UMAUTH    IFEQ 'N'                                                           CRE024
+     C                     MOVE 'N'       VLDRCD                                              CRE024
+     C                     END                                                                CRE024
+     C                     END                                                                CRE024
+     C/COPY WNCPYSRC,GL0061C019
+ E4  C                     END
+ E3  C                     END
+ E2  C                     END
+ E1  C                     END
+      *
+     C                     ENDSR
+      *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  SFLRCD     -  WRITE SUBFILE RECORD                           *
+      *                                                               *
+      *  CALLS      -  ZFRPED  Format Amount for Output               *
+      *                                                               *
+      *  CALLED BY  -  LODSFL  Load Subfile                           *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           SFLRCD    BEGSR
+      * Check user authority to account code if feature not off                            CRE024
+     C           CRE024    IFNE 'N'                                                        CRE024
+     C                     CALL 'SF0930'                                                   CRE024
+     C                     PARM           CRE024  1                                        CRE024
+     C                     PARM *BLANKS   UMAUTH  1                                        CRE024
+     C                     PARM ACOD      UMACOD 100                                       CRE024
+     C**********           PARM *ZEROS    UMCNUM  60                              CRE024 BUG11679
+     C                     PARM *BLANKS   UMCNUM  6                                      BUG11679
+     C                     PARM *BLANKS   UMCCY   3                                        CRE024
+     C                     PARM *ZEROS    UMACSQ  20                                       CRE024
+     C                     PARM *BLANKS   UMBRCA  3                                        CRE024
+     C                     PARM *BLANKS   UMPGM  10                                        CRE024
+     C                     PARM *BLANKS   UMOPTN  5                                        CRE024
+     C                     PARM *BLANKS   UMEMSG 50                                        CRE024
+     C                     END                                                             CRE024
+      *                                                                                    CRE024
+      * Output error message if user not authorised to account code                        CRE024
+      * Use ERR,8 for message details as this is actually redundant                        CRE024
+     C           UMAUTH    IFEQ 'N'                                                        CRE024
+     C                     SUB  1         SFRN                                             CRE024
+     C                     MOVE '1'       *IN89                                            CRE024
+     C/COPY WNCPYSRC,GLH00024
+     C/COPY OFCPYSRCZ,CGL140_006                                                              CGL140
+     C                     MOVEAUMEMSG    ERR,8     P                                      CRE024
+      *                                                                                     MD018447
+      ** Display retail account number even user is not authorized on the account code      MD018447
+      *                                                                                     MD018447
+     C           ACNO      IFGT 0                                                           MD018447
+     C                     MOVE ACNO      ACNOD                                             MD018447
+     C                     ELSE                                                             MD018447
+     C                     MOVE *BLANK    ACNOD                                             MD018447
+     C                     END                                                              MD018447
+      *                                                                                     MD018447
+     C                     ELSE                                                            CRE024
+     C/COPY OFCPYSRCZ,CGL140_007                                                              CGL140
+     C/COPY WNCPYSRC,GL0061C020
+      *
+      * Set on indicator to display '**' to signify that balance is
+      * from the previous day
+      *
+     C***********          SETON                     88                   CCB002
+     C                     SETOF                     3555
+      *
+      * Initialise the linked enquiry option field
+      *
+     C                     MOVE *BLANK    OPTN
+      *
+      * Set up Retail Account Number if it exists
+      *
+ B1  C           ACNO      IFGT 0
+     C                     MOVE ACNO      ACNOD
+ X1  C                     ELSE
+     C                     MOVE *BLANK    ACNOD
+ E1  C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CCPG                                           S01408
+     C*                                                                   S01408
+      ***********                                                         CCB002
+      **If*account is a retail account                                    CCB002
+      *****If*Dubious Balance Indicator on MEMOS header is blank          CCB002
+      *****Retrieve shadow postings from MEMOS                            CCB002
+      *****If*a*live detail record is found and the Dubious Balance       CCB002
+      *****Indicator is blank                                             CCB002
+      ********Set off previous day's balance indicator                    CCB002
+      ********Replace balances from Account Master file with those        CCB002
+      ********from MEMOS                                                  CCB002
+      **Else*(not retail account)                                         CCB002
+      ********Set off previous day's balance indicator                    CCB002
+      ***********                                                         CCB002
+ B1  C***********ATYP      IFEQ 'R'                                       CCB002
+ B2  C***********DUBH      IFEQ *BLANK                                    CCB002
+     C***********RRNM      CHAINMEMO                 60                   CCB002
+ B3  C************IN60     IFEQ '0'                                       CCB002
+ B3  C***********RECI      ANDEQ'D'                                       CCB002
+ B3  C***********DUBD      ANDEQ*BLANK                                    CCB002
+     C***********          SETOF                     88                   CCB002
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CCP7                                           S01408
+     C*                                                                   S01408
+     C***********          Z-ADDLEDGBL    LDBL                            CCB002
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CCP8                                           S01408
+     C*                                                                   S01408
+     C***********          Z-ADDCLRDBL    CLBL                            CCB002
+ E3  C***********          END                                            CCB002
+ E2  C***********          END                                            CCB002
+ X1  C***********          ELSE                                           CCB002
+     C***********          SETOF                     88                   CCB002
+ E1  C***********          END                                            CCB002
+      *
+      **If*previous day's balance indicator is on                         CCB002
+      *****Set*hidden subfile field, Old Balance, to 'Y'                  CCB002
+      *****Set*on indicator to display message warning of previous        CCB002
+      *****day's balances                                                 CCB002
+      ***********                                                         CCB002
+ B1  C************IN88     IFEQ '1'                                       CCB002
+     C***********          MOVE 'Y'       OLDBAL                          CCB002
+     C***********          SETON                     89                   CCB002
+ X1  C***********          ELSE                                           CCB002
+     C***********          MOVE *BLANK    OLDBAL                          CCB002
+ E1  C***********          END                                            CCB002
+      *                                                                   CCB002
+      ** Call Access Object AOMEMSR0                                      CCB002
+     C           ATYP      IFEQ 'R'                                       CCB002
+     C                     CALL 'AOMEMSR0'                                CCB002
+     C                     PARM *BLANKS   W0RTCD  7        I:Return code  CCB002
+     C                     PARM '*KEY   ' W0OPTN  7        O:Option       CCB002
+     C                     PARM 0         W0RETL 100       O:Retail A/C NoCCB002
+     C**********           PARM CNUM      W0CNUM  60       O:Customer No.              CCB002 CSD027
+     C                     PARM CNUM      W0CNUM  6        O:Customer No.                     CSD027
+     C                     PARM CCY       W0CUCD  3        O:Currency     CCB002
+     C**********           PARM ACOD      W0ACCD  40       O:Account Code              CCB002 CGL029
+     C                     PARM ACOD      W0ACCD 100                                          CGL029
+     C                     PARM ACSQ      W0ACSQ  20       O:Account Seq. CCB002
+     C                     PARM BRCA      W0BRCA  3        O:Branch       CCB002
+     C           DSMEMS    PARM DSMEMS    DSFDY                           CCB002
+      *                                                                   CCB002
+     C           W0RTCD    IFEQ '       '                                 CCB002
+      *                                                                   CCB002
+     C                     Z-ADDLDBLN     LDBL                            CCB002
+     C/COPY WNCPYSRC,GL0061C028
+     C                     Z-ADDCLBLN     CLBL                            CCB002
+     C/COPY WNCPYSRC,GL0061C029
+      *                                                                                       CRE023
+      ** Execute SR/SRAVAL if CRE023 is on.                                                   CRE023
+      *                                                                                       CRE023
+     C           CRE023    IFEQ 'Y'                                                           CRE023
+     C           CGL131    ANDNE'Y'                                                         MD020159
+     C                     EXSR SRAVAL                                                        CRE023
+     C                     ENDIF                                                              CRE023
+      *                                                                                       CRE023
+     C                     SETOF                     8889                 CCB002
+     C                     ELSE                                           CCB002
+     C                     SETON                     8889                 CCB002
+     C                     ENDIF                                          CCB002
+     C                     ENDIF                                          CCB002
+      *
+      * If Futures and Options in system
+      *    Check MEMOSM1 for any 'changes' to Ledger/Cleared Balances
+      *    and add changes to existing balances
+      *
+ B1  C           *INU2     IFEQ '1'
+     C                     OPEN MEMOSM1                                   077563
+     C           MEMKEY    SETLLMEMOSM1                60
+ B2  C           *IN60     DOWEQ'0'
+     C           MEMKEY    READEMEMOSM1                  60
+ B3  C           *IN60     IFEQ '0'
+ B3  C           RECI      ANDNE'*'
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CCP9                                           S01408
+      *                                                                                       CGL131
+     C           CGL131    IFNE 'Y'                                                           CGL131
+      *                                                                                       CGL131
+     C*                                                                   S01408
+     C                     ADD  LDBLFF    LDBL
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CP10                                           S01408
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+     C*                                                                   S01408
+     C                     ADD  CLBLFF    CLBL
+ E3  C                     END
+ E2  C                     END
+ E1  C                     END
+      *
+      * If currency has changed
+      *    Store new currency
+      *    Call Currency Details Access Program for new currency
+      *
+ B1  C           CCY       IFNE CCYX
+     C                     MOVE CCY       CCYX    3
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+     C/COPY WNCPYSRC,GL0061C022
+ E1  C                     END
+      *
+      * Format Ledger Balance for output
+      *
+     C                     Z-ADDLDBL      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    LDBLD
+      *
+      * If account is a retail account
+      *    Format Cleared Balance for output
+      *
+ B1  C           ATYP      IFEQ 'R'
+     C                     Z-ADDCLBL      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    CLBLD
+ X1  C                     ELSE
+     C                     MOVE *BLANK    CLBLD
+ E1  C                     END
+      *                                                                                       CLE025
+     C********** CLE025    IFEQ 'Y'                                                    CLE025 250630
+     C           CGL014    IFEQ 'Y'                                                           250630
+     C           COLF      IFEQ 'Y'                                                           CLE025
+     C                     MOVE WSTATS    STATUS                                              CLE025
+     C                     ELSE                                                               CLE025
+     C                     MOVE *BLANKS   STATUS                                              CLE025
+     C                     ENDIF                                                              CLE025
+     C                     ENDIF                                                              CLE025
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CCP1                                           S01408
+      *                                                                                       CGL131
+     C           CGL131    IFNE 'Y'                                                           CGL131
+      *                                                                                       CGL131
+     C*                                                                   S01408
+      *
+      * If user doesn't have authority to branch (*IN65 = 1) then         149835
+      * replace balance with not authorised message and turn off          149835
+      * *IN65.                                                            149835
+      *                                                                   149835
+     C           *IN65     IFEQ *ON                                       149835
+     C                     MOVELAUTMSG    LDBLD     P                     149835
+     C                     MOVEL*BLANKS   CLBLD                           149835
+      *                                                                   149835
+      * Remove stars if not authorised. (*IN88 = 0)                       149835
+      *                                                                   149835
+     C                     SETOF                     88                   149835
+     C                     ENDIF                                          149835
+      *                                                                   149835
+      * Write record to subfile
+      *
+     C                     WRITEGL0061SF
+     C*                                                                   S01408
+     C                     ENDIF                                                   CRE024
+     C/COPY WNCPYSRC,GL0061CP11                                           S01408
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+     C           CGL131    IFEQ 'Y'                                                           CGL131
+      *                                                                                       CGL131
+      ** Save Cleared balance field for later calculation of                                  CGL131
+      ** Dispo balance.                                                                       CGL131
+      *                                                                                       CGL131
+     C                     Z-ADDCLBL      CLRHLD 150                                          CGL131
+      *                                                                                       CGL131
+      ** Overdraft limit is held without decimal places - amend it                            CGL131
+      ** to have decimal places to give overdraft limit                                       CGL131
+      ** which can be added to cleared balance.                                               CGL131
+      *                                                                                       CGL131
+     C           A6NBDP    IFEQ 1                                                             CGL131
+     C********** ODLN      MULT 10        ODLNB  110                                   CGL131 263362
+     C           ODLN      MULT 10        ODLNB  140                                          263362
+     C                     ELSE                                                               CGL131
+     C           A6NBDP    IFEQ 2                                                             CGL131
+     C           ODLN      MULT 100       ODLNB                                               CGL131
+     C                     ELSE                                                               CGL131
+     C           A6NBDP    IFEQ 3                                                             CGL131
+     C           ODLN      MULT 1000      ODLNB                                               CGL131
+     C                     ELSE                                                               CGL131
+     C           A6NBDP    IFEQ 0                                                             CGL131
+     C                     Z-ADDODLN      ODLNB                                               CGL131
+     C                     ENDIF                                                              CGL131
+     C                     ENDIF                                                              CGL131
+     C                     ENDIF                                                              CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+      ** Display one subfile record.                                                          CGL131
+      *                                                                                       CGL131
+     C                     MOVE *OFF      *IN85                                               CGL131
+      *                                                                                     MD018447
+      ** Increment SFRN if restricted account is read.                                      MD018447
+      *                                                                                     MD018447
+     C           UMAUTH    IFEQ 'N'                                                         MD018447
+     C                     ADD  1         SFRN                                              MD018447
+     C                     ENDIF                                                            MD018447
+      *                                                                                     MD018447
+      ** Output error message if user not authorised to account code                        MD018447
+      ** Use ERR,8 for message details as this is actually redundant                        MD018447
+      *                                                                                     MD018447
+     C           UMAUTH    IFEQ 'N'                                                         MD018447
+     C                     MOVELUMEMSG    LDBLD     P                                       MD018447
+     C                     MOVE *BLANK    CLBLD                                             MD018447
+     C                     SUBSTUMEMSG:24 CLBLD                                             MD018447
+     C                     ENDIF                                                            MD018447
+      *                                                                                     MD018447
+     C                     WRITEGL0061SA                                                      CGL131
+      *                                                                                       CGL131
+      ** Clear fields and setup Dispo balance on the next subfile line.                       CGL131
+      *                                                                                       CGL131
+     C                     MOVE *ON       *IN85                                               CGL131
+     C                     MOVE *BLANKS   ACNOD                                               CGL131
+     C                     MOVE *BLANKS   LDBLD                                               CGL131
+      *                                                                                       CGL131
+      ** Account Balance Check                                                                CGL131
+      *                                                                                       CGL131
+     C           CAP207    IFEQ 'Y'                                                           CGL131
+     C                     CALL 'RE001590'                                                    CGL131
+     C                     PARM           ACNO                                                CGL131
+     C                     PARM           CNUM                                                CGL131
+     C                     PARM           CCY                                                 CGL131
+     C                     PARM           ACOD                                                CGL131
+     C                     PARM           ACSQ                                                CGL131
+     C                     PARM           BRCA                                                CGL131
+     C                     PARM 'BAL ENQY'TRNTYP 10                                           CGL131
+     C                     PARM           BJRDNB                                              CGL131
+     C                     PARM *ZEROS    PAMT   150                                          CGL131
+     C                     PARM *BLANKS   PERR01  7                                           CGL131
+     C                     PARM *BLANKS   PERR02  7                                           CGL131
+     C                     PARM *ZEROS    PACTBA                                              CGL131
+     C                     PARM *ZEROS    PAVLBA                                              CGL131
+     C                     PARM *ZEROS    PFADAT  50                                          CGL131
+     C                     PARM *ZEROS    PFABAL 150                                          CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+     C           PERR01    IFEQ *BLANKS                                                       CGL131
+     C           CAP207    ANDEQ'Y'                                                           CGL131
+     C                     Z-ADDPAVLBA    ZFLD15                                              CGL131
+     C                     EXSR ZFRPED                                                        CGL131
+     C                     MOVE ZOUT22    CLBLD                                               CGL131
+     C                     ELSE                                                               CGL131
+      *                                                                                       CGL131
+      ** Dispo balance = cleared balance + overdraft limit - held                             CGL131
+      ** items (signs are reversed)                                                           CGL131
+      *                                                                                       CGL131
+     C                     Z-ADDCLRHLD    DSPBAL 150       Cleared bal                        CGL131
+     C           BJRDNB    IFLT ODED                                                          CGL131
+     C                     SUB  ODLNB     DSPBAL           O/d limit                          CGL131
+     C                     ENDIF                                                              CGL131
+     C                     ADD  HELD      DSPBAL           Held items                         CGL131
+      *                                                                                       CGL131
+     C           ATYP      IFEQ 'R'                                                           CGL131
+     C           DSPBAL    IFNE 0                                                             CGL131
+     C                     Z-ADDA6NBDP    ZDECS                                               CGL131
+     C                     MOVE *BLANKS   ZFLD15                                              CGL131
+     C                     Z-ADDDSPBAL    ZFLD15                                              CGL131
+     C                     MOVE 'A'       ZECODE                                              CGL131
+     C                     EXSR ZFRPED                                                        CGL131
+     C                     MOVE ZOUT22    CLBLD                                               CGL131
+     C                     ELSE                                                               CGL131
+     C                     MOVE *BLANKS   CLBLD                                               CGL131
+     C                     ENDIF                                                              CGL131
+     C                     ELSE                                                               CGL131
+     C                     MOVE *BLANKS   CLBLD                                               CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                     MD018447
+      ** If user not authorised to branch and account code                                  MD018447
+      ** Do not display Balance.                                                            MD018447
+      *                                                                                     MD018447
+     C           UMAUTH    IFEQ 'N'                                                         MD018447
+     C           *IN65     OREQ *ON                                                         MD018447
+     C                     MOVE *BLANK    CLBLD                                             MD018447
+     C                     ENDIF                                                            MD018447
+      *                                                                                       CGL131
+      ** Display Dispo balance.                                                               CGL131
+      *                                                                                       CGL131
+     C                     ADD  1         SFRN                                                CGL131
+     C                     WRITEGL0061SA                                                      CGL131
+     C                     MOVE *OFF      *IN85                                               CGL131
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+     C*                                                                   S01408
+      *
+     C   U2                CLOSEMEMOSM1                                   077563
+     C                     ENDSR
+      *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+     C/COPY ZSRSRC,ZFRPEDZ3
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LODSFL     -  LOAD SUBFILE PAGE                              *
+      *                                                               *
+      *  CALLS      -  NXTRCD  Retrieve Next Valid Record             *
+      *                                                               *
+      *  CALLED BY  -  NEWDTL  Process New Details                    *
+      *             -  ROLL    Process Rollup/Rolldown                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           LODSFL    BEGSR
+      *
+      * Clear message and set off indicators to show error message
+      * and message stating that some balances are from previous day
+      *
+     C                     MOVE *BLANK    MSG
+     C                     SETOF                     7089
+      *
+      * Clear subfile
+      * Initialise subfile record count
+      * Do until page full or all valid records processed
+      *    Increment subfile record count
+      *    If first record on page
+      *       Set up key fields for future rolldown request
+      *    Write subfile record
+      *    Read next account record
+      *
+     C           #CYCLE    IFEQ 'SECND'                                   098241
+     C           #CYCLE    OREQ '     '                                   098241
+     C                     SETOF                     3031
+     C/COPY WNCPYSRC,GL0061C003
+      *                                                                                       CGL131
+     C           CGL131    IFEQ 'Y'                                                           CGL131
+     C                     WRITEGL0061SB                                                      CGL131
+     C                     ELSE                                                               CGL131
+      *                                                                                       CGL131
+     C                     WRITEGL0061SC
+     C/COPY WNCPYSRC,GL0061C004
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+     C                     SETON                     3031
+      *                                                                   098241
+     C                     SETOF                     44                   098241
+     C                     Z-ADD0         SFRN
+     C/COPY WNCPYSRC,GL0061C023
+ B1  C           SFRN      DOUEQ14
+ B1  C           *IN44     OREQ '1'
+     C                     ADD  1         SFRN
+ B2  C           SFRN      IFEQ 1
+     C**********           Z-ADDCNUM      CNUMK                                               CSD027
+     C                     MOVE CNUM      CNUMK                                               CSD027
+     C                     MOVE CCY       CURRK
+     C                     Z-ADDACOD      ACODK
+     C                     Z-ADDACSQ      ACSQK
+     C                     MOVE BRCA      BRCHK
+ E2  C                     END
+     C                     EXSR SFLRCD
+     C                     EXSR NXTRCD
+      *                                                                   149835
+      * If the branch changes or it is the first time through (OLDBR      149835
+      * blank) check to see if the user is authorised to the branch.      149835
+      * If not, turn on indicator 65.                                     149835
+      *                                                                   149835
+     C           OLDBR     IFNE BRCA                                      149835
+      *                                                                   149835
+      *  Initialise branch work field.                                    149835
+      *                                                                   149835
+     C                     MOVEL*BLANKS   W@BRCA  3                       149835
+      *                                                                   149835
+     C                     MOVELBRCA      W@BRCA    P                     149835
+     C                     CALL 'ZVBBU'                                   149835
+     C                     PARM           W@BRCA                          149835
+     C                     PARM           ZVERR   10                      149835
+     C                     MOVELBRCA      OLDBR     P                     149835
+     C           ZVERR     IFNE 0                                         149835
+     C                     SETON                     65                   149835
+     C                     ELSE                                           149835
+     C                     SETOF                     65                   149835
+     C                     ENDIF                                          149835
+      *                                                                   149835
+     C                     ENDIF                                          149835
+      *                                                                   149835
+ E1  C                     END
+      *                                                                   098241
+     C/COPY WNCPYSRC,GL0061C024
+      *
+      *  Save subfile fields to work fields.                              089625
+      *                                                                   089625
+     C           SFRN      IFEQ 14                                        089625
+     C**********           Z-ADDCNUM      CNUME   60                                   089625 CSD027
+     C                     MOVE CNUM      CNUME   6                                           CSD027
+     C                     MOVE CCY       CURRE   3                       089625
+     C**********           Z-ADDACOD      ACODE   40                                   089625 CGL029
+     C                     Z-ADDACOD      ACODE  100                                          CGL029
+     C                     Z-ADDACSQ      ACSQE   20                      089625
+     C                     MOVE BRCA      BRCHE   3                       089625
+     C                     END                                            089625
+      *                                                                   098241
+     C                     ELSE                                           098241
+     C                     MOVE 'FIRST'   #CYCLE                          098241
+     C                     SETON                     3031                 098241
+     C                     ENDIF                                          098241
+     C*                                                                   089625
+      * If indicator indicating some previous day's balances is on
+      *    Set up message
+      *
+ B1  C           *IN89     IFEQ '1'
+     C                     MOVE ERR,8     MSG
+      * Set SFL Display Ind if no authorised accounts to display                           CRE024
+     C           SFRN      IFEQ 0                                                          CRE024
+     C           *IN44     ANDEQ'1'                                                        CRE024
+     C                     MOVE '1'       *IN70                                            CRE024
+     C                     END                                                             CRE024
+     C/COPY WNCPYSRC,GL0061C021
+ E1  C                     END
+      *
+      * If end of file
+      *    Set on Last Page Indicator
+      *
+ B1  C           *IN44     IFEQ '1'
+     C                     SETON                     34
+ E1  C                     END
+      *
+     C                     ENDSR
+      *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  LINK       -  LINKED ENQUIRY PROCESSING                      *
+      *                                                               *
+      *  CALLED BY  -  MAIN    Main Control Processing                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           LINK      BEGSR
+      *
+      * Set off option error indicator and clear error message
+      *
+     C                     SETOF                     557062
+     C                     MOVE *BLANK    MSG
+      *
+      * Do until a record is found with an invalid option or all
+      * all subfile records have been processed
+      *
+ B1  C           *IN70     DOUEQ'1'
+ B1  C           *IN61     OREQ '1'
+ B1  C           *IN62     OREQ '1'
+      *
+      * Do until a subfile record is found against which an option has
+      * been entered or all subfile records have been read
+      *    If a changed record is found with the option field blank
+      *       Set off indicator to highlight option in error
+      *       Set off modified data flag
+      *       If Old Balance field is 'Y'
+      *          Set on indicator so that '**' is displayed
+      *       Update subfile record
+      *
+ B2  C           OPTN      DOUNE*BLANK
+ B2  C           *IN61     OREQ '1'
+     C/COPY WNCPYSRC,GL0061C005
+      *                                                                                       CGL131
+     C           CGL131    IFEQ 'Y'                                                           CGL131
+     C                     READCGL0061SA                 61                                   CGL131
+     C                     ELSE                                                               CGL131
+      *                                                                                       CGL131
+     C                     READCGL0061SF                 61
+     C/COPY WNCPYSRC,GL0061C006
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+ B3  C           OPTN      IFEQ *BLANK
+ B3  C           *IN61     ANDEQ'0'
+     C                     SETOF                     3555
+ B4  C***********OLDBAL    IFEQ 'Y'                                       CCB002
+     C***********          SETON                     88                   CCB002
+ X4  C***********          ELSE                                           CCB002
+     C***********          SETOF                     88                   CCB002
+ E4  C***********          END                                            CCB002
+     C/COPY WNCPYSRC,GL0061C007
+      *                                                                                       CGL131
+     C           CGL131    IFEQ 'Y'                                                           CGL131
+     C                     UPDATGL0061SA                                                      CGL131
+     C                     ELSE                                                               CGL131
+      *                                                                                       CGL131
+     C                     UPDATGL0061SF
+     C/COPY WNCPYSRC,GL0061C008
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+ E3  C                     END
+ E2  C                     END
+      *
+      * If Option entered
+      *    If Option is neither '1' nor '2'
+      *       Set up error message and indicators
+      *       Set on modified data flag
+      *       If Old Balance field is 'Y'
+      *          Set on indicator so that '**' is displayed
+      *       Update subfile record
+      *    Else
+      *       Update Linked Enquiry Data Area
+      *       If Option is '1'
+      *          Call GL Accounts Enquiry (Mode 3) for Account Details
+      *       Else
+      *          Call GL Account Movements to Start of Buisness Enquiry
+      *       Process return from linked enquiry
+      *
+      *                                                                                      BUG5334
+     C           CRE010    IFEQ 'Y'                                                          BUG5334
+      *                                                                                      BUG5334
+     C                     MOVE CNUMD     CNUMK                                              BUG5334
+     C                     MOVE CCY       CURRK                                              BUG5334
+     C                     MOVE ACOD      ACODK                                              BUG5334
+     C                     MOVE ACSQ      ACSQK                                              BUG5334
+     C                     MOVE BRCA      BRCHK                                              BUG5334
+      *                                                                                      BUG5334
+     C           ACTKEY    CHAINACCNT                72                                      BUG5334
+      *                                                                                      BUG5334
+     C                     ENDIF                                                             BUG5334
+      *                                                                                      BUG5334
+     C/COPY WNCPYSRC,GL0061C033
+ B2  C           *IN61     IFEQ '0'
+     C/COPY WNCPYSRC,GL0061C026
+ B3  C********** OPTN      IFNE '1'                                                         AR813329
+ B3  C********** OPTN      ANDNE'2'                                                         AR813329
+     C********** OPTN      IFNE '2'                                                AR813329 MD021858
+     C           OPTN      IFNE '1'                                                         MD021858
+     C           OPTN      ANDNE'2'                                                         MD021858
+     C           CRE010    ANDEQ'N'                                                          BUG5334
+     C           CGL025    ANDNE'Y'                                                           CGL025
+      *                                                                                       CGL025
+     C********** OPTN      ORNE '1'                                                  CGL025 AR813329
+     C********** OPTN      ANDNE'2'                                                  CGL025 AR813329
+     C********** OPTN      ORNE '2'                                                AR813329 MD021858
+     C           OPTN      ORNE '1'                                                         MD021858
+     C           OPTN      ANDNE'2'                                                         MD021858
+     C           OPTN      ANDNE'3'                                                           CGL025
+     C           CRE010    ANDEQ'N'                                                          BUG5334
+     C           CGL025    ANDEQ'Y'                                                           CGL025
+     C/COPY WNCPYSRC,GLH00025
+     C/COPY OFCPYSRCZ,CGL140_008                                                              CGL140
+      *                                                                                      BUG5334
+     C********** OPTN      ORNE '1'                                                 BUG5334 AR813329
+     C********** OPTN      ANDNE'2'                                                 BUG5334 AR813329
+     C********** OPTN      ORNE '2'                                                AR813329 MD021858
+     C           OPTN      ORNE '1'                                                         MD021858
+     C           OPTN      ANDNE'2'                                                         MD021858
+     C           OPTN      ANDNE'3'                                                          BUG5334
+     C           OPTN      ANDNE'4'                                                          BUG5334
+     C           CRE010    ANDEQ'Y'                                                          BUG5334
+     C           CGL025    ANDEQ'N'                                                          BUG5334
+      *                                                                                      BUG5334
+     C********** OPTN      ORNE '1'                                                 BUG5334 AR813329
+     C********** OPTN      ANDNE'2'                                                 BUG5334 AR813329
+     C********** OPTN      ORNE '2'                                                AR813329 MD021858
+     C           OPTN      ORNE '1'                                                         MD021858
+     C           OPTN      ANDNE'2'                                                         MD021858
+     C           OPTN      ANDNE'3'                                                          BUG5334
+     C           OPTN      ANDNE'4'                                                          BUG5334
+     C           OPTN      ANDNE'5'                                                          BUG5334
+     C           CRE010    ANDEQ'Y'                                                          BUG5334
+     C           CGL025    ANDEQ'Y'                                                          BUG5334
+     C/COPY WNCPYSRC,GLH00026
+     C/COPY OFCPYSRCZ,CGL140_009                                                              CGL140
+      *                                                                                      BUG5334
+     C           CRE010    OREQ 'Y'                                                          BUG5334
+     C           CGL025    ANDEQ'N'                                                          BUG5334
+     C           OPTN      ANDEQ'3'                                                          BUG5334
+     C           ATYP      ANDNE'R'                                                          BUG5334
+      *                                                                                      BUG5334
+     C           CRE010    OREQ 'Y'                                                          BUG5334
+     C           CGL025    ANDEQ'N'                                                          BUG5334
+     C           OPTN      ANDEQ'4'                                                          BUG5334
+     C           ATYP      ANDNE'R'                                                          BUG5334
+      *                                                                                      BUG5334
+     C           CRE010    OREQ 'Y'                                                          BUG5334
+     C           CGL025    ANDEQ'Y'                                                          BUG5334
+     C           OPTN      ANDEQ'4'                                                          BUG5334
+     C           ATYP      ANDNE'R'                                                          BUG5334
+      *                                                                                      BUG5334
+     C           CRE010    OREQ 'Y'                                                          BUG5334
+     C           CGL025    ANDEQ'Y'                                                          BUG5334
+     C           OPTN      ANDEQ'5'                                                          BUG5334
+     C           ATYP      ANDNE'R'                                                          BUG5334
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CCP2                                           S01408
+     C*                                                                   S01408
+     C                     SETON                     355570
+     C/COPY WNCPYSRC,GL0061C034
+      *                                                                                       CGL025
+     C           CGL025    IFNE 'Y'                                                           CGL025
+      *                                                                                      BUG5334
+     C           CRE010    IFEQ 'Y'                                                          BUG5334
+     C           ATYP      ANDEQ'R'                                                          BUG5334
+     C/COPY WNCPYSRC,GLH00027
+     C/COPY OFCPYSRCZ,CGL140_010                                                              CGL140
+     C                     MOVE ERR,11    MSG                                                BUG5334
+     C                     ELSE                                                              BUG5334
+     C                     MOVE ERR,9     MSG
+     C/COPY OFCPYSRCZ,CGL140_011                                                              CGL140
+     C/COPY WNCPYSRC,GLH00028
+     C                     ENDIF                                                             BUG5334
+      *                                                                                      BUG5334
+     C                     ELSE                                                               CGL025
+      *                                                                                      BUG5334
+     C/COPY WNCPYSRC,GLH00029
+     C/COPY OFCPYSRCZ,CGL140_012                                                              CGL140
+     C           CRE010    IFEQ 'Y'                                                          BUG5334
+     C           ATYP      ANDEQ'R'                                                          BUG5334
+     C/COPY WNCPYSRC,GLH00030
+     C/COPY OFCPYSRCZ,CGL140_013                                                              CGL140
+     C                     MOVE ERR,12    MSG                                                BUG5334
+     C                     ELSE                                                              BUG5334
+     C                     MOVE ERR,10    MSG                                                 CGL025
+     C                     ENDIF                                                             BUG5334
+     C/COPY OFCPYSRCZ,CGL140_014                                                              CGL140
+     C/COPY WNCPYSRC,GLH00031
+      *                                                                                      BUG5334
+     C                     ENDIF                                                              CGL025
+ B4  C***********OLDBAL    IFEQ 'Y'                                       CCB002
+     C***********          SETON                     88                   CCB002
+ X4  C***********          ELSE                                           CCB002
+     C***********          SETOF                     88                   CCB002
+ E4  C***********          END                                            CCB002
+     C/COPY WNCPYSRC,GL0061C009
+      *                                                                                       CGL131
+     C           CGL131    IFEQ 'Y'                                                           CGL131
+     C                     UPDATGL0061SA                                                      CGL131
+     C                     ELSE                                                               CGL131
+      *                                                                                       CGL131
+     C                     UPDATGL0061SF
+     C/COPY WNCPYSRC,GL0061C010
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+ X3  C                     ELSE
+     C           *LOCK     IN   EMSDS
+     C                     MOVE CNUMD     CNUMP
+     C                     MOVE CCY       CURRP
+     C                     MOVE ACOD      ACODP
+     C                     MOVE ACSQ      ACSQP
+     C                     MOVE BRCA      BRCHP
+     C                     MOVE 'GL'      LINKP
+     C                     OUT  EMSDS
+      *                                                                                       CGL025
+      ** Account Details requested                                                            CGL025
+ B4  C********** OPTN      IFEQ '1'                                                         AR813329
+     C**********           CALL 'GLC2074'                                                   AR813329
+     C*********************PARM '2'       MODE    1                       074576
+ X4  C**********           ELSE                                                             AR813329
+     C           OPTN      IFEQ '1'                                                         MD021858
+     C                     CALL 'GLC2074'                                                   MD021858
+     C                     ELSE                                                             MD021858
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CCP3                                           S01408
+     C*                                                                   S01408
+      ** Account Movements requested                                                          CGL025
+     C           OPTN      IFEQ '2'                                                           CGL025
+     C/COPY WNCPYSRC,GLH00521
+     C                     CALL 'GL4442'
+     C/COPY WNCPYSRC,GLH00522
+     C                     ELSE                                                               CGL025
+      *                                                                                      BUG5334
+     C           CRE010    IFEQ 'Y'                                                          BUG5334
+     C           ATYP      ANDEQ'R'                                                          BUG5334
+      *                                                                                      BUG5334
+     C           OPTN      IFEQ '4'                                                          BUG5334
+     C           CGL025    ANDEQ'Y'                                                          BUG5334
+     C           OPTN      OREQ '3'                                                          BUG5334
+     C           CGL025    ANDEQ'N'                                                          BUG5334
+     C                     CALL 'GL4443'                                                     BUG5334
+     C                     ENDIF                                                             BUG5334
+      *                                                                                      BUG5334
+     C           OPTN      IFEQ '5'                                                          BUG5334
+     C           CGL025    ANDEQ'Y'                                                          BUG5334
+     C           OPTN      OREQ '4'                                                          BUG5334
+     C           CGL025    ANDEQ'N'                                                          BUG5334
+      *                                                                                      BUG5334
+     C                     CALL 'GL002020'                                                   BUG5334
+      *                                                                                      BUG5334
+     C                     IN   EMSDS                                                        BUG5334
+      *                                                                                      BUG5334
+     C           RETND     IFEQ *BLANKS                                                      BUG5334
+     C                     MOVE *BLANKS   OPTN                                               BUG5334
+     C                     UPDATGL0061SF                                                     BUG5334
+     C                     MOVE *OFF      *IN62                                              BUG5334
+     C                     ENDIF                                                             BUG5334
+      *                                                                                      BUG5334
+     C                     ENDIF                                                             BUG5334
+      *                                                                                      BUG5334
+     C/COPY OFCPYSRCZ,CGL140_015                                                              CGL140
+     C/COPY WNCPYSRC,GLH00437
+     C                     ELSE                                                              BUG5334
+      *                                                                                      BUG5334
+     C           CGL025    IFEQ 'Y'                                                          BUG5334
+     C           OPTN      ANDEQ'3'                                                          BUG5334
+      *                                                                                       CGL025
+     C/COPY OFCPYSRCZ,CGL140_016                                                              CGL140
+     C/COPY WNCPYSRC,GLH00032
+      ** Statement of Account requested                                                       CGL025
+     C                     CALL 'GL0063'                                                      CGL025
+     C                     PARM           BRCA                                                CGL025
+     C                     PARM           CNUMD                                               CGL025
+     C                     PARM           CCY                                                 CGL025
+     C                     PARM           ACOD                                                CGL025
+     C                     PARM           ACSQ                                                CGL025
+     C/COPY OFCPYSRCZ,CGL140_017                                                              CGL140
+     C/COPY WNCPYSRC,GLH00033
+      *                                                                                       CGL025
+     C                     ENDIF                                                             BUG5334
+      *                                                                                      BUG5334
+     C                     ENDIF                                                             BUG5334
+      *                                                                                      BUG5334
+     C                     ENDIF                                                              CGL025
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CCP4                                           S01408
+     C*                                                                   S01408
+     C                     ENDIF                                                            MD021858
+ E4  C**********           END                                                              AR813329
+      *
+      * On return from linked enquiry
+      * If Return Code is 'U', or Return Code is 'S' and this is the
+      * top level enquiry (ie. Module ID from initial call is blank)
+      *    Reset Return Code to blank
+      *    Set Option for subfile record just processed to blank
+      *    Set off modified data flag
+      *    If Old Balance field is 'Y'
+      *       Set on indicator so that '**' is displayed
+      *    Update subfile record
+      *
+     C                     IN   EMSDS
+      *
+      *    Check for F1 F3 or F12 pressed in lower program
+      *
+ B4  C           RETND     IFEQ 'U'
+ B4  C           RETND     OREQ 'S'
+ B4  C           RETND     OREQ 'Q'
+     C                     SETON                     62
+ E4  C                     END
+      *
+ B4  C           RETND     IFEQ 'U'
+ B4  C           RETND     OREQ 'S'
+ B4  C           MODID     ANDEQ*BLANK
+     C           *LOCK     IN   EMSDS
+     C                     MOVE *BLANK    RETND
+     C                     OUT  EMSDS
+     C                     MOVE *BLANK    OPTN
+     C                     SETOF                     3555
+ B5  C***********OLDBAL    IFEQ 'Y'                                       CCB002
+     C***********          SETON                     88                   CCB002
+ X5  C***********          ELSE                                           CCB002
+     C***********          SETOF                     88                   CCB002
+ E5  C***********          END                                            CCB002
+     C/COPY WNCPYSRC,GL0061C011
+      *                                                                                       CGL131
+     C           CGL131    IFEQ 'Y'                                                           CGL131
+     C                     UPDATGL0061SA                                                      CGL131
+     C                     ELSE                                                               CGL131
+      *                                                                                       CGL131
+     C                     UPDATGL0061SF
+     C/COPY WNCPYSRC,GL0061C012
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+ E4  C                     END
+      *
+ E3  C                     END
+      *
+     C/COPY WNCPYSRC,GL0061C027
+ E2  C                     END
+      *
+ E1  C                     END
+      *
+      * If there are balances from the previous day on the current
+      * screen and there are no errors
+      *    Set up the balances from previous day message
+      *
+ B1  C           *IN89     IFEQ '1'
+ B1  C           *IN70     ANDEQ'0'
+     C                     MOVE ERR,8     MSG
+ E1  C                     END
+      *
+     C                     ENDSR
+      *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  NEWDTL     -  PROCESS NEW DETAILS                            *
+      *                                                               *
+      *  CALLS      -  NXTRCD  Retrieve Next Valid Record             *
+      *             -  LODSFL  Load Subfile Page                      *
+      *                                                               *
+      *  CALLED BY  -  MAIN    Main Control Processing                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           NEWDTL    BEGSR
+      *
+      * Set off error indicators and clear error message
+      * Set off last page indicator
+      *
+     C                     SETOF                     555657
+     C                     SETOF                     70
+     C                     MOVE *BLANK    MSG
+     C                     SETOF                     34
+      *
+      * Validate Customer:
+      * If Customer input is blank
+      *    Set up error message and indicators
+      * Else
+      *    Access Customer Details file using input
+      *    If Customer input not found
+      *       Set up error message and indicators
+      *    Else
+      *       Set up Customer Details on screen header
+      *
+ B1  C           CUSTD     IFEQ *BLANK
+     C                     MOVE ERR,1     MSG
+     C                     SETON                     5670
+ X1  C                     ELSE
+     C                     MOVELCUSTD     TEST1                           098241
+ B2  C           TEST1     IFEQ '?'                                       098241
+     C                     MOVE 'RESET'   #CYCLE           Re-set/Clear   098241
+ E2  C                     END                                            098241
+     C***********          CALL 'AOCUSTR0'                                CSD007
+     C                     CALL 'AOCUSTR2'                                CSD007
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY'    @OPTN   7
+     C                     PARM           CUSTD
+     C                     PARM *BLANK    @KYST   7
+     C***********SDCUST    PARM SDCUST    DSSDY                           CSD007
+     C           SDCUST    PARM SDCUST    DSLDY                           CSD007
+      *                                                                   CSD007
+      ** If CSD007 is on, allow processing of a closed record (return     CSD007
+      ** code '*NRF' and date deleted equal to zero).                     CSD007
+      *                                                                   CSD007
+ B2  C           @RTCD     IFNE *BLANK
+     C           CSD007    ANDNE'Y'                                       CSD007
+      *                                                                   CSD007
+     C           @RTCD     ORNE *BLANK                                    CSD007
+     C           @RTCD     ANDEQ'*NRF   '                                 CSD007
+     C           BBDTDL    ANDNE*ZEROS                                    CSD007
+     C           CSD007    ANDEQ'Y'                                       CSD007
+      *                                                                                       TDA075
+     C           @RTCD     OREQ '*NRF   '                                                     TDA075
+      *                                                                   CSD007
+     C           @RTCD     ORNE *BLANK                                    CSD007
+     C           @RTCD     ANDNE'*NRF   '                                 CSD007
+     C           CSD007    ANDEQ'Y'                                       CSD007
+     C*                                                                   098241
+     C* If F3 was taken from 'Select Client Details', blank out           098241
+     C* the Customer Number/Shortname field.                              098241
+     C*                                                                   098241
+     C           @RTCD     IFEQ '*NOSEL '                                 098241
+     C                     MOVE *BLANK    CUSTD                           098241
+     C                     END                                            098241
+     C*                                                                   098241
+     C                     MOVE ERR,2     MSG
+     C                     SETON                     5670
+ X2  C                     ELSE
+     C                     MOVELCUSTD     TEST1   1
+ B3  C           TEST1     IFEQ '?'
+     C                     MOVELBBCUST    CUSTD
+ E3  C                     END
+     C                     MOVE BBCUST    CNUMD
+     C                     MOVE BBCSSN    CSNMD
+     C                     MOVE BBCRTN    CTWND
+     C                     MOVE BBCRNM    CRNMD
+     C                     MOVE BBACOC    ACOCD
+ E2  C                     END
+ E1  C                     END
+      *
+      * Validate Branch:
+      * If Customer input is valid and Multi-Branching Environment
+      *    If Branch input is blank
+      *       Default to Default Branch
+      *    If Branch input is 'ALL'
+      *       If user does not have bank level authority
+      *          Set up error message and indicators
+      *       Else
+      *          Access Branch Details file using input
+      *          If Branch Input not found
+      *             Set up error message and indicators
+      *          Else
+      *             Call ZVBBU to check user has authority to branch
+      *             If user not authorised to Branch input
+      *                Set up error message and indicators
+      *
+ B1  C           *IN70     IFEQ '0'
+ B1  C           BGMBIN    ANDEQ'Y'
+ B2  C           BRCHD     IFEQ *BLANK
+     C                     MOVE BRC       BRCHD
+ E2  C                     END
+ B2  C           BRCHD     IFEQ 'ALL'
+ B3  C           BANK      IFNE 'Y'
+     C                     MOVE ERR,3     MSG
+     C                     SETON                     5770
+ E3  C                     END
+ X2  C                     ELSE
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY'    @OPTN   7
+     C                     PARM           BRCHD
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+ B3  C           @RTCD     IFNE *BLANK
+     C                     MOVE ERR,4     MSG
+     C                     SETON                     5770
+ X3  C                     ELSE
+     C                     MOVE A8BRCD    BRCHD
+     C                     CALL 'ZVBBU'
+     C                     PARM           BRCHD
+     C                     PARM           ZVERR   10
+ B4  C           ZVERR     IFNE 0
+     C                     MOVE ERR,5     MSG
+     C                     SETON                     5770
+ E4  C                     END
+ E3  C                     END
+ E2  C                     END
+ E1  C                     END
+     C*
+     C/COPY WNCPYSRC,GL0061CCP5
+     C*
+      *
+      * If Customer or Branch input are invalid
+      *    Set off indicator to display customer details in header
+      * Else
+      *    Set on indicator to display customer details in header
+      *    Store Customer Number and Branch
+      *    SETLL on Accounts Master File using Customer Number
+      *    Read next (first) valid record
+      *    If a valid record is not found
+      *       Set up error message and indicator
+      *    Else
+      *       Set on First Page Indicator
+      *       Load subfile page
+      *
+ B1  C           *IN70     IFEQ '1'
+     C                     SETOF                     32
+ X1  C                     ELSE
+     C                     SETON                     32
+     C**********           MOVE CNUMD     CNUMX   60                                          CSD027
+     C                     MOVE CNUMD     CNUMX   6                                           CSD027
+     C                     MOVE BRCHD     BRCHX
+     C**********           Z-ADDCNUMX     CNUMK                                               CSD027
+     C                     MOVE CNUMX     CNUMK                                               CSD027
+     C                     MOVE *BLANK    CURRK
+     C                     Z-ADD0         ACODK
+     C                     Z-ADD0         ACSQK
+     C                     MOVE *BLANK    BRCHK
+     C/COPY WNCPYSRC,GL0061C017
+     C           ACTKEY    SETLLACCNT
+     C/COPY WNCPYSRC,GL0061C018
+     C                     EXSR NXTRCD
+      *                                                                   149835
+      * If the branch changes or it is the first time through (OLDBR      149835
+      * blank) check to see if the user is authorised to the branch.      149835
+      * If not, turn on indicator 65.                                     149835
+      *                                                                   149835
+     C           OLDBR     IFNE BRCA                                      149835
+      *                                                                   149835
+     C                     MOVEL*BLANKS   W@BRCA  3                       149835
+      *                                                                   149835
+     C                     MOVELBRCA      W@BRCA    P                     149835
+     C                     CALL 'ZVBBU'                                   149835
+     C                     PARM           W@BRCA                          149835
+     C                     PARM           ZVERR   10                      149835
+     C                     MOVELBRCA      OLDBR     P                     149835
+     C           ZVERR     IFNE 0                                         149835
+     C                     SETON                     65                   149835
+     C                     ELSE                                           149835
+     C                     SETOF                     65                   149835
+     C                     ENDIF                                          149835
+      *                                                                   149835
+     C                     ENDIF                                          149835
+      *                                                                   149835
+ B2  C           *IN44     IFEQ '1'
+ B3  C           BGMBIN    IFEQ 'Y'
+ B3  C           BRCHX     ANDNE'ALL'
+     C                     MOVE ERR,6     MSG
+ X3  C                     ELSE
+     C                     MOVE ERR,7     MSG
+ E3  C                     END
+     C                     SETON                     70
+ X2  C                     ELSE
+     C                     SETON                     33
+     C                     EXSR LODSFL
+ E2  C                     END
+ E1  C                     END
+     C/COPY WNCPYSRC,GLH00593
+      *
+      * If Customer or Branch input are invalid or their are no
+      * account records for a valid customer and branch
+      *    Clear existing subfile page
+      *    Set on indicator to display subfile control
+      *    (but leave indicator to display subfile off)
+      *    Write format to clear existing subfile records from screen
+      *
+ B1  C           *IN70     IFEQ '1'
+     C***********          SETOF                     3031                 098241
+     C                     SETOF                     303132               098241
+     C/COPY WNCPYSRC,GL0061C013
+      *                                                                                       CGL131
+     C           CGL131    IFEQ 'Y'                                                           CGL131
+     C                     WRITEGL0061SB                                                      CGL131
+     C                     SETON                     30                                       CGL131
+     C                     WRITEGL0061FA                                                      CGL131
+     C                     ELSE                                                               CGL131
+      *                                                                                       CGL131
+     C                     WRITEGL0061SC
+     C                     SETON                     30
+     C                     WRITEGL0061F2
+     C                     MOVE 'RESET'   #CYCLE           Re-set/Clear   098241
+     C/COPY WNCPYSRC,GL0061C014
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+ E1  C                     END
+      *
+     C                     ENDSR
+      *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  ROLL       -  PROCESS ROLLUP/ROLLDOWN                        *
+      *                                                               *
+      *  CALLS      -  PRVRCD  Retrieve Previous Valid Record         *
+      *             -  NXTRCD  Retrieve Next Valid Record             *
+      *             -  LODSFL  Load Subfile Page                      *
+      *                                                               *
+      *  CALLED BY  -  MAIN    Main Control Processing                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           ROLL      BEGSR
+      *
+      * If Rollup requested
+      *    Set off First Page Indicator
+      *    Reset key fields to values saved from last record on           089625
+      *     screen; this is the first record of the next screen           089625
+      *
+ B1  C           *IN25     IFEQ '1'
+     C                     SETOF                     33
+     C**********           Z-ADDCNUME     CNUMK                                        089625 CSD027
+     C                     MOVE CNUME     CNUMK                                               CSD027
+     C                     MOVE CURRE     CURRK                           089625
+     C                     Z-ADDACODE     ACODK                           089625
+     C                     Z-ADDACSQE     ACSQK                           089625
+     C                     MOVE BRCHE     BRCHK                           089625
+     C           ACTKEY    CHAINACCNT                75                   089625
+ E1  C                     END
+      *
+      * If Rolldown requested
+      *    Set off Last Page Indicator
+      *    SETLL on Accounts Master File using key fields saved from
+      *    first subfile record on current page
+      *    Do until 15 records have been read (record before previous
+      *       page) or start of file
+      *       Read backwards through file
+      *    If start of file reached
+      *       Set on First Page Indicator
+      *       SETLL using original Customer Number
+      *    Read next record (first record on previous page)
+      * Load subfile page
+      *
+ B1  C           *IN26     IFEQ '1'
+     C                     SETOF                     34
+     C           ACTKEY    SETLLACCNT
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CP12                                           S01408
+      *                                                                                       CGL131
+     C           CGL131    IFNE 'Y'                                                           CGL131
+      *                                                                                       CGL131
+     C*                                                                   S01408
+     C                     Z-ADD15        COUNT   30
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0061CP13                                           S01408
+      *                                                                                       CGL131
+     C                     ENDIF                                                              CGL131
+     C           CGL131    IFEQ 'Y'                                                           CGL131
+     C                     Z-ADD8         COUNT   30                                          CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+     C*                                                                   S01408
+ B2  C           COUNT     DOUEQ0
+ B2  C           *IN43     OREQ '1'
+     C                     SUB  1         COUNT
+     C                     EXSR PRVRCD
+ E2  C                     END
+ B2  C           *IN43     IFEQ '1'
+     C                     SETON                     33
+     C**********           Z-ADDCNUMX     CNUMK                                               CSD027
+     C                     MOVE CNUMX     CNUMK                                               CSD027
+     C                     MOVE *BLANK    CURRK
+     C                     Z-ADD0         ACODK
+     C                     Z-ADD0         ACSQK
+     C                     MOVE *BLANK    BRCHK
+     C           ACTKEY    SETLLACCNT
+ E2  C                     END
+     C                     EXSR NXTRCD
+      *                                                                   149835
+      * If the branch changes or it is the first time through (OLDBR      149835
+      * blank) check to see if the user is authorised to the branch.      149835
+      * If not, turn on indicator 65.                                     149835
+      *                                                                   149835
+     C           OLDBR     IFNE BRCA                                      149835
+      *                                                                   149835
+     C                     MOVEL*BLANKS   W@BRCA  3                       149835
+      *                                                                   149835
+     C                     MOVELBRCA      W@BRCA    P                     149835
+     C                     CALL 'ZVBBU'                                   149835
+     C                     PARM           W@BRCA                          149835
+     C                     PARM           ZVERR   10                      149835
+     C                     MOVELBRCA      OLDBR     P                     149835
+     C           ZVERR     IFNE 0                                         149835
+     C                     SETON                     65                   149835
+     C                     ELSE                                           149835
+     C                     SETOF                     65                   149835
+     C                     ENDIF                                          149835
+      *                                                                   149835
+     C                     ENDIF                                          149835
+      *                                                                   149835
+ E1  C                     END
+      *
+     C                     EXSR LODSFL
+      *
+     C                     ENDSR
+      *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  INITL      -  INITIAL PROCESSING                             *
+      *                                                               *
+      *  CALLS      -  *PSSR   Database Error Processing              *
+      *                                                               *
+      *  CALLED BY  -  MAIN    Main Control Processing                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           INITL     BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      * Define key lists for Accounts Master File and FF Retail
+      * Shadow Balances File
+      *
+     C           ACTKEY    KLIST
+     C**********           KFLD           CNUMK   60                                          CSD027
+     C                     KFLD           CNUMK   6                                           CSD027
+     C                     KFLD           CURRK   3
+     C**********           KFLD           ACODK   40                                          CGL029
+     C                     KFLD           ACODK  100                                          CGL029
+     C                     KFLD           ACSQK   20
+     C                     KFLD           BRCHK   3
+      *
+     C           MEMKEY    KLIST                                          S01127
+     C                     KFLD           BRCA                            S01127
+     C                     KFLD           CNUM                            S01127
+     C                     KFLD           CCY                             S01127
+     C                     KFLD           ACOD                            S01127
+     C                     KFLD           ACSQ                            S01127
+      *                                                                   149835
+      * Setup variable to hold old branch name.                           149835
+      *                                                                   149835
+     C                     MOVEL*BLANKS   OLDBR   3 P                     149835
+      *                                                                   S01194
+      * Receive details from Linked Enquiry Data Area and Midas User
+      * Details Data Area
+      *
+     C           *NAMVAR   DEFN           EMSDS
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   EMSDS
+     C                     IN   ZMUSER
+      *
+      * Save Module ID from Linked Enquiry Data Area
+      *
+     C                     MOVE LINKP     MODID   2
+      *
+      * Initialise Indicators
+      *
+     C                     SETON                     30
+     C                     SETOF                     31
+     C                     SETOF                     555657
+     C                     SETOF                     70
+      *
+      * Obtain Run Date and Date Format Indicator from Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+ B1  C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+ E1  C                     END
+      *
+      * If Multi-Branching Flag from Midas Modules File is 'Y'
+      *    Set on indicator to allow processing of branch prompt
+      * Else
+      *    Set Branch Code to 'ALL'
+      *    Set off indicator to allow processing of branch prompt
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+ B1  C           BGMBIN    IFEQ 'Y'
+     C                     SETON                     58
+ X1  C                     ELSE
+     C                     MOVE 'ALL'     BRCHD
+     C                     MOVE 'ALL'     BRCHX
+     C                     SETOF                     58
+ E1  C                     END
+      *
+      * If Retail Module is present
+      *    Set on Retail Module Indicator
+      *    Access MEMOS header for Dubious Balance Indicator
+      *
+ B1  C           *INU1     IFEQ '1'
+     C                     SETON                     41                   E41816
+     C                     CALL 'AORETLR0'                                E38492
+     C                     PARM '*DBERR  '@RTCD   7                       E38492
+     C                     PARM '*FIRST  '@OPTN   7                       E38492
+     C           SDRETL    PARM SDRETL    DSFDY                           E38492
+     C           BMRANR    IFEQ 'Y'                                       E38492
+     C                     SETON                     40
+     C                     END                                            E38492
+     C***********1         CHAINMEMO                 60                   CCB002
+ E1  C                     END
+      *
+      * If program called as linked enquiry
+      *    Move customer number and branch code from linked enquiry
+      *    data area to screen fields
+      *    Set on indicator to enable F1 and F12 processing
+      * Else
+      *    Set direct call from menu field to 'Y'
+      *    Initialise stored customer prompt to all 9's
+      *    Set off indicator to disable F1 and F12 processing
+      *
+ B1  C           LINKP     IFEQ 'GL'
+     C                     MOVELCNUMP     CUSTD
+ B2  C           BGMBIN    IFEQ 'Y'
+ B3  C           BRCHP     IFEQ *BLANK
+     C                     MOVE 'ALL'     BRCHD
+ X3  C                     ELSE
+     C                     MOVE BRCHP     BRCHD
+ E3  C                     END
+ E2  C                     END
+     C                     SETON                     39
+ X1  C                     ELSE
+     C                     MOVE *ALL'9'   CUSTX
+     C                     MOVE 'Y'       DIRECT  1
+     C                     SETOF                     39
+ E1  C                     END
+      *
+      ** Access Switchable Features file and check if CSD007              CSD007
+      ** is switched on or not.                                           CSD007
+      *                                                                   CSD007
+     C                     CALL 'AOSARDR0'                                CSD007
+     C                     PARM *BLANKS   PRTCD   7                       CSD007
+     C                     PARM '*VERIFY' POPTN   7                       CSD007
+     C                     PARM 'CSD007'  PSARD   6                       CSD007
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD007
+      *                                                                   CSD007
+     C           PRTCD     IFEQ *BLANKS                                   CSD007
+     C                     MOVE 'Y'       CSD007  1                       CSD007
+     C                     ELSE                                           CSD007
+     C                     MOVE 'N'       CSD007                          CSD007
+      *                                                                   CSD007
+      ** Database Error, if Return Code is not blanks or *NRF             CSD007
+      *                                                                   CSD007
+     C           PRTCD     IFNE '*NRF   '                                 CSD007
+     C                     MOVEL'SCSARDPD'DBFILE                          CSD007
+     C                     MOVEL'001'     DBASE                           CSD007
+     C                     MOVEL'CSD007  'DBKEY                           CSD007
+     C                     EXSR *PSSR                                     CSD007
+     C                     ENDIF                                          CSD007
+     C                     ENDIF                                          CSD007
+      *                                                                                       CLE025
+      ** Check if CLE025 is switched on                                                       CLE025
+      *                                                                                       CLE025
+     C                     CALL 'AOSARDR0'                                                    CLE025
+     C                     PARM *BLANKS   PRTCD                                               CLE025
+     C                     PARM '*VERIFY' POPTN                                               CLE025
+     C**********           PARM 'CLE025'  PSARD                                        CLE025 250630
+     C                     PARM 'CGL014'  PSARD                                               250630
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE025
+      *                                                                                       CLE025
+      ** Database error                                                                       CLE025
+      *                                                                                       CLE025
+     C           PRTCD     IFNE *BLANKS                                                       CLE025
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE025
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE025
+     C                     Z-ADD2         DBASE                                               CLE025
+     C**********           MOVEL'CLE025  'DBKEY                                        CLE025 250630
+     C                     MOVEL'CGL014  'DBKEY                                               250630
+     C                     EXSR *PSSR                                                         CLE025
+     C                     ENDIF                                                              CLE025
+      *                                                                                       CLE025
+     C           PRTCD     IFEQ *BLANKS                                                       CLE025
+     C**********           MOVE 'Y'       CLE025  1                                    CLE025 250630
+     C                     MOVE 'Y'       CGL014  1                                           250630
+     C                     MOVE *ON       *IN27                                               CLE025
+     C                     ELSE                                                               CLE025
+     C**********           MOVE 'N'       CLE025                                       CLE025 250630
+     C                     MOVE 'N'       CGL014                                              250630
+     C                     MOVE *OFF      *IN27                                               CLE025
+     C                     ENDIF                                                              CLE025
+      *                                                                                       CGL025
+      ** Access Switchable Features file and check if CGL025                                  CGL025
+      ** is switched on.                                                                      CGL025
+      *                                                                                       CGL025
+     C                     CALL 'AOSARDR0'                                                    CGL025
+     C                     PARM *BLANKS   PRTCD   7                                           CGL025
+     C                     PARM '*VERIFY' POPTN   7                                           CGL025
+     C                     PARM 'CGL025'  PSARD   6                                           CGL025
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL025
+      *                                                                                       CGL025
+     C           PRTCD     IFEQ *BLANKS                                                       CGL025
+     C                     MOVE 'Y'       CGL025  1                                           CGL025
+     C                     ELSE                                                               CGL025
+      *                                                                                       CGL025
+     C                     MOVE 'N'       CGL025                                              CGL025
+      *                                                                                       CGL025
+      ** Database Error, if Return Code is not blanks or *NRF                                 CGL025
+      *                                                                                       CGL025
+     C           PRTCD     IFNE '*NRF   '                                                     CGL025
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL025
+     C                     MOVEL'002'     DBASE                                               CGL025
+     C                     MOVEL'CGL025  'DBKEY                                               CGL025
+     C                     EXSR *PSSR                                                         CGL025
+     C                     ENDIF                                                              CGL025
+      *                                                                                       CGL025
+     C                     ENDIF                                                              CGL025
+     C*
+      ** Access SAR details file to determine if Account Access                               CGL037
+      ** Security is switched on                                                              CGL037
+      *                                                                                       CGL037
+     C                     CALL 'AOSARDR0'                                                    CGL037
+     C                     PARM *BLANKS   @RTCD   7                                           CGL037
+     C                     PARM '*VERIFY' @OPTN   7                                           CGL037
+     C                     PARM 'CGL037'  @SARD   6                                           CGL037
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL037
+      *                                                                                       CGL037
+     C           @RTCD     IFNE *BLANKS                                                       CGL037
+     C           @RTCD     ANDNE'*NRF   '                                                     CGL037
+     C                     MOVE *BLANKS   ERRORA 23                                           CGL037
+     C                     MOVEL'SCSARDPD'ERROR1 16                                           CGL037
+     C                     MOVE 'CGL037 ' ERROR1                                              CGL037
+     C                     MOVELERROR1    ERRORA                                              CGL037
+     C                     MOVE '  ERROR' ERRORA                                              CGL037
+     C           ERRORA    DSPLY                                                              CGL037
+     C                     MOVE '1'       *INLR                                               CGL037
+     C                     RETRN                                                              CGL037
+     C                     END                                                                CGL037
+      *                                                                                       CGL037
+     C           @RTCD     IFEQ *BLANK                                                        CGL037
+     C                     MOVEL'Y'       CGL037  1                                           CGL037
+     C                     ELSE                                                               CGL037
+     C                     MOVEL'N'       CGL037                                              CGL037
+     C                     END                                                                CGL037
+      *                                                                                      BUG5334
+      ** Check if CRE010 is switched on                                                      BUG5334
+      *                                                                                      BUG5334
+     C                     CALL 'AOSARDR0'                                                   BUG5334
+     C                     PARM *BLANKS   PRTCD                                              BUG5334
+     C                     PARM '*VERIFY' POPTN                                              BUG5334
+     C                     PARM 'CRE010'  PSARD                                              BUG5334
+     C           SCSARD    PARM SCSARD    DSFDY                                              BUG5334
+      *                                                                                      BUG5334
+      ** Database error                                                                      BUG5334
+      *                                                                                      BUG5334
+     C           PRTCD     IFNE *BLANKS                                                      BUG5334
+     C           PRTCD     ANDNE'*NRF   '                                                    BUG5334
+     C                     MOVEL'SCSARDPD'DBFILE                                             BUG5334
+     C                     Z-ADD3         DBASE                                              BUG5334
+     C                     MOVEL'CRE010  'DBKEY                                              BUG5334
+     C                     EXSR *PSSR                                                        BUG5334
+     C                     ENDIF                                                             BUG5334
+      *                                                                                      BUG5334
+     C           PRTCD     IFEQ *BLANKS                                                      BUG5334
+     C                     MOVE 'Y'       CRE010  1                                          BUG5334
+     C                     ELSE                                                              BUG5334
+     C                     MOVE 'N'       CRE010                                             BUG5334
+     C                     ENDIF                                                             BUG5334
+      *                                                                                       CGL037
+     C/COPY OFCPYSRCZ,CGL140_018                                                              CGL140
+     C/COPY WNCPYSRC,GL0061CCP6
+      *                                                                                       CRE023
+      ** Check if switchable feature CRE023 is on.                                            CRE023
+      *                                                                                       CRE023
+     C                     MOVE *OFF      *IN67                                               CRE023
+     C                     MOVEL'N'       CRE023  1                                           CRE023
+     C                     CALL 'AOSARDR0'                                                    CRE023
+     C                     PARM *BLANKS   PRTCD                                               CRE023
+     C                     PARM '*VERIFY' POPTN                                               CRE023
+     C                     PARM 'CRE023'  PSARD                                               CRE023
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRE023
+      *                                                                                       CRE023
+     C           PRTCD     IFNE *BLANKS                                                       CRE023
+     C           PRTCD     ANDNE'*NRF   '                                                     CRE023
+     C           *LOCK     IN   @LDA                                                          CRE023
+     C                     MOVE 'SCSARDPD'DBFILE                                              CRE023
+     C                     Z-ADD5         DBASE                                               CRE023
+     C                     MOVEL'CRE023'  DBKEY                                               CRE023
+     C                     OUT  @LDA                                                          CRE023
+     C                     EXSR *PSSR                                                         CRE023
+     C                     ENDIF                                                              CRE023
+      *                                                                                       CRE023
+     C           PRTCD     IFEQ *BLANKS                                                       CRE023
+     C                     MOVEL'Y'       CRE023                                              CRE023
+     C                     MOVE *ON       *IN67                                               CRE023
+     C                     OPEN RE2CLKL0                                                      CRE023
+     C                     OPEN REMEMLL0                                                      CRE023
+     C                     ENDIF                                                              CRE023
+      *                                                                                       CGL131
+      ** Check if CGL131 is on.                                                               CGL131
+      *                                                                                       CGL131
+     C                     CALL 'AOSARDR0'                                                    CGL131
+     C                     PARM *BLANKS   PRTCD                                               CGL131
+     C                     PARM '*VERIFY' POPTN                                               CGL131
+     C                     PARM 'CGL131'  PSARD                                               CGL131
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL131
+      *                                                                                       CGL131
+      ** Database error                                                                       CGL131
+      *                                                                                       CGL131
+     C           PRTCD     IFNE *BLANKS                                                       CGL131
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL131
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL131
+     C                     Z-ADD6         DBASE                                               CGL131
+     C                     MOVEL'CGL131  'DBKEY                                               CGL131
+     C                     EXSR *PSSR                                                         CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+     C           PRTCD     IFEQ *BLANKS                                                       CGL131
+     C                     MOVE 'Y'       CGL131  1                                           CGL131
+     C                     ELSE                                                               CGL131
+     C                     MOVE 'N'       CGL131                                              CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+      ** Check if switchable feature CAP207 is on.                                            CGL131
+      *                                                                                       CGL131
+     C                     MOVEL'N'       CAP207  1                                           CGL131
+     C                     CALL 'AOSARDR0'                                                    CGL131
+     C                     PARM *BLANKS   PRTCD                                               CGL131
+     C                     PARM '*VERIFY' POPTN                                               CGL131
+     C                     PARM 'CAP207'  PSARD                                               CGL131
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL131
+      *                                                                                       CGL131
+     C           PRTCD     IFNE *BLANKS                                                       CGL131
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL131
+     C           *LOCK     IN   @LDA                                                          CGL131
+     C                     MOVE 'SCSARDPD'DBFILE                                              CGL131
+     C                     Z-ADD7         DBASE                                               CGL131
+     C                     MOVEL'CAP207'  DBKEY                                               CGL131
+     C                     OUT  @LDA                                                          CGL131
+     C                     EXSR *PSSR                                                         CGL131
+     C                     ENDIF                                                              CGL131
+      *                                                                                       CGL131
+     C           PRTCD     IFEQ *BLANKS                                                       CGL131
+     C                     MOVEL'Y'       CAP207                                              CGL131
+     C                     ENDIF                                                              CGL131
+     C*
+     C                     ENDSR
+     C/COPY WNCPYSRC,GL0061C032
+      *                                                                                       CRE023
+      *****************************************************************                       CRE023
+      *                                                               *                       CRE023
+      *  SRAVAL - Calculate Available Balance                         *                       CRE023
+      *                                                               *                       CRE023
+      *****************************************************************                       CRE023
+     C           SRAVAL    BEGSR                                                              CRE023
+      *                                                                                       CRE023
+      ** Access 2'O Clock flag                                                                CRE023
+      *                                                                                       CRE023
+     C           KEY2CL    KLIST                                                              CRE023
+     C                     KFLD           GCLOCK                                              CRE023
+     C                     MOVE *BLANKS   GCLOCK                                              CRE023
+     C                     MOVEL'CLOCK'   GCLOCK                                              CRE023
+      *                                                                                       CRE023
+     C           KEY2CL    CHAINRE2CLKL0             79                                       CRE023
+     C           *IN79     IFEQ *ON                                                           CRE023
+     C                     MOVEL'RE2CLKL0'DBFILE                                              CRE023
+     C                     MOVELGCLOCK    DBKEY                                               CRE023
+     C                     MOVEL'GL0061  'DBPGM                                               CRE023
+     C                     Z-ADD12        DBASE                                               CRE023
+     C                     EXSR *PSSR                                                         CRE023
+     C                     ENDIF                                                              CRE023
+      *                                                                                       CRE023
+      ** Access MEMOS-L file                                                                  CRE023
+      *                                                                                       CRE023
+     C           ACNO      CHAINREMEMLL0             79                                       CRE023
+     C           *IN79     IFEQ *ON                                                           CRE023
+     C                     Z-ADD*ZEROS    GTAMT                                               CRE023
+     C                     Z-ADD*ZEROS    GPAMT                                               CRE023
+     C                     ENDIF                                                              CRE023
+      *                                                                                       CRE023
+     C           GTFLG     IFEQ '0'                                                           CRE023
+     C           GTAMT     IFNE 0                                                          AR792734A
+     C           LDBL      ADD  GTAMT     CLBL                                                CRE023
+     C                     ENDIF                                                           AR792734A
+     C                     ELSE                                                               CRE023
+     C           GPAMT     IFNE 0                                                          AR792734A
+     C           CLBL      ADD  GPAMT     CLBL                                                CRE023
+     C                     ENDIF                                                           AR792734A
+     C                     ENDIF                                                              CRE023
+      *                                                                                     AR802820
+      ** Held Balance                                                                       AR802820
+      *                                                                                     AR802820
+     C           CLBL      ADD  HELD      CLBL                                              AR802820
+      *                                                                                     AR802820
+      ** Blocked Collateral Amount                                                          AR802820
+      *                                                                                     AR802820
+     C           CLBL      ADD  BCOA      CLBL                                              AR802820
+      *                                                                                     AR802820
+      ** Overdraft Line                                                                     AR802820
+      *                                                                                     AR802820
+     C           ODED      IFGE BJRDNB                                                      AR802820
+     C           ODLN      ANDNE0                                                           AR802820
+     C                     Z-ADDODLN      WKODLN 150                                        AR802820
+     C                     DO   ZDECS                                                       AR802820
+     C                     MULT 10        WKODLN                                            AR802820
+     C                     ENDDO                                                            AR802820
+     C                     SUB  WKODLN    CLBL                                              AR802820
+     C                     ENDIF                                                            AR802820
+      *                                                                                       CRE023
+     C                     ENDSR                                                              CRE023
+      *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  *PSSR      -  ERROR PROCESSING                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           *PSSR     BEGSR
+      *
+      * Update Linked Enquiry Data Area with Return Code set to 'E',
+      * update LDA with program name, set on error switch, dump
+      * program and return to calling program
+      *
+     C           ERROR     IFEQ *BLANK
+     C                     MOVE 'Y'       ERROR   1
+      *
+     C           *LOCK     IN   EMSDS
+     C                     MOVE 'E'       RETND
+     C                     OUT  EMSDS
+      *
+     C                     MOVEL'GL0061  'DBPGM
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVE DBERR     @LDA
+     C                     OUT  @LDA
+      *
+     C                     SETON                     U7LR
+     C                     DUMP
+      *
+     C                     END
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,GL0061OOPG                                           S01408
+     O*                                                                   S01408
+      ** Reinstate Account Details enquiry option                                           MD021858
+      *                                                                                     MD021858
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  ERR
+ ENTER A CUSTOMER NUMBER OR SHORTNAME
+ INVALID CUSTOMER - ENTER '?' FOR LIST OF VALID CUSTOMERS
+ USER NOT AUTHORISED TO BANK LEVEL FUNCTION
+ INVALID BRANCH CODE - ENTER '?' FOR LIST OF VALID BRANCH CODES
+ USER NOT AUTHORISED TO BRANCH
+ THERE ARE NO ACCOUNTS FOR THIS CUSTOMER IN THIS BRANCH
+ THERE ARE NO ACCOUNTS FOR THIS CUSTOMER
+ ** BALANCES FROM PREVIOUS DAY
+ INVALID ENTRY - ENTER '1' FOR ACCOUNT DETAILS OR '2' FOR ACCOUNT MOVEMENTS                 MD021858
+ INVALID ENTRY - ENTER '1' FOR A/C DETLS, '2' FOR A/C MOVEMENTS, '3' FOR STMT               MD021858
+ ENTER '1' - A/C DET, '2' - A/C MVMT, '3' - PROJ A/C MOVMT OR '4' - AVAIL BAL               MD021858
+ ENTER '1'-A/C DET,'2'-A/C MVMT,'3'-STMT,'4'-PROJ A/C MOVMT or '5'-AVAIL BAL                MD021858
+     X/COPY WNCPYSRC,GL0061X001
+     X/COPY OFCPYSRCZ,CGL140_019                                                              CGL140

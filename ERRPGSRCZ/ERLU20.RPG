@@ -1,0 +1,1270 @@
+     H        1
+      *****************************************************************
+/*OVRF*: OVRDBF FILE(EREXRAZ1) TOFILE(EREXRAV1) SHARE(*NO)          : *
+/*OVRF*: OVRDBF SDECOSPD SDECOSLXPD                                 : *           183923
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Amount Due Weighting Rates Decision Table')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting                                   *
+      *                                                               *
+      *  ERLU20 - Amount Due Weighting Rates Decision Table           *
+      *           Maintenance                                         *
+      *                                                               *
+      *  Function:  This program is used to record the weighting      *
+      *             rates to apply on the customer exposures.         *
+      *                                                               *
+      *  Called By: ERCLU20 - Amount Due Weighting Rates Maintenance  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Aug05               *
+      *  Prev Amend No. UPG402             Date 05Oct04               *
+      *                 UPGCSW             Date 27Sep02               *
+      *                 210004             Date 26Sep02               *
+      *                 183923             Date 20Sep00
+      *                 CAD031             Date 05Jan99               *
+      *                 ULX012  *CREATE    Date 12Aug98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus (Recompile only)           *
+      *  UPG402 - Recompile due to change in ZALIGNZ2                 *
+      *  UPGCSW - Due to an upgrade of swift changes 2002 rename      *
+      *           variable V to W (confict with hook ZSRSRC/ZCOTRZ1   *
+      *           Amend ZSRSRC,ZALIGNZ2
+      *  210004 - Mismatch between ',' and '.' in Amend mode.         *
+      *           Link with fix 206456 in ZEDIT. So, apply same fix   *
+      *           in SR/ZALIGN and SR/ZFRPED.                         *
+      *  183923 - File SDECOSPD is renamed SDECOSLXPD.                *
+      *           Recompile                                           *
+      *  CAD031 - To use new economic sector codes                    *
+      *  ULX012 - Guarantees and Collateral Management enhancements   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N    O F   I N D I C A T O R S               *
+      *    ============================================               *
+      *                                                               *
+      *  *IN03  -  F3  pressed, exit program                          *
+      *  *IN05  -  F05 pressed, refresh screen                        *
+      *  *IN12  -  F09 pressed => Change Mode                         *
+      *  *IN15  -  Program called in enquiry mode                     *
+      *  *IN16  -  'Add Mode'                                         *
+      *  *IN17  -  No data to display                                 *
+      *  *IN18  -  Record deleted                                     *
+      *  *IN20  -  Error Selection field and Action Code              *
+      *  *IN21  -  Error Economic Sector Code field                   *
+      *  *IN22  -  Error Zone A/B field                               *
+      *  *IN23  -  Error Claim's Type field                           *
+      *  *IN24  -  Error Claim's Maturity field                       *
+      *  *IN25  -  Error Weighting Rate field                         *
+      *  *IN35  -  Rollup key pressed                                 *
+      *  *IN45  -  Any valid key                                      *
+      *  *IN60  -  Eof not reached                                    *
+      *  *IN63  -  SFLNXTCHG indicator                                *
+      *  *IN77  -  Working field for scan '?'                         *
+      *  *IN80  -  SFLDSPCTL indicator                                *
+      *  *IN81  -  SFLDSP indicator                                   *
+      *  *IN87  -  Eof in the subfile                                 *
+      *  *IN88  -  Eof in the Master file                             *
+      *  *IN89  -  Working indicator                                  *
+      *                                                               *
+      *  *INLR  -  End processing                                     *
+      *  *INU7  -  Data-base                                          *
+      *  *INU8  -  Error control                                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  ===============================                              *
+      *                                                               *
+      *  SRF9   -  SR executed if F9 pressed                          *
+      *  SRCHCK -  SR To check if changes in subfile                  *
+      *  SRVAL  -  SR To validate                                     *
+      *  INISFL -  Initialize subfile                                 *
+      *  LOASFE -  Load subfile                                       *
+      *  LOASF9 -  Load subfile when F9 Key has been pressed          *
+      *  SELEC  -  SR selection for the record read                   *
+      *  PRESS  -  SR to move the appropriate values into field WWAID,*
+      *            depending on which function key has been pressed   *
+      *  *INZSR -  Initial Processing                                 *
+      *                                                               *
+      *  ZASNMS -  SR to send message to program's message queue      *
+      *  *PSSR  -  Dump routine in case of error                      *
+      *                                                               *
+      *****************************************************************
+     FEREXRAZ1IF  E           K        DISK         KINFSR *PSSR
+      ***  Amount due Weighting Rates Decision Table
+      *
+     FEREXRAV1UF  E           K        DISK         KCOMIT       A
+      ***  Amount due Weighting Rates Decision Table
+     F            EREXRAD0                          KRENAMEUPERLUAC
+      *
+     F**SDECOSPDIF  E           K        DISK         KINFSR *PSSR        CAD031
+     FSDNCOSPDIF  E           K        DISK         KINFSR *PSSR          CAD031
+      ***  ER Economic Sector table
+      *
+     FERLU20DFCF  E                    WORKSTN      KINFDS INFDS#
+      ***  Amount due Weighting Rates Display file
+     F                                        SFLRECKSFILE ERLU20S1
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+     E                    TXT     1   3 78
+      ***  Bottom lign screen
+      *
+     E                    DUR     1  15  5   PER     2 0
+      ***  Duration and period Code
+      *
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IINFDS#      DS
+     I                                    B 378 3790CPFPOS
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+     I                                      282 2870STIME
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     I            DS
+     I                                        1   4 DHECSC
+     I                                        5   5 DHZABI
+     I                                        6   6 DHCLAT
+     I                                        7  11 DHCLAM
+     I                                       12  14 DHWEIG
+     I                                        1  14 SELEC1
+      *
+     I            DS
+     I                                        1   4 WWECSC
+     I                                        5   5 WWZABI
+     I                                        6   6 WWCLAT
+     I                                        7  11 WWCLAM
+     I                                       12  14 WWWEIG
+     I                                        1  14 SELEC2
+      *
+     I            DS
+     I                                        1   40WKECSC
+     I                                        5   5 WKZABI
+     I                                        6   60WKCLAT
+     I                                        7   90WKPECO
+     I                                        1   9 WKSELE
+      *
+     I            DS
+     I                                        1   40W2ECSC
+     I                                        5   5 W2ZABI
+     I                                        6   60W2CLAT
+     I                                        7   90W2PECO
+     I                                        1   9 WWSAV2
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ***  DS for access programs, short data structure
+      *
+     ICPYR@#      DS
+      ***  Data structure for compilation  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                M A I N     P R O C E S S I N G                *
+      *****************************************************************
+      *
+      ***  ' ADD MODE ' on first cycle
+      *
+     C           *IN09     IFNE *ON
+     C                     EXSR INISFL                     Init. Subfile
+     C                     EXSR LOASFE                     Load subfile Enquiry
+      *
+     C           CPFPOS    IFNE *ZEROS
+     C                     Z-ADDCPFPOS    SFLREC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Do while not F3 or F12 pressed
+      *
+     C           *INKC     DOWEQ*OFF                       - B1
+     C           *IN12     ANDEQ*OFF
+      *
+     C                     MOVE SELEC1    SELEC2
+      *
+      ***  Reset F9 Indicator
+      *
+     C                     MOVE *OFF      *IN16
+      *
+      ***  Write subfile
+      *
+     C           *IN09     IFNE *ON                        - B2
+      *
+      ***  Set Up Function Key Text - Standard Functions  *
+      *
+     C           *IN15     IFEQ *ON
+     C                     MOVEATXT,3     ##CTX1
+     C                     ELSE
+     C           *IN16     IFEQ *ON
+     C                     MOVEATXT,2     ##CTX1
+     C                     ELSE
+     C                     MOVEATXT,1     ##CTX1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITEERLU20F2                   Bottom
+     C                     WRITE#MSGCTL                    Wrt Msg Scr
+     C                     EXFMTERLU20C1                   Subfile control
+      *
+      ***  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ***  Which key has been pressed
+      *
+     C                     EXSR PRESS
+      *
+     C           WWAID     IFEQ 'UP'                       - B3
+     C                     Z-ADDWWRRN     SFLREC
+     C                     EXSR LOASFE
+     C                     ENDIF                           - E3
+      *
+     C           CPFPOS    IFNE *ZEROS
+     C                     Z-ADDCPFPOS    SFLREC
+     C                     ENDIF
+     C                     ENDIF                           - E2
+      *
+      ***  F9 Key has been pressed
+      *
+     C           *IN09     IFEQ *ON                        - B2
+     C                     EXSR SRF9
+     C                     MOVE SELEC1    SELEC2
+      *
+     C           *INKC     IFEQ *ON                        - B3
+     C                     MOVE *OFF      *IN16
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+      *
+      ***  Enter has been pressed
+      *
+     C           *IN45     IFEQ *OFF                       - B2
+     C           *IN16     ANDEQ*OFF
+      *
+     C           *IN45     IFEQ *OFF                       - B3
+     C           SELEC1    ANDNESELEC2
+     C                     EXSR INISFL
+     C                     EXSR LOASFE
+      *
+      ***  No details in the file
+      *
+     C           SFLREC    IFEQ 0
+     C                     MOVEL'ERL0020' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN17
+     C                     EXSR LOASF9
+     C                     MOVE *OFF      *IN17
+     C                     ENDIF
+      *
+     C           CPFPOS    IFNE *ZEROS
+     C                     Z-ADDCPFPOS    SFLREC
+     C                     ENDIF
+      *
+     C                     ENDIF                           - E3
+      *
+      ***  Check if changes in subfile
+      *
+     C                     EXSR SRCHCK
+     C                     ENDIF                           - E2
+      *
+      ***  F5 Key has been pressed : REFRESH PROCESSING ==> REBUILD SUBFILE
+      ***  or back from F9 screen with F9 Key
+      *
+     C                     MOVE *BLANKS   IN16
+      *
+     C           *IN05     IFEQ *ON                        - B2
+     C           *IN16     OREQ *ON
+     C                     MOVE 'Y'       IN16    1
+     C                     MOVE '0'       *IN16
+     C                     MOVE *BLANKS   SELEC1
+      *
+     C                     EXSR INISFL
+     C                     EXSR LOASFE
+      *
+      ***  No details in the file
+      *
+     C           SFLREC    IFEQ 0
+     C                     MOVEL'ERL0020' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN17
+     C                     EXSR LOASF9
+     C                     MOVE *OFF      *IN17
+     C                     ENDIF
+      *
+     C           CPFPOS    IFNE *ZEROS
+     C                     Z-ADDCPFPOS    SFLREC
+     C                     ENDIF
+     C                     MOVE *BLANKS   IN16
+     C                     ENDIF                           - E2
+     C                     ENDDO                           - E1
+      *
+      ***  End of program
+      *
+     C                     MOVE *ON       *INLR
+     C                     ROLBK
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRF9 -  SR executed if F9 pressed                             *
+      * ----                                                          *
+      *   Called by : Main processing                                 *
+      *   Calls     : INISFL LOASF9 ZASNMS SRVAL                      *
+      *****************************************************************
+      *
+     C           SRF9      BEGSR
+      *
+     C                     MOVE *ON       *IN16
+      *
+     C                     EXSR INISFL
+     C                     EXSR LOASF9
+     C                     Z-ADD1         SFLREC
+      *
+     C           *INKC     DOWEQ*OFF                       - B1
+     C           *IN12     ANDEQ*OFF
+      *
+      ***  Write subfile 'F9'
+      *
+      ***  Set Up Function Key Text - Standard Functions  *
+      *
+     C           *IN15     IFEQ *ON
+     C                     MOVEATXT,3     ##CTX1
+     C                     ELSE
+     C           *IN16     IFEQ *ON
+     C                     MOVEATXT,2     ##CTX1
+     C                     ELSE
+     C                     MOVEATXT,1     ##CTX1
+     C                     ENDIF
+     C                     ENDIF
+     C                     WRITEERLU20F2                   Bottom
+     C                     WRITE#MSGCTL                    Wrt Msg Scr
+     C                     EXFMTERLU20C1                   Subfile control
+      *
+      ***  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ***  F9 Key pressed once again = F12 IS SETON
+      *
+     C           *IN09     IFEQ *ON                        - B2
+     C                     MOVE *ON       *IN12
+     C                     MOVE *OFF      *IN09
+     C                     ENDIF                           - E2
+      *
+      ***  Enter has been pressed on 'F9' Screen
+      *
+     C           *IN45     IFEQ *OFF                       - B2
+     C                     READCERLU20S1                 87
+      *
+     C           *IN87     DOWEQ*OFF                       - B3
+     C                     MOVE *OFF      *IN15
+     C                     MOVEA'00000'   *IN,21
+     C                     MOVE *OFF      *IN63
+      *
+      ***  Validate input fields
+      *
+     C                     EXSR SRVAL
+      *
+      ***  No errors
+      *
+     C           WWERR     IFEQ 'N'                        - B4
+      *
+      ***  Check if the new record already exist in the file
+      *
+     C                     MOVE DSECSC    WKECSC
+     C                     MOVE DSZABI    WKZABI
+     C                     MOVE DSCLAT    WKCLAT
+     C                     MOVE D2PECO    WKPECO
+      *
+     C           KWGAR1    CHAINEREXRAZ1             89
+      *
+      ***  Record already exist in the file
+      *
+     C           *IN89     IFEQ *OFF                       - B5
+     C                     MOVEA'11111'   *IN,21
+     C                     MOVEL'ERL2003' ZAMSID
+     C                     MOVE *ON       *IN63
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X5
+      *
+     C                     MOVE DSECSC    XRECSC           Economic Sector Code
+     C                     MOVE DSZABI    XRZABI           Zone A/B
+     C                     MOVE DSCLAT    XRCLAT           Claim's Type
+     C                     MOVE DSCLAM    XRCLAM           Claim's Maturity
+     C                     MOVE D2PECO    XRPECO           Period Code
+     C                     MOVE DSWEIG    XRWEIG           Weighting Rate
+     C                     MOVE 'I'       XRLCTY
+     C                     Z-ADDBJRDNB    XRLCD
+     C                     WRITEUPERLUAC
+      *
+      ***  Write done then protect record
+      *
+     C                     MOVE *ON       *IN15
+     C                     COMIT
+     C                     ENDIF                           - E5
+     C                     ENDIF                           - E4
+      *
+     C                     UPDATERLU20S1
+     C                     MOVE *OFF      *IN15
+     C                     MOVEA'00000'   *IN,21
+     C                     MOVE *OFF      *IN63
+      *
+      ***  Read next changed record
+      *
+     C                     READCERLU20S1                 87
+     C                     ENDDO                           - E3
+     C                     ENDIF                           - E2
+      *
+      ***  Refresh on F9 SCREEN
+      *
+     C           *IN05     IFEQ *ON                        - B2
+     C                     EXSR INISFL
+     C                     EXSR LOASF9
+     C                     ENDIF                           - E2
+      *
+      ***  Rollup on F9 SCREEN
+      *
+     C           *IN35     IFEQ *ON                        - B2
+     C                     Z-ADDWWRRN2    SFLREC
+     C                     EXSR LOASF9
+     C                     ENDIF                           - E2
+     C                     ENDDO                           - E1
+      *
+     C           *IN12     IFEQ *ON
+     C                     MOVE *OFF      *IN12
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRCHCK - SR To check if changes in subfile                    *
+      * ------                                                        *
+      *   Called by : Main processing                                 *
+      *   Calls     : ZASNMS                                          *
+      *****************************************************************
+      *
+     C           SRCHCK    BEGSR
+      *
+      ***  Retrive all changed records
+      *
+     C                     READCERLU20S1                 87
+      *
+     C           *IN87     DOWEQ*OFF                       - B1
+      *
+      ***  Validation on record subfile
+      *
+     C                     MOVE *OFF      *IN63
+     C                     MOVEA'000000'  *IN,20
+      *
+     C           DSSELE    IFNE 'D'                        - B2
+     C           DSSELE    ANDNE*BLANKS
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN63
+     C                     MOVEL'ERB3001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+      *
+      ***  Validate input fields
+      *
+     C           DSSELE    IFNE 'D'                        - B2
+     C                     EXSR SRVAL
+     C                     ENDIF                           - E2
+      *
+      ***  NO ERRORS
+      *
+     C           *IN20     IFEQ *OFF                       - B2
+     C           WWERR     ANDEQ'N'
+     C           DSSELE    OREQ 'D'
+      *
+      ***  If no error and 'D' selected ==> DELETE IN FILE
+      *
+     C           DSSELE    IFEQ 'D'                        - B3
+     C                     MOVE DSECSC    WKECSC
+     C                     MOVE DSZABI    WKZABI
+     C                     MOVE DSCLAT    WKCLAT
+     C                     MOVE D2PECO    WKPECO
+     C                     MOVE DSWEIG    WKWEIG
+      *
+     C           KWGAR2    CHAINEREXRAV1             88
+      *
+     C           *IN88     IFEQ *OFF                       - B4
+     C                     DELETUPERLUAC
+     C                     MOVE *ON       *IN15
+     C                     MOVE *ON       *IN18
+      *
+      ***  Record Updated/Deleted by an other workstation
+      *
+     C                     ELSE
+     C                     MOVEA'111111'  *IN,20
+     C                     MOVE *ON       *IN63
+     C                     MOVEL'ERL0022' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E4
+      *
+     C                     ELSE                            - X3
+      *
+      ***  Update file and subfile
+      *
+     C                     MOVE DSECSC    WKECSC
+     C                     MOVE DSZABI    WKZABI
+     C                     MOVE DSCLAT    WKCLAT
+     C                     MOVE D2PECO    WKPECO
+     C                     MOVE D2WEIG    WKWEIG
+      *
+     C           KWGAR2    CHAINEREXRAV1             88
+      *
+     C           *IN88     IFEQ *OFF                       - B4
+     C                     MOVE DSECSC    XRECSC           Economic Code
+     C                     MOVE DSZABI    XRZABI           Zone A/B
+     C                     MOVE DSCLAT    XRCLAT           Claim's Type
+     C                     MOVE DSCLAM    XRCLAM           Claim's Maturity
+     C                     MOVE D2PECO    XRPECO           Period code
+     C                     MOVE DSWEIG    XRWEIG           Weighting Rate
+     C                     MOVE 'A'       XRLCTY
+     C                     Z-ADDBJRDNB    XRLCD
+     C                     MOVE DSWEIG    D2WEIG
+     C                     UPDATUPERLUAC
+      *
+      ***  Record Updated/Deleted by an other workstation
+      *
+     C                     ELSE
+     C                     MOVEA'111111'  *IN,20
+     C                     MOVE *ON       *IN63
+     C                     MOVEL'ERL0022' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E4
+     C                     ENDIF                           - E3
+     C                     COMIT
+     C                     ENDIF                           - E2
+      *
+     C                     UPDATERLU20S1
+     C                     MOVE *OFF      *IN18
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN15
+     C                     MOVEA'000000'  *IN,20
+      *
+      ***  Read next changed record
+      *
+     C                     READCERLU20S1                 87
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRVAL - SR To valdidate                                       *
+      * -----                                                         *
+      *   Called by : SRF9 SRCHCK                                     *
+      *   Calls     : ZASNMS AODLSTR0 AOLOANR0 AOACODR0 AOCURRR0      *
+      *               AOCUSTR0                                        *
+      *****************************************************************
+      *
+     C           SRVAL     BEGSR
+      *
+     C                     MOVE 'N'       WWERR   1
+      *
+     C           DSECSC    IFEQ *BLANKS                    - B1
+     C                     MOVE *BLANKS   DSECON
+     C                     ENDIF                           - E1
+      *
+     C           DSECSC    IFEQ *BLANKS                    - B1
+     C           DSZABI    IFEQ *BLANKS                    - B2
+     C           DSCLAT    ANDEQ*BLANKS
+     C           DSCLAM    ANDEQ*BLANKS
+     C           DSWEIG    ANDEQ*BLANKS
+     C                     MOVE *BLANKS   DSECON
+     C                     MOVE *OFF      *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     ELSE
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL2001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+      ***  Economic Sector Code validation
+      *
+     C           DSECSC    IFNE *BLANKS                    - B1
+      *
+     C                     MOVELDSECSC    WWN04   40
+     C                     MOVELWWN04     WWK04   4
+      ***  Check if numeric
+     C           DSECSC    IFNE WWK04                      - B2
+     C                     MOVE *BLANKS   DSECON
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL5001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X2
+     C                     MOVE DSECSC    WKECSC
+      *
+     C***********WKECSC    CHAINSDECOSPD             89                   CAD031
+     C           WKECSC    CHAINSDNCOSPD             89                   CAD031
+      *
+     C           *IN89     IFEQ *ON                        - B3
+     C                     MOVE *BLANKS   DSECON
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL5001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X3
+     C*********************MOVELVGECON    DSECON    P                     CAD031
+     C                     MOVELVNECON    DSECON    P                     CAD031
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+      ***  Zone A/B validation
+      *
+     C           DSZABI    IFNE *BLANKS                    - B1
+     C           DSZABI    ANDNE'A'
+     C           DSZABI    ANDNE'B'
+     C                     MOVE *ON       *IN22
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL5004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+      ***  Economic Sector Code is mandatory with this field
+      *
+     C           DSECSC    IFNE *BLANKS                    - E1
+     C           DSZABI    ANDEQ*BLANKS
+     C                     MOVE *ON       *IN22
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL5002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+      ***  Claim's Type validation
+      *
+     C           DSCLAT    IFNE *BLANKS                    - B1
+     C           DSCLAT    ANDNE'1'
+     C                     MOVE *ON       *IN23
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL2000' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+      *
+      ***  Claim's Maturity validation
+      *
+     C                     Z-ADD1         X       20
+     C           DSCLAM    LOKUPDUR,X                    89
+      *
+     C           *IN89     IFEQ *OFF                       - B1
+     C                     MOVE *BLANKS   D2PECO
+     C                     MOVE *ON       *IN24
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL2002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X1
+     C                     Z-ADDPER,X     D2PECO
+     C                     ENDIF                           - E1
+      *
+      ***  Weighting Rate validation
+      *
+     C           DSWEIG    IFEQ *BLANKS                    - B1
+     C           DSECSC    ANDNE*BLANKS
+     C           DSWEIG    OREQ *BLANKS
+     C           DSZABI    ANDNE*BLANKS
+     C                     MOVE *ON       *IN25
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL5009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X1
+     C           DSWEIG    IFNE *BLANKS                    - B2
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE DSWEIG    ZFIELD    P
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD3         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *ON                        - B3
+     C                     MOVE *ON       *IN25
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL5008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X3
+     C                     MOVE ZFIELD    W3NUM   30
+      *
+     C           W3NUM     IFLT 0                          - B4
+     C           W3NUM     ORGT 100
+     C                     MOVE *ON       *IN25
+     C                     MOVE *ON       *IN63
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'ERL5008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE                            - X4
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    DSWEIG
+     C                     ENDIF                           - E4
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INISFL - Initialize subfile                                   *
+      * -----                                                         *
+      *   Called by : Main processing SRF9                            *
+      *   Calls     : None                                            *
+      *****************************************************************
+      *
+     C           INISFL    BEGSR
+      *
+     C                     MOVE *OFF      *IN80
+     C                     MOVE *OFF      *IN81
+     C                     WRITEERLU20C1
+     C                     MOVE *ON       *IN80
+     C                     MOVE *OFF      *IN60
+     C                     Z-ADD0         SFLREC
+     C                     Z-ADD0         WWRRN2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * LOASFE - Load subfile                                         *
+      * ------                                                        *
+      *   Called by : Main processing                                 *
+      *   Calls     : SELEC                                           *
+      *****************************************************************
+      *
+     C           LOASFE    BEGSR
+      *
+      ***  If selection field reset to blank by user ==> SELECT ALL RECORDS
+      *
+     C           SELEC1    IFNE SELEC2                     - B1
+     C           DHECSC    ANDEQ*BLANKS
+     C           DHZABI    ANDEQ*BLANKS
+     C           DHCLAT    ANDEQ*BLANKS
+     C           DHCLAM    ANDEQ*BLANKS
+     C           DHWEIG    ANDEQ*BLANKS
+     C                     MOVE SELEC1    SELEC2
+     C                     ENDIF                           - B2
+      *
+      ***  Init screen line number
+      *
+     C                     Z-ADD0         WWCPT   20
+      *
+      ***  Economic Sector Code selected
+      *
+     C           DHECSC    IFNE *BLANKS                    - B1
+     C                     MOVE DHECSC    WKECSC
+     C           WKECSC    SETLLEREXRAZ1
+     C                     ELSE
+     C           *LOVAL    SETLLEREXRAZ1
+     C                     ENDIF                           - E1
+      *
+      ***  Rollup pressed
+      *
+     C           WWAID     IFEQ 'UP'                       - B1
+     C                     MOVELWWSAV2    WKSELE
+     C           KWGAR1    SETLLEREXRAZ1
+     C                     ENDIF                           - E1
+      *
+      ***  Read next record
+      *
+     C                     READ EREXRAZ1                 87
+      *
+      ***  Load subfile
+      *
+     C                     MOVE *OFF      *IN63
+      *
+     C           *IN87     DOWEQ'0'                        - B1
+     C           WWCPT     ANDLT14
+      *
+     C           XRECSC    IFEQ *ZERO                      - B2
+     C                     MOVE *BLANKS   DSECSC
+     C                     MOVE *BLANKS   DSECON
+     C                     ELSE                            - X2
+     C                     MOVE XRECSC    DSECSC           Economic Sector Code
+     C                     MOVE XRECSC    WKECSC
+      *
+     C***********WKECSC    CHAINSDECOSPD             89                   CAD031
+     C           WKECSC    CHAINSDNCOSPD             89                   CAD031
+      *
+     C           *IN89     IFEQ *ON                        - B3
+     C                     MOVE *BLANKS   DSECON
+     C                     ELSE                            - X3
+     C*********************MOVELVGECON    DSECON    P      Economic SectorCAD031
+     C                     MOVELVNECON    DSECON    P      Sector NarrativCAD031
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+      *
+     C                     MOVE XRZABI    DSZABI           Zone A/B
+      *
+     C           XRCLAT    IFEQ *ZERO                      - B2
+     C                     MOVE *BLANKS   DSCLAT
+     C                     ELSE                            - X2
+     C                     MOVE XRCLAT    DSCLAT           Claim's Type
+     C                     ENDIF                           - E2
+      *
+     C                     MOVELXRCLAM    DSCLAM
+      *
+     C                     MOVE XRWEIG    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    DSWEIG           Weighting Rate
+      *
+     C                     Z-ADDXRPECO    D2PECO           Periodic code
+      *
+     C                     MOVE XRWEIG    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    D2WEIG
+      *
+     C                     MOVE *BLANKS   DSSELE
+      *
+      ***  Selection has been enterred and not coming from F9
+      *
+     C           SELEC1    IFNE *BLANKS                    - B2
+     C           IN16      ANDEQ*BLANKS
+      *
+      ***  Record read selected or not ???
+      *
+     C                     MOVE 'N'       WWSEL   1
+     C                     EXSR SELEC
+      *
+     C           WWSEL     IFEQ 'Y'                        - B3
+      *
+      ***  Load fields
+      *
+     C                     ADD  1         SFLREC     81
+     C                     ADD  1         WWCPT            SCREEN LINE MBR
+      *
+      ***  Write in subfile
+      *
+     C                     WRITEERLU20S1
+     C                     ENDIF                           - E3
+      *
+     C                     ELSE                            - X2
+      *
+      ***  Load fields
+      *
+     C                     ADD  1         SFLREC     81
+     C                     ADD  1         WWCPT            SCREEN LINE MBR
+      *
+      ***  Write in subfile
+      *
+     C                     WRITEERLU20S1
+     C                     ENDIF                           - E2
+      *
+      ***  Read next record
+      *
+     C                     READ EREXRAZ1                 87
+     C                     MOVE XRECSC    W2ECSC
+     C                     MOVE XRZABI    W2ZABI
+     C                     MOVE XRCLAT    W2CLAT
+     C                     MOVE XRPECO    W2PECO
+     C                     ENDDO                           - E1
+      *
+     C           *IN87     IFEQ *ON                        B*1
+     C                     MOVE *ON       *IN60
+     C                     ENDIF                           E*1
+      *
+     C                     MOVE DHECSC    WWECSC
+     C                     MOVE DHZABI    WWZABI
+     C                     MOVE DHCLAT    WWCLAT
+     C                     MOVE DHCLAM    WWCLAM
+     C                     MOVE DHWEIG    WWWEIG
+     C                     Z-ADDSFLREC    WWRRN   40
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * LOASF9 - Load subfile when F9 Key has been pressed            *
+      * ------                                                        *
+      *   Called by : Main processing SRF9                            *
+      *   Calls     : None                                            *
+      *****************************************************************
+      *
+     C           LOASF9    BEGSR
+      *
+     C                     MOVE *OFF      *IN63
+      *
+      ***  Init screen line number
+      *
+     C                     Z-ADD1         CPT     20
+      *
+      ***  Load subfile
+      *
+     C           CPT       DOWLE14                         - B1
+      *
+     C                     MOVE *BLANKS   DSSELE
+     C                     MOVE *BLANKS   DSECSC
+     C                     MOVE *BLANKS   DSECON
+     C                     MOVE *BLANKS   DSZABI
+     C                     MOVE *BLANKS   DSCLAT
+     C                     MOVE *BLANKS   DSCLAM
+     C                     MOVE *BLANKS   DSWEIG
+     C                     MOVE *BLANKS   D2PECO
+     C                     MOVE *BLANKS   D2WEIG
+      *
+      ***  Load fields
+      *
+     C                     ADD  1         SFLREC     81
+     C                     ADD  1         WWRRN2  40
+     C                     ADD  1         CPT              SCREEN LINE MBR
+      *
+      ***  Write in subfile
+      *
+     C                     WRITEERLU20S1
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SELEC - SR - selection for the record read                    *
+      * ------                                                        *
+      *   Called by : LOANSFE                                         *
+      *   Calls     : None                                            *
+      *****************************************************************
+      *
+     C           SELEC     BEGSR
+      *
+     C           DHECSC    IFEQ *BLANKS                    - B1
+     C           DHZABI    ANDEQ*BLANKS
+     C           DHCLAT    ANDEQ*BLANKS
+     C           DHCLAM    ANDEQ*BLANKS
+     C           DHWEIG    ANDEQ*BLANKS
+     C                     MOVE 'Y'       WWSEL
+     C                     ENDIF                           - E1
+      *
+      ***  Economic Sector selected
+      *
+     C           DHECSC    IFNE *BLANKS                    - B1
+      *
+     C           DHECSC    IFLE DSECSC                     - B2
+     C                     MOVE 'Y'       WWSEL
+     C                     ELSE                            - X2
+     C                     MOVE 'N'       WWSEL
+     C                     GOTO ENDSEL
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+      ***  Zone A/B selected
+      *
+     C           DHZABI    IFNE *BLANKS                    - B1
+      *
+     C           DHZABI    IFEQ DSZABI                     - B2
+     C                     MOVE 'Y'       WWSEL
+     C                     ELSE                            - X2
+     C                     MOVE 'N'       WWSEL
+     C                     GOTO ENDSEL
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+      ***  Claim's Type selected
+      *
+     C           DHCLAT    IFNE *BLANKS                    - B1
+      *
+     C           DHCLAT    IFEQ DSCLAT                     - B2
+     C                     MOVE 'Y'       WWSEL
+     C                     ELSE                            - X2
+     C                     MOVE 'N'       WWSEL
+     C                     GOTO ENDSEL
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+      ***  Claim's Maturity selected
+      *
+     C           DHCLAM    IFNE *BLANKS                    - B1
+      *
+     C           DHCLAM    IFEQ DSCLAM                     - B2
+     C                     MOVE 'Y'       WWSEL
+     C                     ELSE                            - X2
+     C                     MOVE 'N'       WWSEL
+     C                     GOTO ENDSEL
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+      ***  Weighting Rate selected
+      *
+     C           DHWEIG    IFNE *BLANKS                    - B1
+     C                     MOVE DHWEIG    ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD3         ZADIG
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ *OFF                       - B2
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    DHWEIG
+      *
+     C           DHWEIG    IFEQ DSWEIG                     - B3
+     C                     MOVE 'Y'       WWSEL
+     C                     ELSE                            - X3
+     C                     MOVE 'N'       WWSEL
+     C                     GOTO ENDSEL
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+     C           ENDSEL    TAG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * ZASNMS - SR to send message to program's message queue        *
+      * -------                                                       *
+      *   Called by : Main processing SRF9 SRCHCK SRVAL               *
+      *   Calls     : Y2SNMGC                                         *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+      ***  Message file specified use PMSGF
+      *
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***  Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * PRESS - SR to move the appropriate values into field WWAID,   *
+      * ------- depending on which function key has been pressed      *
+      *   Called by : Main processing                                 *
+      *   Calls     : None                                            *
+      *****************************************************************
+      *
+     C           PRESS     BEGSR
+      *
+      ***  If ENTER pressed, the VLDCMDKEY indicator will be off
+      *
+     C                     MOVE '  '      WWAID
+      *
+     C           *IN45     IFEQ *OFF
+     C                     MOVE 'RA'      WWAID   2
+     C                     ENDIF
+      *
+      ***  I1 F3 Key
+      *
+     C           *INKC     IFEQ *ON
+     C                     MOVE '03'      WWAID
+     C                     ENDIF
+      *
+      ***  If F12 Key
+      *
+     C           *INKL     IFEQ *ON
+     C                     MOVE '12'      WWAID
+     C                     ENDIF
+      *
+      ***  If ROLLUP pressed
+      *
+     C           *IN35     IFEQ *ON
+     C                     MOVE 'UP'      WWAID
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *   ------                                                      *
+      *   Called by : Main processing                                 *
+      *   Calls     : AOBANKR0                                        *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+      *
+      ***  In mode Enquiry, all the fields are displayed only
+      *
+     C           ACTION    IFEQ 'E'
+     C                     MOVE *ON       *IN15
+     C                     ENDIF
+      *
+      ***  Select the program MSGQ for error msg.
+      *
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C**********           MOVEL'ERUSRMSG'PMSGF  10                                           CER001
+     C                     MOVEL'STUSRMSG'PMSGF  10                                           CER001
+      *
+      ***  Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVEL'ERLU20'  ZAPGM  10        Message queue
+     C**********           MOVEL'ERUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      ***  Define necessary KLIST'S
+      *
+      ***  Access to LF/EREXRAV1
+      *
+     C           KWGAR2    KLIST
+     C                     KFLD           WKECSC           Economic Sector
+     C                     KFLD           WKZABI           Zone A/B
+     C                     KFLD           WKCLAT           Claim's Type
+     C                     KFLD           WKPECO           Period Code
+     C                     KFLD           WKWEIG  30       Weighting Rate
+      *
+      ***  Access to LF/EREXRAZ1
+      *
+     C           KWGAR1    KLIST
+     C                     KFLD           WKECSC           Economic Sector
+     C                     KFLD           WKZABI           Zone A/B
+     C                     KFLD           WKCLAT           Claim's Type
+     C                     KFLD           WKPECO           Period Code
+      *
+      ***  Access the LDA details Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVE 'ERLU20'  DBPGM     P
+     C                     OUT  LDA
+      *
+      ***  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WORTCD  7
+     C                     PARM '*FIRST ' WOOPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WORTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE    P      * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ***************
+     C                     MOVEL'ERLU20'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBJMRDT    SMRDT
+      *
+      ***  SETUP 'ADD' OR 'AMEND' MODE
+      *
+     C                     READ EREXRAZ1                 88
+      *
+     C           *IN88     IFEQ *ON
+     C                     MOVE *ON       *IN09
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Dump routine in case of error                       *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WWRUN     IFEQ *BLANK
+     C                     MOVE 'Y'       WWRUN   1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZEDITZ2
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+** TXT
+D=Delete   F3=Exit   F5=Refresh   F9=Go to 'Add' Mode
+           F3=Exit   F5=Refresh   F9=Go to 'Change' Mode
+F3=Exit   F5=Refresh
+** DUR & PER (Associate Table)
+<=01D05
+ =02D10
+<=01M15
+<=02M20
+<=03M25
+<=06M35
+<=01Y45
+<=02Y55
+<=03Y60
+<=04Y62
+<=05Y65
+<=06Y70
+<=07Y72
+> 07Y75
+     90
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

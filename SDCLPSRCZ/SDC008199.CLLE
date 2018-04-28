@@ -1,0 +1,116 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Stamp Tax Initial Screen')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       SDC008199 - Midas SD Stamp Tax Initial Screen               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. AR821877           Date 05Sep11              */
+/*       Prev Amend No. AR821872           Date 03Sep11              */
+/*                      CER049   *CREATE   Date 06Dec10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR821877 - Component SEC1112 00001 failed                   */
+/*       AR821872 - Component FTC0610 00001 failed                   */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                           Systems Ltd. 2010')
+ 
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SDC008199 - Midas Stamp Tax Initial +
+                           Screen') TOMSGQ(MRUNQ)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(QTEMP/LDA) VALUE(*BLANK)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+ 
+             CLRPFM     FILE(GLHPMPPD)
+ 
+             CRTDTAARA  DTAARA(&DMLIB/SDSTAMPDA) TYPE(*CHAR) LEN(10)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Stamp Tax Historic Details File */
+ 
+             CALL       PGM(SD008199)
+             MONMSG     MSGID(CPF0000)
+ 
+/** Update Loan Extension File  */
+ 
+             CALL       PGM(SD008196)
+             MONMSG     MSGID(CPF0000)
+ 
+/** Update Account Extension File  */
+ 
+             CALL       PGM(SD008197)
+             MONMSG     MSGID(CPF0000)
+ 
+/** Update Customer Extension File  */
+ 
+             CALL       PGM(SD008198)
+             MONMSG     MSGID(CPF0000)
+                                                                                        /*AR821872*/
+/** Update Cheques to be Collected Extension File */                                    /*AR821872*/
+                                                                                        /*AR821872*/
+             CALL       PGM(SD008201)                                                   /*AR821872*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR821872*/
+                                                                                        /*AR821872*/
+/** Update Cheques to be Paid Extension File */                                         /*AR821872*/
+                                                                                        /*AR821872*/
+             CALL       PGM(SD008202)                                                   /*AR821872*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR821872*/
+                                                                                        /*AR821877*/
+/** Update Position Settlement Extension File */                                        /*AR821877*/
+                                                                                        /*AR821877*/
+             CALL       PGM(SD008203)                                                   /*AR821877*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR821877*/
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             COMMIT
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ /** Send error message */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                           SDC008199 ended abnormally - see job +
+                           log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             ENDPGM

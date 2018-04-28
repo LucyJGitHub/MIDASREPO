@@ -1,0 +1,1617 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Outgoing payments valid. S4/level 2')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0353 - Validate Incoming Payments - Screen 4, Level 2      *
+      *                                                               *
+      *  Function:  This program validates the level 2 screen 4       *
+      *             input for Incoming Payments.                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. BUG26744           Date 11Nov09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG26087           Date 22Sep09               *
+      *                 BUG26022           Date 15Sep09               *
+      *                 CSW209  *CREATE    Date 01Apr09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BUG26744 - Missing CSW209 annotation in array data           *
+      *             and Incorrect /COPY.                              *
+      *  BUG26087 - The word COVER is missing in the error message    *
+      *  BUG26022 - Incorrect message file                            *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *      31 - invalid swift character                             *
+      *      32 - BIC directory not loaded                            *
+      *      50 - set up complete indicator                           *
+      *      65 - valid numeric character                             *
+      *      66 - AOIBANR5 pgm error                                  *
+      *      91 - Address line error                                  *
+      *      92 - Embedded blank lines exist                          *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     F*****************************************************************
+      *
+     E/COPY FTCPYSRC,SFTSWFTF
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+     E                    ALPHA  26  26  1
+      *
+     E                    NUMC   10  10  1
+      *
+      *  Copyright table
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  End of Copysource for error processing
+      *
+     E                    ERCD       38  4               Codes
+     E                    O#E        50  3               Return Error code
+     E/COPY FTCPYSRC,SFTSWFTE
+      *
+      *  Warning codes array
+      *
+     E                    WRN@       40  1
+      *
+      *  Array for validating Bank to Bank
+      *
+     E                    #ER         6  1
+      *
+     E/EJECT
+      *
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing source
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+      *
+      *  Data Structures used by access programs
+      *
+     IDSFDY     E DSDSFDY
+     I*
+     IDSSDY     E DSDSSDY
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+     IMEBICD    E DSMEBICDPD
+      *
+     ISDCNST    E DSSDCNSTPD
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+      ** Define rundat data area
+      *
+     IZMUSER    E DSZMUSER
+      *
+      ** User / Branch Data Area
+      *
+      /EJECT
+      *
+      *  Parameters Data Structure
+      *
+     E/COPY FTCPYSRC,SFTVALDI
+     E/COPY FTCPYSRC,SFT0355SA
+     E/COPY FTCPYSRC,SFT0355FA
+     E/COPY FTCPYSRC,SFT0355IA
+     E/COPY FTCPYSRC,SFT0355S2
+     E/COPY FTCPYSRC,SFT0355S3
+     E/COPY FTCPYSRC,SFTADDRI
+      *
+     ICLSWTK      DS
+      *
+      *  Redefine SWIFT array as field for SETLL.
+      *
+     I                                        1  12 SW
+     IDSMTR       DS
+      *
+      *  Define Fields for Message Translation
+      *
+     I                                        1 132 #MSDTA
+     I                                       15  30 #MPREF
+     I                                    P   1   20#MPART
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+     ISWFLD       DS
+     I                                        1  35 SWFLD1
+     I                                       36  70 SWFLD2
+     I                                       71 105 SWFLD3
+     I                                      106 140 SWFLD4
+     I                                      141 175 SWFLD5
+     IMSGDTA      DS                                                                        BUG26087
+     I                                        1   6 MDTA1                                   BUG26087
+     I                                        7  13 MDTA2                                   BUG26087
+     E/COPY FTCPYSRC,SFTVALCS
+      *
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           SADATA
+     C                     PARM           V#DATA
+     C                     PARM           FADATA
+     C                     PARM           E#DATA
+     C                     PARM           C#DATA
+     C                     PARM           IADATA
+     C                     PARM           S2DATA
+     C                     PARM           S3DATA
+      *
+      *  Set up Primary Reference for database errors
+      *
+     C                     MOVELSADATA    W0PREF
+      *
+      *  Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Determine the mode of processing and execute subroutine :-
+      *
+      *
+      *  Action Code : *VALID
+      *  --------------------
+      *
+      *  Called from FT0300 to validate all input fields on the detail
+      *  screen. Once verified, control returns to the calling program
+      *  where the appropriate error indicators are set on and the
+      *  processing continues.
+      *
+      *
+     C           W0ACT     CASEQ'*VALID  'SRPROC
+     C                     CAS            SRACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC   : Validate All Detail Fields Entered                *
+      *             Seton appropriate indicators and set up the array *
+      *             of relevant error codes for display.              *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPROC    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPROC'  @STK,Q
+      *
+      *  Move warning array passed to WRN@ and error indicators
+      *
+     C                     MOVEAE#WARA    WRN@
+     C                     MOVEA*BLANKS   ERCD
+     C                     CLEARIADATA
+     C                     Z-ADD0         X       50
+      *
+      ** Validate Network
+      *
+     C                     EXSR SRINWK
+      *
+      ** Validate Message Type
+      *
+     C                     EXSR SRIMTP
+      *
+      ** Validate Validation Flag
+      *
+     C                     EXSR SRIVLF
+      *
+      ** Validate Ordering Customer (Cover)
+      *
+     C                     EXSR SRICOC
+      *
+      ** Validate Ordering Institution (Cover)
+      *
+     C                     EXSR SRICOB
+      *
+      ** Validate Intermediary Institution (Cover)
+      *
+     C                     EXSR SRICIN
+      *
+      ** Validate Account with Institution (Cover)
+      *
+     C                     EXSR SRICAB
+      *
+      ** Validate Beneficiary Customer (Cover)
+      *
+     C                     EXSR SRICBN
+      *
+      *  Move waring array back and errors
+      *
+     C                     MOVEAWRN@      E#WARA
+     C                     MOVEAERCD      C#ERCD
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPROC    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/SRINWK
+      *****************************************************************
+      *                                                               *
+      *  SRINWK - Validate Network (Cover)                            *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINWK    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINWK'  @STK,Q
+      *
+     C           SANWRK    IFNE *BLANKS
+     C                     CALL 'AONWRKR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C           SANWRK    PARM SANWRK    PNWRK   6
+     C                     PARM *BLANKS   DSFDY
+      *
+      ** Invalid Network
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSANWRK    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00138' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IANWRK
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /TITLE SR/SRIMTP
+      *****************************************************************
+      *                                                               *
+      *  SRIMTP - Validate Message Type (Cover)                       *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRIMTP    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRIMTP'  @STK,Q
+      *
+     C           SAMTPY    IFNE *BLANKS
+     C                     CALL 'AOMTPYR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C           SAMTPY    PARM SAMTPY    PMTPY   3
+     C                     PARM *BLANKS   DSFDY
+      *
+      ** Invalid Message Type
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSAMTPY    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00139' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAMTPY
+     C                     MOVEL'Y'       E#NOUP
+      *
+      ** Ordering Bank is mandatory for SWIFT 205
+      *
+     C                     ELSE
+     C           SANWRK    IFEQ 'SWIFT'
+     C           SAMTPY    ANDEQ'205'
+     C           S2ORBK    ANDEQ*BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSAMTPY    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00169' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAMTPY
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /TITLE SR/SRIVLF
+      *****************************************************************
+      *                                                               *
+      *  SRIVLF - Validate Validation Flag (Cover)                    *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRIVLF    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRIVLF'  @STK,Q
+      *
+     C           SAVALF    IFNE *BLANKS
+      *
+      ** Network should be SWIFT
+      *
+     C           SANWRK    IFNE 'SWIFT'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSAVALF    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00170' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAVALF
+     C                     MOVEL'Y'       E#NOUP
+     C                     ELSE
+      *
+      ** Message Type should be 103, 202 or 205
+      *
+     C           SAMTPY    IFNE '103'
+     C           SAMTPY    ANDNE'202'
+     C           SAMTPY    ANDNE'205'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSAVALF    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00170' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAVALF
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+      *
+      ** Validation Flag should be STP or REMIT for Message Type 103
+      *
+     C           SAMTPY    IFEQ '103'
+     C           SAVALF    IFNE 'STP'
+     C           SAVALF    ANDNE'REMIT'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSAVALF    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00171' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAVALF
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validation Flag should be COV for Message Type 202 and 205
+      *
+     C           SAMTPY    IFEQ '202'
+     C           SAMTPY    OREQ '205'
+     C           SAVALF    IFNE 'COV'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSAVALF    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00172' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAVALF
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SAVALF    IFEQ 'COV'
+     C           S3RLRF    ANDEQ*BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSAVALF    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00174' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAVALF
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/SRICOC
+      *****************************************************************
+      *                                                               *
+      *  SRICOC   : Validate Ordering Customer (Cover)                *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *  VSWFT     - Validate Swift Address.                          *
+      *  VIBAN     - Validate IBAN Number.                            *
+      *  VADDR     - Validate Address.                                *
+      *  V50F      - 50F Validation.                                  *
+      *****************************************************************
+     CSR         SRICOC    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRICOC'  @STK,Q
+      *
+     C           SANWRK    IFEQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           SAMTPY    ANDEQ'202'
+     C           SANWRK    OREQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           SAMTPY    ANDEQ'205'
+      *
+      ** Ordering Customer (Cover) must be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C           SACOC     IFEQ *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSACOC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00175' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IACOC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCOC
+     C                     ENDIF
+      *
+      ** Ordering Customer (Cover) can only be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C                     ELSE
+      *
+     C           SACOC     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSACOC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00176' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IACOC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCOC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SACOC     IFNE *BLANKS
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVEL*BLANKS   SWFLD
+     C                     MOVELSACOC     ADDRSS
+     C                     MOVELSACOC     SWFLD
+      *
+      ** Validate SWIFT Address
+      *
+     C           ADCH26    IFEQ *BLANKS
+     C           ADEXSW    ANDEQ*BLANKS
+     C           ADSLSH    ANDNE'/'
+     C           ADCH36    OREQ *BLANKS
+     C           ADEXSW    ANDEQ*BLANKS
+     C           ADSLSH    ANDEQ'/'
+     C           ADCHK2    ANDNE*BLANKS
+     C           ADSLS2    ANDNE'/'
+      *
+     C                     MOVEL'ME00177' MSDTA1  7
+     C                     MOVEL'ME00178' MSDTA2  7
+      *
+     C                     EXSR VSWFT
+     C           E#NOUP    IFEQ 'Y'
+     C                     GOTO ENDCOC
+     C                     ENDIF
+      *
+      ** Exit if valid swift address
+      *
+     C           VSFLAG    IFEQ 'Y'
+     C                     MOVELIAFLD1    IACOC1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL*BLANKS   VSFLAG
+     C                     MOVEL'S'       FACOCT
+     C                     GOTO ENDCOC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate IBAN number
+      *
+     C           CFT004    IFEQ 'Y'
+     C           ADCH26    ANDEQ*BLANKS
+     C                     EXSR VIBAN
+     C           IAFLD1    IFEQ 'Y'
+     C                     MOVELIAFLD1    IACOC1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL'I'       FACOCT
+     C                     GOTO ENDCOC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Address
+      *
+     C                     MOVEL'ME00179' MSDTA1
+     C                     MOVEL'ME00180' MSDTA2
+     C                     MOVEL'ME00181' MSDTA3  7
+     C                     MOVEL*BLANKS   W2LINE 35
+     C                     MOVELSACOC2    W2LINE
+      *
+     C                     EXSR VADDR
+      *
+      ** Send error if first line is not "/" and fifth line is not blanks
+      ** and fifth line doesn't start with valid SWIFT tags
+      *
+     C           1         SUBSTSWFLD1:1  @SLASH
+     C           2         SUBSTSWFLD5:1  @SLSH1  2
+     C           5         SUBSTSWFLD1:1  @LINE1  5
+     C           @SLASH    IFNE '/'
+     C           SWFLD5    ANDNE*BLANKS
+      *
+     C           @SLSH1    IFNE '1/'
+     C           @SLSH1    ANDNE'1/'
+     C           @SLSH1    ANDNE'2/'
+     C           @SLSH1    ANDNE'3/'
+     C           @SLSH1    ANDNE'4/'
+     C           @SLSH1    ANDNE'5/'
+     C           @SLSH1    ANDNE'6/'
+     C           @SLSH1    ANDNE'7/'
+     C           @SLSH1    ANDNE'8/'
+     C           @LINE1    ANDNE'ARNU/'
+     C           @LINE1    ANDNE'CCPT/'
+     C           @LINE1    ANDNE'CUST/'
+     C           @LINE1    ANDNE'DRLC/'
+     C           @LINE1    ANDNE'EMPL/'
+     C           @LINE1    ANDNE'NIDN/'
+     C           @LINE1    ANDNE'SOSE/'
+     C           @LINE1    ANDNE'TXID/'
+      *
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSWFLD1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00182' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAFLD1
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     MOVELIAFLD1    IACOC1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL'A'       FACOCT
+      *
+      ** Exit if error found
+      *
+     C           E#MSGS    IFEQ 'Y'
+     C                     GOTO ENDCOC
+     C                     ENDIF
+      *
+      ** 50F Validation
+      *
+     C                     EXSR V50F
+     C                     MOVELIAFLD1    IACOC1
+     C                     MOVEL*BLANKS   IAFLD1
+      *
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C           ENDCOC    ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/SRICOB
+      *****************************************************************
+      *                                                               *
+      *  SRICOB   : Validate Ordering Institution (Cover)             *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *  VSWFT     - Validate Swift Address.                          *
+      *  VADDR     - Validate Address.                                *
+      *****************************************************************
+     CSR         SRICOB    BEGSR
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRICOB'  @STK,Q
+      *
+      *  /COPY Statement
+      *
+     C***/COPY*WNCPYSRC,FT0353ICOC                                                          BUG26744
+      *
+     C           SANWRK    IFEQ 'SWIFT'
+     C           SAMTPY    ANDEQ'202'
+     C           SAVALF    ANDEQ'COV'
+     C           SANWRK    OREQ 'SWIFT'
+     C           SAMTPY    ANDEQ'205'
+     C           SAVALF    ANDEQ'COV'
+      *
+     C                     ELSE
+      *
+      ** Ordering Institution (Cover) can only be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C           SACOB     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSACOB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00183' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IACOB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCOB
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SACOB     IFNE *BLANKS
+      *
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVEL*BLANKS   SWFLD
+     C                     MOVELSACOB     ADDRSS
+     C                     MOVELSACOB     SWFLD
+      *
+      ** Validate SWIFT Address
+      *
+     C           ADCH26    IFEQ *BLANKS
+     C           ADEXSW    ANDEQ*BLANKS
+     C           ADSLSH    ANDNE'/'
+     C           ADCH36    OREQ *BLANKS
+     C           ADEXS2    ANDEQ*BLANKS
+     C           ADSLSH    ANDEQ'/'
+     C           ADCHK2    ANDNE*BLANKS
+     C           ADSLS2    ANDNE'/'
+      *
+     C                     MOVEL'ME00184' MSDTA1
+     C                     MOVEL'ME00185' MSDTA2
+      *
+     C                     EXSR VSWFT
+     C           E#NOUP    IFEQ 'Y'
+     C                     GOTO ENDCOB
+     C                     ENDIF
+      *
+     C           VSFLAG    IFEQ 'Y'
+     C                     MOVELIAFLD1    IACOB1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL*BLANKS   VSFLAG
+     C                     MOVEL'S'       FACOBT
+     C                     GOTO ENDCOB
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Address
+      *
+     C                     MOVEL'ME00186' MSDTA1
+     C                     MOVEL'ME00187' MSDTA2
+     C                     MOVEL'ME00188' MSDTA3
+     C                     MOVEL*BLANKS   W2LINE
+     C                     MOVELSACOB2    W2LINE
+      *
+     C                     EXSR VADDR
+     C                     MOVELIAFLD1    IACOB1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL'A'       FACOBT
+      *
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C           ENDCOB    ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/SRICIN
+      *****************************************************************
+      *                                                               *
+      *  SRICIN   : Validate Intermediary Institution (Cover)         *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *  VSWFT     - Validate Swift Address.                          *
+      *  VADDR     - Validate Address.                                *
+      *****************************************************************
+     CSR         SRICIN    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRICOB'  @STK,Q
+      *
+      ** /COPY Statement
+      *
+     C           SANWRK    IFEQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           SAMTPY    ANDEQ'202'
+     C           SANWRK    OREQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           SAMTPY    ANDEQ'205'
+      *
+     C                     ELSE
+      *
+      ** Intermediary Institution (Cover) can only be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C           SACIB     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSACIB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00189' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IACIB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCIN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SACIB     IFNE *BLANKS
+      *
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVEL*BLANKS   SWFLD
+     C                     MOVELSACIB     ADDRSS
+     C                     MOVELSACIB     SWFLD
+      *
+      ** Validate SWIFT Address
+      *
+     C           ADCH26    IFEQ *BLANKS
+     C           ADEXSW    ANDEQ*BLANKS
+     C           ADSLSH    ANDNE'/'
+     C           ADCH36    OREQ *BLANKS
+     C           ADEXS2    ANDEQ*BLANKS
+     C           ADSLSH    ANDEQ'/'
+     C           ADCHK2    ANDNE*BLANKS
+     C           ADSLS2    ANDNE'/'
+      *
+     C                     MOVEL'ME00190' MSDTA1
+     C                     MOVEL'ME00191' MSDTA2
+      *
+     C                     EXSR VSWFT
+     C           E#NOUP    IFEQ 'Y'
+     C                     GOTO ENDCIN
+     C                     ENDIF
+     C           VSFLAG    IFEQ 'Y'
+     C                     MOVELIAFLD1    IACIB1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL*BLANKS   VSFLAG
+     C                     MOVEL'S'       FACIBT
+     C                     GOTO ENDCIN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Address
+      *
+     C                     MOVEL'ME00192' MSDTA1
+     C                     MOVEL'ME00193' MSDTA2
+     C**********           MOVEL'ME00194' MSDTA2                                            BUG26022
+     C                     MOVEL'ME00194' MSDTA3                                            BUG26022
+     C                     MOVEL*BLANKS   W2LINE
+     C                     MOVELSACIB2    W2LINE
+      *
+     C                     EXSR VADDR
+     C                     MOVELIAFLD1    IACIB1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL'A'       FACIBT
+      *
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C           ENDCIN    ENDSR
+      *
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/SRICAB
+      *****************************************************************
+      *                                                               *
+      *  SRICAB   : Validate Account with Institution (Cover)         *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *  VSWFT     - Validate Swift Address.                          *
+      *  VADDR     - Validate Address.                                *
+      *****************************************************************
+     CSR         SRICAB    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRICAB'  @STK,Q
+      *
+      ** /COPY Statement
+      *
+     C           SANWRK    IFEQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           SAMTPY    ANDEQ'202'
+     C           SANWRK    OREQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           SAMTPY    ANDEQ'205'
+      *
+     C                     ELSE
+      *
+      ** Account with Institution (Cover) can only be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C           SACAB     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSACAB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00195' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IACAB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCAB
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SACAB     IFNE *BLANKS
+      *
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVEL*BLANKS   SWFLD
+     C                     MOVELSACAB     ADDRSS
+     C                     MOVELSACAB     SWFLD
+      *
+      ** Validate SWIFT Address
+      *
+     C           ADCH26    IFEQ *BLANKS
+     C           ADEXSW    ANDEQ*BLANKS
+     C           ADSLSH    ANDNE'/'
+     C           ADCH36    OREQ *BLANKS
+     C           ADEXS2    ANDEQ*BLANKS
+     C           ADSLSH    ANDEQ'/'
+     C           ADCHK2    ANDNE*BLANKS
+     C           ADSLS2    ANDNE'/'
+      *
+     C                     MOVEL'ME00196' MSDTA1
+     C                     MOVEL'ME00197' MSDTA2
+      *
+     C                     EXSR VSWFT
+     C           E#NOUP    IFEQ 'Y'
+     C                     GOTO ENDCAB
+     C                     ENDIF
+     C           VSFLAG    IFEQ 'Y'
+     C                     MOVELIAFLD1    IACAB1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL*BLANKS   VSFLAG
+     C                     MOVEL'S'       FACABT
+     C                     GOTO ENDCAB
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate Address
+      *
+     C                     MOVEL'ME00198' MSDTA1
+     C                     MOVEL'ME00199' MSDTA2
+     C                     MOVEL'ME00222' MSDTA3
+     C                     MOVEL*BLANKS   W2LINE
+     C                     MOVELSACAB2    W2LINE
+      *
+     C                     EXSR VADDR
+     C                     MOVELIAFLD1    IACAB1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL'A'       FACABT
+      *
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C           ENDCAB    ENDSR
+      *
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/SRICBN
+      *****************************************************************
+      *                                                               *
+      *  SRICBN   : Validate Beneficiary Customer (Cover)             *
+      *                                                               *
+      *  Called By: SRPROC subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *  VSWFT     - Validate Swift Address.                          *
+      *  VIBAN     - Validate IBAN Number.                            *
+      *  VADDR     - Validate Address.                                *
+      *****************************************************************
+     CSR         SRICBN    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRICAB'  @STK,Q
+      *
+      ** /COPY Statement
+      *
+     C           SANWRK    IFEQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           SAMTPY    ANDEQ'202'
+     C           SANWRK    OREQ 'SWIFT'
+     C           SAVALF    ANDEQ'COV'
+     C           SAMTPY    ANDEQ'205'
+      *
+      ** Beneficiary Customer (Cover) must be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C           SACBC     IFEQ *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSACBC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00205' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IACBC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBN
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Beneficiary Customer (Cover) can only be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C           SACBC     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSACBC1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00206' FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IACBC1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SACBC     IFNE *BLANKS
+      *
+     C                     MOVEL*BLANKS   ADDRSS
+     C                     MOVEL*BLANKS   SWFLD
+     C                     MOVELSACBC     ADDRSS
+     C                     MOVELSACBC     SWFLD
+      *
+      ** Validate SWIFT Address
+      *
+     C           ADCH26    IFEQ *BLANKS
+     C           ADEXSW    ANDEQ*BLANKS
+     C           ADSLSH    ANDNE'/'
+     C           ADCH36    OREQ *BLANKS
+     C           ADEXS2    ANDEQ*BLANKS
+     C           ADSLSH    ANDEQ'/'
+     C           ADCHK2    ANDNE*BLANKS
+     C           ADSLS2    ANDNE'/'
+      *
+     C                     MOVEL'ME00207' MSDTA1
+     C                     MOVEL'ME00208' MSDTA2
+      *
+     C                     EXSR VSWFT
+     C           E#NOUP    IFEQ 'Y'
+     C                     GOTO ENDCBN
+     C                     ENDIF
+     C           VSFLAG    IFEQ 'Y'
+     C                     MOVELIAFLD1    IACBC1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL*BLANKS   VSFLAG
+     C                     MOVEL'S'       FACBCT
+     C                     GOTO ENDCBN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Validate IBAN number
+      *
+     C           CFT004    IFEQ 'Y'
+     C           ADCH26    ANDEQ*BLANKS
+     C                     EXSR VIBAN
+     C           IAFLD1    IFEQ 'Y'
+     C                     MOVELIAFLD1    IACBC1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL'I'       FACBCT
+     C                     GOTO ENDCBN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Address
+      *
+     C                     MOVEL'ME00209' MSDTA1
+     C                     MOVEL'ME00210' MSDTA2
+     C                     MOVEL'ME00211' MSDTA3
+     C                     MOVEL*BLANKS   W2LINE
+     C                     MOVELSACBC2    W2LINE
+      *
+     C                     EXSR VADDR
+     C                     MOVELIAFLD1    IACBC1
+     C                     MOVEL*BLANKS   IAFLD1
+     C                     MOVEL'A'       FACBCT
+      *
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C           ENDCBN    ENDSR
+      *
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/VSWFT
+      *****************************************************************
+      *                                                               *
+      *  VSWFT    : Validate Swift Address                            *
+      *                                                               *
+      *  Called By: SRCOC - Validate Ordering Customer (Cover)        *
+      *             SRCOB - Validate Ordering Institution (Cover)     *
+      *             SRCIN - Validate Intermediaty Institution (Cover) *
+      *             SRCAB - Validate Account with Institution (Cover) *
+      *             SRCBN - Validate Beneficiary Customer (Cover)     *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *  SWIFT     - Validate Swift Address                           *
+      *****************************************************************
+      *
+     C           VSWFT     BEGSR
+      *
+      ** First 11 characters should be key for CLSWT.
+      *
+     C                     MOVELSWFLD1    CLSWTK
+      *
+     C           SWFLD2    IFNE *BLANKS
+     C                     MOVELSWFLD2    CLSWTK
+     C                     ENDIF
+      *
+     C                     EXSR SWIFT
+      *
+     C           ##CSID    IFEQ 'Y'
+      *
+      ** Invalid SWIFT characters found
+      *
+     C           *IN31     IFEQ *ON
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSWFLD1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF                                            BUG26022
+     C                     MOVELMSDTA1    FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAFLD1  1
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+      *
+      ** BIC directory is not loaded
+      *
+     C           *IN32     IFEQ *ON
+     C           *IN31     ANDEQ*OFF
+     C                     MOVEL'Y'       E#WARN
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSWFLD1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF                                            BUG26022
+     C                     MOVELMSDTA2    FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAFLD1
+     C                     ENDIF
+      *
+     C                     MOVEL'Y'       VSFLAG  1
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /TITLE SR/VIBAN
+      *****************************************************************
+      *                                                               *
+      *  VIBAN    : Validate IBAN Number                              *
+      *                                                               *
+      *  Called By: SRCOC - Validate Ordering Customer (Cover)        *
+      *             SRCBN - Validate Beneficiary Customer (Cover)     *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *****************************************************************
+      *
+     C           VIBAN     BEGSR
+      *
+     C           1         SUBSTSWFLD1:1  @SLASH  1
+     C           @SLASH    IFEQ '/'
+     C           34        SUBSTSWFLD1:2  PIBAN
+      *
+     C                     MOVEL*BLANKS   P@IBAN 34
+     C                     CALL 'AOIBANR3'
+     C                     PARM           PRTCD   7
+     C                     PARM           PIBAN   1
+     C                     PARM           PIWITH  1
+     C           P@IBAN    PARM           PINOBL  1
+      *
+      ** If first four characters are 'AANN', proceed with IBAN
+      ** validation.
+      *
+     C           1         SUBSTP@IBAN:1  IBCTY1  1
+     C           1         SUBSTP@IBAN:2  IBCTY2  1
+     C           1         SUBSTP@IBAN:3  IBCHK1  1
+     C           1         SUBSTP@IBAN:4  IBCHK2  1
+     C           IBCTY1    LOKUPALPHA                    65
+     C   65      IBCTY2    LOKUPALPHA                    65
+     C   65      IBCHK1    LOKUPNUMC                     65
+     C   65      IBCHK2    LOKUPNUMC                     65
+      *
+     C           *IN65     IFEQ *ON
+     C                     CALL 'AOIBANR5'             66
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM           P@IBAN
+      *
+      ** If no warnings, prefix IBAN with '/'
+      *
+     C           *IN66     IFEQ *OFF
+     C           PRTCD     ANDEQ*BLANKS
+     C           '/'       CAT  P@IBAN    SWFLD1
+      *
+     C                     ELSE
+     C                     MOVEL'W'       E#MSGS
+     C                     MOVELSWFLD1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+      *
+     C                     SELEC
+      *
+      ** Invalid ISO country code
+      *
+     C           PRTCD     WHEQ '      1'
+     C                     MOVEL'FTM2400' FTMSID
+      *
+      ** Invalid BBAN length
+      *
+     C           PRTCD     WHEQ '      2'
+     C                     MOVEL'FTM2401' FTMSID
+      *
+      ** Invalid character
+      *
+     C           PRTCD     WHEQ '      3'
+     C                     MOVEL'FTM2402' FTMSID
+      *
+      ** Invalid IBAN length
+      *
+     C           PRTCD     WHEQ '      4'
+     C                     MOVEL'FTM2403' FTMSID
+      *
+      ** Invalid check digit
+      *
+     C           PRTCD     WHEQ '      5'
+     C                     MOVEL'FTM2404' FTMSID
+      *
+      ** Other/non-specific warning
+      *
+     C                     OTHER
+     C                     MOVEL'FTM2405' FTMSID
+     C                     ENDSL
+      *
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAFLD1
+      *
+     C                     ENDIF
+      *
+      ** Exit if Ordering customer (Cover) is in IBAN format
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /TITLE SR/VADDR
+      *****************************************************************
+      *                                                               *
+      *  VADDR    : Validate Address                                  *
+      *                                                               *
+      *  Called By: SRCOC - Validate Ordering Customer (Cover)        *
+      *             SRCOB - Validate Ordering Institution (Cover)     *
+      *             SRCIN - Validate Intermediaty Institution (Cover) *
+      *             SRCAB - Validate Account with Institution (Cover) *
+      *             SRCBN - Validate Beneficiary Customer (Cover)     *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *****************************************************************
+      *
+     C           VADDR     BEGSR
+      *
+     C                     MOVEL'Y'       ADLINE
+     C                     EXSR ADCHK
+      *
+      ** Send error if Address line starts with "/" but no second line entered
+      *
+     C           *IN91     IFEQ *ON
+     C           W2LINE    ANDEQ*BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSWFLD1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF                                            BUG26022
+     C                     MOVELMSDTA1    FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAFLD1
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+      *
+      ** Send error if Embedded blank lines exist
+      *
+     C           *IN92     IFEQ *ON
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSWFLD1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF                                            BUG26022
+     C                     MOVELMSDTA2    FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAFLD1
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+      *
+      ** Send error if Invalid SWIFT character found
+      *
+     C           AD#1      IFEQ 'Y'
+     C           AD#2      OREQ 'Y'
+     C           AD#3      OREQ 'Y'
+     C           AD#4      OREQ 'Y'
+     C           AD#5      OREQ 'Y'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSWFLD1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVELMSDTA3    FTMSID
+     C                     MOVEL'MEMSG'   FTMSGF                                            BUG26022
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAFLD1
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /TITLE SR/V50F
+      *****************************************************************
+      *                                                               *
+      *  V50F     : 50F Validation                                    *
+      *                                                               *
+      *  Called By: SRICOC - Validate Ordering Customer (Cover)       *
+      *                                                               *
+      *  Calls:                                                       *
+      *  FTSNMS    - Send message to program message queue.           *
+      *****************************************************************
+      *
+     C           V50F      BEGSR
+      *
+     C                     CALL 'FT001000'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM *BLANKS   PMSGID  7
+     C                     PARM *BLANKS   PERTP   1
+     C                     PARM 'TRAN'    PVTYPE  4
+     C                     PARM SWFLD1    P50FT1 35
+     C                     PARM SWFLD2    P50FT2 35
+     C                     PARM SWFLD3    P50FT3 35
+     C                     PARM SWFLD4    P50FT4 35
+     C                     PARM SWFLD5    P50FT5 35
+     C                     PARM FACOCT    PACTYP  1
+     C                     PARM *BLANKS   PACCNT 35
+     C                     PARM *BLANKS   PCUST   6
+     C                     PARM *BLANKS   PNACCH 10
+     C                     PARM SANWRK    PNTWRK  6
+     C                     PARM SAMTPY    PMSGTP  3
+     C                     PARM ':50F:'   PMSGTG  5
+     C                     PARM *BLANKS   PCNTRY  2
+     C                     PARM V#BRCA    PBRCH   3
+     C                     PARM V#SMCY    PCURR   3
+     C                     PARM *BLANKS   PNOST   2
+     C                     PARM 'FT'      PMODI   2
+     C                     PARM           POUT1  35
+     C                     PARM           POUT2  35
+     C                     PARM           POUT3  35
+     C                     PARM           POUT4  35
+     C                     PARM           POUT5  35
+      *
+     C           PRTCD     IFNE *BLANKS
+      *
+      ** Suppress formatting errors related to OMFM table
+      *
+     C           PMSGID    IFEQ 'FTS0055'
+     C           PMSGID    OREQ 'FTS0052'
+     C                     MOVEL' '       PERTP   1
+     C                     ENDIF
+      *
+     C                     SELEC
+      *
+     C           PERTP     WHEQ 'W'
+     C                     MOVEL'W'       E#MSGS
+     C**********           MOVELSWFLD1    FTMSDT                                            BUG26087
+     C                     MOVEL*BLANKS   MSGDTA                                            BUG26087
+     C           PMSGID    IFEQ 'FTS0053'                                                   BUG26087
+     C                     MOVELPNTWRK    MDTA1                                             BUG26087
+     C                     MOVEL'(Cover)' MDTA2                                             BUG26087
+     C                     MOVELMSGDTA    FTMSDT                                            BUG26087
+     C                     ELSE                                                             BUG26087
+     C           PMSGID    IFEQ 'FTS0054'                                                   BUG26087
+     C                     MOVELPMSGTG    MDTA1                                             BUG26087
+     C                     MOVEL'(Cover)' MDTA2                                             BUG26087
+     C                     MOVELMSGDTA    FTMSDT                                            BUG26087
+     C                     ELSE                                                             BUG26087
+     C                     MOVEL'(Cover)' FTMSDT                                            BUG26087
+     C                     ENDIF                                                            BUG26087
+     C                     ENDIF                                                            BUG26087
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVELPMSGID    FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAFLD1
+      *
+     C           PERTP     WHEQ 'E'
+     C                     MOVEL'Y'       E#MSGS
+     C**********           MOVELSWFLD1    FTMSDT                                            BUG26087
+     C                     MOVEL'(Cover)' FTMSDT                                            BUG26087
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVELPMSGID    FTMSID
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IAFLD1
+     C                     MOVEL'Y'       E#NOUP
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C***/COPY*WNCPYSRC,FT0347C029                                                          BUG26744
+     E/COPY FTCPYSRC,SFTADDRC
+     E/COPY FTCPYSRC,SFTADDRSC
+     E/COPY FTCPYSRC,SFTSWFTC
+     E/COPY FTCPYSRC,SFTSNMSC
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      ** Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 07 *
+     C                     Z-ADD7         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      ** Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      ** Access SAR file to determine if CFT004 is On
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CFT004'  PSARD   7
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+      ** An NRF (no record found) return code is valid.
+      ** Issue database error only for error return codes.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           PRTCD     ANDNE'*NRF   '
+     C                     MOVEL'CFT004'  DBKEY
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVEL'Y'       CFT004  1
+     C                     ELSE
+     C                     MOVEL'N'       CFT004
+     C                     ENDIF
+      *
+     C***/COPY*WNCPYSRC,FT0347C049                                                          BUG26744
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C***/COPY*WNCPYSRC,FT0347C031                                                          BUG26744
+     CSR                   ENDSR
+      *
+      ** /Copy point for Calculations
+      *
+     C**
+     C/EJECT
+      *
+      ** File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+     C/EJECT
+      *
+      ** /Copy point for Outputs
+      *
+     O/EJECT
+      *                                                                                     BUG26744
+      ** Remove X/COPY WNCPYSRC,FT0347X001                                                  BUG26744
+      *                                                                                     BUG26744
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2009
+**  ALPHA - ARRAY OF ALPHABETIC CHARACTERS
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+**  NUMC - ARRAY OF NUMERIC CHARACTERS
+0123456789
+     X/COPY WNCPYSRC,FT0347X001

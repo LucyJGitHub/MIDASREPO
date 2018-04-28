@@ -1,0 +1,180 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Send DBIC to PEA System via FTP')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000111 - Send DBIC to PEA System via FTP                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR990834           Date 22Jun12              */
+/*       Prev Amend No. CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR990834 - Incorrect FTP logs printed. Password should      */
+/*                  be hidden in the printed logs.                   */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCL        VAR(&GLOBAL) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(15)
+ 
+             DCL        VAR(&PASSWORD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJECT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(80) VALUE(' ')
+             DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MQUEUE) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MQINC) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MQOUT) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MQMSG) TYPE(*CHAR) LEN(2000)
+             DCL        VAR(&SYS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PRFL) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PRFP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RETCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ACTION) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&VLIST) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USERID) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&PASS1) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&PASS2) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&DESCR) TYPE(*CHAR) LEN(50)
+ 
+/*/COPY SDCPYSRC,SDSVALDCL  */
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems +
+                          Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SCC000111 - SC Send DBIC to PEA System +
+                          via FTP') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Get System values */
+ 
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          'BrgMidasGlobalPrefix' &SVAL1 +
+                          'PEAIPAddress' &SVAL2 +
+                          'SaveFileFromLibrary' &SVAL3 +
+                          'SaveFileToLibrary' &SVAL4 +
+                          'PEAFTPUserID' &SVAL5 +
+                          'PEAHandShakingQM' &SVAL6 +
+                          'PEAHandShakingIQ' &SVAL7 +
+                          'PEAHandShakingOQ' &SVAL8 +
+                          'PEALiveSystemPrefix' &SVAL9 +
+                          'PEASystemPrefix' &SVAL10)
+ 
+             CHGVAR     VAR(&GLOBAL) VALUE(%SST(&SVAL1 1 2))
+             CHGVAR     VAR(&SYSTEM) VALUE(%SST(&SVAL2 1 15))
+             CHGVAR     VAR(&FROMLIB) VALUE(%SST(&SVAL3 1 10))
+             CHGVAR     VAR(&TOLIB) VALUE(%SST(&SVAL4 1 10))
+             CHGVAR     VAR(&USER) VALUE(%SST(&SVAL5 1 10))
+             CHGVAR     VAR(&MQMGR) VALUE(&SVAL6)
+             CHGVAR     VAR(&MQINC) VALUE(&SVAL7)
+             CHGVAR     VAR(&MQOUT) VALUE(&SVAL8)
+             CHGVAR     VAR(&PRFL) VALUE(%SST(&SVAL9 1 2))
+             CHGVAR     VAR(&PRFP) VALUE(%SST(&SVAL10 1 2))
+ 
+/** Delete work files */
+ 
+             DLTF       FILE(QTEMP/FTPCOMMAND)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/FTPLOG)
+             MONMSG     MSGID(CPF0000)
+ 
+/** Recreate FTP command save file */
+ 
+             CRTSRCPF   FILE(QTEMP/FTPCOMMAND) RCDLEN(212)
+             ADDPFM     FILE(QTEMP/FTPCOMMAND) MBR(INPUT)
+             ADDPFM     FILE(QTEMP/FTPCOMMAND) MBR(OUTPUT)
+ 
+             CHGVAR     VAR(&ACTION) VALUE('F')
+             CHGVAR     VAR(&VLIST) VALUE('GPLDAPVL')
+             CHGVAR     VAR(&VLIB) VALUE(&GLOBAL *CAT 'GMLIB')
+             CHGVAR     VAR(&USERID) VALUE(&USER)
+ 
+/** Get User ID and Password */
+ 
+             CALL       PGM(UT000033) PARM(&RETCODE &ACTION &VLIST +
+                          &VLIB &USERID &PASS1 &PASS2 &DESCR)
+             IF         COND(&RETCODE *NE ' ') THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('Error in validation list +
+                          functions.')
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(ENDP)
+             ENDDO
+ 
+/** Send DBIC save file to PEA system */
+ 
+             CHKOBJ     OBJ(&FROMLIB/DBIC) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&PASSWORD) VALUE(&PASS1)
+             CHGVAR     VAR(&OBJECT) VALUE('DBIC')
+             OVRDBF     FILE(INPUT) TOFILE(QTEMP/FTPCOMMAND) MBR(INPUT)
+             OVRDBF     FILE(OUTPUT) TOFILE(QTEMP/FTPCOMMAND) +
+                          MBR(OUTPUT)
+ 
+             CALL       PGM(SC000111) PARM(&USERID &PASSWORD +
+                          &OBJECT &FROMLIB &TOLIB)
+ 
+/** Open remote connection */
+ 
+             FTP        RMTSYS(&SYSTEM)
+ 
+/** Check if errors were encountered */
+ 
+             CALL       PGM(UTC000011) PARM(&Error)
+             IF         COND(&ERROR = '1') THEN(GOTO CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&MQMSG) VALUE('DBIC ready')
+             CHGVAR     VAR(&SYS) VALUE(&PRFP)
+             CHGVAR     VAR(&MQUEUE) VALUE(&MQOUT)
+             GOTO       CMDLBL(ENDP)
+ 
+ABNOR:
+             CHGVAR     VAR(&MQMSG) VALUE('FTP error')
+             CHGVAR     VAR(&SYS) VALUE(&PRFL)
+             CHGVAR     VAR(&MQUEUE) VALUE(&MQINC)
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000111 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDP:
+ 
+/** Send MQ message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CALL       PGM(ZAMSGTOMQ) PARM(&RTCD &SYS &MQMGR +
+                          &MQUEUE &MQMSG)
+ 
+/** Create logfile, and get rid of command file (contains password) */
+ 
+/**********  CPYF       FROMFILE(QTEMP/FTPCOMMAND) TOFILE(*PRINT) +                  */ /*AR990834*/
+/**********               MBROPT(*REPLACE) CRTFILE(*YES)                             */ /*AR990834*/
+             CPYF       FROMFILE(QTEMP/FTPCOMMAND) TOFILE(*PRINT) +
+                          FROMMBR(OUTPUT)                                               /*AR990834*/
+             MONMSG     MSGID(CPF0000 MCH0000)
+             DLTF       FILE(QTEMP/FTPCOMMAND)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM

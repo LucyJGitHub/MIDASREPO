@@ -1,0 +1,3258 @@
+     H        1                                                           SE0975
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Security Ledger Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE0975 - SECURITY LEDGER REPORT                              *
+     F*                                                               *
+     F*  Function: Produce report detailing all activities across     *
+     F*   (COB)    all Securities at one Branch or all Branches for   *
+     F*            each Market since the beginning of the current     *
+     F*            month.  The report includes:                       *
+     F*            - all outstanding Trades at the beginning of the   *
+     F*              month with associated Settlements.               *
+     F*            - all Trades, Settlements and Movements during the *
+     F*              month (including Backvalued Trades).             *
+     F*            - Opening and Closing Balances of the User and     *
+     F*              nominated Depots (for the Investment Type).      *
+     F*            - for Grey and Primary Securities, new issue       *
+     F*              information.                                     *
+     F*                                                               *
+     F*  Called by: SEC0908 - Security Ledger Report                  *
+     F*                                                               *
+     F*           Frequency:                                          *
+     F*           - on request during COB                             *
+     F*           - automatically at End Of Month                     *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 222727             Date 05Nov03               *
+      *                 194370             Date 12Jul01               *
+      *                 211407             Date 07Jan03               *
+      *                 208241             Date 21Aug02               *
+      *                 CSE037             Date 29Apr02               *
+      *                 CSE035             Date 22Apr02               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 09Nov01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 130862             Date 16Oct98               *
+      *                 151945             Date 06Jan99               *
+     F*                 CSE005             DATE 04FEB97               *
+     F*                 084704             DATE 01AUG96               *
+     F*                 083039             DATE 01AUG96               *
+     F*                 059110             DATE 01AUG96               *
+     F*                 098175             DATE 09JUL96               *
+     F*                 088047             DATE 26JUN96               *
+     F*                 100228             DATE 30MAY96               *
+     F*                 091254             DATE 20OCT95               *
+     F*                 S01496  JSV        DATE 07OCT94               *
+     F*                 S01502             DATE 02DEC94               *
+     F*                 S01408             DATE 19AUG94               *
+     F*                 S01408             DATE 19MAY94               *
+     F*                 052254             DATE 25NOV93               *
+     F*                 051420             DATE 25NOV93               *
+     F*                 S01445             DATE 04NOV93               *
+     F*                 037183             DATE 26OCT93               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E38667             DATE 24APR92               *
+     F*                 E37680             DATE 06APR92               *
+     F*                 E37493             DATE 01APR92               *
+     F*                 E37680             DATE 27MAR92               *
+     F*                 E37187             DATE 23MAR92               *
+     F*                 E32674             DATE 03DEC91               *
+     F*                 E31197             DATE 04NOV91               *
+     F*                 E27096             DATE 17OCT91               *
+     F*                 E29170             DATE 10OCT91               *
+     F*                 S01117             DATE 29MAY91               *
+     F*                 S01269             DATE 01AUG90               *
+     F*                 E21431             DATE 26FEB90               *
+     F*                 E21230             DATE 26FEB90               *
+     F*                 E20694             DATE 15JAN90               *
+     F*                 E20692             DATE 09JAN90               *
+     F*                 E20583             DATE 28DEC89               *
+     F*                 E20129             DATE 09NOV89               *
+     F*                 E20131             DATE 09NOV89               *
+     F*                 E20133             DATE 09NOV89               *
+     F*                 E19470             DATE 09NOV89               *
+     F*                 E20125             DATE 09NOV89               *
+     F*                 E18874             DATE 07/07/89              *
+     F*                 E17303             DATE 21/04/89              *
+     F*                 E15332             DATE 30/09/88              *
+     F*                 E14833             DATE 10/08/88              *
+     F*                 E14004             DATE 01/08/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  211407 - Recompile after change on copy sources ZYLDZ2,      *
+      *           ZACCRZ1 and ZYCEZ1 for NX/NNX processing.           *
+      *           The change was to call subroutine ZLCD1 instead     *
+      *           of ZLCD in retrieving the PERIOD for NNX processing *
+      *           and ZNCD1 is called instead of ZNCD in retrieving   *
+      *           the WBENCD for NNX processing. Also rewrite tests   *
+      *           for identifying if position is NX,NNX or CUM.       *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *           Recompile over changed ZYLDZ2
+      *  206316 - Recompiled over changed ZLCDZ1.                     *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           (recompilation due to change to ZNCD/ZLCD)          *
+      *  180707 - No Position Settlements generated. Recompile over   *
+      *           changes in /COPY ZNCDZ3.                            *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  130862 - Recompiled over changed ZLCDZ1.                     *
+     F*  151945 - Recompiled Over changed ZDYYRZ3 .                   *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  084704 - RECOMPILE OVER CHANGED ZYLDZ2 SUB.                  *
+     F*  083039 - RECOMPILE OVER CHANGED ZYLDZ2 SUB.                  *
+     F*  059110 - RECOMPILE OVER CHANGED ZYLDZ2 SUB.                  *
+     F*  098175 - Check for overflow before writing TRAIL             *
+     F*  088047 - RECOMPILE over change SR/ZYLDZ2.                    *
+     F*  100228 - ADD STANDARD SR ZLCDZ1.                             *
+     F*           RECOMPILE OVER CHANGED SR ZLCDZ1 AND ZNCDZ3         *
+     F*  091254 - RECOMPILE OVER CHANGED ZLCDZ1 & ZNCDZ3              *
+     F*  S01496 - Incorporation of JYSKE Enhancements (S10978)        *
+     F*  S01502 - BLI TELEKURS PROCESSING, RECOMPILED DUE TO CHANGE   *
+     F*           IN LENGTH OF SESTAT, 133 LONG.                      *
+     F*  S01408 - Core hook SE0975CPD1 added                          *
+     F*           Core hook SE0975CPD2 added                          *
+     F*           Core hook SE0975CPLH added                          *
+     F*           Core hook SE0975CPL1 added                          *
+     F*           Core hook SE0975CPL2 added                          *
+     F*           Core hook SE0975CPL3 added                          *
+     F*           Core hook SE0975CPL5 added                          *
+     F*           Core hook SE0975CPL4 added                          *
+     F*  S01408 - Core hook SE0975CPDR added                          *
+     F*  052254 - RECOMPILED AS CURRENT FACTOR AMENDED FROM 9,8       *
+     F*           TO 10,9                                             *
+     F*  051420 - Squeeze Nominal/Value Currency onto the Report.     *
+     F*  S01445 - DEPOT MOVEMENT CHARGES ENHANCEMENT.                 *
+     F*           Recompiled due to changes in PF/DPTMVD.             *
+     F*  037183 - Page on report can get filled up too much. Changed  *
+     F*           Program to use Automatic Line Counting instead of   *
+     F*           the Overflow Indicator.                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E38667 - Should only display Next Coupon if security is      *
+     F*           coupon bearing                                      *
+     F*  E37680 - C/F appearing twice                                 *
+     F*  E37493 - Recompiled over changed printer file                *
+     F*  E37680 - Requested Branch checking is only applicable if the *
+     F*           System is in Multibranched Mode.                    *
+     F*  E37187 - When market primary and there is a secondary market *
+     F*           as well, User Depot and Other have secondary values *
+     F*  E32674 - Recompiled due to error in DPTMVD                   *
+     F*  E31197 - Should report no details on Audit printer file      *
+     F*  E27096 - Format CFBAL printed up to three times, (G, P, S).  *
+     F*         - Also, User Depot shows 0 for Securities Matured     *
+     F*           later than End of last Month that have not been     *
+     F*           Settled.                                            *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  S01269 - Trade authorisation: recompiled over changed        *
+     F*           file TABSE                                          *
+     F*  E21230 - Nominal settled is wrong for the settlment details  *   E21230
+     F*  E20694 - Produce (REVERSAL) message when needed.             *   E20694
+     F*  E20692 - Settlement records were not being output.           *   E20692
+     F*     Also- C/F for Grey & Primary mkts was not being produced. *   E20692
+     F*  E20583 - Printer overflow error. Use CPF to deal with        *   E20583
+     F*           overflow instead of line counting.                  *   E20583
+     F*  E20129 - Suppress securities which matured in prior months.  *   E20129
+     F*  E20131 - 'Out depot' detail line missing for depot transfer. *   E20131
+     F*     Also: Wrong name on 'out depot' detail line.              *   E20131
+     F*  E20133 - Positions for which all trades are forwards were    *   E20133
+     F*           excluded from security ledger.                      *   E20133
+     F*  E19470 - 'Trading Profit' is the Realized Profit for THIS    *   E19470
+     F*           month. It should not read only the last record for  *   E19470
+     F*           each Sec/Br/Bk/Mkt; it should also not include any  *   E19470
+     F*           Profit from previous months: ie. it should include  *   E19470
+     F*           ALL Profit on Secty/Branch since End of Last Month. *   E19470
+     F*  E20125 - Exclude trades B/V to prev. month from B/F position.*   E20125
+     F*           And: Due to E14004 fix, if all trades for br/sec/mkt*   E20125
+     F*           were B/V to previous month, none showed on report.  *   E20125
+     F*           Note: This fix includes remedy for another error    *   E20125
+     F*           involving entries on the ledger with no activity.   *   E20125
+     F*         - The Depot Position processing was nonsense.         *   E20125
+     F*         - Various reporting errors:                           *   E20125
+     F*         - The C/F Trading Position was incorrect for Matured  *   E20125
+     F*           Securities because of ignoring RECI = 'M' BKPOSD    *   E20125
+     F*           records. Also changed report to say 'Final Trading  *   E20125
+     F*           Position' instead of 'C/F'.                         *   E20125
+     F*         - The report for a Matured Security should say        *   E20125
+     F*           '** MATURED **' instead of showing Next Coupon.     *   E20125
+     F*         - Report was showing wrong Security Report Name.      *   E20125
+     F*         - 'Market' report field was blank when there were no  *   E20125
+     F*           transactions on the Security in the current month.  *   E20125
+     F*  E18874 - PRINTER OVERFLOW FOR A NEW ISSUE.                   *   E18874
+     F*  E17303 - RECOMPILE PROGRAM OVER CHANGED ZDYYRZ3 ZYLDZ1 ZYLDZ2*   E17303
+     F*  E15332 - Count number of lines correctly to prevent          *   E15332
+     F*           overflow error.                                     *   E15332
+     F*  E14833 - Program changed to ignore deleted Depot movements   *   E14833
+     F*           as actioned records are now flagged as 'S' instead  *   E14833
+     F*           of '*' (JB619 in SE2200 refers).                    *   E14833
+     F*  E14004 - Book positions in current month should be selected  *   E14004
+     F*           not those in previous months                        *   E14004
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *
+     F*SESLTD**IF**E                    DISK                              S01117
+     F*SESLTA**IF**E                    DISK                              S01117
+     FSETSLL  IF  E           K        DISK
+     FBKPOSDT IF  E           K        DISK
+     F*BKPOSDX*IF**E           K        DISK                              E20133
+     F************BKPOSDF                           KRENAMEBKPOSDXF       E20133
+     FBKMTT   IF  E           K        DISK                               E20133
+     FMTRADE  IF  E           K        DISK
+     FMTRAD2  IF  E           K        DISK                               E20125
+     F            MTRADDF                           KRENAMEMTRAD2F        E20125
+     FSEERALL2IF  E           K        DISK                           UC  S01496
+     FDPTMVL  IF  E           K        DISK
+     FHOLDU   IF  E           K        DISK
+     FUDEPL0  IF  E           K        DISK                               E27096
+     F            UDEPPDF                           KRENAMEUDEPDAT        E27096
+     FCUDSL   IF  E           K        DISK                               E37187
+     F            UDEPPDF                           KRENAMECUDEPPDF       E37187
+     F            CDEPPDF                           KRENAMECCDEPPDF       E37187
+     FDPOSO   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F***SE0975P1O   E                    PRINTER                     UC  E20583
+     F***SE0975P1O***E             31     PRINTER              UC  E20583 037183
+     FSE0975P1O   E                    PRINTER                        UC  037183
+     F                                              KINFDS SPOOL          E29170
+     FSE0975AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - Market is Grey                                        *
+     F*   11  - Market is Primary                                     *
+     F*   12  - Market is Secondary                                   *
+     F*                                                               *
+     F*   13  - Security is Partly Paid                               *
+     F*   14  - Security has Matured                                  *   E20125
+     F*                                                               *
+     F*   20  - Trade is Purchase                                     *
+     F*   21  - Trade is Sale                                         *
+     F*   22  - Deliver From/To is zero - unallocated                 *
+     F*   23  - Depot is 999999 - unallocated                         *
+     F*   24  - Print Counterparty at change of reference             *
+     F****31**-*Overflow*indicator*********************************E20583 037183
+     F*   37  - Multibranching on                                     *   E29170
+     F*                                                               *
+     F*   50  - File chain fail indicator                             *
+     F*   51  - Open/Close printer file indicator                     *
+     F*                                                               *
+     F*   70  - End of processing for Depot Positions file            *
+     F*   71  - SETLL equal indicator for LF/SEERALL2                 *   S01496
+     F*         (show transaction from ER)                            *   S01496
+     F****90**-*End*of*processing*for*Security*Ledger*Transactions*fil*   S01117
+     F*                                                               *
+     F*   U7  - Database Error.                                       *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  BAINIT - Initialisation routine                              *
+     F*  BBMAIN - Main-line processing                                *
+     F*  BCCLOS - Closing routine                                     *
+     F*  BVTRDS - Remove trades B/V to previous month from B/F positio*  E2 0125
+     F*  EXUDEP - Extract User Depots balance                         *
+     F*  EXNDEP - Extract Depot Positions                             *
+     F*  EXBPOS - Extract Trading Position & Trading Profit/Loss      *
+     F*  FDEPOT - Format Depot Balances to print                      *
+     F*  FSECTY - Access Security file                                *
+     F*  PAUDIT - Print audit details                                 *
+     F*  PDPTMV - Access & print Depot Movement details               *
+     F*  PMTRAD - Access & print Monthly Trades details               *
+     F*  PSETSL - Access & print Settlement details                   *
+     F*  PSECTY - Format & print Security header details              *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+     F*                                                               *
+     F*  ZDATE1 - Format date to day no.                              *
+     F*  ZDATE2 - Format day no. to DDMMMYY                           *
+     F*  ZEVCD  - Get event control date                              *
+     F*  ZNCD   - Retrieve Next Coupon Date                           *
+     F*  ZSDESC - Format Security Description                         *   E20125
+     F*  ZSEDIT - Insert a decimal point and sign into a numeric field*
+     F*           and to blank out leading zeros (optionally inserting*
+     F*                                                      commas)  *
+     F*  ZSYSTM - Chain to the installation control data record       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZSDESCZ1                                               E20125
+     E/COPY ZSRSRC,ZSEDITZ1
+     E                    CPY@    1   1 80
+      /EJECT
+     I*                                                                   E20125
+     IMTRAD2F                                                             E20125
+     I              CDMK                            CDMK2                 E20125
+     I*                                                                   E20125
+     ICCDEPPDF                                                            E37187
+     I              CDSN                            UDSN                  E37187
+     I              CDPA                            UDBA                  E37187
+     I              CDPT                            UDPT                  E37187
+     I              CDNV                            UDNV                  E37187
+     I              CDMK                            UDMK                  E37187
+     I              DDTE                            UDDT                  E37187
+      *                                                                                       CSE037
+     IINVTPDF                                                                                 CSE037
+     I              SFLG                            ISFLG                                     CSE037
+      *                                                                                       CSE037
+     I/COPY WNCPYSRC,SE0975I001
+     I*                                                                   E37187
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ***  Local Data Area for DB Error Information
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I                                    B 188 1890OFLLN1                037183
+     I                                    B 367 3680PRTLN1                037183
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+      *
+     I*  EOM data area
+     ISESTAT    E DS
+     I*
+     I*  Date structure used in ZSEDIT routine
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZSDESCZ2                                               E20125
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+     I*  Program status data structure
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      254 263 USRID
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C*  Initialisation routine
+     C*
+     C                     EXSR BAINIT
+     C*
+     C*  Mainline processing
+     C*
+     C                     EXSR BBMAIN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+      *  Closing routine                                              *
+      *                                                               *
+     C                     EXSR BCCLOS
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BAINIT - Initialisation Subroutine.                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BAINIT    BEGSR                           *** BAINIT ***
+     C*                                                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           ENT     3                       S01117
+     C*
+     C* Define key list for file CLINT
+     C*
+     C           KLCLNT    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           RCDT
+     C*
+     C* Define key list for file SETSL
+     C*
+     C           KLSETL    KLIST
+     C                     KFLD           SSSN
+     C***********          KFLD           SBCD                            S01117
+     C                     KFLD           SBCA                            S01117
+     C                     KFLD           SMKI
+     C*
+     C* Define key list for file BKPOSDT
+     C*
+     C           KLBPOS    KLIST
+     C                     KFLD           BPSC
+     C***********          KFLD           BPBR                            S01117
+     C                     KFLD           BPBA                            S01117
+     C                     KFLD           BPBK
+     C                     KFLD           BPPD
+     C                     KFLD           BPMK
+     C*
+     C* Define key list for file MTRADE
+     C*
+     C           KLMTRD    KLIST
+     C                     KFLD           MSEC
+     C                     KFLD           MBRA
+     C                     KFLD           CDMK
+     C*                                                                   E20125
+     C* Define partial key list for file MTRAD2                           E20125
+     C*                                                                   E20125
+     C           KLMTR2    KLIST                                          E20125
+     C                     KFLD           MSEC                            E20125
+     C                     KFLD           MBRA                            E20125
+     C*
+     C* Define key list for file DPTMV
+     C*
+     C           KLDPMV    KLIST
+     C                     KFLD           DPSS
+     C***********          KFLD           DPBC                            S01117
+     C                     KFLD           DPBA                            S01117
+     C*
+     C* Define key list for file HOLDU
+     C*
+     C           KLUPOS    KLIST
+     C                     KFLD           UDSN
+     C***********          KFLD           UDBR                            S01117
+     C                     KFLD           UDBA                            S01117
+     C                     KFLD           UDPT
+     C*
+     C* Define partial key list for file HOLDU
+     C*
+     C           KLUDEP    KLIST
+     C                     KFLD           UDSN
+     C***********          KFLD           UDBR                            S01117
+     C                     KFLD           UDBA                            S01117
+     C*
+     C* Define key list for file DPOSN
+     C*
+     C           KLDPOS    KLIST
+     C***********          KFLD           DSBR                            S01117
+     C                     KFLD           DSBA                            S01117
+     C                     KFLD           DSSC
+     C                     KFLD           DDPT
+     C                     KFLD           DDTE
+     C*                                                                   E37187
+     C* Define key list for file CUDSL                                    E37187
+     C*                                                                   E37187
+     C           KLCUD     KLIST                                          E37187
+     C                     KFLD           DSBA                            E37187
+     C                     KFLD           DSSC                            E37187
+     C                     KFLD           DDPT                            E37187
+     C*
+     C* Define key list for file DPOSN (Depot balances)
+     C*
+     C           KLNOMD    KLIST
+     C                     KFLD           KYBR
+     C                     KFLD           KYSC
+     C                     KFLD           KYDP
+     C                     KFLD           KYDT
+     C*
+     C* Define key list for file INVTP
+     C*
+     C           KLINVT    KLIST
+     C                     KFLD           CCYI
+     C                     KFLD           INVT
+     C*                                                                   E20133
+     C* Key list for BKMTT (BKMTHD by Security/Branch/Descending Date)    E20133
+     C*                                                                   E20133
+     C           KLBKMT    KLIST                                          E20133
+     C                     KFLD           BKSS                            E20133
+     C***********          KFLD           BKBR                     E20133 S01117
+     C                     KFLD           BKBA                            S01117
+     C                     KFLD           EOMT                            E20133
+     C*
+     C* Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SE0975'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* Define data area for End of Month
+     C*
+     C           *NAMVAR   DEFN           SESTAT
+     C                     IN   SESTAT
+     C                     MOVE EOPM      EOMD    50
+     C                     MOVE EOPT      EOMT    50                      E20133
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C* Define fields
+     C*
+     C************LIKE     DEFN DSBR      SAVBR                           S01117
+     C           *LIKE     DEFN DSBA      SAVBA                           S01117
+     C           *LIKE     DEFN DSSC      SAVSC
+     C           *LIKE     DEFN BPBK      SAVBK
+     C           *LIKE     DEFN BPBK      SAVBKC
+     C           *LIKE     DEFN DDPT      SAVDP
+     C           *LIKE     DEFN CDCN      SAVCN                           E37187
+     C           *LIKE     DEFN UDMK      SAVMK                           E37187
+     C************LIKE     DEFN DSBR      SAVB                            S01117
+     C           *LIKE     DEFN DSBA      SAVB                            S01117
+     C           *LIKE     DEFN DSSC      SAVS
+     C********** *LIKE     DEFN DDPT      SAVD                                                CSD027
+     C                     Z-ADD*ZERO     SAVD    60                                          CSD027
+     C           *LIKE     DEFN DDTE      SAVT
+     C           *LIKE     DEFN MTRF      SAVRF
+     C************LIKE     DEFN DSBR      WSBR                            S01117
+     C************LIKE     DEFN DSBR      KYBR                            S01117
+     C           *LIKE     DEFN DSBA      WSBR                            S01117
+     C           *LIKE     DEFN DSBA      KYBR                            S01117
+     C           *LIKE     DEFN DSSC      KYSC
+     C********** *LIKE     DEFN DDPT      KYDP                                                CSD027
+     C                     Z-ADD*ZERO     KYDP    60                                          CSD027
+     C           *LIKE     DEFN DDTE      KYDT
+     C************LIKE     DEFN UDNV      WUDNV                           E37187
+     C************LIKE     DEFN UDNV      WUDNVB                          E37187
+     C************LIKE     DEFN DSNV      WDBF1                           E37187
+     C************LIKE     DEFN DSNV      WDBF2                           E37187
+     C************LIKE     DEFN DSNV      WDBF3                           E37187
+     C************LIKE     DEFN DSNV      WDCF1                           E37187
+     C************LIKE     DEFN DSNV      WDCF2                           E37187
+     C************LIKE     DEFN DSNV      WDCF3                           E37187
+     C************LIKE     DEFN DSNV      WOTBF                           E37187
+     C************LIKE     DEFN DSNV      WOTCF                           E37187
+     C           *LIKE     DEFN UDNV      WNVCG                           E37187
+     C           *LIKE     DEFN UDNV      WNVCP                           E37187
+     C           *LIKE     DEFN UDNV      WNVCS                           E37187
+     C           *LIKE     DEFN UDNV      WNVBG                           E37187
+     C           *LIKE     DEFN UDNV      WNVBP                           E37187
+     C           *LIKE     DEFN UDNV      WNVBS                           E37187
+     C           *LIKE     DEFN DSNV      WDBF1G                          E37187
+     C           *LIKE     DEFN DSNV      WDBF1P                          E37187
+     C           *LIKE     DEFN DSNV      WDBF1S                          E37187
+     C           *LIKE     DEFN DSNV      WDBF2G                          E37187
+     C           *LIKE     DEFN DSNV      WDBF2P                          E37187
+     C           *LIKE     DEFN DSNV      WDBF2S                          E37187
+     C           *LIKE     DEFN DSNV      WDBF3G                          E37187
+     C           *LIKE     DEFN DSNV      WDBF3P                          E37187
+     C           *LIKE     DEFN DSNV      WDBF3S                          E37187
+     C           *LIKE     DEFN DSNV      WDCF1G                          E37187
+     C           *LIKE     DEFN DSNV      WDCF1P                          E37187
+     C           *LIKE     DEFN DSNV      WDCF1S                          E37187
+     C           *LIKE     DEFN DSNV      WDCF2G                          E37187
+     C           *LIKE     DEFN DSNV      WDCF2P                          E37187
+     C           *LIKE     DEFN DSNV      WDCF2S                          E37187
+     C           *LIKE     DEFN DSNV      WDCF3G                          E37187
+     C           *LIKE     DEFN DSNV      WDCF3P                          E37187
+     C           *LIKE     DEFN DSNV      WDCF3S                          E37187
+     C           *LIKE     DEFN DSNV      WOTBFG                          E37187
+     C           *LIKE     DEFN DSNV      WOTBFP                          E37187
+     C           *LIKE     DEFN DSNV      WOTBFS                          E37187
+     C           *LIKE     DEFN DSNV      WOTCFG                          E37187
+     C           *LIKE     DEFN DSNV      WOTCFP                          E37187
+     C           *LIKE     DEFN DSNV      WOTCFS                          E37187
+     C           *LIKE     DEFN NMDP      FEEDP
+     C           *LIKE     DEFN NMDP      NOMDP
+     C           *LIKE     DEFN DSNV      WBFTPP
+     C           *LIKE     DEFN RPTP      WTPRFP
+     C           *LIKE     DEFN DSNV      WCFTPP
+     C           *LIKE     DEFN DSNV      WBFTPG
+     C           *LIKE     DEFN RPTP      WTPRFG
+     C           *LIKE     DEFN DSNV      WCFTPG
+     C           *LIKE     DEFN DSNV      WBFTPS
+     C           *LIKE     DEFN RPTP      WTPRFS
+     C           *LIKE     DEFN DSNV      WCFTPS
+     C           *LIKE     DEFN DPNA      WDPNA
+     C*
+     C* Initialise fields
+     C*
+     C                     Z-ADD*ZEROS    SSCNT   50
+     C***********          Z-ADD*ZEROS    SECNT   50                      S01117
+     C                     Z-ADD*ZEROS    MTCNT   50
+     C                     Z-ADD*ZEROS    SLCNT   50
+     C                     Z-ADD*ZEROS    DMCNT   50
+     C*********************Z-ADD*ZEROS    LCNT    50                      E20583
+     C                     Z-ADD0         RQDLN1  30                      037183
+     C                     Z-ADD0         DIFLN1  30                      037183
+     C*
+     C* Get Installation Control Data record 1
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C* If error in ZSYSTM, abort program
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '01'      DBASE             **************S01117
+     C                     Z-ADD1         DBASE             **************S01117
+     C                     MOVEL'TABLE'   DBFILE            * DB ERROR 01 *
+     C                     MOVELZTABKY    DBKEY             ***************
+     C                     SETON                     U7U8
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ELSE
+     C*
+     C* Get Installation Control Data record 2
+     C*
+     C                     EXSR ZICD2
+     C*
+     C* If error in ZICD2, abort program
+     C*
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '02'      DBASE             **************S01117
+     C                     Z-ADD2         DBASE             **************S01117
+     C                     MOVEL'TABLE'   DBFILE            * DB ERROR 02 *
+     C                     MOVELZTABKY    DBKEY             ***************
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     END
+     C                     END
+     C*                                                                   E29170
+     C**  TEST FOR MULTIBRANCHING                                         E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     37                   E29170
+     C                     END                                            E29170
+     C*
+     C*  Get Event Control Date
+     C*
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     EXSR ZEVCD
+      *                                                                   S01496
+      **  Access SAR details file to see if JYSKE Enhcmts is installed.   S01496
+      *                                                                   S01496
+     C                     CALL 'AOSARDR0'                                S01496
+     C                     PARM '       ' @RTCD   7                       S01496
+     C                     PARM '*VERIFY' @OPTN   7                       S01496
+     C                     PARM 'S01496'  WSARD   6                       S01496
+      *                                                                   S01496
+     C           @RTCD     IFEQ *BLANK                                    S01496
+     C                     MOVE 'Y'       S01496  1                       S01496
+     C                     END                                            S01496
+      *                                                                                       CSE035
+      ** Access SAR details file to see if CSE035 is installed                                CSE035
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   @RTCD                                               CSE035
+     C                     PARM '*VERIFY' @OPTN                                               CSE035
+     C                     PARM 'CSE035'  WSARD                                               CSE035
+      *                                                                                       CSE035
+     C           @RTCD     IFEQ *BLANK                                                        CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     ENDIF                                                              CSE035
+      *                                                                                       CSE035
+     C/COPY WNCPYSRC,SE0975C001
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BBMAIN - Subroutine to perform Main Processing.              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BBMAIN    BEGSR                           *** BBMAIN ***
+     C*
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     GOTO BBEND
+     C                     END
+     C*
+     C*  Perform main processing for each Security Ledger
+     C*                                       Transaction record ..
+     C*
+     C************         READ SESLTDF                  90               S01117
+     C*
+     C*****If*no*records*found*print*audit*and*end*program*************   S01117
+     C***********                                                         S01117
+     C************IN90     IFEQ '1'                                       S01117
+     C***********          EXSR PAUDIT                                    S01117
+     C***********          OPEN SE0975P1               51                 S01117
+     C***********          Z-ADD0         PAGE                            S01117
+     C***********          WRITEHEADS                                     S01117
+     C***********          GOTO BBEND                                     S01117
+     C***********          END                                            S01117
+     C***********                                                         S01117
+     C************IN90     DOWEQ'0'                                       S01117
+     C***********RECI      IFEQ 'D'                                       S01117
+     C***********          ADD  1         SECNT                           S01117
+     C*
+     C*   Determine mode of processing ..
+     C*
+     C*****..*one*Security*at*one*Branch***else************************   S01117
+     C*****..*one*Security*at*all*Branches*else************************   S01117
+     C*    .. all Securities at one Branch else
+     C*    .. all Securities at all Branches
+     C*
+     C*   Read Depot Positions file for Branch code ..
+     C*
+     C***********BRCP      IFEQ 'ALL'                                     S01117
+     C           ENT       IFEQ 'ALL'                                     S01117
+     C           MBIN      OREQ 'N'                                       E37680
+     C*    .. for all Branches
+     C***********          MOVE *BLANKS   DSBR                            S01117
+     C                     MOVE *BLANKS   DSBA                            S01117
+     C*    .. for one Branch
+     C                     ELSE
+     C***********          MOVE BRCP      WSBR
+     C                     MOVE ENT       WSBR
+     C***********          MOVE BRCP      DSBR                            S01117
+     C                     MOVE ENT       DSBA                            S01117
+     C                     END
+      *
+     C***********SECS      IFEQ 'ALL'                                     S01117
+     C*****..*for*all*Securities***************************************   S01117
+     C                     MOVE *BLANKS   DSSC
+     C***********          ELSE                                           S01117
+     C*****..*for*one*Security*****************************************   S01117
+     C***********          MOVE SECS      DSSC                            S01117
+     C***********          END                                            S01117
+      *
+     C**********           MOVE *ZEROS    DDPT                                                CSD027
+     C                     MOVE *BLANKS   DDPT                                                CSD027
+     C                     MOVE *ZEROS    DDTE
+     C*
+     C           KLDPOS    SETLLDPOSNDF
+     C                     READ DPOSNDF                  70
+     C*
+     C*   .. Process until eof or Branch/Security not selected
+     C*
+     C***********BRCP      IFNE 'ALL'                                     S01117
+     C           ENT       IFNE 'ALL'                                     S01117
+     C***********WSBR      ANDNEDSBR                                      S01117
+     C           WSBR      ANDNEDSBA                                      S01117
+     C           MBIN      ANDEQ'Y'                                       E37680
+     C***********SECS      ORNE 'ALL'                                     S01117
+     C***********SECS      ANDNEDSSC                                      S01117
+     C                     SETON                     70
+     C                     END
+     C*
+     C           *IN70     IFEQ '1'
+     C                     EXSR PAUDIT
+     C***********          OPEN SE0975P1               51                 E29170
+     C***********          Z-ADD0         PAGE                            E29170
+     C***********          WRITEHEADS                                     E29170
+     C           *IN51     IFEQ '1'                                       E29170
+     C* Check for overflow before writing TRAIL                           098175
+     C                     Z-ADD4         RQDLN1                          098175
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          098175
+     C           DIFLN1    IFLE RQDLN1                                    098175
+     C                     WRITEHEADS                                     098175
+     C                     END                                            098175
+     C                     WRITETRAIL                                     E29170
+     C                     END                                            E29170
+     C                     GOTO BBEND
+     C                     END
+     C*
+     C           *IN70     DOWEQ'0'
+     C*
+     C*   If change of Security ..
+     C*
+     C           DSSC      IFNE SAVSC
+     C*
+     C*  Set flag to control printing of headings.                        E20125
+     C                     MOVE *BLANKS   SECFLG  1                       E20125
+     C*                                                                   E20125
+     C*    .. access Security details file
+     C*
+     C                     EXSR FASECT
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     GOTO BBEND
+     C                     END
+     C*                                                                   E20129
+     C** Disregard instruments which matured prior to this month.         E20129
+     C           MATY      IFGT EOMD                                      E20129
+     C           MATY      OREQ 0                                         E20129
+     C*
+     C*    .. extract User Depot Positions
+     C*
+     C                     EXSR EXUDEP
+     C*
+     C*    .. extract Nominated Depot Positions
+     C*********(save*key*fields)******************************************E37187
+     C*
+     C***********          MOVE DSBR      SAVB                            S01117
+     C***********          MOVE DSBA      SAVB                      S01117E37187
+     C***********          MOVE DSSC      SAVS                            E37187
+     C***********          MOVE DDPT      SAVD                            E37187
+     C***********          MOVE DDTE      SAVT                            E37187
+     C*
+     C                     EXSR EXNDEP
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     GOTO BBEND
+     C                     END
+     C***********                                                         E37187
+     C*********(get*back*to*original*Depot*Position)**********************E37187
+     C***********          MOVE SAVB      DSBR                            S01117
+     C***********          MOVE SAVB      DSBA                      S01117E37187
+     C***********          MOVE SAVS      DSSC                            E37187
+     C***********          MOVE SAVD      DDPT                            E37187
+     C***********          MOVE SAVT      DDTE                            E37187
+     C***********KLDPOS    CHAINDPOSNDF              50                   E37187
+     C*
+     C*    .. extract Trading Position & Trading Profit/Loss
+     C*
+     C                     EXSR EXBPOS
+     C*
+     C*    .. print Security details if no markets to print
+     C*    .. BUT only if some sort of position exists.                   E20125
+     C*
+     C           *IN10     IFEQ '0'
+     C           *IN11     ANDEQ'0'
+     C           *IN12     ANDEQ'0'
+     C***********WDBF1     IFNE 0                                   E20125E37187
+     C***********WDBF2     ORNE 0                                   E20125E37187
+     C***********WDBF3     ORNE 0                                   E20125E37187
+     C***********WOTBF     ORNE 0                                   E20125E37187
+     C           WDBF1G    IFNE 0                                         E37187
+     C           WDBF1P    ORNE 0                                         E37187
+     C           WDBF1S    ORNE 0                                         E37187
+     C           WDBF2G    ORNE 0                                         E37187
+     C           WDBF2P    ORNE 0                                         E37187
+     C           WDBF2S    ORNE 0                                         E37187
+     C           WDBF3G    ORNE 0                                         E37187
+     C           WDBF3P    ORNE 0                                         E37187
+     C           WDBF3S    ORNE 0                                         E37187
+     C           WOTBFG    ORNE 0                                         E37187
+     C           WOTBFP    ORNE 0                                         E37187
+     C           WOTBFS    ORNE 0                                         E37187
+     C                     EXSR PSECTY
+     C                     END                                            E20125
+     C                     END
+     C*
+     C*    .. for Grey markets
+     C*     . print Monthly Trade details for Security/Branch
+     C*
+     C           *IN10     IFEQ '1'
+     C                     MOVE 'G'       CDMK
+     C                     MOVEL'GREY    'RMRKT
+     C                     MOVE ' '       RMRKT
+     C                     EXSR PMTRAD
+     C*
+     C*     . print Settlement details for Security/Branch
+     C*
+     C                     MOVE 'G'       SMKI
+     C                     EXSR PSETSL
+     C***********          END                                            E27096
+     C*                                                                   E20692
+     C* Print C/F for Market                                              E20692
+     C*                                                                   E20692
+     C           SECFLG    IFEQ 'Y'                                       E20692
+     C************IN31     IFEQ '1'                                E20692 037183
+     C                     Z-ADD10        RQDLN1                          037183
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          037183
+     C           DIFLN1    IFLE RQDLN1                                    037183
+     C                     WRITEHEADS                                     E20692
+     C                     WRITESHEAD                                     E20692
+     C***********          SETOF                     31            E20692 037183
+     C                     END                                            E20692
+     C                     WRITECFBAL                                     E20692
+     C                     END                                            E20692
+      *                                                                   E27096
+     C                     END                                            E27096
+     C*
+     C*    .. for Primary markets
+     C*     . print Monthly Trade details for Security/Branch
+     C*
+     C           *IN11     IFEQ '1'
+     C                     MOVE 'P'       CDMK
+     C                     MOVEL'PRIMARY 'RMRKT
+     C                     MOVE ' '       RMRKT
+     C                     EXSR PMTRAD
+     C*
+     C*     . print Settlement details for Security/Branch
+     C*
+     C                     MOVE 'P'       SMKI
+     C                     EXSR PSETSL
+     C***********          END                                            E27096
+     C*                                                                   E20692
+     C* Print C/F for Market                                              E20692
+     C*                                                                   E20692
+     C           SECFLG    IFEQ 'Y'                                       E20692
+     C************IN31     IFEQ '1'                                E20692 037183
+     C                     Z-ADD10        RQDLN1                          037183
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          037183
+     C           DIFLN1    IFLE RQDLN1                                    037183
+     C                     WRITEHEADS                                     E20692
+     C                     WRITESHEAD                                     E20692
+     C***********          SETOF                     31            E20692 037183
+     C                     END                                            E20692
+     C                     WRITECFBAL                                     E20692
+     C                     END                                            E20692
+      *                                                                   E27096
+     C                     END                                            E27096
+     C*
+     C*    .. for Secondary markets
+     C*     . print Monthly Trade details for Security/Branch
+     C*
+     C           *IN12     IFEQ '1'
+     C                     MOVE 'S'       CDMK
+     C                     MOVEL'SECONDAR'RMRKT
+     C                     MOVE 'Y'       RMRKT
+     C                     EXSR PMTRAD
+     C*
+     C*     . print Settlement details for Security/Branch
+     C*
+     C                     MOVE 'S'       SMKI
+     C                     EXSR PSETSL
+     C***********          END                                            E37680
+     C*
+     C*    .. print Depot Movement details for Security/Branch
+     C*
+     C                     EXSR PDPTMV
+     C*
+     C*    .. print closing Depot balances for Security/Branch
+     C*
+     C*    .. Only output closing balances if activity detected.          E20125
+     C           SECFLG    IFEQ 'Y'                                       E20125
+     C************IN31     IFEQ '1'                                E20583 037183
+     C                     Z-ADD10        RQDLN1                          037183
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          037183
+     C           DIFLN1    IFLE RQDLN1                                    037183
+     C                     WRITEHEADS                                     E20583
+     C                     WRITESHEAD                                     E20583
+     C***********          SETOF                     31            E20583 037183
+     C                     END                                            E20583
+     C                     WRITECFBAL
+     C***********          ADD  7         LCNT                     E15332 E20583
+     C                     END                                            E20125
+     C                     END                                            E37680
+     C*                                                                   E20129
+      ***  End of Maturity check                                          E20129
+     C                     END                                            E20129
+     C*
+     C                     MOVE DSSC      SAVSC
+     C*
+      ***  End of Change of Security
+     C                     END
+     C                     READ DPOSNDF                  70
+     C***********BRCP      IFNE 'ALL'                                     S01117
+     C           ENT       IFNE 'ALL'                                     S01117
+     C***********WSBR      ANDNEDSBR                                      S01117
+     C           WSBR      ANDNEDSBA                                      S01117
+     C           MBIN      ANDEQ'Y'                                       E37680
+     C***********SECS      ORNE 'ALL'                                     S01117
+     C***********SECS      ANDNEDSSC                                      S01117
+     C                     SETON                     70
+     C                     END
+      *
+      ***  End of Do While *IN70 = '0'
+     C                     END
+      *
+      *****End*of*If*RECI*=*'D'****************************************   S01117
+     C***********          END                                            S01117
+     C***********          READ SESLTDF                  90               S01117
+      ***********                                                         S01117
+      *****End*of*Do*While**IN90*=*'0'*********************************   S01117
+     C***********          END                                            S01117
+     C*
+     C*    Print audit report
+     C*
+     C                     EXSR PAUDIT
+     C*
+     C           BBEND     ENDSR                           *** BBEND  ***
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  BCCLOS - Closing Subroutine.                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BCCLOS    BEGSR                           *** BCCLOS ***
+     C*
+     C           *INU7     IFEQ '0'
+     C           *INU8     ANDEQ'0'
+     C           *IN51     ANDEQ'1'                                       E29170
+     C***********          OPEN SE0975P1               51                 E29170
+     C* Check for overflow before writing TRAIL                           098175
+     C                     Z-ADD4         RQDLN1                          098175
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          098175
+     C           DIFLN1    IFLE RQDLN1                                    098175
+     C                     WRITEHEADS                                     098175
+     C                     END                                            098175
+     C                     WRITETRAIL
+     C                     END
+     C*
+     C***********          CLOSESE0975P1               51                 E29170
+     C                     CLOSESE0975P1                                  E29170
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EXBPOS - Subroutine to Extract Trading Positions and Trading *
+      *           Profit/Loss.                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXBPOS    BEGSR                           *** EXBPOS ***
+     C*
+     C                     SETOF                     101112
+     C                     MOVE *BLANK    CFLGG
+     C                     MOVE *BLANK    CFLGP
+     C                     MOVE *BLANK    CFLGS
+     C                     MOVE *BLANK    BFLGG
+     C                     MOVE *BLANK    BFLGP
+     C                     MOVE *BLANK    BFLGS
+     C***********          MOVE *BLANK    RFLGG   1                       E20133
+     C***********          MOVE *BLANK    RFLGP   1                       E20133
+     C***********          MOVE *BLANK    RFLGS   1                       E20133
+     C***********          MOVE *BLANKS   SAVBK                           E37187
+     C                     MOVE *BLANKS   SAVBKC
+     C                     Z-ADD*ZEROS    WBFTPP
+     C                     Z-ADD*ZEROS    WCFTPP
+     C                     Z-ADD*ZEROS    WTPRFP
+     C                     Z-ADD*ZEROS    WBFTPG
+     C                     Z-ADD*ZEROS    WCFTPG
+     C                     Z-ADD*ZEROS    WTPRFG
+     C                     Z-ADD*ZEROS    WBFTPS
+     C                     Z-ADD*ZEROS    WCFTPS
+     C                     Z-ADD*ZEROS    WTPRFS
+     C*
+     C*  Access BKPOSDT for Positions at End of Month and latest
+     C*
+     C                     MOVE DSSC      BPSC
+     C***********          MOVE DSBR      BPBR                            S01117
+     C                     MOVE DSBA      BPBA                            S01117
+     C                     MOVE '99'      BPBK
+     C                     Z-ADD99999     BPPD
+     C           KLBPOS    SETGTBKPOSDF
+     C                     READPBKPOSDF                  50
+     C           *IN50     DOWEQ'0'
+     C*
+     C*  Extract Book Positions until change of Security/Branch
+     C*
+     C           DSSC      IFEQ BPSC
+     C***********DSBR      ANDEQBPBR                                      S01117
+     C           DSBA      ANDEQBPBA                                      S01117
+     C           RECI      IFEQ 'D'
+     C           RECI      OREQ 'M'                                       E20125
+     C***********BPTV      ANDEQ'V'                                       E20125
+     C*
+     C           BPBK      IFNE SAVBKC
+     C*
+     C                     MOVE BPBK      SAVBKC
+     C                     MOVE ' '       CFLGG   1
+     C                     MOVE ' '       CFLGP   1
+     C                     MOVE ' '       CFLGS   1
+     C                     MOVE ' '       BFLGG   1
+     C                     MOVE ' '       BFLGP   1
+     C                     MOVE ' '       BFLGS   1
+     C                     END
+     C*
+     C*   C/F - FOR A BRANCH/SECURITY COMBINATION -
+     C*       - ACCUMULATE FOR ALL BOOKS -
+     C*       - INTO BRANCH/SECURITY/MARKET TOTALS
+     C*       - FOR EACH BRANCH/SECURITY/BOOK/MARKET COMBINATION ONLY
+     C*       - ACCUMULATE THE FIRST (IE GREATEST DATED) RECORD
+     C*       - EVEN IF DATE IS NOT GREATER THAN END OF PREV MONTH
+     C*
+     C*   .. accumulate Nominal Positions as C/F Trading Position
+     C*   .. accumulate Realised P/L Today as Trading Profit
+     C*
+     C           BPMK      IFEQ 'G'
+     C           CFLGG     ANDNE'Y'
+     C                     ADD  NPSN      WCFTPG
+     C                     MOVE 'Y'       CFLGG
+     C                     ELSE
+      *
+     C           BPMK      IFEQ 'P'
+     C           CFLGP     ANDNE'Y'
+     C                     ADD  NPSN      WCFTPP
+     C                     MOVE 'Y'       CFLGP
+     C                     ELSE
+      *
+     C           BPMK      IFEQ 'S'
+     C           CFLGS     ANDNE'Y'
+     C                     ADD  NPSN      WCFTPS
+     C                     MOVE 'Y'       CFLGS
+     C                     END
+      *
+     C                     END
+     C                     END
+     C*
+     C           BPPD      IFLE EOMD
+     C*
+     C*   B/F - FOR A BRANCH/SECURITY COMBINATION -
+     C*       - ACCUMULATE FOR ALL BOOKS -
+     C*       - INTO BRANCH/SECURITY/MARKET TOTALS
+     C*       - FOR EACH BRANCH/SECURITY/BOOK/MARKET COMBINATION ONLY
+     C*       - ACCUMULATE THE FIRST (IE GREATEST DATED) RECORD
+     C*       - PROVIDING IT IS LESS THAN OR EQUAL TO EOMD
+     C*
+     C*   .. accumulate Nominal Positions as B/F Trading Position
+     C*   .. determine Market types to be printed for this month
+     C*
+     C           BPMK      IFEQ 'G'
+     C           BFLGG     ANDNE'Y'
+     C                     ADD  NPSN      WBFTPG
+     C                     MOVE 'Y'       BFLGG   1
+     C***********          SETON                     10                   E14004
+     C                     ELSE
+      *
+     C           BPMK      IFEQ 'P'
+     C           BFLGP     ANDNE'Y'
+     C                     ADD  NPSN      WBFTPP
+     C                     MOVE 'Y'       BFLGP   1
+     C***********          SETON                     11                   E14004
+     C                     ELSE
+      *
+     C           BPMK      IFEQ 'S'
+     C           BFLGS     ANDNE'Y'
+     C                     ADD  NPSN      WBFTPS
+     C                     MOVE 'Y'       BFLGS   1
+     C***********          SETON                     12                   E14004
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C* Else book position in this month  so... report it.                E14004
+     C                     ELSE                                           E14004
+     C           BPMK      IFEQ 'G'                                       E14004
+     C                     SETON                     10                   E14004
+     C                     ELSE                                           E14004
+      *
+     C           BPMK      IFEQ 'P'                                       E14004
+     C                     SETON                     11                   E14004
+     C                     ELSE                                           E14004
+      *
+     C           BPMK      IFEQ 'S'                                       E14004
+     C                     SETON                     12                   E14004
+     C                     END                                            E14004
+      *
+     C                     END                                            E14004
+     C                     END                                            E14004
+     C*
+     C                     END
+      *
+      ***  End of If RECI = 'D' or 'M'
+     C                     END
+     C*
+     C                     ELSE
+     C                     SETON                     50
+      *
+      ***  End of If Change of Security/Branch
+     C                     END
+     C*
+     C  N50                READPBKPOSDF                  50
+      *
+      ***  End of Do While *IN50 = '0' (Readp BKPOSDF)
+     C                     END
+     C*
+     C***Access*BKPOSDX*for*realized*profit****                           E20133
+     C************                                                        E20133
+     C************         MOVE DSSC      BPSC                            E20133
+     C************         MOVE DSBR      BPBR                            E20133
+     C************         MOVE '99'      BPBK                            E20133
+     C************         Z-ADD99999     BPPD                            E20133
+     C************         SETOF                         50               E20133
+     C***********KLBPOS    SETGTBKPOSDX                                   E20133
+     C************         READPBKPOSDX                  50               E20133
+     C************IN50     DOWEQ'0'                                       E20133
+     C************                                                        E20133
+     C***Extract*Book*Positions*until*change*of*Security/Branch***        E20133
+     C************                                                        E20133
+     C***********DSSC      IFEQ BPSC                                      E20133
+     C***********DSBR      ANDEQBPBR                                      E20133
+     C***********RECI      IFEQ 'D'                                       E20133
+     C************                                                        E20133
+     C***********BPBK      IFNE SAVBKC                                    E20133
+     C************                                                        E20133
+     C************         MOVE BPBK      SAVBKC                          E20133
+     C************         MOVE ' '       RFLGG                           E20133
+     C************         MOVE ' '       RFLGP                           E20133
+     C************         MOVE ' '       RFLGS                           E20133
+     C************         END                                            E20133
+     C************                                                        E20133
+     C****C/F*-*FOR*A*BRANCH/SECURITY*COMBINATION*-********************   E20133
+     C********-*ACCUMULATE*FOR*ALL*BOOKS*-*****************************   E20133
+     C********-*INTO*BRANCH/SECURITY/MARKET*TOTALS*********************   E20133
+     C********-*FOR*EACH*BRANCH/SECURITY/BOOK/MARKET*COMBINATION*ONLY**   E20133
+     C********-*ACCUMULATE*THE*FIRST*(IE*GREATEST*DATED)*RECORD********   E19470
+     C********-*EVEN*IF*DATE*IS*NOT*GREATER*THAN*END*OF*PREV*MONTH*****   E19470
+     C************                                                        E20133
+     C****..*accumulate*realized*profit/loss***************************   E20133
+     C************                                                        E20133
+      ************                                                        E19470
+     C***********BPMK      IFEQ 'G'                                       E20133
+     C***********RFLGG     ANDNE'Y'                                       E20133
+     C************         ADD  RPTP      WTPRFG                          E20133
+     C************         MOVE 'Y'       RFLGG                           E19470
+     C************         ELSE                                           E20133
+      ************                                                        E20133
+     C***********BPMK      IFEQ 'P'                                       E20133
+     C***********RFLGP     ANDNE'Y'                                       E20133
+     C************         ADD  RPTP      WTPRFP                          E20133
+     C************         MOVE 'Y'       RFLGP                           E20133
+     C************         ELSE                                           E20133
+      ************                                                        E20133
+     C***********BPMK      IFEQ 'S'                                       E20133
+     C***********RFLGS     ANDNE'Y'                                       E20133
+     C************         ADD  RPTP      WTPRFS                          E20133
+     C************         MOVE 'Y'       RFLGS                           E20133
+     C************         END                                            E20133
+      ************                                                        E20133
+     C************         END                                            E20133
+     C************         END                                            E20133
+     C************                                                     *  E20133
+     C************         END                                            E20133
+     C************                                                        E20133
+     C************         ELSE                                           E20133
+     C************         SETON                     50                   E20133
+     C************         END                                            E20133
+     C************                                                        E20133
+     C**N50*******         READPBKPOSDX                  50               E20133
+     C************         END                                            E20133
+     C*                                                                   E20133
+     C*  Access BKMTT for realized profit                                 E20133
+     C*                                                                   E20133
+     C                     MOVE DSSC      BKSS                            E20133
+     C***********          MOVE DSBR      BKBR                     E20133 S01117
+     C                     MOVE DSBA      BKBA                            S01117
+     C           KLBKMT    CHAINBKMTHDF              50                   E20133
+     C           *IN50     DOWEQ'0'                                       E20133
+     C*                                                                   E20133
+     C** Extract monthly statistics until change of Security/Branch.      E20133
+     C*                                                                   E20133
+     C** Accumulate realized profit across all books                      E20133
+     C*                                                                   E20133
+     C           BKMK      IFEQ 'G'                                       E20133
+     C                     ADD  RPTM      WTPRFG                          E20133
+     C                     MOVE '1'       *IN10                           E20133
+     C                     ELSE                                           E20133
+      *                                                                   E20133
+     C           BKMK      IFEQ 'P'                                       E20133
+     C                     ADD  RPTM      WTPRFP                          E20133
+     C                     MOVE '1'       *IN11                           E20133
+     C                     ELSE                                           E20133
+      *                                                                   E20133
+     C           BKMK      IFEQ 'S'                                       E20133
+     C                     ADD  RPTM      WTPRFS                          E20133
+     C                     MOVE '1'       *IN12                           E20133
+     C                     END                                            E20133
+      *                                                                   E20133
+     C                     END                                            E20133
+     C                     END                                            E20133
+     C*                                                                   E20133
+     C           KLBKMT    READEBKMTHDF                5050               E20133
+     C                     END                                            E20133
+     C*                                                                   E20125
+     C** SR/BVTRDS removes trades B/V to previous month from B/F posns.   E20125
+     C                     EXSR BVTRDS                                    E20125
+      *
+     C                     ENDSR                                       *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EXNDEP - Subroutine to obtain Depot Balances for Branch/     *
+      *           Security for Investment Type.                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXNDEP    BEGSR                           *** EXNDEP ***
+     C*
+     C*  Access INVTP for Settlement Depots for this Investment type
+     C*
+     C                     MOVE NMCY      CCYI
+     C                     MOVE SITP      INVT
+     C           KLINVT    CHAININVTPDF              50
+     C           *IN50     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBKEY
+     C***********          MOVE '05'      DBASE             **************S01117
+     C                     Z-ADD5         DBASE             **************S01117
+     C                     MOVEL'INVTP'   DBFILE            * DB ERROR 05 *
+     C                     MOVE SITP      DBKEY             ***************
+     C                     MOVELNMCY      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     GOTO EXEND
+     C                     END
+     C*
+     C                     MOVE *BLANKS   RNDP1
+     C                     MOVE *BLANKS   RNDP2
+     C                     MOVE *BLANKS   RNDP3
+     C                     MOVE *BLANKS   SAVDP
+     C                     MOVE *BLANK    BFLG
+     C***********          Z-ADD*ZEROS    WDBF1                           E37187
+     C***********          Z-ADD*ZEROS    WDBF2                           E37187
+     C***********          Z-ADD*ZEROS    WDBF3                           E37187
+     C***********          Z-ADD*ZEROS    WOTBF                           E37187
+     C***********          Z-ADD*ZEROS    WDCF1                           E37187
+     C***********          Z-ADD*ZEROS    WDCF2                           E37187
+     C***********          Z-ADD*ZEROS    WDCF3                           E37187
+     C***********          Z-ADD*ZEROS    WOTCF                           E37187
+     C                     Z-ADD*ZEROS    WDBF1G                          E37187
+     C                     Z-ADD*ZEROS    WDBF1P                          E37187
+     C                     Z-ADD*ZEROS    WDBF1S                          E37187
+     C                     Z-ADD*ZEROS    WDBF2G                          E37187
+     C                     Z-ADD*ZEROS    WDBF2P                          E37187
+     C                     Z-ADD*ZEROS    WDBF2S                          E37187
+     C                     Z-ADD*ZEROS    WDBF3G                          E37187
+     C                     Z-ADD*ZEROS    WDBF3P                          E37187
+     C                     Z-ADD*ZEROS    WDBF3S                          E37187
+     C                     Z-ADD*ZEROS    WOTBFG                          E37187
+     C                     Z-ADD*ZEROS    WOTBFP                          E37187
+     C                     Z-ADD*ZEROS    WOTBFS                          E37187
+     C                     Z-ADD*ZEROS    WDCF1G                          E37187
+     C                     Z-ADD*ZEROS    WDCF1P                          E37187
+     C                     Z-ADD*ZEROS    WDCF1S                          E37187
+     C                     Z-ADD*ZEROS    WDCF2G                          E37187
+     C                     Z-ADD*ZEROS    WDCF2P                          E37187
+     C                     Z-ADD*ZEROS    WDCF2S                          E37187
+     C                     Z-ADD*ZEROS    WDCF3G                          E37187
+     C                     Z-ADD*ZEROS    WDCF3P                          E37187
+     C                     Z-ADD*ZEROS    WDCF3S                          E37187
+     C                     Z-ADD*ZEROS    WOTCFG                          E37187
+     C                     Z-ADD*ZEROS    WOTCFP                          E37187
+     C                     Z-ADD*ZEROS    WOTCFS                          E37187
+     C*
+     C*  Access description for nominated Depot 1
+     C*
+     C                     MOVE 'A'       RCDT
+     C                     MOVE SDC1      CNUM
+     C           KLCLNT    CHAINCLINTCBF             50
+     C           *IN50     IFEQ '0'
+     C                     MOVELCSNM      RNDP1
+     C                     END
+     C*
+     C*  Access description for nominated Depot 2
+     C*
+     C                     MOVE 'A'       RCDT
+     C                     MOVE SDC2      CNUM
+     C           KLCLNT    CHAINCLINTCBF             50
+     C           *IN50     IFEQ '0'
+     C                     MOVELCSNM      RNDP2
+     C                     END
+     C*
+     C*  Access description for nominated Depot 3
+     C*
+     C                     MOVE 'A'       RCDT
+     C                     MOVE SDC3      CNUM
+     C           KLCLNT    CHAINCLINTCBF             50
+     C           *IN50     IFEQ '0'
+     C                     MOVELCSNM      RNDP3
+     C                     END
+     C*
+     C***********          MOVE DSBR      KYBR                            S01117
+     C                     MOVE DSBA      KYBR                            S01117
+     C                     MOVE DSSC      KYSC
+     C*
+     C***Access*DSPOSN*for*Positions*at*End*of*Month*and*latest***********E37187
+      *****NOTE:*DPOSO*is*keyed*in*reverse*date*order.**************E20125E37187
+     C*  Access CUDSL for Positions at End of Month and latest            E37187
+     C*
+     C***********          Z-ADD*ZEROS    KYDP                            E37187
+     C***********          MOVE *HIVAL    KYDT                      E20125E37187
+      *                                                                   E20125
+     C***********KLNOMD    SETLLDPOSNDF                                   E37187
+     C***********          READ DPOSNDF                  50               E37187
+     C           KLCUD     SETLLCUDSL                                     E37187
+     C                     READ CUDSL                    50               E37187
+     C           *IN50     DOWEQ'0'
+     C*
+     C*  Extract Depot Positions until change of Security/Branch
+     C*
+     C***********DSSC      IFEQ KYSC                                      E37187
+     C           UDSN      IFEQ KYSC                                      E37187
+     C***********DSBR      ANDEQKYBR                                      S01117
+     C***********DSBA      ANDEQKYBR                                S01117E37187
+     C           UDBA      ANDEQKYBR                                      E37187
+      *                                                                   E20125
+     C***********DDPT      IFNE SAVDP                               E20125E37187
+     C***********          MOVE DDPT      SAVDP                     E20125E37187
+     C           UDPT      IFNE SAVDP                                     E37187
+     C                     MOVE UDPT      SAVDP                           E37187
+     C                     MOVE *BLANK    BFLG    1                       E20125
+     C                     END                                            E20125
+     C           UDBK      IFNE SAVBK                                     E37187
+     C                     MOVE UDBK      SAVBK                           E37187
+     C                     MOVE *BLANK    BFLG                            E37187
+     C                     END                                            E37187
+     C           UDMK      IFNE SAVMK                                     E37187
+     C                     MOVE UDMK      SAVMK                           E37187
+     C                     MOVE *BLANK    BFLG                            E37187
+     C                     END                                            E37187
+     C           CDCN      IFNE SAVCN                                     E37187
+     C                     MOVE CDCN      SAVCN                           E37187
+     C                     MOVE *BLANK    BFLG                            E37187
+     C                     END                                            E37187
+     C*
+      ***  There is only one RECI='D' record for each Branch/Security/    E20125
+      ***  Depot - this is the latest position (ie: Carried Forward).     E20125
+      *                                                                   E20125
+     C           RECI      IFEQ 'D'
+     C***********DDPT      IFNE SAVDP                                     E20125
+     C***********DDTE      ANDGTEOMD                                      E20125
+     C*
+     C*   .. accumulate Nominal - Value date C/F balance
+     C*
+     C***********DDPT      IFEQ SDC1                                      E37187
+     C           UDPT      IFEQ SDC1                                      E37187
+     C*
+     C*    . Nominated Depot 1 C/F
+     C***********          ADD  DSNV      WDCF1                           E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WDCF1G                          E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WDCF1P                          E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WDCF1S                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     ELSE
+     C***********DDPT      IFEQ SDC2                                      E37187
+     C           UDPT      IFEQ SDC2                                      E37187
+     C*
+     C*    . Nominated Depot 2 C/F
+     C***********          ADD  DSNV      WDCF2                           E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WDCF2G                          E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WDCF2P                          E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WDCF2S                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     ELSE
+     C***********DDPT      IFEQ SDC3                                      E37187
+     C           UDPT      IFEQ SDC3                                      E37187
+     C*
+     C*    . Nominated Depot 3 C/F
+     C***********          ADD  DSNV      WDCF3                           E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WDCF3G                          E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WDCF3P                          E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WDCF3S                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     ELSE
+     C*
+     C*    . Other C/F
+     C***********          ADD  DSNV      WOTCF                           E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WOTCFG                          E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WOTCFP                          E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WOTCFS                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C***********DDPT      IFNE SAVDP                                     E20125
+     C***********DDTE      ANDLEEOMD                                      E20125
+     C***********DDPT      OREQ SAVDP                                     E20125
+     C***********DDTE      ANDLEEOMD                                      E20125
+     C***********BFLG      ANDNE'Y'                                       E20125
+     C*
+      ***  If this Branch/Security/Depot not yet processed for Brought    E20125
+      ***  Forward Balances AND Date of Position is Less Than or Equal    E20125
+      ***  To the End of Last Month, then...                              E20125
+     C*   .. accumulate Nominal - Value date B/F balance
+     C*
+     C           BFLG      IFEQ *BLANK                                    E20125
+     C***********DDTE      ANDLEEOMD                                E20125E37187
+     C           UDDT      ANDLEEOMD                                      E37187
+      *                                                                   E20125
+     C***********DDPT      IFEQ SDC1                                      E37187
+     C           UDPT      IFEQ SDC1                                      E37187
+     C*
+     C*    . Nominated Depot 1 B/F
+     C***********          ADD  DSNV      WDBF1                           E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WDBF1G                          E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WDBF1P                          E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WDBF1S                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     ELSE
+     C***********DDPT      IFEQ SDC2                                      E37187
+     C           UDPT      IFEQ SDC2                                      E37187
+     C*
+     C*    . Nominated Depot 2 B/F
+     C***********          ADD  DSNV      WDBF2                           E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WDBF2G                          E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WDBF2P                          E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WDBF2S                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     ELSE
+     C***********DDPT      IFEQ SDC3                                      E37187
+     C           UDPT      IFEQ SDC3                                      E37187
+     C*
+     C*    . Nominated Depot 3 B/F
+     C***********          ADD  DSNV      WDBF3                           E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WDBF3G                          E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WDBF3P                          E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WDBF3S                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     ELSE
+     C*
+     C*    . Other C/F
+     C***********          ADD  DSNV      WOTBF                           E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WOTBFG                          E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WOTBFP                          E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WOTBFS                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     MOVE 'Y'       BFLG
+     C                     END
+     C*
+      ***  This bit moved to the beginning of the loop.                   E20125
+     C***********DDPT      IFNE SAVDP                                     E20125
+     C***********          MOVE DDPT      SAVDP                           E20125
+     C***********          MOVE *BLANK    BFLG    1                       E20125
+     C***********          END                                            E20125
+     C***********                                                         E20125
+     C***********          END                                            E20125
+     C*
+     C                     ELSE
+     C                     SETON                     50
+     C                     END
+     C*
+     C**N50******          READ DPOSNDF                  50               E37187
+     C  N50                READ CUDSL                    50               E37187
+     C                     END
+     C*
+     C           EXEND     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  EXUDEP - Subroutine to obtain Current and Brought Forward    *
+      *           Depot Balances for Branch/Security at User Depot.   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXUDEP    BEGSR                           *** EXUDEP ***
+     C*
+     C***********          MOVE DSBR      UDBR                            S01117
+     C                     MOVE DSBA      UDBA                            S01117
+     C                     MOVE DSSC      UDSN
+     C**********           Z-ADD*ZEROS    UDPT                                                CSD027
+     C                     MOVE *BLANKS   UDPT                                                CSD027
+     C***********          Z-ADD*ZEROS    WUDNV                           E37187
+     C***********          Z-ADD*ZEROS    WUDNVB                          E37187
+     C                     Z-ADD*ZEROS    WNVBG                           E37187
+     C                     Z-ADD*ZEROS    WNVBP                           E37187
+     C                     Z-ADD*ZEROS    WNVBS                           E37187
+     C                     Z-ADD*ZEROS    WNVCG                           E37187
+     C                     Z-ADD*ZEROS    WNVCP                           E37187
+     C                     Z-ADD*ZEROS    WNVCS                           E37187
+     C*
+     C*  Access User Depot details
+     C*
+     C           KLUPOS    SETLLUDEPPDF
+     C           KLUDEP    READEUDEPPDF                  50
+      *
+     C           *IN50     DOWEQ'0'
+      *
+     C           RECI      IFEQ 'D'
+      *                                                                   E27096
+      ***  Set Flag to indicate that Live record read from UDEPPD.        E27096
+     C                     MOVE 'Y'       WLIVE   1                       E27096
+     C*
+     C*  Accumulate Nominal - Value Date
+     C           UDDT      IFLE EOMD
+     C***********          ADD  UDNV      WUDNVB                          E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WNVBG                           E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WNVBP                           E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WNVBS                           E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     END
+      *
+     C***********          ADD  UDNV      WUDNV                           E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WNVCG                           E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WNVCP                           E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WNVCS                           E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     END
+      *
+     C           KLUDEP    READEUDEPPDF                  50
+     C                     END
+      *                                                                   E27096
+      ***  If no live records read from UDEPPD, then check file for       E27096
+      ***  non-zero Historic records. (eg. A Security that has Matured    E27096
+      ***  since the End of Last Month.)                                  E27096
+      *                                                                   E27096
+     C           WLIVE     IFNE 'Y'                                       E27096
+     C           KLUPOS    SETLLUDEPDAT                                   E27096
+     C           KLUDEP    READEUDEPDAT                  50               E27096
+      *                                                                   E27096
+     C           *IN50     DOWEQ'0'                                       E27096
+      *                                                                   E27096
+     C           WUDPT     IFNE UDPT                                      E27096
+     C**********           MOVE UDPT      WUDPT   60                                   E27096 CSD027
+     C                     MOVE UDPT      WUDPT   6                                           CSD027
+      *                                                                   E27096
+      ***  Accumulate Nominal - Value Date                                E27096
+     C           UDDT      IFLE EOMD                                      E27096
+     C***********          ADD  UDNV      WUDNVB                    E27096E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WNVBG                           E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WNVBP                           E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WNVBS                           E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     END                                            E27096
+      *                                                                   E27096
+     C***********          ADD  UDNV      WUDNV                     E27096E37187
+     C           UDMK      IFEQ 'G'                                       E37187
+     C                     ADD  UDNV      WNVCG                           E37187
+     C                     ELSE                                           E37187
+     C           UDMK      IFEQ 'P'                                       E37187
+     C                     ADD  UDNV      WNVCP                           E37187
+     C                     ELSE                                           E37187
+     C                     ADD  UDNV      WNVCS                           E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     END                                            E27096
+      *                                                                   E27096
+     C           KLUDEP    READEUDEPDAT                  50               E27096
+     C                     END                                            E27096
+      *                                                                   E27096
+     C                     END                                            E27096
+      *                                                                   E27096
+     C                     MOVE 'N'       WLIVE                           E27096
+     C**********           Z-ADD0         WUDPT                                        E27096 CSD027
+     C                     MOVE *BLANKS   WUDPT                                               CSD027
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FASECT - Subroutine to Access Security Details.              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FASECT    BEGSR                           *** FASECT ***
+     C*
+     C*  Access Security details
+     C*
+     C           DSSC      CHAINSECTY                50
+     C*
+     C*  If record found ....
+     C*      ...  get fee currency decimal places
+     C*
+     C           *IN50     IFEQ '0'
+     C           RECI      ANDNE'*'
+     C                     MOVEL*BLANKS   KEY12  12
+     C                     MOVEL'20'      KEY12
+     C                     MOVE '1'       WFLD4   4
+     C                     MOVELFECY      WFLD4
+     C                     MOVE WFLD4     KEY12
+     C           KEY12     CHAINTABTG10F             50
+      *
+     C           *IN50     IFEQ '1'
+     C           *IN50     OREQ '0'
+     C           RECI      ANDEQ'*'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '03'      DBASE             **************S01117
+     C                     Z-ADD3         DBASE             **************S01117
+     C                     MOVEL'TABLE'   DBFILE            * DB ERROR 03 *
+     C                     MOVELKEY12     DBKEY             ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     GOTO FAEND
+     C                     END
+     C                     Z-ADDCDP       FEEDP
+     C*
+     C*      ...  get nominal currency decimal places
+     C*
+     C                     MOVEL*BLANKS   KEY12  12
+     C                     MOVEL'20'      KEY12
+     C                     MOVE '1'       WFLD4   4
+     C                     MOVELNMCY      WFLD4
+     C                     MOVE WFLD4     KEY12
+     C           KEY12     CHAINTABTG10F             50
+      *
+     C           *IN50     IFEQ '1'
+     C           *IN50     OREQ '0'
+     C           RECI      ANDEQ'*'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVE '06'      DBASE             **************S01117
+     C                     Z-ADD6         DBASE             **************S01117
+     C                     MOVEL'TABLE'   DBFILE            * DB ERROR 06 *
+     C                     MOVELKEY12     DBKEY             ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C                     GOTO FAEND
+     C                     END
+     C                     Z-ADDCDP       NOMDP
+     C                     ADD  1         SSCNT
+      *                                                                   E20125
+      ***  Check if Security has Matured                                  E20125
+      *                                                                   E20125
+     C           MATY      IFLE RUND                                      E20125
+     C           MATY      ANDNE0                                         E20125
+     C                     SETON                     14                   E20125
+     C                     ELSE                                           E20125
+     C                     SETOF                     14                   E20125
+     C                     END                                            E20125
+     C*
+     C*  Else database error if not found
+     C*
+     C                     ELSE
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBKEY
+     C***********          MOVE '04'      DBASE             **************S01117
+     C                     Z-ADD4         DBASE             **************S01117
+     C                     MOVEL'SECTY'   DBFILE            * DB ERROR 04 *
+     C                     MOVELDSSC      DBKEY             ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     END
+     C*
+     C           FAEND     ENDSR                           *** FAEND  ***
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FDEPOT - Subroutine to format Depot Balances to Print.       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FDEPOT    BEGSR                           *** FDEPOT ***
+     C*
+     C*  Format Depot Balances
+     C*
+     C*   ..  Trading Profit
+     C                     MOVE *BLANKS   ZFLD15
+      *
+     C           CDMK      IFEQ 'G'
+     C                     MOVE WTPRFG    ZFLD15
+     C                     ELSE
+      *
+     C           CDMK      IFEQ 'P'
+     C                     MOVE WTPRFP    ZFLD15
+     C                     ELSE
+     C                     MOVE WTPRFS    ZFLD15
+     C                     END
+      *
+     C                     END
+      *
+     C                     Z-ADDNOMDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RTPRF
+     C*
+     C*   ..  User Depot Nominal
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WUDNVB    ZFLD15                          E37187
+     C           CDMK      IFEQ 'G'                                       E37187
+     C                     MOVE WNVBG     ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C           CDMK      IFEQ 'P'                                       E37187
+     C                     MOVE WNVBP     ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C                     MOVE WNVBS     ZFLD15                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RUDEPB
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WUDNV     ZFLD15                          E37187
+     C           CDMK      IFEQ 'G'                                       E37187
+     C                     MOVE WNVCG     ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C           CDMK      IFEQ 'P'                                       E37187
+     C                     MOVE WNVCP     ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C                     MOVE WNVCS     ZFLD15                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RUDEP
+     C*
+     C*   ..  Nominated Depot 1 Nominal B/F
+      *
+      **  If no depot ref, and balance is 0, print blanks
+      *
+     C           RNDP1     IFEQ *BLANKS
+     C***********WDBF1     ANDEQ*ZERO                                     E37187
+     C           WDBF1G    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'G'                                       E37187
+     C           RNDP1     OREQ *BLANKS                                   E37187
+     C           WDBF1P    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'P'                                       E37187
+     C           RNDP1     OREQ *BLANKS                                   E37187
+     C           WDBF1S    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'S'                                       E37187
+     C                     MOVE *BLANKS   RDBF1
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WDBF1     ZFLD15                          E37187
+     C           CDMK      IFEQ 'G'                                       E37187
+     C                     MOVE WDBF1G    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C           CDMK      IFEQ 'P'                                       E37187
+     C                     MOVE WDBF1P    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C                     MOVE WDBF1S    ZFLD15                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDBF1
+     C                     END
+     C*
+     C*   ..  Nominated Depot 2 Nominal B/F
+      *
+      **  If no depot ref, and balance is 0, print blanks
+      *
+     C           RNDP2     IFEQ *BLANKS
+     C***********WDBF2     ANDEQ*ZERO                                     E37187
+     C           WDBF2G    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'G'                                       E37187
+     C           RNDP2     OREQ *BLANKS                                   E37187
+     C           WDBF2P    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'P'                                       E37187
+     C           RNDP2     OREQ *BLANKS                                   E37187
+     C           WDBF2S    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'S'                                       E37187
+     C                     MOVE *BLANKS   RDBF2
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WDBF2     ZFLD15                          E37187
+     C           CDMK      IFEQ 'G'                                       E37187
+     C                     MOVE WDBF2G    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C           CDMK      IFEQ 'P'                                       E37187
+     C                     MOVE WDBF2P    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C                     MOVE WDBF2S    ZFLD15                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDBF2
+     C                     END
+     C*
+     C*   ..  Nominated Depot 3 Nominal B/F
+      *
+      **  If no depot ref, and balance is 0, print blanks
+      *
+     C           RNDP3     IFEQ *BLANKS
+     C***********WDBF3     ANDEQ*ZERO                                     E37187
+     C           WDBF3G    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'G'                                       E37187
+     C           RNDP3     OREQ *BLANKS                                   E37187
+     C           WDBF3P    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'P'                                       E37187
+     C           RNDP3     OREQ *BLANKS                                   E37187
+     C           WDBF3S    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'S'                                       E37187
+     C                     MOVE *BLANKS   RDBF3
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WDBF3     ZFLD15                          E37187
+     C           CDMK      IFEQ 'G'                                       E37187
+     C                     MOVE WDBF3G    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C           CDMK      IFEQ 'P'                                       E37187
+     C                     MOVE WDBF3P    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C                     MOVE WDBF3S    ZFLD15                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDBF3
+     C                     END
+     C*
+     C*   ..  Other Depots Nominal B/F
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WOTBF     ZFLD15                          E37187
+     C           CDMK      IFEQ 'G'                                       E37187
+     C                     MOVE WOTBFG    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C           CDMK      IFEQ 'P'                                       E37187
+     C                     MOVE WOTBFP    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C                     MOVE WOTBFS    ZFLD15                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ROTBF
+     C*
+     C*   ..  Nominated Depot 1 Nominal C/F
+      *
+      **  If no depot ref, and balance is 0, print blanks
+      *
+     C           RNDP1     IFEQ *BLANKS
+     C***********WDCF1     ANDEQ*ZERO                                     E37187
+     C           WDCF1G    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'G'                                       E37187
+     C           RNDP1     OREQ *BLANKS                                   E37187
+     C           WDCF1P    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'P'                                       E37187
+     C           RNDP1     OREQ *BLANKS                                   E37187
+     C           WDCF1S    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'S'                                       E37187
+     C                     MOVE *BLANKS   RDCF1
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WDCF1     ZFLD15                          E37187
+     C           CDMK      IFEQ 'G'                                       E37187
+     C                     MOVE WDCF1G    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C           CDMK      IFEQ 'P'                                       E37187
+     C                     MOVE WDCF1P    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C                     MOVE WDCF1S    ZFLD15                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDCF1
+     C                     END
+     C*
+     C*   ..  Nominated Depot 2 Nominal C/F
+      *
+      **  If no depot ref, and balance is 0, print blanks
+      *
+     C           RNDP2     IFEQ *BLANKS
+     C***********WDCF2     ANDEQ*ZERO                                     E37187
+     C           WDCF2G    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'G'                                       E37187
+     C           RNDP2     OREQ *BLANKS                                   E37187
+     C           WDCF2P    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'P'                                       E37187
+     C           RNDP2     OREQ *BLANKS                                   E37187
+     C           WDCF2S    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'S'                                       E37187
+     C                     MOVE *BLANKS   RDCF2
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WDCF2     ZFLD15                          E37187
+     C           CDMK      IFEQ 'G'                                       E37187
+     C                     MOVE WDCF2G    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C           CDMK      IFEQ 'P'                                       E37187
+     C                     MOVE WDCF2P    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C                     MOVE WDCF2S    ZFLD15                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDCF2
+     C                     END
+     C*
+     C*   ..  Nominated Depot 3 Nominal C/F
+      *
+      **  If no depot ref, and balance is 0, print blanks
+      *
+     C           RNDP3     IFEQ *BLANKS
+     C***********WDCF3     ANDEQ*ZERO                                     E37187
+     C           WDCF3G    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'G'                                       E37187
+     C           RNDP3     OREQ *BLANKS                                   E37187
+     C           WDCF3P    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'P'                                       E37187
+     C           RNDP3     OREQ *BLANKS                                   E37187
+     C           WDCF3S    ANDEQ*ZERO                                     E37187
+     C           CDMK      ANDEQ'S'                                       E37187
+     C                     MOVE *BLANKS   RDCF3
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WDCF3     ZFLD15                          E37187
+     C           CDMK      IFEQ 'G'                                       E37187
+     C                     MOVE WDCF3G    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C           CDMK      IFEQ 'P'                                       E37187
+     C                     MOVE WDCF3P    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C                     MOVE WDCF3S    ZFLD15                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDCF3
+     C                     END
+     C*
+     C*   ..  Other Depots Nominal C/F
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE WOTCF     ZFLD15                          E37187
+     C           CDMK      IFEQ 'G'                                       E37187
+     C                     MOVE WOTCFG    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C           CDMK      IFEQ 'P'                                       E37187
+     C                     MOVE WOTCFP    ZFLD15                          E37187
+     C                     ELSE                                           E37187
+     C                     MOVE WOTCFS    ZFLD15                          E37187
+     C                     END                                            E37187
+     C                     END                                            E37187
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ROTCF
+     C*
+     C*   ..  B/F Trading Position
+     C                     MOVE *BLANKS   ZFLD15
+      *
+     C           CDMK      IFEQ 'G'
+     C                     MOVE WBFTPG    ZFLD15
+     C                     ELSE
+      *
+     C           CDMK      IFEQ 'P'
+     C                     MOVE WBFTPP    ZFLD15
+     C                     ELSE
+     C                     MOVE WBFTPS    ZFLD15
+     C                     END
+      *
+     C                     END
+      *
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RBFTP
+     C*
+     C*   ..  C/F Trading Position
+     C                     MOVE *BLANKS   ZFLD15
+      *
+     C           CDMK      IFEQ 'G'
+     C                     MOVE WCFTPG    ZFLD15
+     C                     ELSE
+      *
+     C           CDMK      IFEQ 'P'
+     C                     MOVE WCFTPP    ZFLD15
+     C                     ELSE
+     C                     MOVE WCFTPS    ZFLD15
+     C                     END
+      *
+     C                     END
+      *
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RCFTP
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PAUDIT - Subroutine to Print Audit Details.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PAUDIT    BEGSR                           *** PAUDIT ***
+     C*
+     C***Access*Security*Ledger*Selection*audit************************** S01117
+     C***********                                                         S01117
+     C***********1         CHAINSESLTAF              50                   S01117
+     C************IN50     IFEQ '1'                                       S01117
+     C***********          MOVE *BLANKS   DBKEY                           S01117
+     C***********          MOVE '07'      DBASE             **************S01117
+     C***********          MOVEL'SESLT'   DBFILE            * DB ERROR 07 S01117
+     C***********          MOVEL'AUDIT'   DBKEY             **************S01117
+     C***********          SETON                     U7U8                 S01117
+     C***********          WRITEHEADAU                                    S01117
+     C***********          WRITEERROR                                     S01117
+     C***********          WRITETRAILAU                                   S01117
+     C***********                                                         S01117
+     C***********          ELSE                                           S01117
+     C                     WRITEHEADAU
+     C                     WRITEDETLAU
+     C***********          WRITETRAILAU                                   E29170
+     C***********          END                                            S01117
+     C*                                                                   E31197
+     C** If no records read then print 'No Details' on                    E31197
+     C** Audit Printer File                                               E31197
+     C*                                                                   E31197
+     C           *IN51     IFEQ '0'                                       E31197
+     C                     WRITENONE                                      E31197
+     C                     END                                            E31197
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PDPTMV - Subroutine to format/print Depot Movement details.  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PDPTMV    BEGSR                           *** PDPTMV ***
+     C*
+     C*  Read DPTMV until change of Security/Branch
+     C*
+     C                     MOVE DSSC      DPSS
+     C***********          MOVE DSBR      DPBC                            S01117
+     C                     MOVE DSBA      DPBA                            S01117
+     C           KLDPMV    SETLLDPTMVDF
+     C           KLDPMV    READEDPTMVDF                  50
+     C*
+     C           *IN50     DOWEQ'0'
+     C*
+     C*  Print In Depot details ...
+     C*
+     C           RECI      IFEQ 'D'
+     C***********RECI      OREQ '*'                                       E14833
+     C           RECI      OREQ 'S'                                       E14833
+     C********** DPID      IFNE *ZEROS                                                        CSD027
+     C           DPID      IFNE *BLANKS                                                       CSD027
+     C           DPMD      ANDGTEOMD
+     C*
+     C** Output headings if not already done (SR/PSECTY will set flag).   E20125
+     C           SECFLG    IFNE 'Y'                                       E20125
+     C                     EXSR PSECTY                                    E20125
+     C                     END                                            E20125
+     C*                                                                   E20125
+     C*  Initialise fields
+     C*
+     C                     MOVE *BLANKS   RADAT
+     C                     MOVE *BLANKS   RVDAT
+     C                     MOVE *BLANKS   RTREF
+     C                     MOVE *BLANKS   RNOML
+     C                     MOVE *BLANKS   RPRIC
+     C                     MOVE *BLANKS   RPINT
+     C                     MOVE *BLANKS   RCCY                            051420
+     C                     MOVE *BLANKS   RCVAL
+     C                     MOVE *BLANKS   RPCOD
+     C                     MOVE *BLANKS   RSTAT
+     C                     MOVE *BLANKS   RDEPO
+     C                     MOVE *BLANKS   RCTPY
+     C                     MOVEA'00000'   *IN,20
+     C*
+     C*  Format fields and print detail line ..
+     C*
+     C*   ..  Activity Date
+     C                     Z-ADDDPMD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RADAT
+     C*
+     C*   ..  Value Date
+     C                     Z-ADDDPMD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RVDAT
+     C*
+     C*   ..  Reference No.
+     C                     MOVELDPRN      RTREF
+     C*
+     C*   ..  Nominal
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE DPNA      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RNOML
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0975CPDR                                           S01408
+     C*                                                                   S01408
+     C*
+     C*   ..  Our Delivery Depot
+     C********** DPID      IFNE 999999                                                        CSD027
+     C           DPID      IFNE '999999'                                                      CSD027
+     C                     MOVE 'A'       RCDT
+     C**********           Z-ADDDPID      CNUM                                                CSD027
+     C                     MOVE DPID      CNUM                                                CSD027
+     C           KLCLNT    CHAINCLINTCBF             50
+     C           *IN50     IFEQ '0'
+     C                     MOVELCRNM      RDEPO
+     C                     END
+     C                     ELSE
+     C                     SETON                     23
+     C                     END
+     C*
+     C*  Print headings if overflow
+     C*
+     C***********LCNT      IFGT 55                                        E20583
+     C************IN31     IFEQ '1'                                E20583 037183
+     C                     Z-ADD5         RQDLN1                          037183
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          037183
+     C           DIFLN1    IFLE RQDLN1                                    037183
+     C                     WRITEHEADS
+     C                     WRITESHEAD
+     C***********          SETOF                     31            E20583 037183
+     C***********          Z-ADD10        LCNT                            E15332
+     C***********          Z-ADD12        LCNT                     E15332 E20583
+     C                     END
+     C*
+     C*  Print detail line
+     C*
+     C                     WRITEDETAL
+     C***********          ADD  1         LCNT                            E15332
+     C***********          ADD  4         LCNT                     E15332 E20583
+     C*
+     C                     END
+     C*
+     C*  Print Out Depot details ...
+     C*                                                                   E20131
+     C** For depot transfers, DPDO is zero but out date is really same    E20131
+     C** as movement date (transfer occurs on same day at both depots).   E20131
+     C           DPMV      IFEQ 'DT'                                      E20131
+     C           DPDO      ANDEQ0                                         E20131
+     C                     Z-ADDDPMD      DPDO                            E20131
+     C                     END                                            E20131
+     C*
+     C********** DPOD      IFNE *ZEROS                                                        CSD027
+     C           DPOD      IFNE *BLANKS                                                       CSD027
+     C           DPDO      ANDGTEOMD
+     C*
+     C** Output headings if not already done (SR/PSECTY will set flag).   E20125
+     C           SECFLG    IFNE 'Y'                                       E20125
+     C                     EXSR PSECTY                                    E20125
+     C                     END                                            E20125
+     C*                                                                   E20125
+     C*  Initialise fields
+     C*
+     C                     MOVE *BLANKS   RADAT
+     C                     MOVE *BLANKS   RVDAT
+     C                     MOVE *BLANKS   RTREF
+     C                     MOVE *BLANKS   RNOML
+     C                     MOVE *BLANKS   RPRIC
+     C                     MOVE *BLANKS   RPINT
+     C                     MOVE *BLANKS   RCCY                            051420
+     C                     MOVE *BLANKS   RCVAL
+     C                     MOVE *BLANKS   RPCOD
+     C                     MOVE *BLANKS   RSTAT
+     C                     MOVE *BLANKS   RDEPO
+     C                     MOVE *BLANKS   RCTPY
+     C                     MOVEA'00000'   *IN,20
+     C*
+     C*  Format fields & print detail line ..
+     C*
+     C*   ..  Activity Date
+     C                     Z-ADDDPDO      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RADAT
+     C*
+     C*   ..  Value Date
+     C                     Z-ADDDPDO      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RVDAT
+     C*
+     C*   ..  Reference No.
+     C                     MOVELDPRN      RTREF
+     C*
+     C*   ..  Nominal
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-SUBDPNA      WDPNA
+     C                     MOVE WDPNA     ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RNOML
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0975CPDR                                           S01408
+     C*                                                                   S01408
+     C*
+     C*   ..  Our Delivery Depot
+     C********** DPOD      IFNE 999999                                                        CSD027
+     C           DPOD      IFNE '999999'                                                      CSD027
+     C                     MOVE 'A'       RCDT
+     C***********          Z-ADDDPID      CNUM                            E20131
+     C**********           Z-ADDDPOD      CNUM                                         E20131 CSD027
+     C                     MOVE DPOD      CNUM                                                CSD027
+     C           KLCLNT    CHAINCLINTCBF             50
+     C           *IN50     IFEQ '0'
+     C                     MOVELCRNM      RDEPO
+     C                     END
+     C                     ELSE
+     C                     SETON                     23
+     C                     END
+     C*
+     C*  Print headings if overflow
+     C*
+     C***********LCNT      IFGT 55                                        E20583
+     C************IN31     IFEQ '1'                                E20583 037183
+     C                     Z-ADD5         RQDLN1                          037183
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          037183
+     C           DIFLN1    IFLE RQDLN1                                    037183
+     C                     WRITEHEADS
+     C                     WRITESHEAD
+     C***********          SETOF                     31            E20583 037183
+     C***********          Z-ADD10        LCNT                            E15332
+     C***********          Z-ADD12        LCNT                     E15332 E20583
+     C                     END
+     C*
+     C*  Print detail line
+     C*
+     C                     WRITEDETAL
+     C**********           ADD  1         LCNT                            E15332
+     C***********          ADD  4         LCNT                     E15332 E20583
+     C*
+     C                     END
+     C*
+     C*  Count records read
+     C                     ADD  1         DMCNT
+     C*
+     C                     END
+     C*
+     C           KLDPMV    READEDPTMVDF                  50
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PMTRAD - Subroutine to format/print Monthly Trade details.   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PMTRAD    BEGSR                           *** PMTRAD ***
+     C*
+     C*  Print Security header details
+     C*
+     C                     EXSR PSECTY
+     C*
+     C*  Read MTRADE until change of Security/Branch/Market
+     C*
+     C                     MOVE DSSC      MSEC
+     C***********          MOVE DSBR      MBRA                            S01117
+     C                     MOVE DSBA      MBRA                            S01117
+     C           KLMTRD    SETLLMTRADDF
+     C           KLMTRD    READEMTRADDF                  50
+     C*
+     C           *IN50     DOWEQ'0'
+     C*
+     C*  Initialise fields
+     C*
+     C                     MOVE *BLANKS   RADAT
+     C                     MOVE *BLANKS   RVDAT
+     C                     MOVE *BLANKS   RTREF
+     C                     MOVE *BLANKS   RNOML
+     C                     MOVE *BLANKS   RPRIC
+     C                     MOVE *BLANKS   RCCY                            051420
+     C                     MOVE *BLANKS   RPINT
+     C                     MOVE *BLANKS   RCVAL
+     C                     MOVE *BLANKS   RPCOD
+     C                     MOVE *BLANKS   RSTAT
+     C                     MOVE *BLANKS   RDEPO
+     C                     MOVE *BLANKS   RCTPY
+     C                     MOVE *BLANKS   SAVRF
+     C                     MOVEA'00000'   *IN,20
+     C*
+     C*  Format fields and print detail line ..
+     C*
+     C*   ..  Activity Date
+     C                     Z-ADDMTRD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RADAT
+     C*
+     C*   ..  Value Date
+     C                     Z-ADDMVAD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RVDAT
+     C*
+     C*   ..  Type
+     C           MTTP      IFEQ 'TP'
+     C                     SETON                     20
+     C                     ELSE
+     C           MTTP      IFEQ 'TS'
+     C                     SETON                     21
+     C                     END
+     C                     END
+     C*                                                                   S01496
+     C* Check if current transaction was previously generated by ER       S01496
+     C*                                                                   S01496
+     C                     MOVE '0'       *IN71                           S01496
+     C*                                                                   S01496
+     C           S01496    IFEQ 'Y'                                       S01496
+     C           *IN20     IFEQ '1'                                       S01496
+     C           *IN21     OREQ '1'                                       S01496
+     C                     OPEN SEERALL2                                  S01496
+     C           MTRF      SETLLSEERALL2                 71               S01496
+     C                     CLOSESEERALL2                                  S01496
+     C                     END                                            S01496
+     C                     END                                            S01496
+     C*
+     C*   ..  Reference No.
+     C                     MOVELMTRF      RTREF
+     C*
+     C*   ..  Price
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE MPDY      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RPRIC
+     C*
+     C*   ..  Nominal
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE BCNL      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RNOML
+     C*
+     C*   ..  Interest
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE MPHI      ZFLD15
+     C                     Z-ADDNOMDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RPINT
+      *                                                                   051420
+      ***  Nominal Currency.                                              051420
+      *                                                                   051420
+     C                     MOVE NMCY      RCCY                            051420
+     C*
+     C*   ..  Countervalue
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE MCTV      ZFLD15
+     C                     Z-ADDNOMDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RCVAL
+     C*
+     C*   ..  Payment Code
+     C                     MOVE MPCD      RPCOD
+     C*
+     C*   ..  Status
+     C           INCI      IFEQ 'I'
+     C                     MOVEL'INC '    RSTAT
+     C                     END
+     C*
+     C*   ..  Our Delivery Depot
+     C           *IN20     IFEQ '1'
+     C**********           Z-ADDMDTO      CNUM                                                CSD027
+     C                     MOVE MDTO      CNUM                                                CSD027
+     C                     ELSE
+     C           *IN21     IFEQ '1'
+     C**********           Z-ADDMDFR      CNUM                                                CSD027
+     C                     MOVE MDFR      CNUM                                                CSD027
+     C                     END
+     C                     END
+     C*
+     C********** CNUM      IFNE *ZEROS                                                        CSD027
+     C           CNUM      IFNE *BLANKS                                                       CSD027
+     C                     MOVE 'A'       RCDT
+     C           KLCLNT    CHAINCLINTCBF             50
+     C           *IN50     IFEQ '0'
+     C                     MOVELCRNM      RDEPO
+     C                     END
+     C                     ELSE
+     C                     SETON                     22
+     C                     END
+     C*
+     C*   ..  Counterparty
+     C           MTRF      IFNE SAVRF
+     C                     MOVE '1'       RCDT
+     C                     MOVE MCPA      CNUM
+     C           KLCLNT    CHAINCLINTSEF             50
+     C           *IN50     IFEQ '0'
+     C                     MOVE 'A'       RCDT
+     C                     MOVE MCPA      CNUM
+     C           KLCLNT    CHAINCLINTCBF             50
+     C           *IN50     IFEQ '0'
+     C                     MOVELCRNM      RCTPY
+     C                     END
+     C                     END
+     C                     MOVE MTRF      SAVRF
+     C                     SETON                     24
+     C                     END
+     C*
+     C*  Print headings if overflow
+     C*
+     C***********LCNT      IFGT 55                                        E20583
+     C************IN31     IFEQ '1'                                E20583 037183
+     C                     Z-ADD5         RQDLN1                          037183
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          037183
+     C           DIFLN1    IFLE RQDLN1                                    037183
+     C                     WRITEHEADS
+     C                     WRITESHEAD
+     C***********          SETOF                     31            E20583 037183
+     C**********           Z-ADD10        LCNT                            E15332
+     C***********          Z-ADD12        LCNT                     E15332 E20583
+     C                     END
+     C*
+     C*  Print detail line
+     C*
+     C                     WRITEDETAL
+     C***********          ADD  1         LCNT                            E20583
+     C************IN24     IFEQ '1'                                       E20583
+     C***********          ADD  2         LCNT                            E20583
+     C***********          END                                            E20583
+     C*
+     C*  Count records read
+     C                     ADD  1         MTCNT
+     C*
+     C           KLMTRD    READEMTRADDF                  50
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                              E20125
+      *****************************************************************   E20125
+      *                                                               *   E20125
+      *  BVTRDS - Subroutine to remove Trades Backvalued to previous  *   E20125
+      *           months from the Brought Forward Position.           *   E20125
+      *     Note: Only trades touched this month are on PF/MTRADD.    *   E20125
+      *                                                               *   E20125
+      *****************************************************************   E20125
+      *                                                                   E20125
+     C           BVTRDS    BEGSR                           *** BVTRDS *** E20125
+     C*                                                                   E20125
+     C** Read first trade for security/branch/market from MTRAD2.         E20125
+     C*                                                                   E20125
+     C                     MOVE DSSC      MSEC                            E20125
+     C***********          MOVE DSBR      MBRA                     E20125 S01117
+     C                     MOVE DSBA      MBRA                            S01117
+     C           KLMTR2    CHAINMTRAD2F              50                   E20125
+     C*                                                                   E20125
+     C** Back out trades until change of key or current month encountered.E20125
+     C           *IN50     DOWEQ'0'                                       E20125
+     C*                                                                   E20125
+     C           MVAD      IFGT EOMD                                      E20125
+     C                     MOVE '1'       *IN50                           E20125
+     C                     ELSE                                           E20125
+     C*                                                                   E20125
+     C** Subtract purchases, add sales.                                   E20125
+      *                                                                   E20125
+     C**    .. Grey Market                                                E20125
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0975CPD1                                           S01408
+     C*                                                                   S01408
+     C           CDMK      IFEQ 'G'                                       E20125
+     C                     SETON                     10                   E20125
+      *                                                                   E20125
+     C           MTTP      IFEQ 'TP'                                      E20125
+     C                     SUB  BCNL      WBFTPG                          E20125
+     C                     ELSE                                           E20125
+     C                     ADD  BCNL      WBFTPG                          E20125
+     C                     END                                            E20125
+      *                                                                   E20125
+     C                     ELSE                                           E20125
+      *                                                                   E20125
+     C**    .. Primary Market                                             E20125
+     C           CDMK      IFEQ 'P'                                       E20125
+     C                     SETON                     11                   E20125
+      *                                                                   E20125
+     C           MTTP      IFEQ 'TP'                                      E20125
+     C                     SUB  BCNL      WBFTPP                          E20125
+     C                     ELSE                                           E20125
+     C                     ADD  BCNL      WBFTPP                          E20125
+     C                     END                                            E20125
+      *                                                                   E20125
+     C                     ELSE                                           E20125
+      *                                                                   E20125
+     C**    .. Secondary Market                                           E20125
+     C           CDMK      IFEQ 'S'                                       E20125
+     C                     SETON                     12                   E20125
+      *                                                                   E20125
+     C           MTTP      IFEQ 'TP'                                      E20125
+     C                     SUB  BCNL      WBFTPS                          E20125
+     C                     ELSE                                           E20125
+     C                     ADD  BCNL      WBFTPS                          E20125
+     C                     END                                            E20125
+      *                                                                   E20125
+     C                     END                                            E20125
+     C                     END                                            E20125
+     C                     END                                            E20125
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0975CPD2                                           S01408
+     C*                                                                   S01408
+     C*                                                                   E20125
+     C                     END                                            E20125
+     C*                                                                   E20125
+     C  N50      KLMTR2    READEMTRAD2F                  50               E20125
+     C                     END                                            E20125
+     C*                                                                   E20125
+     C                     ENDSR                                          E20125
+      *                                                                   E20125
+      *****************************************************************   E20125
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PSECTY - Subroutine to format/print Security Header details. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PSECTY    BEGSR                           *** PSECTY ***
+     C*
+     C*  Initialise fields
+     C*
+     C*    .. set flag to control printing of headings                    E20125
+     C                     MOVE 'Y'       SECFLG                          E20125
+     C*                                                                   E20125
+     C                     MOVE *BLANKS   BRNM
+     C***********          MOVE *BLANKS   RSRPN                           E20125
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0975CPL4                                           S01408
+     C*                                                                   S01408
+     C                     MOVE *BLANKS   RISSU
+     C                     MOVE *BLANKS   RLEAD
+     C                     MOVE *BLANKS   RISSA
+     C                     MOVE *BLANKS   RISSP
+     C                     MOVE *BLANKS   RTOTU
+     C                     MOVE *BLANKS   RALRQ
+     C                     MOVE *BLANKS   RALRC
+     C                     MOVE *BLANKS   RMGFD
+     C                     MOVE *BLANKS   RUNFD
+     C                     MOVE *BLANKS   RMGRC
+     C                     MOVE *BLANKS   RUNFR
+     C                     SETOF                     13
+     C*
+     C*  Access Branch details
+     C*
+     C                     MOVE *BLANKS   KEY12
+     C***********          MOVE DSBR      KEY12                           S01117
+     C                     MOVE DSBA      KEY12                           S01117
+     C                     MOVEL'10'      KEY12
+     C           KEY12     CHAINTABLETRF             50
+     C*
+     C*  Format Depot balances
+     C*
+     C                     EXSR FDEPOT
+     C*
+     C*  Security report
+      ***  Set up Security Short Description (Output is ZRNME)            E20125
+      *                                                                   E20125
+     C***********          MOVELSRPN      RSRPN                           E20125
+      *                                                                   E20125
+     C                     MOVELSESN      ZSRPN                           E20125
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0975CPL5                                           S01408
+     C*                                                                   S01408
+     C                     MOVE *BLANKS   ZSFN1                           E20125
+     C                     MOVE *BLANKS   ZSFN2                           E20125
+     C                     MOVE RSFD      ZRSFD                           S01117
+     C                     EXSR ZSDESC                                    E20125
+      *                                                                   E20125
+      ***  If no transactions against the Security this month, set up     E20125
+      ***  the Market from the latest Market Indicator on file.           E20125
+      *                                                                   E20125
+     C           *IN10     IFEQ '0'                                       E20125
+     C           *IN11     ANDEQ'0'                                       E20125
+     C           *IN12     ANDEQ'0'                                       E20125
+      *                                                                   E20125
+     C           MKTI      IFEQ 'G'                                       E20125
+     C                     MOVEL'GREY    'RMRKT                           E20125
+     C                     MOVE ' '       RMRKT                           E20125
+     C                     ELSE                                           E20125
+     C           MKTI      IFEQ 'P'                                       E20125
+     C                     MOVEL'PRIMARY 'RMRKT                           E20125
+     C                     MOVE ' '       RMRKT                           E20125
+     C                     ELSE                                           E20125
+     C                     MOVEL'SECONDAR'RMRKT                           E20125
+     C                     MOVE 'Y'       RMRKT                           E20125
+     C                     END                                            E20125
+     C                     END                                            E20125
+      *                                                                   E20125
+     C                     END                                            E20125
+     C*
+     C*  Next Coupon Date
+      ***  Only if the Security has not matured.                          E20125
+     C*
+     C                     MOVE *BLANKS   RNCPN                           E20125
+     C                     SETOF                     15
+     C           *IN14     IFEQ '0'                                       E20125
+     C           MATY      ANDNE0                                         E20125
+     C*                                                                   E38667
+     C** Only do if coupon bearing                                        E38667
+     C*                                                                   E38667
+     C           DYBS      IFNE '4'                                       E38667
+     C           STBS      ANDNE'D'                                       E38667
+     C*                                                                   E38667
+     C           PROT      IFEQ '1'                                       E38667
+     C           PROT      OREQ '3'                                       E38667
+     C           PROT      OREQ '5'                                       E38667
+     C           PROT      OREQ '6'                                       E38667
+     C           PROT      OREQ '8'                                       E38667
+     C           PROT      OREQ '9'                                       E38667
+     C                     EXSR ZNCD
+     C                     Z-ADDNCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RNCPN
+     C                     SETON                     15                   E38667
+     C                     END                                            E38667
+     C                     END                                            E38667
+     C                     END                                            E20125
+     C*
+     C* Print New Issue information if Market is Grey or
+     C*    Market is Primary & Grey Market not already printed.
+     C*
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0975CPLH                                           S01408
+     C*                                                                   S01408
+     C           CDMK      IFEQ 'G'
+     C           CDMK      OREQ 'P'
+     C           *IN10     ANDEQ'0'
+     C*
+     C*   ..  Issuer
+     C                     MOVE 'A'       RCDT
+     C**********           Z-ADDISSR      CNUM                                                CSD027
+     C                     MOVE ISSR      CNUM                                                CSD027
+     C           KLCLNT    CHAINCLINTCBF             50
+     C           *IN50     IFEQ '0'
+     C                     MOVELCSNM      RISSU
+     C                     END
+     C*
+     C*   ..  Lead Manager
+     C                     MOVE 'A'       RCDT
+     C**********           Z-ADDLMGR      CNUM                                                CSD027
+     C                     MOVE LMGR      CNUM                                                CSD027
+     C           KLCLNT    CHAINCLINTCBF             50
+     C           *IN50     IFEQ '0'
+     C                     MOVELCSNM      RLEAD
+     C                     END
+     C*
+     C*   ..  Issue Amount
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE ISSA      ZFLD15
+     C                     Z-ADD0         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RISSA
+     C*
+     C*   ..  Issue Price
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE ISSP      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RISSP
+     C*
+     C*   ..  Partly Paid
+     C           PPDI      IFEQ 'Y'
+     C                     SETON                     13
+     C                     END
+     C*
+     C*   ..  Total Underwritten
+     C/COPY WNCPYSRC,SE0975C002
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TOTU      ZFLD15
+     C                     Z-ADD0         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RTOTU
+     C/COPY WNCPYSRC,SE0975C003
+     C*
+     C*   ..  Allocation Requested
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE ALRQ      ZFLD15
+     C                     Z-ADD0         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RALRQ
+     C*
+     C*   ..  Allocation Received
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE ALRC      ZFLD15
+     C                     Z-ADD0         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RALRC
+     C*
+     C*   ..  Management Fees Due
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE MGFD      ZFLD15
+     C                     Z-ADDFEEDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RMGFD
+     C*
+     C*   ..  Underwriting Fees Due
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE UNFD      ZFLD15
+     C                     Z-ADDFEEDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RUNFD
+     C*
+     C*   ..  Management Fees Received
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE MGRC      ZFLD15
+     C                     Z-ADDFEEDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RMGRC
+     C*
+     C*   ..  Underwriting Fees Received
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE UNFR      ZFLD15
+     C                     Z-ADDFEEDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RUNFR
+     C*
+     C                     END
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0975CPL1                                           S01408
+     C*                                                                   S01408
+     C*
+     C*  Print Security/Header details
+     C*                                                                *
+     C***********DSBR      IFNE SAVBR                                     S01117
+     C           DSBA      IFNE SAVBA                                     S01117
+     C           *IN51     IFEQ '1'                                       E29170
+     C* Check for overflow before writing TRAIL                           098175
+     C                     Z-ADD4         RQDLN1                          098175
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          098175
+     C           DIFLN1    IFLE RQDLN1                                    098175
+     C                     WRITEHEADS                                     098175
+     C                     END                                            098175
+     C                     WRITETRAIL                                     E29170
+     C                     END                                            E29170
+     C***********          CLOSESE0975P1               51                 E29170
+     C                     CLOSESE0975P1                                  E29170
+     C                     OPEN SE0975P1
+     C                     Z-ADD0         PAGE
+     C***********          MOVE DSBR      SAVBR                           S01117
+     C                     MOVE DSBA      SAVBA                           S01117
+     C                     SETON                     51                   E29170
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END
+     C                     WRITEHEADS
+     C***********          Z-ADD8         LCNT                            E20583
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0975CPL2                                           S01408
+     C*                                                                   S01408
+     C           CDMK      IFEQ 'G'
+     C           CDMK      OREQ 'P'
+     C           *IN10     ANDEQ'0'
+     C                     WRITEISSUE
+     C***********          ADD  8         LCNT                            E18874
+     C***********          ADD  15        LCNT                     E18874 E20583
+     C                     END
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE0975CPL3                                           S01408
+     C*                                                                   S01408
+     C                     WRITEBFBAL
+     C                     WRITESHEAD
+     C***********          ADD  12        LCNT                            E15332
+     C***********          ADD  14        LCNT                     E15332 E20583
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PSETSL - Subroutine to format/print Settlement details.      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PSETSL    BEGSR                           *** PSETSL ***
+     C*
+     C*  Read SETSL until change of Security/Branch/Market
+     C*
+     C                     MOVE DSSC      SSSN
+     C***********          MOVE DSBR      SBCD                            S01117
+     C                     MOVE DSBA      SBCA                            S01117
+     C           KLSETL    SETLLSETLEDF
+     C           KLSETL    READESETLEDF                  50
+     C*
+     C           *IN50     DOWEQ'0'
+     C           RECI      IFEQ 'D'
+     C           RECI      OREQ 'H'                                       E20692
+     C           SEDE      ANDGTEOMD
+     C*
+     C*  Initialise fields
+     C*
+     C                     MOVE *BLANKS   RADAT
+     C                     MOVE *BLANKS   RVDAT
+     C                     MOVE *BLANKS   RTREF
+     C                     MOVE *BLANKS   RNOML
+     C                     MOVE *BLANKS   RPRIC
+     C                     MOVE *BLANKS   RPINT
+     C                     MOVE *BLANKS   RCCY                            051420
+     C                     MOVE *BLANKS   RCVAL
+     C                     MOVE *BLANKS   RPCOD
+     C                     MOVE *BLANKS   RSTAT
+     C                     MOVE *BLANKS   RDEPO
+     C                     MOVE *BLANKS   RCTPY
+     C                     MOVEA'00000'   *IN,20
+     C*
+     C*  Format fields & print detail line ..
+     C*
+     C*   ..  Activity Date
+     C                     Z-ADDSEDE      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RADAT
+     C*
+     C*   ..  Value Date
+     C                     Z-ADDSEDE      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RVDAT
+     C*
+     C*   ..  Reference No.
+     C                     MOVELSTDR      RTREF
+     C*
+     C*   ..  Nominal
+     C                     MOVE *BLANKS   ZFLD15
+     C***********          MOVE BCNL      ZFLD15                          E21230
+     C                     MOVE SNMS      ZFLD15                          E21230
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RNOML
+      *                                                                   051420
+      ***  Nominal Currency.                                              051420
+      *                                                                   051420
+     C                     MOVE SSCY      RCCY                            051420
+     C*
+     C*   ..  Countervalue
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE SVLS      ZFLD15
+     C                     Z-ADDNOMDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RCVAL
+     C*
+     C*   ..  Status
+     C           SFSI      IFEQ 'Y'
+     C                     MOVEL'FULL'    RSTAT
+     C                     ELSE
+     C           SOSI      IFEQ 'Y'
+     C                     MOVEL'OVER'    RSTAT
+     C                     ELSE
+     C           SFSI      IFEQ 'N'
+     C***********SOSI      ANDEQ'N'                                       E20692
+     C* SOSI is either 'Y' or blank, not 'N'                              E20692
+     C                     MOVEL'PART'    RSTAT
+     C                     END
+     C                     END
+     C                     END
+     C*   ..  Reversals (use RDEPO as it's not needed for settlements)    E20694
+     C           SRIN      IFEQ 'Y'                                       E20694
+     C                     MOVEL'(REVERSA'RDEP0  10                       E20694
+     C                     MOVE 'L)'      RDEP0                           E20694
+     C                     MOVELRDEP0     RDEPO                           E20694
+     C                     END                                            E20694
+     C*
+     C** Output headings if not already done (SR/PSECTY will set flag).   E20125
+     C           SECFLG    IFNE 'Y'                                       E20125
+     C                     EXSR PSECTY                                    E20125
+     C                     END                                            E20125
+     C*                                                                   E20125
+     C*  Print headings if overflow
+     C*
+     C***********LCNT      IFGT 55                                        E20583
+     C************IN31     IFEQ '1'                                E20583 037183
+     C                     Z-ADD5         RQDLN1                          037183
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                          037183
+     C           DIFLN1    IFLE RQDLN1                                    037183
+     C                     WRITEHEADS
+     C                     WRITESHEAD
+     C***********          SETOF                     31            E20583 037183
+     C***********          Z-ADD10        LCNT                            E15332
+     C***********          Z-ADD12        LCNT                     E15332 E20583
+     C                     END
+     C*
+     C*  Print detail line
+     C*
+     C                     WRITEDETAL
+     C***********          ADD  1         LCNT                            E15332
+     C***********          ADD  4         LCNT                     E15332 E20583
+     C*
+     C*  Count records read
+     C                     ADD  1         SLCNT
+     C                     END
+     C*
+     C           KLSETL    READESETLEDF                  50
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+     C**                                                                  S01117
+      *****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM DSBA      SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT                                                              E20125
+     C/COPY ZSRSRC,ZLCDZ1                                                 100228
+      /EJECT                                                              100228
+     C/COPY ZSRSRC,ZSDESCZ3                                               E20125
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,99 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas UT Copy Source for Source Parser')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC01003 - Midas UT Copy Source for Source Parser           */
+/*                                                                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CBF011  *CREATE    Date 04Jun11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CBF011 - BF Infrastructure: Error Message Handling          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PGNAM &OBJTYP &SRCLIBS)
+ 
+             DCL        VAR(&PGNAM)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJTYP)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PGTXT)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SRCF)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCFLB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCLIBS) TYPE(*CHAR) LEN(2500)
+             DCL        VAR(&SRCMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBCNT) TYPE(*DEC) LEN(3)
+ 
+/**  Copyright statement */
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                            2011')
+/** Initialise */
+ 
+             CHGVAR     VAR(&LIBCNT) VALUE(1)
+ 
+/** Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Retrieve Source File Information through RTVOBJD */
+ 
+             RTVOBJD    OBJ(&PGNAM) OBJTYPE(*MODULE) OBJATR(&OBJTYP) +
+                          TEXT(&PGTXT) SRCF(&SRCF) SRCMBR(&SRCMBR)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+               RTVOBJD    OBJ(&PGNAM) OBJTYPE(*PGM) OBJATR(&OBJTYP) +
+                            TEXT(&PGTXT) SRCF(&SRCF) SRCMBR(&SRCMBR)
+               MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+             ENDDO
+ 
+/** Create UTPARSPD in QTEMP if not done yet */
+ 
+             CHKOBJ     OBJ(QTEMP/UTPARSPD) OBJTYPE(*FILE) MBR(*FIRST)
+             MONMSG     MSGID(CPF9815 CPF9810 CPF9801 CPF9820 +
+                          CPF9802) EXEC(DO)
+               CPYF       FROMFILE(UTTPARPD) TOFILE(QTEMP/UTPARSPD) +
+                            CRTFILE(*YES)
+             ENDDO
+ 
+/** Copy Source into Parser Work File   */
+ 
+LOOP:
+             CHGVAR     VAR(&SRCFLB) VALUE(%SST(&SRCLIBS &LIBCNT 10))
+             IF         COND(&SRCFLB *EQ ' ') THEN(GOTO CMDLBL(ABNOR))
+ 
+/** Check if source member exists   */
+ 
+             CHKOBJ     OBJ(&SRCFLB/&SRCF) OBJTYPE(*FILE) MBR(&SRCMBR)
+             MONMSG     MSGID(CPF9815 CPF9810 CPF9801 CPF9820 +
+                          CPF9802) EXEC(DO)
+               CHGVAR     VAR(&LIBCNT) VALUE(&LIBCNT + 10)
+               GOTO       CMDLBL(LOOP)
+             ENDDO
+ 
+/** Copy source to UTPARSPD */
+ 
+             CPYF       FROMFILE(&SRCFLB/&SRCF) TOFILE(UTPARSPD) +
+                          FROMMBR(&SRCMBR) MBROPT(*REPLACE) +
+                          FMTOPT(*CVTSRC)
+             MONMSG     MSGID(CPF2868) EXEC(DO)
+               CHGVAR     VAR(&LIBCNT) VALUE(&LIBCNT + 10)
+               GOTO       CMDLBL(LOOP)
+             ENDDO
+             MONMSG     MSGID(CPF9212 CPF2864 CPF2909 +
+                          CPF2816 CPF2817) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(ENDCLPGM)
+ ABNOR:
+             CHGVAR     VAR(&PGNAM)  VALUE(' ')
+             SNDPGMMSG  MSG('Program UTC01003 ended abnormally - see +
+                          job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ ENDCLPGM:
+             ENDPGM

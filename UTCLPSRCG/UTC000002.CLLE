@@ -1,0 +1,182 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UTC000002F) TOFILE(UPFDCSTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Remove / add physical file constraints')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000002 - Remove / add physical file constraints          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. A1084804           Date 29Jan13              */
+/*       Prev Amend No. BUG27980           Date 05Aug10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BG19128            Date 19May08              */
+/*                      BG18582  *CREATE   Date 10Apr08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       A1084804 - Handle libraries with no files.                  */
+/*       BUG27980 - Remove DBGVIEW (Recompile).                      */
+/*       BG19128 - Handle request for single file.                   */
+/*       BG18582 - Enhancements to changing CCSIDs.                  */
+/*                                                                   */
+/*********************************************************************/
+/*       This program should normally be run twice; once to remove   */
+/*       constraints and once to add them back.  This is conditioned */
+/*       on the parameter &MODE.  As both modes rely on an outfile   */
+/*       in QTEMP then both runs should be within the same job.  In  */
+/*       addition, if this program is run in '*REMOVE' mode twice    */
+/*       then information about the original constraints may be      */
+/*       lost.                                                       */
+/*********************************************************************/
+/**********  PGM        PARM(&LIB &MODE)                                              */ /*BG19128*/
+             PGM        PARM(&LIB &FILE &MODE)                                           /*BG19128*/
+ 
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)                                   /*BG19128*/
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(9999)
+             DCL        VAR(&CMDLEN) TYPE(*DEC) LEN(15 5) VALUE(9999)
+             DCL        VAR(&CSTN) TYPE(*CHAR) LEN(258)
+             DCL        VAR(&PRKY) TYPE(*CHAR) LEN(1200)
+             DCL        VAR(&PRKYSTR) TYPE(*CHAR) LEN(1320)
+             DCL        VAR(&CKXP) TYPE(*CHAR) LEN(2000)
+             DCL        VAR(&CSTT) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LIBNAME) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&POS1) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&POS2) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&INQMSGRPY) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             DCLF       FILE(UTC000002F) ALWVARLEN(*YES)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2008')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* If the mode is *REMOVE then build outfile of constraints. */
+             IF         COND(&MODE *EQ '*REMOVE') THEN(DO)
+                RTVJOBA    INQMSGRPY(&INQMSGRPY)                                        /*A1084804*/
+                DLTF       FILE(QTEMP/UTC000002F)
+                MONMSG     MSGID(CPF0000)
+                CRTDUPOBJ  OBJ(UPFDCSTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                             TOLIB(QTEMP) NEWOBJ(UTC000002F)
+/**********     DSPFD      FILE(&LIB/*ALL) TYPE(*CST) OUTPUT(*OUTFILE) +              */ /*BG19128*/
+/**********                  FILEATR(*PF) OUTFILE(QTEMP/CST)                          */ /*BG19128*/
+                DSPFD      FILE(&LIB/&FILE) TYPE(*CST) OUTPUT(*OUTFILE) +
+                             FILEATR(*PF) OUTFILE(QTEMP/CST)                             /*BG19128*/
+                MONMSG     MSGID(CPF3012) EXEC(DO)                                      /*A1084804*/
+                   GOTO       CMDLBL(READNEXT)                                          /*A1084804*/
+                ENDDO                                                                   /*A1084804*/
+                CPYF       FROMFILE(QTEMP/CST) TOFILE(QTEMP/UTC000002F) +
+                             MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+/* Change job to handle enquiry messages. */
+/**********     RTVJOBA    INQMSGRPY(&INQMSGRPY)                                     */ /*A1084804*/
+                CHGJOB     INQMSGRPY(*DFT)
+             ENDDO
+ 
+/* If the mode is *ADD then change library names in constraint names. */
+             IF         COND(&MODE *EQ '*ADD') THEN(DO)
+                CHGVAR     VAR(&PREFIX) VALUE(%SST(&LIB 1 2))
+                CHGVAR     VAR(&LIBNAME) VALUE(%SST(&LIB 3 5))
+                CALL       PGM(UT000006) PARM(&PREFIX &LIBNAME)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CHGVAR     VAR(&CSTN) VALUE(%SST(&PHCSTN 3 258))
+/* *REMOVE mode. */
+             IF         COND(&MODE *EQ '*REMOVE') THEN(DO)
+                RMVPFCST   FILE(&LIB/&CSFILE) CST(&CSTN)
+             ENDDO
+/* *ADD mode. */
+             IF         COND(&MODE *EQ '*ADD') THEN(DO)
+                CHGVAR     VAR(&CMD) VALUE('ADDPFCST FILE(' *TCAT &LIB +
+                             *TCAT '/' *TCAT &CSFILE *TCAT ') CST(' +
+                             *TCAT &CSTN *TCAT ')')
+                IF         COND(&PHCSTT *EQ 'P' *OR &PHCSTT *EQ 'U') +
+                             THEN(DO)
+                   IF         COND(&PHCSTT *EQ 'P') THEN(DO)
+                      CHGVAR     VAR(&CSTT) VALUE('*PRIKEY')
+                   ENDDO
+                   IF         COND(&PHCSTT *EQ 'U') THEN(DO)
+                      CHGVAR     VAR(&CSTT) VALUE('*UNQCST')
+                   ENDDO
+                   IF         COND(&PHNMKY *NE 0) THEN(DO)
+                      CHGVAR     VAR(&PRKY) VALUE(%SST(&PHPRKY 3 1200))
+/* Build up key string to ensure that there are blanks in the command string. */
+                      CHGVAR     VAR(&PRKYSTR) VALUE(' ')
+                      CHGVAR     VAR(&POS1) VALUE(1)
+                      CHGVAR     VAR(&POS2) VALUE(1)
+LOOP:
+                      IF         COND(%SST(&PRKY &POS1 10) *NE ' ') THEN(DO)
+                         CHGVAR     VAR(%SST(&PRKYSTR &POS2 10)) +
+                                      VALUE(%SST(&PRKY &POS1 10))
+                         CHGVAR     VAR(&POS1) VALUE(&POS1 + 10)
+                         CHGVAR     VAR(&POS2) VALUE(&POS2 + 11)
+                         GOTO       CMDLBL(LOOP)
+                      ENDDO
+                      CHGVAR     VAR(&CMD) VALUE(&CMD *BCAT 'TYPE(' *TCAT +
+                                   &CSTT *TCAT ') KEY(' *TCAT &PRKYSTR *TCAT +
+                                   ')')
+                   ENDDO
+                ENDDO
+                IF         COND(&PHCSTT *EQ 'C') THEN(DO)
+                   CHGVAR     VAR(&CKXP) VALUE(%SST(&PHCKXP 3 2000))
+                   CHGVAR     VAR(&CMD) VALUE(&CMD *BCAT 'TYPE(*CHKCST) +
+                                CHKCST(' *TCAT &QUOTE *TCAT &CKXP *TCAT +
+                                &QUOTE *TCAT ')')
+                ENDDO
+                CALL       PGM(QCMDEXC) PARM(&CMD &CMDLEN)
+                MONMSG     MSGID(CPF32B0)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             IF         COND(&MODE *EQ '*REMOVE') THEN(DO)
+                CHGJOB     INQMSGRPY(&INQMSGRPY)
+             ENDDO
+ 
+             ENDPGM

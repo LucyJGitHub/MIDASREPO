@@ -1,0 +1,1097 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Exposure management ICD enquiry')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9131E - Exposure Management ICD Enquiry.                   *
+      *                                                               *
+      *  Function:  This program displays the Exposure Management     *
+      *             ICD record.                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD030956           Date 09Oct14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002             Date 17SEP98               *   CTI002
+      *                 CDL002             Date 17JAN97               *
+      *                 S01459             Date 17JAN97               *
+     F*                 S01339            Date: 26MAY92                  *
+     F*                 S01332            Date:  8MAR91                  *
+     F*                 LN0255            Date: 15JUN90                  *
+     F*                 S01212            Date: 14SEP89                  *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  MD030956 - Additional changes to BFM-TI enhancement          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+     F*  CTI002 - TRADE INNOVATION INTERFACE PHASE II                    *
+      *  CDL002 - FX Netting: addition of field 'Net FX Exposure'.    *
+      *  S01459 - Addition of Midas headerbox.                        *
+     F*  S01339 - Syndicated loans made redundant at R10.                *
+     F*  S01332 - Exposure Management rel 10 enhancements                *
+     F*  LN0255 - Standardise ICD Headers and Footers                    *
+     F*  S01212 - /Copies and windows                                    *
+     F*                                                                  *
+     F********************************************************************
+     F/COPY WNCPYSRC,SD9131EFPG
+     FSD9131E#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Exposure management ICD enquiry
+      *
+     FSDEXPML1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Exposure Management Data retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E/COPY WNCPYSRC,SD9131EEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I****/COPY QWINDSRC,IOE1DTA                                          S01229
+     I/COPY QWINDSRC,SD9130GDTA                                           S01229
+     I/COPY WNCPYSRC,SD9131EIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * KEY: Exposure Management Data retrieval
+      * I : RST Exposure Management key
+     I                                        1  10 P1EXMK
+     IP2PARM      DS
+      * B :  Work Return code
+     I                                        1   5 P2WRTC
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0001
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Exposure M
+     C           P2WRTC    PARM P2WRTC    WP0001  5        Work Return cod
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Display and process key screen
+     C                     EXSR BADSKY
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1EXMK    IFEQ *BLANK                     Exposure Manage
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           BUEXMK           Exposure Manage
+      * Setup key
+     C                     MOVEL#1EXMK    BUEXMK           Exposure Manage
+     C           KRTV      CHAIN@BUREE1              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     99    *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, then signal error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     99    *
+      * Send message 'Exposure Management Da NF'
+     C                     MOVEL'USR0228' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9131ESFF - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131ESFF
+     C                     END                             *FI
+      * USER: Load detail screen from DBF record
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9131ELDS - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131ELDS
+     C                     END                             *FI
+     C                     END
+      *
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * USER: Validate key screen
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9131EVKS - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131EVKS
+     C                     END                             *FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process key screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9131EPKR - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131EPKR
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P2WRTC           Work Return cod
+     C                     MOVEL'PREV'    P2WRTC           Work Return cod
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   05                MOVEL'Y'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+     C                     MOVEL'Y'       W0TRN
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * Process record:
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * CALC: Detail screen function fields
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9131ESFF - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131ESFF
+     C                     END                             *FI
+      * USER: Validate detail screen
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * Window processing - window on
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * Start of SAR S01117
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'E'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * End of SAR S01117
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/COPY Member SD9131EVSW - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131EVSW
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9131EVDS - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131EVDS
+     C                     END                             *FI
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * USER: Perform confirmed action
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9131EPCA - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131EPCA
+     C                     END                             *FI
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * USER: Process command keys
+      * S01339 - remove F8 (further records) processing.
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9131EPCK - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131EPCK
+     C                     END                             *FI
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+     C                     MOVEL'0'       *IN79
+     C           WUFIIN    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN78
+     C           WUFUOP    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN78
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN77
+     C           WUY9ST    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       *IN77
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN76                           CTI002
+     C           WUCTI2    IFEQ 'N'                        *IF            CTI002
+     C                     MOVEL'1'       *IN76                           CTI002
+     C                     END                             *FI            CTI002
+     C           CTI007    IFEQ 'Y'                                                         MD030956
+     C                     MOVEL'0'       *IN76                                             MD030956
+     C                     ENDIF                                                            MD030956
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1CYCD           Currency Code
+     C                     Z-ADD*ZERO     #1UPWT           Update Wait Tim
+     C                     Z-ADD*ZERO     #1MSFX           Mod. Seq. for F
+     C                     Z-ADD*ZERO     #1MSSC           Mod. Seq. for S
+     C                     Z-ADD*ZERO     #1MSMM           Mod. Seq. for M
+     C                     Z-ADD*ZERO     #1MSSI           Mod. Seq. for S
+     C                     Z-ADD*ZERO     #1MSLN           Mod. Seq. for L
+     C                     Z-ADD*ZERO     #1MSSP           Mod. Seq. for S
+     C                     Z-ADD*ZERO     #1MSRT           Mod. Seq. for R
+     C                     Z-ADD*ZERO     #1MSFU           Mod. Seq. for F
+     C                     Z-ADD*ZERO     #1MSFR           Mod. Seq. for F
+     C                     Z-ADD*ZERO     #1MSOP           Mod. seq. for O
+     C                     Z-ADD*ZERO     #1MSIR           Mod. Seq. for I
+     C                     Z-ADD*ZERO     #1MSTF           Mod. Seq. forTFCTI002
+     C                     MOVEL*BLANK    #1IRFD           Issuer Risk Fac
+     C                     MOVEL*BLANK    #1PIFX           Portfolio to in
+     C                     MOVEL*BLANK    #1PHFD           Portfolio Holdi
+     C                     MOVEL*BLANK    #1CPTG           Counterparty Ta
+     C                     MOVEL*BLANK    #1LSHN           Long/Short Hold
+     C                     MOVEL*BLANK    #1APCD           Allow for Pay C
+     C                     MOVEL*BLANK    #1CCSO           Caps/clrs/flrs
+     C                     MOVEL*BLANK    #1FONG           FO positions Ne
+     C                     MOVEL*BLANK    #1NTEM           Net FX Exposure
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @BUREE1 fields to screen
+      *================================================================
+     C                     MOVELBUEXMK    #1EXMK           Exposure Manage
+     C                     Z-ADDBULCD     #1LCD            Last Change Dat
+     C                     MOVELBUTYLC    #1TYLC           Type of Last Ch
+     C                     MOVELBUCYCD    #1CYCD           Currency Code
+     C                     Z-ADDBUUPWT    #1UPWT           Update Wait Tim
+     C                     Z-ADDBUMSFX    #1MSFX           Mod. Seq. for F
+     C                     Z-ADDBUMSSC    #1MSSC           Mod. Seq. for S
+     C                     Z-ADDBUMSMM    #1MSMM           Mod. Seq. for M
+     C                     Z-ADDBUMSSI    #1MSSI           Mod. Seq. for S
+     C                     Z-ADDBUMSLN    #1MSLN           Mod. Seq. for L
+     C                     Z-ADDBUMSSP    #1MSSP           Mod. Seq. for S
+     C                     Z-ADDBUMSRT    #1MSRT           Mod. Seq. for R
+     C                     Z-ADDBUMSFU    #1MSFU           Mod. Seq. for F
+     C                     Z-ADDBUMSFR    #1MSFR           Mod. Seq. for F
+     C                     Z-ADDBUMSOP    #1MSOP           Mod. seq. for O
+     C                     Z-ADDBUMSIR    #1MSIR           Mod. Seq. for I
+     C                     Z-ADDBUMSTF    #1MSTF           Mod. seq. forTFCTI002
+     C                     MOVELBUIRFD    #1IRFD           Issuer Risk Fac
+     C                     MOVELBUPIFX    #1PIFX           Portfolio to in
+     C                     MOVELBUPHFD    #1PHFD           Portfolio Holdi
+     C                     MOVELBUCPTG    #1CPTG           Counterparty Ta
+     C                     MOVELBULSHN    #1LSHN           Long/Short Hold
+     C                     MOVELBUAPCD    #1APCD           Allow for Pay C
+     C                     MOVELBUCCSO    #1CCSO           Caps/clrs/flrs
+     C                     MOVELBUFONG    #1FONG           FO positions Ne
+     C                     MOVELBUNTEM    #1NTEM           Net FX Exposure
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP1EXMK    #1EXMK           Exposure Manage
+      * USER: Load key screen
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9131ELKS - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131ELKS
+     C                     END                             *FI
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * get trading indicators - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSA     CHAIN@BGREC8              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0096' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDMMODPD'ZA0001           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SAEXIT                     *QUIT
+     C                     GOTO SAEXIT
+     C                     END
+      *
+      * USER: Exit processing
+      * PAR = DB1 By name
+     C                     MOVELBGDLFX    WUDLFX           Dealing: FX
+     C                     MOVELBGCSLN    WUCSLN           Customer Lendin
+     C                     MOVELBGRTBN    WURTBN           Retail Banking
+     C                     MOVELBGSECS    WUSECS           Securities
+     C                     MOVELBGFUOP    WUFUOP           Futures & Optio
+     C                     MOVELBGFIIN    WUFIIN           FRA/IRS Indicat
+     C                     MOVELBGDLMM    WUDLMM           Dealing: MM
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSB     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM 'SDJVD1R' W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/COPY Member SD9131EEPP - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131EEPP
+     C                     END                             *FI
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'CMD01'   P2WRTC           Work Return cod
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field FRA/IRS Indicator
+     C                     MOVEL*BLANK    WUFIIN  1
+      * Define work field Futures & Options
+     C                     MOVEL*BLANK    WUFUOP  1
+      * Define work field FX Netting switched on
+     C                     MOVEL*BLANK    WUY9ST  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Dealing: FX
+     C                     MOVEL*BLANK    WUDLFX  1
+      * Define work field Customer Lending
+     C                     MOVEL*BLANK    WUCSLN  1
+      * Define work field Retail Banking
+     C                     MOVEL*BLANK    WURTBN  1
+      * Define work field CTI002 is active                                CTI002
+     C                     MOVEL*BLANK    WUCTI2  1                       CTI002
+      * Define work field Securities
+     C                     MOVEL*BLANK    WUSECS  1
+      * Define work field Dealing: MM
+     C                     MOVEL*BLANK    WUDLMM  1
+      * Define work field SAR number field
+     C                     MOVEL*BLANK    WUSARN  6
+      * Define work field Access Pgm Return Code
+     C                     MOVEL*BLANK    WUAPRC  7
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD9131E#
+     C                     OPEN SDEXPML1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * Start of change S01459.
+      * SD9131E Precompiler - Exposure Management Data  *
+      * Remove Last Amend Box and Creation Parameters functions.
+      * End of change S01459.
+      * Copyright Statement 1988 - Standard Functions  * copyright
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * get trading indicators - MIDAS Modules  *
+     C                     EXSR SARVGN
+      * Start of change CDL002.
+     C                     MOVEL'N'       WUY9ST           FX Netting swit
+     C                     MOVEL'CDL002'  WUSARN           SAR number fiel
+     C                     MOVEL*BLANK    WUAPRC           Access Pgm Retu
+      * SAR switched on check - Standard Functions  *
+     C                     CALL 'AOSARDR0'             90  SAR switched on
+     C           WUAPRC    PARM WUAPRC    WQ0001  7        Access Pgm Retu
+     C                     PARM '*VERIFY' WQ0002  7        Option for ACCO
+     C           WUSARN    PARM WUSARN    WQ0003  6        SAR number fiel
+     C                     PARM *BLANK    WQ0004 76        Access obj dumm
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOSARDR0'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Check return code.
+      * CASE: WRK.Access Pgm Return Code is AP No Record Found
+     C           WUAPRC    IFEQ '*NRF'                     *IF
+     C                     MOVEL'N'       WUY9ST           FX Netting swit
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'Y'       WUY9ST           FX Netting swit
+     C                     END                             *FI
+      * End of change CDL002.
+      * Start of change CTI002.                                           CTI002
+     C                     MOVEL'N'       WUCTI2           CTI002 active ?CTI002
+     C                     MOVEL'CTI002'  WUSARN           SAR number fielCTI002
+     C                     MOVEL*BLANK    WUAPRC           Access Pgm RetuCTI002
+      * SAR switched on check - Standard Functions  *                     CTI002
+     C                     CALL 'AOSARDR0'             90  SAR switched onCTI002
+     C           WUAPRC    PARM WUAPRC    WQ0174  7        Access Pgm RetuCTI002
+     C                     PARM '*VERIFY' WQ0175  7        Option for ACCOCTI002
+     C           WUSARN    PARM WUSARN    WQ0176  6        SAR number fielCTI002
+     C                     PARM *BLANK    WQ0177 76        Access obj dummCTI002
+      *                                                                   CTI002
+     C           *IN90     IFEQ '1'                                       CTI002
+      * Call to program ended in error                                    CTI002
+     C                     MOVEL'Y2U0032' W0RTN                           CTI002
+     C                     MOVEL*BLANKS   W0CLPG 10                       CTI002
+     C                     MOVEL'AOSARDR0'W0CLPG                          CTI002
+      * Send message '*Error occured on CALL...'                          CTI002
+     C                     MOVEL'Y2U0032' ZAMSID                          CTI002
+     C                     MOVEL'Y2USRMSG'ZAMSGF                          CTI002
+     C                     MOVELW0CLPG    ZAMSDA           Message data   CTI002
+     C                     EXSR ZASNMS                                    CTI002
+     C                     END                                            CTI002
+      *                                                                   CTI002
+      * Check return code.                                                CTI002
+      * CASE: WRK.Access Pgm Return Code is AP No Record Found            CTI002
+     C           WUAPRC    IFEQ '*NRF'                     *IF            CTI002
+     C                     MOVEL'N'       WUCTI2           CTI002 inactiveCTI002
+     C                     ELSE                                           CTI002
+      * CASE: *OTHERWISE                                                  CTI002
+     C                     MOVEL'Y'       WUCTI2           CTI002 active  CTI002
+     C                     END                             *IF            CTI002
+      * End of change CTI002.                                             CTI002
+      *                                                                                     MD030956
+      ** Check if CTI007 BFM-TI Exposure Management is enabled                              MD030956
+      *                                                                                     MD030956
+     C                     MOVEL'N'       CTI007  1                                         MD030956
+     C                     MOVEL'CTI007'  WUSARN                                            MD030956
+     C                     MOVEL*BLANK    WUAPRC                                            MD030956
+      *                                                                                     MD030956
+     C                     CALL 'AOSARDR0'             90                                   MD030956
+     C           WUAPRC    PARM WUAPRC    WQ0174                                            MD030956
+     C                     PARM '*VERIFY' WQ0175                                            MD030956
+     C           WUSARN    PARM WUSARN    WQ0176                                            MD030956
+     C                     PARM *BLANK    WQ0177                                            MD030956
+      *                                                                                     MD030956
+     C           *IN90     IFEQ '1'                                                         MD030956
+     C                     MOVEL'Y2U0032' W0RTN                                             MD030956
+     C                     MOVEL*BLANKS   W0CLPG                                            MD030956
+     C                     MOVEL'AOSARDR0'W0CLPG                                            MD030956
+     C                     MOVEL'Y2U0032' ZAMSID                                            MD030956
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                            MD030956
+     C                     MOVELW0CLPG    ZAMSDA                                            MD030956
+     C                     EXSR ZASNMS                                                      MD030956
+     C                     END                                                              MD030956
+      *                                                                                     MD030956
+     C           WUAPRC    IFEQ '*NRF'                                                      MD030956
+     C                     MOVEL'N'       CTI007                                            MD030956
+     C                     ELSE                                                             MD030956
+     C                     MOVEL'Y'       CTI007                                            MD030956
+     C                     END                                                              MD030956
+      *                                                                                     MD030956
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * Window processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SBRVGN
+      * Data Structure - Exp Mgmt - Exposure Management Data  *
+      * 00/COPY Member SD9131EFPG - Exposure Management Data  *
+      * 00/COPY Member SD9131EEPG - Exposure Management Data  *
+      * 00/COPY Member SD9131EIPG - Exposure Management Data  *
+      * 00/COPY Memebr SD9131ECPG - Exposure Management Data  *
+     C/COPY WNCPYSRC,SD9131ECPG
+      * 00/COPY Member SD9131EOPG - Exposure Management Data  *
+     C                     END                             *FI
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9131EPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9131EPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9131EPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O/COPY WNCPYSRC,SD9131EOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

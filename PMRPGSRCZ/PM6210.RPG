@@ -1,0 +1,748 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Build Forward Positions')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portfolio Management Module                          *
+      *                                                               *
+      *  PM6210 - Build Forward Positions                             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Function : This program creates forward security trade       *
+      *   (COB)     positions.                                        *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CPM005             Date 26JUN96               *
+      *                 S01124             Date 16JUN94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPM005 - Private Banking Phase 2                             *
+      *           Focus Group Changes upgraded to DBA                 *
+      *  S01124 - PBFG/3 - DISPLAY OF UNREALISED P&L ON FORWARD SE    *
+      *                    TRADE                                      *
+      *                                                               *
+      *****************************************************************
+     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*BJ*************************************************   CPM005
+     FPMFTACL1IF  E           K        DISK         KINFSR *PSSR
+      *      PREFIX FK
+     F***PMFPSDPPO***E                    DISK         KINFSR *PSSR       CPM005
+     FPMFPSDPDO   E                    DISK         KINFSR *PSSR          CPM005
+      *      PREFIX FL
+     FPM6210AUO   E                    PRINTER      KINFSR *PSSR
+      *****************************************************************
+     E                    CPY@    1   1 80
+      *****************************************************************
+      *
+      **  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     ILDA         DS                            256
+     I***********                           132 141 DBFILE                CPM005
+     I                                      134 141 DBFILE                CPM005
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *                                                                   CPM005
+     ISDBANK    E DSSDBANKPD                                              CPM005
+      ** Data Structure for Bank ICD Access Pgm                           CPM005
+      *                                                                   CPM005
+     ISDPORT    E DSSDPORTPD                                              CPM005
+      **  Midas SD Portfolio Management ICD details                       CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 CPM005
+      ** Short Data Structure for Access Programs                         CPM005
+      *
+      **  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #MAIN    - MAIN PROCESSING                                       *
+      * #FOPO    - CALCULATE FORWARD POSITION                            *
+      * #OUFO    - OUTPUT FORWARD POSITIONS DETAILS                      *
+      * #TERM    - TERMINATION PROCESSING                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C                     EXSR #INIT
+      *
+     C                     EXSR #MAIN
+      *
+     C                     EXSR #TERM
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPGM    - DATABASE ERROR                                        *
+      * WWBASE   - DATABASE ERROR                                        *
+      * WWFILE   - DATABASE ERROR                                        *
+      * WWKEY1   - DATABASE ERROR                                        *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+      *
+      **  PREPARE LDA:
+     C           *NAMVAR   DEFN           LDA
+     C***********          MOVEL'PM6210'  WWPGM  10                       CPM005
+     C                     MOVEL'PM6210'  DBPGM                           CPM005
+      *
+      **  GET INSTALLATION CONTROL DATA RECORD 1: BANK DETAILS
+     C************LOVAL    SETLLSDBANKL1                                  CPM005
+     C***********          READ SDBANKL1                 71               CPM005
+     C                     CALL 'AOBANKR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*FIRST'  WOPTN   7                       CPM005
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN71     IFEQ *ON                        *B1            CPM005
+     C***********          Z-ADD1         WWBASE  30       ***************CPM005
+     C***********          MOVEL'SDBANKL1'WWFILE 10        * DB ERROR 01 *CPM005
+     C***********          MOVEL*BLANKS   WWKEY1 28        ***************CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                        ***************CPM005
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *CPM005
+     C                     MOVE 'SDBANKPD'DBFILE           ***************CPM005
+     C                     MOVE *BLANKS   DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ELSE
+     C** TEST DATE FORMAT FOR SR/ZDATE2
+     C           BJDFIN    IFEQ 'M'                        **B2
+     C                     MOVE *ON       *IN98
+     C                     ENDIF                           **E2
+     C                     ENDIF                           *E1
+      *                                                                   CPM005
+      **  ACCESS PORTFOLIO MANAGEMENT ICD                                 CPM005
+     C                     CALL 'AOPORTR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*FIRST'  WOPTN                           CPM005
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                        ***************CPM005
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *CPM005
+     C                     MOVE 'SDPORTPD'DBFILE           ***************CPM005
+     C                     MOVE *BLANKS   DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #FOPO    - CALCULATE FORWARD POSITION                            *
+      * #OUFO    - OUTPUT FORWARD POSITIONS DETAILS                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCOUN   - NUMBER OF RECORDS OUTPUT IN PMFPSDPP                  *
+      * WWCNUM   - SAVED CUSTOMER FOR RUPTURE                            *
+      * WWPTFR   - SAVED PORTFOLIO REFERENCE FOR RUPTURE                 *
+      * WWTDSS   - SAVED SECURITY FOR RUPTURE                            *
+      * WWVDAT   - SAVED VALUE DATE FOR RUPTURE                          *
+      * WWBONO   - BOUGHT NOMINAL                                        *
+      * WWBOAP   - BOUGHT AP NUMERATOR                                   *
+      * WWBOFX   - BOUGHT FX P/L                                         *
+      * WWTOCL   - TOTAL CLOSED P/L                                      *
+      * WWSONO   - SOLD NOMINAL                                          *
+      * WWSOAP   - SOLD AP NUMERATOR                                     *
+      * WWSOFX   - SOLD FX P/L                                           *
+      * WWNTNO   - NET NOMINAL                                           *
+      * WWNTAP   - NET AP NUMERATOR                                      *
+      *                                                                  *
+      ********************************************************************
+     C           #MAIN     BEGSR
+      *
+      **  RESET FIELD TO COUNT NUMBER OF RECORDS OUTPUT IN PF/PMFTACPP
+     C                     Z-ADD*ZEROS    WWCOUN  50
+      *
+     C           *LOVAL    SETLLPMFTACL1
+     C                     READ PMFTACL1                 71
+      *
+      **  DO WHILE END OF FILE
+     C           *IN71     DOWEQ*OFF                       *BW1
+      *
+      **  SAVE FIELDS FOR RUPTURE
+     C**********           Z-ADDFKCNUM    WWCNUM  60                                          CSD027
+     C                     MOVE FKCNUM    WWCNUM  6                                           CSD027
+     C                     MOVELFKPTFR    WWPTFR  4
+     C                     MOVELFKTDSS    WWTDSS 10
+     C                     Z-ADDFKVDAT    WWVDAT  50
+      *
+      **  RESET WORK FIELDS
+     C                     Z-ADD*ZEROS    WWBONO 150
+     C                     Z-ADD*ZEROS    WWBOAP 150
+     C                     Z-ADD*ZEROS    WWBOFX 150
+     C                     Z-ADD*ZEROS    WWTOCL 150
+     C                     Z-ADD*ZEROS    WWSONO 150
+     C                     Z-ADD*ZEROS    WWSOAP 150
+     C                     Z-ADD*ZEROS    WWSOFX 150
+     C                     Z-ADD*ZEROS    WWNTNO 150
+     C                     Z-ADD*ZEROS    WWNTAP 150
+      *
+      **  DO WHILE NOT END OF FILE
+      **     AND SAME CUSTOMER
+      **     AND SAME PORTFOLIO REFERENCE
+      **     AND SAME SECURITY SHORT NAME
+      **     AND SAME POSITION DATE
+     C           *IN71     DOWEQ*OFF                       **BW2
+     C           FKCNUM    ANDEQWWCNUM
+     C           FKPTFR    ANDEQWWPTFR
+     C           FKTDSS    ANDEQWWTDSS
+     C           FKVDAT    ANDEQWWVDAT
+      *
+     C                     EXSR #FOPO
+      *
+     C                     READ PMFTACL1                 71
+      *
+     C                     ENDDO                           **EW2
+      *
+     C                     EXSR #OUFO
+      *
+     C                     ENDDO                           *EW1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #FOPO    - CALCULATE FORWARD POSITION                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBONO   - BOUGHT NOMINAL                                        *
+      * WWBOAP   - BOUGHT AP NUMERATOR                                   *
+      * WWBOFX   - BOUGHT FX P/L                                         *
+      * WWNTNO   - NET NOMINAL                                           *
+      * WWFLD2   - WORK FIELD TO CALCULATE 'TOTAL CLOSED P/L'            *
+      * WWANNO   - NET NOMINAL IN ABSOLUTE VALUE      (WWNTNO)           *
+      * WWANOM   - ACTION NOMINAL IN ABSOLUTE VALUE   (FKNOML)           *
+      * WWNTAP   - NET AP NUMERATOR                                      *
+      * WWATAP   - NET AP NUMERATOR IN ABSOLUTE VALUE (WWNTAP)           *
+      * WWFLD3   - WORK FIELD TO CALCULATE 'AP NUMERATOR'                *
+      * WWTOCL   - TOTAL CLOSED P/L                                      *
+      * WWSONO   - SOLD NOMINAL                                          *
+      * WWSOAP   - SOLD AP NUMERATOR                                     *
+      * WWSOFX   - SOLD FX P/L                                           *
+      * WWNVAP   - NEGATIVE VALUE OF ACTION NUMERATOR (FKAPNU)           *
+      *                                                                  *
+      ********************************************************************
+     C           #FOPO     BEGSR
+      *
+      ** CALCULATE NEW NOMINAL POSITIONS FOR A TRADE SALE
+     C           FKTDTP    IFEQ 'TS'                       B1
+      *
+     C                     ADD  FKNOML    WWBONO
+     C                     ADD  FKAPNU    WWBOAP
+     C                     ADD  FKFXPL    WWBOFX
+      *
+      ** CALCULATE THE 'CLOSED PROFIT' DUE TO THE TRADE SALE AS PER
+      ** THE TABLE BELOW:
+      *  --------------------------------------------------
+      *  I NET POSITION I ABS ACTION NOM  I CLOSED PROFIT I
+      *  I   *GE 0      I *LE ABS NET NOM I  CALCULATION  I
+      *  I--------------I-----------------I---------------I
+      *  I      Y       I     Y/N         I      0        I
+      *  I      N       I      Y          I CALCULATION 1 I
+      *  I      N       I      N          I CALCULATION 2 I
+      *  --------------------------------------------------
+      *
+      ** LINE 1 OF ABOVE TABLE:
+     C           WWNTNO    IFGE *ZEROS                     B2
+     C                     Z-ADD*ZEROS    WWFLD2 150
+      *
+     C                     ELSE                            X2
+      *
+      ** DETERMINE ABSOLUTE NET NOMINAL POSITION  AND ABSOLUTE NET
+      ** AP NUMERATOTR
+     C           WWNTNO    IFLT 0                          B3
+     C                     Z-SUBWWNTNO    WWANNO 150
+     C                     ELSE                            X3
+     C                     Z-ADDWWNTNO    WWANNO
+     C                     END                             E3
+      *
+     C           WWNTAP    IFLT 0                          B3
+     C                     Z-SUBWWNTAP    WWATAP 150
+     C                     ELSE                            X3
+     C                     Z-ADDWWNTAP    WWATAP
+     C                     END                             E3
+      *
+      ** IF ACTION NOMINAL *LE ABSOLUTE NET NOMINAL CALCULATE CLOSED
+      ** PROFIT AS PER LINE 2 OF TABLE
+     C           FKNOML    IFLE WWANNO                     B3
+      *
+      ** CALCULATE CLOSED P/L USING FOLLOWING EQUATION (CALCULATION 1):
+      **               ACTION NOMINAL X ABS NET AP NUMERATOR
+      ** CLOSED P/L =  -------------------------------------- - ACTION AP NUMER.
+      **                     ABS NET NOMINAL
+      *
+     C           FKNOML    MULT WWANNO    WWFLD3 150
+     C           WWFLD3    DIV  WWANNO    WWFLD3
+     C           WWFLD3    SUB  FKAPNU    WWFLD2
+      *
+      ** IF ACTION NOMINAL *GT ABSOLUET NET NOMINAL CALCULATE CLOSED
+      ** PROFIT AS PER LINE 3 OF TABLE
+     C                     ELSE                            X3
+      *
+      ** CALCULATE CLOSED P/L USING FOLLOWING EQUATION (CALCULATION 2):
+      **                                  ACTION NOMINAL X ABS NET AP NUMERATOR
+      ** CLOSED P/L = ABS NET AP NUMER -  -------------------------------------
+      **                                              ABS NET NOMINAL
+     C           WWANNO    MULT FKAPNU    WWFLD3
+     C           WWFLD3    DIV  FKNOML    WWFLD3
+     C           WWATAP    SUB  WWFLD3    WWFLD2
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+     C                     ADD  WWFLD2    WWTOCL
+      *
+     C                     ENDIF                           E1
+      *
+      ** CALCULATE NEW NOMINAL POSITIONS FOR A TRADE PURCHASE
+     C           FKTDTP    IFEQ 'TP'                       B1
+      *
+     C                     SUB  FKNOML    WWSONO
+     C                     SUB  FKAPNU    WWSOAP
+     C                     ADD  FKFXPL    WWSOFX
+      *
+      ** CALCULATE THE 'CLOSED PROFIT' DUE TO THE TRADE PURCHASE AS
+      ** PER THE TABLE BELOW:
+      *  --------------------------------------------------
+      *  I NET POSITION I ABS ACTION NOM  I CLOSED PROFIT I
+      *  I   *LE 0      I *LE ABS NET NOM I  CALCULATION  I
+      *  I--------------I-----------------I---------------I
+      *  I      Y       I     Y/N         I      0        I
+      *  I      N       I      Y          I CALCULATION 1 I
+      *  I      N       I      N          I CALCULATION 2 I
+      *  --------------------------------------------------
+      *
+      ** CALCULATE CLOSED P/L AS PER LINE 1 OF ABOVE TABLE:
+     C           WWNTNO    IFLE *ZERO                      B2
+      *
+     C                     Z-ADD*ZEROS    WWFLD2
+      *
+     C                     ELSE                            X2
+      *
+      ** DETERMINE ABSOLUTE NET NOMINAL POSITION AND ABSOLUTE NET
+      ** AP NUMERATOR
+     C           WWNTNO    IFLT 0                          B3
+     C                     Z-SUBWWNTNO    WWANNO 150
+     C                     ELSE                            X3
+     C                     Z-ADDWWNTNO    WWANNO
+     C                     END                             E3
+      *
+     C           WWNTAP    IFLT 0                          B3
+     C                     Z-SUBWWNTAP    WWATAP 150
+     C                     ELSE                            X3
+     C                     Z-ADDWWNTAP    WWATAP
+     C                     END                             E3
+      *
+      ** IF ACTION NOMINAL *LE ABSOLUTE NET NOMINAL CALCULATE CLOSED
+      ** PROFIT AS PER LINE 2 OF TABLE
+     C           FKNOML    IFLE WWANNO                     B3
+      *
+      ** CALCULATE CLOSED P/L USING FOLLOWING EQUATION (CALCULATION 1):
+      **                                  ACTION NOMINAL X NET AP NUMERATOR
+      ** CLOSED P/L = ACTION AP NUMER -  ----------------------------------
+      **                                            NET NOMINAL
+     C           FKNOML    MULT WWNTAP    WWFLD3
+     C           WWFLD3    DIV  WWNTNO    WWFLD3
+     C           FKAPNU    SUB  WWFLD3    WWFLD2
+     C                     ELSE                            X3
+      *
+      ** IF ABS ACTION NOMINAL NOT *LE ABSOLUTE NET NOMINAL CALCULATE CLOSED
+      ** PROFIT AS PER LINE 3 OF TABLE. CALCULATION 2 AS BELOW:
+      **               NET NOMINAL X ACTION AP NUMERATOR
+      ** CLOSED P/L =  --------------------------------- - NET AP NUMERATOR
+      **                     ACTION NOMINAL
+      *
+     C           WWNTNO    MULT FKAPNU    WWFLD3
+     C           WWFLD3    DIV  FKNOML    WWFLD3
+     C           WWFLD3    SUB  WWNTAP    WWFLD2
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+     C                     ADD  WWFLD2    WWTOCL
+      *
+     C                     ENDIF                           E1
+      *
+      **  CALCULATE NEW 'NET AP NUMERATOR' AS PER TABLE BELOW:
+      *  -----------------------------------------------------------------
+      *  I NET NOMINAL I ACTION I ABSOLUTE NET NOMINAL I CALCULATION OF  I
+      *  I   POSITION  I  TYPE  I *GE ACTION NOMINAL   I AP NUMERATOR    I
+      *  I-------------I--------I----------------------I-----------------I
+      *  I      0      I   TP   I        N/A           I - ACTION AP NUM I
+      *  I      0      I   TS   I        N/A           I ACTION AP NUMER I
+      *  I      -      I   TP   I        N/A           I CALCULATION 1   I
+      *  I      +      I   TS   I        N/A           I CALCULATION 2   I
+      *  I      +      I   TP   I         Y            I CALCULATION 3   I
+      *  I      +      I   TP   I         N            I CALCULATION 4   I
+      *  I      -      I   TS   I         Y            I CALCULATION 3   I
+      *  I      -      I   TP   I         N            I CALCULATION 5   I
+      *  -----------------------------------------------------------------
+      *
+      ** CALCULATE 'NEW NET AP NUMERATOR AS PER LINES 1 & 2 OF ABOVE TABLE
+     C           WWNTNO    IFEQ *ZERO                      B1
+      *
+     C           FKTDTP    IFEQ 'TP'                       B2
+     C                     Z-SUBFKAPNU    WWNTAP
+     C                     ELSE                            X2
+     C                     Z-ADDFKAPNU    WWNTAP
+     C                     ENDIF                           E2
+      *
+     C                     ENDIF                           E1
+      *
+      ** DETERMINE ABSOLUTE NET NOMINAL POSITION
+     C           WWNTNO    IFLT 0                          B1
+     C                     Z-SUBWWNTNO    WWANNO 150
+     C                     ELSE                            X1
+     C                     Z-ADDWWNTNO    WWANNO
+     C                     END                             E1
+      *
+      ** IF NET POSITION IS SHORT CALCULATE 'NEW NET AP NUMERATOR AS FOLLOWS:
+     C           WWNTNO    IFLT *ZEROS                     *B1
+      *
+      ** CLACULATE AS PER LINE 3 OF TABLE. CALCULATION 1 AS BELOW:
+      ** NEW NET AP NUMER = NET AP NUMERATOR - ACTION AP NUMERATOR
+     C           FKTDTP    IFEQ 'TP'                       B2
+     C           WWNTAP    SUB  FKAPNU    WWNTAP
+     C                     ELSE                            X2
+      *
+      ** IF ABS NET NOMINAL *GE ACTION NOMINAL CALCULATE AS PER LINE 7
+      ** OF ABOVE TABLE. CALCULATION 3 AS BELOW:
+      **                    ABS NET NOMINAL - ACTION NOMINAL
+      ** NEW NET AP NUMER = -------------------------------- X NET AP NUMER
+      **                              ABS NET NOMINAL
+     C           WWANNO    IFGE FKNOML                     B3
+     C           WWANNO    SUB  FKNOML    WWFLD3
+     C           WWFLD3    MULT WWNTAP    WWFLD3
+     C           WWFLD3    DIV  WWANNO    WWNTAP
+      *
+      ** IF ABS NET NOMINAL *LT ACTION NOMINAL CALCULATE AS PER LINE 8
+      ** OF ABOVE TABLE. CALCULATION 5 AS BELOW:
+      **                    ACTION NOMINAL - ABS NET NOMINAL
+      ** NEW NET AP NUMER = -------------------------------- X ACTION AP NUMER
+      **                              ACTION NOMINAL
+     C                     ELSE                            X3
+     C           FKNOML    SUB  WWANNO    WWFLD3
+     C           WWFLD3    MULT FKAPNU    WWFLD3
+     C           WWFLD3    DIV  FKNOML    WWNTAP
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+     C                     ENDIF                           E1
+      *
+      ** IF NET POSITION IS LONG CALCULATE 'NEW NET AP NUMERATOR AS FOLLOWS:
+     C           WWNTNO    IFGT *ZEROS                     B1
+      *
+      ** CLACULATE AS PER LINE 4 OF TABLE. CALCULATION 2 AS BELOW:
+      ** NEW NET AP NUMER = NET AP NUMERATOR + ACTION AP NUMERATOR
+     C           FKTDTP    IFEQ 'TS'                       B2
+     C           WWNTAP    ADD  FKAPNU    WWNTAP
+     C                     ELSE                            X2
+      *
+      ** IF ABS NET NOMINAL *GE ACTION NOMINAL CALCULATE AS PER LINE 5
+      ** OF ABOVE TABLE. CALCULATION 3 AS BELOW:
+      **                    ABS NET NOMINAL - ACTION NOMINAL
+      ** NEW NET AP NUMER = -------------------------------- X NET AP NUMER
+      **                              ABS NET NOMINAL
+     C           WWANNO    IFGE FKNOML                     B3
+     C           WWANNO    SUB  FKNOML    WWFLD3
+     C           WWFLD3    MULT WWNTAP    WWFLD3
+     C           WWFLD3    DIV  WWANNO    WWNTAP
+      *
+      ** IF ABS NET NOMINAL *LT ACTION NOMINAL CALCULATE AS PER LINE 6
+      ** OF ABOVE TABLE. CALCULATION 4 AS BELOW:
+      **                    ACTION NOMINAL - ABS NET NOMINAL
+      ** NEW NET AP NUMER = -------------------------------- X ACTION AP NUMER
+      **                              ACTION NOMINAL
+     C                     ELSE                            X3
+     C           FKNOML    SUB  WWANNO    WWFLD3
+     C                     Z-SUBFKAPNU    WWNVAP 150
+     C           WWFLD3    MULT WWNVAP    WWFLD3
+     C           WWFLD3    DIV  FKNOML    WWNTAP
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+     C                     ENDIF                           E1
+      *
+      ** CALCULATE NEW NET NOMINAL POSITION
+     C           FKTDTP    IFEQ 'TS'                       B1
+     C           WWNTNO    ADD  FKNOML    WWNTNO
+     C                     ELSE                            X1
+     C           WWNTNO    SUB  FKNOML    WWNTNO
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #OUFO    - OUTPUT FORWARD POSITIONS DETAILS                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCNUM   - SAVED CUSTOMER FOR RUPTURE                            *
+      * WWPTFR   - SAVED PORTFOLIO REFERENCE FOR RUPTURE                 *
+      * WWTDSS   - SAVED SECURITY FOR RUPTURE                            *
+      * WWVDAT   - SAVED VALUE DATE FOR RUPTURE                          *
+      * WWBONO   - BOUGHT NOMINAL                                        *
+      * WWSONO   - SOLD NOMINAL                                          *
+      * WWAONO   - SOLD NOMINAL IN ABSOLUTE VALUE     (WWSONO)           *
+      * WWTOCL   - TOTAL CLOSED P/L                                      *
+      * WWBOAP   - BOUGHT AP NUMERATOR                                   *
+      * WWBOFX   - BOUGHT FX P/L                                         *
+      * WWNTNO   - NET NOMINAL                                           *
+      * WWNTAP   - NET AP NUMERATOR                                      *
+      * WWCOUN   - NUMBER OF RECORDS OUTPUT IN PMFPSDPP                  *
+      * WWSOAP   - SOLD AP NUMERATOR                                     *
+      * WWSOFX   - SOLD FX P/L                                           *
+      *                                                                  *
+      ********************************************************************
+     C           #OUFO     BEGSR
+      *
+     C**********           Z-ADDWWCNUM    FLCNUM                                              CSD027
+     C                     MOVE WWCNUM    FLCNUM                                              CSD027
+     C                     MOVELWWPTFR    FLPTFR
+     C                     MOVELWWTDSS    FLCSSN
+     C                     Z-ADDWWVDAT    FLPDAT
+      *
+      ** IF BOUGHT NOMINAL *NE 0 OUTPUT A BOUGHT NOMINAL FORWARD POSITION
+     C           WWBONO    IFNE *ZEROS                     B1
+      *                                                                   CPM005
+      ** IF BANK PORTFOLIOS SUPPORTED                                     CPM005
+     C           FCPORS    IFEQ 'B'                                       CPM005
+     C                     MOVEL'S'       FLBSIN                          CPM005
+     C                     Z-SUBWWBONO    FLNOML                          CPM005
+      *                                                                   CPM005
+     C                     Z-ADDWWSONO    WWAONO 150                      CPM005
+     C*                                                                   CPM005
+     C           WWBONO    IFLE WWAONO                     B2             CPM005
+     C           WWBONO    ADD  WWSONO    FLONOM                          CPM005
+     C                     Z-SUBFLONOM    FLONOM                          CPM005
+     C                     Z-ADD*ZEROS    FLCLPL                          CPM005
+     C                     ELSE                            X2             CPM005
+     C                     Z-ADD*ZEROS    FLONOM                          CPM005
+     C                     Z-SUBWWTOCL    FLCLPL                          CPM005
+     C                     ENDIF                           E2             CPM005
+      *                                                                   CPM005
+     C                     Z-SUBWWBOAP    FLAPNU                          CPM005
+     C                     Z-SUBWWBOFX    FLFXPL                          CPM005
+      *                                                                   CPM005
+     C                     Z-SUBWWNTNO    WWNTNO                          CPM005
+      *                                                                   CPM005
+     C           WWNTNO    IFLE *ZEROS                     B2             CPM005
+     C                     Z-SUBWWNTAP    FLNAPU                          CPM005
+     C                     ELSE                            X2             CPM005
+     C                     Z-ADD*ZEROS    FLNAPU                          CPM005
+     C                     ENDIF                           E2             CPM005
+      *                                                                   CPM005
+     C                     ELSE                                           CPM005
+      *                                                                   CPM005
+     C                     MOVEL'B'       FLBSIN
+     C                     Z-ADDWWBONO    FLNOML
+      *
+     C                     Z-SUBWWSONO    WWAONO 150
+     C*
+     C           WWBONO    IFGT WWAONO                     B2
+     C           WWBONO    ADD  WWSONO    FLONOM
+     C                     Z-ADD*ZEROS    FLCLPL
+     C                     ELSE                            X2
+     C                     Z-ADD*ZEROS    FLONOM
+     C                     Z-ADDWWTOCL    FLCLPL
+     C                     ENDIF                           E2
+      *
+     C                     Z-ADDWWBOAP    FLAPNU
+     C                     Z-ADDWWBOFX    FLFXPL
+      *
+     C           WWNTNO    IFGT *ZEROS                     B2
+     C                     Z-ADDWWNTAP    FLNAPU
+     C                     ELSE                            X2
+     C                     Z-ADD*ZEROS    FLNAPU
+     C                     ENDIF                           E2
+     C                     ENDIF                                          CPM005
+      *
+     C                     ADD  1         WWCOUN
+     C                     WRITEPMFPSDD0
+      *
+     C                     ENDIF                           *E1
+      *
+      ** IF SOLD NOMINAL *NE 0 OUTPUT A SOLD NOMINAL FORWARD POSITION
+     C           WWSONO    IFNE *ZEROS                     *B1
+      *                                                                   CPM005
+      ** IF BANK PORTFOLIOS SUPPORTED                                     CPM005
+     C           FCPORS    IFEQ 'B'                                       CPM005
+     C                     MOVEL'B'       FLBSIN                          CPM005
+     C                     Z-SUBWWSONO    FLNOML                          CPM005
+      *                                                                   CPM005
+     C                     Z-ADDWWSONO    WWAONO 150                      CPM005
+      *                                                                   CPM005
+     C           WWAONO    IFLE WWBONO                     B2             CPM005
+     C           WWSONO    ADD  WWBONO    FLONOM                          CPM005
+     C                     Z-SUBFLONOM    FLONOM                          CPM005
+     C                     ELSE                            X2             CPM005
+     C                     Z-ADD*ZEROS    FLONOM                          CPM005
+     C                     ENDIF                           E2             CPM005
+      *                                                                   CPM005
+     C                     Z-SUBWWSOAP    FLAPNU                          CPM005
+      *                                                                   CPM005
+     C           WWAONO    IFLT WWBONO                     B2             CPM005
+     C                     Z-ADD*ZEROS    FLCLPL                          CPM005
+     C                     ELSE                            X2             CPM005
+     C                     Z-SUBWWTOCL    FLCLPL                          CPM005
+     C                     ENDIF                           E2             CPM005
+      *                                                                   CPM005
+     C                     Z-SUBWWSOFX    FLFXPL                          CPM005
+      *                                                                   CPM005
+     C                     Z-SUBWWNTNO    WWNTNO                          CPM005
+      *                                                                   CPM005
+     C           WWNTNO    IFGE *ZEROS                     B2             CPM005
+     C                     Z-SUBWWNTAP    FLNAPU                          CPM005
+     C                     ELSE                            X2             CPM005
+     C                     Z-ADD*ZEROS    FLNAPU                          CPM005
+     C                     ENDIF                           E2             CPM005
+      *                                                                   CPM005
+     C                     ELSE                                           CPM005
+      *                                                                   CPM005
+     C                     MOVEL'S'       FLBSIN
+     C                     Z-ADDWWSONO    FLNOML
+      *
+     C                     Z-SUBWWSONO    WWAONO 150
+      *
+     C           WWAONO    IFGT WWBONO                     B2
+     C           WWSONO    ADD  WWBONO    FLONOM
+     C                     ELSE                            X2
+     C                     Z-ADD*ZEROS    FLONOM
+     C                     ENDIF                           E2
+      *
+     C                     Z-ADDWWSOAP    FLAPNU
+      *
+     C           WWAONO    IFGE WWBONO                     B2
+     C                     Z-ADD*ZEROS    FLCLPL
+     C                     ELSE                            X2
+     C                     Z-ADDWWTOCL    FLCLPL
+     C                     ENDIF                           E2
+      *
+     C                     Z-ADDWWSOFX    FLFXPL
+      *
+     C           WWNTNO    IFLT *ZEROS                     B2
+     C                     Z-ADDWWNTAP    FLNAPU
+     C                     ELSE                            X2
+     C                     Z-ADD*ZEROS    FLNAPU
+     C                     ENDIF                           E2
+     C                     ENDIF                                          CPM005
+      *
+     C                     ADD  1         WWCOUN
+     C                     WRITEPMFPSDD0
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #TERM    - TERMINATION PROCESSING                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCOUN   - NUMBER OF RECORDS OUTPUT IN PMFPSDPP                  *
+      *                                                                  *
+      ********************************************************************
+     C           #TERM     BEGSR
+      *
+     C                     Z-ADDWWCOUN    RRNORE
+     C                     WRITEPM6210PP
+     C                     MOVE *ON       *INLR
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFILE   - DATABASE ERROR                                        *
+      * WWKEY1   - DATABASE ERROR                                        *
+      * WWBASE   - DATABASE ERROR                                        *
+      * WWPGM    - DATABASE ERROR                                        *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C************LOCK     IN   LDA                                       CPM005
+     C***********          MOVELWWFILE    DBFILE                          CPM005
+     C***********          MOVELWWKEY1    DBKEY                           CPM005
+     C***********          Z-ADDWWBASE    DBASE                           CPM005
+     C***********          MOVELWWPGM     DBPGM                           CPM005
+      *
+     C                     WRITEERRORAU
+      *
+     C***********          OUT  LDA                                       CPM005
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+     C**=================================================================
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

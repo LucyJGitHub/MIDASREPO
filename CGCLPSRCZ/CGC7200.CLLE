@@ -1,0 +1,92 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Interest Scale Dealing Extract')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       CGC7200 - Interest Scale Dealing extract (daily)            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&RUN_DATE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&NEXT_DAY) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&QRYSEL)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CNAM)     TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ)     TYPE(*DEC)  LEN(5)
+             DCL        VAR(&MEM)      TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2011')
+ 
+             DCLF       FILE(SDBANKPD)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Set-off Database Error Switches */
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Send a message to say the component is running */
+ 
+             SNDPGMMSG  MSG('CGC7200 - Interest Scale Dealing extract') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Read the SDBANKPD file for the rundate and next day */
+             RCVF
+ 
+             OVRDBF     FILE(HISTSAA) SHARE(*YES)
+ 
+/*  Set the date as alpha and prepare selection string for QRYF */
+             CHGVAR     VAR(&RUN_DATE) VALUE(&BJRDNB)
+             CHGVAR     VAR(&NEXT_DAY) VALUE(&BJDNWD)
+ 
+/*  Exclude interest capitalisation IP records and include */
+/*  interest due records                                   */
+ 
+             CHGVAR     VAR(&QRYSEL) VALUE('(EDAT *GE ' *CAT +
+                          &RUN_DATE *CAT ') *AND (EDAT *LT ' *CAT +
+                          &NEXT_DAY *CAT ') *AND (RTYP = "IP") *AND +
+                          (INTC *NE "Y")')
+ 
+/* Open the query file with a selection */
+             OPNQRYF    FILE((HISTSAA)) QRYSLT(&QRYSEL)
+ 
+/* Call the extract program */
+             CALL       PGM(CG7200)
+ 
+/* Close the query file */
+ 
+             CLOF       OPNID(HISTSAA)
+ 
+/* Database error handling */
+ 
+             IF   COND(%SWITCH(XXXXXX11))   THEN(DO)
+                RTVDTAARA   DTAARA(LDA (134 50))   RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                    TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program CGC7200 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/*  Logical end of the program */
+ END:        ENDPGM
+ 

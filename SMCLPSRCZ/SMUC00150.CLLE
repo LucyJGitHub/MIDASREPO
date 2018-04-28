@@ -1,0 +1,80 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Upgrade local industry codes')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00150 - Upgrade EXTRNS for EMTFEXPD                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*                                                                   */
+/*       Last Amend No. MD033690           Date 31Mar15              */
+/*       Prev Amend No. CTI007             Date 13Mar15              */
+/*                      xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD033690 - Use SCRUNSQL command instead of RUNSQL.          */
+/*       CTI007 - New Upgarde program for CTI007.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                            2009')
+ 
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Retrieve library prefix. */
+             IF         COND(&MODE *EQ '*UPG') THEN(DO)
+                RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PFX)
+                CHGVAR     VAR(&LIB) VALUE('#.' *TCAT &PFX *TCAT 'DMLIB')
+             ENDDO
+             IF         COND(&MODE *EQ '*MIG') THEN(DO)
+                CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                             'BrgOldZonePrefix' &SVAL1 ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ')
+                IF         COND(%SST(&SVAL1 1 4) *EQ '*NRF' *OR &RTNCDE +
+                             *NE ' ') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                CHGVAR     VAR(&PFX) VALUE(%SST(&SVAL1 1 2))
+                CHGVAR     VAR(&LIB) VALUE(&PFX *TCAT 'DMLIB')
+             ENDDO
+ 
+/* Copy old version of file to new using *NOCHK. */
+             CPYF       FROMFILE(&LIB/EMTFEXPD) TOFILE(EMTFEXPD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                CLRPFM     FILE(EXTFEXPD)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/* Update moved field and set old field to 0. */
+/**********  RUNSQL     SQL('update emtfexpd set extrns = qqtrns') +
+                          COMMIT(*NONE)                                            */ /* MD033690 */
+             SCRUNSQL   SQL('UPDATE EMTFEXPD SET EXTRNS = QQTRNS')                    /* MD033690 */
+/**********  RUNSQL     SQL('update emtfexpd set qqtrns = 0') +
+                          COMMIT(*NONE)                                            */ /* MD033690 */
+             SCRUNSQL   SQL('UPDATE EMTFEXPD SET QQTRNS = 0')                         /* MD033690 */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

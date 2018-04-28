@@ -1,0 +1,1661 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Update Customer Fiscal Average Prices')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module
+      *                                                               *
+      *  SE2410A - Midas SE Update Customer Fiscal Average Prices     *
+      *                                                               *
+      *  Function: PF/CAPRHD records are read.  For each customer     *
+      *   (COB)    position, the nominal and average fiscal price     *
+      *            from the position record on PF/CPOSND with a       *
+      *            position date immediately prior to the earliest    *
+      *            PF/CAPRHD record for re-actioning are recovered    *
+      *            to be used as starting point for all average       *
+      *            fiscal price calculations.                         *
+      *            As the PF/CAPRHD records are read in, the average  *
+      *            fiscal price on each position date is determined.  *
+      *            This average fiscal price is then put onto the     *
+      *            appropriate position record on PF/CPOSND.          *
+      *            (The average fiscal price numerator for trade and  *
+      *            value date basis is written to PF/CPOSND.)         *
+      *            Once each record on PF/CAPRHD has been dealt with  *
+      *            the record ID is set to 'H'.  PF/CAPRHD is a       *
+      *            permanent file.                                    *
+      *                                                               *
+      *  Called by: SEC0606L - SE Update Customer Fiscal Average      *
+      *                        Prices                                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 17May06               *
+      *  Prev Amend No. 234320             Date 16Jun05               *
+      *                 234262             Date 17Jun05               *
+      *                 233705             Date 31May05               *
+      *                 CGL031  *CREATE    Date 05Jul04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  234320 - Remove 234262 as program read previous position     *
+      *  234262 - Reset nominal as it was before SE2410 before        *
+      *           recalculating the average fiscal price numerators   *
+      *  233705 - Update of RECI on CAPRHD                            *
+      *  CGL031 - Taxation of Savings Income                          *
+      *                                                               *
+      *****************************************************************
+      *
+     FCAPRHA  IF  E                    DISK         KINFDS CAPRDS
+     F                                              KINFSR CAPRSR
+     FCPOSNA  UF  E                    DISK
+     FTABSE   IF  E           K        DISK
+     F            TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     FSE2410AUO   E                    PRINTER
+     FSEDEV   IF  E           K        DISK
+     FTRADS   IF  E           K        DISK
+     FDPTMV   IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FCAPRA   UF  E           K        DISK         KINFDS CAPHDS
+     F                                              KINFSR CAPHSR
+     FCPOSH   UF  E           K        DISK         KINFDS CPOSDSA
+     F                                              KINFSR CPOSSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   21 - Nominal Currency Dec. Places 0                         *
+      *   22 - Nominal Currency Dec. Places 1                         *
+      *   23 - Nominal Currency Dec. Places 2                         *
+      *   24 - Nominal Currency Dec. Places 3                         *
+      *   33 - General Work Indicator                                 *
+      *   77 - A/P Numerator to be written to file is negative (RVRS) *
+      *   79 - End of Customer Depot Positions for this Security      *
+      *   89 - End of Average Price File - STD Report and End         *
+      *   87 - Exception Error on UPDATED File - Prints Status/Audit  *
+      *   29 - Difference Message is printed                          *
+      *90-99 - Used in Z subroutines                                  *
+      *   U7 - Database Error                                         *
+      *   U8 - Database Error                                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  I N D E X   T O   S U B R O U T I N E S                      *
+      *                                                               *
+      *  FIRST  - Accesses ICD Information                            *
+      *  CALL   - Update Average Price Numerator for                  *
+      *           a call on a partly paid security                    *
+      *  TRADE  - Update Average Price Numerator for                  *
+      *           a Trade Action                                      *
+      *  DMVT   - Update Average Price Numerator for                  *
+      *           a Depot Movement                                    *
+      *  PRICEU - Update Average Price Numerator for                  *
+      *           a Price Action                                      *
+      *  CH01   - Change of position or date within a position -      *
+      *           Update position for last Date action                *
+      *  AUDIT  - Outputs Audit Record UDEPPA and Control Report      *
+      *  CAPRSR - Error Handling for CAPRHA                           *
+      *  CAPHSR - Error Handling for CAPRA                            *
+      *  CPOSSR - Error Handling for  POSH                            *
+      *  *PSSR  - Error Handling                                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      ** Tables and Arrays **
+     E/COPY ZSRSRC,ZPOWER8Z1
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *
+     ICAPRHDF
+     I              CSCN                            CACN
+     I              CSBA                            CABR
+     I              CSSC                            CASC
+     I              CSDA                            CADA
+      *
+     ITABLKY      DS
+      *
+      ** TABTB11 TABLE Key Field Data Structure for DB Error
+      *
+     I                                        1  12 TABKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+      *
+     ICPOSDS      DS                            366
+      *
+      ** Customer Positions File Error Exception Data Struct.
+      *
+     I                                     *STATUS  STSPOS
+      *
+     ICAPHDS      DS                            366
+      *
+      ** Customer Average Price Actions Error Exception Data Struct.
+      *
+     I                                     *STATUS  STSCAP
+      *
+     ICAPRDS      DS                            366
+      *
+      ** Cust.Avg. Price Audit File Error Exception Data Struct.
+      *
+     I                                     *STATUS  STSCPR
+     IWPRVKY      DS
+      *
+      ** Previous Position Keys - Customer/Branch/Security
+      *
+     I**********                              1   60WPCST                                    CSD027A
+     I                                        1   6 WPCST                                    CSD027A
+     I                                        7   9 WPBR
+     I                                       10  19 WPSEC
+     I                                        1  19 CPKEYD
+     I                                       20  240WPCSDA
+      *
+     IWCURKY      DS
+      *
+      ** Current Position Keys - Customer/Branch/Security
+      *
+     I**********                              1   60CACN                                     CSD027A
+     I                                        1   6 CACN                                     CSD027A
+     I                                        7   9 CABR
+     I                                       10  19 CASC
+     I                                        1  19 CURKEY
+     I                                       20  240CADA
+      *
+      ** Data Structure for compilation  - Copyright Insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Data Area RUNDAT
+      *
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      **  External DS for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+      *
+      ** Data Structure for module details
+      *
+     ISDMMOD    E DSSDMMODPD
+      *
+      ** Data Structure for Access Objects, Short Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T
+      *================================================================
+      *
+      ** Keylists for chaining to files
+      *
+      ** Customer Depot Positions - Retrieve earlier date  LF/CPOSH
+      *
+     C           CPKEY     KLIST
+     C                     KFLD           WPBR
+     C                     KFLD           WPSEC
+     C                     KFLD           WPCST
+     C                     KFLD           WPCSDA
+      *
+     C           CPKEY2    KLIST
+     C                     KFLD           WPBR
+     C                     KFLD           WPSEC
+     C                     KFLD           WPCST
+      *
+      ** Security Events - LF/SEDEV
+      *
+     C           SECDKY    KLIST
+     C                     KFLD           CASC
+     C                     KFLD           CADA
+     C                     KFLD           SDET
+      *
+      ** Trade Actions   - LF/TRADE
+      *
+     C           TRADKY    KLIST
+     C                     KFLD           CSRF
+      *
+      ** Depot Movements - LF/DPTMV
+      *
+     C           DEPTKY    KLIST
+     C                     KFLD           CASC
+     C                     KFLD           CSRF
+      *
+      ** Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     Z-ADD1         DBASE
+     C                     MOVE 'SE2410A 'DBPGM
+     C                     OUT  LDA
+      *
+      ** In the DataArea RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Access Bank Details, for Title
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     MOVELPOPTN     DBOPTN  7
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *IN89
+     C                     GOTO EAUDIT
+     C                     ENDIF
+      *
+      ** Get module details using access object
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST'  POPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVE 'SDMMODPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *IN89
+     C                     GOTO EAUDIT
+     C                     ENDIF
+      *
+      ** Define and Clear Work Fields
+      *
+     C           *LIKE     DEFN CSCP      WNAPT
+     C           *LIKE     DEFN CSCP      WNAPV
+     C           *LIKE     DEFN CSAT      WAPNMT
+     C           *LIKE     DEFN CSAV      WAPNMV
+     C           *LIKE     DEFN CSNV      WPCSNV
+     C           *LIKE     DEFN CSNT      WPCSNT
+     C           *LIKE     DEFN CSNV      WNCSNV
+     C           *LIKE     DEFN CSNT      WNCSNT
+     C           *LIKE     DEFN CSAP      WCAPT
+     C           *LIKE     DEFN CSAP      WCAPV
+     C           *LIKE     DEFN CSOA      WPCSOA
+     C           *LIKE     DEFN CSSE      WPCSSE
+     C           *LIKE     DEFN CSNS      WPCSNS
+     C           *LIKE     DEFN CSEX      WPCSEX
+     C           *LIKE     DEFN CSCT      WPCSCT
+     C           *LIKE     DEFN CSCV      WPCSCV
+     C           *LIKE     DEFN CSBA      WPCSBR
+     C           *LIKE     DEFN CSCN      WPCSCN
+     C           *LIKE     DEFN CSSC      WPCSSC
+      *
+      ** Loop round processing for each action record read LF/CAPRA
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ** Read action file of Customer Average Price Actions
+      *
+     C                     READ CAPRA                    89
+      *
+      ** If action record deleted Goto End of Loop for next action
+      *
+     C  N89      RECI      CABEQ'*'       ENDLP
+      *
+      ** At End of File
+      *
+     C           *IN89     CABEQ*ON       ENDLP
+      *
+     C                     MOVE RECI      WREC    1
+      *
+      ** Add to counter for each record read for Type A and Type D
+      *
+     C           WREC      IFEQ 'A'
+     C                     ADD  1         WTYPEA  50
+     C                     ENDIF
+     C           WREC      IFEQ 'D'
+     C                     ADD  1         WTYPED  50
+     C                     ENDIF
+      *
+      ** For a reversal, set sort sequence to 0.
+      *
+     C           WREC      IFEQ 'C'
+     C                     MOVE '0'       CSSE
+     C                     ENDIF
+      *
+      ** If portfolio management is present
+      ** or private banking is present
+      *
+     C           BGPFMG    IFEQ 'Y'
+     C           BGN4ST    OREQ 'Y'
+      *
+      ** If action is a portfolio position price change set Record ID
+      ** to 'H' and terminate loop
+      *
+     C           CSOA      IFEQ 'XT'
+     C           CSOA      OREQ 'XV'
+     C                     MOVE 'H'       RECI
+     C                     GOTO ENTAG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Action is for a new position
+      *
+     C           CPKEYD    IFNE CURKEY
+      *
+      ** New position - Update last one if not first time
+      *
+     C           WPSEC     IFNE *BLANKS
+     C                     EXSR CH01
+     C                     ENDIF
+      *
+      ** Fetch new position details
+      *
+     C           CASC      CHAINSECTYDF              33
+     C           *IN33     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECTY'   DBFILE
+     C                     MOVELCACN      DBKEY
+     C                     Z-ADD04        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *IN89
+     C                     GOTO ENDLP
+     C                     ENDIF
+      *
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELNMCY      ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             33
+     C  N33      RECI      COMP '*'                      33
+     C           *IN33     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELTKEY      DBKEY
+     C                     Z-ADD05        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *IN89
+     C                     GOTO ENDLP
+     C                     ENDIF
+      *
+     C                     MOVEA'0000'    *IN,21
+     C           21        ADD  CDP       J       20
+     C                     MOVEA'1'       *IN,J
+      *
+      ** Get latest earlier position from LF/CPOSH
+      *
+     C                     MOVE WCURKY    WPRVKY
+     C                     MOVE CSOA      WPCSOA
+     C                     MOVE CADA      WPCSDA
+      *
+     C           CPKEY     SETLLCPOSH                    77
+     C                     READPCPOSH                    79
+     C           *IN79     IFEQ *ON
+     C           CSBA      ORNE CABR
+     C           CSCN      ORNE CACN
+     C           CSSC      ORNE CASC
+     C                     Z-ADD0         CSNT
+     C                     Z-ADD0         CSNV
+     C                     Z-ADD0         CSAT
+     C                     Z-ADD0         CSAV
+     C                     Z-ADD0         WNCSNT
+     C                     Z-ADD0         WPCSNT
+     C                     Z-ADD0         WNCSNV
+     C                     Z-ADD0         WPCSNV
+     C                     Z-ADD0         WPCSNS
+     C                     Z-ADD0         WPCSEX
+     C                     Z-ADD0         WPCSCT
+     C                     Z-ADD0         WPCSCV
+     C                     ENDIF
+      *
+      ** Save nominal positions into 'PREVIOUS' & 'NEW' value fields
+      *
+     C                     Z-ADDCSNT      WPCSNT
+     C                     Z-ADDCSNV      WPCSNV
+     C                     Z-ADDCSNT      WNCSNT
+     C                     Z-ADDCSNV      WNCSNV
+     C                     Z-ADDCSAT      WAPNMT
+     C                     Z-ADDCSAV      WAPNMV
+     C                     Z-ADDCSNS      WPCSNS
+     C                     Z-ADDCSEX      WPCSEX
+     C                     Z-ADDCSCT      WPCSCT
+     C                     Z-ADDCSCV      WPCSCV
+      *
+      ** Check if a call is due for security
+      *
+     C                     MOVE 'PP'      SDET
+     C           SECDKY    CHAINSEDEV                79
+     C           *IN79     IFNE *ON
+     C                     EXSR CALL
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Else... not Change of Position, but change of date for this position.
+      *
+     C           WPCSDA    IFNE CADA
+      *
+      ** New Position - Update last
+      *
+     C                     EXSR CH01
+     C                     MOVE CADA      WPCSDA
+      *
+      ** Get latest earlier position from LF/CPOSH
+      *
+     C                     MOVE CSOA      WPCSOA
+      *
+     C           CPKEY     SETLLCPOSH                    77
+     C                     READPCPOSH                    79
+     C           *IN79     IFEQ *ON
+     C           CSBA      ORNE CABR
+     C           CSCN      ORNE CACN
+     C           CSSC      ORNE CASC
+     C                     Z-ADD0         CSNT
+     C                     Z-ADD0         CSNV
+     C                     Z-ADD0         CSAT
+     C                     Z-ADD0         CSAV
+     C                     Z-ADD0         WNCSNT
+     C                     Z-ADD0         WPCSNT
+     C                     Z-ADD0         WNCSNV
+     C                     Z-ADD0         WPCSNV
+     C                     ENDIF
+      *
+      ** Save nominal positions into 'PREVIOUS' & 'NEW' value fields
+      *
+     C                     Z-ADDCSNT      WPCSNT
+     C                     Z-ADDCSNV      WPCSNV
+     C                     Z-ADDCSNT      WNCSNT
+     C                     Z-ADDCSNV      WNCSNV
+     C                     Z-ADDCSAT      WAPNMT
+     C                     Z-ADDCSAV      WAPNMV
+     C                     Z-ADDCSNS      WPCSNS
+     C                     Z-ADDCSEX      WPCSEX
+     C                     Z-ADDCSCT      WPCSCT
+     C                     Z-ADDCSCV      WPCSCV
+      *
+      ** Check if a call is due for security
+      *
+     C                     MOVE 'PP'      SDET
+     C           SECDKY    CHAINSEDEV                79
+     C           *IN79     IFNE *ON
+     C                     EXSR CALL
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Trade Action, if Type 'A' Access LF/TRADS and if found or
+      **                  If Type 'D' Execute P/TRADE
+      *
+     C           CSOA      IFEQ 'TP'
+     C           CSOA      OREQ 'TS'
+     C           WREC      IFEQ 'D'
+     C                     EXSR TRADE
+     C                     ELSE
+     C           WREC      IFEQ 'A'
+     C           TRADKY    CHAINTRADS                79
+     C  N79                EXSR TRADE
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If Depot Mvmnt, if Type 'A' Access LF/DPTMV and if found or
+      **                 If Type 'D' Execute P/DMVT
+      *
+     C           CSOA      IFEQ 'CI'
+     C           CSOA      OREQ 'CO'
+     C           WREC      IFEQ 'D'
+     C                     EXSR DMVT
+     C                     ELSE
+     C           WREC      IFEQ 'A'
+     C           DEPTKY    CHAINDPTMV                79
+     C  N79                EXSR DMVT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE CSSE      WPCSSE
+      *
+      ** If Price Action,execute P/Priceu
+      *
+     C           CSOA      IFEQ 'CT'
+     C           CSOA      OREQ 'CV'
+     C           WREC      IFEQ 'D'
+     C           WREC      OREQ 'A'
+     C                     EXSR PRICEU
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Update Record ID to H for actioned or * for deleted
+      *
+     C           WREC      IFEQ 'C'
+     C                     MOVE '*'       RECI
+     C                     ELSE
+     C                     MOVE 'H'       RECI
+     C                     ENDIF
+     C           ENTAG     TAG
+     C                     EXCPTCAPRID
+      *
+     C           ENDLP     TAG
+      *
+     C                     ENDDO
+      *
+      ** End of Actions - Update last group if not first time
+      *
+     C           WPSEC     IFNE *BLANKS
+     C                     EXSR CH01
+     C                     ENDIF
+      *
+     C           EAUDIT    TAG
+      *
+      ** Output Run Control Report
+      *
+     C                     EXSR AUDIT
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CH01 - Change of Position of Date - Update changes for        *
+      *        last Position/Date read in.                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CH01      BEGSR
+      *
+     C           CPKEY     CHAINCPOSH                79
+     C           *IN79     IFEQ *OFF
+     C                     Z-ADDWAPNMT    CSAT         77
+     C   77                Z-SUBCSAT      CSAT
+     C                     Z-ADDWAPNMV    CSAV         77
+     C   77                Z-SUBCSAV      CSAV
+      *
+      ** Update Customer Positions
+      *
+     C                     UPDATCPOSNDF
+      *
+      ** Increment count for Audit Report
+      *
+     C                     ADD  1         WCUPDT  50
+      *
+      ** If change of position check if there is future date position rec.
+      ** and update AP Numerator. This is only for V. Odd circumstances
+      ** (See header box)
+      *
+     C           CPKEYD    IFNE CURKEY
+     C           RECI      ANDEQ'H'
+     C           CPKEY2    READECPOSH                    79
+     C           *IN79     IFEQ '0'
+     C                     Z-ADDWAPNMT    CSAT         77
+     C   77                Z-SUBCSAT      CSAT
+     C                     Z-ADDWAPNMV    CSAV         77
+     C   77                Z-SUBCSAV      CSAV
+     C                     UPDATCPOSNDF
+     C                     ADD  1         WCUPDT  50
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Else *IN79 is on but if action is Price Record, write out
+      ** new Customer Position Record
+      *
+     C           WPCSOA    IFEQ 'CT'
+     C           WPCSOA    OREQ 'CV'
+      *
+     C                     MOVELCSBA      WPCSBR
+     C**********           Z-ADDCSCN      WPCSCN
+     C                     MOVE CSCN      WPCSCN
+     C                     MOVE CSSC      WPCSSC
+     C           CPKEY     SETGTCPOSNDF
+     C                     READPCPOSNDF                  79
+     C           *IN79     IFEQ '0'
+     C           CSBA      ANDEQWPCSBR
+     C           CSCN      ANDEQWPCSCN
+     C           CSSC      ANDEQWPCSSC
+     C                     MOVE 'H'       RECI
+     C                     EXCPTCPRECI
+     C                     ENDIF
+      *
+     C           CPKEY2    READECPOSNDF                  78
+     C           *IN78     IFEQ '1'
+     C                     MOVE 'D'       RECI
+     C                     ELSE
+     C                     MOVE 'H'       RECI
+     C                     ENDIF
+     C                     Z-ADDWPCSNT    CSNT
+     C                     Z-ADDWPCSNV    CSNV
+     C                     Z-ADDWPCSNS    CSNS
+     C                     Z-ADDWPCSEX    CSEX
+     C                     Z-ADDWPCSDA    CSDA
+     C                     Z-ADDWAPNMT    CSAT
+     C                     Z-ADDWAPNMV    CSAV
+     C                     Z-ADDWPCSCT    CSCT
+     C                     Z-ADDWPCSCV    CSCV
+     C                     WRITECPOSNDF
+      *
+     C                     ADD  1         ADDREC  50
+     C                     ELSE
+      *
+      ** No matching date to transaction, so DB Error
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CPOSH  ' DBFILE
+     C                     MOVELWPRVKY    DBKEY
+     C                     Z-ADD06        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     GOTO EAUDIT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WAPNMT
+     C                     Z-ADD0         WAPNMV
+     C           ENDCH1    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CALL - Calculate change to average price numerator ATR        *
+      *        a call for each call due after a change in price       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CALL      BEGSR
+      *
+     C                     Z-ADD*ZEROS    WAPNM0 150
+     C                     Z-ADD*ZEROS    WAPNM1 151
+     C                     Z-ADD*ZEROS    WAPNM2 152
+     C                     Z-ADD*ZEROS    WAPNM3 153
+      *
+      ** Calculate values for a call percentage i.e. not an amount
+      *
+     C           SDPC      IFNE 0
+      *
+      ** Calculate Average Price prior to the call
+      *
+     C           CSAT      IFNE *ZEROS
+     C           CSNT      ANDNE*ZEROS
+     C           CSAT      DIV  CSNT      WNAPTT 158H
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC     10
+     C                     ADD  CDP       DEC
+     C                     DIV  POWER8,DECWNAPTT
+      *
+      ** Price basis security
+      *
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       WNAPTT
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNAPTT
+     C                     ENDIF
+      *
+     C           CSAV      IFNE *ZEROS
+     C           CSNV      ANDNE*ZEROS
+     C           CSAV      DIV  CSNV      WNAPVV 158H
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC     10
+     C                     ADD  CDP       DEC
+     C                     DIV  POWER8,DECWNAPVV
+      *
+      ** Price basis security
+      *
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       WNAPVV
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNAPVV
+     C                     ENDIF
+      *
+      ** Calculate new Average Price after the call
+      *
+     C           WNAPTT    MULT SDPC      WNAPT
+     C           WNAPVV    MULT SDPC      WNAPV
+     C           WNAPT     DIV  100       WNAPT     H
+     C           WNAPV     DIV  100       WNAPV     H
+     C           WNAPV     ADD  WNAPVV    WNAPV
+     C           WNAPT     ADD  WNAPTT    WNAPT
+      *
+      ** Calculate new AP Numerator
+      *
+     C   21      CSNT      MULT WNAPT     WAPNM0
+     C   22      CSNT      MULT WNAPT     WAPNM1
+     C   23      CSNT      MULT WNAPT     WAPNM2
+     C   24      CSNT      MULT WNAPT     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMT
+     C   22                MOVE WAPNM1    WAPNMT
+     C   23                MOVE WAPNM2    WAPNMT
+     C   24                MOVE WAPNM3    WAPNMT
+      *
+     C   21      CSNV      MULT WNAPV     WAPNM0
+     C   22      CSNV      MULT WNAPV     WAPNM1
+     C   23      CSNV      MULT WNAPV     WAPNM2
+     C   24      CSNV      MULT WNAPV     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMV
+     C   22                MOVE WAPNM1    WAPNMV
+     C   23                MOVE WAPNM2    WAPNMV
+     C   24                MOVE WAPNM3    WAPNMV
+      *
+      ** Price basis security
+      *
+     C           SPBS      IFEQ 'P'
+     C                     DIV  100       WAPNMT
+     C                     DIV  100       WAPNMV
+     C                     ENDIF
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMT
+     C                     MULT POWER8,DECWAPNMV
+      *
+     C                     ENDIF
+      *
+      ** Calculate values for call amount i.e. not a percentage
+      *
+     C           SDPP      IFNE 0
+      *
+      ** Calculate Average Price prior to the call
+      *
+     C           CSAT      IFNE *ZEROS
+     C           CSNT      ANDNE*ZEROS
+     C           CSAT      DIV  CSNT      WNAPT     H
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC     10
+     C                     ADD  CDP       DEC
+     C                     DIV  POWER8,DECWNAPT
+      *
+      ** Price basis security
+      *
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       WNAPT
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNAPT
+     C                     ENDIF
+      *
+     C           CSAV      IFNE *ZEROS
+     C           CSNV      ANDNE*ZEROS
+     C           CSAV      DIV  CSNV      WNAPV     H
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC     10
+     C                     ADD  CDP       DEC
+     C                     DIV  POWER8,DECWNAPV
+      *
+      ** Price basis security
+      *
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       WNAPV
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNAPV
+     C                     ENDIF
+      *
+      ** Calculate new Average Price after the call for call amount
+      *
+     C           WNAPT     ADD  SDPP      WNAPT
+     C           WNAPV     ADD  SDPP      WNAPV
+      *
+      ** Calculate new AP Numerator
+      *
+     C   21      CSNT      MULT WNAPT     WAPNM0
+     C   22      CSNT      MULT WNAPT     WAPNM1
+     C   23      CSNT      MULT WNAPT     WAPNM2
+     C   24      CSNT      MULT WNAPT     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMT
+     C   22                MOVE WAPNM1    WAPNMT
+     C   23                MOVE WAPNM2    WAPNMT
+     C   24                MOVE WAPNM3    WAPNMT
+      *
+     C   21      CSNV      MULT WNAPV     WAPNM0
+     C   22      CSNV      MULT WNAPV     WAPNM1
+     C   23      CSNV      MULT WNAPV     WAPNM2
+     C   24      CSNV      MULT WNAPV     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMV
+     C   22                MOVE WAPNM1    WAPNMV
+     C   23                MOVE WAPNM2    WAPNMV
+     C   24                MOVE WAPNM3    WAPNMV
+      *
+      ** Price basis security
+      *
+     C           SPBS      IFEQ 'P'
+     C                     DIV  100       WAPNMT
+     C                     DIV  100       WAPNMV
+     C                     ENDIF
+      *
+      ** Allow for nominal decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMT
+     C                     MULT POWER8,DECWAPNMV
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * TRADE - Calculate new Average Price Numerator for a Trade     *
+      *         Action for each action on a customer position         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TRADE     BEGSR
+      *
+      **  Calculate nominal after Trade Action
+      *
+     C           CSTF      IFNE 0
+     C           WREC      ANDNE'C'
+      *
+      ** Trade Action is Trade Date basis if CSTF is not 0
+      *
+      ** Reset nominal amount as it was before the run of SE2410                              234262
+     C           CSOA      IFEQ 'TS'
+     C***********WNCSNT    ADD  CSNL      WNCSNT                                              234262
+     C***********WPCSNT    SUB  CSNL      WPCSNT                                       234262 234320
+     C           WNCSNT    ADD  CSNL      WNCSNT                                              234320
+     C                     ENDIF
+     C           CSOA      IFEQ 'TP'
+     C***********WNCSNT    SUB  CSNL      WNCSNT                                              234262
+     C***********WPCSNT    ADD  CSNL      WPCSNT                                       234262 234320
+     C           WNCSNT    SUB  CSNL      WNCSNT                                              234320
+     C                     ENDIF
+      *
+      ** If sale and now LONG, or purchase and now SHORT
+      *
+     C           CSOA      IFEQ 'TS'
+     C           WNCSNT    ANDGT0
+     C           CSOA      OREQ 'TP'
+     C           WNCSNT    ANDLT0
+      *
+      ** If position has changed from LONG to SHORT or SHORT to LONG
+      *
+     C           CSOA      IFEQ 'TS'
+     C           WPCSNT    ANDLT0
+     C           CSOA      OREQ 'TP'
+     C           WPCSNT    ANDGT0
+      *
+      ** Calculate new average price as contract price
+      ** and new AP Numerator as contract price times new nominal
+      *
+     C                     Z-ADDCSCP      WNAPT
+     C           SPBS      IFEQ 'P'
+     C                     DIV  100       WNAPT
+     C                     ENDIF
+     C   21      WNCSNT    MULT WNAPT     WAPNM0
+     C   22      WNCSNT    MULT WNAPT     WAPNM1
+     C   23      WNCSNT    MULT WNAPT     WAPNM2
+     C   24      WNCSNT    MULT WNAPT     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMT
+     C   22                MOVE WAPNM1    WAPNMT
+     C   23                MOVE WAPNM2    WAPNMT
+     C   24                MOVE WAPNM3    WAPNMT
+      *
+      ** Allow for nominal decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMT
+      *
+     C                     ELSE
+      *
+      ** i.e. else it is not change from SHORT to LONG nor LONG to SHORT
+      ** so calculate new AP Numerator as current value plus change value
+      *
+     C           CSTF      IFLT *ZEROS
+     C           WAPNMT    SUB  CSTF      WAPNMT
+     C                     ELSE
+     C           WAPNMT    ADD  CSTF      WAPNMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Else ... not (TS and now LONG) nor (TP and now SHORT)
+      *
+     C                     ELSE
+      *
+      ** Calculate current AP as AP Numerator/Previous nominal
+      *
+     C           WAPNMT    IFNE *ZERO
+     C           WPCSNT    ANDNE*ZERO
+     C           WAPNMT    DIV  WPCSNT    WCAPT     H
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC     10
+     C                     ADD  CDP       DEC
+     C                     DIV  POWER8,DECWCAPT
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WCAPT
+     C                     ENDIF
+      *
+      ** and calculate new AP Numerator as current AP times new Nomnl.
+      *
+     C   21      WNCSNT    MULT WCAPT     WAPNM0
+     C   22      WNCSNT    MULT WCAPT     WAPNM1
+     C   23      WNCSNT    MULT WCAPT     WAPNM2
+     C   24      WNCSNT    MULT WCAPT     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMT
+     C   22                MOVE WAPNM1    WAPNMT
+     C   23                MOVE WAPNM2    WAPNMT
+     C   24                MOVE WAPNM3    WAPNMT
+      *
+      ** Allow for nominal decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMT
+      *
+     C                     ENDIF
+     C                     Z-ADDWNCSNT    WPCSNT
+      *
+     C                     ENDIF
+      *
+     C           CSVF      IFNE 0
+     C           WREC      ANDNE'C'
+      *
+      ** Trade Action is Value Date basis if CSVF is not 0
+      *
+      ** Reset nominal amount as it was before the run of SE2410                              234262
+     C           CSOA      IFEQ 'TS'
+     C***********WNCSNV    ADD  CSNL      WNCSNV                                              234262
+     C***********WPCSNV    SUB  CSNL      WPCSNV                                       234262 234320
+     C           WNCSNV    ADD  CSNL      WNCSNV                                              234320
+     C                     ENDIF
+     C           CSOA      IFEQ 'TP'
+     C***********WNCSNV    SUB  CSNL      WNCSNV                                              234262
+     C***********WPCSNV    ADD  CSNL      WPCSNV                                       234262 234320
+     C           WNCSNV    SUB  CSNL      WNCSNV                                              234320
+     C                     ENDIF
+      *
+      ** If sale and now LONG, or purchase and now SHORT
+      *
+     C           CSOA      IFEQ 'TS'
+     C           WNCSNV    ANDGT0
+     C           CSOA      OREQ 'TP'
+     C           WNCSNV    ANDLT0
+      *
+      ** If position has changed from LONG to SHORT or SHORT to LONG
+      *
+     C           CSOA      IFEQ 'TS'
+     C           WPCSNV    ANDLT0
+     C           CSOA      OREQ 'TP'
+     C           WPCSNV    ANDGT0
+      *
+      ** Calculate new average price as contract price
+      ** and new AP Numerator as contract price times new nominal
+      *
+     C                     Z-ADDCSCP      WNAPV
+      *
+      ** Price basis security
+      *
+     C           SPBS      IFEQ 'P'
+     C                     DIV  100       WNAPV
+     C                     ENDIF
+      *
+     C   21      WNCSNV    MULT WNAPV     WAPNM0
+     C   22      WNCSNV    MULT WNAPV     WAPNM1
+     C   23      WNCSNV    MULT WNAPV     WAPNM2
+     C   24      WNCSNV    MULT WNAPV     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMV
+     C   22                MOVE WAPNM1    WAPNMV
+     C   23                MOVE WAPNM2    WAPNMV
+     C   24                MOVE WAPNM3    WAPNMV
+      *
+      ** Allow for nominal decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMV
+      *
+     C                     ELSE
+      *
+      ** i.e. else it is not change from SHORT to LONG nor LONG to SHORT
+      ** so calculate new AP Numerator as current value plus change value
+      *
+     C           CSVF      IFLT *ZEROS
+     C           WAPNMV    SUB  CSVF      WAPNMV
+     C                     ELSE
+     C           WAPNMV    ADD  CSVF      WAPNMV
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Else ... not (TS and now LONG) nor (TP and now SHORT)
+      *
+     C                     ELSE
+      *
+      ** Calculate current AP as AP Numerator/Previous Nominal
+      *
+     C           WAPNMV    DIV  WPCSNV    WCAPV     H
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC     10
+     C                     ADD  CDP       DEC
+     C                     DIV  POWER8,DECWCAPV
+      *
+      ** and calculate new AP Numerator as current AP times new Nomnl.
+      *
+     C   21      WNCSNV    MULT WCAPV     WAPNM0
+     C   22      WNCSNV    MULT WCAPV     WAPNM1
+     C   23      WNCSNV    MULT WCAPV     WAPNM2
+     C   24      WNCSNV    MULT WCAPV     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMV
+     C   22                MOVE WAPNM1    WAPNMV
+     C   23                MOVE WAPNM2    WAPNMV
+     C   24                MOVE WAPNM3    WAPNMV
+      *
+      ** Allow for nominal decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMV
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDWNCSNV    WPCSNV
+     C                     ENDIF
+      *
+     C           WAPNMT    IFLT *ZEROS
+     C                     Z-SUBWAPNMT    WAPNMT
+     C                     ENDIF
+      *
+     C           WAPNMV    IFLT *ZEROS
+     C                     Z-SUBWAPNMV    WAPNMV
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DMVT - Calculate New Av. Price Numerator for a Depot Movt.    *
+      *        for each portfolio customer walk-in / walk-out.        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DMVT      BEGSR
+      *
+      ** Calculate nominal after Depot Movement
+      *
+     C           CSVF      IFNE 0
+     C           WREC      ANDNE'C'
+      *
+      ** Depot Movt. is Value Date basis if CSVF is not 0
+      *
+      ** Reset nominal amount as it was before the run of SE2410                              234262
+     C           CSOA      IFEQ 'CI'
+     C***********WNCSNV    ADD  CSNL      WNCSNV                                              234262
+     C***********WPCSNV    SUB  CSNL      WPCSNV                                       234262 234320
+     C           WNCSNV    ADD  CSNL      WNCSNV                                              234320
+     C                     ENDIF
+     C           CSOA      IFEQ 'CO'
+     C***********WNCSNV    SUB  CSNL      WNCSNV                                              234262
+     C***********WPCSNV    ADD  CSNL      WPCSNV                                       234262 234320
+     C           WNCSNV    SUB  CSNL      WNCSNV                                              234320
+     C                     ENDIF
+      *
+      ** If sale and now LONG, or purchase and now SHORT
+      *
+     C           CSOA      IFEQ 'CI'
+     C           WNCSNV    ANDGT0
+     C           CSOA      OREQ 'CO'
+     C           WNCSNV    ANDLT0
+      *
+      ** If position has changed from LONG to SHORT or SHORT to LONG
+      *
+     C           CSOA      IFEQ 'CI'
+     C           WPCSNV    ANDLT0
+     C           CSOA      OREQ 'CO'
+     C           WPCSNV    ANDGT0
+      *
+      ** Calculate new average price as market price
+      ** and new AP Numerator as market price times new nominal
+      *
+      ** Market price is change to AP Num (TRADE) Div. by Action Nominal
+      *
+     C           CSVF      IFNE *ZEROS
+     C           CSNL      ANDNE*ZEROS
+     C           CSVF      DIV  CSNL      WNAPV     H
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC     10
+     C                     ADD  CDP       DEC
+     C                     DIV  POWER8,DECWNAPV
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNAPV
+     C                     ENDIF
+      *
+     C   21      WNCSNV    MULT WNAPV     WAPNM0
+     C   22      WNCSNV    MULT WNAPV     WAPNM1
+     C   23      WNCSNV    MULT WNAPV     WAPNM2
+     C   24      WNCSNV    MULT WNAPV     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMV
+     C   22                MOVE WAPNM1    WAPNMV
+     C   23                MOVE WAPNM2    WAPNMV
+     C   24                MOVE WAPNM3    WAPNMV
+      *
+      ** Allow for nominal decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMV
+     C                     ELSE
+      *
+      ** i.e. else it is not change from SHORT to LONG nor LONG to SHORT
+      ** so calculate new AP Numerator as current value plus change value
+      *
+     C           CSVF      IFLT *ZEROS
+     C           WAPNMV    SUB  CSVF      WAPNMV
+     C                     ELSE
+     C           WAPNMV    ADD  CSVF      WAPNMV
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Else ... not (TS and now LONG) nor (TP and now SHORT)
+      *
+     C                     ELSE
+      *
+      ** Calculate current AP as AP Numerator/Previous Nominal
+      *
+     C           WAPNMV    IFNE *ZEROS
+     C           WPCSNV    ANDNE*ZEROS
+     C           WAPNMV    DIV  WPCSNV    WCAPV     H
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC     10
+     C                     ADD  CDP       DEC
+     C                     DIV  POWER8,DECWCAPV
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WCAPV
+     C                     ENDIF
+      *
+      ** and calculate new AP Numerator as currend AP times new Nomnl.
+      *
+     C   21      WNCSNV    MULT WCAPV     WAPNM0
+     C   22      WNCSNV    MULT WCAPV     WAPNM1
+     C   23      WNCSNV    MULT WCAPV     WAPNM2
+     C   24      WNCSNV    MULT WCAPV     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMV
+     C   22                MOVE WAPNM1    WAPNMV
+     C   23                MOVE WAPNM2    WAPNMV
+     C   24                MOVE WAPNM3    WAPNMV
+      *
+      ** Allow for nominal decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMV
+     C                     ENDIF
+      *
+     C                     Z-ADDWNCSNV    WPCSNV
+     C                     ENDIF
+      *
+     C           CSTF      IFNE 0
+     C           WREC      ANDNE'C'
+      *
+      ** Depot Movt. is Trade Date basis if CSTF is not 0
+      *
+      ** Reset nominal amount as it was before the run of SE2410                              234262
+     C           CSOA      IFEQ 'CI'
+     C***********WNCSNT    ADD  CSNL      WNCSNT                                              234262
+     C***********WPCSNT    SUB  CSNL      WPCSNT                                       234262 234320
+     C           WNCSNT    ADD  CSNL      WNCSNT                                              234320
+     C                     ENDIF
+     C           CSOA      IFEQ 'CO'
+     C***********WNCSNT    SUB  CSNL      WNCSNT                                              234262
+     C***********WPCSNT    ADD  CSNL      WPCSNT                                       234262 234320
+     C           WNCSNT    SUB  CSNL      WNCSNT                                              234320
+     C                     ENDIF
+      *
+      ** If sale and now LONG, or purchase and now SHORT
+      *
+     C           CSOA      IFEQ 'CI'
+     C           WNCSNT    ANDGT0
+     C           CSOA      OREQ 'CO'
+     C           WNCSNT    ANDLT0
+      *
+      ** If position has changed from LONG to SHORT or SHORT to LONG
+      *
+     C           CSOA      IFEQ 'CI'
+     C           WPCSNT    ANDLT0
+     C           CSOA      OREQ 'CO'
+     C           WPCSNT    ANDGT0
+      *
+      ** Calculate new average price as market price
+      ** and new AP Numerator as market price times new nominal
+      *
+      ** Market price is change to AP Num (TRADE) Div. by Action Nominal
+      *
+     C           CSTF      IFNE *ZEROS
+     C           CSNL      ANDNE*ZEROS
+     C           CSTF      DIV  CSNL      WNAPT     H
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC     10
+     C                     ADD  CDP       DEC
+     C                     DIV  POWER8,DECWNAPT
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WNAPT
+     C                     ENDIF
+      *
+     C   21      WNCSNT    MULT WNAPT     WAPNM0
+     C   22      WNCSNT    MULT WNAPT     WAPNM1
+     C   23      WNCSNT    MULT WNAPT     WAPNM2
+     C   24      WNCSNT    MULT WNAPT     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMT
+     C   22                MOVE WAPNM1    WAPNMT
+     C   23                MOVE WAPNM2    WAPNMT
+     C   24                MOVE WAPNM3    WAPNMT
+      *
+      ** Allow for nominal decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMT
+     C                     ELSE
+      *
+      ** i.e. else it is not change from SHORT to LONG nor LONG to SHORT
+      ** so calculate new AP Numerator as current value plus change value
+      *
+     C           CSTF      IFLT *ZEROS
+     C           WAPNMT    SUB  CSTF      WAPNMT
+     C                     ELSE
+     C           WAPNMT    ADD  CSTF      WAPNMT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Else ... not (TS and Now LONG) nor (TP and Now SHORT)
+      *
+     C                     ELSE
+      *
+      ** Calculate current AP as AP Numerator/Previous Nominal
+      *
+     C           WAPNMT    IFNE *ZEROS
+     C           WPCSNT    ANDNE*ZEROS
+     C           WAPNMT    DIV  WPCSNT    WCAPT     H
+      *
+      ** Allow for nominal and nominal currency decimal places
+      *
+     C           5         SUB  NMDP      DEC     10
+     C                     ADD  CDP       DEC
+     C                     DIV  POWER8,DECWCAPT
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WCAPT
+     C                     ENDIF
+      *
+      ** and calculate new AP Numerator as current AP times new Nomnl.
+      *
+     C   21      WNCSNT    MULT WCAPT     WAPNM0
+     C   22      WNCSNT    MULT WCAPT     WAPNM1
+     C   23      WNCSNT    MULT WCAPT     WAPNM2
+     C   24      WNCSNT    MULT WCAPT     WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMT
+     C   22                MOVE WAPNM1    WAPNMT
+     C   23                MOVE WAPNM2    WAPNMT
+     C   24                MOVE WAPNM3    WAPNMT
+      *
+      ** Allow for nomianl decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMT
+     C                     ENDIF
+      *
+     C                     Z-ADDWNCSNT    WPCSNT
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PRICEU - Calculate new Av. Price Numerator for a Price        *
+      *           change for each customer average price change input *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRICEU    BEGSR
+      *
+      ** Set New AP Numerator to new Average Price times Nominal Posn
+      ** Calculate on either Trade and Value Date basis.
+      *
+     C           CSOA      IFEQ 'CT'
+     C   21      WNCSNT    MULT CSAP      WAPNM0
+     C   22      WNCSNT    MULT CSAP      WAPNM1
+     C   23      WNCSNT    MULT CSAP      WAPNM2
+     C   24      WNCSNT    MULT CSAP      WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMT
+     C   22                MOVE WAPNM1    WAPNMT
+     C   23                MOVE WAPNM2    WAPNMT
+     C   24                MOVE WAPNM3    WAPNMT
+      *
+      ** Price basis security
+      *
+     C           SPBS      IFEQ 'P'
+     C                     DIV  100       WAPNMT    H
+     C                     ENDIF
+      *
+      ** Allow for nominal decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMT    H
+     C                     ENDIF
+      *
+     C           CSOA      IFEQ 'CV'
+     C   21      WNCSNV    MULT CSAP      WAPNM0
+     C   22      WNCSNV    MULT CSAP      WAPNM1
+     C   23      WNCSNV    MULT CSAP      WAPNM2
+     C   24      WNCSNV    MULT CSAP      WAPNM3
+      *
+     C   21                MOVE WAPNM0    WAPNMV
+     C   22                MOVE WAPNM1    WAPNMV
+     C   23                MOVE WAPNM2    WAPNMV
+     C   24                MOVE WAPNM3    WAPNMV
+      *
+      ** Price basis security
+      *
+     C           SPBS      IFEQ 'P'
+     C                     DIV  100       WAPNMV    H
+     C                     ENDIF
+      *
+      ** Allow for nominal decimal places
+      *
+     C           5         SUB  NMDP      DEC
+     C                     MULT POWER8,DECWAPNMV    H
+     C                     ENDIF
+      *
+     C                     Z-ADDWNCSNT    WPCSNT
+     C                     Z-ADDWNCSNV    WPCSNV
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * AUDIT - Outputs Audit Record CPOSNA and Control Report        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+      ** Compare count of actions to Audit File actions
+      *
+     C           *INU8     IFNE *ON
+     C                     READ CAPRHA                   79
+      *
+      ** Database Error
+      *
+     C           *IN79     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CAPRHA'  DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     Z-ADD7         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ELSE
+     C                     Z-ADDNORE      SANORE  50
+     C                     Z-ADDSINS      SSINS
+     C                     Z-ADDSAMD      SSAMD
+     C                     ENDIF
+      *
+      ** Read CPOSNA Audit Record
+      *
+     C           *INU8     IFNE *ON
+     C                     READ CPOSNA                   79
+      *
+      ** Database Error
+      *
+     C           *IN79     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CPOSNA'  DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     Z-ADD8         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ELSE
+      *
+     C           ADDREC    IFGT 0
+     C                     ADD  ADDREC    NORE
+     C                     UPDATCPOSNAF
+     C                     ENDIF
+     C                     Z-ADDNORE      CPNORE  50
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *INU8     IFNE *ON
+     C********** SSINS     IFNE WTYPED                                                        233705
+     C**********           MOVE *ON       *INU8                                               233705
+     C**********           MOVE *ON       *IN29                                               233705
+     C**********           ENDIF                                                              233705
+      *
+     C           *INU8     IFEQ *OFF
+     C********** SSAMD     IFNE WTYPEA                                                        233705
+     C**********           MOVE *ON       *INU8                                               233705
+     C**********           MOVE *ON       *IN30                                               233705
+     C**********           ENDIF                                                              233705
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Output Control Report
+      *
+     C                     WRITEHEADAU
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEERROR
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C           *INU7     IFEQ *ON
+     C           *INU8     OREQ *ON
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CAPHSR - Subroutine for Error Handling of LF/CAPRA            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CAPHSR    BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CAPRA '  DBFILE
+     C                     MOVELWCURKY    DBKEY
+     C                     Z-ADD9         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE STSCAP    DBSTAT
+     C                     MOVE *ON       *IN87
+     C                     MOVE *ON       *IN99
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     GOTO EAUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      * CAPRSR - Subroutine for Error Handling of PF/CAPRHA Audit     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CAPRSR    BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CAPRHA'  DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     Z-ADD10        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE STSCPR    DBSTAT
+     C                     MOVE *ON       *IN87
+     C                     MOVE *ON       *IN99
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     GOTO EAUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      * CPOSSR - Subroutine for Error Handling of LF/CPOSH            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CPOSSR    BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CPOSH '  DBFILE
+     C                     MOVELCPKEYD    DBKEY
+     C                     Z-ADD11        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE STSPOS    DBSTAT
+     C                     MOVE *ON       *IN87
+     C                     MOVE *ON       *IN99
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     GOTO EAUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR - Error control subroutine                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     O/EJECT
+     OCPOSNDF E                CPRECI
+     O                         RECI
+     OCAPRHDF E                CAPRID
+     O                         RECI
+      /EJECT
+      ***
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2004

@@ -1,0 +1,705 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas SC 24x7 Processing Day Msg Mnt Browse')
+      *****************************************************************
+      *                                                               *
+      *  Midas - System Control Module                                *
+      *                                                               *
+      *  SCWMSGBRW - 24x7 Processing Day Message Maintenance Details  *
+      *              Browse                                           *
+      *                                                               *
+      *  Function:  This module runs in two modes:                    *
+      *             One displays a list of all records in SCSYSTPD    *
+      *             with the Message Type selected, the other picks-  *
+      *             off all selection made.                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Last Amend No. CSC011  *CREATE    Date 18Sep01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSC011 - 24x7 Midas Availability                             *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+ 
+      ** Processing Day Msg Mnt Browse Display File
+     FSCWMSGBRDFCF   E             WORKSTN INFSR(*PSSR)
+     F                                     SFILE(SCWMSGBRS0:Wrrn)
+ 
+      ** Processing Date Switch Message File
+     FSCSYSTL2  IF   E           K DISK    INFSR(*PSSR) USROPN
+ 
+      ** Table of field numbers and names
+     FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
+ 
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes (among others) the LDA layout
+      ** and the copyright array definition:
+     D/COPY ZACPYSRC,STD_D_SPEC
+      **--------------------------------------------------------------------------------------------
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes all the defined fields in the
+      ** Program Status Data Structures.  They have meaningful
+      ** names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+      **--------------------------------------------------------------------------------------------
+      *
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes the definitions for error and
+      ** warning message arrays.
+     D/COPY ZACPYSRC,ERR_ARRAYS
+      **--------------------------------------------------------------------------------------------
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes all the definitions of the error
+      ** arrays, including the named constant giving the size of
+      ** the arrays.  Note that it uses #MsgID and *MsgData, and so requires
+      ** STD_D_SPEC.
+     D/COPY ZACPYSRC,FVAL_ARRAY
+      **--------------------------------------------------------------------------------------------
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes the definitions for error and
+      ** warning message arrays.
+     D/COPY ZACPYSRC,APICTLARR
+      **--------------------------------------------------------------------------------------------
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes the definitions for fields
+      ** required by the message handler.
+     D/COPY ZACPYSRC,MSGHNDDCL
+      **--------------------------------------------------------------------------------------------
+ 
+      ** +--------------------------------------+
+      ** ¦ End of automatically included D-specs¦
+      ** ¦ =====================================¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+      ** +--------------------------------------+
+      ** ¦ Manually included D-specs            ¦
+      ** ¦ =========================            ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+      ** Selected record details
+     D PSelRec         DS
+     D   WMsgType              1      1
+     D   WMsgTime              2      6  0
+     D   WLangCode             7      8
+ 
+      ** External DS for Bank Details
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+ 
+      ** First DS for access programs, short data structure
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+     D PMType          S              1
+     D POpSel          S              1
+     D PBdSfl          S              1
+     D PRdSfl          S              1
+     D PInkc           S              1
+     D PInki           S              1
+     D PInkl           S              1
+     D PMTypTxt        S             78
+     D PRetCode        S              7
+     D POptn           S              7
+     D PMsgID          S              7
+     D PMsgData        S            132
+     D PText1          S            132
+     D PText2          S            512
+ 
+     D WMTime          S              5
+     D WError1         S              1
+     D WError2         S              1
+     D WRun            S              1
+     D WSelect         S              1
+     D WSavLan         S              2
+     D WSavTim         S              5S 0
+     D WKTime          S              5S 0
+     D WSflCtr         S              2S 0
+     D Wrrn            S              4S 0
+     D WSavRrn         S              4S 0
+     D Idx             S              3P 0
+ 
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+      ** Initialization
+ 
+     C                   EXSR      SRInit
+ 
+      ** Build subfile
+ 
+     C                   IF        PBdSfl = 'Y'
+     C                   EXSR      SRBldSfl
+     C                   ENDIF
+ 
+      ** Read subfile record
+ 
+     C                   IF        PRdSfl = 'Y'
+     C                   EXSR      SRRdSflr
+     C                   ENDIF
+ 
+      ** Close file
+ 
+     C                   CLOSE     SCSYSTL2
+ 
+     C                   RETURN
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBldSfl - Build subfile                                     *
+      *                                                               *
+      *  Called by: Main                                              *
+      *                                                               *
+      *  Calls    : SRFillSfl, SRValActn                              *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SRBldSfl      BEGSR
+ 
+      ** Clear subfile first.
+ 
+     C                   EVAL      *IN32 = *ON
+     C                   WRITE     SCWMSGBRC0
+     C                   EVAL      *IN32 = *OFF
+ 
+      ** Check if there are records to display.
+ 
+     C     PMType        CHAIN     SCSYSTD0                           11
+ 
+     C                   IF        *IN11 = *OFF
+     C                   EXSR      SRFillSfl
+ 
+      ** If record not found, send message 'No Record Found'.
+ 
+     C                   ELSE
+     C                   EVAL      *IN31 = *OFF
+     C                   EVAL      *IN50 = *ON
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNameArr(Idx) = '#1SELE'
+     C                   EVAL      MsgIdArr(Idx) = 'SCC0023'
+     C                   ENDIF
+ 
+      ** Display screen while function keys are not pressed
+ 
+     C                   DOW       PInkc = '0' AND PInki = '0' AND PInkl = '0'
+     C                             AND (WError1 = 'Y' OR WError2 = 'Y')
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line includes processing for the error and
+      ** warning messages.
+     C/COPY ZACPYSRC,MSGHNDDSP1
+      **--------------------------------------------------------------------------------------------
+ 
+     C                   WRITE     SCWMSGBRF0
+     C                   WRITE     SCWMSGBRF1
+     C                   WRITE     SCWMSGBRC1
+     C                   EXFMT     SCWMSGBRC0
+ 
+     C                   CALL      'SCC0250'
+     C                   EVAL      FldNameArr = *BLANKS
+     C                   EVAL      MsgIdArr = *BLANKS
+     C                   EVAL      Idx = 0
+     C                   EVAL      *IN31 = *ON
+     C                   EVAL      *IN34 = *OFF
+ 
+     C                   SELECT
+ 
+      ** F3 pressed
+ 
+     C                   WHEN      *INKC = *ON
+     C                   EVAL      PInkc = '1'
+     C                   EVAL      *INLR = '1'
+ 
+      ** F9 pressed
+ 
+     C                   WHEN      *INKI = *ON
+     C                   EVAL      PInki = '1'
+ 
+      ** F12 pressed
+ 
+     C                   WHEN      *INKL = *ON
+     C                   EVAL      PInkl = '1'
+ 
+      ** Rollup
+ 
+     C                   WHEN      *IN37 = *ON
+     C                   EXSR      SRFillSfl
+ 
+      ** No Record Found
+ 
+     C                   WHEN      *IN50 = *ON
+     C                   EVAL      *IN31 = *OFF
+     C                   EVAL      WError1 = 'Y'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNameArr(Idx) = '#1SELE'
+     C                   EVAL      MsgIdArr(Idx) = 'SCC0023'
+ 
+     C                   OTHER
+     C                   EXSR      SRValActn
+ 
+     C                   ENDSL
+     C                   ENDDO
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRdSflr - Read Subfile Record                               *
+      *                                                               *
+      *  Called by: Main                                              *
+      *                                                               *
+      *  Calls    : SRFmtDets                                         *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SRRdSflr      BEGSR
+ 
+     C                   DOU       *IN99 = *ON OR WSelect <> *BLANK
+     C                   READC     SCWMSGBRS0                             99
+ 
+     C                   EVAL      WSelect = #0SELE
+ 
+     C                   ENDDO
+ 
+     C                   IF        *IN99 <> *ON AND WSelect <> *BLANK
+ 
+     C                   IF        WSelect = 'A' OR WSelect = 'D'
+     C                   EVAL      POpSel = WSelect
+     C                   ELSE
+     C                   EVAL      POpSel = 'E'
+     C                   ENDIF
+ 
+     C                   EXSR      SRFmtDets
+     C                   ENDIF
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFillSfl - Fill Subfile                                     *
+      *                                                               *
+      *  Called by: SRBldSfl                                          *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SRFillSfl     BEGSR
+ 
+     C                   EVAL      Wrrn = WSavRrn
+     C                   EVAL      WSflCtr = 0
+     C                   MOVEA     '00'          *IN(35)
+ 
+      ** Fill subfile until one page is full or until all
+      ** records are written.
+ 
+     C                   DOW       *IN11 = *OFF AND WSflCtr < 13
+ 
+     C                   ADD       1             WSflCtr
+     C                   ADD       1             Wrrn
+     C                   EVAL      WSavRrn = Wrrn
+     C                   EVAL      #0SFRN = Wrrn
+     C                   EVAL      #0SELE = *BLANKS
+     C                   EVAL      #0LANG = T1LANG
+     C                   MOVE      T1MTIM        WMTime
+     C                   EVAL      #0MTIM = %SUBST(WMTime:1:3) + '-' +
+     C                                      %SUBST(WMTime:4:2)
+     C                   EVAL      #0MTXT = T1MTXT
+ 
+      ** Write to subfile
+ 
+     C                   WRITE     SCWMSGBRS0
+ 
+     C     PMType        READE     SCSYSTD0                               11
+ 
+      ** If all records have been written, disable Rollup.
+ 
+     C                   IF        *IN11 = *ON
+     C                   MOVEA     '11'          *IN(35)
+     C                   ELSE
+     C                   EVAL      WSavTim = T1MTIM
+     C                   EVAL      WSavLan = T1LANG
+     C                   ENDIF
+ 
+     C                   ENDDO
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRValActn - Validate Action Code entered                     *
+      *                                                               *
+      *  Called by: SRBldSfl                                          *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SRValActn     BEGSR
+ 
+     C                   EVAL      WError1 = 'N'
+     C                   EVAL      WError2 = 'N'
+ 
+     C                   READC     SCWMSGBRS0                             99
+ 
+      ** Validate selection field while not EOF
+ 
+     C                   DOW       *IN99 = *OFF
+ 
+     C                   EVAL      WSelect = #0SELE
+ 
+      ** Selection Option must be A, E, or D.
+ 
+     C                   IF        WSelect <> 'A' AND WSelect <> 'D' AND
+     C                             WSelect <> 'E' AND WSelect <> *BLANKS
+     C                   IF        WError1 = 'N'
+     C                   EVAL      #0SFRN = Wrrn
+     C                   ENDIF
+     C                   EVAL      WError1 = 'Y'
+     C                   EVAL      *IN34 = *ON
+     C                   ENDIF
+ 
+      ** If record to be deleted has blank Language Code, there should be
+      ** no record with the same msg type/time combination that exists in file.
+ 
+     C                   IF        WSelect = 'D' AND #0LANG = *BLANKS
+     C                   EVAL      WMTime = %SUBST(#0MTIM:1:3) +
+     C                                      %SUBST(#0MTIM:5:2)
+     C                   MOVE      WMTime        WKTime
+     C     KTypTim       CHAIN     SCSYSTD0
+     C     KTypTim       READE     SCSYSTD0                               13
+     C                   IF        *IN13 = *OFF
+ 
+     C                   IF        WError2 = 'N'
+     C                   EVAL      #0SFRN = Wrrn
+     C                   ENDIF
+ 
+     C                   EVAL      WError2 = 'Y'
+     C                   EVAL      *IN34 = *ON
+     C                   ENDIF
+     C     KFulKey       CHAIN     SCSYSTD0
+     C                   ENDIF
+ 
+      ** Update subfile with subfile-next-change enabled.
+ 
+     C                   EVAL      *IN33 = *ON
+     C                   UPDATE    SCWMSGBRS0
+     C                   EVAL      *IN33 = *OFF
+     C                   EVAL      *IN34 = *OFF
+ 
+     C                   READC     SCWMSGBRS0                             99
+     C                   ENDDO
+ 
+     C                   SELECT
+     C                   WHEN      WError1 = 'Y'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNameArr(Idx) = '#2SEL'
+     C                   EVAL      MsgIdArr(Idx) = 'SCC0013'
+ 
+     C                   WHEN      WError2 = 'Y'
+     C                   EVAL      Idx = Idx + 1
+     C                   EVAL      FldNameArr(Idx) = '#2SEL'
+     C                   EVAL      MsgIdArr(Idx) = 'SCC0014'
+     C                   ENDSL
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFmtDets - Format record details for output                 *
+      *                                                               *
+      *  Called by: SRFillSfl                                         *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      ******************************************************************
+ 
+     C     SRFmtDets     BEGSR
+ 
+      ** Setup output parameter DS PSelRec.
+ 
+     C                   EVAL      WMsgType = PMType
+     C                   EVAL      WMTime = %SUBST(#0MTIM:1:3) +
+     C                                      %SUBST(#0MTIM:5:2)
+     C                   MOVE      WMTime        WMsgTime
+     C                   EVAL      WLangCode = #0LANG
+ 
+     C                   ENDSR
+ 
+      ******************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRExtract - Extract message information                      *
+      *                                                               *
+      *  Called by: SRInit                                            *
+      *                                                               *
+      *  Calls    : SDC1460                                           *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SRExtract     BEGSR
+ 
+      ** Extract message information via CLP SDC1460.
+ 
+     C                   CALL      'SDC1460'
+     C                   PARM                    PMsgID
+     C                   PARM                    #MsgFile
+     C                   PARM      *BLANKS       PMsgData
+     C                   PARM      *BLANKS       PText1
+     C                   PARM      *BLANKS       PText2
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRInit - Initialisation                                      *
+      *                                                               *
+      *  Called by: Main                                              *
+      *                                                               *
+      *  Calls    : SRExtract                                         *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SRInit        BEGSR
+ 
+     C                   EVAL      WError1 = 'Y'
+     C                   EVAL      WError2 = 'Y'
+     C                   EVAL      PInkc = '0'
+     C                   EVAL      PInki = '0'
+     C                   EVAL      PInkl = '0'
+     C                   EVAL      Wrrn = 0
+     C                   EVAL      WSavRrn = 0
+     C                   EVAL      Idx = 0
+ 
+     C                   EVAL      *IN30 = *OFF
+     C                   EVAL      *IN31 = *ON
+     C                   EVAL      *IN50 = *OFF
+ 
+      ** Initialise message type text.
+ 
+     C                   SELECT
+     C                   WHEN      PMType = 'C'
+     C                   EVAL      PMsgId = 'SCC0024'
+ 
+     C                   WHEN      PMType = 'S'
+     C                   EVAL      PMsgId = 'SCC0025'
+ 
+     C                   WHEN      PMType = 'O'
+     C                   EVAL      *IN30 = *ON
+     C                   EVAL      PMsgId = 'SCC0026'
+ 
+     C                   WHEN      PMType = 'M'
+     C                   EVAL      PMsgId = 'SCC0027'
+ 
+     C                   WHEN      PMType = 'F'
+     C                   EVAL      *IN30 = *ON
+     C                   EVAL      PMsgId = 'SCC0028'
+ 
+     C                   WHEN      PMType = 'V'
+     C                   EVAL      PMsgId = 'SCC0029'
+ 
+     C                   WHEN      PMType = 'W'
+     C                   EVAL      PMsgId = 'SCC0030'
+ 
+     C                   WHEN      PMType = 'X'
+     C                   EVAL      *IN30 = *ON
+     C                   EVAL      PMsgId = 'SCC0031'
+     C                   ENDSL
+ 
+     C                   EXSR      SRExtract
+     C                   EVAL      #0MTYP = PText1
+     C                   EVAL      PMTypTxt = PText1
+ 
+      ** Open file
+ 
+     C                   OPEN      SCSYSTL2
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *INZSR - INITIAL PROCESSING
+      *****************************************************************
+ 
+     C     *INZSR        BEGSR
+ 
+      ** Parameters
+ 
+     C     *ENTRY        PLIST
+ 
+      ** Input Parameters
+      ** Return Code
+ 
+     C                   PARM                    RetCodeIn
+ 
+      ** Action Code
+ 
+     C                   PARM                    PMType
+ 
+      ** Build Subfile
+ 
+     C                   PARM                    PBdSfl
+ 
+      ** Read Subfile Record
+ 
+     C                   PARM                    PRdSfl
+ 
+      ** Errors
+ 
+     C                   PARM                    FldNameArr
+     C                   PARM                    MsgIdArr
+     C                   PARM                    MsgDtaArr
+ 
+      ** Output Parameters:
+      ** Message Type Text
+ 
+     C                   PARM                    PMTypTxt
+ 
+      ** Selected Record
+ 
+     C                   PARM                    PSelRec
+ 
+      ** Option Selected
+ 
+     C                   PARM                    POpSel
+ 
+      ** Command Keys
+ 
+     C                   PARM                    PInkc
+     C                   PARM                    PInki
+     C                   PARM                    PInkl
+ 
+      ** Clear message subfile
+ 
+     C                   CALL      'SCC0250'
+ 
+     C     KTypTim       KLIST
+     C                   KFLD                    PMType
+     C                   KFLD                    WKTime
+ 
+     C     KFulKey       KLIST
+     C                   KFLD                    PMType
+     C                   KFLD                    WSavTim
+     C                   KFLD                    WSavLan
+ 
+      ** Access Bank Details
+ 
+     C                   CALL      'AOBANKR0'
+     C                   PARM      '*DBERR '     PRetCode
+     C                   PARM      '*FIRST '     POptn
+     C     SDBANK        PARM      SDBANK        DSFDY
+ 
+      ** Database Error
+ 
+     C                   IF        PRetCode <> *BLANKS
+     C                   EVAL      DBFILE = 'SDBANKPD'
+     C                   EVAL      DBASE = 901
+     C                   EVAL      DBKEY = POPTN
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      ** Initialize program name
+ 
+     C                   EVAL      DBPGM = 'SCWMSGBRW'
+ 
+      ** Initialise standard/screen fields.
+ 
+     C                   EVAL      #0WSID = PsJobName
+     C                   EVAL      #0RUNA = BJMRDT
+     C                   EVAL      #0USER = PsUser
+     C                   EVAL      #1PGMQ = PSProcName
+ 
+      **--------------------------------------------------------------------------------------------
+      ** The following /COPY line sets up the fixed data for SD *DSP
+      ** Functions for the message handler, ZAMSGHNDLE.
+     C/COPY SDCPYSRC,MSGHNDDATA
+      **--------------------------------------------------------------------------------------------
+ 
+     C                   EVAL      #MsgFile = 'SDUSRMSG'
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      *
+      /EJECT
+      ** The following /COPY line includes the ProcMsgs subroutine
+      ** to process error and warning messages.
+     C/COPY ZACPYSRC,MSGHNDDSP2
+      **--------------------------------------------------------------------------------------------
+ 
+      *****************************************************************
+      ** Program, module and procedure names for database error processing.
+      ** =================================================================
+      ** The following /COPY sets these values, and also defines LDA as
+      ** an external data area
+      ********************************************************************
+     C/COPY ZACPYSRC,PSSR_ILE
+      ********************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

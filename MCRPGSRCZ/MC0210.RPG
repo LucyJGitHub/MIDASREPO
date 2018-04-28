@@ -1,0 +1,2568 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Management accounts review enquiry')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *   MC0210 - Management Accounts Review Enquiry                 *
+      *                                                               *
+      *  Function: This program allows a user to view available       *
+      *  (I/C)     management accounts via an initial select subfile  *
+      *            and from there to select further information for   *
+      *            each definition.                                   *
+      *                                                               *
+      *  Called by: MCC0205 - Management Account Review Initial Control
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC023             Date 28Jan04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197434             Date 09Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 151104             Date 15Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 135171             Date 05Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02MAR99               *
+      *                 CTI002             Date 23SEP98               *
+      *                 120835             Date 14Jul97               *
+      *                 CMC001             Date 18MAR96               *
+      *                 048237             Date 18MAR93               *
+      *
+      *****************************************************************
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC023 - SBMJOB output queue must be *JOBD.                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  197434 - Array index error on SF0021. Increase maximum       *
+      *           number of branches from 100 to 900.                 *
+      *  151104 - Allow up to 900 branches.                           *
+      *  176443 - Avoid MCH3601 to be sent.                           *
+      *           Pass correct parameter to AOCUSTR0.                 *
+      *  135171 - When Customer is selected, associated customer      *
+      *           should be left as blank (No selection) and not      *
+      *           selected with the value of the customer .           *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  120835 - Database error using invalid period number          *
+      *  CMC001 - Management Accounts Enhancement for PCA:            *
+      *           Disable F13 if Management Accounts enhancement is   *
+      *           on and enquiring on a closed period.                *
+      *  048237 - Speedup Management Accounts                         *
+      *                                                               *
+      **************************************************************
+     FMC0210DFCF  E                    WORKSTN      KINFSR INFSR
+      ** MC0210S1 is Initial selection subfile
+     F                                        PRRN1 KSFILE MC0210S1
+      *
+      ** file used to build subfile (mbr overridden in previous pgm)
+     FGLHIBLL3IF  E           K        DISK         KINFSR INFSR      UC
+      *
+      ** used for Further details screen (mbr overridden in prev pgm)
+     FGLHIBLL1IF  E           K        DISK         KINFSR INFSR      UC
+      *
+      ** file used for DR/CR average balances screen
+     FGLAVBLL1IF  E           K        DISK                           UC
+      /EJECT
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *  3 - F3 has been pressed
+      *  8 - F8 Display DR/CR average balances screen
+      * 10 - F10 Delete new balances from Initial selection subfile
+      * 11 - F11 Produce a report from Initial selection subfile
+      * 12 - F12 has been pressed
+      * 13 - F13 Recreate balances from Initial selection subfile
+      * 14 - System is multibranched
+      * 15 - Profit Centres used in system
+      * 18 - F13 (Recreate Balances) disabled                             CMC001
+      * 20 - Seton if no details on GLHIBLL3 for requested key
+      * 21 - End of file for GLHIBLL3
+      * 22 - Error on read of GLHIBLL3
+      * 23 - End of file for readc on Initial selection subfile
+      * 25 - Error on read to initial subfile selection screen
+      * 29 - Enable F10, delete new balances
+      * 30 - subfile clear for Initial selection subfile
+      * 31 - subfile control display for Initial selection subfile
+      * 32 - subfile control dspctl for Initial selection subfile
+      * 33 - subfile control end for Initial selection subfile
+      *      ('+' is shown if 33 is off)
+      * 34 - Protect user selection fields on blank subfile
+      * 35 - Validation error on branch
+      * 36 - Validation error on currency
+      * 37 - Validation error on account code
+      * 38 - Validation error on client
+      * 39 - Validation error on profit centre
+      * 40 - Enable F8 on Further details screen
+      * 41 - Error on read of GLHIBLL1
+      * 42 - Error on read of Further details screen
+      * 43 - Term 1 not defined, do not display
+      * 44 - Term 2 not defined, do not display
+      * 45 - Error on read of GLAVBLL1
+      * 46 - Error on read of DR/CR average balances screen
+      * 47 - Validation error on book code
+      * 48 - Validation error on associated customer number
+      * 49 - Validation error on account sequence number
+      * 50 - Work indicator
+      * 51 - Rollup entered on Initial selection subfile
+      * 52 - Work indicator
+      * 60 - Used in dspf for sflend on message subfile (dummy *in)
+      * 98 - Seton if date format is MMDDYY (rather than DDMMYY)
+      * U6 - Program error
+      * U7 - Database error
+      * U8 - Database error
+      **************************************************************
+      /SPACE 3
+      *  S U B R O U T I N E   I N D E X
+      *
+      *  (Note that sr name indicates calling routine, eg sr/#BC is
+      *   called from sr/#B, #Z routines are called from anywhere)
+      *  (Note that sr's are ordered in the program to minimise
+      *   paging by bunching sr as close to exsr line as possible)
+      *
+      * MAIN   - Main control routine
+      * #BB    - Test for different user request of branch, ccy etc.
+      * #B     - Screen processing - main loop
+      * #BA    - Fill up Initial selection subfile
+      * #BAA   - Read next record valid from GLHIBLL3
+      * #BC    - Display further details screen
+      * #BCA   - Display DR/CR average balances screen
+      * #ZA    - Format 19,0 amount for display as 27A
+      * ZDATE2 - Convert a day number to date format, /COPY routine
+      * #ZB    - Call MCC0215 to produce report
+      * #A     - Initial processing
+      * *PSSR  - Program error subroutine
+      * INFSR  - File error subroutine
+      **************************************************************
+      /SPACE 3
+      *  P R O G R A M   C A L L E D   I N D E X
+      *
+      * QCMDEXC   - Used to submit MCC0215
+      * AOGELRR0  - General Ledger details access object
+      * AOACODR0  - Account codes access object
+      * AOBOOKR0  - Book codes access object
+      * AOBRCHR0  - Branch code access object
+      * AOCURRR0  - Currency details access object
+      * AOCUSTR0  - Customer details access object
+      * AOHBCGR0  - Group code details access object
+      * AOPRFCR0  - Profit centre access object
+      * MCC0215   - (SBMJOB) Produce report
+      * Y2CLMSC   - Clear program message queue
+      * Y2SNMGC   - Send message to program message queue
+      **************************************************************
+      /EJECT
+      ** CPYP  Copyright array
+     E                    CPYP    1   1 80
+      *
+      ** PG    To setup sbmjob for MCC0215
+     E**********          PG     65 257  1                                                    CSC023
+     E                    PG     65 325  1                                                    CSC023
+      *
+      ** RMV   To setup sbmjob for MIDASRMV
+     E**********          RMV    60 111  1                                                    CSC023
+     E                    RMV    65 130  1                                                    CSC023
+      *
+      ** ZS1   Field to be formatted, used by sr/#ZA
+     E                    ZS1        19  1 0
+      *
+      ** ZS2   Formatted field, used by sr/#ZA
+     E                    ZS2        27  1
+      *
+      ** BR    Branches user is authorised to
+     E***********         BR        100  3                                151104
+     E                    BR        900  3                                151104
+      ** Copy in date formatting arrays
+      /COPY ZSRSRC,ZDATE2Z1
+     E/COPY WNCPYSRC,MC0210E001
+      **************************************************************
+     E/EJECT
+      *
+     IRUNDAT    E DSRUNDAT
+      * External data area for run-date, dtaara/RUNDAT
+      *
+      *
+     IZBRU        DS
+      ** Authorised branches for the user
+      *
+      ** Index to the list of branches
+     I                                        2   4 IN
+      ** List of branches
+     I                                        5 154 BR1
+     I                                      155 304 BR2
+      *                                                                                       197434
+     IZBRU1       DS                                                                          197434
+      *                                                                                       197434
+      ** Bank Level Functions / Booking Branches 1                                            197434
+      *                                                                                       197434
+     I                                        1 255 BR11                                      197434
+     I                                      256 510 BR12                                      197434
+     I                                      511 765 BR13                                      197434
+     I                                      7661020 BR14                                      197434
+     I                                     10211275 BR15                                      197434
+     I                                     12761530 BR16                                      197434
+     I                                     15311785 BR17                                      197434
+     I                                     17861998 BR18                                      197434
+     IZBRU2       DS                                                                          197434
+      *                                                                                       197434
+      ** Bank Level Functions / Booking Bbanches 2                                            197434
+      *                                                                                       197434
+     I                                        1 255 BR21                                      197434
+     I                                      256 402 BR22                                      197434
+      *
+     IPSDS       SDS
+      **  Program Status DS
+      *
+     I                                      201 208 PFILE
+     I                                      244 253 JOB
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, Long Data Structure
+      *
+     IGLHBCG    E DSGLHBCGPD
+      **  Historic Balance Control Groups
+      *
+     IGLPERD    E DSGLPERDPD                                              CMC001
+      **  Period Details                                                  CMC001
+      *                                                                   CMC001
+     ISDGELR    E DSSDGELRPD
+      **  General Ledger details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Branch details
+      *
+     ISDACOD    E DSSDACODPD
+      **  Account code details
+     I              QQACCD                          ACCDQQ                                    CGL029
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Customer details
+     I              QQDFAC                          DFACQQ                                    CGL029
+      *
+     ISDPRFC    E DSSDPRFCPD
+      **  Profit centre details
+      *
+     ISDBOOK    E DSSDBOOKPD
+      **  Book code details
+      *
+     ISCSARD    E DSSCSARDPD                                              CMC001
+      *  DS for SCSARDPD                                                  CMC001
+      *                                                                   CMC001
+     IDS1         DS
+      * Used by sr/#ZA, links array and field to be formatted
+     I                                        1  190ZWRK19
+     I                                        1  190ZS1
+      *
+     ILDA       E DSLDA
+      ** Local data structure used for error handling
+      *
+     I*PCMD*****  DS                            257                                           CSC023
+     IPCMD        DS                            325                                           CSC023
+      ** Array used with QCMDEXC to sbmjob MCC0215
+     I**********                              1 257 PG                                        CSC023
+     I                                        1 325 PG                                        CSC023
+      *
+     I*PCMDR****  DS                            111                                           CSC023
+     IPCMDR       DS                            130                                           CSC023
+      ** Array used with QCMDEXC to sbmjob MIDASRMV
+     I**********                              1 111 RMV                                       CSC023
+     I                                        1 130 RMV                                       CSC023
+     I/COPY WNCPYSRC,MC0210I001
+      *
+      /EJECT
+      **************************************************************
+      * MAIN routine - Controlling routine
+      *
+      * NOTE: Generally fields beginning with 'P' are program defined.
+      *       Generally fields beginning with 'S' are display file
+      *       defined.
+      *
+      **************************************************************
+      *
+      ** Run initial processing
+     C           PBIS      IFEQ *BLANKS                    B1
+     C                     EXSR #A                         *1
+     C                     END                             E1
+      *
+      ** Process initial selection screen
+     C                     EXSR #B
+      *
+      ** End program if F3 or F10 has been pressed
+     C           PRETN     IFEQ 'E'                        B1
+     C           PRETN     OREQ 'F'                        B1
+     C           PRETN     OREQ 'C'                        B1
+     C                     SETON                     LR    *1
+     C                     END                             E1
+      *
+      ** Reset Return Code if F12 has been pressed
+     C           *IN12     IFEQ '1'                        B1
+     C           PRETN     IFNE 'R'                        B*2
+     C                     MOVE 'P'       PRETN            **2
+     C                     ELSE                            X*2
+     C                     MOVE ' '       PRETN            **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Must always close the files to allow override to different
+      ** members (for different group codes)
+      ** If file not open then open it
+     C           PAVOPN    IFEQ 'OPN'                      B1
+     C                     CLOSEGLAVBLL1                   *1
+     C                     MOVE *BLANKS   PAVOPN           *1
+     C                     END                             E1
+     C                     CLOSEGLHIBLL1
+     C                     CLOSEGLHIBLL3
+      *
+      ** Return to calling program
+     C                     RETRN
+      *
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BB - Test for change in user request of branch, ccy etc.
+      *          PRQFL is return as 'CHGD' if any user selection
+      *          field is changed and returned as *blanks if no
+      *          user selection field is changed. Also process for
+      *          '?' prompt processing.
+      *          PRQFL is returned as 'CHGD' if all fields are blanks
+      *          (i.e. user has removed all selection to return to
+      *          full subfile)
+      *
+      * Called from:     #B   Screen processing
+      *
+      **************************************************************
+     C           #BB       BEGSR
+      *
+      ** Reset user request flag to blanks
+     C                     MOVE *BLANKS   PRQFL   4
+      *
+      ** Check for all selection fields blank
+     C           SBRCDS    IFEQ *BLANKS                    B1
+     C           SCYCDS    ANDEQ*BLANKS                    B1
+     C           SACCDS    ANDEQ*BLANKS                    B1
+     C           SCUSTS    ANDEQ*BLANKS                    B1
+     C           SACSNS    ANDEQ*BLANKS                    B1
+     C           SPCCDS    ANDEQ*BLANKS                    B1
+     C           SBKCDS    ANDEQ*BLANKS                    B1
+     C           SOTTPS    ANDEQ*BLANKS                    B1
+     C           STSTYS    ANDEQ*BLANKS                    B1
+     C           SASCUS    ANDEQ*BLANKS                    B1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     END                             E1
+      *
+      ** If no change to selection fields, and <ENTER> has been
+      ** pressed, must reposition to top of subfile (this will avoid
+      ** showing blank screen with two <ENTER> presses).
+     C           SBRCDS    IFEQ PSVBR                      B1
+     C           SCYCDS    ANDEQPSVCY                      B1
+     C           SACCDS    ANDEQPSVAC                      B1
+     C           SCUSTS    ANDEQPSVCU                      B1
+     C           SACSNS    ANDEQPSVAN                      B1
+     C           SPCCDS    ANDEQPSVPR                      B1
+     C           SBKCDS    ANDEQPSVBO                      B1
+     C           SOTTPS    ANDEQPSVTP                      B1
+     C           STSTYS    ANDEQPSVST                      B1
+     C           SASCUS    ANDEQPSVAS                      B1
+     C           *IN03     ANDEQ'0'                        B1
+     C           *IN10     ANDEQ'0'                        B1
+     C           *IN11     ANDEQ'0'                        B1
+     C           *IN12     ANDEQ'0'                        B1
+     C           *IN13     ANDEQ'0'                        B1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     END                             E1
+      *
+      ** Test each field to see if they have been changed by comparing
+      ** with saved copy of the field
+      *
+      ** Call for '?' processing
+     C           SBRCDS    IFNE *BLANKS                    B1
+     C**********           CALL 'AOBRCHR0'                 *1                                 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*VERIFY' PRTCD   7        *1
+     C                     PARM '*KEY   ' POPTN   7        *1
+     C                     PARM SBRCDS    PKEY2   3        *1
+     C********** SDBRCH    PARM SDBRCH    DSFDY            *1                                 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFEQ *BLANKS                    B*2
+     C                     MOVELA8BRCD    SBRCDS           **2
+      *
+      ** Else send error message
+     C                     ELSE                            X*2
+     C                     SETON                     35    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0042' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Ensure user is authorised to the branch.
+     C           AGMBIN    IFEQ 'Y'                        B1
+     C           SBRCDS    ANDNE*BLANKS                    B1
+     C           PRTCD     ANDEQ*BLANKS                    B1
+     C                     MOVE IN        PIN     30       *1
+     C           SBRCDS    LOKUPBR,PIN                   50*1
+     C           *IN50     IFEQ '0'                        B*2
+     C                     SETON                     35    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0351' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM SBRCDS    PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           SBRCDS    IFNE PSVBR                      B1
+     C           PRQFL     ANDEQ*BLANKS                    B1
+     C           PRTCD     ANDEQ*BLANKS                    B1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     MOVELSBRCDS    PSVBR            *1
+     C           *LIKE     DEFN SBRCDS    PSVBR            *1
+     C                     END                             E1
+      *
+      ** Check for user selection of currency code
+      *
+      ** Call for '?' processing
+     C           SCYCDS    IFNE *BLANKS                    B1
+     C                     CALL 'AOCURRR0'                 *1
+     C                     PARM '*VERIFY' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C                     PARM SCYCDS    PKEY2            *1
+     C           SDCURR    PARM SDCURR    DSSDY            *1
+      *
+     C           PRTCD     IFEQ *BLANKS                    B*2
+     C                     MOVELA6CYCD    SCYCDS           **2
+      *
+      ** Else send error message
+     C                     ELSE                            X*2
+     C                     SETON                     36    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0023' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           SCYCDS    IFNE PSVCY                      B1
+     C           PRQFL     ANDEQ*BLANKS                    B1
+     C           PRTCD     ANDEQ*BLANKS                    B1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     MOVELSCYCDS    PSVCY            *1
+     C           *LIKE     DEFN SCYCDS    PSVCY            *1
+     C                     END                             E1
+      *
+      ** Check for user selection of account code
+      *
+      ** Call for '?' processing
+     C           SACCDS    IFNE *BLANKS                    B1
+     C                     CALL 'AOACODR0'                 *1
+     C                     PARM '*VERIFY' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C**********           PARM SACCDS    PKEY3   4        *1                                 CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY            *1                                 CGL029
+     C                     PARM SACCDS    PKEY10 10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFEQ *BLANKS                    B*2
+     C                     MOVELA5ACCD    SACCDS           **2
+      *
+      ** Else send error message
+     C                     ELSE                            X*2
+     C                     SETON                     37    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0147' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           SACCDS    IFNE PSVAC                      B1
+     C           PRQFL     ANDEQ*BLANKS                    B1
+     C           PRTCD     ANDEQ*BLANKS                    B1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     MOVELSACCDS    PSVAC            *1
+     C           *LIKE     DEFN SACCDS    PSVAC            *1
+     C                     END                             E1
+      *
+      ** Check for user selection of customer number
+      *
+      ** Call for '?' processing
+     C           SCUSTS    IFNE *BLANKS                    B1
+     C                     CALL 'AOCUSTR0'                 *1
+     C                     PARM '*VERIFY' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C                     PARM SCUSTS    PKEY4   6        *1
+     C                     PARM *BLANKS   PKEY5   7        *1
+     C***********SDCUST    PARM SDCUST    DSFDY            *1             176443
+     C           SDCUST    PARM SDCUST    DSSDY            *1             176443
+      *
+     C           PRTCD     IFEQ *BLANKS                    B*2
+     C                     MOVELBBCUST    SCUSTS           **2
+      *
+      ** Else send error message
+     C                     ELSE                            X*2
+     C                     SETON                     38    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0037' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           SCUSTS    IFNE PSVCU                      B1
+     C           PRQFL     ANDEQ*BLANKS                    B1
+     C           PRTCD     ANDEQ*BLANKS                    B1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     MOVELSCUSTS    PSVCU            *1
+     C           *LIKE     DEFN SCUSTS    PSVCU            *1
+     C                     END                             E1
+      *
+      ** Check for user selection of account sequence number
+      ** Must be numeric
+     C           SACSNS    IFNE *BLANKS                    B1
+     C                     TESTN          SACSNS     50    *1
+     C                     MOVE SACSNS    PSIGN   1        *1
+     C                     TESTZ          PSIGN          52*1
+     C           *IN50     IFEQ '0'                        B*2
+     C           *IN52     ANDEQ'0'                        B*2
+     C                     SETON                     49    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0224' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           SACSNS    IFNE PSVAN                      B1
+     C           PRQFL     ANDEQ*BLANKS                    *1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     MOVELSACSNS    PSVAN            *1
+     C           *LIKE     DEFN SACSNS    PSVAN            *1
+     C                     END                             E1
+      *
+      ** Check for user selection of profit centre
+      *
+      ** Call for '?' processing
+     C           SPCCDS    IFNE *BLANKS                    B1
+     C                     CALL 'AOPRFCR0'                 *1
+     C                     PARM '*VERIFY' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C**********           PARM SPCCDS    PKEY3            *1                                 CGL029
+     C                     PARM SPCCDS    PKEY3   4                                           CGL029
+     C           SDPRFC    PARM SDPRFC    DSFDY            *1
+      *
+     C           PRTCD     IFEQ *BLANKS                    B*2
+     C                     MOVELDSPCCD    SPCCDS           **2
+      *
+      ** Else send error message
+     C                     ELSE                            X*2
+     C                     SETON                     39    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0182' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           SPCCDS    IFNE PSVPR                      B1
+     C           PRQFL     ANDEQ*BLANKS                    B1
+     C           PRTCD     ANDEQ*BLANKS                    B1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     MOVELSPCCDS    PSVPR            *1
+     C           *LIKE     DEFN SPCCDS    PSVPR            *1
+     C                     END                             E1
+      *
+      ** Check for user selection of book code
+      *
+      ** Call for '?' processing
+     C           SBKCDS    IFNE *BLANKS                    B1
+     C                     CALL 'AOBOOKR0'                 *1
+     C                     PARM '*VERIFY' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C                     PARM SBKCDS    PKEY3            *1
+     C           SDBOOK    PARM SDBOOK    DSFDY            *1
+      *
+     C           PRTCD     IFEQ *BLANKS                    B*2
+     C                     MOVELBDBKCD    SBKCDS           **2
+      *
+      ** Else send error message
+     C                     ELSE                            X*2
+     C                     SETON                     47    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0240' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           SBKCDS    IFNE PSVBO                      B1
+     C           PRQFL     ANDEQ*BLANKS                    *1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     MOVELSBKCDS    PSVBO            *1
+     C           *LIKE     DEFN SBKCDS    PSVBO            *1
+     C                     END                             E1
+      *
+      ** Check for user selection of transaction type
+     C           SOTTPS    IFNE PSVTP                      B1
+     C           PRQFL     ANDEQ*BLANKS                    B1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     MOVELSOTTPS    PSVTP            *1
+     C           *LIKE     DEFN SOTTPS    PSVTP            *1
+     C                     END                             E1
+      *
+      ** Check for user selection of transaction subtype
+     C           STSTYS    IFNE PSVST                      B1
+     C           PRQFL     ANDEQ*BLANKS                    *1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     MOVELSTSTYS    PSVST            *1
+     C           *LIKE     DEFN STSTYS    PSVST            *1
+     C                     END                             E1
+      *
+      ** Check for user selection of associated customer number
+      *
+      ** Call for '?' processing
+     C           SASCUS    IFNE *BLANKS                    B1
+     C                     CALL 'AOCUSTR0'                 *1
+     C                     PARM '*VERIFY' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C                     PARM SASCUS    PKEY4            *1
+     C                     PARM *BLANKS   PKEY5            *1
+     C***********SDCUST    PARM SDCUST    DSFDY            *1             176443
+     C           SDCUST    PARM SDCUST    DSSDY            *1             176443
+      *
+     C           PRTCD     IFEQ *BLANKS                    B*2
+     C                     MOVELBBCUST    SASCUS           **2
+      *
+      ** Else send error message
+     C                     ELSE                            X*2
+     C                     SETON                     48    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0058' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           SASCUS    IFNE PSVAS                      B1
+     C           PRQFL     ANDEQ*BLANKS                    B1
+     C           PRTCD     ANDEQ*BLANKS                    B1
+     C                     MOVE 'CHGD'    PRQFL            *1
+     C                     MOVELSASCUS    PSVAS            *1
+     C           *LIKE     DEFN SASCUS    PSVAS            *1
+     C                     END                             E1
+      *
+     C           #BB9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#B - Set up screen
+      *
+      * Called from:     MAIN routine
+      *
+      **************************************************************
+     C           #B        BEGSR
+      *
+     C                     OPEN GLHIBLL3
+     C                     OPEN GLHIBLL1
+      *
+      ** Setof various indicators that may be seton during previous
+      ** call to program
+     C                     SETOF                     1240
+     C                     SETOF                     353637
+     C                     SETOF                     383947
+     C                     SETOF                     484929
+     C   14                MOVE *BLANKS   SBRCDS
+     C                     MOVE *BLANKS   SCYCDS
+     C                     MOVE *BLANKS   SACCDS
+     C                     MOVE *BLANKS   SCUSTS
+     C                     MOVE *BLANKS   SACSNS
+     C   15                MOVE *BLANKS   SPCCDS
+     C                     MOVE *BLANKS   SBKCDS
+     C                     MOVE *BLANKS   SOTTPS
+     C                     MOVE *BLANKS   STSTYS
+     C                     MOVE *BLANKS   SASCUS
+      *
+      ** Obtain group code details for this call to program.
+      ** This has been validated as existing by previous pgm, MC0205
+      ** so if not on file must be database error (access program
+      ** takes control and reroutes if error)
+     C                     CALL 'AOHBCGR0'
+     C                     PARM '*DBERR ' PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM PGRCD     PKEY1   2
+     C           GLHBCG    PARM GLHBCG    DSFDY
+      *                                                                   CMC001
+      **  Once period set code was retrieved from GLHBCGPD, obtain        CMC001
+      **  period details                                                  CMC001
+      *                                                                   CMC001
+     C                     MOVELHCPSTC    WRK5    5                       CMC001
+     C                     MOVE PPDYE     WRK5                            CMC001
+     C                     MOVELWRK5      WRK7    7                       CMC001
+     C                     MOVE PPDNY     WRK7                            CMC001
+     C                     CALL 'AOPERDR0'                                CMC001
+     C                     PARM *BLANKS   PRTCD                           CMC001
+     C                     PARM '*KEY   ' POPTN                           CMC001
+     C                     PARM WRK7      PKEY7   7                       CMC001
+     C           GLPERD    PARM GLPERD    DSFDY                           CMC001
+      *                                                                   CMC001
+      ****If*error*in*accessing*period*details,*issue*DB*error      CMC001120835
+      **  If error in accessing period details, issue error message       120835
+      *                                                                   CMC001
+     C           PRTCD     IFNE *BLANK                                    CMC001
+     C***********          MOVEL'MC0210  'DBPGM                     CMC001120835
+     C***********          MOVEL'GLPERDPD'DBFILE       ***********  CMC001120835
+     C***********          Z-ADD05        DBASE        * DBASE 05*  CMC001120835
+     C***********          MOVELPKEY7     DBKEY        ***********  CMC001120835
+     C***********          SETON                     U7U8LR         CMC001120835
+     C***********          MOVE 'Y'       PRETN                     CMC001120835
+     C***********          DUMP                                     CMC001120835
+     C                     MOVE '1'       PRETN                           120835
+     C                     GOTO #B9                                       CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CMC001
+      **  Disable F13 (Recreate Balances) if Management Accounts          CMC001
+      **  enhancement is on and enquiring upon a closed period            CMC001
+      *                                                                   CMC001
+     C           CMC001    IFEQ 'Y'                                       CMC001
+     C           DTCLSD    ANDGT*ZERO                                     CMC001
+     C                     MOVE '1'       *IN18                           CMC001
+     C                     ENDIF                                          CMC001
+      *
+      ** Obtain currency decimal places (access program takes control
+      ** and reroutes if error) using currency of balances from
+      ** file GLHBCGPD if it is not blank
+     C           HCCCYB    IFNE *BLANKS                    B1
+     C                     CALL 'AOCURRR0'                 *1
+     C                     PARM '*DBERR ' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C                     PARM HCCCYB    PKEY2   3        *1
+     C           SDCURR    PARM SDCURR    DSSDY            *1
+     C                     Z-ADDA6NBDP    PNBDP   10       *1
+     C                     END                             E1
+      *
+      ** Year is received from *entry as 4A field but is stored on
+      ** file as century 2A and year 2A so split up *entry field.
+     C                     MOVELPPDYE     PPDCT            Period century
+     C                     MOVE PPDYE     PPDYR            Period year
+      *
+     C           *LIKE     DEFN HBPDCT    PPDCT
+     C           *LIKE     DEFN HBPDYR    PPDYR
+      *
+      ** Must force an initial setll on GLHIBLL3 so force sr/#BB to
+      ** return 'CHGD' with the first run
+     C                     MOVE '1ST'     PSVBR
+      *
+      ** Main processing loop for the screen
+      ** Loop until F3 (exit to main Midas menu), F12 (return to
+      ** calling program), F10 is pressed
+     C           *IN03     DOWEQ'0'                        B1
+     C           *IN10     ANDEQ'0'                        B1
+     C           *IN12     ANDEQ'0'                        B1
+      *
+      ** See if user has requested different branch, ccy etc. Will
+      ** want to display from top of file again by resetting pointer
+      ** #BB returns PRQFL set to 'CHGD' if fields are changed.
+     C           *IN51     IFEQ '0'                        B*2
+     C           PSUBF     ANDEQ*BLANKS                    B*2
+     C                     EXSR #BB                        **2
+     C                     END                             E*2
+      *
+      ** If rollup not pressed and no blank screen to display
+      ** and user has changed requested particular
+      ** branch, ccy etc. Or F13 (recreate balances)
+      ** then position file pointer
+     C           *IN51     IFEQ '0'                        B*2
+     C           PSUBF     ANDEQ*BLANKS                    B*2
+     C           PRQFL     ANDEQ'CHGD'                     B*2
+     C           *IN13     OREQ '1'                        B*2
+      *
+      ** Set file pointer on Historic balances by period year/number
+      ** file for period year, period number from *entry parm.
+      ** Note that this has been overridden to the appropriate member
+      ** before this program is called. Use GLHIBLL3.
+     C           KHIBL     SETLL@HIBLEE                  20**2
+     C           KHIBL     KLIST                           **2
+     C                     KFLD           PPDCT            **2
+     C                     KFLD           PPDYR            **2
+     C                     KFLD           PPDNY            **2
+      *
+      ** Clear the subfile to remove details from any previous call
+     C                     SETON                     30    **2
+     C                     WRITEMC0210C1                   **2
+     C                     SETOF                     30    **2
+      *
+      ** Initialise subfile record counter and the sflrcdnbr field
+     C                     Z-ADD1         PRRN1   40       **2
+     C                     Z-ADD1         DSPREC           **2
+     C                     END                             E*2
+      *
+      ** If details found on GLHIBLL3 for the *entry parms or rollup
+      ** pressed and F13 has no messages to display
+     C           *IN20     IFEQ '1'                        B*2
+     C           PSUBF     ANDEQ*BLANKS                    B*2
+     C           *IN51     OREQ '1'                        B*2
+     C           PSUBF     ANDEQ*BLANKS                    B*2
+      *
+      ** Fill up/display subfile with details from GLHIBLL3
+     C                     EXSR #BA                        **2
+     C           *INU7     CABEQ'1'       #B9              CAB
+     C                     END                             E*2
+      *
+      ** Must display empty subfile if #BA has found no valid rcds
+      ** when considering user selection (no rcds in subfile) or
+      ** if no details found for key on setll (*IN20 is setoff) or
+      ** a message to display.
+     C           *IN20     IFEQ '0'                        B*2
+     C           PSUBF     ANDEQ*BLANKS                    B*2
+     C           PCOUNT    OREQ *ZERO                      B*2
+      *
+      ** Ensure user selection are non display and protect
+     C                     SETON                     34    **2
+      *
+      ** Clear the subfile
+     C                     SETON                     30    **2
+     C                     WRITEMC0210C1                   **2
+     C                     SETOF                     30    **2
+      *
+      ** Fill the subfile with blanks
+     C                     Z-ADD1         PRRN1            **2
+     C           PRRN1     DOWLT11                         B**3
+     C                     MOVE *BLANKS   SUSSN            ***3
+     C   14                MOVE *BLANKS   SBRCD            ***3
+     C                     MOVE *BLANKS   SCYCD            ***3
+     C                     MOVE *BLANKS   SACCD            ***3
+     C                     MOVE *BLANKS   SCUST            ***3
+     C                     MOVE *BLANKS   SACSN            ***3
+     C   15                MOVE *BLANKS   SPCCD            ***3
+     C                     MOVE *BLANKS   SBKCD            ***3
+     C                     MOVE *BLANKS   SOTTP            ***3
+     C                     MOVE *BLANKS   STSTY            ***3
+     C                     MOVE *BLANKS   SASCU            ***3
+     C                     WRITEMC0210S1                   ***3
+     C                     ADD  1         PRRN1            ***3
+     C                     END                             E**3
+     C                     Z-ADD1         DSPREC           **2
+      *
+      ** Ensure '+' is not shown but that subfile details are shown
+     C                     SETON                     313233**2
+      *
+      ** Setup No details.... message and display headings and footer
+     C           PCOUNT    IFEQ *ZERO                      B**3
+     C           *IN20     OREQ '0'                        B**3
+     C                     CALL 'Y2SNMGC'                  ***3
+     C                     PARM 'MC0210  'PYPGM  10        ***3
+     C                     PARM *BLANKS   PYPGRL  5        ***3
+     C                     PARM 'GLX0347' PYMSID  7        ***3
+     C                     PARM 'GLUSRMSG'PYMSGF 10        ***3
+     C                     PARM *BLANKS   PYMSDA132        ***3
+     C                     PARM *BLANKS   PYMSTP  7        ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+      ** If recreate balances attempt was unsuccessful because the
+      ** program was already active, show message on screen
+     C           PRETN     IFEQ 'B'                        B*2
+     C                     SETON                     32    **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM  10        **2
+     C                     PARM *BLANKS   PYPGRL  5        **2
+     C                     PARM 'GLX0348' PYMSID  7        **2
+     C                     PARM 'GLUSRMSG'PYMSGF 10        **2
+     C                     PARM *BLANKS   PYMSDA132        **2
+     C                     PARM *BLANKS   PYMSTP  7        **2
+     C                     END                             E*2
+      *
+     C           PRETN     IFEQ 'A'                        B*2            048237
+     C                     MOVE 'R'       PRETN            **2            048237
+     C                     SETON                     32    **2            048237
+     C                     CALL 'Y2SNMGC'                  **2            048237
+     C                     PARM 'MC0210  'PYPGM  10        **2            048237
+     C                     PARM *BLANKS   PYPGRL  5        **2            048237
+     C                     PARM 'GLX0384' PYMSID  7        **2            048237
+     C                     PARM 'GLUSRMSG'PYMSGF 10        **2            048237
+     C                     PARM *BLANKS   PYMSDA132        **2            048237
+     C                     PARM *BLANKS   PYMSTP  7        **2            048237
+     C                     END                             E*2            048237
+      *                                                                   048237
+      ** If return code is sent back as 'R' then enable F10
+     C           PRETN     IFEQ 'R'                        B*2
+     C                     SETON                     29    **2
+     C                     END                             E*2
+      *
+      ** Now write subfile and footer and message subfile
+      ** and screen headings with correct time.
+     C                     TIME           STIME            *1
+     C                     WRITEMC0210H1                   *1
+     C                     WRITEMC0210C2                   *1
+     C                     WRITEMC0210F1                   *1
+     C                     WRITEMC0210C1                   *1
+      *
+      ** setoff any subfile controlling inds ready for next display
+      ** and clear any messages, setoff setll indicator, etc.
+      ** Note that PSUBF is set to 'SUBF' when the pgm must display
+      ** the subfile but not rebuild it from file. PRQFL is set to
+      ** 'CHGD' if any of the selection fields are changed.
+     C                     SETOF                     303132*1
+     C                     SETOF                     343520*1
+     C                     SETOF                     363738*1
+     C                     SETOF                     394748*1
+     C                     SETOF                     49    *1
+     C                     MOVE *BLANKS   PRQFL            *1
+     C                     MOVE *BLANKS   PSUBF   4        *1
+     C                     CALL 'Y2CLMSC'                  *1
+     C                     PARM 'MC0210  'PYPGM            *1
+     C                     PARM '*SAME'   PYPGRL           *1
+      *
+      ** Read file
+     C                     READ MC0210C1                 25*1
+      *
+      ** If F11 has been pressed, produce a report
+     C           *IN11     IFEQ '1'                        B*2
+     C                     EXSR #ZB                        **2
+     C                     SETOF                     11    **2
+     C                     END                             E*2
+      *
+      ** If F3 has been pressed from either full subfile or no details
+      ** to report empty subfile, exit program
+     C           *IN03     IFEQ '1'                        B*2
+     C           PRETN     IFEQ 'R'                        B**3
+     C                     MOVE 'F'       PRETN            ***3
+     C                     ELSE                            X**3
+     C                     MOVE 'E'       PRETN            ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+      ** If F10 has been pressed from either full subfile or no details
+      ** to report empty subfile, exit program. But user must repeat
+      ** pressing F10 after confirmation message is sent.
+     C           *IN10     IFEQ '1'                        B*2
+     C           PPRESS    ANDEQ'F10'                      B*2
+     C                     MOVE 'C'       PRETN            **2
+     C                     END                             E*2
+      *
+      ** If first press of F10 then send warning message asking
+      ** for confirmation of F10
+     C           *IN10     IFEQ '1'                        B*2
+     C           PPRESS    ANDEQ*BLANKS                    B*2
+     C                     MOVE 'F10'     PPRESS  3        **2
+     C                     CALL 'Y2SNMGC'                  **2
+     C                     PARM 'MC0210  'PYPGM            **2
+     C                     PARM *BLANKS   PYPGRL           **2
+     C                     PARM 'GLX0350' PYMSID           **2
+     C                     PARM 'GLUSRMSG'PYMSGF           **2
+     C                     PARM *BLANKS   PYMSDA           **2
+     C                     PARM *BLANKS   PYMSTP           **2
+     C                     END                             E*2
+      *
+      ** If confirmation is not taken blank out working field PPRESS
+     C           *IN10     IFEQ '0'                        B*2
+     C           PPRESS    ANDEQ'F10'                      B*2
+     C                     MOVE *BLANKS   PPRESS           **2
+     C                     ELSE                                          048237
+     C           PRETN     IFNE 'C'                        B*3           048237
+     C                     MOVE '0'       *IN10            **3           048237
+     C                     END                             E*3           048237
+     C                     END                             E*2
+      *
+      ** If F13 has been pressed from either full subfile or no details
+      ** to report empty subfile, set return code to 'R' and return to
+      ** MCC0210 to call the recreate program
+     C           *IN13     IFEQ '1'                        B*2
+     C                     MOVE 'R'       PRETN            **2
+     C                     SETON                     LR    **2
+     C                     RETRN                           **2
+     C                     END                             E*2
+      *
+      ** Process each user selection as long as F3, F10, F11, F12
+      ** and rollup have not been pressed
+     C           *IN03     IFEQ '0'                        B*2
+     C           *IN10     ANDEQ'0'                        B*2
+     C           *IN11     ANDEQ'0'                        B*2
+     C           *IN12     ANDEQ'0'                        B*2
+     C           *IN51     ANDEQ'0'                        B*2
+      *
+      ** READC overwrites subfile rcd number so must save it
+     C                     Z-ADDPRRN1     PSRRN1  40       **2
+      *
+      ** Go through each user selection in turn and display more info
+      ** unless F3 or F12 taken from one of further screens
+     C           *IN23     DOWEQ'0'                        B**3
+     C           *IN03     ANDEQ'0'                        B**3
+     C           *IN12     ANDEQ'0'                        B**3
+     C                     READCMC0210S1                 23***3
+      *
+      ** Give further details for all non blank characters (must
+      ** check for blanks in case user changes rcd then blanks the
+      ** selection out, is changed record but not a select)
+     C           SUSSN     IFNE *BLANKS                    B***4
+     C                     MOVE 'SUBF'    PSUBF            ****4
+     C                     EXSR #BC                        ****4
+     C                     Z-ADDPRRN1     DSPREC           ****4
+     C           *INU7     CABEQ'1'       #B9              CAB
+     C                     END                             E***4
+     C                     END                             E**3
+      *
+      ** READC overwrites subfile rcd number so must restore it
+     C                     Z-ADDPSRRN1    PRRN1            **2
+     C                     SETOF                     1223  **2
+     C                     SETON                     3132  **2
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+     C           #B9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BA - Fill up initial selection subfile for historic
+      *          balances by Period year/period number.
+      *          This routine returns either:
+      *          A subfile containing records
+      *       or PFLAG set to *blanks and no rcds written to subfile
+      *
+      * Called from:     #B   Screen processing
+      *
+      **************************************************************
+     C           #BA       BEGSR
+      *
+      ** Reset record count (to ensure only fill one page a time)
+     C                     Z-ADD*ZERO     PCOUNT  20
+      *
+      ** Save position of subfile so when returning to screen
+      ** go back to page containing the first selection
+     C                     Z-ADDPRRN1     DSPREC
+      *
+      ** Read next record from historic balances file which
+      ** meets various selection requirements. File pointer has
+      ** been set in previous subroutine and file is overridden
+      ** to the member for the selected group in previous program.
+      ** #BAA returns either  Valid record from GLHIBLL3 and PFLAG set
+      ** to 'OK'  Or PFLAG set to *blanks if no valid record found
+     C                     EXSR #BAA
+      *
+      ** If no rcd found skip to end of this subroutine
+     C           PFLAG     CABEQ*BLANKS   #BA9             CAB
+      *
+      ** If at least one record to display then set on subfile
+      ** display indicators and process the subfile and ensure blank
+      ** subfile is not displayed
+     C                     SETON                     313220
+      *
+      ** Load subfile while GLHIBLL3 has records which meet the various
+      ** selection requirements or the subfile page is full. (Note that
+      ** the 12th line contains only the option '+').
+      ** Valid record found
+     C           PFLAG     DOWEQ'OK'                       B1
+      ** Page size
+     C           PCOUNT    ANDLT11                         B1
+      *
+      ** Set up screen fields
+      ** User selection
+     C                     MOVE *BLANKS   SUSSN            *1
+      ** Branch code (only displayed for multibranched system)
+     C   14                MOVELHBBRCD    SBRCD            *1
+      ** Currency code
+     C                     MOVELHBCYCD    SCYCD            *1
+      ** Account code
+     C                     MOVELHBACCD    SACCD            *1
+      ** Customer number
+     C           HBCUST    IFEQ '000000'
+     C                     MOVE *BLANKS   SCUST
+     C                     ELSE
+     C                     MOVELHBCUST    SCUST            *1
+     C                     END
+      ** Account sequence
+     C           HBACSN    IFEQ '00'
+     C                     MOVE *BLANKS   SACSN
+     C                     ELSE
+     C                     MOVELHBACSN    SACSN            *1
+     C                     END
+      ** Profit centre (only displayed if Profit Centres used)
+     C   15                MOVELHBPCCD    SPCCD            *1
+      ** Book code
+     C                     MOVELHBBKCD    SBKCD            *1
+      ** Transaction type
+     C                     MOVELHBOTTP    SOTTP            *1
+      ** Transaction sub-type
+     C                     MOVELHBTSTY    STSTY            *1
+      ** Associated customer number
+     C           HBACNB    IFEQ '000000'
+     C                     MOVE *BLANKS   SASCU
+     C                     ELSE
+     C                     MOVELHBACNB    SASCU            *1
+     C                     END
+      *
+     C                     WRITEMC0210S1                   *1
+      *
+      ** Increment subfile record number count
+     C                     ADD  1         PRRN1            *1
+     C                     ADD  1         PCOUNT           *1
+      *
+      ** Read next record from historic balances file which
+      ** meets various selection requirements as long as subfile
+      ** not full
+     C           PCOUNT    IFLT 11                         B*2
+     C                     EXSR #BAA                       **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Increment subfile record because line 12 used only for '+'
+     C                     ADD  1         PRRN1
+      *
+      ** Seton subfile end indicator so '+' only shown as required
+     C                     SETON                     33
+      *
+      ** If subfile was full then must read ahead to see if need
+      ** to display the '+'
+     C           PCOUNT    IFEQ 11                         B1
+      *
+      ** Save current position of file pointer
+     C                     MOVELHBPDCT    PKCT             *1
+     C           *LIKE     DEFN HBPDCT    PKCT             *1
+     C                     MOVELHBPDYR    PKYR             *1
+     C           *LIKE     DEFN HBPDYR    PKYR             *1
+     C                     MOVELHBPDNY    PKNY             *1
+     C           *LIKE     DEFN HBPDNY    PKNY             *1
+     C                     MOVELHBBRCD    PKBR             *1
+     C           *LIKE     DEFN HBBRCD    PKBR             *1
+     C                     MOVELHBCYCD    PKCY             *1
+     C           *LIKE     DEFN HBCYCD    PKCY             *1
+     C                     MOVELHBACCD    PKAC             *1
+     C           *LIKE     DEFN HBACCD    PKAC             *1
+     C                     MOVELHBCUST    PKCU             *1
+     C           *LIKE     DEFN HBCUST    PKCU             *1
+     C                     MOVELHBACSN    PKAN             *1
+     C           *LIKE     DEFN HBACSN    PKAN             *1
+     C                     MOVELHBPCCD    PKPR             *1
+     C           *LIKE     DEFN HBPCCD    PKPR             *1
+     C                     MOVELHBBKCD    PKBO             *1
+     C           *LIKE     DEFN HBBKCD    PKBO             *1
+     C                     MOVELHBOTTP    PKTT             *1
+     C           *LIKE     DEFN HBOTTP    PKTT             *1
+     C                     MOVELHBTSTY    PKTY             *1
+     C           *LIKE     DEFN HBTSTY    PKTY             *1
+     C                     MOVELHBACNB    PKAS             *1
+     C           *LIKE     DEFN HBACNB    PKAS             *1
+      *
+      ** Read next record which meets various selection requirements
+     C                     EXSR #BAA                       *1
+      *
+      ** If there are more rcds to display show a '+'
+     C           PFLAG     IFEQ 'OK'                       B*2
+     C                     SETOF                     33    **2
+     C                     END                             E*2
+      *
+      ** reset file pointer using stored key field values
+     C           KHIBL2    SETGT@HIBLEE                    *1
+     C           KHIBL2    KLIST                           *1
+     C                     KFLD           PKCT             *1
+     C                     KFLD           PKYR             *1
+     C                     KFLD           PKNY             *1
+     C                     KFLD           PKBR             *1
+     C                     KFLD           PKCY             *1
+     C                     KFLD           PKAC             *1
+     C                     KFLD           PKCU             *1
+     C                     KFLD           PKAN             *1
+     C                     KFLD           PKPR             *1
+     C                     KFLD           PKBO             *1
+     C                     KFLD           PKTT             *1
+     C                     KFLD           PKTY             *1
+     C                     KFLD           PKAS             *1
+      *
+     C                     END                             E1
+      *
+     C           #BA9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BAA - Read forward next record from GLHIBLL3 considering
+      *           any user selections.
+      *           This routine returns either:
+      *           Valid record from GLHIBLL3 and PFLAG set to 'OK'
+      *        or PFLAG set to *blanks
+      *
+      * Called from:     #BA  Fill up subfile
+      *
+      *
+      **************************************************************
+     C           #BAA      BEGSR
+      *
+      ** Read record from historic balances file, file pointer has
+      ** been set in a previous subroutine and file is overridden
+      ** to the member for the selected group in previous program.
+      ** If user selection fields have been entered must only display
+      ** records which meet the selection requirements.
+      *
+      ** Meets user selection requirements
+     C           PFLAG     DOUEQ'OK'                       B1
+      ** Period century compare with *entry parms
+     C           HBPDCT    ORGT PPDCT                      B1
+      ** Period year compare with *entry parms
+     C           HBPDYR    ORGT PPDYR                      B1
+      ** Period number compare with *entry parms
+     C           HBPDNY    ORGT PPDNY                      B1
+      ** End of file
+     C           *IN21     OREQ '1'                        B1
+      ** Error on read (perhaps locked by a rebuild??)
+     C           *IN22     OREQ '1'                        B1
+      *
+     C                     MOVE 'OK'      PFLAG   2        *1
+      *
+      ** Read GLHIBLL3
+     C                     READ @HIBLEE                2221*1
+      *
+      *
+      ** Ensure user is authorised to the branch. If not then do not
+      ** allow user to see any details for the record.
+     C           AGMBIN    IFEQ 'Y'                        B*2
+     C           HBBRCD    ANDNE*BLANKS                    B*2
+     C                     MOVE IN        PIN     30       **2
+     C           HBBRCD    LOKUPBR,PIN                   50**2
+     C           *IN50     IFEQ '0'                        B**3
+     C                     MOVE *BLANKS   PFLAG            ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+      ** Check for user selection of branch code
+     C           SBRCDS    IFNE *BLANKS                    B*2
+     C           SBRCDS    ANDNEHBBRCD                     B*2
+     C           PFLAG     ANDNE*BLANKS                    B*2
+     C                     MOVE *BLANKS   PFLAG            **2
+     C                     END                             E*2
+      *
+      ** Check for user selection of currency code
+     C           SCYCDS    IFNE *BLANKS                    B*2
+     C           SCYCDS    ANDNEHBCYCD                     B*2
+     C           PFLAG     ANDNE*BLANKS                    B*2
+     C                     MOVE *BLANKS   PFLAG            **2
+     C                     END                             E*2
+      *
+      ** Check for user selection of account code
+     C           SACCDS    IFNE *BLANKS                    B*2
+     C           SACCDS    ANDNEHBACCD                     B*2
+     C           PFLAG     ANDNE*BLANKS                    B*2
+     C                     MOVE *BLANKS   PFLAG            **2
+     C                     END                             E*2
+      *
+      ** Check for user selection of customer number
+     C           SCUSTS    IFNE *BLANKS                    B*2
+     C           SCUSTS    ANDNEHBCUST                     B*2
+     C           PFLAG     ANDNE*BLANKS                    B*2
+     C                     MOVE *BLANKS   PFLAG            **2
+     C                     END                             E*2
+      *
+      ** Check for user selection of account sequence number
+     C           SACSNS    IFNE *BLANKS                    B*2
+     C           SACSNS    ANDNEHBACSN                     B*2
+     C           PFLAG     ANDNE*BLANKS                    B*2
+     C                     MOVE *BLANKS   PFLAG            **2
+     C                     END                             E*2
+      *
+      ** Check for user selection of profit centre
+     C           SPCCDS    IFNE *BLANKS                    B*2
+     C           SPCCDS    ANDNEHBPCCD                     B*2
+     C           PFLAG     ANDNE*BLANKS                    B*2
+     C                     MOVE *BLANKS   PFLAG            **2
+     C                     END                             E*2
+      *
+      ** Check for user selection of book code
+     C           SBKCDS    IFNE *BLANKS                    B*2
+     C           SBKCDS    ANDNEHBBKCD                     B*2
+     C           PFLAG     ANDNE*BLANKS                    B*2
+     C                     MOVE *BLANKS   PFLAG            **2
+     C                     END                             E*2
+      *
+      ** Check for user selection of transaction type
+     C           SOTTPS    IFNE *BLANKS                    B*2
+     C           SOTTPS    ANDNEHBOTTP                     B*2
+     C           PFLAG     ANDNE*BLANKS                    B*2
+     C                     MOVE *BLANKS   PFLAG            **2
+     C                     END                             E*2
+      *
+      ** Check for user selection of transaction subtype
+     C           STSTYS    IFNE *BLANKS                    B*2
+     C           STSTYS    ANDNEHBTSTY                     B*2
+     C           PFLAG     ANDNE*BLANKS                    B*2
+     C                     MOVE *BLANKS   PFLAG            **2
+     C                     END                             E*2
+      *
+      ** Check for user selection of associated customer number
+     C           SASCUS    IFNE *BLANKS                    B*2
+     C           SASCUS    ANDNEHBACNB                     B*2
+     C           PFLAG     ANDNE*BLANKS                    B*2
+     C                     MOVE *BLANKS   PFLAG            **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** Period century compare with *entry parms
+     C           HBPDCT    IFGT PPDCT                      B1
+      ** Period year compare with *entry parms
+     C           HBPDYR    ORGT PPDYR                      B1
+      ** Period number compare with *entry parms
+     C           HBPDNY    ORGT PPDNY                      B1
+      ** End of file
+     C           *IN21     OREQ '1'                        B1
+      ** Error on read
+     C           *IN22     OREQ '1'                        B1
+     C                     MOVE *BLANKS   PFLAG            *1
+     C                     END                             E1
+      *
+     C           #BAA9     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BC - Display Further details screen. Is called for each
+      *          user selection of a subfile record.
+      *          From this screen F3 causes return to Midas, F12
+      *          causes redisplay of subfile (allowing change of
+      *          user selected records), <ENTER> causes the display
+      *          of next selected subfile record, F11 produces
+      *          a report and remains on this screen, F8 goes to DR/CR
+      *          average balances screen.
+      *
+      * Called from:   #BA    Fill up subfile
+      *
+      * Calls:         #ZA    Format 19,0 field as 27A
+      *                #BCA   Display DR/CR average balances screen
+      *
+      **************************************************************
+     C           #BC       BEGSR
+      *
+      ** Blank out selection character on the subfile
+     C                     MOVE *BLANKS   SUSSN
+      *
+      ** Update the subfile record for the blank selection character
+     C                     UPDATMC0210S1
+      *
+      *
+      ** Branch code (only displayed for multibranched system)
+     C   14                MOVELSBRCD     SBRCD2
+      ** Currency code
+     C                     MOVELSCYCD     SCYCD2
+      ** Account code
+     C                     MOVELSACCD     SACCD2
+      ** Customer number
+     C                     MOVELSCUST     SCUST2
+      ** Account sequence
+     C                     MOVELSACSN     SACSN2
+      ** Profit centre (only diplayed if Profit Centres used)
+     C   15                MOVELSPCCD     SPCCD2
+      ** Book code
+     C                     MOVELSBKCD     SBKCD2
+      ** Transaction type
+     C                     MOVELSOTTP     SOTTP2
+      ** Transaction sub-type
+     C                     MOVELSTSTY     STSTY2
+      ** Associated customer number
+     C                     MOVELSASCU     SASCU2
+      *
+      ** Read the selected record from GLHIBLPD for further details
+      ** via another logical file to avoid repositioning the GLHIBLL3
+      ** file pointer used for subfile display. Use GLHIBLL1.
+     C           *LIKE     DEFN HBCGCD    PKCG
+     C                     MOVELPGRCD     PKCG
+     C                     MOVELSBRCD     PKBR
+     C                     MOVELSCYCD     PKCY
+     C                     MOVELSACCD     PKAC
+     C           SCUST     IFEQ *BLANK
+     C                     MOVE *ZEROS    PKCU
+     C                     ELSE
+     C                     MOVELSCUST     PKCU
+     C                     END
+     C           SACSN     IFEQ *BLANK
+     C                     MOVE *ZEROS    PKAN
+     C                     ELSE
+     C                     MOVELSACSN     PKAN
+     C                     END
+     C                     MOVELSPCCD     PKPR
+     C                     MOVELSBKCD     PKBO
+     C                     MOVELSOTTP     PKTT
+     C                     MOVELSTSTY     PKTY
+     C           SASCU     IFEQ *BLANK
+     C                     MOVE *ZEROS    PKAS
+     C                     ELSE
+     C                     MOVELSASCU     PKAS
+     C                     END
+     C                     MOVELPPDCT     PKCT
+     C                     MOVELPPDYR     PKYR
+     C                     MOVELPPDNY     PKNY
+      *
+      ** Access GLHIBLL1
+     C           KHIBL3    CHAIN@BORED7              41
+     C           KHIBL3    KLIST
+     C                     KFLD           PKCG
+     C                     KFLD           PKBR
+     C                     KFLD           PKCY
+     C                     KFLD           PKAC
+     C                     KFLD           PKCU
+     C                     KFLD           PKAN
+     C                     KFLD           PKPR
+     C                     KFLD           PKBO
+     C                     KFLD           PKTT
+     C                     KFLD           PKTY
+     C                     KFLD           PKAS
+     C                     KFLD           PKCT
+     C                     KFLD           PKYR
+     C                     KFLD           PKNY
+      *
+      ** If record not found, process for database error
+     C           *IN41     IFEQ '1'                        B1
+     C                     SETON                     U7U8LR*1
+     C                     MOVE 'Y'       PRETN            *1
+     C                     MOVEL'GLHIBLL1'DBFILE           *1
+     C                     Z-ADD001       DBASE            *1
+     C                     MOVEL'See Dump'DBKEY            *1
+     C                     MOVEL'MC0210'  DBPGM            *1
+     C                     DUMP                            *1
+     C                     GOTO #BC9                       GOTO
+     C                     END                             E1
+      *
+      ** Obtain currency decimal places (access program takes control
+      ** and reroutes if error) using currency from GLHIBLL1 if
+      ** currency of balances from file GLHBCGPD is blank
+     C           HCCCYB    IFEQ *BLANKS                    B1
+     C                     CALL 'AOCURRR0'                 *1
+     C                     PARM '*DBERR ' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C                     PARM HBCYCD    PKEY2            *1
+     C           SDCURR    PARM SDCURR    DSSDY            *1
+     C                     Z-ADDA6NBDP    PNBDP            *1
+     C                     END                             E1
+      *
+      ** Start of Year Date
+     C                     Z-ADDHBSOYD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SSYDD3
+      *
+      ** Period Opening Balance (formatted for 27A display)
+     C                     Z-ADDHBPDOB    ZFLD19
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SPROB3
+      *
+      ** Start of Term 1 Date, only process and display if defined
+     C           HBST1D    IFEQ *ZEROS                     B1
+     C                     SETON                       43  *1
+     C                     ELSE                            X1
+     C                     Z-ADDHBST1D    ZDAYNO           *1
+     C                     EXSR ZDATE2                     *1
+     C                     MOVE ZADATE    SSTT13           *1
+     C                     SETOF                       43  *1
+     C                     END                             E1
+      *
+      ** Period Closing Balance (formatted for 27A display)
+     C                     Z-ADDHBPDCB    ZFLD19
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SPRCB3
+      *
+      ** Start of Term 2 Date, only process and display if defined
+     C           HBST2D    IFEQ *ZEROS                     B1
+     C                     SETON                       44  *1
+     C                     ELSE                            X1
+     C                     Z-ADDHBST2D    ZDAYNO           *1
+     C                     EXSR ZDATE2                     *1
+     C                     MOVE ZADATE    SSTT23           *1
+     C                     SETOF                       44  *1
+     C                     END                             E1
+      *
+      ** Account Section
+     C                     MOVELHBACSC    SACSC3
+      *
+      ** Start of Period Date
+     C                     Z-ADDHBSPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SSPRD3
+      *
+      ** Last Movement Date
+     C                     Z-ADDHBLMDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SSLMD3
+      *
+      ** End of Period Date
+     C                     Z-ADDHBEPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SEPRD3
+      *
+      ** Yearly Movements to-date (formatted for 27A display)
+     C                     Z-ADDHBYMTD    ZFLD19
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SYRMD3
+     C/COPY WNCPYSRC,MC0210C001
+      *
+      ** Term 1 Movements to-date (formatted for 27A display),
+      ** only process if defined (*IN43 set in this sr)
+     C           *IN43     IFEQ '0'                        B1
+     C                     Z-ADDHBT1MT    ZFLD19           *1
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    ST1MD3           *1
+      *
+      ** Average Balance Term 1 to-date (formatted for 27A display),
+      ** only process if defined (*IN43 set in this sr)
+      ** Derived from Weighted Balance and Days to Date fields from
+      ** GLHIBLPD
+      ** Use inclusive dates to date for the period, hence add 1
+     C           HBWT1B    IFEQ *ZEROS                     B*2
+     C                     Z-ADD*ZEROS    ZFLD19           **2
+     C                     ELSE                            X*2
+     C           HBEPDD    SUB  HBST1D    PDAYS            **2
+     C           PDAYS     ADD  1         PDAYS            **2
+     C/COPY WNCPYSRC,MC0210C002
+     C           HBWT1B    DIV  PDAYS     ZFLD19    H      **2
+     C/COPY WNCPYSRC,MC0210C003
+     C                     END                             E*2
+      *
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    SAT1D3           *1
+     C                     END                             E1
+      *
+      ** Term 2 Movements to-date (formatted for 27A display),
+      ** only process if defined (*IN44 set in this sr)
+     C           *IN44     IFEQ '0'                        B1
+     C                     Z-ADDHBT2MT    ZFLD19           *1
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    ST2MD3           *1
+      *
+      ** Average Balance Term 2 to-date (formatted for 27A display),
+      ** only process if defined (*IN44 set in this sr)
+      ** Derived from Weighted Balance and Days to Date fields from
+      ** GLHIBLPD
+      ** Use inclusive dates to date for the period, hence add 1
+     C           HBWT2B    IFEQ *ZEROS                     B*2
+     C                     Z-ADD*ZEROS    ZFLD19           **2
+     C                     ELSE                            X*2
+     C           HBEPDD    SUB  HBST2D    PDAYS            **2
+     C           PDAYS     ADD  1         PDAYS            **2
+     C/COPY WNCPYSRC,MC0210C004
+     C           HBWT2B    DIV  PDAYS     ZFLD19    H      **2
+     C/COPY WNCPYSRC,MC0210C005
+     C                     END                             E*2
+      *
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    SAT2D3           *1
+     C                     END                             E1
+      *
+      ** Period Movements to-date (formatted for 27A display)
+     C                     Z-ADDHBPMTD    ZFLD19
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SPRMD3
+      *
+      ** Average Balance Period to-date (formatted for 27A display)
+     C           HBWPBL    IFEQ *ZEROS                     B1
+     C                     Z-ADD*ZEROS    ZFLD19           *1
+     C                     ELSE                            X1
+     C           HBEPDD    SUB  HBSPDD    PDAYS            *1
+     C           PDAYS     ADD  1         PDAYS            *1
+     C/COPY WNCPYSRC,MC0210C006
+     C           HBWPBL    DIV  PDAYS     ZFLD19    H      *1
+     C/COPY WNCPYSRC,MC0210C007
+     C                     END                             E1
+      *
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SAPRD3
+      *
+      ** Average Balance Year to-date (formatted for 27A display)
+      ** Derived from Weighted Balance and Days to Date fields from
+      ** GLHIBLPD
+      ** Use inclusive dates to date for the period, hence add 1
+     C           HBWYBL    IFEQ *ZEROS                     B1
+     C                     Z-ADD*ZEROS    ZFLD19           *1
+     C                     ELSE                            X1
+     C           HBEPDD    SUB  HBSOYD    PDAYS   50       *1
+     C           PDAYS     ADD  1         PDAYS            *1
+     C/COPY WNCPYSRC,MC0210C008
+     C           HBWYBL    DIV  PDAYS     ZFLD19    H      *1
+     C/COPY WNCPYSRC,MC0210C009
+     C                     END                             E1
+      *
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SAYRD3
+      *
+      ** If average DR/CR balances are used (from GLHBCGPD) enable F8
+      ** but not for income or expense account sections
+     C                     SETOF                     40
+     C           HCADCB    IFNE 'N'                        B1
+     C           HBACSC    ANDNE'IN'                       B1
+     C           HBACSC    ANDNE'EX'                       B1
+     C                     SETON                     40    *1
+     C                     END                             E1
+      *
+      *
+      ** Write details and screen headings with correct time.
+      ** PFURTH is set in sr/#BCA
+     C           *IN11     DOUEQ'0'                        B1
+     C           PFURTH    ANDEQ*BLANKS                    B1
+     C                     TIME           STIME            *1
+     C                     WRITEMC0210H1                   *1
+     C                     WRITEMC0210F2                   *1
+     C                     WRITEMC0210F3                   *1
+      *
+      ** Read to check for function keys pressed
+     C                     READ MC0210F3                 42*1
+      *
+     C                     MOVE *BLANKS   PFURTH  3        *1
+      *
+      ** If F11 has been pressed, produce a report
+     C           *IN11     IFEQ '1'                        B*2
+     C**********           EXSR #ZB                        **2            135171
+     C                     EXSR #ZC                        **2            135171
+     C                     SETOF                     11    **2
+     C                     END                             E*2
+      *
+      ** If F8 has been pressed, display DR/CR average balances screen
+     C           *IN08     IFEQ '1'                        B*2
+     C                     EXSR #BCA                       **2
+     C           *INU7     CABEQ'1'       #BC9             CAB
+     C                     SETOF                     0812  **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** If F3 has been pressed exit program
+     C           *IN03     IFEQ '1'                        B1
+     C           PRETN     IFEQ 'R'                        B*2
+     C           PRETN     OREQ 'F'                        B*2
+     C                     MOVE 'F'       PRETN            **2
+     C                     ELSE                            X*2
+     C                     MOVE 'E'       PRETN            **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           #BC9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BCA - Display DR/CR Average balances screen
+      *           From this screen F3 causes return to Midas,
+      *           F12 causes return to Further details screen,
+      *           <ENTER> has no effect,
+      *           F11 produces a report and remains on this screen.
+      *
+      * Called from:     #BC  Display Further details screen
+      *
+      * Calls:           #ZA  Format 19,0 field as 27A
+      *
+      **************************************************************
+     C           #BCA      BEGSR
+      *
+      ** If file not open then open it
+     C           PAVOPN    IFEQ *BLANKS                    B1
+     C                     OPEN GLAVBLL1                   *1
+     C                     MOVE 'OPN'     PAVOPN  3        *1
+     C                     END                             E1
+      *
+      ** Access GLAVBLL1, key is same as for GLHIBLL1
+     C           KHIBL3    CHAIN@BPRED4              45
+      *
+      ** If record not found, process for database error
+     C           *IN45     IFEQ '1'                        B1
+     C                     SETON                     U7U8LR*1
+     C                     MOVE 'Y'       PRETN            *1
+     C                     MOVEL'GLAVBLL1'DBFILE           *1
+     C                     Z-ADD002       DBASE            *1
+     C                     MOVEL'See Dump'DBKEY            *1
+     C                     MOVEL'MC0210'  DBPGM            *1
+     C                     DUMP                            *1
+     C                     GOTO #BCA9                      GOTO
+     C                     END                             E1
+      *
+      ** Yearly Days in DR
+     C                     MOVE ABYDDD    SYDDD4
+     C/COPY WNCPYSRC,MC0210C010
+      *
+      ** Yearly DR Movement (formatted for 27A display)
+     C                     Z-ADDABYDMT    ZFLD19
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SYDMT4
+      *
+      ** Yearly Days in CR
+     C                     MOVE ABYDDC    SYDDC4
+     C/COPY WNCPYSRC,MC0210C011
+      *
+      ** Yearly CR Movement (formatted for 27A display)
+     C                     Z-ADDABYCMT    ZFLD19
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SYCMT4
+      *
+      ** Term 1 Days in DR, if term 1 defined
+     C           *IN43     IFEQ '0'                        B1
+     C                     MOVE ABT1DD    ST1DD4           *1
+     C/COPY WNCPYSRC,MC0210C012
+      *
+      ** Term 1 DR Movement (formatted for 27A display), if defined
+     C                     Z-ADDABT1DM    ZFLD19           *1
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    ST1DM4           *1
+      *
+      ** Term 1 Days in CR, if term 1 defined
+     C                     MOVE ABT1DC    ST1DC4           *1
+     C/COPY WNCPYSRC,MC0210C013
+      *
+      ** Term 1 CR Movement (formatted for 27A display), if defined
+     C                     Z-ADDABT1CM    ZFLD19           *1
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    ST1CM4           *1
+     C                     END                             E1
+      *
+      ** Term 2 Days in DR, if term 2 defined
+     C           *IN44     IFEQ '0'                        B1
+     C                     MOVE ABT2DD    ST2DD4           *1
+     C/COPY WNCPYSRC,MC0210C014
+      *
+      ** Term 2 DR Movement (formatted for 27A display), if defined
+     C                     Z-ADDABT2DM    ZFLD19           *1
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    ST2DM4           *1
+      *
+      ** Term 2 Days in CR, if term 2 defined
+     C                     MOVE ABT2DC    ST2DC4           *1
+     C/COPY WNCPYSRC,MC0210C015
+      *
+      ** Term 2 CR Movement (formatted for 27A display), if defined
+     C                     Z-ADDABT2CM    ZFLD19           *1
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    ST2CM4           *1
+     C                     END                             E1
+      *
+      ** Period Days in DR
+     C                     MOVE ABPDDD    SPDDD4
+     C/COPY WNCPYSRC,MC0210C016
+      *
+      ** Period DR Movement (formatted for 27A display)
+     C                     Z-ADDABPDMT    ZFLD19
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SPDMT4
+      *
+      ** Period Days in CR
+     C                     MOVE ABPDDC    SPDDC4
+     C/COPY WNCPYSRC,MC0210C017
+      *
+      ** Period CR Movement (formatted for 27A display)
+     C                     Z-ADDABPCMT    ZFLD19
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SPCMT4
+      *
+      *
+      ** Yearly DR Average Balance
+     C           ABWYDB    IFEQ *ZEROS                     B1
+     C                     Z-ADD*ZEROS    ZFLD19           *1
+     C                     ELSE                            X1
+      *
+      ** Average balance calculated on Total days in period (inclusive)
+      ** basis (flag on GLHBCGPD)
+     C           HCADCB    IFEQ 'T'                        B*2
+     C           HBEPDD    SUB  HBSOYD    PDAYS            **2
+     C           PDAYS     ADD  1         PDAYS            **2
+     C/COPY WNCPYSRC,MC0210C018
+     C                     ELSE                            X*2
+      *
+      ** Average balance calculated on Days in DR/CR basis
+     C                     MOVE *BLANKS   PDAYS            **2
+     C                     MOVE ABYDDD    PDAYS            **2
+     C/COPY WNCPYSRC,MC0210C019
+     C                     END                             E*2
+      *
+     C/COPY WNCPYSRC,MC0210C020
+     C           ABWYDB    DIV  PDAYS     ZFLD19    H      *1
+     C/COPY WNCPYSRC,MC0210C021
+     C                     END                             E1
+      *
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SYRDA4
+      *
+      ** Yearly CR Average Balance
+     C           ABWYCB    IFEQ *ZEROS                     B1
+     C                     Z-ADD*ZEROS    ZFLD19           *1
+     C                     ELSE                            X1
+      *
+      ** Average balance calculated on Total days in period (inclusive)
+      ** basis (flag on GLHBCGPD)
+     C           HCADCB    IFEQ 'T'                        B*2
+     C           HBEPDD    SUB  HBSOYD    PDAYS            **2
+     C           PDAYS     ADD  1         PDAYS            **2
+     C/COPY WNCPYSRC,MC0210C022
+     C                     ELSE                            X*2
+      *
+      ** Average balance calculated on Days in DR/CR basis
+     C                     MOVE *BLANKS   PDAYS            **2
+     C                     MOVE ABYDDC    PDAYS            **2
+     C/COPY WNCPYSRC,MC0210C023
+     C                     END                             E*2
+      *
+     C/COPY WNCPYSRC,MC0210C024
+     C           ABWYCB    DIV  PDAYS     ZFLD19    H      *1
+     C/COPY WNCPYSRC,MC0210C025
+     C                     END                             E1
+      *
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SYRCA4
+      *
+      ** Term 1 DR Average Balance, if term 1 defined
+     C           *IN43     IFEQ '0'                        B1
+     C           ABW1DB    IFEQ *ZEROS                     B*2
+     C                     Z-ADD*ZEROS    ZFLD19           **2
+     C                     ELSE                            X*2
+      *
+      ** Average balance calculated on Total days in period (inclusive)
+      ** basis (flag on GLHBCGPD)
+     C           HCADCB    IFEQ 'T'                        B**3
+     C           HBEPDD    SUB  HBST1D    PDAYS            ***3
+     C           PDAYS     ADD  1         PDAYS            ***3
+     C/COPY WNCPYSRC,MC0210C026
+     C                     ELSE                            X**3
+      *
+      ** Average balance calculated on Days in DR/CR basis
+     C                     MOVE *BLANKS   PDAYS            ***3
+     C                     MOVE ABT1DD    PDAYS            ***3
+     C/COPY WNCPYSRC,MC0210C027
+     C                     END                             E**3
+      *
+     C/COPY WNCPYSRC,MC0210C028
+     C           ABW1DB    DIV  PDAYS     ZFLD19    H      **2
+     C/COPY WNCPYSRC,MC0210C029
+     C                     END                             E*2
+      *
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    ST1DA4           *1
+      *
+      ** Term 1 CR Average Balance
+     C           ABW1CB    IFEQ *ZEROS                     B*1
+     C                     Z-ADD*ZEROS    ZFLD19           **1
+     C                     ELSE                            X*1
+      *
+      ** Average balance calculated on Total days in period (inclusive)
+      ** basis (flag on GLHBCGPD)
+     C           HCADCB    IFEQ 'T'                        B**3
+     C           HBEPDD    SUB  HBST1D    PDAYS            ***3
+     C           PDAYS     ADD  1         PDAYS            ***3
+     C/COPY WNCPYSRC,MC0210C030
+     C                     ELSE                            X**3
+      *
+      ** Average balance calculated on Days in DR/CR basis
+     C                     MOVE *BLANKS   PDAYS            ***3
+     C                     MOVE ABT1DC    PDAYS            ***3
+     C/COPY WNCPYSRC,MC0210C031
+     C                     END                             E**3
+      *
+     C/COPY WNCPYSRC,MC0210C032
+     C           ABW1CB    DIV  PDAYS     ZFLD19    H      **2
+     C/COPY WNCPYSRC,MC0210C033
+     C                     END                             E*2
+      *
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    ST1CA4           *1
+     C                     END                             E1
+      *
+      ** Term 2 DR Average Balance, if term 1 defined
+     C           *IN44     IFEQ '0'                        B1
+     C           ABW2DB    IFEQ *ZEROS                     B*2
+     C                     Z-ADD*ZEROS    ZFLD19           **2
+     C                     ELSE                            X*2
+      *
+      ** Average balance calculated on Total days in period (inclusive)
+      ** basis (flag on GLHBCGPD)
+     C           HCADCB    IFEQ 'T'                        B**3
+     C           HBEPDD    SUB  HBST2D    PDAYS            ***3
+     C           PDAYS     ADD  1         PDAYS            ***3
+     C/COPY WNCPYSRC,MC0210C034
+     C                     ELSE                            X**3
+      *
+      ** Average balance calculated on Days in DR/CR basis
+     C                     MOVE *BLANKS   PDAYS            ***3
+     C                     MOVE ABT2DD    PDAYS            ***3
+     C/COPY WNCPYSRC,MC0210C035
+     C                     END                             E**3
+      *
+     C/COPY WNCPYSRC,MC0210C036
+     C           ABW2DB    DIV  PDAYS     ZFLD19    H      **2
+     C/COPY WNCPYSRC,MC0210C037
+     C                     END                             E*2
+      *
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    ST2DA4           *1
+      *
+      ** Term 2 CR Average Balance
+     C           ABW2CB    IFEQ *ZEROS                     B*1
+     C                     Z-ADD*ZEROS    ZFLD19           **1
+     C                     ELSE                            X*1
+      *
+      ** Average balance calculated on Total days in period (inclusive)
+      ** basis (flag on GLHBCGPD)
+     C           HCADCB    IFEQ 'T'                        B**3
+     C           HBEPDD    SUB  HBST2D    PDAYS            ***3
+     C           PDAYS     ADD  1         PDAYS            ***3
+     C/COPY WNCPYSRC,MC0210C038
+     C                     ELSE                            X**3
+      *
+      ** Average balance calculated on Days in DR/CR basis
+     C                     MOVE *BLANKS   PDAYS            ***3
+     C                     MOVE ABT2DC    PDAYS            ***3
+     C/COPY WNCPYSRC,MC0210C039
+     C                     END                             E**3
+      *
+     C/COPY WNCPYSRC,MC0210C040
+     C           ABW2CB    DIV  PDAYS     ZFLD19    H      **2
+     C/COPY WNCPYSRC,MC0210C041
+     C                     END                             E*2
+      *
+     C                     EXSR #ZA                        *1
+     C                     MOVE ZOUT27    ST2CA4           *1
+     C                     END                             E1
+      *
+      ** Period DR Average Balance
+     C           ABWPDB    IFEQ *ZEROS                     B1
+     C                     Z-ADD*ZEROS    ZFLD19           *1
+     C                     ELSE                            X1
+      *
+      ** Average balance calculated on Total days in period (inclusive)
+      ** basis (flag on GLHBCGPD)
+     C           HCADCB    IFEQ 'T'                        B*2
+     C           HBEPDD    SUB  HBSPDD    PDAYS            **2
+     C           PDAYS     ADD  1         PDAYS            **2
+     C/COPY WNCPYSRC,MC0210C042
+     C                     ELSE                            X*2
+      *
+      ** Average balance calculated on Days in DR/CR basis
+     C                     MOVE *BLANKS   PDAYS            **2
+     C                     MOVE ABPDDD    PDAYS            **2
+     C/COPY WNCPYSRC,MC0210C043
+     C                     END                             E*2
+      *
+     C/COPY WNCPYSRC,MC0210C044
+     C           ABWPDB    DIV  PDAYS     ZFLD19    H      *1
+     C/COPY WNCPYSRC,MC0210C045
+     C                     END                             E1
+      *
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SPRDA4
+      *
+      ** Period CR Average Balance
+     C           ABWPCB    IFEQ *ZEROS                     B1
+     C                     Z-ADD*ZEROS    ZFLD19           *1
+     C                     ELSE                            X1
+      *
+      ** Average balance calculated on Total days in period (inclusive)
+      ** basis (flag on GLHBCGPD)
+     C           HCADCB    IFEQ 'T'                        B*2
+     C           HBEPDD    SUB  HBSPDD    PDAYS            **2
+     C           PDAYS     ADD  1         PDAYS            **2
+     C/COPY WNCPYSRC,MC0210C046
+     C                     ELSE                            X*2
+      *
+      ** Average balance calculated on Days in DR/CR basis
+     C                     MOVE *BLANKS   PDAYS            **2
+     C                     MOVE ABPDDC    PDAYS            **2
+     C/COPY WNCPYSRC,MC0210C047
+     C                     END                             E*2
+      *
+     C/COPY WNCPYSRC,MC0210C048
+     C           ABWPCB    DIV  PDAYS     ZFLD19    H      *1
+     C/COPY WNCPYSRC,MC0210C049
+     C                     END                             E1
+      *
+     C                     EXSR #ZA
+     C                     MOVE ZOUT27    SPRCA4
+      *
+      ** Write details and screen headings with correct time.
+     C           *IN12     DOUEQ'1'                        B1
+     C           *IN03     OREQ '1'                        B1
+     C                     TIME           STIME            *1
+     C                     WRITEMC0210H1                   *1
+     C                     WRITEMC0210F2                   *1
+     C                     WRITEMC0210F4                   *1
+      *
+      ** Read to check for function keys pressed
+     C                     READ MC0210F4                 46*1
+      *
+      ** If F11 has been pressed, produce a report
+     C           *IN11     IFEQ '1'                        B*2
+     C***********          EXSR #ZB                        **2            135171
+     C                     EXSR #ZC                        **2            135171
+     C                     SETOF                     11    **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** If F3 has been pressed exit program
+     C           *IN03     IFEQ '1'                        B1
+     C           PRETN     IFEQ 'R'                        B*2
+     C                     MOVE 'F'       PRETN            **2
+     C                     ELSE                            X*2
+     C                     MOVE 'E'       PRETN            **2
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** If F12 pressed must return to previous screen
+     C           *IN12     IFEQ '1'                        B1
+     C                     MOVE 'FUR'     PFURTH           *1
+     C                     END                             E1
+      *
+     C           #BCA9     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#ZA - Format a 19,0 numeric field adding trailing +/-,
+      *          decimal point, commas every three digits and no
+      *          leading zero (unless amount is zero). Outputs a
+      *          27A field. Was based on ZFRPED.
+      *
+      * Input fields:    ZFLD19 19,0 field to be formatted
+      *                  PNBDP  decimal places
+      *
+      * Output fields    ZOUT27 27A  formatted field
+      *
+      * Called by:   #BC  - Display Further details screen
+      *              #BCA - Dispaly Average balances screen
+      *
+      **************************************************************
+     C           #ZA       BEGSR
+      *
+      ** Define/Clear fields
+     C                     Z-ADDZFLD19    ZFLD19 190
+     C                     MOVE *BLANKS   ZOUT27 27
+      *
+      ** Set up work fields and arrays
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+      ** Z1 is the index for the number to be formatted array
+     C                     Z-ADD19        Z1      20
+      ** Z2 is the index for the output array
+     C                     Z-ADD26        Z2      20
+      *
+      ** Check if numeric field is negative and set up - sign
+     C           ZFLD19    IFLT *ZEROS                     B1
+     C                     MOVE '-'       ZS2,27           *1
+     C                     Z-SUBZFLD19    ZFLD19           *1
+     C                     ELSE                            X1
+     C                     MOVE '+'       ZS2,27           *1
+     C                     END                             E1
+      *
+     C                     Z-ADDZFLD19    ZWRK19
+      *
+      ** Check for zero decimal places
+     C           PNBDP     CABEQ0         #ZA1             CAB
+      *
+      ** Set up decimals
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQPNBDP                      B1
+      *
+      ** Move number into array until decimal places end, array ZS1
+      ** contains the number to be formatted, array ZS2 contains the
+      ** formatted number
+     C                     MOVE ZS1,Z1    ZS2,Z2           *1
+     C                     SUB  1         Z2               *1
+     C                     ADD  1         ZCNT             *1
+     C                     SUB  1         Z1               *1
+     C                     END                             E1
+      *
+      ** Put in decimal place
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+      *
+     C           #ZA1      TAG                             ** #ZA1 TAG **
+      *
+      ** Set up integers
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS                     B1
+     C                     MOVE ZS1,Z1    ZS2,Z2           *1
+     C                     SUB  1         Z1               *1
+     C                     SUB  1         Z2               *1
+      *
+      ** Insert a ',' before each group of three digits - not if
+      ** beginning of array reached.
+     C           Z2        IFGT *ZEROS                     B*2
+     C                     ADD  1         CNT3             **2
+     C           CNT3      IFEQ 3                          B**3
+     C                     MOVE ','       ZS2,Z2           ***3
+     C                     SUB  1         Z2               ***3
+     C                     Z-ADD*ZEROS    CNT3             ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+      ** Put in leading blanks
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'                        B1
+     C           ZS2,Z2    OREQ ' '                        B1
+     C           ZS2,Z2    OREQ ','                        B1
+     C                     MOVE ' '       ZS2,Z2           *1
+     C                     ADD  1         Z2               *1
+     C           Z2        CABEQ27        #ZA2             CAB
+     C                     END                             E1
+      *
+      ** If no integers put in leading zero
+     C           #ZA2      TAG                             ** #ZA2 TAG **
+      *
+     C           ZS2,Z2    IFEQ '.'                        B1
+     C           ZS2,Z2    OREQ '+'                        B1
+     C           ZS2,Z2    OREQ '-'                        B1
+     C                     SUB  1         Z2               *1
+     C                     MOVE '0'       ZS2,Z2           *1
+     C                     END                             E1
+      *
+      ** Set up output field
+     C                     MOVEAZS2       ZOUT27
+      *
+     C           #ZA9      ENDSR
+      **************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+     C/COPY WNCPYSRC,MC0210C050
+      /EJECT
+      **************************************************************
+      *
+      * SR/#ZB - Call MCC0215 to produce a report
+      *
+      * Called from:   #B   - Screen processing
+      *                #BC  - Display further details screen
+      *                #BCA - Display DR/CR average balances screen
+      *
+      *
+      **************************************************************
+     C           #ZB       BEGSR
+      *
+      ** Must add data to the parameters for the call. Skeleton
+      ** for the call is in compile time array PG.
+      *
+      ** Group code
+     C                     Z-ADD155       X
+     C                     MOVEAPGRCD     PG,X
+      *
+      ** Branch code
+     C                     Z-ADD158       X       30
+     C                     MOVEASBRCDS    PG,X
+      *
+      ** Customer number
+     C                     Z-ADD162       X
+     C                     MOVEASCUSTS    PG,X
+      *
+      ** Currency code
+     C                     Z-ADD169       X
+     C                     MOVEASCYCDS    PG,X
+      *
+      ***Account*code**************************************************                       CGL029
+     C**********           Z-ADD173       X                                                   CGL029
+     C**********           MOVEASACCDS    PG,X                                                CGL029
+      *
+      ** Account sequence number
+     C                     Z-ADD178       X
+     C                     MOVEASACSNS    PG,X
+      *
+      ** Profit centre
+     C                     Z-ADD181       X
+     C                     MOVEASPCCDS    PG,X
+      *
+      ** Book code
+     C                     Z-ADD186       X
+     C                     MOVEASBKCDS    PG,X
+      *
+      ** Transaction type
+     C                     Z-ADD189       X
+     C                     MOVEASOTTPS    PG,X
+      *
+      ** Transaction sub-type
+     C                     Z-ADD200       X
+     C                     MOVEASTSTYS    PG,X
+      *
+      ** Associated customer number
+     C                     Z-ADD211       X
+     C*                                                                   135171
+     C**********           MOVEASCUSTS    PG,X                            135171
+     C                     MOVEASASCUS    PG,X                            135171
+     C*                                                                   135171
+      *
+      ** Period century and year
+     C                     Z-ADD218       X
+     C                     MOVEAPPDYE     PG,X
+      *
+      ** Period number
+     C                     Z-ADD223       X
+     C                     MOVEAPPDNY     PG,X
+      *
+      ** Requesting user
+     C                     Z-ADD226       X
+     C                     MOVEASUSER     PG,X
+      *                                                                                       CGL029
+      ** Account code                                                                         CGL029
+     C                     Z-ADD237       X                                                   CGL029
+     C                     MOVEASACCDS    PG,X                                                CGL029
+      *
+      ** Sequence number and entity left as blanks
+      *
+      ** The array PG is transfered to field PCMD via a datastructure
+     C                     CALL 'QCMDEXC'
+     C                     PARM           PCMD
+     C**********           PARM 257       PLNTH  155                                          CSC023
+     C                     PARM 325       PLNTH  155                                          CSC023
+      *
+      ** Also submit MIDASRMV
+     C                     CALL 'QCMDEXC'
+     C                     PARM           PCMDR
+     C**********           PARM 111       PLNTH  155                                          CSC023
+     C                     PARM 130       PLNTH  155                                          CSC023
+      *
+     C           #ZB9      ENDSR
+      **************************************************************      135171
+      *                                                                   135171
+      * SR/#ZC - Call MCC0215 to produce a report of a single record      135171
+      *                                                                   135171
+      * Called from:   #BC  - Display further details screen              135171
+      *                #BCA - Display DR/CR average balances screen       135171
+      *                                                                   135171
+      *                                                                   135171
+      **************************************************************      135171
+     C           #ZC       BEGSR                                          135171
+      *                                                                   135171
+      ** Must add data to the parameters for the call. Skeleton           135171
+      ** for the call is in compile time array PG.                        135171
+      *                                                                   135171
+      ** Group code                                                       135171
+     C                     Z-ADD155       X                               135171
+     C                     MOVEAPKCG      PG,X                            135171
+      *                                                                   135171
+      ** Branch code                                                      135171
+     C                     Z-ADD158       X       30                      135171
+     C                     MOVEAPKBR      PG,X                            135171
+      *                                                                   135171
+      ** Customer number                                                  135171
+     C                     Z-ADD162       X                               135171
+     C                     MOVEAPKCU      PG,X                            135171
+      *                                                                   135171
+      ** Currency code                                                    135171
+     C                     Z-ADD169       X                               135171
+     C                     MOVEAPKCY      PG,X                            135171
+      *                                                                   135171
+      ***Account*code**************************************************                135171 CGL029
+     C**********           Z-ADD173       X                                            135171 CGL029
+     C**********           MOVEAPKAC      PG,X                                         135171 CGL029
+      *                                                                   135171
+      ** Account sequence number                                          135171
+     C                     Z-ADD178       X                               135171
+     C                     MOVEAPKAN      PG,X                            135171
+      *                                                                   135171
+      ** Profit centre                                                    135171
+     C                     Z-ADD181       X                               135171
+     C                     MOVEAPKPR      PG,X                            135171
+      *                                                                   135171
+      ** Book code                                                        135171
+     C                     Z-ADD186       X                               135171
+     C                     MOVEAPKBO      PG,X                            135171
+      *                                                                   135171
+      ** Transaction type                                                 135171
+     C                     Z-ADD189       X                               135171
+     C                     MOVEAPKTT      PG,X                            135171
+      *                                                                   135171
+      ** Transaction sub-type                                             135171
+     C                     Z-ADD200       X                               135171
+     C                     MOVEAPKTY      PG,X                            135171
+      *                                                                   135171
+      ** Associated customer number                                       135171
+     C                     Z-ADD211       X                               135171
+     C                     MOVEAPKAS      PG,X                            135171
+      *                                                                   135171
+      ** Period century and year                                          135171
+     C                     Z-ADD218       X                               135171
+     C                     MOVEAPPDYE     PG,X                            135171
+      *                                                                   135171
+      ** Period number                                                    135171
+     C                     Z-ADD223       X                               135171
+     C                     MOVEAPKNY      PG,X                            135171
+      *                                                                   135171
+      ** Requesting user                                                  135171
+     C                     Z-ADD226       X                               135171
+     C                     MOVEASUSER     PG,X                            135171
+      *                                                                                       CGL029
+      ** Account code                                                                         CGL029
+     C                     Z-ADD237       X                                                   CGL029
+     C                     MOVEAPKAC      PG,X                                                CGL029
+      *                                                                   135171
+      ** Sequence number and entity left as blanks                        135171
+      *                                                                   135171
+      ** The array PG is transfered to field PCMD via a datastructure     135171
+     C                     CALL 'QCMDEXC'                                 135171
+     C                     PARM           PCMD                            135171
+     C**********           PARM 257       PLNTH  155                                   135171 CSC023
+     C                     PARM 325       PLNTH  155                                          CSC023
+      *                                                                   135171
+      ** Also submit MIDASRMV                                             135171
+     C                     CALL 'QCMDEXC'                                 135171
+     C                     PARM           PCMDR                           135171
+     C**********           PARM 111       PLNTH  155                                   135171 CSC023
+     C                     PARM 130       PLNTH  155                                          CSC023
+      *                                                                   135171
+     C           #ZC9      ENDSR                                          135171
+      **************************************************************      135171
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#A - Initial processing
+      *
+      * Called from:     MAIN routine
+      *
+      *
+      *
+      **************************************************************
+     C           #A        BEGSR
+      *
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           PGRCD   2
+     C                     PARM           PPDYE   4
+     C                     PARM           PPDNY   2
+     C                     PARM           PRETN   1
+      *
+      ** If program recalled after recreate balance request set on F13
+     C           PRETN     IFEQ 'R'
+     C           PRETN     OREQ 'B'
+     C           PRETN     OREQ 'A'                                       048237
+     C                     SETON                     13
+     C                     END
+      *
+      ** Use copyright array to ensure copyright gets into object
+     C                     MOVEACPYP      PBIS   80
+      *
+      ** Define field used by message subfile
+     C                     MOVE *BLANKS   SPGMQ  10
+     C                     MOVEL'MC0210  'SPGMQ
+      *
+      ** Obtain run date and multibranching flag from dtaara/RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Only display branch if system is multibranched
+     C           AGMBIN    IFEQ 'Y'                        B1
+     C                     SETON                     14    *1
+      *
+      ** Read in branches user is authorised to, stored on ds/ZBRU
+     C           *NAMVAR   DEFN           ZBRU             *1
+     C                     IN   ZBRU                       *1
+     C                     MOVEABR1       BR,1             *1
+     C                     MOVEABR2       BR,51            *1
+      *                                                                                       197434
+      ** Set up the array BR by branches in data areas ZBRU1 and ZBRU2                        197434
+      *                                                                                       197434
+     C           *NAMVAR   DEFN           ZBRU1                                               197434
+     C                     IN   ZBRU1                                                         197434
+     C                     Z-ADD101       W       30                                          197434
+     C                     MOVEABR11      BR,W                                                197434
+     C                     Z-ADD186       W                                                   197434
+     C                     MOVEABR12      BR,W                                                197434
+     C                     Z-ADD271       W                                                   197434
+     C                     MOVEABR13      BR,W                                                197434
+     C                     Z-ADD356       W                                                   197434
+     C                     MOVEABR14      BR,W                                                197434
+     C                     Z-ADD441       W                                                   197434
+     C                     MOVEABR15      BR,W                                                197434
+     C                     Z-ADD526       W                                                   197434
+     C                     MOVEABR16      BR,W                                                197434
+     C                     Z-ADD611       W                                                   197434
+     C                     MOVEABR17      BR,W                                                197434
+     C                     Z-ADD696       W                                                   197434
+     C                     MOVEABR18      BR,W                                                197434
+     C           *NAMVAR   DEFN           ZBRU2                                               197434
+     C                     IN   ZBRU2                                                         197434
+     C                     Z-ADD767       W                                                   197434
+     C                     MOVEABR21      BR,W                                                197434
+     C                     Z-ADD852       W                                                   197434
+     C                     MOVEABR22      BR,W                                                197434
+     C                     END                             E1
+      *
+      ** Setup the date format indicator used by sr/ZDATE2
+     C           AGDFF     IFEQ 'M'                        B1
+     C                     SETON                     98    *1
+     C                     END                             E1
+      *
+      ** Obtain General Ledger details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDGELRPD'DBFILE           *1
+     C                     Z-ADD03        DBASE            *1
+     C                     MOVEL'*FIRST'  DBKEY            *1
+     C                     MOVEL'MC0210'  DBPGM            *1
+     C                     SETON                     U7U8LR*1
+     C                     MOVE 'Y'       PRETN            *1
+     C                     DUMP                            *1
+     C                     GOTO #A9                        *1 GOTO
+     C                     END                             E1
+      *                                                                   CMC001
+      **  Check if Management Accounts Enhancement for PCA is installed   CMC001
+      *                                                                   CMC001
+     C                     MOVE 'N'       CMC001  1                       CMC001
+     C                     CALL 'AOSARDR0'                                CMC001
+     C                     PARM *BLANKS   PRTCD                           CMC001
+     C                     PARM '*VERIFY' POPTN                           CMC001
+     C                     PARM 'CMC001'  PKEY6   6                       CMC001
+     C           SCSARD    PARM SCSARD    DSFDY                           CMC001
+      *                                                                   CMC001
+      **  If error in accessing SAR details, issue DB error               CMC001
+      *                                                                   CMC001
+     C           PRTCD     IFNE *BLANK                                    CMC001
+     C           PRTCD     IFNE '*NRF'                                    CMC001
+     C                     MOVEL'MC0210  'DBPGM                           CMC001
+     C                     MOVEL'SCSARDPD'DBFILE            ***********   CMC001
+     C                     Z-ADD04        DBASE             * DBASE 04*   CMC001
+     C                     MOVELPKEY6     DBKEY             ***********   CMC001
+     C                     SETON                     U7U8LR               CMC001
+     C                     MOVE 'Y'       PRETN                           CMC001
+     C                     DUMP                                           CMC001
+     C                     GOTO #A9                                       CMC001
+     C                     ENDIF                                          CMC001
+     C                     ELSE                                           CMC001
+     C                     MOVE 'Y'       CMC001                          CMC001
+     C                     ENDIF                                          CMC001
+      *
+      ** Setup the Profit Centres Used indicator used by report
+     C           BKPRCU    IFEQ 'Y'                        B1
+     C                     SETON                     15    *1
+     C                     END                             E1
+      *
+     C/COPY WNCPYSRC,MC0210C052
+     C           #A9       ENDSR
+     C/COPY WNCPYSRC,MC0210C051
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/*PSSR - Program error subroutine
+      *
+      * Called by:   Executes whenever program error occurs
+      *
+      ***************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Set PERR1 to 'Y' to prevent looping if further errors
+     C           PERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR1   1        *1
+     C                     MOVE 'Y'       PRETN            *1
+     C                     SETON                     U6    *1
+      *                                                    *1
+      ** Set up fields in LDA
+     C                     Z-ADD991       DBASE            *1
+     C                     MOVEL'MC0210'  DBPGM            *1
+      *                                                    *1
+      ** Dump the program                                  *1
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     SETON                       LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/INFSR - File error subroutine
+      *
+      * Called by:   Executes whenever file exception/error occurs
+      *
+      ***************************************************************
+      *
+     C           INFSR     BEGSR
+      *
+      ** Set PERR2 to 'Y' to prevent looping if further errors
+     C           PERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR2   1        *1
+     C                     MOVE 'Y'       PRETN            *1
+     C                     SETON                     U7U8  *1
+      *                                                    *1
+      ** Set up fields in LDA
+     C                     MOVELPFILE     DBFILE           *1
+     C                     Z-ADD992       DBASE            *1
+     C                     MOVEL'MC0210'  DBPGM            *1
+      *                                                    *1
+      ** Dump the program                                  *1
+     C                     DUMP                            *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     SETON                       LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      /EJECT
+** CPYP         OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** PG           SBMJOB of external program MCC0215
+SBMJOB JOB(MCC0215) JOBD(MBATCH) USER(*JOBD) RTGDTA(*JOBD)
+INLLIBL(*JOBD) MSGQ(MOPERQ) CMD(CALL MCC0215
+PARM('     ' 'S' '   ' '
+                                                           '))
+** RMV          SBMJOB of external program MIDASRMV
+SBMJOB JOB(MIDASRMV) JOBD(MBATCH) USER(*JOBD) INLLIBL(*JOBD)
+ RTGDTA(*JOBD) RQSDTA('CALL MIDASRMV') MSGQ(MOPERQ)
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN used by sr/ZDATE2
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR used by sr/ZDATE2
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES used by sr/ZDATE2
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

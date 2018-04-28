@@ -1,0 +1,462 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Initialise Midas modules')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9006X - Midas SD Initialise Midas Modules File.            *
+      *                                                               *
+      *  Function:  This program initialises SDMMODPD.                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *  Prev Amend No. CSD003             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAAA01             Date 22FEB95               *
+      *                 S01459             DATE 22FEB95               *
+      *                 S01339             DATE 27MAY92               *
+      *                 E22603             DATE 04DEC90               *
+      *                 E20712             DATE 27NOV90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CAAA01 - GUI/400 Development.                                *
+      *           - Flag MODUPDATE data area for update when          *
+      *             SDMMODPD has been amended.                        *
+      *  S01459 - Addition of Midas header box.                       *
+      *  S01339 - SYNDICATED LOANS MODULE MADE REDUNDANT AT R10.      *
+      *  E22603 - ENSURE THAT DRS MODULES ARE INITIALISED TO          *
+      *           'N' (LN1026)                                        *
+      *  E20712 - CHANGE DB ERROR PROCESSING (LN1028)                 *
+      *                                                               *
+      *****************************************************************
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     FSDMMODL0IF  E           K        DISK                      A    UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Midas module flags update
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0001
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Initialise Midas Modules
+      * Start of change S01459.
+      * SD9006X Precompiler - MIDAS Modules  *
+      * Copyright Statement 1988 - Standard Functions  *
+      * End of change S01459.
+      * Check exist of record - MIDAS Modules  *
+     C                     EXSR SARVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Start of Fix E22603
+      * Ensure that DSR modules SD, CM and CA are initialised as 'N'.
+      * Create MIDAS Modules - MIDAS Modules  *
+     C                     EXSR SBCRRC
+      * End of Fix E22603
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+     C                     COMIT
+     C                     END                             *FI
+     C                     END                             *FI
+      *----------------------------------------------------------------
+      * Exit program
+     C           AAEXIT    TAG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Check exist of record - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSA     CHAIN@BGREC8              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0096' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Start of Fix E20712
+      * remove db error message
+      * End of Fix E20712
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * Start of Fix E20712
+      * If a record already exists then send a db error message
+      * Setup message data for message
+     C                     MOVEL'SDMMODPD'ZA0001           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SAEXIT                     *QUIT
+      * End of Fix E20712
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBCRRC    BEGSR
+      *================================================================
+      * Create MIDAS Modules - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move all fields to @BGREC7
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C                     Z-ADD*ZERO     BGLCD            Last Change Dat
+     C                     MOVEL'I'       BGTYLC           Type of Last Ch
+     C                     MOVEL'N'       BGMTMI           Midas/Telex Mod
+     C                     MOVEL'N'       BGSWFT           SWIFT Funds Tra
+     C                     MOVEL'N'       BGSWST           SWIFT Securitie
+     C                     MOVEL'N'       BGSWCL           SWIFT Customer
+     C                     MOVEL'N'       BGSWSL           SWIFT Synd Loan
+     C                     MOVEL'N'       BGSWSM           SWIFT Statement
+     C                     MOVEL'N'       BGSWDL           SWIFT Dealing
+     C                     MOVEL'Y'       BGSDGL           Standing data/G
+     C                     MOVEL'N'       BGDLFX           Dealing: FX
+     C                     MOVEL'N'       BGSYLN           Syndicated Loan
+     C                     MOVEL'N'       BGEXMG           Exposure Manage
+     C                     MOVEL'N'       BGFNMO           Financial Model
+     C                     MOVEL'N'       BGSTRT           Statutory Retur
+     C                     MOVEL'N'       BGCSLN           Customer Lendin
+     C                     MOVEL'N'       BGRTBN           Retail Banking
+     C                     MOVEL'N'       BGMSDL           Midas/Swift dir
+     C                     MOVEL'N'       BGSECS           Securities
+     C                     MOVEL'N'       BGAURC           Auto-reconcilia
+     C                     MOVEL'N'       BGBDLI           Bond Dealers In
+     C                     MOVEL'N'       BGDRSD           DRS Standing Da
+     C                     MOVEL'N'       BGDRCM           DRS Control mod
+     C                     MOVEL'N'       BGDRFE           DRS Foreign Exc
+     C                     MOVEL'N'       BGDRMM           DRS Money Marke
+     C                     MOVEL'N'       BGDRAR           DRS Arbitrage
+     C                     MOVEL'N'       BGFDTR           Funds Transfer
+     C                     MOVEL'N'       BGDRCA           DRS Common Appl
+     C                     MOVEL'N'       BGFUOP           Futures & Optio
+     C                     MOVEL'N'       BGMTSL           Midas/Telex Syn
+     C                     MOVEL'N'       BGMTDL           Midas/Telex Dea
+     C                     MOVEL'N'       BGMTGL           Midas/Telex Gen
+     C                     MOVEL'N'       BGMTCL           Midas/Telex Cus
+     C                     MOVEL'N'       BGNWMI           Message Managem
+     C                     MOVEL'N'       BGFIIN           FRA/IRS Indicat
+     C                     MOVEL'N'       BGDLMM           Dealing: MM
+     C                     MOVEL'N'       BGINCN           Internal Contra
+     C                     MOVEL'N'       BGTRMG           Treasury Manage
+     C                     MOVEL'N'       BGRKMG           Interest Risk M
+     C                     MOVEL'N'       BGTSKY           Testkey
+     C                     MOVEL'N'       BGMIDQ           Midas/Q
+     C                     MOVEL'N'       BGMFIC           Microfiche
+     C                     MOVEL'N'       BGIOAC           Interest on acc
+     C                     MOVEL'N'       BGWDPR           Window processi
+     C                     MOVEL'N'       BGSARP           SAR's processin
+     C                     MOVEL'N'       BGFRIN           French return i
+     C                     MOVEL'N'       BGLRIN           Lux return indi
+     C                     MOVEL'N'       BGDRIN           Dutch return in
+     C                     MOVEL'N'       BGGRIN           German return i
+     C                     MOVEL'N'       BGBRIN           Belgian return
+     C                     MOVEL'N'       BGIRIN           Italian return
+     C                     MOVEL'N'       BGSWEI           Swift External
+     C                     MOVEL'N'       BGPFMG           Portfolio Manag
+     C                     MOVEL'N'       BGCRMG           Credit Manageme
+     C                     MOVEL'N'       BGHORP           Head Office Rep
+     C                     MOVEL'N'       BGAVBL           Average Balance
+     C                     MOVEL'N'       BGMARG           Margins
+     C                     MOVEL'N'       BGCFMT           Confirmation Ma
+     C                     MOVEL'N'       BGMIMX           Mimix
+     C                     MOVEL'Y'       BGRCFI           Report Control
+     C                     MOVEL'N'       BGAMIN           Amps Int
+     C                     MOVEL'N'       BGSWRT           Swiss Returns
+     C                     MOVEL'N'       BGFLND           Fiduciary Loans
+     C                     MOVEL'N'       BGLMCR           Portfolio Lendi
+     C                     MOVEL'N'       BGCNTX           Cantonal Tax
+     C                     MOVEL'N'       BGSTDU           Stamp Duty
+     C                     MOVEL'N'       BGUDRS           Use DRS Shortna
+     C                     MOVEL'N'       BGCHDL           Chips Dealing
+     C                     MOVEL'N'       BGCHLN           Chips Lending
+     C                     MOVEL'N'       BGCHOB           Chips Opening B
+     C                     MOVEL'N'       BGCHIP           CHIPS
+     C                     MOVEL'N'       BGCHDI           Chips Direct Li
+     C                     MOVEL'N'       BGOPDK           Optical Disk
+     C                     MOVEL'N'       BGMBIN           Multi-branching
+     C                     MOVEL'N'       BGNNST           Leo Data Nucleu
+     C                     MOVEL'N'       BGNOST           Leo Letters of
+     C                     MOVEL'N'       BGNPST           Leo Collections
+     C                     MOVEL'N'       BGNQST           Leo Bills/Finan
+     C                     MOVEL'N'       BGNRST           Leo Bankers Acc
+     C                     MOVEL'N'       BGNSST           Leo Reimburseme
+     C                     MOVEL'N'       BGNTST           Taxes
+     C                     MOVEL'N'       BGNUST           History & Audit
+     C                     MOVEL'N'       BGNVST           Management Acco
+     C                     MOVEL'N'       BGNWST           IBLC Returns
+     C                     MOVEL'N'       BGNXST           Retail 3
+     C                     MOVEL'N'       BGNYST           Interest on Acc
+     C                     MOVEL'N'       BGNZST           Midas Export Da
+     C                     MOVEL'N'       BGN0ST           Analytical Acco
+     C                     MOVEL'N'       BGN1ST           User Defined Co
+     C                     MOVEL'N'       BGN2ST           Midas-Plato Int
+     C                     MOVEL'N'       BGN3ST           Midas-Trade Inn
+     C                     MOVEL'N'       BGN4ST           Reserved for La
+     C                     MOVEL'N'       BGN5ST           Reserved for La
+     C                     MOVEL'N'       BGN6ST           Reserved for La
+     C                     MOVEL'N'       BGN7ST           Reserved for La
+     C                     MOVEL'N'       BGN8ST           Reserved for La
+     C                     MOVEL'N'       BGN9ST           Reserved for La
+     C                     MOVEL'N'       BGOAST           Reserved for La
+     C                     MOVEL'N'       BGOBST           Reserved for La
+     C                     MOVEL'N'       BGOCST           Reserved for La
+     C                     MOVEL'N'       BGODST           Reserved for La
+     C                     MOVEL'N'       BGOEST           Reserved for La
+     C                     MOVEL'N'       BGOFST           Reserved for La
+     C                     MOVEL'N'       BGOGST           Reserved for La
+     C                     MOVEL'N'       BGOHST           Reserved for La
+     C                     MOVEL'N'       BGOIST           Reserved for La
+     C                     MOVEL'N'       BGOJST           Reserved for La
+     C                     MOVEL'N'       BGOKST           Reserved for La
+     C                     MOVEL'N'       BGOLST           Reserved for La
+     C                     MOVEL'N'       BGOMST           Reserved for La
+     C                     MOVEL'N'       BGONST           Reserved for La
+     C                     MOVEL'N'       BGOOST           Reserved for La
+     C                     MOVEL'N'       BGOPST           Reserved for La
+     C                     MOVEL'N'       BGOQST           Reserved for La
+     C                     MOVEL'N'       BGORST           Reserved for La
+     C                     MOVEL'N'       BGOSST           Reserved for La
+      *
+     C           KLCRSB    KLIST
+     C                     KFLD           BGMODS           Modules
+      * Check for duplicate primary key
+     C           KLCRSB    SETLL@BGREC7                  90*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'USR0097' W0RTN   7
+      * Send message 'MIDAS Modules          EX'
+     C                     MOVEL'USR0097' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C                     WRITE@BGREC7                91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Write error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * USER: Processing after Data update
+      * Start of change CAAA01.
+     C                     MOVEL'Y'       WUUPRQ           Update Request
+      * Set update SDMMIDPD flag - MIDAS Modules  *
+     C                     CALL 'SDC9011'              90  Set update SDMM
+     C           WUUPRQ    PARM WUUPRQ    WQ0001  1        Update Request
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDC9011' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * End of change CAAA01.
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Update Request
+     C                     MOVEL*BLANK    WUUPRQ  1
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SDMMODL1
+     C                     OPEN SDMMODL0
+     C                     MOVEL'N'       W0PMT   1
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9006XPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9006XPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINS
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9006XPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

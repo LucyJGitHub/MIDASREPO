@@ -1,0 +1,238 @@
+      *****************************************************************
+/*STD *  PGMBASE                                                      *
+/*EXI *  MODULE(LECLIPVU) ACTGRP(*CALLER)                             *
+/*EXI *  TEXT('Midas LE Loan input details validate and update')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LECLIPVU - Transaction validate and update program           *
+      *                                                               *
+      *  Function:  This program validates and updates transactions   *
+      *             recieved from the front end                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      *  Last Amend No. MD032052           Date 23Jan15               *
+      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                 CDL094             Date 01Sep14               *
+      *                 MD025521           Date 19Aug14               *
+      *                 MD025619           Date 07Mar14               *
+      *                 MD025009B          Date 12May14               *
+      *                 MD023116           Date 24Apr14               *
+      *                 CSD095             Date 08Apr14               *
+      *                 MD022807C          Date 15Oct13               *
+      *                 MD022807           Date 11Oct13               *
+      *                 AR868380           Date 19Jun13               *
+      *                 MD020605           Date 10Jun13               *
+      *                 MD020578           Date 24May13               *
+      *                 AR1095041          Date 12Mar13               *
+      *                 AR1076968A         Date 07Feb13               *
+      *                 AR804863           Date 10Dec12               *
+      *                 AR1078092          Date 20Jan13               *
+      *                 AR1021983          Date 01Aug12               *
+      *                 AR693137           Date 01Aug12               *
+      *                 AR634877           Date 01Aug12               *
+      *                 AR317161           Date 01Aug12               *
+      *                 AR314017           Date 01Aug12               *
+      *                 262461A            Date 01Aug12               *
+      *                 262461             Date 01Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CSF011A            Date 28Nov11               *
+      *                 CSF011             Date 12Sep11               *
+      *                 CER049             Date 06Dec10               *
+      *                 CRE073             Date 06Dec10               *
+      *                 AR746353A          Date 06Jun11               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23645           Date 03Apr09               *
+      *                 CER047             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG22318           Date 28Jan09               *
+      *                 BUG21860           Date 06Dec08               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG21167           Date 25Sep08               *
+      *                 256564             Date 17Sep08               *
+      *                 255159A            Date 27Jun08               *
+      *                 BUG16617           Date 01Mar08               *
+      *                 247441             Date 20Jul07               *
+      *                 247545             Date 09May07               *
+      *                 245273             Date 26Jan07               *
+      *                 245411             Date 26Jan07               *
+      *                 246342             Date 12Mar07
+      *                 BUG13843           Date 02May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 244510             Date 28Feb07               *
+      *                 245227             Date 20Feb07               *
+      *                 245210             Date 12Jan07               *
+      *                 241519             Date 05Sep06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10391R          Date 17Feb06               *
+      *                 BUG10671R          Date 07Mar06               *
+      *                 BUG10574           Date 02Mar06               *
+      *                 BUG10604           Date 02Mar06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG9691            Date 22Dec05               *
+      *                 CER001             Date 25Apr05               *
+      *                 BUG8526            Date 27Sep05               *
+      *                 CLE106             Date 01Aug04               *
+      *                 CLE031             Date 26Apr05               *
+      *                 CAS011             Date 16May05               *
+      *                 CAP086             Date 08Jun05               *
+      *                 BUG6010            Date 30Mar05               *
+      *                 BUG6108            Date 03May05               *
+      *                 BUG4663 (reopen)   Date 08Nov04               *
+      *                 BUG4685            Date 17Nov04               *
+      *                 BUG4473            Date 06Oct04               *
+      *                 CLE120             Date 09Aug04               *
+      *                 BUG3721 (CLE028)   Date 09Aug04               *
+      *                 BUG2480            Date 26May04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 TDA023             Date 22Mar04               *
+      *                 BUG826             Date 23Mar04               *
+      *                 196461             Date 22Aug03               *
+      *                 CDE005             Date 23Sep02               *
+      *                 CAP084  *CREATE    Date 22Sep02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD032052 - Unable to authorize loan repaired from repair     *
+      *             queue. Enhance MD031225 to bypass validation of   *
+      *             loan number if record come from COB. (Recompile)  *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompile)                                         *
+      *  MD025521 - Recompile due to changes on LECLI2PD.             *
+      *  MD025619 - No validation for Pay Our Account for blocked     *
+      *             debits and credits (Recompile)                    *
+      *  MD025009B - API returned a Serious midas error has occurred  *
+      *  MD023116 - Incorrect error message in RONS field (Recompile) *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  MD022807C - Additional validation delivered by MD022807      *
+      *              no longer required (Recompile)                   *
+      *  MD022807 - Additional validation for PDCL Maturity Date      *
+      *             amendment (Recompile)                             *
+      *  AR868380 - Infinite lock status encountered on OLPOS.        *
+      *             (Child: AR868381) (Recompile)                     *
+      *  MD020605 - CLE134 Impossible to create PDCL in IC (Recompile)*
+      *  MD020578 -  Cannot authorise WIP record. Status is neither   *
+      *              complete nor requesting re-authorisation         *
+      *              (Recompile)                                      *
+      *  AR1095041 - Midas error in CLIP due to CPF4293 error in      *
+      *              LEPDUELB file (Recompile)                        *
+      *  AR1076968A - System did not generate PDCL fees for unpaid    *
+      *               portion of Fee due (Recompile)                  *
+      *  AR804863 - Recompiled due to changes in LECLIPVU module.     *
+      *             (Child: AR804864)                                 *
+      *           - Applied for AR910559 (Child: AR910560)            *
+      *  AR1078092 - Event Code of 45021706 (settlement account is    *
+      *              (blocked) is not user configurable (Recompile)   *
+      *  AR1021983 - ¢PDP! Option C - Technical Enhancements Stated   *
+      *              in POC (Recompile)                               *
+      *  AR693137 - Recompile due to changes made in LECLIPVU         *
+      *             (Child: AR693138)                                 *
+      *  AR634877 - AUTO cannot be 'C' if both settlement methods are *
+      *             '00'.(Recompile)(Child: AR634878)                 *
+      *  AR317161 - FAMU validation must accept value 'N' when loan   *
+      *             type is not X, Y or Z (Recompile)                 *
+      *             (Child: AR317162)                                 *
+      *  AR314017 - PONS/RONS warning if changed with LEACCNPD        *
+      *             records (Child: AR314018)                         *
+      *  262461A -  Incorrect settlement branch for fees.             *
+      *  262461 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+      *          - CCR016: Settlement Allocation                      *
+      *            (Recompile)                                        *
+      *  CSF011 - Customer Name on Inputs (Recompile)                 *
+      *  CER049 - Stamp Tax (Recompile)                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  AR746353A - System Error Occured in CLIP (Recompile)         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23645 - Recompiled due to change in LECLIPVU module       *
+      *  CER047 - German Features LF037-00 Reporting ÷24c             *
+      *           (Recompile)                                         *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  BUG22318 - Risk Participation loans with recourse are not    *
+      *             allowed (Recompile)                               *
+      *  BUG21860 - Loan Input API Settlement instructions for Pay    *
+      *             settlement method lost while authorising the      *
+      *             transaction (Recompile)                           *
+      *  BUG21167 - No generation of MT103, 202 and 210 (Recompile)   *
+      *  256564 - Recompile due to PF changes done by fix 256330      *
+      *  255159A - Re-instate part of fix commented out by 247545 for *
+      *           pay settlement.  Correct fix is to protect the field*
+      *           on JAVA when loan has started (same with R4).       *
+      *           Recompile due to changed module LECLIPVU.           *
+      *  BUG16617 - Attempt to divide by zero while calculating       *
+      *             repayment amount for repayment type 3. Do not     *
+      *             calculate if effective interest rate is zero      *
+      *             (Recompile)                                       *
+      *  247441 - Recompiled due to change in LECLIPVU module         *
+      *  247545 - Recompiled due to change in LECLIPVU.               *
+      *  245273 - Recompiled due to change in LECLIPVU.               *
+      *  245411 - Recompiled due to change in LECLIPVU.               *
+      *  246342 - *RECUP must not commit changes But Rollback updates *
+      *           Recompiled due to LECLIPVU Changes                  *
+      *  BUG13843 - Wrong OLNO reflected (Recompile)                  *
+      *  244510 - Recompiled due to change in LECLIPVU                *
+      *  245227 - Recompiled due to change in LECLIPVU                *
+      *  245210 - User should not be able to reopen matured           *
+      *           participant loan. (Recompiled)                      *
+      *  241519 - Recompiled due to change in LECLIPVU                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10391R - Funding Rate and Funding Spread Rate fields      *
+      *              should be shown separately when CLE036 is *ON    *
+      *              (Recompile)                                      *
+      *  BUG10671R - Auto generated error on completion of agented    *
+      *              loan. (Recompile)                                *
+      *  BUG10574 - Recompiled due to changes in LECLI4PD.            *
+      *  BUG10604- UNLOCK record locking for PTPF.                    *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  BUG9691- Include CAS011 changes in GZCLOANCL to align valids *
+      *           file format.(Recompile)                             *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  BUG8526- Facility Currency Exchange Rate should be used, if  *
+      *           entered, in the calculation of the Facility         *
+      *           Repayment amount.                                   *
+      *  CLE106 - Syndications Manager. (Recompiled)                  *
+      *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
+      *  CAS011 - EIR/AC Accounting Upgrade to MP1 (Recompile)        *
+      *  CAP086 - Introduce Auto Authorisation to the API's           *
+      *           without it.                                         *
+      *  BUG6010 - Allow Amendment of the value date settlement if    *
+      *            the loan has passed value date.  Display Warning   *
+      *            message instead of an error message. (Recompile)   *
+      *  BUG6108 - Recompiled due to change in LECLIPVU               *
+      *  BUG4663- Midas Serious Error upon insert on CLIP             *
+      *  BUG4685 - Unable to authorise transaction because WIP do     *
+      *            not have correct data.                             *
+      *  BUG4473 - Error in validating a closed payment account when  *
+      *            authorising loan                                   *
+      *  CLE120 - Core changes for GBO020                             *
+      *         - Debt Classification by Assets                       *
+      *         - Upgrade to Midasplus                                *
+      *  BUG3721 - Flat Rate Personal Loans (Rule of 78s) (CLE028)    *
+      *           (Recompile)                                         *
+      *  BUG2480 - Send the reservation id to the back end            *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  TDA023 - Increase Maturity Date Account to 18 Digits         *
+      *           (Recompile)                                         *
+      *  BUG826 - Missing CAS00x changes                              *
+      *  196461 - Validation of settlement shall not be done when     *
+      *           Receipt and/or Payment are protected.               *
+      *  CDE005   Reservation ID                                      *
+      *  CAP084 - Midas Plus API development                          *
+      *                                                               *
+      *****************************************************************

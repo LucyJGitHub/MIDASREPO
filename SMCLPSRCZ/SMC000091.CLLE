@@ -1,0 +1,160 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Shell for initial module set up')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000091 - Shell for initial module set up                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *CREATE    Date 06Oct10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFXSVAL &PGM)
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AGSUC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPSVALJ0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area LDA in QTEMP for error handling. */
+             DLTDTAARA  DTAARA(QTEMP/LDA)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ')
+ 
+/* Create data area MIDASMSG in QTEMP for screen error handling. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SMC000091 (SCBEGIN)')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PFX) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC000088' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CALL       PGM(UPC0014) PARM(&PFX)
+ 
+             CHGVAR     VAR(&DMLIB) VALUE(&PFX *TCAT 'DMLIB')
+ 
+/* Check if system set up flag is on; if yes then end program. */
+             RTVDTAARA  DTAARA(&DMLIB/RUNDAT (11 1)) RTNVAR(&AGSUC)
+             IF         COND(&AGSUC *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('*SETUP')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Start commitment control. */
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCCMTCTL) PARM('S')
+ 
+/* Call modular specific program. */
+             CALL       PGM(&PGM) PARM(&PFX &ERRPGM)
+             IF         COND(&ERRPGM *NE ' ') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                ROLLBACK
+                MONMSG     MSGID(CPF0000)
+                IF         COND(&ERRPGM *NE ' ') THEN(DO)
+/* Check for special values. */
+                   IF         COND(&ERRPGM *EQ '*NOT ON') THEN(DO)
+                      CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('Module is +
+                                   not switched on.')
+                      GOTO       CMDLBL(DSPERR)
+                   ENDDO
+                   IF         COND(&ERRPGM *EQ '*SETUP') THEN(DO)
+                      CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('System +
+                                   setup flag is on.')
+                      GOTO       CMDLBL(DSPERR)
+                   ENDDO
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) MSGDTA(&ERRPGM) +
+                                MSG(&MESSAGE)
+                   MONMSG     MSGID(CPF0000)
+                ENDDO
+                ELSE       CMD(DO)
+                   RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                                MSGDTA('SMC000091') MSG(&MESSAGE)
+                   MONMSG     MSGID(CPF0000)
+                ENDDO
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                             joblog for details')
+                MONMSG     MSGID(CPF0000)
+DSPERR:
+                CALL       PGM(SCC0010) PARM('SMC000091' 'ENTER' ' ')
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+ENDPGM:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             RCLRSC
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

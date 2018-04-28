@@ -1,0 +1,387 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Extract Latest Rate Change for Today')           *
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE7430 - EXTRACT LATEST RATE CHANGE INPUT FOR TODAY.         *
+     F*           REPLACES RE743A                                     *
+0007 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*      1990, 1993                                               *
+0009 F*                                                               *
+      *  Last Amend No. CRE083BP           Date 06Aug12               *
+      *  Prev Amend No. AR722581           Date 25Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CRE005             Date 18Jan10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413             Date 13Apr93               *
+0011 F*                                                               *
+0012 F*****************************************************************
+0011 F*                                                               *
+      *  CRE083BP - COB Restructure - RE COB Optimisation Phase 1     *
+      *  AR722581 - Wrong rates are being taken when inserted on a    *
+      *             a Saturday or Sunday where CoB is not scheduled   *
+      *             to run. Use Transaction Number instead of Time    *
+      *             when getting latest rate. Apply fix 189834.       *
+      *             (Child: AR723746)                                 *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE005 - Changes to STRAN                                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01413  -  Header Box Standardised                           *
+0011 F*  Please note that the name of this program has been changed   *
+     F*  RE743A to RE7430 to comply with the requirements of multi-   *
+     F*  branching phase II.                                          *
+0011 F*                                                               *
+0012 F*****************************************************************
+0011 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0013 F***SRCIP** IP  F     200 15AI     2 DISK                                                CGL029
+     FSRCIP   IP  F     210 15AI     2 DISK                                                   CGL029
+     FRERCHGL0IS  F     210 15AI     2 DISK                                                   CRE005
+0014 F***SRCIP2HHO   F     200            DISK                                                CGL029
+     FSRCIP2HHO   F     210            DISK                                                   CGL029
+0014 F***SRCIP2P1O   F     200            DISK                                                CGL029
+0014 F***SRCIP2P2O   F     200            DISK                                                CGL029
+0014 F***SRCIP2P3O   F     200            DISK                                                CGL029
+     FSRCIP2P1O   F     210            DISK                                                   CGL029
+     FSRCIP2P2O   F     210            DISK                                                   CGL029
+     FSRCIP2P3O   F     210            DISK                                                   CGL029
+0014 FSRCIP2ZZO   F     200            DISK
+0015 F*
+0016 F* I  F  C  H  L    FUNCTION OF INDICATORS
+     F*
+0017 F* 01            SRCIP - HEADER
+0018 F* 02                  - SEQUENCE 1
+0019 F* 03                  - SEQUENCE 2
+0020 F* 04                  - SEQUENCE 3
+0021 F* 05                  - TRAILER
+     F*
+0022 F*       11      OUTPUT DETAIL
+0023 F*       12      OUTPUT SEQUENCE 2 DETAIL
+0024 F*       13      OUTPUT SEQUENCE 3 DETAIL
+0025 F*       20      SORT KEY VALUE NOT SAME AS LAST TIME
+0026 F*       21      IGNORE CURRENT RECORD-GROUP
+0027 F*       22      REPLACE LAST RECORD-GROUP
+0028 F*       23      SOMETHING STORED
+0029 F*       24      FIRST STORE
+     F*       30      CRE005 SWITCHED ON                                                      CRE005
+0030 F*       52      END OF FIRST CYCLE.
+     F*
+     E                    CPY@    1   1 80
+0031 I********************************************************************
+     I*
+0032 I* RATE CHANGES INPUT - HEADER RECORD.
+0033 I*
+0034 ISRCIP   NS  01   1 CA
+0035 I       OR   01   1 CH
+0036 I**********                              1 200 LOTREC                                    CGL029
+     I                                        1 210 LOTREC                                    CGL029
+0037 I*
+0038 I* RATE CHANGES FILE - SEQUENCE 1 DETAIL RECORD.
+0039 I*
+0040 I        NS  02   1 CR  17 C1
+0041 I       OR   02   1 CD  17 C1
+0042 I                                        1   1 RECI
+0043 I**********                              2   70CNUM                                      CSD027
+0043 I                                        2   7 CNUM                                      CSD027
+0044 I                                        8  10 CCY
+0045 I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0046 I                                       15  160ACSQ
+     I                                       15  160WACSQF                                    CGL029
+0047 I**********                              2  16 KEY1                                      CGL029
+     I                                        2  10 WKEY1F                                    CGL029
+0048 I                                       17  170RSEQ
+0049 I                                    P  36  380VALD
+0050 I                                       81  810DRCR
+     I                                       82  870TIME
+0052 I                                       82  870MTIME
+     I                                      103 105 BRCA
+     I                                    P 195 1970SNUM                                    AR722581
+     I                                      201 2100ACOD                                      CGL029
+     I                                      201 2100WACODF                                    CGL029
+0053 I**********                              1 200 LOTREC                                    CGL029
+     I                                        1 210 LOTREC                                    CGL029
+0054 I*
+0055 I* RATE CHANGE INPUT FILE - SEQUENCE 2 RECORD.
+0056 I*
+0057 I        NS  03   1 CR  17 C2
+0058 I       OR   03   1 CD  17 C2
+0059 I                                        1   1 RECI
+0060 I**********                              2   70CNUM                                      CSD027
+0060 I                                        2   7 CNUM                                      CSD027
+0061 I                                        8  10 CCY
+0062 I**********                             11  140ACOD                                      CGL029
+0062 I                                       11  140ACODQQ                                    CGL029
+0063 I                                       15  160ACSQ
+0064 I                                       17  170RSEQ
+     I                                      201 2100ACOD                                      CGL029
+0065 I**********                              1 200 LOTREC                                    CGL029
+     I                                        1 210 LOTREC                                    CGL029
+0066 I*
+0067 I* RATE CHANGE INPUT FILE - SEQUENCE 3 RECORD.
+0068 I*
+0069 I        NS  04   1 CR  17 C3
+0070 I       OR   04   1 CD  17 C3
+0071 I                                        1   1 RECI
+0072 I**********                              2   70CNUM                                      CSD027
+0072 I                                        2   7 CNUM                                      CSD027
+0073 I                                        8  10 CCY
+0074 I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ
+0075 I                                       15  160ACSQ
+0076 I                                       17  170RSEQ
+     I                                      201 2100ACOD                                      CGL029
+0077 I**********                              1 200 LOTREC                                    CGL029
+     I                                        1 210 LOTREC                                    CGL029
+0078 I* RATE CHANGES INPUT FILE - TRAILER RECORD.
+0079 I*
+0080 I        NS  05   1 CZ
+     I                                      103 105 BRCA
+0082 I* CATCHALL
+0083 I        NS
+0084 I*
+     IRERCHGL0NS  01   1 CA                                                                   CRE005
+     I       OR   01   1 CH                                                                   CRE005
+     I                                        1 210 LOTREC                                    CRE005
+      *                                                                                       CRE005
+      * RATE CHANGES FILE - SEQUENCE 1 DETAIL RECORD.                                         CRE005
+      *                                                                                       CRE005
+     I        NS  02   1 CR  17 C1                                                            CRE005
+     I       OR   02   1 CD  17 C1                                                            CRE005
+     I                                        1   1 RECI                                      CRE005
+     I                                        2   7 CNUM                                      CRE005
+     I                                        8  10 CCY                                       CRE005
+     I                                       11  200ACOD                                      CRE005
+     I                                       21  220ACSQ                                      CRE005
+     I                                        2  22 KEY1                                      CRE005
+     I                                       23  230RSEQ                                      CRE005
+     I                                    P  42  440VALD                                      CRE005
+     I                                       87  870DRCR                                      CRE005
+     I                                       88  930TIME                                      CRE005
+     I                                       88  930MTIME                                     CRE005
+     I                                      109 111 BRCA                                      CRE005
+     I                                        1 210 LOTREC                                    CRE005
+      *                                                                                       CRE005
+      * RATE CHANGE INPUT FILE - SEQUENCE 2 RECORD.                                           CRE005
+      *                                                                                       CRE005
+     I        NS  03   1 CR  17 C2                                                            CRE005
+     I       OR   03   1 CD  17 C2                                                            CRE005
+     I                                        1   1 RECI                                      CRE005
+     I                                        2   7 CNUM                                      CRE005
+     I                                        8  10 CCY                                       CRE005
+     I                                       11  200ACOD                                      CRE005
+     I                                       21  220ACSQ                                      CRE005
+     I                                       23  230RSEQ                                      CRE005
+     I                                        1 210 LOTREC                                    CRE005
+      *                                                                                       CRE005
+      * RATE CHANGE INPUT FILE - SEQUENCE 3 RECORD.                                           CRE005
+      *                                                                                       CRE005
+     I        NS  04   1 CR  17 C3                                                            CRE005
+     I       OR   04   1 CD  17 C3                                                            CRE005
+     I                                        1   1 RECI                                      CRE005
+     I                                        2   7 CNUM                                      CRE005
+     I                                        8  10 CCY                                       CRE005
+     I                                       11  200ACOD                                      CRE005
+     I                                       21  220ACSQ                                      CRE005
+     I                                       23  230RSEQ                                      CRE005
+     I                                        1 210 LOTREC                                    CRE005
+      * RATE CHANGES INPUT FILE - TRAILER RECORD.                                             CRE005
+     I*                                                                                       CRE005
+     I        NS  05   1 CZ                                                                   CRE005
+     I                                      103 105 BRCA                                      CRE005
+     I* CATCHALL                                                                              CRE005
+     I        NS                                                                              CRE005
+     I*                                                                                       CRE005
+     ISCSARD    E DSSCSARDPD                                                                  CRE005
+     I** MIDAS Switchable Features Accessed Via Access Program                                CRE005
+     I*                                                                                       CRE005
+     I* STANDARD LOCAL DATA AREA FIELDS                                                       CRE005
+     I*                                                                                       CRE005
+     IDSFDY     E DSDSFDY                                                                     CRE005
+      **  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                                  CRE005
+      *                                                                                       CRE005
+     ILDA        UDS                            256                                           CRE005
+     I                                      134 141 LFILE                                     CRE005
+     I                                      142 170 LKEY                                      CRE005
+     I                                      171 180 LPROG                                     CRE005
+     I                                      181 1830LDBNO                                     CRE005
+     I                                      134 141 DBFILE                                    CRE005
+     I                                      142 170 DBKEY                                     CRE005
+     I                                      171 180 DBPGM                                     CRE005
+     I                                      181 1830DBASE                                     CRE005
+0085 I            DS
+0086 I**********                              1 200 LOTRSV                                    CGL029
+     I                                        1 210 LOTRSV                                    CGL029
+0087 I                                        1   1 RECISV
+0088 I**********                              2  16 KEY1SV                                    CGL029
+     I                                        2  10 WKEY1S                                    CGL029
+     I                                       15  160WACSQS                                    CGL029
+0090 I                                       81  810DRCRSV
+0092 I                                       82  870TIMESV
+0091 I                                      103 105 BRCDSV
+     I                                    P 195 1970SNUMSV                                  AR722581
+     I                                      201 2100WACODS                                    CGL029
+     IKEY1        DS                                                                          CGL029
+     I                                        1   9 WKEY1F                                    CGL029
+     I                                       10  190WACODF                                    CGL029
+     I                                       20  210WACSQF                                    CGL029
+     IKEY1SV      DS                                                                          CGL029
+     I                                        1   9 WKEY12                                    CGL029
+     I                                       10  190WACOD2                                    CGL029
+     I                                       20  210WACSQ2                                    CGL029
+0093 I********************************************************************
+     I/EJECT
+     C**********           MOVEACPY@      BIS@   80                                         CRE083BP
+      *  DEFINE LDA                                                                           CRE005
+     C           *NAMVAR   DEFN           LDA                                                 CRE005
+     C********** *LOCK     IN   LDA                                                  CRE005 CRE083BP
+      *                                                                                       CRE005
+0094 C  N52                EXSR FIRST1
+0095 C   03 21
+0096 COR 04 21             GOTO END                        IGNORE 2, 3?
+0097 C   01      RECOUT    ADD  1         RECOUT  50
+0098 C   01                EXCPT
+0099 C   01                GOTO END
+0100 C                     SETOF                     202122
+0101 C                     SETOF                     24
+0102 C   05                GOTO END
+0103 C           RECISV    COMP ' '                      24
+0104 C   24                EXSR STORE
+0105 C   24                GOTO END
+0106 C*
+     C   02      BRCA      COMP BRCDSV               2020
+0108 C   02N20   KEY1      COMP KEY1SV               2020
+0109 C   02N20   VALD      COMP VALDSV               2020
+0110 C   02N20   DRCR      COMP DRCRSV               2020  SAME KEY?
+0111 C*
+0112 C***02N20** MTIME     COMP TIMESV                                               222121 AR722581
+0112 C   02N20   SNUM      COMP SNUMSV               222121                                 AR722581
+0113 C   21                GOTO END                        KEEP LAST
+0114 C*
+0115 C   20                EXSR FLUSH                      OUTPUT & STORE
+0116 C   20
+0117 COR 22                EXSR STORE                      REPLACE LAST
+0118 C***03*****           MOVE LOTREC    S2AREA200        STORE TYPE 2                       CGL029
+     C   03                MOVE LOTREC    S2AREA210                                           CGL029
+0119 C   03                SETON                     12
+0120 C***04*****           MOVE LOTREC    S3AREA200        STORE TYPE 3                       CGL029
+     C   04                MOVE LOTREC    S3AREA210                                           CGL029
+0121 C   04                SETON                     13
+0122 C*
+0123 C           END       TAG
+     C***LR         RECOUT    ADD  1         RECOUT                                           CRE005
+     C***LR                   EXSR FLUSH                                                      CRE005
+     CLRNU7      RECOUT    ADD  1         RECOUT                                              CRE005
+     CLRNU7                EXSR FLUSH                                                         CRE005
+     CLR U7                EXSR *PSSR                                                         CRE005
+      ********************************************************************                    CRE005
+0127 C*
+0128 C           FIRST1    BEGSR
+      *                                                                                       CRE005
+     C                     MOVEACPY@      BIS@   80                                         CRE083BP
+      *                                                                                     CRE083BP
+     C                     CALL 'AOSARDR0'                                                    CRE005
+     C                     PARM *BLANKS   @RTCD   7                                           CRE005
+     C                     PARM '*VERIFY' @OPTN   7                                           CRE005
+     C                     PARM 'CRE005'  @SARD   6                                           CRE005
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRE005
+      *                                                                                       CRE005
+     C                     SELEC                                                              CRE005
+     C           @RTCD     WHEQ *BLANK                                                        CRE005
+     C                     MOVE *ON       *IN30                                               CRE005
+     C           @RTCD     WHEQ '*NRF'                                                        CRE005
+     C                     MOVE *OFF      *IN30                                               CRE005
+     C                     OTHER                                                              CRE005
+     C           *LOCK     IN   LDA                                                           CRE005
+     C                     MOVEL'SCSARDPD'DBFILE                                              CRE005
+     C                     Z-ADD001       DBASE                                               CRE005
+     C                     MOVEL@OPTN     DBKEY                                               CRE005
+     C                     SETON                     U7U8LR                                   CRE005
+     C                     OUT  LDA                                                           CRE005
+     C                     GOTO END                                                           CRE005
+     C                     ENDSL                                                              CRE005
+      *                                                                                       CRE005
+0129 C                     MOVE *BLANKS   LOTRSV
+0130 C                     Z-ADD0         ZERO15 150
+0131 C                     SETON                     52    NOT FIRST CYCLE
+0132 C                     ENDSR
+0133 C********************************************************************
+0134 C* OUTPUT STORED RECORDS
+0135 C*
+0136 C           FLUSH     BEGSR
+0137 C   23                SETON                     11
+0138 C   11      RECOUT    ADD  1         RECOUT
+0139 C   12      RECOUT    ADD  1         RECOUT
+0140 C   13      RECOUT    ADD  1         RECOUT
+0141 C                     EXCPT
+0142 C                     SETOF                     111213
+0143 C                     ENDSR
+0144 C********************************************************************
+0145 C* STORE INPUT
+0146 C*
+0147 C           STORE     BEGSR
+0148 C                     SETOF                     1213
+0149 C                     MOVE LOTREC    LOTRSV
+     C                     MOVE WKEY1S    WKEY12                                              CGL029
+     C                     MOVE WACODS    WACOD2                                              CGL029
+     C                     MOVE WACSQS    WACSQ2                                              CGL029
+     C                     MOVE VALD      VALDSV  50
+0150 C                     MOVE *BLANKS   S2AREA
+0151 C                     MOVE *BLANKS   S3AREA
+0152 C                     SETON                     23
+0153 C                     ENDSR
+      ********************************************************************                    CRE005
+      *                                                                                       CRE005
+      * *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS                             CRE005
+      *                                                                                       CRE005
+      * CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                                          CRE005
+      *                                                                                       CRE005
+      * CALLS: NOTHING                                                                        CRE005
+      *                                                                                       CRE005
+      ********************************************************************                    CRE005
+      *                                                                                       CRE005
+     C           *PSSR     BEGSR                                                              CRE005
+      *                                                                                       CRE005
+     C           @RUN      IFEQ *BLANKS                                                       CRE005
+     C                     MOVE 'Y'       @RUN    1                                           CRE005
+     C                     DUMP                                                               CRE005
+     C                     END                                                                CRE005
+      *                                                                                       CRE005
+     C                     ENDSR                                                              CRE005
+      ********************************************************************                    CRE005
+0154 C********************************************************************
+0155 OSRCIP2HHE        01
+0156 O**********               LOTREC   200                                                   CGL029
+     O                         LOTREC   210                                                   CGL029
+0157 OSRCIP2P1E        11
+0158 O**********               LOTRSV   200                                                   CGL029
+     O                         LOTRSV   210                                                   CGL029
+     O                         WACOD2   176                                                   CGL029
+0159 OSRCIP2P2E        11 12
+0160 O**********               S2AREA   200                                                   CGL029
+     O                         S2AREA   210                                                   CGL029
+     O                         WACOD2   170                                                   CGL029
+0161 OSRCIP2P3E        11 13
+0162 O**********               S3AREA   200                                                   CGL029
+     O                         S3AREA   210                                                   CGL029
+     O                         WACOD2   170                                                   CGL029
+0163 OSRCIP2ZZE        LR
+0164 O                                    1 'Z'
+0165 O                         RECOUT     6
+0166 O                         ZERO15    14P
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

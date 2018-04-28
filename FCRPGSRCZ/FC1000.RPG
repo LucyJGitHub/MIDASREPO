@@ -1,0 +1,388 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FC Log mandatory report request')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Report Control Facility Module                       *
+      *                                                               *
+      *  FC1000 - Log mandatory report request                        *
+      *                                                               *
+      *  Function:  Written for User Defined Correspondence; create   *
+      *             a new RCF report request for UDC generated        *
+      *             print.                                            *
+      *                                                               *
+      *  Called By: CG5200                                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG7269            Date 25May05               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 18Jan95               *
+      *                 X00000                  00XXX00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  BUG7269 - FCC0301 FC0600 DBERR in MUSER                      *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  S01522 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  01   -    XX                                                 *
+      *  50   -    CHAIN fail                                         *
+      *                                                               *
+      *****************************************************************
+      *
+      /COPY WNCPYSRC,FC1000FPG
+     FFCREPTL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FFCRCOML1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FFCMOUTL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FMUSER   IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FFCRREQPDO   E           K        DISK
+     F                                              KINFSR SRFILE
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Copyright statement
+      *
+      /COPY CGCPYSRC,SRERRE
+      /COPY WNCPYSRC,FC1000EPG
+      /EJECT
+     I##MOUT    E DSFCMOUTL1
+      ** External DS for FCMOUTL1
+      *
+     I##RREQ    E DSFCRREQL1
+      ** External DS for FCRREQL1
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+      ** Copyright statement
+      *
+     IRUNDTA    E DSRUNDAT
+      ** Data Area for run-date
+      *
+     I***D#PHAS*   E DSMPHAS                                                                  CCB020
+      ***Data*Area*for*Midas*phase*************************************                       CCB020
+      *
+     IREPSEQ      DS
+     I                                        1   50SEQ
+      ** Report sequence number
+      *
+     I            DS
+     I*I********    'MIDAS    '               1  10 K#MDS                                    BUG7269
+     I I            'MIDAS     '              1  10 K#MDS                                    BUG7269
+      ** 'MIDAS' key for CHAIN/ing MUSER
+      *
+     I#DRCOM      DS
+     I                                        1  10 #KRNAM
+     I                                       11  20 #KCNAM
+     I                                       21  25 #KCSEQ
+      ** Used to report database error
+      *
+     I              'CBC001001'           C         PGNME                                     CCB020
+      ** Constant for calling program CBC001001                                               CCB020
+      *                                                                                       CCB020
+      /COPY CGCPYSRC,SRERRI
+      /COPY WNCPYSRC,FC1000IPG
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRINIT - Initial processing                                 *
+      *   SRDEFN - Look up report description and component defn.     *
+      *   SROPIN - Look up mandatory output instructions              *
+      *   SRBRCH - Access user's default branch                       *
+      *   SRNEXT - Access next sequence number                        *
+      *   SRCRTR - Create report request                              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           R0RTN   7        Return code
+     C                     PARM           #2RSEQ  5        Rept. seq.
+     C                     PARM           #3RNAM 10        Rept. name
+     C                     PARM           #4CNAM 10        Comp. name
+     C                     PARM           #5CSEQ  5        Comp. seq.
+     C                     PARM           #6LEVL  1        Level
+     C                     PARM           #7ENTY  3        Entity
+     C                     PARM           #8OPIN 10        O/P ins.
+      *
+      ** Initial processing
+     C                     EXSR SRINIT
+      *
+      ** Look up report description and component definition
+     C                     EXSR SRDEFN
+      *
+      ** Look up mandatory output instructions
+     C                     EXSR SROPIN
+      *
+      ** Access user's default branch
+     C                     EXSR SRBRCH
+      *
+      ** Access next sequence number from DTAARA/REPSEQ
+     C                     EXSR SRNEXT
+      *
+      ** Create report request
+     C                     EXSR SRCRTR
+      *
+      /COPY WNCPYSRC,FC1000PRC
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Purpose     :  Initial processing                             *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright statement
+     C                     MOVE CPYR@#    ACT@   80
+      *
+      ** Key lists:
+      **  o FCRCOML1
+     C           #KRCOM    KLIST
+     C                     KFLD           #KRNAM 10
+     C                     KFLD           #KCNAM 10
+     C                     KFLD           #KCSEQ  5
+      *
+      ** Access run-date
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+      *
+      ** Access Midas phase
+     C********** *NAMVAR   DEFN MPHAS     D#PHAS                                              CCB020
+     C**********           IN   D#PHAS                                                        CCB020
+      *                                                                                       CCB020
+      ** Call program CBC001001 to check if system in COB or IC                               CCB020
+      ** If the return value is *YES, system is in COB                                        CCB020
+      *                                                                                       CCB020
+     C                     CALL PGNME                                                         CCB020
+     C                     PARM           COBST   4                                           CCB020
+      *
+      ** Access current time
+     C                     TIME           ##TIME  60
+      *
+     C           EXINIT    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRDEFN                                         *
+      * Purpose     :  Look up report description and component       *
+      *                definition                                     *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRDEFN    BEGSR
+      *
+      ** Access report description information from FCREPTL1
+     C           #3RNAM    CHAINFCREPTL1             50
+      *
+      ** Database error if description not found
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'FCREPTL1'W0FILE
+     C                     MOVEL#3RNAM    W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      ** Access component definition from FCRCOML1
+     C                     MOVEL#3RNAM    #KRNAM
+     C                     MOVEL#4CNAM    #KCNAM
+     C                     MOVEL#5CSEQ    #KCSEQ
+     C           #KRCOM    CHAINFCRCOML1             50
+      *
+      ** Database error if definition not found
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'FCREPTL1'W0FILE
+     C                     MOVEL#DRCOM    W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C           EXDEFN    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SROPIN                                         *
+      * Purpose     :  Look up mandatory output instructions          *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SROPIN    BEGSR
+      *
+      ** Clear output instruction data structure
+     C                     CLEAR##MOUT
+      *
+      ** Access default output instruction file
+     C           #3RNAM    CHAINFCMOUTL1             50
+      *
+      ** If no output instruction found, set up default values
+     C           *IN50     IFEQ '1'
+      *
+     C                     MOVELDXDFTO    D2DFTO
+     C                     MOVEL##USR     D2USRO
+     C                     MOVEL'N'       D2ARMF
+     C                     MOVEL'N'       D2AROD
+     C                     MOVEL##USR     D2DFTU
+      *
+      ** Set 'distribution required' only if multibranched; 'Y' for
+      ** entity level, 'N' for system level.
+     C           AGMBIN    IFEQ 'Y'
+     C           #7ENTY    IFEQ *BLANK
+     C                     MOVEL'Y'       D2DRQD
+     C                     ELSE
+     C                     MOVEL'N'       D2DRQD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If output instruction parameter passed to this program,
+      ** overwrite existing value.
+     C           #8OPIN    IFNE *BLANKS
+     C                     MOVEL#8OPIN    D2DFTO
+     C                     ENDIF
+      *
+     C           EXOPIN    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRBRCH                                         *
+      * Purpose     :  Access user's default branch                   *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRBRCH    BEGSR
+      *
+      ** Access user details for report user
+     C           D2DFTU    CHAINMUSERDDF             50
+      *
+      ** If not found, access details for default user MIDAS. If MIDAS
+      ** found, set
+     C           *IN50     IFEQ '1'
+     C           K#MDS     CHAINMUSERDDF             50
+     C           *IN50     IFEQ '0'
+     C**********           MOVEL'MIDAS'   D2DFTU                                             BUG7269
+     C                     MOVELK#MDS     D2DFTU                                             BUG7269
+     C                     ELSE
+      *
+      ** If still not found, database error
+     C                     MOVEL'MUSER   'W0FILE
+     C                     MOVEL'MIDAS'   W0KEY            ***************
+     C                     Z-ADD3         W0ERNB           * DB ERROR 03 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           EXBRCH    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRNEXT                                         *
+      * Purpose     :  Get next report sequence number                *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRNEXT    BEGSR
+      *
+      ** Obtain next sequence number from DTAARA/REPSEQ, and update       LN1183
+      ** this data area for next request                                  LN1183
+     C           *NAMVAR   DEFN           REPSEQ
+     C           *LOCK     IN   REPSEQ
+     C                     MOVE SEQ       #2RSEQ
+     C                     ADD  1         SEQ
+     C                     OUT  REPSEQ
+      *
+     C           EXNEXT    TAG
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRCRTR                                         *
+      * Purpose     :  Create report request                          *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRCRTR    BEGSR
+      *
+      ** Clear report request data structure
+     C                     CLEAR##RREQ
+      *
+      ** Set up details for request
+     C                     MOVEL#2RSEQ    D5RQSQ
+     C                     MOVEL#3RNAM    D5RNAM
+     C                     MOVELD2DFTO    D5SOID
+     C                     MOVEL#6LEVL    D5LVL
+     C                     MOVEL#7ENTY    D5ETTY
+     C********** D#PHAS    IFEQ 'C'                                                           CCB020
+     C********** D#PHAS    OREQ 'D'                                                           CCB020
+     C********** D#PHAS    OREQ 'E'                                                           CCB020
+     C           COBST     IFEQ '*YES'                                                        CCB020
+     C                     MOVEL'N'       D5IPCY
+     C                     MOVEL'Y'       D5COBR
+     C                     ELSE
+     C                     MOVEL'Y'       D5IPCY
+     C                     MOVEL'N'       D5COBR
+     C                     ENDIF
+     C                     MOVEL'N'       D5PDFL
+     C                     MOVELD2DLS1    D5DLS1
+     C                     MOVELD2DLS2    D5DLS2
+     C                     MOVELD2USRO    D5USRO
+     C                     MOVELD2ARMF    D5ARMF
+     C                     MOVELD2AROD    D5AROD
+     C                     MOVELD2DRQD    D5DRQD
+     C                     MOVELD2DFTU    D5USRR
+     C                     MOVELDBRN      D5DBRN
+     C                     MOVEL##TIME    D5RQTM
+     C                     MOVEL#4CNAM    D5COTT
+     C                     MOVEL#5CSEQ    D5CSEQ
+     C                     Z-ADD*ZERO     D5TNLU
+      *
+      ** Write to file
+     C                     WRITEFCRREQD0
+      *
+     C           EXCRTR    TAG
+     C                     ENDSR
+      *
+      /EJECT
+      /COPY WNCPYSRC,FC1000CPG
+      /COPY CGCPYSRC,SRERRC
+      /COPY CGCPYSRC,SRERRPSSR
+** CPY@ Copyright statement
+(c) Misys International Banking Systems Ltd. 2001

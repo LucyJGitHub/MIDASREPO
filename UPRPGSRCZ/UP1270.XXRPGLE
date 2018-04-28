@@ -1,0 +1,264 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*X*IA***OVRDBF*FILE(COMF1)*TOFILE(UPCOMFTPD)**************************                       CUP021
+/*X*IB***OVRDBF*FILE(COMF2)*TOFILE(UPCOMFTPD)**************************                       CUP021
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1270 - Build Action File for MXCOMFPD                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP022 *CREATE     Date 13Jan03               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP022 - Creation of new set of Action File utilities.       *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write or chain fail
+      *       70 - 84 Indicators for changed fields
+      *
+     FCOMF1     IF   E             DISK    INFSR(*PSSR)
+     FCOMF2     IF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(MXCOMFP0:COMFF) PREFIX(X)
+     FUPCOMFPD  O    E             DISK    INFSR(*PSSR)
+      *
+      /EJECT
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *       Defines:                      142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      * Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    MODE              1
+      *
+     C     COMP          KLIST
+     C                   KFLD                    CFCOMI
+     C                   KFLD                    CFEXTT
+     C                   KFLD                    CFSEQM
+      *
+     C                   READ      COMF1                                6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+     C     COMP          CHAIN     COMFF                              3069
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * If record not found then record has been deleted or added
+      *  depending on mode.
+     C     *IN30         IFEQ      *ON
+     C                   MOVE      MODE          CFACTC
+     C                   WRITE     UPCOMFD0                             69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Need to find differences but this should only be run once;
+      *  run only if mode is 'Delete'.
+     C     MODE          IFEQ      'D'
+      *
+      * If record found then look for any differences; only look in
+      *  fields that have data all of the time.
+     C     *IN30         IFEQ      *OFF
+     C                   MOVE      'A'           CFACTC
+      * Format
+     C     CFFMT         IFNE      XCFFMT
+     C                   SETON                                        70
+     C                   ENDIF
+      * Processing Sequence
+     C     CFPRSQ        IFNE      XCFPRSQ
+     C                   SETON                                        71
+     C                   ENDIF
+      * Description
+     C     CFDESC        IFNE      XCFDESC
+     C                   SETON                                        72
+     C                   ENDIF
+      * Multiple
+     C     CFMULT        IFNE      XCFMULT
+     C                   SETON                                        73
+     C                   ENDIF
+      * Export Y/N
+     C     CFEXPT        IFNE      XCFEXPT
+     C                   SETON                                        74
+     C                   ENDIF
+      * MQ Series File Type
+     C     CFFILT        IFNE      XCFFILT
+     C                   SETON                                        75
+     C                   ENDIF
+      * Optimise File Type
+     C     CFOPTF        IFNE      XCFOPTF
+     C                   SETON                                        76
+     C                   ENDIF
+      * Link-To Format
+     C     CFLFMT        IFNE      XCFLFMT
+     C                   SETON                                        77
+     C                   ENDIF
+      * Link-To Proc Seq
+     C     CFLPRS        IFNE      XCFLPRS
+     C                   SETON                                        78
+     C                   ENDIF
+      * Link-To Buff Posn 1
+     C     CFLBP1        IFNE      XCFLBP1
+     C                   SETON                                        79
+     C                   ENDIF
+      * Link-To Buff Posn 2
+     C     CFLBP2        IFNE      XCFLBP2
+     C                   SETON                                        80
+     C                   ENDIF
+      * Link-To Buff Posn 3
+     C     CFLBP3        IFNE      XCFLBP3
+     C                   SETON                                        81
+     C                   ENDIF
+      * Link-To Buff Posn 4
+     C     CFLBP4        IFNE      XCFLBP4
+     C                   SETON                                        82
+     C                   ENDIF
+      * Link-To Buff Posn 5
+     C     CFLBP5        IFNE      XCFLBP5
+     C                   SETON                                        83
+     C                   ENDIF
+      * Link-To Buff Posn 6
+     C     CFLBP6        IFNE      XCFLBP6
+     C                   SETON                                        84
+     C                   ENDIF
+      * Link-To Length 1n 1
+     C     CFLLN1        IFNE      XCFLLN1
+     C                   SETON                                        85
+     C                   ENDIF
+      * Link-To Length 1n 2
+     C     CFLLN2        IFNE      XCFLLN2
+     C                   SETON                                        86
+     C                   ENDIF
+      * Link-To Length 1n 3
+     C     CFLLN3        IFNE      XCFLLN3
+     C                   SETON                                        87
+     C                   ENDIF
+      * Link-To Length 1n 4
+     C     CFLLN4        IFNE      XCFLLN4
+     C                   SETON                                        88
+     C                   ENDIF
+      * Link-To Length 1n 5
+     C     CFLLN5        IFNE      XCFLLN5
+     C                   SETON                                        89
+     C                   ENDIF
+      * Link-To Length 1n 6
+     C     CFLLN6        IFNE      XCFLLN6
+     C                   SETON                                        90
+     C                   ENDIF
+      *
+     C                   MOVEA     *IN(70)       INTEST           21
+     C                   MOVE      INTEST        INTNUM           21 0
+      * If any indicators are set on then write record.
+     C     INTNUM        IFNE      0
+     C                   WRITE     UPCOMFD0                             69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * Set values to write second record.
+     C                   MOVEL     XCFFMT        CFFMT
+     C                   MOVEL     XCFPRSQ       CFPRSQ
+     C                   MOVEL     XCFDESC       CFDESC
+     C                   MOVEL     XCFMULT       CFMULT
+     C                   MOVEL     XCFEXPT       CFEXPT
+     C                   MOVEL     XCFFILT       CFFILT
+     C                   MOVEL     XCFOPTF       CFOPTF
+     C                   MOVEL     XCFLFMT       CFLFMT
+     C                   MOVEL     XCFLPRS       CFLPRS
+     C                   Z-ADD     XCFLBP1       CFLBP1
+     C                   Z-ADD     XCFLBP2       CFLBP2
+     C                   Z-ADD     XCFLBP3       CFLBP3
+     C                   Z-ADD     XCFLBP4       CFLBP4
+     C                   Z-ADD     XCFLBP5       CFLBP5
+     C                   Z-ADD     XCFLBP6       CFLBP6
+     C                   Z-ADD     XCFLLN1       CFLLN1
+     C                   Z-ADD     XCFLLN2       CFLLN2
+     C                   Z-ADD     XCFLLN3       CFLLN3
+     C                   Z-ADD     XCFLLN4       CFLLN4
+     C                   Z-ADD     XCFLLN5       CFLLN5
+     C                   Z-ADD     XCFLLN6       CFLLN6
+      *
+     C                   WRITE     UPCOMFD0                             69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Read next record
+     C                   MOVEA     '0000000000'  *IN(70)
+     C                   MOVEA     '0000000000'  *IN(80)
+     C                   MOVEA     '0'           *IN(90)
+     C                   READ      COMF1                                6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      ********************************************************************

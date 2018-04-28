@@ -1,0 +1,145 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                 /*MD024412*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBC022004 - Midas CB Execute Command/Retrieve Messages      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD024412 *REDUNDANTDate 20Jan14              */
+/*       Prev Amend No. MD023157           Date 29Oct13              */
+/*                      MD022590A          Date 08Oct13              */
+/*                      MD022554 *CREATE   Date 02Oct13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD024412 - Additional changes for COM processing            */
+/*       MD023157 - Locking issue on CBC022001 for APOSTPD GLACPHPD  */
+/*       MD022590A - Account movements enquiry missing members       */
+/*       MD022554 - CBC022001 issues on missing members              */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&CMD &LEN &MSGLIST &MSGTOTAL)
+ 
+/* Input parameters */
+ 
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(500)
+             DCL        VAR(&LEN) TYPE(*DEC) LEN(15 5)
+ 
+/* Output parameters */
+ 
+/**********  DCL        VAR(&MSGLIST) TYPE(*CHAR) LEN(140)           */                /*MD022590A*/
+             DCL        VAR(&MSGLIST) TYPE(*CHAR) LEN(180)                             /*MD022590A*/
+             DCL        VAR(&MSGTOTAL) TYPE(*DEC) LEN(2)
+ 
+/* Message extraction variables */
+ 
+             DCL        VAR(&SNDMSG) TYPE(*CHAR) LEN(500)                              /*MD022590A*/
+             DCL        VAR(&KEYVAR) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGIDL) TYPE(*CHAR) LEN(7)                                 /*MD023157*/
+             DCL        VAR(&N_SEV) TYPE(*DEC) LEN(2)                                  /*MD022590A*/
+             DCL        VAR(&C_SEV) TYPE(*CHAR) LEN(2)                                 /*MD022590A*/
+ 
+             DCL        VAR(&MSGINDEX) TYPE(*DEC) LEN(2)
+             DCL        VAR(&MSGSTART) TYPE(*DEC) LEN(3)
+             DCL        VAR(&CONTRCV) TYPE(*LGL)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Initialise message extraction variables */
+ 
+RETRY:                                                                                  /*MD023157*/
+             CHGVAR     VAR(&MSGIDL) VALUE(' ')                                         /*MD023157*/
+             CHGVAR     VAR(&MSGLIST) VALUE(' ')
+             CHGVAR     VAR(&MSGTOTAL) VALUE(0)
+ 
+             CHGVAR     VAR(&MSGINDEX) VALUE(0)
+             CHGVAR     VAR(&CONTRCV) VALUE('0')
+ 
+/* Execute passed command, extract messages received */
+ 
+             CHGVAR     VAR(&SNDMSG) VALUE(%SST(&CMD 1 &LEN))                          /*MD022590A*/
+             SNDPGMMSG  MSG(&SNDMSG) KEYVAR(&KEYVAR)                                   /*MD022590A*/
+                                                                                       /*MD022590A*/
+             CALL       PGM(QCMDEXC) PARM(&CMD &LEN)
+ /********** MONMSG     MSGID(CPF0000) EXEC(DO)                      */                /*MD022590A*/
+ /**********    RCVMSG     MSGTYPE(*LAST) WAIT(0) RMV(*NO) +         */                /*MD022590A*/
+ /**********                 KEYVAR(&KEYVAR) MSGID(&MSGID)           */                /*MD022590A*/
+ /**********    MONMSG     MSGID(CPF0000)                            */                /*MD022590A*/
+             MONMSG     MSGID(CPF0000)
+             RCVMSG     MSGTYPE(*NEXT) MSGKEY(&KEYVAR) WAIT(0) +
+                          RMV(*NO) KEYVAR(&KEYVAR) MSGID(&MSGID) +
+                          SEV(&N_SEV)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&MSGIDL) VALUE(&MSGID)                                      /*MD023157*/
+                                                                                        /*MD023157*/
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+/**********        CHGVAR     VAR(%SST(&MSGLIST 1 7)) VALUE(&MSGID)  */                /*MD022590A*/
+                   CHGVAR     VAR(&C_SEV) VALUE(&N_SEV)                                /*MD022590A*/
+                   CHGVAR     VAR(%SST(&MSGLIST 1 9)) VALUE(&MSGID *CAT +
+                                &C_SEV)                                                /*MD022590A*/
+                   CHGVAR     VAR(&CONTRCV) VALUE('1')
+                   CHGVAR     VAR(&MSGINDEX) VALUE(1)
+                   CHGVAR     VAR(&MSGTOTAL) VALUE(20)
+                ENDDO
+ 
+                DOWHILE    COND(&CONTRCV *AND &MSGINDEX *LT &MSGTOTAL)
+ /**********       RCVMSG     MSGTYPE(*PRV) MSGKEY(&KEYVAR) WAIT(0) +  */              /*MD022590A*/
+ /**********                    RMV(*NO) KEYVAR(&KEYVAR) MSGID(&MSGID) */              /*MD022590A*/
+                   RCVMSG     MSGTYPE(*NEXT) MSGKEY(&KEYVAR) WAIT(0) +
+                                RMV(*NO) KEYVAR(&KEYVAR) MSGID(&MSGID) +
+                                SEV(&N_SEV)
+                   MONMSG     MSGID(CPF0000)
+                   IF         COND(&MSGID *EQ ' ') THEN(DO)
+                                                                                        /*MD023157*/
+ /* Retry when cannot allocate object */                                                /*MD023157*/
+                      IF         COND((&MSGIDL= 'CPF3218')  +
+                                   *OR (&MSGIDL= 'CPF3203') +
+                                   *OR (&MSGIDL= 'CPF4128') +
+                                   *OR (&MSGIDL= 'CPF3018') +
+                                   *OR (&MSGIDL= 'CPF3202') +
+                                   *OR (&MSGIDL= 'CPF4126') +
+                                   *OR (&MSGIDL= 'CPF5729') +
+                                   ) THEN(DO)                                           /*MD023157*/
+                         DLYJOB     DLY(10)                                             /*MD023157*/
+                         GOTO       CMDLBL(RETRY)                                       /*MD023157*/
+                      ENDDO                                                             /*MD023157*/
+                                                                                        /*MD023157*/
+                      LEAVE
+                   ENDDO
+ 
+                   CHGVAR     VAR(&C_SEV) VALUE(&N_SEV)                                /*MD022590A*/
+                   CHGVAR     VAR(&MSGSTART) VALUE(&MSGINDEX * 9 + 1)                  /*MD022590A*/
+                                                                                       /*MD022590A*/
+                   CHGVAR     VAR(%SST(&MSGLIST &MSGSTART 9)) VALUE(&MSGID +
+                                *CAT &C_SEV)                                           /*MD022590A*/
+                   CHGVAR     VAR(&MSGINDEX) VALUE(&MSGINDEX + 1)                      /*MD022590A*/
+                ENDDO                                                                  /*MD022590A*/
+             CHGVAR     VAR(&MSGTOTAL) VALUE(&MSGINDEX)                                /*MD022590A*/
+ /**********       CHGVAR     VAR(&MSGSTART) VALUE(&MSGINDEX * 7 + 1)        */        /*MD022590A*/
+ /**********       CHGVAR     VAR(%SST(&MSGLIST  &MSGSTART 7)) VALUE(&MSGID) */        /*MD022590A*/
+ /**********       CHGVAR     VAR(&MSGINDEX) VALUE(&MSGINDEX + 1)            */        /*MD022590A*/
+ /**********    ENDDO                                                        */        /*MD022590A*/
+ /**********    CHGVAR     VAR(&MSGTOTAL) VALUE(&MSGINDEX)                   */        /*MD022590A*/
+ /********** ENDDO                                                           */        /*MD022590A*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Program CBC022004 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

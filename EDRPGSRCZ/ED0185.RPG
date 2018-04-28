@@ -1,0 +1,687 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED A/c rept code special processing (COB)')
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0185 - Bulk Transfer : Account code-Report code special    *
+      *           processing (COB)                                    *
+      *                                                               *
+      *  Function: Program creates bulk transfer batches for file     *
+      *            PF/SDACRCPD.                                       *
+      *                                                               *
+      *  Called By: EDC0020 - Bulk Transfer Component                 *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Access Object for Bank Details ICD     *
+      *             AOMEXPR0 - Access Object for ED ICD               *
+      *             EDC0024  - Bulk Transfer Member Creation          *
+      *                                                               *
+      *  Notes:  i) ED0185AU is only printed for Database Errors, not *
+      *             each time this program runs.                      *
+      *         ii) When called, PF/EDSAVEPD will be overridden to    *
+      *             PF/EDSAVxPD.  PF/EDBUTFPD will be overridden to   *
+      *             PF/EDBUTxPD.  x = Stream number.                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CED002 *CREATE     Date 25Apr97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CED002  - Midas ED Enhancements                              *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDACRCL0IF  E           K        DISK         KINFSR *PSSR
+      **  A/C-Report Codes Table
+      *
+     FEDFBUTPDUF  E           K        DISK         KINFSR *PSSR
+      **  List of files to transfer to DTA
+      *
+     FEDBULKPDO   F    4096            DISK         KINFSR *PSSR      UC
+      **  Bulk Transfer data
+      *
+     FEDSAVXPDO   E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      **  Batches to send to DTA
+      *
+     FEDBUAUPDO   E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      **  Audit File
+      *
+     FED0185AUO   E                    PRINTER                        UC
+      **  Audit Report
+      *
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01  - READ OF LF/SDACRCL0                                  *
+      *    02  - Do 'Close the Batch' processing                      *
+      *    03  - NO EDFBUTPD RECORD FOUND TO DELETE                   *
+      *    04  - End of Read Ahead buffer for PF/SDACRCPD             *
+      *                                                               *
+      *    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #DETL  - Detail Processing                                   *
+      *  #BATCH - Create batch                                        *
+      *  #INIT  - Initial Processing                                  *
+      *  #READA - Read all records for A/C code - Report Code         *
+      *           combination                                         *
+      *  #READ  - Read record from LF/SDACRCL0                        *
+      *  #LAST  - Termination processing                              *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      **  Array for Object Copyright Statement.
+      *
+     E                    DATA     4096  1
+      *
+      *
+     I/TITLE I-SPECIFICATIONS
+      *
+     ISDACAH    E DSSDACRCPD
+      ** Read Ahead Buffer for SDACRCPD
+      *
+     I              G6RSNO                          A6RSNO
+     I              G6RSCD                          A6RSCD
+     I              G6ACCD                          A6ACCD
+     I              G6DRCR                          A6DRCR
+     I              G6LCD                           A6LCD
+     I              G6TYLC                          A6TYLC
+      *
+     ISDACPG    E DSSDACRCPD
+      ** Program Buffer for SDACRCPD
+      *
+     I              G6RSNO                          B6RSNO
+     I              G6RSCD                          B6RSCD
+     I              G6ACCD                          B6ACCD
+     I              G6DRCR                          B6DRCR
+     I              G6LCD                           B6LCD
+     I              G6TYLC                          B6TYLC
+     I              QQRSCD                          #RSCD1                                    CGL029
+     I              QQACCD                          #ACCD1                                    CGL029
+      *
+     IPSDS       SDS
+      **  Program status data structure.
+      *
+     I                                      244 253 WJOB
+     I                                      254 263 WUSER
+     I                                      264 2690WJOBNO
+      *
+     IEDBULK      DS
+      ** ED ICD Details
+      *
+     I                                        1   60UBTCH0
+     I                                        7  120UBTCH1
+     I                                       13  180UBTCH2
+     I                                       19  240UBTCH3
+     I                                       25  300UBTCH4
+     I                                       31  360UBTCH5
+     I                                       37  420UBTCH6
+     I                                       43  480UBTCH7
+     I                                       49  540UBTCH8
+     I                                       55  600UBTCH9
+      *
+     IWBATCH      DS                             10
+      ** Batch Name field
+      *
+     I                                        1   3 WEDDTX
+     I                                        4   40WSTREM
+     I                                        5  100WBATNN
+      *
+     IWOVR        DS                             54
+      **  DS for QCMDEXC
+      *
+     I                                       44  53 WDSBAT
+      *
+      **  Constant for QCMDEXC
+      *
+     I              'OVRDBF FILE(EDBULKPD-C         QOVR
+     I              ') TOFILE(EDBULKPD) M-
+     I              'BR(XXXXXXXXXX)'
+      *
+     ITFROK       DS
+      ** Setup Data structure for Deletion from Failed Bulk Transfers
+      *
+     I                                        1  10 XFILEN
+     I                                       11  20 XMEMBN
+      *
+     IDBERR       DS                            256
+      ** Data structure for data-base error processing.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDMEXP    E DSSDMEXPPD
+      ** ED ICD Details
+      *-----------------------------------------------------------
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      **  Perform Initialisation.
+      *
+     C                     EXSR #INIT
+      *
+      **  Perform Detail Processing.
+      *
+     C                     EXSR #DETL
+      *
+      **  Perform Final Processing.
+      *
+     C                     EXSR #LAST
+      *
+      *                                                               *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *================================================================
+      /EJECT
+      /TITLE SR/#DETL
+      *****************************************************************
+      *                                                               *
+      *  #DETL    - Subroutine to do the Detail Processing.           *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : #BATCH                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #DETL     BEGSR
+      *
+     C                     EXSR #READA
+      *
+      ** If record found, call #BATCH to create a batch.
+      *
+     C           *IN04     IFEQ '0'                        B1
+      *
+     C                     EXSR #BATCH
+      *
+      ** Else, set up fields for PF/EDBUAUPD and WRITE.
+      *
+     C                     ELSE                            X1
+      *
+     C                     MOVEL'No Batch'EABTCH
+     C                     Z-ADD*ZERO     EARECT
+     C                     WRITEEDBUAUD0
+     C                     ENDIF                           E1
+      *
+      **  Process WHILE there are valid records.
+      *
+     C           *IN04     DOWEQ*OFF                       B1
+      *
+      ** Move data into array DATA.
+      *
+     C                     MOVEA*BLANKS   DATA
+     C                     MOVEASDACPG    DATA
+      *
+      ** Write record to PF/EDBULKPD
+      *
+     C                     EXCPTDTL
+      *
+      ** Increment commitment cycle number and record count.
+      *
+     C                     ADD  1         WCOUNT
+      *
+      ** Read next record from LF/SDACRCL0.
+      *
+     C                     EXSR #READA
+      *
+      ** If record found and record count => max. no. recs in batch,
+      **  OR no record found, set on indicator 02 to condition
+      **  further processing.
+      *
+     C           *IN04     IFEQ *OFF                       B2
+     C           WCOUNT    IFGE E7BUMR                     B3
+     C                     SETON                     02
+     C                     ELSE                            X3
+     C                     SETOF                     02
+     C                     ENDIF                           E3
+     C                     ELSE                            X2
+     C                     SETON                     02
+     C                     ENDIF                           E2
+      *
+      ** If indicator 02 is on, do the 'close the batch' processing.
+      *
+     C           *IN02     IFEQ *ON                        B2
+     C                     CLOSEEDBULKPD
+      *
+      ** Set up data for BATCH LOCATION DETAILS
+      *
+     C                     MOVELUSVLIB    EFLIBR
+     C                     MOVEL'/'       EFSEP1
+     C                     MOVEL'EDBULKPD'EFFILE
+     C                     MOVEL'.'       EFSEP2
+     C                     MOVELWBATCH    EFMEMB
+     C                     MOVEL*BLANKS   EFBLNK
+      *
+     C                     WRITEEDSAVXD0
+      *
+      ** Set up data for Audit file and write to it.
+      *
+     C                     MOVELWBATCH    EABTCH
+     C                     Z-ADDWCOUNT    EARECT
+     C                     WRITEEDBUAUD0
+      *
+      ** Set record count to zero.
+      *
+     C                     Z-ADD0         WCOUNT
+      *
+      ** If LF/SDACRCL0 record was found, create next batch.
+      *
+     C           *IN04     IFEQ *OFF                       B3
+     C                     EXSR #BATCH
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+     C                     ENDDO                           E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/#BATCH
+      *****************************************************************
+      *                                                               *
+      *  #BATCH - Subroutine to create a batch                        *
+      *                                                               *
+      *  Called By: #DETL                                             *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BATCH    BEGSR
+      *
+      ** Increment batch name
+      *
+     C                     ADD  1         WBATNN
+      *
+      ** Call EDC0024 to create new member of PF/EDBULKPD.
+      *
+     C                     CALL 'EDC0024'
+     C                     PARM           WBATCH
+     C                     PARM           WRTCD1  1
+      *
+     C           WRTCD1    IFNE *BLANKS
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'EDC0024 'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Override to new member of PF/EDBULKPD - Do this in RPG
+      ** rather than in EDC0024 as the override is needed at
+      ** this level.
+      *
+     C                     MOVELQOVR      WOVR
+     C                     MOVELWBATCH    WDSBAT
+     C                     CALL 'QCMDEXC'
+     C                     PARM           WOVR
+     C                     PARM 54        QLEN   155
+      *
+      ** Open PF/EDBULKPD now the correct member exists
+      ** Write header record of PF/EDBULKPD.
+      *
+     C                     OPEN EDBULKPD
+     C                     EXCPTHDR
+      *
+      ** Add one to record count.
+      *
+     C                     ADD  1         WCOUNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/#INIT
+      *****************************************************************
+      *                                                               *
+      *  #INIT  - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      **  Program entry
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           USVLIB  7
+     C           XFILEN    PARM           UFILEN 10
+     C           XMEMBN    PARM           UMEMBN 10
+     C                     PARM           USQCD   3
+     C                     PARM           USTREM  1
+      *
+      ** Copyright Statement.
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      **   Name of program
+      *
+     C                     MOVEL'ED0185'  DBPGM
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD7  7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD7    IFNE *BLANKS
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 03 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     ENDIF
+      *
+      ** Access ED ICD Details
+      *
+     C                     CALL 'AOMEXPR0'
+     C                     PARM '*MSG   ' WRTCD7
+     C                     PARM '*FIRST ' WOPTN
+     C           SDMEXP    PARM SDMEXP    DSFDY
+      *
+     C           WRTCD7    IFNE *BLANKS
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SDMEXPPD'DBFILE           * DB ERROR 04 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Definitions
+      *
+     C           *LIKE     DEFN EABTCH    WBCNNM
+      *
+      ** Initialisations
+      *
+      **   File and member names for PF/EDBUAUPD Audit file
+      *
+     C                     MOVEL'SDACRCPD'EAFNME
+     C                     MOVEL'SDACRCPD'EAMNME
+      *
+      **   Components of batch name and batch location fields
+      *
+     C                     MOVE *BLANKS   WBCNNM
+     C                     MOVEL'EDB'     WEDDTX
+     C                     MOVELUSTREM    WSTREM
+     C                     MOVELUSQCD     EFSQCD
+      *
+      ** Get the next number for a batch for this stream from
+      **  DTAARA/EDBULK
+      *
+     C           *NAMVAR   DEFN           EDBULK
+     C           *LOCK     IN   EDBULK
+     C                     SELEC
+     C           USTREM    WHEQ '0'
+     C                     Z-ADDUBTCH0    WBATNN
+     C           USTREM    WHEQ '1'
+     C                     Z-ADDUBTCH1    WBATNN
+     C           USTREM    WHEQ '2'
+     C                     Z-ADDUBTCH2    WBATNN
+     C           USTREM    WHEQ '3'
+     C                     Z-ADDUBTCH3    WBATNN
+     C           USTREM    WHEQ '4'
+     C                     Z-ADDUBTCH4    WBATNN
+     C           USTREM    WHEQ '5'
+     C                     Z-ADDUBTCH5    WBATNN
+     C           USTREM    WHEQ '6'
+     C                     Z-ADDUBTCH6    WBATNN
+     C           USTREM    WHEQ '7'
+     C                     Z-ADDUBTCH7    WBATNN
+     C           USTREM    WHEQ '8'
+     C                     Z-ADDUBTCH8    WBATNN
+     C           USTREM    WHEQ '9'
+     C                     Z-ADDUBTCH9    WBATNN
+     C                     ENDSL
+     C                     OUT  EDBULK
+      *
+      **  More initialisation.
+      *
+     C                     Z-ADD0         WCOUNT  50
+      *
+     C                     EXSR #READ
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/#READA
+      *****************************************************************
+      *                                                               *
+      *  #READA - Subroutine to read all records on LF/SDACRCL0       *
+      *           for A/C code-Report Code combination                *
+      *                                                               *
+      *  Called By: #DETL                                             *
+      *                                                               *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #READA    BEGSR
+      *
+      **  End of file LF/SDACRCL0
+      *
+     C           *IN01     IFEQ '1'                        B1
+     C                     MOVE '1'       *IN04
+     C                     ELSE                            X1
+      *
+      ** Move data from look ahead buffer SDACAH to program buffer
+      ** SDACPG.
+      *
+     C                     MOVE A6RSNO    B6RSNO
+     C                     MOVE A6RSCD    B6RSCD
+     C                     MOVE A6ACCD    B6ACCD
+     C                     MOVE A6DRCR    B6DRCR
+     C                     MOVE A6LCD     B6LCD
+     C                     MOVE A6TYLC    B6TYLC
+      *
+      ** Read ahead until buffer contains new A/C code-report code.
+      *
+     C           *IN01     DOWEQ'0'                        B2
+     C           B6RSNO    ANDEQA6RSNO
+     C           B6RSCD    ANDEQA6RSCD
+     C           B6ACCD    ANDEQA6ACCD
+      *
+     C                     EXSR #READ
+      *
+      ** Record has same account code - report code combination,
+      ** set DR/CR indicator to 2.
+      *
+     C           B6RSNO    IFEQ A6RSNO                     B3
+     C           B6RSCD    ANDEQA6RSCD
+     C           B6ACCD    ANDEQA6ACCD
+     C                     MOVE '2'       B6DRCR
+     C                     ENDIF                           E3
+      *
+     C                     ENDDO                           E2
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/#READ
+      *****************************************************************
+      *                                                               *
+      *  #READ  - Subroutine to read next active record on            *
+      *           LF/SDACRCL0 for A/C code-Report Code combination    *
+      *                                                               *
+      *  Called By: #INIT                                             *
+      *                                                               *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #READ     BEGSR
+      *
+     C           *IN01     DOUEQ'1'
+     C           G6RSCD    ORNE '****'
+     C           G6ACCD    ANDNE'    '
+     C                     READ SDACRCL0                 01
+      *
+      ** End of file LF/SDACRCL0, clear look ahead buffer
+      *
+     C           *IN01     IFEQ '1'
+     C                     CLEARSDACAH
+      *
+      ** Not end of file, move data into look ahead buffer.
+      *
+     C                     ELSE
+     C                     MOVE G6RSNO    A6RSNO
+     C                     MOVE G6RSCD    A6RSCD
+     C                     MOVE G6ACCD    A6ACCD
+     C                     MOVE G6DRCR    A6DRCR
+     C                     MOVE G6LCD     A6LCD
+     C                     MOVE G6TYLC    A6TYLC
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/#LAST
+      *****************************************************************
+      *                                                               *
+      *  #LAST  - Subroutine to do Program Termination                *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LAST     BEGSR
+      *
+      **     Update DTAARA/EDBULK
+      *
+     C           *LOCK     IN   EDBULK
+     C                     SELEC
+     C           USTREM    WHEQ '0'
+     C                     Z-ADDWBATNN    UBTCH0
+     C           USTREM    WHEQ '1'
+     C                     Z-ADDWBATNN    UBTCH1
+     C           USTREM    WHEQ '2'
+     C                     Z-ADDWBATNN    UBTCH2
+     C           USTREM    WHEQ '3'
+     C                     Z-ADDWBATNN    UBTCH3
+     C           USTREM    WHEQ '4'
+     C                     Z-ADDWBATNN    UBTCH4
+     C           USTREM    WHEQ '5'
+     C                     Z-ADDWBATNN    UBTCH5
+     C           USTREM    WHEQ '6'
+     C                     Z-ADDWBATNN    UBTCH6
+     C           USTREM    WHEQ '7'
+     C                     Z-ADDWBATNN    UBTCH7
+     C           USTREM    WHEQ '8'
+     C                     Z-ADDWBATNN    UBTCH8
+     C           USTREM    WHEQ '9'
+     C                     Z-ADDWBATNN    UBTCH9
+     C                     ENDSL
+     C                     OUT  EDBULK
+      *
+      **  Delete record from Failed Bulk Transfers PF/EDFBUTPD
+      *
+     C           TFROK     DELETEDFBUTPD             03
+     C                     COMIT
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      **  ERROR REPORT  ED0185AU
+      *
+     C                     OPEN ED0185AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEED0185AU
+      *
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** Exit program
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      ***
+     OEDBULKPDE                HDR
+     O                                   20 'MIDAS_BULK_TRANSFER '
+     O                                   24 '4096'
+     O                                   42 'SDACRCPD  UNIQUEPT'
+     OEDBULKPDE                DTL
+     O                         DATA    4096
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

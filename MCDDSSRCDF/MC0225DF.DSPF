@@ -1,0 +1,571 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas MC Opening balance maintenance')
+      *****************************************************************
+     A*                                                               *
+     A*  Midas - Management Accounting Module                         *
+     A*                                                               *
+     A*  MC0225DF - Opening Balance Maintenance                       *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 29Nov05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 174435             Date 14Feb00               **
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     A*  174435 - Automatic assignment of unallocated balances        *
+     A*                                                               *
+     A*****************************************************************
+     A                                      PRINT(MPRINT)
+     A                                      INDARA
+     A                                      CHGINPDFT
+     A                                      CF10
+      *
+      * Subfile 1 - Financial account details
+     A          R SFL1                      SFL
+     A  80                                  SFLNXTCHG
+     A            SACTN          1A  B  9  3TEXT('Selection field')
+     A  10                                  DSPATR(RI)
+     A N10                                  DSPATR(UL)
+     A N10 40                               DSPATR(HI)
+     A            SBRCA          3A  O  9  7TEXT('Branch code')
+     A  40                                  DSPATR(HI)
+     A  70                                  DSPATR(ND)
+     A            SCCY           3A  O  9 15TEXT('Currency code')
+     A  40                                  DSPATR(HI)
+     A  71                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  SACOD          4  0O  9 24TEXT('Account code')                              CGL029
+     A            SACOD         10  0O  9 21TEXT('Account code')
+     A**End of change CGL029
+     A                                      EDTCDE(3)
+     A  40                                  DSPATR(HI)
+     A  72                                  DSPATR(ND)
+      * Begin /CSD027/
+     A**********  SCNUM          6  0O  9 32TEXT('Customer number')                           CSD027
+     A**********                            EDTCDE(3)                                         CSD027
+     A            SCNUM          6A  O  9 32TEXT('Customer number')
+      * End /CSD027/
+     A  40                                  DSPATR(HI)
+     A  73                                  DSPATR(ND)
+     A            SACSQ          2  0O  9 42TEXT('Account sequence')
+     A                                      EDTCDE(3)
+     A  40                                  DSPATR(HI)
+     A  74                                  DSPATR(ND)
+     A            SAM1          21A  O  9 56TEXT('Unallocated balance')
+     A  40                                  DSPATR(HI)
+     A            SDPS           1  0H      TEXT('Decimal places')
+     A            SAM1N         19  0H      TEXT('Unallocated bal. - numeric')
+     A            SRRN1          5  0H      TEXT('RRN for GLOPBLPD record')
+     A            SEVDT          5  0H      TEXT('Event date')
+     A            SVOIN          1  0H      TEXT('Void indicator')
+     A            SGETP          1A  H      TEXT('Generated entry type')
+     A            SACSC          2A  H      TEXT('Account section')
+     A            SCPNB          6  0H      TEXT('Current period')
+     A            SPDTM         11  0H      TEXT('Posting date/time')
+      *
+      * Subfile control 1 - Financial account details
+     A          R SFLCTL1                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      CA03
+      *                                                           Begin /174435/
+     A                                      CA17(21)
+      *                                                           End /174435/
+     A  41                                  CA05
+     A                                      CA11
+     A                                      SFLCTL(SFL1)
+     A                                      SFLSIZ(14)
+     A                                      SFLPAG(13)
+     A  81                                  SFLCLR
+     A N81                                  SFLDSPCTL
+     A  82                                  SFLDSP
+     A  60                                  ROLLUP(61)
+     A N60 82                               SFLEND
+     A                                      PUTOVR
+     A                                      OVERLAY
+     A            SPOSN1         4  0H      TEXT('Subfile position')
+     A                                      SFLRCDNBR(CURSOR)
+     A            SUSER         10A  O  1  2TEXT('User ID')
+     A                                  1 13'MC0225'
+     A            SMRDT          7A  O  1 72TEXT('Run date')
+     A            SWSID         10A  O  2  2
+     A                               O  2 28'OPENING BALANCE +
+     A                                       SELECTION'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                  4 11'Group'
+     A            SGRPC          2A  O  4 18TEXT('Group code')
+     A                                      DSPATR(HI)
+     A                                  4 26'Period'
+     A            SPERY          4A  O  4 34TEXT('Period year')
+     A                                      DSPATR(HI)
+     A            SPERN          2A  O  4 39TEXT('Period number')
+     A                                      DSPATR(HI)
+     A                                  6  6'Branch'
+     A  70
+     AON82                                  DSPATR(ND)
+     A                                  6 13'Currency'
+     A  71
+     AON82                                  DSPATR(ND)
+     A                                  6 22'A/c Code'
+     A  72
+     AON82                                  DSPATR(ND)
+     A                                  6 31'Customer'
+     A  73
+     AON82                                  DSPATR(ND)
+     A                                  6 40'A/c Seq'
+     A  74
+     AON82                                  DSPATR(ND)
+     A                                  6 56'Unallocated Amount'
+     A N82                                  DSPATR(ND)
+     A            SBRCAP         3A  B  7  7TEXT('Branch code positioner')
+     A N70 82                               DSPATR(HI UL)
+     A  70
+     AON82                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A            SCCYP          3A  B  7 15TEXT('Currency code positioner')
+     A N71 82                               DSPATR(HI UL)
+     A  71
+     AON82                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A**Start of change CGL029
+     A**********  SACODP         4  0B  7 24TEXT('Account code positioner')                   CGL029
+     A            SACODP        10  0B  7 21TEXT('Account code positioner')
+     A**End of change CGL029
+     A                                      EDTCDE(4)
+     A N72 82                               DSPATR(HI UL)
+     A  72
+     AON82                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      * Begin /CSD027/
+     A**********  SCNUMP         6  0B  7 32TEXT('Customer number positioner')                CSD027
+     A**********                            EDTCDE(4)                                         CSD027
+     A            SCNUMP         6A  B  7 32TEXT('Customer number positioner')
+      * End /CSD027/
+     A N73 82                               DSPATR(HI UL)
+     A  73
+     AON82                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A            SACSQP         2  0B  7 42TEXT('Account seq. positioner')
+     A                                      EDTCDE(4)
+     A N74 82                               DSPATR(HI UL)
+     A  74
+     AON82                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      *
+      *  Screen footer 1 - Control key details
+     A          R FOOT1                     TEXT('Command keys.')
+     A                                      OVERLAY
+     A                                      KEEP
+      *                                                           Begin /174435/
+     A****************                 23  2'A=Amend'
+     A****************                 23 11'F3=Exit'
+     A****************                 23 20'F10=Cancel Recreate'
+     A*N41************                 23 41'F11=Unallocated a/c''s'
+     A**41************                 23 41'F11=All a/c''s (F5=Refresh)'
+     A                                 22  2'A=Amend'
+     A                                 22 11'F3=Exit'
+     A                                 22 20'F10=Cancel Recreate'
+     A N41                             22 41'F11=Unallocated a/c''s'
+     A  41                             22 41'F11=All a/c''s (F5=Refresh)'
+     A                                 23  2'F17=Auto Allocate Balances'
+      *                                                           End /174435/
+      * Subfile 2 - Management account details (amend)
+     A          R SFL2                      SFL
+     A            SPRFC          4A  O 12  6TEXT('Profit centre')
+     A                                      DSPATR(HI)
+     A  75                                  DSPATR(ND)
+     A            SBOOK          2A  O 12 15TEXT('Book code')
+     A                                      DSPATR(HI)
+     A  76                                  DSPATR(ND)
+     A            STTYP         10A  O 12 20TEXT('Transaction type')
+     A                                      DSPATR(HI)
+     A  77                                  DSPATR(ND)
+     A            STSTP         10A  O 12 31TEXT('Transaction sub-type')
+     A                                      DSPATR(HI)
+     A  78                                  DSPATR(ND)
+      * Begin /CSD027/
+     A**********  SASCU          6  0O 12 45TEXT('Asc. customer')                             CSD027
+     A**********                            EDTCDE(4)                                         CSD027
+     A            SASCU          6A  O 12 45TEXT('Asc. customer')
+      * End /CSD027/
+     A                                      DSPATR(HI)
+     A  79                                  DSPATR(ND)
+     A            SAM2S         21A  B 12 56TEXT('Balance')
+     A  11                                  DSPATR(RI)
+     A N11                                  DSPATR(HI UL)
+     A            SAM2SN        19  0H      TEXT('Balance - numeric')
+     A            SRRN2          5  0H      TEXT('RRN for GLMOVEPD record')
+      *
+      * Subfile control 2 - Management account details (amend)
+     A          R SFLCTL2                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      CF09
+     A                                      CF12(22)
+     A                                      SFLCTL(SFL2)
+     A                                      SFLSIZ(11)
+     A                                      SFLPAG(10)
+     A  84                                  SFLCLR
+     A N84                                  SFLDSPCTL
+     A  85                                  SFLDSP
+     A  85                                  SFLEND
+     A                                      PUTOVR
+     A                                      OVERLAY
+     A            SPOSN2         4  0H      TEXT('Subfile position')
+     A                                      SFLRCDNBR(CURSOR)
+     A            SUSER         10A  O  1  2TEXT('User ID')
+     A                                  1 13'MC0225'
+     A            SMRDT          7A  O  1 72TEXT('Run date')
+     A            SWSID         10A  O  2  2
+     A                               O  2 28'OPENING BALANCE +
+     A                                       MAINTENANCE'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                  4 11'Group'
+     A            SGRPC          2A  O  4 18TEXT('Group code')
+     A                                      DSPATR(HI)
+     A                                  4 26'Period'
+     A            SPERY          4A  O  4 34TEXT('Period year')
+     A                                      DSPATR(HI)
+     A            SPERN          2A  O  4 39TEXT('Period number')
+     A                                      DSPATR(HI)
+     A                                  6  4'Brch'
+     A  70                                  DSPATR(ND)
+     A                                  6  9'Ccy'
+     A  71                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********                        6 13'A/c Code'                                        CGL029
+     A                                  6 14'A/c Code'
+     A**End of change CGL029
+     A  72                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********                        6 22'Customer'                                        CGL029
+     A                                  6 24'Customer'
+     A**End of change CGL029
+     A  73                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********                        6 32'Seq'                                             CGL029
+     A                                  6 34'Seq'
+     A**End of change CGL029
+     A  74                                  DSPATR(ND)
+     A                                  6 64'Balance'
+     A            SBRCA          3A  O  7  4TEXT('Branch code')
+     A                                      DSPATR(HI)
+     A  70                                  DSPATR(ND)
+     A            SCCY           3A  O  7  9TEXT('Currency code')
+     A                                      DSPATR(HI)
+     A  71                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  SACOD          4  0O  7 15TEXT('Account code')                              CGL029
+     A            SACOD         10  0O  7 13TEXT('Account code')
+     A**End of change CGL029
+     A                                      EDTCDE(3)
+     A                                      DSPATR(HI)
+     A  72                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  SCNUM          6  0O  7 23TEXT('Customer number')                           CGL029
+      * Begin /CSD027/
+     A**********  SCNUM          6  0O  7 25TEXT('Customer number')                           CSD027
+     A            SCNUM          6A  O  7 25TEXT('Customer number')
+      * End /CSD027/
+     A**End of change CGL029
+      * Begin /CSD027/
+     A**********                            EDTCDE(3)                                         CSD027
+      * End /CSD027/
+     A                                      DSPATR(HI)
+     A  73                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  SACSQ          2  0O  7 32TEXT('Account sequence')                          CGL029
+     A            SACSQ          2  0O  7 34TEXT('Account sequence')
+     A**End of change CGL029
+     A                                      EDTCDE(3)
+     A                                      DSPATR(HI)
+     A  74                                  DSPATR(ND)
+     A            SAM2C         21A  O  7 56TEXT('Residual balance')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A                                  9  4'Prof Cntr'
+     A  75
+     AON85                                  DSPATR(ND)
+     A                                  9 14'Book'
+     A  76
+     AON85                                  DSPATR(ND)
+     A                                  9 20'Trans Type'
+     A  77
+     AON85                                  DSPATR(ND)
+     A                                  9 32'Sub-Type'
+     A  78
+     AON85                                  DSPATR(ND)
+     A                                  9 43'Assoc Cust'
+     A  79
+     AON85                                  DSPATR(ND)
+     A            SPRFCP         4A  B 10  6TEXT('Profit centre positioner')
+     A N75 85                               DSPATR(HI UL)
+     A  75
+     AON85                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A            SBOOKP         2A  B 10 15TEXT('Book code positioner')
+     A N76 85                               DSPATR(HI UL)
+     A  76
+     AON85                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A            STTYPP        10A  B 10 20TEXT('Tx type positioner')
+     A N77 85                               DSPATR(HI UL)
+     A  77
+     AON85                                  DSPATR(ND PR)
+     A                                      OVRDTA
+     A            STSTPP        10A  B 10 31TEXT('Sub-type positioner')
+     A N78 85                               DSPATR(HI UL)
+     A  78
+     AON85                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      * START OF CSD027
+     A************SASCUP         6  0B 10 45TEXT('Asc. customer positioner')
+     A            SASCUP         6A  B 10 45TEXT('Asc. customer positioner')
+     A************                          EDTCDE(4)
+      * END OF CSD027
+     A N79 85                               DSPATR(HI UL)
+     A  79
+     AON85                                  DSPATR(ND PR)
+     A                                      OVRDTA
+      *
+      *  Screen footer 2 - Control key details (amend)
+     A          R FOOT2                     TEXT('Command keys.')
+     A                                      OVERLAY
+     A                                      KEEP
+     A                                 23  2'F9=Add'
+     A                                 23 11'F10=Cancel Recreate'
+     A                                 23 32'F12=Previous Screen'
+      *
+      * Subfile 3 - Management account details (add)
+     A          R SFL3                      SFL
+     A  86                                  SFLNXTCHG
+     A            SPRFC3         4A  B 12  6TEXT('Profit centre')
+     A N12                                  DSPATR(HI UL)
+     A  12                                  DSPATR(RI)
+     A  75                                  DSPATR(ND PR)
+     A            SBOOK3         2A  B 12 15TEXT('Book code')
+     A N13                                  DSPATR(HI UL)
+     A  13                                  DSPATR(RI)
+     A  76                                  DSPATR(ND PR)
+     A            STTYP3        10A  B 12 20TEXT('Transaction type')
+     A N14                                  DSPATR(HI UL)
+     A  14                                  DSPATR(RI)
+     A  77                                  DSPATR(ND PR)
+     A            STSTP3        10A  B 12 31TEXT('Transaction sub-type')
+     A N15                                  DSPATR(HI UL)
+     A  15                                  DSPATR(RI)
+     A  78                                  DSPATR(ND PR)
+      * Begin /CSD027/
+     A**********  SASCU3         6  0B 12 45TEXT('Asc. customer')                             CSD027
+     A**********                            EDTCDE(4)                                         CSD027
+     A            SASCU3         6A  B 12 45TEXT('Asc. customer')
+      * End /CSD027/
+     A N16                                  DSPATR(HI UL)
+     A  16                                  DSPATR(RI)
+     A  79                                  DSPATR(ND PR)
+     A            SAM3S         21A  B 12 56TEXT('Balance')
+     A  17                                  DSPATR(RI)
+     A N17                                  DSPATR(HI UL)
+     A            SAM3SN        19  0H      TEXT('Balance - numeric')
+      *
+      * Subfile control 3 - Management account details (add)
+     A          R SFLCTL3                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      CF12(23)
+     A                                      SFLCTL(SFL3)
+     A                                      SFLSIZ(11)
+     A                                      SFLPAG(10)
+     A  87                                  SFLCLR
+     A N87                                  SFLDSPCTL
+     A N87                                  SFLDSP
+     A  87                                  SFLEND
+     A N87                                  ROLLUP(88)
+     A                                      PUTOVR
+     A                                      OVERLAY
+     A            SPOSN3         4  0H      TEXT('Subfile position')
+     A                                      SFLRCDNBR(CURSOR)
+     A            SUSER         10A  O  1  2TEXT('User ID')
+     A                                  1 13'MC0225'
+     A            SMRDT          7A  O  1 72TEXT('Run date')
+     A            SWSID         10A  O  2  2
+     A                               O  2 28'OPENING BALANCE +
+     A                                       MAINTENANCE (ADD)'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                  4 11'Group'
+     A            SGRPC          2A  O  4 18TEXT('Group code')
+     A                                      DSPATR(HI)
+     A                                  4 26'Period'
+     A            SPERY          4A  O  4 34TEXT('Period year')
+     A                                      DSPATR(HI)
+     A            SPERN          2A  O  4 39TEXT('Period number')
+     A                                      DSPATR(HI)
+     A                                  6  4'Brch'
+     A  70                                  DSPATR(ND)
+     A                                  6  9'Ccy'
+     A  71                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********                        6 13'A/c Code'                                        CGL029
+     A                                  6 14'A/c Code'
+     A**End of change CGL029
+     A  72                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********                        6 22'Customer'                                        CGL029
+     A                                  6 24'Customer'
+     A**End of change CGL029
+     A  73                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********                        6 32'Seq'                                             CGL029
+     A                                  6 34'Seq'
+     A**End of change CGL029
+     A  74                                  DSPATR(ND)
+     A                                  6 64'Balance'
+     A            SBRCA          3A  O  7  4TEXT('Branch code')
+     A                                      DSPATR(HI)
+     A  70                                  DSPATR(ND)
+     A            SCCY           3A  O  7  9TEXT('Currency code')
+     A                                      DSPATR(HI)
+     A  71                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  SACOD          4  0O  7 15TEXT('Account code')                              CGL029
+     A            SACOD         10  0O  7 13TEXT('Account code')
+     A**End of change CGL029
+     A                                      EDTCDE(3)
+     A                                      DSPATR(HI)
+     A  72                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  SCNUM          6  0O  7 23TEXT('Customer number')                           CGL029
+      * Begin /CSD027/
+     A**********  SCNUM          6  0O  7 25TEXT('Customer number')                           CSD027
+     A            SCNUM          6A  O  7 25TEXT('Customer number')
+      * End /CSD027/
+     A**End of change CGL029
+      * Begin /CSD027/
+     A**********                            EDTCDE(3)                                         CSD027
+      * End /CSD027/
+     A                                      DSPATR(HI)
+     A  73                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  SACSQ          2  0O  7 32TEXT('Account sequence')                          CGL029
+     A            SACSQ          2  0O  7 34TEXT('Account sequence')
+     A**End of change CGL029
+     A                                      EDTCDE(3)
+     A                                      DSPATR(HI)
+     A  74                                  DSPATR(ND)
+     A            SAM3C         21A  O  7 56TEXT('Residual balance')
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A                                  9  4'Prof Cntr'
+     A  75                                  DSPATR(ND)
+     A                                  9 14'Book'
+     A  76                                  DSPATR(ND)
+     A                                  9 20'Trans Type'
+     A  77                                  DSPATR(ND)
+     A                                  9 32'Sub-Type'
+     A  78                                  DSPATR(ND)
+     A                                  9 43'Assoc Cust'
+     A  79                                  DSPATR(ND)
+      *
+      *  Screen footer 3 - Control key details (add)
+     A          R FOOT3                     TEXT('Command keys.')
+     A                                      OVERLAY
+     A                                      KEEP
+     A                                 23 11'F10=Cancel Recreate'
+     A                                 23 32'F12=Previous Screen'
+      *
+      *  Dummy record used to clear screen
+     A          R DUMMY                     TEXT('Clear screen')
+     A                                 12 40' '
+     A*=========================================================================
+      *                                              Begin /174435/
+     A* Header for Auto Assignment
+     A          R MC0225F0
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      OVERLAY
+     A            SUSER         10A  O  1  2TEXT('User ID')
+     A                                  1 13'MC0225'
+     A            SMRDT          7A  O  1 72TEXT('Run date')
+     A            SWSID         10A  O  2  2
+     A                               O  2 20'ASSIGNMENT OF ALL UNALLOCATED +
+     A                                      BALANCES'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+      * Auto Assignment Footer
+     A          R MC0225FT
+     A                                 23  3'F3=Exit Auto Allocation'
+     A  31
+     AAN35                             23 30'F12=Previous Screen'
+     A  35                             23 30'F12=Initial Assignment Screen'
+      * Assignment type selection
+     A          R MC0225F1
+     A                                      CA03(20 'Exit.')
+     A                                      CF12(24 'Prev. Screen')
+     A                                      OVERLAY
+     A  32N35                           6 16'1  Assign Using ICD Default Profit-
+     A                                       Centre'
+     A  32N35                           7 19'(If Analytical Accounting Switched-
+     A                                       On)'
+     A  33N35                           9 16'2  Assign Using a User Defined Pro-
+     A                                      fit Centre'
+     A  30        ASSTYP         1D  I 16 40DSPATR(UL)
+     A                                      DSPATR(PC)
+     A  31        APRFC          4A  B 15 40DSPATR(UL)
+     A                                      DSPATR(PC)
+     A  34
+     AO 35                                  DSPATR(HI)
+     A  35                             14 27'Balances have been assigned to'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+      * Assignment Confirmation
+     A          R MC0225F2
+     A                                      CA03(20 'Exit.')
+     A                                      CF12(24 'Prev. Screen')
+     A  34                                  CA06(25 'Confirmation')
+     A                                      OVERLAY
+     A                                      PROTECT
+     A  34                             17  5'YOU ARE ABOUT TO ASSIGN UNALLOCATE-
+     A                                      D BALANCES TO THE ABOVE PROFIT CE-
+     A                                      NTRE'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  34                             18 35'F6 to CONFIRM'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+      *                                              End   /174435/
+     A*=========================================================================
+      *
+      *  Format: Message subfile
+     A          R SFLRCDM                   TEXT('Message subfile')
+     A                                      SFL
+     A                                      SFLMSGRCD(24)
+     A            SSFKY                     SFLMSGKEY
+     A            SPGMQ                     SFLPGMQ
+      *
+      *  Format: Message subfile control
+     A          R SFLCTLM                   TEXT('Message subfile ctl')
+     A                                      OVERLAY
+     A                                      SFLCTL(SFLRCDM)
+     A                                      SFLDSP
+     A                                      SFLINZ
+     A  99
+     AON99                                  SFLEND
+     A                                      SFLSIZ(3)
+     A                                      SFLPAG(1)
+     A            SPGMQ                     SFLPGMQ

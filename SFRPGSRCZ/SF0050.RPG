@@ -1,0 +1,140 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SF Request universal password change')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  SECURITY PROFILE FACILITY
+     F*                                                                  *
+     F*    SF0050 - MIDAS REQUEST UNIVERSAL PASSWORD CHANGE              *
+     F*                                                                  *
+     F*  Function: This program enables the Universal Password Change    *
+     F*            Facility to be activated, to force all users to       *
+     F*            change their passwords when they next sign on.        *
+     F*                                                                  *
+     F*  Where Used: Input Cycle                                         *
+     F*                                                                  *
+     F*  Called By: SFC0050                                              *
+     F*                                                                  *
+     F*  Calls: None                                                     *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 239898             Date 29May06               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAAA01             Date 08Mar95               *
+      *                 083547             Date 20Feb95               *
+     F*                  S01486              DATE 09JUN94                *
+     F*                  S01117              DATE 25MAR92                *
+     F*                  S01269              DATE 24JUN91                *
+     F********************************************************************
+      *                                                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  239898 - Applied core fix BUG11032.                          *
+      *  BUG11032 - Reporting About Users (Recompile)                 *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+     F*    CAAA01 - GUI/400 development
+     F*           - Ensure that the option field defaults to 'N'.
+     F*    083547 - RECOMPILED OVER MUSERDD                              *
+     F*    S01486 - RECOMPILED DUE TO CHANGED MUSER FOR PRIVATE BANKING  *
+     F*    S01117 - RECOMPILE FOR FT CHANGE TO MUSERDD                   *
+     F*    S01269 - RECOMPILE OVER CHANGED LF/MUSER                      *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*                 ************************
+     F*                  Function of Indicators
+     F*                 ************************
+     F*
+     F* ID F  C  H  L
+     F*
+     F*      20         A 'Y' or 'N' has not been entered
+     F*      25         Failed read to SDBANKPD
+     F*      27         Failed read to MUSER
+     FMUSER   UF  E           K        DISK
+     FSF0050DFCF  E                    WORKSTN
+     FSDBANKPDUF  E                    DISK
+     E                    CPY@    1   1 80
+     IPSDS       SDS
+     I**
+     I**     Program status data structure.
+     I**
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 SWSID
+     I                                      254 263 USRID
+     I*
+     ILDA         DS                            256
+     I**
+     I**     Local data area.
+     I**
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     C**
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C                     READ SDBANKPD                 25
+     C*
+     C           *IN25     IFEQ '1'
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVE 'SF0050  'DBPGM
+     C                     Z-ADD01        DBASE            ** DBERR 01 **
+     C                     DUMP
+     C                     RETRN
+     C                     END
+     C*
+     C*    SETON U6 FOR CL MESSAGE AND END IF PASSWORD CHANGE
+     C*      FACILITY NOT USED
+     C*
+     C           BJPCFU    IFNE 'Y'
+     C                     SETON                     LRU6
+     C                     RETRN
+     C                     END
+     C*
+     C                     MOVE BJMRDT    SRUNA
+     C                     MOVE 'N'       SUPWR                           CAAA01
+     C**
+     C** LOOP UNTIL EITHER A 'Y' OR A 'N' HAS BEEN ENTERED
+     C**
+     C           *IN20     DOUEQ'0'                        *** LBEG1
+     C                     EXFMTSF0050F1
+     C**
+     C** F3
+     C           *INKC     IFEQ '1'                        *** B0001
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END                             *** E0001
+     C                     SETOF                     20
+     C           SUPWR     IFNE 'Y'                        *** B0001
+     C           SUPWR     ANDNE'N'
+     C                     SETON                     20
+     C                     END                             *** E0001
+     C                     END                             *** LEND1
+     C           SUPWR     IFEQ 'Y'                        *** B0001
+     C           *LOVAL    SETLLMUSER
+     C           *IN27     DOUEQ'1'                        *** LBEG1
+     C                     READ MUSERDDF                 27
+     C           *IN27     IFEQ '0'                        *** B0002
+     C                     MOVE BJPCFQ    SOCNT
+     C                     UPDATMUSERDDF
+     C                     END                             *** E0002
+     C                     END                             *** LEND1
+     C                     MOVE BJRDNB    LPWD
+     C                     TIME           TIME1   60
+     C                     MOVE TIME1     LPWD
+     C                     UPDATSDBANKD0
+     C                     END                             *** E0001
+     C                     SETON                     LR
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

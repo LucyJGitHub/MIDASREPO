@@ -1,0 +1,1146 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Bulk Definitions Audit List Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7536 - Bulk Definitions Audit List Report                  *
+      *                                                               *
+      * Function:  This Program produces a report of Bulk Definitions *
+      * (COB)      details. It will be produced on Request during     *
+      * (I/C)      I/C (with promp) (mode 1) or on request            *
+      *            during Close of Business (mode 2)                  *
+      *                                                               *
+      *  Called By: Standart RCF processing                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 136932             Date 25Jun98               *
+      *                 136428             Date 15Jun98               *
+      *                 135688             Date 29May98               *
+      *                 CEU017  *CREATE    Date 06Mar98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+      *  136932 - Add the field 'After Maturity Date' in the Bulk     *
+      *           Selection Screen.                                   *
+      *  136428 - Add Days Basis and Div. Basis in the Bulk Input     *
+      *           Screen to be used for the generation of new         *
+      *           Securities.                                         *
+      *  135688 - Add the Industry Code in the Bulk Input Screen.     *
+      *  CEU017 - Securities Redenomination Euro Changes              *
+      *                                                               *
+      *****************************************************************
+     FSECORBL0IF  E           K        DISK         KINFSR *PSSR
+      ***  Redenomination Bulk Detail file - prefix NB
+      *
+     FSECORSL0IF  E           K        DISK         KINFSR *PSSR
+      ***  Redenomination Bulk Selected Securities Detail - prefix NC
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      ***  Securities Details
+      *
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+      ***  Investment Type Details
+      *
+     FSE7536AUO   E                    PRINTER      KINFSR *PSSR      UC
+      ***  Bulk Definitions - Audit
+     F                                              KINFDS SPOOLU
+      *
+     FSE7536P1O   E                    PRINTER      KINFSR *PSSR      UC
+      ***  Bulk Definitions Details - Report
+     F                                              KINFDS SPOOL1
+      *
+     FSE7536P2O   E                    PRINTER      KINFSR *PSSR      UC
+      ***  Bulk Selected Securities Detail - Report
+     F                                              KINFDS SPOOL2
+     F/COPY WNCPYSRC,SE7536F001
+      *
+      /EJECT
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSDESCZ1
+      *
+     E                    #SNAR   1   7 50
+      ***  Status narrative
+      *
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+      /SPACE 3
+     ISPOOL1      DS
+      ***  File Information Data Structure for SE7536P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOL2      DS
+      ***  File Information Data Structure for SE7536P2.
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 188 1890OFLLN2
+     I                                    B 367 3680PRTLN2
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SE7536AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IWPARM       DS                            100
+     I                                        1   1 WWALL
+     I                                        2   70WWBLKR
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  Customer extension file
+      *
+     ISCSARD    E DSSCSARDPD
+      ***  Data structure for switchable features file
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      ***  Second DS For Access Programs, Long Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      ***  First DS for access programs, short data structure
+      *
+     I/COPY ZSRSRC,ZSDESCZ2
+      *
+     ICPYR@$      DS
+      ***  Data structure for compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *
+      /EJECT
+      *****************************************************************
+      *                M A I N   P R O C E S S I N G                  *
+      *****************************************************************
+      *
+      ***  If Parameter Bulk Definition is blank than read all Bulk Definition
+      ***  else read the details for the parameter Bulk Defintion
+      *
+     C           WWALL     IFEQ 'Y'
+     C                     EXSR #ALL
+     C                     ELSE
+     C                     EXSR #SELEC
+     C                     ENDIF
+      *
+      ***  If RCOUNT >< 0, Then Print Trailer
+      *
+     C           RCOUNT    IFNE 0
+     C           WWOPEN    ANDEQ'Y'
+     C                     WRITETRAILP1
+     C                     ENDIF
+      *
+      ***  If RCOUN2 >< 0, Then Print Trailer
+      *
+     C           RCOUN2    IFNE 0
+     C           WWOPE2    ANDEQ'Y'
+     C                     WRITETRAILP2
+     C                     ENDIF
+      *
+      ***  Close Output file
+      *
+     C                     CLOSESE7536P1
+     C                     CLOSESE7536P2
+      *
+      ***  Perform audit report
+      *
+     C                     EXSR AUDIT
+      *
+      ***  Normal End of Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *         E N D   O F   M A I N   P R O C E S S I N G           *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #ALL   - Read All Bulk Definitions                           *
+      *  ----                                                         *
+      *  Called By : Main processing                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #ALL      BEGSR
+      *
+      ***  read file for record
+      *
+     C                     READ SECORBL0                 89
+      *
+      ***  Do While End of File not reached.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ***  If FULL Mode or Last Change Date = Run date
+      ***  Process Report Lines
+      *
+     C           MODE      IFEQ '2'
+     C           NBLCD     OREQ BJRDNB
+     C                     EXSR #REPD1
+     C                     ENDIF
+      *
+      ***  Read next record.
+      *
+     C                     READ SECORBL0                 89
+     C                     ENDDO                           EOF not reached
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #SELEC - Read Bulk Definition equal to parameter             *
+      *  ------                                                       *
+      *  Called By : Main processing                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #SELEC    BEGSR
+      *
+      ***  read file for record equal to the parameter
+      *
+     C           WWBLKR    SETLLSECORBL0                 89
+     C           WWBLKR    READESECORBL0                 89
+      *
+      ***  Do While End of File not reached.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ***  If FULL Mode or Last Change Date = Run date
+      ***  Process Report Lines
+      *
+     C*****      MODE      IFEQ '2'
+     C*****      NBLCD     OREQ BJRDNB
+     C                     EXSR #REPD1
+     C*****                ENDIF
+      *
+      ***  Read next record.
+      *
+     C           WWBLKR    READESECORBL0                 89
+     C                     ENDDO                           EOF not reached
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #REPD1 - Process Report Lines.                               *
+      *  ------                                                       *
+      *  Called By : Main processing                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #REPD1    BEGSR
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C           WWOPEN    IFNE 'Y'
+     C                     EXSR RCFP1
+     C                     ENDIF
+      *
+     C                     WRITEHEADP1
+      *
+      ***  Report Details
+      *
+     C                     MOVE NBBLKR    RBLKR            Bulk Ref.
+     C                     MOVELNBBLKN    RBLKN     P      Bulk Nar.
+     C                     SELEC
+     C           NBSTAT    WHEQ 'I'
+      ***  Incomplete
+     C                     MOVEL#SNAR,1   RSTAT
+     C           NBSTAT    WHEQ 'G'
+      ***  Securities Details Generated
+     C                     MOVEL#SNAR,2   RSTAT
+     C           NBSTAT    WHEQ 'L'
+      ***  Allocated/Events generated
+     C                     MOVEL#SNAR,3   RSTAT
+     C           NBSTAT    WHEQ 'X'
+      ***  Authorised
+     C                     MOVEL#SNAR,4   RSTAT
+     C           NBSTAT    WHEQ 'C'
+      ***  Complete
+     C                     MOVEL#SNAR,5   RSTAT
+     C           NBSTAT    WHEQ 'S'
+      ***  Stock authorised
+     C                     MOVEL#SNAR,6   RSTAT
+     C           NBSTAT    WHEQ 'R'
+      ***  Reversed
+     C                     MOVEL#SNAR,7   RSTAT
+     C                     OTHER
+     C                     MOVE *BLANKS   RSTAT
+     C                     ENDSL
+      *
+     C                     MOVE NBSENC    RSENC            Nom. Ccy
+     C                     MOVE NBSEVC    RSEVC            Value Ccy
+     C                     MOVE NBSEMC    RSEMC            Market center
+     C                     MOVE NBSEPT    RSEPT            Proc. Type
+     C                     MOVE NBSEIT    RSEIT            Inv. Type
+     C                     MOVELNBSESS    RSESS     P      Security
+      *
+     C********** NBSEIS    IFNE *ZEROS                                                        CSD027
+     C           NBSEIS    IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELNBSEIS    @KEYC  10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEYC
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCSSN    RSEIS     P      Issuer
+     C                     ELSE
+     C                     MOVE *BLANKS   RSEIS
+     C                     ENDIF
+      *                                                                   135688
+     C           NBSIDY    IFNE *ZEROS                                    135688
+     C                     MOVE NBSIDY    RSIDY            Industry Code  135688
+     C                     ELSE                                           135688
+     C                     MOVE *BLANKS   RSIDY                           135688
+     C                     ENDIF                                          135688
+      *                                                                   136932
+     C           NBMATY    IFNE *ZEROS                                    136932
+     C                     MOVE NBMATY    ZDAYNO           After Maturity 136932
+     C                     EXSR ZDATE2                                    136932
+     C                     MOVE ZADATE    RMATY            DDMMMYY        136932
+     C                     ELSE                                           136932
+     C                     MOVE *BLANKS   RMATY                           136932
+     C                     ENDIF                                          136932
+      *
+     C                     MOVE NBCOAT    RCOAT            Corp. Action Type
+     C                     MOVE NBCOAN    ZDAYNO           Date of Announcement
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RCOAN            DDMMMYY
+     C                     MOVE NBCOEX    ZDAYNO           Ex Date
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RCOEX            DDMMMYY
+     C                     MOVE NBEVDT    ZDAYNO           Event Date
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REVDT            DDMMMYY
+     C                     MOVE NBTDVD    RTDVD            Trade/Value
+     C                     MOVE NBALEF    ZDAYNO           Allocation Eff. Date
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RALEF            DDMMMYY
+     C                     MOVE NBCOPD    ZDAYNO           Payement Date
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RCOPD            DDMMMYY
+     C                     MOVE NBTDDT    ZDAYNO           Trade Date
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RTDDT            DDMMMYY
+     C                     MOVE NBNCCY    RNCCY            New Nom. Ccy
+     C                     MOVE NBNDCP    RNDCP            New Dec. Places
+     C                     MOVE NBVCCY    RVCCY            New Value Ccy
+      *
+     C** Output Days and Divisor Basis                                    136428
+     C*                                                                   136428
+     C                     MOVE *BLANKS   RODAYS                          136428
+     C                     MOVE *BLANKS   RODIV                           136428
+     C           NBDYBS    IFEQ *BLANK                                    136428
+     C                     MOVE '*SAME*'  RODAYS                          136428
+     C                     ELSE                                           136428
+     C                     MOVE NBDYBS    RODAYS                          136428
+     C                     END                                            136428
+     C           NBDVBS    IFEQ *BLANK                                    136428
+     C                     MOVE '*SAME*'  RODIV                           136428
+     C                     ELSE                                           136428
+     C                     MOVE NBDVBS    RODIV                           136428
+     C                     END                                            136428
+     C*                                                                   136428
+     C           NBONSZ    IFNE *ZEROS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE NBONSZ    ZFIELD           Old Nominal Size
+     C                     MOVE '7'       ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RONSZ
+     C                     ELSE
+     C                     MOVE *BLANKS   RONSZ
+     C                     ENDIF
+      *
+     C           NBNNSZ    IFNE *ZEROS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE NBNNSZ    ZFIELD           New nominal size
+     C                     MOVE '7'       ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RNNSZ
+     C                     ELSE
+     C                     MOVE *BLANKS   RNNSZ
+     C                     ENDIF
+      *
+     C           NBDMLT    IFNE *ZEROS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE NBDMLT    ZFIELD           Denomination multiplier
+     C                     MOVE NBNDCP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RDMLT
+     C                     ELSE
+     C                     MOVE *BLANKS   RDMLT
+     C                     ENDIF
+      *
+     C                     MOVE NBRNDN    RRNDN            Rounding type
+     C                     MOVE NBRNDS    RRNDS            Rounding in Cash
+      *
+     C           NBCOMP    IFNE *ZEROS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE NBCOMP    ZFIELD           Compensation price
+     C                     MOVE '8'       ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RCOMP
+     C                     ELSE
+     C                     MOVE *BLANKS   RCOMP
+     C                     ENDIF
+      *
+     C                     MOVELNBTXT1    RTXT1     P      Narrative
+     C                     MOVELNBTXT2    RTXT2     P
+     C                     MOVELNBTXT3    RTXT3     P
+     C                     MOVELNBTXT4    RTXT4     P
+      *
+      ***  Report last activity when *FULL (*IN50 is *ON)
+      *
+     C           WIN50     IFEQ *ON
+      *
+     C                     MOVE *ON       *IN50
+     C                     MOVE NBLCD     ZDAYNO           Last change date
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RLCD             DDMMMYY
+     C                     MOVE *BLANKS   RLCTY            Last change type
+      *
+      ***  If Type = 'I' move 'INSERT', Type = A  move 'AMEND'
+      ***  If Type = 'D' move 'DELETE'
+      *
+     C                     MOVEL'INSERT'  RLCTY
+     C           NBCHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  RLCTY
+     C                     ENDIF
+     C           NBCHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  RLCTY
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *OFF      *IN50
+     C                     ENDIF
+      *
+      ***  Write out Detail Record.
+      *
+     C/COPY WNCPYSRC,SE7536C002
+     C                     WRITEDETAIL
+     C                     ADD  1         RCOUNT
+      *
+      ***  Read all Bulk Selected Securities Detail from the Bulk Reference
+      *
+     C                     EXSR #SELB2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #SELB2 - Read Bulk Selected Securities detail                *
+      *  ------   with Bulk Reference from LF/SECORBL0                *
+      *  Called By :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #SELB2    BEGSR
+      *
+      ***  read file for record equal to the parameter
+      *
+     C                     MOVELNBBLKR    W2BLKR  60P
+     C           W2BLKR    SETLLSECORSL0                 88
+     C           W2BLKR    READESECORSL0                 88
+      *
+      ***  Do While End of File not reached.
+      *
+     C           *IN88     DOWEQ*OFF
+      *
+      ***  If FULL Mode or Last Change Date = Run date
+      ***  Process Report Lines
+      *
+     C           MODE      IFEQ '2'
+     C           NCLCD     OREQ BJRDNB
+     C                     EXSR #REPD2
+     C                     ENDIF
+      *
+      ***  Read next record.
+      *
+     C           W2BLKR    READESECORSL0                 88
+     C                     ENDDO                           EOF not reached
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #REPD2 - Process Report Lines for next page                  *
+      *  ------                                                       *
+      *  Called By :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #REPD2    BEGSR
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C           WWOPE2    IFNE 'Y'
+     C                     EXSR RCFP2
+     C                     ENDIF
+      *
+     C           NCBLKR    IFNE WNBLKR
+     C                     WRITEHEADP2
+     C                     MOVE NCBLKR    WNBLKR           Bulk Ref.
+     C                     ENDIF
+      *
+      ***  Report Details
+      *
+     C                     MOVELNCOSEC    WKSESN
+     C           WKSESN    CHAINSECTY                87
+      *
+     C           *IN87     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 01 *
+     C                     MOVE 'SECTY   'DBFILE           ***************
+     C                     MOVELWKSESN    DBKEY
+     C                     MOVEL'SE7536'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           NBSTAT    IFEQ 'I'
+     C           NBSTAT    OREQ 'R'
+     C                     MOVELSESN      ROSEC            Old Security
+     C                     MOVE NMCY      RONCC            Nom. Ccy
+     C                     MOVE NMDP      RODCP            Dec. Places
+     C                     MOVE VLCY      ROVCC            Value Ccy
+     C                     MOVELNCNSEC    RNSEC            New Security
+     C                     MOVE NBNCCY    RNNCC            Nom. Ccy
+     C                     MOVE NBNDCP    RNDCP            Dec. Places
+     C                     MOVE NBVCCY    RNVCC            Value Ccy
+     C                     MOVE SMCC      RSMCC            Market Center
+     C                     MOVE SITP      RSITP            Investment Type
+      *
+      ***  Prepare fields for report name
+      *
+     C                     MOVE SRPN      ZSRPN
+     C                     MOVE *BLANK    ZSFN1
+     C                     MOVE *BLANK    ZSFN2
+      *
+      ***  Once for report name
+      *
+     C                     EXSR ZSDESC
+     C                     MOVE ZRNME     RSRPN
+      *
+      ***  Prepare fields for full names
+      *
+     C                     MOVE *BLANK    ZSRPN
+     C                     MOVE SFN1      ZSFN1
+     C                     MOVE SFN2      ZSFN2
+      *
+      ***  Once for full names
+      *
+     C                     EXSR ZSDESC
+     C                     MOVE ZFNM1     RFNM1
+     C                     MOVE ZFNM2     RFNM2
+     C                     MOVE ZFNM3     RFNM3
+     C           NCMANU    IFEQ 'Y'
+     C                     MOVE NCMANU    RMANU            Manually Added
+     C                     ELSE
+     C                     MOVE 'N'       RMANU            Manually Added
+     C                     ENDIF
+      *
+      ***  Retrieve the processing type and the Settlement Depot
+      *
+     C           KWINV     CHAININVTP                86
+     C           *IN86     IFEQ *OFF
+     C                     MOVE PROT      RPROT            Proc. Type
+     C                     ENDIF
+      *
+     C********** ISSR      IFNE *ZEROS                                                        CSD027
+     C           ISSR      IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELISSR      @KEYC  10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEYC
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCSSN    RISSR     P      Issuer
+     C                     ELSE
+     C                     MOVE *BLANKS   RISSR
+     C                     ENDIF
+      *
+     C                     MOVELT2RF      RT2RF            Telekurs
+     C                     MOVELSREF      RSREF            Sedol
+     C                     MOVELISIN      RISNO            ISIN/COMMON
+     C                     MOVELCSPN      RCSPN            Cusip Ref.
+      *
+      ***  Retrieve the Settlement Depot from PF/INVTPD
+      *
+     C           *IN86     IFEQ *OFF
+      *
+      ***  If settlement depot 1 is not equal to *zero than retrieve the shortname
+      *
+     C********** SDC1      IFNE *ZEROS                                                        CSD027
+     C           SDC1      IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELSDC1      @KEYC  10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEYC
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCSSN    RCSS1
+     C                     ENDIF
+      *
+      ***  If settlement depot 2 is not equal to *zero than retrieve the shortname
+      *
+     C********** SDC2      IFNE *ZEROS                                                        CSD027
+     C           SDC2      IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELSDC2      @KEYC
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEYC
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCSSN    RCSS2
+     C                     ENDIF
+      *
+      ***  If settlement depot 3 is not equal to *zero than retrieve the shortname
+      *
+     C********** SDC3      IFNE *ZEROS                                                        CSD027
+     C           SDC3      IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELSDC3      @KEYC
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEYC
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCSSN    RCSS3
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVELDASR      RDASR            Depot 1 sec ref
+     C                     MOVELDCSR      RDCSR            Depot 2 sec ref
+     C                     MOVELDDSR      RDDSR            Depot 3 sec ref
+     C           NCCORF    IFNE *ZEROS
+     C                     MOVELNCCORF    RCORF            Corp. Action Ref.
+     C                     ELSE
+     C                     MOVE *BLANKS   RCORF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           NBSTAT    IFNE 'I'
+     C           NBSTAT    ANDNE'R'
+     C                     MOVELSESN      ROSEC            Old Security
+     C                     MOVE NMCY      RONCC            Nom. Ccy
+     C                     MOVE NMDP      RODCP            Dec. Places
+     C                     MOVE VLCY      ROVCC            Value Ccy
+      *
+     C                     MOVELNCNSEC    WKSESN 10
+     C           WKSESN    CHAINSECTY                87
+      *
+     C           *IN87     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 02 *
+     C                     MOVE 'SECTY   'DBFILE           ***************
+     C                     MOVELWKSESN    DBKEY
+     C                     MOVEL'SE7536'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELSESN      RNSEC            New Security
+     C                     MOVE NMCY      RNNCC            Nom. Ccy
+     C                     MOVE NMDP      RNDCP            Dec. Places
+     C                     MOVE VLCY      RNVCC            Value Ccy
+     C                     MOVE SMCC      RSMCC            Market Center
+     C                     MOVE SITP      RSITP            Investment Type
+      *
+      ***  Prepare fields for report name
+      *
+     C                     MOVE SRPN      ZSRPN
+     C                     MOVE *BLANK    ZSFN1
+     C                     MOVE *BLANK    ZSFN2
+      *
+      ***  Once for report name
+      *
+     C                     EXSR ZSDESC
+     C                     MOVE ZRNME     RSRPN
+      *
+      ***  Prepare fields for full names
+      *
+     C                     MOVE *BLANK    ZSRPN
+     C                     MOVE SFN1      ZSFN1
+     C                     MOVE SFN2      ZSFN2
+      *
+      ***  Once for full names
+      *
+     C                     EXSR ZSDESC
+     C                     MOVE ZFNM1     RFNM1
+     C                     MOVE ZFNM2     RFNM2
+     C                     MOVE ZFNM3     RFNM3
+     C           NCMANU    IFEQ 'Y'
+     C                     MOVE NCMANU    RMANU            Manually Added
+     C                     ELSE
+     C                     MOVE 'N'       RMANU            Manually Added
+     C                     ENDIF
+      *
+      ***  Retrieve the processing type and the Settlement Depot
+      *
+     C           KWINV     CHAININVTP                86
+     C           *IN86     IFEQ *OFF
+     C                     MOVE PROT      RPROT            Proc. Type
+     C                     ENDIF
+      *
+     C********** ISSR      IFNE *ZEROS                                                        CSD027
+     C           ISSR      IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELISSR      @KEYC  10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEYC
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCSSN    RISSR     P      Issuer
+     C                     ELSE
+     C                     MOVE *BLANKS   RISSR
+     C                     ENDIF
+      *
+     C                     MOVELT2RF      RT2RF            Telekurs
+     C                     MOVELSREF      RSREF            Sedol
+     C                     MOVELISIN      RISNO            ISIN/COMMON
+     C                     MOVELCSPN      RCSPN            Cusip Ref.
+      *
+      ***  Retrieve the Settlement Depot from PF/INVTPD
+      *
+     C           *IN86     IFEQ *OFF
+      *
+      ***  If settlement depot 1 is not equal to *zero than retrieve the shortname
+      *
+     C********** SDC1      IFNE *ZEROS                                                        CSD027
+     C           SDC1      IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELSDC1      @KEYC
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEYC
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCSSN    RCSS1
+     C                     ENDIF
+      *
+      ***  If settlement depot 2 is not equal to *zero than retrieve the shortname
+      *
+     C********** SDC2      IFNE *ZEROS                                                        CSD027
+     C           SDC2      IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELSDC2      @KEYC
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEYC
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCSSN    RCSS2
+     C                     ENDIF
+      *
+      ***  If settlement depot 3 is not equal to *zero than retrieve the shortname
+      *
+     C********** SDC3      IFNE *ZEROS                                                        CSD027
+     C           SDC3      IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELSDC3      @KEYC
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEYC
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCSSN    RCSS3
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVELDASR      RDASR            Depot 1 sec ref
+     C                     MOVELDCSR      RDCSR            Depot 2 sec ref
+     C                     MOVELDDSR      RDDSR            Depot 3 sec ref
+     C           NCCORF    IFNE *ZEROS
+     C                     MOVELNCCORF    RCORF            Corp. Action Ref.
+     C                     ELSE
+     C                     MOVE *BLANKS   RCORF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Report last activity when *FULL (*IN50 is *ON)
+      *
+     C           WIN50     IFEQ *ON
+      *
+     C                     MOVE *ON       *IN50
+     C                     MOVE NCLCD     ZDAYNO           Last change date
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RLCD             DDMMMYY
+     C                     MOVE *BLANKS   RLCTY            Last change type
+      *
+      ***  If Type = 'I' move 'INSERT', Type = A  move 'AMEND'
+      ***  If Type = 'D' move 'DELETE'
+      *
+     C                     MOVEL'INSERT'  RLCTY
+     C           NCCHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  RLCTY
+     C                     ENDIF
+     C           NCCHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  RLCTY
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *OFF      *IN50
+     C                     ENDIF
+     C/COPY WNCPYSRC,SE7536C003
+      *
+      ***  Write out Detail Record.
+      *
+     C                     Z-ADD10        RQDLN2           Check Overflow
+     C           OFLLN2    SUB  PRTLN2    DIFLN2
+     C           DIFLN2    IFLE RQDLN2
+     C                     WRITEHEADP2
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL2
+     C                     ADD  1         RCOUN2
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *  ------                                                       *
+      *  Called By : Main Processing, *PSSR                           *
+      *  Calls     : None.                                            *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+     C           *INU7     IFEQ *ON
+     C           RCOUNT    OREQ 0
+      *
+     C                     EXSR RCFAU
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C                     WRITENODTLS
+     C                     ENDIF                           U7 = *ON
+     C                     ENDIF                           U7 = *ON or RCOUNT=0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ***  Open Report file
+      *
+     C                     CLOSESE7536P1
+      *
+     C                     OPEN SE7536P1
+     C                     MOVE 'Y'       WWOPEN
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM PENT      SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVE 'SE7536P1'DBFILE           * DB ERROR 03 *
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P      ***************
+     C                     MOVEL'SE7536'  DBPGM     P
+     C                     OUT  LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  RCFP2  - Subroutine to register the P2 Printer File via RCF. *
+      *  -----                                                        *
+      *****************************************************************
+      *
+     C           RCFP2     BEGSR                            *** RCFP2  ***
+      *
+      ***  Open Report file
+      *
+     C                     CLOSESE7536P2
+      *
+     C                     OPEN SE7536P2
+     C                     MOVE 'Y'       WWOPE2  1
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM2    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM PENT      SENTY   3
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVE 'SE7536P2'DBFILE           * DB ERROR 04 *
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P      ***************
+     C                     MOVEL'SE7536'  DBPGM     P
+     C                     OUT  LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Open printer File
+      *
+     C                     CLOSESE7536AU
+     C                     Z-ADD0         RCOUNT  50
+     C                     Z-ADD0         RCOUN2  50
+     C                     OPEN SE7536AU
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM PENT      SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVE 'SE7536AU'DBFILE           * DB ERROR 05 *
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P      ***************
+     C                     MOVEL'SE7536'  DBPGM     P
+     C                     OUT  LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *   ------                                                      *
+      *   Called by : Main processing                                 *
+      *   Calls     : None.                                           *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           PSEQ    5
+     C                     PARM           PENT    3
+     C                     PARM           WPARM
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  If Audit Mode, set indicator for Change Type and Change Time
+      *
+     C           MODE      IFEQ '2'
+     C                     MOVE *ON       WIN50   1
+     C                     ELSE
+     C                     MOVE *OFF      WIN50
+     C                     ENDIF
+      *
+      ***  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' WWRTCD  7
+     C                     PARM '*FIRST ' WWOPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           WWRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE    P      * DB ERROR 06 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ***************
+     C                     MOVEL'SE7536'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Set indicator 98 for date format used in ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     END
+      *
+      ***  Check if CEU018 (SE Decimal on Nominal Amount) is active
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' WWRTCD
+     C                     PARM '*VERIFY' WWOPTN
+     C                     PARM 'CEU018'  WLSARD  6
+     C           SCSARD    PARM SCSARD    DSSDY
+      *
+      **  If record not found
+     C           WWRTCD    IFEQ *BLANKS                    B*1
+     C                     MOVE *ON       *IN60
+     C                     ELSE                            X*1
+     C                     MOVE *OFF      *IN60
+     C                     ENDIF                           E*1
+      *
+     C           KWINV     KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RCOUNT
+     C                     Z-ADD0         RCOUN2
+     C                     Z-ADD0         RQDLN2  30
+     C                     Z-ADD0         DIFLN2  30
+     C                     MOVE *BLANKS   WWCCY   3
+     C                     MOVE *ZERO     WNBLKR  60
+     C                     MOVE 'N'       WWOPEN
+     C                     MOVE 'N'       WWOPE2
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error control subroutine                            *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C                     SETON                     U7U8
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WWOPEN  1        To avoid RCFAU in AUDIT
+     C                     EXSR AUDIT
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZSDESCZ3
+     C/COPY ZSRSRC,ZDATE2Z3
+**  SNAR
+INCOMPLETE
+SECURITIES DETAILS GENERATED
+ALLOCATED/EVENTS GENERATED
+AUTHORISED
+COMPLETE
+STOCK AUTHORISED
+REVERSED
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

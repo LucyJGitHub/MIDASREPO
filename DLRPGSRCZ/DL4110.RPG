@@ -1,0 +1,488 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL IRS Date Schedule Exception Extract')         *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module                                       *
+     F*                                                               *
+     F*  DL4110 - IRS Date Schedule Exception Extract                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+     F*  Function:  This program is designed to extract any holiday   *
+     F*  (COB)      errors that have occurred on schedules            *
+     F*             previously set up before the holidays were        *
+     F*             entered.                                          *
+     F*                                                               *
+     F*  Called By: DLC4110       - IRS Date Schedule Extract/Report  *
+     F*                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 244278             Date 21Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CER001             Date 25Apr05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CEU003             Date 27Jan98               *
+      *                 119988             DATE 07JAN98               *
+     F*                 CIR001 *CREATE     Date 13Jun95               *
+     F*                                    DATE ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  244278 - Remove issuing of database error 2.                 *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *           Applied IRSLUX - IRS Enhancement for Luxembourg     *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+     F*  CEU003 - EMU DL Settlement Currency Conversion:              *
+     F*           Include processing required by EMU switchable       *
+     F*           feature CEU003.                                     *
+     F*  119988 - If deal not found could be because it has turned    *
+     F*           historic this COB. Do not report DB error but do    *
+     F*           not extract either.                                 *
+     F*  CIR001 - Interest Rate Calendars.                            *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FDEALS   IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F***DEALSH**IF**E***********K********DISK*************************                CER001 244278
+     F**********  DEALSDGF                          KRENAMEWDEALDG                     CER001 244278
+     F**********  DEALSDBF                          KIGNORE                            CER001 244278
+     F**********  DEALSDCF                          KIGNORE                            CER001 244278
+     F**********  DEALSDDF                          KIGNORE                            CER001 244278
+     F**********  DEALSDEF                          KIGNORE                            CER001 244278
+     FDLDTSCL0IF  E           K        DISK
+     FDLCFSCL0IF  E           K        DISK
+     FDLPCSCL0IF  E           K        DISK
+     FDLSDEEPDO   E                    DISK
+     FDL4110AUO   E                    PRINTER                        UC
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *       01      DLDTSCL0 record read                            *
+      *       02      DLCFSCL0 record read                            *
+      *       03      DLPCSCL0 record read                            *
+      *       20      End of file DLDTSCL0                            *
+      *       22      End of file DLPCSCL0                            *
+      *       23      End of file DLCFSCL0                            *
+      *       30      DEALS record not found                          *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *PSSR        Program exception error routine                 *
+      *  #LINIT       Initial Processing                              *
+      *  #LLOOP       Loop Processing                                 *
+      *  #LVALD       Validate date for exception                     *
+      *  #LRESC       Read schedule records                           *
+      *  #LREDL       Read related deal record                        *
+      *  #LAUD        Output Audit report and end program             *
+      *                                                               *
+      *  Standard routines:                                           *
+      *  ZACCH        Access record for holidays file routine         *
+      *  ZCHKH        Check if holiday for currency/location          *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZHOLE
+      /SPACE 3
+     IDLDTSCD0    01
+     IDLCFSCD0    02
+     IDLPCSCD0    03
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for Access Programs, short data structure
+      *
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                M A I N  P R O C E S S I N G                   *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Perform initialisation
+      *
+     C                     EXSR #LINIT
+      *
+     C                     EXSR #LLOOP
+      *
+     C                     MOVE '1'       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LINIT - Initial Processing                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LINIT    BEGSR
+      *
+      ** Copyright Statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      ** Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL4110'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   CEU003
+     C**   Check EMU switchable feature CEU003 in SCSARDPD file.          CEU003
+     C*                                                                   CEU003
+     C                     CALL 'AOSARDR0'                                CEU003
+     C                     PARM '*MSG   ' @RTCD                           CEU003
+     C                     PARM '*VERIFY' @OPTN                           CEU003
+     C                     PARM 'CEU003'  @SARD   6                       CEU003
+     C*                                                                   CEU003
+     C           @RTCD     IFEQ *BLANKS                                   CEU003
+     C                     MOVE 'Y'       CEU003  1                       CEU003
+     C                     ELSE                                           CEU003
+     C                     MOVE 'N'       CEU003                          CEU003
+     C                     ENDIF                                          CEU003
+      *
+      ** Get first schedule record
+      *
+     C                     EXSR #RESC
+      *
+      ** Read related deal record
+      *
+     C           *IN20     IFEQ '0'
+     C           *IN22     OREQ '0'
+     C           *IN23     OREQ '0'
+     C                     EXSR #REDL
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LLOOP - Loop Processing                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LLOOP    BEGSR
+      *
+     C           *IN20     DOWEQ'0'
+     C           *IN22     OREQ '0'
+     C           *IN23     OREQ '0'
+      *
+      ** Check for new deal number
+      *
+     C           DLNO      IFNE LASTDN
+     C                     EXSR #REDL
+     C                     END
+      *                                                                   119988
+      * Skip extraction routine if no related deal was found              119988
+     C           *IN30     IFNE '1'                                       119988
+      *
+      ** Validate schedule date and write extract record
+      *
+     C********** WWPASS    IFEQ 'N'                                                    CER001 244278
+     C                     EXSR #VALD
+     C**********           ENDIF                                                       CER001 244278
+      *                                                                   119988
+     C                     END                                            119988
+      *
+      ** Read next schedule record
+      *
+     C                     EXSR #RESC
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #VALD  - Validate date for exception                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #VALD     BEGSR
+      *
+      ** Check if date is a holiday
+      *
+      * Set currency input parameter (ZCCY) for sr/ZCHKH to the           CEU003
+      *  appropriate settlement currency.                                 CEU003
+      *                                                                   CEU003
+     C           OTIN      IFNE 'T'
+     C*                                                                   CEU003
+     C           CEU003    IFEQ 'Y'                                       CEU003
+     C           PSCY      ANDNE*BLANKS                                   CEU003
+     C                     MOVE PSCY      ZCCY                            CEU003
+     C                     ELSE                                           CEU003
+     C                     MOVE UCUCY     ZCCY
+     C                     ENDIF                                          CEU003
+     C*                                                                   CEU003
+     C                     ELSE
+     C*                                                                   CEU003
+     C           CEU003    IFEQ 'Y'                                       CEU003
+     C           RSCY      ANDNE*BLANKS                                   CEU003
+     C                     MOVE RSCY      ZCCY                            CEU003
+     C                     ELSE                                           CEU003
+     C                     MOVE TCUCY     ZCCY
+     C                     ENDIF                                          CEU003
+     C*                                                                   CEU003
+     C                     END
+     C                     Z-ADDPRDT      ZDAYNO
+     C                     MOVE BJSLCD    ZLOC
+     C                     EXSR ZCHKH
+      *
+      ** If date is a holiday, but not a confirmed
+      ** holiday in the schedule
+      *
+     C           ZIND      IFEQ 'H'
+     C           COHO      ANDNE'Y'
+      *
+      ** Determine schedule type
+      *
+     C           *IN01     IFEQ '1'
+     C           RCIP      ANDEQ'R'
+     C           OTIN      IFNE 'T'
+     C                     MOVE '1'       SCHT
+     C                     ELSE
+     C                     MOVE '2'       SCHT
+     C                     END
+     C                     END
+      *
+     C           *IN01     IFEQ '1'
+     C           RCIP      ANDEQ'P'
+     C           OTIN      IFNE 'T'
+     C                     MOVE '3'       SCHT
+     C                     ELSE
+     C                     MOVE '4'       SCHT
+     C                     END
+     C                     END
+      *
+     C           *IN02     IFEQ '1'
+     C           OTIN      IFNE 'T'
+     C                     MOVE '5'       SCHT
+     C                     ELSE
+     C                     MOVE '6'       SCHT
+     C                     END
+     C                     END
+      *
+     C           *IN03     IFEQ '1'
+     C           OTIN      IFNE 'T'
+     C                     MOVE '7'       SCHT
+     C                     ELSE
+     C                     MOVE '8'       SCHT
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDPRDT      PRCDT
+     C                     WRITEDLSDEED0
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #RESC  - Read schedule records                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #RESC     BEGSR
+      *
+      ** Read first schedule file record
+      *
+     C           *IN20     IFEQ '0'
+     C                     READ DLDTSCL0                 20
+     C                     END
+      *
+     C           *IN20     IFEQ '1'
+      *
+      ** Read second schedule file record
+      *
+     C           *IN23     IFEQ '0'
+     C                     READ DLCFSCL0                 23
+     C                     END
+      *
+     C           *IN23     IFEQ '1'
+      *
+      ** Read third schedule file record
+      *
+     C           *IN22     IFEQ '0'
+     C                     READ DLPCSCL0                 22
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #REDL  - Read related deal record                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #REDL     BEGSR
+      *****************************************************************                CER001 244278
+     C**********           MOVE 'N'       WWPASS  1                                    CER001 244278
+      *
+     C           DLNO      CHAINDEALS                30
+      *
+     C********** *IN30     IFEQ '1'                                                    CER001 244278
+     C********** DLNO      CHAINDEALSH               99                                CER001 244278
+     C********** *IN99     IFEQ *ON                                                    CER001 244278
+     C********** *LOCK     IN   LDA                                                    CER001 244278
+     C**********           MOVEL'DL4110'  DBPGM                                        CER001 244278
+     C**********           MOVELDLNO      DBKEY                                        CER001 244278
+     C**********           MOVEL'DEALS   'DBFILE                                       CER001 244278
+     C**********           Z-ADD2         DBASE                                        CER001 244278
+     C**********           OUT  LDA                                                    CER001 244278
+     C**********           EXSR *PSSR                                                  CER001 244278
+     C**********           ELSE                                                        CER001 244278
+     C**********           MOVE 'Y'       WWPASS                                       CER001 244278
+     C**********           ENDIF                                                       CER001 244278
+     C**********           ENDIF                                                       CER001 244278
+      *                                                                                       CER001
+     C********** *IN30     IFEQ '1'                                       119988
+     C********** *LOCK     IN   LDA                                       119988
+     C**********           MOVEL'DL4110'  DBPGM                           119988
+     C**********           MOVELDLNO      DBKEY                           119988
+     C**********           MOVEL'DEALS   'DBFILE                          119988
+     C**********           Z-ADD2         DBASE                           119988
+     C**********           OUT  LDA                                       119988
+     C**********           EXSR *PSSR                                     119988
+     C**********           END                                            119988
+      *
+     C                     Z-ADDDLNO      LASTDN  60
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R *PSSR  - Error control subroutine                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     EXSR #LAUD
+     C                     END
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S/R #LAUD  - Output Audit report and End Program             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LAUD     BEGSR
+      *
+     C                     OPEN DL4110AU
+      *
+      ** Output report header and database error details.
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+      ** End program and return.
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

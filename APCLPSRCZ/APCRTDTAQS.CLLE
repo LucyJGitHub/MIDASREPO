@@ -1,0 +1,116 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas AP Create all data queues')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Application Programming Interfaces               */
+/*                                                                   */
+/*       APCRTDTAQS - Create all API data queues                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*       Last Amend No. CPK014             Date 02Jan02              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. 153108  *CREATE    Date 13Jan99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CPK014 - Release 4 alphasite:                               */
+/*                - Ensure that the API DTAQs are owned by the       */
+/*                  correct owner.                                   */
+/*       153108 - Introduce means of creating data queues            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RETURNCODE)
+ 
+/*/COPY WNCPYSRC,APCRTDTA01                                           */
+ 
+/* ------------------------------------------------------------------ +
+   Parameters +
+/* ------------------------------------------------------------------ + */
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+ 
+/* ------------------------------------------------------------------ +
+   Other fields +
+/* ------------------------------------------------------------------ + */
+             DCL        VAR(&LIBRARY) TYPE(*CHAR) LEN(10) +
+                          VALUE(XXDPLIB) /* The library in which to +
+                          create the queues; if this ever changes, +
+                          just change the initialisation of this +
+                          field */
+ 
+             DCL        VAR(&LENGTH) TYPE(*CHAR) LEN(5) +
+                          VALUE('00010') /* The maximum entry +
+                          length of the queues */
+ 
+             DCL        VAR(&DELETE) TYPE(*CHAR) LEN(1) VALUE('N') +
+                          /* Whether or not to delete the queues if +
+                          they are already there */
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2) /* The Midas +
+                          system prefix */
+ 
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10) /* The object owner */            /*CPK014*/
+                                                                                          /*CPK014*/
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+             DCLF       FILE(APDTAQPD)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ 
+/*/COPY WNCPYSRC,APCRTDTA02                                         */
+ 
+/* Retrieve the Midas system prefix and construct the library name */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+             CHGVAR     VAR(%SST(&LIBRARY 1 2)) VALUE(&PREFIX)
+ 
+/* Determine the owner of the target library */                                           /*CPK014*/
+             RTVOBJD    OBJ(&LIBRARY) OBJTYPE(*LIB) OWNER(&OWNER)                         /*CPK014*/
+                                                                                          /*CPK014*/
+/* Read through the file and create each data queue */
+Read:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+ 
+             CALLPRC    PRC(UTCRTDTAQ) PARM(&RETURNCODE &ABQUEUE +
+                          &LIBRARY &LENGTH &ABTEXT &DELETE)
+ 
+/* Change the owner to be the same as the library */                                      /*CPK014*/
+             CHGOBJOWN  OBJ(&LIBRARY/&ABQUEUE) OBJTYPE(*DTAQ) +
+                          NEWOWN(&OWNER)                                                  /*CPK014*/
+                                                                                          /*CPK014*/
+/* Clear the return code (errors are ignored here) */
+             CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+ 
+             GOTO       CMDLBL(Read)
+ 
+/*/COPY WNCPYSRC,APCRTDTA03                                           */
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,APCRTDTA04                                           */
+ 
+             CHGVAR     VAR(&RETURNCODE) VALUE('Error')
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          APCRTDTAQS ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ 
+ END:
+ 
+/*/COPY WNCPYSRC,APCRTDTA05                                           */
+ 
+             ENDPGM

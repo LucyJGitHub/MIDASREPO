@@ -1,0 +1,308 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP0811 - Report of CoB Mut. Excl. differences                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP032             Date 18Oct05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CUP004 *CREATE     Date 01Apr98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP032 - Use one printer file for Action Files.              *
+      *  CUP004  -  Make upgrade of DTALIB files easier               *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      End of file indicator
+      *       37      Overflow indicator
+      *       69      Read or write errors
+      *       70      Deleted records
+      *       71      No deleted records to report
+      *       72      Deleted records headers
+      *       80      Inserted records
+      *       81      No Inserted records to report
+      *       82      Inserted records headers
+      *
+     FUPMEXCL0IF  E           K        DISK         KINFSR *PSSR
+     F*UP0811P1O**E             37     PRINTER                        UC                      CUP032
+     FUP0799P1O   E             37     PRINTER                        UC                      CUP032
+      *
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+     IKEYHDR      DS                          1 132                                           CUP032
+     I I            'Component'              10  18 HDR1                                      CUP032
+     I I            'Unq. No.'               33  40 HDR2                                      CUP032
+     I I            'Mut. Excl. Component'   50  69 HDR3                                      CUP032
+      *
+     IKEYDTA      DS                          1 132                                           CUP032
+     I                                       10  19 DTA1                                      CUP032
+     I                                       21  25 DTA2                                      CUP032
+     I                                       33  34 DTA3                                      CUP032
+     I                                       50  59 DTA4                                      CUP032
+     I                                       61  65 DTA5                                      CUP032
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           HDRTXT
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C*********            OPEN UP0811P1                                                      CUP032
+     C                     OPEN UP0799P1                                                      CUP032
+      *
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           *LOVAL    SETLLUPMEXCD0
+      *
+     C                     READ UPMEXCL0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      * If there are no records at all write 'no records'
+     C           *IN20     IFEQ *ON
+     C                     WRITENORECS                 69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     WRITETRAILP                 69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     GOTO ENDPGM
+      *
+     C                     ELSE
+     C                     SETON                     70
+     C**********           WRITEDTL1                                                          CUP032
+     C                     WRITEDTL2                                                          CUP032
+     C                     SETOF                     70
+     C                     ENDIF
+      *
+     C           DKACTC    IFNE 'D'
+     C                     SETON                     71
+     C**********           WRITEDTL1                                                          CUP032
+     C                     WRITEDTL2                                                          CUP032
+     C                     SETOF                     71
+     C                     ELSE
+     C                     SETON                     72
+     C**********           WRITEDTL1                                                          CUP032
+     C                     WRITEDTL2                                                          CUP032
+     C                     SETOF                     72
+     C                     ENDIF
+      *
+     C           DKACTC    DOWEQ'D'
+     C           *IN20     ANDNE*ON
+      *
+      * Write headers if overflow on
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETON                     70
+     C**********           WRITEDTL1                                                          CUP032
+     C                     WRITEDTL2                                                          CUP032
+     C                     SETOF                     70
+     C                     SETON                     72
+     C**********           WRITEDTL1                                                          CUP032
+     C                     WRITEDTL2                                                          CUP032
+     C                     SETOF                     7237
+     C                     ENDIF
+      *
+     C                     EXSR DELETE
+      *
+     C                     READ UPMEXCL0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETON                     80
+     C**********           WRITEDTL2                                                          CUP032
+     C                     WRITEDTL3                                                          CUP032
+     C                     SETOF                     80
+      *
+     C           DKACTC    IFNE 'I'
+     C                     SETON                     81
+     C**********           WRITEDTL2                                                          CUP032
+     C                     WRITEDTL3                                                          CUP032
+     C                     SETOF                     81
+     C                     ELSE
+     C                     SETON                     82
+     C**********           WRITEDTL2                                                          CUP032
+     C                     WRITEDTL3                                                          CUP032
+     C                     SETOF                     82
+     C                     ENDIF
+      *
+     C           DKACTC    DOWEQ'I'
+     C           *IN20     ANDNE*ON
+      *
+      * Write headers if overflow on
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETON                     80
+     C**********           WRITEDTL2                                                          CUP032
+     C                     WRITEDTL3                                                          CUP032
+     C                     SETOF                     80
+     C                     SETON                     82
+     C**********           WRITEDTL2                                                          CUP032
+     C                     WRITEDTL3                                                          CUP032
+     C                     SETOF                     8237
+     C                     ENDIF
+      *
+     C                     EXSR INSERT
+      *
+     C                     READ UPMEXCL0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     WRITETRAILP                 69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           ENDPGM    TAG
+     C**********           CLOSEUP0811P1                                                      CUP032
+     C                     CLOSEUP0799P1                                                      CUP032
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *
+      * DELETE subroutine - process deleted records
+      *
+      *****************************************************************
+     C           DELETE    BEGSR
+     C**********           MOVELDKCOTT    #COMP1                                              CUP032
+     C**********           MOVELDKCSEQ    #SEQ1                                               CUP032
+     C**********           MOVELDKMEUN    #UNQ                                                CUP032
+     C**********           MOVELDKMECN    #COMP2                                              CUP032
+     C**********           MOVELDKMECS    #SEQ2                                               CUP032
+     C                     MOVELDKCOTT    DTA1                                                CUP032
+     C                     MOVELDKCSEQ    DTA2                                                CUP032
+     C                     MOVELDKMEUN    DTA3                                                CUP032
+     C                     MOVELDKMECN    DTA4                                                CUP032
+     C                     MOVELDKMECS    DTA5                                                CUP032
+      *
+     C**********           WRITEDTL1                   69                                     CUP032
+     C                     WRITEDTL2                                                          CUP032
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      * INSERT subroutine - process inserted records
+      *
+      *****************************************************************
+     C           INSERT    BEGSR
+     C**********           MOVELDKCOTT    #COMP1                                              CUP032
+     C**********           MOVELDKCSEQ    #SEQ1                                               CUP032
+     C**********           MOVELDKMEUN    #UNQ                                                CUP032
+     C**********           MOVELDKMECN    #COMP2                                              CUP032
+     C**********           MOVELDKMECS    #SEQ2                                               CUP032
+     C                     MOVELDKCOTT    DTA1                                                CUP032
+     C                     MOVELDKCSEQ    DTA2                                                CUP032
+     C                     MOVELDKMEUN    DTA3                                                CUP032
+     C                     MOVELDKMECN    DTA4                                                CUP032
+     C                     MOVELDKMECS    DTA5                                                CUP032
+      *
+     C**********           WRITEDTL2                   69                                     CUP032
+     C                     WRITEDTL3                                                          CUP032
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

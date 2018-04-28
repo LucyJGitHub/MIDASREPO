@@ -1,0 +1,930 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Postings History Purge.')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - General Ledger                                   *
+     F*                                                               *
+     F*  GL4450 - Account Postings History Purge.                     *
+     F*                                              _                *
+     F*  Function:  This component will delete from the A/C Posting   *
+     F*            History file GLACPHPD any posting with a posting   *
+     F*            date earlier than the Account Posting Retention    *
+     F*            Period from the account codes file. If the account *
+     F*            code record has been deleted, the default Account  *
+     F*            Posting Retention period from the ICD is used.     *
+     F*             If Switchable Feature S01520 is installed, the    *
+     F*            program also updates the Historic Balance for the  *
+     F*            account, if it is still on the accounts file.      *
+     F*             File updates are committed every 60 seconds or    *
+     F*            1000 updates.                                      *
+     F*                                                               *
+     F*             This component ends automatically if MPHAS is not *
+     F*            either 'A' or 'C' - Input Cycle or COB             *
+     F*                                                               *
+     F*             This program is called during Close of Business,  *
+     F*            or can be run interactively or in batch in Input   *
+     F*            Cycle as long as there are no users in the system. *
+     F*                                                               *
+     F*  Called by: GLC4450 - Account Postings History Purge component*
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CGL127AY           Date 06Aug12               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *                 CGL127AB           Date 06Aug12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002             Date 23Sep98               *
+     F*                 107793             DATE 01OCT96               *
+     F*                 091378             DATE 23JAN96               *
+     F*                 S01408             DATE 03FEB95               *
+     F*                 S01520             DATE 02NOV94               *
+     F*                 S01194             DATE 25APR91               *
+     F*                 S01238             DATE 09APR90               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CGL127AY - COB Restructure - GL COB Optimisation Phase 1     *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CGL127AB - General Ledger  Module optimisation - Phase 1     *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+     F*           Information (Recompile)                             *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*   107793 - Use journalling for recovery, rather than          *
+     F*            security copies. This will greatly reduce the time *
+     F*            taken for recovery, and prevent the security copies*
+     F*            from causing a machine crash due to disk space     *
+     F*            problems.                                          *
+     F*   091378 - DB ERROR ON ACCNT CAUSED BY POSTINGS FROM S/38     *
+     F*   S01408 - ADDITION OF CORE HOOK GL4450FFPG                   *
+     F*            ADDITION OF CORE HOOK GL4450IIPG                   *
+     F*            ADDITION OF CORE HOOK GL4450CCPG                   *
+     F*            ADDITION OF CORE HOOK GL4450CDBU                   *
+     F*  S01520 - BLI Account Statements Changes.                     *
+     F*   S01194 - CHANGES FOR NEW STANDING DATA                      *
+     F*   S01238 - MIS INCORPORATION (UPDATE OF SYNON FIELD NAMES)    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*FSTART
+     F***GLACPHL*UF**E           K        DISK                            S01520
+     F/COPY WNCPYSRC,GL4450F001
+     F***GLACPHL1UF  E           K        DISK                           UC          S01520 CGL127AB
+     F*                                             KINFSR GLASR                            CGL127AB
+     F*                                             KCOMIT                           107793 CGL127AB
+      * Account postings history file.
+      * ------------------------------
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,GL4450FFPG                                           S01408
+     F*                                                                   S01408
+     F***GLACPHL UF  E           K        DISK                           UC          S01520 CGL127AY
+     F***GL*Accounts*Post*Historic*Details*file************************              S01520 CGL127AY
+     F**********                                    KINFSR GLASR                     S01520 CGL127AY
+     F**********  APOSTPDF                          KRENAMEAPOSTPDX                  S01520 CGL127AY
+     F**********                                    KCOMIT                           107793 CGL127AB
+      *                                                                                     CGL127AB
+     F***GLACPHL5UF  E           K        DISK                           UC        CGL127AB CGL127AY
+     FGLACPHL5UF  E           K        DISK                                                 CGL127AY
+     F*  GL Accounts Post -  Historic Details file                                          CGL127AB
+     F                                              KINFSR GLASR                            CGL127AB
+     F            APOSTPDF                          KRENAMEAPOSTPDY                         CGL127AB
+     F                                              KCOMIT                                  CGL127AB
+     F*                                                                   S01520
+     FACCNT   UF  E           K        DISK                               S01520
+     F*  GL Accounts Master file                                          S01520
+     F                                              KINFSR ACCSR          S01520
+     F            ACCNTAAF                          KIGNORE               S01520
+     F            ACCNTACF                          KIGNORE               S01520
+     F                                              KCOMIT                107793
+     F/COPY WNCPYSRC,GL4450F002
+     F*                                                                   S01520
+     FGL4450AUO   E                    PRINTER
+      * Audit report.
+      * -------------
+     FGLACHDPDIF  E                    DISK                           UC                    CGL127AY
+      * Driver File                                                                         CGL127AY
+     F                                              KCOMIT                                  CGL127AY
+     FGLACHPZZO   E                    DISK                                                 CGL127AY
+      * Summary File for number of postings dropped.                                        CGL127AY
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY WNCPYSRC,GL4450E001
+     I*ISTART
+     I***MPHAS       DS                                                                107793 CCB020
+     I**********                              1   1 MPHASE                             107793 CCB020
+      ** Data area for MPHAS                                              107793
+      *                                                                   107793
+     I*P@FMT1****E DSSDBANKPD                                             S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+      *
+      ** Data area for AOBANKR0.
+      *
+     I*P@FMT2****E DSSDGELRPD                                             S01194
+     ISDGELR    E DSSDGELRPD                                              S01194
+      *
+      ** Data area for AOGELRR0
+      *
+     I*P@FMT3****E DSSDACODPD                                             S01194
+     ISDACOD    E DSSDACODPD                                              S01194
+     I              QQACCD                          QQACD1                                    CGL029
+      *
+      ** Data area for AOACODR0
+      *
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+      *                                                                   S01194
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      ** DS for Access Programs, Long data structure                                          CGL029
+      *                                                                                       CGL029
+     ILDA         DS                            256
+      *
+      ** Local data area.
+      *
+     I***********                           134 138 DBFILE                S01194
+     I***********                           139 167 DBKEY                 S01194
+     I***********                           168 175 DBPGM                 S01194
+     I***********                           176 1770DBASE                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     I*                                                                   S01520
+     I***ACCNKY*  DS                             18                                    S01520 CGL029
+     IACCNKY      DS                             24                                           CGL029
+     I**  Full account key                                                S01520
+     I**********                              1   60CNUM                               S01520 CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        7   9 CCY                   S01520
+     I**********                             10  130ACOD                               S01520 CGL029
+     I**********                             14  150ACSQ                               S01520 CGL029
+     I**********                             16  18 BRCA                               S01520 CGL029
+     I                                       10  190ACOD                                      CGL029
+     I                                       20  210ACSQ                                      CGL029
+     I                                       22  24 BRCA                                      CGL029
+     I*                                                                   S01520
+     I***SACCKY*     DS                          18                                    S01520 CGL029
+     ISACCKY      DS                             24                                           CGL029
+     I**  Full account key                                                S01520
+     I**********                              1   60WCNUM                              S01520 CSD027
+     I                                        1   6 WCNUM                                     CSD027
+     I                                        7   9 WCCY                  S01520
+     I**********                             10  130WACOD                              S01520 CGL029
+     I**********                             14  150WACSQ                              S01520 CGL029
+     I**********                             16  18 WBRCA                              S01520 CGL029
+     I                                       10  190WACOD                                     CGL029
+     I                                       20  210WACSQ                                     CGL029
+     I                                       22  24 WBRCA                                     CGL029
+     ICBTASK    E DSCBTASKSP                                                                CGL127AY
+      ** Data area for CBTASKSP                                                             CGL127AY
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,GL4450IIPG                                           S01408
+     I*                                                                   S01408
+      /EJECT
+     C*CSTART
+      *---------------------------------------------------------------*
+      *                                                               *
+      *             FUNCTION OF INDICATORS                            *
+      *                                                               *
+      *  01         End of file for LF/GLACPHL.                       *
+      *  10         Loop prevention indicator for GLASR.              *
+      *  80         Record not found.                                 *   S01520
+      *  81         EOF of PF/GLACHDPD                                *                     CGL127AY
+      *  U7         Along with U8, file out of balance.               *
+      *  U8         File out of balance.                              *
+      *  LR         Last record indicator.                            *
+      *                                                               *
+      *---------------------------------------------------------------*
+      /SPACE 3
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   Initial process - defines local data area , outputs report  *
+      *                     heading and determines default control    *
+      *                     date.                                     *
+      *                                                               *
+      *   Calls programs    : AOBANKR0                                *
+      *                       AOGELRR0                                *
+      *                       AOSARDR0                                *   S01520
+      *                                                               *
+      *   Calls subroutines : ERROR                                   *
+      *                                                               *
+      *---------------------------------------------------------------*
+     C                     MOVEACPY@      BIS@   80
+      *                                                                                     CGL127AY
+     C           *ENTRY    PLIST                                                            CGL127AY
+     C                     PARM           RSTART  1                                         CGL127AY
+     C*                                                                   S01520
+     C**  Define key list for LF/ACCNT file                               S01520
+     C*                                                                   S01520
+     C           ACCKEY    KLIST                                          S01520
+     C                     KFLD           WCNUM                           S01520
+     C                     KFLD           WCCY                            S01520
+     C                     KFLD           WACOD                           S01520
+     C                     KFLD           WACSQ                           S01520
+     C                     KFLD           WBRCA                           S01520
+     C*                                                                   S01520
+     C**  Define key list for LF/GLACPHL1 file                            S01520
+     C*                                                                   S01520
+     C********** GLAKEY    KLIST                                                     S01520 CGL127AB
+     C**********           KFLD           BRCA                                       S01520 CGL127AB
+     C**********           KFLD           CNUM                                       S01520 CGL127AB
+     C**********           KFLD           CCY                                        S01520 CGL127AB
+     C**********           KFLD           ACOD                                       S01520 CGL127AB
+     C**********           KFLD           ACSQ                                       S01520 CGL127AB
+     C**********           KFLD           PSTD                                       S01520 CGL127AB
+     C*                                                                                     CGL127AB
+     C**  Define key list for LF/GLACPHL5 file                                              CGL127AB
+     C*                                                                                     CGL127AB
+     C           GLBKEY    KLIST                                                            CGL127AB
+     C                     KFLD           ACOD                                              CGL127AB
+     C                     KFLD           BRCA                                              CGL127AB
+     C                     KFLD           CNUM                                              CGL127AB
+     C                     KFLD           CCY                                               CGL127AB
+     C                     KFLD           ACSQ                                              CGL127AB
+     C                     KFLD           PSTD                                              CGL127AB
+     C*                                                                                     CGL127AB
+     C****Define*key*list*for*LF/GLACPHL*file                                      CGL127AB CGL127AY
+     C**********                                                                   CGL127AB CGL127AY
+     C********** GLCKEY    KLIST                                                   CGL127AB CGL127AY
+     C**********           KFLD           ACOD                                     CGL127AB CGL127AY
+     C**********           KFLD           PSTD                                     CGL127AB CGL127AY
+     C*                                                                                     CGL127AB
+     C**  Define account key list for LF/GLACPHL5 file                                      CGL127AB
+     C*                                                                                     CGL127AB
+     C           GLDKEY    KLIST                                                            CGL127AB
+     C                     KFLD           ACOD                                              CGL127AB
+     C                     KFLD           BRCA                                              CGL127AB
+     C                     KFLD           CNUM                                              CGL127AB
+     C                     KFLD           CCY                                               CGL127AB
+     C                     KFLD           ACSQ                                              CGL127AB
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL4450CCPG                                           S01408
+     C*                                                                   S01408
+      *
+      **  Define local data area.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C*********************MOVE 'GL4450  'DBPGM                           S01194
+     C                     MOVEL'GL4450  'DBPGM                           S01194
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *                                                                                     CGL127AY
+     C           *NAMVAR   DEFN CBTASKSP  CBTASK                                            CGL127AY
+     C                     IN   CBTASK                                                      CGL127AY
+     C                     MOVE CMTBLK    #OPTIM 100                                        CGL127AY
+      *
+      **  Access run date and report title.
+      *
+     C                     CALL 'AOBANKR0'
+     C*********************PARM *BLANKS   P@RTNC  7                       S01194
+     C                     PARM '*MSG   ' P@RTNC  7                       S01194
+     C                     PARM '*FIRST'  P@OPTN  7
+     C*********************PARM           P@KEY  10                       S01194
+     C*********************PARM           P@FMT1                          S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+      *
+      ****Write*report*heading.**                                                           CGL127AY
+      *
+     C**********           WRITEHEADING                                                     CGL127AY
+      *
+     C           P@RTNC    IFNE *BLANKS
+      *
+     C           *LOCK     IN   LDA
+     C*********************MOVE 'BANK '   DBFILE           ***************S01194
+     C                     MOVE 'SDBANKPD'DBFILE           ***************S01194
+     C                     Z-ADD01        DBASE            * DB error 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR ERROR
+      *
+     C                     END
+      *
+      **  Access a/c postings retention period.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C*********************PARM *BLANKS   P@RTNC                          S01194
+     C                     PARM '*MSG    'P@RTNC                          S01194
+     C                     PARM '*FIRST'  P@OPTN
+     C*********************PARM           P@FMT2                          S01194
+     C********** SDGELR    PARM SDGELR    DSFDY                           S01194              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           P@RTNC    IFNE *BLANKS
+      *
+     C           *LOCK     IN   LDA
+     C*********************MOVE 'GELR '   DBFILE           ***************S01194
+     C                     MOVE 'SDGELRPD'DBFILE           ***************S01194
+     C                     Z-ADD02        DBASE            * DB error 02 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR ERROR
+      *
+     C                     END
+     C*                                                                   S01520
+     C****Check*if*SAR*S01520*is*installed***                                        S01520 CGL127AY
+     C**********                                                                     S01520 CGL127AY
+     C**********           CALL 'AOSARDR0'                                           S01520 CGL127AY
+     C**********           PARM *BLANKS   P@RTNC                                     S01520 CGL127AY
+     C**********           PARM '*VERIFY' P@OPTN                                     S01520 CGL127AY
+     C**********           PARM 'S01520'  P@SARN  6                                  S01520 CGL127AY
+     C**********                                                                     S01520 CGL127AY
+     C********** P@RTNC    IFEQ *BLANKS                                              S01520 CGL127AY
+     C**********           MOVE 'Y'       S01520  1                                  S01520 CGL127AY
+     C**********           OPEN GLACPHL1                                             S01520 CGL127AB
+     C**********           OPEN GLACPHL5                                           CGL127AB CGL127AY
+     C**********           ELSE                                                      S01520 CGL127AY
+     C**********           MOVE 'N'       S01520                                     S01520 CGL127AY
+     C**********           OPEN GLACPHL                                              S01520 CGL127AY
+     C**********           ENDIF                                                     S01520 CGL127AY
+     C/COPY WNCPYSRC,GL4450C004
+      *
+      **  Calculate the default control date:-
+      **
+      **  'Run date' - (31 * 'a/c posting retention period').
+      *
+     C***********BKKCNB    MULT 31        WORK4   40                      S01238
+     C           BKAPRP    MULT 31        WORK4   40                      S01238
+     C***********BJAKTX    SUB  WORK4     DCDATE  50                      S01238
+     C           BJRDNB    SUB  WORK4     DCDATE  50                      S01238
+      *
+      *  Initialise fields                                                107793
+     C                     Z-ADD*ZERO     COUNT   40                      107793
+     C                     TIME           TIME1   60                      107793
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   Main process -  reads through the a/c postings history file *
+      *                   and deletes relevent records.               *
+      *                                                               *
+      *   Calls subroutine  : LVLBRK                                  *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C*                                                                   S01520
+     C****Perfrom*the*existing*processing*if*SAR*S01520****        S01520 107473
+     C****is*not*installed.******                                  S01520 107793
+     C****If*S01520*not*installed,*delete*relevant*posting*records*only*-            107793 CGL127AY
+     C****do*not*update*historic*balance.***                                         107793 CGL127AY
+     C**********                                                                     S01520 CGL127AY
+     C********** S01520    IFNE 'Y'                                                  S01520 CGL127AY
+     C**********                                                                     S01520 CGL127AY
+     C**********           READ GLACPHL                  01                                 CGL127AY
+      **********                                                                            CGL127AY
+      ****Execute*level*break*subroutine*for*the*first*posting*record.**                    CGL127AY
+      **********                                                                            CGL127AY
+     C********** *IN01     IFEQ '0'                                                         CGL127AY
+     C**********           EXSR LVLBRK                                                      CGL127AY
+     C**********           END                                                              CGL127AY
+      **********                                                                            CGL127AY
+     C********** *IN01     DOWEQ'0'                                                         CGL127AY
+      **********                                                                            CGL127AY
+      ****Check*for*level*break.**                                                          CGL127AY
+      **********                                                                            CGL127AY
+     C********** ACOD      IFNE SACOD                                                       CGL127AY
+     C**********           EXSR LVLBRK                                                      CGL127AY
+     C**********           END                                                              CGL127AY
+      **********                                                                   CGL127AB CGL127AY
+      ****Using*the*Account*Code*and*Back-valued*Date,***                          CGL127AB CGL127AY
+      ****SETGT*to*GLACPHL.***                                                     CGL127AB CGL127AY
+      **********                                                                   CGL127AB CGL127AY
+     C**********           MOVE CTLD      PSTD                                     CGL127AB CGL127AY
+     C********** GLCKEY    SETGTGLACPHL                                            CGL127AB CGL127AY
+     C********** ACOD      REDPEGLACPHL                  01                        CGL127AB CGL127AY
+      **********                                                                   CGL127AB CGL127AY
+      ****While*record*is*found*in*GLACPHL,*delete*record.**                       CGL127AB CGL127AY
+      **********                                                                   CGL127AB CGL127AY
+     C********** *IN01     DOWEQ'0'                                                CGL127AB CGL127AY
+      **********                                                                            CGL127AY
+      ****Only*delete*record*if*its*posting*date*is*less*than*the*control                   CGL127AB
+      ****date.*Take*into*account*the*case*of*ACOD*equal*to*'9999'.*                        CGL127AB
+      **********                                                                            CGL127AY
+     C********** PSTD      IFLT CTLD                                                        CGL127AB
+     C**********                                                                     S01408 CGL127AY
+     C/COPY WNCPYSRC,GL4450CDBU                                           S01408
+     C**********                                                                     S01408 CGL127AY
+     C**********           DELETGLACPHL                                                     CGL127AY
+     C**********           ADD  1         NDROP                                             CGL127AY
+     C/COPY WNCPYSRC,GL4450C001
+     C**********           ADD  1         COUNT                                      107793 CGL127AB
+      **********                                                                   CGL127AB CGL127AY
+     C********** ACOD      REDPEGLACPHL                  01                        CGL127AB CGL127AY
+      **********                                                                   CGL127AB CGL127AY
+     C**********           ENDDO                                                   CGL127AB CGL127AY
+     C*                                                                   107793
+     C****Check*time*elapsed*-*each*60*seconds*elapsed*gives*a*difference            107793 CGL127AB
+     C****of*100.                                                                    107793 CGL127AB
+     C**********           TIME           TIME2   60                                 107793 CGL127AB
+     C********** TIME2     SUB  TIME1     TMDIFF  60                                 107793 CGL127AB
+     C**********                                                                     107793 CGL127AY
+     C****If*there*are*1000*changes*to*commit                                        107793 CGL127AB
+     C****or*60*seconds*have*elapsed,                                                107793 CGL127AB
+     C****then*commit*changes.                                                       107793 CGL127AB
+      **********                                                                     107793 CGL127AY
+     C********** COUNT     IFGE 1000                                                 107793 CGL127AB
+     C********** TMDIFF    ORGE 100                                                  107793 CGL127AB
+     C/COPY WNCPYSRC,GL4450C007
+     C**********           COMIT                                                     107793 CGL127AB
+     C/COPY WNCPYSRC,GL4450C008
+     C**********           Z-ADD0         COUNT                                      107793 CGL127AB
+     C**********           TIME           TIME1                                      107793 CGL127AB
+      **********                                                                     107793 CGL127AY
+     C****If*system*not*in*COB*or*Input*Cycle,*terminate*program*******                107793 CCB020
+     C**********           IN   MPHAS                                                  107793 CCB020
+     C********** MPHASE    IFNE 'C'                                                    107793 CCB020
+     C********** MPHASE    ANDNE'A'                                                    107793 CCB020
+     C**********           GOTO END                                                    107793 CCB020
+     C**********           END                                                         107793 CCB020
+     C**********                                                                     107793 CGL127AY
+     C**********           END                                                       107793 CGL127AB
+      **********                                                                     107793 CGL127AY
+      ****Read*ahead.**                                                                     CGL127AY
+     C********** ACOD      SETGTGLACPHL                                            CGL127AB CGL127AY
+     C**********           READ GLACPHL                  01                                 CGL127AY
+      **********                                                                            CGL127AY
+     C**********           ELSE                                                             CGL127AB
+      **********                                                                            CGL127AY
+     C********** ACOD      IFNE 9999                                                        CGL127AB
+     C**********           ADD  1         ACOD                                              CGL127AB
+     C********** ACOD      SETLLGLACPHL                                                     CGL127AB
+      ****Read*ahead.**                                                                     CGL127AY
+     C**********           READ GLACPHL                  01                                 CGL127AB
+      **********                                                                            CGL127AY
+     C**********           ELSE                                                             CGL127AB
+      ****Exit*do*loop.**                                                                   CGL127AY
+     C**********           MOVE '1'       *IN01                                             CGL127AB
+     C**********           END                                                              CGL127AB
+      **********                                                                            CGL127AY
+     C**********           END                                                              CGL127AB
+      **********                                                                            CGL127AY
+     C**********           END                                                              CGL127AY
+     C*                                                                   S01520
+     C****Perfrom*a*new*account*processing*if*SAR*S01520***********S01520 107793
+     C****is*installed.*******                                     S01520 107793
+     C**  Delete relevant posting records and update historic balance on  107793
+     C**  account master record (if not deleted), if S01520 installed.    107793
+     C*                                                                   S01520
+     C**********           ELSE                                                      S01520 CGL127AY
+     C*                                                                   S01520
+     C**********           READ GLACPHL1                 01                          S01520 CGL127AB
+      *                                                                                     CGL127AY
+      ** If RESTART indicator = 'E', end program.                                           CGL127AY
+      *                                                                                     CGL127AY
+     C           RSTART    IFEQ 'E'                                                         CGL127AY
+      *                                                                                     CGL127AY
+     C                     SETON                     LR                                     CGL127AY
+      *                                                                                     CGL127AY
+     C                     ELSE                                                             CGL127AY
+      *                                                                                     CGL127AY
+      ** Open and Read driver file.                                                         CGL127AY
+      *                                                                                     CGL127AY
+     C                     OPEN GLACHDPD                                                    CGL127AY
+     C                     READ GLACHDPD                 81                                 CGL127AY
+      *                                                                                     CGL127AY
+      ** If driver file is not empty, process records starting                              CGL127AY
+      ** at S#ACOD.                                                                         CGL127AY
+      *                                                                                     CGL127AY
+     C           *IN81     IFEQ '0'                                                         CGL127AY
+      *                                                                                     CGL127AY
+     C           S#ACOD    SETLLGLACPHL5                                                    CGL127AY
+     C                     READ GLACPHL5                 01                                 CGL127AB
+     C*                                                                   S01520
+     C**  Execute level break subroutine for the first posting record.    S01520
+     C*                                                                   S01520
+     C           *IN01     IFEQ '0'                                       S01520
+     C                     EXSR LVLBRK                                    S01520
+     C                     MOVE ACCNKY    SACCKY                          S01520
+     C                     Z-ADD*ZERO     @HCFB                           S01520
+     C                     Z-ADD0         COUNT                                             CGL127AB
+     C                     END                                            S01520
+     C*                                                                   S01520
+      ** Process while ACOD LE end ACOD in driver file.                                     CGL127AY
+      *                                                                                     CGL127AY
+     C           *IN01     DOWEQ'0'                                       S01520
+     C           ACOD      ANDLEE#ACOD                                                      CGL127AY
+     C*                                                                   S01520
+     C****Check*time*elapsed*-*each*60*seconds*elapsed*gives*a*difference            107793 CGL127AB
+     C****of*100.                                                                    107793 CGL127AB
+     C**********           TIME           TIME2   60                                 107793 CGL127AB
+     C********** TIME2     SUB  TIME1     TMDIFF  60                                 107793 CGL127AB
+     C*                                                                   S01520
+     C****Check*for*level*break.*************                       S01520107793
+     C****If*account*changes,                                                        107793 CGL127AB
+     C****or*there*are*1000*changes*to*commit,                                       107793 CGL127AB
+     C****or*60*seconds*have*elapsed,                                                107793 CGL127AB
+     C****then*update*account*master*record*and*commit*changes.                      107793 CGL127AB
+      *                                                                   107793
+     C********** ACCNKY    IFNE SACCKY                                               S01520 CGL127AB
+     C********** COUNT     ORGE 1000                                                 107793 CGL127AB
+     C********** TMDIFF    ORGE 100                                                  107793 CGL127AB
+     C**********           EXSR LVLBKA                                               S01520 CGL127AB
+     C*                                                                   107793
+     C**  Re-access of file required after COMIT                          107793
+     C********** GLAKEY    SETLLGLACPHL1                                             107793 CGL127AB
+     C**********           READ GLACPHL1                 01                          107793 CGL127AB
+     C*                                                                   107793
+     C**********           END                                                       S01520 CGL127AB
+      *                                                                                     CGL127AB
+      **  Check for level break.                                                            CGL127AB
+      *                                                                                     CGL127AB
+     C           ACOD      IFNE SACOD                                                       CGL127AB
+     C                     EXSR LVLBRK                                                      CGL127AB
+     C                     END                                                              CGL127AB
+      *                                                                                     CGL127AB
+      **  Set Total Posting Amount to zero.                                                 CGL127AB
+      *                                                                                     CGL127AB
+     C                     Z-ADD0         @HCFB  150                                        CGL127AB
+      *                                                                                     CGL127AB
+      *   Using the Account Code and Back-valued Date,                                      CGL127AB
+      *   SETGT to GLACPHL5.                                                                CGL127AB
+      *                                                                                     CGL127AB
+     C                     MOVE CTLD      PSTD                                              CGL127AB
+     C           GLBKEY    SETGTGLACPHL5                                                    CGL127AB
+     C           GLDKEY    REDPEGLACPHL5                 01                                 CGL127AB
+     C*                                                                   S01520
+     C****If*posting*date*is*less*than*the*control*date,                             S01520 CGL127AB
+     C****accumulate*historic*balance*then*delete*the*record.                        S01520 CGL127AB
+     C*                                                                   S01520
+     C********** PSTD      IFLT CTLD                                                 S01520 CGL127AB
+     C           *IN01     DOWEQ'0'                                                         CGL127AB
+     C/COPY WNCPYSRC,GL4450C005
+     C*                                                                   S01520
+     C           DRCR      IFEQ *ZERO                                     S01520
+     C                     ADD  PSTA      @HCFB                           S01520
+     C                     ELSE                                           S01520
+     C                     SUB  PSTA      @HCFB                           S01520
+     C                     ENDIF                                          S01520
+     C*                                                                   S01520
+     C/COPY WNCPYSRC,GL4450C002
+     C**********           DELETGLACPHL1                                             S01520 CGL127AB
+     C                     DELETGLACPHL5                                                    CGL127AB
+     C**********           ADD  1         NDROP                                      S01520 CGL127AY
+     C/COPY WNCPYSRC,GL4450C003
+     C                     ADD  1         COUNT                           107793
+      *                                                                                     CGL127AB
+      **  If count of records > 10000, update ACCNTAB and commit changes.                   CGL127AB
+      *                                                                                     CGL127AB
+     C********** COUNT     IFGT 10000                                              CGL127AB CGL127AY
+     C           COUNT     IFGE #OPTIM                                                      CGL127AY
+     C                     Z-ADDCOUNT     NOPP                                              CGL127AY
+     C                     WRITEGLACHPR0                                                    CGL127AY
+     C                     EXSR LVLBKA                                                      CGL127AB
+     C                     Z-ADD0         COUNT                                             CGL127AB
+     C                     Z-ADD0         @HCFB                                             CGL127AB
+     C                     ENDIF                                                            CGL127AB
+      *                                                                   107793
+     C**********           READ GLACPHL1                 01                          S01520 CGL127AB
+     C           GLDKEY    REDPEGLACPHL5                 01                          S01520 CGL127AB
+     C*                                                                   S01520
+     C****Read*the*first*historic*posting*record*of*a*new*account                    S01520 CGL127AB
+     C*                                                                   S01520
+     C**********           ELSE                                                      S01520 CGL127AB
+     C**********           Z-ADD99999     PSTD                                       S01520 CGL127AB
+     C********** GLAKEY    SETGTGLACPHL1                                             S01520 CGL127AB
+     C**********           READ GLACPHL1                 01                          S01520 CGL127AB
+     C**********           ENDIF                                                     S01520 CGL127AB
+     C                     ENDDO                                                            CGL127AB
+      *                                                                                     CGL127AB
+      **  If Account's Total Posting amount is NE 0, update ACCNTAB.                        CGL127AB
+      *                                                                                     CGL127AB
+     C           @HCFB     IFNE 0                                                           CGL127AB
+     C                     EXSR LVLBKA                                                      CGL127AB
+     C                     ENDIF                                                            CGL127AB
+      *                                                                                     CGL127AB
+     C           GLDKEY    SETGTGLACPHL5                                                    CGL127AB
+     C                     READ GLACPHL5                 01                                 CGL127AB
+     C*                                                                   S01520
+     C                     ENDDO                                          S01520
+     C*                                                                   S01520
+     C                     ENDIF                                          S01520
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   Final process - writes detail and end format of audit       *
+      *                   report.                                     *
+      *                 - commits any remaining uncommitted changes   *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           END       TAG                                            107793
+      *                                                                   107793
+     C/COPY WNCPYSRC,GL4450C009
+     C                     COMIT                                          107793
+     C/COPY WNCPYSRC,GL4450C010
+      *                                                                   107793
+     C**********           WRITEDETAIL                                                      CGL127AY
+     C**********           WRITEENDRPT                                                      CGL127AY
+      *                                                                                     CGL127AY
+      ** If number of records dropped is NE zero, COMMIT.                                   CGL127AY
+      *                                                                                     CGL127AY
+     C           COUNT     IFNE 0                                                           CGL127AY
+     C                     Z-ADDCOUNT     NOPP                                              CGL127AY
+     C                     WRITEGLACHPR0                                                    CGL127AY
+     C                     Z-ADD0         COUNT                                             CGL127AY
+     C                     COMIT                                                            CGL127AY
+     C                     ENDIF                                                            CGL127AY
+      *
+     C                     CLOSEGLACHDPD                                                    CGL127AY
+     C                     UNLCKGLACPHL5                                                    CGL127AY
+     C                     ENDIF                                                            CGL127AY
+     C**********           MOVE '1'       *INLR                                             CGL127AY
+     C                     RETRN
+      /EJECT
+      *---------------------------------------------------------------*
+      *   Index to subroutines.                                       *
+      *                                                               *
+      *   LVLBRK - accesses retention date for account code.          *
+      *   LVLBKA - update historic balance field in ACCNTAB.          *
+      *   ERROR  - processing for data base errors.                   *
+      *   GLASR  - file exception/error subroutine.                   *
+      *   ACCSR  - file exception/error subroutine.                   *
+      *   *PSSR  - program exception/error subroutine.                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   LVLBRK subroutine - on the change of account code , this    *
+      *                       subroutine will access a/c posting      *
+      *                       retention period from the account codes *
+      *                       file and use it to calculate the        *
+      *                       control date. If a valid record does    *
+      *                       not exist it will use the default       *
+      *                       control date.                           *
+      *                                                               *
+      *   Called by main process.                                     *
+      *                                                               *
+      *   Calls program     : AOACODR0                                *
+      *                                                               *
+      *   Input  - account code: ACOD                                 *
+      *   Output - control date: CTLD                                 *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           LVLBRK    BEGSR
+      *
+     C**********           MOVE ACOD      SACOD   40                                          CGL029
+     C**********           MOVE ACOD      P@ACOD  4                                           CGL029
+     C                     MOVE ACOD      SACOD  100                                          CGL029
+     C                     MOVE ACOD      P@ACOD 10                                           CGL029
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   P@RTNC
+     C                     PARM '*KEY'    P@OPTN
+     C                     PARM           P@ACOD
+     C*********************PARM           P@FMT3                          S01194
+     C********** SDACOD    PARM SDACOD    DSFDY                                        S01194 CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+     C           P@RTNC    IFEQ *BLANKS
+     C***********A5M4NB    ANDNE0                                         S01238
+     C           A5ACPR    ANDNE0                                         S01238
+      *
+     C***********A5M4NB    MULT 31        WORK4                           S01238
+     C           A5ACPR    MULT 31        WORK4                           S01238
+     C***********BJAKTX    SUB  WORK4     CTLD    50                      S01238
+     C           BJRDNB    SUB  WORK4     CTLD    50                      S01238
+     C                     SUB  1         CTLD                                              CGL127AB
+      *
+     C                     ELSE
+      *
+     C                     MOVE DCDATE    CTLD
+     C                     SUB  1         CTLD                                              CGL127AB
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT                                                              S01520
+     C*---------------------------------------------------------------*   S01520
+     C*                                                               *   S01520
+     C*   LVLBKA subroutine - on the change of account (full account  *   S01520
+     C*                       key, not just account code) update      *   S01520
+     C*                       the HCFB field in ACCNTAB file.         *   S01520
+     C*                                                               *   S01520
+     C*   Called by main process.                                     *   S01520
+     C*                                                               *   S01520
+     C*   Calls subroutine  : LVLBRK                                  *   S01520
+     C*                                                               *   S01520
+     C*   Input  - accumulated historic balance: @HCFB                *   S01520
+     C*   Output - updated ACCNTAB record                             *   S01520
+     C*                                                               *   S01520
+     C*---------------------------------------------------------------*   S01520
+     C*                                                                   S01520
+     C           LVLBKA    BEGSR                                          S01520
+     C*                                                                   S01520
+     C**********           MOVE ACCNKY    WACCKY 18                                    S01520 CGL029
+     C**********           MOVE ACCNKY    WACCKY 24                                  CGL029 CGL127AB
+     C                     MOVE ACCNKY    SACCKY 24                                         CGL127AB
+     C*                                                                   S01520
+     C**  Chain to ACCNT file using the full account in GLACPHL           S01520
+     C*                                                                   S01520
+     C           ACCKEY    CHAINACCNT                80                   S01520
+     C*                                                                   S01520
+     C           *IN80     IFEQ '1'                                       S01520
+     C*                                                                   091378
+     C* IF RECORD NOT FOUND ON ACCNTAB: NO DB ERROR                       091378
+     C* (POSTINGS ARE DROPPED ANYWAY)                                     091378
+     C************LOCK     IN   LDA                                S01520 091378
+     C***********          Z-ADD04        DBASE     ***************S01520 091378
+     C***********          MOVE 'ACCNT   'DBFILE    * DB Error 004*S01520 091378
+     C***********          MOVE *BLANKS   DBKEY     ***************S01520 091378
+     C***********          MOVELACCNKY    DBKEY                    S01520 091378
+     C***********          OUT  LDA                                S01520 091378
+     C***********          EXSR ERROR                              S01520 091378
+     C**                                                           S01520 091378
+     C**  Update the HCFB field in ACCNTAB by adding the                  S01520
+     C**  accumulated historic balance (@HCFB)                            S01520
+     C*                                                                   S01520
+     C                     ELSE                                           S01520
+     C                     ADD  @HCFB     HCFB                            S01520
+     C                     UPDATACCNTABF                                  S01520
+     C                     ENDIF                                          S01520
+      *                                                                   107793
+     C**  Commit changes and reset counter                                107793
+     C/COPY WNCPYSRC,GL4450C011
+     C                     COMIT                                                              107793
+     C/COPY WNCPYSRC,GL4450C012
+     C**********           Z-ADD0         COUNT                                      107793 CGL127AB
+     C**********           TIME           TIME1                                      107793 CGL127AB
+     C*                                                                   S01520
+     C****Initialise*@HCFB*and*SACCKY                                                S01520 CGL127AB
+     C*                                                                   S01520
+     C**********           MOVE WACCKY    SACCKY 18                                    S01520 CGL029
+     C**********           MOVE WACCKY    ACCNKY 18                                    S01520 CGL029
+     C**********           MOVE WACCKY    SACCKY 24                                  CGL029 CGL127AB
+     C**********           MOVE WACCKY    ACCNKY 24                                  CGL029 CGL127AB
+     C**********           Z-ADD*ZERO     @HCFB  150                                 S01520 CGL127AB
+      *                                                                   107793
+     C****If*system*not*in*COB*or*Input*Cycle,*terminate*program*******                107793 CCB020
+     C********** *NAMVAR   DEFN           MPHAS                                        107793 CCB020
+     C**********           IN   MPHAS                                                  107793 CCB020
+      *                                                                   107793
+     C********** MPHASE    IFNE 'C'                                                    107793 CCB020
+     C********** MPHASE    ANDNE'A'                                                    107793 CCB020
+     C**********           GOTO END                                                    107793 CCB020
+     C**********           END                                                         107793 CCB020
+     C*                                                                   107793
+     C**  Check for level break.                                          S01520
+     C*                                                                   S01520
+     C********** ACOD      IFNE SACOD                                                S01520 CGL127AB
+     C**********           EXSR LVLBRK                                               S01520 CGL127AB
+     C**********           END                                                       S01520 CGL127AB
+     C*                                                                   S01520
+     C                     ENDSR                                          S01520
+     C*                                                                   S01520
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   ERROR subroutine - in the event of a data base error this   *
+      *                      routine will write the error format to   *
+      *                      the audit report.                        *
+      *                                                               *
+      *   Called by initial process and GLASR.                        *
+      *                                                               *
+      *   Input  - db information: DBFILE, DBPGM, DBASE.              *
+      *                                                               *
+      *   Output - formats to GL4450AU: DBERROR, ENDRPT.              *
+      *            db information: DBFILE, DBPGM, DBASE.              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           ERROR     BEGSR
+      *
+     C                     WRITEHEADING                                                     CGL127AY
+     C                     WRITEDBERROR
+     C                     WRITEENDRPT
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+     C                     DUMP                                           107793
+     C                     ROLBK                                                            CGL127AY
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   GLASR subroutine - in the event of a file exception/error , *
+      *                      for LF/GLACPHL , this subroutine will    *
+      *                      produce a dump.                          *
+      *   Called by RPG/400.                                          *
+      *                                                               *
+      *   Calls subroutine : ERROR                                    *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           GLASR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C*********************MOVE 'ACPH '   DBFILE           ***************S01194
+     C********** S01520    IFEQ 'Y'                                                  S01520 CGL127AY
+     C**********           MOVEL'GLACPHL1'DBFILE                                     S01520 CGL127AB
+     C                     MOVEL'GLACPHL5'DBFILE                                            CGL127AB
+     C**********           ELSE                                                      S01520 CGL127AY
+     C**********           MOVEL'GLACPHL' DBFILE           ***************           S01194 CGL127AY
+     C**********           ENDIF                           ***************           S01520 CGL127AY
+     C                     Z-ADD03        DBASE            * DB error 03 *
+     C                     OUT  LDA                        ***************
+      *
+     C           *IN10     IFEQ '0'
+     C                     MOVE '1'       *IN10
+     C                     DUMP
+     C                     END
+      *
+     C                     EXSR ERROR
+      *
+     C                     ENDSR
+     C*                                                                   S01520
+     C/EJECT                                                              S01520
+     C*---------------------------------------------------------------*   S01520
+     C*                                                               *   S01520
+     C****GLASR*subroutine*-*in*the*event*of*a*file*exception/erro S01520 107793
+     C*   ACCSR subroutine - in the event of a file exception/error , *   107793
+     C*                      for LF/ACCNT, this subroutine will       *   S01520
+     C*                      produce a dump.                          *   S01520
+     C*                                                               *   S01520
+     C*   Called by RPG/400.                                          *   S01520
+     C*                                                               *   S01520
+     C*   Calls subroutine : ERROR                                    *   S01520
+     C*                                                               *   S01520
+     C*---------------------------------------------------------------*   S01520
+     C*                                                                   S01520
+     C           ACCSR     BEGSR                                          S01520
+     C*                                                                   S01520
+     C           *LOCK     IN   LDA                                       S01520
+     C                     MOVEL'ACCNT'   DBFILE           ***************S01520
+     C                     Z-ADD04        DBASE            * DB error 04 *S01520
+     C                     OUT  LDA                        ***************S01520
+     C*                                                                   S01520
+     C                     MOVE '1'       *IN10                           S01520
+     C                     MOVE '1'       *IN80                           S01520
+     C                     DUMP                                           S01520
+     C*                                                                   S01520
+     C                     EXSR ERROR                                     S01520
+     C*                                                                   S01520
+     C                     ENDSR                                          S01520
+     C*                                                                   S01520
+      /EJECT
+     C/COPY WNCPYSRC,GL4450C006
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   *PSSR subroutine - in the event of a program exception/     *
+      *                      error , this subroutine will produce a   *
+      *                      dump and return to caller.               *
+      *   Called by RPG/400.                                          *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     C           *PSSR     BEGSR
+      *
+     C           *IN10     IFEQ '0'
+     C                     MOVE '1'       *IN10
+     C                     DUMP
+     C                     END
+      *
+     C/COPY WNCPYSRC,GL4450C013
+     C                     ROLBK                                          107793
+     C/COPY WNCPYSRC,GL4450C014
+      *                                                                   107793
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1243 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Posn Settles Extract for Settles')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1874 - POSITION SETTLEMENTS EXTRACT FOR SETTLEMENTS        *
+     F*                                                               *
+     F*  Function: Extract details required for S.W.I.F.T. Position   *
+     F*   (I/C)    Settlement Messages for Position Settlements that  *
+     F*   (COB)    that were Input, Amended or Cancelled Today or     *
+     F*            Automatically Authorised by the system.            *
+     F*                                                               *
+     F*  Called by: SEC3305 - Pay/Receive Telexes Input cycle         *
+     F*                       processing.                             *
+     F*             Frequency: On Request in Input Cycle              *
+     F*                                                               *
+     F*             SEC0603 - Pay/Receive Telexes                     *
+     F*             Frequency: Automatically in Close of Business     *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR583539           Date 29Jul10               *
+      *  Prev Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSW025             Date 26Mar02               *
+      *                 CSE031             Date 09Nov01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+     F*                 CSW020             Date 13Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CSE005             Date 04Feb97               *
+     F*                 078256             DATE 07MAY96               *
+     F*                 CSW003             DATE 08JAN96               *
+     F*                 S01447             DATE 04NOV93               *
+     F*                 066915             DATE 14FEB94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  AR583539 - MT566 always appeared in MMM as deleted every     *
+      *             time messages were requested                      *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  180707 - No Position Settlements generated. Recompile over   *
+     F*           changes in /COPY ZNCDZ3.                            *
+      *  CSW025 - Midas Message Manager                               *
+      *           - Pass original change type                         *
+     F*  CSE023 - Treaty Withholding Tax                              *
+     F*  CSW020 - Missing paramter on call to MG9500                  *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  078256 - Output nominal dec places                           *
+     F*  CSW003 - MT5xx Message Generation - Phase 2                  *
+     F*  S01447 - WITHHOLDING TAX (SE) ENHANCEMENT.                   *
+     F*           Recompiled due to changes in PF/POSETD.             *
+     F*  066915 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9 by GEMS 052254.                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature: New program           *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FPOSETDJ2IF  E           K        DISK         KINFSR *PSSR
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     FPOSETDY2IF  E           K        DISK         KINFSR *PSSR
+     FSECET   IF  E           K        DISK         KINFSR *PSSR
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+     FACNUM   IF  E           K        DISK         KINFSR *PSSR
+     FPOSETDY1UF  E           K        DISK         KINFSR *PSSR
+     F            POSETDD1                          KRENAMEPOSETDDX
+     FPOSET   UF  E           K        DISK         KINFSR *PSSR
+     FMGF554PDO   E                    DISK         KINFSR *PSSR
+     FMGISOPPDO   E                    DISK         KINFSR *PSSR                              CSW025
+     FSE1874P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FSE1874AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+     F/COPY WNCPYSRC,SE1874F002
+      /TITLE FUNCTION OF INCICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    15  - Print file, SE1874P1, has been opened at least once  *
+     F*    20  - Control of call to MG9500                            *
+     F*    50  - Control of chain to POSETDJ2                         *
+     F*    61  - Control of chain to POSET                            *
+     F*    62  - Control of chain to POSETDY1                         *
+     F*    66  - Control of chain to SECET                            *
+     F*    67  - Control of chain to SECTY                            *
+     F*    68  - Control of chain to INVTP                            *
+     F*    69  - Control of chain to POSETDY2                         *
+     F*    70  - Control of write to MGF554D0                         *
+     F*    71  - Control of update to POSETDDX                        *
+     F*    80  - Control of chain to ACNUM                            *
+     F*                                                               *
+     F*    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  PROCES - Perform Detail Processing                           *
+     F*  AMASF  - Access master files                                 *
+     F*  GCMSG  - Generate cancelation messages                       *
+     F*  MSGST  - Determine message(s) to be sent                     *
+     F*  UPOSET - Update Message Indicator on LF/POSET                *
+     F*  AUDIT  - Run Control Process                                 *
+     F*                                                               *
+     F*  *PSSR  - Program error handling routine                      *
+     F*                                                               *
+     F*  ZNCD   - Determines next coupon date                         *
+     F*                                                               *
+     F*****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E/COPY ZSRSRC,ZPOWER8Z1
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E/COPY ZSRSRC,ZNCDZ1
+     I/TITLE I-SPECIFICATIONS
+      *
+      ** RENAME DUPLICATE FIELDS
+     IACCNTABF
+     I              CNUM                            CNUMAC
+     ISECTYDF
+     I              CHTP                            SYCHTP
+     ISEDEVDF
+     I              CHTP                            SVCHTP
+     IINVTPDF
+     I              CHTP                            INCHTP
+     IPOSETDF                                                             CSE023
+     I              PSEQ                            POPSEQ                CSE023
+     IPOSETDD1                                                                              AR583539
+     I              TNLU                            PTNLU                                   AR583539
+      *
+     ISPOOL1      DS
+      ***  File Information Data Structure for SE1874P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890WWOFL1
+     I                                    B 367 3680WWPTL1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SE1874AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I/COPY WNCPYSRC,SE1874I003
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Second Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** General Ledger Details
+      *
+     ISDSECS    E DSSDSECSPD
+      ** Securities Trading Clients
+     I              QQACCD                          QQACCX                                    CGL029
+      *
+     ISDNOST    E DSSDNOSTPD
+      ** Nostro Details
+     I              QQACCD                          QQACCY                                    CGL029
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IPSDS       SDS
+      ** PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     I                                    B 367 3680LINE2
+      *
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+     IKEY3DS      DS
+      * DATA STRUCTURE KEY 3
+     I                                        1  17 WWKEY3
+     I                                        1  10 POPSSH
+     I                                       11  12 WWPEVT
+     I                                       13  170WWPDUD
+      *
+     IKEY4DS      DS
+      * DATA STRUCTURE KEY 4
+     I                                        1   6 WWKEY4
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+      *
+     IKEY7DS      DS
+      * DATA STRUCTURE KEY 7
+     I                                        1  17 WWKEY7
+     I                                        1   3 POPBCA
+     I                                        4  13 WWPSSH
+     I**********                             14  190POPCPY                                    CSD027
+     I                                       14  19 POPCPY                                    CSD027
+     I                                       20  240POPDUD
+     I                                       25  26 POPEVT
+     I/COPY WNCPYSRC,SE1874I002
+      *
+     I            DS
+      ** DATA STRUCTURE TO SPLIT PSEA
+     I**********                              1  12 WWPSEA                                    CGL029
+     I                                        1  18 WWPSEA                                    CGL029
+     I                                        1   6 WP0106
+     I**********                              7  10 WP0710                                    CGL029
+     I**********                             11  120WP1112                                    CGL029
+     I**********                              7  12 WP0712                                    CGL029
+     I                                        7  16 WP0710                                    CGL029
+     I                                       17  180WP1112                                    CGL029
+     I                                        7  18 WP0712                                    CGL029
+     I                                        1  100WP0110
+      *
+     I            DS
+      ** DATA STRUCTURE TO SPLIT P2AFPL
+     I                                        1  35 P2AFPL
+     I                                        1   2 WA0102
+      *
+     IWDATP       DS                        200
+      ** DATA STRUCTURE FOR PRINTING OF MT592
+     I                                        1  16 DTRNO
+     I                                       17  32 DRELR
+     I                                       33  40 DRELD
+     I                                       41  46 DNWRK
+      *
+     ICANDS       DS                             50
+      * DATA STRUCTURE FOR CANCELLATION
+     I                                        1   3 CCPBCA
+     I                                        4   50PSMT
+     I                                        6  11 DEST
+     I                                       12  17 DSBICN
+     I                                       18  29 DSBTID
+     I                                       30  31 CCTYPE
+     I                                    P  32  340CCPDUD
+     I                                       35  40 CCPCPY
+     I                                       41  43 PSCY
+      *
+     I            DS
+      * DATA STRUCTURE FOR EXTENDED SETTLEMENT FIELDS
+     I                                        1  16 WXSFLD
+     I                                        1   1 WXS53
+     I                                        2   2 WXS57
+     I                                        3   3 WXS58
+     I                                        4   4 WXS71
+     I                                        5   5 WXS72
+     I                                        6   6 WXS77F
+     I                                        7   7 WXS77R
+     I                                        8   8 WXS79
+     I                                        9   9 WXS82I
+     I                                       10  10 WXS82C
+     I                                       11  11 WXS83
+     I                                       12  12 WXS84
+     I                                       13  13 WXS85
+     I                                       14  14 WXS87R
+     I                                       15  15 WXS87D
+     I                                       16  16 WXS88
+     ISDDTA       DS                                                                          CSW025
+     I                                        1 256 SDDATA                                    CSW025
+     I                                        6   7 SPREFX                                    CSW025
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    :                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ***  Receive entry parameter : blank sequence number.
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ
+      *
+      ***  Key List for Position Settlements File.
+      *
+     C           KPOSET    KLIST
+     C                     KFLD           PBCA
+     C                     KFLD           PSSH
+     C                     KFLD           PCPY
+     C                     KFLD           PDUD
+     C                     KFLD           PEVT
+     C                     KFLD           PTFR                                              AR583539
+     C                     KFLD           PTNLU                                             AR583539
+      *
+      ** KLIST FOR POSETDY2
+     C           KL2       KLIST
+     C                     KFLD           WWPBCH
+     C                     KFLD           POPSSH
+     C                     KFLD           WWPCPY
+     C                     KFLD           POPDUD
+     C                     KFLD           POPEVT
+      *
+      ** KLIST FOR SECET
+     C           KL3       KLIST
+     C                     KFLD           POPSSH
+     C                     KFLD           WWPEVT
+     C                     KFLD           WWPDUD
+      *
+      ** KLIST FOR INVTP
+     C           KL4       KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      ** KLIST FOR POSETDY1
+     C           KL7       KLIST
+     C                     KFLD           POPBCA
+     C                     KFLD           WWPSSH
+     C                     KFLD           POPCPY
+     C                     KFLD           POPDUD
+     C                     KFLD           POPEVT
+     C/COPY WNCPYSRC,SE1874C005
+      *
+      ** Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** ACCESS PF/SDGELRPD
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'002'     DBASE            **************
+     C                     MOVEL'SDGELRPD'DBFILE           * DB ERROR 2 *
+     C                     MOVE *BLANKS   DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,SE1874C006
+      *
+      ** DEFINE WORKFIELDS
+     C           *LIKE     DEFN A8BICN    WKBICN
+     C           *LIKE     DEFN MGDEST    WKDEST
+     C                     Z-ADD*ZERO     RRLIVE
+      *                                                                                       CSW025
+      ** Get system prefix from SDSTAT                                                        CSW025
+      *                                                                                       CSW025
+     C           *NAMVAR   DEFN SDSTAT    SDDTA                                               CSW025
+     C                     IN   SDDTA                                                         CSW025
+      *                                                                                       CSW025
+      ** Check if ISO15022 is installed                                                       CSW025
+      *                                                                                       CSW025
+     C                     CALL 'AOSARDR0'                                                    CSW025
+     C                     PARM *BLANKS   PRTCO   7                                           CSW025
+     C                     PARM '*VERIFY' POPTN   7                                           CSW025
+     C                     PARM 'CSE029'  PSARD   6                                           CSW025
+      *                                                                                       CSW025
+     C           PRTCO     IFEQ *BLANKS                                                       CSW025
+     C                     MOVE 'Y'       CSE029  1                                           CSW025
+     C                     ELSE                                                               CSW025
+     C                     MOVE 'N'       CSE029                                              CSW025
+     C                     ENDIF                                                              CSW025
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: AMASF, GCMSG, MSGST, UPOSET                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ***  Read the Position Settlements/Extension Join File. Note that
+      ***  the Logical is choosing the Position Settlements which are
+      ***  Authorised, not Actioned yet, (or Changed/Cancelled after
+      ***  Authorisation), are for Portfolio Customers, for Coupons or
+      ***  Dividends and where a S.W.I.F.T. Settlement Message has been
+      ***  requested.
+      *
+     C                     READ POSETDJ2                 50
+      *
+      ***  Process all Position Settlements requiring S.W.I.F.T.
+      ***  Settlement Messages.
+      *
+     C           *IN50     DOWEQ'0'
+      *
+      ***  Count the record read.
+      *
+     C                     ADD  1         RRLIVE
+      *
+      ** ACCESS MASTER FILES
+     C                     EXSR AMASF
+      *
+      * SET UP GENERATION DRIVER FILES
+     C           CSE029    IFEQ 'Y'                                                           CSW025
+     C                     CLEARMGISOPD0                                                      CSW025
+     C                     ELSE                                                               CSW025
+     C                     CLEARMGF554D0
+     C                     ENDIF                                                              CSW025
+      *
+      ** DETERMINE DESTINATION CUSTOMER ADDRESS
+      ** MESSAGE BRANCH ZERO - SET DEST CUST EQUAL TO COUNTERPARY CUST
+     C                     MOVE WKDEST    MGDEST
+      *
+      ***  If Receive/Deliver Generated indicates Message already
+      ***  generated, then a Cancellation Message is required.
+      *
+     C           PORCDG    IFEQ 'Y'
+     C           CSE029    ANDNE'Y'                                                           CSW025
+     C                     EXSR GCMSG
+     C                     END
+      *
+      ***  If the Last Change was not a Deletion, then continue to        DC0045
+      ***  process further messages.                                      DC0045
+      *                                                                   DC0045
+     C           CHTP      IFNE 'D'
+     C           CSE029    OREQ 'Y'                                                           CSW025
+     C                     EXSR MSGST
+     C                     END
+      *
+      ***  Update the Message Indicator on the Position Settlements
+      ***  File to 'N'.
+      *
+     C                     EXSR UPOSET
+      *
+      ***  Read the next record from the Position Settlements/Extension
+      ***  Join File.
+      *
+     C                     READ POSETDJ2                 50
+      *
+      ***  End of Do While Not End of File.
+     C                     ENDDO
+      *
+      ** If print file open then right 'End of Report' and close file
+     C           *IN15     IFEQ '1'
+     C                     WRITETRAILP1
+     C                     CLOSESE1874P1
+     C                     END
+      *
+      ** OUTPUT RUN CONTROL REPORT
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/AMASF
+      *****************************************************************
+      *                                                               *
+      *    AMASF     - ACCESS MASTER FILES                            *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     -                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AMASF     BEGSR
+     C/COPY WNCPYSRC,SE1874C009
+      *
+      ** ACCESS PF/SDBRCHPD FOR BRANCH CODE
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM POPBCA    WWBRCH  3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'003'     DBASE            **************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 3 *
+     C                     MOVELWWBRCH    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** SAVE BRANCH INTERNAL CUSTOMER
+     C                     MOVE A8BICN    WKBICN
+      *
+      ** SAVE WORKFIELD WKDEST
+     C**********           Z-ADDPOPCPY    WKDEST                                              CSD027
+     C                     MOVE POPCPY    WKDEST                                              CSD027
+      *
+      ***  Access Securities Customers File to check that Counterparty
+      ***  is a Portfolio Customer.
+      *
+     C                     MOVE WKDEST    WWDST6  6
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM WWDST6    WWCUST  6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           BFCLAS    ORNE 'S'
+     C           BFCLAS    ANDNE'D'
+     C                     MOVEL'004'     DBASE            **************
+     C                     MOVEL'SDSECSPD'DBFILE           * DB ERROR 4 *
+     C                     MOVELWWDST6    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** ACCESS JLF/SECTY    USING KEY SECURITY SHORTNAME
+     C           POPSSH    CHAINSECTY                67
+     C           *IN67     IFEQ '1'
+     C                     MOVEL'005'     DBASE            **************
+     C                     MOVEL'SECTY   'DBFILE           * DB ERROR 5 *
+     C                     MOVELPOPSSH    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** ACCESS PF/POSETDY2 USING KEY OF BRANCH CODE, SECURITY SHORT-
+      **  NAME, COUNTERPARTY, DUE DATE, EVENT TYPE, PORTFOLIO REF.,
+      **  AND TRANS. NO. OF LAST UPDATE. SET FLAG TO INDICATE IF
+      **  RECORD EXISTS FOR THIS POSITION
+     C                     MOVE POPBCA    WWPBCH  3
+     C**********           MOVE POPCPY    WWPCPY  60                                          CSD027
+     C                     MOVE POPCPY    WWPCPY  6                                           CSD027
+     C           KL2       CHAINPOSETDY2             69
+     C           *IN69     IFEQ '0'
+     C                     MOVE 'Y'       WWEXSS  1
+     C                     ELSE
+     C                     MOVE 'N'       WWEXSS
+     C                     END
+      *
+      ** RESET EXTENDED FIELDS DATA STRUCTURE
+     C                     MOVE *BLANKS   WXSFLD
+     C/COPY WNCPYSRC,SE1874C007
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/GCMSG
+      *****************************************************************
+      *                                                               *
+      *    GCMSG     - GENERATE CANCELLATION MESSAGES                 *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - MG9500                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GCMSG     BEGSR
+      *
+     C                     MOVELPOPCPY    TRNUM  10
+     C                     MOVELPOSEQN    TSEQ    7
+     C                     MOVEL*BLANKS   DTRNO
+      *
+     C                     MOVELPOPCPY    CCPCPY
+     C                     MOVELPOPCPY    DEST
+     C                     MOVELPOPBCA    CCPBCA
+     C                     MOVEL'PS'      CCTYPE
+     C                     Z-ADDPOPDUD    CCPDUD
+     C                     MOVELA8BICN    DSBICN  6
+     C                     MOVELA8BTID    DSBTID 12
+      *
+     C                     CALL 'MG9500'               20
+     C                     PARM           TRNUM
+     C                     PARM 'PR'      CALLP   2
+     C                     PARM 'SE'      MODID   2
+     C                     PARM 'PS'      TTYPE   2
+     C                     PARM *BLANKS   WRTNC   1
+     C                     PARM           TSEQ
+     C                     PARM           WDATP  46        DATA TO PRINT
+     C                     PARM           CANDS  50
+     C                     PARM *BLANKS   CEDPRO  1                       CSW020
+     C                     PARM *BLANKS   CSW003  1                       CSW003
+      *
+      ** IF PROGRAM NOT FOUND
+     C           *IN20     IFEQ '1'
+     C                     MOVE '006'     DBASE            ***************
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 006 *
+     C                     MOVEL'MG9500'  DBPGM            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** IF ERROR DURING PROGRAM
+     C           WRTNC     IFEQ 'E'
+     C                     MOVE '007'     DBASE            ***************
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 007 *
+     C                     MOVELTRNUM     DBKEY            ***************
+     C                     MOVEL'MG9500'  DBPGM
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** PRINT MT592 GENERATED
+     C                     EXSR WPR01
+      *
+      ** ACCESS PF/POSETDY2 USING KEY OF BRANCH CODE, SECURITY SHORT-
+      **  NAME, COUNTERPARTY, DUE DATE, EVENT TYPE, PORTFOLIO REF.,
+      **  AND TRANS. NO. OF LAST UPDATE.
+     C                     MOVE POPSSH    WWPSSH
+     C           KL7       CHAINPOSETDY1             62
+     C           *IN62     IFEQ '1'
+     C                     MOVE '008'     DBASE            ***************
+     C                     MOVEL'POSETDY1'DBFILE           * DB ERROR 008*
+     C                     MOVELWWKEY7    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** UPDATE PORCDG TO 'N' AND UPDATE FILE
+     C                     MOVE 'N'       PORCDG
+     C                     UPDATPOSETDDX               71
+      *
+      ** IF ERROR DURING UPDATE
+     C           *IN71     IFEQ '1'
+     C                     MOVE '009'     DBASE            ***************
+     C                     MOVEL'POSETDY1'DBFILE           * DB ERROR 009*
+     C                     MOVELWWKEY7    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/MSGST
+      *****************************************************************
+      *                                                               *
+      *    MSGST     - FORMAT FIELDS FOR MT554                        *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - ZNCD                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MSGST     BEGSR
+      *                                                                                       CSW025
+      ** Set up system prefix                                                                 CSW025
+      *                                                                                       CSW025
+     C                     MOVELSPREFX    MGPFIX                                              CSW025
+      *                                                                                       CSW025
+      ** Set up sender                                                                        CSW025
+      *                                                                                       CSW025
+     C                     MOVE WKBICN    MGSNNR                                              CSW025
+      *
+      ** MODULE ID
+     C                     MOVE 'SE'      MGMODI
+      *
+      ***  Next Coupon Date. If not a Coupon Message, set to zero.
+      *
+     C           POPEVT    IFEQ 'CP'
+     C           POPDUD    ADD  1         ECD     50
+     C                     EXSR ZNCD
+     C                     Z-ADDNCD       MGNCDT
+     C                     ELSE
+     C                     Z-ADD0         MGNCDT
+     C                     ENDIF
+      *
+      ** FURTHER IDENTIFICATION MT554
+     C           POFID3    IFEQ 'C     '
+     C                     MOVE 'CREDIT'  MGFID3
+     C                     ELSE
+      *
+     C           POFID3    IFEQ 'D     '
+     C                     MOVE 'DEBIT '  MGFID3
+     C                     ELSE
+      *
+     C           POFID3    IFEQ ' DEBIT'
+     C                     MOVE 'DEBIT '  MGFID3
+     C                     ELSE
+      *
+     C                     MOVE POFID3    MGFID3
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** COUPON/DIVIDEND VALUE DATE
+     C           POPEVT    IFEQ 'CP'
+     C                     Z-ADDPOPDUD    MGCDDT
+     C/COPY WNCPYSRC,SE1874C011
+     C                     ELSE
+      *
+      **  ACCESS LF/SECET USING KEY POPSSH AND POPEVT
+     C                     MOVE POPEVT    WWPEVT
+     C                     MOVE POPDUD    WWPDUD
+     C           KL3       CHAINSECET                66
+     C           *IN66     IFEQ '0'
+     C                     Z-ADDSDPD      MGCDDT
+     C/COPY WNCPYSRC,SE1874C010
+     C                     ELSE
+     C                     Z-ADDPOPDUD    MGCDDT
+     C/COPY WNCPYSRC,SE1874C012
+     C                     END
+     C                     END
+      *
+      ** QUANTITY OF SECURITIES
+     C                     Z-ADDPNMP      MGQANT
+      *                                                                   078256
+      ** Nominal decimal places                                           078256
+     C                     Z-ADDNMDP      MGNMDP                          078256
+      *
+      ** SWIFT SECURITY TYPE
+     C                     MOVE SWTP      MGSWTP
+      *
+      ** ISIN OF SECURITY FOR SWIFT
+     C                     MOVE ISIN      MGISIN
+      *
+      ** EXCHANGE RATE (NOM/SETT)
+      *
+      **    SET PSXR TO 1 IF WAS ZERO TO PREVENT DIVIDE BY ZERO
+      *
+     C           PSXR      IFEQ *ZERO
+     C                     Z-ADD1         PSXR
+     C                     END
+      *
+     C           PMDI      IFEQ 'M'
+     C                     Z-ADDPSXR      MGPSXR
+     C                     ELSE
+     C           1         DIV  PSXR      MGPSXR
+     C                     END
+      *
+      ** ACCOUNT FOR PAYMENT & ACCOUNT FOR PAYMENT A/C LINE
+     C           WWEXSS    IFEQ 'Y'
+     C           P2AFPN    ANDNE*BLANKS
+     C           WWEXSS    OREQ 'Y'
+     C           P2AFPL    ANDNE*BLANKS
+     C                     MOVE 'Y'       WXS53
+     C                     MOVELP2AFPN    MGAFPN
+     C                     MOVELP2AFPL    MGAFPL
+     C                     ELSE
+      *
+     C                     MOVELPOPCPY    MGAFPN
+      *
+      ** IF PSEA IS NOT BLANK
+     C           PSEA      IFNE *BLANKS
+     C                     MOVE PSEA      WWPSEA
+     C                     END
+      *
+      ** IF PSMT IS '01', '02', '07', '08' OR '12'
+     C           PSMT      IFEQ 01
+     C           PSMT      OREQ 02
+     C           PSMT      OREQ 07
+     C           PSMT      OREQ 08
+     C           PSMT      OREQ 12
+      *
+     C                     MOVELPSEA      WA0102
+      *
+      ** ACCESS SDNOSTL0
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM *BLANKS   PWCUST  6          Customer No
+     C                     PARM PSCU      PWCYCD  3          Currency
+     C**********           PARM *BLANKS   PWACCD  4          A/c Code                         CGL029
+     C                     PARM *BLANKS   PWACCD 10                                           CGL029
+     C                     PARM *BLANKS   PWACSN  2          A/c Seq
+     C                     PARM WA0102    PWNONB  2          Nostro No
+     C                     PARM *BLANKS   PWBRCD  3          Branch Code
+     C                     PARM *BLANKS   PWCSSN 10          Cust ShortN
+     C                     PARM *BLANKS   PWPNOI  1          Prime Nost In
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVEL'/'       MGAFPL
+     C                     MOVELA7ACCD    WW34
+     C                     MOVE WW34      MGAFPL
+     C                     MOVELA7CUST    MGAFPN
+     C                     ELSE
+     C                     MOVELPSEA      MGAFPL
+     C                     END
+      *
+     C                     END
+      *
+      ** IF PSMT IS '00', '03' OR '06'
+     C           PSMT      IFEQ 00
+     C           PSMT      OREQ 03
+     C           PSMT      OREQ 06
+      *
+      ** SAVE BRANCH INTERNAL CUSTOMER NUMBER
+     C                     MOVELWKBICN    MGAFPN
+     C                     END
+      *
+      ** IF PSMT IS '05' OR '15'
+     C           PSMT      IFEQ 05
+     C           PSMT      OREQ 15
+      *
+     C                     MOVELWP0106    MGAFPN
+      *
+      ** SET UP WORK FIELDS
+     C                     MOVELWP0712    WW34   34
+     C                     MOVEL'/'       MGAFPL
+     C                     MOVE WW34      MGAFPL
+     C                     END
+      *
+      ** IF PSMT IS '14'
+     C           PSMT      IFEQ 14
+      *
+      ** ACCESS LF/ACNUM USING KEY OF LEFT 10 CHARS OF WWOURA
+     C           WP0110    CHAINACNUM                80
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'010'     DBASE            **************
+     C                     MOVEL'ACNUM'   DBFILE           * DBERR  010 *
+     C                     MOVELWP0110    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELCNUMAC    MGAFPN
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** CHARGES
+     C                     Z-ADDPCHA      MGCHGS
+     C/COPY WNCPYSRC,SE1874C008
+      *
+      ** COMMISSION
+     C                     Z-ADDPCAM      MGCOMM
+      *
+      ** SAFEKEEPING ACCOUNT AND SAFEKEEPING ACCOUNT A/C LINE
+     C           WWEXSS    IFEQ 'Y'
+     C           P2SKAN    ANDNE*BLANKS
+     C           WWEXSS    OREQ 'Y'
+     C           P2SKAL    ANDNE*BLANKS
+     C                     MOVE 'Y'       WXS83
+     C                     MOVELP2SKAN    MGSKAN
+     C                     MOVELP2SKAL    MGSKAL
+     C                     ELSE
+      *
+     C                     MOVELPOPCPY    MGSKAN
+     C                     END
+      *
+      ** RECEIVER/DELIVERER OF SECURITIES
+     C           WWEXSS    IFEQ 'Y'
+     C           P2DSSN    ANDNE*BLANKS
+     C           WWEXSS    OREQ 'Y'
+     C           P2DSS1    ANDNE*BLANKS
+     C                     MOVE 'Y'       WXS87R
+     C                     MOVE P2DSSN    MGRSSN
+     C                     MOVE P2DSS1    MGRSS1
+     C                     END
+      *
+      ** SENDER TO RECEIVER INFO 1 & 2
+     C           WWEXSS    IFEQ 'Y'
+     C           P2SRL1    ANDNE*BLANKS
+     C                     MOVE 'Y'       WXS72
+     C                     MOVE P2SRL1    MGSRL1
+     C                     MOVE P2SRL2    MGSRL2
+     C                     MOVE P2SRL3    MGSRL3
+     C                     ELSE
+      *
+     C                     MOVE PSPI      MGSRL1
+     C                     END
+      *
+      ** SECURITY FULL NAME-1 & 2
+     C           SFN1      IFNE *BLANKS
+     C                     MOVE SFN1      MGSFN1
+     C                     MOVE SFN2      MGSFN2
+     C                     ELSE
+      *
+     C                     MOVELSESN      MGSFN1
+     C                     MOVELSRPN      MGSFN2
+     C                     END
+      *
+      * OBTAIN DECIMAL PLACES OF NOMINAL CURRENCY
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM PNCY      WCUCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'011'     DBASE            **************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 11*
+     C                     MOVELPNCY      DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** COUPON/INTEREST RATE
+      ** DIVIDEND/RATE INDICATOR
+      ** GROSS AMOUNT
+      ** DIVIDEND PER SHARE
+     C           POPEVT    IFEQ 'CP'
+      *
+      ** ACCESS LF/INVTP USING KEY NOMINAL CURR. & SECURITY INV. TYPE
+     C           KL4       CHAININVTP                68
+     C           *IN68     IFEQ '1'
+     C                     MOVEL'012'     DBASE            **************
+     C                     MOVEL'INVTP'   DBFILE           * DB ERROR 12*
+     C                     MOVELWWKEY4    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           PROT      IFEQ '3'
+     C           PROT      OREQ '5'
+     C           PROT      OREQ '8'
+      *
+      **  ACCESS LF/SECET USING KEY POPSSH, 'IR' AND POPDUD
+     C                     MOVE 'IR'      WWPEVT
+     C                     Z-ADDPOPDUD    WWPDUD
+     C           KL3       CHAINSECET                66
+     C           *IN66     IFEQ '0'
+     C                     Z-ADDSDNC      MGIRAT
+     C                     ELSE
+     C                     Z-ADDCPNR      MGIRAT
+     C                     END
+      *
+     C                     ELSE
+     C                     Z-ADDCPNR      MGIRAT
+     C                     END
+      *
+      *
+      *     Convert Nominal Dec places to Currency Dec. Places
+     C           5         SUB  NMDP      DC      10
+     C                     ADD  A6NBDP    DC
+      *
+     C           PNMP      MULT POWER8,DC WPNMP  150H
+     C                     MOVE 'I'       MGDVIR
+     C           WPNMP     MULT MGIRAT    MGGAMT    H
+     C           MGGAMT    DIV  100       MGGAMT    H
+     C                     ELSE
+      *
+      **  ACCESS LF/SECET USING KEY POPSSH, 'DV' AND POPDUD
+     C                     MOVE 'DV'      WWPEVT
+     C                     Z-ADDPOPDUD    WWPDUD
+     C           KL3       CHAINSECET                66
+     C           *IN66     IFEQ '0'
+     C           5         SUB  NMDP      DC      10
+     C                     ADD  A6NBDP    DC
+     C                     Z-ADDSDVA      MGDIVD
+     C                     MOVE 'D'       MGDVIR
+     C           PNMP      MULT MGDIVD    WWWAMT 158
+     C           WWWAMT    MULT POWER8,DC MGGAMT
+     C                     ELSE
+     C                     Z-ADD0         MGGAMT
+     C                     END
+      *
+     C                     END
+      *
+      ** NOMINAL CURRENCY
+     C                     MOVE PNCY      MGNMCY
+      *
+      ** SETTLEMENT AMOUNT
+     C                     Z-ADDPSAT      MGSTAM
+      *
+      ** TRANSACTION NUMBER
+     C                     MOVELPOPCPY    MGTNUM
+      *
+      ** CURRENCY OF NET PROCEEDS
+     C                     MOVE PSCU      MGCYNP
+      *
+      ** BRANCH CODE OF SENDER
+     C                     MOVE POPBCA    MGSNBR
+      *
+      ** SETTLEMENT BRANCH
+     C                     MOVE POPBCA    MGBRCA
+      *
+      ** SETTLEMENT TYPE
+     C                     MOVE PSMT      MGSETP
+      *
+      ** SECURITY SHORTNAME
+     C                     MOVELPOPSSH    MGPSSH
+      *
+      ** DUE DATE
+     C                     MOVELPOPDUD    MGPDUD
+      *
+      ** EVENT TYPE
+     C                     MOVELPOPEVT    MGPEVT
+      *
+      ** EXTENDED SETTLEMENT FIELDS
+     C                     MOVE WXSFLD    MGXSFL
+      *
+      ** WRITE A RECORD TO PF/MGF554PD
+     C           CSE029    IFEQ 'Y'                                                           CSW025
+     C                     WRITEMGISOPD0               70                                     CSW025
+     C                     ELSE                                                               CSW025
+     C                     WRITEMGF554D0               70
+     C                     ENDIF                                                              CSW025
+      *
+      ** CHECK RECORD SUCCESSFULLY WRITTEN TO FILE
+     C           *IN70     IFEQ '1'
+     C                     MOVEL'013'     DBASE            **************
+     C                     MOVEL'MGF554PD'DBFILE           * DB ERROR 13*
+     C                     MOVE *BLANKS   DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WPR01
+      *****************************************************************
+      *                                                               *
+      *   WPR01     - PRINT MT592 GENERATED                           *
+      *                                                               *
+      *   CALLED BY - Main Processing                                 *
+      *   CALLS     - NONE                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WPR01     BEGSR
+      *
+     C           DTRNO     IFNE *BLANKS
+     C                     MOVE 'Y'       WWPR01  1
+      *
+      ** FORMAT TRADE REFERENCE
+     C                     MOVELDTRNO     R1TRNO
+     C                     MOVELDRELR     R1RELR
+     C                     MOVELDRELD     R1ORIG
+     C                     MOVELDNWRK     R1NWRK
+      *
+      ***  If print file not yet open then open it and write headings
+     C           *IN15     IFEQ '0'
+      *
+     C                     OPEN SE1874P1
+     C                     MOVE '1'       *IN15
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM *BLANKS   WPARM   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** PRINT PAGE HEADINGS
+     C                     WRITEHEADP1
+      *
+     C                     END
+      *
+      ** WRITE A DETAIL LINE TO THE REPORT CHECKING FOR OVERFLOW
+     C           WWOFL1    SUB  WWPTL1    WWLINE  20
+     C           WWLINE    IFLT 3
+     C                     WRITEHEADP1
+     C                     END
+      *
+     C                     WRITEDETAIL
+     C                     CLEARDETAIL
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/UPOSET
+      *****************************************************************
+      *                                                               *
+      *  UPOSET - Subroutine to Update the Message Indicator to 'N'   *
+      *           after Message Generation.                           *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPOSET    BEGSR                           *** UPOSET ***
+      *
+     C           KPOSET    CHAINPOSETDF              61
+     C           *IN61     IFEQ *OFF
+     C                     MOVE 'N'       PSMI
+     C                     EXCPTUPDPOS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *    AUDIT     - RUN CONTROL PROCESS                            *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - NONE                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   WPARM
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ***  Write Heading and control information
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no valid records read, Output "No Details" message.
+     C           WWPR01    IFNE 'Y'
+     C                     WRITENONE
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'SE1874'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     SETON                     U7U8LR
+      *
+     C                     EXSR AUDIT
+      *
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/ZDATE1
+     C/COPY ZSRSRC,ZDATE1Z2
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZNCD
+     C/COPY ZSRSRC,ZNCDZ3
+      /TITLE OUTPUT SPECIFICATIONS
+     OPOSETDF E                UPDPOS
+     O                         PSMI
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** Array of powers of 10 for currency conversion
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

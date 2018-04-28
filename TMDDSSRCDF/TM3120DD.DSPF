@@ -1,0 +1,248 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas TM DDS for FX Daily Summary')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - TREASURY MANAGEMENT
+     A*                                                               *
+     A*  DSPF/TM3120DD - FOREIGN EXCHANGE BOOK - DAILY SUMMARY        *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*  LAST AMEND NO. E39162             DATE   18JUN92             *
+     A*  PREV AMEND NO. S01280             DATE   30NOV90             *
+     A*                 S01117             DATE   23OCT90             *
+     A*                 S01253             DATE   17APR90             *
+     A*                 S01199             DATE   27FEB90             *
+     A*                 S01187             DATE   16/01/89            *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+     A*  E39162  -  CHANGE 'PRINT' TO 'PRINT(MPRINT)'.                *
+     A*  S01280  -  INHIBIT F12 IF NO DETAILS TO DISPLAY FOR          *
+     A*             CCY/DATE COMBINATION SELECTED,(GENERAL ERROR FIX) *
+     A*  S01117  -  CHANGE NAME OF FILE FROM DL3120DD                 *
+     A*  S01253  -  RECOMPILED FOR MULTILANGUAGE SCREENS              *
+     A*  S01199  -  HELP SYSTEM.                                  *
+     A*  S01187 -  RELEASE 1 TEST FIX                                 *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+     A* INDICATORS TO BE RECEIVED FROM THE SCREEN - COMMANDS          *
+     A*                                                               *
+     A*     01   -  EXIT PROGRAM                                      *
+     A******02   -  RETURN TO SUMMARY                                /*S01187*/
+     A*     12   -  RETURN TO SUMMARY                                 *
+     A*     05   -  REFRESH SCREEN                                    *
+     A*     10   -  HELP KEY HAS BEEN PRESSED                         *
+     A*     15   -  PROTECT SELECT FIELD - NO INPUT ALLOWED           *
+     A*     25   -  ROLLUP REQUESTED                                  *
+     A*     26   -  ROLLDOWN REQUESTED                                *
+     A*     27   -  INHIBIT ROLL/REFRESH/SELECT KEYS & TEXT/ENQ TITLES*
+     A*     28   -  INHIBIT CMD/12                                    *   TM0015
+     A*                                                               *
+     A* INDICATORS TO CONTROL THE ENQUIRY SUBFILE                     *
+     A*                                                               *
+     A*     30   -  ACTIVATE SUBFILE END                              *
+     A*     35   -  ACTIVATE SUBFILE DISPLAY                          *
+     A*     36   -  ACTIVATE SUBFILE DISPLAY CONTROL                  *
+     A*     (N35N36   -  ACTIVATE SUBFILE CLEAR)                      *
+     A*                                                               *
+     A* INDICATORS TO CONTROL THE MESSAGE SUBFILE                     *
+     A*                                                               *
+     A*     40   -  ACTIVATE SUBFILE END                              *
+     A*     46   -  ACTIVATE SUBFILE DISPLAY CONTROL                  *
+     A*                                                               *
+     A* INDICATORS TO REPORT ERRORS ON VALIDATION OF PROMPT SCREEN    *
+     A*                                                               *
+     A*     60   -  ERROR ON CURRENCY SELECTED                        *
+     A*     61   -  ERROR ON MONTH SELECTED                           *
+     A*     69   -  GENERAL INDICATOR ON VALIDATION OF PROMPT SCREEN  *
+     A*                                                               *
+     A*****************************************************************
+     A*
+     A                                      DSPSIZ(24 80 *DS3)
+     A  36                                  INVITE
+     A*********        START OF CHANGE                     /E39162/
+     A*********                             PRINT
+     A                                      PRINT(MPRINT)
+     A*                END OF CHANGE                       /E39162/
+     A                                      CA03(01 'F3 to Exit')
+     A**********                            CA02(02 'F2 - summary')   /*S01187*/
+     A*                                                         /*S01280*/
+     A*****                                 CA12(02 'F12 - summary')
+     A  28                                  CA12(02 'F12 - summary')
+     A*                                                         /*S01280*/
+     A                                      CA05(05 'F5 to Refresh')
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A*                                                    /*S01117*/
+     A*                                                    /*S01117*/
+     A*                                                    /*S01199*/
+     A*                                                    /*S01117*/
+     A*****     R DL3120F0                  TEXT('Title')
+     A          R TM3120F0                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*
+     A*****                             1  2'Ref:DL3120'
+     A                                  1  2'Ref:TM3120'
+     A*                                                    /*S01117*/
+     A                                  1 61TIME
+     A*
+     A                                  1 70'WSID'
+     A            @WSID          3   O  1 75TEXT('Workstation Id')
+     A*
+     A*
+     A                                  2  2'FX BOOK - DAILY SUMMARY'
+     A                                      DSPATR(UL HI)
+     A            @SCCY          3A     2 62TEXT('Currency selected')
+     A                                  2 66'(000''S)'
+     A            @STEND         5A     3 67TEXT('start/end/blank')
+     A*
+     A* Subfile Titles
+     A*
+     A                                  3 24'SPOT'
+     A                                      DSPATR(HI)
+     A            DDLOSP         9      3 29TEXT('Low spot')
+     A                                      DSPATR(HI)
+     A                                  3 39'/'
+     A                                      DSPATR(HI)
+     A            DDHISP         9      3 41TEXT('High spot')
+     A                                      DSPATR(HI)
+     A                                  4 16'IN'
+     A                                      DSPATR(UL)
+     A                                  4 26'OUT'
+     A                                      DSPATR(UL)
+     A                                  4 35'FX NET'
+     A                                      DSPATR(UL)
+     A                                  4 44'AV RATE'
+     A                                      DSPATR(UL)
+     A                                  4 54'DEAL'
+     A                                      DSPATR(UL)
+     A                                  4 64'MKT'
+     A                                      DSPATR(UL)
+     A                                  4 69'P/L-UNITS'
+     A                                      DSPATR(UL)
+     A*
+     A*                                                    /*S01117*/
+     A*****     R DL3120F1                  TEXT('Command Keys Text')
+     A          R TM3120F1                  TEXT('Command Keys Text')
+     A*                                                    /*S01117*/
+     A                                      OVERLAY
+     A*
+     A**********                       23  1'Press F31 to end,'       /*S01187*/
+     A                                 23  1'Press F3 to end,'
+     A**********                       23 21'F2 for summary,'         /*S01187*/
+     A*                                                         /*S01280*/
+     A*****                            23 21'F12 for summary,'
+     A  28                             23 21'F12 for summary,'
+     A*                                                         /*S01280*/
+     A                                 23 40'F5 to refresh,'
+     A                                 24  1'Rollup/Rolldown for'
+     A                                 24 21'further details.'
+     A                                 24 38'Enter ''1'' for detail'
+     A                                 24 59'enquiry.'
+     A*
+     A*
+     A*                                                    /*S01117*/
+     A*****     R DL3120S0                  TEXT('Message Subfile')
+     A          R TM3120S0                  TEXT('Message Subfile')
+     A*                                                    /*S01117*/
+     A*
+     A* Message Subfile
+     A*
+     A                                      SFL
+     A                                      SFLMSGRCD(24)
+     A            DDMGKY                    SFLMSGKEY
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A*
+     A*                                                    /*S01117*/
+     A*****     R DL3120C0                  TEXT('Message Subfile Control')
+     A          R TM3120C0                  TEXT('Message Subfile Control')
+     A*                                                    /*S01117*/
+     A*
+     A* Message Subfile Control
+     A*
+     A*                                                    /*S01117*/
+     A*****                                 SFLCTL(DL3120S0)
+     A                                      SFLCTL(TM3120S0)
+     A*                                                    /*S01117*/
+     A                                      SFLSIZ(15)
+     A                                      SFLPAG(1)
+     A                                      SFLDSP
+     A  46                                  SFLDSPCTL
+     A                                      SFLINZ
+     A  40                                  SFLEND
+     A                                      OVERLAY
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A*
+     A*                                                    /*S01117*/
+     A*****     R DL3120S1                  TEXT('Enquiry Subfile')
+     A          R TM3120S1                  TEXT('Enquiry Subfile')
+     A*                                                    /*S01117*/
+     A*
+     A* Subfile Record Format and a select field
+     A*
+     A                                      SFL
+     A N15        SSSLCT         1A  I  5  2TEXT('Select Field')
+     A  15                                  DSPATR(PR)
+     A            DDDAT          7A     5  4TEXT('Date')
+     A                                      DSPATR(HI)
+     A            DDIN           9A     5 13TEXT('Amount In')
+     A                                      DSPATR(HI)
+     A            DDOUT          9A     5 23TEXT('Amount Out')
+     A                                      DSPATR(HI)
+     A            DDNET          9A     5 33TEXT('FX Net')
+     A                                      DSPATR(HI)
+     A            DDAVR          9A     5 43TEXT('Average Rate')
+     A                                      DSPATR(HI)
+     A            DDDEAL         7A     5 53TEXT('Dealt fwd points')
+     A                                      DSPATR(HI)
+     A            DDMKT          7A     5 61TEXT('Market fwd points')
+     A                                      DSPATR(HI)
+     A            DDPLU         11A     5 69TEXT('Profit/loss - units')
+     A                                      DSPATR(HI)
+     A*
+     A*
+     A*                                                    /*S01117*/
+     A*****     R DL3120C1                  TEXT('Enquiry Subfile Control')
+     A          R TM3120C1                  TEXT('Enquiry Subfile Control')
+     A*                                                    /*S01117*/
+     A*
+     A* Enquiry Subfile Control and prompts
+     A*
+     A*                                                    /*S01117*/
+     A*****                                 SFLCTL(DL3120S1)
+     A                                      SFLCTL(TM3120S1)
+     A*                                                    /*S01117*/
+     A  35                                  SFLDSP
+     A  36                                  SFLDSPCTL
+     A N35N36                               SFLCLR
+     A                                      SFLSIZ(0016)
+     A                                      SFLPAG(0016)
+     A  30                                  SFLEND
+     A                                      OVERLAY
+     A N27                                  ROLLUP(25)
+     A N27                                  ROLLDOWN(26)
+     A*
+     A* Prompts
+     A*
+     A                                 21 21'Currency'
+     A            @SRCCY         3A  B 21 30TEXT('Currency Selected')
+     A N60                                  DSPATR(HI)
+     A  60                                  DSPATR(RI PC)
+     A*
+     A                                 21 35'Date'
+     A            @SRDAT         7A  B 21 40TEXT('Date Selected')
+     A N61                                  DSPATR(HI)
+     A  61                                  DSPATR(RI PC)

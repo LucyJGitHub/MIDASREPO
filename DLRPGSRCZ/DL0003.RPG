@@ -1,0 +1,504 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Cityd LE, FT, RE & NT Trans. Handler')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0003 - Citydealer LE, FT, RE, & NT Transmission Handler    *
+      *                                                               *
+      *  Function:  This program will be submitted during input cycle *
+      *  (I/C Term) Initiation or whenever the Input Cycle is         *
+      *             Re-opened and ended during Input Cycle Termina-   *
+      *             tion.  It will process details (from DTAQ/        *
+      *             DLCDDTAQ) as extracted by DL0002, of changes to   *
+      *             cashflow and exposure arising from LE, RE and FT  *
+      *             and changes to Nostro account balances arising    *
+      *             from NT transactions within both the Midas Funds  *
+      *             Transfer and Dealing modules.                     *
+      *                                                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 099849             Date 21Feb96               *
+      *                 095306             Date 01Nov95               *
+      *                 095251             DATE 31OCT95               *
+      *                 CCM002 *CREATE     DATE 04SEP95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  099849 - Citydealer interface not initiated correctly. If    *
+      *           the COB finished late in the evening, then the last *
+      *           transmission time will always be greater than the   *
+      *           current transmission period, so job is not called.  *
+      *  095306 - Recompiled due to printer file change.              *
+      *  095251 - This program crashes with an RPG error message when *
+      *           DL0004 fails to acquire the Citydealer device. This *
+      *           is an acceptable error and this program should      *
+      *           continue normally.                                  *
+      *  CCM002 - Midas/Citydealer Interface (Phases V and VI)        *
+      *                                                               *
+      *****************************************************************
+     FDLCDCGL0UF  E           K        DISK         KINFSR *PSSR A
+     FDLCDCRL0UF  E           K        DISK         KINFSR *PSSR A
+     FDL0003AUO   E                    PRINTER                        UC
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N    O F    I N D I C A T O R S                *
+     F*                                                               *
+     F*  10         Chain Fails for LF/DLCDCGL0                       *
+     F*  20         Chain Fails for LF/DLCDCRL0                       *
+     F*  21         Error on Call to PGM/DL0004                       *   095251
+     F*  U7-U8      Database Error                                    *
+     F*  LR         Exit program                                      *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  #LINIT  -  Initial Processing                                *
+     F*  #LMSG   -  Process message from the Dataqueue                *
+     F*  #LTRAN  -  Transmit details of the changes if Transmission   *
+     F*             Delay Period has elapsed.                         *
+     F*  #LCONV  -  Convert the Citydealer Transmission Delay Period  *
+     F*  *PSSR   -  Error Subroutine                                  *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+      /SPACE 3
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Data Structure for Message Data parameter
+      *
+     I            DS
+     I                                        1 256 PMSGD
+     I                                        1   8 DBFILE
+     I                                        9  37 DBKEY
+     I                                       38  47 DBPGM
+     I                                       48  500DBASE
+     I*
+     I** Data structure for the data queue.
+     I*
+     I            DS
+     I                                        1   2 ULMTYP
+     I                                        3   5 ULBRCA
+     I                                        6   8 ULCCY
+     I                                        9  130ULVDAT
+     I                                       14  150ULNOSN
+     I                                       16  300ULAMT
+     I                                       31  31 ULSTAF
+     I                                       32  32 ULTRMF
+     I                                        1   3 WEND
+     I                                        1  32 WDTAQ
+     I*
+     I** Data structure for files DLCDCGL0 and DLCDCRL0.
+     I*
+     I            DS
+     I                                        1   2 MOTYP
+     I                                        3   5 BRCA
+     I                                        6   8 CCY
+     I                                        9  130VDAT0
+     I                                       14  150NOSN
+     I                                       16  300AMT
+     I                                        1  30 WFLDS
+     I*
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDDEAL    E DSSDDEALPD
+      ** Deal Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+      /EJECT
+     C*
+     C** Initialisation.
+     C*
+     C                     EXSR #LINIT
+     C*
+     C                     MOVEL*BLANKS   WEND
+     C*
+     C** Main Processing.
+     C*
+     C           WEND      DOWNE'END'
+     C*
+     C** Check message from the Dataqueue.
+     C*
+     C                     CALL 'QRCVDTAQ'
+     C                     PARM 'DLCDDTAQ'PDTAQ  10
+     C                     PARM '*LIBL'   PLIB   10
+     C                     PARM 32        PLEN    50
+     C                     PARM           PMESS  32
+     C                     PARM 600       PWAIT   50
+     C*
+     C** If there is a message in the dataqueue, process the message.
+     C*
+     C           PLEN      IFNE 0
+     C                     EXSR #LMSG
+     C                     ELSE
+     C*
+     C** Determine the Transmission delay period.
+     C*
+     C                     EXSR #LTRAN
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C                     MOVE '1'       *INLR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LINIT  - Initial Processing.                                 *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C* Calls :  *PSSR  - Database Error Processing                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LINIT    BEGSR
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Set Key for file DLCDCGL0/DLCDCRL0.
+     C*
+     C           KCDCG     KLIST
+     C                     KFLD           ULMTYP
+     C                     KFLD           ULBRCA
+     C                     KFLD           ULCCY
+     C                     KFLD           ULVDAT
+     C                     KFLD           ULNOSN
+     C*
+     C** Access the Bank Details.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C*
+     C                     MOVEL'001'     DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     MOVEL'DL0003'  DBPGM
+     C*
+     C** Send database error message to MOPERQ MRUNQ
+     C*
+     C                     CALL 'DLC0004'
+     C                     PARM 'MIDAS'   PMSGF  10
+     C                     PARM 'MEM0011' PMSGID  7
+     C                     PARM           PMSGD
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LMSG - Process the message from the Dataqueue.               *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C* Calls :  DL0004 - Citydealer LE, FT, RE & NT Transmission     *
+     C*                   Router                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LMSG     BEGSR
+     C*
+     C                     MOVELPMESS     WDTAQ
+     C*
+     C** Update the Citydealer Changes to be Transmitted file
+     C** if not yet end of transmission.
+     C*
+     C           WEND      IFNE 'END'
+     C           KCDCG     CHAINDLCDCGL0             10
+     C*
+     C** If record is found, update the record.
+     C*
+     C           *IN10     IFEQ *OFF
+     C                     ADD  ULAMT     AMT
+     C                     UPDATDLCDCGD0
+     C                     ELSE
+     C*
+     C** Else add a new record to the file.
+     C*
+     C                     MOVELWDTAQ     WFLDS
+     C                     WRITEDLCDCGD0
+     C                     ENDIF
+     C*
+     C** Update the Citydealer Current Transmitter Values file
+     C** if the Start Flag is not set.
+     C*
+     C           ULSTAF    IFNE 'Y'
+     C           KCDCG     CHAINDLCDCRL0             20
+     C*
+     C** If record is found, update the record.
+     C*
+     C           *IN20     IFEQ *OFF
+     C                     ADD  ULAMT     AMT
+     C                     UPDATDLCDCRD0
+     C                     ELSE
+     C*
+     C** Else add a new record to the file.
+     C*
+     C                     MOVELWDTAQ     WFLDS
+     C                     WRITEDLCDCRD0
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C** If end of transmission or transmit flag is set,
+     C** transmit the details of the changes.
+     C*
+     C           WEND      IFEQ 'END'
+     C           ULTRMF    OREQ 'Y'
+     C*
+     C** Call the Citydealer LE, FT, RE & NT Transmission Router.
+     C*
+     C***********          CALL 'DL0004'                                  095251
+     C                     MOVE '0'       *IN21                           095251
+     C                     CALL 'DL0004'               21                 095251
+     C*                                                                   095251
+     C           *IN21     IFEQ *ON                                       095251
+     C*                                                                   095251
+     C                     MOVE '0'       *INU7                           095251
+     C                     MOVE '0'       *INU8                           095251
+     C*                                                                   095251
+     C                     ENDIF                                          095251
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LTRAN - Transmit details of the changes if Transmission      *
+     C*          Delay Period has elapsed.                            *
+     C*                                                               *
+     C* Called by :  Main - Main Processing.                          *
+     C*                                                               *
+     C* Calls :  #LCONV   - Convert the Citydealer Transmission       *
+     C*                     Delay Period                              *
+     C*          DL0004   - Citydealer LE, FT, RE & NT Transmission   *
+     C*                     Router                                    *
+     C*          BUDEALR0 - Background Update of Citydealer Dealing   *
+     C*                     ICD                                       *
+     C*          *PSSR    - Program exception error routine           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LTRAN    BEGSR
+     C*
+     C                     MOVE 'N'       WTRMT   1
+     C*
+     C** Determine the Transmission Delay period.
+     C*
+     C                     EXSR #LCONV
+     C*
+     C           WTRMT     IFEQ 'Y'
+     C*
+     C** Call the Citydealer LE, FT, RE & NT Transmission Router.
+     C*
+     C***********          CALL 'DL0004'                                  095251
+     C                     MOVE '0'       *IN21                           095251
+     C                     CALL 'DL0004'               21                 095251
+     C*                                                                   095251
+     C           *IN21     IFEQ *ON                                       095251
+     C*                                                                   095251
+     C                     MOVE '0'       *INU7                           095251
+     C                     MOVE '0'       *INU8                           095251
+     C*                                                                   095251
+     C                     ENDIF                                          095251
+     C*
+     C** Update the Last Transmission Date and time on the dealing ICD.
+     C*
+     C                     CALL 'BUDEALR0'
+     C*
+     C           *INU7     IFEQ *ON
+     C           *INU8     OREQ *ON
+     C*
+     C                     MOVEL'002'     DBASE            ***************
+     C                     MOVEL'BUDEALR0'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'*CALL'   DBKEY            ***************
+     C                     MOVEL'DL0003'  DBPGM
+     C*
+     C** Send database error message to MOPERQ MRUNQ
+     C*
+     C                     CALL 'DLC0004'
+     C                     PARM 'MIDAS'   PMSGF  10
+     C                     PARM 'MEM0011' PMSGID  7
+     C                     PARM           PMSGD
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* #LCONV - Convert the Citydealer Transmission Delay Period     *
+     C*                                                               *
+     C* Called by :  #LTRAN - Transmit details of the changes if      *
+     C*                       Transmission Delay Period has elapsed.  *
+     C*                                                               *
+     C* Calls :  *PSSR  - Program exception error routine             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LCONV    BEGSR
+     C*
+     C** Access the Dealing ICD Details.
+     C*
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDDEAL    PARM SDDEAL    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C*
+     C                     MOVEL'003'     DBASE            ***************
+     C                     MOVEL'SDDEALPD'DBFILE           *DB ERROR 003 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     MOVEL'DL0003'  DBPGM
+     C*
+     C** Send database error message to MOPERQ MRUNQ
+     C*
+     C                     CALL 'DLC0004'
+     C                     PARM 'MIDAS'   PMSGF  10
+     C                     PARM 'MEM0011' PMSGID  7
+     C                     PARM           PMSGD
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     Z-ADD0         WHOUR   20
+     C*
+     C** Get the Citydealer Transmission Delay Period.
+     C*
+     C                     Z-ADDBNDLYP    WMIN    30
+     C           WMIN      DOWGE60
+     C                     ADD  1         WHOUR
+     C                     SUB  60        WMIN
+     C                     ENDDO
+     C*
+     C** Add the minutes portion of the Last Transmission Time.
+     C*
+     C                     MOVELBNLTMT    WTMP1   4
+     C                     MOVE WTMP1     WTMP2   20
+     C                     ADD  WTMP2     WMIN
+     C*
+     C           WMIN      IFGE 60
+     C                     ADD  1         WHOUR
+     C                     SUB  60        WMIN
+     C                     ENDIF
+     C*
+     C** Add the hours portion of the Last Transmission Time.
+     C*
+     C                     MOVELWTMP1     WTMP3   20
+     C                     ADD  WTMP3     WHOUR
+     C*
+     C                     Z-ADDBNLTMD    WLTMD   50
+     C*
+     C           WHOUR     IFGE 24
+     C                     ADD  1         WLTMD
+     C                     SUB  24        WHOUR
+     C                     ENDIF
+     C*
+     C** Compute the total time.
+     C*
+     C                     MOVE BNLTMT    WTIME   60
+     C                     MOVE WMIN      WTEMP1  4
+     C                     MOVELWHOUR     WTEMP1
+     C                     MOVELWTEMP1    WTIME
+     C*
+     C** Check the Last Transmission Date with the System Run Date.
+     C*
+     C           WLTMD     IFLT BJRDNB
+     C                     MOVE 'Y'       WTRMT
+     C***********          ENDIF                                          099849
+     C*
+     C***********WLTMD     IFEQ BJRDNB                                    099849
+     C                     ELSE                                           099849
+     C                     TIME           WCURRT  60
+     C           WCURRT    IFGE WTIME
+     C           WCURRT    ORLT BNLTMT                                    099849
+     C                     MOVE 'Y'       WTRMT
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      /EJECT
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by: #LINIT - Initial Processing                        *
+     C*            #LTRAN - Transmit details of the changes if        *
+     C*                     Transmission Delay Period has elapsed     *
+     C*            #LCONV - Convert the Citydealer Transmission       *
+     C*                     Delay Period                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C                     OPEN DL0003AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEDL0003AU
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

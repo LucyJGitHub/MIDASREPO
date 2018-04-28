@@ -1,0 +1,1931 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Generate Fee Postngs from Auth. Settlmnts')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1961 - Customer service Fees -                             *
+      *           Generate Fee Postings from Authorised Settlmnts     *
+      *                                                               *
+      *  Function:  This Program generates postings for all           *
+      *  (COB)      authorised fee settlements on the settlement date.*
+      *             Amounts are always arriving in charging currency. *
+      *                                                               *
+      *  Called by: GLC1961 - Generate Fee Postings Control           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 201626             Date 07Mar02               *
+      *                 197076             Date 07Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL020 - Midas Compliance Watch - Additional A/c Postings    *
+      *           Information                                         *
+      *  201626 - Account sequence is '00' on GEFEPP for some         *
+      *           postings. Also status not reset correctly.          *
+      *  197076 - Account section and profit centre are blank. PTIM   *
+      *           also must be 235959 for management accounts.        *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     FGLOTSTL5UF  E           K        DISK         KINFSR *PSSR
+      ** Outstanding Settlement - Authorised             Prefix 'F7'
+      *
+     FSDCFTPL0IF  E           K        DISK         KINFSR *PSSR
+      ** Fee type definition                             Prefix 'F1'
+      *
+     FSDVATCL0IF  E           K        DISK         KINFSR *PSSR
+      ** Fee Tax code definition                         Prefix 'F9'
+      *
+     FGLCHRGL0UF  E           K        DISK         KINFSR *PSSR
+      ** Customer Fees Charges
+      *
+     FGLOTSTL6IF  E           K        DISK         KINFSR *PSSR
+     F            GLOTSTD0                          KRENAMEGLOTSTD6
+      ** Outstanding Settlement by Charge Reference      Prefix 'F7'
+      *
+     FGLTAHIPDO   E                    DISK         KINFSR *PSSR A
+      ** Today Accruals on Holding items File            Prefix 'F2'
+      *
+     FGEFEPD  O   E           K        DISK         KINFSR *PSSR A
+      ** Customer Fees Posting file
+      *
+     FGEFEZZ  UF  E           K        DISK         KINFSR *PSSR A
+      ** Customer Fees Posting File - Trailer
+      *
+     FSDCFCDL0IF  E           K        DISK         KINFSR *PSSR
+      ** Customer Fees Details File
+      *
+     FGL1961AUO   E                    PRINTER      KINFSR *PSSR
+      ** Fees Settlements Generation - Audit report
+     F                                              KINFDS SPOOLU
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   70  - End of File                                           *
+      *   80  - End of File                                           *
+      *   81  - CHAIN indicator                                       *
+      *   85  - CHAIN indicator                                       *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *   LR  - Terminate Program                                     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SRRTVD - Retrieve details for fee settlement postings        *
+      *  SRFETP - Retrieve fee definition details                     *
+      *  SRCHGD - Charging Details                                    *
+      *  SRSETD - Settlement Details                                  *
+      *  SRCURR - Access currency code details                        *
+      *  SRBRCH - Access branch details                               *
+      *  SRPOST - Generate postings of settlements and accruals if    *
+      *           necessary                                           *
+      *  SRACCR - Routine to post accrual amount                      *
+      *  SRTAXE - Routine to post VAT amount when required            *
+      *  SRSTDP - Generate standard settlement entries                *
+      *  SRCHBK - Generate base currency settlement entries           *
+      *  SRBKSE - Generate settlement currency settlement entries     *
+      *  SRINTB - Generate inter-branch settlement entries            *
+      *  SRACOD - Retrieve account details                            *
+      *  SRWTSE - Write suspense account entries into GEFEPD          *
+      *  SRWNSE - Write non-suspense account entries                  *
+      *  SRCHRG - Update status of charge reference                   *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report                                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RFCAU  - Register AU file via RCF                            *
+      *  ZCCYCN - Convert amount to diff. currency                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    POWER   1   7  7 3
+      ** Power array for SR/ZCCYCR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************                       CGL029
+     ISDCFTPD0                                                                                CGL029
+     I              QQACAC                          QQACAX                                    CGL029
+      *
+      ** Texts for Narrative
+     I              'FEE ACCR.  '         C         WWNAR1
+     I              'FEE SETTL. '         C         WWNAR2
+      *
+     IDSNARR      DS
+      ** Data Structure for Posting Narrative
+      ** Fee Processing Type + 'Fee Settl.' or 'Fee Accr.' + Fee type + Custom
+      ** + '(' + Portfolio / ')' when Portfolio Level Fee
+      *
+     I                                        1   2 DSPRTP
+     I                                        4  14 DSTEXT
+     I                                       15  16 DSFETP
+     I                                       18  23 DSCNUM
+     I                                       25  25 DSLEFT
+     I                                       26  29 DSPTFR
+     I                                       30  30 DSRIGH
+     I                                        1  30 XFPNAR
+      *
+     ISPOOLU      DS
+      ** GL1961AU Spool details
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IRUNDT     E DSRUNDAT
+      ** DS for Rundate
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External Data Structure for Bank Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** External Data Structure for GL ICD
+      *
+     ISDTRAD    E DSSDTRADPD
+      ** for Trading I.C.D. Details
+     I              QQACCD                          QQACCX                                    CGL029
+      *
+     IACCNT     E DSACCNTAB
+      ** For Account details
+      *
+     I              PRFC                            APRFC
+      *
+     ISDACOD    E DSSDACODPD
+      ** For Account Code Details
+     I              QQACCD                          QQACCY                                    CGL029
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** For Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** For Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short DS for access programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long DS for access programs
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CGL020
+      ** SAR File Details Accessed via access program AOSARDR0                                CGL020
+      *                                                                                       CGL020
+     I              LCD                             SLCD                                      CGL020
+      ** Rename LCD to avoid conflict on files SCSARDPD and ACCNTAB                           CGL020
+      *                                                                                       CGL020
+     IDSCFTP      DS
+      ** Fee definition working DS
+      *
+     I                                        1   1 L1FEPC
+     I                                        2   60L1RETR
+     I                                        7   7 L1TAXE
+     I**********                              8  110L1IRAC                                    CGL029
+     I**********                             12  13 L1VATC                                    CGL029
+     I**********                             14  170L1VATA                                    CGL029
+     I**********                             18  190L1VATS                                    CGL029
+     I**********                             20  230L1INAC                                    CGL029
+     I**********                             24  270L1ACAC                                    CGL029
+     I**********                             28  310L1VAIA                                    CGL029
+     I                                        8  170L1IRAC                                    CGL029
+     I                                       18  19 L1VATC                                    CGL029
+     I                                       20  290L1VATA                                    CGL029
+     I                                       30  310L1VATS                                    CGL029
+     I                                       32  410L1INAC                                    CGL029
+     I                                       42  510L1ACAC                                    CGL029
+     I                                       52  610L1VAIA                                    CGL029
+      *
+     IXFCFTP      DS
+      ** Fee definition working DS - Transfer
+      *
+     I                                        1   1 F1FECP
+     I                                        2   60F1RETR
+     I                                        7   7 F1TAXE
+     I**********                              8  110F1IRAC                                    CGL029
+     I**********                             12  13 F1VATC                                    CGL029
+     I**********                             14  170F1VATA                                    CGL029
+     I**********                             18  190F1VATS                                    CGL029
+     I**********                             20  230F1INAC                                    CGL029
+     I**********                             24  270F1ACAC                                    CGL029
+     I**********                             28  310F1VAIA                                    CGL029
+     I                                        8  170F1IRAC                                    CGL029
+     I                                       18  19 F1VATC                                    CGL029
+     I                                       20  290F1VATA                                    CGL029
+     I                                       30  310F1VATS                                    CGL029
+     I                                       32  410F1INAC                                    CGL029
+     I                                       42  510F1ACAC                                    CGL029
+     I                                       52  610F1VAIA                                    CGL029
+      *
+     I***DSACNT*     DS                             18                                        CGL029
+     IDSACNT      DS                             24                                           CGL029
+      ** Data structure For Account format : F2BRCA + WCBICN + F2ACCY + DSACAC
+      *
+     I                                        1   3 F2BRCA
+     I                                        4   9 WCBICN
+     I                                       10  12 F2ACCY
+     I**********                             13  160DSACAC                                    CGL029
+     I**********                             17  180DSACSQ                                    CGL029
+     I                                       13  220DSACAC                                    CGL029
+     I                                       23  240DSACSQ                                    CGL029
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      ** Audit Processing and Program Termination
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0  - Access Program for Bank Details                  *
+      *  AOMMODR0  - Access Program for Module Details                *
+      *  AOGELRR0  - Access Program for GL ICD                        *
+      *  AOTRADR0  - Access Program for Trading Details               *
+      *  RCFAU     - Routine to register AU file file via RCF.        *
+      *  SRBRCH    - Access branch details                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Prepare LDA and RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBFILE
+     C                     MOVEL*BLANK    DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'GL1961'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Reset WWERR field
+      *
+     C                     Z-ADD0         WWERR   30
+      *
+      ** RCF processing for Audit file.
+      *
+     C                     EXSR RCFAU
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'GL1961'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Keep Bank details (work fields Prefix 'WB')
+      *
+     C                     MOVE BJCYCD    WBCYCD  3
+     C                     MOVE BJSBRC    WBSBCD  3
+      *
+      ** Access Currency Details with WBCYCD
+      *
+     C                     MOVE BJCYCD    WWCURR  3
+     C                     Z-ADD7         WWERR
+     C                     EXSR SRCURR
+     C                     MOVE A6NBDP    WBNBDP  10
+     C                     MOVE A6SPRT    WBSPRT 138
+     C                     MOVE A6MDIN    WBMDIN  1
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Access SDGELRPD Details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST'  POPTN
+     C           SDGELR    PARM SDGELR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVE 'SDGELRPD'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Retrieve Main Branch Details
+      *
+     C                     MOVE BKMABR    WWBRCH  3
+     C                     Z-ADD8         WWERR
+     C                     EXSR SRBRCH
+      *
+      ** Keep Main Branch Details (Fields prefix 'WM')
+      *
+     C                     MOVELA8BICN    WMBICN  6
+     C**********           MOVE A8DFAC    WMDFAC  4                                           CGL029
+     C**********           MOVE A8DTAC    WMDTAC  4                                           CGL029
+     C                     MOVE A8DFAC    WMDFAC 10                                           CGL029
+     C                     MOVE A8DTAC    WMDTAC 10                                           CGL029
+      *
+      ** Access Trading I.C.D.
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM '       ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'SDTRADPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Keep Spot trade account (work field prefix 'WT')
+      *
+     C**********           MOVE BLSPTA    WTACOD  4                                           CGL029
+     C                     MOVE BLSPTA    WTACOD 10                                           CGL029
+      *
+      ** Create Work field to Keep details
+      *
+     C                     MOVE *BLANKS   WCBRCH  6
+     C                     MOVE *BLANKS   WSBRCH  6
+     C                     MOVE *BLANKS   WCCCY   3
+     C                     MOVE *BLANKS   WSCCY   3
+      *
+     C                     MOVE *BLANK    WWSAPR  1
+      *
+     C                     Z-ADD0         WWHTOT 180
+     C                     Z-ADD0         WWHRWN 150
+     C                     Z-ADD0         WWHRDC  40
+     C                     Z-ADD0         WWRCNT  50
+     C**********           Z-ADD0         WWCNUM  60                                          CSD027
+     C                     MOVE *BLANKS   WWCNUM  6                                           CSD027
+     C**********           Z-ADD0         WWACOD  40                                          CGL029
+     C                     Z-ADD0         WWACOD 100                                          CGL029
+     C                     Z-ADD0         WWACSQ  20
+     C                     Z-ADD0         WWACNO 100
+     C                     Z-ADD0         WWRIND  10
+     C                     Z-ADD0         WWTRAT  50
+     C                     Z-ADD0         WWPSTA 150
+     C                     MOVE *BLANK    WWATYP  1
+     C                     Z-ADD01        DSACSQ
+      *
+      ** Check if Compliance Watch - Additional A/c Postings                                  CGL020
+      ** Information is installed.                                                            CGL020
+      *                                                                                       CGL020
+     C                     CALL 'AOSARDR0'                                                    CGL020
+     C                     PARM *BLANKS   PRTCD   7                                           CGL020
+     C                     PARM '*VERIFY' POPTN   7                                           CGL020
+     C                     PARM 'CGL020'  PSARD   6                                           CGL020
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL020
+      *                                                                                       CGL020
+     C           PRTCD     IFNE *BLANKS                                                       CGL020
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL020
+     C           *LOCK     IN   LDA                                                           CGL020
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL020
+     C                     MOVELPSARD     DBKEY                                               CGL020
+     C                     Z-ADD7         DBASE                                               CGL020
+     C                     MOVEL'GL1961'  DBPGM                                               CGL020
+     C                     OUT  LDA                                                           CGL020
+     C                     EXSR *PSSR                                                         CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C           PRTCD     IFEQ *BLANK                                                        CGL020
+     C                     MOVEL'Y'       CGL020  1                                           CGL020
+     C                     ELSE                                                               CGL020
+     C                     MOVEL'N'       CGL020                                              CGL020
+     C                     ENDIF                                                              CGL020
+      *                                                                                       CGL020
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRRTVD   - Retrieve details for Fee Settlement postings      *
+      *  SRPOST   - Generate postings of settlements and accruals     *
+      *  SRACCR   - Routine to post accrual amount                    *
+      *  SRCHRG   - Update status of charge reference                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR                           *** SRPROC ***
+      *
+     C                     MOVE 'N'       WWDOST  1
+      *
+      ** Read Oustanding Settlements Until EOF
+      *
+     C           *LOVAL    SETLLGLOTSTL5
+     C                     READ GLOTSTL5                 80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Select only the settlements authorised
+      ** or deleted Records
+      *
+     C           F7AUID    IFEQ 'Y'
+     C           F7RECI    OREQ '*'
+      *
+      ** Check that Settlement value date is reached
+      *
+     C                     MOVE 'Y'       WWDOST
+      *
+      ** Fill up work fields for Settlements posting
+      *
+     C                     EXSR SRRTVD
+      *
+      ** If Record is Live, then post settlement including Outstanding Settlem
+      ** Else Reverse Accruals of deleted Settlements
+      *
+     C           F7RECI    IFEQ 'D'
+     C                     EXSR SRPOST
+     C                     ELSE
+     C                     Z-SUBF7ACDT    WWPSTA
+     C                     Z-ADD0         WWERR
+     C                     EXSR SRACCR
+     C                     ENDIF
+      *
+     C                     DELETGLOTSTD0
+      *
+     C                     EXSR SRCHRG
+      *
+     C                     ENDIF
+      *
+      ** Read next record
+      *
+     C                     READ GLOTSTL5                 80
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRTVD
+      *****************************************************************
+      *                                                               *
+      *  SRRTVD - Retrieve details for fee settlement postings        *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRFETP   - Retrieve fee definition details                   *
+      *  SRCHGD   - Charging details                                  *
+      *  SRSETD   - Settlement details                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRTVD    BEGSR                           *** SRRTVD ***
+      *
+      ** Access Fee Definition to Fill Up Correctly Posting details
+      *
+     C                     EXSR SRFETP
+      *
+      ** Retrieve Charging Details : Branch, Branch BICN, Currency,
+      *
+     C                     EXSR SRCHGD
+      *
+      ** Retrieve Settlement Details : Branch, Branch BICN, Currency,
+      ** If not a Deleted Record.
+      *
+     C           F7RECI    IFEQ '*'
+     C           F7STBR    ANDEQ*BLANKS
+     C           F7STCY    ANDEQ*BLANKS
+     C           F7SCUS    ANDEQ*BLANKS
+     C                     ELSE
+     C                     EXSR SRSETD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRFETP
+      *****************************************************************
+      *                                                               *
+      *  SRFETP - Retrieve fee definition details                     *
+      *                                                               *
+      *  Output : L1FEPC (P or C)                                     *
+      *           L1RETR Retail transaction                           *
+      *           L1TAXE (Y or N)                                     *
+      *           L1IRAC (Incomes Account of VAT)                     *
+      *           L1VATC (VAT code --> GLVATCPD)                      *
+      *           L1VATA (VAT Account of Settlement)                  *
+      *           L1VATS (VAT Account Sequence)                       *
+      *           L1VAIA (VAT Income Received Account Code)           *
+      *           L1INAC (Incomes Account)                            *
+      *           L1ACAC (Accruals Account)                           *
+      *                                                               *
+      *  Called By: SRRTVD Subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFETP    BEGSR                           *** SRFETP ***
+      *
+      ** Key definition
+      *
+     C           KFEET     KLIST
+     C                     KFLD           KFETP   2
+     C                     KFLD           KCHGR   2
+      *
+      ** Access the fee type default (fee type/charge group=blank)
+      *
+     C                     MOVE F7FETP    KFETP
+     C                     MOVE *BLANKS   KCHGR
+     C                     CLEARDSCFTP
+      *
+     C           KFEET     CHAINSDCFTPL0             81
+      *
+     C           *IN81     IFEQ *OFF
+     C           F1RECI    ANDNE'*'
+     C                     MOVELXFCFTP    DSCFTP
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE
+     C                     MOVEL'SDCFTPL0'DBFILE    P
+     C                     MOVELF7FETP    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access the fee type/Charge group
+      *
+     C                     MOVE F7FETP    KFETP
+     C                     MOVE F7CHGR    KCHGR
+     C           KFEET     CHAINSDCFTPL0             81
+      *
+     C           *IN81     IFEQ *OFF
+     C           F1RECI    ANDNE'*'
+      *
+      ** Override the details of the defaults with Charge group detai  ls
+      *
+     C           F1RETR    IFNE *ZERO
+     C                     Z-ADDF1RETR    L1RETR
+     C                     ENDIF
+      *
+     C           F1TAXE    IFNE *BLANKS
+     C                     MOVE F1TAXE    L1TAXE
+     C                     Z-ADDF1IRAC    L1IRAC
+     C                     MOVE F1VATC    L1VATC
+     C                     Z-ADDF1VATA    L1VATA
+     C                     Z-ADDF1VATS    L1VATS
+     C                     Z-ADDF1VAIA    L1VAIA
+     C                     ENDIF
+      *
+     C           F1INAC    IFNE *ZERO
+     C                     Z-ADDF1INAC    L1INAC
+     C                     ENDIF
+      *
+     C           F1ACAC    IFNE *ZERO
+     C                     Z-ADDF1ACAC    L1ACAC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCHGD
+      *****************************************************************
+      *                                                               *
+      *  SRCHGD - Charging Details                                    *
+      *                                                               *
+      *  Called By: SRRTVD Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRCURR   - Access currency details                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHGD    BEGSR                           *** SRCHGD ***
+      *
+      ** Retrieve Charging Customer Internal Branch Customer number
+      *
+     C           F7BRCA    IFNE WCBRCH
+     C                     MOVE F7BRCA    WWBRCH  3
+     C                     Z-ADD9         WWERR
+     C                     EXSR SRBRCH
+     C                     MOVE A8BICN    WCBICN  6
+     C**********           MOVE A8DFAC    WCDFAC  4                                           CGL029
+     C**********           MOVE A8DTAC    WCDTAC  4                                           CGL029
+     C                     MOVE A8DFAC    WCDFAC 10                                           CGL029
+     C                     MOVE A8DTAC    WCDTAC 10                                           CGL029
+     C                     MOVE F7BRCA    WCBRCH
+     C                     ENDIF
+      *
+      ** Retrieve Charging Currency details
+      *
+     C           F7ACCY    IFNE WCCCY
+     C                     MOVE F7ACCY    WWCURR  3
+     C                     Z-ADD10        WWERR
+     C                     EXSR SRCURR
+     C                     Z-ADDA6SPRT    WCSPRT 138
+     C                     Z-ADDA6NBDP    WCNBDP  10
+     C                     MOVE A6MDIN    WCMDIN  1
+     C**********           MOVE A6SPAE    WCSPAE  40                                          CGL029
+     C                     MOVE A6SPAE    WCSPAE 100                                          CGL029
+     C                     MOVE F7ACCY    WCCCY
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRSETD
+      *****************************************************************
+      *                                                               *
+      *  SRSETD - Settlement Details                                  *
+      *                                                               *
+      *  Called By: SRRTVD Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRBRCH   - Access branch details                             *
+      *  SRCURR   - Access currency details                           *
+      *  AOACCTR0 - Access object for Account Details                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSETD    BEGSR                           *** SRSETD ***
+      *
+      ** Retrieve Settlement Customer Internal Branch Customer number
+      *
+     C           F7STBR    IFNE WSBRCH
+     C                     MOVE F7STBR    WWBRCH
+     C                     Z-ADD11        WWERR
+     C                     EXSR SRBRCH
+     C                     MOVE A8BICN    WSBICN  6
+     C**********           MOVE A8DFAC    WSDFAC  4                                           CGL029
+     C**********           MOVE A8DTAC    WSDTAC  4                                           CGL029
+     C                     MOVE A8DFAC    WSDFAC 10                                           CGL029
+     C                     MOVE A8DTAC    WSDTAC 10                                           CGL029
+     C                     MOVE F7STBR    WSBRCH
+     C                     ENDIF
+      *
+      ** Retrieve Settlement Currency details
+      *
+     C           F7STCY    IFNE WSCCY
+     C                     MOVE F7STCY    WWCURR  3
+     C                     Z-ADD12        WWERR
+     C                     EXSR SRCURR
+     C                     Z-ADDA6SPRT    WSSPRT 138
+     C                     Z-ADDA6NBDP    WSNBDP  10
+     C                     MOVE A6MDIN    WSMDIN  1
+     C**********           MOVE A6SPAE    WSSPAE  40                                          CGL029
+     C                     MOVE A6SPAE    WSSPAE 100                                          CGL029
+     C                     MOVE F7STCY    WSCCY
+     C                     ENDIF
+      *
+      ** Retrieve Settlement Customer Taxable indicator
+      *
+     C                     MOVE 'N'       WSTAIN
+     C           F7SCUS    CHAINSDCFCDL0             81
+      *
+     C           *IN81     IFEQ *OFF
+     C                     MOVE E6TAIF    WSTAIN  1
+     C                     ELSE
+     C                     MOVE 'N'       WSTAIN
+     C                     ENDIF
+      *
+      ** Check if Settlement Account exists, else Suspens Account
+      *
+     C                     MOVE 'N'       WWSAPR
+      *
+      ** Access object to retrieve Account details
+      *
+     C                     MOVE F7SCUS    PCUST
+     C                     MOVE F7STCY    PCURR
+     C                     MOVE F7ACCN    PACOD
+     C                     MOVE F7ACSQ    PACSQ
+     C                     MOVE F7STBR    PBRCA
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM '       ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM *BLANKS   DUMMY  10
+     C                     PARM           PCUST   6
+     C                     PARM           PCURR   3
+     C**********           PARM           PACOD   4                                           CGL029
+     C                     PARM           PACOD  10                                           CGL029
+     C                     PARM           PACSQ   2
+     C                     PARM           PBRCA   3
+     C           ACCNT     PARM ACCNT     DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C           RECI      ANDEQ'D'
+     C**********           Z-ADDCNUM      WWCNUM                                              CSD027
+     C                     MOVE CNUM      WWCNUM                                              CSD027
+     C                     Z-ADDACOD      WWACOD
+     C                     Z-ADDACSQ      WWACSQ
+     C                     MOVE ATYP      WWATYP
+      *
+     C           ATYP      IFEQ 'R'
+     C                     MOVE '1'       WWRIND
+     C                     Z-ADDL1RETR    WWTRAT
+     C                     MOVE ACNO      WWACNO
+     C                     ELSE
+     C                     MOVE *ZEROS    WWRIND
+     C                     Z-ADD*ZEROS    WWTRAT
+     C                     MOVE *ZEROS    WWACNO
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE 'Y'       WWSAPR
+     C                     ENDIF
+      *
+      ** Create Posting Narrative : .. Fees Settl. .. ...... (....)
+      *
+     C                     MOVE *BLANKS   DSNARR
+     C                     MOVE F1PRTP    DSPRTP
+     C                     MOVE F7FETP    DSFETP
+     C                     MOVE F7CNUM    DSCNUM
+      *
+     C           F1FECP    IFEQ 'C'
+     C                     MOVE '  '      DSLEFT
+     C                     MOVE *BLANK    DSPTFR
+     C                     MOVE '  '      DSRIGH
+     C                     ELSE
+     C                     MOVE ' ('      DSLEFT
+     C                     MOVE F7PTFR    DSPTFR
+     C                     MOVE ')'       DSRIGH
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCURR
+      *****************************************************************
+      *                                                               *
+      *  SRCURR - Access currency code details                        *
+      *                                                               *
+      *  Called By: SRCHGD, SRSETD and SRINIT Subroutines             *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOCURRR0 - Access object for Currency Details                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCURR    BEGSR                           *** SRCURR ***
+      *
+      ** Retrieve Currency details with Access Object Program
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '       ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WWCURR    PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADDWWERR     DBASE
+     C                     MOVEL'SDCURRPD'DBFILE    P
+     C                     MOVELWWCURR    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRBRCH
+      *****************************************************************
+      *                                                               *
+      *  SRBRCH - Access branch details                               *
+      *                                                               *
+      *  Called By: SRCHGD, SRSETD and SRINIT Subroutines             *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBRCHR0 - Access object for Branch Details                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBRCH    BEGSR                           *** SRBRCH ***
+      *
+      ** Retrieve Branch details with Access Object Program
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '       ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WWBRCH    PBRCA
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADDWWERR     DBASE
+     C                     MOVEL'SDBRCHPD'DBFILE    P
+     C                     MOVELWWBRCH    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPOST
+      *****************************************************************
+      *                                                               *
+      *  SRPOST - Generate postings of settlements and accruals if    *
+      *           necessary                                           *
+      *                                                               *
+      *  1) Accrualise Outstanding Settlements                        *
+      *  2) Generate VAT posting Entries                              *
+      *  3) Generate Standard Posting of Settlements (Total)          *
+      *  4) Generate Base Currency Settlements Entries                *
+      *  5) Generate Cross-Currency Settlements Entries               *
+      *  6) Generate Inter-branch Settlement Entries                  *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRACCR   - Routine to post accrual amount                    *
+      *  SRTAXE   - Routine to post VAT amount when required          *
+      *  SRSTDP   - Generate standard settlement entries              *
+      *  SRCHBK   - Generate base currency settlement entries         *
+      *  SRBKSE   - Generate settlement ccy settlement entries        *
+      *  SRINTB   - Generate Inter-Branch settlement entries          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPOST    BEGSR                           *** SRPOST ***
+      *
+      ** Amount Accrued / Amount to Settlements
+      *
+     C           F7ACDT    ADD  F7MACP    WWACDT 150
+      *
+      ** 1) Accrualise Outstanding Settlement in Charging CCY
+      ** Settlement Amount in Charging CCY   WWACDT = WWACDT +/- F7OTAJ
+      *
+     C                     Z-ADD0         WWPSTA
+      *
+      ** Accrual of Outstanding Settlement
+      *
+     C           F7OTSG    IFEQ '+'
+     C                     Z-ADDF7OTAJ    WWPSTA 150
+     C                     Z-ADD13        WWERR
+     C                     EXSR SRACCR
+     C                     ELSE
+     C           F7OTSG    IFEQ '-'
+     C                     Z-SUBF7OTAJ    WWPSTA
+     C                     Z-ADD14        WWERR
+     C                     EXSR SRACCR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Narrative Changed From 'Fee Accru.'  to 'Fee Settl.'
+      *
+     C                     MOVELWWNAR2    DSTEXT
+      *
+     C           WWPSTA    IFNE 0
+     C                     ADD  WWPSTA    WWACDT
+      *
+      ** Write SETHIPP record '6' (Outstanding Settlement Adjustment)
+      *
+     C                     CLEARGLTAHID0
+     C                     MOVEL'6'       F2RECI
+     C                     Z-ADDBJRDNB    F2PSTD
+     C                     MOVE F7BRCA    F2BRCA
+     C                     MOVE F7PRTP    F2FEPT
+     C                     MOVE F7FETP    F2FETP
+     C                     MOVE F7CNUM    F2CNUM
+     C                     MOVE F7PTFR    F2PTFR
+     C                     MOVE F7CHGR    F2CHGR
+     C                     MOVE F7ACCY    F2ACCY
+     C                     MOVE L1ACAC    DSACAC
+     C                     MOVELDSACNT    F2ADAC
+     C                     Z-ADDWWPSTA    F2ADAM
+     C                     WRITEGLTAHID0
+     C                     ENDIF
+      *
+      ** Keep Net amount and Gross amount
+      *
+     C                     Z-ADDWWACDT    WWNETC 150
+     C                     Z-ADDWWACDT    WWGRSC 150
+     C                     Z-ADD0         WWVATC 150
+      *
+      ** 2) Generate VAT posting if Required
+      **    if Taxable Indicator is 'Y' (always calculate VAT)
+      **    or Taxable Indicator is 'C' (Depending on the indicator of
+      **    the customer) and Taxable Customer
+      *
+     C                     MOVE 'N'       WWVAT   1
+     C           L1TAXE    IFEQ 'Y'
+     C           L1TAXE    OREQ 'C'
+     C           WSTAIN    ANDEQ'Y'
+     C                     MOVE 'Y'       WWVAT
+     C                     EXSR SRTAXE
+     C                     ENDIF
+      *
+      ** 3) Generate Standard Postings
+      *
+     C                     EXSR SRSTDP
+      *
+      ** 4) If Accruals currency is different of Cust Settlement Ccy
+      **    Then generate inter-currency posting (chrg Ccy --> Bank Ccy)
+      *
+     C           F7ACCY    IFNE F7STCY
+     C                     EXSR SRCHBK
+      *
+      ** 5) If Settlement Ccy is different of Bank Currency
+      **    Then Generate Cross-CCY posting (Bank Ccy --> Settl. Ccy)
+      *
+     C           F7STCY    IFNE BJCYCD
+     C                     EXSR SRBKSE
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** 6) If Customer settlement Branch is not Customer Branch
+      **    then Generate Inter-Branch Accounting entries
+      *
+     C           WSBRCH    IFNE WCBRCH
+     C                     EXSR SRINTB
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRACCR
+      *****************************************************************
+      *                                                               *
+      *  SRACCR - Routine to post accrual amount                      *
+      *                                                               *
+      *  Called By: SRPROC and SRPOST Subroutines                     *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRACOD   - Retrieve account details                          *
+      *  SRWNSE   - Write non-suspense account entries                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACCR    BEGSR                           *** SRACCR ***
+      *
+      ** Posting Text is ".. Fee Accru.  .. ...... (....)"
+      *
+     C                     MOVELWWNAR1    DSTEXT
+      *
+      ** Generate Adjustment Entry  D E B I T  (accruals)
+      *
+     C                     Z-ADDWWPSTA    PSTA
+     C                     MOVE WCBICN    CNUM
+     C                     MOVE WCCCY     CCY
+     C                     MOVE L1ACAC    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C           WWPSTA    IFGT 0
+     C                     Z-ADD0         DRCR
+     C                     ELSE
+     C                     Z-ADD1         DRCR
+     C           WWPSTA    IFLT 0
+     C                     Z-SUBPSTA      PSTA
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVE WCBRCH    BRCA
+     C                     Z-ADD0         RIND
+      *
+      ** DBASE = 100 --> Reverse of Deleted Accruals
+      ** DBASE = 110 --> Settlement Ajustment to Accrue before Settlement
+      *
+     C           WWERR     ADD  100       WWERR
+     C                     EXSR SRACOD
+     C                     SUB  100       WWERR
+      *
+      ** Accrual posting --> Retrieve Profit Center
+      *
+     C                     Z-ADD14        WWERR
+      *
+     C                     EXSR SRWNSE
+      *
+      ** Generate Adjustment Entry  C R E D I T (incomes)
+      *
+     C           DRCR      IFEQ 0
+     C                     Z-ADD1         DRCR
+     C                     ELSE
+     C                     Z-ADD0         DRCR
+     C                     ENDIF
+     C                     MOVE L1INAC    ACOD
+      *
+      ** DBASE = 100 --> Reverse of Deleted Accruals
+      ** DBASE = 110 --> Settlement Ajustment to Accrue before Settlement
+      *
+     C           WWERR     ADD  101       WWERR
+     C                     EXSR SRACOD
+     C                     SUB  101       WWERR
+     C                     EXSR SRWNSE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTAXE
+      *****************************************************************
+      *                                                               *
+      *  SRTAXE - Routine to post VAT amount when required            *
+      *                                                               *
+      *  Called By: SRPOST Subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTAXE    BEGSR                           *** SRTAXE ***
+      *
+      ** Retrieve VAT Percentage
+      *
+     C           L1VATC    CHAINSDVATCL0             85
+     C           *IN85     IFEQ *OFF
+     C           F9RECI    ANDEQ'D'
+      *
+      ** Calculate Amount of VAT
+      *
+     C           WWACDT    MULT F9RATE    XXVAT  183
+     C           XXVAT     DIV  100       WWVATC    H
+     C           WWNETC    ADD  WWVATC    WWGRSC 150
+     C                     ELSE
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDVATCPD'DBFILE    P
+     C                     Z-ADD5         DBASE
+     C                     MOVELF9RATE    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRSTDP
+      *****************************************************************
+      *                                                               *
+      *  SRSTDP - Generate standard settlement entries                *
+      *                                                               *
+      *  Called By: SRPOST Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZCCYCN   - Convert amount to a diff. currency                *
+      *  SRWTSE   - Write suspense account entries to GEFEPD          *
+      *  SRWNSE   - Write non-suspense account entries                *
+      *  SRACOD   - Access account details                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSTDP    BEGSR                           *** SRSTDP ***
+      *
+      ** Generate Standard Settlement Entry  D E B I T (Settlements)
+      ** Convert Accrued to date amount in Settlement CCY  (Fee charges + VAT)
+      *
+     C                     Z-ADDWWGRSC    ZAMTF
+      *
+     C                     MOVE WCCCY     ZCCYF
+     C                     Z-ADDWCSPRT    ZRATEF
+     C                     MOVE WCMDIN    ZMDINF
+     C                     Z-ADDWCNBDP    ZCDPF
+      *
+     C                     MOVE WSCCY     ZCCYT
+     C                     Z-ADDWSSPRT    ZRATET
+     C                     MOVE WSMDIN    ZMDINT
+     C                     Z-ADDWSNBDP    ZCDPT
+      *
+      ** If Settlement Currency isn't Charging Currency, then convert Amount
+      *
+     C           ZCCYF     IFNE ZCCYT
+     C                     EXSR ZCCYCN
+     C                     ELSE
+     C                     Z-ADDZAMTF     ZAMTT
+     C                     ENDIF
+      *
+     C                     Z-ADDZAMTT     WSGRSC 150
+     C                     Z-ADDWSGRSC    PSTA
+      *
+     C                     MOVE F7STCY    CCY
+     C                     Z-ADD0         DRCR
+      *                                                                                       CGL020
+      ** Output 'F' to Fee Flag, Posting amount (PSTA) to Fee Value                           CGL020
+      ** and 100 to Fee Percent if CGL020 is installed                                        CGL020
+      *                                                                                       CGL020
+     C           CGL020    IFEQ 'Y'                                                           CGL020
+     C                     MOVE 'F'       FEEFLG                                              CGL020
+     C                     Z-ADDPSTA      FEEVAL                                              CGL020
+     C                     Z-ADD100       FEEPCT                                              CGL020
+     C                     ENDIF                                                              CGL020
+      *
+      ** If Suspense Account Posting Required Flag is 'Y'
+      ** Write a Suspense Entry to GEFEPD
+      *
+     C           WWSAPR    IFEQ 'Y'
+     C                     EXSR SRWTSE
+      *
+     C                     ELSE
+      *
+     C                     MOVE WWCNUM    CNUM
+     C                     Z-ADDWWACOD    ACOD
+     C                     Z-ADDWWACSQ    ACSQ
+     C                     Z-ADDWWACNO    ACNO
+     C                     Z-ADDWWTRAT    TRAT
+     C                     MOVE WSBRCH    BRCA
+     C                     Z-ADDWWRIND    RIND
+     C                     MOVE WWATYP    ATYP
+      *
+      ** Show a narrative without customer detail
+      *
+     C                     MOVE *BLANKS   PNAR
+     C                     MOVE DSNARR    PNAR
+      *
+      ** Settlement Posting --> Retrieve Profit Center
+      *
+     C                     Z-ADD15        WWERR
+      *
+     C                     EXSR SRACOD                                                        197076
+     C                     EXSR SRWNSE
+      *
+     C                     ENDIF
+      *                                                                                       CGL020
+      ** Clear Fee Flag, Fee Value and Fee Percent                                            CGL020
+      *                                                                                       CGL020
+     C           CGL020    IFEQ 'Y'                                                           CGL020
+     C                     MOVE *BLANKS   FEEFLG                                              CGL020
+     C                     Z-ADD0         FEEVAL                                              CGL020
+     C                     Z-ADD0         FEEPCT                                              CGL020
+     C                     ENDIF                                                              CGL020
+      *
+      ** Generate Standard Settlement Entry  C R E D I T (Accruals)
+      *
+     C                     Z-ADDWWNETC    PSTA
+     C                     MOVE WCBICN    CNUM
+     C                     MOVE F7ACCY    CCY
+     C                     Z-ADDL1ACAC    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C                     Z-ADD1         DRCR
+     C                     MOVE WCBRCH    BRCA
+     C                     Z-ADD0         RIND
+     C                     Z-ADD16        WWERR
+     C                     EXSR SRACOD
+      *
+      ** Settlement posting --> Credit
+      *
+     C                     Z-ADD17        WWERR
+      *
+     C                     EXSR SRWNSE
+      *
+      ** If Customer is taxable,
+      *
+     C           WWVAT     IFEQ 'Y'
+      *
+      ** Credit VAT amount of VAT Account
+      *
+     C                     Z-ADDWWVATC    PSTA
+     C                     MOVE WCBICN    CNUM
+     C                     MOVE F7ACCY    CCY
+     C                     Z-ADDL1VATA    ACOD
+     C                     Z-ADDL1VATS    ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C                     Z-ADD1         DRCR
+     C                     MOVE WCBRCH    BRCA
+     C                     Z-ADD0         RIND
+     C                     Z-ADD18        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+     C                     ENDIF
+      *
+      ** If VAT Posting, transfer Net charge amount in Incomes received Account
+      ** with VAT Sequence. Even if L1INAC EQ L1ORAC.
+      ** Then transfer Incomes into Incomes Received Account
+      ** Debit Incomes Account of net amount  (Sequence 01)
+      *
+     C                     Z-ADDWWNETC    PSTA
+     C                     MOVE WCBICN    CNUM
+     C                     MOVE F7ACCY    CCY
+     C                     Z-ADDL1INAC    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C                     Z-ADD0         DRCR
+     C                     MOVE WCBRCH    BRCA
+     C                     Z-ADD0         RIND
+     C                     Z-ADD19        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+      ** Credit Incomes Received Account of net amount (VAT Sequence)
+      *
+     C           WWVAT     IFEQ 'Y'
+     C                     Z-ADDL1VAIA    ACOD
+     C                     ELSE
+     C                     Z-ADDL1IRAC    ACOD
+     C                     ENDIF
+     C           L1VATS    IFNE 0                                                             201626
+     C                     Z-ADDL1VATS    ACSQ
+     C                     ENDIF                                                              201626
+     C                     Z-ADD1         DRCR
+     C                     Z-ADD20        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCHBK
+      *****************************************************************
+      *                                                               *
+      *  SRCHBK - Generate base currency settlement entries           *
+      *                                                               *
+      *  Called By: SRPOST Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRACOD   - Access account details                            *
+      *  SRWNSE   - Write non-suspense account entries                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHBK    BEGSR                           *** SRCHBK ***
+      *
+      ** Convert Accrued to Date Amount in Base Currency for Bank
+      *
+     C                     Z-ADDWWGRSC    ZAMTF
+     C                     Z-ADD0         ZAMTT
+     C                     MOVE WCCCY     ZCCYF
+     C                     Z-ADDWCSPRT    ZRATEF
+     C                     Z-ADDWCNBDP    ZCDPF
+     C                     MOVE WCMDIN    ZMDINF
+      *
+     C                     MOVE BJCYCD    ZCCYT
+     C                     Z-ADDWBSPRT    ZRATET
+     C                     Z-ADDWBNBDP    ZCDPT
+     C                     MOVE WBMDIN    ZMDINT
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WBACDT 150
+      *
+      ** Generate Inter-currency Settlement Entries if Charging CCY is different
+      ** Bank Base Currency
+      *
+     C           F7ACCY    IFNE BJCYCD
+      *
+      ** Debit Entry in Charging Currency
+      *
+     C                     Z-ADDWWGRSC    PSTA
+     C                     MOVE WCBICN    CNUM
+     C                     MOVE WCCCY     CCY
+     C                     MOVE WTACOD    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C                     Z-ADD0         DRCR
+     C                     MOVE WCBRCH    BRCA
+     C                     Z-ADD0         RIND
+     C                     Z-ADD21        WWERR
+     C                     EXSR SRACOD
+      *
+      ** Inter-Currency Posting - Retrieve Profit Center
+      *
+     C                     Z-ADD22        WWERR
+      *
+     C                     EXSR SRWNSE
+      *
+      ** Credit Entry in Base  Currency
+      *
+     C                     Z-ADDWBACDT    PSTA
+     C                     MOVE BJCYCD    CCY
+     C                     MOVE WCSPAE    ACOD
+     C                     Z-ADD1         DRCR
+     C                     Z-ADD23        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRBKSE
+      *****************************************************************
+      *                                                               *
+      *  SRBKSE - Generate settlement currency settlement entries     *
+      *                                                               *
+      *  Called By: SRPOST Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRACOD   - Access account details                            *
+      *  SRWNSE   - Write non-suspense account entries                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBKSE    BEGSR                           *** SRBKSE ***
+      *
+      ** Generate Inter-currency settlement Entry
+      ** Debit Entry --> Base CCY equivalent amount
+      *
+     C           F7ACCY    IFEQ BJCYCD
+     C                     Z-ADDWWGRSC    PSTA
+     C                     ELSE
+     C                     Z-ADDWBACDT    PSTA
+     C                     ENDIF
+      *
+     C                     MOVE WCBICN    CNUM
+     C                     MOVE BJCYCD    CCY
+     C                     MOVE WSSPAE    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADD0         TRAT
+     C                     Z-ADD0         DRCR
+     C                     MOVE WCBRCH    BRCA
+     C                     Z-ADD0         RIND
+     C                     Z-ADD24        WWERR
+     C                     EXSR SRACOD
+      *
+      ** Inter-Currency Posting - Retrieve Profit Center
+      *
+     C                     Z-ADD25        WWERR
+      *
+     C                     EXSR SRWNSE
+      *
+      ** Credit entry - Settlement Ccy Amount
+      *
+     C                     Z-ADDWSGRSC    PSTA
+     C                     MOVE F7STCY    CCY
+     C                     MOVE WTACOD    ACOD
+     C                     Z-ADD1         DRCR
+     C                     Z-ADD26        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRINTB
+      *****************************************************************
+      *                                                               *
+      *  SRINTB - Generate inter-branch settlement entries            *
+      *                                                               *
+      *  Called By: SRPOST Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRACOD   - Access account details                            *
+      *  SRWNSE   - Write non-suspense account entries                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINTB    BEGSR                           *** SRINTB ***
+      *
+      ** Inter-Branch Postings - Retrieve Profit Center
+      *
+     C                     Z-ADD27        WWERR
+      *
+      ** If System is Multi-branching and not suspense account posting
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C           WWSAPR    ANDEQ'N'
+      *
+      ** If interbranch accounting is via main branch, postings are:
+      *
+     C           BKIEMB    IFEQ 'Y'
+      *
+      ** Debit account (PSTA and CCY represent amount in settlement Ccy)
+      *
+     C                     MOVE WCBRCH    BRCA
+     C                     MOVE WMBICN    CNUM
+     C                     MOVE WCDTAC    ACOD
+     C                     MOVE '01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     Z-ADD28        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+      ** Credit Account
+      *
+     C                     MOVE BKMABR    BRCA
+     C                     MOVE WCBICN    CNUM
+     C                     MOVE WMDFAC    ACOD
+     C                     MOVE '01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     Z-ADD29        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+      ** Debit account
+      *
+     C                     MOVE BKMABR    BRCA
+     C                     MOVE WSBICN    CNUM
+     C                     MOVE WMDTAC    ACOD
+     C                     MOVE '01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     Z-ADD30        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+      ** Credit account
+      *
+     C                     MOVE WSBRCH    BRCA
+     C                     MOVE WMBICN    CNUM
+     C                     MOVE WSDFAC    ACOD
+     C                     MOVE '01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     Z-ADD31        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+     C                     ELSE
+      *
+      ** Debit account
+      *
+     C                     MOVE WCBRCH    BRCA
+     C                     MOVE WSBICN    CNUM
+     C                     MOVE WCDTAC    ACOD
+     C                     MOVE '01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     Z-ADD32        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+      ** Credit account
+      *
+     C                     MOVE WSBRCH    BRCA
+     C                     MOVE WCBICN    CNUM
+     C                     MOVE WSDFAC    ACOD
+     C                     MOVE '01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     Z-ADD33        WWERR
+     C                     EXSR SRACOD
+     C                     EXSR SRWNSE
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRACOD
+      *****************************************************************
+      *                                                               *
+      *  SRACOD - Retrieve account details                            *
+      *                                                               *
+      *  Called By: SRACCR, SRSTDP, SRBKSE, SRINTB and SRWTSE Subr.   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOACODR0 - Access object for Account Code Details            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACOD    BEGSR                           *** SRACOD ***
+      *
+      ** Retrieve Account Code Details with Access Object Program
+      *
+     C**********           MOVE ACOD      WAACOD  4                                           CGL029
+     C                     MOVE ACOD      WAACOD 10                                           CGL029
+     C                     CALL 'AOACODR0'
+     C                     PARM '       ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C**********           PARM WAACOD    PACOD   4                                           CGL029
+     C                     PARM WAACOD    PACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADDWWERR     DBASE
+     C                     MOVEL'SDACODPD'DBFILE    P
+     C                     MOVELWAACOD    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A5ACTY    ATYP
+     C                     MOVE A5ACSC    ACSC                                                197076
+     C                     Z-ADD235959    PTIM                                                197076
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRWTSE
+      *****************************************************************
+      *                                                               *
+      *  SRWTSE - Write suspense account entries into GEFEPD          *
+      *                                                               *
+      *  Called By: SRSTDP Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRACOD   - Access account details                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWTSE    BEGSR                           *** SRWTSE ***
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVE WSBICN    CNUM
+     C                     MOVE BKACCD    ACOD
+     C                     Z-ADD01        ACSQ
+     C                     Z-ADD0         ACNO
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDF7STVD    VALD
+     C                     Z-ADD0         TRAT
+     C                     MOVELDSNARR    PNAR
+     C                     MOVE F7CNUM    ASOC
+     C                     Z-ADD0         CHQN
+      *
+      ** Select Fee processing type to generate SPOS
+      *
+     C                     MOVEL'  GE-SC' SPOS
+     C                     MOVEL'SC'      OTTP
+     C                     SELEC
+     C           F7PRTP    WHEQ 'MG'
+     C                     MOVE '  GE-MG' SPOS
+     C                     MOVEL'MG'      OTTP
+     C           F7PRTP    WHEQ 'FI'
+     C                     MOVE '  GE-FI' SPOS
+     C                     MOVEL'FI'      OTTP
+     C           F7PRTP    WHEQ 'HM'
+     C                     MOVE '  GE-HM' SPOS
+     C                     MOVEL'HM'      OTTP
+     C           F7PRTP    WHEQ 'NA'
+     C                     MOVE '  GE-NA' SPOS
+     C                     MOVEL'NA'      OTTP
+     C                     ENDSL
+      *
+     C                     MOVE WSBRCH    BRCA
+     C                     Z-ADD0         RIND
+     C                     Z-ADD0         REJC
+     C                     MOVE *BLANK    DPMT
+     C                     Z-ADD0         RRNM
+      *
+     C                     Z-ADD34        WWERR
+     C                     EXSR SRACOD
+     C                     MOVE '0'       EXIN
+     C                     BITOF'01234567'PRIN
+     C                     MOVE 'B'       GETP
+     C                     Z-ADD0         ACUM
+      *
+     C                     MOVE *BLANK    PRFC
+     C                     MOVE *BLANK    SWCR
+     C                     MOVE *BLANK    DLREF
+     C                     MOVE *BLANK    FACO
+     C**********           Z-ADD0         DBCNUM                                              CSD027
+     C                     MOVE *BLANKS   DBCNUM                                              CSD027
+     C                     MOVE *BLANK    PREF
+     C                     MOVELF7REFE    OTRF
+     C                     MOVE *BLANK    OTST
+     C                     MOVE *BLANK    OTTP
+     C                     Z-ADD0         SDCB
+     C                     Z-ADD0         SDLB
+     C                     MOVE *BLANK    BOKC
+      *
+      ** Write a Record on PF/GEFEPD
+      *
+     C           PSTA      IFNE 0
+     C                     WRITEAPOSTPDF
+     C                     ADD  1         WWRCNT
+     C                     ADD  PSTA      WWHTOT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRWNSE
+      *****************************************************************
+      *                                                               *
+      *  SRWNSE - Write non-suspense account entries                  *
+      *                                                               *
+      *  Called By: SRACCR, SRSTDP, SRCHBK, SRBKSE and SRINTB Subr.   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWNSE    BEGSR                           *** SRWNSE ***
+      *
+     C                     MOVE 'P'       RECI
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDF7STVD    VALD
+     C                     MOVELDSNARR    PNAR
+     C                     MOVE F7CNUM    ASOC
+     C                     Z-ADD0         CHQN
+      *
+      ** Select Fee processing type to generate SPOS
+      *
+     C                     MOVEL'  GE-SC' SPOS
+     C                     MOVEL'SC'      OTTP
+     C                     SELEC
+     C           F7PRTP    WHEQ 'MG'
+     C                     MOVE '  GE-MG' SPOS
+     C                     MOVEL'MG'      OTTP
+     C           F7PRTP    WHEQ 'FI'
+     C                     MOVE '  GE-FI' SPOS
+     C                     MOVEL'FI'      OTTP
+     C           F7PRTP    WHEQ 'HM'
+     C                     MOVE '  GE-HM' SPOS
+     C                     MOVEL'HM'      OTTP
+     C           F7PRTP    WHEQ 'NA'
+     C                     MOVE '  GE-NA' SPOS
+     C                     MOVEL'NA'      OTTP
+     C                     ENDSL
+      *
+     C                     Z-ADD0         REJC
+     C                     MOVE *BLANK    DPMT
+     C                     Z-ADD0         RRNM
+     C                     MOVE '0'       EXIN
+     C                     BITOF'01234567'PRIN
+     C                     MOVE 'B'       GETP
+     C                     Z-ADD0         ACUM
+     C                     MOVELF7REFE    OTRF
+     C                     MOVE *BLANK    PRFC
+     C                     MOVE *BLANK    SWCR
+     C                     MOVE F7PFTC    PRFC
+     C                     MOVE *BLANK    DLREF
+     C                     MOVE *BLANK    FACO
+     C**********           Z-ADD0         DBCNUM                                              CSD027
+     C                     MOVE *BLANKS   DBCNUM                                              CSD027
+     C                     MOVE *BLANK    PREF
+     C                     MOVE *BLANK    OTST
+     C                     Z-ADD0         SDCB
+     C                     Z-ADD0         SDLB
+     C                     MOVE *BLANK    BOKC
+      *
+      ** Write a record on PF/GEFEPD
+      *
+     C           PSTA      IFNE 0
+     C                     WRITEAPOSTPDF
+     C                     ADD  1         WWRCNT
+     C                     ADD  PSTA      WWHTOT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCHRG
+      *****************************************************************
+      *                                                               *
+      *  SRCHRG - Update status of charge reference                   *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHRG    BEGSR                           *** SRCHRG ***
+      *
+     C           F7REFE    IFNE *BLANKS
+      *
+     C                     MOVE F7REFE    KREFE   80
+     C           KREFE     CHAINGLCHRGL0             89
+      *
+     C           *IN89     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE
+     C                     MOVEL'GLCHRGPD'DBFILE    P
+     C                     MOVELKREFE     DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           F7REFE    CHAINGLOTSTL6             89
+      *
+     C           *IN89     IFEQ *ON
+     C           CHSTAT    ANDEQ'O'
+     C           *IN89     OREQ '1'                                                           201626
+     C           CHSTAT    ANDEQ'G'                                                           201626
+      *
+     C                     MOVE 'A'       CHCHTP
+     C                     Z-ADDBJRDNB    CHLCD
+      *
+     C           CHFIND    IFLE BJRDNB
+     C           CHFIND    ANDNE*ZEROS
+     C                     MOVE 'E'       CHSTAT
+     C                     ELSE
+     C                     MOVE 'A'       CHSTAT
+     C                     ENDIF
+      *
+     C                     UPDATGLCHRGD0
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                           *** SRAUDT ***
+      *
+     C           WWDOST    IFEQ 'Y'
+      *
+      ** Update Trailer GEFEZZ
+      *
+     C           WWHTOT    DIV  1000      WWHRWN
+     C                     MVR            WWHRDC
+      *
+     C                     READ GEFEZZ                   70
+      *
+     C           *IN70     IFEQ *OFF
+     C                     ADD  WWRCNT    NORE1
+     C                     ADD  WWHRWN    HRWN
+     C           HRDC      ADD  WWHRDC    WWHRDC
+      *
+     C           WWHRDC    IFGT 1000
+     C           WWHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+     C                     ELSE
+     C                     Z-ADDWWHRDC    HRDC
+     C                     ENDIF
+      *
+     C                     UPDATAPOSTZZF
+     C                     ELSE
+      *
+     C                     MOVE 'T'       RECI
+     C                     Z-ADDWWRCNT    NORE1
+     C                     ADD  2         NORE1
+     C                     Z-ADDWWHRWN    HRWN
+     C                     Z-ADDWWHRDC    HRDC
+     C                     WRITEAPOSTZZF
+     C                     ENDIF
+      *
+      ** Print Audit report GL1961AU
+      *
+     C                     Z-ADDWWRCNT    RCOUNT
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+     C                     ELSE
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   PSEQ    5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           WWRUN     IFNE 'Y'
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     DUMP
+     C                     MOVE 'Y'       WWRUN   1
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZCCYCN
+      *****************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  POWER - Array of powers for currency conversion
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

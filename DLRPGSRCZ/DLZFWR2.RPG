@@ -1,0 +1,320 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Dealing forward rate calculation')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DLZFWR - Dealing Forward Rate Calculation                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. 245132             Date 31Jan07               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 247544             Date 16May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL033   *CREATE   Date 10Feb05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  245132 - After switching on CAS009, COB takes longer time.   *
+      *  247544 - Increase definition of W@NLP2 to match w/ ZINTDYZ2  *
+      *           processing as amended by 242286.  (Recompile)       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *                                                               *
+      *****************************************************************
+      *----------------------------------------------------------------
+      * ID  F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       90-99       STANDARD SUBROUTINES
+      *----------------------------------------------------------------
+      /SPACE 5
+     E                    CPY@    1   1 80
+     E                    ZF29   14  32  5 0
+     E                    ZYDY    4   4  4 0
+     E                    ZMDY   13  13  3 0
+     E                    ZMNM   12  12  3
+     E/COPY ZSRSRC,ZDATE9Z1
+      /SPACE 5
+     ISDCURR    E DSSDCURRPD
+      ** Currency details accessed via access program
+     IDSSDY     E DSDSSDY
+      ** First DS for access programs, short date structure
+      *
+      ** Data structure for subroutine ZCBDYS
+     I            DS
+     I                                        1   80ZZDAT1
+     I                                        1   40ZZYYA
+     I                                        5   60ZZMMA
+     I                                        7   80ZZDDA
+      *
+     I            DS
+     I                                        1   80ZZDAT2
+     I                                        1   40ZZYYB
+     I                                        5   60ZZMMB
+     I                                        7   80ZZDDB
+      *
+     I/COPY ZSRSRC,ZDATE9Z2
+     I/COPY ZSRSRC,ZDAT10Z1
+      /SPACE 5
+      *****************************************************************
+      *
+      ** Initialize fields everytime
+      *
+     C                     EXSR SRINIT
+      *
+      ** Execute Main Subroutine
+      *
+     C                     EXSR SRMAIN
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Subroutine To Initialize Variables (Run Everytime)   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Initialise fields.
+      *
+     C                     Z-ADD0         ZFWOUT
+     C                     MOVE ZFWCCY    ZFWCC2                                              245132
+     C                     MOVE ZFWINC    ZFWIN2                                              245132
+     C                     MOVE ZFYLDC    ZFYLD2                                              245132
+     C                     Z-ADDZFWSDT    ZFWSD2                                              245132
+      *
+     C                     MOVE '0'       *IN98
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN - Main Subroutine                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAIN    BEGSR
+      *
+      ** On change of currency
+      ** Read currency file for default interest calculation method
+      *
+     C           ZFWCCY    IFNE @CCY
+     C                     MOVELZFWCCY    @CCY    3
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           @CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If interest calculation method is not present,
+      ** use currency default.
+      *
+     C           ZFWINC    IFEQ ' '
+     C           ZFWINC    OREQ '0'
+     C                     MOVELA6DICB    ZFWINC
+     C                     ENDIF
+      *
+      ** Calculate discount factor as at near date
+      *
+     C           ZFWCCY    IFNE ZFWCC2                                                        245132
+     C           ZFWINC    ORNE ZFWIN2                                                        245132
+     C           ZFYLDC    ORNE ZFYLD2                                                        245132
+     C           ZFWSDT    ORNE ZFWSD2                                                        245132
+     C           ZFWNDT    ORNE ZFWND2                                                        245132
+      *                                                                                       245132
+     C                     Z-ADDZFWNDT    ZNPFDT
+     C                     EXSR CALDF
+     C                     Z-ADDZNPDF     ZFWNEA 119H
+      *                                                                                       245132
+     C                     ELSE                                                               245132
+     C                     Z-ADDZFWNE2    ZFWNEA                                              245132
+     C                     ENDIF                                                              245132
+      *
+      ** Calculate discount factor as at far date
+      *
+     C                     Z-ADDZFWFDT    ZNPFDT
+     C                     EXSR CALDF
+     C                     Z-ADDZNPDF     ZFWFAR 119H
+     C                     Z-ADDZNPDF     ZFWNE2                                              245132
+     C                     Z-ADDZFWFDT    ZFWND2                                              245132
+      *
+      ** Calculate the number of days/divisor basis
+      ** from near date to far date
+      *
+     C                     Z-ADDZFWNDT    ZCBSDT
+     C                     Z-ADDZFWFDT    ZCBEDT
+     C                     MOVELZFWINC    ZCBCBS
+     C                     EXSR ZCBDYS
+      *
+      ** Forward rate = {(Near Discount Factor/Far Discount Factor)- 1}
+      **                X Divisor Basis / Day Basis
+      *
+     C           ZFWFAR    IFNE *ZERO
+     C           ZFWNEA    DIV  ZFWFAR    ZFWWRK 219H
+     C                     SUB  1         ZFWWRK
+     C                     ELSE
+     C                     Z-ADD*ZERO     ZFWWRK
+     C                     ENDIF
+      *
+     C                     MULT ZCBDIV    ZFWWRK    H
+     C                     MULT 100       ZFWWRK
+      *
+     C           ZCBDAY    IFNE *ZERO
+     C                     DIV  ZCBDAY    ZFWWRK    H
+     C                     ELSE
+     C                     Z-ADD*ZERO     ZFWWRK
+     C                     ENDIF
+      *
+      ** Output Forward Rate
+      *
+     C                     Z-ADDZFWWRK    ZFWOUT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  CALDF - Calculate discount factor                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CALDF     BEGSR
+      *
+     C                     CALL 'DLZNPV2'
+     C                     PARM *BLANK    ZNPRTC  5
+      *
+      ** Currency
+      *
+     C                     PARM ZFWCCY    ZNPCCY  3
+      *
+      ** Int. Calc. Meth.
+      *
+     C                     PARM ZFWINC    ZNPINC  1
+      *
+      ** Spot Date
+      *
+     C                     PARM ZFWSDT    ZNPSDT  50
+      *
+      ** Forward Date
+      *
+     C                     PARM           ZNPFDT  50
+      *
+      ** Amount
+      *
+     C                     PARM *ZERO     ZNPAMT 130
+     C                     PARM *ZERO     ZNPRAT 117
+     C                     PARM *ZERO     ZNPDF  139
+     C                     PARM *ZERO     ZNPOUT 130
+     C                     PARM           ZFYLDC
+     C                     PARM           AS001C  1
+     C                     PARM           CAS008  1                                           245132
+     C                     PARM           CIR004  1                                           245132
+      *
+     C           ZNPRTC    IFEQ '*ERR*'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           ZNPRTC    IFEQ '*NRCD'
+     C                     MOVEL'*NRCD'   ZFWRTC
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * *PSSR - Program Exception/Error Subroutine                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE '*ERR*'   ZFWRTC
+     C                     DUMP
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Initialisatino Subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ZFWRTC  5
+      *
+      ** Currency
+      *
+     C                     PARM           ZFWCCY  3
+      *
+      ** Int. Calc. Meth.
+      *
+     C                     PARM           ZFWINC  1
+      *
+      ** Spot Date
+      *
+     C                     PARM           ZFWSDT  50
+      *
+      ** Next Date
+      *
+     C                     PARM           ZFWNDT  50
+      *
+      ** Far Date
+      *
+     C                     PARM           ZFWFDT  50
+     C                     PARM           ZFWOUT 117
+     C                     PARM           ZFYLDC  5
+     C                     PARM           AS001C  1
+     C                     PARM           CAS008  1                                           245132
+     C                     PARM           CIR004  1                                           245132
+     C                     PARM           ZFWCC2  3                                           245132
+     C                     PARM           ZFWIN2  1                                           245132
+     C                     PARM           ZFYLD2  5                                           245132
+     C                     PARM           ZFWSD2  50                                          245132
+     C                     PARM           ZFWND2  50                                          245132
+     C                     PARM           ZFWNE2 119                                          245132
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZCBDYSZ1
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZDATE9Z3
+     C/COPY ZSRSRC,ZDAT10Z2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005
+**   ZF29 Day nos. of Feb 29 to 2096 (including 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - Years in days cumulative in four-year span
+0366073110961461
+**   ZMDY - Months in days cumulative through year
+000031059090120151181212243273304334365
+**   ZMNM - Month short names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+     X/COPY ZSRSRC,ZDATE9Z4

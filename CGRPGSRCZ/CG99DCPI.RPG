@@ -1,0 +1,311 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Calcul current principal/interest of deal')   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG99DCPI - Calculate Current Principal/Interest of Deal      *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 247544             Date 16May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 182370             Date 05Jun01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 088644             Date 31May95               *
+      *                 S01522             Date 22Nov94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  247544 - Increase definition of W@NLP2 to match w/ ZINTDYZ2  *
+      *           processing as amended by 242286.  (Recompile)       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over ZDLINT and ZCBDYS.                   *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  182370 - Incorrect calculation of number of days for calcu-  *
+      *           lation basis 6. Amended /COPY such that for calcu-  *
+      *           lation basis 6, the number of days per year is      *
+      *           equal to 366 when the year in question is a leap    *
+      *           year, and 365 days/year for non-leap years. Calcu-  *
+      *           lation was made so that processing would be in-line *
+      *           with that of /COPY ZINTDY.                          *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+      *         - Recompiled due to ZCBDYS changes                    *
+     F*  088644 - Ignore all but live records                         *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     FDEAMS   IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F/COPY WNCPYSRC,CG99DCPIF1
+     F/SPACE 5
+     E/COPY CGCPYSRC,SRERRE
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     E                    ZF29   14  32  5 0             29TH FEB ARRAY
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     E/COPY ZSRSRC,ZDATE9Z1                                               182370
+     E/COPY ZSRSRC,ZDAT10Z1                                               182370
+     E/SPACE 5
+     I            DS
+     I                                        1   80VDSN
+     I                                        1   50VDAT
+     I                                        6   80DASN
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      *                                                                   182370
+      ** Data structure for subroutine ZCBDYS                             182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT1                182370
+     I                                        1   40ZZYYA                 182370
+     I                                        5   60ZZMMA                 182370
+     I                                        7   80ZZDDA                 182370
+      *                                                                   182370
+     I            DS                                                      182370
+     I                                        1   80ZZDAT2                182370
+     I                                        1   40ZZYYB                 182370
+     I                                        5   60ZZMMB                 182370
+     I                                        7   80ZZDDB                 182370
+      *                                                                   182370
+     I/COPY CGCPYSRC,SRERRI
+     I/COPY ZSRSRC,ZDATE9Z2                                               182370
+     I/SPACE 5
+     C*****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           ##DLNO  60
+     C                     PARM           ##VDAT  50
+     C                     PARM           ##DASN  30
+     C                     PARM           ##NIDT  50
+     C                     PARM           ##IACD  50
+     C                     PARM           ##AITC 130
+     C                     PARM           ##IPRD 130
+     C                     PARM           ##ICTD 130
+     C                     PARM           ##INTR 117
+     C                     PARM           ##ICBS  10
+     C                     PARM           ##PCPL 150       * Principal
+     C                     PARM           ##INTA 130       * Interest
+     C                     PARM           ##RTCD  7        * Return Code
+      *
+      ** Initial processing.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Calculation of current principal and interest
+      *
+     C                     EXSR SRDCPI
+      *
+     C                     SETON                     LR
+     C                     RETRN
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRDCPI                                         *
+      * Function    :  Calculation of current principal and interest  *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+     C*****************************************************************
+     C           SRDCPI    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRDCPI'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     MOVEL##VDAT    ##VDSN  80
+     C                     MOVE ##DASN    ##VDSN
+     C                     MOVEL##ICBS    ZCBCBS  10
+     C*
+     C           DEAMSK    KLIST
+     C                     KFLD           ##DLNO
+     C                     KFLD           ##IACD
+     C*
+     C           DEAMSK    SETLLDEAMSDIF
+     C           ##DLNO    READEDEAMS                    99*
+      *
+      * Whilst deal amendments can be found, apply the changes
+      *
+     C           *IN99     DOWEQ'0'
+     C           VDSN      ANDLT##VDSN
+      *                                                                   088644
+      * Process live records only                                         088644
+      *                                                                   088644
+     C           RECI      IFEQ 'D'                                       088644
+      *
+      * Calculate the interest between the control date and
+      * the value date of the deal amendment
+     C*
+     C           VDAT      IFGT ##IACD
+     C                     Z-ADD##IACD    ZCBSDT
+     C                     Z-ADDVDAT      ZCBEDT
+     C                     Z-ADD##PCPL    ZDLAMT 130
+     C                     Z-ADD##INTR    ZDLRAT
+     C/COPY WNCPYSRC,CG99DCPIC4
+     C                     EXSR ZDLINT
+     C/COPY WNCPYSRC,CG99DCPIC5
+     C                     ADD  ZDLOUT    ##AITC
+     C                     Z-ADDVDAT      ##IACD
+     C                     END
+     C*
+     C* Principal increase, add deal amendment amount to principal
+     C*
+     C           AMTP      IFEQ 'PI'
+     C                     ADD  DAAM      ##PCPL
+     C                     END
+     C*
+     C* Principal decrease, sub deal amendment amount from principal
+     C*
+     C           AMTP      IFEQ 'PD'
+     C                     SUB  DAAM      ##PCPL
+     C                     END
+     C*
+     C* If the deal amendment is a rate change, change the interest rate
+     C*
+     C           AMTP      IFEQ 'SC'
+     C                     Z-ADDRTSP      ##INTR
+     C                     END
+     C*
+     C* If the deal amendment is settle interest
+     C*
+     C           AMTP      IFEQ 'SI'
+     C                     Z-ADD##AITC    ##INTD
+     C                     SUB  ##IPRD    ##INTD
+     C                     SUB  ##ICTD    ##INTD
+      *
+     C                     ADD  ##INTD    ##IPRD
+     C                     END
+     C*
+     C* If the deal amendment is capitalize interest
+     C*
+     C           AMTP      IFEQ 'CI'
+     C                     Z-ADD##AITC    ##INTD
+     C                     SUB  ##IPRD    ##INTD
+     C                     SUB  ##ICTD    ##INTD
+      *
+     C                     ADD  ##INTD    ##ICTD
+     C                     ADD  ##INTD    ##PCPL
+     C                     END
+      *                                                                   088644
+     C                     ENDIF                                          088644
+     C*
+     C* Read next record
+     C*
+     C           ##DLNO    READEDEAMS                    99
+     C                     END
+     C*
+      * Calculate the interest between the control date and
+      * the event date
+     C*
+     C           ##VDAT    IFGT ##IACD
+     C                     Z-ADD##IACD    ZCBSDT
+     C                     Z-ADD##VDAT    ZCBEDT
+     C                     Z-ADD##PCPL    ZDLAMT
+     C                     Z-ADD##INTR    ZDLRAT
+     C/COPY WNCPYSRC,CG99DCPIC1
+     C                     EXSR ZDLINT
+     C/COPY WNCPYSRC,CG99DCPIC2
+     C                     ADD  ZDLOUT    ##AITC
+     C                     Z-ADD##VDAT    ##IACD
+     C                     END
+      *
+      * The interest due at the event date is the interest to the event date
+      * minus the interest paid/received and capitalized to date
+      *
+     C                     Z-ADD##AITC    ##INTA
+     C                     SUB  ##IPRD    ##INTA
+     C                     SUB  ##ICTD    ##INTA
+      *
+      *................................................................
+      *
+     C           EXCINT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing                             *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C                     SETOF                     98
+     C*
+     C           *LIKE     DEFN ##IPRD    ##INTD
+     C/COPY WNCPYSRC,CG99DCPIC3
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDLINTZ1
+     C/SPACE 5
+     C/COPY ZSRSRC,ZCBDYSZ1
+     C/SPACE 5
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     C/COPY ZSRSRC,ZDATE9Z3                                               182370
+     C/COPY ZSRSRC,ZDAT10Z2                                               182370
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+     X/COPY ZSRSRC,ZDATE9Z4                                               182370

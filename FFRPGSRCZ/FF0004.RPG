@@ -1,0 +1,214 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Set up file with EOC component list')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  -  Futures and Options Module
+     F*                                                                  *
+     F*   FF0004  -  SET UP FILE WITH LIST OF EOC COMPONENTS             *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *   Last Amend No. CER001             Date 25Apr05              *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *   Prev Amend No. S01408             Date 04Sep95              *
+      *                  S01456             Date 15Dec93              *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*   S01408 - Addition of hooks FF0004CCP1                          *
+     F*                              FF0004CCP2                          *
+     F*                              FF0004CCP3                          *
+     F*                              FF0004CCP4                          *
+     F*                              FF0004IIP1                          *
+     F*   S01456 - Monthly P&L Enhancements.                             *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FCMPRND  O   E                    DISK
+     F/COPY WNCPYSRC,FF0004F001
+     FILICDRPDIF  E                    DISK                           UC                      CER001
+      *                                                                                       CER001
+      ** IBLC 2002 I.C.D.                                                                     CER001
+      *                                                                                       CER001
+     F/EJECT
+     E                    CPY@    1   1 80
+     I*****************************************************************
+     ILCMP        DS
+     I*
+     I** Data Area To Form CL Component.
+     I*
+     I                                        1   4 FFC1
+     I                                        5   70N
+     I                                        8  10 BLANK
+     I*                                                                   S01456
+     I@DSFDY    E DSDSFDY                                                 S01456
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01456
+     I*                                                                   S01456
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,FF0004IIP1                                           S01408
+     ISDMMOD    E DSSDMMODPD                                                                  CER001
+      *                                                                                       CER001
+      ** DUMMY RECORD FORMATS FOR ACCESS TO MIDAS MODULES DETAILS                             CER001
+      *                                                                                       CER001
+     IRUNDAT    E DSRUNDAT                                                                    CER001
+      *                                                                                       CER001
+      ** Midas rundat Data structure                                                          CER001
+      *                                                                                       CER001
+     I*                                                                   S01408
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*****************************************************************
+     C*                                                                   S01456
+      *** Check the switchable features file to see if S01456 is on.      S01456
+      *                                                                   S01456
+     C                     MOVE 'N'       S01456  1                       S01456
+     C                     CALL 'AOSARDR0'                                S01456
+     C                     PARM '       ' @RTCD   7                       S01456
+     C                     PARM '*VERIFY' @OPTN   7                       S01456
+     C                     PARM 'S01456 ' @SARD   6                       S01456
+      *                                                                   S01456
+     C           @RTCD     IFEQ *BLANKS                                   S01456
+     C                     MOVE 'Y'       S01456                          S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0004CCP1                                           S01408
+      *                                                                                       CER001
+      ** Call access program for Midas modules details                                        CER001
+      *                                                                                       CER001
+     C                     CALL 'AOMMODR0'                                                    CER001
+     C                     PARM '*MSG    '@RTCD                                               CER001
+     C                     PARM '*FIRST  '@OPTN                                               CER001
+     C           SDMMOD    PARM SDMMOD    @DSFDY                                              CER001
+      *                                                                                       CER001
+      ** ULX043 - IBLC 2002 Reporting is Activated                                            CER001
+      *                                                                                       CER001
+     C                     MOVE 'N'       ULX043  1                                           CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   @RTCD                                               CER001
+     C                     PARM '*VERIFY' @OPTN                                               CER001
+     C                     PARM 'ULX043'  @SARD                                               CER001
+      *                                                                                       CER001
+     C           @RTCD     IFEQ *BLANKS                    Feature is on                      CER001
+      *                                                                                       CER001
+      ** Read Rundat                                                                          CER001
+      *                                                                                       CER001
+     C           *NAMVAR   DEFN           RUNDAT                                              CER001
+     C                     IN   RUNDAT                                                        CER001
+      *                                                                                       CER001
+      ** Read IBLC 2002 ICD Date of Activation                                                CER001
+      ** because COD process must be activated                                                CER001
+      ** After ICD Activation date                                                            CER001
+      ** After 1st Of January 2002 (10960)                                                    CER001
+      *                                                                                       CER001
+     C                     OPEN ILICDRPD                                                      CER001
+     C           1         SETLLILICDRPD                                                      CER001
+     C                     READ ILICDRPD                 99                                   CER001
+     C           *IN99     IFEQ *ON                                                           CER001
+     C                     Z-ADD99999     ICACTD                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** If Activation date is reached, then run EOC.                                         CER001
+      *                                                                                       CER001
+     C           AGRDNB    IFGE ICACTD                     After activation date              CER001
+     C           AGRDNB    ORGE 10960                      After 1st jan02                    CER001
+     C                     MOVE 'Y'       ULX043                                              CER001
+     C                     ENDIF                                                              CER001
+     C                     ENDIF                                                              CER001
+     C*                                                                   S01408
+      *                                                                   S01456
+     C*
+      ** Set Up 'FFC1' Constant For Component Names.
+     C*
+     C                     MOVE 'FFC1'    FFC1
+     C*
+      ** Write components FFC1003 to FFC1015 Inclusive.
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0004CCP2                                           S01408
+     C*                                                                   S01408
+     C*
+     C           ULX043    IFEQ 'Y'                                                           CER001
+     C           3         DO   11        N                                                   CER001
+     C                     WRITECMPRNDF                                                       CER001
+     C                     ENDDO                                                              CER001
+     C                     ELSE                                                               CER001
+     C           3         DO   15        N
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0004CCP3                                           S01408
+     C*                                                                   S01408
+     C                     WRITECMPRNDF
+     C                     END
+     C                     ENDIF                                                              CER001
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF0004CCP4                                           S01408
+      *                                                                                       CER001
+      ** Add Run of IBLC 2002 EOC component                                                   CER001
+      ** When Feature ULX043 is Present and COB Process is activated                          CER001
+      *                                                                                       CER001
+     C           BGNWST    IFEQ 'Y'                                                           CER001
+     C           ULX043    IFEQ 'Y'                                                           CER001
+     C           'ILC0645' CAT  'EOC':0   W1     10                                           CER001
+     C                     MOVELW1        LCMP                                                CER001
+     C                     WRITECMPRNDF                                                       CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** Restart loop for FF EOC Components                                                   CER001
+      *                                                                                       CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     MOVEL*BLANKS   LCMP                                                CER001
+     C                     MOVE 'FFC1'    FFC1                                                CER001
+     C           12        DO   15        N                                                   CER001
+     C                     WRITECMPRNDF                                                       CER001
+     C                     ENDDO                                                              CER001
+     C*                                                                   S01408
+     C*
+      ** Write components FFC1021 to FFC1028 Inclusive.
+     C*
+     C           21        DO   28        N
+     C                     WRITECMPRNDF
+     C                     END
+     C*
+      *                                                                   S01456
+      *** If the feature is switched on then write components FFC1060.    S01456
+      *                                                                   S01456
+     C           S01456    IFEQ 'Y'                                       S01456
+     C           60        DO   60        N                               S01456
+     C                     WRITECMPRNDF                                   S01456
+     C                     END                                            S01456
+     C                     END                                            S01456
+      *                                                                   S01456
+      *                                                                   S01456
+      ** Write component FFC1080
+     C*
+     C           80        DO   80        N
+     C                     WRITECMPRNDF
+     C                     END
+     C*
+      ** Terminate Program.
+     C*
+     C                     SETON                     LR
+     C*
+     C                     RETRN
+     C*
+     C*****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,603 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Portfolio Management Extract')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  IL0649 - Portfolio Management Extract                        *
+      *                                                               *
+      *  Function:  This program is running during Close of business  *
+      *             To extract Item to report for iblc 2002 From      *
+      *             the Portfolio Management Module                   *
+      *                                                               *
+      *  Called By: ILC0649 - IBLC 2002 - Portfolio Management Extract*
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 220750             Date 17Oct06               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX043             Date 28Sep01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  220750 - Database error if customer is closed                *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FGEPMPD  IF  E           K        DISK
+      ***  Generated entries for Portfolio Management
+      *
+     F                                              KINFSR *PSSR
+      *
+     FSDBRCHL5IF  E           K        DISK         KINFSR *PSSR
+      ***  Std. Data - Branch Code                         Prefix 'A8'
+      *
+     FILICDRPDIF  E                    DISK
+      ***  IBLC Installation Control Data                  Prefix 'IC'
+     F                                              KINFSR *PSSR
+     F***SDACODYLIF  E           K        DISK                                                CER001
+     FSDACX1L0IF  E           K        DISK                                                   CER001
+      ***  IBLC Client details         Extended file       Prefix 'AC'
+     F                                              KINFSR *PSSR
+     F***SDCURRYLIF  E           K        DISK                                                CER001
+     FSDCYX1L0IF  E           K        DISK                                                   CER001
+      ***  IBLC Currency ext. file                         Prefix 'CY'
+     F                                              KINFSR *PSSR
+     F***SDCUSTYLIF  E           K        DISK                                                CER001
+     FSDCUX1L0IF  E           K        DISK                                                   CER001
+      ***  IBLC Customer ext. file                         Prefix 'CU'
+     F                                              KINFSR *PSSR
+     F***SDBRCHYLIF  E           K        DISK                                                CER001
+     FSDBRX1L0IF  E           K        DISK                                                   CER001
+      ***  IBLC branch code - Ext file                     Prefix 'BR'
+     F                                              KINFSR *PSSR
+     FILDIWKPDO   E           K        DISK
+      ***   IBLC Items generated                           Prefix 'IT'
+     F                                              KINFSR *PSSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+      ***  Standard Subroutine Arrays
+      *
+     E                    ZMNM   12  12  3
+     E                    POWER   1   7  7 3              std ZCCYCN
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80               Copyright
+      *
+      /EJECT
+      *****************************************************************
+      *
+      ***  Working Data Structure
+      *
+     IPSDS       SDS
+      ***  Program status data structure for WS/user ID'S
+     I                                     *PROGRAM PGMID
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      *
+     IMRDTDS      DS
+      ***  Data structure to use BJMRDT
+     I                                        1   2 WDLUP
+     I                                        3   5 WMLUP
+     I                                        6   7 WYLUP
+     I            DS
+      ***  Data structure for ITOPER
+     I                                        4  16 ITOPE3
+     I                                        1  16 ITOPER
+     I            DS
+      ***  Data structure for ITACTD
+     I                                        1   2 ITACDD
+     I                                        3   4 ITACMM
+     I                                        5   6 ITACYY
+     I                                        1   60ITACTD
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Standing Data - Bank Details
+     ISDGELR    E DSSDGELRPD
+      ***  Standing Data - Midas General Ledger Module details
+     ISDBRCH    E DSSDBRCHPD
+      ***  Standing Data - Branch Details
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QDFACC                                    CER001
+      ***  Standing Data - Customer Details
+     ISDCURR    E DSSDCURRPD
+      * External DS for Currency Details
+     IDSFDY     E DSDSFDY
+      ***  First DS for access programs, short DS
+     IDSSDY     E DSDSSDY
+      *** Second DS for access programs, long DS
+     IDSLDY     E DSDSLDY                                                                     220750
+      *  Third DS for access programs, very long data strcture                                220750
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+     C                     MOVE *BLANKS   KWBRCA
+     C                     MOVE *BLANKS   KWECCY
+     C                     READ GEPMPD                   70
+      *
+     C           *IN70     DOWEQ*OFF                       Process Until EOF
+      *
+      ***  Check Branch : To be reported ? Branch of consolidation ?
+      *
+     C           BRCA      IFNE KWBRCA
+     C                     MOVE BRCA      KWBRCA  3
+     C********** KWBRCA    CHAINSDBRCHYL             99                                       CER001
+     C           KWBRCA    CHAINSDBRX1L0             99                                       CER001
+      *
+      ***  Database error in case of Problem
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ****************
+     C**********           MOVEL'SDBRCHYL'DBFILE           * DB ERROR 001 *                   CER001
+     C                     MOVEL'SDBRX1L0'DBFILE           * DB ERROR 001 *                   CER001
+     C                     MOVELKWBRCA    DBKEY            ****************
+     C                     MOVELPGMID     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Check if branch must be Reported. If no, Loop
+      *
+     C           BRREPT    IFNE 'Y'
+     C                     READ GEPMPD                   70next record
+     C                     ITER                            LOOP
+     C                     ENDIF
+      *
+      ***  Report using branch of Consolidation
+      *
+     C                     MOVE BRCONS    ITBRCD
+      *
+      ***  Access Branch Details to retrieve BICN number
+      *
+     C                     CALL 'AOBRCHR0'             99
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM KWBRCA    PBRCA   3
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ****************
+     C                     MOVEL'SDBRCHPD'DBFILE    P      * DB ERROR 002 *
+     C                     MOVELKWBRCA    DBKEY     P      ****************
+     C                     MOVELPGMID     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Retrieve Immatriculation of BICN
+      *
+     C********** A8BICN    CHAINSDCUSTYL             99                                       CER001
+     C           A8BICN    CHAINSDCUX1L0             99                                       CER001
+      *
+      ***  Database error in case of Problem
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            *****************
+     C**********           MOVEL'SDCUSTYL'DBFILE    P      * DB ERROR 003 **                  CER001
+     C                     MOVEL'SDCUX1L0'DBFILE    P      * DB ERROR 003 **                  CER001
+     C                     MOVELA8BICN    DBKEY     P      *****************
+     C                     MOVELPGMID     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Save Immatriculation for identification
+      *
+     C           CUIMCO    IFNE *BLANKS                    Defined
+     C           CUIMCO    ANDNE'00'                       and Known
+     C                     MOVELCUIMCO    WKIDCO  2
+     C                     MOVELCUIMNB    WKIDEN  9
+     C                     ELSE                            else use identification
+     C                     MOVELCUIDCO    WKIDCO
+     C                     MOVELCUIDEN    WKIDEN
+     C                     ENDIF
+      *
+      ***  Process While Same branch and End OF File not detected
+      *
+     C                     MOVE *BLANKS   KWECCY  3        Reset
+      *
+     C           KWBRCA    DOWEQBRCA                       Process same branch
+     C           *IN70     ANDEQ*OFF                       and until EOF
+      *
+      ***  Check Event Currency : To be reported ?
+      *
+     C           CCY       IFNE KWECCY
+     C                     MOVE CCY       KWECCY
+     C********** KWECCY    CHAINSDCURRYL             99                                       CER001
+     C           KWECCY    CHAINSDCYX1L0             99                                       CER001
+      *
+      ***  Database error in case of Problem
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ****************
+     C**********           MOVEL'SDCURRYL'DBFILE           * DB ERROR 004 *                   CER001
+     C                     MOVEL'SDCYX1L0'DBFILE           * DB ERROR 004 *                   CER001
+     C                     MOVELKWECCY    DBKEY            ****************
+     C                     MOVELPGMID     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Check if Currency is to be Reported. If no, Loop
+      *
+     C           CYREPT    IFNE 'Y'
+     C                     READ GEPMPD                   70Read next
+     C                     ITER                            Loop
+     C                     ENDIF
+      *
+      ***  Access Currency details For converison if Required
+      *
+     C                     CALL 'AOCURRR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM KWECCY    PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           *IN99     IFEQ *ON
+     C           PRTCD     ORNE *BLANKS
+     C                     Z-ADD5         DBASE            ****************
+     C                     MOVEL'SDCURRPD'DBFILE    P      * DB ERROR 005 *
+     C                     MOVELKWECCY    DBKEY     P      ****************
+     C                     MOVELPGMID     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Keep to convert Eventually Amount in Euro for 'In' Currency
+      *
+     C                     MOVELA6CYCD    ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVELA6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVE A6INCY    KPINCY  1
+      *
+      ***  Process while same currency
+      *
+     C           KWECCY    DOWEQCCY                        Process same currency
+     C           KWBRCA    ANDEQBRCA                       and same branc
+     C           *IN70     ANDEQ*OFF                       and until EOF
+      *
+      ***  Is the customer accepted ?
+      *
+      ***  check whether record is to be reported dependign on account Code
+      *
+     C**********           MOVE ACOD      KWACOD  4                                           CER001
+     C                     MOVE ACOD      KWACOD 10                                           CER001
+     C********** KWACOD    CHAINSDACODYL             99                                       CER001
+     C           KWACOD    CHAINSDACX1L0             99                                       CER001
+      *
+      ***  Database error in case of Problem
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ****************
+     C**********           MOVEL'SDACODYL'DBFILE           * DB ERROR 006 *                   CER001
+     C                     MOVEL'SDACX1L0'DBFILE           * DB ERROR 006 *                   CER001
+     C                     MOVELKWACOD    DBKEY            ****************
+     C                     MOVELPGMID     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           ACDRPT    IFEQ 'Y'                        A/c Code to be Reported
+      *
+      ***  check whether customer is non-resident and not BICN
+      *
+     C                     EXSR #CUST
+      *
+     C           *IN60     IFEQ *ON                        OK
+      *
+     C                     EXSR #WREC
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ GEPMPD                   70Read Next
+      *
+     C                     ENDDO                           End currency
+      *
+     C                     ENDDO                           End branch
+      *
+     C                     ENDDO                           End eof
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      /EJECT
+      ****************************************************************
+      *  #CUST  - Customer Checks                                    *
+      *  ------                                                      *
+      *  Called by : Mainlines                                       *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #CUST     BEGSR
+      *
+     C                     MOVE *ON       *IN60            continue
+      *
+      *** Bypass (*IN60 *OFF) if customer is internal branch customer
+      *
+     C                     MOVE CNUM      KCUST   6
+     C           KCUST     CHAINSDBRCHL5             99
+     C           *IN99     IFEQ *OFF                       Found = BICN
+     C                     MOVE *OFF      *IN60
+     C                     ELSE
+      *
+      *** Bypass (*IN60 *OFF) if Customer is resident
+      *
+     C                     MOVELKCUST     PCUST  10
+     C**********           CALL 'AOCUSTR0'             99                                     220750
+     C                     CALL 'AOCUSTR1'             99                                     220750
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C                     PARM           PCUST
+     C********** SDCUST    PARM SDCUST    DSSDY                                               220750
+     C           SDCUST    PARM SDCUST    DSLDY                                               220750
+     C           PRTCD     IFNE *BLANKS
+     C           BBCLST    ANDNE'Y'                                                           220750
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD7         DBASE            ****************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DB ERROR 007 *
+     C                     MOVELKCUST     DBKEY            ****************
+     C                     MOVELPGMID     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Customer is resident if Bank country = Customer country location
+      *
+     C           BBCOLC    IFEQ 'LU'
+     C                     MOVE *OFF      *IN60            Bypass
+     C                     ELSE
+     C********** KCUST     CHAINSDCUSTYL             99                                       CER001
+     C           KCUST     CHAINSDCUX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE           * DB ERROR 008 *                   CER001
+     C                     MOVEL'SDCUX1L0'DBFILE           * DB ERROR 008 *                   CER001
+     C                     MOVELKCUST     DBKEY            ****************
+     C                     MOVELPGMID     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE CUIDCO    ITIDCO
+     C                     MOVE CUIDEN    ITIDNB
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #WREC  - Write Item EXtract in file ILDWIKPD                *
+      *  ------                                                      *
+      *  Called by : Mainlines                                       *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #WREC     BEGSR
+      *
+     C                     MOVE 'PM'      ITMODI
+     C                     MOVEL'130'     ITOPCO           Operation code
+     C                     MOVE CCY       ITCURR
+     C                     MOVE '0'       ITCORR
+     C                     MOVE '0'       ITGLOB
+     C                     MOVEL'010'     ITOPER           ITOPER (DS)
+     C                     MOVE *ALL'0'   ITOPE3
+     C                     MOVE CNUM      ITOPE3
+     C                     Z-ADDPSTA      ITAMNT           Amount in ccy
+     C                     Z-ADD0         ITITSQ
+      *
+     C                     MOVE BJMRDT    MRDTDS
+     C                     MOVELWDLUP     ITACDD
+     C                     Z-ADD1         #J      20
+     C           WMLUP     LOKUPZMNM,#J                  62
+     C                     MOVE '00'      ITACMM
+     C                     MOVE #J        ITACMM
+     C                     MOVELWYLUP     ITACYY           Accounting date
+      *
+     C                     MOVE 'D'       ITDRCR           Debit/Credit
+      *
+     C                     MOVE BBCOLC    ITCOCO           Country code
+     C                     MOVE WKIDCO    ITIDCO           ID. code
+     C                     MOVE WKIDEN    ITIDNB           ID number
+     C                     MOVEL*BLANKS   ITTEXT           Narrative
+      *
+      ***  Convert Original Amount in Reporting Amount (Euro) for 'In' CCy
+      *                                                       for All Ccy
+     C                     Z-ADDITAMNT    ZAMTF
+     C                     EXSR ZCCYCN
+     C           KPINCY    IFEQ 'Y'                        In currency
+     C                     MOVE ITCURR    ITOCUR           Original CCy
+     C                     Z-ADDITAMNT    ITOAMN           Amount in Orig. Ccy
+     C                     MOVE BKEURO    ITCURR
+     C                     Z-ADDZAMTT     ITAMNT
+     C                     ELSE
+     C                     MOVE *BLANK    ITOCUR
+     C                     MOVE *BLANK    ITOAMN
+     C                     ENDIF
+     C                     Z-ADDZAMTT     ITAMNB           Amount in EUROS
+     C                     MOVE 'Y'       ITOWN            Own account
+      *
+      ***  Physical write if greather or equal to Limit of Registration
+      *
+      ****  Synoptic Program will remove unnecessary items
+     C****       ITAMNB    IFGE ICLIMR
+     C                     WRITEILITEMD0
+     C****                 ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial processing : Reset static fields            *
+      *  ------                        access standing data           *
+      *  Called by : First RPG Cycle                                  *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVELPGMID     DBPGM
+      *
+      ***  Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD9         DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 009 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     MOVELPGMID     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     ENDIF
+      *
+      ***  Access General Ledger detail to retrive EURO Ccy code
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDGELR    PARM SDGELR    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD10        DBASE            ****************
+     C                     MOVEL'SDGELRPD'DBFILE    P      * DB ERROR 010 *
+     C                     MOVEL'READ'    DBKEY     P      ****************
+     C                     MOVELPGMID     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access EURO CCy details for Std routine for Currency conversion
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BKEURO    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE            ****************
+     C                     MOVEL'SDCURRPD'DBFILE    P      * DB ERROR 011 *
+     C                     MOVELPCURR     DBKEY     P      ****************
+     C                     MOVELPGMID     DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Convert Amounts in Euro  when required; keep "To CCY" details
+      *
+     C                     MOVELA6CYCD    ZCCYT
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVELA6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+      *
+      ***  Read IBLC I.C.D.
+      *
+     C           1         SETLLILICDRPD
+     C                     READ ILICDRPD                 99
+      *
+      ***  Database error in Case of read with error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            ****************
+     C                     MOVEL'ILICDRPD'DBFILE           * DB ERROR 012 *
+     C                     MOVEL'ICDR  '  DBKEY            ****************
+     C                     MOVELPGMID     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error processing                                    *
+      *  Called by : Initial processing                               *
+      *              in case of error                                 *
+      *  Calls     : None                                             *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /TITLE Copy Standard Subroutines
+      /COPY ZSRSRC,ZCCYCN
+**  ZMNM  MONTHS
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

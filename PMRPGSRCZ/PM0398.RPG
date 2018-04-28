@@ -1,0 +1,853 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM RE daily transactions extract')               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F***PM0398**-*RE*DAILY*TRANSACTION*EXTRACT************************   CPM004
+     F*  PM0398  - GL DAILY TRANSACTION EXTRACT                       *   CPM004
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 182961             Date 21Apr01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                 CTI002 Exposure Management / TI Interface     *
+     F*                 116406             DATE 04APR97               *
+     F*                 CPM004             DATE 08FEB96               *
+     F*                 085867             DATE 16MAR95               *
+     F*                 085862             DATE 16MAR95                  *S01486
+     F*                 081353             DATE 09JAN95               *
+     F*                 S01486             DATE 04OCT94               *
+     F*                 S01313             DATE 06NOV92               *
+     F*                 B9991 DT           DATE 13NOV91               *
+     F*                 R10041             DATE 16/09/90              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  182961 - Database error occurred due to a blank key field    *
+      *           (Instrument Type).  The default Instrument type in  *
+      *           PF/SDPORTPD is taken if a blank instrument type is  *
+      *           encountered.                                        *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  116406  -  If the Instrument type from the A/C Codes file is *
+     F*             blank, use the default value from PM ICD.         *
+     F*  CPM004 - Bank Portfolios.                                    *
+     F*  085867 - Change Pay A/C and Rec A/C to have the branch code  *
+     F*           (RECOMPILE)                                         *
+     F*  085862 - INCLUDE BRANCH IN ACCOUNT IDENTIFIER                *
+     F*  081353  -  Remove ZSFILE coding                              *
+     F*  S01486  -  Portfolio Management Upgrade to R10               *
+     F*  S01313  -  RECOMPILED DUE TO PORTFOLIO PERFORMANCE           *
+     F*  B9991   -  ADDING OF SOME FIELDS TO IMPROVE PM0400P1 REPORT  *
+     F*  R10041  -  EXTRACT ALL POSTINGS GENERATED DURING COB         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSDPORTPDIF  E                    DISK         KINFSR *PSSR          182961
+     F***PM0398AUO***E                    PRINTER                         S01486
+     F***PM0398AUO   E                    PRINTER      KINFDS SPOOLUS01486081353
+     FPM0398AUO   E                    PRINTER                            081353
+     F***SDBANKPDIF**E                    DISK                            S01486
+     F***************                               KINFSR *PSSR          S01486
+     F***PMTRCNZZUF**E           K        DISK                      A     S01486
+     FPMTRCNPAUF  E           K        DISK                      A        S01486
+     F                                              KINFSR *PSSR
+     F***PMTRCNPPO***E           K        DISK                            S01486
+     FPMTRCNPDO   E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F                                              KINFSR *PSSR
+     F***SDPLINPDIF**E           K        DISK                            S01486
+     F***************                               KINFSR *PSSR          S01486
+     F***SDACODL0IF**E           K        DISK                            S01486
+     F***************                               KINFSR *PSSR          S01486
+     F*ANPOJF*IF**E***        K        DISK                               R10041
+     F***EODPOJF*IF**E           K        DISK                     R10041 S01486
+     FPMEODPL0IF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F***SDACOFL0IF**E           K        DISK                      B9991 S01486
+     F***PREFIX*AZ***                                               B9991 S01486
+     F***************                               KINFSR *PSSR    B9991 S01486
+     FPMDSPGL3IF  E           K        DISK                               B9991
+     F** PREFIX PA                                                        B9991
+     F                                              KINFSR *PSSR          B9991
+      /EJECT
+     F*
+     F**   INDICATOR USAGE
+     F**   ---------------
+     F*
+     F**   71      INITIAL PROCESSING
+     F*****73      PF/PMTRCNZZ NOT THERE                                  S01486
+     F**   73      PF/PMTRCNPA NOT THERE                                  S01486
+     F*
+      /EJECT
+     F*
+     F**   SUB-ROUTINE DEFINITIONS
+     F**   -----------------------
+     F*
+     F**   #P02 AUDIT PROCESSING
+     F**   #W01 WRITE MANUAL POSTING TO TRANSACTION REPORT CONTROL FILE
+     F**   #W0201   WRITE TO TRANSACTION REPORT CONTROL  FILE
+     F**   #W0201   WRITE TO RE DAILY TRANSACTION EXTRACT AUDIT REPORT
+     F*
+      /EJECT
+     E** FORMAT RE DETAILS FOR OUTPUT  (SR/ZFRELN)
+     E                    ZLI        20  1
+     E*
+     E**   Array for copyright
+     E                    CPY@    1   1 80               COPYRIGHT
+      /EJECT
+     I*
+     I** DATA STRUCTURE TO REDEFINE ACCOUNT CODE
+     I            DS
+     I************                            1  15 DSACCN                CPM004
+     I**********                              1  18 DSACCN                             CPM004 CGL029
+     I                                        1  24 DSACCN                                    CGL029
+     I**********                              1   60CNUM                                      CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        7   9 CCY
+     I**********                             10  130ACOD                                      CGL029
+     I**********                             14  150ACSQ                                      CGL029
+     I**********                             16  18 BRCA                               CPM004 CGL029
+     I                                       10  190ACOD                                      CGL029
+     I                                       20  210ACSQ                                      CGL029
+     I                                       22  24 BRCA                                      CGL029
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***LDA********UDS                            256                    S01486
+     I**************                        132 183 DBLOT                 S01486
+     I**************                        132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I*                                                                   CPM004
+     I** Input parameters on call to AOPLCSR1                             CPM004
+     II@PARM      DS                            256                       CPM004
+     I                                        1   1 I#PORS                CPM004
+     I                                        2   5 I#R997                CPM004
+     I                                        6  15 I#CUST                CPM004
+     I                                       16  18 I#BRCA                CPM004
+     I                                       19  20 I#BOOK                CPM004
+     I                                       21  24 I#PTFR                CPM004
+     I                                       25  34 I#CPGM                CPM004
+     I*                                                                   CPM004
+     I** Output parameters on call to AOPLCSR1                            CPM004
+     IO@PARM      DS                            256                       CPM004
+     I                                        1   2 O#BOOK                CPM004
+     I                                        3   6 O#PTFR                CPM004
+     I                                        7  12 O#BICN                CPM004
+     I                                       13  22 O#CRNM                CPM004
+     I                                       23  24 O#ACOF                CPM004
+     I*
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDPORT    E DSSDPORTPD                                              CPM004
+     I** EXTERNAL DS FOR PORTFOLIO DETAILS                                CPM004
+     ISDPLIN    E DSSDPLINPD                                              S01486
+     I** EXTERNAL DS FOR INSTRUMENT DETAILS                               S01486
+     ISDACOD    E DSSDACODPD                                              S01486
+     I** EXTERNAL DS FOR ACCOUNT CODES DETAILS                            S01486
+     ISDPLCS    E DSSDPLCSPD                                              CPM004
+     I**  SD Portfolio Management Customer details                        CPM004
+     I              QBCUST                          WQBCUS                CPM004
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE                S01486
+     I*****SPOOLU      DS                                          S01486 081353
+     I************************************** 83  92 SFILEU         S01486 081353
+     I*********************************** B 123 1240SFNUMU         S01486 081353
+     I*********************************** B 367 3680LINE1          S01486 081353
+     I*
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  P R O G R A M     I N I T I A L I S A T I O N                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C***DISPLAY*NON-PORTFOLIO*DISPALY*PICTURE*FROM*PF/PMICD1PP********   S01486
+     C***Display*non-portfolio display picture from PF/SDPORTPD    S01486 CPM004
+     C************ENTRY    PLIST                                          CPM004
+     C***********          PARM           P9DP97  1                       S01486
+     C***********          PARM           FCDP97  1                S01486 CPM004
+     C*
+     C** KEY TO ACCESS ACCOUNTS MASTER FILE
+     C           P1KEY     KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA                            CPM004
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C           *IN71     IFEQ '0'
+     C                     EXSR #INIT
+     C                     END
+     C*
+     C*************************************************************************
+      /EJECT
+     C*************************************************************************
+     C**
+     C**            MAIN  PROCESSING
+     C**=======================================================================
+     C*
+     C** READ MANUAL POSTINGS FILE
+     C********             READ MANPOJF                  73               R10041
+     C**********           READ EODPOJF                  73       R10041  S01486
+     C                     READ PMEODPL0                 73               S01486
+     C*
+     C** EXTRACT MANUAL POSTINGS UNTIL END OF FILE REACHED
+     C           *IN73     DOWEQ'0'
+     C                     EXSR #P01
+     C*******              READ MANPOJF                  73               R10041
+     C**********           READ EODPOJF                  73       R10041  S01486
+     C                     READ PMEODPL0                 73               S01486
+     C                     END
+     C*
+     C** PERFORM AUDIT PROCESSING
+     C                     EXSR #P02
+     C*
+     C*************************************************************************
+      /EJECT
+     C*************************************************************************
+     C**
+     C**   #P01          -  PROCESS MANUAL POSTINGS
+     C**
+     C**   CALLED BY     -  MAIN PROCESSING
+     C**
+     C**   CALLS         -  #W01   - WRITE POSTINGS TO TRANS. FILE
+     C**                    #ACOD  - ACCESS ACCOUNT CODE DETAILS
+     C**                    #INST  - ACCESS PM INSTRUMENT TYPE DETAILS
+     C**                    #ACCN  - ACCESS ACCOUNT DETAILS
+     C**
+     C*=========================================================================
+     C*
+     C           #P01      BEGSR                           *** #P01   ***
+     C*
+     C** SAVE BRANCH CODE
+     C***********          MOVE BRCD      WWBRCD                          S01486
+     C                     MOVE BRCA      WWBRCD                          S01486
+     C*
+     C** WHEN CHANGE OF ACCOUNT CODE, ACCESS A/C CODE AND INSTRUMENT
+     C** TYPE DETAILS
+     C***********ACOD      IFNE WWACOD                                    CPM004
+     C           ACOD      IFNE W@ACOD                                    CPM004
+     C                     EXSR #ACOD
+     C                     EXSR #INST
+     C***********          Z-ADDACOD      WWACOD                          CPM004
+     C**********           Z-ADDACOD      W@ACOD  40                                   CPM004 CGL029
+     C                     Z-ADDACOD      W@ACOD 100                                          CGL029
+     C                     END
+     C*                                                                   CPM004
+     C** When change of booking branch, access branch internal customer   CPM004
+     C** number, branch customer report name and branch a/c officer       CPM004
+     C           FCPORS    IFEQ 'B'                                       CPM004
+     C           BRCA      ANDNEW@BRCA                                    CPM004
+     C                     EXSR #BRCA                                     CPM004
+     C                     MOVELBRCA      W@BRCA                          CPM004
+     C                     END                                            CPM004
+     C*
+     C** WHEN CHANGE OF ACCOUNT, ACCESS THE NEW ACCOUNT DETAILS
+     C           CNUM      IFNE WWCNUM
+     C           CCY       ORNE WWCCY
+     C           ACOD      ORNE WWACOD
+     C           ACSQ      ORNE WWACSQ
+     C           BRCA      ORNE WWBRCA                                    CPM004
+     C                     EXSR #ACCN
+     C**********           Z-ADDCNUM      WWCNUM                                              CSD027
+     C                     MOVE CNUM      WWCNUM                                              CSD027
+     C                     MOVE CCY       WWCCY
+     C                     Z-ADDACOD      WWACOD
+     C                     Z-ADDACSQ      WWACSQ
+     C                     MOVELBRCA      WWBRCA                          CPM004
+     C*
+     C** EXTRACT DEAL AMENDMENT IF DISPLAY NON-PORTFOLIO PICTURE
+     C** (9997) INDICATOR IS NOT 'N' AND IF PORTFOLIO REFERENCE
+     C** NOT BLANK
+     C           PTFR      IFEQ *BLANKS
+     C******     P1KEY     SETGTMANPOJF                                   R10041
+     C***********P1KEY     SETGTEODPOJF                            R10041 S01486
+     C           P1KEY     SETGTPMEODPL0                                  S01486
+     C                     GOTO #P011
+     C                     END
+     C*
+     C           PTFR      IFEQ '9997'
+     C***********P9DP97    ANDEQ'N'                                       S01486
+     C           FCDP97    ANDEQ'N'                                       S01486
+     C******     P1KEY     SETGTMANPOJF                                   R10041
+     C***********P1KEY     SETGTEODPOJF                            R10041 S01486
+     C           P1KEY     SETGTPMEODPL0                                  S01486
+     C                     GOTO #P011
+     C                     END
+     C                     END
+     C*
+     C                     EXSR #W01
+     C                     ADD  1         RECPT   50
+     C*
+     C           #P011     ENDSR                           *** #P01 END **
+     C*************************************************************************
+      /EJECT
+     C*************************************************************************
+     C**
+     C**   #P02          -  AUDIT PROCESSING
+     C**
+     C**   CALLED BY     -  MAIN PROCESSING
+     C**
+     C**   CALLS #W0201  -  WRITE TO TRANSACTION REPORT CONTROL FILE
+     C**         #W0202  -  WRITE TO TRANSACTION EXTRACT AUDIT REPORT
+     C**
+     C*=========================================================================
+     C*
+     C           #P02      BEGSR                           *** #P02   ***
+     C*
+     C***ACCESS*PF/PMTRCNZZ***TRANSACTION REPORT CONTROL AUDIT FILE       S01486
+     C************         READ PMTRCNZZ                 73               S01486
+     C** ACCESS PF/PMTRCNPA - TRANSACTION REPORT CONTROL AUDIT FILE       S01486
+     C                     READ PMTRCNPA                 73               S01486
+     C                     ADD  RECPT     SANORE
+     C                     MOVE 'D'       SARECI
+     C*
+     C** WRITE TO TRANSACTION REPORT CONTROL AUDIT FILE
+     C                     EXSR #W0201
+     C*
+     C** WRITE TO LE DAILY TRANSACTIONS EXTRACT AUDIT REPORT
+     C                     EXSR #W0202
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR                           *** P02 END ***
+     C*************************************************************************
+      /EJECT
+     C*************************************************************************
+     C**
+     C**   #W01          -  WRITE FF TRANSACTION TO  TRANSACTIONS FILE
+     C**
+     C**   CALLED BY     -  MAIN PROCESSING
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #W01      BEGSR                           *** #W01   ***
+     C*
+     C                     MOVE 'D'       SARECI
+     C                     MOVE BBACOC    SAACOC
+     C**********           Z-ADDCNUM      SACNUM                                              CSD027
+     C                     MOVE CNUM      SACNUM                                              CSD027
+     C                     MOVE PTFR      SAPTFR
+     C                     MOVE A5INNR    SAINNR
+     C                     MOVE 'GL'      SAMODI
+     C                     MOVELACOD      SATRNB
+     C                     MOVE ACSQ      SATRNB
+     C                     MOVE *BLANKS   SATRTP
+     C                     MOVE *BLANKS   SATRST
+     C                     MOVE *BLANKS   SATDSS
+     C                     Z-ADD*ZEROS    SANMDP
+     C                     MOVE *BLANKS   SASPBS
+     C                     Z-ADD*ZEROS    SASEQA
+     C                     Z-ADDPSTD      SADDAT
+     C                     Z-ADDVALD      SAVDAT
+     C                     Z-ADD*ZEROS    SAMDAT
+     C***********          Z-ADDWWBRCD    SABRCD                          S01486
+     C                     MOVE WWBRCD    SABRCD                          S01486
+     C           DRCR      IFEQ 1
+     C                     Z-SUBPSTA      SAAMT1
+     C                     ELSE
+     C                     Z-ADDPSTA      SAAMT1
+     C                     END
+     C                     Z-ADD*ZEROS    SAAMT2
+     C                     MOVE CCY       SACCY1
+     C                     MOVE *BLANKS   SACCY2
+     C                     Z-ADD*ZEROS    SAPRC1
+     C                     Z-ADD*ZEROS    SAPRC2
+     C                     Z-ADD*ZEROS    SARATA
+     C                     Z-ADD*ZEROS    SARATB
+     C                     MOVE *BLANKS   SAMDV1
+     C                     MOVE *BLANKS   SAMDV2
+     C                     Z-ADD*ZEROS    SABRT1
+     C                     Z-ADD*ZEROS    SABRT2
+     C                     Z-ADD*ZEROS    SARAI1
+     C                     Z-ADD*ZEROS    SARAI2
+     C                     MOVE *BLANKS   SAFRQ1
+     C                     MOVE *BLANKS   SAFRQ2
+     C                     Z-ADD*ZEROS    SAIPD1
+     C                     Z-ADD*ZEROS    SAIPD2
+     C                     Z-ADD*ZEROS    SANDYS
+     C                     Z-ADD*ZEROS    SAAINT
+     C                     MOVE *BLANKS   SABROK
+     C                     Z-ADD*ZEROS    SASWOD
+     C                     MOVE *BLANK    SAACRI
+     C                     Z-ADD*ZEROS    SAPURI
+     C                     Z-ADD*ZEROS    SAVAL1
+     C                     Z-ADD*ZEROS    SAVAL2
+     C                     MOVE PDDSPG    SARCOA
+     C                     MOVE PDITDS    SARSEA
+     C                     MOVELPNAR      SAT1XT
+     C**********           Z-ADDCNUM      ZCNUM                                               CSD027
+     C                     MOVE CNUM      ZCNUM                                               CSD027
+     C                     MOVELCCY       ZCCY
+     C                     MOVELACOD      ZACOD
+     C                     MOVELACSQ      ZACSQ
+     C                     MOVELBRCA      ZBRCA   3                       085862
+     C                     EXSR ZFRELN
+     C                     MOVELZLIN      SAT2XT
+     C                     MOVE *BLANKS   SACOMC
+     C                     MOVE *BLANKS   SACFRQ
+     C                     Z-ADD0         SANCDT
+     C                     MOVE *BLANKS   SAPAYM
+     C                     MOVE *BLANKS   SAPYAC
+     C                     MOVE *BLANKS   SARCVM
+     C                     MOVE *BLANKS   SARCAC
+     C                     MOVE *BLANKS   SACGST
+     C                     MOVE *BLANKS   SACGAD
+     C                     MOVE 'I'       SACHTP
+     C                     MOVE BBCRNM    SACRNM
+     C                     MOVE PDISTN    SAISTN
+     C*                                                                   CPM004
+     C           FCPORS    IFEQ 'B'                                       CPM004
+     C                     MOVELO#ACOF    SABACO                          CPM004
+     C                     MOVELO#BICN    SABCNM                          CPM004
+     C                     MOVELO#CRNM    SABCRN                          CPM004
+     C                     END                                            CPM004
+     C*
+     C                     WRITEPMTRCNP0
+     C*
+     C                     ENDSR                           *** #W01 END **
+     C*************************************************************************
+      /EJECT
+     C*************************************************************************
+     C**
+     C**   #ACOD           -  ACCESS ACCOUNT CODE DETAILS
+     C**
+     C**   CALLED BY #P01  -  RE TRANSACTIONS PROCESSING
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #ACOD     BEGSR                           * #ACOD  BEGS *
+     C*
+     C**   ACCESS THE ACCOUNT OCDES FILE USING ACCOUNT CODE FROM
+     C**   THE TRANSACTION
+     C                     MOVE ACOD      WWACOX
+     C***********WWACOX    CHAINSDACODL0             72                   S01486
+     C                     CALL 'AOACODR0'                                S01486
+     C                     PARM '*MSG    'WWRTCD  7                       S01486
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C**********           PARM WWACOX    WWKEY4  4                                    S01486 CGL029
+     C                     PARM WWACOX    WWKEY4 10                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                        S01486 CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C***                                                                 S01486
+     C*
+     C**   PERFORM DATABASE IN ERROR PROCESSING IF NO RECORD FOUND
+     C************IN72     IFEQ '1'                                       S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVELACOD      DBKEY
+     C                     MOVEL'02'      DBASE            ***************
+     C***********          MOVEL'SDACODL0'DBFILE           * DB ERROR 02 *S01486
+     C                     MOVE 'SDACODPD'DBFILE           * DB ERROR 02 *S01486
+     C                     OUT  LDA                        ***************S01486
+     C                     EXSR *PSSR                      ***************
+     C                     END
+     C*
+     C                     ENDSR                           * #ACOD  ENDS**
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #INST           -  ACCESS PM INSTRUMENT TYPE DETAILS
+     C**
+     C**   CALLED BY #P01  -  RE TRANSACTION PROCESSING
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #INST     BEGSR                           * #INST BEGS *
+      *                                                                   182961
+      ** Instrument type is defaulted from PF/SDPORTPD if a blank         182961
+      ** instrument type is found.                                        182961
+      ** Indicator 35 was used as the operation's resulting indicator.    182961
+      *                                                                   182961
+     C           A5INNR    IFEQ *BLANKS                                   182961
+     C           1         SETLLSDPORTPD                                  182961
+     C                     READ SDPORTPD                 35               182961
+     C                     MOVE FCDINR    A5INNR                          182961
+     C                     ENDIF                                          182961
+     C**                                                                  116406
+     C* Instrument type supplied is from an OPTIONAL field on the Account 116406
+     C*  Codes file.  If the supplied values is blank, use the Default    116406
+     C*  Instrument Type from the PM ICD file.                            116406
+     C**                                                                  116406
+     C           A5INNR    IFEQ ' '                                       116406
+     C                     MOVE FCDINR    A5INNR                          116406
+     C                     END                                            116406
+     C**                                                                  116406
+     C*
+     C**   ACCESS THE INSTRUMENT TYPES FILE USING THE PM INSTRUMENT TYPE
+     C**   FROM THE INSTRUMENT TYPE
+     C***********A5INNR    CHAINSDPLINPD             72                   S01486
+     C                     CALL 'AOPLINR0'                                S01486
+     C                     PARM '*MSG    'WWRTCD  7                       S01486
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C                     PARM A5INNR    WWKEY3  3                       S01486
+     C           SDPLIN    PARM SDPLIN    DSFDY                           S01486
+     C*
+     C**   PERFORM DATABASE IN ERROR PROCESSING IF NO LIVE RECORD FOUND
+     C************IN72     IFEQ '0'                                       S01486
+     C           WWRTCD    IFEQ *BLANKS                                   S01486
+     C           PDRECI    ANDEQ'*'
+     C***********          MOVE '1'       *IN72                           S01486
+     C                     MOVEL'*ERROR  'WWRTCD                          S01486
+     C                     END
+     C*
+     C************IN72     IFEQ '1'                                       S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVELA5INNR    DBKEY
+     C                     MOVEL'03'      DBASE
+     C***********          MOVEL'SDPLINPD'DBFILE           ***************S01486
+     C                     MOVE 'SDPLINPD'DBFILE           * DB ERROR 03 *S01486
+     C                     OUT  LDA                        ***************S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   B9991
+     C**   ACCESS THE DISPLAY GROUPS FILE                                 B9991
+     C*                                                                   B9991
+     C           PDDSPG    CHAINPMDSPGL3             72                   B9991
+     C*                                                                   B9991
+     C           *IN72     IFEQ '0'                                       B9991
+     C                     MOVE PADSPS    SADSPS                          B9991
+     C                     ELSE                                           B9991
+     C                     MOVE *BLANKS   SADSPS                          B9991
+     C                     END                                            B9991
+     C***********                                                   B9991 S01486
+     C*****ACCESS THE ACCOUNT OFFICERS FILE                         B9991 S01486
+     C***********                                                   B9991 S01486
+     C***********BBACOC    CHAINSDACOFL0             72             B9991 S01486
+     C***********                                                   B9991 S01486
+     C************IN72     IFEQ '0'                                 B9991 S01486
+     C***********          MOVE AZPRTL    SAPRTL                    B9991 S01486
+     C***********          ELSE                                     B9991 S01486
+     C***********          MOVE *BLANKS   SAPRTL                    B9991 S01486
+     C***********          END                                      B9991 S01486
+     C*
+     C                     ENDSR                           * #INST ENDS**
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C**
+     C**   #ACCN           -  ACCESS ACCOUNT DETAILS
+     C**
+     C**   CALLED BY #P01  -  MANUAL POSTINGS PROCESSING
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #ACCN     BEGSR                           * #ACCN BEGS *
+     C*
+     C**   ACCESS THE ACCOUNT DETAILS FILE USING THE NEW ACCOUNT NUMBER
+     C**   FROM THE TRANSACTION
+     C           P1KEY     CHAINACCNT                72
+     C*
+     C           *IN72     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVELDSACCN    DBKEY
+     C                     MOVEL'04'      DBASE            ***************
+     C***********          MOVEL'ACCNT   'DBFILE           * DB ERROR 04 *S01486
+     C                     MOVE 'ACCNT   'DBFILE           * DB ERROR 04 *S01486
+     C                     OUT  LDA                        ***************S01486
+     C                     EXSR *PSSR                      ***************
+     C                     END
+     C*
+     C                     ENDSR                           * #CUST ENDS**
+     C*************************************************************************
+      /EJECT                                                              CPM004
+     C********************************************************************CPM004
+     C**                                                                  CPM004
+     C**   #BRCA           -  Access Branch Details                       CPM004
+     C**                                                                  CPM004
+     C**   CALLED BY #P01  -  Process Postings                            CPM004
+     C**                                                                  CPM004
+     C**   CALLS     AOPLCSR1                                             CPM004
+     C**                                                                  CPM004
+     C*===================================================================CPM004
+     C*                                                                   CPM004
+     C           #BRCA     BEGSR                           * #BRCA BEGS * CPM004
+     C*                                                                   CPM004
+     C**   Access Branch Internal Customer, Branch Customer Report        CPM004
+     C**   Name and Branch Account Officer.                               CPM004
+     C*                                                                   CPM004
+     C                     MOVEL'B'       I#PORS                          CPM004
+     C                     MOVELBRCA      I#BRCA                          CPM004
+      *                                                                   CPM004
+     C                     CALL 'AOPLCSR1'                                CPM004
+     C                     PARM *BLANKS   @RTCD   7                       CPM004
+     C                     PARM '*KEY   ' @OPTN   7                       CPM004
+     C                     PARM           I@PARM                          CPM004
+     C                     PARM *BLANKS   O@PARM                          CPM004
+     C           SDPLCS    PARM SDPLCS    DSFDY                           CPM004
+      *                                                                   CPM004
+     C           @RTCD     IFEQ 'PMA0007'                                 CPM004
+     C           *LOCK     IN   LDA                                       CPM004
+     C                     MOVEL'05'      DBASE            ***************CPM004
+     C                     MOVE 'SDBRCHPD'DBFILE           * DB ERROR 05 *CPM004
+     C                     MOVELI#BRCA    DBKEY            ***************CPM004
+     C                     OUT  LDA                                       CPM004
+     C                     EXSR *PSSR                                     CPM004
+     C                     ENDIF                                          CPM004
+      *                                                                   CPM004
+     C                     ENDSR                           * #BRCA ENDS** CPM004
+     C********************************************************************CPM004
+      /EJECT
+     C*************************************************************************
+     C**
+     C**   #W0201        -  WRITE TO TRANSACTION REPORT AUDIT FILE
+     C**
+     C**   CALLED BY     -  #P02 - AUDIT PROCESSING
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #W0201    BEGSR                           *** #W0201 ***
+     C*
+     C           *IN73     IFEQ '0'
+     C                     UPDATPMTRCNZ0
+     C                     ELSE
+     C                     WRITEPMTRCNZ0
+     C                     END
+     C*
+     C                     ENDSR                           ** #W0201 END*
+     C*************************************************************************
+      /EJECT
+     C*************************************************************************
+     C**
+     C**   #W0202        -  WRITE TO DAILY TRANS. EXTRACT AUDIT REPORT
+     C**
+     C**   CALLED BY     -  #P02 - AUDIT PROCESSING
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #W0202    BEGSR                           *** #W0202 ***
+     C*
+     C                     WRITEPM0398P1
+     C*
+     C                     ENDSR                           ** #W0202 END*
+     C*************************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*    ZFRELN SR. TO FORMAT THE 20A PORTFOLIO MANAGMENT LINE DESCRIPTION
+     C*                                 FOR RETAIL
+     C*
+     C*  FORMAT: 999999 XXX 9999 99
+     C*
+     C*          999999 CUSTOMER NUMBER
+     C*          XXX = CURRENCY
+     C*          9999 = ACCOUNT CODE
+     C*          99 = ACCOUNT SEQUENCE
+     C*
+     C*  INPUT  FIELDS
+     C*       ZCNUM   60     CUSTOMER NUMBER
+     C*       ZCCY    3A     CURRENCY
+     C*       ZACOD   40     ACCOUNT CODE
+     C*       ZACSQ   20     ACCOUNT SEQUENCE
+     C*
+     C*  OUTPUT  FIELDS
+     C*       ZLIN   20A     LINE DESCRIPTION
+     C*
+     C*  ARRAY USED
+     C*      ZLI    20 ELEMENTS, EACH 1 CHARACTER LONG
+     C*
+     C********************************************************************
+     C           ZFRELN    BEGSR                           *** ZFRELN ***
+     C*
+     C** CLEAR LINE DESCRIPTION .
+     C                     MOVEA*BLANKS   ZLI
+     C*
+     C** MOVE CUSTOMER NUMBER TO LINE DESCRIPTION
+     C                     MOVE ZCNUM     ZWRKA6  6
+     C                     MOVEAZWRKA6    ZLI,01
+     C*
+     C** MOVE CURRENCY TO LINE DESCRIPTION
+     C***********          MOVEAZCCY      ZLI,08                          085862
+     C                     MOVEAZCCY      ZLI,07                          085862
+     C*
+     C** MOVE ACCUONT CODE TO LINE DESCRIPTION
+     C**********           MOVE ZACOD     ZWRKA4  4                                           CGL029
+     C                     MOVE ZACOD     ZWRKA4 10                                           CGL029
+     C***********          MOVEAZWRKA4    ZLI,12                          085862
+     C                     MOVEAZWRKA4    ZLI,10                          085862
+     C*
+     C** MOVE ACCUONT SEQUENCE TO LINE DESCRIPTION
+     C                     MOVE ZACSQ     ZWRKA2  2
+     C***********          MOVEAZWRKA2    ZLI,17                          085862
+     C                     MOVEAZWRKA2    ZLI,14                          085862
+     C                     MOVEAZBRCA     ZLI,16                          085862
+     C**
+     C**  SET ALL   FIELDS TO BLANKS OR ZEROS
+     C**********           Z-ADD*ZEROS    ZCNUM   60                                          CSD027
+     C                     MOVE *BLANKS   ZCNUM   6                                           CSD027
+     C                     MOVE *BLANKS   ZCCY    3
+     C**********           Z-ADD*ZEROS    ZACOD   40                                          CGL029
+     C                     Z-ADD*ZEROS    ZACOD  100                                          CGL029
+     C                     Z-ADD*ZEROS    ZACSQ   20
+     C                     MOVE *BLANKS   ZBRCA                           085862
+     C**
+     C                     MOVEAZLI       ZLIN   20
+     C**
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C**   #INIT         -  TO GET BANK DETAILS
+     C**
+     C**   CALLED BY     -  MAIN PROCESSING
+     C**
+     C**   CALLS
+     C**
+     C*=========================================================================
+     C*
+     C           #INIT     BEGSR                           ** #INIT **
+     C*
+     C************LIKE     DEFN BRCD      WWBRCD                          S01486
+     C           *LIKE     DEFN BRCA      WWBRCD                          S01486
+     C           *LIKE     DEFN BRCA      WWBRCA                          CPM004
+     C           *LIKE     DEFN BRCA      W@BRCA                          CPM004
+     C           *LIKE     DEFN CNUM      WWCNUM
+     C           *LIKE     DEFN CCY       WWCCY
+     C           *LIKE     DEFN ACOD      WWACOD
+     C           *LIKE     DEFN ACSQ      WWACSQ
+     C           *LIKE     DEFN A5ACCD    WWACOX
+     C*
+      ***  Copyright Statement.                                           S01486
+     C                     MOVEACPY@      CPY2@  80
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'PM0398'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*
+     C** ACCESS BANK DETAILS
+     C************         READ SDBANKPD                 72               S01486
+     C************                                                        S01486
+     C***IF*RECORD NOT FOUND, ABORT PROGRAM                               S01486
+     C************IN72     IFEQ '1'                                       S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*MSG   ' WWRTCD  7                       S01486
+     C                     PARM '*FIRST ' WWOPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE '01'      DBASE
+     C************         MOVEL'SDBANKPD'DBFILE            ************  S01486
+     C                     MOVE 'SDBANKPD'DBFILE            * DATABASE *  S01486
+     C                     OUT  LDA                         * ERROR 01 *  S01486
+     C                     EXSR *PSSR                       ************
+     C                     END
+     C                     MOVE '1'       *IN71
+     C*                                                                   CPM004
+     C** ACCESS PM ICD                                                    CPM004
+     C*                                                                   CPM004
+     C                     CALL 'AOPORTR0'                                CPM004
+     C                     PARM *BLANKS   WWRTCD                          CPM004
+     C                     PARM '*FIRST  'WWOPTN                          CPM004
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM004
+     C           WWRTCD    IFNE *BLANKS                                   CPM004
+     C           *LOCK     IN   LDA                                       CPM004
+     C                     MOVEL'50'      DBASE            ***************CPM004
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 50 *CPM004
+     C                     OUT  LDA                        ***************CPM004
+     C                     EXSR *PSSR                                     CPM004
+     C                     END                                            CPM004
+     C********************                                         S01486 081353
+     C****ENSURE*AUDIT*SPOOL*FILE*RECORDED*BY*RCF                  S01486 081353
+     C********************                                         S01486 081353
+     C******************** Z-ADDSFNUMU    ZSNUMU  60               S01486 081353
+     C********************                                         S01486 081353
+     C******************** CALL 'ZSFILE'                           S01486 081353
+     C******************** PARM           SEQ     5                S01486 081353
+     C******************** PARM *BLANKS   SENTY   3                S01486 081353
+     C******************** PARM           SFILEU                   S01486 081353
+     C******************** PARM           ZSNUMU                   S01486 081353
+     C******************** PARM *BLANK    ZSERR   1                S01486 081353
+     C********************                                         S01486 081353
+     C********** ZSERR     IFEQ 'Y'                                S01486 081353
+     C********************                                         S01486 081353
+     C****ERROR*DURING*ZSFILE*PROCESSING,*RETURN*TO*CALLING*PROGRAMS01486 081353
+     C********************                                         S01486 081353
+     C******************** SETON                     U7U8LR        S01486 081353
+     C******************** RETRN                                   S01486 081353
+     C******************** END                                     S01486 081353
+     C*
+     C                     ENDSR                            ** #INIT ESR *
+     C*************************************************************************
+      /EJECT
+     C**************************************************************************
+      ** *PSSR       :      FILE EXCEPTION ERROR HANDLING SUBROUTINE
+      ** CALLED FROM : MAIN
+      ** CALLS       :
+     C*=========================================================================
+     C           *PSSR     BEGSR                            ** *PSRR BSR**
+     C**
+     C** ROLL BACK CHANGES , DUMP AND RETURN TO THE CALLING PROGRAM
+     C**
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR                            ** *PSRR ESR**
+     C*=========================================================================
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

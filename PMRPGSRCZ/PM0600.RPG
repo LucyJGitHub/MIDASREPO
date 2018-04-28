@@ -1,0 +1,1206 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Notepad Maintenance-GRPJOB version')          *
+/*OVRF*: OVRDBF FILE(PMCSNPXX) TOFILE(PMCSNPPD) SHARE(*NO)          : *   S01486
+/*OVRF*: OVRDBF FILE(PMPTNPXX) TOFILE(PMPTNPPD) SHARE(*NO)          : *   S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                                 *
+     F*                                                               *
+     F*  PM0600 - NOTEPAD MAINTENANCE                                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 20JUN96               *
+     F*                 085817             Date 13MAR95               *
+     F*                 086386             DATE 20DEC94               *
+     F*                 080202             DATE 20DEC94               *
+     F*                 S01486             DATE 08JUL94               *
+     F*                 062274             DATE 22OCT93               *
+     F*                 60545      DW      DATE 20JUL93               *
+     F*                 54973              DATE 06MAY93               *
+     F*                 S01313             DATE 03JUN92               *
+     F*                 B07934             DATE 26JUN91               *
+     F*                 R10043             DATE 19SEP90               *
+     F*                 R10037             DATE 16SEP90               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET/LIABILITY SPLIT           *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  085817 - Recompile due to changes in PMLDAPD                 *
+     F*  086386 - Missing call of PM0950                              *
+     F*  080202 - Porfolio Notepad fields not updated                 *
+     F*  S01486 - Portfolio Management Upgrade                        *
+     F*  062274 - RESTORE CALL TO PM PROGRAM AND ADD WINDOWS          *
+     F*  60545  - ADD CUSTOMER DETAILS ENQUIRY                        *
+     F*  54973  - F5 ONLY ALLOWED FOR DEFINED PORTFOLIOS              *
+     F*  S01313 - PORTFOLIO PERFORMANCE CHANGES                       *
+     F*  B07934 - ALLOW USER TO INDICATE WHETHER CUSTOMER OR PORTFOLIO*
+     F*           EXTRA VALUATION STATEMENT TO BE REQUESTED           *
+     F*  R10043 - ADD 'EXTRA VALUATION STATEMENT' COMMAND KEY.        *
+     F*  R10037 - INCORRECT PORTFOLIO REFERENCE OUTPUT TO NOTEPAD     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+      *: OVRDBF FILE(PMCSNPXX) TOFILE(PMCSNPPP) SHARE(*NO)          : *   S01486
+      *: OVRDBF FILE(PMPTNPXX) TOFILE(PMPTNPPP) SHARE(*NO)          : *   S01486
+     F*                                                               *
+     F*****************************************************************
+     F****SDBANKL1IF  E                    DISK                           S01486
+     F** PREFIX : BJ                                                      S01486
+     F*********                                     KINFSR *PSSR          S01486
+     F***PMCSNPPPUF  E           K        DISK                      A     S01486
+     FPMCSNPPDUF  E           K        DISK                      A        S01486
+     F** PREFIX : PR
+     F                                              KINFSR *PSSR
+     FPMCSNPXXIF  E           K        DISK
+     F            PMCSNPP0                          KRENAMEPMCSNPPX
+     F                                              KINFSR *PSSR
+     F****PMPTNPPPUF  E           K        DISK                      A    S01486
+     FPMPTNPPDUF  E           K        DISK                      A        S01486
+     F** PREFIX : PR
+     F                                              KINFSR *PSSR
+     FPMPTNPXXIF  E           K        DISK
+     F            PMPTNPP0                          KRENAMEPMPTNPPX
+     F                                              KINFSR *PSSR
+     F****PM0600DDCF  E                    WORKSTN                        S01486
+     FPM0600DFCF  E                    WORKSTN                            S01486
+     F** PREFIX : DD
+     F                                              KINFDS INFDS
+     F                                        DDRRN KSFILE PM0600S0
+     F                                        DDRRN KSFILE PM0600S1
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F********01*        CUSTOMER MASTER DETAILS (PF1)                 N  CPM005
+     F********02*        CUSTOMER DOCUMENTATION  (PF2)                 N  CPM005
+     F*       03         EXIT                    (PF3)                 N
+     F********05*        PORTFOLIO DEFINITION    (PF5)                 N  CPM005
+     F*       12         PREVIOUS SCREEN        (PF12)                 N
+     F********22*        EXTRA VALUATION STAT.  (PF22)              R10043CPM005
+     F*
+     F*       25         ROLLUP
+     F*
+     F*       41         SFLDSP - CUSTOMER SFL
+     F*       42         SFLDSP - PORTFOLIO SFL
+     F*       43         CLEAR SUBFILE DEATAILS
+     F*       44         ROLLUP BEYOND END OF SUBFILE - CUSTOMER SFL
+     F*       45         ROLLUP BEYOND END OF SUBFILE - PORTFOLIO SFL
+     F*       46         ACTIVATE FUNCTION KEYS F1, F2
+     F*       47         ACTIVATE FUNCTION KEY F5
+     F*       49         VLDCMDKY
+     F*
+     F******* 80         FILE OPERATIONS INDICATOR - SDBANKL1             S01486
+     F******* 83         FILE OPERATIONS INDICATOR - PMCSNPPP             S01486
+     F*       83         FILE OPERATIONS INDICATOR - PMCSNPPD             S01486
+     F*       84         FILE OPERATIONS INDICATOR - PMCSNPXX
+     F******* 85         FILE OPERATIONS INDICATOR - PMPTNPPP             S01486
+     F*       85         FILE OPERATIONS INDICATOR - PMPTNPPD             S01486
+     F*       86         FILE OPERATIONS INDICATOR - PMPTNPXX
+     F******* 87         FILE OPERATIONS INDICATOR - PM0600DD             S01486
+     F*       87         FILE OPERATIONS INDICATOR - PM0600DF             S01486
+     F*
+     F*       98         DATE FORMAT = MMDDYY
+     F*       99         WORK
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       ..  ..  ..  04  ..  06  07  08  09  10
+     F*       11  ..  13  14  15  16  17  18  19  20
+     F*       21  ..  23  24  ..  26  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       ..  ..  43  ..  ..  ..  ..  48  ..  50
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       61  62  63  64  65  66  67  68  69  70
+     F*       71  72  73  74  75  76  77  78  79  ..
+     F*       81  82  ..  ..  ..  ..  ..  88  89  90
+     F*       91  92  93  94  95  96  97  ..  ..
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F*       'WWAID' VALUES USED
+     F*
+     F********01*        F1                                               CPM005
+     F********02*        F2                                               CPM005
+     F*       03         F3
+     F********05*        F5                                               CPM005
+     F*       12         F12
+     F********22*        F22                                        R10043CPM005
+     F*       RA         ENTER PRESSED
+     F*       UP         ROLLUP
+     F*       DN         ROLLDOWN
+     E*
+     E                    CPY@    1   1 80
+     I*
+     I** DATA STRUCTURES FOR CURSOR POSITION ON SCREEN
+     I*
+     IINFDS       DS
+     I                                      370 371 WWCPOS
+     IWWCREF      DS
+     I                                        1   1 WWPOS1
+     I                                        2   2 WWPOS2
+     I*
+     I** EXTERNAL FORMAT FOR GROUP DATA AREA
+     I*
+     I****WWGDA     E DSPMGRDAPP                                          S01486
+     I*
+     I****WWLDA     E DSPMLDAPP                                           S01486
+     IWWLDA     E DSPMLDAPD                                               S01486
+     I*
+     I** DATA STRUCTURE FOR ZTNLU1
+     I*
+     I*    MIDAS 'Next Available Transaction No.' Data Area DNATN .
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPSDS       SDS
+     I**********                            244 253 WSID                  S01486
+     I**********                            254 263 USID                  S01486
+     I                                      244 253 WKSTN                 S01486
+     I                                      254 263 USER                  S01486
+     I*
+     I*PARC*****  DS                              6                 60545 062274
+     I****                                    1   6 PACUST          60545 062274
+     I*
+     I** DATA STRUCTURE FOR LAST UPDATE
+     I*
+     IWWHLUP      DS
+     I                                        1   20WWDLUP
+     I                                        3   5 WWMLUP
+     I                                        6   70WWYLUP
+     I*                                                                   S01486
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     I*                                                                   CPM005
+     ISDPORT    E DSSDPORTPD                                              CPM005
+     I** EXTERNAL DS FOR PORTFOLIO DETAILS                                CPM005
+     I*                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -                                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P01     - FORMAT CUSTOMER NOTEPAD DETAILS                       *
+      * #P02     - FORMAT PORTFOLIO NOTEPAD DETAILS                      *
+      * #P03     - PROCESS PM NOTEPAD SCREEN                             *
+      * #P04     - UPDATE PM CUSTOMER NOTEPAD                            *
+      * #P05     - UPDATE PM PORTFOLIO NOTEPAD                           *
+      **#ENDG****-*WRITE*DETAILS*TO *GDA*AND*END*GROUP*JOBS***************S01486
+      * #ENDG    - WRITE DETAILS TO *LDA AND END GROUP JOBS              *S01486
+      * #SFLC    - FILL CUSTOMER SUBFILE                                 *
+      * #SFLP    - FILL PORTFOLIO SUBFILE                                *
+      * #VCMD    - VALIDATE COMMAND KEYS                                 *
+      * ZTNLU1   - RETRIEVE NEXT TRANSACTION NUMBER                      *
+      * *PSSR    - FILE ERROR HANDLING                                   *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      **PMC1000**-*WRITE*DETAILS*TO *GDA**********************************S01486
+      * PMC1001  - WRITE DETAILS TO *LDA                                 *S01486
+      **PMC1020**-*END*GROUP*JOBS*****************************************S01486
+      **PMC1010**-*RETRIEVE*DATA*FROM *GDA********************************S01486
+      * PMC1003  - RETRIEVE DATA FROM *LDA                               *S01486
+      * PM0710   - CUSTOMER MASTER DETAILS ENQUIRY                       *
+      * PM0165   - CUSTOMER DOCUMENTATION MAINTENANCE                    *
+      * PM0720   - PORTFOLIO DETAILS ENQUIRY                             *
+      * ZA0240   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C**  DEFINE WORK FIELDS
+     C*
+     C           *LIKE     DEFN PRCNUM    WWCNUM
+     C           *LIKE     DEFN PRPTFR    WWPTFR
+     C           *LIKE     DEFN PRNOTS    WWSAV0
+     C           *LIKE     DEFN PRNOTS    WWSAV1
+     C           *LIKE     DEFN PRNOTS    WWRRN
+     C           *LIKE     DEFN WWSFLA    WWRTRN
+     C*
+     C**  DEFINE KEYS
+     C*
+     C           WWKEYC    KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           DDRRN
+     C*
+     C           WWKEYP    KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFR
+     C*
+     C           WWKEY3    KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFR
+     C                     KFLD           DDRRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *  P R O G R A M     S T A R T
+      ********************************************************************
+     C*
+     C** PERFORM SETUP OF STANDARD FIELDS
+     C*
+     C                     EXSR #INIT
+     C*
+     C** FORMAT CUSTOMER NOTEPAD DETAILS
+     C*
+     C                     EXSR #P01
+     C*
+     C** FORMAT PORTFOLIO NOTEPAD DETAILS
+     C*
+     C                     EXSR #P02
+     C*
+     C** PROCESS NOTEPAD SCREEN
+     C*
+     C                     EXSR #P03
+     C*
+     C           WWAID     IFEQ '03'
+     C                     EXSR #ENDG
+     C                     END
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     RETRN
+      ********************************************************************
+      *  P R O G R A M     E N D
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - FILE ERROR HANDLING                                   *
+      **PMC1010**-*RETRIEVE*DATA*FROM *GDA********************************S01486
+      * PMC1003  - RETRIEVE DATA FROM *LDA                               *S01486
+      **#ENDG****-*WRITE*DETAILS*TO *GDA*AND*END*GROUP*JOBS***************S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCNUM   - CUSTOMER NUMBER (PARAMETER)                           *
+      * WWPTFR   - PORTFOLIO REFERENCE (PARAMETER)                       *
+      * WWLDA    - LOCAL DATA AREA                                       *
+      **WWGDA****-*GROUP*DATA*AREA****************************************S01486
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           ** #INIT BSR **
+     C*
+     C                     MOVE '0'       *IN
+     C                     MOVE '0'       *INKL
+     C**
+     C**
+     C**  SET UP PARAMETER TO RETRIEVE MESSAGE FROM MESSAGE FILE
+     C           PLLANG    PLIST
+     C                     PARM           MSMBR4  7
+     C                     PARM           MSGER  10
+     C                     PARM           MSGTXT 80
+     C**********           MOVEL'MLGBMSGF'MSGER                           S01486
+     C                     MOVEL'PMUSRMSG'MSGER                           S01486
+     C*
+     C** GET DATA FROM GROUP DATA AREA
+     C*
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+     C                     MOVELQMRUNA    DDRUNA
+     C                     MOVE QMCNUM    DDCNUM
+     C                     MOVELQMCRNM    DDCRNM
+     C                     MOVE QMPTF2    DDPTFR
+     C                     MOVELQMPTFN    DDPTFN
+     C**********           Z-ADDQMCNUM    WWCNUM                                              CSD027
+     C                     MOVE QMCNUM    WWCNUM                                              CSD027
+     C                     MOVE QMPTF1    WWPTFR
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C********** 1         SETLLSDBANKL1                                  S01486
+     C**********           READ SDBANKL1                 80               S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C*
+     C********** *IN80     IFEQ '1'                                       S01486
+     C                     Z-ADD1         QMERRN           **DB ERROR 01**
+     C                     MOVEL'SDBANKPD'QMFILE                          S01486
+     C                     MOVE *BLANKS   QMKEY
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IF FOUND CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           BJDFIN    IFEQ 'M'                        MMDDYY, 98 ON
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*                                                                   CPM005
+     C**  GET PORTFOLIO MANAGEMENT INSTALLATION DETAILS                   CPM005
+     C                     CALL 'AOPORTR0'                                CPM005
+     C                     PARM '*DBERR ' @RTCD   7                       CPM005
+     C                     PARM '*FIRST ' @OPTN   7                       CPM005
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM005
+     C*                                                                   CPM005
+     C           @RTCD     IFNE *BLANKS                                   CPM005
+     C                     Z-ADD2         QMERRN           **DB ERROR 02**CPM005
+     C                     MOVE 'SDPORTPD'QMFILE                          CPM005
+     C                     MOVE *BLANKS   QMKEY                           CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     END                                            CPM005
+     C*
+     C** INITIALIZE REFERENCE FIELD FOR CURSOR POSITION
+     C*
+     C                     BITON'467'     WWPOS1
+     C                     BITOF'01235'   WWPOS1
+     C                     BITON'13'      WWPOS2
+     C                     BITOF'024567'  WWPOS2
+     C                     MOVE '1'       *IN46
+     C*
+     C           E#INIT    ENDSR                           ** #INIT ESR **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - FORMAT CUSTOMER NOTEPAD DETAILS                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #SFLC    - FILL CUSTOMER SUBFILE                                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCNUM   - CUSTOMER NUMBER (PARAMETER)                           *
+      * WWSAV0   - KEEPS NBR OF RECORDS PRESENT IN CUST. SUBFILE         *
+      * WWSFLA   - INDICATOR FOR WRITE/EXFMT                             *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR                           ** #P01  BSR **
+     C*
+     C** INITIALIZE SCREEN
+     C*
+     C                     WRITEPM0600F0
+     C*
+     C** INITIALIZE SUBFILE
+     C*
+     C                     Z-ADD1         DDRRN
+     C                     MOVE '1'       *IN43
+     C                     WRITEPM0600C0
+     C                     MOVE '0'       *IN43
+     C                     MOVE '1'       *IN41
+     C*
+     C** ACCESS FILE RECORD
+     C*
+     C           WWCNUM    CHAINPMCSNPXX             84
+     C*
+     C** FILL SUBFILE
+     C*
+     C                     Z-ADD1         WWSAV0
+     C                     EXSR #SFLC
+     C                     MOVE ' '       WWSFLA  1
+     C*
+     C           E#P01     ENDSR                           ** #P01   ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P02     - FORMAT PORTFOLIO NOTEPAD DETAILS                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #SFLP    - FILL PORTFOLIO SUBFILE                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWKEYP   - KEY FOR CHAINING TO PORTFOLIO NOTEPAD FILE            *
+      * WWSAV1   - KEEPS NBR OF RECORDS PRESENT IN PORTF. SUBFILE        *
+      * WWSFLA   - INDICATOR FOR WRITE/EXFMT                             *
+      *                                                                  *
+      ********************************************************************
+     C           #P02      BEGSR                           ** #P02  BSR **
+     C*
+     C** INITIALIZE SUBFILE
+     C*
+     C                     Z-ADD1         DDRRN
+     C                     MOVE '1'       *IN43
+     C                     WRITEPM0600C1
+     C                     MOVE '0'       *IN43
+     C*
+     C** ACCESS FILE RECORD
+     C*
+     C           DDPTFR    IFNE *BLANKS
+     C           DDPTFR    ANDNEFCR997                                    CPM005
+     C           DDPTFR    ANDNEFCR998                                    CPM005
+     C           DDPTFR    ANDNEFCR999                                    CPM005
+     C                     MOVE '1'       *IN42
+     C*                                                                   54973
+     C           QMPTF1    IFNE '9997'                                    54973
+     C           QMPTF1    ANDNE'9998'                                    54973
+     C           QMPTF1    ANDNE'9999'                                    54973
+     C                     MOVE '1'       *IN47
+     C                     END                                            54973
+     C           WWKEYP    CHAINPMPTNPXX             86
+     C*
+     C** FILL SUBFILE
+     C*
+     C                     Z-ADD1         WWSAV1
+     C                     EXSR #SFLP
+     C                     MOVE 'C'       WWSFLA
+     C                     END
+     C*
+     C           E#P02     ENDSR                           ** #P02   ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P03     - PROCESS PM NOTEPAD SCREEN                             *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #VCMD    - VALIDATE COMMAND KEYS                                 *
+      * #SFLC    - FILL CUSTOMER SUBFILE                                 *
+      * #SFLP    - FILL PORTFOLIO SUBFILE                                *
+      * PM0710   - CUSTOMER MASTER DETAILS ENQUIRY                       *
+      **PMC1010**-*RETRIEVE*DATA*FROM *GDA********************************S01486
+      * PMC1003  - RETRIEVE DATA FROM *LDA                               *S01486
+      **#ENDG****-*WRITE*DETAILS*TO *GDA*AND*END*GROUP*JOBS***************S01486
+      * #ENDG    - WRITE DETAILS TO *LDA AND END GROUP JOBS              *S01486
+      * PM0165   - CUSTOMER DOCUMENTATION MAINTENANCE                    *
+      * PM0720   - PORTFOLIO DETAILS ENQUIRY                             *
+      * #P04     - UPDATE PM CUSTOMER NOTEPAD                            *
+      * #P05     - UPDATE PM PORTFOLIO NOTEPAD                           *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    -                                                       *
+      * WWSFLA   - INDICATOR FOR WRITE/EXFMT                             *
+      * WWCNUM   - CUSTOMER NUMBER (PARAMETER)                           *
+      * WWKEYP   - KEY FOR CHAINING TO PORTFOLIO NOTEPAD FILE            *
+      * WWPARM   - GROUP DATA AREA                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #P03      BEGSR                           ** #P03   BSR**
+     C*
+     C***********          MOVEL'PM90036' MSMBR4                          CPM005
+     C                     MOVEL'PM90039' MSMBR4                          CPM005
+     C                     CALL 'SDRTVTXT'PLLANG
+     C******               MOVELMSGTXT    DDINF1                          B07934
+     C                     MOVELMSGTXT    DDINF2                          B07934
+     C*
+     C           QMPTF1    IFEQ '9997'
+     C           QMPTF1    OREQ '9998'
+     C           QMPTF1    OREQ '9999'
+     C           QMPTF1    OREQ *BLANKS
+     C***********          MOVEL'PM90038' MSMBR4                          CPM005
+     C***********          CALL 'SDRTVTXT'PLLANG                          CPM005
+     C*******              MOVELMSGTXT    DDINF2                          B07934
+     C***********          MOVELMSGTXT    DDINF1                    B07934CPM005
+     C                     ELSE
+     C***********          MOVEL'PM90037' MSMBR4                          CPM005
+     C***********          CALL 'SDRTVTXT'PLLANG                          CPM005
+     C*******              MOVELMSGTXT    DDINF2                          B07934
+     C***********          MOVELMSGTXT    DDINF1                    B07934CPM005
+     C                     MOVE *BLANKS   DDINF1                          CPM005
+     C                     END
+     C*
+     C** DISPLAY TITLE AND CUSTOMER NOTEPAD HEADER
+     C*
+     C                     WRITEPM0600F1
+     C                     WRITEPM0600F3
+     C*
+     C** DISPLAY PORTFOLIO NOTEPAD HEADER
+     C*
+     C           DDPTFR    IFNE *BLANKS
+     C           DDPTFR    ANDNEFCR997                                    CPM005
+     C           DDPTFR    ANDNEFCR998                                    CPM005
+     C           DDPTFR    ANDNEFCR999                                    CPM005
+     C                     WRITEPM0600F2
+     C                     END
+     C*
+     C                     MOVE 'RA'      WWAID
+     C*
+     C** D O   U N T I L   F 3   O R   F 1 2   T A K E N
+     C*
+     C           WWAID     DOUEQ'03'
+     C           WWAID     OREQ '12'
+     C*
+     C** PORTFOLIO SFL IS NOT DISPLAYED
+     C*
+     C           WWSFLA    IFEQ ' '
+     C                     EXFMTPM0600C0
+     C                     END
+     C*
+     C** CURSOR IS PLACED ON CUSTOMER SFL
+     C*
+     C           WWSFLA    IFEQ 'C'
+     C*
+     C           WWAID     IFEQ 'RA'
+     C                     WRITEPM0600C1
+     C                     END
+     C*
+     C                     EXFMTPM0600C0
+     C                     END
+     C*
+     C** CURSOR IS PLACED ON PORTFOLIO SFL
+     C*
+     C           WWSFLA    IFEQ 'P'
+     C*
+     C           WWAID     IFEQ 'RA'
+     C                     WRITEPM0600C0
+     C                     END
+     C*
+     C                     EXFMTPM0600C1
+     C                     END
+     C*
+     C** UPDATE CURSOR POSITION IN INFDS
+     C*
+     C                     POST           INFDS
+     C                     EXSR #VCMD
+     C*
+     C** 'ENTER'
+     C*
+     C           WWAID     IFEQ 'RA'
+     C                     EXSR #P04
+     C                     Z-ADD1         SFLNR0
+     C*
+     C           DDPTFR    IFNE *BLANKS
+     C           DDPTFR    ANDNEFCR997                                    CPM005
+     C           DDPTFR    ANDNEFCR998                                    CPM005
+     C           DDPTFR    ANDNEFCR999                                    CPM005
+     C                     EXSR #P05
+     C                     Z-ADD1         SFLNR1
+     C*
+     C           WWSFLA    IFEQ 'C'
+     C                     MOVE 'P'       WWSFLA
+     C                     ELSE
+     C                     MOVE 'C'       WWSFLA
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** ROLL UP WITH CURSOR ON CUSTOMER SUBFILE
+     C*
+     C           WWAID     IFEQ 'UC'
+     C*
+     C           *IN44     IFEQ '0'
+     C           WWCNUM    READEPMCSNPXX                 84
+     C                     EXSR #SFLC
+     C                     END
+     C*
+     C           WWSFLA    IFNE ' '
+     C                     MOVE 'C'       WWSFLA
+     C                     END
+     C*
+     C                     END
+     C*
+     C** ROLL UP WITH CURSOR ON PORTFOLIO SUBFILE
+     C*
+     C           WWAID     IFEQ 'UF'
+     C*
+     C           *IN45     IFEQ '0'
+     C           WWKEYP    READEPMPTNPXX                 86
+     C                     EXSR #SFLP
+     C                     END
+     C*
+     C                     MOVE 'P'       WWSFLA
+     C                     END
+     C*
+     C** PGM CALLED FROM ENQUIRY PGMS
+     C*
+     C***F1*PRESSED - CUSTOMER MASTER DETAILS                             CPM005
+     C****                 MOVE QMCNUM    PACUST                    60545 062274
+     C*
+     C***********WWAID     IFEQ '01'                                      CPM005
+     C***                  CALL 'PM0710'                                   60545
+     C****                 CALL 'SD0011E'                           60545 062274
+     C****                 PARM *BLANK    W0RTN   7        Return co60545 062274
+     C****                 PARM           PARC             KEY: Clie60545 062274
+     C***********          CALL 'PM0710'                            062274CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C***F2*PRESSED - CUSTOMER DOCUMENTATION                              CPM005
+     C***********                                                         CPM005
+     C***********WWAID     IFEQ '02'                                      CPM005
+     C***********          CALL 'PM0165'                                  CPM005
+     C***********          END                                            CPM005
+     C*
+     C** F3 TAKEN FROM PM0160
+     C*
+     C           WWRTRN    IFEQ '1'
+     C                     EXSR #ENDG
+     C                     END
+     C***********                                                         CPM005
+     C***F5*PRESSED - PORTFOLIO DEFINITION                                CPM005
+     C***********                                                         CPM005
+     C***********WWAID     IFEQ '05'                                      CPM005
+     C***********          CALL 'PM0720'                                  CPM005
+     C***********          END                                            CPM005
+     C****                                                          S01313B07934
+     C***F21 PRESSED - EXTRA CUSTOMER VALUATION STATEMENT           S01313B07934
+     C****                                                          S01313B07934
+     C****       WWAID     IFEQ '21'                                S01313B07934
+     C****                 MOVE 'C'       WWCSPT  1                 S01313B07934
+     C****                 CALL 'PMC0821'                           S01313B07934
+     C****                 PARM           DDCNUM                    S01313B07934
+     C****                 PARM           DDPTFR                    S01313B07934
+     C****                 PARM           WWCSPT                    S01313B07934
+     C****                 END                                      S01313B07934
+     C***********                                                   R10043CPM005
+     C***F22*PRESSED - EXTRA PORTFOLIO VALUATION STATEMENT          R10043CPM005
+     C***********                                                   R10043CPM005
+     C***********WWAID     IFEQ '22'                                R10043CPM005
+     C****                 MOVE 'P'       WWCSPT  1                 S01313B07934
+     C***********          CALL 'PMC0821'                           R10043086386
+     C****                 PARM           DDCNUM                    S01313R10043
+     C****                 PARM           DDPTFR                    S01313R10043
+     C****                 PARM           WWCSPT                    S01313B07934
+     C***********          CALL 'FCC0201'                           086386CPM005
+     C***********          PARM 'PMC0950' WWCOMP 10                 086386CPM005
+     C***********          PARM '10001'   WWSEQ   5                 086386CPM005
+     C***********          PARM 'PM0950'  WWPRGM 10                 086386CPM005
+     C***********          PARM 'B'       WWBRCH  1                 086386CPM005
+     C***********          END                                      R10043CPM005
+     C***********                                                         CPM005
+     C***GET*DATA*FROM *GDA                                               S01486
+     C***GET*DATA*FROM**LDA*****************************************S01486CPM005
+     C***********                                                         CPM005
+     C**********           CALL 'PMC1004'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C***********          CALL 'PMC1003'                           S01486CPM005
+     C***********          PARM           WWLDA                     S01486CPM005
+     C***********                                                         CPM005
+     C***F3*TAKEN FROM PM0710 OR PM0720                                   CPM005
+     C***********                                                         CPM005
+     C***********QMENQT    IFEQ 'Y'                                       CPM005
+     C***********          MOVEL'03'      WWAID                           CPM005
+     C***********          END                                            CPM005
+     C*
+     C                     END
+     C*
+     C           E#P03     ENDSR                           ** #P03   ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P04     - UPDATE PM CUSTOMER NOTEPAD                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZTNLU1   - RETRIEVE NEXT TRANSACTION NUMBER                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P03     - PROCESS PM NOTEPAD SCREEN                             *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCNUM   - CUSTOMER NUMBER (PARAMETER)                           *
+      * WWDLUP   - DAY OF LAST UPDATE                                    *
+      * WWMLUP   - MONTH OF LAST UPDATE                                  *
+      * WWYLUP   - YEAR OF LAST UPDATE                                   *
+      * WWTLUP   - TIME OF LAST UPDATE                                   *
+      * WWKEYC   - KEY FOR CHAINING TO CUSTOMER NOTEPAD FILE             *
+      *                                                                  *
+      ********************************************************************
+     C           #P04      BEGSR                           ** #P04   BSR**
+     C*
+     C** RUN DATE
+     C*
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    PRDLUP
+     C                     MOVE WWMLUP    PRMLUP
+     C                     Z-ADDWWYLUP    PRYLUP
+     C*
+     C** RETRIEVE NEXT TRANSACTION NUMBER
+     C*
+     C                     EXSR ZTNLU1
+     C                     MOVELNATN      PRTNLU
+     C*
+     C** S C A N   S U B F I L E   A N D   U P D A T E   F I L E
+     C*
+     C                     Z-ADD1         DDRRN
+     C                     MOVELDDCNUM    PRCNUM
+     C           DDRRN     CHAINPM0600S0             87
+     C*
+     C           *IN87     DOWEQ'0'
+     C********** WWKEYC    CHAINPMCSNPPP             83                   S01486
+     C           WWKEYC    CHAINPMCSNPPD             83                   S01486
+     C                     MOVE DDRRN     PRNOTS
+     C                     TIME           PRTLUP
+     C*
+     C           DDNTPD    IFEQ *BLANKS
+     C                     MOVE '*'       PRRECI
+     C                     ELSE
+     C                     MOVE 'D'       PRRECI
+     C                     MOVE DDNTPD    PRNTPD
+     C                     END
+     C*
+     C** UPDATE RECORD ON FILE IF RECORD EXISTS ON BOTH FILE AND SUBFILE
+     C*
+     C           *IN83     IFEQ '0'
+     C                     Z-ADDWWDLUP    PRDLUP
+     C                     MOVE WWMLUP    PRMLUP
+     C                     Z-ADDWWYLUP    PRYLUP
+     C                     UPDATPMCSNPP0
+     C                     ELSE
+     C*
+     C** ADD RECORD ON FILE IF RECORD EXISTS ON SUBFILE ONLY
+     C*
+     C           PRRECI    IFEQ 'D'
+     C                     WRITEPMCSNPP0
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ADD  1         DDRRN
+     C           DDRRN     CHAINPM0600S0             87
+     C                     END
+     C*
+     C           E#P04     ENDSR                           ** #P04   ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P05     - UPDATE PM PORTFOLIO NOTEPAD                           *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P03     - PROCESS PM NOTEPAD SCREEN                             *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWTLUP   - TIME OF LAST UPDATE                                   *
+      * WWKEY3   - FULL KEY FOR CHAINING TO PORTFOLIO NOTEPAD FILE       *
+      *                                                                  *
+      ********************************************************************
+     C           #P05      BEGSR                           ** #P05   BSR**
+     C*                                                                   080202
+     C                     MOVELNATN      GATNLU                          080202
+     C                     Z-ADDWWDLUP    GADLUP                          080202
+     C                     MOVE WWMLUP    GAMLUP                          080202
+     C                     Z-ADDWWYLUP    GAYLUP                          080202
+     C*
+     C** S C A N   S U B F I L E   A N D   U P D A T E   F I L E
+     C*
+     C*********            MOVELDDPTFR    PRPTFR                          R10037
+     C***********          MOVE QMPTF1    PRPTFR                   R10037 080202
+     C                     MOVELDDCNUM    GACNUM                          080202
+     C                     MOVE QMPTF1    GAPTFR                          080202
+     C                     Z-ADD1         DDRRN
+     C           DDRRN     CHAINPM0600S1             87
+     C*
+     C           *IN87     DOWEQ'0'
+     C********** WWKEY3    CHAINPMPTNPPP             85                   S01486
+     C           WWKEY3    CHAINPMPTNPPD             85                   S01486
+     C***********          MOVE DDRRN     PRNOTS                          080202
+     C***********          TIME           PRTLUP                          080202
+     C                     MOVE DDRRN     GANOTS                          080202
+     C                     TIME           GATLUP                          080202
+     C*
+     C           DDNTPD    IFEQ *BLANKS
+     C***********          MOVE '*'       PRRECI                          080202
+     C                     MOVE '*'       GARECI                          080202
+     C                     ELSE
+     C***********          MOVE 'D'       PRRECI                          080202
+     C***********          MOVE DDNTPD    PRNTPD                          080202
+     C                     MOVE 'D'       GARECI                          080202
+     C                     MOVE DDNTPD    GANTPD                          080202
+     C                     END
+     C*
+     C** UPDATE RECORD ON FILE IF RECORD EXISTS ON BOTH FILE AND SUBFILE
+     C*
+     C           *IN85     IFEQ '0'
+     C***********          Z-ADDWWDLUP    PRDLUP                          080202
+     C***********          MOVE WWMLUP    PRMLUP                          080202
+     C***********          Z-ADDWWYLUP    PRYLUP                          080202
+     C                     Z-ADDWWDLUP    GADLUP                          080202
+     C                     MOVE WWMLUP    GAMLUP                          080202
+     C                     Z-ADDWWYLUP    GAYLUP                          080202
+     C                     UPDATPMPTNPP0
+     C                     ELSE
+     C*
+     C** ADD RECORD ON FILE IF RECORD EXISTS ON SUBFILE ONLY
+     C*
+     C***********PRRECI    IFEQ 'D'                                       080202
+     C           GARECI    IFEQ 'D'                                       080202
+     C                     WRITEPMPTNPP0
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ADD  1         DDRRN
+     C           DDRRN     CHAINPM0600S1             87
+     C                     END
+     C*
+     C           E#P05     ENDSR                           ** #P05   ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      **#ENDG****-*WRITE*DETAILS*TO *GDA*AND*END*GROUP*JOBS***************S01486
+      * PMC1001  - WRITE DETAILS TO *LDA AND END GROUP JOBS              *S01486
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P03     - PROCESS PM NOTEPAD SCREEN                             *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPARM   - GROUP DATA AREA                                       *
+      * WWENDJ   - ENQUIRIES TERMINATING INDICATOR (PARAMETER)           *
+      * WWGRPJ   - GROUP JOBS INDICATOR (PARAMETER)                      *
+      *                                                                  *
+      ********************************************************************
+     C           #ENDG     BEGSR                           ** #ENDG  BSR**
+     C*
+     C                     MOVE 'Y'       QMENQT
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C*
+     C                     ENDSR                           ** #ENDG  ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #SFLC    - FILL CUSTOMER SUBFILE                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - FORMAT CUSTOMER NOTEPAD DETAILS                       *
+      * #P03     - PROCESS PM NOTEPAD SCREEN                             *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWSAV0   - KEEPS NBR OF RECORDS PRESENT IN CUST. SUBFILE         *
+      * WWRRN    - COUNTER FOR INPUT/OUTPUT OPERATIONS ON SUBFILES       *
+      * WWCNUM   - CUSTOMER NUMBER (PARAMETER)                           *
+      *                                                                  *
+      ********************************************************************
+     C           #SFLC     BEGSR                           ** #SFLC  BSR**
+     C*
+     C** INITIALIZE RECORD NUMBER
+     C*
+     C                     Z-ADDWWSAV0    DDRRN
+     C                     Z-ADDWWSAV0    SFLNR0
+     C                     Z-ADD0         WWRRN
+     C*
+     C** FILL SUBFILE
+     C*
+     C           *IN84     DOWEQ'0'
+     C                     MOVE *BLANKS   DDNTPD
+     C*
+     C           DDRRN     IFEQ PRNOTS
+     C           PRRECI    ANDEQ'D'
+     C                     MOVELPRNTPD    DDNTPD
+     C                     END
+     C*
+     C                     WRITEPM0600S0
+     C                     ADD  1         WWRRN
+     C                     ADD  1         DDRRN
+     C*
+     C           DDRRN     IFGT PRNOTS
+     C           WWCNUM    READEPMCSNPXX                 84
+     C                     END
+     C*
+     C                     END
+     C*
+     C** CHECK IF LAST PAGE OF SUBFILE IS COMPLETE
+     C*
+     C           WWRRN     DOULE0
+     C                     SUB  7         WWRRN
+     C                     END
+     C*
+     C** COMPLETE SUBFILE PAGE IF NECESSARY
+     C*
+     C           WWRRN     IFLT 0
+     C                     MOVE *BLANKS   DDNTPD
+     C                     Z-SUBWWRRN     WWRRN
+     C*
+     C                     DO   WWRRN
+     C                     WRITEPM0600S0
+     C                     ADD  1         DDRRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C** SAVE RRN
+     C*
+     C                     Z-ADDDDRRN     WWSAV0
+     C*
+     C** ACTIVATE SFLEND
+     C*
+     C           WWSAV0    IFGE 98
+     C                     MOVE '1'       *IN44
+     C                     END
+     C*
+     C           E#SFLC    ENDSR                           ** #SFLC  ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #SFLP    - FILL PORTFOLIO SUBFILE                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - FORMAT PORTFOLIO NOTEPAD DETAILS                      *
+      * #P03     - PROCESS PM NOTEPAD SCREEN                             *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWSAV1   - KEEPS NBR OF RECORDS PRESENT IN PORTF. SUBFILE        *
+      * WWRRN    - COUNTER FOR INPUT/OUTPUT OPERATIONS ON SUBFILES       *
+      * WWKEYP   - KEY FOR CHAINING TO PORTFOLIO NOTEPAD FILE            *
+      *                                                                  *
+      ********************************************************************
+     C           #SFLP     BEGSR                           ** #SFLP  BSR**
+     C*
+     C*
+     C** INITIALIZE RECORD NUMBER
+     C*
+     C                     Z-ADDWWSAV1    DDRRN
+     C                     Z-ADDWWSAV1    SFLNR1
+     C                     Z-ADD0         WWRRN
+     C*
+     C** FILL SUBFILE
+     C*
+     C           *IN86     DOWEQ'0'
+     C                     MOVE *BLANKS   DDNTPD
+     C*
+     C***********DDRRN     IFEQ PRNOTS                                    080202
+     C***********PRRECI    ANDEQ'D'                                       080202
+     C***********          MOVELPRNTPD    DDNTPD                          080202
+     C           DDRRN     IFEQ GANOTS                                    080202
+     C           GARECI    ANDEQ'D'                                       080202
+     C                     MOVELGANTPD    DDNTPD                          080202
+     C                     END
+     C*
+     C                     WRITEPM0600S1
+     C                     ADD  1         WWRRN
+     C                     ADD  1         DDRRN
+     C*
+     C***********DDRRN     IFGT PRNOTS                                    080202
+     C           DDRRN     IFGT GANOTS                                    080202
+     C           WWKEYP    READEPMPTNPXX                 86
+     C                     END
+     C*
+     C                     END
+     C*
+     C** CHECK IF LAST PAGE OF SUBFILE IS COMPLETE
+     C*
+     C           WWRRN     DOULE0
+     C                     SUB  7         WWRRN
+     C                     END
+     C*
+     C** COMPLETE SUBFILE PAGE IF NECESSARY
+     C*
+     C           WWRRN     IFLT 0
+     C                     MOVE *BLANKS   DDNTPD
+     C                     Z-SUBWWRRN     WWRRN
+     C*
+     C                     DO   WWRRN
+     C                     WRITEPM0600S1
+     C                     ADD  1         DDRRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C** SAVE RRN
+     C*
+     C                     Z-ADDDDRRN     WWSAV1
+     C*
+     C** ACTIVATE SFLEND
+     C*
+     C           WWSAV1    IFGE 98
+     C                     MOVE '1'       *IN45
+     C                     END
+     C*
+     C           E#SFLP    ENDSR                           ** #SFLP  ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #VCMD    - VALIDATE COMMAND KEYS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P03     - PROCESS PM NOTEPAD SCREEN                             *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #VCMD     BEGSR                           ** #VCMD  BSR **
+     C*
+     C** If ENTER pressed, the VLDCMDKEY indicator will be off
+     C*
+     C           *IN49     IFEQ '0'
+     C                     MOVE 'RA'      WWAID   2
+     C                     END
+     C***********                                                         CPM005
+     C***If*F1                                                            CPM005
+     C***********                                                         CPM005
+     C************INKA     IFEQ '1'                                       CPM005
+     C***********          MOVE '01'      WWAID                           CPM005
+     C***********          MOVE '0'       *INKA                           CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C***If*F2                                                            CPM005
+     C***********                                                         CPM005
+     C************INKB     IFEQ '1'                                       CPM005
+     C***********          MOVE '02'      WWAID                           CPM005
+     C***********          MOVE '0'       *INKB                           CPM005
+     C***********          END                                            CPM005
+     C*
+     C** If F3
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE '03'      WWAID
+     C                     MOVE '0'       *INKC
+     C                     END
+     C***********                                                         CPM005
+     C***If*F5                                                            CPM005
+     C***********                                                         CPM005
+     C************INKE     IFEQ '1'                                       CPM005
+     C***********          MOVE '05'      WWAID                           CPM005
+     C***********          MOVE '0'       *INKE                           CPM005
+     C***********          END                                            CPM005
+     C*
+     C** If F12
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE '12'      WWAID
+     C                     MOVE '0'       *INKL
+     C                     END
+     C***********                                                   B07934CPM005
+     C***IF*F21                                                     B07934CPM005
+     C***********                                                   B07934CPM005
+     C************INKV     IFEQ '1'                                 B07934CPM005
+     C***********          MOVE '21'      WWAID                     B07934CPM005
+     C***********          MOVE '0'       *INKV                     B07934CPM005
+     C***********          END                                      B07934CPM005
+     C***********                                                   R10043CPM005
+     C***IF*F22                                                     R10043CPM005
+     C***********                                                   R10043CPM005
+     C************INKW     IFEQ '1'                                 R10043CPM005
+     C***********          MOVE '22'      WWAID                     R10043CPM005
+     C***********          MOVE '0'       *INKW                     R10043CPM005
+     C***********          END                                      R10043CPM005
+     C*
+     C** If ROLLUP pressed
+     C*
+     C           *IN25     IFEQ '1'
+     C*
+     C           WWCPOS    IFGT WWCREF
+     C           DDPTFR    ANDNE*BLANKS
+     C           DDPTFR    ANDNEFCR997                                    CPM005
+     C           DDPTFR    ANDNEFCR998                                    CPM005
+     C           DDPTFR    ANDNEFCR999                                    CPM005
+     C                     MOVE 'UF'      WWAID
+     C                     ELSE
+     C                     MOVE 'UC'      WWAID
+     C                     END
+     C*
+     C                     MOVE '0'       *IN25
+     C                     END
+     C*
+     C                     ENDSR                           ** #VCMD  ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ZTNLU1   - RETRIEVE NEXT TRANSACTION NUMBER                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P04     - UPDATE PM CUSTOMER NOTEPAD                            *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           ZTNLU1    BEGSR                            ** ZTNLU1 BSR**
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C*
+     C                     ENDSR                            ** ZTNLU1 ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - FILE ERROR HANDLING                                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **PMC1000**-*WRITE*DETAILS*TO *GDA**********************************S01486
+      * PMC1001  - WRITE DETAILS TO *LDA                                 *S01486
+      **PMC1020**-*END*GROUP*JOBS*****************************************S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P01     - FORMAT CUSTOMER NOTEPAD DETAILS                       *
+      * #P02     - FORMAT PORTFOLIO NOTEPAD DETAILS                      *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPARM   - GROUP DATA AREA                                       *
+      * WWENDJ   - ENQUIRIES TERMINATING INDICATOR (PARAMETER)           *
+      * WWGRPJ   - GROUP JOBS INDICATOR (PARAMETER)                      *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                            ** *PSSR BSR**
+     C*
+     C                     MOVE 'Y'       QMENQT
+     C                     MOVE 'Y'       QMDBER
+     C                     MOVE 'PM0600'  QMPGM
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C                     RETRN
+     C*
+     C                     ENDSR                            ** *PSSR ESR**
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

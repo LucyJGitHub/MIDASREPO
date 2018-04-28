@@ -1,0 +1,218 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*S*D****RPGBASEBNC****************************************************                      CCB023A
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE000101 - DLDLDCQD Reconciliation                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CCB023A *REDUNDANT Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL049             Date 07Jul06               *
+      *                 BUG9020            Date 13Jan06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10705R          Date 11Mar06               *
+      *                 BUG10705           Date 28Feb06               *
+      *                 BUG10315           Date 07Feb06               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 BUG3937            Date 10Sep04               *
+      *                 BUG3830 *CREATE    Date 17Jun04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB023A - COB Restructure - Input Cycle Termination          *
+      *            Restructuring                                      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  BUG9020 - LEC000100 failed due to missing recs in DLDLDBQD/  *
+      *            DEALSDB and DLDLDGQD but missing from DEALSDG      *
+      *            (similar fix as BUG10705)                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10705R- Remove initial fix and instead, delete extension  *
+      *             records in MM0101 if Treasury Management is ON.   *
+      *             If not, checking should include MMDELDPP.         *
+      *  BUG10705 - LE000101 failed due to missing recs in DEALSDC    *
+      *             but existing in DLDLDCQD.                         *
+      *  BUG10315 - LDNI: Amend System allowed amendment of matured   *
+      *             deal                                              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  BUG3937 - Check extension files against DEALSDC instead of   *
+      *            MMDELDPP.                                         *
+      *  BUG3830 - Credit Lines Extension Files Reconciliation        *
+      *                                                               *
+      *****************************************************************
+ 
+     FDLDEALL5  IP  AE           K DISK    INCLUDE(DLDLDCD0)
+     F*MMDEALLL*IS  AE           K DISK    INCLUDE(MMDELDP0)                                 BUG3937
+     FDEALS     IS  AE           K DISK    INCLUDE(DEALSDCF)                                 BUG3937
+     F***MMDEALLL  IS  AE           K DISK    INCLUDE(MMDELDP0)                    BUG10705 BUG10705
+     FMMDEALLL  IF   E           K DISK    INCLUDE(MMDELDP0)                                BUG10705
+     FDEALSH    IF   E           K DISK    INCLUDE(DLCHISD0)                                BUG10315
+     FQSYSPRT   O    F  132        PRINTER USROPN
+ 
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+     D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                BUG10705
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC                                                             BUG10705
+     IDLDLDCD0      01
+     I                                          F1DLNO        L1M1
+     I*MMDELDP0*    02                                                                       BUG3937
+     I**********                                HKDN38        L1M1                           BUG3937
+     IDEALSDCF      02                                                                       BUG3937
+     I                                          DLNO          L1M1                           BUG3937
+     I***MMDELDP0      04                                                          BUG10705 BUG10705
+     I**********                                HKDN38        L1M1                 BUG10705 BUG10705
+ 
+     C     *INMR         IFEQ      *OFF
+     C                   EXSR      OPNPRTF
+     C     *IN01         IFEQ      *ON
+     C                   MOVE      F1DLNO        KDLNO                                      BUG10315
+     C     KDLNO         CHAIN     DLCHISD0                           03                    BUG10315
+     C     *IN03         IFEQ      *ON                                                      BUG10315
+      *                                                                                     BUG10705
+     C     *IN10         IFEQ      *OFF                                                     BUG10705
+     C     KDLNO         CHAIN     MMDELDP0                           04                    BUG10705
+     C                   ENDIF                                                              BUG10705
+      *                                                                                     BUG10705
+     C     *IN03         IFEQ      *ON                                                      BUG10705
+     C     *IN10         ANDEQ     *ON                                                      BUG10705
+     C     *IN10         OREQ      *OFF                                                     BUG10705
+     C     *IN03         ANDEQ     *ON                                                      BUG10705
+     C     *IN04         ANDEQ     *ON                                                      BUG10705
+     C******IN04         ANDEQ     *OFF                                            BUG10705 BUG10705
+     C*****F1BRCA        ORNE      BRCA                                            BUG10315 BUG10705
+     C     F1BRCA        ORNE      BRCA                                                     BUG10705
+     C     *IN03         ANDEQ     *OFF                                                     BUG10705
+     C     F1BRCA        ORNE      HKDBRC                                                   BUG10705
+     C     *IN10         ANDEQ     *OFF                                                     BUG10705
+     C     *IN04         ANDEQ     *OFF                                                     BUG10705
+     C                   EXCEPT    ERR1
+     C                   ENDIF                                                              BUG10315
+     C                   ENDIF                                                              BUG10705
+     C                   ELSE
+     C******IN02         IFEQ      *OFF                                            BUG10705 BUG10705
+     C******IN04         ANDEQ     *ON                                             BUG10705 BUG10705
+     C                   EXCEPT    ERR2
+     C                   SETON                                          U7U8                 BUG3937
+     C**********         ENDIF                                                     BUG10705 BUG10705
+     C                   ENDIF
+     C                   ELSE
+     C***02F1BRCA        IFNE      HKDBRC                                                    BUG3937
+     C***02F1BRCA        IFNE      BRCA                                             BUG3937 BUG10705
+     C   02F1BRCA        IFNE      BRCA                                                     BUG10705
+     C*****F1BRCA        IFNE      BRCA                                                     BUG10705
+     C******IN02         ANDEQ     *ON                                                      BUG10705
+     C*****F1BRCA        ORNE      HKDBRC                                                   BUG10705
+     C******IN04         ANDEQ     *ON                                                      BUG10705
+     C                   EXSR      OPNPRTF
+     C                   EXCEPT    ERR3
+     C                   SETON                                          U7U8                 BUG3937
+     C                   ENDIF
+     C                   ENDIF
+     C/SPACE 5
+      *********************************************************************
+      * OPNPRTF - OPEN PRINTER FILE
+      *********************************************************************
+     C     OPNPRTF       BEGSR
+     C     PrintOpen     IFNE      'Y'
+     C                   MOVE      'Y'           PrintOpen         1
+     C**********         SETON                                          U7U8                 BUG3937
+     C                   OPEN      QSYSPRT
+     C                   EXCEPT    HEADINGS
+     C                   ENDIF
+     C                   ENDSR
+      *********************************************************************
+     C/SPACE 5
+      *********************************************************************
+      * *PSSR  --- ABNORMAL ERROR CONDITIONS
+      *********************************************************************
+     C     *PSSR         BEGSR
+     C     RunBefore     IFEQ      *BLANKS
+     C                   MOVE      'Y'           RunBefore         1
+     C                   DUMP
+     C                   SETON                                        LRU7U8
+     C                   ENDIF
+     C                   RETURN
+     C                   ENDSR
+      *********************************************************************
+     C/SPACE 5
+      *********************************************************************
+      * *INZSR --- INITIAL PROCESSING
+      *********************************************************************
+     C     *INZSR        BEGSR
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANKS       PRTCD             7
+     C                   PARM      '*FIRST '     POPTN             7
+     C     SDBANK        PARM      SDBANK        DSFDY
+                                                                                            BUG10315
+     C                   Z-ADD     0             KDLNO             6 0                      BUG10315
+                                                                                            BUG10315
+     C                   CALL      'AOMMODR0'                                               BUG10705
+     C                   PARM      *BLANKS       PRTCD                                      BUG10705
+     C                   PARM      '*FIRST '     POPTN                                      BUG10705
+     C     SDMMOD        PARM      SDMMOD        DSFDY                                      BUG10705
+                                                                                            BUG10705
+      ** Database error                                                                     BUG10705
+                                                                                            BUG10705
+     C     @RTCD         IFNE      *BLANKS                                                  BUG10705
+     C                   MOVEL     'SDMMODPD'    DBFILE                                     BUG10705
+     C                   MOVEL     '001'         DBASE                                      BUG10705
+     C                   MOVEL     @OPTN         DBKEY                                      BUG10705
+     C                   EXSR      *PSSR                                                    BUG10705
+     C                   END                                                                BUG10705
+     C                   MOVE      *OFF          *IN10                                      BUG10705
+     C     BGTRMG        IFEQ      'Y'                                                      BUG10705
+     C                   MOVE      *ON           *IN10                                      BUG10705
+     C                   END                                                                BUG10705
+     C                   ENDSR
+      *********************************************************************
+     OQSYSPRT   E            HEADINGS       1 03
+     O                                           12 'REF:LE000101'
+     O                                           70 'DLDLDCQD RECONCILIATION'
+     O                                           77 'REPORT'
+     O                                          120 'DATE:'
+     O                       BJMRDT             128
+     O          E            ERR1        1
+     O                                           11 'Deal number'
+     O                       F1DLNO              18
+     O                                           43 'on DLDLDCQD but missing '
+     O**********                                 56 'from MMDELDPP'                          BUG3937
+     O**********                                 56 'from DEALSDC'                  BUG3937 BUG10315
+     O**********                                 65 'from DEALSDC/DLCHISPD'        BUG10315 BUG10705
+     O**********                                 66 'from MMDELDPP/DEALSDC/ '      BUG10705 BUG10705
+     O**********                                 74 'DLCHISPD'                     BUG10705 BUG10705
+     O              N10                          66 'from MMDELDPP/DEALSDC/ '               BUG10705
+     O              N10                          74 'DLCHISPD'                              BUG10705
+     O               10                          65 'from DEALSDC/DLCHISPD'                 BUG10705
+     O          E            ERR2        1
+     O                                           11 'Deal number'
+     O**********             HKDN38              18                                          BUG3937
+     O                       DLNO                18                                          BUG3937
+     O**********                                 43 'on MMDELDPP but missing '               BUG3937
+     O**********                                 43 'on DEALSDC but missing '       BUG3937 BUG10315
+     O**********                                 56 'from DLDLDCQD'                         BUG10315
+     O**********                                 43 'on DEALSDC/DLCHISPD but '     BUG10315 BUG10705
+     O**********                                 40 'on MMDELDPP/DEALSDC/ '        BUG10705 BUG10705
+     O**********                                 60 'DLCHISPD but missing '        BUG10705 BUG10705
+     O**********                                 73 'from DLDLDCQD'                BUG10705 BUG10705
+     O              N10                          40 'on MMDELDPP/DEALSDC/ '                 BUG10705
+     O              N10                          60 'DLCHISPD but missing '                 BUG10705
+     O              N10                          73 'from DLDLDCQD'                         BUG10705
+     O               10                          43 'on DEALSDC/DLCHISPD but '              BUG10705
+     O               10                          64 'missing from DLDLDCQD'                 BUG10705
+     O**********                                 64 'missing from DLDLDCQD'        BUG10315 BUG10705
+     O          E            ERR3        1
+     O                                           11 'Deal number'
+     O**********             HKDN38              18                                          BUG3937
+     O                       DLNO                18                                          BUG3937
+     O                                           43 'has an invalid branch on'
+     O                                           52 'DLDLDCQD'

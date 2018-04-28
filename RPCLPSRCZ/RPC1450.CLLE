@@ -1,0 +1,138 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas RP PB Transactions/Positions Take On.')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Private Banking Module                              */
+/*                                                                   */
+/*       RPC1450 - Transactions/Positions Take On.                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. BG18886            Date 26May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*       Last Amend No. CPB002  *CREATE    Date 01Jun99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       CPB002 - Meridian DBA Middleware Replication Customization. */
+/*                Midas/TOF Interface.                               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*-------------------------------------------------------------------*/
+/*  Variables declaration.                                           */
+/*-------------------------------------------------------------------*/
+ 
+             DCL        VAR(&Msgdta)     TYPE(*CHAR) LEN(128)
+             DCL        VAR(&Mem)        TYPE(*CHAR) LEN(256)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/*-------------------------------------------------------------------*/
+/*  Global Monitor Message.                                          */
+/*-------------------------------------------------------------------*/
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/*-------------------------------------------------------------------*/
+/*  Create LDA if not present.                                       */
+/*-------------------------------------------------------------------*/
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                                AUT(*EXCLUDE)
+             ENDDO
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+ 
+/*-------------------------------------------------------------------*/
+/*  Set switches U7 and U8 off.                                      */
+/*  Set switch U1 off to indicate take on processing is running      */
+/*  within scope of Private banking take on.                         */
+/*-------------------------------------------------------------------*/
+ 
+             CHGJOB     SWS(0XXXXX00)
+ 
+/*-------------------------------------------------------------------*/
+/*  Create Customer Selection Data Area in library QTEMP, if it does */
+/*  not already exists, to be used for Customer Selection Input.     */
+/*-------------------------------------------------------------------*/
+ 
+             CHKOBJ     OBJ(QTEMP/RPCUST) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CRTDTAARA  DTAARA(QTEMP/RPCUST) TYPE(*CHAR) LEN(256) +
+                                AUT(*EXCLUDE)
+             ENDDO
+             CHGDTAARA  DTAARA(QTEMP/RPCUST) VALUE(' ')
+ 
+/*-------------------------------------------------------------------*/
+/*  Call Transactions/Positions Take On program.                     */
+/*-------------------------------------------------------------------*/
+ 
+             CALLPRC    PRC(RP1450)
+ 
+/*-------------------------------------------------------------------*/
+/*  Database error processing                                        */
+/*-------------------------------------------------------------------*/
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   RTVDTAARA  DTAARA(LDA *ALL) RTNVAR(&MEM)
+/******************IF         COND(%SST(&Mem 134 8) *= ' ') THEN(DO)             */ /*BG18886*/
+                   IF         COND(%SST(&Mem 134 8) *NE ' ') THEN(DO)               /*BG18886*/
+                        SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                                     MSGDTA(%SST(&Mem 134 50)) +
+                                      TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                   ENDDO
+                   ELSE       CMD(DO)
+                        CHGVAR     VAR(&Msgdta) +
+                             VALUE('Module' *BCAT %SST(&Mem 184 10) +
+                                   *TCAT ' ended abnormally.' *BCAT +
+                                   %SST(&Mem 204 53) *TCAT '"')
+                         SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA(&Msgdta) +
+                                      TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                   ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/*-------------------------------------------------------------------*/
+/*  Abnormal Termination.                                            */
+/*-------------------------------------------------------------------*/
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             CHGVAR     VAR(&Msgdta) +
+                          VALUE('RPC1450 - Transactions/Positions Take On +
+                                - ended abnormally. See job log')
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA(&MSGDTA) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*-------------------------------------------------------------------*/
+/*  End processing.                                                  */
+/*-------------------------------------------------------------------*/
+ 
+ ENDPGM:
+ 
+/*-------------------------------------------------------------------*/
+/*  Reset switch U1 off.                                             */
+/*-------------------------------------------------------------------*/
+ 
+             CHGJOB     SWS(0XXXXXXX)
+             MONMSG     MSGID(CPF0000 MCH0000)

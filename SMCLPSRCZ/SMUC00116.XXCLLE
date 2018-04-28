@@ -1,0 +1,210 @@
+/*******************************************************************/
+/*S*D****CLPBASEBND*************************************************/                     /*CLE164*/
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       SMUC00116 - PDCL Standing Data Validation                 */
+/*                                                                 */
+/*       NOTE: THIS PROGRAM IS A COPY OF LE007000 DESIGNED         */
+/*       TO RUN ONLY ONCE AS PART OF THE PDP MIGRATION FROM        */
+/*       RELEASE 1.4 TO BF2.1                                      */
+/*                                                                 */
+/*       Note: If &CNAM begins "*", assume mode is passed in       */
+/*             interactive session                                 */
+/*                                                                 */
+/*       When called interactively, four modes of operation are    */
+/*       available by setting &CNAM to:                            */
+/*         *REPORT  - Report errors on repayments due              */
+/*         *SYNC    - As above and add/remove LEACCNPD entries     */
+/*         *ALL     - Report errors on all repayments              */
+/*         *ALLSYNC - As "*ALL" and add/remove LEACCNPD entries    */
+/*                                                                 */
+/*       When called in batch, &MODE is set to *SYNC.              */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. CLE164  *REDUNDANT Date 18Aug14            */
+/*       Prev Amend No. AR1083670A *CREATE Date 04Apr13            */
+/*                      xxxxxx             Date ddMmmyy            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)     */
+/*       AR1083670A - Changes in LEPRATPD should be included in    */
+/*                    migration program                            */
+/*                                                                 */
+/*******************************************************************/
+             PGM
+ 
+             DCL        VAR(&SAVDM) TYPE(*CHAR) LEN(10) +
+                           VALUE('LEC07000DM')
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)  VALUE(' ')
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1)  VALUE('Y')
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SLC) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&BJRDNBX) TYPE(*CHAR) LEN(5)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&TOLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+ 
+/** Main Processing Control */
+ 
+             SNDPGMMSG  MSG('PDCL Standing Data Validation') +
+                           TOMSGQ(MRUNQ)
+ 
+/** Check the current status of this component */
+ 
+             CHGVAR     VAR(&CNAM)  VALUE('*')
+             CHGVAR     VAR(&CSEQ ) VALUE(0)
+ 
+             IF         COND(%SST(&CNAM 1 1) *NE '*') THEN(DO)
+               CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+               IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Restart Process */
+/**/
+               IF         COND(&STAT *NE 'Y') THEN(GOTO SAVDTA)
+ 
+/** Do not restore LEACCNPD from LEC0700DM savf */
+ 
+               GOTO       CMDLBL(QRY010)
+/**/
+/** Save a Copy of Data Files that are Updated in this Process */
+/**/
+SAVDTA:
+ 
+               DLTF       FILE(&DILIB/&SAVDM)
+               MONMSG     MSGID(CPF2105)
+/**/
+               CRTSAVF    FILE(&DILIB/&SAVDM) AUT(*LIBCRTAUT)
+               SAVOBJ     OBJ(LEACCNPD) LIB(&DMLIB) DEV(*SAVF) +
+                             SAVF(&DILIB/&SAVDM)
+               DLTF       FILE(X1LEACCNPD)
+               MONMSG     MSGID(CPF0000)
+/**/
+               CPYF       FROMFILE(LEACCNPD) +
+                             TOFILE(&TOLIB/X1LEACCNPD) +
+                             CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+/** Update Component Status */
+ 
+               CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+             ENDDO
+ 
+/** Extract Active PDCL Records */
+ 
+QRY010:
+             CLOF       OPNID(CLOANLB)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&SLC) VALUE('RECI = ''D'' *AND +
+                           AUTO = ''C''')
+ 
+             OPNQRYF    FILE((CLOANLB)) OPTION(*ALL) QRYSLT(&SLC)
+ 
+QRY020:
+             CLOF       OPNID(LEFEEDLU)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&SLC) VALUE('FEAUTO  = ''C''')
+             OPNQRYF    FILE((LEFEEDLU)) OPTION(*ALL) QRYSLT(&SLC)
+ 
+/** If Interative Call, Set Mode, Otherwise Set Default */
+ 
+             IF         COND(%SST(&CNAM 1 1) *EQ '*') THEN(+
+                           CHGVAR     VAR(&MODE) VALUE(&CNAM))
+ 
+             IF         COND(&MODE *EQ ' ') THEN(+
+                           CHGVAR     VAR(&MODE) VALUE('*SYNC'))
+ 
+/** Execute Primary Function */
+ 
+             OVRMSGF    MSGF(MIUSRMSG) TOMSGF(GBMIUSRMSG)
+ 
+             OVRDBF     FILE(LEACCNA1) TOFILE(LEACCNL3) SHARE(*NO)
+ 
+             CALL       PGM(SMU00116) PARM(&MODE)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Reset Component Status */
+ 
+             IF         COND(%SST(&CNAM 1 1) *NE '*') THEN(DO)
+               CHGVAR     VAR(&STAT) VALUE('N')
+ 
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+               IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+             ENDDO
+ 
+/** Program Completed Successfully */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Process Errors */
+ 
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_OOB:
+             SNDPGMMSG  MSG('Job terminated, file out of balance.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_CDE:
+             SNDPGMMSG  MSG('Job terminated, component does not +
+                           exist.') TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Termination Process */
+ 
+ENDPGM:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CLOF       OPNID(CLOANLB)
+             MONMSG     MSGID(CPF0000)
+ 
+             CLOF       OPNID(LEFEEDLU)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Misys International Banking Systems Ltd.')
+             ENDPGM
+ 

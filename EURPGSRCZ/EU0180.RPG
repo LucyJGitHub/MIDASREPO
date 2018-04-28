@@ -1,0 +1,988 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU Bulk maintenance report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Retail Utilities                                 *
+      *                                                               *
+      *  EU0180 -  Bulk Maintenance for EMU  Report                   *
+      *                                                               *
+      *  Function:  This program is a new report to provide a full    *
+      *   (IC)      list on-request of all the new Euro accounts      *
+      *             opened, sweep records created and 'In' currency   *
+      *             accounts flagged for closure due to bulk retail   *
+      *             account maintenance for EMU.                      *
+      *                                                               *
+      *  Called By: EUC0180                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CRE401             Date 26Nov09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRE008             Date 19Feb02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 137489             Date 15Jul98               *
+      *                 133671             Date 17Apr98               *
+      *                 CEU022             Date 20JAN98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE401 - 4-Eyes Checking Gaps - Sweeps (Recompile)           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CRE008 - Cash Management                                     *
+      *  137489 - Fix on Bulk Maintenance Reports wherein New Euro    *
+      *           Accounts is missing.                                *
+      *  133671 - Blanks out retail account no. of 'in' currency acc  *
+      *           when retail account nos have been preserved         *
+      *  CEU022 - EMU Retail Utilities                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+     FEUMDHDL5IF  E           K        DISK         KINFSR *PSSR
+      *                                                               *
+     FEUACMLL4IF  E           K        DISK         KINFSR *PSSR
+     F            EUACMLPF                          KRENAMEEUACML4
+      *                                                               *
+     FEUACMLL5IF  E           K        DISK         KINFSR *PSSR
+     F            EUACMLPF                          KRENAMEEUACML5
+      *                                                               *
+     FRESWEPL3IF  E           K        DISK         KINFSR *PSSR
+      *                                                               *
+     FEU0180AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FEU0180P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     F/COPY WNCPYSRC,EU0180F001
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *   60  - Euro account opened record being written              *
+      *   61  - Sweep detail being written                            *
+      *   62  - 'In' currency account closed record being written     *
+      *                                                               *
+      *   80  - Used for CHAIN and READE                              *
+      *   89  - End of File                                           *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *                   ~~~~~~~~~~~~~~~~~~~~                        *
+      *  INIT    -  Program Initialisation                            *
+      *  EUROPN  -  Processes details of Euro accounts opened         *
+      *  SWEEP   -  Processes details of Sweep records                *
+      *  INCLOS  -  Processes details of 'In' ccy accounts closed     *
+      *  OPENSP  -  Opens a new spool file                            *
+      *  WP1REC  -  Writes records to the report                      *
+      *  WP1END  -  Writes End of Report                              *
+      *  AUDIT   -  Outputs Audit report and ends program             *
+      *  *PSSR   -  Error control subroutine                          *
+      *  RCFP1   -  Registers the P1 Printer File via RCF             *
+      *  RCFAU   -  Registers the AU Printer File via RCF             *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Arrays for ZDATE2 subroutine
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISPOOL1      DS
+      ***  File Information Data Structure for EU0180P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for EU0180AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  Dummy Data Structures used by Access Programs
+     IDSFDY     E DSDSFDY
+      *
+      ***  Dummy Data Structures used by Access Programs
+     IDSSDY     E DSDSSDY
+      *
+      ***  External data structures for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ***  External data structures for Branch Details
+     ISDBRCH    E DSSDBRCHPD
+      *
+      * ===============================================================
+      **                  D E F I N I T I O N S
+      * ===============================================================
+      *
+     C           *LIKE     DEFN EUEBRC    K#EBRC
+     C           *LIKE     DEFN EUEACD    K#EACD
+     C           *LIKE     DEFN EUECNM    K#ECNM
+     C           *LIKE     DEFN EUMAPN    K#MAPN
+     C           *LIKE     DEFN EUECCY    K#ECCY                          CRE008
+     C           *LIKE     DEFN EUEACD    K#EAC2                          CRE008
+     C           *LIKE     DEFN EUESQN    K#ESQN                          CRE008
+      *
+     C           *LIKE     DEFN EUIBRC    K#DRBR
+     C           *LIKE     DEFN EUIACD    K#DACD
+     C           *LIKE     DEFN EUICNM    K#DCUS
+     C           *LIKE     DEFN EUICCY    K#CCY
+     C           *LIKE     DEFN EUISQN    K#DACS
+      *
+     C           *LIKE     DEFN EUOPIN    W#EXIT
+     C           *LIKE     DEFN EUOPIN    W#NONE
+      *
+     C           K#KY01    KLIST
+     C                     KFLD           K#EBRC
+     C                     KFLD           K#EACD
+     C                     KFLD           K#ECNM
+     C                     KFLD           K#MAPN
+      *                                                                   CRE008
+     C           K#KY1F    KLIST                                          CRE008
+     C                     KFLD           K#EBRC                          CRE008
+     C                     KFLD           K#EACD                          CRE008
+     C                     KFLD           K#ECNM                          CRE008
+     C                     KFLD           K#MAPN                          CRE008
+     C                     KFLD           K#ECCY                          CRE008
+     C                     KFLD           K#EAC2                          CRE008
+     C                     KFLD           K#ESQN                          CRE008
+      *
+     C           K#KY02    KLIST
+     C                     KFLD           K#EBRC
+     C                     KFLD           K#EACD
+     C                     KFLD           K#MAPN
+      *                                                                   CRE008
+     C           K#KY2F    KLIST                                          CRE008
+     C                     KFLD           K#EBRC                          CRE008
+     C                     KFLD           K#EACD                          CRE008
+     C                     KFLD           K#MAPN                          CRE008
+     C                     KFLD           K#ECNM                          CRE008
+     C                     KFLD           K#ECCY                          CRE008
+     C                     KFLD           K#EAC2                          CRE008
+     C                     KFLD           K#ESQN                          CRE008
+      *
+     C           K#KY03    KLIST
+     C                     KFLD           K#DRBR
+     C                     KFLD           K#DCUS
+     C                     KFLD           K#CCY
+     C                     KFLD           K#DACD
+     C                     KFLD           K#DACS
+      *
+      *
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C           W#EXIT    DOWEQ'N'
+      *
+     C                     EXSR EUROPN
+     C                     EXSR SWEEP
+     C                     EXSR INCLOS
+      *
+     C                     ENDDO
+      *
+     C           W#NONE    IFEQ 'N'
+     C                     EXSR WP1END
+     C                     ENDIF
+      *
+      ***  Output Audit Report and End Program.
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      **   Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *   Check if multi-branch
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN37
+     C                     END
+      *
+      ***  Initialise LDA field.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EU0180'  DBPGM
+     C                     OUT  LDA
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     MOVE 'N'       W#EXIT
+     C                     MOVE 'Y'       W#NONE
+     C                     MOVE *BLANKS   K#EBRC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/EUROPN
+      *****************************************************************
+      *                                                               *
+      *  EUROPN - Subroutine to do the Detail Processing for Euro     *
+      *           accounts opened.                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EUROPN    BEGSR                           *** EUROPN ***
+      *
+      ***  Read first record from File.
+      *
+     C           K#EBRC    SETGTEUMDHDL5
+     C                     READ EUMDHDL5                 89
+      *
+      ***  If End of Records, (*IN89), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE 'Y'       W#EXIT
+      *
+     C                     ELSE
+      *
+      ***  Load flag to show that some records exist on EUMDHDL5
+     C                     MOVE 'N'       W#NONE
+      *
+      ***  Save current Map No. in key field
+     C                     MOVE EUBRCA    K#EBRC
+      *
+      ***  If branch changes.
+     C           EUBRCA    IFNE RBRCA
+      *
+      ***  If not first record read.
+     C           RBRCA     IFNE *BLANKS
+     C                     EXSR WP1END
+     C                     CLOSEEU0180P1
+     C                     ENDIF
+      *
+      ***  Open a new spool file for next branch
+     C                     EXSR OPENSP
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *
+     C           *IN89     DOWEQ*OFF
+     C           W#EXIT    ANDEQ'N'
+      *
+      ***  Process Report Lines.
+     C                     MOVE EUMAPN    W#MAPN  60
+      *
+     C                     MOVE EUBRCA    K#EBRC
+     C                     MOVE EUACOD    K#EACD
+     C                     MOVE EUMAPN    K#MAPN
+      *
+     C********** EUCNUM    IFEQ *ZERO                                                         CSD027
+     C           EUCNUM    IFEQ *BLANKS                                                       CSD027
+      *
+     C**********           Z-ADD*ZERO     K#ECNM                                              CSD027
+     C                     MOVE *BLANKS   K#ECNM                                              CSD027
+      *
+     C           K#KY02    CHAINEUACMLL5             80
+      *
+     C                     ELSE
+      *
+     C                     MOVE EUCNUM    K#ECNM
+     C           K#KY01    CHAINEUACMLL4             80
+      *
+     C                     ENDIF
+      *
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+     C           EUOPIN    IFEQ 'Y'
+     C           EUOPFA    ANDEQ'N'
+      *
+      **  Process New Euro Accounts Opened, turn on Euro account opened
+      **  indicator to write correct details.
+     C                     MOVE *ON       *IN60
+     C                     EXSR WP1REC
+     C                     MOVE *OFF      *IN60
+      *
+      ***  Count records read.
+     C                     ADD  1         RCOUNT  60
+      *
+     C                     ENDIF
+      *
+     C**********           Z-ADDEUECNM    K#ECNM                                       CRE008 CSD027
+     C                     MOVE EUECNM    K#ECNM                                              CSD027
+     C                     MOVE EUECCY    K#ECCY                          CRE008
+     C                     Z-ADDEUEACD    K#EAC2                          CRE008
+     C                     Z-ADDEUESQN    K#ESQN                          CRE008
+     C********** EUCNUM    IFEQ *ZERO                                                  CRE008 CSD027
+     C           EUCNUM    IFEQ *BLANKS                                                       CSD027
+     C           K#KY2F    SETGTEUACMLL5                                  CRE008
+     C           K#KY02    READEEUACMLL5                 80               CRE008
+     C                     ELSE                                           CRE008
+     C           K#KY1F    SETGTEUACMLL4                                  CRE008
+     C           K#KY01    READEEUACMLL4                 80               CRE008
+     C                     ENDIF                                          CRE008
+      *
+     C***********EUCNUM    IFEQ *ZERO                                     CRE008
+      ***********                                                         CRE008
+      *****Check*if all 'In' currency accounts are to be mapped into      CRE008
+      *****just*One Euro account (i.e. EUMULT = 'N')                      CRE008
+     C***********EUMULT    IFEQ 'Y'                                       CRE008
+     C***********K#KY02    READEEUACMLL5                 80               CRE008
+      ***********                                                         CRE008
+     C***********          ELSE                                           CRE008
+      ***********                                                         CRE008
+      *****If*previous record was not printed, select next record         CRE008
+     C***********EUOPFA    IFEQ 'Y'                                       CRE008
+     C***********          READ EUACMLL4                 80               CRE008
+     C***********          ELSE                                           CRE008
+      ***********                                                         CRE008
+      *****If*previous was printed, read record for next Customer No.     CRE008
+     C***********          MOVE EUECNM    K#ECNM                          CRE008
+      ***********                                                         CRE008
+     C***********K#KY01    SETGTEUACMLL4                                  CRE008
+     C***********          READ EUACMLL4                 80               CRE008
+      ***********                                                         CRE008
+     C***********          ENDIF                                          CRE008
+      ***********                                                         CRE008
+      *****Check*if next record has new Mapping Header details            CRE008
+     C***********EUMAPN    IFNE W#MAPN                                    CRE008
+     C***********          MOVE *ON       *IN80                           CRE008
+     C***********          ENDIF                                          CRE008
+      ***********                                                         CRE008
+     C***********          ENDIF                                          CRE008
+      ***********                                                         CRE008
+     C***********          ELSE                                           CRE008
+      ***********                                                         CRE008
+      *****i.e*only records for one Customer No. are required for this    CRE008
+      *****Map*Number. If MULTI='N', move on to next Map No.              CRE008
+     C***********EUMULT    IFEQ 'Y'                                       CRE008
+     C***********K#KY01    READEEUACMLL4                 80               CRE008
+     C***********          ELSE                                           CRE008
+      ***********                                                         CRE008
+     C***********EUOPFA    IFEQ 'Y'                                       CRE008
+     C***********K#KY01    READEEUACMLL4                 80               CRE008
+     C***********          ELSE                                           CRE008
+     C***********          MOVE *ON       *IN80                           137489
+     C***********          MOVE EUEACN    EATEMP 100               137489 CRE008
+     C***********          MOVE 'N'       SCTR    1                137489 CRE008
+     C***********K#KY01    READEEUACMLL4                 80        137489 CRE008
+      ***********                                                  137489 CRE008
+     C************IN80     DOWEQ*OFF                               137489 CRE008
+     C***********SCTR      ANDNE'Y'                                137489 CRE008
+      ***********                                                  137489 CRE008
+     C***********EUEACN    IFEQ EATEMP                             137489 CRE008
+     C***********K#KY01    READEEUACMLL4                 80        137489 CRE008
+     C***********          ELSE                                    137489 CRE008
+     C***********EUMAPN    IFEQ W#MAPN                             137489 CRE008
+     C***********          MOVE 'Y'       SCTR                     137489 CRE008
+     C***********          ENDIF                                   137489 CRE008
+     C***********          ENDIF                                   137489 CRE008
+      ***********                                                  137489 CRE008
+     C***********          ENDDO                                   137489 CRE008
+      ***********                                                  137489 CRE008
+     C***********          ENDIF                                          CRE008
+      ***********                                                         CRE008
+     C***********          ENDIF                                          CRE008
+      ***********                                                         CRE008
+     C***********          ENDIF                                          CRE008
+      *
+     C                     ENDDO
+      *
+      ***  Read next record.
+     C           K#EBRC    READEEUMDHDL5                 89
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SWEEP
+      *****************************************************************
+      *                                                               *
+      *  SWEEP  - Subroutine to do the Detail Processing for Sweep    *
+      *           records.                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SWEEP     BEGSR                           *** SWEEP  ***
+      *
+      ***  Read first record from File.
+      *
+     C           K#EBRC    SETLLEUMDHDL5
+     C           K#EBRC    READEEUMDHDL5                 89
+      *
+      ***  First Sweep Record flag - allows Sweep sub-header to be
+      **   written before the first Sweep detail
+     C                     MOVE 'Y'       W#SWEE  1
+      *
+      ***  Do While not End of File.
+      *
+     C           *IN89     DOWEQ*OFF                       Loop 1 start
+     C           W#EXIT    ANDEQ'N'
+      *
+      ***  Process Report Lines.
+      *
+     C                     MOVE EUBRCA    K#EBRC
+     C                     MOVE EUACOD    K#EACD
+     C                     MOVE EUMAPN    K#MAPN
+      *
+     C********** EUCNUM    IFEQ *ZERO                                                         CSD027
+     C           EUCNUM    IFEQ *BLANKS                                                       CSD027
+      *
+     C**********           Z-ADD*ZERO     K#ECNM                                              CSD027
+     C                     MOVE *BLANKS   K#ECNM                                              CSD027
+      *
+     C           K#KY02    CHAINEUACMLL5             80
+      *
+     C                     ELSE
+      *
+     C                     MOVE EUCNUM    K#ECNM
+     C           K#KY01    CHAINEUACMLL4             80
+      *
+     C                     ENDIF
+      *
+     C           *IN80     DOWEQ*OFF                       Loop 2 start
+      *
+     C           EUSWPI    IFEQ 'Y'
+     C           EUSWFA    ANDEQ'N'
+      *
+     C                     MOVE EUMAPN    RMAPN
+      *
+      ** Set up key to read Sweep Details file (RESWEPL3)
+     C                     MOVE EUIBRC    K#DRBR
+     C                     MOVE EUICNM    K#DCUS
+     C                     MOVE EUICCY    K#CCY
+     C                     MOVE EUIACD    K#DACD
+     C                     MOVE EUISQN    K#DACS
+      *
+     C           K#KY03    CHAINRESWEPL3             81
+      *
+      **  Write sub-header if first record for this branch
+     C           *IN81     IFEQ *OFF
+     C           W#SWEE    ANDEQ'Y'
+     C                     WRITEHEADP1
+     C                     WRITESWPSUB
+     C                     MOVE 'N'       W#SWEE
+     C                     ENDIF
+      *
+      **  Process Sweep details
+     C           *IN81     IFEQ *OFF
+     C                     MOVE *ON       *IN61
+     C                     EXSR WP1REC
+     C                     MOVE *OFF      *IN61
+      *
+      ***  Count records read.
+     C                     ADD  1         RCOUNT  60
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C********** EUCNUM    IFEQ *ZERO                                                         CSD027
+     C           EUCNUM    IFEQ *BLANKS                                                       CSD027
+     C           K#KY02    READEEUACMLL5                 80
+     C                     ELSE
+     C           K#KY01    READEEUACMLL4                 80
+     C                     ENDIF
+      *
+     C                     ENDDO                           Loop 2 end
+      *
+      ***  Read next record.
+     C           K#EBRC    READEEUMDHDL5                 89
+      *
+     C                     ENDDO                           Loop 1 end
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /TITLE SR/INCLOS
+      *****************************************************************
+      *                                                               *
+      *  INCLOS - Subroutine to do the Detail Processing for 'In'     *
+      *           currency accounts closed.                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INCLOS    BEGSR                           *** INCLOS ***
+      *
+      ***  Read next record from File.
+      *
+     C           K#EBRC    SETLLEUMDHDL5
+     C           K#EBRC    READEEUMDHDL5                 89
+      *
+      ***  First Account Closed Record flag - allows correct sub-header
+      **   to be written before the first detail line
+     C                     MOVE 'Y'       W#CLOS  1
+      *
+      ***  Do While not End of File.
+      *
+     C           *IN89     DOWEQ*OFF
+     C           W#EXIT    ANDEQ'N'
+      *
+      ***  Process Report Lines.
+      *
+     C                     MOVE EUBRCA    K#EBRC
+     C                     MOVE EUACOD    K#EACD
+     C                     MOVE EUMAPN    K#MAPN
+      *
+     C********** EUCNUM    IFEQ *ZERO                                                         CSD027
+     C           EUCNUM    IFEQ *BLANKS                                                       CSD027
+      *
+     C**********           Z-ADD*ZERO     K#ECNM                                              CSD027
+     C                     MOVE *BLANKS   K#ECNM                                              CSD027
+      *
+     C           K#KY02    CHAINEUACMLL5             80
+      *
+     C                     ELSE
+      *
+     C                     MOVE EUCNUM    K#ECNM
+     C           K#KY01    CHAINEUACMLL4             80
+      *
+     C                     ENDIF
+      *
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+     C           EUCLSE    IFEQ 'Y'
+     C           EUACLO    ANDEQ'N'
+      *
+      **  Write sub-header if first record for this branch
+     C           *IN80     IFEQ *OFF
+     C           W#CLOS    ANDEQ'Y'
+     C                     WRITEHEADP1
+     C                     WRITECLOSUB
+     C                     MOVE 'N'       W#CLOS
+     C                     ENDIF
+      *
+      **  Process 'In' Currency Accounts Closed, turn on 'In' currency
+      **  accounts closed indicator to write correct details.
+     C                     MOVE *ON       *IN62
+     C                     EXSR WP1REC
+     C                     MOVE *OFF      *IN62
+      *
+      ***  Count records read.
+     C                     ADD  1         RCOUNT  60
+      *
+     C                     ENDIF
+      *
+      *
+     C********** EUCNUM    IFEQ *ZERO                                                         CSD027
+     C           EUCNUM    IFEQ *BLANKS                                                       CSD027
+     C           K#KY02    READEEUACMLL5                 80
+     C                     ELSE
+     C           K#KY01    READEEUACMLL4                 80
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***  Read next record.
+     C           K#EBRC    READEEUMDHDL5                 89
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/OPENSP
+      *****************************************************************
+      *                                                               *
+      *  OPENSP - Opens a new spool file (for next branch)            *
+      *                                                               *
+      *****************************************************************
+     C           OPENSP    BEGSR                           *** OPENSP ***
+      *
+     C                     OPEN EU0180P1
+     C                     EXSR RCFP1
+      *
+      ***  Get branch name using Access Object AOBRCHR0.
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C           RBRCA     PARM           EUBRCA
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVELEUBRCA    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Write header, subheader
+     C                     WRITEHEADP1
+     C                     WRITEEURSUB
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1REC
+      *****************************************************************
+      *                                                               *
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1REC    BEGSR                           *** WP1REC ***
+      *
+     C                     SELEC                                       **
+      *
+      ***  Format Report fields for Open Euro Accounts.
+     C           *IN60     WHEQ *ON                                    **
+      *
+     C                     MOVE EUEBRC    REBRC
+     C                     MOVE EUEACD    REACD
+     C                     MOVE EUECNM    RECNM
+     C                     MOVE EUECCY    RECCY                           CRE008
+     C                     MOVE EUMAPN    RMAPN
+     C                     MOVE EUESQN    RESQN
+     C                     MOVE EUEACN    REACN
+     C/COPY WNCPYSRC,EU0180C001
+      *
+      ***  Format Report fields for Sweep Details.
+     C           *IN61     WHEQ *ON                                    **
+      *
+     C                     MOVE DRBR      RDRBR
+     C                     MOVE DACD      RDACD
+     C                     MOVE DCUS      RDCUS
+     C                     MOVE DACS      RDACS
+      *                                                                   133671
+      ** If retail account nos are preserved, blank out 'in' currency one 133671
+     C           DRAN      IFEQ *ZEROS                                    133671
+     C                     MOVE *BLANKS   RDRAN                           133671
+     C                     ELSE                                           133671
+     C                     MOVE DRAN      RDRAN
+     C                     ENDIF                                          133671
+      *                                                                   133671
+     C                     MOVE CBRC      RCBRC
+     C                     MOVE CSCA      RCSCA
+     C                     MOVE CCYC      RCCYC                           CRE008
+     C                     MOVE CACD      RCACD
+     C                     MOVE CCUS      RCCUS
+     C*********************MOVE CRAN      RCRAN
+     C           CRAN      IFEQ *ZEROS                                    CRE008
+     C                     MOVE *BLANKS   RCRAN                           CRE008
+     C                     ELSE                                           CRE008
+     C                     MOVE CRAN      RCRAN                           CRE008
+     C                     ENDIF                                          CRE008
+     C                     MOVE CCY       RCCY
+     C                     MOVE SWEP      RSWEP
+      *
+      ***  Convert sweep date to DDMMMYY format
+     C                     MOVE NXTP      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RNXTP
+      *
+      *
+      ***  Format Report fields for Close 'In' Currency accounts.
+     C           *IN62     WHEQ *ON                                    **
+      *
+     C                     MOVE EUIBRC    RIBRC
+     C                     MOVE EUIACD    RIACD
+     C                     MOVE EUICNM    RICNM
+     C                     MOVE EUMAPN    RMAPN
+     C                     MOVE EUISQN    RISQN
+      *                                                                   133671
+      ** If retail account nos are preserved, blank out 'in' currency one 133671
+     C           EUIACN    IFEQ *ZEROS                                    133671
+     C                     MOVE *BLANKS   RIACN                           133671
+     C                     ELSE                                           133671
+     C                     MOVE EUIACN    RIACN
+     C                     ENDIF                                          133671
+      *                                                                   133671
+     C                     MOVE EUICCY    RICCY
+      *
+     C                     ENDSL                                       **
+      *
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+      *
+     C                     SELEC
+      *
+     C           *IN60     WHEQ *ON
+     C                     WRITEEURSUB
+      *
+     C           *IN61     WHEQ *ON
+     C                     WRITESWPSUB
+      *
+     C           *IN62     WHEQ *ON
+     C                     WRITECLOSUB
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+      ***  Write out appropriate detail record.
+     C                     SELEC
+      *
+     C           *IN60     WHEQ *ON
+     C                     WRITEEURDTL
+      *
+     C           *IN61     WHEQ *ON
+     C                     WRITESWPDTL
+      *
+     C           *IN62     WHEQ *ON
+     C                     WRITECLODTL
+      *
+     C                     ENDSL
+      *
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1END    BEGSR                           *** WP1END ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ***  Write out Total Format.
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Report Header
+      *
+     C                     WRITEHEADAU
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           @RUN      IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       @RUN    1
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     DUMP
+      *
+     C                     EXSR AUDIT
+      *
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM EUBRCA    SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+     X/COPY ZSRSRC,ZDATE2Z3

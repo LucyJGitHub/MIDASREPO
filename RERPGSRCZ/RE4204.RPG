@@ -1,0 +1,615 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Passbook Updt Control File Reorg')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4204 - Passbook Update Control File Reorganisation         *
+     F*                                                               *
+     F*  Function:  This program drops passbook update control        *
+     F*  (COB)      records for accounts that have been closed.       *
+     F*                                                               *
+     F*  Called By: REC4204 - Passbook Update Control File Reorg      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT001   *CREATE   Date 28Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CRT001 - Retail Teller System                                *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     FACNUM   IF  E           K        DISK
+     F** Account Numbers Cross Reference File
+     F            ACCNTABF                          KRENAMEACNUMABF
+     F*
+     FPBUDCPH UF  E           K        DISK         KINFSR *PSSR
+     F** Passbook file             File header
+     F*
+     FPBUDCPD UF  E           K        DISK         KINFSR *PSSR
+     F** Passbook file             File Details
+     F*
+     FRE4204AUO   E                    PRINTER      KINFDS SPOOLU
+     F** Audit report
+     F*
+     FRE4204P1O   E             11     PRINTER      KINFDS SPOOL      UC
+     F** List of passbook update control reorg.
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   11  - Overflow indicator                                    *
+     F*                                                               *
+     F*   15  - Difference print indicator                            *
+     F*                                                               *
+     F*   70  - General Indicator Used For Passbook file              *
+     F*   71  - General Indicator Used For CHAIN                      *
+     F*   72  - General Indicator Used For CHAIN                      *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F* U7+U8 - Set on if database error occurs                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MAIN   - Control Processing                                  *
+     F*  FIRST  - Initial Processing                                  *
+     F*                                                               *
+     F*  PRODET - Process details                                     *
+     F*                                                               *
+     F*  PRDET  - Print details                                       *
+     F*  PRCON  - Print controls                                      *
+     F*                                                               *
+     F*  UPDHED - Update header                                       *
+     F*                                                               *
+     F*  GCURR  - Get decimals for currencies                         *
+     F*                                                               *
+     F*  FINAL  - Final Processing                                    *
+     F*                                                               *
+     F*  *PSSR  - Program error                                       *
+     F*  ZFRPED - Edit numeric field                                  *
+     F*  DBERR  - Database Error Handling :                           *
+     F*           Terminates program                                  *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZFRPEDZ1
+      ** Array for SR.ZFRPED
+      *
+     IENUM        DS                             19
+      ** Data structure for splitting the edited numeric which
+      ** has a value with 2 spaces to the right (CR,-)
+      *
+     I                                        1  17 @EN
+     I                                       18  19 @FL
+     I** FILE INFORMATION DATA STRUCTURE
+     I*
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+      *
+      /COPY ZSRSRC,ZFRPEDZ2
+      ** Data structure for SR.ZFRPED
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+      ** Field containing program ID
+     I                                        1  10 @PGM
+      *
+      ** Field containing workstation ID
+     I                                      244 253 @JOB
+      *
+      ** Field containing user ID
+     I                                      254 263 @USER
+     ILDA         DS                            256
+     I**  Local data area for data base errors.
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+     I**  Field combining the following fields
+     I                                      134 183 DBLOT
+     I**  Name of database file in error
+     I                                      134 141 DBFILE
+     I**  Key value causing database error
+     I                                      142 170 DBKEY
+     I**  Name of program causing database error
+     I                                      171 180 DBPGM
+     I**  Number of database error
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+     I** External data structure for Bank Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** External data structure for Currency Codes
+     I*
+     IDSSDY     E DSDSSDY
+     I** Second DS for access programs, Long data structure
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for access programs, Short data structure
+     I*
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      FINAL  - Final Processing                          *
+      *            FIRST  - Initial Processing                        *
+      *            PRODET - Process details                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+     C*
+      ** Initial Processing
+     C                     EXSR FIRST
+      *
+      ** processing passbook file  until EOF
+     C           *IN72     DOWEQ'0'
+      *
+     C                     READ PBUDCPDF                 72
+      *
+     C           *IN72     IFEQ '0'
+      *
+     C                     EXSR PRODET
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** If EOF reached do final processing
+     C                     EXSR FINAL
+      *
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRODET - Process details                           *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling           (01)(02)*
+      *            GCURR  - Get decimals for currencies               *
+      *            PRDET  - Print details                             *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRODET    BEGSR                           ** PRODET **
+      *
+     C                     ADD  1         NORD
+     C                     MOVELACNO      KACNO
+      *
+      ** Get Account Details
+     C           KLACNO    CHAINACNUM                70
+      *
+      ** If account is a closed
+     C           RECI      IFEQ 'C'
+     C           RECI      OREQ '*'
+     C           *IN70     OREQ '1'
+      *
+      ** Get currency details
+     C           *IN70     IFEQ '0'
+     C                     EXSR GCURR
+     C                     END
+      *
+      ** Print passbook details
+     C                     EXSR PRDET
+      *
+      ** Physically delete the record in the passbook file
+     C                     DELETPBUDCPDF
+      *
+      ** Increment deleted record counter
+     C                     ADD  1         NDEL
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FINAL  - Final Processing                          *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling               (03)*
+      *            PRCON  - Print controls                            *
+      *            UPDHED - Update header                             *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FINAL     BEGSR                           ** FINAL  **
+      *
+      ** Print the last line of the report
+     C           NDEL      IFGT *ZEROS
+     C                     WRITELAST
+     C                     END
+      *
+      ** If there have been record deletions
+     C*          NDEL      IFGT *ZEROS
+      *
+      ** Access header record of passbook file
+     C                     READ PBUDCPHF                 72
+      *
+      ** If record not found?
+     C           *IN72     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD3         DBASE            ** DB ERR 03 **
+     C                     MOVE 'PBUDCPHF'DBFILE           ***************
+     C                     MOVEL'H'       DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** Check for file imbalance
+     C           NORD      IFNE NORE
+     C           *LOCK     IN   LDA
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+     C                     SETON                     U715
+     C                     END
+      *
+      ** Update the passbook header
+     C                     EXSR UPDHED
+      *
+      ** Print audit controls
+     C                     EXSR PRCON
+      *
+     C                     SETON                     LR
+     C                     CLOSE*ALL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPDHED - Update header                             *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling               (04)*
+      *                                                               *
+      * CALLED BY  FINAL  - Final Processing                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           UPDHED    BEGSR                           ** UPDHED **
+      *
+     C           NORD      SUB  NDEL      NOREA
+      *
+      ** Move to audit print variable before update
+     C                     Z-ADDNORE      PNORE
+     C                     Z-ADDNOREA     NORE
+      *
+     C                     UPDATPBUDCPHF               71
+      *
+     C           *IN71     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'PBUDCPHF'DBFILE           ***************
+     C                     Z-ADD4         DBASE            ** DB ERR 04 **
+     C                     MOVEL'1'       DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRDET  - Print details                             *
+      *                                                               *
+      * CALLS      ZFRPED - Edit numeric field                        *
+      *                                                               *
+      * CALLED BY  PRODET - Process details                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           PRDET     BEGSR                           ** PRDET  **
+      *
+     C                     MOVELACNO      PACNO
+     C                     MOVELANAM      PANAM
+     C                     MOVELSPBL      PSPBL
+      *
+      ** Convert carry forward amount to edited numeric with decimal
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE *BLANKS   ENUM
+     C                     MOVE *BLANKS   PCFPB
+     C                     Z-ADDCFPB      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     MOVE A6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    ENUM
+     C                     MOVE @EN       PCFPB
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C           WOPEN     IFNE 'Y'
+     C                     OPEN RE4204P1
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C                     MOVE 'Y'       WOPEN   1
+     C                     MOVE '1'       *IN11
+     C*
+     C                     END
+      *
+      ** check for heading print
+     C           *IN11     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     11
+     C                     END
+      *
+      ** Write detail line
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRCON  - Print controls                            *
+      *                                                               *
+      * CALLS                                                     (05)*
+      *                                                               *
+      * CALLED BY  FINAL  - Final processing                          *
+      *                                                               *
+      * FLDS USED        -                                            *
+      *                                                               *
+      *****************************************************************
+     C           PRCON     BEGSR                           ** PRCON  **
+      *
+     C                     MOVELNORD      PNORD
+      *
+     C                     MOVELNDEL      PNDEL
+     C                     MOVELNOREA     PNOREA
+      *
+     C                     EXSR #RCFAU
+      *
+     C                     WRITEHEADAU
+     C*
+     C** Report no details
+     C*
+     C           NORD      IFEQ 0
+     C           *INU7     ANDEQ'0'
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      ** Print control totals report.
+     C                     WRITECONTROL
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial Processing                        *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling               (05)*
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Input parameter(s) :
+     C           *ENTRY    PLIST                           Entry paramete
+     C                     PARM           PSEQ    5        Sequence
+      *
+      ** Account Numbers Cross Reference
+     C           KLACNO    KLIST
+     C                     KFLD           KACNO  100
+      *
+      ** Currency Details
+     C           KLBANK    KLIST
+     C                     KFLD           BJBANK
+      *
+      **   Reset LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** Get Midas run-date and title
+      *
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If record not found?
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD5         DBASE            ** DB ERR 05 **
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+      **  Initialise work variables
+     C                     Z-ADD0         NDEL    50
+     C                     Z-ADD0         NORD    50
+     C                     Z-ADD0         NOREA   50
+      *
+      ** Seton overflow indicator
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            GCURR  - Get decimals for currencies               *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling               (06)*
+      *                                                               *
+      * CALLED BY  PRODET - Process details                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           GCURR     BEGSR                           ** GCURR  **
+      *
+      ** Access currency file for no.of decimal places of local curr.
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       @CURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If record not found.
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD6         DBASE            ** DB ERR 06 *
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELCCY       DBKEY
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C*                                                               *
+     C* #RCFAU -  Record audit spool file in RCF                      *
+     C*                                                               *
+     C* Calls:  None                                                  *
+     C*                                                               *
+     C* Called from: PRCON, DBERR                                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #RCFAU    BEGSR                           *** #RCFAU ***
+     C*
+     C** Ensure Report Spool File Recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANKS   ZSERRU  1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERRU    IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DBERR  - Database Error Handling :                 *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  FINAL  - Final Processing                     (03) *
+      *            FIRST  - Initial Processing                   (05) *
+      *            GCURR  - Get decimals for currencies          (06) *
+      *            PRODET - Process details                  (01)(02) *
+      *            UPDHED - Update header                        (04) *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     EXSR #RCFAU
+     C                     MOVEL@PGM      DBPGM
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C           WOPEN     IFEQ 'Y'
+     C                     WRITEERRLINE
+     C                     CLOSERE4204P1
+     C                     END
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY                                                     *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      ** Transaction failed.  Re-input necessary.
+     C                     CLOSE*ALL
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      ** SR.ZFRPED Subroutine
+      /COPY ZSRSRC,ZFRPEDZ3
+      *
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

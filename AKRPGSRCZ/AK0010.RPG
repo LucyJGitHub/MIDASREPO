@@ -1,0 +1,722 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AK Account keys gen - module selection')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Account Key Generator
+     F*                                                               *
+     F*  AK0010  -  Account Keys Generation Module Selection.         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Prev Amend No. 127177             Date 22Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 103747             Date 10Apr97               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CAS006 - Hedge Accounting Phase B                            *
+     F*  127177 - Correct conditioning indicators and display         *
+     F*           'IN USE' text.                                      *
+     F*      103747 - Insert an additional checking for the only      *
+     F*               valid options.                                  *
+     F*                                                               *
+     F*****************************************************************
+     FAK0010DFCF  E                    WORKSTN
+     F*
+     F*   INDICATOR USAGE
+     F*   ---------------
+     F*   03   Exit requested
+     F*   10   Valid option entered
+     F*   20   Dealing installed
+     F*   21   FRA/IRS installed
+     F*   22   Internal Contracts installed
+     F*   24   Lending installed
+     F*   26   Securities installed
+      *   27   Dealing and/or Lending installed                                               CAS006
+     F*   30   PF/ACKEYAL and PF/ACKEYAK are allocated to other jobs      103747
+     F*   31   PF/SEACKD and PF/XSEACKD are allocated to other jobs       103747
+     F*   99   Error on screen
+     F*   U1   PF/ACKEYAL and PF/ACKEYAK are allocated to other jobs      103747
+     F*   U2   PF/SEACKD and PF/XSEACKD are allocated to other jobs       103747
+     F*   U8   Database error
+     F*
+     E*****************************************************************
+     E**********          DESCR   1   5 24                                127177
+     E**********          DESCR   1  10 24                                             127177 CAS006
+     E                    DESCR   1  12 24                                                    CAS006
+     E** Description of options
+     E*
+     E                    CPY@    1   1 80
+     E** Copyright array
+     E*
+     E********************************************************************
+     I** Data structures
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I** Data Structure to retrieve User and Workstation ID.
+     I*
+     IRUNDAT      DS                             13
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 @MBIN
+     I** Rundate Data Area
+     I*
+     I*
+     I*  LDA for database error
+     I*
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I/COPY WNCPYSRC,AK0010I001
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I** Midas Modules Details
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** Data Structure for Compilation  - Copyright Insertion
+     I*
+     C*****************************************************************
+     C* INDEX OF SUBROUTINES
+     C*
+     C* LOAD     -   Load screen with options
+     C* ZASNMS   -   Send message to program message queue
+     C* DLSR     -   Dealing Account Key Generator requested
+     C* FRSR     -   FRA/IRS Account Key Generator requested
+     C* ICSR     -   Internal Contracts Account Key Generator requested
+     C* LESR     -   Lending Account Key Generator requested
+     C* SESR     -   Securities Account Key Generator requested
+     C* INUSE    -   Call "AKC10A" to allocate or deallocate              103747
+     C*              the account keys files                               103747
+     C*
+     C*****************************************************************
+     C*  Main Processing.
+     C*
+     C** Prepare LDA.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'AK0010  'DBPGM
+     C*
+     C**  Define Rundat Data Area
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C** Prepare program messge queue.
+     C*
+     C                     MOVE *BLANKS   SPGMQ            Program queue
+     C                     MOVEL'AK0010'  SPGMQ            Program queue
+     C*
+     C** Use access program AOMMODR0 to retrieve SDMMODPD Details
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDMMODPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DBERROR 001 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** Use access program AOBANKR0 to retrieve SDBANKPD Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DBERROR 002 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+      *                                                                                       CAS006
+     C                     CALL 'AOSARDR0'                                                    CAS006
+     C                     PARM *BLANKS   PRTCD   7                                           CAS006
+     C                     PARM '*VERIFY' POPTN   7                                           CAS006
+     C                     PARM 'CAS006'  PSARD   6                                           CAS006
+     C                     PARM           DSFDY                                               CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFNE *BLANK                                                        CAS006
+     C           PRTCD     ANDNE'*NRF   '                                                     CAS006
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS006
+     C                     Z-ADD3         DBASE                                               CAS006
+     C                     MOVEL'CAS006'  DBKEY                                               CAS006
+     C                     EXSR DBERR                                                         CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFEQ *BLANKS                                                       CAS006
+     C                     MOVE 'Y'       CAS006  1                                           CAS006
+     C                     ELSE                                                               CAS006
+     C                     MOVE 'N'       CAS006                                              CAS006
+     C                     ENDIF                                                              CAS006
+     C*
+     C* Initialise work fields.
+     C*
+     C                     Z-ADD0         X       10
+     C**********           Z-ADD0         Y       10                      127177
+     C                     Z-ADD0         Y       20                      127177
+     C                     SETOF                     0310
+     C*
+     C* Initialise screen fields.
+     C*
+     C                     MOVE *BLANKS   OPT1
+     C                     MOVE *BLANKS   OPT2
+     C                     MOVE *BLANKS   OPT3
+     C                     MOVE *BLANKS   OPT4
+     C                     MOVE *BLANKS   OPT5
+     C                     MOVE *BLANKS   OPT6
+     C                     MOVE *BLANKS   OPT7
+     C*                                                                   103747
+     C** Check for the only possible options.                             103747
+     C*                                                                   103747
+     C           *INU1     IFEQ '1'                                       103747
+     C                     MOVE '1'       *IN30                           103747
+     C                     ENDIF                                          103747
+     C           *INU2     IFEQ '1'                                       103747
+     C                     MOVE '1'       *IN31                           103747
+     C                     ENDIF                                          103747
+     C*
+      ** Load appropriate IN USE descriptions if applicable.              127177
+      *                                                                   127177
+     C           BGDLFX    IFEQ 'Y'
+     C           BGDLMM    OREQ 'Y'
+     C                     ADD  1         X
+     C           *IN30     IFEQ '0'                                       127177
+     C                     Z-ADD1         Y
+     C                     ELSE                                           127177
+     C                     Z-ADD6         Y                               127177
+     C                     END                                            127177
+     C                     SETON                     20
+     C                     EXSR LOAD
+     C                     END
+     C*
+     C           BGFIIN    IFEQ 'Y'
+     C                     ADD  1         X
+     C           *IN30     IFEQ '0'                                       127177
+     C                     Z-ADD2         Y
+     C                     ELSE                                           127177
+     C                     Z-ADD7         Y                               127177
+     C                     END                                            127177
+     C                     SETON                     21
+     C                     EXSR LOAD
+     C                     END
+     C*
+     C           BGINCN    IFEQ 'Y'
+     C                     ADD  1         X
+     C           *IN30     IFEQ '0'                                       127177
+     C                     Z-ADD3         Y
+     C                     ELSE                                           127177
+     C                     Z-ADD8         Y                               127177
+     C                     END                                            127177
+     C                     SETON                     22
+     C                     EXSR LOAD
+     C                     END
+     C*
+     C           BGCSLN    IFEQ 'Y'
+     C                     ADD  1         X
+     C           *IN30     IFEQ '0'                                       127177
+     C                     Z-ADD4         Y
+     C                     ELSE                                           127177
+     C                     Z-ADD9         Y                               127177
+     C                     END                                            127177
+     C                     SETON                     24
+     C                     EXSR LOAD
+     C                     END
+     C*
+     C           BGSECS    IFEQ 'Y'
+     C                     ADD  1         X
+     C           *IN31     IFEQ '0'                                       127177
+     C                     Z-ADD5         Y
+     C                     ELSE                                           127177
+     C                     Z-ADD10        Y                               127177
+     C                     END                                            127177
+     C                     SETON                     26
+     C                     EXSR LOAD
+     C                     END
+      *                                                                                       CAS006
+      ** If CAS006 is installed, and either lending or dealing is also                        CAS006
+      ** installed, display option for Forecast Transaction Module                            CAS006
+      *                                                                                       CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C           BGDLMM    IFEQ 'Y'                                                           CAS006
+     C           BGCSLN    OREQ 'Y'                                                           CAS006
+     C                     ADD  1         X                                                   CAS006
+     C           *IN30     IFEQ *OFF                                                          CAS006
+     C                     Z-ADD11        Y                                                   CAS006
+     C                     ELSE                                                               CAS006
+     C                     Z-ADD12        Y                                                   CAS006
+     C                     ENDIF                                                              CAS006
+     C                     MOVE *ON       *IN27                                               CAS006
+     C                     EXSR LOAD                                                          CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ENDIF                                                              CAS006
+     C*
+     C           *IN03     DOWEQ'0'
+     C                     WRITE#MSGCTL
+     C                     EXFMTMENUF
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C                     SETOF                     99
+     C*
+     C           *IN03     IFEQ '0'
+     C                     SETOF                     10
+     C                     MOVE '0'       WALC    1                       103747
+     C                     MOVE '0'       WALC1   1                       103747
+     C                     MOVE '0'       WFLG    1                       103747
+     C*
+     C** Check screen value entered.
+     C*
+     C***********OPTION    CASEQ'D'       DLSR           10               103747
+     C***********OPTION    CASEQ'F'       FRSR           10               103747
+     C***********OPTION    CASEQ'I'       ICSR           10               103747
+     C***********OPTION    CASEQ'L'       LESR           10               103747
+     C***********OPTION    CASEQ'S'       SESR           10               103747
+     C***********          END                                            103747
+     C                     SELEC                                          103747
+     C           OPTION    WHEQ 'D'                                       103747
+     C           *IN30     ANDEQ'0'                                       103747
+     C                     EXSR DLSR                                      103747
+     C                     MOVE '1'       *IN10                           103747
+     C           OPTION    WHEQ 'F'                                       103747
+     C           *IN30     ANDEQ'0'                                       103747
+     C                     EXSR FRSR                                      103747
+     C                     MOVE '1'       *IN10                           103747
+     C           OPTION    WHEQ 'I'                                       103747
+     C           *IN30     ANDEQ'0'                                       103747
+     C                     EXSR ICSR                                      103747
+     C                     MOVE '1'       *IN10                           103747
+     C           OPTION    WHEQ 'L'                                       103747
+     C           *IN30     ANDEQ'0'                                       103747
+     C                     EXSR LESR                                      103747
+     C                     MOVE '1'       *IN10                           103747
+     C           OPTION    WHEQ 'S'                                       103747
+     C           *IN31     ANDEQ'0'                                       103747
+     C                     EXSR SESR                                      103747
+     C                     MOVE '1'       *IN10                           103747
+      *                                                                                       CAS006
+      ** If CAS006 is on, and option T is entered, display Forecast                           CAS006
+      ** Transactions account key generator                                                   CAS006
+      *                                                                                       CAS006
+     C           OPTION    WHEQ 'T'                                                           CAS006
+     C           CAS006    ANDEQ'Y'                                                           CAS006
+     C           *IN30     ANDEQ*OFF                                                          CAS006
+     C                     EXSR SRFT                                                          CAS006
+     C                     MOVE *ON       *IN10                                               CAS006
+      *                                                                                       CAS006
+     C                     ENDSL                                          103747
+     C*                                                                   103747
+     C** Allocate the files.                                              103747
+     C*                                                                   103747
+     C           WALC      IFEQ '1'                                       103747
+     C                     MOVE '0'       *IN31                           103747
+     C                     Z-ADD2         WOPT    10                      103747
+     C                     EXSR INUSE                                     103747
+     C           WFLG      IFEQ '1'                                       103747
+     C                     MOVE '1'       *IN31                           103747
+     C                     ENDIF                                          103747
+     C                     ENDIF                                          103747
+     C           WALC1     IFEQ '1'                                       103747
+     C                     MOVE '0'       *IN30                           103747
+     C                     Z-ADD1         WOPT                            103747
+     C                     EXSR INUSE                                     103747
+     C           WFLG      IFEQ '1'                                       103747
+     C                     MOVE '1'       *IN30                           103747
+     C                     ENDIF                                          103747
+     C                     ENDIF                                          103747
+     C*
+     C** Entry is invalid.
+     C*
+     C           *IN10     IFEQ '0'
+     C                     SETON                     99
+     C                     MOVEL'USR4202' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C*
+     C                     END
+     C           *IN30     IFEQ '0'                                       103747
+     C                     MOVE '0'       *INU1                           103747
+     C                     ENDIF                                          103747
+     C           *IN31     IFEQ '0'                                       103747
+     C                     MOVE '0'       *INU2                           103747
+     C                     ENDIF                                          103747
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  DLSR  :       Subroutine to call Dealing Account Key         *
+     C*                Generator Menu.                                *
+     C*                                                               *
+     C*  CALLED BY :   Main processing.                               *
+     C*                                                               *
+     C*  CALLS :       ZASNMS - Send message to program message queue.*
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DLSR      BEGSR
+     C*                                                                   103747
+     C** Deallocate the files.                                            103747
+     C*                                                                   103747
+     C                     Z-ADD4         WOPT                            103747
+     C                     EXSR INUSE                                     103747
+     C                     MOVE '1'       WALC                            103747
+     C*
+     C           *IN20     IFEQ '1'
+     C                     CALL 'AKC20'
+     C                     MOVE *BLANKS   OPTION
+     C*
+     C* Option entered is not available.
+     C*
+     C                     ELSE
+     C                     SETON                     99
+     C                     MOVEL'USR4202' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  FRSR  :       Subroutine to call FRA/IRS Account Key         *
+     C*                Generator Menu.                                *
+     C*                                                               *
+     C*  CALLED BY :   Main processing.                               *
+     C*                                                               *
+     C*  CALLS :       ZASNMS - Send message to program message queue.*
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FRSR      BEGSR
+     C*                                                                   103747
+     C** Deallocate the files.                                            103747
+     C*                                                                   103747
+     C                     Z-ADD4         WOPT                            103747
+     C                     EXSR INUSE                                     103747
+     C                     MOVE '1'       WALC                            103747
+     C*
+     C           *IN21     IFEQ '1'
+     C                     CALL 'AKC30'
+     C                     MOVE *BLANKS   OPTION
+     C*
+     C* Option entered is not available.
+     C*
+     C                     ELSE
+     C                     SETON                     99
+     C                     MOVEL'USR4202' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ICSR  :       Subroutine to call Internal Contracts Account  *
+     C*                Key Generator Menu.                            *
+     C*                                                               *
+     C*  CALLED BY :   Main processing.                               *
+     C*                                                               *
+     C*  CALLS :       ZASNMS - Send message to program message queue.*
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ICSR      BEGSR
+     C*                                                                   103747
+     C** Deallocate the files.                                            103747
+     C*                                                                   103747
+     C                     Z-ADD4         WOPT                            103747
+     C                     EXSR INUSE                                     103747
+     C                     MOVE '1'       WALC                            103747
+     C*
+     C           *IN22     IFEQ '1'
+     C                     CALL 'AKC50'
+     C                     MOVE *BLANKS   OPTION
+     C*
+     C* Option entered is not available.
+     C*
+     C                     ELSE
+     C                     SETON                     99
+     C                     MOVEL'USR4202' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  LESR  :       Subroutine to call Lending Account Key         *
+     C*                Generator Menu.                                *
+     C*                                                               *
+     C*  CALLED BY :   Main processing.                               *
+     C*                                                               *
+     C*  CALLS :       ZASNMS - Send message to program message queue.*
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LESR      BEGSR
+     C*                                                                   103747
+     C** Deallocate the files.                                            103747
+     C*                                                                   103747
+     C                     Z-ADD4         WOPT                            103747
+     C                     EXSR INUSE                                     103747
+     C                     MOVE '1'       WALC                            103747
+     C*
+     C           *IN24     IFEQ '1'
+     C                     CALL 'AKC40'
+     C                     MOVE *BLANKS   OPTION
+     C*
+     C* Option entered is not available.
+     C*
+     C                     ELSE
+     C                     SETON                     99
+     C                     MOVEL'USR4202' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SESR  :       Subroutine to call Securities Account Key      *
+     C*                Generator Menu.                                *
+     C*                                                               *
+     C*  CALLED BY :   Main processing.                               *
+     C*                                                               *
+     C*  CALLS :       ZASNMS - Send message to program message queue.*
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SESR      BEGSR
+     C*                                                                   103747
+     C** Deallocate the files.                                            103747
+     C*                                                                   103747
+     C                     Z-ADD3         WOPT                            103747
+     C                     EXSR INUSE                                     103747
+     C                     MOVE '1'       WALC1                           103747
+     C*
+     C           *IN26     IFEQ '1'
+     C                     CALL 'AKC60'
+     C                     PARM           FKEY1   1
+     C                     PARM           FKEY2   1
+     C                     MOVE *BLANKS   OPTION
+     C*
+     C* Option entered is not available.
+     C*
+     C                     ELSE
+     C                     SETON                     99
+     C                     MOVEL'USR4202' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT                                                                                  CAS006
+      *****************************************************************                       CAS006
+      *                                                               *                       CAS006
+      * SRFT   - Subroutine to call Foreacst Transactions Account     *                       CAS006
+      *          Key generator menu.                                  *                       CAS006
+      *                                                               *                       CAS006
+      *****************************************************************                       CAS006
+     C           SRFT      BEGSR                                                              CAS006
+      *                                                                                       CAS006
+      ** Deallocate the files.                                                                CAS006
+      *                                                                                       CAS006
+     C                     Z-ADD4         WOPT                                                CAS006
+     C                     EXSR INUSE                                                         CAS006
+     C                     MOVE '1'       WALC                                                CAS006
+      *                                                                                       CAS006
+     C           *IN27     IFEQ *ON                                                           CAS006
+     C                     CALL 'AKC70'                                                       CAS006
+     C                     MOVE *BLANKS   OPTION                                              CAS006
+      *                                                                                       CAS006
+      ** Option entered is not available.                                                     CAS006
+      *                                                                                       CAS006
+     C                     ELSE                                                               CAS006
+     C                     MOVE *ON       *IN99                                               CAS006
+     C                     MOVEL'USR4202' ZAMSID                                              CAS006
+     C                     EXSR ZASNMS                                                        CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C                     ENDSR                                                              CAS006
+      *****************************************************************                       CAS006
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  LOAD  :       Load screen with valid options.                *
+     C*                                                               *
+     C*  CALLED BY :   Main processing.                               *
+     C*                                                               *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LOAD      BEGSR
+     C*
+     C** Load screen with valid options.
+     C*
+     C           X         IFEQ 1
+     C                     MOVELDESCR,Y   OPT1
+     C                     ELSE
+     C           X         IFEQ 2
+     C                     MOVELDESCR,Y   OPT2
+     C                     ELSE
+     C           X         IFEQ 3
+     C                     MOVELDESCR,Y   OPT3
+     C                     ELSE
+     C           X         IFEQ 4
+     C                     MOVELDESCR,Y   OPT4
+     C                     ELSE
+     C           X         IFEQ 5
+     C                     MOVELDESCR,Y   OPT5
+     C                     ELSE                                                               CAS006
+      *                                                                                       CAS006
+     C           X         IFEQ 6                                                             CAS006
+     C           CAS006    ANDEQ'Y'                                                           CAS006
+     C                     MOVELDESCR,Y   OPT6                                                CAS006
+     C                     ENDIF                                                              CAS006
+      *                                                                                       CAS006
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                               *
+     C*  ZASNMS:      Send message to program message queue           *
+     C*                                                               *
+     C*  CALLS:       Y2SNMGC - send message to program message queue *
+     C*                                                               *
+     C*  CALLED BY:   OPTION subroutine.                              *
+     C*                                                               *
+     C********************************************************************
+     C*
+     C           ZASNMS    BEGSR
+     C*
+     C** Declare message file name
+     C*
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C* DBERR - Database error processing
+     C*
+     C* Calls     : None
+     C*
+     C* Called by : Main processing
+     C*
+     C********************************************************************
+     C           DBERR     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT                                                              103747
+     C********************************************************************103747
+     C*                                                                   103747
+     C* INUSE - Allocate and deallocate the physical files ACKEYAK,       103747
+     C*         ACKEYAL, SEACKD and XSEACKD.                              103747
+     C*                                                                   103747
+     C* Calls     : AKC10A                                                103747
+     C*                                                                   103747
+     C* Called by : Main processing                                       103747
+     C*                                                                   103747
+     C********************************************************************103747
+     C           INUSE     BEGSR                                          103747
+     C*                                                                   103747
+     C                     CALL 'AKC10A'                                  103747
+     C                     PARM           WOPT                            103747
+     C                     PARM           WFLG                            103747
+     C*                                                                   103747
+     C                     ENDSR                                          103747
+     C********************************************************************103747
+      *                                                                   127177
+      ** 5 Additional IN USE descriptions added.                          127177
+      *                                                                   127177
+**  DESCR
+D  -  Dealing
+F  -  FRA/IRS
+I  -  Internal Contracts
+L  -  Lending
+S  -  Securities
+      Dealing IN USE
+      FRA/IRS IN USE
+      Int Contrs IN USE
+      Lending IN USE
+      Securities IN USE
+T  -  FH Transactions
+      DL and/or LE IN USE
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

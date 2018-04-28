@@ -1,0 +1,2604 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME SWIFT accounts maint MB active')              *
+/*XBIA*: OVRDBF SWACBCHG SWACB                                      : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Message Management                                     *
+     F*                                                               *
+     F*  ME0021 - S.W.I.F.T Accounts Maintenance                      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. 260771             Date 03Dec09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAAA03             Date 28Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 183566             Date 30Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01Jun00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 162496             Date 05Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 125961             Date 04Mar98               *
+     F*                 127398             Date 19Feb98               *
+     F*                 109972             DATE 18FEB98               *
+     F*                 101867             DATE 10MAR97               *
+     F*                 081216             DATE 02APR96               *
+     F*                 089675             DATE 28FEB96               *
+     F*                 095633             DATE 20NOV95               *
+     F*                 095627             DATE 20NOV95               *
+     F*                 CSW004             DATE 20NOV95               *
+     F*                 065654             DATE 25OCT95               *
+     F*                 S01408             DATE 19MAY94               *
+     F*                 064107             DATE 14MAR94               *
+     F*                 S01408             DATE 01OCT93               *
+     F*                 E34944             DATE 24SEP92               *
+     F*                 E33772             DATE 06JUL92               *
+     F*                 S01389             DATE 22JUN92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  260771 - MT940 Destination can be blank if Internal Only     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAAA03 - Webfacing Changes. Recompile due to changes in      *
+      *           ME0021DF.                                           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  183566 - Amend program such that when a new account is       *
+      *           defined as a SWIFT account, balance is taken from   *
+      *           PF/GLACBTPD instead of PF/ACCNTAB.                  *
+     F*  CFT009 - FT Fees and Charge Development-Recompiled           *
+     F*  162496 - Reset display file fields to blanks.                *
+     F*  125961 - Wrong debit/credit indicator.                       *
+     F*  127398 - Move correct error code when Branch is missing      *
+     F*  109972 - Update correct SWACS control file number of records *
+     F*           When a SWIFT Account is reopened after a deletion.  *
+     F*  101867 - If SWIFT A/C deleted, add 1 to NORD. Applied 068212.*
+     F*  081216 - When the operator does not enter an A/C sequence    *
+     F*           number, the program does not default to 01.         *
+     F*  089675 - Should update LSNO field by Z-ADD so it won't       *
+     F*           get previous LSNO value; should not update LSNO     *
+     F*           to 0 when amending an account                       *
+     F*  095633 - Retail A/C Number should be highlighted if in error *
+     F*  095627 - If SWIFT Postings Flag = 'N', Internal Only field   *
+     F*           must be input capable. Statement date fields are not*
+     F*           displayed.  Default Statement Frequency = Daily.   *
+     F*           Amend mode allowed for Internal Only and MT940      *
+     F*           Destination fields.                                 *
+     F*  CSW004 - MT940 SWIFT Message Generation - Switchable Feature.*
+     F*           'MT940 Destination' field added to screen           *
+     F*  065654 - Allow statement frequency of ' '. Processed in      *
+     F*           GL1300 as 'On Movement' .                           *
+     F*  S01408 - Core hook ME0021DTA  added                          *
+     F*           Core hook ME0021CWP1 added                          *
+     F*           Core hook ME0021CWP2 added                          *
+     F*           Core hook ME0021CWP3 added                          *
+     F*           Core hook ME0021CWP4 added                          *
+     F*           Core hook ME0021CWP5 added                          *
+     F*  064107 - Update correct SWACS control file number of records *
+     F*           field for deleted detail records                    *
+     F*  S01408 - Core hook ME0021CVK1 added                          *
+     F*         - Core hook ME0021CVK2 added                          *
+     F*  E34944 - Should display account balance from SWACSSB,        *
+     F*           not from ACCNTAB                                    *
+     F*  E33772 - New accounts set up for non retail A/C's have a     *
+     F*           starting balance of 0. Also, new A/C's should use   *
+     F*           LDBL rather than the CFSB from ACCNT when setting   *
+     F*           up CFSB on SWACS                                    *
+     F*  S01389 - 'Internal Only?' field added to screen and          *
+     F*           validated as a one character amendable field        *
+     F*                                                               *
+     F*****************************************************************
+     FME0021DFCF  E                    WORKSTN
+     F*
+     FACCBR   IF  E           K        DISK
+     FACNUM   IF  E           K        DISK                           U1
+     F            ACCNTABF                          KRENAMEACNUMF
+      *                                                                   183566
+      ** Midas GL Account Balances Today                                  183566
+      *                                                                   183566
+     FGLACBTL0IF  E           K        DISK                               183566
+      *                                                                   183566
+     FTABMS   IF  E           K        DISK
+     F            TABTB40F                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLET1F                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     FCLINT   IF  E           K        DISK
+     FSWACBCHGUF  E           K        DISK                      A
+     F                                              KCOMIT
+     FSWACB   IF  E           K        DISK
+     F            SWACSSBF                          KRENAMESWACBF
+     F            SWACSSAF                          KIGNORE
+     F            SWACSSCF                          KIGNORE
+     F/COPY WNCPYSRC,ME0021F001
+     FME0021AUO   F     132     OA     PRINTER                        UC
+      *
+      /EJECT
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      * ***************************************
+      *
+      *    U1         PRESENCE OF RETAIL ACCOUNT NOS. FILE ON SYSTEM
+      *    U2         POSTINGS FILE NOT ON SYSTEM - NO UPDATE ALLOWED
+      *
+      *       KC      END OF JOB SCREEN COMMAND
+      *       KJ      DELETE RECORD SCREEN COMMAND
+      *       KL      REDISPLAY INITIAL SCREEN COMMAND
+      *       KI      INSERT A RECORD SCREEN COMMAND
+      *
+      *       01      ERROR - RETAIL ACCOUNT NO. NOT NUMERIC
+      *       02      ERROR - RETAIL ACCOUNT NO.
+      *       06      ERROR - ACTION CODE
+      *       07      ERROR - BRANCH CODE
+      *       08      ERROR - CUSTOMER NUMBER
+      *       09      ERROR - CURRENCY CODE
+      *       10      ERROR - ACCOUNT CODE
+      *       11      ERROR - A/C SEQUENCE NO.
+      *       12      ERROR - S.W.I.F.T. STATEMENT FREQUENCY
+      *       13      ERROR - STATEMENT DAY IN MONTH
+      *       14      ERROR - NEXT STATEMENT DATE
+      *       17      ERROR - INTERNAL ONLY FIELD                         S01389
+      *       18      ERROR - MT940 DESTINATION FIELD                     CSW004
+      *       25      BRANCH NOT ON PF/TABLETR
+      *       28      OUTPUT RETAIL NO. ON SCREEN
+      *       35      TABFR LOOK UP INDICATOR
+      *       36      PARENT INDICATOR FOR RECORDS ON LF/CLINT
+      *       40      CCY HAS 0 DEC. PL.
+      *       41      CCY HAS 1 DEC. PL
+      *       42      CCY HAS 2 DEC. PL.
+      *       43      CCY HAS 3 DEC. PL
+      *       44      BALANCE ON FILE IS NEG.
+      *       60      WORK INDICATOR
+      *       61      MT940 DESTINATION SWITCHABLE FEATURE INDICATOR      CSW004
+      *       65      NOT AUTH. TO ACTION RETAIL A/C OR NON MB
+      *       67      DISPLAY OF RETAIL A/C FIELD ON WORKSTATION
+      *       69      ACCOUNTS POSTING FILE ON SYSTEM INDICATOR
+      *       70      ERROR - VALIDATION DURING READ FROM THE WORKSTATION
+      *
+      *       72      CHAIN FAIL TO LF/SWACBCHG, ON PF/SWACSSC
+      *       77      CHAIN FAIL TO LF/SWACBCHG, ON PF/SWACSSB
+      *       78      CHAIN FAIL TO LF/TABMS, ON PF/TABLETR
+      *       79      CHAIN FAIL TO LF/ACCBR
+      *       80      MULTIBRANCHING (OFF IF ACTIVE)
+      *       81      CHAIN FAIL TO LF/CLINT
+      *       82      CHAIN FAIL TO LF/ACNUM
+      *       83      CHAIN FAIL TO LF/CLINT
+      *       84      CHAIN FAIL TO LF/ACCBR
+      *       85      CHAIN FAIL TO LF/TABMS, ON PF/TABTB10
+      *       86      CHAIN FAIL TO LF/TABMS, ON PF/TABTB11
+      *       87      CHAIN FAIL TO LF/TABMS, ON PF/TABTG10
+      *       88      CHAIN FAIL TO LF/TABMS, ON PF/TABTE10
+      *       89      CHAIN to LF/GLACBTL0 failed.                        183566
+      *
+      ********************************************************************
+      *
+     E                    CPY@    1   1 80               COPYRIGHT.
+     E/COPY WNCPYSRC,ME0021E001
+     E                    TABFR  14  14  1               FREQ. TABLE
+     E/COPY WNCPYSRC,ME0021E002
+     E                    ERCD       20  4               ERROR CODES
+     E/COPY WNCPYSRC,ME0021E003
+     E                    MGN     1   4 38               ERROR MESSAGE
+     E/COPY WNCPYSRC,ME0021E004
+      *
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+      *
+      ********************************************************************
+      /EJECT
+      *
+     IACCNTABF
+     I              CFSB                            CSFB1
+      *                                                                   183566
+     IGLACBLF                                                             183566
+     I              RECI                            GLRECI                183566
+      *                                                                   183566
+     ISDACOD    E DSSDACODPD                                                                  CGL029
+      ** Midas SD Account Codes                                                               CGL029
+      *                                                                                       CGL029
+     ISDCUST    E DSSDCUSTPD                                              CSW004
+     I*                                                                   CSW004
+     ISDCNST    E DSSDCNSTPD                                              CSW004
+     I*                                                                   CSW004
+     IMEBICD    E DSMEBICDPD                                              CSW004
+     I*                                                                   CSW004
+     IDSFDY     E DSDSFDY                                                 CSW004
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                CSW004
+     I*                                                                   CSW004
+     IDSSDY     E DSDSSDY                                                 CSW004
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                CSW004
+     I*                                                                   CSW004
+     ISCSARD    E DSSCSARDPD                                              CSW004
+     I* SAR FILE DETAILS                                                  CSW004
+      *
+     I/COPY WNCPYSRC,ME0021I001
+      ** Data structure for compilation - Copyright insertion
+     ICPYRIT      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ** Program described data structure to retrieve workstation ID
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+      *
+      ** Data structure to provide text on COMIT entry in journal
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTN
+     I                                       26  35 USRIDX
+     I                                       51 275 SCRAL
+      *
+      ** Data structure to update last transaction number data area
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+      *
+      ** Local data area - for database error
+     I/COPY WNCPYSRC,ME0021I004
+     ILDA        UDS                            256
+     I/COPY WNCPYSRC,ME0021I005
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Data structure for account key and screen fields for CMTTXT
+     I            DS
+     I**********                              1  18 ACCKZ                                     CGL029
+     I**********                              4  18 ACCKZP                                    CGL029
+     I                                        1  24 ACCKZ                                     CGL029
+     I                                        4  24 ACCKZP                                    CGL029
+     I                                        1   3 SBRCA
+     I                                        4   9 SCNUM
+     I                                       10  12 SCCY
+     I**********                             13  16 SACOD                                     CGL029
+     I**********                             17  18 SACSQ                                     CGL029
+     I                                       13  22 SACOD                                     CGL029
+     I                                       23  24 SACSQ                                     CGL029
+      *
+     I**********                             19  19 SACTN                                     CGL029
+     I**********                             20  240NSTD                                      CGL029
+     I**********                             25  25 STFQ                                      CGL029
+     I**********                             26  270STDY                                      CGL029
+     I**********                             28  28 DDIS                                      CGL029
+     I**********                             29  330LSNO                                      CGL029
+     I**********                             34  34 UPRI                                      CGL029
+     I                                       25  25 SACTN                                     CGL029
+     I                                       26  300NSTD                                      CGL029
+     I                                       31  31 STFQ                                      CGL029
+     I                                       32  330STDY                                      CGL029
+     I                                       34  34 DDIS                                      CGL029
+     I                                       35  390LSNO                                      CGL029
+     I                                       40  40 UPRI                                      CGL029
+     I/COPY WNCPYSRC,ME0021I002
+     I*********                              35  440ACNO                  CSW004
+     I**********                             35  45 SMT94                              CSW004 CGL029
+     I**********                             46  550ACNO                               CSW004 CGL029
+     I                                       41  51 SMT94                                     CGL029
+     I                                       52  610ACNO                                      CGL029
+     I/COPY WNCPYSRC,ME0021I003
+      *
+     I**********                              1  19 SCREND                                    CGL029
+     I                                        1  25 SCREND                                    CGL029
+     I*********                               1  34 SCRENA                CSW004
+     I*********                               1  44 SCRENI                CSW004
+     I/COPY WNCPYSRC,ME0021I006
+     I**********                              1  45 SCRENA                             CSW004 CGL029
+     I**********                              1  55 SCRENI                             CSW004 CGL029
+     I                                        1  51 SCRENA                                    CGL029
+     I                                        1  61 SCRENI                                    CGL029
+     I/COPY WNCPYSRC,ME0021I007
+      *
+      ** Data structure for account key
+     I***ACNTMB*     DS                             22                                        CGL029
+     IACNTMB      DS                             28                                           CGL029
+     I                                        1   3 @BRCA
+     I                                        5  10 @CNUMA
+     I                                       12  14 @CCY
+     I**********                             16  190@ACOD                                     CGL029
+     I**********                             21  220@ACSQ                                     CGL029
+     I                                       16  250@ACOD                                     CGL029
+     I                                       27  280@ACSQ                                     CGL029
+     I*                                                                   S01408
+     I** Insert DS to pass the data parameter to the return program       S01408
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,ME0021DTA                                            S01408
+     I*                                                                   S01408
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** P01
+      ** MAIN LINE Processing
+      ** Calls BLNK1, W01, P04, P05, P06, P07.
+      *
+      ** Initial Processing
+     C                     EXSR INIT
+     C                     MOVE '1'       *INKL
+      *
+     C           *INKC     DOUEQ'1'
+      *
+     C           *INKL     IFEQ '1'
+     C*********************MOVEA'0000'    *IN,12                          CSW004
+     C                     MOVEA'0000000' *IN,12                          CSW004
+     C/COPY WNCPYSRC,ME0021C011
+     C                     MOVE '0'       *IN70
+     C                     EXSR BLNK1
+     C                     EXSR W01
+     C                     END
+      *
+      ** Perform corresponding action Processing
+     C           SACTN     CASEQ'I'       P04
+     C           SACTN     CASEQ'A'       P05
+     C           SACTN     CASEQ'D'       P06
+     C           SACTN     CASEQ'E'       P07
+     C                     END
+      *
+     C                     END
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      *                                                                  *
+      *                    S U B R O U T I N E S                         *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+      /SPACE 03
+      ********************************************************************
+      *                                                                  *
+      *  LIST OF SUBROUTINES                                             *
+      *                                                                  *
+      *    P01     MAIN LINE Processing                                  *
+      *    P04     Insert Processing                                     *
+      *    P05     Amendment Processing                                  *
+      *    P06     Delete Processing                                     *
+      *    P07     Enquiry Processing                                    *
+      *    P08     Insert/Addition Processing                            *
+      *                                                                  *
+      *    W01     Initial Write Processing                              *
+      *    W02     Insert Write Processing                               *
+      *    W03     Amendment Write Processing                            *
+      *    W04     Delete Write Processing                               *
+      *    W05     Enquiry Write Processing                              *
+      *                                                                  *
+      *    V01     Initial Screen Validation                             *
+      *    V02     Insert/Amendment Screen Validation                    *
+      *                                                                  *
+      *    INIT    Programme Initialisation                              *
+      *    BLNK1   Blank Initial Screen Fields                           *
+      *    ACTSR   Action Authorisation Validation                       *
+      *    ACTBSR  Branch/Action Authorisation Validation                *
+      *    ZDATE1  Date validation and conversion to day number          *
+      *    ZDATE2  Day number to date conversion                         *
+      *                                                                  *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** P04 SUBROUTINE
+      ** Insert Processing
+      ** Called by P01
+      ** Calls W02
+      *
+     C           P04       BEGSR
+      *
+      ** Blank insert screen for output
+      *
+     C                     MOVE *BLANKS   SFREQ
+     C                     MOVE *BLANKS   SSDIM
+     C                     MOVE *BLANKS   SNSDT
+     C                     MOVE *BLANKS   SDMND
+     C                     MOVE *BLANKS   INTES                           S01389
+     C                     MOVE *BLANKS   SMT94                           CSW004
+     C/COPY WNCPYSRC,ME0021C012
+      *
+     C                     EXSR W02
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** P05 SUBROUTINE
+      ** Amendment Processing
+      ** Called by P01
+      ** Calls W03
+      *
+     C           P05       BEGSR
+      *
+      ** Set up amendment screen for output
+     C                     MOVE STFQ      SFREQ
+     C           STDY      IFNE *ZERO
+     C                     MOVE STDY      SSDIM
+     C                     ELSE
+     C                     MOVE *BLANKS   SSDIM
+     C                     END
+      *
+     C                     MOVE *BLANKS   SNSDT
+     C           NSTD      IFNE 0
+     C                     Z-ADDNSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     SNSDT
+      *
+     C                     END
+     C                     MOVE DDIS      SDMND
+     C*                                                                   CSW004
+     C** If MT940 SWIFT messages feature is switched ON, set up           CSW004
+     C** 'MT940 Destination' field                                        CSW004
+     C           MT94FG    IFEQ 'Y'                                       CSW004
+     C                     MOVE MT94      SMT94                           CSW004
+     C/COPY WNCPYSRC,ME0021C013
+     C                     END                                            CSW004
+     C*                                                                   S01389
+     C           IND       IFEQ ' '                                       S01389
+     C                     MOVE 'N'       INTES                           S01389
+     C                     ELSE                                           S01389
+     C                     MOVE IND       INTES                           S01389
+     C                     END                                            S01389
+      *
+     C                     EXSR W03
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** P06 SUBROUTINE
+      ** Delete Processing
+      ** Called by P01
+      ** Calls W04
+      *
+     C           P06       BEGSR
+      *
+     C                     MOVE *BLANKS   SNSDT
+     C           NSTD      IFNE 0
+     C                     Z-ADDNSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     SNSDT
+     C                     END
+      *
+      ** Set up delete screen for output
+     C                     MOVE STFQ      SFREQ
+     C           STDY      IFNE *ZERO
+     C                     MOVE STDY      SSDIM
+     C                     ELSE
+     C                     MOVE *BLANKS   SSDIM
+     C                     END
+     C                     MOVE DDIS      SDMND
+     C                     MOVE LSTD      SLSDT
+     C                     MOVE LDBL      SBAL   130
+     C*                                                                   CSW004
+     C** If MT940 SWIFT messages feature is switched ON, set up           CSW004
+     C** 'MT940 Destination' field                                        CSW004
+     C           MT94FG    IFEQ 'Y'                                       CSW004
+     C                     MOVE MT94      SMT94                           CSW004
+     C/COPY WNCPYSRC,ME0021C014
+     C                     END                                            CSW004
+      *                                                                   S01389
+     C           IND       IFEQ ' '                                       S01389
+     C                     MOVE 'N'       INTES                           S01389
+     C                     ELSE                                           S01389
+     C                     MOVE IND       INTES                           S01389
+     C                     END                                            S01389
+      *
+     C                     EXSR W04
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** P07 SUBROUTINE
+      ** Enquiry Processing
+      ** Called by P01
+      ** Calls W05
+      *
+     C           P07       BEGSR
+      *
+      ** Set up enquiry screen for output
+     C                     MOVE STFQ      SFREQ
+     C           STDY      IFNE *ZERO
+     C                     MOVE STDY      SSDIM
+     C                     ELSE
+     C                     MOVE *BLANKS   SSDIM
+     C                     END
+      *
+     C                     MOVE *BLANKS   SNSDT
+     C           NSTD      IFNE 0
+     C                     Z-ADDNSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     SNSDT
+     C                     END
+      *
+     C                     MOVE DDIS      SDMND
+      *
+     C                     Z-ADDLSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SLSDT
+      *
+     C***********          MOVE LDBL      SBAL                            E34944
+     C                     MOVE CFSB      SBAL                            E34944
+     C*DETERMINE SIGN OF BALANCE IF ENQUIRY
+     C                     MOVEA'00000'   *IN,40
+     C********             Z-ADDSBAL      SBAL         44                 125961
+     C**                                                                  125961
+     C** Determine the sign of amount                                     125961
+     C**                                                                  125961
+     C                     MOVE '0'       *IN44                           125961
+     C                     MOVE '0'       *IN45                           125961
+     C           SBAL      IFLT 0                                         125961
+     C                     MOVE '1'       *IN44                           125961
+     C                     ELSE                                           125961
+     C                     MOVE '1'       *IN45                           125961
+     C                     ENDIF                                          125961
+     C**                                                                  125961
+     C** Clear the sign of the amount if greather than 0                  125961
+     C                     WRITECLEAR                                     125961
+     C           CDP       COMP 1                      4041
+     C           CDP       COMP 2                    43  42
+     C   40                MOVE SBAL      SBAL0
+     C   41                MOVE SBAL      SBAL1
+     C   42                MOVE SBAL      SBAL2
+     C   43                MOVE SBAL      SBAL3
+     C*                                                                   CSW004
+     C** If MT940 SWIFT messages feature is switched ON, set up           CSW004
+     C** 'MT940 Destination' field                                        CSW004
+     C           MT94FG    IFEQ 'Y'                                       CSW004
+     C                     MOVE MT94      SMT94                           CSW004
+     C/COPY WNCPYSRC,ME0021C015
+     C                     END                                            CSW004
+     C*                                                                   CSW004
+      *
+     C           IND       IFEQ ' '                                       S01389
+     C                     MOVE 'N'       INTES                           S01389
+     C                     ELSE                                           S01389
+     C                     MOVE IND       INTES                           S01389
+     C                     END                                            S01389
+      *                                                                   S01389
+     C                     EXSR W05
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** P08 SUBROUTINE
+      ** Insert request, Record Addition
+      ** Called by W02
+      ** Calls ZTNLU1
+      *
+     C           P08       BEGSR
+      *
+     C                     MOVE '0'       *IN70
+      *
+     C                     MOVE '*'       RECI
+     C           ACCKY1    CHAINSWACSSBF             7775
+      *
+      ** If record is locked by another workstation
+     C           *IN75     IFEQ '1'
+     C                     MOVELMGN,4     EMSG
+     C                     MOVE '1'       *IN70
+      *
+     C                     ELSE
+      *
+      ** If record is marked as deleted on file
+     C           *IN77     IFEQ '0'
+     C           RECI      ANDEQ'*'
+      * or not found
+     C           *IN77     OREQ '1'
+      *
+      ** Save Record I.D.
+     C                     MOVE RECI      @RECI   1
+      *
+     C                     MOVE 'D'       RECI
+      *
+     C           SACNO     IFEQ *BLANK
+     C                     MOVE SBRCA     BRCA
+     C                     MOVE SCNUM     CNUMA
+     C                     MOVE SCCY      CCY
+     C                     MOVE SACOD     ACOD
+     C                     MOVE SACSQ     ACSQ
+      *
+     C                     ELSE
+     C                     MOVE CNUM      CNUMA
+     C                     MOVE SACNO     ACNO
+     C                     END
+      *                                                                   183566
+      ** Access Balances Today File to retrieve Ledger Balance.           183566
+      *                                                                   183566
+     C           KGLACB    CHAINGLACBTL0             89                   183566
+      *                                                                   183566
+      ** If record does not already exist or flagged as deleted,          183566
+      ** initialize Ledger Balance to 0.                                  183566
+      *                                                                   183566
+     C           *IN89     IFEQ '1'                        Begin *IN89    183566
+     C           *IN89     OREQ '0'                                       183566
+     C           GLRECI    ANDNE'D'                                       183566
+     C                     Z-ADD0         LDBL                            183566
+      *                                                                   183566
+     C                     END                             End *IN89      183566
+      *                                                                   E33772
+      ** Set up CFSB field for all A/C types                              E33772
+     C                     Z-ADDLDBL      CFSB                            E33772
+      *
+      ** Update These Fields Only If The Postings File Is Present
+     C           *INU2     IFEQ '0'
+     C                     MOVE @NSDT     NSTD
+     C                     MOVE SFREQ     STFQ
+     C                     MOVE SSDIM     STDY
+     C                     MOVE SDMND     DDIS
+     C                     END                                            095627
+      *                                                                   095627
+      ** Frequency must be Daily If The Postings File Is Not Present      095627
+     C           *INU2     IFEQ '1'                                       095627
+     C                     Z-ADDRUND      NSTD                            095627
+     C                     MOVE 'D'       STFQ                            095627
+     C                     MOVE *BLANKS   STDY                            095627
+     C                     MOVE *BLANKS   DDIS                            095627
+     C                     END                                            095627
+     C*                                                                   S01389
+     C           INTES     IFEQ ' '                                       S01389
+     C                     MOVE 'N'       IND                             S01389
+     C                     ELSE                                           S01389
+     C                     MOVE INTES     IND                             S01389
+     C                     END                                            S01389
+     C****************     END                                            095627
+      *                                                                   CSW004
+     C** If MT940 SWIFT messages feature is switched ON, output           CSW004
+     C** 'MT940 Destination' field                                        CSW004
+     C           MT94FG    IFEQ 'Y'                                       CSW004
+     C                     MOVE SMT94     MT94                            CSW004
+     C/COPY WNCPYSRC,ME0021C016
+     C                     END                                            CSW004
+      *
+     C***********          MOVE 0         LSNO                            089675
+     C                     Z-ADD0         LSNO                            089675
+     C/COPY WNCPYSRC,ME0021C010
+     C                     MOVE '1'       UPRI
+      *
+      ** Obtain last transaction number
+      ** and set up standard output infomation
+      *
+     C                     EXSR ZTNLU1
+      *
+     C                     MOVE RUND      LCD
+     C                     MOVE SACTN     CHTP
+     C                     Z-ADDNATN      TNLU
+      *
+     C           *IN77     IFEQ '1'
+      *
+     C                     WRITESWACSSBF
+      *
+     C                     ELSE
+      *
+     C                     UPDATSWACSSBF
+      *
+     C                     END
+      *
+      ** Get Trailer Record for the Record Counts' update
+     C           '999999'  CHAINSWACSSCF             72
+      *
+      ** If record is not found then DATABASE ERROR
+     C           *IN72     IFEQ '1'
+      *
+     C                     ROLBK
+      *
+      ** DATABASE ERROR 06 on SWACB file
+      *
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE 'SWACB'   DBFILE           ***************
+     C                     MOVEL'999'     DBKEY            * DB ERROR 06 *
+     C                     Z-ADD06        DBASE            ***************
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     CLOSEME0021AU
+     C                     OPEN ME0021AU
+     C                     EXCPTDBERR
+     C                     RETRN
+     C                     END
+      *
+     C************IN77     IFEQ '1'                                       109972
+      ** If record is marked as deleted on file                           109972
+     C           *IN77     IFEQ '0'                                       109972
+     C           @RECI     ANDEQ'*'                                       109972
+      * or not found                                                      109972
+     C           *IN77     OREQ '1'                                       109972
+     C                     ADD  1         NORE
+      *
+     C                     ELSE
+     C                     ADD  1         NORD
+     C                     END
+      *
+      ** Update Trailer
+     C                     UPDATSWACSSCF
+      *
+     C                     ELSE
+      *
+     C                     EXCPTRELSW
+      *
+     C                     MOVELMGN,1     EMSG
+     C                     MOVE '1'       *IN70
+      *
+     C                     END
+      *
+     C           *IN70     IFEQ '1'
+     C                     ROLBK
+     C                     ELSE
+      *
+     C                     MOVELSCRENI    SCRAL
+     C                     TIME           MTIME
+     C           CMTTXT    COMIT
+     C                     MOVE '1'       *INKL
+     C                     END
+      *
+     C                     END
+      *
+     C/COPY WNCPYSRC,ME0021C033
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** P09 SUBROUTINE
+      ** Amendment request, Record Update
+      ** Called by W03
+      ** Calls ZTNLU1
+      *
+     C           P09       BEGSR
+      *
+     C                     MOVE '0'       *IN70
+     C                     MOVE INTES     INTEMP  1                       S01389
+      *
+     C           ACCKY1    CHAINSWACSSBF             7775
+      *
+      ** If record is locked by another workstation
+     C           *IN75     IFEQ '1'
+     C                     MOVELMGN,4     EMSG
+     C                     MOVE '1'       *IN70
+      *
+     C                     ELSE
+      *
+      ** If record is already amended by another workstation
+     C           TNLU      IFNE @TNLU
+      *
+      ** Release record
+     C                     EXCPTRELSW
+      *
+     C                     ROLBK
+      *
+     C                     MOVELMGN,2     EMSG
+     C                     MOVE '1'       *IN70
+      *
+     C                     ELSE
+      *
+     C                     MOVE @NSDT     NSTD
+     C                     MOVE SFREQ     STFQ
+     C                     MOVE SSDIM     STDY
+     C***********          MOVE 0         LSNO                            089675
+     C                     MOVE '1'       UPRI
+     C                     MOVE SDMND     DDIS
+     C*                                                                   S01389
+     C           INTEMP    IFEQ ' '                                       S01389
+     C                     MOVE 'N'       INTEMP                          S01389
+     C                     END                                            S01389
+      *                                                                   CSW004
+     C** If MT940 SWIFT messages feature is switched ON, output           CSW004
+     C** 'MT940 Destination' field                                        CSW004
+     C           MT94FG    IFEQ 'Y'                                       CSW004
+     C                     MOVE SMT94     MT94                            CSW004
+     C/COPY WNCPYSRC,ME0021C017
+     C                     END                                            CSW004
+      *
+      ** Obtain last transaction number
+      ** and set up standard output infomation
+      *
+     C                     EXSR ZTNLU1
+      *
+     C                     MOVE RUND      LCD
+     C                     MOVE SACTN     CHTP
+     C                     Z-ADDNATN      TNLU
+     C                     MOVE INTEMP    IND                             S01389
+      *
+     C                     UPDATSWACSSBF
+      *
+     C                     MOVELSCRENA    SCRAL
+     C                     TIME           MTIME
+     C           CMTTXT    COMIT
+     C                     MOVE '1'       *INKL
+      *
+     C                     END
+     C                     END
+      *
+     C/COPY WNCPYSRC,ME0021C034
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** P10 SUBROUTINE
+      ** Delete request, Record Update
+      ** Called by W04
+      ** Calls ZTNLU1
+      *
+     C           P10       BEGSR
+      *
+     C                     MOVE '0'       *IN70
+      *
+     C           ACCKY1    CHAINSWACSSBF             7775
+      *
+      ** If record is locked by another workstation
+     C           *IN75     IFEQ '1'
+     C                     MOVELMGN,4     EMSG
+     C                     MOVE '1'       *IN70
+      *
+     C                     ELSE
+      *
+      ** If record is already amended by another workstation
+     C           *IN77     IFEQ '0'
+     C           TNLU      ANDNE@TNLU
+      *
+      ** Release record
+     C                     EXCPTRELSW
+     C                     ROLBK
+      *
+     C                     MOVELMGN,3     EMSG
+     C                     MOVE '1'       *IN70
+      *
+     C                     ELSE
+      *
+     C                     MOVE '*'       RECI
+      *
+      ** Obtain last transaction number
+      ** and set up standard output infomation
+      *
+     C                     EXSR ZTNLU1
+      *
+     C                     MOVE RUND      LCD
+     C                     MOVE SACTN     CHTP
+     C                     Z-ADDNATN      TNLU
+      *
+     C                     UPDATSWACSSBF
+     C/COPY WNCPYSRC,ME0021C018
+      *
+      *
+      ** Get Trailer Record for the Record Counts' update
+     C           '999999'  CHAINSWACSSCF             72
+      *
+      ** If record is not found then DATABASE ERROR
+     C           *IN72     IFEQ '1'
+      *
+      ** DATABASE ERROR  - ROLL BACK
+      *
+     C                     ROLBK
+      *
+      ** DATABASE ERROR 10 on SWACB file
+      *
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE 'SWACB'   DBFILE           ***************
+     C                     MOVEL'999'     DBKEY            * DB ERROR 10 *
+     C                     Z-ADD10        DBASE            ***************
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     CLOSEME0021AU
+     C                     OPEN ME0021AU
+     C                     EXCPTDBERR
+     C                     RETRN
+     C                     END
+      *
+     C***********          SUB  1         NORE                            064107
+     C                     SUB  1         NORE                            101867
+     C                     ADD  1         NORD                            064107
+      *
+      ** Update Trailer
+     C                     UPDATSWACSSCF
+      *
+     C                     MOVELSCREND    SCRAL
+     C                     TIME           MTIME
+     C           CMTTXT    COMIT
+     C                     MOVE '1'       *INKL
+      *
+     C                     END
+     C                     END
+      *
+     C/COPY WNCPYSRC,ME0021C035
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** W01 SUBROUTINE
+      ** Initial Screen Processing
+      ** Called by MAIN LINE
+      ** Calls V01
+      *
+     C           W01       BEGSR
+      *
+      ** DO until input is valid
+      *
+     C           *IN70     DOUEQ'0'
+      *
+     C                     EXFMTME0021F0
+      *
+      ** IF F3 is on
+     C           *INKC     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+      ** Perform initial screen validation
+     C                     EXSR V01
+      *
+      ** END do until input is valid
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      /TITLE
+      ********************************************************************
+      *
+      ** W02 SUBROUTINE
+      ** Insert Screen Processing
+      ** Called by P04
+      ** Calls W02, P08
+      *
+     C           W02       BEGSR
+      *
+      ** DO until input is valid or F12 is pressed
+     C           *IN70     DOUEQ'0'
+     C           *INKI     ANDEQ'1'
+     C           *INKL     OREQ '1'
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,ME0021CWP1                                           S01408
+      *
+     C                     EXFMTME0021F1
+      *
+     C/COPY WNCPYSRC,ME0021C001
+      ** IF F3 is on
+     C           *INKC     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+      ** IF F9 pressed
+     C           *INKI     IFEQ '1'
+      *
+      ** Perform insert screen validation
+     C                     EXSR V02
+      *
+     C/COPY WNCPYSRC,ME0021C002
+      ** IF validation successful
+     C           *IN70     CASEQ'0'       P08
+     C                     END
+      *
+      ** End of if F9
+     C                     END
+      ** END do until input is valid or F12 is pressed
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      /TITLE
+      ********************************************************************
+      *
+      ** W03 SUBROUTINE
+      ** Amendment Screen Processing
+      ** Called by P05
+      ** Calls V02, P09
+      *
+     C           W03       BEGSR
+      *
+      ** DO until input is valid or F12 is pressed
+     C           *IN70     DOUEQ'0'
+     C           *INKL     OREQ '1'
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,ME0021CWP2                                           S01408
+      *
+     C                     EXFMTME0021F2
+      *
+     C/COPY WNCPYSRC,ME0021C003
+      ** IF F3 is on
+     C           *INKC     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+      ** IF F12 is off
+     C           *INKL     IFEQ '0'
+      *
+      ** Perform insert screen validation
+     C                     EXSR V02
+      *
+     C/COPY WNCPYSRC,ME0021C004
+      ** IF validation successful
+      ** Perform amendment update
+     C           *IN70     CASEQ'0'       P09
+     C                     END
+      *
+      ** End of if F12 is off
+     C                     END
+      ** END do until input is valid or F12 is pressed
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      /TITLE
+      ********************************************************************
+      *
+      ** W04 SUBROUTINE
+      ** Delete Screen Processing
+      ** Called by P06
+      ** Calls P10
+      *
+     C           W04       BEGSR
+      *
+      ** DO until F10 or F12 is on
+      *
+     C           *INKJ     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C/COPY WNCPYSRC,ME0021C022
+      *
+     C                     EXFMTME0021F3
+      *
+      ** IF F3 is on
+     C           *INKC     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C/COPY WNCPYSRC,ME0021C023
+      *
+      ** IF  F10 is pressed
+      ** Perform delete update
+     C           *INKJ     CASEQ'1'       P10
+     C                     END
+      *
+      ** End of do until F10 or F12 is pressed
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      /TITLE
+      ********************************************************************
+      *
+      ** W05 SUBROUTINE
+      ** Enquiry Screen Processing
+      ** Called by P07
+      ** Calls V01
+      *
+     C           W05       BEGSR
+      *
+      ** DO until input is valid or F12 is pressed
+     C           *IN70     DOUEQ'0'
+     C           *INKL     OREQ '1'
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,ME0021CWP3                                           S01408
+      *
+     C                     EXFMTME0021F4
+      *
+      ** IF F3 is on
+     C           *INKC     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C/COPY WNCPYSRC,ME0021C005
+      ** IF F12 is off
+      ** Perform initial screen validation
+      *
+     C           *INKL     CASEQ'0'       V01
+     C                     END
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,ME0021CWP4                                           S01408
+      *
+      ** END do until input is valid or F12 is pressed
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      /TITLE
+      ********************************************************************
+      *
+      ** V01 SUBROUTINE
+      ** Initial Screen Validation
+      ** Called by W01 W05
+      ** Calls ACTSR ACTBSR
+      *
+     C           V01       BEGSR
+      *
+      ** Set up error codes for display screen
+     C                     Z-ADD1         Y       20
+     C                     MOVEA*BLANKS   ERCD
+      *                                                                   162496
+      ** Setup screen fields initially as blank.                          162496
+      *                                                                   162496
+     C                     MOVE *BLANKS   ACNTMB                          162496
+     C                     MOVE *BLANKS   ACNT                            162496
+     C                     MOVE *BLANKS   ANAM                            162496
+     C                     MOVE *BLANKS   ACNOS                           162496
+     C                     MOVE *BLANKS   SFREQ                           162496
+     C                     MOVE *BLANKS   SSDIM                           162496
+     C                     MOVE *BLANKS   SNSDT                           162496
+     C                     MOVE *BLANKS   SDMND                           162496
+     C                     MOVE *BLANKS   SLSDT                           162496
+     C                     MOVE *BLANKS   INTES                           162496
+     C                     MOVE *BLANKS   SMT94                           162496
+     C                     MOVE *BLANKS   SBAL                            162496
+     C                     MOVE *BLANKS   SBAL0                           162496
+     C                     MOVE *BLANKS   SBAL1                           162496
+     C                     MOVE *BLANKS   SBAL2                           162496
+     C                     MOVE *BLANKS   SBAL3                           162496
+     C                     MOVE '0'       *IN40                           162496
+     C                     MOVE '0'       *IN41                           162496
+     C                     MOVE '0'       *IN42                           162496
+     C                     MOVE '0'       *IN43                           162496
+     C                     MOVE '0'       *IN44                           162496
+     C                     WRITECLEAR                                     162496
+      *
+      ** Set on validation indicators
+      *
+     C                     MOVE '1'       *IN02
+     C                     MOVE '1'       *IN06
+     C  N80                MOVE '1'       *IN07
+     C                     MOVE '1'       *IN08
+     C                     MOVE '1'       *IN09
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN11
+     C                     MOVE '1'       *IN70
+      *
+      ** IF Account Key only or Retail Number only has been entered
+     C           ACCKZ     IFEQ *BLANKS
+     C           SACNO     ANDNE*BLANKS
+     C           ACCKZ     ORNE *BLANKS
+     C           SACNO     ANDEQ*BLANKS
+     C           ACCKZP    OREQ *BLANKS
+     C           SACNO     ANDNE*BLANKS
+     C           MBIN      ANDNE'Y'
+      *
+     C                     MOVE '0'       *IN02
+      *
+      ** IF Account Number has been entered
+     C           SACNO     IFEQ *BLANKS
+      *
+     C                     MOVE '0'       *IN11
+      *
+      ** IF Account number is not blank
+     C           SCNUM     IFNE *BLANKS
+      *
+      ** Validate Customer No.
+      *
+      ** Branch/Action Validation
+      *
+     C           *IN80     IFEQ '1'
+     C                     EXSR ACTSR                      ***  ACTSR  ***
+     C                     ELSE
+     C                     EXSR ACTBSR                     ***  ACTBSR ***
+     C                     END
+      *
+     C                     MOVE SCNUM     @SCNUM
+     C           CLKEY     CHAINCLINT                81
+      *
+      **CHANGE OF CUSTOMER PROCESSING                                     S01408
+     C/COPY WNCPYSRC,ME0021CVK1                                           S01408
+      *
+      ** Check if it is a Parent
+     C           *IN81     IFEQ '0'
+     C           RECI      ANDEQ'D'
+      *                                                                   CSW004
+      ** If MT940 SWIFT messages feature is switched ON, set off          CSW004
+      ** customer number error indicator                                  CSW004
+     C           MT94FG    IFEQ 'Y'                                       CSW004
+     C                     MOVE '0'       *IN08                           CSW004
+     C                     END                                            CSW004
+      *
+      ** Validate customer S.W.I.F.T ID. only if MT940 SWIFT messages     CSW004
+      ** feature is switched OFF                                          CSW004
+     C           MT94FG    IFEQ ' '                                       CSW004
+     C                     TESTB'2'       CMIN           36
+      *
+      ** Check if S.W.I.F.T. format messages required for this client
+      ** and Customer S.W.I.F.T. ID is not blank.
+     C           *IN36     IFEQ '0'
+     C           GSFM      ANDEQ'Y'
+     C           CSID      ANDNE*BLANKS
+      *
+      **ADDITIONAL CONDITIONING ON ERROR CODE 008                         S01408
+     C/COPY WNCPYSRC,ME0021CVK2                                           S01408
+      *
+     C                     MOVE '0'       *IN08
+      *
+     C                     ELSE
+      *
+     C                     MOVE ' 008'    ERCD,Y
+     C                     ADD  1         Y
+      *
+      ** End of if S.W.I.F.T. format messages required
+     C                     END
+      ** End of if MT940 SWIFT messages feature is OFF                    CSW004
+     C                     END                                            CSW004
+      *
+      ** Else Customer No. not valid
+     C                     ELSE
+      *
+     C                     MOVE ' 008'    ERCD,Y
+     C                     ADD  1         Y
+      *
+      ** End of if it is a Parent
+     C                     END
+      *
+      ** End of if Account Number is not blank
+     C                     END
+      *
+      *
+      *
+      ** IF Currency Code is not blank
+     C           SCCY      IFNE *BLANKS
+      *
+      ** Validate Currency
+     C                     MOVELSCCY      @CCYK   4
+     C                     MOVE '1'       @CCYK
+     C                     MOVE @CCYK     CCYKY
+     C           CCYKY     CHAINTABMS                87
+      *
+     C           *IN87     IFEQ '0'
+     C           RECI      ANDEQ'D'
+     C                     MOVE '0'       *IN09
+      *
+     C                     ELSE
+      *
+     C                     MOVE ' 009'    ERCD,Y
+     C                     ADD  1         Y
+     C                     END
+      *
+      ** End of if Currency Code is not blank
+     C                     END
+      *
+      *
+      *
+      ** IF Account Code is not blank
+     C           SACOD     IFNE *BLANKS
+      *
+      ** Validate Account Code
+     C**********           MOVELSACOD     @ACCK   5                                           CGL029
+     C**********           MOVE '1'       @ACCK                                               CGL029
+     C**********           MOVE @ACCK     ACKEY                                               CGL029
+     C********** ACKEY     CHAINTABMS                88                                       CGL029
+     C                     CALL 'AOACODR0'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                                               CGL029
+     C                     PARM '*KEY   ' @OPTN                                               CGL029
+     C                     PARM SACOD     PACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+      ** Check A/C is not a Title
+     C********** *IN88     IFEQ '0'                                                           CGL029
+     C********** RECI      ANDEQ'D'                                                           CGL029
+     C********** TITO      ANDNE'Y'                                                           CGL029
+     C           @RTCD     IFEQ *BLANKS                                                       CGL029
+     C           A5TOIN    ANDNE'Y'                                                           CGL029
+     C                     MOVE '0'       *IN10
+      *
+     C                     ELSE
+      *
+     C                     MOVE ' 010'    ERCD,Y
+     C                     ADD  1         Y
+     C                     END
+      *
+      ** End of if Account Code is not blank
+     C                     END
+      *
+      *
+      ** Else Retail A/C No. has been entered
+     C                     ELSE
+      *
+     C                     MOVE '0'       *IN08
+     C                     MOVE '0'       *IN09
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN11
+      *
+      ** Validate the Retail Account No.
+      *
+     C                     TESTN          SACNO      01
+      *
+     C           *IN01     IFEQ '1'
+     C                     MOVE SACNO     @SACNO 100
+     C           @SACNO    CHAINACNUM                82
+     C                     ELSE
+     C                     MOVE '1'       *IN82
+     C                     END
+      *
+     C           *IN82     IFEQ '0'
+     C           RECI      ANDEQ'D'
+      *
+      ** Branch/Action Validation
+      *
+     C           *IN80     IFEQ '1'
+     C                     EXSR ACTSR                      ***  ACTSR  ***
+     C                     ELSE
+     C                     EXSR ACTBSR                     ***  ACTBSR  **
+     C                     END
+      *
+      ** Save the Currency of the Retail A/C
+     C                     MOVE CCY       @CCYR   3
+      *
+      ** Chain to TABTG10 to pick CDP
+     C                     MOVELCCY       @CCYK   4
+     C                     MOVE '1'       @CCYK
+     C                     MOVE @CCYK     CCYKY
+     C           CCYKY     CHAINTABMS                87
+      *
+     C           *IN87     IFEQ '1'
+     C                     MOVEL'TABMS'   DBFILE
+     C                     MOVELCCYKY     DBKEY            * DB ERROR 11 *
+     C                     Z-ADD11        DBASE            ***************
+     C                     SETON                     U7U8LR
+     C                     CLOSEME0021AU
+     C                     OPEN ME0021AU
+     C                     EXCPTDBERR
+     C                     RETRN
+     C                     END
+      *
+      *
+      ** Check that S.W.I.F.T. message format is required on LF/CLINT
+     C                     MOVELCNUM      @SCNUM
+     C           CLKEY     CHAINCLINT                83
+      *
+     C           *IN83     IFEQ '0'
+     C           RECI      ANDEQ'D'
+      *
+      ** If MT940 SWIFT messages feature is switched ON, set off          CSW004
+      ** Account number error indicator                                   CSW004
+     C           MT94FG    IFEQ 'Y'                                       CSW004
+     C                     MOVE '0'       *IN02                           CSW004
+     C                     END                                            CSW004
+      *
+      ** Validate S.W.I.F.T message format only if MT940 SWIFT messages   CSW004
+      ** feature is switched OFF                                          CSW004
+     C           MT94FG    IFEQ ' '                                       CSW004
+     C           GSFM      IFEQ 'Y'
+     C                     MOVE '0'       *IN02
+     C                     ELSE
+      *
+     C                     MOVE '1'       *IN02                           095633
+     C                     MOVE ' 008'    ERCD,Y
+     C                     ADD  1         Y
+      *
+      ** End of S.W.I.F.T. mesage format on LF/CLINT
+     C                     END
+      ** End of if MT940 SWIFT messages feature is OFF                    CSW004
+     C                     END                                            CSW004
+      *
+      ** Else if no record found on CLINT
+     C                     ELSE
+      *
+     C                     MOVE '01'      DBASE            * DB ERROR 01 *
+     C                     MOVEL'CLINT'   DBFILE
+     C                     MOVEL@SCNUM    @CLKEY  7
+     C                     MOVE RCDT      @CLKEY
+     C                     MOVEL@CLKEY    DBKEY
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     CLOSEME0021AU
+     C                     OPEN ME0021AU
+     C                     EXCPTDBERR
+     C                     RETRN
+      *
+      ** End of if record found on CLINT
+     C                     END
+      *
+      ** Else if no record found on ACNUM
+     C                     ELSE
+      *
+     C                     MOVE '1'       *IN02
+     C                     MOVE ' 016'    ERCD,Y
+     C                     ADD  1         Y
+     C                     MOVE '0'       *IN07
+      *
+      ** End of if record found on ACNUM
+     C                     END
+      *
+      ** End of either Account Key fields or Retail A/C No. are blank
+     C                     END
+      *
+      ** Else if both fields entered
+     C                     ELSE
+      *
+     C                     MOVE ' 002'    ERCD,Y
+     C                     ADD  1         Y
+      *
+      ** End of Account Key or Retail A/C No. only has been entered
+     C                     END
+      *
+      *
+      *
+      ** IF action code is 'I','A','D', or 'E' and Amemdment is allowed
+     C           SACTN     IFEQ 'A'
+     C********** *INU2     ANDEQ'0'                                       095627
+     C           SACTN     OREQ 'I'
+     C           SACTN     OREQ 'D'
+     C           SACTN     OREQ 'E'
+      *
+     C                     MOVE '0'       *IN06
+      *
+     C                     ELSE
+      *
+     C                     MOVE ' 006'    ERCD,Y
+     C                     ADD  1         Y
+      *
+      ** End action code  'I', 'A', 'D' or 'E'
+     C                     END
+      *
+      ** User not authorised to action for Branch
+      ** accessed by Retail No.
+     C           *IN65     IFEQ '1'
+     C                     MOVE '1'       *IN06
+     C                     MOVE ' 040'    ERCD,Y
+     C                     ADD  1         Y
+     C                     END
+      *
+      ** If there are no errors so far Validate the Account Key
+     C           *IN02     IFEQ '0'
+     C           *IN06     ANDEQ'0'
+     C           *IN07     ANDEQ'0'
+     C           *IN08     ANDEQ'0'
+     C           *IN09     ANDEQ'0'
+     C           *IN10     ANDEQ'0'
+     C           *IN11     ANDEQ'0'
+      *
+      **
+     C           SACNO     IFNE *BLANKS
+      *
+     C           MBIN      IFNE 'Y'
+     C                     MOVE SBRCA     BRCA
+     C                     END
+      *
+     C           RETAC     CHAINACCBR                84
+      *
+     C           *IN84     IFEQ '0'
+     C           RECI      ANDEQ'D'
+      *
+     C           ACST      IFEQ 'C'
+     C           SACTN     ANDNE'D'
+      *
+     C                     MOVE '1'       *IN02
+     C                     MOVE ' 003'    ERCD,Y
+     C                     ADD  1         Y
+     C                     END
+      *
+     C                     ELSE
+      *
+     C                     MOVE '1'       *IN02
+     C                     MOVE ' 011'    ERCD,Y
+     C                     ADD  1         Y
+     C                     END
+      *
+     C                     ELSE
+      *
+     C                     MOVE SBRCA     @SBRCA
+     C                     MOVE SCNUM     @SCNUM
+     C                     MOVE SCCY      @SCCY
+     C                     MOVE SACOD     @SACOD
+     C                     MOVE SACSQ     @SACSQ
+      *
+      ** Depending on whether A/C Sequence has been entered
+     C           SACSQ     IFEQ *BLANKS
+     C                     MOVE '01'      @SACSQ                          081216
+     C                     MOVE '01'      SACSQ                           081216
+     C*******    ACCPKY    CHAINACCBR                79                   081216
+      *
+     C*******              ELSE                                           081216
+     C                     END                                            081216
+      *
+     C           ACCKY     CHAINACCBR                79
+     C*******              END                                            081216
+      *
+     C           *IN79     IFEQ '0'
+     C           RECI      ANDEQ'D'
+      *
+     C           ACST      IFEQ 'C'
+     C           SACTN     ANDNE'D'
+      *
+     C  N80                MOVE '1'       *IN07
+     C                     MOVE '1'       *IN08
+     C                     MOVE '1'       *IN09
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN11
+     C                     MOVE ' 003'    ERCD,Y
+     C                     ADD  1         Y
+     C                     END
+      *
+     C                     ELSE
+      *
+     C  N80                MOVE '1'       *IN07
+     C                     MOVE '1'       *IN08
+     C                     MOVE '1'       *IN09
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN11
+     C                     MOVE ' 011'    ERCD,Y
+     C                     ADD  1         Y
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** If validation is successful so far
+      ** Chain to SWACB to find out whether the record already exists
+     C           *IN02     IFEQ '0'
+     C           *IN06     ANDEQ'0'
+     C           *IN07     ANDEQ'0'
+     C           *IN08     ANDEQ'0'
+     C           *IN09     ANDEQ'0'
+     C           *IN10     ANDEQ'0'
+     C           *IN11     ANDEQ'0'
+      *
+      ** If the Retail A/C No. is used set up correct key
+     C           SACNO     IFNE *BLANKS
+     C  N80                MOVE BRCA      @BRCA
+     C   80                MOVE SBRCA     @BRCA
+     C                     MOVE CNUM      @CNUMA
+     C                     MOVE CCY       @CCY
+     C                     MOVE ACOD      @ACOD
+     C                     MOVE ACSQ      @ACSQ
+      *
+     C                     ELSE
+      *
+      ** If the Account Key is used set up correct key
+     C                     MOVE SBRCA     @BRCA
+     C                     MOVE SCNUM     @CNUMA
+     C                     MOVE SCCY      @CCY
+     C                     MOVE SACOD     @ACOD
+     C                     MOVE SACSQ     @ACSQ
+     C                     END
+      *
+     C   80                MOVE ACNTMB    ACNT
+      *
+     C           ACNO      IFGT 0
+     C           *INU1     ANDEQ'1'
+     C                     MOVE ACNO      ACNOS
+     C                     MOVE '1'       *IN28
+     C                     ELSE
+     C                     MOVE '0'       *IN28
+     C                     END
+      *
+     C           ACCKY1    CHAINSWACBF               77
+     C           *IN77     IFEQ '0'
+     C           RECI      ANDEQ'D'
+      *
+     C           SACTN     IFEQ 'I'
+     C                     MOVE ' 005'    ERCD,Y
+     C                     MOVE '1'       *IN06
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           SACTN     IFEQ 'A'
+     C           SACTN     OREQ 'D'
+     C           SACTN     OREQ 'E'
+     C                     MOVE ' 004'    ERCD,Y
+     C                     MOVE '1'       *IN06
+     C                     END
+      *
+     C                     END
+      *
+      ** For Insert Of SWIFT Accounts If The Postings File Is Not Present
+      *
+     C*********  *INU2     IFEQ '1'                                       095627
+     C*********  SACTN     ANDEQ'A'                                       095627
+     C*********            MOVE ' 006'    ERCD,Y                          095627
+     C*********            MOVE '1'       *IN06                           095627
+     C*********            END                                            095627
+      *
+      ** End of if validation is successful so far
+     C                     END
+      *
+      *
+      ** IF validation is successful set off screen error indicator
+      *
+     C           *IN02     IFEQ '0'
+     C           *IN06     ANDEQ'0'
+     C           *IN07     ANDEQ'0'
+     C           *IN08     ANDEQ'0'
+     C           *IN09     ANDEQ'0'
+     C           *IN10     ANDEQ'0'
+     C           *IN11     ANDEQ'0'
+     C/COPY WNCPYSRC,ME0021C019
+      *
+     C                     MOVE '0'       *IN70
+     C                     MOVE *BLANKS   EMSG
+      *
+      ** Save Transaction Number Of Last Update
+     C                     Z-ADDTNLU      @TNLU   50
+      *
+      ** Else move error array to screen field
+     C                     ELSE
+      *
+     C                     MOVEAERCD      EMSG
+      *
+      ** End screen error indicator
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      /TITLE
+      ********************************************************************
+      *
+      ** V02 SUBROUTINE
+      ** Insert Screen Validation
+      ** Called by W02 W03
+      ** Calls ZDATE2, ZDATE1
+      *
+     C           V02       BEGSR
+      *
+      ** Set up error codes for display screen
+     C                     Z-ADD1         Y       20
+     C                     MOVEA*BLANKS   ERCD
+      *
+      ** Set on validation indicators
+      *
+     C/COPY WNCPYSRC,ME0021C036
+     C                     MOVE '1'       *IN12
+     C                     MOVE '1'       *IN13
+     C                     MOVE '1'       *IN14
+     C                     MOVE '1'       *IN15
+     C                     MOVE '1'       *IN17                           S01389
+     C           MT94FG    IFEQ 'Y'                                       CSW004
+     C                     MOVE '1'       *IN18                           CSW004
+     C                     END                                            CSW004
+     C                     MOVE '1'       *IN70
+      *
+      ** Validate statement frequency, statement day, statement date      095627
+      ** and statement indicator if SWIFT posting file is on the system   095627
+     C           *INU2     IFEQ '0'                                       095627
+      *                                                                   095627
+      ** IF S.W.I.F.T. Statement Frequency is valid
+     C           SFREQ     IFNE *BLANKS
+      *
+     C                     MOVE '0'       *IN35
+     C           SFREQ     LOKUPTABFR                    35
+     C           *IN35     IFEQ '1'
+     C                     MOVE '0'       *IN12
+      *
+     C                     ELSE
+      *
+     C                     MOVE ' 012'    ERCD,Y
+     C                     ADD  1         Y
+      *
+     C                     END
+      *
+     C/COPY WNCPYSRC,ME0021C032
+     C                     ELSE
+     C******************** MOVE ' 012'    ERCD,Y                          065654
+     C******************** ADD  1         Y                               065654
+     C                     MOVE '0'       *IN12                           065654
+      *
+      ** End Statement Frequency
+     C                     END
+      *
+      ** Statement Day in the month must be blank or between 01 & 31
+      ** if the frquency is 'M', 'Q', 'X' or 'T'
+     C           SFREQ     IFEQ 'M'
+     C           SFREQ     OREQ 'Q'
+     C           SFREQ     OREQ 'X'
+     C           SFREQ     OREQ 'T'
+      *
+     C           SSDIM     IFGE '01'
+     C           SSDIM     ANDLE'31'
+     C                     MOVE '0'       *IN13
+      *
+     C                     ELSE
+      *
+     C                     MOVE ' 013'    ERCD,Y
+     C                     ADD  1         Y
+      *
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           SSDIM     IFEQ *BLANK
+     C                     MOVE '0'       *IN13
+      *
+     C                     ELSE
+      *
+     C                     MOVE ' 013'    ERCD,Y
+     C                     ADD  1         Y
+      *
+     C                     END
+      *
+      ** End of Statement Day in the month is blank or between 01 & 31
+      ** if the frquency is 'M', 'Q', 'X' or 'T'
+     C                     END
+      *
+      ** IF Next Statement Date is valid
+     C           SFREQ     IFEQ 'Z'
+      *
+     C           SNSDT     IFEQ *BLANKS
+     C                     MOVE '0'       *IN14
+      *
+     C           RUND      ADD  183       CMPDAT  50
+     C                     Z-ADDCMPDAT    @NSDT   50
+     C                     Z-ADD@NSDT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     ONSDT   60
+      *
+     C                     END
+      *
+      ** Else frequency is not 'Z'
+     C                     ELSE
+      *
+      ** Check the date format (DDMMYY)
+     C                     Z-ADD0         ZDATE
+     C                     MOVE SNSDT     ZDATE
+     C                     EXSR ZDATE1
+      *
+      ** If the date is valid
+     C           *IN99     IFEQ '0'
+     C                     Z-ADDZDAYNO    @NSDT
+      *
+      ** Ensure the Next Statement Date is greater than or equal to
+      ** the run date
+     C           @NSDT     IFGE RUND
+     C                     MOVE '0'       *IN14
+      *
+      ** Else if the run date is greater
+     C                     ELSE
+      *
+     C                     MOVE ' 014'    ERCD,Y
+     C                     ADD  1         Y
+      *
+     C                     END
+      *
+      ** Else if the date is invalid
+     C                     ELSE
+      *
+     C                     MOVE ' 014'    ERCD,Y
+     C                     ADD  1         Y
+      *
+     C                     END
+      *
+      ** End Next Statement Date
+     C                     END
+      *
+      ** IF Demand S.W.I.F.T. Statement is 'Y' or Blank
+     C           SDMND     IFEQ 'Y'
+     C           SDMND     OREQ *BLANKS
+      *
+     C                     MOVE '0'       *IN15
+      *
+     C                     ELSE
+      *
+     C                     MOVE ' 015'    ERCD,Y
+     C                     ADD  1         Y
+      *
+      ** End S.W.I.F.T. Statement Demand
+     C                     END
+      *                                                                   095627
+     C                     END                                            095627
+      **                                                                  095627
+     C           *INU2     IFEQ '1'                                       095627
+     C                     MOVE '0'       *IN12                           095627
+     C                     MOVE '0'       *IN13                           095627
+     C                     MOVE '0'       *IN14                           095627
+     C                     MOVE '0'       *IN15                           095627
+     C                     END                                            095627
+      ** If MT940 SWIFT messages feature is switched ON                   CSW004
+     C           MT94FG    IFEQ 'Y'                                       CSW004
+     C/COPY WNCPYSRC,ME0021C006
+      *                                                                   CSW004
+      ** Validate 'MT940 Destination' field                               CSW004
+     C* Call SD0011U1 to validate (SWIFT ID)                              CSW004
+     C           SMT94     IFNE *BLANKS                                   CSW004
+     C                     MOVE '0'       *IN18                           CSW004
+      *                                                                   CSW004
+     C                     MOVELSMT94     #MT94  12                       CSW004
+     C                     CALL 'SD0011U1'             90                 CSW004
+     C           W0RTN     PARM W0RTN     WQ0080  7        *Return code   CSW004
+     C                     PARM #MT94     WQ0081 12        Swift id       CSW004
+     C           WUSICL    PARM *BLANK    WQ0082  1        Swift ID is 10 CSW004
+     C           WUC6NL    PARM *BLANK    WQ0083  1        Characters 1-6 CSW004
+     C           WUINVC    PARM *BLANK    WQ0084  1        Invalid Chars. CSW004
+     C           WUSIL8    PARM *BLANK    WQ0085  1        SWIFT ID < 8   CSW004
+     C           WUEMSP    PARM *BLANK    WQ0086  1        Embedded SpacesCSW004
+     C           WUBICL    PARM *BLANK    WQ0087  1        Length of fld  CSW004
+      *                                                                   CSW004
+      * Call to program ended in error                                    CSW004
+     C           *IN90     IFEQ '1'                                       CSW004
+     C                     EXSR *PSSR                                     CSW004
+     C                     END                                            CSW004
+      *                                                                   CSW004
+      * Embedded blanks in the SWIFT ID                                   CSW004
+     C           WUEMSP    IFEQ '1'                                       CSW004
+     C                     MOVE ' 023'    ERCD,Y                          CSW004
+     C                     ADD  1         Y                               CSW004
+     C                     MOVE '1'       *IN18                           CSW004
+     C                     END                                            CSW004
+      * SWIFT ID is 10 characters long                                    CSW004
+     C           WUSICL    IFEQ '1'                                       CSW004
+     C                     MOVE ' 020'    ERCD,Y                          CSW004
+     C                     ADD  1         Y                               CSW004
+     C                     MOVE '1'       *IN18                           CSW004
+     C                     END                                            CSW004
+      * The first 6 characters of SWIFT ID are not letters                CSW004
+     C           WUC6NL    IFEQ '1'                                       CSW004
+     C                     MOVE ' 021'    ERCD,Y                          CSW004
+     C                     ADD  1         Y                               CSW004
+     C                     MOVE '1'       *IN18                           CSW004
+     C                     END                                            CSW004
+      * SWIFT ID is less than 8 characters long                           CSW004
+     C           WUSIL8    IFEQ '1'                                       CSW004
+     C                     MOVE ' 020'    ERCD,Y                          CSW004
+     C                     ADD  1         Y                               CSW004
+     C                     MOVE '1'       *IN18                           CSW004
+     C                     END                                            CSW004
+      * Invalid characters found in SWIFT ID                              CSW004
+     C           WUINVC    IFEQ '1'                                       CSW004
+     C                     MOVE ' 022'    ERCD,Y                          CSW004
+     C                     ADD  1         Y                               CSW004
+     C                     MOVE '1'       *IN18                           CSW004
+     C                     END                                            CSW004
+      * Any Swift ID that is entered must be 8 or 11 characters in length CSW004
+     C           WUBICL    IFEQ '1'                                       CSW004
+     C                     MOVE ' 020'    ERCD,Y                          CSW004
+     C                     ADD  1         Y                               CSW004
+     C                     MOVE '1'       *IN18                           CSW004
+     C                     END                                            CSW004
+      *                                                                   CSW004
+      * Setup parameters for BIC code validation.                         CSW004
+     C                     MOVEL#MT94     WUBIC8           BICC Code - 8 LCSW004
+     C           3         SUBST#MT94:9   WUBIC3    P  90  BICC Code - 3 LCSW004
+      * Validate BIC code.                                                CSW004
+     C*                                                                   CSW004
+     C* Call ME1400 to validate identifier.                               CSW004
+     C*                                                                   CSW004
+     C                     CALL 'ME1400'               90                 CSW004
+     C                     PARM *BLANKS   WUBICR  7                       CSW004
+     C                     PARM           WUBIC8  8                       CSW004
+     C                     PARM           WUBIC3  3                       CSW004
+     C                     PARM           SDCUST                          CSW004
+     C                     PARM           SDCNST                          CSW004
+     C                     PARM           MEBICD                          CSW004
+     C                     PARM *BLANKS   WUBICC  1                       CSW004
+     C                     PARM *BLANKS   WUBICS  1                       CSW004
+     C                     PARM *BLANKS   WUBICI  1                       CSW004
+      *                                                                   CSW004
+      * Call to program ended in error                                    CSW004
+     C           *IN90     IFEQ '1'                                       CSW004
+     C                     EXSR *PSSR                                     CSW004
+     C                     END                                            CSW004
+     C*                                                                   CSW004
+      * Check BIC validation return code.                                 CSW004
+      *  Record not found on directory but found on others                CSW004
+      *  - BIC directory has data so error                                CSW004
+     C           WUBICR    IFEQ 'MIN0244'                                 CSW004
+     C           WUBICR    OREQ 'MIN0245'                                 CSW004
+     C           WUBICR    OREQ 'MIN0246'                                 CSW004
+     C                     MOVE ' 024'    ERCD,Y                          CSW004
+     C                     ADD  1         Y                               CSW004
+     C                     MOVE '1'       *IN18                           CSW004
+     C                     END                                            CSW004
+      ** End of if MT940 Destination field is not blank                   CSW004
+     C                     END                                            CSW004
+      *                                                                                       260771
+      ** Validate if Internal Only Flag is NOT 'Y'.  If Flag is 'Y',                          260771
+      ** then MT940 Destination can be blank.                                                 260771
+      *                                                                                       260771
+     C           INTES     IFNE 'Y'                                                           260771
+      *                                                                   CSW004
+      ** IF 'MT940 Destination' field is blank, validate Customer         CSW004
+      ** S.W.I.F.T. ID                                                    CSW004
+     C           SMT94     IFEQ *BLANKS                                   CSW004
+      *                                                                   CSW004
+      ** If full Account Number has been entered                          CSW004
+      *                                                                   CSW004
+     C           SACNO     IFEQ *BLANKS                                   CSW004
+      *                                                                   CSW004
+     C                     TESTB'2'       CMIN           36               CSW004
+     C           *IN36     IFEQ '0'                                       CSW004
+     C           GSFM      ANDEQ'Y'                                       CSW004
+     C           CSID      ANDNE*BLANKS                                   CSW004
+      *                                                                   CSW004
+     C                     MOVE '0'       *IN18                           CSW004
+      *                                                                   CSW004
+     C                     ELSE                                           CSW004
+      *                                                                   CSW004
+     C                     MOVE ' 025'    ERCD,Y                          CSW004
+     C                     ADD  1         Y                               CSW004
+      *                                                                   CSW004
+     C                     END                                            CSW004
+      *                                                                   CSW004
+      ** End of if full Account Number entered                            CSW004
+     C                     END                                            CSW004
+      *                                                                   CSW004
+      ** If Retail Account Number has been entered                        CSW004
+      *                                                                   CSW004
+     C           SACNO     IFNE *BLANKS                                   CSW004
+     C           GSFM      IFEQ 'Y'                                       CSW004
+     C                     MOVE '0'       *IN18                           CSW004
+     C                     ELSE                                           CSW004
+      *                                                                   CSW004
+     C                     MOVE ' 025'    ERCD,Y                          CSW004
+     C                     ADD  1         Y                               CSW004
+      *                                                                   CSW004
+     C                     END                                            CSW004
+      *                                                                   CSW004
+      ** End of if Retail Account Number entered                          CSW004
+     C                     END                                            CSW004
+      ** End of if MT940 Destination field is blank                       CSW004
+     C                     END                                            CSW004
+      *                                                                   CSW004
+      ** End of if MT940 SWIFT messages feature is ON                     CSW004
+     C                     END                                            CSW004
+      *                                                                                       260771
+     C                     ELSE                                                               260771
+     C                     MOVE '0'       *IN18                                               260771
+      *                                                                                       260771
+      ** End of if Internal Only Flag = 'Y'                                                   260771
+      *                                                                                       260771
+     C                     ENDIF                                                              260771
+      *                                                                   CSW004
+     C/COPY WNCPYSRC,ME0021C007
+      *                                                                   S01389
+      **  Validate Internal Only Indicator - Mandatory Field Must Be      S01389
+      **  'Y', 'N', Or Blank.  If Blank, Default To 'N'.                  S01389
+     C           INTES     IFEQ 'N'                                       S01389
+     C           INTES     OREQ 'Y'                                       S01389
+     C           INTES     OREQ ' '                                       S01389
+      *                                                                   S01389
+     C                     MOVE '0'       *IN17                           S01389
+      *                                                                   S01389
+     C/COPY WNCPYSRC,ME0021C008
+     C                     ELSE                                           S01389
+      *                                                                   S01389
+     C                     MOVE ' 017'    ERCD,Y                          S01389
+     C                     ADD  1         Y                               S01389
+      *                                                                   S01389
+     C                     END                                            S01389
+      *
+      ** IF validation is successful set off screen error indicator
+      *
+     C           *IN12     IFEQ '0'
+     C           *IN13     ANDEQ'0'
+     C           *IN14     ANDEQ'0'
+     C           *IN15     ANDEQ'0'
+     C           *IN17     ANDEQ'0'                                       S01389
+     C           *IN18     ANDEQ'0'                                       CSW004
+     C/COPY WNCPYSRC,ME0021C020
+      *
+     C                     MOVE '0'       *IN70
+     C                     MOVE *BLANKS   EMSG
+     C/COPY WNCPYSRC,ME0021C021
+      *
+      ** Else move error array to screen field
+     C                     ELSE
+      *
+     C/COPY WNCPYSRC,ME0021C037
+     C                     MOVEAERCD      EMSG
+     C/COPY WNCPYSRC,ME0021C038
+      *
+      ** End screen error indicator
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      /TITLE
+      ********************************************************************
+      *
+      **  INIT SUBROUTINE
+      ** Set up fields ,access tabtb10 & tabtb11
+      ** Called by MAIN LINE
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C/COPY WNCPYSRC,ME0021C024
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVE 'ME0021  'DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C/COPY WNCPYSRC,ME0021C025
+      *
+      ** Set up CMTTXT
+      *
+     C                     MOVE 'ME'      MDID
+     C                     MOVE 'ME0021'  PGMN
+     C                     MOVE WSID      WSIDX
+     C                     MOVE USRID     USRIDX
+      *
+      ** Set up ACNT Data Structure for display screen header
+      *
+     C                     MOVE *ALL'-'   ACNTMB
+      *
+      ** Obtain run date for screen
+      *
+     C                     MOVEL'01      'ZTABKY 12
+     C                     MOVE '  10'    ZTABKY
+     C           ZTABKY    CHAINTABMS                85
+     C           *IN85     IFEQ '1'
+     C           RECI      ORNE 'D'
+      *
+      ** DATABASE ERROR 08 on TABLE file
+      *
+     C/COPY WNCPYSRC,ME0021C026
+     C                     MOVEL'01      'ZTABKY
+     C                     MOVE '  10'    ZTABKY
+     C                     MOVE 'TABMS'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 08 *
+     C                     Z-ADD08        DBASE            ***************
+     C/COPY WNCPYSRC,ME0021C027
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     CLOSEME0021AU
+     C                     OPEN ME0021AU
+     C                     EXCPTDBERR
+     C                     RETRN
+     C                     END
+      *
+     C                     MOVE RUNA      DATE    7
+      *
+      ** Obtain multibranching indicator
+      *
+     C                     MOVEL'01      'ZTABKY 12
+     C                     MOVE '  11'    ZTABKY
+     C           ZTABKY    CHAINTABMS                86
+     C           *IN86     IFEQ '1'
+     C           RECI      ORNE 'D'
+      *
+      ** DATABASE ERROR 02 on TABLE file
+      *
+     C/COPY WNCPYSRC,ME0021C028
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD02        DBASE            ***************
+     C/COPY WNCPYSRC,ME0021C029
+     C                     SETON                     U7U8LR
+     C                     CLOSEME0021AU
+     C                     OPEN ME0021AU
+     C                     EXCPTDBERR
+     C                     RETRN
+     C                     END
+      *
+     C           MBIN      IFNE 'Y'
+     C                     MOVE DFBM      SBRCA
+     C                     MOVE '1'       *IN80
+     C                     END
+      *
+      ** If Retail module is not on the system make SACNO non-displayed
+     C           *INU1     IFEQ '0'
+     C                     MOVE '1'       *IN67
+     C                     END
+      *
+      ** If Postings File is not on the system disallow amendment
+     C           *INU2     IFEQ '1'
+     C                     MOVE '1'       *IN69
+     C                     END
+      *
+      ** Check System date format, DDMMYY(98 off) or MMDDYY(98 on)
+     C           DATF      IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** Set up key for CLINT CHAIN
+     C                     MOVE 'A'       @RCDT
+     C           CLKEY     KLIST
+     C**********           KFLD           @SCNUM  60                                          CSD027
+     C                     KFLD           @SCNUM  6                                           CSD027
+     C                     KFLD           @RCDT   1
+      *
+      ** Set up key for ACCBR CHAIN using Account Key screen entry
+     C           ACCKY     KLIST
+     C                     KFLD           @SBRCA  3
+     C                     KFLD           @SCNUM
+     C                     KFLD           @SCCY   3
+     C**********           KFLD           @SACOD  40                                          CGL029
+     C                     KFLD           @SACOD 100                                          CGL029
+     C                     KFLD           @SACSQ  20
+      *
+      ** Set up partial key for ACCBR CHAIN for use if A/C sequence is
+      ** not entered using Account Key screen entry
+     C           ACCPKY    KLIST
+     C                     KFLD           @SBRCA  3
+     C                     KFLD           @SCNUM
+     C                     KFLD           @SCCY   3
+     C**********           KFLD           @SACOD  40                                          CGL029
+     C                     KFLD           @SACOD 100                                          CGL029
+      *
+      ** Set up key for ACCBR CHAIN using Retail A/C No. screen entry
+     C           RETAC     KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *
+      ** Set up key for SWACB CHAIN using Retail A/C No.  screen entry
+     C           ACCKY1    KLIST
+     C                     KFLD           @BRCA   3
+     C                     KFLD           @CNUMA  6
+     C                     KFLD           @CCY    3
+     C**********           KFLD           @ACOD   40                                          CGL029
+     C                     KFLD           @ACOD  100                                          CGL029
+     C                     KFLD           @ACSQ   20
+      *                                                                   183566
+      ** Define Key List to access GLACBTL0 by using Account Key.         183566
+      *                                                                   183566
+     C           KGLACB    KLIST                                          183566
+     C                     KFLD           CNUM                            183566
+     C                     KFLD           CCY                             183566
+     C                     KFLD           ACOD                            183566
+     C                     KFLD           ACSQ                            183566
+     C                     KFLD           BRCA                            183566
+      *
+      ** Set up key for TABLE file,BRCA rec.(PF/TABLETR)
+     C                     MOVEL'10'      BRKEY  12
+      *
+      ** Set up ket for TABLE file,CCY rec. (PF/TABTG10)
+     C                     MOVEL'20'      CCYKY  12
+      *
+      ** Set up key for TABLE FILE, A/C CODES rec.(PF/TABTE10)
+     C**********           MOVEL'30'      ACKEY  12                                           CGL029
+      *
+      ** Set up RETAIL A/C NO field for output to screen
+     C                     MOVEL'RETAIL A'RNARR  14
+     C                     MOVE '/C NO.'  RNARR
+     C*                                                                   CSW004
+     C** CHECK if MT940 SWIFT messages feature is switched on             CSW004
+     C*                                                                   CSW004
+     C                     MOVE '0'       *IN61                           CSW004
+     C                     MOVE ' '       MT94FG  1                       CSW004
+     C                     CALL 'AOSARDR0'                                CSW004
+     C                     PARM *BLANKS   @RTCD   7                       CSW004
+     C                     PARM '*VERIFY' @OPTN   7                       CSW004
+     C                     PARM 'CSW004'  @SARD   6                       CSW004
+     C           SCSARD    PARM SCSARD    DSFDY                           CSW004
+     C*                                                                   CSW004
+     C           @RTCD     IFEQ *BLANKS                                   CSW004
+     C                     MOVE '1'       *IN61                           CSW004
+     C                     MOVE 'Y'       MT94FG                          CSW004
+     C                     ELSE                                           CSW004
+     C           @RTCD     IFNE '*NRF   '                                 CSW004
+     C/COPY WNCPYSRC,ME0021C030
+     C                     MOVE *BLANKS   DBKEY                           CSW004
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CSW004
+     C                     MOVEL'*VERIFY' DBKEY            * DBERR 03 *   CSW004
+     C                     Z-ADD03        DBASE            ************   CSW004
+     C/COPY WNCPYSRC,ME0021C031
+     C                     EXSR *PSSR                                     CSW004
+     C                     END                                            CSW004
+     C                     END                                            CSW004
+      *                                                                   CSW004
+     C/COPY WNCPYSRC,ME0021C009
+      ** Initialise Parameters for call of program SD0011U1               CSW004
+      *                                                                   CSW004
+     C                     MOVE *BLANKS   W0RTN   7                       CSW004
+     C                     MOVE *BLANKS   WUSICL  1                       CSW004
+     C                     MOVE *BLANKS   WUC6NL  1                       CSW004
+     C                     MOVE *BLANKS   WUINVC  1                       CSW004
+     C                     MOVE *BLANKS   WUSIL8  1                       CSW004
+     C                     MOVE *BLANKS   WUEMSP  1                       CSW004
+     C                     MOVE *BLANKS   WUBICL  1                       CSW004
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** BLNK1 SUBROUTINE
+      ** Blank Initial Screen
+      ** Called by P01, P07.
+      *
+     C           BLNK1     BEGSR
+      *
+      ** Blank initial screen for output when F12 is pressed
+      *
+     C  N80                MOVE *BLANKS   SBRCA
+     C                     MOVE *BLANKS   SCNUM
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SACOD
+     C                     MOVE *BLANKS   SACSQ
+     C                     MOVE *BLANKS   SACNO
+     C                     MOVE *BLANKS   SACTN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+     C           ACTBSR    BEGSR
+      *         =================
+      *
+     C                     MOVE '0'       *IN65
+     C                     MOVE '0'       *IN25
+      *
+     C           SACNO     IFEQ *BLANKS
+      *
+      ** Validate that the Branch Code is on file
+     C                     MOVE SBRCA     BRKEY
+     C           BRKEY     CHAINTABMS                78
+      *
+     C           *IN78     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C**************       MOVE ' 025'    ERCD,Y                          127398
+     C                     MOVE ' 007'    ERCD,Y                          127398
+     C                     ADD  1         Y
+     C                     MOVE '1'       *IN25
+     C                     ELSE
+     C                     MOVE SBRCA     ZBRCA
+     C                     END
+      *
+      ** Else Retail No.
+     C                     ELSE
+     C                     MOVE BRCA      ZBRCA
+     C                     END
+      *
+      ** If Branch Code is on file or Retail No. used.
+      ** Validate user's Branch authority and Action Code.
+      *
+     C           *IN25     IFEQ '0'
+     C           SACNO     ORNE *BLANKS
+      *
+     C                     MOVE SACTN     ZACTN
+     C                     Z-ADD0         ZRETC
+      *
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM           ZACTN   1
+     C                     PARM           ZBRCA   3
+     C                     PARM           ZRETC   10
+      *
+     C           ZRETC     IFNE 0
+      *
+      * If Retail No. display as an error on Action
+     C           SACNO     IFNE *BLANKS
+     C                     MOVE '0'       *IN07
+     C                     MOVE '1'       *IN65
+     C                     ELSE
+     C                     MOVE ' 040'    ERCD,Y
+     C                     ADD  1         Y
+     C                     END
+      *
+     C                     ELSE
+     C                     MOVE '0'       *IN07
+     C                     END
+      *
+      ** End of if branch code is on file
+     C                     END
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      /TITLE
+      ********************************************************************
+      *
+     C           ACTSR     BEGSR
+      *         =================
+      *
+     C                     MOVE '0'       *IN65
+      *
+      ** Validate user's authority to Action Code.
+      *
+     C                     MOVE SACTN     ZACTN
+     C                     Z-ADD0         ZRETC
+      *
+      *
+     C                     CALL 'ZVACTU'
+     C                     PARM           ZACTN   1
+     C                     PARM           ZRETC   10
+      *
+     C           ZRETC     IFNE 0
+     C                     MOVE '1'       *IN65
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C**                                                                  CSW004
+     C**   *PSSR  SR TO DUMP PROGRAM WHEN DATABASE ERROR OCCURS           CSW004
+     C**                                                                  CSW004
+     C           *PSSR     BEGSR                                          CSW004
+     C           WRUN      IFEQ *BLANKS                                   CSW004
+     C                     MOVE 'Y'       WRUN    1                       CSW004
+     C                     SETON                     U7U8LR               CSW004
+     C                     DUMP                                           CSW004
+      **                                                                  CSW004
+      ** Call standard database error program                             CSW004
+      **                                                                  CSW004
+     C                     CALL 'DBERRCTL'                                CSW004
+     C                     END                                            CSW004
+      **                                                                  CSW004
+      ** IF *PSSR already run, end program here                           CSW004
+      **                                                                  CSW004
+     C                     SETON                     U7U8LR               CSW004
+     C                     RETRN                                          CSW004
+      *                                                                   CSW004
+     C                     ENDSR                                          CSW004
+     C**                                                                  CSW004
+0370 C********************************************************************CSW004
+      /EJECT
+      /TITLE
+      ********************************************************************
+      **
+      **   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+      **              CONVERT TO A NUMBER OF DAYS.
+      **
+      **   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+      **
+     C           ZDATE1    BEGSR                           ***  ZDATE1 ***
+      **
+      **   CLEAR DAY NUMBER.
+     C                     Z-ADD0         ZDAYNO  50
+      **
+      **   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C                     Z-ADDZDATE     ZDATE   60
+      **
+      **   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+      **
+      **   ENSURE MONTH IS VALID.
+     C           ZMTH      COMP 0                      9999
+     C  N99      ZMTH      COMP 12                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+      **
+      **   CHECK FOR 30 DAY MONTHS.
+     C           ZMTH      COMP 4                        90IF 90 ON, 30
+     C  N90      ZMTH      COMP 6                        90DAY MONTH.
+     C  N90      ZMTH      COMP 9                        90
+     C  N90      ZMTH      COMP 11                       90
+      **
+      **   ENSURE DAY IS VALID.
+     C           ZDAY      COMP 0                      9999
+     C   90N99   ZDAY      COMP 30                   99
+     C  N90N99   ZDAY      COMP 31                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+      **
+      **   CHECK FOR LEAP YEAR AND FEBRUARY.
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10     91LEAP YR, 91 ON
+     C           ZMTH      COMP 2                    93  92FEB., 92 ON
+      **                                                   PAST FEB, 93 ON
+      **   IF FEBUARY FURTHER VALIDATE DAY.
+     C  N91 92   ZDAY      COMP 28                   99
+     C   91 92   ZDAY      COMP 29                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+      **
+      **   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANS
+     C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.
+     C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+     C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+      **
+     C           ZDEND1    ENDSR                           ***  ZDEND1 ***
+      **
+      **
+      ********************************************************************
+      /EJECT
+      /TITLE
+      ********************************************************************
+      **
+      **   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+      **
+      **   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+      **
+     C           ZDATE2    BEGSR                           ***  ZDATE2 ***
+      **
+      **   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+      **
+      **   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+      **
+      **   DETERMINE YEAR NUMBER.
+      **
+      **   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+      **
+      **   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+      **                                                   DAYS
+      **   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ***  ZDTAG1 ***
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+      **
+      **   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+      **
+      **   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+      **
+      **   DETERMINE MONTH NUMBER.
+      **
+      **   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+      **
+      **   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ***  ZDTAG2 ***
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+      **
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+      **
+      **   DETERMINE DAY OF MONTH.
+      **
+      **   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+      **
+      **   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+      **
+      **   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+      **
+      **   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+      **
+      **   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+      **
+     C           ZDEND2    ENDSR                           ***  ZDEND2 ***
+      **
+      **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      **  ZTNLU1 SR. - TO LOCK AND UPDATE TRANSACTION NUMBER DATA AREA
+      *
+      *
+     C           ZTNLU1    BEGSR
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,ME0021CWP5                                           S01408
+     C*                                                                   S01408
+      ********************************************************************
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      *REPORT IF DATABASE ERROR
+     OME0021AUE  102           DBERR
+     O                                   27 'REFERENCE ME0021AU'
+     O                         TITL      84
+     O                                  100 'DATE'
+     O                         RUNA     108
+     O                                  117 'PAGE'
+     O                         PAGE1 Z  121
+     O        E   40           DBERR
+     O                                   42 '*** REFERENCE'
+     O                         DBPGM     51
+     O                                   71 '-DATABASE ERROR AT'
+     O                         DBASE     74
+     O        E 1              DBERR
+     O                                   37 'FILE NAME'
+     O                         DBFILE    43
+     O                                   48 'KEY'
+     O                         DBKEY     78
+     O        E 3              DBERR
+     O                                   75 '*** END OF REPORT ***'
+      *
+      ********************************************************************
+      *
+      *Release SWACSSB record
+      *
+     OSWACSSBFE                RELSW
+      ********************************************************************
+      /EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+     X/COPY WNCPYSRC,ME0021X001
+** TABFR - TABLE OF VALID FREQ. CODES
+DWFSMRTQXYLBAZ
+** MGN
+Record INSERTED by another workstation
+Record AMENDED by another workstation
+Record DELETED by another workstation
+Record IN USE by another workstation
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

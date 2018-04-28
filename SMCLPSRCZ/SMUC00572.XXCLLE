@@ -1,0 +1,119 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                     MD021155
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       SMUC00572 - Utility to zeroise RODN when reused             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD021155 *REDUNDANTDate 23Apr13              */
+/*       Prev Amend No. AR665113A *CREATE  Date 20Dec12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD021155 - COB Restructure Phase 1 remnants                 */
+/*                - Remove unnecessary logicals.                     */
+/*       AR665113A - Utility to zeroise RODN when reused             */
+/*                   (Child: AR665114A)                              */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems LTD. +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
+ 
+             IF         COND((&MODE *NE 'U') *AND (&MODE *NE 'A')) +
+                          THEN(DO)
+                SNDPGMMSG  MSG('Invalid parameter on call.') +
+                             TOMSGQ(MOPERQ)
+                GOTO       END
+             ENDDO
+ 
+/* Create backup in xxDPLIB if in update mode */
+ 
+             CHGJOB     SWS(00000000)
+ 
+             IF         COND(&MODE *EQ 'U') THEN(DO)
+                RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+                CHGVAR     VAR(&DMLIB) VALUE(&PREF *TCAT 'DMLIB')
+                CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
+ 
+                CPYF       FROMFILE(&DMLIB/DEALSDC) +
+                             TOFILE(&DPLIB/DEALSDCX) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDPGMMSG  MSG('Backup not created for DEALSDC.') +
+                             TOMSGQ(MOPERQ)
+                GOTO       END
+                ENDDO
+ 
+                CPYF       FROMFILE(&DMLIB/MMDELDPP) +
+                             TOFILE(&DPLIB/MMDELDPPX) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDPGMMSG  MSG('Backup not created for MMDELDPP.') +
+                             TOMSGQ(MOPERQ)
+                GOTO       END
+                ENDDO
+             ENDDO
+ 
+/* Call data patch utility program */
+ 
+             CALL       PGM(SMU00572) PARM(&MODE)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+                GOTO       ABNOR
+             ENDDO
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       ABNOR
+             ENDDO
+ 
+             IF         COND(&MODE *EQ 'U') THEN(DO)
+                DLTF       FILE(&DPLIB/DEALSDCX)
+                MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+                DLTF       FILE(&DPLIB/MMDELDPPX)
+                MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             ENDDO
+ 
+             SNDPGMMSG  MSG('SMUC00572 ended successfully.') +
+                          TOMSGQ(MOPERQ)
+             SNDUSRMSG  MSG('SMUC00572 ended successfully.') +
+                          MSGTYPE(*INFO)
+             GOTO       END
+ 
+/* Database error processing */
+ABNOR:
+             IF         COND(&MODE *EQ 'U') THEN(DO)
+                CPYF       FROMFILE(&DPLIB/DEALSDCX) +
+                            TOFILE(&DMLIB/DEALSDC) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                SNDPGMMSG  MSG('Error in recovery of file DEALSDC. +
+                            Please restore manually.') TOMSGQ(MOPERQ)
+                ENDDO
+ 
+                CPYF       FROMFILE(&DPLIB/MMDELDPPX) +
+                            TOFILE(&DMLIB/MMDELDPP) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                SNDPGMMSG  MSG('Error in recovery of file MMDELDPP. +
+                            Please restore manually.') TOMSGQ(MOPERQ)
+                ENDDO
+             ENDDO
+ 
+             CHGJOB     SWS('XXXXXX11')
+             SNDPGMMSG  MSG('SMUC00572 ended abnormally - see +
+                          joblog.') TOMSGQ(MOPERQ)
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Copyright MISYS +
+                          International Banking Systems 2012')
+             ENDPGM

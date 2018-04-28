@@ -1,0 +1,2650 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas FT Outgoing payments maintenance level 2')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Funds Transfer Module                            *
+     A*                                                               *
+     A*  DSPF/FT0345DF - FT Outgoing Payments Maintenance Level 2     *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Prev Amend No. CFT009             Date 18Jul00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 29May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT007             Date 12Nov99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 04Oct96               *
+     A*                 CAC001             DATE 01FEB96               *
+     A*                 S01408             Date 25JUL95               *
+     A*                 090199             DATE 12JUL95               *
+     A*                 S01499             DATE 06JUN94               *
+     A*                 S01494             DATE 25MAY94               *
+     A*                 S01435             DATE 05OCT93               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFT009 - Fees and Charges Development                        *
+      *  CFT014 - Straight-through processing Phase 2 MT103           *
+      *           Messages Generation for FT.                         *
+     A*  CFT007 - BIC Database Plus Integration                       *
+     A*  S01408 - Core Hook FT0345DF03 Added                          *
+     A*  CAC001  -  Profit Centre Accounting Development:             *
+     A*             Allow F19 for Margin Information if Analytical    *
+     A*             Accounting is installed.                          *
+     A*  S01408 - Core Hook FT0345DF02 Added                          *
+     A*         - Core Hook FT0345DF01 Added                          *
+     A*  090199  -  Recompile to include new Multi-Language Suport    *
+     A*             messages IDs from 10.6 packaging into core.       *
+     A*  S01499 - BLI V.A.T. Processing                               *
+     A*  S01494 - BLI Funds Transfer Enhancements                     *
+     A*  S01435 - Incoming Message Management                         *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+     A*  Indicator usage for special processing                       *
+     A*                                                               *
+     A*  61 - Analytical Accounting module switched ON                *   CAC001
+      *  62 - SAR feature CFT014 switched ON                          *   CFT009
+      *  63 - SAR feature CFT009 switched ON                          *   CFT009
+      *  64 - SAR feature CFT010 switched ON                          *   CFT009
+     A*  82 - SAR feature S01499 switched ON                          *   S01499
+     A*  80 - SAR feature S01494 switched ON                          *   S01494
+     A*  79 - Protect input fields                                    *
+     A*  78 - Multibranched system                                    *
+     A*  77 - Originating branches used                               *
+     A*  76 - Display error codes                                     *
+     A*  75 - Next Payment processing F7 allowed                      *
+     A*  74 - Delete processing F10 allowed                           *
+     A*  73 - Add mode                                                *
+     A*  72 - Profit Centre control                                   *
+     A*  71 - "   "   "   "  "   "                                    *
+     A*  70 - "   "   "   "  "   "                                    *
+     A*  60 - Generated from Incoming Payment   s                     *
+     A*                                                               *
+     A*****************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A*=========================================================================
+     A          R #RCDKEY                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      KEEP
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '89')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A N75                                  CF05(05 'Reset.')
+     A  75                                  CF07(07 'Next.')
+     A N75                                  CF12(12 'CF12 Previous')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1ACTC')
+     A                                      SETOF(32 'Invalid: #1PREF')
+     A*/COPY WNCPYSRC,FT0345DF36
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'FT0345F1'
+     A                                      DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7      1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  2 26'Outgoing Payments Maintenance'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3  6'Enter action code'
+     A            #1ACTC         1A  B  3 25TEXT('Action Code')
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(HI)
+     A                                      DSPATR(UL)
+     A N25                                  OVRATR
+     A                                  3 29'Payment reference'
+     A            #1PREF        15A  B  3 49
+     A*/COPY WNCPYSRC,FT0345DF37
+     A N25                                  OVRDTA
+     A  32                                  DSPATR(RI PC)
+     A N32                                  DSPATR(HI)
+     A                                      DSPATR(UL)
+     A N25                                  OVRATR
+     A            #1ERR1        76     20  2
+     A N76                                  DSPATR(ND)
+     A  76                                  DSPATR(RI)
+     A                                      OVRDTA
+     A            #1ERR2        76     21  2
+     A N76                                  DSPATR(ND)
+     A  76                                  DSPATR(RI)
+     A                                      OVRDTA
+     A*=========================================================================
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+     A            #KCMD1        78     22  2TEXT('Command Line 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #KCMD2        78     23  2TEXT('Command Line 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A*=========================================================================
+     A          R #RCDDTL1                  TEXT('Details')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      KEEP
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A  75                                  CF07(07 'Next.')
+     A                                      CF12(12 'Previous.')
+     A*                                               Start /CFT007/
+     A  85                                  CF04(08)
+     A  85                                  CF16(13)
+     A*                                               End   /CFT007/
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+      *                                              Begin /CFT014/
+     A***********                           SETOF(31 'Invalid: #1TRCT')
+     A***********                           SETOF(32 'Invalid: #1CDRO')
+     A***********                           SETOF(33 'Invalid: #1CDBR')
+     A***********                           SETOF(34 'Invalid: #1RCO1')
+     A***********                           SETOF(35 'Invalid: #1RCO2')
+     A***********                           SETOF(36 'Invalid: #1RCO3')
+     A***********                           SETOF(37 'Invalid: #1RCO4')
+     A***********                           SETOF(38 'Invalid: #1RCO5')
+     A***********                           SETOF(39 'Invalid: #1ACB1')
+     A***********                           SETOF(40 'Invalid: #1ACB2')
+     A***********                           SETOF(41 'Invalid: #1ACB3')
+     A***********                           SETOF(42 'Invalid: #1ACB4')
+     A***********                           SETOF(43 'Invalid: #1ACB5')
+     A                                      SETOF(31 'Invalid: #1BKOP')
+     A                                      SETOF(32 'Invalid: #1TRNT')
+     A                                      SETOF(33 'Invalid: #1RCO1')
+     A                                      SETOF(34 'Invalid: #1RCO2')
+     A                                      SETOF(35 'Invalid: #1RCO3')
+     A                                      SETOF(36 'Invalid: #1RCO4')
+     A                                      SETOF(37 'Invalid: #1RCO5')
+     A                                      SETOF(38 'Invalid: #1TRI1')
+     A                                      SETOF(39 'Invalid: #1TRI2')
+     A                                      SETOF(40 'Invalid: #1TRI3')
+     A                                      SETOF(41 'Invalid: #1TRI4')
+     A                                      SETOF(42 'Invalid: #1TRI5')
+     A                                      SETOF(54 'Invalid: #1INB1')
+     A                                      SETOF(55 'Invalid: #1INB2')
+     A                                      SETOF(56 'Invalid: #1INB3')
+     A                                      SETOF(57 'Invalid: #1INB4')
+     A                                      SETOF(58 'Invalid: #1INB5')
+     A                                      SETOF(49 'Invalid: #1ACB1')
+     A                                      SETOF(50 'Invalid: #1ACB2')
+     A                                      SETOF(51 'Invalid: #1ACB3')
+     A                                      SETOF(52 'Invalid: #1ACB4')
+     A                                      SETOF(53 'Invalid: #1ACB5')
+      *                                              End   /CFT014/
+     A                                      SETOF(44 'Invalid: #1BNC1')
+     A                                      SETOF(45 'Invalid: #1BNC2')
+     A                                      SETOF(46 'Invalid: #1BNC3')
+     A                                      SETOF(47 'Invalid: #1BNC4')
+     A                                      SETOF(48 'Invalid: #1BNC5')
+      *                                              Begin /CFT014/
+     A***********                           SETOF(49 'Invalid: #1DTP1')
+     A***********                           SETOF(50 'Invalid: #1DTP2')
+     A***********                           SETOF(51 'Invalid: #1DTP3')
+     A***********                           SETOF(52 'Invalid: #1DTP4')
+     A***********                           SETOF(53 'Invalid: #1BBI1')
+     A***********                           SETOF(54 'Invalid: #1BBI2')
+     A***********                           SETOF(55 'Invalid: #1BBI3')
+     A***********                           SETOF(56 'Invalid: #1BBI4')
+     A***********                           SETOF(57 'Invalid: #1BBI5')
+     A***********                           SETOF(58 'Invalid: #1BBI6')
+      *                                              End   /CFT014/
+     A*/COPY WNCPYSRC,FT0345DF38
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'FT0345F2'
+     A                                      DSPATR(HI)
+     A*/COPY WNCPYSRC,FT0345DF39
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7      1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  2 26'Outgoing Payments Maintenance'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3  6'Enter action code'
+     A            #1ACTC         1A  O  3 25TEXT('Action Code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3 29'Payment reference'
+     A            #1PREF        15A  O  3 49
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A            #1STAT        10A  O  3 71DSPATR(HI)
+     A                                      OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF40
+      *
+      *                                              Begin /CFT014/
+     A***********                       4  2'Transfer commission tariff'
+     A*********** #1TRCT         1A  B  4 29
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF04
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF05
+     A**31*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N31*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+      ***********
+     A***********                       4 31'Charges to the debit of a/c'
+     A*/COPY*WNCPYSRC,FT0345DF41
+     A*********** #1CDRO        12A  B  4 61
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**32*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N32*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+      ***********
+     A**78******* #1CDBR         3A  B  4 74
+     A*/COPY*WNCPYSRC,FT0345DF42
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**33*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N33*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+      ***********
+     A***********                       5  2'Receiver''s correspondent'
+     A*********** #1RCO1        35A  B  5 45
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**34*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N34*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1RCO2        35A  B  6  2
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**35*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N35*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1RCO3        35A  B  6 45
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**36*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N36*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1RCO4        35A  B  7  2
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**37*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N37*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1RCO5        35A  B  7 45
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**38*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N38*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+      ***********
+     A***********                       8  2'Account with bank'
+     A*********** #1ACB1        35A  B  8 45
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**39*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N39*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1ACB2        35A  B  9  2
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**40*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N40*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1ACB3        35A  B  9 45
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**41*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N41*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1ACB4        35A  B 10  2
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**42*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N42*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1ACB5        35A  B 10 45
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**43*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N43*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+      *
+     A                                  4  2'Bank operation code'
+     A N62                                  DSPATR(ND)
+     A            #1BKOP         4A  B  4 33
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  31                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  4 45'Transaction type code'
+     A N62                                  DSPATR(ND)
+     A            #1TRNT         3A  B  4 77
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  32                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  5  2'Receiver''s correspondent'
+     A            #1RCO1        35A  B  5 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  33                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1RCO2        35A  B  6  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  34                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1RCO3        35A  B  6 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  35                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N35                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1RCO4        35A  B  7  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  36                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1RCO5        35A  B  7 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  37                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N37                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  8  2'Third reimbursement institution'
+     A N62                                  DSPATR(ND)
+     A            #1TRI1        35A  B  8 45
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  38                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N38                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1TRI2        35A  B  9  2
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  39                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N39                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1TRI3        35A  B  9 45
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  40                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N40                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1TRI4        35A  B 10  2
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  41                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N41                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1TRI5        35A  B 10 45
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  42                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N42                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 11  2'Intermediary'
+     A            #1INB1        35A  B 11 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+      *                                              Begin /CFT009/
+     A**54*******                           DSPATR(RI PC)
+     A  26                                  DSPATR(RI PC)
+      *                                              End   /CFT009/
+     A N79                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A*N54*******                           DSPATR(HI)
+     A N26                                  DSPATR(HI)
+      *                                              End   /CFT009/
+     A N25                                  OVRATR
+     A            #1INB2        35A  B 12  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+      *                                              Begin /CFT009/
+     A**55*******                           DSPATR(RI PC)
+     A  27                                  DSPATR(RI PC)
+      *                                              End   /CFT009/
+     A N79                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A*N55*******                           DSPATR(HI)
+     A N27                                  DSPATR(HI)
+      *                                              End   /CFT009/
+     A N25                                  OVRATR
+     A            #1INB3        35A  B 12 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+      *                                              Begin /CFT009/
+     A**56*******                           DSPATR(RI PC)
+     A  28                                  DSPATR(RI PC)
+      *                                              End   /CFT009/
+     A N79                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A*N56*******                           DSPATR(HI)
+     A N28                                  DSPATR(HI)
+      *                                              End   /CFT009/
+     A N25                                  OVRATR
+     A            #1INB4        35A  B 13  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+      *                                              Begin /CFT009/
+     A**57*******                           DSPATR(RI PC)
+     A  29                                  DSPATR(RI PC)
+      *                                              End   /CFT009/
+     A N79                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A*N57*******                           DSPATR(HI)
+     A N29                                  DSPATR(HI)
+      *                                              End   /CFT009/
+     A N25                                  OVRATR
+     A            #1INB5        35A  B 13 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+      *                                              Begin /CFT009/
+     A**58*******                           DSPATR(RI PC)
+     A  30                                  DSPATR(RI PC)
+      *                                              End   /CFT009/
+     A N79                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A*N58*******                           DSPATR(HI)
+     A N30                                  DSPATR(HI)
+      *                                              End   /CFT009/
+     A N25                                  OVRATR
+      *
+     A                                 14  2'Account with bank'
+     A            #1ACB1        35A  B 14 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  49                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N49                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1ACB2        35A  B 15  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  50                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N50                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1ACB3        35A  B 15 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  51                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N51                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1ACB4        35A  B 16  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  52                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N52                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #1ACB5        35A  B 16 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  53                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N53                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A***********                      11  2'Beneficiary'
+     A*********** #1BNC1        35A  B 11 45
+     A                                 17  2'Beneficiary'
+     A            #1BNC1        35A  B 17 45
+      *                                              End   /CFT014/
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF06
+     A  79                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,FT0345DF07
+     A  44                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF75
+     A N44                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              Begin /CFT014
+     A*********** #1BNC2        35A  B 12  2
+     A            #1BNC2        35A  B 18  2
+      *                                              End   /CFT014
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF08
+     A  79                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,FT0345DF09
+     A  45                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF65
+     A N45                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT014
+     A*********** #1BNC3        35A  B 12 45
+     A            #1BNC3        35A  B 18 45
+      *                                              End   /CFT014
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF10
+     A  79                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,FT0345DF11
+     A  46                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF66
+     A N46                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              Begin /CFT014/
+     A*********** #1BNC4        35A  B 13  2
+     A            #1BNC4        35A  B 19  2
+      *                                              End   /CFT014/
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF12
+     A  79                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,FT0345DF13
+     A  47                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF67
+     A N47                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              Begin /CFT014/
+     A*********** #1BNC5        35A  B 13 45
+     A            #1BNC5        35A  B 19 45
+      *                                              End   /CFT014/
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF14
+     A  79                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,FT0345DF15
+     A  48                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF68
+     A N48                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT014/
+     A***********                      14  2'Details of payment'
+     A*********** #1DTP1        35A  B 15  2
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF16
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF17
+     A**49*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF69
+     A*N49*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1DTP2        35A  B 15 45
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF18
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF19
+     A**50*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF70
+     A*N50*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1DTP3        35A  B 16  2
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF20
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF21
+     A**51*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF71
+     A*N51*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1DTP4        35A  B 16 45
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF22
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF23
+     A**52*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF72
+     A*N52*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+      ***********
+     A***********                      17  2'Bank to bank information'
+     A*********** #1BBI1        35A  B 18  2
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**53*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N53*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1BBI2        35A  B 18 45
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**54*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N54*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1BBI3        35A  B 19  2
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**55*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N55*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1BBI4        35A  B 19 45
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**56*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N56*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1BBI5        35A  B 20  2
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**57*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N57*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #1BBI6        35A  B 20 45
+     A*N25*******                           OVRDTA
+     A**60*******
+     A*O79*******                           DSPATR(PR))
+     A**58*******                           DSPATR(RI PC)
+     A*N79N60****                           DSPATR(UL)
+     A*N58*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+      *                                              End   /CFT014/
+     A            #1ERR1        76     21  2
+     A N76                                  DSPATR(ND)
+     A  76                                  DSPATR(RI)
+     A                                      OVRDTA
+     A*=========================================================================
+     A          R #CMDTXT2                  TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+      *                                              Begin /CFT014/
+     A*********** ##CMD1        78     22  2TEXT('Command Line 1')
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+      *                                              End   /CFT014/
+     A            ##CMD2        78     23  2TEXT('Command Line 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A*=========================================================================
+     A          R #RCDDTL2                  TEXT('Details')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      KEEP
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A  75                                  CF07(07 'Next.')
+     A                                      CF12(12 'Previous.')
+     A*                                              Begin /CAC001/
+      *                                              Begin /CFT014/
+     A**61*******                           CF19
+      *                                              End   /CFT014/
+     A*                                              End   /CAC001/
+     A*                                              Start /CFT007/
+     A  85                                  CF04(08)
+     A  85                                  CF16(13)
+     A*                                              End   /CFT007/
+     A*                                              /start S01408/
+     A*/COPY WNCPYSRC,FT0345DF03
+     A*                                              /end   S01408/
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+      *                                              Begin /CFT014/
+     A***********                           SETOF(31 'Invalid: #2INB1')
+     A***********                           SETOF(32 'Invalid: #2INB2')
+     A***********                           SETOF(33 'Invalid: #2INB3')
+     A***********                           SETOF(34 'Invalid: #2INB4')
+     A***********                           SETOF(35 'Invalid: #2INB5')
+     A***********                           SETOF(36 'Invalid: #2DNBC')
+     A***********                           SETOF(37 'Invalid: #2DTCH')
+     A***********                           SETOF(38 'Invalid: #2TRCD')
+     A***********                           SETOF(39 'Invalid: #2TXCD')
+     A***********                           SETOF(40 'Invalid: #2CQCD')
+     A***********                           SETOF(41 'Invalid: #2CSTD')
+     A***********                           SETOF(42 'Invalid: #2SPCD')
+     A***********                           SETOF(43 'Invalid: #2MSCD')
+     A***********                           SETOF(44 'Invalid: #2RLPR')
+     A***********                           SETOF(45 'Invalid: #2CHAP')
+     A***********                                    End   /CFT014/
+     A*********              Start of Change               /S01494/
+      *                                              Begin /CFT014
+     A***********                           SETOF(46 'Invalid: #2CHCD')
+      *                                              End   /CFT014
+     A***********            End of Change                 /S01494/
+     A***********            Start of Change               /S01499/
+     A***********                           SETOF(47 'Invalid: #2VAT1')
+     A***********                           SETOF(48 'Invalid: #2VAT2')
+     A***********                           SETOF(49 'Invalid: #2VAT3')
+     A***********                           SETOF(50 'Invalid: #2VAT4')
+     A***********                           SETOF(51 'Invalid: #2VAT5')
+     A***********                           SETOF(52 'Invalid: #2VAT6')
+     A***********                           SETOF(53 'Invalid: #2VAT7')
+      *                                              End   /CFT014
+     A***********            End of Change                 /S01499/
+      *                                              Begin /CFT014
+     A                                      SETOF(31 'Invalid: #2DTP1')
+     A                                      SETOF(32 'Invalid: #2DTP2')
+     A                                      SETOF(33 'Invalid: #2DTP3')
+     A                                      SETOF(34 'Invalid: #2DTP4')
+     A                                      SETOF(35 'Invalid: #2BBI1')
+     A                                      SETOF(36 'Invalid: #2BBI2')
+     A                                      SETOF(37 'Invalid: #2BBI3')
+     A                                      SETOF(38 'Invalid: #2BBI4')
+     A                                      SETOF(39 'Invalid: #2BBI5')
+     A                                      SETOF(40 'Invalid: #2BBI6')
+     A                                      SETOF(41 'Invalid: #2DNBC')
+     A                                      SETOF(42 'Invalid: #2TRCT')
+     A                                      SETOF(44 'Invalid: #2RLPR')
+     A                                      SETOF(45 'Invalid: #2CHAP')
+     A                                      SETOF(46 'Invalid: #2INS1')
+     A                                      SETOF(47 'Invalid: #2INS2')
+     A                                      SETOF(48 'Invalid: #2INS3')
+     A                                      SETOF(49 'Invalid: #2INS4')
+     A                                      SETOF(50 'Invalid: #2INS5')
+     A                                      SETOF(51 'Invalid: #2RGR1')
+     A                                      SETOF(52 'Invalid: #2RGR2')
+     A                                      SETOF(53 'Invalid: #2RGR3')
+      *                                              End   /CFT014
+     A*/COPY WNCPYSRC,FT0345DF78
+     A*/COPY WNCPYSRC,FT0345DF79
+     A*********              Start of Change               /S01494/
+      *                                              Begin /CFT014/
+      *                                              End   /CFT014/
+     A***********            End of Change                 /S01494/
+     A***********            Start of Change               /S01499/
+      *                                              Begin /CFT014/
+      *                                              End   /CFT014/
+     A***********            End of Change                 /S01499/
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'FT0345F3'
+     A                                      DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7      1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  2 25'Outgoing Payments Maintenance'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3  6'Enter action code'
+     A            #1ACTC         1A  O  3 25TEXT('Action Code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3 29'Payment reference'
+     A            #1PREF        15A  O  3 49
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A            #1STAT        10A  O  3 71DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A*********              Start of Change               /S01494/
+     A*********                         5  6'Intermediary bank'
+     A*********   #2INB1        35A  B  5 26
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**31*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N31*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+     A*********   #2INB2        35A  B  6 26
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**32*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N32*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+     A*********   #2INB3        35A  B  7 26
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**33*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N33*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+     A*********   #2INB4        35A  B  8 26
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**34*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N34*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+     A*********   #2INB5        35A  B  9 26
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**35*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N35*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+      *********
+     A*********                        10  6'Central bank reference'
+     A*********   #2DNBC        11A  B 10 31
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**36*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N36*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+      *********
+     A*********                        10 44'Details of charges'
+     A*********   #2DTCH         3A  B 10 65
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**37*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N37*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+      *********
+     A*********                        13  6'Transfer commission'
+     A*********   #2CCY1         3A  O 13 30
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2TRCD        12A  B 13 36
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**38*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N38*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+     A*********   #2RCY1         3A  O 13 56
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2TRCM        12A  O 13 62
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+      *********
+     A*********                        14  6'Telex charge'
+     A*********   #2CCY2         3A  O 14 30
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2TXCD        12A  B 14 36
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**39*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N39*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+     A*********   #2RCY2         3A  O 14 56
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2TXCH        12A  O 14 62
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+      *********
+     A*********                        15  6'Cheque charge'
+     A*********   #2CCY3         3A  O 15 30
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2CQCD        12A  B 15 36
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**40*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N40*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+     A*********   #2RCY3         3A  O 15 56
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2CQCH        12A  O 15 62
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+      *********
+     A*********                        16  6'Costs abroad'
+     A*********   #2CCY4         3A  O 16 30
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2CSTD        12A  B 16 36
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**41*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N41*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+     A*********   #2RCY4         3A  O 16 56
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2CSTA        12A  O 16 62
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+      *********
+     A*********                        17  6'Swift priority charge'
+     A*********   #2CCY5         3A  O 17 30
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2SPCD        12A  B 17 36
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**42*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N42*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+     A*********   #2RCY5         3A  O 17 56
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2SPCH        12A  O 17 62
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+      *********
+     A*********                        18  6'Miscellaneous charge'
+     A*********   #2CCY6         3A  O 18 30
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2MSCD        12A  B 18 36
+     A*N25*****                             OVRDTA
+     A**79*****                             DSPATR(PR)
+     A**43*****                             DSPATR(RI PC)
+     A*N79*****                             DSPATR(UL)
+     A*N43*****                             DSPATR(HI)
+     A*N25*****                             OVRATR
+     A*********   #2RCY6         3A  O 18 56
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+     A*********   #2MSCH        12A  O 18 62
+     A*N25*****                             OVRDTA
+     A*********                             DSPATR(HI)
+      *                                              Begin /CFT014/
+     A***********                       4  6'Intermediary bank'
+     A*********** #2INB1        35A  B  4 26
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**31*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N31*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #2INB2        35A  B  5 26
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**32*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N32*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #2INB3        35A  B  6 26
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**33*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N33*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #2INB4        35A  B  7 26
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**34*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N34*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A*********** #2INB5        35A  B  8 26
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**35*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N35*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********
+     A***********                       9  6'Central bank reference'
+     A*********** #2DNBC        11A  B  9 31
+     A*N25*******                           OVRDTA
+     A**79*******                           DSPATR(PR)
+     A**36*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*N36*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********
+     A***********                       9 44'Details of charges'
+     A*********** #2DTCH         3A  B  9 65
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF73
+     A**79*******                           DSPATR(PR)
+     A**37*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF74
+     A*N37*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********
+     A***********            Start of Change               /S01499/
+     A**82*******                      10 52'VAT?'
+     A***********            End of Change                 /S01499/
+     A***********
+     A***********                      11  6'Transfer commission'
+     A*********** #2CCY1         3A  O 11 30
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2TRCD        12A  B 11 36
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF24
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF25
+     A**38*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF43
+     A*N38*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            Start of Change               /S01499/
+     A**82******* #2VAT1         1A  B 11 54
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF44
+     A**79*******                           DSPATR(PR)
+     A**47*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF45
+     A*N47*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            End of Change                 /S01499/
+     A*********** #2RCY1         3A  O 11 60
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2TRCM        12A  O 11 66
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A***********
+     A**80*******                      12  6'FX/Change commission'
+     A**80******* #2CCY7         3A  O 12 30
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A**80******* #2CHCD        12A  B 12 36
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF46
+     A**79*******                           DSPATR(PR)
+     A**46*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF47
+     A*N46*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            Start of Change               /S01499/
+     A**82*80**** #2VAT7         1A  B 12 54
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF48
+     A**79*******                           DSPATR(PR)
+     A**53*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF49
+     A*N53*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            End of Change                 /S01499/
+     A**80******* #2RCY7         3A  O 12 60
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A**80******* #2CHCM        12A  O 12 66
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A***********
+     A***********                                    /start S01408/
+     A*/COPY*WNCPYSRC,FT0345DF01
+     A***********                                    /end   S01408/
+     A***********                      13  6'Telex charge'
+     A***********                                    /start S01408/
+     A*/COPY*WNCPYSRC,FT0345DF02
+     A***********                                    /end   S01408/
+     A*********** #2CCY2         3A  O 13 30
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2TXCD        12A  B 13 36
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF26
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF27
+     A**39*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF50
+     A*N39*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            Start of Change               /S01499/
+     A**82******* #2VAT2         1A  B 13 54
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF51
+     A**79*******                           DSPATR(PR)
+     A**48*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF52
+     A*N48*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            End of Change                 /S01499/
+     A*********** #2RCY2         3A  O 13 60
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2TXCH        12A  O 13 66
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A***********
+     A***********                      14  6'Cheque charge'
+     A*********** #2CCY3         3A  O 14 30
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2CQCD        12A  B 14 36
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF28
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF29
+     A**40*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF53
+     A*N40*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            Start of Change               /S01499/
+     A**82******* #2VAT3         1A  B 14 54
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF54
+     A**79*******                           DSPATR(PR)
+     A**49*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF55
+     A*N49*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            End of Change                 /S01499/
+     A*********** #2RCY3         3A  O 14 60
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2CQCH        12A  O 14 66
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A***********
+     A***********                      15  6'Costs abroad'
+     A*********** #2CCY4         3A  O 15 30
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2CSTD        12A  B 15 36
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF30
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF31
+     A**41*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF56
+     A*N41*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            Start of Change               /S01499/
+     A**82******* #2VAT4         1A  B 15 54
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF57
+     A**79*******                           DSPATR(PR)
+     A**50*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF58
+     A*N50*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            End of Change                 /S01499/
+     A*********** #2RCY4         3A  O 15 60
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2CSTA        12A  O 15 66
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A***********
+     A***********                      16  6'Swift priority charge'
+     A*********** #2CCY5         3A  O 16 30
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2SPCD        12A  B 16 36
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF32
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF33
+     A**42*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF59
+     A*N42*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            Start of Change               /S01499/
+     A**82******* #2VAT5         1A  B 16 54
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF60
+     A**79*******                           DSPATR(PR)
+     A**51*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF61
+     A*N51*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            End of Change                 /S01499/
+     A*********** #2RCY5         3A  O 16 60
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2SPCH        12A  O 16 66
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A***********
+     A***********                      17  6'Miscellaneous charge'
+     A*********** #2CCY6         3A  O 17 30
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2MSCD        12A  B 17 36
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF34
+     A**79*******                           DSPATR(PR)
+     A*/COPY*WNCPYSRC,FT0345DF35
+     A**43*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF62
+     A*N43*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            Start of Change               /S01499/
+     A**82******* #2VAT6         1A  B 17 54
+     A*N25*******                           OVRDTA
+     A*/COPY*WNCPYSRC,FT0345DF63
+     A**79*******                           DSPATR(PR)
+     A**52*******                           DSPATR(RI PC)
+     A*N79*******                           DSPATR(UL)
+     A*/COPY*WNCPYSRC,FT0345DF64
+     A*N52*******                           DSPATR(HI)
+     A*N25*******                           OVRATR
+     A***********            End of Change                 /S01499/
+     A*********** #2RCY6         3A  O 17 60
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*********** #2MSCH        12A  O 17 66
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A***********            End of Change                 /S01494/
+     A***********            Start of Change               /S01499/
+     A**82*******                      18  6'V.A.T.'
+     A**82******* #2CCY8         3A  O 18 30
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A**82******* #2VATD        12A  O 18 36
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A**82******* #2RCY8         3A  O 18 60
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A**82******* #2VATT        12A  O 18 66
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+     A*/COPY*WNCPYSRC,FT0345DF80
+     A***********            End of Change                 /S01499/
+      *
+     A                                  5  2'Details of payment'
+     A            #2DTP1        35A  B  6  2
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF84
+     A  79                                  DSPATR(PR)
+     A  31                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF85
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2DTP2        35A  B  6 45
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF86
+     A  79                                  DSPATR(PR)
+     A  32                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF87
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2DTP3        35A  B  7  2
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF88
+     A  79                                  DSPATR(PR)
+     A  33                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF89
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2DTP4        35A  B  7 45
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF90
+     A  79                                  DSPATR(PR)
+     A  34                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF91
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                  8  2'Bank to bank information'
+     A            #2BBI1        35A  B  9  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  35                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N35                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2BBI2        35A  B  9 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  36                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2BBI3        35A  B 10  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  37                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N37                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2BBI4        35A  B 10 45
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  38                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N38                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2BBI5        35A  B 11  2
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  39                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N39                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2BBI6        35A  B 11 45
+     A N25                                  OVRDTA
+     A  60
+     AO 79                                  DSPATR(PR)
+     A  40                                  DSPATR(RI PC)
+     A N79N60                               DSPATR(UL)
+     A N40                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 13  2'Central bank ref'
+     A            #2DNBC        11A  B 13 26
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  41                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N41                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *******                                    START/CFT009/         '
+     A*********************************13 45'Transfer commission tariff'
+     A************#2TRCT         1A  B 13 72
+     A*N25**********************************OVRDTA
+     A**79**********************************DSPATR(PR)
+     A**42**********************************DSPATR(RI PC)
+     A*N79**********************************DSPATR(UL)
+     A*N42**********************************DSPATR(HI)
+     A*N25**********************************OVRATR
+     A N63                             13 45'Transfer commission tariff'
+     A            #2TRCT         1A  B 13 72
+     A N25                                  OVRDTA
+     A  63                                  DSPATR(ND)
+     A  63
+     AO 79                                  DSPATR(PR)
+     A  42N63                               DSPATR(PC)
+     A  42                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N42                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *******                                      END/CFT009/         '
+      *
+     A***********                      19  6'Related payment reference'
+     A*********** #2RLPR        16A  B 19 33
+     A                                 14  2'Related pay ref'
+     A            #2RLPR        16A  B 14 21
+      *                                              End   /CFT014
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF76
+     A  79                                  DSPATR(PR)
+     A  44                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF77
+     A N44                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT014
+     A***********                      19 56'CHAPS code'
+     A*********** #2CHAP         6A  B 19 68
+     A                                 14 45'CHAPS code'
+     A            #2CHAP         6A  B 14 57
+      *                                              End   /CFT014/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  45                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N45                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,FT0345DF81
+      *                                              Begin /CFT014/
+     A                                 16  2'Instruction code'
+     A N62                                  DSPATR(ND)
+     A            #2INS1        35A  B 16 45
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  46                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N46                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2INS2        35A  B 17  2
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  47                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N47                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2INS3        35A  B 17 45
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  48                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N48                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2INS4        35A  B 18  2
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  49                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N49                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2INS5        35A  B 18 45
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  50                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N50                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 19  2'Regulatory reporting'
+     A N62                                  DSPATR(ND)
+     A            #2RGR1        35A  B 19 45
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  51                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N51                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2RGR2        35A  B 20  2
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  52                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N52                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            #2RGR3        35A  B 20 45
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  53                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N53                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A*********** #2ERR1        76     20  2
+     A            #2ERR1        76     21  2
+      *                                              End   /CFT014/
+     A N76                                  DSPATR(ND)
+     A  76                                  DSPATR(RI)
+     A                                      OVRDTA
+      *                                              Begin /CFT014/
+     A*********** #2ERR2        76     21  2
+     A            #2ERR2        76     22  2
+      *                                              End   /CFT014/
+     A N76                                  DSPATR(ND)
+     A  76                                  DSPATR(RI)
+     A                                      OVRDTA
+     A*=========================================================================
+     A          R #CMDTXT3                  TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+      *                                              Begin /CFT014/
+     A*********** ##CMD3        78     22  2TEXT('Command Line 1')
+     A*N25*******                           OVRDTA
+     A***********                           DSPATR(HI)
+      *                                              End   /CFT014/
+     A            ##CMD4        78     23  2TEXT('Command Line 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT014
+      *
+      ** Detail screen 3
+      *
+     A          R #RCDDTL3                  TEXT('Details')
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      KEEP
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '''ADD'' mode')
+      *                                              Begin /CFT009/
+     A**************************************INDTXT(88 'Protect key fields')
+     A**************************************INDTXT(87 'Enable key screen')
+      *                                              End   /CFT009/
+      ** Command keys                                                  .........
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF05(05 'Reset.')
+     A  75                                  CF07(07 'Next.')
+     A                                      CF12(12 'Previous.')
+     A  61                                  CF19
+     A  85                                  CF04(08)
+     A  85                                  CF16(13)
+      ** Setoffs                                                       .........
+     A                                      SETOF(99 'Global error flag')
+      *                                              Begin /CFT009/
+     A                                      SETOF(26 'Invalid: #3SCC1')
+     A                                      SETOF(27 'Invalid: #3SCC2')
+     A                                      SETOF(28 'Invalid: #3SCC3')
+     A                                      SETOF(29 'Invalid: #3SCC4')
+     A                                      SETOF(30 'Invalid: #3SCC5')
+      *                                              End   /CFT009/
+     A                                      SETOF(31 'Invalid: #3CDRO')
+     A                                      SETOF(32 'Invalid: #3CDBR')
+     A                                      SETOF(33 'Invalid: #3DTCH')
+     A                                      SETOF(34 'Invalid: #3TRCD')
+     A                                      SETOF(35 'Invalid: #3CHCD')
+     A                                      SETOF(36 'Invalid: #3TXCD')
+     A                                      SETOF(37 'Invalid: #3CQCD')
+     A                                      SETOF(38 'Invalid: #3CSTD')
+     A                                      SETOF(39 'Invalid: #3SPCD')
+     A                                      SETOF(40 'Invalid: #3MSCD')
+     A                                      SETOF(41 'Invalid: #3VAT1')
+     A                                      SETOF(42 'Invalid: #3VAT2')
+     A                                      SETOF(43 'Invalid: #3VAT3')
+     A                                      SETOF(44 'Invalid: #3VAT4')
+     A                                      SETOF(45 'Invalid: #3VAT5')
+     A                                      SETOF(46 'Invalid: #3VAT6')
+     A                                      SETOF(47 'Invalid: #3VAT7')
+     A                                      SETOF(48 'Invalid: #3RCDR')
+     A                                      SETOF(49 'Invalid: #3SCD1')
+     A                                      SETOF(50 'Invalid: #3SCD2')
+     A                                      SETOF(51 'Invalid: #3SCD3')
+     A                                      SETOF(52 'Invalid: #3SCD4')
+     A                                      SETOF(53 'Invalid: #3SCD5')
+      *                                              Begin /CFT009/
+     A**********                            SETOF(54 'Invalid: #3SCC1')
+     A**********                            SETOF(55 'Invalid: #3SCC2')
+     A**********                            SETOF(56 'Invalid: #3SCC3')
+     A**********                            SETOF(57 'Invalid: #3SCC4')
+     A**********                            SETOF(58 'Invalid: #3SCC5')
+     A                                      SETOF(54 'Invalid: M3CD')
+     A                                      SETOF(55 'Invalid: VAT11')
+     A                                      SETOF(56 'Invalid: M4CDE')
+     A                                      SETOF(57 'Invalid: M4CD')
+     A                                      SETOF(58 'Invalid: VAT12')
+     A                                      SETOF(59 'Invalid: M5CDE')
+     A                                      SETOF(60 'Invalid: M5CD')
+     A                                      SETOF(65 'Invalid: VAT13')
+     A                                      SETOF(66 'Invalid: TRCDE')
+     A                                      SETOF(67 'Invalid: FXCDE')
+     A                                      SETOF(68 'Invalid: TXCDE')
+     A                                      SETOF(69 'Invalid: CQCDE')
+     A                                      SETOF(70 'Invalid: CACDE')
+     A                                      SETOF(71 'Invalid: STCDE')
+     A                                      SETOF(72 'Invalid: STCD')
+     A                                      SETOF(83 'Invalid: VAT14')
+     A                                      SETOF(84 'Invalid: SPCDE')
+     A                                      SETOF(87 'Invalid: MSCDE')
+     A                                      SETOF(88 'Invalid: M1CDE')
+     A                                      SETOF(92 'Invalid: M1CD')
+     A                                      SETOF(93 'Invalid: VAT9')
+     A                                      SETOF(94 'Invalid: M2CDE')
+     A                                      SETOF(95 'Invalid: M2CD')
+     A                                      SETOF(96 'Invalid: VAT10')
+     A                                      SETOF(97 'Invalid: M3CDE')
+      *                                              End   /CFT009/
+      ** Charges to the debit of account
+      ** Details of charges
+      ** Transfer commission
+      *                                              Start /CFT009/
+      *                                              End   /CFT009/
+      ** FX/Change commission
+      *                                              Start /CFT009/
+      *                                              End   /CFT009/
+      ** Telex charge
+      *                                              Start /CFT009/
+      *                                              End   /CFT009/
+      ** Cheque charge
+      *                                              Start /CFT009/
+      *                                              End   /CFT009/
+      ** Costs abroad
+      *                                              Start /CFT009/
+      *                                              End   /CFT009/
+      *                                              Begin /CFT009/
+      ** Swift standard charge
+      *                                              End   /CFT009/
+      ** Swift priority charge
+      *                                              Start /CFT009/
+      *                                              End   /CFT009/
+      ** Miscellaneous charge
+      *                                              Start /CFT009/
+      *                                              End   /CFT009/
+      *                                              Begin /CFT009/
+      ** Miscellaneous charge 1
+      ** Miscellaneous charge 2
+      ** Miscellaneous charge 3
+      ** Miscellaneous charge 4
+      ** Miscellaneous charge 5
+      *                                              End   /CFT009/
+      ** Vat 1
+      ** Vat 2
+      ** Vat 3
+      ** Vat 4
+      ** Vat 5
+      *                                              Begin /CFT009/
+      ** Swift standard charge VAT
+      *                                              End   /CFT009/
+      ** Vat 6
+      ** Vat 7
+      *                                              Begin /CFT009/
+      ** Miscellaneous charge 1 VAT
+      ** Miscellaneous charge 2 VAT
+      ** Miscellaneous charge 3 VAT
+      ** Miscellaneous charge 4 VAT
+      ** Miscellaneous charge 5 VAT
+      *                                              End   /CFT009/
+      ** Receiver's Charges Remitted
+      *                                                Begin /CFT014/
+      *                                                End   /CFT014/
+      ** Sender's Charges
+      *                                                Begin /CFT014/
+      *                                                End   /CFT014/
+      *
+      *                                                                .........
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'FT0345F4'
+     A                                      DSPATR(HI)
+     A                                  1 26'            Midas            '
+     A            ##MRDT         7      1 72TEXT('Midas run date')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  2 25'Outgoing Payments Maintenance'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 72TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3  6'Enter action code'
+     A            #1ACTC         1A  O  3 25TEXT('Action Code')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  3 29'Payment reference'
+     A            #1PREF        15A  O  3 49
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A            #1STAT        10A  O  3 71DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                  4 02'Charges to the debit of a/c'
+     A**Start of change CGL029
+     A**********  #3CDRO        12A  B  4 30                                                  CGL029
+     A            #3CDRO        18A  B  4 30
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  31                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A**Start of change CGL029
+     A**78******  #3CDBR         3A  B  4 43                                                  CGL029
+     A  78        #3CDBR         3A  B  4 49
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  32                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 04 56'Details of charges'
+     A            #3DTCH         3A  B 04 76
+     A N25                                  OVRDTA
+     A*/COPY WNCPYSRC,FT0345DF92
+     A  79                                  DSPATR(PR)
+     A  33                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A*/COPY WNCPYSRC,FT0345DF93
+     A N33                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT009/
+     A  63                              5 32'Charge'
+      *                                              End   /CFT009/
+     A                                  5 39'Ccy'
+     A                                  5 49'Amount'
+      *                                              Begin /CFT009/
+     A**82******************************5 57'VAT?'
+     A  64
+     AO 82N63                           5 57'VAT?'
+      *                                              End   /CFT009/
+     A                                  5 63'Ccy'
+     A                                  5 73'Amount'
+      *
+     A                                  6 02'Transfer commission'
+      *                                              Begin /CFT009/
+     A            TRCDE          5A  B  6 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  66 63                               DSPATR(PC)
+     A  66                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N66                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /CFT009/
+     A            #3CCY1         3A  O  6 39
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A********    #3TRCD        12A  B  6 43
+     A            #3TRCD        14A  B  6 43
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  34                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N34                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT009/
+     A**82********#3VAT1         1A  B  6 58
+     A  64
+     AO 82N63     #3VAT1         1A  B  6 58
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  41                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N41                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            #3RCY1         3A  O  6 63
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A*******     #3TRCM        12A  O  6 67
+     A            #3TRCM        14A  O  6 67
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A  80                              7 02'FX/Change commission'
+      *                                              Begin /CFT009/
+     A            FXCDE          5A  B  7 33
+     A N25                                  OVRDTA
+     A N80
+     AON63                                  DSPATR(ND)
+       N80
+     AON63
+     AO 79                                  DSPATR(PR)
+     A  67                                  DSPATR(RI)
+     A  67 63 80                            DSPATR(PC)
+     A N79                                  DSPATR(UL)
+     A N67                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /CFT009/
+     A  80        #3CCY7         3A  O  7 39
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A**80*****   #3CHCD        12A  B  7 43
+     A  80        #3CHCD        14A  B  7 43
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  35                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N35                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT009/
+     A**82*80*****#3VAT7         1A  B  7 58
+     A  64 80
+     AO 82 80N63  #3VAT7         1A  B  7 58
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  47                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N47                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A  80        #3RCY7         3A  O  7 63
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A**80****    #3CHCM        12A  O  7 67
+     A  80        #3CHCM        14A  O  7 67
+      *                                              Begin /CFT009/
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  8 02'Telex charge'
+      *                                              Begin /CFT009/
+     A            TXCDE          5A  B  8 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  68 63                               DSPATR(PC)
+     A  68                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N68                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /CFT009/
+     A            #3CCY2         3A  O  8 39
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A******      #3TXCD        12A  B  8 43
+     A            #3TXCD        14A  B  8 43
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  36                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N36                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT009/
+     A**82********#3VAT2         1A  B  8 58
+     A  64
+     AO 82N63     #3VAT2         1A  B  8 58
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  42                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N42                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            #3RCY2         3A  O  8 63
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A******      #3TXCH        12A  O  8 67
+     A            #3TXCH        14A  O  8 67
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                  9 02'Cheque charge'
+      *                                              Begin /CFT009/
+     A            CQCDE          5A  B  9 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  69 63                               DSPATR(PC)
+     A  69                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N69                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /CFT009/
+     A            #3CCY3         3A  O  9 39
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A****        #3CQCD        12A  B  9 43
+     A            #3CQCD        14A  B  9 43
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  37                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N37                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT009/
+     A**82********#3VAT3         1A  B  9 58
+     A  64
+     AO 82N63     #3VAT3         1A  B  9 58
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  43                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N43                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            #3RCY3         3A  O  9 63
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A******      #3CQCH        12A  O  9 67
+     A            #3CQCH        14A  O  9 67
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                 10 02'Costs abroad'
+      *                                              Begin /CFT009/
+     A            CACDE          5A  B 10 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  70 63                               DSPATR(PC)
+     A  70                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N70                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /CFT009/
+     A            #3CCY4         3A  O 10 39
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A******      #3CSTD        12A  B 10 43
+     A            #3CSTD        14A  B 10 43
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  38                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N38                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT009/
+     A**82********#3VAT4         1A  B 10 58
+     A  64
+     AO 82N63     #3VAT4         1A  B 10 58
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  44                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N44                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            #3RCY4         3A  O 10 63
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A******      #3CSTA        12A  O 10 67
+     A            #3CSTA        14A  O 10 67
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+      *                                              Begin /CFT009/
+     A  63                             11 02'Swift Standard Charge'
+     A            STCDE          5A  B 11 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  71 63                               DSPATR(PC)
+     A  71                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N71                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            CCY14          3A  O 11 39
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            STCD          14A  B 11 43
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  72 63                               DSPATR(PC)
+     A  72                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N72                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            VAT14          1A  B 11 58
+     A N25                                  OVRDTA
+     A N64                                  DSPATR(ND)
+     A N64
+     AO 79                                  DSPATR(PR)
+     A  83 64                               DSPATR(PC)
+     A  83                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N83                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            RCY14          3A  O 11 63
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            STCH          14A  O 11 67
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *                                              End   /CFT009/
+      *
+     A                                 12 02'Swift priority charge'
+      *                                              Begin /CFT009/
+     A            SPCDE          5A  B 12 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  84 63                               DSPATR(PC)
+     A  84                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N84                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /CFT009/
+     A            #3CCY5         3A  O 12 39
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A*******     #3SPCD        12A  B 12 43
+     A            #3SPCD        14A  B 12 43
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  39                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N39                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT009/
+     A**82********#3VAT5         1A  B 12 58
+     A  64
+     AO 82N63     #3VAT5         1A  B 12 58
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  45                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N45                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            #3RCY5         3A  O 12 63
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A*******     #3SPCH        12A  O 12 67
+     A            #3SPCH        14A  O 12 67
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A*/COPY WNCPYSRC,FT0345DF82
+     A                                 13 02'Miscellaneous charge'
+     A*/COPY WNCPYSRC,FT0345DF83
+      *                                              Begin /CFT009/
+     A            MSCDE          5A  B 13 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  87 63                               DSPATR(PC)
+     A  87                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N87                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /CFT009/
+     A            #3CCY6         3A  O 13 39
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A******      #3MSCD        12A  B 13 43
+     A            #3MSCD        14A  B 13 43
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  40                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N40                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+      *                                              Begin /CFT009/
+     A**82********#3VAT6         1A  B 13 58
+     A  64
+     AO 82N63     #3VAT6         1A  B 13 58
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(PR)
+     A  46                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N46                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            #3RCY6         3A  O 13 63
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A*******     #3MSCH        12A  O 13 67
+     A            #3MSCH        14A  O 13 67
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+      *                                              Begin /CFT009/
+     A  63        M1DESC        30A  O 14 02
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+      *                                              Begin /CFT009/
+     A            M1CDE          5A  B 14 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  88 63                               DSPATR(PC)
+     A  88                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N88                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            CCY9           3A  O 14 39
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            M1CD          14A  B 14 43
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  92 63                               DSPATR(PC)
+     A  92                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N92                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            VAT9           1A  B 14 58
+     A N25                                  OVRDTA
+     A N64                                  DSPATR(ND)
+     A N64
+     AO 79                                  DSPATR(PR)
+     A  93 64                               DSPATR(PC)
+     A  93                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N93                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            RCY9           3A  O 14 63
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            M1CH          14A  O 14 67
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *
+     A  63        M2DESC        30A  O 15 02
+     A N25                                  OVRDTA
+     A            M2CDE          5A  B 15 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  94 63                               DSPATR(PC)
+     A  94                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N94                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            CCY10          3A  O 15 39
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            M2CD          14A  B 15 43
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  95 63                               DSPATR(PC)
+     A  95                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N95                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            VAT10          1A  B 15 58
+     A N25                                  OVRDTA
+     A N64                                  DSPATR(ND)
+     A N64
+     AO 79                                  DSPATR(PR)
+     A  96 64                               DSPATR(PC)
+     A  96                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N96                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            RCY10          3A  O 15 63
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            M2CH          14A  O 15 67
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *
+     A  63        M3DESC        30A  O 16 02
+     A N25                                  OVRDTA
+     A            M3CDE          5A  B 16 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  97 63                               DSPATR(PC)
+     A  97                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N97                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            CCY11          3A  O 16 39
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            M3CD          14A  B 16 43
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  54 63                               DSPATR(PC)
+     A  54                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N54                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            VAT11          1A  B 16 58
+     A N25                                  OVRDTA
+     A N64                                  DSPATR(ND)
+     A N64
+     AO 79                                  DSPATR(PR)
+     A  55 64                               DSPATR(PC)
+     A  55                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N55                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            RCY11          3A  O 16 63
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            M3CH          14A  O 16 67
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *
+     A  63        M4DESC        30A  O 17 02
+     A N25                                  OVRDTA
+     A            M4CDE          5A  B 17 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  56 63                               DSPATR(PC)
+     A  56                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N56                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            CCY12          3A  O 17 39
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            M4CD          14A  B 17 43
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  57 63                               DSPATR(PC)
+     A  57                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N57                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            VAT12          1A  B 17 58
+     A N25                                  OVRDTA
+     A N64                                  DSPATR(ND)
+     A N64
+     AO 79                                  DSPATR(PR)
+     A  58 64                               DSPATR(PC)
+     A  58                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N58                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            RCY12          3A  O 17 63
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            M4CH          14A  O 17 67
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *
+     A  63        M5DESC        30A  O 18 02
+     A N25                                  OVRDTA
+     A            M5CDE          5A  B 18 33
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  59 63                               DSPATR(PC)
+     A  59                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N59                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A            CCY13          3A  O 18 39
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            M5CD          14A  B 18 43
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A N63
+     AO 79                                  DSPATR(PR)
+     A  60 63                               DSPATR(PC)
+     A  60                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N60                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            VAT13          1A  B 18 58
+     A N25                                  OVRDTA
+     A N64                                  DSPATR(ND)
+     A N64
+     AO 79                                  DSPATR(PR)
+     A  65 64                               DSPATR(PC)
+     A  65                                  DSPATR(RI)
+     A N79                                  DSPATR(UL)
+     A N65                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A            RCY13          3A  O 18 63
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            M5CH          14A  O 18 67
+     A N25                                  OVRDTA
+     A N63                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *
+      *
+     A**82*****************************19 02'V.A.T.'
+     A**82********#3CCY8         3A  O 19 39
+     A  64
+     AO 82N63                          19 02'V.A.T.'
+     A  64
+     AO 82N63     #3CCY8         3A  O 19 39
+     A N25                                  OVRDTA
+      *                                              End   /CFT009/
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A**82********#3VATD        12A  O 19 43
+     A  64
+     AO 82N63     #3VATD        14A  O 19 43
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A**82********#3RCY8         3A  O 19 63
+     A  64
+     AO 82N63     #3RCY8         3A  O 19 63
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *                                              Begin /CFT009/
+     A**82********#3VATT        12A  O 19 67
+     A  64
+     AO 82N63     #3VATT        14A  O 19 67
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                 20 02'Receiver''s charges remitted'
+     A N62                                  DSPATR(ND)
+      *                                              Begin /CFT009/
+     A            #3RCCY         3A  O 20 33TEXT('Payment Currency')
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N48                                  DSPATR(HI)
+     A            #3RCDR        12A  B 20 38
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  48                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N48                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *
+     A                                 21 02'Sender''s charges deducted'
+     A N62                                  DSPATR(ND)
+     A                                 21 30'1.'
+     A N62                                  DSPATR(ND)
+      *                                              Begin /CFT009/
+     A***********                      21 34')'
+     A*N62*******                           DSPATR(ND)
+     A            #3SCC1         3A  B 21 33TEXT('Payment Currency')
+      *                                              End   /CFT009/
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+      *                                              Begin /CFT009/
+     A**54*******                           DSPATR(RI PC)
+     A  26                                  DSPATR(RI PC)
+      *                                              End   /CFT009/
+     A N79                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A*N54*******                           DSPATR(HI)
+     A N26                                  DSPATR(HI)
+      *                                              End   /CFT009/
+     A N25                                  OVRATR
+     A            #3SCD1        12A  B 21 38
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  49                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N49                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 21 54'2.'
+     A N62                                  DSPATR(ND)
+     A            #3SCC2         3A  B 21 57
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+      *                                              Begin /CFT009/
+     A**55*******                           DSPATR(RI PC)
+     A  27                                  DSPATR(RI PC)
+      *                                              End   /CFT009/
+     A N79                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A*N55*******                           DSPATR(HI)
+     A N27                                  DSPATR(HI)
+      *                                              End   /CFT009/
+     A N25                                  OVRATR
+     A            #3SCD2        12A  B 21 62
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  50                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N50                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 22  8'3.'
+     A N62                                  DSPATR(ND)
+     A            #3SCC3         3A  B 22 11
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+      *                                              Begin /CFT009/
+     A**56*******                           DSPATR(RI PC)
+     A  28                                  DSPATR(RI PC)
+      *                                              End   /CFT009/
+     A N79                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A*N56*******                           DSPATR(HI)
+     A N28                                  DSPATR(HI)
+      *                                              End   /CFT009/
+     A N25                                  OVRATR
+     A            #3SCD3        12A  B 22 16
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  51                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N51                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 22 30'4.'
+     A N62                                  DSPATR(ND)
+     A            #3SCC4         3A  B 22 33
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+      *                                              Begin /CFT009/
+     A**57*******                           DSPATR(RI PC)
+     A  29                                  DSPATR(RI PC)
+      *                                              End   /CFT009/
+     A N79                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A*N57*******                           DSPATR(HI)
+     A N29                                  DSPATR(HI)
+      *                                              End   /CFT009/
+     A N25                                  OVRATR
+     A            #3SCD4        12A  B 22 38
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  52                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N52                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 22 54'5.'
+     A N62                                  DSPATR(ND)
+     A            #3SCC5         3A  B 22 57
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+      *                                              Begin /CFT009/
+     A**58*******                           DSPATR(RI PC)
+     A  30                                  DSPATR(RI PC)
+      *                                              End   /CFT009/
+     A N79                                  DSPATR(UL)
+      *                                              Begin /CFT009/
+     A*N58*******                           DSPATR(HI)
+     A N30                                  DSPATR(HI)
+      *                                              End   /CFT009/
+     A N25                                  OVRATR
+     A            #3SCD5        12A  B 22 62
+     A N25                                  OVRDTA
+     A N62                                  DSPATR(ND)
+     A N62
+     AO 79                                  DSPATR(PR)
+     A  53                                  DSPATR(RI PC)
+     A N79                                  DSPATR(UL)
+     A N53                                  DSPATR(HI)
+     A N25                                  OVRATR
+      */COPY WNCPYSRC,FT0345DF81
+      *                                              End   /CFT014/
+     A*=========================================================================
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================

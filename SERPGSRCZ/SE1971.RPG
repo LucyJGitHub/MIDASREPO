@@ -1,0 +1,3227 @@
+     H        1
+      *****************************************************************
+/*XBIA*: OVRDBF FILE(MESSAGE) TOFILE(MEMLMSPD)                        *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trades Extract for Settlements')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE1971 - TRADES EXTRACT FOR SETTLEMENTS CONFIRMATION MESSAGES*
+      *                                                               *
+      *  Function: Extract details required for S.W.I.F.T. Trade      *
+      *            Settlement confirmation Messages for Complete      *
+      *            that were Input, Amended or Cancelled Today.       *
+      *                                                               *
+      *  Called by: SEC003310 - Settlement confirmation background    *
+      *                       job.                                    *
+      *             Frequency:                                        *
+      *                                                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CSW214             Date 25Nov14               *
+      *  Prev Amend No. CSW213             Date 03Jun13               *
+      *                 AR589164A          Date 16Aug10               *
+      *                 CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG20963           Date 02Sep08               *
+      *                 CSW207A            Date 08Aug07               *
+      *                 CSW207             Date 08Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSE039 *CREATE     Date 21Feb03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
+      *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
+      *  AR589164A - Additional fix to cater //XX input               *
+      *  CSW210 - SWIFT 2010 Changes                                  *
+      *  BUG20963 - Applied Fix BUG20432                              *
+      *  BUG20432 - Field 98E for MT544 to MT547 has different date   *
+      *             and Time.                                         *
+      *  CSW207A - SWIFT 2007 Changes                                  *
+      *  CSW207 - SWIFT 2007 Changes                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE039 - Settlement Trade confirmation. MT544-7              *
+      *           This program is mainly based on SE1871, so any      *
+      *           fixes done in this program may be applicable to     *
+      *           SE1871.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     FSEMVTTL9UF  E           K        DISK         KINFSR *PSSR
+     FTRADSDJ5IF  E           K        DISK         KINFSR *PSSR
+     FTRADSDY2IF  E           K        DISK         KINFSR *PSSR
+     FTRAUT   IF  E           K        DISK
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     FSEMKC   IF  E           K        DISK         KINFSR *PSSR
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+     FACNUM   IF  E           K        DISK         KINFSR *PSSR
+     FSETLE   IF  E           K        DISK         KINFSR *PSSR
+     FMESSAGE IF  E           K        DISK         KINFSR *PSSR
+     FMEISOCL1IF  E           K        DISK         KINFSR *PSSR                              CSW207
+      *
+     FMGSETTPDO   E                    DISK         KINFSR *PSSR
+      *
+     FSE1971AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      /TITLE FUNCTION OF INCICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    50  - Control of chain to TRADSDJ5                         *
+     F*    65  - Control of chain to TRAUT                            *
+     F*    66  - Control of chain to SEMKC                            *
+     F*    67  - Control of chain to SECTY                            *
+     F*    68  - Control of chain to INVTP                            *
+     F*    69  - Control of chain to TRADSDY2                         *
+     F*    70  - Control of chain to TRADS                            *
+     F*    80  - Control of chain to ACNUM                            *
+     F*    81  - Control of chain to SECET                            *
+     F*    85  - Look up of array, ECIN                               *
+     F*                                                               *
+     F*    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  PROCES - Perform Detail Processing                           *
+     F*  AMASF  - Access master files                                 *
+     F*  MTYPE  - Determine message type                              *
+     F*  DCUST  - Determine destination customer address              *
+     F*  GCMSG  - Generate cancelation messages                       *
+     F*  MSGST  - Determine message(s) to be sent                     *
+     F*                                                               *
+     F*  FMTALL - Format fields common to all messages                *
+     F*  FMT52X - Format fields common to MT52x messages              *
+     F*  FMT52Y - Format fields common to MT520 & MT521 messages      *
+     F*  FMT52Z - Format fields common to MT522 & MT522 messages      *
+     F*  FMT520 - Format fields specific to MT520                     *
+     F*  FMT521 - Format fields specific to MT521                     *
+     F*  FMT522 - Format fields specific to MT522                     *
+     F*  FMT523 - Format fields specific to MT523                     *
+     F*  FMT580  - Format fields specific to MT580                    *
+     F*                                                               *
+     F*  DAYSAC - Calculate Number of Days of Accrued Interest        *
+     F*  CONVT  - Converts an amount from one currency to another     *
+     F*  AUDIT  - Run Control Process                                 *
+     F*  AOSARD  Call access object - Switchable features file        *
+     F*                                                               *
+     F*  *PSSR  - Program error handling routine                      *
+     F*                                                               *
+     F*  ZLCD   - Determines Last Coupon Date                         *
+     F*  ZNCD   - Determines Next Coupon Date                         *
+     F*                                                               *
+     F*****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E                    ECIN   10  40  2
+      ** ARRAY FOR EUROCLEAR AND CEDEL NUMERIC CODES FOR INSTRUCTIONS
+      *
+     E                    ECTA   10  40  3
+      ** ARRAY FOR EUROCLEAR AND CEDEL ALPHA. CODES EQUIVALENT FOR
+      ** INSTRUCTION TYPE
+      *
+     E                    ECSA   10  40  5
+      ** ARRAY FOR EUROCLEAR AND CEDEL ALPHA. CODES EQUIVALENT FOR
+      ** INSTRUCTION SUBTYPE
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E/COPY ZSRSRC,ZDAYSZ1
+      *
+     E/COPY ZSRSRC,ZPOWERZ1
+      *
+     E/COPY ZSRSRC,ZNCDZ1
+     E**********          SDPT        3  6 0                                                  CSD027
+     E                    SDPT        3  6                                                    CSD027
+     E                    SDTY        3  1
+     E** ARRAY TO HOLD OTHER SETTLEMENT DEPOT
+     E**
+     I/TITLE I-SPECIFICATIONS
+      *
+      ** RENAME DUPLICATE FIELDS
+     IACCNTABF
+     I              CNUM                            CNUMAC
+      *
+      ** RENAME DUPLICATE FIELDS
+     IMSGF
+     I              TRANS00001                      MMTRN
+      *
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SE1971AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Second Data Structure for Access Objects
+      *
+     IDSLDY     E DSDSLDY                                                                     CSW207
+      ** Data structure for Access objects                                                    CSW207
+      *                                                                                       CSW207
+     ISDCSSW    E DSSDCSSWPD                                                                  CSW207
+      ** Midas SD Customer Extensions SWIFT Details                                           CSW207
+      *                                                                                       CSW207
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDCNST    E DSSDCNSTPD                                                                  CSW210
+      ** Midas SD Counterparty Nostro File                                                    CSW210
+      *                                                                                       CSW210
+     IMEBICD    E DSMEBICDPD                                                                  CSW210
+      ** Midas BIC Directory                                                                  CSW210
+      *                                                                                       CSW210
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ** Securities Trading ICD Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** General Ledger Details
+      *
+     ISDSECS    E DSSDSECSPD
+     I              QQACCD                          QQACC1                                    CGL029
+      ** Securities Trading Clients
+      *
+     ISECGT     E DSSECGTD
+     I**  EXTERNAL DS FOR CHARGE TYPE DETAILS
+      *
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QQACC2                                    CGL029
+      ** Nostro Details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+      ** Customer Details
+      *
+     ISDLOCN    E DSSDLOCNPD                                                                  CSW207
+      ** Location Code Details                                                                CSW207
+     ISDCCSY    E DSSDCCSYPD                                                               AR589164A
+      ** Currency Clearing Details                                                         AR589164A
+      *                                                                                    AR589164A
+      *                                                                                       CSW207
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+      *
+     IKEY3DS      DS
+      * DATA STRUCTURE KEY 3
+     I                                        1   6 WWKEY3
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+      *
+      *
+     I            DS
+      ** DATA STRUCTURE
+     I**********                              1  12 WWOURA                                    CGL029
+     I                                        1  18 WWOURA                                    CGL029
+     I                                        1   6 WO0106
+     I**********                              7  12 WO0712                                    CGL029
+     I                                        7  18 WO0712                                    CGL029
+     I                                        1  100WO0110
+      *
+     I            DS
+      ** DATA STRUCTURE
+     I                                        1  10 WWOA10
+     I                                        1   60WA0106
+      *
+     I            DS
+      ** DATA STRUCTURE
+     I                                        1  10 EU10
+     I                                        1   1 EU0101
+     I                                        1   4 EU0104
+     I                                        2   7 EU0207
+      *
+     IWDATP       DS                        200
+      ** DATA STRUCTURE FOR PRINTING OF MT592
+     I                                        1  16 DTRNO
+     I                                       17  32 DRELR
+     I                                       33  40 DRELD
+     I                                       41  46 DNWRK
+      *
+     ISDDTA       DS
+     I                                        1 256 SDDATA
+     I                                        6   7 SPREFX
+      *                                                                                     BUG20432
+     I            DS                                                                        BUG20432
+     I                                        1   60PFRTM                                   BUG20432
+     I                                       11  160PMKTM                                   BUG20432
+     I                                       21  240PMKTOF                                  BUG20432
+     I                                       31  360PLCTM                                   BUG20432
+     I                                       41  440PLCTOF                                  BUG20432
+     I                                       51  560PSYTM                                   BUG20432
+     I                                       61  640PSYTOF                                  BUG20432
+      *                                                                                       CSW210
+     I              'ABCDEFGHIJKLMNOPQRST-C         ALPHAN                                    CSW210
+     I              'UVWXYZ0123456789'                                                        CSW210
+      *                                                                                       CSW210
+      ** Data Structure for extended settlement fields                                     AR589164A
+     I            DS                                                                       AR589164A
+     I                                        1  35 WDRAB                                  AR589164A
+     I                                        1   2 WP0102                                 AR589164A
+     I                                        3   4 WP0304                                 AR589164A
+     I                                        5  35 WP0535                                 AR589164A
+      *                                                                                    AR589164A
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ***  Receive entry parameter : blank sequence number.
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    50
+      *
+      ** KLIST FOR INVTP
+     C           KLS       KLIST
+     C                     KFLD           TMTRBB
+     C                     KFLD           TMTRRF
+     C                     KFLD           TMSSQN
+      *
+      ** KLIST FOR INVTP
+     C           KL3       KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      ** KLIST FOR TRADSDY2
+     C           TDRFW     KLIST
+     C                     KFLD           TDRF
+     C                     KFLD           T1WHEN
+      *
+      ** KLIST FOR SEMVTTL9
+     C           KL5       KLIST
+     C                     KFLD           TMTRRF
+     C                     KFLD           TMTRTY
+      *
+      ** Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** ACCESS PF/SDGELRPD
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'002'     DBASE            **************
+     C                     MOVEL'SDGELRPD'DBFILE           * DB ERROR 2 *
+     C                     MOVE *BLANKS   DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * Access Securities Trading ICD details
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'003'     DBASE            **************
+     C                     MOVEL'SDSTRDPD'DBFILE           * DB ERROR 3 *
+     C                     MOVE *BLANKS   DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** STORE DEPOT REFERENCE 1-EUROCLEAR AND 2-CEDEL
+     C                     MOVE BVDR1     WWEOC
+     C                     MOVE BVDR2     WWCEDL
+     C                     MOVE BVDR2     WWCEDN  60
+     C                     MOVE BVDR3     WWAKV
+     C                     MOVE *BLANKS   WCUST
+      *
+      ** RETRIEVE BIC 1-EUROCLEAR AND 2-CEDEL AND 3-KASSENVEREIN
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WWEOC     WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'004'     DBASE            **************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DBERR  04  *
+     C                     MOVE WWEOC     DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVE BBCSID    CSIDEO 12
+     C                     MOVE *BLANKS   WCUST
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WWCEDL    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'005'     DBASE            **************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DBERR  05  *
+     C                     MOVE WWCEDL    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVE BBCSID    CSIDCE 12
+     C                     MOVE *BLANKS   WCUST
+      *
+     C*                    CALL 'AOCUSTR0'
+     C*                    PARM *BLANKS   WRTCD
+     C*                    PARM '*KEY   ' WOPTN
+     C*                    PARM WWAKV     WCUST  10
+     C*                    PARM *BLANKS   WKYST   7
+     C*          SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'006'     DBASE            **************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DBERR  06  *
+     C                     MOVE WWCEDL    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVE BBCSID    CSIDAK 12
+      *
+     C**  Access SAR details file to see if CSW003 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CSW003'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSW003  1
+     C                     ENDIF
+     C*
+      **  Access SAR details file to see if EMU SE Settlement currency
+      **  conversion is installed.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CEU005'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CEU005  1
+     C                     ELSE
+     C                     MOVE 'N'       CEU005
+     C                     ENDIF
+     C*
+     C** Check if ISO15022 is installed
+     C*
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCO   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CSE029'  PSARD   6
+      *
+     C           PRTCO     IFEQ *BLANKS
+     C                     MOVE 'Y'       CSE029  1
+     C                     ELSE
+     C                     MOVE 'N'       CSE029
+     C                     ENDIF
+      *                                                                                       CSW207
+     C                     CALL 'SWIF2007'                                                    CSW207
+     C                     PARM           @RTCD                                               CSW207
+      *                                                                                       CSW207
+     C           @RTCD     IFEQ 'CSW2007'                                                     CSW207
+     C                     MOVE 'Y'       CSW207  1                                           CSW207
+     C                     ELSE                                                               CSW207
+     C                     MOVE 'N'       CSW207                                              CSW207
+     C                     ENDIF                                                              CSW207
+      *
+      ** Check if CSW202 is switched on
+      *
+     C                     CALL 'SWIF2002'
+     C                     PARM *BLANKS   PRTCO
+      *
+     C           PRTCO     IFEQ 'CSW2002'
+     C                     MOVE 'Y'       CSW202  1
+     C                     ELSE
+     C                     MOVE 'N'       CSW202
+     C                     ENDIF
+      *
+      *
+      ** Check if CSE033 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCO   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CSE033'  PSARD   6
+      *
+     C           PRTCO     IFEQ *BLANKS
+     C                     MOVE 'Y'       CSE033  1
+     C                     ELSE
+     C                     MOVE 'N'       CSE033
+     C                     ENDIF
+      *
+      ** In this program CSE033 should function as CSE029 even if
+      ** is not being switch on
+      *
+     C           CSE033    IFEQ 'Y'
+     C           CSE029    ANDEQ'N'
+     C                     MOVE 'Y'       CSE029
+     C                     ENDIF
+     C*
+      *
+     C                     CALL 'SWIF2008'                                                  BUG20432
+     C                     PARM           @RTCD                                             BUG20432
+      *                                                                                     BUG20432
+     C           @RTCD     IFEQ 'CSW2008'                                                   BUG20432
+     C                     MOVE 'Y'       CSW208  1                                         BUG20432
+     C                     ELSE                                                             BUG20432
+     C                     MOVE 'N'       CSW208                                            BUG20432
+     C                     ENDIF                                                            BUG20432
+      *                                                                                     BUG20432
+      ** Call SWIF2010 to check if CSW210 is switched on                                      CSW210
+      *                                                                                       CSW210
+     C                     CALL 'SWIF2010'                                                    CSW210
+     C                     PARM *BLANKS   @RTCD                                               CSW210
+      *                                                                                       CSW210
+     C           @RTCD     IFEQ 'CSW2010'                                                     CSW210
+     C                     MOVE 'Y'       CSW210  1                                           CSW210
+     C                     ELSE                                                               CSW210
+     C                     MOVE 'N'       CSW210                                              CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+      ** DEFINE WORKFIELDS
+     C           *LIKE     DEFN DELT      WWBICN
+     C           *LIKE     DEFN DELT      WWDEST
+     C           *LIKE     DEFN A6NBDP    WWNMDP
+     C           *LIKE     DEFN A6NBDP    WWSTDP
+     C           *LIKE     DEFN A7CUST    WWPFNS
+     C           *LIKE     DEFN A7OANN    WWPFAC
+     C           *LIKE     DEFN MGSTAM    WWSTAM
+     C           *LIKE     DEFN BJCUST    WWEOC
+     C           *LIKE     DEFN BVDR2     WWCEDL
+     C           *LIKE     DEFN BVDR3     WWAKV
+     C           *LIKE     DEFN BFCLAS    WWDCLS
+     C                     MOVE 'N'       WWPR01  1
+     C                     MOVE 'N'       WWPR02  1
+     C                     Z-ADD*ZERO     RRLIVE
+     C*
+     C** Get system prefix from SDSTAT
+     C*
+     C           *NAMVAR   DEFN SDSTAT    SDDTA
+     C                     IN   SDDTA
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: AMASF, MTYPE, DCUST, GCMSG, MSGST                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      * SET UP GENERATION DRIVER FILES
+     C                     CLEARMGSETTD0
+      *
+      ***  Read the Trades Movement work file.
+      ***     "SET ", Settl. message generated ="N".
+     C                     READ SEMVTTL9                 50
+      *
+      ***  Process all Trades requiring S.W.I.F.T. Settlement Conf. Messages.
+      *
+ B1  C           *IN50     DOWEQ'0'
+      *
+      ***  Read the Trades/Extension Join File. Note that the Logical
+      ***  is choosing the following Trades:
+      ***     Complete, Authorised, Clearance Type Not= 0,
+      *
+     C           TMTRRF    CHAINTRADSDJ5             30
+      *
+ B2  C           *IN30     DOWEQ'0'
+      *
+      ***  Count the record read.
+      *
+      *
+      ** Only process A record
+      *
+     C           T1WHEN    IFEQ 'A'
+      *
+     C                     ADD  1         RRLIVE
+      *
+      ***  Save Record Id and Last Change Type from Trades File.
+      *
+     C                     MOVE CHTP      WTCHTP  1
+     C                     MOVE RECI      WTRECI  1
+     C                     MOVEL'A'       MGCHG   1
+      *
+      ***  If the Last Change to the Trade is Authorisation, Access the
+      ***  Trade Authorisation Audit record prior to the Authorisation
+      ***  to see if the Trade has been Cancelled.
+      *
+ B3  C           WTCHTP    IFEQ 'Y'
+     C           TDRF      SETGTTRAUTDF
+     C                     READPTRAUTDF                  65
+     C                     READPTRAUTDF                  65
+ B4  C           TATYP     IFEQ 'DL'
+     C           WTRECI    ANDEQ'C'
+     C                     MOVE 'D'       WTCHTP
+ E4  C                     END
+ E3  C                     END
+      *
+      ** If Portfolio Client (S or D) process second record.
+ B3  C           T1WHEN    IFEQ 'B'
+      *
+ B4  C           TDTP      IFEQ 'TP'
+     C                     MOVE 'TS'      TDTP
+ X4  C                     ELSE
+     C                     MOVE 'TP'      TDTP
+ E4  C                     ENDIF
+      *
+ B4  C           CLTY      IFEQ '2'
+     C           CLTY      OREQ '4'
+     C           CLTY      OREQ '5'
+      *
+      ** Determine classification of Counterparty`s agent
+      *
+ B5  C           TDTP      IFEQ 'TP'
+     C                     MOVELDELT      WWCUST
+ X5  C                     ELSE
+     C                     MOVELDELF      WWCUST
+ E5  C                     ENDIF
+      *
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WWCUST
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+ B5  C           WRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   CACLAS  1
+ X5  C                     ELSE
+     C                     MOVE BFCLAS    CACLAS
+ E5  C                     ENDIF
+      *
+     C                     SELEC
+     C           CACLAS    WHEQ 'E'
+     C                     MOVE '2'       CLTY
+     C           CACLAS    WHEQ 'C'
+     C                     MOVE '4'       CLTY
+     C                     OTHER
+     C                     MOVE '5'       CLTY
+     C                     ENDSL
+      *
+ E4  C                     ENDIF
+      *
+ E3  C                     ENDIF
+      *
+      ***  Setup CACLAS for other record type than 'B'
+ B3  C           T1WHEN    IFNE 'B'
+      *
+ B4  C           CLTY      IFEQ '2'
+     C           CLTY      OREQ '4'
+     C           CLTY      OREQ '5'
+      *
+      ***  Determine classification of Counterparty's agent
+      *
+     C                     MOVELDELF      WWCUST
+      *
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WWCUST
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+ B5  C           WRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   CACLAF  1
+ X5  C                     ELSE
+     C                     MOVE BFCLAS    CACLAF
+ E5  C                     ENDIF
+      *
+      ***  Determine classification of Counterparty's agent
+      *
+     C                     MOVELDELT      WWCUST
+      *
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WWCUST
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+ B5  C           WRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   CACLAT  1
+ X5  C                     ELSE
+     C                     MOVE BFCLAS    CACLAT
+ E5  C                     ENDIF
+      *
+ E4  C                     ENDIF
+      *
+ E3  C                     ENDIF
+      *
+      *
+      ***  If the Last Change was not a Deletion, then continue to
+      ***  process further messages.
+      *
+ B3  C           WTCHTP    IFNE 'D'
+     C           T1NEW     OREQ 'Y'
+      *
+      ** ACCESS MASTER FILES
+     C                     EXSR AMASF
+      *
+      ** DETERMINE MESSAGE TYPE
+     C                     EXSR MTYPE
+      *
+      ** DETERMINE DESTINATION CUSTOMER ADDRESS
+     C                     EXSR DCUST
+      *
+      ** DETERMINE MESSAGE(S) TO BE SENT
+     C                     EXSR MSGST
+ E3  C                     END
+      *
+     C                     END
+      *
+      ***  Read the next record from the Trade/Extension Join File.
+      *
+     C                     READETRADSDJ5                 30
+      *
+      ***  End of Do While Not End of File.
+ E2  C                     ENDDO
+      *
+     C                     DELETSEMVTTL9
+      *
+      * SET UP GENERATION DRIVER FILES
+     C                     CLEARMGSETTD0
+      *
+     C                     READ SEMVTTL9                 50
+      *
+      ***  End of Do While Not End of File.
+ E1  C                     ENDDO
+      *
+      *
+      ** OUTPUT RUN CONTROL REPORT
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AMASF
+      *****************************************************************
+      *                                                               *
+      *    AMASF     - ACCESS MASTER FILES                            *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     -                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AMASF     BEGSR
+      *
+     C           TDTP      IFEQ 'TS'
+     C           PYTA      ANDNE'   '
+      *
+      ** Access LF/SDBRCHL1 for BICN of Settlement (Pay To) Branch
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM PYTA      PTBRCH  3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+1    C                     MOVEL'030'     DBASE            **************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DBERR  030 *
+     C                     MOVELPTBRCH    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Save BICN of Settlement Branch (Pay to Branch)
+     C                     MOVE A8BICN    PTBICN  6
+     C                     END
+      *
+      ** ACCESS LF/SDBRCHL1 FOR BRANCH CODE
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM TDBA      WWBRCH  3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'007'     DBASE            **************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 7 *
+     C                     MOVELWWBRCH    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** SAVE BRANCH INTERNAL CUSTOMER
+     C                     MOVE A8BICN    WWBICN
+      *
+      ** SAVE WORKFIELD WWDEST AS DELIVER TO OR DELIVER FROM
+     C           TDTP      IFEQ 'TP'
+     C**********           Z-ADDDELT      WWDEST                                              CSD027
+     C                     MOVE DELT      WWDEST                                              CSD027
+     C                     END
+      *
+     C           TDTP      IFEQ 'TS'
+     C**********           Z-ADDDELF      WWDEST                                              CSD027
+     C                     MOVE DELF      WWDEST                                              CSD027
+     C                     END
+      *
+      ** ACCESS LF/SDSECSJ3 USING KEY COUNTERPARTY
+     C                     MOVE TCNR      WWTCNR  6
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM WWDST6    WWCUST  6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+      ** DATABASE ERROR
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   WWTCNE  6
+     C                     MOVE *BLANKS   WWTCNC  6
+      *
+      ** BFDRF1 needs to be updated by the 1st 6 characters of BFNDR1.
+      ** BFDRF2 needs to be updated by the 1st 6 characters of BFNDR2.
+      *
+     C                     MOVELBFNDR1    BFDRF1
+     C                     MOVELBFNDR2    BFDRF2
+      *
+     C                     ELSE
+     C                     MOVE BFCLAS    WCLAS   1
+     C                     MOVE BFDRF1    WWTCNE
+     C                     MOVEL'/'       WWTCNE
+     C                     MOVE BFDRF2    WWTCNC
+     C                     MOVEL'/'       WWTCNC
+     C                     END
+      *
+      ** ACCESS LF/SDSECSJ3 USING KEY WORKFIELD WWDEST
+     C                     MOVE WWDEST    WWDST6  6
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM WWDST6    WWCUST  6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+      ** NO DATABASE ERROR IS REQUIRED.  THIS CAN HAPPEN IF CLEARANCE TYPE
+      ** ON THE TRADE IS 0  (DELIVER FROM/TO DOES NOT HAVE TO BE ENTERED)
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   WWDCLS
+     C                     ELSE
+     C                     MOVE BFCLAS    WWDCLS
+     C                     END
+      *
+      ** ACCESS JLF/SECTY    USING KEY SECURITY REFERENCE
+     C           TDSS      CHAINSECTY                67
+     C           *IN67     IFEQ '1'
+     C                     MOVEL'008'     DBASE            **************
+     C                     MOVEL'SECTY   'DBFILE           * DB ERROR 8 *
+     C                     MOVELTDSS      DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C*** Get other settlement depot information and set up array
+     C*
+     C           KL3       CHAININVTP                68
+     C           *IN68     IFEQ '1'
+     C                     MOVEL'027'     DBASE            ***************
+     C                     MOVEL'INVTPD  'DBFILE           * DB ERROR 27 *
+     C                     MOVELWWKEY3    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C*** Set up settlement depot in array
+     C*
+     C                     MOVE SDC1      SDPT,1
+     C                     MOVE SDC2      SDPT,2
+     C                     MOVE SDC3      SDPT,3
+     C                     MOVE STC1      SDTY,1
+     C                     MOVE STC2      SDTY,2
+     C                     MOVE STC3      SDTY,3
+      *
+      ** ACCESS PF/TRADSDY2 USING KEY OF TRADE REF AND SET ON FLAG
+      **  IF RECORD EXISTS
+      ** Key now Trade Ref and First/Second Record Indicator.
+     C           TDRFW     CHAINTRADSDY2             69
+     C           *IN69     IFEQ '0'
+     C                     MOVE 'Y'       WWEXSS  1
+     C                     ELSE
+     C                     MOVE 'N'       WWEXSS
+     C                     END
+      *
+      *
+      ** ACCESS LF/SDCURRL1 USING KEY NOMINAL CURRENCY
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM TNMC      WCUCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'009'     DBASE            **************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 9 *
+     C                     MOVELTNMC      DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** SAVE NO. OF DEC. PLACES
+     C                     MOVE A6NBDP    WWNMDP
+      *
+      ** Save SWIFT currency Code for nominal currency.
+     C                     MOVE A6SWCY    WWNCID  4
+      *
+      ** ACCESS LF/SDCURRL1 USING KEY SETTLEMENT CURRENCY
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM SETC      WCUCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'010'     DBASE            **************
+     C                     MOVEL'SDCURRPD'DBFILE           * DB ERROR 10*
+     C                     MOVELSETC      DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** SAVE NO. OF DEC. PLACES
+     C                     MOVE A6NBDP    WWSTDP
+      *
+      ** Save SWIFT currency Code for settlement currency.
+     C                     MOVE A6SWCY    WWSCID  4
+      *
+     C           CSW003    IFEQ 'Y'
+     C           T1WHEN    ANDEQ'B'
+     C           TDTP      IFEQ 'TP'
+     C                     MOVELPAYT      WWOURA
+     C                     ELSE
+     C                     MOVELPYFM      WWOURA
+     C                     END
+     C                     ELSE
+      ** IF TDTP IS 'TP'
+     C           TDTP      IFEQ 'TP'
+     C                     MOVELPYFM      WWOURA
+     C                     ELSE
+      *
+     C                     MOVELPAYT      WWOURA
+     C                     END
+     C                     ENDIF
+      *
+      ** IF SMTH IS '01', '02', '07', '08' OR '12'
+     C           SMTH      IFEQ 01
+     C           SMTH      OREQ 02
+     C           SMTH      OREQ 07
+     C           SMTH      OREQ 08
+     C           SMTH      OREQ 12
+      *
+      ** SET UP KLIST FOR CHAINING TO FILE
+     C                     MOVELWWOURA    WWPYFM  2
+      *
+      ** ACCESS LF/SDNOSTL0 USING KEY SETTLEMNT CCY AND WWOURA
+     C                     CALL 'AONOSTR0'
+     C                     PARM           WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM *BLANKS   PWCUST  6          Customer No
+     C                     PARM SETC      PWCYCD  3          Currency
+     C**********           PARM *BLANKS   PWACCD  4          A/c Code                         CGL029
+     C                     PARM *BLANKS   PWACCD 10                                           CGL029
+     C                     PARM *BLANKS   PWACSN  2          A/c Seq
+     C                     PARM WWPYFM    PWNONB  2          Nostro No
+     C                     PARM *BLANKS   PWBRCD  3          Branch Code
+     C                     PARM *BLANKS   PWCSSN 10          Cust ShortN
+     C                     PARM *BLANKS   PWPNOI  1          Prime Nost In
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      ** DATABASE ERROR
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'011'     DBASE            **************
+     C                     MOVEL'SDNOSTPD'DBFILE           * DBERR  011 *
+     C                     MOVELSETC      DBKEY5  5        **************
+     C                     MOVE WWPYFM    DBKEY5
+     C                     MOVE DBKEY5    DBKEY
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** SAVE NOSTRO CUSTOMER NUMBER
+     C                     MOVELA7CUST    WWOA10
+      *
+      ** IF A7OANN IS NOT BLANK
+     C           A7OANN    IFNE *BLANKS
+     C                     MOVELA7OANN    WW34   34
+     C                     ELSE
+     C                     MOVELA7NOSN    WW34
+     C                     END
+      *
+     C                     MOVEL'/'       WWOA35 35
+     C                     MOVE WW34      WWOA35
+     C                     END
+      *
+      ** IF SMTH IS '04'
+     C           SMTH      IFEQ 04
+      *
+      ** SAVE COUNTERPARTY CUSTOMER NUMBER
+     C                     MOVELTCNR      WWOA10
+     C                     END
+      *
+      ** IF SMTH IS '00', '03' OR '06'
+     C           SMTH      IFEQ 00
+     C           SMTH      OREQ 03
+     C           SMTH      OREQ 06
+      *
+      ** SAVE BRANCH INTERNAL CUSTOMER NUMBER
+     C                     MOVELWWBICN    WWOA10
+     C                     END
+      *
+      ** IF SMTH IS '05' OR '15'
+     C           SMTH      IFEQ 05
+     C           SMTH      OREQ 15
+      *
+      ** SET UP WORK FIELDS WWOA10 AND WWOA35
+     C                     MOVELWO0106    WWOA10
+     C                     MOVELWO0712    WW34
+     C                     MOVEL'/'       WWOA35
+     C                     MOVE WW34      WWOA35
+     C                     END
+      *
+      ** IF SMTH IS '14'
+     C           SMTH      IFEQ 14
+      *
+      ** ACCESS LF/ACNUM USING KEY OF LEFT 10 CHARS OF WWOURA
+     C           WO0110    CHAINACNUM                80
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'012'     DBASE            **************
+     C                     MOVEL'ACNUM'   DBFILE           * DBERR  012 *
+     C                     MOVELWO0110    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** SET UP WORK FIELDS WWOA10 AND WWO35
+     C                     MOVELCNUMAC    WWOA10
+     C                     MOVELWWOURA    WW34
+     C                     MOVEL'/'       WWOA35
+     C                     MOVE WW34      WWOA35
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/MTYPE
+      *****************************************************************
+      *                                                               *
+      *    MTYPE     - DETERMINE MESSAGE TYPE                         *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - NONE                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MTYPE     BEGSR
+      *
+      ** INITIALISE WTYP
+     C                     MOVE *BLANKS   WTYP    3
+      *
+      ** DETERMINE VALUE OF CLEARANCE TYPE
+     C           CLTY      IFEQ '1'
+     C           CLTY      OREQ '2'
+     C           CLTY      OREQ '3'
+     C           CLTY      OREQ '4'
+     C                     MOVEL'580'     WTYP
+     C                     ELSE
+      *
+      ** DETERMINE VALUE OF TRADE PURCHASE
+     C           TDTP      IFEQ 'TP'
+      *
+     C           PCOD      IFEQ '1'
+     C           PCOD      OREQ '5'
+     C                     MOVEL'521'     WTYP
+     C                     ELSE
+     C                     MOVE '520'     WTYP
+     C                     END
+     C                     END
+      *
+     C           TDTP      IFEQ 'TS'
+      *
+     C           PCOD      IFEQ '1'
+     C           PCOD      OREQ '5'
+     C                     MOVE '523'     WTYP
+     C                     ELSE
+     C                     MOVE '522'     WTYP
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/DCUST
+      *****************************************************************
+      *                                                               *
+      *    DCUST     - DETERMINE DESTINATION CUSTOMER ADDRESS         *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     -                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DCUST     BEGSR
+      *
+      ** IF WTYP IS BLANK - EXIT
+     C           WTYP      IFNE *BLANKS
+     C                     MOVE WWDEST    MGDEST
+      *
+      ** WTYP IS 580 AND MGDEST IS NOT WWEOC OR WWCEDL DATABASE ERROR
+     C                     MOVELWWEOC     WWEOC6  60
+     C                     MOVELWWCEDL    WWCDL6  60
+      *
+     C           WTYP      IFEQ '580'
+     C           WWDCLS    ANDNE'E'
+     C           WWDCLS    ANDNE'C'
+     C                     MOVEL'013'     DBASE            **************
+     C                     MOVE *BLANKS   DBFILE           * DB ERROR 13*
+     C                     MOVE *BLANKS   DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/MSGST
+      *****************************************************************
+      *                                                               *
+      *    MSGST     - DETERMINE MESSAGE(S) TO BE SENT                *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - FMTALL,FMT52X,FMT52Y,FMT52Z,FMT520,FMT521,     *
+      *                FMT522,FMT523,FMT580                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MSGST     BEGSR
+      *
+     C           WTYP      IFNE *BLANKS
+      *
+      ** FORMAT FIELDS COMMON TO ALL MESSAGES
+     C                     EXSR FMTALL
+      *
+      ** FORMAT FIELDS COMMON TO MT52xx MESSAGES
+     C           WTYP      IFEQ '520'
+     C           WTYP      OREQ '521'
+     C           WTYP      OREQ '522'
+     C           WTYP      OREQ '523'
+     C                     EXSR FMT52X
+     C                     END
+      *
+      ** FORMAT FIELDS SPECIFIC TO MT521
+     C           WTYP      IFEQ '521'
+     C                     EXSR FMT521
+     C                     END
+      *
+      ** FORMAT FIELDS SPECIFIC TO MT523
+     C           WTYP      IFEQ '523'
+     C                     EXSR FMT523
+     C                     END
+      *
+      ** FORMAT FIELDS SPECIFIC TO MT580
+     C           WTYP      IFEQ '580'
+     C                     EXSR FMT580
+     C                     END
+     C*
+     C** If ISO15022 is needed, then format ISO fields
+     C*
+     C           CSE029    IFEQ 'Y'
+     C           T1NEW     ANDEQ'Y'
+     C                     EXSR FMTISO
+     C                     ENDIF
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FMTALL
+      *****************************************************************
+      *                                                               *
+      *    FMTALL    - FORMAT COMMON FIELDS                           *
+      *                                                               *
+      *    CALLED BY - MSGST                                          *
+      *    CALLS     -                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FMTALL    BEGSR
+      *
+      ** SET UP DELIVERY FROM/TO AND COUNT/CUST NUMB. WORKFIELD
+     C                     MOVELDELF      WWDELF  6
+     C                     MOVELDELT      WWDELT  6
+     C                     MOVELTCNR      WWTNR6  6
+      *
+      *
+      ** MODULE ID
+      *
+      ** TRANSACTION TYPE
+     C           T1WHEN    IFEQ 'B'                                       CSW003
+     C                     MOVEL'TS'      MGTTYP                          CSW003
+     C                     ELSE                                           CSW003
+     C                     MOVEL'TR'      MGTTYP
+     C                     ENDIF                                          CSW003
+      *
+      ** TRANSACTION SUB-TYPE
+     C                     MOVELTDTP      MGTSTP
+      *
+      *
+      *
+      ** SETTLEMENT TYPE
+     C                     MOVELSMTH      MGSETP
+      *
+      ** VALUE DATE
+     C           TDVD      IFLT BJRDNB
+     C                     Z-ADDBJRDNB    MGSDAT
+     C                     ELSE
+     C                     Z-ADDTDVD      MGSDAT
+     C                     END
+      *
+      ** TRADE DATE
+     C                     MOVELTDDT      MGTDAT
+      *
+      ** SWIFT SECURITY TYPE
+     C           WTYP      IFEQ '580'
+      *
+     C           SWTP      IFEQ 'RTS'
+     C           SWTP      OREQ 'UNT'
+     C           SWTP      OREQ 'WTS'
+     C                     MOVELSWTP      MGSWTP
+     C                     ELSE
+      *
+      ** ACCESS LF/INVTP USING KEY NOMINAL CURR. & SECURITY INV. TYPE
+     C           KL3       CHAININVTP                68
+     C           *IN68     IFEQ '1'
+     C                     MOVEL'018'     DBASE            **************
+     C                     MOVEL'INVTP'   DBFILE           * DB ERROR 18*
+     C                     MOVELWWKEY3    DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           PROT      IFEQ '4'
+     C           PROT      OREQ '7'
+     C                     MOVEL'SHS'     MGSWTP
+     C                     ELSE
+     C                     MOVEL'FMT'     MGSWTP
+     C                     END
+     C                     END
+      *
+     C                     ELSE
+      *
+     C                     MOVELSWTP      MGSWTP
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FMT52X
+      *****************************************************************
+      *                                                               *
+      *    FMT52X    - FORMAT FIELDS COMMON TO MT52xx MESSAGES        *
+      *                                                               *
+      *    CALLED BY - FMTALL                                         *
+      *    CALLS     - ZNCD                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FMT52X    BEGSR
+      *
+     C           TMKC      IFNE *BLANKS
+      *
+      ** MARKET NAME
+      **    ACCESS LF/SEMKC USING KEY TRADE MARKET CENTRE
+     C           TMKC      CHAINSEMKC                66
+     C           *IN66     IFEQ '1'
+     C                     MOVEL'019'     DBASE            **************
+     C                     MOVEL'SEMKC'   DBFILE           * DB ERROR 19*
+     C                     MOVELTMKC      DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+      ***  Next Coupon Date. If Security is not Interest-Bearing,
+      ***  (implied by Initial Date = 0 or Coupon Rate = 0), then set
+      ***  the Next Coupon Date to zero.
+      *
+     C           ITLD      IFEQ 0
+     C           CPNR      OREQ 0
+     C                     Z-ADD0         MGNCDT
+     C                     ELSE
+      *
+      ***  Want Next Coupon AFTER Value Date, so add 1.
+     C           TDVD      ADD  1         ECD     50
+     C                     EXSR ZNCD
+     C                     Z-ADDNCD       MGNCDT
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *    FMT521    - FORMAT FIELDS SPECIFIC TO MT521                *
+      *                                                               *
+      *    CALLED BY - MSGST                                          *
+      *    CALLS     - CONVT, DAYSAC                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FMT521    BEGSR
+      *
+      *
+      *
+      *
+      *** Field :33T: requires the 'Price/Discount/Yield' data.
+      *** (ref Functional spec.)
+     C                     Z-ADDTPDY      MGPRIC
+      *
+      ** SETTLEMENT CURRENCY
+     C                     MOVELSETC      MGSTCY
+      *
+      ** SET UP WORKFIELD FOR SETTLEMENT AMOUNT
+     C                     Z-ADDTCTR      WWSTAM
+      *
+      ** CONVERT SETTLEMENT AMOUNT FROM NOMINAL TO SETTLEMENT CCY
+     C                     Z-ADDWWSTAM    WKAMTI
+     C                     Z-ADDWWNMDP    WKDPI
+     C                     Z-ADDWWSTDP    WKDPO
+     C                     Z-ADDTDER      WKEXCH
+     C                     MOVE TMDI      WKZMD
+     C                     EXSR CONVT
+     C                     Z-ADDWKAMTO    MGSTAM
+      *
+      *
+      *
+      *
+      ** SETUP ACCRUED INTEREST
+     C                     Z-ADDITRA      MGITRA
+      *
+      ** SETUP INTEREST ACCRUED NUMBER OF DAYS
+     C           ITRA      IFNE 0
+     C           ACIN      IFEQ 'C'
+     C           ACIN      OREQ 'X'
+     C                     EXSR DAYSAC
+      *
+     C           DADJ      IFNE 0
+     C                     Z-ADDDADJ      MGACND
+     C                     ELSE
+     C                     Z-ADDZDDAYS    MGACND
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C           CEU005    IFEQ 'Y'
+     C           ICCY      IFNE *BLANKS
+     C           ICCY      IFEQ TNMC
+      * Set up the original transaction amount as the countervalue in
+      * nominal currency
+     C                     Z-ADDTCTR      MGOTRA
+      * Set up the original transaction currency as the nominal currency
+     C                     MOVE TNMC      MGOTRC
+     C                     ELSE
+      * Set up the original transaction amount as the countervalue in
+      * nominal currency converted to the 'In' currency in field 72
+     C                     CALL 'EU0200'
+     C                     PARM *BLANK    P@RTCD  7        Return Code
+     C                     PARM TCTR      P@FRAM 183       FROM Ccy Amount
+     C                     PARM TNMC      P@FRCY  3        FROM Currency
+     C                     PARM ICCY      P@TOCY  3        TO Currency
+     C                     PARM           P@OUTA 150       Outright Amount
+     C                     PARM           P@INTA 183       Interim Amount
+     C                     PARM           P@EXRT 159       Exchange Rate
+     C                     PARM           P@MDIN  1        Mult/Div Ind.
+     C                     MOVE P@OUTA    MGOTRA    P
+      * Set up the original transaction currency as the 'In' currency
+     C                     MOVE ICCY      MGOTRC
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FMT523
+      *****************************************************************
+      *                                                               *
+      *    FMT523    - FORMAT FIELDS SPECIFIC TO MT523                *
+      *                                                               *
+      *    CALLED BY - MSGST                                          *
+      *    CALLS     - DAYSAC                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FMT523    BEGSR
+      *
+      ** MARKET PRICE
+     C                     Z-ADDTPDY      MGPRIC
+      *
+      ** SETTLEMENT CURRENCY
+     C                     MOVELSETC      MGSTCY
+      *
+      ** SET UP WORKFIELD FOR SETTLEMENT AMOUNT
+     C                     Z-ADDTCTR      WWSTAM
+      *
+      ** CONVERT SETTLEMENT AMOUNT FROM NOMINAL TO SETTLEMENT CCY
+     C                     Z-ADDWWSTAM    WKAMTI
+     C                     Z-ADDWWNMDP    WKDPI
+     C                     Z-ADDWWSTDP    WKDPO
+     C                     Z-ADDTDER      WKEXCH
+     C                     MOVE TMDI      WKZMD
+     C                     EXSR CONVT
+     C                     Z-ADDWKAMTO    MGSTAM
+      *
+      ** SETUP ACCRUED INTEREST
+     C                     Z-ADDITRA      MGITRA
+      *
+      ** SETUP INTEREST ACCRUED NUMBER OF DAYS
+     C           ITRA      IFNE 0
+     C           ACIN      IFEQ 'C'
+     C           ACIN      OREQ 'X'
+     C                     EXSR DAYSAC
+      *
+     C           DADJ      IFNE 0
+     C                     Z-ADDDADJ      MGACND
+     C                     ELSE
+     C                     Z-ADDZDDAYS    MGACND
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C           CEU005    IFEQ 'Y'
+     C           ICCY      IFNE *BLANKS
+     C           ICCY      IFEQ TNMC
+      * Set up the original transaction amount as the countervalue in
+      * nominal currency
+     C                     Z-ADDTCTR      MGOTRA
+      * Set up the original transaction currency as the nominal currency
+     C                     MOVE TNMC      MGOTRC
+     C                     ELSE
+      * Set up the original transaction amount as the countervalue in
+      * nominal currency converted to the 'In' currency in field 72
+     C                     CALL 'EU0200'
+     C                     PARM *BLANK    P@RTCD  7        Return Code
+     C                     PARM TCTR      P@FRAM 183       FROM Ccy Amount
+     C                     PARM TNMC      P@FRCY  3        FROM Currency
+     C                     PARM ICCY      P@TOCY  3        TO Currency
+     C                     PARM           P@OUTA 150       Outright Amount
+     C                     PARM           P@INTA 183       Interim Amount
+     C                     PARM           P@EXRT 159       Exchange Rate
+     C                     PARM           P@MDIN  1        Mult/Div Ind.
+     C                     MOVE P@OUTA    MGOTRA    P
+      * Set up the original transaction currency as the 'In' currency
+     C                     MOVE ICCY      MGOTRC
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FMT580
+      *****************************************************************
+      *                                                               *
+      *    FMT580    - FORMAT FIELDS SPECIFIC TO MT580                *
+      *                                                               *
+      *    CALLED BY - MSGST                                          *
+      *    CALLS     - CONVT, DAYSAC                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FMT580    BEGSR
+      ** FIELD 23 SUB-FIELD 1
+     C           TDTP      IFEQ 'TP'
+      *
+     C           PCOD      IFEQ '1'
+     C           PCOD      OREQ '5'
+     C                     MOVE 'RECAPMT' MGF231  7
+     C                     ELSE
+      *
+     C                     MOVE 'RECFREE' MGF231
+     C                     END
+     C                     ELSE
+      *
+     C           PCOD      IFEQ '1'
+     C           PCOD      OREQ '5'
+     C                     MOVE 'DELAPMT' MGF231
+     C                     ELSE
+      *
+     C                     MOVE 'DELFREE' MGF231
+     C                     END
+     C                     END
+      *
+      ** SETTLEMENT CURRENCY
+     C                     MOVELSETC      MGSTCY
+      *
+      ** MARKET PRICE
+     C                     Z-ADDTPDY      MGPRIC
+      *
+      ** SET UP WORKFIELD FOR SETTLEMENT AMOUNT
+     C                     Z-ADDTCTR      WWSTAM
+      *
+      ** CONVERT SETTLEMENT AMOUNT FROM NOMINAL TO SETTLEMENT CCY
+     C                     Z-ADDWWSTAM    WKAMTI
+     C                     Z-ADDWWNMDP    WKDPI
+     C                     Z-ADDWWSTDP    WKDPO
+     C                     Z-ADDTDER      WKEXCH
+     C                     MOVE TMDI      WKZMD
+     C                     EXSR CONVT
+     C                     Z-ADDWKAMTO    MGSTAM
+      *
+      *
+      ** INTEREST ACCRUED NO. OF DAYS
+ B1  C           ITRA      IFNE *ZEROS
+      *
+ B2  C           ACIN      IFEQ 'C'
+     C           ACIN      OREQ 'X'
+     C                     EXSR DAYSAC
+      *
+ B3  C           DADJ      IFNE 0
+     C                     Z-ADDDADJ      MGACND
+     C                     ELSE
+     C                     Z-ADDZDDAYS    MGACND
+ E3  C                     END
+      *
+ E2  C                     END
+ E1  C                     END
+      *
+      ** INTEREST AMOUNT
+     C                     Z-ADDITRA      MGITRA
+      *
+      ** INTEREST CURRENCY
+     C                     MOVELNMCY      MGITCY
+      *
+      *
+      ** ACCESS LF/INVTP USING KEY NOMINAL CURR. & SECURITY INV. TYPE
+     C           KL3       CHAININVTP                68
+ B1  C           *IN68     IFEQ '1'
+     C                     MOVEL'024'     DBASE            **************
+     C                     MOVEL'INVTP'   DBFILE           * DBERR 024  *
+     C                     MOVELWWKEY3    DBKEY            **************
+     C                     EXSR *PSSR
+ E1  C                     END
+      *
+      ** ASSUME DEFAULT VALUE FOR BOOK ENTRY
+ B1  C           T1INSS    IFEQ *BLANKS
+      *
+ B2  C           T1INST    IFEQ '6F '
+     C           T1INST    OREQ '61 '
+     C           T1INST    OREQ '03 '
+     C           T1INST    OREQ '03K'
+     C           T1INST    OREQ '07 '
+     C           T1INST    OREQ '07K'
+     C                     MOVEL'BOOK '   T1INSS
+ E2  C                     END
+      *
+      ** ASSUME DEFAULT VALUE FOR MATCHING & SETTLEMENT
+ B2  C           T1INST    IFEQ '01 '
+     C           T1INST    OREQ '02 '
+     C           T1INST    OREQ '03C'
+     C           T1INST    OREQ '07C'
+     C                     MOVEL'SETTL'   T1INSS
+ E2  C                     END
+      *
+ E1  C                     END
+      *
+      ** ASSUME DEFAULT VALUE FOR FREE OR AGAINST PAYMENT (EUROCLEAR)
+ B1  C           T1INST    IFEQ '01 '
+     C           T1INST    OREQ '02 '
+     C           T1INST    OREQ '03 '
+      *
+ B2  C           PCOD      IFEQ '1'
+     C           PCOD      OREQ '5'
+     C                     MOVE 'P'       T1INST
+     C                     ELSE
+     C                     MOVE 'F'       T1INST
+ E2  C                     END
+      *
+ E1  C                     END
+      *
+      ** INSTRUCTIONS TYPE AND SUB-TYPE
+     C                     Z-ADD1         J       20
+     C                     MOVELT1INST    WKINST  2
+     C           WKINST    LOKUPECIN,J                   85
+ B1  C           *IN85     IFEQ '1'                        Found numeric.
+     C                     MOVELECTA,J    MGINST
+ B2  C           T1INSS    IFNE *BLANKS
+     C                     MOVELT1INSS    MGINSS
+     C                     ELSE
+     C                     MOVELECSA,J    MGINSS
+ E2  C                     END
+ X1  C                     ELSE                            Numeric not f.
+      *
+     C                     Z-ADD1         J       20
+     C                     MOVE T1INST    WKINST
+     C           WKINST    LOKUPECIN,J                   85
+ B2  C           *IN85     IFEQ '1'                        Found alpha
+     C                     MOVELECTA,J    MGINST
+     C                     MOVELECSA,J    MGINSS
+ X2  C                     ELSE                            Alpha not f.
+      *
+     C                     MOVELT1INST    MGINST
+     C                     MOVELT1INSS    MGINSS
+ E2  C                     END
+ E1  C                     END
+      *
+ B1  C           MGINSS    IFEQ ' BOOK'
+     C                     MOVEL'BOOK '   MGINSS
+ E1  C                     END
+      *
+      ** ACCOUNT WITH INSTITUTION & ACCOUNT WITH INSTITUTION A/C LINE
+ B1  C           TDTP      IFEQ 'TP'
+     C           CLTY      ANDEQ'4'
+     C           CACLAF    ANDNE'E'                                       121495
+      *
+      *
+      *
+      *
+      ** DELIVERER OF SECURITIES & DELIVERER OF SECURITIES A/C LINE
+ B2  C           TDTP      IFEQ 'TP'
+      *
+      *
+      ** BENEFICIARY OF SECURITIES & BENEFICIARY OF SECURITIES A/C LINE
+      *                                                                   CEU005
+ B3  C           CEU005    IFEQ 'Y'                                       CEU005
+ B4  C           ICCY      IFNE *BLANKS                                   CEU005
+ B5  C           ICCY      IFEQ TNMC                                      CEU005
+      * Set up the original transaction amount as the countervalue in     CEU005
+      * nominal currency                                                  CEU005
+     C                     Z-ADDTCTR      MGOTRA                          CEU005
+      * Set up the original transaction currency as the nominal currency  CEU005
+     C                     MOVE TNMC      MGOTRC                          CEU005
+ X5  C                     ELSE                                           CEU005
+      * Set up the original transaction amount as the countervalue in     CEU005
+      * nominal currency converted to the 'In' currency in field 72       CEU005
+     C                     CALL 'EU0200'                                  CEU005
+     C                     PARM *BLANK    P@RTCD  7        Return Code    CEU005
+     C                     PARM TCTR      P@FRAM 183       FROM Ccy AmountCEU005
+     C                     PARM TNMC      P@FRCY  3        FROM Currency  CEU005
+     C                     PARM ICCY      P@TOCY  3        TO Currency    CEU005
+     C                     PARM           P@OUTA 150       Outright AmountCEU005
+     C                     PARM           P@INTA 183       Interim Amount CEU005
+     C                     PARM           P@EXRT 159       Exchange Rate  CEU005
+     C                     PARM           P@MDIN  1        Mult/Div Ind.  CEU005
+     C                     MOVE P@OUTA    MGOTRA    P                     CEU005
+      * Set up the original transaction currency as the 'In' currency     CEU005
+     C                     MOVE ICCY      MGOTRC                          CEU005
+ E5  C                     ENDIF                                          CEU005
+ E4  C                     ENDIF                                          CEU005
+ E3  C                     ENDIF                                          CEU005
+ E2  C                     ENDIF                                          CEU005
+ E1  C                     ENDIF                                          CEU005
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FMTISO
+      *****************************************************************
+      *                                                               *
+      *    FMTISO    - FORMAT FIELDS SPECIFIC TO ISO15022             *
+      *                                                               *
+      *    CALLED BY - MSGST                                          *
+      *    CALLS     -                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FMTISO    BEGSR
+      *  Access the related incoming message to retreive the TRN.
+      *
+     C*****                MOVE *BLANK    TMMSGK
+     C                     MOVELTMMSGK    MYKEY  42
+     C           MYKEY     CHAINMESSAGE              53
+     C                     MOVE *BLANK    TMMSGK
+     C           *IN53     IFEQ '0'
+     C                     MOVELMMTRN     TMMSGK
+     C                     ELSE
+     C                     MOVELTMTRRF    TMMSGK
+     C                     END
+      *
+      *  If partial settlement,access SETLE to retrieve the nominal settle
+      *  and the previous amount settled.
+B1   C           TMSWSC    IFEQ 'PST '
+B1   C           TMSWSC    OREQ 'SET '
+B1   C           TMSWSC    OREQ 'RVS '
+      *
+     C           KLS       CHAINSETLE                55
+      *
+B2   C           *IN55     IFEQ '1'
+     C                     MOVEL'139'     DBASE            **************
+     C                     MOVEL'SETLE   'DBFILE           * DB ERROR139*
+     C                     MOVE *BLANKS   DBKEY            **************
+     C                     EXSR *PSSR
+X2   C                     ELSE
+      * Save the current amount settled and the date and
+      * check if there was a previous partial settlement.
+     C                     Z-ADDSNMS      TMNOMS
+     C                     Z-ADDSEDE      TMDTMV
+     C                     Z-ADDSVLS      TMVALS
+     C                     READPSETLE                    55
+B3   C           *IN55     IFNE '0'
+B4   C           STDR      IFEQ TMTRRF
+     C                     Z-ADDSNMS      TMNOMP
+     C                     Z-ADDSVLS      TMVALP
+E4   C                     END
+E3   C                     END
+E2   C                     END
+E1   C                     END
+      *
+      ** Set up transaction reference.
+      *
+     C                     MOVE TDRF      MGTREF
+      *
+      ** Set up SWIFT Sequence number
+      *
+     C           T1LSWS    ADD  1         MGTSEQ
+      *
+      ** Setting up ISO15022 message Type
+      *
+     C           WTYP      IFEQ '580'                                     CSE029
+     C                     MOVE MGF231    MGTYPE                          CSE029
+     C                     ENDIF                                          CSE029
+     C           WTYP      IFEQ '520'
+     C                     MOVE 'RECFREE' MGTYPE
+     C                     ENDIF
+     C           WTYP      IFEQ '521'
+     C                     MOVE 'RECAPMT' MGTYPE
+     C                     ENDIF
+     C           WTYP      IFEQ '522'
+     C                     MOVE 'DELFREE' MGTYPE
+     C                     ENDIF
+     C           WTYP      IFEQ '522'
+     C                     MOVE 'DELAPMT' MGTYPE
+     C                     ENDIF
+      *
+      ** Determine classification of Counterparty
+      *
+     C                     MOVELTCNR      WWCUST
+      *
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WWCUST
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BFCLAS    MGCCLS
+     C                     ENDIF
+      *
+      ** Determine classification of From Depot
+      *
+     C                     MOVELDELF      WWCUST
+      *
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WWCUST
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BFCLAS    MGFCLS
+     C                     ENDIF
+      *
+      ** Determine classification of To Depot
+      *
+     C                     MOVELDELT      WWCUST
+      *
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WWCUST
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BFCLAS    MGTCLS
+     C                     ENDIF
+      *
+      ** Set up system prefix
+      *
+     C                     MOVELSPREFX    MGPFIX
+      *
+      ** Set up Security processing Type
+      *
+     C                     MOVE PROT      MGPROT
+      *
+      ** Set up Market Centre
+      *
+     C                     MOVE SWMKTC    MGSMKC
+     C                     MOVE MCTY      MGMCTY
+     C                     MOVE TKSECD    MGTMCD
+      *
+      ** If last change type for the depot movement is not equal to 'D'
+      ** then treat all transaction as amend.
+      *
+     C           WTCHTP    IFNE 'D'
+     C                     MOVE 'A'       MGTSTS
+     C                     ELSE
+     C                     MOVE 'D'       MGTSTS
+     C                     END
+      *
+      ** Set up Intermediary for download if short name/customer
+      ** number is being used.
+      *
+     C                     MOVE *BLANKS   WCUST
+     C           T2IMD1    IFNE *BLANKS
+     C                     MOVELT2IMD1    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    MGIMD1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WCUST
+     C           T2IMD2    IFNE *BLANKS
+     C                     MOVELT2IMD2    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    MGIMD2
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WCUST
+     C           T2IMD3    IFNE *BLANKS
+     C                     MOVELT2IMD3    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    MGIMD3
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WCUST
+     C           T2IMD4    IFNE *BLANKS
+     C                     MOVELT2IMD4    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    MGIMD4
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WCUST
+     C           T2IMD5    IFNE *BLANKS
+     C                     MOVELT2IMD5    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    MGIMD5
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WCUST
+     C           T2IMD6    IFNE *BLANKS
+     C                     MOVELT2IMD6    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    MGIMD6
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WCUST
+     C           T2IMD7    IFNE *BLANKS
+     C                     MOVELT2IMD7    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    MGIMD7
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WCUST
+     C           T2IMD8    IFNE *BLANKS
+     C                     MOVELT2IMD8    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    MGIMD8
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WCUST
+     C           T2IMD9    IFNE *BLANKS
+     C                     MOVELT2IMD9    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    MGIMD9
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   WCUST
+     C           T2PSET    IFNE *BLANKS
+     C                     MOVELT2PSET    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCUST    MGPSET
+     C                     MOVE BBCSID    MGPSBI
+     C                     MOVE BBCNA1    MGPSL1
+     C                     MOVE BBCNA2    MGPSL2
+     C                     MOVE BBCNA3    MGPSL3
+     C                     MOVE BBCNA4    MGPSL4
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set Up charges SWIFT Code
+      *
+     C                     MOVE TNMC      @CCY    3
+      *
+     C           TBCC      IFNE *BLANKS
+     C                     MOVE TBCC      @CCOM   2
+      *
+     C                     CALL 'AOCHGTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM           @CCY
+     C                     PARM           @CCOM
+     C           SECGT     PARM SECGT     DSSDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE SWID      MGBCCD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           TCCC      IFNE *BLANKS
+     C                     MOVE TCCC      @CCOM
+      *
+     C                     CALL 'AOCHGTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM           @CCY
+     C                     PARM           @CCOM
+     C           SECGT     PARM SECGT     DSSDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE SWID      MGCCCD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           TCC1      IFNE *BLANKS
+     C                     MOVE TCC1      @CCOM
+      *
+     C                     CALL 'AOCHGTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM           @CCY
+     C                     PARM           @CCOM
+     C           SECGT     PARM SECGT     DSSDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE SWID      MGCHG1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           TCC2      IFNE *BLANKS
+     C                     MOVE TCC2      @CCOM
+      *
+     C                     CALL 'AOCHGTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM           @CCY
+     C                     PARM           @CCOM
+     C           SECGT     PARM SECGT     DSSDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE SWID      MGCHG2
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           TCC3      IFNE *BLANKS
+     C                     MOVE TCC3      @CCOM
+      *
+     C                     CALL 'AOCHGTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM           @CCY
+     C                     PARM           @CCOM
+     C           SECGT     PARM SECGT     DSSDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE SWID      MGCHG3
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           TCC4      IFNE *BLANKS
+     C                     MOVE TCC4      @CCOM
+      *
+     C                     CALL 'AOCHGTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM           @CCY
+     C                     PARM           @CCOM
+     C           SECGT     PARM SECGT     DSSDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE SWID      MGCHG4
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           TCC5      IFNE *BLANKS
+     C                     MOVE TCC5      @CCOM
+      *
+     C                     CALL 'AOCHGTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM           @CCY
+     C                     PARM           @CCOM
+     C           SECGT     PARM SECGT     DSSDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE SWID      MGCHG5
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           TCC6      IFNE *BLANKS
+     C                     MOVE TCC6      @CCOM
+      *
+     C                     CALL 'AOCHGTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM           @CCY
+     C                     PARM           @CCOM
+     C           SECGT     PARM SECGT     DSSDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE SWID      MGCHG6
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           TCC7      IFNE *BLANKS
+     C                     MOVE TCC7      @CCOM
+      *
+     C                     CALL 'AOCHGTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM           @CCY
+     C                     PARM           @CCOM
+     C           SECGT     PARM SECGT     DSSDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE SWID      MGCHG7
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set up currency dec. point
+      *
+     C                     Z-ADDWWSTDP    MGSTDP
+     C                     Z-ADDWWNMDP    MGITDP
+     C           ICCY      IFNE *BLANK
+     C           ICCY      ANDNETNMC
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM ICCY      WCUCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADDA6NBDP    MGOTDP
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADDWWNMDP    MGOTDP
+     C                     ENDIF
+      *
+      ** Setup Sender SWIFT ID for ISO15022 message
+     C                     MOVE *BLANKS   WCUST
+     C                     MOVELWWBICN    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSID    MGSNDI
+     C                     ENDIF
+      *
+      ** Setup SWIFT currency code for settlement and nominal ccy
+      ** to be output to file.
+     C                     MOVE WWNCID    MGOTRC
+     C                     MOVE WWSCID    MGSTCY
+      *
+      ** A/C with Institution Detail
+     C                     MOVE *BLANKS   WCUST
+     C           T2AWIN    IFNE *BLANKS
+     C                     MOVELT2AWIN    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSID    MGAWBI
+     C                     MOVE BBCNA1    MGAWL1
+     C                     MOVE BBCNA2    MGAWL2
+     C                     MOVE BBCNA3    MGAWL3
+     C                     MOVE BBCNA4    MGAWL4
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                    AR589164A
+      ** A/C with Institution account line                                                 AR589164A
+     C           T2AWIL    IFNE *BLANKS                                                    AR589164A
+     C                     MOVELT2AWIL    WDRAB                                            AR589164A
+     C           WP0102    IFEQ '//'                                                       AR589164A
+     C                     CALL 'AOCCSYR0'                                                 AR589164A
+     C                     PARM *BLANKS   WRTCD                                            AR589164A
+     C                     PARM '*KEY   ' WOPTN                                            AR589164A
+     C                     PARM NMCY      CYCD    3                                        AR589164A
+     C                     PARM WP0304    CLSY    2                                        AR589164A
+     C           SDCCSY    PARM SDCCSY    DSFDY                                            AR589164A
+      *                                                                                    AR589164A
+     C           WRTCD     IFNE *BLANKS                                                    AR589164A
+     C                     Z-ADD028       DBASE                                            AR589164A
+     C                     MOVEL'SDCCSYPD'DBFILE                                           AR589164A
+     C                     MOVELWP0304    DBKEY                                            AR589164A
+     C                     EXSR *PSSR                                                      AR589164A
+     C                     ENDIF                                                           AR589164A
+      *                                                                                    AR589164A
+     C           DPISCD    IFNE *BLANKS                                                    AR589164A
+      *                                                                                    AR589164A
+      ** Format Account with Institution account line                                      AR589164A
+      *                                                                                    AR589164A
+     C                     MOVE *BLANKS   LGDSS  10                                        AR589164A
+      *                                                                                    AR589164A
+     C           NMCY      IFEQ 'EUR'                                                      AR589164A
+     C           DPISCD    IFEQ 'LATI'                                                     AR589164A
+     C                     MOVEL'IBRCLATI'LGDSS                                            AR589164A
+     C                     ENDIF                                                           AR589164A
+     C                     ENDIF                                                           AR589164A
+      *                                                                                    AR589164A
+     C           NMCY      IFEQ 'USD'                                                      AR589164A
+     C                     SELEC                                                           AR589164A
+     C           DPISCD    WHEQ 'USCH'                                                     AR589164A
+     C                     MOVEL'NYCHUSCH'LGDSS                                            AR589164A
+     C           DPISCD    WHEQ 'USCP'                                                     AR589164A
+     C                     MOVEL'NYCHUSCP'LGDSS                                            AR589164A
+     C           DPISCD    WHEQ 'FINS'                                                     AR589164A
+     C                     MOVEL'DTCYFINS'LGDSS                                            AR589164A
+     C           DPISCD    WHEQ 'PART'                                                     AR589164A
+     C                     MOVEL'DTCYPART'LGDSS                                            AR589164A
+     C           DPISCD    WHEQ 'USER'                                                     AR589164A
+     C                     MOVEL'DTCYUSER'LGDSS                                            AR589164A
+     C           DPISCD    WHEQ 'ID  '                                                     AR589164A
+     C                     MOVEL'DTCYID'  LGDSS                                            AR589164A
+     C                     ENDSL                                                           AR589164A
+     C                     ENDIF                                                           AR589164A
+     C                     MOVE *BLANKS   MGAWL1                                           AR589164A
+     C                     MOVE *BLANKS   MGAWL2                                           AR589164A
+     C                     MOVE *BLANKS   MGAWL3                                           AR589164A
+     C                     MOVE *BLANKS   MGAWL4                                           AR589164A
+     C           LGDSS     IFEQ *BLANKS                                                    AR589164A
+     C           '/'       CAT  DPISCD:0  MGAWL1                                           AR589164A
+     C                     ELSE                                                            AR589164A
+     C           '/'       CAT  LGDSS:0   MGAWL1                                           AR589164A
+     C                     ENDIF                                                           AR589164A
+     C           MGAWL1    CAT  '/':0     MGAWL1                                           AR589164A
+     C           MGAWL1    CAT  WP0535:0  MGAWL1                                           AR589164A
+      *                                                                                    AR589164A
+     C                     ENDIF                                                           AR589164A
+     C                     ENDIF                                                           AR589164A
+     C                     ENDIF                                                           AR589164A
+      *
+      ** Custodian Detail
+     C                     MOVE *BLANKS   WCUST
+     C           T2SKAN    IFNE *BLANKS
+     C                     MOVELT2SKAN    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSID    MGCDBI
+     C                     MOVE BBCNA1    MGCDL1
+     C                     MOVE BBCNA2    MGCDL2
+     C                     MOVE BBCNA3    MGCDL3
+     C                     MOVE BBCNA4    MGCDL4
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Deliverer Detail
+     C                     MOVE *BLANKS   WCUST
+     C           T2DSSN    IFNE *BLANKS
+     C                     MOVELT2DSSN    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSID    MGDLBI
+     C                     MOVE BBCNA1    MGDLL1
+     C                     MOVE BBCNA2    MGDLL2
+     C                     MOVE BBCNA3    MGDLL3
+     C                     MOVE BBCNA4    MGDLL4
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Receiver Detail
+     C                     MOVE *BLANKS   WCUST
+     C           T2RSSN    IFNE *BLANKS
+     C                     MOVELT2RSSN    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSID    MGRRBI
+     C                     MOVE BBCNA1    MGRRL1
+     C                     MOVE BBCNA2    MGRRL2
+     C                     MOVE BBCNA3    MGRRL3
+     C                     MOVE BBCNA4    MGRRL4
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Beneficiary of security detail
+     C                     MOVE *BLANKS   WCUST
+     C           T2BSSN    IFNE *BLANKS
+     C                     MOVELT2BSSN    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSID    MGBSBI
+     C                     MOVE BBCNA1    MGBSL1
+     C                     MOVE BBCNA2    MGBSL2
+     C                     MOVE BBCNA3    MGBSL3
+     C                     MOVE BBCNA4    MGBSL4
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Beneficiary of money detail
+     C                     MOVE *BLANKS   WCUST
+     C           T2BOFN    IFNE *BLANKS
+     C                     MOVELT2BOFN    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSID    MGBMBI
+     C                     MOVE BBCNA1    MGBML1
+     C                     MOVE BBCNA2    MGBML2
+     C                     MOVE BBCNA3    MGBML3
+     C                     MOVE BBCNA4    MGBML4
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                    AR589164A
+      ** Beneficiary of money account line                                                 AR589164A
+     C           T2BOF1    IFNE *BLANKS                                                    AR589164A
+     C                     MOVELT2BOF1    WDRAB                                            AR589164A
+     C           WP0102    IFEQ '//'                                                       AR589164A
+     C                     CALL 'AOCCSYR0'                                                 AR589164A
+     C                     PARM *BLANKS   WRTCD                                            AR589164A
+     C                     PARM '*KEY   ' WOPTN                                            AR589164A
+     C                     PARM NMCY      CYCD    3                                        AR589164A
+     C                     PARM WP0304    CLSY    2                                        AR589164A
+     C           SDCCSY    PARM SDCCSY    DSFDY                                            AR589164A
+      *                                                                                    AR589164A
+     C           WRTCD     IFNE *BLANKS                                                    AR589164A
+     C                     Z-ADD029       DBASE                                            AR589164A
+     C                     MOVEL'SDCCSYPD'DBFILE                                           AR589164A
+     C                     MOVELWP0304    DBKEY                                            AR589164A
+     C                     EXSR *PSSR                                                      AR589164A
+     C                     ENDIF                                                           AR589164A
+      *                                                                                    AR589164A
+     C           DPISCD    IFNE *BLANKS                                                    AR589164A
+      *                                                                                    AR589164A
+      ** Format Account with Institution account line                                      AR589164A
+      *                                                                                    AR589164A
+     C                     MOVE *BLANKS   LGDSS  10                                        AR589164A
+      *                                                                                    AR589164A
+     C           NMCY      IFEQ 'EUR'                                                      AR589164A
+     C           DPISCD    IFEQ 'LATI'                                                     AR589164A
+     C                     MOVEL'IBRCLATI'LGDSS                                            AR589164A
+     C                     ENDIF                                                           AR589164A
+     C                     ENDIF                                                           AR589164A
+      *                                                                                    AR589164A
+     C           NMCY      IFEQ 'USD'                                                      AR589164A
+     C                     SELEC                                                           AR589164A
+     C           DPISCD    WHEQ 'USCH'                                                     AR589164A
+     C                     MOVEL'NYCHUSCH'LGDSS                                            AR589164A
+     C           DPISCD    WHEQ 'USCP'                                                     AR589164A
+     C                     MOVEL'NYCHUSCP'LGDSS                                            AR589164A
+     C           DPISCD    WHEQ 'FINS'                                                     AR589164A
+     C                     MOVEL'DTCYFINS'LGDSS                                            AR589164A
+     C           DPISCD    WHEQ 'PART'                                                     AR589164A
+     C                     MOVEL'DTCYPART'LGDSS                                            AR589164A
+     C           DPISCD    WHEQ 'USER'                                                     AR589164A
+     C                     MOVEL'DTCYUSER'LGDSS                                            AR589164A
+     C           DPISCD    WHEQ 'ID  '                                                     AR589164A
+     C                     MOVEL'DTCYID'  LGDSS                                            AR589164A
+     C                     ENDSL                                                           AR589164A
+     C                     ENDIF                                                           AR589164A
+     C                     MOVE *BLANKS   MGBML1                                           AR589164A
+     C                     MOVE *BLANKS   MGBML2                                           AR589164A
+     C                     MOVE *BLANKS   MGBML3                                           AR589164A
+     C                     MOVE *BLANKS   MGBML4                                           AR589164A
+     C           LGDSS     IFEQ *BLANKS                                                    AR589164A
+     C           '/'       CAT  DPISCD:0  MGBML1                                           AR589164A
+     C                     ELSE                                                            AR589164A
+     C           '/'       CAT  LGDSS:0   MGBML1                                           AR589164A
+     C                     ENDIF                                                           AR589164A
+     C           MGBML1    CAT  '/':0     MGBML1                                           AR589164A
+     C           MGBML1    CAT  WP0535:0  MGBML1                                           AR589164A
+      *                                                                                    AR589164A
+     C                     ENDIF                                                           AR589164A
+     C                     ENDIF                                                           AR589164A
+     C                     ENDIF                                                           AR589164A
+      *
+      ** Instructing Party detail
+     C                     MOVE *BLANKS   WCUST
+     C           T2IPYN    IFNE *BLANKS
+     C                     MOVELT2IPYN    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSID    MGIPBI
+     C                     MOVE BBCNA1    MGIPL1
+     C                     MOVE BBCNA2    MGIPL2
+     C                     MOVE BBCNA3    MGIPL3
+     C                     MOVE BBCNA4    MGIPL4
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set up link field for extension file
+      *
+     C                     MOVE T1WHEN    MGWHEN
+     C                     MOVE TDSS      MGDPSS
+      *
+      ** Deliverer Instructing Party detail
+     C                     MOVE *BLANKS   WCUST
+     C           T2DCTL    IFNE *BLANKS
+     C                     MOVELT2DCTL    WCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSID    MGDIPI
+     C                     MOVE BBCNA1    MGDIP1
+     C                     MOVE BBCNA2    MGDIP2
+     C                     MOVE BBCNA3    MGDIP3
+     C                     MOVE BBCNA4    MGDIP4
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                       CSW207
+      ** check if valid UTC is valid for output                                               CSW207
+      *                                                                                       CSW207
+     C           CSW207    IFEQ 'Y'                                                           CSW207
+     C           CSW208    OREQ 'Y'                                                         BUG20432
+     C           CSE029    ANDEQ'Y'                                                         BUG20432
+     C                     EXSR MFID                                                          CSW207
+     C           WMFID     IFEQ 'Y'                                                           CSW207
+      *                                                                                       CSW207
+      ** format UTC                                                                           CSW207
+      *                                                                                       CSW207
+     C           A8TMOF    IFNE *ZERO                                                         CSW207
+     C                     MOVE A8TMOF    WTMOF   4                                           CSW207
+     C           A8SIGN    IFEQ '-'                                                           CSW207
+     C           'N'       CAT  WTMOF     WUTC    5                                           CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C           A8SIGN    IFEQ '+'                                                           CSW207
+     C                     MOVELWTMOF     WUTC                                                CSW207
+     C                     ENDIF                                                              CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C                     MOVE WTMOF     TMMFID                                              CSW207
+      *                                                                                       CSW207
+      ** format for TRCA and INCA                                                             CSW207
+      *                                                                                       CSW207
+     C           BFCLAS    IFEQ 'M'                                                           CSW207
+     C                     MOVE CSCPCI    TMTRCA                                              CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C           BFCLAS    IFEQ 'S'                                                           CSW207
+     C           BFCLAS    OREQ 'D'                                                           CSW207
+     C                     MOVE CSCICI    TMINCA                                              CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+      ** If SWIFT 2008 is installed                                                         BUG20432
+      *                                                                                     BUG20432
+     C           CSW208    IFEQ 'Y'                                                         BUG20432
+     C           CSE029    ANDEQ'Y'                                                         BUG20432
+     C                     Z-ADD*ZERO     PFRTM                                             BUG20432
+      *                                                                                     BUG20432
+     C           T1TRTT    IFEQ *BLANKS                                                     BUG20432
+     C                     Z-ADDTDDT      MGMKDT                                            BUG20432
+     C                     MOVE *ZEROS    MGMKTM                                            BUG20432
+     C                     MOVE *BLANKS   MGMKTO                                            BUG20432
+     C                     Z-ADDTDDT      MGLCDT                                            BUG20432
+     C                     MOVE *ZEROS    MGLCTM                                            BUG20432
+     C                     MOVE *BLANKS   MGLCTO                                            BUG20432
+     C                     ELSE                                                             BUG20432
+     C                     MOVELT1TRTT    PFRTM                                             BUG20432
+     C                     CALL 'ZADTMCVT'                                                  BUG20432
+     C                     PARM *BLANKS   PRTCD   7                                         BUG20432
+     C                     PARM 'S'       PFRTZ   1                                         BUG20432
+     C                     PARM           PFRTM                                             BUG20432
+     C                     PARM TDDT      FRDT    50                                        BUG20432
+     C                     PARM 'SE'      PMODL   2                                         BUG20432
+     C                     PARM TDBA      PBRCA   3                                         BUG20432
+     C                     PARM TMKC      PMRKT   2                                         BUG20432
+     C                     PARM *BLANKS   PSESN  10                                         BUG20432
+     C                     PARM *BLANKS   PMICC   4                                         BUG20432
+     C                     PARM *ZEROS    PMKTM                                             BUG20432
+     C                     PARM *ZEROS    PMKDT   50                                        BUG20432
+     C                     PARM *ZEROS    PMKTOF                                            BUG20432
+     C                     PARM *BLANKS   PMKTOS  1                                         BUG20432
+     C                     PARM *ZEROS    PLCTM                                             BUG20432
+     C                     PARM *ZEROS    PLCDT   50                                        BUG20432
+     C                     PARM *ZEROS    PLCTOF                                            BUG20432
+     C                     PARM *BLANKS   PLCTOS  1                                         BUG20432
+     C                     PARM *ZEROS    PSYTM                                             BUG20432
+     C                     PARM *ZEROS    PSYDT   50                                        BUG20432
+     C                     PARM *ZEROS    PSYTOF                                            BUG20432
+     C                     PARM *BLANKS   PSYTOS  1                                         BUG20432
+      *                                                                                     BUG20432
+     C           PRTCD     IFEQ *BLANKS                                                     BUG20432
+     C                     Z-ADDPMKDT     MGMKDT                                            BUG20432
+     C                     Z-ADDPMKTM     MGMKTM                                            BUG20432
+     C                     Z-ADDPLCDT     MGLCDT                                            BUG20432
+     C                     MOVE PLCTM     MGLCTM                                            BUG20432
+     C                     MOVE *BLANKS   MGMKTO                                            BUG20432
+     C                     MOVE *BLANKS   MGLCTO                                            BUG20432
+     C                     ENDIF                                                            BUG20432
+      *                                                                                     BUG20432
+      ** If Branch and Receiving Customer are MFID-compliant                                BUG20432
+      *                                                                                     BUG20432
+     C           WMFID     IFEQ 'Y'                                                         BUG20432
+      *                                                                                     BUG20432
+      ** Set Offset at Market                                                               BUG20432
+      *                                                                                     BUG20432
+     C                     MOVE PMKTOF    #WKTOF  4                                         BUG20432
+     C           PMKTOS    IFEQ '-'                                                         BUG20432
+     C           'N'       CAT  #WKTOF    MGMKTO                                            BUG20432
+     C                     ELSE                                                             BUG20432
+     C                     MOVEL#WKTOF    MGMKTO                                            BUG20432
+     C                     ENDIF                                                            BUG20432
+      *                                                                                     BUG20432
+     C                     MOVE PLCTOF    #WCTOF  4                                         BUG20432
+     C           PLCTOS    IFEQ '-'                                                         BUG20432
+     C           'N'       CAT  #WCTOF    MGLCTO                                            BUG20432
+     C                     ELSE                                                             BUG20432
+     C                     MOVEL#WCTOF    MGLCTO                                            BUG20432
+     C                     ENDIF                                                            BUG20432
+      *                                                                                     BUG20432
+     C                     ENDIF                                                            BUG20432
+      *                                                                                     BUG20432
+     C                     ENDIF                                                            BUG20432
+      *                                                                                     BUG20432
+     C                     ENDIF                                                            BUG20432
+      *                                                                                     BUG20432
+     C                     ELSE                                                             BUG20432
+      * Non Mifid Compliant.                                                                BUG20432
+     C                     Z-ADD*ZEROS    MGMKDT                                            BUG20432
+     C                     MOVE *ZEROS    MGMKTM                                            BUG20432
+     C                     MOVE *BLANKS   MGMKTO                                            BUG20432
+     C                     Z-ADD*ZEROS    MGLCDT                                            BUG20432
+     C                     MOVE *ZEROS    MGLCTM                                            BUG20432
+     C                     MOVE *BLANKS   MGLCTO                                            BUG20432
+      *                                                                                     BUG20432
+     C                     ENDIF                                                              CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW210
+     C           CSW210    IFEQ 'Y'                                                           CSW210
+      *                                                                                       CSW210
+      ** Debtor ID entered                                                                    CSW210
+      *                                                                                       CSW210
+     C           T2DIDN    IFNE *BLANKS                                                       CSW210
+     C                     CALL 'AOCUSTR1'                                                    CSW210
+     C                     PARM *BLANKS   WRTCD                                               CSW210
+     C                     PARM '*KEY   ' WOPTN                                               CSW210
+     C                     PARM T2DIDN    WCUST                                               CSW210
+     C                     PARM *BLANKS   WKYST                                               CSW210
+     C           SDCUST    PARM SDCUST    DSLDY                                               CSW210
+      *                                                                                       CSW210
+      ** Debtor ID is Customer                                                                CSW210
+      *                                                                                       CSW210
+     C           WRTCD     IFEQ *BLANKS                                                       CSW210
+     C                     MOVELBBCSID    MGDIBI                                              CSW210
+     C                     MOVELBBCNA1    MGDAL1                                              CSW210
+     C                     MOVELBBCNA2    MGDAL2                                              CSW210
+     C                     MOVELBBCNA3    MGDAL3                                              CSW210
+     C                     MOVELBBCNA4    MGDAL4                                              CSW210
+     C                     ELSE                                                               CSW210
+      *                                                                                       CSW210
+     C                     CALL 'AOCNSTR0'                                                    CSW210
+     C                     PARM *BLANKS   WRTCD                                               CSW210
+     C                     PARM '*KEY   ' WOPTN                                               CSW210
+     C                     PARM T2DIDN    WCNST   8                                           CSW210
+     C           SDCNST    PARM SDCNST    DSFDY                                               CSW210
+      *                                                                                       CSW210
+      ** Debtor ID is Counterparty Nostro                                                     CSW210
+      *                                                                                       CSW210
+     C           WRTCD     IFEQ *BLANKS                                                       CSW210
+     C                     MOVELAWSWID    MGDIBI                                              CSW210
+     C                     MOVELAWCPNM    MGDAL1                                              CSW210
+     C                     MOVELAWCNTN    MGDAL2                                              CSW210
+     C                     MOVEL*BLANKS   MGDAL3                                              CSW210
+     C                     MOVEL*BLANKS   MGDAL4                                              CSW210
+     C                     ENDIF                                                              CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+      ** Debtor Address entered                                                               CSW210
+      *                                                                                       CSW210
+     C                     ELSE                                                               CSW210
+     C           T2DAD1    IFNE *BLANKS                                                       CSW210
+     C           T2DAD2    ANDEQ*BLANKS                                                       CSW210
+     C           T2DAD3    ANDEQ*BLANKS                                                       CSW210
+     C           T2DAD4    ANDEQ*BLANKS                                                       CSW210
+     C                     EXSR SRSWFT                                                        CSW210
+      *                                                                                       CSW210
+      ** SWIFT Address                                                                        CSW210
+      *                                                                                       CSW210
+     C           ##CSID    IFEQ 'Y'                                                           CSW210
+     C                     MOVELT2DAD1    MGDIBI                                              CSW210
+     C                     MOVEL*BLANKS   MGDAL1                                              CSW210
+     C                     MOVEL*BLANKS   MGDAL2                                              CSW210
+     C                     MOVEL*BLANKS   MGDAL3                                              CSW210
+     C                     MOVEL*BLANKS   MGDAL4                                              CSW210
+     C                     ELSE                                                               CSW210
+      *                                                                                       CSW210
+      ** Standard Address                                                                     CSW210
+      *                                                                                       CSW210
+     C                     MOVEL*BLANKS   MGDIBI                                              CSW210
+     C                     MOVELT2DAD1    MGDAL1                                              CSW210
+     C                     MOVEL*BLANKS   MGDAL2                                              CSW210
+     C                     MOVEL*BLANKS   MGDAL3                                              CSW210
+     C                     MOVEL*BLANKS   MGDAL4                                              CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+     C                     ELSE                                                               CSW210
+      *                                                                                       CSW210
+      ** Standard Address                                                                     CSW210
+      *                                                                                       CSW210
+     C                     MOVEL*BLANKS   MGDIBI                                              CSW210
+     C                     MOVELT2DAD1    MGDAL1                                              CSW210
+     C                     MOVELT2DAD2    MGDAL2                                              CSW210
+     C                     MOVELT2DAD3    MGDAL3                                              CSW210
+     C                     MOVELT2DAD4    MGDAL4                                              CSW210
+     C                     ENDIF                                                              CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+      ** QFIN entered                                                                         CSW210
+      *                                                                                       CSW210
+     C           T2QFIN    IFNE *BLANKS                                                       CSW210
+     C                     CALL 'AOCUSTR1'                                                    CSW210
+     C                     PARM *BLANKS   WRTCD                                               CSW210
+     C                     PARM '*KEY   ' WOPTN                                               CSW210
+     C                     PARM T2QFIN    WCUST                                               CSW210
+     C                     PARM *BLANKS   WKYST                                               CSW210
+     C           SDCUST    PARM SDCUST    DSLDY                                               CSW210
+      *                                                                                       CSW210
+      ** QFIN is Customer                                                                     CSW210
+      *                                                                                       CSW210
+     C           WRTCD     IFEQ *BLANKS                                                       CSW210
+     C                     MOVELBBCSID    MGQFBI                                              CSW210
+     C                     MOVELBBCNA1    MGQAL1                                              CSW210
+     C                     MOVELBBCNA2    MGQAL2                                              CSW210
+     C                     MOVELBBCNA3    MGQAL3                                              CSW210
+     C                     MOVELBBCNA4    MGQAL4                                              CSW210
+     C                     ELSE                                                               CSW210
+      *                                                                                       CSW210
+     C                     CALL 'AOCNSTR0'                                                    CSW210
+     C                     PARM *BLANKS   WRTCD                                               CSW210
+     C                     PARM '*KEY   ' WOPTN                                               CSW210
+     C                     PARM T2QFIN    WCNST                                               CSW210
+     C           SDCNST    PARM SDCNST    DSFDY                                               CSW210
+      *                                                                                       CSW210
+      ** QFIN is Counterparty Nostro                                                          CSW210
+      *                                                                                       CSW210
+     C           WRTCD     IFEQ *BLANKS                                                       CSW210
+     C                     MOVELAWSWID    MGQFBI                                              CSW210
+     C                     MOVELAWCPNM    MGQAL1                                              CSW210
+     C                     MOVELAWCNTN    MGQAL2                                              CSW210
+     C                     MOVEL*BLANKS   MGQAL3                                              CSW210
+     C                     MOVEL*BLANKS   MGQAL4                                              CSW210
+     C                     ENDIF                                                              CSW210
+     C                     ENDIF                                                              CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+      ** Place of Clearing entered                                                            CSW210
+      *                                                                                       CSW210
+     C           T2PCLR    IFNE *BLANKS                                                       CSW210
+     C                     CALL 'AOCUSTR1'                                                    CSW210
+     C                     PARM *BLANKS   WRTCD                                               CSW210
+     C                     PARM '*KEY   ' WOPTN                                               CSW210
+     C                     PARM T2PCLR    WCUST                                               CSW210
+     C                     PARM *BLANKS   WKYST                                               CSW210
+     C           SDCUST    PARM SDCUST    DSLDY                                               CSW210
+      *                                                                                       CSW210
+      ** Place of Clearing is Customer                                                        CSW210
+      *                                                                                       CSW210
+     C           WRTCD     IFEQ *BLANKS                                                       CSW210
+     C                     MOVELBBCSID    MGPCBI                                              CSW210
+     C                     ELSE                                                               CSW210
+      *                                                                                       CSW210
+     C                     CALL 'AOCNSTR0'                                                    CSW210
+     C                     PARM *BLANKS   WRTCD                                               CSW210
+     C                     PARM '*KEY   ' WOPTN                                               CSW210
+     C                     PARM T2PCLR    WCNST                                               CSW210
+     C           SDCNST    PARM SDCNST    DSFDY                                               CSW210
+      *                                                                                       CSW210
+      ** Place of Clearing is Counterparty Nostro                                             CSW210
+      *                                                                                       CSW210
+     C           WRTCD     IFEQ *BLANKS                                                       CSW210
+     C                     MOVELAWSWID    MGPCBI                                              CSW210
+     C                     ENDIF                                                              CSW210
+     C                     ENDIF                                                              CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+     C                     ENDIF                                                              CSW210
+      *
+      ** Output to extract file
+      *
+     C                     WRITEMGSETTD0               74
+     C           *IN74     IFEQ '1'
+     C                     MOVEL'039'     DBASE            **************
+     C                     MOVEL'MGSETTPD'DBFILE           * DB ERROR 39*
+     C                     MOVE *BLANKS   DBKEY            **************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                       CSW207
+      /TITLE SR/MFID                                                                          CSW207
+      *****************************************************************                       CSW207
+      *                                                               *                       CSW207
+      *    MFID      - Check if Sending branch and Destination        *                       CSW207
+      *                Customer are MiFID compliant.                  *                       CSW207
+      *                                                               *                       CSW207
+      *    CALLED BY - FMTISO                                         *                       CSW207
+      *    CALLS     -                                                *                       CSW207
+      *                                                               *                       CSW207
+      *****************************************************************                       CSW207
+      *                                                                                       CSW207
+     C           MFID      BEGSR                                                              CSW207
+      *                                                                                       CSW207
+      ** initialise work fields                                                               CSW207
+      *                                                                                       CSW207
+     C                     MOVE 'N'       WBRCH   1                                           CSW207
+     C                     MOVE 'N'       WDEST   1                                           CSW207
+     C                     MOVE 'N'       WMFID   1                                           CSW207
+      *                                                                                       CSW207
+      ** check if Sending Branch is MiFID complaint                                           CSW207
+      *                                                                                       CSW207
+     C           TMTRBB    IFNE *BLANKS                                                       CSW207
+      *                                                                                       CSW207
+     C                     CALL 'AOBRCHR1'                                                    CSW207
+     C                     PARM '*MSG'    P@RTCD                                              CSW207
+     C                     PARM '*KEY'    P@OPTN  7                                           CSW207
+     C                     PARM TMTRBB    P@BRCD  3                                           CSW207
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CSW207
+      *                                                                                       CSW207
+      ** DATABASE ERROR                                                                       CSW207
+      *                                                                                       CSW207
+     C           P@RTCD    IFNE *BLANKS                                                       CSW207
+     C                     MOVEL'030'     DBASE                                               CSW207
+     C                     MOVEL'SDBRCHPD'DBFILE                                              CSW207
+     C                     MOVELP@BRCD    DBKEY                                               CSW207
+     C                     EXSR *PSSR                                                         CSW207
+     C                     END                                                                CSW207
+      *                                                                                       CSW207
+     C                     CALL 'AOLOCNR0'                                                    CSW207
+     C                     PARM *BLANKS   P@RTCD                                              CSW207
+     C                     PARM '*KEY   ' P@OPTN                                              CSW207
+     C                     PARM A8LCCD    P@LOCN  3                                           CSW207
+     C           SDLOCN    PARM SDLOCN    DSFDY                                               CSW207
+      *                                                                                       CSW207
+      ** Database error proceesing                                                            CSW207
+      *                                                                                       CSW207
+     C           P@RTCD    IFNE *BLANKS                                                       CSW207
+     C                     Z-ADD045       DBASE                                               CSW207
+     C                     MOVEL'SDLOCNPD'DBFILE                                              CSW207
+     C                     MOVE A8LCCD    DBKEY                                               CSW207
+     C                     EXSR *PSSR                                                         CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C                     MOVELA8LCCD    M3ISOC                                              CSW207
+      *                                                                                       CSW207
+     C           M3ISOC    CHAINMEISOCL1             90                                       CSW207
+      *                                                                                       CSW207
+      ** DATABASE ERROR                                                                       CSW207
+      *                                                                                       CSW207
+     C           *IN90     IFEQ *ON                                                           CSW207
+     C                     MOVEL'031'     DBASE                                               CSW207
+     C                     MOVEL'MEISOCPD'DBFILE                                              CSW207
+     C                     MOVELA8LCCD    DBKEY                                               CSW207
+     C                     EXSR *PSSR                                                         CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C           M3MFID    IFEQ 'Y'                                                           CSW207
+     C                     MOVE 'Y'       WBRCH                                               CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+      ** check if Destination Customer is MiFID complaint                                     CSW207
+      *                                                                                       CSW207
+     C********** MGDEST    IFNE *ZEROS                                                CSW207 CSW207A
+     C           TCNR      IFNE *ZEROS                                                       CSW207A
+      *                                                                                       CSW207
+     C**********           MOVE MGDEST    WCUST                                       CSW207 CSW207A
+     C                     MOVE TCNR      WCUST                                              CSW207A
+     C                     CALL 'AOCSSWR0'                                                    CSW207
+     C                     PARM *BLANKS   WRTCD                                               CSW207
+     C                     PARM '*KEY   ' WOPTN                                               CSW207
+     C                     PARM           WCUST                                               CSW207
+     C                     PARM *BLANKS   WKYST                                               CSW207
+     C                     PARM           DSLDY                                               CSW207
+      *                                                                                       CSW207
+      ** DATABASE ERROR                                                                       CSW207
+      *                                                                                       CSW207
+     C           WRTCD     IFNE *BLANKS                                                       CSW207
+     C                     MOVEL'032'     DBASE                                               CSW207
+     C                     MOVEL'SDCSSWPD'DBFILE                                              CSW207
+     C                     MOVELWCUST     DBKEY                                               CSW207
+     C                     EXSR *PSSR                                                         CSW207
+     C                     END                                                                CSW207
+      *                                                                                       CSW207
+      ** extract SDCUSTPD and SDCSSWPD                                                        CSW207
+      *                                                                                       CSW207
+     C                     MOVEL'SDCUSTPD'P#FILN                                              CSW207
+     C                     EXSR GETRCL                                                        CSW207
+     C           P#RCDL    SUBSTDSLDY     SDCUST                                              CSW207
+     C           P#RCDL    ADD  1         S       50                                          CSW207
+      *                                                                                       CSW207
+     C                     MOVEL'SDCSSWPD'P#FILN                                              CSW207
+     C                     EXSR GETRCL                                                        CSW207
+     C           P#RCDL    SUBSTDSLDY:S   SDCSSW                                              CSW207
+      *                                                                                       CSW207
+     C           BBCOLC    CHAINMEISOCL1             90                                       CSW207
+      *                                                                                       CSW207
+      ** DATABASE ERROR                                                                       CSW207
+      *                                                                                       CSW207
+     C           *IN90     IFEQ *ON                                                           CSW207
+     C                     MOVEL'033'     DBASE                                               CSW207
+     C                     MOVEL'MEISOCPD'DBFILE                                              CSW207
+     C                     MOVELBBCOLC    DBKEY                                               CSW207
+     C                     EXSR *PSSR                                                         CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C           M3MFID    IFEQ 'Y'                                                           CSW207
+     C                     MOVE 'Y'       WDEST                                               CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+      ** check if both are MiFID compliant                                                    CSW207
+      *                                                                                       CSW207
+     C           WBRCH     IFEQ 'Y'                                                           CSW207
+     C           WDEST     ANDEQ'Y'                                                           CSW207
+     C                     MOVE 'Y'       WMFID                                               CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+      ** retrieve the classification of the counterparty                                      CSW207
+      *                                                                                       CSW207
+     C**********           MOVELMGDEST    WWCUST                                      CSW207 CSW207A
+     C                     MOVELTCNR      WWCUST                                             CSW207A
+      *                                                                                       CSW207
+     C                     CALL 'AOSECSR0'                                                    CSW207
+     C                     PARM *BLANKS   WRTCD                                               CSW207
+     C                     PARM '*KEY   ' WOPTN                                               CSW207
+     C                     PARM           WWCUST                                              CSW207
+     C           SDSECS    PARM SDSECS    DSSDY                                               CSW207
+      *                                                                                       CSW207
+      ** DATABASE ERROR                                                                       CSW207
+      *                                                                                       CSW207
+     C           WRTCD     IFNE *BLANKS                                                       CSW207
+     C                     MOVEL'034'     DBASE                                               CSW207
+     C                     MOVEL'SDSECSPD'DBFILE                                              CSW207
+     C                     MOVELWWCUST    DBKEY                                               CSW207
+     C                     EXSR *PSSR                                                         CSW207
+     C                     END                                                                CSW207
+      *                                                                                       CSW207
+     C                     ENDSR                                                              CSW207
+      *****************************************************************
+      /TITLE SR/DAYSAC
+      *****************************************************************
+      *                                                               *
+      *  DAYSAC - Subroutine to calculate the Number of Days of       *
+      *           Accrued Interest.                                   *
+      *                                                               *
+      *  Called By: FMT521, FMT523, FMT580                            *
+      *  Calls: ZLCD                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DAYSAC    BEGSR                           *** DAYSAC ***
+      *
+      ***  Determine the Start and End Dates for Calculating the number
+      ***  of Days in the Period.
+      *
+      ***  Cum Coupon Trades:
+      *
+     C           ACIN      IFEQ 'C'
+      *
+      ***  The Start Date is the Last Coupon Date before (or on) the
+      ***  Value Date of the Trade.
+      *
+     C                     Z-ADDTDVD      ZECD
+     C                     EXSR ZLCD
+     C                     Z-ADDZZLCD     ZSDATE
+      *
+      ***  The End Date is the Value Date of the Trade.
+      *
+     C                     Z-ADDTDVD      ZEDATE
+     C                     ENDIF
+      *
+      ***  Ex-Coupon Trades:
+      *
+     C           ACIN      IFEQ 'X'
+      *
+      ***  The Start Date is the Value Date of the Trade.
+      *
+     C                     Z-ADDTDVD      ZSDATE
+      *
+      ***  The End Date is the Next Coupon Date after (or on) the Value
+      ***  Date of the Trade.
+      *
+     C                     Z-ADDTDVD      ECD     50
+     C                     EXSR ZNCD
+     C                     Z-ADDNCD       ZEDATE
+     C                     ENDIF
+      *
+      ***  Calculate Number of Days from Start Date to End Date.
+      *
+     C                     EXSR ZDAYS
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CONVT
+      *****************************************************************
+      *                                                               *
+      *   CONVT - Converts an amount from one currency to another.    *
+      *                                                               *
+      *    INPUT  - WKAMTI (15,0) AMOUNT INPUT                        *
+      *             WKEXCH (13,8) EXCHANGE RATE                       *
+      *             WKZMD  (1)    MULTIPLY/DIVIDE INDICATOR           *
+      *             WKDPI  (1,0)  CURRENCY INPUT                      *
+      *             WKDPO  (1,0)  CURRENCY TO BE CONVERTED TO         *
+      *                                                               *
+      *   Arrays       - POWER  powers of 10                          *
+      *                                                               *
+      *   OUTPUT -  WKAMTO (15,0) AMOUNT OUTPUT                       *
+      *                                                               *
+      *   CALLS    - NONE                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CONVT     BEGSR
+      *
+      ** DEFINE ALL FIELDS
+     C                     Z-ADDWKAMTI    WKAMTI 150
+     C                     Z-ADD0         WKAMTO 150
+     C                     Z-ADDWKDPI     WKDPI   10
+     C                     Z-ADDWKDPO     WKDPO   10
+     C                     Z-ADDWKEXCH    WKEXCH 138
+     C                     MOVE WKZMD     WKZMD   1
+      *
+      *** IF DECIMAL PLACES DIFFER -
+      ***      CALCULATE DIFFERENCE IN DECIMAL PLACES TO USE AS POWER INDEX
+      *
+     C           WKDPO     SUB  WKDPI     ZPX     10
+     C                     ADD  4         ZPX
+      *
+      ** CALCULATE CURRENCY AMOUNT OUTPUT BY MULTIPLYING INPUT AMOUNT BY
+      **  POWER ARRAY ENTRY AND THEN MULTIPLYING RESULT BY EXCHANGE RATE
+      **  DEPENDING ON INDICATOR
+      *
+     C           WKAMTI    MULT POWER,ZPX Z21#3  213
+      *
+     C           WKZMD     IFEQ 'D'
+     C           Z21#3     DIV  WKEXCH    WKAMTO    H
+     C                     ELSE
+     C           Z21#3     MULT WKEXCH    WKAMTO    H
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *    AUDIT     - RUN CONTROL PROCESS                            *
+      *                                                               *
+      *    CALLED BY - PROCES                                         *
+      *    CALLS     - NONE                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   WPARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ***  Write Heading and control information
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no valid records read, Output "No Details" message.
+     C           WWPR01    IFNE 'Y'
+     C           WWPR02    ANDNE'Y'
+     C                     WRITENONE
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************                       CSW207
+      /TITLE SR/GETRCL                                                                        CSW207
+      *****************************************************************                       CSW207
+      *                                                               *                       CSW207
+      *  GETRCL- Get record length                                    *                       CSW207
+      *                                                               *                       CSW207
+      *****************************************************************                       CSW207
+      *                                                                                       CSW207
+     C           GETRCL    BEGSR                                                              CSW207
+      *                                                                                       CSW207
+     C           'UTGETRCD'CAT  'LN'      P#PGM  10                                           CSW207
+      *                                                                                       CSW207
+     C                     CALL P#PGM                                                         CSW207
+     C                     PARM           P#RTCD 10                                           CSW207
+     C                     PARM           P#RCDL  50                                          CSW207
+     C                     PARM           P#FILN 10                                           CSW207
+     C                     PARM '*LIBL'   P#LIBN 10                                           CSW207
+      *                                                                                       CSW207
+     C           P#RTCD    IFNE *BLANK                                                        CSW207
+     C                     EXSR *PSSR                                                         CSW207
+     C                     ENDIF                                                              CSW207
+      *                                                                                       CSW207
+     C                     ENDSR                                                              CSW207
+      *
+      *****************************************************************                       CSW210
+      **                                                              *                       CSW210
+      **  SRSWFT    - SWIFT Address validation                        *                       CSW210
+      **                                                              *                       CSW210
+      **  Calls     - ME1400                                          *                       CSW210
+      **  Called By - SRDADD                                          *                       CSW210
+      **                                                              *                       CSW210
+      *****************************************************************                       CSW210
+      *                                                                                       CSW210
+     C           SRSWFT    BEGSR                                                              CSW210
+     C                     SETOF                     909192                                   CSW210
+      *                                                                                       CSW210
+      ** Test positions 1-8 for valid SWIFT Characters                                        CSW210
+      ** Check how many characters are alphanumeric                                           CSW210
+     C                     MOVEL*BLANKS   FLD    35                                           CSW210
+     C                     MOVELT2DAD1    FLD                                                 CSW210
+     C           ALPHAN    CHECKFLD       X#      30     90                                   CSW210
+      *                                                                                       CSW210
+      ** If the first 8 or 11 are ok proceed                                                  CSW210
+     C           *IN90     IFEQ *ON                                                           CSW210
+     C           X#        ANDEQ9                                                             CSW210
+     C           *IN90     OREQ *ON                                                           CSW210
+     C           X#        ANDEQ12                                                            CSW210
+     C           ' '       CHECKFLD:X#    ##001   10     90                                   CSW210
+      *                                                                                       CSW210
+      ** Check for blanks if before 8 or 11 then assume address                               CSW210
+     C           *IN90     IFEQ *ON                                                           CSW210
+     C           X#        ANDEQ11                                                            CSW210
+     C                     SETON                     91                                       CSW210
+     C                     MOVE 'Y'       ##CSID  1                                           CSW210
+     C                     GOTO ENDSWT                                                        CSW210
+     C                     ENDIF                                                              CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+      ** Invalid format - Not a S.W.I.F.T.                                                    CSW210
+     C           *IN90     IFEQ *ON                                                           CSW210
+     C                     MOVE 'N'       ##CSID                                              CSW210
+     C                     GOTO ENDSWT                                                        CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+      ** Call Access object to validate identifier                                            CSW210
+     C                     MOVELFLD       W9BICC                                              CSW210
+     C           3         SUBSTFLD:9     W9BICB                                              CSW210
+      *                                                                                       CSW210
+     C                     CALL 'ME1400'                                                      CSW210
+     C                     PARM *BLANKS   W9RTN   7                                           CSW210
+     C                     PARM           W9BICC  8                                           CSW210
+     C                     PARM           W9BICB  3                                           CSW210
+     C                     PARM           SDCUST                                              CSW210
+     C                     PARM           SDCNST                                              CSW210
+     C                     PARM           MEBICD                                              CSW210
+     C                     PARM *BLANKS   W9CUST  1                                           CSW210
+     C                     PARM *BLANKS   W9CNST  1                                           CSW210
+     C                     PARM *BLANKS   W9BICD  1                                           CSW210
+      *                                                                                       CSW210
+      ** Record found - BIC exists                                                            CSW210
+     C           W9RTN     IFEQ *BLANKS                                                       CSW210
+     C                     MOVE 'Y'       ##CSID                                              CSW210
+     C                     ENDIF                                                              CSW210
+      *                                                                                       CSW210
+     C           ENDSWT    TAG                                                                CSW210
+     C                     ENDSR                                                              CSW210
+      *                                                                                       CSW210
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'SE1971'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     SETON                     U7U8LR
+      *
+     C                     EXSR AUDIT
+      *
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE1
+     C/COPY ZSRSRC,ZDATE1Z2
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZDAYS
+     C/COPY ZSRSRC,ZDAYSZ2
+      /TITLE SR/ZLCD
+     C/COPY ZSRSRC,ZLCDZ1
+      /TITLE SR/ZNCD
+     C/COPY ZSRSRC,ZNCDZ3
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2003
+**  ECIN - EUROCLEAR AND CEDEL NUMERIC CODES FOR INSTRUCTIONS
+####################
+####################
+4F4T6F##41##61######
+315F5T8D8151##8M8A##
+**  ECTA - EUROCLEAR AND CEDEL ALPHABETIC CODES EQUIVALENT FOR INST. TYPE
+##############################
+##############################
+INTINTEXT###INT###EXT#########
+INTINTINTEXTEXTINT###EXTEXT###
+**  ECSA - EUROCLEAR AND CEDEL ALPHABETIC CODES EQUIVALENT FOR INST. SUB-TYPE
+##################################################
+##################################################
+SETTLMATCHBOOK #####SETTL#####BOOK ###############
+TRANSSETTLMATCHBOOK PHYSISETTL#####BOOK PHYSI#####
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

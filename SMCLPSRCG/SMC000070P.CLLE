@@ -1,0 +1,64 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM POP for RELEASELVL command')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000070P - POP for RELEASELVL command                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27791  *CREATE  Date 27May10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27791 - Identify 'from' release more easily              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CMD &KEYPARM &RTNDATA)
+ 
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&KEYPARM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNDATA) TYPE(*CHAR) LEN(5700)
+             DCL        VAR(&STRINGLEN) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&BINLEN) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PRODUCT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SUBRLS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&SVAL) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&AORTN) TYPE(*CHAR) LEN(7)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Retrieve data from data from temporary data area. */
+             RTVDTAARA  DTAARA(QTEMP/SMBRGRELDA (1 10)) +
+                          RTNVAR(&PRODUCT)
+             RTVDTAARA  DTAARA(QTEMP/SMBRGRELDA (11 10)) RTNVAR(&REL)
+             RTVDTAARA  DTAARA(QTEMP/SMBRGRELDA (21 2)) RTNVAR(&SUBRLS)
+ 
+BLDSTR:
+/* Build command string to return. */
+             CHGVAR     VAR(%BIN(&BINLEN)) VALUE(&STRINGLEN)
+             CHGVAR     VAR(&RTNDATA) VALUE(&BINLEN)
+             CHGVAR     VAR(&RTNDATA) VALUE(&RTNDATA *TCAT +
+                          'PRODUCT(' *TCAT &PRODUCT *TCAT ')')
+             CHGVAR     VAR(&RTNDATA) VALUE(&RTNDATA *BCAT 'REL(' +
+                          *TCAT &QUOTE *TCAT &REL *TCAT &QUOTE +
+                          *TCAT ')')
+             CHGVAR     VAR(&RTNDATA) VALUE(&RTNDATA *BCAT 'SUBRLS(' +
+                          *TCAT &SUBRLS *TCAT ')')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             SNDPGMMSG  MSGID(CPF0011) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+ 
+ ENDPGM:
+             ENDPGM

@@ -1,0 +1,83 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  DL0280 - DL0280DLA1                                          *
+      *                                                               *
+      *  Called by : DLAMND subroutine                                *
+      *                                                               *
+      *  Last Amend No. MD031216           Date 25Nov14               *
+      *  Prev Amend No. AR1045065          Date 13Dec13               *
+      *                 AR937392*CREATE    Date 29Mar12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031216 - Dealing Base Rate Change issue when CDL020 is off *
+      *  AR1045065 - Access First the current base rate then historic *
+      *              base rate if not found (Child:AR1045066)         *
+      *            - Applied for MD024110                             *
+      *  AR937392 - DLC0606B DBERR 53 on file SDBSHSPD                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDLA1 - Get base rate from SDBSHSPD/SDBSRTPD                *
+      *                                                               *
+      *****************************************************************
+      *                                                                                       CDL020
+      **  Get base rate for base rate code                                                    CDL020
+      *                                                                                       CDL020
+     C     CDL020        IFNE      'Y'
+     C**********         MOVE      BRTTDM        @@BSRC            2 0                     AR1045065
+     C**********         CALL      'AOBSHSR0'                                              AR1045065
+     C                   MOVE      BRTTDM        @BSRC             2                       AR1045065
+     C                   CALL      'AOBSRTR0'                                              AR1045065
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM      PCCY          @@CYCD            3
+     C**********         PARM                    @@BSRC                                    AR1045065
+     C**********         PARM      VDATDM        @HSTDT            5 0                     AR1045065
+     C*****SDBSHS        PARM      SDBSHS        DSFDY                                     AR1045065
+     C                   PARM                    @BSRC                                     AR1045065
+     C     SDBSRT        PARM      SDBSRT        DSFDY                                     AR1045065
+     C     @RTCD         IFNE      *BLANK
+     C**********         MOVE      @@BSRC        @BSRC             2              AR937392 AR1045065
+     C**********         CALL      'AOBSRTR0'                                     AR937392 AR1045065
+     C                   MOVE      @BSRC         @@BSRC            2 0                     AR1045065
+     C                   CALL      'AOBSHSR0'                                              AR1045065
+     C                   PARM      *BLANKS       @RTCD                                      AR937392
+     C                   PARM      '*KEY   '     @OPTN                                      AR937392
+     C                   PARM      PCCY          @@CYCD            3                        AR937392
+     C                   PARM                    @@BSRC                                    AR1045065
+     C                   PARM      VDATDM        @HSTDT            5 0                     AR1045065
+     C     SDBSHS        PARM      SDBSHS        DSFDY                                     AR1045065
+     C**********         PARM                    @BSRC                            AR937392 AR1045065
+     C*****SDBSRT        PARM      SDBSRT        DSFDY                            AR937392 AR1045065
+     C     @RTCD         IFNE      *BLANK                                                   AR937392
+     C                   MOVEL     'BASERATE'    DBFILE           10                        AR937392
+     C**********         MOVEL     'SDBSHSPD'    DBFILE           10             ***********AR937392
+     C                   MOVEL     '53'          DBASE             3             *DBERROR 53 *
+     C                   MOVEL     @@BSRC        DBKEY                           *************
+     C                   SETON                                        U7U8LR
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+     C                   ELSE                                                               AR937392
+     C**********         Z-ADD     BANBRT        BRTEDM                           AR937392 AR1045065
+     C                   Z-ADD     G0CBSR        BRTEDM                                    AR1045065
+     C                   GOTO      ENDDLA                                                   AR937392
+     C                   ENDIF                                                              AR937392
+     C                   END
+      *                                                                                       CDL020
+      **  Update the base rate                                                                CDL020
+      *                                                                                       CDL020
+     C**********         Z-ADD     G0CBSR        BRTEDM                                    AR1045065
+     C                   Z-ADD     BANBRT        BRTEDM                                    AR1045065
+     C**********         ADD       RTSP          BRTEDM                           AR1045065 MD031216
+     C                   ENDIF
+     C     ENDDLA        TAG                                                                AR937392
+      *****************************************************************                     AR973932
+      /EJECT                                                                                AR973932
+      *****************************************************************                     AR973932
+      * End of /COPY DL0280DLA1                                       *                     AR973932
+      *****************************************************************                     AR973932

@@ -1,0 +1,115 @@
+/*********************************************************************/
+/*STD    CLPBASEBNN                                                  */
+/*EXI    TEXT('Midas MR MBI/Almonde interface - housekeeping')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - MidasPlus Reporting Module                          */
+/*                                                                   */
+/*       MRC001010 - MBI/Almonde interface - housekeeping            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CMR002  *CREATE    Date 14Feb11              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CMR002 - MBI/Almonde Interface                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/* AOSVALR0 parameters */
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+ 
+/* MR001010 parameters */
+             DCL        VAR(&RTNPERNUM) TYPE(*DEC) LEN(2 0)
+ 
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&LIBNAME) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2011')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('MRC001010 - MBI/Almonde interface - +
+                          housekeeping') TOMSGQ(MRUNQ)
+ 
+/* Create data area LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+/* Get system prefix variable from SDSTAT data area */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+ 
+/* Create list of possible libraries to delete */
+             DLTF       FILE(QTEMP/LIBLIST)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CPYF       FROMFILE(UPOBJDTPD) TOFILE(QTEMP/LIBLIST) +
+                          MBROPT(*NONE) CRTFILE(*YES)
+             CHGVAR     VAR(&LIBNAME) VALUE(&SYSID *CAT '*')
+             DSPOBJD    OBJ(&LIBNAME) OBJTYPE(*LIB) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/LIBLIST) OUTMBR(*FIRST +
+                          *REPLACE)
+ 
+/* Get retention period */
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'MBIRetentionPeriod' &SVAL1 &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK0 &SVAL10)
+ 
+/* If the system value is missing then end abnormally */
+             IF         COND(%SST(&RTNCDE 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Call program to delete libraries */
+             CHGVAR     VAR(&RTNPERNUM) VALUE(%SST(&SVAL1 1 2))
+             CALL       PGM(MR001010) PARM(&RTNCDE &RTNPERNUM)
+ 
+/* Database error processing */
+             IF         COND(&RTNCDE = '*Error*') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination - batch job */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                             MRC001010 ended abnormally - see job log') +
+                             TOMSGQ(MOPERQ MRUNQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+END:
+ 
+             ENDPGM

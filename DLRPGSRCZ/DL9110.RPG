@@ -1,0 +1,1557 @@
+     H        1                                                           S01390
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Interest history purge select')               *
+     H***********                                                         S01390
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *     DL9110 - DEALING INTEREST HISTORY PURGE                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 AR996895           Date 25Nov12               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 126017             Date 14Nov97               *
+      *                 121768             Date 19Feb98               *
+     F*                    097885            DATE 31JAN97                *
+     F*                    093198            DATE 18APR96                *
+     F*                    095244            DATE 01NOV95             *
+     F*                    095238            DATE 31OCT95             *
+     F*                    066550            DATE 04FEB94                *
+     F*                    060787            DATE 31JAN94                *
+     F*                    049733            DATE 26JAN93                *
+     F*                    S01390            DATE 12AUG92                *
+     F*                    AUS006            DATE 18DEC90                *AUS006
+     F*                    S36008            DATE 01/DEC/89              *
+     F*                                                                  *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR996895 - Incorrect acrrual interest calculation            *
+      *             (Child: AR996897) (Recompile)                     *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSD007 - Customer Closing                                    *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+      *         - Recompiled due to GLINTC and ZINTDY changes         *
+     F*  126017 - Correction to interest calculation for calculation  *
+     F*           basis 6 in SR/GLINTC. Add SR/ZDAT10                 *
+     F*  121768 - Recompile over changed GLINTCZ1                     *
+     F*  097885 - Recompiled for wrong calculation of number of day      *
+     F*           interest (ZINTDYZ2).                                   *
+     F*  093198 - INTEREST HISTORY PURGE REPORT WRITE BEFORE OPEN        *
+     F*           DUE TO EMPTY BRANCH CODE                               *
+     F*  095244 - Recompiled for Calculation method 3                 *
+     F*  095238 - Recompiled for Calculation method 3                 *
+     F*  066550 - GLINTC has had historical problems and inaccuracies    *
+     F*           and is now externaly descibed and changed to use       *
+     F*           ZINTDYZ1. See document atached to error no on GEMS     *
+     F*  060787 - Purge records for dropped deals.                    *
+     F*     049733 - Error Messages non standard                         *
+     F*     S01390 - Release 10 Changes for Australianisation            *
+     F*     AUS006 - AUSTRALIAN PRODUCT - INTEREST HISTORY               *AUS006
+     F*     S36008 - INTEREST HISTORY ENQUIRY AND PURGE                  *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F********************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F********************************************************************
+     F*       05         SUBFILE DISPLAY
+     F*       06         SUBFILE CLEAR
+     F*       07         SUBFILE END
+     F*       08         ROLLUP
+     F*       09         NO HISTORY RECORDS SELECTED
+     F*       20         DEAL NOT MATURED
+     F*       30         DEAL ALREADY SELECTED FOR DISPLAY
+     F*       50         CUSTOMER INPUT ERROR - HIGHLIGHT
+     F*       51         PURGE DATE ERROR - HIGHLIGHT
+     F*       52         DISPLAY ERROR MESSAGE
+     F*       90-98      STANDARD SUBROUTINE INDICATORS
+     F*       99         CHAIN FAIL INDICATOR
+     F/EJECT
+     F*
+     FDL9110FMCF  E                    WORKSTN
+     F                                              KINFDS WSTNDS
+     F                                        RRN1  KSFILE SUBR01
+     F                                        RRN2  KSFILE SUBR02
+     F/COPY WNCPYSRC,DL9110F001
+     F*
+     F***SNAME***IF**E           K        DISK                            S01390
+     F*********** CLINTCBF                          KRENAMESHORTNMF       S01390
+     F***********                                                         S01390
+     F***CLINT***IF**E           K        DISK                            S01390
+     F***********                                                         S01390
+     F***TABDLEE*IF**E           K        DISK                            S01390
+     F*********** TABLETAF                          KIGNORE               S01390
+     F*********** TABTB20F                          KIGNORE               S01390
+     F*********** TABTB40F                          KIGNORE               S01390
+     F*********** TABTG20F                          KIGNORE               S01390
+     F*********** TABLETHF                          KIGNORE               S01390
+     F*********** TABLETIF                          KIGNORE               S01390
+     F*********** TABLETKF                          KIGNORE               S01390
+     F*********** TABLETLF                          KIGNORE               S01390
+     F*********** TABLETMF                          KIGNORE               S01390
+     F*********** TABLETPF                          KIGNORE               S01390
+     F*********** TABLETSF                          KIGNORE               S01390
+     F*********** TABLET1F                          KIGNORE               S01390
+     F*********** TABLET2F                          KIGNORE               S01390
+     F*********** TABLET5F                          KIGNORE               S01390
+     F*
+     FHIST4   UF  E           K        DISK
+     F*
+     FDEALALL IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     FHISTPAA O   E                    DISK                      A    UC
+     F*
+     F/EJECT
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E***********         ERR     1   8 80               ERROR MESSAGES   S01390
+     E***********         ERR     1   9 80               ERROR MESSAS01390049733
+     E                    ZAR1       20  1               AMOUNT ARRAY 1
+     E                    ZAR2       20  1               AMOUNT ARRAY 2
+0069 E                    ZA1        16  1               ZALIGN SR. ARRAY
+0070 E                    ZA2        16  1               ZALIGN SR. ARRAY
+     E                    DL          7  6               DEAL NUMBERS
+     E                    CPY@    1   1 80                                S01390
+     E*
+     E/COPY ZSRSRC,ZDATE9Z1                                               066550
+     E/EJECT
+     I*
+     IDEALSDCF
+     I              PCPL                            DPCPL
+     I              ICBS                            DICBS
+     I*
+     IHISTSAAF
+     I              CNUM                            HCNUM
+     I***********                                                         S01390
+     I***CLINTCBF***                                                      S01390
+     I***********   BRCD                            BRCC                  S01390
+     I***LDA********UDS                            256                    S01390
+     I***********                           129 133 DBFILE                S01390
+     I***********                           134 162 DBKEY                 S01390
+     I***********                           163 170 DBPGM                 S01390
+     I***********                           171 172 DBASE                 S01390
+     ILDA         DS                            256                       S01390
+     I*                                                                   S01390
+     I** Local Data Area To Identify Database Errors                      S01390
+     I*                                                                   S01390
+     I                                      134 141 DBFILE                S01390
+     I                                      142 170 DBKEY                 S01390
+     I                                      171 180 DBPGM                 S01390
+     I                                      181 1830DBASE                 S01390
+     I*                                                                   S01390
+     IRUNDT       DS                                                      S01390
+     I                                       13  13 MBIN                  S01390
+     I*                                                                   S01390
+     ISDBANK    E DSSDBANKPD                                              S01390
+     I* Bank Details Accesses Via Access Program                          S01390
+     I*                                                                   S01390
+     ISDCUST    E DSSDCUSTPD                                              S01390
+     I* Customer Details Accesses Via Access Program                      S01390
+     I*                                                                   S01390
+     ISCSARD    E DSSCSARDPD                                              S01390
+     I* SAR Details Accessed Via Access Program                           S01390
+     I*                                                                   S01390
+     IDSFDY     E DSDSFDY                                                 S01390
+     I* First DS For Access Programs, Short Data Structure                S01390
+     I*                                                                   S01390
+     IDSSDY     E DSDSSDY                                                 S01390
+     I* Second DS For Access Programs, Long Data Structure                S01390
+      *                                                                   CSD007
+     IDSLDY     E DSDSLDY                                                 CSD007
+      ** Third DS for access programs, very long data structure           CSD007
+      *                                                                   CSD007
+     IRPARM       DS                            100                       S01390
+     I                                        1   7 PRDATE                S01390
+     I*
+     I*********** DS                                                      S01390
+     I***********                             1  12 TABKY                 S01390
+     I***********                             1   2 TABKY1                S01390
+     I***********                             9  11 TABKY2                S01390
+     I***********                            12  12 TABKY3                S01390
+     I***********                            10  12 TABKY4                S01390
+     I*
+     I            DS
+     I                                        1   60ODEAL1
+     I                                        7  120ODEAL2
+     I                                       13  180ODEAL3
+     I                                       19  240ODEAL4
+     I                                       25  300ODEAL5
+     I                                       31  360ODEAL6
+     I                                       37  420ODEAL7
+     I                                        1  42 ODLS
+     I*
+     IWSTNDS      DS
+     I                                      197 206 WRKSTN
+     I*
+     I/COPY WNCPYSRC,DL9110I002
+     I/COPY ZSRSRC,ZINTDYZ1                                               066550
+     I/COPY ZSRSRC,ZDATE9Z2                                               066550
+     I/COPY ZSRSRC,ZDAT10Z1                                               126017
+     I/EJECT
+     I/COPY WNCPYSRC,DL9110I001
+     C********************************************************************
+     C*
+     C*     M A I N L I N E
+     C*
+     C*     INITIALISATION PROCESSING
+     C*
+     C                     EXSR INIT
+     C*
+     C*     MAIN PROCESSING
+     C*
+     C           *INLR     IFNE '1'                                       S01390
+     C                     EXSR MAIN
+     C*
+     C*     END PROCESSING
+     C*
+     C                     EXSR END
+     C                     END                                            S01390
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*     SUBROUTINE: INITIALISATION
+     C*
+     C           INIT      BEGSR                           *** INIT SUBR *
+     C/COPY WNCPYSRC,DL9110C003
+     C                     CALL 'AOSARDR0'                                S01390
+     C                     PARM *BLANKS   RTCD                            S01390
+     C                     PARM '*VERIFY' OPTN                            S01390
+     C                     PARM 'AUS006'  KYSAR   6                       S01390
+     C           SCSARD    PARM SCSARD    DSFDY                           S01390
+     C*                                                                   S01390
+     C           RTCD      IFNE *BLANKS                                   S01390
+     C                     SETON                     LR                   S01390
+     C                     GOTO INTEND                                    S01390
+     C                     END                                            S01390
+      *                                                                   CSD007
+      ** Access Switchable Features file and check if CSD007              CSD007
+      ** is switched on or not.                                           CSD007
+      *                                                                   CSD007
+     C                     CALL 'AOSARDR0'                                CSD007
+     C                     PARM *BLANKS   RTCD    7                       CSD007
+     C                     PARM '*VERIFY' OTPN    7                       CSD007
+     C                     PARM 'CSD007'  KYSAR   6                       CSD007
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD007
+      *                                                                   CSD007
+     C           RTCD      IFEQ *BLANKS                                   CSD007
+     C                     MOVE 'Y'       CSD007  1                       CSD007
+      *                                                                   CSD007
+     C                     ELSE                                           CSD007
+     C                     MOVE 'N'       CSD007                          CSD007
+      *                                                                   CSD007
+      ** Database Error, if Return Code is not blanks or *NRF             CSD007
+      *                                                                   CSD007
+     C           RTCD      IFNE '*NRF   '                                 CSD007
+     C                     MOVEL'SCSARDPD'DBFILE                          CSD007
+     C                     MOVEL'007'     DBASE                           CSD007
+     C                     MOVEL'CSD007  'DBKEY                           CSD007
+     C                     MOVE *ON       *INLR                           CSD007
+     C                     GOTO INTEND                                    CSD007
+     C                     ENDIF                                          CSD007
+     C                     ENDIF                                          CSD007
+     C*
+     C*     PARAMETER LIST FOR REPORT
+     C*
+     C*
+     C*     INITIALISE STANDARD VARIABLES
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01390
+     C           *LOCK     IN   LDA                                       S01390
+     C                     MOVEL'DL9110'  DBPGM
+     C                     OUT  LDA                                       S01390
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01390
+     C                     IN   RUNDT                                     S01390
+     C                     MOVE '1'       ON      1
+     C                     MOVE *ZERO     OFF     1
+     C                     MOVE OFF       SC1     1
+     C                     MOVE OFF       SC2     1
+     C                     MOVE *BLANKS   ALL    10
+     C                     MOVEL'ALL'     ALL
+     C                     MOVEL'NOT FOUN'NFFLD   9
+     C                     MOVE 'D'       NFFLD
+     C**********           Z-ADD*ZERO     LCNUM   60                                          CSD027
+     C                     MOVE *BLANKS   LCNUM   6                                           CSD027
+     C                     Z-ADD*ZERO     LDLNO   60
+     C                     Z-ADD*ZERO     LEDAT   50
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C***********                                                         S01390
+     C******KEY*LIST*FOR*CLIENT*FILE**************************************S01390
+     C***********                                                         S01390
+     C***********CLTKY     KLIST                                          S01390
+     C***********          KFLD           CLKY01  60       CUST NO        S01390
+     C***********          KFLD           CLKY02  1        REC TYPE       S01390
+     C*
+     C*     KEY LISTS FOR HISTORY FILE
+     C*
+     C           HISKY1    KLIST
+     C**********           KFLD           HISK01  60       CUST NO                            CSD027
+     C                     KFLD           HISK01  6        CUST NO                            CSD027
+     C*
+     C           HISKY2    KLIST
+     C**********           KFLD           HISK01  60       CUST NO                            CSD027
+     C                     KFLD           HISK01  6        CUST NO                            CSD027
+     C                     KFLD           HISK02  60       DEAL NO
+     C                     KFLD           HISK03  50       EVENT DATE
+     C*
+     C******INSTALLATION*CONTROL*RECORD*1.********************************S01390
+     C*     ACCESS BANK DETAILS                                           S01390
+     C*
+     C***********          EXSR ZSYSTM                                    S01390
+     C                     CALL 'AOBANKR0'                                S01390
+     C                     PARM '*DBERR ' RTCD    7                       S01390
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDBANK    PARM SDBANK    DSFDY                           S01390
+     C************IN99     IFEQ ON                                        S01390
+     C***********          MOVEL'TABLE'   DBFILE                          S01390
+     C***********          MOVELZTABKY    DBKEY                           S01390
+     C***********          MOVE '01'      DBASE                           S01390
+     C***********          MOVE ON        *INU7                           S01390
+     C***********          MOVE ON        *INU8                           S01390
+     C***********          END                                            S01390
+     C*
+     C***********          MOVE RUNA      RUNDAT                          S01390
+     C                     MOVE BJMRDT    RUNDAT                          S01390
+      *                                                                   049733
+      **  Initialise screen msg queue.                                    049733
+     C                     MOVEL'*'       DDPGMQ                          049733
+      *                                                                   049733
+      **  Set on Message Subfile end indicator.                           049733
+     C                     MOVE '1'       *IN59                           049733
+     C/COPY WNCPYSRC,DL9110C001
+     C*
+     C*     GET FIRST SCREEN INFORMATION
+     C*
+     C                     EXSR SCREN1
+     C*
+     C           INTEND    TAG                                            S01390
+     C                     ENDSR                           *** END INIT **
+     C********************************************************************
+     C*
+     C*    MAIN PROCESSING SUBROUTINE
+     C*
+     C           MAIN      BEGSR                           ** MAIN SUBR **
+     C*
+     C           *INLR     DOWNEON
+     C*
+     C           SC2       CASEQON        SCREN1           ** SCREEN 1 ***
+     C           SC1       CASEQON        SCREN2           ** SCREEN 2 ***
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDMAN    ENDSR                           ** END OF MAIN
+     C*
+     C********************************************************************
+     C*
+     C*    END PROCESSING SUBROUTINE
+     C*
+     C           END       BEGSR                           *** END SUBR  *
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*    SCREEN 1 SUBROUTINE - GETS FIRST SCREEN DETAILS AND VALIDATES
+     C*
+     C           SCREN1    BEGSR
+     C*
+     C*    SET OFF BOTH SCREEN INDICATORS
+     C*
+     C                     MOVE OFF       SC1
+     C                     MOVE OFF       SC2
+     C           *IN52     IFEQ OFF
+     C                     MOVE *BLANK    CUSTNO
+     C                     MOVE *BLANK    PRDTIN
+     C                     END
+     C*
+     C*    SCREEN 1 LOOP UNTIL VALID SCREEN READ
+     C*
+     C           SC1       DOWEQOFF                        ** START LOOP 1
+     C*
+     C*    DISPLAY SCREEN 1 ERRORS / READ SCREEN 1 DETAILS
+     C*
+     C                     WRITEDL9110S0                                  049733
+     C                     EXFMTFORMT1
+     C*
+     C*    SET ON SCREEN READ INDICATOR
+     C*
+     C                     MOVE ON        SC1
+     C*
+     C*    RESET ERROR INDICATOR
+     C*
+     C***********          MOVE *BLANKS   ERRMSG                          049733
+     C                     MOVE OFF       *IN52
+     C*
+     C*    CHECK FOR EXIT KEY PRESSED (CMD-1)
+     C*
+     C           *INKC     IFEQ ON
+     C                     MOVE ON        *INLR
+     C                     ELSE
+     C*
+     C*    IF NO EXIT KEY PRESSED EXECUTE SCREEN 1 VALIDATION ROUTINE.
+     C*
+     C                     EXSR VALSC1
+     C                     END
+     C***********                                                         049733
+     C*****IF*SCREEN 1 IS INVALID LOOP AROUND AND DISPLAY ERROR CODES     049733
+     C***********                                                         049733
+     C***********ERRMSG    IFNE *BLANKS                                   049733
+     C***********          MOVE OFF       SC1                             049733
+     C***********          MOVE ON        *IN52                           049733
+     C***********          END                                            049733
+     C*
+     C                     END                             ** END LOOP 1 *
+     C*
+     C           ENDSC1    ENDSR
+     C*
+     C********************************************************************
+     C********************************************************************
+     C*
+     C*    SCREEN 2 SUBROUTINE - DISPLAY HISTORY DETAILS
+     C*
+     C           SCREN2    BEGSR
+     C*
+     C*    SET OFF BOTH SCREEN INDICATORS AND RE-SET STORED KEYS
+     C*
+     C                     MOVE OFF       SC1
+     C                     MOVE OFF       SC2
+     C                     MOVE ON        *IN06
+     C                     MOVE OFF       *IN05
+     C                     MOVE OFF       *IN09
+     C**********           Z-ADD*ZERO     LCNUM                                               CSD027
+     C                     MOVE *BLANKS   LCNUM                                               CSD027
+     C                     Z-ADD*ZERO     LDLNO
+     C                     Z-ADD*ZERO     LEDAT
+     C                     Z-ADD*ZERO     RRN1
+     C                     Z-ADD*ZERO     RRN2
+     C*
+     C*    CHECK IF ALL CUSTOMER SELECTED
+     C*
+     C           CUSTNO    IFEQ ALL
+     C*
+     C*    CLEAR SCREEN DETAILS
+     C*
+     C                     WRITESUBF01
+     C                     MOVE OFF       *IN06
+     C*
+     C*    READ HISTORY RECORDS AND BUILD SUBFILE
+     C*
+     C                     EXSR READF1
+     C*
+     C*    ELSE A SINGLE CUSTOMER SELECTED
+     C*
+     C                     ELSE
+     C*
+     C*    CLEAR SCREEN DETAILS
+     C*
+     C                     WRITESUBF02
+     C                     MOVE OFF       *IN06
+     C***********          MOVE CRNM      OCRNM                           S01390
+     C                     MOVE BBCRNM    OCRNM                           S01390
+     C*
+     C*    READ HISTORY RECORDS AND BUILD SUBFILE
+     C*
+     C                     EXSR READF2
+     C*
+     C                     END
+     C*
+     C                     MOVE ON        SC2
+     C*
+     C*    CHECK IF ANY DEALS TO BE DISPLAYED
+     C*
+     C           *IN09     IFEQ OFF
+     C                     MOVEL'DLM0040' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C***********          MOVE ERR,7     ERRMSG                          049733
+     C                     MOVE OFF       SC1
+     C                     MOVE ON        *IN52
+     C                     GOTO ENDSC2
+     C                     END
+     C*
+     C*    OUTPUT HISTORY SCREEN DETAILS
+     C*
+     C           DSPLY     TAG
+     C*
+     C                     WRITEFORMT2
+     C                     MOVE ON        *IN05
+     C*
+     C           CUSTNO    IFEQ ALL
+     C                     EXFMTSUBF01
+     C                     ELSE
+     C                     EXFMTSUBF02
+     C                     END
+     C*
+     C*
+     C*    CHECK COMMAND KEYS
+     C*
+     C           *INKC     IFEQ ON
+     C                     MOVE ON        *INLR
+     C                     GOTO ENDSC2
+     C                     END
+     C*
+     C*  CMD/4 PURGE RECORDS
+     C*
+     C           *INKD     IFEQ ON
+     C                     EXSR PURGE
+     C                     GOTO ENDSC2
+     C                     END
+     C*
+     C*  CMD/5 PREVIOUS SCREEN
+     C*
+     C           *INKL     CABEQ'1'       ENDSC2
+     C*
+     C*  ROLLUP
+     C*
+     C           *IN08     IFEQ '1'
+     C           CUSTNO    IFEQ ALL
+     C                     EXSR READF1
+     C                     ELSE
+     C                     EXSR READF2
+     C                     END
+     C                     END
+     C*
+     C                     GOTO DSPLY
+     C*
+     C           ENDSC2    ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*    VALIDATE SCREEN 1 DETAILS.
+     C*
+     C           VALSC1    BEGSR
+     C*
+     C*    VALIDATES - CUSTOMER NUMBER
+     C*              - PURGE DATE
+     C*
+     C*    SET OFF SCREEN ERROR INDICATORS
+     C*
+     C                     MOVEA'00'      *IN,50
+     C***********                                                         049733
+     C*****CLEAR*OUT SCREEN ERROR MESSAGES                                049733
+     C***********                                                         049733
+     C***********          MOVE *BLANKS   ERRMSG                          049733
+      *                                                                   049733
+      **  Clear screen message queue.                                     049733
+     C                     CALL 'ZA0250'                                  049733
+     C*
+     C*    VALIDATE CUSTOMER NUMBER
+     C*
+     C*    CUSTOMER NUMBER - MANDATORY ENTRY.
+     C*                    - MUST BE A VALID CUSTOMER NUMBER OR
+     C*                      VALID CUSTOMER SHORTNAME, OR 'ALL'
+     C*                    - CUSTOMER MUST NOT BE A PARENT.
+     C*                    - CUSTOMER MUST HAVE RECORDS ON HISTORY FILE.
+     C*
+     C           CUSTNO    IFEQ *BLANKS
+     C                     MOVE ON        *IN50
+     C***********          MOVE ERR,1     ERRMSG                          049733
+     C                     MOVE OFF       SC1                             049733
+     C                     MOVEL'DLM0034' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C                     ELSE
+0452 C*
+0453 C**   IF 'ALL' NOT ENTERED.
+     C*
+     C           CUSTNO    IFNE ALL
+0452 C***********                                                         S01390
+0453 C*****IS*CUSTOMER*NO*OR*SHORTNAME*ENTERED.***************************S01390
+     C***********                                                         S01390
+0454 C***********          Z-ADD0         ZADEC                           S01390
+ 455 C***********          Z-ADD6         ZADIG                           S01390
+0456 C***********          MOVE '        'ZFIELD                          S01390
+0457 C***********          MOVEL'        'ZFIELD                          S01390
+0458 C***********          MOVE CUSTNO    ZFIELD                          S01390
+0459 C***********          EXSR ZALIGN                                    S01390
+0460 C************IN99     IFEQ ON                                        S01390
+0467 C*
+0468 C*****IF*SNAME*ENTERED,*CHECK*IT*IS*ON*SHORT*NAME*FILE.**************S01390
+     C*    CHECK CUSTOMER IS ON FILE.                                     S01390
+     C*
+0471 C***********CUSTNO    CHAINSNAME                98                   S01390
+     C                     MOVE CUSTNO    KYCN   10                       S01390
+     C***********          CALL 'AOCUSTR0'                         S01390 CSD007
+     C                     CALL 'AOCUSTR2'                                CSD007
+     C                     PARM *BLANKS   RTCD                            S01390
+     C                     PARM '*KEY   ' OPTN                            S01390
+     C                     PARM           KYCN                            S01390
+     C                     PARM *BLANKS   KYST    7                       S01390
+     C***********SDCUST    PARM SDCUST    DSSDY                    S01390 CSD007
+     C           SDCUST    PARM SDCUST    DSLDY                           CSD007
+0472 C************IN98     IFEQ ON                                        S01390
+      *                                                                   CSD007
+      ** If CSD007 is on, allow processing of a closed record (return     CSD007
+      ** code '*NRF' and date deleted equal to zero).                     CSD007
+      *                                                                   CSD007
+     C           CSD007    IFEQ 'Y'                                       CSD007
+     C           RTCD      ANDEQ'*NRF'                                    CSD007
+     C           BBDTDL    ANDEQ*ZERO                                     CSD007
+     C                     MOVELBBCUST    CNUM                            CSD007
+      *                                                                   CSD007
+     C                     ELSE                                           CSD007
+      *                                                                   CSD007
+     C           RTCD      IFNE *BLANKS                                   S01390
+     C                     MOVE ON        *IN50
+     C           KYST      IFEQ '*CSHT  '                                 S01390
+     C***********          MOVE ERR,2     ERRMSG                          049733
+     C                     MOVE OFF       SC1                             049733
+     C                     MOVEL'DLM0035' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C                     ELSE                                           S01390
+     C***********          MOVE ERR,3     ERRMSG                    S01390049733
+     C                     MOVE OFF       SC1                             049733
+     C                     MOVEL'DLM0036' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C                     END                                            S01390
+     C                     ELSE
+     C***********          MOVELCUSTNO    CNUM                            S01390
+     C                     MOVELBBCUST    CNUM                            S01390
+     C                     END
+      *                                                                   CSD007
+     C                     ENDIF                                          CSD007
+     C*
+0461 C*    CHECK CUSTOMER RECORDS ON THE HISTORY FILE
+     C*
+0462 C                     MOVELCNUM      HISK01
+     C           HISKY1    SETLLHIST4                    98
+     C           *IN98     IFEQ OFF
+     C                     MOVE ON        *IN50
+     C***********          MOVE ERR,1     ERRMSG                          049733
+     C                     MOVE OFF       SC1                             049733
+     C                     MOVEL'DLM0034' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C                     ELSE
+     C           HISKY1    READEHIST4                    98
+     C           *IN98     IFEQ ON
+     C                     MOVE ON        *IN50
+     C***********          MOVE ERR,8     ERRMSG                          049733
+     C                     MOVE OFF       SC1                             049733
+     C                     MOVEL'DLM0037' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C                     ELSE
+     C*
+     C*    DUMMY UPDATE TO RELEASE RECORD      .
+     C*
+     C                     UPDATHISTSAAF
+     C***********                                                         S01390
+     C*****CHECK*CUSTOMER*RECORDS*ON*CLIENT*FILE.*************************S01390
+     C***********                                                         S01390
+     C***********          MOVE 'A'       CLKY02                          S01390
+     C***********          MOVE HCNUM     CLKY01                          S01390
+     C***********CLTKY     CHAINCLINT                98                   S01390
+     C************IN98     IFEQ ON                                        S01390
+     C***********          MOVE ON        *IN50                           S01390
+     C***********          MOVE ERR,1     ERRMSG                          S01390
+     C***********          END                                            S01390
+     C                     END
+     C                     END
+     C*
+     C*    CHECK CUSTOMER IS NOT A PARENT
+     C*
+     C           *IN50     IFEQ OFF
+     C***********          TESTB'2'       CMIN           50               S01390
+     C           BBPAIN    IFEQ 'P'                                       S01390
+     C                     SETON                     50                   S01390
+     C                     END                                            S01390
+     C           *IN50     IFEQ ON
+     C***********          MOVE ERR,3     ERRMSG                          049733
+     C                     MOVE OFF       SC1                             049733
+     C                     MOVEL'DLM0036' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*    VALIDATE PURGE DATE
+     C*
+     C*    PURGE DATE - MANDATORY
+     C*               - MUST BE IN VALID DATE FORMAT
+     C*               - MUST NOT BE LATER THAN RUNDATE
+     C*
+     C                     MOVE *BLANKS   PRDATE
+     C                     Z-ADD*ZERO     FRDAYN
+     C*
+     C*    PURGE DATE MUST NOT BE BLANK
+     C*
+     C           PRDTIN    IFEQ *BLANKS
+     C                     MOVE ON        *IN51
+     C***********          MOVE ERR,4     ERRMSG                          049733
+     C                     MOVE OFF       SC1                             049733
+     C                     MOVEL'DLM0041' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C                     ELSE
+     C                     MOVE PRDTIN    DATE    6
+     C                     EXSR DATCHK
+     C           *IN99     IFEQ ON
+     C                     MOVE ON        *IN51
+     C***********          MOVE ERR,5     ERRMSG                          049733
+     C                     MOVE OFF       SC1                             049733
+     C                     MOVEL'DLM0042' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C                     ELSE
+     C                     MOVE ZDAYNO    FRDAYN  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PRDATE
+     C*
+     C*    PURGE DATE MUST BE BEFORE RUN DATE
+     C*
+     C***********FRDAYN    IFGT RUND                                      S01390
+     C           FRDAYN    IFGT BJRDNB                                    S01390
+     C***********          MOVE ERR,6     ERRMSG                          049733
+     C                     MOVE OFF       SC1                             049733
+     C                     MOVEL'DLM0043' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C                     MOVE ON        *IN51
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           ENDVS1    ENDSR
+     C*
+     C**********************************************************************
+     C*
+     C*    READ VALID HISTORY RECORDS FOR ALL CUSTOMERS
+     C*
+     C           READF1    BEGSR
+     C*
+     C*    POSITION FILE AT LAST RECORD READ
+     C*
+     C                     MOVE LCNUM     HISK01
+     C                     MOVE LDLNO     HISK02
+     C                     MOVE LEDAT     HISK03
+     C           HISKY2    SETGTHIST4
+     C*
+     C* IF ROLL UP OUTPUT LAST REPORT NAME FROM PREVIOUS SCREEN
+     C*
+     C           *IN08     IFEQ ON
+     C***********          MOVE CRNM      OCRNM                           S01390
+     C                     MOVE BBCRNM    OCRNM                           S01390
+     C                     END
+     C*
+     C*    RE-SET COUNTERS AND WORK ARRAY
+     C*
+     C                     Z-ADD*ZERO     X       20
+     C                     Z-ADD*ZERO     Y       20
+     C                     MOVEA*BLANKS   DL
+     C*
+     C*    READ HISTORY FILE UNTIL SCREEN FULL OR END OF FILE
+     C*
+     C           *IN07     DOUEQON
+     C           Y         OREQ 14
+     C                     READ HIST4                    07
+     C           *IN07     IFEQ OFF
+     C*
+     C*    DUMMY UPDATE TO RELEASE RECORD
+     C*
+     C                     UPDATHISTSAAF
+     C*
+     C*    CHECK DATE IS LESS THAN PURGE DATE
+     C*
+     C           EDAT      CABGEFRDAYN    ENDRF1
+     C*
+     C*    CHECK DEAL IS MATURED
+     C*
+     C           DLNO      IFNE LDLNO
+     C                     MOVE OFF       *IN20
+     C           DLNO      CHAINDEALALL              99
+     C           *IN99     IFEQ OFF
+     C           RECI      IFNE 'M'
+     C           RECI      ANDNE'R'
+     C           RECI      ANDNE'N'                                       060787
+     C                     MOVE ON        *IN20
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           *IN20     CABEQON        ENDRF1
+     C*
+     C                     MOVE ON        *IN09
+     C*
+     C*    CHECK IF CHANGE OF CUSTOMER
+     C*
+     C           HCNUM     IFNE LCNUM
+     C*
+     C*    IF NOT FIRST CUSTOMER OUTPUT PREVIOUS CUSTOMER DEALS
+     C*
+     C           X         IFNE *ZERO
+     C                     ADD  1         Y
+     C                     ADD  1         RRN1
+     C                     MOVEADL        ODLS
+     C                     WRITESUBR01
+     C                     Z-ADD*ZERO     X
+     C                     MOVEA*BLANKS   DL
+     C           Y         CABEQ14        ENDRF1
+     C                     END
+     C*
+     C*****CHAIN*TO*CLIENT*FILE*TO*RETRIEVE*REPORT*NAME*******************S01390
+     C*    ACCESS CUSTOMER DETAILS TO RETRIEVE REPORT NAME                S01390
+     C*
+     C***********          MOVE 'A'       CLKY02
+     C***********          MOVE HCNUM     CLKY01
+     C***********CLTKY     CHAINCLINT                98
+     C                     MOVE HCNUM     KYCN   10                       S01390
+     C***********          CALL 'AOCUSTR0'                         S01390 CSD007
+     C                     CALL 'AOCUSTR2'                                CSD007
+     C                     PARM *BLANKS   RTCD                            S01390
+     C                     PARM '*KEY   ' OPTN                            S01390
+     C                     PARM           KYCN                            S01390
+     C                     PARM *BLANKS   KYST    7                       S01390
+     C***********SDCUST    PARM SDCUST    DSSDY                    S01390 CSD007
+     C           SDCUST    PARM SDCUST    DSLDY                           CSD007
+     C************IN98     IFEQ ON
+      *                                                                   CSD007
+      ** If CSD007 is on, allow processing of a closed record (return     CSD007
+      ** code '*NRF' and date deleted equal to zero).                     CSD007
+      *                                                                   CSD007
+     C           CSD007    IFEQ 'Y'                                       CSD007
+     C           RTCD      ANDEQ'*NRF'                                    CSD007
+     C           BBDTDL    ANDEQ*ZERO                                     CSD007
+      *                                                                   CSD007
+     C                     ELSE                                           CSD007
+      *                                                                   CSD007
+     C           RTCD      IFNE *BLANKS                                   S01390
+     C                     MOVEL'***'     WRK10  10
+     C                     MOVE HCNUM     WRK10
+     C***********          MOVELWRK10     CRNM                            S01390
+     C***********          MOVE NFFLD     CRNM                            S01390
+     C                     MOVELWRK10     BBCRNM                          S01390
+     C                     MOVE NFFLD     BBCRNM                          S01390
+     C                     END
+      *                                                                   CSD007
+     C                     ENDIF                                          CSD007
+      *                                                                   CSD007
+     C***********          MOVE CRNM      OCRNM                           S01390
+     C                     MOVE BBCRNM    OCRNM                           S01390
+     C*
+     C                     MOVE HCNUM     LCNUM
+     C                     END
+     C*
+     C*    CHECK IF DEAL NUMBER HAS ALREADY BEEN SELECTED
+     C*
+     C                     MOVE DLNO      WRK6A   6
+     C           WRK6A     LOKUPDL                       30
+     C           *IN30     IFEQ OFF
+     C                     ADD  1         X
+     C*
+     C*    CHECK IF RECORD TO BE WRITTEN TO SUB-FILE
+     C*
+     C           X         IFGT 7
+     C                     ADD  1         Y
+     C                     ADD  1         RRN1
+     C                     MOVEADL        ODLS
+     C                     WRITESUBR01
+     C                     Z-ADD1         X
+     C                     MOVE *BLANKS   OCRNM
+     C                     MOVEA*BLANKS   DL
+     C           Y         CABEQ14        ENDRF1
+     C                     END
+     C*
+     C*    STORE DEAL NUMBER AND EVENT DATE
+     C*
+     C                     MOVE DLNO      DL,X
+     C                     END
+     C*
+     C                     MOVE DLNO      LDLNO
+     C                     MOVE EDAT      LEDAT
+     C*
+     C*    END READ LOOP
+     C*
+     C           ENDRF1    TAG
+     C                     END
+     C                     END
+     C*
+     C*    IF END OF FILE AND SOME DEALS STORED WRITE RECORD TO SUBFILE
+     C*
+     C           *IN07     IFEQ ON
+     C           Y         ANDNE14
+     C           X         ANDNE*ZERO
+     C                     ADD  1         Y
+     C                     ADD  1         RRN1
+     C                     MOVEADL        ODLS
+     C                     WRITESUBR01
+     C                     MOVE *BLANKS   OCRNM
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C**********************************************************************
+     C*
+     C*    READ VALID HISTORY RECORDS FOR SINGLE CUSTOMER
+     C*
+     C           READF2    BEGSR
+     C*
+     C*    POSITION FILE AT LAST RECORD READ
+     C*
+     C                     MOVE HCNUM     HISK01
+     C                     MOVE LDLNO     HISK02
+     C                     MOVE LEDAT     HISK03
+     C           HISKY2    SETLLHIST4
+     C*
+     C*    RE-SET COUNTER
+     C*
+     C                     Z-ADD*ZERO     Y
+     C*
+     C*    READ HISTORY FILE UNTIL SCREEN FULL OR END OF FILE
+     C*
+     C           *IN07     DOUEQON
+     C           HISKY1    READEHIST4                    07
+     C           *IN07     IFEQ OFF
+     C           Y         ANDLT96
+     C*
+     C*    DUMMY UPDATE TO RELEASE RECORD
+     C*
+     C                     UPDATHISTSAAF
+     C*
+     C*    CHECK DATE IS LESS THAN PURGE DATE
+     C*
+     C           EDAT      CABGEFRDAYN    ENDRF2
+     C*
+     C*    IF CHANGE OF DEAL NUMBER
+     C*
+     C           DLNO      IFNE LDLNO
+     C*
+     C*    CHECK DEAL IS MATURED
+     C*
+     C           DLNO      CHAINDEALALL              99
+     C           *IN99     IFEQ OFF
+     C           RECI      IFNE 'M'
+     C           RECI      ANDNE'N'                                       060787
+     C           RECI      CABNE'R'       ENDRF2
+     C                     END
+     C                     END
+     C*
+     C                     MOVE ON        *IN09
+     C*
+     C*    WRITE RECORD TO SUBFILE
+     C*
+     C                     MOVE DLNO      ODEAL
+     C                     ADD  1         RRN2
+     C                     ADD  1         Y
+     C                     MOVE DLNO      LDLNO
+     C                     WRITESUBR02
+     C*
+     C                     END
+     C*
+     C*    END READ LOOP
+     C*
+     C           ENDRF2    TAG
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C**********************************************************************
+     C*
+     C*    DELETE SELECTED RECORDS FROM INTEREST HISTORY FILE          ATE
+     C*
+     C           PURGE     BEGSR                           ***  PURGE    ***
+     C*
+     C                     OPEN HISTPAA
+     C*
+     C*    POSITION HISTORY FILE AT FIRST RECORDS TO BE DELETED
+     C*
+     C**********           Z-ADD*ZERO     HISK01                                              CSD027
+     C                     MOVE *BLANKS   HISK01                                              CSD027
+     C                     Z-ADD*ZERO     HISK02
+     C                     Z-ADD*ZERO     HISK03
+     C                     Z-ADD*ZERO     LDLNO
+     C**********           Z-ADD*ZERO     LCNUM                                               CSD027
+     C                     MOVE *BLANKS   LCNUM                                               CSD027
+     C           CUSTNO    IFNE ALL
+     C                     MOVE HCNUM     HISK01
+     C                     END
+     C*
+     C                     MOVE OFF       *IN07
+     C           HISKY2    SETLLHIST4
+     C*
+     C*    READ HISTORY FILE SELECTING RECORDS TO BE DELETED
+     C*
+     C           *IN07     DOUEQON
+     C*
+     C*    CHECK IF ALL CUSTOMERS OR SINGLE CUSTOMER SELECTED
+     C*
+     C           CUSTNO    IFEQ ALL
+     C                     READ HIST4                    07
+     C                     ELSE
+     C           HISKY1    READEHIST4                    07
+     C                     END
+     C*
+     C           *IN07     IFEQ OFF
+     C*
+     C*    BY-PASS IF EVENT DATE NOT LESS THAN PURGE DATE
+     C*
+     C           EDAT      CABGEFRDAYN    PURG01
+     C*
+     C*   IF CHANGE OF DEAL CHECK IF DEAL MATURED
+     C*
+     C           DLNO      IFNE LDLNO
+     C                     MOVE OFF       *IN20
+     C           DLNO      CHAINDEALALL              99
+     C           *IN99     IFEQ OFF
+     C           RECI      IFNE 'M'
+     C           RECI      ANDNE'R'
+     C           RECI      ANDNE'N'                                       060787
+     C                     MOVE ON        *IN20
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*    BY-PASS IF DEAL NOT MATURED
+     C*
+     C           *IN20     CABEQON        PURG01
+     C*
+     C*   IF CHANGE OF CUSTOMER CHAIN TO CLIENT FILE TO RETRIEVE
+     C*   BRANCH CODE AND ALPHA SORT CODE
+     C*
+     C           HCNUM     IFNE LCNUM
+     C***********          MOVE HCNUM     CLKY01                          S01390
+     C***********          MOVE 'A'       CLKY02                          S01390
+     C***********CLTKY     CHAINCLINT                98                   S01390
+     C*                    MOVE HCNUM     KYCN   10                S01390 093198
+     C                     MOVELHCNUM     KYCN   10                       093198
+     C***********          CALL 'AOCUSTR0'                         S01390 CSD007
+     C                     CALL 'AOCUSTR2'                                CSD007
+     C                     PARM *BLANKS   RTCD                            S01390
+     C                     PARM '*KEY   ' OPTN                            S01390
+     C                     PARM           KYCN                            S01390
+     C                     PARM *BLANKS   KYST    7                       S01390
+     C***********SDCUST    PARM SDCUST    DSSDY                    S01390 CSD007
+     C           SDCUST    PARM SDCUST    DSLDY                           CSD007
+     C************IN98     IFEQ ON                                        S01390
+     C***********          MOVE *ZERO     BRCC                            S01390
+     C***********          MOVE *BLANK    CASK                            S01390
+      *                                                                   CSD007
+      ** If CSD007 is on, allow processing of a closed record (return     CSD007
+      ** code '*NRF' and date deleted equal to zero).                     CSD007
+      *                                                                   CSD007
+     C           CSD007    IFEQ 'Y'                                       CSD007
+     C           RTCD      ANDEQ'*NRF'                                    CSD007
+     C           BBDTDL    ANDEQ*ZERO                                     CSD007
+      *                                                                   CSD007
+     C                     ELSE                                           CSD007
+      *                                                                   CSD007
+     C           RTCD      IFNE *BLANKS                                   S01390
+     C                     MOVE *BLANKS   BBBRCD                          S01390
+     C                     MOVE *BLANKS   BBCASC                          S01390
+     C                     END
+      *                                                                   CSD007
+     C                     ENDIF                                          CSD007
+      *                                                                   CSD007
+     C*                                                                   093198
+     C*   SET-UP THE CUSTOMER BRANCH CODE                                 093198
+     C*                                                                   093198
+     C                     MOVE BBBRCD    BRCC                            093198
+     C                     MOVE HCNUM     LCNUM
+     C                     END
+     C*
+     C*    OUTPUT RECORD TO STATEMENT EXTRACT FILE
+     C*
+     C                     WRITEHISTPAAF
+     C*
+     C*    DELETE RECORD FROM HISTORY FILE
+     C*
+     C                     DELETHISTSAAF
+     C/COPY WNCPYSRC,DL9110C002
+     C*
+     C*    END OF LOOP
+     C*
+     C           PURG01    TAG
+     C*
+     C                     END
+     C                     END
+     C*
+     C*    CALL PURGE REPORT
+     C*
+     C                     CLOSEHISTPAA
+     C************NAMVAR   DEFN *LDA      LDA                             S01390
+     C***********          UNLCK*NAMVAR                                   S01390
+     C***********          CALL 'DLC9111'                                 S01390
+     C***********          PARM           PRDATE                          S01390
+     C                     CALL 'FC0040X'                                 S01390
+     C                     PARM *BLANKS   RTCD                            S01390
+     C                     PARM 'DL9111'  RNAM   10                       S01390
+     C                     PARM 'DLC9111' CNAM   10                       S01390
+     C                     PARM '10001'   CSEQ    5                       S01390
+     C                     PARM           RPARM 100                       S01390
+     C                     PARM MBIN      RMBIN   1                       S01390
+     C                     PARM 'B'       RLEV    1                       S01390
+     C*    DIFFERENT BRANCH CODES ARE POSSIBLE FOR SAME CUSTOMER          093198
+     C*                    PARM BRCC      RENT    3                S01390 093198
+     C                     PARM 'ALL'     RENT    3                       093198
+     C*                                                                   S01390
+     C           RTCD      IFNE *BLANKS                                   S01390
+     C                     MOVE ON        *IN50                           S01390
+     C***********          MOVE ERR,9     ERRMSG                    S01390049733
+     C                     MOVEL'DLM0031' @MSGID 10                       049733
+     C                     CALL 'ZA0240'                                  049733
+     C                     PARM           @MSGID                          049733
+     C                     END                                            S01390
+     C*
+     C                     ENDSR
+     C*
+     C**********************************************************************
+     C*
+     C*    DATE CHECK SUBROUTINE. CHECKS THAT DATE ENTERED BEFORE RUN DATE
+     C*
+     C           DATCHK    BEGSR                           ***  DATCHK   ***
+     C*
+     C                     MOVE OFF       *IN99
+0454 C                     Z-ADD0         ZADEC
+ 455 C                     Z-ADD6         ZADIG
+0456 C                     MOVE '        'ZFIELD
+0457 C                     MOVEL'        'ZFIELD
+0458 C                     MOVE DATE      ZFIELD
+0459 C                     EXSR ZALIGN
+     C           *IN99     IFEQ OFF
+     C                     MOVE DATE      ZDATE
+     C***********DATF      COMP 'M'                      98               S01390
+     C           BJDFIN    COMP 'M'                      98               S01390
+     C                     EXSR ZDATE1
+     C                     END
+     C*
+     C*    DATE INPUT MUST BE LESS THAN RUN DATE
+     C*
+     C***********ZDAYNO    IFGE RUND                                      S01390
+     C           ZDAYNO    IFGE BJRDNB                                    S01390
+     C                     MOVE ON        *IN99
+     C                     END
+     C*
+     C                     ENDSR                           ** END DATCHK ***
+     C********************************************************************
+     C***/EJECT*****                                                      S01390
+     C********************************************************************S01390
+     C***********                                                         S01390
+     C*****ZSYSTM*SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RECORD.***S01390
+     C***********                                                         S01390
+     C***********ZSYSTM    BEGSR                           *** ZSYSTM *** S01390
+     C***********                                                         S01390
+     C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD.********************S01390
+     C***********          MOVEL'01      'ZTABKY 12                       S01390
+     C***********          MOVE '  10'    ZTABKY                          S01390
+     C***********                                                         S01390
+     C***********ZTABKY    CHAINTABDLEE              99    ON NOT THERE   S01390
+     C**N99******RECI      COMP 'D'                  9999  ON, IS DELETED S01390
+     C***********                                                         S01390
+     C*****CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.********************S01390
+     C***********DATF      COMP 'M'                      98MMDDYY, 98 ON  S01390
+     C***********                                                         S01390
+     C***********          ENDSR                                          S01390
+     C***********                                                         S01390
+     C********************************************************************S01390
+     C***********                                                         S01390
+     C********************************************************************S01390
+     C***********                                                         S01390
+     C*****ZDATE2*SR.*TO*CONVERT*A*DAY*NUMBER*TO*DATE*FORMATS.************S01390
+     C***********                                                         S01390
+     C*****THE*YEAR*2000,*BEING*DIVISIBLE*BY*400,*IS*A*LEAP*YEAR.*********S01390
+     C***********                                                         S01390
+     C***********ZDATE2    BEGSR                           *** ZDATE2 *** S01390
+     C***********                                                         S01390
+     C*****CLEAR*DATE*FIELDS.*********************************************S01390
+     C***********          Z-ADD0         ZDATE   60                      S01390
+     C***********          MOVEL'       ' ZADATE  7                       S01390
+     C***********                                                         S01390
+     C*****CALCULATION*TO*DEFINE*INPUT*DAY*NUMBER.                        S01390
+     C***********          Z-ADDZDAYNO    ZDAYNO  50                      S01390
+     C***********                                                         S01390
+     C*****DETERMINE*YEAR*NUMBER.*****************************************S01390
+     C***********                                                         S01390
+     C*****ADJUST*DAY*NUMBER*IN*CASE*LAST*DAY*OF*YEAR.********************S01390
+     C***********ZDAYNO    SUB  1         ZDAYN1  50   99                 S01390
+     C***99******          GOTO ZDEND2                                    S01390
+     C***********                                                         S01390
+     C*****CALCULATE*NUMBER*OF*4*YEAR*SPANS*SINCE*31/12/1971.*************S01390
+     C***********ZDAYN1    DIV  1461      ZLYR    20                      S01390
+     C***********          MVR            ZDAYN1           SAVE REMAINING S01390
+     C***********                                          DAYS           S01390
+     C*****CALCULATE*NUMBER*OF*REMAINING*YEARS.***************************S01390
+     C***********          Z-ADD1         ZWRK2   20                      S01390
+     C***********ZDTAG1    TAG                             ** ZDTAG1 TAG *S01390
+     C***********ZDAYN1    COMP ZYDY,ZWRK2             90                 S01390
+     C**N90******ZWRK2     ADD  1         ZWRK2                           S01390
+     C**N90******          GOTO ZDTAG1                                    S01390
+     C***********ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON S01390
+     C***********                                                         S01390
+     C*****DECREMENT*DAY*NO.*BY*DAYS*IN*REMAINING*YEARS.******************S01390
+     C**N91******ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          S01390
+     C***********                                                         S01390
+     C*****CALCULATE*ACTUAL*YEAR*NUMBER.**********************************S01390
+     C***********ZLYR      MULT 4         ZWRK3   30                      S01390
+     C***********ZWRK3     ADD  72        ZWRK3            BASE IS 1972   S01390
+     C***********          Z-ADDZWRK3     ZYEAR   20                      S01390
+     C***********ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           S01390
+     C***********                                                         S01390
+     C*****DETERMINE*MONTH*NUMBER.****************************************S01390
+     C***********                                                         S01390
+     C*****ADJUST*DAY*NO.*IN*CASE*LAST*DAY*OF*LEAP*YEAR*FEBRUARY.*********S01390
+     C***********          SETOF                     9293                 S01390
+     C***91******ZDAYN1    COMP 59                     9293               S01390
+     C***91N92***ZDAYN1    SUB  1         ZDAYN1                          S01390
+     C***********                                                         S01390
+     C*****CALCULATE*MONTH*NUMBER.****************************************S01390
+     C***********          Z-ADD2         ZWRK2                           S01390
+     C***********ZDTAG2    TAG                             ** ZDTAG2 TAG *S01390
+     C***********ZDAYN1    COMP ZMDY,ZWRK2             94                 S01390
+     C**N94******ZWRK2     ADD  1         ZWRK2                           S01390
+     C**N94******          GOTO ZDTAG2                                    S01390
+     C***********ZWRK2     SUB  1         ZWRK2                           S01390
+     C***********                                                         S01390
+     C***********          Z-ADDZWRK2     ZMTH    20       MONTH          S01390
+     C***********                                                         S01390
+     C*****DETERMINE*DAY*OF*MONTH.****************************************S01390
+     C***********                                                         S01390
+     C*****ADD*BACK*LAST*DAY*OF*YEAR*ADJUSTMENT.**************************S01390
+     C***********ZDAYN1    ADD  1         ZDAYN1                          S01390
+     C***********                                                         S01390
+     C*****CALCULATE*DAY*OF*MONTH*****************************************S01390
+     C***********ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            S01390
+     C***********                                                         S01390
+     C*****ADD*BACK*LEAP*YEAR*29TH*FEBUARY*ADJUSTMENT,*IF*REQUIRED.*******S01390
+     C***93******ZDAY      ADD  1         ZDAY                            S01390
+     C***********                                                         S01390
+     C*****FORMAT*DATE,*DDMMYY*OR*MMDDYY.*********************************S01390
+     C**N98******          MOVELZDAY      ZWRK4   40                      S01390
+     C***98******          MOVE ZDAY      ZWRK4                           S01390
+     C**N98******          MOVE ZMTH      ZWRK4                           S01390
+     C***98******          MOVELZMTH      ZWRK4                           S01390
+     C***********          MOVELZWRK4     ZDATE                           S01390
+     C***********          MOVE ZYEAR     ZDATE                           S01390
+     C***********                                                         S01390
+     C*****FORMAT*ALPHA*DATE,*DDMMMYY.************************************S01390
+     C***********ZDAY      COMP 10                     95                 S01390
+     C***********          MOVELZDAY      ZWRK5   5                       S01390
+     C***95******          MOVEL' '       ZWRK5                           S01390
+     C***********          MOVE ZMNM,ZMTH ZWRK5                           S01390
+     C***********          MOVELZWRK5     ZADATE                          S01390
+     C***********          MOVE ZYEAR     ZADATE                          S01390
+     C***********                                                         S01390
+     C***********ZDEND2    ENDSR                           * ZDEND2 ENDSR*S01390
+     C***********                                                         S01390
+     C***/EJECT*****                                                      S01390
+0747 C***********                                                         S01390
+0748 C*****ZALIGN*SR.*TO*VALIDATE*AND*RIGHT-ALIGN*NUMERIC*FIELDS.*********S01390
+0749 C***********                                                         S01390
+     C***********ZALIGN    BEGSR                           *** ZALIGN *** S01390
+     C***********                                                         S01390
+     C***********          SETOF                     929399               S01390
+     C***********                                                         S01390
+     C*****SAVE*INPUT*FIELD*IN*ARRAY,*ZA1.********************************S01390
+     C***********          MOVEAZFIELD    ZA1                             S01390
+     C***********                                                         S01390
+     C*****CALCULATION*TO*DEFINE*NUMBER*STRUCTURE*CONTROL*FIELDS.*********S01390
+     C***********          Z-ADDZADIG     ZADIG   20                      S01390
+     C***********          Z-ADDZADEC     ZADEC   10                      S01390
+     C***********                                                         S01390
+     C*****CALCULATIONS*TO*DEFINE/CLEAR*FIELDS.***************************S01390
+     C***********          MOVE ' '       ZA2                             S01390
+     C***********          MOVEAZA2       ZFIELD 16                       S01390
+     C***********          Z-ADD0         ZX      20                      S01390
+     C***********          Z-ADD0         ZY      20                      S01390
+     C***********                                                         S01390
+     C*****ENSURE*REQUIRED*STRUCTURE*OF*FIELD*IS*VALID.*******************S01390
+     C***********ZADIG     ADD  ZADEC     ZZ      20                      S01390
+     C***********ZZ        COMP 15                   99                   S01390
+     C***99******          GOTO ZAEND                                     S01390
+     C***********                                                         S01390
+     C*****LOOP*TO*FIND*DECIMAL*POINT,*BLANKS*AND*CHARACTERS.*************S01390
+     C***********ZATAG1    TAG                             ** ZATAG1 TAG *S01390
+     C***********ZX        ADD  1         ZX                              S01390
+     C***********                                                         S01390
+     C*****CHECK*FOR*DECIMAL*POINT.*ERROR*IF*SECOND*DECIMAL*POINT.********S01390
+     C***********ZA1,ZX    COMP '.'                      90               S01390
+     C***90*93***          SETON                     99                   S01390
+     C***99******          GOTO ZAEND                                     S01390
+     C***********                                                         S01390
+     C***********                                                         S01390
+     C*****CHECK*FOR*'M'*CONSTANT.*ERROR*IF*NOT*LAST*CHARACTER*ENTERED****S01390
+     C***********ZA1,ZX    COMP 'M'                      96               S01390
+     C***96******          DO                                             S01390
+     C***********ZX        ADD  1         ZX                              S01390
+     C***********ZA1,ZX    COMP ' '                  9999                 S01390
+     C***99******          GOTO ZAEND                                     S01390
+     C***********ZX        SUB  1         ZX                              S01390
+     C***********ZX        COMP 9                    99                   S01390
+     C***99******          GOTO ZAEND                                     S01390
+     C***********          END                                            S01390
+     C***********                                                         S01390
+     C*****CHECK*FOR*'T'*CONSTANT.*ERROR*IF*NOT*LAST*CHARACTER*ENTERED****S01390
+     C***********ZA1,ZX    COMP 'T'                      97               S01390
+     C***97******          DO                                             S01390
+     C***********ZX        ADD  1         ZX                              S01390
+     C***********ZA1,ZX    COMP ' '                  9999                 S01390
+     C***99******          GOTO ZAEND                                     S01390
+     C***********ZX        SUB  1         ZX                              S01390
+     C***********ZX        COMP 12                   99                   S01390
+     C***99******          GOTO ZAEND                                     S01390
+     C***********          END                                            S01390
+     C***********                                                         S01390
+     C*****CLEAR*ALPHAMERIC*CONSTANT*FROM*ZA1*****************************S01390
+     C***96******                                                         S01390
+     C***OR*97***             MOVE ' '       ZA1,ZX                       S01390
+     C***********                                                         S01390
+     C*****CHECK*FOR*BLANKS.*BYPASS*FOR*FIRST*BLANK*AFTER*A*DIGIT.********S01390
+     C***********ZA1,ZX    COMP ' '                      91               S01390
+     C***91*92***          GOTO ZATAG2                                    S01390
+     C***********                                                         S01390
+     C*****CHECK*FOR*NUMERIC,*IF*NOT*'.'*OR*' '.**************************S01390
+     C**N90N91***ZA1,ZX    COMP '0'                    99                 S01390
+     C**N90N91N99ZA1,ZX    COMP '9'                  99                   S01390
+     C***99******          GOTO ZAEND                      NOT NUMERIC    S01390
+     C***********                                                         S01390
+     C*****STORE*DIGITS*IN*ARRAY*AND*HOW*MANY.****************************S01390
+     C*****ZY,*TOTAL*OF*DIGITS*IN*THE*INPUT*FIELD.************************S01390
+     C*****ZZ,*TOTAL*OF*DIGITS*TO*THE*LEFT*OF*DECIMAL*POINT.**************S01390
+     C**N90N91***ZY        ADD  1         ZY         92                   S01390
+     C**N90N91***          MOVE ZA1,ZX    ZA2,ZY                          S01390
+     C***90******          Z-ADDZY        ZZ         93  93               S01390
+     C***********                                                         S01390
+     C***********ZX        COMP 16                     94  CHECK IF ALL   S01390
+     C***94******          GOTO ZATAG1                                    S01390
+     C***********                                                         S01390
+     C***********ZATAG2    TAG                             ** ZATAG2 TAG *S01390
+     C***********                                                         S01390
+     C*****IF*'M'*SPECIFIED,*MULTIPLY*ZA1*BY*1*MILLION********************S01390
+     C***96******ZZ        ADD  6         ZZ                              S01390
+     C***********                                                         S01390
+     C*****IF*'T'*SPECIFIED,*MULTIPLY*ZA1*BY*1*THOUSAND*******************S01390
+     C***97******ZZ        ADD  3         ZZ                              S01390
+     C***********                                                         S01390
+     C*****FILL*IN*ZEROS*IN*ANY*BLANKS*LEFT*OF*DECIMAL*POINT**************S01390
+     C***96*93***                                                         S01390
+     C***OR*97*93***ZZ        DOWGTZY                                     S01390
+     C***********ZY        ADD  1         ZY                              S01390
+     C***********          MOVE '0'       ZA2,ZY                          S01390
+     C***********          END                                            S01390
+     C***********                                                         S01390
+     C*****IF*CONSTANT*SPECIFIED*WITH*NO*DECIMAL*POINT*ZEROISE*BLANKS*****S01390
+     C***96N93***          DO   6                                         S01390
+     C***********ZY        ADD  1         ZY                              S01390
+     C***********          MOVE '0'       ZA2,ZY                          S01390
+     C***********          END                                            S01390
+     C***********                                                         S01390
+     C***97N93***          DO   3                                         S01390
+     C***********ZY        ADD  1         ZY                              S01390
+     C***********          MOVE '0'       ZA2,ZY                          S01390
+     C***********          END                                            S01390
+     C***********                                                         S01390
+     C*****IF*NO*DECIMAL*POINT*FOUND,*SET*TOTAL*FIELD*ZZ.*****************S01390
+     C**N93******          Z-ADDZY        ZZ                              S01390
+     C***********                                                         S01390
+     C*****CHECK*FOR*EMBEDDED*BLANKS.*************************************S01390
+     C***91*92***          MOVEAZA1,ZX    ZFIELD                          S01390
+     C***91*92***ZFIELD    COMP ' '                  9999                 S01390
+     C***99******          GOTO ZAEND                      EMBEDDED BLANK S01390
+     C***********                                                         S01390
+     C*****ENSURE*THAT*NUMBER*OF*DIGITS*ENTERED*EITHER*SIDE***************S01390
+     C*****OF*DECIMAL*POINT*ARE*NOT*MORE*THAN*ALLOWED.********************S01390
+     C***********ZZ        COMP ZADIG                99                   S01390
+     C***********ZY        SUB  ZZ        ZX                              S01390
+     C**N99******ZADEC     SUB  ZX        ZX           9995               S01390
+     C***99******          GOTO ZAEND                                     S01390
+     C***95******          GOTO ZATAG4                     NO TRAILING    S01390
+     C***********                                          BLANKS.        S01390
+     C*****FILL*THE*TRAILING*BLANKS*WITH*ZEROS.***************************S01390
+     C***********ZY        ADD  ZX        ZZ                              S01390
+     C***********ZATAG3    TAG                             ** ZATAG3 TAG *S01390
+     C***********ZY        ADD  1         ZY                              S01390
+     C***********          MOVE '0'       ZA2,ZY                          S01390
+     C***********ZY        COMP ZZ                     94                 S01390
+     C***94******          GOTO ZATAG3                                    S01390
+     C***********                                                         S01390
+     C*****RIGHT-ALIGN*THE*VALUE*BY*MOVING*BACK*TO*ARRAY,*ZA1.************S01390
+     C***********ZATAG4    TAG                             ** ZATAG4 TAG *S01390
+     C***********          MOVE '0'       ZA1                             S01390
+     C***********          Z-ADD16        ZX                              S01390
+     C***********ZATAG5    TAG                             ** ZATAG5 TAG *S01390
+     C***********ZY        COMP 0                        94               S01390
+     C***94******          GOTO ZATAG6                                    S01390
+     C***********          MOVE ZA2,ZY    ZA1,ZX                          S01390
+     C***********ZY        SUB  1         ZY                              S01390
+     C***********ZX        SUB  1         ZX                              S01390
+     C***********          GOTO ZATAG5                                    S01390
+     C***********ZATAG6    TAG                             ** ZATAG6 TAG *S01390
+     C***********                                                         S01390
+     C*****MOVE*VALIDATED*AND*RIGHT-ALIGNED*NUMBER*BACK*INTO*ZFIELD.******S01390
+     C***********          MOVEAZA1       ZFIELD                          S01390
+     C***********                                                         S01390
+     C***********          SETOF                     9697                 S01390
+     C***********                                                         S01390
+     C***********ZAEND     ENDSR                           * ZAEND ENDSR *S01390
+     C***********                                                         S01390
+     C***********                                                         S01390
+     C********************************************************************S01390
+     C***/SPACE*3                                                         S01390
+     C********************************************************************S01390
+     C***********                                                         S01390
+     C*****ZDATE1*SR.*TO*VALIDATE*DATES*SUBMITTED*AND*********************S01390
+     C****************CONVERT*TO*A*NUMBER*OF*DAYS.************************S01390
+     C***********                                                         S01390
+     C*****THE*YEAR*2000,*BEING*DIVISIBLE*BY*400,*IS*A*LEAP*YEAR.*********S01390
+     C***********                                                         S01390
+     C***********ZDATE1    BEGSR                           *** ZDATE1 *** S01390
+     C***********                                                         S01390
+     C*****CLEAR*DAY*NUMBER.**********************************************S01390
+     C***********          Z-ADD0         ZDAYNO  50                      S01390
+     C***********                                                         S01390
+     C*****CALCULATION*TO*DEFINE*INPUT*DATE*FIELD.************************S01390
+     C***********          Z-ADDZDATE     ZDATE   60                      S01390
+     C***********                                                         S01390
+     C*****GET*INDIVIDUAL*DAY,*MONTH*AND*YEAR*FIELDS.*********************S01390
+     C***********          MOVE ZDATE     ZYEAR   20                      S01390
+     C**N98******          MOVELZDATE     ZDAY    20                      S01390
+     C***98******          MOVELZDATE     ZMTH    20                      S01390
+     C***********          MOVE ZDATE     ZWRK4   40                      S01390
+     C**N98******          MOVELZWRK4     ZMTH                            S01390
+     C***98******          MOVELZWRK4     ZDAY                            S01390
+     C***********                                                         S01390
+     C*****ENSURE*MONTH*IS*VALID.*****************************************S01390
+     C***********ZMTH      COMP 0                      9999               S01390
+     C**N99******ZMTH      COMP 12                   99                   S01390
+     C***99******          GOTO ZDEND1                     BYPASS IF ERRORS01390
+     C***********                                                         S01390
+     C*****CHECK*FOR*30*DAY*MONTHS.***************************************S01390
+     C***********ZMTH      COMP 4                        90IF 90 ON, 30   S01390
+     C**N90******ZMTH      COMP 6                        90DAY MONTH.     S01390
+     C**N90******ZMTH      COMP 9                        90               S01390
+     C**N90******ZMTH      COMP 11                       90               S01390
+     C***********                                                         S01390
+     C*****ENSURE*DAY*IS*VALID.*******************************************S01390
+     C***********ZDAY      COMP 0                      9999               S01390
+     C***90N99***ZDAY      COMP 30                   99                   S01390
+     C**N90N99***ZDAY      COMP 31                   99                   S01390
+     C***99******          GOTO ZDEND1                     BYPASS IF ERRORS01390
+     C***********                                                         S01390
+     C*****CHECK*FOR*LEAP*YEAR*AND*FEBRUARY.******************************S01390
+     C***********ZYEAR     ADD  28        ZYEAR                           S01390
+     C***********ZYEAR     DIV  4         ZLYR    20                      S01390
+     C***********          MVR            ZLY     10     91LEAP YR, 91 ON S01390
+     C***********ZMTH      COMP 2                    93  92FEB., 92 ON    S01390
+     C***********                                          PAST FEB, 93 ONS01390
+     C*****IF*FEBUARY*FURTHER*VALIDATE*DAY.*******************************S01390
+     C**N91*92***ZDAY      COMP 28                   99                   S01390
+     C***91*92***ZDAY      COMP 29                   99                   S01390
+     C***99******          GOTO ZDEND1                     BYPASS IF ERRORS01390
+     C***********                                                         S01390
+     C*****DETERMINE*NUMBER*OF*DAYS*FROM*31/12/1971.*****NO.OF*4*YR.*SPANSS01390
+     C***********ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.S01390
+     C**N91******ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YRS01390
+     C***91*93***ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.S01390
+     C***********ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR S01390
+     C***********ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTHS01390
+     C***********                                                         S01390
+     C***********ZDEND1    ENDSR                           * ZDEND1 ENDSR*S01390
+     C***********                                                         S01390
+     C********************************************************************S01390
+     C***/EJECT*****                                                      S01390
+     C********************************************************************S01390
+     C/COPY ZSRSRC,GLINTCZ1                                               S01390
+     C/SPACE 3                                                            S01390
+     C/COPY ZSRSRC,ZDAT10Z2                                               126017
+     C/EJECT                                                              126017
+     C/COPY ZSRSRC,ZALIGNZ2                                               S01390
+     C/SPACE 3                                                            S01390
+     C/COPY ZSRSRC,ZDATE1Z2                                               S01390
+     C/SPACE 3                                                            S01390
+     C/COPY ZSRSRC,ZDATE2Z2                                               S01390
+     C/SPACE 3                                                            S01390
+     C/COPY ZSRSRC,ZSAVEZ1                                                S01390
+     C/SPACE 3                                                            S01390
+     C/COPY ZSRSRC,ZRSTORZ1                                               S01390
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZINTDYZ2                                               066550
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZDATE9Z3                                               066550
+     C/SPACE 3                                                            S01390
+     C*                                                                   049733
+     C* TABLE OF ERROR MESSAGES HAS BEEN REMOVED BY 049733                049733
+     C*                                                                   049733
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT                                        S01390
+(c) Misys International Banking Systems Ltd. 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

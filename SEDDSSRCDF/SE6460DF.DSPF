@@ -1,0 +1,167 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SE Security Holdings Enquiry')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Securities Trading Module                        *
+     A*                                                               *
+     A*  SE6460DF - SECURITY HOLDINGS ENQUIRY                         *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 29Nov05               *
+      *  Prev Amend No. 222234             Date 01Dec03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                 112563             Date 21JAN97               *
+     A*                 S01514 *CREATE     DATE 10AUG94               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  222234 - Reopen. Redesigned fix to consider MUI.             *
+      *         - Portfolio security positions not separated in       *
+      *           enquiry.  Add the portfolio reference field in the  *
+      *           display to be able to distinquish from which        *
+      *           portfolio the customer position belong to.          *
+     A*  112563 - Header and footer changes required for GUI          *
+     A*           Multilanguage support.                              *
+     A*  S01514 - SE Depot Holdings Report and Enquiry                *
+     A*                                                               *
+     A*****************************************************************
+     A*         /////////////////////////////////////////             *
+     A*        // WARNING: When creating this display //              *
+     A*       //   file, take options RSTDSP(*YES)   //               *
+     A*      //                       SHARE (*YES)  //                *
+     A*     /////////////////////////////////////////                 *
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+     A*****************************************************************
+     A                                      REF(MFRFL)
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      MSGLOC(24)
+     A                                      CHGINPDFT
+     A                                      VLDCMDKEY(50 'ANY VALID KEY')
+     A N03                                  ROLLUP(20)
+     A                                      CA03
+     A                                      CF12
+     A                                      CF05
+     A                                      CF06
+     A                                      CF09
+     A*
+     A*
+     A*  SUBFILE DETAILS
+     A          R SE6460S0                  SFL
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A            SELECT         1A  B  7  2DSPATR(HI)
+     A                                      DSPATR(UL)
+     A*
+     A  28
+     AO 29                                  DSPATR(PR ND)
+     A*
+     A            SCLIN         77A  O  7  4DSPATR(HI)
+     A            SCTWN         11A  O  8  4DSPATR(HI)
+     A            STYPE          2A  O  8 16DSPATR(HI)
+     A            SDBR           3A  O  8 20DSPATR(HI)
+     A N07                                  DSPATR(ND)
+     A            STREP         19A  O  8 24DSPATR(HI)
+     A            SVREP         19A  O  8 45DSPATR(HI)
+     A**Start of change 222234
+     A            SPTFT          5A  O  8 66DSPATR(HI)
+     A            SPTFR          4A  O  8 72DSPATR(HI)
+     A**End of change 222234
+      * Begin /CSD027/
+     A**********  SCDCN          6  0H                                                        CSD027
+     A            SCDCN          6A  H
+      * End /CSD027/
+     A            SUDBK          2   H
+     A*/COPY WNCPYSRC,SE6460DF01
+     A          R SE6460C0                  SFLCTL(SE6460S0)
+     A                                      TEXT('SUBFILE CONTROL')
+     A                                      SFLSIZ(0008)
+     A                                      SFLPAG(0007)
+     A                                      OVERLAY
+     A N02                                  SFLDSPCTL
+     A N02N03                               SFLDSP
+     A  02                                  SFLCLR
+     A  05                                  SFLEND
+     A  06                                  SFLMSG('Roll up or down is beyond +
+     A                                      first or last record in file.' 06)
+     A            SFLREC         4S 0H      SFLRCDNBR
+     A  04                             21 25'*** No Details to display ***'
+     A                                      DSPATR(HI)
+     A  42        ERMSG         79   O 21  2DSPATR(HI RI)
+     A**                                             Begin /112563/
+     A***********                      22  2'Enter F3 to end, F12 for prev-
+     A***********                           ious enquiry, F5 for initial -
+     A***********                           screen'
+     A***********                      23  2'screen, F6 for Shortname Enquir-
+     A***********                           y, F9 for initial enquiry, Roll -
+     A***********                           up/down'
+     A***********                      24  2'or enter Security Shortname'
+     A*********** SSTDSS        10A  B 24 30DSPATR(HI)
+     A                                 22  2'F3=Exit  F12=Previous  F5=Initial -
+     A                                      screen  F6=Shortname Enquiry'
+     A                                 23  2'F9=Initial Enquiry'
+     A                                 23 25'or enter Security Shortname'
+     A            SSTDSS        10A  B 23 53DSPATR(HI)
+     A**                                             End   /112563/
+     A  41                                  DSPATR(PC)
+     A N41                                  DSPATR(UL)
+     A  41                                  DSPATR(RI)
+     A**                                             Begin /112563/
+     A***********                      24 41'and Branch'
+     A                                 23 64'and Branch'
+     A**                                             End   /112563/
+     A N07                                  DSPATR(ND)
+     A**                                             Begin /112563/
+     A*********** SBRCD          3A  B 24 52DSPATR(HI)
+     A            SBRCD          3A  B 23 75DSPATR(HI)
+     A**                                             End   /112563/
+     A N43                                  DSPATR(UL)
+     A  43                                  DSPATR(RI)
+     A  43                                  DSPATR(PC)
+     A N07                                  DSPATR(ND)
+     A N07                                  DSPATR(PR)
+     A*
+     A          R SE6460F0                  TEXT('TOP OF SCREEN')
+     A                                  1  2'SECURITY HOLDINGS FOR'
+     A                                      DSPATR(HI UL)
+     A                                  1 24':'
+     A                                      DSPATR(HI)
+     A            SSESN         10A  O  1 26DSPATR(HI)
+     A                                  1 37'Branch:'
+     A N07                                  DSPATR(ND)
+     A            ZZBRCD         3A  O  1 45DSPATR(HI)
+     A N07                                  DSPATR(ND)
+     A            RUNA           7A  O  1 49
+     A                                  1 57TIME
+     A                                  1 66'WID'
+     A            @JOB          10A  O  1 70
+     A            SDESC         41A  O  2  2DSPATR(HI)
+     A                                  2 68'Currency'
+     A            SNMCY          3A  O  2 77DSPATR(HI)
+     A**                                             Begin /112563/
+     A                                  3  2'SE6460'
+     A**                                             End   /112563/
+     A                                  4  4'Book/Client'
+     A                                  4 35'--------------'
+     A                                  4 52'Balances'
+     A                                  4 63'---------------'
+     A  07                              5 18'Branch'
+     A**Start of change 222234
+     A**Start of change 222234
+     A**********                        5 25'Folio'                                           222234
+     A**End of change 222234
+     A**End of change 222234
+     A                                  5 35'Trade'
+     A                                  5 54'Value'
+     A                                  5 72'Settle'

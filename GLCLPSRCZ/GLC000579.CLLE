@@ -1,0 +1,168 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL ATU Authorisation Log File Housekeeping')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000579 - Midas GL ATU Authorisation Log File             */
+/*                   Housekeeping Control                            */
+/*                                                                   */
+/*       Called by:                                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. MD021155           Date 08Jul13              */
+/*       Prev Amend No. CGL127AJ           Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      CGL114  *CREATE    Date 04Jan10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD021155 - COB Restructure Phase 1 remnants                 */
+/*                - End processing is open to looping                */
+/*                - RGZPFM not moved                                 */
+/*       CGL127AJ - COB Restructure - GL COB Optimisation Phase 1    */
+/*       CGL114 - Account Transfer Utility                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                      Misys International Banking Systems Ltd. 2010')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+/**********  DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')   */                   /*CGL127AJ*/
+/**********  DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)             */                   /*CGL127AJ*/
+/**********  DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)            */                   /*CGL127AJ*/
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                  /*CGL127AJ*/
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(26)                                 /*CGL127AJ*/
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)                                /*CGL127AJ*/
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)                                   /*CGL127AJ*/
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)                                   /*CGL127AJ*/
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)                                    /*CGL127AJ*/
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)                                /*CGL127AJ*/
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)                               /*CGL127AJ*/
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CGL127AJ*/
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CGL127AJ*/
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GLC000579 - Midas GL ATU Authorisation +
+                        Log File Housekeeping Today') +
+                        TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Write current journal sequence number to file SCJSEQPD */                            /*CGL127AJ*/
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)                                        /*CGL127AJ*/
+             CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                          *CAT &CSEQA)                                                  /*CGL127AJ*/
+             CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)                          /*CGL127AJ*/
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                          FLAG('S') TEXT(&STEXT)                                        /*CGL127AJ*/
+                                                                                        /*CGL127AJ*/
+/**********  RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)        */                   /*CGL127AJ*/
+/**********  CHGVAR     VAR(&DPLIB) VALUE(&SYSID *CAT 'DPLIB')     */                   /*CGL127AJ*/
+ 
+/**********  CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)        */                   /*CGL127AJ*/
+/**********  IF         COND(&STAT *NE 'Y') THEN(DO)               */                   /*CGL127AJ*/
+/**********     DLTF       FILE(XGLATULPD)                         */                   /*CGL127AJ*/
+/**********     MONMSG     MSGID(CPF2105 CPF0000)                  */                   /*CGL127AJ*/
+/**********     CPYF       FROMFILE(GLATULPD) TOFILE(&DPLIB/XGLATULPD) +
+                           MBROPT(*REPLACE) CRTFILE(*YES)          */                   /*CGL127AJ*/
+/**********  ENDDO                                                 */                   /*CGL127AJ*/
+ 
+/**********  IF         COND(&STAT *EQ 'Y') THEN(DO)               */                   /*CGL127AJ*/
+/**********      CPYF       FROMFILE(XGLATULPD) TOFILE(GLATULPD) +
+                            MBROPT(*REPLACE)                       */                   /*CGL127AJ*/
+/**********      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(GLATULPD))            */                   /*CGL127AJ*/
+/**********  ENDDO                                                 */                   /*CGL127AJ*/
+ 
+/**********  CHGVAR     VAR(&STAT) VALUE('Y')                      */                   /*CGL127AJ*/
+/**********  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)        */                   /*CGL127AJ*/
+ 
+/** Account Transfer Utility Authorisation Log File Housekeeping */
+             CALL       PGM(GL000579)
+ 
+/**********  IF         COND(%SWITCH(XXXXXX00)) THEN(DO)           */                   /*MD021155*/
+/**********  CHGVAR     VAR(&STAT) VALUE('N')                      */                   /*CGL127AJ*/
+/**********  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)        */                   /*CGL127AJ*/
+ 
+/**********  DLTF       FILE(XGLATULPD)                            */                   /*CGL127AJ*/
+/**********  MONMSG     MSGID(CPF2105 CPF0000)                     */                   /*CGL127AJ*/
+ 
+/**********  CALL       PGM(SCC000060) PARM('GLATULPD' '*FIRST')   */                   /*MD021155*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +        */                   /*MD021155*/
+/**********             CMDLBL(ABNOR))                             */                   /*MD021155*/
+/**********  ENDDO                                                 */                   /*MD021155*/
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                        TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+                                                                                        /*MD021155*/
+/** Write current journal sequence number to file SCJSEQPD, using  */                   /*MD021155*/
+/** command SCWRTJREG                                              */                   /*MD021155*/
+                                                                                        /*MD021155*/
+             CHGVAR     VAR(&STEXT) VALUE(' ')                                          /*MD021155*/
+             CHGVAR     VAR(&STEXT) VALUE('End of ' *CAT &CNAM +
+                          *CAT &CSEQA)                                                  /*MD021155*/
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                          FLAG('E') TEXT(&STEXT)                                        /*MD021155*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                        GLC000579 ended abnormally - see job log') +
+                        TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* Retrieve attributes of current job  */                                               /*CGL127AJ*/
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)                                  /*CGL127AJ*/
+                                                                                        /*CGL127AJ*/
+/* Retrieve the most recent journal entry sequence number */                            /*CGL127AJ*/
+/* for the specific job. */                                                             /*CGL127AJ*/
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
+                          TOENT(*FIRST) SEARCH(*DESCEND) +
+                          JOB(&NBR/&USR/&JOB) RTNSEQNBR(&START) +
+                          RTNRCV(&SJRNRCVR)                                             /*CGL127AJ*/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)                                 /*CGL127AJ*/
+             CHGVAR     VAR(&START) VALUE(0)                                            /*CGL127AJ*/
+             ENDDO                                                                      /*CGL127AJ*/
+                                                                                        /*CGL127AJ*/
+/* Determine starting journal sequence number of current job. */                        /*CGL127AJ*/
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                           SEQ(&FINISH)                                                 /*CGL127AJ*/
+                                                                                        /*CGL127AJ*/
+/* Remove journal changes. */                                                           /*CGL127AJ*/
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                          THEN(DO)                                                      /*CGL127AJ*/
+             RMVJRNCHG  JRN(ICJRN) FILE((GLATULPD)) +
+                          FROMENT(&START) TOENT(&FINISH) +
+                          RCVRNG(&SJRNRCVR &FJRNRCVR)                                   /*CGL127AJ*/
+             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                          /*CGL127AJ*/
+             ENDDO                                                                      /*CGL127AJ*/
+                                                                                        /*CGL127AJ*/
+ END:
+/*******************************************************************/          /*CGL127AJ MD021155*/
+/**Write*current*journal*sequence*number*to*file*SCJSEQPD***********/          /*CGL127AJ MD021155*/
+/**********  CHGVAR     VAR(&STEXT) VALUE(' ')                     */          /*CGL127AJ MD021155*/
+/**********  CHGVAR     VAR(&STEXT) VALUE('End of ' *CAT &CNAM *CAT +*/                 /*MD021155*/
+/**********               &CSEQA)                                  */          /*CGL127AJ MD021155*/
+/**********  SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) + */                   /*MD021155*/
+/**********               FLAG('E') TEXT(&STEXT)                   */          /*CGL127AJ MD021155*/
+ 
+             ENDPGM
+ 

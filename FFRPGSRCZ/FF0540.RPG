@@ -1,0 +1,251 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Reset Monthly Statistics')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0540  -  RESET MONTHLY STATISTICS                            *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 Patch D ---------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *  Prev Amend No. 163444             Date 08OCT99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 104013             Date 02AUG96               *
+     F*                  CFF004             DATE 12SEP96                 *
+     F*                  S01456             DATE 29NOV93                 *
+     F*                  E20526             DATE 03MAY90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*    163444  -  Re-compiled over changed physical file.            *
+     F*    104013  -  RENAME RECI FORM MKCTLD TO AVOID AN OVERWRITTEN    *
+     F*               FROM FILE PRICSD                                   *
+     F*    CFF004  -  Increase in size of Price Fields,(Recompiled Only) *
+     F*    S01456  -  Monthly P&L Enhancements.                          *
+     F*    E20526  -  RECOMPILED OVER CHANGED FILE PRICSD                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     FPOSTNKD UF  E                    DISK
+     FPOSTNCD UF  E                    DISK
+     FPRICSD  UF  E                    DISK
+     FMKCTL   UF  E           K        DISK                               S01456
+     F*
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       30         EOF on READ operation
+     F*             LR   Last record
+     F/EJECT
+     E                    CPY@    1   1 80
+     I*                                                                   104013
+     IMKCTLDF                                                             104013
+     I              RECI                            MKRECI                104013
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01456
+     I@DSFDY    E DSDSFDY                                                 S01456
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01456
+     I*                                                                   S01456
+      *                                                                   S01456
+     C           *ENTRY    PLIST                                          S01456
+     C                     PARM           MKT     2                       S01456
+     C*                                                                   S01456
+      *** Check the switchable features file to see if S01456 is on.      S01456
+      *                                                                   S01456
+     C                     MOVE 'N'       S01456  1                       S01456
+     C                     CALL 'AOSARDR0'                                S01456
+     C                     PARM '       ' @RTCD   7                       S01456
+     C                     PARM '*VERIFY' @OPTN   7                       S01456
+     C                     PARM 'S01456 ' @SARD   6                       S01456
+      *                                                                   S01456
+     C           @RTCD     IFEQ *BLANKS                                   S01456
+     C                     MOVE 'Y'       S01456                          S01456
+     C                     ENDIF                                          S01456
+      *                                                                   S01456
+     C*  TAKE MARKET CONTROL INFORMATIONS                                 S01456
+     C*                                                                   S01456
+     C           S01456    IFEQ 'Y'                                       S01456
+     C           MKT       IFNE *BLANKS                                   S01456
+     C           MKT       CHAINMKCTL                50                   S01456
+     C                     ELSE                                           S01456
+     C                     MOVE 'Y'       EOMCHK                          S01456
+     C                     ENDIF                                          S01456
+     C                     ENDIF                                          S01456
+     C*                                                                   S01456
+     C*                                                                   S01456
+     C*
+     C**                   MAIN PROCESSING
+     C*                    ~~~~~~~~~~~~~~~
+     C                     EXSR RSTPOC
+      *
+     C                     EXSR RSTPOK
+      *
+     C                     EXSR RSTPRS
+      *
+      **                   FINAL PROCESSING
+      *                    ~~~~~~~~~~~~~~~~
+      *                                                                   S01456
+      ** If the feature switchable feature is on then                     S01456
+      ** reset EOM indicator to 'N' for this market after EOM             S01456
+      *                                                                   S01456
+     C           S01456    IFEQ 'Y'                                       S01456
+     C           MKT       IFNE *BLANKS                                   S01456
+     C                     MOVE 'N'       EOMCHK                          S01456
+     C                     UPDATMKCTLDF                                   S01456
+     C                     ENDIF                                          S01456
+     C                     ENDIF                                          S01456
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   RSTPOC SR. - To reset monthly totals on POSTNCD               *
+     C**   ~~~~~~~~~                                                     *
+     C**      Called From   Main Processing                              *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           RSTPOC    BEGSR                           ** RSTPOC SR**
+     C**
+     C                     READ POSTNCDF                 30
+      *                                                                   S01456
+      *
+      ** Do while the end of file indicator remains off
+      *
+     C           *IN30     DOWEQ'0'
+      *
+     C           S01456    IFEQ 'Y'                                       S01456
+     C           EOMCHK    ANDEQ'Y'                                       S01456
+     C           S01456    OREQ 'N'                                       S01456
+      *
+     C                     Z-ADD0         CMTM
+     C                     Z-ADD0         CHTM
+     C                     Z-ADD0         PMTM
+     C                     Z-ADD0         UPLM
+     C                     Z-ADD0         RPLM
+      *
+     C                     EXCPTPOC
+      *                                                                   S01456
+     C                     ENDIF                                          S01456
+      *
+     C                     READ POSTNCDF                 30
+      *
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   PSTPOK SR. - To record start of month data on POSTNKD         *
+     C**   ~~~~~~~~~    and set monthly totals to zero                   *
+     C**      Called From   Main Processing                              *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           RSTPOK    BEGSR                           ** RSTPOK SR**
+     C**
+     C                     MOVE '0'       *IN30
+      *
+     C                     READ POSTNKDF                 30
+      *
+      ** Do while the end of file indicator remains off
+      *
+     C           *IN30     DOWEQ'0'
+      *
+     C           S01456    IFEQ 'Y'                                       S01456
+     C           EOMCHK    ANDEQ'Y'                                       S01456
+     C           S01456    OREQ 'N'                                       S01456
+      *                                                                   S01456
+     C           LOPC      SUB  SOPC      POSM
+     C                     Z-ADD0         TOTP
+     C                     Z-ADD0         TOTS
+     C                     Z-ADD0         CMSP
+     C                     Z-ADD0         CMSR
+     C                     Z-ADD0         CPTM
+     C                     Z-ADD0         CRTM
+     C                     Z-ADD0         PMTM
+     C                     Z-ADD0         UPLM
+     C                     Z-ADD0         RPLM
+      *
+     C                     EXCPTPOK
+      *                                                                   S01456
+     C                     ENDIF                                          S01456
+      *
+     C                     READ POSTNKDF                 30
+      *
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   RSTPRS SR. - To reset monthly total on PRICSCD                *
+     C**   ~~~~~~~~~                                                     *
+     C**      Called From   Main Processing                              *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           RSTPRS    BEGSR                           ** RSTPRS SR**
+     C**
+     C                     MOVE '0'       *IN30
+      *
+     C                     READ PRICSDF                  30
+      *
+      ** Do while the end of file indicator remains off
+      *
+     C           *IN30     DOWEQ'0'
+      *
+     C           S01456    IFEQ 'Y'                                       S01456
+     C           EOMCHK    ANDEQ'Y'                                       S01456
+     C           S01456    OREQ 'N'                                       S01456
+      *                                                                   S01456
+     C                     MOVE NEWP      PRSM
+      *
+     C                     EXCPTPRS
+      *                                                                   S01456
+     C                     ENDIF                                          S01456
+      *
+     C                     READ PRICSDF                  30
+      *
+     C                     END
+     C                     ENDSR
+     C/EJECT
+      *
+      **                   OUTPUT
+      *                    ~~~~~~
+     OPOSTNCDFE                POC
+     O                         CMTM
+     O                         CHTM
+     O                         PMTM
+     O                         UPLM
+     O                         RPLM
+     OPOSTNKDFE                POK
+     O                         POSM
+     O                         TOTP
+     O                         TOTS
+     O                         CMSP
+     O                         CMSR
+     O                         CPTM
+     O                         CRTM
+     O                         PMTM
+     O                         UPLM
+     O                         RPLM
+     OPRICSDF E                PRS
+     O                         PRSM
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

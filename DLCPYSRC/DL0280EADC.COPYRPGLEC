@@ -1,0 +1,357 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  DL0280 - DL0280EADC                                          *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. BUG23732           Date 23Apr09               *
+      *                 CER054             Date 07Apr09               *
+      *                 BUG23692           Date 09Apr09               *
+      *                 BUG23693           Date 07Apr09               *
+      *                 BUG23123           Date 09Mar09               *
+      *                 CER048A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 233565             Date 18May05               *
+      *                 233324  *CREATE    Date 02May05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23732 - Joint Account threshold                           *
+      *  CER054 - German Features - Church Tax                        *
+      *  BUG23692 - Possible incorrect posting on key TDMGE B         *
+      *  BUG23693 - Deal Reversal Does not amend Threshold Utilisation*
+      *  BUG23123 - Report: Does not show Retail Account Number       *
+      *                     Date is not Midas Standard Date           *
+      *                     Period should be actual int. calc. period *
+      *                     Secondary Tax amount is not printed       *
+      *                     Added field TSSLID                        *
+      *                     (Recompile)                               *
+      *  CER048A - German Features - Taxes                             *
+      *  233565 - Account key problems.                               *
+      *  233324 - Add new fields in DEALSDC for EU Tax.               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREADC - EU a/c key generation for Money Market & Loans.     *
+      *                                                               *
+      *****************************************************************
+     C     SREADC        BEGSR
+      *
+      ** Delete all customer income records related to this deal.
+      *
+     C                   MOVE      *IN10         WIN10             1
+     C                   MOVE      DLNO          KDLLN
+      *
+     C     KDLLN         SETLL     SDCSINLD
+     C     KDLLN         READE     SDCSINLD                               10
+      *
+     C**********         Z-ADD     *ZEROS        WSNint           15 0              CER048A BUG23732
+     C                   Z-ADD     *ZEROS        WSNinb           15 0                      BUG23732
+     C                   Z-ADD     *ZEROS        WSGinb           15 0                      BUG23732
+     C                   Z-ADD     *ZEROS        WPThus           15 0                       CER048A
+     C     *IN10         DOWNE     *ON
+     C**********         EVAL      WSNint = TSNINT + WSNint                         CER048A BUG23732
+     C                   EVAL      WSNinb = TSNINB + WSNinb                                 BUG23732
+     C                   EVAL      WSGinb = TSGINB + WSGinb                                 BUG23732
+     C                   EVAL      WPThus = TSPTHU + WPThus                                  CER048A
+     C                   DELETE    SDCSINDD
+     C     KDLLN         READE     SDCSINLD                               10
+     C                   ENDDO
+      *
+     C                   MOVE      WIN10         *IN10
+      *
+     C                   MOVEA     DTYP          AKY(1)                                       233565
+     C**********         MOVE      'M'           AKY(3)                                       233565
+     C                   MOVE      'I'           AKY(3)                                       233565
+     C                   MOVEA     DLST          AKY(4)
+     C                   MOVE      'U'           AKY(9)
+     C                   MOVEL     PCCY          KYCCY
+     C                   Z-ADD     BJRDNB        KYDAT
+      *
+     C     EUTO          IFNE      *ZERO
+     C******IN23         ANDEQ     *ON                                                        233565
+      **********                                                                              233565
+      ***Original*Ccy*=*Tax*Ccy****************************************                       233565
+      **********                                                                              233565
+     C******PCCY         IFEQ      EUCY                                                       233565
+     C**********         MOVE      'T'           AKY(10)                                      233565
+     C**********         MOVEA     COLC          AKY(6)                                       233565
+     C**********         Z-ADD     EUTO          KYAMT                                        233565
+     C**********         EXSR      EXCP                                                       233565
+     C**********         ENDIF                                                                233565
+      **********                                                                              233565
+     C**********         MOVE      'D'           AKY(10)                                      233565
+     C**********         MOVEA     COLC          AKY(6)                                       233565
+     C     INTC          IFNE      'Y'                                                        233565
+     C                   MOVE      'A'           AKY(10)                                      233565
+     C                   MOVEA     '   '         AKY(6)                                       233565
+     C                   MOVEL     PCCY          KYCCY
+     C                   Z-ADD     EUTO          KYAMT
+     C                   EXSR      EXCP
+     C                   ENDIF                                                                233565
+      *                                                                                       233565
+     C     PCCY          IFEQ      EUCY                                                       233565
+     C                   MOVE      'S'           AKY(10)                                      233565
+     C                   MOVEA     COLC          AKY(6)                                       233565
+     C                   MOVEL     EUCY          KYCCY                                        233565
+     C                   Z-ADD     EUTO          KYAMT                                        233565
+     C                   EXSR      EXCP                                                       233565
+     C                   ENDIF                                                                233565
+      *                                                                                       233565
+      ** Generate a/c key for deal type 'CD' or 'DP'.                                         233565
+      *                                                                                       233565
+     C     INTC          IFEQ      'Y'                                                        233565
+     C                   MOVE      'E'           AKY(10)                                      233565
+     C                   MOVEA     '   '         AKY(6)                                       233565
+     C                   MOVEL     PCCY          KYCCY                                        233565
+     C                   Z-ADD     EUTO          KYAMT                                        233565
+     C                   EXSR      EXCP                                                       233565
+     C                   ENDIF                                                                233565
+      *
+      ** Original Ccy <> Tax Ccy
+      *
+     C     PCCY          IFNE      EUCY
+      *
+      ** Spot Trade Account
+      *
+     C                   MOVE      'D'           AKY(10)
+     C                   MOVEA     '   '         AKY(6)
+     C                   MOVEL     PCCY          KYCCY
+     C                   Z-ADD     EUTO          KYAMT
+     C                   EXSR      EXCP
+      *
+      ** Spot Trade Equivalent Account
+      *
+     C                   MOVE      'G'           AKY(10)
+     C                   MOVEA     PCCY          AKY(6)
+     C                   MOVEL     BJCYCD        KYCCY
+     C                   Z-ADD     EUTB          KYAMT
+     C                   EXSR      EXCP
+      *
+     C                   MOVE      'F'           AKY(10)
+     C                   MOVEA     EUCY          AKY(6)
+     C                   MOVEL     BJCYCD        KYCCY
+     C                   Z-ADD     EUTB          KYAMT
+     C                   EXSR      EXCP
+      *
+      ** Spot Trade Account
+      *
+     C                   MOVE      'S'           AKY(10)
+     C                   MOVEA     '   '         AKY(6)
+     C                   MOVEL     EUCY          KYCCY
+     C                   Z-ADD     EUTX          KYAMT
+     C                   EXSR      EXCP
+      *
+     C                   MOVE      'S'           AKY(10)
+     C                   MOVEA     COLC          AKY(6)
+     C                   MOVEL     EUCY          KYCCY
+     C                   Z-ADD     EUTX          KYAMT
+     C                   EXSR      EXCP
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                      CER048A
+     C                   IF        EUTO <> *ZEROS AND                                        CER048A
+     C                             STXO <> *ZEROS                                            CER048A
+      *                                                                                      CER048A
+     C                   EVAL      AKY(9) = 'S'                                              CER048A
+      *                                                                                      CER048A
+     C                   IF        WINTC <> 'Y'                                              CER048A
+      *                                                                                      CER048A
+     C                   EVAL      AKY(10) = 'A'                                             CER048A
+     C                   MOVEA     '   '         AKY(6)                                      CER048A
+     C                   EVAL      KYCCY   = PCCY                                            CER048A
+     C                   EVAL      KYAMT   = STXO                                            CER048A
+     C                   EXSR      EXCP                                                      CER048A
+      *                                                                                      CER048A
+     C                   ENDIF                                                               CER048A
+      *                                                                                      CER048A
+     C                   IF        PCCY  = EUCY                                              CER048A
+      *                                                                                      CER048A
+     C                   EVAL      AKY(10) = 'S'                                             CER048A
+     C                   MOVEA     COLC          AKY(6)                                      CER048A
+     C                   EVAL      KYCCY   = EUCY                                            CER048A
+     C                   EVAL      KYAMT   = STXO                                            CER048A
+     C                   EXSR      EXCP                                                      CER048A
+      *                                                                                      CER048A
+     C                   ENDIF                                                               CER048A
+      *                                                                                      CER048A
+     C                   IF        WINTC = 'Y'                                               CER048A
+      *                                                                                      CER048A
+     C                   EVAL      AKY(10) = 'E'                                             CER048A
+     C                   MOVEA     '   '         AKY(6)                                      CER048A
+     C                   EVAL      KYCCY   = PCCY                                            CER048A
+     C                   EVAL      KYAMT   = STXO                                            CER048A
+     C                   EXSR      EXCP                                                      CER048A
+      *                                                                                      CER048A
+     C                   ENDIF                                                               CER048A
+      *                                                                                      CER048A
+     C                   IF        PCCY <> EUCY                                              CER048A
+      *                                                                                      CER048A
+     C                   EVAL      AKY(10) = 'D'                                             CER048A
+     C                   MOVEA     '   '         AKY(6)                                      CER048A
+     C                   EVAL      KYCCY   = PCCY                                            CER048A
+     C                   EVAL      KYAMT   = STXO                                            CER048A
+     C                   EXSR      EXCP                                                      CER048A
+      *                                                                                      CER048A
+     C                   EVAL      AKY(10) = 'G'                                             CER048A
+     C                   MOVEA     PCCY          AKY(6)                                      CER048A
+     C                   EVAL      KYCCY   = BJCYCD                                          CER048A
+     C                   EVAL      KYAMT   = STXB                                            CER048A
+     C                   EXSR      EXCP                                                      CER048A
+      *                                                                                      CER048A
+     C                   EVAL      AKY(10) = 'F'                                             CER048A
+     C                   MOVEA     EUCY          AKY(6)                                      CER048A
+     C                   EVAL      KYCCY   = BJCYCD                                          CER048A
+     C                   EVAL      KYAMT   = STXB                                            CER048A
+     C                   EXSR      EXCP                                                      CER048A
+      *                                                                                      CER048A
+     C                   EVAL      AKY(10) = 'S'                                             CER048A
+     C                   MOVEA     '   '         AKY(6)                                      CER048A
+     C                   EVAL      KYCCY   = EUCY                                            CER048A
+     C                   EVAL      KYAMT   = STXT                                            CER048A
+     C                   EXSR      EXCP                                                      CER048A
+      *                                                                                      CER048A
+     C                   EVAL      AKY(10) = 'S'                                             CER048A
+     C                   MOVEA     COLC          AKY(6)                                      CER048A
+     C                   EVAL      KYCCY   = EUCY                                            CER048A
+     C                   EVAL      KYAMT   = STXT                                            CER048A
+     C                   EXSR      EXCP                                                      CER048A
+      *                                                                                      CER048A
+     C                   ENDIF                                                               CER048A
+      *                                                                                      CER048A
+     C                   ENDIF                                                               CER048A
+      *                                                                                       CER054
+     C                   IF        EUTO <> *ZEROS AND                                         CER054
+     C                             TTXO <> *ZEROS                                             CER054
+     C                                                                                        CER054
+     C                   EVAL      AKY(9) = 'T'                                               CER054
+     C                                                                                        CER054
+     C                   IF        WINTC <> 'Y'                                               CER054
+     C                                                                                        CER054
+     C                   EVAL      AKY(10) = 'A'                                              CER054
+     C                   MOVEA     '   '         AKY(6)                                       CER054
+     C                   EVAL      KYCCY   = PCCY                                             CER054
+     C                   EVAL      KYAMT   = TTXO                                             CER054
+     C                   EXSR      EXCP                                                       CER054
+     C                                                                                        CER054
+     C                   ENDIF                                                                CER054
+     C                                                                                        CER054
+     C                   IF        PCCY  = EUCY                                               CER054
+     C                                                                                        CER054
+     C                   EVAL      AKY(10) = 'S'                                              CER054
+     C                   MOVEA     COLC          AKY(6)                                       CER054
+     C                   EVAL      KYCCY   = EUCY                                             CER054
+     C                   EVAL      KYAMT   = TTXO                                             CER054
+     C                   EXSR      EXCP                                                       CER054
+     C                   ENDIF                                                                CER054
+     C                                                                                        CER054
+     C                   IF        WINTC = 'Y'                                                CER054
+     C                                                                                        CER054
+     C                   EVAL      AKY(10) = 'E'                                              CER054
+     C                   MOVEA     '   '         AKY(6)                                       CER054
+     C                   EVAL      KYCCY   = PCCY                                             CER054
+     C                   EVAL      KYAMT   = TTXO                                             CER054
+     C                   EXSR      EXCP                                                       CER054
+     C                                                                                        CER054
+     C                   ENDIF                                                                CER054
+     C                                                                                        CER054
+     C                   IF        PCCY <> EUCY                                               CER054
+     C                                                                                        CER054
+     C                   EVAL      AKY(10) = 'D'                                              CER054
+     C                   MOVEA     '   '         AKY(6)                                       CER054
+     C                   EVAL      KYCCY   = PCCY                                             CER054
+     C                   EVAL      KYAMT   = TTXO                                             CER054
+     C                   EXSR      EXCP                                                       CER054
+     C                                                                                        CER054
+     C                   EVAL      AKY(10) = 'G'                                              CER054
+     C                   MOVEA     PCCY          AKY(6)                                       CER054
+     C                   EVAL      KYCCY   = BJCYCD                                           CER054
+     C                   EVAL      KYAMT   = TTXB                                             CER054
+     C                   EXSR      EXCP                                                       CER054
+     C                                                                                        CER054
+     C                   EVAL      AKY(10) = 'F'                                              CER054
+     C                   MOVEA     EUCY          AKY(6)                                       CER054
+     C                   EVAL      KYCCY   = BJCYCD                                           CER054
+     C                   EVAL      KYAMT   = TTXB                                             CER054
+     C                   EXSR      EXCP                                                       CER054
+     C                                                                                        CER054
+     C                   EVAL      AKY(10) = 'S'                                              CER054
+     C                   MOVEA     '   '         AKY(6)                                       CER054
+     C                   EVAL      KYCCY   = EUCY                                             CER054
+     C                   EVAL      KYAMT   = TTXT                                             CER054
+     C                   EXSR      EXCP                                                       CER054
+     C                                                                                        CER054
+     C                   EVAL      AKY(10) = 'S'                                              CER054
+     C                   MOVEA     COLC          AKY(6)                                       CER054
+     C                   EVAL      KYCCY   = EUCY                                             CER054
+     C                   EVAL      KYAMT   = TTXT                                             CER054
+     C                   EXSR      EXCP                                                       CER054
+     C                                                                                        CER054
+     C                   ENDIF                                                                CER054
+     C                                                                                        CER054
+     C                   ENDIF                                                                CER054
+      *
+      ** Net Interest Amount
+      *
+     C                   MOVE      'N'           AKY(10)
+     C                   MOVEA     '   '         AKY(6)
+     C                   MOVE      'U'           AKY(9)                                      CER048A
+     C                   MOVEL     PCCY          KYCCY
+     C*****WORKD         SUB       EUTO          KYAMT                                       CER048A
+     C**********         EVAL      KYAMT = WORKD - (EUTO + STXO)                    CER048A BUG23692
+     C**********         EVAL      KYAMT = WORKD - EUTO                              BUG23692 CER054
+     C                   EVAL      KYAMT = WORKD - (EUTO + STXO + TTXO)                       CER054
+     C                   EXSR      EXCP
+      *
+      ** Net Principal + Interest Amount
+      *
+     C                   MOVE      'B'           AKY(10)
+     C                   MOVEA     '   '         AKY(6)
+     C                   MOVEL     PCCY          KYCCY
+     C*****PAMT*         ADD       WORKD         KYAMT                                       CER048A
+     C*****KYAMT         SUB       EUTO          KYAMT                                       CER048A
+     C**********         EVAL      KYAMT = (PAMT + WORKD) - (EUTO + STXO)           CER048A BUG23692
+     C**********         EVAL      KYAMT = (PAMT + WORKD) - EUTO                     BUG23692 CER054
+     C                   EVAL      KYAMT = (PAMT+WORKD) - (EUTO+STXO+TTXO)                    CER054
+     C                   EXSR      EXCP
+      *
+     C                   MOVE      ' '           AKY(9)
+     C**********         Z-ADD     *ZEROS        TAXA                                         233565
+      *
+     C                   IF        EWTHMD = 'Y'                                              CER048A
+      *                                                                                      CER048A
+      ** Read Interest Payment History file                                                  CER048A
+      *                                                                                      CER048A
+     C                   MOVE      CNUM          WCNUM                                      BUG23693
+     C                   MOVE      BRCA          @@BRCA                                     BUG23693
+      *                                                                                     BUG23693
+     C     KIPhl2        KLIST                                                              BUG23732
+     C                   KFLD                    WCNUM                                      BUG23732
+     C                   KFLD                    @@BRCA                                     BUG23732
+      *                                                                                     BUG23732
+     C     KIPhl2        CHAIN     SDINPHL2                                                  CER048A
+      *                                                                                      CER048A
+     C                   IF        %FOUND(SDINPHL2)                                          CER048A
+     C**********         EVAL      TITOUT = TITOUT - WSNint                         CER048A BUG23732
+     C                   EVAL      TITOUT = TITOUT - WSNinb                                 BUG23732
+     C                   EVAL      TIGSIN = TIGSIN - WSGinb                                 BUG23732
+     C                   EVAL      TITTAX = TITTAX - TSTXSB - TSSTDB                        BUG23732
+     C                   EVAL      TIUTTH = TIUTTH - WPThus                                  CER048A
+     C                   UPDATE    SDINPHD0                                                  CER048A
+     C                   ENDIF                                                               CER048A
+      *                                                                                      CER048A
+     C                   ENDIF                                                               CER048A
+      *                                                                                      CER048A
+     C                   ENDSR
+      *****************************************************************
+      *
+      *****************************************************************
+      * End of /COPY DL0280EADC                                       *
+      *****************************************************************

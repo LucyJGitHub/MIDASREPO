@@ -1,0 +1,329 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU Transaction types backgnd update')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas SD STANDING DATA MODULE
+     F*                                                                  *
+     F*     TABLETZ - BACKGROUND UPDATE OF TABLETZ FILE                  *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 114554             DATE 22JAN98               *
+     F*     PREV AMEND NO. S01413             DATE 05JUL93               *E19517
+     F*          AMEND NO. E19517             DATE 10SEP90               *E19517
+     F*          AMEND NO. S01230             DATE 06/11/89              *S01230
+     F*          AMEND NO. S01229             DATE 20/10/89              *S01229
+     F*          AMEND NO. E17596             DATE 20/03/89              *
+     F*                                                                  *
+     F********************************************************************
+     F*  114554 - Unable to input new transaction type.  This error   *
+     F*           happens when the transaction type does not exist    *
+     F*           in SDRETRPD but exists in TABLETZ.                  *
+     F*     S01413 - RETAIL 3 INCORPORATION:- ACCOUNT COMMISSION         *
+     F*              INDICATOR ADDED TO TABLETZ.                         *
+     F*     E19517 - CONVERT THE DEBIT/CREDIT INDICATOR PARAMETER        *E19517
+     F*     S01230 - STANDARDISE PROGRAMS                                *S01230
+     F*     S01229 - SYNON FIELD NAME CHANGES                            *S01229
+     F*     E17596 - RECOMPILED FOR NEW VERSION OF TABLETXL              *
+     F********************************************************************S01230
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      CHAIN TABLETZ FAILED/ERROR                         *
+     F*       31      ERROR ON TABLETZ FILE                              *
+     F*       32      CHAIN TABLETX FAILED/ERROR                         *
+     F*                                                                  *
+     F********************************************************************
+     FTABLETZ UF  E           K        DISK                      A
+     F                                              KCOMIT
+     FTABLETA UF  E           K        DISK
+     F                                              KCOMIT
+     FTABLETXLUF  E           K        DISK
+     F                                              KCOMIT
+      /EJECT
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT                                                              S01230
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ITABLETAF
+     I              RECT                            RECTA
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7        RETURN CODE
+     C*********************PARM           WTRAT   5        TRANSACTION TYPS01229
+     C*********************PARM           WTRAN  30        TRANSACTION NAMS01229
+     C*********************PARM           WCUOR   1        CUST.ORIG.IND. S01229
+     C                     PARM           WTRTY   5        TRANSACTION TYPS01229
+     C                     PARM           WRTNM  30        TRANSACTION NAMS01229
+     C                     PARM           WCOIN   1        CUST.ORIG.IND. S01229
+     C                     PARM           WDCIN   1        D./CR. INDICAT.
+     C*********************PARM           WREVI   1        REVERSAL INDIC.S01229
+     C*********************PARM           WADVI   1        PRINT ADVICE I.S01229
+     C*********************PARM           WCHTP   1        LAST CHANGE TYPS01229
+     C                     PARM           WRVIN   1        REVERSAL INDIC.S01229
+     C                     PARM           WPADI   1        PRINT ADVICE I.S01229
+     C                     PARM           WACCOM  1        A/C COMM IND.  S01413
+     C                     PARM           WTYLC   1        LAST CHANGE TYPS01229
+     C                     PARM           WLCD    50       LAST CHANGE DATE
+     C           *LIKE     DEFN TRAT      KTRAT
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*                                                                   E19517
+     C* CONVERT PARAMETER  DCIN  .( C TO 0  AND  D TO 1 )                 E19517
+     C*                                                                   E19517
+     C           WDCIN     IFEQ 'C'                                       E19517
+     C                     MOVE '0'       WDCIN                           E19517
+     C                     END                                            E19517
+     C*                                                                   E19517
+     C           WDCIN     IFEQ 'D'                                       E19517
+     C                     MOVE '1'       WDCIN                           E19517
+     C                     END                                            E19517
+     C*
+     C* IF RECORD HAS BEEN INSERTED, CHAIN TO TABLETZ TO CHECK THAT
+     C* RECORD DOES NOT ALREADY EXIST ON THIS FILE
+     C*
+     C***********WCHTP     IFEQ 'I'                                       S01229
+     C           WTYLC     IFEQ 'I'                                       S01229
+     C*********************MOVE WTRAT     KTRAT                           S01229
+     C                     MOVE WTRTY     KTRAT                           S01229
+     C           KTRAT     CHAINTABLETZ              30    CHAIN FAILED
+     C***********                                                         114554
+     C**IF*RECORD*DOES*NOT*EXIST*                                         114554
+     C**THEN*MOVE*PARAMETERS*RECIEVED*INTO*FILE*FIELDS*AND*WRITE*         114554
+     C**A*NEW*RECORD*                                                     114554
+     C***********                                                         114554
+     C************IN30     IFEQ '1'                                       114554
+     C***********                                                         114554
+     C**IF*IT*DOES*EXIST*AS*DELETED(RECI**)*                              114554
+     C**THEN*MOVE*PARAMETERS*RECIEVED*INTO*FILE*FIELDS*AND*UPDATE*        114554
+     C**OLD*RECORD*                                                       114554
+     C***********                                                         114554
+     C************IN30     OREQ '0'                                       114554
+     C***********RECI      ANDEQ'*'                                       114554
+     C*                                                                   114554
+     C** Move values into fields then write or update record              114554
+     C** accordingly                                                      114554
+     C*                                                                   114554
+     C                     MOVE 'D'       RECI
+     C                     Z-ADD41        RECT
+     C*********************MOVE WTRAT     TRAT                            S01229
+     C*********************MOVE WTRAN     TRAN                            S01229
+     C*********************MOVE WCUOR     CUOR                            S01229
+     C                     MOVE WTRTY     TRAT                            S01229
+     C                     MOVE WRTNM     TRAN                            S01229
+     C                     MOVE WCOIN     CUOR                            S01229
+     C                     MOVE WDCIN     DCIN
+     C*********************MOVE WREVI     REVI                            S01229
+     C*********************MOVE WADVI     ADVI                            S01229
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WRVIN     REVI                            S01229
+     C                     MOVE WPADI     ADVI                            S01229
+     C                     MOVE WACCOM    ACCOM                           S01413
+     C*********************MOVE WTYLC     CHTP                     S01229 114554
+     C                     MOVE 'I'       CHTP                            114554
+     C                     Z-ADDWLCD      LCD
+     C***********                                                         114554
+     C**IF*RECORD*FOUND*ON*FILE*AND*IS*NOT*A*DELETED*RECORD*SET*ERROR*    114554
+     C***********                                                         114554
+     C*********************ELSE                                           114554
+     C***********                                                         114554
+     C*********************SETON                     31                   114554
+     C*********************END                                            114554
+     C*
+     C           *IN30     IFEQ '1'
+     C                     WRITETABLETZF               31   ERROR
+     C*********************END                                            114554
+     C***********                                                         114554
+     C************IN30     IFEQ '0'                                       114554
+     C************IN31     ANDEQ'0'                                       114554
+     C                     ELSE                                           114554
+     C                     UPDATTABLETZF               31   ERROR
+     C                     END
+     C*
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT AN INSERT
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C*********************MOVE WTRAT     KTRAT                           S01229
+     C                     MOVE WTRTY     KTRAT                           S01229
+     C           KTRAT     CHAINTABLETZF             30    CHAIN FAILED
+     C*
+     C**IF*RECORD*FOUND,*MOVE*RECEIVED*PARAMETERS*INTO*FILE*FIELDS*       114554
+     C**AND*UPDATE*                                                       114554
+     C*                                                                   114554
+     C** Move values into fields then write or update record              114554
+     C** accordingly.                                                     114554
+     C*
+     C************IN30     IFEQ '0'                                       114554
+     C*********************MOVE WTRAT     TRAT                            S01229
+     C*********************MOVE WTRAN     TRAN                            S01229
+     C*********************MOVE WCUOR     CUOR                            S01229
+     C                     MOVE 'D'       RECI                            114554
+     C                     Z-ADD41        RECT                            114554
+     C                     MOVE WTRTY     TRAT                            S01229
+     C                     MOVE WRTNM     TRAN                            S01229
+     C                     MOVE WCOIN     CUOR                            S01229
+     C                     MOVE WDCIN     DCIN
+     C*********************MOVE WREVI     REVI                            S01229
+     C*********************MOVE WADVI     ADVI                            S01229
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WRVIN     REVI                            S01229
+     C                     MOVE WPADI     ADVI                            S01229
+     C                     MOVE WACCOM    ACCOM                           S01413
+     C*********************MOVE WTYLC     CHTP                     S01229 114554
+     C                     MOVE 'A'       CHTP                            114554
+     C                     Z-ADDWLCD      LCD
+     C*                                                                   114554
+     C** If record does not exist, write a new record, otherwise,         114554
+     C** update record                                                    114554
+     C*                                                                   114554
+     C           *IN30     IFEQ '1'                                       114554
+     C                     WRITETABLETZF               30  ERROR          114554
+     C                     ELSE                                           114554
+     C                     UPDATTABLETZF               30  ERROR
+     C                     END
+     C*
+     C**IF*RECORD*NOT*FOUND*OR*ERROR*OCCURRED*ON*UPDATE*SET*ERROR*        114554
+     C**PARAMETER*                                                        114554
+     C*                                                                   114554
+     C* If error occurred on write or update, set error parameter         114554
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT A CHANGED RECORD
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
+     C* FROM TABLETZ
+     C*
+     C***********WCHTP     IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C*********************MOVE WTRAT     KTRAT                           S01229
+     C                     MOVE WTRTY     KTRAT                           S01229
+     C           KTRAT     CHAINTABLETZF             30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
+     C* DELETE ANY RECORDS FROM THE OLD FILES)
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*'       RECI
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABLETZF               30  ERROR
+     C                     END
+     C***********                                                         114554
+     C**IF*RECORD*NOT*FOUND*OR*ERROR*OCCURRED*ON*UPDATE*SET*ERROR*        114554
+     C**PARAMETER*                                                        114554
+     C***********                                                         114554
+     C************IN30     IFEQ '1'                                       114554
+     C*********************MOVE '*ERROR*' P0RTN                           114554
+     C*********************END                                            114554
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON TABLETZ UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C           '41'      CHAINTABLETXF             32    CHAIN FAILED
+     C*
+     C* IF CHAIN TO FILE SUCCESSFUL
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* IF FIRST ACCESS TO THE FILE THEN GET HEADER RECORD
+     C*
+     C           NINS      ANDEQ0
+     C           NAMD      ANDEQ0
+     C           NDEL      ANDEQ0
+     C*
+     C                     READ TABLETAF                 32  EOF
+     C*
+     C* IF HEADER RECORD FOUND THEN SET PRINT INDICATOR AND UPDATE
+     C*
+     C           *IN32     IFEQ '0'
+     C                     ADD  1         ITRT
+     C                     UPDATTABLETAF               32    ERROR
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C***********WCHTP     IFEQ 'I'                                       S01229
+     C           WTYLC     IFEQ 'I'                                       S01229
+     C                     ADD  1         NINS
+     C                     END
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C                     ADD  1         NAMD
+     C                     END
+     C*
+     C***********WCHTP     IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C                     ADD  1         NDEL
+     C                     END
+     C*
+     C                     UPDATTABLETXF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Misys International Banking Systems Ltd. 2001

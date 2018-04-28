@@ -1,0 +1,1330 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Referral/excess report extract')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE3760 - REFERRAL/EXCESS REPORT EXTRACT                      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. MD022097           Date 30Aug13               *
+      *  Prev Amend No. CRE083BU           Date 06Aug12               *
+      *                 CRE083AI           Date 06Aug12               *
+      *                 AR676213           Date 19Nov10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27045A          Date 13Apr10               *
+      *                 BUG27045           Date 18Feb10               *
+      *                 CAP201             Date 09Dec09               *
+      *                 CSC042             Date 16Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 217332             Date 13May03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 17May01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 28Jan99               *
+      *                 093025             Date 27Feb98               *
+     F*                 086936             DATE 24FEB98               *
+     F*                 080823             DATE 20JAN98               *
+     F*                 CGL002             Date 28OCT96               *
+     F*                 S01408             Date 07MAY96               *
+     F*                 086290             DATE 26FEB96               *
+     F*                 S01408             DATE 20JUL95               *
+     F*                 S01498             DATE 11AUG94               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD022097 - Low performance of REC3760T2                      *
+      *  CRE083BU - COB Restructure - RE COB Optimisation Phase 1     *
+      *  CRE083AI - COB Restructure - RE COB Optimisation Phase 1     *
+      *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
+      *  BUG27045A - Override the fix of Bug 27045 (Recompile)        *
+      *  BUG27045 - Amend via SOAP removes Document Linkage           *
+      *             (Recompile)                                       *
+      *  CAP201 - Enhance Stopped Cheques processing for              *
+      *           Teller Interfaces                                   *
+      *  CSC042 - COB performance fix. Replace call to AOCURRR0 with  *
+      *           an array built in first cycle as BG system calls
+      *           AOCURRR0 almost 1 million times
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  217332 - CRE008 Fix - Exclude mirror bookings                *
+      *  CSD006 - Use DSSDY for call to AOCURRR0.                     *
+      *  CGL007 - Account Postings Enquiry                            *
+     F*  S01408 - Correction of blank hook names:                     *
+     F*         - Addition of core hook RE3760FTC1                    *
+     F*         - Addition of core hook RE3760CTC1                    *
+     F*         - Addition of core hook RE3760OTC1                    *
+     F*  093025 - Correct extract of referral accounts:               *
+     F*           1) Do not check accounts where no mimimum balance   *
+      *              is defined.                                      *
+      *           2) Use minimum balance from retail accounts extract *
+      *              rather than accounts master file.                *
+     F*           3) Move the order in which checking for below min.  *
+     F*              balance is done, so that other referral conds    *
+     F*              are not overwritten.                             *
+     F*           4) Check both DR and CR balances.                   *
+     F*           5) Allow for currency decimal places, as minimum    *
+     F*              balance is held in major currency units while    *
+     F*              account balance is held in minor ccy units.      *
+     F*  086936 - Check for Bad Debt/Bankrupt. Output REFRLRL excep'n *
+     F*           record : Type 'Y' = Bad Debt  and 'X' = Bankrupt.   *
+     F*  080823 - Referral report does not show Stop Cheque payments. *
+     F*           Remove check on *IN67 (no rcd found) as last part   *
+     F*           of key blank so will never be equal to ref number.  *
+     F*  CGL002 - Block GL Accounts in Journal Entry Input            *
+     F*  S01408 - Addition of core hook RE3760CCP6                    *
+     F*           Addition of core hook RE3760CCP5                    *
+     F*           Addition of core hook RE3760CCP4                    *
+     F*           Addition of core hook RE3760CCP3                    *
+     F*  086290 - Accounts with no customer originated,               *
+     F*           non-clearing credit postings for 31 days or         *
+     F*           more should continue to appear in RE0790P1 until    *
+     F*           such posting is passed to the account.              *
+     F*  S01408 - Addition of core hook RE3760IIPG                    *
+     F*           Addition of core hook RE3760CCPG                    *
+     F*           Addition of core hook RE3760CCP1                    *
+     F*           Addition of core hook RE3760CCP2                    *
+     F*  S01498 - Portfolio Lending Upgrade to Release 10             *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*           and changes to Release 10 standards.                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSSRACJL IP AF     160  1AI     1 DISK
+     F***SRETP***IS AF     160  1AI     1 DISK                            CGL007
+     F***SRETP** IS AF     331  1AI     1 DISK                                         CGL007 CGL029
+     FSRETP   IS AF     620  1AI     1 DISK                                                   CGL029
+     F/COPY WNCPYSRC,RE3760F002
+     F***STOPB** IF  F      96 21AI     2 DISK                                                CGL029
+     F***STOPB** IF  F     106 27AI     2 DISK                                         CGL029 CAP201
+     FSTOPB   IF  F     218 27AI     2 DISK                                                   CAP201
+     F/COPY WNCPYSRC,RE3760F003
+     F*CCNT***UF**F     400 18AI     2 DISK                               086290
+     FACCNT   IF  F     400 18AI     2 DISK                               086290
+     FREGAHLJ2IF  E           K        DISK                           UC  217332
+     F/COPY WNCPYSRC,RE3760FTC1                                           S01408
+     F***ODACON* O   F     128            DISK                                                CGL029
+     F***ODACON* O   F     138            DISK                                       CGL029 CRE083BU
+     FODACON  O   F     138            DISK         KCOMIT                                  CRE083BU
+     F***ODACZZ* O   F     128            DISK                                              CRE083BU
+     FODACZZ  O   F     128            DISK         KCOMIT                                  CRE083BU
+     F/COPY WNCPYSRC,RE3760F004
+     F***REFRLRL O   F     128            DISK                                                CGL029
+     F***REFRLRL O   F     138            DISK                                       CGL029 CRE083BU
+     FREFRLRL O   F     138            DISK         KCOMIT                                  CRE083BU
+     F/COPY WNCPYSRC,RE3760F005
+     F***REFRLZZ O   F     128            DISK                                              CRE083BU
+     FREFRLZZ O   F     128            DISK         KCOMIT                                  CRE083BU
+     F***REFRLGL O   F     128            DISK                                                CGL029
+     F***REFRLGL O   F     138            DISK                                       CGL029 CRE083BU
+     FREFRLGL O   F     138            DISK         KCOMIT                                  CRE083BU
+     F***REFRLGZ O   F     128            DISK                                              CRE083BU
+     FREFRLGZ O   F     128            DISK         KCOMIT                                  CRE083BU
+     FRE3760AUO   F     132     OV     PRINTER
+     FSDCURRPDIF  E                    DISK                           UC                      CSC042
+     F***CLINT** IF  E           K        DISK                                     CRE083BU MD022097
+     F**********  CLINTCAF                          KIGNORE                        CRE083BU MD022097
+     F**********  CLINTCCF                          KIGNORE                        CRE083BU MD022097
+     F**********  CLINTC1F                          KIGNORE                        CRE083BU MD022097
+     F**********  CLINTSEF                          KIGNORE                        CRE083BU MD022097
+     F/COPY WNCPYSRC,RE3760F001
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*       01       RETAIL ACCOUNTS EXTRACT DETAIL                 *
+     F*       03       RETAIL ACCOUNTS EXTRACT CATCHALL               *
+     F*       04       RETAIL ACCOUNTS POSTINGS DETAIL                *
+     F*       06       RETAIL ACCOUNTS POSTINGS CATCHALL              *
+     F*       07       STOPPED CHEQUES FILE DETAIL                    *
+     F*       08       STOPPED CHEQUES FILE CATCHALL                  *
+     F*       12       ACCOUNTS MASTER DETAIL                         *
+     F*       13       ACCOUNTS MASTER CATCHALL                       *
+     F*                                                               *
+     F*       21       NO RETAIL ACCOUNT NUMBER                       *
+     F*       22       NON-RETAIL                                     *
+     F*       23       DEBIT                                          *
+     F*       24       NO O/D LINE                                    *
+     F*       25       CLEARED BALANCE POSITIVE                       *
+     F*       26       CLEARED BALANCE NEGATIVE                       *
+     F*       27       NO CHEQUE NUMBER                               *
+     F*       28       POSTING IS A GENERATED ENTRY                   *
+     F*       29       FROM CHEQUE NO BLANK                           *
+     F*       30       TO CHEQUE NO BLANK                             *
+     F*       35       LEDGER BALANCE BELOW MINIMUM BALANCE           *
+     F*                                                               *
+     F*       40       FIRST CYCLE                                    *
+     F*       41       CHAIN FAIL                                     *
+      ********42*      Chain to CLINT fail                            *            CRE083BU MD022097
+     F*       43       DEPOSIT ACCOUNT                                *
+     F*       44       LOAN ACCOUNT                                   *
+     F*       45       CLEARED BALANCE EXCEEDS O/D LINE IF IT EXISTS, *
+     F*                OR IF NOT, CLEARED BALANCE DEBIT               *
+     F*       46       DEPOSIT ACCOUNT IN DEBIT                       *
+     F*       47       LOAN ACCOUNT IN CREDIT                         *
+     F*       48       LIMIT CHANGED DATE EQUALS RUN DATE             *
+     F*       49       HELD AMOUNT EXCEEDS CLEARED BALANCE            *
+     F*       50       NO CREDITS TO ACCOUNT IN LAST 31 DAYS          *
+     F*       51       CONTROLS COUNT OF RECORDS WRITTEN TO ODAC      *
+     F*       52       O/D LIMIT EXPIRED                              *
+     F*       53       NEW ACCOUNT & LESS THAN 31 DAYS OLD            *
+     F*       55       Block GL Accounts Enhancement is switched on   *   CGL002
+     F*                                                               *
+     F*       60       REFER ALL DEBITS                               *
+     F*       61       REFER ALL CREDITS                              *
+     F*       62       BLOCK ALL DEBITS                               *
+     F*       63       BLOCK ALL CREDITS                              *
+     F*       64       INACTIVE                                       *
+     F*       66       BANKRUPT                                       *   086936
+     F*       67       BAD DEBT                                       *   086936
+     F********67*******STOP CHEQUE                                    *   086936
+     F*                                                               *
+     F*       70       CURRENCY HAS 0 D.P.                            *
+     F*       71       CURRENCY HAS 1 D.P.                            *
+     F*       72       CURRENCY HAS 2 D.P.                            *
+     F*       73       CURRENCY HAS 3 D.P.                            *
+     F*       77       REFER FOR STOPPED CHEQUE                       *
+     F*                                                               *
+     F*       86       BANKRUPT                                       *   086936
+     F*       87       BAD DEBT                                       *   086936
+     F*                                                               *   086936
+     F*       88       MULTIBRANCHING INDICATOR                       *
+     F*       98       DATE FORMAT FLAG                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  REXCPT - Output records to S/REFRL                           *
+     F*  GLXCPT - Output records to S/REFRLGL                         *
+     F*  *PSSR  - Handles Abnormal Error Conditions                   *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80               COPYRIGHT
+     E                    SPA         7  1
+     E                    #C1       250  3                                                    CSC042
+     E                    #C2       250  1 0                                                  CSC042
+     E/SPACE 3
+     I*
+     ISSRACJL NS  01   1 CD
+     I*
+     I** Retail Accounts Extract File
+     I*
+     I                                        2   4 REBRCA  M5
+     I                                        5   5 ATYP
+     I                                        6   6 STYP
+     I**********                              7  120RECNUM  M4                                CSD027
+     I                                        7  12 RECNUM  M4                                CSD027
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3760IIPG                                           S01408
+     C*                                                                   S01408
+     I                                       13  15 RECCY   M3
+     I**********                             16  190REACOD  M2                                CGL029
+     I**********                             20  210REACSQ  M1                                CGL029
+     I**********                             22  310REACNO                                    CGL029
+     I**********                             40  59 CRNM                                      CGL029
+     I**********                             60  61 ACOC                                      CGL029
+     I**********                             64  64 RETB                                      CGL029
+     I**********                          P  65  670LRCR                                      CGL029
+     I**********                          P  68  750GRBL0                                     CGL029
+     I**********                          P  68  751GRBL1                                     CGL029
+     I**********                          P  68  752GRBL2                                     CGL029
+     I**********                          P  68  753GRBL3                                     CGL029
+     I**********                          P  76  830NETBL0      2526                          CGL029
+     I**********                          P  76  831NETBL1                                    CGL029
+     I**********                          P  76  832NETBL2                                    CGL029
+     I**********                          P  76  833NETBL3                                    CGL029
+     I**********                          P  84  910HELD0           34                        CGL029
+     I**********                          P  84  911HELD1                                     CGL029
+     I**********                          P  84  912HELD2                                     CGL029
+     I**********                          P  84  913HELD3                                     CGL029
+     I**********                          P  92  970MINB                               093025 CGL029
+     I**********                          P  98 1030ODLN            24                        CGL029
+     I**********                          P 104 1060ODED                                      CGL029
+     I**********                          P 107 1090DLIM                                      CGL029
+     I                                       16  250REACOD  M2                                CGL029
+     I                                       26  270REACSQ  M1                                CGL029
+     I                                       28  370REACNO                                    CGL029
+     I**********                             46  65 CRNM                             CGL029 CRE083BU
+     I**********                             66  67 ACOC                             CGL029 CRE083BU
+     I                                       46  65 CRNM                                    MD022097
+     I                                       66  67 ACOC                                    MD022097
+     I                                       70  70 RETB                                      CGL029
+     I                                    P  71  730LRCR                                      CGL029
+     I                                    P  74  810GRBL0                                     CGL029
+     I                                    P  74  811GRBL1                                     CGL029
+     I                                    P  74  812GRBL2                                     CGL029
+     I                                    P  74  813GRBL3                                     CGL029
+     I                                    P  82  890NETBL0      2526                          CGL029
+     I                                    P  82  891NETBL1                                    CGL029
+     I                                    P  82  892NETBL2                                    CGL029
+     I                                    P  82  893NETBL3                                    CGL029
+     I                                    P  90  970HELD0           34                        CGL029
+     I                                    P  90  971HELD1                                     CGL029
+     I                                    P  90  972HELD2                                     CGL029
+     I                                    P  90  973HELD3                                     CGL029
+     I                                    P  98 1030MINB                                      CGL029
+     I                                    P 104 1090ODLN            24                        CGL029
+     I                                    P 110 1120ODED                                      CGL029
+     I                                    P 113 1150DLIM                                      CGL029
+     I        NS  03
+     I*
+     I** Catchall
+     I*
+     ISRETP   NS  04   1 CP
+     I*
+     I** Sorted Retail Accounts Postings File
+     I*
+     I**********                              2   70RLCNUM  M4                                CSD027
+     I                                        2   7 RLCNUM  M4                                CSD027
+     I                                        8  10 RLCCY   M3
+     I**********                             11  140RLACOD  M2                                CGL029
+     I                                       11  140QQACOD                                    CGL029
+     I                                       15  160RLACSQ  M1
+     I**********                              2  16 KYST                                      CGL029
+     I                                        2  10 WKFLD1                                    CGL029
+     I                                       23  320RLACNO          21
+     I                                    P  36  380VALD
+     I                                       39  430TRAT
+     I                                    P  74  800PSTA
+     I                                       81  810DRCR            23
+     I                                       88  950CHQN            27
+     I                                       96 102 SPOS
+     I                                      103 105 RLBRCA  M5
+     I                                      106 1060RIND            22
+     I                                      109 111 DPMT
+     I                                      317 319 XRFI                  217332
+     I                                      590 5990RLACOD  M2                                CGL029
+     I        NS  06
+     I*
+     I** Catchall
+     I*
+     ISTOPB   NS  07   1 CD
+     I**********                              2  16 SDKYST                                    CGL029
+     I                                        2  10 WKFLD4                                    CGL029
+     I/COPY WNCPYSRC,RE3760I001
+     I                                       17  190STCR
+     I/COPY WNCPYSRC,RE3760I002
+     I                                       30  32 BRCA
+     I                                       33  400FCHQ            29
+     I                                       41  480TCHQ            30
+     I                                    P  49  550STPA
+     I/COPY WNCPYSRC,RE3760I003
+     I        NS  08
+     I*
+     I** Catchall
+     I*
+     IACCNT   NS  12   1 CD
+     I*
+     I** Accounts Master File
+     I*
+     I                                    P  30  320DACO
+     I                                    P 141 1430LRCRIN
+     I************************************P 228 2330MINB                  093025
+     I        NS  13
+     I*
+     I** Catchall
+     I*
+     ILDA         DS                            256
+     I*
+     I** Local Data Area
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IRUNDT       DS
+     I*
+     I** DATA AREA RUNDAT
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 AGDFF
+     I                                       13  13 MBIN
+      *                                                                                     MD022097
+      ** Data Structure for the compare field                                               MD022097
+      *                                                                                     MD022097
+     I            DS                                                                        MD022097
+     I                                        1  24 CMPFLD                                  MD022097
+     I                                        1   3 REBRCA                                  MD022097
+     I                                        4   9 RECNUM                                  MD022097
+     I                                       10  12 RECCY                                   MD022097
+     I                                       13  220REACOD                                  MD022097
+     I                                       23  240REACSQ                                  MD022097
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Data Structure for Bank details
+     I*
+     I              BJURPT                          TITL
+     I**********                                                                              CSC042
+     I*********SDCURR    E DSSDCURRPD                                                         CSC042
+     I**********                                                                              CSC042
+     I***Data*Structure*for*Currency*Codes*Details                                            CSC042
+     I**********                                                                              CSC042
+     I**********    A6NBDP                          CDP                                       CSC042
+      *                                                                   S01498
+     ISDMMOD    E DSSDMMODPD                                              S01498
+     I** Dummy record format for Module details                           S01498
+     I*                                                                   S01498
+     ISDLOMB    E DSSDLOMBPD                                              S01498
+     I** Dummy record format for Portfolio Lending ICD.                   S01498
+     I*                                                                   S01498
+     ISDLBCS    E DSSDLBCSPD                                              S01498
+     I** Dummy record format for Portfolio Lending Customer File          S01498
+     I*                                                                   S01498
+     ISCSARD    E DSSCSARDPD                                              CGL002
+     I** Dummy record format for Switchable Features File                 CGL002
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access programs, long data structure
+     I*
+     C/EJECT
+     C*****************************************************************
+     C** M A I N   R O U T I N E
+     C*****************************************************************
+     C*
+     C** First Cycle processing
+     C*
+      ** Create new KEY field to accomodate the new                                           CGL029
+      ** Account Code of lenght 10                                                            CGL029
+      *                                                                                       CGL029
+     C                     MOVELRLACOD    WKFLD3 12                                           CGL029
+     C                     MOVE RLACSQ    WKFLD3                                              CGL029
+     C           WKFLD1    CAT  WKFLD3    KYST   21                                           CGL029
+      *                                                                                       CGL029
+     C                     MOVELREACOD    WKFLD3 12                                           CGL029
+     C                     MOVE REACSQ    WKFLD3                                              CGL029
+     C           WKFLD1    CAT  WKFLD3    KYST   21                                           CGL029
+      *                                                                                       CGL029
+     C                     MOVELRLACOD    WKFLD5 12                                           CGL029
+     C                     MOVE RLACSQ    WKFLD5                                              CGL029
+     C           WKFLD4    CAT  WKFLD5    SDKYST 21                                           CGL029
+      *                                                                                       CGL029
+     C                     MOVELREACOD    WKFLD5 12                                           CGL029
+     C                     MOVE REACSQ    WKFLD5                                              CGL029
+     C           WKFLD4    CAT  WKFLD5    SDKYST 21                                           CGL029
+      *                                                                                       CGL029
+     C**********           MOVEACPY@      BIS@   80                                         CRE083AI
+     C   40                GOTO START
+     C                     SETON                     40
+      *                                                                                     MD022097
+     C           *ENTRY    PLIST                                                            MD022097
+     C                     PARM           ENDKEY 24                                         MD022097
+      *                                                                                     MD022097
+     C                     MOVEACPY@      BIS@   80                                         CRE083AI
+     C                     MOVE *BLANKS   KEYX    6                                         CRE083AI
+      *                                                                   217332
+     C           CMACKY    KLIST                                          217332
+     C                     KFLD           RECNUM                          217332
+     C                     KFLD           RECCY                           217332
+     C                     KFLD           REACOD                          217332
+     C                     KFLD           REACSQ                          217332
+     C                     KFLD           REBRCA                          217332
+      **********                                                                   CRE083BU MD022097
+     C********** CKEY      KLIST                                                   CRE083BU MD022097
+     C**********           KFLD           RECNUM                                   CRE083BU MD022097
+     C**********           KFLD           RCDT                                     CRE083BU MD022097
+      **********                                                                   CRE083BU MD022097
+     C********** *LIKE     DEFN RECNUM    LCNUM                                    CRE083BU MD022097
+     C**********           MOVE *BLANKS   LCNUM                                    CRE083BU MD022097
+     C**********           MOVE 'A'       RCDT                                     CRE083BU MD022097
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Access Data Area RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** Check Multibranching indicator
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     88
+     C                     END
+     C*
+     C** Set up indicator 98 based on the date format
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+      *                                                                   S01498
+      ** Call Access Program for Module Details                           S01498
+     C                     CALL 'AOMMODR0'                                S01498
+     C                     PARM '*MSG    '@RTCD   7                       S01498
+     C                     PARM '*FIRST  '@OPTN   7                       S01498
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01498
+      *                                                                   S01498
+     C           @RTCD     IFNE *BLANK                                    S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVEL'SDMMODPD'DBFILE            ************* S01498
+     C                     MOVEL'08'      DBASE             *DBERROR 008* S01498
+     C                     MOVEL@OPTN     DBOPTN  7         ************* S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     OUT  LDA                                       S01498
+     C                     EXSR *PSSR                                     S01498
+     C                     GOTO END                                       S01498
+     C                     END                                            S01498
+      *                                                                   S01498
+      ** Call Access Program for Portfolio Lending ICD.                   S01498
+     C           BGLMCR    IFEQ 'Y'                                       S01498
+     C                     CALL 'AOLOMBR0'                                S01498
+     C                     PARM '*MSG    '@RTCD   7                       S01498
+     C                     PARM '*FIRST  '@OPTN   7                       S01498
+     C           SDLOMB    PARM SDLOMB    DSFDY                           S01498
+      *                                                                   S01498
+     C           @RTCD     IFNE *BLANK                                    S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVEL'SDLOMBPD'DBFILE            ************* S01498
+     C                     MOVEL'09'      DBASE             *DBERROR 009* S01498
+     C                     MOVEL@OPTN     DBOPTN  7         ************* S01498
+     C                     OUT  LDA                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     EXSR *PSSR                                     S01498
+     C                     GOTO END                                       S01498
+     C                     END                                            S01498
+     C                     END                                            S01498
+     C*
+     C** Get Bank Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'RE3760'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CGL002
+      **  Check if Block GL Accounts Enhancement feature is installed     CGL002
+      *                                                                   CGL002
+     C                     CALL 'AOSARDR0'                                CGL002
+     C                     PARM *BLANKS   @RTCD                           CGL002
+     C                     PARM '*VERIFY' @OPTN                           CGL002
+     C                     PARM 'CGL002'  WSARN   6                       CGL002
+     C           SCSARD    PARM SCSARD    DSFDY                           CGL002
+      *                                                                   CGL002
+     C           @RTCD     IFEQ *BLANKS                                   CGL002
+     C                     MOVE *ON       *IN55                           CGL002
+     C                     ELSE                                           CGL002
+     C                     MOVE *OFF      *IN55                           CGL002
+     C           @RTCD     IFNE '*NRF'                                    CGL002
+     C           *LOCK     IN   LDA                                       CGL002
+     C                     MOVEL'SCSARDPD'DBFILE                          CGL002
+     C                     MOVELWSARN     DBKEY            ************   CGL002
+     C                     MOVEL'RE3760'  DBPGM            * DBERR 15 *   CGL002
+     C                     Z-ADD15        DBASE            ************   CGL002
+     C                     OUT  LDA                                       CGL002
+     C                     SETON                     U7U8LR               CGL002
+     C                     EXSR *PSSR                                     CGL002
+     C                     ENDIF                                          CGL002
+     C                     ENDIF                                          CGL002
+      *                                                                   217332
+      **  Check if Cash Management feature is on                          217332
+      *                                                                   217332
+     C                     CALL 'AOSARDR0'                                217332
+     C                     PARM *BLANKS   @RTCD                           217332
+     C                     PARM '*VERIFY' @OPTN                           217332
+     C                     PARM 'CRE008'  WSARN   6                       217332
+     C           SCSARD    PARM SCSARD    DSFDY                           217332
+      *                                                                   217332
+     C                     MOVE 'N'       CRE008  1                       217332
+     C           @RTCD     IFEQ *BLANKS                                   217332
+     C                     MOVE 'Y'       CRE008                          217332
+     C                     OPEN REGAHLJ2                                  217332
+     C                     END                                            217332
+      *                                                                   217332
+     C           @RTCD     IFNE *BLANKS                                   217332
+     C           @RTCD     ANDNE'*NRF   '                                 217332
+     C                     MOVEL'SCSARDPD'DBFILE           ************   217332
+     C                     MOVELWSARN     DBKEY            * DBERR 16 *   217332
+     C                     Z-ADD16        DBASE            ************   217332
+     C                     SETON                     U7LR                 217332
+     C                     GOTO END                                       217332
+     C                     ENDIF                                          217332
+     C*
+     C/COPY WNCPYSRC,REH00062
+     C**********           Z-ADD2         NRITO   50                                        CRE083BU
+     C**********           Z-ADD2         NOREFR  50                                        CRE083BU
+     C**********           Z-ADD1         GLNORE  50                                        CRE083BU
+     C                     Z-ADD0         NRITO   50                                        CRE083BU
+     C                     Z-ADD0         NOREFR  50                                        CRE083BU
+     C                     Z-ADD0         GLNORE  50                                        CRE083BU
+      *                                                                                       CSC042
+      * Set up the currency decimal places arrays                                             CSC042
+     C           *LIKE     DEFN A6NBDP    CDP                                                 CSC042
+     C                     Z-ADD0         #Y      30                                          CSC042
+     C                     OPEN SDCURRPD                                                      CSC042
+     C                     READ SDCURRPD                 99                                   CSC042
+     C           *IN99     DOWNE*ON                                                           CSC042
+     C                     ADD  1         #Y                                                  CSC042
+     C                     MOVELA6CYCD    #C1,#Y                                              CSC042
+     C                     Z-ADDA6NBDP    #C2,#Y                                              CSC042
+     C                     READ SDCURRPD                 99                                   CSC042
+     C                     ENDDO                                                              CSC042
+     C                     CLOSESDCURRPD                                                      CSC042
+     C/COPY WNCPYSRC,RE3760C001
+     C           START     TAG                             ** Start TAG **
+      *                                                                                     MD022097
+      ** If record read from SSRACJL with key GT than ENDKEY, seton LR                      MD022097
+      *                                                                                     MD022097
+     C           CMPFLD    IFGT ENDKEY                                                      MD022097
+     C                     SETON                     LR                                     MD022097
+     C                     GOTO END                                                         MD022097
+     C                     ENDIF                                                            MD022097
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3760CCP2                                           S01408
+     C*                                                                   S01408
+     C********** RECNUM    IFNE LCNUM                                              CRE083BU MD022097
+     C********** CKEY      CHAINCLINT                42                            CRE083BU MD022097
+      **********                                                                   CRE083BU MD022097
+     C********** *IN42     IFEQ *ON                                                CRE083BU MD022097
+     C********** *LOCK     IN   LDA                                                CRE083BU MD022097
+     C**********           MOVEL'CLINTCB' DBFILE                                   CRE083BU MD022097
+     C**********           MOVELRECNUM    DBKEY                                    CRE083BU MD022097
+     C**********           MOVEL'RE3760'  DBPGM                                    CRE083BU MD022097
+     C**********           OUT  LDA                                                CRE083BU MD022097
+     C**********           EXSR *PSSR                                              CRE083BU MD022097
+     C**********           ENDIF                                                   CRE083BU MD022097
+      **********                                                                   CRE083BU MD022097
+     C**********           MOVE RECNUM    LCNUM                                    CRE083BU MD022097
+     C**********           ENDIF                                                   CRE083BU MD022097
+     C*
+     C** Accumulate number of live records read from each input file
+     C*
+     C   01      NOSSR     ADD  1         NOSSR   50
+     C   04      NOSRE     ADD  1         NOSRE   50
+      *                                                                   217332
+      **  If primary record,                                              217332
+      **  If CRE008 is on,  access Group Account record                   217332
+     C           *IN01     IFEQ *ON                                       217332
+     C                     MOVEL' '       CR8GA   1                       217332
+     C           CRE008    IFEQ 'Y'                                       217332
+     C           CMACKY    CHAINREGAHLJ2             36                   217332
+     C           *IN36     IFEQ *OFF                                      217332
+     C           CLCCAT    ANDEQ'T'                                       217332
+     C           *IN36     OREQ *OFF                                      217332
+     C           CLCCAT    ANDEQ'L'                                       217332
+     C                     MOVEL'Y'       CR8GA   1                       217332
+     C                     ENDIF                                          217332
+     C                     ENDIF                                          217332
+     C                     ENDIF                                          217332
+      *                                                                   S01498
+      ** If Portfolio Lending is switched on, if a LB customer            S01498
+      ** is selected for extraction ignore it when the LB setup           S01498
+      ** is to, not include LB customers for DL Exposure reports.         S01498
+      *                                                                   S01498
+     C           BGLMCR    IFEQ 'Y'                                       S01498
+     C           LBLCLE    ANDEQ'N'                                       S01498
+      *                                                                                     CRE083AI
+      ** Access object is called only when the customer changes.                            CRE083AI
+      *                                                                                     CRE083AI
+     C           RECNUM    IFNE KEYX                                                        CRE083AI
+     C                     MOVE RECNUM    KEYX                                              CRE083AI
+     C                     MOVE 'N'       LBFLAG  1                                         CRE083AI
+      *                                                                   S01498
+      ** Call Access Program to determine if a LB Customer.               S01498
+     C                     MOVELRECNUM    @AENB                           S01498
+     C                     CALL 'AOLBCSR0'                                S01498
+     C                     PARM '*MSG    '@RTCD                           S01498
+     C                     PARM '*KEY    '@OPTN                           S01498
+     C                     PARM           @AENB  10                       S01498
+     C           SDLBCS    PARM SDLBCS    DSSDY                           S01498
+     C*                                                                   S01498
+     C           @RTCD     IFNE *BLANK                                    S01498
+     C           @RTCD     ANDNE'*NRF'                                    S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVEL'SDLBCSPD'DBFILE            ************* S01498
+     C                     MOVEL'10'      DBASE             *DBERROR 010* S01498
+     C                     MOVEL@OPTN     DBOPTN            ************* S01498
+     C                     MOVELRECNUM    DBKEY                           S01498
+     C                     OUT  LDA                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     EXSR *PSSR                                     S01498
+     C                     END                                            S01498
+      *                                                                   S01498
+      ** Customer is a LB customer - ignore.                              S01498
+     C           @RTCD     IFEQ *BLANKS                                   S01498
+     C                     MOVE 'Y'       LBFLAG                                            CRE083AI
+     C                     GOTO END                                       S01498
+     C                     END                                            S01498
+     C                     END                                            S01498
+     C           LBFLAG    IFEQ 'Y'                                                         CRE083AI
+     C                     GOTO END                                                         CRE083AI
+     C                     ENDIF                                                            CRE083AI
+     C                     ENDIF                                                            CRE083AI
+     C   03
+     COR 06                GOTO END
+     C*
+     C           ATYP      IFEQ 'R'
+     C*
+     C   MR 04             GOTO PROSEC
+     C*
+     C** This part executed when a primary record is selected
+     C** for processing
+     C*
+     C  N01                GOTO END
+     C                     SETOF                     454647
+     C                     SETOF                     484950
+     C                     SETOF                     5253
+     C                     SETOF                     35
+     C/COPY WNCPYSRC,RE3760CTC1                                           S01408
+     C*
+     C** If Deposit Account, set 43
+     C** If Loan Account, set 44
+     C*
+     C           STYP      COMP 'S'                      43
+     C           STYP      COMP 'L'                      44
+     C*
+     C** Find number of D.P. for currency
+     C*
+     C                     Z-ADD1         #Y                                                  CSC042
+     C           RECCY     LOKUP#C1,#Y                   74                                   CSC042
+     C           *IN74     IFEQ *ON                                                           CSC042
+     C                     Z-ADD#C2,#Y    CDP                                                 CSC042
+     C                     ELSE                                                               CSC042
+     C**********           CALL 'AOCURRR0'                                                    CSC042
+     C**********           PARM '*MSG   ' @RTCD                                               CSC042
+     C**********           PARM '*KEY    '@OPTN                                               CSC042
+     C**********           PARM RECCY     @KEY    3                                           CSC042
+     C***********SDCURR    PARM SDCURR    DSFDY                           CSD006
+     C********** SDCURR    PARM SDCURR    DSSDY                                        CSD006 CSC042
+     C*
+     C********** @RTCD     IFNE *BLANK                                                        CSC042
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELRECCY     DBKEY            * DBERROR 002 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'RE3760'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           CDP       COMP 1                      7071
+     C           CDP       COMP 2                    73  72
+     C/COPY WNCPYSRC,RE3760C002
+     C*
+     C** Set indicators for reason codes, O,D,L,C,H AND N
+     C*
+     C      24 25          SETON                     45
+     C*
+     C   25N24 70NETBL0    COMP ODLN                 45
+     C*
+     C   25N24 71NETBL1    COMP ODLN                 45
+     C*
+     C   25N24 72NETBL2    COMP ODLN                 45
+     C*
+     C   25N24 73NETBL3    COMP ODLN                 45
+     C/COPY WNCPYSRC,RE3760C003
+     C*
+     C** Deposit account in Debit
+     C*
+     C      25 43          SETON                     46
+     C*
+     C** Loan Account in Credit
+     C*
+     C      26 44          SETON                     47
+     C*
+     C** 'Limit Changed' Date equals Rundate
+     C*
+     C           DLIM      COMP RUND                     48
+     C*
+     C**  'Limit Expired'
+     C*
+     C  N24      ODED      COMP RUND                   5252
+     C*
+     C** Held Amount exceeds Cleared Balance
+     C** First negate Held Amt, Refer if result is less than balance
+     C*
+     C  N34                Z-SUBHELD0     WSHELD 150
+     C  N34      WSHELD    COMP NETBL0                 49
+     C*
+     C** No credits to the account in the last 31 days
+     C*
+     C           RUND      SUB  LRCR      DSINCR  50
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3760CCP3                                           S01408
+     C*                                                                   S01408
+     C           DSINCR    COMP 31                   50  50
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3760CCP4                                           S01408
+     C*                                                                   S01408
+     C      50             MOVELRECNUM    KL      9
+     C      50             MOVE RECCY     KL
+     C******50**           MOVELREACOD    KR      6                                           CGL029
+     C      50             MOVELREACOD    KR     12                                           CGL029
+     C      50             MOVE REACSQ    KR
+     C      50             MOVELKL        KEYACM 15
+     C      50             MOVE KR        KEYACM
+     C      50             MOVELKEYACM    ACCKEY 18
+     C      50             MOVE REBRCA    ACCKEY
+     C      50   ACCKEY    CHAINACCNT                41
+     C      50   LRCR      COMP 0                        53
+     C   50 53             Z-ADDDACO      LRCR
+     C   50 53   RUND      SUB  LRCR      DSINCR
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3760CCP5                                           S01408
+     C*                                                                   S01408
+     C   50 53   DSINCR    COMP 31                     53
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3760CCP6                                           S01408
+     C*                                                                   S01408
+     C******50***          Z-ADDRUND      LRCR31  50                      086290
+     C*
+     C***Check*whether*below*minimum*balance**                            093025
+     C***********GRBL0     IFLT 0                                         093025
+     C*********************Z-SUBGRBL0     WRK152 152                      093025
+     C***********WRK152****IFLT MINB                                      093025
+     C*********************SETON                     35                   093025
+     C*********************END                                            093025
+     C*********************END                                            093025
+      *                                                                   093025
+     C                     SETOF                     51
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3760CCPG                                           S01408
+     C*                                                                   S01408
+     C   52
+     COR 45
+     COR 46
+     COR 47
+     COR 48
+     COR 49
+     COR 50N53             SETON                     51
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3760CCP1                                           S01408
+     C*                                                                   S01408
+     C      51   NRITO     ADD  1         NRITO
+     C   51                EXCPT
+     C   51                SETOF                     51
+     C   01                GOTO END
+     C*
+     C** Test relevant bits in  'Referral Indicator field
+     C*
+     C           PROSEC    TAG
+      *                                                                   217332
+      *  Ignore posting if CM GA mirror booking                           217332
+     C           CR8GA     IFEQ 'Y'                                       217332
+     C           XRFI      ANDEQ'GA '                                     217332
+     C                     GOTO END                                       217332
+     C                     ENDIF                                          217332
+      *                                                                   093025
+      * Only perform min. balance processing if min. balance entered      093025
+     C           MINB      IFNE 0                          --- B001       093025
+      *                                                                   093025
+      * If balance is zero or greater it is a debit so report it          093025
+     C           GRBL0     IFGE 0                          --- B002       093025
+     C                     SETON                     35                   093025
+     C                     ELSE                            --- X002       093025
+      *                                                                   093025
+      * Credit balances are less than zero. Make +ve and allow for        093025
+      * currency dec. places, then compare with min. balance (which       093025
+      * is held in major currency units).                                 093025
+     C           *IN70     IFEQ *ON                        --- B003       093025
+     C                     Z-SUBGRBL0     WRK150 150                      093025
+     C           WRK150    COMP MINB                   35  Less than      093025
+     C                     ENDIF                           --- E003       093025
+     C           *IN71     IFEQ *ON                        --- B003       093025
+     C                     Z-SUBGRBL1     WRK151 151                      093025
+     C           WRK151    COMP MINB                   35  Less than      093025
+     C                     ENDIF                           --- E003       093025
+     C           *IN72     IFEQ *ON                        --- B003       093025
+     C                     Z-SUBGRBL2     WRK152 152                      093025
+     C           WRK152    COMP MINB                   35  Less than      093025
+     C                     ENDIF                           --- E003       093025
+     C           *IN73     IFEQ *ON                        --- B003       093025
+     C                     Z-SUBGRBL3     WRK153 150                      093025
+     C           WRK153    COMP MINB                   35  Less than      093025
+     C                     ENDIF                           --- E003       093025
+      *                                                                   093025
+     C                     ENDIF                           --- E002       093025
+     C                     ENDIF                           --- E001       093025
+      *                                                                   093025
+     C                     SETOF                     606162
+     C                     SETOF                     75
+     C                     SETOF                     636467
+     C                     SETOF                         66               086936
+     C      23             TESTB'0'       RETB           60
+     C      60             SETON                     80
+     C     N23             TESTB'1'       RETB           61
+     C      61             SETON                     81
+     C      23             TESTB'2'       RETB           62
+     C      62             SETON                     82
+     C     N23             TESTB'3'       RETB           63
+     C      63             SETON                     83
+     C                     TESTB'4'       RETB           64
+     C      64             SETON                     84
+      * Bankrupt                                                          086936
+     C                     MOVE *OFF      *IN86                           086936
+     C                     TESTB'6'       RETB           66               086936
+     C           *IN66     IFEQ *ON                                       086936
+     C                     MOVE *ON       *IN86                           086936
+     C                     ENDIF                                          086936
+      * Bad Debt                                                          086936
+     C                     MOVE *OFF      *IN87                           086936
+     C                     TESTB'7'       RETB           67               086936
+     C           *IN67     IFEQ *ON                                       086936
+     C                     MOVE *ON       *IN87                           086936
+     C                     ENDIF                                          086936
+      *                                                                   086936
+     C   45                SETON                     85
+     C   49                SETON                     89
+     C*
+     C     N60             SETOF                     80
+     C     N61             SETOF                     81
+     C     N62             SETOF                     82
+     C     N63             SETOF                     83
+     C     N64             SETOF                     84
+     C     N45             SETOF                     85
+     C     N49             SETOF                     89
+     C*
+     C** Stop cheque processing
+     C*
+     C*****N67***                                                         080823
+     C*R*27******          GOTO OUT                                       080823
+     C   27                GOTO OUT                                       080823
+     C*
+     C** Set up Account Reference
+     C*
+     C**********           MOVE KYST      KYSTB  18                                           CGL029
+     C                     MOVE KYST      KYSTB  24                                           CGL029
+     C                     MOVELRLBRCA    KYSTB
+     C**********           MOVE KYSTB     QSCA   18                                           CGL029
+     C**********           MOVELKYSTB     KYSTCQ 21                                           CGL029
+     C                     MOVE KYSTB     QSCA   24                                           CGL029
+     C                     MOVELKYSTB     KYSTCQ 27                                           CGL029
+     C*
+     C** Use to access STOPB
+     C*
+     C           KYSTCQ    SETLLSTOPB
+     C           RDSTCQ    TAG                             ** RDSTCQ **
+     C                     SETOF                     0775
+     C                     READ STOPB                    75
+     C  N07N75             GOTO RDSTCQ
+     C*
+     C** When live record found, is it for this account
+     C*
+     C**********           MOVE SDKYST    BKYST  18                                           CGL029
+     C                     MOVE SDKYST    BKYST  24                                           CGL029
+     C                     MOVELBRCA      BKYST
+     C           BKYST     COMP QSCA                 7676
+     C      75
+     COR 76                GOTO OUT
+     C*
+     C** Determine if the Posting is to be stopped
+     C*
+     C                     SETOF                     313233
+     C                     SETOF                     77
+     C  N29      CHQN      COMP FCHQ                 32  31
+     C  N29N30 32CHQN      COMP TCHQ                   3232
+     C   29 30   PSTA      COMP STPA                     33
+     C*
+     C  N29 31                                             Single CHQ
+     CORN29N30 32                                          Range of CHQS
+     COR 33                SETON                     77    Amount AMNT
+     C*
+     C      77             EXSR REXCPT
+     C                     GOTO RDSTCQ
+     C           OUT       TAG                             ** Out TAG **
+     C                     SETOF                     77
+     C   89                EXSR REXCPT
+     C                     SETOF                     89
+     C   85                EXSR REXCPT
+     C                     SETOF                     85
+     C   80                EXSR REXCPT
+     C                     SETOF                     80
+     C   81                EXSR REXCPT
+     C                     SETOF                     81
+     C   82                EXSR REXCPT
+     C                     SETOF                     82
+     C   83                EXSR REXCPT
+     C                     SETOF                     83
+     C   84                EXSR REXCPT
+     C                     SETOF                     84
+      * Bankrupt                                                          086936
+     C           *IN86     IFEQ *ON                                       086936
+     C                     EXSR REXCPT                                    086936
+     C                     MOVE *OFF      *IN86                           086936
+     C                     ENDIF                                          086936
+      * Bad Debt                                                          086936
+     C           *IN87     IFEQ *ON                                       086936
+     C                     EXSR REXCPT                                    086936
+     C                     MOVE *OFF      *IN87                           086936
+     C                     ENDIF                                          086936
+      *                                                                   086936
+     C/COPY WNCPYSRC,RE3760C005
+     C   35                EXSR REXCPT
+     C                     SETOF                     35
+      *                                                                   086936
+      * ELSE : NON-Retail Accounts                                        086936
+     C                     ELSE
+     C                     SETOF                     454647
+     C                     SETOF                     484950
+     C                     SETOF                     5253
+     C                     SETOF                     35
+     C                     SETOF                     606162
+     C                     SETOF                     63
+     C                     SETOF                     66  67               086936
+     C                     SETOF                     808182
+     C                     SETOF                     86  87               086936
+     C                     SETOF                     83
+      *                                                                   CGL002
+      **  If Block GL Accounts Enhancement is switched on, initialise     CGL002
+      **  output indicators                                               CGL002
+      *                                                                   CGL002
+     C           *IN55     IFEQ 'Y'                                       CGL002
+     C                     SETOF                     848589               CGL002
+     C                     ENDIF                                          CGL002
+     C  N04
+     CORNMR                GOTO END
+      *  For non-retail,                                                  217332
+      *  Ignore posting if CM GA mirror booking                           217332
+     C           CR8GA     IFEQ 'Y'                                       217332
+     C           XRFI      ANDEQ'GA '                                     217332
+     C                     GOTO END                                       217332
+     C                     ENDIF                                          217332
+     C*                                                                   217332
+     C      23             TESTB'0'       RETB           60
+     C      60             SETON                     80
+     C     N23             TESTB'1'       RETB           61
+     C      61             SETON                     81
+     C      23             TESTB'2'       RETB           62
+     C      62             SETON                     82
+     C     N23             TESTB'3'       RETB           63
+     C      63             SETON                     83
+      * Bankrupt                                                          086936
+     C                     TESTB'6'       RETB           66               086936
+     C           *IN66     IFEQ *ON                                       086936
+     C                     MOVE *ON       *IN86                           086936
+     C                     ENDIF                                          086936
+      * Bad Debt                                                          086936
+     C                     TESTB'7'       RETB           67               086936
+     C           *IN67     IFEQ *ON                                       086936
+     C                     MOVE *ON       *IN87                           086936
+     C                     ENDIF                                          086936
+      *                                                                   086936
+     C   80                EXSR GLXCPT
+     C                     SETOF                     80
+     C   81                EXSR GLXCPT
+     C                     SETOF                     81
+     C   82                EXSR GLXCPT
+     C                     SETOF                     82
+     C   83                EXSR GLXCPT
+     C                     SETOF                     83
+      * Bankrupt                                                          086936
+     C           *IN86     IFEQ *ON                                       086936
+     C                     EXSR GLXCPT                                    086936
+     C                     MOVE *OFF      *IN86                           086936
+     C                     ENDIF                                          086936
+      * Bad Debt                                                          086936
+     C           *IN87     IFEQ *ON                                       086936
+     C                     EXSR GLXCPT                                    086936
+     C                     MOVE *OFF      *IN87                           086936
+     C                     ENDIF                                          086936
+      *                                                                   086936
+     C*
+     C                     END
+     C           END       TAG                             ** End TAG**
+      *                                                                                     CRE083BU
+     CLR                   COMIT                                                            CRE083BU
+     C*****************************************************************
+     C**  E N D   O F  M A I N   R O U T I N E
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** REXCPT   - Subroutine to output records to S/REFRL           *
+     C*                                                               *
+     C*  CALLED BY: Main routine                                      *
+     C*                                                               *
+     C*  CALLS    : None                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           REXCPT    BEGSR                           **REXCPT**
+     C           NOREFR    ADD  1         NOREFR
+     C                     EXCPT
+     C                     ENDSR                           **REXCPT**
+     C*****************************************************************
+     C/SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  GLXCPT - Subroutine to output records to S/REFRLGL           *
+     C*                                                               *
+     C*  CALLED BY: Main routine                                      *
+     C*                                                               *
+     C*  CALLS    : None                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           GLXCPT    BEGSR                           **GLXCPT**
+     C           GLNORE    ADD  1         GLNORE
+     C                     EXCPTGLREF
+     C                     ENDSR                           **GLXCPT**
+     C*****************************************************************
+     C/SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR--- Subroutine to handle abnormal error conditions      *
+     C*                                                               *
+     C*  CALLED BY: Main routine                                      *
+     C*                                                               *
+     C*  CALLS    : None                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                            ** PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     SETON                     U7U8LR
+     C                     ENDSR                            ** PSSR **
+     C********************************************************************
+     O*
+     OODACON  E        51
+     O*
+     O** Retail Accounts Excess File
+     O*
+     O                                    1 'D'
+     O                         REBRCA     4
+     O                         ACOC       6
+     O                         RECNUM    12
+     O                         RECCY     15
+     O**********               REACOD    19                                                   CGL029
+     O                         QQACOD    19                                                   CGL029
+     O                         REACSQ    21
+     O                         REACNO    31
+     O                         CRNM      51
+     O                         ODLN      57P
+     O                         GRBL0     65P
+     O                         NETBL0    73P
+     O                         HELD0     81P
+     O                       45          82 'O'
+     O                       46          83 'D'
+     O                       47          84 'L'
+     O                       48          85 'C'
+     O                       49          86 'H'
+     O                    50N53          87 'N'
+     O                       52          88 'E'
+     O                         REACOD   138                                                   CGL029
+     O/COPY WNCPYSRC,RE3760OTC1                                           S01408
+     OODACZZ  T        LR
+     O                                    1 'T'
+     O                         NRITO      4P
+     O*ACCNT**D********50N41 01                                           086290
+0418 O****************N53      LRCR31   143P                              086290
+     O*
+     O** Update Accounts Master Detail Record
+     O*
+     OREFRLRL E        04 77
+     O*
+     O** Refferal File
+     O*
+     O                                    1 'D'
+     O                         REBRCA     4
+     O                                    5 'S'
+     O                         ACOC       7
+     O                         RLCNUM    13
+     O                         RLCCY     16
+     O**********               RLACOD    20                                                   CGL029
+     O                         QQACOD    20                                                   CGL029
+     O                         RLACSQ    22
+     O                         RLACNO    32
+     O                         CRNM      54
+     O                         TRAT      57P
+     O                         SPOS      64
+     O                         VALD      67P
+     O                         PSTA      74P
+     O                         DRCR      75
+     O                         NETBL0    83P
+     O/COPY WNCPYSRC,RE3760O001
+     O                         STCR     116
+     O                         DPMT     119
+     O                         RLACOD   138                                                   CGL029
+     O/COPY WNCPYSRC,RE3760O002
+     OREFRLRL E        04N77
+     O                                    1 'D'
+     O                         RLBRCA     4
+     O                       35           5 'L'                           093025
+     O/COPY WNCPYSRC,RE3760O003
+      * Bad Debt                                                          086936
+     O                       87           5 'Y'                           086936
+      * Bankrupt                                                          086936
+     O                       86           5 'X'                           086936
+      *                                                                   086936
+     O                       84           5 'I'
+     O                       83           5 'B'
+     O                       82           5 'B'
+     O                       81           5 'C'
+     O                       80           5 'D'
+     O                       85           5 'O'
+     O                       89           5 'H'
+      ********************** 35           5 'L'                           093025
+     O                         ACOC       7
+     O                         RLCNUM    13
+     O                         RLCCY     16
+     O**********               RLACOD    20                                                   CGL029
+     O                         QQACOD    20                                                   CGL029
+     O                         RLACSQ    22
+     O                         RLACNO    32
+     O                         CRNM      54
+     O                         TRAT      57P
+     O                         SPOS      64
+     O                         VALD      67P
+     O                         PSTA      74P
+     O                         DRCR      75
+     O                         NETBL0    83P
+     O/COPY WNCPYSRC,REH00063
+     O                         DPMT     119
+     O                         RLACOD   138                                                   CGL029
+     OREFRLZZ T        LR
+     O                                    1 'T'
+     O                         NOREFR     4P
+     O*
+     OREFRLGL E                GLREF
+     O                                    1 'D'
+     O                         RLBRCA     4
+     O                       35           5 'L'                           093025
+      * Bad Debt                                                          086936
+     O                       87           5 'Y'                           086936
+      * Bankrupt                                                          086936
+     O                       86           5 'X'                           086936
+      *                                                                   086936
+     O                       84           5 'I'
+     O                       83           5 'B'
+     O                       82           5 'B'
+     O                       81           5 'C'
+     O                       80           5 'D'
+     O                       85           5 'O'
+     O                       89           5 'H'
+      ********************** 35           5 'L'                           093025
+     O                         ACOC       7
+     O                         RLCNUM    13
+     O                         RLCCY     16
+     O**********               RLACOD    20                                                   CGL029
+     O                         QQACOD    20                                                   CGL029
+     O                         RLACSQ    22
+     O                         RLACNO    32
+     O                         CRNM      54
+     O                         TRAT      57P
+     O                         SPOS      64
+     O                         VALD      67P
+     O                         PSTA      74P
+     O                         DRCR      75
+     O                         NETBL0    83P
+     O                         DPMT     119
+     O                         RLACOD   138                                                   CGL029
+     OREFRLGZ T        LR
+     O                                    1 'T'
+     O                         GLNORE     4P
+     ORE3760AUT  203   LR
+     O*
+     O** Control Report
+     O*
+     O                                   25 'REFERENCE RE3760AU'
+     O                         TITL      95
+     O                                  104 'DATE'
+     O                         RUNA     113
+     O                                  127 'PAGE    1'
+     O        T  1     LR
+     O                                   66 'REFERRAL/EXCESS '
+     O                                   81 'REPORTS EXTRACT'
+     O                                   97 'RUN CONTROLS'
+     O        T  2     LR
+     O                                   66 '----------------'
+     O                                   81 '----------------'
+     O        T  315   LR
+     O                                   44 'FILE CONTROLS'
+     O        T  1     LR
+     O                                   74 'INPUT'
+     O                                   92 'CALCULATED'
+     O        T  2     LR
+     O                                   74 '-----'
+     O                                   92 '----------'
+     O        T  1     LR
+     O                                   48 'A/C BALANCES FILE'
+     O***********                        58 ' - SSRACJL'                  CGL002
+     O**********      N55                58 ' - SSRACJL'                             CGL002 CRE083BU
+     O**********      N55                59 ' - GLRACCL1'                          CRE083BU MD022097
+     O                N55                59 ' - SSRACJL'                                    MD022097
+     O**********       55                59 ' - GLACCTJ0'                            CGL002 CRE083BU
+     O**********       55                59 ' - GLRGACL1'                          CRE083BU MD022097
+     O                 55                59 ' - GLACCTJ0'                                   MD022097
+     O        T  2     LR
+     O                                   63 'NO.OF RECORDS READ'
+     O                         NOSSR 1   92
+     O        T  1     LR
+     O                                   51 'DAILY MOVEMENTS FILE'
+     O        T  3     LR
+     O                                   63 'NO.OF RECORDS READ'
+     O                         NOSRE 1   74
+     O                         NOSRE 1   92
+     O        T 11     LR
+     O                                   53 'RETAIL REFERRAL REPORT'
+     O                                   58 ' FILE'
+     O        T  2     LR
+     O                                   66 'NO.OF RECORDS WRITTEN'
+     O                         NOREFR1   92
+     O        T  1     LR
+     O                                   51 'RETAIL EXCESS REPORT'
+     O                                   56 ' FILE'
+     O        T  2     LR
+     O                                   66 'NO.OF RECORDS WRITTEN'
+     O                         NRITO 1   92
+     O        T  1     LR
+     O***********                        50 'NON RETAIL REFERRAL'         CGL002
+     O                N55                50 'NON RETAIL REFERRAL'         CGL002
+     O                 55                50 'GL ACCOUNT REFERRAL'         CGL002
+     O                                   62 ' REPORT FILE'
+     O        T  2     LR
+     O                                   66 'NO.OF RECORDS WRITTEN'
+     O                         GLNORE1   92
+     O        T 32     U7 U8 LR
+     O                                   55 '*** REFERENCE RE3760 ***'
+     O                                   75 'DATABASE ERROR AT'
+     O                         DBASE     80
+     O        T        U7 U8 LR
+     O                                   45 'FILENAME'
+     O                         DBFILE    55
+     O                                   60 'KEY'
+     O                         DBKEY     90
+** CPY@ OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

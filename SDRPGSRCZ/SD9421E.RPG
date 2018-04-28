@@ -1,0 +1,970 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Fontis interface ICD enquiry')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9421E - Midas SD Fontis Interface ICD Enquiry.             *
+      *                                                               *
+      *  Function:  This program allows the user to enquire about     *
+      *             the Fontis Interface details                      *
+      *  Function:  This program displays the Fontis Interface ICD    *
+      *             record.                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *  Prev Amend No. CSD003             Date 01Jul99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL009             Date 18May99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL004             Date 04FEB97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CGL009 - Midas-Fontis Inter-Account Transfers (IAT) and      *
+      *           Third Party Payments (TPP) Interface                *
+      *  CGL004 - Midas-Fontis Interface:                             *
+      *           New function.                                       *
+      *                                                               *
+      *****************************************************************
+     F*Fontis Interface ICD Enq Initialise Program F-Spec
+     F/COPY WNCPYSRC,SD9421EFPG
+     FSD9421E#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Fontis interface ICD enquiry
+      *
+     FSDFONTL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Fontis Interface ICD retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*Fontis Interface ICD Enq Initialise Program E-Spec
+     E/COPY WNCPYSRC,SD9421EEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I/COPY QWINDSRC,SD9420GDTA                                           S01229
+     I*Fontis Interface ICD Enq Initialise Program I-Spec
+     I/COPY WNCPYSRC,SD9421EIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * KEY: Midas SD Fontis Interface ICD retrieval
+      * I : RST Fontis Interface ICD Key
+     I                                        1  10 P1FONT
+     IP2PARM      DS
+      * B :  Work Return code
+     I                                        1   5 P2WRTC
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Fontis Int
+     C           P2WRTC    PARM P2WRTC    WP0001  5        Work Return cod
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Check passed parameters
+     C                     EXSR FACKPM
+      * Perform once if all passed, else repeat
+     C           W0RPT     DOUEQ'N'
+      * Display and process key screen
+     C                     EXSR BADSKY
+     C                     END
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1FONT    IFEQ *BLANK                     Fontis Interfac
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           F8FONT           Fontis Interfac
+      * Setup key
+     C                     MOVEL#1FONT    F8FONT           Fontis Interfac
+     C           KRTV      CHAIN@FONTL1              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     9931  *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, then signal error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     9931  *
+      * Send message 'Fontis Interface ICD   NF'
+     C                     MOVEL'USR3185' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * 00/Copy Member SD9421ESFF - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Calculate Detail Func Fld
+     C/COPY WNCPYSRC,SD9421ESFF
+      * USER: Load detail screen from DBF record
+      * 00/Copy Member SD9421ELDS - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Load Detail Screen
+     C/COPY WNCPYSRC,SD9421ELDS
+     C                     END
+      *
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * USER: Validate key screen
+      * 00/Copy Member SD9421EVKS - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Validate Key Screen
+     C/COPY WNCPYSRC,SD9421EVKS
+      * Fontis Interface ICD Key required
+     C           #1FONT    IFEQ *BLANK                     IF
+     C                     SETON                     9931  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process key screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C***********          EXFMT#RCDDTL1                                  CGL009
+     C                     WRITE#RCDDTL1                                  CGL009
+     C           WUGL09    IFEQ 'Y'                                       CGL009
+     C                     WRITE#RCDDTL2                                  CGL009
+     C                     ENDIF                                          CGL009
+     C                     READ #RCDDTL1                 90               CGL009
+     C           WUGL09    IFEQ 'Y'                                       CGL009
+     C                     READ #RCDDTL2                 90               CGL009
+     C                     ENDIF                                          CGL009
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * 00/Copy Member SD9421EPKR - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD9421EPKR
+      * Bypass KEY screen if F12 is pressed on detail screen
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   05                MOVEL'Y'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+     C                     MOVEL'Y'       W0TRN
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * Process record:
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * CALC: Detail screen function fields
+      * 00/Copy Member SD9421ESFF - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Calculate Detail Func Fld
+     C/COPY WNCPYSRC,SD9421ESFF
+      * USER: Validate detail screen
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'E'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD9421EVSW - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Validate Detail Scrn Wdw
+     C/COPY WNCPYSRC,SD9421EVSW
+     C                     END                             *FI
+      * 00/Copy Member SD9421EVDS - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Validate Detail Screen
+     C/COPY WNCPYSRC,SD9421EVDS
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * USER: Perform confirmed action
+      * 00/Copy Member SD9421EPCA - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Perform Confrimed Action
+     C/COPY WNCPYSRC,SD9421EPCA
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * USER: Process command keys
+      * 00/Copy Member SD9421EPCK - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Process Command Keys
+     C/COPY WNCPYSRC,SD9421EPCK
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters
+      *================================================================
+      * Is full key present?
+     C           P1FONT    IFEQ *BLANK                     Fontis Interfac
+      * Not every key field passed - loop program
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      * Full key passed, so single shot program
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #DFDP1           Fontis Svr DtaF
+     C                     MOVEL*BLANK    #DFDP2           Fontis Svr DtaF
+     C                     Z-ADD*ZERO     #1DNFQ           Download Freque
+     C                     Z-ADD*ZERO     #1RTRY           Maximum no. of
+     C                     Z-ADD*ZERO     #1HSTP           History Retenti
+     C                     MOVEL*BLANK    #1HOST           Fontis Server H
+     C                     MOVEL*BLANK    #1MUFS           Midas User on F
+     C                     MOVEL*BLANK    #1PASW           Password for Mi
+     C                     MOVEL*BLANK    #1PATH           Fontis Servr Dt
+     C           WUGL09    IFEQ 'Y'                                       CGL009
+     C                     MOVEL*BLANK    #1BKID                          CGL009
+     C                     Z-ADD*ZERO     #2IATF                          CGL009
+     C                     Z-ADD*ZERO     #2BRDS                          CGL009
+     C                     MOVEL*BLANK    #2DPCD                          CGL009
+     C                     MOVEL*BLANK    #2TRTC                          CGL009
+     C                     MOVEL*BLANK    #2TRTD                          CGL009
+     C                     MOVEL*BLANK    #2IBKC                          CGL009
+     C                     MOVEL*BLANK    #2IPFC                          CGL009
+     C                     Z-ADD*ZERO     #2BNRL                          CGL009
+     C                     Z-ADD*ZERO     #2BNRU                          CGL009
+     C                     Z-ADD*ZERO     #2TPPF                          CGL009
+     C                     Z-ADD*ZERO     #2MRDS                          CGL009
+     C                     MOVEL*BLANK    #2OPST                          CGL009
+     C                     MOVEL*BLANK    #2IPST                          CGL009
+     C                     MOVEL*BLANK    #2STMT                          CGL009
+     C                     MOVEL*BLANK    #2TBKC                          CGL009
+     C                     MOVEL*BLANK    #2TPFC                          CGL009
+     C                     ENDIF                                          CGL009
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @FONTL1 fields to screen
+      *================================================================
+     C                     MOVELF8FONT    #1FONT           Fontis Interfac
+     C                     Z-ADDF8LCD     #1LCD            Last Change Dat
+     C                     MOVELF8TYLC    #1TYLC           Type of Last Ch
+     C                     Z-ADDF8DNFQ    #1DNFQ           Download Freque
+     C                     Z-ADDF8RTRY    #1RTRY           Maximum no. of
+     C                     Z-ADDF8HSTP    #1HSTP           History Retenti
+     C                     MOVELF8HOST    #1HOST           Fontis Server H
+     C                     MOVELF8MUFS    #1MUFS           Midas User on F
+     C                     MOVELF8PASW    #1PASW           Password for Mi
+     C                     MOVELF8PATH    #1PATH           Fontis Servr Dt
+     C           WUGL09    IFEQ 'Y'                                       CGL009
+     C                     MOVELF8BKID    #1BKID                          CGL009
+     C                     Z-ADDF8IATF    #2IATF                          CGL009
+     C                     Z-ADDF8BRDS    #2BRDS                          CGL009
+     C                     MOVELF8DPCD    #2DPCD                          CGL009
+     C                     MOVELF8TRTC    #2TRTC                          CGL009
+     C                     MOVELF8TRTD    #2TRTD                          CGL009
+     C                     MOVELF8IBKC    #2IBKC                          CGL009
+     C                     MOVELF8IPFC    #2IPFC                          CGL009
+     C                     MOVE F8BNRL    #2BNRL                          CGL009
+     C                     MOVE F8BNRU    #2BNRU                          CGL009
+     C                     Z-ADDF8TPPF    #2TPPF                          CGL009
+     C                     Z-ADDF8MRDS    #2MRDS                          CGL009
+     C                     MOVELF8OPST    #2OPST                          CGL009
+     C                     MOVELF8IPST    #2IPST                          CGL009
+     C           F8STMT    IFEQ 0                                         CGL009
+     C                     MOVE *BLANK    #2STMT                          CGL009
+     C                     ELSE                                           CGL009
+     C                     MOVE F8STMT    #2STMT                          CGL009
+     C                     ENDIF                                          CGL009
+     C                     MOVELF8TBKC    #2TBKC                          CGL009
+     C                     MOVELF8TPFC    #2TPFC                          CGL009
+     C                     ENDIF                                          CGL009
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP1FONT    #1FONT           Fontis Interfac
+      * USER: Load key screen
+      * 00/Copy Member SD9421ELKS - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Load Key Screen
+     C/COPY WNCPYSRC,SD9421ELKS
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSA     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+      *                                                                   CGL009
+      ** Analytical accounting present                                    CGL009
+      *                                                                   CGL009
+     C           BGN0ST    IFEQ 'Y'                                       CGL009
+     C                     MOVE '1'       *IN52                           CGL009
+     C                     ELSE                                           CGL009
+      *                                                                   CGL009
+      ** Protect and hide profit centers                                  CGL009
+      *                                                                   CGL009
+     C                     MOVE '0'       *IN52                           CGL009
+     C                     ENDIF                                          CGL009
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM 'SDI5D1R' W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * 00/Copy Member SD9421EEPP - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Exit Program Processing
+     C/COPY WNCPYSRC,SD9421EEPP
+      * Fast exit processing
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      *                                                                   CGL009
+      ** Define work field Access obj dummy DS (76)                       CGL009
+      *                                                                   CGL009
+     C                     MOVEL*BLANK    WUFDY  76                       CGL009
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      *                                                                   CGL009
+      ** Check to see if CGL009 is present                                CGL009
+      *                                                                   CGL009
+     C                     CALL 'AOSARDR0'             90  SAR switched onCGL009
+     C                     PARM *BLANK    WUAPRC  7        Access Pgm RetuCGL009
+     C                     PARM '*VERIFY' WQ0147  7        Option for ACCOCGL009
+     C                     PARM 'CGL009'  WUSARN  6        SAR number fielCGL009
+     C           WUFDY     PARM WUFDY     WQ0149 76        Access obj dummCGL009
+      *                                                                   CGL009
+     C           *IN90     IFEQ '1'                                       CGL009
+      *                                                                   CGL009
+      ** Call to program ended in error                                   CGL009
+      *                                                                   CGL009
+     C                     MOVEL'Y2U0032' W0RTN                           CGL009
+     C                     MOVEL*BLANKS   W0CLPG 10                       CGL009
+     C                     MOVEL'AOSARDR0'W0CLPG                          CGL009
+      *                                                                   CGL009
+      ** Send message '*Error occurred on CALL...'                        CGL009
+      *                                                                   CGL009
+     C                     MOVEL'Y2U0032' ZAMSID                          CGL009
+     C                     MOVEL'Y2USRMSG'ZAMSGF                          CGL009
+     C                     MOVELW0CLPG    ZAMSDA           Message data   CGL009
+     C                     EXSR ZASNMS                                    CGL009
+     C                     ENDIF                                          CGL009
+      *                                                                   CGL009
+      ** Check return code.                                               CGL009
+      ** CASE: WRK.Access Pgm Return Code is *Normal                      CGL009
+      *                                                                   CGL009
+     C           WUAPRC    IFEQ *BLANK                                    CGL009
+     C           *IN90     ANDEQ'0'                                       CGL009
+     C                     MOVEL'Y'       WUGL09  1                       CGL009
+     C                     MOVE '1'       *IN56                           CGL009
+     C                     ELSE                                           CGL009
+      *                                                                   CGL009
+      ** CASE: *OTHERWISE                                                 CGL009
+      *                                                                   CGL009
+     C                     MOVEL'N'       WUGL09                          CGL009
+     C                     MOVE '0'       *IN56                           CGL009
+     C                     ENDIF                                          CGL009
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD9421E#
+     C                     OPEN SDFONTL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD9421E Precompiler - Fontis Interface ICD  *
+      * Copyright Statement 1996 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Fontis Intrf ICD DtaStr - Fontis Interface ICD  *
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SARVGN
+      * 00/Copy Member SD9421EFPG - Fontis Interface ICD  *
+      * 00/Copy Member SD9421EEPG - Fontis Interface ICD  *
+      * 00/Copy Member SD9421EIPG - Fontis Interface ICD  *
+      * 00/Copy Member SD9421ECPG - Fontis Interface ICD  *
+     C*Fontis Interface ICD Enq Initialise Program C-Spec
+     C/COPY WNCPYSRC,SD9420ECPG
+      * 00/Copy Member SD9421EOPG - Fontis Interface ICD  *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9421EPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9421EPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9421EPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*Fontis Interface ICD Enq Initialise Program O-Spec
+     O/COPY WNCPYSRC,SD9421EOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

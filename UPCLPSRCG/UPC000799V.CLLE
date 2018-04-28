@@ -1,0 +1,354 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Action File handler - validity checker')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000799V - Action File handler validity checker           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. A1084804           Date 30Jan13              */
+/*       Prev Amend No. CUP021             Date 24Jan11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CUP022 *CREATE     Date 09Feb04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       A1084804 - New *MRG option.                                 */
+/*       CUP021 - Rewrite of Action File processing.                 */
+/*       CUP022 - Standardise action file processing.                */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&FILE &BUILD &REVIEW &CONFLICT &PROCESS +                 */ /*CUP021*/
+/**********               &RESET &OLDLIB &NEWLIB &REVTYP)                              */ /*CUP021*/
+             PGM        PARM(&MODE &FILE &OLDLIB &NEWLIB &MBROPT +
+                          &TKOOPT &KEYF &LAYER)                                           /*CUP021*/
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)                                     /*CUP021*/
+             DCL        VAR(&FILE)       TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&BUILD)      TYPE(*CHAR) LEN(4)                            */ /*CUP021*/
+/**********  DCL        VAR(&REVIEW)     TYPE(*CHAR) LEN(4)                            */ /*CUP021*/
+/**********  DCL        VAR(&CONFLICT)   TYPE(*CHAR) LEN(4)                            */ /*CUP021*/
+/**********  DCL        VAR(&PROCESS)    TYPE(*CHAR) LEN(4)                            */ /*CUP021*/
+/**********  DCL        VAR(&RESET)      TYPE(*CHAR) LEN(4)                            */ /*CUP021*/
+             DCL        VAR(&OLDLIB)     TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWLIB)     TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&REVTYP)     TYPE(*CHAR) LEN(7)                            */ /*CUP021*/
+             DCL        VAR(&MBROPT) TYPE(*CHAR) LEN(8)                                   /*CUP021*/
+             DCL        VAR(&TKOOPT) TYPE(*CHAR) LEN(8)                                   /*CUP021*/
+             DCL        VAR(&KEYF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+ 
+/**********  DCL        VAR(&ACTIONFILE) TYPE(*CHAR) LEN(10)                           */ /*CUP021*/
+/**********  DCL        VAR(&LOGICFILE)  TYPE(*CHAR) LEN(10)                           */ /*CUP021*/
+             DCL        VAR(&AFFLAG)     TYPE(*CHAR) LEN(1) VALUE(' ')
+/**********  DCL        VAR(&AFCPROG)    TYPE(*CHAR) LEN(10)                           */ /*CUP021*/
+/**********  DCL        VAR(&OVRRFILE)   TYPE(*CHAR) LEN(10)                           */ /*CUP021*/
+ 
+/**********  DCL        VAR(&ORACTNFILE) TYPE(*CHAR) LEN(10)                           */ /*CUP021*/
+/**********  DCL        VAR(&ORLOGICFIL) TYPE(*CHAR) LEN(10)                           */ /*CUP021*/
+/**********  DCL        VAR(&ORAFFLAG)   TYPE(*CHAR) LEN(1) VALUE(' ')                 */ /*CUP021*/
+/**********  DCL        VAR(&ORAFCPROG)  TYPE(*CHAR) LEN(10)                           */ /*CUP021*/
+/**********  DCL        VAR(&OROVRRFILE) TYPE(*CHAR) LEN(10)                           */ /*CUP021*/
+ 
+             DCL        VAR(&CHKFILE)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR)      TYPE(*CHAR) LEN(1) VALUE(' ')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Call UP000799V to get action file data for &FILE */
+/**********  CALL       PGM(UP000799V) PARM(&FILE &ACTIONFILE &LOGICFILE +             */ /*CUP021*/
+/**********               &AFFLAG &AFCPROG &OVRRFILE)                                  */ /*CUP021*/
+/**********  IF         COND(&MODE *NE '*UPD') THEN(DO)                       */ /*CUP021 A1084804*/
+             IF         COND(&MODE *NE '*UPD' *AND &MODE *NE '*MRG') +
+                          THEN(DO)                                                      /*A1084804*/
+                CALL       PGM(UP000799V) PARM(&FILE &AFFLAG)                             /*CUP021*/
+ 
+/* If error in UP000799V, send message. */
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Error when running program +
+                                UP000799V') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+ 
+/* If file not found on UPACTFPD report. */
+                IF         COND(&AFFLAG *EQ 'Y') THEN(DO)
+                   IF         COND(&MODE *NE '*ADD') THEN(DO)                             /*CUP021*/
+                      SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                   MSGDTA('0000File' *BCAT &FILE *BCAT 'does +
+                                   not have an Action File') MSGTYPE(*DIAG)
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO                                                                  /*CUP021*/
+                   IF         COND(&MODE *EQ '*ADD') THEN(DO)                             /*CUP021*/
+                      CHKOBJ     OBJ(&FILE) OBJTYPE(*FILE) AUT(*USE)                      /*CUP021*/
+                      MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)                          /*CUP021*/
+                         SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                                      *TCAT &FILE *BCAT 'does not exist or you +
+                                      have insufficient authority') MSGTYPE(*DIAG)        /*CUP021*/
+                         CHGVAR     VAR(&ERROR) VALUE('Y')                                /*CUP021*/
+                         GOTO       CMDLBL(ABNOR)                                         /*CUP021*/
+                      ENDDO                                                               /*CUP021*/
+                      CHKOBJ     OBJ(&KEYF) OBJTYPE(*FILE) AUT(*USE)                      /*CUP021*/
+                      MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)                          /*CUP021*/
+                         SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                                      *TCAT &KEYF *BCAT 'does not exist or you +
+                                      have insufficient authority') MSGTYPE(*DIAG)        /*CUP021*/
+                         CHGVAR     VAR(&ERROR) VALUE('Y')                                /*CUP021*/
+                         GOTO       CMDLBL(ABNOR)                                         /*CUP021*/
+                      ENDDO                                                               /*CUP021*/
+                   ENDDO                                                                  /*CUP021*/
+                ENDDO
+             ENDDO                                                                        /*CUP021*/
+ 
+/**If*there*is*no*action*file*command*for*the*program,*exit*program.**/ /*             */ /*CUP021*/
+/**********  IF         COND((&AFCPROG *EQ '*NONE') *AND +                             */ /*CUP021*/
+/**********               (&ACTIONFILE *EQ '*NONE')) THEN+                             */ /*CUP021*/
+/**********             (GOTO CMDLBL(END))                                             */ /*CUP021*/
+ 
+/**If*an*AF*CPP*is*'*OVERRIDE*',**/ /*                                                 */ /*CUP021*/
+/**********  IF         COND(&AFCPROG *EQ '*OVERRIDE ') THEN(DO)                       */ /*CUP021*/
+/*****the*override*file*should*not*be*blank.**/ /*                                     */ /*CUP021*/
+/**********     IF         COND(&OVRRFILE = ' ')  THEN(DO)                             */ /*CUP021*/
+/**********        SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +                           */ /*CUP021*/
+/**********                      MSGDTA('0000Field AAUPLF does not have +              */ /*CUP021*/
+/**********                      overriden file name for AF CPP being +                */ /*CUP021*/
+/**********                      *OVERRIDE') MSGTYPE(*DIAG)                            */ /*CUP021*/
+/**********        CHGVAR     VAR(&ERROR) VALUE('Y')                                   */ /*CUP021*/
+/**********        GOTO       CMDLBL(ABNOR)                                            */ /*CUP021*/
+/**********     ENDDO                                                                  */ /*CUP021*/
+ 
+/*****action*file*record*for*the*overrride*file*should*exist*in.**/ /*                 */ /*CUP021*/
+/**********     CALL       PGM(UP000799V) PARM(&OVRRFILE &ORACTNFILE +                 */ /*CUP021*/
+/**********                   &ORLOGICFIL &ORAFFLAG &ORAFCPROG &OROVRRFILE)            */ /*CUP021*/
+/*****If*error*in*UP000799V,*send*message.**/ /*                                       */ /*CUP021*/
+/**********     IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                            */ /*CUP021*/
+/**********        SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +                           */ /*CUP021*/
+/**********                      MSGDTA('0000Error when running program +              */ /*CUP021*/
+/**********                      UP000799V') MSGTYPE(*DIAG)                            */ /*CUP021*/
+/**********        CHGVAR     VAR(&ERROR) VALUE('Y')                                   */ /*CUP021*/
+/**********        GOTO       CMDLBL(ABNOR)                                            */ /*CUP021*/
+/**********     ENDDO                                                                  */ /*CUP021*/
+ 
+/*****If*override*file*not*found*on*UPACTFPD*report.**/ /*                             */ /*CUP021*/
+/**********     IF         COND(&ORAFFLAG *EQ 'Y') THEN(DO)                            */ /*CUP021*/
+/**********        SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +                           */ /*CUP021*/
+/**********                      MSGDTA('0000Override file' *BCAT +                    */ /*CUP021*/
+/**********                      &OVRRFILE *BCAT 'does not have an Action +            */ /*CUP021*/
+/**********                      File') MSGTYPE(*DIAG)                                 */ /*CUP021*/
+/**********        CHGVAR     VAR(&ERROR) VALUE('Y')                                   */ /*CUP021*/
+/**********        GOTO       CMDLBL(ABNOR)                                            */ /*CUP021*/
+/**********     ENDDO                                                                  */ /*CUP021*/
+ 
+/*****The*action*file*record*for*the*override*file*must*be*of*type**NONE***/ /*        */ /*CUP021*/
+/**********     IF         COND(&ORAFCPROG *NE '*NONE     ') THEN(DO)                  */ /*CUP021*/
+/**********        SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000The +           */ /*CUP021*/
+/**********                      AF CPP for the override file' *BCAT +                 */ /*CUP021*/
+/**********                      &OVRRFILE *BCAT 'must be *NONE') +                    */ /*CUP021*/
+/**********                      MSGTYPE(*DIAG)                                        */ /*CUP021*/
+/**********        CHGVAR     VAR(&ERROR) VALUE('Y')                                   */ /*CUP021*/
+/**********        GOTO       CMDLBL(ABNOR)                                            */ /*CUP021*/
+/**********     ENDDO                                                                  */ /*CUP021*/
+ 
+/**********  ENDDO                                                                     */ /*CUP021*/
+ 
+/**If*BUILD**EQ**YES.**/ /*                                                            */ /*CUP021*/
+/**********  IF         COND(&BUILD *EQ '*YES') THEN(DO)                               */ /*CUP021*/
+/* If Mode *EQ *BLD. */
+             IF         COND(&MODE *EQ '*BLD') THEN(DO)                                   /*CUP021*/
+/* Check "old" library exists with correct authority. */                                  /*CUP021*/
+                CHKOBJ     OBJ(QSYS/&OLDLIB) OBJTYPE(*LIB) AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Library' *BCAT &OLDLIB *BCAT 'does not +
+                                exist or you have insufficient +
+                                authority') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+/* Check "new" library exists with correct authority. */
+                CHKOBJ     OBJ(QSYS/&NEWLIB) OBJTYPE(*LIB) AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Library' *BCAT &NEWLIB *BCAT 'does not +
+                                exist or you have insufficient +
+                                authority') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+/* Check file exists in "old" library with correct authority. */
+                CHKOBJ     OBJ(&OLDLIB/&FILE) OBJTYPE(*FILE) AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                                *TCAT &FILE *BCAT 'does not exist in' +
+                                *BCAT &OLDLIB *BCAT 'or you have +
+                                insufficient authority') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+/* Check file exists in "new" library with correct authority. */
+                CHKOBJ     OBJ(&NEWLIB/&FILE) OBJTYPE(*FILE) AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                                *TCAT &FILE *BCAT 'does not exist in' +
+                                *BCAT &NEWLIB *BCAT 'or you have +
+                                insufficient authority') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+/**Check*necessary*Action*File*exists*with*correct*authority.**/ /*                    */ /*CUP021*/
+/**********     CHKOBJ     OBJ(*LIBL/&ACTIONFILE) OBJTYPE(*FILE) +                     */ /*CUP021*/
+/**********                  AUT(*CHANGE)                                              */ /*CUP021*/
+/**********     MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)                             */ /*CUP021*/
+/**********        SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +              */ /*CUP021*/
+/**********                     Either file' *BCAT &ACTIONFILE *BCAT 'is +             */ /*CUP021*/
+/**********                     not in the library list or there is +                  */ /*CUP021*/
+/**********                     insufficient authority to update it') +                */ /*CUP021*/
+/**********                     MSGTYPE(*DIAG)                                         */ /*CUP021*/
+/**********       CHGVAR     VAR(&ERROR) VALUE('Y')                                    */ /*CUP021*/
+/**********       GOTO ABNOR                                                           */ /*CUP021*/
+/**********     ENDDO                                                                  */ /*CUP021*/
+             ENDDO
+ 
+/**If*REVIEW*or*CONFLICT*or*PROCESS**EQ**YES.*/ /*                                     */ /*CUP021*/
+/**********  IF         COND(&REVIEW *EQ '*YES' *OR &CONFLICT *EQ +                    */ /*CUP021*/
+/**********               '*YES' *OR &PROCESS *EQ '*YES') THEN(DO)                     */ /*CUP021*/
+/**Check*necessary*Action*File*exists*with*correct*authority.**/ /*                    */ /*CUP021*/
+/**********     CHKOBJ     OBJ(*LIBL/&ACTIONFILE) OBJTYPE(*FILE) AUT(*USE)             */ /*CUP021*/
+/**********     MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)                             */ /*CUP021*/
+/**********        SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +              */ /*CUP021*/
+/**********                     Either file' *BCAT &ACTIONFILE *BCAT 'is +             */ /*CUP021*/
+/**********                     not in the library list or there is +                  */ /*CUP021*/
+/**********                     insufficient authority to use it') +                   */ /*CUP021*/
+/**********                     MSGTYPE(*DIAG)                                         */ /*CUP021*/
+/**********       CHGVAR     VAR(&ERROR) VALUE('Y')                                    */ /*CUP021*/
+/**********       GOTO ABNOR                                                           */ /*CUP021*/
+/**********     ENDDO                                                                  */ /*CUP021*/
+/**********  ENDDO                                                                     */ /*CUP021*/
+ 
+/**If*CONFLICT**EQ**YES.**/ /*                                                         */ /*CUP021*/
+/**********  IF         COND(&CONFLICT *EQ '*YES') THEN(DO)                            */ /*CUP021*/
+/* If Mode *EQ *CFT. */                                                                   /*CUP021*/
+             IF         COND(&MODE *EQ '*CFT') THEN(DO)                                   /*CUP021*/
+/* Check necessary file exists with correct authority. */
+/**If*there*is*no*logic*file*used,*check*&FILE**/ /*                                   */ /*CUP021*/
+/**********     IF         COND(&LOGICFILE *EQ '*NONE') THEN+                          */ /*CUP021*/
+/**********        (CHGVAR VAR(&CHKFILE) VALUE(&FILE))                                 */ /*CUP021*/
+/**********     ELSE (CHGVAR VAR(&CHKFILE) VALUE(&LOGICFILE))                          */ /*CUP021*/
+ 
+                CHGVAR     VAR(&CHKFILE) VALUE(&FILE)                                     /*CUP021*/
+                CHKOBJ     OBJ(*LIBL/&CHKFILE) OBJTYPE(*FILE) AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Either file' *BCAT &CHKFILE *BCAT 'is +
+                                not in the library list or there is +
+                                insufficient authority to use it') +
+                                MSGTYPE(*DIAG)
+                  CHGVAR     VAR(&ERROR) VALUE('Y')
+                  GOTO ABNOR
+                ENDDO
+             ENDDO
+ 
+/**If*PROCESS**EQ**YES.**/ /*                                                          */ /*CUP021*/
+/**********  IF         COND(&PROCESS *EQ '*YES') THEN(DO)                             */ /*CUP021*/
+/* If Mode *EQ *PRC. */                                                                   /*CUP021*/
+             IF         COND(&MODE *EQ '*PRC') THEN(DO)                                   /*CUP021*/
+/* Check necessary file exists with correct authority. */
+/**If*there*is*no*logic*file*used,*check*&FILE**/ /*                                   */ /*CUP021*/
+/**********     IF         COND(&LOGICFILE *EQ '*NONE') THEN+                          */ /*CUP021*/
+/**********        (CHGVAR VAR(&CHKFILE) VALUE(&FILE))                                 */ /*CUP021*/
+/**********     ELSE (CHGVAR VAR(&CHKFILE) VALUE(&LOGICFILE))                          */ /*CUP021*/
+ 
+                CHGVAR     VAR(&CHKFILE) VALUE(&FILE)                                     /*CUP021*/
+                CHKOBJ     OBJ(*LIBL/&CHKFILE) OBJTYPE(*FILE) +
+                          AUT(*CHANGE)
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Either file' *BCAT &CHKFILE *BCAT 'is +
+                                not in the library list or there is +
+                                insufficient authority to update it') +
+                                MSGTYPE(*DIAG)
+                  CHGVAR     VAR(&ERROR) VALUE('Y')
+                  GOTO ABNOR
+                ENDDO
+             ENDDO
+ 
+/* If Mode *EQ *MRG. */                                                                 /*A1084804*/
+             IF         COND(&MODE *EQ '*MRG') THEN(DO)                                 /*A1084804*/
+/* Check "old" library exists with correct authority. */                                /*A1084804*/
+                CHKOBJ     OBJ(QSYS/&OLDLIB) OBJTYPE(*LIB) AUT(*CHANGE)                 /*A1084804*/
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)                              /*A1084804*/
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Library' *BCAT &OLDLIB *BCAT 'does not +
+                                exist or you have insufficient +
+                                authority.') MSGTYPE(*DIAG)                             /*A1084804*/
+                   CHGVAR     VAR(&ERROR) VALUE('Y')                                    /*A1084804*/
+                   GOTO       CMDLBL(ABNOR)                                             /*A1084804*/
+                ENDDO                                                                   /*A1084804*/
+/* Check "new" library exists with correct authority. */                                /*A1084804*/
+                CHKOBJ     OBJ(QSYS/&NEWLIB) OBJTYPE(*LIB) AUT(*USE)                    /*A1084804*/
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)                              /*A1084804*/
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Library' *BCAT &NEWLIB *BCAT 'does not +
+                                exist or you have insufficient +
+                                authority.') MSGTYPE(*DIAG)                             /*A1084804*/
+                   CHGVAR     VAR(&ERROR) VALUE('Y')                                    /*A1084804*/
+                   GOTO       CMDLBL(ABNOR)                                             /*A1084804*/
+                ENDDO                                                                   /*A1084804*/
+/* Check UPAFCPPD exists in "old" library with correct authority. */                    /*A1084804*/
+                CHKOBJ     OBJ(&OLDLIB/UPAFCPPD) OBJTYPE(*FILE) AUT(*CHANGE)            /*A1084804*/
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)                              /*A1084804*/
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000UPAFCPPD does not exist in' +
+                             *BCAT &OLDLIB *BCAT 'or you have +
+                             insufficient authority.') MSGTYPE(*DIAG)                   /*A1084804*/
+                   CHGVAR     VAR(&ERROR) VALUE('Y')                                    /*A1084804*/
+                   GOTO       CMDLBL(ABNOR)                                             /*A1084804*/
+                ENDDO                                                                   /*A1084804*/
+/* Check UPAFCPPD exists in "new" library with correct authority. */                    /*A1084804*/
+                CHKOBJ     OBJ(&NEWLIB/UPAFCPPD) OBJTYPE(*FILE) AUT(*USE)               /*A1084804*/
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)                              /*A1084804*/
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000UPAFCPPD does not exist in' +
+                             *BCAT &NEWLIB *BCAT 'or you have +
+                             insufficient authority.') MSGTYPE(*DIAG)                   /*A1084804*/
+                   CHGVAR     VAR(&ERROR) VALUE('Y')                                    /*A1084804*/
+                   GOTO       CMDLBL(ABNOR)                                             /*A1084804*/
+                ENDDO                                                                   /*A1084804*/
+             ENDDO                                                                      /*A1084804*/
+ 
+/**If*RESET**EQ**YES.**/ /*                                                            */ /*CUP021*/
+/**********  IF         COND(&RESET *EQ '*YES') THEN(DO)                               */ /*CUP021*/
+/**Check*necessary*file*exists*with*correct*authority.**/ /*                           */ /*CUP021*/
+/**********     CHKOBJ     OBJ(*LIBL/&FILE) OBJTYPE(*FILE) AUT(*CHANGE)                */ /*CUP021*/
+/**********     MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)                             */ /*CUP021*/
+/**********        SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +              */ /*CUP021*/
+/**********                     Either file' *BCAT &FILE *BCAT 'is +                   */ /*CUP021*/
+/**********                     not in the library list or there is +                  */ /*CUP021*/
+/**********                     insufficient authority to update it') +                */ /*CUP021*/
+/**********                     MSGTYPE(*DIAG)                                         */ /*CUP021*/
+/**********       CHGVAR     VAR(&ERROR) VALUE('Y')                                    */ /*CUP021*/
+/**********       GOTO ABNOR                                                           */ /*CUP021*/
+/**********     ENDDO                                                                  */ /*CUP021*/
+/**********  ENDDO                                                                     */ /*CUP021*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+/* Send message to cause CPF tp pass earlier messages back. */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+END:
+             ENDPGM

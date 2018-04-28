@@ -1,0 +1,914 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL FRA Monthly Summary Rebuild 2')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module
+     F*                                                               *
+     F* DL1907 - FRA MONTHLY SUMMARY REBUILD 2                        *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 138231             Date 03Jul98               *
+      *                 CEU012             Date 16Feb98               *
+      *                 110523             Date 20Jan97               *
+     F*                 S01194             Date 10Apr90               *
+     F*                  S01157                 DATE 14/07/88         *
+     F*                                                               *
+     F*****************************************************************
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  138231 - The CEU012 processing does not check for EOF        *
+      *           of DLDLDGLA.                                        *
+      *  CEU012 - EMU Position/Risk Enquiries                         *
+     F*   110523 - TO CORRECT DISPLAY ORDER OF MTHLY SUMMARY REPORTS  *
+     F*            AND DIFFERENTIATE BETWEEN RECORDS BEFORE AND AFTER *
+     F*            YEAR 2000                                          *
+     F*                                                               *
+     F*   S01194 - NEW STANDING DATA CHANGES                          *
+     F*                                                               *
+     F*   S01157 - NEW PROGRAM FOR FRA/IRS PROJECT                    *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*
+     FFDMNTHLLIF  E           K        DISK         KINFSR *PSSR      UC
+     F*FDICDRLLIF**E*******    K        DISK         KINFSR *PSSR      UC S01194
+     FDLDLDGLBIF  E           K        DISK         KINFSR *PSSR      UC
+     F*DLMSM1L*UF**E*******    K        DISK         KINFSR *PSSR A    UC S01194
+     FDLMSY2L UF  E           K        DISK         KINFSR *PSSR A    UC  S01194
+     F*
+     F/EJECT
+     F*
+     F*****************************************************************
+     F*
+     F*    FUNCTION OF INDICATORS
+     F*
+     F*    08 - PREVENT LOOPING WITHIN *PSSR
+     F*    60 - FAIL ON DLDLDGLB
+     F*****70*-*FAIL*ON*DLMSM1L                                           S01194
+     F*    70 - FAIL ON DLMSY2L                                           S01194
+     F*    85 - FAIL ON FDMNTHLL
+     F*****86*-*FAIL*ON*FDICDRLL                                          S01194
+     F*    98 - DATE FORMAT OF SYSTEM
+     F*
+     F*****************************************************************
+     F/EJECT
+     E*
+     E/COPY ZSRSRC,ZDATE8Z1
+     E*
+     E                    TOT1        5 15 0             FRA MTH SUM
+     E                    TOT4        5 15 0             FRA MTH SUM
+     E                    ETOT        5 15 0             FRA MTH SUM EURO CEU012
+     E*
+     E*
+     E                    CPY@    1   1 80
+     E** COMPILE TIME ARRAY FOR COPYRIGHT STATEMENT
+     E*
+     E/EJECT
+     E*
+     I*
+     I/COPY ZSRSRC,ZDATE8Z2
+     I*
+     I*
+     I* DATA STRUCTURE TO SPLIT UP DATE FORMAT (*IN98 = 0)
+     I*
+     IDATEA       DS
+     I                                        1   20@SSDAY
+     I                                        3   40@MM1
+     I                                        5   60@YY1
+     I                                        1   60@DATE
+     I*
+     I* DATA STRUCTURE TO SPLIT UP DATE FORMAT (*IN98 = 1)
+     I*
+     IDATEB       DS
+     I                                        1   20@MM
+     I                                        3   40@DD
+     I                                        5   60@YY
+     I                                        1   60@DATE2
+     I*
+     IPERIOD      DS
+     I                                        1   50@VDCM
+     I                                        5   50@PERD
+     I*
+     ITOTAL1      DS
+     I                                        1  750TOT1
+     I*
+     I*
+     IFILE1       DS
+     I                                        1  150KENP03
+     I                                       16  300KENP06
+     I                                       31  450KENP09
+     I                                       46  600KENP12
+     I                                       61  750KENPRR
+     I                                        1  750TOT4
+     I*
+     IDBERR       DS                            256
+     I*
+     I** DATA STRUCTURE FOR DATABASE ERROR HANDLING
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I*                                                                   BO0001
+     I*********************
+     I*@CPYRT******DS******
+     I*********************
+     I***DATA*STRUCTURE*FOR COMPILATION - COPYRIGHT INSERTION
+     I*********************
+     I*********************                   1  80 CPY@
+     I*********************                   1  20 CPY@##
+     I*********************
+      *                                                                   S01194
+      ** Dummy data structures used by access programs                    S01194
+      ** (DSSDY only used if file records over 150 chars long)            S01194
+      *                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** RECORD FORMATS FOR ACCESS TO BANK DETAILS                        S01194
+     I*                                                                   S01194
+     ISDGELR    E DSSDGELRPD                                              CEU012
+      ** General ledger details                                           CEU012
+      *                                                                   CEU012
+     ISCSARD    E DSSCSARDPD                                              CEU012
+      **  Switchable Features File                                        CEU012
+      *                                                                   CEU012
+     ISDCURR    E DSSDCURRPD                                              CEU012
+      * Currency Details                                                  CEU012
+      *                                                                   CEU012
+     I/EJECT
+     C*****************************************************************
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C                     EXSR #A
+     C*
+     C                     EXSR #B
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C*****************************************************************
+     C*
+     C* SUBROUTINES USED
+     C*
+     C*         #A     - INITIAL PROCESSING
+     C*         #B     - MAIN PROCESSING
+     C*         #BA    - ACCUMULATE TOTALS
+     C*         #BB    - WRITE VDAT PERIOD RCD
+     C*         ZDATE8 - FORMAT MIDAS DAY NO.(MMDDYY/DDMMYY)
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* #A - INITIAL PROCESSING
+     C*
+     C* CALLS -
+     C*
+     C* CALLED BY - MAIN CONTROLLING ROUTINE
+     C*
+     C* FLDS USED -
+     C*
+     C*
+     C*****************************************************************
+     C           #A        BEGSR
+     C*
+     C* OPEN ALL FILES
+     C*
+     C                     OPEN FDMNTHLL
+     C                     OPEN DLDLDGLB
+     C*********************OPEN DLMSM1L                                   S01194
+     C                     OPEN DLMSY2L                                   S01194
+     C*********************OPEN FDICDRLL                                  S01194
+      *                                                                   S01194
+      ** Call Access Program for Bank Details                             S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+      *                                                                   S01194
+      ** If database error                                                S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDBANKPD'DBFILE           ************   S01194
+     C                     MOVEL'10'      DBASE            *DBERROR 10*   S01194
+     C                     MOVEL@OPTN     DBOPTN  7        ************   S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     END                                            S01194
+     C*
+     C                     READ FDMNTHLL                 85
+     C*
+     C           *IN85     IFEQ '1'                        B*1
+     C           MNDLTF    ORNE ' '
+     C*                                                    ***************
+     C                     MOVEL'FDMNTHLL'DBFILE           *             *
+     C                     MOVEL*BLANK    DBKEY            * DBERROR 011 *
+     C                     MOVE '011'     DBASE            *             *
+     C*                                                    ***************
+     C                     EXSR *PSSR                       *1
+     C                     END                             E*1
+     C*
+     C*********************READ FDICDRLL                 86               S01194
+     C*********************                                               S01194
+     C************IN86*****IFEQ '1'                        B*1            S01194
+     C***********RECI******ORNE 'D'                                       S01194
+     C*********************                                ***************S01194
+     C*********************MOVEL'FDICDRLL'DBFILE           *             *S01194
+     C*********************MOVEL*BLANK    DBKEY            * DBERROR 021 *S01194
+     C*********************MOVE '021'     DBASE            *             *S01194
+     C*********************                                ***************S01194
+     C*********************EXSR *PSSR                       *1            S01194
+     C*********************END                             E*1            S01194
+     C*
+     C* DETERMINE DATE FORMAT OF SYSTEM AND SET *IN98 ACCORDINGLY
+     C* FOR USE WITH SUBROUTINE ZDATE8
+     C*
+     C***********DATF******IFEQ 'M'                        B*1            S01194
+     C           BJDFIN    IFEQ 'M'                                       S01194
+     C                     MOVE '1'       *IN98             *1
+     C                     ELSE                            X*1
+     C                     MOVE '0'       *IN98             *1
+     C                     END                             E*1
+     C*
+     C* INITIALISE ARRAYS
+     C*
+     C                     Z-ADD0         TOT1
+     C                     Z-ADD0         TOT4
+      *                                                                   CEU012
+      ** Check if SAR CEU012 is installed                                 CEU012
+      *                                                                   CEU012
+     C                     CALL 'AOSARDR0'                                CEU012
+     C                     PARM *BLANKS   @RTCD                           CEU012
+     C                     PARM '*VERIFY' @OPTN                           CEU012
+     C                     PARM 'CEU012'  @SARD   6                       CEU012
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU012
+      *                                                                   CEU012
+     C           @RTCD     IFEQ *BLANKS                                   CEU012
+     C                     MOVE 'Y'       CEU012  1                       CEU012
+     C                     ELSE                                           CEU012
+     C                     MOVE 'N'       CEU012                          CEU012
+      *                                                                   CEU012
+     C           @RTCD     IFNE '*NRF   '                                 CEU012
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CEU012
+     C                     MOVEL'CEU012 ' DBKEY            *DBERROR 12*   CEU012
+     C                     MOVEL'012'     DBASE            ************   CEU012
+     C                     EXSR *PSSR                                     CEU012
+     C                     ENDIF                                          CEU012
+     C                     ENDIF                                          CEU012
+      *                                                                   CEU012
+      ** Retrieve general ledger details                                  CEU012
+      *                                                                   CEU012
+     C           CEU012    IFEQ 'Y'                                       CEU012
+     C**********           CALL 'AOGELRR0'                                CEU012              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                           CEU012
+     C                     PARM '*FIRST ' @OPTN                           CEU012
+     C           SDGELR    PARM SDGELR    DSSDY                           CEU012
+      *                                                                   CEU012
+     C           @RTCD     IFNE *BLANKS                                   CEU012
+     C                     MOVEL'SDGELRPD'DBFILE           ************   CEU012
+     C                     MOVEL'*FIRST'  DBKEY            *DBERROR 13*   CEU012
+     C                     MOVEL'013'     DBASE            ************   CEU012
+     C                     EXSR *PSSR                                     CEU012
+     C                     ENDIF                                          CEU012
+     C                     ENDIF                                          CEU012
+     C*
+     C           #A9       ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* #B - MAIN PROCESSING
+     C*
+     C* CALLS - #BA    - ACCUMULATE TOTALS
+     C*         #BB    - WRITE VDAT PERIOD RCD
+     C*         ZDATE8 - FORMAT MIDAS DAY NO.(MMDDYY/DDMMYY)
+     C*
+     C* CALLED BY - MAIN CONTROLLING ROUTINE
+     C*
+     C* FLDS USED - @BOKC - BOOK CODE
+     C*             @CCY  - CURRENCY
+     C*             @YYMM - MONTH/YEAR
+     C*             @VDPD - VAL DATE PERIOD
+     C*             @SSDAY- DAY
+     C*             @VDCM - VAL DATE PERIOD (COMPARISION)
+     C*             @DATE - DATE(DDMMYY)
+     C*             @DATE2- DATE(MMDDYY)
+     C*
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C* SELECTION DONE FOR VALUE DATE GREATER THAN OR EQUAL TO THE NEXT
+     C* WORKING DAY USING OPNQRYF
+     C*
+     C                     READ DLDLDGLB                 60
+     C*
+     C*INITIALISE COMPARISION FIELDS
+     C*
+     C                     MOVE BOKC      @BOKC   2
+     C                     MOVE UCUCY     @CCY    3
+      *                                                                   CEU012
+      ** Check if currency is an 'In' currency and if is within           CEU012
+      ** EMU transition start date and transition end date.               CEU012
+      *                                                                   CEU012
+     C           CEU012    IFEQ 'Y'                                       CEU012
+     C           *IN60     ANDEQ'0'                                       138231
+     C                     CALL 'AOCURRR0'                                CEU012
+     C                     PARM *BLANK    P@RTCD  7                       CEU012
+     C                     PARM '*KEY   ' P@OPTN  7                       CEU012
+     C                     PARM UCUCY     P@CUCY  3                       CEU012
+     C           SDCURR    PARM SDCURR    DSSDY                           CEU012
+      *                                                                   CEU012
+     C           P@RTCD    IFEQ *BLANKS                                   CEU012
+     C                     MOVELA6INCY    WTINCY  1                       CEU012
+      *                                                                   CEU012
+     C                     ELSE                                           CEU012
+     C                     MOVEL'SDCURRPD'DBFILE           ************   CEU012
+     C                     MOVEL'14'      DBASE            *DBERROR 14*   CEU012
+     C                     MOVELUCUCY     DBKEY            ************   CEU012
+     C                     EXSR *PSSR                                     CEU012
+     C                     ENDIF                                          CEU012
+      *                                                                   CEU012
+     C                     ENDIF                                          CEU012
+     C*
+     C*INITIALISE NUMBER-OF-DEALS-IN-RECORD FIELD
+     C*
+     C                     Z-ADD0         @NDLR   50
+     C*
+     C* DETERMINE VALUE DATE PERIOD
+     C*
+     C* CONVERT VALUE DATE (DAY NO. FORMAT) TO DATE FORMAT
+     C*
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE8
+     C*
+     C* SETUP @YYMM - DEPENDANT UPON DATE FORMAT RETURNED
+     C*
+     C           *IN98     IFEQ '1'                        B*1
+     C                     Z-ADDZDATE     @DATE2            *1
+     C                     MOVEL@YY       @YYMM   40        *1
+     C                     MOVE @MM       @YYMM             *1
+     C                     Z-ADD@DD       @SSDAY            *1
+     C                     ELSE                            X*1
+     C                     Z-ADDZDATE     @DATE             *1
+     C                     MOVEL@YY1      @YYMM             *1
+     C                     MOVE @MM1      @YYMM             *1
+     C                     END                             E*1
+     C*
+     C                     Z-ADD@YYMM     @VDPD   50
+     C                     MULT 10        @VDPD
+     C*
+     C* IF DAY NO. OF MONTH IS LESS THAN 15
+     C*
+     C           @SSDAY    IFLE 15                         B*1
+     C                     ADD  1         @VDPD             *1
+     C                     ELSE                            X*1
+     C                     ADD  2         @VDPD             *1
+     C                     END                             E*1
+     C*
+     C                     Z-ADD@VDPD     @VDCM   50
+     C*
+     C* DO WHILE NOT END OF FILE
+     C*
+     C           *IN60     DOWEQ'0'                        B*1
+     C*
+     C*
+     C* DO WHILE SAME BOOK AND CURRENCY AS PREVIOUS RECORD & SAME
+     C* VALUE DATE PERIOD & NOT END OF FILE
+     C*
+     C           BOKC      DOWEQ@BOKC                      B**2
+     C           UCUCY     ANDEQ@CCY                        **2
+     C           @VDPD     ANDEQ@VDCM                       **2
+     C           *IN60     ANDEQ'0'                         **2
+     C*
+     C*
+     C** DEAL BELONGS IN SAME RECORD AS PREVIOUS DEAL
+     C*
+     C                     ADD  1         @NDLR            **2
+     C*
+     C* ACCUMULATE TOTALS
+     C*
+     C                     EXSR #BA                        **2
+     C*
+     C                     READ DLDLDGLB                 60**2
+     C*
+     C* DETERMINE VALUE DATE PERIOD - IF NOT END OF FILE
+     C*
+     C           *IN60     IFEQ '0'                        B***3
+     C*
+     C* CONVERT VALUE DATE (DAY NO. FORMAT) TO DATE FORMAT
+     C*
+     C                     Z-ADDVDAT      ZDAYNO            ***3
+     C                     EXSR ZDATE8                      ***3
+     C*
+     C* SETUP @YYMM - DEPENDANT UPON DATE FORMAT RETURNED
+     C*
+     C           *IN98     IFEQ '1'                        B****4
+     C                     Z-ADDZDATE     @DATE2            ****4
+     C                     MOVEL@YY       @YYMM             ****4
+     C                     MOVE @MM       @YYMM             ****4
+     C                     Z-ADD@DD       @SSDAY            ****4
+     C                     ELSE                            X****4
+     C                     Z-ADDZDATE     @DATE             ****4
+     C                     MOVEL@YY1      @YYMM             *1
+     C                     MOVE @MM1      @YYMM             *1
+     C                     END                             E****4
+     C*
+     C                     Z-ADD@YYMM     @VDPD             ***3
+     C                     MULT 10        @VDPD             ***3
+     C*
+     C* IF DAY NO. OF MONTH IS LESS THAN 15
+     C*
+     C           @SSDAY    IFLE 15                         B****4
+     C                     ADD  1         @VDPD             ****4
+     C                     ELSE                            X****4
+     C                     ADD  2         @VDPD             ****4
+     C                     END                             E****4
+     C*
+     C                     END                             E***3
+     C*
+     C                     END                             E**2
+     C*
+     C* OTHERWISE BOOK, CURRENCY OR VDAT PERD HAS CHANGED
+     C*
+     C*
+     C**WRITE*RECORD*TO*DLMSM1L                                           S01194
+     C* WRITE RECORD TO DLMSY2L                                           S01194
+     C*
+     C                     EXSR #BB                         *1
+      *                                                                   CEU012
+      ** Check if currency is an 'In' currency and if is within           CEU012
+      ** EMU transition start date and transition end date.               CEU012
+      *                                                                   CEU012
+     C           CEU012    IFEQ 'Y'                                       CEU012
+     C                     CALL 'AOCURRR0'                                CEU012
+     C                     PARM *BLANK    P@RTCD  7                       CEU012
+     C                     PARM '*KEY   ' P@OPTN  7                       CEU012
+     C                     PARM UCUCY     P@CUCY  3                       CEU012
+     C           SDCURR    PARM SDCURR    DSSDY                           CEU012
+      *                                                                   CEU012
+     C           P@RTCD    IFEQ *BLANKS                                   CEU012
+     C                     MOVELA6INCY    WTINCY  1                       CEU012
+      *                                                                   CEU012
+     C                     ELSE                                           CEU012
+     C                     MOVEL'SDCURRPD'DBFILE           ************   CEU012
+     C                     MOVEL'15'      DBASE            *DBERROR 15*   CEU012
+     C                     MOVELUCUCY     DBKEY            ************   CEU012
+     C                     EXSR *PSSR                                     CEU012
+     C                     ENDIF                                          CEU012
+      *                                                                   CEU012
+     C                     ENDIF                                          CEU012
+     C*
+     C*
+     C* STORE BOOK, CCY & VAL.DATE PERIOD FOR COMPARISON
+     C*
+     C                     MOVE BOKC      @BOKC             *1
+     C                     MOVE UCUCY     @CCY              *1
+     C                     Z-ADD@VDPD     @VDCM             *1
+     C*
+     C* ZEROISE TOTALS
+     C*
+     C                     Z-ADD0         TOT1              *1
+     C*
+     C                     END                             E*1
+     C*
+     C           #B9       ENDSR
+     C*
+     C/EJECT
+     C*
+     C*****************************************************************
+     C*
+     C* #BA - ACCUMULATE TOTALS
+     C*
+     C* CALLS -
+     C*
+     C* CALLED BY - #B - MAIN PROCESSING ROUTINE
+     C*
+     C* FLDS USED - @VDAT1 - VAL DATE PERIOD +100
+     C*             @VDAT2 - VAL DATE PERIOD +190
+     C*             @VDAT3 - VAL DATE PERIOD +285
+     C*             @VDAT4 - VAL DATE PERIOD +375
+     C*             @MDPD  - MATURITY DATE PERIOD
+     C*             X      - ARRAY INDEX
+     C*
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C* DETERMINE MATURITY DATE PERIOD & SET ARRAY INDEX
+     C*
+     C           VDAT      ADD  100       @VDAT1  50
+     C           VDAT      ADD  190       @VDAT2  50
+     C           VDAT      ADD  285       @VDAT3  50
+     C           VDAT      ADD  375       @VDAT4  50
+     C*
+     C           VDAT      IFLE MDAT                       B*1
+     C           MDAT      ANDLE@VDAT1                      *1
+     C                     MOVE ' 3M'     @MDPD   3         *1
+     C                     Z-ADD1         X       10        *1
+     C                     END                             E*1
+     C*
+     C           @VDAT1    IFLT MDAT                       B*1
+     C           MDAT      ANDLE@VDAT2                      *1
+     C                     MOVE ' 6M'     @MDPD             *1
+     C                     Z-ADD2         X                 *1
+     C                     END                             E*1
+     C*
+     C           @VDAT2    IFLT MDAT                       B*1
+     C           MDAT      ANDLE@VDAT3                      *1
+     C                     MOVE ' 9M'     @MDPD             *1
+     C                     Z-ADD3         X                 *1
+     C                     END                             E*1
+     C*
+     C           @VDAT3    IFLT MDAT                       B*1
+     C           MDAT      ANDLE@VDAT4                      *1
+     C                     MOVE '12M'     @MDPD             *1
+     C                     Z-ADD4         X                 *1
+     C                     END                             E*1
+     C*
+     C           @VDAT4    IFLT MDAT                       B*1
+     C                     MOVE 'REM'     @MDPD             *1
+     C                     Z-ADD5         X                 *1
+     C                     END                             E*1
+     C*
+     C* IF BUY/SELL INDICATOR IS 'B'
+     C*
+     C           BYSL      IFEQ 'B'                        B*1
+     C*
+     C* ADD DEAL CONTRACT AMOUNTS TO APPROPRIATE FIELD
+     C*
+     C                     ADD  UPAMT     TOT1,X            *1
+     C*
+     C*
+     C* ELSE BUY/SELL INDICATOR IS 'S'
+     C*
+     C                     ELSE                            X*1
+     C*
+     C                     SUB  UPAMT     TOT1,X            *1
+     C*
+     C                     END                             E*1
+     C*
+     C           #BA9      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*****************************************************************
+     C*
+     C* #BB - WRITE VDAT PERD RCD
+     C*
+     C* CALLS -
+     C*
+     C* CALLED BY - #B - MAIN PROCESSING ROUTINE
+     C*
+     C* FLDS USED - @BOKC - BOOK CODE
+     C*             @CCY  - CURRENCY
+     C*             @VDCM - VAL DATE PERIOD
+     C*             @PERD - PART OF VAL DATE PERIOD
+     C**************KEY1**- KEY TO DLMSM1L                                S01194
+     C*             KEY1  - KEY TO DLMSY2L                                S01194
+     C*             @YY   - YEAR, USED TO DETERMINE THE CENTURY (FROM A   110523
+     C*                     PREVIOUS SUBROUTINE, #B)                      110523
+     C*
+     C*****************************************************************
+     C           #BB       BEGSR
+     C*
+     C* SETUP CCY,VAL DATE PERIOD
+     C*
+     C                     MOVE @BOKC     KEBOKC
+     C                     MOVE @CCY      KECCY
+     C                     Z-ADD@VDCM     KEVDTP
+     C*
+     C** TO DIFFERENTIATE BETWEEN RECORDS BEFORE AND AFTER YR 2000.       110523
+     C*                                                                   110523
+     C           *IN98     IFEQ '1'                                       110523
+     C*                                                                   110523
+     C           @YY       IFLT 72                                        110523
+     C                     MOVE '2'       KECENT                          110523
+     C                     ELSE                                           110523
+     C                     MOVE '1'       KECENT                          110523
+     C                     ENDIF                                          110523
+     C*                                                                   110523
+     C                     ELSE                                           110523
+     C*                                                                   110523
+     C           @YY1      IFLT 72                                        110523
+     C                     MOVE '2'       KECENT                          110523
+     C                     ELSE                                           110523
+     C                     MOVE '1'       KECENT                          110523
+     C                     ENDIF                                          110523
+     C*                                                                   110523
+     C                     END                                            110523
+      *                                                                   CEU012
+      ** If SAR CEU012 installed convert the postion net fields           CEU012
+      ** amount to EURO currency via conversion program EU0200.           CEU012
+      *                                                                   CEU012
+     C           CEU012    IFEQ 'Y'                                       CEU012
+     C           WTINCY    ANDEQ'Y'                                       CEU012
+     C           CEU012    OREQ 'Y'                                       CEU012
+     C           @CCY      ANDEQBKEURO                                    CEU012
+     C                     Z-ADD1         J       20                      CEU012
+      *                                                                   CEU012
+     C           J         DOWLT5                                         CEU012
+     C                     Z-ADDTOT1,J    W@AMT1 150                      CEU012
+      *                                                                   CEU012
+     C           W@AMT1    IFNE *ZEROS                                    CEU012
+     C           @CCY      ANDNEBKEURO                                    CEU012
+     C                     CALL 'EU0200'               1010               CEU012
+     C                     PARM *BLANKS   P@RTCD  7                       CEU012
+     C                     PARM W@AMT1    P@FRAM 183                      CEU012
+     C                     PARM @CCY      P@FRCY  3                       CEU012
+     C                     PARM BKEURO    P@TOCY  3                       CEU012
+     C                     PARM *ZEROS    P@OUTA 150                      CEU012
+     C                     PARM *ZEROS    P@INTA 183                      CEU012
+     C                     PARM *ZEROS    P@EXRT 159                      CEU012
+     C                     PARM *BLANKS   P@MDIN  1                       CEU012
+      *                                                                   CEU012
+     C           P@RTCD    IFEQ *BLANKS                                   CEU012
+     C                     Z-ADDP@OUTA    ETOT,J                          CEU012
+     C                     ELSE                                           CEU012
+     C                     MOVEL'*CALL'   DBFILE           ************   CEU012
+     C                     MOVEL'016'     DBASE            *DBERROR 16*   CEU012
+     C                     MOVEL'EU0200'  DBKEY            ************   CEU012
+     C                     EXSR *PSSR                                     CEU012
+     C                     ENDIF                                          CEU012
+      *                                                                   CEU012
+     C                     ELSE                                           CEU012
+     C                     Z-ADDTOT1,J    ETOT,J                          CEU012
+     C                     ENDIF                                          CEU012
+     C                     ADD  1         J                               CEU012
+      *                                                                   CEU012
+     C                     ENDDO                                          CEU012
+      *                                                                   CEU012
+     C                     ENDIF                                          CEU012
+     C*                                                                   110523
+     C*
+     C           @PERD     IFEQ 1                          B*1
+      *                                                                   CEU012
+     C           CEU012    IFEQ 'Y'                                       CEU012
+     C           WTINCY    ANDEQ'Y'                                       CEU012
+     C           CEU012    OREQ 'Y'                                       CEU012
+     C           @CCY      ANDEQBKEURO                                    CEU012
+      *                                                                   CEU012
+     C           KEY2      CHAINDLMSY2L              70                   CEU012
+      *                                                                   CEU012
+     C           *IN70     IFEQ '0'                                       CEU012
+     C                     ADD  ETOT,1    KENP03                          CEU012
+     C                     ADD  ETOT,2    KENP06                          CEU012
+     C                     ADD  ETOT,3    KENP09                          CEU012
+     C                     ADD  ETOT,4    KENP12                          CEU012
+     C                     ADD  ETOT,5    KENPRR                          CEU012
+     C                     ADD  @NDLR     KENDLR                          CEU012
+     C                     UPDATDLMSY2P0                                  CEU012
+     C                     MOVEL@CCY      KECCY                           CEU012
+     C                     ELSE                                           CEU012
+     C                     Z-ADDETOT,1    KENP03                          CEU012
+     C                     Z-ADDETOT,2    KENP06                          CEU012
+     C                     Z-ADDETOT,3    KENP09                          CEU012
+     C                     Z-ADDETOT,4    KENP12                          CEU012
+     C                     Z-ADDETOT,5    KENPRR                          CEU012
+     C                     Z-ADD@NDLR     KENDLR                          CEU012
+     C                     MOVELBKEUCP    KECCY                           CEU012
+     C                     WRITEDLMSY2P0                                  CEU012
+      *                                                                   CEU012
+     C                     ADD  1         KEVDTP                          CEU012
+     C                     Z-ADD0         KENDLR                          CEU012
+     C                     Z-ADD0         TOT4                            CEU012
+     C                     WRITEDLMSY2P0                                  CEU012
+      *                                                                   CEU012
+     C                     SUB  1         KEVDTP                          CEU012
+     C                     MOVEL@CCY      KECCY                           CEU012
+     C                     ENDIF                                          CEU012
+      *                                                                   CEU012
+     C                     ENDIF                                          CEU012
+     C*
+     C* SET UP POSN NET FIELDS AND N0-OF-DEALS-IN-RECORD COUNT
+     C*
+     C                     MOVE TOTAL1    FILE1             *1
+     C                     Z-ADD@NDLR     KENDLR            *1
+     C*
+     C* WRITE RCD
+     C*
+     C*********************WRITEDLMSM1P0                    *1            S01194
+     C                     WRITEDLMSY2P0                                  S01194
+     C*
+     C* SET VAL DATE PERIOD TO MMYY2
+     C*
+     C                     ADD  1         KEVDTP            *1
+     C*
+     C* WRITE RCD WITH ZERO POSITIONS
+     C*
+     C                     Z-ADD0         KENDLR            *1
+     C                     Z-ADD0         TOT4              *1
+     C*********************WRITEDLMSM1P0                    *1            S01194
+     C                     WRITEDLMSY2P0                                  S01194
+     C*
+     C* ELSE VDAT PERIOD IS MMYY2
+     C*
+     C                     ELSE                            X*1
+     C*
+     C**RETRIEVE*RCD*FROM*DLMSM1L                                         S01194
+     C* RETRIEVE RCD FROM DLMSY2L                                         S01194
+     C*
+     C***********KEY1******CHAINDLMSM1L              70     *1            S01194
+     C           KEY1      CHAINDLMSY2L              70                   S01194
+     C*
+     C* IF RCD FOUND - UPDATE RCD ; ELSE WRITE NEW RCD
+     C*
+     C           *IN70     IFEQ '0'                        B**2
+     C*
+     C                     ADD  @NDLR     KENDLR            *2
+     C                     ADD  TOT1      TOT4              **2
+     C*
+     C*********************UPDATDLMSM1P0                    **2           S01194
+     C                     UPDATDLMSY2P0                                  S01194
+      *                                                                   CEU012
+     C           CEU012    IFEQ 'Y'                                       CEU012
+     C           WTINCY    ANDEQ'Y'                                       CEU012
+     C           CEU012    OREQ 'Y'                                       CEU012
+     C           @CCY      ANDEQBKEURO                                    CEU012
+      *                                                                   CEU012
+     C           KEY2      CHAINDLMSY2L              70                   CEU012
+      *                                                                   CEU012
+     C           *IN70     IFEQ '0'                                       CEU012
+     C                     ADD  ETOT,1    TOT4,1                          CEU012
+     C                     ADD  ETOT,2    TOT4,2                          CEU012
+     C                     ADD  ETOT,3    TOT4,3                          CEU012
+     C                     ADD  ETOT,4    TOT4,4                          CEU012
+     C                     ADD  ETOT,5    TOT4,5                          CEU012
+     C                     ADD  @NDLR     KENDLR                          CEU012
+     C                     UPDATDLMSY2P0                                  CEU012
+     C                     MOVEL@CCY      KECCY                           CEU012
+     C                     ENDIF                                          CEU012
+     C                     ENDIF                                          CEU012
+     C*
+     C                     ELSE                            X**2
+     C*
+     C                     Z-ADD@NDLR     KENDLR            *2
+     C                     Z-ADDTOT1      TOT4              **2
+     C*
+     C*********************WRITEDLMSM1P0                    **2           S01194
+     C                     WRITEDLMSY2P0                                  S01194
+      *                                                                   CEU012
+     C           CEU012    IFEQ 'Y'                                       CEU012
+     C           WTINCY    ANDEQ'Y'                                       CEU012
+     C           CEU012    OREQ 'Y'                                       CEU012
+     C           @CCY      ANDEQBKEURO                                    CEU012
+      *                                                                   CEU012
+     C           KEY2      CHAINDLMSY2L              70                   CEU012
+      *                                                                   CEU012
+     C           *IN70     IFEQ '1'                                       CEU012
+     C                     Z-ADDETOT,1    TOT4,1                          CEU012
+     C                     Z-ADDETOT,2    TOT4,2                          CEU012
+     C                     Z-ADDETOT,3    TOT4,3                          CEU012
+     C                     Z-ADDETOT,4    TOT4,4                          CEU012
+     C                     Z-ADDETOT,5    TOT4,5                          CEU012
+     C                     Z-ADD@NDLR     KENDLR                          CEU012
+     C                     WRITEDLMSY2P0                                  CEU012
+     C                     MOVEL@CCY      KECCY                           CEU012
+     C                     ENDIF                                          CEU012
+     C                     ENDIF                                          CEU012
+     C*
+     C                     END                             E**2
+     C*
+     C* SET VAL DATE PERIOD TO MMYY1
+     C*
+     C                     SUB  1         KEVDTP            *1
+     C*
+     C***********KEY1******CHAINDLMSM1L              70     *1            S01194
+     C           KEY1      CHAINDLMSY2L              70                   S01194
+     C*
+     C* IF RCD DOESN'T EXIST WRITE EMPTY RCD
+     C*
+     C           *IN70     IFEQ '1'                        B**2
+     C*
+     C                     Z-ADD0         KENDLR            *2
+     C                     Z-ADD0         TOT4              **2
+     C*
+     C*********************WRITEDLMSM1P0                    **2           S01194
+     C                     WRITEDLMSY2P0                                  S01194
+     C*
+     C                     END                             E**2
+      *                                                                   CEU012
+     C           CEU012    IFEQ 'Y'                                       CEU012
+     C           WTINCY    ANDEQ'Y'                                       CEU012
+     C           CEU012    OREQ 'Y'                                       CEU012
+     C           @CCY      ANDEQBKEURO                                    CEU012
+      *                                                                   CEU012
+     C           KEY2      CHAINDLMSY2L              70                   CEU012
+      *                                                                   CEU012
+     C           *IN70     IFEQ '1'                                       CEU012
+     C                     Z-ADD0         TOT4                            CEU012
+     C                     Z-ADD0         KENDLR                          CEU012
+     C                     WRITEDLMSY2P0                                  CEU012
+     C                     ENDIF                                          CEU012
+     C                     ENDIF                                          CEU012
+     C*
+     C                     END                             E*1
+     C*
+     C** RESET NO-OF-DEALS-IN-RECORD COUNT
+     C*
+     C                     Z-ADD0         @NDLR
+     C*
+     C           #BB9      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C/COPY ZSRSRC,ZDATE8Z3
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*                    KLIST DEFN
+     C*                    ENTRY LIST
+     C*
+     C*****************************************************************
+     C*
+     C           KEY1      KLIST
+     C                     KFLD           @BOKC
+     C                     KFLD           @CCY
+     C                     KFLD           KECENT                          110523
+     C                     KFLD           KEVDTP
+      *                                                                   CEU012
+     C           KEY2      KLIST                                          CEU012
+     C                     KFLD           @BOKC                           CEU012
+     C                     KFLD           BKEUCP                          CEU012
+     C                     KFLD           KECENT                          CEU012
+     C                     KFLD           @VDCM                           CEU012
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @@TERM
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR    - DATABASE ERROR SUBROUTINE                          *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED IF ANY PROGRAM OR FILE ERRORS                          *
+     C*                                                               *
+     C* FLDS USED                                                     *
+     C*            DBPGM    -  HOLDS PGM NAME IN LDA                  *
+     C*            @LDA     -  VARIABLE TO SET UP LDA WITH DB ERRORS  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C** MOVE DATABASE ERROR DETAILS INTO LDA FIELD
+     C*
+     C           *IN08     IFEQ '0'
+     C                     MOVE '1'       *IN08
+     C*
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVELDBERR     @LDA
+     C                     OUT  @LDA
+     C*
+     C** SET UP TERMINATION PARAMETER, TURN ON ERROR SWITCHES,
+     C** SET ON LR, DUMP AND RETURN
+     C*
+     C                     MOVE 'E'       @@TERM  1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  CPY@  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

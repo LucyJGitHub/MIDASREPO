@@ -1,0 +1,67 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Submit Forward Account Transfer Job - I/C')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       GLC004607 - Submit Forward Account Transfer Job - IC        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Prev Amend No. BUG27831A *CREATE  Date 03Aug10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB020 - COB Restructure - Secondary COB Infrastracture     */
+/*       BUG27831A - Forward Account Transfer Processing             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PHASEOFDAY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Retrieve system prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+ 
+/** Retrieve phase of day */
+ 
+             RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&PHASEOFDAY)
+ 
+/** Check if the FWDRATM_xx job is running */
+ 
+             ALCOBJ     OBJ((GLFRATMLCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ENDPGM))
+             DLCOBJ     OBJ((GLFRATMLCK *DTAARA *EXCL))
+ 
+/** Submit FWDRATM_xx background job */
+ 
+/**********  IF         COND(&PHASEOFDAY *EQ 'A') THEN(DO)                             */ /*CCB020*/
+             IF         COND((&PHASEOFDAY *EQ 'A') *OR +
+                          (&PHASEOFDAY *EQ 'G')) THEN(DO)                                 /*CCB020*/
+             CHGVAR     VAR(&JOBNAME) VALUE('FWDRATM_' *CAT &PREFIX)
+             SBMJOB     CMD(CALL PGM(GLC004605)) JOB(&JOBNAME) +
+                          JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +
+                          OUTQ(*JOBD) USER(*JOBD)
+             ENDDO
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC004607 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ ENDPGM:
+             ENDPGM

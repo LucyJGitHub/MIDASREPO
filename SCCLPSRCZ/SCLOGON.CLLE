@@ -1,0 +1,51 @@
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('API Signon to a Unit')                                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCLOGON -  Sign On from a Unit                              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/*       Last Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BG13758            Date 19Apr07              */
+/*                      BG13742 *CREATE    Date 17Apr07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       BG13758 - Data definition mismatch between Java and         */
+/*                 APPRMTJ                                           */
+/*       BG13742 - Authority problem on MidasPlus Equation interface */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LOGON &PASSWORD &DSSYSE &DSSYS2 &STAT +
+                          &MSGID &MSGTXT &PZONE)
+             DCL        VAR(&LOGON) TYPE(*CHAR) LEN(128)
+             DCL        VAR(&PASSWORD) TYPE(*CHAR) LEN(64)
+             DCL        VAR(&DSSYSE) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&DSSYS2) TYPE(*CHAR) LEN(2000)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGTXT) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&PZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(END))        */                  /*BG13758*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))                          /*BG13758*/
+/*                                                                                        /*CSC043*/
+/** CSC043 - Programs are moved from 'XLIB' to 'XPLIB'. */                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+/**********  CHGVAR     VAR(&LIB) VALUE(&PZONE *CAT 'XLIB')  */                           /*CSC043*/
+             CHGVAR     VAR(&LIB) VALUE(&PZONE *CAT 'XPLIB')                              /*CSC043*/
+             CALL       PGM(&LIB/SCLOGON2) PARM(&LOGON &PASSWORD +
+                          &DSSYSE &DSSYS2 &STAT &MSGID &MSGTXT)
+             IF         COND(&STAT = '1') THEN(GOTO CMDLBL(ERROR))                       /*BG13758*/
+             GOTO       CMDLBL(END)                                                      /*BG13758*/
+ERROR:       DSPJOBLOG  OUTPUT(*PRINT)                                                   /*BG13758*/
+             CHGVAR     VAR(&STAT) VALUE('1')                                            /*BG13758*/
+       END:
+             ENDPGM

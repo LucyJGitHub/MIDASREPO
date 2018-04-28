@@ -1,0 +1,55 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Update ACCNTAB')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00032 - Update ACCNTAB                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Last Amend No. BG26993            Date 26Jan10              */
+/*       Prev Amend No. 248369 *CREATE     Date 20Jun07              */
+/*                      xxxxxx             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed S248369C01.                               */
+/*       248369  - Update ACCNTAB to complete fix SC248369.          */
+/*                                                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Build string to delete record. */
+             CHGVAR     VAR(&STM_STR) VALUE('update ACCNTAB set +
+                          PRFC =' *BCAT &QUOTE *BCAT &QUOTE *BCAT +
+                          'where PRFC <>' *BCAT &QUOTE *BCAT &QUOTE +
+                          *BCAT 'and ATYP <>' *BCAT &QUOTE *TCAT +
+                          'R' *TCAT &QUOTE *BCAT 'and ATYP <>' +
+                          *BCAT &QUOTE *TCAT 'N' *TCAT &QUOTE)
+/* Call standard program to write to source file ... */
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:         ENDPGM

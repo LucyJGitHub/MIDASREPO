@@ -1,0 +1,172 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CGL061A*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC4302 - Balance Statements - Task Split Server            */
+/*                                                                   */
+/*       (c) Misys Banking Systems Ltd. 2006                         */
+/*                                                                   */
+/*       Last Amend No. CGL061A *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. 252651             Date 07Feb08              */
+/*                      CGL061  *Create    Date 27Jun06              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CGL061A - Statements Task Split Processing                  */
+/*       252651 - COB Error - GLC4302                                */
+/*       CGL061 - Multi-streaming GL Statements - Task Split         */
+/*                Task Split Server                                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAME &CSEQ &COPY_RECS)
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&COPY_RECS) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('STMTSERVE')
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2006')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                /*252651*/
+/*/COPY WNCPYSRC,GLH00687                                            */
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLC4302 - Balance Statements +
+                           - Task Split Server') +
+                          TOMSGQ(MRUNQ)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)                      /*252651*/
+             CHGVAR     VAR(&DTAQLIBL) VALUE(&SYSID *CAT 'DPLIB')                /*252651*/
+                                                                                 /*252651*/
+/* Start commitment control */
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+/*/COPY WNCPYSRC,GLH00688                                            */
+ 
+/* Read COB components file to check the restart status */
+ 
+             CALL       PGM(CB0160) PARM(&CNAME &CSEQ &STAT)
+ 
+/* Check if any problems with COB components file */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If restart status = Y, send message to each sub-task data queue */
+ 
+             IF         COND(&STAT = 'Y') THEN(DO)
+ 
+/* Retrieve first member description */
+ 
+             RTVMBRD    FILE(GLSTAMPD) RTNMBR(&MEMBER)
+ 
+/* Set up data queue and message data */
+ 
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('RESTART')
+ 
+/* Send message data to data queue */
+ 
+ LOOP:       CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+/* Retrieve next member description */
+ 
+             RTVMBRD    FILE(GLSTAMPD) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&SNDDTAQ)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(ENDLOOP))
+ 
+/* Loop for all members in driving file */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&SNDDTAQ)
+             GOTO       CMDLBL(LOOP)
+ 
+ ENDLOOP:    ENDDO
+ 
+/* Set restart status to 'Y' */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+ 
+/* Wait for data queue entry */
+ 
+ RECEIVE:    CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* Extract member name */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10))
+ 
+/* Override driving file and trailer file */
+ 
+             OVRDBF     FILE(GLSTAMPD) TOFILE(GLSTAMPD) MBR(&MEMBER)
+             OVRDBF     FILE(GLSTAMPA) TOFILE(GLSTAMPA) MBR(&MEMBER)
+ 
+/* Call the program to copy records to specified member */
+ 
+/*/COPY WNCPYSRC,GLH00689                                            */
+             CALL       PGM(GL4302) PARM(&COPY_RECS &RTN_CODE)
+/*/COPY WNCPYSRC,GLH00690                                            */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Set up data queue and message data */
+ 
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('PROMPT')
+ 
+/* Send message data to data queue */
+ 
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+/* If return code = EOF, set restart status to 'N' and terminate */
+ 
+             IF         COND(&RTN_CODE = 'EOF') THEN(DO)
+ 
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+ 
+             GOTO       CMDLBL(END)
+ 
+             ENDDO
+ 
+/* If return code <> EOF, wait for another data queue entry */
+ 
+             GOTO       CMDLBL(RECEIVE)
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GLC4302 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+ 
+             ENDPGM

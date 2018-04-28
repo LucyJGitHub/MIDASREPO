@@ -1,0 +1,391 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Msg Contents Translation Table Print')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1550 - Message Contents Translation Table Print            *
+      *                                                               *
+      *  Function:  To list all of the entries in the                 *
+      *             Message Contents Translation Table.               *
+      *                                                               *
+      *  Called By: MEC1550 - Message Contents Print Control Process  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CFT003  *CREATE    Date 07May98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CFT003 - Stright Through Processing Phase 1                  *
+      *           Based on ME1550 original references S01489/HUB001   *
+      *                                                               *
+      *****************************************************************
+     FMEDECDL0IF  E           K        DISK
+      **  Message Contents Translation Table Retrieval Index
+      *
+     FMEDECDL3IF  E           K        DISK
+      **  Message Contents Translation Table By Account
+      *
+     FMEDECDL4IF  E           K        DISK
+      **  Message Contents Translation Table By Text
+      *
+     FME1550P1O   E                    PRINTER      KINFDS SPOOL
+      **  Message Contents Translation Table Printer File
+      *
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   15  -  Printed record indicator                             *
+      *   16  -  Type of report indicator (full or audit)             *
+      *   20  -  Overflow indicator for PRTF/ME1550P1                 *
+      *   22  -  Incoming field data line indicator (second)          *
+      *   23  -  Incoming field data line indicator (third)           *
+      *   24  -  Incoming field data line indicator (fourth)          *
+      *   25  -  Incoming field data line indicator (fifth)           *
+      *                                                               *
+      *   U7  -  Database error                                       *
+      *   U8  -  Database error                                       *
+      *   LR  -  Last record indicator                                *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   #HINIT   - Initialisation processing                        *
+      *   #HPRTD   - Performs printing of detail records              *
+      *   *PSSR    - Handles abnormal error conditions                *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      * Copyright notice for inclusion in all programs
+      *
+     I/EJECT
+      *
+     I#HINDA      DS                            175
+      *
+      **  Data Structure for Incoming Field Data Output Fields
+      *
+     I                                        1  35 #HIND1
+     I                                       36  70 #HIND2
+     I                                       71 105 #HIND3
+     I                                      106 140 #HIND4
+     I                                      141 175 #HIND5
+     IDCINDA      DS                            175
+     I                                        1  35 DCIND1
+     I                                       36  70 DCIND2
+     I                                       71 105 DCIND3
+     I                                      106 140 DCIND4
+     I                                      141 175 DCIND5
+      *
+     ISPOOL       DS
+      ** File information data structure - P1
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     ILDA         DS                            256
+      *
+      **  Local data area
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IRUNDT       DS
+      *
+      **  Standard Data Area Layout for System Flags and Run Date
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data Structure for Bank Details
+      *
+     I              BJURPT                          TITL
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for Access Programs, Short Data Structure
+      *
+     C/EJECT
+      *================================================================
+      *   M A I N   P R O C E S S I N G
+      *================================================================
+      *
+      **  Initialisation process
+      *
+     C                     EXSR #HINIT
+      *
+      **  Print header record and do a first read on the file
+      *
+     C                     WRITEHEADER
+      *
+      * Read record depending on report type
+      *
+     C                     SELEC
+     C           @ACTN     WHEQ 'A'
+     C           @ACTN     OREQ 'L'
+     C                     READ MEDECDL0                 LR
+     C           @ACTN     WHEQ 'C'
+     C                     READ MEDECDL3                 LR
+     C           @ACTN     WHEQ 'T'
+     C                     READ MEDECDL4                 LR
+     C                     OTHER
+     C                     MOVEL'1'       *INLR
+     C                     ENDSL
+      *
+     C                     MOVE '0'       *IN15
+      *
+     C           *INLR     DOWEQ'0'
+      *
+      **  Print detail record depending on type of report requested
+      *
+     C           @ACTN     IFNE 'A'
+     C           @ACTN     OREQ 'A'
+     C           DCARDT    ANDEQRUNA
+      *
+      **  Perform printing of live detail records
+     C           DCRECI    IFEQ 'D'
+     C           @ACTN     OREQ 'A'
+     C                     EXSR #HPRTD
+     C                     MOVE '1'       *IN15
+     C                     END
+      *
+     C                     END
+      *
+      * Read record depending on report type
+      *
+     C                     SELEC
+     C           @ACTN     WHEQ 'A'
+     C           @ACTN     OREQ 'L'
+     C                     READ MEDECDL0                 LR
+     C           @ACTN     WHEQ 'C'
+     C                     READ MEDECDL3                 LR
+     C           @ACTN     WHEQ 'T'
+     C                     READ MEDECDL4                 LR
+     C                     OTHER
+     C                     MOVEL'1'       *INLR
+     C                     ENDSL
+      *
+     C                     END
+      *
+      **  End the program processing
+      *
+     C                     EXSR #HPEND
+      *
+      *================================================================
+      *   E N D   O F   M A I N   P R O C E S S I N G
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #HINIT  Subroutine to perform initial processing.            *
+      *                                                               *
+      *      Called by     Main Processing                            *
+      *      Calls         DBSR                                       *
+      *                                                               *
+      *****************************************************************
+     C           #HINIT    BEGSR
+      *
+      ** Receive entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ
+     C                     PARM           @ACTN   1
+      *
+      ** Copyright Insertion
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Prepare LDA variables
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ME1550'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** In the data area RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Get bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Error in SDBANKPD
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Determine type of report (full list or audit list)
+      *
+     C           @ACTN     IFNE 'A'
+     C                     MOVE '1'       *IN16
+     C                     ELSE
+     C                     MOVE '0'       *IN16
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #HPRTD  Subroutine to print detail records.                  *
+      *                                                               *
+      *      Called by     Main Processing                            *
+      *      Calls         Nothing                                    *
+      *                                                               *
+      *****************************************************************
+     C           #HPRTD    BEGSR
+      *
+      **  Prepare work fields and initialise line indicators
+      *
+     C                     MOVEL*BLANKS   #HNWRK
+     C                     MOVEL*BLANKS   #HMTAG
+     C                     MOVEL*BLANKS   #HCYCD
+     C                     MOVEL*BLANKS   #HSNDR
+     C                     MOVEL*BLANKS   #HMTPY
+     C                     MOVEL*BLANKS   #HINDA
+     C                     MOVEL*BLANKS   #HMDEQ
+     C                     MOVEL*BLANKS   #HAACT
+     C                     MOVEL*BLANKS   #HARDT
+     C                     SETOF                     2223
+     C                     SETOF                     2425
+      *
+      **  Set up fields for printing
+      *
+     C                     MOVELDCNWRK    #HNWRK
+     C                     MOVELDCMTAG    #HMTAG
+     C                     MOVELDCCYCD    #HCYCD
+     C                     MOVELDCSNDR    #HSNDR
+     C                     MOVELDCMTPY    #HMTPY
+     C                     MOVELDCINDA    #HINDA
+     C                     MOVELDCMDEQ    #HMDEQ
+     C                     MOVELDCAACT    #HAACT
+     C                     MOVELDCARDT    #HARDT
+      *
+      **  Determine number of incoming field data lines to be printed
+      *
+     C           #HIND2    IFNE *BLANK
+     C                     MOVE '1'       *IN22
+     C                     END
+      *
+     C           #HIND3    IFNE *BLANK
+     C                     MOVE '1'       *IN23
+     C                     END
+      *
+     C           #HIND4    IFNE *BLANK
+     C                     MOVE '1'       *IN24
+     C                     END
+      *
+     C           #HIND5    IFNE *BLANK
+     C                     MOVE '1'       *IN25
+     C                     END
+      *
+      **  Print detail record
+      *
+     C                     WRITEDTLRCD                 20
+      *
+      **  If overflow occurs, print headings and detail record
+      **  on the next page
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     MOVE '0'       *IN20
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #HPEND  Subroutine to end program processing                 *
+      *                                                               *
+      *      Called by     Main Processing                            *
+      *      Calls         Nothing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #HPEND    BEGSR
+      *
+      ** Write the header with checks for the printer overflow
+      *
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     MOVE '0'       *IN20
+     C                     END
+     C                     WRITEFOOTER
+      *
+      ** Ensure Report Spool File Recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ    5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+      *
+      ** Error During ZSFILE Processing, Return to Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   Subroutine to handle abnormal error conditions       *
+      *                                                               *
+      *       Called by    #HINIT                                     *
+      *       Calls        Nothing                                    *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+** CPY@   **      Object Copyright
+(c) Misys International Banking Systems Ltd. 2001

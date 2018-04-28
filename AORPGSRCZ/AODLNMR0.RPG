@@ -1,0 +1,205 @@
+     H        1                                                           S01230
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Deal Number Record          *RDR')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  ACCESS OBJECTS
+     F*                                                                  *
+     F*     AODLNMR0 - READ ACCESS TO DEAL NUMBER RECORD FILE            *
+     F*                I.C.D. RECORD - ONLY ONE RECORD IN FILE           *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01314             Date 05/01/90              *S01314
+     F*                 S01230             Date 05/01/90              *S01230
+     F*                    S01230              DATE 23/11/89             *S01230
+     F*                    S01230              DATE 06/11/89             *S01230
+     F*                                                                  *
+     F********************************************************************S01230
+     F*                                                                  *S01230
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01314  -  CHANGES MADE DURING R10 PTF INCORPORATION         *S01314
+     F*     S01230  -  STANDARDISE ACCESS PROGRAMS                       *S01230
+     F*                                                                  *S01230
+     F********************************************************************
+     F*
+     F* ID F  C  H  L     FUNCTION OF INDICATORS
+     F*
+     F*       01       OPEN FILE
+     F*       90       FILE ERROR
+     F*       91       OPEN ERROR
+     F*       92       CLOSE ERROR
+     F*       93       EMPTY FILE
+     F*       96       OPTION ERROR
+     F*       99       SEND MESSAGE ERROR
+     F*
+     F********************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     FFDDLNML1IF  E           K        DISK                           UC
+      * IN  - FDDLNMP0 DEAL NO RECORD  ()
+      ************************************************************        S01230
+      /EJECT                                                              S01230
+     E*ESTART                                                             S01230
+      ************************************************************        S01230
+     E                    @MG     1   1 50                                S01230
+      ************************************************************
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT
+     I*ISTART
+      ************************************************************
+     IP@MGDA      DS                                                      S01230
+     I                                        1  50 @MG                   S01230
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     I********************P@NORF    E DSFDDLNMPP                          S01230
+     ID@FMT     E DSFDDLNMPP                                              S01230
+      * FDDLNMP0 - DEAL NO Record Format Data Structure
+      *
+     I********************P@COPY      DS                             67   S01230
+     IP@FMT     E DSDSFDY                                                 S01230
+     I*                                                                   S01230
+     I* EXTERNAL DATA STRUCTURE TO HOLD THE OUTGOING RECORD FORMAT OF     S01230
+     I* THE FILE                                                          S01230
+     I******P@FMT       DS                             67                 S01230
+     I******                                  1  67 NOCOPY                S01230
+      * Copy of Record Format Data Structure to be Passed Back
+      * to the Calling Program After 1st Call.
+      *
+      *
+      ************************************************************
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+      ************************************************************        S01230
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C*********************PARM P@NORF    P@COPY           O:Format       S01230
+     C                     PARM           P@FMT            O:Format       S01230
+      *****************************************************
+      *MAIN
+     C           P@OPTN    IFEQ '*SAME  '                                 S01230
+     C           *IN01     COMP '0'                      91               S01230
+     C                     GOTO T@SKIP                                    S01230
+     C                     END                                            S01230
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     9396   ¦ error flags
+      *
+      * First call - open file - read record - close file
+      *
+      * Subsequent calls will return the format name.
+      *
+     C           P@OPTN    IFEQ '*FIRST  '                 IF 1  VALID
+     C           P@OPTN    OREQ '*NEXT   '                       OPTION
+     C           P@OPTN    OREQ '*PREV   '                       HAS
+     C           P@OPTN    OREQ '*LAST   '                       BEEN
+     C           P@OPTN    OREQ '*KEY    '                       ENTERED
+     C           P@OPTN    OREQ '*FREE   '
+     C           P@OPTN    OREQ '*SAME  '                                 S01230
+     C           P@OPTN    OREQ '*VERIFY'                                 S01230
+     C           *IN01     IFEQ '0'                        IF 2 FIRST TIME
+     C                     SETON                     01      Set ind.
+     C                     OPEN FDDLNML1               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     READ FDDLNMP0               9093  Read record
+     C                     CLOSEFDDLNML1               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C           *IN93     CABEQ'1'       T@SKIP         LR  Empty error
+     C                     SETON                     LR      Set ind.
+     C*                                                                   S01230
+     C** MOVE THE FILE VALUES TO THE OUTPUT PARAMETER                     S01230
+     C*                                                                   S01230
+     C                     MOVELD@FMT     P@FMT                           S01230
+     C                     RETRN                             Return
+     C                     END                             FI 2
+     C                     ELSE
+     C                     SETON                     96
+     C                     END                             FI 1
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   96                MOVE '*OPTION' P@RTCD           OPTION INVALID
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SEND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C***90                MOVE 'ACO0001' P@MGID             File error   S01314
+     C***91                MOVE 'ACO0002' P@MGID             Open error   S01314
+     C***92                MOVE 'ACO0003' P@MGID             Close error  S01314
+     C***93                MOVE 'ACO0004' P@MGID             Empty file   S01314
+     C***96                MOVE 'ACO0007' P@MGID             OPTION INVAL S01314
+     C   90                MOVE 'ACO1001' P@MGID             File error   S01314
+     C   91                MOVE 'ACO1002' P@MGID             Open error   S01314
+     C   92                MOVE 'ACO1003' P@MGID             Close error  S01314
+     C   93                MOVE 'ACO1004' P@MGID             Empty file   S01314
+     C   96                MOVE 'ACO1007' P@MGID             OPTION INVAL S01314
+     C                     CALL 'ZASNMG'               99    <SEND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Prog name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Msg ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Msg key    S01230
+     C*********************PARM *BLANK    P@MGDA 50          I:Msg data   S01230
+     C                     PARM           P@MGDA 50          I:Msg data   S01230
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 9
+      *                                                                   S01230
+      *      CALLER REQUESTS DB HANDLING                                  S01230
+      *                                                                   S01230
+     C           W@RTCD    IFEQ '*DBERR'                   IF DB ERROR    S01230
+     C           P@RTCD    ANDNE*BLANK                     AND            S01230
+     C                     DUMP                                           S01230
+     C                     CALL 'DBERRCTL'                                S01230
+     C                     END                             FI             S01230
+      *                                                                   S01230
+     C           P@OPTN    IFNE '*VERIFY'                                 S01230
+     C           P@OPTN    ANDNE'*FREE'                                   S01230
+     C           P@RTCD    ANDNE'*OPTION'                                 S01230
+     C                     MOVELD@FMT     P@FMT                           S01230
+     C                     END                                            S01230
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**                                                                        S01230
+FDDLNMPP  AODLNMR0  Deal Number Record
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Misys International Banking Systems Ltd. 2001

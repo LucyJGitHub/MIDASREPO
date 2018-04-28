@@ -1,0 +1,308 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas GL Submit management limits jobs')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC005010 - Submit Management Limits Jobs                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. CSC043             Date 18Jun10              */
+/*       Prev Amend No. BUG27747A          Date 25Jun10              */
+/*                      BUG27747           Date 22Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      242243             Date 02Oct06              */
+/*                      BUG5996            Date 19Apr05              */
+/*                      BG4147             Date 02Sep04              */
+/*                      BG3656  *CREATE    Date 17May04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       BUG27747A - Error in CALCMGR_zz and LTVMNTR_zz (Reopen)     */
+/*       BUG27747 - Error in CALCMGR_zz and LTVMNTR_zz               */
+/*       242243 - Move build of GLMLJARS to GLC005010                */
+/*       BUG5996 - Remove LANGID(ENU) CNTRYID(US) ACCDID(37) in      */
+/*                 SBMJOB command                                    */
+/*       BG4147 - Autostart of management limits jobs                */
+/*       BG3656 - Run management limits jobs in global subsystem     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PHASEOFDAY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SBMUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                   /*242243*/
+             DCL        VAR(&JAVAPATH) TYPE(*CHAR) LEN(200)                               /*242243*/
+             DCL        VAR(&LSCOMMAND) TYPE(*CHAR) LEN(100)                              /*242243*/
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(100)                                  /*242243*/
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)                                  /*242243*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                  /*242243*/
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)                                  /*242243*/
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)                                  /*242243*/
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)                                  /*242243*/
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)                                  /*242243*/
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)                                  /*242243*/
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)                                  /*242243*/
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)                                  /*242243*/
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)                                  /*242243*/
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)                                  /*242243*/
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)                                  /*242243*/
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)                                  /*242243*/
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)                                  /*242243*/
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)                                  /*242243*/
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)                                  /*242243*/
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)                                  /*242243*/
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)                                 /*242243*/
+             DCL        VAR(&JAVA_HOME) TYPE(*CHAR) LEN(1024)                           /*BUG27747*/
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(18)                                    /*CSC043*/
+/*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Get global system prefix */
+ 
+             CALL       PGM(GPRTVLIB) PARM(&PREFIX)
+ 
+/*                                                                                        /*CSC043*/
+/** Get the global IASP system values */                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 'IASPdatabase' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Check whether system is in IASP environment. */                                       /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Get name of database. */                                                              /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 18))                              /*CSC043*/
+                                                                                          /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+                                                                                          /*CSC043*/
+/* Build user profile under which to submit the job */
+ 
+             CHGVAR     VAR(&SBMUSER) VALUE(&PREFIX *TCAT 'WEBUSER')
+ 
+                                                                                          /*242243*/
+/* Skip to end if all three jobs are already running */                                   /*242243*/
+                                                                                          /*242243*/
+             ALCOBJ     OBJ((GLMLCALLCK *DTAARA *EXCL)) WAIT(0)                           /*242243*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(EOD))                             /*242243*/
+             DLCOBJ     OBJ((GLMLCALLCK *DTAARA *EXCL))                                   /*242243*/
+             GOTO       CMDLBL(BUILD)                                                     /*242243*/
+EOD:         ALCOBJ     OBJ((GLEODMNLCK *DTAARA *EXCL)) WAIT(0)                           /*242243*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(MAIL))                            /*242243*/
+             DLCOBJ     OBJ((GLEODMNLCK *DTAARA *EXCL))                                   /*242243*/
+             GOTO       CMDLBL(BUILD)                                                     /*242243*/
+MAIL:        ALCOBJ     OBJ((GLEMAILLCK *DTAARA *EXCL)) WAIT(0)                           /*242243*/
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))                             /*242243*/
+             DLCOBJ     OBJ((GLEMAILLCK *DTAARA *EXCL))                                   /*242243*/
+BUILD:                                                                                    /*242243*/
+/* Otherwise build java file common to all jobs */                                        /*242243*/
+                                                                                          /*242243*/
+/* Get 'JavaPath' system value from file GPSVALPD  */                                     /*242243*/
+                                                                                          /*242243*/
+                                                                                          /*242243*/
+/**********  CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +               */                /*BUG27747A*/
+/**********               'GlobalJavaPathStem' &JAVAPATH &SVALK2 +   */                /*BUG27747A*/
+/**********               &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +     */                /*BUG27747A*/
+/**********               &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +    */                /*BUG27747A*/
+/**********               &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +     */                /*BUG27747A*/
+/**********               &SVALK0 &SVAL10)                           */         /*242243 BUG27747A*/
+                                                                                          /*242243*/
+/**/                                                                                   /*BUG27747A*/
+/* Get 'GlobalJavaPathStem' and 'GlobalJavaHome'     */                                /*BUG27747A*/
+/* system values from file GPSVALPD                  */                                /*BUG27747A*/
+/**/                                                                                   /*BUG27747A*/
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                          'GlobalJavaPathStem' &JAVAPATH +
+                          'GlobalJavaHome' &JAVA_HOME &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)                       /*BUG27747A*/
+                                                                                       /*BUG27747A*/
+/* If the 'GlobalJavaPathStem' system value is missing then end abnormally */             /*242243*/
+                                                                                          /*242243*/
+             IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*242243*/
+                                                                                        /*BUG27747*/
+/* Get 'GlobalJavaHome' system value from file GPSVALPD  */                             /*BUG27747*/
+                                                                                        /*BUG27747*/
+/**********  CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +               */                /*BUG27747A*/
+/**********               'GlobalJavaHome' &JAVA_HOME &SVALK2 +      */                /*BUG27747A*/
+/**********               &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +     */                /*BUG27747A*/
+/**********               &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +    */                /*BUG27747A*/
+/**********               &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +     */                /*BUG27747A*/
+/**********               &SVALK0 &SVAL10)                           */       /*BUG27747 BUG27747A*/
+                                                                                        /*BUG27747*/
+/* If the 'GlobalJavaHome' system value is missing then end abnormally */               /*BUG27747*/
+                                                                                        /*BUG27747*/
+             IF         COND(%SST(&JAVA_HOME 1 4) *EQ '*NRF') THEN(GOTO +
+                          CMDLBL(ABNOR))                                                /*BUG27747*/
+                                                                                        /*BUG27747*/
+/** Setup environment variable JAVA_HOME */                                             /*BUG27747*/
+                                                                                        /*BUG27747*/
+             RMVENVVAR  ENVVAR(JAVA_HOME)                                               /*BUG27747*/
+             MONMSG     MSGID(CPFA981)                                                  /*BUG27747*/
+                                                                                        /*BUG27747*/
+             ADDENVVAR  ENVVAR(JAVA_HOME) VALUE(&JAVA_HOME)                             /*BUG27747*/
+             MONMSG     MSGID(CPFA0A0)                                                  /*BUG27747*/
+                                                                                          /*242243*/
+             CHGVAR     VAR(&GPLIB) VALUE(&PREFIX *CAT 'GPLIB')                           /*242243*/
+                                                                                          /*242243*/
+             CLRPFM     FILE(&GPLIB/GLMLJARS)                                             /*242243*/
+             MONMSG     MSGID(CPF0000)                                                    /*242243*/
+                                                                                          /*242243*/
+                                                                                          /*242243*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             CHGVAR     VAR(&LSCOMMAND) VALUE('LS ' *CAT &JAVAPATH +
+                          *TCAT '/lib/ext/ > /' *CAT &IASP *TCAT +
+                          '/QSYS.LIB/' *TCAT &GPLIB *TCAT +
+                          '.LIB/GLMLJARS.FILE/GLMLJARS.MBR')                              /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             CHGVAR     VAR(&LSCOMMAND) VALUE('LS ' *CAT &JAVAPATH +
+                          *TCAT '/lib/ext/ > /QSYS.LIB/' *TCAT +
+                          &GPLIB *TCAT +
+                          '.LIB/GLMLJARS.FILE/GLMLJARS.MBR')                              /*242243*/
+             ENDDO                                                                        /*CSC043*/
+                                                                                          /*242243*/
+             QSH        CMD(&LSCOMMAND)                                                   /*242243*/
+                                                                                          /*242243*/
+ 
+ CALCMANML:
+/* Calculation Manager processing */
+ 
+/* Management Limits Calculation Manager */
+/* Check if the CALMANML job is running */
+ 
+             ALCOBJ     OBJ((GLMLCALLCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(EODMON))
+ 
+             DLCOBJ     OBJ((GLMLCALLCK *DTAARA *EXCL))
+ 
+/* Build submitted job name */
+ 
+             CHGVAR     VAR(&JOBNAME) VALUE('CALMANML')
+ 
+/**********  SBMJOB     CMD(CALL PGM(GLC005011) PARM(&PREFIX +       */                   /*BG4147*/
+/**********               'calcml')) JOB(&JOBNAME) +                 */                   /*BG4147*/
+/**********               JOBD(*LIBL/GPBATCH) JOBQ(GPNOMAX) +        */                   /*BG4147*/
+/**********               OUTQ(*JOBD) USER(&SBMUSER) LANGID(ENU) +   */                   /*BG4147*/
+/**********               CNTRYID(US) CCSID(37)                      */                   /*BG4147*/
+                                                                                          /*BG4147*/
+/**********  SBMJOB     CMD(CALL PGM(GLC005011) PARM(&PREFIX +       */                  /*BUG5996*/
+/**********               'calcml')) JOB(&JOBNAME) +                 */                  /*BUG5996*/
+/**********               JOBD(*LIBL/GPBATCH) JOBQ(GPNOMAX) +        */                  /*BUG5996*/
+/**********               OUTQ(*JOBD) USER(*JOBD) LANGID(ENU) +      */                  /*BUG5996*/
+/**********               CNTRYID(US) CCSID(37)                      */       /*BG4147*/ /*BUG5996*/
+                                                                                         /*BUG5996*/
+             SBMJOB     CMD(CALL PGM(GLC005011) PARM(&PREFIX +
+                          'calcml')) JOB(&JOBNAME) +
+                          JOBD(*LIBL/GPBATCH) JOBQ(GPNOMAX) +
+                          OUTQ(*JOBD) USER(*JOBD)                                        /*BUG5996*/
+ 
+ EODMON:
+/* End of Day Monitor processing */
+ 
+/* Check if the MLEODMON job is running */
+ 
+             ALCOBJ     OBJ((GLEODMNLCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(EMAILER))
+ 
+             DLCOBJ     OBJ((GLEODMNLCK *DTAARA *EXCL))
+ 
+/* Build submitted job name */
+ 
+/*********** CHGVAR     VAR(&JOBNAME) VALUE('MLEODMON')                                   /*242243*/
+             CHGVAR     VAR(&JOBNAME) VALUE('EODMONITOR')                                 /*242243*/
+ 
+/**********  SBMJOB     CMD(CALL PGM(GLC005011) PARM(&PREFIX +       */                   /*BG4147*/
+/**********               'eodmon')) JOB(&JOBNAME) +                 */                   /*BG4147*/
+/**********               JOBD(*LIBL/GPBATCH) JOBQ(GPNOMAX) +        */                   /*BG4147*/
+/**********               OUTQ(*JOBD) USER(&SBMUSER) LANGID(ENU) +   */                   /*BG4147*/
+/**********               CNTRYID(US) CCSID(37)                      */                   /*BG4147*/
+                                                                                          /*BG4147*/
+/**********  SBMJOB     CMD(CALL PGM(GLC005011) PARM(&PREFIX +       */                  /*BUG5996*/
+/**********               'eodmon')) JOB(&JOBNAME) +                 */                  /*BUG5996*/
+/**********               JOBD(*LIBL/GPBATCH) JOBQ(GPNOMAX) +        */                  /*BUG5996*/
+/**********               OUTQ(*JOBD) USER(*JOBD) LANGID(ENU) +      */                  /*BUG5996*/
+/**********               CNTRYID(US) CCSID(37)                      */       /*BG4147*/ /*BUG5996*/
+                                                                                         /*BUG5996*/
+             SBMJOB     CMD(CALL PGM(GLC005011) PARM(&PREFIX +
+                          'eodmon')) JOB(&JOBNAME) +
+                          JOBD(*LIBL/GPBATCH) JOBQ(GPNOMAX) +
+                          OUTQ(*JOBD) USER(*JOBD)                                        /*BUG5996*/
+ 
+ EMAILER:
+/* E-Mailer processing */
+ 
+/* Check if the MLEMAILER job is running */
+ 
+             ALCOBJ     OBJ((GLEMAILLCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))
+ 
+             DLCOBJ     OBJ((GLEMAILLCK *DTAARA *EXCL))
+ 
+/* Build submitted job name */
+ 
+             CHGVAR     VAR(&JOBNAME) VALUE('MLEMAILER')                                  /*242243*/
+             CHGVAR     VAR(&JOBNAME) VALUE('EMAILER')                                    /*242243*/
+ 
+/**********  SBMJOB     CMD(CALL PGM(GLC005011) PARM(&PREFIX +            */              /*BG4147*/
+/**********               'email ')) JOB(&JOBNAME) +                      */              /*BG4147*/
+/**********               JOBD(*LIBL/GPBATCH) JOBQ(GPNOMAX) +             */              /*BG4147*/
+/**********               OUTQ(*JOBD) USER(*JOBD) LANGID(ENU) +           */              /*BG4147*/
+/**********               CNTRYID(US) CCSID(37)                           */              /*BG4147*/
+/**********  SBMJOB     CMD(CALL PGM(GLC005011) PARM(&PREFIX 'email +     */             /*BUG5996*/
+/**********               ')) JOB(&JOBNAME) JOBD(*LIBL/GPBATCH) +         */             /*BUG5996*/
+/**********               JOBQ(GPNOMAX) OUTQ(*JOBD) USER(*JOBD) +         */             /*BUG5996*/
+/**********               LANGID(ENU) CNTRYID(US) CCSID(37)               */  /*BG4147*/ /*BUG5996*/
+                                                                                         /*BUG5996*/
+/**********  SBMJOB     CMD(CALL PGM(GLC005011) PARM(&PREFIX 'email +   */                /*CSC043*/
+/**********               ')) JOB(&JOBNAME) JOBD(*LIBL/GPBATCH) +       */                /*CSC043*/
+/**********               JOBQ(GPNOMAX) OUTQ(*JOBD) USER(*JOBD)         */        /*BUG5996 CSC043*/
+             SBMJOB     CMD(CALL PGM(GLC005011) PARM(&PREFIX 'email +
+                          ')) JOB(&JOBNAME) JOBD(*LIBL/GPBATCH) +
+                          JOBQ(GPNOMAX) OUTQ(*JOBD) USER(*JOBD) +
+                          INLLIBL(*JOBD)                                                 /*CSC043*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC005010 ended abnormally - see job +
+                          log') TOMSGQ(GPOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             ENDPGM

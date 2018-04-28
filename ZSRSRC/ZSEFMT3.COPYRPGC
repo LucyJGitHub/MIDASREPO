@@ -1,0 +1,106 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+     C********************************************************************
+     C*
+     C**   ZSEFMT SR. TO FORMAT RATE FIELD FOR OUTPUT.
+     C*
+     C           ZSEFMT    BEGSR                           *** ZSEFMT ***
+     C*
+     C                     MOVE *BLANK    ZRT13A 14        O/P FIELD
+     C                     MOVE ZPBAS     ZPBAS   1        I/P FIELD
+     C                     MOVE '0'       *IN94
+     C*
+     C                     MOVEA*BLANKS   OUT
+     C                     Z-ADD1         J       20
+     C*
+     C** CLEAR LEADING ZEROS
+     C*
+     C           J         DOWLE5
+     C           *IN94     IFEQ '0'
+     C           RAT,J     IFEQ 0
+     C                     MOVE ' '       OUT,J
+     C                     ELSE
+     C                     MOVE RAT,J     OUT,J
+     C                     SETON                     94
+     C                     END
+     C                     ELSE
+     C                     MOVE RAT,J     OUT,J
+     C                     END
+     C                     ADD  1         J
+     C                     END
+     C*
+     C** MOVE IN DECIMAL POINT
+     C*
+     C           J         IFEQ 6
+     C           *IN94     IFEQ '0'
+     C                     MOVE '0'       OUT,5
+     C                     END
+     C                     MOVE '.'       OUT,J
+     C                     END
+     C*
+     C** POSITION DECIMALS,DELETE TRAILING ZEROS
+     C*
+     C                     MOVE '0'       *IN94
+     C                     Z-ADD13        J
+     C                     Z-ADD14        K       20
+     C                     Z-ADD14        P       20
+     C           J         DOWGE6
+     C           *IN94     IFEQ '0'
+     C           RAT,J     IFEQ 0
+     C                     MOVE ' '       OUT,K
+     C                     Z-ADDK         P
+     C                     ELSE
+     C                     MOVE RAT,J     OUT,K
+     C                     SETON                     94
+     C                     END
+     C                     ELSE
+     C                     MOVE RAT,J     OUT,K
+     C                     END
+     C                     SUB  1         J
+     C                     SUB  1         K
+     C                     END
+     C*
+     C** REMOVE DECIMAL POINT IF THE PRICE DOESN'T HAVE A FRACTIONAL
+     C** PART.
+     C*
+     C           OUT,7     IFEQ ' '
+     C                     MOVE ' '       OUT,6
+     C                     Z-ADD6         P
+     C                     END
+     C*
+     C** IF PRICE BASIS A PERCENTAGE THEN ADD %
+     C*
+     C           ZPBAS     IFEQ 'P'
+     C           P         IFGT 14
+     C                     Z-ADD14        P
+     C                     END
+     C                     MOVE '%'       OUT,P
+     C                     END
+     C*
+     C** FINALLY MOVE  EDITED FIELD INTO O/P FIELD
+     C*
+     C                     MOVEAOUT       ZRT13A
+     C*
+     C           ZSEND     ENDSR                           * ZSEND ENDSR *
+     C**
+     C********************************************************************
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

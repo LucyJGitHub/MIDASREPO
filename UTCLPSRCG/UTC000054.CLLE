@@ -1,0 +1,75 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Compare file with no key')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000054 - Compare files with no key                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD021155 *CREATE   Date 13May13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD021155 - COB Restructure Phase 1 remnants                 */
+/*                - Additional compare for file with no key.         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE1 &LIB1 &FILE2 &LIB2 &MEMBER)
+ 
+             DCL        VAR(&FILE1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Delete temporary files if they already exist. */
+             DLTF       FILE(QTEMP/UT0000541)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UT0000542)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Override to correct member to pick up file definition. */
+             OVRDBF     FILE(UTFLDDPD) MBR(&MEMBER)
+/* Call program to populate files for comparison. */
+             CALL       PGM(UT000054) PARM(&FILE1 &LIB1 &FILE2 &LIB2)
+             DLTOVR     FILE(UTFLDDPD)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

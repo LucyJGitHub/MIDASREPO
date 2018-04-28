@@ -1,0 +1,934 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                      CCB022A
+/*STD *  RPGSQL                                                       *                      CCB022A
+/*EXI *  TEXT('Midas CB Select components to be run today')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing                         *
+     F*                                                               *
+     F*  CB0100 - SELECT COMPONENTS TO BE RUN TODAY                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. MD025682           Date 19Aug14               *
+      *  Prev Amend No. CSC057             Date 06Aug12               *
+      *                 CCB022A            Date 06Aug12               *
+      *                 CCB022             Date 06Aug12               *
+      *                 AR998384           Date 16Jul12               *
+      *                 CSC054             Date 23Feb12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+     F*                 CPB001             Date 02Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CPL002             Date 08MAR99               *
+     F*                 CTI001             Date 30JUL97               *
+     F*                 CAC001             Date 17JUN96               *
+     F*                 CRT002             DATE 01DEC95               *
+     F*                 S01408             DATE 14SEP95               *
+     F*                 S01486             DATE 06JUN94               *
+     F*                 S01498             DATE 06JUN94               *
+     F*                 S01522             DATE 25NOV94               *
+     F*                 S01495             DATE 01OCT94               *
+     F*                 S01493             DATE 19JUL94               *
+     F*                 S01488             DATE 15APR94               *
+     F*                 S01427             DATE 12JUL93               *
+     F*                 S01407             DATE 25FEB93               *
+     F*                 S01393             DATE 30OCT92               *
+     F*                 S10736             DATE 29OCT92               *
+     F*                 S01379             DATE 22SEP92               *
+     F*                 S01382             DATE 11AUG92               *
+     F*                 S01339             DATE 31JUL92               *
+     F*                 S01310             DATE 31JUL91               *
+     F*                 LN0635             DATE 16AUG90               *
+     F*                                                               *
+     F*****************************************************************
+      *                                                               *
+      *  MD025682 - Dump when in error                                *
+      *  CSC057 - COB Save Enhancement - Using SWA 1.0                *
+      *  CCB022A - CoB Restructure - COB File Manager                 *
+      *  CCB022 - CoB Restructure - COB File Manager.                 *
+      *  AR998384 - SCC000121 component restarted from halt status    *
+      *  CSC054 - Period End Adjustments                              *
+     F*  CPB001 - 'Private Banking' Module                            *
+      *  CPL002 - Midas - Plato Interface Enhancement.                *
+     F*  CTI001 - Midas / Trade Innovation Interface Phase 1          *
+     F*  CAC001 - Profit Centre Accounting Development:               *
+     F*           Introduction of new Analytical Accounting module    *
+      *  CRT002 - Retail Branch Access.                               *
+      *  S01408 - Hook CB0100CCP1 added.                              *
+     F*  S01486 - PORTFOLIO MANAGEMENT                                *
+     F*  S01498 - PORTFOLIO LENDING                                   *
+      *  S01522 - User Defined Correspondence                         *
+      *  S01495 - COB Enhancements. Recompiled due to changes in      *
+      *           PF/CBCOMSPD.                                        *
+      *  S01493 - MIDAS EXPORT DATA INTERFACE                         *   S01493
+      *  S01488 - COB RUN CONDITIONS ENHANCEMENTS                     *
+      *  S01427 - R10 CHIPS INCORPORATIONS                            *
+      *  S01407 - SWITCHABILITY ENHANCEMENTS                          *
+      *  S01393 - RISK MANAGEMENT                                     *
+      *  S10736 - MANAGEMENT ACCOUNTING                               *
+      *  S01379 - HISTORY AND AUDIT FACILITY                          *
+      *         - USE 'HF' FOR HISTORY AND AUDIT FACILITY             *
+      *  S01382 - OPTICAL DISK REPORTING                              *
+      *         - USE 'MF' FOR MICROFICHE, 'OD' FOR OPTICAL DISK      *
+      *  S01339 - SYNDICATED LOANS MADE REDUNDANT AT R10.             *
+      *           REMOVE MODULE IDs '#O', 'CL' AND '#H' FROM          *
+      *           ARRAY MODPOS.                                       *
+      *  S01310 - SWIFT RATIONALISATION                               *
+      *           CHANGE 'NETWORK MIDAS' (NM) TO 'MESSAGE             *
+      *           MANAGEMENT' (ME) - ARRAY MODPOS CHANGED             *
+      *           AND --- ADD CF (POSN 70)
+     F*  LN0635 - CHANGE FRA/IRS MODULE ID FORM '#L' TO 'IR'          *
+     F*                                                               *
+     F*****************************************************************
+     FSDMMODPDIT  F     128           EDISK
+     FCBMDCNL1IF  E           K        DISK
+     F***********CBCOMSPDUF  E                    DISK                    S01407
+     FCBCOMSJ0IF  E           K        DISK                               S01407
+     FCBCOMSL0UF  E           K        DISK                               S01407
+     F***SCLFMAU2IF  E           K        DISK                                        CCB022 CCB022A
+     FSDMMIDL0IF  E           K        DISK                                                   CCB022
+     F*
+      /SPACE 2
+     F********************************************************************
+     F*
+     F*     C  L   FUNCTION OF INDICATORS
+     F*
+     F*        LR  END OF FILE
+     F*****50******READ*FAIL/END*OF*FILE*CBCOMSPD*-*COMPONENTS FILE       S01407
+     F*    50      READ FAIL/END OF FILE CBCOMSJ0 - SAR RELATED COMPONENTSS01407
+     F*    51      CHAIN FAIL ON FILE CBCOMSL0 - COMPONENTS FILE          S01407
+     F*    60      CHAIN FAIL ON FILE CBMDCNL1 - EXTRA MODULES FILE
+     F*    70      MODULE FOUND IN MODPOS ARRAY
+     F*    80      MAIN MODULE FOUND IN MODPOS ARRAY
+     F*
+     F*    U7&U8   DATABASE ERROR
+     F*
+     F*                 ****************************
+     F*                  EXPLANATION OF MODULE CODES
+     F*                 ****************************
+     F*
+     F*    CODE   POSITION DESCRIPTION
+     F*
+     F*     MT      15     MIDAS/TELEX   MODULE
+     F*     #A      16     SWIFT FUNDS TRANSFER
+     F*     #B      17     SWIFT SECURITIES TRADING
+     F*     #C      18     SWIFT CUSTOMER LENDING
+     F******#D******19*****SWIFT SYNDICATED LOANS                         S01339
+     F*     #E      20     SWIFT STATEMENTS
+     F*     #F      21     SWIFT DEALING
+     F*     GL      22     STANDING DATA/GENERAL LEDGER
+     F*     DL      23     DEALING: FX
+     F******CL******24*****SYNDICATED LOANS                               S01339
+     F*     EM      25     EXPOSURE MANAGEMENT
+     F*     FM      26     FINANCIAL MODELLER
+     F*     ST      27     STATUTORY RETURNS
+     F*     LE      28     CUSTOMER LENDING
+     F*     RE      29     RETAIL BANKING
+     F*     MS      30     MIDAS/S.W.I.F.T. DIRECT LINK
+     F*     SE      31     SECURITIES TRADING
+     F*     RC      32     AUTO-RECONCILIATIONS
+     F*     #G      33     BOND DEALERS INTERFACE
+     F*     FD      34     DRS STANDING DATA
+     F*     CM      35     DRS CONTROL MODULE
+     F*     FX      36     DRS FOREIGN EXCHANGE
+     F*     MM      37     DRS MONEY MARKET
+     F*     AB      38     DRS ARBITRAGE MODULE
+     F*     FT      39     FUNDS TRANSFER
+     F*     CA      40     DRS COMMON APPLICATIONS
+     F*     FF      41     FUTURES & OPTIONS
+     F******#H******42*****MIDAS/TELEX SYNDICATED LOANS                   S01339
+     F*     #I      43     MIDAS/TELEX DEALING
+     F*     #J      44     MIDAS/TELEX GENERAL LEDGER
+     F*     #K      45     MIDAS/TELEX CUSTOMER LENDING
+     F******NM******46*****NETWORK MIDAS                                  S01310
+      *     ME      46     MESSAGE MANAGEMENT                             S01310
+     F******#L******47     FRA/IRS INDICATOR                              LN0635
+     F*     IR      47     FRA/IRS INDICATOR                              LN0635
+     F*     DL      48     DEALING: MM
+     F*     DL      49     INTERNAL CONTRACTS
+     F*     TM      50     TREASURY MANAGEMENT
+     F******#M      51     RISK MANAGEMENT                                S01393
+     F*     RM      51     RISK MANAGEMENT                                S01393
+     F*     TK      52     TESTKEY
+     F*     MQ      53     MIDAS/Q
+     F******MA******54     MICROFICHE                                     S01382
+     F*     MF      54     MICROFICHE                                     S01382
+     F*     IA      55     INTEREST ON ACCOUNTS MODULE
+     F*             56     WINDOW PROCESSING
+     F*             57     SAR PROCESSING
+     F*             58     FRENCH RETURNS
+     F*             59     LUX RETURNS
+     F*             60     DUTCH RETURNS
+     F*             61     GERMAN RETURNS
+     F*             62     BELGIAN RETURNS
+     F*             63     ITALIAN RETURNS
+     F*             64     SWIFT EXTERNAL INTERFACE
+     F*             65     PORTFOLIO MANAGEMENT
+     F*             66     CREDIT MANAGEMENT
+     F*             67     HEAD OFFICE REPORTING
+     F*             68     AVERAGE BALANCES
+     F*             69     MARGINS
+     F************* 70     CONFIRMATION MATCHING                          S01310
+     F*     CF      70     CONFIRMATION MATCHING                          S01310
+     F*             71     MIMIX
+     F*             72     REPORT CONTROL FACILITY
+     F*             73     AMPS INT
+     F*             74     SWISS RETURNS
+     F*             75     FIDUCIARY LOANS AND DEPOSITS
+     F*             76     LOMBARD CREDITS
+     F*             77     CANTONAL TAX
+     F*             78     STAMP DUTY
+     F*             79     USE DRS SHORTNAMES
+     F*             80     CHIPS DEALING
+     F*             81     CHIPS LENDING
+     F*             82     CHIPS OPENING BALANCE
+     F**************83     CHIPS                                    S5214 S01427
+     F*     CP      83     CHIPS                                          S01427
+     F*             84     CHIPS DIRECT LINK
+     F**************85     OPTICAL DISK                                   S01382
+     F*     OD      85     OPTICAL DISK                                   S01382
+     F*     MB      86     MULTIBRANCHING INDICATOR
+     F*     HF      94     HISTORY AND AUDIT FACILITY                     S01379
+     F*     MC      95     MANAGEMENT ACCOUNTING                          S10736
+     F*     ED      99     MIDAS EXPORT DATA INTERFACE                    S01493
+     F*     CG     101     User Defined Correspondence                    S01522
+     F*     PL     102     Midas Plato Interface Enhancement              CPL002
+     F*     TI     103     Midas/TI Interface                             CTI001
+     F*     PB     104     Private Banking                                CPB001
+     F**********87-128     RESERVED FOR LATER USE                         S01379
+     F* REMAINING POSITIONS RESERVED FOR LATER USE                        S01379
+     F*
+     F*****************************************************************
+     F/EJECT
+     E*
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E                    MODPOS 11 128  2
+     E** ARRAY SHOWING POSITIONS OF MODULES ON FILE SDMMODPD
+     E*
+     E********************FRQ        20  1                                S01488
+     E                    FRQ        99  1                                S01488
+     E** ARRAY TO SPLIT FRQLST INTO SINGLE FIELDS
+     E*
+     E                    MOD        10  2
+     E** ARRAY TO HOLD NAMES OF MODULE ID'S FROM CBMDCNL1
+     E*
+     E                    MOO        10  1
+     E** ARRAY TO HOLD VALUES SHOWING
+     E** WHETHER MODULE IS ON FROM CBMDCNL1
+     E*
+     E    SDMMODPD        SMOD  128 128  1
+     E** ARRAY TO DETERMINE WHETHER MODULE IS ON TAKEN FROM FILE MMODF
+     E*****************************************************************
+     E/EJECT
+     I*
+     IMODDS       DS
+     I                                        1  20 MOD
+     I                                        1   2 DJMD01
+     I                                        3   4 DJMD02
+     I                                        5   6 DJMD03
+     I                                        7   8 DJMD04
+     I                                        9  10 DJMD05
+     I                                       11  12 DJMD06
+     I                                       13  14 DJMD07
+     I                                       15  16 DJMD08
+     I                                       17  18 DJMD09
+     I                                       19  20 DJMD10
+     I** DATA STRUCTURE TO HOLD VALUES FOR ARRAY MOD
+     I*
+     IMOODS       DS
+     I                                        1  10 MOO
+     I                                        1   1 DJMP01
+     I                                        2   2 DJMP02
+     I                                        3   3 DJMP03
+     I                                        4   4 DJMP04
+     I                                        5   5 DJMP05
+     I                                        6   6 DJMP06
+     I                                        7   7 DJMP07
+     I                                        8   8 DJMP08
+     I                                        9   9 DJMP09
+     I                                       10  10 DJMP10
+     I** DATA STRUCTURE TO HOLD VALUES FOR ARRAY MO0
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**     LOCAL DATA AREA
+     I*
+     ISCSARD    E DSSCSARDPD                                              CRT002
+      *                                                                   CRT002
+     IDSFDY     E DSDSFDY                                                 CRT002
+      ** First DS for access programs, Short data structure               CRT002
+      *                                                                   CRT002
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I              'PEAIndicator'        C         PEAIND                                    CSC054
+     I              'SCC000121'           C         PEACOM                                    CSC054
+     I              'SaveWhileActiveDBIC' C         SWADBC                                    CSC057
+      ** COM Data Structure                                                                  CCB022A
+     ISCCOMJ    E DSSCCOMJK0                                                                 CCB022A
+     I*****************************************************************
+     I/EJECT
+     C*
+     C** LIST FOR PARAMETER PASSED TO PROGRAM
+     C           *ENTRY    PLIST
+     C*********************PARM           FRQLST 20                       S01488
+     C                     PARM           FRQLST 99                       S01488
+     C                     PARM           ERROR   1
+     C*
+     C** KEY TO CHAIN TO CBMDCNL1
+     C*
+     C           CKEY      KLIST
+     C                     KFLD           DHCOTT
+     C                     KFLD           DHCSEQ
+     C*                                                                   S01407
+     C** INITIALISE WORK FIELDS TO SAVE LAST VALUES OF COMPONENT NAME     S01407
+     C** AND COMPONENT SEQUENCE NUMBER                                    S01407
+     C*                                                                   S01407
+     C                     MOVEL*BLANKS   ##COTT 10                       S01407
+     C                     MOVEL*BLANKS   ##CSEQ  5                       S01407
+     C*
+     C** MOVE PARAMETER PASSED BY COBRUN INTO ARRAY FRQ
+     C                     MOVEAFRQLST    FRQ
+      *                                                                   CRT002
+      **  Check if SAR CRT001 and CRT002 are on.                          CRT002
+      *                                                                   CRT002
+     C                     CALL 'AOSARDR0'                                CRT002
+     C                     PARM *BLANKS   @RTCD   7                       CRT002
+     C                     PARM '*VERIFY' @OPTN   7                       CRT002
+     C                     PARM 'CRT001'  @SARD   6                       CRT002
+     C           SCSARD    PARM SCSARD    DSFDY                           CRT002
+      *                                                                   CRT002
+     C           @RTCD     IFEQ *BLANKS                                   CRT002
+     C                     MOVE 'Y'       CRT001  1                       CRT002
+     C                     ELSE                                           CRT002
+     C                     MOVE 'N'       CRT001                          CRT002
+     C                     END                                            CRT002
+      *                                                                   CRT002
+     C                     CALL 'AOSARDR0'                                CRT002
+     C                     PARM *BLANKS   @RTCD                           CRT002
+     C                     PARM '*VERIFY' @OPTN                           CRT002
+     C                     PARM 'CRT002'  @SARD                           CRT002
+     C           SCSARD    PARM SCSARD    DSFDY                           CRT002
+      *                                                                   CRT002
+     C           @RTCD     IFEQ *BLANKS                                   CRT002
+     C                     MOVE 'Y'       CRT002  1                       CRT002
+     C                     ELSE                                           CRT002
+     C                     MOVE 'N'       CRT002                          CRT002
+     C                     END                                            CRT002
+      *                                                                                       CSC054
+      ** Check if CSC054 Period End Adjustments is Switched On                                CSC054
+      *                                                                                       CSC054
+     C                     CALL 'AOSARDR0'                                                    CSC054
+     C                     PARM *BLANKS   @RTCD                                               CSC054
+     C                     PARM '*VERIFY' @OPTN                                               CSC054
+     C                     PARM 'CSC054'  @SARD                                               CSC054
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC054
+      *                                                                                       CSC054
+     C           @RTCD     IFEQ *BLANKS                                                       CSC054
+     C                     MOVE 'Y'       CSC054  1                                           CSC054
+     C                     ELSE                                                               CSC054
+     C                     MOVE 'N'       CSC054                                              CSC054
+     C                     END                                                                CSC054
+      *                                                                                       CSC054
+      ** Check PEA Indicator                                                                  CSC054
+      *                                                                                       CSC054
+     C                     MOVE *BLANK    WPEA    1                                           CSC054
+     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C                     CALL 'AOSVALR0'                                                    CSC054
+     C                     PARM           @RTCD                                               CSC054
+     C                     PARM PEAIND    SVALK1 20                                           CSC054
+     C                     PARM           SVAL1 200                                           CSC054
+     C                     PARM           SVALK2 20                                           CSC054
+     C                     PARM           SVAL2 200                                           CSC054
+     C                     PARM           SVALK3 20                                           CSC054
+     C                     PARM           SVAL3 200                                           CSC054
+     C                     PARM           SVALK4 20                                           CSC054
+     C                     PARM           SVAL4 200                                           CSC054
+     C                     PARM           SVALK5 20                                           CSC054
+     C                     PARM           SVAL5 200                                           CSC054
+     C                     PARM           SVALK6 20                                           CSC054
+     C                     PARM           SVAL6 200                                           CSC054
+     C                     PARM           SVALK7 20                                           CSC054
+     C                     PARM           SVAL7 200                                           CSC054
+     C                     PARM           SVALK8 20                                           CSC054
+     C                     PARM           SVAL8 200                                           CSC054
+     C                     PARM           SVALK9 20                                           CSC054
+     C                     PARM           SVAL9 200                                           CSC054
+     C                     PARM           SVALK0 20                                           CSC054
+     C                     PARM           SVAL10200                                           CSC054
+     C           @RTCD     IFEQ *BLANKS                                                       CSC054
+     C                     MOVELSVAL1     WPEA                                                CSC054
+     C                     ENDIF                                                              CSC054
+     C                     ENDIF                                                              CSC054
+     C*
+     C***READ*COMPONENTS*FILE*-*CBCOMSPD                                  S01407
+     C** READ SAR RELATED COMPONENTS FILE - CBCOMSJ0                      S01407
+     C                     READ CBCMPND0                 50
+     C*
+     C           *IN50     IFEQ '1'
+     C                     MOVE 'Y'       ERROR   1
+     C*********************MOVE 'CMPPD'   DBFILE                          S01407
+     C                     MOVE 'CMPJ0'   DBFILE                          S01407
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'CB0100'  DBPGM            ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** DO WHILE RECORDS ON COMPONENTS FILE
+     C*
+     C           *IN50     DOWEQ'0'
+     C*                                                                   S01407
+     C** BYPASS THE PROCESSING IF THIS RECORD HAS THE SAME COMPONENT NAME/S01407
+     C** COMPONENT SEQUENCE NUMBER COMBINATION TO THE PREVIOUS RECORD READS01407
+     C*                                                                   S01407
+     C           DHCOTT    IFEQ ##COTT                                    S01407
+     C           DHCSEQ    ANDEQ##CSEQ                                    S01407
+     C                     GOTO BYPASS                                    S01407
+     C                     END                                            S01407
+     C*                                                                   S01407
+     C** ONLY PROCESS IF THE COMPONENT
+     C** READ IS NOT AN ON REQUEST REPORT
+     C*
+     C           DHCFRQ    IFNE '00'
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,CB0100CCP1                                           S01408
+     C*                                                                   S01408
+     C*
+     C** IF EXTRA MODULES INDICATOR (DHKEST) = N
+     C** SET UP CONDITIONS MET INDICATOR TO 'Y'
+     C** ELSE
+     C** IF DHKEST = Y AMEND CONDITIONS MET FIELD TO 'N'
+     C** AND CHECK IF REQUIRED TODAY
+     C*
+     C           DHCEMI    IFEQ 'N'
+     C                     MOVE 'Y'       CONMET  1
+     C*
+     C                     ELSE
+     C                     MOVE 'N'       CONMET
+     C*
+     C** CHAIN TO EXTRA MODULES FILE - CBMDCNL1
+     C*
+     C           CKEY      CHAIN@DJREGN              60
+     C*
+     C           *IN60     IFEQ '1'
+     C                     MOVE 'Y'       ERROR
+     C                     MOVE 'MDCL1'   DBFILE
+     C                     MOVELDHCOTT    KEYERR 15
+     C                     MOVE DHCSEQ    KEYERR
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELKEYERR    DBKEY
+     C                     MOVEL'CB0100'  DBPGM            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** DO WHILE RECORDS ON EXTRA MODULES FILE
+     C           *IN60     DOWEQ'0'
+     C           CONMET    ANDEQ'N'
+     C*
+     C** PROCESSING TO CHECK IF MODULE IS ON
+     C*
+     C** SET UP WORK FIELDS
+     C                     MOVE 'Y'       MATCH   1
+     C                     Z-ADD1         COUNT   20
+     C*
+     C           COUNT     DOWLE10
+     C           MATCH     ANDEQ'Y'
+     C*
+     C** RESET COUNT FIELD FOR COUNT OF MODULE ID'S ARRAY
+     C*
+     C******************** Z-ADD1         X       20                      S01522
+     C                     Z-ADD1         X       30                      S01522
+     C*
+     C** PROCESS IF MODULE ID EXISTS
+     C*
+     C           MOD,COUNT IFNE '  '
+     C*
+     C** CHECK IF MODULE ID IS VALID AND ON, EXCEPT SD
+     C** WHICH IS ASSUMED TO EXIST AND BE ON,
+     C** UNLESS SD MODULE IS REQUIRED TO BE OFF
+     C** WHICH WILL CAUSE A DATABASE ERROR
+     C*
+     C           MOD,COUNT IFNE 'SD'
+     C           MOD,COUNT OREQ 'SD'
+     C           MOO,COUNT ANDEQ'N'
+     C*
+     C           MOD,COUNT LOKUPMODPOS,X                 70
+     C*
+     C           *IN70     IFEQ '0'
+     C                     MOVE 'Y'       ERROR
+     C                     MOVE 'MDCL1'   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE MOD,COUNT DBKEY
+     C                     MOVEL'CB0100'  DBPGM            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** DETERMINE WHETHER MODULE EXISTS AND IS ON IN
+     C** SYSTEM AND SET UP MATCH FIELD AS REQUIRED
+     C*
+     C           MOO,COUNT IFEQ 'Y'
+     C           SMOD,X    ANDEQ'N'
+     C           MOO,COUNT OREQ 'N'
+     C           SMOD,X    ANDEQ'Y'
+     C*
+     C                     MOVE 'N'       MATCH
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           COUNT     ADD  1         COUNT
+     C                     END
+     C*
+     C** IF MATCH = 'Y' SET UP CONDITIONS MET FIELD
+     C*
+     C           MATCH     IFEQ 'Y'
+     C                     MOVE 'Y'       CONMET
+     C*
+     C                     ELSE
+     C*
+     C** READ NEXT RECORD FROM EXTRA MODULES FILE - CBMDCNL1
+     C*
+     C           CKEY      READE@DJREGN                  60
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** PROCESSING TO CHECK MODULE ID
+     C*
+     C** SET UP WORK FIELDS
+     C                     MOVE 'Y'       MATCH
+     C                     Z-ADD1         X
+     C*
+     C** DETERMINE WHETHER MAIN MODULE EXISTS - NOT CHECKED
+     C** FOR SD MODULE THIS IS ASSUMED TO EXIST IN ALL SYSTEMS
+     C*
+     C           DHCMOD    IFNE 'SD'
+     C*
+     C           DHCMOD    LOKUPMODPOS,X                 80
+     C*
+     C           *IN80     IFEQ '0'
+     C                     MOVE 'Y'       ERROR   1
+     C                     MOVE 'CMPPD'   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE DHCMOD    DBKEY
+     C                     MOVEL'CB0100'  DBPGM            ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** CHECK IF MODULE IS OFF IN SYSTEM
+     C*
+     C           SMOD,X    IFEQ 'N'
+     C                     MOVE 'N'       MATCH
+     C                     END
+     C*
+     C                     END
+     C*
+     C** UPDATE COMPONENTS FILE IF REQUIRED TODAY
+     C*
+     C** SET UP ARRAY INDEX AS NUMERIC FIELD
+     C*
+     C                     MOVE DHCFRQ    NUM     20
+     C*
+     C           FRQ,NUM   IFEQ 'Y'
+     C           MATCH     ANDEQ'Y'
+     C           CONMET    ANDEQ'Y'
+     C*********************MOVE 'Y'       DHCRQD                          S01407
+      *                                                                   S01407
+      ** UPDATE FILE VIA LF/CBCOMSL0                                      S01407
+      *                                                                   S01407
+     C*********************EXCPTRCOMU                                     S01407
+     C           CKEY      CHAIN@DHREGG              51                   S01407
+     C           *IN51     IFEQ '1'                                       S01407
+     C                     MOVE 'Y'       ERROR   1                       S01407
+     C                     MOVE 'CMPL0'   DBFILE                          S01407
+     C                     MOVE *BLANKS   DBKEY                           S01407
+     C                     MOVELDHCOTT    KEYERR 15                       S01407
+     C                     MOVE DHCSEQ    KEYERR                          S01407
+     C                     MOVELKEYERR    DBKEY                           S01407
+     C                     MOVEL'CB0100'  DBPGM            ***************S01407
+     C                     Z-ADD5         DBASE            * DB ERROR 05 *S01407
+     C                     EXSR DBERR                      ***************S01407
+     C                     ELSE                                           S01407
+      *                                                                   CRT002
+     C           CRT001    IFEQ 'Y'                                       CRT002
+     C           CRT002    ANDEQ'Y'                                       CRT002
+     C           ACSARN    ANDEQ'CRT002'                                  CRT002
+     C                     MOVE 'N'       DHCRQD                          CRT002
+     C                     ELSE                                           CRT002
+     C                     MOVE 'Y'       DHCRQD                          S01407
+     C                     END                                            CRT002
+      *                                                                   CRT002
+     C           CSC054    IFEQ 'Y'                                                           CSC054
+     C           WPEA      ANDEQ'Y'                                                           CSC054
+     C           DHCRQD    ANDEQ'Y'                                                           CSC054
+     C           DHCOTT    ANDEQPEACOM                                                        CSC054
+     C                     MOVE 'Y'       DHCHTB                                              CSC054
+     C                     MOVE 'Y'       DHCHTA                                            AR998384
+     C                     ENDIF                                                              CSC054
+      *                                                                                       CSC054
+     C                     UPDAT@DHREGG                                   S01407
+     C                     END                                            S01407
+      *                                                                   S01407
+     C                     END
+     C*
+     C                     END
+     C*                                                                   S01407
+     C** SAVE COMPONENT NAME/COMPONENT SEQUENCE NUMBER FOR LAST REC READ  S01407
+     C*                                                                   S01407
+     C           BYPASS    TAG                                            S01407
+     C                     MOVEL*BLANKS   ##COTT                          S01407
+     C                     MOVEL*BLANKS   ##CSEQ                          S01407
+     C                     MOVELDHCOTT    ##COTT                          S01407
+     C                     MOVELDHCSEQ    ##CSEQ                          S01407
+     C*
+     C***READ*NEXT*RECORD*FROM*COMPONENTS*FILE*-*CBCOMSPD                 S01407
+     C** READ NEXT RECORD FROM SAR RELATED COMPONENTS FILE - CBCOMSJ0     S01407
+     C*
+     C                     READ CBCMPND0                 50
+     C                     END
+     C*
+      ** Check SWA Indicator for DBIC                                                         CSC057
+      *                                                                                       CSC057
+     C                     MOVE *BLANK    DBCIND  1                                           CSC057
+      *                                                                                       CSC057
+     C                     CALL 'AOSVALR0'                                                    CSC057
+     C                     PARM           @RTCD                                               CSC057
+     C                     PARM SWADBC    SVALK1 20                                           CSC057
+     C                     PARM           SVAL1 200                                           CSC057
+     C                     PARM           SVALK2 20                                           CSC057
+     C                     PARM           SVAL2 200                                           CSC057
+     C                     PARM           SVALK3 20                                           CSC057
+     C                     PARM           SVAL3 200                                           CSC057
+     C                     PARM           SVALK4 20                                           CSC057
+     C                     PARM           SVAL4 200                                           CSC057
+     C                     PARM           SVALK5 20                                           CSC057
+     C                     PARM           SVAL5 200                                           CSC057
+     C                     PARM           SVALK6 20                                           CSC057
+     C                     PARM           SVAL6 200                                           CSC057
+     C                     PARM           SVALK7 20                                           CSC057
+     C                     PARM           SVAL7 200                                           CSC057
+     C                     PARM           SVALK8 20                                           CSC057
+     C                     PARM           SVAL8 200                                           CSC057
+     C                     PARM           SVALK9 20                                           CSC057
+     C                     PARM           SVAL9 200                                           CSC057
+     C                     PARM           SVALK0 20                                           CSC057
+     C                     PARM           SVAL10200                                           CSC057
+     C           @RTCD     IFEQ *BLANKS                                                       CSC057
+     C                     MOVELSVAL1     DBCIND                                              CSC057
+     C                     ENDIF                                                              CSC057
+      *                                                                                       CSC057
+     C           DBCIND    IFEQ 'Y'                                                           CSC057
+      *                                                                                       CSC057
+     C/EXEC SQL                                                                               CSC057
+     C+ update CBCOMSL0 set DHCRQD = 'Y', DHCEMI = 'S'                                        CSC057
+     C+ where DHCOTT = 'SCC001711'                                                            CSC057
+     C/END-EXEC                                                                               CSC057
+      *                                                                                       CSC057
+     C/EXEC SQL                                                                               CSC057
+     C+ update CBCOMSL0 set DHCRQD = 'N'                                                      CSC057
+     C+ where DHCOTT = 'SCC1711'                                                              CSC057
+     C/END-EXEC                                                                               CSC057
+      *                                                                                       CSC057
+     C                     ELSE                                                               CSC057
+      *                                                                                       CSC057
+     C/EXEC SQL                                                                               CSC057
+     C+ update CBCOMSL0 set DHCRQD = 'N'                                                      CSC057
+     C+ where DHCOTT = 'SCC001711'                                                            CSC057
+     C/END-EXEC                                                                               CSC057
+      *                                                                                       CSC057
+     C/EXEC SQL                                                                               CSC057
+     C+ update CBCOMSL0 set DHCRQD = 'Y'                                                      CSC057
+     C+ where DHCOTT = 'SCC1711'                                                              CSC057
+     C/END-EXEC                                                                               CSC057
+      *                                                                                       CSC057
+     C                     ENDIF                                                              CSC057
+      *                                                                                       CCB022
+      ***Add*Logical*File*Manager*processing.*Read*through*SCLFMAU2.***               CCB022 CCB022A
+      ***Only*process*FMDEL*=*'C'*and*FMDEL*=*'N'**********************               CCB022 CCB022A
+      ** Add Logical File Manager processing. Read through SCCOMJK0.                         CCB022A
+      ** Process records with FMDEL = 'N' and FMTYPE = 'C'.                                  CCB022A
+      *                                                                                       CCB022
+     C**********           READ SCLFMAU2                 51                           CCB022 CCB022A
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ declare ACursor insensitive scroll cursor for                                        CCB022A
+     C+ select * from SCCOMJK0                                                               CCB022A
+     C+ where FMTYPE = 'C'                                                                   CCB022A
+     C+ and FMDEL = 'N'                                                                      CCB022A
+     C+ order by FMTYPE, FMNAME, FMCSEQ, FMMBR, FMCCSQ                                       CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ open ACursor                                                                         CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ fetch next from ACursor into :SCCOMJ                                                 CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                      CCB022A
+     C                     MOVELFMNAME    WPRVFL 10                                           CCB022
+     C                     MOVELFMCSEQ    WPRVSQ  5                                           CCB022
+     C                     MOVE 'N'       WIGNOR  1                                           CCB022
+      *                                                                                       CCB022
+     C********** *IN51     DOWEQ*OFF                                                  CCB022 CCB022A
+     C           SQLCOD    DOWEQ0                                                            CCB022A
+      *                                                                                       CCB022
+      ** Process Complex Conditions.                                                          CCB022
+      *                                                                                       CCB022
+     C           WPRVFL    IFNE FMNAME                                                        CCB022
+     C           WPRVSQ    ORNE FMCSEQ                                                        CCB022
+     C           WAND      IFEQ '0'                                                           CCB022
+     C                     EXSR SRNCOB                                                        CCB022
+     C                     ENDIF                                                              CCB022
+     C                     MOVE 'N'       WIGNOR                                              CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                       CCB022
+      ** If WIGNOR = 'Y', condition was already satisfied.                                    CCB022
+      ** no need to process other OR's.                                                       CCB022
+      *                                                                                       CCB022
+     C           WIGNOR    IFEQ 'N'                                                           CCB022
+      *                                                                                       CCB022
+      ** Check the status of Switchable Feature or Module                                     CCB022
+      ** against FMCOND if it is satisfied.                                                   CCB022
+      *                                                                                       CCB022
+     C                     EXSR SRCHKS                                                        CCB022
+      *                                                                                       CCB022
+     C           FMCPLX    IFEQ *BLANKS                                                       CCB022
+     C                     MOVE WSTAT     WAND    1                                           CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                       CCB022
+     C           FMCPLX    IFEQ '*AND'                                                        CCB022
+     C           WAND      IFEQ '1'                                                           CCB022
+     C           WSTAT     ANDEQ'1'                                                           CCB022
+     C                     MOVE '1'       WAND                                                CCB022
+     C                     ELSE                                                               CCB022
+     C                     MOVE '0'       WAND                                                CCB022
+     C                     ENDIF                                                              CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                       CCB022
+     C           FMCPLX    IFEQ '*OR'                                                         CCB022
+     C           WAND      IFEQ '1'                                                           CCB022
+     C                     MOVE 'Y'       WIGNOR                                              CCB022
+     C                     ELSE                                                               CCB022
+     C                     MOVE WSTAT     WAND                                                CCB022
+     C                     ENDIF                                                              CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                       CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                       CCB022
+     C                     MOVELFMNAME    WPRVFL                                              CCB022
+     C                     MOVELFMCSEQ    WPRVSQ                                              CCB022
+     C**********           READ SCLFMAU2                 51                           CCB022 CCB022A
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ fetch next from ACursor into :SCCOMJ                                                 CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                      CCB022A
+     C                     ENDDO                                                              CCB022
+      *                                                                                       CCB022
+      ** Evaluate last set of Complex Condition.                                              CCB022
+      *                                                                                       CCB022
+     C           WAND      IFEQ '0'                                                           CCB022
+     C                     EXSR SRNCOB                                                        CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ close ACursor                                                                        CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                       CCB022
+      ** Process COM Exclusions. Set COM Components with FMTYPE = 'X',                       CCB022A
+      ** FMDEL = 'N' and blank FMMBR (no section name) not to run                            CCB022A
+      ** today.                                                                              CCB022A
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ declare BCursor insensitive scroll cursor for                                        CCB022A
+     C+ select * from SCCOMJK0                                                               CCB022A
+     C+ where FMTYPE = 'X'                                                                   CCB022A
+     C+ and FMMBR = ' '                                                                      CCB022A
+     C+ and FMDEL = 'N'                                                                      CCB022A
+     C+ order by FMTYPE, FMNAME, FMCSEQ, FMMBR, FMCCSQ                                       CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ open BCursor                                                                         CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ fetch next from BCursor into :SCCOMJ                                                 CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                      CCB022A
+     C           SQLCOD    DOWEQ0                                                            CCB022A
+     C           FMCSEQ    IFEQ '*ALL'                                                       CCB022A
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ update CBCOMSPD set DHCRQD = 'N' where DHCOTT = :FMNAME                              CCB022A
+     C+ with nc                                                                              CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                      CCB022A
+     C                     ELSE                                                              CCB022A
+     C                     MOVELFMNAME    WPRVFL                                             CCB022A
+     C                     MOVELFMCSEQ    WPRVSQ                                             CCB022A
+     C                     EXSR SRNCOB                                                       CCB022A
+     C                     ENDIF                                                             CCB022A
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ fetch next from BCursor into :SCCOMJ                                                 CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                      CCB022A
+     C                     ENDDO                                                             CCB022A
+      *                                                                                      CCB022A
+     C/EXEC SQL                                                                              CCB022A
+     C+ close BCursor                                                                        CCB022A
+     C/END-EXEC                                                                              CCB022A
+      *                                                                                      CCB022A
+     C                     SETON                     LR
+      /EJECT
+     C*************************************************************
+     C*
+      ** S/R DBERR TO PERFORM DATABASE ERROR EXIT FROM PROGRAM
+      *
+      ** CALLED FROM MAIN CYCLE
+      *
+      ** CALLS NO OTHER SUBROUTINES
+     C*
+     C*************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** SETON INDICATORS U7 U8 LR
+     C** AND RETURN TO CALLING PROGRAM
+     C*
+     C                     DUMP                                                             MD025682
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      *****************************************************************                       CCB022
+      *                                                               *                       CCB022
+      *  SRNCOB - This subroutine removes the COB component from      *                       CCB022
+      *           today's COB processing.                             *                       CCB022
+      *  Calls: None                                                  *                       CCB022
+      *  Called by: Main Processing                                   *                       CCB022
+      *                                                               *                       CCB022
+      *****************************************************************                       CCB022
+     C           SRNCOB    BEGSR                                                              CCB022
+     C                     MOVE *BLANKS   DHCOTT                                              CCB022
+     C                     MOVE *BLANKS   DHCSEQ                                              CCB022
+     C                     MOVE WPRVFL    DHCOTT                                              CCB022
+     C                     MOVE WPRVSQ    DHCSEQ                                              CCB022
+      *                                                                                       CCB022
+     C           CKEY      CHAIN@DHREGG              60                                       CCB022
+     C           *IN60     IFEQ '1'                                                           CCB022
+     C                     MOVE 'Y'       ERROR   1                                           CCB022
+     C                     MOVE 'CMPL0'   DBFILE                                              CCB022
+     C                     MOVE *BLANKS   DBKEY                                               CCB022
+     C                     MOVELDHCOTT    KEYERR 15                                           CCB022
+     C                     MOVE DHCSEQ    KEYERR                                              CCB022
+     C                     MOVELKEYERR    DBKEY                                               CCB022
+     C                     MOVEL'CB0100'  DBPGM                                               CCB022
+      *                                                                                       CCB022
+      ** DBERR 06                                                                             CCB022
+      *                                                                                       CCB022
+     C                     Z-ADD6         DBASE                                               CCB022
+     C                     EXSR DBERR                                                         CCB022
+     C                     ELSE                                                               CCB022
+     C                     MOVE 'N'       DHCRQD                                              CCB022
+     C                     UPDAT@DHREGG                                                       CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                       CCB022
+     C                     ENDSR                                                              CCB022
+      *****************************************************************                       CCB022
+      *                                                               *                       CCB022
+      *  SRCHKS - Check the status of a Switchable Feature or Module  *                       CCB022
+      *                                                               *                       CCB022
+      *****************************************************************                       CCB022
+     C           SRCHKS    BEGSR                                                              CCB022
+      *                                                                                       CCB022
+      ** If Switchable Feature is specified.                                                  CCB022
+      *                                                                                       CCB022
+     C           FMFEAT    IFNE *BLANKS                                                       CCB022
+      *                                                                                       CCB022
+     C                     CALL 'AOSARDR0'                                                    CCB022
+     C                     PARM *BLANKS   PRTCD   7                                           CCB022
+     C                     PARM '*VERIFY' POPTN   7                                           CCB022
+     C                     PARM FMFEAT    PSARD   6                                           CCB022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CCB022
+      *                                                                                       CCB022
+     C                     MOVE '0'       WSTAT   1                                           CCB022
+     C           PRTCD     IFEQ *BLANKS                                                       CCB022
+     C           FMCOND    ANDEQ'*ON'                                                         CCB022
+     C                     MOVE '1'       WSTAT                                               CCB022
+     C                     ENDIF                                                              CCB022
+     C           PRTCD     IFNE *BLANKS                                                       CCB022
+     C           FMCOND    ANDEQ'*OFF'                                                        CCB022
+     C                     MOVE '1'       WSTAT                                               CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                       CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                       CCB022
+      ** If Module name is specified.                                                         CCB022
+      *                                                                                       CCB022
+     C           FMMOD     IFNE *BLANKS                                                       CCB022
+      *                                                                                       CCB022
+     C           FMMOD     CHAINSDMMIDL0             60                                       CCB022
+      *                                                                                       CCB022
+     C                     MOVE '0'       WSTAT                                               CCB022
+     C           FOMMIN    IFEQ 'Y'                                                           CCB022
+     C           FMCOND    ANDEQ'*ON'                                                         CCB022
+     C                     MOVE '1'       WSTAT                                               CCB022
+     C                     ENDIF                                                              CCB022
+     C           FOMMIN    IFEQ 'N'                                                           CCB022
+     C           FMCOND    ANDEQ'*OFF'                                                        CCB022
+     C                     MOVE '1'       WSTAT                                               CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                       CCB022
+     C                     ENDIF                                                              CCB022
+      *                                                                                       CCB022
+     C                     ENDSR                                                              CCB022
+      *****************************************************************                       CCB022
+      /EJECT
+     O********************************************************************
+     O************                                                        S01407
+     O*****UPDATE*REQUIRED TODAY FIELD ON COMPONENTS FILE                 S01407
+     O************                                                        S01407
+     O************CBCMPND0E                RCOMU                          S01407
+     O************                                                        S01407
+     O************                         DHCRQD                         S01407
+     O********************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  MODPOS  -  MODULE IDS ACCORDING TO SDMMODPD SEE COMMENT IN F-SPECS
+ 
+      MT#A#B#C  #E#FGL                                                    S01339
+DL  EMFMSTLEREMSSERC#G                                                    S01339
+FDCMFXMMABFTCAFF  #I#J                                                    S01339
+#KMEIRDLDLTMRMTKMQMFIA                                  LN0635S01310S01382S01393
+                  PM                                                      S01486
+      CF          LB                                                S01310S01498
+          CP  OD                                                    S01382S01427
+          HFMC      ED                                        S01379S10736S01493
+AACGPLTIPB                                        CTI001S01522CAC001CPL002CPB001
+ 
+ 

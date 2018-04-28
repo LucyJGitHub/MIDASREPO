@@ -1,0 +1,90 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas MX Daily Housekeeping - RE purging update')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Meridian Export Module                              */
+/*                                                                   */
+/*       MXC004806 - Daily Housekeeping - RE purging update          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1089839          Date 19Feb13              */
+/*       Prev Amend No. CMX014  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1089839 - COBOP and 2.1 source clashes                    */
+/*       CMX014 - COB Restructure - MX COB Optimisation Phase 1      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&COB) TYPE(*CHAR) LEN(1) VALUE(Y)
+             DCL        VAR(&SOM) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&CURSOM) TYPE(*CHAR) LEN(5)
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('MXC004806 - Midas MX Daily Housekeeping +
+                          - RE purging and update') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CALL       PGM(MXEXCTUPD) PARM(&RTCD &ERMS &COB &SOM)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* If start of month, purge saved data files */
+/* Drop all records with an LCD < previous start of month date */
+/* This means 2 months of data is held on these files */
+ 
+             IF         COND(&SOM *EQ 'Y') THEN(DO)
+ 
+             RTVDTAARA  DTAARA(MXEXPCTL (06 5)) RTNVAR(&CURSOM)
+ 
+/**********  RUNSQL     SQL('delete from MXSRECEPD where LCD <' +  */                  /*AR1089839*/
+/**********                *CAT &CURSOM) COMMIT(*NONE)             */                  /*AR1089839*/
+             SCRUNSQL   SQL('delete from MXSRECEPD where LCD <' +
+                           *CAT &CURSOM)                                               /*AR1089839*/
+ 
+/**********  RUNSQL     SQL('delete from MXSRETRPD where TTCSOM <' +*/                 /*AR1089839*/
+/**********                *CAT &CURSOM) COMMIT(*NONE)             */                  /*AR1089839*/
+             SCRUNSQL   SQL('delete from MXSRETRPD where TTCSOM <' +
+                           *CAT &CURSOM)                                               /*AR1089839*/
+ 
+/**********  RUNSQL     SQL('delete from MXSRETCPD where TTCSOM <' +*/                 /*AR1089839*/
+/**********                *CAT &CURSOM) COMMIT(*NONE)             */                  /*AR1089839*/
+             SCRUNSQL   SQL('delete from MXSRETCPD where TTCSOM <' +
+                           *CAT &CURSOM)                                               /*AR1089839*/
+             ENDDO
+ 
+/* Do saved data updates */
+ 
+             OVRDBF     FILE(TTRANPD) MBR(*ALL) OVRSCOPE(*JOB)
+             OVRDBF     FILE(TTCHGPD) MBR(*ALL) OVRSCOPE(*JOB)
+             CALL       PGM(MXSDUPDRE) PARM(&RTCD &ERMS &SOM)
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MXC004806 ended abnormally - see job +
+                            log') TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program MXC004806 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

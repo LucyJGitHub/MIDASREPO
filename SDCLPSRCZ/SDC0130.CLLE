@@ -1,0 +1,86 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Addnl cust details rpt control CL')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC0130 - Additional Customer Details Rpt Control           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. CER047  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER047 - German Features LF037-00 Reporting §24c KWG        */
+/*                                                                   */
+/*********************************************************************/
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARM)
+/*                                                                   */
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                             Misys International Banking Systems Ltd. +
+                             2008')
+/*                                                                   */
+             CHGJOB     SWS(XXXXXX00)
+/*                                                                   */
+/* Clear extract file                                                */
+/*                                                                   */
+             CLRPFM     FILE(SDCEXTPD)
+/*                                                                   */
+/* Produce extract depending on selection criteria                   */
+/*                                                                   */
+             CALL       PGM(SD0130) PARM(&RPARM)
+/*                                                                   */
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+/*                                                                   */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                             TOMSGQ(MOPERQ)
+             GOTO END
+             ENDDO
+/*                                                                   */
+             IF         COND(%SWITCH(XXXXXX10)) THEN(DO)
+                SNDPGMMSG  MSG('SD0131 - Additional customer details +
+                             report ended abnormally') TOMSGQ(MOPERQ)
+             GOTO END
+             ENDDO
+/*                                                                   */
+/* Select logical view depending on sort sequence                    */
+/*                                                                   */
+             IF         COND(%SST(&RPARM 17 1) *EQ 'Y') THEN(OVRDBF +
+                          FILE(SDCEXTL1) TOFILE(SDCEXTL2))
+             IF         COND(%SST(&RPARM 18 1) *EQ 'Y') THEN(OVRDBF +
+                          FILE(SDCEXTL1) TOFILE(SDCEXTL3))
+/*                                                                   */
+/* Produce Report                                                    */
+/*                                                                   */
+             CALL       PGM(SD0131) PARM(&RSEQ)
+/*                                                                   */
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+/*                                                                   */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                             TOMSGQ(MOPERQ)
+             GOTO END
+             ENDDO
+/*                                                                   */
+             IF         COND(%SWITCH(XXXXXX10)) THEN(DO)
+                SNDPGMMSG  MSG('SD0131 - Additional customer details +
+                             report ended abnormally') TOMSGQ(MOPERQ)
+             GOTO END
+             ENDDO
+/*                                                                   */
+END:    CHGVAR &CPYFLD '(C) Copyright Misys International Banking Systems 2008'
+/*                                                                   */
+             ENDPGM

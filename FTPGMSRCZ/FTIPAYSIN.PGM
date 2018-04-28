@@ -1,0 +1,200 @@
+      *****************************************************************
+/*STD *: PGMBASE                                                    : *
+/*EXI *: MODULE(FTIPAYSIN) ACTGRP(FTIPAYSIN)                        : *                      BUG1796
+/*EXI *  TEXT('Midas FT Incoming payments input')                     *
+/*E*I *:*MODULE(FTIPAYSIN)*ACTGRP(*CALLER)**************************:**               CSC022 BUG1796
+/*E*I *:*MODULE(FTIPAYSIN)*ACTGRP(FTIPAYSIN)************************:**                CPK016 CSC022
+/*E*I *:*MODULE(FTIPAYSIN)******************************************:**                       CPK016
+/*E*I *:*BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(FTIPAYSIN)***********:**                       CPK016
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FTIPAYSIN - Incoming Payments Input                          *
+      *                                                               *
+      *  Function: This program binds the modules that perform        *
+      *            the maintenance of Incoming Payments.              *
+      *                                                               *
+      *  Called By: FTC0051                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD025111           Date 10May14               *
+      *  Prev Amend No. CFT151             Date 21Mar14               *
+      *                 MD022652           Date 07Oct13               *
+      *                 MD023247           Date 03Dec13               *
+      *                 MD022428           Date 17Sep13               *
+      *                 CFT120             Date 28Sep12               *
+      *                 CAP211             Date 28Sep12               *
+      *                 261468             Date 10Aug12               *
+      *                 CSC054             Date 23Feb12               *
+      *                 CSF011A            Date 28Nov11               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 260326             Date 18Jun09               *
+      *                 BUG24998           Date 17Jul09               *
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 257665             Date 14Nov08               *
+      *                 256256             Date 04Sep08               *
+      *                 256117             Date 18Aug08               *
+      *                 255350             Date 25Jul08               *
+      *                 250600             Date 01Oct07               *
+      *                 247142             Date 01Jun07               *
+      *                 247398             Date 30Jun07               *
+      *                 248631             Date 23Jun07               *
+      *                 247665             Date 17May07               *
+      *                 BUG14494A          Date 09Aug07               *
+      *                 CFT032             Date 11Sep06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 241002             Date 18Jul06               *
+      *                 CDL049             Date 06Jul06               *
+      *                 237914             Date 18Apr06               *
+      *                 237415             Date 14Feb06               *
+      *                 237413             Date 08Feb06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 226917             Date 06Jun06               *
+      *                 225169             Date 06Jun06               *
+      *                 226722 (Reopen)    Date 06Jun06               *
+      *                 216351             Date 06Jun06               *
+      *                 219728             Date 06Jun06               *
+      *                 220180             Date 06Jun06               *
+      *                 CER001             Date 25Apr05               *
+      *                 BUG7101            Date 06Jul05               *
+      *                 CSC024             Date 07Feb05               *
+      *                 BUG4776            Date 15Nov04               *
+      *                 CFT115             Date 01Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 BUG1796            Date 15Apr04               *
+      *                 TDA006             Date 16Mar04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGP001             Date 09Dec03               *
+      *                 CAP084             Date 25Aug03               *
+      *                 CPK016             Date 29Jul03               *
+      *                 CSD015             Date 14Oct02               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 210733             Date 11Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 209067             Date 09Sep02               *
+      *                 207211             Date 16Jul02               *
+      *                 204152             Date 10Apr02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSC011             Date 18Sep01               *
+      *                 202322             Date 30Jan02               *
+      *                 193883             Date 20Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 195545             Date 13Jul01               *
+      *                 195063             Date 05Jul01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 03Mar01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 187056             Date 01Dec00               *
+      *                 CSD009             Date 10Oct00               *
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136  *CREATE    Date 15Nov99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD025111 - Incoming payment without charges is not allowed   *
+      *             if the account is blocked for DR (Recompile)      *
+      *  CFT151 - FT IN/OP Alphanumeric sequence (Recompile)          *
+      *  MD022652 - Excluded Phase Processing (Recompile)             *
+      *  MD023247 - Dbase Error in Incoming payments for a sender     *
+      *             (Recompile)                                       *
+      *  MD022428 - CAR CFT120 - points instead of currency           *
+      *           (Recompile)                                         *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CAP211 - FT IN_OP APIs - Auto-Authorization of Payment       *
+      *           (Recompile)                                         *
+      *  261468 - Disable F7, F8 and F15 from screens 2, 3 and 4 to   *
+      *           be consistent with Outgoing payments input screen.  *
+      *           Also de-allocate payment reference numbers when     *
+      *           browse functions keys are taken after an F12 in the *
+      *           2nd, 3rd and 4th settlement/charges screen          *
+      *  CSC054 - Period End Adjustments (Recompile)                  *
+      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+      *            (Recompile)                                        *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  260326 - Incorrect restoration of canceled ref seq number.   *
+      *           (Recompile)                                         *
+      *  BUG24998 - Bank operation code is missing (Recompile)        *
+      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
+      *  257665 - Recompiled due to change in FTIPAYSIN module.       *
+      *  256256 - Redisplay Level 2 Screen 3 if the value of          *
+      *           'Charges to the debit of a/c' has been changed      *
+      *           (Recompile)                                         *
+      *  256117 - Recompiled due to changed module FTIPAYSIN.         *
+      *  255350 - Recompiled due to change in MODULE/FTIPAYSIN        *
+      *  250600 - Fix on CFT032 (Recompile)                           *
+      *  247142 - Recompile.                                          *
+      *  247398 - Recompiled due to changes in FTIPAYSIN module.      *
+      *  248631 - No warning message for outbound FT on a holiday.    *
+      *           Pattermed after fix 223018. Recompiled due to       *
+      *           changes in FTIPAYSIN *module.                       *
+      *  247665 - Recompiled due to change in FTIPAYSIN module        *
+      *  BUG14494A - Incoming Payment not working (Recompile)         *
+      *  CFT032 - Account line in field 50X in MT103 (Recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  241002 - Cannot amend booking branch. Applied 227458.        *
+      *  227458 - Allow booking branch to be amendable. Applied part  *
+      *           of 219713. Recompiled due to changes in module.     *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  237914 - Recompiled due to changes done to FTIPAYSIN module. *
+      *  237415 - Recompiled due to changes done to FTIPAYSIN module. *
+      *  237413 - Increase length of DS LFLT due to changes in CGL029.*
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  226917 - 225169 should not perform database error processing *
+      *           if a currency is not found.                         *
+      *  225169 - When routed payment contains SWIFT currency code,   *
+      *           translate it to Midas currency code.                *
+      *  226722 - Recompiled due to changes in FTIPAYSIN module.      *
+      *  216351 - Recompiled due to change in FTIPAYSIN module        *
+      *  219728 - Recompiled due to change in FTIPAYSIN               *
+      *  220180 - Recompile over changes in FTIPAYSIN                 *
+      *  CER001 - LUX Upgrade to MidasPlus (Recompile)                *
+      *  BUG7101 - Recompied due to changes in module FTIPAYSIN.      *
+      *  CSC024 - Open Month End                                      *
+      *  BUG4776- Correct skipping of transaction reference.          *
+      *  CFT115 - Core changes for GBO015.                            *
+      *         - Incoming Payments Beneficiary Validation            *
+      *         - Upgrade to Midasplus                                *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  BUG1796 - DB error due to failed reclaim of activation group *
+      *  TDA006 - Correct 10-digit full account processing.           *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGP001 - Recompiled due to change in FTVOPY2PD               *
+      *  CAP084 - Thin Client API Wrappers                            *
+      *           Recompiled over changed FTIPY6PD.                   *
+      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
+      *  CSD015 - Midas Compliance Watch - Watch List Checking.       *
+      *           (Recompile).                                        *
+      *  210733 - Recompiled due to changes in MODULE/FTIPAYSIN.      *
+      *  209067 - Recompied due to changes in module FTIPAYSIN.       *
+      *  207211 - Recompied due to changes in module FTIPAYSIN.       *
+      *  204152 - Recompied due to changes in module FTIPAYSIN.       *
+      *  CSC011 - 24x7 Midas Availability (Recompile)                 *
+      *  202322 - FT - FTIPAYSIN decimal data error in FTVITCHG       *
+      *           (recompile)                                         *
+      *  193883 - Recompile over changed FTIPAYUPD.                   *
+      *  195545 - Recompied due to changes in module FTIPAYSIN.       *
+      *  195063 - Book Code defaults to 'FT' when transaction is      *
+      *           coming from an Electronic Message. Recompile only.  *
+      *  CFT009 - Funds Transfer Fees and Charges : Recompiled        *
+      *  187056 - IP and OP do not recalculate screen charges if      *
+      *           'Charges to the Debit of a/c' has been changed      *
+      *           from blank to non-blank. Recompile only.            *
+      *  CSD009 - Profit Centre Accounting Default Matrix Enhancement *
+      *           Re-compiled due to changes in module AOPRFMR0.      *
+      *  CFT014 - Straight-through Processing Phase 2 MT103           *
+      *           Messages Generation for FT.                         *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *                                                               *
+      *****************************************************************

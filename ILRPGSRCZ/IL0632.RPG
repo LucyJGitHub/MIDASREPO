@@ -1,0 +1,346 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 RTV Loans with MDATE changed')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0632    - Retrieve Loans with Maturity Date Changed    *
+      *                                                               *
+      *  Function: This program is called by ILC0600 wich is always   *
+      *            active. This RPG produces a list of loans with     *
+      *            maturity date changed, depending on some criteria. *
+      *                                                               *
+      *  Called By: CLP/ILC0600  - Retrieve Loans with Maturity Date  *
+      *                            Changed                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. AR1056715          Date 15Nov12               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 ULX043             Date 28Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1056715 - Loan reference field name for this file was      *
+      *              changed from MCLNRF to MCLOAN                    *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD027A - Conversion Of Customer Number to Alpha.            *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FILOMISPDIF  E           K        DISK         KINFSR *PSSR
+     FILMATCPDO   E           K        DISK         KINFSR *PSSR
+      /EJECT
+      *----------------------------------------------------------------
+      /COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE
+      *
+      ***  Array for compilation - copyright insertion
+      *
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *----------------------------------------------------------------
+     ISDBANK    E DSSDBANKPD
+      ***  Standing Data - Bank Details
+      ***  Data structure for journal entry (DATA FROM POSITION 126)
+      *    (125+N) depend of release version
+      *
+     IJRNENT      DS                           5000
+     I                                        6  150JOSEQN
+     I                                       17  18 JOENTT
+     I                                       31  40 JOBNAM
+     I                                       41  50 USRNAM
+     I                                       51  56 JOBNUM
+     I                                      108 1170COMCYC
+     I                                      118 125 RESERV
+      *
+     I/COPY ZSRSRC,ZHOLDS
+     I/COPY ZSRSRC,ZHOLI
+      *
+      ***  Working Data Structure
+      *
+     IPSDS       SDS
+      ***  Program status data structure for WS/user ID'S
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area
+     I            DS
+     I                                        1   40RCDLGT
+     I                                        1   4 LGTH
+      *
+      ***  Data structure for deal's file
+      *
+     I@SDDS     E DSCLOANCL
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short DS
+      *
+      *****************************************************************
+      * MAIN LINE
+      *****************************************************************
+      *
+      ***  Move data of receive journal entry to DS externe
+      *
+     C                     CALL 'IL0632A'
+     C                     PARM 'CLOANCL' PARM1  10
+     C                     PARM *BLANKS   LGTH    4
+     C           RCDLGT    SUBSTJRNENT:126@SDDS
+      *
+      ***  Execute only if parameters in RCVJRNE are correct
+      *
+     C           @CALL     IFEQ '1'
+      *
+     C                     MOVE 'LE'      WWMODI
+     C                     MOVE LTYP      WWTYPE
+     C                     MOVE SUTP      WWSTYP
+     C                     MOVE *BLANK    WWCLAS                                              CER001
+      *
+     C           WWKEY     SETLLILOMISPD                 60
+      *
+      ***  Not found on omit file
+      *
+     C           *IN60     IFEQ *OFF
+      *
+      ***  Retrieve loan duration
+      *
+     C                     EXSR #DURA
+      *
+      ***  Save loan details before update
+      *
+     C           JOENTT    IFEQ 'UB'
+     C                     EXSR #SAVE
+      *
+      ***  Move loan details to ILMATCPD if change of duration
+      *
+     C                     ELSE
+     C           WDURA     IFNE WWDURA
+     C                     EXSR #FILE
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     RETRN
+      ****************************************************************
+      *  *INZSR - Initial Processing                                 *
+      *  ------                                                      *
+      *  Called by : Main lines                                      *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C                     MOVEACPY@      CPY@2  80        Copyrights
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           JRNENT
+     C                     PARM           @CALL   1
+      *
+      ***  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVELPGM       DBPGM
+      *
+      ***  Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD33        DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 033 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     ENDIF
+      *
+      ***  Key to access file ILOMISPD
+      *
+     C           WWKEY     KLIST
+     C                     KFLD           WWMODI  2
+     C                     KFLD           WWTYPE  2
+     C                     KFLD           WWSTYP  2
+     C                     KFLD           WWCLAS  4                                           CER001
+      *
+     C                     ENDSR
+      ****************************************************************
+      *  #DURA - Calculate loan duration                             *
+      *  ------                                                      *
+      *  Called by : Main lines                                      *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #DURA     BEGSR
+      *
+     C           MDAT      SUB  VDAT      WDATE   50
+     C           WDATE     IFLT 366
+     C                     MOVE 'Y'       WDURA   1
+     C                     ELSE
+      *
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     ADD  1         ZDATE
+     C                     EXSR ZDATE1
+      *
+      ***  Greater or equal 366 days
+      ***  1: if 366 and year has 366 days --> duration is 'Y'
+      *
+     C           ZDAYNO    IFEQ MDAT
+     C                     MOVE 'Y'       WDURA            Year counts 366 Days
+      *
+      ***  2: check if VDAT + 1 Year is a holiday
+      *
+     C                     ELSE
+     C                     MOVE CCY       ZCCY
+     C                     MOVE *BLANKS   ZLOC
+     C                     EXSR ZCHKH
+      *
+      ***  3: not a holiday --> duration is 'N'
+      *
+     C           ZIND      IFEQ 'W'
+     C                     MOVE 'N'       WDURA
+      *
+      ***  4:  a holiday --> Check next open day
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ZLOC
+     C                     Z-ADD1         ZNRDYS
+     C                     EXSR ZFWDT
+      *
+      ***  5:  1 year duration finished after maturity date --> durat. 'Y'
+      *
+     C           ZDYNBR    IFGE MDAT
+     C                     MOVE 'Y'       WDURA
+     C                     ELSE
+     C                     MOVE 'N'       WDURA            Year counts 365 Days
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      *  #SAVE - Save subroutine                                     *
+      *  ------                                                      *
+      *  Called by : Main lines                                      *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #SAVE     BEGSR
+      *
+      ***  Save loan ref, value date, maturity date, customer and loan duration.
+      *
+     C**********           MOVE LNRF      WWLNRF  60                                          CLE148
+     C                     MOVE LNRF      WWLNRF  6                                           CLE148
+     C                     MOVE VDAT      WWVDAT  50
+     C                     MOVE MDAT      WWMDAT  50
+     C**********           MOVE CNUM      WWCNUM  60                                         CSD027A
+     C                     MOVE CNUM      WWCNUM  6                                          CSD027A
+     C                     MOVE WDURA     WWDURA  1
+      *
+     C                     ENDSR
+      ****************************************************************
+      *  #FILE  - Move Loan details to file ILMATCPD                 *
+      *  ------                                                      *
+      *  Called by : Main lines                                      *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #FILE     BEGSR
+      *
+      ***  Store in file ILMATCPD
+      *
+     C                     MOVE CNUM      MCCNUM
+     C**********           MOVE LNRF      MCLNRF                                           AR1056715
+     C                     MOVE LNRF      MCLOAN                                           AR1056715
+     C                     MOVE LTYP      MCLTYP
+     C                     MOVE SUTP      MCSUTP
+     C                     MOVE CPAM      MCCPAM
+     C                     MOVE CCY       MCCYCD
+     C                     MOVE VDAT      MCVDAT
+     C                     MOVE WWMDAT    MCMDAB
+     C                     MOVE MDAT      MCMDAA
+      *
+     C                     WRITEILMATCD0
+      *
+     C                     ENDSR
+      ****************************************************************
+      *  *PSSR  - error Subroutine                                   *
+      *  -------                                                     *
+      *  Called by : on FILE error                                   *
+      *              *INZSR                                          *
+      ****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     DUMP
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           ** *PSSR **
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZFWDT
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      *----------------------------------------------------------------
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

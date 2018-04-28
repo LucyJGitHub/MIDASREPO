@@ -1,0 +1,598 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT FT0239   payments by dest. extrct')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module                                *
+     F*                                                               *
+     F*  FT0239 - Outgoing Payments by Destination Extract            *
+     F*             Generator                                         *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01JUN00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+     A*                 175479             Date 08FEB00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 113139             DATE 01JUL97               *
+     F*                 S01494             DATE 25MAY94               *
+     F*                 S01435             DATE 08SEP93               *
+     F*                 056032             DATE 04JUN93               *
+     F*                 S01414             DATE 29MAR93               *
+     F*                 051416             DATE 26FEB93               *
+     F*                 043959             DATE 03JUL92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CFT009 - FT Fees and Charge Development-Recompiled           *
+     A*  175479 - Recompiled over changes in OTPAYDD                  *
+     F*  113139 - Allow for OTPAYDD to be empty without dumping prog. *
+     F*  S01494 - BLI Funds Transfer Enhancements                     *
+     F*  S01435 - Incoming Message Management.                        *
+     F*  056032 - Prevent database error processing for:              *
+     F*           a) Destination if PVDT (pay value date)     is less *
+     F*              than Rundate or if the payment is matured.       *
+     F*           b) Beneficiary if PVDT (pay value date) is less     *
+     F*              than Rundate or if the payment is matured.       *
+     F*           N.B fix includes errors 048005,054302               *
+     F*  S01414 - Book Code and Profit Centre Incorporation.          *
+     F*           Rename of profit centre field on ACCNTABF           *
+     F*  051416 - For type 1 only details of payments authorised today*
+     F*           should be written to extract file.                  *
+     F*  043959 - Do not check on account if the posting is matured   *
+     F*           with an account closed.                             *
+     F*                                                               *
+     F*****************************************************************
+     FOTPAYDD IF  E                    DISK         KINFSR ERROR
+     FOTPAYEX O   E                    DISK         KINFSR ERROR
+      ************                                                        S01435
+      ************ Files now accessed through FT0315 access object        S01435
+      ************                                                        S01435
+     F*CLINT***IF**E           K        DISK         KINFSR ERROR         S01435
+     F************CLINTCAF                          KIGNORE               S01435
+     F************CLINTCCF                          KIGNORE               S01435
+     F************CLINTC1F                          KIGNORE               S01435
+     F************CLINTCBF                          KRENAMECLINTBF1       S01435
+     FTABFP   IF  E           K        DISK         KINFSR ERROR
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABTE10F                          KIGNORE
+      ************                                                        S01435
+      ************ Files now accessed through FT0315 access object        S01435
+      ************                                                        S01435
+     F*ACNUMA**IF**E           K        DISK         KINFSR ERROR         S01435
+     F************ACCNTABF                          KRENAMEACNUMAR        S01435
+     F*SDCUSTL7IF**E           K        DISK                              S01435
+     F/COPY WNCPYSRC,FT0239F001
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       10
+     F*       89      GENERAL WORK INDICATOR
+     F*       99      ZSYSTM, INSTALLATION CONTROL DATA RECORD NOT FOUND.
+     F*
+     F*     U7 & U8   DATABASE ERROR, REQUIRED RECORDS NOT FOUND.
+     F*****************************************************************
+     E/EJECT
+     E**************************************************************************
+     E** COPYRIGHT ARRAY FOR COMPILE
+     E*
+     E                    CPY@    1   1 80
+     E************        TXT     1   2 18                                056032
+     I**************************************************************************
+     I/EJECT
+     I* RENAME THE BRANCH FIELD BRCA IN  ACNUMA AND TABLETL TO AVOID
+     I* CORRUPTION OF BRCA FIELD IN OTPAYDD
+     I*                                                                   S01414
+     I* Rename of Profit Centre to avoid overwriting                      S01414
+     I*
+      ************                                                        S01435
+      ************ Files now accessed through FT0315 access object        S01435
+      ************                                                        S01435
+     I*ACNUMAR*****                                                       S01435
+     I************  BRCA                            BRCH                  S01435
+     I************  PRFC                            ACPRFC                S01414
+     ITABLETLF
+     I              BRCA                            BRCH
+     I**
+     IOTPAYDDF
+     I              RECI                            @RECI
+     I              LCD                             @LCD
+     I              OEDT                            @OEDT
+     I              CHTP                            @CHTP
+     I**
+      ** Table key (using CCY,Nostro).
+     IKYTABL      DS                             12
+     I                                        1   2 CONS70
+     I*
+     I**  LOCAL DATA AREA (MIDAS)
+     ILDA         DS                            256
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 177 DBASE
+     I*
+     I*  Data Structure for GETNAM.
+     I*
+     I** Split name into components.
+     I            DS
+     I                                        1  35 DS1T35
+     I                                        1  100DS1T10
+     I                                        1   60DS1T6
+     I                                        1   5 DS1T5
+     I                                        1  12 DS1T12
+     I*
+     I** to define XTYPE.
+     I                                       36  36 XTYPE
+      *                                                                   S01435
+      ** Program data structure                                           S01435
+     IDSPGM     ESDSY2PGDSP
+      *                                                                   S01435
+      ** Split name into components.                                      S01435
+     IXNAMDS      DS                            175                       S01435
+     I                                        1  12 XACCT                 S01435
+     I                                       13  15 XBRCA                 S01435
+     I                                        1   1 XSLSH                 S01435
+     I                                        1  35 XADD1                 S01435
+     I                                       36  70 XADD2                 S01435
+     I                                       71 105 XADD3                 S01435
+     I                                      106 140 XADD4                 S01435
+     I                                      141 175 XADD5                 S01435
+      *                                                                   S01435
+      **            address lines 2 - 5.                                  S01435
+     I                                       36 175 XADDS                 S01435
+      *                                                                   S01435
+      /EJECT                                                              S01435
+     IW8FT        DS                            128                       S01435
+      *                                                                   S01435
+      * Address data structure                                            S01435
+      *                                                                   S01435
+      * Currency                                                          S01435
+     I                                        1   3 W8CCY                 S01435
+      * Settlement Type                                                   S01435
+     I                                        4   5 W8STMT                S01435
+      * Mandatory Text - convert BIC identifiers                          S01435
+     I                                        6   6 W8MTXT                S01435
+      * Message Tag                                                       S01435
+     I                                        7  11 W8MTAG                S01435
+      * Construct of data in field                                        S01435
+     I                                       12  12 W8TYPE                S01435
+      * Number of Lines available                                         S01435
+     I                                       13  140W8NLIN                S01435
+      * Network and Message Type                                          S01435
+     I                                       15  20 W8NWRK                S01435
+     I                                       21  23 W8MTPY                S01435
+      * Calling Program                                                   S01435
+     I                                       24  33 W8CPGM                S01435
+      * Action *PRINT/*ENQ/*MSG GEN                                       S01435
+     I                                       34  41 W8ACT                 S01435
+      * Critical reporting - Database error if 'Y'                        S01435
+      * If no BIC directory and BIC entered no error                      S01435
+     I                                       42  42 W8CRIT                S01435
+      * Force Midas Address - where possible                              S01435
+     I                                       43  43 W8MADD                S01435
+      * If Retail get first address from account                          S01435
+     I                                       44  44 W8RTAD                S01435
+      * Alternative Address                                               S01435
+     I                                       45  45 W8ALTN                S01435
+      * Address type selected in W0MSG                                    S01435
+     I                                       46  46 W8ADTP                S01435
+      *                                                                   056032
+      * Set up message to print instead of DB error processing            056032
+      *                                                                   056032
+     I            DS                                                      056032
+     I                                        1  35 @MSG                  056032
+     I                                        1  15 @DS1T                 056032
+     I                                       17  34 @TXT                  056032
+      *
+     I******************** INITIAL PROCESSING **********************************
+     C*
+     C           *ENTRY    PLIST                                          051416
+     C                     PARM           TYPE    1                       051416
+     C                     PARM           W0RNTP  7                       S01494
+     C*                                                                   051416
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*                                                                   051416
+     C** CALL ZSYSTM TO ACCESS I.C.D.R. 1 ON TABLE FILE                   051416
+     C*                                                                   051416
+     C                     EXSR ZSYSTM                                    051416
+     C*                                                                   051416
+     C**    INITIALIZE CHAIN CONSTANT
+     C                     MOVE '70'      CONS70
+     C*
+     C******************** MAIN PROCESSING   ***********************************
+     C*
+     C** READ IN RECORD FROM OTPAYDD FIND DESTINATION ADDRESS AND WRITE TO
+     C** OTPAYEX UNTIL END OF FILE
+     C*
+     C********** 1         SETLLOTPAYDDF               89                 113139
+     C***89*****           MOVEL'01'      @ERR                 **DBERR 01*113139
+     C**********                                                          113139
+     C***IF*NOT*ERROR*CONTINUE****************************************    113139
+     C*
+     C********** *IN89     IFNE '1'                        B001           113139
+     C                     READ OTPAYDDF               8910
+     C   89                MOVEL'02'      @ERR             **DBERR 02**
+     C           *IN10     DOWNE'1'                        B002
+     C           *IN89     ANDNE'1'
+     C*
+     C*   If the type is ' ' then all payments requested                  051416
+     C*   If the type is '1' then all aut payments today                  051416
+     C*   If the type is '2' then all unaut payments                      051416
+     C*                                                                   051416
+     C           TYPE      IFNE '1'                                       051416
+     C           TYPE      OREQ '1'                                       051416
+     C           @OEDT     ANDEQRUND                                      051416
+     C           TYPE      OREQ '1'                                       051416
+     C           @LCD      ANDEQRUND                                      051416
+     C*                                                                   051416
+     C                     MOVELDSTT      XTYPE
+     C                     MOVELDST1      DS1T35
+     C                     MOVEL*BLANKS   XNAMDS                          S01435
+     C                     MOVELDST1      XADD1                           S01435
+     C                     MOVELDST2      XADD2                           S01435
+     C                     MOVELDST3      XADD3                           S01435
+     C                     MOVELDST4      XADD4                           S01435
+     C                     MOVELPCCY      XCCY                            S01435
+     C                     EXSR GETNAM
+     C                     MOVELXNAME     DESEX1
+     C*
+     C                     MOVELBNCT      XTYPE
+     C                     MOVELBNC1      DS1T35
+     C                     MOVEL*BLANKS   XNAMDS                          S01435
+     C                     MOVELBNC1      XADD1                           S01435
+     C                     MOVELBNC2      XADD2                           S01435
+     C                     MOVELBNC3      XADD3                           S01435
+     C                     MOVELBNC4      XADD4                           S01435
+     C                     MOVELBNC5      XADD4                           S01435
+     C                     MOVELPCCY      XCCY                            S01435
+     C                     EXSR GETNAM
+     C                     MOVELXNAME     BENEX1
+     C*
+     C                     MOVE @RECI     RECI
+     C                     Z-ADD@LCD      LCD
+     C                     Z-ADD@OEDT     OEDT
+     C                     MOVE @CHTP     CHTP
+      *
+     C** Write to OTPAYEX only if it is in Regular Payments mode (run     S01494
+     C** type is 'FTM2507' or 'FTM2509') or if in Outgoing Payments       S01494
+     C** mode (run type is 'FTM2506' or 'FTM2508') with payment type      S01494
+     C** equal to 'OP'                                                    S01494
+     C*                                                                   S01494
+     C           W0RNTP    IFEQ 'FTM2507'                                 S01494
+     C           W0RNTP    OREQ 'FTM2509'                                 S01494
+     C*                                                                   S01494
+     C           W0RNTP    OREQ 'FTM2506'                                 S01494
+     C           PYTP      ANDEQ'OP'                                      S01494
+     C*                                                                   S01494
+     C           W0RNTP    OREQ 'FTM2508'                                 S01494
+     C           PYTP      ANDEQ'OP'                                      S01494
+     C*                                                                   S01494
+     C/COPY WNCPYSRC,FT0239C001
+     C                     WRITEOTPAYEXF               89
+     C   89                MOVEL'03'      @ERR             **DBERR 03**
+     C*                                                                   S01494
+     C                     END                                            S01494
+     C*                                                                   S01494
+     C                     END                                            051416
+     C*                                                                   051416
+     C           *IN89     IFNE '1'                        B003
+     C                     READ OTPAYDDF               8910
+     C   89                MOVEL'04'      @ERR             **DBERR 04**
+     C                     END                             E003
+     C                     END                             E002
+     C**********           END                             E001           113139
+     C*
+     C           *IN89     IFEQ '1'                        B001
+     C                     EXSR ERROR
+     C                     ELSE
+     C                     SETON                         LR
+     C                     RETRN
+     C                     END                             E001
+      *
+      /EJECT
+      **************************************************************************
+      ******Get*name for Type.                                            S01435
+      ***********                                                         S01435
+     C***********GETNAM    BEGSR                                          S01435
+      ***********                                                         S01435
+     C***********          MOVEL*BLANKS   @MSG                            056032
+     C***********          MOVE *BLANKS   XNAME  35                       S01435
+      ***********                                                         S01435
+      ***Type*A=*Address.                                                 S01435
+      ***********                                                         S01435
+     C***********XTYPE     IFEQ 'A'                                       S01435
+     C***********          MOVELDS1T35    XNAME                           S01435
+     C***********          END                                            S01435
+      ***********                                                         S01435
+      ***Type*F=*Full Nostro                                              S01435
+      ***********                                                         S01435
+     C***********XTYPE     IFEQ 'F'                                       S01435
+      ***********                                                         S01435
+      ***Get*account key from Table using 5 chars. of beneficiary.        S01435
+      ***********                                                         S01435
+     C***********          MOVE DS1T5     KYTABL                          S01435
+     C***********KYTABL    CHAINTABFP                99                   S01435
+      ***********                                                         S01435
+      ***DB*Error if no record found or "deleted".                        S01435
+     C***********                                                         056032
+     C**Process*for database error UNLESS the payment is matured OR       056032
+     C**the*value date is prior to the rundate. The account may have      056032
+     C**been*closed/dropped since that date but it don't matter coz       056032
+     C**the*accounting is complete. The file key is displayed instead     056032
+     C**of*the*name.                                                      056032
+     C***********                                                         056032
+     C************IN99     IFEQ '1'                                       S01435
+     C***********RECI      ORNE 'D'                                       S01435
+      ***********                                                         056032
+     C***********@RECI     IFNE 'M'                                       056032
+     C***********PVDT      ANDGERUND                                      056032
+     C***********          MOVEL'TABFP'   @FILE                           S01435
+     C***********          MOVELKYTABL    @KEY                            S01435
+     C***********          MOVE '05'      @ERR             ** DBERR 05**  S01435
+     C***********          EXSR ERROR                                     S01435
+     C***********          ELSE                                           056032
+     C***********          MOVELDS1T5     @DS1T                           056032
+     C***********          MOVE TXT,1     @TXT                            056032
+     C***********          MOVEL@MSG      XNAME                           056032
+     C***********          GOTO ENDGET                                    056032
+     C***********          END                             E003           056032
+      ***********                                                         056032
+     C***********          END                                            S01435
+      ***********                                                         S01435
+     C***********CNUM      CHAINCLINTBF1             99                   S01435
+      ***********                                                         S01435
+      ***DB*Error if no record found or "deleted".                        S01435
+      ***Same*processing as for Nostro Account                            056032
+      ***********                                                         056032
+     C************IN99     IFEQ '1'                                       S01435
+     C***********RECI      ORNE 'D'                                       S01435
+      ***********                                                         056032
+     C***********@RECI     IFNE 'M'                                       056032
+     C***********PVDT      ANDGERUND                                      056032
+     C***********          MOVEL'CLINT'   @FILE                           S01435
+     C***********          MOVELCNUM      @KEY                            S01435
+     C***********          MOVE '06'      @ERR             ** DBERR 06**  S01435
+     C***********          EXSR ERROR                                     S01435
+     C***********          ELSE                                           056032
+     C***********          MOVELCNUM      @DS1T                           056032
+     C***********          MOVE TXT,2     @TXT                            056032
+     C***********          MOVEL@MSG      XNAME                           056032
+     C***********          GOTO ENDGET                                    056032
+     C***********          END                             E003           056032
+      ***********                                                         056032
+     C***********          END                                            S01435
+      ***********                                                         S01435
+     C***********          MOVELCRNM      XNAME                           S01435
+     C***********          END                                            S01435
+      ***********                                                         S01435
+      ***Type*R=*Retail .                                                 S01435
+      ***********                                                         S01435
+     C***********XTYPE     IFEQ 'R'                                       S01435
+      ***********                                                         S01435
+      ***Get*account key from ACNUMA using 10 chars. of benefc.           S01435
+      ***********                                                         S01435
+     C***********DS1T10    CHAINACNUMA               99                   S01435
+      ***********                                                         S01435
+      ***DB*Error if no record found or "deleted".                        S01435
+      ***Same*processing as for Nostro Account                            056032
+      ***********                                                         056032
+     C***********@RECI     IFNE 'M'                                 043959056032
+      ***********                                                         056032
+     C************IN99     IFEQ '1'                                       S01435
+     C***********RECI      ORNE 'D'                                       S01435
+      ***********                                                         056032
+     C***********@RECI     IFNE 'M'                                       056032
+     C***********PVDT      ANDGERUND                                      056032
+     C***********          MOVEL'ACCNT'   @FILE                           S01435
+     C***********          MOVELDS1T10    @KEY                            S01435
+     C***********          MOVE '07'      @ERR             ** DBERR 07**  S01435
+     C***********          EXSR ERROR                                     S01435
+     C***********          ELSE                                           056032
+     C***********          MOVELDS1T10    @DS1T                           056032
+     C***********          MOVE TXT,1     @TXT                            056032
+     C***********          MOVEL@MSG      XNAME                           056032
+     C***********          GOTO ENDGET                                    056032
+     C***********          END                                            056032
+      ***********                                                         S01435
+     C***********          END                                            S01435
+      ***********                                                         S01435
+     C***********          MOVELANAM      XNAME                           S01435
+     C***********          END                                            S01435
+      ***********                                                         S01435
+      ***If*Full(G) Customer(C) or Partial(P)..                           S01435
+      *******...get name from Client file.                                S01435
+      ***********                                                         S01435
+     C***********XTYPE     IFEQ 'P'                                       S01435
+     C***********XTYPE     OREQ 'G'                                       S01435
+     C***********XTYPE     OREQ 'C'                                       S01435
+     C***********DS1T6     CHAINCLINTBF1             99                   S01435
+      ***********                                                         S01435
+      ***DB*Error if no record found or "deleted".                        S01435
+      ***Same*processing as for Nostro Account                            056032
+      ***********                                                         056032
+     C************IN99     IFEQ '1'                                       S01435
+     C***********RECI      ORNE 'D'                                       S01435
+      ***********                                                         056032
+     C***********@RECI     IFNE 'M'                                       056032
+     C***********PVDT      ANDGERUND                                      056032
+     C***********          IN   LDA                                       S01435
+     C***********          MOVEL'CLINT'   @FILE                           S01435
+     C***********          MOVELDS1T6     @KEY                            S01435
+     C***********          MOVE '08'      @ERR             ** DBERR 08**  S01435
+     C***********          EXSR ERROR                                     S01435
+     C***********          ELSE                                           056032
+     C***********          MOVELDS1T6     @DS1T                           056032
+     C***********          MOVE TXT,2     @TXT                            056032
+     C***********          MOVEL@MSG      XNAME                           056032
+     C***********          GOTO ENDGET                                    056032
+     C***********          END                                            056032
+      ***********                                                         056032
+     C***********          END                                            S01435
+      ***********                                                         S01435
+     C***********          MOVELCRNM      XNAME                           S01435
+     C***********          END                                            S01435
+      ***********                                                         S01435
+      **If*swift*customer                                                 S01435
+      ***********                                                         S01435
+     C***********XTYPE     IFEQ 'S'                                       S01435
+     C***********DS1T12    CHAINSDCUSTL7             99                   S01435
+      ***********                                                         S01435
+     C************IN99     IFEQ '0'                                       S01435
+     C***********          MOVELBBCRNM    XNAME                           S01435
+     C***********          ELSE                                           S01435
+     C***********          MOVELDS1T12    XNAME                           S01435
+     C***********          END                                            S01435
+      ***********                                                         S01435
+     C***********          END                                            S01435
+      ***********                                                         S01435
+     C*********************ENDSR                                          056032
+     C***********ENDGET    ENDSR                                          056032
+      ***********                                                         S01435
+      /EJECT                                                              S01435
+      *****************************************************************   S01435
+      **                                                                  S01435
+      **    Get name for Type.                                            S01435
+      **                                                                  S01435
+      **    CALLED FROM:  anywhere                                        S01435
+      **    CALLS:                                                        S01435
+      **                                                                  S01435
+      **                                                                  S01435
+     C           GETNAM    BEGSR                                          S01435
+      *                                                                   S01435
+      *                                                                   S01435
+      *  Set up general parameters                                        S01435
+      *                                                                   S01435
+     C           *LIKE     DEFN PCCY      XCCY                            S01435
+     C                     MOVEL*BLANKS   @MSG                            S01435
+     C                     MOVE *BLANKS   XNAME  35                       S01435
+      *                                                                   S01435
+     C                     CLEARW8FT                                      S01435
+     C                     MOVEL*BLANKS   W8STMT                          S01435
+     C                     MOVELXCCY      W8CCY                           S01435
+     C                     MOVEL##PGM     W8CPGM                          S01435
+     C                     MOVEL'*PRINT'  W8ACT                           S01435
+     C                     MOVEL'Y'       W8MTXT                          S01435
+     C                     Z-ADD5         W8NLIN                          S01435
+      *                                                                   S01435
+      *  Set up parameters                                                S01435
+      *                                                                   S01435
+     C                     MOVELXTYPE     W8TYPE                          S01435
+     C                     MOVEL*BLANKS   W8LINS                          S01435
+     C                     MOVELXNAMDS    W8LINS                          S01435
+      *                                                                   S01435
+      * Call expansion program                                            S01435
+      *                                                                   S01435
+     C                     CALL 'FT0315'               9999               S01435
+     C                     PARM           W8RTN   7                       S01435
+     C                     PARM           W8FT                            S01435
+     C                     PARM           W8LINS256                       S01435
+     C                     PARM           W8RPT 256                       S01435
+     C                     PARM           W8MSG 256                       S01435
+     C                     PARM           W8SCR 256                       S01435
+      *                                                                   S01435
+      ** Check if database error occurred                                 S01435
+      *                                                                   S01435
+     C           *IN99     IFEQ '1'                                       S01435
+     C           W8RTN     ORNE *BLANKS                                   S01435
+     C                     MOVEL'FT0315'  @FILE                           S01435
+     C                     MOVEL'*CALL'   @KEY                            S01435
+     C                     MOVEL'05'      @ERR                            S01435
+     C                     EXSR ERROR                      *ABORT PGM*    S01435
+     C                     END                                            S01435
+      *                                                                   S01435
+     C                     MOVELW8MSG     XNAMDS                          S01435
+     C           XSLSH     IFNE '/'                                       S01435
+     C           XTYPE     OREQ 'A'                                       S01435
+     C                     MOVELXADD1     XNAME                           S01435
+     C                     ELSE                                           S01435
+     C                     MOVELXADD2     XNAME                           S01435
+     C                     END                                            S01435
+      *                                                                   S01435
+     C                     ENDSR                                          S01435
+      /EJECT
+      **************************************************************************
+      **    GENERAL ERROR SUBROUTINE
+      **
+     C           ERROR     BEGSR
+     C*
+     C** IF ERROR IN MAIN PROCESSING SET UP FIELDS
+     C*
+     C           *LOCK     IN   LDA
+     C           *LIKE     DEFN DBKEY     @KEY
+     C           *LIKE     DEFN DBASE     @ERR
+     C           *LIKE     DEFN DBFILE    @FILE
+     C                     MOVEL'FT0239'  DBPGM
+     C           *IN89     IFEQ '1'
+     C                     MOVEL'MAIN '   DBFILE
+     C                     MOVEL'PROCESS' DBKEY
+     C                     ELSE
+     C                     MOVEL@FILE     DBFILE
+     C                     MOVEL@ERR      DBASE
+     C                     MOVEL@KEY      DBKEY
+     C                     END
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C           ERR       ENDSR
+     C********************************************************************051416
+     C/EJECT                                                              051416
+     C********************************************************************051416
+     C**                                                                  051416
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   051416
+     C**                                                                  051416
+     C           ZSYSTM    BEGSR                           *** ZSYSTEM ***051416
+     C**                                                                  051416
+     C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.                    051416
+     C                     MOVE *BLANK    KEY    12                       051416
+     C                     MOVEL'01'      KEY                             051416
+     C                     MOVE '10'      KEY                             051416
+     C**                                                                  051416
+     C           KEY       CHAINTABTB10F             99    ON NOT THERE   051416
+     C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED 051416
+      *                                                                   051416
+      ** DB Error if no record found or "deleted".                        051416
+      *                                                                   051416
+     C           *IN99     IFEQ '1'                                       051416
+     C                     MOVEL'TABTB10' @FILE                           051416
+     C                     MOVELKEY       @KEY                            051416
+     C                     MOVE '09'      @ERR             ** DBERR 09**  051416
+     C                     EXSR ERROR                                     051416
+     C                     END                                            051416
+     C**                                                                  051416
+     C                     ENDSR                                          051416
+     C**                                                                  051416
+      **************************************************************************
+      ************                                                        S01435
+      ************ Errors now indicated through FT0315 access object      S01435
+      ************                                                        S01435
+     O**   TXT - Text                                                     056032
+     O*- Account Closed                                                   056032
+     O*- Customer Deleted                                                 056032
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

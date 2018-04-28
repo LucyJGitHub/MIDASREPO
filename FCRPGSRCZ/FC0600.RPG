@@ -1,0 +1,1060 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FC Audit of todays rpt production')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Report Control Facility Module
+     F*                                                               *
+     F*  FC0600 - TODAY'S REPORTING AUDIT                             *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 142799             Date 27Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 108329             Date 28Feb97               *
+     F*                 083547             DATE 20FEB95               *
+     F*                 S01486             DATE 06JUN94               *
+     F*                 067530             DATE 15FEB94               *
+     F*                 047383             DATE 05NOV93               *
+     F*                 S01392             DATE 08OCT92               *
+     F*                 S01382             DATE  1SEP92               *
+     F*                 E36542             DATE 28MAY92               *
+     F*                 S01117             DATE 25MAR92               *
+     F*                 S01269             DATE 25JUN91               *
+     F*                 LN1091             DATE 09JAN91               *
+     F*                 LN1067             DATE 06DEC90               *
+     F*                 LN0193             DATE 11JUN90               *
+     F*****************************************************************
+     F*                                                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  142799 - Some reports were not distributed by RCF.           *
+     F*           Recompiled because of changes in FCSFNOL1.          *
+     F*  108329 - It is not a database error if the company code is   *
+     F*           not found on file.  Program should output           *
+     F*           <Company Code Not Found> instead.  067530 does this *
+     F*           as well in the branch level.                        *
+     F*  083547 - Recompile over MUSERDD                              *
+     F*  S01486 - Private Banking Upgrade to Rel 10.                  *
+     F*           Add Account Officer and Department Level (RCF).     *
+     F*  067530 - It is not a database error if the branch code record   *
+     F*           is not found on file, as the branch code may have been *
+     F*           deleted after a report was requested for the branch -  *
+     F*           program should output < Branch Not Found > instead.    *
+     F*  047383 - Should not try to open printer file if already open.*
+     F*           Program should close file and then open it again to *
+     F*           produce a spool file for each branch.               *
+     F*  S01392 - Recompiled for JSM change to SDBRCHPD; also changed *
+     F*           creation paramaters to IGNDECERR(*YES).             *
+     F*  S01382 - THE PAGE OVERFLOW CHECK FOR SPOOLF SUBROUTINE SHOULD*
+     F*           BE 52 NOT 57. OTHERWISE THE REPORT MAY FAIL IN COB  *
+     F*           DUE TO A PAGE OVERFLOW ERROR.                       *
+     F*  E36542 - (1) INDICATE BRANCH AND REMOVE COLUMN HEADINGS      *
+     F*               WHEN THERE IS NO DETAIL TO REPORT.              *
+     F*           (2) END OF REPORT SHOULD BE BY BRANCH.              *
+     F*  S01117 - RECOMPILE FOR FT CHANGE TO MUSERDD                  *
+     F*  S01269 - RECOMPILE FOR TRADE AUTHORISATION CHANGE TO         *
+     F*           MUSERDD                                             *
+     F*  LN1091 - (1) RESET PAGE NUMBER WHEN OPENING SPOOL            *
+     F*               FOR A DIFFERENT ENTITY                          *
+     F*           (2) ADD WRITE OF HEADER INFORMATION WHEN WRITING    *
+     F*               FORMATS RREQSFCT AND NODETL AFTER AMENDMENT     *
+     F*               TO PRINTER FILE                                 *
+     F*  LN1067 - BLANK OUT FIELDS ON DETAIL LINE AND LINE UP         *
+     F*           DISTRIBUTION LISTS                                  *
+     F*  LN0193 - CALL TO SDBANKPD ADDED FOR TITLE                    *
+     F*****************************************************************
+     FFCRREQLAIF  E           K        DISK
+     FFCSFNOL1IF  E           K        DISK
+     FMUSER   IF  E           K        DISK
+     FSDBRCHL1IF  E           K        DISK                               E36542
+      *                                                                   S01486
+     FFC0600P1O   E                    PRINTER      KINFDS SPOOL      UC
+     FFC0600AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F*
+     F**   FUNCTION OF INDICATORS
+     F*
+     F*  50     MULTIBRANCHING INDICATOR (MBIN = Y)
+     F*  60     PRINTER FILE P1 OPEN                                      047383
+     F*  70     CHAIN FAIL , MUSER
+     F*  80     READ INDICATOR , FCRREQLA
+     F*  81     READ INDICATOR , FCSFNOL1
+     F*  90     READ INDICATOR , SDBRCHL1                                 E36542
+     F*
+     E                    NA         10  1
+     E************        TXT     1  11 24                                067530
+     E************        TXT     1  12 24                          067530S01486
+     E********************TXT     1  14 24                         S01486 108329
+     E                    TXT     1  15 24                                108329
+     E                    CPY@    1   1 80
+     IDSFDY     E DSDSFDY
+     I* 200 BYTE DATA AREA FOR ACCESS PROGRAMS
+     I*
+     ISDBANK    E DSSDBANKPD                                              LN0193
+     I*                                                                   LN0193
+     I** DATA STRUCTURE FOR ACCESS PROGRAM AOBANKR0                       LN0193
+     I*                                                                   LN0193
+     ID@REPT    E DSFCREPTPD
+     I*
+     I** DATA STRUCTURE FOR ACCESS PROGRAM AOREPTR0
+     I*
+     ID@RSFX    E DSFCRSFXPD
+     I*
+     I** DATA STRUCTURE FOR ACCESS PROGRAM AORSFXR0
+     I*
+     ID@BRCH    E DSSDBRCHPD                                              E36542
+     I*                                                                   E36542
+     I** DATA STRUCTURE FOR ACCESS PROGRAM AOBRCHR0                       E36542
+     I*                                                                   E36542
+     I**    This was renamed internally to prevent an overlap of value    E36542
+     I** with the sequential access to SDBRCHL1.  This is now used sole   E36542
+     I** ly by procedure SPOOLF.                                          E36542
+     I*                                                                   E36542
+     I                                        1   3 DSBRCD                E36542
+     I                                        4   6 DSCMCD                E36542
+     I                                        7   9 DSLCCD                E36542
+     I                                       10  13 DSDFAC                E36542
+     I                                       14  17 DSDTAC                E36542
+     I                                       18  23 DSBICN                E36542
+     I                                    P  24  260DSLCD                 E36542
+     I                                       27  27 DSTYLC                E36542
+     I                                       28  57 DSBRNM                E36542
+     I                                       58  60 DSGBCD                E36542
+     I                                       61  63 DSBRSN                E36542
+     I                                       64  64 DSRECI                E36542
+     I                                       65  76 DSBTID                E36542
+     I*
+     ID@COMP    E DSSDCOMPPD
+     I*
+     I** DATA STRUCTURE FOR ACCESS PROGRAM AOBRCHR0
+     I*
+     I*                                                                   S01486
+     ISDACOF    E DSSDACOFPD                                              S01486
+      ** Access Object for Account Officer File.                          S01486
+      *                                                                   S01486
+     ISDDEPT    E DSSDDEPTPD                                              S01486
+      ** Access Object for Department Code File                           S01486
+     I*
+     IRUNDAT      DS
+     I*
+      ** DATA AREA OF BANK DETAILS
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *                                                                   S01486
+      ** Used to store Entity value from the Reports Request file         S01486
+      *                                                                   S01486
+     I            DS                                                      S01486
+     I                                        1   3 D5ETTY                S01486
+     I                                        1   1 @POS1                 S01486
+     I*
+     ILDA         DS                            256
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR REPORTING
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IPSDS       SDS
+      *
+      **  Program status data structure.
+      *
+     I                                       37  390@NOPMS
+     I                                      244 253 @JOBNM
+     I                                      254 263 @USER
+     I                                      264 2690@JOBNO
+     I*
+     ISPOOL       DS
+     I*
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+     I*
+     ISPOOLU      DS
+     I*
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE - AU REPORT
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I** REPORT SUFFIXES DATABASE ERROR KEY
+     I*
+     IRSFXDS      DS
+     I                                        1  10 D5RNAM
+     I                                       11  20 D6RSFX
+     I*
+     IROUTI       DS                          1  24
+     I*
+     I** TO FORMAT OUTPUT INSTRUCTION TEXT
+     I*
+     I                                        7  16 INS
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** PARAMETER PASSED FROM REQUEST OPTION
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PSSEQ   5
+     C                     PARM           PLVL    1
+     C                     PARM           PETTY   3
+     C*                                                                   E36542
+     C** Save original value of PETTY for future comparisons              E36542
+     C*                                                                   E36542
+     C                     MOVE PETTY     SETTY   3                       E36542
+     C*                                                                   LN0193
+     C** CALL TO SDBANKPD NECESSARY FOR TITLE                             LN0193
+     C*                                                                   LN0193
+     C                     CALL 'AOBANKR0'                                LN0193
+     C                     PARM '*MSG   ' @RTCD   7                       LN0193
+     C                     PARM '*FIRST ' @OPTN   7                       LN0193
+     C           SDBANK    PARM SDBANK    DSFDY                           LN0193
+     C           @RTCD     IFNE *BLANKS                                   LN0193
+     C                     MOVEL'SDBANKPD'DBFILE             *************LN0193
+     C                     Z-ADD7         DBASE              * DBERR 007 *LN0193
+     C                     MOVEL@OPTN     DBOPTN  7          *************LN0193
+     C                     MOVEL@OPTN     DBKEY                           LN0193
+     C                     MOVEL'FC0600'  DBPGM            ***************LN0193
+     C                     OUT  LDA                                       LN0193
+     C                     OPEN FC0600AU                                  LN0193
+     C                     Z-ADD0         PAGE                            LN1091
+     C                     Z-ADDSFNUMU    SFNUM1  60                      LN0193
+     C                     CALL 'ZSFILE'                                  LN0193
+     C                     PARM           PSSEQ                           LN0193
+     C                     PARM *BLANK    ETTY    3                       LN0193
+     C                     PARM           SFILEU                          LN0193
+     C                     PARM SFNUM1    ZSFNO   60                      LN0193
+     C                     PARM           PERR    1                       LN0193
+     C                     WRITEDBERR                                     LN0193
+     C                     SETON                     U7U8LR               LN0193
+     C                     RETRN                                          LN0193
+     C                     END                                            LN0193
+     C*
+     C** KEY LISTS
+     C*
+     C           RREQ      KLIST
+     C                     KFLD           PETTY
+     C*
+     C           SFNO      KLIST
+     C                     KFLD           D5RQSQ
+     C*
+     C** ACCESS DATA AREA RUNDAT FOR MULTIBRANCH INDICATOR
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           MBIN      COMP 'Y'                      50
+      *                                                                   E36542
+      ** The following are removed and modified below for a better        E36542
+      ** ALL-BRANCHES reporting.                                          E36542
+      *                                                                   E36542
+     C***********                                                         E36542
+     C***ACCESS*REPORT*REQUESTS*FILE*FOR*REQUIRED*BRANCH(ES)***********   E36542
+     C***IF*ENTITY*PASSED*IS*BLANK/ALL,*READ*ALL*RECORDS***************   E36542
+     C***********                                                         E36542
+     C***********PETTY     IFEQ *BLANK                                    E36542
+     C***********PETTY     OREQ 'ALL'                                     E36542
+     C***********          READ FCRREQLA                 80               E36542
+     C***********          ELSE                                           E36542
+     C***********                                                         E36542
+     C***IF*ANY*OTHER*VALUE*IS*PASSED*AS*ENTITY,*READ*ONLY*RECORDS*FOR*   E36542
+     C***THAT*KEY                                                         E36542
+     C***********                                                         E36542
+     C***********RREQ      SETLLFCRREQLA                                  E36542
+     C***********RREQ      READEFCRREQLA                 80               E36542
+     C***********          END                                            E36542
+     C***********                                                         E36542
+     C***IF*NO*RECORDS,*WRITE*NULL*REPORT******************************   E36542
+     C***********                                                         E36542
+     C************IN80     IFEQ '1'                                       E36542
+     C***********          OPEN FC0600P1                                  E36542
+     C***********          Z-ADD0         PAGE                     LN1091 E36542
+     C***********          Z-ADDSFNUM     SFNUM2  60               LN0193 E36542
+     C***********          CALL 'ZSFILE'                                  E36542
+     C***********          PARM           PSSEQ                           E36542
+     C***********          PARM           PETTY                           E36542
+     C***********          PARM           SFILE                           E36542
+     C***********          PARM SFNUM     ZSFNO   60               LN0193 E36542
+     C***********          PARM SFNUM2    ZSFNO   60               LN0193 E36542
+     C***********          PARM           PERR    1                       E36542
+     C***********                                                         E36542
+     C***IF*ERROR*CODE*=*'Y'*THEN*TERMINATE*THE*PROGRAM****************   E36542
+     C***********                                                         E36542
+     C***********PERR      IFEQ 'Y'                                       E36542
+     C***********          SETON                     LR                   E36542
+     C***********          RETRN                                          E36542
+     C***********          END                                            E36542
+     C***********                                                         E36542
+     C***********          WRITEFC0600H0                           LN1091 E36542
+     C***********          WRITENODETL                                    E36542
+     C***********          WRITEEORPT                                     E36542
+     C***********          END                                            E36542
+      *                                                                   E36542
+      ** Access branches file for report                                  E36542
+      **   If entity passed is blank/ALL, read all records                E36542
+      *                                                                   E36542
+     C           SETTY     IFEQ 'ALL'                                     E36542
+     C           SETTY     OREQ *BLANK                                    E36542
+     C                     READ SDBRCHL1                 90               E36542
+     C                     ELSE                                           E36542
+     C           SETTY     SETLLSDBRCHL1                                  E36542
+     C           SETTY     READESDBRCHL1                 90               E36542
+     C                     END                                            E36542
+     C*                                                                   E36542
+     C                     MOVE A8BRCD    PETTY                           E36542
+     C                     MOVE A8BRCD    RDBRN                           E36542
+     C                     MOVE A8BRNM    RBRNM                           E36542
+     C*                                                                   E36542
+     C           *IN90     DOWEQ'0'                                       E36542
+      *                                                                   E36542
+      ** Access report requests file for required branch(es)              E36542
+      *                                                                   E36542
+     C           RREQ      SETLLFCRREQLA                                  E36542
+     C           RREQ      READEFCRREQLA                 80               E36542
+      *                                                                   E36542
+      ** If no records, write null report                                 E36542
+      *                                                                   E36542
+     C           *IN80     IFEQ '1'                                       E36542
+     C           MBIN      ANDEQ'Y'                                       E36542
+     C           *IN60     IFEQ '1'                                       047383
+     C                     CLOSEFC0600P1                                  047383
+     C                     SETOF                     60                   047383
+     C                     END                                            047383
+     C                     OPEN FC0600P1                                  E36542
+     C                     SETON                     60                   047383
+     C                     Z-ADD0         PAGE                     LN1091 E36542
+     C                     Z-ADDSFNUM     SFNUM2  60               LN0193 E36542
+     C                     CALL 'ZSFILE'                                  E36542
+     C                     PARM           PSSEQ                           E36542
+     C                     PARM           PETTY                           E36542
+     C                     PARM           SFILE                           E36542
+     C                     PARM SFNUM2    ZSFNO   60               LN0193 E36542
+     C                     PARM           PERR    1                       E36542
+      *                                                                   E36542
+      ** If ERROR CODE = 'Y' then terminate the program                   E36542
+      *                                                                   E36542
+     C           PERR      IFEQ 'Y'                                       E36542
+     C                     SETON                     LR                   E36542
+     C                     RETRN                                          E36542
+     C                     END                                            E36542
+     C*                                                                   E36542
+     C                     WRITEFC0600H0                           LN1091 E36542
+     C                     WRITENODETL                                    E36542
+     C                     END                                            E36542
+     C*
+     C** PERFORM RECORD PROCESSING
+     C*
+     C           *IN80     DOWEQ'0'
+      *                                                                   E36542
+      ** The following were removed as these are now covered different-   E36542
+      ** ly by the outer loop.                                            E36542
+      *                                                                   E36542
+     C***********                                                         E36542
+      ***WRITE*TO*NEW*PRINTER*FILE*ON*CHANGE*OF*BRANCH*****************   E36542
+     C***********                                                         E36542
+      ***ACCESS*BRANCH*DETAILS*FOR*BRANCH*NAME*************************   E36542
+     C***********                                                         E36542
+     C***********          CALL 'AOBRCHR0'                                E36542
+     C***********          PARM *BLANK    P@APRC  7                       E36542
+     C***********          PARM '*KEY'    P@APOP  7                       E36542
+     C***********          PARM           D5DBRN                          E36542
+     C***********D@BRCH    PARM D@BRCH    DSFDY                           E36542
+     C***********                                                         E36542
+     C***********P@APRC    IFNE *BLANK                                    E36542
+     C************LOCK     IN   LDA                                       E36542
+     C***********          MOVELD5DBRN    DBKEY                           E36542
+     C***********          MOVEL'SDBRCHL1'DBFILE           ***************E36542
+     C***********          Z-ADD1         DBASE            * DB ERROR 001*E36542
+     C***********          MOVEL'FC0600'  DBPGM            ***************E36542
+     C***********          OUT  LDA                                       E36542
+     C***********          OPEN FC0600AU                                  E36542
+     C***********          Z-ADD0         PAGE                     LN1091 E36542
+     C***********          Z-ADDSFNUMU    SFNUM1  60               LN0193 E36542
+     C***********          CALL 'ZSFILE'                                  E36542
+     C***********          PARM           PSSEQ                           E36542
+     C***********          PARM *BLANK    ETTY    3                       E36542
+     C**********           PARM           SFILE                           LN0193
+     C**********           PARM SFNUM     ZSFNO   60                      LN0193
+     C***********          PARM           SFILEU                   LN0193 E36542
+     C***********          PARM SFNUM1    ZSFNO   60               LN0193 E36542
+     C***********          PARM           PERR    1                       E36542
+     C***********          WRITEDBERR                                     E36542
+     C***********          SETON                     U7U8LR               E36542
+     C***********          RETRN                                          E36542
+     C***********          END                                            E36542
+     C*
+      ** OPEN PRINTER FILE
+     C*
+     C           *IN60     IFEQ '1'                                       047383
+     C                     CLOSEFC0600P1                                  047383
+     C                     SETOF                     60                   047383
+     C                     END                                            047383
+     C                     OPEN FC0600P1
+     C                     SETON                     60                   047383
+     C                     Z-ADDSFNUM     SFNUM2  60                      LN0193
+     C                     Z-ADD0         PAGE                            LN1091
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSSEQ
+     C                     PARM           D5DBRN
+     C                     PARM           SFILE
+     C**********           PARM SFNUM     ZSFNO   60                      LN0193
+     C                     PARM SFNUM2    ZSFNO   60                      LN0193
+     C                     PARM           PERR    1
+     C*
+     C** IF ERROR CODE = 'Y' THEN TERMINATE THE PROGRAM
+     C*
+     C           PERR      IFEQ 'Y'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C***********                                                         E36542
+      ***FORMAT*PRINT*FIELDS*******************************************   E36542
+     C***********                                                         E36542
+     C***********          MOVE D5DBRN    RDBRN                           E36542
+     C***********          MOVE A8BRNM    RBRNM                           E36542
+     C*
+      ** WRITE HEADINGS ON CHANGE OF BRANCH/USER
+     C*
+     C           *IN80     DOWEQ'0'
+     C           D5DBRN    ANDEQRDBRN
+     C*
+     C** ACCESS USER DETAILS FOR USER NAME
+     C*
+     C           D5USRR    CHAINMUSER                70
+     C*
+      ** DATABASE ERROR IF NOT FOUND
+     C*
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVELD5USRR    DBKEY
+     C                     MOVEL'MUSER'   DBFILE           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 002*
+     C                     MOVEL'FC0600'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     OPEN FC0600AU
+     C                     Z-ADD0         PAGE                            LN1091
+     C                     Z-ADDSFNUMU    SFNUM1  60                      LN0193
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSSEQ
+     C                     PARM *BLANK    ETTY    3
+     C*********            PARM           SFILE                           LN0193
+     C*********            PARM SFNUM     ZSFNO   60                      LN0193
+     C                     PARM           SFILEU                          LN0193
+     C                     PARM SFNUM1    ZSFNO   60                      LN0193
+     C                     PARM           PERR    1
+     C                     WRITEDBERR
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C** FORMAT SCREEN FIELDS
+     C*
+     C                     MOVE D5USRR    RUSRR
+     C                     MOVE USER1     RUNAM
+     C*
+     C** WRITE HEADINGS
+     C*
+     C                     WRITEFC0600H0
+     C*
+      ** ACCESS REPORT DETAILS ON CHANGE OF REPORT
+     C*
+     C           *IN80     DOWEQ'0'
+     C           D5DBRN    ANDEQRDBRN
+     C           D5USRR    ANDEQRUSRR
+     C*
+      ** ACCESS REPORT DESCRIPTIONS FOR REPORT NAME
+     C*
+     C                     CALL 'AOREPTR0'
+     C                     PARM *BLANK    P@APRC  7
+     C                     PARM '*KEY'    P@APOP  7
+     C                     PARM           D5RNAM
+     C           D@REPT    PARM D@REPT    DSFDY
+     C*
+     C           P@APRC    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVELD5RNAM    DBKEY
+     C                     MOVEL'FCREPTL1'DBFILE           ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 003*
+     C                     MOVEL'FC0600'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     OPEN FC0600AU
+     C                     Z-ADD0         PAGE                            LN1091
+     C                     Z-ADDSFNUMU    SFNUM1  60                      LN0193
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSSEQ
+     C                     PARM *BLANK    ETTY    3
+     C**********           PARM           SFILE                           LN0193
+     C**********           PARM SFNUM     ZSFNO   60                      LN0193
+     C                     PARM           SFILEU                          LN0193
+     C                     PARM SFNUM1    ZSFNO   60                      LN0193
+     C                     PARM           PERR    1
+     C                     WRITEDBERR
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+      ** FORMAT REPORT DETAILS
+     C*
+     C                     MOVE DXRDSC    RRDSC
+     C                     MOVE D5RNAM    RRNAM
+     C*
+      ** PRINT DETAILS FOR ALL SEQUENCES OF THE REPORT
+     C*
+     C           *IN80     DOWEQ'0'
+     C           D5DBRN    ANDEQRDBRN
+     C           D5USRR    ANDEQRUSRR
+     C           D5RNAM    ANDEQRRNAM
+     C*
+      ** FORMAT MAIN DETAILS
+     C*
+     C                     MOVE D5RQSQ    RRQSQ
+     C                     MOVE D5RQTM    RRQTM
+     C                     MOVE D5ETTY    RETTY
+     C                     MOVE *BLANKS   RPROD                           LN1067
+     C                     MOVE *BLANKS   ROUTI                           LN1067
+     C                     MOVE *BLANKS   RLVL                            LN1067
+      *
+      ** FORMAT LEVEL (BLANK FOR SINGLE BRANCH)
+      *
+     C           D5LVL     IFEQ 'B'
+     C                     MOVELTXT,1     RLVL
+     C                     END
+      *
+     C           D5LVL     IFEQ 'C'
+     C                     MOVELTXT,2     RLVL
+     C                     END
+      *
+     C           D5LVL     IFEQ 'S'
+     C                     MOVELTXT,3     RLVL
+     C                     END
+      *                                                                   S01486
+      ** For Account Officer, text is 'A/c Ofr'.                          S01486
+      *                                                                   S01486
+     C           D5LVL     IFEQ 'A'                                       S01486
+     C                     MOVELTXT,13    RLVL                            S01486
+     C                     END                                            S01486
+      *                                                                   S01486
+      ** For Department, text is 'Dept'.                                  S01486
+      *                                                                   S01486
+     C           D5LVL     IFEQ 'D'                                       S01486
+     C                     MOVELTXT,14    RLVL                            S01486
+     C                     END                                            S01486
+     C*
+      ** FORMAT OUTPUT INSTRUCTIONS
+     C*
+     C** INPUT CYCLE?
+     C*
+     C           D5IPCY    IFEQ 'Y'
+     C                     MOVELTXT,4     RPROD
+     C                     END
+     C*
+     C** CLOSE OF BUSINESS?
+     C*
+     C           D5COBR    IFEQ 'Y'
+     C                     MOVELTXT,5     RPROD
+     C                     END
+     C*
+     C** PERIODIC?
+     C*
+     C           D5PDFL    IFEQ 'Y'
+     C                     MOVELTXT,6     RPROD
+     C                     END
+     C*
+     C** USER ID
+     C*
+     C           D5USRO    IFNE *BLANKS
+     C                     MOVELTXT,7     ROUTI
+     C                     MOVE D5USRO    INS
+     C                     END
+     C*
+     C** STANDARD OUTPUT ID
+     C*
+     C           D5SOID    IFNE *BLANK
+     C                     MOVELTXT,8     ROUTI
+     C                     MOVELD5SOID    INS
+     C                     END
+     C*
+     C** DISTRIBUTION LIST
+     C*
+     C           D5DLS1    IFNE *BLANK
+     C                     MOVELTXT,9     ROUTI
+     C                     MOVELD5DLS1    INS
+     C                     END
+     C*
+     C** ARCHIVED ONLY
+     C*
+     C           D5SOID    IFEQ *BLANK
+     C           D5USRO    ANDEQ*BLANK
+     C           D5DLS1    ANDEQ*BLANK
+     C*
+     C** MICROFICHE
+     C*
+     C           D5ARMF    IFEQ 'Y'
+     C                     MOVELTXT,10    ROUTI
+     C                     END
+     C*
+     C** OPTICAL DISK ONLY?
+     C*
+     C           D5ARMF    IFEQ 'N'
+     C           D5AROD    ANDEQ'Y'
+     C                     MOVELTXT,11    ROUTI
+     C                     END
+     C*
+     C                     END
+     C*
+     C** OVERFLOW
+     C*
+     C           LINE      IFGT 52
+     C                     WRITEFC0600H0
+     C                     END
+     C*
+     C** WRITE FIRST LINE OF DETAILS
+     C*
+     C                     WRITERREQDTL
+     C*
+     C** CONTINUATION LINES:
+     C*
+     C** DISTRIBUTION LIST COVERS TWO LINES
+     C*
+     C           D5DLS2    IFNE *BLANK
+     C                     MOVE *BLANK    ROUTI
+     C***********          MOVE D5DLS2    INS                             LN1067
+     C                     MOVELD5DLS2    INS                             LN1067
+     C                     WRITERREQCTN
+     C                     END
+     C*
+     C** ARCHIVED AS WELL AS DISTRIBUTED
+     C*
+     C** MICROFICHE
+     C*
+     C           D5USRO    IFNE *BLANK
+     C           D5SOID    ORNE *BLANK
+     C           D5DLS1    ORNE *BLANK
+     C*
+     C           D5ARMF    IFEQ 'Y'
+     C                     MOVELTXT,10    ROUTI
+     C                     WRITERREQCTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C** OPTICAL DISK
+     C*
+     C           D5USRO    IFNE *BLANK
+     C           D5SOID    ORNE *BLANK
+     C           D5DLS1    ORNE *BLANK
+     C*
+     C           D5AROD    IFEQ 'Y'
+     C                     MOVELTXT,11    ROUTI
+     C                     WRITERREQCTN
+     C                     END
+     C*
+      ** IF DISTRIBUTED AND ARCHIVED TO BOTH MEDIA, STILL ONE LINE O/S
+     C*
+     C                     ELSE
+     C*
+     C           D5ARMF    IFEQ 'Y'
+     C           D5AROD    ANDEQ'Y'
+     C                     MOVELTXT,11    ROUTI
+     C                     WRITERREQCTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C** PROCESS SPOOL FILE ENTRIES IF PRESENT (REPORT JOB HAS BEEN RUN)
+     C*
+     C           D5JUSR    IFNE *BLANK
+     C                     MOVE *BLANK    LRPNAM
+     C                     EXSR SPOOLF
+     C                     END
+     C*
+     C***IF*ENTITY*PASSED*IS*BLANK/ALL,*READ*ALL*RECORDS***************   E36542
+     C***********                                                         E36542
+     C***********PETTY     IFEQ *BLANK                                    E36542
+     C***********PETTY     OREQ 'ALL'                                     E36542
+     C***********          READ FCRREQLA                 80               E36542
+     C***********          ELSE                                           E36542
+     C***********                                                         E36542
+     C***IF*ANY*OTHER*VALUE*IS*PASSED*AS*ENTITY,*READ*ONLY*RECORDS*FOR*   E36542
+     C***THAT*KEY                                                         E36542
+     C*
+     C           RREQ      READEFCRREQLA                 80
+     C                     END
+      *
+      ** END DO WHILE REPORT UNCHANGED
+      *
+     C                     END
+      *
+      ** END DO WHILE REPORT/USER UNCHANGED
+     C*
+     C                     END
+     C*
+      ** END DO WHILE REPORT/USER/BRANCH UNCHANGED
+     C*
+     C                     END
+     C*
+     C** WRITE 'END OF REPORT'
+     C*
+     C***********LINE      IFGT 57                                        LN1091
+     C           LINE      IFGT 54                                        LN1091
+     C                     WRITEFC0600H0
+     C                     END
+     C*                                                                   E36542
+     C           SETTY     IFNE *BLANK                                    E36542
+     C                     WRITEEORPT
+     C                     END                                            E36542
+     C*
+      ** CLOSE REPORT FOR THIS BRANCH
+     C*
+     C           SETTY     IFNE *BLANK                                    E36542
+     C                     CLOSEFC0600P1
+     C                     SETOF                     60                   047383
+     C                     END                                            E36542
+     C*                                                                   E36542
+     C** Access branches file for next branch to report on                E36542
+     C*                                                                   E36542
+     C           SETTY     IFEQ 'ALL'                                     E36542
+     C           SETTY     OREQ *BLANK                                    E36542
+     C                     READ SDBRCHL1                 90               E36542
+     C*                                                                   E36542
+     C                     MOVE A8BRCD    PETTY                           E36542
+     C                     MOVE A8BRCD    RDBRN                           E36542
+     C                     MOVE A8BRNM    RBRNM                           E36542
+     C*                                                                   E36542
+     C                     ELSE                                           E36542
+     C                     SETON                     9080LR               E36542
+     C                     END                                            E36542
+     C*
+      ** END DO WHILE NOT END OF FILE
+     C*
+     C                     END
+     C*                                                                   E36542
+     C           SETTY     IFEQ *BLANK                                    E36542
+     C                     WRITEEORPT                                     E36542
+     C                     CLOSEFC0600P1                                  E36542
+     C                     SETOF                     60                   047383
+     C                     END                                            E36542
+     C*
+     C                     SETON                     LR
+      /EJECT
+     C********************************************************************
+     C*
+     C* S/R SPOOLF - PROCESS SPOOL FILE ENTRIES
+     C*
+     C* CALLED FROM MAIN PROCESSING
+     C* CALLS
+     C*
+     C********************************************************************
+     C*
+     C           SPOOLF    BEGSR
+     C*                                                                   LN1091
+     C** OVERFLOW TEST                                                    LN1091
+     C*                                                                   LN1091
+     C********** LINE      IFGE 57                                  LN1091S01382
+     C           LINE      IFGE 52                                        S01382
+     C                     WRITEFC0600H0                                  LN1091
+     C                     END                                            LN1091
+     C*
+     C** WRITE HEADINGS
+     C*
+     C                     WRITEFC0600H1
+     C*
+     C** READ ALL SPOOL FILE NUMBERS RECORDS FOR THE REQUEST
+     C*
+     C           SFNO      SETLLFCSFNOL1
+     C           SFNO      READEFCSFNOL1                 81
+     C*
+     C** WRITE SPOOL FILE DETAILS FOR EACH RECORD FOUND
+     C*
+     C           *IN81     DOWEQ'0'
+     C*
+      ** FORMAT REPORT NAME/SUFFIX, BRANCH
+     C*
+     C                     MOVELD6RSFX    RPNAM
+     C                     MOVE D6XETY    RXETY
+     C*
+     C** ACCESS SPOOL FILE TEXT IF SPOOL FILE CHANGES
+     C*
+     C           RPNAM     IFNE LRPNAM
+     C                     CALL 'AORSFXR0'
+     C                     PARM *BLANK    P@APRC  7
+     C                     PARM '*KEY'    P@APOP  7
+     C                     PARM           D5RNAM
+     C                     PARM           D6RSFX
+     C           D@RSFX    PARM D@RSFX    DSFDY
+     C*
+     C           P@APRC    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVELRSFXDS    DBKEY
+     C                     MOVEL'FCRSFXL1'DBFILE           ***************
+     C                     Z-ADD6         DBASE            * DB ERROR 006*
+     C                     MOVEL'FC0600'  DBPGM            ***************
+     C                     OUT  LDA
+     C                     OPEN FC0600AU
+     C                     Z-ADD0         PAGE                            LN1091
+     C                     Z-ADDSFNUMU    SFNUM1  60                      LN0193
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSSEQ
+     C                     PARM *BLANK    ETTY    3
+     C**********           PARM           SFILE                           LN0193
+     C**********           PARM SFNUM     ZSFNO   60                      LN0193
+     C                     PARM           SFILEU                          LN0193
+     C                     PARM SFNUM1    ZSFNO   60                      LN0193
+     C                     PARM           PERR    1
+     C                     WRITEDBERR
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     MOVE DYPFTX    RPFTX
+     C                     MOVE RPNAM     LRPNAM
+     C           *LIKE     DEFN D6RSFX    LRPNAM
+     C                     END
+     C*
+     C** ACCESS BRANCH/COMPANY NAME UNLESS AUDIT REPORT
+     C*                                                                   LN0193
+     C** IF AN 'AU' REPORT OR AT SYSTEM LEVEL BLANK OUT REPORT NAME       LN0193
+     C*                                                                   LN0193
+     C           D5LVL     IFEQ 'S'                                       LN0193
+     C           D6AURP    OREQ 'Y'                                       LN0193
+     C*                                                                   LN0193
+     C                     MOVE *BLANKS   RXNAM                           LN0193
+     C                     END                                            LN0193
+     C*                                                                   LN0193
+     C           D5LVL     IFEQ 'B'
+     C           D6AURP    ANDEQ'N'
+     C*
+      ** ACCESS BRANCH DETAILS FOR BRANCH NAME
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    P@APRC  7
+     C                     PARM '*KEY'    P@APOP  7
+     C                     PARM           D6XETY
+     C********** D@BRCH    PARM D@BRCH    DSFDY                                               CGL029
+     C           D@BRCH    PARM D@BRCH    DSSDY                                               CGL029
+     C*
+     C***********P@APRC    IFNE *BLANK                                    067530
+     C************LOCK     IN   LDA                                       067530
+     C***********          MOVELD6XETY    DBKEY                           067530
+     C***********          MOVEL'SDBRCHL1'DBFILE           ***************067530
+     C***********          Z-ADD4         DBASE            * DB ERROR 004*067530
+     C***********          MOVEL'FC0600'  DBPGM            ***************067530
+     C***********          OUT  LDA                                       067530
+     C***********          OPEN FC0600AU                                  067530
+     C***********          Z-ADD0         PAGE                      LN1091067530
+     C***********          Z-ADDSFNUMU    SFNUM1  60                LN0193067530
+     C***********          CALL 'ZSFILE'                                  067530
+     C***********          PARM           PSSEQ                           067530
+     C***********          PARM *BLANK    ETTY    3                       067530
+     C***********          PARM           SFILE                           LN0193
+     C***********          PARM SFNUM     ZSFNO   60                      LN0193
+     C***********          PARM           SFILEU                    LN0193067530
+     C***********          PARM SFNUM1    ZSFNO   60                LN0193067530
+     C***********          PARM           PERR    1                       067530
+     C***********          WRITEDBERR                                     067530
+     C***********          SETON                     U7U8LR               067530
+     C***********          RETRN                                          067530
+     C***********          END                                            067530
+     C*
+     C*  If branch not found, output < Branch not Found >                 067530
+     C           P@APRC    IFNE *BLANK                                    067530
+     C                     MOVE *BLANKS   RXNAM                           067530
+     C                     MOVELTXT,12    RXNAM                           067530
+     C*                                                                   067530
+     C*  Else output branch name.                                         067530
+     C                     ELSE                                           067530
+     C***********          MOVE A8BRNM    RXNAM                           E36542
+     C                     MOVE DSBRNM    RXNAM                           E36542
+     C                     END                                            067530
+     C*
+     C                     END
+     C*
+     C           D5LVL     IFEQ 'C'
+     C           D6AURP    ANDEQ'N'
+     C*
+      ** ACCESS COMPANY DETAILS FOR COMPANY NAME
+     C*
+     C                     CALL 'AOCOMPR0'
+     C                     PARM *BLANK    P@APRC  7
+     C                     PARM '*KEY'    P@APOP  7
+     C                     PARM           D6XETY
+     C           D@COMP    PARM D@COMP    DSFDY
+     C*
+     C***********P@APRC    IFNE *BLANK                                    108329
+     C************LOCK     IN   LDA                                       108329
+     C***********          MOVELD6XETY    DBKEY                           108329
+     C***********          MOVEL'SDCOMPL1'DBFILE           ***************108329
+     C***********          Z-ADD5         DBASE            * DB ERROR 005*108329
+     C***********          MOVEL'FC0600'  DBPGM            ***************108329
+     C***********          OUT  LDA                                       108329
+     C***********          OPEN FC0600AU                                  108329
+     C***********          Z-ADD0         PAGE                     LN1091 108329
+     C***********          Z-ADDSFNUMU    SFNUM1  60               LN0193 108329
+     C***********          CALL 'ZSFILE'                                  108329
+     C***********          PARM           PSSEQ                           108329
+     C***********          PARM *BLANK    ETTY    3                       108329
+     C**********           PARM           SFILE                           LN0193
+     C**********           PARM SFNUM     ZSFNO   60                      LN0193
+     C***********          PARM           SFILEU                   LN0193 108329
+     C***********          PARM SFNUM1    ZSFNO   60               LN0193 108329
+     C***********          PARM           PERR    1                       108329
+     C***********          WRITEDBERR                                     108329
+     C***********          SETON                     U7U8LR               108329
+     C***********          RETRN                                          108329
+     C***********          END                                            108329
+     C*
+     C*  If company code not found, output < Company Code not Found >     108329
+     C*                                                                   108329
+     C           P@APRC    IFNE *BLANK                                    108329
+     C                     MOVE *BLANKS   RXNAM                           108329
+     C                     MOVELTXT,15    RXNAM                           108329
+     C*                                                                   108329
+     C*  Else output company name.                                        108329
+     C*                                                                   108329
+     C                     ELSE                                           108329
+     C                     MOVE APCMNM    RXNAM
+     C                     END                                            108329
+     C*                                                                   108329
+     C                     END
+      *                                                                   S01486
+     C           D5LVL     IFEQ 'A'                                       S01486
+     C           D6AURP    ANDEQ'N'                                       S01486
+     C           D5ETTY    ANDNE'ALL'                                     S01486
+     C           D5ETTY    ANDNE'   '                                     S01486
+      *                                                                   S01486
+      ** Determine how the 2A Account Officer field has been stored.      S01486
+      ** Access the Account Officers file for the Account Officer Name.   S01486
+      *                                                                   S01486
+     C           @POS1     IFNE ' '                                       S01486
+     C                     MOVELD5ETTY    @ACOF   2                       S01486
+     C                     ELSE                                           S01486
+     C                     MOVE D5ETTY    @ACOF                           S01486
+     C                     END                                            S01486
+      *                                                                   S01486
+     C                     CALL 'AOACOFR0'                                S01486
+     C                     PARM *BLANK    @RTCD                           S01486
+     C                     PARM '*KEY    '@OPTN                           S01486
+     C                     PARM           @ACOF                           S01486
+     C           SDACOF    PARM SDACOF    DSFDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'SDACOFL0'DBFILE             *************S01486
+     C                     Z-ADD8         DBASE              * DBERR 008 *S01486
+     C                     MOVELD5ETTY    DBKEY              *************S01486
+     C                     MOVEL'FC0600'  DBPGM                           S01486
+     C                     OUT  LDA                                       S01486
+     C                     OPEN FC0600AU                                  S01486
+     C                     Z-ADD0         PAGE                            S01486
+     C                     Z-ADDSFNUMU    SFNUM1  60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           PSSEQ                           S01486
+     C                     PARM *BLANK    ETTY    3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM SFNUM1    ZSFNO   60                      S01486
+     C                     PARM           PERR    1                       S01486
+     C                     WRITEDBERR                                     S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+      *                                                                   S01486
+     C                     MOVE AZACON    RXNAM                           S01486
+     C                     END                                            S01486
+      *                                                                   S01486
+     C           D5LVL     IFEQ 'D'                                       S01486
+     C           D6AURP    ANDEQ'N'                                       S01486
+     C           D5ETTY    ANDNE'   '                                     S01486
+     C           D5ETTY    ANDNE'ALL'                                     S01486
+      *                                                                   S01486
+      ** Access the Department file for the Department Name.              S01486
+      *                                                                   S01486
+     C                     CALL 'AODEPTR0'                                S01486
+     C                     PARM *BLANK    @RTCD                           S01486
+     C                     PARM '*KEY    '@OPTN                           S01486
+     C                     PARM           SETTY                           S01486
+     C           SDDEPT    PARM SDDEPT    DSFDY                           S01486
+      *                                                                   S01486
+      ** Error                                                            S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'SDDEPTL0'DBFILE             *************S01486
+     C                     Z-ADD9         DBASE              * DBERR 009 *S01486
+     C                     MOVELD5ETTY    DBKEY              *************S01486
+     C                     MOVEL'FC0600'  DBPGM                           S01486
+     C                     OUT  LDA                                       S01486
+     C                     OPEN FC0600AU                                  S01486
+     C                     Z-ADD0         PAGE                            S01486
+     C                     Z-ADDSFNUMU    SFNUM1  60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           PSSEQ                           S01486
+     C                     PARM *BLANK    ETTY    3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM SFNUM1    ZSFNO   60                      S01486
+     C                     PARM           PERR    1                       S01486
+     C                     WRITEDBERR                                     S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+      *                                                                   S01486
+     C                     MOVE AEDPNM    RXNAM                           S01486
+     C                     END                                            S01486
+     C*
+     C** OVERFLOW
+     C*
+     C***********LINE      IFGT 57
+     C           LINE      IFGE 57                                        LN1091
+     C                     WRITEFC0600H0                                  LN1091
+     C                     WRITERREQSFCT
+     C                     END
+     C*
+     C                     WRITESFNODTL
+     C                     MOVE *BLANK    RPFTX
+     C*
+     C           SFNO      READEFCSFNOL1                 81
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+      *****************************************************************
+**  TXT
+Branch
+Company
+System
+I/C Request
+C/B Request
+Periodic
+USER:
+SOI:
+DIST:
+Archived on Microfiche
+Archived on Optical Disk
+  < BRANCH NOT FOUND >                                                    067530
+A/c Ofr
+Dept
+<COMPANY CODE NOT FOUND>                                                  108329
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

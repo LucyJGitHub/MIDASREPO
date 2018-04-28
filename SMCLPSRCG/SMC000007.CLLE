@@ -1,0 +1,220 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Check contents of "to" GVLIB')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000007 - Check contents of "to" GVLIB                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CUP038             Date 13Jul07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK025  *CREATE    Date 03Jul06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP038 - Library list should contain program library        */
+/*       CPK025 - MidasPlus 1.3 packaging.  Global layer migration.  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFXSVAL &OPFXSVAL &BRGSVAL)
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BRGLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FROMGVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOGVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOGPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOGTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(UPGSVALJ0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Check that System Values have an entry. */
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PREFIX) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&BRGLIB) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+/* Set up messages for Midas Information Screen  */
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC000007' 'ENTER' ' ')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Set up library names. */
+             CHGVAR     VAR(&FROMGVLIB) VALUE(&OLDSBSID *TCAT 'GVLIB')
+             CHGVAR     VAR(&TOGVLIB) VALUE(&PREFIX *TCAT 'GVLIB')
+             CHGVAR     VAR(&TOGMLIB) VALUE(&PREFIX *TCAT 'GMLIB')
+             CHGVAR     VAR(&TOGPLIB) VALUE(&PREFIX *TCAT 'GPLIB')
+             CHGVAR     VAR(&TOGTALIB) VALUE(&PREFIX *TCAT 'GTALIB')
+ 
+/* Delete outfiles if they already exist. */
+             DLTF       FILE(QTEMP/FROMGVLIB)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&BRGLIB/FILEMBR)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(&BRGLIB/FILEMULMBR)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Get data about logical file members in "from" GVLIB. */
+             DSPFD      FILE(&FROMGVLIB/*ALL) TYPE(*MBR) +
+                          OUTPUT(*OUTFILE) FILEATR(*LF) +
+                          OUTFILE(&BRGLIB/FILEMBR)
+ 
+             CPYF       FROMFILE(&BRGLIB/FILEMBR) +
+                          TOFILE(&BRGLIB/FILEMULMBR) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF MBNOMB *GT 1))
+ 
+/* Rebuild logical file members. */
+/**Save*library*list*and*set*global*library*list up. */ /*                             */ /*CUP038*/
+/**********  SAVLIBL    SAVDTL(SMC000007)                                              */ /*CUP038*/
+/* Set global library list up. */                                                         /*CUP038*/
+             CALL       PGM(GPC000016) PARM(&PREFIX)
+/* Call program to update library name on FILEMULMBR. */
+             CALL       PGM(SM0264)
+/* Call program to add logical file members. */
+             CALL       PGM(UPC0265) PARM(&BRGLIB &RETURN)
+             IF         COND(&RETURN *EQ 'C') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+/* Call program to rebuild logical file members. */
+             CALL       PGM(SMC0266) PARM(&RETURN)
+             IF      COND(&RETURN *EQ 'C') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**Reset*library*list.**/ /*                                                           */ /*CUP038*/
+/**********  RSTLIBL    SAVEDLIBL(SMC000007)                                           */ /*CUP038*/
+ 
+/* Produce outfile of files in "from" GVLIB. */
+DSPOBJD:
+             DSPOBJD    OBJ(&FROMGVLIB/*ALL) OBJTYPE(*ALL) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/FROMGVLIB)
+ 
+/* Produce outfile of files in "to" GVLIB. */
+             DSPFD      FILE(&TOGVLIB/*ALL) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/UPGVLBOF)
+ 
+/* Produce query to identify files not in "to" library that */
+/*  exist in "from" library.                                */
+             OPNQRYF    FILE((QTEMP/FROMGVLIB) (UPGVLBOF)) +
+                          FORMAT(QADSPOBJ) JFLD((1/ODOBNM 2/ATFILE +
+                          *EQ)) JDFTVAL(*ONLYDFT)
+             CPYFRMQRYF FROMOPNID(FROMGVLIB) TOFILE(QTEMP/SMGVNFQF) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             CLOF       OPNID(FROMGVLIB)
+ 
+/* Change library list in case compiles are to be attempted. */
+             RMVLIBLE   LIB(&TOGMLIB)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&TOGMLIB)
+ 
+             RMVLIBLE   LIB(&TOGPLIB)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&TOGPLIB)
+ 
+             RMVLIBLE   LIB(&TOGTALIB)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&TOGTALIB)
+ 
+/* Call program to produce report of files not in "to" library. */
+             CLRPFM     FILE(UPNOTFPD) MBR(SMGVNFQF)
+             MONMSG     MSGID(CPF3141)
+             CPYF       FROMFILE(QTEMP/SMGVNFQF) TOFILE(UPNOTFPD) +
+                          TOMBR(SMGVNFQF) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             OVRDBF     FILE(UPNOTFPD) TOFILE(UPNOTFPD) MBR(SMGVNFQF)
+             CALL       PGM(UP0260)
+/* Call program to produce display file for file selection. */
+             CALL       PGM(UP0261) PARM(&TOGVLIB)
+             DLTOVR     FILE(UPNOTFPD)
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC000007') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC000007' 'ENTER' ' ')
+             MONMSG     MSGID(CPF0000)
+ 
+ END:
+/* Remove added libraries. */
+             RMVLIBLE   LIB(&TOGMLIB)
+             MONMSG     MSGID(CPF0000)
+             RMVLIBLE   LIB(&TOGPLIB)
+             MONMSG     MSGID(CPF0000)
+             RMVLIBLE   LIB(&TOGTALIB)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

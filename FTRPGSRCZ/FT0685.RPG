@@ -1,0 +1,330 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT FLAG P/R EVENTS AS PROCESSED- NON-I/C')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FUNDS TRANSFER MODULE
+     F*                                                               *
+     F*  FT0685 - FLAG P/R EVENTS AS PROCESSED   END OF DAY           *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CFT120             Date 28Sep12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01JUN00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 175479             Date 08FEB00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CEU006              DATE  28MAY98             *
+     F*                 S01435              DATE  08SEP93             *
+     F*                 S01117              DATE  21NOV90             *   S01117
+     F*                 S01194              DATE  21NOV90             *   S01194
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CFT009 - FT Fees and Charge Development-Recompiled           *
+      *     175479 - Recompiled over changes in OTPAYDD               *
+     F*     CEU006 - EMU Funds Transfer Enhancements (Recompile Only) *
+     F*     S01435 - Incoming Message Management.                     *
+     F*     S01117 - RCF PROCESSING                                   *
+     F*     S01194 - NEW DATABASE ERROR HANDLING                      *
+     F*                                                               *
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*    01            OTPAYDD
+     F*    02            CQPACDD
+     F*    03            NTRANDD
+     F*
+     F*       20      FIRST CYCLE IND.
+     F*
+     F*       27         INVALID UPDATE
+     F*       88         RECORD NOT FOUND
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     FPRACN   IP  E           K        DISK
+     F            OTPAYDDF                          KRENAMEOTPAYDDR
+     F            CQPACDDF                          KRENAMECQPACDDR
+     F            NTRANDDF                          KRENAMENTRANDDR
+     FOTPAY   UF  E           K        DISK
+     FCQPAC   UF  E           K        DISK
+     F            CQPADDDF                          KIGNORE
+     FNTRAN   UF  E           K        DISK
+     FTABFP   IF  E           K        DISK
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F************TABLETJF                          KIGNORE               S01117
+     F            TABLETRF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F*FT0685P1O***E********************PRINTER                           S01117
+     FFT0685AUO   E                    PRINTER                            S01117
+     F*
+     F********************************************************************
+     E                    CPY@    1   1 80
+     I/EJECT
+     I********************************************************************
+     I*
+     I** DEFINE RECORD IDENTIFYING INDICATORS
+     I*  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     I*
+     IOTPAYDDR    01
+     I*
+     ICQPACDDR    02
+     I*
+     INTRANDDR    03
+     I*
+     I***
+     ITABTB10F
+     I***
+     I***   STANDING DATA FILE DETAIL  - PF/TABTB10  ICD 1
+     I***
+     I              RECI                            RECITB
+     I*
+     I** DATA AREA LDA - USED IN THE EVENT OF DATABASE ERRORS
+     I*
+     IDLDA        DS                            256
+     I**************************************134 138 DBFILE                S01194
+     I**************************************139 167 DBKEY                 S01194
+     I**************************************168 175 DBPGM                 S01194
+     I**************************************176 177 DBASE                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I********************************************************************
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C********************************************************************
+     C***
+     C***    KLIST FOR KEY TO  - PF/CQPAC
+     C***
+     C           KCQPAC    KLIST
+     C                     KFLD           PREF
+     C                     KFLD           WCQSQ   20
+     C*
+     C********************************************************************
+     C*
+     C**   FIRST CYCLE
+     C*    -----------
+     C*
+     C           *IN20     IFEQ '0'                        ### B001
+     C                     SETON                     20
+     C*
+     C                     MOVEL'01    '  ZTABKY 12
+     C                     MOVE '    10'  ZTABKY
+     C**
+     C           ZTABKY    CHAINTABFP                99    ON NOT THERE
+     C*
+     C           *IN99     IFEQ '1'                        ### B002
+     C           RECITB    ORNE 'D'
+     C                     MOVE 'TABFP'   WBFILE  5        ***************
+     C                     MOVELZTABKY    WBKEY  28        ** DBERR  01 **
+     C                     Z-ADD01        WBASE   20       ***************
+     C                     EXSR ABORT
+     C                     END                             ### E002
+     C*
+     C                     END                             ### E001
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**  DETAIL  PROCESSING
+     C*   ~~~~~~~~~~~~~~~~~~
+     C*
+     C** PERFORM SUBROUTINE ACCORDING TO RECORD TYPE
+     C*
+     C                     SETOF                     2788  WORK IND.
+     C*
+     C           *IN01     CASEQ'1'       OTPAYS
+     C*
+     C           *IN02     CASEQ'1'       CQPACS
+     C*
+     C           *IN03     CASEQ'1'       NTRANS
+     C*
+     C                     END
+     C*
+     C** FINAL PROCESSING : PRINT RUN CONTROLS REPORT
+     C*  ~~~~~~~~~~~~~~~~
+     C*
+     C*  IF THERE ARE NO RECORDS ON THE FILE THEN CHAIN FOR DETAIL
+     C*
+     CLR         *IN20     IFEQ '0'                        ### B001
+     CLR                   SETON                     20
+     C*
+     CLR                   MOVEL'01    '  ZTABKY 12
+     CLR                   MOVE '    10'  ZTABKY
+     C**
+     CLR         ZTABKY    CHAINTABFP                99    ON NOT THERE
+     C*
+     CLR         *IN99     IFEQ '1'                        ### B002
+     CLR         RECITB    ORNE 'D'
+     CLR                   MOVE 'TABFP'   WBFILE  5        ***************
+     CLR                   MOVELZTABKY    WBKEY  28        ** DBERR  02 **
+     CLR                   Z-ADD02        WBASE   20       ***************
+     CLR                   EXSR ABORT
+     CLR                   END                             ### E002
+     C*
+     CLR                   END                             ### E001
+     C*
+     C*LR*******************WRITEP1CONT                                   S01117
+     CLR                   WRITEAUCONT                                    S01117
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**   PROCESSING OF A 'OTPAYDD' RECORD
+     C*
+     C           OTPAYS    BEGSR
+     C*
+     C           PREF      CHAINOTPAY                88
+     C*
+     C           *IN88     IFEQ '1'                        ### B001
+     C                     MOVE 'OTPAY'   WBFILE  5        ***************
+     C                     MOVELPREF      WBKEY  28        ** DBERR  02 **
+     C                     Z-ADD02        WBASE   20       ***************
+     C                     EXSR ABORT
+     C                     END                             ### E001
+     C*
+     C**   UPDATE THE P/R INDICATOR
+     C*
+     C                     MOVE 'Y'       PRIN
+     C*
+     C                     EXCPTOTPAYO
+     C*
+     C                     ADD  1         TOTREC           RECORD
+     C*                                                                **
+     C                     ENDSR                                        *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**   PROCESSING OF A 'CQPACDD' RECORD
+     C*
+     C           CQPACS    BEGSR
+     C*
+     C           KCQPAC    CHAINCQPAC                88    CHAIN FAIL
+     C*
+     C           *IN88     IFEQ '1'                        ### B001
+     C                     MOVE 'CQPAC'   WBFILE  5        ***************
+     C                     MOVELPREF      WBKEY  28        ** DBERR  02 **
+     C                     Z-ADD02        WBASE   20       ***************
+     C                     EXSR ABORT
+     C                     END                             ### E001
+     C*
+     C**   UPDATE THE P/R INDICATOR
+     C*
+     C                     MOVE 'Y'       PRIN
+     C*
+     C                     EXCPTCQPACO
+     C*
+     C                     ADD  1         TOTREC           RECORD
+     C*                                                                **
+     C                     ENDSR                                        *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**   PROCESSING OF A 'NTRANDD' RECORD
+     C*
+     C           NTRANS    BEGSR
+     C*
+     C           TFRF      CHAINNTRAN                88    CHAIN FAIL
+     C*
+     C           *IN88     IFEQ '1'                        ### B001
+     C                     MOVE 'NTRAN'   WBFILE  5        ***************
+     C                     MOVELTFRF      WBKEY  28        ** DBERR  03 **
+     C                     Z-ADD03        WBASE   20       ***************
+     C                     EXSR ABORT
+     C                     END                             ### E001
+     C*
+     C**   UPDATE THE P/R INDICATOR
+     C*
+     C                     MOVE 'Y'       PRIN
+     C*
+     C                     EXCPTNTRANO
+     C*
+     C                     ADD  1         TOTREC           RECORD
+     C*                                                                **
+     C                     ENDSR                                        *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  FUNCTION : TO ABORT THE PROGRAM IN THE EVENT OF A DATABASE
+     C*             ERROR.
+     C*
+     C           ABORT     BEGSR
+     C*
+     C** SETON INDICATORS TO INDICATE DATABASE ERRORS
+     C*
+     C                     SETON                     U7U8LR
+     C*
+     C           *NAMVAR   DEFN LDA       DLDA
+     C           *LOCK     IN   DLDA
+     C                     MOVEL'FT0685'  DBPGM
+     C                     MOVELWBKEY     DBKEY
+     C                     MOVELWBFILE    DBFILE
+     C                     MOVELWBASE     DBASE
+     C                     OUT  DLDA
+     C*
+     C** REPORT DATABASE ERROR
+     C*
+     C*********************WRITEP1CONT                                    S01117
+     C                     WRITEAUCONT                                    S01117
+     C*
+     C*********************MOVELDBASE     P2DBAS                          S01117
+     C*********************MOVELDBFILE    P2DBFL                          S01117
+     C*********************MOVELDBKEY     P2DBKY                          S01117
+     C*********************WRITEP1DBER                                    S01117
+     C                     MOVELDBASE     AUDBAS                          S01117
+     C                     MOVELDBFILE    AUDBFL                          S01117
+     C                     MOVELDBKEY     AUDBKY                          S01117
+     C                     WRITEAUDBER                                    S01117
+     C*
+     C** PRODUCE PROGRAM DUMP
+     C*
+     C                     DUMP
+     C*
+     C** END PROGRAM
+     C*
+     C                     RETRN
+     C*
+     C           UEEND     ENDSR
+     C********************************************************************
+     OOTPAYDDFE                OTPAYO
+     O                         PRIN
+     O*
+     OCQPACDDFE                CQPACO
+     O                         PRIN
+     O*
+     ONTRANDDFE                NTRANO
+     O                         PRIN
+     O*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

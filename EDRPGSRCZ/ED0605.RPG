@@ -1,0 +1,1073 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Write DATA type batches for Mccy Rollover')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0605 - ED Write DATA type batches for Multi-Currency       *
+      *           Rollovers (CoB)                                     *
+      *                                                               *
+      *  Function: This program is called during close of business    *
+      *            by the ED bulk transfer as a special processing    *
+      *            program for the multi-currency rollovers           *
+      *            It writes DATA formatted batch records to          *
+      *            PF/EDBULKPD.                                       *
+      *                                                               *
+      *  Called By: EDC0020 - Bulk Transfer                           *
+      *                                                               *
+      *  Calls:     EDC0024  - Open New Batch                         *
+      *             AOBANKR0 - Access SD Bank Details                 *
+      *             AOMEXPR0 - Access ED ICD Details                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 01Aug04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE031             Date 20May03               *
+      *                 CAP075             Date 08Jul02               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU031  *CREATE    Date 12Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CLE106 - Syndications Manager.                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE031 - Lending Enhancements.                               *
+      *  CAP075 - Lending API enhancements - Loan Amendment.          *
+      *           (amendment in common with CAP079)                   *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CEU031 - EMU Global Manager Changes.                         *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDFBUTPDUF  E           K        DISK         KINFSR *PSSR
+      **  List of files to transfer to DTA
+      *
+     FEDBULKPDO   F    4096            DISK         KINFSR *PSSR      UC
+      **  Bulk Transfer data
+      *
+     FEDSAVXPDO   E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      ** Batches to send to DTA
+      *
+     FEDBUAUPDO   E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      **  Audit File
+      *
+     FEDMCRLPDIF  E                    DISK         KINFSR *PSSR
+      ** Consolidated events
+      *
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR
+      * LE Loans File
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+      *
+     FLMANP   IF  E           K        DISK         KINFSR *PSSR
+      * LE Loans Amendment file
+      *
+     FED0605AUO   E                    PRINTER                        UC
+      ** Audit report
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  01 - EOF on EDMCRLPD                                         *
+      *  02 - NRF Lf/CLOAN                                            *
+      *  03 - EOF/NRF Lf/CLOAN                                        *
+      *  U7 - Database error                                          *
+      *  U8 - Database error                                          *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT  - Initial processing                                   *
+      *  PROCES- Detail Processing                                    *
+      *  READ  - Read file                                            *
+      *  OBTCH - Open new Batch processing                            *
+      *  WRITE - Write detail record to EDBULKPD                      *
+      *  SRDETL- Proces Detail record                                 *
+      *  KEYLT - Check for last record in key                         *
+      *  CBTCH - Close Batch processing                               *
+      *  CLOSE - Closedown processing                                 *
+      *  *PSSR - Program Error Processing                             *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      **  Array for Object Copyright Statement.
+     E                    DATA     3971  1
+     E                    DLOANL   2000  1
+     E                    DLOANK   2000  1
+     E                    MLOANL   2000  1
+     E                    MLOANK   2000  1
+      *
+      *
+     I/TITLE I-SPECIFICATIONS
+      *
+     ILOANA     E DSCLOANCL
+      ** Loan Details 'A'
+      *-----------------------------------------------------------
+     ILOANB     E DSCLOANCK
+      ** Loan Details 'B'
+     I              RECI                            BBRECI
+     I              LNRF                            BBLNRF
+     I              RCDT                            BBRCDT
+     I              MRIN                            BBMRIN
+     I              ORED                            BBORED
+     I              LCD                             BBLCD
+     I              CHTP                            BBCHTP
+     I              TNLU                            BBTNLU
+     I              FRNT                            BBFRNT                                    CAP075
+     I              AFRT                            BBAFRT                                    CAP075
+     I              REPA                            BBREPA                                    CAP075
+     I              TMST                            BBTMST                                    CAP075
+      *-----------------------------------------------------------
+     ILOAM      E DSLOAMSDK
+      ** Loan Amendment Details
+     I              RECI                            CCRECI
+     I              LNRF                            CCLNRF
+     I              VDAT                            CCVDAT
+     I              MRIN                            CCMRIN
+     I              LTYP                            CCLTYP
+     I              SUTP                            CCSUTP
+     I              PTYP                            CCPTYP
+     I              BRTT                            CCBRTT
+     I              RTSP                            CCRTSP
+     I              CCY                             CCCCY
+     I              BRCA                            CCBRCA
+     I              CNUM                            CCCNUM
+     I              REPT                            CCREPT
+     I              AUTO                            CCAUTO
+     I              FACO                            CCFACO
+     I              SPI1                            CCSPI1
+     I              SPI2                            CCSPI2
+     I              SPI3                            CCSPI3
+     I              BRTE                            CCBRTE
+     I              SPIN                            CCSPIN
+     I              WTIN                            CCWTIN
+     I              FCUS                            CCFCUS
+     I              FTYP                            CCFTYP
+     I              FSEQ                            CCFSEQ
+     I              INTC                            CCINTC
+     I              NACD                            CCNACD
+     I              FCLB                            CCFCLB
+     I              ORED                            CCORED
+     I              LCD                             CCLCD
+     I              CHTP                            CCCHTP
+     I              TNLU                            CCTNLU
+     I              RSTM                            CCRSTM
+     I              RONS                            CCRONS
+     I              RIBN                            CCRIBN
+     I              RIBA                            CCRIBA
+     I              ROBN                            CCROBN
+     I              ROCN                            CCROCN
+     I              PSTM                            CCPSTM
+     I              PONS                            CCPONS
+     I              PIBN                            CCPIBN
+     I              PIBA                            CCPIBA
+     I              POBN                            CCPOBN
+     I              POCN                            CCPOCN
+     I              RCRN                            CCRCRN
+     I              RCRA                            CCRCRA
+     I              RVNO                            CCRVNO
+     I              AWBN                            CCAWBN
+     I              AWBA                            CCAWBA
+     I              BENN                            CCBENN
+     I              BENA                            CCBENA
+     I              DTP1                            CCDTP1
+     I              DTP2                            CCDTP2
+     I              DTP3                            CCDTP3
+     I              DTP4                            CCDTP4
+     I              DCHG                            CCDCHG
+     I              BTB1                            CCBTB1
+     I              BTB2                            CCBTB2
+     I              BTB3                            CCBTB3
+     I              BTB4                            CCBTB4
+     I              BTB5                            CCBTB5
+     I              BTB6                            CCBTB6
+     I              CVMR                            CCCVMR
+     I              FSRP                            CCFSRP
+     I              FSGN                            CCFSGN
+     I              FPRC                            CCFPRC
+     I              DFTP                            CCDFTP
+     I              DFST                            CCDFST
+     I              MNSG                            CCMNSG
+     I              GASS                            CCGASS
+     I              GPRT                            CCGPRT
+     I              IUSR                            CCIUSR
+     I              AUSR                            CCAUSR
+     I              XUSR                            CCXUSR
+     I              PCRF                            CCPCRF
+     I              PCOB                            CCPCOB
+     I              PDDI                            CCPDDI
+     I              PTDI                            CCPTDI
+     I              SCCY                            CCSCCY
+     I              ICCY                            CCICCY
+     I              ECIN                            CCECIN
+     I              REPI                            CCREPI                                    CLE011
+     I              CHDU                            CCCHDU                                    CLE028
+     I              REXR                            CCREXR                                    CLE031
+     I              REXI                            CCREXI                                    CLE031
+     I              PSCY                            CCPSCY                                    CLE031
+     I              PEXR                            CCPEXR                                    CLE031
+     I              PEXI                            CCPEXI                                    CLE031
+     I              STAL                            CCSTAL                                    CLE031
+     I              FRNT                            CCFRNT                                    CAP075
+     I              AFRT                            CCAFRT                                    CAP075
+     I              REPA                            CCREPA                                    CAP075
+     I              TMST                            CCTMST                                    CAP075
+     I              RONSQQ                          #RONS1                                    CGL029
+     I              PONSQQ                          #PONS1                                    CGL029
+     I              AUTH                            CCAUTH                                    CLE106
+     I              BASR                            CCBASR                                    CLE106
+     I              SLTP                            CCSLTP                                    CLE106
+     I              SLST                            CCSLST                                    CLE106
+     I              CLAS                            CCCLAS                                    CLE042
+     I              DFCL                            CCDFCL                                    CLE042
+     I              SLCL                            CCSLCL                                    CLE042
+      *-----------------------------------------------------------
+     IPSDS       SDS
+      **  Program status data structure.
+     I                                      244 253 WJOB
+     I                                      254 263 WUSER
+     I                                      264 2690WJOBNO
+      *-----------------------------------------------------------
+     IWBATCH      DS                             10
+      ** Batch Name field
+     I                                        1   3 WEDDTX
+     I                                        4   40WSTREM
+     I                                        5  100WBATNN
+      *-----------------------------------------------------------
+     IDBERR       DS                            256
+      ** Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      *-----------------------------------------------------------
+     I            DS
+      ** Data Structure for EDBULKPD output
+     I                                        1 125 BLKOUT
+     I                                        1   50JOENTL
+     I                                        6  150JOSEQN
+     I                                       16  16 JOCODE
+     I                                       17  18 JOENTT
+     I                                       19  24 JODATE
+     I                                       25  300JOTIME
+     I                                       31  40 JOJOB
+     I                                       41  50 JOUSER
+     I                                       51  560JONBR
+     I                                       57  66 JOPGM
+     I                                       67  76 JOOBJ
+     I                                       77  86 JOLIB
+     I                                       87  96 JOMBR
+     I                                       97 1060JOCTRR
+     I                                      107 107 JOFLAG
+     I                                      108 1170JOCCID
+     I                                      118 125 JORES
+      *-----------------------------------------------------------
+     IEDBULK      DS
+      ** ED ICD Details
+     I                                        1   60UBTCH0
+     I                                        7  120UBTCH1
+     I                                       13  180UBTCH2
+     I                                       19  240UBTCH3
+     I                                       25  300UBTCH4
+     I                                       31  360UBTCH5
+     I                                       37  420UBTCH6
+     I                                       43  480UBTCH7
+     I                                       49  540UBTCH8
+     I                                       55  600UBTCH9
+      *-----------------------------------------------------------
+     IEDMCRL    E DSEDMCRLPD
+      ** DS for Multi-Currency Rollovers Extract
+      *-----------------------------------------------------------
+     IWOVR        DS                             54
+      **  DS for QCMDEXC
+     I                                       44  53 WDSBAT
+      *-----------------------------------------------------------
+      **  Constant for QCMDEXC
+      *
+     I              'OVRDBF FILE(EDBULKPD-C         QOVR
+     I              ') TOFILE(EDBULKPD) M-
+     I              'BR(XXXXXXXXXX)'
+      *-----------------------------------------------------------
+     ITFROK       DS
+      * Setup Data structure for Deletion from Failed Bulk Transfers
+     I                                        1  10 XFILEN
+     I                                       11  20 XMEMBN
+      *
+      *-----------------------------------------------------------
+      *
+     I              'Bulk Trans'          C         LIBR
+      *-----------------------------------------------------------
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *-----------------------------------------------------------
+     IDSSDY     E DSDSSDY
+      ** Second Data Structure for Access Objects
+      *-----------------------------------------------------------
+     ISDMEXP    E DSSDMEXPPD
+      ** ED ICD Details
+      *-----------------------------------------------------------
+     ISDBANK    E DSSDBANKPD
+      ** SD Bank details
+      *-----------------------------------------------------------
+     ISDSTRD    E DSSDSTRDPD
+      ** Securities tradings details
+      *-----------------------------------------------------------
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      ** Program entry
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           USVLIB  7
+     C           XFILEN    PARM           UFILNM 10
+     C           XMEMBN    PARM           UMEMBN 10
+     C                     PARM           USQCD   3
+     C                     PARM           USTREM  1
+      *
+     C                     EXSR INIT
+      *
+     C                     EXSR PROCES
+      *
+     C                     EXSR CLOSE
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *================================================================
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT  - Initial processing                                  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: AOMEXPR0 - Access ED ICD details                      *
+      *         AOBANKR0 - Access SD Bank Details                     *
+      *         AOSTRDR0 - Access SE Trading Details                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Copyright Statement.
+     C                     MOVEACPY@      ACT@   80
+      *
+      **  Definitions
+     C           *LIKE     DEFN EABTCH    WBCNNM
+      *
+     C           KLOAN     KLIST
+     C**********           KFLD           KLNRF   60                                          CLE148
+     C                     KFLD           KLNRF   6                                           CLE148
+     C                     KFLD           KRCDT   1
+      *
+     C           KLOAM     KLIST
+     C                     KFLD           KLNRF
+     C                     KFLD           KVDAT   50
+     C                     KFLD           KLASN   30
+      *
+     C                     MOVELUFILNM    DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'ED0605'  DBPGM
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Database error.
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL'ED0605'  DBPGM            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Access ED ICD details.
+     C                     CALL 'AOMEXPR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMEXP    PARM SDMEXP    DSFDY
+      *
+      ** Database error.
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDMEXPPD'DBFILE           * DB ERROR 02 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVEL'ED0605'  DBPGM
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Securities Trading details.
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+     C*
+      ** Database error.
+     C           @RTCD     IFNE *BLANK
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'SDSTRDPD'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            * DB ERROR 03 *
+     C                     MOVEL'ED0605'  DBPGM            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** File and member names for PF/EDBUAUPD Audit file
+      *
+     C                     MOVELUFILNM    EAFNME
+     C           UMEMBN    IFEQ *BLANKS
+     C                     MOVELUFILNM    EAMNME
+     C                     ELSE
+     C                     MOVELUMEMBN    EAMNME
+     C                     ENDIF
+      *
+      ** Components of batch name and batch location fields
+      *
+     C                     MOVE *BLANKS   WBCNNM
+     C                     MOVEL'EDB'     WEDDTX
+     C                     MOVELUSTREM    WSTREM
+     C                     MOVELUSQCD     EFSQCD
+      *
+      ** Get the next number for a batch for this stream from
+      ** DTAARA/EDBULK
+      *
+     C           *NAMVAR   DEFN           EDBULK
+     C           *LOCK     IN   EDBULK
+     C                     SELEC
+     C           USTREM    WHEQ '0'
+     C                     Z-ADDUBTCH0    WBATNN
+     C           USTREM    WHEQ '1'
+     C                     Z-ADDUBTCH1    WBATNN
+     C           USTREM    WHEQ '2'
+     C                     Z-ADDUBTCH2    WBATNN
+     C           USTREM    WHEQ '3'
+     C                     Z-ADDUBTCH3    WBATNN
+     C           USTREM    WHEQ '4'
+     C                     Z-ADDUBTCH4    WBATNN
+     C           USTREM    WHEQ '5'
+     C                     Z-ADDUBTCH5    WBATNN
+     C           USTREM    WHEQ '6'
+     C                     Z-ADDUBTCH6    WBATNN
+     C           USTREM    WHEQ '7'
+     C                     Z-ADDUBTCH7    WBATNN
+     C           USTREM    WHEQ '8'
+     C                     Z-ADDUBTCH8    WBATNN
+     C           USTREM    WHEQ '9'
+     C                     Z-ADDUBTCH9    WBATNN
+     C                     ENDSL
+     C                     OUT  EDBULK
+      *
+      ** Initialise count for number of records written to EDBULKPD.
+      *
+     C                     Z-ADD0         COUNT   50
+     C                     Z-ADD0         JOCCID
+      *
+      ** Initialise fields for bulk transfer record
+      *
+     C                     Z-ADD4096      JOENTL
+     C                     Z-ADD1         JOSEQN
+     C                     MOVE 'R'       JOCODE
+     C                     MOVE 'PT'      JOENTT
+     C                     TIME           TIMSTP 120
+     C                     MOVELTIMSTP    JOTIME
+     C                     MOVE TIMSTP    JODATE
+     C                     MOVE WJOB      JOJOB
+     C                     MOVE WUSER     JOUSER
+     C                     MOVE WJOBNO    JONBR
+     C                     MOVEL'EDC0020' JOPGM
+     C                     MOVELUFILNM    JOOBJ
+     C                     MOVELLIBR      JOLIB
+     C                     MOVE UMEMBN    JOMBR
+     C                     CLEARJOCTRR
+     C                     MOVE '1'       JOFLAG
+     C                     CLEARJORES
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do detail processing.                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: OPEN - Open file subroutine                           *
+      *         READ - Read file subroutine                           *
+      *         OBTCH - Open Batch subroutine                         *
+      *         WRITE - Write detail record subroutine                *
+      *         KEYLT - Check for last record in key subroutine       *
+      *         CBTCH - Close Batch subroutine                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ** Read file
+     C                     READ EDMCRLPD                 01
+      *
+      ** If records found, open new batch.
+     C           *IN01     IFEQ '0'
+     C                     EXSR OBTCH
+     C                     ELSE
+      *
+      ** No records found, write no batch audit record.
+      *
+     C                     MOVEL*BLANKS   EABTCH
+     C                     MOVEL'No Batch'EABTCH
+     C                     Z-ADD*ZERO     EARECT
+     C                     WRITEEDBUAUD0
+     C                     ENDIF
+      *
+      ** Process all records in file.
+     C           *IN01     DOWEQ'0'
+      *
+      ** If maximum batch size reached, close the batch
+      *
+     C           COUNT     IFGE E7BUMR
+     C                     EXSR CBTCH
+     C                     EXSR OBTCH
+     C                     ENDIF
+      *
+      ** Process record
+     C                     EXSR SRDETL
+      *
+      ** Read next record
+     C                     READ EDMCRLPD                 01
+      *
+     C                     ENDDO
+      *
+      ** If batch has been opened, close batch.
+     C           COUNT     IFGT 0
+     C                     EXSR CBTCH
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRDETL
+      *****************************************************************
+      *                                                               *
+      *  SRDETL- Process detail record per loan number read.          *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      **  Clear array fields
+      *
+     C                     MOVEA*BLANKS   DLOANL
+     C                     MOVEA*BLANKS   DLOANK
+     C                     MOVEA*BLANKS   MLOANL
+     C                     MOVEA*BLANKS   MLOANK
+      *
+      **  Access CLOAN record for the loan
+      *
+     C**********           Z-ADDEDLNRF    KLNRF                                               CLE148
+     C                     MOVELEDLNRF    KLNRF                                               CLE148
+     C                     MOVE 'A'       KRCDT
+      *
+     C           KLOAN     CHAINCLOAN                02
+      *
+     C           *IN02     IFEQ *ON
+     C                     Z-ADD04        DBASE
+     C                     MOVEL'CLOAN   'DBFILE
+     C                     MOVELKLNRF     DBKEY
+     C           DBKEY     CAT  KRCDT:1   DBKEY     P      ***************
+     C                     MOVEL'ED0605'  DBPGM            * DB ERROR 04 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Move detail 'A' before image to EDMCRLPD with CHTP = 'D'
+      *
+     C                     MOVEL'D'       CHTP
+     C                     MOVEALOANA     DLOANL
+      *
+      ** Move detail 'A' after image to EDMCRLPD with CHTP = 'M'
+      *
+     C                     MOVEL'M'       CHTP
+     C                     MOVEALOANA     MLOANL
+      *
+      **  Access CLOAN record 'B' for the loan
+      *
+     C                     MOVE 'B'       KRCDT
+      *
+     C           KLOAN     CHAINCLOAN                02
+      *
+     C           *IN02     IFEQ *ON
+     C                     Z-ADD05        DBASE
+     C                     MOVEL'CLOAN   'DBFILE
+     C                     MOVELKLNRF     DBKEY            ***************
+     C           DBKEY     CAT  KRCDT:1   DBKEY     P      * DB ERROR 05 *
+     C                     MOVEL'ED0605'  DBPGM            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move detail 'B' before image to EDMCRLPD with CHTP = 'D'
+      *
+     C                     EXSR SRMFL1
+     C                     MOVEL'D'       BBCHTP
+     C                     MOVEALOANB     DLOANK
+      *
+      ** Move detail 'A' before image to EDMCRLPD with CHTP = 'M'
+      *
+     C                     MOVEL'M'       BBCHTP
+     C                     MOVEALOANB     MLOANK
+      *
+      ** Write DATA entries to EDBULKPD
+      *
+     C                     EXSR WRITE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WRITE
+      *****************************************************************
+      *                                                               *
+      *  WRITE - Subroutine to write detail record to EDBULKPD.       *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRITE     BEGSR
+      *
+     C                     ADD  1         JOCCID
+     C                     MOVEA*BLANKS   DATA
+     C                     TIME           TIMSTP
+     C                     MOVELTIMSTP    JOTIME
+     C                     MOVE TIMSTP    JODATE
+      *
+      ** Write CLOANCL 'Delete' record
+     C                     MOVEADLOANL    DATA
+     C                     MOVEL'CLOANCL' JOOBJ     P
+     C                     EXCPTDTL
+     C                     ADD  1         COUNT
+      *
+      ** Write CLOANCK 'Delete' record
+     C                     MOVEA*BLANKS   DATA
+     C                     MOVEADLOANK    DATA
+     C                     MOVEL'CLOANCK' JOOBJ     P
+     C                     EXCPTDTL
+     C                     ADD  1         COUNT
+      *
+      ** Define a new commit group for 'insert' records
+     C                     ADD  1         JOCCID
+      *
+      ** Write CLOANCL 'Insert' record
+     C                     MOVEA*BLANKS   DATA
+     C                     MOVEAMLOANL    DATA
+     C                     MOVEL'CLOANCL' JOOBJ     P
+     C                     EXCPTDTL
+     C                     ADD  1         COUNT
+      *
+      ** Write CLOANCK 'Insert' record
+     C                     MOVEA*BLANKS   DATA
+     C                     MOVEAMLOANK    DATA
+     C                     MOVEL'CLOANCK' JOOBJ     P
+     C                     EXCPTDTL
+     C                     ADD  1         COUNT
+      *
+      ** For each Loan Amendment record after the rollover date,
+      ** write one record to EDBULKPD.
+      *
+     C**********           Z-ADDEDLNRF    KLNRF                                               CLE148
+     C                     MOVELEDLNRF    KLNRF                                               CLE148
+     C                     Z-ADDEDVDAT    KVDAT
+     C                     Z-ADD0         KLASN
+      *
+     C           KLOAM     SETGTLMANP
+     C           KLNRF     READELMANP                    03
+      *
+     C           *IN03     DOWEQ*OFF
+      *
+      ** Define a new commit group for loamsdk records
+     C                     ADD  1         JOCCID
+      *
+     C                     MOVEA*BLANKS   DATA
+     C                     EXSR SRMFL2
+     C                     MOVEALOAM      DATA
+     C                     MOVEL'LOAMSDK' JOOBJ     P
+     C                     EXCPTDTL
+     C                     ADD  1         COUNT
+      *
+     C           KLNRF     READELMANP                    03
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/OBTCH
+      *****************************************************************
+      *
+      *  OBTCH - Subroutine to open new batch.                        *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *                                                               *
+      *  Calls: EDC0024                                               *
+      *         QCMDEXC                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OBTCH     BEGSR
+      *
+      ** Increment batch name
+     C                     ADD  1         WBATNN
+      *
+      ** Call EDC0024 to create new member of PF/EDBULKPD
+      *
+     C                     CALL 'EDC0024'
+     C                     PARM           WBATCH
+     C                     PARM           WRTCD1  1
+      *
+     C           WRTCD1    IFNE *BLANKS
+     C                     Z-ADD006       DBASE            ***************
+     C                     MOVEL'EDC0024 'DBFILE           * DB ERROR 06 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Override to new member of PF/EDBULKPD - Do this in RPG
+      ** rather than in EDC0024 as the override is needed at
+      ** this level.
+      *
+     C                     MOVELQOVR      WOVR
+     C                     MOVELWBATCH    WDSBAT
+     C                     CALL 'QCMDEXC'
+     C                     PARM           WOVR
+     C                     PARM 54        QLEN   155
+      *
+      ** Open PF/EDBULKPD now the correct member exists
+      ** Write header record of PF/EDBULKPD
+      *
+     C                     OPEN EDBULKPD
+     C                     EXCPTHDR
+     C                     ADD  1         COUNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CBTCH
+      *****************************************************************
+      *                                                               *
+      *  CBTCH  - Subroutine to close batch.                          *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *             WRTBEG                                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CBTCH     BEGSR
+      *
+     C                     CLOSEEDBULKPD
+      *
+      ** Write batch location to PF/EDSAVXPD.
+      *
+     C                     MOVELUSVLIB    EFLIBR
+     C                     MOVEL'/'       EFSEP1
+     C                     MOVEL'EDBULKPD'EFFILE
+     C                     MOVEL'.'       EFSEP2
+     C                     MOVELWBATCH    EFMEMB
+     C                     MOVEL*BLANKS   EFBLNK
+     C                     MOVELUSQCD     EFSQCD
+     C                     WRITEEDSAVXD0
+      *
+      ** Write Audit record to EDBUAUPD
+      *
+     C                     MOVELWBATCH    EABTCH
+     C                     Z-ADDCOUNT     EARECT
+      *
+     C                     WRITEEDBUAUD0
+      *
+      ** Reset count for number of records written to EDBULKPD.
+      *
+     C                     Z-ADD0         COUNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRMFL1
+      *****************************************************************
+      *                                                               *
+      *  SRMFL1 - Move read fields to data structure fields before    *
+      *           writing record to file (brought about by            *
+      *           compilation contraints in I specs)                  *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMFL1    BEGSR                                       **
+      *
+     C                     MOVELRECI      BBRECI
+     C**********           Z-ADDLNRF      BBLNRF                                              CLE148
+     C                     MOVELLNRF      BBLNRF                                              CLE148
+     C                     MOVELRCDT      BBRCDT
+     C                     MOVELMRIN      BBMRIN
+     C                     Z-ADDLCD       BBLCD
+     C                     MOVELCHTP      BBCHTP
+     C                     Z-ADDTNLU      BBTNLU
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRMFL2
+      *****************************************************************
+      *                                                               *
+      *  SRMFL2 - Move read fields to data structure fields before    *
+      *           writing record to file (brought about by            *
+      *           compilation contraints in I specs)                  *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMFL2    BEGSR                                       **
+      *
+     C                     MOVE RECI      CCRECI
+     C**********           Z-ADDLNRF      CCLNRF                                              CLE148
+     C                     MOVELLNRF      CCLNRF                                              CLE148
+     C                     Z-ADDVDAT      CCVDAT
+     C                     Z-ADDMRIN      CCMRIN
+     C                     MOVE LTYP      CCLTYP
+     C                     MOVE SUTP      CCSUTP
+     C                     Z-ADDPTYP      CCPTYP
+     C                     Z-ADDBRTT      CCBRTT
+     C                     Z-ADDRTSP      CCRTSP
+     C                     MOVE CCY       CCCCY
+     C                     MOVE BRCA      CCBRCA
+     C**********           Z-ADDCNUM      CCCNUM                                              CSD027
+     C                     MOVE CNUM      CCCNUM                                              CSD027
+     C                     Z-ADDREPT      CCREPT
+     C                     MOVE AUTO      CCAUTO
+     C                     MOVE FACO      CCFACO
+     C                     MOVE SPI1      CCSPI1
+     C                     MOVE SPI2      CCSPI2
+     C                     MOVE SPI3      CCSPI3
+     C                     Z-ADDBRTE      CCBRTE
+     C                     MOVE SPIN      CCSPIN
+     C                     MOVE WTIN      CCWTIN
+     C**********           Z-ADDFCUS      CCFCUS                                              CSD027
+     C                     MOVE FCUS      CCFCUS                                              CSD027
+     C                     Z-ADDFTYP      CCFTYP
+     C                     Z-ADDFSEQ      CCFSEQ
+     C                     MOVE INTC      CCINTC
+     C                     MOVE NACD      CCNACD
+     C                     MOVE FCLB      CCFCLB
+     C                     Z-ADDORED      CCORED
+     C                     Z-ADDLCD       CCLCD
+     C                     MOVE CHTP      CCCHTP
+     C                     Z-ADDTNLU      CCTNLU
+     C                     Z-ADDRSTM      CCRSTM
+     C                     MOVE RONS      CCRONS
+     C                     MOVE RIBN      CCRIBN
+     C                     MOVE RIBA      CCRIBA
+     C**********           Z-ADDROBN      CCROBN                                              CSD027
+     C**********           Z-ADDROCN      CCROCN                                              CSD027
+     C                     MOVE ROBN      CCROBN                                              CSD027
+     C                     MOVE ROCN      CCROCN                                              CSD027
+     C                     Z-ADDPSTM      CCPSTM
+     C                     MOVE PONS      CCPONS
+     C                     MOVE PIBN      CCPIBN
+     C                     MOVE PIBA      CCPIBA
+     C**********           Z-ADDPOBN      CCPOBN                                              CSD027
+     C**********           Z-ADDPOCN      CCPOCN                                              CSD027
+     C                     MOVE POBN      CCPOBN                                              CSD027
+     C                     MOVE POCN      CCPOCN                                              CSD027
+     C                     MOVE RCRN      CCRCRN
+     C                     MOVE RCRA      CCRCRA
+     C                     MOVE RVNO      CCRVNO
+     C                     MOVE AWBN      CCAWBN
+     C                     MOVE AWBA      CCAWBA
+     C                     MOVE BENN      CCBENN
+     C                     MOVE BENA      CCBENA
+     C                     MOVE DTP1      CCDTP1
+     C                     MOVE DTP2      CCDTP2
+     C                     MOVE DTP3      CCDTP3
+     C                     MOVE DTP4      CCDTP4
+     C                     MOVE DCHG      CCDCHG
+     C                     MOVE BTB1      CCBTB1
+     C                     MOVE BTB2      CCBTB2
+     C                     MOVE BTB3      CCBTB3
+     C                     MOVE BTB4      CCBTB4
+     C                     MOVE BTB5      CCBTB5
+     C                     MOVE BTB6      CCBTB6
+     C                     MOVE CVMR      CCCVMR
+     C                     Z-ADDFSRP      CCFSRP
+     C                     MOVE FSGN      CCFSGN
+     C                     MOVE FPRC      CCFPRC
+     C                     MOVE DFTP      CCDFTP
+     C                     MOVE DFST      CCDFST
+     C                     MOVE MNSG      CCMNSG
+     C                     MOVE GASS      CCGASS
+     C                     MOVE GPRT      CCGPRT
+     C                     MOVE IUSR      CCIUSR
+     C                     MOVE AUSR      CCAUSR
+     C                     MOVE XUSR      CCXUSR
+     C                     MOVE PCRF      CCPCRF
+     C                     MOVE PCOB      CCPCOB
+     C                     MOVE PDDI      CCPDDI
+     C                     MOVE PTDI      CCPTDI
+     C                     MOVE SCCY      CCSCCY
+     C                     MOVE ICCY      CCICCY
+     C                     MOVE ECIN      CCECIN
+     C                     MOVE BASR      CCBASR                                              CLE106
+     C                     MOVE SLTP      CCSLTP                                              CLE106
+     C                     MOVE SLST      CCSLST                                              CLE106
+     C                     MOVE CLAS      CCCLAS                                              CLE042
+     C                     MOVE DFCL      CCDFCL                                              CLE042
+     C                     MOVE SLCL      CCSLCL                                              CLE042
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CLOSE
+      *****************************************************************
+      *                                                               *
+      *  CLOSE - Subroutine for closedown processing.                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLOSE     BEGSR
+      *
+     C           *LOCK     IN   EDBULK
+     C                     SELEC
+     C           USTREM    WHEQ '0'
+     C                     Z-ADDWBATNN    UBTCH0
+     C           USTREM    WHEQ '1'
+     C                     Z-ADDWBATNN    UBTCH1
+     C           USTREM    WHEQ '2'
+     C                     Z-ADDWBATNN    UBTCH2
+     C           USTREM    WHEQ '3'
+     C                     Z-ADDWBATNN    UBTCH3
+     C           USTREM    WHEQ '4'
+     C                     Z-ADDWBATNN    UBTCH4
+     C           USTREM    WHEQ '5'
+     C                     Z-ADDWBATNN    UBTCH5
+     C           USTREM    WHEQ '6'
+     C                     Z-ADDWBATNN    UBTCH6
+     C           USTREM    WHEQ '7'
+     C                     Z-ADDWBATNN    UBTCH7
+     C           USTREM    WHEQ '8'
+     C                     Z-ADDWBATNN    UBTCH8
+     C           USTREM    WHEQ '9'
+     C                     Z-ADDWBATNN    UBTCH9
+     C                     ENDSL
+     C                     OUT  EDBULK
+      *
+      **  Delete record from Failed Bulk Transfers PF/EDFBUTPD
+      *
+     C           TFROK     DELETEDFBUTPD             01
+     C                     COMIT
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     MOVE 'E'       WRTCD1
+     C                     SETON                     U7U8LR
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      **  ERROR REPORT  ED0410AU
+      *
+     C                     OPEN ED0605AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEED0605AU
+      *
+     C                     DUMP
+     C                     ENDIF
+      *
+     ** Exit program
+     C                     RETRN
+     C                     ENDSR
+      *
+      *****************************************************************
+      ***
+     OEDBULKPDE                HDR
+     O                                   20 'MIDAS_DRIP_FEED     '
+     O                                   24 '4096'
+     O                         UFILNM    34
+     O                                   42 'UNIQUEPT'
+     OEDBULKPDE                DTL
+     O                         BLKOUT   125
+     O                         DATA    4096
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1011 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Incoming Messages Report')                    *
+     F*****************************************************************
+      *                                                               *
+      *  Midas - SWIFT Direct Link Module                         *
+      *                                                               *
+      *  MS5060 - Incoming Messages Report                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD023232           Date 24Apr14               *
+      *  Prev Amend No. AR567569           Date 27Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG22407           Date 22Jan09               *
+      *                 250829             Date 10Oct07               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 124673             Date 04Jun98               *
+      *                 097534             Date 21DEC95               *
+      *                 088882             DATE 20OCT95               *
+      *                 086960             DATE 20OCT95               *
+      *                 CSW095             DATE 10APR95               *
+      *                 E43953             DATE O6OCT92               *
+      *                 E39479             DATE 05MAY92               *
+      *                 S01310             DATE 06DEC90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD023232 - CRLF can be X'0D25' or X'0D15' so check both.     *
+      *  AR567569 - MT950 with multiple messages can cause array      *
+      *             index error.  Fix is to report multiple and       *
+      *             duplicate messages individually.                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG22407 - When EndOfText is reached, end loop.              *
+      *  250829 - Handle messages with trailers longer than 128 chara *
+      *           to prevent 'Array index is invalid' message'        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  124673 - Add Century field to key lists and use for          *
+      *           selection purposes.                                 *
+      *  097534 - 088882 not fully incorporated. Index error in array *
+      *           LINE. The program is not expecting certain message  *
+      *           types, e.g. MT961's, which contain a lot of data.   *
+      *           In these cases write another line to the report.    *
+      *           Also reduce the size of array LINE from 130 to 128  *
+      *           as it occupies columns 5 to 132 on the report.      *
+      *  088882 - Recompile for change to MS5060P1.                   *
+      *  086960 - Remove E43953.                                      *
+      *           Show each message as it is on file, including       *
+      *           duplicates, by scanning for end-of-text marker.     *
+      *  CSW095 - S.W.I.F.T 1995 Message Changes.                     *
+      *           Increase arrays to handle a 10,000 character        *
+      *           message.                                            *
+      *  E43953 - Temp fix to prevent array index error when          *
+      *           duplicated messages on incoming msg file            *
+      *  E39479 - Recompiled for change to printer file               *
+      *  S01310 - Re written for SWIFT rationalisation                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FSDBANKPDIF  E                    DISK
+     FSDBRCHL0IF  E           K        DISK
+     FMSMSI2L0IF  E           K        DISK
+     F            MSMSI2D0                          KRENAMEMSMSI20F
+     FMSMSI2L1IF  E           K        DISK
+     F            MSMSI2D0                          KRENAMEMSMSI21F
+     FMSMSI2L2IF  E           K        DISK
+     F            MSMSI2D0                          KRENAMEMSMSI22F
+     FMSMSI2L3IF  E           K        DISK
+     F            MSMSI2D0                          KRENAMEMSMSI23F
+     FMSMSI2LBIF  E           K        DISK
+     F            MSMSI2D0                          KRENAMEMSMSI2BF
+     FMSMSI2LCIF  E           K        DISK
+     F            MSMSI2D0                          KRENAMEMSMSI2CF
+     FMSMSI2LDIF  E           K        DISK
+     F            MSMSI2D0                          KRENAMEMSMSI2DF
+     FMSMSI2LEIF  E           K        DISK
+     F            MSMSI2D0                          KRENAMEMSMSI2EF
+     FMS5060AUO   E                    PRINTER      KINFDS SPOOLA     UC
+     FMS5060P1O   E             06     PRINTER      KINFDS SPOOLP     UC
+     F/COPY WNCPYSRC,MS5060F001
+      *
+      * ID C  F  H  L    Function of indicators
+      *    06            Overflow indicator
+      *    10            EOF MSMSI2PD
+      *    11            Record validation
+      *    41            Multibranching on
+      *    50            by type, priority, date, time
+      *    51            by type, date, time
+      *    52            by priority, date, time
+      *    53            by date, time
+      *    88            EOF SDBRCHL0
+      *    89            EOF SDBANKPD
+      *    U7U8LR        DB error
+      *
+     F/COPY WNCPYSRC,MS5060F002
+     E***********         IMSG     3072  1                                CSW095
+     E                    IMSG     9999  1                                CSW095
+     E*******             LINE      130  1                                097534
+     E                    LINE      128  1                                097534
+     E                    CPY@    1   1 80
+     E/COPY WNCPYSRC,MS5060E001
+      *
+     IPARAM       DS
+     I                                        1   3 PTYP
+     I                                        4   4 PPTY
+     I                                        5  10 POSD
+     I                                       11  14 POST
+     I                                       15  20 POED
+     I                                       21  24 POET
+     I                                        5  100@OSD
+     I                                       11  140@OST
+     I                                       15  200@OED
+     I                                       21  240@OET
+      **  Parameters data structure
+      *
+     I            DS
+     I                                        1 114 @HDR
+     I                                        7  18 ORAD
+     I                                       19  22 OSNN
+     I                                       23  28 OSQN
+     I                                       34  36 OMTP
+     I                                       37  40 OITM
+     I                                       41  68 OMIR
+     I                                       69  74 @ODT
+     I                                       75  78 OOTM
+     I                                       79  79 @MPY
+     I                                       81  83 @WK3
+      **  Message header data structure
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     ISPOOLA      DS
+     I                                       83  92 AFILE
+     I                                    B 123 1240AFNUM
+     ISPOOLP      DS
+     I                                       83  92 PFILE
+     I                                    B 123 1240PFNUM
+      **  File information data structure
+     I/COPY WNCPYSRC,MS5060I001
+      *
+     C           KEY0      KLIST
+     C                     KFLD           MTPY
+     C                     KFLD           MPRY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEY1      KLIST
+     C                     KFLD           MTPY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEY2      KLIST
+     C                     KFLD           MPRY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEY3      KLIST
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEYB      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           MTPY
+     C                     KFLD           MPRY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEYC      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           MTPY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEYD      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           MPRY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEYE      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RLEV    1
+     C                     PARM           RENT    3
+     C                     PARM           PARAM
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - Main process                                        *
+      *   INIT  - Initial process                                     *
+      *   REPT1 - Non multibranched report                            *
+      *   REPT2 - Single branch report                                *
+      *   REPT3 - ALL branch report                                   *
+      *   REPT  - Format message for report                           *
+      *   VRCD  - Validate record                                     *
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN - Main process                                         *
+      *   Calls -  INIT Initial process                               *
+      *            REPT1 - Non multibranched report                   *
+      *            REPT2 - Single branch report                       *
+      *            REPT3 - ALL branch report                          *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Set up keys
+     C                     MOVE PTYP      MTPY
+     C                     MOVE PPTY      MPRY
+     C                     MOVE POSD      MODE
+     C                     MOVE POST      MOTM
+      *                                                                   124673
+      **  Set up century field for key list using start date.             124673
+     C           POSD      IFEQ *BLANKS                                   124673
+     C                     MOVE *BLANKS   MODEC                           124673
+     C                     ELSE                                           124673
+      *                                                                   124673
+     C                     MOVELPOSD      @OSDC   2                       124673
+     C           @OSDC     IFLT '72'                                      124673
+     C                     MOVE '20'      MODEC                           124673
+     C                     MOVE '20'      @OSDC                           124673
+     C                     ELSE                                           124673
+     C                     MOVE '19'      MODEC                           124673
+     C                     MOVE '19'      @OSDC                           124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+      **  Set up century field for end date validation.                   124673
+     C           POED      IFEQ *BLANKS                                   124673
+     C                     MOVE *BLANKS   @OEDC   2                       124673
+     C                     ELSE                                           124673
+      *                                                                   124673
+     C                     MOVELPOED      @OEDC                           124673
+      *                                                                   124673
+     C           @OEDC     IFLT '72'                                      124673
+     C                     MOVE '20'      @OEDC                           124673
+     C                     ELSE                                           124673
+     C                     MOVE '19'      @OEDC                           124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+      *
+      **  If type & priority entered report by type,priority,date,time
+     C           MTPY      IFNE *BLANK
+     C           MPRY      IFNE *BLANK
+     C                     SETON                     50
+      *
+      **  If type entered report by type,date,time
+     C                     ELSE
+     C                     SETON                     51
+     C                     END
+      *
+      **  If priority entered report by priority,date,time
+     C                     ELSE
+     C           MPRY      IFNE *BLANK
+     C                     SETON                     52
+      *
+      **  Report by date,time
+     C                     ELSE
+     C                     SETON                     53
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,MS5060C003
+      *
+      ** If multibranching on and not system level
+     C           MBIN      IFEQ 'Y'
+     C           RLEV      ANDNE'S'
+      *
+     C           RENT      IFEQ 'ALL'
+     C                     EXSR REPT3
+     C                     ELSE
+     C                     MOVE RENT      BRCA
+     C                     EXSR REPT2
+     C                     END
+      *
+     C                     ELSE
+     C                     EXSR REPT1
+     C                     END
+     C/COPY WNCPYSRC,MS5060C004
+      *
+      **  Write report trailer
+     C                     WRITEEOREPT
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MS5060  'DBPGM
+     C                     OUT  LDA
+     C/COPY WNCPYSRC,MS5060C010
+      *
+      **  Initialise 'CR' and 'LF' fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVE *LOVAL    NL      1                                         MD023232
+     C                     BITON'357'     NL                                                MD023232
+     C                     MOVE *LOVAL    ETX     1
+     C                     BITON'67'      ETX
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+     C                     MOVELCR        CRNL    2                                         MD023232
+     C                     MOVE NL        CRNL                                              MD023232
+      *
+      **  Access SDBANKPD for report title
+     C                     READ SDBANKPD                 89
+      *
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '01'      DBASE
+     C                     MOVE 'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     OPEN MS5060AU
+     C                     MOVE AFILE     SFILE
+     C                     Z-ADDAFNUM     ZSNUM
+     C                     EXSR SPLF
+     C                     WRITEHEADERA
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C                     IN   DSRUN
+      *
+      ** If multibranching on and not system level display branch code
+     C           MBIN      IFEQ 'Y'
+     C           RLEV      ANDNE'S'
+     C                     MOVE '1'       *IN41
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT1 - Non multibranched report                            *
+      *   Calls - REPT Format message for report                      *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           REPT1     BEGSR
+      *
+      **  Read first record
+     C   50      KEY0      SETLLMSMSI2L0
+     C   50                READ MSMSI2L0                 10
+     C   51      KEY1      SETLLMSMSI2L1
+     C   51                READ MSMSI2L1                 10
+     C   52      KEY2      SETLLMSMSI2L2
+     C   52                READ MSMSI2L2                 10
+     C   53      KEY3      SETLLMSMSI2L3
+     C   53                READ MSMSI2L3                 10
+      *
+     C                     OPEN MS5060P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C                     EXSR SPLF
+     C                     WRITEHEADER
+      *
+      **  Write 'NO MESSAGES TO REPORT'
+     C           *IN10     IFEQ '1'
+     C                     WRITENORECS
+      *
+      **  Process all messages which match parameters
+     C                     ELSE
+      *
+     C           *IN10     DOWEQ'0'
+     C           *IN11     ANDEQ'0'
+     C/COPY WNCPYSRC,MS5060C012
+     C***********          Z-ADD1         X       40                      CSW095
+     C                     Z-ADD1         X       50                      CSW095
+      *
+      **  Move all records which match key into array
+     C           *IN10     DOWEQ'0'
+      *                                                                                     AR567569
+      ** IF "{1:" HAS BEEN REPEATED, IT'S A MULTIPLE OR DUPLICATE                           AR567569
+      *                                                                                     AR567569
+     C                     MOVELMDTA      WSTRT   3                                         AR567569
+     C           WSTRT     IFEQ '{1:'                                                       AR567569
+     C           X         ANDNE1                                                           AR567569
+     C                     EXSR REPT                                                        AR567569
+     C                     WRITEHEADER                                                      AR567569
+     C                     Z-ADD1         X                                                 AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                                     AR567569
+     C                     MOVEAMDTA      IMSG,X
+     C********** ETX       SCAN MDTA      @POS    30                                 086960 AR567569
+      *
+     C   50      KEY0      READEMSMSI2L0                 10
+     C   51      KEY1      READEMSMSI2L1                 10
+     C   52      KEY2      READEMSMSI2L2                 10
+     C   53      KEY3      READEMSMSI2L3                 10
+      *****************************************************************              086960 AR567569
+      **If*end-of-text*marker*is*found*and*more*records*exist*with*****              086960 AR567569
+      **this*key,*then*this*message*is*one*of*a*group*of*duplicates.***              086960 AR567569
+     C********** @POS      IFGT *ZERO                                                086960 AR567569
+     C********** *IN10     ANDEQ*OFF                                                 086960 AR567569
+     C**********           EXSR REPT                                                 086960 AR567569
+     C**********           WRITEHEADER                                               086960 AR567569
+     C**********           Z-ADD1         X                                          086960 AR567569
+     C**********           ELSE                                                      086960 AR567569
+      *
+     C***If*there is going to be an array index                     E43953086960
+     C***********                                                   E43953086960
+     C***********X         IFGT 2816                               E43953 CSW095
+     C*******    X         IFGT 9984                               CSW095 086960
+     C*                                                                   E43953
+     C************IN30     DOWEQ'0'                                 E43953086960
+     C***50******KEY0      READEMSMSI2L0                 30         E43953086960
+     C***51******KEY1      READEMSMSI2L1                 30         E43953086960
+     C***52******KEY2      READEMSMSI2L2                 30         E43953086960
+     C***53******KEY3      READEMSMSI2L3                 30         E43953086960
+     C***********          END                                      E43953086960
+     C***********                                                   E43953086960
+     C***********          MOVE '0'       *IN30                     E43953086960
+     C***********          MOVE '1'       *IN10                     E43953086960
+     C***********          MOVE '1'       *INU5                     E43953086960
+     C***********          ELSE                                     E43953086960
+     C*                                                                   E43953
+     C                     ADD  256       X
+     C**********           ENDIF                                                     086960 AR567569
+     C***********          END                                      E43953086960
+     C                     END
+     C                     SETOF                     10
+      *
+      **  Write message & next report header
+     C                     EXSR REPT
+     C                     WRITEHEADER
+      *
+      **  Read first record of next message
+     C   50      KEY0      SETGTMSMSI2L0
+     C   50                READ MSMSI2L0                 10
+     C   51      KEY1      SETGTMSMSI2L1
+     C   51                READ MSMSI2L1                 10
+     C   52      KEY2      SETGTMSMSI2L2
+     C   52                READ MSMSI2L2                 10
+     C   53      KEY3      SETGTMSMSI2L3
+     C   53                READ MSMSI2L3                 10
+      *
+     C                     EXSR VRCD
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT2 - Single branch report                                *
+      *   Calls - REPT Format message for report                      *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           REPT2     BEGSR
+      *
+      **  Read first record
+     C   50      KEYB      SETLLMSMSI2LB
+     C   50                READ MSMSI2LB                 10
+     C   51      KEYC      SETLLMSMSI2LC
+     C   51                READ MSMSI2LC                 10
+     C   52      KEYD      SETLLMSMSI2LD
+     C   52                READ MSMSI2LD                 10
+     C   53      KEYE      SETLLMSMSI2LE
+     C   53                READ MSMSI2LE                 10
+      *
+     C                     OPEN MS5060P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C                     EXSR SPLF
+     C           BRCA      CHAINSDBRCHL0             88
+     C                     WRITEHEADER
+      *
+      **  Write 'NO MESSAGES TO REPORT'
+     C           *IN10     IFEQ '1'
+     C                     WRITENORECS
+      *
+      **  Process all messages which match parameters
+     C                     ELSE
+      *
+     C           *IN10     DOWEQ'0'
+     C           *IN11     ANDEQ'0'
+     C/COPY WNCPYSRC,MS5060C013
+     C***********          Z-ADD1         X       40                      CSW095
+     C                     Z-ADD1         X                               CSW095
+      *
+      **  Move all records which match key into array
+     C           *IN10     DOWEQ'0'
+      *                                                                                     AR567569
+      ** IF "{1:" HAS BEEN REPEATED, IT'S A MULTIPLE OR DUPLICATE                           AR567569
+      *                                                                                     AR567569
+     C                     MOVELMDTA      WSTRT                                             AR567569
+     C           WSTRT     IFEQ '{1:'                                                       AR567569
+     C           X         ANDNE1                                                           AR567569
+     C                     EXSR REPT                                                        AR567569
+     C                     WRITEHEADER                                                      AR567569
+     C                     Z-ADD1         X                                                 AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                                     AR567569
+     C                     MOVEAMDTA      IMSG,X
+     C********** ETX       SCAN MDTA      @POS                                       086960 AR567569
+      *
+     C   50      KEYB      READEMSMSI2LB                 10
+     C   51      KEYC      READEMSMSI2LC                 10
+     C   52      KEYD      READEMSMSI2LD                 10
+     C   53      KEYE      READEMSMSI2LE                 10
+      *****************************************************************              086960 AR567569
+      **If*end-of-text*marker*is*found*and*more*records*exist*with*****              086960 AR567569
+      **this*key,*then*this*message*is*one*of*a*group*of*duplicates.***              086960 AR567569
+     C********** @POS      IFGT *ZERO                                                086960 AR567569
+     C********** *IN10     ANDEQ*OFF                                                 086960 AR567569
+     C**********           EXSR REPT                                                 086960 AR567569
+     C**********           WRITEHEADER                                               086960 AR567569
+     C**********           Z-ADD1         X                                          086960 AR567569
+     C**********           ELSE                                                      086960 AR567569
+      *
+     C***If*there is going to be an array index                     E43953086960
+     C***********                                                   E43953086960
+     C***********X         IFGT 2816                               E43953 CSW095
+     C***********X         IFGT 9984                               CSW095 086960
+     C*                                                                   E43953
+     C************IN30     DOWEQ'0'                                 E43953086960
+     C***50******KEYB      READEMSMSI2LB                 30         E43953086960
+     C***51******KEYC      READEMSMSI2LC                 30         E43953086960
+     C***52******KEYD      READEMSMSI2LD                 30         E43953086960
+     C***53******KEYE      READEMSMSI2LE                 30         E43953086960
+     C***********          END                                      E43953086960
+     C***********                                                   E43953086960
+     C***********          MOVE '0'       *IN30                     E43953086960
+     C***********          MOVE '1'       *IN10                     E43953086960
+     C***********          MOVE '1'       *INU5                     E43953086960
+     C***********          ELSE                                     E43953086960
+     C*                                                                   E43953
+     C                     ADD  256       X
+     C**********           ENDIF                                                     086960 AR567569
+     C***********          END                                      E43953086960
+     C                     END
+     C                     SETOF                     10
+      *
+      **  Write message & next report header
+     C                     EXSR REPT
+     C                     WRITEHEADER
+      *
+      **  Read first record of next message
+     C   50      KEYB      SETGTMSMSI2LB
+     C   50                READ MSMSI2LB                 10
+     C   51      KEYC      SETGTMSMSI2LC
+     C   51                READ MSMSI2LC                 10
+     C   52      KEYD      SETGTMSMSI2LD
+     C   52                READ MSMSI2LD                 10
+     C   53      KEYE      SETGTMSMSI2LE
+     C   53                READ MSMSI2LE                 10
+      *
+     C                     EXSR VRCD
+      *
+     C           RENT      IFNE BRCA
+     C                     SETON                     11
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT3 - ALL branch report                                   *
+      *   Calls - REPT Format message for report                      *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           REPT3     BEGSR
+      *
+      **  Read first record
+     C   50                READ MSMSI2LB                 10
+     C   51                READ MSMSI2LC                 10
+     C   52                READ MSMSI2LD                 10
+     C   53                READ MSMSI2LE                 10
+     C                     MOVE BRCA      @BRCA   3
+      *
+     C                     OPEN MS5060P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C           BRCA      CHAINSDBRCHL0             88
+     C                     EXSR SPLF
+     C                     WRITEHEADER
+      *
+     C           *IN10     DOWEQ'0'
+     C/COPY WNCPYSRC,MS5060C014
+     C                     EXSR VRCD
+      *
+      **  Move all records which match key into array
+     C           *IN11     IFEQ '0'
+     C***********          Z-ADD1         X       40                      CSW095
+     C                     Z-ADD1         X                               CSW095
+     C           *IN10     DOWEQ'0'
+      *                                                                                     AR567569
+      ** If "{1:" Has been repeated, it's a multiple or duplicate                           AR567569
+      *                                                                                     AR567569
+     C                     MOVELMDTA      WSTRT                                             AR567569
+     C           WSTRT     IFEQ '{1:'                                                       AR567569
+     C           X         ANDNE1                                                           AR567569
+     C                     EXSR REPT                                                        AR567569
+     C                     WRITEHEADER                                                      AR567569
+     C                     Z-ADD1         X                                                 AR567569
+     C                     ENDIF                                                            AR567569
+      *                                                                                     AR567569
+     C                     MOVEAMDTA      IMSG,X
+     C********** ETX       SCAN MDTA      @POS                                       086960 AR567569
+      *
+     C   50      KEYB      READEMSMSI2LB                 10
+     C   51      KEYC      READEMSMSI2LC                 10
+     C   52      KEYD      READEMSMSI2LD                 10
+     C   53      KEYE      READEMSMSI2LE                 10
+      *****************************************************************              086960 AR567569
+      **If*end-of-text*marker*is*found*and*more*records*exist*with*****              086960 AR567569
+      **this*key,*then*this*message*is*one*of*a*group*of*duplicates.***              086960 AR567569
+     C********** @POS      IFGT *ZERO                                                086960 AR567569
+     C********** *IN10     ANDEQ*OFF                                                 086960 AR567569
+     C**********           EXSR REPT                                                 086960 AR567569
+     C**********           WRITEHEADER                                               086960 AR567569
+     C**********           Z-ADD1         X                                          086960 AR567569
+     C**********           ELSE                                                      086960 AR567569
+      *
+     C***If*there is going to be an array index                     E43953086960
+     C***********                                                   E43953086960
+     C***********X         IFGT 2816                               E43953 CSW095
+     C***********X         IFGT 9984                               CSW095 086940
+     C*                                                                   E43953
+     C************IN30     DOWEQ'0'                                 E43953086960
+     C***50******KEYB      READEMSMSI2LB                 30         E43953086960
+     C***51******KEYC      READEMSMSI2LC                 30         E43953086960
+     C***52******KEYD      READEMSMSI2LD                 30         E43953086960
+     C***53******KEYE      READEMSMSI2LE                 30         E43953086960
+     C***********          END                                      E43953086960
+     C***********                                                   E43953086960
+     C***********          MOVE '0'       *IN30                     E43953086960
+     C***********          MOVE '1'       *IN10                     E43953086960
+     C***********          MOVE '1'       *INU5                     E43953086960
+     C***********          ELSE                                     E43953086960
+     C*                                                                   E43953
+     C                     ADD  256       X
+     C**********           ENDIF                                                     086960 AR567569
+     C***********          END                                      E43953086960
+     C                     END
+     C                     SETOF                     10
+      *
+      **  Write message & next report header
+     C                     EXSR REPT
+     C                     WRITEHEADER
+     C                     END
+      *
+     C   50      KEYB      SETGTMSMSI2LB
+     C   50                READ MSMSI2LB                 10
+     C   51      KEYC      SETGTMSMSI2LC
+     C   51                READ MSMSI2LC                 10
+     C   52      KEYD      SETGTMSMSI2LD
+     C   52                READ MSMSI2LD                 10
+     C   53      KEYE      SETGTMSMSI2LE
+     C   53                READ MSMSI2LE                 10
+      *
+     C           *IN10     IFEQ '0'
+     C           BRCA      ANDNE@BRCA
+     C           TOTI      IFEQ 0
+     C                     WRITENORECS
+     C                     END
+     C                     WRITEEOREPT                                    S01310
+     C                     CLOSEMS5060P1                                  S01310
+     C                     OPEN MS5060P1                                  S01310
+     C                     MOVE PFILE     SFILE                           S01310
+     C                     Z-ADDPFNUM     ZSNUM                           S01310
+     C                     EXSR SPLF                                      S01310
+     C           BRCA      CHAINSDBRCHL0             88
+     C                     WRITEHEADER
+     C                     Z-ADD0         TOTI
+     C                     END
+     C                     MOVE BRCA      @BRCA
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT - Format message for report                            *
+      *   Called by - REPT1 Non multibranched report                  *
+      *               REPT2 Single branch report                      *
+      *               REPT3 ALL branch report                         *
+      *****************************************************************
+      *
+     C           REPT      BEGSR
+      *
+      **  Analyse message headers using data structure
+     C                     MOVEAIMSG,1    @HDR  114
+     C                     Z-ADD86        X
+      *
+      **  Format message output date for editing & message priority
+     C                     MOVE @ODT      OODT    60
+     C           @MPY      IFEQ 'N'
+     C                     MOVE 'NORMAL'  OPTY
+     C                     ELSE
+     C                     MOVE 'URGENT'  OPTY
+     C                     END
+      *
+      **  Write basic header & application header (blocks 1 & 2)
+     C                     WRITEBLOCK1
+      *
+      **  If user header present
+     C/COPY WNCPYSRC,MS5060C008
+     C           @WK3      IFEQ '{3:'
+     C/COPY WNCPYSRC,MS5060C001
+     C                     MOVE *BLANKS   OBPY
+     C                     MOVE *BLANKS   OMUR
+     C/COPY WNCPYSRC,MS5060C009
+     C                     Z-ADD84        X
+     C/COPY WNCPYSRC,MS5060C002
+      *
+      **  If banking priority present
+     C                     MOVEAIMSG,X    @WK5    5
+     C           @WK5      IFEQ '{113:'
+     C                     ADD  5         X
+     C                     Z-ADD1         Z       30
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     END
+     C                     MOVEALINE      OBPY
+     C                     MOVEA*BLANKS   LINE
+     C                     ADD  1         X
+     C                     END
+      *
+      **  If message user reference (MUR) present
+     C                     MOVEAIMSG,X    @WK5
+     C           @WK5      IFEQ '{108:'
+     C                     ADD  5         X
+     C                     Z-ADD1         Z
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     END
+     C                     MOVEALINE      OMUR
+     C                     MOVEA*BLANKS   LINE
+     C                     ADD  1         X
+     C                     END
+     C/COPY WNCPYSRC,MS5060C011
+      *
+      **  Write user header (block 3)
+     C                     WRITEBLOCK3
+     C                     ADD  6         X
+     C                     END
+      *
+      **  Write message text (block 4) headings
+     C                     WRITEBLOCK4
+      *
+      **  Do while not end of message
+     C           @WK2      DOUEQ'-}'
+     C                     Z-ADD5         Z
+      *
+      **  If tag is present indent by 5 characters
+     C           IMSG,X    IFEQ ':'
+     C                     Z-ADD1         Z
+     C                     END
+      *
+      **  Do while CRLF or ETX
+     C           @WK2      DOUEQCRLF
+     C           @WK2      OREQ CRNL                                                        MD023232
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C*                                                                   097534
+     C           Z         IFGE 128                                       097534
+     C                     MOVEALINE      RCD                             097534
+     C                     WRITEFIELD                                     097534
+     C                     MOVEA*BLANKS   LINE                            097534
+     C                     Z-ADD5         Z                               097534
+     C                     ELSE                                           097534
+     C                     ADD  1         Z
+     C                     END                                            097534
+     C*                                                                   097534
+     C                     MOVEAIMSG,X    @WK2    2
+     C           @WK2      IFEQ ETX                                                         BUG22407
+     C                     GOTO EREPT                                                       BUG22407
+     C                     ENDIF                                                            BUG22407
+     C                     END
+      *
+      **  Write out detail line
+     C                     MOVEALINE      RCD
+      *
+     C           *IN06     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     06
+     C                     END
+      *
+     C                     WRITEFIELD
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     ADD  2         X
+     C                     MOVEAIMSG,X    @WK2
+     C           @WK2      IFEQ ETX                                                         BUG22407
+     C                     GOTO EREPT                                                       BUG22407
+     C                     ENDIF                                                            BUG22407
+     C                     END
+      *
+     C                     ADD  2         X
+     C                     MOVEAIMSG,X    @WL3    3
+      *
+      **  If message trailer present
+     C           @WL3      IFEQ '{5:'
+     C                     ADD  4         X
+      **  Write trailer header (block 5)
+     C                     WRITEBLOCK5
+      *
+     C           @WK2      DOUEQ'}}'
+     C           X         ORGT 9998                                                          250829
+     C                     Z-ADD1         Z
+      *
+     C           IMSG,X    DOUEQ'}'
+     C           Z         ORGT 127                                                           250829
+     C           X         ORGT 9998                                                          250829
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         Z
+     C                     ADD  1         X
+     C                     END
+      *
+      **  Write out detail line
+     C                     MOVEALINE      RCD
+      *
+     C           *IN06     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     06
+     C                     END
+      *
+     C                     WRITEFIELD
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     MOVEAIMSG,X    @WK2
+     C                     ADD  2         X
+     C                     END
+     C                     END
+      *
+     C           X         IFLT 9999                                                          250829
+     C                     MOVEAIMSG,X    @WL3
+      *
+      **  If STS trailer present
+     C           @WL3      IFEQ '{S:'
+     C                     ADD  4         X
+      **  Write STS trailer header (S block)
+     C                     WRITESBLOCK
+      *
+     C           @WK2      DOUEQ'}}'
+     C                     Z-ADD1         Z
+      *
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         Z
+     C                     ADD  1         X
+     C                     END
+      *
+      **  Write out detail line
+     C                     MOVEALINE      RCD
+      *
+     C           *IN06     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     06
+     C                     END
+      *
+     C                     WRITEFIELD
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     MOVEAIMSG,X    @WK2
+     C                     ADD  2         X
+     C                     END
+     C                     END
+     C                     ENDIF                                                              250829
+     C/COPY WNCPYSRC,MS5060C005
+      *
+     C           EREPT     TAG                                                              BUG22407
+      **  Add 1 to message total
+     C                     ADD  1         TOTI    40
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VRCD - Validate record                                      *
+      *   Called by - REPT1 Non multibranched report                  *
+      *               REPT2 Single branch report                      *
+      *               REPT3 ALL branch report                         *
+      *****************************************************************
+      *
+     C           VRCD      BEGSR
+      *
+     C                     SETOF                     11
+      *
+      **  If message type & priority do not match parameters
+     C           PTYP      IFNE *BLANKS
+     C           PTYP      ANDNEMTPY
+     C                     SETON                     11
+     C                     END
+      *
+     C           PPTY      IFNE *BLANKS
+     C           PPTY      ANDNEMPRY
+     C                     SETON                     11
+     C                     END
+      *
+      **  If end date entered & less than message output date
+     C           POED      IFNE *BLANKS
+      *                                                                   124673
+     C           @OEDC     IFLT MODEC                                     124673
+     C           @OEDC     OREQ MODEC                                     124673
+     C           @OED      ANDLTMODE
+     C                     SETON                     11
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     END
+      *
+      **  If end date equal to message output date,
+      **  end time entered & less than message output time
+     C           @OED      IFEQ MODE
+     C           @OEDC     ANDEQMODEC                                     124673
+     C           POET      ANDNE*BLANKS
+     C           @OET      ANDLTMOTM
+     C                     SETON                     11
+     C                     END
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,MS5060C006
+      *
+     C/EJECT
+      *****************************************************************
+      *   SPLF - Spool file handling                                  *
+      *****************************************************************
+      *
+     C           SPLF      BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM BRCA      @PARM   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,MS5060C007
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

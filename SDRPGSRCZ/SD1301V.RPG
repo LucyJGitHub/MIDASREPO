@@ -1,0 +1,835 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Prompt reporting codes')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1301V - Midas SD Reporting codes retrieval                 *
+      *                                                               *
+      *  Function:  This program prompts fields, allowing user changes*
+      *             validates fields, if valid, performs an action    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *  Prev Amend No. CSD003             Date 15APR99               *
+      *                 S01459             Date 15APR99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01117             Date 06FEB91               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *  S01117 - ADD RCF PROCESSING (LN1121)                         *
+      *                                                               *
+      *****************************************************************
+     FSD1301V#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Prompt Reporting Codes
+      *
+     FSDRPSTL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Reporting sets retrieval
+      *
+     FSDREPCL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Reporting codes retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+      * Outward parameters
+     IPARC        DS                              5
+      * KEY : Midas SD Reporting codes retrieval
+      * I : MAP Reporting Set Number
+     I                                        1   1 PARSNO
+      * I : MAP Reporting Structure Code
+     I                                        2   5 PARSCD
+      *
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Set Number not found'
+      * Reporting Set Number
+     I                                        1   1 ZA0001
+      * Message data for 'Set Number invalid value'
+      * Reporting Set Number
+     I                                        1   1 ZA0002
+      * Message data for 'Question Mark Invalid'
+      * Key Field
+     I                                        1  10 ZA0003
+      * Message data for 'Asterisk invalid'
+      * Region Name
+     I                                        1  30 ZA0004
+      * Message data for 'Value required-Rep Code'
+      * Reporting Structure Code
+     I                                        1   4 ZA0005
+      * Message data for 'Reporting cd rec invalid'
+      * Reporting Set Number
+     I                                        1   1 ZA0006
+      * Reporting Structure Code
+     I                                        2   5 ZA0007
+      * Message data for 'Reporting Codes exists'
+      * Reporting Set Number
+     I                                        1   1 ZA0008
+      * Reporting Structure Code
+     I                                        2   5 ZA0009
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Conduct screen conversation
+     C                     DO   *HIVAL
+      * Start new transaction
+     C                     MOVEL'Y'       W0TRN   1
+      * Process current transaction
+     C           W0TRN     DOWEQ'Y'
+      * Display screen
+     C                     EXSR CAEXFM
+      * Process response
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            MALDSC
+      * Process screen input
+     C                     CAS            DAPRSC
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *****************************************************************
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDDTL1
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPRSC    BEGSR
+      *================================================================
+      * Process screen input
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * USER: Process command keys
+      * 00/Copy Member SD1301VPCK - Reporting Codes  *
+     C*00/Copy Member SD1301V   PROCESS COMMAND KEYS
+     C/COPY WNCPYSRC,SD1301VPCK
+      * Validate screen input
+     C                     EXSR DBVLSC
+      * If error, exit
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: User defined action
+      * 00/Copy Member SD1301VUDA - Reporting Codes  *
+     C*00/Copy Member SD1301V   USER DEFINED ACTION
+     C/COPY WNCPYSRC,SD1301VUDA
+      * Request new transaction
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBVLSC    BEGSR
+      *================================================================
+      * Validate screen input
+      *================================================================
+      * USER: Validate fields
+      * Validate Set Number
+      * CASE: DTL.Reporting Set Number is valid value
+     C           #1RSNO    IFGE '1'                        *IF
+     C           #1RSNO    ANDLE'9'
+      * Retrieve Reporting Sets - Reporting Sets  *
+     C                     EXSR SARVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1RSNO    ZA0001           Reporting Set N
+      * Send message 'Set Number not found'
+     C                     MOVEL'USR4136' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: DTL.Reporting Set Number is question mark
+     C           #1RSNO    IFEQ '?'                        *IF
+      * Select Reporting Sets - Reporting Sets  *
+     C                     CALL 'SD1310S'              90  Select Reportin
+     C                     PARM *BLANK    W0RTN   7
+     C           #1RSNO    PARM #1RSNO    WQ0001  1        Reporting Set N
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD1310S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9931  *
+     C                     END
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1RSNO    ZA0002           Reporting Set N
+      * Send message 'Set Number invalid value'
+     C                     MOVEL'USR4137' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Validate Reporting Code
+      * CASE: DTL.Reporting Structure Code is question mark
+     C           #1RSCD    IFEQ '?'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1RSCD    ZA0003           Reporting Struc
+      * Send message 'Question Mark Invalid'
+     C                     MOVEL'USR0380' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     ELSE
+      * CASE: DTL.Reporting Structure Code is asterisk
+     C           #1RSCD    IFEQ '*'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1RSCD    ZA0004           Reporting Struc
+      * Send message 'Asterisk invalid'
+     C                     MOVEL'USR1164' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     ELSE
+      * CASE: DTL.Reporting Structure Code is blank
+     C           #1RSCD    IFEQ *BLANK                     *IF
+     C                     MOVEL*BLANK    WUKEYF           Key Field
+     C                     MOVEL#1RSCD    WUKEYF           Key Field
+      * Setup message data for message
+     C                     MOVEL#1RSCD    ZA0005           Reporting Struc
+      * Send message 'Value required-Rep Code'
+     C                     MOVEL'USR0039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     MOVEL#1RSCD    WURCDE           Reporting Code
+      * 00/Copy Member SD1301VVFI - Reporting Codes  *
+     C*00/Copy Member SD1301V   VALIDATE FIELDS
+     C/COPY WNCPYSRC,SD1301VVFI
+      * Bypass ref file checks if error already detected
+     C   99                GOTO DBEXIT
+      * Select existing record
+     C                     EXSR VACKRL
+      * CALC: Screen function fields
+      * 00/Copy Member SD1301VSFI - Reporting Codes  *
+     C*00/Copy Member SD1301V   SCREEN FUNCTION FIELDS
+     C/COPY WNCPYSRC,SD1301VSFI
+      * USER: Validate relations
+      * Prevent user inserting record with Set No=9, Reporting Code=9999
+      * CASE: DTL.Reporting Set Number is last set number
+     C           #1RSNO    IFEQ '9'                        *IF
+      * CASE: DTL.Reporting Structure Code is last structure Code
+     C           #1RSCD    IFEQ '9999'                     *IF
+      * Setup message data for message
+     C                     MOVEL#1RSNO    ZA0006           Reporting Set N
+     C                     MOVEL#1RSCD    ZA0007           Reporting Struc
+      * Send message 'Reporting cd rec invalid'
+     C                     MOVEL'USR4148' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     993132*
+      *
+     C                     GOTO DBEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+      * Retrieve Reporting Codes - Reporting Codes  *
+     C                     EXSR SBRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Reporting Codes Maint. - Reporting Codes  *
+     C                     CLEARPARC
+     C                     MOVEL#1RSNO    PARSNO           Reporting Set N
+     C                     MOVEL#1RSCD    PARSCD           Reporting Struc
+      *
+     C                     CALL 'SD1301R'              90  Reporting Codes
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: Reporting
+     C                     PARM 'I'       WQ0004  1        Action Code
+     C           WUDRTC    PARM *BLANK    WQ0005  7        Duplicate Retur
+     C           WUMSRQ    PARM *BLANK    WQ0006  1        Message require
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD1301R' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     993132*
+     C                     END
+      * CASE: WRK.Duplicate Return Code is *User QUIT requested
+     C           WUDRTC    IFEQ 'Y2U9999'                  *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: WRK.Duplicate Return Code is *Normal
+     C           WUDRTC    IFEQ *BLANK                     *IF
+     C                     MOVEL*BLANK    #1RSNO           Reporting Set N
+     C                     MOVEL*BLANK    #1RSCD           Reporting Struc
+      * Send message '*Record added'
+     C                     MOVEL'Y2U0011' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+      * Inform user if Accounts have been transferred to new BS/PL Code.
+      * CASE: WRK.Message required? is Yes
+     C           WUMSRQ    IFEQ 'Y'                        *IF
+     C                     MOVEL'N'       WUMSRQ           Message require
+      * Send message 'A/c transfer to new BS/PL'
+     C                     MOVEL'USR4140' ZAMSID
+     C                     MOVEL'*INFO  ' ZAMSTP           Message type
+     C                     EXSR ZASNMS
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1RSNO    ZA0008           Reporting Set N
+     C                     MOVEL#1RSCD    ZA0009           Reporting Struc
+      * Send message 'Reporting Codes exists'
+     C                     MOVEL'USR4133' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     993132*
+      *
+     C                     END                             *FI
+      * 00/Copy Member SD1301VVRE - Reporting Codes  *
+     C*00/Copy Member SD1301V   VALIDATE RELATIONS
+     C/COPY WNCPYSRC,SD1301VVRE
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         MALDSC    BEGSR
+      *================================================================
+      * Load screen from passed parameters
+      *================================================================
+     C                     MOVEL*BLANK    #1LVNB           Level Number
+     C                     MOVEL*BLANK    #1RPNA           Reporting Narra
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1RSNO           Reporting Set N
+     C                     MOVEL*BLANK    #1RSCD           Reporting Struc
+      * CALC: Screen function fields
+      * 00/Copy Member SD1301VSFI - Reporting Codes  *
+     C*00/Copy Member SD1301V   SCREEN FUNCTION FIELDS
+     C/COPY WNCPYSRC,SD1301VSFI
+      * USER: Load screen
+      * 00/Copy Member SD1301VLSR - Reporting Codes  *
+     C*00/Copy Member SD1301V   LOAD SCREEN
+     C/COPY WNCPYSRC,SD1301VLSR
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Retrieve Reporting Sets - Reporting Sets  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           G5RSNO           Reporting Set N
+      * Move fields to key list
+     C                     MOVEL#1RSNO    G5RSNO           Reporting Set N
+     C           KRSSA     CHAIN@ADREAJ              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR1549' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Retrieve Reporting Codes - Reporting Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           G4RSNO           Reporting Set N
+     C                     KFLD           G4RSCD           Reporting Struc
+      * Move fields to key list
+     C                     MOVEL#1RSNO    G4RSNO           Reporting Set N
+     C                     MOVEL#1RSCD    G4RSCD           Reporting Struc
+     C           KRSSB     CHAIN@AEREAM              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR1551' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSC     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Select existing record
+      *================================================================
+      * Name search required?
+     C                     MOVEL#1RSNO    WK1X01  1
+     C                     MOVEL#1RSCD    WK1X02  1
+     C           WK1X01    IFEQ '?'                        Reporting Set N
+     C           WK1X02    OREQ '?'                        Reporting Struc
+     C                     CALL 'SD1300S'              90  Select Reportin
+     C                     PARM *BLANK    W0RTN   7
+     C           #1RSNO    PARM #1RSNO    WQ0002  1        Reporting Set N
+     C           #1RSCD    PARM #1RSCD    WQ0003  4        Reporting Struc
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD1300S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     993132*
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program
+      *================================================================
+      * USER: Exit program processing
+      * CASE: WRK.S01212 is SAR installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD1301VEPP - Reporting Codes  *
+     C*00/Copy Member SD1301V   EXIT PROGRAM PROCESSING
+     C/COPY WNCPYSRC,SD1301VEPP
+     C                     END                             *FI
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Key Field
+     C                     MOVEL*BLANK    WUKEYF 10
+      * Define work field Reporting Code entered
+     C                     MOVEL*BLANK    WURCDE  4
+      * Define work field Duplicate Return Code
+     C                     MOVEL*BLANK    WUDRTC  7
+      * Define work field Message required?
+     C                     MOVEL*BLANK    WUMSRQ  1
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD1301V#
+     C                     OPEN SDRPSTL1
+     C                     OPEN SDREPCL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD1301V PRECOMPILER - Reporting Codes  *
+      * Copyright Statement 1988 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+     C                     MOVEL'N'       WUMSRQ           Message require
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SCRVGN
+      * 00/Copy Member SD1301VCPG - Reporting Codes  *
+     C*00/Copy Member SD1301V   INITIALISE PROGRAM
+     C/COPY WNCPYSRC,SD1301VCPG
+      * 00/Copy Member SD1301VIPG - Reporting Codes  *
+     C*00/Copy Member SD1301V   INITIALISE PROGRAM
+     C/COPY WNCPYSRC,SD1301VIPG
+      * 00/Copy Member SD1301VOPG - Reporting Codes  *
+     C*00/Copy Member SD1301V   INITIALISE PROGRAM
+     C/COPY WNCPYSRC,SD1301VOPG
+      * 00/Copy Member SD1301VFPG - Reporting Codes  *
+     C*00/Copy Member SD1301V   INITIALISE PROGRAM
+     C/COPY WNCPYSRC,SD1301VFPG
+      * 00/Copy Member SD1301VEPG - Reporting Codes  *
+     C*00/Copy Member SD1301V   INITIALISE PROGRAM
+     C/COPY WNCPYSRC,SD1301VEPG
+      * Load screen
+     C                     EXSR MALDSC
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD1301VPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD1301VPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD1301VPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

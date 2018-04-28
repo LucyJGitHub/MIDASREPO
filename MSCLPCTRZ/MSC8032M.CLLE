@@ -1,0 +1,199 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas MS Start/Stop Midas/CAS comms: START')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas SWIFT Direct Link : Midas/CAS interface               */
+/*                                                                   */
+/*       MSC8032M - Start/Stop Midas/CAS communications : START      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*    This source is centrally supported and must ONLY be            */
+/*    amended by Core Development Personnel                          */
+/*                                                                   */
+/*    /COPY, Client or Country amendments must not be                */
+/*    applied to this source.                                        */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CSC023             Date 30Jan04              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*       Prev Amend No. CPK014             Date 14Nov01              */
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      192801             Date 02May01              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CSW008 *CREATE     Date 15AUG96              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/* This program is called via command WRKCASIF                       */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
+/*                OUTQ must always be *JOBD.                         */
+/*       CPK014 - Submit jobs with user *JOBD                        */
+/*       192801 - Change SBMJOB to use CASJOBD                       */
+/*       CSW008 - Midas/CAS interface                                */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&LMAPID &IO &JNAM &ACCP &JOB &CJOB +
+                          &CUSR &CNUM &CPFX &SYS)
+ 
+             DCL        VAR(&LMAPID) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&IO) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACCP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&CJOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CUSR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CNUM) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SYS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&CASSTS) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&NOACTA) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&NOACTN) TYPE(*DEC) LEN(9 0)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&JNAM1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTN_INFO) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&ERR_INFO) TYPE(*CHAR) LEN(4) +
+                          VALUE(X'00000000')
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(20) +
+                          VALUE('CASSBS    *LIBL     ')
+             DCL        VAR(&RTN_BIN) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&RETRY) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&JSTAT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FORMAT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&INT_JOB_ID) TYPE(*CHAR) LEN(16) VALUE(' ')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check whether session is associated with this Midas system. If */
+/* not send message to user and terminate.                        */
+             IF         COND(&CPFX *NE &SYS) THEN(DO)
+             SNDPGMMSG  MSGID(MEM6005) MSGF(MIDAS) MSGDTA(&SYS *CAT +
+                          &CPFX) TOPGMQ(*PRV (MS8030M)) MSGTYPE(*COMP)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Check whether CASmf is active; if not send message to user and */
+/* terminate.                                                     */
+             CHGVAR     VAR(&RTN_BIN) VALUE(X'00000200')
+             CHGVAR     VAR(&FORMAT) VALUE('SBSI0100')
+             CALL       PGM(QWDRSBSD) PARM(&RTN_INFO &RTN_BIN +
+                          &FORMAT &SBS &ERR_INFO)
+             MONMSG     MSGID(CPF1605 CPF1606 CPF1607) EXEC(DO)
+             CHGVAR     VAR(&CASSTS) VALUE('*UNAVAILABLE')
+             GOTO       CMDLBL(SKIP)
+             ENDDO
+             CHGVAR     VAR(&CASSTS) VALUE(%SST(&RTN_INFO 29 10))
+             CHGVAR     VAR(&NOACTA) VALUE(%SST(&RTN_INFO 73 4))
+             CHGVAR     VAR(&NOACTN) VALUE(%BINARY(&NOACTA))
+             IF         COND((&CASSTS *EQ '*ACTIVE') *AND ((&NOACTN +
+                          *LT 4) *AND (&NOACTN *GE 1))) THEN(CHGVAR +
+                          VAR(&CASSTS) VALUE('*ABNORMAL'))
+             IF         COND((&CASSTS *EQ '*ACTIVE') *AND (&NOACTN +
+                          *EQ 0)) THEN(CHGVAR VAR(&CASSTS) +
+                          VALUE('*INACTIVE'))
+ SKIP:       IF         COND(&CASSTS *NE '*ACTIVE') THEN(DO)
+             SNDPGMMSG  MSGID(MEM6007) MSGF(MIDAS) MSGDTA(&CASSTS) +
+                          TOPGMQ(*PRV (MS8030M)) MSGTYPE(*COMP)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Check if job currently active (if job not found set status */
+/* to *OUTQ).                                                 */
+             CHGVAR     VAR(&RTN_BIN) VALUE(X'00000200')
+             CHGVAR     VAR(&FORMAT) VALUE('JOBI0100')
+             CHGVAR     VAR(&RETRY) VALUE('FALSE')
+ RETRY:      CALL       PGM(QUSRJOBI) PARM(&RTN_INFO &RTN_BIN +
+                          &FORMAT &JOB &INT_JOB_ID)
+             MONMSG     MSGID(CPF3C53 CPF3C55 CPF3C54 CPF3C58) EXEC(DO)
+             RCVMSG     RMV(*NO) MSGDTA(&MSGDTA) MSGID(&MSGID)
+             IF         COND(&MSGID *EQ 'CPF3C54') THEN(DO)
+             IF         COND(&RETRY *EQ 'FALSE') THEN(DO)
+             CHGVAR     VAR(&RETRY) VALUE('TRUE ')
+             DLYJOB     DLY(30)
+             GOTO       CMDLBL(RETRY)
+             ENDDO
+             ELSE       CMD(DO)
+             SNDPGMMSG  MSGID(CPF3C54) MSGF(QCPFMSG) MSGDTA(&MSGDTA) +
+                          TOPGMQ(*PRV (MS8030M))
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+             CHGVAR     VAR(&JSTAT) VALUE('*OUTQ')
+             GOTO TAG
+             ENDDO
+ 
+/* If job found, get status from API returned data */
+             CHGVAR     VAR(&JSTAT) VALUE(%SST(&RTN_INFO 51 10))
+ 
+/* If status is not *OUTQ, send message to user and terminate */
+ TAG:        IF         COND(&JSTAT *NE '*OUTQ') THEN(SNDPGMMSG +
+                          MSGID(MEM6004) MSGF(MIDAS) MSGDTA(&CJOB +
+                          *CAT &JSTAT *CAT &LMAPID) TOPGMQ(*PRV +
+                          (MS8030M)) MSGTYPE(*COMP))
+             ELSE       CMD(DO)
+ 
+/* Otherwise, submit new job and collect details for return */
+             CHGVAR     VAR(&JNAM1) VALUE(&JNAM)
+             IF         COND(&JNAM1 *EQ ' ') THEN(DO)
+             IF         COND(&IO *EQ 'I') THEN(CHGVAR VAR(&JNAM1) +
+                          VALUE('MS_ALL2MID'))
+             ELSE       CMD(CHGVAR VAR(&JNAM1) VALUE('MS_MID2ALL'))
+             ENDDO
+/************SBMJOB     CMD(CALL PGM(MS8010P) PARM(&LMAPID &IO +       192801*/
+/************             &ACCP)) JOB(&JNAM1) JOBD(MBATCH) +           192801*/
+/************             JOBQ(MSJOBQ) RTGDTA(CASCOMMS) MSGQ(MOPERQ)   192801*/
+/************SBMJOB     CMD(CALL PGM(MS8010P) PARM(&LMAPID &IO +                          /*CPK014*/
+/************             &ACCP)) JOB(&JNAM1) JOBD(CASJOBD) +                             /*CPK014*/
+/************             JOBQ(MSJOBQ) RTGDTA(CASCOMMS) MSGQ(MOPERQ) /*192801*/           /*CPK014*/
+/************SBMJOB     CMD(CALL PGM(MS8010P) PARM(&LMAPID &IO +                          /*CSC023*/
+/************             &ACCP)) JOB(&JNAM1) JOBD(CASJOBD) +                             /*CSC023*/
+/************             JOBQ(MSJOBQ) USER(*JOBD) RTGDTA(CASCOMMS) +                     /*CSC023*/
+/************             MSGQ(MOPERQ)                                         /*CPK014*/ /*CSC023*/
+             SBMJOB     CMD(CALL PGM(MS8010P) PARM(&LMAPID &IO +
+                          &ACCP)) JOB(&JNAM1) JOBD(CASJOBD) +
+                          JOBQ(MSJOBQ) USER(*JOBD) RTGDTA(CASCOMMS) +
+                          MSGQ(MOPERQ) OUTQ(*JOBD)                                        /*CSC023*/
+             RCVMSG     PGMQ(*SAME) RMV(*NO) MSGDTA(&MSGDTA) +
+                          MSGID(&MSGID)
+ 
+/* If submit successful retrieve job information for return to RPG */
+             IF         COND(&MSGID *EQ 'CPC1221') THEN(DO)
+             SNDPGMMSG  MSGID(&MSGID) MSGF(QCPFMSG) MSGDTA(&MSGDTA) +
+                          TOPGMQ(*PRV (MS8030M))
+             CHGVAR     VAR(&CJOB) VALUE(%SST(&MSGDTA 1 10))
+             CHGVAR     VAR(&CUSR) VALUE(%SST(&MSGDTA 11 10))
+             CHGVAR     VAR(&CNUM) VALUE(%SST(&MSGDTA 21 6))
+             ENDDO
+             ELSE       CMD(DO)
+ 
+/* Else abnormal termination */
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO
+ 
+/* Normal end */
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal end */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('WRKCASIF ended abnormally - see +
+                          job log') TOPGMQ(*PRV (MS8030M)) +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

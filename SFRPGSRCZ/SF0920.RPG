@@ -1,0 +1,689 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas¦ABS Maintain Restricted Account Users')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Profile Facility                            *
+      *                                                               *
+      *  SF0920 - MAINTAIN RESTRICTED ACCOUNT USERS                   *
+      *                                                               *
+      *  Function:  This program displays all users authorised to     *
+      *             restricted account code ranges. Users can be      *
+      *             authorised to more ranges, enquired upon or       *
+      *             deleted.                                          *
+      *             F9 from the authorisation screen calls SF0921     *
+      *             from which restricted account code ranges to      *
+      *             which the user is unauthorised can be selected.   *
+      *             F11 calls the print program FC0040X which submits *
+      *             the report SF0922.                                *
+      *             F13 returns control to SF0910.                    *
+      *             Any details found for users on SFRAAUPA but       *
+      *             not on MUSER will be deleted from SFRAAUPA.       *
+      *                                                               *
+      *  Called By: SF0910 - Maintain Restricted Account Code Ranges  *
+      *                                                               *
+      *  (C) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CRE024   *CREATE   Date 07Oct05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE024 - COUNTRY LEVEL SWITCHABLE FEATURE :                  *
+      *           SECURITY FEATURES FOR RESTRICTED ACCOUNTS           *
+      *                                                               *
+      *****************************************************************
+      *
+     FSF0920DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                              KINFDS INFDS1
+     F                                        S0RRN KSFILE SF0920S0
+     F                                        S1RRN KSFILE SF0920S1
+     FSFRAAUPAUF  E           K        DISK         KINFSR *PSSR A
+     FSFRACRPAIF  E           K        DISK         KINFSR *PSSR
+      *-------------------------------------------------------------------
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *   KC - F3  Exit
+      *   KI - F9  Add/Change
+      *   KK - F11 Print
+      *   KL - F12 Previous
+      *   KM - F13 Users/Ranges
+      *
+      *   30 - S0 SFLDSPCTL
+      *   31 - S0 SFLDSP
+      *   32 - S0 SFLEND
+      *   33 - S0 SFLNXTCHG
+      *   39 - S0 ROLLUP
+      *
+      *   50 - S1 SFLDSPCTL
+      *   51 - S1 SFLDSP
+      *   52 - S1 SFLEND
+      *   59 - S1 ROLLUP
+      *   60 - Authorise Ranges Mode
+      *
+      *-------------------------------------------------------------------
+     E                    CPY@    1   1 80               MKI Copyright array
+      *-------------------------------------------------------------------
+      *
+      * File Information Data structure for Display file
+     IINFDS1      DS
+     I                                    B 378 3790INSFRC
+      *
+      * Program status data structure
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      * Data Structure to pass parameters to Access programs
+     IAOFMTS    E DSDSFDY
+      *
+      * Data Structure to receive MUSERDD details
+     IAOUSER    E DSMUSERDD
+      *
+     ILDA       E DSLDA                         256
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+     I              'Authority to All Acc-C         ALLTXT
+     I              'ounts'
+      *
+      *-------------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTCD
+      *
+     C                     EXSR #INIT
+     C                     MOVE '1'       *INKE
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKM     ANDEQ'0'
+      * Initialize and Load subfile if *INKE has been set on
+      * (First time through, Delete or F5)
+     C   KE                EXSR #INLZ0
+     C   KE                EXSR #LOAD0
+      * Display screen
+     C                     EXSR #DISP0
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKM     ANDEQ'0'
+     C           *INKK     CASEQ'1'       #PRINT           Print Report
+     C           *IN39     CASEQ'1'       #LOAD0           Rollup
+     C                     CAS            #READ0           Read
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C   KM                MOVEL'*RETRN'  P0RTCD
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *******************************************************************
+      *                                                                 *
+      * #INLZ0 - Initialize Subfile                                     *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #INLZ0    BEGSR
+      * Clear subfile
+     C                     MOVEA'0000'    *IN,30
+     C                     WRITESF0920C0
+     C                     MOVE '1'       *IN30
+      *
+     C                     Z-ADD0         S0RRN
+     C                     Z-ADD0         X0RRN
+      *
+     C           *LOVAL    SETLLSFRAAUP0
+     C                     READ SFRAAUP0                 32
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #LOAD0 - Load Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #LOAD0    BEGSR
+      *
+     C                     Z-ADD0         LINENO
+     C                     Z-ADDX0RRN     S0RRN
+      *
+      * Reset position
+     C           *IN39     IFEQ '1'
+     C           K0RAAU    CHAINSFRAAUP0             90
+     C                     END
+      *
+      * Load SFL page until SFL page full or end of file
+     C           *IN32     DOWEQ'0'
+     C           LINENO    ANDLT16
+      *
+      * Call access program AOUSERR0 to obtain User Name
+     C                     CALL 'AOUSERR0'
+     C                     PARM '*BLANKS' P2RTCD           Return Code
+     C                     PARM '*KEY'    P2OPTN           Option
+     C                     PARM MAUSR     P2AUSR           Key
+     C           AOUSER    PARM *BLANKS   AOFMTS           Return Data
+      *
+      * If record not found , delete from SFRAAUPA
+     C           P2RTCD    IFEQ '*NRF'
+      *
+     C           MAUSR     SETLLSFRAAUP0
+     C           MAUSR     READESFRAAUP0                 90
+     C           *IN90     DOWEQ'0'
+     C                     DELETSFRAAUP0
+     C           MAUSR     READESFRAAUP0                 90
+     C                     END
+     C                     ELSE
+      *
+      * Write detail to subfile, left justifying user name
+     C                     MOVE MAUSR     S0AUSR           User Profile From
+      *
+     C           USER1     IFEQ *BLANKS
+     C                     MOVE *BLANKS   S0USNM
+     C                     ELSE
+     C           ' '       CHECKUSER1     POSN
+     C           25        SUB  POSN      LNGTH
+     C           LNGTH     SUBSTUSER1:POSNS0USNM    P      User Name
+     C                     END
+      *
+     C                     MOVE *BLANK    S0SEL
+     C                     ADD  1         S0RRN      31
+     C                     ADD  1         LINENO
+     C                     WRITESF0920S0
+     C                     END
+      * Read record for next user
+     C           MAUSR     SETGTSFRAAUP0
+     C                     READ SFRAAUP0                 32
+     C                     END
+      *
+      * Set Subfile Record Number and Save
+     C           X0RRN     ADD  1         C0SFRC
+     C                     Z-ADDS0RRN     X0RRN
+     C                     MOVE MAUSR     X0AUSR
+     C                     MOVE MFRAC     X0FRAC
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #DISP0 - Display Subfile                                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #DISP0    BEGSR
+      *
+      * If no records displayed, output message
+     C           S0RRN     IFEQ 0
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     WRITESF0920HH
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT0
+     C                     EXFMTSF0920C0
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      * Maintain subfile page
+     C           INSFRC    IFNE 0
+     C                     Z-ADDINSFRC    C0SFRC
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #READ0 - Read Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #READ0    BEGSR
+      *
+     C           *IN31     IFEQ '1'                        B1
+     C                     MOVE 'N'       X1DEL
+     C                     READCSF0920S0                 90
+      *
+     C           *IN90     DOWEQ'0'                        B2
+     C           *INKC     ANDEQ'0'
+      *
+      * Update Subfile here otherwise problems occur if after READC
+      * of second subfile
+     C                     MOVE S0SEL     X0SEL
+     C                     MOVE ' '       S0SEL
+     C                     UPDATSF0920S0
+      *
+     C           *INKL     IFEQ '0'
+     C           X0SEL     CASEQ'D'       #DEL0
+     C           X0SEL     CASEQ'E'       #PROC1
+     C           X0SEL     CASEQ'X'       #PROC1
+     C                     END
+     C                     END
+      *
+     C                     READCSF0920S0                 90
+     C                     END                             E2
+      *
+      * Set on *INKE to force execution of INLZ0 subroutine if all
+      * codes for a user deleted
+     C           X1DEL     IFEQ 'Y'
+     C                     MOVE '1'       *INKE
+     C                     END
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #PRINT - Submit Print Request                                   *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #PRINT    BEGSR
+      *
+      * Call standard report submission program
+     C                     CALL 'FC0040X'
+     C                     PARM *BLANKS   P3RTCD
+     C                     PARM 'SF0922'  P3RNAM
+     C                     PARM 'SFC0922' P3COTT
+     C                     PARM '10001'   P3CSEQ
+     C                     PARM           P3PARM
+     C                     PARM *BLANKS   P3MBRC
+     C                     PARM 'S'       P3LEVL
+     C                     PARM *BLANKS   P3ETTY
+      *
+      * Check and process for error
+     C           P3RTCD    IFEQ 'Y2U0004'
+     C                     MOVEL'FC0040X' DBFILE
+     C                     MOVEL'001'     DBASE            ** DBERR 001 **
+     C                     MOVEL'PGM'     DBKEY
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #DEL0 - Deletion Processing                                     *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #DEL0     BEGSR
+      *
+      * Access Authorised Users file and delete all records for range
+     C           S0AUSR    SETLLSFRAAUP0
+     C           S0AUSR    READESFRAAUP0                 90
+      *
+     C           *IN90     DOWEQ'0'
+     C                     DELETSFRAAUP0
+     C           S0AUSR    READESFRAAUP0                 90
+     C                     END
+      *
+      * Set on *INKE to force execution of INLZ0 subroutine
+     C                     MOVE '1'       *INKE
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #PROC1 - Process Enquiry and Authorise Screen                   *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #PROC1    BEGSR
+      *
+     C           X0SEL     IFEQ 'X'
+     C                     MOVE '1'       *IN60
+     C                     ELSE
+     C                     MOVE '0'       *IN60
+     C                     END
+     C                     MOVE '1'       *INKE
+      *
+      * *INKE used to reload subfile even though F5 not available
+      * Display screen until no action taken
+     C           *IN59     DOUEQ'0'
+     C           *INKE     ANDEQ'0'
+     C           *INKI     ANDEQ'0'
+      *
+     C   KE                EXSR #INLZ1
+     C   KE                EXSR #LOAD1
+      *
+     C                     EXSR #DISP1
+      *
+     C           *IN59     CASEQ'1'       #LOAD1           Rollup
+     C           *INKI     CASEQ'1'       #ADD1            Add Mode
+     C           *IN60     CASEQ'1'       #READ1           Read
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #INLZ1 - Initialize Subfile                                     *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #INLZ1    BEGSR
+      * Clear subfile
+     C                     MOVEA'0000'    *IN,50
+     C                     WRITESF0920C1
+     C                     MOVE '1'       *IN50
+      *
+     C                     WRITESF0920HH
+      *
+     C                     Z-ADD0         S1RRN
+     C                     Z-ADD0         X1RRN
+     C                     MOVE *BLANKS   S1SEL
+      *
+     C           S0AUSR    SETLLSFRAAUP0
+     C           S0AUSR    READESFRAAUP0                 52
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #LOAD1 - Load Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #LOAD1    BEGSR
+      *
+     C                     Z-ADD0         LINENO
+     C                     Z-ADDX1RRN     S1RRN
+      *
+      * Reset position
+     C           *IN59     IFEQ '1'
+     C           K1RAAU    CHAINSFRAAUP0             90
+     C                     END
+      *
+      * Load SFL page until SFL page full or end of file
+     C           *IN52     DOWEQ'0'
+     C           LINENO    ANDLT12
+      *
+     C           MFRAC     IFEQ '*ALL'
+     C                     MOVE ALLTXT    MRGDS
+     C                     ELSE
+      *
+      * Access Account Code Ranges to obtain range description
+     C           MFRAC     CHAINSFRACRP0             99
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'SFRAAUPA'DBFILE
+     C                     MOVEL'002'     DBASE            ** DBERR 002 **
+     C                     MOVELS0AUSR    DBKEY
+     C                     MOVE X1FRAC    DBKEY
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+      *
+     C                     MOVE MFRAC     S1FRAC           Account Code From
+     C                     MOVE MTOAC     S1TOAC           Account Code To
+     C                     MOVE MRGDS     S1RGDS           Range Description
+     C                     ADD  1         S1RRN      51
+     C                     ADD  1         LINENO
+     C                     WRITESF0920S1
+      * Read next record
+     C           S0AUSR    READESFRAAUP0                 52
+     C                     END
+      *
+      * Set Subfile Record Number and Save
+     C           X1RRN     ADD  1         C1SFRC
+     C                     Z-ADDS1RRN     X1RRN
+     C                     MOVE MFRAC     X1FRAC
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #DISP1 - Display Subfile                                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #DISP1    BEGSR
+      *
+      * If no records displayed, output message
+     C           S1RRN     IFEQ 0
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       X1DEL
+     C                     END
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMTSF0920C1
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      * Maintain subfile page
+     C           INSFRC    IFNE 0
+     C                     Z-ADDINSFRC    C1SFRC
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #ADD1 - Add Mode                                                *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #ADD1     BEGSR
+      *
+      * Call Select Program
+     C                     UNLCKLDA
+     C                     CALL 'SF0921'
+     C                     PARM S0AUSR    P1AUSR           User
+     C                     PARM *BLANKS   P1FRAC           Account Code From
+     C                     PARM *BLANKS   P1TOAC           Account Code To
+     C           *LOCK     IN   LDA
+      *
+      * Terminate program if error
+     C   U7                EXSR *PSSR
+      *
+      * If Range selected, update SFRAAUPA and reload subfile
+     C           P1FRAC    IFNE *BLANKS
+      *
+      * If Account Range is *ALL, first delete all other ranges for
+      * user
+     C           P1FRAC    IFEQ '*ALL'
+     C           S0AUSR    SETLLSFRAAUP0
+     C           S0AUSR    READESFRAAUP0                 90
+      *
+     C           *IN90     DOWEQ'0'
+     C                     DELETSFRAAUP0
+     C           S0AUSR    READESFRAAUP0                 90
+     C                     END
+     C                     END
+      *
+     C                     MOVE S0AUSR    MAUSR
+     C                     MOVE P1FRAC    MFRAC
+     C                     MOVE P1TOAC    MTOAC
+     C                     Z-ADDAGRDNB    MLCD
+     C                     TIME           MTIME
+     C                     MOVE USER      MLCUS
+     C                     WRITESFRAAUP0
+     C                     MOVE '1'       *INKE
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #READ1 - Read Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #READ1    BEGSR
+      *
+      * Read through all changed records and delete
+     C           *IN51     IFEQ '1'                        B1
+     C                     READCSF0920S1                 90
+      *
+     C           *IN90     DOWEQ'0'                        B2
+      *
+     C           S1SEL     IFNE *BLANKS                    B3
+     C                     MOVE S1FRAC    X1FRAC
+     C           K1RAAU    CHAINSFRAAUP0             99
+      *
+     C           *IN99     IFEQ '1'                        B4
+     C                     MOVEL'SFRAAUPA'DBFILE
+     C                     MOVEL'003'     DBASE            ** DBERR 003 **
+     C                     MOVELS0AUSR    DBKEY
+     C                     MOVE X1FRAC    DBKEY
+     C                     EXSR *PSSR
+     C                     END                             B4
+      *
+     C                     DELETSFRAAUP0
+     C                     MOVE '1'       *INKE
+     C                     END                             E3
+      *
+     C                     READCSF0920S1                 90
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * ZASNMS - Send Message to Program Message Queue                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id
+     C                     PARM           ZAMSGF           Message file
+     C                     PARM           ZAMSDA           Message data
+     C                     PARM           ZAMSTP           Message type
+      *
+     C                     MOVEL*BLANKS   ZAMSGF
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAPGRL
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * #INIT - Initial Program Subroutine                              *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      * Define Key Lists
+     C           K0RAAU    KLIST
+     C                     KFLD           X0AUSR
+     C                     KFLD           X0FRAC
+      *
+     C           K1RAAU    KLIST
+     C                     KFLD           S0AUSR
+     C                     KFLD           X1FRAC
+      *
+      * Define all program work fields
+     C           *LIKE     DEFN MAUSR     P1AUSR
+     C           *LIKE     DEFN MFRAC     P1FRAC
+     C           *LIKE     DEFN MFRAC     P1TOAC
+     C           *LIKE     DEFN MAUSR     P2AUSR
+     C           *LIKE     DEFN MAUSR     X0AUSR
+     C           *LIKE     DEFN MFRAC     X0FRAC
+     C           *LIKE     DEFN S0SEL     X0SEL
+     C           *LIKE     DEFN S0RRN     X0RRN
+     C           *LIKE     DEFN MFRAC     X1FRAC
+     C           *LIKE     DEFN S1RRN     X1RRN
+      *
+     C                     MOVE *BLANKS   P0RTCD  7
+     C                     MOVE *BLANKS   P2RTCD  7
+     C                     MOVE *BLANKS   P2OPTN  7
+     C                     MOVE *BLANKS   P3RTCD  7
+     C                     MOVE *BLANKS   P3RNAM 10
+     C                     MOVE *BLANKS   P3COTT 10
+     C                     MOVE *BLANKS   P3CSEQ  5
+     C                     MOVE *BLANKS   P3PARM100
+     C                     MOVE *BLANKS   P3MBRC  1
+     C                     MOVE *BLANKS   P3LEVL  1
+     C                     MOVE *BLANKS   P3ETTY  3
+      *
+     C                     MOVE *BLANKS   ZAPGM  10
+     C                     MOVE *BLANKS   ZAPGRL  5
+     C                     MOVE *BLANKS   ZAMSID  7
+     C                     MOVE *BLANKS   ZAMSGF 10
+     C                     MOVE *BLANKS   ZAMSDA132
+     C                     MOVE *BLANKS   ZAMSTP  7
+      *
+     C                     Z-ADD0         S0RRN   50
+     C                     Z-ADD0         S1RRN   50
+     C                     Z-ADD0         LINENO  20
+     C                     Z-ADD0         X       20
+     C                     Z-ADD0         POSN    20
+     C                     Z-ADD0         LNGTH   20
+      *
+     C                     MOVE *BLANKS   X0ERR   1
+     C                     MOVE *BLANKS   X1DEL   1
+      *
+      * Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+      * Get Rundate
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+     C                     MOVELPGM       ZAPGM
+      *
+      * Set screen constants and output header
+     C                     MOVELPGM       SPGM
+     C                     MOVELWSID      SWSID
+     C                     MOVELUSER      SUSER
+     C                     MOVELAGMRDT    SRUNA
+      *
+     C                     WRITESF0920HH
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * *PSSR  - Program Exception Error Routine                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'SF0920'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *
+** CPY@     : Copyright notice for inclusion in all MKI programs
+(C) Misys International Banking Systems Ltd. 2005

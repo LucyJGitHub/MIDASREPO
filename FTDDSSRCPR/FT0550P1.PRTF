@@ -1,0 +1,558 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas FT Cheques To Be Paid Audit And List')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Funds Transfer Module                            *
+     A*                                                               *
+     A*  PRTF/FT0550P1 - Audit/Full List of Cheques to be Paid.       *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 187494             Date 19Mar01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU006             Date 01Apr98               *
+      *                 099217             Date 04FEB98               *
+      *                 S01408             Date 05SEP95               *
+     A*                 S01499             DATE 06JUN94               *
+     A*                 S01494             DATE 25MAY94               *
+     A*                 S01414             DATE 30MAR93               *
+     A*                 E25125             DATE 03JUN91               *
+     A*                 E32860             DATE 21MAY91               *
+     A*                 E32879             DATE 21MAY91               *
+     A*                 S01117             DATE 11OCT90               *
+     A*                 E23054             DATE 06AUG90               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  187494 - Debit party seems to be 'split' into two parts      *
+      *           because the debit party branch is misplaced.        *
+      *  CEU006 - EMU FT Payments and Settlement.                     *
+     A*  099217 - Report doesn't show clearly how Net Debit Amount is *
+     A*           calculated. Amend report to show settlement amount  *
+     A*           before charges AND settlement amount net of charges.*
+     A*  S01408 - Addition of hooks FT0550P101                        *
+     A*  S01499 - BLI V.A.T. Processing                               *
+     A*  S01494 - BLI Funds Transfer Enhancements                     *
+     A*  S01414 - Book Code and Profit Centre Incorporation.          *
+     A*  E25125 - PRINT STATUS OF DEBIT PARTY IF DELETED              *
+     A*  E32860 - Print debit currency equivalent in settlements      *
+     A*  E32879 - Show override on the report                         *
+     A*  E23054 - PAGE OVERFLOW                                       *
+     A*                                                               *
+     A*****************************************************************
+     A                                      REF(MFRFL)
+     A          R P1HEDT
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*                                                    /S01117/
+     A**********************************3  3'REFERENCE FT0550'
+     A                                  3  3'REFERENCE FT0550P1'
+     A*                                                    /S01117/
+     A            TITL          53A     3 37
+     A                                  3100'DATE'
+     A            RUNA           7A     3105
+     A                                  3119'PAGE'
+     A            PAGE           5  0   3124EDTCDE(4)
+     A*
+     A                                  5 51'CHEQUES TO BE PAID -'
+     A            P1HEAD        10      5 72
+     A*
+     A                                  6 51'---------------------'
+     A            P1DASH        11      6 72
+     A*
+     A*  DETAIL OUTPUT - CREDIT RECORD
+     A*
+     A          R P1CRED                    SPACEB(1)
+     A*                                                    /S01117/
+     A  10   N14                           3'BOOKING BRANCH'
+     A  10    14                           3'ORIGINATING BRANCH'
+     A  10        SBRA      R        O    23REFFLD(BRCA)
+     A  10        PBRNM     R        O    27REFFLD(BRNM)
+     A  10 14                             63'BOOKING BRANCH'
+     A  10 15N14                          63'ORIGINATING BRANCH'
+     A  10N14 15
+     AO 10 14     SBRO      R        O    83REFFLD(BRCA)
+     A  10N14 15
+     AO 10 14     PBRNO     R        O    87REFFLD(BRNM)
+     A*                                                    /S01117/
+     A*
+     A*                                                    /S01117/
+     A************P1STTS********12A      121SPACEA(1)
+     A            P1STTS        12A      121SPACEB(1)
+     A                                      SPACEA(1)
+     A*                                                    /S01117/
+     A*
+     A                                     3'PAYMENT'
+     A                                    34'-------------- PAY ------------'
+     A                                   112'PROCEEDS'
+     A                                      SPACEA(1)
+     A*
+     A                                     3'REFERENCE'
+     A                                    20'TYPE  SUB-TYPE'
+     A                                    42'TOTAL REM  CCY   VALUE'
+     A                                    70'TOTAL DEBITS'
+     A  25                                85'* DIFFERENCE *'
+     A                                   112'REMITTED'
+     A                                      SPACEA(1)
+     A*
+     A            PREF          15A        3
+     A            PYTP           2A       21
+     A            PYST           2A       29
+     A     30     AMTB0         13  0     34EDTCDE(J)
+     A     31     AMTB1         13  1     34EDTCDE(J)
+     A     32     AMTB2         13  2     34EDTCDE(J)
+     A     33     AMTB3         13  3     34EDTCDE(J)
+     A* TOTAL DEBITS
+     A     30     AMTA0         13  0     65EDTCDE(J)
+     A     31     AMTA1         13  1     65EDTCDE(J)
+     A     32     AMTA2         13  2     65EDTCDE(J)
+     A     33     AMTA3         13  3     65EDTCDE(J)
+     A* DIFFERENCE
+     A  25 30     AMTH0         13  0     80EDTCDE(J)
+     A  25 31     AMTH1         13  1     80EDTCDE(J)
+     A  25 32     AMTH2         13  2     80EDTCDE(J)
+     A  25 33     AMTH3         13  3     80EDTCDE(J)
+     A  25        DIFFSN         1A       99TEXT('SIGN FOR DIFFERENCE')
+     A            OCCY           3A       53
+     A*  PROCEEDS REMITTED
+     A     30     AMTG0         13  0    103EDTCDE(J)
+     A     31     AMTG1         13  1    103EDTCDE(J)
+     A     32     AMTG2         13  2    103EDTCDE(J)
+     A     33     AMTG3         13  3    103EDTCDE(J)
+      *                                              Begin /CEU006/
+     A*********** VDATO          7A       58SPACEA(2)
+     A            VDATO          7A       58SPACEA(1)
+     A  46                                24'Delivery: '
+     A  46        RPADEL        18A       34
+     A  46        RPACCY         3A       53
+      *                                              End   /CEU006/
+ 
+     A*
+     A                                     3'SENDER''S'
+      *                                              Begin /CEU006/
+     A                                      SPACEB(1)
+      *                                              End   /CEU006/
+     A            P1SNCO        10        18
+     A                                    61'RECEIVER''S'
+     A            RCO1      R             76SPACEA(1)
+     A*
+     A                                     3'CORRESPONDENT'
+     A                                    61'CORRESPONDENT'
+     A            RCO2      R             76SPACEA(1)
+     A            RCO3      R             76SPACEA(1)
+     A*
+     A                                     3'REMITTING BANK'
+     A            CBANK1        35A       18
+     A            RCO4      R             76SPACEA(1)
+     A*
+     A            CBANK2        35A       18
+     A            RCO5      R             76SPACEA(1)
+     A            CBANK3        35A       18SPACEA(1)
+     A*
+     A            CBANK4        35A       18
+     A                                    61'ACCOUNT WITH'
+     A            ACB1      R             76SPACEA(1)
+     A*
+     A                                    61'BANK'
+     A            ACB2      R             76SPACEA(1)
+     A*
+     A                                     3'REMITTING BANK'
+     A            RBKR      R             18
+     A            ACB3      R             76SPACEA(1)
+     A*
+     A                                     3'REFERENCE'
+     A            ACB4      R             76SPACEA(1)
+     A            ACB5      R             76SPACEA(1)
+     A*
+     A                                     3'DETAILS OF'
+     A            DAA1      R             18SPACEA(1)
+     A*
+     A                                     3'AMOUNTS ADDED'
+     A            DAA2      R             18
+     A                                    61'BANK TO BANK'
+     A            BBI1      R             76SPACEA(1)
+     A*
+     A            DAA3      R             18
+     A                                    61'INFORMATION'
+     A            BBI2      R             76SPACEA(1)
+     A*
+     A            DAA4      R             18
+     A            BBI3      R             76SPACEA(1)
+     A            DAA5      R             18
+     A            BBI4      R             76SPACEA(1)
+     A            DAA6      R             18
+     A            BBI5      R             76SPACEA(1)
+     A            BBI6      R             76SPACEA(1)
+     A*
+     A                                     3'DETAILS OF'
+     A            DCH1      R             18SPACEA(1)
+     A*
+     A                                     3'CHARGES'
+     A            DCH2      R             18
+     A                                    61'SETTLEMENT TYPE'
+     A            STMT      R             82
+     A  51                               100'INPUT OFFICER'
+     A                                      SPACEA(1)
+     A            DCH3      R             18SPACEA(1)
+     A*
+     A            DCH4      R             18
+     A                                    61'SWIFT PRIORITY CODE'
+     A*                                                    /S01117/
+     A************SWPC******R*************82
+     A            P1SWPC         1        82
+     A*                                                    /S01117/
+     A  51        SIUSR1        25       100
+     A                                      SPACEA(1)
+     A            DCH5      R             18SPACEA(1)
+     A*
+     A            DCH6      R             18
+     A                                    61'SEND MT202 INDICATOR'
+     A*********              Start of Change               /S01499/
+     A*********   DECIS          3A       82SPACEA(2)
+     A            DECIS          3A       82SPACEA(1)
+     A  45                                49'VAT?'
+     A  45                                  SPACEA(1)
+     A*                      End of Change                 /S01499/
+     A*
+     A                                     3'CORRESPONDENT''S CHARGE'
+     A*********              Start of Change               /S01499/
+     A N45                                  SPACEB(1)
+     A*                      End of Change                 /S01499/
+     A     30     AMTC0         11  0     32EDTCDE(J)
+     A     31     AMTC1         11  1     32EDTCDE(J)
+     A     32     AMTC2         11  2     32EDTCDE(J)
+     A     33     AMTC3         11  3     32EDTCDE(J)
+     A*********              Start of Change               /S01499/
+     A     45     RCVT1          1        50
+     A*                      End of Change                 /S01499/
+     A*
+     A* Start S01414
+     A                                    61'BOOK CODE'
+     A            BOKC      R             82
+     A* End   S01414
+     A*
+     A            OCCY1          3A       27SPACEA(1)
+     A*
+     A                                     3'DEDUCTIONS'
+     A     30     AMTD0         11  0     32EDTCDE(J)
+     A     31     AMTD1         11  1     32EDTCDE(J)
+     A     32     AMTD2         11  2     32EDTCDE(J)
+     A     33     AMTD3         11  3     32EDTCDE(J)
+     A*********              Start of Change               /S01499/
+     A     45     RCVT2          1        50
+     A*                      End of Change                 /S01499/
+     A*
+     A* Start S01414
+     A  76                                61'PROFIT CENTRE'
+     A  76        PRFC      R             82
+     A* End   S01414
+     A*
+     A*********              Start of Change               /S01499/
+     A*********   CRNCY          3A       27SPACEA(3)
+     A            CRNCY          3A       27SPACEA(2)
+     A     45                              3'V.A.T. CORRESPONDENT'
+     A  30 45     VCAM0         11  0     32EDTCDE(J)
+     A  31 45     VCAM1         11  1     32EDTCDE(J)
+     A  32 45     VCAM2         11  2     32EDTCDE(J)
+     A  33 45     VCAM3         11  3     32EDTCDE(J)
+     A     45     VCOCY          3A       27SPACEA(1)
+     A     45                              3'V.A.T. DEDUCTION'
+     A  30 45     VDAM0         11  0     32EDTCDE(J)
+     A  31 45     VDAM1         11  1     32EDTCDE(J)
+     A  32 45     VDAM2         11  2     32EDTCDE(J)
+     A  33 45     VDAM3         11  3     32EDTCDE(J)
+     A     45     VDECY          3A       27SPACEA(3)
+     A*                      End of Change                 /S01499/
+     A*/COPY WNCPYSRC,FT0550P102
+     A*
+     A*  DETAIL OUTPUT - DEBIT RECORD.
+     A*
+     A*                                                     /*E23054*/
+     A**********R P1DEBT                    SPACEB(2)
+     A          R P1DEBT                    SPACEB(1)
+     A*                                                     /*E23054*/
+     A*
+     A                                     3'DEBIT PARTY'
+     A            TOTCRD         2  0     +1EDTCDE(4)
+     A*                                                               /*E25125*/
+     A  75        P2STTS        12A      121
+     A*                                                               /*E25125*/
+     A                                      SPACEA(2)
+     A*
+     A                                     6'REFERENCE'
+     A*                                                               /*E25125*/
+     A N75                                  SPACEB(2)
+     A*                                                               /*E25125*/
+      ******               E32860 Starts here
+     A*********************************** 34'---------- SETTLEMENT ---------'
+     A                                    35'----------------------'
+     A                                    58'SETTLEMENT'
+     A                                    69'----------------------'
+      ******               E32860 Ends here
+     A                                      SPACEA(1)
+     A*
+      ******               E32860 Starts here
+     A**********************************  45'AMOUNT  CCY   VALUE'
+     A**********************************  72'RATE'
+     A                                    33'VALUE  CCY         AMOUNT'
+     A                                    64'RATE'
+     A                                    76'CCY         AMOUNT'
+      ******               E32860 Ends here
+     A N51                                  SPACEA(1)
+     A  51                               100'INPUT OFFICER'
+     A  51                                  SPACEA(1)
+     A*
+     A            PREF          15         3
+     A            CQSQ           2  0     19
+      ******               E32860 Starts here
+     A**** 40     AMTC0         11  0     37EDTCDE(J)
+     A**** 41     AMTC1         11  1     37EDTCDE(J)
+     A**** 42     AMTC2         11  2     37EDTCDE(J)
+     A**** 43     AMTC3         11  3     37EDTCDE(J)
+     A****        DRCY           3        53
+     A****        VDATO          7        58
+     A*********   RATE          13  8     69EDTCDE(4)
+     A*N51*****                             SPACEA(2)
+     A            VDATO          7        32
+     A            PCCY           3        40
+     A     40     AMTC0         11  0     44EDTCDE(J)
+     A     41     AMTC1         11  1     44EDTCDE(J)
+     A     42     AMTC2         11  2     44EDTCDE(J)
+     A     43     AMTC3         11  3     44EDTCDE(J)
+     A            RATE          13  8     60EDTCDE(4)
+     A            DRCY           3        76
+     A     70     @OUT0         11  0     80EDTCDE(J)
+      *                                              Begin /CEU006/
+     A*N51*70****                           SPACEA(2)
+     A N51 70                               SPACEA(1)
+      *                                              End   /CEU006/
+     A     71     @OUT1         11  1     80EDTCDE(J)
+      *                                              Begin /CEU006/
+     A*N51*71****                           SPACEA(2)
+     A N51 71                               SPACEA(1)
+      *                                              End   /CEU006/
+     A     72     @OUT2         11  2     80EDTCDE(J)
+      *                                              Begin /CEU006/
+     A*N51*72****                           SPACEA(2)
+     A N51 72                               SPACEA(1)
+      *                                              End   /CEU006/
+     A     73     @OUT3         11  3     80EDTCDE(J)
+      *                                              Begin /CEU006/
+     A*N51*73****                           SPACEA(2)
+     A N51 73                               SPACEA(1)
+      *                                              End   /CEU006/
+      ******               E32860 Ends here
+     A  51        SIUSR2        25       100
+      *                                              Begin /CEU006/
+     A**51*******                           SPACEA(2)
+     A  51                                  SPACEA(1)
+     A  47                                66'Delivery: '
+     A  47        RSECCY         3A       76
+     A  47        RSEDEL        18A       80
+      *                                              End   /CEU006/
+     A*
+     A                                     3'DEBIT PARTY'
+      *                                              Begin /CEU006/
+     A                                      SPACEB(1)
+      *                                              End   /CEU006/
+     A**Start of change CGL029
+     A**********  P1DRPY        12        18                                                  CGL029
+     A            P1DRPY        18        18
+     A**End of change CGL029
+     A**Start of change 187494
+     A            P1DRBR    R             +0REFFLD(DRBR)
+     A**End of change 187494
+      ******               E32879 Starts here
+     A                                    62'OVERRIDE'
+     A            @OVR           3        71
+      ******               E32879 Ends here
+     A*                                                               /S01117/
+     A**Start of change 187494
+     A**********  P1DRBR    R             +0REFFLD(DRBR)
+     A**End of change 187494
+     A*                                                               /S01117/
+     A                                      SPACEA(2)
+     A*
+     A                                     3'CENTRAL BANK REFERENCE'
+     A            FDNBC         11        29
+     A                                      SPACEA(2)
+     A*
+     A                                    11'COMMISSION TARIFF'
+     A            TRCT           1        31
+     A*********              Start of Change               /S01494/
+     A*********                           44'COMMISSION'
+     A*****30**   AMTD0         11  0     62EDTCDE(J)
+     A*****31**   AMTD1         11  1     62EDTCDE(J)
+     A*****32**   AMTD2         11  2     62EDTCDE(J)
+     A*****33**   AMTD3         11  3     62EDTCDE(J)
+     A*********              Start of Change               /S01499/
+     A*********                           46'COMMISSION'
+     A*****30**   AMTD0         11  0     64EDTCDE(J)
+     A*****31**   AMTD1         11  1     64EDTCDE(J)
+     A*****32**   AMTD2         11  2     64EDTCDE(J)
+     A*****33**   AMTD3         11  3     64EDTCDE(J)
+     A                                    46'VAT?'
+     A*                      End of Change                 /S01499/
+     A*                      End of Change                 /S01494/
+     A  51                               103'AUTHORISING OFFICER 1'
+     A*                                                               /S01117/
+     A************OCCY1**********3********57SPACEA(2)
+     A*********              Start of Change               /S01499/
+     A*********   OCCY1          3        57SPACEA(1)
+     A*                      End of Change                 /S01499/
+     A*                                                               /S01117/
+     A*
+     A*********              Start of Change               /S01499/
+     A                                     3'COMMISSION'
+     A                                       SPACEB(1)
+     A     30     AMTD0         11  0     29EDTCDE(J)
+     A     31     AMTD1         11  1     29EDTCDE(J)
+     A     32     AMTD2         11  2     29EDTCDE(J)
+     A     33     AMTD3         11  3     29EDTCDE(J)
+     A  45        RDVT1          1        47
+     A                                    62'BOOK CODE'
+     A            BOKC      R             77
+     A  51        SAUP1         25       103
+     A            OCCY1          3        24SPACEA(1)
+     A*                      End of Change                 /S01499/
+     A                                     3'COLLECTION CHARGE'
+     A*********              Start of Change               /S01494/
+     A*****30**   AMTE0         11  0     27EDTCDE(J)
+     A*****31**   AMTE1         11  1     27EDTCDE(J)
+     A*****32**   AMTE2         11  2     27EDTCDE(J)
+     A*****33**   AMTE3         11  3     27EDTCDE(J)
+     A*********
+     A**Start*S01414
+     A*********                           44'BOOK CODE'
+     A*********   BOKC      R             59
+     A**End***S01414
+     A*********
+     A     30     AMTE0         11  0     29EDTCDE(J)
+     A     31     AMTE1         11  1     29EDTCDE(J)
+     A     32     AMTE2         11  2     29EDTCDE(J)
+     A     33     AMTE3         11  3     29EDTCDE(J)
+     A*********              Start of Change               /S01499/
+     A*********                           46'BOOK CODE'
+     A*********   BOKC      R             61
+     A*********              End of Change                 /S01494/
+     A**51*****   SAUP1         25       103
+     A  45        RDVT2          1        47
+     A  76                                62'PROFIT CENTRE'
+     A  76        PRFC      R             77
+     A  51                               103'AUTHORISING OFFICER 2'
+     A*                      End of Change                 /S01499/
+     A*********              Start of Change               /S01494/
+     A*********   CRNCY          3        22SPACEA(2)
+     A            CRNCY          3        24SPACEA(1)
+     A*                      End of Change                 /S01494/
+     A*
+     A                                     3'COSTS ABROAD'
+     A*********              Start of Change               /S01494/
+     A*****30**   AMTF0         11  0     27EDTCDE(J)
+     A*****31**   AMTF1         11  1     27EDTCDE(J)
+     A*****32**   AMTF2         11  2     27EDTCDE(J)
+     A*****33**   AMTF3         11  3     27EDTCDE(J)
+     A*********
+     A**Start*S01414
+     A**76*****                           44'PROFIT CENTRE'
+     A**76*****   PRFC      R             59
+     A**End***S01414
+     A*********
+     A     30     AMTF0         11  0     29EDTCDE(J)
+     A     31     AMTF1         11  1     29EDTCDE(J)
+     A     32     AMTF2         11  2     29EDTCDE(J)
+     A     33     AMTF3         11  3     29EDTCDE(J)
+     A*********              Start of Change               /S01499/
+     A**76*****                           46'PROFIT CENTRE'
+     A**76*****   PRFC      R             61
+     A*********              End of Change                 /S01494/
+     A**51*****                          103'AUTHORISING OFFICER 2'
+     A            RDVT3          1        47
+     A  51        SAUP2         25       103
+     A*                      End of Change                 /S01499/
+     A*                                                               /S01117/
+     A************OCCY2**********3********22SPACEA(2)
+     A*********              Start of Change               /S01494/
+     A*********   OCCY2          3        22SPACEA(1)
+     A            OCCY2          3        24SPACEA(1)
+     A     44                              3'FX/CHANGE COMMISSION'
+     A  30 44     CHAM0         11  0     29EDTCDE(J)
+     A  31 44     CHAM1         11  1     29EDTCDE(J)
+     A  32 44     CHAM2         11  2     29EDTCDE(J)
+     A  33 44     CHAM3         11  3     29EDTCDE(J)
+     A*********              Start of Change               /S01499/
+     A  45 44     RDVT4          1        47
+     A*                      End of Change                 /S01499/
+     A     44     CHCY           3A       24SPACEA(1)
+     A*                      End of Change                 /S01494/
+     A*********              Start of Change               /S01499/
+     A     45                              3'V.A.T.'
+     A  30 45     VTAM0         11  0     29EDTCDE(J)
+     A  31 45     VTAM1         11  1     29EDTCDE(J)
+     A  32 45     VTAM2         11  2     29EDTCDE(J)
+     A  33 45     VTAM3         11  3     29EDTCDE(J)
+     A     45     VTCY           3A       24SPACEA(1)
+     A*                      End of Change                 /S01499/
+     A*                                                               /S01117/
+     A*
+     A                                     3'CHARGES TO THE DEBIT OF A/C'
+     A**Start of change CGL029
+     A**********  P1CDRO        12        31                                                  CGL029
+     A            P1CDRO        18        31
+     A**End of change CGL029
+     A*                                                               /S01117/
+     A            P1CDBR    R             +0REFFLD(CDBRFT)
+     A*                                              Begin /099217/
+     A                                    55' DEBIT CURRENCY AMOUNT'
+     A     70     @NET0         11  0     80EDTCDE(J)
+     A     71     @NET1         11  1     80EDTCDE(J)
+     A     72     @NET2         11  2     80EDTCDE(J)
+     A     73     @NET3         11  3     80EDTCDE(J)
+     A*                                              End   /099217/
+     A*N51**********************************SPACEA(2)
+     A*********              Start of Change               /S01499/
+     A*N51*****                             SPACEA(1)
+     A                                      SPACEA(1)
+     A*                      End of Change                 /S01499/
+     A*                                                               /S01117/
+     A*********              Start of Change               /S01499/
+     A**51*****   SAUP2         25       103
+     A*                      End of Change                 /S01499/
+     A*                                                               /S01117/
+     A**51**********************************SPACEA(2)
+     A*********              Start of Change               /S01499/
+     A**51*****                             SPACEA(1)
+     A*                      End of Change                 /S01499/
+     A*                                              Start /S01408/
+     A*/COPY WNCPYSRC,FT0550P101
+     A*                                              End   /S01408/
+     A**Start of change CER001
+     A          R ZZEXIBLC                  TEXT('Extended IBLC informations')
+     A            RRLINE       132         1SPACEB(1)
+     A**End of change CER001
+     A*                                                               /S01117/
+     A*
+     A          R P1EOR                     SPACEB(2)
+     A*                                                               /S01117/
+     A****N77*****************************53'*** NO DETAILS TO +
+     A************************************    REPORT ***'
+     A************************************56'*** END OF REPORT ***'
+     A****N77*****************************  SPACEB(2)
+     A N10
+     AO 11                                56'** END OF REPORT **'
+     A  10N11                             50'** END OF REPORT FOR BRANCH **'
+     A*                                                               /S01117/
+     A*

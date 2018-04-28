@@ -1,0 +1,50 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ZA Retrieve User Defined Attribute')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Common Programs                                     */
+/*                                                                   */
+/*       ZACRTVUSRA - Retrieve User Defined Attribute                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CMR002  *CREATE    Date 14Feb11              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CMR002 - MBI/Almonde Interface                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTNCDE &OBJNAME &OBJTYPE &USERATTR)
+ 
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OBJNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&USERATTR) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2011')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVOBJD    OBJ(&OBJNAME) OBJTYPE(&OBJTYPE) +
+                          USRDFNATR(&USERATTR)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination - batch job */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          ZACRTVUSRA ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGVAR     VAR(&RTNCDE) VALUE('*ERROR')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             ENDPGM

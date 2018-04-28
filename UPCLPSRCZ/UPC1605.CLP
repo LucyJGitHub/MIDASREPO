@@ -1,0 +1,98 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas UP Save renamed libraries')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC1605 - Save renamed libraries                            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP016  *CREATE    Date 02Dec02              */
+/*       Prev Amend No. Xxxxxx             Date nnXXXnn              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP016 - Add implementation software to core.               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MSPREFIX &SSPREFIX)
+ 
+             DCL        VAR(&MSPREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SSPREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MSDZLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SSDMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SSDPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SSDVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SSDTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Build the Main and Support database names. */
+             CHGVAR     VAR(&MSDZLIB) VALUE(&MSPREFIX *CAT 'DZLIB')
+ 
+             CHGVAR     VAR(&SSDMLIB) VALUE(&SSPREFIX *CAT 'DMLIB')
+             CHGVAR     VAR(&SSDPLIB) VALUE(&SSPREFIX *CAT 'DPLIB')
+             CHGVAR     VAR(&SSDVLIB) VALUE(&SSPREFIX *CAT 'DVLIB')
+             CHGVAR     VAR(&SSDTLIB) VALUE(&SSPREFIX *CAT 'DTALIB')
+ 
+/* Create save files in Main DZLIB. */
+             CRTSAVF    FILE(&MSDZLIB/&SSDMLIB) TEXT('DMLIB save for +
+                          Support system')
+/* If it already exists then clear it. */
+             MONMSG     MSGID(CPF7302) EXEC(DO)
+                CLRSAVF    FILE(&MSDZLIB/&SSDMLIB)
+             ENDDO
+ 
+             CRTSAVF    FILE(&MSDZLIB/&SSDPLIB) TEXT('DPLIB save for +
+                          Support system')
+/* If it already exists then clear it. */
+             MONMSG     MSGID(CPF7302) EXEC(DO)
+                CLRSAVF    FILE(&MSDZLIB/&SSDPLIB)
+             ENDDO
+ 
+             CRTSAVF    FILE(&MSDZLIB/&SSDTLIB) TEXT('DTALIB save for +
+                          Support system')
+/* If it already exists then clear it. */
+             MONMSG     MSGID(CPF7302) EXEC(DO)
+                CLRSAVF    FILE(&MSDZLIB/&SSDTLIB)
+             ENDDO
+ 
+             CRTSAVF    FILE(&MSDZLIB/&SSDVLIB) TEXT('DVLIB save for +
+                          Support system')
+/* If it already exists then clear it. */
+             MONMSG     MSGID(CPF7302) EXEC(DO)
+                CLRSAVF    FILE(&MSDZLIB/&SSDVLIB)
+             ENDDO
+ 
+/* Save libraries. */
+             SAVLIB     LIB(&SSDMLIB) DEV(*SAVF) +
+                          SAVF(&MSDZLIB/&SSDMLIB) OUTPUT(*PRINT)
+ 
+             SAVLIB     LIB(&SSDPLIB) DEV(*SAVF) +
+                          SAVF(&MSDZLIB/&SSDPLIB) OUTPUT(*PRINT)
+ 
+             SAVLIB     LIB(&SSDTLIB) DEV(*SAVF) +
+                          SAVF(&MSDZLIB/&SSDTLIB) OUTPUT(*PRINT)
+ 
+             SAVLIB     LIB(&SSDVLIB) DEV(*SAVF) +
+                          SAVF(&MSDZLIB/&SSDVLIB) OUTPUT(*PRINT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

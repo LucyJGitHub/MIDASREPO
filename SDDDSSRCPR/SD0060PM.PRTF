@@ -1,0 +1,565 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas SD Branch codes aud/req print file')             *
+      ********************************************************************
+      *                                                                  *
+      *  Midas - STANDING DATA MODULES                                   *
+      *                                                                  *
+      *   SD0060PM BRANCH CODES Aud/Req Report                           *
+      *                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                                  *
+      *  Last Amend No. CTI006             Date 31Mar14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 30Nov05               *
+      *                 CER001             Date 25Apr05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL013             Date 21Feb02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE015             Date 12Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             DATE 04MAY00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT004             Date 27Jul99                  *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE004             Date 28Feb97                  *
+      *                 CTI001             Date 01SEP97                  *
+      *                 CRT003             Date 22JUL96                  *
+      *                 S01408             Date 07SEP95                  *
+      *                 S01408             DATE 04AUG95                  *
+      *                 S01408             DATE 25MAY95                  *
+      *                 S01392             DATE 20JUL92                  *
+      *                 S01383             DATE 12JUN92                  *
+      *                 LN0706             DATE 06SEP90                  *
+      *                 LN0424             DATE 25JUN90                  *
+      *                 S01117             DATE 20APR90                  *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL013 - MT94x Message Generation.                           *
+      *  CLE015 - Functionality moved from Syndicated Lending to      *
+      *           Customer Lending                                    *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *  CDL008 - Continous Linked Settlement                         *
+      *  CFT004 - Straight Through Processing Phase 2                    *
+      *         - International Bank Account Numbers                     *
+      *  CLE004 - Customer Lending Enhancements - Syndication            *
+      *  CTI001 - Midas/Trade Innovation Interface - Phase 1             *
+      *  CRT003 - Cashier Interface.                                     *
+      *           Amended to display the Opening and Closing Times       *
+      *           as well as the Times Override Indicator for the whole  *
+      *           week if CRT003 is present.                             *
+      *  S01408 - Addition of core hook SD0060PM02                       *
+      *           Addition of core hook SD0060PM03                       *
+      *  S01408 - Addition of core hook SD0060PM01                       *
+      *  S01408 - Addition of core hook SD0060PMR1                       *
+      *  S01392 - JAP.SUB-MODULE INCORPORATION (CORE)                    *
+      *  S01383 - Basic Rate Tax Incorporation - added Sort Code field.  *
+      *           Note: As every second line was commented out, the      *
+      *           source was unreadable, so collected live code together.*
+      *     LN0706 - ADDITION OF TID TO REPORT                           *
+      *     LN0424 - Change CMCD and LCCD to 3A.                         *LN0424
+      *                                                                  *LN0424
+      *     S01117 - Rel 10 Multi-branching changes                      *S01117
+      *                                                                  *S01117
+      ********************************************************************S01117
+     A                                      INDARA
+      *=========================================================================
+     A          R ZZPAGHDR                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      SKIPB(3)
+      *.........................................................................
+     A                                     2'Reference'
+     A            ##PGM         10        12TEXT('*PROGRAM')
+     A            ##URPT        53        45TEXT('User Report Title')
+     A                                   111'Date'
+     A            ##MRDT         7       116TEXT('midas rundate')
+     A                                   124'Page'
+     A                                   129PAGNBR
+     A                                      EDTCDE(3)
+     A                                   111'Time'
+     A                                      SPACEB(1)
+     A                                   116TIME
+     A                                      EDTWRD('  :  :  ')
+     A            ##ARTL        53        45TEXT('Audit/Request Title')
+     A                                      SPACEB(1)
+     A            ##UNDL        53        45TEXT('Underline')
+     A                                      SPACEB(1)
+      *=========================================================================
+     A          R ZZCOLHDG                  TEXT('Detail line headings.')
+     A                                      SKIPB(8)
+     A                                      SPACEA(1)
+      *.........................................................................
+     A                                     2'Branch'
+     A                                     9'Branch Name'
+      *                                              Begin /S01383/
+     A                                    41'Branch'
+     A                                    49'Company'
+     A                                    58'Loc.'
+     A                                    64'Global'
+     A**                                                       /S01392/
+     A****************                    75'Branch'
+     A****************                    86'Due From'
+     A****************                    96'Due To'
+     A**Start of change CGL029
+     A**********                          74'Branch'                                          CGL029
+     A**********                          83'Due From'                                        CGL029
+     A**********                          93'Due To'                                          CGL029
+     A**********                         100'Rnd'                                             CGL029
+     A                                    73'Branch'
+     A                                    85'Due From'
+     A                                    97'Due To'
+     A                                   107'Rnd'
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0060PM05
+     A**                                                       /S01392/
+     A**Start of change CGL029
+     A**86******                         106'Sort'                                            CGL029
+     A  86                               112'Sort'
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0060PM10
+     A**Start of change CGL029
+     A**********                         115'Change'                                          CGL029
+     A**********                         124'Change'                                          CGL029
+     A                                   119'Change'
+     A                                   127'Change'
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0060PM06
+      *
+     A                                     2'Code'
+     A                                      SPACEB(1)
+     A                                    41' Int.'
+     A                                    49' Code'
+     A                                    58'Code'
+     A                                    64'Branch'
+     A**                                                       /S01392/
+     A****************                    76'TID'
+     A****************                    88'a/c'
+     A****************                    97'a/c'
+     A**Start of change CGL029
+     A**********                          75'TID'                                             CGL029
+     A**********                          85'a/c'                                             CGL029
+     A**********                          94'a/c'                                             CGL029
+     A**********                         100'Dwn'                                             CGL029
+     A                                    74'TID'
+     A                                    87'a/c'
+     A                                    98'a/c'
+     A                                   107'Dwn'
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0060PM07
+     A**                                                       /S01392/
+     A**Start of change CGL029
+     A**86******                         106'Code'                                            CGL029
+     A  86                               112'Code'
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0060PM11
+     A**Start of change CGL029
+     A**********                         115'Date'                                            CGL029
+     A**********                         124'Type'                                            CGL029
+     A                                   120'Date'
+     A                                   127'Type'
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0060PM08
+      *
+     A                                    41' Cust.'
+     A                                      SPACEB(1)
+     A                                    64' Code'
+     A**                                                       /S01392/
+     A****************                    88'Code'
+     A****************                    97'Code'
+     A**Start of change CGL029
+     A**********                          85'Code'                                            CGL029
+     A**********                          94'Code'                                            CGL029
+     A**********                         100'Int'                                             CGL029
+     A                                    87'Code'
+     A                                    98'Code'
+     A                                   107'Int'
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0060PM12
+     A**                                                       /S01392/
+      *
+      ****  START OF COMMENTED OUT SECTION - LIVE CODE EXTRACTED  *****
+     A**                                                       /S01117/
+     A**                                  40'Branch'
+     A***********                         41'Branch'
+     A**                                  48'Branch'
+     A**                                  56' Int/brch'
+     A**                                  68'Int/brch'
+     A**                                  78'Start'
+     A**                                  85'End'
+     A**                                  89'Company'
+     A**                                  97'Loc.'
+     A**                                 102'Global'
+     A***********                         49'Company'
+     A***********                         58'Loc.'
+     A***********                         64'Global'
+     A**                                                       /LN0706/
+     A***********                         75'Branch'
+     A**                                  73'Due From'
+     A***********                         86'Due From'
+     A**                                  83'Due To'
+     A***********                         96'Due To'
+     A**                                                       /LN0706/
+     A**                                                       /S01117/
+     A***********                        111'Change'
+     A***********                        121'Change'
+     A***********                          2'Code'
+     A***********                           SPACEB(1)
+     A**                                                       /S01117/
+     A**                                  40' Int.'
+     A***********                         41' Int.'
+     A**                                  48'S/name'
+     A**                                  56'Branch A/c'
+     A**                                  68'H.O. A/c'
+     A**                                  78' A/c'
+     A**                                  85'A/c'
+     A**                                  89' Code'
+     A**                                  97'Code'
+     A**                                 102'Branch'
+     A***********                         49' Code'
+     A***********                         58'Code'
+     A***********                         64'Branch'
+     A**                                                       /LN0706/
+     A***********                         76'TID'
+     A**                                  75'a/c'
+     A***********                         88'a/c'
+     A**                                  84'a/c'
+     A***********                         97'a/c'
+     A**                                                       /LN0706/
+     A**                                                       /S01117/
+     A***********                        111'Date'
+     A***********                        121'Type'
+     A**                                                       /S01117/
+     A**                                  40' Cust.'
+     A***********                         41' Cust.'
+     A***********                           SPACEB(1)
+     A**                                  78' Seq'
+     A**                                  85'Seq'
+     A**                                 102' Code'
+     A***********                         64' Code'
+     A**                                                       /LN0706/
+     A**                                  75'Code'
+     A***********                         88'Code'
+     A**                                  84'Code'
+     A***********                         97'Code'
+     A**                                                       /LN0706/
+     A**                                                       /S01117/
+      *=========================================================================
+     A*********** ZZDTLRCD                  TEXT('Detail line.             ')
+     A***********                           SPACEB(1)
+     A***********                           SPACEA(1)
+      ***********...............................................................
+     A*********** XRBRCD         3         3TEXT('Branch code')
+     A*********** XRBRNM        30         9TEXT('Branch Name')
+     A**                                                       /S01117/
+     A**          XRBICN         6        40TEXT('Branch Internal Customer')
+     A*********** XRBICN         6        41TEXT('Branch Internal Customer')
+     A**          XRBRSN         3        49TEXT('Branch Shortname')
+     A**          XRIBAC         4        58TEXT('Interbranch Branch A/c Ac')
+     A**          XRIHOA         4        70TEXT('Interbranch H.O A/c')
+     A**          XRSACS         2  0     79TEXT('Start Account Sequence')
+     A**          XREACS         2  0     85TEXT('End Account Sequence')
+     A**          XRCMCD         2        91TEXT('Company Code')
+     A**          XRLCCD         2        98TEXT('Location Code')
+     A**          XRGBCD         3       103TEXT('Global Branch Code')
+     A*                                                         /LN0424
+     A**          XRCMCD         2        51TEXT('Company Code')
+     A**          XRLCCD         2        59TEXT('Location Code')
+     A*********** XRCMCD         3        51TEXT('Company Code')
+     A*********** XRLCCD         3        59TEXT('Location Code')
+     A*                                                         /LN0424
+     A*********** XRGBCD         3        65TEXT('Global Branch Code')
+     A**                                                       /LN0706/
+     A*********** XRBTID        12        72TEXT('Branch TID')
+     A**          XRDFAC         4        75TEXT('Due From a/c Code')
+     A*********** XRDFAC         4        88TEXT('Due From a/c Code')
+     A**          XRDTAC         4        84TEXT('Due To a/c Code')
+     A*********** XRDTAC         4        97TEXT('Due To a/c Code')
+     A**                                                       /LN0706/
+     A**                                                       /S01117/
+     A*********** XRACDT         7       111TEXT('alpha change date')
+     A*********** XRALCH         6       121TEXT('alpha of last change')
+      **************  END OF COMMENTED OUT SECTION  *******************
+      *                                                                     ....
+     A          R ZZDTLRCD                  TEXT('Detail line.             ')
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,SD0060PM01
+     A*                                                    End of   /*S01408*/
+     A                                      SPACEB(1)
+      *                                              Begin /CLE004/
+     A***********                           SPACEA(1)
+     A N87                                  SPACEA(1)
+      *                                              End   /CLE004/
+      *.........................................................................
+     A            XRBRCD         3         3TEXT('Branch code')
+     A            XRBRNM        30         9TEXT('Branch Name')
+     A            XRBICN         6        41TEXT('Branch Internal Customer')
+     A            XRCMCD         3        51TEXT('Company Code')
+     A            XRLCCD         3        59TEXT('Location Code')
+     A            XRGBCD         3        65TEXT('Global Branch Code')
+     A**                                                       /S01392/
+     A************XRBTID        12        72TEXT('Branch TID')
+     A************XRDFAC         4        88TEXT('Due From a/c Code')
+     A************XRDTAC         4        97TEXT('Due To a/c Code')
+     A**Start of change CGL029
+     A**********  XRBTID        12        71TEXT('Branch TID')                                CGL029
+     A**********  XRDFAC         4        85TEXT('Due From a/c Code')                         CGL029
+     A**********  XRDTAC         4        94TEXT('Due To a/c Code')                           CGL029
+     A**********  XRDFC          1       101TEXT('Round Down Interest')                       CGL029
+     A            XRBTID        12        70TEXT('Branch TID')
+     A            XRDFAC        10        84TEXT('Due From a/c Code')
+     A            XRDTAC        10        96TEXT('Due To a/c Code')
+     A            XRDFC          1       108TEXT('Round Down Interest')
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0060PM09
+     A**                                                       /S01392/
+     A**Start of change CGL029
+     A**86******  XRSTCD         6       105TEXT('Sort Code')                                 CGL029
+     A  86        XRSTCD         6       111TEXT('Sort Code')
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0060PM13
+     A**Start of change CGL029
+     A**********  XRACDT         7       115TEXT('alpha change date')                         CGL029
+     A**********  XRALCH         6       124TEXT('alpha of last change')                      CGL029
+     A            XRACDT         7       119TEXT('alpha change date')
+     A            XRALCH         6       127TEXT('alpha of last change')
+     A**End of change CGL029
+     A*/COPY WNCPYSRC,SD0060PM04
+      *                                              End   /S01383/
+      *                                              Begin /CLE004/
+     A  87                                 3'Syndic. agent/customer ref'
+     A*                                                    Begin of /*CLE015*/
+     A***********                           SPACEB(1)
+     A  87                                  SPACEB(1)
+     A*                                                    End of /*CLE015*/
+      * Begin /CSD027/
+     A**87******  XRSYCU         6  0     30TEXT('Syndic. agent/customer ref')                CSD027
+     A  87        XRSYCU         6A       30TEXT('Syndic. agent/customer ref')
+      * End /CSD027/
+     A*                                                    Begin of /*CLE015*/
+     A**87********                        40'MQ for: Sent msg'
+     A**87********XRMQSM        10        57TEXT('MQ for Sent msg')
+     A**87********                        68'Returned msg'
+     A**87********XRMQRT        10        81TEXT('MQ for Returned msg')
+     A**87********                        92'Bulk'
+     A**87********XRMQBU        10        97TEXT('MQ for Bulk Transfer')
+     A**87********                       108'Drip feed'
+     A**87********XRMQDF        10       119TEXT('MQ for Drip Feed')
+     A  88                                 3'MQ for: Sent msg'
+     A  88                                  SPACEB(1)
+     A  88        XRMQSM        10        20TEXT('MQ for Sent msg')
+     A  88                                31'Returned msg'
+     A  88        XRMQRT        10        44TEXT('MQ for Returned msg')
+     A  88                                55'Bulk'
+     A  88        XRMQBU        10        60TEXT('MQ for Bulk Transfer')
+     A  88                                71'Drip feed'
+     A  88        XRMQDF        10        82TEXT('MQ for Drip Feed')
+     A*                                                    End of /*CLE015*/
+      *                                              End   /CLE004/
+     A*/COPY WNCPYSRC,SD0060PM14
+     A N79        XRWFFR       131         2TEXT('Window Function Field')
+     A                                      SPACEB(1)
+     A N78        XRWF1R       131         2TEXT('Window Function Field 1')
+     A                                      SPACEB(1)
+     A N77        XRWF2R       131         2TEXT('Window Function Field 2')
+     A                                      SPACEB(1)
+      * 'Hidden' internal version of Last Change Date
+     A  99N99     XRLCD          5  0      1SPACEB(1)
+      * 'Hidden' internal version of Type of Last Change
+     A  99N99     XRTYLC         1         1SPACEB(1)
+     A*                                              Begin /*CRT003*/
+     A  70                                 5'Sunday Opening Time    :'
+     A                                      SPACEB(2)
+     A  70        XRSUOP         4  0     31TEXT('Sunday Opening Time')
+     A  70                                47'Wednesday Opening Time  :'
+     A  70        XRWEOP         4  0     74TEXT('Wednesday Opening Time')
+     A  70                                90'Friday Opening Time     :'
+     A  70        XRFYOP         4  0    117TEXT('Friday Opening Time')
+     A  70                                 5'Sunday Closing Time    :'
+     A                                      SPACEB(1)
+     A  70        XRSUCL         4  0     31TEXT('Sunday Closing Time')
+     A  70                                47'Wednesday Closing Time  :'
+     A  70        XRWECL         4  0     74TEXT('Wednesday Closing Time')
+     A  70                                90'Friday Closing Time     :'
+     A  70        XRFYCL         4  0    117TEXT('Friday Closing Time')
+     A  70                                 5'Sunday Times Override  :'
+     A                                      SPACEB(1)
+     A  70        XRSUOV         1        31TEXT('Sunday Times Override')
+     A  70                                47'Wednesday Time Override :'
+     A  70        XRWEOV         1        74TEXT('Wednesday Time Override')
+     A  70                                90'Friday Time Override    :'
+     A  70        XRFYOV         1       117TEXT('Friday Time Override')
+     A  70                                 5'Monday Opening Time    :'
+     A                                      SPACEB(2)
+     A  70        XRMOOP         4  0     31TEXT('Monday Opening Time')
+     A  70                                47'Thursday Opening Time   :'
+     A  70        XRTHOP         4  0     74TEXT('Thursday Opening Time')
+     A  70                                90'Saturday Opening Time   :'
+     A  70        XRSAOP         4  0    117TEXT('Saturday Opening Time')
+     A  70                                 5'Monday Closing Time    :'
+     A                                      SPACEB(1)
+     A  70        XRMOCL         4  0     31TEXT('Monday Closing Time')
+     A  70                                47'Thursday Closing Time   :'
+     A  70        XRTHCL         4  0     74TEXT('Thursday Closing Time')
+     A  70                                90'Saturday Closing Time   :'
+     A  70        XRSACL         4  0    117TEXT('Saturday Closing Time')
+     A  70                                 5'Monday Times Override  :'
+     A                                      SPACEB(1)
+     A  70        XRMOOV         1        31TEXT('Monday Times Override')
+     A  70                                47'Thursday Times Override :'
+     A  70        XRTHOV         1        74TEXT('Thursday Times Override')
+     A  70                                90'Saturday Times Override :'
+     A  70        XRSAOV         1       117TEXT('Saturday Times Override')
+     A  70                                 5'Tuesday Opening Time   :'
+     A                                      SPACEB(2)
+     A  70        XRTUOP         4  0     31TEXT('Tuesday Opening Time')
+     A  70                                 5'Tuesday Closing Time   :'
+     A  70                                  SPACEB(1)
+     A  70        XRTUCL         4  0     31TEXT('Tuesday Closing Time')
+      *                                              Begin /CRT004/
+     A  50                                47'TCP/IP Listener         :'
+     A  50        XRLLIS         1        74TEXT('TCP/IP Listener')
+      *                                              End   /CRT004/
+     A  70                                 5'Tuesday Times Override :'
+     A                                      SPACEB(1)
+     A  70        XRTUOV         1        31TEXT('Tuesday Times Override')
+      *                                              Begin /CRT004/
+     A  50                                47'TCP/IP Port Number      :'
+     A  50        XRTCPP         4  0     74TEXT('TCP/IP Port Num')
+      *                                              End   /CRT004/
+     A*                                              End   /*CRT003*/
+      *                                              Begin of /*CTI001*/
+     A  71                                 5'TI Branch Number :'
+     A                                      SPACEB(2)
+     A  71        A8TIBR         4        24
+     A                                      SPACEA(1)
+      **Start of change CTI006
+     A**71******                           5'Departmental Server for Incoming'                CTI006
+     A**71******                         + 1'SWIFT Messages :'                                CTI006
+     A**71******  A8TIDS         2        55                                                  CTI006
+     A  71N85                              5'Departmental Server for Incoming'
+     A  71N85                            + 1'SWIFT Messages :'
+     A  71N85     A8TIDS         2        55
+      **Eng of change CTI006
+     A                                      SPACEA(1)
+     A  71                                 5'Branch Name and Address 1 :'
+     A  71        A8BRA1        35        33
+     A                                      SPACEA(1)
+     A  71                                 5'Branch Name and Address 2 :'
+     A  71        A8BRA2        35        33
+     A                                      SPACEA(1)
+     A  71                                 5'Branch Name and Address 3 :'
+     A  71        A8BRA3        35        33
+     A                                      SPACEA(1)
+     A  71                                 5'Branch Name and Address 4 :'
+     A  71        A8BRA4        35        33
+     A                                      SPACEA(1)
+     A  71                                 5'Branch Name and Address 5 :'
+     A  71        A8BRA5        35        33
+     A                                      SPACEA(1)
+     A  71                                 5'Branch Telephone Number   :'
+     A  71        A8BRNB        16        33
+     A                                      SPACEA(1)
+      *                                              End of /*CTI001*/
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,SD0060PMR1
+     A*                                                    End of   /*S01408*/
+      *                                              Begin /CFT004/
+     A  72                                 5'IBAN bank/branch identifier       +
+     A                                       :'
+     A                                      SPACEB(2)
+     A  72        #PIBID        10        42TEXT('IBAN bank/branch id')
+     A  72                                57'IBAN Generation Method  : '
+     A  72        #PGENM         1        84TEXT('IBAN generation method')
+     A  72                                 5'BBAN General Ledger Account +
+     A                                       Format:'
+     A                                      SPACEB(1)
+     A  72        #PGLFM         1        42TEXT('BBAN GL account format')
+     A  72                                 5'Short-form Branch 1               +
+     A                                       :'
+     A                                      SPACEB(1)
+     A  72        #PBID1         1        42TEXT('Short-form branch 1')
+     A  72                                57'Short-form Branch 2     :'
+     A  72        #PBID2         2        84TEXT('Short-form branch 2')
+     A                                      SPACEA(1)
+      *                                              End   /CFT004/
+      *                                              Begin /CDL008/
+     A  75                                 5'Eligible Date for CLS +
+     A                                      Deals       :'
+     A  75                                  SPACEB(2)
+     A  75        XREDAT         1  0     42TEXT('Eligible Date for +
+     A                                      CLS Deals')
+      *
+     A  75                                57'CLS Cut Off Time        :'
+     A  75        XRCOTI         5        84TEXT('CLS Cut Off Time')
+      *
+     A  75                                 5'Default CLS by +
+     A                                      Customer           :'
+     A  75                                  SPACEB(1)
+     A  75        XRDCLC         1        42TEXT('Default CLS by +
+     A                                      Customer')
+      *
+     A  75                                57'Time Difference from +
+     A                                      CET:'
+     A  75        XRTDCE         6        84TEXT('Time Difference +
+     A                                      from CET')
+      *                                              End   /CDL008/
+      *                                              Begin /*CGL013*/
+     A  73                                 5'Time Offset against +
+     A                                      UTC           :'
+     A                                      SPACEB(2)
+     A  73        XRTMOF         4  0     42TEXT('Time Offset against UTC')
+     A                                      EDTWRD('0 :  ')
+     A  73        XRSIGN         1        48TEXT('Time Offset Sign')
+     A  73                                57'System Time Offset      :'
+     A  73        XRSTOF         4  0     84TEXT('System Time Offset')
+     A                                      EDTWRD('0 :  ')
+     A  73        XRSSIN         1        90TEXT('System Time Offset')
+      *                                              END   /*CGL013*/
+     A*/COPY WNCPYSRC,SD0060PM15
+      *=========================================================================
+     A          R ZZFINTTL                  TEXT('Final totals             ')
+     A                                      SPACEB(2)
+      *.........................................................................
+     A  76                                57'*** NO DETAILS TO REPORT ***'
+     A                                    53'Number of Records Printed..:'
+     A                                      SPACEB(2)
+     A            ZTNCRC         5  0     82TEXT('No of Calculated Recs')
+     A                                      EDTCDE(3)
+      * 'Hidden' internal version of *CON (Screen constant)
+     A  99N99     ZTCON          1         1SPACEB(1)
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,SD0060PM02                                          S01408
+     A*                                                                   S01408
+      **Start of change CER001
+     A          R ZZIBLC02                  TEXT('Extended BCL Information')
+     A            RLINE1       132         1SPACEA(1)
+      **End of change CER001
+      *=========================================================================
+     A          R ZZENDRPT                  TEXT('End of report            ')
+     A                                      SPACEB(2)
+      *.........................................................................
+     A                                    60'*** END OF REPORT ***'
+      *=========================================================================
+     A*                                                                   S01408
+     A*/COPY WNCPYSRC,SD0060PM03                                          S01408
+     A*                                                                   S01408
+      **Start of change CER001
+     A          R ER0001                    TEXT('EUROPEAN REPORTING')
+     A                                    42'Include data : '
+     A            XRINCL         1        57
+     A                                    68'Origine op. code : '
+     A            XROROC         1        87
+     A                                      SPACEA(1)
+      **End of change CER001

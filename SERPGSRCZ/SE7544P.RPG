@@ -1,0 +1,296 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Pending Transactions Prompt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7544P - Pending Transactions Report - Prompt               *
+      *                                                               *
+      *  Function:  Produces a selection Corporate Action Reference   *
+      *                                                               *
+      *  Called By: I/C : FCC0201                                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Last Amend No. CSE020             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CSE007  *CREATE    Date 02Apr98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSE020 - Corporate Actions Domino Effect Processing          *
+      *           SECORFPD (Recompiled)                               *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+     FSECORFL1IF  E           K        DISK         KINFSR *PSSR
+      ***  CO Reference
+      *
+     FSE7544DFCF  E                    WORKSTN      KINFSR *PSSR
+      ***  Bulk Definition Audit List - Prompt
+     F                                              KINFDS INFDS#
+      *
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      ***  Second DS For Access Programs, Long Data Structure
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+     I                                      282 2870STIME
+      *
+     IINFDS#      DS
+      ***  I/O Feedback Area: Workstation.
+     I                                      261 270 SWFMT
+      *
+     IWWPARM      DS                            100
+      ***  Parameter Data
+     I                                        1   1 WWALL
+     I                                        2   7 WWCORF
+      *
+     ICPYR@#      DS
+      ***  Data Structure for compilation  - Copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     C/EJECT
+      *****************************************************************
+      *                 M A I N   P R O C E S S I N G                 *
+      *****************************************************************
+      *
+     C           *IN21     DOWEQ*OFF                       DoWhile #Exit
+      *                                                     Processes:
+      ***  Display Screen.
+      *
+     C                     WRITE#MSGCTL                    Wrt Msg Scr
+     C                     EXFMTSE7544F1                   Wrt Scr 01
+      *
+      ***  Clear screen message file
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C           *INKC     IFEQ *ON                         - F03=Exit
+     C                     MOVE *BLANKS   WWALL            Set All Outstanding Reference
+     C                     MOVE *BLANKS   WWCORF           Set CO Reference
+     C                     MOVE 'E'       WWCMD
+     C                     MOVE *ON       *IN21            Set Exit Ind
+     C                     ELSE                             - Enter pressed
+      *
+     C                     EXSR #A
+     C                     ENDIF
+     C                     ENDDO                           End DoWhile
+      *
+     C           *INKC     IFEQ *OFF                        - F03=Exit
+     C           WWALL     ANDNE'Y'
+     C                     MOVE 'N'       WWALL            Set All Outstanding Reference
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR            Return
+     C                     RETRN
+      *
+      *****************************************************************
+      *          E N D   O F   M A I N   P R O C E S S I N G          *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #A - Enter key processing                                    *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *  Calls     : *PSSR Error processing                           *
+      *****************************************************************
+      *
+     C           #A        BEGSR
+      *
+      ***  Reset Data Items.
+      *
+     C                     MOVE 'N'       WWERR   1        Indicator error
+     C                     MOVEA'00'      *IN,60           Reset Ind
+      *
+      ***  Valid values for all Outstanding Reference is 'Y' or 'N'
+      *
+     C           S1ALL     IFNE 'Y'
+     C           S1ALL     ANDNE'N'
+     C           S1ALL     ANDNE' '
+     C                     MOVE '1'       *IN60
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'CO00344' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+      ***  Access to Bulk definitions file
+      *
+     C           S1CORF    IFNE *BLANKS
+      *
+     C                     MOVE S1CORF    WNCORF  6
+     C           KWCORF    CHAINSECORFL1             89
+      *
+     C           *IN89     IFEQ *ON
+     C           MARECI    ORNE 'D'
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'CO00348' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           S1ALL     IFEQ 'Y'
+     C           S1CORF    ANDNE*BLANKS
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'CO00324' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C           S1ALL     IFNE 'Y'
+     C           S1CORF    ANDEQ*BLANKS
+     C                     MOVE '1'       *IN61
+     C                     MOVE 'Y'       WWERR
+     C                     MOVEL'CO00359' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C           WWERR     IFEQ 'N'                        If Error
+     C                     MOVE *ON       *IN21             Set Exit Ind
+     C                     MOVE S1ALL     WWALL            Set All Bulk Definitions
+     C                     MOVE S1CORF    WWCORF           Set CO Reference
+     C                     MOVE ' '       WWCMD
+     C                     ENDIF                           End If
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   SRSMSG - Send message in Subfile message                    *
+      *   ------                                                      *
+      * Called by : #A                                                *
+      * Calls     : SNDERMSG                                          *
+      *****************************************************************
+      *
+     C           SRSMSG    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM ##PGM     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***  Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *   -------                                                     *
+      *   Called by : Main processing                                 *
+      *   Calls     : None.                                           *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set Initial values.
+      *
+     C           *NAMVAR   DEFN           LDA              Dcl LDA
+      *
+      ***  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' WWRTCD  7
+     C                     PARM '*FIRST ' WWOPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C                     MOVE BJMRDT    SMRDT
+      *
+     C           *ENTRY    PLIST                           Entry List
+     C                     PARM           WWSEQ   5
+     C                     PARM           WWLVL   1
+     C                     PARM           WWENT   3
+     C                     PARM           WWPARM
+     C                     PARM           WWACT   1
+     C                     PARM           WWCMD   1
+      *
+     C           KWCORF    KLIST
+     C                     KFLD           WNCORF
+      *
+      ***  Cleanup values from previous call.
+      *
+     C                     MOVE *BLANK    WWALL
+     C                     MOVE *BLANK    WWCORF
+     C                     MOVE *OFF      *IN21            Reset Ind
+     C                     MOVEA'00'      *IN,60           .
+     C                     MOVE *OFF      *INKC            .
+      *
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVEL'N'       S1ALL
+     C                     MOVEL*BLANKS   S1CORF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error control subroutine - automatically Called or  *
+      *  ------                                                       *
+      *  Called By : *INZSR                                           *
+      *  Calls     : DBERRCTL                                         *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD*ZERO     DBASE
+     C                     MOVEL' '       DBFILE    P
+     C                     MOVEL' '       DBKEY     P
+     C                     MOVEL##PGM     DBPGM     P
+     C                     OUT  LDA
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE 'E'       WWCMD
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

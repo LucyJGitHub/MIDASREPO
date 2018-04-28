@@ -1,0 +1,217 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Amortised Cost UP/UL and Non-linear Amort. Control')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC004651 - Midas LE Amort Cost UP/UL and Non-linear        */
+/*                   Amort Control                                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. CLE134             Date 01Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CAS016  *CREATE    Date 28Feb06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       CAS016 - IAS18 EIR Recalculation (Fee Amortisation Over     */
+/*                Whole Period)                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/* Parameter for AOHEDGR0 */
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST')
+             DCL        VAR(&RFMT) TYPE(*CHAR) LEN(200)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2006')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('LEC004651 - Fee & Discount Non Linear +
+                          Amort A/C Control') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CALL       PGM(AOHEDGR0) PARM(&RTCD &OPTN &RFMT)
+ 
+/* Do the process when amortisation method is not linear, else end this program */
+               IF         COND(&RTCD *EQ '       ') THEN(DO)
+ 
+                  IF         COND(%SST(&RFMT 32 1) *EQ 'L') THEN(GOTO +
+                          CMDLBL(END))
+               ENDDO
+ 
+/* Setup system prefix variable from SDSTAT data area. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+/* Call program CB0160 to get value of restart indicator. */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/* If it is NOT a restart. */
+ 
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+               DLTF       FILE(XCLOANCL)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLEERAPPD)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLKEYFED)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLKEYFEZ)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLKEY1DP)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLKEY1ZZ)
+               MONMSG     MSGID(CPF0000)
+ 
+               CPYF       FROMFILE(CLOANCL) TOFILE(&DPLIB/XCLOANCL) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(LEEIRDPD) TOFILE(XLEEIRDPD) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(LEERAPPD) TOFILE(&DPLIB/XLEERAPPD) +
+                          CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(LEFEED) TOFILE(&DPLIB/XLEFEED) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(LEEIRAPD) TOFILE(&DPLIB/XLEEIRAPD) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(LKEYFED) TOFILE(&DPLIB/XLKEYFED) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(LKEYFEZ) TOFILE(&DPLIB/XLKEYFEZ) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(LKEY1DP) TOFILE(&DPLIB/XLKEY1DP) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(LKEY1ZZ) TOFILE(&DPLIB/XLKEY1ZZ) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+/* If it is a restart. */
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+               CPYF       FROMFILE(XCLOANCL) TOFILE(CLOANCL) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(XLEEIRDPD) TOFILE(LEEIRDPD) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(LEEIRDPD))
+               CPYF       FROMFILE(XLEERAPPD) TOFILE(LEERAPPD) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(LEERAPPD))
+               CPYF       FROMFILE(XLEFEED) TOFILE(LEFEED) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(XLEEIRAPD) TOFILE(LEEIRAPD) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(XLKEYFED) TOFILE(LKEYFED) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(XLKEYFEZ) TOFILE(LKEYFEZ) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(XLKEY1DP) TOFILE(LKEY1DP) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(XLKEY1ZZ) TOFILE(LKEY1ZZ) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+/* Call CB0150 to update restart indicator */
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Call Lending Fee and Discount Amortisation A/C Key Generation Report */
+ 
+/* Clear LEAMRTPD before calling LE004651 */
+             CLRPFM     LEAMRTPD
+             MONMSG     MSGID(CPF0000)
+ 
+             CALL       PGM(LE004651)
+ 
+/* If no error occured in the program */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/* Call CB0150 to update restart indicator. */
+ 
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+               DLTF       FILE(XCLOANCL)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLEERAPPD)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLKEYFED)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLKEYFEZ)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLKEY1DP)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLKEY1ZZ)
+               MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('LEC4651 Midas LE Fee and Discount +
+                          Amortisation A/C Key Generation Report +
+                          ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

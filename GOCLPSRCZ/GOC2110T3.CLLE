@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO GPWTRAPPD Housekeeping - End subtask')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing                                   */
+/*                                                                   */
+/*       GOC2110T3 - Midas GO GPWTRAPPD Housekeeping - End Subtasks  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD023876A          Date 06Jan14              */
+/*       Prev Amend No. MD023876 *CREATE   Date 14Nov13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD023876A - Wrong location of task split objects            */
+/*       MD023876 - GOC210000 Performance Issues                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/**********  DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10) +          */                /*MD023876A*/
+/**********               VALUE('GPWTRPSVDQ')                        */                /*MD023876A*/
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOWTRPSVDQ')                                          /*MD023876A*/
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50) +
+                          VALUE('FINISH')
+ 
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FULLCHECK) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&ZOZONE)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZOSHTC)  TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZORDNB)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZODNWD)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&ZOBCCY)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ZONJOB)  TYPE(*DEC)  LEN(1 0)
+             DCL        VAR(&PROC)  TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(SDSBNKTD)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ. */
+             SNDPGMMSG  MSG('GOC2110T3 - GPWTRAPPD Housekeeping +
+                          - End Subtasks') TOMSGQ(MRUNQ)
+ 
+/* Get zone */
+             CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
+                          &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY +
+                          &ZONJOB)
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Determine if it is this zone to do the housekeeping */
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(GP210000) PARM(&RTCD &ERMS &ZOZONE +
+                          &BJMRDT &PROC)
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             IF         COND(&PROC *NE 'Y') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Send 'FINISH' message to main data queue. */
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program GOC2110T3 ended abnormally.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

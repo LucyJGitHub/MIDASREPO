@@ -1,0 +1,725 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Update Book Posns for Next Day')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2340 - UPDATE I/C FIELDS ON BOOK POSITIONS                 *
+     F*                                                               *
+     F*  Function: To update I/C fields on the book position records  *
+     F*   (COB)    with details of trades with a value date of next   *
+     F*            working day.  These fields are used by the Enquiry *
+     F*            Programs in the next day's I/C.                    *
+     F*                                                               *
+     F*  Called by: SEC0606K - Update Book Posn With Next Day Trades  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR669051           Date 27Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG9864            Date 13Jan06               *
+      *                 CSE065             Date 08Nov04               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU017             Date 07Apr98               *
+     F*                 CSE007             Date 17Mar98               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 16SEP92               *
+     F*                 E35917             DATE 17FEB92               *
+     F*                 E29170             DATE 06NOV91               *
+     F*                 S01117             DATE 06JUN91               *
+     F*                 E21114             DATE 13FEB90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  AR669051 - Client's extraction of data from file BKPOSD      *
+      *             failed because of a decimal data error. Fix is to *
+      *             initialise PNOM to zero, applied fix 263060.      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG9864 - Component SEC0606K failed due to duplicate records.*
+      *            Applied Fix 144485                                 *
+      *  CSE065 - Const. Yield Amort. on Mortgage backed assets       *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+     F*  CAS006 - Hedge Accounting Phase B                            *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*           Just recompile                                      *
+     F*  CSE007 - Corporate Actions - Just recompile                  *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*         - Added processing for Discount/Premium since First   *
+     F*           Position Date for Amortisation by Security Report   *
+     F*         - Recompiled for New Zealand Bond Formula             *
+     F*  E35917 - Should update trade and value date records          *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  E21114 - NEW PROGRAM CREATED ON 13FEB90.                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FBKTRAC  IF  E           K        DISK
+     FBKPHD   IF  E           K        DISK                      A
+     FBKPOS   UF  E           K        DISK                      A
+     FBKPHDA  UF  E                    DISK
+     FBKPOSA  UF  E                    DISK
+     FSECTY   IF  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F*CCY        TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     FSE2340AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   44 - AUDIT RECORD MISSING FOR BKPHDA OF BKPOSA              *
+     F*   55 - THERE IS NO EXISTING POSITION                          *
+     F*   66 - CHAIN FAIL ON BKPHD OR BKPOS                           *
+     F*   77 - CHAIN FAIL ON SECURITIES FILE                          *
+     F*   80 - CHAIN FAIL ON CURRENCIES TABLE                         *
+     F*   89 - END OF FILE FOR BKTRAC                                 *
+     F*90-99 - STANDARD SUBROUTINES                                   *
+     F*U7&U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   AUDIT  - UPDATE AUDIT RECORDS AND PRODUCE AUDIT REPORT      *
+     F*   FIRST  - ACCESSES INFO FROM ICD                             *
+     F*   P01    - FIND LATEST POSITION RECORD                        *
+     F*   P02    - CALCULATE A P NUMERATOR AND UPDATE I/C FIELDS      *
+     F*   SECCHN - ACCESSES SECURITY FILE                             *
+     F*   TABCHN - ACCESSES CURRENCY TABLE                            *
+     F*   W01    - WRITE NEW BOOK POSITION RECORDS                    *
+     F*   *PSSR  - Error handling                                     *   S01117
+     F*   ZCNSD  - CALCULATES PRICE X NOMINAL                         *
+     F*   ZSYSTM - ACCESSES ICD1                                      *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZPOWER8Z1
+      /EJECT
+     I*
+     I            DS
+     I*
+     I* DATA STRUCTURES TO STORE KEYS FOR PREVIOUS ACTION
+     I*
+     I                                        1  17 BCKEY
+     I                                        1  10 TDSS
+     I***********                            11  130TDBR                  S01117
+     I                                       11  13 TDBA                  S01117
+     I                                       14  15 TDBK
+     I                                       16  16 TDMI
+     I***********                            17  17 #BCTV                 E35917
+     I                                       17  17 TVDA                  E35917
+     I*
+     I            DS
+     I                                        1  17 BCKEYP
+     I                                        1  20 BPKEY
+     I                                        1  10 KBCSS
+     I***********                            11  130KBCBR                 S01117
+     I                                       11  13 KBCBA                 S01117
+     I                                       14  15 KBCBO
+     I                                       16  16 KBCMK
+     I                                       17  17 KBCTV
+     I                                    P  18  200LPSD
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C* KEYLISTS FOR FILE CHAINS
+     C*
+     C*   - BOOK POSITION HEADER
+     C*
+     C           BKHKEY    KLIST
+     C                     KFLD           KBCSS
+     C***********          KFLD           KBCBR                           S01117
+     C                     KFLD           KBCBA                           S01117
+     C                     KFLD           KBCBO
+     C                     KFLD           KBCMK
+     C                     KFLD           KBCTV
+     C*
+     C*  - BOOK POSITION
+     C*
+     C           BKPKEY    KLIST
+     C                     KFLD           KBCSS
+     C***********          KFLD           KBCBR                           S01117
+     C                     KFLD           KBCBA                           S01117
+     C                     KFLD           KBCBO
+     C                     KFLD           KBCMK
+     C                     KFLD           KBCTV
+     C                     KFLD           LPSD
+      *                                                                                       CAS006
+      ** Access SAR Details to see if CAS006 is installed                                     CAS006
+      *                                                                                       CAS006
+     C                     MOVE 'N'       CAS006  1                                           CAS006
+     C                     CALL 'AOSARDR0'                                                    CAS006
+     C                     PARM *BLANKS   PRTCD   7                                           CAS006
+     C                     PARM '*VERIFY 'POPTN   7                                           CAS006
+     C                     PARM 'CAS006'  PSARD   6                                           CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFNE *BLANKS                                                       CAS006
+     C           PRTCD     ANDNE'*NRF   '                                                     CAS006
+     C           *LOCK     IN   LDA                                                           CAS006
+     C                     MOVEL'CAS006'  DBKEY                                               CAS006
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS006
+     C                     Z-ADD1         DBASE                                               CAS006
+     C                     OUT  LDA                                                           CAS006
+     C                     EXSR *PSSR                                                         CAS006
+     C                     ELSE                                                               CAS006
+      *                                                                                       CAS006
+     C           PRTCD     IFEQ *BLANKS                                                       CAS006
+     C                     MOVE 'Y'       CAS006                                              CAS006
+     C                     ENDIF                                                              CAS006
+     C                     ENDIF                                                              CAS006
+     C*
+     C*   DO FIRST CYCLE PROCESSING
+     C*
+     C                     EXSR FIRST
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C*   READ TRADE ACTIONS UNTIL END OF FILE
+     C*
+     C                     READ BKTRAC                   89
+     C*
+     C           *IN89     DOWEQ'0'
+     C*
+     C*   KEEP COUNT OF ACTION RECORDS FOR AUDIT
+     C*
+     C                     ADD  1         IREC
+     C*
+     C*   IF CHANGE OF POSITION
+     C*
+     C           BCKEY     IFNE BCKEYP
+     C*
+     C*   IF NOT FIRST ACTION
+     C*
+     C           KBCSS     IFNE *BLANKS
+     C*
+     C*   IF NOT PREVIOUS POSITION WRITE NEW POSITION RECORDS
+     C*
+     C           *IN55     IFEQ '1'
+     C*
+     C                     EXSR W01
+     C*
+     C*   OTHERWISE UPDATE POSITION
+     C*
+     C                     ELSE
+     C*
+     C                     UPDATBKPOSDF
+     C                     ADD  1         BPUPD
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*   ACCESS SECURITIES FILE
+     C*
+     C           TDSS      IFNE KBCSS
+     C                     EXSR SECCHN
+     C*
+     C*   ACCESS CURRENCIES TABLE FOR NOMINAL CURRENCY DECIMAL PLACES
+     C*
+     C           NMCY      IFNE SNMCY
+     C                     MOVE NMCY      SNMCY   3
+     C                     EXSR TABCHN
+     C                     END
+     C                     END
+     C*
+     C*   ACCESS LATEST BOOK POSITION
+     C*
+     C                     EXSR P01
+     C*
+     C                     END
+     C*
+     C*   CALCULATE A P NUMERATOR AND UPDATE I/C FIELDS
+     C*
+     C                     EXSR P02
+     C*
+     C                     READ BKTRAC                   89
+     C*
+     C*   UPDATE LAST POSITION BEFORE FINISHING
+     C*
+     C           *IN89     IFEQ '1'
+     C           *INU7     ANDEQ'0'
+     C*
+     C*   IF NOT PREVIOUS POSITION WRITE NEW POSITION RECORDS
+     C*
+     C           *IN55     IFEQ '1'
+     C*
+     C                     EXSR W01
+     C*
+     C*   OTHERWISE UPDATE POSITION
+     C*
+     C                     ELSE
+     C*
+     C                     UPDATBKPOSDF
+     C                     ADD  1         BPUPD
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*  UPDATE AUDIT RECORDS AND WRITE AUDIT REPORT
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * FIRST - SUBROUTINE TO ACCESS ICD INFORMATION ON FIRST CYCLE   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE2340  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C***********                                                         E35917
+     C***********          MOVE 'V'       KBCTV                           E35917
+     C***********          MOVE 'V'       #BCTV                           E35917
+     C*
+     C* ACCESS ICD1
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SECCHN    -  SUBROUTINE TO CHAIN TO SECTY                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SECCHN    BEGSR                           **  SECCHN **
+     C*
+     C           TDSS      CHAINSECTY                77
+     C*
+     C           *IN77     IFEQ '1'
+     C********** RECI      ORNE 'D'                                                          BUG9864
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U889*****************
+     C                     MOVE 'SECTY'   DBFILE           ** DB ERROR 02 **
+     C                     MOVELTDSS      DBKEY            *****************
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * TABCHN    -  SUBROUTINE TO CHAIN TO TABTG10                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TABCHN    BEGSR                           **  TABCHN **
+     C*
+     C                     MOVE *BLANK    TKEY   12
+     C                     MOVEL'20'      TKEY
+     C                     MOVELNMCY      KEY4    4
+     C                     MOVE '1'       KEY4
+     C                     MOVE KEY4      TKEY
+     C           TKEY      CHAINTABTG10F             80
+     C           *IN80     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U889*****************
+     C                     MOVE 'TABLE'   DBFILE           ** DB ERROR 03 **
+     C                     MOVELTKEY      DBKEY            *****************
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE                                           E35917
+     C                     Z-ADDCDP       ZCDP                            E35917
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * P01       -  SUBROUTINE TO FIND LATEST BOOK POSTION RECORD    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           P01       BEGSR                           **   P01   **
+     C*
+     C*  SET UP KEY FIELDS FOR ACCESSING BOOK POSITION FILES
+     C*
+     C                     MOVE TDSS      KBCSS
+     C***********          MOVE TDBR      KBCBR                           S01117
+     C                     MOVE TDBA      KBCBA                           S01117
+     C                     MOVE TDBK      KBCBO
+     C                     MOVE TDMI      KBCMK
+     C                     MOVE TVDA      KBCTV                           E35917
+     C*
+     C           BKHKEY    CHAINBKPHD                66
+     C*
+     C*  IF NO CURRENT POSITION BLANK I/C FIELDS
+     C*
+     C           *IN66     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     SETON                     55
+     C                     Z-ADD0         SNPI
+     C                     Z-ADD0         SNSI
+     C                     Z-ADD0         SANP
+     C                     Z-ADD0         SANS
+     C*
+     C*  OTHERWISE ACCESS DETAIL RECORD
+     C*
+     C                     ELSE
+     C*
+     C                     SETOF                     55
+     C           BKPKEY    CHAINBKPOS                66
+     C*
+     C           *IN66     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U889*****************
+     C                     MOVE 'BKPOS'   DBFILE           ** DB ERROR 04 **
+     C                     MOVELBPKEY     DBKEY            *****************
+     C                     Z-ADD4         DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * P02       -  SUBROUTINE TO CALCULATE AP NUMERATOR AND UPDATE  *
+      *              I/C FIELDS                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           P02       BEGSR                           **   P02   **
+     C*
+     C*  CALCULATE VALUE FOR A P NUMERATOR
+     C*
+     C                     Z-ADDCNTP      ZPRC
+     C                     Z-ADDNOML      ZNOML
+     C                     EXSR ZCNSD
+     C*
+     C*  TRADE IS PURCHASE
+     C*
+     C           PRSL      IFEQ 'P'
+     C                     ADD  NOML      SNPI
+     C                     ADD  ZCONS     SANP
+     C*
+     C*  TRADE IS SALE
+     C*
+     C                     ELSE
+     C                     SUB  NOML      SNSI
+     C                     SUB  ZCONS     SANS
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * W01       -  SUBROUTINE TO WRITE NEW BOOK POSITION            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W01       BEGSR                           **   W01   **
+     C*
+     C*  SET UP FIELDS FOR NEW BOOK POSITION HEADER
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE KBCSS     BHSC
+     C***********          MOVE KBCBR     BHBR                            S01117
+     C                     MOVE KBCBA     BHBA                            S01117
+     C                     MOVE KBCBO     BHBK
+     C                     MOVE KBCMK     BHMK
+     C***********          MOVE 'V'       BHTV                            E35917
+     C                     MOVE KBCTV     BHTV                            E35917
+     C                     Z-ADDEVTD      FPSD
+     C                     Z-ADDEVTD      LPSD
+     C                     Z-ADD*ZEROS    LPCD
+     C                     Z-ADD*ZEROS    LAVP
+     C                     Z-ADD*ZEROS    LATD
+     C                     Z-ADD*ZEROS    ARPC
+     C                     Z-ADDEVTD      ICLD
+     C                     Z-ADD*ZEROS    IACR
+     C                     Z-ADD*ZEROS    IACP
+     C                     Z-ADD*ZEROS    INDO
+     C                     Z-ADD*ZEROS    UPPT
+     C                     Z-ADD*ZEROS    DPAP
+     C                     Z-ADD*ZEROS    DPFP                            S01397
+     C                     Z-ADD*ZEROS    BUDU
+     C                     MOVE SITP      INVT
+     C                     MOVE NMCY      NCRY
+     C                     Z-ADD*ZEROS    BHTR
+     C                     Z-ADD*ZEROS    BHRN
+     C                     Z-ADD*ZEROS    LPRC
+     C                     Z-ADD*ZEROS    BHDP
+     C                     Z-ADD*ZEROS    BHCP
+     C                     Z-ADD*ZEROS    BHPP
+     C                     Z-ADD*ZEROS    TNLU
+     C                     Z-ADD*ZEROS    PNOM                                              AR669051
+      *                                                                                       CAS006
+      ** Initialise the new fields before writing to BKPHDD                                   CAS006
+      ** if CAS006 is intalled.                                                               CAS006
+      *                                                                                       CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADD*ZERO     LAVN                                                CAS006
+     C                     Z-ADD*ZERO     DPAN                                                CAS006
+     C                     Z-ADD*ZERO     BUDN                                                CAS006
+     C                     Z-ADD*ZERO     INDN                                                CAS006
+     C                     ENDIF                                                              CAS006
+     C*
+     C                     Z-ADD*ZEROS    NAVP                                                CSE065
+     C                     Z-ADD*ZEROS    BKVAMT                                              CSE065
+     C                     Z-ADD*ZEROS    EQTAMT                                              CSE065
+      *                                                                                       CSE065
+     C                     WRITEBKPHDDF
+     C                     ADD  1         NWBKH
+     C*
+     C*  SET UP FIELDS FOR NEW BOOK POSITION DETAIL
+     C*
+     C                     MOVE 'D'       RECI
+     C                     MOVE KBCSS     BPSC
+     C***********          MOVE KBCBR     BPBR                            S01117
+     C                     MOVE KBCBA     BPBA                            S01117
+     C                     MOVE KBCBO     BPBK
+     C                     MOVE KBCMK     BPMK
+     C***********          MOVE 'V'       BPTV                            E35917
+     C                     MOVE KBCTV     BPTV                            E35917
+     C                     Z-ADDEVTD      BPPD
+     C                     Z-ADD*ZEROS    NPSN
+     C                     Z-ADD*ZEROS    ECNP
+     C                     Z-ADD*ZEROS    APPB
+     C                     Z-ADD*ZEROS    RPTP
+     C                     Z-ADD*ZEROS    PILP
+     C                     Z-ADD*ZEROS    APNC
+     C                     Z-ADD*ZEROS    ANMP
+     C                     Z-ADD*ZEROS    AAPR
+     C                     MOVE *BLANK    ADJI
+     C                     Z-ADD*ZEROS    TNLU
+      *                                                                                       CAS006
+      ** Initialise the new fields before writing to BKPOSD                                   CAS006
+      ** if CAS006 is intalled.                                                               CAS006
+      *                                                                                       CAS006
+     C           CAS006    IFEQ 'Y'                                                           CAS006
+     C                     Z-ADD*ZERO     APPN                                                CAS006
+     C                     Z-ADD*ZERO     APNN                                                CAS006
+     C                     Z-ADD*ZERO     PILN                                                CAS006
+     C                     ENDIF                                                              CAS006
+     C/COPY WNCPYSRC,SE2340C001
+     C*
+     C                     Z-ADD*ZEROS    BKCOST                                              CSE065
+      *                                                                                       CSE065
+     C                     WRITEBKPOSDF
+     C                     ADD  1         NWBKP
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * AUDIT     -  SUBROUTINE TO UPDATE AUDIT RECORDS AND PRODUCE   *
+      *              AUDIT REPORT                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           **  AUDIT  **
+     C*
+     C*  IF NO DB ERROR
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C***NO*DETAILS*TO*REPORT******************************************   E29170
+     C***********                                                         E29170
+     C***********IREC      IFEQ 0                                         E29170
+     C***********          WRITEHEADER                                    E29170
+     C***********          WRITENONE                                      E29170
+     C***********          WRITETRAILER                                   E29170
+     C***********          ELSE                                           E29170
+     C*
+     C*  UPDATE AUDIT RECORDS
+     C*
+     C           NWBKH     IFGT 0
+     C                     READ BKPHDA                   44
+     C           *IN44     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  *****************
+     C                     MOVE 'BKPHDA'  DBFILE           ** DB ERROR 05 **
+     C                     MOVEL'AUDIT'   DBKEY            *****************
+     C                     Z-ADD5         DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C                     Z-ADDNORE      BHNORE
+     C                     ADD  NWBKH     NORE
+     C                     Z-ADDNORE      BHNEW
+     C                     UPDATBKPHDAF
+     C                     END
+     C                     END
+     C*
+     C           *INU7     IFEQ '0'
+     C           NWBKP     IFGT 0
+     C                     READ BKPOSA                   44
+     C           *IN44     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  *****************
+     C                     MOVE 'BKPOSA'  DBFILE           ** DB ERROR 06 **
+     C                     MOVEL'AUDIT'   DBKEY            *****************
+     C                     Z-ADD6         DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C                     Z-ADDNORE      BPNORE
+     C                     ADD  NWBKP     NORE
+     C                     Z-ADDNORE      BPNEW
+     C                     UPDATBKPOSAF
+     C                     END
+     C                     END
+     C*
+     C*    WRITE AUDIT RECORD
+     C*
+     C           *INU7     IFEQ '0'
+     C                     WRITEHEADER
+     C                     WRITEDETAIL
+     C***********          WRITETRAILER                                   E29170
+     C                     END
+     C*
+     C                     END
+     C***********          END                                            E29170
+     C                     END
+     C*
+     C* IF DB ERROR SHOW THIS ON REPORT
+     C*
+     C           *INU7     IFEQ '1'
+     C                     WRITEHEADER
+     C                     WRITEERROR
+     C***********          WRITETRAILER                                   E29170
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZCNSDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

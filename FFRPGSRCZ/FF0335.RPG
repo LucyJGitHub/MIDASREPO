@@ -1,0 +1,253 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Autoclosure transaction update')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas FUTURES AND OPTIONS MODULE
+     F*                                                                  *
+     F*   FF0335  -  AUTOCLOSURE TRANSACTIONS UPDATE                     *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. CAS002             Date 14Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 Patch E ---------------------------------------*
+      *                 170520             Date 19Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 08Mar99               *
+      *                 CAP003             Date 18Aug98               *
+      *                 CAC003             Date 25Feb97               *
+      *                  CFF004             Date 02OCT96                 *
+     F*                  S71062             DATE 19DEC95                 *
+     F*                  S01411             DATE 16APR93                 *
+     F*                  S01117             DATE 13MAR90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS002 - Hedge Strategy/Linkage (Recompile)                  *
+      *  170520 - Recompile over changed TRANSD file                  *
+     F*  CPL002 - Midas-Plato Interface (Recompiled)                  *
+      *  CAP003 - Conversion of Midas inputs to modular API structure *
+      *           (phase 2) - recompiled                              *
+     F*  CAC003 - Profit Centre Accounting Development Phase 3.       *
+     F*         - Recompiled due to changes in TRANSD.                *
+     F*   CFF004  -  Increase in size of Price Fields,(Recompiled Only)  *
+     F*   S71062  -  FF/PM Automatic closure (Just recompiled)           *
+     F*   S01411  -  RECOMPILED BECAUSE 'ORIGINAL ENTRY DATE' HAS BEEN   *
+     F*              ADDED TO TRANSD.                                    *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*     IGNDECERR(*NO )                                              *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FWTRNS1  IF  E           K        DISK
+     FTRANS   UF  E           K        DISK
+     F*
+     F********************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       50         END OF FILE FOR WTRNS1
+     F*       80-89      RESERVED FOR STANDARD FF SUBROUTINES
+     F*       99         CHAIN FAIL TO LF/TRANS
+     F*       U7 & U8    DATABASE ERROR
+     F*
+     F********************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     I********************************************************************
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+      ********************************************************************
+      /EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C********************************************************************
+     C                     EXSR START
+     C                     EXSR MIDDLE
+     C                     SETON                     LR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** START       READ FIRST RECORD ON WTRNS1
+      **
+      ** MIDDLE      PROCESS REST OF WTRNS1 RECORDS
+      **
+      ** PROTRN      PROCESS TRANSACTION ACCESS
+      **
+      ** *PSSR       HANDLE ABNORMAL ERROR CONDITIONS                     S01117
+      **                                                                  S01117
+     C********************************************************************
+     C********************************************************************
+      **
+      ** START S/R TO PROCESS FIRST RECORD ON WTRNS1
+      **
+      ** CALLED FROM: MAIN PROCESSING
+      **
+      ** CALLS: PROTRN
+      **
+     C********************************************************************
+     C*
+     C           START     BEGSR
+     C*
+     C                     READ WTRNS1                   50
+     C*
+     C** If not EOF Access transaction
+     C*
+     C           *IN50     IFEQ '0'
+     C                     EXSR PROTRN
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C********************************************************************
+      **
+      ** MIDDLE S/R TO PROCESS REST OF WTRNS1 RECORDS
+      **
+      ** CALLED FROM: MAIN PROCESSING
+      **
+      ** CALLS: PROTRN
+      **
+     C********************************************************************
+     C*
+     C           MIDDLE    BEGSR
+     C*
+     C           *IN50     DOWEQ'0'
+     C*
+      ** Replace number of open contracts in relevant field
+     C*
+      ** Broker record
+     C*
+     C           CLUI      IFEQ 'B'
+     C                     Z-ADDNUMO      NOBO
+     C                     END
+     C*
+      ** Customer/Book record
+     C*
+     C           CLUI      IFEQ 'C'
+     C                     Z-ADDNUMO      NOCO
+     C                     END
+     C*
+      ** Record for both Broker & Customer/Book
+     C*
+     C           CLUI      IFEQ 'X'
+     C                     Z-ADDNUMO      NOBO
+     C                     Z-ADDNUMO      NOCO
+     C                     END
+     C*
+     C                     READ WTRNS1                   50
+     C*
+      ** If new transaction ,or EOF update last transaction processed
+     C*
+     C           *IN50     IFEQ '1'
+     C           TNBR      ORNE TNBRO
+     C*
+      ** Update transaction record
+     C*
+     C                     EXCPTUPDATE
+     C*
+      ** Process new transaction record if not EOF
+     C*
+     C           *IN50     IFEQ '0'
+     C                     EXSR PROTRN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C********************************************************************
+      **
+      ** PROTRN S/R TO PROCESS TRANSACTION ACCESS
+      **
+      ** CALLED FROM: MAIN PROCESSING
+      **
+      ** CALLS: PROTRN
+      **
+     C********************************************************************
+     C*
+     C           PROTRN    BEGSR
+     C*
+      ** Get Transaction record for current number
+     C*
+     C           TNBR      CHAINTRANS                99
+     C*
+      ** DATABASE ERROR if not found
+     C*
+     C           *IN99     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'FF0335  'DBPGM
+     C                     SETON                     U7U8LR***************
+     C                     MOVE 'TRANS'   DBFILE           * DB ERROR 01 *
+     C                     Z-ADD01        DBASE            ***************
+     C                     MOVELTNBR      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+     C*
+      ** Store current transaction number
+     C*
+     C                     Z-ADDTNBR      TNBRO   60
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT
+     O********************************************************************
+     OTRANSDF E                UPDATE
+     O                         NOBO
+     O                         NOCO
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

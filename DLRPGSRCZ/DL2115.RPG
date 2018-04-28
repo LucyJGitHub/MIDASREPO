@@ -1,0 +1,1341 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Fiduciary charges/commissions types rept')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL2115 - Fiduciary Charges/Commission Types Report           *
+      *                                                               *
+      *  Function:  This program produces a report, for audit pur-    *
+      *  (I/C)      poses, of all charge types defined to the sys-    *
+      *  (COB)      tem. The sequence of the report is currency,      *
+      *             charge code.                                      *
+      *                                                               *
+      *             Frequency:                                        *
+      *             The report is available in 2 modes (I and A):     *
+      *             1) On request during I/C; an interim report       *
+      *                showing the latest status of charge types      *
+      *                inserted, amended or deleted during the day.   *
+      *             2) During COB; a report of all charge types       *
+      *                inserted, amended or deleted during the day.   *
+      *                                                               *
+      *  Called By: DLC2115                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *  Prev Amend No. CDL006   *CREATE   Date 26Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL006 - Dealing Fiduciary.                                  *
+      *                                                               *
+      *****************************************************************
+     FDLCCGDL2IF  E           K        DISK                           UC
+     FDLCCGDL0IF  E           K        DISK                           UC
+     F            DLCCGDD0                          KRENAMEDLCCGD
+     FDLCCGDPAUF  E                    DISK
+     FDL2115P1O   E             11     PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     FDL2115AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   11  - Report page overflow indicator                        *
+      *   20  - Charge basis is 'P'                                   *
+      *   21  - Charge basis is 'N'                                   *
+      *   22  - Charge basis is not 'P' or 'N'                        *
+      *   23  - Look up indicator for charge basis indicator          *
+      *   24  - Look up indicator for threshold indicator             *
+      *   28  - MT5xx switchable features present - S01401            *
+      *   29  - Switchable feature present - S01446                   *
+      *   31  - Analytical accounting is installed                    *
+      *   32  - Switchable feature CSW098 is on or date is greater    *
+      *         than 16 October 1998. Can also be error on call to    *
+      *         SWIFT98.                                              *
+      *   40  - First time thru' for printer file indicator           *
+      *   55  - Valid record not read                                 *
+      *   60  - Currency type indicators for printer file             *
+      *   61  - Currency type indicators for printer file             *
+      *   62  - Currency type indicators for printer file             *
+      *   63  - Currency type indicators for printer file             *
+      *   64  - Currency type indicators for printer file             *
+      *   65  - Currency type indicators for printer file             *
+      *   70  - Autocharge option                                     *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRERRS - Database error - report and end program             *
+      *  SRDETL - Detail processing and reporting                     *
+      *  SRTERM - Termination process                                 *
+      *  SRRTOT - Run Control process                                 *
+      *  SRREC1 - Control totals - count process                      *
+      *  SRREC2 - Count for number of live records read               *
+      *  SRRDET - Detail record report print process                  *
+      *  SRCCYD - Write out range limit & flat charge in correct      *
+      *           currency format                                     *
+      *  SROVER - Detail report page overflow process                 *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    TABA    1   4  1   TABB    4
+     E                    TABC    1   2  1   TABD    9
+     E/COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+      *
+     ICPYR@#      DS
+      ** Data structure for compilation - copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for DL2115P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for DL2115AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     IDSFDY     E DSDSFDY
+      ** Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** External data structures for Midas Modules
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ** Data structure for securities trading details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for Currency Details
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           SEQ     5
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRDETL
+      *
+      ** Termination Processing.
+      *
+     C                     EXSR SRTERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0  Access Object                                      *
+      *  AOMMODR0  Access Object                                      *
+      *  AOSTRDR0  Access Object                                      *
+      *  AOSARDR0  Access Object                                      *
+      *  AOCURRR0  Access Object                                      *
+      *  SRERRS  - Error Subroutine                                   *
+      *  SWIFT98 - CSW098 SAR                                         *
+      *  RCFAU   - Subroutine to register AU printer file via RCF.    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+     C                     Z-ADD*ZERO     DBASE
+     C                     MOVE *BLANKS   PACTIV  3
+     C                     MOVE *BLANKS   PCHTP   1
+     C                     MOVE *BLANKS   PRECI   1
+     C                     MOVE *BLANKS   SGCCI   1
+     C                     MOVE *BLANKS   SGCCO   2
+     C                     MOVE *BLANKS   PGCCO
+     C                     MOVE *ZERO     PLCD    50
+     C                     MOVE *ZERO     PTNLU   50
+     C                     Z-ADD*ZERO     PNLRR   50
+     C                     Z-ADD*ZERO     PNRLT   50
+     C                     Z-ADD*ZERO     LCTI    50
+     C                     Z-ADD*ZERO     LCTA    50
+     C                     Z-ADD*ZERO     LCTD    50
+     C                     Z-ADD*ZERO     FC     150
+     C                     Z-ADD*ZERO     ST     150
+     C                     Z-ADD*ZERO     PL      74
+     C                     Z-ADD*ZERO     ST0    150
+     C                     Z-ADD*ZERO     FC0    150
+     C                     Z-ADD*ZERO     ST1    151
+     C                     Z-ADD*ZERO     FC1    151
+     C                     Z-ADD*ZERO     ST2    152
+     C                     Z-ADD*ZERO     FC2    152
+     C                     Z-ADD*ZERO     ST3    153
+     C                     Z-ADD*ZERO     FC3    153
+     C                     Z-ADD*ZERO     ST4    154
+     C                     Z-ADD*ZERO     ST8    158
+     C                     Z-ADD*ZERO     MAX1   151
+     C                     Z-ADD*ZERO     MIN1   151
+     C                     Z-ADD*ZERO     MAX2   152
+     C                     Z-ADD*ZERO     MIN2   152
+     C                     Z-ADD*ZERO     MAX3   153
+     C                     Z-ADD*ZERO     MIN3   153
+     C                     MOVE *OFF      *IN29
+     C                     MOVE *ON       *IN40
+      *
+      ** Initialize LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVE 'DL2115'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELWOPTN     DBKEY            *************
+     C                     Z-ADD001       DBASE            * DBERR 001 *
+     C                     MOVEL'DL2102'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR SRERRS
+     C                     ENDIF
+      *
+      ** Access MIDAS Module
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            *************
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERR 002 *
+     C                     MOVE *BLANKS   DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR SRERRS
+     C                     ENDIF
+      *
+      ** Access securities trading details using access object if
+      ** Securities is installed.
+      *
+     C           BGSECS    IFEQ 'Y'
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*FIRST'  WOPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+      ** Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDSTRDPD'DBFILE
+     C                     MOVELWOPTN     DBKEY            *************
+     C                     Z-ADD003       DBASE            * DBERR 003 *
+     C                     MOVEL'DL2115'  DBPGM            *************
+     C                     OUT  LDA
+     C                     EXSR SRERRS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** RCF Processing for Audit File
+      *
+     C                     EXSR RCFAU
+      *
+      ** If the autocharges option indicator present seton indicator
+      *
+     C           BVACOP    IFEQ 'Y'
+     C                     MOVE *ON       *IN70
+     C                     ELSE
+     C                     MOVE *OFF      *IN70
+     C                     ENDIF
+      *
+      ** Access Switchable features file for MT5xx processing.
+      *
+     C                     MOVE 'N'       S01401
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'S01401'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       S01401  1
+     C                     MOVE *ON       *IN28
+     C                     ENDIF
+      *
+      ** Access Switchable features file to see if S01446 = 'Y'.
+      *
+     C                     MOVE 'N'       S01446  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'S01446'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       S01446  1
+     C                     MOVE *ON       *IN29
+     C                     ENDIF
+      *
+      ** Set up analytical accounting indicator
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C                     MOVE *ON       *IN31
+     C                     ELSE
+     C                     MOVE *OFF      *IN31
+     C                     ENDIF
+      *
+     C           *IN29     IFEQ '1'
+     C           BVACOP    ANDEQ'Y'
+     C           BVCHRC    ANDNE*BLANKS
+      *
+      ** Use currency dec places for formatting amounts
+      ** convert to correct currency format
+      *
+     C                     MOVEA'0000'    *IN,60
+      *
+      ** Number of decimal place
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM BVCHRC    WKEY1   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD006       DBASE            *************
+     C                     MOVELBVCHRC    DBKEY            * DBERR 006 *
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     MOVEL'DL2115'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR SRERRS
+     C                     ENDIF
+      *
+     C           A6NBDP    IFEQ 0
+     C                     MOVE *ON       *IN60
+     C                     ENDIF
+      *
+     C           A6NBDP    IFEQ 1
+     C                     MOVE *ON       *IN61
+     C                     ENDIF
+      *
+     C           A6NBDP    IFEQ 2
+     C                     MOVE *ON       *IN62
+     C                     ENDIF
+      *
+     C           A6NBDP    IFEQ 3
+     C                     MOVE *ON       *IN63
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Open necessary files under user control
+      *
+     C           MODE      IFEQ 'I'
+     C                     OPEN DLCCGDL2
+     C                     ENDIF
+      *
+     C           MODE      IFEQ 'A'
+     C                     OPEN DLCCGDL0
+     C                     ENDIF
+      *
+      ** Check to see if switchable feature CSW098 is on or if date is
+      ** greater than 16 October 1998.
+      *
+     C                     CALL 'SWIFT98'              32
+     C                     PARM           SWRTN   7
+      *
+     C           *IN32     IFEQ *ON
+     C           *LOCK     IN   LDA                        *************
+     C                     Z-ADD004       DBASE            * DBERR 004 *
+     C                     MOVEL'DL2115'  DBPGM            *************
+     C                     MOVEL'ERR CALL'DBFILE
+     C                     MOVEL'SWIFT98' DBKEY
+     C                     OUT  LDA
+     C                     EXSR SRERRS
+     C                     ENDIF
+      *
+     C           SWRTN     IFEQ 'CSW098 '
+     C                     MOVE *ON       *IN32
+     C                     ELSE
+     C                     MOVE *OFF      *IN32
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRERRS
+      *****************************************************************
+      *                                                               *
+      *  SRERRS - Database error - report and end program.            *
+      *                                                               *
+      *  Called By:  SRINIT,SRRTOT and SRRDET subroutines             *
+      *                                                               *
+      *  Calls:                                                       *
+      *  *PSSR    - Error handling subroutine                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRERRS    BEGSR                           *** SRERRS ***
+      *
+     C           MODE      IFEQ 'I'
+     C                     WRITETITLE1AU
+     C                     WRITEAUDEXC
+     C                     WRITETITLE2AU
+     C                     ENDIF
+      *
+     C           MODE      IFEQ 'A'
+     C                     WRITETITLE1AU
+     C                     WRITEAUDIT
+     C                     WRITETITLE2AU
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     EXSR *PSSR
+     C                     WRITEERROR
+      *
+     C           *IN40     IFEQ *OFF
+     C                     WRITEERRORP1
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRDETL
+      *****************************************************************
+      *                                                               *
+      *  SRDETL - Detail processing and reporting.                    *
+      *                                                               *
+      *  Called By: Main processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRREC1   - Control totals - count process                    *
+      *  SRREC2   - Count for number of live records read             *
+      *  SRRDET   - Detail record report print process                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR                           *** SRDETL ***
+      *
+     C                     MOVE *ON       *IN55
+     C                     MOVE 'N'       COLH    1
+      *
+      ** Read todays records - mode 'I'
+      *
+     C           MODE      IFEQ 'I'
+     C                     READ DLCCGDD0                 98
+      *
+     C           *IN98     DOWEQ'0'
+     C           FDLCD     ANDEQBJRDNB
+     C                     MOVE FDCHTP    PCHTP
+     C                     MOVE FDRECI    PRECI
+     C                     MOVE FDLCD     PLCD
+     C                     MOVE FDTNLU    PTNLU
+     C                     MOVE *OFF      *IN55
+     C                     EXSR SRREC1
+     C                     EXSR SRRDET
+     C                     READ DLCCGDD0                 98
+     C                     ENDDO
+      *
+     C                     ELSE
+      *
+     C                     READ DLCCGD                   98
+     C                     MOVE FDCHTP    PCHTP
+     C                     MOVE FDRECI    PRECI
+     C                     MOVE FDTNLU    PTNLU
+     C                     MOVE FDLCD     PLCD
+      *
+      ** Read todays records - mode 'A'
+      *
+     C           *IN98     DOWEQ'0'
+     C           MODE      IFEQ 'A'
+     C           FDLCD     IFEQ BJRDNB
+     C                     MOVE *OFF      *IN55
+     C                     EXSR SRREC1
+     C                     EXSR SRRDET
+     C                     ENDIF
+     C                     EXSR SRREC2
+      *
+     C           BJSUC     IFEQ 'N'
+     C           PRECI     ANDNE'C'
+     C                     MOVE PCHTP     FDCHTP
+     C                     MOVE PRECI     FDRECI
+     C                     MOVE PLCD      FDLCD
+     C                     MOVE PTNLU     FDTNLU
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ DLCCGD                   98
+     C                     MOVE FDCHTP    PCHTP
+     C                     MOVE FDRECI    PRECI
+     C                     MOVE FDTNLU    PTNLU
+     C                     MOVE FDLCD     PLCD
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Close files under user control
+      *
+     C           MODE      IFEQ 'I'
+     C                     CLOSEDLCCGDL2
+     C                     ELSE
+     C                     CLOSEDLCCGDL0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTERM
+      *****************************************************************
+      *                                                               *
+      *  SRTERM - Termination process                                 *
+      *                                                               *
+      *  Called By: Main processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRRTOT   - Run Control process                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR                           *** SRTERM ***
+      *
+     C                     MOVE *ON       *INLR
+     C                     EXSR SRRTOT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRTOT
+      *****************************************************************
+      *                                                               *
+      *  SRRTOT - Run Control process                                 *
+      *                                                               *
+      *  Called By: SRTERM subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRERRS   - Error subroutine                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRTOT    BEGSR                           *** SRRTOT ***
+      *
+      ** Read trailer file record
+      *
+     C                     READ DLCCGDD1                 99
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'DLCCGDPA'DBFILE           *************
+     C                     Z-ADD005       DBASE            * DBERR 005 *
+     C                     MOVEL'TR.'     DBKEY            *************
+     C                     MOVE 'MISSING' DBKEY
+     C                     OUT  LDA
+     C                     EXSR SRERRS
+     C                     ENDIF
+      *
+      ** Print audit report type 'I'
+      *
+     C           MODE      IFEQ 'I'
+     C                     WRITETITLE1AU
+     C                     WRITEAUDEXC
+     C                     WRITETITLE2AU
+     C                     WRITECONTCOM
+     C                     WRITECONTI
+     C                     ENDIF
+      *
+      ** Print audit report type 'A'
+      *
+     C           MODE      IFEQ 'A'
+     C                     Z-ADDFDNLRB    PRECS   50
+     C                     ADD  FDNINS    PRECS
+     C                     SUB  FDNDEL    PRECS
+      *
+     C           PRECS     IFNE PNLRR
+     C                     MOVE *ON       *INU8
+     C                     ENDIF
+      *
+     C           FDNORE    IFNE PNLRR
+     C                     MOVE *ON       *INU8
+     C                     ENDIF
+      *
+     C                     WRITETITLE1AU
+     C                     WRITEAUDIT
+     C                     WRITETITLE2AU
+     C                     WRITECONTCOM
+     C                     WRITECONTA
+      *
+     C           FDNORE    IFNE PNLRR
+     C                     WRITEDIFF
+     C                     ENDIF
+      *
+     C           *INU8     IFEQ '0'
+     C                     Z-ADDFDNORE    FDNLRB
+     C                     Z-ADD*ZERO     FDNINS
+     C                     Z-ADD*ZERO     FDNAMD
+     C                     Z-ADD*ZERO     FDNDEL
+     C                     UPDATDLCCGDD1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Print audit report trailers
+      *
+     C           *IN55     IFEQ '1'
+     C                     WRITENONEAU
+     C                     ELSE
+     C                     WRITETRAILP1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRREC1
+      *****************************************************************
+      *                                                               *
+      *  SRREC1 - Control totals - count process                      *
+      *                                                               *
+      *  Called By: SRDETL subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREC1    BEGSR                           *** SRREC1 ***
+      *
+     C           MODE      IFEQ 'I'
+     C           MODE      OREQ 'A'
+      *
+      ** Count for last change type 'I'
+      *
+     C           PCHTP     IFEQ 'I'
+     C                     ADD  1         LCTI
+     C                     ENDIF
+      *
+      ** Count for last change type 'A'
+      *
+     C           PCHTP     IFEQ 'A'
+     C                     ADD  1         LCTA
+     C                     ENDIF
+      *
+      ** Count for last change type 'D'
+      *
+     C           PCHTP     IFEQ 'D'
+     C                     ADD  1         LCTD
+     C                     ENDIF
+      *
+      ** Count for number of records listed
+      *
+     C           FDLCD     IFEQ BJRDNB
+     C                     ADD  1         PNRLT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRREC2
+      *****************************************************************
+      *                                                               *
+      *  SRREC2 - Count for number of live records read               *
+      *                                                               *
+      *  Called By: SRDETL subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREC2    BEGSR                           *** SRREC2 ***
+      *
+     C           MODE      IFEQ 'A'
+     C           PRECI     IFEQ 'D'
+     C                     ADD  1         PNLRR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRDET
+      *****************************************************************
+      *                                                               *
+      *  SRRDET - Detail record report print process                  *
+      *                                                               *
+      *  Called By: SRDETL subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOCURRR0   Access Object                                     *
+      *  RCFP1    - Subroutine to register P1 printer file via RCF.   *
+      *  ZDATE2   - Date Conversion subroutine                        *
+      *  SRERRS   - Error subroutine                                  *
+      *  SRCCYD   - Write out range limit & flat charge in correct    *
+      *             currency format.                                  *
+      *  SROVER   - Detail report page overflow process               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRDET    BEGSR                           *** SRRDET ***
+      *
+      ** Check for first time through
+      *
+     C           *IN40     IFEQ '1'
+     C                     MOVE *OFF      *IN40
+      *
+      ** Open printer file
+      *
+     C                     OPEN DL2115P1
+      *
+      ** RCF Processing for Detail Printer File
+      *
+     C                     EXSR RCFP1
+     C                     Z-ADD0         PAGE
+      *
+      ** Check if autocharges option is off
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITETITLEP1
+     C                     ELSE
+     C                     WRITETITLEPAU
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Convert midas date to external date
+      *
+     C                     Z-ADDFDLCD     ZDAYNO
+     C                     EXSR ZDATE2
+      *
+      ** If S01446 is switched off or charges currency is blank then
+      ** access file for currency details for this currency.
+      *
+     C           S01446    IFEQ 'N'
+     C           BVCHRC    OREQ *BLANKS
+      *
+      ** Convert to correct currency format
+      *
+     C                     MOVEA'0000'    *IN,60
+      *
+      ** Number of decimal place
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM FDCCY     WKEY1   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD007       DBASE            *************
+     C                     MOVELBVCHRC    DBKEY            * DBERR 007 *
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     MOVEL'DL2115'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR SRERRS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN20
+     C                     MOVE *OFF      *IN21
+     C                     MOVE *OFF      *IN22
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN65
+      *
+     C           FDCHGB    IFEQ 'P'
+     C                     MOVE *ON       *IN20
+     C                     MOVE *ON       *IN64
+     C                     ENDIF
+      *
+     C           FDCHGB    IFEQ 'N'
+     C                     MOVE *ON       *IN21
+     C                     MOVE *ON       *IN65
+     C                     ENDIF
+      *
+     C           FDCHGB    IFNE 'N'
+     C           FDCHGB    ANDNE'P'
+     C                     MOVE *ON       *IN22
+     C                     ENDIF
+      *
+      ** If S01446 is switched off or Charges Currency (ICD) is blank
+      ** then set up indicators for this currency.
+      *
+     C           S01446    IFEQ 'N'
+     C           BVCHRC    OREQ *BLANKS
+      *
+     C           A6NBDP    IFEQ 0
+     C                     MOVE *ON       *IN60
+     C                     ENDIF
+      *
+     C           A6NBDP    IFEQ 1
+     C                     MOVE *ON       *IN61
+     C                     ENDIF
+      *
+     C           A6NBDP    IFEQ 2
+     C                     MOVE *ON       *IN62
+     C                     ENDIF
+      *
+     C           A6NBDP    IFEQ 3
+     C                     MOVE *ON       *IN63
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** The Charge Code and the Charge Code Indicator fields are
+      ** output to the printer file.
+      *
+     C           S01446    IFEQ 'Y'
+     C                     MOVE FDGCCI    SGCCI   1
+     C                     MOVE FDGCCO    SGCCO   2
+     C                     MOVE FDGCCO    PGCCO
+     C                     ENDIF
+      *
+     C           PCHTP     IFEQ 'I'
+     C                     MOVE 'INS'     PACTIV
+     C                     ENDIF
+      *
+     C           PCHTP     IFEQ 'A'
+     C                     MOVE 'AMD'     PACTIV
+     C                     ENDIF
+      *
+     C           PCHTP     IFEQ 'D'
+     C                     MOVE 'DEL'     PACTIV
+     C                     ENDIF
+      *
+      ** Determing narrative for charge basis indicator
+      *
+     C           FDCHGB    LOKUPTABA      TABB           23
+      *
+     C           *IN23     IFEQ '1'
+     C                     MOVE TABB      CHNARR
+     C                     ELSE
+     C                     MOVE *BLANK    CHNARR
+     C                     ENDIF
+      *
+      ** Determine narrative for threshold indicator
+      *
+     C           FDTHRI    LOKUPTABC      TABD           24
+      *
+     C           *IN24     IFEQ '1'
+     C                     MOVE TABD      THNARR
+     C                     ELSE
+     C                     MOVE *BLANK    THNARR
+     C                     ENDIF
+      *
+      ** Determine Narrative for Own/Other Charge.
+      ** (Only displayed if MT5xx Feature available)
+      *
+     C           S01401    IFEQ 'Y'
+      *
+     C           SWRTN     IFNE 'CSW098 '
+     C                     MOVE *BLANKS   RROWOT
+      *
+     C           FDOWOT    IFEQ 'O'
+     C                     MOVE 'OWN  '   RROWOT
+     C                     ELSE
+      *
+     C           FDOWOT    IFEQ 'T'
+     C                     MOVE 'OTHER'   RROWOT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE FDSWID    RSWID
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C                     MOVE FDPRFC    PPRFC
+     C                     MOVE FDBOTR    PBOTR
+     C                     ENDIF
+      *
+      ** Write out detail line part 1
+      *
+     C           *IN70     IFEQ '1'
+      *
+      ** Column heading not printed if it as already been printed
+      ** due to overflow.
+      *
+     C           COLH      IFEQ 'N'
+     C                     WRITETITLEP2
+     C                     ENDIF
+      *
+     C                     WRITEDETPT1
+      *
+     C           FDSTU1    IFNE *ZERO
+     C           FDPL01    ORNE *ZERO
+     C           FDFC01    ORNE *ZERO
+     C                     Z-ADDFDSTU1    ST
+     C                     Z-ADDFDPL01    PL
+     C                     Z-ADDFDFC01    FC
+     C                     EXSR SRCCYD
+     C                     ENDIF
+      *
+     C                     WRITEDETPT6
+     C                     EXSR SROVER
+      *
+      ** Write out each set of ranges if any one of upper limit,
+      ** percentage or flat charge is non-zero.
+      *
+     C           FDSTU2    IFNE *ZERO
+     C           FDPL02    ORNE *ZERO
+     C           FDFC02    ORNE *ZERO
+     C                     Z-ADDFDSTU2    ST
+     C                     Z-ADDFDPL02    PL
+     C                     Z-ADDFDFC02    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+     C           FDSTU3    IFNE *ZERO
+     C           FDPL03    ORNE *ZERO
+     C           FDFC03    ORNE *ZERO
+     C                     Z-ADDFDSTU3    ST
+     C                     Z-ADDFDPL03    PL
+     C                     Z-ADDFDFC03    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDSTU4    IFNE *ZERO
+     C           FDPL04    ORNE *ZERO
+     C           FDFC04    ORNE *ZERO
+     C                     Z-ADDFDSTU4    ST
+     C                     Z-ADDFDPL04    PL
+     C                     Z-ADDFDFC04    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDSTU5    IFNE *ZERO
+     C           FDPL05    ORNE *ZERO
+     C           FDFC05    ORNE *ZERO
+     C                     Z-ADDFDSTU5    ST
+     C                     Z-ADDFDPL05    PL
+     C                     Z-ADDFDFC05    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDSTU6    IFNE *ZERO
+     C           FDPL06    ORNE *ZERO
+     C           FDFC06    ORNE *ZERO
+     C                     Z-ADDFDSTU6    ST
+     C                     Z-ADDFDPL06    PL
+     C                     Z-ADDFDFC06    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDSTU7    IFNE *ZERO
+     C           FDPL07    ORNE *ZERO
+     C           FDFC07    ORNE *ZERO
+     C                     Z-ADDFDSTU7    ST
+     C                     Z-ADDFDPL07    PL
+     C                     Z-ADDFDFC07    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDSTU8    IFNE *ZERO
+     C           FDPL08    ORNE *ZERO
+     C           FDFC08    ORNE *ZERO
+     C                     Z-ADDFDSTU8    ST
+     C                     Z-ADDFDPL08    PL
+     C                     Z-ADDFDFC08    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDSTU9    IFNE *ZERO
+     C           FDPL09    ORNE *ZERO
+     C           FDFC09    ORNE *ZERO
+     C                     Z-ADDFDSTU9    ST
+     C                     Z-ADDFDPL09    PL
+     C                     Z-ADDFDFC09    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDST10    IFNE *ZERO
+     C           FDPL10    ORNE *ZERO
+     C           FDFC10    ORNE *ZERO
+     C                     Z-ADDFDST10    ST
+     C                     Z-ADDFDPL10    PL
+     C                     Z-ADDFDFC10    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDST11    IFNE *ZERO
+     C           FDPL11    ORNE *ZERO
+     C           FDFC11    ORNE *ZERO
+     C                     Z-ADDFDST11    ST
+     C                     Z-ADDFDPL11    PL
+     C                     Z-ADDFDFC11    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDST12    IFNE *ZERO
+     C           FDPL12    ORNE *ZERO
+     C           FDFC12    ORNE *ZERO
+     C                     Z-ADDFDST12    ST
+     C                     Z-ADDFDPL12    PL
+     C                     Z-ADDFDFC12    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDST13    IFNE *ZERO
+     C           FDPL13    ORNE *ZERO
+     C           FDFC13    ORNE *ZERO
+     C                     Z-ADDFDST13    ST
+     C                     Z-ADDFDPL13    PL
+     C                     Z-ADDFDFC13    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDST14    IFNE *ZERO
+     C           FDPL14    ORNE *ZERO
+     C           FDFC14    ORNE *ZERO
+     C                     Z-ADDFDST14    ST
+     C                     Z-ADDFDPL14    PL
+     C                     Z-ADDFDFC14    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C           FDFC15    IFNE *ZERO
+     C           FDPL15    ORNE *ZERO
+     C                     Z-ADD*ZERO     ST
+     C                     Z-ADDFDPL15    PL
+     C                     Z-ADDFDFC15    FC
+     C                     EXSR SRCCYD
+     C                     WRITESPACE
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+      ** Write out last line
+      *
+     C                     WRITESPACE
+      *
+     C           *IN60     IFEQ '1'
+     C                     WRITENARR1
+     C                     ENDIF
+      *
+     C           *IN61     IFEQ '1'
+     C                     MOVE FDMXCH    MAX1
+     C                     MOVE FDMNCH    MIN1
+     C                     WRITENARR2
+     C                     ENDIF
+      *
+     C           *IN62     IFEQ '1'
+     C                     MOVE FDMXCH    MAX2
+     C                     MOVE FDMNCH    MIN2
+     C                     WRITENARR3
+     C                     ENDIF
+      *
+     C           *IN63     IFEQ '1'
+     C                     MOVE FDMXCH    MAX3
+     C                     MOVE FDMNCH    MIN3
+     C                     WRITENARR4
+     C                     ENDIF
+      *
+      ** Set flag to indicate if column heading is to print
+      ** due to overflow.
+      *
+     C           *IN11     IFEQ '1'
+     C           *IN70     ANDEQ'1'
+     C                     MOVE 'Y'       COLH
+     C                     ELSE
+     C                     MOVE 'N'       COLH
+     C                     ENDIF
+      *
+     C                     EXSR SROVER
+      *
+      ** If autocharges option not present
+      *
+     C                     ELSE
+     C                     WRITEDETPT1AU
+     C                     EXSR SROVER
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCCYD
+      *****************************************************************
+      *                                                               *
+      *  SRCCYD - Write out range limit & flat charge in correct      *
+      *           currency format                                     *
+      *                                                               *
+      *  Called By: SRRDET subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCCYD    BEGSR                           *** SRCCYD ***
+      *
+     C           *IN64     IFEQ '1'
+     C                     MOVE ST        ST8
+     C                     ENDIF
+      *
+     C           *IN65     IFEQ '1'
+     C                     MOVE ST        ST4
+     C                     ENDIF
+      *
+     C           *IN60     IFEQ '1'
+     C                     MOVE ST        ST0
+     C                     MOVE FC        FC0
+     C                     WRITEDETPT2
+     C                     ENDIF
+      *
+     C           *IN61     IFEQ '1'
+     C                     MOVE ST        ST1
+     C                     MOVE FC        FC1
+     C                     WRITEDETPT3
+     C                     ENDIF
+      *
+     C           *IN62     IFEQ '1'
+     C                     MOVE ST        ST2
+     C                     MOVE FC        FC2
+     C                     WRITEDETPT4
+     C                     ENDIF
+      *
+     C           *IN63     IFEQ '1'
+     C                     MOVE ST        ST3
+     C                     MOVE FC        FC3
+     C                     WRITEDETPT5
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SROVER
+      *****************************************************************
+      *                                                               *
+      *  SROVER - Detail report page overflow process                 *
+      *                                                               *
+      *  Called By: SRRDET subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SROVER    BEGSR                           *** SROVER ***
+      *
+     C           *IN11     IFEQ '1'
+     C           *IN70     IFEQ '1'
+     C                     WRITETITLEP1
+     C                     WRITETITLEP2
+     C                     ELSE
+     C                     WRITETITLEPAU
+     C                     ENDIF
+     C                     MOVE *OFF      *IN11
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  TABA AND TABB
+FFLAT
+CCONS
+PPRCE
+NNOML
+**  TABC AND TABD
+YTHRESHOLD
+N TIERED
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

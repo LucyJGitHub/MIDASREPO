@@ -1,0 +1,230 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280GENM                           *
+      *                                                               *
+      *  Last Amend No. AR992570A          Date 16Dec13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG6293            Date 04Oct04               *
+      *                 BUG3012            Date 01Jun04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR992570A - Corrected the computation of amount when multiple*
+      *              settlement is on. (Child: AR992571)              *
+      *            - Applied for MD024091                             *
+      *  BUG6293- Move subroutine to a /COPY to free up space in      *
+      *           DL0280 for other changes.                           *
+      *  BUG3012- Account keys are not being output for multiple      *
+      *           settlement accounts.                                *
+      *                                                               *
+      *****************************************************************   CDL018
+      *                                                               *   CDL018
+      *  GENMKY - Generate Multiple Account Keys                      *   CDL018
+      *                                                               *   CDL018
+      *****************************************************************   CDL018
+     C     GENMKY        BEGSR                                                                 CDL01
+      *                                                                   CDL018
+      **  Reset work fields                                               CDL018
+     C                   Z-ADD     0             ##AMTA           13 0                         CDL01
+     C                   Z-ADD     0             ##AMTB           19 3                         CDL01
+     C                   Z-ADD     0             ##AMTC           13 0                         CDL01
+     C                   Z-ADD     0             ##AMTD           13 0                         CDL01
+     C                   Z-ADD     0             ##TAXA           13 0                         CDL01
+      *                                                                   CDL018
+      *                                                                   CDL018
+      ** Set settlement account and branch if settlement type 14          CDL018
+     C     ##SETM        IFEQ      14                                                          CDL01
+     C                   MOVEL     ##ACX         KYOSTL                                        CDL01
+      *                                                                   CDL018
+      ** Access the Account Details using the Retail account key.         CDL018
+     C                   MOVEL     ##ACX         @RETL                                         CDL01
+     C                   CALL      'AOACCTR0'                                                  CDL01
+     C                   PARM      *BLANKS       @RTCD                                         CDL01
+     C                   PARM      '*KEY   '     @OPTN                                         CDL01
+     C                   PARM                    @RETL                                         CDL01
+     C                   PARM      *BLANKS       @CNUM                                         CDL01
+     C                   PARM      *BLANKS       @CUCD                                         CDL01
+     C                   PARM      *BLANKS       @ACCD                                         CDL01
+     C                   PARM      *BLANKS       @ACSQ                                         CDL01
+     C                   PARM      *BLANKS       @BRCA                                         CDL01
+     C     SDACCT        PARM      SDACCT        DSSDY                                         CDL01
+      *                                                                   CDL018
+      **  Database error if account not found                             CDL018
+     C     @RTCD         IFNE      *BLANKS                                                     CDL01
+     C                   MOVE      'ACCNTAB '    DBFILE                         *************  CDL01
+     C                   MOVEL     '055'         DBASE                          *DBERROR 055*  CDL01
+     C                   MOVEL     ##ACX         DBKEY                          *************  CDL01
+     C                   EXSR      *PSSR                                                       CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **  Set branch code for retail account number                       CDL018
+     C                   MOVE      @BRCA         KYSTBR                                        CDL01
+      *                                                                   CDL018
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      ** Set settlement account and branch if settlement type 05          CDL018
+     C     ##SETM        IFEQ      05                                                          CDL01
+     C                   MOVEL     ##ACX         KYSTBR                                        CDL01
+     C                   MOVE      ##ACX         #WRK18           18                           CDL01
+     C                   MOVEL     #WRK18        KYOSTL                                        CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      *                                                                   CDL018
+      **  Reversal Account Key                                            CDL018
+     C     *IN47         IFEQ      *ON                                                         CDL01
+      *                                                                   CDL018
+      **   If value date account key reverse principal already posted     CDL018
+     C     AKY(3)        IFEQ      'V'                                                         CDL01
+     C                   Z-ADD     ##AMX         ##AMTA                                        CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **   If interest account key reverse interest/tax already posted    CDL018
+     C     AKY(3)        IFEQ      'I'                                                         CDL01
+     C     ##PRX         SUB       ##TXX         ##AMTA                                        CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+     C                   ELSE                                                                  CDL01
+      *                                                                   CDL018
+      *                                                                   CDL018
+      **  Process details according to amount allocation                  CDL018
+     C                   SELECT                                                                CDL01
+      *                                                                   CDL018
+      **  Interest Allocation                                             CDL018
+     C     ##ALX         WHENEQ    'I'                                                         CDL01
+      *                                                                   CDL018
+      **    If amount allocation and interim interest determine amount    CDL018
+      **    to be posted to account today as a percentage of interest     CDL018
+     C     ##AMX         IFNE      0                                                           CDL01
+     C     AKY(3)        ANDEQ     'I'                                                         CDL01
+     C     ##AMX         DIV       TOTI          ##PCTG           12 6                         CDL01
+     C     ##PCTG        DIV       100           ##PCX                                         CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **    If amount allocation post residual interest at maturity       CDL018
+     C     ##AMX         IFNE      0                                                           CDL01
+     C     AKY(3)        ANDEQ     'M'                                                         CDL01
+     C     ##AMX         SUB       ##PRX         ##AMTA                                        CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **    Percentage allocation                                         CDL018
+     C     ##PCX         IFNE      0                                                           CDL01
+     C     ##INTA        MULT      ##PCX         ##AMTB                                        CDL01
+     C     ##AMTB        DIV       100           ##AMTA                                        CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **    Accumulate interest paid/received to date                     CDL018
+     C                   ADD       ##AMTA        ##PRX                                         CDL01
+      *                                                                   CDL018
+      **    If tax deducted then adjust amount to be posted               CDL018
+     C     TAXA          IFNE      0                                                           CDL01
+     C     ##AMTA        DIV(H)    ##INTA        ##AMTB                                        CDL01
+     C*****##INTA        SUB       TAXA          ##AMTC                             CDL018 AR992570A
+     C     TAXA          MULT(H)   ##AMTB        ##TAXA                                    AR992570A
+     C*****##AMTB        MULT(H)   ##AMTC        ##TAXA                             CDL018 AR992570A
+     C     ##AMTA        SUB       ##TAXA        ##AMTA                                        CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **    Accumulate tax posted to date                                 CDL018
+     C                   ADD       ##TAXA        ##TXX                                         CDL01
+      *                                                                   CDL018
+      **    Accumulate total amount posted                                CDL018
+     C                   ADD       ##AMTA        ##TOTE                                        CDL01
+      *                                                                   CDL018
+      **    Set account key amount                                        CDL018
+     C                   Z-ADD     ##AMTA        KYAMT                                         CDL01
+      *                                                                   CDL018
+      *                                                                   CDL018
+      **  Principal Allocation                                            CDL018
+     C     ##ALX         WHENEQ    'P'                                                         CDL01
+      *                                                                   CDL018
+      **    If amount allocation then post amount                         CDL018
+     C     ##AMX         IFNE      0                                                           CDL01
+     C                   Z-ADD     ##AMX         ##AMTA                                        CDL01
+     C                   ELSE                                                                  CDL01
+      *                                                                   CDL018
+      **    Otherwise percentage allocation                               CDL018
+     C     ##PAMT        MULT      ##PCX         ##AMTB           19 3                         CDL01
+     C     ##AMTB        DIV(H)    100           ##AMTA           13 0                         CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **    Accumulate total amount of posted                             CDL018
+     C                   ADD       ##AMTA        ##TOTE                                        CDL01
+      *                                                                   CDL018
+      **    Set account key amount                                        CDL018
+     C                   Z-ADD     ##AMTA        KYAMT                                         CDL01
+      *                                                                   CDL018
+      *                                                                   CDL018
+      **  Both Interest & Principal Allocation                            CDL018
+     C     ##ALX         WHENEQ    'B'                                                         CDL01
+      *                                                                   CDL018
+      **    Determine interest portion if interest not paid separate      CDL018
+     C     IPDS          IFNE      'Y'                                                         CDL01
+      *                                                                   CDL018
+      **    If amount allocation determine percentage                     CDL018
+     C     ##AMX         IFNE      0                                                           CDL01
+     C     OPAM          ADD       TOTI          ##TOTL           15 0                         CDL01
+     C     ##AMX         DIV       ##TOTL        ##PCTG           12 6                         CDL01
+     C     ##PCTG        DIV       100           ##PCX                                         CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **     Percentage allocation for interest                           CDL018
+     C     ##PCX         IFNE      0                                                           CDL01
+     C     ##INTA        MULT      ##PCX         ##AMTB                                        CDL01
+     C     ##AMTB        DIV       100           ##AMTA                                        CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **     Accumulate interest paid/received to date                    CDL018
+     C                   ADD       ##AMTA        ##PRX                                         CDL01
+      *                                                                   CDL018
+      **     If tax deducted then adjust amount to be posted              CDL018
+     C     TAXA          IFNE      0                                                           CDL01
+     C     ##AMTA        DIV(H)    ##INTA        ##AMTB                                        CDL01
+     C*****##INTA        SUB       TAXA          ##AMTD                             CDL018 AR992570A
+     C*****##AMTB        MULT(H)   ##AMTD        ##TAXA                             CDL018 AR992570A
+     C     ##AMTB        MULT(H)   TAXA          ##TAXA                                    AR992570A
+     C     ##AMTA        SUB       ##TAXA        ##AMTA                                        CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **    Accumulate tax posted to date                                 CDL018
+     C                   ADD       ##TAXA        ##TXX                                         CDL01
+      *                                                                   CDL018
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      *                                                                   CDL018
+      **    Determine principal to be posted                              CDL018
+     C     AKY(3)        IFEQ      'V'                                                         CDL01
+     C     AKY(3)        OREQ      'M'                                                         CDL01
+      *                                                                   CDL018
+      **    If amount allocation post any residual principal amount       CDL018
+     C     ##AMX         IFNE      0                                                           CDL01
+     C     ##AMX         SUB       ##PRX         ##AMTC                                        CDL01
+     C                   ELSE                                                                  CDL01
+      *                                                                   CDL018
+      **    Otherwise percentage allocation for principal                 CDL018
+     C     ##PAMT        MULT      ##PCX         ##AMTB                                        CDL01
+     C     ##AMTB        DIV       100           ##AMTC                                        CDL01
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      **    Accumulate total amount posted                                CDL018
+      **       (Interest less tax plus principal)                         CDL018
+     C     ##AMTA        ADD       ##AMTC        ##TOTE                                        CDL01
+      *                                                                   CDL018
+      **    Set account key amount                                        CDL018
+     C     ##AMTA        ADD       ##AMTC        KYAMT                                         CDL01
+      *                                                                   CDL018
+      *                                                                   CDL018
+     C                   ENDSL                                                                 CDL01
+      *                                                                   CDL018
+     C                   ENDIF                                                                 CDL01
+      *                                                                   CDL018
+      *                                                                   CDL018
+      ** Generate account key                                             CDL018
+     C                   EXSR      MEXCP                                                       CDL01
+      *                                                                   CDL018
+     C                   ENDSR                                                                 CDL01
+      *****************************************************************   CDL018

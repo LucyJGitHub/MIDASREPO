@@ -1,0 +1,306 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Adjustments processing - history upd')        *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Dealing Module
+     F*                                                                  *
+     F*     DL9001 - ADJUSTMENTS PROCESSING FOR HISTORY UPDATE           *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 AR1096788          Date 18Mar13               *
+      *                 AR900144           Date 03Dec12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01390             Date 04Aug92               *
+      *                 S36008             Date 01/02/90              *
+     F*                    AUS006     DATE 18DEC90                       *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR1096788 - DLAA details should be written in core STRANF    *
+      *              file instead of the new DLSTRANFPD file          *
+      *  AR900144 - STRAN Limitation.                                 *
+      *             Need to modify programs updating STRAN header and *
+      *             detail records, from update to write record.      *
+      *             Changed file being access from STRAN to STRANF.   *
+      *             (Child: AR900145)                                 *
+      *             Applied for AR1005423. (Child: AR1005425)         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+     F*    S01390 - Release 10 Changes for Australianisation             *
+     F*    S36008 - INTEREST HISTORY ENQUIRY AND PURGE                   *
+     F*    AUS006 - AUSTRALIAN PRODUCT - INTEREST HISTORY                *
+     F*                                                                  *
+     F********************************************************************
+     F***/EJECT*****                                                      S01390
+      ***************FFFFFFFFFFFFFF***************************************S01390
+      ***************FFFFFFFFFFFFFF***************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFFFFFFF*********************************************S01390
+      ***************FFFFFFFF*********************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+      ***************FFF**************************************************S01390
+     F*
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F* INPUT FILES
+     F***STRAN** IF  F     200            DISK                                              AR900144
+     F***STRANF* IF  F     200            DISK                                    AR900144 AR1096788
+     FSTRANF  IF  F     304            DISK                                                AR1096788
+     F***TABTB10*IF**E                    DISK                            S01390
+     FDEALS   IF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F*
+     F* OUTPUT FILES
+     FHISTSAA O   E                    DISK
+     F***DL9001P1O***E                    PRINTER                         S01390
+     FDL9001AUO   E                    PRINTER                            S01390
+      /EJECT
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEEEEEEE*********************************************S01390
+     E***************EEEEEEEE*********************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEE**************************************************S01390
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E***************EEEEEEEEEEEEEE***************************************S01390
+     E********************************************************************S01390
+     E                    CPY@    1   1 80                                S01390
+      ***/EJECT*****                                                      S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I********************III*********************************************S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I***************IIIIIIIIIIIIII***************************************S01390
+     I********************************************************************S01390
+     I*                                                                   PS0040
+     IDEALSDCF
+     I              PCPL                            PCPL1
+     I              ICBS                            ICBS1                 S36008
+     I***STRAN** NS       1 CF                                                              AR900144
+     ISTRANF  NS       1 CF                                                                 AR900144
+     I                                        1   1 RECID
+     I                                        2   70DLNO
+     I**********                              8  130CNUM                                      CSD027
+     I                                        8  13 CNUM                                      CSD027
+     I                                    P  17  230MAAM
+     I                                       24  24 SIGN
+     I                                       25  26 DTYPD                                  AR1096788
+     I                                       27  27 INIRS                                  AR1096788
+     I                                      186 188 BRCDE                                  AR1096788
+     I                                      189 1940UDTM                                   AR1096788
+     I                                    P 195 1970RRNT                                   AR1096788
+     I                                    P 198 2000TNLU                                   AR1096788
+     I                                    P 201 2080USIT                                   AR1096788
+     I                                    P 209 2150AACF                                   AR1096788
+     I                                      216 216 FSGN                                   AR1096788
+     I                                    P 217 2190FLLCD                                  AR1096788
+     I                                      220 220 FLTYLC                                 AR1096788
+     I                                      221 221 FLUSGN                                 AR1096788
+     I                                      222 227 FLTRNN                                 AR1096788
+     I                                      228 247 FLFRNT                                 AR1096788
+     I                                      248 267 FLAFRT                                 AR1096788
+     I                                      268 268 FLREPA                                 AR1096788
+     I                                      269 294 FLTMST                                 AR1096788
+     I                                      295 304 FLUSER                                 AR1096788
+     I        NS
+     I                                        1   1 RECID
+     I*                                                                   S01390
+     ISDBANK    E DSSDBANKPD                                              S01390
+     I* Bank Details Accesses Via Access Program                          S01390
+     I*                                                                   S01390
+     IDSFDY     E DSDSFDY                                                 S01390
+     I* First DS For Access Programs, Short Data Structure                S01390
+     I*                                                                   S01390
+      /EJECT
+     C***************CCCCCCCCCCCCCC***************************************S01390
+     C***************CCCCCCCCCCCCCC***************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCC**************************************************S01390
+     C***************CCCCCCCCCCCCCC***************************************S01390
+     C***************CCCCCCCCCCCCCC***************************************S01390
+     C*
+     C                     EXSR #INIT                      INITIALISATION
+     C*
+     C           *IN20     IFEQ #OFF
+     C*
+     C           *IN20     DOWEQ#OFF
+     C*
+     C**********           READ STRAN                    20                                 AR900144
+     C                     READ STRANF                   20                                 AR900144
+     C*
+     C           RECID     IFNE 'F'
+     C                     MOVE #ON       *IN20
+     C                     END
+     C*                                                                LS
+     C           *IN20     IFEQ #OFF
+     C*
+     C                     ADD  1         RECRED
+     C*
+     C           DLNO      CHAINDEALS                77
+     C                     CAS            HISTA
+     C                     END
+     C*
+     C                     ADD  1         RECOUT
+     C*
+     C                     WRITEHISTSAAF
+     C*
+     C                     CAS            HISTB
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C* WRITE AUDIT REPORT.
+     C                     WRITEAUDIT
+     C*
+     C                     MOVE #ON       *INLR
+      /TITLE INITIALISACTION ROUTINE
+     C           #INIT     BEGSR
+      **--------------------------------------------------------#INIT
+      **                                                           **
+      ** #INIT - INITIALISATION ROUTINE.                           **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C                     MOVE '1'       #ON     1
+     C                     MOVE '0'       #OFF    1
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C*
+     C                     TIME           TIME    60
+     C*
+     C***********          READ TABTB10                  H1               S01390
+     C                     CALL 'AOBANKR0'                                S01390
+     C                     PARM '*DBERR ' RTCD    7                       S01390
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDBANK    PARM SDBANK    DSFDY                           S01390
+     C*
+     C**********           READ STRAN                    20                                 AR900144
+     C*
+     C                     ENDSR
+      /TITLE PREPARE HISTORY RECORD
+     C           HISTA     BEGSR
+      **--------------------------------------------------------HISTA
+      **                                                           **
+      ** HISTA - MOVE VALUES TO HISTORY FILE FIELDS BEFORE A       **
+      **         RECORD IS WRITTEN TO THE HISTORY FILE.            **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C                     MOVE 'IA'      RTYP
+     C***********          Z-ADDRUND      EDAT                            S01390
+     C                     Z-ADDBJRDNB    EDAT                            S01390
+     C                     Z-ADDPCPL1     PCPL
+     C                     Z-ADDINTR      NRAT
+     C                     Z-ADDINTR      ORAT
+     C                     MOVE NOTD      TERM
+     C                     Z-ADD12        SQNO
+     C           SIGN      IFEQ '+'
+     C                     Z-ADDMAAM      EAMT
+     C                     ELSE
+     C           SIGN      IFEQ '-'
+     C                     Z-SUBMAAM      EAMT
+     C                     END
+     C                     END
+     C                     MOVE 'N'       CHQI
+     C                     MOVE ICBS1     ICBS                            S36008
+     C*
+     C                     ENDSR
+      /TITLE BLANK OUT DEALS RECORD FIELDS AFTER HISTORY RECORD OUTPUT
+     C           HISTB     BEGSR
+      **--------------------------------------------------------HISTB
+      **                                                           **
+      ***HISTB*-*BALNK*OUT*ALL*FIELDS*FROM*DEALS*RECORD*USED*IN******     S01390
+      ** HISTB - BLANK OUT ALL FIELDS FROM DEALS RECORD USED IN    **     S01390
+      **         THE PROGRAM ONCE THE HISTORY RECORD HAS BEEN      **
+      **         OUTPUT.                                           **
+      **                                                           **
+      **-----------------------------------------------------------**
+      *
+     C                     Z-ADD0         PCPL1
+     C                     Z-ADD0         INTR
+     C                     Z-ADD0         NOTD
+     C                     MOVE '  '      DTYP
+     C                     MOVE '  '      DLST
+     C***********          Z-ADD0         BRCD                            S01390
+     C                     MOVEL*BLANKS   BRCA                            S01390
+     C                     Z-ADD0         MDAT
+     C                     MOVE '   '     CCY
+     C                     MOVE ' '       INTC
+     C                     MOVE '  '      RTYP
+     C**********           Z-ADD0         CNUM                                                CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C                     Z-ADD0         EDAT
+     C                     Z-ADD0         DLNO
+     C                     Z-ADD0         PCPL
+     C                     Z-ADD0         NRAT
+     C                     Z-ADD0         ORAT
+     C                     MOVE '   '     TERM
+     C                     Z-ADD0         SQNO
+     C                     MOVE ' '       SECI
+     C                     Z-ADD0         EAMT
+     C                     MOVE ' '       CHQI
+     C                     MOVE ' '       ICBS1                           S36008
+     C                     MOVE '    '    CLAS                                                CDL038
+     C*
+     C                     ENDSR
+      ***/EJECT*****                                                      S01390
+     O***********    OOOOOOOOOOOOOO                                       S01390
+     O***********    OOOOOOOOOOOOOO                                       S01390
+     O***********    OOO        OOO                                       S01390
+     O***********    OOO        OOO                                       S01390
+     O***********    OOO        OOO                                       S01390
+     O***********    OOO        OOO                                       S01390
+     O***********    OOO        OOO                                       S01390
+     O***********    OOO        OOO                                       S01390
+     O***********    OOOOOOOOOOOOOO                                       S01390
+     O***********    OOOOOOOOOOOOOO                                       S01390
+     O***********                                                         S01390
+** CPY@   **      OBJECT COPYRIGHT                                        S01390
+(c) Misys International Banking Systems Ltd. 2001

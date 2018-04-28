@@ -1,0 +1,768 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Country Tax Rates Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  Securities Trading Module                         *
+     F*                                                               *
+     F*  SE1920 - Country Tax Rates Report                            *
+     F*                                                               *
+     F*  Function: Program produces a report listing Tax Rates by     *
+     F*            country.                                           *
+     F*            It runs in two modes, Full and Audit.              *
+     F*                                                               *
+     F*  Called By: SEC1920 - Country Tax Rates Report Audit File     *
+     F*                                                               *
+     F*  Calls: AOBANKR0 - Access object for Bank I.C.D. details      *
+     F*         ZSFILE   - Log spool file                             *
+     F*         AOCTRYR0 - Access object for Country Codes            *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 BUG3644            Date 12Jul04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 084256             Date 06Sep95               *
+      *                 S01496             Date 06Oct94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+     F*  084256 - Tax rate change should be switchable                *
+     F*  S01496 - Incorporation of JYSKE Enhancements (S10982)        *
+     F*           Program recompiled due to changes in PTRF/SE1920P1  *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F**   COUNTRY TAX RATES (COUNTRY SEQUENCE)     - PREFIX CR
+     FSECNTRL0IF  E           K        DISK         KINFSR *PSSR      UC
+     F            SECNTRD0                          KRENAMESECNTRDA
+     F*
+     F**   COUNTRY TAX RATES (LAST CHANGE SEQUENCE) - PREFIX CR
+     FSECNTRL1IF  E           K        DISK         KINFSR *PSSR      UC
+     F*
+     F**   COUNTRY TAX RATES RUN CONTROLS REPORT
+     FSE1920AUO   E             21     PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+     F*
+     F**   COUNTRY TAX RATES REPORT
+     FSE1920P1O   E             22     PRINTER      KINFDS SPOOL      UC
+     F                                              KINFSR *PSSR
+     F*
+     F/EJECT
+     F*****************************************************************
+     F**                                                              *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F**                 ------------------------                     *
+     F**                                                              *
+     F**    21         - OVERFLOW INDICATOR ON SE1920AU               *
+     F**    22         - OVERFLOW INDICATOR ON SE1920P1               *
+     F**       30 - FULL LIST INDICATOR FOR PRINTER FILE              *
+     F*        31 - Private Banking Securities Trading Enhancements on*   084256
+     F**       40 - FIRST TIME THRO' FOR PRINTER FILE INDICATOR       *
+     F**       51 - COB,I/C AUDIT                                     *
+     F**       52 - COB FULL REPORT                                   *
+     F**       53 - I/C FULL REPORT                                   *
+     F**       70 - FILE ERROR                                        *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E/EJECT
+     E*****************************************************************
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     I*
+     ISDCTRY    E DSSDCTRYPD
+     I** EXTERNAL DS FOR COUNTRY DETAILS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*                                                                   084256
+     ISCSARD    E DSSCSARDPD                                              084256
+     I** EXTERNAL DS FOR SWITCHABLE FEATURES                              084256
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I**   LOCAL DATA AREA
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IRUNDT       DS
+     I*
+     I** DATA AREA RUNDAT
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I**   DATE FORMATTING DATA STRUCTURE
+     IUPDATE      DS
+     I                                        1   2 TXDAY
+     I                                        3   5 TXMON
+     I                                        6   7 TXYER
+     ISPOOL       DS
+     I*
+     I**  DS FOR P1 SPOOL FILE NAME
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE1
+     I**
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INPUT PARAMETER LIST
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           @SEQ    5
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR #B
+     C*
+     C**   END PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    INDEX TO SUBROUTINES                                      *
+     C**   ----------------------                                     *
+     C**                                                              *
+     C**                                                              *
+     C**   #A      - INITIAL PROCESSING                               *
+     C**   #B      - MAIN PROCESSING                                  *
+     C**   #BA     - COUNTRY TAX RATES FULL REPORT                    *
+     C**   #BC     - COUNTRY TAX RATES AUDIT LIST                     *
+     C**   #ZA     - SET UP PRINTER FILE FOR DATABASE ERRORS          *
+     C**   #ZB     - SETUP OUTPUT FIELDS FOR TAX RATES REPORT         *
+     C**   #BB     - PROCESS FULL LIST RUN CONTROLS                   *
+     C**   #BD     - PROCESS AUDIT LIST RUN CONTROLS                  *
+     C**   *PSSR   - PROGRAM ERROR HANDLING SUBROUINE                 *
+     C**   RCFP1   - REGISTER P1 VIA RCF                              *
+     C**   RCFAU   - REGISTER AUDIT VIA RCF                           *
+     C**                                                              *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #B        - This subroutine performs Main processing       *
+     C**                                                              *
+     C**   CALLS     - #BA #BC                                        *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C           MODE      IFEQ 'I'
+     C           MODE      OREQ 'F'
+     C                     MOVE '1'       *IN53
+     C                     END
+     C*
+     C           MODE      IFEQ 'A'
+     C                     MOVE '1'       *IN52
+     C                     END
+     C*
+     C           MODE      IFEQ 'U'
+     C                     MOVE '1'       *IN51
+     C                     END
+     C*
+     C** CHECK INPUT PARAMETER
+     C*
+     C           MODE      IFEQ 'I'                        B1
+     C           MODE      OREQ 'F'
+     C*
+     C** FULL LIST
+     C*
+     C                     EXSR #BA
+     C*
+     C*
+     C** FULL LIST RUN CONTROLS PROCESSING
+     C*
+     C           RRPROG    IFNE 0
+     C                     EXSR #BB
+     C                     END
+     C*
+     C                     ELSE                            X1
+     C           MODE      IFEQ 'A'                        B*2
+     C           MODE      OREQ 'U'
+     C*
+     C** AUDIT LIST
+     C*
+     C                     EXSR #BC
+     C*
+     C** AUDIT LIST RUN CONTROLS PROCESSING
+     C*
+     C           RRPROG    IFNE 0
+     C                     EXSR #BD
+     C                     END
+     C*
+     C                     ELSE                            X*2
+     C*
+     C** STANDARD DATABASE ERROR HANDLING
+     C*
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'MODE'    DBFILE           ***************
+     C                     MOVELMODE      DBKEY            * DBERROR 002 *
+     C                     EXSR #ZA                        ***************
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #A        - This subroutine performs initial processing    *
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C                     Z-ADD*ZEROS    LINE1
+     C                     MOVE '1'       *IN40
+     C                     CLOSESE1920P1
+     C                     CLOSESECNTRL1
+     C                     CLOSESECNTRL0
+     C*
+     C** Initialise DB error fields and store program name for DB
+     C** error field
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'SE1920'  DBPGM
+     C                     OUT  LDA
+     C*
+     C** IN THE DATAAREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** Ensure Audit Spool File recorded by RCF
+     C*
+     C                     EXSR RCFAU
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           BJTYLC    OREQ 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'001'     DBASE            * DBERR 01 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     MOVE '1'       *IN99
+     C                     OUT  LDA
+     C                     EXSR #ZA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     MOVE '1'       WWFTT   1
+     C*
+     C** Initialise run controls work fields
+     C                     Z-ADD*ZEROS    RRPROG  50
+     C                     Z-ADD*ZEROS    RRPROI  50
+     C                     Z-ADD*ZEROS    RRPROA  50
+     C                     Z-ADD*ZEROS    RRTOTL  50
+      *
+      ** Open file according to mode
+      *
+     C           MODE      IFEQ 'I'
+     C                     OPEN SECNTRL0
+     C                     END
+     C           MODE      IFEQ 'A'
+     C                     OPEN SECNTRL1
+     C                     END
+     C           MODE      IFEQ 'F'
+     C                     OPEN SECNTRL0
+     C                     END
+     C           MODE      IFEQ 'U'
+     C                     OPEN SECNTRL1
+     C                     END
+     C*                                                                   084256
+     C**  Access SAR details file to see if Private Banking Securities    084256
+     C**  Trading Enhancements switchable feature is installed.           084256
+     C*                                                                   084256
+     C                     CALL 'AOSARDR0'                                084256
+     C                     PARM *BLANKS   @RTCD                           084256
+     C                     PARM '*VERIFY' @OPTN                           084256
+     C                     PARM 'S01496'  @SARD   6                       084256
+     C           SCSARD    PARM SCSARD    DSFDY                           084256
+     C*                                                                   084256
+     C           @RTCD     IFEQ *BLANK                                    084256
+     C                     MOVE 'Y'       S01496  1                       084256
+     C                     SETON                     31                   084256
+     C                     END                                            084256
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BA       - COUNTRY TAX RATES FULL REPORT                  *
+     C**                                                              *
+     C**   CALLS     - #ZB                                            *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C                     READ SECNTRL0                 70
+     C           *IN70     IFEQ '1'
+     C*
+     C** SETON FLAG TO INDICATE NULL REPORT
+     C*
+     C                     MOVE '1'       WWEMTF  1
+     C                     WRITEHEADER
+     C                     WRITENULL1
+     C                     ELSE
+     C           *IN70     DOWEQ'0'
+     C           TXRECI    IFEQ 'D'
+     C*
+     C** ADD 1 TO NUMBER OF RECORDS READ
+     C*
+     C                     ADD  1         RRPROG
+     C*
+     C** SET UP OUTPUT FIELDS FOR COUNTRY TAX RATES REPORT
+     C*
+     C                     EXSR #ZB
+     C                     END
+     C                     READ SECNTRL0                 70
+     C                     END
+     C*
+     C** NO LIVE RECORDS FOUND ON LF SECNTRL0
+     C*
+     C           RRPROG    IFEQ 0
+     C           WWEMTF    ANDNE'1'
+     C                     WRITEHEADER
+     C                     WRITENULL1
+     C                     ELSE
+     C*
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C                     WRITEFOOTING1
+     C                     END
+     C                     END
+     C                     CLOSESECNTRL0
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BC       - COUNTRY TAX RATES AUDIT LIST                   *
+     C**                                                              *
+     C**   CALLS     - #ZB                                            *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BC       BEGSR
+     C*
+     C           BJRDNB    SETLLSECNTRL1
+     C                     READ SECNTRL1                 70
+     C           *IN70     IFEQ '1'
+     C                     MOVE '1'       WWEMTF
+     C                     WRITEHEADER
+     C                     WRITENULL1
+     C                     ELSE
+     C           *IN70     DOWEQ'0'
+     C           BJRDNB    ANDEQTXLCD
+     C*
+     C** ADD 1 TO NUMBER OF INSERT RECORDS READ
+     C*
+     C           TXCHTP    IFEQ 'I'
+     C                     ADD  1         RRPROI
+     C                     ADD  1         RRPROG
+     C                     END
+     C*
+     C** ADD 1 TO NUMBER OF AMENDMENT RECORDS READ
+     C*
+     C           TXCHTP    IFEQ 'A'
+     C                     ADD  1         RRPROA
+     C                     ADD  1         RRPROG
+     C                     END
+     C*
+     C** SET UP OUTPUT FIELDS FOR COUNTRY TAX RATES REPORT
+     C*
+     C                     EXSR #ZB
+     C                     READ SECNTRL1                 70
+     C                     END
+     C*
+     C** NO LIVE RECORDS FOUND ON LF SECNTRL1 WITH LAST CHANGE DATE
+     C** EQUAL TO RUN DATE FROM SDBANKPD
+     C*
+     C           RRPROI    IFEQ 0
+     C           RRPROA    ANDEQ0
+     C           WWEMTF    ANDNE'1'
+     C                     WRITEHEADER
+     C                     WRITENULL1
+     C                     ELSE
+     C*
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C                     WRITEFOOTING1
+     C                     END
+     C                     END
+     C                     CLOSESECNTRL1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZA       - Process Database Errors                        *
+     C**                                                              *
+     C**   CALLS     - None                                           *
+     C**                                                              *
+     C**   CALLED BY - #A #B #BB                                      *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C           MODE      IFEQ 'I'
+     C                     MOVE '1'       *IN53
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     END
+     C*
+     C           MODE      IFEQ 'A'
+     C                     MOVE '1'       *IN52
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     END
+     C*
+     C           MODE      IFEQ 'F'
+     C                     MOVE '1'       *IN53
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     END
+     C*
+     C           MODE      IFEQ 'U'
+     C                     MOVE '1'       *IN51
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     END
+     C*
+     C           MODE      IFNE 'U'
+     C           MODE      ANDNE'A'
+     C           MODE      ANDNE'F'
+     C           MODE      ANDNE'I'
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZB       - SETUP OUTPUT FIELDS FOR TAX RATES REPORT       *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #BA #BC                                        *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZB       BEGSR
+     C*
+     C**  CHECK FOR FIRST TIME THROUGH
+     C           *IN40     IFEQ '1'
+     C                     MOVE '0'       *IN40
+     C*
+     C** Open printer file
+     C*
+     C                     OPEN SE1920P1
+     C*
+     C** RCF Processing for Detail Printer File
+     C*
+     C                     EXSR RCFP1
+     C                     END
+     C*
+     C                     MOVE TXCTTA    RRCODE
+     C                     MOVE TXTABD    RRBAND
+     C***********          MOVE TXRASO    RRTAXS                          084256
+     C           S01496    IFEQ 'Y'                                       084256
+     C                     Z-ADDTXRASO    RRTAX4                          084256
+     C                     ELSE                                           084256
+     C                     Z-ADDTXRASO    RRTAX2                          084256
+     C                     END                                            084256
+     C                     MOVE TXTADE    RRDESC
+     C*
+     C           TXCHTP    IFEQ 'I'
+     C                     MOVE 'INSERT'  RRACTN
+     C                     END
+     C*
+     C           TXCHTP    IFEQ 'A'
+     C                     MOVE 'AMEND '  RRACTN
+     C                     END
+     C*
+     C           TXCHTP    IFEQ 'D'
+     C                     MOVE 'DELETE'  RRACTN
+     C                     END
+     C*
+     C** SET UP LAST ACTIVITY DATE FOR OUTPUT
+     C*
+     C                     MOVE TXDLUP    TXDAY
+     C                     MOVE TXMLUP    TXMON
+     C                     MOVE TXYLUP    TXYER
+     C                     MOVE UPDATE    RRDATE
+     C*
+     C** SET UP LAST ACTIVITY TIME FOR OUTPUT
+     C*
+     C                     MOVE TXTLUP    RRTIME
+     C*
+     C           TXCTTA    IFNE SXCTTA
+     C*
+     C** ACCESS COUNTRY CODES FILE VIA ACCESS OBJECT
+     C*
+     C                     CALL 'AOCTRYR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM TXCTTA    @CNCD   2
+     C           SDCTRY    PARM SDCTRY    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'SDCTRYPD'DBFILE           ***************
+     C                     MOVELTXCTTA    DBKEY            * DBERROR 003 *
+     C                     EXSR #ZA                        ***************
+     C                     EXSR *PSSR
+     C                     OUT  LDA
+     C                     END
+     C                     END
+     C                     MOVE A4CNNM    RRCBNM
+     C                     MOVE TXCTTA    SXCTTA  2
+     C*
+     C           MODE      IFEQ 'I'
+     C           MODE      OREQ 'F'
+     C                     MOVE '1'       *IN30
+     C                     END
+     C*
+     C           MODE      IFEQ 'U'
+     C                     MOVE '1'       *IN50
+     C                     END
+     C*
+     C           LINE1     IFGT 55
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     MOVE '0'       WWFTT
+     C                     END
+     C*
+     C                     WRITEDETAIL1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BB       - PROCESS FULL LIST RUN CONTROLS                 *
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C** OUTPUT RUN CONTROLS REPORT
+     C*
+     C           MODE      IFEQ 'I'
+     C                     MOVE '1'       *IN53
+     C                     WRITEHEADER
+     C                     END
+     C           MODE      IFEQ 'F'
+     C                     MOVE '1'       *IN53
+     C                     WRITEHEADER
+     C                     END
+     C                     WRITEDETAILA
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BD       - PROCESS AUDIT LIST RUN CONTROLS                *
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BD       BEGSR
+     C*
+     C** OUTPUT RUN CONTROLS REPORT
+     C*
+     C           MODE      IFEQ 'U'
+     C                     MOVE '1'       *IN51
+     C                     END
+     C           MODE      IFEQ 'A'
+     C                     MOVE '1'       *IN52
+     C                     END
+     C                     WRITEHEADER
+     C                     WRITEDETAILB
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - Program error handling routine                 *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C**
+     C                     SETON                     U7U8LR
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C*
+     C                     END
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*******************************************************************
+     C*
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C*
+     C*******************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM @SEQ      SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*******************************************************************
+     C/EJECT
+     C****************************************************************
+     C*
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     C*
+     C*******************************************************************
+     C*
+     C           RCFAU     BEGSR                            ** RCFAU **
+     C*
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM @SEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,64 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Get Driver keys for Referral/Excess Extr')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC3760RD - Midas RE Get Driver keys for Retail and Excess  */
+/*                   Report Extract                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD022097  *CREATE  Date 30Aug13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD022097 - Low performance of REC3760T2                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SKEYVALUE &EKEYVALUE)
+ 
+             DCL        VAR(&SKEYVALUE) TYPE(*CHAR) LEN(24)
+             DCL        VAR(&EKEYVALUE) TYPE(*CHAR) LEN(24)
+             DCLF       FILE(RERACDPD)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                             EXEC(GOTO ABNOR)
+ 
+             SNDPGMMSG  MSG('REC3760RD - Midas RE Get Driver keys +
+                          for Referral and Excess Report Extract') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Get the Start and End Key to be processed */
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+ 
+             CHGVAR     VAR(%SST(&SKEYVALUE 1 3)) VALUE(&SBRCA)
+             CHGVAR     VAR(%SST(&SKEYVALUE 4 6)) VALUE(&SCNUM)
+             CHGVAR     VAR(%SST(&SKEYVALUE 10 3)) VALUE(&SCCY)
+             CHGVAR     VAR(%SST(&SKEYVALUE 13 10)) VALUE(&SACOD)
+             CHGVAR     VAR(%SST(&SKEYVALUE 23 2)) VALUE(&SACSQ)
+             CHGVAR     VAR(%SST(&EKEYVALUE 1 3)) VALUE(&EBRCA)
+             CHGVAR     VAR(%SST(&EKEYVALUE 4 6)) VALUE(&ECNUM)
+             CHGVAR     VAR(%SST(&EKEYVALUE 10 3)) VALUE(&ECCY)
+             CHGVAR     VAR(%SST(&EKEYVALUE 13 10)) VALUE(&EACOD)
+             CHGVAR     VAR(%SST(&EKEYVALUE 23 2)) VALUE(&EACSQ)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSG('Program REC3760RD ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

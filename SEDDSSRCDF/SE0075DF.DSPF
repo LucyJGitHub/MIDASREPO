@@ -1,0 +1,435 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SE Depot Transfers')
+      *****************************************************************
+      *                                                               *
+      *  Midas - (Module Name) Module                                 *
+      *                                                               *
+      *  DSPF/SE0075DF - Midas SE Bulk Depot Transfer Display         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 29Nov05               *
+      *  Prev Amend No. 216805             Date 16Apr03               *
+      *                 203363             Date 07Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE016             Date 10Jan01               *
+      *                 CSE027  *CREATE    Date 29Jan01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  216805 - Movement Subtype field not included. Fix is to      *
+      *           include this field if Correspondence Manager or     *
+      *           Private Banking module is on.                       *
+      *  203363   Do not display the average price if global transfer *
+      *  CSE016 - Extended Security Descriptions                      *
+      *  CSE027 - Bulk Depot Transfer.                                *
+      *                                                               *
+      *****************************************************************
+     A                                      REF(MFRFL)
+     A*                                     DSPSIZ(24 80 *DS3)
+     A                                      PRINT(*LIBL/MPRINT)
+     A                                      INDARA
+     A                                      VLDCMDKEY(50 'ANY VALID KEY')
+     A          R SE0075F0                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      ROLLUP(65)
+     A                                      ROLLDOWN(66)
+     A                                      BLINK
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CHANGE(19)
+      *
+     A          R SE0075F1
+      *
+     A                                      CA03
+     A                                      OVERLAY
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'SE0075F1'
+     A                                  1 34'Bulk Depot Transfer'
+     A                                      DSPATR(UL HI)
+     A                                  1 66'Date: '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 66'Time: '
+     A                                  2 73TIME
+      *
+     A                                  4  2'Action'
+     A            ACTN           1A  B  4  9DSPATR(HI)
+     A N05N21                               DSPATR(UL)
+     A  05                                  DSPATR(PR)
+     A  21                                  DSPATR(RI)
+     A  21                                  DSPATR(PC)
+     A  88                              4 12'Branch'
+     A  88        XDTBR          3A  B  4 22DSPATR(HI)
+     A N05N24                               DSPATR(UL)
+     A  05                                  DSPATR(PR)
+     A  24                                  DSPATR(RI)
+     A  24                                  DSPATR(PC)
+     A                                  5 12'Security'
+     A            XDTSS         10A  B  5 22DSPATR(HI)
+     A N05N22                               DSPATR(UL)
+     A  05                                  DSPATR(PR)
+     A  22                                  DSPATR(RI)
+     A  22                                  DSPATR(PC)
+     A                                  6 12'Reference'
+     A            XDTRN          6A  B  6 22DSPATR(HI)
+     A N05N23                               DSPATR(UL)
+     A  05                                  DSPATR(PR)
+     A  23                                  DSPATR(RI)
+     A  23                                  DSPATR(PC)
+     A                                  6 47'Review from'
+     A  05                                  DSPATR(ND)
+     A  88        PDTBR          3A  B  6 59DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  05                                  DSPATR(PR)
+     A  05                                  DSPATR(ND)
+     A            PDTSS         10A  B  6 63DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  05                                  DSPATR(PR)
+     A  05                                  DSPATR(ND)
+     A            PDTRN          6A  B  6 74DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  05                                  DSPATR(PR)
+     A  05                                  DSPATR(ND)
+      *
+     A          R CLSCREEN
+      *
+     A                                  1  2' '
+      *
+     A          R SE0075S0                  SFL
+      *
+     A  85                                  SFLNXTCHG
+     A            DTCUBK         6A  H
+     A            DTDPNA        11  0H
+      * Begin /CSD027/
+     A**********  DTDPOD         6  0H                                                        CSD027
+     A**********  DTDPID         6  0H                                                        CSD027
+     A            DTDPOD         6A  H
+     A            DTDPID         6A  H
+      * End /CSD027/
+     A            DTDPMD         5  0H
+     A            DTDPMK         1A  H
+     A            DTPTFR         4A  H
+     A            DTDPNR        35A  H
+     A**Start of change 216805
+     A            DTMSTP         2A  H
+     A**End of change 216805
+     A            XNMDP          1  0H
+     A            MKPR          15  8H
+     A            ACTN           1A  B  9  5DSPATR(HI)
+     A N21                                  DSPATR(UL)
+     A  21                                  DSPATR(RI)
+     A  21                                  DSPATR(PC)
+     A            DTDPBA         3   O  9 10DSPATR(HI)
+     A N88                                  DSPATR(ND)
+     A            DTDPSS        10A  O  9 18DSPATR(HI)
+     A            DTDPRN         6   O  9 32DSPATR(HI)
+     A            SDTID          6A  O  9 43DSPATR(HI)
+     A            SDTOD          6A  O  9 52DSPATR(HI)
+     A            SDTNA         15   O  9 61DSPATR(HI)
+      *
+     A          R SE0075C0                  OVERLAY
+      *
+     A                                      SFLCTL(SE0075S0)
+     A                                      SFLSIZ(0012)
+     A                                      SFLPAG(0012)
+     A                                      CA03
+     A                                      CA05
+     A                                      CA12
+     A                                      ROLLUP(65)
+     A N04                                  ROLLDOWN(66)
+     A  01                                  SFLDSP
+     A  02                                  SFLDSPCTL
+     A N01N02                               SFLCLR
+     A  03                                  SFLEND
+     A            RRN            4S 0H      SFLRCDNBR
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'SE0075F2'
+     A                                  1 34'Bulk Depot Transfer'
+     A                                      DSPATR(UL HI)
+     A                                  1 66'Date: '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 66'Time: '
+     A                                  2 73TIME
+      *
+     A                                  4 47'Review from'
+     A  88        PDTBR          3A  B  4 59DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            PDTSS         10A  B  4 63DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            PDTRN          6A  B  4 74DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  88                              6  5'E   Branch   Security     Transf+
+     A                                      er    Depot    Depot     Nominal A+
+     A                                      mount'
+     A  88                              7  5'     Code                 Refere+
+     A                                      nce    In       out '
+     A N88                              6  5'E            Security     Transf+
+     A                                      er    Depot    Depot     Nominal A+
+     A                                      mount'
+     A N88                              7  5'                          Refere+
+     A                                      nce    In       out '
+      *
+     A          R SE0075S1                  SFL
+      *
+     A  84                                  SFLNXTCHG
+      * Begin /CSD027/
+     A**********  XDTOD          6S 0H                                                        CSD027
+     A            XDTOD          6A  H
+      * End /CSD027/
+     A            DTODRN        20A  H
+     A            DSNT          15  0H
+     A            DSNV          15  0H
+     A            DSNS          15  0H
+     A            SSELD          1A  B 11  2DSPATR(HI)
+     A N20                                  DSPATR(UL)
+     A  20                                  DSPATR(RI PC)
+     A            DTODSN        10A  O 11  6DSPATR(HI)
+     A            SDSNT         17   O 11 23DSPATR(HI)
+     A            SDSNV         17   O 11 42DSPATR(HI)
+     A            SDSNS         17A  O 11 61DSPATR(HI)
+      *
+     A          R SE0075C1                  OVERLAY
+      *
+     A                                      SFLCTL(SE0075S1)
+     A                                      CA03
+     A                                      CA12
+     A                                      SFLSIZ(0011)
+     A                                      SFLPAG(0010)
+     A N48                                  SFLEND(*MORE)
+     A N61                                  SFLDSPCTL
+     A N61N68                               SFLDSP
+     A  61                                  SFLCLR
+     A            RRND           4S 0H      SFLRCDNBR
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'SE0075F3'
+     A                                  1 34'Bulk Depot Transfer'
+     A                                      DSPATR(UL HI)
+     A                                  1 66'Date: '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 66'Time: '
+     A                                  2 73TIME
+      *
+     A                                  4  2'Action'
+     A            ACTN           1A  O  4  9DSPATR(HI)
+     A  88                              4 12'Branch'
+     A  88        XDTBR          3A  O  4 22DSPATR(HI)
+     A                                  5 12'Security'
+     A            XDTSS         10A  O  5 22DSPATR(HI)
+     A**Start of change CSE016
+     A**********  SECURN        20A  O  5 35DSPATR(HI)                    CSE016
+     A            XSRNM         41A  O  5 33DSPATR(HI)
+     A**End of change CSE016
+     A                                  6 12'Reference'
+     A            XDTRN          6A  O  6 22DSPATR(HI)
+     A                                  8  2'1   Depository      --------------+
+     A                                      ---- Nominal Value At ------------+
+     A                                      -------'
+     A                                  9 29'Trade Date         Value Date    +
+     A                                        Settlement Date'
+      *
+     A          R SE0075S2                  SFL
+      *
+     A  84                                  SFLNXTCHG
+     A            WNOMA         15  0H
+     A            WNOMT         11  0H
+     A            DSNT          15  0H
+     A            DSNV          15  0H
+     A            WPTFR          4   H
+     A            SSELC          1A  B 12  2DSPATR(HI)
+     A N20                                  DSPATR(UL)
+     A  20                                  DSPATR(RI PC)
+     A            SCUBO          6A  O 12  5DSPATR(HI)
+     A            SNAME         10A  O 12 12DSPATR(HI)
+     A            SMK            1A  O 12 25DSPATR(HI)
+     A            SPTFR          4A  O 12 32DSPATR(HI)
+     A N09                                  DSPATR(ND)
+     A            SNOMA         16A  O 12 43DSPATR(HI)
+     A            SNOMT         11A  O 12 68DSPATR(HI)
+      *
+     A          R SE0075C2                  OVERLAY
+      *
+     A                                      SFLCTL(SE0075S2)
+     A                                      CA03
+     A                                      CA12
+     A***  Start 203363
+     A*N75N74*****  *                       CF09
+     A N75N74                               CF09(80)
+     A***  End   203363
+     A  75                                  CF23
+     A                                      SFLSIZ(0010)
+     A                                      SFLPAG(0009)
+     A N48                                  SFLEND(*MORE)
+     A N61                                  SFLDSPCTL
+     A N61N69                               SFLDSP
+     A  61                                  SFLCLR
+     A            RRNC           4S 0H      SFLRCDNBR
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'SE0075F4'
+     A                                  1 34'Bulk Depot Transfer'
+     A                                      DSPATR(UL HI)
+     A                                  1 66'Date: '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 66'Time: '
+     A                                  2 73TIME
+      *
+     A                                  4  2'Action'
+     A            ACTN           1A  O  4  9DSPATR(HI)
+     A  88                              4 12'Branch'
+     A  88        XDTBR          3A  O  4 23DSPATR(HI)
+     A                                  5 12'Security'
+     A            XDTSS         10A  O  5 23DSPATR(HI)
+     A**Start of change CSE016
+     A**********  SECURN        20A  O  5 34DSPATR(HI)                    CSE016
+     A            XSRNM         41A  O  5 34DSPATR(HI)
+     A**End of change CSE016
+     A                                  6 12'Reference'
+     A            XDTRN          6A  O  6 23DSPATR(HI)
+     A                                  7  7'From Depository'
+      * Begin /CSD027/
+     A**********  XDTOD          6  0H                                                        CSD027
+     A            XDTOD          6A  H
+      * End /CSD027/
+     A            DTODSN        10A  O  7 23DSPATR(HI)
+     A            DTODRN        20A  O  7 34DSPATR(HI)
+     A                                  8 12'Nominal'
+     A            SDSNV         17A  O  8 23DSPATR(HI)
+     A  09                             10  2'1  Customer/Book      Mrkt  Portfo+
+     A                                      lio  Nominal Available  Nominal to +
+     A                                       Transfer'
+     A N09                             10  2'1  Customer/Book      M+
+     A                                      rkt             Nominal Available  +
+     A                                      Nominal to Transfer'
+      *
+     A          R SE0075F2                  OVERLAY
+      *
+     A                                      CA03
+     A                                      CA12
+     A  74                                  CF23
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'SE0075F5'
+     A                                  1 34'Bulk Depot Transfer'
+     A                                      DSPATR(UL HI)
+     A                                  1 66'Date: '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+      *
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 66'Time: '
+     A                                  2 73TIME
+     A  88                              4 12'Branch'
+     A  88        XDTBR          3A  O  4 22DSPATR(HI)
+     A                                  5 12'Security'
+     A            XDTSS         10A  O  5 22DSPATR(HI)
+     A**Start of change CSE016
+     A**********  SECURN        20A  O  5 34DSPATR(HI)                    CSE016
+     A            XSRNM         41A  O  5 33DSPATR(HI)
+     A**End of change CSE016
+     A                                  6 12'Reference'
+     A            DDTRN          6   O  6 22DSPATR(HI)
+     A                                  8 17'From Depository'
+      * Begin /CSD027/
+     A**********  XDTOD          6  0H                                                        CSD027
+     A            XDTOD          6A  H
+      * End /CSD027/
+     A            DTODSN        10A  O  8 33DSPATR(HI)
+     A            DTODRN        20A  O  8 44DSPATR(HI)
+     A                                  9 17'Nominal'
+     A            SDSNV         17A  O  9 33DSPATR(HI)
+     A                                 10 17'Customer/Book'
+     A  73                                  DSPATR(ND)
+     A            DDTCN          6A  H
+     A            DDTCNN        10A  O 10 33DSPATR(HI)
+     A  73                                  DSPATR(ND)
+     A                                 11 17'Market'
+     A  73                                  DSPATR(ND)
+     A            DDTMK          1A  O 11 33DSPATR(HI)
+     A  73                                  DSPATR(ND)
+     A                                 12 17'Portfolio'
+     A N09
+     AO 73                                  DSPATR(ND)
+     A            DDTPT          4A  O 12 33DSPATR(HI)
+     A N09
+     AO 73                                  DSPATR(ND)
+     A                                 14 12'To depository'
+     A            DDTID         10A  B 14 26DSPATR(HI)
+     A N41N13                               DSPATR(UL)
+     A  41                                  DSPATR(RI)
+     A  41                                  DSPATR(PC)
+     A  13                                  DSPATR(PR)
+     A
+     A                                 16 12'Transfer Date'
+     A            DDTDI          6A  B 16 26DSPATR(HI)
+     A N42N13                               DSPATR(UL)
+     A  42                                  DSPATR(RI)
+     A  42                                  DSPATR(PC)
+     A  13                                  DSPATR(PR)
+     A**Start of change 216805
+     A                                 16 45'Mvt Subtype'
+     A N09N34                               DSPATR(ND)
+     A            DMSTP          2A  B 16 57DSPATR(HI)
+     A N47N13                               DSPATR(UL)
+     A  47                                  DSPATR(RI)
+     A  47                                  DSPATR(PC)
+     A  13                                  DSPATR(PR)
+     A N09N34                               DSPATR(ND)
+     A**End of change 216805
+     A                                 18 12'Nominal'
+     A            DDTNA         11A  B 18 26DSPATR(HI)
+     A N43N13N73                            DSPATR(UL)
+     A  43                                  DSPATR(RI)
+     A  43                                  DSPATR(PC)
+     A  73
+     AO 13                                  DSPATR(PR)
+     A                                 18 45'Average price'
+     A***  Start 203363
+     A  80
+     AO 13                                  DSPATR(ND)
+     A**13                                  DSPATR(ND)
+     A***  End   203363
+     A            DDTMP         16A  O 18 60DSPATR(HI)
+     A***  Start 203363
+     A  80
+     AO 13                                  DSPATR(ND)
+     A**13                                  DSPATR(ND)
+     A***  End   203363
+     A                                 20 12'Narrative'
+     A            DDTNR         35A  B 20 26DSPATR(HI)
+     A N13                                  DSPATR(UL)
+     A  13                                  DSPATR(PR)
+      *
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(22)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+      *
+     A          R #MSGCTL                   TEXT('Program messages')
+      *
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(15)
+     A                                      OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  99
+     AON99                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A          R SE0075F3                  TEXT('Command keys')
+     A                                      OVERLAY
+     A  14                             24  2'F3=Exit'
+     A  15                             24  2'F3=Exit   F5=Refresh   F12=Cancel'
+     A  16                             24  2'F3=Exit   F12=Cancel'
+     A  17                             24  2'F3=Exit   F9=Global   F12=Cancel  '
+     A  18                             24  2'F3=Exit   F12=Cancel  F23=Confirm +
+     A                                      Transfer'

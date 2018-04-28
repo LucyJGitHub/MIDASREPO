@@ -1,0 +1,849 @@
+     H        1
+     F********************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL MDDR Usage (70/100%) Report')                 *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - DEALING MODULE
+     F*                                                                  *
+     F*      DL0764 - MDDR USAGE (70/100%) REPORT                        *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 236334             Date 06Jan06               *
+      *                 218582             Date 06Jun06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 191399             Date 20Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163486             Date 14Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                     160828     Date 05Jul99                   *
+     F*                     CDL002     DATE 17SEP97                      *
+     F*                     096917     DATE 04APR97                      *
+     F*                     088141     DATE 09AUG95                      *
+     F*                     S01393     DATE 30OCT92                      *
+     F*                     E28817     DATE 14OCT91                      *
+     F*                     E25515     DATE 08AUG91                      *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  236334 - DLC0806 often fails due to FCOOB. Recompiled due to *
+      *           change in length of NORE in PF/EVLXCEG. Applied fix *
+      *           213645.                                             *
+      *  218582 - DLC0806 often fails due to FCOOB. Recompiled due to *
+      *           change in length of NORE in PF/EVLXCEG. Applied fix *
+      *           213645.                                             *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*      191399 - Recompile due to removal of 160828 from EVLSX.     *
+     F*      163486 - Recompile due to changes in LVENTEL.               *
+     F*      160828 - Recompile due to changes in EVLSX.                 *
+     F*      CDL002 - FX Netting. Exclude netted FX deal events and      *
+     F*               include FX net events.                             *
+     F*      096917 - Various problems with DL0764P1 report.             *
+     F*      088141 - Print client limit even if no exposure.            *
+     F*      S01393 - RECOMPILED FOR STRATEGIC RISK MANAGEMENT           *
+     F*      E28817 - STEVEAB and STEVEFC are now redundant              *
+     F*      E25515 - REMOVAL OF SYNDICATED LOANS                        *
+     F*                                                                  *
+     F********************************************************************
+     F/COPY WNCPYSRC,DL0764F001
+     FEVLSX   IP  E           K        DISK
+     F/COPY WNCPYSRC,DL0764F002
+     F************STEVEABF                          KIGNORE               E28817
+     F************CEVNXCCF                          KIGNORE               E25515
+     F            LVENTELF                          KIGNORE
+     FFXNEVTL0IS  E           K        DISK                           U3  CDL002
+     F*                                                                   CDL002
+     F** FX Net Events                                                    CDL002
+     FDEALS   IF  E           K        DISK                           UC  CDL002
+     F*                                                                   CDL002
+     F** Deals                                                            CDL002
+     F            DEALSDAF                          KIGNORE               CDL002
+     F            DEALSDCF                          KIGNORE               CDL002
+     F            DEALSDDF                          KIGNORE               CDL002
+     F            DEALSDEF                          KIGNORE               CDL002
+     F            DEALSDFF                          KIGNORE               CDL002
+     F            DEALSDGF                          KIGNORE               CDL002
+     FEVLSXA  IF  E           K        DISK                               096917
+     F            EVLXCEDF                          KRENAMEEVLXCED1       096917
+     F            EVNTXEDF                          KRENAMEEVNTXED1       096917
+     F/COPY WNCPYSRC,DL0764F003
+     FDL0764AUO   F     132            PRINTER      KINFDS SPOOLU
+     FDL0764P1O   F     132     OF     PRINTER      KINFDS SPOOL
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            EVENT RECORD
+     F* 02            EVENTS LIMIT RECORD
+     F* 03            EVENTS FILE TRAILER
+     F* 06            FX NET EVENT RECORD                                 CDL002
+     F*       09      DETAIL OUTPUT INDICATOR
+     F*       15      USAGE IS LESS THAN 70%
+     F*       22      NEGATIVE AVAILABILITY (EXCESS) INDICATOR
+     F*       25      NEGATIVE EVENT AMOUNT
+     F*       46      NO DETAILS TO REPORT
+     F*       55      EVLSXA CHAIN INDICATOR                              096917
+     F*       85      No record on DEALS                              *   CDL002
+     F*       90-99N97STANDARD MIDAS SUBROUTINE INDICATORS
+     F*       U3      FX NETTING SWITCHABLE FEATURE ON                *   CDL002
+     F*          U7&U8CHAIN FAIL SWITCHES
+     F*          U8   FILES OUT OF BALANCE SWITCH
+     F*         U4    REPORT IS TO INCLUDE ALL EXPOSURES - PERCENTAGE
+     F*                   OF LIMITS IS TO BE DISREGARDED
+     F*        NU4    REPORT IS TO INCLUDE ONLY THOSE WITH EXPOSURES
+     F*                   GT/EQ TO 70% OF LIMIT
+     F*            L1 EVENT DATE CONTROL BREAK
+     F*            L2 CUSTOMER NUMBER CONTROL BREAK
+     F*            OF OVERFLOW
+     E                    CPY@    1   1 80
+     E                    FCT     1   4  4 0             DECIMAL PT. CONV.
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     IEVLXCEDF    01
+     I***********                                   CUNR  L2              CDL002
+     I                                              CUNR  L2M1            CDL002
+     I                                              CASK    M2            CDL002
+     I                                              EDAT  L1
+     I*
+     I*    EVLXCED - EVENTS BY PARENT
+     IEVNTXEDF    01
+     I***********                                   CUNR  L2              CDL002
+     I                                              CUNR  L2M1            CDL002
+     I                                              CASK    M2            CDL002
+     I                                              EDAT  L1
+     I*
+     I*    EVNTXED - EVENTS BY CUSTOMER
+     I/COPY WNCPYSRC,DL0764I001
+     IEVLXCEEF    02
+     I***********                                   CUNR  L2              CDL002
+     I                                              CUNR  L2M1            CDL002
+     I                                              CASK    M2            CDL002
+     I                                              EDAT  L1
+     I*
+     I*    EVLXCEE - EVENTS LIMIT RECORD
+     IEVLXCEGF    03
+     I*
+     I*    EVENTS FILE - TRAILER RECORD.
+     IEVLXCECF
+     I*
+     I**   EVENTS FILE - CATCHALL
+     I*
+     IFXNEVTD0    06                                                      CDL002
+     I                                              CUNR  L2M1            CDL002
+     I                                              CASK    M2            CDL002
+     I                                              EDAT  L1              CDL002
+     I*                                                                   CDL002
+     I*    FXNEVTPD - FX NET EVENTS BY CUSTOMER                           CDL002
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I** EXTERNAL DS FOR CUSTOMER DETAILS
+     I*
+     ISDDEAL    E DSSDDEALPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** EXTERNAL DS FOR CURRENCY DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     ISPOOL       DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I**
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I**
+     I********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C********************************************************************
+     C*
+     C**   ON FIRST CYCLE - GET ICDR1 & 2
+     C*
+     C   40                GOTO DETAIL
+     C                     SETON                     OF
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0764'  DBPGM
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* Call Access Prog. For BANK DETAILS.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C* If error occurs...
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'01'      DBASE            * DBERR 01 *
+     C                     MOVEL@OPTN     DBOPTN           ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*
+     C** TEST DATE FORMAT VALUE
+     C*
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C* Call Access Prog. To Obtain DEAL DETAILS For Base CCY For Limits
+     C*
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*
+     C* If error occurs...
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDDEALPD'DBFILE           ************
+     C                     MOVEL'02'      DBASE            * DBERR 02 *
+     C                     MOVEL@OPTN     DBOPTN           ************
+     C                     MOVEL@OPTN     DBKEY
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*
+     C* Call Access Prog. to obtain CURRENCY DETAILS for Decimal Places
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BNCYCD    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C* If error occurs...
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVEL'03'      DBASE            * DBERR 03 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     MOVEL@AJCD     DBKEY  29
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C           A6NBDP    ADD  1         DEP     10
+     C*                                                                   CDL002
+     C** Only do FX Netting processing if switchable feature CDL002       CDL002
+     C** is on, which is worked out by DLC0763 which switches on U3,      CDL002
+     C** and Limits Reports are to include FX Netting Events.             CDL002
+     C*                                                                   CDL002
+     C                     MOVEL'N'       CDL002  1                       CDL002
+     C                     MOVEL'N'       W#NTCE  1                       CDL002
+     C*                                                                   CDL002
+     C           *INU3     IFEQ '1'                                       CDL002
+     C                     MOVEL'Y'       CDL002                          CDL002
+     C*                                                                   CDL002
+     C           BNNTCE    IFEQ 'Y'                                       CDL002
+     C                     MOVELBNNTCE    W#NTCE                          CDL002
+     C                     OPEN DEALS                                     CDL002
+     C                     END                                            CDL002
+     C                     END                                            CDL002
+     C*                                                                   CDL002
+     C                     OUT  LDA
+     C*****************************************************
+     C                     SETON                         40
+     C           DETAIL    TAG                             ** D E T A I L*
+     C*
+     C*****************************************************************
+     C*
+     C* IF TRAILER READ -
+     C*
+     C   03                GOTO TRAIL
+     C*
+     C* IF NOT EVENT OR LIMIT RECORD -
+     C*
+     C**N01N02***          GOTO END                                       CDL002
+     C  N01N02N06          GOTO END                                       CDL002
+     C*
+     C*****************************************************************
+     C*
+     C**  CALCULATE 70% OF RLAM FROM LIMIT REC.
+     C*
+     C   L2N02             Z-ADD0         RLAM
+     C   L2      RLAM      MULT .70       SVNTY   90H
+     C**
+     C**
+     C** ZEROIZE RECORDS READ,TOTAL AMOUNT & DATE TOTAL ON DATE CHANGE
+     C**
+     C   L1                Z-ADD0         TREAD
+     C   L1                Z-ADD0         TEAMT
+     C   L1                Z-ADD0         DATOT
+     C**
+     C**  HASH TOTALLING ROUTINE
+     C**
+     C                     ADD  1         HASHN   70
+     C           *IN01     IFEQ '1'
+     C           *IN06     OREQ '1'                                       CDL002
+     C           EAMT      MULT .001      ZZAMT        25
+     C      25             Z-SUBZZAMT     ZZAMT
+     C                     EXSR HASH
+     C                     ELSE
+     C*
+     C*      (IF NOT EVENT RECORD)
+     C*                                                                   088141
+     C           *IN02     IFEQ '1'                                       088141
+     C           FLTY      ANDNE0                                         088141
+     C           FLED      ANDGEBJRDNB                                    088141
+     C           RLAM      ANDGT0                                         096917
+     C*                                                                   096917
+     C           CUNR      CHAINEVLSXA               55                   096917
+     C           *IN55     IFEQ '0'                                       096917
+     C                     GOTO END                                       096917
+     C                     END                                            096917
+     C*                                                                   096917
+     C                     ADD  1         TREAD   40                      088141
+     C                     END                                            088141
+     C*
+     C                     GOTO END
+     C                     END
+     C**
+     C** IF CUSTOMER HAS A PARENT, IGNORE THIS CUSTOMER
+     C** (IT WILL BE REPORTED UNDER ITS PARENT)
+     C**
+     C           PTNU      IFNE *BLANKS
+     C           PTNU      ANDNE'000000'
+     C/COPY WNCPYSRC,DL0764C001
+     C                     GOTO END
+     C                     END
+     C**
+     C*  CHECK IF EVENT IS TO BE INCLUDED IN REPORTING
+     C**
+     C           DTYP      IFNE 'FP'
+     C           DTYP      ANDNE'FS'
+     C           DTYP      ANDNE'CX'
+     C           DTYP      ANDNE'PI'
+     C           DTYP      ANDNE'SI'
+     C           DTYP      ANDNE'OT'
+     C           DTYP      ANDNE'SW'
+     C/COPY WNCPYSRC,DL0764C002
+     C                     GOTO END
+     C                     END
+     C*                                                                   CDL002
+     C** Do not include FX deals if the buy amount has been netted.       CDL002
+     C*                                                                   CDL002
+     C           W#NTCE    IFEQ 'Y'                                       CDL002
+     C           *IN01     ANDEQ'1'                                       CDL002
+     C*                                                                   CDL002
+     C           DLNO      CHAINDEALSDBF             85                   CDL002
+     C*                                                                   CDL002
+     C           *IN85     IFEQ '1'                                       CDL002
+     C                     MOVEL'DEALS'   DBFILE           ************   CDL002
+     C                     MOVELDLNO      DBKEY            * DB ERR 4 *   CDL002
+     C                     Z-ADD4         DBASE            ************   CDL002
+     C                     SETON                     U7U8LR               CDL002
+     C                     EXSR *PSSR                                     CDL002
+     C                     GOTO END                                       CDL002
+     C*                                                                   CDL002
+     C                     ELSE                                           CDL002
+     C           NETBR     IFNE *BLANKS                                   CDL002
+     C                     GOTO END                                       CDL002
+     C                     END                                            CDL002
+     C                     END                                            CDL002
+     C                     END                                            CDL002
+     C*                                                                   CDL002
+     C** Only include FX nets if it is a buy net                          CDL002
+     C*                                                                   CDL002
+     C           *IN06     IFEQ '1'                                       CDL002
+     C           INOI      IFNE 'I'                                       CDL002
+     C           W#NTCE    ORNE 'Y'                                       CDL002
+     C                     GOTO END                                       CDL002
+     C                     END                                            CDL002
+     C                     END                                            CDL002
+     C**
+     C** UPDATE RECORDS LISTED & TOTAL AMT
+     C**
+     C                     ADD  1         TREAD   40
+     C                     ADD  EAMT      TEAMT  130
+     C**
+     C**  CONVERT EVENT DATE TO REPORT FORM
+     C**
+     C                     MOVE EDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C**
+     C**  CONVERT LIM. CUR. EQIV. TO WHOLE UNITS
+     C**
+     C           A6NBDP    ADD  1         DEP
+     C           LCEQ      DIV  FCT,DEP   WRK130 130H
+     C**
+     C**  ACCUMULATE EVENT AMOUNT
+     C**
+     C                     ADD  WRK130    DATOT  150
+     C                     GOTO END
+     C**
+     C           TRAIL     TAG                             ** T R A I L **
+     C**
+     C                     ADD  2         HASHN
+     C**
+     C           END       TAG                             **  END TAG **
+     C**
+     C**  T O T A L    C A L C U L A T I O N S
+     C**
+     C**  L1 EVENT DATE CONTROL BREAK
+     C**
+     CL1 U7 U8             GOTO BYPRNT
+     C**
+     C**   IF NO EVENTS READ FOR THIS DATE, THEN BYPASS PRINT
+     C**
+     CL1                   SETOF                         09
+     CL1         TREAD     IFEQ 0
+     CL1                   GOTO BYPRNT
+     CL1                   END
+     C**
+     C**
+     CL1         DATOT     DIV  1000      TOTOUT 120H
+     CL1         TOTOUT    COMP 0                        15
+     CL1N15NU4   TOTOUT    COMP SVNTY                  15
+     C**
+     C**   IF 70 % NOT EXCEEDED & ONLY THESE ARE REQUIRED, THEN BYPASS PRINT
+     C**
+     CL1 15NU4             GOTO BYPRNT
+     C**
+     C**   SET ON INDICATOR (09) TO DO OUTPUT
+     C**
+     CL1         TOTOUT    IFEQ 0                                         096917
+     CL1                   MOVE *BLANKS   ZADATE                          096917
+     CL1                   END                                            096917
+     CL1                   SETON                     09
+     C**
+     C**   HASH TOTALS FOR REPORTED RECORDS
+     C**
+     C***L1******          ADD  TREAD     TLIST   40                      096917
+     CL1                   ADD  1         TLIST   40                      096917
+     CL1         TEAMT     MULT .001      ZZAMT        25
+     CL1 25                Z-SUBZZAMT     ZZAMT
+     CL1                   EXSR RHASH
+     C**
+     CL1         RLAM      SUB  TOTOUT    DIFF   120   22
+     C**
+     CL1         BYPRNT    TAG                             *  BYPRNT TAG *
+     C**
+     CLRNU7      TLIST     COMP 0                        46
+     C**
+     C** CALL ZSFILE FOR P1 FILE - ONCE - ONLY IF DETAILS TO REPORT
+     CLR         *IN46     IFEQ '0'
+     CLR                   Z-ADDSFNUM     ZSNUM   60
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANKS   @PARM   3
+     CLR                   PARM           SFILE
+     CLR                   PARM           ZSNUM
+     CLR                   PARM           ZSERR   1
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C** Error during ZSFILE processing, return to calling program
+     CLR                   SETON                     U7U8LR
+     CLR                   RETRN
+     CLR                   END
+     CLR                   END
+     C**
+     C**
+     C** CALL ZSFILE FOR AU FILE - ONCE ONLY
+     CLR                   Z-ADDSFNUMU    ZSNUM   60
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANKS   @PARM   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUM
+     CLR                   PARM           ZSERR   1
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C** Error during ZSFILE processing, return to calling program
+     CLR                   SETON                     U7U8LR
+     CLR                   RETRN
+     CLR                   END
+     C**
+     C********************************************************************
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C********************************************************************
+     C*    SR TO ADD REPORTED AMOUNT TO HASH TOTAL ARRAYS
+     C           RHASH     BEGSR
+     C                     Z-ADDRINT      ZZTOTI
+     C                     Z-ADDRDEC      ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    RINT   150
+     C                     Z-ADDZZTOTD    RDEC    30
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*    SR TO ADD AMOUNT TO HASH TOTAL ARRAYS
+     C           HASH      BEGSR
+     C                     Z-ADDINT       ZZTOTI
+     C                     Z-ADDDEC       ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    INT    150
+     C                     Z-ADDZZTOTD    DEC     30
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     ODL0764P1H   03   OF
+     O                                   22 'REFERENCE DL0764P1'
+     O                         BJURPT    89
+     O                                  122 'DATE              PAGE'
+     O                         BJMRDT   112
+     O                         PAGE  Z  127
+     O        H 2      OF
+     O                                   76 'MDDR USAGE IN 000''S'
+     O                         BNCYCD    80
+     O                 U4                91 ' - COMPLETE'
+     O                NU4                97 ' - EXPOSURES 70+%'
+     O        H 1      OF
+     O                                   76 '-------------------'
+     O                                   80 '------------'
+     O        H 32     OF
+     O                                   21 'CUSTOMER'
+     O                                   55 'MDDR AMOUNT'
+     O                                   72 '70% OF MDDR'
+     O                                   83 'DATE'
+     O                                   99 'USAGE'
+     O                                  126 'AVAILIBILITY/EXCESS'
+     O        TF 1     L1 09
+     O                         CUNR      11
+     O                         CRNM      34
+     O                         RLAM      55 '   ,   , 0 '
+     O                         SVNTY     72 '   ,   , 0 '
+     O                         ZADATE    85
+     O                         TOTOUT   104 '   ,   ,   , 0 '
+     O                         DIFF     124 '   ,   ,   , 0 '
+     O                       22         125 '-'
+     O        TF 2     L1 09
+     O                         CTWN      24
+     O        TF       LRN46
+     O                                   71 '*** END OF REPORT ***'
+     O        TF3      LR 46
+     O                                   63 '***   NO DETAILS TO REPO'
+     O                                   71 'RT   ***'
+     ODL0764AUT   03   LR
+     O                                   22 'REFERENCE DL0764AU'
+     O                         BJURPT    89
+     O                                  122 'DATE              PAGE'
+     O                         BJMRDT   112
+     O                         PAGE1 Z  127
+     O        T 2      LR
+     O                                   76 'MDDR USAGE IN 000''S'
+     O                         BNCYCD    80
+     O                 U4                91 ' - COMPLETE'
+     O                NU4                97 ' - EXPOSURES 70+%'
+     O        T 1      LR
+     O                                   76 '-------------------'
+     O                                   80 '------------'
+     O        T   20   LRNU7
+     O                                   18 'RUN CONTROLS'
+     O        T 2      LRNU7
+     O                                   59 'NUMBER'
+     O                                   84 'VALUE'
+     O        T 2      LRNU7
+     O                                   29 'EXTRACT FILE RECORDS '
+     O                                   34 'INPUT'
+     O                         HASHN 3   59
+     O                         INT   Z   81
+     O                         DEC       84
+     O        T 2      LRNU7
+     O                                   29 'EXTRACT FILE CONTROL '
+     O                                   35 'TOTALS'
+     O                         NORE  3   59
+     O                         HRWN  Z   81
+     O                         HRDC      84
+     O        T 2      LRNU7
+     O                                   30 'RECORDS LISTED IN THIS'
+     O                                   37 'REPORT'
+     O                         TLIST 3   59
+     O                         RINT  Z   81
+     O                         RDEC      84
+     O        T   26   LR U7
+     O                                   67 'RUN TERMINATED -'
+     O                                   82 'DATABASE ERROR'
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   FCT - CONVERSION FACTORS FOR DECIMAL POINT
+0001
+0010
+0100
+1000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

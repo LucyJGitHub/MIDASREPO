@@ -1,0 +1,96 @@
+/********************************************************************/
+/*STD    CLPBASEBND                                                 */
+/*EXI    TEXT('Midas SD Default Reporting Information Report')       */
+/********************************************************************/
+/*                                                                  */
+/*       Midas - Standing Data Module                               */
+/*                                                                  */
+/*       SDC001303 - CL Component to control SD001303               */
+/*                   Default Reporting Information Report           */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2013          */
+/*                                                                  */
+/*       Last Amend No. CSW213 *CREATE     Date 03Jun13             */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*       CSW213 - SWIFT Changes 2013                                */
+/*                                                                  */
+/********************************************************************/
+             PGM        PARM(&MODE &RSEQ &RLEV &RENT)
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+ 
+/** Copyright statement                                               */
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Check if LDA Data area exists and create it if not                */
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas SD Local Data Area +
+                          Equivalent') AUT(*USE))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Check if CSW213 is ON                                             */
+ 
+             CALL       PGM(SWIF2013) PARM(&RTCD)
+             IF         COND(&RTCD *NE 'CSW2013') THEN(GOTO +
+                          CMDLBL(END))
+ 
+/** Retreive data area MPHAS                                          */
+ 
+             RTVDTAARA  DTAARA(MPHAS *ALL) RTNVAR(&MPHAS)
+ 
+             IF         COND((%SST(&MPHAS 1 1) = 'C') *AND (&MODE +
+                          *EQ 'A')) THEN(SNDPGMMSG MSG('SD001303 - +
+                          Default Reporting Information Audit +
+                          List') TOMSGQ(MRUNQ))
+ 
+/** Call program                                                      */
+ 
+             CALL       PGM(SD001303) PARM(&MODE &RSEQ &RENT)
+ 
+/** Check for database errors trapped by program                      */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+ 
+             IF         COND(%SST(&MPHAS 1 1) = 'C') THEN(DO)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MRUNQ MOPERQ)
+ 
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             SNDPGMMSG  MSG('SD001303 - Default Reporting +
+                          Information List terminated abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

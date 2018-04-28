@@ -1,0 +1,437 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF Clearout expired feedback records')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Confirmation Matching
+     F*                                                               *
+     F*  CF0070 - CLEAR OUT FEEDBACK                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL028             Date 07Feb05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 171060             Date 27Feb01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 113352             Date 13Feb97               *
+      *                 054820             Date 06Nov93               *
+     F*                 E39375             DATE 29APR92               *
+     F*                 E38191             DATE 30MAR92               *
+     F*                 S01310             DATE 06DEC90               *
+     F*                 S01304             DATE 13SEP90               *
+     F*                 S01184             DATE 15DEC89               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  171060 - Do not drop CFFEEDPD record if corresponding deal   *
+      *           is found on DEALS with RECI not equal to 'R'.       *
+      *           Applied fix 148906.                                 *
+     F*  113352 - RE-COMPILE OVER CHANGES IN MGOREFPD                 *
+     F*  054820 - Should access SDMGMEPD record by RRN 1              *
+     F*           otherwise does not find record when reading.        *
+     F*  E38375 - RECOMPILED FOR CHANGE TO PRINTER FILE               *
+     F*  E38191 - USE SDMGMEPD NOT SDMSDLPD                           *
+     F*  S01310 - SWIFT RATIONALISATION                               *
+     F*  S01304 - CHANGES MADE DURING CONFIRMATION MATCHING           *
+     F*           INCORPORATION.                                      *
+     F*  S01184 - CREATED FOR CONFIRMATION MATCHING                   *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FCFFEEDL0UF  E           K        DISK         KINFSR *PSSR
+     FSDBANKPDIF  E                    DISK
+     F*DMSDLPDIF**E********************DISK                               E38191
+     FSDMGMEPDIF  E                    DISK                               E38191
+     FMGOREFL0IF  E           K        DISK                               S01310
+     FDEALS   IF  E           K        DISK                                                   171060
+     F*FMSIXL3IF**E********   K        DISK                               S01310
+     FCF0070AUO   E             20     PRINTER
+     F/COPY WNCPYSRC,CF0070F001
+     F*
+     F*****************************************************************
+     F* FUNCTION OF INDICATORS
+     F*
+     F* 10 - LOKUP
+     F* 20 - CF0070AU OVERFLOW
+     F**30*-*ERROR ON SDBANKPD OR SDMSDLPD, CFMSIXL3 RECORD NOT FOUND     E38191
+     F* 30 - ERROR ON SDBANKPD OR SDMGMEPD, CFMSIXL3 RECORD NOT FOUND     E38191
+     F* 31 - EOF CFFEEDL0
+      * 32 - No record found on DEALS or deal is reversed (RECI = R)  *                       171060
+     F* 98 - DATE FORMAT USED IN ZDATE2
+     F* U7 - DATABASE ERRORS
+     F* U8 - DATABASE ERRORS
+     F* LR - DATABASE ERRORS AND END PROGRAM
+     E*****************************************************************
+     E                    TAB1    1  10  2 0 TAB2   15
+     E*   FEEDBACK Status
+     E                    ZYDY    4   4  4 0
+     E                    ZMDY   13  13  3 0
+     E                    ZMNM   12  12  3
+     E*   3 arrays used by ZDATE2 to convert 5n to DDMMYY
+     E*****************************************************************
+     I            DS
+     I                                        1   7 @RDAT
+     I                                        1   2 @DD
+     I                                        6   7 @YY
+     I**  Start of Retention Period (DDMMMYY)
+     I*
+     I            DS                                                                          171060
+     I                                        1  16 IMRF                                      171060
+     I                                        3   80DLNOKY                                    171060
+      *                                                                                       171060
+     I            DS
+     I                                        1   60@SDAT
+     I                                        1   2 @Y
+     I                                        3   4 @M
+     I                                        5   6 @D
+     I**  Start of Retention Period (YYMMDD)
+     I*
+     I************DS*******                                               S01310
+     I*********************                   1  16 IMRF                  S01310
+     I*********************                   1   1 MSMI                  S01310
+     I*********************                   2  16 TNRF                  S01310
+     I****Key*to*CFMSIXL3**                                               S01310
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**  Local Data Area - Database errors
+     I*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*               INDEX TO SUBROUTINES                            *
+     C* MAIN    - MAIN PROCESS                                        *
+     C* INIT    - INITIAL PROCESS                                     *
+     C* CLEAR   - CLEAR FEEDBACK                                      *
+     C* ZDATE2  - TO CONVERT A DAY NUMBER TO DATE FORMATS             *
+     C* *PSSR   - ERROR PROCESS                                       *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  MAIN - MAIN PROCESS                                          *
+     C*                                                               *
+     C*  CALLS    INIT   - INITIAL PROCESS                            *
+     C*           CLEAR  - CLEAR FEEDBACK                             *
+     C*                                                               *
+     C*  CALLED BY                                                    *
+     C*****************************************************************
+     C*
+     C                     EXSR INIT
+     C*
+     C* Read FEEDBACK file sequentially
+     C                     READ CFFEEDL0                 31
+     C*
+     C           *IN31     DOWEQ'0'
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     20
+     C                     END
+     C                     EXSR CLEAR
+     C                     END
+     C*
+     C**  Page overflow?
+     C           *IN20     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     20
+     C                     END
+     C*
+     C**  "*** NO DETAILS ***"
+     C           @PRT      IFNE 'Y'
+     C                     WRITENODETAIL
+     C                     END
+     C*
+     C**  Write "*** END OF REPORT ***"
+     C                     WRITEEOREPORT
+     C*
+     C                     SETON                     LR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  INIT - INITIAL PROCESS                                       *
+     C*                                                               *
+     C*  CALLS    *PSSR  - ERROR PROCESS                              *
+     C*           ZDATE2 - CONVERT DAY NUMBER TO DATE                 *
+     C*                                                               *
+     C*  CALLED BY   MAIN - MAIN PROCESS                              *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C****Define*key*list*for CFMSIXL3                                    S01310
+     C***********@KEY******KLIST                                          S01310
+     C*********************KFLD           MSMI                            S01310
+     C*********************KFLD           TNRF                            S01310
+     C*
+     C** DTAARA/LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CF0070  'DBPGM
+     C                     OUT  LDA
+     C*
+     C****Obtain*report title (BJAGNA) and run day number (BJAKTX) from   S01304
+     C**  Obtain report title (BJURPT) and run day number (BJRDNB) from   S01304
+     C**  PF/SDBANKPD
+     C                     READ SDBANKPD                 30
+     C           *IN30     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD01        DBASE            * DB ERROR 01 *
+     C                     MOVEL'FIRST'   DBKEY            ***************
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C****Obtain*retention period in days (BSI2NB) from PF/SDMSDLPD       S01304
+     C****Obtain*retention*period*in*days*(BSDSMN)*from*PF/SDMSDLPD S01304E38191
+     C*********************READ SDMSDLPD                 30               E38191
+     C**  Obtain retention period in days (ENDSMN) from PF/SDMGMEPD S01304E38191
+     C***********          READ SDMGMEPD                 30        E38191 054820
+     C           1         CHAINSDMGMEPD             30                   054820
+     C           *IN30     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD02        DBASE            * DB ERROR 02 *
+     C                     MOVEL'FIRST'   DBKEY            ***************
+     C*********************MOVEL'SDMSDLPD'DBFILE                          E38191
+     C                     MOVEL'SDMGMEPD'DBFILE                          E38191
+     C                     OUT  LDA
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  Calculate start date of this retention period (run day number
+     C**  minus retention days)
+     C***********BJAKTX    SUB  BSI2NB    @DAT    50                      S01304
+     C***********BJRDNB    SUB  BSDSMN    @DAT    50                S01304E38191
+     C           BJRDNB    SUB  ENDSMN    @DAT    50                      E38191
+     C*
+     C**  Convert Start of Retention Date to DDMMMYY
+     C                     Z-ADD@DAT      ZDAYNO
+     C                     SETOF                     98
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    @RDAT   7
+     C*
+     C**  Convert Start of Retention date (DDMMYY) to YYMMDD format
+     C                     MOVE @YY       @Y
+     C                     MOVE ZMTH      @M
+     C                     MOVE @DD       @D
+     C*
+     C**  Write REPORT HEADER
+     C                     SETON                     20
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  CLEAR  -  CLEAR OUT FEEDBACK                                 *
+     C*                                                               *
+     C*  CALLS    None                                                *
+     C*                                                               *
+     C*  CALLED BY   MAIN - MAIN PROCESS                              *
+     C*****************************************************************
+     C*
+     C           CLEAR     BEGSR
+     C*
+     C**  IF status change date earlier than start of retention period
+     C           DTSC      IFLE @SDAT
+      *                                                                                       171060
+     C           DLNOKY    CHAINDEALS                32                                       171060
+     C           *IN32     IFEQ '0'                                                           171060
+     C           RECI      IFEQ 'R'                                                           171060
+     C                     MOVE '1'       *IN32                                               171060
+     C                     ENDIF                                                              171060
+     C                     ENDIF                                                              171060
+      *                                                                                       171060
+     C           *IN32     IFEQ '1'                                                           171060
+      *                                                                                       171060
+     C           IMRF      CHAINMGOREFL0             30                   S01310
+     C***********@KEY      CHAINCFMSIXL3             30                   S01310
+     C           *IN30     IFEQ '1'
+     C*
+     C**  Find Status Text for Counterparty and Broker
+     C           CPSX      LOKUPTAB1      TAB2           10
+     C                     MOVELTAB2      CSTAT
+     C           BKSX      LOKUPTAB1      TAB2           10
+     C                     MOVELTAB2      BSTAT
+     C*
+     C**  Output to audit report and delete feedback record
+     C                     WRITEDETAIL
+     C                     MOVE 'Y'       @PRT    1
+     C                     DELETCFFEEDD0
+     C/COPY WNCPYSRC,CF0070C001
+     C                     END
+      *                                                                                       171060
+     C                     ENDIF                                                              171060
+      *                                                                                       171060
+     C                     END
+     C*
+     C* Read next FEEDBACK record
+     C                     READ CFFEEDL0                 31
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*    ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.        *
+     C*    THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.     *
+     C*                                                               *
+     C*    CALLED BY   INIT - INITIAL PROCESS                         *
+     C*                                                               *
+     C*    CALLS       NONE                                           *
+     C*****************************************************************
+     C**
+     C           ZDATE2    BEGSR
+     C**
+     C**   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  *PSSR - ERROR PROCESS                                        *
+     C*                                                               *
+     C*  CALLS    NONE                                                *
+     C*                                                               *
+     C*  CALLED BY   INIT  - INITIAL PROCESSING                       *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+**  STATUS TEXTS                                        *****
+00NO FEEDBACK YET
+01WAITING
+02TIMED OUT
+50PROPOSED PAIR
+51PAIRED ERROR-O
+52PAIRED ERROR-T
+53PAIRED ERROR-B
+54PROPOSED INVEST
+97NONE EXPECTED
+99PAIRED NO ERROR
+**   ZYDY - Years in days cumulative, four year span    *****
+0366073110961461
+**   ZMDY - Months in days cumulative through year      *****
+000031059090120151181212243273304334365
+**   ZMNM - Months short names                          *****
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

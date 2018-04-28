@@ -1,0 +1,398 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Print parameters for print')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - HISTORY AND AUDIT FACILITY
+     F*                                                               *
+     F*  HF0540 - HAF Print Parameters for Print                      *
+     F*                                                               *
+     F*  Function : To select the printer parameters for audit report *
+     F*  (I/C INT)  of selected journal records                       *
+     F*                                                               *
+     F*  Called By: HF0530  - Display changes in file                 *
+     F*                                                               *
+     F*  Calls    : HFC0320 - Check authority on outqueue             *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01379             Date 16SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01379 - HISTORY AND AUDIT FACILITY                          *
+     F*           NEW PROGRAM CREATED FOR SAR.                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FHF0540DFCF  E                    WORKSTN
+      ** Input Screen
+      *
+     FHFSCANL0IF  E           K        DISK                           UC
+     F                                              KINFDS SCNDS
+      ** Scan details
+      *
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  11       CMD/11 (PRINT) IS PRESSED                           *
+     F*  12       CMD/12 (CANCEL) IS PRESSED                          *
+     F*  51       ERROR ON 'START PRINTING AT' FIELD                  *
+     F*  52       ERROR ON 'NBR OF RECORDS TO PRINT' FIELD            *
+     F*  53       ERROR ON 'CONSIDER SCAN CONDS' FIELD                *
+     F*  54       ERROR ON 'WHICH FIELDS TO PRINT' FIELD              *
+     F*  55       ERROR ON 'OUTPUT QUEUE' FIELD                       *
+     F*  56       ERROR ON 'NBR OF COPIES TO PRINT' FIELD             *
+     F*  57       ERROR ON 'HOLD SPOOL FILE ?' FIELD                  *
+     F*  58       ERROR ON 'SAVE SPOOL FILE ?' FIELD                  *
+     F*  60       DUMMY CHAIN TO HFSCANL0                             *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  L0CHK    - CHECK IF SCAN DETAILS HFSCANL0 IS OPEN            *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    OVR     1   2 60
+      ** Array containing Override statements for QCMDEXC
+      *
+      /SPACE 3
+      *
+     ISCNDS       DS                            512
+     I                                       93 102 SCFIL
+      *
+     IJRN2       UDS                            256
+     I                                       30  30 REQ
+     I                                       31  38 START
+     I                                       39  440NPRI
+     I                                       45  45 COSC
+     I                                       46  53 PRITEM
+     I                                       54  63 OUTQN
+     I                                       64  73 OUTQL
+     I                                       74  750COPI
+     I                                       76  79 HOLD
+     I                                       80  83 SAVE
+      *
+     IPSDS       SDS
+      ** Program status data structure
+     I                                      244 253 #JOB
+     I                                      254 263 #USER
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+      /EJECT
+      *
+      **---------------------------------------------------------------
+      ** INITIAL PROCESSING
+      ** ------------------
+      *
+      ** SETUP COPYRIGHT STATEMENT
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** OPEN SCAN DETAILS FILE ON PROGRAM ENTRY
+      *
+     C           @OPEN     IFNE 'OPEN'
+     C                     EXSR L0CHK
+     C                     MOVEL'OPEN'    @OPEN   4
+     C                     END
+      *
+      ** PROGRAM ENTRY PARAMETER
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RET     1
+      *
+     C           *NAMVAR   DEFN           JRN2
+     C           *LOCK     IN   *NAMVAR
+      *
+      ** DEFINE LOCAL DATA AREA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** RUN DATE
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA
+     C                     MOVE #USER     SUSER
+     C                     MOVEL#JOB      SWSID
+      *
+      ** SET UP ERROR MESSAGE FIELDS
+      *
+     C                     MOVEL'HF0540'  SPGMQ  10
+     C                     MOVEL*BLANKS   SSFKY   4
+     C                     MOVE *BLANKS   WUMSID  7        Message Identif
+     C                     MOVEL'HFMSGF'  WUMSGF 10        Message File Na
+      *
+      ** SET UP DEFAULT VALUES
+      *
+     C           REQ       IFNE 'R'
+     C                     MOVEL'*CURRENT'START
+     C                     Z-ADD999999    NPRI
+     C                     MOVEL'Y'       COSC
+     C                     MOVEL'*CHANGED'PRITEM
+     C                     MOVEL'MPRINT'  OUTQN
+     C                     MOVEL'*LIBL'   OUTQL
+     C                     Z-ADD1         COPI
+     C                     MOVEL'*NO'     HOLD
+     C                     MOVEL'*NO'     SAVE
+     C                     END
+      *
+      ** IF NO SCAN PARMS DEFINED, CONSIDER SCAN CANNOT BE 'Y'
+      *
+     C           SCFIL     IFNE 'QTEMP'
+     C                     MOVEL'N'       COSC
+     C                     END
+      *
+      ** THIS IS A DUMMY CHAIN IN ORDER TO PASS COMPILE
+      *
+     C           JOOBJF    CHAINHFSCANL0             60
+      *
+      **---------------------------------------------------------------
+      ** MAIN PROCESSING
+      ** ---------------
+      *
+     C           STR       TAG
+      *
+      ** DISPLAY SCREEN
+      *
+     C                     WRITEHF0540C0
+     C                     EXFMTHF0540F1
+      *
+      ** EXIT IF CMD12 PRESSED
+      *
+     C           *IN12     IFEQ '1'
+     C                     SETON                     LR
+     C                     MOVEL'1'       RET
+     C                     GOTO ENDPGM
+     C                     END
+      *
+      ** CLEAR PROGRAM OF MESSAGES
+      *
+     C                     CALL 'SCC0250'
+     C                     MOVEA'00000000'*IN,51
+     C                     Z-ADD0         ERR     10
+      *
+      ** VALIDATION OF SCREEN FIELDS
+      *
+      ** TEST START FIELD
+      *
+     C           START     IFNE '*CURRENT'
+     C           START     ANDNE'*TOP'
+     C                     SETON                     51
+     C                     MOVEL'HAF0088' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     Z-ADD1         ERR
+     C                     END
+      *
+      * TEST NUMBER OF PRINTS TO BE DONE
+      *
+     C           NPRI      IFEQ 0
+     C                     SETON                     52
+     C                     MOVEL'HAF0089' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     Z-ADD1         ERR
+     C                     END
+      *
+      ** CONSIDER SCAN?
+      *
+     C           COSC      IFNE 'Y'
+     C           COSC      ANDNE'N'
+     C                     SETON                     53
+     C                     MOVEL'HAF0090' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     Z-ADD1         ERR
+     C                     END
+      *
+     C           *IN53     IFEQ '0'
+     C           SCFIL     IFNE 'QTEMP'
+     C           COSC      IFNE 'N'
+     C                     SETON                     53
+     C                     MOVEL'HAF0090' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     Z-ADD1         ERR
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** PRINT ITEMS (FIELDS TO PRINT)
+      *
+     C           PRITEM    IFNE '*CHANGED'
+     C           PRITEM    ANDNE'*ALL'
+     C                     SETON                     54
+     C                     MOVEL'HAF0091' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     Z-ADD1         ERR
+     C                     END
+      *
+      ** TEST OUTQ
+      *
+     C                     MOVEL'N'       OK      1
+     C                     CALL 'HFC0320'
+     C                     PARM           OUTQN
+     C                     PARM           OUTQL
+     C                     PARM           OK
+     C           OK        IFEQ 'N'
+     C                     SETON                     55
+     C                     MOVEL'HAF0032' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     Z-ADD1         ERR
+     C                     END
+      *
+      ** TEST NUMBER OF COPIES
+      *
+     C           COPI      IFEQ 0
+     C                     SETON                     56
+     C                     MOVEL'HAF0092' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     Z-ADD1         ERR
+     C                     END
+      *
+      ** TEST HOLD
+      *
+     C           HOLD      IFNE '*YES'
+     C           HOLD      ANDNE'*NO'
+     C                     SETON                     57
+     C                     MOVEL'HAF0093' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     Z-ADD1         ERR
+     C                     END
+      *
+      ** TEST SAVE
+      *
+     C           SAVE      IFNE '*YES'
+     C           SAVE      ANDNE'*NO'
+     C                     SETON                     58
+     C                     MOVEL'HAF0094' WUMSID           Message Identif
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     Z-ADD1         ERR
+     C                     END
+      *
+      ** ANY ERRORS FOUND?
+      *
+     C           ERR       IFNE 0
+     C                     GOTO STR
+     C                     END
+      *
+      ** ACCEPT PRINT PARAMETERS IF CMD11 PRESSED
+      *
+     C           *IN11     IFEQ '1'
+     C                     SETON                     LR
+     C                     MOVEL'5'       RET
+     C                     GOTO ENDPGM
+      *
+      ** OTHERWISE REDISPLAY SCREEN
+      *
+     C                     ELSE
+     C                     GOTO STR
+     C                     END
+      *
+      ** TERMINATE PROGRAM
+      *
+     C           ENDPGM    TAG
+     C                     MOVEL'R'       REQ
+      *
+      ** CLEAR PROGRAM OF MESSAGES
+      *
+     C                     CALL 'SCC0250'
+     C                     OUT  *NAMVAR
+     C                     CLOSEHFSCANL0
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * L0CHK    - CHECK IF SCAN DETAILS HFSCANL0 IS OPEN             *
+      *                                                               *
+      * Called by:  INITIAL PROCESSING                                *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           L0CHK     BEGSR
+      *
+      * Override the file to the QTEMP version
+      *
+     C                     MOVELOVR,1     ZCMD
+     C                     CALL 'QCMDEXC'              9999
+     C                     PARM           ZCMD   60
+     C                     PARM 60        ZLEN   155
+      *
+      * Now try and open the file
+      *
+     C                     OPEN HFSCANL0               60
+      *
+      * If the open failed then file does not exist in QTEMP
+      *
+     C           *IN60     IFEQ '1'
+      *
+      * Delete the override
+      *
+     C                     MOVELOVR,2     ZCMD
+     C                     CALL 'QCMDEXC'              9999
+     C                     PARM           ZCMD
+     C                     PARM 60        ZLEN
+      *
+      * Now open the library list version of the file
+      *
+     C                     OPEN HFSCANL0
+      *
+     C                     END
+      *
+      ** Clear program of messages
+      *
+     C                     CALL 'SCC0250'
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**
+OVRDBF HFSCANL0 QTEMP/HFSCANL0
+DLTOVR HFSCANL0

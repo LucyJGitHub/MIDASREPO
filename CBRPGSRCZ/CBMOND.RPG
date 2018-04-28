@@ -1,0 +1,2155 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Close of business display monitor')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CBMOND - Interactive Monitoring                              *
+      *                                                               *
+      *  Function:  This program is in charge to display the CoB      *
+      *             activity                                          *
+      *                                                               *
+      *  Called By: CBCMOND - Interactive Monitoring                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR1096378          Date 20Mar13               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CPK025             Date 23Nov06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAAA02             Date 16Jul03               *
+      *                 CCB012             Date 19Jun02               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 25Oct01               *
+      *                 196795             Date 13Aug01               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CPK010             Date 21OCT99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPK008             Date 01JUL97               *
+      *                 102495             Date 10JUL96               *
+      *                 095664             Date 07NOV95               *
+      *                 S01420  *CREATE    Date 12APR95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1096378 - NWDC issues encountered during link testing.     *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CPK025 - Revert back fix of CAAA02                           *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA02 - Remove use of INVITE keyword to enable WebFacing    *
+      *           to process screens. Recompile only.                 *
+      *  CCB012 - Use 70 job streams in close of business.            *
+      *  CPK014 - Release 4 Packaging                                 *
+      *         - Remove all 'DBA' references                         *
+      *  196795 - Use DTAARA CBRECV instead of DTAQ MAINDTQ to avoid  *
+      *           object lock at V5R1M0.                              *
+      *  CPK010 - DBA3 Alphasite Changes:                             *
+      *         - Call AOCURRR0 *FREE to close down SDCURRPD.         *
+      *  CPK008 - DBA R2 Packaging                                    *
+      *         - Recompile over DSPF/CBMONDDF                        *
+      *  102495   Activity of scheduler and monitor never reviewed    *
+      *           as field WWRACT is a negative field. Fix is to      *
+      *           check for negative value.                           *
+      *  095664 - If ending or starting journalling, a LCKW           *
+      *           should display as a RUN                             *
+      *  S01420 - CoB Enhancements                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FCBMONDDFCF  E                    WORKSTN
+     F                                              KINFDS INFFDK
+     F/COPY WNCPYSRC,CBMONDF001
+      *
+      /SPACE 2
+      *****************************************************************
+      *                                                               *
+      *     C  L   FUNCTION OF INDICATORS                             *
+      *                                                               *
+      *****01******DISPLAY*STREAM*01*INFO******************************                       CCB012
+      *    01      Stream 01 error condition                          *                       CCB012
+      *****02******DISPLAY*STREAM*02*INFO******************************                       CCB012
+      *    02      Stream 02 error condition                          *                       CCB012
+      *****03******DISPLAY*STREAM*03*INFO******************************                       CCB012
+      *    03      Stream 03 error condition                          *                       CCB012
+      *****04******DISPLAY*STREAM*04*INFO******************************                       CCB012
+      *    04      Stream 04 error condition                          *                       CCB012
+      *****05******DISPLAY*STREAM*05*INFO******************************                       CCB012
+      *    05      Stream 05 error condition                          *                       CCB012
+      *****06******DISPLAY*STREAM*06*INFO******************************                       CCB012
+      *    06      Stream 06 error condition                          *                       CCB012
+      *****07******DISPLAY*STREAM*07*INFO******************************                       CCB012
+      *    07      Stream 07 error condition                          *                       CCB012
+      *****08******DISPLAY*STREAM*08*INFO******************************                       CCB012
+      *    08      Stream 08 error condition                          *                       CCB012
+      *****09******DISPLAY*STREAM*09*INFO******************************                       CCB012
+      *    09      Stream 09 error condition                          *                       CCB012
+      *    10      Stream 10 error condition                          *                       CCB012
+      *    11      Stream 11 error condition                          *                       CCB012
+      *    12      Stream 12 error condition                          *                       CCB012
+      *    13      Stream 13 error condition                          *                       CCB012
+      *    14      Stream 14 error condition                          *                       CCB012
+      *    15      Stream 15 error condition                          *                       CCB012
+      *    16      Stream 16 error condition                          *                       CCB012
+      *    17      Stream 17 error condition                          *                       CCB012
+      *    18      Stream 18 error condition                          *                       CCB012
+      *    19      Stream 19 error condition                          *                       CCB012
+      *****20******ERROR*ON*WRITE*TO*WORKSTATION***********************                       CCB012
+      *    20      Stream 20 error condition                          *                       CCB012
+      *****21******EOF*ON*DSPF/CBMONDF*********************************                       CCB012
+      *    21      Stream 21 error condition                          *                       CCB012
+      *    22      Stream 22 error condition                          *                       CCB012
+      *    23      Stream 23 error condition                          *                       CCB012
+      *    24      Stream 24 error condition                          *                       CCB012
+      *    25      Stream 25 error condition                          *                       CCB012
+      *    26      Stream 26 error condition                          *                       CCB012
+      *    27      Stream 27 error condition                          *                       CCB012
+      *    28      Stream 28 error condition                          *                       CCB012
+      *    29      Stream 29 error condition                          *                       CCB012
+      *    30      Stream 30 error condition                          *                       CCB012
+      *    31      Stream 31 error condition                          *                       CCB012
+      *    32      Stream 32 error condition                          *                       CCB012
+      *    33      Stream 33 error condition                          *                       CCB012
+      *    34      Stream 34 error condition                          *                       CCB012
+      *    35      Stream 35 error condition                          *                       CCB012
+      *    36      Stream 36 error condition                          *                       CCB012
+      *    37      Stream 37 error condition                          *                       CCB012
+      *    38      Stream 38 error condition                          *                       CCB012
+      *    39      Stream 39 error condition                          *                       CCB012
+      *    40      Stream 40 error condition                          *                       CCB012
+      *    41      Stream 41 error condition                          *                       CCB012
+      *    42      Stream 42 error condition                          *                       CCB012
+      *    43      Stream 43 error condition                          *                       CCB012
+      *    44      Stream 44 error condition                          *                       CCB012
+      *    45      Stream 45 error condition                          *                       CCB012
+      *    46      Stream 46 error condition                          *                       CCB012
+      *    47      Stream 47 error condition                          *                       CCB012
+      *    48      Stream 48 error condition                          *                       CCB012
+      *    49      Stream 49 error condition                          *                       CCB012
+      *****50******DISPLAY*NUMBER*OF*FAILED*COMPONENTS*****************                       CCB012
+      *    50      Stream 50 error condition                          *                       CCB012
+      *    51      Stream 51 error condition                          *                       CCB012
+      *    52      Stream 52 error condition                          *                       CCB012
+      *    53      Stream 53 error condition                          *                       CCB012
+      *    54      Stream 54 error condition                          *                       CCB012
+      *    55      Stream 55 error condition                          *                       CCB012
+      *    56      Stream 56 error condition                          *                       CCB012
+      *    57      Stream 57 error condition                          *                       CCB012
+      *    58      Stream 58 error condition                          *                       CCB012
+      *    59      Stream 59 error condition                          *                       CCB012
+      *    60      Stream 60 error condition                          *                       CCB012
+      *    61      Stream 61 error condition                          *                       CCB012
+      *    62      Stream 62 error condition                          *                       CCB012
+      *    63      Stream 63 error condition                          *                       CCB012
+      *    64      Stream 64 error condition                          *                       CCB012
+      *    65      Stream 65 error condition                          *                       CCB012
+      *    66      Stream 66 error condition                          *                       CCB012
+      *    67      Stream 67 error condition                          *                       CCB012
+      *    68      Stream 68 error condition                          *                       CCB012
+      *    69      Stream 69 error condition                          *                       CCB012
+      *****70******RE-TRY*LOCK*OF*DATA*AREA****************************                       CCB012
+      *    70      Stream 00 error condition                          *                       CCB012
+      *    71      Monitor not active                                 *                       CCB012
+      *    72      Scheduler not active                               *                       CCB012
+      *    73      No failed components                               *                       CCB012
+      *    74      Display information message.                       *                       CCB012
+      *    75      S01420 active.                                     *                       CCB012
+      *    76      Current job                                        *                       CCB012
+      *    77      Error on write to workstation                      *                       CCB012
+      *    78      EOF on DSPF/CBMONDF                                *                       CCB012
+      *    80      Array lookup indicator                             *                       CCB012
+      *    89      Display file INVITE indicator                      *                       CCB012
+      *    99      Error on call to QRCVDTAQ                          *                       CCB012
+      *                                                               *
+      *    LR      LAST RECORD INDICATOR                              *
+      *                                                               *
+      *    U7&U8   DATABASE ERROR                                     *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+      ** COPYRIGHT ARRAY
+      * Arrays - Attention Program
+     E**********          ATN     1   2 33                                                 AR1096378
+     E                    ATN     1   3 33                                                 AR1096378
+      * Arrays - CoB phases
+     E**********          FAS     1   6  1   DSC    40                                        CCB020
+     E                    FAS     1   9  1   DSC    40                                        CCB020
+     E**********          ST         10  1                                                    CCB012
+     E                    ST         70  1                                                    CCB012
+     E**********          STS        10  4                                                    CCB012
+     E                    STS        70  4                                                    CCB012
+      ** SR. FOR SETTING ON CORRECT NUMBER OF STREAM INDICATORS
+      *****************************************************************
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      ** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     IPHASE       DS
+     I                                        1   1 WWPHAS
+      ** DATA STRUCTURE TO GET DATE FROM RUNDAT DATA AREA
+      *
+      * Info data structure
+      *
+     IINFFDK      DS
+     I                                     *STATUS  WWSTUS
+      *
+      * Program data structure
+      *
+     I           SDS
+     I                                     *STATUS  ERR
+     I                                      244 253 WCWSID
+     I                                      254 263 USRID
+     I                                      264 2690#JNBR
+     I                                      264 269 JNBR
+     IWWLMSG      DS
+     I                                        1  40 WWMSDA
+     I                                       41  420WWSEVR
+     I            DS
+     I                                        1  26 WWLUSR
+     I                                        1   6 WWSNBR
+     I                                        7  16 WWSWSD
+     I                                       17  26 WWSUSR
+     I            DS
+     I                                        1  10 WWUSSP
+     I                                       11  20 WWLIBL
+     I                                        1  20 WWQUAL
+     I            DS
+     I                                    B   1   40WWSTRT
+     I                                    B   5   80WWLENU
+     I            DS
+     I                                        1   60WWTIME
+     I                                        1   20WWHOUR
+     I                                        3   40WWMINU
+     I                                        5   60WWSECO
+     I            DS
+     I**********                              1  40 SCSTAT                                    CCB012
+     I**********                              1   4 SCSTS0                                    CCB012
+     I**********                              5   8 SCSTS1                                    CCB012
+     I**********                              9  12 SCSTS2                                    CCB012
+     I**********                             13  16 SCSTS3                                    CCB012
+     I**********                             17  20 SCSTS4                                    CCB012
+     I**********                             21  24 SCSTS5                                    CCB012
+     I**********                             25  28 SCSTS6                                    CCB012
+     I**********                             29  32 SCSTS7                                    CCB012
+     I**********                             33  36 SCSTS8                                    CCB012
+     I**********                             37  40 SCSTS9                                    CCB012
+     I                                        1 256 SCSTAT                                    CCB012
+     I                                        1   4 SCSS00                                    CCB012
+     I                                        5   8 SCSS01                                    CCB012
+     I                                        9  12 SCSS02                                    CCB012
+     I                                       13  16 SCSS03                                    CCB012
+     I                                       17  20 SCSS04                                    CCB012
+     I                                       21  24 SCSS05                                    CCB012
+     I                                       25  28 SCSS06                                    CCB012
+     I                                       29  32 SCSS07                                    CCB012
+     I                                       33  36 SCSS08                                    CCB012
+     I                                       37  40 SCSS09                                    CCB012
+     I                                       41  44 SCSS10                                    CCB012
+     I                                       45  48 SCSS11                                    CCB012
+     I                                       49  52 SCSS12                                    CCB012
+     I                                       53  56 SCSS13                                    CCB012
+     I                                       57  60 SCSS14                                    CCB012
+     I                                       61  64 SCSS15                                    CCB012
+     I                                       65  68 SCSS16                                    CCB012
+     I                                       69  72 SCSS17                                    CCB012
+     I                                       73  76 SCSS18                                    CCB012
+     I                                       77  80 SCSS19                                    CCB012
+     I                                       81  84 SCSS20                                    CCB012
+     I                                       85  88 SCSS21                                    CCB012
+     I                                       89  92 SCSS22                                    CCB012
+     I                                       93  96 SCSS23                                    CCB012
+     I                                       97 100 SCSS24                                    CCB012
+     I                                      101 104 SCSS25                                    CCB012
+     I                                      105 108 SCSS26                                    CCB012
+     I                                      109 112 SCSS27                                    CCB012
+     I                                      113 116 SCSS28                                    CCB012
+     I                                      117 120 SCSS29                                    CCB012
+     I                                      121 124 SCSS30                                    CCB012
+     I                                      125 128 SCSS31                                    CCB012
+     I                                      129 132 SCSS32                                    CCB012
+     I                                      133 136 SCSS33                                    CCB012
+     I                                      137 140 SCSS34                                    CCB012
+     I                                      141 144 SCSS35                                    CCB012
+     I                                      145 148 SCSS36                                    CCB012
+     I                                      149 152 SCSS37                                    CCB012
+     I                                      153 156 SCSS38                                    CCB012
+     I                                      157 160 SCSS39                                    CCB012
+     I                                      161 164 SCSS40                                    CCB012
+     I                                      165 168 SCSS41                                    CCB012
+     I                                      169 172 SCSS42                                    CCB012
+     I                                      173 176 SCSS43                                    CCB012
+     I                                      177 180 SCSS44                                    CCB012
+     I                                      181 184 SCSS45                                    CCB012
+     I                                      185 188 SCSS46                                    CCB012
+     I                                      189 192 SCSS47                                    CCB012
+     I                                      193 196 SCSS48                                    CCB012
+     I                                      197 200 SCSS49                                    CCB012
+     I                                      201 204 SCSS50                                    CCB012
+     I                                      205 208 SCSS51                                    CCB012
+     I                                      209 212 SCSS52                                    CCB012
+     I                                      213 216 SCSS53                                    CCB012
+     I                                      217 220 SCSS54                                    CCB012
+     I                                      221 224 SCSS55                                    CCB012
+     I                                      225 228 SCSS56                                    CCB012
+     I                                      229 232 SCSS57                                    CCB012
+     I                                      233 236 SCSS58                                    CCB012
+     I                                      237 240 SCSS59                                    CCB012
+     I                                      241 244 SCSS60                                    CCB012
+     I                                      245 248 SCSS61                                    CCB012
+     I                                      249 252 SCSS62                                    CCB012
+     I                                      253 256 SCSS63                                    CCB012
+     I            DS                                                                          CCB012
+     I                                        1  24 SCSTA2                                    CCB012
+     I                                        1   4 SCSS64                                    CCB012
+     I                                        5   8 SCSS65                                    CCB012
+     I                                        9  12 SCSS66                                    CCB012
+     I                                       13  16 SCSS67                                    CCB012
+     I                                       17  20 SCSS68                                    CCB012
+     I                                       21  24 SCSS69                                    CCB012
+      *
+     I/COPY WNCPYSRC,CBMONDI001
+      * CBRECV IS USED TO RECEIVE  THE DATA FROM THE MONITOR
+      *
+     IWWDATA    E DSCBRECV
+      *
+     I*BRECV***** DS                           1024                                    196795 CCB012
+     ICBRECV      DS                           1099                                           CCB012
+      *                                                                                       196795
+     IWWCLOB    E DSCBSTAT
+     I                                       20  20 HALTST
+      *
+     IWWDTQA    E DSCBDTAQ
+      *                                                                                       CPK010
+     IDSSDY     E DSDSSDY                                                                     CPK010
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WWDTQF 10
+     C                     PARM           WWRTRN  7
+      *
+     C                     EXSR #INIT
+      *
+     C                     EXSR #MAIN
+      *
+     C                     EXSR #END
+      *
+      *****************************************************************
+     C           #MAIN     BEGSR
+      *
+     C           DQPROC    DOWNE'END    '
+     C           DQPROC    ANDNE'SIGNOFF'
+      *
+      ** PROCESS RECEIVE DATA FROM MAIN DATA QUEUE
+      *
+     C                     EXSR #RCVM
+      *
+      ** PROCESS RECEIVE SPECIAL INFORMATION
+      *
+     C                     EXSR #RCVS
+      *
+     C           WWRACT    IFGT 60
+     C           WWRACT    ORLT -60                                       102495
+     C                     Z-ADDWWNACT    WWOACT
+     C                     EXSR #ACTY
+     C                     END
+      *
+     C           DQPROC    IFNE 'SIGNOFF'
+     C           DQPROC    ANDNE'END    '
+      *
+      ** RESET JOB ACTIVITY
+      *
+     C                     EXSR #STUS
+      *
+      ** DATA HAS BEEN RECEIVED FROM DATA QUEUE
+      *
+     C                     EXSR #FILL
+      *
+      ** PROCESS DATA
+      *
+     C                     EXSR #PROC
+      *
+      ** SEND MONITOR SCREEN
+      *
+     C           WWDATA    IFNE *BLANKS
+     C                     MOVE *ON       *IN89
+      *
+     C                     EXSR #SCRN
+      *
+     C                     MOVE *OFF      *IN89
+     C                     END
+      *
+     C                     EXSR #TIME
+      *
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      **********************************************************************
+     C           #RCVM     BEGSR
+      *
+     C                     MOVEL*BLANKS   WWDATA
+      *
+      ** RECEIVE DATA FROM MAIN DATA QUEUE
+      *
+     C*******              CALL 'QRCVDTAQ'             99                                     196795
+     C*******              PARM           WWMAIN                                              196795
+     C*******              PARM           WWDQLB                                              196795
+     C*******              PARM           WWLENM                                              196795
+     C*******              PARM           WWDATA                                              196795
+     C*******              PARM           WWDQW1                                              196795
+     C*******              PARM           WWORDR                                              196795
+     C*******              PARM           WWLENK                                              196795
+     C*******              PARM           WWDTQF                                              196795
+     C*******              PARM           WWLENS                                              196795
+     C*******              PARM           WWSNDR                                              196795
+      *                                                                                       196795
+     C           *NAMVAR   DEFN           CBRECV                                              196795
+     C                     IN   CBRECV                                                        196795
+     C                     MOVELCBRECV    WWDATA                                              196795
+      *
+     C                     ENDSR
+      **********************************************************************
+     C           #RCVS     BEGSR
+      *
+     C                     MOVEL*BLANKS   WWDQDA
+      *
+      ** RECEIVE DATA FROM SPECIAL DATA QUEUE
+      *
+     C                     CALL 'QRCVDTAQ'             99
+     C                     PARM           WWDTQF
+     C                     PARM           WWDQLB
+     C                     PARM           WWDQLN
+     C                     PARM           WWDQDA
+     C                     PARM           WWDQW2
+      *
+     C           WWDQDA    IFNE *BLANKS
+     C                     MOVELWWDQDA    WWDTQA
+     C                     MOVELDQPROC    WWRTRN
+      *
+      ** PROCESS SEVERITY OF MESSAGE
+      *
+     C                     EXSR #SEVR1
+      *
+     C           DQPROC    CASEQ'       ' #NOTH
+     C           DQPROC    CASEQ'LOCK   ' #LOCK
+     C           DQPROC    CASEQ'UNLOCK ' #LOCK
+     C           DQPROC    CASEQ'REOPEN ' #REOP
+     C           DQPROC    CASEQ'NEWUSER' #NEWU
+     C           DQPROC    CASEQ'RMVUSER' #RMVU
+     C           DQPROC    CASEQ'HALTIMM' #HALT
+     C           DQPROC    CASEQ'HALTED ' #HALT
+     C           DQPROC    CASEQ'RESTART' #RSTR
+     C           DQPROC    CASEQ'MESSAGE' #MESG
+     C                     END
+      *
+      ** RESET   SEVERITY OF MESSAGE
+      *
+     C                     EXSR #SEVR2
+     C                     END
+      *
+     C                     ENDSR
+      **********************************************************************
+     C           #NOTH     BEGSR
+      *
+     C                     ENDSR
+      **********************************************************************
+     C           #SEVR1    BEGSR
+      *
+      ** AVOID DECIMAL DATA ERROR IN DQSEVR
+      *
+     C           DQSEVR    IFGT 1
+     C           DQSEVR    ANDLT10
+     C                     Z-ADDWWTNEW    WWOMSG
+     C                     END
+     C           WWDQDA    IFEQ *BLANKS
+     C                     Z-ADD1         DQSEVR
+     C                     END
+      *
+     C           DQSEVR    IFEQ 0
+     C           WWINFO    ANDLT95
+     C                     Z-ADD1         WWINFO
+     C                     Z-ADD1         DQSEVR
+     C                     END
+      *
+     C           DQSEVR    IFGT 1
+     C           DQSEVR    ANDLT10
+     C           WWINFO    ANDGT10
+     C           WWINFO    ANDNE95
+     C           WWTEMP    ANDNE'TEMP'
+     C                     MOVELSCINFR    WWSAVE 40
+     C                     Z-ADDWWINFO    WWSVFO  20
+     C                     Z-ADDDQSEVR    WWINFO
+     C                     MOVELDQMESG    SCINFR
+     C                     MOVEL'TEMP'    WWTEMP  4
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+     C           #SEVR2    BEGSR
+      *
+     C           DQSEVR    IFNE 0
+     C           DQSEVR    ANDGTWWINFO
+     C           WWTEMP    ANDEQ*BLANKS
+     C                     Z-ADDDQSEVR    WWINFO
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+     C           #END      BEGSR
+      *
+     C********** *IN56     IFEQ '1'                                                           CCB012
+     C           *IN76     IFEQ '1'                                                           CCB012
+     C                     CALL 'CBC0521'
+     C                     PARM           WWALL
+     C                     PARM           WWERR
+     C                     END
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+      *
+      ********************************************************************
+     C           #FILL     BEGSR
+      *
+     C                     Z-ADD1         Z       10
+     C                     IN   PHASE
+     C           WWPHAS    LOKUPFAS,Z                    80
+     C           *IN80     IFEQ '1'
+     C                     MOVELDSC,Z     SCPHAS
+     C                     ELSE
+     C                     MOVEL*BLANKS   SCPHAS
+     C                     END
+     C***************      MOVELRVTITL    TITLE                                               CPK014
+     C                     MOVE RVRUND    RUNA
+     C                     MOVELWCWSID    SCWSID
+     C                     MOVELRVCURT    SCCURT
+     C                     MOVELRVSTTI    SCSTTI
+     C/COPY WNCPYSRC,CBMONDC002
+     C                     MOVELRVELTI    SCELTI
+     C/COPY WNCPYSRC,CBMONDC003
+     C                     MOVE RVMAXA    SCMAXA
+     C                     MOVE RVRANA    SCRANA
+     C                     MOVE RVRUNA    SCRUNA
+     C                     MOVE RVCURA    SCCURA
+     C                     MOVE RVFAIL    SCFAIL
+     C**********           MOVELRVSTR0    SCSTR0                                              CCB012
+     C**********           MOVELRVSTR1    SCSTR1                                              CCB012
+     C**********           MOVELRVSTR2    SCSTR2                                              CCB012
+     C**********           MOVELRVSTR3    SCSTR3                                              CCB012
+     C**********           MOVELRVSTR4    SCSTR4                                              CCB012
+     C**********           MOVELRVSTR5    SCSTR5                                              CCB012
+     C**********           MOVELRVSTR6    SCSTR6                                              CCB012
+     C**********           MOVELRVSTR7    SCSTR7                                              CCB012
+     C**********           MOVELRVSTR8    SCSTR8                                              CCB012
+     C**********           MOVELRVSTR9    SCSTR9                                              CCB012
+     C                     MOVELRVST00    SCTR00                                              CCB012
+     C                     MOVELRVST01    SCTR01                                              CCB012
+     C                     MOVELRVST02    SCTR02                                              CCB012
+     C                     MOVELRVST03    SCTR03                                              CCB012
+     C                     MOVELRVST04    SCTR04                                              CCB012
+     C                     MOVELRVST05    SCTR05                                              CCB012
+     C                     MOVELRVST06    SCTR06                                              CCB012
+     C                     MOVELRVST07    SCTR07                                              CCB012
+     C                     MOVELRVST08    SCTR08                                              CCB012
+     C                     MOVELRVST09    SCTR09                                              CCB012
+     C                     MOVELRVST10    SCTR10                                              CCB012
+     C                     MOVELRVST11    SCTR11                                              CCB012
+     C                     MOVELRVST12    SCTR12                                              CCB012
+     C                     MOVELRVST13    SCTR13                                              CCB012
+     C                     MOVELRVST14    SCTR14                                              CCB012
+     C                     MOVELRVST15    SCTR15                                              CCB012
+     C                     MOVELRVST16    SCTR16                                              CCB012
+     C                     MOVELRVST17    SCTR17                                              CCB012
+     C                     MOVELRVST18    SCTR18                                              CCB012
+     C                     MOVELRVST19    SCTR19                                              CCB012
+     C                     MOVELRVST20    SCTR20                                              CCB012
+     C                     MOVELRVST21    SCTR21                                              CCB012
+     C                     MOVELRVST22    SCTR22                                              CCB012
+     C                     MOVELRVST23    SCTR23                                              CCB012
+     C                     MOVELRVST24    SCTR24                                              CCB012
+     C                     MOVELRVST25    SCTR25                                              CCB012
+     C                     MOVELRVST26    SCTR26                                              CCB012
+     C                     MOVELRVST27    SCTR27                                              CCB012
+     C                     MOVELRVST28    SCTR28                                              CCB012
+     C                     MOVELRVST29    SCTR29                                              CCB012
+     C                     MOVELRVST30    SCTR30                                              CCB012
+     C                     MOVELRVST31    SCTR31                                              CCB012
+     C                     MOVELRVST32    SCTR32                                              CCB012
+     C                     MOVELRVST33    SCTR33                                              CCB012
+     C                     MOVELRVST34    SCTR34                                              CCB012
+     C                     MOVELRVST35    SCTR35                                              CCB012
+     C                     MOVELRVST36    SCTR36                                              CCB012
+     C                     MOVELRVST37    SCTR37                                              CCB012
+     C                     MOVELRVST38    SCTR38                                              CCB012
+     C                     MOVELRVST39    SCTR39                                              CCB012
+     C                     MOVELRVST40    SCTR40                                              CCB012
+     C                     MOVELRVST41    SCTR41                                              CCB012
+     C                     MOVELRVST42    SCTR42                                              CCB012
+     C                     MOVELRVST43    SCTR43                                              CCB012
+     C                     MOVELRVST44    SCTR44                                              CCB012
+     C                     MOVELRVST45    SCTR45                                              CCB012
+     C                     MOVELRVST46    SCTR46                                              CCB012
+     C                     MOVELRVST47    SCTR47                                              CCB012
+     C                     MOVELRVST48    SCTR48                                              CCB012
+     C                     MOVELRVST49    SCTR49                                              CCB012
+     C                     MOVELRVST50    SCTR50                                              CCB012
+     C                     MOVELRVST51    SCTR51                                              CCB012
+     C                     MOVELRVST52    SCTR52                                              CCB012
+     C                     MOVELRVST53    SCTR53                                              CCB012
+     C                     MOVELRVST54    SCTR54                                              CCB012
+     C                     MOVELRVST55    SCTR55                                              CCB012
+     C                     MOVELRVST56    SCTR56                                              CCB012
+     C                     MOVELRVST57    SCTR57                                              CCB012
+     C                     MOVELRVST58    SCTR58                                              CCB012
+     C                     MOVELRVST59    SCTR59                                              CCB012
+     C                     MOVELRVST60    SCTR60                                              CCB012
+     C                     MOVELRVST61    SCTR61                                              CCB012
+     C                     MOVELRVST62    SCTR62                                              CCB012
+     C                     MOVELRVST63    SCTR63                                              CCB012
+     C                     MOVELRVST64    SCTR64                                              CCB012
+     C                     MOVELRVST65    SCTR65                                              CCB012
+     C                     MOVELRVST66    SCTR66                                              CCB012
+     C                     MOVELRVST67    SCTR67                                              CCB012
+     C                     MOVELRVST68    SCTR68                                              CCB012
+     C                     MOVELRVST69    SCTR69                                              CCB012
+      *
+      ** Default counter to 1 while controller is working
+      *
+     C           RVCONT    IFEQ *BLANKS
+     C                     Z-ADD1         SCCONT
+     C                     ELSE
+     C                     MOVE RVCONT    SCCONT
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C           #STUS     BEGSR
+      *
+     C                     MOVEL*BLANKS   SCSTAT
+     C                     MOVEL*BLANKS   SCSTA2                                              CCB012
+     C**********           MOVEA'00000000'*IN,60                                              CCB012
+     C**********           MOVEA'00'      *IN,68                                              CCB012
+     C                     MOVEA'00000000'*IN,01                                              CCB012
+     C                     MOVEA'00000000'*IN,09                                              CCB012
+     C                     MOVEA'00000000'*IN,17                                              CCB012
+     C                     MOVEA'00000000'*IN,25                                              CCB012
+     C                     MOVEA'00000000'*IN,33                                              CCB012
+     C                     MOVEA'00000000'*IN,41                                              CCB012
+     C                     MOVEA'00000000'*IN,49                                              CCB012
+     C                     MOVEA'00000000'*IN,57                                              CCB012
+     C                     MOVEA'000000'  *IN,65                                              CCB012
+      *
+     C********** RVSTR0    IFNE *BLANKS                                                       CCB012
+     C********** RVSTS0    IFNE *BLANKS                                                       CCB012
+     C**********           MOVELRVSTS0    SCSTS0                                              CCB012
+     C**********           ELSE                                                               CCB012
+     C**********           MOVEL'RUN '    SCSTS0                                              CCB012
+     C**********           END                                                                CCB012
+     C**********           END                                                                CCB012
+      **********                                                                              CCB012
+     C********** RVSTR1    IFNE *BLANKS                                                       CCB012
+     C********** RVSTS1    IFNE *BLANKS                                                       CCB012
+     C**********           MOVELRVSTS1    SCSTS1                                              CCB012
+     C**********           ELSE                                                               CCB012
+     C**********           MOVEL'RUN '    SCSTS1                                              CCB012
+     C**********           END                                                                CCB012
+     C**********           END                                                                CCB012
+      **********                                                                              CCB012
+     C********** RVSTR2    IFNE *BLANKS                                                       CCB012
+     C********** RVSTS2    IFNE *BLANKS                                                       CCB012
+     C**********           MOVELRVSTS2    SCSTS2                                              CCB012
+     C**********           ELSE                                                               CCB012
+     C**********           MOVEL'RUN '    SCSTS2                                              CCB012
+     C**********           END                                                                CCB012
+     C**********           END                                                                CCB012
+      **********                                                                              CCB012
+     C********** RVSTR3    IFNE *BLANKS                                                       CCB012
+     C********** RVSTS3    IFNE *BLANKS                                                       CCB012
+     C**********           MOVELRVSTS3    SCSTS3                                              CCB012
+     C**********           ELSE                                                               CCB012
+     C**********           MOVEL'RUN '    SCSTS3                                              CCB012
+     C**********           END                                                                CCB012
+     C**********           END                                                                CCB012
+      **********                                                                              CCB012
+     C********** RVSTR4    IFNE *BLANKS                                                       CCB012
+     C********** RVSTS4    IFNE *BLANKS                                                       CCB012
+     C**********           MOVELRVSTS4    SCSTS4                                              CCB012
+     C**********           ELSE                                                               CCB012
+     C**********           MOVEL'RUN '    SCSTS4                                              CCB012
+     C**********           END                                                                CCB012
+     C**********           END                                                                CCB012
+      **********                                                                              CCB012
+     C********** RVSTR5    IFNE *BLANKS                                                       CCB012
+     C********** RVSTS5    IFNE *BLANKS                                                       CCB012
+     C**********           MOVELRVSTS5    SCSTS5                                              CCB012
+     C**********           ELSE                                                               CCB012
+     C**********           MOVEL'RUN '    SCSTS5                                              CCB012
+     C**********           END                                                                CCB012
+     C**********           END                                                                CCB012
+      **********                                                                              CCB012
+     C********** RVSTR6    IFNE *BLANKS                                                       CCB012
+     C********** RVSTS6    IFNE *BLANKS                                                       CCB012
+     C**********           MOVELRVSTS6    SCSTS6                                              CCB012
+     C**********           ELSE                                                               CCB012
+     C**********           MOVEL'RUN '    SCSTS6                                              CCB012
+     C**********           END                                                                CCB012
+     C**********           END                                                                CCB012
+      **********                                                                              CCB012
+     C********** RVSTR7    IFNE *BLANKS                                                       CCB012
+     C********** RVSTS7    IFNE *BLANKS                                                       CCB012
+     C**********           MOVELRVSTS7    SCSTS7                                              CCB012
+     C**********           ELSE                                                               CCB012
+     C**********           MOVEL'RUN '    SCSTS7                                              CCB012
+     C**********           END                                                                CCB012
+     C**********           END                                                                CCB012
+      **********                                                                              CCB012
+     C********** RVSTR8    IFNE *BLANKS                                                       CCB012
+     C********** RVSTS8    IFNE *BLANKS                                                       CCB012
+     C**********           MOVELRVSTS8    SCSTS8                                              CCB012
+     C**********           ELSE                                                               CCB012
+     C**********           MOVEL'RUN '    SCSTS8                                              CCB012
+     C**********           END                                                                CCB012
+     C**********           END                                                                CCB012
+      **********                                                                              CCB012
+     C********** RVSTR9    IFNE *BLANKS                                                       CCB012
+     C********** RVSTS9    IFNE *BLANKS                                                       CCB012
+     C**********           MOVELRVSTS9    SCSTS9                                              CCB012
+     C**********           ELSE                                                               CCB012
+     C**********           MOVEL'RUN '    SCSTS9                                              CCB012
+     C**********           END                                                                CCB012
+     C**********           END                                                                CCB012
+     C           RVST00    IFNE *BLANKS                                                       CCB012
+     C           RVSS00    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS00    SCTS00                                              CCB012
+     C                     MOVE RVSS00    SCSS00                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS00                                              CCB012
+     C                     MOVE 'RUN '    SCSS00                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS00                                              CCB012
+     C                     MOVE '    '    SCSS00                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST01    IFNE *BLANKS                                                       CCB012
+     C           RVSS01    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS01    SCTS01                                              CCB012
+     C                     MOVE RVSS01    SCSS01                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS01                                              CCB012
+     C                     MOVE 'RUN '    SCSS01                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS01                                              CCB012
+     C                     MOVE '    '    SCSS01                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST02    IFNE *BLANKS                                                       CCB012
+     C           RVSS02    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS02    SCTS02                                              CCB012
+     C                     MOVE RVSS02    SCSS02                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS02                                              CCB012
+     C                     MOVE 'RUN '    SCSS02                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS02                                              CCB012
+     C                     MOVE '    '    SCSS02                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST03    IFNE *BLANKS                                                       CCB012
+     C           RVSS03    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS03    SCTS03                                              CCB012
+     C                     MOVE RVSS03    SCSS03                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS03                                              CCB012
+     C                     MOVE 'RUN '    SCSS03                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS03                                              CCB012
+     C                     MOVE '    '    SCSS03                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST04    IFNE *BLANKS                                                       CCB012
+     C           RVSS04    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS04    SCTS04                                              CCB012
+     C                     MOVE RVSS04    SCSS04                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS04                                              CCB012
+     C                     MOVE 'RUN '    SCSS04                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS04                                              CCB012
+     C                     MOVE '    '    SCSS04                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST05    IFNE *BLANKS                                                       CCB012
+     C           RVSS05    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS05    SCTS05                                              CCB012
+     C                     MOVE RVSS05    SCSS05                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS05                                              CCB012
+     C                     MOVE 'RUN '    SCSS05                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS05                                              CCB012
+     C                     MOVE '    '    SCSS05                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST06    IFNE *BLANKS                                                       CCB012
+     C           RVSS06    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS06    SCTS06                                              CCB012
+     C                     MOVE RVSS06    SCSS06                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS06                                              CCB012
+     C                     MOVE 'RUN '    SCSS06                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS06                                              CCB012
+     C                     MOVE '    '    SCSS06                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST07    IFNE *BLANKS                                                       CCB012
+     C           RVSS07    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS07    SCTS07                                              CCB012
+     C                     MOVE RVSS07    SCSS07                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS07                                              CCB012
+     C                     MOVE 'RUN '    SCSS07                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS07                                              CCB012
+     C                     MOVE '    '    SCSS07                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST08    IFNE *BLANKS                                                       CCB012
+     C           RVSS08    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS08    SCTS08                                              CCB012
+     C                     MOVE RVSS08    SCSS08                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS08                                              CCB012
+     C                     MOVE 'RUN '    SCSS08                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS08                                              CCB012
+     C                     MOVE '    '    SCSS08                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST09    IFNE *BLANKS                                                       CCB012
+     C           RVSS09    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS09    SCTS09                                              CCB012
+     C                     MOVE RVSS09    SCSS09                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS09                                              CCB012
+     C                     MOVE 'RUN '    SCSS09                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS09                                              CCB012
+     C                     MOVE '    '    SCSS09                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST10    IFNE *BLANKS                                                       CCB012
+     C           RVSS10    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS10    SCTS10                                              CCB012
+     C                     MOVE RVSS10    SCSS10                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS10                                              CCB012
+     C                     MOVE 'RUN '    SCSS10                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS10                                              CCB012
+     C                     MOVE '    '    SCSS10                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST11    IFNE *BLANKS                                                       CCB012
+     C           RVSS11    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS11    SCTS11                                              CCB012
+     C                     MOVE RVSS11    SCSS11                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS11                                              CCB012
+     C                     MOVE 'RUN '    SCSS11                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS11                                              CCB012
+     C                     MOVE '    '    SCSS11                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST12    IFNE *BLANKS                                                       CCB012
+     C           RVSS12    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS12    SCTS12                                              CCB012
+     C                     MOVE RVSS12    SCSS12                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS12                                              CCB012
+     C                     MOVE 'RUN '    SCSS12                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS12                                              CCB012
+     C                     MOVE '    '    SCSS12                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST13    IFNE *BLANKS                                                       CCB012
+     C           RVSS13    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS13    SCTS13                                              CCB012
+     C                     MOVE RVSS13    SCSS13                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS13                                              CCB012
+     C                     MOVE 'RUN '    SCSS13                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS13                                              CCB012
+     C                     MOVE '    '    SCSS13                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST14    IFNE *BLANKS                                                       CCB012
+     C           RVSS14    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS14    SCTS14                                              CCB012
+     C                     MOVE RVSS14    SCSS14                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS14                                              CCB012
+     C                     MOVE 'RUN '    SCSS14                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS14                                              CCB012
+     C                     MOVE '    '    SCSS14                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST15    IFNE *BLANKS                                                       CCB012
+     C           RVSS15    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS15    SCTS15                                              CCB012
+     C                     MOVE RVSS15    SCSS15                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS15                                              CCB012
+     C                     MOVE 'RUN '    SCSS15                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS15                                              CCB012
+     C                     MOVE '    '    SCSS15                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST16    IFNE *BLANKS                                                       CCB012
+     C           RVSS16    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS16    SCTS16                                              CCB012
+     C                     MOVE RVSS16    SCSS16                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS16                                              CCB012
+     C                     MOVE 'RUN '    SCSS16                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS16                                              CCB012
+     C                     MOVE '    '    SCSS16                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST17    IFNE *BLANKS                                                       CCB012
+     C           RVSS17    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS17    SCTS17                                              CCB012
+     C                     MOVE RVSS17    SCSS17                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS17                                              CCB012
+     C                     MOVE 'RUN '    SCSS17                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS17                                              CCB012
+     C                     MOVE '    '    SCSS17                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST18    IFNE *BLANKS                                                       CCB012
+     C           RVSS18    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS18    SCTS18                                              CCB012
+     C                     MOVE RVSS18    SCSS18                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS18                                              CCB012
+     C                     MOVE 'RUN '    SCSS18                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS18                                              CCB012
+     C                     MOVE '    '    SCSS18                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST19    IFNE *BLANKS                                                       CCB012
+     C           RVSS19    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS19    SCTS19                                              CCB012
+     C                     MOVE RVSS19    SCSS19                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS19                                              CCB012
+     C                     MOVE 'RUN '    SCSS19                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS19                                              CCB012
+     C                     MOVE '    '    SCSS19                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST20    IFNE *BLANKS                                                       CCB012
+     C           RVSS20    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS20    SCTS20                                              CCB012
+     C                     MOVE RVSS20    SCSS20                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS20                                              CCB012
+     C                     MOVE 'RUN '    SCSS20                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS20                                              CCB012
+     C                     MOVE '    '    SCSS20                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST21    IFNE *BLANKS                                                       CCB012
+     C           RVSS21    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS21    SCTS21                                              CCB012
+     C                     MOVE RVSS21    SCSS21                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS21                                              CCB012
+     C                     MOVE 'RUN '    SCSS21                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS21                                              CCB012
+     C                     MOVE '    '    SCSS21                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST22    IFNE *BLANKS                                                       CCB012
+     C           RVSS22    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS22    SCTS22                                              CCB012
+     C                     MOVE RVSS22    SCSS22                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS22                                              CCB012
+     C                     MOVE 'RUN '    SCSS22                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS22                                              CCB012
+     C                     MOVE '    '    SCSS22                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST23    IFNE *BLANKS                                                       CCB012
+     C           RVSS23    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS23    SCTS23                                              CCB012
+     C                     MOVE RVSS23    SCSS23                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS23                                              CCB012
+     C                     MOVE 'RUN '    SCSS23                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS23                                              CCB012
+     C                     MOVE '    '    SCSS23                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST24    IFNE *BLANKS                                                       CCB012
+     C           RVSS24    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS24    SCTS24                                              CCB012
+     C                     MOVE RVSS24    SCSS24                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS24                                              CCB012
+     C                     MOVE 'RUN '    SCSS24                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS24                                              CCB012
+     C                     MOVE '    '    SCSS24                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST25    IFNE *BLANKS                                                       CCB012
+     C           RVSS25    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS25    SCTS25                                              CCB012
+     C                     MOVE RVSS25    SCSS25                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS25                                              CCB012
+     C                     MOVE 'RUN '    SCSS25                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS25                                              CCB012
+     C                     MOVE '    '    SCSS25                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST26    IFNE *BLANKS                                                       CCB012
+     C           RVSS26    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS26    SCTS26                                              CCB012
+     C                     MOVE RVSS26    SCSS26                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS26                                              CCB012
+     C                     MOVE 'RUN '    SCSS26                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS26                                              CCB012
+     C                     MOVE '    '    SCSS26                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST27    IFNE *BLANKS                                                       CCB012
+     C           RVSS27    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS27    SCTS27                                              CCB012
+     C                     MOVE RVSS27    SCSS27                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS27                                              CCB012
+     C                     MOVE 'RUN '    SCSS27                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS27                                              CCB012
+     C                     MOVE '    '    SCSS27                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST28    IFNE *BLANKS                                                       CCB012
+     C           RVSS28    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS28    SCTS28                                              CCB012
+     C                     MOVE RVSS28    SCSS28                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS28                                              CCB012
+     C                     MOVE 'RUN '    SCSS28                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS28                                              CCB012
+     C                     MOVE '    '    SCSS28                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST29    IFNE *BLANKS                                                       CCB012
+     C           RVSS29    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS29    SCTS29                                              CCB012
+     C                     MOVE RVSS29    SCSS29                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS29                                              CCB012
+     C                     MOVE 'RUN '    SCSS29                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS29                                              CCB012
+     C                     MOVE '    '    SCSS29                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST30    IFNE *BLANKS                                                       CCB012
+     C           RVSS30    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS30    SCTS30                                              CCB012
+     C                     MOVE RVSS30    SCSS30                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS30                                              CCB012
+     C                     MOVE 'RUN '    SCSS30                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS30                                              CCB012
+     C                     MOVE '    '    SCSS30                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST31    IFNE *BLANKS                                                       CCB012
+     C           RVSS31    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS31    SCTS31                                              CCB012
+     C                     MOVE RVSS31    SCSS31                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS31                                              CCB012
+     C                     MOVE 'RUN '    SCSS31                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS31                                              CCB012
+     C                     MOVE '    '    SCSS31                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST32    IFNE *BLANKS                                                       CCB012
+     C           RVSS32    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS32    SCTS32                                              CCB012
+     C                     MOVE RVSS32    SCSS32                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS32                                              CCB012
+     C                     MOVE 'RUN '    SCSS32                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS32                                              CCB012
+     C                     MOVE '    '    SCSS32                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST33    IFNE *BLANKS                                                       CCB012
+     C           RVSS33    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS33    SCTS33                                              CCB012
+     C                     MOVE RVSS33    SCSS33                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS33                                              CCB012
+     C                     MOVE 'RUN '    SCSS33                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS33                                              CCB012
+     C                     MOVE '    '    SCSS33                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST34    IFNE *BLANKS                                                       CCB012
+     C           RVSS34    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS34    SCTS34                                              CCB012
+     C                     MOVE RVSS34    SCSS34                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS34                                              CCB012
+     C                     MOVE 'RUN '    SCSS34                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS34                                              CCB012
+     C                     MOVE '    '    SCSS34                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST35    IFNE *BLANKS                                                       CCB012
+     C           RVSS35    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS35    SCTS35                                              CCB012
+     C                     MOVE RVSS35    SCSS35                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS35                                              CCB012
+     C                     MOVE 'RUN '    SCSS35                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS35                                              CCB012
+     C                     MOVE '    '    SCSS35                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST36    IFNE *BLANKS                                                       CCB012
+     C           RVSS36    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS36    SCTS36                                              CCB012
+     C                     MOVE RVSS36    SCSS36                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS36                                              CCB012
+     C                     MOVE 'RUN '    SCSS36                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS36                                              CCB012
+     C                     MOVE '    '    SCSS36                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST37    IFNE *BLANKS                                                       CCB012
+     C           RVSS37    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS37    SCTS37                                              CCB012
+     C                     MOVE RVSS37    SCSS37                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS37                                              CCB012
+     C                     MOVE 'RUN '    SCSS37                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS37                                              CCB012
+     C                     MOVE '    '    SCSS37                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST38    IFNE *BLANKS                                                       CCB012
+     C           RVSS38    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS38    SCTS38                                              CCB012
+     C                     MOVE RVSS38    SCSS38                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS38                                              CCB012
+     C                     MOVE 'RUN '    SCSS38                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS38                                              CCB012
+     C                     MOVE '    '    SCSS38                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST39    IFNE *BLANKS                                                       CCB012
+     C           RVSS39    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS39    SCTS39                                              CCB012
+     C                     MOVE RVSS39    SCSS39                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS39                                              CCB012
+     C                     MOVE 'RUN '    SCSS39                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS39                                              CCB012
+     C                     MOVE '    '    SCSS39                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST40    IFNE *BLANKS                                                       CCB012
+     C           RVSS40    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS40    SCTS40                                              CCB012
+     C                     MOVE RVSS40    SCSS40                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS40                                              CCB012
+     C                     MOVE 'RUN '    SCSS40                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS40                                              CCB012
+     C                     MOVE '    '    SCSS40                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST41    IFNE *BLANKS                                                       CCB012
+     C           RVSS41    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS41    SCTS41                                              CCB012
+     C                     MOVE RVSS41    SCSS41                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS41                                              CCB012
+     C                     MOVE 'RUN '    SCSS41                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS41                                              CCB012
+     C                     MOVE '    '    SCSS41                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST42    IFNE *BLANKS                                                       CCB012
+     C           RVSS42    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS42    SCTS42                                              CCB012
+     C                     MOVE RVSS42    SCSS42                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS42                                              CCB012
+     C                     MOVE 'RUN '    SCSS42                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS42                                              CCB012
+     C                     MOVE '    '    SCSS42                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST43    IFNE *BLANKS                                                       CCB012
+     C           RVSS43    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS43    SCTS43                                              CCB012
+     C                     MOVE RVSS43    SCSS43                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS43                                              CCB012
+     C                     MOVE 'RUN '    SCSS43                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS43                                              CCB012
+     C                     MOVE '    '    SCSS43                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST44    IFNE *BLANKS                                                       CCB012
+     C           RVSS44    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS44    SCTS44                                              CCB012
+     C                     MOVE RVSS44    SCSS44                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS44                                              CCB012
+     C                     MOVE 'RUN '    SCSS44                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS44                                              CCB012
+     C                     MOVE '    '    SCSS44                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST45    IFNE *BLANKS                                                       CCB012
+     C           RVSS45    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS45    SCTS45                                              CCB012
+     C                     MOVE RVSS45    SCSS45                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS45                                              CCB012
+     C                     MOVE 'RUN '    SCSS45                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS45                                              CCB012
+     C                     MOVE '    '    SCSS45                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST46    IFNE *BLANKS                                                       CCB012
+     C           RVSS46    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS46    SCTS46                                              CCB012
+     C                     MOVE RVSS46    SCSS46                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS46                                              CCB012
+     C                     MOVE 'RUN '    SCSS46                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS46                                              CCB012
+     C                     MOVE '    '    SCSS46                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST47    IFNE *BLANKS                                                       CCB012
+     C           RVSS47    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS47    SCTS47                                              CCB012
+     C                     MOVE RVSS47    SCSS47                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS47                                              CCB012
+     C                     MOVE 'RUN '    SCSS47                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS47                                              CCB012
+     C                     MOVE '    '    SCSS47                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST48    IFNE *BLANKS                                                       CCB012
+     C           RVSS48    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS48    SCTS48                                              CCB012
+     C                     MOVE RVSS48    SCSS48                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS48                                              CCB012
+     C                     MOVE 'RUN '    SCSS48                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS48                                              CCB012
+     C                     MOVE '    '    SCSS48                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST49    IFNE *BLANKS                                                       CCB012
+     C           RVSS49    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS49    SCTS49                                              CCB012
+     C                     MOVE RVSS49    SCSS49                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS49                                              CCB012
+     C                     MOVE 'RUN '    SCSS49                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS49                                              CCB012
+     C                     MOVE '    '    SCSS49                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST50    IFNE *BLANKS                                                       CCB012
+     C           RVSS50    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS50    SCTS50                                              CCB012
+     C                     MOVE RVSS50    SCSS50                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS50                                              CCB012
+     C                     MOVE 'RUN '    SCSS50                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS50                                              CCB012
+     C                     MOVE '    '    SCSS50                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST51    IFNE *BLANKS                                                       CCB012
+     C           RVSS51    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS51    SCTS51                                              CCB012
+     C                     MOVE RVSS51    SCSS51                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS51                                              CCB012
+     C                     MOVE 'RUN '    SCSS51                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS51                                              CCB012
+     C                     MOVE '    '    SCSS51                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST52    IFNE *BLANKS                                                       CCB012
+     C           RVSS52    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS52    SCTS52                                              CCB012
+     C                     MOVE RVSS52    SCSS52                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS52                                              CCB012
+     C                     MOVE 'RUN '    SCSS52                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS52                                              CCB012
+     C                     MOVE '    '    SCSS52                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST53    IFNE *BLANKS                                                       CCB012
+     C           RVSS53    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS53    SCTS53                                              CCB012
+     C                     MOVE RVSS53    SCSS53                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS53                                              CCB012
+     C                     MOVE 'RUN '    SCSS53                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS53                                              CCB012
+     C                     MOVE '    '    SCSS53                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST54    IFNE *BLANKS                                                       CCB012
+     C           RVSS54    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS54    SCTS54                                              CCB012
+     C                     MOVE RVSS54    SCSS54                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS54                                              CCB012
+     C                     MOVE 'RUN '    SCSS54                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS54                                              CCB012
+     C                     MOVE '    '    SCSS54                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST55    IFNE *BLANKS                                                       CCB012
+     C           RVSS55    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS55    SCTS55                                              CCB012
+     C                     MOVE RVSS55    SCSS55                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS55                                              CCB012
+     C                     MOVE 'RUN '    SCSS55                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS55                                              CCB012
+     C                     MOVE '    '    SCSS55                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST56    IFNE *BLANKS                                                       CCB012
+     C           RVSS56    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS56    SCTS56                                              CCB012
+     C                     MOVE RVSS56    SCSS56                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS56                                              CCB012
+     C                     MOVE 'RUN '    SCSS56                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS56                                              CCB012
+     C                     MOVE '    '    SCSS56                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST57    IFNE *BLANKS                                                       CCB012
+     C           RVSS57    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS57    SCTS57                                              CCB012
+     C                     MOVE RVSS57    SCSS57                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS57                                              CCB012
+     C                     MOVE 'RUN '    SCSS57                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS57                                              CCB012
+     C                     MOVE '    '    SCSS57                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST58    IFNE *BLANKS                                                       CCB012
+     C           RVSS58    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS58    SCTS58                                              CCB012
+     C                     MOVE RVSS58    SCSS58                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS58                                              CCB012
+     C                     MOVE 'RUN '    SCSS58                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS58                                              CCB012
+     C                     MOVE '    '    SCSS58                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST59    IFNE *BLANKS                                                       CCB012
+     C           RVSS59    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS59    SCTS59                                              CCB012
+     C                     MOVE RVSS59    SCSS59                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS59                                              CCB012
+     C                     MOVE 'RUN '    SCSS59                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS59                                              CCB012
+     C                     MOVE '    '    SCSS59                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST60    IFNE *BLANKS                                                       CCB012
+     C           RVSS60    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS60    SCTS60                                              CCB012
+     C                     MOVE RVSS60    SCSS60                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS60                                              CCB012
+     C                     MOVE 'RUN '    SCSS60                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS60                                              CCB012
+     C                     MOVE '    '    SCSS60                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST61    IFNE *BLANKS                                                       CCB012
+     C           RVSS61    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS61    SCTS61                                              CCB012
+     C                     MOVE RVSS61    SCSS61                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS61                                              CCB012
+     C                     MOVE 'RUN '    SCSS61                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS61                                              CCB012
+     C                     MOVE '    '    SCSS61                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST62    IFNE *BLANKS                                                       CCB012
+     C           RVSS62    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS62    SCTS62                                              CCB012
+     C                     MOVE RVSS62    SCSS62                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS62                                              CCB012
+     C                     MOVE 'RUN '    SCSS62                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS62                                              CCB012
+     C                     MOVE '    '    SCSS62                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST63    IFNE *BLANKS                                                       CCB012
+     C           RVSS63    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS63    SCTS63                                              CCB012
+     C                     MOVE RVSS63    SCSS63                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS63                                              CCB012
+     C                     MOVE 'RUN '    SCSS63                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS63                                              CCB012
+     C                     MOVE '    '    SCSS63                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST64    IFNE *BLANKS                                                       CCB012
+     C           RVSS64    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS64    SCTS64                                              CCB012
+     C                     MOVE RVSS64    SCSS64                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS64                                              CCB012
+     C                     MOVE 'RUN '    SCSS64                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS64                                              CCB012
+     C                     MOVE '    '    SCSS64                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST65    IFNE *BLANKS                                                       CCB012
+     C           RVSS65    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS65    SCTS65                                              CCB012
+     C                     MOVE RVSS65    SCSS65                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS65                                              CCB012
+     C                     MOVE 'RUN '    SCSS65                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS65                                              CCB012
+     C                     MOVE '    '    SCSS65                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST66    IFNE *BLANKS                                                       CCB012
+     C           RVSS66    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS66    SCTS66                                              CCB012
+     C                     MOVE RVSS66    SCSS66                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS66                                              CCB012
+     C                     MOVE 'RUN '    SCSS66                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS66                                              CCB012
+     C                     MOVE '    '    SCSS66                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST67    IFNE *BLANKS                                                       CCB012
+     C           RVSS67    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS67    SCTS67                                              CCB012
+     C                     MOVE RVSS67    SCSS67                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS67                                              CCB012
+     C                     MOVE 'RUN '    SCSS67                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS67                                              CCB012
+     C                     MOVE '    '    SCSS67                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST68    IFNE *BLANKS                                                       CCB012
+     C           RVSS68    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS68    SCTS68                                              CCB012
+     C                     MOVE RVSS68    SCSS68                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS68                                              CCB012
+     C                     MOVE 'RUN '    SCSS68                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS68                                              CCB012
+     C                     MOVE '    '    SCSS68                                              CCB012
+     C                     END                                                                CCB012
+      *                                                                                       CCB012
+     C           RVST69    IFNE *BLANKS                                                       CCB012
+     C           RVSS69    IFNE *BLANKS                                                       CCB012
+     C                     MOVELRVSS69    SCTS69                                              CCB012
+     C                     MOVE RVSS69    SCSS69                                              CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE 'R'       SCTS69                                              CCB012
+     C                     MOVE 'RUN '    SCSS69                                              CCB012
+     C                     END                                                                CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVE ' '       SCTS69                                              CCB012
+     C                     MOVE '    '    SCSS69                                              CCB012
+     C                     END                                                                CCB012
+      **********                                                                       095664 CCB012
+      **Correct*status*for*normal*journalling*process.***********                      095664 CCB012
+      **********                                                                       095664 CCB012
+     C**********           MOVELRVSTR0    COMP   10                                    095664 CCB012
+     C********** COMP      IFEQ 'SCC0402'                                              095664 CCB012
+     C********** COMP      OREQ 'SCC0406'                                              095664 CCB012
+     C********** RVSTS0    IFEQ 'LCKW'                                                 095664 CCB012
+     C**********           MOVEL'RUN '    SCSTS0                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+      **********                                                                       095664 CCB012
+     C**********           MOVELRVSTR1    COMP                                         095664 CCB012
+     C********** COMP      IFEQ 'SCC0402'                                              095664 CCB012
+     C********** COMP      OREQ 'SCC0406'                                              095664 CCB012
+     C********** RVSTS1    IFEQ 'LCKW'                                                 095664 CCB012
+     C**********           MOVEL'RUN '    SCSTS1                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+      **********                                                                       095664 CCB012
+     C**********           MOVELRVSTR2    COMP                                         095664 CCB012
+     C********** COMP      IFEQ 'SCC0402'                                              095664 CCB012
+     C********** COMP      OREQ 'SCC0406'                                              095664 CCB012
+     C********** RVSTS2    IFEQ 'LCKW'                                                 095664 CCB012
+     C**********           MOVEL'RUN '    SCSTS2                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+      **********                                                                       095664 CCB012
+     C**********           MOVELRVSTR3    COMP                                         095664 CCB012
+     C********** COMP      IFEQ 'SCC0402'                                              095664 CCB012
+     C********** COMP      OREQ 'SCC0406'                                              095664 CCB012
+     C********** RVSTS3    IFEQ 'LCKW'                                                 095664 CCB012
+     C**********           MOVEL'RUN '    SCSTS3                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+      **********                                                                       095664 CCB012
+     C**********           MOVELRVSTR4    COMP                                         095664 CCB012
+     C********** COMP      IFEQ 'SCC0402'                                              095664 CCB012
+     C********** COMP      OREQ 'SCC0406'                                              095664 CCB012
+     C********** RVSTS4    IFEQ 'LCKW'                                                 095664 CCB012
+     C**********           MOVEL'RUN '    SCSTS4                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+      **********                                                                       095664 CCB012
+     C**********           MOVELRVSTR5    COMP                                         095664 CCB012
+     C********** COMP      IFEQ 'SCC0402'                                              095664 CCB012
+     C********** COMP      OREQ 'SCC0406'                                              095664 CCB012
+     C********** RVSTS5    IFEQ 'LCKW'                                                 095664 CCB012
+     C**********           MOVEL'RUN '    SCSTS5                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+      **********                                                                       095664 CCB012
+     C**********           MOVELRVSTR6    COMP                                         095664 CCB012
+     C********** COMP      IFEQ 'SCC0402'                                              095664 CCB012
+     C********** COMP      OREQ 'SCC0406'                                              095664 CCB012
+     C********** RVSTS6    IFEQ 'LCKW'                                                 095664 CCB012
+     C**********           MOVEL'RUN '    SCSTS6                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+      **********                                                                       095664 CCB012
+     C**********           MOVELRVSTR7    COMP                                         095664 CCB012
+     C********** COMP      IFEQ 'SCC0402'                                              095664 CCB012
+     C********** COMP      OREQ 'SCC0406'                                              095664 CCB012
+     C********** RVSTS7    IFEQ 'LCKW'                                                 095664 CCB012
+     C**********           MOVEL'RUN '    SCSTS7                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+      **********                                                                       095664 CCB012
+     C**********           MOVELRVSTR8    COMP                                         095664 CCB012
+     C********** COMP      IFEQ 'SCC0402'                                              095664 CCB012
+     C********** COMP      OREQ 'SCC0406'                                              095664 CCB012
+     C********** RVSTS8    IFEQ 'LCKW'                                                 095664 CCB012
+     C**********           MOVEL'RUN '    SCSTS8                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+      **********                                                                       095664 CCB012
+     C**********           MOVELRVSTR9    COMP                                         095664 CCB012
+     C********** COMP      IFEQ 'SCC0402'                                              095664 CCB012
+     C********** COMP      OREQ 'SCC0406'                                              095664 CCB012
+     C********** RVSTS9    IFEQ 'LCKW'                                                 095664 CCB012
+     C**********           MOVEL'RUN '    SCSTS9                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+     C**********           ENDIF                                                       095664 CCB012
+      *
+     C                     MOVEASCSTAT    STS,1
+     C                     Z-ADD65        YY      30                                          CCB012
+     C                     MOVEASCSTA2    STS,YY                                              CCB012
+     C**********           Z-ADD59        IN      20                                          CCB012
+     C                     Z-SUB1         IN      20                                          CCB012
+     C           *IN80     DOUEQ'0'
+     C                     Z-ADD1         Y       20
+     C           'MSGW'    LOKUPSTS,Y                    80
+     C           *IN80     IFEQ '1'
+     C           IN        ADD  Y         IN
+     C           IN        IFGT 0                                                             CCB012
+     C                     MOVEA'1'       *IN,IN
+     C                     MOVEL*BLANKS   STS,Y
+     C**********           Z-ADD59        IN                                                  CCB012
+     C                     Z-SUB1         IN                                                  CCB012
+     C                     ELSE                                                               CCB012
+     C                     MOVEA'1'       *IN,70                                              CCB012
+     C                     MOVEL*BLANKS   STS,Y                                               CCB012
+     C                     Z-SUB1         IN                                                  CCB012
+     C                     END                                                                CCB012
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #TIME     BEGSR
+      *
+     C                     Z-ADD0         WWTNEW
+     C                     Z-ADD0         WWTTMP
+     C                     Z-ADD0         WWTMTP
+     C                     TIME           WWTIME
+     C           WWHOUR    MULT 3600      WWTTMP
+     C           WWMINU    MULT 60        WWTMTP
+     C           WWTTMP    ADD  WWTMTP    WWTTMP
+     C           WWTTMP    ADD  WWSECO    WWTNEW
+      *
+     C           WWTOLD    IFGT WWTNEW
+     C           WWTNEW    ADD  43200     WWTNEW
+     C                     END
+      *
+     C                     Z-ADDWWTNEW    WWNACT           * ACTIVITY TIME
+     C           WWOACT    SUB  WWNACT    WWRACT           * DIFFERENCE
+     C           WWOMSG    IFGT 0
+     C                     Z-ADDWWTNEW    WWNMSG           * MESSAGE TIME
+     C           WWNMSG    SUB  WWOMSG    WWRMSG           * DIFFERENCE
+     C                     ELSE
+     C                     Z-ADD0         WWNMSG
+     C                     END
+      *
+      ** ANY INFORMATION WITH SEVERITY LOWER THAN 10 IS REFRESHED
+      *
+     C           WWINFO    IFLT 10
+     C           WWINFO    ANDGE1
+     C           WWRMSG    IFGT 30
+     C                     Z-ADD0         WWOMSG
+     C                     MOVEL*BLANKS   SCINFR
+     C**********           MOVE '0'       *IN54                                               CCB012
+     C                     MOVE '0'       *IN74                                               CCB012
+     C                     Z-ADD1         WWINFO
+     C           WWTEMP    IFEQ 'TEMP'
+     C                     MOVEL'    '    WWTEMP
+     C                     MOVELWWSAVE    SCINFR
+     C**********           MOVE '1'       *IN54                                               CCB012
+     C                     MOVE '1'       *IN74                                               CCB012
+     C                     Z-ADDWWSVFO    WWINFO
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #PROC     BEGSR
+      *
+     C           WWINFO    IFEQ 88
+     C                     IN   WWCLOB
+     C           HALTST    IFEQ 'N'
+     C                     Z-ADD1         WWINFO
+     C                     MOVEL*BLANKS   SCINFR
+     C                     END
+     C                     END
+      *
+      *****USE*MAXAS*FIELD*TO*DETERMINE*HOW*MANY*STREAMS*TO*SHOW**********                    CCB012
+      *****WHEN*DISPLAYING*THE*MONITOR.***********************************                    CCB012
+      ************                                                                            CCB012
+     C************         Z-ADD1         CNT     20                                          CCB012
+     C************         MOVE RVMAXA    WWMAXI  20                                          CCB012
+     C************         SUB  1         WWMAXI                                              CCB012
+     C***********CNT       DOWLEWWMAXI                                                        CCB012
+     C************         MOVE '1'       ST,CNT                                              CCB012
+     C************         ADD  1         CNT                                                 CCB012
+     C************         END                                                                CCB012
+     C************         ADD  1         WWMAXI                                              CCB012
+      ************                                                                            CCB012
+      *****SET*ON*THE*APPROPRIATE*DISPLAY*FILE*INDICATORS.****************                    CCB012
+      ************                                                                            CCB012
+     C************         MOVEAST        *IN,01                                              CCB012
+      *
+      **   IF ALL FAILED COMPONENTS HAVE BEEN RESTARTED THEN DO
+      **   NOT DISPLAY THE CORRESPONDING LINE ON THE DISPLAY FILE.
+      *
+     C           RVFAIL    IFLE 0
+     C**********           SETON                     50                                       CCB012
+     C                     SETON                     73                                       CCB012
+     C                     ELSE
+     C**********           SETOF                     50                                       CCB012
+     C                     SETOF                     73                                       CCB012
+     C                     END
+      *
+     C**********           MOVE '0'       *IN56                                               CCB012
+     C                     MOVE '0'       *IN76                                               CCB012
+     C                     MOVEL'USERLOCK'WWUSSP
+     C                     MOVEL'*LIBL  ' WWLIBL
+     C                     MOVEL*BLANKS   WWLUSR
+     C                     Z-ADD1         WWSTRT
+     C                     Z-ADD26        WWLENU
+     C                     CALL 'QUSRTVUS'             99
+     C                     PARM           WWQUAL
+     C                     PARM           WWSTRT
+     C                     PARM           WWLENU
+     C                     PARM           WWLUSR
+     C           WWLUSR    IFNE *BLANKS
+     C           WWSUSR    ANDEQUSRID
+     C           WWSWSD    ANDEQWCWSID
+     C           WWSNBR    ANDEQJNBR
+     C**********           MOVE '1'       *IN56                                               CCB012
+     C                     MOVE '1'       *IN76                                               CCB012
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #SCRN     BEGSR
+      *
+     C/COPY WNCPYSRC,CBMONDC001
+      **   SEND THE MONITOR SCREEN
+      *
+     C           WWSTUS    IFEQ 0
+      *                                                                                       196795
+      * Delay job to prevent screen flicker/excessive CPU usage                               196795
+      *                                                                                       196795
+     C                     CALL 'QCMDEXC'                                                     196795
+     C                     PARM 'DLYJOB 1'CMD     8                                           196795
+     C                     PARM 8         CMDLEN 155                                          196795
+      *
+     C**********           WRITECBMONF0                20                                     CCB012
+     C                     WRITECBMONF0                77                                     CCB012
+      *
+     C           WWSTUS    IFNE 0
+     C********** *IN20     OREQ '1'                                                           CCB012
+     C           *IN77     OREQ '1'                                                           CCB012
+     C                     EXSR #RSTD
+     C                     END
+     C                     ELSE
+     C                     EXSR #RSTD
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+     C           #RSTD     BEGSR
+      *
+     C                     Z-ADD0         WWSTUS
+     C**********           MOVE *OFF      *IN20                                               CCB012
+     C                     MOVE *OFF      *IN77                                               CCB012
+     C                     MOVE *OFF      *IN89
+     C**********           READ CBMONF0                2021                                   CCB012
+     C                     READ CBMONF0                7778                                   CCB012
+     C                     MOVE *ON       *IN89
+     C**********           WRITECBMONF1                20                                     CCB012
+     C                     WRITECBMONF1                77                                     CCB012
+     C**********           WRITECBMONF0                20                                     CCB012
+     C                     WRITECBMONF0                77                                     CCB012
+      *
+     C                     ENDSR
+      ********************************************************************
+     C           #ACTY     BEGSR
+      *
+     C                     MOVEL*BLANKS   WWMONI  1
+     C                     MOVEL*BLANKS   WWSCHD  1
+     C                     MOVEL*BLANK    WWERRO  1
+      *
+     C                     CALL 'CBC0512'              99
+     C                     PARM           WWMONI
+     C                     PARM           WWSCHD
+     C                     PARM           WWERRO
+      *
+      ** MONITOR   ACTIVITY
+      *
+     C           WWMONI    IFEQ 'Y'
+     C                     MOVEL'*Yes'    SCMONI
+     C**********           MOVE '0'       *IN51                                               CCB012
+     C                     MOVE '0'       *IN71                                               CCB012
+     C                     ELSE
+     C                     MOVEL'*No '    SCMONI
+     C**********           MOVE '1'       *IN51                                               CCB012
+     C                     MOVE '1'       *IN71                                               CCB012
+     C                     END
+      *
+      ** SCHEDULER ACTIVITY
+      *
+     C           WWSCHD    IFEQ 'Y'
+     C                     MOVEL'*Yes'    SCSCED
+     C**********           MOVE '0'       *IN52                                               CCB012
+     C                     MOVE '0'       *IN72                                               CCB012
+     C                     ELSE
+     C**********           MOVE '1'       *IN52                                               CCB012
+     C                     MOVE '1'       *IN72                                               CCB012
+     C                     MOVEL'*No '    SCSCED
+     C                     END
+      *
+      ** IF BOTH SCHEDULER AND MONITOR HAVE ENDED TERMINATE JOB
+      *
+     C           WWMONI    IFNE 'Y'
+     C           WWSCHD    ANDNE'Y'
+     C                     MOVEL'END     'DQPROC
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #LOCK     BEGSR
+      *
+     C                     Z-ADD0         X
+      *
+      ** LOCK/UNLOCK MENU
+      *
+     C           WWLOCK    IFEQ *BLANK
+     C           DQPROC    ANDEQ'LOCK    '
+     C                     MOVEL'L'       WWLOCK
+     C                     Z-ADD2         X
+     C**********           MOVE '1'       *IN54                                               CCB012
+     C                     MOVE '1'       *IN74                                               CCB012
+     C                     MOVELDQMESG    SCINFR
+     C                     END
+      *
+     C           WWLOCK    IFEQ 'L'
+     C           DQPROC    ANDEQ'UNLOCK  '
+     C                     Z-ADD0         WWINFO
+     C                     MOVE *BLANK    WWLOCK
+     C                     MOVEL*BLANKS   SCINFR
+     C**********           MOVE '0'       *IN54                                               CCB012
+     C                     MOVE '0'       *IN74                                               CCB012
+      *                                                                                    AR1096378
+     C           PHASE     IFNE 'N'                                                        AR1096378
+     C                     Z-ADD1         X
+     C                     ELSE                                                            AR1096378
+     C                     Z-ADD3         X                                                AR1096378
+     C                     ENDIF                                                           AR1096378
+      *                                                                                    AR1096378
+     C                     END
+      *
+      ** EXECUTE COMMAND
+      *
+     C           X         IFNE 0
+      *
+     C                     EXSR #ATTN
+      *
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #ATTN     BEGSR
+      *
+      ** SETON/off ATTENTION PROGRAM
+      *
+     C                     MOVEL*BLANKS   WWATTN
+     C                     MOVEAATN,X     WWATTN 33
+     C                     Z-ADD33        WWLENG
+     C                     CALL 'QCMDEXC'              99
+     C                     PARM           WWATTN
+     C                     PARM           WWLENG
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #REOP     BEGSR
+      *
+     C                     MOVEL*BLANKS   SCINFR
+     C                     MOVELDQMESG    SCINFR
+     C**********           MOVE '1'       *IN54                                               CCB012
+     C                     MOVE '1'       *IN74                                               CCB012
+     C                     Z-ADD2         X
+     C                     EXSR #ATTN
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #HALT     BEGSR
+      *
+     C           DQSEVR    IFGE WWINFO
+     C           WWINFO    ANDNE88
+     C                     MOVEL*BLANKS   SCINFR
+     C                     MOVELDQMESG    SCINFR
+     C**********           MOVE '1'       *IN54                                               CCB012
+     C                     MOVE '1'       *IN74                                               CCB012
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #MESG     BEGSR
+      *
+     C           DQSEVR    IFGE WWINFO
+     C                     MOVEL*BLANKS   SCINFR
+     C                     MOVELDQMESG    SCINFR
+     C**********           MOVE '1'       *IN54                                               CCB012
+     C                     MOVE '1'       *IN74                                               CCB012
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #RSTR     BEGSR
+      *
+     C           DQSEVR    IFGE WWINFO
+     C                     Z-ADD1         WWINFO
+     C                     MOVEL*BLANKS   SCINFR
+     C                     MOVELDQMESG    SCINFR
+     C**********           MOVE '1'       *IN54                                               CCB012
+     C                     MOVE '1'       *IN74                                               CCB012
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #NEWU     BEGSR
+      *
+     C           DQSEVR    IFGE WWINFO
+     C                     MOVEL*BLANKS   SCINFR
+     C                     MOVELDQMESG    SCINFR
+     C**********           MOVE '1'       *IN54                                               CCB012
+     C                     MOVE '1'       *IN74                                               CCB012
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+     C           #RMVU     BEGSR
+      *
+     C           DQSEVR    IFGE WWINFO
+     C                     MOVEL*BLANKS   SCINFR
+     C                     MOVELDQMESG    SCINFR
+     C**********           MOVE '1'       *IN54                                               CCB012
+     C                     MOVE '1'       *IN74                                               CCB012
+     C                     END
+      *
+     C                     ENDSR
+      ******************************************************************
+     C           #INIT     BEGSR
+      *
+     C           *NAMVAR   DEFN CBSTAT    WWCLOB
+     C           *NAMVAR   DEFN CBLMSG    WWLMSG
+     C           *NAMVAR   DEFN MPHAS     PHASE
+     C                     CALL 'AOCURRR0'                                                    CPK010
+     C                     PARM '        '@RTCD   7                                           CPK010
+     C                     PARM '*FREE   '@OPTN   7                                           CPK010
+     C                     PARM           @CCY    3                                           CPK010
+     C                     PARM           DSSDY                                               CPK010
+      *
+      ** ACTIVATE S01420
+      *
+     C**********           MOVE '1'       *IN55                                               CCB012
+     C                     MOVE '1'       *IN75                                               CCB012
+      *
+      ** INITIALISE WORK FIELDS
+      *
+      ** Initialise Main data queue parameters
+      *
+     C                     MOVEL'MAINDTQ 'WWMAIN 10
+     C                     Z-ADD1024      WWLENM  50
+     C                     MOVEL'EQ'      WWORDR  2
+     C                     Z-ADD10        WWLENK  30
+     C                     Z-ADD10        WWLENS  30
+     C                     MOVEL*BLANKS   WWSNDR 10
+     C                     MOVEL'*ALL    'WWALL  10
+     C                     MOVEL*BLANK    WWERR   1
+     C                     MOVEL'*LIBL'   WWDQLB 10
+     C                     MOVEL'MASTER'  WWMAST 10
+     C                     MOVEL*BLANK    WWLOCK  1
+     C                     MOVEL*BLANKS   WWDQDA256
+     C                     Z-ADD10        WWDQW1  50
+     C                     Z-ADD0         WWDQW2  50
+     C                     Z-ADD256       WWDQLN  50
+     C                     Z-ADD0         WWLENG 155
+     C                     Z-ADD0         X       10
+     C                     Z-ADD1         WWINFO  20
+     C                     Z-ADD0         WWTNEW  50
+     C                     Z-ADD0         WWTOLD  50
+     C                     Z-ADD0         WWOACT  50
+     C                     Z-ADD0         WWNACT  50
+     C                     Z-ADD0         WWOMSG  50
+     C                     Z-ADD0         WWNMSG  50
+     C                     Z-ADD0         WWTTMP  50
+     C                     Z-ADD0         WWTMTP  50
+     C                     Z-ADD0         WWRMSG  40
+     C                     Z-ADD0         WWRACT  40
+     C                     MOVEL*BLANKS   SCINFR
+      *
+      ** Default screen values before the control becomes active
+      *
+     C**********           MOVEA'00'      *IN,51                                              CCB012
+     C                     MOVEA'00'      *IN,71                                              CCB012
+     C                     MOVE '*Yes'    SCMONI
+     C                     MOVE '*Yes'    SCSCED
+     C                     Z-ADD1         SCCONT
+      *
+      ** SEND WAIT MESSAGE
+      *
+     C                     CALL 'SCC0010'
+     C                     PARM 'CBCMOND 'WWDEVC 10
+     C                     PARM '        'WWOPTN 10
+     C                     PARM           WWNRPY  1
+      *
+     C                     IN   WWLMSG
+      *
+     C           WWMSDA    IFNE *BLANKS
+     C           WWSEVR    ANDEQ88
+     C           WWMSDA    ORNE *BLANKS
+     C           WWSEVR    ANDEQ85
+     C                     MOVELWWMSDA    SCINFR
+     C                     Z-ADDWWSEVR    WWINFO
+     C**********           MOVE '1'       *IN54                                               CCB012
+     C                     MOVE '1'       *IN74                                               CCB012
+     C                     END
+      *
+     C/COPY WNCPYSRC,CBMONDC004
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** ATN - USED for QCMDEXC
+SETATNPGM PGM(CBC0015A) SET(*ON)
+SETATNPGM PGM(CBC0531)  SET(*ON)
+SETATNPGM PGM(CB000003) SET(*ON)                                                           AR1096378
+** FAS
+B        Input Cycle Termination
+C      Close of Business Processing
+D             Next Day Setup
+E             Next Day Setup
+F         Input Cycle Initiation
+A           Input Cycle Start
+G             Secondary COB                                                                   CCB020
+N          Non-Working Day CoB                                                                CCB020
+X            Midas Disabled                                                                   CCB020

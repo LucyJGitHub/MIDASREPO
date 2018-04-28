@@ -1,0 +1,423 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Convert Character to Hex and vice versa')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Utilities Module                                     *
+      *                                                               *
+      *  UT0078 - Update data area maintenance                        *
+      *                                                               *
+      *  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By: UPDDTAARA - Update data area                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. CREATE             Date 05MAR96               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CREATE - Rewrite AMDDTAAR                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *
+      * Conversion arrays
+      *
+     E                    @C        100  1
+      *
+      *  Characters
+      *
+     E                    @DC       100  1
+     E                    @DCA   50 100  1
+     E                    @HXA   16  16  1
+      *
+      *  Displayable Characters
+      *
+     E                    @H1       100  1
+      *
+      *  First Hex characters ie FDC
+      *
+     E                    @H2       100  1
+      *
+      *  Second Hex characters ie 091
+      *
+     E                    @H3       100  2
+      *
+      *  Hex character as pairs ie F3D8 etc
+      *
+      /EJECT
+      *****************************************************************
+     I@W1         DS
+      *
+      *  Work data structure to keep data
+      *
+     I                                        1 100 W0CHAR
+     I                                      101 200 W0HEX1
+     I                                      201 300 W0HEX2
+     I                                      301 500 W0HEX3
+     I                                      501 600 W0DCHR
+     I@W2         DS
+      *
+      *  Work data structure to pointers
+      *
+     I                                        2   2 @B2
+     I                                    B   1   20@B
+     I                                        3   4 @C2
+     I                                        3   3 @C21
+     I                                        4   4 @C22
+      /EJECT
+      *****************************************************************
+      *
+      *  Entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM W0RTN     P0RTN   7        Return Code
+     C           W0CVTT    PARM           P0CVTT 10        Conv. Type
+     C           W0CHAR    PARM @CHAR     P0CHAR100        Chars
+     C           W0DCHR    PARM @DSPC     P0DSPC100        Display Char
+     C           W0HEX1    PARM @HX1      P0HX1 100        Hex first
+     C           W0HEX2    PARM @HX2      P0HX2 100        Hex Second
+     C           W0HEX3    PARM @HEX      P0HEX 200        Hex both
+     C           W0LEN     PARM @LEN      P0LEN   50       Length
+      *
+      *****************************************************************
+      *
+      *  Execute initiation subroutine
+      *
+     C                     EXSR SRINIT
+      *
+      *  Check type of conversion
+      *
+     C                     MOVEL'*ACTION' W0RTN   7
+     C           W0CVTT    CASEQ'*C*H'    SRCH
+     C           W0CVTT    CASEQ'*D*C'    SRDC
+     C           W0CVTT    CASEQ'*H*C*1'  SRHC1
+     C           W0CVTT    CASEQ'*H*C*2'  SRHC2
+     C           W0CVTT    CASEQ'*END'    SREND
+     C                     CAS            SRERP
+     C                     END
+      *
+      *  End program
+      *
+     C                     MOVEL*BLANKS   W0RTN
+     C                     RETRN
+      /EJECT
+     CSR         SRINIT    BEGSR
+      *================================================================
+      * Initialise fields
+      *================================================================
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C                     MOVEL*BLANKS   W0RTN
+     C                     MOVEL*BLANKS   @CHAR
+     C                     MOVEL*BLANKS   @C
+     C                     MOVEL*BLANKS   @DC
+     C                     MOVEL*BLANKS   @H1
+     C                     MOVEL*BLANKS   @H2
+     C                     MOVEL*BLANKS   @H3
+     C                     Z-ADD*ZEROS    @LEN    50
+      *
+      *  Check that the length is within range
+      *
+     C           W0LEN     IFGT 100
+     C           W0LEN     ORLE 0
+     C                     MOVEL'*LEN   ' W0RTN
+     C                     EXSR SRERP
+     C                     END
+      *
+      *================================================================
+     C           SRINIX    ENDSR
+      /EJECT
+     CSR         SRCH      BEGSR
+      *================================================================
+      * Convert character string to hexidecimal for display
+      *================================================================
+      *
+      * Move characters into arrays and format
+      *
+     C                     MOVEAW0CHAR    @C
+      *
+     C           1         DO   W0LEN     X       50
+      *
+      * Format hex arrays
+      *
+     C                     Z-ADD0         @B
+     C                     MOVEL@C,X      @B2
+     C                     BITOF'4567'    @B2
+     C           @B        DIV  16        @B
+     C                     ADD  1         @B
+     C                     MOVEL@HXA,@B   @H1,X
+     C                     MOVEL@HXA,@B   @H3,X
+     C                     Z-ADD0         @B
+     C                     MOVEL@C,X      @B2
+     C                     BITOF'0123'    @B2
+     C                     ADD  1         @B
+     C                     MOVEL@HXA,@B   @H2,X
+     C                     MOVE @HXA,@B   @H3,X
+      *
+      * Check if displayable character
+      *
+     C                     EXSR SRDSPC
+     C           @RTN      IFEQ *BLANKS
+     C                     MOVEL@C,X      @DC,X
+     C                     END
+      *
+     C                     END
+      *
+      * Move in fields for return
+      *
+     C                     MOVELW0CHAR    @CHAR 100
+     C                     MOVEA@DC       @DSPC 100
+     C                     MOVEA@H1       @HX1  100
+     C                     MOVEA@H2       @HX2  100
+     C                     MOVEA@H3       @HEX  200
+      *
+      *================================================================
+     C           SRCHX     ENDSR
+      /EJECT
+     C           SRDC      BEGSR
+      *================================================================
+      * Convert display characters into arrays
+      *================================================================
+      *
+      * Move characters into arrays and format
+      *
+     C                     MOVEAW0CHAR    @C
+     C                     MOVEAW0DCHR    @DC
+      *
+     C           1         DO   W0LEN     X       50
+      *
+      * Format into hex arrays
+      *
+     C                     Z-ADD0         @B
+     C                     MOVEL@C,X      @B2
+     C                     BITOF'4567'    @B2
+     C           @B        DIV  16        @B
+     C                     ADD  1         @B
+     C                     MOVEL@HXA,@B   @H1,X
+     C                     MOVEL@HXA,@B   @H3,X
+     C                     Z-ADD0         @B
+     C                     MOVEL@C,X      @B2
+     C                     BITOF'0123'    @B2
+     C                     ADD  1         @B
+     C                     MOVEL@HXA,@B   @H2,X
+     C                     MOVE @HXA,@B   @H3,X
+      *
+      * Check if displayable character
+      *
+     C                     EXSR SRDSPC
+      *
+      *  If displayable check for change and place in @C
+      *
+     C           @RTN      IFEQ *BLANKS
+     C           @C,X      IFNE @DC,X
+     C                     MOVEL@DC,X     @C,X
+     C                     END
+     C                     ELSE
+      *
+      *  If not displayable check for non-blank and place in @C
+      *
+     C           @DC,X     IFNE *BLANKS
+     C                     MOVEL@DC,X     @C,X
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      *  Format fields using SRCH subroutine
+      *
+     C                     MOVEA@C        W0CHAR
+     C                     EXSR SRINIT
+     C                     EXSR SRCH
+      *
+      *================================================================
+     C           SRDCX     ENDSR
+      /EJECT
+     C           SRHC1     BEGSR
+      *================================================================
+      * Convert hex single arrays to character fields etc
+      *================================================================
+      *
+      * Move characters into arrays and format
+      *
+     C                     MOVEAW0HEX1    @H1
+     C                     MOVEAW0HEX2    @H2
+      *
+     C           1         DO   W0LEN     X       50
+      *
+      * Format from hex arrays
+      *
+     C                     Z-ADD1         Y       50
+     C           @H1,X     LOKUP@HXA,Y                   90
+     C           *IN90     IFEQ '0'
+     C                     Z-ADDX         @LEN
+     C                     MOVEL'*INVF  ' W0RTN
+     C                     RETRN
+     C                     END
+     C                     SUB  1         Y
+     C           Y         MULT 16        @B
+     C                     Z-ADD1         Y       50
+     C           @H2,X     LOKUP@HXA,Y                   90
+     C           *IN90     IFEQ '0'
+     C                     Z-ADDX         @LEN
+     C                     MOVEL'*INVF  ' W0RTN
+     C                     RETRN
+     C                     END
+     C                     SUB  1         Y
+     C           Y         ADD  @B        @B
+     C                     MOVEL@B2       @C,X
+     C                     MOVEL@H1,X     @H3,X
+     C                     MOVE @H2,X     @H3,X
+      *
+      * Check if displayable character
+      *
+     C                     EXSR SRDSPC
+     C           @RTN      IFEQ *BLANKS
+     C                     MOVEL@C,X      @DC,X
+     C                     END
+      *
+     C                     END
+      *
+      * Move in fields for return
+      *
+     C                     MOVEA@C        @CHAR 100
+     C                     MOVEA@DC       @DSPC 100
+     C                     MOVELW0HEX1    @HX1  100
+     C                     MOVELW0HEX2    @HX2  100
+     C                     MOVEA@H3       @HEX  200
+      *
+      *================================================================
+     C           SRHC1X    ENDSR
+      /EJECT
+     C           SRHC2     BEGSR
+      *================================================================
+      * Convert hex single arrays to character fields etc
+      *================================================================
+      *
+      * Move characters into arrays and format
+      *
+     C                     MOVEAW0HEX3    @H3
+      *
+     C           1         DO   W0LEN     X       50
+      *
+      * Format from hex arrays
+      *
+     C                     MOVEL@H3,X     @C2
+     C                     Z-ADD1         Y       50
+     C           @C21      LOKUP@HXA,Y                   90
+     C           *IN90     IFEQ '0'
+     C                     Z-ADDX         @LEN
+     C                     MOVEL'*INVF  ' W0RTN
+     C                     RETRN
+     C                     END
+     C                     SUB  1         Y
+     C           Y         MULT 16        @B
+     C                     Z-ADD1         Y       50
+     C           @C22      LOKUP@HXA,Y                   90
+     C           *IN90     IFEQ '0'
+     C                     Z-ADDX         @LEN
+     C                     MOVEL'*INVF  ' W0RTN
+     C                     RETRN
+     C                     END
+     C                     SUB  1         Y
+     C           Y         ADD  @B        @B
+     C                     MOVEL@B2       @C,X
+     C                     MOVEL@C21      @H1,X
+     C                     MOVEL@C22      @H2,X
+      *
+      * Check if displayable character
+      *
+     C                     EXSR SRDSPC
+     C           @RTN      IFEQ *BLANKS
+     C                     MOVEL@C,X      @DC,X
+     C                     END
+      *
+     C                     END
+      *
+      * Move in fields for return
+      *
+     C                     MOVEA@C        @CHAR 100
+     C                     MOVEA@DC       @DSPC 100
+     C                     MOVEA@H1       @HX1  100
+     C                     MOVEA@H2       @HX2  100
+     C                     MOVELW0HEX3    @HEX  200
+      *
+      *================================================================
+     C           SRHC2X    ENDSR
+      /EJECT
+     C           SRDSPC    BEGSR
+      *================================================================
+      * Check if displayable character
+      *================================================================
+      *
+     C                     Z-ADD1         Z       50
+     C                     MOVEL*BLANKS   @RTN    7
+     C           @H1,X     LOKUP@HXA,Z                   90
+     C           *IN90     IFEQ '0'
+     C           Z         ORLT 5
+     C                     MOVEL'*NOND'   @RTN    7
+     C                     ELSE
+     C           @H1,X     IFEQ 'F'
+     C           @H2,X     ANDEQ'F'
+     C                     MOVEL'*NOND'   @RTN    7
+     C                     END
+     C                     END
+      *
+      *================================================================
+     C           SRDSPX    ENDSR
+      /EJECT
+     C           SREND     BEGSR
+      *================================================================
+      * End program and define variables
+      *================================================================
+      *
+     C                     MOVEL'1'       *INLR
+     C                     MOVEL*BLANKS   W0CVTT 10
+     C                     Z-ADD0         W0LEN   50
+     C                     MOVEL@DCA,1    @DCA    1
+      *
+      *================================================================
+     C           SRENDX    ENDSR
+      /EJECT
+     C           SRERP     BEGSR
+      *================================================================
+      * Error routine
+      *================================================================
+      *
+     C           W0RTN     IFEQ *BLANKS
+     C                     MOVEL'*ERROR ' W0RTN
+     C                     END
+      *
+      *  Dump and End program
+      *
+     C                     MOVEL'1'       *INLR
+     C                     DUMP
+     C                     RETRN
+      *
+      *================================================================
+      *
+     C           SRERPX    ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** Displayable Characters @DCA
+ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890\|!"$¢%&'()#=~
+¬-@;:+*}{,./<>?_¦abcdefghijklmnopqrstuvwxyz
+** Hex look up @HXA
+0123456789ABCDEF

@@ -1,0 +1,195 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D ***RPGBASEMOD****************************************************                       CGP016
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GOWRTTRAPE - Write Equation Consumer Account TRAP Records    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CGP016  *REDUNDANT Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGP016 - Global database - Re-use deleted records            *
+      *  CRE026 - Consumer Banking                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *    XX    - Function of Indicator                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *PSSR       - Program exception error routine                *
+      *  *INZSR      - Initialisation Subroutine                      *
+      *  CUST_DEFAULT- Subroutine to Get Customer Details             *
+      *                                                               *
+      *  The *INZSR subroutine will only get called automatically     *
+      *  on entry to the module the first time it is run              *
+      *  (unless you end the program with LR on).  Similarly          *
+      *  D-spec initialisation only happens the first time.  Use      *
+      *  RESET for subsequent passes.                                 *
+      *                                                               *
+      *****************************************************************
+ 
+     FGPETRAPL0 UF A E           K DISK    INFSR(*PSSR) USROPN  COMMIT(D_COM)
+     F                                     PREFIX(G)
+     FGOETRAPPD O    E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(GETRAPD0:GOETRAPD0)
+     F                                     USROPN
+     FGF80LF    IF   E           K DISK    INFSR(*PSSR)
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+     D/COPY ZACPYSRC,PSDS
+ 
+      ** T R A N S A C T I O N    D E T A I L S
+     D T_TRAP        E DS                  EXTNAME(GPETRAPPD)
+     D GT_TRAP       E DS                  EXTNAME(GPETRAPPD)
+     D                                     PREFIX(G)
+ 
+     D I#RTCD          S              7A
+     D I#ERMS          S             50A
+     D I#LOC           S              4A
+     D I#CUSTDEFLT     S              1A
+     D D_COM           S              1A
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically:Entry            ¦
+      ** ¦ Parameters.                                                    ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      ** Entry Parameters
+      *
+     C     *ENTRY        PLIST
+ 
+     C                   PARM                    I#RTCD
+     C                   PARM                    I#ERMS
+      *
+      ** Inputs
+      *
+     C                   PARM                    I#LOC
+     C                   PARM                    I#CUSTDEFLT
+     C                   PARM                    T_TRAP
+      *
+      ** Check for the sub-module (CBRD OR CBRL)
+      *
+     C                   IF        T_SMOD = 'CBRD' OR
+     C                             T_SMOD = 'CBRL'
+      *
+      ** Supply customer defaults (if required)
+      *
+     C     I#CUSTDEFLT   IFEQ      'Y'
+     C                   EXSR      CUST_DEFAULT
+     C                   ENDIF
+      **
+     C                   ENDIF
+      *
+      ** Update is either global or zonal. The latter arises in a COB
+      *
+     C     I#LOC         IFEQ      'GLOB'
+     C     GETRAPK       CHAIN     GPETRAPL0
+ 
+     C                   EVAL      GT_TRAP = T_TRAP
+ 
+     C                   IF        %FOUND(GPETRAPL0)
+     C                   UPDATE    GETRAPD0
+     C                   ELSE
+     C                   WRITE     GETRAPD0
+     C                   ENDIF
+     C                   ELSE
+     C                   EVAL      T_GCOB = 'Y'
+     C                   WRITE     GOETRAPD0
+     C                   ENDIF
+ 
+      * RETURN
+ 
+     C                   RETURN
+ 
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    CUST_DEFAULT - Get Customer Details                        *
+      *                                                               *
+      *    Called by : Main Processing                                *
+      *                                                               *
+      *    Calls :     *PSSR                                          *
+      *****************************************************************
+     C     CUST_DEFAULT  BEGSR
+      *
+      ** Get customer details
+      *
+     C     T_CNUM        CHAIN     GF80LF
+     C                   IF        %FOUND(GF80LF)
+     C                   EVAL      T_LICD = GFP5R
+     C                   EVAL      T_CNCD = GFCNAL
+      *
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBPGM = PSProcPgm
+     C                   EVAL      DBMOD = PSProcMod
+     C                   EVAL      DBFILE = 'GFPF'
+     C                   EVAL      DBKEY  = T_CNUM
+     C                   EVAL      DBASE  = 001
+     C                   EVAL      DBPROC = 'SR/MAIN'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+      *
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *  *INZSR - Initialization Subroutine                           *
+      *                                                               *
+      *  Called by: Main processing                                   *
+      *                                                               *
+      *  Calls:     GPCOPN4COM                                        *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+      *
+      ** Open for commit?
+      *
+     C                   CALL      'GPCOPN4COM'
+     C                   PARM                    D_COM
+      *
+      ** Open file
+      *
+     C     I#LOC         IFEQ      'GLOB'
+     C                   OPEN      GPETRAPL0
+     C                   ELSE
+     C                   OPEN      GOETRAPPD
+     C                   ENDIF
+      *
+      ** Key list
+      *
+     C     GETRAPK       KLIST
+     C                   KFLD                    T_ID
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *********************************************************************
+      * * P S S R  --- A B N O R M A L   E R R O R   C O N D I T I O N S
+      /COPY GOCPYSRC,GOPSSR
+      *********************************************************************
+      /SPACE 5
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

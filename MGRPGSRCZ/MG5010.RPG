@@ -1,0 +1,1016 @@
+     H        1                           F
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG Leo update of message files')
+     H********1                                                           081194
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Generation Module                            *
+     F*                                                               *
+     F*  MG5010 - Update Midas Message files, PF/MGOREFPD and         *
+     F*           PF/MGOMSGPD.                                        *
+     F*                                                               *
+     F*  Function:  This program was created for the Leo Midas        *
+     F*             Integration project. SWIFT messages are created   *
+     F*             from the Leo correspondence and credits. These    *
+     F*             are written to two different Leo files, LCCTXT    *
+     F*             and LEODOC, which are formatted in different ways *
+     F*             Both CLCU51 and CCGU40 call this program, which   *
+     F*             reformats the messages to the Midas files.        *
+     F*             The PF/MGOMSGPD record must be written prior to   *
+     F*             the PF/MGOREFPD record, to prevent any of the     *
+     F*             ME programs trying to access a half written       *
+     F*             record.                                           *
+     F*                                                               *
+     F*  Phases - Leo Input Cycle / Midas Input Cycle                 *
+     F*                                                               *
+     F*  Called By: CLCU51 - Credit Production                        *
+     F*             CCGU40 - Correspondence Production                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. 222385             Date 23Oct03               *
+      *                 221145             Date 08Sep03               *
+      *                 219242             Date 01Jul03               *
+      *                 219241             Date 01Jul03               *
+      *                 CSD015             Date 14Oct02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21Sep98               *
+     F*                 113352             DATE 13FEB97               *
+     F*                 102687             DATE 07JAN97               *
+     F*                 092624             DATE 17JUN96               *
+     F*                 095667             DATE 06NOV95               *
+     F*                 CSW095             DATE 07APR95               *
+     F*                 088620             DATE 05JUN95               *
+     F*                 088610             DATE 05JUN95               *
+     F*                 088114             DATE 01JUN95               *
+     F*                 082351             DATE 12DEC94               *
+     F*                 082343             DATE 29NOV94               *
+     F*                 081194             DATE 24NOV94               *
+     F*                 S01487             DATE 29JUL94               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  222385 - SWIFT msgs are Watch List checked regardless of     *
+      *           configuration file setting                          *
+      *  221145 - Compliance Watch WLC: Move compliance check to      *
+      *           after COMIT to MGOMSGPD                             *
+      *  219242 - Not possible to create MT103+ payment msg from      *
+      *           non-FT transaction (Recompile)                      *
+      *  219241 - Defaulting of "Details of Charges" assign a         *
+      *           system value (Recompile)                            *
+      *  CSD015 - Midas Compliance Watch - Watch List Checking        *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+      *  141572 - Setup CINDV (century flag) SVDT ( value date).      *
+      *  113352 - Set-up CIND (Century flag)  to correct year2000     *
+      *           display problem.                                    *
+     F*  102687 - Recomiple over the new version of the translation   *
+     F*           table SWIFTLEOTR. MGOREFPD has been added to the    *
+     F*           table.                                              *
+     F*                                                               *
+     F*  092624 - Amendment to SWIFT message format to separate the   *
+     F*           SWIFT sequence number from the credit reference by  *
+     F*           a '/' if there is room.                             *
+     F*           Eg, for Credit reference I4000001, Negotiation      *
+     F*           Reference 01, SWIFT sequence 02, field 20 on the    *
+     F*           SWIFT message would be :20:LOI4000001 01/02         *
+     F*                                                               *
+     F*  095667 - S.W.I.F.T 1995 Message Changes.                     *
+     F*           Increase mult DS to handle a  9,999 character       *
+     F*           message.                                            *
+     F*                                                               *
+     F*  CSW095 - S.W.I.F.T 1995 Message Changes.                     *
+     F*           Increase arrays to handle a  9,999 character        *
+     F*           message.                                            *
+     F*                                                               *
+     F*  088620 - Ensure that the entire message field is copied      *
+     F*           to the Midas files.                                 *
+     F*                                                               *
+     F*  088610 - Reposition the array pointer to the start of the    *
+     F*           SWIFT message, rather than field :20:               *
+     F*                                                               *
+     F*  088114 - Message priority fix.                               *
+     F*           1). The message priority on Midas is blank.         *
+     F*               Delivery/Non-Delivery Warning not set up        *
+     F*               correctly.                                      *
+     F*           2). Some banks use the SWIFT II Priority on Leo,    *
+     F*               this program should allow for his possibility.  *
+     F*                                                               *
+     F*  082351 - If Midas Payment Verifiction is switched on, we     *
+     F*           must set up the currency, amount, and date fields.  *
+     F*           If these fields are not present, the message will   *
+     F*           never be verified, and therefore can never be       *
+     F*           released.                                           *
+     F*                                                               *
+     F*  082343 - If the message type is an MT202, the test key       *
+     F*           required flag must be set to 'Y', as the message    *
+     F*           may get re-routed via Telex.                        *
+     F*                                                               *
+     F*  081194 - Need SWIFT translation table to ensure valid        *
+     F*           characters output.                                  *
+     F*                                                               *
+     F*  S01487 - Created for Leo Midas Integration                   *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F********************************************************************
+     F*
+     FMGOMSGPDO   E                    DISK
+     F                                              KCOMIT
+     FMGOREFPDO   E                    DISK
+     F                                              KCOMIT
+     FMGOREFL0IF  E           K        DISK
+     F            MGOREFD0                          KRENAMEMGREFL0
+     FMG5010AUO   E                    PRINTER                        UC
+     F/COPY WNCPYSRC,MG5010F001
+      ********************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *       U7U8       Database Error
+     F********************************************************************
+     E                    CPY@    1   1 80               Copyright
+     E***********         ARDS     2048  1                                CSW095
+     E***********         @ARR     2048  1                                CSW095
+     E                    ARDS     9999  1                                CSW095
+     E                    @ARR     9999  1                                CSW095
+     E                    @WRK       20  1               Work Array
+     E/COPY WNCPYSRC,MG5010E001
+      *
+     IARR         DS
+     I                                        19999 ARDS                  CSW095
+     I***********                             12048 ARDS                  CSW095
+      ** Data Structure for Message
+      *
+     I*ULT********DS                         95                           095667
+     IMULT        DS                        180                           095667
+     I                                        1   5 MTAG
+     I                                        6  55 MFLD
+     I                                       56 105 MERR
+      **  Multiple occurrence data structure for message
+      *
+     I@MTAG       DS                          5
+     I I            ':'                       1   1 COLON1
+     I                                        2   3 FLDNO
+     I                                        4   4 TAG
+     I I            ':'                       5   5 COLON2
+      **  Data structure constructing message field tag
+      *
+     I            DS
+     I************                            1  50 @FLD                  088620
+     I                                        1  55 @FLD                  088620
+     I                                        1   4 @TAG4
+     I                                        1   5 @TAG5
+     I                                        4   4 @COL4
+     I                                        5   5 @COL5
+     I************                            5  50 @DAT4                 088620
+     I************                            6  50 @DAT5                 088620
+     I                                        5  55 @DAT4                 088620
+     I                                        6  55 @DAT5                 088620
+      **  DS to break up data record
+      *
+     I@CRLF       DS
+     I                                        1   1 @CR
+     I                                        2   2 @LF
+      **  Carriage Return/Line Feed
+      *
+     I@VER        DS                                                      082351
+     I                                        1   6 @SVDT                 082351
+     I                                        7   9 @CCY                  082351
+     I                                       10  26 @AMTS                 082351
+      **  Field :32A: split for verification messages                     082351
+      *                                                                   082351
+     I/COPY WNCPYSRC,MG5010I001
+     I           UDS
+     I                                       81  90 LIBA
+     I                                       91 100 LIBB
+     I                                      101 110 LIBC
+     I                                      111 120 LIBD
+      ** For CCGU40
+      *
+     I                                      523 532 LIBE
+     I                                      533 542 LIBF
+     I                                      543 552 LIBG
+     I                                      553 562 LIBH
+      ** For CLCU51
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External Data structure for bank details.
+      *
+     ISDSYTM    E DSSDSYTMPD
+      **  External Data structure for branch details.
+      *
+     ISDMGME    E DSSDMGMEPD
+      **  Data structure for message management data.
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CSD015
+      ** Data structure for SAR - Switchable features file                                    CSD015
+      *                                                                                       CSD015
+     IWLTDS     E DSSDWLTOPD                                                                  CSD015
+      ** DS For Watch List Transaction Details File                                           CSD015
+      *                                                                                       CSD015
+     IPSTRNG      DS                           9999                                           CSD015
+      *                                                                                       CSD015
+     ISDWLCC    E DSSDWLCCPD                                                                  222385
+      ** Watch list checking details                                                          222385
+      *                                                                                       222385
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      **  Long data structure for access programs
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+      /EJECT
+      *****************************************************************
+      *   MAIN - main process                                         *
+      *   Called by -                                                 *
+      *   Calls     - INIT Initial Processing                         *
+      *****************************************************************
+      *
+      ** Initial process
+     C                     EXSR INIT
+      *
+      ** Process the incoming message array. Split the array
+     C                     EXSR PARR
+      *
+      ** Output the message to the message files
+     C                     EXSR OMSG
+      *
+      **  COMIT all changes since no error on writing the message
+     C                     COMIT
+      *                                                                   221145
+      **  Call Compliance Watch:Watch List Checking                       221145
+      *                                                                   221145
+     C           CSD015    IFEQ 'Y'                                       221145
+     C           W1EWLC    ANDEQ'Y'                                                           222385
+     C           CSW025    ANDEQ'N'                                       221145
+     C                     EXSR WLCDQ                                     221145
+     C                     ENDIF                                          221145
+      *
+      ** End the program
+     C/COPY WNCPYSRC,MG5010C001
+     C                     SETON                     LR
+      *****************************************************************
+      *   PARR - Format Messages                                      *
+      *   Called by - main process                                    *
+      *   Calls - None                                                *
+      *****************************************************************
+     C           PARR      BEGSR
+      *
+      ** Sort out the header information.
+      ** The ARR passed from the Leo program is formatted as a SWIFT I
+      ** Message. We must extract the relevant header information and
+      ** write this to PF/MGOREFPD, the reference record, and then
+      ** write the message to PF/MGOMSGPD, the data record.
+      ** The message as passed from Leo is set up in the following way:
+      ** 'SOH''CRLF'(Sender)'CRLF(Msg Type)_(Msg Priority)'CRLF'(Dest)
+      **  SOH is 1 long, CRLF is 2 long, there is one blank between Type
+      **  and Priority.
+      ** Sender address
+     C           @CRLF     SCAN ARR       H
+     C                     ADD  2         H
+     C           ' '       SCAN ARR:H     S
+     C           S         SUB  H         @LEN    50
+     C           @LEN      SUBSTARR:H     NWSN
+      *
+      ** Message Type
+     C           @CRLF     SCAN ARR:H     H
+     C           H         ADD  2         H
+     C           3         SUBSTARR:H     @MTPY   3
+      *                                                                   082351
+      ** Payment Messages                                                 082351
+      ** If we are processing a payment message, (MT202, MT100),          082351
+      ** the value date, currency and amount fields must be output        082351
+      ** to the file, so that, if the payment verification flag           082351
+      ** is on, the messages can be released.                             082351
+     C           @MTPY     IFEQ '100'                                     082351
+     C           @MTPY     OREQ '202'                                     082351
+      *                                                                   082351
+      ** Scan the array for field :32A:                                   082351
+     C           ':32A:'   SCAN ARR:I     I                               082351
+     C           I         ADD  5         I                               082351
+     C           @CRLF     SCAN ARR:I     S                               082351
+     C           S         SUB  I         @LEN                            082351
+     C           @LEN      SUBSTARR:I     @VER   26                       082351
+     C                     END                                            082351
+      *
+      ** Message Priority
+     C           H         ADD  4         H
+     C           2         SUBSTARR:H     PRIO    2
+      *                                                                   088114
+      ** Check if the priority has been entered on Leo as SWIFT II.       088114
+      ** If so, move this directly to the Midas priority field, else      088114
+      ** convert from SWIFT I.                                            088114
+     C                     MOVELPRIO      PRIO1   1                       088114
+     C           PRIO1     IFEQ 'N'                                       088114
+     C                     MOVE 'N'       @MPRY                           088114
+     C                     ADD  3         H                               088114
+     C                     END                                            088114
+      *                                                                   088114
+     C           PRIO1     IFEQ 'U'                                       088114
+     C                     MOVE 'U'       @MPRY                           088114
+     C                     MOVE '3'       @DELC   1                       088114
+     C                     ADD  3         H                               088114
+     C                     END                                            088114
+      *
+      ** The SWIFT I Priority must be changed to the SWIFT II Priority
+      ***02*to*N;*01*to*U3;*12*to*N2;*11*to*U1************************    088114
+      ** 02 and 12 to N; 01 and 11 to U. Also set up the Delivery         088114
+      ** Notification, and non delivery warning fields.                   088114
+     C           PRIO      IFEQ '02'
+     C***********          MOVE 'N '      @MPRY   2                       088114
+     C                     MOVE 'N'       @MPRY   1                       088114
+     C                     ADD  4         H                               088114
+     C                     END
+      *
+     C           PRIO      IFEQ '01'
+     C***********          MOVE 'U3'      @MPRY                           088114
+     C                     MOVE 'U'       @MPRY                           088114
+     C                     MOVE '3'       @DELC                           088114
+     C                     ADD  4         H                               088114
+     C                     END
+      *
+     C           PRIO      IFEQ '11'
+     C***********          MOVE 'U1'      @MPRY                           088114
+     C                     MOVE 'U'       @MPRY                           088114
+     C                     MOVE '1'       @DELC                           088114
+     C                     ADD  4         H                               088114
+     C                     END
+      *
+     C           PRIO      IFEQ '12'
+     C***********          MOVE 'N2'      @MPRY                           088114
+     C                     MOVE 'N'       @MPRY                           088114
+     C                     MOVE '2'       @DELC                           088114
+     C                     ADD  4         H                               088114
+     C                     END
+      *
+      ** Destination.
+     C***********          ADD  4         H                               088114
+     C           @CRLF     SCAN ARR:H     S
+     C           S         SUB  H         @LEN
+     C           @LEN      SUBSTARR:H     NWDS
+      *
+      ** Message data
+      *
+      **  Extract field/subfield (delimited by CrLf)
+      ** Initially we scan from 'H' to find CRLF. This is the new H.
+      ** Adding 2 to this gives the start of the field (CRLF is 2 long)
+      ** The start of the field is position S. Scan again for CRLF
+      ** gives the start of the next CRLF, which is also the end of the
+      ** previous field. H sub S gives the length of the field.
+     C           @CRLF     SCAN ARR:H     H
+     C           H         ADD  2         S       50
+     C           @CRLF     SCAN ARR:S     H              15
+     C           S         SUB  H         @LEN    50
+      *
+      ** Format field :20: to Midas format.
+     C           ':20:'    SCAN ARR       H
+     C                     ADD  4         H
+     C           @CRLF     SCAN ARR:H     S
+     C           S         SUB  H         @LEN
+     C           @LEN      SUBSTARR:H     @MTRN  15
+      *
+     C/COPY WNCPYSRC,MG5010C005
+      ** Set up the field
+     C                     Z-ADD1         Z       20
+     C                     MOVEA'LO'      @WRK
+     C/COPY WNCPYSRC,MG5010C006
+     C                     MOVEA@MTRN     @WRK,3
+     C/COPY WNCPYSRC,MG5010C007
+     C                     ADD  @SEQ      LSWS    20
+     C                     MOVE LSWS      LSEQ    2
+      *
+     C/COPY WNCPYSRC,MG5010C008
+     C***********' '       LOKUP@WRK,Z                   31               092624
+     C                     Z-ADD15        Z                               092624
+     C                     MOVEALSEQ      @WRK,Z
+     C*                                                                   092624
+     C           @WRK,14   IFEQ *BLANKS                                   092624
+     C                     Z-ADD14        Z                               092624
+     C                     MOVE '/'       @WRK,Z                          092624
+     C                     ENDIF                                          092624
+      *
+      **  Check on MGREFPD for a uniqne TRN,else output as an error.
+      *
+     C                     MOVEA@WRK      @TRNA  16
+     C           @TRNA     CHAINMGREFL0              11
+      *
+      ** If a record is found flag field as in error.
+      *
+     C           *IN11     IFEQ '0'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C***********          MOVEL':20:'    MTAG                            088610
+     C***********          MOVEA@WRK      MFLD                            088610
+     C                     MOVEA@WRK      TRNO
+      *
+     C***********          ADD  1         X                               088610
+     C***********X         OCUR MULT                                      088610
+      *                                                                   088610
+     C           ':'       SCAN ARR       H                               088610
+     C                     SUB  2         H                               088610
+      *
+      **  For all fields/subfields
+     C           *IN15     DOUEQ'0'
+      *
+      ** Extract field details
+     C           @CRLF     SCAN ARR:H     H
+     C           H         ADD  2         S       50
+     C           @CRLF     SCAN ARR:S     H              15
+     C           H         SUB  S         @LEN    50
+      *
+      ** If field/subfield found...
+     C           *IN15     IFEQ '1'
+      *
+      ** Extract field details
+     C                     MOVE *BLANKS   @FLD
+     C           @LEN      SUBSTARR:S     @FLD
+      *
+      ** Format details
+     C           @COL5     IFEQ ':'
+     C                     MOVEL@TAG5     MTAG
+     C                     MOVEL@DAT5     MFLD
+     C                     ELSE
+     C           @COL4     IFEQ ':'
+     C                     MOVEL@TAG4     MTAG
+     C                     MOVEL@DAT4     MFLD
+     C                     ELSE
+     C                     MOVEL*BLANKS   MTAG
+     C                     MOVEL@FLD      MFLD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           MTAG      IFEQ ':20: '                                   088610
+     C                     MOVE *BLANKS   MFLD                            088610
+     C/COPY WNCPYSRC,MG5010C009
+     C                     MOVELTRNO      MFLD                            088610
+     C/COPY WNCPYSRC,MG5010C010
+     C                     ENDIF                                          088610
+      *                                                                   088610
+     C                     ADD  1         X                               056739
+     C           X         OCUR MULT                                      056739
+     C                     ENDIF
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *   OMSG - output correctly generated messages                  *
+      *   Called by - main process                                    *
+      *   Calls - WREF Write o/p reference to PF/MGOREFPD.            *
+      *****************************************************************
+      *
+     C           OMSG      BEGSR
+      *
+      **  Write reference record to PF/MGOREFPD.
+     C                     EXSR WREF
+      *
+      **  Write multiple occurrence data structure to MGOMSGPD
+     C*********            Z-ADD1         X       20                      095667
+     C                     Z-ADD1         X       30                      095667
+     C           X         OCUR MULT
+      *
+     C***********X         DOWLE40                                        CSW095
+     C           X         DOWLE180                                       CSW095
+     C           MFLD      ANDNE*BLANKS
+     C                     WRITEMGOMSGD0               06
+      *
+      **  Error on write to PF/MGOMSGPD (message data file)
+     C           *IN06     IFEQ '1'
+     C                     MOVE '006'     DBASE            * * * * * * * *
+     C                     MOVEL'       ' DBKEY            *  DBERR 006  *
+     C                     MOVEL'MGOMSGPD'DBFILE           * * * * * * * *
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   WREF - Write reference record to PF/MGOREFPD                *
+      *   Called by - OMSG  output message PF/MGOMSGPD                *
+      *****************************************************************
+      *
+     C           WREF      BEGSR
+      *
+     C                     MOVE *BLANKS   TRNF
+     C                     MOVE *BLANKS   TRNM
+     C                     MOVEL@MTRN     MTRN
+     C                     MOVE *BLANKS   SBTP
+     C                     MOVE *BLANKS   EVTP
+     C                     MOVEL*BLANKS   NWBN
+     C                     MOVE @MTPY     MTPY
+     C                     MOVE @MPRY     MPRY
+     C                     MOVEL*BLANKS   LSCC
+     C                     MOVEL*BLANKS   PTST
+     C                     MOVEL*BLANKS   CARQ
+     C                     MOVEL*BLANKS   MPDE
+     C                     MOVEL@HRDT     HRDT
+     C                     TIME           MGTM
+     C                     MOVE BJMRDT    LADT
+     C                     MOVE MGTM      LATM
+      *                                                                                       CSD015
+      ** If Watch List Checking is Applied and CSW025 is not installed,                       CSD015
+      ** do watch list processing.                                                            CSD015
+      *                                                                                       CSD015
+     C           CSD015    IFEQ 'Y'                                                           CSD015
+     C           W1EWLC    ANDEQ'Y'                                                           222385
+     C           CSW025    ANDEQ'N'                                                           CSD015
+     C                     EXSR SRWTCH                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *
+      ** If this is an MT202, Testkey Status must be set to 'Y'           082343
+     C           MTPY      IFEQ '202'                                     082343
+     C                     MOVE 'Y'       TSKS                            082343
+     C                     ELSE                                           082343
+     C                     MOVEL*BLANKS   TSKS                            082343
+     C                     END                                            082343
+     C                     MOVE *BLANKS   TSKY                            082343
+      *                                                                   082343
+     C                     MOVEL*BLANKS   RUSR
+     C                     MOVEL*BLANKS   RWSN
+     C                     MOVEL*BLANKS   AMTS
+     C                     MOVEL*BLANKS   AMTX
+     C                     MOVEL*BLANKS   SVDT
+     C                     MOVEL*BLANKS   CINDV                           141572
+     C                     MOVEL*BLANKS   CCY
+     C                     MOVEL*BLANKS   NSNO
+     C                     MOVEL*BLANKS   SACN
+     C                     MOVEL*BLANKS   AORR
+     C                     MOVEL*BLANKS   DESI
+     C                     MOVEL*BLANKS   OTHB
+     C                     MOVEL*BLANKS   RCBR
+     C                     MOVE *BLANKS   NETI
+     C***********          MOVE *BLANKS   DELC                            088114
+     C                     MOVE @DELC     DELC                            088114
+     C                     MOVE *BLANKS   DYST
+     C                     MOVE *BLANKS   RSID
+     C                     MOVE *BLANKS   MSE1
+     C                     MOVE *BLANKS   ELIN
+     C                     MOVE *BLANKS   SSAC
+     C                     MOVE *BLANKS   MIR
+     C***********          MOVE *BLANKS   TSKS                            082343
+     C***********          MOVE *BLANKS   TSKY                            082343
+      *                                                                   082351
+      ** If this is an MT202, or an MT100, output the payment             082351
+      ** verification fields.                                             082351
+     C           MTPY      IFEQ '100'                                     082351
+     C           MTPY      OREQ '202'                                     082351
+     C                     MOVEL@SVDT     SVDT                            082351
+      *                                                                   141572
+      ** Setup century indicator CINDV for value date SVDT                141572
+     C           SVDT      IFEQ *BLANK                                    141572
+     C                     MOVE *BLANK    CINDV                           141572
+     C                     ELSE                                           141572
+     C                     MOVELSVDT      YYN     20                      141572
+     C           YYN       IFLT 72                                        141572
+     C                     MOVE '2'       CINDV                           141572
+     C                     ELSE                                           141572
+     C                     MOVE '1'       CINDV                           141572
+     C                     ENDIF                                          141572
+     C                     ENDIF                                          141572
+      *                                                                   141572
+     C                     MOVEL@CCY      CCY                             082351
+     C                     MOVEL@AMTS     AMTS                            082351
+     C                     END                                            082351
+     C/COPY WNCPYSRC,MG5010C002
+      *
+     C                     WRITEMGOREFD0               05
+      *
+      **  Error on write to PF/MGOREFPD (message reference file)
+     C           *IN05     IFEQ '1'
+     C                     MOVE '007'     DBASE            * * * * * * * *
+     C                     MOVEL'       ' DBKEY            *  DBERR 007  *
+     C                     MOVEL'MGOREFPD'DBFILE           * * * * * * * *
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDSR
+      *
+      *****************************************************************
+      *   Init - Initial Processing                                   *
+      *   Called by - Main Process                                    *
+      *   Calls       Setup Process                                   *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **  Parameter Entry
+     C           *ENTRY    PLIST
+     C                     PARM           @NAM    6
+     C                     PARM           @ARR
+     C                     PARM           @BRC    3
+     C                     PARM           @SEQ    20
+     C                     PARM           @ERR    6
+      *
+     C                     MOVEACPY@      BIS@   80
+     C/COPY WNCPYSRC,MG5010C011
+      *
+      **  Set up Error Handling
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MG5010'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+      *
+      **  Access SDBANKPD for report title
+     C                     MOVEL'AOBANKR0'PGM     8
+     C                     EXSR SETUP
+     C                     MOVEA@WRK      BANK   20
+      *
+     C                     CALL BANK
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If no record is found on sdbankpd.
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '001'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 001 *
+     C                     MOVEL'SDBANKPD'DBFILE             * * * * * * *
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,MG5010C003
+      *
+      **  Access SDSYTMPD for message management data.
+     C                     MOVEL*BLANKS   PGM
+     C                     MOVEL'AOSYTMR0'PGM
+     C                     EXSR SETUP
+     C                     MOVEA@WRK      SDSY   20
+      *
+     C                     CALL SDSY
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C                     PARM 'LEO   '  @SYTM   6
+     C           SDSYTM    PARM SDSYTM    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 002  *
+     C                     MOVEL'SDSYTMPD'DBFILE           * * * * * * * *
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Set up the message status from the default status field
+     C                     MOVE ECDFST    MGST
+     C           MGST      IFEQ 'CRTD'
+     C                     MOVE '1'       MGSG
+     C                     END
+     C           MGST      IFEQ 'RSND'
+     C                     MOVE '2'       MGSG
+     C                     END
+      *                                                                                       CSD015
+      ** Access SAR Details file to determine if CSD015 is installed                          CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'N'       CSD015  1                                           CSD015
+     C                     MOVEL'N'       W1EWLC                                              222385
+     C                     CALL 'AOSARDR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD   7                                           CSD015
+     C                     PARM '*VERIFY' POPTN   7                                           CSD015
+     C                     PARM 'CSD015'  PSARD   6                                           CSD015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANK                                                        CSD015
+     C           PRTCD     ANDNE'*NRF   '                                                     CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     MOVEL'009'     DBASE                                               CSD015
+     C                     MOVELPRTCD     DBKEY                                               CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFEQ *BLANK                                                        CSD015
+     C                     MOVE 'Y'       CSD015                                              CSD015
+      *                                                                                       222385
+      ** Access AOWLCCR0 to check if function code MESSGENT is available                      222385
+      *                                                                                       222385
+     C                     CALL 'AOWLCCR0'                                                    222385
+     C                     PARM *BLANKS   PRTCD                                               222385
+     C                     PARM '*KEY'    POPTN                                               222385
+     C                     PARM 'MESSGENT'PFUNC   8                                           222385
+     C           SDWLCC    PARM SDWLCC    DSFDY                                               222385
+      *                                                                                       222385
+     C           PRTCD     IFNE *BLANKS                                                       222385
+     C           PRTCD     ANDNE'*NRF'                                                        222385
+     C                     MOVEL'SDWLCCPD'DBFILE                                              222385
+     C                     MOVELPFUNC     DBKEY                                               222385
+     C                     Z-ADD32        DBASE                                               222385
+     C                     EXSR *PSSR                                                         222385
+     C                     ENDIF                                                              222385
+      *                                                                                       222385
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Is CSW025 installed?                                                                 CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'N'       CSW025  1                                           CSD015
+     C                     CALL 'AOSARDR0'                                                    CSD015
+     C                     PARM '       ' PRTCD                                               CSD015
+     C                     PARM '*VERIFY' POPTN                                               CSD015
+     C                     PARM 'CSW025'  PSARD                                               CSD015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANK                                                        CSD015
+     C           PRTCD     ANDNE'*NRF   '                                                     CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     Z-ADD11        DBASE                                               CSD015
+     C                     MOVELPRTCD     DBKEY                                               CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFEQ *BLANK                                                        CSD015
+     C                     MOVE 'Y'       CSW025  1                                           CSD015
+     C                     ENDIF                                                              CSD015
+      *
+      ** Correctly work out Date Format
+     C           BJDFIN    COMP 'M'                      98
+      *
+      **  Access SDMGMEPD for message management data.
+     C                     MOVEL*BLANKS   PGM
+     C                     MOVEL'AOMGMER0'PGM
+     C                     EXSR SETUP
+     C                     MOVEA@WRK      MGME   20
+      *
+     C                     CALL MGME
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMGME    PARM SDMGME    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 003  *
+     C                     MOVEL'SDMGMEPD'DBFILE           * * * * * * * *
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Convert run date to YYMMDD, for Message Generation Date
+     C                     MOVEL*BLANKS   PGM
+     C                     MOVEL'ZM0060'  PGM
+     C                     EXSR SETUP
+     C                     MOVEA@WRK      ZMPGM  20
+      *
+     C                     CALL ZMPGM                  15
+     C                     PARM BJRDNB    ZMDAY   50
+     C                     PARM           ZSDATE  6
+      *
+      ** Program ended in error.
+     C           *IN15     IFEQ '1'
+     C                     MOVE '004'     DBASE              * * * * * * *
+     C                     MOVEL'       ' DBKEY              * DBERR 004 *
+     C                     MOVEL'ZM0060'  DBFILE             * * * * * * *
+     C                     EXSR *PSSR
+     C                     END
+     C                     MOVE ZSDATE    MGDE
+      *                                                                   113352
+      ** Set-up Message Generation  Century flag                          113352
+      *YYN IS A NUMERIC YEAR FIELD                                        141572
+      *                                                                   113352
+     C                     MOVELMGDE      YY      20                      113352
+     C           YY        IFLT 72                                        113352
+     C                     MOVE '2'       CIND                            113352
+     C                     ELSE                                           113352
+     C                     MOVE '1'       CIND                            113352
+     C                     ENDIF                                          113352
+      *
+      **  Convert history retention date to YYMMDD
+     C           BJRDNB    ADD  ENDSMN    ZMDAY
+     C                     CALL ZMPGM                  15
+     C                     PARM           ZMDAY
+     C                     PARM           ZSDATE
+      *
+      ** If the program ends in error.
+     C           *IN15     IFEQ '1'
+     C                     MOVE '005'     DBASE              * * * * * * *
+     C                     MOVEL'       ' DBKEY              * DBERR 005 *
+     C                     MOVEL'ZM0060'  DBFILE             * * * * * * *
+     C                     EXSR *PSSR
+     C                     END
+     C                     MOVE ZSDATE    @HRDT   6
+      *
+      ** Set up the constant records on PF/MGOREFPD
+     C                     MOVEL'LEO'     SYTM
+     C                     MOVEL'SWIFT'   NWRK
+     C                     MOVEL'LO'      MODI
+     C                     MOVEL@HRDT     HRDT
+     C                     TIME           MGTM
+     C                     MOVE BJMRDT    LADT
+     C                     MOVE MGTM      LATM
+     C                     MOVE @BRC      BRCA
+      *
+     C           @NAM      IFEQ 'CCGU40'
+     C                     MOVE 'CO'      TNTP
+     C                     END
+     C           @NAM      IFEQ 'CLCU51'
+     C                     MOVE 'DO'      TNTP
+     C                     END
+      *
+      **  Initialise constant fields
+      **   - CarriageReturn
+     C                     BITOF'01234567'@CR     1
+     C                     BITON'457'     @CR
+      **   - LineFeed
+     C                     BITOF'01234567'@LF     1
+     C                     BITON'257'     @LF
+     C                     MOVE @CRLF     CTRC
+      *
+      **  Clear multiple occurrence data structure
+     C***********          Z-ADD1         X       20                      095667
+     C                     Z-ADD1         X                               095667
+     C           X         OCUR MULT
+      *
+     C***********X         DOWLE40                                        CSW095
+     C           X         DOWLE180                                       CSW095
+     C           MULT      ANDNE*BLANKS
+     C                     MOVE *BLANKS   MULT
+     C                     ADD  1         X
+     C           X         OCUR MULT
+     C                     END
+      *
+     C                     Z-ADD1         H       50
+     C                     Z-ADD1         I       50                      082351
+     C                     Z-ADD1         T       50
+     C                     Z-ADD1         X
+     C           X         OCUR MULT
+      *
+      ** Move the @ARR input to a Data Structure Field for processing
+     C                     MOVEA@ARR      ARDS
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   Setup - Set up the calls to the Midas Programs              *
+      *   Called by - INIT                                            *
+      *****************************************************************
+     C           SETUP     BEGSR
+      *
+      ** Set up the values of Libs 1 to 4, dependent on which is the
+      ** calling program. The libraries are held in different places
+      ** in the LDA
+     C           @NAM      IFEQ 'CCGU40'
+     C                     MOVELLIBA      LIB1   10
+     C                     MOVELLIBB      LIB2   10
+     C                     MOVELLIBC      LIB3   10
+     C                     MOVELLIBD      LIB4   10
+     C                     END
+      *
+     C           @NAM      IFEQ 'CLCU51'
+     C                     MOVELLIBE      LIB1
+     C                     MOVELLIBF      LIB2
+     C                     MOVELLIBG      LIB3
+     C                     MOVELLIBH      LIB4
+     C                     END
+      *
+     C           PGM       IFEQ 'AOBANKR0'
+     C                     MOVELLIB1      LIBNM  10
+     C                     END
+      *
+     C           PGM       IFEQ 'AOSYTMR0'
+     C                     MOVELLIB2      LIBNM
+     C                     END
+      *
+     C           PGM       IFEQ 'AOMGMER0'
+     C                     MOVELLIB3      LIBNM
+     C                     END
+      *
+     C           PGM       IFEQ 'ZM0060'
+     C                     MOVELLIB4      LIBNM
+     C                     END
+      *
+      ** Blank out the array, the set up the library name
+     C                     MOVEA*BLANKS   @WRK
+     C                     MOVEALIBNM     @WRK
+     C                     Z-ADD1         H
+      *
+     C           *BLANK    LOKUP@WRK,H                   10
+     C                     MOVEA'/'       @WRK,H
+     C                     ADD  1         H
+     C                     MOVEAPGM       @WRK,H
+     C                     ENDSR
+     C/COPY WNCPYSRC,MG5010C004
+     C/EJECT                                                                                  CSD015
+      *****************************************************************                       CSD015
+      *                                                               *                       CSD015
+      *  SRWTCH - Watch Processing                                    *                       CSD015
+      *                                                               *                       CSD015
+      *****************************************************************                       CSD015
+      *                                                                                       CSD015
+     C           SRWTCH    BEGSR                                                              CSD015
+      *                                                                                       CSD015
+      ** Re-determine Message Status                                                          CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'N'       PARLS   1                                           CSD015
+      *                                                                                       CSD015
+     C           MGST      IFEQ 'RSND'                                                        CSD015
+      *                                                                                       CSD015
+     C           NWRK      IFEQ 'SWIFT '                                                      CSD015
+     C           NWRK      OREQ 'TELEX '                                                      CSD015
+     C           NWRK      OREQ 'STTX  '                                                      CSD015
+     C                     MOVE 'CRTD'    MGST                                                CSD015
+     C                     MOVE '1'       MGSG                                                CSD015
+     C                     MOVE 'Y'       PARLS                                               CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Initialise parameter for Compliance Engine program.                                  CSD015
+      *                                                                                       CSD015
+     C                     MOVE *BLANK    WLTDS                                               CSD015
+      *                                                                                       CSD015
+     C                     Z-ADD0         W4VDAT                                              CSD015
+     C                     Z-ADD0         W4MDAT                                              CSD015
+     C                     Z-ADD0         W4AMT1                                              CSD015
+     C                     Z-ADD0         W4AMT2                                              CSD015
+      *                                                                                       CSD015
+      ** Setup parameters for Compliance engine program                                       CSD015
+      ** Set-up 1st parameter for SDWLCLOP                                                    CSD015
+      *                                                                                       CSD015
+     C                     MOVELTRNO      W4IDEN                                              CSD015
+     C                     MOVELMTPY      W4ITEM                                              CSD015
+     C                     MOVELBRCA      W4BRCH                                              CSD015
+     C                     MOVEL'MGOREF  'W4FUNT                                              CSD015
+      *                                                                                       CSD015
+      ** Extract customer number                                                              CSD015
+      *                                                                                       CSD015
+     C                     CALL 'SDCWLFMT'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD   7                                           CSD015
+     C                     PARM NWDS      PINP1  35                                           CSD015
+     C                     PARM *BLANKS   PINP2  35                                           CSD015
+     C                     PARM *BLANKS   PINP3  35                                           CSD015
+     C                     PARM *BLANKS   PINP4  35                                           CSD015
+     C                     PARM *BLANKS   PINP5  35                                           CSD015
+     C                     PARM *BLANKS   PINP6  35                                           CSD015
+     C                     PARM *BLANKS   PINCCY  3                                           CSD015
+     C                     PARM *BLANKS   POUTP 216                                           CSD015
+     C                     PARM *BLANKS   PCOUTP  6                                           CSD015
+      *                                                                                       CSD015
+     C                     MOVELPCOUTP    W4CNUM                                              CSD015
+     C                     Z-ADDBJRDNB    W4DDAT                                              CSD015
+     C                     MOVELPARLS     W4ARLS                                              CSD015
+      *                                                                                       CSD015
+      ***Send*transaction*to*compliance engine program                                 CSD015 221145
+      *********************                                                            CSD015 221145
+     C*********************CALL 'SDWLCLOP'                                             CSD015 221145
+     C*********************PARM           WLTDS                                        CSD015 221145
+     C*********************PARM *BLANKS   PSTRNG                                       CSD015 221145
+      *                                                                                       CSD015
+     C           EWTCH     ENDSR                                                              CSD015
+      *                                                                                       CSD015
+      *****************************************************************                       CSD015
+     C/EJECT
+      *****************************************************************                       221145
+      *                                                               *                       221145
+      *  WLCDQ - Submit information to Watch List Check Dtaq          *                       221145
+      *                                                               *                       221145
+      *****************************************************************                       221145
+      *                                                                                       221145
+     C           WLCDQ     BEGSR                                                              221145
+      *                                                                                       221145
+      *  Send transaction to compliance engine program                                        221145
+      *                                                                                       221145
+     C                     CALL 'SDWLCLOP'                                                    221145
+     C                     PARM           WLTDS                                               221145
+     C                     PARM *BLANKS   PSTRNG                                              221145
+      *                                                                                       221145
+      *                                                                                       221145
+     C                     ENDSR                                                              221145
+      *                                                                                       221145
+     C/EJECT                                                                                  221145
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Write database error to report
+      *
+     C                     OPEN MG5010AU
+     C                     WRITEHEAD
+     C                     WRITEDBERROR
+      *
+     C                     ROLBK
+     C                     MOVE '*ERROR'  @ERR
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     O* Copy File Translation Charaters for *EQUATE                       081194
+     O/COPY MGCPYSRC,SWIFTLEOTR
+** CPY@   Object Copyright
+(c) Misys International Banking Systems Ltd. 2001

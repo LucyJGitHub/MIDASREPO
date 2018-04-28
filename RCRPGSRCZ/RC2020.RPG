@@ -1,0 +1,387 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RC II - Ledger Detail Download')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Automatic Reconciliations II module                  *
+      *                                                               *
+      *  RC2020 - Ledger Details Download                             *
+      *                                                               *
+      *  Function:  Download Midas generated ledger details to PC     *
+      *             component. This program is evoked by the remote   *
+      *             PC using the PC/support command RMTCMD. The PC    *
+      *             should pass its subsystem id as a parameter. This *
+      *             program will process all details for branches     *
+      *             linked to the subsystem id.                       *
+      *                                                               *
+      *  Input Cycle                                                  *
+      *                                                               *
+      *  Called By: RCC2020 - Ledger Details Download                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *                                                               *
+      *****************************************************************
+     FSDBRCHL6IF  E           K        DISK
+     FRCLDGRL3UF  E           K        DISK
+     F                                              KCOMIT
+     FRCLDGDL0IF  E           K        DISK
+     FRCLINTPDO   E                    DISK
+     F                                              KCOMIT
+     FRC2020P1O   E             20     PRINTER      KINFDS SPOOLP
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      *                                                               *
+      *   10        EoF SDBRCHL6                                      *
+      *   11        EoF RCLDGRL3                                      *
+      *   12        EoF RCLDGRL0                                      *
+      *                                                               *
+      *   15        Work                                              *
+      *                                                               *
+      *   20        Overflow/RC2020P1                                 *
+      *                                                               *
+      *   30        Print branch code on headings                     *
+      *                                                               *
+      *   U7 & U8   Database error                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+     E                    DT1        10256
+     E                    DT2      2560  1
+      **  Message data arrays
+      *
+     I            DS
+     I**********                              1  18 R1ACID                                    CGL029
+     I                                        1  24 R1ACID                                    CGL029
+     I                                        1   6 @HCUST
+     I                                        7   9 @HCCY
+     I                                       10  19 @HACOD                                    CGL029
+     I                                       20  21 @HACSQ                                    CGL029
+     I**********                             10  13 @HACOD                                    CGL029
+     I**********                             14  15 @HACSQ                                    CGL029
+      **  DS to break up account details
+      *
+     I            DS
+     I                                        1 256 @DRCD
+     I                                        1   4 @TAG4
+     I                                        1   5 @TAG5
+     I                                        4   4 @COL4
+     I                                        5   5 @COL5
+     I                                        5 256 @DAT4
+     I                                        6 256 @DAT5
+      **  DS to break up data record
+      *
+     ISPOOLP      DS
+     I                                       83  92 PFILE
+     I                                    B 123 1240PFNUM
+     I                                    B 367 3680PLINE
+      ** Spool file data structure (used for RCF processing)
+      *
+     ILDA       E DSLDA                         256
+      ** LDA for database error reporting
+      *
+     I            DS
+     I                                        1   60@TIMEN
+     I                                        1   6 @TIME
+      ** Time
+      *
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I                                      264 269 @NUM
+      ** Program Status Data Structure - gives Job name, user and
+      ** number
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Data structure for bank details table
+     I/COPY WNCPYSRC,RC2020I001
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   INIT      Initial process                                   *
+      *   DETL      Process details for branch                        *
+      *   *PSSR     Process errors                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ** Parameter list - PC component subsystem i/d
+     C           *ENTRY    PLIST
+     C                     PARM           @PCID  10
+     C                     PARM           @ERR    1
+      *
+      ** Execute initial process
+     C                     EXSR INIT
+      *
+      ** Access first branch for this PC component subsystem
+     C           @PCID     CHAINSDBRCHL6             10
+      *
+      ** If no record found output appropriate report format
+     C           *IN10     IFEQ '1'
+     C                     WRITERC2020F1
+     C                     WRITERC2020F3
+     C                     ELSE
+     C                     SETON                     30
+     C                     END
+      *
+      ** For each branch linked to the PC subsystem, process messages
+     C           *IN10     DOWEQ'0'
+      *
+     C                     EXSR DETL
+      *
+      ** Read next branch
+     C           @PCID     READESDBRCHL6                 10
+      *
+     C                     ENDDO
+      *
+      ** Write end-of-report and terminate RPG program (perform
+      ** overflow processing if required)
+     C           *IN20     IFEQ '1'
+     C                     SETOF                     20
+     C                     WRITERC2020F1
+     C                     ENDIF
+     C                     WRITERC2020F8
+     C                     SETON                     LR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  DETL                                           *
+      * Function    :  Perform detail processing for branch           *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :                                                 *
+      *****************************************************************
+      *
+     C           DETL      BEGSR
+      *
+      ** Access first statement for this branch
+     C           A8BRCD    CHAINRCLDGRL3             11
+      *
+      ** If no record found, output appropriate report format
+     C           *IN11     IFEQ '1'
+     C                     WRITERC2020F1
+     C                     WRITERC2020F4
+     C                     END
+      *
+      ** Process all statements
+     C           *IN11     DOWEQ'0'
+      *
+      ** Format heading information
+     C                     CALL 'ZA0140'
+     C                     PARM R1CDAT    ZMDAY   50
+     C                     PARM BJDFIN    ZDATF   1
+     C                     PARM           ZMDATE  60
+     C           @HDATC    PARM           ZMDAT7  7
+     C                     PARM           ZMNU2   1
+     C                     PARM           ZMNU3   80
+      *
+     C           R1DSEQ    ADD  1         @DSEQ
+      *
+      ** Write statement heading information
+     C                     WRITERC2020F1
+     C                     WRITERC2020F5
+      *
+      ** Access first data record for statement
+     C           R1REFR    CHAINRCLDGDL0             12
+      *
+      ** If no record found, perform database error processing
+     C           *IN12     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVELR1REFR    DBKEY            *  DBERR 003  *
+     C                     MOVEL'RCLDGDL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C/COPY WNCPYSRC,RC2020C001
+      *
+      ** For each data record
+     C           *IN12     DOWEQ'0'
+     C/COPY WNCPYSRC,RC2020C002
+      *
+      ** Write to intermediary file
+     C                     CLEARR6DATA
+     C                     MOVELR2DATA    R6DATA
+     C                     WRITERCLINTD0
+      *
+      **  Break up field into tag and data using data structure
+     C                     MOVELR2DATA    @DRCD
+     C                     CLEAR@DTAG
+     C                     CLEAR@DDAT
+     C           @COL5     IFEQ ':'
+     C                     MOVEL@TAG5     @DTAG
+     C                     MOVEL@DAT5     @DDAT
+     C                     ELSE
+     C           @COL4     IFEQ ':'
+     C                     MOVEL@TAG4     @DTAG
+     C                     MOVEL@DAT4     @DDAT
+     C                     ELSE
+     C                     MOVEL*BLANKS   @DTAG
+     C                     MOVELR2DATA    @DDAT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Write to report (perform overflow processing if required)
+     C           *IN20     IFEQ '1'
+     C                     SETOF                     20
+     C                     WRITERC2020F1
+     C                     ENDIF
+     C                     WRITERC2020F6
+      *
+      ** Read again
+     C           R1REFR    READERCLDGDL0                 12
+      *
+     C                     ENDDO
+     C/COPY WNCPYSRC,RC2020C003
+      *
+      ** Set up download details on index record to prevent this
+      ** message being processed again.
+     C                     MOVEL'D'       R1RPTS
+     C                     MOVELBJRDNB    R1SDAT
+     C                     MOVEL@TIME     R1STIM
+     C                     ADD  1         R1DSEQ
+     C                     MOVELBJRDNB    R1RDAT
+     C                     MOVEL@TIME     R1RTIM
+     C                     MOVEL@JOB      R1LJOB
+     C                     MOVEL@USER     R1LUSR
+     C                     MOVEL@NUM      R1LJNO
+     C                     UPDATRCLDGRD0
+      *
+      ** Commit these changes
+     C                     COMIT
+      *
+      ** Read again (index)
+     C           A8BRCD    READERCLDGRL3                 11
+      *
+     C                     ENDDO
+      *
+      ** Write End of Report for Branch (perform overflow processing if
+      ** required)
+     C           *IN20     IFEQ '1'
+     C                     SETOF                     20
+     C                     WRITERC2020F1
+     C                     ENDIF
+     C                     WRITERC2020F7
+      *
+     C                     ENDSR                           DETL
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  INIT                                           *
+      * Function    :  Perform initial processing                     *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  AOBANKR0                                       *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Initialise object copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Initialise LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'RC2020'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      ** Access SDBANKPD for bank ICD
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C                     PARM           SDBANK
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY            *  DBERR 001  *
+     C                     MOVEL'SDBANKPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Initialise constant fields:
+      **   - Report time
+     C                     TIME           @TIMEN
+      *
+      ** Identify report to RCF and write headings
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   @SEQ    5
+     C                     PARM *BLANKS   @ENT    3
+     C                     PARM PFILE     @SFL   10
+     C                     PARM PFNUM     @NMR    60
+     C                     PARM *BLANKS   @ZSE    1
+      *
+     C           @ZSE      IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVEL'ERROR'   DBKEY            *  DBERR 002  *
+     C                     MOVEL'ZSFILE  'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     WRITERC2020F1
+     C                     WRITERC2020F2
+     C/COPY WNCPYSRC,RC2020C004
+      *
+     C                     ENDSR                           INIT
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  *PSSR                                          *
+      * Function    :  Called automatically if a program error occurs *
+      *                or directly in case of database errors.        *
+      *                This program DUMPs the program just once.      *
+      *                                                               *
+      * Called by   :  Automatically                                  *
+      *                INIT                                           *
+      *                                                               *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @ERR      IFEQ *BLANK
+     C                     MOVE 'Y'       @ERR
+      *
+      ** Write database error report and DUMP
+     C                     WRITERC2020F1
+     C                     WRITERC2020F9
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           *PSSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

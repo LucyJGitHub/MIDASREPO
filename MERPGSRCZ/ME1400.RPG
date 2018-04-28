@@ -1,0 +1,664 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Access SWIFT BIC identifier info')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module
+     F*                                                               *
+     F*  ME1400 - Access SWIFT BIC Identifier Information             *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. MD019970           Date 19Aug14               *
+      *  Prev Amend No. MD027201           Date 26May14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG20280           Date 28Jul08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 193630             Date 19Dec01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 183583             Date 08Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 101550             Date 09Jul96               *
+      *                 099234             Date 09Jul96               *
+     F*                 073187             DATE 21MAY96               *
+     F*                 069250             DATE 03MAY94               *
+     F*                 S01435             DATE 08NOV93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD019970 - Customer Details Amendment Error. Added validation*
+      *             for MT3xx Corporate BEI.                          *
+      *  MD027201 - Additional Beneficiary Validation                 *
+      *  BUG20280 - Error in Amending Swift Identifier Field          *
+      *  CFT032 - Account line in field 50X in MT103                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  193630 - Use LF/SDCNSTL1 instead of LF/SDCNSTL0 to retrieve  *
+      *           counterparty nostro details so that error CPF4293   *
+      *           will not occur.                                     *
+      *  183583 - Add extension file MGOEXTPD to store customer no.   *
+      *           of field with SWIFT address.                        *
+     F*  101550 - Add another chaining to SDCNSTPD for cases where    *
+     F*           the BIC is not equal to blank and details are       *
+     F*           found in this file.                                 *
+     F*           (IF..ENDIF markers inserted for clarity.)           *
+     F*  099234 - Add chaining to SDCNSTPD for cases where SWIFT      *
+     F*           BIC is not equal to blank.                          *
+     F*  073187 - Check if customer deleted                           *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/******:*OVRDBF*(File*in*program)*(file*on*system)******************:**   069250
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    General work indicator                                 *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FMEBICDL2IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+      *
+      * RTV : SWIFT BIC Directory by SWIFT Identifier
+      *
+     FSDCUSTL7IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            @CUSTGE                           KRENAMESDCUSTSW
+     FSDCUSTL5IF  E           K        DISK                           UC  183583
+      *
+      * RTV : Customer Details by SWIFT Identifier
+      *
+     FSDCNSTL2IF  E           K        DISK                           UC
+     F                                              KINFSR SRFILE
+     F            @CNSTLD                           KRENAMESDCNSTSW
+     F**SDCNSTL0IF  E         K        DISK                                            183583 193630
+     FSDCNSTL1IF  E           K        DISK                                                   193630
+     FSDCUSTLSIF  E           K        DISK                           UC                      CFT032
+     FMEISOCL1IF  E           K        DISK                                                 MD027201
+      *
+      * RTV : Counterparty Details by SWIFT identifier
+      *
+     F/COPY WNCPYSRC,ME1400DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,ME1400DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+      *                                                                                     MD027201
+      ** BIC Validation Check                                                               MD027201
+      *                                                                                     MD027201
+     E                    ALPHA   1   1 26                                                  MD027201
+     E                    ALPHN   1   1 36                                                  MD027201
+     E/EJECT
+     I/COPY WNCPYSRC,ME1400DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     IW0DTA1    E DSSDCUSTPD
+      *
+      *  Define Customer Details
+      *
+     IW0DTA2    E DSSDCNSTPD
+      *
+      *  Define Counterparty Details
+      *
+     IW0DTA3    E DSMEBICDPD
+      *
+      *  Define SWIFT BIC Directory
+      *
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+     IW0BICC      DS                                                                        MD027201
+     I                                        1   4 WBNK                                    MD027201
+     I                                        5   6 WCTY                                    MD027201
+     I                                        7   8 WLOC                                    MD027201
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0BICC  8
+     C                     PARM           W0BICB  3
+     C                     PARM           W0DTA1
+     C                     PARM           W0DTA2
+     C                     PARM           W0DTA3
+     C                     PARM           W0CUST  1
+     C                     PARM           W0CNST  1
+     C                     PARM           W0BICD  1
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Look up Customer Details
+      *
+     C                     EXSR SRCUST
+      *
+      *  Look up Counterparty Details
+      *
+     C                     EXSR SRCNST
+      *
+      *  Look up SWIFT Directory Details
+      *
+     C                     MOVEL'Y'       ISBIC   1                                         MD027201
+     C           ALPHA,1   CHECKWBNK                     95                                 MD027201
+     C           *IN95     IFEQ '0'                                                         MD027201
+     C           WCTY      CHAINMEISOCL1             95                                     MD027201
+     C           *IN95     IFEQ '0'                                                         MD027201
+     C           ALPHN,1   CHECKWLOC                     95                                 MD027201
+     C           *IN95     IFEQ '0'                                                         MD027201
+     C                     EXSR SRBICD
+     C                     ELSE                                                             MD027201
+     C                     MOVE 'N'       ISBIC                                             MD027201
+     C                     ENDIF                                                            MD027201
+     C                     ELSE                                                             MD027201
+     C                     MOVE 'N'       ISBIC                                             MD027201
+     C                     ENDIF                                                            MD027201
+     C                     ELSE                                                             MD027201
+     C                     MOVE 'N'       ISBIC                                             MD027201
+     C                     ENDIF                                                            MD027201
+      *
+     C/COPY WNCPYSRC,ME1400C001
+      *  Set up return code
+      *
+      *  If BIC Directory has records and no BIC found then
+      *  return code will always be not found
+      *
+     C           ISBIC     IFEQ 'Y'                                                         MD027201
+     C                     MOVEL'Y2U0005' W0RTN
+     C                     ELSE                                                             MD027201
+     C                     MOVEL'FREEFMT' W0RTN                                             MD027201
+     C                     MOVEL'Y'       W0BICD                                            MD027201
+     C                     CLEARW0DTA3                                                      MD027201
+     C                     ENDIF                                                            MD027201
+     C                     SELEC
+      *
+      *  Not on BIC directory but on Customer master file
+      *
+     C           ##BICD    WHEQ 'Y'
+     C           W0BICD    ANDNE'Y'
+     C           W0CUST    ANDEQ'Y'
+     C/COPY WNCPYSRC,ME1400C002
+     C                     MOVEL'MIN0244' W0RTN
+      *
+      *  Not on BIC directory but on Counterparty Nostro file
+      *
+     C           ##BICD    WHEQ 'Y'
+     C           W0BICD    ANDNE'Y'
+     C           W0CNST    ANDEQ'Y'
+     C/COPY WNCPYSRC,ME1400C003
+     C                     MOVEL'MIN0245' W0RTN
+      *
+      *  Not on BIC directory
+      *
+     C           ##BICD    WHEQ 'Y'
+     C           W0BICD    ANDNE'Y'
+     C/COPY WNCPYSRC,ME1400C004
+     C                     MOVEL'MIN0246' W0RTN
+      *                                                                                     MD019970
+      *  Corporate BEI already exist in SDCUSTPD                                            MD019970
+     C           W0CBEI    WHEQ 'Y'                                                         MD019970
+     C                     MOVEL'MIN0247' W0RTN                                             MD019970
+      *
+      *  Found on one of the files
+      *
+     C           W0BICD    WHEQ 'Y'
+     C           W0CUST    OREQ 'Y'
+     C           W0CNST    OREQ 'Y'
+     C                     MOVEL*BLANKS   W0RTN
+     C                     ENDSL
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCUST   : Look up Customer Details                          *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCUST    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCUST'  @STK,Q
+      *
+      *  Clear W0DTA1 of data
+      *
+     C                     CLEARW0DTA1
+      *
+      *  Access Customer details with key passed
+      *
+     C                     MOVEL*BLANKS   BBCSID
+     C                     MOVELW0BICC    BBCSID
+     C                     MOVEL*BLANKS   ##004   4
+     C                     MOVELW0BICB    ##004
+     C                     MOVE ##004     BBCSID
+      *
+     C           KCUST     CHAINSDCUSTSW             90
+     C                     MOVEL*BLANKS   W0CUST
+      *                                                                   073187
+      * Record found and not deleted                                      073187
+      *                                                                   073187
+     C           *IN90     IFEQ '0'
+     C           BBDTDL    ANDEQ0                                         073187
+     C                     MOVEL'Y'       W0CUST  1
+     C                     ELSE
+      *
+      * Address not found, if branch blank try XXX
+      *
+     C           W0BICB    IFEQ *BLANKS
+     C                     MOVE 'XXX '    BBCSID
+      *
+     C           KCUST     CHAINSDCUSTSW             90
+     C                     MOVEL*BLANKS   W0CUST
+      *                                                                   073187
+      * Record found and not deleted                                      073187
+      *                                                                   073187
+     C           *IN90     IFEQ '0'
+     C           BBDTDL    ANDEQ0                                         073187
+     C                     MOVEL'Y'       W0CUST
+     C                     END
+     C                     END
+     C                     END
+     C           W0CUST    IFNE 'Y'                                       183583
+     C                     MOVE W0BICC    @FLD2   2                       183583
+     C           @FLD2     IFEQ '  '                                      183583
+     C                     MOVELW0BICC    @FLD6   6                       183583
+     C           @FLD6     CHAINSDCUSTL5             90                   183583
+     C           *IN90     IFEQ '0'                                       183583
+     C                     MOVEL'Y'       W0CUST                          183583
+     C                     ENDIF                                          183583
+     C                     ENDIF                                          183583
+     C                     ENDIF                                          183583
+      *                                                                                       CFT032
+     C           CSW024    IFEQ 'Y'                                                           CFT032
+     C           W0CUST    IFNE 'Y'                                                           CFT032
+     C                     MOVE *BLANKS   WBBCBE 11                                           CFT032
+     C           W0BICC    CAT  W0BICB:0  WBBCBE                                              CFT032
+     C           WBBCBE    CHAINSDCUSTLS             90                                       CFT032
+     C           *IN90     IFEQ '0'                                                           CFT032
+     C           BBDTDL    ANDEQ0                                                             CFT032
+     C                     MOVEL'Y'       W0CUST                                              CFT032
+     C                     ELSE                                                               CFT032
+     C           W0BICB    IFEQ *BLANKS                                                       CFT032
+     C                     MOVE *BLANKS   WBBCBE                                              CFT032
+     C           W0BICC    CAT  'XXX':0   WBBCBE                                              CFT032
+     C           WBBCBE    CHAINSDCUSTLS             90                                       CFT032
+     C           *IN90     IFEQ '0'                                                           CFT032
+     C           BBDTDL    ANDEQ0                                                             CFT032
+     C                     MOVEL'Y'       W0CUST                                              CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ENDIF                                                              CFT032
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCUST    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCNST   : Counterparty Nostro                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCNST    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCNST'  @STK,Q
+      *
+      *  Clear W0DTA2 of data
+      *
+     C                     CLEARW0DTA2
+      *
+      *  Access Counterparty details with key passed
+      *
+     C                     MOVEL*BLANKS   AWSWID
+     C                     MOVELW0BICC    AWSWID
+     C                     MOVEL*BLANKS   ##004   4
+     C                     MOVELW0BICB    ##004
+     C                     MOVE ##004     BBCSID
+      *
+     C           KCNST     CHAINSDCNSTSW             90
+     C                     MOVEL*BLANKS   W0CNST
+     C           *IN90     IFEQ '0'                        B1
+     C                     MOVEL'Y'       W0CNST  1
+      *                                                                   101550
+      ** SWIFT ID is found, but CHAIN again if BIC is not blank to        101550
+      ** get the correct details.                                         101550
+      *                                                                   101550
+     C           W0BICB    IFNE *BLANKS                     B2            101550
+     C                     MOVELBBCSID    AWSWID                          101550
+     C           KCNST     CHAINSDCNSTSW             90                   101550
+     C           *IN90     IFEQ '1'                          B3           101550
+     C                     MOVEL*BLANKS   W0CNST                          101550
+     C                     ENDIF                             E3           101550
+     C                     ENDIF                            E2            101550
+      *                                                                   101550
+     C                     ELSE                            X1
+      *
+      * Address not found, if branch blank try XXX
+      *
+     C           W0BICB    IFEQ *BLANKS                     B2
+     C                     MOVE 'XXX '    AWSWID
+     C           KCNST     CHAINSDCNSTSW             90
+     C                     MOVEL*BLANKS   W0CNST
+     C           *IN90     IFEQ '0'                          B3
+     C                     MOVEL'Y'       W0CNST
+     C                     END                               E3
+      *                                                                   099234
+      ** Re-check address with branches not equal to blank                099234
+      *                                                                   099234
+     C                     ELSE                             X2            099234
+     C                     MOVEL*BLANKS   AWSWID                          099234
+     C                     MOVELBBCSID    AWSWID                          099234
+     C           KCNST     CHAINSDCNSTSW             90                   099234
+     C                     MOVEL*BLANKS   W0CNST                          099234
+     C           *IN90     IFEQ '0'                          B3           099234
+     C                     MOVEL'Y'       W0CNST                          099234
+     C                     END                               E3           099234
+     C                     END                              E2
+     C                     END                             E1
+     C           W0CNST    IFNE 'Y'                                       183583
+     C                     MOVELW0BICC    @FLD8   8                       183583
+     C********** @FLD8     CHAINSDCNSTL0             90                   183583              193630
+     C           @FLD8     CHAINSDCNSTL1             90                                       193630
+     C           *IN90     IFEQ '0'                                       183583
+     C                     MOVEL'Y'       W0CNST                          183583
+     C                     ENDIF                                          183583
+     C                     ENDIF                                          183583
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCNST    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBICD   : SWIFT Directory                                   *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBICD    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRBICD'  @STK,Q
+      *
+      *  Clear W0DTA3 of data
+      *
+     C                     CLEARW0DTA3
+      *
+      *  If W0BICB is blank use 'XXX'
+      *
+     C                     MOVELW0BICC    BDBICC
+     C                     MOVELW0BICB    BDBICB
+     C           W0BICB    IFEQ *BLANKS
+     C                     MOVEL'XXX'     BDBICB
+     C                     END
+      *
+     C           KBIC      CHAIN@BICDL2              90
+     C                     MOVEL*BLANKS   W0BICD
+     C           *IN90     IFEQ '0'
+     C                     MOVEL'Y'       W0BICD  1
+     C                     END
+      *                                                                                     MD019970
+     C           W0BICD    IFEQ 'Y'                                                         MD019970
+     C                     MOVEL'N'       W0CBEI  1                                         MD019970
+     C                     MOVE *BLANKS   WBBCBE                                            MD019970
+     C           W0BICC    CAT  W0BICB:0  WBBCBE                                            MD019970
+     C           WBBCBE    CHAINSDCUSTLS             90                                     MD019970
+     C           *IN90     IFEQ '0'                                                         MD019970
+     C           BBDTDL    ANDEQ0                                                           MD019970
+     C                     MOVEL'Y'       W0CBEI                                            MD019970
+     C                     ENDIF                                                            MD019970
+     C                     ENDIF                                                            MD019970
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXBICD    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                             BUG20280
+     C                     IN   SCCMT                                                       BUG20280
+      *                                                                                     BUG20280
+      ** Array index error will occur if CSC022 is OFF                                      BUG20280
+      ** and CSW024 is ON, initialisation of SCCMTJOB                                       BUG20280
+      ** first, before checking CSC022 and CSW024                                           BUG20280
+      *                                                                                     BUG20280
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C********** *NAMVAR   DEFN SCCMTJOB  SCCMT                                      CSC022 BUG20280
+     C**********           IN   SCCMT                                                CSC022 BUG20280
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CFT032
+      ** Check if CSW024 is switched *ON.                                                     CFT032
+      *                                                                                       CFT032
+     C                     CALL 'AOSARDR0'                                                    CFT032
+     C                     PARM *BLANKS   @RTCD   7                                           CFT032
+     C                     PARM '*VERIFY' @OPTN   7                                           CFT032
+     C                     PARM 'CSW024'  @SARD   6                                           CFT032
+      *                                                                                       CFT032
+     C           @RTCD     IFEQ *BLANKS                                                       CFT032
+     C                     MOVE 'Y'       CSW024  1                                           CFT032
+     C                     Z-ADD1         C       30                                          CFT032
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CFT032
+     C                     MOVEACMTARR    CMTJOB                                              CFT032
+     C           CMTNUM    IFGT 0                                                             CFT032
+     C           C         DOWLECMTNUM                                                        CFT032
+     C           ##JOB     IFEQ CMTJOB,C                                                      CFT032
+     C                     MOVEL'Y'       WCMTSK                                              CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ADD  1         C                                                   CFT032
+     C                     ENDDO                                                              CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVE 'N'       CSW024                                              CFT032
+     C                     ENDIF                                                              CFT032
+      *
+      *  Open files if not already open
+      *
+     C           FIL001    IFEQ *BLANKS
+     C                     OPEN SDCUSTL7
+     C                     OPEN SDCUSTL5                                  183583
+     C                     OPEN SDCNSTL2
+     C                     OPEN MEBICDL2
+     C                     OPEN SDCUSTLS                                                      CFT032
+     C                     MOVEL'Y'       FIL001  1
+     C                     END
+      *
+      *  Define keys to files
+      *
+     C           KBIC      KLIST
+     C                     KFLD           BDBICC
+     C                     KFLD           BDBICB
+     C           KCUST     KLIST
+     C                     KFLD           BBCSID
+     C           KCNST     KLIST
+     C                     KFLD           AWSWID
+      *
+      *  Check MEBICDL2 for details
+      *
+     C                     MOVEL*LOVAL    BDBICC
+     C                     MOVEL*LOVAL    BDBICB
+     C           KBIC      SETLLMEBICDL2
+     C                     READ @BICDL2                  90
+     C                     MOVEL*BLANKS   ##BICD
+     C           *IN90     IFEQ '0'
+     C                     MOVEL'Y'       ##BICD  1
+     C                     END
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1400DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1400DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001
+** ALPHA
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+** ALPHN
+ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890

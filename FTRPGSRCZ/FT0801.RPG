@@ -1,0 +1,1333 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Batch Authorisation prompt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0801 - Batch Authorization Prompt Program.                 *
+      *                                                               *
+      *  Function:  This program prompts and validates for the        *
+      *             selection criteria to be passed to the Payments   *
+      *             Reporting/Authorization program FT0803.           *
+      *                                                               *
+      *  Called By: FCC0201- RCF Control Processing                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 221761             Date 13Apr04               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 185107             Date 17Oct00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT006             Date 09Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFT003  *CREATE    Date 05May98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  221761 - Recompiled due to change made in PF/FT101HPD.       *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  185107 - Mapping of details from swift message - Recompile   *
+      *  CFT006 - Funds Transfer addition of MT101 and MT102 messages *
+      *  CFT003 - FT Batch Authorisation                              *
+      *           Based on FTH003 original references IMP042/HUB01B   *
+      *                                                               *
+      *****************************************************************
+     FMUSER   IF  E           K        DISK
+     FOTPAY   IF  E           K        DISK
+     FINPAY   IF  E           K        DISK
+     FFTCONTL0IF  E           K        DISK
+     FFT101HL3IF  E           K        DISK                               CFT006
+     FFT102HL3IF  E           K        DISK                               CFT006
+     FFT0801DFCF  E                    WORKSTN
+     F*****************************************************************
+     F/EJECT
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F*       20         Confirmation Screen is displayed             *
+     F*       21         Selection Details already Confirmed          *
+     F*       28         Error occured in detail screen               *
+     F*       29         Error on Report/Authorize promt              *
+     F*       30         Error on Transaction Auto Gen. Ind.          *
+     F*       31         Error on Transaction Ref./from               *
+     F*       32         Error on Transaction Ref./To                 *
+     F*       33         Error on Settle Value Date/From              *
+     F*       34         Error on Pay Value Date/From                 *
+     F*       35         Error on Settle Value Date/To                *
+     F*       36         Error on Pay Value Date/To                   *
+     F*       37         Error on Payment Type                        *
+     F*       38         Error on Payment Sub-type                    *
+     F*       39         Error on Sell Currency                       *
+     F*       40         Error on Pay Currency                        *
+     F*       41         Error on Nostro Code                         *
+     F*       42         Error on Settlement Method                   *
+     F*       43         Error on Settlement Period                   *
+     F*       44         Error on operator name 1                     *
+     F*       45         Error on operator name 2                     *
+     F*       46         Error on operator name 3                     *
+     F*       47         Error on operator name 4                     *
+     F*       48         Error on operator name 5                     *
+     F*       49         Scan for '?'                                 *   CFT003
+     F*       50         '?' processing has been performed            *   CFT003
+     F*       61         End of file for LF/OTPAY                     *
+     F*       62         End of file for LF/INPAY                     *
+     F*       64         Chain fail to LF/FTCONTL0                    *
+     F*       65         End of file for LF/FT101HL3                  *   CFT006
+     F*       66         End of file for LF/FT102HL3                  *   CFT006
+     F*       88         Multibranching YES                           *
+     F*       98         Date Format indicator (DDMMYY/MMDDYY)        *
+     F*       99         Error on Date input from ZDATE1              *
+     F*       U7         System error, wrong status                   *
+     F*       U8         Database error                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*           Index to Subroutine                                 *
+     F*                                                               *
+     F*     INIT   - Initialisation                                   *
+     F*     DETL   - Detail Processing                                *
+     F*     TERM   - Termination processing                           *
+     F*     VSEL   - Validate Prompt/Selection screen                 *
+     F*     REFR   - Refresh processing                               *
+     F*     CONF   - Display Confirmation Screen                      *
+     F*     *PSSR  - standard routine for error processing            *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E/COPY ZSRSRC,ZDATE1Z1
+     E                    CPY@    1   1 80                   COPYRIGHT
+     E                    MON     1  12  3                   MONTH ARRAY
+     I/EJECT
+     IFT102HD0                                                            CFT006
+     I              SINST                           CSINST                CFT006
+     I**  CCT Header                                                      CFT006
+     I*                                                                   CFT006
+     ILDA         DS                            256
+     I**  Local data area data structure
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I           SDS
+     I**  Program status data structure
+     I*
+     I                                     *PROGRAM ##PGM
+     I                                     *PARMS   PGMPRM
+     I                                      244 253 PGMDEV
+     I                                      254 263 PGMUSR
+     I           UDS
+     I**  Data Area Data structure for *LDA
+     I*
+     I                                        1 130 @@RPRM
+     I                                        1   1 @RAIN
+     I                                        2  16 @FTRN
+     I                                       17  31 @TTRN
+     I                                       32  36 @FSVD
+     I                                       37  41 @TSVD
+     I                                       42  46 @FPVD
+     I                                       47  51 @TPVD
+     I                                       52  53 @PTYP
+     I                                       54  55 @PSTY
+     I                                       56  58 @SCCY
+     I                                       59  61 @PCCY
+     I                                       62  66 @NCDE
+     I                                       67  68 @SMTH
+     I                                       69  69 @CPIN
+     I                                       70  70 @TAGI
+     I                                       71  80 @USER
+     I                                       81  90 @OPR1
+     I                                       91 100 @OPR2
+     I                                      101 110 @OPR3
+     I                                      111 120 @OPR4
+     I                                      121 130 @OPR5
+     I                                      131 140 @WSTN
+     I                                      141 144 @BCNO
+     IDSRUN       DS
+     I**  RUNDAT data area data structure (date format -ddmmmyy)
+     I*
+     I                                        1   7 RDAT
+     I                                        1   2 @DD
+     I                                        3   5 @MMM
+     I                                        6   7 @YY
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I            DS
+     I** Data Structure to format Value date
+     I                                        1   6 @VDT
+     I                                        1   2 @VDD
+     I                                        3   4 @VMM
+     I                                        5   6 @VYY
+     IDATA        DS                           1024
+     I**  Data structure for window program
+     I*
+     I                                        1   1 @HCFRM
+     ISDBANK    E DSSDBANKPD
+     I**  Data Structure for Bank Details Access Program
+     I*
+     ISDDLST    E DSSDDLSTPD
+     I**  Data Structure for Deal Sub-type Access Program
+     I*
+     ISDCURR    E DSSDCURRPD
+     I**  Data Structure for currencies file Access Program
+     I*
+     ISDNOST    E DSSDNOSTPD
+     I**  Data Structure for nostro file Access Program
+     I*
+     ISCSARD    E DSSCSARDPD                                              CFT006
+      * External data structure for SAR file details                      CFT006
+      *                                                                   CFT006
+     IDSSDY     E DSDSSDY
+     I** Short Data Structure
+     I*
+     IDSFDY     E DSDSFDY
+     I** Long Data Structure
+     I*
+     I              '0123456789'          C         VLDNBR
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Establish the message file
+     C*
+     C                     MOVE *BLANK    ZAMSID 10
+     C                     MOVEL'GBFTUSR' @MSGF  10
+     C                     MOVE 'MSG'     @MSGF
+     C*
+     C** ZA0340 Error
+     C           #AERR     PLIST
+     C                     PARM @MSGF     ZAMSGF 10        Message file
+     C                     PARM           ZAMSID 10        Message ID
+     C*
+     C**  Parameters for calling AOBANKR0
+     C*
+     C           #ABANK    PLIST
+     C                     PARM *BLANKS   @RCD    7
+     C                     PARM '*FIRST  '@OPN    7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C                     MOVEL'FT0801'  PGMQ   10
+     C                     MOVEL*BLANKS   MSGKEY  4
+     C*
+     C**  RCF Parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ    5
+     C                     PARM           @LVL    1
+     C                     PARM           @ENT    1
+     C                     PARM           @RPARM100
+     C                     PARM           RACT    1
+     C                     PARM           RCMD    1
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   MAIN  :    Main process                                     *
+     C*   Calls :    INIT - Init process                              *
+     C*              DETL - Detail processing                         *
+     C*              TERM - Termination processing                    *
+     C*****************************************************************
+     C*
+     C**  Perform initial process
+     C*
+     C                     EXSR INIT
+     C*
+     C**  Perform detail process
+     C*
+     C                     EXSR DETL
+     C*
+     C**  Perform termination process
+     C*
+     C                     EXSR TERM
+     C/EJECT
+     C*****************************************************************
+     C*   INIT     : Initial processing                               *
+     C*   Called by: Main process                                     *
+     C*   Calls    : Access objects                                   *
+     C*****************************************************************
+     C           INIT      BEGSR
+     C*
+     C**  Set up LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'FT0801'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+     C*
+     C**  Access data area DSRUN to find date
+     C*
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C                     IN   DSRUN
+     C*
+     C**  If data area not found then perform database error processing
+     C*
+     C           RDAT      IFEQ *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'RUNDAT'  DBFILE           * DBERR 001   *
+     C                     MOVEL'FIRST'   DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Set-up for multibranching indicator
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN88
+     C                     ELSE
+     C                     MOVE '0'       *IN88
+     C                     END
+     C*
+     C**  Access MUSER for users profile
+     C*
+     C           PGMUSR    CHAINMUSER                9899
+     C*
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVELPGMUSR    DBKEY            * DBERR 002   *
+     C                     MOVEL'MUSER'   DBFILE           ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Access Bank Details
+     C*
+     C                     CALL 'AOBANKR0'#ABANK
+     C*
+     C           @RCD      IFNE *BLANKS
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'FIRST   'DBKEY            * DBERR 003   *
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Check System Date Format, DDMMYY OR MMDDYY.
+     C*
+     C           DATF      IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END                             -DATF
+     C** Display rundate as initial value for FROM and TO  value date according
+     C** to system date format.
+     C*
+     C                     Z-ADD1         @X      20
+     C                     MOVE @DD       @DN     20
+     C                     MOVE @DN       @DD
+     C           @MMM      LOKUPMON,@X                   60
+     C           *IN98     IFEQ '1'
+     C                     MOVE @X        @VDD
+     C                     MOVE @DD       @VMM
+     C                     ELSE
+     C                     MOVE @X        @VMM
+     C                     MOVE @DD       @VDD
+     C                     END                             -*IN98
+     C                     MOVE @YY       @VYY
+      *                                                                   CFT006
+      ** Access SAR details file to determine if CFT006 is switched ON    CFT006
+      *                                                                   CFT006
+     C                     CALL 'AOSARDR0'                                CFT006
+     C                     PARM *BLANKS   @RTCD   7                       CFT006
+     C                     PARM '*VERIFY' @OPTN   7                       CFT006
+     C                     PARM 'CFT006'  @SARD   6                       CFT006
+     C           SCSARD    PARM SCSARD    DSFDY                           CFT006
+      *                                                                   CFT006
+      ** If CFT006 is switched ON                                         CFT006
+      *                                                                   CFT006
+     C           @RTCD     IFEQ *BLANKS                                   CFT006
+     C                     MOVE 'Y'       CFT006  1                       CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVE 'N'       CFT006                          CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      *                                                                   CFT006
+      ** Access SAR details file to determine if CFT008 is switched ON    CFT006
+      *                                                                   CFT006
+     C                     CALL 'AOSARDR0'                                CFT006
+     C                     PARM *BLANKS   @RTCD   7                       CFT006
+     C                     PARM '*VERIFY' @OPTN   7                       CFT006
+     C                     PARM 'CFT008'  @SARD   6                       CFT006
+     C           SCSARD    PARM SCSARD    DSFDY                           CFT006
+      *                                                                   CFT006
+      ** If CFT008 is switched ON                                         CFT006
+      *                                                                   CFT006
+     C           @RTCD     IFEQ *BLANKS                                   CFT006
+     C                     MOVE 'Y'       CFT008  1                       CFT006
+     C                     ELSE                                           CFT006
+     C                     MOVE 'N'       CFT008                          CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C*
+     C/COPY WNCPYSRC,FT0801C001
+     C**  Display initial screen
+     C*
+     C                     EXFMTINITSCN
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*   DETL     : Detail processing                                *
+     C*   Called by: Main process                                     *
+     C*   Calls    : REFR - Refresh processing                        *
+     C*              CONF - Confirmation processing                   *
+     C*****************************************************************
+     C           DETL      BEGSR
+     C*
+     C**  Do while not F3 and details not yet confirmed
+     C*
+     C           *INKC     DOWEQ'0'
+     C           *IN21     ANDEQ'0'
+     C*
+     C**  Refresh fields - INIT (If F5 is pressed)
+     C*
+     C           *INKE     IFEQ '1'
+     C                     EXSR REFR
+     C                     MOVE '0'       *IN20
+     C                     WRITESFLMSGC
+     C                     EXFMTINITSCN
+     C*
+     C                     ELSE
+     C*
+     C**  Validate input - VSEL (If no function key is pressed)
+     C*
+     C                     EXSR VSEL
+     C*
+     C**  If errors exist, display initial screen
+     C*
+     C           *IN28     IFEQ '1'
+     C                     MOVE '0'       *IN20
+     C                     WRITESFLMSGC
+     C                     EXFMTINITSCN
+     C                     CALL 'ZA0250'
+     C                     END                             -*IN28
+     C*
+     C**  If no errors exist, display confirmation screen
+     C*
+     C           *IN28     IFEQ '0'
+     C                     MOVE '1'       *IN20
+     C                     EXSR CONF
+     C*
+     C           @HCFRM    IFEQ 'N'
+     C                     MOVE '1'       *INKC
+     C                     END
+     C*
+     C**  If F12 pressed in confirmation screen
+     C*
+     C           *INKL     IFEQ '1'
+     C                     WRITESFLMSGC
+     C                     EXFMTINITSCN
+     C                     END                             -*INKL
+     C*
+     C                     END                             -*IN28
+     C*
+     C                     END                             -*INKE
+     C*
+     C                     END                             -*INKC,*IN21
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*   VSEL     : Validation Selection processing                  *
+     C*   Called by: DETL   Detail Processing                         *
+     C*   Calls    : ZDATE1 Check/Convert date                        *
+     C*****************************************************************
+     C           VSEL      BEGSR
+     C*
+     C**  Initialize error indicators
+     C*
+     C                     MOVE '0'       *IN28
+     C                     MOVEA'00000000'*IN,29           -*IN29 to *IN36
+     C                     MOVEA'00000000'*IN,37           -*IN37 to *IN44
+     C                     MOVEA'0000'    *IN,45           -*IN37 to *IN44
+     C*
+     C                     MOVE *BLANKS   @FSVD
+     C                     MOVE *BLANKS   @TSVD
+     C                     MOVE *BLANKS   @FPVD
+     C                     MOVE *BLANKS   @TPVD
+     C*
+     C** Validate if Report then Authorise process is followed
+     C*
+     C           PGMUSR    CHAINFTCONTL0             64
+     C*
+     C           SRPAUT    IFEQ 'R'
+     C           *IN64     ANDEQ'0'
+     C           COBATN    ANDNE*BLANK
+     C                     MOVEL'U1B0027' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN29
+     C                     END                             -SRPAUT
+     C*
+     C           SRPAUT    IFEQ 'X'
+     C           *IN64     ANDEQ'1'
+     C           SRPAUT    OREQ 'X'
+     C           *IN64     ANDEQ'0'
+     C           COBATN    ANDEQ*BLANK
+     C                     MOVEL'U1B0028' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN29
+     C                     END                             -SRPAUT
+     C*
+     C** Validate Report/Authorize Indicator
+     C*
+     C           SRPAUT    IFNE 'R'
+     C           SRPAUT    ANDNE'X'
+     C                     MOVEL'U1B0001' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN29
+     C                     END                             -SRPAUT<>R,X
+     C*
+     C**  No other details can be entered if Authorisation
+     C*
+     C           SRPAUT    IFEQ 'X'
+     C           SAUTOG    IFNE *BLANKS
+     C           SFMTRN    ORNE *BLANKS
+     C           STOTRN    ORNE *BLANKS
+     C           SSFMDT    ORNE *BLANKS
+     C           SSTODT    ORNE *BLANKS
+     C           SPFMDT    ORNE *BLANKS
+     C           SPTODT    ORNE *BLANKS
+     C           SPYTYP    ORNE *BLANKS
+     C           SPSTYP    ORNE *BLANKS
+     C           SDDLST    ORNE *BLANKS
+     C           SPCURR    ORNE *BLANKS
+     C           SNSCDE    ORNE *BLANKS
+     C           SSETMD    ORNE *BLANKS
+     C           SCPIND    ORNE *BLANKS
+     C           SCPIND    ORNE *BLANKS
+     C           SOPER1    ORNE *BLANKS
+     C           SOPER2    ORNE *BLANKS
+     C           SOPER3    ORNE *BLANKS
+     C           SOPER4    ORNE *BLANKS
+     C           SOPER5    ORNE *BLANKS
+     C                     MOVEL'U1B0019' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN29
+     C           SAUTOG    COMP *BLANKS              3030
+     C           SFMTRN    COMP *BLANKS              3131
+     C           STOTRN    COMP *BLANKS              3232
+     C           SSFMDT    COMP *BLANKS              3333
+     C           SPFMDT    COMP *BLANKS              3434
+     C           SSTODT    COMP *BLANKS              3535
+     C           SPTODT    COMP *BLANKS              3636
+     C           SPYTYP    COMP *BLANKS              3737
+     C           SPSTYP    COMP *BLANKS              3838
+     C           SSCURR    COMP *BLANKS              3939
+     C           SPCURR    COMP *BLANKS              4040
+     C           SNSCDE    COMP *BLANKS              4141
+     C           SSETMD    COMP *BLANKS              4242
+     C           SCPIND    COMP *BLANKS              4343
+     C           SOPER1    COMP *BLANKS              4444
+     C           SOPER2    COMP *BLANKS              4545
+     C           SOPER3    COMP *BLANKS              4646
+     C           SOPER4    COMP *BLANKS              4747
+     C           SOPER5    COMP *BLANKS              4848
+     C                     END                             -*NE BLANKS
+     C                     END                             -SAUTOG
+     C*
+     C           SRPAUT    IFEQ 'R'
+     C*
+     C**  Validate Transaction Auto-Gen Ind.
+     C*
+     C/COPY WNCPYSRC,FT0801C002
+     C           SAUTOG    IFNE 'Y'
+     C           SAUTOG    ANDNE'N'
+     C                     MOVEL'U1B0014' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN30
+     C                     END                             -SAUTOG
+     C/COPY WNCPYSRC,FT0801C003
+     C*
+     C**  Validate Transaction Ref. Number  FROM/TO
+     C*
+     C           SFMTRN    IFNE *BLANKS
+     C           STOTRN    ANDEQ*BLANKS
+     C                     MOVEL'U1B0002' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN32
+     C                     END                             -SFMTRN
+     C*
+     C           STOTRN    IFNE *BLANKS
+     C           SFMTRN    ANDEQ*BLANKS
+     C                     MOVEL'U1B0002' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN31
+     C                     END                             -STOTRN
+     C*
+     C           SFMTRN    IFNE *BLANKS
+     C           STOTRN    ANDNE*BLANKS
+     C*
+     C           SFMTRN    IFGT STOTRN
+     C                     MOVE '1'       *IN28
+     C                     MOVEL'U1B0031' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN32
+     C                     END
+     C*
+     C           SPYTYP    IFNE 'RI'                                      CFT006
+     C           SPYTYP    ANDNE'RO'                                      CFT006
+     C           CFT006    ANDEQ'Y'                                       CFT006
+     C           CFT008    ANDEQ'N'                                       CFT006
+     C           SPYTYP    ORNE 'BI'                                      CFT006
+     C           SPYTYP    ANDNE'BO'                                      CFT006
+     C           CFT006    ANDEQ'N'                                       CFT006
+     C           CFT008    ANDEQ'Y'                                       CFT006
+     C           SPYTYP    ORNE 'RI'                                      CFT006
+     C           SPYTYP    ANDNE'RO'                                      CFT006
+     C           SPYTYP    ANDNE'BI'                                      CFT006
+     C           SPYTYP    ANDNE'BO'                                      CFT006
+     C           CFT006    ANDEQ'Y'                                       CFT006
+     C           CFT008    ANDEQ'Y'                                       CFT006
+     C           CFT006    OREQ 'N'                                       CFT006
+     C           CFT008    ANDEQ'N'                                       CFT006
+      *                                                                   CFT006
+     C           SFMTRN    SETLLOTPAY
+     C                     READ OTPAY                    61
+     C           *IN61     IFEQ '1'
+     C           SFMTRN    ORGT PREF
+     C           STOTRN    ORLT PREF                                      CFT006
+     C           SFMTRN    SETLLINPAY
+     C                     READ INPAY                    62
+     C           *IN62     IFEQ '1'
+     C           SFMTRN    ORGT PREF
+     C           STOTRN    ORLT PREF                                      CFT006
+     C                     MOVEL'U1B0003' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN32
+     C                     END                             -*IN62
+     C                     END                             -*IN61
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+      *                                                                   CFT006
+     C           SPYTYP    IFEQ 'RI'                                      CFT006
+     C           SPYTYP    OREQ 'RO'                                      CFT006
+     C           SFMTRN    SETLLFT101HL3                                  CFT006
+     C                     READ FT101HL3                 65               CFT006
+      *                                                                   CFT006
+     C           *IN65     IFEQ *ON                                       CFT006
+     C           SFMTRN    ORGT RFTID                                     CFT006
+     C           STOTRN    ORLT RFTID                                     CFT006
+     C                     MOVEL'U1B0003' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN31                           CFT006
+     C                     MOVE *ON       *IN32                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+     C           SFMTRN    SETLLFT102HL3                                  CFT006
+     C                     READ FT102HL3                 66               CFT006
+      *                                                                   CFT006
+     C           *IN66     IFEQ *ON                                       CFT006
+     C           SFMTRN    ORGT CCTID                                     CFT006
+     C           STOTRN    ORLT CCTID                                     CFT006
+     C                     MOVEL'U1B0003' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN31                           CFT006
+     C                     MOVE *ON       *IN32                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     END                             -SFMTRN,STOTRN
+     C*
+     C**  Validate Settle Value Date - FROM
+     C*
+     C           SPYTYP    IFNE 'BI'                                      CFT006
+     C           CFT006    ANDEQ'N'                                       CFT006
+     C           CFT008    ANDEQ'Y'                                       CFT006
+     C           SPYTYP    ORNE 'RO'                                      CFT006
+     C           CFT006    ANDEQ'Y'                                       CFT006
+     C           CFT008    ANDEQ'N'                                       CFT006
+     C           SPYTYP    ORNE 'RO'                                      CFT006
+     C           SPYTYP    ANDNE'BI'                                      CFT006
+     C           CFT006    ANDEQ'Y'                                       CFT006
+     C           CFT008    ANDEQ'Y'                                       CFT006
+     C           CFT006    OREQ 'N'                                       CFT006
+     C           CFT008    ANDEQ'N'                                       CFT006
+      *                                                                   CFT006
+     C           SSFMDT    IFNE *BLANKS
+     C           SSTODT    ANDEQ*BLANKS
+     C                     MOVEL'U1B0004' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN35
+     C                     END
+     C*
+     C           SSTODT    IFNE *BLANKS
+     C           SSFMDT    ANDEQ*BLANKS
+     C                     MOVEL'U1B0004' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN33
+     C                     END
+      *
+      ** If both settlement from and to value dates are blanks, default
+      ** to run date.
+      *
+     C           SSFMDT    IFEQ *BLANKS
+     C           SSTODT    ANDEQ*BLANKS
+     C                     MOVEL@VDT      SSFMDT
+     C                     MOVEL@VDT      SSTODT
+     C                     END
+     C*
+     C           SSFMDT    IFNE *BLANKS
+     C           SSTODT    ANDNE*BLANKS
+     C*
+     C           VLDNBR    CHECKSSFMDT    W#ERR   30
+     C           W#ERR     IFEQ 0
+     C                     MOVE SSFMDT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    @FSVD
+     C                     ELSE
+     C                     MOVE '1'       *IN99
+     C                     END
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'U1B0005' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN33
+     C                     END
+     C*
+     C**  Validate Settle Value Date - TO
+     C*
+     C           VLDNBR    CHECKSSTODT    W#ERR
+     C           W#ERR     IFEQ 0
+     C                     MOVE SSTODT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    @TSVD
+     C                     ELSE
+     C                     MOVE '1'       *IN99
+     C                     END
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'U1B0006' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN35
+     C                     END
+     C*
+     C           @FSVD     IFGT @TSVD
+     C                     MOVE '1'       *IN28
+     C                     MOVEL'U1B0030' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN35
+     C                     END
+     C*
+     C                     END
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+      *                                                                   CFT006
+      ** If payment type is BI OR RO, settle value date must be blank     CFT006
+      *                                                                   CFT006
+     C           SSFMDT    IFNE *BLANKS                                   CFT006
+     C           SSTODT    ORNE *BLANKS                                   CFT006
+     C                     MOVEL'RFV0024' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN33                           CFT006
+     C                     MOVE *ON       *IN35                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ENDIF                                          CFT006
+     C*
+     C**  Validate Pay Value Date - FROM
+     C*
+     C           SPYTYP    IFNE 'RI'                                      CFT006
+     C           SPYTYP    ANDNE'RO'                                      CFT006
+     C           CFT006    ANDEQ'Y'                                       CFT006
+     C           CFT008    ANDEQ'N'                                       CFT006
+     C           SPYTYP    ORNE 'BI'                                      CFT006
+     C           SPYTYP    ANDNE'BO'                                      CFT006
+     C           CFT006    ANDEQ'N'                                       CFT006
+     C           CFT008    ANDEQ'Y'                                       CFT006
+     C           SPYTYP    ORNE 'RI'                                      CFT006
+     C           SPYTYP    ANDNE'RO'                                      CFT006
+     C           SPYTYP    ANDNE'BI'                                      CFT006
+     C           SPYTYP    ANDNE'BO'                                      CFT006
+     C           CFT006    ANDEQ'Y'                                       CFT006
+     C           CFT008    ANDEQ'Y'                                       CFT006
+     C           CFT006    OREQ 'N'                                       CFT006
+     C           CFT008    ANDEQ'N'                                       CFT006
+      *                                                                   CFT006
+     C           SPFMDT    IFNE *BLANKS
+     C           SPTODT    ANDEQ*BLANKS
+     C                     MOVEL'U1B0023' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN36
+     C                     END
+     C*
+     C           SPTODT    IFNE *BLANKS
+     C           SPFMDT    ANDEQ*BLANKS
+     C                     MOVEL'U1B0023' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN34
+     C                     END
+      *
+      ** If both pay from and to value dates are blanks, default
+      ** to run date.
+      *
+     C           SPFMDT    IFEQ *BLANKS
+     C           SPTODT    ANDEQ*BLANKS
+     C                     MOVEL@VDT      SPFMDT
+     C                     MOVEL@VDT      SPTODT
+     C                     END
+     C*
+     C           SPFMDT    IFNE *BLANKS
+     C           SPTODT    ANDNE*BLANKS
+     C*
+     C           VLDNBR    CHECKSPFMDT    W#ERR
+     C           W#ERR     IFEQ 0
+     C                     MOVE SPFMDT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    @FPVD
+     C                     ELSE
+     C                     MOVE '1'       *IN99
+     C                     END
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'U1B0024' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN34
+     C                     END
+     C*
+     C**  Validate Pay Value Date - TO
+     C*
+     C           VLDNBR    CHECKSPTODT    W#ERR
+     C           W#ERR     IFEQ 0
+     C                     MOVE SPTODT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    @TPVD
+     C                     ELSE
+     C                     MOVE '1'       *IN99
+     C                     END
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'U1B0025' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN36
+     C                     END
+     C*
+     C           @FPVD     IFGT @TPVD
+     C                     MOVE '1'       *IN28
+     C                     MOVEL'U1B0030' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN36
+     C                     END
+     C*
+     C                     END
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+      *                                                                   CFT006
+      ** If payment type is RI, RO, BI or BO - Pay value date must be     CFT006
+      ** blank                                                            CFT006
+      *                                                                   CFT006
+     C           SPFMDT    IFNE *BLANKS                                   CFT006
+     C           SPTODT    ORNE *BLANKS                                   CFT006
+     C                     MOVEL'RFV0135' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN34                           CFT006
+     C                     MOVE *ON       *IN36                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ENDIF                                          CFT006
+     C*
+     C**  Validate Payment Type
+     C*
+     C           CFT006    IFEQ 'N'                                       CFT006
+     C           CFT008    ANDEQ'N'                                       CFT006
+      *                                                                   CFT006
+     C           SPYTYP    IFNE 'OP'
+     C           SPYTYP    ANDNE'RP'
+     C           SPYTYP    ANDNE'IN'
+     C                     MOVEL'U1B0007' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN37
+     C                     END                             -SPYTYP
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+      *                                                                   CFT006
+     C           CFT006    IFEQ 'Y'                                       CFT006
+     C           CFT008    ANDEQ'Y'                                       CFT006
+      *                                                                   CFT006
+     C           SPYTYP    IFNE 'OP'                                      CFT006
+     C           SPYTYP    ANDNE'RP'                                      CFT006
+     C           SPYTYP    ANDNE'IN'                                      CFT006
+     C           SPYTYP    ANDNE'RI'                                      CFT006
+     C           SPYTYP    ANDNE'RO'                                      CFT006
+     C           SPYTYP    ANDNE'BO'                                      CFT006
+     C           SPYTYP    ANDNE'BI'                                      CFT006
+     C                     MOVEL'RFV0172' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN37                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           CFT006    IFEQ 'Y'                                       CFT006
+     C           CFT008    ANDEQ'N'                                       CFT006
+      *                                                                   CFT006
+     C           SPYTYP    IFNE 'OP'                                      CFT006
+     C           SPYTYP    ANDNE'RP'                                      CFT006
+     C           SPYTYP    ANDNE'IN'                                      CFT006
+     C           SPYTYP    ANDNE'RI'                                      CFT006
+     C           SPYTYP    ANDNE'RO'                                      CFT006
+     C                     MOVEL'RFV0172' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN37                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           CFT006    IFEQ 'N'                                       CFT006
+     C           CFT008    ANDEQ'Y'                                       CFT006
+      *                                                                   CFT006
+     C           SPYTYP    IFNE 'OP'                                      CFT006
+     C           SPYTYP    ANDNE'RP'                                      CFT006
+     C           SPYTYP    ANDNE'IN'                                      CFT006
+     C           SPYTYP    ANDNE'BO'                                      CFT006
+     C           SPYTYP    ANDNE'BI'                                      CFT006
+     C                     MOVEL'RFV0172' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN37                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                          CFT006
+     C*
+     C**  Validate Payment Sub-Type
+     C*
+     C           SPSTYP    IFNE *BLANKS
+     C                     CALL 'AODLSTR0'
+     C                     PARM *BLANKS   @RCD
+     C                     PARM '*VERIFY' @OPN
+     C                     PARM SPSTYP    @DST    2
+     C           SDDLST    PARM SDDLST    DSFDY
+     C*
+     C**     not found in deal sub-type table
+     C*
+     C           @RCD      IFNE *BLANKS
+     C           @RCD      ANDNE'*NOSEL'                                  CFT003
+     C                     MOVEL'U1B0009' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN38
+     C                     ELSE                                           CFT003
+     C           '?'       SCAN SPSTYP                   49               CFT003
+     C           *IN49     IFEQ *ON                                       CFT003
+     C                     MOVE *ON       *IN50                           CFT003
+     C                     ENDIF                                          CFT003
+     C                     MOVE @DST      SPSTYP                          CFT003
+     C                     END                             -@RCD
+     C*
+     C                     END                             -SPYTYP,SPSTYP
+     C*
+     C**  Validate Settle Currency, if entered
+     C*
+     C           SPYTYP    IFNE 'RI'                                      CFT006
+     C           SPYTYP    ANDNE'RO'                                      CFT006
+     C           CFT006    ANDEQ'Y'                                       CFT006
+     C           CFT006    OREQ 'N'                                       CFT006
+      *                                                                   CFT006
+     C           SSCURR    IFNE *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RCD
+     C                     PARM '*VERIFY' @OPN
+     C                     PARM SSCURR    @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C**     not found in currencies file
+     C*
+     C           @RCD      IFNE *BLANKS
+     C           @RCD      ANDNE'*NOSEL'                                  CFT003
+     C                     MOVEL'U1B0010' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN39
+     C                     ELSE                                           CFT003
+     C           '?'       SCAN SSCURR                   49               CFT003
+     C           *IN49     IFEQ *ON                                       CFT003
+     C                     MOVE *ON       *IN50                           CFT003
+     C                     ENDIF                                          CFT003
+     C                     MOVE @CCY      SSCURR                          CFT003
+     C                     END                             -@RCD
+     C*
+     C                     END                             -SPCURR
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+      *                                                                   CFT006
+      ** If payment type is RI or RO, settle currency must be blank       CFT006
+      *                                                                   CFT006
+     C           SSCURR    IFNE *BLANKS                                   CFT006
+     C                     MOVEL'RFV0136' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN39                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ENDIF                                          CFT006
+     C*
+     C**  Validate Pay Currency, if entered
+     C*
+     C           SPYTYP    IFNE 'RI'                                      CFT006
+     C           SPYTYP    ANDNE'RO'                                      CFT006
+     C           CFT006    ANDEQ'Y'                                       CFT006
+     C           CFT008    ANDEQ'N'                                       CFT006
+     C           SPYTYP    ORNE 'BI'                                      CFT006
+     C           SPYTYP    ANDNE'BO'                                      CFT006
+     C           CFT006    ANDEQ'N'                                       CFT006
+     C           CFT008    ANDEQ'Y'                                       CFT006
+     C           SPYTYP    ORNE 'RI'                                      CFT006
+     C           SPYTYP    ANDNE'RO'                                      CFT006
+     C           SPYTYP    ANDNE'BI'                                      CFT006
+     C           SPYTYP    ANDNE'BO'                                      CFT006
+     C           CFT006    ANDEQ'Y'                                       CFT006
+     C           CFT008    ANDEQ'Y'                                       CFT006
+     C           CFT006    OREQ 'N'                                       CFT006
+     C           CFT008    ANDEQ'N'                                       CFT006
+      *                                                                   CFT006
+     C           SPCURR    IFNE *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RCD
+     C                     PARM '*VERIFY' @OPN
+     C                     PARM SPCURR    @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C**     not found in currencies file
+     C*
+     C           @RCD      IFNE *BLANKS
+     C           @RCD      ANDNE'*NOSEL'                                  CFT003
+     C                     MOVEL'U1B0010' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN40
+     C                     ELSE                                           CFT003
+     C           '?'       SCAN SPCURR                   49               CFT003
+     C           *IN49     IFEQ *ON                                       CFT003
+     C                     MOVE *ON       *IN50                           CFT003
+     C                     ENDIF                                          CFT003
+     C                     MOVE @CCY      SPCURR                          CFT003
+     C                     END                             -@RCD
+     C*
+     C                     END                             -SPCURR
+     C*
+     C**  Validate Nostro Code, if entered
+     C*
+     C           SNSCDE    IFNE *BLANKS
+     C                     MOVELSNSCDE    WUCCY   3
+     C                     MOVE SNSCDE    WUCOD   2
+     C           SPCURR    IFNE WUCCY
+     C           SSCURR    ANDNEWUCCY
+     C                     MOVEL'U1B0011' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN41
+     C                     END                             -SPCURR,SNSCDE
+     C*
+     C**    check in the nostro file
+     C*
+     C           *IN39     IFNE '1'
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   @RCD
+     C                     PARM '*KEY   ' @OPN
+     C                     PARM *BLANKS   @CUST   6
+     C                     PARM WUCCY     @CCY
+     C**********           PARM *BLANKS   @ACCD   4                                           CGL029
+     C                     PARM *BLANKS   @ACCD  10                                           CGL029
+     C                     PARM *BLANKS   @ACSN   2
+     C                     PARM WUCOD     @NOS    2
+     C                     PARM *BLANKS   @BRCD   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+     C*
+     C           @RCD      IFNE *BLANKS
+     C                     MOVEL'U1B0012' ZAMSID
+     C                     CALL 'ZA0340'  #AERR
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN41
+     C                     END                             -@RCD
+     C*
+     C                     END                             -SNSCDE
+     C                     END                             -SNSCDE,SPCURR
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+      *                                                                   CFT006
+      ** If payment type is RI, RO, BI or BO - Payment currency, nostro   CFT006
+      ** code, settlement method, settlement period must be blank         CFT006
+      *                                                                   CFT006
+     C           SPCURR    IFNE *BLANKS                                   CFT006
+     C                     MOVEL'RFV0137' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN40                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           SNSCDE    IFNE *BLANKS                                   CFT006
+     C                     MOVEL'RFV0138' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN41                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           SSETMD    IFNE *BLANKS                                   CFT006
+     C                     MOVEL'RFV0139' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN42                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           SCPIND    IFNE *BLANKS                                   CFT006
+     C                     MOVEL'RFV0140' ZAMSID                          CFT006
+     C                     CALL 'ZA0340'  #AERR                           CFT006
+     C                     MOVE *ON       *IN28                           CFT006
+     C                     MOVE *ON       *IN43                           CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     ENDIF                                          CFT006
+     C*                                                                   CFT003
+     C*** '?' Processing has been performed                               CFT003
+     C*                                                                   CFT003
+     C           *IN50     IFEQ *ON                                       CFT003
+     C                     MOVE *ON       *IN28                           CFT003
+     C                     MOVE *OFF      *IN50                           CFT003
+     C                     MOVEA'00000000'*IN,29                          CFT003
+     C                     MOVEA'00000000'*IN,37                          CFT003
+     C                     MOVEA'0000'    *IN,45                          CFT003
+     C                     CALL 'ZA0250'
+     C                     ENDIF                                          CFT003
+     C*
+     C                     END                             -SRPAUT
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   CONF     : Confirmation processing                          *
+     C*   Called by: Main process                                     *
+     C*   Calls    : None                                             *
+     C*****************************************************************
+     C           CONF      BEGSR
+     C*
+     C           SRPAUT    IFEQ 'R'
+     C*
+     C**  Do while not F3 / F12 / F6 - to confirm
+     C*
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           *INKF     ANDEQ'0'
+     C                     WRITESFLMSGC
+     C                     EXFMTCONFSCN
+     C           *INKF     IFEQ '1'
+     C                     MOVE '1'       *IN21
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C           SRPAUT    IFEQ 'X'
+     C*
+     C**  Call window manager
+     C*
+     C                     CALL 'WN0010'
+     C                     PARM ##PGM     UPGM   10        Program
+     C                     PARM *BLANK    UFKEY   2        Function Key
+     C                     PARM 'I'       UACTCD  1        Action
+     C                     PARM           DATA             Trans Data
+     C                     PARM *BLANK    W0RTN   7        Return Code
+     C                     PARM           SPARE 256        Spare Field
+     C*
+     C                     MOVELSPARE     W0FLD1  1
+     C           W0FLD1    IFEQ 'Y'
+     C                     MOVE '1'       *IN21
+     C                     ELSE
+     C                     MOVE '0'       *IN21
+     C                     MOVE '1'       *INKL
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*   REFR     : Refresh Screen fields processing                 *
+     C*   Called by: DETL - Detail processing                         *
+     C*   Calls    : None                                             *
+     C*****************************************************************
+     C           REFR      BEGSR
+     C*
+     C**  Initialize error indicators
+     C*
+     C                     MOVEA'00000000'*IN,29           -*IN29 to *IN36
+     C                     MOVEA'00000000'*IN,37           -*IN37 to *IN44
+     C                     MOVEA'0000'    *IN,45           -*IN45 to *IN48
+     C*
+     C**  Initialize program message queue
+     C*
+     C                     CALL 'ZA0250'
+     C*
+     C** Blank out all other fields
+     C*
+     C                     MOVE *BLANKS   SRPAUT
+     C                     MOVE *BLANKS   SFMTRN
+     C                     MOVE *BLANKS   STOTRN
+     C                     MOVE *BLANKS   SPYTYP
+     C                     MOVE *BLANKS   SPSTYP
+     C                     MOVE *BLANKS   SSCURR
+     C                     MOVE *BLANKS   SPCURR
+     C                     MOVE *BLANKS   SNSCDE
+     C                     MOVE *BLANKS   SSETMD
+     C                     MOVE *BLANKS   SCPIND
+     C                     MOVE *BLANKS   SAUTOG
+     C                     MOVE *BLANKS   SOPER1
+     C                     MOVE *BLANKS   SOPER2
+     C                     MOVE *BLANKS   SOPER3
+     C                     MOVE *BLANKS   SOPER4
+     C                     MOVE *BLANKS   SOPER5
+     C                     MOVE *BLANKS   SSFMDT
+     C                     MOVE *BLANKS   SSTODT
+     C                     MOVE *BLANKS   SPFMDT
+     C                     MOVE *BLANKS   SPTODT
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   TERM     : Termination Processing                           *
+     C*   Called by: Main Process                                     *
+     C*****************************************************************
+     C           TERM      BEGSR
+     C*
+     C**  If F3 was pressed send termination code of 'E' back to RCF
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'E'       RCMD
+     C                     END
+     C*
+     C**  If F12 was pressed send termination code of 'F' back to RCF
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'F'       RCMD
+     C                     END
+     C*
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C**  Set up &RPARM with selection criteria parameters
+     C*
+     C                     MOVELSRPAUT    @RAIN
+     C*
+     C           SRPAUT    IFEQ 'R'
+     C                     MOVELSFMTRN    @FTRN
+     C                     MOVELSTOTRN    @TTRN
+     C                     MOVELSPYTYP    @PTYP
+     C                     MOVELSPSTYP    @PSTY
+     C                     MOVELSSCURR    @SCCY
+     C                     MOVELSPCURR    @PCCY
+     C                     MOVELSNSCDE    @NCDE
+     C                     MOVELSSETMD    @SMTH
+     C                     MOVELSCPIND    @CPIN
+     C                     MOVELSAUTOG    @TAGI
+     C                     MOVELPGMDEV    @WSTN
+     C*
+     C                     MOVELSOPER1    @OPR1
+     C                     MOVELSOPER2    @OPR2
+     C                     MOVELSOPER3    @OPR3
+     C                     MOVELSOPER4    @OPR4
+     C                     MOVELSOPER5    @OPR5
+     C                     END
+     C*
+     C           SRPAUT    IFEQ 'X'
+     C                     MOVELPGMUSR    @USER
+     C                     MOVELCOBATN    @BCNO
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   @@RPRM
+     C                     END
+     C*
+     C** Normal end of program
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     C**************************************************************************
+     C*   *PSSR - error handling                                               *
+     C*   Called by - INIT initial process                                     *
+     C**************************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z3
+** CPY@   **      Object copyright
+(c) Misys International Banking Systems Ltd. 2001
+** MON  **  Moths of the year
+JAN
+FEB
+MAR
+APR
+MAY
+JUN
+JUL
+AUG
+SEP
+OCT
+NOV
+DEC

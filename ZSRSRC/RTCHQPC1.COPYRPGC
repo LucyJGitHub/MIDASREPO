@@ -1,0 +1,130 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+     C*  Last Amend No. BUG8514            Date 30Sep05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  Prev Amend No. 104270             DATE 17Sep97               *
+     C*                 CRT001  *CREATE    DATE 28Feb95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+     C*  BUG8514- Issue regarding teller overrides.                   *
+     C*  104270 - Initialise override (@O) array element(s).          *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTCHQP - Cheque present check                      *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED  Input                                              *
+     C*            @V     - Validation indicators array               *
+     C*            @CP    - Cheque present array position             *
+     C*            @ACNO  - Retail account number                     *
+     C*            @CQNF  - Cheque reference number                   *
+     C*            @CA    - Cheque presented status array             *
+     C*                                                               *
+     C* FLDS USED  Output                                             *
+     C*            @WI    - Warning  error index                      *
+     C*            @TI    - Terminal error index                      *
+     C*            @O     - Override indicators array                 *
+     C*            @T     - Terminal message codes array              *
+     C*            @W     - Warning  message codes array              *
+     C*            @OFSET - Offset (cheque no. minus start cheque no.)*
+     C*            @BITN  - Bit position representing cheque number   *
+     C*            @CAI   - Cheque presented status array index       *
+     C*            @I     - Array index                               *
+     C*            @UCQB  - Update cheque book indicator              *
+     C*                                                               *
+     C*****************************************************************
+     C           RTCHQP    BEGSR                           ** RTCHQP **
+      *
+      ** Define parameters
+     C                     Z-ADD@WI       @WI     20
+     C                     Z-ADD@TI       @TI     20
+     C                     Z-ADD@ACNO     @ACNO  100
+     C                     Z-ADD@CQNF     @CQNF   80
+     C                     MOVE ' '       @UCQB   1
+     C                     MOVE *ZEROS    @I
+     C                     MOVE *ZEROS    @BITN
+      *                                                                   104270
+      ** Initialise override array element                                104270
+      *                                                                   104270
+     C           PFNCD     IFNE '***'                                                        BUG8514
+     C                     MOVE ' '       @O,@CP                          104270
+     C                     ENDIF                                                             BUG8514
+      *
+      ** Calculate cheque presented status array index
+     C           @CQNF     SUB  SCQN      @OFSET  80
+     C           @OFSET    DIV  8         @I
+     C                     MVR            @BITN   10
+     C                     ADD  1         @I
+      *
+      ** Test corresponding bit-position of element for cheque presented
+     C           @BITN     IFEQ 0
+     C                     TESTB'0'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 1
+     C                     TESTB'1'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 2
+     C                     TESTB'2'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 3
+     C                     TESTB'3'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 4
+     C                     TESTB'4'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 5
+     C                     TESTB'5'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 6
+     C                     TESTB'6'       @CA,@I         81
+     C                     END
+     C           @BITN     IFEQ 7
+     C                     TESTB'7'       @CA,@I         81
+     C                     END
+     C*                                                                   891103
+     C** Check for duplicate checks on the subfile                        891103
+     C           @CQNF     LOKUP@CQN                     41               891103
+     C*                                                                   891103
+     C** If not a duplicate check save in cheque number array             891103
+     C           *IN41     IFNE '1'                                       891103
+     C                     ADD  1         Z       10                      891103
+     C                     Z-ADD@CQNF     @CQN,Z                          891103
+     C                     END                                            891103
+      *
+      ** If test is successful
+     C           *IN81     IFEQ '1'
+     C           *IN41     OREQ '1'
+      *
+      ** If override allowed
+     C           @V,@CP    IFEQ 'Y'
+     C                     ADD  1         @WI
+     C                     MOVEL'CHQPRES' @W,@WI
+     C                     MOVE 'Y'       @O,@CP
+     C                     END
+      *
+      ** If override not allowed
+     C           @V,@CP    IFEQ 'N'
+     C                     ADD  1         @TI
+     C                     MOVEL'CHQPRES' @T,@TI
+     C                     END
+      *
+     C                     ELSE
+      *
+     C                     Z-ADD@I        @CAI    20
+     C                     MOVE 'Y'       @UCQB
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************

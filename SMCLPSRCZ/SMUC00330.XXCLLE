@@ -1,0 +1,68 @@
+/*******************************************************************/
+/*S*D****CLPBASEBND*************************************************/                  /*AR1096969*/
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       SMUC00330 - Midas UT Add Logical File Members             */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. AR1096969*REDUNDANTDate 21Mar13            */
+/*       Prev Amend No. AR1072101          Date 28Dec12            */
+/*                      AR1073235*CREATE   Date 28Dec12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       AR1096969 - CBCFMGR_nn jobs should no longer run in our   */
+/*                   system                                        */
+/*                 - CCB022B - COB Restructure - COB File Manager  */
+/*                   (Missed out for drop2A delivery)              */
+/*       AR1072101 - Event Code error encountered when creating fee*/
+/*       AR1073235 - LEC06A seq 03001 component failed             */
+/*                                                                 */
+/*******************************************************************/
+             PGM
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+ 
+/** Global MONMSG to trap errors  */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                           CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('SMUC00330 - Midas UT Add Logical +
+                           File Members') TOMSGQ(MRUNQ)
+ 
+/** Reinstate logical file manager background job */
+             CALL       PGM(CBCFMGR001) PARM(' ')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** Call program to rebuild logical files */
+             CALL       PGM(CBCFMGR004)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/***Call*program*to*end*logical*file*manager*background*job**/                         /*AR1072101*/
+/**********  CALL       PGM(CBCFMGR005)                     */                         /*AR1072101*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)    */                         /*AR1072101*/
+/**********    GOTO       CMDLBL(ERROR)                     */                         /*AR1072101*/
+/**********  ENDDO                                          */                         /*AR1072101*/
+ 
+ERROR:       CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF4520)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                           MSGDTA('Program SMUC00330 ended +
+                           abnormally - see job log') +
+                           TOMSGQ(MOPERQ)
+             DMPCLPGM
+ 
+END:
+             ENDPGM

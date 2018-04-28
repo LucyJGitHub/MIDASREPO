@@ -1,0 +1,1707 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account details window controller')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  General Ledger Module                                 *
+     F*                                                               *
+     F*  GL3271WC - ACCOUNT DETAILS WINDOW CONTROLLER                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CER055             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL013             Date 10Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAAA03             Date 18Mar04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CDE002             Date 21Dec99               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CRE007             Date 01Mar01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CAP035             Date 24Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CRE001             Date 18Feb97               *
+     F*                 S01408             DATE 26APR96               *
+     F*                 S01408             DATE 22FEB95               *
+     F*                 077214             DATE 04OCT94               *
+     F*                 S01408             DATE 21SEP94               *
+     F*                 056584             DATE 28SEP93               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
+      *           (Recompile)                                         *
+      *  CDL013 - Tiered Withholding Tax                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAAA03 - Webfacing Changes                                   *
+      *         - Recompiled due to changes in DSPF/GL327B#C          *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  CDE002 - Revenue Analysis                                    *
+     F*  CRE007 - Base Rate Tax 2001.                                 *
+      *  CAP035 - Account maintenance API; recompiled over changed    *
+      *           ACCBR.                                              *
+     F*  CRE001 - Overdraft Interest Calculations:                    *
+     F*           Increase length of SVRCD and initialise new         *
+     F*           Overdraft fields in PF/ACCNTBXC.                    *
+     F*  S01408 - Addition of core hook GL3271WCI1                    *
+     F*  S01408 - Addition of core hook GL3271WVSR                    *
+     F*           Addition of core hook GL3271WVS2                    *
+     F*           Addition of core hook GL3271WVS3                    *
+     F*           Addition of core hook GL3271WISE                    *
+     F*           Addition of core hook GL3271WIS1                    *
+     F*           Addition of core hook GL3271WCP1                    *
+     F*           Addition of core hook GL3271WVS4                    *
+     F*           Addition of core hook GL3271WVS5                    *
+     F*  077214 - Specify correct message file for window error msgs  *
+     F*  S01408 - Addition of core hook GL3271WVS1                    *
+     F*           Addition of core hook GL3271WVSF                    *
+     F*           Addition of core hook GL3271WCPG                    *
+     F*  056584 - Use interest taxable message                        *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+      *
+      *   The following routines CANNOT be changed :
+      *   ========================================
+      *
+      *   (Main processing)
+      *   SRINS
+      *   SRAMD
+      *   SRDEL
+      *   SRENQ
+      *   SRSMSG
+      *   SRCMSG
+      *   SRRTRN
+      *   SRDBER
+      *   SRSCRN
+      *   SRREC
+      *   SRUPD
+      *   SRWRT
+      *   SRDELR
+      *   SRALOC
+      *   SRCOMP
+      *
+      *   The following routines can be changed :
+      *   =====================================
+      *
+      *   SRINIT for specific initialization
+      *   SRVAL  to initialize error indicators and control validation
+      *          of more/less fields
+      *   SRINZ  to setup fields with defaults
+      *   SRFTOS to move additional fields to the screen fields
+      *   SRSTOF to move additional fields to the file fields
+      *   SRBTOF to move blanks to the file fields
+      *
+      *   Changes to the existing code should be reduced to a minimum
+      *   using separate subroutines in order to preserve the program
+      *   structure as defined in the skeleton, thus reducing
+      *   maintenance efforts.
+      *
+      *   Moreover, no functionality should be added unless specifically
+      *   required. In this case, it should be very well documented
+      *   in the header box.
+      *
+      * - The data structure used to save the before image of the
+      *   record is called SVRCD.
+      *   Only the length should be changed
+      *
+      * - The data structure used to access the current record
+      *   via the DS name is called NWRCD.
+      *   Only the file name should be changed
+      *
+      * - The files must have their record formats renamed to
+      *      RTVIDX for the retrieve index
+      *      UPDIDX for the update index
+      *      SCREEN for the screen format
+      *   Any file/screen access will be done thru the renamed format
+      *   so that these routines remain unchanged
+      *
+      *-------------------------------------------------------------------------
+      *
+      *   Naming conventions
+      *   ==================
+      *
+      * - Work fields used in the program should start with WW or WU
+      *   i.e. WWCNUM or WUCNUM
+      *
+      * - Screen fields should start with #1 (for 1st screen format),
+      *   i.e. #1CNUM
+      *
+      * - Key fields should start with K ,i.e. KACCNT
+      *   (Also for fields used in KLIST's)
+      *
+      * - Subroutines should start with SR, i.e. SRVAL for validation,
+      *   SRINIT for initial routine , etc...
+      *
+      *-------------------------------------------------------------------------
+     FACCNTBY0IF  E           K        DISK
+     F            ACCNTBD0                          KRENAMERTVIDX
+     FACCNTBXCUF  E           K        DISK         KCOMIT       A
+     F            ACCNTBD0                          KRENAMEUPDIDX
+     FRESTCHPDIF  E           K        DISK
+     FTABTBRE IF  E                    DISK
+     FGL327B#CCF  E                    WORKSTN
+     F            GL327BF0                          KRENAMESCREEN
+     F            GL327BF1                          KRENAMESCREEN1
+     F            GL327BF2                          KRENAMESCREEN2
+     F/COPY WNCPYSRC,GL3271WCF1
+     F*****************************************************************
+     F*  Use of indicators:
+     F*
+     F*  (Screen field error indicators should start with 20 in
+     F*   ascending order)
+     F*
+     F*  *IN08  -  Rolldown requested
+     F*  *IN10  -  On=Delete/Enquiry, Protect field.
+     F*            Off=Insert/Amdend, Underline field.
+     F*  *IN11  -  On=Delete - Display 'F10=Confirm Delete'
+     F*  *IN20  -  Error on field #0ITAX
+     F*  *IN21  -  Error on field #0STCI
+     F*  *IN22  -  Display Statement fee amount (For Enquery only)
+     F*  *IN23  -  Error on field #0CHIN
+     F*  *IN24  -  Error on field #0CHAM
+     F*  *IN60  -  Extension record not found via update index
+     F*  *IN61  -  Unable to allocate record via update index
+     F*  *IN68  -  Error occured during DBF update
+     F*  *IN69  -  Database Error
+     F*  *IN72  -  Statement Charges
+     F*  *IN73  -  Fixed Account Charges
+     F*  *IN75  -  General error indicator. Used to condition output
+     F*            of error messages and redisplay screen.
+     F*  *IN80  -  Unable to allocate extension record
+     F*  *IN81  -  Call to DBERRCTL ended in error
+     F*  *IN89  -  Extension record not found via retrieval index
+     F*  *INKJ  -  F10 pressed, enable delete
+     F*  *INKL  -  F12 pressed, exit
+     F*  *INLR  -  End processing
+     F*****************************************************************
+     E/EJECT
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80               COPYRIGHT
+     E*
+     E** Copyright Array
+     E*
+     E                    @F         16  1               ZA0840 array
+     F* input array for za0840
+     E                    @G         16  1               ZA0840 array
+     E* output array for za0840
+     E                    @H      1  15 15 0             ZA0840 array
+     E* array of powers of ten
+     E                    ZA1        16  1               ZALIGN/ZEDIT ARRA
+     E                    ZA2        16  1               ZALIGN/ZEDIT ARRA
+     I/EJECT
+     I*****************************************************************
+     I*
+     I** Get program name from PSDS
+     I           SDS
+     I                                     *PROGRAM WWPGM
+     I*
+     I** Current/previous master file fields
+     INWRCD     E DSACCNTBXC
+     I*
+     I** Stored master file fields
+     I***SVRCD****DS                            128                       CRE001
+     I***SVRCD****DS                            149                CRE001 CDE002
+     ISVRCD       DS                            246                       CDE002
+     I*
+     I** Data structure for data-base error processing.
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** Customer Details
+     ISDCUST    E DSSDCUSTPD
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** Currency Details
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I*
+     I** Module Details
+     I*
+      *                                                                                       CDL013
+      ***   External data structure forPF/SCSARPD                                             CDL013
+      *                                                                                       CDL013
+     ISCSARD    E DSSCSARDPD                                                                  CDL013
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,GL3271WCI1                                           S01408
+     I*                                                                   S01408
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access programs, long data structure
+     I*
+     I*
+     I** Get the data structure passed from calling program
+     I/COPY QWINDSRC,GL3271DTA
+     I/COPY WNCPYSRC,GL3271WCI2
+     C/EJECT
+     C*-----------------------------------------------------------------
+     C** Main processing
+     C*-----------------------------------------------------------------
+     C*
+     C** Copyright Statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           1         SETLLTABTBRE
+     C                     READ TABTBRE                  70
+     C*
+     C           TSTMC     IFEQ 'Y'
+     C                     MOVE '1'       *IN72
+     C                     END
+     C*
+     C           FACH      IFEQ 'Y'
+     C                     MOVE '1'       *IN73
+     C                     END
+     C*
+     C** Execute initial routine
+     C*
+     C                     EXSR SRINIT
+     C*
+     C** Execute specific routine depending on action
+     C*
+     C           ACTION    CASEQ'I'       SRINS
+     C           ACTION    CASEQ'A'       SRAMD
+     C           ACTION    CASEQ'E'       SRENQ
+     C           ACTION    CASEQ'D'       SRDEL
+     C                     END
+     C*
+     C** Execute routine to setup return code and exit program
+     C*
+     C                     EXSR SRRTRN
+     C*
+     C/EJECT
+     C*----------------------------------------------------------------
+     C* SRINS - Routine to handle 'INSERT' action
+     C*----------------------------------------------------------------
+     C           SRINS     BEGSR
+     C*
+     C** Check whether record exists
+     C*
+     C                     EXSR SRREC
+     C*
+     C** If record found,
+     C*
+     C           *IN89     IFEQ '0'
+     C*
+     C** In case of 'Insert over Deleted Record'
+     C** Save before image
+     C*
+     C                     EXSR SRSAVE
+     C                     END
+     C*
+     C** Initialize fields
+     C*
+     C                     EXSR SRINZ
+     C*
+     C** Display and handle screen until no more errors or F12
+     C*
+     C           *IN61     DOUEQ'0'
+     C           *IN60     ANDEQ'0'
+     C           *IN75     ANDEQ'0'
+     C           *INKL     OREQ '1'
+     C                     EXSR SRSCRN
+     C*
+     C** Bypass any further validation if previous DB error or F12
+     C*
+     C           *IN69     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C** Clear messages for redisplay
+     C*
+     C                     EXSR SRCMSG
+     C*
+     C** Validate input
+     C*
+     C                     EXSR SRVAL
+     C*
+     C** No errors
+     C*
+     C           *IN75     IFEQ '0'
+     C*
+     C** In case of 'Insert over Deleted Record'
+     C*
+     C           *IN89     IFEQ '0'
+     C*
+     C** Allocate record via update index
+     C*
+     C                     EXSR SRALOC
+     C*
+     C** If record on file and allocated, compare record images,
+     C** else, screen will be redisplayed
+     C*
+     C           *IN60     IFEQ '0'
+     C           *IN61     ANDEQ'0'
+     C                     EXSR SRCOMP
+     C*
+     C** If images do not match, screen will be redisplayed with
+     C** relevant message
+     C*
+     C           WWMTCH    IFEQ 'Y'
+     C*
+     C** Move blanks to all file fields
+     C*
+     C                     EXSR SRBTOF
+     C*
+     C** Images match, move screen values to file fields
+     C*
+     C                     EXSR SRSTOF
+     C*
+     C** Update record
+     C*
+     C                     EXSR SRUPD
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** Move screen fields to file fields
+     C*
+     C                     EXSR SRSTOF
+     C*
+     C** Write new record
+     C*
+     C                     EXSR SRWRT
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*----------------------------------------------------------------
+     C* SRAMD - Routine to handle 'AMEND' action
+     C*----------------------------------------------------------------
+     C           SRAMD     BEGSR
+     C*
+     C** Check whether record exists
+     C*
+     C                     EXSR SRREC
+     C*
+     C** If record not found,
+     C** set DB error indicator, setup message, display screen, exit
+     C*
+     C           *IN89     IFEQ '1'
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'WNE9999' ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF                          077214
+     C                     EXSR SRSMSG
+     C*
+     C** Protect fields for display
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C** Display screen
+     C*
+     C                     EXSR SRSCRN
+     C*
+     C** Execute DB error routine
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVELWWEXTF    DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBER 001 *
+     C                     MOVEL*BLANKS   DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR SRDBER
+     C*
+     C** Record found,
+     C** set file fields to screen fields and save before image
+     C*
+     C                     ELSE
+     C*                                                                  S01408
+     C/COPY WNCPYSRC,GL3271WVSR                                          S01408
+     C*                                                                  S01408
+     C                     EXSR SRFTOS
+     C                     EXSR SRSAVE
+     C*
+     C** Display and handle screen until record can be allocated and
+     C** record on file and no errors left or F12 pressed
+     C*
+     C           *IN61     DOUEQ'0'
+     C           *IN60     ANDEQ'0'
+     C           *IN75     ANDEQ'0'
+     C           *INKL     OREQ '1'
+     C                     EXSR SRSCRN
+     C*
+     C** Bypass any further validation if previous DB error or F12
+     C*
+     C           *IN69     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C** Clear messages for redisplay
+     C*
+     C                     EXSR SRCMSG
+     C*
+     C** Validate input
+     C*
+     C                     EXSR SRVAL
+     C*
+     C** No errors
+     C*
+     C           *IN75     IFEQ '0'
+     C*
+     C** Allocate record via update index
+     C*
+     C                     EXSR SRALOC
+     C*
+     C** If record on file and allocated, compare record images,
+     C** else, screen will be redisplayed
+     C*
+     C           *IN60     IFEQ '0'
+     C           *IN61     ANDEQ'0'
+     C                     EXSR SRCOMP
+     C*
+     C** If images do not match, screen will be redisplayed with
+     C** relevant message
+     C*
+     C           WWMTCH    IFEQ 'Y'
+     C*
+     C** Images match, move screen values to file fields
+     C*
+     C                     EXSR SRSTOF
+     C*
+     C** Update record
+     C*
+     C                     EXSR SRUPD
+     C/COPY WNCPYSRC,GL3271WCC2
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*------------------------------------------------------------------
+     C* SRDEL - Routine to handle 'DELETE' action
+     C*------------------------------------------------------------------
+     C           SRDEL     BEGSR
+     C*
+     C** Set indicators on for 'DELETE' mode to protect fields
+     C                     MOVE '1'       *IN10
+     C*
+     C** Check whether record exists
+     C                     EXSR SRREC
+     C*
+     C** If record not found,
+     C** set DB error indicator, setup message, display screen, exit
+     C           *IN89     IFEQ '1'
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'WNE9996' ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF                          077214
+     C                     EXSR SRSMSG
+     C*
+     C** Disable F10 key
+     C                     MOVE '0'       *IN11
+     C*
+     C** Display screen
+     C                     EXSR SRSCRN
+     C*
+     C** Execute DB error routine
+     C           *LOCK     IN   LDA
+     C                     MOVELWWEXTF    DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBER 002 *
+     C                     MOVEL*BLANKS   DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR SRDBER
+     C                     ELSE
+     C*
+     C** Record found,
+     C** set file fields to screen fields and save before image
+     C                     EXSR SRFTOS
+     C                     EXSR SRSAVE
+     C*
+     C** Enable F10 key
+     C                     MOVE '1'       *IN11
+     C*
+     C** Display and handle screen until record can be allocated and
+     C** record on file and F10 pressed or F12 pressed
+     C           *IN61     DOUEQ'0'
+     C           *IN60     ANDEQ'0'
+     C           *INKJ     ANDEQ'1'
+     C           *INKL     OREQ '1'
+     C                     EXSR SRSCRN
+     C*
+     C** F12 not pressed, F10 pressed                                  .
+     C           *INKL     IFEQ '0'
+     C           *INKJ     ANDEQ'1'
+     C*
+     C** Allocate record via update index
+     C                     EXSR SRALOC
+     C*
+     C** Images match, delete record
+     C                     EXSR SRDELR
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*------------------------------------------------------------------
+     C* SRENQ - Routine to handle 'ENQUIRY' action
+     C*------------------------------------------------------------------
+     C           SRENQ     BEGSR
+     C*
+     C** Set indicators on for 'ENQUIRY' mode to protect fields
+     C                     MOVE '1'       *IN10
+     C*
+     C** Check whether record exists
+     C                     EXSR SRREC
+     C*
+     C** If record not found,
+     C** set DB error indicator, setup message, display screen, exit
+     C           *IN89     IFEQ '1'
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'WNE9994' ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF                          077214
+     C                     EXSR SRSMSG
+     C*
+     C** Protect fields
+     C                     MOVE '1'       *IN10
+     C*
+     C** Display screen
+     C                     EXSR SRSCRN
+     C*
+     C** Execute DB error routine
+     C           *LOCK     IN   LDA
+     C                     MOVELWWEXTF    DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBER 003 *
+     C                     MOVEL*BLANKS   DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR SRDBER
+     C*
+     C** Record found, set file fields to screen fields
+     C                     ELSE
+     C                     EXSR SRFTOS
+     C*
+     C** Display and handle screen
+     C                     EXSR SRSCRN
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-----------------------------------------------------------------
+     C* SRSMSG - Routine to send messages to message subfile.
+     C*-----------------------------------------------------------------
+     C           SRSMSG    BEGSR
+     C*
+     C           ZAMSGF    IFEQ *BLANKS                    *B1
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     END                             *E1
+     C*
+     C                     CALL 'SNDERMSG'
+     C                     PARM WWPGM     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C*                    PARM 'SDUSRMSG'ZAMSGF 10        Message file.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     ENDSR
+     C*                                                                  S01408
+     C/COPY WNCPYSRC,GL3271WCP1                                          S01408
+     C*                                                                  S01408
+     C/EJECT
+     C*------------------------------------------------------------------
+     C* SRCMSG - Routine to clear program's message queue.
+     C*------------------------------------------------------------------
+     C           SRCMSG    BEGSR
+     C*
+     C                     CALL 'CLRERMSG'
+     C                     PARM WWPGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-----------------------------------------------------------------
+     C* SRREC - Routine to access file via retrieve index
+     C*-----------------------------------------------------------------
+     C           SRREC     BEGSR
+     C*
+     C           KACCNT    CHAINRTVIDX               89
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*----------------------------------------------------------------
+     C* SRALOC - Routine to access record via update index
+     C*----------------------------------------------------------------
+     C           SRALOC    BEGSR
+     C*
+     C           KACCNT    CHAINUPDIDX               6061
+     C*
+     C** If record not on file, setup message 'Record deleted'
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'WNE9998' ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF                          077214
+     C                     EXSR SRSMSG
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-----------------------------------------------------------------
+     C* SRUPD - Routine to update file.
+     C*-----------------------------------------------------------------
+     C           SRUPD     BEGSR
+     C*
+     C                     UPDATUPDIDX                 68
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-----------------------------------------------------------------
+     C* SRWRT - Routine to write a new record to the file.
+     C*-----------------------------------------------------------------
+     C           SRWRT     BEGSR
+     C*
+     C                     MOVEASTAMP,1   ATTMST           Default Timestamp                  CPK015
+     C                     WRITEUPDIDX                 68
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-----------------------------------------------------------------
+     C* SRDELR - Routine to delete a record
+     C*-----------------------------------------------------------------
+     C           SRDELR    BEGSR
+     C*
+     C** Extended Record is deleted by Association
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-----------------------------------------------------------------
+     C* SRCOMP - Routine to compare before/after image of records
+     C*-----------------------------------------------------------------
+     C           SRCOMP    BEGSR
+     C*
+     C           SVRCD     IFEQ NWRCD
+     C                     MOVE 'Y'       WWMTCH  1
+     C                     ELSE
+     C                     MOVE 'N'       WWMTCH
+     C                     MOVEL'WNE9997' ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF                          077214
+     C                     EXSR SRSMSG
+     C*
+     C* Use SETLL to release record lock
+     C           KACCNT    SETLLUPDIDX
+     C*
+     C* Set condition to redisplay screen
+     C                     MOVE '1'       *IN60
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*--------------------------------------------------------------
+     C* SRSAVE - Routine to save before image of record via DS
+     C*--------------------------------------------------------------
+     C           SRSAVE    BEGSR
+     C*
+     C                     MOVELNWRCD     SVRCD
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*----------------------------------------------------------------
+     C* SRRTRN - Routine to set up return code for calling program
+     C*----------------------------------------------------------------
+     C           SRRTRN    BEGSR
+     C*
+     C** DBF update error
+     C           *IN68     IFEQ '1'
+     C                     MOVE 'USR0563' WWRTRN
+     C                     ELSE
+     C*
+     C** Database error
+     C           *IN69     IFEQ '1'
+     C                     MOVE 'Y2U0004' WWRTRN
+     C                     ELSE
+     C*
+     C** F12 pressed
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'USR0791' WWRTRN
+     C*
+     C** No errors
+     C                     ELSE
+     C                     MOVE *BLANKS   WWRTRN
+     C                     END
+     C*
+     C** - NOT IN PROGRAM SKELETON - BEGIN -
+     C** Rolldown pressed
+     C           *IN08     IFEQ '1'
+     C                     MOVE 'USR0792' WWRTRN
+     C                     END
+     C*
+     C** - NOT IN PROGRAM SKELETON - END -
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Exit program
+     C                     MOVE '1'       *INLR
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*------------------------------------------------------------------
+     C* SRDBER - Routine to handle database errors
+     C*------------------------------------------------------------------
+     C           SRDBER    BEGSR
+     C*
+     C** Update data area LDA.
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL3271WC'DBPGM
+     C                     OUT  LDA
+     C*
+     C** Set on LR and data-base error indicators.
+     C                     MOVE '1'       *IN69
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C*
+     C** Produce program dump.
+     C                     DUMP
+     C*
+     C** Call standard DB error handler
+     C                     CALL 'DBERRCTL'             81
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*----------------------------------------------------------------
+     C* SRSCRN - Routine to handle screen and validation
+     C*----------------------------------------------------------------
+     C           SRSCRN    BEGSR
+     C*
+     C** Display messages
+     C                     WRITE#MSGCTL
+     C*                                                                  S01408
+     C/COPY WNCPYSRC,GL3271WVS4                                          S01408
+     C*                                                                  S01408
+     C*
+     C** Display main screen
+     C           *IN72     IFEQ '1'
+     C           *IN73     ANDEQ'1'
+     C                     EXFMTSCREEN
+     C                     ELSE
+     C           *IN73     IFEQ '1'
+     C                     EXFMTSCREEN2
+     C                     ELSE
+     C                     EXFMTSCREEN1
+     C                     END
+     C                     END
+     C*                                                                  S01408
+     C/COPY WNCPYSRC,GL3271WVS5                                          S01408
+     C*                                                                  S01408
+     C*
+     C* EXIT PROGRAM IF CMD/3 PRESSED
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'USR0790' WWRTRN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C* Return to previous screen if a command key pressed
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'USR0791' WWRTRN
+     C                     END
+     C**
+     C** IF ROLLDOWN PRESSED
+     C**
+     C           *IN08     IFEQ '1'
+     C                     MOVE 'USR0792' WWRTRN
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-----------------------------------------------------------------
+     C* The routines that can be changed start here...
+     C*-----------------------------------------------------------------
+     C* SRVAL - Routine to control validation of each field.
+     C*-----------------------------------------------------------------
+     C           SRVAL     BEGSR
+     C*
+     C** Initialize error condition indicators
+     C                     MOVE '0'       *IN75
+     C*                    MOVEA'0'       *IN,20
+     C                     MOVEA'00'      *IN,20
+     C                     MOVEA'00'      *IN,23
+     C*
+     C           *IN12     IFEQ '1'
+     C*
+     C** #0ITAX validation
+     C                     EXSR SRITAX
+     C                     END
+     C*
+     C           *IN72     IFEQ '1'
+     C*
+     C**   #0ISTCIvalidation
+     C                     EXSR SRSTCI
+     C                     END
+     C*
+     C           *IN73     IFEQ '1'
+     C*
+     C**   #0ICHINvalidation
+     C                     EXSR SRCHIN
+     C*
+     C**   #0ICHAMvalidation
+     C                     EXSR SRCHAM
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*------------------------------------------------------------------
+     C* SRITAX - Routine to validate #0ITAX: Interest Taxable
+     C*------------------------------------------------------------------
+     C           SRITAX    BEGSR
+      *                                                                                      CDL013
+      *** Check CAR is switched on                                                           CDL013
+      *                                                                                      CDL013
+     C           CDL013    IFEQ *ON                                                          CDL013
+     C*                                                                                      CDL013
+     C** If action is amend, customer details won't have been accessed                       CDL013
+     C** so retrieve these for customer type                                                 CDL013
+     C*                                                                                      CDL013
+     C           ACTION    IFEQ 'A'                                                          CDL013
+     C*                                                                                      CDL013
+     C                     MOVEL#CNUM     @CNUM                                              CDL013
+     C*                                                                                      CDL013
+     C                     CALL 'AOCUSTR0'                                                   CDL013
+     C                     PARM '*MSG    '@RTCD                                              CDL013
+     C                     PARM '*KEY    '@OPTN                                              CDL013
+     C                     PARM           @CNUM  10                                          CDL013
+     C                     PARM           @CSTAT  7                                          CDL013
+     C           SDCUST    PARM SDCUST    DSSDY                                              CDL013
+     C*                                                                                      CDL013
+     C** Data-base error processing.                                                         CDL013
+     C*                                                                                      CDL013
+     C           @RTCD     IFNE *BLANKS                                                      CDL013
+     C           @CSTAT    OREQ '*ERROR'                                                     CDL013
+     C           *LOCK     IN   LDA                                                          CDL013
+     C                     MOVEL'SDCUSTPD'DBFILE           ************                      CDL013
+     C                     Z-ADD8         DBASE            * DBER 008 *                      CDL013
+     C                     MOVEL#CNUM     DBKEY            ************                      CDL013
+     C                     OUT  LDA                                                          CDL013
+     C                     EXSR SRDBER                                                       CDL013
+     C                     ENDIF                                                             CDL013
+     C                     ENDIF                                                             CDL013
+     C*                                                                                      CDL013
+     C           BBCSTY    IFEQ 'N'                                                          CDL013
+     C*                                                                                      CDL013
+     C           #0ITAX    IFNE '0'                                                          CDL013
+     C                     MOVEL'XXW0100' ZAMSID                                             CDL013
+     C                     MOVEL'GLUSRMSG'ZAMSGF                                             CDL013
+     C                     EXSR SRSMSG                                                       CDL013
+     C*                                                                                      CDL013
+     C                     MOVE *ON       *IN20                                              CDL013
+     C                     MOVE *ON       *IN75                                              CDL013
+     C                     ENDIF                                                             CDL013
+     C*                                                                                      CDL013
+     C*** Customer type is not N                                                             CDL013
+     C*                                                                                      CDL013
+     C                     ELSE                                                              CDL013
+     C*                                                                                      CDL013
+     C           #0ITAX    IFNE '0'                                                          CDL013
+     C           #0ITAX    ANDNE'1'                                                          CDL013
+     C           #0ITAX    ANDNE'2'                                                          CDL013
+     C           #0ITAX    ANDNE'3'                                                          CDL013
+     C           #0ITAX    ANDNE'4'                                                          CDL013
+     C           #0ITAX    ANDNE'5'                                                          CDL013
+     C           #0ITAX    ANDNE'6'                                                          CDL013
+     C           #0ITAX    ANDNE'7'                                                          CDL013
+     C           #0ITAX    ANDNE'8'                                                          CDL013
+     C           #0ITAX    ANDNE'9'                                                          CDL013
+     C*                                                                                      CDL013
+     C                     MOVEL'XXW0101' ZAMSID                                             CDL013
+     C                     MOVEL'GLUSRMSG'ZAMSGF                                             CDL013
+     C                     EXSR SRSMSG                                                       CDL013
+     C                     MOVE *ON       *IN20                                              CDL013
+     C                     MOVE *ON       *IN75                                              CDL013
+     C                     ENDIF                                                             CDL013
+     C*                                                                                      CDL013
+     C                     ENDIF                                                             CDL013
+     C*                                                                                      CDL013
+     C                     ELSE                                                              CDL013
+     C*                                                                                      CDL013
+     C*** Car is not switched on - continue processing                                       CDL013
+     C*                                                                                      CDL013
+     C*                                                                  S01408
+     C/COPY WNCPYSRC,GL3271WVS2                                          S01408
+     C*                                                                  S01408
+     C*
+     C** #0ITAX must be 'Y' or 'N'
+     C           #0ITAX    IFNE 'Y'
+     C           #0ITAX    ANDNE'N'
+     C*********************MOVEL'TAM0017' ZAMSID                         056584
+     C                     MOVEL'TAM4801' ZAMSID                         056584
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN75
+     C                     END
+     C*
+     C*                                                                                      CDL013
+     C                     ENDIF                                                             CDL013
+     C*                                                                                      CDL013
+     C*                                                                  S01408
+     C/COPY WNCPYSRC,GL3271WVS3                                          S01408
+     C*                                                                  S01408
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C* SRSTCI - Routine to validate Statement charge ind.
+     C*-------------------------------------------------------------------
+     C*
+     C           SRSTCI    BEGSR
+     C*
+     C**   If the indicator is equal to blank the filed is set to 'Y'
+     C*
+     C           #0STCI    IFEQ *BLANKS
+     C                     MOVE 'Y'       #0STCI
+     C                     END
+     C*
+     C**   The indicator must equal to 'Y' or 'N'
+     C*
+     C           #0STCI    IFNE 'Y'
+     C           #0STCI    ANDNE'N'
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN21
+     C                     MOVEL'LZW1506' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C* SRCHIN - Routine to validate Statement charge ind.
+     C*-------------------------------------------------------------------
+     C*
+     C           SRCHIN    BEGSR
+     C*
+     C**   If the indicator is equal to blank the filed is set to 'Y'
+     C           #0CHIN    IFEQ *BLANKS
+     C                     MOVE 'Y'       #0CHIN
+     C                     END
+     C*
+     C**   The indicator must equal to 'Y' or 'N'
+     C           #0CHIN    IFNE 'Y'
+     C           #0CHIN    ANDNE'N'
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN23
+     C                     MOVEL'LZW1612' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C* SRCHAM - Routine to validate Statement charge ind.
+     C*-------------------------------------------------------------------
+     C*
+     C           SRCHAM    BEGSR
+     C*
+     C**   The field must be entered if it is subject to account charge
+     C*
+     C           #0CHIN    IFEQ 'Y'                        B2
+     C*
+     C           #0CHAM    IFNE *BLANKS                    B3
+     C*
+     C**   Using SR/ZA0840 subroutine to validate and align amount
+     C                     MOVE *BLANK    @@ALPH
+     C                     MOVE #0CHAM    @@ALPH
+     C                     Z-ADDA6NBDP    @@IDP
+     C           7         SUB  A6NBDP    @@IINT
+     C                     MOVE *BLANK    @@ERCD
+     C                     EXSR ZA0840
+     C*
+     C**   The field is invalid in the base currency if the return code
+     C**   is equal to '1' or to '2'
+     C           @@ERCD    IFEQ 1                          B4
+     C           @@ERCD    OREQ 2
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN24
+     C                     MOVEL'LZW1614' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     END                             E4
+     C*
+     C*
+     C**   The field can't be less then zero
+     C           @@AMT     IFLT *ZEROS                     B4
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN24
+     C                     MOVEL'LZW1615' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C                     END                             E4
+     C                     END                             E3
+     C                     END                             E2
+     C*
+     C*
+     C**   The field must be blank if it is not subject to account
+     C**   charge
+     C           #0CHIN    IFNE 'Y'                        B2
+     C*
+     C           #0CHAM    ANDNE*BLANKS
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN24
+     C                     MOVEL'LZW1616' ZAMSID
+     C                     MOVEL'REUSRMSG'ZAMSGF
+     C                     EXSR SRSMSG
+     C*
+     C                     END                             E2
+     C*
+     C           #0CHIN    IFNE 'Y'                        B2
+     C*
+     C           *IN24     ANDEQ'0'
+     C                     Z-ADD*ZEROS    ATCHAM
+     C*
+     C                     END                             E2
+     C*                    END                             E1      SA9016
+     C*
+     C**   If the amount returned by the subroutine is valid
+     C**   moving the amount in a work field
+     C           *IN50     IFEQ '0'                        *B1
+     C           *IN24     ANDEQ'0'
+     C           #0CHAM    IFNE *BLANKS                    *B2
+     C                     MOVE @@ALPH    #0CHAM
+     C                     END                             *E2
+     C                     END                             *E1
+     C*
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C* SRINZ - Routine to initialize screen fields with defaults
+     C*-------------------------------------------------------------------
+     C           SRINZ     BEGSR
+     C*
+     C                     MOVEL#CNUM     @CNUM
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM           @CNUM  10
+     C                     PARM           @CSTAT  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C** Data-base error processing.
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           @CSTAT    OREQ '*ERROR'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCUSTPD'DBFILE           ************
+     C                     Z-ADD5         DBASE            * DBER 005 *
+     C                     MOVEL#CNUM     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR SRDBER
+     C                     END
+     C*
+     C** Initialise screen field.
+     C*                                                                  S01408
+     C/COPY WNCPYSRC,GL3271WISE                                          S01408
+     C*                                                                  S01408
+     C* Only default value if Base Rate Tax is not ON.                   CRE007
+     C           S01383    IFEQ 'N'                                      CRE007
+     C                     MOVE BBTAIN    #0ITAX
+     C                     ELSE                                          CRE007
+     C                     MOVE *BLANKS   #0ITAX                         CRE007
+     C                     ENDIF                                         CRE007
+     C*                                                                  S01408
+     C/COPY WNCPYSRC,GL3271WIS1                                          S01408
+     C*                                                                  S01408
+     C           *IN72     IFEQ '1'
+     C                     MOVEL'Y'       #0STCI
+     C                     END
+     C                     MOVE *BLANKS   #0CHIN
+     C                     MOVE *BLANKS   #0CHAM
+     C*
+     C/COPY WNCPYSRC,GL3271WCC1
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C* SRFTOS - Routine to move file fields to screen fields
+     C*-------------------------------------------------------------------
+     C           SRFTOS    BEGSR
+     C*
+     C                     MOVELATITAX    #0ITAX
+     C/COPY WNCPYSRC,GL3271WCC3
+     C           *IN73     IFEQ '1'
+     C                     MOVE ATCHIN    #0CHIN
+     C*
+     C**   Use the SR/ZEDIT to format the file amount
+     C           ATCHAM    IFNE *ZEROS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE ATCHAM    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #0CHAM
+     C                     MOVE *BLANKS   ZFIELD
+     C                     ELSE
+     C                     MOVE *BLANKS   #0CHAM
+     C                     END
+     C                     END
+     C*
+     C           *IN72     IFEQ '1'
+     C                     MOVE ATSTCI    #0STCI
+     C*
+     C**   Use the SR/ZEDIT to format the file amount
+     C           STFAMT    IFNE *ZEROS
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE STFAMT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #0FAMT
+     C                     MOVE *BLANKS   ZFIELD
+     C                     ELSE
+     C                     MOVE *BLANKS   #0FAMT
+     C                     END
+     C                     END
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C* SRSTOF - Routine to move screen fields to file fields
+     C*-------------------------------------------------------------------
+     C           SRSTOF    BEGSR
+     C*
+     C** Move key fields to file fields
+     C                     MOVEL#CNUM     ATCNUM
+     C                     MOVEL#CCY      ATCCY
+     C                     MOVEL#ACOD     ATACOD
+     C                     MOVEL#ACSQ     ATACSQ
+     C                     MOVEL#BRCA     ATBRCA
+     C*
+     C** Move data fields to file fields
+     C                     MOVEL#0ITAX    ATITAX
+     C           *IN72     IFEQ '1'
+     C                     MOVE #0STCI    ATSTCI
+     C                     END
+     C*
+     C           *IN73     IFEQ '1'
+     C                     MOVE #0CHIN    ATCHIN
+     C           #0CHAM    IFNE *BLANKS
+     C                     Z-ADD@@AMT     ATCHAM
+     C                     ELSE
+     C                     Z-ADD*ZEROS    ATCHAM
+     C                     END
+     C                     END
+      *                                                                   CRE001
+      ** Initialise new Overdraft fields in PF/ACCNTBXC                   CRE001
+      *                                                                   CRE001
+     C           CRE001    IFNE 'Y'                                       CRE001
+     C                     Z-ADD*ZERO     ATAODR                          CRE001
+     C                     Z-ADD*ZERO     ATITRD                          CRE001
+     C                     Z-ADD*ZERO     ATORTC                          CRE001
+     C                     Z-ADD*ZERO     ATOLVD                          CRE001
+     C                     Z-ADD*ZERO     ATPOLC                          CRE001
+     C                     Z-ADD*ZERO     ATPOLE                          CRE001
+     C                     ENDIF                                          CRE001
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C* SRBTOF - Routine to move blanks to file fields
+     C*-------------------------------------------------------------------
+     C           SRBTOF    BEGSR
+     C*
+     C** Move blanks to file fields
+     C                     MOVEL*BLANKS   ATITAX
+     C           *IN72     IFEQ '1'
+     C                     MOVEL*BLANKS   ATSTCI
+     C                     END
+     C           *IN73     IFEQ '1'
+     C                     MOVEL*BLANKS   ATCHIN
+     C                     MOVEL*BLANKS   ATCHAM
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*-------------------------------------------------------------------
+     C* SRINIT - Routine to handle initial processing
+     C*-------------------------------------------------------------------
+     C           SRINIT    BEGSR
+     C*
+     C** Get parameters from calling program
+     C           *ENTRY    PLIST
+     C                     PARM           ACTION  1
+     C                     PARM           DATA
+     C                     PARM           WWRTRN  7
+     C*
+     C** Dummy parameters (used for non-DDS window method)
+     C                     PARM           DUMMY1  30
+     C                     PARM           DUMMY2  30
+     C                     PARM           DUMMY3  30
+     C                     PARM           DUMMY4  30
+     C                     PARM           DUMMY5 10
+     C*
+     C** The following parameter is needed from PTF16 on.
+     C** Every PTF level below should omit this parameter
+     C                     PARM           SPARE 256
+     C*
+     C** Setup key values using transaction data passed from caller
+     C           KACCNT    KLIST
+     C**********           KFLD           #CNUM   60                                          CSD027
+     C                     KFLD           #CNUM   6                                           CSD027
+     C                     KFLD           #CCY    3
+     C**********           KFLD           #ACOD   40                                          CGL029
+     C                     KFLD           #ACOD  100                                          CGL029
+     C                     KFLD           #ACSQ   20
+     C                     KFLD           #BRCA   3
+     C*
+     C* Redefine data-base error fields for program.
+     C           *LIKE     DEFN DBFILE    WWEXTF
+     C                     MOVEL'ACCNTBXC'WWEXTF
+     C*
+     C* Determine if Window Processing Required
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDMMODPD'DBFILE           ************
+     C                     Z-ADD4         DBASE            * DBER 004 *
+     C                     MOVEL*BLANKS   DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR SRDBER
+     C                     END
+     C*
+     C* Determine if Swiss Taxes Module Present   (BGNTST in SDMMODPD)
+     C                     MOVE '0'       *IN12
+     C*
+     C           BGNTST    IFEQ 'Y'
+     C                     MOVE '1'       *IN12
+     C                     END
+      *                                                                                      CDL013
+      ***   Check if CAR CDL013 is installed                                                 CDL013
+      *                                                                                      CDL013
+     C                     CALL 'AOSARDR0'                                                   CDL013
+     C                     PARM *BLANKS   @RTCD   7                                          CDL013
+     C                     PARM '*VERIFY' @OPTN   7                                          CDL013
+     C                     PARM 'CDL013'  @SARD   6                                          CDL013
+     C                     PARM           DSFDY                                              CDL013
+      *                                                                                      CDL013
+      ***   CAR CDL013 is installed                                                          CDL013
+      *                                                                                      CDL013
+     C           @RTCD     IFEQ *BLANKS                                                      CDL013
+     C                     MOVE '1'       CDL013  1                                          CDL013
+      *                                                                                      CDL013
+      ***   CAR CDL013 is not installed                                                      CDL013
+      *                                                                                      CDL013
+     C                     ELSE                                                              CDL013
+     C                     MOVE '0'       CDL013                                             CDL013
+     C                     END                                                               CDL013
+      *                                                                                      CDL013
+     C*                                                                  S01408
+     C/COPY WNCPYSRC,GL3271WCPG                                          S01408
+     C*                                                                  S01408
+     C*
+     C*LOAD KEYS
+     C*
+     C                     MOVE #1CNUM    #CNUM
+     C                     MOVE #1CCY     #CCY
+     C                     MOVE #1ACOD    #ACOD
+     C                     MOVE #1ACSQ    #ACSQ
+     C                     MOVE #1BRCA    #BRCA
+     C*
+     C** Initialise file fields
+     C*
+     C                     Z-ADD*ZEROS    ATCRST
+     C                     MOVEL*BLANK    ATSUBO
+     C                     MOVEL*BLANK    ATITAX
+     C                     MOVE *BLANK    ATSTCI
+     C                     MOVE *BLANK    ATCHIN
+     C                     Z-ADD*ZEROS    ATCHAM
+     C*
+     C*
+     C**   Access currency details master file to get the number of
+     C**   decimal positions
+     C           *IN72     IFEQ '1'
+     C           *IN73     OREQ '1'
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR  '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM #1CCY     @CURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS                    *B1
+     C                     MOVE '1'       *IN50
+     C                     END
+     C*
+     C           KEY01     KLIST
+     C                     KFLD           #1CCY
+     C                     KFLD           #1STFQ
+     C*
+     C                     MOVE '0'       *IN22
+     C*
+     C           *IN72     IFEQ '1'
+     C           ACTION    IFEQ 'E'                        *B1
+     C*
+     C           KEY01     CHAINRESTCHPD             70
+     C*
+     C           *IN70     IFEQ '0'                        *B2
+     C                     MOVE '1'       *IN22
+     C                     END                             *E2
+     C*
+     C                     END                             *E1
+     C*
+     C           ACTION    IFNE 'E'                        *B1
+     C                     MOVE '0'       *IN22
+     C                     END                             *E1
+     C                     END
+     C*
+     C                     END
+      *                                                                   CRE001
+      **  Check if Overdraft Interest Calculation (CRE001) is installed   CRE001
+      *                                                                   CRE001
+     C                     MOVE *BLANK    CRE001  1                       CRE001
+      *                                                                   CRE001
+     C                     CALL 'AOSARDR0'                                CRE001
+     C                     PARM '       ' @RTCD   7                       CRE001
+     C                     PARM '*VERIFY' @OPTN   7                       CRE001
+     C                     PARM 'CRE001'  @SAR    6                       CRE001
+      *                                                                   CRE001
+     C           @RTCD     IFNE *BLANKS                                   CRE001
+     C           @RTCD     ANDNE'*NRF   '                                 CRE001
+     C           *LOCK     IN   LDA                                       CRE001
+     C                     Z-ADD6         DBASE            ***************CRE001
+     C                     MOVEL'SCSARDPD'DBFILE           **DB ERROR 6 **CRE001
+     C                     MOVEL@SAR      DBKEY            ***************CRE001
+     C                     OUT  LDA                                       CRE001
+     C                     EXSR SRDBER                                    CRE001
+     C                     ENDIF                                          CRE001
+      *                                                                   CRE001
+     C           @RTCD     IFEQ *BLANKS                                   CRE001
+     C                     MOVE 'Y'       CRE001                          CRE001
+     C                     ENDIF                                          CRE001
+      *                                                                   CRE007
+      **  Check if Base Rate Tax (S01383) is installed                    CRE007
+      *                                                                   CRE007
+     C                     MOVE *BLANK    S01383  1                       CRE007
+      *                                                                   CRE007
+     C                     CALL 'AOSARDR0'                                CRE007
+     C                     PARM '       ' @RTCD                           CRE007
+     C                     PARM '*VERIFY' @OPTN                           CRE007
+     C                     PARM 'S01383'  @SAR                            CRE007
+      *                                                                   CRE007
+     C           @RTCD     IFNE *BLANKS                                   CRE007
+     C           @RTCD     ANDNE'*NRF   '                                 CRE007
+     C           *LOCK     IN   LDA                                       CRE007
+     C                     Z-ADD7         DBASE            ***************CRE007
+     C                     MOVEL'SCSARDPD'DBFILE           **DB ERROR 7 **CRE007
+     C                     MOVEL@SAR      DBKEY            ***************CRE007
+     C                     OUT  LDA                                       CRE007
+     C                     EXSR SRDBER                                    CRE007
+     C                     ENDIF                                          CRE007
+      *                                                                   CRE007
+     C           @RTCD     IFEQ *BLANKS                                   CRE007
+     C                     MOVE 'Y'       S01383                          CRE007
+     C                     ENDIF                                          CRE007
+      *                                                                   CRE007
+     C/COPY WNCPYSRC,GL3271WCC4
+      *                                                                   CRE001
+     C                     ENDSR
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*
+     C           ZA0840    BEGSR
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL3271WVSF                                           S01408
+     C*                                                                   S01408
+     C*
+     C**   initialize the fields and the arrays
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN82
+     C                     Z-ADD0         @@ERCD  10
+     C                     Z-ADD0         @@AMT  150
+     C                     MOVEA*BLANKS   @G
+     C                     MOVEA@@ALPH    @F
+     C                     MOVE *BLANKS   @@ALPH 16
+     C                     Z-ADD0         @@WK7   10
+     C                     Z-ADD0         @@CADP  30
+     C                     Z-ADD0         @@CINT  30
+     C                     Z-ADD0         @@PIDP  30
+     C                     Z-ADD0         @@PODP  30
+     C                     Z-ADD0         @@C     20
+     C                     Z-ADD0         @@D     20
+     C                     Z-ADD0         @@E     20
+     C*
+     C**   define the input fields
+     C           *LIKE     DEFN @@CADP    @@IDP
+     C           *LIKE     DEFN @@CINT    @@IINT
+     C*
+     C** first check that the number input will not produce a number
+     C** output with more than 15 figures.
+     C           @@IDP     ADD  @@IINT    @@WK2   20
+     C           @@WK2     IFGT 15                         B1
+     C                     Z-ADD2         @@ERCD           *1
+     C                     GOTO ZA0849                     *1
+     C                     END                             E1
+     C*
+     C** work through input array, ignoring leading zeros and blanks,
+     C** also blanking the leading zeros in the input array.
+     C                     MOVE '0'       *IN83
+     C                     ADD  1         @@C
+     C           @@C       DOWLE16                         B1
+     C           *IN83     ANDEQ'0'                        *1
+     C           @F,@@C    IFNE ' '                        B*2
+     C           @F,@@C    ANDNE'0'                        **2
+     C                     MOVE '1'       *IN83            **2
+     C                     SUB  1         @@C              **2
+     C                     END                             E*2
+     C                     ADD  1         @@C              **2
+     C                     END                             E1
+     C*
+     C** check the integer part of the number for valid characters.
+     C           @@C       DOWLE16                         B1
+     C           @F,@@C    ANDNE'.'                        *1
+     C           @F,@@C    ANDNE' '                        *1
+     C*
+     C** check for non numeric characters
+     C           @F,@@C    IFGT '9'                        B*2
+     C           @F,@@C    ORLT '0'                        **2
+     C                     Z-ADD0         @@AMT            **2
+     C                     Z-ADD1         @@ERCD           **2
+     C                     GOTO ZA0849                     **2
+     C*
+     C                     ELSE                            X*2
+     C*
+     C                     ADD  1         @@CINT           **2
+     C*
+     C** check number of integers is not greater than that required
+     C           @@CINT    IFGT @@IINT                     B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+     C*
+     C** multiply the output amount by 10 then add the number in
+     C** the input array element being processed.
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C           @@AMT     ADD  @@WK7     @@AMT            **2
+     C                     END                             E*2
+     C*
+     C** increase array index
+     C                     ADD  1         @@C              *1
+     C                     END                             E1
+     C*
+     C** set up position of decimal point in input array
+     C                     Z-ADD@@C       @@PIDP
+     C*
+     C** if the character pointed to is a decimal point add 1 to the
+     C** index
+     C           @@C       IFLE 16                         B1
+     C           @F,@@C    ANDEQ'.'                        *1
+     C                     ADD  1         @@C              *1
+     C                     MOVE '1'       *IN82            *1
+     C                     END                             E1
+     C*
+     C** now validate the decimal part of the number
+     C           @@C       DOWLE16                         B1
+     C*
+     C** if a blank is found set on the blank input indicator
+     C           @F,@@C    IFEQ ' '                        B*2
+     C                     MOVE '1'       *IN81            **2
+     C                     END                             E*2
+     C*
+     C** if the figure is numeric, check that the number of decimal
+     C** places does not exceed that specified, and that no blanks
+     C** have been entered.
+     C           @F,@@C    IFGE '0'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     ADD  1         @@CADP           **2
+     C*
+     C           @@CADP    IFGT @@IDP                      B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+     C*
+     C           *IN81     IFEQ '1'                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+     C*
+     C** update output amount
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C                     ADD  @@WK7     @@AMT            **2
+     C*
+     C                     ELSE                            X*2
+     C*
+     C** if the character is not numeric and not a blank then it is
+     C** invalid
+     C           @F,@@C    IFNE ' '                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+     C*
+     C** increase index
+     C                     ADD  1         @@C              *1
+     C*
+     C                     END                             E1
+     C*
+     C** correct the output number for any decimal places not input
+     C** in the alpha field.
+     C           @@IDP     SUB  @@CADP    @@E
+     C*
+     C** increase the index by one to get correct array entry
+     C                     ADD  1         @@E
+     C           @@AMT     MULT @H,@@E    @@AMT
+     C*
+     C** now format the output alpha field, first calculate where
+     C** the decimal point goes
+     C           16        SUB  @@IDP     @@PODP
+     C           @@PODP    SUB  1         @@PIDP
+     C*
+     C** if there are no decimal points set the position to 17
+     C           @@IDP     IFEQ 0                          B1
+     C                     Z-ADD17        @@PODP           *1
+     C                     END                             E1
+     C*
+     C** move the output number into the input array
+     C                     MOVEA*BLANKS   @F
+     C                     MOVE @@AMT     @@AMTA 15
+     C                     MOVEA@@AMTA    @F
+     C*
+     C** set up indexes
+     C                     Z-ADD1         @@C
+     C                     Z-ADD1         @@D
+     C                     MOVE '0'       *IN80
+     C*
+     C** now fill up the output array
+     C           @@D       DOWLE16                         B1
+     C*
+     C** insert decimal point if the position is found
+     C           @@D       IFEQ @@PODP                     B*2
+     C                     MOVE '.'       @G,@@D           **2
+     C                     ADD  1         @@D              **2
+     C                     END                             E*2
+     C*
+     C** insert the zero before the decimal point
+     C           *IN80     IFEQ '0'                        B*2
+     C           @@D       ANDEQ@@PIDP                     **2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE '1'       *IN80            **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+     C*
+     C** blank leading zeros
+     C           *IN80     IFEQ '0'                        B*2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE ' '       @G,@@D           **2
+     C                     END                             E*2
+     C*
+     C** move a normal character
+     C           @F,@@C    IFGE '1'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     MOVE @F,@@C    @G,@@D           **2
+     C                     MOVE '1'       *IN80            **2
+     C                     END                             E*2
+     C*
+     C** non blanked zero
+     C           @F,@@C    IFEQ '0'                        B*2
+     C           *IN80     ANDEQ'1'                        **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+     C*
+     C                     ADD  1         @@C              *1
+     C                     ADD  1         @@D              *1
+     C                     END                             E1
+     C*
+     C*
+     C** put output array into output amount
+     C                     MOVEA@G        @@ALPH
+     C*
+     C** align figure with zero decimal places.
+     C           @@IDP     IFEQ 0                          B1
+     C                     MOVE *BLANKS   @@ALP1 17        *1
+     C                     MOVE @@ALPH    @@ALP1           *1
+     C                     MOVEL@@ALP1    @@ALPH           *1
+     C                     END                             E1
+     C*
+     C*                                                                S01408
+     C/COPY WNCPYSRC,GL3271WVS1                                        S01408
+     C*                                                                S01408
+     C           ZA0849    ENDSR                           ZA0849 TAG
+     C*
+     C********************************************************************
+     C/EJECT
+      /COPY ZSRSRC,ZEDITZ2
+     C/EJECT
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+** CPY@ OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** array of powers of 10 from 0 to 8
+000000000000001
+000000000000010
+000000000000100
+000000000001000
+000000000010000
+000000000100000
+000000001000000
+000000010000000
+000000100000000
+000001000000000
+000010000000000
+000100000000000
+001000000000000
+010000000000000
+100000000000000

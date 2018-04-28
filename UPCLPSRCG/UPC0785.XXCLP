@@ -1,0 +1,129 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CUP021*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0785 - Copy Action Files into Midas system.              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP021  *REDUNDANT Date 24Jan11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK018             Date 16Mar04              */
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*                      CUP019             Date 03Oct02              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CUP017             Date 29May02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      CUP008             Date 11Jul00              */
+/* Midas DBA 3.01 ---------------------------------------------------*/
+/*                      CPK010             Date 04Oct99              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CUP004 *CREATE     Date 08Jun98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP021 - Rewrite of Action File processing.                 */
+/*       CPK018 - MidasPlus packaging.  Handle global layer.         */
+/*       CUP019 - Allow for records with value of *NONE.             */
+/*       CUP017 - UPCPYFPD renamed to UPACTDPD.                      */
+/*       CUP008 - Add field to hold "based on" file name (Recompile) */
+/*       CPK010 - DBA3 Alphasite changes:                            */
+/*                - Change some file references to make them more    */
+/*                  specific.                                        */
+/*       CUP004 - Make upgrade of DTALIB items easier                */
+/*                                                                   */
+/*********************************************************************/
+/************PGM        PARM(&DELLIB)                                                  */ /*CPK010*/
+/**********  PGM        PARM(&DELLIB &PREFIX &RETURN)                       */ /*CPK010*/ /*CPK018*/
+             PGM        PARM(&DELLIB &COPYTO &RETURN)                                     /*CPK018*/
+ 
+             DCL        VAR(&DELLIB) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)                                */ /*CPK018*/
+             DCL        VAR(&COPYTO) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FMTOPT1) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&FMTOPT2) TYPE(*CHAR) LEN(5)
+/**********  DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1) VALUE(' ')          */ /*CPK010*/ /*CPK018*/
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)                                   /*CPK018*/
+/**COPY*UPCPYSRC,UPLIBDCL*                                           */ /*             */ /*CPK018*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/************DCLF       FILE(UPCPYFPD)                                                 */ /*CUP017*/
+/**********  DCLF       FILE(UPACTFPD)                                      */ /*CUP017*/ /*CPK018*/
+             DCLF       FILE(UPGPACTFPD)                                                  /*CPK018*/
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/************CHGJOB     SWS(XXXXXX00)                                                  */ /*CPK010*/
+ 
+/************RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)                           */ /*CPK010*/
+ 
+/*******UPCPYSRC,UPLIBNAME                                            */                  /*CPK010*/
+/**********  CHGVAR     VAR(&DPLIB) VALUE(&PREFIX *TCAT 'DPLIB')            */ /*CPK010*/ /*CPK018*/
+ 
+/**Copy*driving*file*from*the*delivery*library*to*the*main*database**/ /*              */ /*CPK018*/
+/**********  CPYF       FROMFILE(&DELLIB/UPCPYFPDDC) +      */                            /*CPK010*/
+/**********               TOFILE(UPCPYFPD) MBROPT(*REPLACE)  */                           /*CPK010*/
+/************CPYF       FROMFILE(&DELLIB/UPCPYFPD) +                                   */ /*CUP017*/
+/************             TOFILE(&DPLIB/UPCPYFPD) MBROPT(*REPLACE)             /*CPK010*/ /*CUP017*/
+ 
+ RCVF:       RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+ 
+/* If the record has no Action File then read next record. */                             /*CUP019*/
+             IF         COND(&AATOFL *EQ '*NONE') THEN(DO)                                /*CUP019*/
+                GOTO       CMDLBL(RCVF)                                                   /*CUP019*/
+             ENDDO                                                                        /*CUP019*/
+ 
+/* Build*the*To*Library*name**/ /*                                          */ /*CPK010*/ /*CPK018*/
+/**********  CHGVAR     VAR(&COPYTO) VALUE(&PREFIX *CAT &AALIBR)            */ /*CPK010*/ /*CPK018*/
+                                                                                          /*CPK010*/
+/* Always clear the To File even if there is no data to copy */
+/**********  CLRPFM     FILE(&AATOFL) */                                                  /*CPK010*/
+             CLRPFM     FILE(&COPYTO/&AATOFL)                                             /*CPK010*/
+ 
+/* Check to see if the file in question has been delivered */
+/* and if not, read the next record.                       */
+             CHKOBJ     OBJ(&DELLIB/&AAFRMF) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(RCVF))
+ 
+/* If the file has been delivered then copy it to the main database */
+             CHGVAR     VAR(&FMTOPT1) VALUE(%SST(&AACOPY 1 5))
+             CHGVAR     VAR(&FMTOPT2) VALUE(%SST(&AACOPY 6 5))
+ 
+             IF         COND(&AACOPY *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&FMTOPT1) VALUE('*MAP')
+                CHGVAR     VAR(&FMTOPT2) VALUE('*DROP')
+             ENDDO
+ 
+/**********  CHGVAR     VAR(&COPYTO) VALUE(&PREFIX *CAT &AALIBR) */                       /*CPK010*/
+ 
+             CPYF       FROMFILE(&DELLIB/&AAFRMF) +
+                          TOFILE(&COPYTO/&AATOFL) MBROPT(*REPLACE) +
+                          FMTOPT(&FMTOPT1 &FMTOPT2)
+ 
+             GOTO       CMDLBL(RCVF)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/* Abnormal termination */
+ 
+/************SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('UPC0785 +                 */ /*CPK010*/
+/************             ended abnormally - see joblog') +                            */ /*CPK010*/
+/************             MSGTYPE(*ESCAPE)                                             */ /*CPK010*/
+/************MONMSG     MSGID(CPF0000 MCH0000)                                         */ /*CPK010*/
+             CHGVAR     VAR(&RETURN) VALUE(F)                                             /*CPK010*/
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

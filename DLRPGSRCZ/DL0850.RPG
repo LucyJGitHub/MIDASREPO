@@ -1,0 +1,524 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Deal number gap work file extraction')        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module                                       *
+     F*                                                               *
+     F*  DL0850 - Deal Numbers Gap Number Work File Extraction        *
+     F*                                                               *
+     F*  Function:  This program extracts all the used deal numbers   *
+     F*   (I/C)     and put them into the work file DLGAPNPD.         *
+     F*                                                               *
+     F*  Called By: DLC0904 - Deal Number Input Gaps - Input Cycle    *
+     F*             DLC0808 - Deal Number Input Gaps - CoB On Req     *
+     F*                                                               *
+     F*  Calls :    None                                              *
+     F*                                                               *
+     F*  (c) Misys International Banking Systems Ltd. 2002            *
+     F*                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *                 231310             Date 19Aug14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+     F*                 169253  *CREATE    Date 21Mar00               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  231310 - DL0851P1: Deal Number Input Gaps Report             *
+      *           Include transactions reversed on rundate but        *
+      *           inserted prior to rundate in the input gaps report. *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+     F*  169253 - Extract all the deal numbers FX, MM, AB and put in  *
+     F*           a work file.                                        *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+      *
+     FDLNXTPL0IF  E           K        DISK
+     FABDEALLLIF  E           K        DISK                           UC
+     FMMDELDPPIF  E           K        DISK                           UC
+     FMMDENBPPIF  E           K        DISK                           UC
+     FMMDENSPPIF  E           K        DISK                           UC
+     FFXDEALLLIF  E           K        DISK                           UC
+     FDLNOTRPDUF  E           K        DISK                      A    UC
+     FDLDLDGLEIF  E           K        DISK                           UC
+     FDLGAPNPDO   E                    DISK                      A    UC
+     FSDBANKPDIF  E                    DISK                                                   231310
+      *
+     E/EJECT
+     E/COPY ZSRSRC,ZDATE9Z1
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     I/COPY ZSRSRC,ZDATE9Z2
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  10 - EOF                                                     *
+      *                                                               *
+      *****************************************************************
+      *****************************************************************
+      *  M A I N   P R O C E S S I N G                                *
+      *****************************************************************
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C                     OPEN ABDEALLL
+     C                     OPEN MMDELDPP
+     C                     OPEN MMDENBPP
+     C                     OPEN MMDENSPP
+     C                     OPEN FXDEALLL
+     C                     OPEN DLNOTRPD
+     C                     OPEN DLGAPNPD
+      *
+      **  Get all Nostro Transfer Deals
+      *
+     C                     EXSR GETNX
+      *
+      **  Extract Loan/Deposit/CD Issued number
+      *
+     C                     SETOF                     10
+     C                     READ MMDELDPP                 10
+     C           *IN10     DOWEQ*OFF
+     C                     Z-ADDHKDN38    WKDLNO
+     C                     MOVE HKDDLT    WKDDLT
+     C                     MOVE HKDSTS    WKDSTS
+     C                     MOVE HKCHTP    WKCHTP
+     C                     Z-ADDHKDTYY    WKDYER
+     C                     Z-ADDHKDTMM    WKDMON
+     C                     Z-ADDHKDTDD    WKDDAY
+     C                     WRITEDLGAPND0
+     C                     READ MMDELDPP                 10
+     C                     ENDDO
+      *
+      **  Extract NAS Bought number
+      *
+     C                     SETOF                     10
+     C                     READ MMDENBPP                 10
+     C           *IN10     DOWEQ*OFF
+     C                     Z-ADDHLDN38    WKDLNO
+     C                     MOVE HLDDLT    WKDDLT
+     C                     MOVE HLDSTS    WKDSTS
+     C                     MOVE HLCHTP    WKCHTP
+     C                     Z-ADDHLDTYY    WKDYER
+     C                     Z-ADDHLDTMM    WKDMON
+     C                     Z-ADDHLDTDD    WKDDAY
+     C                     WRITEDLGAPND0
+     C                     READ MMDENBPP                 10
+     C                     ENDDO
+      *
+      **  Extract NAS Sold number
+      *
+     C                     SETOF                     10
+     C                     READ MMDENSPP                 10
+     C           *IN10     DOWEQ*OFF
+     C                     Z-ADDHMDN38    WKDLNO
+     C                     MOVE HMDDLT    WKDDLT
+     C                     MOVE HMDSTS    WKDSTS
+     C                     MOVE HMCHTP    WKCHTP
+     C                     Z-ADDHMDTYY    WKDYER
+     C                     Z-ADDHMDTMM    WKDMON
+     C                     Z-ADDHMDTDD    WKDDAY
+     C                     WRITEDLGAPND0
+     C                     READ MMDENSPP                 10
+     C                     ENDDO
+      *
+      **  Extract FX Deal number
+      *
+     C                     SETOF                     10
+     C           *LOVAL    SETLLFXDEALLL
+     C                     READ FXDEALLL                 10
+     C           *IN10     DOWEQ*OFF
+     C                     Z-ADDFHDN38    WKDLNO
+     C                     MOVE FHDDLT    WKDDLT
+     C                     MOVE FHDSTS    WKDSTS
+     C                     MOVE FHCHTP    WKCHTP
+     C                     Z-ADDFHDTYY    WKDYER
+     C                     Z-ADDFHDTMM    WKDMON
+     C                     Z-ADDFHDTDD    WKDDAY
+     C                     WRITEDLGAPND0
+     C                     READ FXDEALLL                 10
+     C                     ENDDO
+      *
+      **  Extract AB First Deal number
+      *
+     C                     SETOF                     10
+     C           *LOVAL    SETLLABDEALP0
+     C                     READ ABDEALP0                 10
+     C           *IN10     DOWEQ*OFF
+     C                     Z-ADDJPFD38    WKDLNO
+     C                     MOVE JPDDLT    WKDDLT
+     C                     MOVE JPDSTS    WKDSTS
+     C                     MOVE JPCHTP    WKCHTP
+     C                     Z-ADDJPLAYY    WKDYER
+     C                     Z-ADDJPLAMM    WKDMON
+     C                     Z-ADDJPLADD    WKDDAY
+     C                     WRITEDLGAPND0
+     C                     READ ABDEALP0                 10
+     C                     ENDDO
+      *
+      **  Extract AB Second Deal number
+      *
+     C                     SETOF                     10
+     C           *LOVAL    SETLLABDEALP1
+     C                     READ ABDEALP1                 10
+     C           *IN10     DOWEQ*OFF
+     C                     Z-ADDJPSD38    WKDLNO
+     C                     MOVE JPDDLT    WKDDLT
+     C                     MOVE JPDSTS    WKDSTS
+     C                     MOVE JPCHTP    WKCHTP
+     C                     Z-ADDJPLAYY    WKDYER
+     C                     Z-ADDJPLAMM    WKDMON
+     C                     Z-ADDJPLADD    WKDDAY
+     C                     WRITEDLGAPND0
+     C                     READ ABDEALP1                 10
+     C                     ENDDO
+      *
+      **  Extract DL Nostro Transfer number
+      *
+     C                     SETOF                     10
+     C                     READ DLNOTRPD                 10
+     C           *IN10     DOWEQ*OFF
+     C                     Z-ADDDLNO      WKDLNO
+     C                     MOVE RECS      WKDDLT
+     C                     MOVE RECS      WKDSTS
+     C                     MOVE RECS      WKCHTP
+     C                     MOVE DTYP      WKDTYP
+     C                     Z-ADDOREDYY    WKDYER
+     C                     Z-ADDOREDMM    WKDMON
+     C                     Z-ADDOREDDD    WKDDAY
+     C                     WRITEDLGAPND0
+     C                     READ DLNOTRPD                 10
+     C                     ENDDO
+      *
+      **  Extract DL FRA/IRS deals
+      *
+     C                     OPEN DLDLDGLE
+     C                     SETOF                     10
+     C                     READ DLDLDGLE                 10
+     C           *IN10     DOWEQ*OFF
+     C                     Z-ADDDLNO      WKDLNO
+     C           CHTP      IFEQ 'R'
+     C                     MOVE 'D'       WKDDLT
+     C                     ELSE
+     C                     MOVE CHTP      WKDDLT
+     C                     ENDIF
+     C                     MOVE RECI      WKDSTS
+     C                     MOVE CHTP      WKCHTP
+     C                     Z-ADDORED      @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     MOVEL@@VDT     YYMMDD  8
+     C                     MOVELYYMMDD    YYYY    4
+     C                     MOVE YYMMDD    MMDD    4
+     C                     MOVELMMDD      MM      2
+     C                     MOVE MMDD      DD      2
+     C                     MOVELYYYY      WKDYER
+     C                     MOVELMM        WKDMON
+     C                     MOVELDD        WKDDAY
+     C                     WRITEDLGAPND0
+     C                     READ DLDLDGLE                 10
+     C                     ENDDO
+     C                     CLOSEDLDLDGLE
+      *
+     C                     CLOSEABDEALLL
+     C                     CLOSEMMDELDPP
+     C                     CLOSEMMDENBPP
+     C                     CLOSEMMDENSPP
+     C                     CLOSEFXDEALLL
+     C                     CLOSEDLNOTRPD
+      *                                                                                       231310
+      ** Get deals reversed on rundate but inserted prior to rundate                          231310
+      *                                                                                       231310
+     C                     EXSR GDREVP                                                        231310
+      *                                                                                       231310
+     C                     CLOSEDLGAPNPD
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  GETNX - Get all Nostro Transfer deals and transfer it to     *
+      *          PF/DLNOTRPD.                                         *
+      *                                                               *
+      *  Called by:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GETNX     BEGSR
+      *
+      **  Convert ORED to TRNDAY format
+      *
+     C                     SETOF                     10
+     C                     READ DLNXTPL0                 10
+     C           *IN10     DOWEQ*OFF
+     C                     MOVE ORED      @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     MOVEL@@VDT     DYER    40
+     C                     MOVE @@VDT     @TEMP   40
+     C                     MOVEL@TEMP     DMON    20
+     C                     MOVE @TEMP     DDAY    20
+      *
+      **  Move converted to DLNOTRPD fields
+      *
+     C                     MOVE DYER      OREDYY
+     C                     MOVE DMON      OREDMM
+     C                     MOVE DDAY      OREDDD
+     C                     MOVE RECI      RECS
+     C                     WRITEDLNOTRD0
+     C                     READ DLNXTPL0                 10
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************                       231310
+      *                                                               *                       231310
+      *  GDREVP - Get deals reversed today but inserted prior to today*                       231310
+      *                                                               *                       231310
+      *  Called by:  Main Processing                                  *                       231310
+      *                                                               *                       231310
+      *  Calls    :  MOVDT                                            *                       231310
+      *                                                               *                       231310
+      *****************************************************************                       231310
+      *                                                                                       231310
+     C           GDREVP    BEGSR                                                              231310
+      *                                                                                       231310
+      ** Get run date                                                                         231310
+      *                                                                                       231310
+     C                     READ SDBANKPD                 10                                   231310
+     C                     Z-ADDBJRDNB    #RMI    50                                          231310
+     C                     Z-ADDBJRDNB    @@DAYN                                              231310
+     C                     EXSR ZDATE9                                                        231310
+     C                     MOVEL@@VDT     #RYYMD  8                                           231310
+      *                                                                                       231310
+     C                     OPEN MMDELDPP                                                      231310
+     C                     OPEN MMDENBPP                                                      231310
+     C                     OPEN MMDENSPP                                                      231310
+     C                     OPEN FXDEALLL                                                      231310
+      *                                                                                       231310
+      **  Extract Loan/Deposit/CD Issued number                                               231310
+      *                                                                                       231310
+     C                     SETOF                     10                                       231310
+     C                     READ MMDELDPP                 10                                   231310
+     C           *IN10     DOWEQ*OFF                                                          231310
+     C                     Z-ADDHKDN38    WKDLNO                                              231310
+     C                     MOVE HKDDLT    WKDDLT                                              231310
+     C                     MOVE HKDSTS    WKDSTS                                              231310
+     C                     MOVE HKLACT    WKCHTP                                              231310
+     C                     Z-ADDHKDTYY    @@YR                                                231310
+     C                     Z-ADDHKDTMM    @@Z71M                                              231310
+     C                     Z-ADDHKDTDD    @@Z71D                                              231310
+     C                     MOVE @@VDT     #TYYMD  8                                           231310
+     C                     Z-ADDHKLCD     @@DAYN                                              231310
+     C                     EXSR MOVDT                                                         231310
+      *                                                                                       231310
+     C           HKLCD     IFEQ #RMI                                                          231310
+     C           HKLACT    ANDEQ'D'                                                           231310
+     C           #TYYMD    ANDLT#RYYMD                                                        231310
+     C                     WRITEDLGAPND0                                                      231310
+     C                     ENDIF                                                              231310
+      *                                                                                       231310
+     C                     READ MMDELDPP                 10                                   231310
+     C                     ENDDO                                                              231310
+      *                                                                                       231310
+      **  Extract NAS Bought number                                                           231310
+      *                                                                                       231310
+     C                     SETOF                     10                                       231310
+     C                     READ MMDENBPP                 10                                   231310
+     C           *IN10     DOWEQ*OFF                                                          231310
+     C                     Z-ADDHLDN38    WKDLNO                                              231310
+     C                     MOVE HLDDLT    WKDDLT                                              231310
+     C                     MOVE HLDSTS    WKDSTS                                              231310
+     C                     MOVE HLLACT    WKCHTP                                              231310
+     C                     Z-ADDHLDTYY    @@YR                                                231310
+     C                     Z-ADDHLDTMM    @@Z71M                                              231310
+     C                     Z-ADDHLDTDD    @@Z71D                                              231310
+     C                     MOVE @@VDT     #TYYMD  8                                           231310
+     C                     Z-ADDHLLCD     @@DAYN                                              231310
+     C                     EXSR MOVDT                                                         231310
+      *                                                                                       231310
+     C           HLLCD     IFEQ #RMI                                                          231310
+     C           HLLACT    ANDEQ'D'                                                           231310
+     C           #TYYMD    ANDLT#RYYMD                                                        231310
+     C                     WRITEDLGAPND0                                                      231310
+     C                     ENDIF                                                              231310
+      *                                                                                       231310
+     C                     READ MMDENBPP                 10                                   231310
+     C                     ENDDO                                                              231310
+      *                                                                                       231310
+      **  Extract NAS Sold number                                                             231310
+      *                                                                                       231310
+     C                     SETOF                     10                                       231310
+     C                     READ MMDENSPP                 10                                   231310
+     C           *IN10     DOWEQ*OFF                                                          231310
+     C                     Z-ADDHMDN38    WKDLNO                                              231310
+     C                     MOVE HMDDLT    WKDDLT                                              231310
+     C                     MOVE HMDSTS    WKDSTS                                              231310
+     C                     MOVE HMLACT    WKCHTP                                              231310
+     C                     Z-ADDHMDTYY    @@YR                                                231310
+     C                     Z-ADDHMDTMM    @@Z71M                                              231310
+     C                     Z-ADDHMDTDD    @@Z71D                                              231310
+     C                     MOVE @@VDT     #TYYMD  8                                           231310
+     C                     Z-ADDHMLCD     @@DAYN                                              231310
+     C                     EXSR MOVDT                                                         231310
+      *                                                                                       231310
+     C           HMLCD     IFEQ #RMI                                                          231310
+     C           HMLACT    ANDEQ'D'                                                           231310
+     C           #TYYMD    ANDLT#RYYMD                                                        231310
+     C                     WRITEDLGAPND0                                                      231310
+     C                     ENDIF                                                              231310
+      *                                                                                       231310
+     C                     READ MMDENSPP                 10                                   231310
+     C                     ENDDO                                                              231310
+      *                                                                                       231310
+      **  Extract FX Deal number                                                              231310
+      *                                                                                       231310
+     C                     SETOF                     10                                       231310
+     C           *LOVAL    SETLLFXDEALLL                                                      231310
+     C                     READ FXDEALLL                 10                                   231310
+     C           *IN10     DOWEQ*OFF                                                          231310
+     C                     Z-ADDFHDN38    WKDLNO                                              231310
+     C                     MOVE FHDDLT    WKDDLT                                              231310
+     C                     MOVE FHDSTS    WKDSTS                                              231310
+     C                     MOVE FHLACT    WKCHTP                                              231310
+     C                     Z-ADDFHDTYY    @@YR                                                231310
+     C                     Z-ADDFHDTMM    @@Z71M                                              231310
+     C                     Z-ADDFHDTDD    @@Z71D                                              231310
+     C                     MOVE @@VDT     #TYYMD  8                                           231310
+     C                     Z-ADDFHLCD     @@DAYN  50                                          231310
+     C                     EXSR MOVDT                                                         231310
+      *                                                                                       231310
+     C           FHLCD     IFEQ #RMI                                                          231310
+     C           FHLACT    ANDEQ'D'                                                           231310
+     C           #TYYMD    ANDLT#RYYMD                                                        231310
+     C                     WRITEDLGAPND0                                                      231310
+     C                     ENDIF                                                              231310
+      *                                                                                       231310
+     C                     READ FXDEALLL                 10                                   231310
+     C                     ENDDO                                                              231310
+      *                                                                                       231310
+     C                     CLOSEDLDLDGLE                                                      231310
+     C                     CLOSEMMDELDPP                                                      231310
+     C                     CLOSEMMDENBPP                                                      231310
+     C                     CLOSEMMDENSPP                                                      231310
+     C                     CLOSEFXDEALLL                                                      231310
+      *                                                                                       231310
+      **  Extract DL FRA/IRS deals                                                            231310
+      *                                                                                       231310
+     C                     OPEN DLDLDGLE                                                      231310
+     C                     SETOF                     10                                       231310
+     C                     READ DLDLDGLE                 10                                   231310
+     C           *IN10     DOWEQ*OFF                                                          231310
+     C                     Z-ADDDLNO      WKDLNO                                              231310
+     C           CHTP      IFEQ 'R'                                                           231310
+     C                     MOVE 'D'       WKDDLT                                              231310
+     C                     ELSE                                                               231310
+     C                     MOVE CHTP      WKDDLT                                              231310
+     C                     ENDIF                                                              231310
+     C                     MOVE RECI      WKDSTS                                              231310
+     C                     MOVE CHTP      WKCHTP                                              231310
+     C                     Z-ADDLCD       @@DAYN  50                                          231310
+     C                     EXSR ZDATE9                                                        231310
+     C                     MOVEL@@VDT     YYMMDD  8                                           231310
+     C                     MOVELYYMMDD    YYYY    4                                           231310
+     C                     MOVE YYMMDD    MMDD    4                                           231310
+     C                     MOVELMMDD      MM      2                                           231310
+     C                     MOVE MMDD      DD      2                                           231310
+     C                     MOVELYYYY      WKDYER                                              231310
+     C                     MOVELMM        WKDMON                                              231310
+     C                     MOVELDD        WKDDAY                                              231310
+     C           LCD       IFEQ #RMI                                                          231310
+     C           CHTP      ANDEQ'R'                                                           231310
+     C           ORED      ANDLT#RMI                                                          231310
+     C                     WRITEDLGAPND0                                                      231310
+     C                     ENDIF                                                              231310
+     C                     READ DLDLDGLE                 10                                   231310
+     C                     ENDDO                                                              231310
+     C                     CLOSEDLDLDGLE                                                      231310
+      *                                                                                       231310
+     C                     ENDSR                                                              231310
+      *                                                                                       231310
+      *****************************************************************                       231310
+      *                                                               *                       231310
+      *  MOVDT - Move values to deal transaction date fields          *                       231310
+      *                                                               *                       231310
+      *  Called by:  Main Processing                                  *                       231310
+      *                                                               *                       231310
+      *  Calls    :  None                                             *                       231310
+      *                                                               *                       231310
+      *****************************************************************                       231310
+      *                                                                                       231310
+     C           MOVDT     BEGSR                                                              231310
+      *                                                                                       231310
+      ** Convert last changed date from MIDAS format into YYYYMMDD format                     231310
+      *                                                                                       231310
+     C                     EXSR ZDATE9                                                        231310
+     C                     MOVEL@@VDT     YYMMDD  8                                           231310
+     C                     MOVELYYMMDD    YYYY    4                                           231310
+     C                     MOVE YYMMDD    MMDD    4                                           231310
+     C                     MOVELMMDD      MM      2                                           231310
+     C                     MOVE MMDD      DD      2                                           231310
+      *                                                                                       231310
+      ** Move values to transaction date fields                                               231310
+      *                                                                                       231310
+     C                     MOVELYYYY      WKDYER                                              231310
+     C                     MOVELMM        WKDMON                                              231310
+     C                     MOVELDD        WKDDAY                                              231310
+      *                                                                                       231310
+     C                     ENDSR                                                              231310
+      *                                                                                       231310
+      /EJECT
+     C/COPY ZSRSRC,ZDATE9Z3
+      /EJECT
+     C/COPY ZSRSRC,ZDATE9Z4
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2002

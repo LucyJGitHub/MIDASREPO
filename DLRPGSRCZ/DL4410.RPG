@@ -1,0 +1,1379 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Forward Commitments Revaluation (UP/UL)')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL4410 - Forward Commitments Revaluation UP/UL A/c Key       *
+      *           Generation                                          *
+      *                                                               *
+      *  Function:  This program reads from FX NPV file and generates *
+      *             UP/UL account keys.                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSW212             Date 03May12               *
+      *                 AR821740           Date 29Aug11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER048             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BG12190            Date 09Oct06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CAS008             Date 16Jun04               *
+      *                 226170             Date 05Apr04               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005  *CREATE    Date 16Dec02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  AR821740 - COB - No stamp tax account keys generated         *
+      *             (Recompile)                                       *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  BG12190- CAS005 codes from Midas R4.                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CAS008 - IAS 39 Enhancements (Recompile)                     *
+      *  226170 - UP/UL posting should be in base currency.           *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *                                                               *
+      *****************************************************************
+     FDLNPVLL4IF  E           K        DISK
+      ** Re-valued Forward Commitments File
+      *
+     F*DEALS***IF  E           K        DISK                                                 BG12190
+     FDEALS   UF  E           K        DISK                                                  BG12190
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+      *
+     FDKEYSZZ UF  E                    DISK
+      ** Midas DL Deals Generated Account Keys (Trailer)
+      *
+     F*DKEYSDP*O***F*****153************DISK**********************A                           CDL038
+     FDKEYSDP O   F     364            DISK                      A                            CDL038
+      ** Midas DL Deals Generated Account Keys (Detail)
+      *
+     FDLNPVPPDO   E                    DISK                                                  BG12190
+      ** Revalued Forward Commitments File - REVERSALS                                       BG12190
+      *                                                                                      BG12190
+     FDL4410P1O   E                    PRINTER      KINFDS SPOOL      UC
+      ** DL Forward Commitments Revaluation (UP/UL)
+      *
+     FDL4410AUO   E                    PRINTER      KINFDS SPOOLU
+      ** DL Forward Commitments Revaluation (UP/UL)
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  23 - BNBCPL is 'Y'                                           *
+      *  24 - READ Indicator for DKEYSZZ                              *
+      *  25 - READ Indicator for DLNPVLL4                             *
+      *  26 - CHAIN Indicator for DEALS                               *
+      *  28 - LOKUP Indicator                                         *
+      *  29 - EXCPT Indicator                                         *
+      *                                                               *
+      *  91 to 99 - Indicators used by GLZADD and GLZSUM              *
+      *  LR - Last Record Indicator (Program Termination)             *
+      *  U7 and U8 - DB Error Processing Indicator                    *
+      *                                                               *
+      *****************************************************************
+      /SPACE
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  SRINIT - Initialisation Routine                              *
+      *  SRPRNT - Print Transaction Details                           *
+      *  SRBLNK - Blank Out Detail Fields                             *
+      *  SRLOAD - Load Detail Line                                    *
+      *  SRWRTD - Write Details to Printer File                       *
+      *  SRGNAK - Generate account keys                               *
+      *  SREXCP - Write Out to DKEYSDP File                           *
+      *  SRASUM - Account Key Summary                                 *
+      *  SRAUDT - Print Audit Report                                  *
+      *  SRRCFP - Subroutine to register P1 Printer File via RCF      *
+      *                                                               *
+      *  *INZSR - Program Initialisation Routine                      *
+      *  *PSSR  - Program Exception Error Routine                     *
+      *  GLZADD - Add and Amount to th Total                          *
+      *  GLZSUM - Carry Out Addition                                  *
+      *                                                               *
+      *****************************************************************
+     E                    CPY@    1   1 80
+     E                    AKY        10  1
+     E********************KEY        12  1                                                    CDL038
+     E********************TKEY      500 12                                                    CDL038
+     E********************TPAM      500 13 0                                                  CDL038
+     E********************TLAM      500 13 0                                                  CDL038
+     E                    KEY        16  1                                                    CDL038
+     E                    TKEY      990 16                                                    CDL038
+     E                    TPAM      990 13 0                                                  CDL038
+     E                    TLAM      990 13 0                                                  CDL038
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+      *****************************************************************
+     ISPOOL       DS
+      ** File Information Data Structure
+      *
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680PRTLNE
+     ISPOOLU      DS
+      ** File Information Data Structure
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details File
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch Codes File
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currencies File
+      *
+     ISDGELR    E DSSDGELRPD
+      ** General Ledger Details
+      *
+     ISDBOOK    E DSSDBOOKPD
+      ** Book Details
+      *
+     ISDDEAL    E DSSDDEALPD
+     I              QQACCD                          ACCDB1                                    CGL029
+      ** Dealing ICD File
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     IXXKEY       DS
+     I                                        1   3 XXBRCA
+     I                                        4   5 XXBKCD
+     I                                        6   7 XXDTYP
+     I                                        8   9 XXDLST
+     I                                       10  12 XXCYCD
+     I                                       13  16 XXCLAS                                    CDL038
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *****************************************************************
+      *                                                               *
+      *  Main Processing                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     EXSR SRINIT
+      *
+     C           KNPVMT    SETLLDLNPVLL4
+      *
+     C                     READ DLNPVLL4                 25
+      *
+     C           *IN25     IFEQ *ON
+     C                     EXSR SRAUDT
+     C                     ELSE
+      *
+      ** Open files for the first branch reporting
+      *
+     C                     CLOSEDL4410P1
+     C                     OPEN DL4410P1
+      *
+      ** Ensure report spool file recorded by RCF
+      ** transfer binary data into numeric field
+      *
+     C                     EXSR SRRCFP
+     C                     ENDIF
+      *
+     C           *IN25     DOWEQ*OFF
+     C           FSNPVM    ANDEQBNNPV2
+      *
+      ** Only process record when profit or loss is not zero
+      *
+     C           FSPRLA    IFNE 0
+     C                     EXSR SRPRNT
+     C                     ENDIF
+      *
+     C           KNPVMT    READEDLNPVLL4                 25
+      *
+     C                     ENDDO
+      *
+     C           BKAKSI    IFEQ 'Y'
+     C                     EXSR SRASUM
+     C                     ENDIF
+      *
+     C           PRTLNE    IFGT 52
+     C                     WRITEDL4410D1
+     C                     ENDIF
+      *
+     C                     Z-ADDWCOUNT    RTOTAL
+      *
+     C                     WRITEDL4410D3
+      *
+     C           PRTLNE    IFGT 56
+     C                     WRITEDL4410D1
+     C                     ENDIF
+      *
+     C                     WRITEDL4410D4
+      *
+     C                     Z-ADDWKREC     NORE
+     C                     Z-ADDWTODKI    HRWN
+     C                     Z-ADDWTODKD    HRDC
+      *
+     C                     UPDATDKEYSZZF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialisation Routine                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM *BLANK    PPARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ** Error during ZSFILE processing, return to calling program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCOUNT  50
+      *
+     C                     MOVE *BLANKS   WBRCA   3
+      *
+     C           *LIKE     DEFN A6NBDP    WNBDPP
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPRNT - Print Transaction Details                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPRNT    BEGSR
+      *
+      ** If the branch changes, end the report for branch and open
+      ** a new report for the new branch
+      *
+     C           FSBRCA    IFNE WBRCA
+     C           BKAKSI    ANDNE'Y'
+      *
+     C           WBRCA     IFNE *BLANK
+      *
+     C           PRTLNE    IFGT 52
+     C                     WRITEDL4410D1
+     C                     ENDIF
+      *
+     C                     Z-ADDWCOUNT    RTOTAL
+     C                     Z-ADD*ZERO     WCOUNT
+      *
+     C                     WRITEDL4410D3
+      *
+     C           PRTLNE    IFGT 56
+     C                     WRITEDL4410D1
+     C                     ENDIF
+      *
+     C                     WRITEDL4410D4
+      *
+      ** Open files for the new branch reporting
+      *
+     C                     CLOSEDL4410P1
+     C                     OPEN DL4410P1
+      *
+     C                     ENDIF
+      *
+      ** Use access program to read branch codes file
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM FSBRCA    PDSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELFSBRCA    DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     Z-ADD5         DBASE
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELFSBRCA    RBRCA
+     C                     MOVE FSBRCA    WBRCA
+     C                     MOVELA8BRNM    RBRNM
+      *
+      ** Print header line
+      *
+     C                     WRITEDL4410D1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *ZERO     WACSQ   2
+      *
+      ** Check if deal and currency are valid
+      *
+     C           FSDLNO    CHAINDEALS                26
+      *
+     C           *IN26     IFEQ *ON
+     C                     MOVELFSDLNO    DBKEY
+     C                     MOVEL'DEALS   'DBFILE
+     C                     Z-ADD6         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           RCDT      WHEQ 'B'
+     C                     MOVE ZZ002     WACSQ
+     C           FSCYCD    IFEQ PUCY                                                         BG12190
+     C                     Z-ADDFSPRLA    FSURPL                                             BG12190
+     C                     ENDIF                                                             BG12190
+     C           FSCYCD    IFEQ SLCY                                                         BG12190
+     C                     Z-ADDFSPRLA    FSSUPL                                             BG12190
+     C                     ENDIF                                                             BG12190
+     C                     UPDATDEALSDBF                                                     BG12190
+     C           RCDT      WHEQ 'C'
+     C           RCDT      OREQ 'G'
+     C                     MOVE CDAS      WACSQ
+     C           RCDT      WHEQ 'D'
+     C                     MOVE IDAS      WACSQ
+     C           RCDT      WHEQ 'E'
+     C                     MOVE ZZ005     WACSQ
+     C                     ENDSL
+      *
+     C           WACSQ     IFEQ '00'
+     C           WACSQ     OREQ '  '                                                          CDL038
+     C                     MOVE '01'      WACSQ
+     C                     ENDIF
+      *
+     C**********           CALL 'AOCURRR0'                                                    226170
+     C**********           PARM '*MSG   ' PRTCD                                               226170
+     C**********           PARM '*KEY   ' POPTN                                               226170
+     C**********           PARM FSCYCD    PAJCD   3                                           226170
+     C********** SDCURR    PARM SDCURR    DSSDY                                               226170
+      **********                                                                              226170
+     C********** PRTCD     IFNE *BLANKS                                                       226170
+     C**********           MOVELFSCYCD    DBKEY                                               226170
+     C**********           MOVEL'SDCURRPD'DBFILE                                              226170
+     C**********           Z-ADD7         DBASE                                               226170
+     C**********           EXSR *PSSR                                                         226170
+     C**********           ENDIF                                                              226170
+      *
+     C                     Z-ADD*ZERO     WPAMT  150
+     C                     Z-ADD*ZERO     WLAMT  150
+      *
+      ** Generate account keys
+      *
+     C           FSPRLA    IFGT *ZERO
+     C                     Z-ADDFSPRLA    WPAMT
+     C                     ELSE
+     C**********           Z-ADDFSPRLA    WLAMT                                              BG12190
+     C                     Z-SUBFSPRLA    WLAMT                                              BG12190
+     C                     ENDIF
+      *
+     C                     EXSR SRGNAK
+      *
+     C                     Z-ADD*ZERO     WPAMT
+     C                     Z-ADD*ZERO     WLAMT
+      *
+      ** Load details
+      *
+     C           BKAKSI    IFNE 'Y'
+     C                     EXSR SRWRTD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBLNK - Blank Out Detail Fields                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRBLNK    BEGSR
+      *
+     C                     MOVE *BLANKS   RCNUM
+     C                     MOVE *BLANKS   RDLNO
+     C                     MOVE *BLANKS   RACKY
+     C                     MOVE *BLANKS   RYAMT
+     C                     MOVE *BLANKS   RCYCD
+     C                     MOVE *BLANKS   RREVI
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOAD - Load Detail Line                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+     C           BKAKSI    IFEQ 'Y'
+     C                     MOVE *BLANK    RCNUM
+     C                     MOVE *BLANK    RDLNO
+     C                     ELSE
+     C                     MOVE FSCNUM    RCNUM
+     C                     MOVE FSDLNO    RDLNO
+     C                     ENDIF
+      *
+     C                     MOVEAAKY,1     RACKY
+     C                     MOVE MCLAS     RACKY                                               CDL038
+     C                     MOVELMYCCY     RCYCD
+      *
+      ** Edit the profit/loss amount according to the number of
+      ** decimal places of the Currency, if currency is not blanks
+      *
+     C           RCYCD     IFNE *BLANKS
+     C                     Z-ADDMYAMT     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE *BLANKS   WRK19  19
+     C                     MOVE ZOUT22    WRK19
+     C                     MOVELWRK19     RYAMT
+     C                     ENDIF
+      *
+      ** Reversal indicator (live = '0', deleted or matured = '1')
+      *
+     C                     MOVE '0'       RREVI
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRWRTD - Write Details to Printer File                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRTD    BEGSR
+      *
+     C           PRTLNE    IFGT 58
+     C                     WRITEDL4410D1
+     C                     ENDIF
+      *
+     C                     EXSR SRBLNK
+     C                     EXSR SRLOAD
+      *
+     C                     WRITEDL4410D2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRGNAK - Generate Account Keys                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRGNAK    BEGSR
+      *
+      ** If Accrual Key Summary indicator is off, generate account
+      ** key per deal
+      *
+     C           BKAKSI    IFNE 'Y'
+      *
+      ** Generate Profit Account Key
+      *
+     C           WPAMT     IFNE 0
+     C                     MOVEAFSDTYP    AKY,1
+     C                     MOVE 'A'       AKY,3
+     C                     MOVEAFSDLST    AKY,4
+      *
+     C           *IN23     IFEQ *ON
+     C                     MOVEAFSBKCD    AKY,6
+     C                     ENDIF
+      *
+     C                     MOVEA'UP'      AKY,9
+     C                     MOVE FSDTYP    MDTYP   2
+     C                     MOVE FSCLAS    MCLAS   4                                           CDL038
+     C                     Z-ADDFSDLNO    MDLNO   60
+     C**********           Z-ADDFSCNUM    MCNUM   60                                          CSD027
+     C                     MOVE FSCNUM    MCNUM   6                                           CSD027
+     C                     Z-ADDBJRDNB    MYDAT   50
+     C                     Z-ADDWPAMT     MYAMT  130
+     C**********           MOVE FSCYCD    MYCCY   3                                           226170
+     C                     MOVE BJCYCD    MYCCY   3                                           226170
+     C                     MOVE FSBRCA    MBRCA   3
+     C                     MOVE FSBKCD    MBKCD   3
+     C                     EXSR SREXCP
+     C                     ENDIF
+      *
+      ** Generate Loss Account Key
+      *
+     C           WLAMT     IFNE 0
+     C                     MOVEAFSDTYP    AKY,1
+     C                     MOVE 'A'       AKY,3
+     C                     MOVEAFSDLST    AKY,4
+      *
+     C           *IN23     IFEQ *ON
+     C                     MOVEAFSBKCD    AKY,6
+     C                     ENDIF
+      *
+     C                     MOVEA'UL'      AKY,9
+     C                     MOVE FSDTYP    MDTYP
+     C                     MOVE FSCLAS    MCLAS                                               CDL038
+     C                     Z-ADDFSDLNO    MDLNO
+     C**********           Z-ADDFSCNUM    MCNUM                                               CSD027
+     C                     MOVE FSCNUM    MCNUM                                               CSD027
+     C                     Z-ADDBJRDNB    MYDAT
+     C                     Z-ADDWLAMT     MYAMT
+     C**********           MOVE FSCYCD    MYCCY                                               226170
+     C                     MOVE BJCYCD    MYCCY                                               226170
+     C                     MOVE FSBRCA    MBRCA
+     C                     MOVE FSBKCD    MBKCD
+     C                     EXSR SREXCP
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If Accrual Key Summary indicator is on, store totals
+      ** by deal type/subtype and book code if book on A/C key = 'Y'
+      *
+     C           BKAKSI    IFEQ 'Y'
+      *
+     C                     MOVEA*BLANK    KEY
+     C                     MOVEAFSBRCA    KEY,1
+      *
+     C           *IN23     IFEQ *ON
+     C                     MOVEAFSBKCD    KEY,4
+     C                     ENDIF
+      *
+     C                     MOVEAFSDTYP    KEY,6
+     C                     MOVEAFSDLST    KEY,8
+     C**********           MOVEAFSCYCD    KEY,10                                              226170
+     C                     MOVEABJCYCD    KEY,10                                              226170
+     C                     MOVEAFSCLAS    KEY,13                                              CDL038
+      *
+     C                     Z-ADD1         M       30                                          CDL038
+     C                     MOVEAKEY       LKEY   16                                           CDL038
+     C*********************Z-ADD1         M       20                                          CDL038
+     C*********************MOVEAKEY       LKEY   12                                           CDL038
+      *
+     C           LKEY      LOKUPTKEY,M                   28
+      *
+     C           *IN28     IFEQ *ON
+     C                     ADD  WLAMT     TLAM,M
+     C                     ADD  WPAMT     TPAM,M
+     C                     ELSE
+     C                     ADD  1         Z
+     C                     MOVEAKEY       TKEY,Z
+     C                     Z-ADDWLAMT     TLAM,Z
+     C                     Z-ADDWPAMT     TPAM,Z
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Increment counter
+      *
+     C           WPAMT     IFNE 0
+     C           WLAMT     ORNE 0
+     C                     ADD  1         WCOUNT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREXCP - Write Out to DKEYSDP File                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREXCP    BEGSR
+      *
+     C                     MOVE *ON       *IN29
+     C                     EXCPT
+     C                     MOVE *OFF      *IN29
+      *
+     C           WKREC     ADD  1         WKREC
+     C           MYAMT     DIV  1000      ZZAMT
+      *
+     C           ZZAMT     IFLT 0
+     C                     Z-SUBZZAMT     ZZAMT
+     C                     ENDIF
+      *
+     C                     Z-ADDWTODKI    ZZTOTI
+     C                     Z-ADDWTODKD    ZZTOTD
+     C                     EXSR GLZADD
+     C                     Z-ADDZZTOTI    WTODKI 150
+     C                     Z-ADDZZTOTD    WTODKD  30
+      *                                                                                      BG12190
+     C                     WRITEDLNPVPD0                                                     BG12190
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRASUM - Account Key Summary                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRASUM    BEGSR
+      *
+      ** Generate Profit Account Key
+      *
+     C*********************Z-ADD1         Y       20                                          CDL038
+     C                     Z-ADD1         Y       30                                          CDL038
+     C                     Z-ADD0         WCOUNT
+      *
+     C           Y         DOWLEZ
+      *
+     C           TPAM,Y    IFNE 0
+     C                     MOVE *BLANK    XXKEY
+     C                     MOVE TKEY,Y    XXKEY
+     C                     MOVEAXXDTYP    AKY,1
+     C                     MOVE 'A'       AKY,3
+     C                     MOVEAXXDLST    AKY,4
+      *
+     C           *IN23     IFEQ *ON
+     C                     MOVEAXXBKCD    AKY,6
+     C                     ENDIF
+      *
+     C                     MOVEA'UP'      AKY,9
+     C                     MOVE XXDTYP    MDTYP
+     C                     MOVE XXCLAS    MCLAS                                               CDL038
+     C                     Z-ADD0         MDLNO
+     C**********           Z-ADD0         MCNUM                                               CSD027
+     C                     MOVE *BLANKS   MCNUM                                               CSD027
+     C                     Z-ADDBJRDNB    MYDAT
+     C                     Z-ADDTPAM,Y    MYAMT
+     C                     MOVE XXCYCD    MYCCY
+     C                     MOVE XXBRCA    MBRCA
+     C                     MOVE XXBKCD    MBKCD
+     C                     EXSR SREXCP
+      *
+      ** If the branch changes, end the report for branch and open
+      ** a new report for the new branch
+      *
+     C           MBRCA     IFNE WBRCA
+      *
+     C           WBRCA     IFNE *BLANK
+      *
+     C           PRTLNE    IFGT 52
+     C                     WRITEDL4410D1
+     C                     ENDIF
+      *
+     C                     Z-ADDWCOUNT    RTOTAL
+     C                     Z-ADD*ZERO     WCOUNT
+      *
+     C                     WRITEDL4410D3
+      *
+     C           PRTLNE    IFGT 56
+     C                     WRITEDL4410D1
+     C                     ENDIF
+      *
+     C                     WRITEDL4410D4
+      *
+      ** Open files for the new branch reporting
+      *
+     C                     CLOSEDL4410P1
+     C                     OPEN DL4410P1
+      *
+     C                     ENDIF
+      *
+      ** Use access program to read branch codes file
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM MBRCA     PDSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELMBRCA     DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     Z-ADD5         DBASE
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELMBRCA     RBRCA
+     C                     MOVE MBRCA     WBRCA
+     C                     MOVELA8BRNM    RBRNM
+      *
+      ** Print header line
+      *
+     C                     WRITEDL4410D1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXSR SRWRTD
+      *
+     C                     ADD  1         WCOUNT
+     C                     ENDIF
+      *
+      ** Generate Loss Account Key
+      *
+     C           TLAM,Y    IFNE 0
+     C                     MOVE *BLANK    XXKEY
+     C                     MOVE TKEY,Y    XXKEY
+     C                     MOVEAXXDTYP    AKY,1
+     C                     MOVE 'A'       AKY,3
+     C                     MOVEAXXDLST    AKY,4
+      *
+     C           *IN23     IFEQ *ON
+     C                     MOVEAXXBKCD    AKY,6
+     C                     ENDIF
+      *
+     C                     MOVEA'UL'      AKY,9
+     C                     MOVE XXDTYP    MDTYP
+     C                     MOVE XXCLAS    MCLAS                                               CDL038
+     C                     Z-ADD0         MDLNO
+     C**********           Z-ADD0         MCNUM                                               CSD027
+     C                     MOVE *BLANKS   MCNUM                                               CSD027
+     C                     Z-ADDBJRDNB    MYDAT
+     C                     Z-ADDTLAM,Y    MYAMT
+     C                     MOVE XXCYCD    MYCCY
+     C                     MOVE XXBRCA    MBRCA
+     C                     MOVE XXBKCD    MBKCD
+     C                     EXSR SREXCP
+      *
+      ** If the branch changes, end the report for branch and open
+      ** a new report for the new branch
+      *
+     C           MBRCA     IFNE WBRCA
+      *
+     C           WBRCA     IFNE *BLANK
+      *
+     C           PRTLNE    IFGT 52
+     C                     WRITEDL4410D1
+     C                     ENDIF
+      *
+     C                     Z-ADDWCOUNT    RTOTAL
+     C                     Z-ADD*ZERO     WCOUNT
+      *
+     C                     WRITEDL4410D3
+      *
+     C           PRTLNE    IFGT 56
+     C                     WRITEDL4410D1
+     C                     ENDIF
+      *
+     C                     WRITEDL4410D4
+      *
+      ** Open files for the new branch reporting
+      *
+     C                     CLOSEDL4410P1
+     C                     OPEN DL4410P1
+      *
+     C                     ENDIF
+      *
+      ** Use access program to read branch codes file
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM MBRCA     PDSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELMBRCA     DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     Z-ADD5         DBASE
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELMBRCA     RBRCA
+     C                     MOVE MBRCA     WBRCA
+     C                     MOVELA8BRNM    RBRNM
+      *
+      ** Print header line
+      *
+     C                     WRITEDL4410D1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXSR SRWRTD
+      *
+     C                     ADD  1         WCOUNT
+     C                     ENDIF
+      *
+     C                     ADD  1         Y
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Print Audit Report                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+     C                     WRITEHEADAU
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+     C           WCOUNT    IFEQ *ZERO
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRCFP - Subroutine to register P1 Printer File via RCF      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFP    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM FSBRCA    PPARM
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Program Initialisation Routine                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read RUNDAT for multi-branching indicator
+      *
+     C                     IN   RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT 13
+      *
+     C                     MOVEL'DL4410'  DBPGM
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELPOPTN     DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *                                                                                       226170
+     C                     CALL 'AOCURRR0'                                                    226170
+     C                     PARM '*MSG   ' PRTCD                                               226170
+     C                     PARM '*KEY   ' POPTN                                               226170
+     C                     PARM BJCYCD    PAJCD   3                                           226170
+     C           SDCURR    PARM SDCURR    DSSDY                                               226170
+      *                                                                                       226170
+     C           PRTCD     IFNE *BLANKS                                                       226170
+     C                     MOVELBJCYCD    DBKEY                                               226170
+     C                     MOVEL'SDCURRPD'DBFILE                                              226170
+     C                     Z-ADD7         DBASE                                               226170
+     C                     EXSR *PSSR                                                         226170
+     C                     ENDIF                                                              226170
+      *
+      ** Access General Ledger
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELPOPTN     DBKEY
+     C                     MOVE 'SDGELRPD'DBFILE
+     C                     Z-ADD2         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Dealing ICD
+      *
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*DBERR ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+      *
+      ** Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELPOPTN     DBKEY
+     C                     MOVEL'SDDEALPD'DBFILE
+     C                     Z-ADD3         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF                                                             BG12190
+      *                                                                                      BG12190
+     C           BNNPV2    IFEQ ' '                                                          BG12190
+     C                     MOVE 'N'       BNNPV2                                             BG12190
+     C                     ENDIF
+      *
+     C           BNBCPL    IFEQ 'Y'
+     C                     MOVE *ON       *IN23
+     C                     ENDIF
+      *
+      ** Check for the Accrual Key Summary Indicator
+      *
+     C           BKAKSI    IFEQ 'Y'
+     C                     MOVE *OFF      *IN02
+     C                     ELSE
+     C                     MOVE *ON       *IN02
+     C                     ENDIF
+      *
+      ** Get Event Control Date as the lesser between (Next Working Day - 1)
+      ** and Accrual Profit Date
+      *
+     C           BJDNWD    SUB  1         WEVCD   50
+      *
+     C           BKAPDT    IFLT WEVCD
+     C                     Z-ADDBKAPDT    WEVCD
+     C                     ENDIF
+      *
+      ** Convert the event control date to ddmmmyy format
+      *
+     C                     Z-ADDWEVCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    REVCD
+      *
+     C           KNPVMT    KLIST
+     C                     KFLD           BNNPV2
+      *
+     C                     READ DKEYSZZ                  24
+      *
+      ** Handle database error
+      *
+     C           *IN24     IFEQ *ON
+     C                     MOVEL'READ    'DBKEY
+     C                     MOVEL'DKEYSZZ 'DBFILE
+     C                     Z-ADD4         DBASE
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     Z-ADDNORE      WKREC   50
+     C                     Z-ADDHRWN      WTODKI 150
+     C                     Z-ADDHRDC      WTODKD  30
+     C                     ENDIF
+      *
+     C*********************Z-ADD0         Z       20                                          CDL038
+     C                     Z-ADD0         Z       30                                          CDL038
+     C                     Z-ADD0         ZERO5   50
+     C                     Z-ADD0         ZERO6   60
+     C                     Z-ADD0         ZER138 138
+     C                     Z-ADD0         ZER117 117
+     C                     Z-ADD0         ZERO13 130
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Program Exception Error Routine                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+     C                     EXSR SRAUDT
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GLZADD - Add an Amount to the Total                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GLZADD    BEGSR
+      *
+     C                     Z-ADDZZAMT     ZZAMT  153     91
+      *
+     C           *IN91     IFEQ *ON
+     C                     GOTO ZZAEND
+     C                     ENDIF
+      *
+      ** Split ZZAMT into integer and decimal fields
+      *
+     C                     Z-ADDZZAMT     ZZAMTI 150
+     C                     MOVE ZZAMT     ZZAMTD  30
+      *
+      ** Both ZZAMTI and ZZAMTD contain a 'SIGN' zone now
+      *
+     C                     EXSR GLZSUM
+      *
+     C           ZZAEND    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GLZSUM - Carry Out Addition                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GLZSUM    BEGSR
+      *
+     C                     Z-ADDZZTOTI    ZZTOTI 150
+     C                     Z-ADDZZTOTD    ZZTOTD  30
+     C                     MOVE *OFF      *IN91
+     C                     MOVE *OFF      *IN92
+     C                     MOVE *OFF      *IN93
+     C                     MOVE *OFF      *IN94
+     C                     MOVE *OFF      *IN95
+     C                     MOVE *OFF      *IN99
+      *
+      ** Determine sign of ZZAMTI & D, 92
+      *
+     C           ZZAMTI    COMP 0                      9293
+      *
+     C           *IN93     IFEQ *ON
+     C           ZZAMTD    COMP 0                      9293
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *ON
+     C                     GOTO ZZSEND
+     C                     ENDIF
+      *
+      ** Determine sign of ZZTOTI & D, 91
+      *
+     C           ZZTOTI    COMP 0                      9193
+      *
+     C           *IN93     IFEQ *ON
+     C           ZZTOTD    COMP 0                      9193
+     C                     ENDIF
+      *
+      ** If ZZTOTAL is zero, return ZZAMOUNT
+      *
+     C           *IN93     IFEQ *ON
+     C                     Z-ADDZZAMTI    ZZTOTI
+     C                     Z-ADDZZAMTD    ZZTOTD
+     C                     GOTO ZZSEND
+     C                     ENDIF
+      *
+      ** If signs differ bypass overflow checks
+      *
+     C           *IN91     IFEQ *ON
+     C           *IN92     ANDEQ*OFF
+     C           *IN91     OREQ *OFF
+     C           *IN92     ANDEQ*ON
+     C                     GOTO ZZOFPS
+     C                     ENDIF
+      *
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     C           ZZWK2     COMP 999                  93
+      *
+     C           *IN93     IFEQ *OFF
+     C           ZZWK2     COMP -999                   93
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *ON
+     C           *IN92     ANDEQ*OFF
+     C           ZZAMTI    ADD  1         ZZWK3  150
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *ON
+     C           *IN92     ANDEQ*ON
+     C           ZZAMTI    SUB  1         ZZWK3
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *ON
+     C           ZZTOTI    ADD  ZZWK3     ZZWK3
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *OFF
+     C           ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C                     ENDIF
+      *
+      ** If modulus of ZZWK3 < modulus of ZZTOTI then O/F has occurred
+      *
+     C  N92      ZZWK3     COMP ZZTOTI                 99
+     C   92      ZZWK3     COMP ZZTOTI               99
+     C  N99                Z-ADDZZWK2     ZZTOTD
+     C  N99                Z-ADDZZWK3     ZZTOTI
+      *
+      ** If O/F zeroise ZZAMT, *IN99 set and ZZTOT fields left intact
+      *
+     C           *IN99     IFEQ *ON
+     C                     Z-ADD0         ZZAMT  153
+     C                     ENDIF
+      *
+     C                     GOTO ZZSEND
+      *
+      ** The 'SIGNS' are different
+      *
+     C           ZZOFPS    TAG
+      *
+      ** If ZZAMT was negative, make it pos. to comp with ZZTOT
+      *
+     C           *IN92     IFEQ *ON
+     C                     Z-SUBZZAMTI    ZZAMTI 150
+     C                     Z-SUBZZAMTD    ZZAMTD  30
+     C                     ENDIF
+      *
+      ** If ZZTOT was negative, make it pos. to comp with ZZAMT
+      *
+     C           *IN91     IFEQ *ON
+     C                     Z-SUBZZTOTI    ZZTOTI
+     C                     Z-SUBZZTOTD    ZZTOTD
+     C                     ENDIF
+      *
+      ** Both ZZAMT and ZZTOT are now positive
+      *
+     C           ZZTOTI    COMP ZZAMTI               93  95
+      *
+     C           *IN95     IFEQ *ON
+     C           ZZTOTD    COMP ZZAMTD               93  95
+     C                     ENDIF
+      *
+      ** If ZZTOT = ZZAMT return zero
+      *
+     C           *IN95     IFEQ *ON
+     C                     Z-ADD0         ZZTOTI
+     C                     Z-ADD0         ZZTOTD
+     C                     GOTO ZZSEND
+     C                     ENDIF
+      *
+      ** If ZZTOT > ZZAMT
+      *
+     C           *IN93     IFEQ *ON
+     C           ZZAMTD    COMP ZZTOTD               94
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *ON
+     C           *IN94     ANDEQ*ON
+     C           ZZTOTI    SUB  1         ZZTOTI
+     C           ZZTOTD    ADD  1000      ZZWK2
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *ON
+     C           ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *ON
+     C           *IN94     ANDEQ*ON
+     C           ZZWK2     SUB  ZZAMTD    ZZTOTD
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *ON
+     C           *IN94     ANDEQ*OFF
+     C           ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C                     ENDIF
+      *
+      ** If ZZAMT > ZZTOT
+      *
+     C           *IN93     IFEQ *OFF
+     C           ZZTOTD    COMP ZZAMTD               94
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *OFF
+     C           *IN94     ANDEQ*ON
+     C           ZZAMTI    SUB  1         ZZWK3  150
+     C           ZZAMTD    ADD  1000      ZZWK2
+     C           ZZWK3     SUB  ZZTOTI    ZZTOTI
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *OFF
+     C           *IN94     ANDEQ*OFF
+     C           ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *OFF
+     C           *IN94     ANDEQ*ON
+     C           ZZWK2     SUB  ZZTOTD    ZZTOTD
+     C                     ENDIF
+      *
+     C           *IN93     IFEQ *OFF
+     C           *IN94     ANDEQ*OFF
+     C           ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C                     ENDIF
+      *
+      ** Reverse sign of ZZTOT if larger I/P fields were negative
+      *
+     C                     MOVE *OFF      *IN94
+      *
+     C           *IN93     IFEQ *ON
+     C           *IN91     ANDEQ*ON
+     C           *IN93     OREQ *OFF
+     C           *IN92     ANDEQ*ON
+     C                     MOVE *ON       *IN94
+     C                     ENDIF
+      *
+     C           *IN94     IFEQ *ON
+     C                     Z-SUBZZTOTI    ZZTOTI
+     C                     Z-SUBZZTOTD    ZZTOTD
+     C                     ENDIF
+      *
+      ** Restore sign of ZZAMTI & ZZAMTD if it was reversed
+      *
+     C           *IN92     IFEQ *ON
+     C                     Z-SUBZZAMTI    ZZAMTI
+     C                     Z-SUBZZAMTD    ZZAMTD
+     C                     ENDIF
+      *
+     C           ZZSEND    TAG
+      *
+      ** If ZZTOTD is zero and ZZTOTI is neg. set up ZZNEGD
+      *
+     C                     MOVE *OFF      *IN96
+      *
+     C           ZZTOTD    COMP 0                        91
+      *
+     C           *IN91     IFEQ *ON
+     C           ZZTOTI    COMP 0                      96
+     C                     ENDIF
+      *
+     C           *IN96     IFEQ *ON
+     C                     MOVE '.000-'   ZZNEGD  5
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZFRPEDZ3
+      ********************************************************************
+     ODKEYSDP EADD     29
+     O                                    1 'D'
+     O                         MDTYP      3
+     O                         AKY       11
+     O                         MDLNO     17
+     O                         MCNUM     23
+     O                         MBRCA     26
+     O                         WACSQ     28
+     O                         MYDAT     31P
+     O                         MYAMT     38P
+     O                         MYCCY     41
+     O                                   43 '00'
+     O                                   56 '0'
+     O                         ZERO13 B  63P
+     O                         ZER138    73P
+     O                         VDAT      76P
+     O                         ZERO5     79P
+     O                         ZERO5     82P
+     O                                   84 '00'
+     O                         ZER117    90P
+     O                         ZER117    96P
+     O                         ZER117   102P
+     O                         ZERO5    105P
+     O                         ZER117   111P
+     O                         ZERO6    118P
+     O                         PRFC     132                                                  BG12190
+     O                         MBKCD    137
+     O                         ZERO6    143
+     O                         ZERO13   161P                                                  CDL038
+     O                         ZERO5    332P                                                  CDL038
+     O                         AKY      360                                                   CDL038
+     O                         MCLAS    364                                                   CDL038
+      ********************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,972 @@
+     H        1
+      *****************************************************************
+/*XBI *  OVRDBF FILE(SDSVALL0) TOFILE(GPSVALL0)                       *                       CPK022
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Utilities menu')
+      *****************************************************************
+      *                                                               *
+      *  Midas -  UT Utilities                                        *
+      *                                                               *
+      *  UT0930 - Midas UT Utilities Menu System                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CPK023             Date 20Oct05               *
+      *  Prev Amend No. CPK022             Date 06Jul05               *
+      *                 CPK019             Date 23Jul04               *
+      *                 CPK018             Date 21Feb04               *
+      *                 CAAA02             Date 16Jul03               *
+      *                 CPK016             Date 19Nov02               *
+      *                 CUP019             Date 03Oct02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CUP006             Date 16Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CUP001             Date 16Jul98               *
+      *                 140586             Date 12Aug98               *
+      *                 CUP004             Date 28Apr98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CPK023 - Remove prompt for Bridge library.                   *
+      *  CPK022 - Put in override for compilation.  During run time   *
+      *           the zone library list should always be present.     *
+      *  CPK019 - Call UPC0131 to change library list for another     *
+      *           zone if option NEWZ is selected while upgrade.      *
+      *  CPK018 - MidasPlus packaging.  Changes to Bridge menu.       *
+      *  CAAA02 - Remove use of INVITE keyword to enable WebFacing    *
+      *           to process screens.                                 *
+      *  CPK016 - R5 packaging.  Restructuring of Bridge.             *
+      *  CUP019 - Change of key for UTMENUL1 and removal of HELP.     *
+      *  CUP006 - Changes to handling of UTMENUPD                     *
+      *  CUP001 - Introduction of BRIDGE                              *
+      *  140586 - Correction to error handling on menu selection      *
+      *  CUP004 - Make upgrade of DTALIB files easier                 *
+      *                                                               *
+     F*****************************************************************
+     FUT0930DFCF  E                    WORKSTN
+     F                                        WRCNO KSFILE UT0930F1
+     F                                              KNUM        1
+     F* Menu display file
+     F*UTMENUL0IF*E           K        DISK                                                   CUP019
+     FUTMENUL1IF  E           K        DISK                               CUP001
+     F* Menu items file logical
+     FSDSVALL0IF  E           K        DISK         KINFSR *PSSR      UC                      CPK019
+     F* Midas system values by system value                                                   CPK019
+     F*
+     F*                 ************************
+     F*                  FUNCTION OF INDICATORS
+     F*                 ************************
+     F*
+     F* ID F  C  H  L
+     F*
+     F*      10         SFLCLR
+     F*      11         SFLDSPCTL
+     F*      12         SFLDSP
+     F*      13         SFLEND
+     F*
+     F*      15         Error - invalid option
+     F*      16         Error - call failed
+     F*      17         Error (enable the error message display)
+     F*      18         Error - helptag not found
+     F*
+     F*      20         Last record for menu group
+     F*      21         Do not display current record
+     F*      22         LOKUP =
+     F*      23         Option selected is numeric
+     F*      24         Option field is blank
+     F*      25         Non-blank character found in array TN1
+     F*      26         Blank character found in array TN2
+     F*      27         Subfile record is a title record
+     F*
+     F*      30         Subfile has been set up
+     F*      31         Bottom line of screen has been displayed
+     F*      35         X-Select Option has been taken
+     F*******36         H-Help Option has been taken.                                         CUP019
+     F*
+     F*      40         Work indicator used in title centering subroutine
+     F*                                                                                       CPK019
+     F*      51         Record not found in SDSVALL0                                          CPK019
+     F*
+     F*      80         Terminate program
+     F*      99         Last record for Midas modules file.
+     F*
+     F********************************************************************
+     F/EJECT
+     E********************************************************************
+     E***********         TXT     1   3 80               Text strings                         CPK019
+     E                    TXT     1   5 80               Text strings                         CPK019
+     E***********         MG         15  5               Menu groups      CUP001
+     E                    MG         21  5               Menu groups      CUP001
+     E                    TN1         5  1               Test numeric 1
+     E                    TN2         5  1               Test numeric 2
+     E                    CNTR       45  1               Title centering
+     E********************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+     I********************************************************************
+     I**
+     I**     Program status data structure
+     I**
+     IPSDS       SDS
+     I                                       40  42 CPF
+     I                                       43  46 ENO
+     I                                      244 253 WSJOB
+     I                                      254 263 WSUSER
+     I**
+     I**     Local data area
+     I**
+     ILDA         DS                            256
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+     I**
+     I**
+     I*                                                                   051113
+     I**     Menu title data structure
+     I**
+     IWSTITL      DS                             45
+     I                                       18  45 WTITL2
+     I                                       20  21 WZONET                                    CPK019
+     I*
+     I**   DATA AREA OF MENU ITEM REQUESTED
+     I**
+     IUTITEM      DS
+     I                                        1   1 UTID
+     I                                        2   50UTMGRP
+     I                                        6   9 UTICDE
+     I*
+     I**
+     I********************************************************************
+     I/EJECT
+     I********************************************************************
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C*
+     C*  MASTER SEGMENT
+     C*  ==============
+     C*
+     C*  Calls to: SUB001, SUB010, SUB020, SUB030, SUB040,
+     C*
+     C*  SUB001 - Initialization
+     C                     EXSR SUB001                     *** SUB001 ***
+     C*
+     C           *IN80     DOUEQ'1'                        *** B10
+     C*
+     C*  SUB010 - Set up subfile for display
+     C           *IN30     IFEQ '0'
+     C                     EXSR SUB010                     *** SUB010 ***
+     C                     ENDIF
+     C*
+     C*  SUB020 - Display/validate screen
+     C                     EXSR SUB020                     *** SUB020 ***
+     C*
+     C*  SUB030/35 - Execute option if exit not selected
+     C           *IN80     IFEQ '0'
+      *
+     C***Help*selected*                                                                       CUP019
+      ***********                                                                             CUP019
+     C************IN36     IFEQ '1'                                                           CUP019
+     C************         EXSR SUB035                     *** SUB035 ***                     CUP019
+      ************                                                                            CUP019
+     C************         ELSE                                                               CUP019
+      *
+     C*  Option selected
+      *
+     C                     EXSR SUB030                     *** SUB030 ***
+     C************         ENDIF                                                              CUP019
+      *
+     C                     ENDIF
+     C*
+     C                     END                             *** E10
+     C*
+     C           *IN80     IFEQ '1'
+     C                     Z-ADD9         WXERR
+     C                     END
+     C*
+     C** SUB040 - Exit from program
+     C*
+     C                     EXSR SUB040                     *** SUB040 ***
+     C*
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  PLIST's, KLIST's etc.
+     C*  =====================
+     C*
+     C*  *ENTRY PLIST
+     C           *ENTRY    PLIST
+     C***********          PARM           WXUMGI 50                       CUP001
+     C                     PARM           WXUMGI100                       CUP001
+     C                     PARM           WXERR   10
+     C*
+     C***KLIST*for*LF/UTMENUL0*                                                               CUP019
+     C***********WKITEM    KLIST                                                              CUP019
+     C***********          KFLD           WKMGRP                                              CUP019
+     C***********          KFLD           WKICDE                                              CUP019
+     C*  KLIST for LF/UTMENUL1                                            CUP001
+     C           WKMITM    KLIST                                          CUP001
+     C                     KFLD           WKMGRP                          CUP001
+     C                     KFLD           WKISEQ                          CUP001
+     C                     KFLD           WKICDE                                              CUP019
+     C*
+     C           *LIKE     DEFN MGRP      WKMGRP
+     C           *LIKE     DEFN ICDE      WKICDE
+     C           *LIKE     DEFN SECL      WXSECL
+     C           *LIKE     DEFN ISEQ      WKISEQ                          CUP001
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  Subroutine SUB001 - Initialization
+     C*
+     C*  Called by: Master segment
+     C*  Calls    : SUB400 - Centre title
+     C*
+     C           SUB001    BEGSR                           *** SUB001 ***
+     C*
+     C*  Initialize error code
+     C                     Z-ADD0         WXERR
+     C*
+     C*  Move initial menu group into field for processing
+     C***********          MOVELWXUMGI    WXUMG  50                       CUP001
+     C                     MOVELWXUMGI    WXUMG 100                       CUP001
+     C*
+     C*  Initialize screen position field
+     C                     Z-ADD1         WSPOS
+     C*
+     C*  Set up initial and previous menu groups
+     C***********          MOVELWXUMG     WIMG   50                       CUP001
+     C***********          MOVELWXUMG     WPMG   50                       CUP001
+     C                     MOVELWXUMG     WIMG  100                       CUP001
+     C                     MOVELWXUMG     WPMG  100                       CUP001
+     C*
+     C*  Set up initial title, and store as initial and previous titles
+     C                     MOVELTXT,1     WSTITL
+     C*
+     C*  SUB400: Centre title stored in WSTITL
+     C                     EXSR SUB400                     *** SUB400 ***
+     C*
+     C                     MOVELWSTITL    WITITL 45
+     C                     MOVELWSTITL    WPTITL 45
+     C*
+     C* Set up menu group '9999'
+     C***********          MOVEL'9999'    MG,11                           CUP001
+     C                     MOVEL'9999'    MG,21                           CUP001
+     C*
+     C* Enable SFLEND
+     C                     SETON                     13
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  Subroutine SUB010 - Set up subfile
+     C*
+     C*  Called by: Master segment
+     C*  Calls    : SUB100 - Set up subfile records for menu group
+     C*
+     C           SUB010    BEGSR                           *** SUB010 ***
+     C*
+     C*  Clear subfile
+     C                     MOVEA'100'     *IN,10
+     C                     WRITEUT0930F2
+     C                     MOVEA'01'      *IN,10
+     C*
+     C*  Reset subfile record number and option numbers
+     C                     Z-ADD0         WSNUM
+     C                     Z-ADD0         WRCNO   40
+     C*
+     C*  Store menu groups in array
+     C                     MOVEAWXUMG     MG,1
+     C*
+     C*  For each non-zero menu group, set up subfile records
+     C*  SUB100: Set up all subfile records for a menu group
+     C***********1         DO   11        I                *** B10        CUP001
+     C           1         DO   21        I                *** B10        CUP001
+     C                     MOVELMG,I      WKMGRP
+     C           WKMGRP    CASNE0         SUB100           *** SUB100 ***
+     C                     END
+     C                     END                             *** E10
+     C*
+     C*  Set on SFLDSP if there are records to display
+     C           WRCNO     COMP 0                    1212
+     C*
+     C*  Set screen position
+     C                     Z-ADD1         WSPOS
+     C*
+     C*  Set 'setup' flag
+     C                     SETON                     30
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  Subroutine SUB020 - Display/validate screen
+     C*
+     C*  Called by: Master segment
+     C*  Calls    : SUB200 - Display screen
+     C*             SUB300 - Seton 23 if WSOPT is valid numeric
+     C*
+     C           SUB020    BEGSR                           *** SUB020 ***
+     C*
+     C           *IN80     DOUEQ'1'                        *** B10
+     C*
+     C*  SUB200: Display screen
+     C                     EXSR SUB200                     *** SUB200 ***
+     C*
+     C*  Validate option if timeout has not occurred, and option entered
+     C*  is not blank
+     C*
+     C*  If option field blank and timeout not occurred, check for help
+     C*  or select option.
+     C*
+     C  N80      WSOPT     IFEQ *BLANKS                    *** B20
+     C                     SETON                     24
+     C                     Z-ADD1         WRCNO
+     C           HLPOPT    DOUNE*BLANKS
+     C           WRCNO     CHAINUT0930F1             15
+     C***********HLPOPT    IFEQ 'H'                                                           CUP019
+     C***********          SETON                     36                                       CUP019
+     C***********          ENDIF                                                              CUP019
+     C           HLPOPT    IFEQ 'X'
+     C                     SETON                     35
+     C                     ENDIF
+     C  N15                ADD  1         WRCNO
+     C  N15                END
+     C                     ENDIF
+     C*
+     C*  Is option numeric?
+     C           *IN24     IFEQ *OFF                       *** B20
+     C                     EXSR SUB300                     *** SUB300 ***
+     C*
+     C*  If option is numeric, then try to find matching option number
+     C*  in the subfile
+     C   12      *IN23     IFEQ '1'                        *** B30
+     C                     MOVELWSOPT     WFLD    40
+     C                     Z-ADDWFLD      WRCNO
+     C           WSNUM     DOUEQWFLD                       *** B40
+     C           WRCNO     CHAINUT0930F1             15
+     C  N15                ADD  1         WRCNO
+     C  N15                END                             *** E40
+     C*
+     C*  If option is non-numeric, then try to find matching short code
+     C*  in the subfile
+     C                     ELSE                            *** X30
+     C                     Z-ADD1         WRCNO
+     C           WSOPT     DOUEQICDE                       *** B40
+     C           WRCNO     CHAINUT0930F1             15
+     C  N15                ADD  1         WRCNO
+     C  N15                END                             *** E40
+     C*
+     C                     END                             *** E30
+     C*
+     C*  If empty subfile, then set error indicator
+     C  N12                SETON                     15
+     C*
+     C                     END                             *** E20
+     C*
+     C* Exit if error
+     C*
+     C   15                END                             *** E10
+     C*
+     C* Reset option type indicator
+     C*
+     C                     MOVE '0'       *IN24
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  Subroutine SUB030 - Execute command
+     C*
+     C*  Called by: Master segment
+     C*  Calls    : SUB400 - Centre title
+     C*             SUB500 - Get current zone id                                              CPK019
+     C*             SUB510 - Set title for returning to zone menu from                        CPK019
+     C*                      zone menu                                                        CPK019
+     C*
+     C           SUB030    BEGSR                           *** SUB030 ***
+     C*
+     C*  If command is 'MENU', then store current menu group as previous
+     C*  menu group, set the current menu group to the value stored in the
+     C*  parameter field on the subfile, and set off the 'subfile built'
+     C*  flag.
+     C           PCMD      IFEQ 'MENU'                     *** B10
+     C*                                                                                       CPK019
+     C           ICDE      IFEQ 'CURZ'                     *** B20                            CPK019
+     C           ICDE      OREQ 'NEWZ'                                                        CPK019
+     C*  get current zone id WCURID                                                           CPK019
+     C                     EXSR SUB500                     *** SUB500 ***                     CPK019
+     C*                                                                                       CPK019
+     C*  If another zone is selected from the zone menu, prompt for                           CPK019
+     C*  entry of another zone and set up library list before go to the                       CPK019
+     C*  new menu.                                                                            CPK019
+     C           ICDE      IFEQ 'NEWZ'                     *** B30                            CPK019
+     C                     CALL 'UPC0131'                                                     CPK019
+     C                     PARM           WCURID  2                                           CPK019
+     C                     PARM *BLANK    RTNCOD  7                                           CPK019
+     C*  If error or F3 exit, end subroutine.                                                 CPK019
+     C           RTNCOD    IFNE *BLANK                     *** B40                            CPK019
+     C                     GOTO END030                                                        CPK019
+     C                     ENDIF                           *** E40                            CPK019
+     C*                                                                                       CPK019
+     C                     ENDIF                           *** E30                            CPK019
+     C                     ENDIF                           *** E20                            CPK019
+     C*                                                                                       CPK019
+     C                     MOVELWXUMG     WPMG
+     C                     MOVELPARA      WXUMG
+     C                     MOVELWSTITL    WPTITL
+     C                     MOVELINAR      WSTITL
+      *                                                                                       CPK019
+     C           ICDE      IFEQ 'CURZ'                     *** B20                            CPK019
+     C           ICDE      OREQ 'NEWZ'                                                        CPK019
+     C                     MOVELTXT,4     WSTITL                                              CPK019
+     C                     MOVELWCURID    WZONET                                              CPK019
+     C                     ENDIF                           *** E20                            CPK019
+     C*
+     C*  SUB400: Centre title
+     C                     EXSR SUB400                     *** SUB400 ***
+     C                     SETOF                         30
+     C                     END                             *** E10
+     C*
+     C*  If command is 'MAIN', then save current title and menu group,
+     C*  and reset current title and menu group to initial title and
+     C*  menu group.
+     C           PCMD      IFEQ 'MAIN'                     *** B10
+     C                     MOVELWSTITL    WPTITL
+     C                     MOVELWXUMG     WPMG
+     C                     MOVELWIMG      WXUMG
+     C                     MOVELWITITL    WSTITL
+     C                     SETOF                         30
+     C                     END                             *** E10
+     C*
+     C*  If command is 'PREV', then save the previous menu group, set the
+     C*  previous menu group to the current menu group, set the current
+     C*  menu group to the saved value of the previous menu group, and
+     C*  set off the 'subfile built' flag.
+     C           PCMD      IFEQ 'PREV'                     *** B10
+     C***********          MOVELWPMG      WUGSAV 50                       CUP001
+     C                     MOVELWPMG      WUGSAV100                       CUP001
+     C                     MOVELWXUMG     WPMG
+     C                     MOVELWUGSAV    WXUMG
+     C                     MOVELWPTITL    WTTLSV 45
+     C                     MOVELWSTITL    WPTITL
+     C                     MOVELWTTLSV    WSTITL
+     C*  Set title for returning to zone menu from zone menu.                                 CPK019
+     C                     EXSR SUB510                     *** SUB510 ***                     CPK019
+     C                     SETOF                         30
+     C                     END                             *** E10
+     C*
+     C*  If command is 'OFF', then set the termination flag.
+     C           PCMD      COMP 'OFF'                    80
+     C*
+     C*  If command is 'EXIT', then execute EXIT Subroutine.
+     C           PCMD      IFEQ 'EXIT'
+     C                     EXSR SUB040
+     C                     ENDIF
+     C*
+     C*  If command is 'RTRN', then RETRN to end program.
+     C           PCMD      IFEQ 'RETURN'
+     C                     RETRN
+     C                     END
+     C*
+     C*  If none of the above, then concatenate the program and
+     C*  parameters and execute the command via QCMDEXC.
+     C   30      *IN80     IFEQ '0'                        *** B10
+     C*  Also, receive and update the Menu Items data area.
+     C           *NAMVAR   DEFN           UTITEM
+     C           *LOCK     IN   UTITEM
+     C                     Z-ADDMGRP      UTMGRP
+     C                     MOVE ICDE      UTICDE
+     C                     OUT  UTITEM
+     C***********          MOVELPCMD      WCMD   90                       CUP001
+     C***********          MOVE PARA      WCMD                            CUP001
+     C                     MOVELPCMD      WCMD2 120                       CUP001
+     C                     MOVE PARA      WCMD2                           CUP001
+     C*
+     C                     CALL 'QCMDEXC'              16
+     C***********          PARM           WCMD                            CUP001
+     C***********          PARM 90        WLEN   155                      CUP001
+     C                     PARM           WCMD2                           CUP001
+     C***********          PARM 100       WLEN   155                                   CUP001 CUP006
+     C                     PARM 120       WLEN   155                                          CUP006
+      *
+      * If there is an error, check if it means an F3 was taken from a
+      * prompt screen(CPF6801).  If it was set off error indicator.
+     C           *IN16     IFEQ '1'
+     C           CPF       IFEQ 'CPF'
+     C           ENO       ANDEQ'6801'
+     C                     SETOF                     16
+     C                     END
+     C                     END
+     C*  SETOF EXTERNAL SWITCHES 1 - 6
+     C***********          MOVEL*BLANKS   WCMD                            CUP001
+     C                     MOVEL*BLANKS   WCMD   90                       CUP001
+     C                     MOVELTXT,3     WCMD
+     C                     CALL 'QCMDEXC'              41
+     C                     PARM           WCMD
+     C                     PARM 90        WLEN
+     C*
+     C                     MOVEL*BLANKS   WCMD
+     C                     MOVELTXT,2     WCMD
+     C                     CALL 'QCMDEXC'              41
+     C                     PARM           WCMD
+     C                     PARM 90        WLEN
+      *
+     C*  If U7 and U8 are on then the called program ended in error.
+     C                     CALL 'UTC0931'
+     C                     PARM           U7      1
+     C                     PARM           U8      1
+     C           U7        IFEQ '1'
+     C           U8        ANDEQ'1'
+     C                     SETON                     16
+     C                     ENDIF
+      *
+     C*  If error, then set error parameter
+     C   16                Z-ADD1         WXERR
+      ** If 'X' option taken, rebuild subfile to clear value
+      *
+     C*
+     C*  Set screen page for next display
+     C           WRCNO     SUB  1         WSPOS
+      *
+      ** Reset error code to 0
+      *
+     C                     Z-ADD0         WXERR
+      *
+     C           *IN16     IFEQ '0'
+     C           *IN35     ANDEQ'1'
+     C                     SETOF                     3035
+     C                     ENDIF
+      *                                                                                CUP001 CPK023
+      **If*BRIDGE*has*been*requested*then*this*needs*to*be*treated*                    CUP001 CPK023
+      **like*a*menu*option*after*the*program*has*been*called.*                         CUP001 CPK023
+      **********                                                                       CUP001 CPK023
+     C***********ICDE      IFEQ 'BRGE'                                                 CUP001 CPK016
+     C********** ICDE      IFEQ 'UPG '                                                 CPK016 CPK023
+     C********** ICDE      OREQ 'IMP '                                                 CPK016 CPK023
+      **If*command*prompt*exited*then*end*subroutine*                                  140586 CPK023
+     C********** CPF       IFEQ 'CPF'                                                  140586 CPK023
+     C********** ENO       ANDEQ'6801'                                                 140586 CPK023
+     C**********           MOVE *BLANKS   CPF                                          CUP001 CPK023
+     C**********           MOVE *BLANKS   ENO                                          CUP001 CPK023
+     C**********           GOTO END030                                                 140586 CPK023
+     C**********           ENDIF                                                       140586 CPK023
+      **********                                                                       140586 CPK023
+     C**********           MOVELWXUMG     WPMG                                         CUP001 CPK023
+     C**********           MOVE *BLANKS   WXUMG                                        CUP001 CPK023
+     C********** ICDE      IFEQ 'UPG '                                                 CPK016 CPK023
+     C********** '0801'    CAT  WXUMG:0   WXUMG                                        CPK016 CPK018
+     C********** '0799'    CAT  WXUMG:0   WXUMG                                        CPK018 CPK023
+     C**********           ENDIF                                                       CPK016 CPK023
+     C********** ICDE      IFEQ 'IMP '                                                 CPK016 CPK023
+     C********** '1801'    CAT  WXUMG:0   WXUMG                                        CPK016 CPK018
+     C********** '1799'    CAT  WXUMG:0   WXUMG                                        CPK018 CPK023
+     C**********           ENDIF                                                       CPK016 CPK023
+     C***********'0895'    CAT  WXUMG:0   WXUMG                                        CUP001 CPK016
+     C***********'0890'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0885'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0880'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0875'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0870'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0865'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0860'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0855'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0850'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0845'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0840'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0835'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0830'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0825'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0820'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0815'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0810'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0805'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C***********'0800'    CAT  WXUMG:1   WXUMG                                        CUP001 CPK016
+     C**********           MOVELWSTITL    WPTITL                                       CUP001 CPK023
+     C**********           MOVELINAR      WSTITL                                       CUP001 CPK023
+      **********                                                                       CUP001 CPK023
+      ***SUB400:*Centre*title*                                                         CUP001 CPK023
+     C**********           EXSR SUB400                     *** SUB400 ***              CUP001 CPK023
+     C**********           SETOF                         30                            CUP001 CPK023
+     C**********           ENDIF                                                       CUP001 CPK023
+     C*
+     C                     END                             *** E10
+     C***********          ENDSR                                          140586
+     C           END030    ENDSR                                          140586
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C***********                                                                             CUP019
+     C***Subroutine*SUB035*-*HELP*TAGS                                                        CUP019
+     C***********                                                                             CUP019
+     C***Called*by:*SUB020*                                                                   CUP019
+     C***Calls****:*NONE*                                                                     CUP019
+     C***********                                                                             CUP019
+     C***********SUB035    BEGSR                           *** SUB035 ***                     CUP019
+     C***********                                                                             CUP019
+     C***Get*details*of*associated*help*tag*and*help*document*                                CUP019
+     C***********                                                                             CUP019
+     C***********          Z-ADDMGRP      WKMGRP                                              CUP019
+     C***********          MOVE ICDE      WKICDE                                              CUP019
+     C***********WKITEM    CHAINUTMENUL0             18                                       CUP019
+     C***********                                                                             CUP019
+     C***Call*CLPGM*UTC0932*to*display*help*document*                                         CUP019
+     C************IN80     IFEQ '0'                                                           CUP019
+     C************IN18     ANDEQ'0'                                                           CUP019
+     C***********          MOVELHDOC      PARTA  12                                           CUP019
+     C***********          MOVELHFLR      PARTB  13                                           CUP019
+     C***********          MOVELHLBL      PARTC  10                                           CUP019
+     C***********                                                                             CUP019
+     C***********          CALL 'UTC0932'                                                     CUP019
+     C***********          PARM           PARTA                                               CUP019
+     C***********          PARM           PARTB                                               CUP019
+     C***********          PARM           PARTC                                               CUP019
+     C***********          PARM           RETCDE 10                                           CUP019
+     C***********                                                                             CUP019
+     C***If*error,*then*set*error*parameter*                                                  CUP019
+     C***********RETCDE    IFEQ 'HELPTAG'                                                     CUP019
+     C***********          SETON                     18                                       CUP019
+     C***********          ENDIF                                                              CUP019
+     C***********                                                                             CUP019
+      ***Reset*error*code*to*0*                                                               CUP019
+     C***********                                                                             CUP019
+     C***********          Z-ADD0         WXERR                                               CUP019
+     C***********                                                                             CUP019
+      ***Force*subfile*to*be*rebuilt*to*clear*option*value*('H')*                             CUP019
+     C***********                                                                             CUP019
+     C***********          SETOF                     3036                                     CUP019
+      ***********                                                                             CUP019
+     C***********          ENDIF                                                              CUP019
+     C***********                                                                             CUP019
+     C***********          ENDSR                                                              CUP019
+     C***********                                                                             CUP019
+     C********************************************************************
+     C/EJECT
+     C*******************************************************************
+     C*
+     C*  Subroutine SUB040 - Exit from program
+     C*
+     C*  Called by: Master segment
+     C*             SUB200 - Set up subfile
+     C*  Calls    :
+     C*
+     C           SUB040    BEGSR                           *** SUB040 ***
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR                                          051113
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  Subroutine SUB100 - Write subfile records for a menu group
+     C*
+     C*  Called by: SUB010 - Set up subfile
+     C*  Calls    :
+     C*
+     C           SUB100    BEGSR                           *** SUB100 ***
+     C*
+     C*  Check for supplied record to allow validation                 L0001
+     C*             ** TO BE INSERTED **                               L0001
+     C*
+     C*  Set key for logical file
+     C                     MOVEL*LOVAL    WKICDE
+     C*
+     C*  Read all records for the menu group
+     C***********WKITEM    SETLLUTMENUL0             20                   CUP001
+     C           WKMITM    SETLLUTMENUL1             20                   CUP001
+     C*
+     C           *IN20     DOWEQ'0'                        *** B10
+     C*
+     C***********WKMGRP    READEUTMENUL0                 20               CUP001
+     C           WKMGRP    READEUTMENUL1                 20               CUP001
+     C*
+     C           *IN20     IFNE '1'                        *** B20
+     C*
+     C*  Record ID must be 'D'
+     C*  If OK, then write a new subfile record
+     C           RECI      IFEQ 'D'                        *** B30
+     C*
+     C                     ADD  1         WRCNO
+     C           PCMD      IFEQ 'TITLE'                    *** B40
+     C                     SETON                     27
+     C                     ELSE                            *** X40
+     C                     SETOF                     27
+     C                     ADD  1         WSNUM
+     C                     END                             *** E40
+     C                     WRITEUT0930F1
+     C                     END                             *** E30
+     C*
+     C                     END                             *** E20
+     C                     END                             *** E10
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  Subroutine SUB200 - Display screen
+     C*
+     C*  Called by: SUB020 - Set up subfile
+     C*  Calls    : SUB040 - EXIT
+     C*
+     C           SUB200    BEGSR                           *** SUB200 ***
+     C*
+     C*  Display error message if error has occurred
+     C           *IN15     IFEQ '1'
+     C           *IN16     OREQ '1'
+     C           *IN18     OREQ '1'
+     C                     MOVE '1'       *IN17
+     C                     ELSE
+     C*
+     C*  Otherwise clear input field before displaying screen
+     C                     MOVE *BLANKS   WSOPT
+     C                     ENDIF
+     C*
+     C                     SETOF                     11
+     C                     WRITEUT0930F3
+     C                     SETON                     11
+     C                     WRITEUT0930F2
+     C                     SETON                     31
+     C*
+     C***********          READ UT0930DF               8080                                   CAAA02
+     C                     READ UT0930F2               8080                                   CAAA02
+     C*
+     C*  Check for command keys
+     C*          *INKC     IFEQ '1'
+     C*                    EXSR SUB040                     EXIT
+     C*                    END
+     C           *INKL     IFEQ '1'
+     C                     MOVEL'PREV'    WSOPT            PREV
+     C                     END
+     C           *INKQ     IFEQ '1'
+     C                     MOVEL'MAIN'    WSOPT            MAIN
+     C                     END
+      *                                                                   140586
+      *If previously, error indicators had been set on, turn off          140586
+      * *IN24 (option field is blank)                                     140586
+     C           *IN17     IFEQ *ON                                       140586
+     C                     SETOF                     24                   140586
+     C                     ENDIF                                          140586
+     C*
+     C*  Reset error fields indicators
+     C                     SETOF                     151618
+     C                     SETOF                     17
+     C*
+     C*  Reset screen position
+     C                     Z-ADD1         WSPOS
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  Subroutine SUB300 - Seton *IN23 if option in WSOPT is valid
+     C*                      and numeric
+     C*
+     C*  Called by: SUB020 - Set up subfile
+     C*  Calls    :
+     C*
+     C           SUB300    BEGSR                           *** SUB300 ***
+     C*
+     C*  Reset indicators
+     C                     SETON                     23
+     C                     SETOF                     25  26
+     C*
+     C*  Search for last non-blank position in option field
+     C                     MOVEAWSOPT     TN1,1
+     C                     Z-ADD4         I       30
+     C           I         DOUEQ0                          *** B10
+     C           TN1,I     COMP ' '                  2525
+     C  N25                SUB  1         I
+     C  N25                END                             *** E10
+     C*
+     C*  Store in array TN2 in right adjusted form
+     C           5         SUB  I         I
+     C                     MOVEA'    '    TN2,1
+     C                     MOVEATN1,1     TN2,I
+     C*
+     C*  Search through array TN2, ignoring leading blanks.
+     C*  Exit loop and set off 23 if non-numeric character found.
+     C           1         DO   4         I                *** B10
+     C     N26   TN2,I     COMP ' '                  2626
+     C      26   TN2,I     COMP '0'                  23  23
+     C   23 26   TN2,I     COMP '9'                    2323
+     C   23                END                             *** E10
+     C*
+     C*  If valid, then right justify screen option field
+     C   23                MOVEATN2,1     WSOPT
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  Subroutine SUB400 - Centre title field
+     C*
+     C*  Called by: SUB001 - Initialization
+     C*             SUB030 - Execute command
+     C*  Calls    :
+     C*
+     C           SUB400    BEGSR                           *** SUB400 ***
+     C*
+     C*  Move title to work array
+     C                     MOVEAWSTITL    CNTR,1
+     C*
+     C*  Determine the number of leading spaces, and store in field S.
+     C*  Store start position in field P.
+     C                     Z-ADD1         I
+     C           I         DOUEQ45                         *** B10
+     C           CNTR,I    COMP ' '                  4040
+     C  N40                ADD  1         I
+     C  N40                END                             *** E10
+     C           I         SUB  1         S       30
+     C                     Z-ADDI         P       30
+     C*
+     C*  Determine the number of trailing spaces, and add to S
+     C                     Z-ADD45        I
+     C           I         DOWGTS                          *** B10
+     C           CNTR,I    COMP ' '                  4040
+     C  N40                SUB  1         I
+     C  N40                END                             *** E10
+     C           45        SUB  I         I
+     C                     ADD  I         S
+     C*
+     C*  Halve the number of spaces and add 1 to give start position in
+     C*  array
+     C                     DIV  2         S
+     C                     ADD  1         S
+     C*
+     C*  Centre title using array as work field
+     C*  (1) Take title (in array) and move to field WSTITL (left
+     C*      justified)
+     C                     MOVEL*BLANKS   WSTITL
+     C                     MOVEACNTR,P    WSTITL
+     C*
+     C*  (2) Take title (in WSTITL) and centre it (in array)
+     C                     MOVEA*BLANKS   CNTR,1
+     C                     MOVEAWSTITL    CNTR,S
+     C*
+     C*  (3) Move title (in array) to display field (WSTITL)
+     C                     MOVEACNTR,1    WSTITL
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************                    CPK019
+     C/EJECT                                                                                  CPK019
+     C********************************************************************                    CPK019
+     C*                                                                                       CPK019
+     C*  Subroutine SUB500 - Get current zone id                                              CPK019
+     C*                                                                                       CPK019
+     C*  Called by: SUB030 - Execute command                                                  CPK019
+     C*  Calls    : *PSSR                                                                     CPK019
+     C*                                                                                       CPK019
+     C           SUB500    BEGSR                           *** SUB500 ***                     CPK019
+     C*                                                                                       CPK019
+     C           SVKLST    KLIST                                                              CPK019
+     C                     KFLD           KSVAL  20                                           CPK019
+     C*                                                                                       CPK019
+     C                     MOVELTXT,5     KSVAL                                               CPK019
+     C*                                                                                       CPK019
+     C* Get system id of the current zone                                                     CPK019
+     C                     OPEN SDSVALL0                                                      CPK019
+     C           SVKLST    CHAINSDSVALL0             51                                       CPK019
+     C*                                                                                       CPK019
+     C* If record found, save the current value as current zone id.                           CPK019
+     C           *IN51     IFEQ '0'                        *** B10                            CPK019
+     C                     MOVELGIVAL     WCURID                                              CPK019
+     C                     ELSE                            *** X10                            CPK019
+     C                     EXSR *PSSR                                                         CPK019
+     C                     ENDIF                           *** E10                            CPK019
+     C*                                                                                       CPK019
+     C                     CLOSESDSVALL0                                                      CPK019
+     C*                                                                                       CPK019
+     C                     ENDSR                                                              CPK019
+     C*                                                                                       CPK019
+     C********************************************************************                    CPK019
+     C/EJECT                                                                                  CPK019
+     C********************************************************************                    CPK019
+     C*                                                                                       CPK019
+     C*  Subroutine SUB510 - Set title for returning to zone menu from                        CPK019
+     C*                      zone menu                                                        CPK019
+     C*                                                                                       CPK019
+     C*  Called by: SUB030 - Execute command                                                  CPK019
+     C*  Calls    :                                                                           CPK019
+     C*                                                                                       CPK019
+     C           SUB510    BEGSR                           *** SUB510 ***                     CPK019
+     C*                                                                                       CPK019
+     C*  IF present menu is zone menu, check if the previous menu is                          CPK019
+     C*  zone menu.                                                                           CPK019
+     C                     MOVELWPMG      CURGRP  4                                           CPK019
+     C           CURGRP    IFEQ '0801'                     *** B10                            CPK019
+     C                     MOVELWXUMG     PRVGRP  4                                           CPK019
+     C*  IF both menus are zone menu, use the previous title (ie, the                         CPK019
+     C*  title when 'PREV' is selected.                                                       CPK019
+     C           PRVGRP    IFEQ '0801'                     *** B20                            CPK019
+     C                     MOVELWPTITL    WSTITL                                              CPK019
+     C                     ENDIF                           *** E20                            CPK019
+     C*                                                                                       CPK019
+     C                     ENDIF                           *** E10                            CPK019
+     C*                                                                                       CPK019
+     C                     ENDSR                                                              CPK019
+     C*                                                                                       CPK019
+     C********************************************************************
+     C/EJECT                                                                                  CPK019
+      ********************************************************************                    CPK019
+     C*  Subroutine *PSSR  - Error handling                                                   CPK019
+     C*                                                                                       CPK019
+     C*  Called by: SUB500 - Get current zone id                                              CPK019
+     C*  Calls    :                                                                           CPK019
+     C*                                                                                       CPK019
+      ********************************************************************                    CPK019
+      *                                                                                       CPK019
+     C           *PSSR     BEGSR                                                              CPK019
+      *                                                                                       CPK019
+     C           @RUN      IFEQ *BLANK                     *** B10                            CPK019
+     C                     MOVE 'Y'       @RUN    1                                           CPK019
+     C                     DUMP                                                               CPK019
+     C                     END                             *** E10                            CPK019
+      *                                                                                       CPK019
+     C                     SETON                     U7U8LR                                   CPK019
+     C                     RETRN                                                              CPK019
+      *                                                                                       CPK019
+     C                     ENDSR                                                              CPK019
+      *                                                                                       CPK019
+      ********************************************************************                    CPK019
+     C/EJECT
+     C********************************************************************
+** TXT - Large text strings
+Initial menu
+RCLRSC
+CHGJOB SWS(000000XX)
+Zone Menu For Zone
+BrgMidasSystemPrefix
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

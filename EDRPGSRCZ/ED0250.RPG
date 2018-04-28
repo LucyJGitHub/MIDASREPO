@@ -1,0 +1,387 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Facility/loan/deposit reconciliation ext.')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0250 -  ED Facilities/Loans/Deposits Reconciliation Extract*
+      *                                                               *
+      *  Function: This program is one of the Reconciliation Report   *
+      *            Extract programs.  This program processes the      *
+      *            LE Facilities, Loans and Deposits as well as       *
+      *            Dealing Module Loans and Deposits. These are com-  *
+      *            bined as Global Manager treats them identically.   *
+      *            NOTE: For efficiency, as this program processes a  *
+      *            number of potentially very large files, the Logic  *
+      *            Cycle is exploited.                                *
+      *                                                               *
+      *  Called By: EDC0250                                           *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 06Jul06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 104383             Date 19Aug96               *
+      *                 101973  *CREATE    Date 09Feb96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  104383 - Do not count deal and loan amendments in the count  *
+      *           of transactions, although do include their value.   *
+      *  101973 - Phase V Modifications                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDDEALL2IP  E           K        DISK         KINFSR *PSSR
+      * MM L&D Deals by Branch and Currency
+      *
+     FEDFACIL1IS  E           K        DISK         KINFSR *PSSR
+      * Facilities by Branch and Currency
+      *
+     FEDLOANL1IS  E           K        DISK         KINFSR *PSSR
+      * Loans by Branch and Currency
+      *
+     FEDDEAML1IF  E           K        DISK         KINFSR *PSSR
+      * MM Deal Amendment Details
+      *
+     FEDLOAML1IF  E           K        DISK         KINFSR *PSSR
+      * Loan Amendments by Branch and Currency
+      *
+     FEDREC5PDO   E                    DISK         KINFSR *PSSR
+      * ED LOANS/FACILITIES RECONCILIATION DATA
+      *
+     FED0250AUO   E                    PRINTER                        UC
+      * Program Audit report
+     F/COPY WNCPYSRC,ED0250F001
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01  -  EDDEAML1 Access                                     *
+      *    02  -  EDLOAML1 Access                                     *
+      *    11  -  EDDEALL2 Access                                     *
+      *    12  -  EDFACIL1 Access                                     *
+      *    13  -  EDLOANL1 Access                                     *
+      *    31  -  Extract to write                                    *
+      *    40  -  First Cycle                                         *
+      *    41  -  SDBANKR0 error                                      *
+      *    L2  -  Level break for Branch                              *
+      *    L1  -  Level break for Currency                            *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     I/TITLE I-SPECIFICATIONS
+      *-----------------------------------------------------------
+     IDEALSDCF    11
+     I                                              BRCA  L2M2
+     I                                              CCY   L1M1
+     IFCLTYFMF    12
+     I                                              BRCA  L2M2
+     I              FCCY                            CCY   L1M1
+     ICLOANF      13
+     I                                              BRCA  L2M2
+     I                                              CCY   L1M1
+     IPSDS       SDS
+      ** Program Status
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I                                      276 281 WDATE
+     I                                      282 287 WTIME
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Midas Access Object Short Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Copyright Statement.
+      *
+     C           *IN40     IFEQ *OFF
+     C                     MOVEACPY@      MKI@   80
+     C                     Z-ADD5         EJTRTY
+     C/COPY WNCPYSRC,ED0250C001
+      *
+      **  Get run date for comparison against value date and
+      **  report title (used on error report)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     41
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                       CLE134
+      ** Past Due Call Loans                                                                  CLE134
+      *                                                                                       CLE134
+     C                     CALL 'AOSARDR0'                                                    CLE134
+     C                     PARM *BLANKS   @RTCD   7                                           CLE134
+     C                     PARM '*VERIFY' @OPTN   7                                           CLE134
+     C                     PARM 'CLE134'  @SARD   6                                           CLE134
+      *                                                                                       CLE134
+     C           @RTCD     IFEQ *BLANK                                                        CLE134
+     C                     MOVE 'Y'       CLE134  1                                           CLE134
+     C                     ELSE                                                               CLE134
+     C                     MOVE 'N'       CLE134                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *
+     C                     SETON                     40
+     C                     ENDIF
+      *
+     C   L2                MOVELBRCA      EJBRCA
+     C   L1                MOVELCCY       EJCCYC
+     C   L1                SETOF                     31
+     C/COPY WNCPYSRC,ED0250C002
+      *
+      **  DEALING MODULE LOANS/DEPOSITS
+      *
+     C           *IN11     IFEQ *ON
+      *
+      **  Accumulate if deal has not matured in the past (do accumulate
+      **  if maturing today).  Call deals may have no maturity date.
+      *
+     C           BJRDNB    IFLE MDAT
+     C           MDAT      OREQ *ZERO
+     C                     SETON                     31
+     C                     ADD  1         EJTCOT
+     C                     ADD  PCPL      EJTVAL
+     C/COPY WNCPYSRC,ED0250C003
+      *
+      **  Include any live deal amendments - take no account of whether
+      **  they increase or decrease the principal.
+      *
+     C           DLNO      CHAINEDDEAML1             01
+     C           *IN01     DOWEQ*OFF
+     C**********           ADD  1         EJTCOT                          104383
+     C                     ADD  DAAM      EJTVAL
+     C/COPY WNCPYSRC,ED0250C004
+     C           DLNO      READEEDDEAML1                 01
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  LENDING MODULE FACILITIES
+      *
+     C           *IN12     IFEQ *ON
+      *
+      *** Only count if not expired before today
+      *
+     C           BJRDNB    IFLE DTEX
+      *
+W6   C                     SETON                     31
+     C                     ADD  1         EJTCOT
+     C                     ADD  FAMT      EJTVAL
+     C/COPY WNCPYSRC,ED0250C005
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  LENDING MODULE LOANS/DEPOSITS
+      *
+     C           *IN13     IFEQ *ON
+      *
+      *** Only count if not matured before today
+      *
+     C           BJRDNB    IFLE MDAT
+     C           MDAT      OREQ *ZERO
+      *
+      *** Accumulate Original Principal
+      *
+     C                     SETON                     31
+     C                     ADD  1         EJTCOT
+     C                     ADD  OPAM      EJTVAL
+     C/COPY WNCPYSRC,ED0250C006
+      *
+      *** GM also accounts for Loans with regular repayments on the
+      *** following basis (at present).
+      *
+     C           NRPD      IFNE *ZERO
+     C           AUTO      ANDEQ'Y'
+     C           REPT      ANDGE1
+     C           REPT      ANDLE2
+      *                                                                                       CLE134
+      * Past Due Call Loan                                                                    CLE134
+     C           NRPD      ORNE *ZERO                                                         CLE134
+     C           AUTO      ANDEQ'C'                                                           CLE134
+     C           REPT      ANDGE1                                                             CLE134
+     C           REPT      ANDLE2                                                             CLE134
+     C           CLE134    ANDEQ'Y'                                                           CLE134
+     C***********          ADD  1         EJTCOT                          104383
+     C                     ADD  RAMT      EJTVAL
+     C/COPY WNCPYSRC,ED0250C007
+     C                     ENDIF
+      *
+      *** GM also accounts for Loan Amendments (of types RE MR PI) -
+      *** Read through all the live amendments for this loan
+      *
+     C           LNRF      CHAINEDLOAML1             01
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+      *** RE - Only Auto-settle YES repayments are required.
+      *
+     C           AMTP      IFEQ 'RE'
+     C           AUTO      ANDEQ'Y'
+      *                                                                                       CLE134
+     C           AMTP      OREQ 'RE'                                                          CLE134
+     C           AUTO      ANDEQ'C'                                                           CLE134
+     C           CLE134    ANDEQ'Y'                                                           CLE134
+      *                                                                                       CLE134
+     C           AMTP      ORNE 'RE'
+     C***********          ADD  1         EJTCOT                          104383
+     C                     ADD  PRAM      EJTVAL
+     C/COPY WNCPYSRC,ED0250C008
+     C                     ENDIF
+     C           LNRF      READEEDLOAML1                 01
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ***  Set up LDA data
+      *
+     C                     MOVEL'ED0250'  DBPGM
+      *
+      ***  Set up deal key if the error did not occur in 1st cycle process
+      *
+     C           *IN41     IFEQ *OFF
+      *
+     C                     MOVELBRCA      KEY1    7 P
+     C                     MOVE CCY       KEY1
+     C                     MOVELKEY1      DBKEY     P
+      *
+     C           *IN11     IFEQ *ON
+     C                     MOVEL'EDDEALL2'DBFILE
+     C                     MOVE DLNO      DBKEY
+     C                     ENDIF
+      *
+     C           *IN12     IFEQ *ON
+     C                     MOVEL'EDFACIL1'DBFILE
+     C                     MOVELFACT      KEY2    5 P
+     C                     MOVE FCNO      KEY2
+     C                     MOVE KEY2      DBKEY
+     C                     ENDIF
+      *
+     C           *IN13     IFEQ *ON
+     C                     MOVEL'EDLOANL1'DBFILE
+     C                     MOVE LNRF      DBKEY
+     C                     ENDIF
+      *
+     C                     MOVEL'001'     DBASE
+     C                     ENDIF
+      *
+      ***  Output LDA
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      **  Print audit report ED0250AU
+      *
+     C                     OPEN ED0250AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEED0250AU
+      *
+     C                     DUMP
+      *
+     C                     END
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      **********************************************************************
+     OEDREC5D0T        L1 31
+     O                         EJBRCA
+     O                         EJCCYC
+     O                         EJTRTY
+     O                         EJTCOT B
+     O                         EJTVAL B
+      **********************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

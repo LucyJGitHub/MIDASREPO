@@ -1,0 +1,595 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Drop historic messages')                      *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MESSAGE MANAGEMENT
+     F*                                                               *
+     F*  ME0200 - DROP HISTORIC MESSAGES                              *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 07Jul06               *
+      *                 235530             Date 24Oct05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 217058             Date 22Apr03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 183583             Date 08Jun01               *
+      *                 171060             Date 27Feb01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21Sep98               *
+     F*                 142977             DATE 06OCT98               *
+      *                 135462            DATE 26MAY98                *
+      *                 113352            DATE 13FEB97                *
+      *                 078777             DATE 27JAN98               *
+     F*                 111008             DATE 14JAN97               *
+     F*                 CSW005             Date 01AUG96               *
+     F*                 094335             DATE 24MAY96               *
+     F*                 066991             DATE 24FEB94               *
+     F*                 056499             DATE 17NOV93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  235530 - MGOREFPD and MGOEXTPD are not properly purged.      *
+      *           Apply 233271, 232757 and 232209 to rectify the      *
+      *           problem.                                            *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+     F*  217058 - Do not remove records from MOGREFPD if they are     *
+     F*           still present in zero balancing/sweeping file       *
+     F*           CRE008 FIX.                                         *
+      *  183583 - Drop historic records in the extension file.        *
+      *  171060 - Remove dropping of PF/CFFEEDPD records from this    *
+      *           program.  Applied fix 148906.                       *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+      *  141572 - Re-compile over MGOREFPD                            *
+     F*  142977 - Ensure the SWIFT Messages are only dropped when     *
+     F*           necessary.                                          *
+     F*  135462 - Messages with status 'Ready to Send' were being     *
+     F*           dropped in Close of Business. Error was that *IN10, *
+     F*           EOF indicator on MGOREFPD, was also used as EOF ind.*
+     F*           on CFCHSRL1, causing main processing loop to end.   *
+     F*           Fix is to use EOF indicator 12 for CFCHSRL1.        *
+     F*  113352 - RE-COMPILE OVER CHANGES IN MGOREFPD                 *
+     F*  078777 - No housekeeping routines for CFCHSRPD Chaser File   *
+     F*           or CFFEEDPD TRAM Feedback file. Fix is to amend     *
+     F*           ME0200/MEC0200 to drop all records except -         *
+     F*           1) Chaser and Feedback records where the outgoing   *
+     F*              message is still on MGOREFPD and hasn't expired. *
+     F*           2) Chasers of 'Chaser not Generated' type which are *
+     F*              not before the Historic Retention Period.        *
+     F*         - Extend fix 111008 to cover CSW005 changes.          *
+     F*  111008 - Use Midas day no. for comparison rather than        *
+     F*           YYMMDD                                              *
+     F*  CSW005 - MG34n and MG36n message generation                  *
+     F*  094335 - MT5xx cancellation process fix (MGOREFPD must not   *
+     F*           have the order of its records changed)              *
+     F*  066991 - Orion not passing Telex status back to Midas        *
+     F*            o Set return code if Telex records dropped to      *
+     F*              force reorganization of N#MO                     *
+     F*  056499 - Recompiled over changed ME0200AU                    *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSDBANKPDIF  E                    DISK
+     FMGOREFL0IF  E           K        DISK
+     F*MGOREFL1IF**E***********K        DISK                              094335
+     FMGOREFPDIF  E           K        DISK                               094335
+     F            MGOREFD0                          KRENAMEMGOREF00
+     FMGOREFBKO   E           K        DISK
+     F            MGOREFD0                          KRENAMEMGOREFB0
+     FMGOMSGPDIF  E           K        DISK
+     FDEALS   IF  E           K        DISK                               CSW005
+     F            DEALSDAF                          KIGNORE               CSW005
+     F            DEALSDBF                          KIGNORE               CSW005
+     F            DEALSDCF                          KIGNORE               CSW005
+     F            DEALSDDF                          KIGNORE               CSW005
+     F            DEALSDEF                          KIGNORE               CSW005
+     F            DEALSDFF                          KIGNORE               CSW005
+     FMGOMSGBKO   E           K        DISK
+     F            MGOMSGD0                          KRENAMEMGOMSGB0
+     FMGOEXTPDIF  E           K        DISK                               183583
+     FMGOEXTBKO   E           K        DISK                               183583
+     F            MGOEXTD0                          KRENAMEMGOEXTB0       183583
+     FME0200AUO   E             50     PRINTER                        UC
+     F*                                                                   078777
+     FSDMMODPDIF  E                    DISK                               078777
+     FCFCHSRL1IF  E           K        DISK                               078777
+     F*CFFEEDL0IF**E*******    K        DISK                                           078777 171060
+     FCFCHSRBKO   E           K        DISK                               078777
+     F            CFCHSRD0                          KRENAMECFCHSRB0       078777
+     F*CFFEEDBKO***E******     K        DISK                                           078777 171060
+     F**********  CFFEEDD0                          KRENAMECFFEEDB0                    078777 171060
+      *                                                                   078777
+     FREICSDL4IF  E           K        DISK                               217058
+     F/COPY WNCPYSRC,ME0200F001
+      *
+     E                    CPY@    1   1 80
+     E* Copy point for ZDATE1 subroutine E specs                          111008
+     E/COPY ZSRSRC,ZDATE1Z1                                               111008
+      *
+      * ID C  F  H  L    Function of indicators
+      *    01            ME0200AU open
+      *    10            EOF MGOREFPD
+      *    11            EOF MGOMSGPD
+      *    50            ME0200AU overflow
+      *    75            EOF DEALS                                        CSW005
+      *    87            EOF SDBANKPD
+      *    U7U8LR        DB error
+      *
+     E/COPY WNCPYSRC,ME0200E001
+      *                                                                   111008
+      ** Data area to re-format date                                      111008
+      *                                                                   111008
+     I            DS                                                      111008
+     I                                        1   60HRFORM                111008
+     I                                        1   20HRYY                  111008
+     I                                        5   60HRDD                  111008
+     I                                        7  120ZDATE                 111008
+     I                                        7   80ZDD                   111008
+     I                                       11  120ZYY                   111008
+      *                                                                   111008
+     I/COPY WNCPYSRC,ME0200I001
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+      *
+     I            DS                                                      078777
+     I                                        1  16 TRNO                  078777
+     I                                        3   3 @Q                    078777
+     I                                        4  16 @REST                 078777
+     I***                                                                 078777
+     I            DS                                                      078777
+     I                                       19  21 #MTPY                 078777
+     I                                       57  72 #RREL                 078777
+     I                                       74  79 #MGDE                 078777
+     I                                        1 132 PRLN                  078777
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - main process                                        *
+      *   INIT  - initial process                                     *
+      *   REPT  - report dropped messages                             *
+      *   WRIT  - copy messages to backup files                       *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN - Main process                                         *
+      *   Calls -  INIT initial process                               *
+      *            REPT report dropped messages                       *
+      *            WRIT copy messages to backup files                 *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Read multiple headers & single messages
+     C***********          READ MGOREFL1                 10               094335
+     C                     READ MGOREFPD                 10               094335
+      *
+     C           *IN10     DOWEQ'0'
+      *
+     C           TRNF      IFEQ *BLANKS                                   094335
+      *                                                                   111008
+      **  Change History Retention Date to Midas day no. format           111008
+      *                                                                   111008
+     C                     MOVE HRDT      HRFORM                          111008
+     C                     MOVE HRDT      ZDATE                           111008
+     C                     MOVE HRDD      ZDD                             111008
+     C                     MOVE HRYY      ZYY                             111008
+     C                     MOVE '0'       *IN98                           111008
+     C                     EXSR ZDATE1                                    111008
+     C                     Z-ADDZDAYNO    MHRDT   50                      111008
+      *                                                                   CSW005
+      ** If CSW005 is switched on do not drop FRA/IRS message             CSW005
+      ** until deal is deleted or deal record id = '*', 'M' or 'N'        CSW005
+      ***and*History*Retention*Date*(HRDT)*<*Event*Date*(@EDAT)**** CSW005078777
+      *  and History Retention Date (HRDT) < Todays Date                  078777
+      *                                                                   CSW005
+     C************LIKE     DEFN @SARD     @EDAT                     111008078777
+     C           CSW005    IFEQ 'Y'                                       CSW005
+     C           MTPY      ANDEQ'340'                                     CSW005
+     C           CSW005    OREQ 'Y'                                       CSW005
+     C           MTPY      ANDEQ'341'                                     CSW005
+     C           CSW005    OREQ 'Y'                                       CSW005
+     C           MTPY      ANDEQ'360'                                     CSW005
+     C           CSW005    OREQ 'Y'                                       CSW005
+     C           MTPY      ANDEQ'361'                                     CSW005
+     C           CSW005    OREQ 'Y'                                       CSW005
+     C           MTPY      ANDEQ'362'                                     CSW005
+      *                                                                   CSW005
+     C           6         SUBSTMTRN:1    WMTRN1  6                       CSW005
+     C                     MOVE WMTRN1    WMTRN   60                      CSW005
+     C           WMTRN     CHAINDEALS                75                   CSW005
+      *                                                                   CSW005
+     C           *IN75     IFEQ '1'                                       CSW005
+     C           *IN75     OREQ '1'                                                           235530
+     C           MGST      ANDEQ'PRTD'                                                        235530
+     C           RECI      OREQ '*'                                       CSW005
+     C***********HRDT      ANDLT@EDAT                               CSW005078777
+     C           MHRDT     ANDLTBJRDNB                                    078777
+     C           RECI      OREQ '*'                                                           235530
+     C           MHRDT     ANDLTBJRDNB                                                        235530
+     C           MGST      ANDEQ'PRTD'                                                        235530
+     C           RECI      OREQ 'M'                                       CSW005
+     C***********HRDT      ANDLT@EDAT                               CSW005078777
+     C           MHRDT     ANDLTBJRDNB                                    078777
+     C           RECI      OREQ 'M'                                                           235530
+     C           MHRDT     ANDLTBJRDNB                                                        235530
+     C           MGST      ANDEQ'PRTD'                                                        235530
+     C           RECI      OREQ 'N'                                       CSW005
+     C***********HRDT      ANDLT@EDAT                               CSW005078777
+     C           MHRDT     ANDLTBJRDNB                                    078777
+     C           RECI      OREQ 'N'                                                           235530
+     C           MHRDT     ANDLTBJRDNB                                                        235530
+     C           MGST      ANDEQ'PRTD'                                                        235530
+     C           RECI      OREQ 'D'                                                           235530
+     C           MGST      ANDEQ'DLTD'                                                        235530
+     C           MHRDT     ANDEQBJRDNB                                                        235530
+     C                     EXSR REPT                                      CSW005
+     C                     ELSE                                           CSW005
+     C*Conf matching.                                                     078777
+     C           BGCFMT    IFEQ 'Y'                                       078777
+     C                     EXSR WRITCM                                    078777
+     C                     END                                            078777
+     C*                                                                   078777
+     C                     EXSR WRIT                                      CSW005
+     C                     ENDIF                                          CSW005
+      *                                                                   CSW005
+     C                     ELSE                            CSW005='Y'     CSW005
+      **  Check if not present in Zero Balance/Sweeping Details           217058
+      *                                                                   217058
+     C                     MOVE '1'       *IN66                           217058
+     C           CRE008    IFEQ 'Y'                                       217058
+     C           TRNO      CHAINREICSDL4             66                   217058
+     C                     ENDIF                                          217058
+      *                                                                   094335
+      **  If before retention date report else copy to backup file
+     C***********HRDT      IFLT @EDAT                                     111008
+     C           MHRDT     IFLT BJRDNB                                    111008
+     C           *IN66     ANDEQ'1'                                       217058
+     C           MHRDT     ORLE BJRDNB                                                        235530
+     C           MGST      ANDEQ'PRTD'                                                        235530
+      *                                                                   111008
+     C                     EXSR REPT
+     C                     ELSE
+     C*Conf matching.                                                     078777
+     C           BGCFMT    IFEQ 'Y'                                       078777
+     C                     EXSR WRITCM                                    078777
+     C                     END                                            078777
+     C*                                                                   078777
+     C                     EXSR WRIT
+     C                     END
+      *                                                                   CSW005
+     C                     ENDIF                            CSW005='Y'    CSW005
+      *                                                                   094335
+     C                     END                                            094335
+      *
+      **  Read next multiple header or single message
+     C***********          READ MGOREFL1                 10               094335
+     C                     READ MGOREFPD                 10               094335
+     C                     ENDDO                                          142977
+      *                                                                   078777
+      **  Drop CFCHSRPD records of 'Chasers not generated'                078777
+     C           BGCFMT    IFEQ 'Y'                                       078777
+     C                     EXSR DROPCH                                    078777
+     C***********          END                                     078777 142977
+     C                     END
+     C/COPY WNCPYSRC,ME0200C006
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *                                                                   066991
+      **  Return code - set to 'Y' if Midas-Orion interface file          066991
+      **  records deleted. This will cause file to be reorganized         066991
+      **  on return to calling CL.                                        066991
+     C           *ENTRY    PLIST                                          066991
+     C                     PARM           @RTCD   1                       066991
+     C                     MOVEL*BLANKS   @RTCD                           066991
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'ME0200'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD for date format
+     C           1         CHAINSDBANKPD             87
+      *
+     C           *IN87     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ****Obtain*run*date*in*YYMMDD*format                                111008
+     C***********          CALL 'ZM0080'                                  111008
+     C***********          PARM *BLANKS   @EDAT   6                       111008
+     C***********          PARM           BJDFIN  1                       111008
+     C*                                                                   078777
+     C**  Access SDMMODPD for Confirmation Matching Module.               078777
+     C           1         CHAINSDMMODPD             87                   078777
+     C           *IN87     IFEQ '1'                                       078777
+     C           *LOCK     IN   LDA                                       078777
+     C                     Z-ADD2         DBASE                           078777
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 02 *078777
+     C                     MOVEL'SDMMODPD'DBFILE                          078777
+     C                     OUT  LDA                                       078777
+     C                     EXSR *PSSR                                     078777
+     C                     END                                            078777
+     C*                                                                   078777
+      *                                                                   CSW005
+      ** Access AOSARDR0 to check if CSW005 is switched on                CSW005
+      *                                                                   CSW005
+     C                     CALL 'AOSARDR0'                                CSW005
+     C                     PARM '       ' #RTCD   7                       CSW005
+     C                     PARM '*VERIFY' @OPTN   7                       CSW005
+     C                     PARM 'CSW005'  @SARD   6                       CSW005
+      *                                                                   CSW005
+     C           #RTCD     IFNE *BLANK                                    CSW005
+     C           #RTCD     ANDNE'*NRF   '                                 CSW005
+     C           *LOCK     IN   LDA                                       CSW005
+     C                     Z-ADD2         DBASE                           CSW005
+     C                     MOVEL'*VERIFY' DBKEY            * DB ERROR 2 * CSW005
+     C                     MOVEL'SCSARDPD'DBFILE                          CSW005
+     C                     OUT  LDA                                       CSW005
+     C                     EXSR *PSSR                                     CSW005
+     C                     ENDIF                                          CSW005
+      *                                                                   CSW005
+     C           #RTCD     IFEQ *BLANK                                    CSW005
+     C                     MOVE 'Y'       CSW005  1                       CSW005
+     C                     ELSE                                           CSW005
+     C                     MOVE 'N'       CSW005                          CSW005
+     C                     ENDIF                                          CSW005
+      *                                                                   217058
+      ** Access AOSARDR0 to check if CRE008 is switched on                217058
+      *                                                                   217058
+     C                     CALL 'AOSARDR0'                                217058
+     C                     PARM '       ' #RTCD   7                       217058
+     C                     PARM '*VERIFY' @OPTN   7                       217058
+     C                     PARM 'CRE008'  @SARD   6                       217058
+      *                                                                   217058
+     C           #RTCD     IFNE *BLANK                                    217058
+     C           #RTCD     ANDNE'*NRF   '                                 217058
+     C           *LOCK     IN   LDA                                       217058
+     C                     Z-ADD3         DBASE                           217058
+     C                     MOVEL'*VERIFY' DBKEY            * DB ERROR 2 * 217058
+     C                     MOVEL'SCSARDPD'DBFILE                          217058
+     C                     OUT  LDA                                       217058
+     C                     EXSR *PSSR                                     217058
+     C                     ENDIF                                          217058
+      *                                                                   217058
+     C           #RTCD     IFEQ *BLANK                                    217058
+     C                     MOVE 'Y'       CRE008  1                       217058
+     C                     ELSE                                           217058
+     C                     MOVE 'N'       CRE008                          217058
+     C                     ENDIF                                          217585
+      *
+     C/COPY WNCPYSRC,ME0200C002
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT - Report dropped messages                              *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           REPT      BEGSR
+      *                                                                   066991
+      **  If Telex message to be dropped set return code to force         066991
+      **  reorganization of N#MO                                          066991
+     C           NWRK      IFEQ 'TELEX '                                  066991
+      *                                                                   066991
+     C           @RTCD     IFEQ *BLANK                                    066991
+     C                     MOVEL'Y'       @RTCD                           066991
+     C                     ENDIF                                          066991
+      *                                                                   066991
+     C                     ENDIF                                          066991
+      *
+      **  Open printer file
+     C           *IN01     IFEQ '0'
+     C                     OPEN ME0200AU
+     C                     WRITER01
+     C                     SETON                     01
+     C                     END
+      *
+      **  Write header on overflow
+     C           *IN50     IFEQ '1'
+     C                     WRITER01
+     C                     SETOF                     50
+     C                     END
+      *
+      **  Write dropped message details
+     C                     WRITERS
+     C/COPY WNCPYSRC,ME0200C007
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   WRIT - Copy messages to backup files                        *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           WRIT      BEGSR
+      *
+      **  Write multiple header or single message reference
+     C/COPY WNCPYSRC,ME0200C003
+     C                     WRITEMGOREFB0
+     C/COPY WNCPYSRC,ME0200C001
+      *
+      **  Write all records for multiple or single message
+     C           TRNO      CHAINMGOMSGPD             11
+      *
+     C           *IN11     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVELTRNO      DBKEY            * DB ERROR 02 *
+     C                     MOVEL'MGOMSGPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           *IN11     DOWEQ'0'
+     C                     WRITEMGOMSGB0
+     C           TRNO      READEMGOMSGD0                 11
+     C                     END
+      *                                                                   183583
+      ** Write all records for extension file.                            183583
+      *                                                                   183583
+     C           TRNO      CHAINMGOEXTPD             1112                 183583
+      *                                                                   183583
+      ** Report database error when failed to access file.                183583
+      *                                                                   183583
+     C           *IN12     IFEQ '1'                                       183583
+     C           *LOCK     IN   LDA                                       183583
+     C                     Z-ADD4         DBASE            ************** 183583
+     C                     MOVELTRNO      DBKEY            * DBERROR 04 * 183583
+     C                     MOVEL'MGOEXTPD'DBFILE           ************** 183583
+     C                     OUT  LDA                                       183583
+     C                     EXSR *PSSR                                     183583
+     C                     ENDIF                                          183583
+      *                                                                   183583
+     C           *IN11     DOWEQ'0'                                       183583
+     C                     WRITEMGOEXTB0                                  183583
+     C           TRNO      READEMGOEXTD0                 11               183583
+     C                     ENDDO                                          183583
+      *
+      **  Write references for other messages within multiple message
+     C           TRNM      DOWNE*BLANKS
+     C           TRNM      CHAINMGOREFL0             10
+      *
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVELTRNM      DBKEY            * DB ERROR 03 *
+     C                     MOVEL'MGOREFL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,ME0200C004
+      *
+     C                     WRITEMGOREFB0
+     C/COPY WNCPYSRC,ME0200C005
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT                                                              111008
+     C/COPY ZSRSRC,ZDATE1Z2                                               111008
+     C/EJECT
+      *****************************************************************   078777
+      *   WRITCM - Copy confirmation chaser messages to backup file.  *   078777
+      *            Copy TRAM feedback messages to backup file.        *   078777
+      *   Called by - main process                                    *   078777
+      *****************************************************************   078777
+     C           WRITCM    BEGSR                                          078777
+      *                                                                   078777
+     C                     MOVE TRNO      @TRNO  16                       078777
+     C                     MOVELMTPY      @MTPY   1                       078777
+      ** Chaser generated                                                 078777
+     C           @Q        IFEQ 'Q'                                       078777
+      *                                                                   078777
+      ** Chaser file.                                                     078777
+     C           @TRNO     CHAINCFCHSRL1             11                   078777
+     C           *IN11     IFEQ '0'                                       078777
+     C                     WRITECFCHSRB0                                  078777
+      ***Feedback*File.*************************************************************** 078777 171060
+     C********** #RREL     CHAINCFFEEDL0             11                                078777 171060
+     C********** *IN11     IFEQ '0'                                                    078777 171060
+     C**********           WRITECFFEEDB0                                               078777 171060
+     C**********           END                                                         078777 171060
+      *                                                                   078777
+     C                     END                                            078777
+      *                                                                   078777
+     C                     END                                            078777
+      *                                                                   078777
+     C                     ENDSR                                          078777
+     C/EJECT                                                              078777
+      *****************************************************************   078777
+      *   DROPCH - Copy confirmation chaser file records of the type  *   078777
+      *            'Chaser not generated' if within retention period. *   078777
+      *   Called by - main process                                    *   078777
+      *****************************************************************   078777
+     C           DROPCH    BEGSR                                          078777
+      *                                                                   078777
+     C************LOVAL    SETLLCFCHSRL1                 10         078777135462
+     C           *LOVAL    SETLLCFCHSRL1                 12               135462
+      *                                                                   078777
+     C************IN10     DOWEQ'0'                                 078777135462
+     C           *IN12     DOWEQ'0'                                       135462
+      **                                                                  078777
+     C************         READ CFCHSRD0                 10         078777135462
+     C************IN10     IFEQ '0'                                 078777135462
+     C                     READ CFCHSRD0                 12               135462
+     C           *IN12     IFEQ '0'                                       135462
+      **                                                                  078777
+      **Chaser not generated type record                                  078777
+      **and retention date not expired.                                   078777
+     C           #MTPY     IFEQ *BLANKS                                   078777
+     C           #MGDE     ANDGEHRDT                                      078777
+     C                     WRITECFCHSRB0                                  078777
+     C                     END                                            078777
+      **                                                                  078777
+     C                     END                                            078777
+      **                                                                  078777
+     C                     ENDDO                                          078777
+      *                                                                   078777
+     C                     ENDSR                                          078777
+     C/EJECT                                                              078777
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *   Called by - INIT initial process                            *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C* ZYDY & ZMDY INSERTED BY FIX 111008
+** CPY@   **      Object copyright
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

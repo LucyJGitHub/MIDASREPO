@@ -1,0 +1,776 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Fontis IAT file pre-processing')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL2824 - Midas-Fontis IAT File Pre-Processing                *
+      *                                                               *
+      *  Function:  This program will be called from the IAT          *
+      *             background task to process the following:         *
+      *                1. Convert the current processed member of the *
+      *                   IAT Header (GLIATHPD) and Postings          *
+      *                   (GLIATPPD) files from ASCII to EBCDIC format*
+      *                2. Output the EBCDIC format to GLIATXPD        *
+      *                   (header) and GLIATJPD (posting)             *
+      *                3. Supply the equivalent GL format for entries *
+      *                   with account number in retail format        *
+      *                4. Complete the account number information for *
+      *                   entries to spot trade accounts              *
+      *                                                               *
+      *                                                               *
+      *  Called By: GLC2823 - Midas-Fontis IAT Background Task        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL009  *CREATE    Date 18May99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL009 - Midas-Fontis Inter-Account Transfers (IAT) and      *
+      *           Third Party Payments (TPP) Interface                *
+      *                                                               *
+      *****************************************************************
+     FGLIATHPDIF  E                    DISK
+     FGLIATPPDIF  E                    DISK
+     FGLIATJL1UF  E           K        DISK         KINFSR *PSSR
+     F            GLIATJD0                          KRENAMEGLIATJ1
+     F                                              KCOMIT
+     FGLIATJL2IF  E           K        DISK
+     F            GLIATJD0                          KRENAMEGLIATJ2
+     FGLIATXPDO   E                    DISK         KCOMIT            UC
+     FGLIATJPDO   E                    DISK         KCOMIT            UC
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    60           Read Indicator for GLIATHPD                   *
+      *    61           Read Indicator for GLIATPPD                   *
+      *    62           Read Indicator for GLIATJL1                   *
+      *    63           Read Indicator for GLIATJL2                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    NARR    1   4 20
+      ** Array containing Error Narrative Statements
+      *
+      /EJECT
+     IGLIATJ1
+      ** Rename fields of GLIATJL1
+      *
+     I              FDBTNB                          ADBTNB
+     I              FDBINB                          ADBINB
+     I              FDACNO                          ADACNO
+     I              FDPSTA                          ADPSTA
+     I              FDDRCR                          ADDRCR
+     I              FDVDAT                          ADVDAT
+     I              FDNARR                          ADNARR
+     I              FDIATT                          ADIATT
+     I              FDAFTP                          ADAFTP
+     I              FDABRC                          ADABRC
+     I              FDACUS                          ADACUS
+     I              FDACCY                          ADACCY
+     I              FDACOD                          ADACOD
+     I              FDACSQ                          ADACSQ
+     I              FDENAR                          ADENAR
+     I              FDBREF                          ADBREF
+     IGLIATJ2
+      ** Rename fields of GLIATJL2
+      *
+     I              FDBTNB                          BDBTNB
+     I              FDBINB                          BDBINB
+     I              FDACNO                          BDACNO
+     I              FDPSTA                          BDPSTA
+     I              FDDRCR                          BDDRCR
+     I              FDVDAT                          BDVDAT
+     I              FDNARR                          BDNARR
+     I              FDIATT                          BDIATT
+     I              FDAFTP                          BDAFTP
+     I              FDABRC                          BDABRC
+     I              FDACUS                          BDACUS
+     I              FDACCY                          BDACCY
+     I              FDACOD                          BDACOD
+     I              FDACSQ                          BDACSQ
+     I              FDENAR                          BDENAR
+     I              FDBREF                          BDBREF
+      *
+      ** Data Structure for Conversion Data
+      *
+     I            DS
+     I                                        1 256 W#CONV
+     I                                        1   3 W#BTNB
+     I                                        4   6 W#BRIN
+     I                                        7  16 W#WSID
+     I                                       17  19 W#LITN
+     I                                       20  20 W#BSTS
+     I                                       21  21 W#MBRB
+     I                                       22  51 W#NARA
+     I                                       31  38 W#GDAT
+     I                                       31  32 W#CNTY
+     I                                       33  34 W#YEAR
+     I                                       39  42 W#GTIM
+     I**********                              7  24 W#ACNO                                    CGL029
+     I                                        7  30 W#ACNO                                    CGL029
+     I                                        7   9 W#BRCA
+     I                                       10  15 W#CNUM
+     I                                       16  18 W#CCY
+     I**********                             19  22 W#ACCD                                    CGL029
+     I**********                             23  24 W#ACSQ                                    CGL029
+     I                                       19  28 W#ACCD                                    CGL029
+     I                                       29  30 W#ACSQ                                    CGL029
+     I                                        7  16 W#RETL
+     I                                       17  24 W#REST
+     I**********                             19  22 W#ACOD                                    CGL029
+     I**********                             25  37 W#PSTA                                    CGL029
+     I**********                             38  38 W#DRCR                                    CGL029
+     I**********                             39  46 W#VDAT                                    CGL029
+     I**********                             47  76 W#NARR                                    CGL029
+     I**********                             77  86 W#IATT                                    CGL029
+     I                                       19  28 W#ACOD                                    CGL029
+     I                                       31  43 W#PSTA                                    CGL029
+     I                                       44  44 W#DRCR                                    CGL029
+     I                                       45  52 W#VDAT                                    CGL029
+     I                                       53  82 W#NARR                                    CGL029
+     I                                       83  92 W#IATT                                    CGL029
+      *
+      ** Data Structure for ADACNO of GLIATJL1
+      *
+     I            DS
+     I**********                              1  18 ADACN0                                    CGL029
+     I                                        1  24 ADACN0                                    CGL029
+     I                                        1   3 ADACN1
+     I                                        4   9 ADACN2
+     I                                       10  12 ADACN3
+     I**********                             13  16 ADACN4                                    CGL029
+     I**********                             17  18 ADACN5                                    CGL029
+     I                                       13  22 ADACN4                                    CGL029
+     I                                       23  24 ADACN5                                    CGL029
+      /SPACE 3
+     IW#IATH    E DSGLIATHPD
+      ** Data Structure to hold the Header Details
+      *
+     IW#IATP    E DSGLIATPPD
+      ** Data Structure to hold the Posting Details
+      *
+     IACCNTB    E DSACCNTAB
+      ** External DS for General Ledger Account Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+     ISDTRAD    E DSSDTRADPD
+      ** External DS for Trading Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External DS for Branch Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     ILDA         DS                            256
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                      184 256 DBTXT
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                   Index to subroutines                        *
+      *  Main routine                                                 *
+      *  SRINIT  -  Initial processing                                *
+      *  SRDETL  -  Detail processing                                 *
+      *  SRCONV  -  Convert ASCII record to EBCDIC                    *
+      *  SRHEAD  -  Write header record to GLIATXPD                   *
+      *  SRPOST  -  Write posting record to GLIATJPD                  *
+      *  SRACCN  -  Assign value of A/C Format Indicator              *
+      *  SRSPOT  -  Complete spot trade account entries information   *
+      *  SRSAVE  -  Save fields for second spot trade account         *
+      *  SREND   -  End program                                       *
+      *  *PSSR   -  Error handling subroutine                         *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Main Program
+      *
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform different detailed processing
+      *
+     C                     EXSR SRDETL
+      *
+      ** Terminate program
+      *
+     C                     EXSR SREND
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT  -  Initial Processing                                *
+      *  Called by: Main routine                                      *
+      *  Calls    : AOBANKR0 - Access Bank Details                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL2824'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBTXT
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+      *
+      ** Key list for GLIATJL2
+      *
+     C           KLIATA    KLIST
+     C                     KFLD           K#BREF 30
+     C                     KFLD           K#NARR 30
+     C                     KFLD           K#AFTP  1
+     C                     KFLD           K#DRCR  1
+      *
+      ** Another Key list for GLIATJL2
+      *
+     C           KLIATB    KLIST
+     C                     KFLD           K#BREF
+     C                     KFLD           K#NARR
+      *
+      ** Retrieve bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Trading Details to get spot trade account code
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST  'POPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'SDTRADPD'DBFILE           *DB ERROR 004 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Initialise work fields and indicators
+      *
+     C                     MOVEL*BLANKS   W#DATA256
+     C                     MOVEL*BLANKS   W#CONV256
+     C                     MOVE *OFF      *IN98
+      *
+      ** Open files for input and output
+      *
+     C                     OPEN GLIATXPD
+     C                     OPEN GLIATJPD
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL  -  Detail Processing                                 *
+      *  Called by: Main routine                                      *
+      *  Calls    : SRCONV, SRHEAD, SRPOST, SRSPOT                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      ** Process header record
+      *
+     C                     READ GLIATHPD                 60
+      *
+     C           *IN60     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'GLIATHPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELW#IATH    W#DATA
+     C                     EXSR SRCONV
+     C                     EXSR SRHEAD
+     C                     ENDIF
+      *
+      ** Process posting records
+      *
+     C                     READ GLIATPPD                 61
+      *
+     C           *IN61     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'GLIATPPD'DBFILE           *DB ERROR 003 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+     C           *IN61     DOWEQ'0'
+     C                     MOVELW#IATP    W#DATA
+     C                     EXSR SRCONV
+     C                     EXSR SRPOST
+     C                     READ GLIATPPD                 61
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** Spot Trade account update
+      *
+     C                     EXSR SRSPOT
+      *
+      ** Commit files updated
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCONV  -  Convert ASCII record to EBCDIC                    *
+      *  Called by: SRDETL                                            *
+      *  Calls    : QDCXLATE - Standard program to convert ASCII      *
+      *                        to EBCDIC                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCONV    BEGSR
+      *
+      ** Call standard QDCXLATE to convert IAT from ASCII to EBCDIC
+      *
+     C                     CALL 'QDCXLATE'
+      *
+     C                     PARM 256       P#LEN   50
+     C                     PARM W#DATA    P#DTA 256
+     C                     PARM 'QTCPEBC' P#TAB  10
+     C                     PARM 'QUSRSYS' P#LIB  10
+      *
+      ** Set converted EBCDIC IAT Data
+      *
+     C                     MOVELP#DTA     W#CONV
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHEAD  -  Write header record to GLIATXPD                   *
+      *  Called by: SRDETL                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRHEAD    BEGSR
+      *
+      ** Set the fields of GLIATXPD from EBCDIC output
+      *
+     C                     MOVE W#BTNB    FCBTNB
+     C                     MOVE W#BRIN    FCBRCA
+     C                     MOVE W#WSID    FCWSID
+     C                     MOVE W#LITN    FCLITN
+     C                     MOVE W#BSTS    FCBSTS
+     C                     MOVE W#MBRB    FCMBRB
+     C                     MOVE W#NARA    FCNARR
+     C                     MOVE ' '       FCPROC
+      *
+      *  Format Batch reference from the narrative information:
+      *   = 'FONTIS' + b + YYYYMMDD + b + HHMM + b + Batch no.
+      *
+     C           FCBREF    CAT  'FONTIS':0FCBREF    P
+     C                     CAT  W#GDAT:1  FCBREF    P
+     C                     CAT  W#GTIM:1  FCBREF    P
+     C                     CAT  W#BTNB:1  FCBREF    P
+      *
+      ** Write Header record to GLIATXPD
+      *
+     C                     WRITEGLIATXD0
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPOST  -  Write posting record to GLIATJPD                  *
+      *  Called by: SRDETL                                            *
+      *  Calls    : SRACCN                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPOST    BEGSR
+      *
+      ** Determine value of account format indicator
+      *
+     C                     EXSR SRACCN
+      *
+      ** Set the fields of GLIATJPD from EBCDIC output
+      *
+     C                     MOVE W#BTNB    FDBTNB
+     C                     MOVE W#BRIN    FDBINB
+     C                     MOVE W#ACNO    FDACNO
+     C                     MOVE W#PSTA    FDPSTA
+     C                     MOVE W#DRCR    FDDRCR
+     C                     MOVE W#VDAT    FDVDAT
+     C                     MOVE W#NARR    FDNARR
+     C                     MOVE W#IATT    FDIATT
+     C                     MOVE W#AFTP    FDAFTP
+     C                     MOVELFCBREF    FDBREF
+      *
+     C           W#AFTP    IFEQ 'R'
+     C           W#AFTP    OREQ 'G'
+     C                     MOVE BRCA      FDABRC
+     C                     MOVE CNUM      FDACUS
+     C                     MOVE CCY       FDACCY
+     C                     MOVE ACOD      FDACOD
+     C                     MOVE ACSQ      FDACSQ
+     C                     ELSE
+     C                     MOVE *BLANKS   FDABRC
+     C                     MOVE *BLANKS   FDACUS
+     C                     MOVE *BLANKS   FDACCY
+     C                     MOVE *BLANKS   FDACOD
+     C                     MOVE *BLANKS   FDACSQ
+     C                     ENDIF
+      *
+     C           W#AFTP    IFEQ 'X'
+     C                     MOVELNARR,1    FDENAR
+     C                     ELSE
+     C                     MOVE *BLANKS   FDENAR
+     C                     ENDIF
+      *
+      ** Write Posting record to GLIATJPD
+      *
+     C                     WRITEGLIATJD0
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACCN  -  Assign value of A/C Format Indicator              *
+      *  Called by: SRPOST                                            *
+      *  Calls    : AOACCTR0 - Access Account Details                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACCN    BEGSR
+      *
+     C                     MOVE 'X'       W#AFTP  1
+      *
+      ** Determine if account is a spot trade
+      *
+     C           BLSPTA    IFEQ W#ACOD
+     C                     MOVE 'S'       W#AFTP
+     C                     GOTO SRFIN
+     C                     ENDIF
+      *
+      ** Determine if account is a Retail account
+      *
+     C           W#REST    IFEQ *BLANK
+     C                     CALL 'AOACCTR0'
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM W#RETL    PRETL  10
+     C                     PARM *BLANKS   PCNMA   6
+     C                     PARM *BLANKS   PCUCD   3
+     C**********           PARM *BLANKS   PACODA  4                                           CGL029
+     C                     PARM *BLANKS   PACODA 10                                           CGL029
+     C                     PARM *BLANKS   PASQ    2
+     C                     PARM *BLANKS   PBRCA   3
+     C           ACCNTB    PARM ACCNTB    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'R'       W#AFTP
+     C                     GOTO SRFIN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Determine if account is a General Ledger Account
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM *BLANKS   PRETL  10
+     C                     PARM W#CNUM    PCNMA   6
+     C                     PARM W#CCY     PCUCD   3
+     C**********           PARM W#ACCD    PACODA  4                                           CGL029
+     C                     PARM W#ACCD    PACODA                                              CGL029
+     C                     PARM W#ACSQ    PASQ    2
+     C                     PARM W#BRCA    PBRCA   3
+     C           ACCNTB    PARM ACCNTB    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'G'       W#AFTP
+     C           ATYP      IFEQ 'R'
+     C                     MOVE 'R'       W#AFTP
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SRFIN     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSPOT  -  Complete spot trade account entries information   *
+      *  Called by: SRDETL                                            *
+      *  Calls    : AOBRCHR1 - Access Branch Details                  *
+      *             SRSAVE                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSPOT    BEGSR
+      *
+      ** Initialise W#FLAG which will determine which spot trade
+      ** trade is being read (i.e. first or second)
+      *
+     C                     MOVE *BLANKS   W#FLAG  1
+      *
+     C           *LOVAL    SETLLGLIATJL1
+     C                     READ GLIATJL1                 62
+      *
+      *  Save transaction number
+     C                     MOVE ADNARR    WSNARR 30
+      *
+     C           *IN62     DOWEQ'0'
+      *
+      ** Set up Key list for GLIATJL2
+      *
+     C                     MOVE ADBREF    K#BREF
+     C                     MOVE ADNARR    K#NARR
+     C                     MOVE ADAFTP    K#AFTP
+      *
+     C           ADDRCR    IFEQ 'C'
+     C                     MOVE 'D'       K#DRCR
+     C                     ELSE
+     C                     MOVE 'C'       K#DRCR
+     C                     ENDIF
+      *
+      ** Check if there is an opposite spot trade account entry
+      *
+     C           KLIATA    CHAINGLIATJL2             63
+     C           *IN63     IFEQ '1'
+     C                     MOVE NARR,2    ADENAR
+     C                     ELSE
+      *
+      ** Check for the matching principal entry
+      *
+     C                     MOVE *BLANKS   W#WYES  1
+      *
+     C           KLIATB    SETLLGLIATJL2
+     C           KLIATB    READEGLIATJL2                 63
+      *
+     C           W#WYES    DOUEQ'Y'
+     C           *IN63     IFEQ '1'
+     C                     MOVE 'Y'       W#WYES
+     C                     ELSE
+     C           BDAFTP    IFEQ 'R'
+     C           BDDRCR    ANDEQK#DRCR
+     C           BDAFTP    OREQ 'G'
+     C           BDDRCR    ANDEQK#DRCR
+     C           BDAFTP    OREQ 'X'
+     C           BDDRCR    ANDEQK#DRCR
+     C                     MOVE 'Y'       W#WYES
+     C                     ELSE
+     C           KLIATB    READEGLIATJL2                 63
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           *IN63     IFEQ '0'
+     C           W#FLAG    IFEQ *BLANKS
+     C                     MOVE BDABRC    ADABRC
+      *
+      ** Retrieve internal customer for branch BDABRC of GLIATJL2
+      *
+     C                     CALL 'AOBRCHR1'
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BDABRC    PBRCA
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE A8BICN    ADACUS
+     C                     ENDIF
+      *
+     C                     MOVE ADACNO    ADACN0
+     C                     MOVE ADACN3    ADACCY
+     C                     MOVE ADACN4    ADACOD
+     C                     MOVE '01'      ADACSQ
+      *
+     C           ADABRC    IFEQ *BLANKS
+     C                     MOVE NARR,4    ADENAR
+     C                     ELSE
+      *
+      ** Save fields for second spot trade account
+      *
+     C                     EXSR SRSAVE
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE ADACNO    ADACN0
+     C                     MOVE S#ABRC    ADABRC
+     C                     MOVE S#ACUS    ADACUS
+     C                     MOVE ADACN3    ADACCY
+     C                     MOVE S#ACOD    ADACOD
+     C                     MOVE S#ACSQ    ADACSQ
+     C                     MOVE S#ENAR    ADENAR
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVE NARR,3    ADENAR
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     UPDATGLIATJ1
+     C                     READ GLIATJL1                 62
+      *
+     C           WSNARR    IFNE ADNARR
+     C                     MOVE ADNARR    WSNARR
+     C                     MOVE *BLANKS   W#FLAG
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSAVE  -  Save fields for second spot trade account         *
+      *  Called by: SRSPOT                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRSAVE    BEGSR
+      *
+      ** Define saving fields
+      *
+     C           *LIKE     DEFN ADABRC    S#ABRC
+     C           *LIKE     DEFN ADACUS    S#ACUS
+     C           *LIKE     DEFN ADACCY    S#ACCY
+     C           *LIKE     DEFN ADACOD    S#ACOD
+     C           *LIKE     DEFN ADACSQ    S#ACSQ
+     C           *LIKE     DEFN ADENAR    S#ENAR
+      *
+      ** Save fields
+      *
+     C                     MOVE ADABRC    S#ABRC
+     C                     MOVE ADACUS    S#ACUS
+     C                     MOVE ADACOD    S#ACOD
+     C                     MOVE ADACSQ    S#ACSQ
+     C                     MOVE ADENAR    S#ENAR
+      *
+      ** Update working flag
+      *
+     C                     MOVE 'Y'       W#FLAG
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREND   -  End Program                                       *
+      *  Called by: Main routine                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREND     BEGSR
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  File Exception/Error Handling Subroutine          *
+      *  Called by: Various                                           *
+      *  Calls    : DBERRCTL - DB Error Control                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     U7U8
+     C                     EXSR SREND
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  NARR
+*ACCNT_NOT_FOUND
+*SPOT_MATCH_ERR
+*PRIN_MATCH_ERR
+*PRIN_ACCT_NOT_FOUND

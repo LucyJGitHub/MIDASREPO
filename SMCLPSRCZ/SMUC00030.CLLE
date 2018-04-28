@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Correct SPIN and INTR in CLOANCL')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00030 - Correct SPIN and INTR in CLOANCL                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Last Amend No. BG26993            Date 26Jan10              */
+/*       Prev Amend No. 206257 *CREATE     Date 21Jun02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Renamed S206257C01                                */
+/*       206257  - Datapatch to update interest rate INTR and spread */
+/*                 indicator SPIN of certain risk loans in CLOANCL.  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Copy CLOANCL to template file. */
+             CPYF       FROMFILE(CLOANCL) TOFILE(SMU002PD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+             MONMSG     MSGID(CPF2817 CPF2909) EXEC(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(SMU00099) PARM('U')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* If program succssful then copy version of CLOANCL back. */
+             CPYF       FROMFILE(SMU002PD) TOFILE(CLOANCL) +
+                          MBROPT(*REPLACE)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

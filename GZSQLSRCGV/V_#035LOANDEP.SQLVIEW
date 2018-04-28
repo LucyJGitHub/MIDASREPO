@@ -1,0 +1,362 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#LOANDEP - Loan/Deposit/Funding                                     */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. CDL096             Date 22Sep14                        */
+/*       Prev Amend No. CDL094             Date 30May14                        */
+/*                      AR1092544          Date 01Mar13                        */
+/*                      AR964347           Date 21Dec12                        */
+/*                      CSF011             Date 12Sep11                        */
+/*                      CER049             Date 06Dec10                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      262336             Date 10Nov09                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CAP185             Date 21Apr06                        */
+/*                      BUG12250           Date 20Oct06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG7820            Date 31May06                        */
+/*                      CDL049             Date 07Jul06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CDL038             Date 10May05                        */
+/*                      BUG6164            Date 31Mar05                        */
+/*                      CDL033             Date 10Feb05                        */
+/*                      BUG6132            Date 28Feb05                        */
+/*                      BUG5401R           Date 03Feb05                        */
+/*                      BUG5404            Date 18Jan05                        */
+/*                      BUG5401            Date 07Jan05                        */
+/*                      CLE040             Date 05Jul04                        */
+/*                      BUG3035            Date 03Jun04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      CDL019             Date 03Feb04                        */
+/*                      CDL018             Date 03Feb04                        */
+/*                      CDL017             Date 03Feb04                        */
+/*                      CDL016             Date 03Feb04                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      BUG2336            Date 04May04                        */
+/*                      BUG1979            Date 22Apr04                        */
+/*                      BUG639             Date 16Mar04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CDL096 - Business Day Conventions on MM Deals.                        */
+/*                Also include fields for CDL094.                              */
+/*       CDL094 - Enhance  Receive Settlement Instructions (Recompile)         */
+/*       AR1092544 - Problem on list view - Customer Names                     */
+/*       AR964347 - 'Error retrieving branch for transaction' occurs in Java   */
+/*                   screen because of incorrect Join condition added by       */
+/*                   a fix. Removed fix for GEMS262336. (Child: AR964348)      */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER049 - Stamp Tax                                                    */
+/*       CRE073 - Interest Rate Rounding                                       */
+/*       262336 - Duplicate records shown for deals in which customer has two  */
+/*                branches found in GPGLCUSL file.                             */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to Midas Plus       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*       CAP185 - MQ Series Interface                                          */
+/*       BUG12250 - Unable to load SQLView                                     */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG7820 - FD-Screen-customer report and shortname                     */
+/*       CDL049 - Addition of a Reference Rate field (recompile)               */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CDL038 - Extended Deal Sub Type                                       */
+/*       BUG6164 - HKDVSD is needed to re-order subfile.                       */
+/*       CDL033 - Floating Rate CDs Issued (Recompile)                         */
+/*       BUG5401R-Performance enhancement (Reopened)                           */
+/*       BUG6132- Performance Enhancement OrderBy                              */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       BUG5401- Performance enhancement                                      */
+/*       CLE040 - Collateralised Lending Phase 2 (Recompile)                   */
+/*       BUG3035 - Error on calculation when a rate change is done             */
+/*                 (Recompile)                                                 */
+/*       CLE025 - Credit Lines                                                 */
+/*       CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans              */
+/*       CDL018 - Multiple Settlement Accounts on Loans/Deposit                */
+/*       CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep          */
+/*       CDL016 - Automatic Rollover of Fixed Term Loan/Deposit                */
+/*       BUG1912- SQL performance analysis required                            */
+/*       BUG2336- Change FHKMATD (formatted Maturity Date) to use              */
+/*                fields HKMDYY/HKMDMM/HKMDDD instead of HKMATD.               */
+/*       BUG1979- Result field not big enough caused SQL error.                */
+/*       BUG639 - Pad IPDM (Interest Payment Day in Month) with zero.          */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+   SELECT                                                                       :
+    HKRCID, HKDLTF, HKMLUP, HKCHTP, HKLCD,                                      :
+    HKLUID, HKPCDN, HKDADN, HKBKCD, HKCCY, HKCYDP, HKDDLT, HKDSTS,              :
+/***HKMTYP,*HKRBSI,*HKTYPE,*HKSTYP,*HKCSNM,*HKCNUM,*HKINTR,*HKBRCA,*************:             CDL038
+    HKMTYP, HKRBSI, HKTYPE, HKSTYP, HKCLAS, HKCSNM, HKCNUM, HKINTR, HKBRCA,     :             CDL038
+    HKDBRC, HKBKCY, HKBCDP, HKFEDF, HKCDRF, HKCDRP, HKLACT,                     :
+    HKDUSC, HKAOFR, HKROBY, HKSPRD, HKIIRT, HKIPFQ, HKICMT,                     :
+    HKIPDM, HKCPTI, HKCNTI, HKNGVI, HKMTAX, HKBSRC, HKDBSR,                     :
+    HKMDYY, HKMDMM, HKMDDD, HKNTCE, HKFCLY, HKBRAT, HKMMDI, HKDORM,             :
+    HKDORI, HKMORI, HKDCPI, HKMCPI, HKDOPM, HKDOPI,                             :
+    HKMOPI, HKDCRI, HKMCRI, HKDFAC, HKMFAO, HKSPEC, HKBOKC, HKRSTM,             :
+    HKRONS, HKRIBN, HKRIBA, HKPSTM, HKPONS, HKPIBN, HKPIBA, HKRCRN,             :
+    HKRCRA, HKRVNO, HKAWBN, HKAWBA, HKBENN, HKBENA, HKDTP1, HKDTP2,             :
+    HKDTP3, HKDTP4, HKDCHG, HKBTB1, HKBTB2, HKBTB3, HKBTB4, HKBTB5,             :
+    HKBTB6, HKORBR, HKPRFC, HKPOBR, HKROBR, HKDRID, HKDDMR, HKCVMR,             :
+    HKRDFC, HKFLID, HKFUID, HKAURO, HKIPDS, HKROFQ, HKCNNA, HKIMET,             :
+    HKINSA, HKINOS, HKWRPI, HKPTFR, HKFSRP, HKFSGN, HKFPRC, HKSTCY,             :
+    HKIC72, HKISCY, HKII72, HKRACD, HKFRNT, HKAFRT, HKREPA, HKTMST,             :
+    HKRTFC, HKFCGC, HKFCGD, HKFCMC, HKFCMD, HKFCMT, HKFTST,                     :
+    HKFRN1, HKFRN2, HKFRN3, HKFRN4, HKREPI, HKOMDT, HKBUSR, HKPRIN,             :
+    HKAUTH, HKTRTP, HKCOLF, HKOYLC, HKUSER, HKLQPR, HKLQPS,                     :
+    HKROLI, HKSOFD, HKBLKA,                                                     :             CDL016
+    HKPNPR,                                                                     :             CDL017
+    HKRMAC, HKPMAC,                                                             :             CDL018
+    HKFBRT,                                                                     :             CDL019
+    HKDN38,HKROBN,HKPOBN,HKPOCN,HKROCN,HKLNKN,HKPCTN,HKMCDH,HKRLDN,             :BUG6132
+    HKACSQ,HKORCM,HKMOPM,HKDLUP,HKTIME,HKTLUP,HKLDAT,HKBRKG,HKAMNP,             :BUG6132
+    HKDDND,HKNIPD,HKSLID,HKCAND,N.F1FCCU,N.F1FACT,N.F1FCNO,                     :BUG6132
+    N.F1TAX,N.F1PRIN,N.F1PDTE,N.F1AVBL,N.F1ADTE,N.F1SINT,N.F1IDTE,              :             CER049
+    N.F1DCCY,N.F1DBRC || N.F1DCST || N.F1DCCY || DIGITS(N.F1DACD) ||            :             CER049
+    DIGITS(N.F1DASC) AS F1DBAC, N.F1STAB,N.F1STAI,N.F1TAXE,                     :             CER049
+    HKDVSD,                                                                     :            BUG6164
+    DIGITS(HKDN38) AS PADHKDN38,                                                :
+****DIGITS(HKCNUM)*AS*PADHKCNUM,************************************************:             CSD027
+****CASE*WHEN*HKROBN*=*0*THEN*'*'*ELSE*DIGITS(HKROBN)*END*AS*PADHKROBN,*********:             CSD027
+****CASE*WHEN*HKPOBN*=*0*THEN*'*'*ELSE*DIGITS(HKPOBN)*END*AS*PADHKPOBN,*********:             CSD027
+****CASE*WHEN*HKPOCN*=*0*THEN*'*'*ELSE*DIGITS(HKPOCN)*END*AS*PADHKPOCN,*********:             CSD027
+****CASE*WHEN*HKROCN*=*0*THEN*'*'*ELSE*DIGITS(HKROCN)*END*AS*PADHKROCN,*********:             CSD027
+           HKCNUM  AS PADHKCNUM,                                                :             CSD027
+    CASE WHEN HKROBN ='' THEN ' ' ELSE        HKROBN  END AS PADHKROBN,         :             CSD027
+    CASE WHEN HKPOBN ='' THEN ' ' ELSE        HKPOBN  END AS PADHKPOBN,         :             CSD027
+    CASE WHEN HKPOCN ='' THEN ' ' ELSE        HKPOCN  END AS PADHKPOCN,         :             CSD027
+    CASE WHEN HKROCN ='' THEN ' ' ELSE        HKROCN  END AS PADHKROCN,         :             CSD027
+    CASE WHEN HKLNKN = 0 THEN ' ' ELSE DIGITS(HKLNKN) END AS PADHKLNKN,         :
+    CASE WHEN HKPCTN = 0 THEN ' ' ELSE DIGITS(HKPCTN) END AS PADHKPCTN,         :
+****CASE*WHEN*HKMCDH*=*0*THEN*'*'*ELSE*DIGITS(HKMCDH)*END*AS*PADHKMCDH,*********:             CSD027
+    CASE WHEN HKMCDH ='' THEN ' ' ELSE        HKMCDH  END AS PADHKMCDH,         :             CSD027
+    CASE WHEN HKRLDN = 0 THEN ' ' ELSE DIGITS(HKRLDN) END AS PADHKRLDN,         :
+    CASE WHEN HKFCLY = 0 THEN ' ' ELSE DIGITS(HKFCLY) END AS PADHKFCLY,         :
+    CASE WHEN HKACSQ = 0 THEN ' ' ELSE DIGITS(HKACSQ) END AS PADHKACSQ,         :
+    DIGITS(HKORCM) AS PADHKORCM,                                                :
+    DIGITS(HKMOPM) AS PADHKMOPM,                                                :
+    DIGITS(HKDLUP) AS PADHKDLUP,                                                :
+    TIME(SUBSTRING(DIGITS(HKTIME),1,2) CONCAT '.' CONCAT                        :
+         SUBSTRING(DIGITS(HKTIME),3,2) CONCAT '.' CONCAT                        :
+         SUBSTRING(DIGITS(HKTIME),5,2)) AS FHKTIME,                             :
+    TIME(SUBSTRING(DIGITS(HKTLUP),1,2) CONCAT '.' CONCAT                        :
+         SUBSTRING(DIGITS(HKTLUP),3,2) CONCAT '.' CONCAT                        :
+         SUBSTRING(DIGITS(HKTLUP),5,2)) AS FHKTLUP,                             :
+    DATE(SUBSTRING(DIGITS(HKLDAT),1,4) CONCAT '-' CONCAT                        :
+         SUBSTRING(DIGITS(HKLDAT),5,2) CONCAT '-' CONCAT                        :
+         SUBSTRING(DIGITS(HKLDAT),7,2)) AS FHKLDAT,                             :
+    CASE WHEN HKYLUP > 70 THEN ('19' CONCAT DIGITS(HKYLUP)) ELSE                :
+              ('20' CONCAT DIGITS(HKYLUP)) END AS FHKYLUP,                      :
+    CASE WHEN HKFSRP = 0 THEN NULL ELSE HKFSRP END AS NHKFSRP,                  :
+/***CASE*WHEN*HKIPDM*=*0*THEN*NULL*ELSE*HKIPDM*END*AS*NHKIPDM,******************:             BUG639
+    CASE WHEN HKIPDM = 0 THEN NULL ELSE DIGITS(HKIPDM) END AS NHKIPDM,          :             BUG639
+    CASE WHEN HKBKCY = '   ' THEN NULL ELSE HKBCDP END AS NHKBCDP,              :
+    CASE WHEN HKNTCE = 0 OR HKNTCE = -999 THEN NULL ELSE                        :
+    DEC(HKNTCE) END AS NHKNTCE,                                                 :
+    CASE HKBRKG WHEN 999999999999999 THEN NULL ELSE                             :
+**********DEC(HKBRKG*C1.SCALING,15,4) END AS SHKBRKG,                           :            BUG1979
+****DEC(HKBRKG*C1.SCALING,31,4) END AS SHKBRKG,*********************************:BUG1979,BUG5401
+    HKBRKG END AS SHKBRKG,                                                      :BUG5401
+****CASE HKBRKG WHEN 999999999999999 THEN NULL ELSE*****************************:BUG5401
+**********DEC(HKBRKG*C1.SCALING*C1.RATE,15,4) END AS "BSHKBRKG",                :            BUG1979
+****DEC(HKBRKG*C1.SCALING*C1.RATE,31,4) END AS "BSHKBRKG",**********************:BUG1979,BUG5401
+    ABS(HKAMNP) AS ABSHKAMNP,                                                   :
+    CASE WHEN HKDTDD=0 AND HKDTMM=0 AND HKDTYY=0 THEN NULL ELSE                 :
+    DATE(CAST (DIGITS(HKDTDD) AS CHAR(2)) CONCAT '.' CONCAT CAST                :
+    (DIGITS(HKDTMM) AS CHAR (2)) CONCAT '.' CONCAT CAST (DIGITS(HKDTYY)         :
+    AS CHAR(4))) END AS FHKDTDT,                                                :
+    CASE WHEN HKIADD=0 AND HKIAMM=0 AND HKIAYY=0 THEN NULL ELSE                 :
+    DATE(CAST (DIGITS(HKIADD) AS CHAR(2)) CONCAT '.' CONCAT CAST                :
+    (DIGITS(HKIAMM) AS CHAR (2)) CONCAT '.' CONCAT CAST (DIGITS(HKIAYY)         :
+    AS CHAR(4))) END AS FHKIADT,                                                :
+    CASE WHEN HKDVSD=0 THEN NULL ELSE DATE(HKDVSD+719892) END AS FHKDVSD,       :
+    CASE WHEN HKDDND=0 THEN NULL ELSE DATE(HKDDND+719892) END AS FHKDDND,       :
+    CASE WHEN HKNIPD=0 THEN NULL ELSE DATE(HKNIPD+719892) END AS FHKNIPD,       :
+    CASE WHEN HKSLID=0 THEN NULL ELSE DATE(HKSLID+719892) END AS FHKSLID,       :
+**********CASE WHEN HKMATD=0 THEN NULL ELSE DATE(HKMATD+719892) END AS FHKMATD, :            BUG2336
+    CASE WHEN HKMDYY=0 AND HKMDMM=0 AND HKMDYY=0 THEN NULL ELSE                 :            BUG2336
+    DATE(CAST (DIGITS(HKMDDD) AS CHAR(2)) CONCAT '.' CONCAT CAST                :            BUG2336
+    (DIGITS(HKMDMM) AS CHAR (2)) CONCAT '.' CONCAT CAST (DIGITS(HKMDYY)         :            BUG2336
+    AS CHAR(4))) END AS FHKMATD,                                                :            BUG2336
+    CASE WHEN HKOMDT=0 THEN NULL ELSE DATE(HKOMDT+719892) END AS FHKOMDT,       :
+    CASE WHEN HKCAND=0 THEN NULL ELSE DATE(HKCAND+719892) END AS FHKCAND,       :             CDL017
+**********DEC(HKAMNP*C1.SCALING,15,4) AS "SHKAMNP",                             :            BUG1979
+**********DEC(HKAMNP*C1.SCALING*C1.RATE,15,4) AS "BSHKAMNP",                    :            BUG1979
+**********DEC(ABS(HKMTTI)*C1.SCALING,15,4) AS "SHKMTTI",                        :            BUG1979
+**********DEC(ABS(HKMTTI)*C1.SCALING*C1.RATE,15,4) AS "BSHKMTTI",               :            BUG1979
+**********DEC(HKIMAT*C1.SCALING,15,4) AS "SHKIMAT",                             :            BUG1979
+**********DEC(HKIMAT*C1.SCALING*C1.RATE,15,4) AS "BSHKIMAT",                    :            BUG1979
+**********DEC(HKRBAT*C1.SCALING,15,4) AS "SHKRBAT",                             :            BUG1979
+**********DEC(HKRBAT*C1.SCALING*C1.RATE,15,4) AS "BSHKRBAT",                    :            BUG1979
+**********DEC(HKORDA*C1.SCALING,15,4) AS "SHKORDA",                             :            BUG1979
+**********DEC(HKORDA*C1.SCALING*C1.RATE,15,4) AS "BSHKORDA",                    :            BUG1979
+**********DEC(HKFCGA*C1.SCALING,15,4) AS "SHKFCGA",                             :            BUG1979
+**********DEC(HKFCGA*C1.SCALING*C1.RATE,15,4) AS "BSHKFCGA",                    :            BUG1979
+**********DEC(HKFCMA*C1.SCALING,15,4) AS "SHKFCMA",                             :            BUG1979
+**********DEC(HKFCMA*C1.SCALING*C1.RATE,15,4) AS "BSHKFCMA",                    :            BUG1979
+**********DEC(HKPENA*C1.SCALING,15,4) AS "SHKPENA",                             :            BUG1979
+**********DEC(HKPENA*C1.SCALING*C1.RATE,15,4) AS "BSHKPENA",                    :            BUG1979
+**********DEC(HKCOLA*C1.SCALING,15,4) AS "SHKCOLA",                             :            BUG1979
+**********DEC(HKCOLA*C1.SCALING*C1.RATE,15,4) AS "BSHKCOLA",                    :            BUG1979
+**********DEC(HKFCMT*C1.SCALING,15,4) AS "SHKFCMT",                             :            BUG1979
+**********DEC(HKFCMT*C1.SCALING*C1.RATE,15,4) AS "BSHKFCMT",                    :            BUG1979
+**********DEC(HKFCGT*C1.SCALING,15,4) AS "SHKFCGT",                             :            BUG1979
+**********DEC(HKFCGT*C1.SCALING*C1.RATE,15,4) AS "BSHKFCGT",                    :            BUG1979
+****DEC(HKAMNP*C1.SCALING,31,4) AS "SHKAMNP",***********************************:BUG1979,BUG5401
+    HKAMNP AS SHKAMNP,                                                          :BUG5401
+****DEC(HKAMNP*C1.SCALING*C1.RATE,31,4) AS "BSHKAMNP",**************************:BUG1979,BUG5401
+****DEC(ABS(HKMTTI)*C1.SCALING,31,4) AS "SHKMTTI",******************************:BUG1979,BUG5401
+    ABS(HKMTTI) AS SHKMTTI,                                                     :BUG5401
+****DEC(ABS(HKMTTI)*C1.SCALING*C1.RATE,31,4) AS "BSHKMTTI",*********************:BUG1979,BUG5401
+****DEC(HKIMAT*C1.SCALING,31,4) AS "SHKIMAT",***********************************:BUG1979,BUG5401
+    HKIMAT AS SHKIMAT,                                                          :BUG5401
+****DEC(HKIMAT*C1.SCALING*C1.RATE,31,4) AS "BSHKIMAT",**************************:BUG1979,BUG5401
+****DEC(HKRBAT*C1.SCALING,31,4) AS "SHKRBAT",***********************************:BUG1979,BUG5401
+    HKRBAT AS SHKRBAT,                                                          :BUG5401
+****DEC(HKRBAT*C1.SCALING*C1.RATE,31,4) AS "BSHKRBAT",**************************:BUG1979,BUG5401
+****DEC(HKORDA*C1.SCALING,31,4) AS "SHKORDA",***********************************:BUG1979,BUG5401
+    HKORDA AS SHKORDA,                                                          :BUG5401
+****DEC(HKORDA*C1.SCALING*C1.RATE,31,4) AS "BSHKORDA",**************************:BUG1979,BUG5401
+****DEC(HKFCGA*C1.SCALING,31,4) AS "SHKFCGA",***********************************:BUG1979,BUG5401
+    HKFCGA AS SHKFCGA,                                                          :BUG5401
+****DEC(HKFCGA*C1.SCALING*C1.RATE,31,4) AS "BSHKFCGA",**************************:BUG1979,BUG5401
+****DEC(HKFCMA*C1.SCALING,31,4) AS "SHKFCMA",***********************************:BUG1979,BUG5401
+    HKFCMA AS SHKFCMA,                                                          :BUG5401
+****DEC(HKFCMA*C1.SCALING*C1.RATE,31,4) AS "BSHKFCMA",**************************:BUG1979,BUG5401
+****DEC(HKPENA*C1.SCALING,31,4) AS "SHKPENA",***********************************:BUG1979,BUG5401
+    HKPENA AS SHKPENA,                                                          :BUG5401
+****DEC(HKPENA*C1.SCALING*C1.RATE,31,4) AS "BSHKPENA",**************************:BUG1979,BUG5401
+****DEC(HKCOLA*C1.SCALING,31,4) AS "SHKCOLA",***********************************:BUG1979,BUG5401
+    HKCOLA AS SHKCOLA,                                                          :BUG5401
+****DEC(HKCOLA*C1.SCALING*C1.RATE,31,4) AS "BSHKCOLA",**************************:BUG1979,BUG5401
+****DEC(HKBCAM*C1.SCALING,31,4) AS "SHKBCAM",***********************************:CLE025 ,BUG5401
+    HKBCAM AS SHKBCAM,                                                          :BUG5401
+****DEC(HKBCAM*C1.SCALING*C1.RATE,31,4) AS "BSHKBCAM",**************************:CLE025 ,BUG5401
+****DEC(HKFCMT*C1.SCALING,31,4) AS "SHKFCMT",***********************************:BUG1979,BUG5401
+    HKFCMT AS SHKFCMT,                                                          :BUG5401
+****DEC(HKFCMT*C1.SCALING*C1.RATE,31,4) AS "BSHKFCMT",**************************:BUG1979,BUG5401
+****DEC(HKFCGT*C1.SCALING,31,4) AS "SHKFCGT",***********************************:BUG1979,BUG5401
+    HKFCGT AS SHKFCGT,                                                          :BUG1979
+****DEC(HKFCGT*C1.SCALING*C1.RATE,31,4) AS "BSHKFCGT",**************************:BUG1979,BUG5401
+****CASE*WHEN*N.F1FCCU*=*0*THEN*'*'*ELSE*DIGITS(N.F1FCCU)*END*AS*PADF1FCCU,*****:      CLE025 CSD027
+    CASE WHEN N.F1FCCU ='' THEN ' ' ELSE        N.F1FCCU  END AS PADF1FCCU,     :             CSD027
+    CASE WHEN N.F1FACT = 0 THEN ' ' ELSE DIGITS(N.F1FACT) END AS PADF1FACT,     :             CLE025
+    CASE WHEN N.F1FCNO = 0 THEN ' ' ELSE DIGITS(N.F1FCNO) END AS PADF1FCNO,     :             CLE025
+****A8ZONE AS CUSTZONE, V_GPGLCUSL.* *******************************************:BUG5401
+    A8ZONE AS CUSTZONE,                                                         :BUG5401
+    CGGLOB, CGCSSN, CGRNM, CGRTN, CGICD, CGACO, CGCNCZ, CGCOLC, CGBRCD, CGCUST  :BUG5401
+    , CGZONE                                                                    :BUG5401R
+****,*BBCRNM*AS*CLRNM***********************************************************:  BUG7820 AR1092544
+    , CGLRNM AS CLRNM                                                           :          AR1092544
+    , CGLRNM, CGLRTN                                                            :             CER043
+***,HKISDT,*HKFMDT,*HKORDN******************************************************:      CER020 CRE073
+   ,HKISDT, HKFMDT, HKORDN, HKCNSP, HKRDMT, HKRDFD                              :             CRE073
+   ,HKRBB1, HKRBB2, HKRBB3, HKRBB4, HKRBB5, HKRBB6                              :             CDL096
+   ,HKC1PC, HKC2PC, HKC3PC, HKC4PC, HKC5PC, HKC6PC, HKC7PC, HKC8PC              :             CDL096
+   ,HKC9PC, HKC0PC, HKPYDC, HKAMTC                                              :             CDL096
+   FROM GZMMDELDPP                                                              :
+   LEFT JOIN GZDLDLDCQD AS N ON N.F1DLNO = DIGITS(HKDN38) AND HKBRCA = N.F1BRCA :             CLE025
+   LEFT JOIN GZSDBRCHPD ON HKBRCA = A8BRCD                                      :
+***LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(HKCNUM)**********:BUG1912
+***LEFT JOIN GPGLCUSL V_GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = HKCNUM ********:BUG1912,BUG5401
+***LEFT*JOIN*GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*HKCNUM*;******************:BUG5401     BUG7820
+***LEFT*JOIN*GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*HKCNUM********************:  BUG7820 AR1092544
+**************************AND*CGBRCD*=*HKBRCA***********************************:    262336 AR964347
+***LEFT JOIN V_GLOBRATE C1 ON C1.CCY=HKCCY;*************************************:BUG5401
+********************************************************************************
+***LEFT*JOIN*GZSDCUSTPD*ON*BBCUST*=*DIGITS(HKCNUM)*AND*BBBRCD*=*HKBRCA*;********:   BUG7820 BUG12250
+***LEFT*JOIN*GZSDCUSTPD*ON*BBCUST*=*HKCNUM*AND*BBBRCD*=*HKBRCA*;****************: BUG12250 AR1092544
+   LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = HKCNUM ;                  :          AR1092544
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (FHKDTDT IS 'Deal                Transaction         Date',                 :
+     FHKIADT IS 'Interest            Accrual             Date');                :
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (FHKDTDT TEXT IS 'Deal Transaction Date',                                   :
+     FHKIADT TEXT IS 'Interest Accrual Date');                                  :
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADHKDN38  AS HKDN38     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADF1FCCU  AS FCCU       USING GZDLDLDCQD                      :             CLE025
+ * DESCRIBEFIELD PADF1FACT  AS FACT       USING GZDLDLDCQD                      :             CLE025
+ * DESCRIBEFIELD PADF1FCNO  AS FCNO       USING GZDLDLDCQD                      :             CLE025
+ * DESCRIBEFIELD PADHKCNUM  AS HKCNUM     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKROBN  AS HKROBN     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKPOBN  AS HKPOBN     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKPOCN  AS HKPOCN     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKROCN  AS HKROCN     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKLNKN  AS HKLNKN     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKPCTN  AS HKPCTN     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKMCDH  AS HKMCDH     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKRLDN  AS HKRLDN     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKFCLY  AS HKFCLY     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD NHKBCDP    AS HKBCDP     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD NHKIPDM    AS HKIPDM     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD NHKNTCE    AS HKNTCE     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD SHKBRKG    AS HKBRKG     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKBRKG   AS HKBRKG     USING GZMMDELDPP**********************:BUG5401
+ * DESCRIBEFIELD ABSHKAMNP  AS HKAMNP     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD FHKDVSD    AS HKDVSD     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD FHKDDND    AS HKDDND     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD FHKNIPD    AS HKNIPD     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD FHKSLID    AS HKSLID     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD FHKMATD    AS HKMATD     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD FHKOMDT    AS HKOMDT     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD FHKLDAT    AS HKLDAT     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD SHKAMNP    AS HKAMNP     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKMOPM  AS HKMOPM     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKORCM  AS HKORCM     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKACSQ  AS HKACSQ     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD PADHKDLUP  AS HKDLUP     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD FHKTIME    AS HKTIME     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD FHKTLUP    AS HKTLUP     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD FHKYLUP    AS HKYLUP     USING GZMMDELDPP                      :
+ * DESCRIBEFIELD NHKFSRP    AS HKFSRP     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKAMNP   AS HKAMNP     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD SHKMTTI    AS HKMTTI     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKMTTI   AS HKMTTI     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD SHKIMAT    AS HKIMAT     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKIMAT   AS HKIMAT     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD SHKRBAT    AS HKRBAT     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKRBAT   AS HKRBAT     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD SHKORDA    AS HKORDA     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKORDA   AS HKORDA     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD SHKFCGA    AS HKFCGA     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKFCGA   AS HKFCGA     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD SHKFCMA    AS HKFCMA     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKFCMA   AS HKFCMA     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD SHKPENA    AS HKPENA     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKPENA   AS HKPENA     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD SHKCOLA    AS HKCOLA     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKCOLA   AS HKCOLA     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD SHKBCAM    AS HKBCAM     USING GZMMDELDPP                      :             CLE025
+***DESCRIBEFIELD BSHKBCAM   AS HKBCAM     USING GZMMDELDPP (BASECCY)************:CLE025,BUG5401
+ * DESCRIBEFIELD SHKFCMT    AS HKFCMT     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKFCMT   AS HKFCMT     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD SHKFCGT    AS HKFCGT     USING GZMMDELDPP                      :
+***DESCRIBEFIELD BSHKFCGT   AS HKFCGT     USING GZMMDELDPP (BASECCY)************:BUG5401
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Loan/deposit/CD issued - GZMMDELDPP      ';                     :
+                                                                                :

@@ -1,0 +1,225 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SC Data replication processing')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000610 - Data Replication Processing                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CSC022             Date 24Feb04              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. CSC011  *CREATE    Date 18Sep01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC022 - Commitment Control Changes for MidasPlus           */
+/*       CSC011 - 24x7 Midas Availability                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&BTCHNO)
+ 
+             DCL        VAR(&BTCHNO) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SCJSN) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&JSEQN) TYPE(*DEC) LEN(10)
+             DCL        VAR(&JSEQA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSPREF) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DARCVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MAINXLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SCCMTJOB) TYPE(*CHAR) LEN(256)                               /*CSC022*/
+             DCL        VAR(&RETCD) TYPE(*CHAR) LEN(7)                                    /*CSC022*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CSC022*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CSC022*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CSC022*/
+             DCL        VAR(&CSC022) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
+             DCL        VAR(&CMTNUM) TYPE(*DEC) LEN(3 0)                                  /*CSC022*/
+             DCL        VAR(&CMTJOB1) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB2) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB3) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB4) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB5) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB6) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB7) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB8) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB9) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB10) TYPE(*CHAR) LEN(10)                                /*CSC022*/
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTSKP) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+                                                                                          /*CSC022*/
+             CHGVAR     VAR(&CSC022) VALUE(' ')                                           /*CSC022*/
+             CHGVAR     VAR(&RETCD) VALUE('       ')                                      /*CSC022*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CSC022*/
+             CHGVAR     VAR(&SAR) VALUE('CSC022')                                         /*CSC022*/
+                                                                                          /*CSC022*/
+             CALL       PGM(AOSARDR0) PARM(&RETCD &OPTN &SAR &SCSARD)                     /*CSC022*/
+                                                                                          /*CSC022*/
+             IF         COND(&RETCD *EQ '       ') THEN(DO)                               /*CSC022*/
+                 CHGVAR     VAR(&CSC022) VALUE('Y')                                       /*CSC022*/
+             RTVDTAARA  DTAARA(SCCMTJOB (1 256)) RTNVAR(&SCCMTJOB)                        /*CSC022*/
+             CHGVAR     VAR(&CMTNUM) VALUE(%SST(&SCCMTJOB 1 3))                           /*CSC022*/
+             CHGVAR     VAR(&CMTJOB1) VALUE(%SST(&SCCMTJOB 4 10))                         /*CSC022*/
+             CHGVAR     VAR(&CMTJOB2) VALUE(%SST(&SCCMTJOB 14 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB3) VALUE(%SST(&SCCMTJOB 24 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB4) VALUE(%SST(&SCCMTJOB 34 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB5) VALUE(%SST(&SCCMTJOB 44 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB6) VALUE(%SST(&SCCMTJOB 54 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB7) VALUE(%SST(&SCCMTJOB 64 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB8) VALUE(%SST(&SCCMTJOB 74 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB9) VALUE(%SST(&SCCMTJOB 84 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB10) VALUE(%SST(&SCCMTJOB 94 10))                       /*CSC022*/
+                                                                                          /*CSC022*/
+             RTVJOBA    JOB(&JOBNAME)                                                     /*CSC022*/
+             IF         COND((&CMTNUM *GT 0) *AND (&CMTJOB1 *EQ +
+                          &JOBNAME)) THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 1) *AND (&CMTJOB2 *EQ +
+                          &JOBNAME)) THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 2) *AND (&CMTJOB3 *EQ +
+                          &JOBNAME)) THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 3) *AND (&CMTJOB4 *EQ +
+                          &JOBNAME)) THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 4) *AND (&CMTJOB5 *EQ +
+                          &JOBNAME)) THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 5) *AND (&CMTJOB6 *EQ +
+                          &JOBNAME)) THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 6) *AND (&CMTJOB7 *EQ +
+                          &JOBNAME)) THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 7) *AND (&CMTJOB8 *EQ +
+                          &JOBNAME)) THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 8) *AND (&CMTJOB9 *EQ +
+                          &JOBNAME)) THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 9) *AND (&CMTJOB10 *EQ +
+                          &JOBNAME)) THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+                                                                                          /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+                                                                                          /*CSC022*/
+                                                                                          /*CSC022*/
+             CHGJOB     SWS(00000000)
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+ 
+/** Retrieve system prefix */
+ 
+             RTVDTAARA  DTAARA(SC24X7 (1 2)) RTNVAR(&SYSPREF)
+             CHGVAR     VAR(&JLIB) VALUE(&SYSPREF *CAT 'JLIB')
+             CHGVAR     VAR(&MAINXLIB) VALUE(&SYSPREF *CAT 'XLIB')
+ 
+/** Allocate the file SCJSNxPD. If this is locked, program is */
+/** already active and therefore this program should terminate     */
+ 
+             CHGVAR     VAR(&SCJSN) VALUE('SCJSN' *CAT &BTCHNO *CAT 'PD')
+             ALCOBJ     OBJ((&SCJSN *FILE *EXCLRD)) WAIT(30)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+             SNDPGMMSG  MSG('SCC000610 - Attempt to start +
+                          Replication batch number ' *CAT &BTCHNO +
+                          *CAT ' has failed. Probable cause: +
+                          process is active already.') +
+                          TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                          GOTO       CMDLBL(END)
+             ENDDO
+ 
+             SNDPGMMSG  MSG('SCC000610 - Replication batch number ' +
+                          *CAT &BTCHNO *CAT ' has started') +
+                          TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+ 
+             CHGVAR     VAR(&RTCD) VALUE('          ')
+             CALL       PGM(SC000500) PARM(&RTCD &BTCHNO &JSEQA)
+             IF         COND(&RTCD *NE '          ') THEN(GOTO +
+                        CMDLBL(ABNOR))
+ 
+/** Check if journal exists. If journal sequence  */
+/** does not exist, set to restart at first entry */
+ 
+             RTVDTAARA  DTAARA(SCDRSTAT (26 10)) RTNVAR(&DARCVR)
+             CHGVAR     VAR(&JSEQN) VALUE(&JSEQA)
+             RTVJRNE    JRN(&JLIB/ICJRN) RCVRNG(&JLIB/&DARCVR) +
+                          FROMENT(&JSEQN) TOENT(&JSEQN)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+                CHGVAR     VAR(&JSEQN) VALUE(0)
+                RTVJRNE    JRN(&JLIB/ICJRN) FROMENT(*FIRST) +
+                           TOENT(*FIRST) RTNSEQNBR(&JSEQN) +
+                           RTNRCV(&DARCVR)
+                CHGDTAARA  DTAARA(SCDRSTAT (26 10)) VALUE(&DARCVR)
+                SNDPGMMSG  MSG('SCC000610 - Journal sequence for batch +
+                             number ' *CAT &BTCHNO *CAT ' cannot be +
+                             determined') TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+                CHGVAR     VAR(&JSEQN) VALUE(&JSEQN - 1)
+             ENDDO
+ 
+             CHGVAR     VAR(&JSEQN) VALUE(&JSEQN + 1)
+ 
+/** Call SC000610 to process journal entries received */
+ 
+             CHGVAR     VAR(&JSEQA) VALUE(&JSEQN)
+             CHGDTAARA  DTAARA(LDA (1 1)) VALUE(&BTCHNO)
+             CALL       PGM(SC000610) PARM(&JSEQA &BTCHNO)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                           CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(ENDMSG)
+ 
+/** Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             IF         COND((&CSC022 *NE 'Y') *OR (&CSC022 *EQ 'Y' +
+                          *AND &CMTSKP *NE 'Y')) THEN(DO)                                 /*CSC022*/
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO                                                                        /*CSC022*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000610 ended abnormally - see joblog') +
+                          TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End program */
+ 
+ ENDMSG:     SNDPGMMSG  MSG('SCC000610 - Replication batch number ' +
+                          *CAT &BTCHNO *CAT ' is now terminating') +
+                          TOMSGQ(MOPERQ &MAINXLIB/SC24X7Q)
+ 
+ END:        DLCOBJ     OBJ((&SCJSN *FILE *EXCLRD))
+             RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM

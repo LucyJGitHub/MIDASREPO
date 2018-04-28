@@ -1,0 +1,506 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Portfolio Cost Calculation')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PMZPCT - PORTFOLIO COST CALCULATION                          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM004             Date 07Feb96               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CPM004 - Bank Portfolios                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     FPMPORTLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FPMHSEXPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     E****************************************************************
+     E/COPY ZSRSRC,ZPOWERZ1
+     E                    CYCD      200  3
+     E                    SPRT      200 13 8
+     E                    MDIN      200  1
+     E                    NBDP      200  1 0
+     E*
+     E                    PRTK      200 10
+     E                    PRTD      200  3
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     I*
+     I** Input parameters on call to AOPLCSR1
+     II@PARM      DS                            256
+     I                                        1   1 I#PORS
+     I                                        2   5 I#R997
+     I                                        6  15 I#CUST
+     I                                       16  18 I#BRCA
+     I                                       19  20 I#BOOK
+     I                                       21  24 I#PTFR
+     I                                       25  34 I#CPGM
+     I*
+     I** Output parameters on call to AOPLCSR1
+     IO@PARM      DS                            256
+     I                                        1   2 O#BOOK
+     I                                        3   6 O#PTFR
+     I                                        7  12 O#BICN
+     I                                       13  22 O#CRNM
+     I                                       23  24 O#ACOF
+     I            DS
+     I                                        1  10 ##PRTK
+     I**********                              1   60##BICN                                    CSD027
+     I                                        1   6 ##BICN                                    CSD027
+     I                                        7  10 ##PTFR
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     ILDA         DS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDPLCS    E DSSDPLCSPD
+     I**  SD Portfolio Management Customer details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I**  Currencies details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Long data structure
+     I*
+     C**************************************************************************
+      /SPACE 5
+     C**********************************************************************
+     C*
+     C* COPYRIGHT
+     C                     MOVEA##CPY     ##CPY2 80
+      *
+      * Parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ##BRCH  3        Branch
+     C                     PARM           ##BOOK  2        Book
+     C                     PARM           ##CCY   3        Currency
+     C                     PARM           ##R997  4        '9997' Ref
+     C                     PARM           ##IDAT  50       In Date
+     C                     PARM           ##IAMT 150       In Amount
+     C                     PARM           ##IRAT 138       In Rate
+     C                     PARM           ##IMDI  1        In M/D Ind
+     C                     PARM           ##OAMT 150       Out Amount
+     C                     PARM           ##ORAT 138       Out Rate
+     C                     PARM           ##OMDI  1        Out M/D Ind
+     C                     PARM           ##OPTR  4        Out Port.Ref.
+     C                     PARM           ##OPTC  3        Out Port.Ccy.
+     C                     PARM           ##RETC  6
+      *
+      **  Terminate program
+      *
+     C           ##RETC    IFEQ '*CLOSE'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+      *
+      ** Initialize output
+      *
+     C                     Z-ADD0         ##OAMT
+     C                     Z-ADD0         ##ORAT
+     C                     MOVEL*BLANK    ##OMDI
+     C                     MOVEL*BLANK    ##OPTR
+     C                     MOVEL*BLANK    ##OPTC
+      *
+      ** Initial Processing
+      *
+     C           ##INIT    IFNE 'Y'
+     C                     EXSR INIT
+     C                     END
+      *
+      ** Access Customer Details
+      *
+     C                     EXSR CSTDET
+      *
+      ** If not a portfolio customer, then exit
+      *
+     C           ##PORC    IFNE 'Y'
+     C                     RETRN
+     C                     END
+      *
+      ** Determine 'In Currency' details
+      *
+     C                     EXSR DETICY
+      *
+      ** Access Portfolio Details
+      *
+     C                     EXSR PORDET
+      *
+      ** Determine Out Rate / Multiply/Divide Indicator
+      *
+     C           ##IRAT    IFEQ *ZERO
+     C                     EXSR DETORT
+     C                     ELSE
+     C                     Z-ADD##IRAT    ##ORAT
+     C                     MOVE ##IMDI    ##OMDI
+     C                     END
+      *
+      **  Calculate Cost in Portfolio Currency
+      *
+     C                     EXSR CALPCT
+      *
+      ** Out Portfolio Reference and Portfolio Currency
+      *
+     C                     MOVE ##PTFR    ##OPTR
+     C                     MOVE PNPTCY    ##OPTC
+      *
+      ** Return
+      *
+     C                     RETRN
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  DETICY - Determine 'In Currency' details                     *
+      *                                                               *
+      *****************************************************************
+     C           DETICY    BEGSR
+      *
+      ** Look up currency
+      *
+     C                     Z-ADD1         B
+     C           ##CCY     LOKUPCYCD,B                   99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 11 *
+     C                     MOVEL##CCY     DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADDSPRT,B    #CSPRT 138
+     C                     MOVELMDIN,B    #CMDIN  1
+     C                     Z-ADDNBDP,B    #CNBDP  10
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  DETORT - Determine Out Rate                                  *
+      *                                                               *
+      *****************************************************************
+     C           DETORT    BEGSR
+      *
+      ** Key lists
+      *
+     C           KPMHSE    KLIST
+     C                     KFLD           ##RCCY  3
+     C                     KFLD           ##IDAT
+     C           KPMHSP    KLIST
+     C                     KFLD           ##RCCY
+      *
+      ** Get historic rate for 'In Currency' at, or prior to, 'In date'
+      *
+     C                     MOVEL##CCY     ##RCCY
+     C           KPMHSE    SETGTPMHSEXPD
+     C           KPMHSP    REDPEPMHSEXPD                 99*
+      *
+      ** If not found, use spot rate
+      *
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD#CSPRT    Q8SPOT
+     C                     MOVE #CMDIN    Q8MDV1
+     C                     Z-ADD#CNBDP    Q8CDP
+     C                     END
+     C*
+     C**  'FROM' details for 'In Currency'
+     C*
+     C                     Z-ADDQ8SPOT    ZRATEF
+     C                     MOVE Q8MDV1    ZMDINF
+     C                     Z-ADDQ8CDP     ZCDPF
+     C                     MOVE ##CCY     ZCCYF
+      *
+      ** Get historic rate for portfolio ccy at, or prior to, 'In date'
+      *
+     C                     MOVELPNPTCY    ##RCCY
+     C           KPMHSE    SETGTPMHSEXPD
+     C           KPMHSP    REDPEPMHSEXPD                 99*
+      *
+      ** If not found, use spot rate
+      *
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD#PSPRT    Q8SPOT
+     C                     MOVE #PMDIN    Q8MDV1
+     C                     Z-ADD#PNBDP    Q8CDP
+     C                     END
+     C*
+     C**  'TO' details for portfolio currency
+     C*
+     C                     Z-ADDQ8SPOT    ZRATET
+     C                     MOVE Q8MDV1    ZMDINT
+     C                     Z-ADDQ8CDP     ZCDPT
+     C                     MOVE PNPTCY    ZCCYT
+      *
+      ** Calculate Cross Rate between In Currency and Portfolio Currency
+      *
+     C                     Z-ADD0         ZAMTF
+     C                     EXSR ZCCYCN
+     C*
+     C                     Z-ADDZCRSRT    ##ORAT
+     C                     MOVE ZCRSMD    ##OMDI
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  CALPCT - Calculate Cost in Portfolio Currency                *
+      *                                                               *
+      *****************************************************************
+     C           CALPCT    BEGSR
+      *
+      ** Convert amount
+      *
+     C           ##CCY     IFNE PNPTCY
+     C                     Z-ADD##IAMT    ZAMTF            In amount
+     C                     Z-ADD##ORAT    ZCRSRT           Rate
+     C                     MOVE ##OMDI    ZCRSMD           M/D indicator
+     C                     Z-ADD#CNBDP    ZCDPF            In Ccy dec.pls
+     C                     Z-ADD#PNBDP    ZCDPT            Port ccy dec.pls
+     C                     EXSR ZCCYXR
+     C                     Z-ADDZAMTT     ##OAMT
+     C                     ELSE
+     C                     Z-ADD##IAMT    ##OAMT
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      ********************************************************************
+      *
+      * CSTDET - ACCESS CUSTOMER DETAILS
+      *
+      ********************************************************************
+     C           CSTDET    BEGSR
+     C*
+     C** ACCESS DETAILS
+     C*
+     C                     MOVEL'B'       I#PORS
+     C                     MOVEL##R997    I#R997
+     C                     MOVEL##BRCH    I#BRCA
+     C                     MOVEL##BOOK    I#BOOK
+     C*
+     C                     CALL 'AOPLCSR1'
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*KEY   ' P@OPTN  7        I:Option
+     C                     PARM           I@PARM           I:Parameters
+     C                     PARM *BLANKS   O@PARM           O:Parameters
+     C           SDPLCS    PARM SDPLCS    DSFDY            O:Format
+     C*
+     C** ERROR
+     C           P@RTCD    IFEQ 'PMA0007'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            ***************
+     C                     MOVE 'SDBRCHPD'DBFILE           * DB ERROR 12 *
+     C                     MOVELI#BRCA    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IS THE BRANCH A PORTFOLIO CUSTOMER?
+     C*
+     C                     MOVE 'Y'       ##PORC  1
+     C           P@RTCD    IFNE *BLANK
+     C                     MOVE 'N'       ##PORC
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /SPACE 5
+      ********************************************************************
+      *
+      * PORDET - ACCESS PORTFOLIO DETAILS
+      *
+      ********************************************************************
+     C           PORDET    BEGSR
+     C*
+     C* IF '9997' PORTFOLIO, THE PORTFOLIO CURRENCY IS THE CUSTOMER CURREN
+     C*
+     C           O#PTFR    IFEQ ##R997
+     C                     MOVEL'9997'    ##PTFR
+     C                     MOVELQBCSBY    PNPTCY
+     C                     ELSE
+     C*
+     C** ELSE, GET THE PORTFOLIO DETAILS
+     C*
+     C                     MOVELO#BICN    ##BICN
+     C                     MOVELO#PTFR    ##PTFR
+     C                     Z-ADD1         B
+     C           ##PRTK    LOKUPPRTK,B                   99
+     C*
+     C** IF PREVIOUSLY ACCESSED, SET THE PORTFOLIO CURRENCY
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVELPRTD,B    PNPTCY
+     C                     ELSE
+     C*
+     C** NOT PREVIOUSLY ACCESSED
+     C*
+     C           KPMPOR    KLIST
+     C                     KFLD           ##BICN
+     C                     KFLD           ##PTFR
+     C           KPMPOR    CHAINPMPORTLL             99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD13        DBASE            ***************
+     C                     MOVE 'PMPORTLL'DBFILE           * DB ERROR 13 *
+     C                     MOVEL##PRTK    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADD1         B
+     C           *BLANK    LOKUPPRTK,B                   99
+     C                     MOVEL##PRTK    PRTK,B
+     C                     MOVELPNPTCY    PRTD,B
+     C*
+     C                     END
+     C                     END
+     C*
+     C** GET THE PORTFOLIO CURRENCY DETAILS
+     C*
+     C                     Z-ADD1         B
+     C           PNPTCY    LOKUPCYCD,B                   99
+     C*
+     C** ERROR
+     C           *IN99     IFEQ '0'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD14        DBASE            ***************
+     C                     MOVE 'SDCURRL0'DBFILE           * DB ERROR 14 *
+     C                     MOVELPNPTCY    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     Z-ADDSPRT,B    #PSPRT 138
+     C                     MOVELMDIN,B    #PMDIN  1
+     C                     Z-ADDNBDP,B    #PNBDP  10
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/SPACE 5
+      **************************************************************************
+      *                                                                        *
+      * INIT     - INITIAL PROCESSING                                          *
+      *                                                                        *
+     C********************************************************************
+     C           INIT      BEGSR
+     C*
+     C**  Define local data area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** PREPARE LDA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PMZPCT'  DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Read the first Currency record
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C                     PARM           P@CYCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE            ***************
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Set up array of currencies
+     C*
+     C                     Z-ADD1         B       30
+     C           P@RTCD    DOWNE'*EOF'
+     C*
+     C                     MOVE A6CYCD    CYCD,B
+     C                     MOVE A6MDIN    MDIN,B
+     C                     Z-ADDA6NBDP    NBDP,B
+     C*
+     C                     ADD  1         B
+     C*
+     C**  Read the next record in currencies file
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*NEXT '  P@OPTN
+     C                     PARM           P@CYCD  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           P@RTCD    ANDNE'*EOF'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE            ***************
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 02 *
+     C                     MOVEL'*NEXT '  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     END
+     C*
+     C                     MOVEL'Y'       ##INIT  1
+     C*
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+     C           *PSSR     BEGSR
+     C                     SETON                     LR
+     C                     DUMP
+     C                     MOVEL'*ERROR'  ##RETC
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      /COPY ZSRSRC,ZCCYXR
+      /SPACE 5
+      /COPY ZSRSRC,ZCCYCN
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

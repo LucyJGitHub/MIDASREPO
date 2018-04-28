@@ -1,0 +1,797 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Transmission Communication')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3110  -  EXTEL Transmission Communication                  *
+     F*                                                               *
+     F*  Function: To receive data from Extel via a wire connection   *
+     F*            and store the data on a disk file                  *
+     F*                                                               *
+     F*  Called by: SEC3111  - EXTEL Daily Changes Wire Take-On       *
+     F*             SEC3111A - EXTEL Communication Device Check       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 052254             Date 11JAN94               *
+     F*                 E34034             Date  7JAN92               *
+     F*                 S01117             DATE 11JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E34034 - Recompiled over changed printer file                *
+     F*  S01117 - Multi-branching                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FTABTB10 IF  E                    DISK                           UC
+     F*
+     FEXLNKD  O   E                    DISK
+     F*
+     FEXWIRD  O   E                    DISK
+     F*
+     FSE3110AUO   E                    PRINTER                        UC
+     F*
+     FSE3110CMIF  E                    WORKSTN                        UC
+     F                                              KINFDS ERRDS
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   30 - Error - number of blocks sent/received                 *
+     F*   50 - End of Transmission (from DDS)                         *
+     F*   83 - Error in Write to Printer file                         *
+     F*   84 - Error in Access of data area EXSTAT                    *
+     F*   85 - I/O Error in TABTB10                                   *
+     F*   86 - End of Communication file                              *
+     F*   87 - Error in Open of Communication file                    *
+     F*   88 - Error in Write to Link Error file                      *
+     F*   89 - READ error                                             *
+     F*90-99 - Standard Subroutines                                   *
+     F*   98 - Date format                                            *
+     F*   U6 - Reception error                                        *
+     F*U7-U8 - Database error                                         *
+     F*   U8 - File out of Balance                                    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   WRTREC - Write EXTEL record to EXWIRD                       *
+     F*   CHKTR  - Check for Trailer record                           *
+     F*   FLDSU  - Field Set Up                                       *
+     F*   EOTPR  - End of transmission processing                     *
+     F*   ICDR1  - Access TABTB10 for ICD 1                           *
+     F*   ERROR  - Output to EXLNK if transmission error              *
+     F*   ERREX  - Error processing of EXTEL data                     *
+     F*   *PSSR  - Default Error Handling                             *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    TERR    1   6 30
+     E                    NAR     1   1 12
+     E                    IOE     1   1 20
+      /EJECT
+     I*
+     IEXSTTD    E DSEXSTAT
+     I*
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I*
+     IPSDS       SDS
+     I*
+     I**      DATA AREA FOR PROGRAM STATUS DISK AREA
+     I*
+     I                                     *PROGRAM #PGM
+     I                                      201 208 #FILE
+     I                                      244 253 WID
+     I                                      254 263 USRID
+     I*
+     IERRDS       DS
+     I*
+     I**      Data structure for transmission error codes
+     I*
+     I                                     *STATUS  COMSTS
+     I                                      401 402 MAJCOD
+     I                                      403 404 MINCOD
+     I                                      401 404 MAJMIN
+     I*
+     IF4HDR       DS                             80
+     I*
+     I**      Data structure for break down of F4HDR from EXTEL
+     I*
+     I                                    P   1   40A1P
+     I                                        5   5 RTYP
+     I                                    P   6   90FDAT
+     I                                    P  10  110FSN
+     I*
+     IDATE1       DS                              7
+     I*
+     I**      Data structures for break down of date from EXTEL
+     I*
+     I                                        2   30D1YY
+     I                                        4   50D1MM
+     I                                        6   70D1DD
+     I            DS                              6
+     I                                        1   20D2DD
+     I                                        3   40D2MM
+     I                                        5   60D2YY
+     I                                        1   60DATE2
+     I*
+     IEXBRCV      DS                             80
+     I*
+     I**      Data structure for Trailer Block from EXTEL
+     I*
+     I                                        1  12 EXEOFN
+     I                                       13  180EXNOBK
+     I*
+     IJBIDTA      DS                             15
+     I*
+     I**      Data structure for addition of fields from EXSTAT
+     I*
+     I                                        1   60JBDREC
+     I                                        7   90JBSQNR
+     I                                       10  15 JBJBCD
+     I*
+     IBK1DTA      DS                             15
+     I*
+     I**      Data structure for addition of fields from BLOCK 1
+     I*
+     I                                        1   60EXDREC
+     I                                        7   90EXSQNR
+     I                                       10  15 EXJBCD
+     I*
+     ITRSN5       DS                             27
+     I*
+     I**      Data structure for composition of error message 5
+     I*
+     I                                        1  13 TERR5
+     I                                       14  14 BLNK
+     I                                       15  200NOBK
+     I                                       21  21 CHAR
+     I                                       22  270NBLK
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+      /EJECT
+     C*
+     C**      Set Up LDA
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL#PGM      DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C**      Set Up fields
+     C*
+     C                     Z-ADD0         NBLK
+     C                     Z-ADD0         NOBK
+     C                     MOVE *BLANKS   BLNK    1
+     C*
+     C**     Define data areas and fields
+     C*
+     C           *NAMVAR   DEFN EXSTAT    EXSTTD
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C           *LIKE     DEFN DBKEY     #KEY
+     C           *LIKE     DEFN DBASE     #BASE
+     C*
+     C**     Do ERROR processing if device failure.
+     C**              (U6 set on in SEC3111A)
+     C*
+     C           *INU6     IFEQ '1'
+     C                     MOVELTERR,6    TRSN
+     C                     EXSR ERROR
+     C                     END
+     C/EJECT
+     C*
+     C**     S T A R T   L I N K
+     C*
+     C**     Open the communication file.
+     C*
+     C                     OPEN SE3110CM               87
+     C*
+     C           *IN87     IFEQ '1'
+     C***********          MOVE '01'      #BASE            *************  S01117
+     C                     Z-ADD1         #BASE            *************  S01117
+     C                     MOVEL'BSCF/   '#FILE            * DBERR  01 *
+     C                     MOVEL'SE3110CM'#KEY             *************
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     END
+     C*
+     C**     Receive Block 1 from EXTEL.
+     C*
+     C                     READ EXTELF                 8986
+     C*
+     C**     Increment count of Blocks received.
+     C*
+     C                     ADD  1         NBLK
+     C*
+     C**     If I/O error (check status), try read again.
+     C*
+     C           COMSTS    IFEQ 1299                       B1
+     C                     READ EXTELF                 8986*1
+     C                     END                             E1
+     C*
+     C           *IN89     IFEQ '1'                        B1
+     C***********          MOVE '02'      #BASE            *************  S01117
+     C                     Z-ADD2         #BASE            *************  S01117
+     C                     MOVEL'BSCF/   '#FILE            * DBERR  02 *
+     C                     MOVEL'SE3110CM'#KEY             *************
+     C*
+     C                     EXSR *PSSR                      *1
+     C                     END                             E1
+     C**
+     C**     If major code returned is neither 00 nor 03 then error.
+     C**
+     C           MAJCOD    IFGT '03'                       B1
+     C                     MOVELTERR,1    TRSN             *1
+     C                     MOVE MAJMIN    TRSN             *1
+     C                     EXSR ERROR                      *1
+     C                     END                             E1
+     C**
+     C**     Store EXTEL bank code from Block1
+     C**
+     C                     MOVELBRCV1     EXJBCD
+     C**
+      /EJECT
+     C**
+     C**     Loop until last block transmitted
+     C**
+     C           *IN50     DOUEQ'1'                        B1
+     C**
+     C**     Write out EXTEL record to EXWIRD
+     C**
+     C                     EXSR WRTREC                     *1
+     C**
+     C**     Check for Trailer record
+     C**
+     C                     EXSR CHKTR                      *1
+     C**
+     C**     Read from EXTEL transmission.
+     C**
+     C                     READ EXTELF                 8986*1
+     C**
+     C**     If I/O error (check status), try read again.
+     C**
+     C           COMSTS    IFEQ 1299                       B*2
+     C                     READ EXTELF                 8986**2
+     C                     END                             E*2
+     C**
+     C           *IN89     IFEQ '1'                        B*2
+     C***********          MOVE '03'      #BASE            *************  S01117
+     C                     Z-ADD3         #BASE            *************  S01117
+     C                     MOVEL'BSCF/   '#FILE            * DBERR  03 *
+     C                     MOVEL'SE3110CM'#KEY             *************
+     C**
+     C                     EXSR *PSSR                      **2
+     C                     END                             E*2
+      /EJECT
+     C**
+     C**     Drop out if Turnaround.
+     C**
+     C           *IN50     IFEQ '0'                        B*2
+     C**
+     C**     Increment count of Blocks received.
+     C**
+     C                     ADD  1         NBLK             **2
+     C**
+     C**     If major code greater than 03 then error.
+     C**
+     C           MAJCOD    IFLE '03'                       B**3
+     C**
+     C**     Store data from Block2.
+     C**
+     C           NBLK      IFEQ 2                          B***4
+     C                     EXSR FLDSU                      ****4
+     C                     END                             E***4
+     C**
+     C**     If major code returned is neither 00 nor 03 then error.
+     C**
+     C                     ELSE                            X**3
+     C                     MOVELTERR,3    TRSN             ***3
+     C                     MOVE MAJMIN    TRSN             ***3
+     C                     EXSR ERROR                      ***3
+     C                     END                             E**3
+     C**
+     C                     END                             E*2
+     C**
+     C                     END                             E1
+     C**
+      /EJECT
+     C**
+     C**     End of transmission processing
+     C**
+     C                     EXSR EOTPR
+     C**
+     C**  END PROGRAM
+     C**
+     C                     SETON                     LR
+     C                     RETRN
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    WRTREC - Write EXTEL record to EXWIRD                     *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           WRTREC    BEGSR                                       ***
+     C**
+     C                     MOVE BRCV1     BRCV
+     C                     WRITEEXWIRF
+     C**
+     C           BRCV2     IFNE *BLANKS
+     C                     MOVE BRCV2     BRCV
+     C                     WRITEEXWIRF
+     C                     END
+     C**
+     C           BRCV3     IFNE *BLANKS
+     C                     MOVE BRCV3     BRCV
+     C                     WRITEEXWIRF
+     C                     END
+     C**
+     C           BRCV4     IFNE *BLANKS
+     C                     MOVE BRCV4     BRCV
+     C                     WRITEEXWIRF
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    CHKTR         Check for Trailer Record                    *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           CHKTR     BEGSR                                       ***
+     C**
+     C                     MOVELBRCV1     EXBRCV
+     C           EXEOFN    IFNE NAR,1                      B1
+     C                     MOVELBRCV2     EXBRCV
+     C           EXEOFN    IFNE NAR,1                      B*2
+     C                     MOVELBRCV3     EXBRCV
+     C           EXEOFN    IFNE NAR,1                      B**3
+     C                     MOVELBRCV4     EXBRCV
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                             **
+     C**    FLDSU        Field Set Up for use in Data Structures     **
+     C**                                                             **
+     C**    CALLED FROM:  MAIN                                       **
+     C**    CALLS:        returns.                                   **
+     C**                                                             **
+     C*****************************************************************
+     C**
+     C           FLDSU     BEGSR
+     C**
+     C                     MOVELBRCV1     F4HDR
+     C                     Z-ADDFSN       EXSQNR
+     C                     MOVE FDAT      DATE1
+     C                     Z-ADDD1YY      D2YY
+     C                     Z-ADDD1MM      D2MM
+     C                     Z-ADDD1DD      D2DD
+     C                     Z-ADDDATE2     EXDREC
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    EOTPR         End of transmission processing              *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        ERROR, ERREX, ICDR1, returns.               *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           EOTPR     BEGSR                                       ***
+     C**
+     C**    Access data area EXSTAT
+     C**
+     C                     IN   EXSTTD                 84
+     C**
+     C           *IN84     IFEQ '0'
+     C                     Z-ADDDREC      JBDREC
+     C                     Z-ADDSQNR      JBSQNR
+     C                     MOVELJBCD      JBJBCD
+     C**
+     C**     DB Error handling of data area error
+     C**
+     C                     ELSE
+     C***********          MOVE '04'      #BASE            *************  S01117
+     C                     Z-ADD4         #BASE            *************  S01117
+     C                     MOVEL'DTARA   '#FILE            * DBERR  04 *
+     C                     MOVEL'EXSTAT'  #KEY             *************
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**    Check data sent is as expected
+     C**
+     C           BK1DTA    IFNE JBIDTA                     B1
+     C                     MOVELTERR,2    TRSN             *1
+     C                     EXSR ERREX                      *1
+     C                     END                             E1
+     C**
+     C**    Increment number of blocks from EXTEL with header & trailer
+     C**
+     C           EXNOBK    ADD  2         NOBK
+     C           NOBK      IFNE NBLK                       B1
+     C                     MOVELTERR,5    TERR5            *1
+     C                     MOVE '/'       CHAR             *1
+     C                     MOVELTRSN5     TRSN             *1
+     C                     MOVE '1'       *IN30            *1
+     C                     EXSR ERROR                      *1
+     C                     END                             E1
+     C**
+     C**    Access ICD 1.
+     C**
+     C                     EXSR ICDR1
+     C**
+     C**    Produce run control report
+     C**
+     C                     OPEN SE3110AU               89
+     C**
+     C**     DB Error if problem
+     C**
+     C           *IN89     IFEQ '1'
+     C***********          MOVE '05'      #BASE            *************  S01117
+     C                     Z-ADD5         #BASE            *************  S01117
+     C                     MOVEL'PRINT   '#FILE            * DBERR  05 *
+     C                     MOVEL'SE3110AU'#KEY             *************
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**     Produce audit trail
+     C**
+     C                     WRITESE3110A1               83
+     C                     WRITESE3110A2               83
+     C**
+     C           *IN83     IFEQ '1'
+     C***********          MOVE '06'      #BASE            *************  S01117
+     C                     Z-ADD6         #BASE            *************  S01117
+     C                     MOVEL'PRINT   '#FILE            * DBERR  06 *
+     C                     MOVEL'SE3110AU'#KEY             *************
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    ICDR1 - ACCESS TABTB10                                    *
+     C**                                                              *
+     C**    CALLED FROM:  EOTPR, *PSSR                                *
+     C**    CALLS:        *PSSR, returns.                             *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ICDR1     BEGSR                                       ***
+     C**
+     C                     OPEN TABTB10                85
+     C**
+     C           *IN85     IFEQ '0'                        B1
+     C**
+     C                     READ TABTB10                  89*1
+     C           *IN89     IFEQ '0'                        B*2
+     C           RECI      ANDEQ'D'                        B*2
+     C**
+     C**   Check system date format, DDMMYY or MMDDYY.
+     C**
+     C           DATF      IFEQ 'M'                        B**3
+     C                     MOVE '1'       *IN98            ***3
+     C                     END                             E**3
+     C**
+     C                     ELSE                            X*2
+     C                     MOVE '1'       *IN89            **2
+     C                     END                             E*2
+     C**
+     C**     DB Error if no record found.
+     C**     Ignore if SR called from *PSSR subroutine.
+     C**
+     C           *IN89     IFEQ '1'                        B*2
+     C           WERROR    ANDNE'Y'                        B*2
+     C***********          MOVE '07'      #BASE            *************  S01117
+     C                     Z-ADD7         #BASE            *************  S01117
+     C                     MOVEL'TABLE   '#FILE            * DBERR  07 *
+     C                     MOVEL'TABTB10' #KEY             *************
+     C**
+     C                     EXSR *PSSR                      **2
+     C**
+     C                     END                             E*2
+     C**
+     C                     END                             E1
+     C**
+     C**     Close file.
+     C**
+     C                     CLOSETABTB10                85
+     C**
+     C**     If error on open or close.
+     C**     Ignore if SR called from *PSSR subroutine.
+     C**
+     C           *IN85     IFEQ '1'                        B1
+     C           WERROR    ANDNE'Y'                        B1
+     C***********          MOVE '08'      #BASE            *************  S01117
+     C                     Z-ADD8         #BASE            *************  S01117
+     C                     MOVEL'TABLE   '#FILE            * DBERR  08 *
+     C                     MOVELIOE,1     #KEY             *************
+     C**
+     C                     EXSR *PSSR                      *1
+     C**
+     C                     END                             E1
+     C**
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    ERROR - Output to EXLNK if transmission error             *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN, EOTPR                                 *
+     C**    CALLS:        *PSSR, returns.                             *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ERROR     BEGSR                                       ***
+     C**
+     C**      Set Up TERMINATION TIME
+     C**
+     C                     TIME           TTIM
+     C**
+     C**      Set Up EXTEL status narrative, error flag and finish time
+     C**
+     C           *LOCK     IN   EXSTTD                 84
+     C           *IN84     IFEQ '0'                        B1
+     C                     MOVELTRSN      STNR             *1
+     C                     MOVE 'Y'       EXEF             *1
+     C                     Z-ADDTTIM      LKFT             *1
+     C                     OUT  EXSTTD                 84  *1
+     C                     END                             E1
+     C**
+     C**     Write to link error file
+     C**
+     C                     MOVE 'D'       RECI
+     C                     Z-ADDLKST      STIM
+     C                     WRITEEXLNKDF                88
+     C**
+     C**     DB Error handling of data area error
+     C**
+     C           *IN84     IFEQ '1'
+     C***********          MOVE '09'      #BASE            *************  S01117
+     C                     Z-ADD9         #BASE            *************  S01117
+     C                     MOVEL'DTARA   '#FILE            * DBERR  09 *
+     C                     MOVEL'EXSTAT'  #KEY             *************
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**     DB Error handling Link Error file
+     C**
+     C           *IN88     IFEQ '1'
+     C***********          MOVE '10'      #BASE            *************  S01117
+     C                     Z-ADD10        #BASE            *************  S01117
+     C                     MOVEL'EXLNKD  '#FILE            * DBERR  10 *
+     C                     MOVEL'D'       #KEY             *************
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**      If terminaton error 5 - file out of balance
+     C**      Program not terminated
+     C**
+     C           *IN30     IFEQ '1'                        B1
+     C                     SETON                     U8    *1
+     C**
+     C**      Else reception error
+     C**
+     C                     ELSE                            X1
+     C                     SETON                     U6LR  *1
+     C                     DUMP                            *1
+     C                     RETRN                           *1
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    ERREX - Error processing of EXTEL data                    *
+     C**                                                              *
+     C**    CALLED FROM:  EOTPR                                       *
+     C**    CALLS:        *PSSR                                       *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ERREX     BEGSR                                       ***
+     C**
+     C**      Set Up TERMINATION TIME
+     C**
+     C                     TIME           TTIM
+     C**
+     C**      Set Up EXTEL status narrative, error flag and finish time
+     C**
+     C           *LOCK     IN   EXSTTD                 84
+     C           *IN84     IFEQ '0'                        B1
+     C                     MOVELTRSN      STNR             *1
+     C                     MOVE 'Y'       EXEF             *1
+     C                     Z-ADDTTIM      LKFT             *1
+     C                     OUT  EXSTTD                 84  *1
+     C                     END                             E1
+     C**
+     C**     Write to link error file
+     C**
+     C                     MOVE 'D'       RECI
+     C                     Z-ADDLKST      STIM
+     C                     WRITEEXLNKDF                88
+     C**
+     C**     DB Error handling of data area error
+     C**
+     C           *IN84     IFEQ '1'
+     C***********          MOVE '11'      #BASE            *************  S01117
+     C                     Z-ADD11        #BASE            *************  S01117
+     C                     MOVEL'DTARA   '#FILE            * DBERR  11 *
+     C                     MOVEL'EXSTAT'  #KEY             ** **********
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**     DB Error handling Link Error file
+     C**
+     C           *IN88     IFEQ '1'
+     C***********          MOVE '12'      #BASE            *************  S01117
+     C                     Z-ADD12        #BASE            *************  S01117
+     C                     MOVEL'EXLNKD  '#FILE            * DBERR  12 *
+     C                     MOVEL'D'       #KEY             *************
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**      Data base error processing of data received from EXTEL.
+     C**
+     C***********          MOVE '13'      #BASE            *************  S01117
+     C                     Z-ADD13        #BASE            *************  S01117
+     C                     MOVEL'EXTEL   '#FILE            * DBERR  13 *
+     C                     MOVELBK1DTA    #KEY             *************
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    *PSSR - DEFAULT ERROR HANDLING                            *
+     C**                                                              *
+     C**    CALLED FROM:  anywhere                                    *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           *PSSR     BEGSR                                       ***
+     C**
+     C***********          MOVEL#PGM      DBPGM                           S01117
+     C***********          MOVEL#KEY      DBKEY                           S01117
+     C***********          MOVEL#FILE     DBFILE                          S01117
+     C***********          MOVEL#FILE     DBFIL8                          S01117
+     C***********          MOVEL#BASE     DBASE                           S01117
+     C**
+     C           WERROR    IFNE 'Y'                        B1
+     C                     MOVE 'Y'       WERROR  1        *1
+     C**                                                                  S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL#PGM      DBPGM                           S01117
+     C                     MOVEL#KEY      DBKEY                           S01117
+     C                     MOVEL#FILE     DBFILE                          S01117
+     C                     Z-ADD#BASE     DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C**
+     C**    Access ICD 1.
+     C**
+     C                     EXSR ICDR1                      *1
+     C**
+     C**    Produce data base error report
+     C**
+     C                     OPEN SE3110AU               89  *1
+     C**
+     C                     DUMP
+     C**
+     C**    Produce report if OPEN successful & *PSSR not called
+     C**     because of error in previous write to printer file
+     C**
+     C           *IN89     IFEQ '0'                        B*2
+     C           *IN83     ANDEQ'0'                        B*2
+     C                     WRITESE3110A1               83  **2
+     C                     WRITESE3110A3               83  **2
+     C                     END                             E*2
+     C**
+     C                     END                             E1
+     C**
+     C        NU8          SETON                       U7U8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C**
+      /EJECT
+     C*
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  TERR --  TERMINATION ERROR MESSAGES
+TRANSMIT ERROR ON HEADER-
+WRONG INFORMATION RECEIVED
+TRANSMIT ERROR ON DETAIL-
+NO TRAILER RECORD
+SENT/RECV OOB
+DEVICE ERROR
+**  NAR  --  NARRATIVE
+END OF FILE
+**  IOE  --  INPUT/OUTPUT ERROR
+I/O ERROR  TABTB10

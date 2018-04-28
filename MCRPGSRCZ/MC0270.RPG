@@ -1,0 +1,1073 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Deleted Management Accounts')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0270    Periodic Drop of Management Accounts               *
+     F*                                                               *
+     F*  Function: This program calculates the earliest year to       *
+     F*  (CoB)     retain management accounts and deletes those       *
+     F*            prior to this date.                                *
+     F*            A P1 report of deleted records is produced if      *
+     F*            required by icd. If report is required but no      *
+     F*            records have been deleted an AU report only is     *
+     F*            produced.                                          *
+     F*                                                               *
+     F*  Called by: MCC0270 - Management Accounts file reorganisation *
+     F*                       Control                                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 128433             Date 01Jun98               *
+      *                 095568             Date 15Jan97               *
+     F*                 ANNNNN             DATE NNAAANN               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  128433 - Ensure that user controlled files closed if         *
+     F*         - job terminates incorrectly.                         *
+     F*  095568 - Database error accessing SDCURRPD with blank Ccy.   *
+     F*           Apply 074052.                                       *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FMC0270P1O   E                    PRINTER      KINFSR INFSR      UC
+     F                                              KINFDS MCRPT
+      ** P1 Report
+     FMC0270AUO   E                    PRINTER      KINFSR INFSR      UC
+     F                                              KINFDS MCAUD
+      ** AU Report
+     FGLAVBLL1UF  E           K        DISK         KINFSR INFSR      UC
+     F                                              KINFDS AVBL
+      ** Average Balances, format @BPRED4, multimember file
+     FGLHIBLL2UF  E           K        DISK         KINFSR INFSR      UC
+      ** Historic Balances, format @HIBLED, multimember file
+     FGLPERSL0IF  E           K        DISK         KINFSR INFSR
+      ** Period Sets, format @BJREDS
+     FGLHBCGL1IF  E           K        DISK         KINFSR INFSR
+      ** Group Codes, format @BNRED0
+      /EJECT
+      *****************************************************************
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      * 10 - EOF for Group Codes file in main processing loop
+      * 14 - System is multibranched
+      * 15 - Profit Centres are used in the system
+      * 21 - End of file for GLHIBLL2
+      * 40 - Average Balances are defined
+      * 45 - General chain fail indicator
+      * 50 - Error on call to QCMDEXC meaning member not found
+      * 98 - Seton if date format is MMDDYY (rather than DDMMYY)
+      * U1 - At least one record has been deleted
+      * U6 - Program error
+      * U7 - Database error
+      * U8 - Database error
+      *
+      **************************************************************
+      *
+      *  S U B R O U T I N E   I N D E X
+      *
+      *  (Note that sr name indicates calling routine, eg sr/#BC is
+      *   called from sr/#B, #Z routines are called from anywhere)
+      *  (Note that sr's are ordered in the program to minimise
+      *   paging by bunching sr as close to exsr line as possible)
+      *
+      * MAIN   - Main control routine
+      * #BA    - Derive Expired date/period
+      * #B     - Process each Group Code
+      * #BB    - Format fields and write to report
+      * #BBA   - Format 27A fields
+      * #BBB   - Format 3A fields with leading zeros
+      * ZDATE2 - Convert Midas date format to DDMMMYY
+      * #ZA    - Write audit trail and end of report line
+      * #A     - Initial processing
+      * *PSSR  - Program error subroutine
+      * INFSR  - File error subroutine
+      *
+      **************************************************************
+      *
+      *  P R O G R A M   C A L L E D   I N D E X
+      *
+      * ZSFILE    - Log spool file to RCF
+      * AOBANKR0  - Obtain bank details
+      * AOGELRR0  - Obtain general ledger details
+      * AOCURRR0  - Obtain currency details
+      * QCMDEXC   - Used to override to correct member
+      *
+      **************************************************************
+      /EJECT
+      *
+      ** CPYP  Copyright array
+     E                    CPYP    1   1 80
+      *
+      ** ZS1   Field to be formatted, used by sr/#CA
+     E                    ZS1        19  1 0
+      *
+      ** ZS2   Formatted field, used by sr/#CA
+     E                    ZS2        27  1
+      *
+      ** PAR   Formatted field, used by sr/#CB
+     E                    PAR         3  1
+      *
+      ** PC    To setup file member check
+     E                    PC     43  43  1
+      *
+      ** PO    To setup file overrides
+     E                    PO     29  29  1
+      *
+      ** Copy in date formatting arrays
+      /COPY ZSRSRC,ZDATE2Z1
+      **************************************************************
+      /EJECT
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, Long Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank details
+      *
+     ISDGELR    E DSSDGELRPD
+      **  General Ledger details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency details
+      *
+     IMCRPT       DS
+      ** File information DS for MC0270P1 report
+     I                                       83  92 PFILE1
+     I                                    B 123 1240PFNUM1
+      *
+     IMCAUD       DS
+      ** File information DS for MC0270AU report
+     I                                       83  92 PFILEA
+     I                                    B 123 1240PFNUMA
+      *
+     IAVBL        DS
+      ** File information DS for GLAVBLL1, used for open/close flag
+     I                                        9   9 PAVBLO
+      *
+     IDS1         DS
+      * Used by sr/#BBA, links array and field to be formatted
+     I                                        1  190ZWRK19
+     I                                        1  190ZS1
+      *
+     IDS2         DS
+      * Used by sr/#BBB, links array and field to be formatted
+     I                                        1   3 PWRK3
+     I                                        1   3 PAR
+      *
+     IPCHK        DS                             43
+      ** Array used with QCMDEXC to check file members exist
+     I                                        1  43 PC
+      *
+     IPOVR        DS                             29
+      ** Array used with QCMDEXC to override file members
+     I                                        1  29 PO
+      *
+     ILDA       E DSLDA
+      ** Local data structure used for error handling
+      *
+     IGLSTAT    E DSGLSTAT
+      ** GLSTAT data structure, to obtain Print Option field
+      *
+     IPSDS       SDS
+      **  Program Status DS
+     I                                      244 253 JOB
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+      /EJECT
+      **************************************************************
+      * MAIN routine - Controlling routine
+      *
+      * NOTE: Generally fields beginning with 'P' are program defined.
+      *       Generally fields beginning with 'R' are used by
+      *       the printer file.
+      *
+      **************************************************************
+      *
+      ** Run initial processing
+     C           PBIS      IFEQ *BLANKS                    B1
+     C                     EXSR #A                         *1
+     C                     END                             E1
+     C           *INU7     CABEQ'1'       MAIN1            CAB GOTO
+      *
+      ** Read through all Group Codes on lf/GLHBCGL1
+     C           *LOVAL    SETLL@BNRED0              10
+      *
+      ** Skip processing if no Group Codes defined
+     C           *IN10     CABEQ'1'       MAIN1            CAB GOTO
+      *
+      ** Process all records on lf/GLHBCGL1
+     C           *IN10     DOUEQ'1'                        B1
+     C                     READ @BNRED0                  10*1
+      *
+      ** If record found, process details using sr/#B
+     C           *IN10     IFEQ '0'                        B*2
+     C                     EXSR #B                         **2
+     C           *INU7     CABEQ'1'       MAIN1            **2 CAB GOTO
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+     C           MAIN1     TAG                             TAG MAIN1
+      *
+      ** Write end of report and audit trail as required
+     C           *INU7     IFEQ '0'                        B1
+     C                     EXSR #ZA                        *1
+     C                     END                             E1
+      *
+      ** Program termination
+     C                     SETON                     LR
+      *
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BA - Calculate Expired year/period
+      *
+      * Called from:      #B - Process each Group Code
+      *
+      **************************************************************
+     C           #BA       BEGSR
+      *
+      ** Read Period Set details from lf/GLPERSL0 for Periods per Annum
+     C           HCPSTC    CHAIN@BJREDS              45
+      *
+      ** If record not found, process for database error
+     C           *IN45     IFEQ '1'                        B1
+     C                     SETON                     U7U8  *1
+     C                     MOVEL'GLPERSL0'DBFILE           *1
+     C                     Z-ADD002       DBASE            *1
+     C                     MOVELHCPSTC    DBKEY            *1
+     C                     MOVEL'MC0270'  DBPGM            *1
+     C                     SETON                       LR  *1
+     C                     DUMP                            *1
+     C                     EXSR #ZA                        *1
+     C***********          GOTO #BA9                       *1             128433
+     C                     EXSR *PSSR                                     128433
+     C                     END                             E1
+      *
+      *
+      ** Split Current Period Number (from Group Codes file) into
+      ** Current Year and Current Period Number
+     C                     MOVELHCCPNB    PCPYR   40
+     C                     MOVE HCCPNB    PCPNB   20
+      *
+      ** If Number of Periods to Retain (from Group Codes file) is
+      ** less than Current Period Number
+     C           HCNPTR    IFLT PCPNB                      B1
+      *
+      ** Expiry Period is Current Period Number minus Periods to
+      ** Retain (from Group Codes file)
+      ** And Expiry Year is Current Year
+     C           PCPNB     SUB  HCNPTR    PEXPR   20       *1
+     C                     Z-ADDPCPYR     PEXYR   40       *1
+      *
+      ** Else Number of Periods to Retain (from Group Codes file) is
+      ** greater than or equal to Current Period Number
+     C                     ELSE                            X1
+      *
+      ** Expiry Year is Current Year minus 1
+     C           PCPYR     SUB  1         PEXYR            *1
+      *
+      ** Set Remaining Periods work field to Number of Periods to
+      ** Retain (from Group Codes file) minus Current Period Number
+     C           HCNPTR    SUB  PCPNB     PRMPR   30       *1
+      *
+      ** If Remaining Period is zero, Expiry Period is Period Per
+      ** Annum (from Period Set file)
+     C           PRMPR     IFEQ *ZERO                      B*2
+     C                     Z-ADDSTPPAN    PEXPR            **2
+      *
+      ** Otherwise must derive Expiry Period
+     C                     ELSE                            X*2
+      *
+      ** Repeat until Remaining Period becomes zero
+     C           PRMPR     DOWNE*ZERO                      B**3
+      *
+      ** If more than a years worth of periods remain
+     C           PRMPR     IFGE STPPAN                     B***4
+      *
+      ** Subtract a years worth of periods from Remaining Period
+     C           PRMPR     SUB  STPPAN    PRMPR            ****4
+     C           PEXYR     SUB  1         PEXYR            ****4
+      *
+      ** Check for Remaining Period being zero, this will happen when
+      ** exactly a years worth of period remained and were removed
+     C           PRMPR     IFEQ *ZERO                      B****5
+     C                     Z-ADDSTPPAN    PEXPR            *****5
+     C                     END                             E****5
+      *
+      ** Else less than a years worth of periods remain
+     C                     ELSE                            X***4
+      ** Expiry Period is Periods Per Annum (from Period Set file)
+      ** minus Remaining Periods
+     C           STPPAN    SUB  PRMPR     PEXPR            ****4
+     C                     Z-ADD*ZERO     PRMPR            ****4
+     C                     END                             E***4
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C                     MOVELPEXYR     PEXPIR  60
+     C                     MOVE PEXPR     PEXPIR
+      *
+     C           #BA9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#B - Process Group Code just read
+      *
+      * Called from:      Main routine
+      *
+      **************************************************************
+     C           #B        BEGSR
+      *
+      ** GLHIBLL2 has a separate member for each Group Code, must
+      ** override for the Group Code being processed
+     C                     CLOSEGLHIBLL2
+      *
+      ** Check that the member exists, if not then no error, just
+      ** skip processing for this Group Code
+     C                     MOVEA'GLHIBLL2'PC,12
+     C                     MOVEAHCCGCD    PC,41
+     C                     CALL 'QCMDEXC'              50
+     C                     PARM           PCHK
+     C                     PARM 43        PLNTH  155
+     C           *IN50     CABEQ'1'       #B9
+      *
+     C                     MOVEA'GLHIBLL2'PO,13
+     C                     MOVEAHCCGCD    PO,27
+     C                     CALL 'QCMDEXC'
+     C                     PARM           POVR
+     C                     PARM 29        PLNTH
+      *
+     C                     OPEN GLHIBLL2
+      *
+      ** Calculate Expired year/period
+     C                     EXSR #BA
+     C           *INU7     CABEQ'1'       #B9
+      *
+      ** Read through all details on lf/GLHIBLL2 for the Group Code
+      ** being processed
+     C           HCCGCD    SETLL@HIBLED
+      *
+      ** Must delete all records for the Group Code being processed
+      ** if they have period year prior to the Expired year
+      *
+      ** Do until end of file (DOU runs through at least once)
+     C           *IN21     DOUEQ'1'                        B1
+      ** or a different Group Code
+     C           HCCGCD    ORNE HBCGCD                     B1
+      ** or period year/period is greater than expired year/period
+     C           PYRNB     ORGE PEXPIR                     B1
+      *
+      ** Read lf/GLHIBLL2, Historic Balances file
+     C                     READ @HIBLED                  21*1
+      *
+      ** Process records read
+     C           *IN21     IFEQ '0'                        B*2
+      *
+      ** Concatonate the year from century and year number
+     C           HBPDCT    CAT  HBPDYR    PYEAR   4        **2
+     C           PYEAR     CAT  HBPDNY    PYRPR   6        **2
+     C                     MOVE PYRPR     PYRNB   60       **2
+      *
+      ** Process records to be deleted (i.e. prior to retention period)
+     C           HBCGCD    IFEQ HCCGCD                     B**3
+     C           PYRNB     ANDLTPEXPIR                     B**3
+      *
+      ** Delete record from lf/GLHIBLL2, Historic Balances
+     C                     DELET@HIBLED                    ***3
+     C                     SETON                     U1    ***3
+      *
+      ** If appropriate must delete equivalent Average Balances record
+      ** If average DR/CR balances are used (from GLHBCGPD),
+      ** but not for income or expense account sections (on GLHIBLPD)
+     C           HCADCB    IFNE 'N'                        B***4
+     C           HBACSC    ANDNE'IN'                       B***4
+     C           HBACSC    ANDNE'EX'                       B***4
+      *
+      ** GLAVBLL1 has a separate member for each Group Code, must
+      ** override for the Group Code being processed
+      ** Check that the member exists, if not then no error, just
+      ** skip processing for this Group Code
+     C           HCCGCD    IFNE PCGCD2                     B****5
+     C                     MOVE HCCGCD    PCGCD2  2        *****5
+     C                     CLOSEGLAVBLL1                   *****5
+      *
+     C                     MOVEA'GLAVBLL1'PC,12            *****5
+     C                     MOVEAHCCGCD    PC,41            *****5
+     C                     CALL 'QCMDEXC'              50  *****5
+     C                     PARM           PCHK             *****5
+     C                     PARM 43        PLNTH            *****5
+     C           *IN50     CABEQ'1'       #B9              *****5
+      *
+     C                     MOVEA'GLAVBLL1'PO,13            *****5
+     C                     MOVEAHCCGCD    PO,27            *****5
+     C                     CALL 'QCMDEXC'                  *****5
+     C                     PARM           POVR             *****5
+     C                     PARM 29        PLNTH            *****5
+     C                     OPEN GLAVBLL1                   *****5
+     C                     END                             E****5
+      *
+      ** If lf/GLAVBLL1 is open can process it, use file information
+      ** data structure to check
+     C           PAVBLO    IFEQ '1'                        B****5
+     C           KAVBL1    CHAIN@BPRED4              45    *****5
+     C           KAVBL1    KLIST                           *****5
+     C                     KFLD           HBCGCD           *****5
+     C                     KFLD           HBBRCD           *****5
+     C                     KFLD           HBCYCD           *****5
+     C                     KFLD           HBACCD           *****5
+     C                     KFLD           HBCUST           *****5
+     C                     KFLD           HBACSN           *****5
+     C                     KFLD           HBPCCD           *****5
+     C                     KFLD           HBBKCD           *****5
+     C                     KFLD           HBOTTP           *****5
+     C                     KFLD           HBTSTY           *****5
+     C                     KFLD           HBACNB           *****5
+     C                     KFLD           HBPDCT           *****5
+     C                     KFLD           HBPDYR           *****5
+     C                     KFLD           HBPDNY           *****5
+      *
+      ** Delete record from lf/GLAVBLL1, Average Balances
+     C           *IN45     IFEQ '0'                        B*****6
+     C                     DELET@BPRED4                    ******6
+     C                     END                             E*****6
+     C                     END                             E****5
+     C                     END                             E***4
+      *
+      ** If File Reorganisation Print Option (GLSTAT) is set then
+      ** report all deleted records
+     C           FRPR      IFEQ 'Y'                        B***4
+     C                     EXSR #BB                        ****4
+     C           *INU7     CABEQ'1'       #B9              ****4 GOTO
+     C                     END                             E***4
+      *
+      ** Else, if record is not to be deleted must release
+      ** the record (it is read in for update)
+     C                     ELSE                            X**3
+     C                     EXCPTHIBLL2                     ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+      *
+     C           #B9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BB - Report of deleted records
+      *
+      * Called from:     #B - Process each Group Code
+      *
+      **************************************************************
+     C           #BB       BEGSR
+      *
+      ** If P1 report is not open, open it and register with RCF
+     C           PFILP1    IFEQ *BLANKS                    B1
+     C                     MOVE 'OPN'     PFILP1  3        *1
+     C                     OPEN MC0270P1                   *1
+     C                     Z-ADD1         RPAGE            *1
+     C                     Z-ADD5         PLINE            *1
+     C                     WRITEMC0270H1                   *1
+      *
+      ** Convert binary number to packed numeric and run RCF processing
+     C                     Z-ADDPFNUM1    PSNUM   60       *1
+     C                     CALL 'ZSFILE'                   *1
+     C                     PARM           PSEQ    5        *1
+     C                     PARM *BLANKS   PPARM   3        *1
+     C                     PARM           PFILE1           *1
+     C                     PARM           PSNUM            *1
+     C                     PARM           PSERR   1        *1
+      *
+     C           PSERR     IFEQ 'Y'                        B*2
+     C                     SETON                     U7U8LR**2
+     C                     Z-ADD004       DBASE            **2
+     C                     MOVELPFILE1    DBFILE           **2
+     C                     MOVEL'See Dump'DBKEY            **2
+     C                     MOVEL'ZSFILE ' DBPGM            **2
+     C                     DUMP                            **2
+     C                     EXSR #ZA                        **2
+     C***********          GOTO #BB9                       **2 GOTO       128433
+     C                     EXSR *PSSR                                     128433
+     C                     END                             E*2
+     C                     END                             E1
+      *
+      ** If Group Code has changed must format fields for the headings
+     C           HCCGCD    IFNE PCGCD                      B1
+     C                     MOVE HCCGCD    PCGCD   2        *1
+     C           HCCCYB    IFNE *BLANK                                    095568
+      *
+      ** Obtain currency decimal places using Currency of Balances
+      ** from file GLHBCGPD
+     C                     CALL 'AOCURRR0'                 *1
+     C                     PARM '*MSG   ' PRTCD            *1
+     C                     PARM '*KEY'    POPTN            *1
+     C                     PARM HCCCYB    PKEY3   3        *1
+     C           SDCURR    PARM SDCURR    DSSDY            *1
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B*2
+     C                     MOVEL'SDCURRPD'DBFILE           **2
+     C                     Z-ADD005       DBASE            **2
+     C                     MOVELHCCCYB    DBKEY            **2
+     C                     MOVEL'MC0270'  DBPGM            **2
+     C                     SETON                     U7U8LR**2
+     C                     DUMP                            **2
+     C                     EXSR #ZA                        **2
+     C***********          GOTO #BB9                       **2GOTO        128433
+     C                     EXSR *PSSR                                     128433
+     C                     END                             E*2
+     C                     END                                            095568
+      *
+      ** Format Start of Period Date
+     C                     Z-ADDHBSPDD    ZDAYNO           *1
+     C                     EXSR ZDATE2                     *1
+     C                     MOVE ZADATE    RSPRD            *1
+      *
+      ** Format End of Period Date
+     C                     Z-ADDHBEPDD    ZDAYNO           *1
+     C                     EXSR ZDATE2                     *1
+     C                     MOVE ZADATE    REPRD            *1
+      *
+      ** Write headings for new Group Code, on new page if necessary
+     C           PLINE     IFGE 44                         B*2
+     C                     ADD  1         RPAGE            **2
+     C                     Z-ADD5         PLINE   20       **2
+     C                     WRITEMC0270H1                   **2
+     C                     END                             E*2
+     C                     ADD  5         PLINE            *1
+     C                     WRITEMC0270H2                   *1
+     C                     END                             E1
+      *
+      ** If Currency has changed must obtain Ccy decimal places           095568
+      *                                                                   095568
+     C           HCCCYB    IFEQ *BLANK                     B1             095568
+     C           HBCYCD    IFNE PCCCD                      B2             095568
+     C                     MOVE HBCYCD    PCCCD   3        **2            095568
+      *                                                                   095568
+      ** Obtain currency decimal places using Amount currency             095568
+      ** from file GLHIBLPD                                               095568
+     C                     CALL 'AOCURRR0'                 **2            095568
+     C                     PARM '*MSG   ' PRTCD            **2            095568
+     C                     PARM '*KEY'    POPTN            **2            095568
+     C                     PARM HBCYCD    PKEY3   3        **2            095568
+     C           SDCURR    PARM SDCURR    DSSDY            **2            095568
+      *                                                                   095568
+      ** DB error if not found                                            095568
+     C           PRTCD     IFNE *BLANK                     B**3           095568
+     C                     MOVEL'SDCURRPD'DBFILE           ***3           095568
+     C                     Z-ADD007       DBASE            ***3           095568
+     C                     MOVELHBCYCD    DBKEY            ***3           095568
+     C                     MOVEL'MC0270'  DBPGM            ***3           095568
+     C                     SETON                     U7U8LR***3           095568
+     C                     DUMP                            ***3           095568
+     C                     EXSR #ZA                        ***3           095568
+     C                     GOTO #BB9                       ***3GOTO       095568
+     C                     END                             E**3           095568
+     C                     END                             E*2            095568
+     C                     END                             E1             095568
+      *
+      ** Derive Net Days in Period (inclusive, hence add 1)
+     C           HBEPDD    SUB  HBSPDD    PDAYS   50
+     C           PDAYS     ADD  1         PDAYS
+     C                     EXSR #BBB
+     C                     MOVE POUT3     RDIPR
+      *
+      ** Format Net Period Movement
+     C                     Z-ADDHBPMTD    ZFLD19
+     C                     EXSR #BBA
+     C                     MOVE ZOUT27    RPMTD
+      *
+      ** Format Net Weighted Balance
+     C                     Z-ADDHBWPBL    ZFLD19
+     C                     EXSR #BBA
+     C                     MOVE ZOUT27    RWPBL
+      *
+      ** Format Period Opening Balance (to 27A)
+     C                     Z-ADDHBPDOB    ZFLD19
+     C                     EXSR #BBA
+     C                     MOVE ZOUT27    RPROB
+      *
+      ** Format Period Closing Balance (to 27A)
+     C                     Z-ADDHBPDCB    ZFLD19
+     C                     EXSR #BBA
+     C                     MOVE ZOUT27    RPRCB
+      *
+      *
+      ** If appropriate must format average balance fields
+      ** If average DR/CR balances are used (from GLHBCGPD),
+      ** but not for income or expense account sections (on GLHIBLPD)
+     C                     SETOF                     40
+     C           HCADCB    IFNE 'N'                        B1
+     C           HBACSC    ANDNE'IN'                       B1
+     C           HBACSC    ANDNE'EX'                       B1
+      *
+      ** Seton print conditioning indicator
+     C                     SETON                     40    *1
+      *
+      ** Format Period Days in DR
+     C                     MOVE ABPDDD    PDAYS            *1
+     C                     EXSR #BBB                       *1
+     C                     MOVE POUT3     RPDDD            *1
+      *
+      ** Format Period DR Movement (formatted for 27A output)
+     C                     Z-ADDABPDMT    ZFLD19           *1
+     C                     EXSR #BBA                       *1
+     C                     MOVE ZOUT27    RPDMT            *1
+      *
+      ** Format Debit Weighted Balance
+     C                     Z-ADDABWPDB    ZFLD19           *1
+     C                     EXSR #BBA                       *1
+     C                     MOVE ZOUT27    RWPDB            *1
+      *
+      ** Format Period Days in CR
+     C                     MOVE ABPDDC    PDAYS            *1
+     C                     EXSR #BBB                       *1
+     C                     MOVE POUT3     RPDDC            *1
+      *
+      ** Format Period CR Movement (formatted for 27A output)
+     C                     Z-ADDABPCMT    ZFLD19           *1
+     C                     EXSR #BBA                       *1
+     C                     MOVE ZOUT27    RPCMT            *1
+      *
+      ** Format Credit Weighted Balance
+     C                     Z-ADDABWPCB    ZFLD19           *1
+     C                     EXSR #BBA                       *1
+     C                     MOVE ZOUT27    RWPCB            *1
+      *
+      ** Increment line count for average balances lines
+     C                     ADD  2         PLINE            *1
+     C                     END                             E1
+      *
+      *
+      ** Write detail lines for management account and historic
+      ** balances (if required), starting on new page if necessary
+     C           PLINE     IFGE 50                         B1
+     C                     ADD  1         RPAGE            *1
+     C                     Z-ADD10        PLINE            *1
+     C                     WRITEMC0270H1                   *1
+     C                     WRITEMC0270H2                   *1
+     C                     END                             E1
+      *
+     C                     ADD  6         PLINE
+     C                     WRITEMC0270D1
+      *
+     C           #BB9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BBA - Format a 19,0 numeric field adding trailing +/-,
+      *           decimal point, commas every three digits and no
+      *           leading zero (unless amount is zero). Outputs a
+      *           27A field. Was based on ZFRPED.
+      *
+      * Input fields:    ZFLD19 19,0 field to be formatted
+      *                  A6NBDP  decimal places
+      *
+      * Output fields    ZOUT27 27A  formatted field
+      *
+      * Called by:   #BA - Process for report
+      *
+      **************************************************************
+     C           #BBA      BEGSR
+      *
+      ** Define/Clear fields
+     C                     Z-ADDZFLD19    ZFLD19 190
+     C                     MOVE *BLANKS   ZOUT27 27
+      *
+      ** Set up work fields and arrays
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+      ** Z1 is the index for the number to be formatted array
+     C                     Z-ADD19        Z1      20
+      ** Z2 is the index for the output array
+     C                     Z-ADD26        Z2      20
+      *
+      ** Check if numeric field is negative and set up - sign
+     C           ZFLD19    IFLT *ZEROS                     B1
+     C                     MOVE '-'       ZS2,27           *1
+     C                     Z-SUBZFLD19    ZFLD19           *1
+     C                     ELSE                            X1
+     C                     MOVE '+'       ZS2,27           *1
+     C                     END                             E1
+      *
+     C                     Z-ADDZFLD19    ZWRK19
+      *
+      ** Check for zero decimal places
+     C           A6NBDP    CABEQ0         #BBA1            CAB
+      *
+      ** Set up decimals
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQA6NBDP                     B1
+      *
+      ** Move number into array until decimal places end, array ZS1
+      ** contains the number to be formatted, array ZS2 contains the
+      ** formatted number
+     C                     MOVE ZS1,Z1    ZS2,Z2           *1
+     C                     SUB  1         Z2               *1
+     C                     ADD  1         ZCNT             *1
+     C                     SUB  1         Z1               *1
+     C                     END                             E1
+      *
+      ** Put in decimal place
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+      *
+     C           #BBA1     TAG                             ** #BBA1 TAG**
+      *
+      ** Set up integers
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS                     B1
+     C                     MOVE ZS1,Z1    ZS2,Z2           *1
+     C                     SUB  1         Z1               *1
+     C                     SUB  1         Z2               *1
+      *
+      ** Insert a ',' before each group of three digits - not if
+      ** beginning of array reached.
+     C           Z2        IFGT *ZEROS                     B*2
+     C                     ADD  1         CNT3             **2
+     C           CNT3      IFEQ 3                          B**3
+     C                     MOVE ','       ZS2,Z2           ***3
+     C                     SUB  1         Z2               ***3
+     C                     Z-ADD*ZEROS    CNT3             ***3
+     C                     END                             E**3
+     C                     END                             E*2
+      *
+     C                     END                             E1
+      *
+      ** Put in leading blanks
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'                        B1
+     C           ZS2,Z2    OREQ ' '                        B1
+     C           ZS2,Z2    OREQ ','                        B1
+     C                     MOVE ' '       ZS2,Z2           *1
+     C                     ADD  1         Z2               *1
+     C           Z2        CABEQ27        #BBA2            CAB
+     C                     END                             E1
+      *
+      ** If no integers put in leading zero
+     C           #BBA2     TAG                             ** #BBA2 TAG**
+      *
+     C           ZS2,Z2    IFEQ '.'                        B1
+     C           ZS2,Z2    OREQ '+'                        B1
+     C           ZS2,Z2    OREQ '-'                        B1
+     C                     SUB  1         Z2               *1
+     C                     MOVE '0'       ZS2,Z2           *1
+     C                     END                             E1
+      *
+      ** Set up output field
+     C                     MOVEAZS2       ZOUT27
+      *
+     C           #BBA9     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#BBB - Format a 3A character field, removing leading zeros
+      *
+      * Input fields:    PDAYS  5,0 field to be formatted
+      *
+      * Output fields    POUT3  3A formatted field
+      *
+      * Called by:   #BB - Process for report
+      *
+      **************************************************************
+     C           #BBB      BEGSR
+      *
+      ** Transfer to array via data structure
+     C                     MOVE PDAYS     PWRK3
+      *
+      ** Put in leading blanks
+     C                     Z-ADD1         P1      10
+     C           PAR,P1    DOWEQ'0'                        B1
+     C                     MOVE ' '       PAR,P1           *1
+     C                     ADD  1         P1               *1
+     C           P1        CABEQ4         #BBB1            CAB
+     C                     END                             E1
+      *
+     C           #BBB1     TAG
+      *
+      ** If no integers put in leading zero
+     C           P1        IFEQ 4
+     C                     MOVE '0'       PAR,3            *1
+     C                     END                             E1
+      *
+      ** Set up output field
+     C                     MOVEAPAR       POUT3   3
+      *
+     C           #BBB9     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      /COPY ZSRSRC,ZDATE2Z2
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/#ZA- Audit trail production. An audit trail is produced
+      *         if there are no records to delete and a report is
+      *         required or a database or program error occurs.
+      *         And write end of report line to P1 report.
+      *
+      * Called from:     MAIN routine
+      *                  #A    Initial processing
+      *                  INFSR File error processing
+      *                  *PSSR File error processing
+      *
+      **************************************************************
+     C           #ZA       BEGSR
+      *
+      ** Produce error audit trail if required
+     C           *INU1     IFEQ '0'                        B1
+     C           FRPR      ANDEQ'Y'                        B1
+     C           *INU7     OREQ '1'                        B1
+     C           *INU6     OREQ '1'                        B1
+      *
+     C                     OPEN MC0270AU                   *1
+      *
+      ** Convert binary number to packed numeric and run RCF processing
+      ** to log audit trail to RCF
+     C                     Z-ADDPFNUMA    PSNUM   60       *1
+     C                     CALL 'ZSFILE'                   *1
+     C                     PARM           PSEQ             *1
+     C                     PARM *BLANKS   PPARM            *1
+     C                     PARM           PFILEA           *1
+     C                     PARM           PSNUM            *1
+     C                     PARM           PSERR            *1
+      *
+     C           PSERR     IFEQ 'Y'                        B*2
+     C                     Z-ADD003       DBASE            **2
+     C                     MOVELPFILEA    DBFILE           **2
+     C                     MOVEL'See Dump'DBKEY            **2
+     C                     MOVEL'ZSFILE ' DBPGM            **2
+     C                     SETON                     U7U8LR**2
+     C                     DUMP                            **2
+     C                     END                             E*2
+      *
+      ** Write headings
+     C                     WRITEMC0270A1                   *1
+      *
+      ** Write error format
+     C           *INU7     IFEQ '1'                        B*2
+     C           *INU6     OREQ '1'                        B*2
+     C                     WRITEMC0270A3                   **2
+     C                     END                             E*2
+      *
+      ** Write no details format to AU report
+     C           *INU1     IFEQ '0'                        B*2
+     C           *INU7     ANDEQ'0'                        B*2
+     C           *INU6     ANDEQ'0'                        B*2
+     C                     WRITEMC0270A2                   **2
+     C                     END                             E*2
+      *
+     C                     CLOSEMC0270AU                   *1
+      *
+     C                     END                             E1
+      *
+      *
+      ** Write end of report line to the P1 report if required
+     C           *INU1     IFEQ '1'                        B1
+     C           FRPR      ANDEQ'Y'                        B1
+     C           *INU7     ANDEQ'0'                        B1
+     C           *INU6     ANDEQ'0'                        B1
+      *
+      ** If required start new page and write headings
+     C           PLINE     IFGE 50                         B*2
+     C                     WRITEMC0270H1                   **2
+     C                     WRITEMC0270H2                   **2
+     C                     END                             E*2
+      *
+     C                     WRITEMC0270D2                   *1
+     C                     CLOSEMC0270P1                   *1
+     C                     END                             E1
+      *
+     C           #ZA9      ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      * SR/#A - Initial processing
+      *
+      * Called from:     MAIN routine
+      *
+      **************************************************************
+     C           #A        BEGSR
+      *
+      ** Use copyright array to ensure copyright gets into object
+     C                     MOVEACPYP      PBIS   80
+      *
+      ** Obtain bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDBANKPD'DBFILE           *1
+     C                     Z-ADD001       DBASE            *1
+     C                     MOVEL'*FIRST  'DBKEY            *1
+     C                     MOVEL'MC0270'  DBPGM            *1
+     C                     SETON                     U7U8LR*1
+     C                     DUMP                            *1
+     C                     EXSR #ZA                        *1
+     C***********          GOTO #A9                        *1 GOTO        128433
+     C                     EXSR *PSSR                                     128433
+     C                     END                             E1
+      *
+      ** Only show branch if system is multibranched
+     C           BJSBRC    IFEQ *BLANKS                    B1
+     C                     SETON                     14    *1
+     C                     END                             E1
+      *
+      ** Setup the date format indicator used by sr/ZDATE2
+     C           BJDFIN    IFEQ 'M'                        B1
+     C                     SETON                     98    *1
+     C                     END                             E1
+      *
+      ** Obtain General Ledger details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** DB error if not found
+     C           PRTCD     IFNE *BLANK                     B1
+     C                     MOVEL'SDGELRPD'DBFILE           *1
+     C                     Z-ADD06        DBASE            *1
+     C                     MOVEL'*FIRST'  DBKEY            *1
+     C                     MOVEL'MC0270'  DBPGM            *1
+     C                     SETON                     U7U8LR*1
+     C                     DUMP                            *1
+     C                     EXSR #ZA                        *1
+     C***********          GOTO #A9                        *1 GOTO        128433
+     C                     EXSR *PSSR                                     128433
+     C                     END                             E1
+      *
+      ** Setup the Profit Centres Used indicator
+     C           BKPRCU    IFEQ 'Y'                        B1
+     C                     SETON                     15    *1
+     C                     END                             E1
+      *
+      ** Obtain File Reorg. Print Option field from dtaara/GLSTAT
+     C           *NAMVAR   DEFN           GLSTAT
+     C                     IN   GLSTAT
+      *
+     C           #A9       ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/*PSSR - Program error subroutine
+      *
+      * Called by:   Executes whenever program error occurs
+      *
+      ***************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Set PERR1 to 'Y' to prevent looping if further errors
+     C           PERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR1   1        *1
+     C                     SETON                     U6    *1
+      *                                                    *1
+      ** Set up fields in LDA
+     C                     MOVEL'*PSSR   'DBKEY            *1
+     C                     Z-ADD991       DBASE            *1
+     C                     MOVEL'MC0270'  DBPGM            *1
+      *
+      ** Dump the program
+     C                     DUMP                            *1
+      *
+      ** Produce error report on audit trail
+     C                     EXSR #ZA                        *1
+     C                     END                             E1
+      *
+     C* If program error and GLAVBLL1 or GLHIBLL2 open close files.       128433
+     C*                                                                   128433
+     C           PAVBLO    IFEQ '1'                                       128433
+     C                     CLOSEGLAVBLL1                                  128433
+     C                     CLOSEGLHIBLL2                                  128433
+     C                     END                                            128433
+     C*                                                                   128433
+      ** Terminate the program
+     C                     SETON                       LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      /EJECT
+      **************************************************************
+      *
+      * SR/INFSR - File error subroutine
+      *
+      * Called by:   Executes whenever file exception/error occurs
+      *
+      ***************************************************************
+      *
+     C           INFSR     BEGSR
+      *
+      ** Set PERR2 to 'Y' to prevent looping if further errors
+     C           PERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       PERR2   1        *1
+     C                     SETON                     U7U8  *1
+      *                                                    *1
+      ** Set up fields in LDA
+     C                     MOVEL'INFSR   'DBKEY            *1
+     C                     Z-ADD992       DBASE            *1
+     C                     MOVEL'MC0270'  DBPGM            *1
+      *
+      ** Dump the program
+     C                     DUMP                            *1
+      *
+      ** Produce error report on audit trail
+     C                     EXSR #ZA                        *1
+     C                     END                             E1
+      *
+      ** Terminate the program
+     C                     SETON                       LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      **************************************************************
+      /EJECT
+      *
+      ** Release record from lf/GLHIBLL2 if no update required
+     O@HIBLED E                HIBLL2
+      *
+      **************************************************************
+      *
+** CPYP         OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   PC   - Check member exists
+CHKOBJ OBJ(GL....L.) OBJTYPE(*FILE) MBR(..)
+**   PO   - Override to correct file member
+OVRDBF FILE(GL....L.) MBR(..)
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN used by sr/ZDATE2
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR used by sr/ZDATE2
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES used by sr/ZDATE2
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

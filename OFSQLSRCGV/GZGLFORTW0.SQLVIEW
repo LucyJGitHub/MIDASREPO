@@ -1,0 +1,154 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - General Ledger Module                                         */
+/*                                                                             */
+/*       GZGLFORTW0 - Midas OF Total Forecast View                             */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2013                     */
+/*                                                                             */
+/*       Last Amend No. CDL094             Date 01Sep14                        */
+/*       Prev Amend No. MD027713           Date 24Jun14                        */
+/*                      MD027234           Date 28May14                        */
+/*                      MD027208           Date 28May14                        */
+/*                      MD026434           Date 23Apr14                        */
+/*                      MD026324           Date 11Apr14                        */
+/*                      CGL155             Date 25MAr14                        */
+/*                      CRE090             Date 14Feb14                        */
+/*                      MD024607           Date 28Jan14                        */
+/*                      MD024476           Date 22Jan13                        */
+/*                      MD024067           Date 17Dec13                        */
+/*                      MD024003           Date 10Dec13                        */
+/*                      MD023805           Date 27Nov13                        */
+/*                      MD023551A          Date 22Nov13                        */
+/*                      MD023432           Date 15Nov13                        */
+/*                      MD023437           Date 14Nov13                        */
+/*                      MD023395           Date 13Nov13                        */
+/*                      CGL145B            Date 28Oct13                        */
+/*                      CGL145A  *CREATE   Date 08Oct13                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CDL094 - Enhance  Receive Settlement Instructions                     */
+/*                (Recompile on GZSDNOSTPD changes)                            */
+/*       MD027713 - Deleted daily limit still appears in forecast total        */
+/*                  listview                                                   */
+/*       MD027234 - Forecast totals are listed twice in Forecast Totals        */
+/*                  listview                                                   */
+/*       MD027208 - RT postings not included in Nostro Group Totals            */
+/*                  (Recompile)                                                */
+/*       MD026434 - Difference column in Forecast Total                        */
+/*       MD026324 - Filter from total listview for Exceed Yed/No doesn't work  */
+/*       CGL155 - Forecast Group Limits                                        */
+/*       CRE090 - Delay Capitalisation of Interest (Recompile)                 */
+/*       MD024607 - Daily Limit value becomes zero when Retail Account is      */
+/*                  added to the Forecast  whose Static Data has none          */
+/*       MD024476 - Nostro Total Forecast field at Forecast Totals has a       */
+/*                  different amount than the forecast generated.              */
+/*       MD024067 - Forecast CR to Retail was added to the CL balance in       */
+/*                  Forecast Totals which should not have                      */
+/*       MD024003 - Nostro Summary screen does not display any details.        */
+/*       MD023805 - No transaction in the Forecast Totals is shown when All    */
+/*                  or Active is selected in the List configuration            */
+/*       MD023551A - Credit Line Balance in the Forecast Totals Listview       */
+/*                   displays erroneous amount.                                */
+/*       MD023432 - Forecast input reflected twice on both Forecast.           */
+/*                - Added TFFCCY and TFRCCY field.                             */
+/*       MD023437 - Forecast Static Data related info is not reflected in the  */
+/*                  Forecast Total Listview                                    */
+/*       MD023395 - Insufficient Funds column is Yes when Retail Account       */
+/*                  has funds in the Forecast Total Listview.                  */
+/*       CGL145B - Subsidiaries Daily Sweeping Forecast (Drop 3)               */
+/*       CGL145A - Subsidiaries Daily Sweeping Forecast                        */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT A.*, B.CGRNM AS TFRNM, B.CGRTN AS TFRTN, B.CGCSSN AS TFSNAM,           :
+  C.ANAM AS TFANAM, C.BRCA AS TFBRCA, C.CLBL AS TFCLBL,                         :
+  CASE WHEN C.FACT = 0 AND C.FCNO = 0 THEN '' ELSE                              :
+  DIGITS(C.FACT) CONCAT DIGITS(C.FCNO) END AS TFFCNO,                           :
+  D.ANAM AS TFNNAM, D.A7CUST AS TFNCUS,                                         :
+  D.BBCRNM AS TFNRNM, D.BBCRTN AS TFNRTN,                                       :
+  /**********CASE WHEN A.TFTATL < 0 THEN A.TFACTL - A.TFAMNT **********/        :            CGL145B
+  /**********ELSE A.TFTATL - A.TFAMNT END AS TFDIFF, **********/                :            CGL145B
+  /**********CASE WHEN A.TFTATL != 0 THEN A.TFTATL - A.TFAMNT***/               :   CGL145B MD026434
+  /**********WHEN A.TFACTL != 0 THEN A.TFACTL - A.TFAMNT ELSE 0 END AS TFDIFF,*/:   CGL145B MD026434
+  (A.TFACTL + A.TFTATL) - A.TFAMNT AS TFDIFF,                                   :           MD026434
+  E.FCDLMT AS TFDLMT, E.FCACSA AS TFACSA,                                       :
+  /**********F.SAVAILAMT AS TFFAVL, G.IFNFTL AS TFNFTL, **********/             :          MD023551A
+  F.SAVAILAMT AS TFFAVL, F.SFAMT, F.FCXLVR, F.SCAMD, F.SFCXCOF,                 :          MD023551A
+  F.FCXALV, F.SFCXCV2, G.IFNFTL AS TFNFTL,                                      :          MD023551A
+  F.FCCY AS TFFCCY, C.CCY AS TFRCCY,                                            :           MD023432
+  CASE WHEN A.TFACNO != 0 THEN DIGITS(A.TFACNO)                                 :
+  ELSE C.BRCA CONCAT C.CNUM CONCAT C.CCY CONCAT                                 :
+  DIGITS(C.ACOD) CONCAT DIGITS(C.ACSQ) END AS TFACCT,                           :
+  FCTBAL,                                                                       :           CGL155
+  NGDLIM,                                                                       :           CGL155
+  NGLCCY,                                                                       :           CGL155
+  /**********CASE WHEN F.SAVAILAMT < 0 OR C.CLBL < 0 THEN 'Y' **********/       :           MD023395
+  /**********ELSE 'N' END AS TFINSF, CASE WHEN G.IFNFTL > E.FCDLMT **********/  :           MD023395
+  /***CASE WHEN G.IFNFTL > E.FCDLMT********************************************/:  MD023395 MD026324
+  /***THEN*'Y'*ELSE*'N'*END*AS*TFLMTE******************************************/:           MD026324
+  ' ' AS TFLMTE                                                                 :           MD026324
+  ,H.F1DAT0 AS TFDAT0,H.F1DAT1 AS TFDAT1,H.F1DAT2 AS TFDAT2, H.F1DAT3 AS        :          MD023551A
+  TFDAT3, H.F1DAT4 AS TFDAT4, H.F1DAT5 AS TFDAT5, H.F1DAT6 AS TFDAT6,           :          MD023551A
+  H.F1DAT7 AS TFDAT7,  H.F1DAT8 AS TFDAT8,  H.F1DAT9 AS TFDAT9,                 :          MD023551A
+  H.F1AVA0 AS TFAVA0, H.F1AVA1 AS TFAVA1,H.F1AVA2 AS TFAVA2,H.F1AVA3 AS TFAVA3, :          MD023551A
+  H.F1AVA4 AS TFAVA4,H.F1AVA5 AS TFAVA5,  H.F1AVA6 AS TFAVA6,                   :          MD023551A
+  H.F1AVA7 AS TFAVA7,H.F1AVA8 AS TFAVA8,  H.F1AVA9 AS TFAVA9,                   :          MD023551A
+  /*****,H.F1AVA0 AS TFAVA0, I.AFAVAIL AS TFAVAIL, C.FCCU AS TFFCCU *****/      :   CGL145B MD023432
+  /**********,H.F1AVA1 AS TFAVA1, I.AFAVAIL AS TFAVAIL, C.FCCU AS TFFCCU *****/ : MD023432 MD023551A
+   I.AFAVAIL AS TFAVAIL, C.FCCU AS TFFCCU                                       :          MD023551A
+  , '' AS TFINSF                                                                :           MD023437
+  , F.FRUN00, F.FRUN01, F.FRUN02, F.FRUN03, F.FRUN04, F.FRUN05, F.FRUN06        :           MD023805
+  , F.FRUN07, F.FRUN08, F.FRUN09, F.SOAM01, F.SOAM02, F.SOAM03, F.SOAM04        :           MD023805
+  , F.SOAM05, F.SOAM06, F.SOAM07, F.SOAM08, F.SOAM09, F.SOAM10                  :           MD023805
+  , J.CLDAT0, J.CLDAT1, J.CLDAT2, J.CLDAT3, J.CLDAT4                            :           MD024067
+  , J.CLDAT5, J.CLDAT6, J.CLDAT7, J.CLDAT8, J.CLDAT9, J.CLFTB0                  :           MD024067
+  , J.CLFTB1, J.CLFTB2, J.CLFTB3, J.CLFTB4, J.CLFTB5, J.CLFTB6                  :           MD024067
+  , J.CLFTB7, J.CLFTB8, J.CLFTB9                                                :           MD024067
+  FROM GZGLFORTTD A LEFT OUTER JOIN                                             :
+  GPGLCUSL B ON A.TFCUST = B.CGCUST AND                                         :
+  A.TFZONE = B.CGZONE LEFT OUTER JOIN GZACCNTAB C                               :
+  ON A.TFFACN = C.BRCA CONCAT C.CNUM                                            :
+  CONCAT C.CCY CONCAT DIGITS(C.ACOD) CONCAT DIGITS(C.ACSQ)                      :
+  LEFT OUTER JOIN GZSDNOSTW0 D                                                  :
+  ON A.TFNOSC = D.A7NONB AND A.TFCCY =                                          :
+  /**********D.A7CYCD LEFT OUTER JOIN GZSDFCSDTD E **********/                  :           MD023805
+  /**********D.A7CYCD AND C.BRCA = D.A7BRCD LEFT OUTER JOIN GZSDFCSDTD E *****/ :  MD023805 MD024003
+  D.A7CYCD AND A.TFNBRC = D.A7BRCD LEFT OUTER JOIN GZSDFCSDTD E                 :           MD024003
+  ON A.TFCUST = E.FCCUST AND A.TFCSAC = E.FCCSRC                                :
+  AND A.TFCCY = E.FCCURR AND A.TFNOSC = E.FCNOTR                                :
+  AND FCRECI = 'D'                                                              :           MD027713
+  /**********AND A.TFFACN = E.FCBRCA CONCAT E.FCRCUS CONCAT E.FCRCCY **********/:           MD023437
+  /**********CONCAT DIGITS(E.FCRACD) CONCAT DIGITS(E.FCRASQ) **********/        :           MD023437
+  /**********AND (A.TFFACN = E.FCBRCA CONCAT E.FCRCUS CONCAT E.FCRCCY**********/:  MD023437 MD024607
+  /**********CONCAT DIGITS(E.FCRACD) CONCAT DIGITS(E.FCRASQ) ORA.TFFACN =  '')*/:  MD023437 MD024607
+  /**********LEFT OUTER JOIN GZFCLTLVPD F ON C.FCCU = F.PADCNUM ***********/    :          MD023551A
+  LEFT OUTER JOIN V_FCLTY F ON C.FCCU = F.PADCNUM                               :          MD023551A
+  AND DIGITS(C.FACT) = F.PADFACT AND DIGITS(C.FCNO) = F.PADFCNO                 :
+  LEFT OUTER JOIN GZGLNFTLW0 G ON                                               :
+  A.TFCUST = G.IFCUST AND A.TFCSAC = G.IFCSAC                                   :
+  AND A.TFCCY = G.IFCCY AND A.TFNOSC = G.IFNOSC AND A.TFNOSC != ''              :
+  AND A.TFDATE = G.IFDATE                                                       :           MD024476
+  LEFT OUTER JOIN GZGLACNTQD H ON A.TFFACN = H.F1BRCA CONCAT                    :            CGL145B
+  H.F1CNUM CONCAT H.F1CCY CONCAT DIGITS(H.F1ACOD) CONCAT DIGITS(H.F1ACSQ)       :            CGL145B
+  LEFT OUTER JOIN GZGLFOAVTD I ON ((A.TFFACN = I.AFBRCA CONCAT                  :            CGL145B
+  I.AFCNUM CONCAT I.AFCCY CONCAT DIGITS(I.AFACOD) CONCAT DIGITS(I.AFACSQ))      :            CGL145B
+  /**********AND (A.TFDATE = I.AFDATE)); **********/                            :   CGL145B MD024067
+  AND (A.TFDATE = I.AFDATE))                                                    :           MD024067
+  LEFT OUTER JOIN GZGLFOCLTD J ON C.BRCA = J.CLBRCA AND C.FCCU = J.CLFCUS AND   :           MD024067
+  C.FACT = J.CLFACT AND C.FCNO = J.CLFCNO                                       :           MD024067
+  LEFT JOIN GZSDNGLDTD ON NCNCCY = TFCCY AND NCNOSC = TFNOSC AND NCZONE =       :           CGL155
+  TFZONE                                                                        :           CGL155
+  AND NCRECI = 'D'                                                              :           MD027234
+  LEFT JOIN GZSDNGLHTD ON NGGRPC = NCGRPC AND NGZONE = NCZONE AND NGRECI = 'D'  :           CGL155
+  LEFT JOIN GZGLFRBLTD ON TFDATE = FCDATE AND NCGRPC = FCGRPC AND FCZONE =      :           CGL155
+  NCZONE                                                                        :           CGL155
+  ;                                                                                         MD024067
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas OF Total Forecast View                      ';                     :
+                                                                                :

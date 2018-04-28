@@ -1,0 +1,68 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       P_MLWIPTDY - Midas GP All the WIP Records Actioned Today              */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*       Last Amend No. BUG1514            Date 08Apr04                        */
+/*       Prev Amend No. CGP001  *CREATE    Date 05Mar04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       BUG1514- 'No Details' reports not produced                            */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE PROCEDURE                                                              :
+  **********/**********                                                         :
+  (IN INCAT VARCHAR(10))                                                        :
+  DYNAMIC RESULT SETS 1                                                         :
+  LANGUAGE SQL                                                                  :
+  SPECIFIC P_MLWIPTDY                                                           :
+  NOT DETERMINISTIC                                                             :
+  MODIFIES SQL DATA                                                             :
+  CALLED ON NULL INPUT                                                          :
+                                                                                :
+  BEGIN                                                                         :
+  DECLARE C1 CURSOR WITH RETURN FOR                                             :
+  SELECT                                                                        :
+   MSWID AS WID,                                                                :
+   MSWSTAT AS STATUS,                                                           :
+   CASE MSWSTAT                                                                 :
+    WHEN 'AUTHORISED' THEN MSWAUTH                                              :
+    WHEN 'APPROVED' THEN MSWAPPR                                                :
+    WHEN 'TO_APPROV' THEN MSWINPUSER                                            :
+    WHEN 'TO_AUTHORISE' THEN MSWINPUSER                                         :
+    WHEN 'NOT_AUTHORISED' THEN MSWAUTH                                          :
+   END BY,                                                                      :
+   CASE MSWSTAT                                                                 :
+    WHEN 'AUTHORISED' THEN DATE (MSWAUTHTS)                                     :
+    WHEN 'APPROVED' THEN DATE (MSWAPPRTS)                                       :
+    WHEN 'TO_AUTHORISE' THEN DATE (MSWINPTS)                                    :
+    WHEN 'TO_APPROV' THEN DATE (MSWINPTS)                                       :
+    WHEN 'NOT_AUTHORISED' THEN DATE (MSWAUTHTS)                                 :
+   END DATE,                                                                    :
+   MSWCAT AS CATEGORY,                                                          :
+   MSWTREF AS REFERENCE,                                                        :
+   MSWDATA AS DATA,                                                             :
+   MSWZONE AS ZONE                                                              :
+   FROM T_MSWIP                                                                 :
+   WHERE MSWID IN                                                               :
+****(SELECT*WIPID*FROM*V_WIPMDFED*WHERE*MSWCAT=INCAT);**************************:BUG1514
+    (SELECT WIPID FROM V_WIPMDFED WHERE MSWCAT=INCAT)                           :BUG1514
+     AND NOT (MSWTREF IS NULL OR MSWTREF = '');                                 :BUG1514
+                                                                                :
+  OPEN C1;                                                                      :
+  END;                                                                          :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Midas GP All the WIP Records Actioned Today       ';                     :
+                                                                                :

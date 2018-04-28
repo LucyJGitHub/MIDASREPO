@@ -1,0 +1,69 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_LEPRATPD - Midas Default Penalty Rates for Loans                    */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2012                     */
+/*                                                                             */
+/*       Last Amend No. MD020672           Date 29May13                        */
+/*       Prev Amend No. AR695705           Date 14Oct12                        */
+/*                      CLE134   *CREATE   Date 01Aug12                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD020672 - Unexpected error in Default Penalty Rate Maintenance       */
+/*       AR695705 - Changed the condition for checking if the loan is live     */
+/*                  (Child: AR696423)                                          */
+/*       CLE134 - Past Due Call Loan Processing                                */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT DISTINCT                                                               :
+  A.B2RECI AS B2RECI,                                                           :
+  A.B2LNRF AS B2LNRF,                                                           :
+  A.B2CAPI AS B2CAPI,                                                           :
+  A.B2SPLI AS B2SPLI,                                                           :
+  A.B2PBSR AS B2PBSR,                                                           :
+  A.B2PBRT AS B2PBRT,                                                           :
+  A.B2PRSP AS B2PRSP,                                                           :
+  A.B2PRAT AS B2PRAT,                                                           :
+  A.B2PICB AS B2PICB,                                                           :
+  A.B2IBSR AS B2IBSR,                                                           :
+  A.B2IBRT AS B2IBRT,                                                           :
+  A.B2IRSP AS B2IRSP,                                                           :
+  A.B2IRAT AS B2IRAT,                                                           :
+  A.B2IICB AS B2IICB,                                                           :
+  A.B2POPR AS B2POPR,                                                           :
+  B.CCY AS B2LCCY,                                                              :
+  B.CNUM AS B2CNUM,                                                             :
+  B.VDAT AS B2VDAT,                                                             :
+  C.BBCRNM AS B2RPTN,                                                           :
+  C.BBCRTN AS B2RPTW,                                                           :
+  CASE WHEN D.YPORG IS NOT NULL OR E.YPORG IS NOT NULL THEN 'Y'                 :
+       ELSE 'N' END AS B2PDCL,                                                  :
+  (SELECT COUNT(*)                                                              :
+   FROM LEDPRTX0 EX                                                             :
+***WHERE*EX.B2LNRF*=*DIGITS(A.B2LNRF)*******************************************:           MD020672
+   WHERE EX.B2LNRF = A.B2LNRF                                                   :           MD020672
+   AND EX.B2CNUM = B.CNUM) AS PCLIP                                             :
+  FROM LEPRATPD A                                                               :
+       INNER JOIN CLOANCL B                                                     :
+           ON B.LNRF = A.B2LNRF                                                 :
+***********AND*B.RECI*=*'D'*****************************************************:           AR695705
+           AND ((B.RCAT IS NOT NULL AND B.RCAT > 0) OR  B.RECI = 'D')           :           AR695705
+       INNER JOIN SDCUSTPD C                                                    :
+           ON C.BBCUST = B.CNUM                                                 :
+       LEFT JOIN LEPDUEPD D                                                     :
+           ON B2LNRF = D.YPORG                                                  :
+           AND D.YRECI = 'D'                                                    :
+       LEFT JOIN LEPDUFPD E                                                     :
+           ON B2LNRF = E.YPORG                                                  :
+           AND E.YRECI = 'D';                                                   :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas Default Penalty Rates for Loans             ';                     :
+                                                                                :

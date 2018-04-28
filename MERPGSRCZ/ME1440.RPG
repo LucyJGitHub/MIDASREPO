@@ -1,0 +1,232 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME BIC Directory update')                        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module                            *
+     F*                                                               *
+     F*  ME1440  - BIC Directory update                               *
+     F*                                                               *
+     F*  Function - This program updates the BIC Directory table      *
+     F*             (MEBICDPD) with data from the BIC Plus Directory  *
+     F*             (MEBICPPD).                                       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR322362           Date 10Jun13               *
+      *  Prev Amend No. 263406             Date 30Dec09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT007  *CREATE    Date 12Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  AR322362 - Wrong city in BIC directory                       *
+      *           - Access MEBICPPD via new key from MEBICPL1         *
+     F*  263406 - Update MEBICDPD only with Unique BIC, Branch        *
+     F*  CFT007 - BIC Database Plus Integration                       *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***MEBICPPDIF  E           K        DISK                                                263406
+     FMEBICBPDIF  E           K        DISK                                                   263406
+     FMEBICPL1IF  E           K        DISK                                                   263406
+     F* BIC Plus Directory
+     F*
+     FMEBICDPDO   E           K        DISK
+     F* BIC Directory
+     F*
+      /EJECT
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *
+      *   70      READ  operation
+      *
+      *   90 - 99
+      *
+      *   U7      Data base error
+      *   U8      Data base error
+      *
+      /EJECT
+      *
+      *   SUB-ROUTINE DEFINITIONS
+      *   -----------------------
+      *
+      *   MAPPRC  Mapping processing
+      *
+      /EJECT
+      *
+      * Copyright
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *                                                                                     AR322362
+      ** Renamed BIKEY in MEBICBPD                                                          AR322362
+      *                                                                                     AR322362
+     IMEBICBD0                                                                              AR322362
+     I              BIKEY                           BKEYI                                   AR322362
+      *                                                                                     AR322362
+      * Data structure for compilation - Copyright insertion
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /EJECT
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      *
+      * Copyright
+     C                     MOVEACPY@      BIS@   80
+      *                                                                                     AR322362
+      ** Setup keylist for MEBICPL1                                                         AR322362
+      *                                                                                     AR322362
+     C           BICKY     KLIST                                                            AR322362
+     C                     KFLD           @@BIC                                             AR322362
+     C                     KFLD           NBEKYI  8                                         AR322362
+      *
+     C***********          READ MEBICPPD                 70                                   263406
+     C                     READ MEBICBPD                 70                                   263406
+     C           *IN70     DOWEQ*OFF
+      *                                                                                       263406
+      * Process only Unique BIC's                                                             263406
+     C           BIUBIC    IFNE *BLANKS                                                       263406
+     C                     MOVELBIUBIC    @@BIC  11                                           263406
+     C                     MOVE BIUBRC    @@BIC                                               263406
+     C                     MOVE BKEYI     NBEKYI                                            AR322362
+     C********** @@BIC     CHAINMEBICPL1             71                              263406 AR322362
+     C           BICKY     CHAINMEBICPL1             71                                     AR322362
+     C           *IN71     IFEQ '0'                                                           263406
+      *
+      * If BIC Plus record has not been deleted and the BIC is not
+      * blank, execute the mapping processing
+     C           BIFLAG    IFNE 'D'
+     C           BIBIC     ANDNE*BLANKS
+     C                     EXSR MAPPRC
+     C                     ENDIF
+      *                                                                                       263406
+     C                     ENDIF                                                              263406
+      *                                                                                       263406
+     C                     ENDIF                                                              263406
+      *
+     C***********          READ MEBICPPD                 70                                   263406
+     C                     READ MEBICBPD                 70                                   263406
+     C                     ENDDO
+      *
+      * Terminate program
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MAPPRC   : Mapping processing                                *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           MAPPRC    BEGSR
+      *
+      * Tag Identifier
+     C                     MOVE BITAG     BDTAG
+      * Modification Flag
+     C                     MOVE BIFLAG    BDMODF
+      * BIC (Bank, Country & Location)
+     C                     MOVELBIBIC     BDBICC
+      * BIC (Branch Code)
+     C                     MOVE BIBIC     BDBICB
+      * Institution Name
+     C           35        SUBSTBIINST:1  BDINS1
+     C           35        SUBSTBIINST:36 BDINS2
+     C           35        SUBSTBIINST:71 BDINS3
+      * Branch Information
+     C                     MOVELBIBNCH    BDBRC1
+     C                     MOVE BIBNCH    BDBRC2
+      * City Heading
+     C                     MOVE BICITY    BDCITY
+      * Subtype Information
+     C                     MOVE BISTYP    BDSUBT
+      * Value Added Services
+     C                     MOVE BISERV    BDADDS
+      * Extra Information
+     C                     MOVE BIXINF    BDXINF
+      * Physical Address
+     C           35        SUBSTBIADDR:1  BDAPH1
+     C           35        SUBSTBIADDR:36 BDAPH2
+     C           35        SUBSTBIADDR:71 BDAPH3
+     C           35        SUBSTBIADDR:106BDAPH4
+      * ZIP Code
+     C                     MOVELBIZIP     BDZIP
+      * Location
+     C           20        SUBSTBILOCN:1  BDLOC1
+     C           35        SUBSTBILOCN:21 BDLOC2
+     C           35        SUBSTBILOCN:56 BDLOC3
+      * Country Name
+     C                     MOVELBICNTY    BDCTY1
+     C                     MOVE BICNTY    BDCTY2
+      * POB Number
+     C                     MOVE BIPOBN    BDPOBN
+      * POB Location
+     C           20        SUBSTBIPOBL:1  POBTM1 20
+     C                     MOVELBIPOBZ    BDPOB1
+     C                     MOVE POBTM1    BDPOB1
+     C           35        SUBSTBIPOBL:21 BDPOB2
+     C           35        SUBSTBIPOBL:56 BDPOB3
+      * POB Country Name
+     C                     MOVELBIPOBC    BDPBC1
+     C                     MOVE BIPOBC    BDPBC2
+      * Source of Information
+     C                     MOVELBISRCI    BDSRC
+      * Special Code
+     C                     MOVELBISPEC    BDSPCD
+      * Non Merged Flag
+     C                     MOVE *BLANK    BDNMFG
+      * Update Date
+     C                     MOVE BIUPDT    BDUDAT
+      * Origin key
+     C                     MOVE BIORIG    BDORGK
+      * BIC Plus Key
+     C                     MOVE BIKEY     BDKEY
+      * CHIPS UID
+     C                     MOVE BICHIP    BDCHIP
+      * National Id
+     C                     MOVE BINATI    BDNATI
+      * Activation Date
+     C                     MOVE BIACTD    BDACTD
+      * De-activation Date
+     C                     MOVE BIDCTD    BDDACT
+      * BIC Undo-Merge BIC Key
+     C                     MOVE *BLANKS   BDUMKY
+      * User Field
+     C                     MOVE BIUSER    BDUSER
+      * Cross Border Info
+     C                     MOVE BICBI1    BDCRS1
+     C                     MOVE BICBI2    BDCRS2
+     C                     MOVE BICBI3    BDCRS3
+     C                     MOVE BICBI4    BDCRS4
+      * Cross Border Info with date
+     C                     MOVE BICBD1    BDCRD1
+     C                     MOVE BICBD2    BDCRD2
+      * Reserved for Future used
+     C                     MOVELBIFILL    BDTRLR
+      *
+      * Write a new record on the BIC Directory table
+     C                     WRITE@BICDPD
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,306 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO CI Transaction Types access object')
+      *****************************************************************
+      *                                                               *
+      *  Midas Access Objects Module                                  *
+      *                                                               *
+      *  AOBAITR0 - Read Access to Transaction Types File             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  LAST AMEND NO. CRT003  *CREATE    DATE 22JUL96               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CRT003 - Cashier Interface                                   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L     FUNCTION OF INDICATORS                      *
+      *                                                               *
+      *       01       OPEN FILE                                      *
+      *       90       FILE ERROR                                     *
+      *       91       OPEN ERROR                                     *
+      *       92       CLOSE ERROR                                    *
+      *       93       EMPTY FILE                                     *
+      *       94       END OF FILE                                    *
+      *       95       NO RECORD FOUND                                *
+      *       96       OPTION ERROR                                   *
+      *       97       NO SELECTION                                   *
+      *       98       CALL ERROR                                     *
+      *       99       SEND MESSAGE ERROR                             *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     FSDBAITL1IF  E           K        DISK                           UC
+     F            @BAITL1                           KRENAME@BAIT
+      * IN  - @BAITL1 Tran. Types      (FXBAIT) Transaction Types
+      *...........................................................
+     FSDBAITL2IF  E           K        DISK                           UC
+     F            @BAITL2                           KRENAME@TTFC
+      * IN  - @BAITL2 Tran. Types      (FXTTFC) Function Code
+      ************************************************************
+      /SPACE 3
+     E*ESTART
+      ***************************************************
+     E                    @MG     1   1 50
+      * Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright
+      ************************************************************
+      *-----------------------------------------------------------
+     E                    @IN        10  1  A            Input array
+      ***************************************************
+      /EJECT
+     I*ISTART
+      ************************************************************
+     IP@MGDA      DS
+     I                                        1  50 @MG
+      *
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     ID@FMT     E DSSDBAITPD
+      * @TTYP - BAI transaction type record format data structure
+      *
+     IP@FMT     E DSDSFDY
+     I* External Data structure to hold the outgoing record format
+     I* of the file.
+      *
+     IP@KEY1      DS
+      * Key input data structure
+     I                                        1  10 @IN
+     I                                        1  10 W@BAIT
+     I                                        1   1 W@INIT
+     I                                        1   2 W@SP
+     I                                        1   3 W@TTFC
+     I                                        4  10 W@BLNK
+      *
+     I*
+      * Description     : Copyright notice for inclusion in all programs
+     I*
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+      ************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM           P@KEY1           I:Key field
+     C                     PARM           P@KYST  7        O:Key status
+     C                     PARM           P@FMT            O:Format
+      *****************************************************
+      *MAIN
+      *
+      * Access Option *SAME input
+      *
+     C           P@OPTN    IFEQ '*SAME '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     END
+      *
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     939495 ¦ error
+     C                     SETOF                     969798 ¦ indicators
+     C                     SETOF                     505152 Test indicator
+     C                     SETOF                     535455 Selection inds.
+     C                     MOVE *BLANK    P@KYST            Key status
+     C                     MOVE *BLANK    W@ALGN 10         Align key
+      *
+      * Check key to determine file to use :
+      *
+      *    1. Check for first two characters if SP        -> BAI Tran Type
+      *    2. Otherwise, key field is in error
+      *
+     C           P@OPTN    IFEQ '*KEY   '                  IF KEYED ACCESS
+     C           P@OPTN    OREQ '*VERIFY'                  OR VERIFY
+      *                    ¦
+      * a) Align and check transaction type or function code:
+      *                    ¦
+     C                     Z-ADD1         P1      30         Set pointer
+     C           *BLANK    LOKUP@IN,P1               97      First non-blank
+     C           *IN97     CABEQ'0'       T@SKIP         97  -> Key is blank
+      *                    ¦
+     C                     MOVEA@IN,P1    W@ALGN             ¦ Align
+     C                     MOVE W@ALGN    P@KEY1             ¦ left
+      *                    ¦
+     C           W@SP      IFEQ 'SP'                       IF 'SP'
+     C                     MOVE '*TTYP  ' P@KYST             Tran Type
+     C                     ELSE                            EL 2 Func. Code
+     C           W@BLNK    CABNE*BLANK    T@SKIP     9797    -> Chars.>3
+     C                     SETON                     50      Func Code ind.
+     C                     MOVE '*TTFC  ' P@KYST         97  Func Code
+     C                     END                             FI 2
+      *                    ¦
+     C                     END                             FI 1
+      *
+      * First call - open files :
+      *
+     C           *IN50     IFEQ '0'                        IF 3 TRAN TYPE
+     C           *IN01     IFEQ '0'                        IF 4 FIRST TIME
+     C                     SETON                     01      Set ind.
+     C                     OPEN SDBAITL1               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI 4
+     C                     ELSE                            EL 3 FUNC CODE
+     C           *IN02     IFEQ '0'                        IF 5 FIRST TIME
+     C                     SETON                     02      Set ind.
+     C                     OPEN SDBAITL2               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     END                             FI 5
+     C                     END                             FI 3
+      *
+      * Last call - close files and terminate program :
+      *
+     C           P@OPTN    IFEQ '*FREE  '                  IF 6 FREE PROGRAM
+     C   01                CLOSESDBAITL1               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C   02                CLOSESDBAITL2               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C                     SETON                     LR      Set ind.
+     C                     RETRN                             Return
+     C                     END                             FI 6
+      *
+      * Caller requests first record :
+      *
+     C           P@OPTN    IFEQ '*FIRST '                  IF 3 FIRST RECORD
+     C           *LOVAL    SETLL@BAIT                9390    Set file
+     C           *IN93     CABEQ'1'       T@SKIP             Empty file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*NEXT  ' P@OPTN             Force *Next
+     C                     END                             FI 3
+      *
+      * Caller requests next record :
+      *
+     C           P@OPTN    IFEQ '*NEXT  '                  IF 4 NEXT RECORD
+     C                     READ @BAIT                  9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 4
+      *
+      * Caller requests last record :
+      *
+     C           P@OPTN    IFEQ '*LAST  '                  IF 5 LAST RECORD
+     C           *HIVAL    SETGT@BAIT                  90    Set file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     MOVE '*PREV  ' P@OPTN             Force *Prev
+     C                     END                             FI 5
+      *
+      * Caller requests previous record :
+      *
+     C           P@OPTN    IFEQ '*PREV  '                  IF 6 PREV.RECORD
+     C                     READP@BAIT                  9094  Read record
+     C           *IN94     CABEQ'1'       T@SKIP             End of file
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 6
+      *
+      * Caller requests record indicated by key :
+      *
+     C           P@OPTN    IFEQ '*KEY   '                  IF 7 KEYED ACCESS
+     C           P@OPTN    OREQ '*VERIFY'                   OR
+     C  N50      W@BAIT    CHAIN@BAIT                9590    Get record
+     C   50      W@TTFC    CHAIN@TTFC                9590    Get record
+      *
+      * Deleted Transaction Type not valid.
+      *
+     C           FXTYLC    IFEQ 'D'                        IF DELETED
+     C                     SETON                     95      No record found
+     C                     END                             FI
+      *
+     C           *IN95     CABEQ'1'       T@SKIP             No record found
+     C           *IN90     CABEQ'1'       T@SKIP         LR  File error
+     C                     END                             FI 7
+      *
+     C           P@OPTN    IFNE '*KEY   '                  IF 8 NOT KEYED
+     C           P@OPTN    ANDNE'*NEXT  '                   AND NOT SEQ.
+     C           P@OPTN    ANDNE'*PREV  '                   AND
+     C           P@OPTN    ANDNE'*VERIFY'                   AND
+     C           P@OPTN    ANDNE'*FREE  '                   AND
+     C                     SETON                       96    Parameter error
+     C                     END                             FI 8
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   94                MOVE '*EOF   ' P@RTCD           End of file
+     C   95                MOVE '*NRF   ' P@RTCD           No record found
+     C   96                MOVE '*OPTION' P@RTCD           Option error
+     C   97                MOVE '*KEY   ' P@RTCD           Invalid key
+     C   54                MOVE '*NOSEL ' P@RTCD           No selection
+     C   55                MOVE '*CALL  ' P@RTCD           Call error
+     C   97                MOVE '*ERROR ' P@KYST           Key status
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SEND MESSAGE
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   94                MOVE 'ACO1005' P@MGID             End of file
+     C   95                MOVE 'ACO1006' P@MGID             No record found
+     C   96                MOVE 'ACO1007' P@MGID             Option error
+     C   97                MOVE 'ACO1008' P@MGID             Invalid key
+     C   54                MOVE 'ACO1009' P@MGID             No selection
+     C   55                MOVE 'ACO1010' P@MGID             Call error
+     C                     CALL 'ZASNMG'                     <SEND MESSAGE>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Program name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Message ID
+     C                     PARM *BLANK    P@MSGF 10          I:Message file
+     C                     PARM *BLANK    P@MGKY  4          O:Message key
+     C                     PARM           P@MGDA 50          I:Message data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Message type
+     C                     END                             FI 9
+      *
+      * Caller Requests DB Error Handling
+      *
+     C           W@RTCD    IFEQ '*DBERR '                  IF
+     C           P@RTCD    ANDNE*BLANK                       AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI
+      *
+     C           P@OPTN    IFNE '*VERIFY'                  IF 13
+     C           P@OPTN    ANDNE'*FREE  '                    AND
+     C           P@RTCD    ANDNE'*OPTION'                    AND
+     C                     MOVELD@FMT     P@FMT            FI 13
+     C                     END
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**
+SDBAITPD  AOBAITR0  Transaction Types Detail
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

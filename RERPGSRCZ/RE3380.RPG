@@ -1,0 +1,2917 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Accd int and charges posted today report')    *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE3380 - RETAIL ACCR INTEREST & CHARGES POSTED TODAY REPORT  *
+     F*         - INTERIM ONLY.                                       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR751622           Date 02May11               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER016             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG26486           Date 19Oct09               *
+      *                 260297             Date 19May09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG9030 (Reopen)   Date 24Oct05               *
+      *                 BUG9030            Date 21Oct05               *
+      *                 BUG8506 (Reopen)   Date 20Oct05               *
+      *                 BUG8506            Date 03Oct05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. CDE002             Date 21Dec99               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 17May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 103460             Date 06Mar98               *
+     F*                 CRE001             Date 18Feb97               *
+     F*                 094127             Date 07APR97               *
+     F*                 S01408             DATE 12SEP96               *
+     F*                 103147             DATE 08JUL96               *
+     F*                 088029             DATE 08JUN95               *
+     F*                 S01408             DATE 31AUG94               *
+     F*                 074592             DATE 22AUG94               *
+     F*                 074578             DATE 17AUG94               *
+     F*                 040446             DATE 28SEP93               *
+     F*                 048574             DATE 28SEP93               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  AR751622 - Erroneous generated interest for Retail Account   *
+      *             (non-leap year) when calculation basis is 0. Need *
+      *             to include SR ZICD CER016 changes in /COPY        *
+      *             ZICDREZ2 - (Recompile)                            *
+      *             (Child: AR751623)                                 *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016 - German Interest Calculation: Upgarde of FGE059      *
+      *           to Midas Plus                                       *
+      *  BUG26486 - Coding standard (recompile)                       *
+      *  260297 - Incorrect interest calculation w/ calc basis 6.     *
+      *           Externalise SR/ZICD and patterned additional fix    *
+      *           from ZINTDYZ2. Applied fix 220323.                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG9030 - Incorrect accrual.                                 *
+      *  BUG9030 - Report does not show accrual details the day after *
+      *            capitalisation.                                    *
+      *  BUG8506 - (Reopen) CR/DR indicator not properly shown.       *
+      *  BUG8506 - Interim Retail Accrued Interest                    *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CDE002 - Revenue Analysis - Recompiled due to changes in     *
+      *           PF/ACCNTBXC.                                        *
+     F*  CSD006 - Use DSSDY for call to AOBSRTR0.                     *
+     F*  103460 - Only charge interest if the balance exceeds the     *
+     F*           initial threshhold.                                 *
+     F*  CRE001 - Overdraft Interest Calculation:                     *
+     F*           To include the Additional Overdraft Rate in the     *
+     F*           calculation of DR interest accrued to date.         *
+     F*  094127 - Database error 092/093 in file REHRDJ/REHRCJ if     *
+     F*           the debit/credit rates of an A/C have never been    *
+     F*           changed before.                                     *
+     F*  S01408 - Hook RE3380FFP1 added.                              *
+     F*           Hook RE3380IIP3 added.                              *
+     F*           Hook RE3380IIP2 added.                              *
+     F*           Hook RE3380IIP1 added.                              *
+     F*           Hook RE3380CCP8 added.                              *
+     F*           Hook RE3380CCP7 added.                              *
+     F*           Hook RE3380CCP6 added.                              *
+     F*           Hook RE3380CCP5 added.                              *
+     F*           Hook RE3380CCP4 added.                              *
+     F*           Hook RE3380CCP3 added.                              *
+     F*           Hook RE3380CCP2 added.                              *
+     F*           Hook RE3380CCP1 added.                              *
+     F*  103147 - Report does not show correct interest accrued to    *
+     F*           date. Use LCD from REACRD (renamed to RHISD) for    *
+     F*           start date, as per RE3364E, and current date for    *
+     F*           end of period. HISD is the date of the last DR/CR   *
+     F*           rate change, not the date interest has been         *
+     F*           calculated up to.                                   *
+     F*  088029 - Field 'RESULT' Not Correctly Formatted When         *
+     F*           American Date Format is Used.                       *
+     F*  S01408 - Hook RE3380CPD1 added.                              *
+     F*           Hook RE3380CPD2 added.                              *
+     F*           Hook RE3380CPD3 added.                              *
+     F*           Hook RE3380CPD4 added.                              *
+     F*           Hook RE3380CPD5 added.                              *
+     F*           Hook RE3380CPD6 added.                              *
+     F*  074592 - DB error in I/C report chain to REHRDJ on wrong     *
+     F*           branch. REACR missing branch on key.                *
+     F*  074578 - Tiered interest not rounded correctly               *
+     F*  040446 - Retail ACNO not always printed                      *
+     F*  048574 - Suppress update of REACRD                           *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     FSREAI   IP  F     160 19AI     2 DISK
+     FCLINT   IF  F     257  7AI     2 DISK
+     F***ACCNT** IF  F     414 18AI     2 DISK                                                CGL029
+     FACCNT   IF  F     573 24AI     2 DISK                                                   CGL029
+     FACCNTBXCIF  E           K        DISK                               CRE001
+     FREHRCJ  IF  E           K        DISK
+     FREHRDJ  IF  E           K        DISK
+     F***REACR***UF**E****       K        DISK                            048574
+     FREACR   IF  E           K        DISK                               048574
+     F                                              KINFDS READS
+     F                                              KINFSR REASR
+     F            REACRAF                           KIGNORE
+     F            REACRZF                           KIGNORE
+     FRE3380AUO   F     132     OA     PRINTER      KINFDS SPOOLU
+     FRE3380P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC
+     F*
+      *                                                                   S01408
+     F/COPY WNCPYSRC,RE3380FFP1                                           S01408
+      *                                                                   S01408
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   02  -  SREAI DETAIL                                         *
+     F*   03  -  SREAI TRAILER                                        *
+     F*                                                               *
+     F*   10  -  STATUS ERROR IN CASE OF UPDATE OF REACR FILE         *
+     F*                                                               *
+     F*   20  -  DEBIT RATE PLUS                                      *
+     F*   21  -  DEBIT RATE MINUS                                     *
+     F*   22  -  DEBIT MAN CR                                         *
+     F*   23  -  DEBIT GEN CR                                         *
+     F*   24  -  DEBIT ACC CR                                         *
+     F*   25  -  CREDIT RATE PLUS                                     *
+     F*   26  -  CREDIT RATE MINUS                                    *
+     F*   27  -  CREDIT MAN CR                                        *
+     F*   28  -  CREDIT GEN CR                                        *
+     F*   29  -  CREDIT ACC CR                                        *
+     F*   30  -  CHARGES CR                                           *
+     F*   31  -  LAST POSTING DATE ACCOUNT RECEIVABLE IS ZERO - LPAR  *
+     F*   32  -  LAST POSTING DATE ACCOUNT PAYABLE IS ZERO - LPAP     *
+     F*   35  -  DEBIT INTEREST TYPE/SUB-TYPE NON-ZERO                *
+     F*   36  -  CREDIT INTEREST TYPE/SUB-TYPE NON-ZERO               *
+     F*   37  -  CHARGES TYPE/SUB-TYPE NON-ZERO                       *
+     F*   38  -  Switchable Feature CRE001 Indicator                  *   CRE001
+     F*                                                               *
+     F*   41  -  SOMETHING PRINTED FOR THIS SREAI RECORD              *
+     F*   42  -  DETAILS TO BE REPORTED.                              *
+     F*   43  -  DEBIT DETAILS TO BE PRINTED                          *
+     F*   44  -  CREDIT DETAILS TO BE PRINTED                         *
+     F*   45  -  CHARGE DETAILS TO BE PRINTED                         *
+     F*   46  -  HAVE DETAILS BEING REPORTED                          *
+     F*                                                               *
+     F*   52  -  NOT FIRST CYCLE                                      *
+     F*   53  -  RETAIL ACCOUNT NUMBER PRESENT                        *
+     F*   54  -  RATE ZERO - DEBIT OR CREDIT                          *
+     F*   55  -  CURRENT RECORD DELETED                               *
+     F*   60  -  OUTPUT BRT CATEGORY                                  *
+     F*   65  -  PRINT DETAIL HEADINGS ON CHANGE BRANCH               *
+     F*   66  -  PRINTFILE OPEN FOR VALID SINGLE BRANCH               *
+     F*   67  -  BRANCH BEING READ <> REQUESTED BRANCH                *
+     F*                                                               *
+     F*   80  -  0 DECIMAL PLACES                                     *
+     F*   81  -  1 DECIMAL PLACE                                      *
+     F*   82  -  2 DECIMAL PLACES                                     *
+     F*   83  -  3 DECIMAL PLACES                                     *
+     F*   88  -  MULTIBRANCHING INDICATOR                             *
+     F*                                                               *
+     F*   90-99 - USED BY STANDARD SUBROUTINES                        *
+     F*   98    - DATE FORMAT FLAG IS 'M'                             *
+     F*   U7    - DATABASE ERROR                                      *
+     F*   U8    - DATABASE ERROR                                      *
+     F*   L1    - CHANGE OF BRANCH                                    *
+     F*   LR    - LAST RECORD INDICATOR                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST1 - First Cycle Processing                              *
+     F*  FINDCY - Gets Currency's Number of Decimal Places            *
+     F*  GETRAT - Gets Base Rate Details                              *
+     F*  REASR  - REACR File Exception/Error Handling                 *
+     F*  CHKBR  - Validates Branch Input on Facilities Detail Record  *
+     F*  DBSR   - Detects Database Error                              *
+     F*  *PSSR  - Handles Abnormal Error Conditions                   *
+     F*  #ZZ    - Spool File Control Subroutine                       *
+     F*  INTCAL - Calculates Interest Between Two Dates               *
+     F*  CRINIT - Loads Credit Rates                                  *
+     F*  DATEIN - Initial Date Processing                             *
+     F*  DRINIT - Loads Debit Rates                                   *
+     F*  ZIC00  - Calculates Interest (Type=00)                       *
+     F*  ZIC01  - Calculates Interest (Type=01)                       *
+     F*  ZIC02  - Calculates Interest (Type=02)                       *
+     F*  ZICD   - Finds No. of Days Accdg. to Calculation Basis       *
+     F*  ZDATE1 - Validates and Converts a Date to Number of Days     *
+     F*  ZDATE2 - Validates and Converts Number of Days to a Date     *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    ZIR        11 11 7             ZIC. INT.RATES
+     E                    ZIRD       11 11 7             ZIC. INT.RATES
+     E                    ZIRC       11 11 7             ZIC. INT.RATES
+     E                    ZIB        11 15 0A            ZIC. INT.BALANCES
+     E                    ZIBD       11 15 0             ZIC. INT.BALANCES
+     E                    ZIBC       11 15 0             ZIC. INT.BALANCES
+     E                    ZIN        11 13 0             ZIC. INT.CALC
+     E**********          ZIN1       11 18 5             ZIC. INT.CALC                 074578 220323
+     E                    ZIN1       11 30 9             ZIC. INT.CALC                        220323
+     E                    ZIA        11 15 0             ZIC. WORK ARRAY
+     E**********          ZIA1       11 15 5             ZIC. WORK ARRAY                      220323
+     E                    ZIA1       11 30 9             ZIC. WORK ARRAY                      220323
+     E/COPY WNCPYSRC,RE3380E001
+     E/EJECT
+     I*
+     ISREAI   NS  02   1 CD
+     I*
+     I** SREAI - JOIN LOGICAL FILE ON REIACD AND REACRD FILE.
+     I*
+     I                                        1   1 RECI
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I                                        8  10 CCY
+     I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+     I                                       15  160ASEQ
+     I**********                              2  19 THEKEY                                    CGL029
+     I                                       17  19 BRCA  L1
+     I* DEBIT INTEREST DETAILS
+     I                                    P  20  260DAIC
+     I                                    P  27  330MADI
+     I                                    P  34  400GADI
+     I* CREDIT INTEREST DETAILS
+     I                                    P  41  470CAIC
+     I                                    P  48  540MACI
+     I                                    P  55  610GACI
+     I                                    P  62  690HISB
+     I* REIAC DETAILS.
+     I                                       70  710DICT
+     I                                       72  760DCST
+     I                                       77  780CICT
+     I                                       79  830CCST
+     I                                       84  850CHCT
+     I                                       86  900CHST
+     I                                    P  91  970NRCA
+     I                                    P  98 1040RCA
+     I                                    P 105 1070LCD
+     I                                      122 1310ACOD                                      CGL029
+     I* TRAILER
+     I        NS  03   1 CZ
+     I* CATCHALL
+     I        NS
+     I                                        1   1 RECI
+     ICLINT   NS       1 CD   8 CA
+     I       OR        1 CC   8 CA
+     I*
+     I** CLIENT FILE - CUSTOMER STANDING DATA RECORD.
+     I*
+     I                                        1   1 RECI
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I                                       39  48 CSNM
+     I* CATCHALL
+     I        NS
+     I                                        1   1 RECI
+     IACCNT   NS
+     I*
+     I* ACCOUNT DETAILS
+     I*
+     I                                        1   1 RECI
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I**********                             11  140ACOD                                      CGL029
+     I                                       11  140ACODQQ                                    CGL029
+     I                                       15  160ASEQ
+     I                                      190 1990ACNO
+     I* DEBIT DETAILS
+     I                                    P 178 1837CDIR
+     I                                      242 2430DRIB
+     I                                    P 244 2497DRIS
+     I                                    P 250 2520DRCD
+     I                                      253 2530DRIC
+     I                                    P 271 2730LPAR
+     I* CREDIT DETAILS
+     I                                    P 184 1897CCIR
+     I                                      318 3190CRIB
+     I                                    P 320 3257CRIS
+     I                                    P 326 3280CRCD
+     I                                      329 3290CRIC
+     I                                    P 347 3490LPAP
+     I*
+     I                                      401 401 BRTCA
+      *                                                                   S01408
+      ** Overdraft Details                                                CRE001
+     I                                    P 202 2070ODRL                  CRE001
+     I                                    P 208 2100ODED                  CRE001
+     I                                      554 5630ACOD                                      CGL029
+     I/COPY WNCPYSRC,RE3380IIP1                                           S01408
+      *                                                                   S01408
+     I*
+     IREACRDF
+     I*
+     I** RENAME REACRDF FORMAT FIELDS - REACR FILE
+     I*
+     I              RECI                            RRECI                 CRE001
+     I              ACCY                            CCY
+     I              LCD                             RHISD
+     I              DAIC1                           DAIC
+     I              CAIC1                           CAIC
+     I              HISB                            RHISB
+     IREHRCJF
+     I*
+     I** RENAME REHRCJF FORMAT FIELDS - REHRCJ FILE
+     I*
+     I              RECI                            RECICJ
+     I              INTH                            INTHC
+     I              ACNO                            ACNOC                 040446
+     I*
+     IREHRDJF
+     I*
+     I** RENAME REHRDJF FORMAT FIELDS - REHRDJ FILE
+     I*
+     I              RECI                            RECIDJ
+     I              INTH                            INTHD
+     I              ACNO                            ACNOD                 040446
+     I*
+     I** DATA STRUCTURE FOR DATE FORMAT DD/MM/YY
+     I*
+     I            DS
+     I                                        1   60RESULT
+     I                                        1   20ZDAY
+     I                                        3   40ZMTH
+     I                                        5   60ZYEAR
+     I*
+     I** DATA STRUCTURE FOR BEGINNING DATE
+     I*
+     I            DS
+     I                                        1   60SRES
+     I                                        1   20ZISD
+     I                                        3   40ZISM
+     I                                        5   60ZISY
+     I*
+     I** DATA STRUCTURE FOR FINISHING DATE
+     I*
+     I            DS
+     I                                        1   60FRES
+     I                                        1   20ZIFD
+     I                                        3   40ZIFM
+     I                                        5   60ZIFY
+     I*                                                                   088029
+     I** DATA STRUCTURE FOR DATE FORMAT MM/DD/YY                          088029
+     I*                                                                   088029
+     I            DS                                                      088029
+     I                                        1   60RESULX                088029
+     I                                        1   20ZMTHX                 088029
+     I                                        3   40ZDAYX                 088029
+     I                                        5   60ZYEARX                088029
+     I*                                                                   088029
+     I** DATA STRUCTURE FOR BEGINNING DATE MM/DD/YY                       088029
+     I*                                                                   088029
+     I            DS                                                      088029
+     I                                        1   60SRESX                 088029
+     I                                        1   20ZISMX                 088029
+     I                                        3   40ZISDX                 088029
+     I                                        5   60ZISYX                 088029
+     I*                                                                   088029
+     I** DATA STRUCTURE FOR FINISHING DATE MM/DD/YY                       088029
+     I*                                                                   088029
+     I            DS                                                      088029
+     I                                        1   60FRESX                 088029
+     I                                        1   20ZIFMX                 088029
+     I                                        3   40ZIFDX                 088029
+     I                                        5   60ZIFYX                 088029
+     I*
+     I** DATA STRUCTURE TO SPLIT FROM ALPHA TO NUMERIC DEBIT AND
+     I** CREDIT BALANCES
+     I*
+     IWDBAL       DS
+     I                                    P   1  880ZIBD
+     I                                    P   1   80ZBD01
+     I                                    P   9  160ZBD02
+     I                                    P  17  240ZBD03
+     I                                    P  25  320ZBD04
+     I                                    P  33  400ZBD05
+     I                                    P  41  480ZBD06
+     I                                    P  49  560ZBD07
+     I                                    P  57  640ZBD08
+     I                                    P  65  720ZBD09
+     I                                    P  73  800ZBD10
+     I                                    P  81  880ZBD11
+     I                                    P  89  960ZBD12
+     I*
+     IWCBAL       DS
+     I                                    P   1  880ZIBC
+     I                                    P   1   80ZBC01
+     I                                    P   9  160ZBC02
+     I                                    P  17  240ZBC03
+     I                                    P  25  320ZBC04
+     I                                    P  33  400ZBC05
+     I                                    P  41  480ZBC06
+     I                                    P  49  560ZBC07
+     I                                    P  57  640ZBC08
+     I                                    P  65  720ZBC09
+     I                                    P  73  800ZBC10
+     I                                    P  81  880ZBC11
+     I                                    P  89  960ZBC12
+     I*
+     I** DATA STRUCTURE TO SPLIT FROM ALPHA TO NUMERIC DEBIT AND
+     I** CREDIT RATES
+     I*
+     IWDRAT       DS
+     I                                    P   1  667ZIRD
+     I                                    P   1   67ZRD01
+     I                                    P   7  127ZRD02
+     I                                    P  13  187ZRD03
+     I                                    P  19  247ZRD04
+     I                                    P  25  307ZRD05
+     I                                    P  31  367ZRD06
+     I                                    P  37  427ZRD07
+     I                                    P  43  487ZRD08
+     I                                    P  49  547ZRD09
+     I                                    P  55  607ZRD10
+     I                                    P  61  667ZRD11
+     I                                    P  67  727ZRD12
+     I*
+     IWCRAT       DS
+     I                                    P   1  667ZIRC
+     I                                    P   1   67ZRC01
+     I                                    P   7  117ZRC02
+     I                                    P  13  187ZRC03
+     I                                    P  19  247ZRC04
+     I                                    P  25  307ZRC05
+     I                                    P  31  367ZRC06
+     I                                    P  37  427ZRC07
+     I                                    P  43  487ZRC08
+     I                                    P  49  547ZRC09
+     I                                    P  55  607ZRC10
+     I                                    P  61  667ZRC11
+     I                                    P  67  727ZRC12
+     I*
+     I** KEY DATA STRUCTURE : REHKEY TO FILL DBKEY IF ERROR
+     I*
+     I            DS
+     I**********                              1  23 REHKEY                                    CGL029
+     I                                        1  29 REHKEY                                    CGL029
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 REHCCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ASEQ                                      CGL029
+     I**********                             19  230REHDAT                                    CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ASEQ                                      CGL029
+     I                                       25  290REHDAT                                    CGL029
+     I*
+     IREADS       DS
+     I*
+     I** DATA STRUCTURE FOR RPG ERROR HANDLING
+     I*
+     I                                     *STATUS  STSREA
+     I*
+     ILDA        UDS                            256
+     I*
+     I* STANDARD LOCAL DATA AREA FIELDS
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISPOOL       DS
+     I*
+     I**  FILE INFORMATION DATA STRUCTURE (FOR RE3380P1)
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I*
+     I**  FILE INFORMATION DATA STRUCTURE (FOR RE3380AU)
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IRUNDT       DS
+     I*
+     I** DATA AREA RUNDAT
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 AGDFF
+     I                                       13  13 MBIN
+      *                                                                   S01408
+     I/COPY WNCPYSRC,RE3380IIP2                                           S01408
+      *                                                                   S01408
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I**  EXTERNAL DATA STRUCTURE FOR BANK DETAILS
+     I*
+     I*
+     ISDBSRT    E DSSDBSRTPD
+     I*
+     I**  EXTERNAL DATA STRUCTURE FOR BASE RATE DETAILS
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I*
+     I**  EXTERNAL DATA STRUCTURE FOR BRANCH CODES
+     I*
+     I              A8BRNM                          BRNM
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I**  EXTERNAL DATA STRUCTURE FOR CURRENCY CODES
+     I*
+     I              A6NBDP                          @NBDP
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     ISCSARD    E DSSCSARDPD                                                                  CER016
+      *                                                                                       CER016
+      ** Externam DS SC Switchable Features                                                   CER016
+      *                                                                                       CER016
+     IDSSDY     E DSDSSDY
+     I*
+     I** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+      *                                                                   S01408
+     I/COPY WNCPYSRC,RE3380IIP3                                           S01408
+      *                                                                   S01408
+      ** Constant Value                                                                       CER016
+      *                                                                                       CER016
+     I              'InterestNumber'      C         PSYSVL                                    CER016
+     C/EJECT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** DEFINE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5         SEQUENCE NUM.
+     C                     PARM           BRNCH   3
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CCP1                                           S01408
+      *                                                                   S01408
+     C*
+     C** KEY LISTS
+     C*
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CCP2                                           S01408
+      *                                                                   S01408
+     C*
+     C** KEY FIELD TO ACCESS TO REHRDJ/REHRCJ FILE
+     C*
+     C           DCKEY     KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ASEQ
+     C                     KFLD           KDATE
+     C*
+     C** KEY FIELD TO CHAIN TO REACR FILE
+     C*
+     C           REACRK    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ASEQ
+     C                     KFLD           BRCA                            074592
+      *                                                                   CRE001
+      ** Key Field to chain to PF/ACCNTBXC                                CRE001
+      *                                                                   CRE001
+     C           ACNTBX    KLIST                                          CRE001
+     C                     KFLD           CNUM                            CRE001
+     C                     KFLD           CCY                             CRE001
+     C                     KFLD           ACOD                            CRE001
+     C                     KFLD           ASEQ                            CRE001
+     C                     KFLD           BRCA                            CRE001
+     C*
+     C** WORK FIELDS DEFINITION
+     C*
+     C           *LIKE     DEFN ACOD      ZLYCHK
+     C           *LIKE     DEFN RUND      ZIBEG
+     C           *LIKE     DEFN RUND      ZIEND
+     C           *LIKE     DEFN RUND      KDATE
+     C           *LIKE     DEFN RUND      ZIBW1
+     C           *LIKE     DEFN RUND      ZILPCP
+     C           *LIKE     DEFN RUND      ZIDREM
+     C           *LIKE     DEFN RUND      ZIDW2
+     C           *LIKE     DEFN RUND      ZID1
+     C           *LIKE     DEFN RUND      ZID2
+     C           *LIKE     DEFN RUND      ZLDTM
+     C           *LIKE     DEFN RUND      ZIREM
+     C           *LIKE     DEFN RHISB     DINT
+     C           *LIKE     DEFN RHISB     CINT
+     C           *LIKE     DEFN RHISB     ZIAMT
+     C           *LIKE     DEFN RHISB     ZIAMT1
+     C           *LIKE     DEFN RHISB     ZIAMTR
+     C           *LIKE     DEFN RHISB     ZITHR
+     C           *LIKE     DEFN RHISB     ZBAL
+     C           *LIKE     DEFN RHISB     WAMT                                                CER016
+     C           *LIKE     DEFN RHISB     WINAMT                                              CER016
+     C           *LIKE     DEFN RHISB     WNAMT1                                              CER016
+     C           *LIKE     DEFN RHISB     WNAMT2                                              CER016
+     C           *LIKE     DEFN ACSQ      ZICT
+     C           *LIKE     DEFN ACSQ      ZIDW1
+     C           *LIKE     DEFN ACSQ      ZIM1
+     C           *LIKE     DEFN ACSQ      ZLYREM
+     C           *LIKE     DEFN ACSQ      ZIY1
+     C           *LIKE     DEFN ACSQ      ZIMAN
+     C           *LIKE     DEFN ACSQ      Z
+     C           *LIKE     DEFN ACSQ      Y
+     C           *LIKE     DEFN CAIC      ZINTR
+     C           *LIKE     DEFN DRIS      ZIRATE
+     C           *LIKE     DEFN DRIS      WRATE                                               CER016
+     C*
+     C                     Z-ADD*ZEROS    ZICALC  10
+     C                     Z-ADD*ZEROS    LOOP    10
+     C                     Z-ADD*ZEROS    ZIFY2   30
+     C                     Z-ADD*ZEROS    ZISY2   30
+     C                     Z-ADD*ZEROS    ZINOM   30
+     C                     Z-ADD*ZEROS    ZIM2    30
+      *                                                                   CRE001
+     C                     Z-ADD*ZEROS    WWINTA 150                      CRE001
+     C                     Z-ADD*ZEROS    WWDRIA 150                      CRE001
+     C                     Z-ADD*ZEROS    WWODIA 150                      CRE001
+     C                     Z-ADD*ZEROS    WWODRL 150                      CRE001
+     C                     Z-ADD*ZEROS    X       30                      CRE001
+      *                                                                   CRE001
+     C*
+     C*================================================================
+     C**  MAIN PROCESSING
+     C*================================================================
+     C*
+     C  N52                EXSR FIRST1                     FIRST CYCLE
+     C                     SETOF                     434445
+     C                     SETOF                     55
+     C                     SETOF                     65
+     C                     SETOF                     202125
+     C                     SETOF                     26
+     C   99                GOTO END
+     C           RECI      COMP '*'                      55DELETED RECORD
+     C   55                                                DELETED
+     CORN02                GOTO END                         OR NOT RETAIL
+     C*
+     C           *INL1     IFEQ '1'
+     C  NLR                EXSR CHKBR
+     C*
+     C**   IF DATABASE ERROR ACCESSING BRANCH CODE RECORD
+     C**   OR BRANCH <> REQD BRANCH
+     C*
+     C           *IN67     CABEQ'1'       END
+     C                     END
+     C*
+     C**   SKIP TO END IF MBIN = 'Y', BRANCH REQUESTED <> ALL,
+     C**   AND THE BRANCH READ ON RECORD <> REQUESTED BRANCH
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           BRNCH     ANDNE'ALL'
+     C           BRCA      ANDNEBRNCH
+     C                     SETOF                     6566
+     C                     SETON                     67
+     C                     GOTO END
+     C                     END
+     C*
+     C/COPY WNCPYSRC,RE3380C013
+     C                     SETOF                     41
+     C                     ADD  1         COUNT
+      *                                                                                       CGL029
+      ** Setup key field THEKEY(24A) using 10 digit account code                              CGL029
+      *                                                                                       CGL029
+     C                     MOVELCNUM      WFLD9   9                                           CGL029
+     C                     MOVE CCY       WFLD9                                               CGL029
+     C                     MOVELASEQ      WFLD5   5                                           CGL029
+     C                     MOVE BRCA      WFLD5                                               CGL029
+     C                     MOVELACOD      WFLD15 15                                           CGL029
+     C                     MOVE WFLD5     WFLD15                                              CGL029
+     C                     MOVELWFLD9     THEKEY 24                                           CGL029
+     C                     MOVE WFLD15    THEKEY                                              CGL029
+     C*
+     C** READ ACCNT FOR ACCOUNT DETAILS
+     C*
+     C           THEKEY    CHAINACCNT                99    READ ACCOUNT
+     C  N99      RECI      COMP '*'                      99
+     C   99                MOVE 'ACCNT'   DBFILE
+     C   99                MOVELTHEKEY    DBKEY
+     C   99                Z-ADD010       DBASE
+     C   99                GOTO END
+     C           ACNO      COMP 0                    5353  RETAIL NUMBER
+      *                                                                   CRE001
+      ** If Overdraft Interest Calculations feature is on,                CRE001
+     C           CRE001    IFEQ 'Y'                                       CRE001
+      *                                                                   CRE001
+      ** Access Account Master 'Core' Extension                           CRE001
+     C           ACNTBX    CHAINACCNTBXC             80                   CRE001
+      *                                                                   CRE001
+     C           *IN80     IFEQ *ON                                       CRE001
+     C                     SETON                     U7U8LR               CRE001
+     C                     Z-ADD012       DBASE            ***************CRE001
+     C                     MOVEL'ACCNTBXC'DBFILE           **DB ERROR 012*CRE001
+     C                     MOVEL'ACNTBX  'DBKEY            ***************CRE001
+     C                     EXSR *PSSR                                     CRE001
+     C                     END                                            CRE001
+      *                                                                   CRE001
+     C                     END                                            CRE001
+     C/COPY WNCPYSRC,RE3380C003
+     C*
+     C** READ CLINT FOR CUSTOMER NAME.
+     C*
+     C                     MOVELCNUM      CLIKEY  7
+     C                     MOVE 'A'       CLIKEY
+     C           CLIKEY    CHAINCLINT                99    READ CLIENT
+     C  N99      RECI      COMP 'D'                  9999
+     C   99      RECI      COMP 'C'                  9999
+     C   99                MOVE 'CLINT'   DBFILE
+     C   99                MOVELCLIKEY    DBKEY
+     C   99                Z-ADD011       DBASE
+     C*
+     C** LOOKUP CURRENCY TABLE FOR DECIMALS.
+     C*
+     C  N99                EXSR FINDCY                     GET DECIMALS
+     C   99                GOTO END
+     C*
+     C** INTEREST CALCULATION BETWEEN TWO DATES AND UPDATE DR/CR
+     C** INTEREST ON REACR FILE
+     C*
+     C                     Z-ADD*ZEROS    DINT
+     C                     Z-ADD*ZEROS    CINT
+     C*
+     C           LCD       IFNE RUND                       - B1
+     C*
+     C** CHAIN TO REACR FILE FOR AN UPDATE IF SOME
+     C** INTEREST HAVE BEEN CALCULATED
+     C*
+     C           REACRK    CHAINREACR                99    READ REACR
+     C*
+     C           RHISD     IFLT RUND                                                         BUG9030
+     C                     EXSR INTCAL
+     C                     ENDIF                                                             BUG9030
+     C*
+     C                     END                             - E1
+     C*
+     C           DINT      IFNE 0                          - B1
+     C           CINT      ORNE 0
+     C                     ADD  DINT      DAIC
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CCP3                                           S01408
+      *                                                                   S01408
+     C                     ADD  CINT      CAIC
+      **********                                                                     BUG8506 BUG9030
+     C********** DAIC      IFLT 0                                                    BUG8506 BUG9030
+     C**********           Z-SUBDAIC      DAIC                                       BUG8506 BUG9030
+     C**********           ENDIF                                                     BUG8506 BUG9030
+     C********** CAIC      IFLT 0                                                    BUG8506 BUG9030
+     C**********           Z-SUBCAIC      CAIC                                       BUG8506 BUG9030
+     C**********           ENDIF                                                     BUG8506 BUG9030
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CCP4                                           S01408
+      *                                                                   S01408
+     C                     Z-ADDZIEND     RHISD
+     C*********************UPDATREACRDF                                   048574
+     C                     END                             - E1
+     C*
+     C** SET UP PRINT FOR DEBIT DETAILS, IF PRESENT.
+     C*
+     C           MADI      COMP 0                    4343  CHECK AT LEAST
+     C  N43      GADI      COMP 0                    4343   ONE AMOUNT
+     C  N43      DAIC      COMP 0                    4343
+     C  N43                GOTO CHEKDR
+     C           MADI      COMP 0                      22  SET
+     C           GADI      COMP 0                      23   AMOUNT CR
+     C           DAIC      COMP 0                      24    INDICATORS
+     C           LPAR      COMP 0                        31
+     C   31                MOVE '       ' LASTDR  7
+     C  N31                Z-ADDLPAR      ZDAYNO
+     C  N31                EXSR ZDATE2                     FORMAT DATE
+     C*
+     C** CHECK IF ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'ZDATE2'  DBFILE
+     C                     MOVEL'ZDAYNO'  DBKEY            ***************
+     C                     MOVE ZDAYNO    DBKEY            * DBERROR 008 *
+     C                     Z-ADD008       DBASE            ***************
+     C                     GOTO END
+     C                     END
+     C*
+     C  N31                MOVE ZADATE    LASTDR
+     C*
+     C** PRINT DEBIT INTEREST TYPE/SUB-TYPE IF PRESENT, ELSE RATE
+     C*
+     C           DICT      COMP 0                    3535
+     C  N35      DCST      COMP 0                    3535
+     C   35                GOTO CHEKDR
+     C*
+     C** CALCULATE DEBIT RATE
+     C*
+     C           DRIB      COMP 0                        54
+     C   54                Z-ADDDRIS      RATEDR 127       USE RAT ON FILE
+     C  N54                MOVE DRIB      @BSRC
+     C  N54                EXSR GETRAT                     READ BASE RATE
+     C  N54 99             GOTO END
+     C  N54      DRIS      ADD  NBRT      RATEDR           RAT=BASE+SPREAD
+     C           RATEDR    COMP 0                    2021  +/- INDICATOR
+     C*
+     C** SET UP PRINT OF CREDIT DETAILS, IF PRESENT.
+     C*
+     C           CHEKDR    TAG
+     C           MACI      COMP 0                    4444  CHECK AT LEAST
+     C  N44      GACI      COMP 0                    4444   ONE AMOUNT
+     C  N44      CAIC      COMP 0                    4444    PRESENT
+     C  N44                GOTO CHEKCH
+     C********** MACI      COMP 0                      27  SET                               BUG8506
+     C********** GACI      COMP 0                      28   AMOUNT CR                        BUG8506
+     C********** CAIC      COMP 0                      29    INDICATOR                       BUG8506
+     C           MACI      COMP 0                    27    SET                               BUG8506
+     C           GACI      COMP 0                    28     AMOUNT CR                        BUG8506
+     C           CAIC      COMP 0                    29      INDICATOR                       BUG8506
+     C           LPAP      COMP 0                        32DATE ZERO
+     C   32                MOVE '       ' LASTCR  7
+     C  N32                Z-ADDLPAP      ZDAYNO
+     C  N32                EXSR ZDATE2                     FORMAT DATE
+     C*
+     C** CHECK IF ERROR
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'ZDATE2'  DBFILE
+     C                     MOVEL'ZDAYNO'  DBKEY            **************
+     C                     MOVE ZDAYNO    DBKEY            * DBERROR 009*
+     C                     Z-ADD009       DBASE            **************
+     C                     GOTO END
+     C                     END
+     C*
+     C  N32                MOVE ZADATE    LASTCR  7
+     C*
+     C** PRINT CREDIT INTEREST TYPE/SUB-TYPE IF PRESENT, ELSE RATE
+     C*
+     C           CICT      COMP 0                    3636
+     C  N36      CCST      COMP 0                    3636
+     C   36                GOTO CHEKCH
+     C*
+     C** CALCULATE CREDIT RATE
+     C*
+     C           CRIB      COMP 0                        54
+     C   54                Z-ADDCRIS      RATECR 127       USE RAT ON FILE
+     C  N54                MOVE CRIB      @BSRC
+     C  N54                EXSR GETRAT                     READ BASE RATE
+     C  N54 99             GOTO END
+     C  N54      CRIS      ADD  NBRT      RATECR           RAT=BASE+SPREAD
+     C           RATECR    COMP 0                    2526  +/- INDICATOR
+     C*
+     C** PRINT CHARGE DETAILS, IF ACCRUED CHARGES PRESENT, AND CHARGE
+     C** TYPE/SUB-TYPE NON-ZERO
+     C*
+     C           CHEKCH    TAG
+     C                     SETOF                     45
+     C           CHCT      COMP 0                    3737
+     C   37      CHST      COMP 0                    3737
+     C  N37                GOTO END
+     C           NRCA      ADD  RCA       TOTCH  130       TOTAL CHARGES
+     C           TOTCH     COMP 0                    4530
+     C   30                SETON                     45
+     C           END       TAG
+     C/COPY WNCPYSRC,RE3380C012
+     C*
+     C** SET ON LR, U7 & U8 FOR IF DATABASE ERROR HAS HAPPENED
+     C*
+     C   99                SETON                     U7U8LR
+     C   43
+     COR 44
+     COR 45                SETON                     41
+     C   41N42             SETON                     42
+     C   41                SETON                     46
+     C*
+     C**  ENSURE TOTAL SPOOL FILE RECORDED BY RCF
+     C*
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60
+     CLR                   OUT  LDA
+     C**
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANK    SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU
+     CLR                   PARM           ZSERR   1
+     CLR         *LOCK     IN   LDA
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     CLR                   SETON                     U7U8
+     CLR                   RETRN
+     CLR                   END
+     C*
+     C**  IF NO DETAILS HAVE BEEN REPORTED PRINT HEADINGS
+     C*
+     CLR         P1OP      IFNE 'Y'
+     CLR                   EXSR #ZZ
+     CLR                   END
+     C*
+     CLR    U7             EXSR *PSSR
+     C*================================================================
+     C* END OF MAIN PROCESSING
+     C*================================================================
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** FIRST1 Subroutine to execute first cycle processing.
+     C**
+     C**     Called by       MAIN
+     C**     Calls           Nothing
+     C**
+     C           FIRST1    BEGSR
+     C*
+     C                     MOVE *BLANK    DBFILE
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVE *BLANK    DBASE
+     C*
+     C** ACCESS RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C* CHECK MULTIBRANCHING INDICATOR
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     88
+     C                     END
+     C*
+     C* SET UP INDICATOR 98 BASED ON THE DATE FORMAT
+     C*
+     C           AGDFF     IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+     C*
+     C                     Z-ADD0         COUNT   30
+     C*
+     C                     TIME           MTIME   60       GET RUN TIME
+     C***********          MOVE 'RE3380  'DBPGM                           074592
+     C                     MOVEL'RE3380  'DBPGM                           074592
+     C**********           Z-ADD*ZEROS    ZIWRK1 155                                          220323
+     C**********           Z-ADD*ZEROS    ZIWRK2 155                                          220323
+     C                     Z-ADD*ZEROS    ZIWRK1 309                                          220323
+     C                     Z-ADD*ZEROS    ZIWRK2 309                                          220323
+     C                     Z-ADD*ZEROS    ZDAYN2  94
+     C*
+     C** ACCESS AOBANKR0 TO GET REPORT TITLE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN99
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 001 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     ELSE
+     C                     MOVELBJURPT    TITL   53
+     C                     END
+     C*
+     C** ACCESS SAR DETAILS FILE TO DETERMINE IF BRT SAR IS INSTALLED
+     C*
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'S01383'  @SARD   6
+     C           @RTCD     IFNE *BLANK
+     C           @RTCD     ANDNE'*NRF   '
+     C                     MOVE '1'       *IN99
+     C                     MOVEL'SCSARDPD'DBFILE           **************
+     C                     Z-ADD002       DBASE            * DBERROR 002*
+     C                     MOVEL@RTCD     DBKEY            **************
+     C                     END
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVEL'1'       *IN60
+     C                     END
+     C/COPY WNCPYSRC,RE3380C001
+      *                                                                   CRE001
+      ** Check if Overdraft Interset Calculations feature is on           CRE001
+     C                     MOVE 'N'       CRE001  1                       CRE001
+     C                     CALL 'AOSARDR0'                                CRE001
+     C                     PARM *BLANKS   @RTCD   7                       CRE001
+     C                     PARM '*VERIFY' @OPTN   7                       CRE001
+     C                     PARM 'CRE001'  @SARD   6                       CRE001
+      *                                                                   CRE001
+     C           @RTCD     IFNE *BLANKS                                   CRE001
+     C           @RTCD     ANDNE'*NRF   '                                 CRE001
+     C                     SETON                     U7U8LR               CRE001
+     C                     MOVEL'CRE001'  DBKEY                           CRE001
+     C                     MOVE 'SCSARDPD'DBFILE           ***************CRE001
+     C                     Z-ADD007       DBASE            * DBERR0R 007 *CRE001
+     C                     EXSR *PSSR                      ***************CRE001
+     C                     END                                            CRE001
+      *                                                                   CRE001
+     C           @RTCD     IFEQ *BLANKS                                   CRE001
+     C                     MOVE 'Y'       CRE001                          CRE001
+     C                     MOVE '1'       *IN38   1                       CRE001
+     C                     ELSE                                           CRE001
+     C                     MOVE 'N'       CRE001                          CRE001
+     C                     MOVE '0'       *IN38   1                       CRE001
+     C                     END                                            CRE001
+     C/COPY WNCPYSRC,RE3380C002
+     C*
+      *                                                                                       CER016
+      ** Call AOSARDR0 to check for CER016                                                    CER016
+      *                                                                                       CER016
+     C                     CALL 'AOSARDR0'                                                    CER016
+     C                     PARM *BLANKS   PRTCD   7                                           CER016
+     C                     PARM '*VERIFY' POPTN   7                                           CER016
+     C                     PARM 'CER016'  PSARD   6                                           CER016
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER016
+      *                                                                                       CER016
+     C           PRTCD     IFEQ *BLANKS                                                       CER016
+     C                     MOVE 'Y'       CER016  1                                           CER016
+     C                     MOVE 'Y'       WFIRST  1                                           CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C                     MOVE 'N'       CER016                                              CER016
+     C                     MOVE 'N'       WFIRST                                              CER016
+     C                     ENDIF                                                              CER016
+      *                                                                                       CER016
+     C           PRTCD     IFNE *BLANKS                                                       CER016
+     C           PRTCD     ANDNE'*NRF   '                                                     CER016
+     C           *LOCK     IN   LDA                                                           CER016
+     C                     MOVEL'CER016'  DBKEY                                               CER016
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER016
+     C                     Z-ADD097       DBASE                                               CER016
+     C                     OUT  LDA                                                           CER016
+     C                     EXSR *PSSR                                                         CER016
+      *                                                                                       CER016
+     C                     ENDIF                                                              CER016
+     C                     SETON                     52    NOT FIRST CYCLE
+     C           ENDFST    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** FINDCY Subroutine to find this currency's number of decimal
+     C**        places
+     C**
+     C**        Called by       MAIN
+     C**        Calls           Nothing
+     C**
+     C           FINDCY    BEGSR
+     C                     SETOF                     808182
+     C                     SETOF                     83
+     C*
+     C** ACCESS AOCURRR0 TO GET NUMBER OF DECIMAL PLACES
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       CKEY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN99
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 003 *
+     C                     Z-ADD003       DBASE            ***************
+     C                     END
+     C*
+     C           @NBDP     IFEQ 0
+     C                     MOVE '1'       *IN80                        3 *
+     C                     END
+     C           @NBDP     IFEQ 1
+     C                     MOVE '1'       *IN81                        3 *
+     C                     END
+     C           @NBDP     IFEQ 2
+     C                     MOVE '1'       *IN82                        3 *
+     C                     END
+     C           @NBDP     IFEQ 3
+     C                     MOVE '1'       *IN83                        3 *
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** GETRAT Subroutine to get base rate details
+     C**
+     C**     Called by       MAIN
+     C**     Calls           Nothing
+     C**
+     C           GETRAT    BEGSR
+     C*
+     C** ACCESS AOBSRTR0
+     C*
+     C                     CALL 'AOBSRTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CCY       @CCY    3
+     C                     PARM           @BSRC   2
+     C***********SDBSRT    PARM SDBSRT    DSFDY                           CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                           CSD006
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN99
+     C                     MOVEL'SDBSRTPD'DBFILE           ***************
+     C                     MOVEL@OPTN     DBKEY            * DBERROR 004 *
+     C                     Z-ADD004       DBASE            ***************
+     C                     ELSE
+     C                     Z-ADDBANBRT    NBRT   117
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** REASR Subroutine for REACR file exception/error handling
+     C**
+     C**     Called by       REACR File Error
+     C**     Calls           Nothing
+     C**
+     C           REASR     BEGSR                           **REASR BEGSR**
+     C*
+     C                     MOVE 'REACR'   DBFILE
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVELTHEKEY    DBKEY            **STATUS ERR **
+     C                     MOVE STSREA    LSTAT   5        ***************
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *IN99
+     C                     GOTO END
+     C*
+     C                     ENDSR                           **REASR ENDSR**
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** CHKBR Subroutine to determine if branch input on facilities
+     C**       detail record is valid for output
+     C**
+     C**       Called by       MAIN
+     C**       Calls           Nothing
+     C**
+     C           CHKBR     BEGSR                           *** CHKBR ****
+     C*
+     C                     CLOSERE3380P1
+     C                     SETOF                     426665
+     C                     SETOF                     67
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           BRNCH     ANDEQ'ALL'
+     C           MBIN      OREQ 'Y'
+     C           BRNCH     ANDEQBRCA
+     C           MBIN      OREQ 'N'
+     C           P1OP      ANDNE'Y'
+     C*
+     C                     OPEN RE3380P1
+     C                     SETON                     6566
+     C                     MOVE 'Y'       P1OP    1
+     C                     Z-ADD0         PAGE
+     C                     Z-ADD0         PAGE1
+     C*
+     C**   ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     OUT  LDA
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM BRCA      SENTY
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C**   ACCESS BRANCH DETAILS
+     C*
+     C           MBIN      IFEQ 'Y'
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     U7U8LR
+     C                     SETON                     67
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVEL@DSNB     DBKEY            * DBERROR 005 *
+     C                     Z-ADD005       DBASE            ***************
+     C                     EXCPT
+     C                     GOTO ENDBR
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C**   END THE PROGRAM IF MBIN = 'Y', BRANCH REQUESTED <> ALL,
+     C**   AND THE BRANCH READ ON RECORD > REQUESTED BRANCH
+     C*
+     C           MBIN      IFEQ 'Y'
+     C           BRNCH     ANDNE'ALL'
+     C           BRCA      ANDGTBRNCH
+     C                     SETOF                     6566
+     C                     SETON                     LR67
+     C                     GOTO ENDBR
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDBR     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** DBSR Subroutine to detect a database error from INTCAL.
+     C**
+     C**       Called by       CRINIT, DATEIN, DRINIT, ZICD
+     C**       Calls           Nothing
+     C**
+     C           DBSR      BEGSR                           *** DBSR ***
+     C*
+     C                     MOVE '1'       *IN99
+     C                     GOTO END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** *PSSR Subroutine to handle abnormal error conditions
+     C**
+     C**     Called by       #ZZ
+     C**     Calls           Nothing
+     C**
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     SETON                     U7U8LR
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** #ZZ Subroutine is called  by main processing during total
+     C**     time calculations if the P1 files have not already been
+     C**     opened (ie, if there are no records read and therefore
+     C**     files opening not performed).
+     C**
+     C**       Called by       MAIN
+     C**       Calls           *PSSR
+     C**
+     C           #ZZ       BEGSR
+     C*
+     C** OPEN P1 SPOOL FILE
+     C*
+     C                     OPEN RE3380P1
+     C                     SETOF                     42
+     C                     SETON                     66
+     C*
+     C** IF REPORT FOR ALL ENTITIES CALL ZSFILE WITH BLANK SENTY
+     C*
+     C           BRNCH     IFEQ 'ALL'
+     C           MBIN      ORNE 'Y'
+     C*
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     OUT  LDA
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C**
+     C                     MOVE 'ALL'     BRCA
+     C                     MOVE *BLANKS   BRNM
+     C*
+     C** ELSE REPORT BY ENTITY SO CALL ZSFILE WITH ENTITY REQUESTED
+     C*
+     C                     ELSE
+     C*
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     OUT  LDA
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM BRNCH     SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     MOVE BRNCH     BRCA
+     C*
+     C** AND GET ENTITY DETAILS FOR REPORT HEADINGS WHEN MULTIBRANCHING
+     C*
+     C           MBIN      IFEQ 'Y'
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRNCH     @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL@DSNB     DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD006       DBASE            * DBERROR 006 *
+     C                     SETON                     U7U8  ***************
+     C                     GOTO #ZZ9
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** OUTPUT 'NO DETAILS TO REPORT' IN P1
+     C*
+     C           #ZZ9      TAG
+     C                     EXCPT
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** INTCAL subroutine for interest calculation between two dates
+     C**
+     C**     Called by       MAIN
+     C**     Calls           CRINIT,DATEIN,DRINIT,ZIC00,ZIC01,ZIC02
+     C**
+     C           INTCAL    BEGSR                           **INTCAL BEGSR**
+     C*
+     C/COPY WNCPYSRC,RE3380C004
+     C** LOADING OF CURRENCY TO CHAIN TO REHRDJ/REHRCJ FILES
+     C*
+     C                     MOVE CCY       REHCCY
+     C*
+     C** DEBIT PROCESSING
+     C*
+     C                     Z-ADD*ZEROS    INRT
+     C                     Z-ADD*ZEROS    INTP
+     C                     Z-ADD*ZEROS    INST
+     C                     Z-ADD*ZEROS    ZINTR
+     C                     Z-ADD*ZEROS    ZLDTM
+      *                                                                                       CER016
+     C           WFIRST    IFEQ 'Y'                                                           CER016
+     C                     EXSR SRAOS                                                         CER016
+     C                     ENDIF                                                              CER016
+     C*
+     C           HISB      IFGT *ZEROS                     - B1
+     C           MNBL      ORGT *ZEROS
+     C                     EXSR DRINIT
+     C                     END                             - E1
+     C*
+     C           SKDCAL    IFEQ 'Y'                        - B1           094127
+     C                     GOTO CRPRO                                     094127
+     C                     END                             - E1           094127
+     C*                                                                   094127
+     C                     Z-ADDINRT      ZIRATE
+     C                     Z-ADDINTP      ZICT
+     C                     Z-ADDDRIC      ZICALC
+     C***********          Z-ADDHISD      ZIBEG                          103147
+     C                     Z-ADDRHISD     ZIBEG                          103147
+     C***********          Z-ADDVALD      ZIEND                          103147
+     C                     Z-ADDRUND      ZIEND                          103147
+     C/COPY WNCPYSRC,RE3380C006
+     C*
+     C           INTP      IFLT 3                          - B1
+     C           HISB      IFGT 0                          - B2
+     C                     Z-ADDRHISB     ZIAMT
+     C***********ZICT      CASEQ0         ZIC00                           CRE001
+     C   38      ZICT      CASEQ0         ZICOD                           CRE001
+     C  N38      ZICT      CASEQ0         ZIC00                           CRE001
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     DINT
+     C                     END                             - E2
+     C*
+     C                     ELSE                            - X1
+     C*
+     C** SEARCHING END-OF-MONTH DATE
+     C*
+     C                     EXSR DATEIN
+     C*
+     C           RUND      IFLE ZLDTM                      - B2
+     C           MNBL      IFGT 0                          - B3
+     C                     Z-ADDMNBL      ZIAMT
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     DINT
+     C                     END                             - E3
+     C*
+     C                     ELSE                            - X2
+     C*
+     C** IF CHANGE OF MONTH OCCURS WITH METHODS 3 & 4 THEN TWO
+     C** PROCESSINGS
+     C*
+     C** FIRST PROCESSING :
+     C*
+     C           MNBL      IFGT 0                          - B3
+     C                     Z-ADDMNBL      ZIAMT
+     C                     Z-ADDZLDTM     ZIEND
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     DINT
+     C                     END                             - E3
+     C*
+     C** SECOND PROCESSING :
+     C*
+     C           HISB      IFGT 0                          - B3
+     C                     Z-ADDHISB      ZIAMT
+     C                     Z-ADDZLDTM     ZIBEG
+     C                     Z-ADDRUND      ZIEND
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     ADD  ZINTR     DINT
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C/COPY WNCPYSRC,RE3380C007
+     C*
+     C** CREDIT PROCESSING
+     C*
+     C           CRPRO     TAG                                            094127
+     C                     Z-ADD*ZEROS    INRT
+     C                     Z-ADD*ZEROS    INTP
+     C                     Z-ADD*ZEROS    INST
+     C                     Z-ADD*ZEROS    ZINTR
+     C                     Z-ADD*ZEROS    ZLDTM
+     C*
+     C           HISB      IFLT *ZEROS                     - B1
+     C           MNBL      ORLT *ZEROS
+     C                     EXSR CRINIT
+     C                     END                             - E1
+     C*
+     C           SKCCAL    IFEQ 'Y'                        - B1           094127
+     C                     GOTO ENDCAL                                    094127
+     C                     END                             - E1           094127
+     C*                                                                   094127
+     C                     Z-ADDINRT      ZIRATE
+     C                     Z-ADDINTP      ZICT
+     C                     Z-ADDCRIC      ZICALC
+     C***********          Z-ADDHISD      ZIBEG                          103147
+     C                     Z-ADDRHISD     ZIBEG                          103147
+     C***********          Z-ADDVALD      ZIEND                          103147
+     C                     Z-ADDRUND      ZIEND                          103147
+     C*
+     C           INTP      IFLT 3                          - B1
+     C           HISB      IFLT 0                          - B2
+     C                     Z-ADDHISB      ZIAMT
+     C           ZICT      CASEQ0         ZIC00
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     CINT
+     C                     END                             - E2
+     C*
+     C                     ELSE                            - X1
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CCP5                                           S01408
+      *                                                                   S01408
+     C*
+     C** SEARCHING END-OF-MONTH DATE
+     C*
+     C                     EXSR DATEIN
+     C*
+     C           RUND      IFLE ZLDTM                      - B2
+     C           MNBL      IFGT 0                          - B3
+     C                     Z-ADDMNBL      ZIAMT
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     CINT
+     C                     END                             - E3
+     C*
+     C                     ELSE                            - X2
+     C*
+     C** IF CHANGE OF MONTH OCCURS WITH METHODS 3 & 4 THEN TWO
+     C** PROCESSINGS
+     C*
+     C** FIRST PROCESSING :
+     C*
+     C           MNBL      IFGT 0                          - B3
+     C                     Z-ADDMNBL      ZIAMT
+     C                     Z-ADDZLDTM     ZIEND
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     CINT
+     C                     END                             - E3
+     C*
+     C** SECOND PROCESSING :
+     C*
+     C           HISB      IFGT 0                          - B3
+     C                     Z-ADDHISB      ZIAMT
+     C                     Z-ADDZLDTM     ZIBEG
+     C                     Z-ADDRUND      ZIEND
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     ADD  ZINTR     CINT
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CCP6                                           S01408
+      *                                                                   S01408
+     C*
+     C                     END                             - E1
+      **********                                                                     BUG9030 BUG9030
+     C********** DINT      IFLT 0                                                    BUG9030 BUG9030
+     C**********           Z-SUBDINT      DINT                                       BUG9030 BUG9030
+     C**********           ENDIF                                                     BUG9030 BUG9030
+     C********** CINT      IFLT 0                                                    BUG9030 BUG9030
+     C**********           Z-SUBCINT      CINT                                       BUG9030 BUG9030
+     C**********           ENDIF                                                     BUG9030 BUG9030
+      **********                                                                     BUG9030 BUG9030
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CCP7                                           S01408
+      *                                                                   S01408
+     C*
+     C           ENDCAL    TAG                                            094127
+     C                     ENDSR                           **INTCAL ENDSR**
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** CRINIT subroutine for credit rates loading
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           DBSR
+     C**
+     C           CRINIT    BEGSR                           **CRINIT BEGSR**
+     C*
+     C                     Z-ADD*ZEROS    ZIRC
+     C                     Z-ADD*ZEROS    ZIBC
+     C                     Z-ADD*ZERO     ZITHR
+     C                     Z-ADD*ZEROS    INTHC
+     C*
+     C** CHAIN TO CREDIT RATE CHANGES FILE
+     C*
+     C                     Z-ADDCRCD      KDATE
+     C*
+     C           DCKEY     CHAINREHRCJ               99
+     C*
+     C** ERROR IN REHRCJ
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C           CRIB      ANDEQ*ZEROS
+     C           CRIS      ANDEQ*ZEROS
+     C                     MOVE '0'       *IN99
+     C                     END                             - E1
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C***********          Z-ADD093       DBASE            ***************094127
+     C***********          MOVE 'HRCJ '   DBFILE           **DB ERROR 093*094127
+     C***********          Z-ADDKDATE     REHDAT           ***************094127
+     C***********          MOVE *BLANKS   DBKEY                           094127
+     C***********          MOVELREHKEY    DBKEY                           094127
+     C***********          EXSR DBSR                                      094127
+     C                     MOVE 'Y'       SKCCAL  1                       094127
+     C                     MOVE '0'       *IN99                           094127
+     C                     GOTO ENDCR                                     091247
+     C                     ELSE                            - X1           094127
+     C                     MOVE 'N'       SKCCAL                          094127
+     C                     END                             - E1
+     C*
+     C** PICK-UP CREDIT THRESHOLD BALANCE
+     C*
+     C                     Z-ADDINTHC     ZITHR
+     C*
+     C** SETUP WORK CREDIT FIELDS WITH FIELDS READ PROCESSING
+     C*
+     C           RAT2      IFNE *BLANKS                    - B1
+     C                     MOVELRAT2      WCRAT
+     C                     END                             - E1
+     C*
+     C           RAT3      IFNE *BLANKS                    - B1
+     C                     MOVE RAT3      WCRAT
+     C                     END                             - E1
+     C*
+     C           BAL2      IFNE *BLANKS                    - B1
+     C                     MOVELBAL2      WCBAL
+     C                     END                             - E1
+     C*
+     C           BAL3      IFNE *BLANKS                    - B1
+     C                     MOVE BAL3      WCBAL
+     C                     END                             - E1
+     C*
+     C** LOADING OF CREDIT INTEREST RATES AND CREDIT INTEREST BALANCES
+     C*
+     C                     Z-ADDZIRC      ZIR
+     C                     Z-ADDZIBC      ZIB
+     C*
+     C           ENDCR     TAG                                            094127
+     C                     ENDSR                           **CRINIT ENDSR**
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** DATEIN subroutine for date init processing
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           DBSR, ZDATE1, ZDATE2
+     C**
+     C           DATEIN    BEGSR                           **DATEIN BEGSR**
+     C*
+     C** WORK FIELD INIT
+     C*
+     C                     Z-ADD*ZEROS    ZLDTM
+     C*
+     C** CALCULATING DATE FROM DAY NUMBER (REACR HISTORY DATE)
+     C*
+     C                     Z-ADDHISD      ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C                     Z-ADD094       DBASE            ***************
+     C                     MOVEL'ZDATE2'  DBFILE           **DB ERROR 094*
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C*
+     C** CALCULATING FIRST DAY OF THIS MONTH TO CALCULATE THE LAST ONE
+     C*
+     C           *IN98     IFEQ '0'                        - B1           088029
+     C                     Z-ADDZDATE     RESULT
+     C                     Z-ADD1         ZDAY
+     C                     Z-ADDRESULT    ZDATE
+     C                     ELSE                            - X1           088029
+     C                     Z-ADDZDATE     RESULX                          088029
+     C                     Z-ADD1         ZDAYX                           088029
+     C                     Z-ADDRESULX    ZDATE                           088029
+     C                     END                             - E1           088029
+     C                     EXSR ZDATE1
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C                     Z-ADD095       DBASE            ***************
+     C                     MOVEL'ZDATE1'  DBFILE           **DB ERROR 095*
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C*
+     C           *IN98     IFEQ '0'                        - B0           088029
+     C           ZMTH      IFEQ 12                         - B1
+     C                     Z-ADD1         ZMTH
+     C                     ADD  1         ZYEAR
+     C                     ELSE                            - X1
+     C                     ADD  1         ZMTH
+     C                     END                             - E1
+     C*
+     C                     Z-ADDRESULT    ZDATE
+     C                     ELSE                            - X0           088029
+     C           ZMTHX     IFEQ 12                         - B1           088029
+     C                     Z-ADD1         ZMTHX                           088029
+     C                     ADD  1         ZYEARX                          088029
+     C                     ELSE                            - X1           088029
+     C                     ADD  1         ZMTHX                           088029
+     C                     END                             - E1           088029
+     C*                                                                   088029
+     C                     Z-ADDRESULX    ZDATE                           088029
+     C                     END                             - E0           088029
+     C                     EXSR ZDATE1
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C                     Z-ADD096       DBASE            ***************
+     C                     MOVE 'ZDATE1'  DBFILE           **DB ERROR 096*
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBSR
+     C                     END                             - E1
+     C*
+     C           ZDAYNO    SUB  1         ZLDTM
+     C*
+     C                     ENDSR                           **DATEIN ENDSR**
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** DRINIT subroutine for debit rates loading
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           DBSR
+     C**
+     C           DRINIT    BEGSR                           **DRINIT BEGSR**
+     C*
+     C                     Z-ADD*ZEROS    ZIRD
+     C                     Z-ADD*ZEROS    ZIBD
+     C                     Z-ADD*ZERO     ZITHR
+     C                     Z-ADD*ZEROS    INTHD
+     C*
+     C** CHAIN TO DEBIT RATE CHANGES FILE
+     C*
+     C                     Z-ADDDRCD      KDATE
+     C*
+     C           DCKEY     CHAINREHRDJ               99
+     C*
+     C** ERROR IN REHRDJ
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C           DRIB      ANDEQ*ZEROS
+     C           DRIS      ANDEQ*ZEROS
+     C                     MOVE '0'       *IN99
+     C                     END                             - E1
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C***********          Z-ADD092       DBASE            ***************094127
+     C***********          MOVE 'HRDJ '   DBFILE           **DB ERROR 092*094127
+     C***********          Z-ADDKDATE     REHDAT           ***************094127
+     C***********          MOVE *BLANKS   DBKEY                           094127
+     C***********          MOVELREHKEY    DBKEY                           094127
+     C***********          EXSR DBSR                                      094127
+     C                     MOVE 'Y'       SKDCAL  1                       094127
+     C                     MOVE '0'       *IN99                           094127
+     C                     GOTO ENDDR                                     091247
+     C                     ELSE                            - X1           094127
+     C                     MOVE 'N'       SKDCAL                          094127
+     C                     END                             - E1
+     C*
+     C** PICK-UP DEBIT THRESHOLD BALANCE
+     C*
+     C                     Z-ADDINTHD     ZITHR
+     C*
+     C** SETUP WORK DEBIT FIELDS WITH FIELDS READ
+     C*
+     C           RAT2      IFNE *BLANKS                    - B1
+     C                     MOVELRAT2      WDRAT
+     C                     END                             - E1
+     C*
+     C           RAT3      IFNE *BLANKS                    - B1
+     C                     MOVE RAT3      WDRAT
+     C                     END                             - E1
+     C*
+     C           BAL2      IFNE *BLANKS                    - B1
+     C                     MOVELBAL2      WDBAL
+     C                     END                             - E1
+     C*
+     C           BAL3      IFNE *BLANKS                    - B1
+     C                     MOVE BAL3      WDBAL
+     C                     END                             - E1
+     C*
+     C** LOADING OF DEBIT INTEREST RATES AND DEBIT INTEREST BALANCES
+     C*
+     C                     Z-ADDZIRD      ZIR
+     C                     Z-ADDZIBD      ZIB
+     C*
+     C           ENDDR     TAG                                            094127
+     C                     ENDSR                           **DRINIT ENDSR**
+     C*
+     C/EJECT                                                              CRE001
+     C********************************************************************CRE001
+     C**                                                                  CRE001
+     C** ZICOD subroutine to calculate Interest with Overdraft            CRE001
+     C**                                                                  CRE001
+     C**     Called by       INTCAL                                       CRE001
+     C**     Calls           ZIC00                                        CRE001
+     C**                                                                  CRE001
+     C********************************************************************CRE001
+     C           ZICOD     BEGSR                           **ZICOD BEGSR**CRE001
+      *                                                                   CRE001
+      ** Zeroise work fields                                              CRE001
+     C                     Z-ADD*ZEROS    WWINTA                          CRE001
+     C                     Z-ADD*ZEROS    WWDRIA                          CRE001
+     C                     Z-ADD*ZEROS    WWODIA                          CRE001
+     C                     Z-ADD*ZEROS    WWODRL                          CRE001
+      *                                                                   CRE001
+      ** Set work field with Overdraft Line Amount                        CRE001
+     C                     Z-ADDODRL      WWODRL                          CRE001
+      *                                                                   CRE001
+      ** Adjust work field according to Currency Decimal Places           CRE001
+      **                                  (retrieved earlier)             CRE001
+     C                     DO   @NBDP                                     CRE001
+     C                     MULT 10        WWODRL                          CRE001
+     C                     ENDDO                                          CRE001
+     C/COPY WNCPYSRC,RE3380C010
+      *                                                                   CRE001
+      ** If History Balance > work field Overdraft Line Amount            CRE001
+      **    And Additional Overdraft Rate NOT = 0                         CRE001
+      **    And Period End Date < OR = Overdraft Expiry Date              CRE001
+     C           HISB      IFGT WWODRL                     B1             CRE001
+     C           ATAODR    ANDNE*ZERO                      A1             CRE001
+     C           ZIEND     ANDLEODED                       A1             CRE001
+      *                                                                   CRE001
+     C/COPY WNCPYSRC,RE3380C018
+      ** Calculate Interest on History Balance using normal DR Int.Rate   CRE001
+     C                     Z-ADDHISB      ZIAMT                           CRE001
+     C/COPY WNCPYSRC,RE3380C019
+     C                     EXSR ZIC00                                     CRE001
+      *                                                                   CRE001
+      ** Move calculated Interest to work field Interest Amount           CRE001
+     C                     Z-ADDZINTR     WWINTA                          CRE001
+      *                                                                   CRE001
+      ** Calculate Interest again using Additional Overdraft Rate         CRE001
+      ** on the difference between the Balance and the Overdraft Limit    CRE001
+     C           HISB      SUB  WWODRL    ZIAMT                           CRE001
+     C                     Z-ADDATAODR    ZIRATE                          CRE001
+     C                     EXSR ZIC00                                     CRE001
+      *                                                                   CRE001
+      ** Move calculated Interest to work field Overdraft Interest Amt    CRE001
+     C                     Z-ADDZINTR     WWODIA                          CRE001
+      *                                                                   CRE001
+      ** Interest Amt + Overdraft Interest Amt = Debit Interest Amt       CRE001
+     C           WWINTA    ADD  WWODIA    WWDRIA                          CRE001
+      *                                                                   CRE001
+     C                     ELSE                            X1             CRE001
+      *                                                                   CRE001
+      ** If Period End Date > Overdraft Expiry Date                       CRE001
+      **    And Overdraft Expiry Date > 0                                 CRE001
+     C           ZIEND     IFGT ODED                       B.2            CRE001
+     C           ODED      ANDGT*ZERO                      A.2            CRE001
+      *                                                                   CRE001
+      ** Calculate Interest on History Balance using normal DR Int.Rate   CRE001
+     C                     Z-ADDHISB      ZIAMT                           CRE001
+     C                     EXSR ZIC00                                     CRE001
+      *                                                                   CRE001
+      ** Move calculated Interest to work field Interest Amount           CRE001
+     C                     Z-ADDZINTR     WWINTA                          CRE001
+      *                                                                   CRE001
+      ** Calculate Interest again using Additional Overdraft Rate         CRE001
+      ** on the same Balance Amount                                       CRE001
+     C                     Z-ADDHISB      ZIAMT                           CRE001
+     C                     Z-ADDATAODR    ZIRATE                          CRE001
+     C                     EXSR ZIC00                                     CRE001
+      *                                                                   CRE001
+      ** Move calculated Interest to work field Overdraft Interest Amt    CRE001
+     C                     Z-ADDZINTR     WWODIA                          CRE001
+      *                                                                   CRE001
+      ** Interest Amt + Overdraft Interest Amt = Debit Interest Amt       CRE001
+     C           WWINTA    ADD  WWODIA    WWDRIA                          CRE001
+      *                                                                   CRE001
+     C                     ELSE                            X.2            CRE001
+      *                                                                   CRE001
+      ** Calculate Interest on History Balance using normal DR Int.Rate   CRE001
+     C                     Z-ADDHISB      ZIAMT                           CRE001
+     C                     EXSR ZIC00                                     CRE001
+      *                                                                   CRE001
+      ** Move calculated Interest to work field Debit Interest Amt        CRE001
+     C                     Z-ADDZINTR     WWDRIA                          CRE001
+      *                                                                   CRE001
+     C                     ENDIF                           E.2            CRE001
+     C                     ENDIF                           E1             CRE001
+      *                                                                   CRE001
+      ** Move Debit Interest Amount to Interest Amount                    CRE001
+     C                     Z-ADDWWDRIA    ZINTR                           CRE001
+     C/COPY WNCPYSRC,RE3380C011
+      *                                                                   CRE001
+     C                     ENDSR                           **ZICOD ENDSR**CRE001
+     C********************************************************************CRE001
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** ZIC00 subroutine to calculate interest (type=00)
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           ZICD
+     C**
+     C           ZIC00     BEGSR                           **ZIC00 BEGSR**
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CPD1                                           S01408
+     C*                                                                   S01408
+     C*
+     C** REVERSE SIGN OF AMOUNT IF IT'S NEGATIVE
+     C*
+     C           ZIAMT     IFLT 0                          - B1
+     C                     Z-SUBZIAMT     ZIAMT
+     C                     END                             - E1
+     C*
+     C** FIND NUMBER OF DAYS TO CALCULATE INTEREST ACCORDING TO CALC. BASIS
+     C*
+     C                     EXSR ZICD
+      *                                                                                       220323
+      ** For calc basis 6, use the factored number of days                                    220323
+      *                                                                                       220323
+     C           ZIAMT     MULT ZIRATE    ZIWRK1                                              220323
+     C           ZICALC    IFEQ 6                                                             220323
+     C           ZIWRK1    MULT INT6DY    ZIWRK2                                              220323
+      *                                                                                       220323
+     C                     ELSE                                                               220323
+     C           ZIWRK1    MULT ZDAYN2    ZIWRK2                                              220323
+     C                     ENDIF                                                              220323
+     C*
+     C           ZICALC    IFEQ 7                          - B1
+     C           ZICALC    OREQ 5
+     C           ZICALC    OREQ 3
+     C           ZICALC    OREQ 2
+     C           ZICALC    OREQ 0                                                             CER016
+      *                                                                                       CER016
+     C           ZICALC    IFEQ 0                                                             CER016
+     C           PINTN     ANDEQ'Y'                                                           CER016
+     C                     Z-ADDZIAMT     WAMT                                                CER016
+     C                     Z-ADDZIRATE    WRATE                                               CER016
+     C                     EXSR SRINT0                                                        CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C********** ZIAMT     DIV  36000     ZIWRK1    H                                         220323
+     C           ZIWRK2    DIV  36000     ZINTR     H                                         220323
+     C                     END                                                                CER016
+      *                                                                                       CER016
+     C                     END                             - E1
+     C*
+     C           ZICALC    IFEQ 4                          - B1
+     C           ZICALC    OREQ 1
+     C********** ZIAMT     DIV  36500     ZIWRK1    H                                         220323
+     C           ZIWRK2    DIV  36500     ZINTR     H                                         220323
+     C                     END                             - E1
+     C*
+     C           ZICALC    IFEQ 6                          - B1
+     C********** ZIAMT     DIV  36600     ZIWRK1    H                                         220323
+     C           ZIWRK2    DIV  36600     ZINTR     H                                         220323
+     C                     END                             - E1
+     C*
+     C********** ZIWRK1    MULT ZIRATE    ZIWRK2    H                                         220323
+     C********** ZIWRK2    MULT ZDAYN2    ZINTR     H                                         220323
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CPD2                                           S01408
+     C*                                                                   S01408
+     C                     ENDSR                           **ZIC00 ENDSR**
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** ZIC01 subroutine to calculate interest (type=01)
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           ZICD
+     C**
+     C           ZIC01     BEGSR                           **ZIC01 BEGSR**
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CPD3                                           S01408
+     C*                                                                   S01408
+     C*
+     C** REVERSE SIGN OF AMOUNT IF IT'S NEGATIVE
+     C*
+     C           ZIAMT     IFLT 0                          - B1
+     C                     Z-SUBZIAMT     ZIAMT
+     C                     END                             - E1
+     C*
+     C** INITIALIZE WORK FIELDS
+     C*
+     C                     Z-ADDZIAMT     ZIAMT1
+     C                     Z-ADD1         Z
+     C                     Z-ADD*ZEROS    ZIAMTR
+     C                     Z-ADD*ZEROS    ZIA
+     C                     Z-ADD*ZEROS    ZIA1
+     C                     Z-ADD*ZEROS    LOOP
+     C                     Z-ADD*ZEROS    Y
+     C                     Z-ADD*ZEROS    ZIN
+     C*
+     C***INTEREST*IS*ONLY*CALCULATED*ON*AN*AMOUNT*THAT*EXCEEDS*OR*IS*EQUAL103460
+     C***EQUALETONTHEAINITIALHTHRESHOLDCBALANCE                           103460
+      *  INTEREST IS ONLY CALCULATED ON AN AMOUNT THAT EXCEEDS THE        103460
+      *  INITIAL THRESHOLD BALANCE                                        103460
+     C*
+     C***********ZIAMT     IFGE ZITHR                      - B1           103460
+     C           ZIAMT     IFGT ZITHR                      - B1           103460
+     C*
+     C** FIND NUMBER OF DAYS TO CALCULATE INTEREST ACCORDING TO CALC. BASIS
+     C*
+     C                     EXSR ZICD
+     C*
+     C           LOOP      DOWEQ0                          - B2
+     C                     Z-ADDZIAMT1    ZIAMTR
+     C*
+     C           Z         IFEQ 11                         - B3
+     C                     Z-ADDZIAMTR    ZIA,Z
+     C                     Z-ADD1         LOOP
+     C*
+     C                     ELSE                            - X3
+     C                     ADD  1         Y
+     C                     ADD  1         Z
+     C*
+     C           ZIB,Z     IFEQ 0                          - B4
+     C                     ADD  ZIAMTR    ZIA,Y
+     C                     Z-ADD1         LOOP
+     C*
+     C                     ELSE                            - X4
+     C           ZIB,Z     SUB  ZIB,Y     ZBAL
+     C           ZIAMTR    SUB  ZBAL      ZIAMT1
+     C*
+     C           ZIAMT1    IFLE 0                          - B5
+     C                     ADD  ZIAMTR    ZIA,Y
+     C                     Z-ADD1         LOOP
+     C*
+     C                     ELSE                            - X5
+     C                     ADD  ZBAL      ZIA,Y
+     C*
+     C                     END                             - E5
+     C*
+     C                     END                             - E4
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C* IF THE SUB-TYPE IS FROM 50000 TO 99999, CALCULATE THE INTEREST
+     C* ON THE AMOUNT EXCEEDING THE INITIAL THRESHOLD. OTHERWISE, THE
+     C* INTEREST IS CALCULATED ON THE WHOLE BALANCE WHENEVER IT EXCEEDS
+     C* THE INITIAL THRESHOLD.
+     C*
+     C           INST      IFGE 50000                      - B2
+     C                     Z-ADD1         Z
+     C           Z         DOWLT12                         - B3
+     C           ZITHR     ANDGT0
+     C           ZIA,Z     SUB  ZITHR     ZIA,Z
+     C           ZIA,Z     IFLT 0                          - B4
+     C                     Z-SUBZIA,Z     ZITHR
+     C                     Z-ADD0         ZIA,Z
+     C                     ELSE                            - X4
+     C                     Z-ADD0         ZITHR
+     C                     END                             - E4
+     C                     ADD  1         Z
+     C                     END                             - E3
+     C                     END                             - E2
+     C*
+     C/COPY WNCPYSRC,RE3380C005
+      *                                                                                       220323
+      ** For calc basis 6, use the factored number of days                                    220323
+      *                                                                                       220323
+     C           ZIA       MULT ZIR       ZIA1                                                220323
+     C           ZICALC    IFEQ 6                                                             220323
+     C           ZIA1      MULT INT6DY    ZIA1                                                220323
+      *                                                                                       220323
+     C                     ELSE                                                               220323
+     C           ZIA1      MULT ZDAYN2    ZIA1                                                220323
+     C                     ENDIF                                                              220323
+      *                                                                                       220323
+     C           ZICALC    IFEQ 7                          - B2
+     C           ZICALC    OREQ 5
+     C           ZICALC    OREQ 3
+     C           ZICALC    OREQ 2
+     C           ZICALC    OREQ 0                                                             CER016
+      *                                                                                       CER016
+     C           ZICALC    IFEQ 0                                                             CER016
+     C           PINTN     ANDEQ'Y'                                                           CER016
+     C                     Z-ADD1         C       20                                          CER016
+      *                                                                                       CER016
+     C           C         DOWLT12                                                            CER016
+     C                     Z-ADDZIA,C     WAMT                                                CER016
+     C                     Z-ADDZIR,C     WRATE                                               CER016
+     C                     EXSR SRINT0                                                        CER016
+     C                     Z-ADDZINTR     ZIN1,C                                              CER016
+     C                     ADD  1         C                                                   CER016
+     C                     ENDDO                                                              CER016
+      *                                                                                       CER016
+     C                     XFOOTZIN1      ZINTR1    H                                         CER016
+     C                     Z-ADDZINTR1    ZINTR     H                                         CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C********** ZIA       DIV  36000     ZIA1      H                                         220323
+     C           ZIA1      DIV  36000     ZIN1      H                                         220323
+     C                     END                                                                CER016
+     C*
+     C                     END                             - E2
+     C*
+     C           ZICALC    IFEQ 4                          - B2
+     C           ZICALC    OREQ 1
+     C********** ZIA       DIV  36500     ZIA1      H                                         220323
+     C           ZIA1      DIV  36500     ZIN1      H                                         220323
+     C*
+     C                     END                             - E2
+     C*
+     C           ZICALC    IFEQ 6                          - B2
+     C********** ZIA       DIV  36600     ZIA1      H                                         220323
+     C           ZIA1      DIV  36600     ZIN1      H                                         220323
+     C*
+     C                     END                             - E2
+     C           ZICALC    IFNE 0                                                             CER016
+     C           PINTN     ORNE 'Y'                                                           CER016
+     C*
+     C********** ZIA1      MULT ZIR       ZIA1      H                                         220323
+     C***********ZIA1      MULT ZDAYN2    ZIN       H                     074578
+     C********** ZIA1      MULT ZDAYN2    ZIN1      H                                  074578 220323
+     C***********          XFOOTZIN       ZINTR                           074578
+     C                     XFOOTZIN1      ZINTR1 185H                     074578
+     C                     Z-ADDZINTR1    ZINTR     H                     074578
+     C                     ENDIF                                                              CER016
+     C*
+     C                     END                             - E1
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CPD4                                           S01408
+     C*                                                                   S01408
+     C                     ENDSR                           **ZIC01 ENDSR**
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** ZIC02 subroutine to calculate interest (type=02)
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           ZICD
+     C**
+     C           ZIC02     BEGSR                           **ZIC02 BEGSR**
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CPD5                                           S01408
+     C*                                                                   S01408
+     C*
+     C** FILL THE END OF THE TABLE WITH HIGHVAL
+     C*
+     C                     Z-ADD2         Z
+     C           Z         DOWLE11
+     C           ZIB,Z     IFEQ *ZEROS
+     C                     Z-ADD*HIVAL    ZIB,Z
+     C                     END
+     C                     ADD  1         Z
+     C                     END
+     C*
+     C** REVERSE SIGN OF AMOUNT IF IT'S NEGATIVE
+     C*
+     C           ZIAMT     IFLT 0                          - B1
+     C                     Z-SUBZIAMT     ZIAMT
+     C                     END                             - E1
+     C*
+     C***INTEREST*IS*ONLY*CALCULATED*ON*AN*AMOUNT*THAT*EXCEEDS*OR*IS*EQUAL103460
+     C***EQUALETONTHEAINITIALHTHRESHOLDCBALACE                            103460
+      *  INTEREST IS ONLY CALCULATED ON AN AMOUNT THAT EXCEEDS THE        103460
+      *  INITIAL THRESHOLD BALANCE                                        103460
+     C*
+     C***********ZIAMT     IFGE ZITHR                      - B1           103460
+     C           ZIAMT     IFGT ZITHR                      - B1           103460
+     C*
+     C** FIND NUMBER OF DAYS TO CALCULATE INTEREST ACCORDING TO CALC. BASIS
+     C*
+     C                     EXSR ZICD
+     C*
+     C                     Z-ADD1         Z
+     C           ZIAMT     LOKUPZIB,Z                  40
+     C*
+     C* IF THE SUB-TYPE IS FROM 50000 TO 99999, CALCULATE THE INTEREST
+     C* ON THE AMOUNT EXCEEDING THE INITIAL THRESHOLD. OTHERWISE, THE
+     C* INTEREST IS CALCULATED ON THE WHOLE BALANCE WHENEVER IT EXCEEDS
+     C* THE INITIAL THRESHOLD.
+     C*
+     C           INST      IFGE 50000                      - B2
+     C           ZIAMT     SUB  ZITHR     ZIAMT
+     C                     END                             - E2
+      *                                                                                       220323
+      ** For calc basis 6, use the factored number of days                                    220323
+      *                                                                                       220323
+     C           ZIAMT     MULT ZIR,Z     ZIWRK1                                              220323
+     C           ZICALC    IFEQ 6                                                             220323
+     C           ZIWRK1    MULT INT6DY    ZIWRK2                                              220323
+      *                                                                                       220323
+     C                     ELSE                                                               220323
+     C           ZIWRK1    MULT ZDAYN2    ZIWRK2                                              220323
+     C                     ENDIF                                                              220323
+     C*
+     C           ZICALC    IFEQ 7                          - B2
+     C           ZICALC    OREQ 5
+     C           ZICALC    OREQ 3
+     C           ZICALC    OREQ 2
+     C           ZICALC    OREQ 0                                                             CER016
+      *                                                                                       CER016
+     C           ZICALC    IFEQ 0                                                             CER016
+     C           PINTN     ANDEQ'Y'                                                           CER016
+     C                     Z-ADDZIAMT     WAMT                                                CER016
+     C                     Z-ADDZIR,Z     WRATE                                               CER016
+     C                     EXSR SRINT0                                                        CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C********** ZIAMT     DIV  36000     ZIWRK1    H                                         220323
+     C           ZIWRK2    DIV  36000     ZINTR     H                                         220323
+     C                     END                                                                CER016
+     C*
+     C                     END                             - E2
+     C*
+     C           ZICALC    IFEQ 4                          - B2
+     C           ZICALC    OREQ 1
+     C********** ZIAMT     DIV  36500     ZIWRK1    H                                         220323
+     C           ZIWRK2    DIV  36500     ZINTR     H                                         220323
+     C*
+     C                     END                             - E2
+     C*
+     C           ZICALC    IFEQ 6                          - B2
+     C********** ZIAMT     DIV  36600     ZIWRK1    H                                         220323
+     C           ZIWRK2    DIV  36600     ZINTR     H                                         220323
+     C*
+     C                     END                             - E2
+     C*
+     C/COPY WNCPYSRC,RE3380C008
+     C********** ZIWRK1    MULT ZIR,Z     ZIWRK2    H                                         220323
+     C********** ZIWRK2    MULT ZDAYN2    ZINTR     H                                         220323
+     C/COPY WNCPYSRC,RE3380C009
+     C*
+     C                     END                             - E1
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CPD6                                           S01408
+     C*                                                                   S01408
+     C                     ENDSR                           **ZIC02 ENDSR**
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZICDREZ2                                                                   220323
+     C*****************************************************************                       220323
+     C**********                                                                              220323
+     C***ZICD*subroutine*to*find*number*of*days*to*calculate*interest**                       220323
+     C********according*to*calculation*basis***************************                       220323
+     C**********                                                                              220323
+     C*******Called*by*******ZIC00,ZIC01,ZIC02*************************                       220323
+     C*******Calls***********DBSR,*ZDATE2******************************                       220323
+     C**********                                                                              220323
+     C********** ZICD      BEGSR                           **ZICD BEGSR**                     220323
+     C**********                                                                              220323
+     C**TO*DETERMINE*NUMBER*OF*DAYS*INTEREST*TO*BE*CALCULATED**********                       220323
+     C**********                                                                              220323
+     C********** ZIEND     SUB  ZIBEG     ZDAYN2                                              220323
+     C**********                                                                              220323
+     C**CHECK*FOR*INTEREST*CALCULATION*BASIS***************************                       220323
+     C**********                                                                              220323
+     C********** ZICALC    IFEQ 3                          - B1                               220323
+     C********** ZIEND     IFGT ZIBEG                      - B2                               220323
+     C**********                                                                              220323
+     C***CALCULATING*DATE*FROM*DAY*NUMBER*(BEGINNING*DATE)*************                       220323
+     C**********                                                                              220323
+     C**********           Z-ADDZIBEG     ZDAYNO                                              220323
+     C**********           EXSR ZDATE2                                                        220323
+     C**********                                                                              220323
+     C***VERIFY*IF*ERROR***********************************************                       220323
+     C**********                                                                              220323
+     C********** *IN99     IFEQ '1'                        - B3                               220323
+     C**********           Z-ADD090       DBASE            ***************                    220323
+     C**********           MOVEL'ZDATE2'  DBFILE           **DB ERROR 090*                    220323
+     C**********           MOVE *BLANKS   DBKEY            ***************                    220323
+     C**********           EXSR DBSR                                                          220323
+     C**********           END                             - E3                               220323
+     C**********                                                                              220323
+     C********** *IN98     IFEQ '0'                        - B3                        088029 220323
+     C**********           Z-ADDZDATE     SRES                                                220323
+     C**********           ELSE                            - X3                        088029 220323
+     C**********           Z-ADDZDATE     SRESX                                        088029 220323
+     C**********           Z-ADDZISDX     ZISD                                         088029 220323
+     C**********           Z-ADDZISMX     ZISM                                         088029 220323
+     C**********           Z-ADDZISYX     ZISY                                         088029 220323
+     C**********           END                             - E3                        088029 220323
+     C**********                                                                              220323
+     C***CALCULATING*DATE*FROM*DAY*NUMBER*(FINISHING*DATE)*************                       220323
+     C**********                                                                              220323
+     C**********           Z-ADDZIEND     ZDAYNO                                              220323
+     C**********           EXSR ZDATE2                                                        220323
+     C**********                                                                              220323
+     C***VERIFY*IF*ERROR***********************************************                       220323
+     C**********                                                                              220323
+     C********** *IN99     IFEQ '1'                        - B3                               220323
+     C**********           Z-ADD091       DBASE            ***************                    220323
+     C**********           MOVEL'ZDATE2'  DBFILE           **DB ERROR 091*                    220323
+     C**********           MOVE *BLANKS   DBKEY            ***************                    220323
+     C**********           EXSR DBSR                                                          220323
+     C**********           END                             - E3                               220323
+     C**********                                                                              220323
+     C********** *IN98     IFEQ '0'                        - B3                        088029 220323
+     C**********           Z-ADDZDATE     FRES                                                220323
+     C**********           ELSE                            - X3                        088029 220323
+     C**********           Z-ADDZDATE     FRESX                                        088029 220323
+     C**********           Z-ADDZIFDX     ZIFD                                         088029 220323
+     C**********           Z-ADDZIFMX     ZIFM                                         088029 220323
+     C**********           Z-ADDZIFYX     ZIFY                                         088029 220323
+     C**********           END                             - E3                        088029 220323
+     C**********                                                                              220323
+     C***IN*ORDER*FOR*THE*FINISH*YEAR*TO*BE*LESS*THAN*THE*START*YEAR*IF*ZIEND                 220323
+     C***IS*GREATER*THAN*ZIBEG,*THEN*THE*DATE*ZIEND*MUST*BE*IN*A*DIFFERENT                    220323
+     C***CENTURY*TO*ZIBEG.*IF*SO*ADD*100*YEARS*TO*IT.******************                       220323
+     C**********                                                                              220323
+     C********** ZIFY      IFLT ZISY                       - B3                               220323
+     C********** ZIFY      ADD  100       ZIFY2                                               220323
+     C**********           ELSE                            - X3                               220323
+     C**********           Z-ADDZIFY      ZIFY2                                               220323
+     C**********           END                             - E3                               220323
+     C**********                                                                              220323
+     C**********           Z-ADDZISY      ZISY2                                               220323
+     C**********                                                                              220323
+     C***DETERMINE*WHETHER*START*YEAR*IS*A*LEAP*YEAR*AND*IF*START*MONTH                       220323
+     C***IS*FEBRUARY**THEN*CONSIDER*LAST*DAY*OF*FEBRUARY*AS*DATE*30ND.*OF*THE                 220323
+     C***MONTH*********************************************************                       220323
+     C**********                                                                              220323
+     C*COPY*WNCPYSRC,RE3380C014                                                               220323
+     C********** ZISM      IFEQ 2                          - B3                               220323
+     C********** ZISY2     ADD  1900      ZLYCHK                                              220323
+     C********** ZLYCHK    DIV  4         ZLYCHK                                              220323
+     C**********           MVR            ZLYREM                                              220323
+     C********** ZLYREM    IFEQ 0                          - B4                               220323
+     C********** ZISD      IFEQ 29                         - B5                               220323
+     C**********           Z-ADD30        ZISD                                                220323
+     C**********           END                             - E5                               220323
+     C**********           ELSE                            - X4                               220323
+     C********** ZISD      IFEQ 28                         - B5                               220323
+     C**********           Z-ADD30        ZISD                                                220323
+     C**********           END                             - E5                               220323
+     C**********           END                             - E4                               220323
+     C**********           END                             - E3                               220323
+     C*COPY*WNCPYSRC,RE3380C015                                                               220323
+     C**********                                                                              220323
+     C********** 30        SUB  ZISD      ZID1                                                220323
+     C**********                                                                              220323
+     C********** ZID1      IFLT 0                          - B3                               220323
+     C**********           Z-ADD*ZEROS    ZID1                                                220323
+     C**********           END                             - E3                               220323
+     C**********                                                                              220323
+     C********** ZISM      IFEQ 12                         - B3                               220323
+     C**********           Z-ADD*ZEROS    ZISM                                                220323
+     C**********           ADD  1         ZISY                                                220323
+     C**********           ADD  1         ZISY2                                               220323
+     C**********           END                             - E3                               220323
+     C**********                                                                              220323
+     C***DETERMINE*WHETHER*END*YEAR*IS*A*LEAP*YEAR*AND*IF*END*MONTH*IS*                       220323
+     C***FEBRUARY******************************************************                       220323
+     C**********                                                                              220323
+     C*COPY*WNCPYSRC,RE3380C016                                                               220323
+     C********** ZIFM      IFEQ 2                          - B3                               220323
+     C********** ZIFY2     ADD  1900      ZLYCHK                                              220323
+     C********** ZLYCHK    DIV  4         ZLYCHK                                              220323
+     C**********           MVR            ZLYREM                                              220323
+     C********** ZLYREM    IFEQ 0                          - B4                               220323
+     C********** ZIFD      IFEQ 29                         - B5                               220323
+     C**********           Z-ADD30        ZIFD                                                220323
+     C**********           END                             - E5                               220323
+     C**********           ELSE                            - X4                               220323
+     C********** ZIFD      IFEQ 28                         - B5                               220323
+     C**********           Z-ADD30        ZIFD                                                220323
+     C**********           END                             - E5                               220323
+     C**********           END                             - E4                               220323
+     C**********           END                             - E3                               220323
+     C*COPY*WNCPYSRC,RE3380C017                                                               220323
+     C**********                                                                              220323
+     C********** ZIFD      IFEQ 31                         - B3                               220323
+     C**********           ADD  30        ZID1                                                220323
+     C**********           ELSE                            - X3                               220323
+     C**********           ADD  ZIFD      ZID1                                                220323
+     C**********           END                             - E3                               220323
+     C**********                                                                              220323
+     C**********           SUB  1         ZIFM                                                220323
+     C**********                                                                              220323
+     C********** ZISY      IFEQ ZIFY                       - B3                               220323
+     C********** ZIFM      SUB  ZISM      ZINOM                                               220323
+     C**********           ELSE                            - X3                               220323
+     C********** 12        SUB  ZISM      ZIM1                                                220323
+     C**********           Z-ADD1         ZISM                                                220323
+     C**********                                                                              220323
+     C***USE*ENLARGE*FIELDS*THAT*CAN*HANDLE*1999*ONWARDS***************                       220323
+     C**********                                                                              220323
+     C**********           ADD  1         ZISY2                                               220323
+     C********** ZIFY2     SUB  ZISY2     ZIY1                                                220323
+     C********** ZIY1      MULT 12        ZIM2                                                220323
+     C********** ZIM2      ADD  ZIFM      ZIM2                                                220323
+     C********** ZIM2      ADD  ZIM1      ZINOM                                               220323
+     C**********                                                                              220323
+     C**********           END                             - E3                               220323
+     C**********                                                                              220323
+     C********** ZINOM     MULT 30        ZID2                                                220323
+     C********** ZID2      ADD  ZID1      ZDAYN2                                              220323
+     C**********                                                                              220323
+     C**********           END                             - E2                               220323
+     C**********                                                                              220323
+     C**********           END                             - E1                               220323
+     C**********                                                                              220323
+     C********** ZICALC    IFEQ 4                          - B1                               220323
+     C********** ZICALC    OREQ 5                                                             220323
+     C**********                                                                              220323
+     C***ONE*DAY*IS*SUBTRACTED*FROM*ZDAYN2*FOR*EACH*OCCURANCE*OF*******                       220323
+     C***29*FEB*IN*THE*INTEREST*CALCULATION*PERIOD*INCLUSIVE*OF********                       220323
+     C***ZIBEG*AND*ZIEND***********************************************                       220323
+     C**********                                                                              220323
+     C***FIND*NO.*OF*FOUR*YEAR*PERIODS*BETWEEN*DATES*******************                       220323
+     C**********                                                                              220323
+     C********** ZDAYN2    DIV  1461      ZIMAN                                               220323
+     C**********           MVR            ZIREM                                               220323
+     C**********                                                                              220323
+     C***FIND*NEXT*29*FEB*DAY*NO.*ON*OR*AFTER*ZIBEG.*******************                       220323
+     C**********                                                                              220323
+     C********** ZIBEG     SUB  60        ZIBW1                                               220323
+     C********** ZIBW1     DIV  1461      ZIDW1                                               220323
+     C**********           MVR            ZIDREM                                              220323
+     C**********                                                                              220323
+     C********** ZIDREM    IFEQ 0                          - B2                               220323
+     C**********           Z-ADDZIBEG     ZIDW2                                               220323
+     C**********           END                             - E2                               220323
+     C**********                                                                              220323
+     C***ROUND*UP*RESULT***********************************************                       220323
+     C**********                                                                              220323
+     C********** ZIDW1     ADD  1         ZIDW2                                               220323
+     C**********                                                                              220323
+     C***CALCULATE*NEXT*29*FEB.****************************************                       220323
+     C**********                                                                              220323
+     C********** ZIDW2     MULT 1461      ZIDW2                                               220323
+     C********** ZIDW2     ADD  60        ZIDW2                                               220323
+     C**********                                                                              220323
+     C***IF*THIS*NEXT*29*FEB.*DAYNO*-*ZIBEG*IS*GREATER*OR*EQUAL*TO*****                       220323
+     C***ZIREM*THEN*ADD*1*TO*ZIMAN.************************************                       220323
+     C**********                                                                              220323
+     C********** ZIDW2     SUB  ZIBEG     ZILPCP                                              220323
+     C**********                                                                              220323
+     C********** ZIREM     IFGE ZILPCP                     - B2                               220323
+     C**********           ADD  1         ZIMAN                                               220323
+     C**********           END                             - E2                               220323
+     C**********                                                                              220323
+     C***SUBTRACT*ZIMAN*FROM*ZDAYN2*TO*GIVE*VALUE*OF*ZDAYN2*REQUIRED***                       220323
+     C***FOR*THIS*INTEREST*CALCULATION*********************************                       220323
+     C**********                                                                              220323
+     C********** ZDAYN2    SUB  ZIMAN     ZDAYN2                                              220323
+     C**********                                                                              220323
+     C**********           END                             - E1                               220323
+     C**********                                                                              220323
+     C**********           ENDSR                           **ZICD ENDSR**                     220323
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** ZDATE1 Subroutine to convert a date format to a day number.
+     C**
+     C**     Called by       DATEIN
+     C**     Calls           Nothing
+     C**
+     C*
+     C/COPY ZSRSRC,ZDATE1Z2
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** ZDATE2 Subroutine to convert a day number to date formats.
+     C**
+     C**     Called by       DATEIN, MAIN, ZICD
+     C**     Calls           Nothing
+     C**
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE3380CCP8                                           S01408
+      *                                                                   S01408
+     C*
+     C*****************************************************************
+      /EJECT                                                                                  CER016
+      *****************************************************************                       CER016
+      *                                                               *                       CER016
+      *  SRINT0 - Calculate Interest for Retail Type Account          *                       CER016
+      *                                                               *                       CER016
+      *  Called by: Z1C00,Z1C01,Z1C02                                 *                       CER016
+      *                                                               *                       CER016
+      *  Calls: None                                                  *                       CER016
+      *                                                               *                       CER016
+      *****************************************************************                       CER016
+      *                                                                                       CER016
+     C           SRINT0    BEGSR                                                              CER016
+      *                                                                                       CER016
+     C                     MOVE @NBDP     WNDP    10                                          CER016
+     C                     Z-ADD1         WNDTMP 150                                          CER016
+      *                                                                                       CER016
+     C           WNDP      IFEQ 0                                                             CER016
+     C                     Z-ADD1         WNDTMP                                              CER016
+     C                     ELSE                                                               CER016
+      *                                                                                       CER016
+     C                     DO   WNDP                                                          CER016
+     C           10        MULT WNDTMP    WNDTMP                                              CER016
+     C                     ENDDO                                                              CER016
+      *                                                                                       CER016
+     C                     ENDIF                                                              CER016
+      *                                                                                       CER016
+     C           WAMT      MULT ZDAYN2    WINAMT                                              CER016
+     C           WINAMT    DIV  100       WNAMT1    H                                         CER016
+     C           WNAMT1    DIV  WNDTMP    WNAMT2    H                                         CER016
+     C           WNAMT2    MULT WNDTMP    WRKFLD 150                                          CER016
+     C           WRKFLD    MULT WRATE     ZINT1  150                                          CER016
+     C           ZINT1     DIV  360       ZINT2  150H                                         CER016
+     C                     Z-ADDZINT2     ZINTR                                               CER016
+      *                                                                                       CER016
+     C                     ENDSR                                                              CER016
+      *                                                                                       CER016
+      *****************************************************************                       CER016
+      /EJECT                                                                                  CER016
+      *****************************************************************                       CER016
+      *                                                               *                       CER016
+      *  SRAOS - To call AOSVALR0 for New system value InterestNumber *                       CER016
+      *                                                               *                       CER016
+      *  Called By: INTCAL                                            *                       CER016
+      *                                                               *                       CER016
+      *  Calls: None                                                  *                       CER016
+      *                                                               *                       CER016
+      *****************************************************************                       CER016
+      *                                                                                       CER016
+     C           SRAOS     BEGSR                                                              CER016
+     C                     MOVE 'N'       WFIRST                                              CER016
+      *                                                                                       CER016
+      **  Call AOSVALR0 to check for InterestNumber                                           CER016
+      *                                                                                       CER016
+     C                     CALL 'AOSVALR0'                                                    CER016
+     C                     PARM *BLANKS   PRTCD   7                                           CER016
+     C                     PARM PSYSVL    PSVLK1 20                                           CER016
+     C                     PARM           PSVL1 200                                           CER016
+     C                     PARM *BLANKS   PSVLK2 20                                           CER016
+     C                     PARM           PSVL2 200                                           CER016
+     C                     PARM *BLANKS   PSVLK3 20                                           CER016
+     C                     PARM           PSVL3 200                                           CER016
+     C                     PARM *BLANKS   PSVLK4 20                                           CER016
+     C                     PARM           PSVL4 200                                           CER016
+     C                     PARM *BLANKS   PSVLK5 20                                           CER016
+     C                     PARM           PSVL5 200                                           CER016
+     C                     PARM *BLANKS   PSVLK6 20                                           CER016
+     C                     PARM           PSVL6 200                                           CER016
+     C                     PARM *BLANKS   PSVLK7 20                                           CER016
+     C                     PARM           PSVL7 200                                           CER016
+     C                     PARM *BLANKS   PSVLK8 20                                           CER016
+     C                     PARM           PSVL8 200                                           CER016
+     C                     PARM *BLANKS   PSVLK9 20                                           CER016
+     C                     PARM           PSVL9 200                                           CER016
+     C                     PARM *BLANKS   PSVLK0 20                                           CER016
+     C                     PARM           PSVL0 200                                           CER016
+      *                                                                                       CER016
+     C           PRTCD     IFNE *BLANKS                                                       CER016
+     C           PSVL1     ANDEQ'*NRF   '                                                     CER016
+     C                     EXSR *PSSR                                                         CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C                     MOVELPSVL1     PINTN   1                                           CER016
+     C                     ENDIF                                                              CER016
+      *                                                                                       CER016
+     C                     ENDSR                                                              CER016
+      *                                                                                       CER016
+      *****************************************************************                       CER016
+     C/EJECT
+     ORE3380P1H  302   65NLR
+     O       OR        OF 66
+     O                                   24 'REFERENCE RE3380P1'
+     O                         TITL      91
+     O                                  102 'DATE'
+     O                         RUNA     110
+     O                                  119 'PAGE'
+     O                 L1      PAGE  Z  124
+     O        H  1     65NLR
+     O       OR        OF 66
+     O                                   55 'INTERIM RETAIL'
+     O                                   74 'ACCRUED INTEREST -'
+     O                         MTIME     82 '  .  .  '
+     O                 88                93 'BRANCH '
+     O                 88      BRCA      96
+     O                 88                97 '-'
+     O                 88      BRNM     127
+     O        H  1     65NLR
+     O       OR        OF 66
+     O                                   55 '--------------'
+     O                                   74 '-------------------'
+     O                                   82 '--------'
+     O        H  1     65NLR
+     O       OR        OF 66
+     O**********                         26 'CUST   CUSTOMER   ACCT'                          CGL029
+     O                                   15 'CUST   CUSTOMER'                                 CGL029
+     O                                   25 'ACCT'                                            CGL029
+     O                                   54 'RETAIL       LAST'
+     O                                   65 'CURRENT'
+     O                 60                73 'BRT'
+     O                                   88 'A C C R U E D'
+     O                                  106 'I N T E R E S T'
+     O                                  130 'A D J U S T M E N T S'
+     O        H  1     65NLR
+     O       OR        OF 66
+     O**********                         15 'NUMBER NAME'                                     CGL029
+     O**********                         43 'CODE    CCY    A/C NO'                           CGL029
+     O                                   11 'NUMBER NAME'                                     CGL029
+     O                                   44 'CODE      CCY     A/C NO'                        CGL029
+     O                                   68 'POSTING RATE OR TYPE'
+     O                 60                73 'CAT'
+     O                                   86 'MANUAL'
+     O                                  106 'GENERATED'
+     O                                  126 'ACCRUED'
+     O/COPY WNCPYSRC,RE3380O001
+     O        D 2      43N99 66
+     O**********               CNUM      10                                                   CGL029
+     O**********               CSNM      21                                                   CGL029
+     O**********               ACOD      26                                                   CGL029
+     O**********                         27 '-'                                               CGL029
+     O**********               ASEQ      29                                                   CGL029
+     O**********               CCY       33                                                   CGL029
+     O**********          53   ACNO      44                                                   CGL029
+     O**********                         47 'DR'                                              CGL029
+     O**********      N35      RATEDR    69 '   0 .       '                                   CGL029
+     O**********       35      DICT      60                                                   CGL029
+     O**********       35                61 '/'                                               CGL029
+     O**********       35      DCST      66                                                   CGL029
+     O**********       20N35             70 '+'                                               CGL029
+     O**********       21N35             70 '-'                                               CGL029
+     O**********               LASTDR    56                                                   CGL029
+     O                         CNUM       6                                                   CGL029
+     O                         CSNM      17                                                   CGL029
+     O                         ACOD      28                                                   CGL029
+     O                                   29 '-'                                               CGL029
+     O                         ASEQ      31                                                   CGL029
+     O                         CCY       35                                                   CGL029
+     O                    53   ACNO      46                                                   CGL029
+     O                                   49 'DR'                                              CGL029
+     O                N35      RATEDR    70 '   0 .       '                                   CGL029
+     O                 35      DICT      61                                                   CGL029
+     O                 35                62 '/'                                               CGL029
+     O                 35      DCST      67                                                   CGL029
+     O                 20N35             71 '+'                                               CGL029
+     O                 21N35             71 '-'                                               CGL029
+     O                         LASTDR    57                                                   CGL029
+     O                 80      MADI      89 ' ,   ,   ,   , 0 '
+     O                 80 22             91 'CR'
+     O                 81      MADI      89 '   ,   ,   , 0 . '
+     O                 81 22             91 'CR'
+     O                 82      MADI      89 '  ,   ,   , 0 .  '
+     O                 82 22             91 'CR'
+     O                 83      MADI      89 ' ,   ,   , 0 .   '
+     O                 83 22             91 'CR'
+     O                 80      GADI     109 ' ,   ,   ,   , 0 '
+     O                 80 23            111 'CR'
+     O                 81      GADI     109 '   ,   ,   , 0 . '
+     O                 81 23            111 'CR'
+     O                 82      GADI     109 '  ,   ,   , 0 .  '
+     O                 82 23            111 'CR'
+     O                 83      GADI     109 ' ,   ,   , 0 .   '
+     O                 83 23            111 'CR'
+     O                 80      DAIC     129 ' ,   ,   ,   , 0 '
+     O                 80 24            131 'CR'
+     O                 81      DAIC     129 '   ,   ,   , 0 . '
+     O                 81 24            131 'CR'
+     O                 82      DAIC     129 '  ,   ,   , 0 .  '
+     O                 82 24            131 'CR'
+     O                 83      DAIC     129 ' ,   ,   , 0 .   '
+     O                 83 24            131 'CR'
+     O        D 2      44N99 66
+     O**********      N43      CNUM      10                                                   CGL029
+     O**********      N43      CSNM      21                                                   CGL029
+     O**********      N43      ACOD      26                                                   CGL029
+     O**********      N43                27 '-'                                               CGL029
+     O**********      N43      ASEQ      29                                                   CGL029
+     O**********      N43      CCY       33                                                   CGL029
+     O**********      N43 53   ACNO      44                                                   CGL029
+     O**********                         47 'CR'                                              CGL029
+     O**********      N36      RATECR    69 '   0 .       '                                   CGL029
+     O**********       36      CICT      60                                                   CGL029
+     O**********       36                61 '/'                                               CGL029
+     O**********       36      CCST      66                                                   CGL029
+     O**********       25N36             70 '+'                                               CGL029
+     O**********       26N36             70 '-'                                               CGL029
+     O**********               LASTCR    56                                                   CGL029
+     O                N43      CNUM       6                                                   CGL029
+     O                N43      CSNM      17                                                   CGL029
+     O                N43      ACOD      28                                                   CGL029
+     O                N43                29 '-'                                               CGL029
+     O                N43      ASEQ      31                                                   CGL029
+     O                N43      CCY       35                                                   CGL029
+     O                N43 53   ACNO      46                                                   CGL029
+     O                                   49 'CR'                                              CGL029
+     O                N36      RATECR    70 '   0 .       '                                   CGL029
+     O                 36      CICT      61                                                   CGL029
+     O                 36                62 '/'                                               CGL029
+     O                 36      CCST      67                                                   CGL029
+     O                 25N36             71 '+'                                               CGL029
+     O                 26N36             71 '-'                                               CGL029
+     O                         LASTCR    57                                                   CGL029
+     O                 60      BRTCA     72
+     O                 80      MACI      89 ' ,   ,   ,   , 0 '
+     O                 80 27             91 'CR'
+     O                 81      MACI      89 '   ,   ,   , 0 . '
+     O                 81 27             91 'CR'
+     O                 82      MACI      89 '  ,   ,   , 0 .  '
+     O                 82 27             91 'CR'
+     O                 83      MACI      89 ' ,   ,   , 0 .   '
+     O                 83 27             91 'CR'
+     O                 80      GACI     109 ' ,   ,   ,   , 0 '
+     O                 80 28            111 'CR'
+     O                 81      GACI     109 '   ,   ,   , 0 . '
+     O                 81 28            111 'CR'
+     O                 82      GACI     109 '  ,   ,   , 0 .  '
+     O                 82 28            111 'CR'
+     O                 83      GACI     109 ' ,   ,   , 0 .   '
+     O                 83 28            111 'CR'
+     O                 80      CAIC     129 ' ,   ,   ,   , 0 '
+     O                 80 29            131 'CR'
+     O                 81      CAIC     129 '   ,   ,   , 0 . '
+     O                 81 29            131 'CR'
+     O                 82      CAIC     129 '  ,   ,   , 0 .  '
+     O                 82 29            131 'CR'
+     O                 83      CAIC     129 ' ,   ,   , 0 .   '
+     O                 83 29            131 'CR'
+     O        D 2      45 66
+     O**********      N43N44   CNUM      10                                                   CGL029
+     O**********      N43N44   CSNM      21                                                   CGL029
+     O**********      N43N44   ACOD      26                                                   CGL029
+     O**********      N43N44             27 '-'                                               CGL029
+     O**********      N43N44   ASEQ      29                                                   CGL029
+     O**********      N43N44   CCY       33                                                   CGL029
+     O**********      N43N44 53ACNO      44                                                   CGL029
+     O**********                         48 'CHG'                                             CGL029
+     O**********               LASTCR    56                                                   CGL029
+     O**********               CHCT      60                                                   CGL029
+     O**********                         61 '/'                                               CGL029
+     O**********               CHST      66                                                   CGL029
+     O                N43N44   CNUM       6                                                   CGL029
+     O                N43N44   CSNM      17                                                   CGL029
+     O                N43N44   ACOD      28                                                   CGL029
+     O                N43N44             29 '-'                                               CGL029
+     O                N43N44   ASEQ      31                                                   CGL029
+     O                N43N44   CCY       25                                                   CGL029
+     O                N43N44 53ACNO      46                                                   CGL029
+     O                                   50 'CHG'                                             CGL029
+     O                         LASTCR    57                                                   CGL029
+     O                         CHCT      61                                                   CGL029
+     O                                   62 '/'                                               CGL029
+     O                         CHST      67                                                   CGL029
+     O                 80      TOTCH    129 ' ,   ,   ,   , 0 '
+     O                 80 30            131 'CR'
+     O                 81      TOTCH    129 '   ,   ,   , 0 . '
+     O                 81 30            131 'CR'
+     O                 82      TOTCH    129 '  ,   ,   , 0 .  '
+     O                 82 30            131 'CR'
+     O                 83      TOTCH    129 ' ,   ,   , 0 .   '
+     O                 83 30            131 'CR'
+     O/COPY WNCPYSRC,RE3380O002
+     ORE3380P1E  302
+     O                                   24 'REFERENCE RE3380P1'
+     O                         TITL      91
+     O                                  102 'DATE'
+     O                         RUNA     110
+     O                                  119 'PAGE'
+     O                 L1      PAGE  Z  124
+     O        E  1
+     O                                   55 'INTERIM RETAIL'
+     O                                   74 'ACCRUED INTEREST -'
+     O                         MTIME     82 '  .  .  '
+     O                 88                93 'BRANCH '
+     O                 88      BRCA      96
+     O                 88                97 '-'
+     O                 88      BRNM     127
+     O        E  1
+     O                                   55 '--------------'
+     O                                   74 '-------------------'
+     O                                   82 '--------'
+     O        E  1
+     O                                   26 'CUST   CUSTOMER   ACCT'
+     O                                   54 'RETAIL       LAST'
+     O                                   65 'CURRENT'
+     O                                   85 'A C C R U E D'
+     O                                  103 'I N T E R E S T'
+     O                                  127 'A D J U S T M E N T S'
+     O        E  1
+     O**********                         15 'NUMBER NAME'                                     CGL029
+     O**********                         43 'CODE    CCY    A/C NO'                           CGL029
+     O                                   11 'NUMBER NAME'                                     CGL029
+     O                                   44 'CODE      CCY     A/C NO'                        CGL029
+     O                                   68 'POSTING RATE OR TYPE'
+     O                                   86 'MANUAL'
+     O                                  106 'GENERATED'
+     O                                  126 'ACCRUED'
+     O        T 3      L1N42 66
+     O       AND      NU7
+     O                                   59 '*** NO DETAILS'
+     O                                   73 'TO REPORT ***'
+     O        T 3      LR U7 66
+     O                                   75 '*** DATABASE ERROR ***'
+     O        T 2      L1 66
+     O                       88          66 '*** END OF REPORT FOR'
+     O                       88          74 ' BRANCH '
+     O                       88BRCA      77
+     O                       88          81 '***'
+     O                N88                76 '*** END OF REPORT ***'
+     O*
+     O*  PRINT FILE CONTROLS PAGE
+     O*
+     ORE3380AUT  302   LR
+     O                                   24 'REFERENCE RE3380AU'
+     O                         TITL      91
+     O                                  102 'DATE'
+     O                         RUNA     110
+     O                                  119 'PAGE'
+     O                                  124 '1'
+     O        T  1     LR
+     O                                   55 'INTERIM RETAIL'
+     O                                   74 'ACCRUED INTEREST -'
+     O                         MTIME     82 '  .  .  '
+     O                                   97 '   RUN CONTROLS'
+     O        T  2     LR
+     O                                   55 '--------------'
+     O                                   74 '-------------------'
+     O                                   82 '--------'
+     O        T 11     LR
+     O                                   22 'FILE CONTROLS'
+     O        T  2     LR
+     O                                   22 '-------------'
+     O        T 3      LR
+     O                                   30 'NUMBER OF RECORDS'
+     O                                   41 'ON S/SREAI'
+     O                         COUNT 3   59
+     O        T 3      LRN46NU7
+     O                                   59 '*** NO DETAILS'
+     O                                   73 'TO REPORT ***'
+     O        T 3      LR U7
+     O                                   66 'DATABASE ERROR '
+     O                         DBASE     69
+     O                                   83 'IN PROGRAM '
+     O                         DBPGM     93
+     O        T 2      LR U7
+     O                                   56 'FILE '
+     O                         DBFILE    64
+     O                                   70 ', KEY '
+     O                         DBKEY     99
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+** ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM - MONTH SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

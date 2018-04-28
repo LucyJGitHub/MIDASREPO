@@ -1,0 +1,2559 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Portfolio closure')                           *
+     H**********                                                          S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                                 *
+     F*                                                               *
+     F*  PM1010 - PORTFOLIO CLOSURE                                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      *                 CPK016             Date 03Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+     F*                 147295             Date 08Nov98               *
+     F*                 114559             Date 28Feb97               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC003             Date 25Feb97               *
+      *                 CFF004             Date 02Oct96               *
+     F*                 CPM003             DATE 02MAY96               *
+     F*                 S71062             DATE 25JAN96               *
+     F*                 095249             DATE 06NOV95               *
+     F*                 S01408             DATE 01APR96               *
+     F*                 CPM004             DATE 08FEB96               *
+     F*                 095249             DATE 06NOV95               *
+     F*                 081351             DATE 09JAN95               *
+     F*                 S01496             DATE 11NOV94               *
+     F*                 S01486             DATE 03JUN94               *
+     F*                 S01313             DATE 06NOV92               *
+     F*                 049467             DATE 28JAN93               *
+     F*                 B08275             DATE 13NOV91               *
+     F*                 R10029             DATE 12SEP90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CPK016 - Release 5 packaging.  Clash of field names.         *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+      *  147295 - Include RCF processing.                             *
+      *           See also PMC101.                                    *
+      *  114559 - Use file SEERALL8 instead of SEERALL3 otherwise     *
+      *           closure is not accepted even if all redemptions     *
+      *           for a client/portfolio are all completed.           *
+     F*  CAC003 - Profit Centre Accounting Development Phase 3.       *
+     F*         - Recompiled due to changes in PF/PMPORTPD.           *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  CPM003 - FF/PM Interface upgrade to Release 10               *
+     F*  S71062 - FF/PM interface                                     *
+     F*           Re-activate FF coding                               *
+     F*  S01408 - Addition of core hook PM1010CCP2                    *
+     F*         - Addition of core hook PM1010CCP1                    *
+     F*         - Addition of core hook PM1010FFP1                    *
+     F*  CPM004 - Bank Portfolios (Recompiled due to change           *
+     F*           in PF/PMTRSFPD)                                     *
+     F*  095249 - Add branch for accounts - RECOMPILE ONLY            *
+     F*  081351 - Wrong files used                                    *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10978)        *
+     F*  S01486 - Private Banking upgrade to Release 10               *
+     F*  S01313 - RECOMPILED DUE TO PORTFOLIO PERFORMANCE             *
+     F*  049467 - RECOMPILED FOR RELEASE 3 PTF 02                     *
+     F*  B08275 - TRANSACTION FILE KEYS ALTERED TO INCLUDE RECORD ID  *
+     F*  R10029 - NO AUTOMATIC TRANSFER POSITIONS FROM CLOSING        *
+     F*           PORTFOLIOS                                          *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F** ******************************************
+     F**      F I L E S ***************************
+     F** ******************************************
+     F**
+     F***SDBANKL1IF**E                    DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***PREFIX*'BJ'******************************************************S01486
+     F***********                                                         S01486
+     F***SDMMODPDIF**E                    DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***PREFIX*'BG'******************************************************S01486
+     F**
+     F***PMPORTPPUF**E           K        DISK                            S01486
+     FPMPORTPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'PN' **
+     F**
+     F***PMPORTZZUF**E           K        DISK                            S01486
+     FPMPORTPAUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'PN' **
+     F**
+     F***PMCIIPPPUF**E           K        DISK                            S01486
+     FPMCIIPPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'PY' **
+     F**
+     F***PMCCIPPPUF**E           K        DISK                            S01486
+     FPMCCIPPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'PZ' **
+     F**
+     F***PMCDIPPPUF**E           K        DISK                            S01486
+     FPMCDIPPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'P1' **
+     F**
+     F***PMCRIPPPUF**E           K        DISK                            S01486
+     FPMCRIPPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'P2' **
+     F**
+     F***PMPTNPPPUF**E           K        DISK                            S01486
+     FPMPTNPPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'PR' **
+     F**
+     F***PMCHRGPPUF**E           K        DISK                            S01486
+     FPMCHRGPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'PO' **
+     F**
+     F*MHPOSLLIF**E           K        DISK                           UC  B08275
+     F****                                          KINFSR *PSSR          B08275
+     FPMOPPSLLIF  E           K        DISK                               B08275
+     F                                              KINFSR *PSSR          B08275
+     F            PMCPOSP0                          KRENAMEPMCPOSPX       B08275
+     F** PREFIX 'QA' **
+     F**
+     F***PMTRSFPPUF**E           K                                        S01486
+     F************                                  KINFSR *PSSR          S01486
+     F***PREFIX*'P8'******************************************************S01486
+     F************                                                        S01486
+     F***PMTRSFZZUF**E                    DISK                            S01486
+     FPMTRSFPAUF  E                    DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'P8' **
+     F**
+     F***TRADPT**IF**E           K        DISK                        UC  S01486
+     FPMTRADL0IF  E           K        DISK                           UC  S01486
+     F                                              KINFSR *PSSR
+     F**
+     F***DPTMPT**IF**E           K        DISK                            S01486
+     FPMDPTML0IF  E           K        DISK                           UC  S01486
+     F                                              KINFSR *PSSR
+     F***********                                                         S01486
+     F***TRANSPT**F**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F**                                                                  S71062
+     FTRANSPT IF  E           K        DISK                           UC  S71062
+     F                                              KINFSR *PSSR          S71062
+     F**
+     F***DEALSPT**F**E           K        DISK                            S01486
+     FPMDEALL0IF  E           K        DISK                           UC  S01486
+     F                                              KINFSR *PSSR
+     F**
+     F***CLOANPT*IF**E           K        DISK                            S01486
+     FPMCLONL1IF  E           K        DISK                           UC  S01486
+     F                                              KINFSR *PSSR
+     F**
+     F** << S01313 BEGIN >>
+     FPMACCNL2IF  E           K        DISK                           UC  S01486
+     F***ACCNTP1*IF**E           K         ISK                            S01486
+     F********ACCNTPT IF  E           K        DISK                           UC
+     F** << S01313 END >>
+     F                                              KINFSR *PSSR
+     F**
+     F***FIDPLNPTIF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,PM1010FFP1                                           S01408
+     F*                                                                   S01408
+     F**
+     FPMTPTFLLUF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            PMTRSFP0                          KRENAMEPMTRSFPX
+     F** PREFIX 'P8' **
+     F**
+     F******SCSCFAPDUF  E           K        DISK                   B8275 081351
+     FSESCFAPDUF  E           K        DISK                               081351
+     F                                              KINFSR *PSSR          B8275
+     F** PREFIX 'SD' **                                                   B8275
+     F**                                                                  B8275
+     F******SCOCFSPDUF  E           K        DISK                   B8275 081351
+     FSEOCFSPDUF  E           K        DISK                               081351
+     F                                              KINFSR *PSSR          B8275
+     F** PREFIX 'SE' **                                                   B8275
+     F**                                                                  B8275
+     FSEBLKPL4IF  E           K        DISK                           UC  S01496
+     F                                              KINFSR *PSSR          S01496
+     F*                                                                   S01496
+     F***SEERALL3IF  E           K        DISK                 UC  S01496 114559
+     FSEERALL8IF  E           K        DISK                           UC  114559
+     F                                              KINFSR *PSSR          S01496
+     F***PM1010P1O***E                    PRINTER                   R10029S01486
+     FPM1010P1O   E                    PRINTER      KINFDS SPOOL      UC  S01486
+     F                                              KINFSR *PSSR          S01486
+     F**                                                                  R10029
+     F***PM1010AUO***E                    PRINTER                         S01486
+     FPM1010AUO   E                    PRINTER      KINFDS SPOOLU         S01486
+     F                                              KINFSR *PSSR          S01486
+     F**
+      /EJECT
+     F*================================================================
+     F*
+     F* ID F  C  H  L    Function of indicators
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  ..  ..  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  20
+     F*       21  22  23  24  25  26  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       41  42  43  44  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       61  62  63  64  65  66  67  68  69  70
+     F*       ..  ..  ..  ..  ..  76  77  78  ..  80
+     F*       81  82  83  84  85  86  87  88  89  90
+     F*       91  92  93  94  95  96  97  98  99
+     F*
+     F*
+     F*       U7&U8      Database error
+     F*       U8         Run control error
+     F*       LR         End of program
+     F*
+     F*       65         Jyske Enhancements feature is installed          S01496
+     F*                                                                   S01496
+     F*       71         Files access indicator
+     F*       72         Files access indicator
+     F*       73         Files access indicator
+     F*       74         Files access indicator
+     F*       75         Files access indicator
+     F*
+     F********79*********'NO*DETAILS'*on*PM1010P1*list**************R10029S01486
+     F*       79         'NO DETAILS' on PM1010AU list                    S01486
+     F*                                                                   R10029
+      /EJECT
+     E*
+     E**   Array for copyright
+     E                    CPY@    1   1 80               COPYRIGHT
+     E*                                                                   S01496
+     E**   Array for reason for which Portfolio Closure rejected          S01496
+     E********************NARR    1   8 30               NARRATIVE S01496 S71062
+     E                    NARR    1   9 30               NARRATIVE        S71062
+     E*                                                                   S01496
+     E                    FLAG        8  1               FLAG (Y/N)       S01496
+     E*
+      /EJECT
+     I************************************************************
+     ITRADSDF                                                                                 CPK016
+     I              CRSK                            TDCRSK                                    CPK016
+     ISCSARD    E DSSCSARDPD                                              S01486
+     I** EXTERNAL DS FOR SAR DETAILS                                      S01486
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     I*                                                                   S01486
+     ISDMMOD    E DSSDMMODPD                                              S01486
+      ** MODULES DETAILS   ACCESSED VIA ACCESS PROGRAM                    S01486
+     I*                                                                   CPM003
+     ISDPORT    E DSSDPORTPD                                              CPM003
+     I** EXTERNAL DS FOR PORTFOLIO DETAILS                                CPM003
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01486
+     I*                                                                   S01486
+     ISPOOL       DS                                                      S01486
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE                         S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+     I*                                                                   S01486
+     ISPOOLU      DS                                                      S01486
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE                         S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I*                                                                   S01486
+     I********************************************************************S01486
+     I***IDENTIFICATION*OF*FIDPLNPT*RECORDS*******************************S01486
+     I********************************************************************S01486
+     I***FILOAND0****05                                                   S01486
+     I************                                                        S01486
+     I***FIDEPOD0****06                                                   S01486
+     I**
+     I** DATA STRUCTURE FOR LAST UPDATE
+     I**
+     I            DS
+     I                                        1   20WWDLUP
+     I                                        3   5 WWMLUP
+     I                                        6   70WWYLUP
+     I                                        1   7 WWHLUP
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***LDA********UDS                            256                    S01486
+     I***********                           132 183 DBLOT                 S01486
+     I***********                           132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I* Data structure for compilation - copyright insertion.              0
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IRUNDAT      DS                                                      B8275
+     I***********                             1   7 BJMRDT          B08275S01486
+     I                                        1   7 RUNA                  S01486
+     I                                        1   2 XDAY                  B8275
+     I                                        3   5 XMONTH                B8275
+     I                                        6   70XYEAR                 B8275
+     IP2PARM      DS                                                      147295
+      * I:    RCF sequence number                                         147295
+     I                                        1   5 P2RSQN                147295
+     IP3PARM      DS                                                      147295
+      * I:    Level                                                       147295
+     I                                        1   1 P3LEVL                147295
+     IP4PARM      DS                                                      147295
+      * I:    Entity                                                      147295
+     I                                        1   3 P4ENTY                147295
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * INDEX OF SUBROUTINES                                                   *
+      * MAIN     - MAIN PROCESSING                                             *
+      * #PAA     - TO ACCESS STANDING DATA AND INITIALIZE WORK FIELDS          *
+      * #PBB     - TO PROCESS ALL TRANSFERS AND DELETIONS                      *
+      * #P00     - TO CHECK WHETHER A PORTFOLIO MAY BE CLOSED             R10029
+      * #P01     - TO DELETE INVESTMENT POLICIES AND NOTEPADS                  *
+      * #P0101   - TO DELETE CUSTOMER INVESTMENT POLICIES                      *
+      * #P0102   - TO DELETE PORTFOLIO NOTEPADS DETAILS                        *
+      * #P0103   - TO FLAG PORTFOLIO CHARGES                                   *
+      **#P02*****-*TO*TRANSFER*TRANSACTIONS*AND*POSITIONS*****************S01486
+      **#P0201***-*TO*TRANSFER*SE*HISTORIC*POSITIONS**********************S01486
+      **#P0202***-*TO*TRANSFER*SE*TRADES**********************************S01486
+      **#P0203***-*TO*TRANSFER*SE*DEPOT*MOVEMENTS*************************S01486
+      **#P0204***-*TO*TRANSFER*FF*TRANSACTIONS****************************S01486
+      **#P0205***-*TO*TRANSFER*DL*DEALS***********************************S01486
+      **#P0206***-*TO*TRANSFER*LE*LOANS***********************************S01486
+      **#P0207***-*TO*TRANSFER*RE*ACCOUNTS********************************S01486
+      **#P0208***-*TO*TRANSFER*FI*LOANS*&*DEPOSITS************************S01486
+      * #P03     - BLOCK TRANSFERS TO CLOSING PORTFOLIOS                       *
+      * #P04     - TO UPDATE PORTFOLIO TRANSFER AUDIT                          *
+      * *PSSR    - TO PROCESS DATA BASE ERRORS                                 *
+      *                                                                        *
+      * EXTERNAL ROUTINES CALLED                                               *
+      *                                                                        *
+      **************************************************************************
+     C***********************************************************
+     C***    CALCULATIONS                                    ****
+     C***********************************************************
+     C*
+     C           *ENTRY    PLIST                                          147295
+     C           P2RSQN    PARM           @RSEQ   5                       147295
+     C           P3LEVL    PARM           @RLVL   1                       147295
+     C           P4ENTY    PARM           @RENT   3                       147295
+      *                                                                   147295
+     C                     MOVEACPY@      CPY2@  80
+     C**
+     C** KLISTS
+     C**
+     C           PMCUPR    KLIST
+     C**********           KFLD           WWPNP8  60                                          CSD027
+     C                     KFLD           WWPNP8  6                                           CSD027
+     C                     KFLD           WWPREF  4
+     C*                                                                   081351
+     C           PMCUPB    KLIST                                          081351
+     C                     KFLD           WWBRCA  3                       081351
+     C**********           KFLD           WWPNP8  60                                   081351 CSD027
+     C                     KFLD           WWPNP8  6                                           CSD027
+     C                     KFLD           WWPREF  4                       081351
+     C**
+     C**                                                                  B08275
+     C           PMCUPL    KLIST                                          B08275
+     C**********           KFLD           WWPNP8  60                                   B08275 CSD027
+     C                     KFLD           WWPNP8  6                                           CSD027
+     C                     KFLD           WWPREF  4                       B08275
+     C                     KFLD           WWLIVE  1                       B08275
+     C           PMTRSF    KLIST
+     C                     KFLD           WWPNP8
+     C                     KFLD           WWPREF
+     C                     KFLD           WWMODI  2
+     C**********           KFLD           WWTRNB  60                                          CLE148
+     C                     KFLD           WWTRNB  6                                           CLE148
+     C                     KFLD           WWCCY   3
+     C**********           KFLD           WWACOD  40                                          CGL029
+     C                     KFLD           WWACOD 100                                          CGL029
+     C                     KFLD           WWACSQ  20
+     C                     KFLD           WWSESN 10
+     C                     KFLD           WWPOTI  1
+     C*                                                                   S01496
+     C           KEY1      KLIST                                          S01496
+     C                     KFLD           WWPNP8                          S01496
+     C                     KFLD           WWPREF                          S01496
+     C                     KFLD           WWDAT   50                      S01496
+     C**
+     C** ***************
+     C** MAIN PROCESSING
+     C** ***************
+     C                     EXSR #PAA
+     C**
+     C                     EXSR #PBB
+     C**
+     C                     EXSR #P04
+     C**
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C** **********************
+     C** END OF MAIN PROCESSING
+     C** **********************
+     C************************************************************
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PBB     - TO PROCESS ALL TRANSFERS AND DELETIONS                      *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #P00     - TO CHECK WHETHER A PORTFOLIO MAY BE CLOSED             R10029
+      * #P01     - TO DELETE INVESTMENT POLICIES AND NOTEPADS                  *
+      * #P02     - TO TRANSFER TRANSACTIONS AND POSITIONS                      *
+      * #P03     - BLOCK TRANSFERS TO CLOSING PORTFOLIOS                       *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWPOCL   - COUNTER FOR PORTFOLIOS CLOSING TODAY                        *
+      * WWCNUM   - CUSTOMER NUMBER KEY (=0) FOR PMCUST KLIST                   *
+      * WWPTFR   - PORTFOLIO REFERENCE (=BLANK) FOR PMCUST KLIST               *
+      * WWCUST   - CUSTOMER NUMBER KEY FOR PMCUPR KLIST                        *
+      * WWPREF   - PORTFOLIO REFERENCE KEY FOR PMCUPR KLIST                    *
+      *                                                                        *
+      **************************************************************************
+     C           #PBB      BEGSR
+     C**
+     C***ACCESS*OPNQRYF*ON*PMPORTPP*TO*GET*PORTFOLIOS*CLOSED*TODAY********S01486
+     C***ACCESS OPNQRYF ON PMPORTPD TO GET PORTFOLIOS CLOSED TODAY        S01486
+     C**
+     C***********          READ PMPORTPP                 72               S01486
+     C                     READ PMPORTPD                 72               S01486
+     C**
+     C**  READ UNTIL LAST OF PORTFOLIOS CLOSED TODAY
+     C**
+     C           *IN72     DOWEQ'0'
+     C******************** ADD  1         WWPOLC                          R10029
+     C**
+     C** LOAD CUSTOMER NUMBER AND PORTFOLIO REFERENCE IN KEY
+     C**
+     C**********           Z-ADD0         WWPNP8                                              CSD027
+     C                     MOVE *BLANKS   WWPNP8                                              CSD027
+     C                     MOVEL*BLANKS   WWPREF
+     C**
+     C**********           Z-ADDPNCNUM    WWPNP8                                              CSD027
+     C                     MOVE PNCNUM    WWPNP8                                              CSD027
+     C                     MOVELPNPTFR    WWPREF
+     C**                                                                  R10029
+     C** CHECK WHETHER PORTFOLIO AVAILABLE FOR CLOSURE                    R10029
+     C**                                                                  R10029
+     C                     EXSR #P00                                      R10029
+     C**                                                                  R10029
+     C           WWOUTP    IFEQ 'N'                                       R10029
+     C**
+     C** DELETE INVESTMENT POLICIES AND NOTEPADS OF CLOSING
+     C** PORTFOLIOS
+     C**
+     C                     EXSR #P01
+     C**                                                                  R10029
+     C** UPDATE RECI ON PORTFOLIO                                         R10029
+     C**                                                                  R10029
+     C                     MOVEL'*'       PNRECI                          R10029
+     C**                                                                  R10029
+     C                     EXCPTPMPORU                                    R10029
+     C                     ADD  1         WWPOLC                          R10029
+     C**                                                                  R10029
+     C                     ELSE                                           R10029
+     C**                                                                  R10029
+     C** WRITE DETAIL LINE TO 'PORTFOLIOS NOT CLOSED TODAY' REPORT        R10029
+     C**                                                                  R10029
+     C                     ADD  1         WWNBRL                          R10029
+     C*                                                                   S01486
+     C** OPEN PRINTER FILE FOR OUTPUT                                     S01486
+     C*                                                                   S01486
+     C           WLOPN     IFNE 'Y'                                       S01486
+     C                     OPEN PM1010P1                                  S01486
+     C                     MOVE 'Y'       WLOPN   1                       S01486
+     C*                                                                   S01486
+     C** Report printer file to RCF via ZSFILE                            S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C***********          PARM           SEQ     5                S01486 147295
+     C                     PARM P2RSQN    SEQ     5                       147295
+     C***********          PARM *BLANKS   @ENT    3               S01486  147295
+     C                     PARM P4ENTY    @ENT    3                       147295
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM *BLANKS   ZSERR   1                       S01486
+     C*                                                                   S01486
+     C** Error during ZSFILE processing, return to calling program        S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C           WWNBRL    IFGT 58                                        R10029
+     C                     WRITEPM1010F1                                  R10029
+     C                     Z-ADD12        WWNBRL                          R10029
+     C                     END                                            R10029
+     C                     MOVE PNCNUM    R2CNUM                          R10029
+     C                     MOVE PNPTFR    R2PTFR                          R10029
+     C                     MOVE PNPTFN    R2PTFN                          R10029
+     C                     WRITEPM1010F2                                  R10029
+     C*                                                                   S01496
+     C**  Retrieve the Reason(s) for which portfolio closure rejected     S01496
+     C**  only if Jyske Enhancements feature is installed                 S01496
+     C*                                                                   S01496
+     C           S01496    IFEQ 'Y'                                       S01496
+     C*                                                                   S01496
+     C                     Z-ADD1         X                               S01496
+     C           X         DOWLE8                                         S01496
+     C*                                                                   S01496
+     C           FLAG,X    IFEQ 'Y'                                       S01496
+     C*                                                                   S01496
+     C** If overflow, output header                                       S01496
+     C*                                                                   S01496
+     C           WWNBRL    IFGT 58                                        S01496
+     C                     WRITEPM1010F1                                  S01496
+     C                     Z-ADD12        WWNBRL                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     ADD  1         WWNBRL                          S01496
+     C                     MOVE *BLANKS   R4NARR                          S01496
+     C                     MOVE NARR,X    R4NARR                          S01496
+     C                     WRITEPM1010F4                                  S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     ADD  1         X                               S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     END                                            S01496
+     C**                                                                  R10029
+     C** RESET 'DATE PORTFOLIO CLOSED' TO ZERO                            R10029
+     C**                                                                  R10029
+     C                     Z-ADD0         PNDPCL                          R10029
+     C**                                                                  R10029
+     C                     EXCPTPMPORU                                    R10029
+     C                     ADD  1         WWPONC                          R10029
+     C**                                                                  R10029
+     C                     END                                            R10029
+     C**
+     C** TRANSFER OUTSTANDING TRANSACTIONS AND POSITIONS
+     C** FROM CLOSING PORTFOLIOS
+     C**
+     C******************** EXSR #P02                                      R10029
+     C**
+     C** BLOCK TRANSFERS TO CLOSING PORTFOLIOS
+     C**
+     C                     EXSR #P03
+     C**
+     C** UPDATE RECI ON PORTFOLIO
+     C**
+     C******************** MOVEL'*'       PNRECI                          R10029
+     C**
+     C******************** EXCPTPMPORU                                    R10029
+     C**
+     C***********          READ PMPORTPP                 72               S01486
+     C                     READ PMPORTPD                 72               S01486
+     C                     END
+     C**
+     C                     ENDSR
+     C****************************************************************
+     C**************************************************************************
+      /EJECT
+      ********************************************************************R10029
+      *                                                                   R10029
+      * #P00     - TO CHECK WHETHER A PORTFOLIO MAY BE CLOSED             R10029
+      *                                                                   R10029
+      * SUBROUTINE CALLS:                                                 R10029
+      *                                                                   R10029
+      * SUBROUTINE CALLED FROM:                                           R10029
+      * #PBB     - TO PROCESS ALL TRANSFERS AND DELETIONS                 R10029
+      *                                                                   R10029
+      * ROUTINE USES VARIABLES:                                           R10029
+      *                                                                   R10029
+      ********************************************************************R10029
+     C           #P00      BEGSR                                          R10029
+     C**                                                                  R10029
+     C** SET 'OUTSTANDING POSITION FLAG' TO 'N'                           R10029
+     C**                                                                  R10029
+     C                     MOVE 'N'       WWOUTP  1                       R10029
+     C                     MOVE 'N'       FLAG                            S01496
+     C**                                                                  R10029
+     C** IF SE MODULE IS PRESENT IN SYSTEM                                R10029
+     C**                                                                  R10029
+     C           BGSECS    IFEQ 'Y'                                       R10029
+     C****                                                          B08275R10029
+     C****CCESS LF/PMHPOSLL - HISTORIC PORTFOLIO POSITIONS          B08275R10029
+     C****                                                          B08275R10029
+     C****       PMCUPR    SETLLPMHPOSLL                 74         B08275R10029
+     C****       *IN74     IFEQ '1'                                 B08275R10029
+     C****                 MOVE 'Y'       WWOUTP                    B08275R10029
+     C****                 END                                      B08275R10029
+     C**                                                                  B08275
+     C** CHECK WHETHER ANY OPEN POSITIONS EXIST FOR THE CUSTOMER          B08275
+     C**                                                                  B08275
+     C           PMCUPR    SETLLPMOPPSLL                 74               B08275
+     C           *IN74     IFEQ '1'                                       B08275
+     C                     MOVE 'Y'       WWOUTP                          B08275
+     C                     Z-ADD1         X       20                      S01496
+     C                     MOVEA'Y'       FLAG,X                          S01496
+     C                     END                                            B08275
+     C**                                                                  R10029
+     C***ACCESS*LF/TRADPT***-*SE*TRADES*BY*PORTFOLIO*REFERENCE******R10029S01486
+     C** ACCESS LF/PMTRADL0 - SE TRADES BY PORTFOLIO REFERENCE            S01486
+     C**                                                                  R10029
+     C                     MOVE 'D'       WWLIVE                          B08275
+     C****       PMCUPR    SETLLTRADPT                   74         B08275R10029
+     C***********PMCUPL    SETLLTRADPT                   74         B08275S01486
+     C           PMCUPL    SETLLPMTRADL0                 74               S01486
+     C           *IN74     IFEQ '1'                                       R10029
+     C                     MOVE 'Y'       WWOUTP                          R10029
+     C                     Z-ADD2         X                               S01496
+     C                     MOVEA'Y'       FLAG,X                          S01496
+     C                     END                                            R10029
+     C**                                                                  R10029
+     C***ACCESS*LF/DPTMPT***-*SE*DEPOT*MOVEMENTS*BY*PORTFOLIO*REFERER10029S01486
+     C** ACCESS LF/PMDPTML0 - SE DEPOT MOVEMENTS BY PORTFOLIO REFERENCE   S01486
+     C**                                                                  R10029
+     C                     MOVE 'D'       WWLIVE                          B08275
+     C****       PMCUPR    SETLLDPTMPT                   74         B08275R10029
+     C***********PMCUPL    SETLLDPTMPT                   74        B08275 S01486
+     C           PMCUPL    SETLLPMDPTML0                 74               S01486
+     C           *IN74     IFEQ '1'                                       R10029
+     C                     MOVE 'Y'       WWOUTP                          R10029
+     C                     Z-ADD3         X                               S01496
+     C                     MOVEA'Y'       FLAG,X                          S01496
+     C                     END                                            R10029
+     C*                                                                   S01496
+     C**  Perform the following only if S01496 is installed               S01496
+     C*                                                                   S01496
+     C           S01496    IFEQ 'Y'                                       S01496
+     C*                                                                   S01496
+     C****Access*LF/SEERALL3*-*Allocations*by*Customer***          S01496 114559
+     C**  Access LF/SEERALL8 - Allocations by Customer                    114559
+     C*                                                                   S01496
+     C***********PMCUPL    SETLLSEERALL3                 74        S01496 114559
+     C           PMCUPL    SETLLSEERALL8                 74               114559
+     C*                                                                   S01496
+     C           *IN74     IFEQ '1'                                       S01496
+     C                     Z-ADD7         X                               S01496
+     C                     MOVEA'Y'       FLAG,X                          S01496
+     C                     MOVE 'Y'       WWOUTP                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  Access LF/SEBLKPL4 - General Blocks by Customer                 S01496
+     C*                                                                   S01496
+     C                     Z-ADDBJRDNB    WWDAT                           S01496
+     C           KEY1      SETLLSEBLKPL4                                  S01496
+     C                     READ SEBLKPL4                 74               S01496
+     C*                                                                   S01496
+     C**  If same customer and portfolio reference                        S01496
+     C*                                                                   S01496
+     C           WWPNP8    IFEQ VDCNUM                                    S01496
+     C           WWPREF    ANDEQVDPTFR                                    S01496
+     C                     Z-ADD8         X                               S01496
+     C                     MOVEA'Y'       FLAG,X                          S01496
+     C                     MOVE 'Y'       WWOUTP                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     END                                            S01496
+     C**                                                                  R10029
+     C                     END                                            R10029
+     C***********                                                   R10029S01486
+     C***IF*FF*MODULE*IS*PRESENT*IN*SYSTEM**************************R10029S01486
+     C***AND*'OUTSTANDING*POSITIONS'*FLAG*=*'N'*********************R10029S01486
+     C***********                                                   R10029S01486
+     C***********BGFUOP    IFEQ 'Y'                                 R10029S01486
+     C***********WWOUTP    ANDEQ'N'                                 R10029S01486
+     C***********                                                   R10029S01486
+     C***ACCESS*LF/TRANSPT**-*FF*TRANSACTIONS*BY*PORTFOLIO*REFERENCER10029S01486
+     C***********                                                   R10029S01486
+     C***********PMCUPR    SETLLTRANSPT                  74         R10029S01486
+     C************IN74     IFEQ '1'                                 R10029S01486
+     C***********          MOVE 'Y'       WWOUTP                    R10029S01486
+     C***********          END                                      R10029S01486
+     C***********                                                   R10029S01486
+     C***********          END                                      R10029S01486
+     C**                                                                  S71062
+     C** IF FF MODULE IS PRESENT IN SYSTEM                                S71062
+     C** AND 'OUTSTANDING POSITIONS' FLAG = 'N'                           S71062
+     C** If Bank Portfolios are supported, treat as if FF off             CPM003
+     C**                                                                  S71062
+     C           BGFUOP    IFEQ 'Y'                                       S71062
+     C           WWOUTP    ANDEQ'N'                                       S71062
+     C           FCPORS    ANDNE'B'                                       CPM003
+     C**                                                                  S71062
+     C** ACCESS LF/TRANSPT  - FF TRANSACTIONS BY PORTFOLIO REFERENCE      S71062
+     C**                                                                  S71062
+     C           PMCUPR    SETLLTRANSPT                  74               S71062
+     C           *IN74     IFEQ '1'                                       S71062
+     C                     MOVE 'Y'       WWOUTP                          S71062
+     C                     Z-ADD9         X                               S71062
+     C                     MOVEA'Y'       FLAG,X                          S71062
+     C                     END                                            S71062
+     C**                                                                  S71062
+     C                     END                                            S71062
+     C**                                                                  R10029
+     C** IF DL MODULE IS PRESENT IN SYSTEM                                R10029
+     C** AND 'OUTSTANDING POSITIONS' FLAG = 'N'                           R10029
+     C**                                                                  R10029
+     C           WWOUTP    IFEQ 'N'                                       R10029
+     C           BGDLFX    IFEQ 'Y'                                       R10029
+     C           BGDLMM    OREQ 'Y'                                       R10029
+     C           BGFIIN    OREQ 'Y'                                       R10029
+     C**                                                                  R10029
+     C***ACCESS*LF/DEALSPT**-*DL*DEALS*BY*PORTFOLIO*REFERENCE*******R10029S01486
+     C** ACCESS LF/PMDEALL0 - DL DEALS BY PORTFOLIO REFERENCE             S01486
+     C**                                                                  R10029
+     C                     MOVE 'D'       WWLIVE                          B08275
+     C****       PMCUPR    SETLLDEALSPT                  74         B08275R10029
+     C***********PMCUPL    SETLLDEALSPT                  74         R10029S01486
+     C           PMCUPL    SETLLPMDEALL0                 74               S01486
+     C           *IN74     IFEQ '1'                                       R10029
+     C                     MOVE 'Y'       WWOUTP                          R10029
+     C                     Z-ADD4         X                               S01496
+     C                     MOVEA'Y'       FLAG,X                          S01496
+     C                     END                                            R10029
+     C**                                                                  R10029
+     C                     END                                            R10029
+     C                     END                                            R10029
+     C**                                                                  R10029
+     C** IF LE MODULE IS PRESENT IN SYSTEM                                R10029
+     C** AND 'OUTSTANDING POSITIONS' FLAG = 'N'                           R10029
+     C**                                                                  R10029
+     C           BGCSLN    IFEQ 'Y'                                       R10029
+     C           WWOUTP    ANDEQ'N'                                       R10029
+     C**                                                                  R10029
+     C***ACCESS*LF/CLOANPT**-*LE*LOANS*BY*PORTFOLIO*REFERENCE*******R10029S01486
+     C** ACCESS LF/PMCLONL1 - LE LOANS BY PORTFOLIO REFERENCE             S01486
+     C**                                                                  R10029
+     C                     MOVE 'D'       WWLIVE                          B08275
+     C****       PMCUPR    SETLLCLOANPT                  74         B08275R10029
+     C***********PMCUPL    SETLLCLOANPT                  74         R10029S01486
+     C           PMCUPL    SETLLPMCLONL1                 74               S01486
+     C           *IN74     IFEQ '1'                                       R10029
+     C                     MOVE 'Y'       WWOUTP                          R10029
+     C                     Z-ADD5         X                               S01496
+     C                     MOVEA'Y'       FLAG,X                          S01496
+     C                     END                                            R10029
+     C**                                                                  R10029
+     C                     END                                            R10029
+     C**                                                                  R10029
+     C** IF RE MODULE IS PRESENT IN SYSTEM                                R10029
+     C** AND 'OUTSTANDING POSITIONS' FLAG = 'N'                           R10029
+     C**                                                                  R10029
+     C           BGRTBN    IFEQ 'Y'                                       R10029
+     C           WWOUTP    ANDEQ'N'                                       R10029
+     C**                                                                  R10029
+     C***ACCESS*LF/ACCNTPT**-*RE*ACCOUNTS*BY*PORTFOLIO*REFERENCE****R10029S01486
+     C** ACCESS LF/PMACCNL2 - RE ACCOUNTS BY PORTFOLIO REFERENCE          S01486
+     C**                                                                  R10029
+     C                     MOVE 'D'       WWLIVE                          B08275
+     C****       PMCUPR    SETLLACCNTPT                  74         B08275R10029
+     C****       PMCUPL    SETLLACCNTPT                  74         B08275S01313
+     C***********PMCUPL    SETLLACCNTP1                  74         S01313S01486
+     C           PMCUPL    SETLLPMACCNL2                 74               S01486
+     C           *IN74     IFEQ '1'                                       R10029
+     C                     MOVE 'Y'       WWOUTP                          R10029
+     C                     Z-ADD6         X                               S01496
+     C                     MOVEA'Y'       FLAG,X                          S01496
+     C                     END                                            R10029
+     C**                                                                  R10029
+     C                     END                                            R10029
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,PM1010CCP1                                           S01408
+     C*                                                                   S01408
+     C***********                                                   R10029S01486
+     C***IF*FI*MODULE*IS*PRESENT*IN*SYSTEM**************************R10029S01486
+     C***AND*'OUTSTANDING*POSITIONS'*FLAG*=*'N'*********************R10029S01486
+     C**********                                                    R10029S01486
+     C***********BGFLND    IFEQ 'Y'                                 R10029S01486
+     C***********WWOUTP    ANDEQ'N'                                 R10029S01486
+     C***********                                                   R10029S01486
+     C***ACCESS*LF/FIDPLNPT*-*FI*LOANS*AND*DEPOSITS*BY*PORTFOLR.****R10029S01486
+     C***********                                                   R10029S01486
+     C***********          MOVE ' '       WWLIVE                    B08275S01486
+     C***********PMCUPL    SETLLFIDPLNPT                 74         B08275S01486
+     C************IN74     IFEQ '1'                                 R10029S01486
+     C***********          MOVE 'Y'       WWOUTP                    R10029S01486
+     C***********          END                                      R10029S01486
+     C***********                                                   R10029S01486
+     C***********          END                                      R10029S01486
+     C**                                                                  R10029
+     C                     ENDSR                                          R10029
+     C********************************************************************R10029
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P01     - TO DELETE INVESTMENT POLICIES AND NOTEPADS                  *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #P0101   - TO DELETE CUSTOMER INVESTMENT POLICIES                      *
+      * #P0102   - TO DELETE PORTFOLIO NOTEPADS DETAILS                        *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PBB     - TO PROCESS ALL TRANSFERS AND DELETIONS                      *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P01      BEGSR
+     C**
+     C** LOGICALLY DELETE CUSTOMER INVESTMENT POLICIES
+     C**
+     C                     EXSR #P0101
+     C**
+     C** LOGICALLY DELETE PORTFOLIO NOTEPAD DETAILS
+     C**
+     C                     EXSR #P0102
+     C**
+     C**
+     C** FLAG PORTFOLIO CHARGE DETAILS FOR CHARGE PROCESSING
+     C**
+     C                     EXSR #P0103
+     C*                                                                   S01486
+     C** Only do if Safe Custody Fees is switched on                      S01486
+     C*                                                                   S01486
+     C           SCF       IFEQ 'Y'                                       S01486
+     C*                                                                   B8275
+     C** DELETE ALL SAFE CUSTODY ACCRUALS FOR THIS PORTFOLIO              B8275
+     C                     EXSR #P0105                                    B8275
+     C*                                                                   B8275
+     C** DELETE ALL OUTSTANDING SC FEE SETTLEMENTS FOR THIS PORTFOLIO     B8275
+     C                     EXSR #P0106                                    B8275
+     C                     END                                            S01486
+     C**
+     C                     ENDSR
+     C****************************************************************
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P0101   - TO DELETE CUSTOMER INVESTMENT POLICIES                      *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #P01     - TO DELETE INVESTMENT POLICIES AND NOTEPADS                  *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P0101    BEGSR
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C***ACCESS*PF/PMCIIPPP*-*CUSTOMER*INSTRUMENT*INVESTMENT*POLICY*******S01486
+     C** ACCESS PF/PMCIIPPD - CUSTOMER INSTRUMENT INVESTMENT POLICY       S01486
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C**
+     C** POSITION IF FILE
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMCIIPPP                                  S01486
+     C           PMCUPR    SETLLPMCIIPPD                                  S01486
+     C**
+     C***********          READ PMCIIPPP                 73               S01486
+     C                     READ PMCIIPPD                 73               S01486
+     C**
+     C           WWPNP8    DOWEQPYCNUM
+     C           WWPREF    ANDEQPYPTFR
+     C           *IN73     ANDEQ'0'
+     C**
+     C** LOGICALLY DELETE RECORD
+     C**
+     C                     MOVEL'*'       PYRECI
+     C**
+     C                     EXCPTPMCIIU
+     C**
+     C***********          READ PMCIIPPP                 73               S01486
+     C                     READ PMCIIPPD                 73               S01486
+     C**
+     C                     END
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C***ACCESS*PF/PMCCIPPP*-*CUSTOMER*CURRENCY***INVESTMENT*POLICY*******S01486
+     C** ACCESS PF/PMCCIPPD - CUSTOMER CURRENCY   INVESTMENT POLICY       S01486
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C**
+     C** POSITION IN FILE
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMCCIPPP                                  S01486
+     C           PMCUPR    SETLLPMCCIPPD                                  S01486
+     C**
+     C***********          READ PMCCIPPP                 73               S01486
+     C                     READ PMCCIPPD                 73               S01486
+     C**
+     C           WWPNP8    DOWEQPZCNUM
+     C           WWPREF    ANDEQPZPTFR
+     C           *IN73     ANDEQ'0'
+     C**
+     C** LOGICALLY DELETE RECORD
+     C**
+     C                     MOVEL'*'       PZRECI
+     C**
+     C                     EXCPTPMCCIU
+     C**
+     C***********          READ PMCCIPPP                 73               S01486
+     C                     READ PMCCIPPD                 73               S01486
+     C**
+     C                     END
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C***ACCESS*PF/PMCRIPPP*-*CUSTOMER*COUNTRY****INVESTMENT*POLICY*******S01486
+     C** ACCESS PF/PMCRIPPD - CUSTOMER COUNTRY    INVESTMENT POLICY       S01486
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C**
+     C** POSITION IN FILE
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMCRIPPP                                  S01486
+     C           PMCUPR    SETLLPMCRIPPD                                  S01486
+     C**
+     C***********          READ PMCRIPPP                 73               S01486
+     C                     READ PMCRIPPD                 73               S01486
+     C**
+     C           WWPNP8    DOWEQP2CNUM
+     C           WWPREF    ANDEQP2PTFR
+     C           *IN73     ANDEQ'0'
+     C**
+     C** LOGICALLY DELETE RECORD
+     C**
+     C                     MOVEL'*'       P2RECI
+     C**
+     C                     EXCPTPMCRIU
+     C**
+     C***********          READ PMCRIPPP                 73               S01486
+     C                     READ PMCRIPPD                 73               S01486
+     C**
+     C                     END
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C***ACCESS*PF/PMCDIPPP*-*CUSTOMER*INDUSTRY***INVESTMENT*POLICY*******S01486
+     C** ACCESS PF/PMCDIPPD - CUSTOMER INDUSTRY   INVESTMENT POLICY       S01486
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C**
+     C** POSITION IN FILE
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMCDIPPP                                  S01486
+     C           PMCUPR    SETLLPMCDIPPD                                  S01486
+     C**
+     C***********          READ PMCDIPPP                 73               S01486
+     C                     READ PMCDIPPD                 73               S01486
+     C**
+     C           WWPNP8    DOWEQP1CNUM
+     C           WWPREF    ANDEQP1PTFR
+     C           *IN73     ANDEQ'0'
+     C**
+     C** LOGICALLY DELETE RECORD
+     C**
+     C                     MOVEL'*'       P1RECI
+     C**
+     C                     EXCPTPMCDIU
+     C**
+     C***********          READ PMCDIPPP                 73               S01486
+     C                     READ PMCDIPPD                 73               S01486
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C****************************************************************
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P0102   - TO DELETE PORTFOLIO NOTEPADS DETAILS                        *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #P01     - TO DELETE INVESTMENT POLICIES AND NOTEPADS                  *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P0102    BEGSR
+     C**
+     C** +++++++++++++++++++++++++++++++++++++
+     C***ACCESS*PF/PMPTNPPP*-*CUSTOMER*NOTEPAD****************************S01486
+     C** ACCESS PF/PMPTNPPD - CUSTOMER NOTEPAD                            S01486
+     C** +++++++++++++++++++++++++++++++++++++
+     C**
+     C** POSITION IN FILE
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMPTNPPP                                  S01486
+     C           PMCUPR    SETLLPMPTNPPD                                  S01486
+     C**
+     C***********          READ PMPTNPPP                 73               S01486
+     C                     READ PMPTNPPD                 73               S01486
+     C**
+     C***********WWPNP8    DOWEQPRCNUM                                    S01486
+     C***********WWPREF    ANDEQPRPTFR                                    S01486
+     C           WWPNP8    DOWEQGACNUM                                    S01486
+     C           WWPREF    ANDEQGAPTFR                                    S01486
+     C           *IN73     ANDEQ'0'
+     C**
+     C** LOGICALLY DELETE RECORD
+     C**
+     C***********          MOVEL'*'       PRRECI                          S01486
+     C                     MOVEL'*'       GARECI                          S01486
+     C**
+     C                     EXCPTPMPTNU
+     C**
+     C***********          READ PMPTNPPP                 73               S01486
+     C                     READ PMPTNPPD                 73               S01486
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C****************************************************************
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P0103   - TO FLAG PORTFOLIO CHARGES                                   *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #P01     - TO DELETE INVESTMENT POLICIES AND NOTEPADS                  *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P0103    BEGSR
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMCHRGPP                                  S01486
+     C           PMCUPR    SETLLPMCHRGPD                                  S01486
+     C**
+     C***********          READ PMCHRGPP                 73               S01486
+     C                     READ PMCHRGPD                 73               S01486
+     C**
+     C           WWPNP8    DOWEQPOCNUM
+     C           WWPREF    ANDEQPOPTFR
+     C           *IN73     ANDEQ'0'
+     C**
+     C*                    MOVEL'C'       PORECI                          B8275
+     C                     MOVEL'*'       PORECI                          B8275
+     C**
+     C                     EXCPTPMCHRU
+     C**
+     C***********          READ PMCHRGPP                 73               S01486
+     C                     READ PMCHRGPD                 73               S01486
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+      ********************************************************************B8275
+      /EJECT                                                              B8275
+      ********************************************************************B8275
+      *                                                                   B8275
+      * #P0105   - DELETE SAFE CUSTODY FEE ACCRUALS FOR THIS PORFOLIO     B8275
+      *                                                                   B8275
+      * SUBROUTINE CALLS:                                                 B8275
+      *                                                                   B8275
+      * SUBROUTINE CALLED FROM:                                           B8275
+      * #P01                                                              B8275
+      *                                                                   B8275
+      * ROUTINE USES VARIABLES:                                           B8275
+      *                                                                   B8275
+      ********************************************************************B8275
+     C           #P0105    BEGSR                                          B8275
+     C**                                                                  B8275
+     C********** PMCUPR    SETLLSCSCFAP0                            B8275 081351
+     C           PMCUPB    SETLLSESCFAP0                                  081351
+     C**                                                                  B8275
+     C********** PMCUPR    READESCSCFAP0                 73         B8275 081351
+     C           PMCUPB    READESESCFAP0                 73               081351
+     C**                                                                  B8275
+     C           *IN73     DOWEQ'0'                                       B8275
+     C**                                                                  B8275
+     C                     MOVE '*'       SDRECI                          B8275
+     C                     MOVE XDAY      SDDLUP                          B8275
+     C                     MOVE XMONTH    SDMLUP                          B8275
+     C                     Z-ADDXYEAR     SDYLUP                          B8275
+     C                     TIME           SDTLUP                          B8275
+     C                     MOVE 'D'       SDCHTP                          B8275
+     C                     Z-ADDBJRDNB    SDLCD                           B8275
+     C                     Z-ADD0         SDTNLU                          B8275
+     C**                                                                  B8275
+     C******************** UPDATSCSCFAP0                            B8275 081351
+     C                     UPDATSESCFAP0                                  081351
+     C**                                                                  B8275
+     C********** PMCUPR    READESCSCFAP0                 73         B8275 081351
+     C           PMCUPB    READESESCFAP0                 73               081351
+     C**                                                                  B8275
+     C                     END                                            B8275
+     C**                                                                  B8275
+     C                     ENDSR                                          B8275
+      ********************************************************************B8275
+      /EJECT                                                              B8279
+      ********************************************************************B8275
+      *                                                                   B8275
+      * #P0106   - DELETE OUTSTANDINDG SC FEE SETTLEMENTS FOR THIS        B8275
+      *            PORTFOLIO.                                             B8275
+      *                                                                   B8275
+      * SUBROUTINE CALLS:                                                 B8275
+      *                                                                   B8275
+      * SUBROUTINE CALLED FROM:                                           B8275
+      * #P01                                                              B8275
+      *                                                                   B8275
+      * ROUTINE USES VARIABLES:                                           B8275
+      *                                                                   B8275
+      ********************************************************************B8275
+     C           #P0106    BEGSR                                          B8275
+     C**                                                                  B8275
+     C********** PMCUPR    SETLLSCOCFSP0                            B8275 081351
+     C           PMCUPB    SETLLSEOCFSP0                                  081351
+     C**                                                                  B8275
+     C********** PMCUPR    READESCOCFSP0                 73         B8275 081351
+     C           PMCUPB    READESEOCFSP0                 73               081351
+     C**                                                                  B8275
+     C           *IN73     DOWEQ'0'                                       B8275
+     C**                                                                  B8275
+     C                     MOVE '*'       SERECI                          B8275
+     C                     MOVE XDAY      SEDLUP                          B8275
+     C                     MOVE XMONTH    SEMLUP                          B8275
+     C                     Z-ADDXYEAR     SEYLUP                          B8275
+     C                     TIME           SETLUP                          B8275
+     C                     MOVE 'D'       SECHTP                          B8275
+     C                     Z-ADDBJRDNB    SELCD                           B8275
+     C                     Z-ADD0         SETNLU                          B8275
+     C**                                                                  B8275
+     C******************** UPDATSCOCFSP0                            B8275 081351
+     C                     UPDATSEOCFSP0                                  081351
+     C**                                                                  B8275
+     C********** PMCUPR    READESCOCFSP0                 73         B8275 081351
+     C           PMCUPB    READESEOCFSP0                 73               081351
+     C**                                                                  B8275
+     C                     END                                            B8275
+     C**                                                                  B8275
+     C                     ENDSR                                          B8275
+      ********************************************************************B8275
+      /EJECT                                                              B8275
+      ********************************************************************S01486
+      ************                                                        S01486
+      **#P02*****-*TO*TRANSFER*TRANSACTIONS*AND*POSITIONS*****************S01486
+      ************                                                        S01486
+      **SUBROUTINE*CALLS:*************************************************S01486
+      ***PSSR****-*TO*PROCESS*DATA*BASE*ERRORS****************************S01486
+      **#P0201***-*TO*TRANSFER*SE*HISTORIC*POSITIONS**********************S01486
+      **#P0202***-*TO*TRANSFER*SE*TRADES**********************************S01486
+      **#P0203***-*TO*TRANSFER*SE*DEPOT*MOVEMENTS*************************S01486
+      **#P0204***-*TO*TRANSFER*FF*TRANSACTIONS****************************S01486
+      **#P0205***-*TO*TRANSFER*DL*DEALS***********************************S01486
+      **#P0206***-*TO*TRANSFER*LE*LOANS***********************************S01486
+      **#P0207***-*TO*TRANSFER*RE*ACCOUNTS********************************S01486
+      ************                                                        S01486
+      **SUBROUTINE*CALLED*FROM:*******************************************S01486
+      **#PBB*****-*TO*PROCESS*ALL*TRANSFERS*AND*DELETIONS*****************S01486
+      ************                                                        S01486
+      **ROUTINE*USES*VARIABLES:*******************************************S01486
+      ************                                                        S01486
+      ********************************************************************S01486
+     C***********#P02      BEGSR                                          S01486
+     C***+++++++++++++++++++++++++++++++++++******************************S01486
+     C***SECURITIES*MODULE*PRESENT*IN*SYSTEM******************************S01486
+     C***+++++++++++++++++++++++++++++++++++******************************S01486
+     C***********BGSECS    IFEQ 'Y'                                       S01486
+     C***********                                                         S01486
+     C******************** OPEN PMHPOSLL                                  R10029
+     C******************** OPEN TRADPT                                    R10029
+     C******************** OPEN DPTMPT                                    R10029
+     C***********                                                         S01486
+     C***TRANSFER*SE*HISTORIC*POSITIONS***********************************S01486
+     C***********                                                         S01486
+     C***********          EXSR #P0201                              B08275S01486
+     C***********                                                         S01486
+     C***TRANSFER*SE*TRADE************************************************S01486
+     C***********                                                         S01486
+     C***********          EXSR #P0202                                    S01486
+     C***********                                                         S01486
+     C***TRANSFER*SE*DEPOT*MOVEMENTS**************************************S01486
+     C***********                                                         S01486
+     C***********          EXSR #P0203                                    S01486
+     C***********                                                         S01486
+     C******************** CLOSEPMHPOSLL                                  R10029
+     C******************** CLOSETRADPT                                    R10029
+     C******************** CLOSEDPTMPT                                    R10029
+     C***********                                                         S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***+++++++++++++++++++++++++++++++++++++++++++**********************S01486
+     C***FUTURE*AND*OPTIONS*MODULE*PRESENT*IN*SYSTEM**********************S01486
+     C***+++++++++++++++++++++++++++++++++++++++++++**********************S01486
+     C***********BGFUOP    IFEQ 'Y'                                       S01486
+     C***********                                                         S01486
+     C******************** OPEN TRANSPT                                   R10029
+     C***********                                                         S01486
+     C***TRANSFER*FF*TRANSACTIONS*****************************************S01486
+     C***********                                                         S01486
+     C***********          EXSR #P0204                                    S01486
+     C***********                                                         S01486
+     C******************** CLOSETRANSPT                                   R10029
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***++++++++++++++++++++++++++++++++*********************************S01486
+     C***DEALING*MODULE*PRESENT*IN*SYSTEM*********************************S01486
+     C***++++++++++++++++++++++++++++++++*********************************S01486
+     C***********BGDLFX    IFEQ 'Y'                                       S01486
+     C***********BGDLMM    OREQ 'Y'                                       S01486
+     C***********BGFIIN    OREQ 'Y'                                       S01486
+     C***********                                                         S01486
+     C******************** OPEN DEALSPT                                   R10029
+     C***********                                                         S01486
+     C***TRANSFER*DL*DEALS************************************************S01486
+     C***********                                                         S01486
+     C***********          EXSR #P0205                                    S01486
+     C***********                                                         S01486
+     C******************** CLOSEDEALSPT                                   R10029
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***++++++++++++++++++++++++++++++++*********************************S01486
+     C***LENDING*MODULE*PRESENT*IN*SYSTEM*********************************S01486
+     C***++++++++++++++++++++++++++++++++*********************************S01486
+     C***********BGCSLN    IFEQ 'Y'                                       S01486
+     C***********                                                         S01486
+     C******************** OPEN CLOANPT                                   R10029
+     C***********                                                         S01486
+     C***TRANSFER*LE*LOANS************************************************S01486
+     C***********                                                         S01486
+     C***********          EXSR #P0206                                    S01486
+     C***********                                                         S01486
+     C******************** CLOSECLOANPT                                   R10029
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***+++++++++++++++++++++++++++++++**********************************S01486
+     C***RETAIL*MODULE*PRESENT*IN*SYSTEM**********************************S01486
+     C***+++++++++++++++++++++++++++++++**********************************S01486
+     C***********BGRTBN    IFEQ 'Y'                                       S01486
+     C***********                                                         S01486
+     C******************** OPEN ACCNTPT                                   R10029
+     C***********                                                         S01486
+     C***TRANSFER*RE*ACCOUNTS*********************************************S01486
+     C***********                                                         S01486
+     C***********          EXSR #P0207                                    S01486
+     C***********                                                         S01486
+     C******************** CLOSEACCNTPT                                   R10029
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***+++++++++++++++++++++++++++++++**********************************S01486
+     C***FI*****MODULE*PRESENT*IN*SYSTEM**********************************S01486
+     C***+++++++++++++++++++++++++++++++**********************************S01486
+     C***********BGFLND    IFEQ 'Y'                                       S01486
+     C***********                                                         S01486
+     C******************** OPEN FIDPLNPT                                  R10029
+     C***********                                                         S01486
+     C***TRANSFER*FI*LOANS*AND*DEPOSITS***********************************S01486
+     C***********                                                         S01486
+     C***********          EXSR #P0208                                    S01486
+     C***********                                                         S01486
+     C******************** CLOSEFIDPLNPT                                  R10029
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          ENDSR                                          S01486
+     C****************************************************************    S01486
+     C********************************************************************S01486
+      ***/EJECT***                                                        S01486
+      **************************************************************************
+      ****                                                                B08275
+      ****0201   - TO TRANSFER SE HISTORIC POSITIONS                      B08275
+      ****                                                                B08275
+      ****BROUTINE CALLS:                                                 B08275
+      ****                                                                B08275
+      ****BROUTINE CALLED FROM:                                           B08275
+      ****02     - TO TRANSFER TRANSACTIONS AND POSITIONS                 B08275
+      ****                                                                B08275
+      ****UTINE USES VARIABLES:                                           B08275
+      ****MODI   - MODULE ID KEY FOR PMTRSF KLIST                         B08275
+      ****TRNB   - TRANSACTION NUMBER KEY FOR PMTRSF KLIST                B08275
+      ****CCY    - CURRENCY KEY FOR PMTRSF KLIST                          B08275
+      ****ACOD   - ACCOUNT CODE KEY FOR PMTRSF KLIST                      B08275
+      ****ACSQ   - ACCOUNT SEQUENCE KEY FOR PMTRSF KLIST                  B08275
+      ****SESN   - SECURITY SHORTNAME KEY FOR PMTRSF KLIST                B08275
+      ****POTI   - POSITION/TRANSACTION INDICATOR KEY FOR PMTRSF          B08275
+      ****HLUP   - DATA STRUCTURE FOR DATE OF LAST UPDATE                 B08275
+      ****DLUP   - DAY OF LAST UPDATE                                     B08275
+      ****MLUP   - MONTH OF LAST UPDATE                                   B08275
+      ****YLUP   - YEAR OF LAST UPDATE                                    B08275
+      ****TRFG   - COUNTER FOR PORTFOLIO TRANSFERS GENERATED              B08275
+      ****                                                                B08275
+      ********************************************************************B08275
+     C****       #P0201    BEGSR                                          B08275
+     C****                                                                B08275
+     C****CCESS LF/PMHPOSLL - HISTORIC PORTFOLIO POSITIONS                B08275
+     C****                                                                B08275
+     C****       PMCUPR    SETLLPMHPOSLL                                  B08275
+     C****                                                                B08275
+     C****       *IN74     DOUEQ'1'                                       B08275
+     C****                                                                B08275
+     C****       PMCUPR    READEPMHPOSLL                 74               B08275
+     C****                                                                B08275
+     C****       *IN74     IFEQ '0'                                       B08275
+     C****                                                                B08275
+     C****                                                                B08275
+     C****CCESS PF/PMTRSFPP - PORTFOLIO TRANSFER DETAILS USING            B08275
+     C****USTOMER NUMBER, PORTFOLIO REFERENCE, SECURITY SHORTNAME         B08275
+     C****ROM LF/PMHPOSLL, MODULE ID 'SE' AND POSITION TRANSACTION        B08275
+     C****NDICATOR = 'P'                                                  B08275
+     C****LL OTHER KEY FIELDS BLANK OR ZERO AS APPROPRIATE                B08275
+     C****                                                                B08275
+     C****                 MOVEL'SE'      WWMODI                          B08275
+     C****                 MOVEL*BLANKS   WWTRNB                          B08275
+     C****                 MOVEL*BLANKS   WWCCY                           B08275
+     C****                 Z-ADD0         WWACOD                          B08275
+     C****                 Z-ADD0         WWACSQ                          B08275
+     C****                 MOVELP8SESN    WWSESN                          B08275
+     C****                 MOVEL'P'       WWPOTI                          B08275
+     C****                                                                B08275
+     C****       PMTRSF    CHAINPMTRSFPP             75                   B08275
+     C****                                                                B08275
+     C****       *IN75     IFEQ '1'                                       B08275
+     C****                                                                B08275
+     C****F NOT FOUND WRITE RECORD                                        B08275
+     C****                                                                B08275
+     C****                 MOVEL'D'       P8RECI                          B08275
+     C****                 MOVELBJMRDT    WWHLUP                          B08275
+     C****                 Z-ADDWWDLUP    P8DLUP                          B08275
+     C****                 MOVELWWMLUP    P8MLUP                          B08275
+     C****                 Z-ADDWWYLUP    P8YLUP                          B08275
+     C****                 TIME           P8TLUP                          B08275
+     C****                 MOVEL'I'       P8CHTP                          B08275
+     C****                 Z-ADDBJRDNB    P8LCD                           B08275
+     C****                 Z-ADD0         P8TNLU                          B08275
+     C****                 Z-ADDQACNUM    P8CNUM                          B08275
+     C****                 MOVELQAPTFR    P8FPTF                          B08275
+     C****                 MOVEL'9997'    P8TPTF                          B08275
+     C****                 Z-ADD0         P8TRNB                          B08275
+     C****                 MOVEL*BLANKS   P8CCY                           B08275
+     C****                 Z-ADD0         P8ACOD                          B08275
+     C****                 Z-ADD0         P8ACSQ                          B08275
+     C****                 MOVELQATDSS    P8SESN                          B08275
+     C****                 MOVEL'SE'      P8MODI                          B08275
+     C****                 MOVEL'Y'       P8DTCL                          B08275
+     C****                 MOVEL'P'       P8POTI                          B08275
+     C****                 MOVEL'Y'       P8TBPR                          B08275
+     C****                                                                B08275
+     C****                 WRITEPMTRSFP0                                  B08275
+     C****                                                                B08275
+     C****DD 1 TO COUNTER OF TRANSFER GENERATED                           B08275
+     C****                                                                B08275
+     C****                 ADD  1         WWTRFG                          B08275
+     C****                                                                B08275
+     C****                 END                                            B08275
+     C****                                                                B08275
+     C****                 END                                            B08275
+     C****                                                                B08275
+     C****                 END                                            B08275
+     C****                                                                B08275
+     C****                 ENDSR                                          B08275
+     C****************************************************************
+     C**************************************************************************
+      ***/EJECT****                                                       S01486
+      ********************************************************************S01486
+      *************                                                       S01486
+      **#P0202***-*TO*TRANSFER*SE*TRADES**********************************S01486
+      *************                                                       S01486
+      **SUBROUTINE*CALLS:*************************************************S01486
+      *************                                                       S01486
+      **SUBROUTINE*CALLED*FROM:*******************************************S01486
+      **#P02*****-*TO*TRANSFER*TRANSACTIONS*AND*POSITIONS*****************S01486
+      *************                                                       S01486
+      **ROUTINE*USES*VARIABLES:*******************************************S01486
+      **WWMODI***-*MODULE*ID*KEY*FOR*PMTRSF*KLIST*************************S01486
+      **WWTRNB***-*TRANSACTION*NUMBER*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWCCY****-*CURRENCY*KEY*FOR*PMTRSF*KLIST**************************S01486
+      **WWACOD***-*ACCOUNT*CODE*KEY*FOR*PMTRSF*KLIST**********************S01486
+      **WWACSQ***-*ACCOUNT*SEQUENCE*KEY*FOR*PMTRSF*KLIST******************S01486
+      **WWSESN***-*SECURITY*SHORTNAME*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWPOTI***-*POSITION/TRANSACTION*INDICATOR*KEY*FOR*PMTRSF**********S01486
+      **WWHLUP***-*DATA*STRUCTURE*FOR*DATE*OF*LAST*UPDATE*****************S01486
+      **WWDLUP***-*DAY*OF*LAST*UPDATE*************************************S01486
+      **WWMLUP***-*MONTH*OF*LAST*UPDATE***********************************S01486
+      **WWYLUP***-*YEAR*OF*LAST*UPDATE************************************S01486
+      **WWTRFG***-*COUNTER*FOR*PORTFOLIO*TRANSFERS*GENERATED**************S01486
+      ************                                                        S01486
+      ********************************************************************S01486
+     C***********#P0202    BEGSR                                          S01486
+     C***********                                                         S01486
+     C***********                                                         S01486
+     C***ACCESS*LF/TRADPT***-*SE*TRADES*BY*PORTFOLIO*REFERENCE************S01486
+     C***********                                                         S01486
+     C****       PMCUPR    SETLLTRADPT                                    B08275
+     C***********          MOVE 'D'       WWLIVE                    B08275S01486
+     C***********PMCUPL    SETLLTRADPT                              B08275S01486
+     C***********                                                         S01486
+     C************IN74     DOUEQ'1'                                       S01486
+     C***********                                                         S01486
+     C*****      PMCUPR    READETRADPT                   74               B08275
+     C***********PMCUPL    READETRADPT                   74         B08275S01486
+     C***********                                                         S01486
+     C************IN74     IFEQ '0'                                       S01486
+     C***********                                                         S01486
+     C***ACCESS*PF/PMTRSFPP*-*PORTFOLIO*TRANSFER*DETAILS*USING************S01486
+     C***CUSTOMER*NUMBER,*PORTFOLIO*REFERENCE,*TRANSACTION*NUMBER*********S01486
+     C***FROM*LF/TRADPT**,*MODULE*ID*'SE'*AND*POSITION*TRANSACTION********S01486
+     C***INDICATOR*=*'T'**************************************************S01486
+     C***ALL*OTHER*KEY*FIELDS*BLANK*OR*ZERO*AS*APPROPRIATE****************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'SE'      WWMODI                          S01486
+     C***********          MOVE TDRF      WWTRNB                          S01486
+     C***********          MOVEL*BLANKS   WWCCY                           S01486
+     C***********          Z-ADD0         WWACOD                          S01486
+     C***********          Z-ADD0         WWACSQ                          S01486
+     C***********          MOVELTDSS      WWSESN                          S01486
+     C***********          MOVEL'T'       WWPOTI                          S01486
+     C***********                                                         S01486
+     C***********PMTRSF    CHAINPMTRSFPP             75                   S01486
+     C***********                                                         S01486
+     C************IN75     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***IF*NOT*FOUND*WRITE*RECORD****************************************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'D'       P8RECI                          S01486
+     C***********          MOVELBJMRDT    WWHLUP                          S01486
+     C***********          Z-ADDWWDLUP    P8DLUP                          S01486
+     C***********          MOVELWWMLUP    P8MLUP                          S01486
+     C***********          Z-ADDWWYLUP    P8YLUP                          S01486
+     C***********          TIME           P8TLUP                          S01486
+     C***********          MOVEL'I'       P8CHTP                          S01486
+     C***********          Z-ADDBJRDNB    P8LCD                           S01486
+     C***********          Z-ADD0         P8TNLU                          S01486
+     C***********          Z-ADDTCNR      P8CNUM                          S01486
+     C***********          MOVELPTFR      P8FPTF                          S01486
+     C***********          MOVEL'9997'    P8TPTF                          S01486
+     C***********          MOVE TDRF      P8TRNB                          S01486
+     C***********          MOVEL*BLANKS   P8CCY                           S01486
+     C***********          Z-ADD0         P8ACOD                          S01486
+     C***********          Z-ADD0         P8ACSQ                          S01486
+     C***********          MOVELTDSS      P8SESN                          S01486
+     C***********          MOVEL'SE'      P8MODI                          S01486
+     C***********          MOVEL'Y'       P8DTCL                          S01486
+     C***********          MOVEL'T'       P8POTI                          S01486
+     C***********          MOVEL'Y'       P8TBPR                          S01486
+     C***********                                                         S01486
+     C***********          WRITEPMTRSFP0                                  S01486
+     C***********                                                         S01486
+     C***ADD*1*TO*COUNTER*OF*TRANSFER*GENERATED***************************S01486
+     C***********                                                         S01486
+     C***********          ADD  1         WWTRFG                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          ENDSR                                          S01486
+     C********************************************************************S01486
+     C********************************************************************S01486
+      ***/EJECT***                                                        S01486
+      ********************************************************************S01486
+      ***********                                                         S01486
+      **#P0203***-*TO*TRANSFER*SE*DEPOT*MOVEMENTS*************************S01486
+      ***********                                                         S01486
+      **SUBROUTINE*CALLS:*************************************************S01486
+      ***********                                                         S01486
+      **SUBROUTINE*CALLED*FROM:*******************************************S01486
+      **#P02*****-*TO*TRANSFER*TRANSACTIONS*AND*POSITIONS*****************S01486
+      ***********                                                         S01486
+      **ROUTINE*USES*VARIABLES:*******************************************S01486
+      **WWMODI***-*MODULE*ID*KEY*FOR*PMTRSF*KLIST*************************S01486
+      **WWTRNB***-*TRANSACTION*NUMBER*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWCCY****-*CURRENCY*KEY*FOR*PMTRSF*KLIST**************************S01486
+      **WWACOD***-*ACCOUNT*CODE*KEY*FOR*PMTRSF*KLIST**********************S01486
+      **WWACSQ***-*ACCOUNT*SEQUENCE*KEY*FOR*PMTRSF*KLIST******************S01486
+      **WWSESN***-*SECURITY*SHORTNAME*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWPOTI***-*POSITION/TRANSACTION*INDICATOR*KEY*FOR*PMTRSF**********S01486
+      **WWHLUP***-*DATA*STRUCTURE*FOR*DATE*OF*LAST*UPDATE*****************S01486
+      **WWDLUP***-*DAY*OF*LAST*UPDATE*************************************S01486
+      **WWMLUP***-*MONTH*OF*LAST*UPDATE***********************************S01486
+      **WWYLUP***-*YEAR*OF*LAST*UPDATE************************************S01486
+      **WWTRFG***-*COUNTER*FOR*PORTFOLIO*TRANSFERS*GENERATED**************S01486
+      ***********                                                         S01486
+      ********************************************************************S01486
+     C***********#P0203    BEGSR                                          S01486
+     C***********                                                         S01486
+     C***ACCESS*LF/DPTMPT***-*SE*DEPOT*MOVEMENTS*BY*PORTFOLIO*************S01486
+     C***REFERENCE********************************************************S01486
+     C***********                                                         S01486
+     C****       PMCUPR    SETLLDPTMPT                                    B08275
+     C***********          MOVE 'D'       WWLIVE                    B08275S01486
+     C***********PMCUPL    SETLLDPTMPT                              B08275S01486
+     C***********                                                         S01486
+     C************IN74     DOUEQ'1'                                       S01486
+     C***********                                                         S01486
+     C****       PMCUPR    READEDPTMPT                                    B08275
+     C***********PMCUPL    READEDPTMPT                   74         B08275S01486
+     C***********                                                         S01486
+     C************IN74     IFEQ '0'                                       S01486
+     C***********                                                         S01486
+     C***ACCESS*PF/PMTRSFPP*-*PORTFOLIO*TRANSFER*DETAILS*USING************S01486
+     C***CUSTOMER*NUMBER,*PORTFOLIO*REFERENCE,*TRANSACTION*NUMBER*********S01486
+     C***FROM*LF/DPTMPT**,*MODULE*ID*'SE'*AND*POSITION*TRANSACTION********S01486
+     C***INDICATOR*=*'D'**************************************************S01486
+     C***ALL*OTHER*KEY*FIELDS*BLANK*OR*ZERO*AS*APPROPRIATE****************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'SE'      WWMODI                          S01486
+     C***********          MOVE DPRN      WWTRNB                          S01486
+     C***********          MOVEL*BLANKS   WWCCY                           S01486
+     C***********          Z-ADD0         WWACOD                          S01486
+     C***********          Z-ADD0         WWACSQ                          S01486
+     C***********          MOVELDPSS      WWSESN                          S01486
+     C***********          MOVEL'D'       WWPOTI                          S01486
+     C***********                                                         S01486
+     C***********PMTRSF    CHAINPMTRSFPP             75                   S01486
+     C***********                                                         S01486
+     C************IN75     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***IF*NOT*FOUND*WRITE*RECORD****************************************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'D'       P8RECI                          S01486
+     C***********          MOVELBJMRDT    WWHLUP                          S01486
+     C***********          Z-ADDWWDLUP    P8DLUP                          S01486
+     C***********          MOVELWWMLUP    P8MLUP                          S01486
+     C***********          Z-ADDWWYLUP    P8YLUP                          S01486
+     C***********          TIME           P8TLUP                          S01486
+     C***********          MOVEL'I'       P8CHTP                          S01486
+     C***********          Z-ADDBJRDNB    P8LCD                           S01486
+     C***********          Z-ADD0         P8TNLU                          S01486
+     C***********          Z-ADDDPBN      P8CNUM                          S01486
+     C***********          MOVELPTFR      P8FPTF                          S01486
+     C***********          MOVEL'9997'    P8TPTF                          S01486
+     C***********          MOVE DPRN      P8TRNB                          S01486
+     C***********          MOVEL*BLANKS   P8CCY                           S01486
+     C***********          Z-ADD0         P8ACOD                          S01486
+     C***********          Z-ADD0         P8ACSQ                          S01486
+     C***********          MOVELDPSS      P8SESN                          S01486
+     C***********          MOVEL'SE'      P8MODI                          S01486
+     C***********          MOVEL'Y'       P8DTCL                          S01486
+     C***********          MOVEL'D'       P8POTI                          S01486
+     C***********          MOVEL'Y'       P8TBPR                          S01486
+     C***********                                                         S01486
+     C***********          WRITEPMTRSFP0                                  S01486
+     C***********                                                         S01486
+     C***ADD*1*TO*COUNTER*OF*TRANSFER*GENERATED***************************S01486
+     C***********                                                         S01486
+     C***********          ADD  1         WWTRFG                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          ENDSR                                          S01486
+     C********************************************************************S01486
+     C********************************************************************S01486
+      ***/EJECT***                                                        S01486
+      ********************************************************************S01486
+      ***********                                                         S01486
+      **#P0204***-*TO*TRANSFER*FF*TRANSACTIONS****************************S01486
+      ***********                                                         S01486
+      **SUBROUTINE*CALLS:*************************************************S01486
+      ***********                                                         S01486
+      **SUBROUTINE*CALLED*FROM:*******************************************S01486
+      **#P02*****-*TO*TRANSFER*TRANSACTIONS*AND*POSITIONS*****************S01486
+      ***********                                                         S01486
+      **ROUTINE*USES*VARIABLES:*******************************************S01486
+      **WWMODI***-*MODULE*ID*KEY*FOR*PMTRSF*KLIST*************************S01486
+      **WWTRNB***-*TRANSACTION*NUMBER*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWCCY****-*CURRENCY*KEY*FOR*PMTRSF*KLIST**************************S01486
+      **WWACOD***-*ACCOUNT*CODE*KEY*FOR*PMTRSF*KLIST**********************S01486
+      **WWACSQ***-*ACCOUNT*SEQUENCE*KEY*FOR*PMTRSF*KLIST******************S01486
+      **WWSESN***-*SECURITY*SHORTNAME*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWPOTI***-*POSITION/TRANSACTION*INDICATOR*KEY*FOR*PMTRSF**********S01486
+      **WWHLUP***-*DATA*STRUCTURE*FOR*DATE*OF*LAST*UPDATE*****************S01486
+      **WWDLUP***-*DAY*OF*LAST*UPDATE*************************************S01486
+      **WWMLUP***-*MONTH*OF*LAST*UPDATE***********************************S01486
+      **WWYLUP***-*YEAR*OF*LAST*UPDATE************************************S01486
+      **WWTRFG***-*COUNTER*FOR*PORTFOLIO*TRANSFERS*GENERATED**************S01486
+      ***********                                                         S01486
+      ********************************************************************S01486
+     C***********#P0204    BEGSR                                          S01486
+     C***********                                                         S01486
+     C***ACCESS*LF/TRANSPT**-*FF*TRANSACTIONS****BY*PORTFOLIO*************S01486
+     C***REFERENCE********************************************************S01486
+     C***********                                                         S01486
+     C***********PMCUPR    SETLLTRANSPT                                   S01486
+     C***********                                                         S01486
+     C************IN74     DOUEQ'1'                                       S01486
+     C***********                                                         S01486
+     C***********PMCUPR    READETRANSPT                  74               S01486
+     C***********                                                         S01486
+     C************IN74     IFEQ '0'                                       S01486
+     C***********                                                         S01486
+     C***ACCESS*PF/PMTRSFPP*-*PORTFOLIO*TRANSFER*DETAILS*USING************S01486
+     C***CUSTOMER*NUMBER,*PORTFOLIO*REFERENCE,*TRANSACTION*NUMBER*********S01486
+     C***FROM*LF/TRANSPT*,*MODULE*ID*'FF'*AND*POSITION*TRANSACTION********S01486
+     C***INDICATOR*=*'T'**************************************************S01486
+     C***ALL*OTHER*KEY*FIELDS*BLANK*OR*ZERO*AS*APPROPRIATE****************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'FF'      WWMODI                          S01486
+     C***********          MOVE TNBR      WWTRNB                          S01486
+     C***********          MOVEL*BLANKS   WWCCY                           S01486
+     C***********          Z-ADD0         WWACOD                          S01486
+     C***********          Z-ADD0         WWACSQ                          S01486
+     C***********          MOVEL*BLANKS   WWSESN                          S01486
+     C***********          MOVEL'T'       WWPOTI                          S01486
+     C***********                                                         S01486
+     C***********PMTRSF    CHAINPMTRSFPP             75                   S01486
+     C***********                                                         S01486
+     C************IN75     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***IF*NOT*FOUND*WRITE*RECORD****************************************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'D'       P8RECI                          S01486
+     C***********          MOVELBJMRDT    WWHLUP                          S01486
+     C***********          Z-ADDWWDLUP    P8DLUP                          S01486
+     C***********          MOVELWWMLUP    P8MLUP                          S01486
+     C***********          Z-ADDWWYLUP    P8YLUP                          S01486
+     C***********          TIME           P8TLUP                          S01486
+     C***********          MOVEL'I'       P8CHTP                          S01486
+     C***********          Z-ADDBJRDNB    P8LCD                           S01486
+     C***********          Z-ADD0         P8TNLU                          S01486
+     C***********          Z-ADDCUSC      P8CNUM                          S01486
+     C***********          MOVELPTFR      P8FPTF                          S01486
+     C***********          MOVEL'9997'    P8TPTF                          S01486
+     C***********          MOVE TNBR      P8TRNB                          S01486
+     C***********          MOVEL*BLANKS   P8CCY                           S01486
+     C***********          Z-ADD0         P8ACOD                          S01486
+     C***********          Z-ADD0         P8ACSQ                          S01486
+     C***********          MOVEL*BLANKS   P8SESN                          S01486
+     C***********          MOVEL'FF'      P8MODI                          S01486
+     C***********          MOVEL'Y'       P8DTCL                          S01486
+     C***********          MOVEL'T'       P8POTI                          S01486
+     C***********          MOVEL'Y'       P8TBPR                          S01486
+     C***********                                                         S01486
+     C***********          WRITEPMTRSFP0                                  S01486
+     C***********                                                         S01486
+     C***ADD*1*TO*COUNTER*OF*TRANSFER*GENERATED***************************S01486
+     C***********                                                         S01486
+     C***********          ADD  1         WWTRFG                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          ENDSR                                          S01486
+     C********************************************************************S01486
+     C********************************************************************S01486
+      ***/EJECT***                                                        S01486
+      ********************************************************************S01486
+      ***********                                                         S01486
+      **#P0205***-*TO*TRANSFER*DL*DEALS***********************************S01486
+      ***********                                                         S01486
+      **SUBROUTINE*CALLS:*************************************************S01486
+      ***********                                                         S01486
+      **SUBROUTINE*CALLED*FROM:*******************************************S01486
+      **#P02*****-*TO*TRANSFER*TRANSACTIONS*AND*POSITIONS*****************S01486
+      ***********                                                         S01486
+      **ROUTINE*USES*VARIABLES:*******************************************S01486
+      **WWMODI***-*MODULE*ID*KEY*FOR*PMTRSF*KLIST*************************S01486
+      **WWTRNB***-*TRANSACTION*NUMBER*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWCCY****-*CURRENCY*KEY*FOR*PMTRSF*KLIST**************************S01486
+      **WWACOD***-*ACCOUNT*CODE*KEY*FOR*PMTRSF*KLIST**********************S01486
+      **WWACSQ***-*ACCOUNT*SEQUENCE*KEY*FOR*PMTRSF*KLIST******************S01486
+      **WWSESN***-*SECURITY*SHORTNAME*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWPOTI***-*POSITION/TRANSACTION*INDICATOR*KEY*FOR*PMTRSF**********S01486
+      **WWHLUP***-*DATA*STRUCTURE*FOR*DATE*OF*LAST*UPDATE*****************S01486
+      **WWDLUP***-*DAY*OF*LAST*UPDATE*************************************S01486
+      **WWMLUP***-*MONTH*OF*LAST*UPDATE***********************************S01486
+      **WWYLUP***-*YEAR*OF*LAST*UPDATE************************************S01486
+      **WWTRFG***-*COUNTER*FOR*PORTFOLIO*TRANSFERS*GENERATED**************S01486
+      ***********                                                         S01486
+      ********************************************************************S01486
+     C***********#P0205    BEGSR                                          S01486
+     C***********                                                         S01486
+     C***ACCESS*LF/DEALSPT**-*DL*DEALS***********BY*PORTFOLIO*************S01486
+     C***REFERENCE********************************************************S01486
+     C***THERE*ARE*THREE*FORMATS*TO*BE*ACCESSED*IN*DEALSPT****************S01486
+     C***DEALSDBF*-*DEALSDCF*-*DEALSDGF***********************************S01486
+     C***********                                                         S01486
+     C****       PMCUPR    SETLLDEALSPT                                   B08275
+     C***********          MOVE 'D'       WWLIVE                    B08275S01486
+     C***********PMCUPL    SETLLDEALSPT                             B08275S01486
+     C***********                                                         S01486
+     C************IN74     DOUEQ'1'                                       S01486
+     C***********                                                         S01486
+     C***********PMCUPR    READEDEALSPT                  74               S01486
+     C***********                                                         S01486
+     C************IN74     IFEQ '0'                                       S01486
+     C***********                                                         S01486
+     C***ACCESS*PF/PMTRSFPP*-*PORTFOLIO*TRANSFER*DETAILS*USING************S01486
+     C***CUSTOMER*NUMBER,*PORTFOLIO*REFERENCE,*TRANSACTION*NUMBER*********S01486
+     C***FROM*LF/DEALSPT*,*MODULE*ID*'DL'*AND*POSITION*TRANSACTION********S01486
+     C***INDICATOR*=*'T'**************************************************S01486
+     C***ALL*OTHER*KEY*FIELDS*BLANK*OR*ZERO*AS*APPROPRIATE****************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'DL'      WWMODI                          S01486
+     C***********          MOVE DLNO      WWTRNB                          S01486
+     C***********          MOVEL*BLANKS   WWCCY                           S01486
+     C***********          Z-ADD0         WWACOD                          S01486
+     C***********          Z-ADD0         WWACSQ                          S01486
+     C***********          MOVEL*BLANKS   WWSESN                          S01486
+     C***********          MOVEL'T'       WWPOTI                          S01486
+     C***********                                                         S01486
+     C***********PMTRSF    CHAINPMTRSFP0             75                   S01486
+     C***********                                                         S01486
+     C************IN75     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***IF*NOT*FOUND*WRITE*RECORD****************************************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'D'       P8RECI                          S01486
+     C***********          MOVELBJMRDT    WWHLUP                          S01486
+     C***********          Z-ADDWWDLUP    P8DLUP                          S01486
+     C***********          MOVELWWMLUP    P8MLUP                          S01486
+     C***********          Z-ADDWWYLUP    P8YLUP                          S01486
+     C***********          TIME           P8TLUP                          S01486
+     C***********          MOVEL'I'       P8CHTP                          S01486
+     C***********          Z-ADDBJRDNB    P8LCD                           S01486
+     C***********          Z-ADD0         P8TNLU                          S01486
+     C***********          Z-ADDCNUM      P8CNUM                          S01486
+     C***********          MOVELPTFR      P8FPTF                          S01486
+     C***********          MOVEL'9997'    P8TPTF                          S01486
+     C***********          MOVE DLNO      P8TRNB                          S01486
+     C***********          MOVEL*BLANKS   P8CCY                           S01486
+     C***********          Z-ADD0         P8ACOD                          S01486
+     C***********          Z-ADD0         P8ACSQ                          S01486
+     C***********          MOVEL*BLANKS   P8SESN                          S01486
+     C***********          MOVEL'DL'      P8MODI                          S01486
+     C***********          MOVEL'Y'       P8DTCL                          S01486
+     C***********          MOVEL'T'       P8POTI                          S01486
+     C***********          MOVEL'Y'       P8TBPR                          S01486
+     C***********                                                         S01486
+     C***********          WRITEPMTRSFP0                                  S01486
+     C***********                                                         S01486
+     C***ADD*1*TO*COUNTER*OF*TRANSFER*GENERATED***************************S01486
+     C***********                                                         S01486
+     C***********          ADD  1         WWTRFG                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          ENDSR                                          S01486
+     C********************************************************************S01486
+     C********************************************************************S01486
+      ***/EJECT***                                                        S01486
+      ********************************************************************S01486
+      ***********                                                         S01486
+      **#P0206***-*TO*TRANSFER*LE*LOANS***********************************S01486
+      ***********                                                         S01486
+      **SUBROUTINE*CALLS:*************************************************S01486
+      ***********                                                         S01486
+      **SUBROUTINE*CALLED*FROM:*******************************************S01486
+      **#P02*****-*TO*TRANSFER*TRANSACTIONS*AND*POSITIONS*****************S01486
+      ***********                                                         S01486
+      **ROUTINE*USES*VARIABLES:*******************************************S01486
+      **WWMODI***-*MODULE*ID*KEY*FOR*PMTRSF*KLIST*************************S01486
+      **WWTRNB***-*TRANSACTION*NUMBER*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWCCY****-*CURRENCY*KEY*FOR*PMTRSF*KLIST**************************S01486
+      **WWACOD***-*ACCOUNT*CODE*KEY*FOR*PMTRSF*KLIST**********************S01486
+      **WWACSQ***-*ACCOUNT*SEQUENCE*KEY*FOR*PMTRSF*KLIST******************S01486
+      **WWSESN***-*SECURITY*SHORTNAME*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWPOTI***-*POSITION/TRANSACTION*INDICATOR*KEY*FOR*PMTRSF**********S01486
+      **WWHLUP***-*DATA*STRUCTURE*FOR*DATE*OF*LAST*UPDATE*****************S01486
+      **WWDLUP***-*DAY*OF*LAST*UPDATE*************************************S01486
+      **WWMLUP***-*MONTH*OF*LAST*UPDATE***********************************S01486
+      **WWYLUP***-*YEAR*OF*LAST*UPDATE************************************S01486
+      **WWTRFG***-*COUNTER*FOR*PORTFOLIO*TRANSFERS*GENERATED**************S01486
+      ***********                                                         S01486
+      ********************************************************************S01486
+     C***********#P0206    BEGSR                                          S01486
+     C***********                                                         S01486
+     C***ACCESS*LF/CLOANPT****LE*LOANS***********BY*PORTFOLIO*************S01486
+     C***REFERENCE********************************************************S01486
+     C***********                                                         S01486
+     C****       PMCUPR    SETLLCLOANPT                                   B08275
+     C***********          MOVE 'D'       WWLIVE                    B08275S01486
+     C***********PMCUPL    SETLLCLOANPT                             B08275S01486
+     C***********                                                         S01486
+     C************IN74     DOUEQ'1'                                       S01486
+     C***********                                                         S01486
+     C****       PMCUPR    READECLOANPT                  74         B08275S01486
+     C***********PMCUPL    READECLOANPT                  74         B08275S01486
+     C***********                                                         S01486
+     C************IN74     IFEQ '0'                                       S01486
+     C***********                                                         S01486
+     C***ACCESS*PF/PMTRSFPP*-*PORTFOLIO*TRANSFER*DETAILS*USING************S01486
+     C***CUSTOMER*NUMBER,*PORTFOLIO*REFERENCE,*TRANSACTION*NUMBER*********S01486
+     C***FROM*LF/CLOANPT*,*MODULE*ID*'LE'*AND*POSITION*TRANSACTION********S01486
+     C***INDICATOR*=*'T'**************************************************S01486
+     C***ALL*OTHER*KEY*FIELDS*BLANK*OR*ZERO*AS*APPROPRIATE****************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'LE'      WWMODI                          S01486
+     C***********          MOVE LNRF      WWTRNB                          S01486
+     C***********          MOVEL*BLANKS   WWCCY                           S01486
+     C***********          Z-ADD0         WWACOD                          S01486
+     C***********          Z-ADD0         WWACSQ                          S01486
+     C***********          MOVEL*BLANKS   WWSESN                          S01486
+     C***********          MOVEL'T'       WWPOTI                          S01486
+     C***********                                                         S01486
+     C***********PMTRSF    CHAINPMTRSFPP             75                   S01486
+     C***********                                                         S01486
+     C************IN75     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***IF*NOT*FOUND*WRITE*RECORD****************************************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'D'       P8RECI                          S01486
+     C***********          MOVELBJMRDT    WWHLUP                          S01486
+     C***********          Z-ADDWWDLUP    P8DLUP                          S01486
+     C***********          MOVELWWMLUP    P8MLUP                          S01486
+     C***********          Z-ADDWWYLUP    P8YLUP                          S01486
+     C***********          TIME           P8TLUP                          S01486
+     C***********          MOVEL'I'       P8CHTP                          S01486
+     C***********          Z-ADDBJRDNB    P8LCD                           S01486
+     C***********          Z-ADD0         P8TNLU                          S01486
+     C***********          Z-ADDCNUM      P8CNUM                          S01486
+     C***********          MOVELPTFR      P8FPTF                          S01486
+     C***********          MOVEL'9997'    P8TPTF                          S01486
+     C***********          MOVE LNRF      P8TRNB                          S01486
+     C***********          MOVEL*BLANKS   P8CCY                           S01486
+     C***********          Z-ADD0         P8ACOD                          S01486
+     C***********          Z-ADD0         P8ACSQ                          S01486
+     C***********          MOVEL*BLANKS   P8SESN                          S01486
+     C***********          MOVEL'LE'      P8MODI                          S01486
+     C***********          MOVEL'Y'       P8DTCL                          S01486
+     C***********          MOVEL'T'       P8POTI                          S01486
+     C***********          MOVEL'Y'       P8TBPR                          S01486
+     C***********                                                         S01486
+     C***********          WRITEPMTRSFP0                                  S01486
+     C***********                                                         S01486
+     C***ADD*1*TO*COUNTER*OF*TRANSFER*GENERATED***************************S01486
+     C***********                                                         S01486
+     C***********          ADD  1         WWTRFG                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          ENDSR                                          S01486
+     C********************************************************************S01486
+     C********************************************************************S01486
+      ***/EJECT***                                                        S01486
+      ********************************************************************S01486
+      ***********                                                         S01486
+      **#P0207***-*TO*TRANSFER*RE*ACCOUNTS********************************S01486
+      ***********                                                         S01486
+      **SUBROUTINE*CALLS:*************************************************S01486
+      ********************************************************************S01486
+      **SUBROUTINE*CALLED*FROM:*******************************************S01486
+      **#P02*****-*TO*TRANSFER*TRANSACTIONS*AND*POSITIONS*****************S01486
+      ***********                                                         S01486
+      **ROUTINE*USES*VARIABLES:*******************************************S01486
+      **WWMODI***-*MODULE*ID*KEY*FOR*PMTRSF*KLIST*************************S01486
+      **WWTRNB***-*TRANSACTION*NUMBER*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWCCY****-*CURRENCY*KEY*FOR*PMTRSF*KLIST**************************S01486
+      **WWACOD***-*ACCOUNT*CODE*KEY*FOR*PMTRSF*KLIST**********************S01486
+      **WWACSQ***-*ACCOUNT*SEQUENCE*KEY*FOR*PMTRSF*KLIST******************S01486
+      **WWSESN***-*SECURITY*SHORTNAME*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWPOTI***-*POSITION/TRANSACTION*INDICATOR*KEY*FOR*PMTRSF**********S01486
+      **WWHLUP***-*DATA*STRUCTURE*FOR*DATE*OF*LAST*UPDATE*****************S01486
+      **WWDLUP***-*DAY*OF*LAST*UPDATE*************************************S01486
+      **WWMLUP***-*MONTH*OF*LAST*UPDATE***********************************S01486
+      **WWYLUP***-*YEAR*OF*LAST*UPDATE************************************S01486
+      **WWTRFG***-*COUNTER*FOR*PORTFOLIO*TRANSFERS*GENERATED**************S01486
+      ***********                                                         S01486
+      ********************************************************************S01486
+     C***********#P0207    BEGSR                                          S01486
+     C***********                                                         S01486
+     C***ACCESS*LF/ACCNTPT**-*RE*ACCOUNTS********BY*PORTFOLIO*************S01486
+     C***REFERENCE********************************************************S01486
+     C***********                                                         S01486
+     C****       PMCUPR    SETLLACCNTPT                                   B08275
+     C***********          MOVE 'D'       WWLIVE                    B08275S01486
+     C***********PMCUPL****SETLLACCNTPT                             B08275S01313
+     C***********PMCUPL    SETLLACCNTP1                             S01313S01486
+     C***********                                                         S01486
+     C***********          MOVE '0'       *IN74                           S01486
+     C***********          Z-ADD0         CNUM                            S01486
+     C***********          MOVEL*BLANKS   PTFR                            S01486
+     C***********                                                         S01486
+     C************IN74     DOUEQ'1'                                       S01486
+     C***********                                                         S01486
+     C****       PMCUPR    READEACCNTPT                  74               B08275
+     C***********PMCUPL****READEACCNTPT                  74         B08275S01313
+     C***********PMCUPL    READEACCNTP1                  74         S01313S01486
+     C***********                                                         S01486
+     C************IN74     IFEQ '0'                                       S01486
+     C***********                                                         S01486
+     C***ACCESS*PF/PMTRSFPP*-*PORTFOLIO*TRANSFER*DETAILS*USING************S01486
+     C***CUSTOMER*NUMBER,*PORTFOLIO*REFERENCE,****************************S01486
+     C***CURRENCY*CODE,*ACCOUNT*CODE*AND*ACCOUNT*SEQUENCE*****************S01486
+     C***FROM*LF/ACCNTPT*,*MODULE*ID*'RE'*AND*POSITION*TRANSACTION********S01486
+     C***INDICATOR*=*'T'**************************************************S01486
+     C***ALL*OTHER*KEY*FIELDS*BLANK*OR*ZERO*AS*APPROPRIATE****************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'RE'      WWMODI                          S01486
+     C***********          MOVEL*BLANKS   WWTRNB                          S01486
+     C***********          MOVELCCY       WWCCY                           S01486
+     C***********          Z-ADDACOD      WWACOD                          S01486
+     C***********          Z-ADDACSQ      WWACSQ                          S01486
+     C***********          MOVEL*BLANKS   WWSESN                          S01486
+     C***********          MOVEL'T'       WWPOTI                          S01486
+     C***********                                                         S01486
+     C***********PMTRSF    CHAINPMTRSFPP             75                   S01486
+     C***********                                                         S01486
+     C************IN75     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***IF*NOT*FOUND*WRITE*RECORD****************************************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'D'       P8RECI                          S01486
+     C***********          MOVELBJMRDT    WWHLUP                          S01486
+     C***********          Z-ADDWWDLUP    P8DLUP                          S01486
+     C***********          MOVELWWMLUP    P8MLUP                          S01486
+     C***********          Z-ADDWWYLUP    P8YLUP                          S01486
+     C***********          TIME           P8TLUP                          S01486
+     C***********          MOVEL'I'       P8CHTP                          S01486
+     C***********          Z-ADDBJRDNB    P8LCD                           S01486
+     C***********          Z-ADD0         P8TNLU                          S01486
+     C***********          Z-ADDCNUM      P8CNUM                          S01486
+     C***********          MOVELPTFR      P8FPTF                          S01486
+     C***********          MOVEL'9997'    P8TPTF                          S01486
+     C***********          Z-ADD0         P8TRNB                          S01486
+     C***********          MOVELCCY       P8CCY                           S01486
+     C***********          Z-ADDACOD      P8ACOD                          S01486
+     C***********          Z-ADDACSQ      P8ACSQ                          S01486
+     C***********          MOVEL*BLANKS   P8SESN                          S01486
+     C***********          MOVEL'RE'      P8MODI                          S01486
+     C***********          MOVEL'Y'       P8DTCL                          S01486
+     C***********          MOVEL'T'       P8POTI                          S01486
+     C***********          MOVEL'Y'       P8TBPR                          S01486
+     C***********                                                         S01486
+     C***********          WRITEPMTRSFP0                                  S01486
+     C***********                                                         S01486
+     C***ADD*1*TO*COUNTER*OF*TRANSFER*GENERATED***************************S01486
+     C***********                                                         S01486
+     C***********          ADD  1         WWTRFG                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          ENDSR                                          S01486
+     C********************************************************************S01486
+     C********************************************************************S01486
+      ***/EJECT***                                                        S01486
+      ********************************************************************S01486
+      ************                                                        S01486
+      **#P0208***-*TO*TRANSFER*FI*LOANS*&*DEPOSITS************************S01486
+      ************                                                        S01486
+      **SUBROUTINE*CALLS:*************************************************S01486
+      ************                                                        S01486
+      **SUBROUTINE*CALLED*FROM:*******************************************S01486
+      **#P02*****-*TO*TRANSFER*TRANSACTIONS*AND*POSITIONS*****************S01486
+      ************                                                        S01486
+      **ROUTINE*USES*VARIABLES:*******************************************S01486
+      **WWMODI***-*MODULE*ID*KEY*FOR*PMTRSF*KLIST*************************S01486
+      **WWTRNB***-*TRANSACTION*NUMBER*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWCCY****-*CURRENCY*KEY*FOR*PMTRSF*KLIST**************************S01486
+      **WWACOD***-*ACCOUNT*CODE*KEY*FOR*PMTRSF*KLIST**********************S01486
+      **WWACSQ***-*ACCOUNT*SEQUENCE*KEY*FOR*PMTRSF*KLIST******************S01486
+      **WWSESN***-*SECURITY*SHORTNAME*KEY*FOR*PMTRSF*KLIST****************S01486
+      **WWPOTI***-*POSITION/TRANSACTION*INDICATOR*KEY*FOR*PMTRSF**********S01486
+      **WWHLUP***-*DATA*STRUCTURE*FOR*DATE*OF*LAST*UPDATE*****************S01486
+      **WWDLUP***-*DAY*OF*LAST*UPDATE*************************************S01486
+      **WWMLUP***-*MONTH*OF*LAST*UPDATE***********************************S01486
+      **WWYLUP***-*YEAR*OF*LAST*UPDATE************************************S01486
+      **WWTRFG***-*COUNTER*FOR*PORTFOLIO*TRANSFERS*GENERATED**************S01486
+      ***********                                                         S01486
+      ********************************************************************S01486
+     C***********#P0208    BEGSR                                          S01486
+     C***********                                                         S01486
+     C***********PMCUPR    SETLLFIDPLNPT                            B08275S01486
+     C***********          MOVE ' '       WWLIVE                    B08275S01486
+     C***********PMCUPL    SETLLFIDPLNPT                            B08275S01486
+     C***********          SETOF                     0506                 S01486
+     C***********PMCUPR    READEFIDPLNPT                 70         B08275S01486
+     C***********PMCUPL    READEFIDPLNPT                 70         B08275S01486
+     C***********                                                         S01486
+     C***FOR*EACH*RECORD*FOUND*WITH*THAT*KEY******************************S01486
+     C***********                                                         S01486
+     C************IN70     DOWEQ'0'                                       S01486
+     C***********                                                         S01486
+     C***ACCESS*PMTRSFPP**************************************************S01486
+     C***********                                                         S01486
+     C************IN05     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***********          Z-ADDFLLONR    WWTRNB                          S01486
+     C***********          MOVEL'FL'      WWMODI                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C************IN06     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***********          Z-ADDFDDENR    WWTRNB                          S01486
+     C***********          MOVEL'FD'      WWMODI                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***ALL*OTHER*FIELDS*BLANK*OR*ZERO***********************************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'T'       WWPOTI                          S01486
+     C***********          MOVEL*BLANKS   WWCCY                           S01486
+     C***********          MOVEL*BLANKS   WWSESN                          S01486
+     C***********          Z-ADD0         WWACOD                          S01486
+     C***********          Z-ADD0         WWACSQ                          S01486
+     C***********                                                         S01486
+     C***********PMTRSF    CHAINPMTRSFPP             71                   S01486
+     C***********                                                         S01486
+     C************IN71     IFEQ '1'                                       S01486
+     C***********                                                         S01486
+     C***IF*NOT*FOUND*WRITE*RECORD****************************************S01486
+     C***********                                                         S01486
+     C***********          MOVEL'D'       P8RECI                          S01486
+     C***********          MOVELBJMRDT    WWHLUP                          S01486
+     C***********          Z-ADDWWDLUP    P8DLUP                          S01486
+     C***********          MOVELWWMLUP    P8MLUP                          S01486
+     C***********          Z-ADDWWYLUP    P8YLUP                          S01486
+     C***********          TIME           P8TLUP                          S01486
+     C***********          MOVEL'I'       P8CHTP                          S01486
+     C***********          Z-ADDBJRDNB    P8LCD                           S01486
+     C***********          Z-ADD0         P8TNLU                          S01486
+     C***********                                                         S01486
+     C************IN05     IFEQ '1'                                       S01486
+     C***********          Z-ADDFLLNUM    P8CNUM                          S01486
+     C***********          Z-ADDFLLONR    P8TRNB                          S01486
+     C***********          MOVEL'FL'      P8MODI                          S01486
+     C***********          MOVELFLPTFR    P8FPTF                          S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C************IN06     IFEQ '1'                                       S01486
+     C***********          Z-ADDFDCNUM    P8CNUM                          S01486
+     C***********          Z-ADDFDDENR    P8TRNB                          S01486
+     C***********          MOVEL'FD'      P8MODI                          S01486
+     C***********          MOVELFDPTFR    P8FPTF                          S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          MOVEL'9997'    P8TPTF                          S01486
+     C***********          MOVEL*BLANKS   P8CCY                           S01486
+     C***********          Z-ADD0         P8ACOD                          S01486
+     C***********          Z-ADD0         P8ACSQ                          S01486
+     C***********          MOVEL*BLANKS   P8SESN                          S01486
+     C***********          MOVEL'Y'       P8DTCL                          S01486
+     C***********          MOVEL'T'       P8POTI                          S01486
+     C***********          MOVEL'Y'       P8TBPR                          S01486
+     C***********                                                         S01486
+     C***********          WRITEPMTRSFP0                                  S01486
+     C***********                                                         S01486
+     C***ADD*1*TO*COUNTER*OF*TRANSFER*GENERATED***************************S01486
+     C***********                                                         S01486
+     C***********          ADD  1         WWTRFG                          S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          SETOF                     0506                 S01486
+     C***********PMCUPR    READEFIDPLNPT                 70         B08275S01486
+     C***********PMCUPL    READEFIDPLNPT                 70         B08275S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C***********                                                         S01486
+     C***********          ENDSR                                          S01486
+     C********************************************************************S01486
+     C********************************************************************S01486
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P03     - BLOCK TRANSFERS TO CLOSING PORTFOLIOS                       *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PBB     - TO PROCESS ALL TRANSFERS AND DELETIONS                      *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P03      BEGSR
+     C**
+     C** ACCESS LF/PMTPTFLL - PORTFOLIO TRANSFER DETAILS BY 'TO'
+     C** PORTFOLIO
+     C**
+     C           PMCUPR    SETLLPMTPTFLL
+     C**
+     C                     MOVE '0'       *IN74
+     C**
+     C                     READ PMTPTFLL                 74
+     C**
+     C           WWPNP8    DOWEQP8CNUM
+     C           WWPREF    ANDEQP8TPTF
+     C           *IN74     ANDEQ'0'
+     C**
+     C** IF RECORD FOUND UPDATE IT
+     C**
+     C                     MOVEL'N'       P8TBPR
+     C**
+     C                     EXCPTPMTRSU
+     C**
+     C                     READ PMTPTFLL                 74
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C****************************************************************
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P04     - TO UPDATE PORTFOLIO TRANSFER AUDIT                          *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - TO PROCESS DATA BASE ERRORS                                 *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P04      BEGSR
+     C**
+     C** ACCESS PF/PMTRSFZZ PORTFOLIO TRANSFER AUDIT
+     C**
+     C***********1         CHAINPMTRSFZZ             76                   S01486
+     C           1         CHAINPMTRSFPA             76                   S01486
+     C**
+     C           *IN76     IFEQ '0'
+     C**
+     C                     ADD  WWTRFG    P8NORE
+     C                     UPDATPMTRSFZ0
+     C**
+     C** WRITE TO PORTFOLIO TRANSFER AUDIT
+     C**
+     C***********          MOVELBJURPT    RRTITL                          S01496
+     C***********          MOVELBJMRDT    RRRUNA                          S01496
+     C                     Z-ADDWWPOLC    RRPOLC
+     C                     Z-ADDWWTRFG    RRTRFG
+     C                     Z-ADDWWPONC    RRPONC                          R10029
+     C***********          Z-ADD0         PAGE                     R10029 S01496
+     C                     Z-ADD0         PAGE1                           S01496
+     C**
+     C***********          WRITEPM1010H                                   S01486
+     C                     WRITEPM1010D                                   S01486
+     C**
+     C                     ELSE
+     C**
+     C** RECORD NOT FOUND - DATA BASE ERROR
+     C**                                                   ***************
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD3         DBASE            **DB ERROR 03**
+     C***********          MOVEL'PMTRSFZZ'DBFILE           ***************S01486
+     C                     MOVE 'PMTRSFPA'DBFILE           ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C** ACCESS PF/PMPORTZZ PORTFOLIO DEFINITION TRAILER
+     C**
+     C***********          READ PMPORTZZ                 76               S01486
+     C                     READ PMPORTPA                 76               S01486
+     C**
+     C           *IN76     IFEQ '0'
+     C**
+     C           PNNORE    SUB  WWPOLC    PNNORE
+     C                     UPDATPMPORTZ0
+     C**
+     C                     ELSE
+     C**
+     C** RECORD NOT FOUND - DATA BASE ERROR
+     C**                                                   ***************
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD4         DBASE            **DB ERROR 04**
+     C***********          MOVEL'PMPORTZZ'DBFILE           ***************S01486
+     C                     MOVE 'PMPORTPA'DBFILE           ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C**                                                                  R10029
+     C** IF NO PORTFOLIOS NOT CLOSED TODAY, THEN 'NO DETAILS' ON PM1010P1 R10029
+     C**                                                                  R10029
+     C           WWPONC    IFEQ 0                                         R10029
+     C                     MOVE '1'       *IN79                           R10029
+     C***********          WRITEPM1010F1                            R10029S01486
+     C                     WRITEPM1010F3                                  S01486
+     C                     ELSE                                           S01486
+     C*                                                                   S01486
+     C**  Output report footer                                            S01486
+     C                     WRITEPM1010FT                                  S01486
+     C                     END                                            R10029
+     C**                                                                  R10029
+     C***********          WRITEPM1010F3                            R10029S01486
+     C**                                                                  R10029
+     C                     ENDSR
+      **************************************************************************
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PAA     - TO ACCESS STANDING DATA AND INITIALIZE WORK FIELDS          *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - TO PROCESS DATA BASE ERRORS                                 *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #PAA      BEGSR
+     C**
+     C** PREPARE LDA
+     C**
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANKS   DBLOT
+     C                     MOVEL'PM1010'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C**
+     C** INITIALIZE WORK FIELDS
+     C**
+     C                     Z-ADD0         WWPOLC  50
+     C                     Z-ADD0         RRPOLC  50
+     C                     Z-ADD0         WWTRFG  50
+     C                     Z-ADD0         RRTRFG  50
+     C                     Z-ADD0         WWDLNO  60
+     C                     Z-ADD0         WWPONC  50                      R10029
+     C                     Z-ADD0         RRPONC  50                      R10029
+     C**
+     C** ACCESS BANK DETAILS
+     C**
+     C***********          READ SDBANKL1                 71               S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*MSG   ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C**
+     C************IN71     IFEQ '1'                                       S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C**
+     C** RECORD NOT FOUND
+     C**                                                   ***************
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            **DB ERROR 01**
+     C                     MOVEL'SDBANKL1'DBPGM            ***************
+     C                     MOVEL@OPTN     DBKEY                           S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     ELSE
+     C**
+     C** RECORD FOUND -  LOAD RUN DATE
+     C**
+     C                     MOVELBJMRDT    RRRUNA
+     C                     MOVELBJMRDT    RUNA                            S01486
+     C**
+     C                     END
+     C*                                                                   S01486
+     C**  Output report header for audit report                           S01486
+     C*                                                                   S01486
+     C                     MOVELBJURPT    RRTITL                          S01486
+     C                     MOVELBJMRDT    RRRUNA                          S01486
+     C                     WRITEPM1010H                                   S01486
+     C*                                                                   S01496
+     C**  Check if feature "Jyske Enhancements" is on                     S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSARDR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD  7                       S01496
+     C                     PARM '*VERIFY' WLOPTN  7                       S01496
+     C                     PARM 'S01496'  WLSARD  6                       S01496
+     C           SCSARD    PARM SCSARD    DSSDY                           S01496
+     C                     MOVE 'N'       S01496  1                       S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFEQ *BLANKS                                   S01496
+     C                     MOVE 'Y'       S01496                          S01496
+     C                     MOVE '1'       *IN65                           S01496
+     C                     ELSE                                           S01496
+     C*                                                                   S01496
+     C**  Return code other than *NRF                                     S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE '*NRF'                                    S01496
+     C           *LOCK     IN   LDA                                       S01496
+     C                     Z-ADD5         DBASE            ***************S01496
+     C                     MOVE 'SCSARDPD'DBFILE           * DB ERROR 05 *S01496
+     C                     MOVELWLOPTN    DBKEY            ***************S01496
+     C                     OUT  LDA                                       S01496
+     C                     EXSR *PSSR                                     S01496
+     C                     END                                            S01496
+     C                     END                                            S01496
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,PM1010CCP2                                           S01408
+     C*                                                                   S01408
+     C**
+     C** ACCESS MIDAS MODULES
+     C**
+     C************         READ SDMMODPD                 71               S01486
+     C                     CALL 'AOMMODR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01486
+     C**
+     C************IN71     IFEQ '1'                        ***************S01486
+     C           @RTCD     IFNE *BLANKS                    ***************S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            **DB ERROR 02**
+     C***********          MOVEL'SDMMODPD'DBFILE           ***************S01486
+     C                     MOVE 'SDMMODPD'DBFILE           ***************S01486
+     C                     MOVEL@OPTN     DBKEY                           S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C** TEST IF SECURITIES MODULE PRESENT IN SYSTEM                      R10029
+     C**                                                                  R10029
+     C           BGSECS    IFEQ 'Y'                                       R10029
+     C****                 OPEN PMHPOSLL                                  B08275
+     C***********          OPEN TRADPT                              R10029S01486
+     C*********************OPEN DPTMPT                             R10029 S01486
+     C                     OPEN PMTRADL0                                  S01486
+     C                     OPEN PMDPTML0                                  S01486
+     C           S01496    IFEQ 'Y'                                       S01496
+     C                     OPEN SEBLKPL4                                  S01496
+     C***********          OPEN SEERALL3                           S01496 114559
+     C                     OPEN SEERALL8                                  114559
+     C                     END                                            S01496
+     C                     END                                            R10029
+     C***********                                                   R10029S01486
+     C***TEST*IF*FUTURES*AND*OPTIONS*MODULE*PRESENT*IN*SYSTEM       R10029S01486
+     C***********                                                   R10029S01486
+     C***********BGFUOP    IFEQ 'Y'                                 R10029S01486
+     C***********          OPEN TRANSPT                             R10029S01486
+     C***********          END                                      R10029S01486
+     C*                                                                   CPM003
+     C           BGFUOP    IFEQ 'Y'                                       CPM003
+     C                     CALL 'AOPORTR0'                                CPM003
+     C                     PARM '*MSG   ' @RTCD                           CPM003
+     C                     PARM '*FIRST ' @OPTN                           CPM003
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM003
+     C**                                                                  CPM003
+     C           @RTCD     IFNE *BLANKS                                   CPM003
+     C           *LOCK     IN   LDA                                       CPM003
+     C                     MOVEL*BLANKS   DBKEY            ***************CPM003
+     C                     Z-ADD6         DBASE            **DB ERROR 06**CPM003
+     C                     MOVEL'SDBANKPD'DBPGM            ***************CPM003
+     C                     OUT  LDA                                       CPM003
+     C                     EXSR *PSSR                                     CPM003
+     C                     END                                            CPM003
+     C                     END                                            CPM003
+     C**                                                                  S71062
+     C** TEST IF FUTURES AND OPTIONS MODULE PRESENT IN SYSTEM             S71062
+     C**                                                                  S71062
+     C           BGFUOP    IFEQ 'Y'                                       S71062
+     C                     OPEN TRANSPT                                   S71062
+     C                     END                                            S71062
+     C**                                                                  R10029
+     C** TEST IF DEALING MODULE PRESENT IN SYSTEM                         R10029
+     C**                                                                  R10029
+     C           BGDLFX    IFEQ 'Y'                                       R10029
+     C           BGDLMM    OREQ 'Y'                                       R10029
+     C           BGFIIN    OREQ 'Y'                                       R10029
+     C***********          OPEN DEALSPT                            R10029 S01486
+     C                     OPEN PMDEALL0                                  S01486
+     C                     END                                            R10029
+     C**                                                                  R10029
+     C** TEST IF LENDING MODULE PRESENT IN SYSTEM                         R10029
+     C**                                                                  R10029
+     C           BGCSLN    IFEQ 'Y'                                       R10029
+     C***********          OPEN CLOANPT                            R10029 S01486
+     C                     OPEN PMCLONL1                                  S01486
+     C                     END                                            R10029
+     C**                                                                  R10029
+     C** TEST IF RETAIL MODULE PRESENT IN SYSTEM                          R10029
+     C**                                                                  R10029
+     C           BGRTBN    IFEQ 'Y'                                       R10029
+     C*********************OPEN ACCNTPT                             R10029S01313
+     C***********          OPEN ACCNTP1                            S01313 S01486
+     C                     OPEN PMACCNL2                                  S01486
+     C                     END                                            R10029
+     C***********                                                  R10029 S01486
+     C***TEST*IF*FIDUCIARY MODULE PRESENT IN SYSTEM                R10029 S01486
+     C***********                                                  R10029 S01486
+     C***********BGFLND    IFEQ 'Y'                                R10029 S01486
+     C***********          OPEN FIDPLNPT                           R10029 S01486
+     C**********           END                                     R10029 S01486
+     C*                                                                   S01486
+     C** CHECK FOR SAFE CUSTODY FEES                                      S01486
+     C*                                                                   S01486
+     C                     CALL 'AOSARDR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM 'S01464'  SCFKY   6                       S01486
+     C           SCSARD    PARM SCSARD    DSFDY                           S01486
+     C           @RTCD     IFEQ *BLANKS                                   S01486
+     C                     MOVEL'Y'       SCF     1                       S01486
+     C                     END                                            S01486
+     C**                                                                  R10029
+     C** FILL IN 'PORTFOLIOS NOT CLOSED TODAY' HEADER FIELDS              R10029
+     C**                                                                  R10029
+     C                     MOVELBJURPT    R1TITL                          R10029
+     C                     MOVELBJMRDT    R1RUNA                          R10029
+     C                     Z-ADD90        WWNBRL  20                      R10029
+     C*                                                                   S01486
+     C** Report printer file to RCF via ZSFILE                            S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ                             S01486
+     C                     PARM           @ENT                            S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM *BLANKS   ZSERR                           S01486
+     C*                                                                   S01486
+     C** Error during ZSFILE processing, return to calling program        S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C**                                                                  R10029
+     C****                                                                B08275
+      ****t Rundate - Rundate  *                                          B08275
+     C****       *NAMVAR   DEFN           RUNDAT                          B08275
+     C****                 IN   RUNDAT                                    B08275
+      *                                                                   B08275
+     C                     ENDSR
+     C****************************************************************
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * *PSSR    - TO PROCESS DATA BASE ERRORS                                 *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PAA     - TO ACCESS STANDING DATA AND INITIALIZE WORK FIELDS          *
+      * #P02     - TO TRANSFER TRANSACTIONS AND POSITIONS                      *
+      * #P04     - TO UPDATE PORTFOLIO TRANSFER AUDIT                          *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           WWERRO    IFEQ ' '
+     C                     MOVE 'Y'       WWERRO  1
+     C*
+     C           DBASE     IFNE 0
+     C*
+     C**  PRINT ERROR MESSAGE:
+     C                     WRITEERRORAU
+     C*                                                                   S01486
+     C**  If printer file P1 is open, output database error reference     S01486
+     C*                                                                   S01486
+     C           WLOPN     IFEQ 'Y'                                       S01486
+     C                     WRITEPM1010DB                                  S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ELSE
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD999       DBASE
+     C                     OUT  LDA                                       S01486
+     C                     END
+     C*
+     C                     DUMP
+     C                     END
+     C*
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*=========================================================================
+     OPMPORTP0E                PMPORU
+     O                         PNRECI
+     O                         PNDPCL
+     OPMCIIPP0E                PMCIIU
+     O                         PYRECI
+     OPMCCIPP0E                PMCCIU
+     O                         PZRECI
+     OPMCRIPP0E                PMCRIU
+     O                         P2RECI
+     OPMCDIPP0E                PMCDIU
+     O                         P1RECI
+     OPMPTNPP0E                PMPTNU
+     O***********              PRRECI                                     S01486
+     O                         GARECI                                     S01486
+     OPMCHRGP0E                PMCHRU
+     O                         PORECI
+     OPMTRSFPXE                PMTRSU
+     O                         P8TBPR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  NARR                                                                  S01496
+OPEN SE POSITIONS EXIST
+UNSETTLED SE TRADES EXIST
+LIVE DEPOT MOVEMENTS EXIST
+LIVE FX / MM DEALS EXIST
+LIVE LE LOANS EXIST
+LIVE RETAIL ACCOUNTS EXIST
+INCOMPLETE ER ALLOCATION EXIST
+BLOCKED POSITIONS EXIST
+LIVE FF TRANSACTIONS EXIST                                                S71062

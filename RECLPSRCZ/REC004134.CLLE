@@ -1,0 +1,83 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas RE Setup the dataarea RTSDTA and file')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC004134 - Setup the dataarea RTSDTA and file TTRNTM2      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. TDA035  *CREATE    Date 31Mar04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       TDA035 - RTS Signon changes for MidasPlus.                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCD &PMODE &PTLID)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2004')
+ 
+             DCL        VAR(&PRTCD)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PMODE)   TYPE(*CHAR) LEN(3)
+             DCL        VAR(&PTLID)   TYPE(*CHAR) LEN(3)
+ 
+/**  Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNORMAL))
+ 
+/**  Send info to message queue */
+ 
+             SNDPGMMSG  MSG('REC004134 - Setup the dataarea RTSDTA +
+                          for Teller-ID:' *BCAT &PTLID) TOMSGQ(MRUNQ)
+ 
+/**  Initialise job switches and fields */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+ 
+/**  Teller-ID should be not be blanks */
+ 
+             IF         COND((&PTLID *EQ '   ') *OR (&PTLID *EQ +
+                          '000')) THEN(GOTO CMDLBL(ABNORMAL))
+ 
+/**  Create dataarea if it doesn't exist */
+ 
+             CRTDTAARA  DTAARA(QTEMP/RTSDTA) TYPE(*CHAR) LEN(256) +
+                          TEXT('RTS Teller Transaction Job Dataarea')
+             MONMSG     MSGID(CPF1023)
+ 
+/**  Call program to initialise/clear dataarea RTSDTA based from the Teller-ID */
+/**  The file TTRNTM2 will be updated with workstation ID                      */
+ 
+             CALL       PGM(RE004134) PARM(&PRTCD &PMODE &PTLID)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNORMAL))
+ 
+             GOTO ENDPGM
+ 
+ABNORMAL:
+             CHGVAR     VAR(&PRTCD) VALUE('*ABNOR')
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          REC004134 ended abnormally - see job +
+                          log') TOMSGQ(MRUNQ MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd.')
+             ENDPGM
+ 

@@ -1,0 +1,373 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MEO Mail / Single message')
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *    ME0846 - ISO Mail / Single message print                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                   141572            Date 21SEP98              *
+      *                   113352            DATE 13FEB97              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+      *   176443 - Avoid MCH3601 to be sent.                          *
+      *            Pass correct parameter to AOCUSTR0.                *
+      *   141572 - Recompile over changes in MGOREFPD                 *
+      *   113352 - Recompile over changes in MGOREFPD                 *
+      *                                                               *
+      *****************************************************************
+     FMGOREFL0UF  E           K        DISK
+     FME0846P1O   E             50     PRINTER      KINFDS SPOOLP     UC
+      *
+      * ID C  F  H  L    Function of indicaators
+      *    50            Over-flow for printer file
+      *    99            Read & Chain fail indicator
+      * U7U8LR           DB error
+      *
+     E                    CPY@    1   1 80
+      ** Copyright statement
+      *
+     ISPOOLP      DS
+     I                                       83  92 PFILE
+     I                                    B 123 1240PFNUM
+      **  File information data structure for ME0846P1
+      *
+     I@RPARM      DS
+     I                                        1 100 @@RPRM
+     I                                        1  16 @TRN
+      **  DS to break up long RCF parameter into TRN and CF indicator
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     IDSRUN       DS
+     I                                        1   7 RDAT
+     I                                        1   2 @DD
+     I                                        3   5 @MMM
+     I                                        6   7 @YY
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      **  RUNDAT data area data structure (date format -ddmmmyy)
+      *
+     ISDCUST    E DSSDCUSTPD
+      **  Customer Details
+      *
+     I            DS
+     I                                        1  90 HD1
+     I                                       42  45 PG1
+     I                                       48  50 PCC
+      *
+      **  Data structure for handling 'Continued on next page'
+      *
+     IDSFDY     E DSDSFDY
+      **  First data structure for access program, Short data structure
+     IDSSDY     E DSDSSDY                                                 176443
+      **  Second DS for access programs, Long Data Structure              176443
+      *
+     C/EJECT
+      *
+      **  Parameters passed from summary program
+     C           *ENTRY    PLIST
+     C                     PARM           @@RSEQ  5
+     C                     PARM           @@LVLP  1
+     C                     PARM           @@BCHP  3
+     C           @@RPRM    PARM           @@PRMP100
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Parameters passed to ME0861
+     C           PLIST1    PLIST
+     C                     PARM TRNO      PARM1  16
+     C                     PARM @@BCHP    PARM2   3
+     C                     PARM RDAT      PARM3   7
+     C           ERR       PARM *BLANKS   ERR     1
+      *
+      **  Parameters passed to QRCVDTAQ
+     C           PLIST2    PLIST
+     C                     PARM 'MEISOPRT'QNAME  10
+     C                     PARM 'QTEMP'   LIB    10
+     C                     PARM 90        FLDLEN  50
+     C           LINE      PARM *BLANKS   FIELD  90
+     C                     PARM           WAIT    50
+      *
+      **  Parameters passed to ZSFILE
+     C           PLIST3    PLIST
+     C                     PARM           @@RSEQ
+     C                     PARM @@BCHP    @BCHP   3
+     C                     PARM PFILE     ZFILE  10
+     C                     PARM PFNUM     ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      **  Parameters passed to AOCUSTR0
+     C           PLIST4    PLIST
+     C                     PARM '*DBMSG  '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM DECNC     @KEY    6
+     C                     PARM           @KYSTS  7
+     C***********SDCUST    PARM SDCUST    DSFDY                           176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN   - Main process                                       *
+      *   INIT   - Initial processing                                 *
+      *   DETLP  - Detail processing                                  *
+      *   PRTM   - Print message                                      *
+      *   ADRESS - Format address                                     *
+      *   *PSSR  - Error handling                                     *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN   - Main process                                       *
+      *   Calls  - INIT - Init process                                *
+      *            MAIN - MAIN processing                             *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Perform detail process
+     C                     EXSR DETLP
+      *
+      **  Set on LR for return
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT   - Initial process                                    *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **  Access data area RUNDAT to find date & multi-branch indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+      *
+      **  Read outgoing message file PF/MGOREFPD
+     C           @TRN      CHAINMGOREFD0             99
+      *
+      ** Database error if record not found
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0846  'DBPGM
+     C                     MOVE '01'      DBASE            ***********
+     C                     MOVE @TRN      DBKEY            * DBERR 1 *
+     C                     MOVE 'MGOREFL0'DBFILE           ***********
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** If TRN-of-first-part is not blank, use it to access first part
+      ** of multiple message
+     C           TRNF      IFNE *BLANKS
+      *
+     C           TRNF      CHAINMGOREFD0             99
+      *
+      ** Database error if record not found
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0846  'DBPGM
+     C                     MOVE '02'      DBASE            ***********
+     C                     MOVE TRNF      DBKEY            * DBERR 2 *
+     C                     MOVE 'MGOREFL0'DBFILE           ***********
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   DETLP  - Detail Process                                     *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           DETLP     BEGSR
+      *
+      **  Open printer file PRTF/ME0846P1
+     C                     OPEN ME0846P1
+      *
+      **  Call ZSFILE via SPLF
+     C                     EXSR SPLF
+      *
+      **  Print message
+     C                     EXSR PRTM
+      *
+      **  Close printer file PRTF/ME0846P1
+     C                     CLOSEME0846P1
+      *
+      ** Update status to 'PRTD', which implies any subsequent
+      ** prints are copies
+     C                     MOVE 'PRTD'    MGST
+     C                     MOVE '3'       MGSG
+     C                     UPDATMGOREFD0
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   PRTM   - Print message                                      *
+      *   Called by DETLP                                             *
+      *****************************************************************
+      *
+     C           PRTM      BEGSR
+      *
+      **  Call formatting program ME0861
+     C                     CALL 'ME0861'  PLIST1
+      *
+     C           ERR       IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Print dummy line
+     C                     WRITEBLK
+      *
+      **  Receive data queue MEDTQPRT from formatting program via
+      **  QRCVDTAQ
+     C                     CALL 'QRCVDTAQ'PLIST2
+      *
+     C                     MOVELLINE      HD1    90
+      *
+     C                     Z-ADD1         PC      30
+     C                     Z-ADD1         XX      30
+      *
+      **  Do while entry found in DATAQ/MEDTQPRT
+     C           FLDLEN    DOWNE0
+      *
+      **  If end of page - throw a page and print headings BLK
+     C           *IN50     IFEQ '1'
+     C                     WRITENEXT
+     C                     EXSR ADRESS
+     C                     WRITEBLK
+     C                     SETOF                     50
+     C                     ADD  1         PC
+     C                     MOVE PC        PCC     3
+     C                     MOVE 'Page'    PG1
+     C                     WRITEHEADER
+     C                     END
+      *
+      **  Output line of message detail from dataq
+     C                     WRITEDETL
+      *
+      **  Receive data queue MEDTQPRT from formatting program via
+      **  QRCVDATAQ
+     C                     CALL 'QRCVDTAQ'PLIST2
+      *
+     C           XX        IFEQ 1
+     C                     ADD  1         XX
+     C                     MOVELLINE      HD2    90
+     C                     END
+      *
+     C                     END
+      *
+     C                     EXSR ADRESS
+     C                     SETOF                     50
+      *
+     C                     ENDSR
+     C/EJECT
+      *******************************************************************
+      *   ADRESS - Address handling process                             *
+      *   Called by - PRTM                                              *
+      *******************************************************************
+      *
+     C           ADRESS    BEGSR
+      *
+     C                     MOVE *BLANKS   BBCNA1
+     C                     MOVE DECN      DECNC   6
+      *
+      **  Access SDCUSTPD via AOCUSTR0
+     C                     CALL 'AOCUSTR0'PLIST4
+      *
+      **  Error handling for access object
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0846  'DBPGM
+     C                     MOVE '03'      DBASE            ***********
+     C                     MOVE 'AOCUSTR0'DBFILE           * DBERR 3 *
+     C                     OUT  LDA                        ***********
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Write address
+     C           BBCNA1    IFNE *BLANKS
+     C                     WRITEADD
+     C                     ELSE
+     C                     WRITEADD1
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *
+     C/EJECT
+      *****************************************************************
+      *   SPLF  - Call ZSFILE                                         *
+      *   Called by - Initial process                                 *
+      *****************************************************************
+      *
+     C           SPLF      BEGSR
+     C                     CALL 'ZSFILE'  PLIST3
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      **************************************************************************
+      *   *PSSR - error handling                                               *
+      *   Called by - INIT initial process                                     *
+      **************************************************************************
+      *
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+** CPY@   **      Object copyright
+(c) Misys International Banking Systems Ltd. 2001

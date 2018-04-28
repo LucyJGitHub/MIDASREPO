@@ -1,0 +1,109 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP CHGJOBDLBL validity checker')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC0126VC - Validity checker for CHGJOBDLBL                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP025             Date 01Dec03              */
+/*       Prev Amend No. CSC017  *CREATE    Date 25Feb03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP025 - MidasPlus Bridge changes.                          */
+/*       CSC017 - Changes for 250 library list                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYSPREFIX &MODE)
+ 
+             DCL        VAR(&SYSPREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/* Create data area to store whether it is zone or global layer. */                       /*CUP025*/
+             DLTDTAARA  DTAARA(QTEMP/LAYER)                                               /*CUP025*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP025*/
+             CRTDTAARA  DTAARA(QTEMP/LAYER) TYPE(*CHAR) LEN(1) +
+                          VALUE(' ') TEXT('Temporary data area for +
+                          CHGJOBDLBL')                                                    /*CUP025*/
+ 
+/**Check*that*XLIB*exists.**/ /*                                                       */ /*CUP025*/
+/**********  CHGVAR     VAR(&XLIB) VALUE(&SYSPREFIX *TCAT 'XLIB')                      */ /*CUP025*/
+/**********  CHKOBJ     OBJ(&XLIB) OBJTYPE(*LIB) AUT(*USE)                             */ /*CUP025*/
+/**********  MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)                                */ /*CUP025*/
+/**********     SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +                 */ /*CUP025*/
+/**********                  Library' *BCAT &XLIB *BCAT 'does not +                    */ /*CUP025*/
+/**********                  exist or you have insufficient +                          */ /*CUP025*/
+/**********                  authority') MSGTYPE(*DIAG)                                */ /*CUP025*/
+/**********     CHGVAR     VAR(&ERROR) VALUE(Y)                                        */ /*CUP025*/
+/**********     GOTO       CMDLBL(ABNOR)                                               */ /*CUP025*/
+/**********  ENDDO                                                                     */ /*CUP025*/
+ 
+/* Check whether an XLIB or GXLIB exists. */                                              /*CUP025*/
+             CHGVAR     VAR(&XLIB) VALUE(&SYSPREFIX *TCAT 'XLIB')                         /*CUP025*/
+             CHKOBJ     OBJ(&XLIB) OBJTYPE(*LIB) AUT(*USE)                                /*CUP025*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP025*/
+                CHGVAR     VAR(&XLIB) VALUE(&SYSPREFIX *TCAT 'GXLIB')                     /*CUP025*/
+                CHKOBJ     OBJ(&XLIB) OBJTYPE(*LIB) AUT(*USE)                             /*CUP025*/
+                MONMSG     MSGID(CPF9801) EXEC(DO)                                        /*CUP025*/
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Neither an XLIB or GXLIB exists with +
+                                prefix' *BCAT &SYSPREFIX) MSGTYPE(*DIAG)                  /*CUP025*/
+                   CHGVAR     VAR(&ERROR) VALUE(Y)                                        /*CUP025*/
+                   GOTO       CMDLBL(ABNOR)                                               /*CUP025*/
+                ENDDO                                                                     /*CUP025*/
+                MONMSG     MSGID(CPF9802) EXEC(DO)                                        /*CUP025*/
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                You have insufficient authority to' *BCAT +
+                                &XLIB) MSGTYPE(*DIAG)                                     /*CUP025*/
+                   CHGVAR     VAR(&ERROR) VALUE(Y)                                        /*CUP025*/
+                   GOTO       CMDLBL(ABNOR)                                               /*CUP025*/
+                ENDDO                                                                     /*CUP025*/
+                CHGDTAARA  DTAARA(QTEMP/LAYER) VALUE('G')                                 /*CUP025*/
+                GOTO       CMDLBL(CHECKJOBD)                                              /*CUP025*/
+             ENDDO                                                                        /*CUP025*/
+             MONMSG     MSGID(CPF9802) EXEC(DO)                                           /*CUP025*/
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                             You have insufficient authority to' *BCAT +
+                             &XLIB) MSGTYPE(*DIAG)                                        /*CUP025*/
+                CHGVAR     VAR(&ERROR) VALUE(Y)                                           /*CUP025*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CUP025*/
+             ENDDO                                                                        /*CUP025*/
+             CHGDTAARA  DTAARA(QTEMP/LAYER) VALUE('Z')                                    /*CUP025*/
+ 
+ CHECKJOBD:                                                                               /*CUP025*/
+/* Check that, if specified, that the job description exists. */
+             IF         COND(&MODE *NE '*CORE' *AND &MODE *NE '*ALL' +
+                          *AND &MODE *NE '*ONEBYONE') THEN(DO)
+                CHKOBJ     OBJ(&XLIB/&MODE) OBJTYPE(*JOBD) AUT(*ALL)
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000 +
+                                Job description' *BCAT &MODE *TCAT '/' +
+                                *TCAT &XLIB *BCAT 'does not exist or you +
+                                have insufficient authority') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE(Y)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+ABNOR:
+/*  Send message to cause CPF tp pass earlier messages back         */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+END:
+             ENDPGM

@@ -1,0 +1,225 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CPP for CFGSQLSEQ')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities module                                    */
+/*                                                                   */
+/*       UTC000019 - CPP for CFGSQLSEQ                               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. AR663527 *CREATE   Date 10Jan11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR663527 - RAT Transaction reference number should be a     */
+/*                  daily incremental number (Child: AR663528)       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SEQ &RESTART &INC &CACHE &ORDER +
+                          &MINVAL &MAXVAL &CYCLE &INCBY)
+ 
+             DCL        VAR(&SEQ) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&RESTART) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&INC) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&CACHE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ORDER) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&MINVAL) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MAXVAL) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&CYCLE) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&INCBY) TYPE(*CHAR) LEN(12)
+ 
+             DCL        VAR(&SEQNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SEQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RESTARTNON) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&RESTARTNOA) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&INCNOB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&INCNON) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&INCNOA) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&INCORDER) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&CCHNBRN) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&CCHNBRA) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MINVALN) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&MINVALA) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MAXVALN) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&MAXVALA) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SQL_STR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&CHANGE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/** Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/** Create source file for running SQL statements. */
+ 
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for CFGSQLSEQ')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+             CHGVAR     VAR(&SEQNAME) VALUE(%SST(&SEQ 1 10))
+             CHGVAR     VAR(&SEQLIB) VALUE(%SST(&SEQ 11 10))
+             IF         COND(&SEQLIB *EQ '*LIBL') THEN(DO)
+                RTVOBJD    OBJ(&SEQNAME) OBJTYPE(*DTAARA) RTNLIB(&RTNLIB)
+                CHGVAR     VAR(&SEQLIB) VALUE(&RTNLIB)
+             ENDDO
+ 
+RESTART:
+             CHGVAR     VAR(&RESTARTNON) VALUE(%BIN(&RESTART))
+             IF         COND(&RESTARTNON *NE 1000000) THEN(DO)
+                CHGVAR     VAR(&RESTARTNOA) VALUE(&RESTARTNON)
+                CHGVAR     VAR(&CHANGE) VALUE('Y')
+                CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                             &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                             'restart with' *BCAT &RESTARTNOA *TCAT ';')
+                CALL       PGM(UTWRTSQL) PARM(&SQL_STR '*WRTIE')
+             ENDDO
+ 
+INCREMENT:
+             IF         COND(&INC *NE '*SAME') THEN(DO)
+                CHGVAR     VAR(&CHANGE) VALUE('Y')
+                CHGVAR     VAR(&INCNOB) VALUE(%SST(&INCBY 3 2))
+                CHGVAR     VAR(&INCNON) VALUE(%BIN(&INCNOB))
+                CHGVAR     VAR(&INCORDER) VALUE(%SST(&INCBY 5 8))
+                IF         COND(&INCORDER *EQ '*DESCEND') THEN(DO)
+                   CHGVAR     VAR(&INCNON) VALUE(&INCNON - (&INCNON * 2))
+                ENDDO
+                CHGVAR     VAR(&INCNOA) VALUE(&INCNON)
+                CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                             &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                             'increment by' *BCAT &INCNOA *TCAT ';')
+                CALL       PGM(UTWRTSQL) PARM(&SQL_STR '*WRTIE')
+             ENDDO
+ 
+CACHE:
+             CHGVAR     VAR(&CCHNBRN) VALUE(%BIN(&CACHE))
+             IF         COND(&CCHNBRN *NE 0) THEN(DO)
+                CHGVAR     VAR(&CHANGE) VALUE('Y')
+                IF         COND(&CCHNBRN *NE 1) THEN(DO)
+                   CHGVAR     VAR(&CCHNBRA) VALUE(&CCHNBRN)
+                   CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                                &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                                'cache' *BCAT &CCHNBRA *TCAT ';')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                                &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                                'no cache;')
+                ENDDO
+                CALL       PGM(UTWRTSQL) PARM(&SQL_STR '*WRTIE')
+             ENDDO
+ 
+ORDER:
+             IF         COND(&ORDER *NE '*SAME') THEN(DO)
+                CHGVAR     VAR(&CHANGE) VALUE('Y')
+                IF         COND(&ORDER *EQ '*ORDER') THEN(DO)
+                   CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                                &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                                'order;')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                                &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                                'no order;')
+                ENDDO
+                CALL       PGM(UTWRTSQL) PARM(&SQL_STR '*WRTIE')
+             ENDDO
+ 
+MINVALUE:
+             CHGVAR     VAR(&MINVALN) VALUE(%BIN(&MINVAL))
+             IF         COND(&MINVALN *NE 1000000) THEN(DO)
+                CHGVAR     VAR(&CHANGE) VALUE('Y')
+                IF         COND(&MINVALN *NE 1111111) THEN(DO)
+                   CHGVAR     VAR(&MINVALA) VALUE(&MINVALN)
+                   CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                                &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                                'minvalue' *BCAT &MINVALA *TCAT ';')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                                &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                                'no minvalue;')
+                ENDDO
+                CALL       PGM(UTWRTSQL) PARM(&SQL_STR '*WRTIE')
+             ENDDO
+ 
+MAXVALUE:
+             CHGVAR     VAR(&MAXVALN) VALUE(%BIN(&MAXVAL))
+             IF         COND(&MAXVALN *NE 1000000) THEN(DO)
+                CHGVAR     VAR(&CHANGE) VALUE('Y')
+                IF         COND(&MAXVALN *NE 1111111) THEN(DO)
+                   CHGVAR     VAR(&MAXVALA) VALUE(&MAXVALN)
+                   CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                                &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                                'maxvalue' *BCAT &MAXVALA *TCAT ';')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                                &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                                'no maxvalue;')
+                ENDDO
+                CALL       PGM(UTWRTSQL) PARM(&SQL_STR '*WRTIE')
+             ENDDO
+ 
+CYCLE:
+             IF         COND(&CYCLE *NE '*SAME') THEN(DO)
+                CHGVAR     VAR(&CHANGE) VALUE('Y')
+                IF         COND(&CYCLE *EQ '*CYCLE') THEN(DO)
+                   CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                                &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                                'cycle;')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SQL_STR) VALUE('alter sequence' *BCAT +
+                                &SEQLIB *TCAT '/' *TCAT &SEQNAME *BCAT +
+                                'no cycle;')
+                ENDDO
+                CALL       PGM(UTWRTSQL) PARM(&SQL_STR '*WRTIE')
+             ENDDO
+ 
+/** Only perform SQL if a change was requested. */
+ 
+             IF         COND(&CHANGE *EQ 'Y') THEN(DO)
+                RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                             COMMIT(*NONE)
+                MONMSG     MSGID(SQL9010) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                IF         COND(&MSGID *NE ' ') THEN(DO)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                   GOTO       CMDLBL(RCVMSG)
+                ENDDO
+                RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                             MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                             MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+             ENDDO
+ENDPGM:
+             ENDPGM

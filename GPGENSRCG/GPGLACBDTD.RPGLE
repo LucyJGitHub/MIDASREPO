@@ -1,0 +1,148 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Generated Code')                                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GPGLACBDTD - On-Line Update of Global File GZGLACBDTD        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Last Amend No. MD024772           Date 03Feb14               *
+      *  Prev Amend No. MD024513           Date 23Jan14               *
+      *                 MD023837           Date 27Nov13               *
+      *                 MD023713           Date 22Nov13               *
+      *                 CGL135B  *CREATE   Date 10Jul13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD024772 - Problems with Accounting Interface postings and   *
+      *             enquiries. (Recompile)                            *
+      *  MD024513 - Add Description field (30A) to the Accounting     *
+      *             Rules. (Recompile)                                *
+      *  MD023837 - Triggers on tables GLACMNTD, GLACBHTD, GLACBDTD   *
+      *             failed                                            *
+      *  MD023713 - Synchronization error for GLACBDTD and GLACMNTD   *
+      *             (Recompile)                                       *
+      *  CGL135B - Accounting Rules Process                           *
+      *                                                               *
+      *****************************************************************
+ 
+O    FGZGLACBDI1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
+O    F                                     USROPN
+O    FGZGLACBDTDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
+O    F                                     RENAME(GLACBDD0    :W_GLACBDD0     )
+O    F                                     USROPN
+O
+O    D Z_GLACBDTD    E DS                  EXTNAME(GZGLACBDTD)
+O    D G_GLACBDTD    E DS                  EXTNAME(GZGLACBDTD) PREFIX(G_)
+ 
+      * ENTRY PARAMETERS
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    I#RTCD            7
+     C                   PARM                    I#ERMS           50
+     C                   PARM                    I#ZONE           10
+     C                   PARM                    I#BFAF            1
+     C                   PARM                    I#TRAP            1
+     C                   PARM                    I#BIMG         4000
+     C                   PARM                    I#AIMG         4000
+O
+O     * Global File Updates
+O
+O    C     I#BFAF        IFEQ      'B'
+O    C                   MOVEL     I#BIMG        Z_GLACBDTD
+O    C                   ELSE
+O    C                   MOVEL     I#AIMG        Z_GLACBDTD
+O    C                   ENDIF
+Z    C**********         MOVEL     I#ZONE        BDZONE                                     MD023837
+Z    C                   MOVEL     I#ZONE        BDZON1                                     MD023837
+O
+O    C     K_GZGLACBDI1  CHAIN     GLACBDD0                           99
+O
+O     * 'Before'
+O
+O    C     I#BFAF        IFEQ      'B'
+O    C  N99              DELETE    GLACBDD0
+O    C                   ELSE
+O
+O     * 'After'
+O
+O    C                   CLEAR                   G_GLACBDTD
+O    C                   MOVEL     Z_GLACBDTD    G_GLACBDTD
+O     * Fix Data
+     C                   CALLB     'GPFIXGDTA'
+O    C                   PARM                    I#ZONE
+O    C                   PARM      'GZGLACBDTD'  I#FILE           10
+O    C                   PARM      G_GLACBDTD    IO#BUFFER      4000
+O    C                   MOVEL     IO#BUFFER     G_GLACBDTD
+O     * Update
+O    C     *IN99         IFEQ      *OFF
+O    C                   UPDATE    GLACBDD0
+O    C                   ELSE
+O    C                   WRITE     W_GLACBDD0
+O    C                   ENDIF
+O    C                   ENDIF
+ 
+     C                   RETURN
+ 
+     C/SPACE 5
+      ********************************************************************
+      * *INZSR - Initial subroutine called automatically at program start
+      ********************************************************************
+     C     *INZSR        BEGSR
+O
+O     * Open for commit?
+O
+O    C                   CALL      'GPCOPN4COM'
+O    C                   PARM                    D_COM             1
+O    C                   OPEN      GZGLACBDI1
+O    C                   OPEN      GZGLACBDTD
+O
+O     * Key lists
+O
+O    C     K_GZGLACBDI1  KLIST
+     C                   KFLD                    BDZON1                                     MD023837
+O    C                   KFLD                    BDBTID
+     C                   KFLD                    BDFOTR                                     MD023837
+ 
+     C                   ENDSR
+      ********************************************************************
+      /SPACE 5
+      *********************************************************************
+      * *PSSR  --- ABNORMAL ERROR CONDITIONS
+      *********************************************************************
+     C     *PSSR         BEGSR
+ 
+     C     W#RUN         IFEQ      *BLANKS
+ 
+     C                   MOVE      'Y'           W#RUN             1
+ 
+     C                   MOVEL     '*ERROR'      I#RTCD
+     C                   MOVE      '1'           *INU7
+     C                   MOVE      '1'           *INU8
+ 
+     C                   DUMP
+      *
+      * If no identified cause of error
+      *
+     C     I#ERMS        IFEQ      *BLANK
+     C                   EVAL      I#ERMS = 'UNEXPECTED ERROR'
+     C                   ENDIF
+      *
+      * Log an error on the error log
+      *
+     C                   CLEAR                   BUFFER
+     C                   EVAL      BUFFER = I#ERMS
+     C                   CALL      'GPWRTELOG'
+     C                   PARM                    BUFFER         4000
+ 
+     C                   SETON                                        LRU7U8
+     C                   RETURN
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *********************************************************************

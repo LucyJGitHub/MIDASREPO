@@ -1,0 +1,102 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Forecast Balance Enquiry')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - General Ledger Module                            */
+/*                                                                   */
+/*       GLC000595 - CL Component for Forecast Balance Enquiry       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD023411 *CREATE   Date 14Nov13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD023411 - Missed out program supposedly for Subsidiaries   */
+/*                  Daily Sweeping Forecast                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MBIN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/*/COPY MLCPYSRC,MLCOVRDCL                                    */
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVDTAARA  DTAARA(RUNDAT (13 1)) RTNVAR(&MBIN)
+ 
+/*   CREATE AND SET UP USER DATA AREA    */
+ 
+             IF         COND(&MBIN *EQ 'Y') THEN(CALL PGM(SFC0400))
+ 
+             CHKOBJ     OBJ(QTEMP/ZMUSER) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+             CALL       PGM(ZMUSER) PARM(&ERRORC &ZMUSER)
+             IF         COND(&ERRORC *NE 0) THEN(DO)
+             SNDPGMMSG MSG('Default Branch or Department not valid') +
+                       TOPGMQ(*EXT) MSGTYPE(*INFO)
+             SIGNOFF    LOG(*LIST)
+             MONMSG     MSGID(CPF0000) /* Monitor here to prevent +
+                          error during re-routing of job */
+             ENDDO
+             ENDDO
+ 
+/*/COPY MLCPYSRC,MLCOVROVR                                    */
+ 
+/* Create the Midas Information Screen data area */
+ 
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ') TEXT('Midas SC Midas +
+                          information screen data')
+             MONMSG     MSGID(CPF1023)
+ 
+/* Create the data area ZMITEM in QTEMP                       */
+ 
+             CRTDTAARA  DTAARA(QTEMP/ZMITEM) TYPE(*CHAR) LEN(10) +
+                          VALUE('          ') TEXT('Midas SF +
+                          Unique Menu Item Code')
+             MONMSG     MSGID(CPF1023)
+ 
+ 
+             CALL       PGM(GL000595)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(*LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC000595 ended abnormally - see job +
+                          log') TOPGMQ(*EXT)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             DMPCLPGM
+             ENDDO
+ 
+END:
+ 
+             ENDPGM

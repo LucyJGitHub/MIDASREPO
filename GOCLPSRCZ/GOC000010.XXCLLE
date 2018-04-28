@@ -1,0 +1,87 @@
+/*********************************************************************/
+/*S*D****CLPBASEMOD***************************************************/                   /*CCB023*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       CLLE/ GOC000010 - Extract country management limit exposure */
+/*                         From Equation - control                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. CCB023 *REDUNDANT Date 06Aug12               */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CRE026  *CREATE    Date 24May06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*       CRE026 - Consumer Banking                                   */
+/*                                                                   */
+/*********************************************************************/
+ 
+            PGM
+ 
+            DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGJOB SWS(00000000)
+ 
+/* Clear Management Limit Country Exposure Table */
+ 
+             CLRPFM     FILE(T_MLEQCE)
+ 
+/* Call, to clear Management Limit Country Exposure Audit Table */
+ 
+             CALL       PGM(GO000012)
+ 
+/* error */
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call to Extract country management limit exposure from Equation */
+ 
+             CALL       PGM(GO000010)
+ 
+/* error */
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            GOC000010 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ MRUNQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+                SNDPGMMSG  MSGID(MEM5003) MSGF(MIDAS) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+END:
+             ENDPGM

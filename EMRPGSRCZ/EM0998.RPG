@@ -1,0 +1,153 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Keep Track in Batch Process')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Keep Track Module                                    *
+      *                                                               *
+      *  EM0998 - Keep Track in EM Batch Process                      *
+      *                                                               *
+      *  Function:  This program uses to write a record in a spy      *
+      *  file EMTRCKPD.                                               *
+      *                                                               *
+      *  Called By: any batch program in EM which need to trap        *
+      *  abnormal cases without stopping its own running.             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. CTI002  *CREATE    Date 16SEP98               *
+      *  Prev Amend No.                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (fix details)                                       *
+      *                                                               *
+      *****************************************************************
+     FEMTRCKPDO   E                    DISK                      A
+     F                                              KCOMIT
+      /EJECT
+     F*****************************************************************
+     F*   INDICATORS USED                                             *
+     F*     50           NOT FIRST CYCLE                              *
+     F*     91           OUTPUT ERROR                                 *
+     F*****************************************************************
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      /COPY EMCPYSRC,EM0998I001
+      **  Data Structure for input/output parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#0998
+      *
+     C           *IN50     IFEQ '0'
+     C                     SETON                     50
+      *
+      ** Set up copyright parameter
+      *
+     C           *NAMVAR   DEFN           LDA   256
+     C                     MOVEACPY@      CPY2@  80
+     C                     END
+      *
+     C           P#INLR    IFEQ '0'
+     C                     EXSR RTVMSG
+     C                     WRITEEMTRCK                 91
+     C           *IN91     IFEQ '1'
+      ** Data base error in file EMTRACK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD01        DBASE            ***************
+     C                     MOVEL'EMTRCKPD'DBFILE           *DB ERROR NNN *
+     C                     MOVELMSGID     DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     CLEARPGMN
+     C                     CLEARMSGID
+     C                     CLEARP#MSDA
+     C                     CLEARP#MSGF
+     C                     RETRN
+     C                     ELSE
+     C                     SETON                     LR
+     C                     END
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RTVMSG - Retrieve a message to fill field MSGDTA             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  FCRVMGC - Retrieve a message                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RTVMSG    BEGSR
+     C                     CALL 'FCRVMGC'
+     C                     PARM           P#RTN   7
+     C                     PARM           MSGID
+     C                     PARM           P#MSGF
+     C                     PARM           P#MSDA
+     C           MSGDAT    PARM           P#MSTX132
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

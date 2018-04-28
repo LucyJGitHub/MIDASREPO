@@ -1,0 +1,151 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Convert interest rate to SWIFT format.')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - MESSAGE MAINTENANCE UTILITIES.
+     F*                                                              *
+     F*  ZM0010 - INTEREST RATE CONVERSION.                          *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*        COMPANY CONFIDENTIAL.                                 *
+     F*                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO.000000         DATE.00/00/00                  *
+     F*                                                              *
+     F****************************************************************
+     F*  C R E A T I O N  P A R A M E T E R S.                       *
+     F*                                                              *
+     F*                                                              *
+     F****************************************************************
+     F* PURPOSE.                                                     *
+     F*                                                              *
+     F*  To convert the exchange rate (ZINRT) (11,7) to SWIFT        *
+     F*  input format (12A).                                         *
+     F*                                                              *
+     F*  1.As a decimal comma is to be inserted.                     *
+     F*  2.Leading and trailing zeros must be blanked.               *
+     F*  3.The decimal comma must have at least one leading digit.   *
+     F*  4.Output is 12A , left adjusted.                            *
+     F****************************************************************
+     F*                                                              *
+     F* FUNCTION OF INDICATORS.                                      *
+     F*                                                              *
+     F* 90  GENERAL WORK - Deleting further leading zeros.           *
+     F*                    and trailing zeros.                       *
+     F* 91  GENERAL WORK -  Leading character is a ','.              *
+     F*                                                              *
+     F****************************************************************
+     E*
+     E** COPYRIGHT STATEMENT ARRAY.
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAY USED IN CONVERSION
+     E*
+     E                    ZIA        12  1
+      /EJECT
+     E****************************************************************
+     I*
+     I** DSTS STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I****************************************************************
+     C*
+     C**  Entry of interest rate.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ZINRT  117
+     C                     PARM           ZSINRT 12
+     C*
+     C                     SETOF                     9091
+     C                     MOVE *BLANKS   ZSINRT
+     C*
+     C** To set up the 12 character field , including decimal comma.
+     C** As the entry field is 11 long, no digits have to be dropped.
+     C** The field is split to 2 work fields and the decimal comma is
+     C** inserted in the appropriate place.
+     C** H04, H05 and H07 are work fields.
+     C*
+     C                     MOVELZINRT     H04     4
+     C                     MOVE ZINRT     H07     7
+     C                     MOVELH04       H05     5
+     C                     MOVE ','       H05
+     C                     MOVELH05       ZIAL   12
+     C                     MOVE H07       ZIAL
+     C*
+     C** Blank out of trailing zeros.
+     C** Any zeros after the decimal comma are removed.Indicator 90
+     C** is set on for a trailing zero. If any other digit is found
+     C** the processing of trailing zeros terminates.
+     C*
+     C                     MOVEAZIAL      ZIA
+     C                     Z-ADD12        ZI      20
+     C*
+     C           ZIA,ZI    IFEQ '0'
+     C                     MOVE '1'       *IN90
+     C                     END
+     C*
+     C           *IN90     DOWEQ'1'
+     C                     MOVE '0'       *IN90
+     C                     MOVE ' '       ZIA,ZI
+     C                     SUB  1         ZI
+     C           ZIA,ZI    IFEQ '0'
+     C                     MOVE '1'       *IN90
+     C                     END
+     C                     END
+     C*
+     C** Blank out all leading zeros leaving at least one leading
+     C** integer.  Any remaining leading zeros are dropped,except
+     C** if there is one directly proceeding the decimal comma.
+     C** This is retained.
+     C*
+     C                     Z-ADD1         ZI
+     C                     SETOF                     9091
+     C*
+     C           *IN90     DOUEQ'0'
+     C*
+     C           ZIA,ZI    IFEQ '0'
+     C           ZIA,ZI    OREQ ' '
+     C                     MOVE '1'       *IN90
+     C                     ELSE
+     C                     MOVE '0'       *IN90
+     C                     END
+     C*
+     C           *IN90     IFEQ '0'
+     C           ZIA,ZI    ANDEQ','
+     C                     MOVE '1'       *IN91
+     C                     END
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVE ' '       ZIA,ZI
+     C                     ADD  1         ZI
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN91     IFEQ '1'
+     C           ZI        SUB  1         ZI
+     C                     MOVE '0'       ZIA,ZI
+     C                     END
+     C*
+     C** Move to a 12A SWIFT format field for output.
+     C*
+     C                     MOVE *BLANKS   ZSINRT 12
+     C                     MOVEAZIA,ZI    ZSINRT
+     C*
+     C**  Termination Processing.
+     C*
+     C                     SETON                     LR
+     C*
+     C**********************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

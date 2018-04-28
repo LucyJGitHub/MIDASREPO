@@ -1,0 +1,1094 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CF DL confirmation status enquiry')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - CONFIRMATION MATCHING                                *
+      *                                                               *
+      *   CF0189 - DEALING CONFIRMATIONS STATUS ENQUIRY               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CMG003             Date 04Oct12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 113352             Date 13Feb97               *
+      *                 053596             Date 10Nov97               *
+      *                  S01453            DATE 13DEC93               *
+      *                  S01310            DATE 06DEC90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CMG003 - SWIFT MT600 Message Generation                      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *   113352 - RE-COMPILE OVER CHANGES IN MGOREFPD                *
+      *   053596 - Include confirmations with status '00' - No        *
+      *            Feedback Yet - in the enquiry.  Note - this pgm    *
+      *            processes the confirmation status using the        *
+      *            corresponding element in array ARY; I have used    *
+      *            element 10 for confirmations with feedback status  *
+      *            '00' as element 0 is not allowed.                  *
+      *   S01453 - Margin and FX Positions/Points and Base currency   *
+      *            Positions/Points added to FX input (Recompiled)    *
+      *   S01310 - RE WRITTEN FOR SWIFT RATIONALISATION               *
+      *                                                               *
+      *****************************************************************
+     FCF0189DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE CF0189F5
+     F                                              KINFDS INFDS
+     FMGOREFL1IF  E           K        DISK
+     FMSIXI2L4IF  E           K        DISK
+     FMGOREFLVIF  E           K        DISK
+     F            MGOREFD0                          KRENAMEMGOREFDF
+     FDEALS   IF  E           K        DISK
+     FCFFEEDL0IF  E           K        DISK
+     FSDCUSTL0IF  E           K        DISK
+     FSDBANKPDIF  E                    DISK
+     FSDBRCHL0IF  E           K        DISK
+     FMUSER   IF  E           K        DISK
+      *
+      * ID C  F  H  L    Function of indicators
+      * 01               STATUS SELECTION ERROR ON 01
+      * 02               STATUS SELECTION ERROR ON 02
+      * 10               STATUS SELECTION ERROR ON 00                     053596
+      * 20               SFLDSP
+      * 21               SFLDSPCTL
+      * 22               ROLLUP PAST LAST SUBFILE RECORD
+      * 23               ROLLUP
+      * 24               PROTECT SELECTION SCREEN
+      * 30               EOF MGOREFL1
+      * 30               EOF MGOREFLV
+      * 31               ERROR CFFEEDL0
+      * 32               ERROR DEALS
+      * 33               ERROR MSIXI2L4
+      * 33               ERROR MSIXI2LB
+      * 34               ERROR SDBANKPD
+      * 40               SCREEN ERROR
+      * 43               COUNTERPARTY SELECTION ERROR
+      * 44               BROKER SELECTION ERROR
+      * 46               STATUS NOT IN TAB1/2
+      * 50               STATUS SELECTION ERROR ON 50
+      * 51               STATUS SELECTION ERROR ON 52
+      * 52               STATUS SELECTION ERROR ON 52
+      * 53               STATUS SELECTION ERROR ON 53
+      * 54               STATUS SELECTION ERROR ON 54
+      * 97               STATUS SELECTION ERROR ON 97
+      * 98               DATE FORMAT = M
+      * 99               STATUS SELECTION ERROR ON 99
+      * U7U8LR           DB ERROR
+      * KC               F3
+      * KL               F12
+      *
+     E                    ARY        99  1               STATUS
+     E                    MSGA    1  12 78               MSGS
+     E                    TAB1    1  10  2 0 TAB2   15   TEXTS            053596
+     E********************TAB1    1   9  2 0 TAB2   15   TEXTS            053596
+     E                    ZYDY    4   4  4 0             ZDATE1/2
+     E                    ZMDY   13  13  3 0             ZDATE1/2
+     E                    ZMNM   12  12  3               ZDATE2
+     E                    CPY@    1   1 80
+      *
+     IMSIXI2D0
+     I              MTPY                            MTPYX
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+      **  Workstation Id
+      *
+     IINFDS       DS
+     I                                    B 378 3790LSTRRN
+      **  Last subfile start RRN
+      *
+     I@SFDN       DS                          1  16
+     I I            'DL'                      1   2 @A
+     I                                        3   8 SFDN
+      **  Deal number selection
+      *
+     I            DS
+     I                                        1   2 @SLT
+     I                                        1   1 SFCP
+     I                                        2   2 SFBK
+      **  Counterparty, broker selection
+      *
+     I            DS
+     I                                        1  99 ARY
+     I                                        1   1 SF01
+     I                                        2   2 SF02
+     I                                       10  10 SF00                  053596
+     I                                       50  50 SF50
+     I                                       51  51 SF51
+     I                                       52  52 SF52
+     I                                       53  53 SF53
+     I                                       54  54 SF54
+     I                                       97  97 SF97
+     I                                       99  99 SF99
+     I                                        1  99 @ARY
+      **  Feedback status selection
+      *
+     I            DS
+     I                                        1  16 TRNO
+     I                                        3   80DLKY
+     I                                        9  11 SEQ
+      **  Deal number extraction
+      *
+     I            DS
+     I                                        1  78 RCD1
+     I                                        1   6 @DLKY
+     I                                        8  10 @SEQ
+     I                                       12  13 DTYP
+     I                                       17  18 DLST
+     I                                       21  35 @ST1
+     I                                       37  64 MIR
+     I I            'C'                      66  66 @C
+     I                                       69  78 BBBKTX
+      **  First subfile record
+      *
+     I            DS
+     I                                        1  78 RCD2
+     I                                        1   7 @DAT
+     I                                        8  20 TXT3
+     I                                       21  35 @ST2
+     I                                       37  52 BKRF
+     I I            'B'                      66  66 @B
+     I                                       68  72 @BRK
+     I                                       76  78 BRCA
+      **  Second subfile record
+      *                                                                                       CMG003
+     ISCSARD    E DSSCSARDPD                                                                  CMG003
+      ** Switchable Features File                                                             CMG003
+      *                                                                                       CMG003
+     IDSFDY     E DSDSFDY                                                                     CMG003
+      ** Short Data Structure for Access Object                                               CMG003
+      *                                                                                       CMG003
+      *
+     C           MGKY      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           TRNO
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT   - initial process                                    *
+      *   VSEL   - validate counterparty/broker                       *
+      *   VSTS   - validate status                                    *
+      *   SFLE   - subfile processing                                 *
+      *   SFLE0  - multibranch subfile processing                     *
+      *   VFED   - validate feedback                                  *
+      *   DATA   - collect deal details                               *
+      *   ZDATE2 - covert a day number to date format                 *
+      *   *PSSR  - Error processing                                   *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           VSEL validate counterparty/broker                   *
+      *           VSTS validate status                                *
+      *           SFLE subfile processing                             *
+      *           SFLE0 multibranch subfile processing                *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Display selection screen until F3 pressed
+     C           *INKC     DOWEQ'0'                                   1
+      *
+      **  If no errors clear input fields
+     C           *IN40     IFEQ '0'                                   2
+     C                     MOVE *BLANKS   SFDN
+     C                     MOVE *BLANKS   @SLT
+     C                     MOVE *BLANKS   SBCH
+     C                     END                                       E2
+      *
+     C                     SETOF                     24
+     C                     WRITECF0189F3
+     C                     EXFMTCF0189F1
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     404344
+     C                     SETOF                     42
+     C                     MOVE 'Y'       @VLD    1
+      *
+      **  If F3 not pressed validate selection
+     C           *INKC     IFEQ '0'                                   2
+     C                     EXSR VSEL
+      *
+      **  If selection valid
+     C           @VLD      IFEQ 'Y'                                   3
+      *
+      **  If counterparty and broker display subfile
+     C           @SLT      IFEQ 'YY'                                  4
+      *
+     C           MBIN      IFEQ 'Y'                                   5
+     C           SBCH      ANDNE'ALL'
+     C                     EXSR SFLE0
+     C                     ELSE                                      X5
+     C                     EXSR SFLE
+     C                     END                                       E5
+      *
+      **  Display status screen until F3 or F12 pressed
+     C                     ELSE                                      X4
+     C           *INKC     DOWEQ'0'                                   5
+     C           *INKL     ANDEQ'0'
+      *
+      **  If no errors clear input fields
+     C           *IN40     IFEQ '0'                                   6
+     C                     MOVE *BLANKS   ARY
+     C                     END                                       E6
+      *
+     C                     SETON                     24
+     C                     WRITECF0189F3
+     C                     WRITECF0189F1
+     C                     EXFMTCF0189F2
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     40
+     C                     SETOF                     010250
+     C                     SETOF                     10                   053596
+     C                     SETOF                     515253
+     C                     SETOF                     549799
+     C                     MOVE 'Y'       @VLD    1
+      *
+      **  If F3 and F12 not pressed validate status
+     C           *INKC     IFEQ '0'                                   6
+     C           *INKL     ANDEQ'0'
+     C                     EXSR VSTS
+      *
+      **  If status valid display subfile
+     C           @VLD      IFEQ 'Y'                                   7
+      *
+     C           MBIN      IFEQ 'Y'                                   8
+     C           SBCH      ANDNE'ALL'
+     C                     EXSR SFLE0
+     C                     ELSE                                      X8
+     C                     EXSR SFLE
+     C                     END                                       E8
+     C                     END                                       E7
+     C                     END                                       E6
+     C                     END                                       E5
+     C                     END                                       E4
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Initial process                                      *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'CF0189  'DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD
+     C                     READ SDBANKPD                 34
+      *
+     C           *IN34     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD04        DBASE            * DB ERROR 04 *
+     C                     MOVEL'FIRST'   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **  Determine date format (M => MMDDYY)
+     C           BJDFIN    IFEQ 'M'                                   1
+     C                     SETON                     98
+     C                     END                                       E1
+      *
+      **  Access MUSER for user's authority
+     C           USRID     CHAINMUSER                89
+      *
+     C           *IN89     IFEQ '1'                                   1
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE '01'      DBASE
+     C                     MOVE USRID     DBKEY            * DB ERROR 01 *
+     C                     MOVE 'MUSER'   DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      **  Access RUNDAT to find run date & multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C                     IN   DSRUN
+      *
+      **  Seton multibranching indicator
+     C           MBIN      IFEQ 'Y'                                   1
+     C                     SETON                     41
+     C                     END                                       E1
+      *
+      ** Access Switchable Feature details, Check if CMG003 is *ON                            CMG003
+      *                                                                                       CMG003
+     C                     CALL 'AOSARDR0'                                                    CMG003
+     C                     PARM *BLANKS   PRTCD   7                                           CMG003
+     C                     PARM '*VERIFY 'POPTN   7                                           CMG003
+     C                     PARM 'CMG003'  PSARD   6                                           CMG003
+     C           SCSARD    PARM SCSARD    DSFDY                                               CMG003
+      *                                                                                       CMG003
+     C           PRTCD     IFNE *BLANK                                                        CMG003
+     C           PRTCD     ANDNE'*NRF '                                                       CMG003
+     C           *LOCK     IN   LDA                                                           CMG003
+     C                     Z-ADD002       DBASE            **************                     CMG003
+     C                     MOVEL'SCSARDPD'DBFILE           ** DB ERROR **                     CMG003
+     C                     MOVELPSARD     DBKEY            **************                     CMG003
+     C                     OUT  LDA                                                           CMG003
+     C                     EXSR *PSSR                                                         CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C           PRTCD     IFEQ *BLANKS                                                       CMG003
+     C                     MOVE 'Y'       CMG003  1                                           CMG003
+     C                     ELSE                                                               CMG003
+     C                     MOVE 'N'       CMG003                                              CMG003
+     C                     ENDIF                                                              CMG003
+      *                                                                                       CMG003
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VSEL - validate counterparty/broker                         *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           VSEL      BEGSR
+      *
+      **  Counterparty or broker must be selected
+     C           @SLT      IFEQ *BLANKS                               1
+     C                     MOVELMSGA,1    SFMG
+     C                     SETON                     404344
+     C                     MOVE 'N'       @VLD
+     C                     ELSE                                      X1
+      *
+      **  Counterparty selection must be Y, N or blank
+     C           SFCP      IFNE 'Y'                                   2
+     C           SFCP      ANDNE'N'
+     C           SFCP      ANDNE' '
+     C                     MOVELMSGA,1    SFMG
+     C                     SETON                     4043
+     C                     MOVE 'N'       @VLD
+     C                     END                                       E2
+      *
+      **  Broker selection must be Y, N or blank
+     C           SFBK      IFNE 'Y'                                   2
+     C           SFBK      ANDNE'N'
+     C           SFBK      ANDNE' '
+     C                     MOVELMSGA,1    SFMG
+     C                     SETON                     4044
+     C                     MOVE 'N'       @VLD
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      **  Validate branch
+     C           MBIN      IFEQ 'Y'                                   1
+      *
+      **  If branch is blank, set to user's default
+     C           SBCH      IFEQ *BLANKS                               2
+     C                     MOVE DBRN      SBCH
+     C                     END                                       E2
+      *
+     C           SBCH      IFEQ 'ALL'                                 2
+      *
+      **  If user not System Routing Officer and does not have Bank
+      **  level authority issue error message
+     C           BANK      IFNE 'Y'                                   3
+     C           ROUF      ANDNE'Y'
+     C                     ADD  1         W       30
+     C                     MOVELMSGA,10   SFMG
+     C                     SETON                     4042
+     C                     MOVE 'N'       @VLD
+     C                     END                                       E3
+      *
+     C                     ELSE                                      X2
+     C           SBCH      CHAINSDBRCHL0             88
+      *
+     C           *IN88     IFEQ '1'                                   3
+     C                     ADD  1         W       30
+     C                     MOVELMSGA,11   SFMG
+     C                     SETON                     4042
+     C                     MOVE 'N'       @VLD
+      *
+      **  If user not System Routing Officer and does not have Bank
+      **  level authority check authority
+     C                     ELSE                                      X3
+     C           BANK      IFNE 'Y'                                   4
+     C           ROUF      ANDNE'Y'
+      *
+     C                     CALL 'ZVRAT'
+     C                     PARM SBCH      ZBR     3
+     C                     PARM           ACODES  6
+     C                     PARM 0         ERR     10
+      *
+      **  If authorised save action codes, else issue error message
+     C           ERR       IFNE 0                                     5
+     C                     ADD  1         W       30
+     C                     MOVELMSGA,12   SFMG
+     C                     SETON                     4042
+     C                     MOVE 'N'       @VLD
+     C                     END                                       E5
+     C                     END                                       E4
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   VSTS - validate status                                      *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           VSTS      BEGSR
+      *
+     C           @ARY      IFEQ *BLANKS                               1
+     C                     MOVELMSGA,9    SFMG
+     C                     SETON                     400102
+     C                     SETON                     10                   053596
+     C                     SETON                     505152
+     C                     SETON                     535497
+     C                     SETON                     99
+     C                     MOVE 'N'       @VLD
+     C                     ELSE                                      X1
+      *
+      **  Status selection must be Y, N or blank
+     C                     Z-ADD1         X       30
+     C           X         DOWLE99                                    2
+     C           ARY,X     IFNE 'Y'                                   3
+     C           ARY,X     ANDNE'N'
+     C           ARY,X     ANDNE' '
+     C                     MOVELMSGA,2    SFMG
+     C                     MOVE '1'       *IN,X
+     C                     SETON                     40
+     C                     MOVE 'N'       @VLD
+     C                     END                                       E3
+     C           X         IFEQ 2                                     3
+     C                     Z-ADD10        X                               053596
+     C                     ELSE                                      X3   053596
+     C           X         IFEQ 10                                    3   053596
+     C                     Z-ADD50        X
+     C                     ELSE                                      X3
+     C           X         IFEQ 54                                    4
+     C                     Z-ADD97        X
+     C                     ELSE                                      X4
+     C           X         IFEQ 97                                    5
+     C                     Z-ADD99        X
+     C                     ELSE                                      X5
+     C                     ADD  1         X
+     C                     END                                       E6   053596
+     C                     END                                       E5
+     C                     END                                       E4
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SFLE - subfile processing                                   *
+      *   Called by - main process                                    *
+      *   Calls - VFED validate feedback                              *
+      *****************************************************************
+      *
+     C           SFLE      BEGSR
+      *
+      **  Begin reading MGOREFPD at deal number entered
+     C           @SFDN     SETLLMGOREFL1
+      *
+      **  Process only live dealing confirmations
+     C                     MOVE 'N'       @MOK    1
+     C           *IN30     DOUEQ'1'                                   1
+     C           @MOK      OREQ 'Y'
+     C                     READ MGOREFL1                 30
+     C           MODI      IFEQ 'DL'                                  2
+      *
+     C           MTPY      IFEQ '300'                                 3
+     C           MTPY      OREQ '320'
+     C           MTPY      OREQ '321'
+     C           MTPY      OREQ '324'
+     C           MTPY      OREQ '330'
+     C           MTPY      OREQ '350'
+     C           MTPY      OREQ '600'                                                         CMG003
+     C           CMG003    ANDEQ'Y'                                                           CMG003
+     C                     MOVE 'Y'       @MOK
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      **  No confirmations after deal number entered
+     C           *IN30     IFEQ '1'                                   1
+     C                     MOVELMSGA,3    SFMG
+     C                     SETON                     40
+     C                     ELSE                                      X1
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITECF0189F6
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  Perform rollup
+     C           *IN23     DOUEQ'0'                                   2
+      *
+      **  If end of subfile set on message
+     C           *IN30     IFEQ '1'                                   3
+     C                     SETON                     22
+      *
+      **  RRN of first recpord on page
+     C                     ELSE                                      X3
+     C                     Z-ADDRRN       DSPREC
+     C                     Z-ADD0         @CNT    20
+      *
+      **  Fill subfile page
+     C           *IN30     DOWEQ'0'                                   4
+     C           @CNT      ANDLT15
+     C                     EXSR VFED
+      *
+      **  If feedback meets selection criteria write subfile record
+     C           @COK      IFEQ 'Y'                                   5
+     C                     MOVELRCD1      RCD
+     C                     WRITECF0189F5
+     C                     ADD  1         RRN
+     C                     MOVELRCD2      RCD
+     C                     WRITECF0189F5
+     C                     ADD  2         RRN
+     C                     ADD  3         @CNT
+     C                     END                                       E5
+      *
+      **  Process only live dealing confirmations
+     C                     MOVE 'N'       @MOK
+     C           *IN30     DOWEQ'0'                                   5
+     C           @MOK      ANDNE'Y'
+     C                     READ MGOREFL1                 30
+     C           MODI      IFEQ 'DL'                                  6
+     C           MTPY      IFEQ '300'                                 7
+     C           MTPY      OREQ '320'
+     C           MTPY      OREQ '321'
+     C           MTPY      OREQ '324'
+     C           MTPY      OREQ '330'
+     C           MTPY      OREQ '350'
+     C           MTPY      OREQ '600'                                                         CMG003
+     C           CMG003    ANDEQ'Y'                                                           CMG003
+     C                     MOVE 'Y'       @MOK
+     C                     END                                       E7
+     C                     END                                       E6
+     C                     END                                       E5
+     C                     END                                       E4
+     C                     END                                       E3
+      *
+      **  No feedback records selected
+     C           @COK      IFEQ 'N'                                   3
+     C           RRN       ANDEQ1
+     C                     MOVELMSGA,4    SFMG
+     C                     SETON                     40
+     C                     ELSE                                      X3
+      *
+      **  Display subfile until F3, F12 or rollup pressed
+     C           *INKC     DOUEQ'1'                                   4
+     C           *INKL     OREQ '1'
+     C           *IN23     OREQ '1'
+     C                     WRITECF0189F4
+     C                     EXFMTCF0189F6
+     C                     Z-ADDLSTRRN    DSPREC
+     C                     SETOF                     22
+     C                     END                                       E4
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SFLE0 - multibranch subfile processing                      *
+      *   Called by - main process                                    *
+      *   Calls - VFED validate feedback                              *
+      *****************************************************************
+      *
+     C           SFLE0     BEGSR
+      *
+      **  Begin reading MGOREFPD at deal number entered
+     C                     MOVE SBCH      BRCA
+     C                     MOVE @SFDN     TRNO
+     C           MGKY      SETLLMGOREFDF
+      *
+      **  Process only live dealing confirmations
+     C                     MOVE 'N'       @MOK    1
+     C           *IN30     DOUEQ'1'                                   1
+     C           @MOK      OREQ 'Y'
+     C                     READ MGOREFDF                 30
+     C           MODI      IFNE 'DL'                                  2
+     C           BRCA      ORNE SBCH
+     C                     SETON                     30
+     C                     END                                       E2
+      *
+     C           MTPY      IFEQ '300'                                 2
+     C           MTPY      OREQ '320'
+     C           MTPY      OREQ '321'
+     C           MTPY      OREQ '324'
+     C           MTPY      OREQ '330'
+     C           MTPY      OREQ '350'
+     C           MTPY      OREQ '600'                                                         CMG003
+     C           CMG003    ANDEQ'Y'                                                           CMG003
+     C                     MOVE 'Y'       @MOK
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      **  No confirmations after deal number entered
+     C           *IN30     IFEQ '1'                                   1
+     C                     MOVELMSGA,3    SFMG
+     C                     SETON                     40
+     C                     ELSE                                      X1
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITECF0189F6
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  Perform rollup
+     C           *IN23     DOUEQ'0'                                   2
+      *
+      **  If end of subfile set on message
+     C           *IN30     IFEQ '1'                                   3
+     C                     SETON                     22
+      *
+      **  RRN of first recpord on page
+     C                     ELSE                                      X3
+     C                     Z-ADDRRN       DSPREC
+     C                     Z-ADD0         @CNT    20
+      *
+      **  Fill subfile page
+     C           *IN30     DOWEQ'0'                                   4
+     C           @CNT      ANDLT15
+     C                     EXSR VFED
+      *
+      **  If feedback meets selection criteria write subfile record
+     C           @COK      IFEQ 'Y'                                   5
+     C                     MOVELRCD1      RCD
+     C                     WRITECF0189F5
+     C                     ADD  1         RRN
+     C                     MOVELRCD2      RCD
+     C                     WRITECF0189F5
+     C                     ADD  2         RRN
+     C                     ADD  3         @CNT
+     C                     END                                       E5
+      *
+      **  Process only live dealing confirmations
+     C                     MOVE 'N'       @MOK
+     C           *IN30     DOWEQ'0'                                   5
+     C           @MOK      ANDNE'Y'
+     C                     READ MGOREFDF                 30
+     C           MODI      IFNE 'DL'                                  6
+     C           BRCA      ORNE SBCH
+     C                     SETON                     30
+     C                     END                                       E6
+      *
+     C           MTPY      IFEQ '300'                                 6
+     C           MTPY      OREQ '320'
+     C           MTPY      OREQ '321'
+     C           MTPY      OREQ '324'
+     C           MTPY      OREQ '330'
+     C           MTPY      OREQ '350'
+     C           MTPY      OREQ '600'                                                         CMG003
+     C           CMG003    ANDEQ'Y'                                                           CMG003
+     C                     MOVE 'Y'       @MOK
+     C                     END                                       E6
+     C                     END                                       E5
+     C                     END                                       E4
+     C                     END                                       E3
+      *
+      **  No feedback records selected
+     C           @COK      IFEQ 'N'                                   3
+     C           RRN       ANDEQ1
+     C                     MOVELMSGA,4    SFMG
+     C                     SETON                     40
+     C                     ELSE                                      X3
+      *
+      **  Display subfile until F3, F12 or rollup pressed
+     C           *INKC     DOUEQ'1'                                   4
+     C           *INKL     OREQ '1'
+     C           *IN23     OREQ '1'
+     C                     WRITECF0189F4
+     C                     EXFMTCF0189F6
+     C                     Z-ADDLSTRRN    DSPREC
+     C                     SETOF                     22
+     C                     END                                       E4
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VFED - validate feedback                                    *
+      *   Called by - SFLE subfile processing                         *
+      *             - SFLE0 multibranch subfile processing            *
+      *   Calls - DATA collect deal details                           *
+      *****************************************************************
+      *
+     C           VFED      BEGSR
+      *
+      **  Read feedback record
+     C           TRNO      CHAINCFFEEDL0             31
+     C                     MOVE 'N'       @COK    1
+      *
+      **  If counterparty and broker selected
+     C           @SLT      IFEQ 'YY'                                  1
+     C                     MOVE 'Y'       @COK
+     C                     END                                       E1
+      *
+      **  If feedback matches counterparty status selection
+      **   set flag to write subfile record.                              053596
+      **  If counterparty status is '00' - No Feedback Yet - check        053596
+      **   array element 10 as cannot use array element 0.                053596
+     C           *IN31     IFEQ '0'                                   1
+     C           SFCP      IFEQ 'Y'                                   2
+     C***********CPSX      ANDNE0                                         053596
+      *                                                                   053596
+     C           CPSX      IFEQ 0                                         053596
+     C                     Z-ADD10        X                               053596
+     C                     ELSE                                           053596
+     C                     Z-ADDCPSX      X
+     C                     END                                            053596
+      *                                                                   053596
+     C           ARY,X     IFEQ 'Y'
+     C                     MOVE 'Y'       @COK
+     C                     END                                       E2
+     C                     END                                       E3
+      *
+      **  If feedback matches broker status selection
+      **   set flag to write subfile record.                              053596
+      **  If broker status is '00' - No Feedback Yet - check              053596
+      **   array element 10 as cannot use array element 0.                053596
+     C           SFBK      IFEQ 'Y'                                   2
+     C***********BKSX      ANDNE0                                         053596
+      *                                                                   053596
+     C           BKSX      IFEQ 0                                         053596
+     C                     Z-ADD10        X                               053596
+     C                     ELSE                                           053596
+     C                     Z-ADDBKSX      X
+     C                     END                                            053596
+      *                                                                   053596
+     C           ARY,X     IFEQ 'Y'                                   3
+     C                     MOVE 'Y'       @COK
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      **  If feedback record selected
+     C           @COK      IFEQ 'Y'                                   1
+     C                     EXSR DATA
+     C                     END                                       E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   DATA - collect deal details                                 *
+      *   Called by - VFED validate feedback                          *
+      *   Calls - ZDATE2 covert a day number to date format           *
+      *****************************************************************
+      *
+     C           DATA      BEGSR
+      *
+      **  Write 'NO FEEDBACK YET' or appropriate counterparty status
+     C           *IN31     IFEQ '1'                                   1
+     C           CPSX      OREQ 0
+     C                     MOVELMSGA,5    @ST1
+     C                     ELSE                                      X1
+     C           CPSX      LOKUPTAB1      TAB2           46
+     C                     MOVELTAB2      @ST1
+     C                     END                                       E1
+      *
+      **  Write 'NO FEEDBACK YET' or appropriate broker status
+     C           *IN31     IFEQ '1'                                   1
+     C           BKSX      OREQ 0
+     C                     MOVELMSGA,5    @ST2
+     C                     ELSE                                      X1
+     C           BKSX      LOKUPTAB1      TAB2           46
+     C                     MOVELTAB2      @ST2
+     C                     END                                       E1
+      *
+     C                     MOVE DLKY      @DLKY
+     C                     MOVE SEQ       @SEQ
+      *
+      **  Read associated deal record
+     C           DLKY      IFNE @SVDL                                 1
+     C                     MOVELDLKY      @SVDL   60
+     C           DLKY      CHAINDEALS                32
+      *
+      **  If record not found or deleted write '* DEAL DELETED *'
+     C                     MOVE *BLANKS   TXT3
+     C           *IN32     IFEQ '1'                                   2
+     C           RECI      ORNE 'D'
+     C                     MOVELMSGA,8    TXT3
+     C                     END                                       E2
+      *
+      **  If record found on deals file
+     C           *IN32     IFEQ '0'                                   2
+      *
+      **  Convert date to DDMMMYY
+     C                     Z-ADDDDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    @DAT
+      *
+      **  Expand broker details
+     C                     MOVE *BLANKS   @BRK
+     C                     MOVELBRKC      @BRK
+      *
+     C           BRKC      IFEQ 'PHON'                                3
+     C                     MOVEL'PHONE'   @BRK
+     C                     MOVELMSGA,6    @ST2
+     C                     END                                       E3
+      *
+     C           BRKC      IFEQ 'TELX'                                3
+     C                     MOVEL'TELEX'   @BRK
+     C                     MOVELMSGA,6    @ST2
+     C                     END                                       E3
+      *
+     C           BRKC      IFEQ 'SWAP'                                3
+     C           BRKC      OREQ 'MAIL'
+     C                     MOVELBRKC      @BRK
+     C                     MOVELMSGA,6    @ST2
+     C                     END                                       E3
+      *
+     C                     ELSE                                      X2
+      *
+      **  Record not found on deals file so clear deal related fields
+     C                     MOVE *BLANKS   DTYP
+     C                     MOVE *BLANKS   DLST
+     C                     MOVE *BLANKS   @DAT
+     C                     MOVE *BLANKS   @ST2
+     C                     MOVE *BLANKS   @BRK
+     C                     MOVE *BLANKS   MIR
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      **  Write 'CANCEL REQUESTED' or MIR of incoming message
+     C           CNRQ      IFEQ 'Y'                                   1
+     C                     MOVELMSGA,7    MIR
+     C                     ELSE                                      X1
+      **  If message is expected to be found on MSIXI2L4
+     C           *IN31     IFEQ '0'                                   2
+     C           CPSX      IFEQ 50                                    3
+     C           CPSX      OREQ 51
+     C           CPSX      OREQ 52
+     C           CPSX      OREQ 53
+     C           CPSX      OREQ 54
+     C           CPSX      OREQ 99
+     C           CPRF      CHAINMSIXI2L4             33
+      *
+     C           *IN33     IFEQ '1'                                   4
+     C                     MOVELCPRF      MIR
+     C                     END                                       E4
+     C                     END                                       E3
+     C                     END                                       E2
+     C                     END                                       E1
+      *
+      **  Get counterparty's shortname using DECN
+     C                     MOVE DECN      SDKY    6
+     C           SDKY      CHAINSDCUSTL0             34
+      *
+     C           *IN34     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD03        DBASE            * DB ERROR 03 *
+     C                     MOVELSDKY      DBKEY
+     C                     MOVEL'SDCUSTL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ZDATE2 covert a day number to date format                   *
+      *   Called by - DATA collect deal details                       *
+      *****************************************************************
+      *
+     C           ZDATE2    BEGSR
+      *
+      **   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+      *
+      **   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+      *
+      **   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+      *
+      **   DETERMINE YEAR NUMBER.
+      **   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+      *
+      **   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1
+      *
+      **   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+      *
+     C           ZWRK2     SUB  1         ZWRK2
+      *
+      **   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+      *
+      **   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR
+      *
+      **   DETERMINE MONTH NUMBER.
+      **   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+      *
+      **   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+      *
+     C           ZWRK2     SUB  1         ZWRK2
+      *
+     C                     Z-ADDZWRK2     ZMTH    20
+      *
+      **   DETERMINE DAY OF MONTH.
+      **   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+      *
+      **   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20
+      *
+      **   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+      *
+      **   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+      *
+      **   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+      *
+     C           ZDEND2    ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR  - Error processing                                   *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+**  MESSAGES
+001  MUST ENTER 'Y' TO SELECT BY BROKER AND/OR COUNTERPARTY STATUS
+002  ENTER 'Y' TO SELECT OPTION, 'N' OR BLANK TO OMIT
+003  NO CONFIRMATIONS FOUND AFTER SELECTED DEAL NUMBER
+004  NO CONFIRMATIONS MATCH SELECTION CRITERIA
+NO FEEDBACK YET
+NO BROKER
+CANCEL REQUESTED
+*DEAL DELETED*
+009  AT LEAST ONE OPTION MUST BE SELECTED
+010  ROUTING OFFICER OR BANK AUTHORITY REQUIRED FOR BRANCH "ALL"
+011  INVALID BRANCH CODE
+012  USER NOT AUTHORISED TO THE BOOOKING BRANCH
+**  TEXTS
+01WAITING
+02TIMED OUT
+10NO FEEDBACK YET
+50PROPOSED PAIR
+51PAIRED ERROR-O
+52PAIRED ERROR-T
+53PAIRED ERROR-B
+54PROPOSED INVEST
+97NONE EXPECTED
+99PAIRED NO ERROR
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

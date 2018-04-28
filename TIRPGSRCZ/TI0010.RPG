@@ -1,0 +1,2145 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas TI Account opening utility')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas/TI Interface                                   *
+      *                                                               *
+      *  TI0010 - Midas/TI Interface Account Opening Utility          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CRE090             Date 14Feb14               *
+      *  Prev Amend No. AR899028           Date 25Jan12               *
+      *                 AR847269           Date 09Nov11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER042             Date 11May11               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 04Jan10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG14016           Date 21May07               *
+      *                 BUG13929           Date 13May07               *
+      *                 BUG13930           Date 11May07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG6597            Date 04Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3772            Date 27Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 01Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 191086             Date 29May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 185144             Date 19Oct00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 180464             Date 12Jul00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CTI099  *CREATE    Date 07Jul99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE090 - Delay Capitalisation of Interest                    *
+      *  AR899028 - NOSTRO AMAD System errors occured; applied        *
+      *             fix AR847269                                      *
+      *  AR847269 - Column F1DACN not in specified tables (Recompile) *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER042 - Interest Scale Report Correspondence                *
+      *           (Upgrade of FGE178/179) (Recompile)                 *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *           (Recompile)                                         *
+      *  BUG14016 - Automatic Account opened for TI - missing field   *
+      *             Automatic Account opened for TI - missing field   *
+      *  BUG13929 - Account Maintenance error in Account code field   *
+      *  BUG13930 - Automatic account opening for TI - Account        *
+      *             Details incorrect                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG6597 - Ensure value of account suffix is handled properly *
+      *            to avoid duplicate key.  Applied fix 230076.       *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3772 - Return to main screen after creating accounts.     *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  191086 - Expend the field ACCNO to 4 digits.                 *
+      *  185144 - Program amended to ADD contents of ACCNO to NINU.   *
+      *           Z-ADDing corrupts NINU and causes FCOOB in REC74.   *
+      *  180464 - When updating an existing Account, change specified *
+      *           fields rather than do a mass update.                *
+      *  CTI099 - Utility to open accounts for Midas/TI Interface     *
+      *                                                               *
+      *****************************************************************
+     FACCBR   UF  E           K        DISK                      A
+     F            ACCNTABF                          KRENAMEACCNT1
+     F                                              KCOMIT                                  BUG14016
+     FACCNTTI IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACCNT2
+     FSDTIACL0UF  E           K        DISK
+     FTIOPACL1IF  E           K        DISK                           UC
+     FTIOPACPDO   E           K        DISK                           UC
+     FACCNTAC UF  E                    DISK                           UC
+     FGLACNTQDO   E                    DISK                           UC                    BUG13929
+     FTI0010DFCF  E                    WORKSTN
+     F*TI0010P1O**E*****        37     PRINTER                                               BUG3772
+     FTI0010P1O   E             37     PRINTER                        UC                     BUG3772
+      /EJECT
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+     E/COPY WNCPYSRC,TI0010E001
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CMDA    1   1 80
+      ** Array containing QCMDEXC commands.
+      *
+     E                    CUR        30  3
+      ** Array containing currencies
+      *
+     E                    ISO        30  3
+      ** Array containing associated ISO currency codes.
+      *
+     E**********          ACC        30  4                                                    CGL029
+     E                    ACC        30 10                                                    CGL029
+      ** Array containing Account Codes
+      *
+     E                    TIA        30  2
+      ** Array containing TI Account Codes
+      *
+     E                    TYP        30  1
+      ** Array containing Account Types
+      *
+     E                    SUB        30  1
+      ** Array containing Account Sub-types
+      *
+     E                    NAM        30 25
+      ** Array containing Account Names
+      *
+      /SPACE 3
+     IACCNT1
+     I              CCY                             OCCY
+     I              ACOD                            OACOD
+     I              ACSQ                            OACSQ
+     I              A5TIAN                          OTIAN
+     I              A5TIAS                          OTIAS
+     IACCNT2
+     I              RECI                            TRECI                                    BUG6597
+     I              CNUM                            TCNUM                                    BUG6597
+     I              CCY                             TCCY
+     I              ACOD                            TACOD
+     I              ACSQ                            TACSQ
+     I              ZZ006                           TZ006                                    BUG6597
+     I              BRCA                            TBRCA                                    BUG6597
+     I              ATYP                            TATYP                                    BUG6597
+     I              STYP                            TSTYP                                    BUG6597
+     I              MFFQ                            TMFFQ                                    BUG6597
+     I              ACST                            TACST                                    BUG6597
+     I              DACO                            TDACO                                    BUG6597
+     I              DACC                            TDACC                                    BUG6597
+     I              ANAM                            TANAM                                    BUG6597
+     I              LDBL                            TLDBL                                    BUG6597
+     I              CLBL                            TCLBL                                    BUG6597
+     I              STFQ                            TSTFQ                                    BUG6597
+     I              STDY                            TSTDY                                    BUG6597
+     I              LSTD                            TLSTD                                    BUG6597
+     I              NSTD                            TNSTD                                    BUG6597
+     I              LSTP                            TLSTP                                    BUG6597
+     I              CFSB                            TCFSB                                    BUG6597
+     I              LMVD                            TLMVD                                    BUG6597
+     I              EPLB                            TEPLB                                    BUG6597
+     I              EPCB                            TEPCB                                    BUG6597
+     I              YTDB                            TYTDB                                    BUG6597
+     I              GLBT                            TGLBT                                    BUG6597
+     I              ADREF1                          TDREF1                                   BUG6597
+     I              PRFC                            TPRFC                                    BUG6597
+     I              ZZ004                           TZ004                                    BUG6597
+     I              ORED                            TORED                                    BUG6597
+     I              DLIM                            TDLIM                                    BUG6597
+     I              LRCR                            TLRCR                                    BUG6597
+     I              RTCB                            TRTCB                                    BUG6597
+     I              RTLB                            TRTLB                                    BUG6597
+     I              DITM                            TDITM                                    BUG6597
+     I              CITM                            TCITM                                    BUG6597
+     I              ADREF2                          TDREF2                                   BUG6597
+     I              ZZ002                           TZ002                                    BUG6597
+     I              CDIR                            TCDIR                                    BUG6597
+     I              CCIR                            TCCIR                                    BUG6597
+     I              ACNO                            TACNO                                    BUG6597
+     I              RETB                            TRETB                                    BUG6597
+     I              ODSC                            TODSC                                    BUG6597
+     I              ODLN                            TODLN                                    BUG6597
+     I              ODED                            TODED                                    BUG6597
+     I              DIOD                            TDIOD                                    BUG6597
+     I              FACT                            TFACT                                    BUG6597
+     I              FCNO                            TFCNO                                    BUG6597
+     I              EFAC                            TEFAC                                    BUG6597
+     I              HELD                            THELD                                    BUG6597
+     I              MINB                            TMINB                                    BUG6597
+     I              LACD                            TLACD                                    BUG6597
+     I              LISP                            TLISP                                    BUG6597
+     I              RRNM                            TRRNM                                    BUG6597
+     I              DRIB                            TDRIB                                    BUG6597
+     I              DRIS                            TDRIS                                    BUG6597
+     I              DRCD                            TDRCD                                    BUG6597
+     I              DRIC                            TDRIC                                    BUG6597
+     I              DRIF                            TDRIF                                    BUG6597
+     I              DRDY                            TDRDY                                    BUG6597
+     I              NDID                            TNDID                                    BUG6597
+     I              LDID                            TLDID                                    BUG6597
+     I              LDIA                            TLDIA                                    BUG6597
+     I              SDAP                            TSDAP                                    BUG6597
+     I              LPAR                            TLPAR                                    BUG6597
+     I              DIIE                            TDIIE                                    BUG6597
+     I              DAIC                            TDAIC                                    BUG6597
+     I              MADI                            TMADI                                    BUG6597
+     I              GADI                            TGADI                                    BUG6597
+     I              DDIS                            TDDIS                                    BUG6597
+     I              DDIA                            TDDIA                                    BUG6597
+     I              OLDR                            TOLDR                                    BUG6597
+     I              OLDB                            TOLDB                                    BUG6597
+     I              OLDS                            TOLDS                                    BUG6597
+     I              CRIB                            TCRIB                                    BUG6597
+     I              CRIS                            TCRIS                                    BUG6597
+     I              CRCD                            TCRCD                                    BUG6597
+     I              CRIC                            TCRIC                                    BUG6597
+     I              CRIF                            TCRIF                                    BUG6597
+     I              CRDY                            TCRDY                                    BUG6597
+     I              NCID                            TNCID                                    BUG6597
+     I              LCID                            TLCID                                    BUG6597
+     I              LCIA                            TLCIA                                    BUG6597
+     I              SCAP                            TSCAP                                    BUG6597
+     I              LPAP                            TLPAP                                    BUG6597
+     I              CIIE                            TCIIE                                    BUG6597
+     I              CAIC                            TCAIC                                    BUG6597
+     I              MACI                            TMACI                                    BUG6597
+     I              GACI                            TGACI                                    BUG6597
+     I              CDIS                            TCDIS                                    BUG6597
+     I              DCIA                            TDCIA                                    BUG6597
+     I              OLCR                            TOLCR                                    BUG6597
+     I              OLCB                            TOLCB                                    BUG6597
+     I              OLCS                            TOLCS                                    BUG6597
+     I              LCD                             TLCD                                     BUG6597
+     I              CHTP                            TCHTP                                    BUG6597
+     I              TNLU                            TTNLU                                    BUG6597
+     I              BRTCA                           TRTCA                                    BUG6597
+     I              NACSG                           TACSG                                    BUG6597
+     I              R4ACNT                          TR4AC                                    BUG6597
+     I              ENOC                            TENOC                                    BUG6597
+     I              EPNO                            TEPNO                                    BUG6597
+     I              ECFB                            TECFB                                    BUG6597
+     I              LTAB                            TLTAB                                    BUG6597
+     I              LTAC                            TLTAC                                    BUG6597
+     I              LTAS                            TLTAS                                    BUG6597
+     I              HCFB                            THCFB                                    BUG6597
+     I              PTFR                            TPTFR                                    BUG6597
+     I              HLEX                            THLEX                                    BUG6597
+     I              A5TIAC                          TTIAC                                    BUG6597
+     I              A5TIAN                          TTIAN
+     I              A5TIAS                          TTIAS
+     I              EUSB                            TEUSB                                    BUG6597
+     I              IBAN                            TIBAN                                    BUG6597
+     I              IBSEQN                          TSEQN                                    BUG6597
+     I              FRNT                            TFRNT                                    BUG6597
+     I              AFRT                            TAFRT                                    BUG6597
+     I              REPA                            TREPA                                    BUG6597
+     I              REPI                            TREPI                                    BUG6597
+     ISCREEN      DS                                                                         BUG3772
+     I                                        1   3 #1BRCH                                   BUG3772
+     I                                        4   9 #1CUST                                   BUG3772
+     I                                       10  12 #1CY01                                   BUG3772
+     I                                       13  15 #1CY02                                   BUG3772
+     I                                       16  18 #1CY03                                   BUG3772
+     I                                       19  21 #1CY04                                   BUG3772
+     I                                       22  24 #1CY05                                   BUG3772
+     I                                       25  27 #1CY06                                   BUG3772
+     I                                       28  30 #1CY07                                   BUG3772
+     I                                       31  33 #1CY08                                   BUG3772
+     I                                       34  36 #1CY09                                   BUG3772
+     I                                       37  39 #1CY10                                   BUG3772
+     I                                       40  42 #1CY11                                   BUG3772
+     I                                       43  45 #1CY12                                   BUG3772
+     I                                       46  48 #1CY13                                   BUG3772
+     I                                       49  51 #1CY14                                   BUG3772
+     I                                       52  54 #1CY15                                   BUG3772
+     I                                       55  57 #1CY16                                   BUG3772
+     I                                       58  60 #1CY17                                   BUG3772
+     I                                       61  63 #1CY18                                   BUG3772
+     I                                       64  66 #1CY19                                   BUG3772
+     I                                       67  69 #1CY20                                   BUG3772
+     I                                       70  72 #1CY21                                   BUG3772
+     I                                       73  75 #1CY22                                   BUG3772
+     I                                       76  78 #1CY23                                   BUG3772
+     I                                       79  81 #1CY24                                   BUG3772
+     I                                       82  84 #1CY25                                   BUG3772
+     I                                       85  87 #1CY26                                   BUG3772
+     I                                       88  90 #1CY27                                   BUG3772
+     I                                       91  93 #1CY28                                   BUG3772
+     I                                       94  96 #1CY29                                   BUG3772
+     I                                       97  99 #1CY30                                   BUG3772
+     I                                      100 109 #1AC01                                   BUG3772
+     I                                      110 119 #1AC02                                   BUG3772
+     I                                      120 129 #1AC03                                   BUG3772
+     I                                      130 139 #1AC04                                   BUG3772
+     I                                      140 149 #1AC05                                   BUG3772
+     I                                      150 159 #1AC06                                   BUG3772
+     I                                      160 169 #1AC07                                   BUG3772
+     I                                      170 179 #1AC08                                   BUG3772
+     I                                      180 189 #1AC09                                   BUG3772
+     I                                      190 199 #1AC10                                   BUG3772
+     I                                      200 209 #1AC11                                   BUG3772
+     I                                      210 219 #1AC12                                   BUG3772
+     I                                      220 229 #1AC13                                   BUG3772
+     I                                      230 239 #1AC14                                   BUG3772
+     I                                      240 249 #1AC15                                   BUG3772
+     I                                      250 259 #1AC16                                   BUG3772
+     I                                      260 269 #1AC17                                   BUG3772
+     I                                      270 279 #1AC18                                   BUG3772
+     I                                      280 289 #1AC19                                   BUG3772
+     I                                      290 299 #1AC20                                   BUG3772
+     I                                      300 309 #1AC21                                   BUG3772
+     I                                      310 319 #1AC22                                   BUG3772
+     I                                      320 329 #1AC23                                   BUG3772
+     I                                      330 339 #1AC24                                   BUG3772
+     I                                      340 349 #1AC25                                   BUG3772
+     I                                      350 359 #1AC26                                   BUG3772
+     I                                      360 369 #1AC27                                   BUG3772
+     I                                      370 379 #1AC28                                   BUG3772
+     I                                      380 389 #1AC29                                   BUG3772
+     I                                      390 399 #1AC30                                   BUG3772
+     ISDBRCH    E DSSDBRCHPD
+      **  External data structure for Branch Details
+     ISDCUST    E DSSDCUSTPD
+      **  External data structure for Customer Details
+     I              QQDFAC                          QQDFA1                                    CGL029
+     ISDCURR    E DSSDCURRPD
+      **  External data structure for Currency Details
+     ISDISOC    E DSSDISOCPD
+      **  External data structure for ISO/CCY Details
+     ISDACOD    E DSSDACODPD
+      **  External data structure for Account Code Details
+     ISDTIIN    E DSSDTIINPD
+      **  External data structure for TI A/C ICD Details
+     ISDBANK    E DSSDBANKPD
+      **  External data structure for Bank Details
+     IDSFDY     E DSDSFDY
+      **  First data structure for Access Programs, short DS
+      *
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *                                                                                     BUG13930
+     I            DS                                                                        BUG13930
+     I                                        1   3 #BRCA                                   BUG13930
+     I**********                              4   90#CNUM                                   BUG13930
+     I                                        4   9 #CNUM                                   BUG13930
+     I                                       10  12 #CCY                                    BUG13930
+     I                                       13  220#ACOD                                   BUG13930
+     I                                       23  240WACSQ                                   BUG13930
+     I                                        1  34 DSACKY                                  BUG13930
+      *
+     C           KLST1     KLIST
+     C                     KFLD           #BRCA   3
+     C**********           KFLD           #CNUM   60                                          CSD027
+     C                     KFLD           #CNUM   6                                           CSD027
+     C                     KFLD           #CCY    3
+     C*********            KFLD           #ACOD   40                                          CGL029
+     C                     KFLD           #ACOD  100                                          CGL029
+      *
+     C           KLST2     KLIST
+     C                     KFLD           #BRCA   3
+     C                     KFLD           #TNUM   6
+     C                     KFLD           #TSUF   3
+      *
+     C           KLST3     KLIST
+     C                     KFLD           #BRCA   3
+     C                     KFLD           #TNUM   6
+      *                                                                                      BUG6597
+     C           KLST4     KLIST                                                             BUG6597
+     C                     KFLD           #BRCA   3                                          BUG6597
+     C                     KFLD           WTIAN   6                                          BUG6597
+     C                     KFLD           WTIAS   3                                          BUG6597
+      *                                                                                      BUG6597
+     C           KLST5     KLIST                                                             BUG6597
+     C                     KFLD           #BRCA   3                                          BUG6597
+     C                     KFLD           WTIAN   6                                          BUG6597
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     MOVEL'TI0010'  ##PGM
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      *
+      ** Clear Physical File TIOPACPD
+     C                     MOVEACMDA,1    CMD    80
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM 80        CMDLEN 155
+      *
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      * Send information to display file and then display
+     C                     MOVELUSER      SUSER
+     C                     MOVELWSID      SWSID
+      *                                                                                      BUG6597
+      ** Initialise counter fields for new accounts                                          BUG6597
+      *                                                                                      BUG6597
+     C                     Z-ADD0         @@TIAS  40                                         BUG6597
+      *                                                                                      BUG6597
+      ** Initialise KLST4 and KLST5 fields.                                                  BUG6597
+      *                                                                                      BUG6597
+     C                     MOVE *BLANK    WTIAN                                              BUG6597
+     C                     MOVE '999'     WTIAS                                              BUG6597
+      *
+     C           NXTINP    TAG                                                               BUG3772
+     C                     EXSR RESET                                                        BUG3772
+      *                                                                                      BUG3772
+     C                     WRITE#MSGCTL
+     C                     EXFMTTI0010F1
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+     C                     CALL 'AOTIINR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST  'WOPTN   7
+     C           SDTIIN    PARM SDTIIN    DSSDY
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'USR3664' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                       99
+      *
+     C                     ELSE
+      *
+      * If TI A/C code and TI Basic are not found sndusrmsg.
+     C           TIATYP    IFNE *BLANKS
+     C           TIBCNO    ANDNE*BLANKS
+     C                     MOVELTIATYP    WTIACT  2
+     C                     MOVELTIBCNO    WTIBCN  3
+     C                     EXSR #VBRCH
+     C                     EXSR #VCUST
+     C                     EXSR #VCURR
+     C                     EXSR #VACOD
+     C/COPY WNCPYSRC,TI0010C003
+      **Snd msg 'No SP101 A/C's will be set up for this customer as only one currency
+      **has been entered.'
+     C           MSGFLG    IFNE 'Y'
+     C           CCYNUM    IFEQ 1
+     C           SPACC     ANDNE*ZEROS
+      *
+     C                     MOVEL'USR3650' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99
+     C                     MOVEL'Y'       MSGFLG  1
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+      * Send message 'SP101 A/C Type and Basic have not been entered on the ICD'
+     C                     MOVEL'USR3649' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                       99
+     C*
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN99     IFEQ *ON
+     C                     WRITE#MSGCTL
+     C                     EXFMTTI0010F1
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ
+     C                     PARM '*SAME'   ZAPGRL
+     C                     SETOF                     99
+     C                     SETOF                     20
+     C                     SETOF                     21
+     C                     MOVEA'00000000'*IN,31
+     C                     MOVEA'00000000'*IN,39
+     C                     MOVEA'00000000'*IN,47
+     C                     MOVEA'00000000'*IN,55
+     C                     MOVEA'00000000'*IN,63
+     C                     MOVEA'00000000'*IN,71
+     C                     MOVEA'00000000'*IN,79
+     C                     MOVEA'0000'    *IN,87
+      *
+     C                     ELSE
+     C                     MOVEL'1'       *INKC
+     C                     MOVEL'Y'       F3      1
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      * Execute Main Subroutine if F3 not entered
+     C           *INKC     IFEQ *ON
+     C           F3        ANDEQ'Y'
+     C                     Z-ADD0         ACCNO
+     C                     EXSR #MAIN
+      *
+      * Update trailer records in ACCNTAC
+     C                     EXSR #ACCN
+      *
+      * Execute Subroutine to write to Printer File.
+     C                     EXSR #PRTF
+      *                                                                                      BUG3772
+      * Clear messages from program message queue for USR0006 to display first.              BUG3772
+     C                     CALL 'Y2CLMSC'                                                    BUG3772
+     C                     PARM ##PGM     ZAPGMQ                                             BUG3772
+     C                     PARM '*SAME'   ZAPGRL                                             BUG3772
+      *                                                                                      BUG3772
+     C                     MOVEL'USR0006' ZAMSID                                             BUG3772
+     C                     EXSR ZASNMS                                                       BUG3772
+     C                     SETON                     9928                                    BUG3772
+     C                     MOVEL'Y'       MSGFLG  1                                          BUG3772
+     C                     WRITE#MSGCTL                                                      BUG3772
+     C                     EXFMTTI0010F1                                                     BUG3772
+      *                                                                                      BUG3772
+     C           *INKC     IFEQ *OFF                                                         BUG3772
+     C                     GOTO NXTINP                                                       BUG3772
+     C                     ENDIF                                                             BUG3772
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      ********************************************************************
+      * Main Account Opening Process.
+      *
+     C           #MAIN     BEGSR
+      *
+     C                     Z-ADD1         @X
+     C                     Z-ADD1         @Z
+     C                     MOVEL#1BRCH    #BRCA
+     C                     MOVEL#1CUST    #CNUM
+      *
+     C                     MOVEACUR,@X    #CCY
+      *
+     C           #CCY      DOWNE*BLANKS
+      *
+     C**********           MOVEAACC,@Z    #1ACOD  4                                           CGL029
+     C                     MOVEAACC,@Z    #1ACOD 10                                           CGL029
+     C                     MOVEL#1ACOD    #ACOD
+      *
+     C           #ACOD     DOWNE*ZEROS
+      *
+     C           SPACC     IFEQ #ACOD
+     C           INTFLG    ANDEQ'Y'
+     C                     EXSR #SP101
+     C                     ELSE
+      *
+     C           KLST1     CHAINACCBR                24
+      *
+     C           *IN24     IFNE '1'
+      * Account already exists - check for TI Details
+     C           INTFLG    IFEQ 'Y'
+     C                     EXSR EXSTA1
+     C                     ELSE
+     C                     EXSR EXSTA2
+     C                     ENDIF
+      *
+     C                     ELSE
+      * Create New Account with TI Details
+     C                     EXSR NEWACC
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Read the next account code in the array
+     C                     ADD  1         @Z
+     C           @Z        IFLE 30
+     C                     MOVEAACC,@Z    #1ACOD
+     C                     MOVEL#1ACOD    #ACOD
+     C                     ELSE
+     C                     Z-ADD*ZEROS    #ACOD
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      * Reset account code access number for a/c code array.
+     C                     Z-ADD1         @Z
+      *
+      * Read next currency in the array
+     C                     ADD  1         @X
+     C           @X        IFLE 30
+     C                     MOVEACUR,@X    #CCY
+     C                     ELSE
+     C                     MOVEL*BLANKS   #CCY
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR                           #MAIN
+      ********************************************************************                   BUG3772
+      * Reset all fields and indicators for next set of accounts.                            BUG3772
+      *                                                                                      BUG3772
+     C           RESET     BEGSR                                                             BUG3772
+      *                                                                                      BUG3772
+      ** Clear Physical File TIOPACPD                                                        BUG3772
+     C                     MOVEACMDA,1    CMD    80                                          BUG3772
+     C                     CALL 'QCMDEXC'                                                    BUG3772
+     C                     PARM           CMD                                                BUG3772
+     C                     PARM 80        CMDLEN 155                                         BUG3772
+      *                                                                                      BUG3772
+      * Clear messages from program message queue                                            BUG3772
+     C                     CALL 'Y2CLMSC'                                                    BUG3772
+     C                     PARM ##PGM     ZAPGMQ                                             BUG3772
+     C                     PARM '*SAME'   ZAPGRL                                             BUG3772
+     C                     SETOF                     99                                      BUG3772
+     C                     SETOF                     20                                      BUG3772
+     C                     SETOF                     21                                      BUG3772
+     C                     SETOF                     28                                      BUG3772
+     C                     MOVEA'00000000'*IN,31                                             BUG3772
+     C                     MOVEA'00000000'*IN,39                                             BUG3772
+     C                     MOVEA'00000000'*IN,47                                             BUG3772
+     C                     MOVEA'00000000'*IN,55                                             BUG3772
+     C                     MOVEA'00000000'*IN,63                                             BUG3772
+     C                     MOVEA'00000000'*IN,71                                             BUG3772
+     C                     MOVEA'00000000'*IN,79                                             BUG3772
+     C                     MOVEA'0000'    *IN,87                                             BUG3772
+     C                     MOVE *BLANKS   SCREEN                                             BUG3772
+     C                     MOVEL'0'       *INKC                                              BUG3772
+     C                     MOVEL'N'       F3                                                 BUG3772
+      *                                                                                      BUG3772
+     C                     ENDSR                           #RESET                            BUG3772
+      **************************************************************
+      * Determine if TI details have been entered against the existing internal account.
+      * If TI details exist write to TIOPACPD otherwise determine what they should be and
+      * Update ACCNTAB and write to TIOPACPD.
+      *
+     C           EXSTA1    BEGSR
+      *
+      *
+      * If TI details don't exist add these to the relevant files.
+     C           A5TIAC    IFNE 'Y'
+     C                     MOVEL'B'       TOACTN
+      *
+     C                     MOVEATIA,@Z    GDC5AT
+     C                     SETOF                     27
+      *
+     C           GDC5AT    CHAINSDTIACL0             27
+      *
+     C           *IN27     IFEQ *OFF
+      *
+     C           GDBCNO    IFEQ *BLANKS
+     C           '99'      CAT  #1ACOD    WCUST1
+     C                     MOVELWCUST1    GDBCNO
+     C                     Z-ADDAGRDNB    GDLCD
+     C                     MOVEL'A'       GDTYLC
+     C                     UPDAT@TIACL0
+     C                     ELSE
+     C                     MOVELGDBCNO    WCUST1
+     C                     ENDIF
+      *
+     C                     MOVEL@X        @Y
+     C                     MOVEAISO,@Y    WISOC   3
+     C                     MOVELWISOC     WSUFFX  30
+      *
+     C                     ELSE
+     C                     MOVE 'D'       TOACTN
+     C                     ENDIF
+      *
+     C                     MOVEL@X        @Y
+     C                     MOVEAISO,@Y    WISOC   3
+     C                     MOVELWISOC     WSUFFX  30
+      *
+     C                     ELSE
+      * TI Details exist
+     C                     MOVEL'A'       TOACTN
+      * Check what the TI details should be for this account. If they are correct update
+      * TIOPACPD with details otherwise report error.
+      *
+     C                     MOVELOTIAN     XCUST1  6
+     C                     MOVELOTIAS     XSUFFX  30
+      *
+     C                     MOVEATIA,@Z    GDC5AT
+     C                     SETOF                     27
+      *
+     C           GDC5AT    CHAINSDTIACL0             27
+      *
+     C           *IN27     IFEQ *OFF
+     C                     MOVELGDBCNO    WCUST1
+     C                     ENDIF
+      *
+     C                     MOVEL@X        @Y
+     C                     MOVEAISO,@Y    WISOC   3
+     C                     MOVELWISOC     WSUFFX  30
+     C                     ENDIF                                                             BUG6597
+      *
+     C********** XSUFFX    IFEQ WSUFFX                                                       BUG6597
+     C********** XCUST1    ANDEQWCUST1                                                       BUG6597
+     C           XCUST1    IFEQ WCUST1                                                       BUG6597
+     C           A5TIAC    ANDEQ'Y'                                                          BUG6597
+     C                     MOVELOTIAN     WCUST1
+     C                     MOVELOTIAS     WSUFFX
+     C                     ELSE
+     C**********           MOVEL'D'       TOACTN                                             BUG6597
+     C                     MOVEL'B'       TOACTN                                             BUG6597
+     C                     MOVELWCUST1    WTIAN                                              BUG6597
+     C                     EXSR SRTIAS                                                       BUG6597
+     C                     ENDIF
+      *
+     C**********           ENDIF                                                             BUG6597
+      *
+     C                     EXSR #UPDAT
+      *
+     C                     ENDSR                           EXSTA1
+      *
+      *
+      ********************************************************************
+      * Determine if TI details have been entered against the existing external account.
+      * If TI details exist write to TIOPACPD otherwise determine what they should be and
+      * Update ACCNTAB and write to TIOPACPD.
+      *
+     C           EXSTA2    BEGSR
+      *
+     C                     SETOF                     2526
+      *
+     C           A5TIAC    IFNE 'Y'
+      * If TI details don't exist add these to the relevant files.
+     C                     MOVEL'B'       TOACTN
+     C**********           MOVELWCUST     #TNUM                                              BUG6597
+      **********                                                                             BUG6597
+     C********** KLST3     SETLLACCNTTI                  25                                  BUG6597
+      **********                                                                             BUG6597
+     C********** *IN25     IFEQ '1'                                                          BUG6597
+     C**********           Z-ADD1         COUNT                                              BUG6597
+      **********                                                                             BUG6597
+     C********** *IN26     DOUEQ'1'                                                          BUG6597
+     C********** KLST3     READEACCNTTI                  26                                  BUG6597
+     C********** *IN26     IFEQ '0'                                                          BUG6597
+     C**********           MOVELTTIAS     WSUFFX                                             BUG6597
+     C********** WSUFFX    IFEQ COUNT                                                        BUG6597
+     C**********           ADD  1         COUNT                                              BUG6597
+     C**********           ELSE                                                              BUG6597
+     C**********           Z-ADDCOUNT     WSUFFX                                             BUG6597
+     C**********           SETON                     26                                      BUG6597
+     C**********           ENDIF                                                             BUG6597
+      **********                                                                             BUG6597
+     C**********           ELSE                                                              BUG6597
+     C**********           Z-ADDCOUNT     WSUFFX                                             BUG6597
+     C**********           ENDIF                                                             BUG6597
+     C**********           ENDDO                                                             BUG6597
+      **********                                                                             BUG6597
+     C********** WSUFFX    IFGT 999                                                          BUG6597
+      **Account*cannot*be*opened**as*TI*Suffix*is*greater*than*999.                          BUG6597
+     C**********           MOVE 'D'       TOACTN                                             BUG6597
+     C**********           ENDIF                                                             BUG6597
+      **********                                                                             BUG6597
+     C**********           ELSE                                                              BUG6597
+      **********                                                                             BUG6597
+     C**********           MOVEL'001'     WSUFFX                                             BUG6597
+     C**********           ENDIF                                                             BUG6597
+     C                     MOVELWCUST     WTIAN                                              BUG6597
+     C                     EXSR SRTIAS                                                       BUG6597
+      *
+     C                     ELSE
+      * TI Details exist
+     C                     MOVEL'A'       TOACTN
+     C                     MOVELOTIAN     WCUST1
+     C                     MOVELOTIAS     WSUFFX
+     C                     ENDIF
+      *
+      *
+     C                     EXSR #UPDAT
+      *
+     C                     ENDSR                           EXSTA2
+      *
+      ***********************************************************************
+      * Subroutine to create details for new TI account (for both Internal and
+      * External accounts).
+      *
+     C           NEWACC    BEGSR
+      * Create New Account with TI Details
+     C                     MOVELTYP,@Z    WACTY   1
+     C           WACTY     IFNE 'R'
+     C                     MOVEL'C'       TOACTN
+     C                     MOVE 'D'       RECI
+      *
+      * If internal account use s/r TIDTL1 to calculate TI details otherwise
+      * use s/r TIDTL2.
+      *
+     C           INTFLG    IFEQ 'Y'
+     C                     EXSR TIDTL1
+     C**********           ELSE                                                              BUG6597
+     C**********           EXSR TIDTL2                                                       BUG6597
+     C                     ENDIF
+      *                                                                                      BUG6597
+     C                     MOVELWCUST1    WTIAN                                              BUG6597
+     C                     EXSR SRTIAS                                                       BUG6597
+      *
+     C                     EXSR #NEW
+      *
+     C                     ELSE
+     C                     MOVEL'D'       TOACTN
+     C                     ENDIF
+      *
+     C                     EXSR #UPDAT
+     C                     ENDSR                           NEWACC
+      *
+      *
+      ***********************************************************************
+      * Subroutine to creates new details for new TI Accounts
+      * (used for both Internal and External and SP101)
+      *
+     C           #NEW      BEGSR
+      *
+     C/COPY WNCPYSRC,TI0010C001
+      *
+     C                     MOVEL#1CUST    #CNUM
+     C**********           MOVEL#1CUST    WCUSTA  60                                          CSD027
+     C                     MOVEL#1CUST    WCUSTA  6                                           CSD027
+      *
+     C           KLST1     SETGTACCBR
+     C                     READPACCBR                    29
+     C           #1BRCH    IFNE BRCA
+     C           WCUSTA    ORNE CNUM
+     C           #CCY      ORNE OCCY
+     C           #ACOD     ORNE OACOD
+     C                     Z-ADD1         WACSQ   20
+     C                     ELSE
+     C                     Z-ADDOACSQ     WACSQ
+     C           WACSQ     ADD  1         WACSQ
+     C                     ENDIF
+      *
+      *
+     C                     MOVEL#1CUST    CNUM
+     C                     MOVEL#CCY      OCCY
+     C                     MOVEL#ACOD     OACOD
+     C                     MOVE #1BRCH    BRCA
+      *
+     C                     MOVEL*BLANKS   ACST
+     C                     MOVEATYP,@Z    ATYP
+     C                     MOVEASUB,@Z    STYP
+     C                     MOVEANAM,@Z    ANAM
+      *
+     C/COPY WNCPYSRC,TI0010C005
+     C                     Z-ADDAGRDNB    DACO
+     C/COPY WNCPYSRC,TI0010C006
+     C                     Z-ADD0         DACC
+     C                     Z-ADD0         LDBL
+     C                     Z-ADD0         CLBL
+     C                     MOVE 'M'       STFQ
+     C                     Z-ADD31        STDY
+     C                     Z-ADDAGRDNB    LSTD
+      *
+      * Calculate number of Days left in Month.
+      *
+     C           AGDFF     IFEQ 'D'
+     C                     MOVELAGMRDT    DAY2    20
+     C                     ELSE
+     C                     MOVE AGMRDT    DAY4    4
+     C                     MOVELDAY4      DAY2    20
+     C                     ENDIF
+     C           STDY      SUB  DAY2      DAY     20
+      *
+     C           AGRDNB    ADD  DAY       NSTD
+     C                     Z-ADD0         LSTP
+     C                     Z-ADD0         CFSB
+     C                     Z-ADD0         LMVD
+     C                     Z-ADD0         EPLB
+     C                     Z-ADD0         EPCB
+     C                     Z-ADD0         YTDB
+     C                     BITOF'01234567'GLBT
+     C                     MOVEL'B'       ADREF1
+     C                     Z-ADDAGRDNB    ORED
+     C                     Z-ADD0         DLIM
+     C                     Z-ADD0         LRCR
+     C                     Z-ADD0         RTCB
+     C                     Z-ADD0         RTLB
+     C                     Z-ADD0         DITM
+     C                     Z-ADD0         CITM
+     C                     MOVE *BLANKS   ADREF2
+     C                     Z-ADD0         CDIR
+     C                     Z-ADD0         CCIR
+     C                     Z-ADD0         ACNO
+     C                     BITOF'01234567'RETB
+     C                     MOVE *BLANKS   ODSC
+     C                     Z-ADD0         ODLN
+     C                     Z-ADD0         ODED
+      *
+     C                     Z-ADD0         DIOD
+     C                     Z-ADD0         FACT
+     C                     Z-ADD0         FCNO
+     C                     Z-ADD0         EFAC
+     C                     Z-ADD0         HELD
+     C                     Z-ADD0         MINB
+     C                     Z-ADD0         LACD
+     C                     Z-ADD0         LISP
+     C                     Z-ADD0         RRNM
+     C                     Z-ADD0         DRIB
+     C                     Z-ADD0         DRIS
+     C                     Z-ADD0         DRCD
+     C                     Z-ADD0         DRIC
+     C                     MOVEL*BLANKS   DRIF
+     C                     Z-ADD0         DRDY
+     C                     Z-ADD0         NDID
+     C                     Z-ADD0         LDID
+     C                     Z-ADD0         LDIA
+     C                     MOVEL*BLANKS   SDAP
+     C                     Z-ADD0         LPAR
+     C                     Z-ADD0         DIIE
+     C                     Z-ADD0         DAIC
+     C                     Z-ADD0         MADI
+     C                     Z-ADD0         GADI
+     C                     MOVE *BLANK    DDIS
+     C                     Z-ADD0         DDIA
+     C                     Z-ADD0         OLDR
+     C                     Z-ADD0         OLDB
+     C                     Z-ADD0         OLDS
+     C                     Z-ADD0         CRIB
+     C                     Z-ADD0         CRIS
+     C                     Z-ADD0         CRCD
+     C                     Z-ADD0         CRIC
+     C                     MOVE *BLANK    CRIF
+     C                     Z-ADD0         CRDY
+     C                     Z-ADD0         NCID
+     C                     Z-ADD0         LCID
+     C                     Z-ADD0         LCIA
+     C                     MOVE *BLANKS   SCAP
+     C                     Z-ADD0         LPAP
+     C                     Z-ADD0         CIIE
+     C                     Z-ADD0         CAIC
+     C                     Z-ADD0         MACI
+     C                     Z-ADD0         GACI
+     C                     MOVE *BLANK    CDIS
+     C                     Z-ADD0         DCIA
+     C                     Z-ADD0         OLCR
+     C                     Z-ADD0         OLCB
+     C                     Z-ADD0         OLCS
+     C                     Z-ADDAGRDNB    LCD
+     C                     MOVE 'I'       CHTP
+     C                     Z-ADD0         TNLU
+     C                     MOVE *BLANK    BRTCA
+     C                     MOVE 'Y'       R4ACNT
+     C                     Z-ADD0         ENOC
+     C                     Z-ADD0         EPNO
+     C                     Z-ADD0         ECFB
+     C                     MOVE *BLANKS   LTAB
+     C                     Z-ADD0         LTAS
+     C                     Z-ADD0         HCFB
+     C                     MOVE TIPRFC    PTFR
+     C                     MOVE *BLANK    HLEX
+      *
+      * Check to see if CEU013 is on to determine default for EUSB
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '        'WRTCD
+     C                     PARM '*VERIFY' WOPTN
+     C                     PARM 'CEU013'  WSARD   6
+      *
+      * If the return code is blank then CEU013 is *ON.
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       EUSB
+     C                     ELSE
+     C                     MOVE 'N'       EUSB
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,TI0010C002
+      *
+     C                     ENDSR                           #NEW
+      *
+      ********************************************************************
+      * TI Details for a new internal TI account.
+      *
+     C           TIDTL1    BEGSR
+      * Create TI Details for an Internal Account
+     C                     MOVEATIA,@Z    GDC5AT
+      *
+     C                     SETOF                     27
+      *
+     C           GDC5AT    CHAINSDTIACL0             27
+      *
+     C           *IN27     IFEQ *OFF
+      *
+     C           GDBCNO    IFEQ *BLANKS
+     C           '99'      CAT  #1ACOD    WCUST1
+     C                     MOVELWCUST1    GDBCNO
+     C                     Z-ADDAGRDNB    GDLCD
+     C                     MOVEL'A'       GDTYLC
+     C                     UPDAT@TIACL0
+     C                     ELSE
+     C                     MOVELGDBCNO    WCUST1
+     C                     ENDIF
+      *
+     C                     MOVEL@X        @Y
+     C                     MOVEAISO,@Y    WISOC   3
+     C                     MOVELWISOC     WSUFFX
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR                           TIDTL1
+      *
+      ********************************************************************
+      **TI*Details*for*a*new*external*TI*account.**********************                      BUG6597
+      **********                                                                             BUG6597
+     C********** TIDTL2    BEGSR                                                             BUG6597
+     C**********           MOVELWCUST     #TNUM                                              BUG6597
+      **********                                                                             BUG6597
+     C**********           SETOF                     2526                                    BUG6597
+      **********                                                                             BUG6597
+     C********** KLST3     SETLLACCNTTI                  25                                  BUG6597
+      **********                                                                             BUG6597
+     C********** *IN25     IFEQ '1'                                                          BUG6597
+     C**********           Z-ADD1         COUNT   30                                         BUG6597
+      **********                                                                             BUG6597
+     C********** *IN26     DOUEQ'1'                                                          BUG6597
+     C********** KLST3     READEACCNTTI                  26                                  BUG6597
+     C********** *IN26     IFEQ '0'                                                          BUG6597
+     C**********           MOVELTTIAS     WSUFFX                                             BUG6597
+     C********** WSUFFX    IFEQ COUNT                                                        BUG6597
+     C**********           ADD  1         COUNT                                              BUG6597
+     C**********           ELSE                                                              BUG6597
+     C**********           Z-ADDCOUNT     WSUFFX                                             BUG6597
+     C**********           SETON                     26                                      BUG6597
+     C**********           ENDIF                                                             BUG6597
+      **********                                                                             BUG6597
+     C**********           ELSE                                                              BUG6597
+     C**********           Z-ADDCOUNT     WSUFFX                                             BUG6597
+     C**********           ENDIF                                                             BUG6597
+     C**********           ENDDO                                                             BUG6597
+      **********                                                                             BUG6597
+     C********** WSUFFX    IFGT 999                                                          BUG6597
+      **Account*cannot*be*opened**as*TI*Suffix*is*greater*than*999.****                      BUG6597
+     C**********           MOVE 'D'       TOACTN                                             BUG6597
+     C**********           ENDIF                                                             BUG6597
+      **********                                                                             BUG6597
+     C**********           ELSE                                                              BUG6597
+      **********                                                                             BUG6597
+     C**********           MOVEL'001'     WSUFFX                                             BUG6597
+     C**********           ENDIF                                                             BUG6597
+      **********                                                                             BUG6597
+     C**********           ENDSR                           TIDTL2                            BUG6597
+      *
+      ********************************************************************
+      * Determine TI Details for accounts if Exchange Position Accounts are required
+     C           #SP101    BEGSR
+      *
+     C           CCYNUM    IFGT 1
+     C                     Z-ADD1         @V      20
+     C                     MOVEAISO,@X    #ISO    3
+     C           WTIBCN    CAT  #ISO      XCUST1
+     C                     MOVEAISO,@V    ISO1    3
+      *
+     C           ISO1      DOWNE*BLANKS
+     C           #ISO      IFNE ISO1
+     C                     MOVELISO1      XSUFFX  30
+      *
+     C                     MOVEL#1BRCH    #BRCA
+     C                     MOVELXCUST1    #TNUM
+     C                     MOVELXSUFFX    #TSUF
+      *
+     C           KLST2     CHAINACCNTTI              29
+      *
+      * If Indicator is off then account has been found
+      *
+     C           *IN29     IFNE '1'
+      *
+     C                     MOVEL'A'       TOACTN
+     C                     MOVELXCUST1    WCUST1
+     C                     MOVELXSUFFX    WSUFFX
+     C                     ELSE
+      * Create new account/check account details.
+      *
+     C                     MOVEL'C'       TOACTN
+     C                     MOVELXCUST1    WCUST1
+     C                     MOVELXSUFFX    WSUFFX
+     C                     EXSR NEWSP
+     C                     ENDIF
+      *
+     C                     EXSR #UPDAT
+     C                     ENDIF
+      *
+     C                     ADD  1         @V
+     C           @V        IFLE 30
+     C                     MOVEAISO,@V    ISO1
+     C                     ELSE
+     C                     MOVEL*BLANKS   ISO1
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR                           #SP101
+      *
+      ********************************************************************
+      * Create new Exchange Position Accounts
+     C           NEWSP     BEGSR
+      *
+     C                     MOVE 'D'       RECI
+     C                     EXSR #NEW
+      *
+     C                     ENDSR                           NEWSP
+      ********************************************************************
+      *
+     C           #UPDAT    BEGSR
+      *
+     C                     MOVEL#1BRCH    TOBRCH
+     C                     MOVEL#1CUST    TOCUST
+     C                     MOVEL#CCY      TOCCY
+     C                     MOVEL#ACOD     TOACOD
+     C                     MOVELNAM,@Z    TOANAM
+     C                     MOVEL'Y'       TOTIAC
+     C                     MOVELWCUST1    TOTIAN
+     C                     MOVELWSUFFX    TOTIAS
+     C                     MOVELDSACKY    A5ACKY                                            BUG13930
+      *
+     C                     SELEC
+     C           TOACTN    WHEQ 'A'
+     C           INTFLG    IFEQ 'Y'
+     C           #ACOD     ANDEQSPACC
+     C                     MOVELTACSQ     TOACSQ
+     C                     ELSE
+     C                     MOVELOACSQ     TOACSQ
+     C                     ENDIF
+     C                     OPEN TIOPACPD
+     C                     WRITETIOPACD0
+     C                     CLOSETIOPACPD
+      *
+     C           TOACTN    WHEQ 'B'
+     C                     MOVELOACSQ     TOACSQ
+     C                     MOVEL'Y'       A5TIAC
+     C                     MOVELWCUST1    OTIAN
+     C                     MOVELWSUFFX    OTIAS
+     C* To ensure only TI specific fields are updated use EXCPT with            180464
+     C* the fields required on the Output Specs.                                180464
+     C*********************UPDATACCNT1                                          180464
+     C                     EXCPTUPDTIF                                          180464
+     C                     OPEN TIOPACPD
+     C                     WRITETIOPACD0
+     C                     CLOSETIOPACPD
+      *
+     C           TOACTN    WHEQ 'C'
+     C                     MOVEL#1BRCH    BRCA
+     C                     MOVEL#1CUST    CNUM
+     C                     MOVEL#CCY      OCCY
+     C                     MOVEL#ACOD     OACOD
+     C                     MOVELWACSQ     OACSQ
+     C                     MOVEL'Y'       A5TIAC
+     C                     MOVELWCUST1    OTIAN
+     C                     MOVELWSUFFX    OTIAS
+     C                     MOVELWACSQ     TOACSQ
+      *
+     C**********           ADD  1         ACCNO   20                                          191086
+     C                     ADD  1         ACCNO   40                                          191086
+      *
+     C                     MOVEASTAMP,1   TMST             Default Timestamp                  CPK015
+     C                     WRITEACCNT1
+     C                     COMIT                                  BUG14016
+      *
+     C                     OPEN TIOPACPD
+     C                     WRITETIOPACD0
+     C                     CLOSETIOPACPD
+      *
+     C           TOACTN    WHEQ 'D'
+     C                     OPEN TIOPACPD
+     C                     WRITETIOPACD0
+     C                     CLOSETIOPACPD
+     C                     ENDSL
+      *                                                                                     BUG13929
+     C           TOACTN    IFNE *BLANKS                                                     BUG13929
+     C                     EXSR WGLEXT                                                      BUG13929
+     C                     ENDIF                                                            BUG13929
+      *
+     C                     ENDSR                           #UPDAT
+      *
+      ********************************************************************
+      *
+     C           #PRTF     BEGSR
+     C                     Z-ADD0         CNT1    30
+     C                     Z-ADD0         CNT2    30
+     C                     Z-ADD0         CNT3    30
+     C                     Z-ADD0         CNT4    30
+     C                     OPEN TI0010P1                                                     BUG3772
+      *
+     C                     WRITEHEADP1
+      *
+     C                     WRITEHEADPA
+     C                     WRITESUBHEAD
+     C                     OPEN TIOPACL1
+     C                     READ TIOPACL1                 29
+      *
+     C           TOACTN    DOWEQ'A'
+     C           *IN29     ANDNE*ON
+     C                     ADD  1         CNT1
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEHEADPA
+     C                     WRITESUBHEAD
+     C                     SETOF                     37
+     C                     ENDIF
+     C                     WRITEDETAIL
+     C                     READ TIOPACL1                 29
+     C                     ENDDO
+     C           CNT1      IFEQ 0
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     SETOF                     37
+     C                     ENDIF
+     C                     WRITEHEADPB
+     C                     WRITESUBHEAD
+     C           TOACTN    DOWEQ'B'
+     C           *IN29     ANDNE*ON
+     C                     ADD  1         CNT2
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEHEADPB
+     C                     WRITESUBHEAD
+     C                     SETOF                     37
+     C                     ENDIF
+     C                     WRITEDETAIL
+     C                     READ TIOPACL1                 29
+     C                     ENDDO
+     C           CNT2      IFEQ 0
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     SETOF                     37
+     C                     ENDIF
+     C                     WRITEHEADPC
+     C                     WRITESUBHEAD
+     C           TOACTN    DOWEQ'C'
+     C           *IN29     ANDNE*ON
+     C                     ADD  1         CNT3
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEHEADPC
+     C                     WRITESUBHEAD
+     C                     SETOF                     37
+     C                     ENDIF
+     C                     WRITEDETAIL
+     C                     READ TIOPACL1                 29
+     C                     ENDDO
+     C           CNT3      IFEQ 0
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     SETOF                     37
+     C                     ENDIF
+     C                     WRITEHEADPD
+     C                     WRITESUBHEAD
+     C           TOACTN    DOWEQ'D'
+     C           *IN29     ANDNE*ON
+     C                     ADD  1         CNT4
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEHEADPD
+     C                     WRITESUBHEAD
+     C                     SETOF                     37
+     C                     ENDIF
+     C                     WRITEDETAIL
+     C                     READ TIOPACL1                 29
+     C                     ENDDO
+     C           CNT4      IFEQ 0
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     SETOF                     37
+     C                     ENDIF
+     C                     WRITETRAILP1
+     C                     CLOSETI0010P1                                                     BUG3772
+     C                     CLOSETIOPACL1                                                     BUG3772
+     C                     ENDSR                           #PRTF
+      *
+      ********************************************************************
+      *
+     C           #ACCN     BEGSR
+      * Update trailer records on ACCNTAC
+      *
+     C           ACCNO     IFGT *ZERO
+     C                     OPEN ACCNTAC
+     C           1         SETLLACCNTAC
+     C                     READ ACCNTAC                  30
+     C**********           Z-ADDACCNO     NINU                            185144
+     C                     ADD  ACCNO     NINU                            185144
+     C           NOAU      ADD  ACCNO     NOAU
+     C                     UPDATACCNTACF
+     C                     CLOSEACCNTAC
+     C                     ENDIF
+      *
+     C                     ENDSR                           #ACCN
+      *
+      ********************************************************************
+      *
+     C           #VBRCH    BEGSR
+      * Validate branch
+     C           #1BRCH    IFNE *BLANK
+      *
+      * Question mark processing
+     C           #1BRCH    IFEQ '?'
+     C           #1BRCH    OREQ ' ?'
+     C           #1BRCH    OREQ '  ?'
+     C                     CALL 'SD0061S'
+     C                     PARM *BLANKS   WRTCD
+     C           #1BRCH    PARM #1BRCH    WBRCD
+     C                     ENDIF
+      *
+     C           WRTCD     IFNE 'Y2U0016'
+     C                     CALL 'AOBRCHR1'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM #1BRCH    WBRCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      * If branch is not found
+     C           WRTCD     IFNE *BLANK
+      * Send message 'Branch invalid'
+     C                     MOVEL'USR3651' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2099
+     C                     ELSE
+      * Check if the branch has been set up as a TI branch
+     C           A8TIBR    IFEQ *ZEROS
+      * Send message 'Branch is not set up as a TI branch'
+     C                     MOVEL'USR3652' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2099
+     C                     ELSE
+      * Store branch internal customer number
+     C                     MOVELA8BICN    WBICN   6
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     SETON                     2099
+     C                     ENDIF
+      *
+     C                     ELSE
+      * Send message 'Branch code must be entered
+     C                     MOVEL'USR3653' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2099
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR                           #VBRCH
+      *
+      *******************************************************************
+      *
+     C           #VCUST    BEGSR
+      *
+      ** Validate Customer - Valid Midas Cust and ensure it is flagged as TI Customer.
+     C           #1CUST    IFNE *BLANKS
+      *
+      * Question mark processing
+     C           #1CUST    IFEQ '?'
+     C           #1CUST    OREQ ' ?'
+     C           #1CUST    OREQ '  ?'
+     C           #1CUST    OREQ '   ?'
+     C           #1CUST    OREQ '    ?'
+     C           #1CUST    OREQ '     ?'
+     C                     CALL 'SD0010S'
+     C                     PARM *BLANKS   WRTCD
+     C           #1CUST    PARM #1CUST    WCUST
+     C                     ENDIF
+      *
+     C           WRTCD     IFNE 'Y2U0016'
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM #1CUST    WCUST  10
+     C                     PARM '*ERROR  'WSTAT   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      * If customer is not found
+     C           WRTCD     IFNE *BLANK
+      *
+      * Send message 'Customer Invalid'
+     C                     MOVEL'USR3654' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2199
+     C                     ELSE
+      * Check if the customer has been set up as a TI customer
+     C           BBTICS    IFEQ *BLANKS
+     C           BBTICS    OREQ 'N'
+      * Send message 'Customer is not set up as a TI Customer'
+     C                     MOVEL'USR3655' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2199
+     C                     ELSE
+      **Store Customer Number
+     C                     MOVEL#1CUST    WCUST1  6
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check if customer number is equal to branch internal customer number.
+     C           WCUST1    IFEQ WBICN
+     C                     MOVE 'Y'       INTFLG  1
+     C                     ELSE
+     C                     MOVE 'N'       INTFLG
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     SETON                     2199
+     C                     ENDIF
+      *
+     C                     ELSE
+      * Send message 'Customer number must be entered'
+     C                     MOVEL'USR3656' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2199
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR                           #VCUST
+      *
+      ********************************************************************
+      *
+     C           #VCURR    BEGSR
+      ** Validate Currencies - must be valid Midas Ccy's and ensure the ccy has an ISO code if the
+      ** branch is an internal customer.
+     C                     MOVEA*BLANKS   CUR
+     C                     MOVEA*BLANKS   ISO
+     C                     Z-ADD0         @W      20
+     C                     Z-ADD0         @X      20
+     C                     Z-ADD0         @Y      20
+     C                     Z-ADD0         CCYNUM  20
+      *
+     C           #1CY01    IFNE *BLANKS
+     C                     MOVEL#1CY01    WCURR   3
+     C                     Z-ADD31        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY01
+     C                     ENDIF
+     C           #1CY02    IFNE *BLANKS
+     C                     MOVEL#1CY02    WCURR   3
+     C                     Z-ADD32        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY02
+     C                     ENDIF
+     C           #1CY03    IFNE *BLANKS
+     C                     MOVEL#1CY03    WCURR   3
+     C                     Z-ADD33        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY03
+     C                     ENDIF
+     C           #1CY04    IFNE *BLANKS
+     C                     MOVEL#1CY04    WCURR   3
+     C                     Z-ADD34        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY04
+     C                     ENDIF
+     C           #1CY05    IFNE *BLANKS
+     C                     MOVEL#1CY05    WCURR   3
+     C                     Z-ADD35        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY05
+     C                     ENDIF
+     C           #1CY06    IFNE *BLANKS
+     C                     MOVEL#1CY06    WCURR   3
+     C                     Z-ADD36        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY06
+     C                     ENDIF
+     C           #1CY07    IFNE *BLANKS
+     C                     MOVEL#1CY07    WCURR   3
+     C                     Z-ADD37        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY07
+     C                     ENDIF
+     C           #1CY08    IFNE *BLANKS
+     C                     MOVEL#1CY08    WCURR   3
+     C                     Z-ADD38        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY08
+     C                     ENDIF
+     C           #1CY09    IFNE *BLANKS
+     C                     MOVEL#1CY09    WCURR   3
+     C                     Z-ADD39        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY09
+     C                     ENDIF
+     C           #1CY10    IFNE *BLANKS
+     C                     MOVEL#1CY10    WCURR   3
+     C                     Z-ADD40        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY10
+     C                     ENDIF
+     C           #1CY11    IFNE *BLANKS
+     C                     MOVEL#1CY11    WCURR   3
+     C                     Z-ADD41        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY11
+     C                     ENDIF
+     C           #1CY12    IFNE *BLANKS
+     C                     MOVEL#1CY12    WCURR   3
+     C                     Z-ADD42        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY12
+     C                     ENDIF
+     C           #1CY13    IFNE *BLANKS
+     C                     MOVEL#1CY13    WCURR   3
+     C                     Z-ADD43        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY13
+     C                     ENDIF
+     C           #1CY14    IFNE *BLANKS
+     C                     MOVEL#1CY14    WCURR   3
+     C                     Z-ADD44        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY14
+     C                     ENDIF
+     C           #1CY15    IFNE *BLANKS
+     C                     MOVEL#1CY15    WCURR   3
+     C                     Z-ADD45        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY15
+     C                     ENDIF
+     C           #1CY16    IFNE *BLANKS
+     C                     MOVEL#1CY16    WCURR   3
+     C                     Z-ADD46        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY16
+     C                     ENDIF
+     C           #1CY17    IFNE *BLANKS
+     C                     MOVEL#1CY17    WCURR   3
+     C                     Z-ADD47        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY17
+     C                     ENDIF
+     C           #1CY18    IFNE *BLANKS
+     C                     MOVEL#1CY18    WCURR   3
+     C                     Z-ADD48        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY18
+     C                     ENDIF
+     C           #1CY19    IFNE *BLANKS
+     C                     MOVEL#1CY19    WCURR   3
+     C                     Z-ADD49        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY19
+     C                     ENDIF
+     C           #1CY20    IFNE *BLANKS
+     C                     MOVEL#1CY20    WCURR   3
+     C                     Z-ADD50        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY20
+     C                     ENDIF
+     C           #1CY21    IFNE *BLANKS
+     C                     MOVEL#1CY21    WCURR   3
+     C                     Z-ADD51        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY21
+     C                     ENDIF
+     C           #1CY22    IFNE *BLANKS
+     C                     MOVEL#1CY22    WCURR   3
+     C                     Z-ADD52        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY22
+     C                     ENDIF
+     C           #1CY23    IFNE *BLANKS
+     C                     MOVEL#1CY23    WCURR   3
+     C                     Z-ADD53        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY23
+     C                     ENDIF
+     C           #1CY24    IFNE *BLANKS
+     C                     MOVEL#1CY24    WCURR   3
+     C                     Z-ADD54        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY24
+     C                     ENDIF
+     C           #1CY25    IFNE *BLANKS
+     C                     MOVEL#1CY25    WCURR   3
+     C                     Z-ADD55        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY25
+     C                     ENDIF
+     C           #1CY26    IFNE *BLANKS
+     C                     MOVEL#1CY26    WCURR   3
+     C                     Z-ADD56        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY26
+     C                     ENDIF
+     C           #1CY27    IFNE *BLANKS
+     C                     MOVEL#1CY27    WCURR   3
+     C                     Z-ADD57        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY27
+     C                     ENDIF
+     C           #1CY28    IFNE *BLANKS
+     C                     MOVEL#1CY28    WCURR   3
+     C                     Z-ADD58        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY28
+     C                     ENDIF
+     C           #1CY29    IFNE *BLANKS
+     C                     MOVEL#1CY29    WCURR   3
+     C                     Z-ADD59        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY29
+     C                     ENDIF
+     C           #1CY30    IFNE *BLANKS
+     C                     MOVEL#1CY30    WCURR   3
+     C                     Z-ADD60        @W
+     C                     EXSR #VCCY
+     C                     MOVELWCURR     #1CY30
+     C                     ENDIF
+      *
+      **Send message 'At least one Currency code must be entered'
+     C           CCYNUM    IFEQ 0
+     C                     MOVEL'USR3663' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     3199
+     C                     ENDIF
+      *
+     C                     ENDSR                           #VCURR
+      *
+      ********************************************************************
+      *
+     C           #VCCY     BEGSR
+      **Subroutine contains common currency validation
+     C                     MOVEL*BLANKS   WRTCD
+      **Question mark processing
+     C           WCURR     IFEQ '?'
+     C           WCURR     OREQ ' ?'
+     C           WCURR     OREQ '  ?'
+     C                     CALL 'SD0020S'
+     C                     PARM *BLANKS   WRTCD
+     C           WCURR     PARM WCURR     WCCY1
+     C                     ENDIF
+      *
+     C           WRTCD     IFNE 'Y2U0016'
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM WCURR     WCCY1   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **If currency is not found
+     C           WRTCD     IFNE *BLANK
+      *
+      **Send message 'Currency Invalid'
+     C                     MOVEL'USR3644' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                       99
+     C                     MOVE '1'       *IN,@W
+     C                     ELSE
+      **Check array for duplicates entries.
+     C           WCURR     LOKUPCUR                      22
+      *
+     C           *IN22     IFEQ *ON
+      **Send message 'Currency already entered - pls reenter another valid currency'
+     C                     MOVEL'USR3657' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                       99
+     C                     MOVE '1'       *IN,@W
+     C                     ELSE
+      *
+      **Check if the currency has an associated ISO if the customer is the same as the
+      * Branch Internal Customer.
+     C           INTFLG    IFEQ 'Y'
+     C                     CALL 'AOISOCR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM WCURR     WCCY1   3
+     C           SDISOC    PARM *BLANKS   DSSDY
+      *
+     C           WRTCD     IFEQ '*NRF'
+     C           WRTCD     OREQ '*ERROR'
+      **Send message 'Currency must have an associated ISO code.'
+     C                     MOVEL'USR3658' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                       99
+     C                     MOVE '1'       *IN,@W
+     C                     ADD  1         @Y
+     C                     MOVE *ZEROS    ISO,@Y
+     C                     ELSE
+      **Store ISO code in the array.
+     C                     ADD  1         @Y
+     C                     MOVELGIISO3    ISO,@Y
+     C                     MOVEL@Y        ISONUM  20
+     C                     ENDIF
+     C                     ENDIF
+      **Store Currency in array CUR
+     C                     ADD  1         @X
+     C                     MOVELWCURR     CUR,@X
+     C                     MOVEL@X        CCYNUM  20
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     SETON                     99
+     C                     MOVE *ON       *IN,@W
+     C                     ENDIF
+      *
+     C                     ENDSR                           #VCCY
+      *
+      **********************************************************************
+      *
+      ** Validate A/C Codes - must be valid A/C code and have TI A/C type.
+      *
+     C           #VACOD    BEGSR
+      *
+     C                     MOVEA*ZEROS    ACC
+     C                     Z-ADD0         @W
+     C                     Z-ADD0         @Z      20
+      *
+     C           #1AC01    IFNE *BLANKS
+     C**********           MOVEL#1AC01    WACOD   4                                           CGL029
+     C                     MOVEL#1AC01    WACOD  10                                           CGL029
+     C                     Z-ADD61        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC01
+     C                     ENDIF
+     C           #1AC02    IFNE *BLANKS
+     C                     MOVEL#1AC02    WACOD
+     C                     Z-ADD62        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC02
+     C                     ENDIF
+     C           #1AC03    IFNE *BLANKS
+     C                     MOVEL#1AC03    WACOD
+     C                     Z-ADD63        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC03
+     C                     ENDIF
+     C           #1AC04    IFNE *BLANKS
+     C                     MOVEL#1AC04    WACOD
+     C                     Z-ADD64        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC04
+     C                     ENDIF
+     C           #1AC05    IFNE *BLANKS
+     C                     MOVEL#1AC05    WACOD
+     C                     Z-ADD65        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC05
+     C                     ENDIF
+     C           #1AC06    IFNE *BLANKS
+     C                     MOVEL#1AC06    WACOD
+     C                     Z-ADD66        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC06
+     C                     ENDIF
+     C           #1AC07    IFNE *BLANKS
+     C                     MOVEL#1AC07    WACOD
+     C                     Z-ADD67        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC07
+     C                     ENDIF
+     C           #1AC08    IFNE *BLANKS
+     C                     MOVEL#1AC08    WACOD
+     C                     Z-ADD68        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC08
+     C                     ENDIF
+     C           #1AC09    IFNE *BLANKS
+     C                     MOVEL#1AC09    WACOD
+     C                     Z-ADD69        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC09
+     C                     ENDIF
+     C           #1AC10    IFNE *BLANKS
+     C                     MOVEL#1AC10    WACOD
+     C                     Z-ADD70        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC10
+     C                     ENDIF
+     C           #1AC11    IFNE *BLANKS
+     C                     MOVEL#1AC11    WACOD
+     C                     Z-ADD71        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC11
+     C                     ENDIF
+     C           #1AC12    IFNE *BLANKS
+     C                     MOVEL#1AC12    WACOD
+     C                     Z-ADD72        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC12
+     C                     ENDIF
+     C           #1AC13    IFNE *BLANKS
+     C                     MOVEL#1AC13    WACOD
+     C                     Z-ADD73        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC13
+     C                     ENDIF
+     C           #1AC14    IFNE *BLANKS
+     C                     MOVEL#1AC14    WACOD
+     C                     Z-ADD74        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC14
+     C                     ENDIF
+     C           #1AC15    IFNE *BLANKS
+     C                     MOVEL#1AC15    WACOD
+     C                     Z-ADD75        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC15
+     C                     ENDIF
+     C           #1AC16    IFNE *BLANKS
+     C                     MOVEL#1AC16    WACOD
+     C                     Z-ADD76        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC16
+     C                     ENDIF
+     C           #1AC17    IFNE *BLANKS
+     C                     MOVEL#1AC17    WACOD
+     C                     Z-ADD77        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC17
+     C                     ENDIF
+     C           #1AC18    IFNE *BLANKS
+     C                     MOVEL#1AC18    WACOD
+     C                     Z-ADD78        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC18
+     C                     ENDIF
+     C           #1AC19    IFNE *BLANKS
+     C                     MOVEL#1AC19    WACOD
+     C                     Z-ADD79        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC19
+     C                     ENDIF
+     C           #1AC20    IFNE *BLANKS
+     C                     MOVEL#1AC20    WACOD
+     C                     Z-ADD80        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC20
+     C                     ENDIF
+     C           #1AC21    IFNE *BLANKS
+     C                     MOVEL#1AC21    WACOD
+     C                     Z-ADD81        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC21
+     C                     ENDIF
+     C           #1AC22    IFNE *BLANKS
+     C                     MOVEL#1AC22    WACOD
+     C                     Z-ADD82        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC22
+     C                     ENDIF
+     C           #1AC23    IFNE *BLANKS
+     C                     MOVEL#1AC23    WACOD
+     C                     Z-ADD83        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC23
+     C                     ENDIF
+     C           #1AC24    IFNE *BLANKS
+     C                     MOVEL#1AC24    WACOD
+     C                     Z-ADD84        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC24
+     C                     ENDIF
+     C           #1AC25    IFNE *BLANKS
+     C                     MOVEL#1AC25    WACOD
+     C                     Z-ADD85        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC25
+     C                     ENDIF
+     C           #1AC26    IFNE *BLANKS
+     C                     MOVEL#1AC26    WACOD
+     C                     Z-ADD86        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC26
+     C                     ENDIF
+     C           #1AC27    IFNE *BLANKS
+     C                     MOVEL#1AC27    WACOD
+     C                     Z-ADD87        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC27
+     C                     ENDIF
+     C           #1AC28    IFNE *BLANKS
+     C                     MOVEL#1AC28    WACOD
+     C                     Z-ADD88        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC28
+     C                     ENDIF
+     C           #1AC29    IFNE *BLANKS
+     C                     MOVEL#1AC29    WACOD
+     C                     Z-ADD89        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC29
+     C                     ENDIF
+     C           #1AC30    IFNE *BLANKS
+     C                     MOVEL#1AC30    WACOD
+     C                     Z-ADD90        @W
+     C                     EXSR #VACC
+     C                     MOVELWACOD     #1AC30
+     C                     ENDIF
+      *
+      **Send message 'At least one Account Code must be entered'
+     C           ACCNUM    IFEQ 0
+     C                     MOVEL'USR3659' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     6199
+     C                     ENDIF
+      *
+     C                     ENDSR                           #VACOD
+      *
+      **********************************************************************
+      *
+     C           #VACC     BEGSR
+      * Validate Accounts as being Valid Midas accounts and ensure that they have a TI A/C type.
+      *
+      * Subroutine contains common account validation
+      *
+     C                     MOVEL*BLANKS   WRTCD   7
+      *
+      * Question mark processing
+     C           WACOD     IFEQ '?'
+     C           WACOD     OREQ ' ?'
+     C           WACOD     OREQ '  ?'
+     C           WACOD     OREQ '   ?'
+     C                     CALL 'SD0031S'
+     C                     PARM *BLANKS   WRTCD
+     C********** WACOD     PARM WACOD     WACC1   4                                           CGL029
+     C           WACOD     PARM WACOD     WACC1  10                                           CGL029
+     C                     ENDIF
+      *
+     C           WRTCD     IFNE 'Y2U0016'
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM WACOD     WACC1
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+      * If the account code is not found snd err msg otherwise check for duplicate entries.
+     C           WRTCD     IFNE *BLANK
+      *
+      * Send message 'Account Code is Invalid'
+     C                     MOVEL'USR3660' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                       99
+     C                     MOVE '1'       *IN,@W
+     C                     ELSE
+      * Check array for duplicates entries.
+     C           WACOD     LOKUPACC                      23
+     C                     ENDIF
+      *
+     C           *IN23     IFEQ *ON
+      * Send message 'A/C Code already entered - pls reenter another valid A/C code'
+     C                     MOVEL'USR3661' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                       99
+     C                     MOVE '1'       *IN,@W
+     C                     ENDIF
+      *
+      * Check if the account has an associated TI A/C type.
+     C           A5TIAT    IFNE *BLANKS
+      * Store A/C Code in array ACC otherwise send msg to say TI A/C type required, also
+      * store A/C type, A/C sub-type and A/C name in relevant Arrays for use later if account
+      * is to be created.
+     C                     ADD  1         @Z
+     C                     MOVELWACOD     ACC,@Z
+     C                     MOVELA5TIAT    TIA,@Z
+     C                     MOVELA5ACTY    TYP,@Z
+     C                     MOVELA5ACST    SUB,@Z
+     C                     MOVELA5ACCN    NAM,@Z
+     C                     MOVEL@Z        ACCNUM  20
+      *
+      * If the A/C has the same SP101 as the ICD store Acct Code
+     C           A5TIAT    IFEQ WTIACT
+     C**********           MOVELWACOD     SPACC   40                                          CGL029
+     C                     MOVELWACOD     SPACC  100                                          CGL029
+     C                     ENDIF
+     C                     ELSE
+      * Send message 'A/C Code does not have an associated TI A/C Code'
+     C                     MOVEL'USR3662' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                       99
+     C                     MOVE '1'       *IN,@W
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     SETON                     99
+     C                     MOVE *ON       *IN,@W
+     C                     ENDIF
+      *
+     C                     ENDSR                           #VACC
+     C/COPY WNCPYSRC,TI0010C004
+      *
+      ***************** FOR EACH DATABASE ERROR *************************
+      *
+      ** Data base error in file (file)
+      *
+     C*          *LOCK     IN   LDA
+     C*                    SETON                       U7U8
+     C*                    Z-ADDNNN       DBASE            ***************
+     C*                    MOVEL'(file)'  DBFILE           *DB ERROR NNN *
+     C*                    MOVEL'(key)'   DBKEY            ***************
+     C*                    OUT  LDA
+     C*                    EXSR *PSSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     ENDSR
+      *
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           *LIKE     DEFN ZAPGMQ    ZADFMF
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C*                    MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      *****************************************************************                      BUG6597
+      * Calculate TI Account sequence.                                                       BUG6597
+      *****************************************************************                      BUG6597
+      *                                                                                      BUG6597
+     C           SRTIAS    BEGSR                                                             BUG6597
+      *                                                                                      BUG6597
+     C           @@TIAS    IFEQ 0                                                            BUG6597
+     C           KLST4     SETGTACCNTTI                                                      BUG6597
+     C           KLST5     REDPEACCNT2                   25                                  BUG6597
+     C           *IN25     IFEQ '1'                                                          BUG6597
+     C                     Z-ADD1         @@TIAS                                             BUG6597
+     C                     ELSE                                                              BUG6597
+     C                     MOVE TTIAS     @@TIAS                                             BUG6597
+     C           @@TIAS    ADD  1         @@TIAS                                             BUG6597
+     C                     ENDIF                                                             BUG6597
+      *                                                                                      BUG6597
+     C                     ELSE                                                              BUG6597
+     C           @@TIAS    ADD  1         @@TIAS                                             BUG6597
+     C                     ENDIF                                                             BUG6597
+      *                                                                                      BUG6597
+     C           @@TIAS    IFGT 999                                                          BUG6597
+      *                                                                                      BUG6597
+      ** Account cannot be opened  as TI Suffix is greater than 999.                         BUG6597
+      *                                                                                      BUG6597
+     C                     MOVE 'D'       TOACTN                                             BUG6597
+     C                     ELSE                                                              BUG6597
+     C                     MOVE @@TIAS    WSUFFX                                             BUG6597
+     C                     ENDIF                                                             BUG6597
+      *                                                                                      BUG6597
+     C                     ENDSR                                                             BUG6597
+      *****************************************************************                     BUG13929
+      * Write new record on GL account master file extension                                BUG13929
+      *****************************************************************                     BUG13929
+      *                                                                                     BUG13929
+     C           WGLEXT    BEGSR                                                            BUG13929
+     C                     OPEN GLACNTQD                                                    BUG13929
+     C**********           Z-ADD#CNUM     F1CNUM                                            BUG13929
+     C                     MOVEL#CNUM     F1CNUM                                            BUG13929
+     C                     MOVEL#CCY      F1CCY                                             BUG13929
+     C                     Z-ADD#ACOD     F1ACOD                                            BUG13929
+     C                     Z-ADDWACSQ     F1ACSQ                                            BUG13929
+     C                     MOVEL#BRCA     F1BRCA                                            BUG13929
+     C                     Z-ADD0         F1FCHD                                            BUG13929
+     C                     Z-ADD0         F1LFCD                                            BUG13929
+     C                     Z-ADD0         F1ACBL                                            BUG13929
+     C                     Z-ADD0         F1TEXO                                            BUG13929
+     C                     Z-ADD0         F1TEOF                                            BUG13929
+     C                     Z-ADD0         F1TEOC                                            BUG13929
+     C                     Z-ADD0         F1DECD                                              CRE090
+     C                     MOVE *BLANKS   F1IABC                                            BUG13929
+     C                     MOVE *BLANKS   F1BCIN                                            BUG13929
+     C                     WRITEGLACNTD0                                                    BUG13929
+     C                     CLOSEGLACNTQD                                                    BUG13929
+     C                     ENDSR                                                            BUG13929
+      *****************************************************************                      BUG6597
+     C/COPY WNCPYSRC,TI0010C007
+      *
+      ********************************************************************
+     OACCNT1  E                UPDTIF                                            180464
+     O                         A5TIAC                                            180464
+     O                         OTIAN                                             180464
+     O                         OTIAS                                             180464
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+     X/COPY WNCPYSRC,TI0010X001
+** CMDA **  QCMDEXC
+CLRPFM FILE(TIOPACPD)

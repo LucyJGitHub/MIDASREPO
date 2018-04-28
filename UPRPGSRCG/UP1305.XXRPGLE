@@ -1,0 +1,223 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+      *****************************************************************
+/*X*IA***OVRDBF*FILE(SFMT1)*TOFILE(UPSFMTTPD)**************************                       CUP021
+/*X*IB***OVRDBF*FILE(SFMT2)*TOFILE(UPSFMTTPD)**************************                       CUP021
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1305 - Build Action File for UPSFMTPD                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP028             Date 08Sep04               *
+      *                 CUP025             Date 08Dec03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 CUP019 *CREATE     Date 30May02               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP028 - Change field FSIPTY in UPSFMTAPD from 1P to 1,0S.   *
+      *           (Recompile)                                         *
+      *           Amend the key list COMP to include FSFSHD.          *
+      *  CUP025 - MidasPlus Bridge changes.                           *
+      *  CUP019 - Creation of new set of Action File utilities.       *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write or chain fail
+      *       70 - 73 Indicators for changed fields
+      *
+     FSFMT1     IF   E             DISK    INFSR(*PSSR)
+     FSFMT2     IF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(UPSFMTD1:SFMTF) PREFIX(X)
+     FUPSFMTAPD O    E             DISK    INFSR(*PSSR)
+      *
+      /EJECT
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *       Defines:                      142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      * Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    MODE              1
+      *
+     C     COMP          KLIST
+     C                   KFLD                    FSFILE
+     C                   KFLD                    FSFSHD                                       CUP028
+      *
+     C                   READ      SFMT1                                6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+     C     COMP          CHAIN     SFMTF                              3069
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * If record not found then record has been deleted or added
+      *  depending on mode.
+     C     *IN30         IFEQ      *ON
+     C                   MOVE      MODE          FSACTC
+     C                   WRITE     UPSFMTAD0                            69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Need to find differences but this should only be run once;
+      *  run only if mode is 'Delete'.
+     C     MODE          IFEQ      'D'
+      *
+      * If record found then look for any differences; only look in
+      *  fields that have data all of the time.
+     C     *IN30         IFEQ      *OFF
+     C                   MOVE      'A'           FSACTC
+      **File*that*has*its*format*shared*                                                      CUP025
+     C*****FSFSHD        IFNE      XFSFSHD                                                    CUP025
+     C*****              SETON                                        70                      CUP025
+     C*****              ENDIF                                                                CUP025
+      * Type of file
+     C     FSTYPE        IFNE      XFSTYPE
+     C                   SETON                                        71
+     C                   ENDIF
+      *
+      * Format name
+     C     FSSFMT        IFNE      XFSSFMT
+     C                   SETON                                        72
+     C                   ENDIF
+      *
+      * Priority                                                                              CUP025
+      * This field has been added so it may not be present at earlier releases; if            CUP025
+      *  it is not found in either file then do not compare.                                  CUP025
+     C                   MOVEL     'FSIPTY'      FIELD            10                          CUP025
+     C                   MOVE      *BLANKS       STATUS            5                          CUP025
+     C                   CALL      'UP0891'                                                   CUP025
+     C                   PARM                    FIELD                                        CUP025
+     C                   PARM                    STATUS                                       CUP025
+      * If found in one only then set field to value of the found field                       CUP025
+     C     STATUS        IFEQ      '*OLD'                                                     CUP025
+     C                   MOVEL     FSIPTY        XFSIPTY                                      CUP025
+     C                   ENDIF                                                                CUP025
+     C     STATUS        IFEQ      '*NEW'                                                     CUP025
+     C                   MOVEL     XFSIPTY       FSIPTY                                       CUP025
+     C                   ENDIF                                                                CUP025
+     C     FSIPTY        IFNE      XFSIPTY                                                    CUP025
+     C                   SETON                                        70                      CUP025
+     C                   ENDIF                                                                CUP025
+      *
+      * Layer                                                                                 CUP025
+      * This field has been added so it may not be present at earlier releases; if            CUP025
+      *  it is not found in either file then do not compare.                                  CUP025
+     C                   MOVEL     'FSLAYR'      FIELD            10                          CUP025
+     C                   MOVE      *BLANKS       STATUS            5                          CUP025
+     C                   CALL      'UP0891'                                                   CUP025
+     C                   PARM                    FIELD                                        CUP025
+     C                   PARM                    STATUS                                       CUP025
+      * If found in one only then set field to value of the found field                       CUP025
+     C     STATUS        IFEQ      '*OLD'                                                     CUP025
+     C                   MOVEL     FSLAYR        XFSLAYR                                      CUP025
+     C                   ENDIF                                                                CUP025
+     C     STATUS        IFEQ      '*NEW'                                                     CUP025
+     C                   MOVEL     XFSLAYR       FSLAYR                                       CUP025
+     C                   ENDIF                                                                CUP025
+     C     FSLAYR        IFNE      XFSLAYR                                                    CUP025
+     C                   SETON                                        73                      CUP025
+     C                   ENDIF                                                                CUP025
+      *
+      * Change length of INTEST and INTNUM to match number of fields compared
+     C*****              MOVEA     *IN(70)       INTEST            3                          CUP025
+     C*****              MOVE      INTEST        INTNUM            3 0                        CUP025
+     C                   MOVEA     *IN(70)       INTEST            4                          CUP025
+     C                   MOVE      INTEST        INTNUM            4 0                        CUP025
+      * If any indicators are set on then write record.
+     C     INTNUM        IFNE      0
+     C                   WRITE     UPSFMTAD0                            69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * Set values to write second record.
+     C*****              MOVEL     XFSFSHD       FSFSHD                                       CUP025
+     C                   MOVEL     XFSTYPE       FSTYPE
+     C                   MOVEL     XFSSFMT       FSSFMT
+     C                   Z-ADD     XFSIPTY       FSIPTY                                       CUP025
+     C                   MOVEL     XFSLAYR       FSLAYR                                       CUP025
+      *
+     C                   WRITE     UPSFMTAD0                            69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Read next record
+     C                   MOVEA     '0000000000'  *IN(70)
+     C                   MOVEA     '0000000000'  *IN(80)
+     C                   READ      SFMT1                                6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      ********************************************************************

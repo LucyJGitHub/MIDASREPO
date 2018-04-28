@@ -1,0 +1,633 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Agency Trade Settlement')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE4320 - Agency Trade Settlement                             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CSE039  *CREATE    Date 10Feb03               *
+      *                 xxxxxx             Date ddMmmyy               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CSE039 - Automatic Settlement of Trades                      *
+      *                                                               *
+      *****************************************************************
+     FSETRSTJ1IF  E           K        DISK
+      *
+      * PF: Midas SE Settlement SETLED/TRADSD
+      *
+     FSETLT   UF  E           K        DISK
+      *
+      * PF: Midas SE TRADES SETTLEMENT - UPDATE
+      *
+     FTRADSDL9IF  E           K        DISK
+      *
+      * PF: Midas SE Trades Details
+      *
+     FTRADSDV1IF  E           K        DISK
+      *
+      * PF: Midas SE Trades Details
+      ********************************************************************
+      *
+      * Description     : Copyright notice for inclusion in all programs
+      *
+     E                    CPY@    1   1 80               Copyright array
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E                    NARR    1   2 35
+      *
+      ********************************************************************
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     IAPITRA      DS                            472
+      ** Data Structure for APITRANSPD
+     I                                        1   6 FIELD1                "SETRSM"
+     I                                       73  77 FIELD2                "MIDAS"
+     I                                      101 105 FIELD3                "Fixed"
+     I                                      109 112 FIELD4                "4.00"
+     I                                      139 144 FIELD5                "AGENCY"
+     I                                      145 150 FIELD6                No Trade Read
+     I                                      151 156 FIELD7                No Trade Set.
+     I                                      157 158 FIEL17                No Trade Set.
+     I                                      179 179 FIELD8                "N"
+     I                                      180 180 FIELD9                "B"
+     I                                      354 368 FIEL14                "Y"
+     I                                      384 399 FIEL15                "Y"
+     I                                      418 452 FIEL16                "Y"
+     I                                      459 464 FIEL10                Trade Ref
+     I                                      465 470 FIEL11                Mvt Date
+     I                                      471 471 FIEL12                "Y"
+     I                                      472 472 FIEL13                "Y"
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDSECS    E DSSDSECSPD
+      * SD Securities Clients
+      *
+     ISCSARD    E DSSCSARDPD
+      * Switchable Features details
+      *
+     ISDBANK    E DSSDBANKPD
+      * BANK details
+     ISDCURR    E DSSDCURRPD
+      * BANK details
+      *
+     IDSSDY     E DSDSSDY
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     IDSFDY     E DSDSFDY
+      * SECOND DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+      *
+      /EJECT
+      *****************************************************************
+      * Initial Processing
+     C                     EXSR #IINIT
+      *
+      * Process File
+     C                     EXSR #IPROC
+      *
+      * End program
+     C                     EXSR #IEND
+      *
+      *****************************************************************
+      *                                                               *
+      * #IINIT -                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IINIT    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define Local Data Area for error handling
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Definition of KLIST to access TRADSD.
+      *
+      ** By Bulk Reference
+     C           KTRAD1    KLIST
+     C                     KFLD           KBULK   6
+      *
+      ** By Order Number
+     C           KTRAD2    KLIST
+     C                     KFLD           KORNO   60
+      *
+      ***  Call Access Program for Bank Details -
+      ***  DATE FORMAT
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SE4320'  DBPGM            ***************
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ** Check if CSE039 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CSE039'  PSARD   6
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CSE039  1
+     C                     ELSE
+     C                     MOVE 'N'       CSE039
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * #IPROC -                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IPROC    BEGSR
+      *
+      ** IF CSE039 is ON, READ SETRSTJ1
+      *
+B1   C           CSE039    IFEQ 'Y'
+      *
+     C                     MOVE *OFF      *IN70
+      *
+      ** READ All records from SETRSTJ1
+     C                     READ SETRSTJ1                 80
+B2   C           *IN80     DOWEQ*OFF
+      *
+     C           SPAG      IFEQ 'P'
+      ** If Bulk Ref. is not blanks, access TRADSDV1
+B3   C           BLKR      IFNE *BLANKS
+     C                     MOVE *OFF      *IN50
+     C                     MOVE *OFF      *IN52
+     C                     MOVELBLKR      KBULK
+     C                     MOVELSTDR      UTDRF   6
+     C                     Z-ADDSEDE      USEDE   50
+     C                     Z-ADDSSQN      USSQN   30
+      *
+     C           KTRAD1    SETLLTRADSDV1
+     C                     READ TRADSDV1                 81
+B4   C           *IN81     IFEQ *OFF
+      *
+B5   C           *IN81     DOWEQ*OFF
+B6   C           RECI      IFNE '*'
+B6   C           RECI      ANDNE'C'
+     C                     MOVELTCNR      UTCNR   6
+      *
+      ** Access SDSECSPD using Counterparty from Trade
+     C                     EXSR #ISECS
+      *
+      ** If Classification is M and Date fully Settled is 0
+      ** Set Indicator 70 to ON
+B7   C           UCLAS     IFEQ 'M'
+     C           TDFS      ANDEQ0
+     C                     MOVE *ON       *IN70
+E7   C                     ENDIF
+E6   C                     ENDIF
+      *
+     C           KTRAD1    READETRADSDV1                 81
+E5   C                     ENDDO
+E4   C                     ENDIF
+      *
+B4   C           *IN70     IFEQ *ON
+     C           UTDRF     SETLLSETLT
+     C                     READ SETLT                    78
+B5   C           *IN78     IFEQ *OFF
+      *
+B6   C           *IN78     DOWEQ*OFF
+     C           *IN52     ANDEQ*OFF
+B7   C           USEDE     IFEQ SEDE
+     C           USSQN     ANDEQSSQN
+     C           SPAG      ANDEQ'P'
+     C                     MOVEL'W'       SPAG
+     C                     UPDATSETLEDF
+     C                     MOVE *ON       *IN52
+E7   C                     ENDIF
+     C           UTDRF     READESETLT                    78
+E6   C                     ENDDO
+E5   C                     ENDIF
+      *
+X4   C                     ELSE
+     C                     MOVE *ON       *IN50
+     C                     EXSR #ISETL
+E4   C                     ENDIF
+      *
+X3   C                     ELSE
+      *
+      ** If Order No. is not blanks, access TRADSDL9
+B4   C           ORDE      IFNE 0
+B4   C           ORDE      ANDNE999999
+     C                     MOVE *OFF      *IN53
+     C                     MOVE *OFF      *IN51
+     C                     Z-ADDORDE      KORNO
+     C                     MOVELSTDR      UTDRF
+     C                     Z-ADDSEDE      USEDE
+     C                     Z-ADDSSQN      USSQN
+      *
+     C           KTRAD2    SETLLTRADSDL9
+     C                     READ TRADSDL9                 82
+B5   C           *IN82     IFEQ *OFF
+      *
+B6   C           *IN82     DOWEQ*OFF
+B7   C           RECI      IFNE '*'
+B7   C           RECI      ANDNE'C'
+     C                     MOVELTCNR      UTCNR   6
+      *
+      ** Access SDSECSPD using Counterparty from Trade
+     C                     EXSR #ISECS
+      *
+      ** If Classification is M and Date fully Settled is 0
+      ** Set Indicator 70 to ON
+B8   C           UCLAS     IFEQ 'M'
+     C           TDFS      ANDEQ0
+     C                     MOVE *ON       *IN70
+E8   C                     ENDIF
+E7   C                     ENDIF
+      *
+     C           KTRAD2    READETRADSDL9                 82
+E6   C                     ENDDO
+E5   C                     ENDIF
+      *
+B5   C           *IN70     IFEQ *ON
+     C           UTDRF     SETLLSETLT
+     C                     READ SETLT                    77
+B6   C           *IN77     IFEQ *OFF
+      *
+B7   C           *IN77     DOWEQ*OFF
+     C           *IN53     ANDEQ*OFF
+B8   C           USEDE     IFEQ SEDE
+     C           USSQN     ANDEQSSQN
+     C           SPAG      ANDEQ'P'
+     C                     MOVEL'W'       SPAG
+     C                     UPDATSETLEDF
+     C                     MOVE *ON       *IN53
+E8   C                     ENDIF
+     C           UTDRF     READESETLT                    77
+E7   C                     ENDDO
+E6   C                     ENDIF
+      *
+X5   C                     ELSE
+     C                     MOVE *ON       *IN51
+     C                     EXSR #ISETL
+E5   C                     ENDIF
+      *
+E4   C                     ENDIF
+      *
+E3   C                     ENDIF
+      *
+     C                     MOVEL*OFF      *IN70
+     C                     ELSE
+     C           SPAG      IFEQ 'R'
+     C                     MOVE *OFF      *IN50
+     C                     MOVE *OFF      *IN52
+     C                     MOVELSTDR      UTDRF
+     C                     Z-ADDSEDE      USEDE
+     C                     Z-ADDSSQN      USSQN
+     C                     MOVE *OFF      *IN53
+     C                     MOVE *OFF      *IN51
+     C                     EXSR #ISETL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ SETRSTJ1                 80
+E2   C                     ENDDO
+      *
+E1   C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ISECS -                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ISECS    BEGSR
+      *
+      ** Retrieve Classification for Counterparty
+     C                     CALL 'AOSECSR0'
+     C                     PARM '*DBERR ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM UTCNR     PKEY6   6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDSECSPD'DBFILE
+     C                     MOVEL'002'     DBASE
+     C                     MOVEL'*KEY  '  DBKEY
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELBFCLAS    UCLAS   1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #ISETL -                                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ISETL    BEGSR
+      *
+      ** Bulk References
+b1   C           *IN50     IFEQ *ON
+b1   C           SPAG      OREQ 'R'
+b1   C           BLKR      ANDNE*BLANKS
+     C                     MOVELBLKR      KBULK
+      *
+     C           KTRAD1    SETLLTRADSDV1
+     C                     READ TRADSDV1                 81
+B2   C           *IN81     IFEQ *OFF
+      *
+B3   C           *IN81     DOWEQ*OFF
+B4   C           RECI      IFNE '*'
+     C           RECI      ANDNE'C'
+     C                     MOVELTCNR      UTCNR   6
+      *
+      ** Access SDSECSPD using Counterparty from Trade
+     C                     EXSR #ISECS
+      *
+      ** If Classification is S OR D and not Autosettle
+      ** If Settlement Message Required = Y  - Settle Trade
+B5   C           UCLAS     IFEQ 'S'
+     C           UCLAS     OREQ 'D'
+B6   C           AUTS      IFEQ 'A'
+      *
+     C           SPAG      IFEQ 'P'
+     C           SPAG      OREQ 'R'
+     C           TDFS      ANDNE0
+     C                     EXSR #IAPI
+      *
+     C           UTDRF     SETLLSETLT
+     C                     READ SETLT                    78
+B5   C           *IN78     IFEQ *OFF
+      *
+B6   C           *IN78     DOWEQ*OFF
+     C           *IN52     ANDEQ*OFF
+B7   C           USEDE     IFEQ SEDE
+     C           USSQN     ANDEQSSQN
+     C           SPAG      IFEQ 'P'
+     C                     MOVEL'W'       SPAG
+E7   C                     ENDIF
+     C           SPAG      IFEQ 'R'
+     C                     MOVEL'D'       SPAG
+E7   C                     ENDIF
+     C                     UPDATSETLEDF
+     C                     MOVE *ON       *IN52
+E7   C                     ENDIF
+     C           UTDRF     READESETLT                    78
+E6   C                     ENDDO
+E5   C                     ENDIF
+      *
+E6   C                     ENDIF
+E6   C                     ENDIF
+E5   C                     ENDIF
+E4   C                     ENDIF
+      *
+     C           KTRAD1    READETRADSDV1                 81
+E3   C                     ENDDO
+E2   C                     ENDIF
+      *
+X1   C                     ELSE
+      *
+      ** Order Numbers
+B2   C           *IN51     IFEQ *ON
+b1   C           SPAG      OREQ 'R'
+b1   C           ORDE      ANDNE0
+b1   C           ORDE      ANDNE999999
+     C                     MOVELORDE      KORNO
+      *
+     C           KTRAD2    SETLLTRADSDL9
+     C                     READ TRADSDL9                 82
+B3   C           *IN82     IFEQ *OFF
+      *
+B4   C           *IN82     DOWEQ*OFF
+B5   C           RECI      IFNE '*'
+     C           RECI      ANDNE'C'
+     C                     MOVELTCNR      UTCNR   6
+      *
+      ** Access SDSECSPD using Counterparty from Trade
+     C                     EXSR #ISECS
+      *
+      ** If Classification is S or D and not autosettle
+      ** If Settlement Message Required = Y  - Settle Trade
+B6   C           UCLAS     IFEQ 'S'
+     C           UCLAS     OREQ 'D'
+B7   C           AUTS      IFEQ 'A'
+      *
+     C           SPAG      IFEQ 'P'
+     C           SPAG      OREQ 'R'
+     C           TDFS      ANDNE0
+     C                     EXSR #IAPI
+      *
+     C           UTDRF     SETLLSETLT
+     C                     READ SETLT                    78
+B5   C           *IN78     IFEQ *OFF
+      *
+B6   C           *IN78     DOWEQ*OFF
+     C           *IN52     ANDEQ*OFF
+B7   C           USEDE     IFEQ SEDE
+     C           USSQN     ANDEQSSQN
+     C           SPAG      IFEQ 'P'
+     C                     MOVEL'W'       SPAG
+E7   C                     ENDIF
+     C           SPAG      IFEQ 'R'
+     C                     MOVEL'D'       SPAG
+E7   C                     ENDIF
+     C                     UPDATSETLEDF
+     C                     MOVE *ON       *IN52
+E7   C                     ENDIF
+     C           UTDRF     READESETLT                    78
+E6   C                     ENDDO
+E5   C                     ENDIF
+      *
+E7   C                     ENDIF
+E7   C                     ENDIF
+E6   C                     ENDIF
+E5   C                     ENDIF
+      *
+     C           KTRAD2    READETRADSDL9                 82
+E4   C                     ENDDO
+E3   C                     ENDIF
+      *
+E2   C                     ENDIF
+E1   C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #IAPI  - Output details to APITRANSPD                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #IAPI     BEGSR
+      *
+      ** Setup details for DS APITRA to pass to SE4320B
+      *
+     C                     MOVEL'SETRSM'  FIELD1
+     C                     MOVEL'MIDAS'   FIELD2
+     C                     MOVEL'Fixed'   FIELD3
+     C                     MOVEL'4.00'    FIELD4
+     C                     MOVEL'AGENCY'  FIELD5
+     C                     MOVELSTDR      FIELD6
+     C                     MOVELTDRF      FIELD7
+     C                     MOVE SSQN      FIEL17
+     C                     MOVEL'N'       FIELD8
+     C                     MOVEL'B'       FIELD9
+     C                     MOVELTDRF      FIEL10
+      *
+      ** Format Movement Date to DDMMYY
+     C                     Z-ADDSEDE      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     FIEL11
+      *
+     C           SPAG      IFEQ 'P'
+     C           SPAG      OREQ 'W'
+     C                     MOVEL'Y'       FIEL12
+     C                     MOVEL' '       FIEL13
+     C                     MOVE NARR,1    FIEL16
+     C                     MOVE *BLANKS   FIEL14
+     C                     MOVE *BLANKS   FIEL15
+     C                     ELSE
+     C                     MOVEL' '       FIEL12
+     C                     MOVEL'Y'       FIEL13
+     C                     MOVE NARR,2    FIEL16
+     C           TNSN      ADD  TNSP      ZFLD15
+     C                     Z-ADDTNMD      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    FIEL14
+     C           TVSN      ADD  TVSP      ZFLD15
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM SETC      @AJCD   3                       S01117
+     C           SDCURR    PARM SDCURR    DSSDY                           S01117
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SE4320'  DBPGM            ***************
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    FIEL15
+     C                     ENDIF
+      *
+     C                     CALL 'SE4320B'
+     C                     PARM           APITRA
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            #IEND    - Exit the program.                       *
+      *                                                               *
+      *                                                               *
+      * CALLED BY            Main processing.
+      *                                                               *
+      ********************************************************************
+      *
+     C           #IEND     BEGSR
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using PSSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVEL'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     ELSE
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZSEDITZ3
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2003
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** NARR
+Automatically Settled -Agency proc
+Automatically Reversed -Agency proc

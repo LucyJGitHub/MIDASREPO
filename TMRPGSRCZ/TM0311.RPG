@@ -1,0 +1,1074 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas TM Update of currency spot dates .')             *
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - Treasury Management Module
+     F*                                                              *
+     F*     TM0311 - Update of Currency Spot Date                    *
+     F*                                                              *
+     F*     Function: This program updates the spot date for each    *
+     F*     (I/C INT) currency record on SDCURRPD during I/C init.   *
+     F*                                                              *
+     F*     Called by: FX8010 FX Daily file setup.                   *
+     F*                                                              *
+     F*     Calls    : None                                          *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER048             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 204923             Date 29Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007             Date 11May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 16May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  204923 - Rate Fix Days Adjustment (OIS)                      *
+      *           (Recompiled over changed SDCURRPD)                  *
+      *  CIR007 - Overnight Index Swaps                               *
+      *           (Recompiled over changed SDCURRPD)                  *
+      *  CSD006 - Market Data Feed (recompile SDCURRPD)              *
+      *  CDL008 - Continuous Linked Settlement (recompile SDCURRPD)  *
+     F*     S01319  -  NEW PROGRAM REPLACES FD0311                   *
+     F*                                                              *
+     F*****************************************************************
+     FFDCYTULLUF  E           K        DISK                           UC
+     FFDCYPULLUF  E           K        DISK                           UC
+     FSDCURRL0UF  E           K        DISK                           UC
+     F*
+     F**  Indicator Function Summary
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*       60         END OF FILE(FDCYTULL)
+     F*       62         RECORD NOT FOUND ON CHAIN TO FDICDRLL
+     F*       66         RECORD NOT FOUND ON CHAIN TO SDCURRL0
+     F*       80         DATABASE ERROR
+     F*
+     F/EJECT
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @YD     4   4  5 0A
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E                    @MD    13  13  5 0A
+     E*
+     E**  ARRAY FOR SR. ZA0850 - DAYS IN A MONTH (COMPILE TIME ARRAY)
+     E                    @M     12  12  2 0
+     E*
+     E                    CPY@    1   1 80
+     E** COMPILE TIME ARRAY FOR COPYRIGHT STATEMENT
+     E*
+     E/COPY ZSRSRC,ZHOLE
+     I/EJECT
+     I/COPY ZSRSRC,ZHOLI
+     I*
+     I**  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@Z71Y
+     I            DS
+     I                                        1   40@@Z71Y
+     I                                        1   10@@SSY1
+     I                                        2   20@@SSY2
+     I                                        3   30@@SSY3
+     I                                        4   40@@SSY4
+     I**  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@VDT
+     I            DS
+     I                                        1   80@@VDT
+     I                                        1   40@@YR
+     I                                        5   60@@Z71M
+     I                                        7   80@@Z71D
+     I*
+     I**  DATA STRUCTURE FOR SR. ZA0680 - DATE INPUT TO SUBROUTINE
+     I            DS
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        3   40@@YY
+     I                                        1   20@@CC
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+     I**
+     I           UDS
+     I**  Local data area for data base errors.
+     I**  Field containing name of database file in error.
+     I                                      134 141 DBFILE
+     I**  Field containing key value causing database error.
+     I                                      142 170 DBKEY
+     I**  Field containing name of program causing database error.
+     I                                      171 180 DBPGM
+     I**  Field containing number of database error.
+     I                                      181 183 DBASE
+     I*
+     I** DATA AREA RUNDAT
+     I**
+     IRUNDT       DS                             13
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 @SUC
+     I                                       12  12 @DEF
+     I                                       13  13 @MBIN
+     I**
+     I*DBANK    E DSSDBANKPD
+     I***DUMMY RECORD FORMATS FOR ACCESS TO BANK DETAILS
+     I*
+     ISDDEAL    E DSSDDEALPD
+     I*  DUMMY RECORD FORMATS FOR ACCESS TO DEALING DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I*SECOND DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE
+     I*
+     C/EJECT
+     C                     MOVEL'TM0311'  DBPGM
+     C*
+     C** DEFINE THE DATAAREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C**  INITIALISATION
+     C                     EXSR #A
+     C**  Process until end of FDCYTULL file
+     C                     READ FDCYTULL                 60*1
+     C**  If the read to the currency file is successful
+     C**  Chain to the synon currency logical
+     C           *IN60     IFEQ '0'                        B1
+     C           CCY       CHAINSDCURRL0             66    *1
+     C*                                                    *1
+     C** If live record not found database error.
+     C           *IN66     IFEQ '1'                        B*2
+     C                     MOVEL'SDCURRL0'DBFILE           ***************
+     C                     MOVE 'CCY'     DBKEY            * DBERROR 003 *
+     C                     MOVEL'003'     DBASE            ***************
+     C                     MOVE '1'       *INU7            **2
+     C                     MOVE '1'       *INU8            **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C           *IN60     DOWEQ'0'                        B1
+     C           *IN66     ANDEQ'0'                        B1
+     C           *INU7     ANDEQ'0'                        B1
+     C*
+     C**  Calculate new currency Spot date for TABTG10 and new
+     C**  Forward dates for FDCCYPPP.
+     C                     EXSR #B                         *1
+     C**  Read next Currency record
+     C                     READ FDCYTULL                 60*1
+     C**  If the read to the currency file is successful
+     C**  chain to the synon currency logical
+     C           *IN60     IFEQ '0'                        B*2
+     C           CCY       CHAINSDCURRL0             66    **2
+     C*
+     C** If live record not found database error.
+     C           *IN66     IFEQ '1'                        B**3
+     C                     MOVEL'SDCURRL0'DBFILE           ***************
+     C                     MOVE 'CCY'     DBKEY            * DBERROR 004 *
+     C                     MOVEL'004'     DBASE            ***************
+     C                     MOVE '1'       *INU7            ***3
+     C                     MOVE '1'       *INU8            ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C**  TERMINATION
+     C                     EXSR #C
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #A - This routine performs initial processing                 *
+     C*                                                               *
+     C* CALLED BY :  CONTROL PROCESSING                               *
+     C*                                                               *
+     C* CALLS :      #AA                                              *
+     C*                                                               *
+     C*              @KEY4  - Part of FDCCYTLL key                    *
+     C*              @SCRKY - Key for FDCCYTLL                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C** Open all files
+     C                     OPEN FDCYTULL
+     C                     OPEN FDCYPULL
+     C                     OPEN SDCURRL0
+      *
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Read the Installation Control Data file SDDEALPD in order
+     C** to access the base currency for dealing.
+     C                     EXSR #AA
+     C*
+     C** Initialise fields
+     C                     GOTO #A9
+     C                     Z-ADD@@DAYN    @@DAYN  50
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     MOVE ZCCY      ZCCY    3
+     C           #A9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*       SUBROUTINE #AA - THIS SUBROUTINE READS THE ONLY         *
+     C*       RECORD ON PF/SDDEALPD TO OBTAIN INSTALLATION            *
+     C*       CONTROL DATA.                                           *
+     C*       INDICATOR 80 IS SET ON IF THE RECORD IS NOT PRESENT.    *
+     C*       IF INDICATOR IS SET ON RELEVANT INFORMATION ABOUT THE   *
+     C*       NATURE OF THE ATTEMPTED FILE ACCESS WILL BE PLACED      *
+     C*       IN THE LDA.                                             *
+     C*                                                               *
+     C*       FIELDS USED :                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AA       BEGSR
+     C*
+     C**  ACCESS PF/SDDEALPD
+     C*
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+0327 C*
+     C** DEAL WITH DATA BASE ERROR
+     C           @RTCD     IFNE *BLANK                     ***************
+     C                     MOVEL'SDDEALPD'DBFILE           *             *
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 002 *
+     C                     MOVEL'002'     DBASE            *             *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           ZA0179    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #B     - CALCULATE THE NEW SPOT DATE.                        *
+     C*                                                               *
+     C*       DURING NEXT DAY SET UP A NEW RUN DATE IS ENTERED TO     *
+     C*       THE MIDAS SYSTEM. THIS NEW RUN DATE IS USED ALONG WITH  *
+     C*       THE NUMBER OF SPOT DAYS FOR THE CURRENCY TO CALCULATE   *
+     C*       THE NEW SPOT DATE.                                      *
+     C*                                                               *
+     C*                                                               *
+     C* INPUT  :                                                      *
+     C*                                                               *
+     C* USES   :                                                      *
+     C*                                                               *
+     C* ROUTINES CALLED : #BA  - CALCULATE NEXT MUTUAL WORKING DAY    *
+     C*                   ZA0710 - CONVET DAY NO. TO YYYYMMDD FORMAT  *
+     C*                   ZA0850 - CALCULATE A PERIOD DATE            *
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C**  SET UP STARTING POINT FOR SPOT DAYS CALCULATION
+     C                     Z-ADDRUND      ZDAYNO  50
+     C*
+     C**  IF SPOT DAYS = 0 SPOT DATE = RUN DATE, UNLESS RUN DATE IS A
+     C**  HOLIDAY IN EITHER BASE CURRENCY OR LOCAL CURRENCY.
+     C           SPDY      IFEQ 0                          B1
+     C                     EXSR #BA                        *1
+     C           *INU7     CABEQ'1'       #B9              *1
+     C                     END                             E1
+     C*
+     C**  IF SPOT DAY > 0 CALCULATE SPOT DATE
+     C           SPDY      IFGT 0                          B1
+     C*
+     C                     Z-ADD0         @COUNT  30       *1
+     C           @COUNT    DOUEQSPDY                       B*2
+     C                     ADD  1         ZDAYNO           **2
+     C                     ADD  1         @COUNT           **2
+     C                     EXSR #BA                        **2
+     C           *INU7     CABEQ'1'       #B9              **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C**  CONVERT SPOT DATE FROM DAY NO. TO YYYYMMDD FORMAT
+     C                     Z-ADDZDAYNO    @@DAYN
+     C                     EXSR ZA0710
+     C           *INU7     CABEQ'1'       #B9
+     C*
+     C**  SET UP SPOT DATE FIELD AND UPDATE PF/TABTG10
+     C                     Z-ADD@@VDT     FXSP
+      * Set up MM Spot Date as well
+     C                     Z-ADD@@VDT     MSPD
+     C                     UPDATTABTG10F
+     C*
+     C**  SET UP SPOT DATE FIELD AND UPDATE LF/SDCURRL0
+     C                     Z-ADDFXSP      A6FXSD
+      * Set up MM Spot Date as well
+     C                     Z-ADDMSPD      A6MMSD
+     C                     UPDAT@A6REA4
+     C*
+     C** SAVE CURRENCY FOR USE IN FORWARD POINT RECORD UPDATE
+     C                     MOVE CCY       @CCYCD  3
+     C*
+     C** NOW UPDATE THE FORWARD POINTS RECORD'S FORWARD DATES (IF THIS
+     C** CURRENCY HAS ANY RECORDS)
+     C           @CCYCD    SETLLFDCYPULL
+     C           @CCYCD    READEFDCYPULL                 61
+     C           *IN61     DOWEQ'0'                        B1
+     C*                                                    *1
+     C** IGNORE DELETED RECORDS                            *1
+     C           XPDLTF    IFEQ ' '                        B*2
+     C*                                                    **2
+     C** PREPARE PARAMETERS FOR ZA0850                     **2
+     C                     MOVE XPTPRD    @@PRDT           **2
+     C                     Z-ADDFXSP      @@SPDD           **2
+     C                     MOVE BNCYCD    @@CCY1           **2
+     C                     MOVE @CCYCD    @@CCY2           **2
+     C                     Z-ADDXPPRD     @@PRDU           **2
+     C*                                                    **2
+     C** FOR O/N, T/N AND S/N, THE NUMBER OF DAYS NEEDS TO BE CONVERTED
+     C** TO THE FORM EXPECTED BY ZA0850                    **2
+     C           XPTPRD    IFEQ 'D'                        B**3
+     C           XPPRD     IFEQ 0                          B***4
+     C                     Z-SUB2         @@PRDU           ****4
+     C                     END                             E***4
+     C           XPPRD     IFEQ 1                          B***4
+     C                     Z-SUB1         @@PRDU           ****4
+     C                     END                             E***4
+     C           XPPRD     IFEQ 2                          B***4
+     C                     Z-ADD1         @@PRDU           ****4
+     C                     END                             E***4
+     C                     END                             E**3
+     C*                                                    **2
+     C                     EXSR ZA0850                     **2
+     C*                                                    **2
+     C                     Z-ADD@@VDT     XPPRDD           **2
+     C*                                                    **2
+     C** UPDATE RECORD                                     **2
+     C                     UPDATFDCCYPP0                   **2
+     C                     END                             E*2
+     C*                                                    *1
+     C           @CCYCD    READEFDCYPULL                 61*1
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C** BA     - SUBROUTINE CALCULATES NEXT MUTUAL WORKING DAY IN A  *
+     C*           CURRENCY                                            *
+     C*                                                               *
+     C* INPUT     CCY    - LOCAL CURRENCY FROM PF/TABTG10             *
+     C*           BNCYCD - BASE CURRENCY FOR DEALING                  *
+     C*           @DATE  - WORKING DAY NUMBER                         *
+     C*                                                               *
+     C**USES      @HHIND - HOLIDAY INDICATOR                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C                     MOVE CCY       ZCCY
+     C*
+     C**  LOOP UNTIL NEXT MUTUAL WORKING DAY DETERMINED
+     C           ZIND      DOUEQ'W'                        B1
+     C*
+     C                     EXSR ZCHKH                      *1
+     C*
+     C*   IF FIRST DAY IS WORKING DAY CHECK NEXT DAY
+     C           ZIND      IFEQ 'W'                        B*2
+     C                     MOVE BNCYCD    ZCCY             **2
+     C                     EXSR ZCHKH                      **2
+     C                     END                             E*2
+     C*
+     C*   IF MUTUAL WORKING DAY NOT FOUND CHECK NEXT DAY TO DETERMINE
+     C*  *WHETHER MUTUAL WORKING
+     C           ZIND      IFNE 'W'                        B*2
+     C                     MOVE CCY       ZCCY             **2
+     C                     ADD  1         ZDAYNO           **2
+     C                     END                             E*1
+     C*
+     C                     END                             E1
+     C*
+     C           #BA9      ENDSR
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZACCH
+     C*
+     C/COPY ZSRSRC,ZCHKH
+     C*
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*       TITLE:CALCULATE MIDAS DAY NO. TO DRS (YYYYMMDD) FORMAT. *
+     C*                                                               *
+     C*       SUBROUTINE ZA0710 EXPECTS FIELD '@@DAYN' TO BE          *
+     C*       PASSED TO IT IN 5,0 FORMAT.IF THE ABOVE FIELD IS LESS   *
+     C*       THAN 1 IT RETURNS 1 IN FIELD '@@RTN'.THE MAIN PROGRAM   *
+     C*       SHOULD CHECK FOR THIS CONDITION AND DO THE NECESSARY.   *
+     C*       IF '@@RTN' IS NOT EQUAL TO 1 IT RETURNS THE FIELD       *
+     C*       '@@VDT'  IN 'YYYYMMDD' FORMAT.                          *
+     C*                                                               *
+     C* NOTE: FIELD TO BE DEFINED BY EXTERNAL ROUTINE IS
+     C*                                                               *
+     C*       1) @@DAYN   LENGTH 5,0.                                 *
+     C*                                                               *
+     C*       FIELDS USED AND ALREADY DEFINED IN THE ROUTINE ARE:     *
+     C*                                                               *
+     C*       1) @@VDT    LENGTH 8,0 DEFINED BY A DS.                 *
+     C*       2) @@RTN    LENGTH 1,0.                                 *
+     C*       3) @@I      LENGTH 2,0 USED TO ACCESS ARRAY @YD         *
+     C*       4) @@J      LENGTH 2,0 USED TO ACCESS ARRAY @MD         *
+     C*       5) @@Z71Y   LENGTH 4,0 DEFINED BY A DS.                 *
+     C*       6) @@RDAY   LENGTH 5,0.                                 *
+     C*       7) @@LEAP   LENGTH 1,0.
+     C*                                                               *
+     C*       INDICATORS USED ARE:                                    *
+     C*                                                               *
+     C*       1) 80       CHECK FOR LOW AND EQUAL ON ARRAY @YD        *
+     C*       2) 81       CHECK FOR LOW ON ARRAY @MD.                 *
+     C*                                                               *
+     C* INPUT FIELD:       @@DAYN                                     *
+     C*                                                               *
+     C* OUTPUT FIELD:      @@VDT                                      *
+     C*                                                               *
+     C* WORK FIELDS:       @@RTN                                      *
+     C*                    @@Z71Y                                     *
+     C*                    @@RDAY                                     *
+     C*                    @@LEAP                                     *
+     C*                    @@I                                        *
+     C*                    @@J                                        *
+     C*                                                               *
+     C* ARRAYS USED:       @YD COMPILE TIME ARRAY.
+     C*                    @MD COMPILE TIME ARRAY.
+     C*
+     C*****************************************************************
+     C*
+     C           ZA0710    BEGSR
+     C*
+     C                     SETOF                     8081
+     C                     Z-ADD0         @@RTN   10
+     C                     Z-ADD0         @@VDT
+     C                     Z-ADD1         @@I     20
+     C                     Z-ADD1         @@J     20
+     C                     Z-ADD1         @@LEAP  10
+     C*
+     C           @@DAYN    IFLT 1
+     C                     Z-ADD1         @@RTN
+     C                     GOTO ZA0719
+     C                     END
+     C*
+     C* DIVISION TO DETERMINE WETHER LEAP YEAR.
+     C*
+     C           @@DAYN    DIV  1461      @@Z71Y
+     C                     MVR            @@RDAY  50
+     C*
+     C* CALCULATING YEAR.
+     C*
+     C           @@Z71Y    MULT 4         @@Z71Y
+     C                     ADD  1972      @@Z71Y
+     C*
+     C* CHECKING IF YEAR IS GREATER THAN OR EQUAL TO 2100
+     C*
+     C           @@Z71Y    IFGE 2100
+     C                     ADD  @@SSY2    @@RDAY
+     C                     END
+     C*
+     C* LOKUP ARRAY @YD TO SEE HOW MANY YEARS OF A FOUR YEAR CYCLE
+     C* HAVE PASSED.
+     C*
+     C           @@RDAY    LOKUP@YD,@@I                8080
+     C*
+     C* IF YEAR IS A LEAP YEAR SSLEAP IS SET TO ZERO.
+     C*
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD0         @@LEAP
+     C                     END
+     C*
+     C* ADD INDEX TO YEAR TO GIVE CORRECT YEAR AND ADJUST '@@RDAY'.
+     C*
+     C           @@LEAP    IFEQ 1
+     C           @@RDAY    SUB  @YD,@@I   @@RDAY
+     C                     ADD  @@I       @@Z71Y
+     C                     END
+     C*
+     C* PROCESSING FOR A LEAP YEAR.
+     C*
+     C           @@LEAP    IFEQ 0
+     C*
+     C* IF '@@RDAY' = 60 DATE MUST BE 29TH OF FEBRUARY.
+     C*
+     C           @@RDAY    IFEQ 60
+     C                     Z-ADD29        @@Z71D
+     C                     Z-ADD2         @@Z71M
+     C                     GOTO ZA0711
+     C                     END
+     C*
+     C* IF '@@RDAY' > 60 DATE IS AFTER 29TH OF FEBRUARY,CONVERSION CAN
+     C* PROCEED AS USUAL AFTER SUBTRACTING THE EXTRA DAY FOR THE LEAP
+     C* YEAR. NOTE : '@@RDAY' < 60 CONVERSION PROCEEDS AS USUAL.
+     C*
+     C           @@RDAY    IFGT 60
+     C           @@RDAY    SUB  1         @@RDAY
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF DAY '@@DAYN' IS EXACTLY DIVISIBLE BY 1461 (NUMBER OF DAYS
+     C* IN 4 YEARS) THEN DATE MUST BE LAST DAY OF PREVIOUS FOUR YEAR
+     C* GROUP.
+     C*
+     C           @@RDAY    IFEQ 0
+     C                     Z-ADD31        @@Z71D
+     C                     Z-ADD12        @@Z71M
+     C                     SUB  1         @@Z71Y
+     C                     GOTO ZA0711
+     C                     END
+     C*
+     C* LOOK UP ARRAY ARRAY @MD TO DETERMINE WHICH MONTH '@@RDAY'
+     C* OCCURS IN
+     C*
+     C           @@RDAY    LOKUP@MD,@@J                81
+     C                     Z-ADD@@J       @@Z71M
+     C           @@RDAY    SUB  @MD,@@J   @@Z71D
+     C*
+     C* DS @@VDT  IS RETURNED IN YYYYMMDD FORMAT
+     C*
+     C           ZA0711    TAG
+     C*
+     C                     MOVE @@Z71Y    @@YR
+     C*
+     C           ZA0719    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*       TITLE:CALCULATE A PERIOD DATE.                          *
+     C*                                                               *
+     C*       SUBROUTINE ZA0850 ACCEPTS A SPOT DATE(8N),PERIOD        *
+     C*       UNITS (2N),PERIOD TYPE (1A),CURRENCY 1 AND CURRENCY 2.  *
+     C*       IT THEN USES THE ABOVE FIELDS AND CALCULATES A PERIOD   *
+     C*       DATE ACCORDINGLY.                                       *
+     C*                                                               *
+     C*                                                               *
+     C* INPUT  :@@SPDD  SPOT DATE     FORMAT(8N)                      *
+     C*         @@PRDU  PERIOD UNIT   FORMAT(2N)                      *
+     C*         @@PRDT  PERIOD TYPE   FORMAT(1A)                      *
+     C*         @@CCY1  CURRENCY 1    FORMAT(3A)                      *
+     C*         @@CCY2  CURRENCY 2    FORMAT(3A)                      *
+     C*                                                               *
+     C* OUTPUT :@@VDT   SPOT DATE RETURNED FORMAT(8N)                 *
+     C*         @@ESWT  SWITCH SET IF ERROR OCCURS  FORMAT(1A)        *
+     C*                                                               *
+     C* USES   :@@SPDD  SPOT DATE                                     *
+     C*         @@PRDU  PERIOD UNIT                                   *
+     C*         @@PRDT  PERIOD TYPE                                   *
+     C*         @@CCY1  CURRENCY 1                                    *
+     C*         @@CCY2  CURRENCY 2                                    *
+     C*         @@CDAY  DAYS IN MONTH + 1                             *
+     C*         @@SDAY  NO OF DAYS IN A MONTH SAVED                   *
+     C*         @@HSWT  HOLIDAY SWITCH USED FOR DO OPERATIONS         *
+     C*         @@LSWT  LAST DAY SWITCH INDICATING SPOT DAY IS THE    *
+     C*                 LAST WORKING DAY OF THE MONTH                 *
+     C*         @@WDSB  NO. OF DAYS PRIOR TO CURRENT DATE REQUIRED    *
+     C*         @@DTIN  INPUT FOR ZA0680 - (YYYYMMDD)                 *
+     C*         @@MDNO  OUTPUT OF ZA0680 - (MIDAS DAY NO.)            *
+     C*         @@DAYN  INPUT FOR ZA0710 - (MIDAS DAY NO.)            *
+     C*         @@VDT   OUTPUT OF ZA0710 - (YYYYMMDD)                 *
+     C*         @@Z71D  DAY PART OF SPOT DATE                         *
+     C*         @@Z71M  MONTH PART OF SPOT DATE                       *
+     C*         @@Z71Y  YEAR PART OF SPOT DATE                        *
+     C*                                                               *
+     C* ARRAYS USED:                                                  *
+     C*         @M      USED BY ZA0850  (COMPILE TIME)                *
+     C*         @YD     USED BY ZA0680 AND ZA0710 (COMPILE TIME)      *
+     C*         @MD     USED BY ZA0680 AND ZA0710 (COMPILE TIME)      *
+     C*                                                               *
+     C* SUBROUTINES CALLED:                                           *
+     C*         ZA0680  CONVERT DATE FORMAT(YYYYMMDD) TO MIDAS DAY NO.*
+     C*         ZA0710  CONVERT MIDAS DAY NO. TO DATE FORMAT(YYYYMMDD)*
+     C*                                                               *
+     C*     LAST AMEND NO. FX0078             DATE   16/09/86         *
+     C*     PREV AMEND NO. 000001             DATE   16/07/86         *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C           ZA0850    BEGSR
+     C*
+     C* VALIDATING PERIOD UNIT AGAINST PERIOD TYPE
+     C*
+     C                     MOVE '0'       @@ESWT  1
+     C*
+     C* VALIDATING FOR DAY
+     C*
+     C           @@PRDT    IFEQ 'D'                        B1
+     C           @@PRDU    ANDNE-2                         *1
+     C           @@PRDU    ANDNE-1                         *1
+     C           @@PRDU    ANDNE1                          *1
+     C                     MOVE '1'       @@ESWT  1        *1
+     C                     GOTO ZA0859                     *1
+     C                     END                             E1
+     C*
+     C* VALIDATING FOR WEEK
+     C*
+     C           @@PRDT    IFEQ 'W'                        B1
+     C           @@PRDU    ANDNE1                          *1
+     C           @@PRDU    ANDNE2                          *1
+     C           @@PRDU    ANDNE3                          *1
+     C                     MOVE '1'       @@ESWT           *1
+     C                     GOTO ZA0859                     *1
+     C                     END                             E1
+     C*
+     C* VALIDATING FOR MONTH
+     C*
+     C           @@PRDT    IFEQ 'M'                        B1
+     C           @@PRDU    IFLT 0                          B*2
+     C           @@PRDU    ORGT 12                         **2
+     C                     MOVE '1'       @@ESWT           **2
+     C                     GOTO ZA0859                     **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C* VALIDATING FOR YEAR
+     C*
+     C           @@PRDT    IFEQ 'Y'                        B1
+     C           @@PRDU    IFNE 1                          B*2
+     C                     MOVE '1'       @@ESWT           **2
+     C                     GOTO ZA0859                     **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C* IF PERIOD TYPE IS MONTH OR YEAR THEN PROCESSING IS DIFFERENT
+     C*
+     C           @@PRDT    IFEQ 'Y'                        B1
+     C           @@PRDT    OREQ 'M'                        *1
+     C                     GOTO ZA0851                     *1
+     C                     END                             E1
+     C*
+     C* PROCESSING FOR DAY AND WEEK
+     C*
+     C* CONVERT SPOT DATE TO MIDAS DAY NO.
+     C                     Z-ADD@@SPDD    @@DTIN  80
+     C                     EXSR ZA0680
+     C*
+     C* IF PERIOD TYPE IS 'W' THEN CONVERT PERIOD UNITS AND ADD TO THE
+     C* MIDAS DAY NO. (NOTE THAT 1 DAY IS ADDED IN NEXT PROCESSING,
+     C* HENCE, (N WEEKS TIMES 7) - 1 DAY. )
+     C           @@PRDT    IFEQ 'W'                        B1
+     C*
+     C           @@PRDU    IFEQ 1                          B*2
+     C                     ADD  6         @@MDNO           **2
+     C                     END                             E*2
+     C*
+     C           @@PRDU    IFEQ 2                          B*2
+     C                     ADD  13        @@MDNO           **2
+     C                     END                             E*2
+     C*
+     C           @@PRDU    IFEQ 3                          B*2
+     C                     ADD  20        @@MDNO           **2
+     C                     END                             E*2
+     C*
+     C                     END                             E*1
+     C*
+     C**  IF THE DATE TO BE FOUND IS FOR THE NEXT WORKING DAY, OR FOR
+     C**  THE NEXT WORKING DAY AFTER 1,2 OR 3 WEEKS, USE THE FOLLOWING
+     C**  PROCESSING.
+     C           @@PRDU    IFGT 0                          B1
+     C*
+     C*   CONTINUE PROCESSING WHILST THE CALC. SPOT DATE IS A HOLIDAY
+     C*   FOR EITHER CURRENCY.
+     C                     MOVE 'H'       ZIND             *1
+     C           ZIND      DOWEQ'H'                        B*2
+     C*
+     C*   INCREMENT THE SPOT DATE BEING CALCULATED BY ONE DAY.
+     C                     ADD  1         @@MDNO           **2
+     C*
+     C*   CHECK WHETHER THE CALC. SPOT DATE IS A HOLIDAY FOR THE FIRST
+     C*   CURRENCY BY EXECUTING SR. ZCHKH.
+     C                     MOVE @@CCY1    ZCCY    3        **2
+     C                     Z-ADD@@MDNO    ZDAYNO  50       **2
+     C                     EXSR ZCHKH                      **2
+     C*
+     C*   IF THE SPOT DATE IS NOT A HOLIDAY FOR THE FIRST CURRENCY,
+     C*   CHECK WHETHER THE CALC. SPOT DATE IS A HOLIDAY FOR THE
+     C****SECOND CURRENCY BY EXECUTING SR. ZCHKH.
+     C           ZIND      IFNE 'H'                        B**3
+     C*
+     C                     MOVE @@CCY2    ZCCY             ***3
+     C                     Z-ADD@@MDNO    ZDAYNO           ***3
+     C                     EXSR ZCHKH                      ***3
+     C*
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C**  IF THE DATE TO BE FOUND IS FOR 1 OR 2 WORKING DAYS PRIOR TO
+     C**  THE CURRENT DATE, USE THE FOLLOWING PROCESSING.
+     C           @@PRDU    IFLT 0                          B1
+     C*
+     C**  INITIALISE THE NUMBER OF WORKING DAYS SUBTRACTED FROM THE
+     C**  CURRENT DATE.
+     C                     Z-ADD0         @@WDSB  10       *1
+     C*
+     C**  CONTINUE PROCESSING WHILST THE ABSOLUTE NO. OF MUTUAL WORKING
+     C**  DAYS PRIOR TO THE CURRENT DATE IS GREATER THAN THE ABSOLUTE
+     C**  NO. OF DAYS SUBTRACTED FROM THE CURRENT DATE.
+     C           @@PRDU    DOWLT@@WDSB                     B*2
+     C*
+     C*   CONTINUE PROCESSING WHILST THE CALC. SPOT DATE IS A HOLIDAY
+     C**  FOR EITHER CURRENCY.
+     C                     MOVE 'H'       ZIND             **2
+     C           ZIND      DOWEQ'H'                        B**3
+     C*
+     C*   DECREMENT THE SPOT DATE BEING CALCULATED BY ONE DAY.
+     C                     SUB  1         @@MDNO           ***3
+     C*
+     C**  CHECK WHETHER THE CALC. SPOT DATE IS A HOLIDAY FOR THE FIRST
+     C**  CURRENCY BY EXECUTING SR. ZA0830.
+     C                     MOVE @@CCY1    ZCCY    3        ***3
+     C                     Z-ADD@@MDNO    ZDAYNO           ***3
+     C                     EXSR ZCHKH                      ***3
+     C*
+     C**  IF THE SPOT DATE IS NOT A HOLIDAY FOR THE FIRST CURRENCY,
+     C**  CHECK WHETHER THE CALC. SPOT DATE IS A HOLIDAY FOR THE
+     C**  SECOND CURRENCY BY EXECUTING SR. ZA0830.
+     C           ZIND      IFNE 'H'                        B***4
+     C*
+     C                     MOVE @@CCY2    ZCCY             ****4
+     C                     Z-ADD@@MDNO    ZDAYNO           ****4
+     C                     EXSR ZCHKH                      ****4
+     C*
+     C                     END                             E***4
+     C*
+     C                     END                             E**3
+     C*
+     C**  INCREMENT THE NO. OF WORKING DAYS ADDED TO THE CURRENT DATE
+     C**  BY ONE DAY.
+     C                     SUB  1         @@WDSB           **2
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C* CONVERTING MIDAS DAY NO. TO DATE(YYYYMMDD)
+     C*
+     C                     Z-ADD@@MDNO    @@DAYN  50
+     C                     EXSR ZA0710
+     C                     GOTO ZA0859
+     C*
+     C           ZA0851    TAG
+     C*
+     C                     MOVE 'N'       @@NXTM  1
+     C                     MOVE '1'       @@HSWT  1
+     C                     MOVE @@SPDD    @@VDT
+     C*
+     C* CHECKING FOR LEAP YEAR
+     C*
+     C           @@YR      DIV  4         @@LP    40
+     C                     MVR            @@RM    10
+     C*
+     C* STORING DAYS IN A MONTH FOR SPOT DATE INPUTED
+     C*
+     C                     MOVE @M,@@Z71M @@SDAY
+     C*
+     C           @@RM      IFEQ 0                          B1
+     C           @@Z71M    IFEQ 2                          B*2
+     C                     MOVE 29        @@SDAY  20       **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C* CHECKING IF SPOT DATE IS THE LAST WORKING DAY OF THE MONTH
+     C*
+     C                     Z-ADD@@Z71D    @@CDAY  20
+     C                     ADD  1         @@CDAY
+     C*
+     C* IF NEXT DAY IS GREATER THAN DAYS IN A MONTH THEN SPOT DATE
+     C* IS THE LAST WORKING DAY
+     C*
+     C           @@CDAY    IFGT @@SDAY                     B1
+     C                     MOVE '1'       @@LSWT  1        *1
+     C                     END                             E1
+     C*
+     C* CHECKING FOR NEXT WORKING DATE
+     C*
+     C           @@LSWT    IFEQ '0'                        B1
+     C*
+     C           @@HSWT    DOWEQ'1'                        B*2
+     C*
+     C* GET MIDAS DAY NO
+     C*
+     C                     Z-ADD@@VDT     @@DTIN           **2
+     C                     EXSR ZA0680                     **2
+     C*
+     C* CHECK IF WORKIN DAY
+     C*
+     C                     Z-ADD@@MDNO    ZDAYNO           **2
+     C                     MOVE @@CCY1    ZCCY             **2
+     C                     EXSR ZCHKH                      **2
+     C*
+     C           ZIND      IFEQ 'W'                        B**3
+     C                     MOVE @@CCY2    ZCCY             ***3
+     C                     EXSR ZCHKH                      ***3
+     C                     END                             E**3
+     C*
+     C* IF HOLIDAY ADD 1 TO DAY
+     C*
+     C           ZIND      IFEQ 'H'                        B**3
+     C                     ADD  1         @@Z71D           ***3
+     C                     ELSE                            X**3
+     C                     MOVE '0'       @@HSWT           ***3
+     C                     END                             E**3
+     C*
+     C* IF DAY GREATER THAN DAYS IN A MONTH THEN EXIT OUT OF DO AND SETON
+     C* LAST DAY SWITCH ALSO MOVE DAYS IN THE MONTH TO DAY
+     C*
+     C           @@Z71D    IFGT @@SDAY                     B**3
+     C                     MOVE '0'       @@HSWT           ***3
+     C                     MOVE '1'       @@LSWT           ***3
+     C                     MOVE @@SDAY    @@Z71D           ***3
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C* IF LAST DAY SWITCH IS NOT ON THEN MOVE SPOT DATE INPUTED TO
+     C* WORK DATE BEING USED
+     C*
+     C           @@LSWT    IFEQ '0'                        B1
+     C                     Z-ADD@@SPDD    @@VDT            *1
+     C                     END                             E1
+     C*
+     C* IF PERIOD TYPE IS 'Y' THEN ADD PERIOD UNIT TO YEAR ELSE ADD IT
+     C* TO MONTH
+     C*
+     C           @@PRDT    IFEQ 'Y'                        B1
+     C                     ADD  @@PRDU    @@YR             *1
+     C                     ELSE                            X1
+     C                     ADD  @@PRDU    @@Z71M           *1
+     C                     END                             E1
+     C*
+     C* CHECKING IF MONTH IS GREATER THAN 12
+     C*
+     C           @@Z71M    IFGT 12                         B1
+     C           @@Z71M    SUB  12        @@Z71M           *1
+     C                     ADD  1         @@YR             *1
+     C                     END                             E1
+     C*
+     C* CHECKING FOR LEAP YEAR
+     C*
+     C           @@YR      DIV  4         @@LP    40
+     C                     MVR            @@RM    10
+     C                     MOVE '1'       @@HSWT
+     C*
+     C                     MOVE @M,@@Z71M @@SDAY
+     C*
+     C           @@RM      IFEQ 0                          B1
+     C           @@Z71M    IFEQ 2                          B*2
+     C                     MOVE 29        @@SDAY  20       **2
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C* IF LAST DAY SWITCH IS ON THEN MOVE DAYS IN A MONTH TO DAY FIELD
+     C*
+     C           @@LSWT    IFEQ '1'                        B1
+     C                     MOVE @@SDAY    @@Z71D           *1
+     C                     END                             E1
+     C*
+     C* IF DAY FIELD IS GREATER THAN DAYS IN A MONTH THEN MOVE DAYS IN A
+     C* MONTH TO DAY FIELD
+     C*
+     C           @@Z71D    IFGT @@SDAY                     B1
+     C                     Z-ADD@@SDAY    @@Z71D           *1
+     C                     END                             E1
+     C*
+     C* CHECKING IF A WORKING DAY
+     C*
+     C           @@HSWT    DOWEQ'1'                        B1
+     C*
+     C                     Z-ADD@@VDT     @@DTIN           *1
+     C                     EXSR ZA0680                     *1
+     C                     Z-ADD@@MDNO    ZDAYNO           *1
+     C                     MOVE @@CCY1    ZCCY             *1
+     C                     EXSR ZCHKH                      *1
+     C*
+     C           ZIND      IFEQ 'W'                        B*2
+     C                     MOVE @@CCY2    ZCCY             **2
+     C                     EXSR ZCHKH                      **2
+     C                     END                             E*2
+     C*
+     C* IF HOLIDAY ADD 1 TO DAY FIELD.IF DAY FIELD IS GREATER THAN DAYS IN
+     C* A MONTH THEN SUBTRACT 2 TO GET THE PREVIOUS DAY
+     C*
+     C           ZIND      IFEQ 'H'                        B*2
+     C                     ADD  1         @@Z71D           **2
+     C           @@Z71D    IFGT @@SDAY                     B**3
+     C           @@NXTM    OREQ 'Y'                        ***3
+     C                     SUB  2         @@Z71D           ***3
+     C                     MOVE 'Y'       @@NXTM           ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C*
+     C           ZIND      IFEQ 'W'                        B*2
+     C                     MOVE '0'       @@HSWT           **2
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C                     GOTO ZA0859
+     C                     MOVE @@SPDD    @@SPDD  80
+     C                     MOVE @@PRDU    @@PRDU  20
+     C                     MOVE @@PRDT    @@PRDT  1
+     C                     MOVE @@CCY1    @@CCY1  3
+     C                     MOVE @@CCY2    @@CCY2  3
+     C*
+     C           ZA0859    ENDSR
+     C*******************************************************************
+     C/EJECT
+     C*******************************************************************
+     C*
+     C* ZA0680 - THIS SUBROUTINE CONVERTS YYYYMMDD FORMAT DATE TO
+     C*          MIDAS DAY NUMBER FORMAT (NO. DAYS FROM 31/12/71)
+     C*
+     C* CALLED BY :
+     C*
+     C* CALLS :
+     C*
+     C* INPUT  : @@DTIN DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)
+     C*
+     C* OUTPUT : @@MDNO MIDAS DAY NUMBER  (SIZE : 5N)
+     C*
+     C* USES :   @@CC   NUMBER OF CENTURIES IN DATE
+     C*          @@DAY  DAY NUMBER
+     C*          @@REM  REMAINDER FROM DIVIDE
+     C*          @@MTH  MONTH NUMBER
+     C*          @MD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN
+     C*                 MONTH
+     C*          @@WK2  WORK FIELD (2,0)
+     C*          @@WK5  WORK FIELD (5,0)
+     C*          @@YYYY YEAR (4 CHARACTER)
+     C*          @@YY   YEAR (2 CHARACTER)
+     C*          @YD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN
+     C*                 A FOUR YEAR PERIOD
+     C*
+     C*******************************************************************
+     C*
+     C           ZA0680    BEGSR
+     C*
+     C**  CLEAR OUT ANY 'OLD' DATA IN FIELD
+     C                     Z-ADD0         @@MDNO  50
+     C*
+     C**   IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING
+     C           @@YYYY    IFGE 2072                       B1
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)
+     C           @@CC      SUB  19        @@WK2   20       *1
+     C           @@WK2     MULT 36524     @@MDNO           *1
+     C*
+     C**  YEAR 2000 IS A LEAP YEAR MUST ALLOW EXTRA DAY
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C           @@YYYY    ADD  28        @@WK2
+     C*
+     C           @@WK2     DIV  4         @@WK2
+     C                     MVR            @@REM   10
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD
+     C           @@WK2     MULT 1461      @@WK5   50
+     C                     ADD  @@WK5     @@MDNO
+     C*
+     C**  CHECK REMAINDER AND MONTH NUMBER
+     C           @@REM     IFEQ 0                          B1
+     C           @@MTH     ANDGT2                          B1
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR
+     C           @@REM     IFNE 0                          B1
+     C                     ADD  @YD,@@REM @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  ADD MONTHS THIS YEAR
+     C                     ADD  @MD,@@MTH @@MDNO
+     C*
+     C**  ADD DAYS THIS MONTH
+     C                     ADD  @@DAY     @@MDNO
+     C*
+     C           ZA0689    ENDSR                           **ZA0689 TAG**
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*   *PSSR SR HANDLES DATABASE ERROR IN NEW STANDING DATA FILES
+     C*
+     C           *PSSR     BEGSR
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C - THIS ROUTINE PERFORMS FINAL PROCESSING                   *
+     C*                                                               *
+     C* CALLED BY :  CONTROL PROCESSING                               *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C**  Close all files
+     C                     CLOSEFDCYTULL
+     C                     CLOSESDCURRL0
+     C*
+     C**  Terminate Processing
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C           #C9       ENDSR
+     C*
+     C*****************************************************************
+** @YD  USED BY SR. #AA    - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. #AA    - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+** TABLE ARRAY ----- @M
+312831303130313130313031
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

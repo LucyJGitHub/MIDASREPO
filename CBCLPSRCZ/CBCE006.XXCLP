@@ -1,0 +1,122 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CCB016A*/
+/*********************************************************************/
+/*                                                                   */
+/*        Midas - Close of Business Processing                       */
+/*                                                                   */
+/*       CBCE006 - CB Control reset of APOSTPD LF access paths       */
+/*                                                                   */
+/*      (c) Misys International Banking Systems Ltd. 2008            */
+/*                                                                   */
+/*       Last Amend No. CCB016A *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CCB016  *CREATE    Date 28May08              */
+/*      Midas Plus 1.4 Base -----------------------------------------*/
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB016A - COB Restructure                                   */
+/*                 CCB016 (Change Logical File Maintenance)          */
+/*       CCB016 - Delay LF Access paths over APOSTPD during GLC42.   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&JOBS)
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          COPYRIGHT MISYS INTERNATIONAL BANKING +
+                          SYSTEMS 2008')
+ 
+             DCL        VAR(&JOBS) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LOOP) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&LOOPA) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(20)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+             DCL        VAR(&KEYLENGTH) TYPE(*DEC) LEN(3 0) VALUE(15)
+             DCL        VAR(&SIZEA) TYPE(*CHAR) LEN(15) VALUE('999999999999999')
+             DCLF       FILE(QAFDLGL)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ                                                                          */
+             SNDPGMMSG  MSG('CBCE006 - CB Submit jobs to reset +
+                          APOSTPD Logical File access paths') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Retrieve system prefix and set program variables                                               */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+ 
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DTAQLIB) VALUE(&PRE *TCAT 'XLIB')
+ 
+/* Initialise number of jobs parameter to 4 if zero and ensure no greater than 15                 */
+ 
+             IF         COND(&JOBS = 0) THEN(CHGVAR VAR(&JOBS) VALUE(4))
+             IF         COND(&JOBS > 15) THEN(CHGVAR VAR(&JOBS) VALUE(15))
+ 
+/* Submit number of jobs as indicated by parameter and send FINISH message each time              */
+ 
+             CHGVAR     VAR(&LOOP) VALUE(0)
+ LOOP1:      IF         COND(&LOOP *GE &JOBS) THEN(GOTO CMDLBL(RCVDTAQ))
+ 
+             CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
+             CHGVAR     VAR(&LOOPA) VALUE(&LOOP)
+             CHGVAR     VAR(&JOBNAME) VALUE('CBCE007_' *CAT &LOOPA)
+ 
+             SBMJOB     JOB(&JOBNAME) JOBD(MEODD) JOBQ(BULKTJOBQ) +
+                          RTGDTA(*JOBD) RQSDTA('CALL PGM(CBCE007)') +
+                          INLLIBL(*JOBD) LOG(4 00) LOGCLPGM(*YES)
+ 
+             CHGVAR     VAR(%SST(&MSGDATA 1 20)) VALUE('FINISH')
+             CALL       PGM(QSNDDTAQ) PARM('CCB016FILE' &DTAQLIB +
+                          &MSGLENGTH &MSGDATA &KEYLENGTH &SIZEA)
+ 
+             GOTO       CMDLBL(LOOP1)
+ 
+/* For each job submitted, read a message from the termination feedback dataqueue                 */
+ 
+ RCVDTAQ:    CHGVAR     VAR(&LOOP) VALUE(0)
+ LOOP2:      CALL       PGM(QRCVDTAQ) PARM('CCB016TERM' &DTAQLIB +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+             IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
+                 CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
+             ENDDO
+             IF         COND(&LOOP *GE &JOBS) THEN(GOTO CMDLBL(RCVF))
+ 
+             GOTO       CMDLBL(LOOP2)
+ 
+/* For each logical based over APOSTPD, set the access path (again) but without                   */
+/* monitoring messages. This ensures that the submitted jobs have completed                       */
+/* normally and if not that either the access path is restored now or that the                    */
+/* program fails causing the CoB to halt.                                                         */
+ 
+ RCVF:       OVRDBF     FILE(QAFDLGL) TOFILE(&DPLIB/CBLATRPA)
+ LOOP3:      RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOF))
+ 
+             IF         COND(&LGMANT *EQ 'I') THEN(DO)
+                 CHGLF      FILE(&LGLIB/&LGFILE) MAINT(*IMMED)
+             ENDDO
+ 
+             GOTO       CMDLBL(LOOP3)
+ 
+ EOF:        DLTOVR     FILE(*ALL)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Error processing - Change the job switches and send messages to MRUNQ and MOPERQ               */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     &MSG VALUE('Program CBCE006 terminated abnormally')
+             SNDMSG     TOMSGQ(MRUNQ MOPERQ) MSG(&MSG)
+             DMPCLPGM
+ 
+ END:        CHGVAR     VAR(&MIBSCPY) VALUE('(C) COPYRIGHT MISYS +
+                          INTERNATIONAL BANKING SYSTEMS 2008')
+ ENDPGM

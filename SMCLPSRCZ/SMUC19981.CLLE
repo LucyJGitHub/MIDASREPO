@@ -1,0 +1,287 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Migration Solution for Duplicate Key error')          */
+/*XBIA   OVRDBF FILE(FDACPTPD) TOFILE(QAFDACCP)                      */                /*MD019981A*/
+/*XBIB   OVRDBF FILE(FDATRIPD) TOFILE(QAFDLGL)                       */                /*MD019981A*/
+/*XBIC   OVRDBF FILE(BRTEMPPD) TOFILE(QADSPDBR)                      */                /*MD019981A*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       SMUC19981 - Migration Solution for Duplicate Key error      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD019981A           Date 15May13             */
+/*       Prev Amend No. MD019981 *CREATE    Date 27Apr13             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD019981A - Incorporate fix change to the actual migration  */
+/*                   process (Reopen)                                */
+/*       MD019981 - DM migration issues, duplicate key error         */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&FMLIB &FLNAM) */                                         /*MD019981A*/
+             PGM                                                                       /*MD019981A*/
+ 
+/**********  DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10) */                             /*MD019981A*/
+             DCL        VAR(&FLNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STATUS) TYPE(*CHAR) LEN(6)                                /*MD019981A*/
+             DCL        VAR(&CHKFIL) TYPE(*CHAR) LEN(8)                                /*MD019981A*/
+             DCL        VAR(&RTNFIL) TYPE(*CHAR) LEN(10)                               /*MD019981A*/
+             DCL        VAR(&RTNVAL) TYPE(*CHAR) LEN(1)                                /*MD019981A*/
+             DCL        VAR(&RTNNUM) TYPE(*DEC) LEN(1 0)                               /*MD019981A*/
+             DCL        VAR(&RTNEOF) TYPE(*CHAR) LEN(3)                                /*MD019981A*/
+             DCL        VAR(&SQLSTMT) TYPE(*CHAR) LEN(100)                             /*MD019981A*/
+             DCL        VAR(&SQLQTMK) TYPE(*CHAR) LEN(8) VALUE('''')                   /*MD019981A*/
+ 
+             DCLF       FILE(SMCPYDPD)                                                 /*MD019981A*/
+                                                                                       /*MD019981A*/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ENDPGM))
+ 
+/* Check the status of the the migrated files if it was already */                     /*MD019981A*/
+/* processed before checking for file errors,  */                                      /*MD019981A*/
+/* if not, then wait for 1 minute then check again  */                                 /*MD019981A*/
+                                                                                       /*MD019981A*/
+ READF:                                                                                /*MD019981A*/
+             RCVF                                                                      /*MD019981A*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                        /*MD019981A*/
+             GOTO       CMDLBL(ENDPGM)                                                 /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(&ODDDAT *EQ 'SUBMIT' *OR &ODDDAT *EQ +
+                          'ACTIVE') THEN(DO)                                           /*MD019981A*/
+ CHKSTS:                                                                               /*MD019981A*/
+             DLYJOB     DLY(60)                                                        /*MD019981A*/
+                                                                                       /*MD019981A*/
+             CALL       PGM(SM000008) PARM(&ODOBNM '*FILE    ' +
+                          '*CHECK ' &STATUS)                                           /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*MD019981A*/
+             GOTO       CMDLBL(ABNOR)                                                  /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(&STATUS *EQ 'SUBMIT' *OR &STATUS *EQ +
+                          'ACTIVE') THEN(DO)                                           /*MD019981A*/
+                                                                                       /*MD019981A*/
+             GOTO       CMDLBL(CHKSTS)                                                 /*MD019981A*/
+                                                                                       /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(&ODDDAT *EQ 'UNIQUE') THEN(DO)                            /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(&ODOBNM *EQ 'GLJENHQD' *OR &ODOBNM +
+                          *EQ 'GLJENPQD' *OR &ODOBNM *EQ +
+                          'GLJENHQD' *OR &ODOBNM *EQ 'LEFEEDQD') +
+                          THEN(DO)                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+/* Determine all dependent logical files */                                            /*MD019981A*/
+                                                                                       /*MD019981A*/
+             DSPDBR     FILE(&ODOBNM) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/BRTEMPPD)                                      /*MD019981A*/
+ 
+ CHKDEPF:                                                                              /*MD019981A*/
+             CHGVAR     VAR(&CHKFIL) VALUE('BRTEMPPD')                                 /*MD019981A*/
+             CHGVAR     VAR(&RTNEOF) VALUE(' ')                                        /*MD019981A*/
+             CHGVAR     VAR(&RTNFIL) VALUE(' ')                                        /*MD019981A*/
+             CALL       PGM(SMU019981) PARM(&CHKFIL &RTNFIL &RTNVAL +
+                          &RTNNUM &RTNEOF)                                             /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*MD019981A*/
+             GOTO       CMDLBL(ABNOR)                                                  /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+ 
+             IF         COND(&RTNEOF *EQ 'EOF') THEN(DO)                               /*MD019981A*/
+             GOTO       CMDLBL(PNUNIQR)                                                /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(&RTNFIL *NE ' ') THEN(DO)                                 /*MD019981A*/
+                                                                                       /*MD019981A*/
+/* Check if the logical file is defined to be "UNIQUE" if "YES"then */                 /*MD019981A*/
+/* check if the member has been remove in the bridge during */                         /*MD019981A*/
+/* the process of migration (applicable only for single member) */                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             DSPFD      FILE(&RTNFIL) TYPE(*ACCPTH) +
+                          OUTPUT(*OUTFILE) FILEATR(*ALL) +
+                          OUTFILE(QTEMP/FDACPTPD)                                      /*MD019981A*/
+                                                                                       /*MD019981A*/
+             CHGVAR     VAR(&CHKFIL) VALUE('FDACPTPD')                                 /*MD019981A*/
+             CHGVAR     VAR(&RTNVAL) VALUE(' ')                                        /*MD019981A*/
+             CALL       PGM(SMU019981) PARM(&CHKFIL &RTNFIL &RTNVAL +
+                          &RTNNUM)                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*MD019981A*/
+             GOTO       CMDLBL(ABNOR)                                                  /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(&RTNVAL *EQ 'Y') THEN(DO)                                 /*MD019981A*/
+                                                                                       /*MD019981A*/
+             DSPFD      FILE(&RTNFIL) TYPE(*ATR) OUTPUT(*OUTFILE) +
+                          FILEATR(*LF) OUTFILE(QTEMP/FDATRIPD)                         /*MD019981A*/
+                                                                                       /*MD019981A*/
+             CHGVAR     VAR(&CHKFIL) VALUE('FDATRIPD')                                 /*MD019981A*/
+             CHGVAR     VAR(&RTNNUM) VALUE(0)                                          /*MD019981A*/
+             CALL       PGM(SMU019981) PARM(&CHKFIL &RTNFIL &RTNVAL +
+                          &RTNNUM)                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               /*MD019981A*/
+             GOTO       CMDLBL(ABNOR)                                                  /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+/* If the logical file has no member, add logical file member */                       /*MD019981A*/
+                                                                                       /*MD019981A*/
+             IF         COND(&RTNNUM *EQ 0) THEN(DO)                                   /*MD019981A*/
+                                                                                       /*MD019981A*/
+             ADDLFM     FILE(&RTNFIL) MBR(&RTNFIL)                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+                                                                                       /*MD019981A*/
+             GOTO       CMDLBL(CHKDEPF)                                                /*MD019981A*/
+                                                                                       /*MD019981A*/
+ PNUNIQR:                                                                              /*MD019981A*/
+                                                                                       /*MD019981A*/
+/* Process Non-unique records in GLJENHQD*/
+/* Create a backup copy of the extension file. */
+ 
+/**********  IF         COND(&FLNAM = 'GLJENHQD') THEN(DO) */                          /*MD019981A*/
+             IF         COND(&ODOBNM = 'GLJENHQD') THEN(DO)                            /*MD019981A*/
+ 
+/**********  CPYF       FROMFILE(&FMLIB/GLJENHQD) + */                                 /*MD019981A*/
+/**********               TOFILE(QTEMP/XGLJENHQD) MBROPT(*REPLACE) +                   /*MD019981A*/
+/**********               CRTFILE(*YES) FMTOPT(*MAP)                                   /*MD019981A*/
+                                                                                       /*MD019981A*/
+             CPYF       FROMFILE(&ODLBNM/GLJENHQD) +
+                          TOFILE(QTEMP/XGLJENHQD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) FMTOPT(*MAP)                                   /*MD019981A*/
+ 
+/* Clear the extension file. */
+ 
+             CLRPFM     FILE(GLJENHQD)
+ 
+/* Insert those records that is match in both backup file and main */
+/* file into the extension file */
+ 
+             SCRUNSQL   SQL('insert into GLJENHQD (HQBTCH, HQBRCD, +
+                    HQFRID) select HQBTCH,HQBRCD, HQFRID FROM +
+                    QTEMP/XGLJENHQD, GLJENHPD WHERE BRBTNB = HQBTCH +
+                    AND BRBCDA = HQBRCD')
+ 
+/* Insert those records that is in the main file but not in the back up file */
+ 
+             SCRUNSQL    SQL('insert into GLJENHQD(HQBTCH, HQBRCD) +
+                    select BRBTNB, BRBCDA from GLJENHPD left outer +
+                    join GLJENHQD on BRBTNB = HQBTCH and +
+                    BRBCDA = HQBRCD where HQBTCH is null')
+ 
+             ENDDO
+ 
+/* Process Non-unique records in GLJENPQD*/
+/* Create a backup copy of the extension file. */
+ 
+/**********  IF         COND(&FLNAM = 'GLJENPQD') THEN(DO) */                          /*MD019981A*/
+             IF         COND(&ODOBNM = 'GLJENPQD') THEN(DO)                            /*MD019981A*/
+ 
+/**********  CPYF       FROMFILE(&FMLIB/GLJENPQD) + */                                 /*MD019981A*/
+/**********               TOFILE(QTEMP/XGLJENPQD) MBROPT(*REPLACE) +                   /*MD019981A*/
+/**********               CRTFILE(*YES) FMTOPT(*MAP)                                   /*MD019981A*/
+                                                                                       /*MD019981A*/
+             CPYF       FROMFILE(&ODLBNM/GLJENPQD) +
+                          TOFILE(QTEMP/XGLJENPQD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) FMTOPT(*MAP)                                   /*MD019981A*/
+ 
+/* Clear the extension file. */
+ 
+             CLRPFM     FILE(GLJENPQD)
+ 
+/* Insert those records that is match in both backup file and main */
+/* file into the extension file GLJENPQD */
+ 
+             SCRUNSQL   SQL('insert into GLJENPQD(IQBTCH, IQBRCD, +
+                    IQBITM, IQFRID) select IQBTCH, IQBRCD, IQBITM, +
+                    IQFRID from QTEMP/XGLJENPQD, GLJENPPD WHERE +
+                    BTBTNB = IQBTCH AND BTBINB = IQBITM AND +
+                    BTIBCA = IQBRCD')
+ 
+/* Insert those records that is in the main file but not in the back up file */
+ 
+             SCRUNSQL   SQL('insert into GLJENPQD(IQBTCH, IQBRCD, +
+                    IQBITM) select BTBTNB, BTIBCA, BTBINB from +
+                    GLJENPPD left outer join GLJENPQD on +
+                    BTBTNB = IQBTCH and BTIBCA = IQBRCD and +
+                    BTBINB = IQBITM where IQBTCH is null and IQBRCD +
+                    is null and IQBITM is null and IQBITM is null')
+ 
+             ENDDO
+ 
+/* Process Non-unique records in LEFEEDQD*/
+/* Create a backup copy of the extension file. */
+ 
+/**********  IF     COND(&FLNAM = 'LEFEEDQD') THEN(DO) */                              /*MD019981A*/
+             IF     COND(&ODOBNM = 'LEFEEDQD') THEN(DO)                                /*MD019981A*/
+ 
+/**********  CPYF       FROMFILE(&FMLIB/LEFEEDQD) + */
+/**********               TOFILE(QTEMP/XLEFEEDQD) MBROPT(*REPLACE) +                   /*MD019981A*/
+/**********               CRTFILE(*YES) FMTOPT(*MAP)                                   /*MD019981A*/
+                                                                                       /*MD019981A*/
+             CPYF       FROMFILE(&ODLBNM/LEFEEDQD) +
+                          TOFILE(QTEMP/XLEFEEDQD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) FMTOPT(*MAP)                                   /*MD019981A*/
+ 
+/* Clear the extension file. */
+ 
+             CLRPFM     FILE(LEFEEDQD)
+ 
+/* Insert those records that is match in both backup file and main */
+/* file into the extension file LEFEEDQD */
+ 
+             SCRUNSQL   SQL('insert into LEFEEDQD(FQBRCA, FQCNUM, +
+                    FQFACL, FQLOAN, FQFSEQ) select FQBRCA, FQCNUM, +
+                    FQFACL, FQLOAN, FQFSEQ from QTEMP/XLEFEEDQD, LEFEED +
+                    WHERE FEBRCA = FQBRCA and FECNUM = FQCNUM AND +
+                    FELOAN = FQLOAN and FEFACL = FQFACL and +
+                    FEFSEQ = FQFSEQ')
+ 
+/* Insert those records that is in the main file but not in the back up file */
+ 
+             SCRUNSQL   SQL('insert into LEFEEDQD(FQBRCA, FQCNUM, +
+                          FQFACL, FQLOAN, FQFSEQ) select FEBRCA, +
+                          FECNUM, FEFACL, FELOAN, FEFSEQ FROM +
+                          LEFEED left outer join LEFEEDQD on FEBRCA +
+                          = FQBRCA and FECNUM = FQCNUM and FEFACL = +
+                          FQFACL and FELOAN = FQLOAN and FEFSEQ = +
+                          FQFSEQ  where FQBRCA is null and FQCNUM +
+                          is null and FQFACL is null and FQLOAN is +
+                          null and FQFSEQ is null')
+ 
+             ENDDO
+ 
+/* Update the status of the Driving file for the database */                           /*MD019981A*/
+/* migration, if insert of records are successful. */                                  /*MD019981A*/
+                                                                                       /*MD019981A*/
+             CHGVAR     VAR(&SQLSTMT) VALUE('UPDATE SMCPYDPD SET +
+                          ODDDAT = ''PASSED'' WHERE ODOBNM =  +
+                          ''' *CAT &ODOBNM *CAT &SQLQTMK)                              /*MD019981A*/
+                                                                                       /*MD019981A*/
+             SCRUNSQL   SQL(&SQLSTMT)                                                  /*MD019981A*/
+             MONMSG     MSGID(SQL0000) EXEC(GOTO CMDLBL(ABNOR))                        /*MD019981A*/
+                                                                                       /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+             ENDDO                                                                     /*MD019981A*/
+             GOTO       CMDLBL(READF)                                                  /*MD019981A*/
+/*           GOTO       CMDLBL(ENDPGM) */                                              /*MD019981A*/
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Migration Solution for Duplicate +
+                          Key error - Ended Abnormally') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

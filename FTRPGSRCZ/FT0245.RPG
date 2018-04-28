@@ -1,0 +1,290 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT OUTGOING PAYMENTS BY DEST PROMPT PGM')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module                            *
+     F*                                                               *
+     F*  FT0245 - Outgoing Payments By Destination Prompt Program     *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. S01494             DATE 25MAY94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  S01494 - BLI Funds Transfer Enhancements                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     FFT0245DFCF  E                    WORKSTN
+     F****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F****************************************************************
+     F*       11        Protect input fields for @PACT='E','D'       *
+     F*       12        @PACT='D' for delete                         *
+     F*       13        Error found                                  *
+     F*                                                              *   S01494
+     F*       26        Outgoing Payments by booking branch          *   S01494
+     F*       27        Regular Payments by booking branch           *   S01494
+     F*       28        Outgoing Payments by originating branch      *   S01494
+     F*       29        Regular Payments by originating branch       *   S01494
+     F*                                                              *   S01494
+     F*       30        Error on SALLP (All payments field)          *
+     F*       31        Error on SAUTH (Authorised Only field)       *
+     F*       32        Error on SNAUT (Non Authorised field)        *
+     F*                                                              *
+     F*       LR        Last record (terminate program).             *
+     F****************************************************************
+     E                    CPY@    1   1 80               COPYRIGHT
+     E                    @ERR       38  4               ERROR CODES
+     E/EJECT
+     ICPYR@#      DS
+     I*********************************************************
+     I* Data structure for compilation - copyright insertion
+     I*********************************************************
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IPSDS       SDS
+     I**********************************************
+     I* Data structure to retrieve WSID and USRID. *
+     I**********************************************
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     IRUNDAT      DS                             13
+     I**********************************************
+     I*       Data structure to retrieve rundat    *
+     I**********************************************
+     I                                        1   7 SRUNA
+     I@PARM       DS                            100
+     I*******************************************************
+     I*       Data structure for input/output parameter     *
+     I*******************************************************
+     I                                        3   3 TYPE
+     I                                        4  10 W0RNTP                S01494
+     I/EJECT
+     C*****************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Call Initialisation Routine
+     C                     EXSR INIT
+     C*
+     C**  Do until Command 3 pressed
+     C***  or Command 12 pressed
+     C****  or no errors and @PACT='I','A',' '
+     C*****  or Command 10 pressed and @PACT='D'
+     C           *INKC     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C           *IN13     OREQ '0'
+     C           *INKJ     OREQ '1'
+     C           @PACT     ANDEQ'D'
+     C                     TIME           TIME
+     C                     EXFMTFT0245DS
+     C*
+     C**  Validate input details if @PACT='I','A',' '
+     C           @PACT     IFNE 'D'
+     C           @PACT     ANDNE'E'
+     C                     EXSR VALID
+     C           *IN13     IFEQ '1'
+     C                     MOVEA@ERR,1    ERCD
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  If Command 3 pressed in called program return to menu
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'E'       @PCMD
+     C                     END
+     C*
+     C**  If Command 10 pressed in called program return to menu
+     C           *INKJ     IFEQ '1'
+     C                     MOVE 'D'       @PCMD
+     C                     END
+     C*
+     C**  If Command 12 pressed in called program return to menu
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'F'       @PCMD
+     C                     END
+     C*
+     C**  If Selection for Authorised Only, Move '1' to TYPE
+     C           SAUTH     IFEQ 'Y'
+     C                     MOVE '1'       TYPE
+     C                     END
+     C*
+     C**  If Selection for Non Authorised Only, Move '2' to TYPE
+     C           SNAUT     IFEQ 'Y'
+     C                     MOVE '2'       TYPE
+     C                     END
+     C*
+     C**  If Selection for All payments, Move '3' to TYPE
+     C           SALLP     IFEQ 'Y'
+     C                     MOVE '3'       TYPE
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C/EJECT
+     C****************************************************************
+     C**  Subroutine 'INIT'                                          *
+     C****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C** Parameter List
+     C           *ENTRY    PLIST
+     C                     PARM           @PSEQ   5
+     C                     PARM           @PLEV   1
+     C                     PARM           @PENT   3
+     C                     PARM           @PARM 100
+     C                     PARM           @PACT   1
+     C                     PARM           @PCMD   1
+     C*
+     C**  Access data area RUNDAT for multi branch indicator
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C**  If Action code is 'E' seton indicator 11 to protect fields
+     C           @PACT     IFEQ 'E'
+     C                     EXSR MOVEY
+     C                     SETON                     11
+     C                     END
+     C*
+     C**  If Action code is 'D' seton indicator 12 to show delete allowed
+     C           @PACT     IFEQ 'D'
+     C                     EXSR MOVEY
+     C                     SETON                     1112
+     C                     END
+     C*
+     C**  If Action code is 'A' seton move 'Y' into appropriate field
+     C           @PACT     IFEQ 'A'
+     C                     EXSR MOVEY
+     C                     END
+     C*
+     C**  If run type parameter is 'FTM2506' seton indicator 26           S01494
+     C*                                                                   S01494
+     C           W0RNTP    IFEQ 'FTM2506'                                 S01494
+     C                     MOVE '1'       *IN26                           S01494
+     C                     END                                            S01494
+     C*                                                                   S01494
+     C**  If run type parameter is 'FTM2507' seton indicator 27           S01494
+     C*                                                                   S01494
+     C           W0RNTP    IFEQ 'FTM2507'                                 S01494
+     C                     MOVE '1'       *IN27                           S01494
+     C                     END                                            S01494
+     C*                                                                   S01494
+     C**  If run type parameter is 'FTM2508' seton indicator 28           S01494
+     C*                                                                   S01494
+     C           W0RNTP    IFEQ 'FTM2508'                                 S01494
+     C                     MOVE '1'       *IN28                           S01494
+     C                     END                                            S01494
+     C*                                                                   S01494
+     C**  If run type parameter is 'FTM2509' seton indicator 29           S01494
+     C*                                                                   S01494
+     C           W0RNTP    IFEQ 'FTM2509'                                 S01494
+     C                     MOVE '1'       *IN29                           S01494
+     C                     END                                            S01494
+     C*                                                                   S01494
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   Subroutine 'VALID'                                          *
+     C*   Check that no entry is in error                             *
+     C*   and that not more than one entry has been made              *
+     C*****************************************************************
+     C*
+     C           VALID     BEGSR
+     C*
+     C**  Reset error indicators
+     C                     SETOF                     13
+     C                     SETOF                     303132
+     C                     Z-ADD1         I       20
+     C                     MOVE *BLANKS   @ERR
+     C*
+     C**  Validate if all entries are blank
+     C           SALLP     IFEQ *BLANKS
+     C           SAUTH     ANDEQ*BLANKS
+     C           SNAUT     ANDEQ*BLANKS
+     C                     MOVE '001'     @ERR,I
+     C                     ADD  1         I
+     C                     SETON                     13
+     C                     SETON                     303132
+     C                     END
+     C*
+     C**  Validate if All Payments field entered
+     C           SALLP     IFNE 'Y'
+     C           SALLP     ANDNE*BLANK
+     C                     MOVE '002'     @ERR,I
+     C                     ADD  1         I       20
+     C                     SETON                     1330
+     C                     END
+     C*
+     C**  Validate if Authorised Only Payments field entered
+     C           SAUTH     IFNE 'Y'
+     C           SAUTH     ANDNE*BLANK
+     C                     MOVE '003'     @ERR,I
+     C                     ADD  1         I
+     C                     SETON                     1331
+     C                     END
+     C*
+     C**  Validate if Non Authorised Only Payments field entered
+     C           SNAUT     IFNE 'Y'
+     C           SNAUT     ANDNE*BLANK
+     C                     MOVE '004'     @ERR,I
+     C                     ADD  1         I
+     C                     SETON                     1332
+     C                     END
+     C*
+     C**  Validate if more than one entry is made
+     C           SALLP     IFNE *BLANKS
+     C           SAUTH     ANDNE*BLANKS
+     C           SALLP     ORNE *BLANKS
+     C           SNAUT     ANDNE*BLANKS
+     C           SAUTH     ORNE *BLANKS
+     C           SNAUT     ANDNE*BLANKS
+     C                     MOVE '005'     @ERR,I
+     C                     ADD  1         I
+     C                     SETON                     13
+     C                     SETON                     303132
+     C                     END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*   Subroutine 'MOVEY'                                          *
+     C*   Move 'Y' into appropriate screen field                      *
+     C*   depending on all, authorised-only or not-authorised only    *
+     C*****************************************************************
+     C*
+     C           MOVEY     BEGSR
+     C*
+     C**  If TYPE='3', move 'Y' into SALLP
+     C           TYPE      IFEQ '3'
+     C                     MOVE 'Y'       SALLP
+     C                     END
+     C*
+     C**  If TYPE='1', move 'Y' into SAUTH
+     C           TYPE      IFEQ '1'
+     C                     MOVE 'Y'       SAUTH
+     C                     END
+     C*
+     C**  If TYPE='2', move 'Y' into SNAUT
+     C           TYPE      IFEQ '2'
+     C                     MOVE 'Y'       SNAUT
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

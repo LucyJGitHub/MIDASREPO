@@ -1,0 +1,88 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  DL0280 - DL0280P02                                           *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CPK025  *CREATE    Date 18Jul06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CPK025 - Externalise P02.                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SR: P02    - TO CALCULATE FX CROSS RATE FOR DEAL             *
+      *                                                               *
+      *****************************************************************
+     C     P02           BEGSR                                                  ** P02    **   S0148
+     C*                                                                   S01486
+     C** ALTER TOTAL DEAL PRINCIPAL FOR 'PD' AND TERMINATE PROCESSING     S01486
+     C     AMTP          IFEQ      'PD'                                                        S0148
+     C*                                                                   S01486
+     C     DLNO          IFNE      WWSAVE                                                      S0148
+     C                   Z-ADD     DLNO          WWSAVE            6 0                         S0148
+     C                   Z-ADD     PAMT          WWPAMT           13 0                         S0148
+     C                   Z-ADD     FXRD          WWFXRD           13 8                         S0148
+     C                   END                                                                   S0148
+     C*                                                                   S01486
+     C     WWPAMT        SUB       DAAM          WWPAMT                                        S0148
+     C                   GOTO      P02END                                                      S0148
+     C                   END                                                                   S0148
+     C*                                                                   S01486
+     C** OBTAIN PORTFOLIO CURRENCY                                        S01486
+     C                   EXSR      P03                                                         S0148
+     C     WWERRF        CABEQ     'Y'           P02END                                        S0148
+     C*                                                                   S01486
+     C     DLNO          IFNE      WWSAVE                                                      S0148
+     C                   Z-ADD     DLNO          WWSAVE            6 0                         S0148
+     C                   Z-ADD     PAMT          WWPAMT           13 0                         S0148
+     C                   Z-ADD     FXRD          WWFXRD           13 8                         S0148
+     C                   END                                                                   S0148
+     C*                                                                   S01486
+     C                   MOVE      PCCY          ZCCYF                                         S0148
+     C                   MOVE      WWPCCY        ZCCYT                                         S0148
+     C                   Z-ADD     VDATDM        ZSDATE                                        S0148
+     C                   EXSR      ZBAKRT                                                      S0148
+     C*                                                                   S01486
+     C** DATABASE ERROR                                                   S01486
+     C     ZERROR        IFEQ      'Y'                                                         S0148
+     C                   SETON                                        U7U8LR                   S0148
+     C                   MOVEL     '13'          DBASE             3             **DBERR 1**   S0148
+     C**********         EXCEPT    ERROR                                              S0148 AR547995
+     C                   MOVE      'Y'           WWERRF                                        S0148
+     C                   EXSR      *PSSR                                                    AR547995
+     C                   GOTO      P02END                                                      S0148
+     C                   END                                                                   S0148
+     C*                                                                   S01486
+     C** SET UP DEAL AMENDMENT AMOUNT FOR USE IN CALCULATIONS             S01486
+     C     AMTP          IFEQ      'PI'                                                        S0148
+     C                   Z-ADD     DAAM          WWDEMA           15 0                         S0148
+     C                   ELSE                                                                  S0148
+     C                   Z-ADD     KYAMT         WWDEMA                                        S0148
+     C                   END                                                                   S0148
+     C*                                                                   S01486
+     C** CALCULATE NEW FX RATE TO BE OUTPUT TO DEALS                      S01486
+     C                   Z-ADD     0             WWOLFX                                        S0148
+     C                   Z-ADD     0             WWPRNC                                        S0148
+     C                   Z-ADD     0             WWNWFX                                        S0148
+     C                   Z-ADD     0             WWFXCO                                        S0148
+     C     WWPAMT        MULT      WWFXRD        WWOLFX                                        S0148
+     C     WWDEMA        MULT      ZCRSRT        WWNWFX                                        S0148
+     C     WWOLFX        ADD       WWNWFX        WWFXCO                                        S0148
+     C     WWPAMT        ADD       WWDEMA        WWPAMT                                        S0148
+     C     WWFXCO        DIV       WWPAMT        FXRD                                          S0148
+     C                   Z-ADD     FXRD          WWFXRD                                        S0148
+     C*                                                                   S01486
+     C     P02END        ENDSR                                                  ** P02 END *   S0148
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * End of /COPY DL0280P02                                        *
+      *****************************************************************

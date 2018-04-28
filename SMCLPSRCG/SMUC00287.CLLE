@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Utility for data queue creation')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing                                   */
+/*                                                                   */
+/*       SMUC00287 - Zone Data Queues Creation                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. AR1091528 *CREATE  Date 30Sep13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1091528 - Utility for data queue creation                 */
+/*                   (Child: AR1091529)                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MAINPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COUNTN) TYPE(*DEC) LEN(1 0) VALUE(0)
+             DCL        VAR(&COUNTA) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SUPPPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQGEN) TYPE(*CHAR) LEN(10)
+             DCLF       FILE(GPZONEPD)
+ 
+             COPYRIGHT TEXT('(c) Misys Banking Systems Ltd. 2013')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Retrieve Global layer library for creation of dataqueues. */
+             RTVOBJD    OBJ(GPUTUXXXXN) OBJTYPE(*DTAQ) RTNLIB(&RTNLIB)
+             RCVF       RCDFMT(GPZONED0)
+ CRTDTAQ:
+             RTVOBJD    OBJ(GPUTUXXXXN) OBJTYPE(*DTAQ) RTNLIB(&RTNLIB)
+             CHGVAR     VAR(&COUNTN) VALUE(&COUNTN + 1)
+             CHGVAR     VAR(&COUNTA) VALUE(&COUNTN)
+             CHGVAR     VAR(&DTAQ) VALUE('GPUTU' *TCAT &ZOSHTC   *TCAT +
+                          &COUNTA)
+             DLTDTAQ    DTAQ(&RTNLIB/&DTAQ)
+             CRTDTAQ    DTAQ(&RTNLIB/&DTAQ) MAXLEN(10) SIZE(*MAX2GB +
+                          200000) AUTORCL(*YES)
+             IF         COND(&COUNTN *LT 9) THEN(DO)
+                GOTO       CMDLBL(CRTDTAQ)
+             ENDDO
+ 
+/* Change ownership and authorities. */
+ 
+             CHGVAR     VAR(&GPSBSID) VALUE(%SST(&RTNLIB 1 2))
+             CHGVAR     VAR(&OWNER) VALUE(&GPSBSID *TCAT 'OWNER')
+             CHGVAR     VAR(&AUTL) VALUE(&GPSBSID *TCAT 'DATABASE')
+             CHGVAR     VAR(&DTAQGEN) VALUE('GPUTU' *TCAT &ZOSHTC   +
+                          *TCAT '*')
+ 
+             CHGOWNAUT  OBJ(&RTNLIB/&DTAQGEN) OBJTYPE(*DTAQ) +
+                          NEWOWN(&OWNER) PUBAUT(*AUTL) AUTL(&AUTL) +
+                          CHGLIB(N)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal end processing. */
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('SMUC00287 ended abnormally - see +
+                          joblog.') TOMSGQ(MOPERQ)
+ END:
+             ENDPGM

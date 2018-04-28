@@ -1,0 +1,354 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE CO Forward Diary Events Extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE7565 - SE Forward Diary Events Extract                     *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CSE020             Date 21Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE007  *CREATE    Date 25Mar98               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE020 - Corporate Actions Domino Effect Processing          *
+      *           SECORFPD (Recompiled)                               *
+     F*  CSE007 - Corporate Actions                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     FSECORFL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      ** SE Corporate Action Reference File
+      *
+     FSECOATL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      ** SE Corporate Action Type File
+      *
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      ** SE Security Details File
+      *
+     FSECOFDPAO   E                    DISK
+     F                                              KINFSR *PSSR
+      ** SE Corporate Action Forward Diary Events - Audit
+      *
+     FSECOFDPDO   E                    DISK
+     F                                              KINFSR *PSSR
+      ** SE Corporate Action Forward Diary Events - Details
+      *
+     FSE7565AUO   E                    PRINTER
+     F                                              KINFSR *PSSR
+      **  Audit Printer File
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *  -------------------------------                              *
+      *                                                               *
+      *  SRINIT - INITIAL PROCESSING                                  *
+      *  SRMAIN - MAIN PROCESSING                                     *
+      *  SRENDP - END PROCESSING                                      *
+      *                                                               *
+      *  *PSSR  - STANDARD DATA BASE ERROR PROCESSING                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      **   For Compilation - Copyright Insertion
+      *
+      ******************************************************************
+      /EJECT
+      ******************************************************************
+     IPGMDS     ESDSY2PGDSP
+      ** Program Date Structure
+      *
+     ILDA       E DSLDA                         256
+      **   Data Structure for Database Error
+      *
+     I@BANK     E DSSDBANKPD
+      ** Dummy record format for access to Bank Details
+      *
+     I@SDGEL    E DSSDGELRPD
+      ** General ledger details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            START  - Main Routine                              *
+      *                                                               *
+      *  CALLS     SRINIT - Initial Processing                        *
+      *            SRMAIN - Main Processing                           *
+      *            SRENDP - End Processing                            *
+      *                                                               *
+      *****************************************************************
+      *
+      **   Initial Processing
+      *
+     C                     EXSR SRINIT
+      *
+      **   Main Processing
+      *
+     C                     EXSR SRMAIN
+      *
+      **   End Processing
+      *
+     C                     EXSR SRENDP
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINIT - INITIAL PROCESSING                        *
+      *                                                               *
+      *  CALLS     *PSSR  - StandardData Base Error Processing        *
+      *                                                               *
+      *  CALLED BY START  - Main Routine                              *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Copyright statement
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Initialise DB error fields and store program name
+      *
+     C                     MOVE *BLANKS   WWLOT  52
+     C                     MOVEL'SE7565'  DBPGM  10
+      *
+      ** Initialise key and work fields
+      *
+     C                     Z-ADD0         WWNREC  50
+      *
+      ** Access to SDBANKPD to retrieve the MIDAS
+      ** Run Date and User Report Title
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+      *
+      ** If record not found
+      *
+     C           @RTCD     IFNE *BLANK                     B*1
+     C           BJTYLC    OREQ 'D'
+     C                     Z-ADD1         DBASE
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY  29
+     C                     EXSR *PSSR
+     C                     END                             E*1
+      *
+      ** Determine Date Format
+      *
+     C           BJDFIN    IFEQ 'M'                        B*1
+     C                     MOVE '1'       *IN98
+     C                     END                             E*1
+      *
+      ** Access general ledger details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** @SDGEL    PARM @SDGEL    DSFDY                                               CGL029
+     C           @SDGEL    PARM @SDGEL    DSSDY                                               CGL029
+      *
+      ** If record not found
+      *
+     C           @RTCD     IFNE *BLANK                     B*1
+     C                     Z-ADD2         DBASE
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVE 'SDGELRPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     EXSR *PSSR
+     C                     END                             E*1
+      *
+      ***  Calculate "Event Control Date" (ECD)
+      *
+     C                     MOVE BKAPDT    ZZAPDT
+     C                     MOVE BJDNWD    ZZDNWD
+     C                     EXSR ZEVCD
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRMAIN - Main Processing                           *
+      *                                                               *
+      *  CALLED BY START  - Main Routine                              *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** Read first record in LF/SECORFL1
+      *
+     C                     READ SECORFL1                 88
+      *
+      ** Do while end of file is not reached
+      *
+     C           *IN88     DOWEQ'0'                        B*1
+      *
+      ** If Event Date is greater than event control date
+      *
+     C           MAEVDT    IFGT ECD                        B*2
+      *
+     C           MASESN    CHAINSECTY                89
+      *
+      ** If record not found
+      *
+     C           *IN89     IFEQ '1'                        B*3
+     C                     Z-ADD3         DBASE
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVE 'SECTY   'DBFILE
+     C                     MOVELMASESN    DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF                           E*3
+      *
+     C           RECI      IFEQ 'D'                        B*3
+      *
+     C           MACOAT    CHAINSECOATL0             89
+      *
+      ** If record not found
+      *
+     C           *IN89     IFEQ '1'                        B*4
+     C                     Z-ADD4         DBASE
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVE 'SECOATL0'DBFILE
+     C                     MOVELMACOAT    DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF                           E*4
+      *
+     C                     MOVE 'D'       MWRECI
+     C                     Z-ADDBJRDNB    MWLCD
+     C                     MOVE 'I'       MWCHTP
+     C                     MOVE ##USR     MWLUID
+     C                     MOVE MACORF    MWCORF
+     C                     Z-ADDMAEVDT    MWEVDT
+     C                     MOVE NMCY      MWNMCY
+     C                     MOVE MACOAT    MWTYPE
+     C                     MOVE MASESN    MWSESN
+     C                     MOVELMMDESC    MWNARR
+      *
+     C                     WRITESECOFDD0
+      *
+     C                     ADD  1         WWNREC
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+      ** Read next record
+      *
+     C                     READ SECORFL1                 88
+      *
+     C                     ENDDO                           E*1
+      *
+     C                     MOVE 'Z'       MWRECI
+     C                     Z-ADDWWNREC    MWNORE
+      *
+     C                     WRITESECOFDZ0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRENDP - End Processing.                           *
+      *                                                               *
+      *  CALLS            -                                           *
+      *                                                               *
+      *  CALLED BY  START - Main Routine                              *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRENDP    BEGSR
+      *
+      **  Produce Audit List.
+      *
+     C                     WRITEHEADERAU
+     C                     Z-ADDWWNREC    PPNREC
+     C                     WRITEDETAILAU
+      *
+      ** End of program
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Standard Data Base Error Processing.      *
+      *                                                               *
+      *  CALLS            -                                           *
+      *                                                               *
+      *  CALLED BY SRINIT - Initial Processing                        *
+      *                                                               *
+      *  FLDS USED        -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Update LDA with Error Information
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE  8
+     C                     MOVELDBKEY     WWKEY  29
+     C                     MOVELDBPGM     WWPGM  10
+     C                     MOVELDBASE     WWASE   30
+     C                     OUT  LDA
+      *
+     C                     WRITEHEADERAU
+     C                     WRITEERRORAU
+      *
+     C                     DUMP
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+**   CPY@
+(c) Misys International Banking Systems Ltd. 2001

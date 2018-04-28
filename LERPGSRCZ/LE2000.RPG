@@ -1,0 +1,220 @@
+     H                                                                    LE2000
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE EODRUN End of Month Check')
+     F********************************************************************
+     F*                                                                  *
+     F*         Midas  CUSTOMER LENDING MODULE                           *
+     F*                                                                  *
+     F*         LE2000 - EODRUN END OF MONTH CHECK                       *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 00                 Date 00/00/00              *
+     F*                                                                  *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *                                                               *
+     F*****************************************************************
+     FTABTB10 IP  F      96            DISK
+     FTABTB11 IS  F      96            DISK
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01               ICDR 1
+     F* 02               ICDR 2
+     F*      42          END OF MONTH
+     F*      43          END OF YEAR
+     F*      99          ERROR IN SUBROUTINE
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR.ARRAY
+     I*
+     I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.
+     I*
+     ITABTB10 NS  01   2 C0   3 C1  12 C1
+     I       AND      13 C0
+     I                                        1   1 RECI
+     I                                        2   30RECT
+     I                                       12  130RCDE
+     I                                       14  66 TITL
+     I                                       67  67 DATF
+     I                                       68  700DFBR
+     I                                       74  74 MODI1
+     I                                       75  75 MODI2
+     I                                       76  76 MODI3
+     I                                    P  77  790RUND
+     I                                       80  86 RUNA
+     I                                       87  870SFLG
+     I*
+     ITABTB10 NS
+     I                                        1   1 RECI
+     I*
+     I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 2.
+     I*
+     ITABTB11 NS  02   2 C0   3 C1
+     I       AND      12 C1  13 C1
+     I                                        1   1 RECI
+     I                                        2   30RECT
+     I                                       12  130RCDE
+     I                                       14  16 BCCY
+     I                                       17  19 BCYL
+     I                                       20  22 HOCY
+     I**********                             23  280HEAD                                      CSD027
+     I                                       23  28 HEAD                                      CSD027
+     I                                    P  29  310APDA
+     I                                       35  35 APFQ
+     I                                    P  36  380LOGS
+     I                                       39  40 CUZR
+     I                                    P  41  430DNWD
+     I                                       44  460BVLP
+     I                                       47  49 LOCY
+     I                                       50  510FDAY
+     I                                       52  52 ACLD
+     I                                       53  53 MBIN
+     I                                       86  86 ISAV
+     I                                    P  87  890LLOG
+     ITABTB11 NS
+     I                                        1   1 RECI
+     I*
+     I*
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           EOM
+     C                     PARM           EOY
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C   01      DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C**
+     C**
+     C********************************************************************
+     C**
+     C***** SET DEFAULT VALUES OF PARAMETERS
+     C**
+     C                     MOVE 'N'       EOM     1
+     C                     MOVE 'N'       EOY     1
+     C**
+     C***** SET UP YEAR NUMBER AND MONTH NUMBER OF TODAY
+     C**
+     CLR                   MOVE RUNA      WRK5    5
+     CLR                   MOVELWRK5      MONTH   3
+     CLR                   MOVE RUNA      YEAR    20
+     C**
+     C***** SET UP YEAR NUMBER AND MONTH NUMBER OF NEXT WORKING DAY
+     C**
+     CLR                   MOVE DNWD      ZDAYNO
+     CLR                   EXSR ZDATE2
+     C**
+     C***** CHECK TODAYS AND TOMORROWS VALUES
+     C**
+     CLR         ZYEAR     COMP YEAR                 4343
+     CLRN43      ZMNM,ZMTH COMP MONTH                4242
+     CLR 43                SETON                     42
+     C**
+     C***** SET PARAMETER VALUES
+     C**
+     CLR 43                MOVE 'Y'       EOY
+     CLR 42                MOVE 'Y'       EOM
+     C**
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+2492 C**
+2493 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+2494 C           ZDAYN1    ADD  1         ZDAYN1
+2495 C**
+2496 C**   CALCULATE DAY OF MONTH.
+2497 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+2498 C**
+2499 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+2500 C   93      ZDAY      ADD  1         ZDAY
+2501 C**
+2502 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+2503 C  N98                MOVELZDAY      ZWRK4   40
+2504 C   98                MOVE ZDAY      ZWRK4
+2505 C  N98                MOVE ZMTH      ZWRK4
+2506 C   98                MOVELZMTH      ZWRK4
+2507 C                     MOVELZWRK4     ZDATE
+2508 C                     MOVE ZYEAR     ZDATE
+2509 C**
+2510 C**   FORMAT ALPHA DATE, DDMMMYY.
+2511 C           ZDAY      COMP 10                     95
+2512 C                     MOVELZDAY      ZWRK5   5
+2513 C   95                MOVEL' '       ZWRK5
+2514 C                     MOVE ZMNM,ZMTH ZWRK5
+2515 C                     MOVELZWRK5     ZADATE
+2516 C                     MOVE ZYEAR     ZADATE
+2517 C**
+2518 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+2519 C**
+2520 C**
+2521 C********************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

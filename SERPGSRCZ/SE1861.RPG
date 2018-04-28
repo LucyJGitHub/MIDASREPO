@@ -1,0 +1,394 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Security Certificate Units Audit')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1861 - SECURITY CERTIFICATE UNITS LIST                     *
+     F*                                                               *
+     F*  Called By: 1) SEC0301 - Audit Reports - Input Cycle          *
+     F*             2) SEC0601 - Audit Reports - Close of Business    *
+     F*             3) SEC0302 - Full Lists - On Request              *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. S01401             DATE 16JUN93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  S01401 - MT5xx SWIFT Messages Feature: New program           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSECRUNPDIF  E           K        DISK
+     FSE1861P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FSE1861AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      /TITLE FUNCTION OF INCICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    15  - Print file, SE1861P1, has been opened at least once  *
+     F*    40  - MODE I          : AUDIT EXCEPTION                    *
+     F*    41  - MODE A          : AUDIT                              *
+     F*    42  - ALL OTHER MODES : FULL LIST                          *
+     F*    89  - End of file/No records error on file SECRUNPD        *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  PROCES - Perform Detail Processing                           *
+     F*  OUTRPT - Set Up Output Fields                                *
+     F*  AUDIT  - Run Control Process                                 *
+     F*                                                               *
+     F*  *PSSR  - Program Error Handling Subroutine                   *
+     F*                                                               *
+     F*****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     I/TITLE I-SPECIFICATIONS
+     IPSDS       SDS
+      **   PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ISPOOL1      DS
+      ***  File Information Data Structure for SE1861P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 367 3680LINE1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SE1861AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+     I*
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IUPDATE      DS
+      **   DATE FORMATTING DATA STRUCTURE
+     I                                        1   7 WWDATE
+     I                                        1   20CUDLUP
+     I                                        3   5 CUMLUP
+     I                                        6   70CUYLUP
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ***  Accept Parameters. (Mode selects either Full or Audit List.)
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   1
+     C                     PARM           PSEQ    5
+      *
+     C           PMODE     IFEQ 'I'
+     C                     SETON                     40
+     C                     ELSE
+     C           PMODE     IFEQ 'A'
+     C                     SETON                     41
+     C                     ELSE
+     C                     SETON                     42
+     C                     END
+     C                     END
+      *
+      ***  Access Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'001'     DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Initialise Data.
+      *
+     C                     Z-ADD0         LINE1
+     C                     MOVE 'Y'       WWEMTF  1
+     C                     Z-ADD*ZERO     RRLIVE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: OUTRPT, AUDIT                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ***  Read the Securities Certificates Unit file and process to EOF
+      *
+     C                     READ SECRUNPD                 89
+      *
+     C           *IN89     DOWEQ'0'
+     C                     EXSR OUTRPT
+      *
+     C                     READ SECRUNPD                 89
+     C                     END
+      *
+      ***  If Print File Open then Write 'End of Report' and Close File.
+      *
+     C           *IN15     IFEQ '1'
+     C                     WRITETRAILP1
+     C                     CLOSESE1861P1
+     C                     END
+      *
+      ***  Output Run Control Report.
+      *
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/OUTRPT
+      *****************************************************************
+      *                                                               *
+      *  OUTRPT - Subroutine to Set Up and Write fields to Report.    *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OUTRPT    BEGSR
+      *
+      ** MAINTAIN 'LIVE' COUNT ONLY IF RECORD NOT DELETED
+     C           CURECI    IFNE '*'
+     C                     ADD  1         RRLIVE
+     C                     END
+      *
+      ** 'A' MODE - ** AUDIT ** OR 'I' MODE - ** AUDIT EXCEPTION **
+     C           PMODE     IFEQ 'A'
+     C           PMODE     OREQ 'I'
+      *
+     C           CULCD     IFNE BJRDNB
+     C                     GOTO OUTEND
+     C                     END
+      *
+      ** 'L' MODE - ** FULL LIST **
+     C                     ELSE
+     C           CURECI    IFEQ '*'
+     C                     GOTO OUTEND
+     C                     END
+     C                     END
+      *
+      ***  Indicate some details to be reported
+     C                     MOVE 'N'       WWEMTF
+      *
+      ***  SET UP CHANGE TYPE
+     C           CUCHTP    IFEQ 'I'
+     C                     MOVEL'INSERT'  RRACTN
+     C                     END
+      *
+     C           CUCHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  RRACTN
+     C                     END
+      *
+     C           CUCHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  RRACTN
+     C                     END
+      *
+      ** SET UP SECURITY REFERENCE FOR OUTPUT
+     C                     MOVE CUSREF    RRSREF
+      *
+      ** SET UP SERIES FOR OUTPUT
+     C                     MOVE CUSERI    RRSERI
+      *
+      ** SET UP UNIT SIZE FOR OUTPUT
+     C                     MOVE CUUNIT    RRUNIT
+      *
+      ** SET UP LAST ACTIVITY DATE
+     C                     MOVE WWDATE    RRDATE
+      *
+      ** SET UP LAST ACTIVITY TIME FOR OUTPUT
+     C                     MOVE CUTLUP    RRTLUP
+      *
+      ***  If print file not yet open then open it and write headings
+     C           *IN15     IFEQ '0'
+      *
+     C                     OPEN SE1861P1
+     C                     SETON                     15
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   WPARM   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     WRITEHEADP1
+      *
+     C                     END
+      *
+      ** If there is no room on current page then throw new page
+     C           LINE1     IFGT 55
+     C                     WRITEHEADP1
+     C                     END
+      *
+      ** OUTPUT DETAIL LINE
+     C                     WRITEDETAIL
+     C                     CLEARDETAIL
+      *
+     C           OUTEND    TAG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Ouput Run Control Report.             *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   WPARM
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ***  Write Heading and control information
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no valid records read, Output "No Details" message.
+     C           WWEMTF    IFEQ 'Y'
+     C                     WRITENONE
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'SE1861'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     SETON                     U7U8LR
+      *
+     C                     EXSR AUDIT
+      *
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

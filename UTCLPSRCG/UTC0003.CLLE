@@ -1,0 +1,291 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Create objects interactively')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     Utilities Module                                  */
+/*                                                                   */
+/*       UTC0003   - CREATE OBJECTS INTERACTIVELY                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUT008  *REWRITE   Date 06Jan11              */
+/*       Prev Amend No. BUG27989           Date 08Aug10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG10052           Date 23Jan06              */
+/*                      CPK018  *MOVED     Date 26Apr04              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. CPK015             Date 25Jun02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                      CPK014             Date 22Oct00              */
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      178905             Date 12May00              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CAP006             DATE 07Dec98              */
+/*                      CAA015             DATE 11Jul97              */
+/*                      CPK008             DATE 03JUN97              */
+/*                      CSW008             DATE 28JAN97              */
+/*                      074291             DATE 08AUG94              */
+/*                      S01516             DATE 18JUL94              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT008 - CRTOBJ rewrite                                     */
+/*       BUG27989 - HATS should run with/without LDAP                */
+/*       BUG10052 - Handle SQL error messages.                       */
+/*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
+/*       CPK015 - Pgm falls over if CPF0821 (Module not created)     */
+/*                received.                                          */
+/*       CPK014 - Don't remove blanks in command string              */
+/*       178905 - New creation parameter types - XBS/XBI, XAS/XAI    */
+/*                to enable multiple line pre- & post-compilation    */
+/*                instructions.                                      */
+/*       CAP006 - APIs enhancement to use service programs.          */
+/*                OPTION keyword added.  For full header-box         */
+/*                text, see the CRTOBJ command source.               */
+/*       CAA015 - Addition of new monitor message for ILE.           */
+/*       CPK008 - DBA R2 packaging:                                  */
+/*                - Change OVR line to specify 112 long file.        */
+/*                - Monotor for failed panel group create (CPF5A02)  */
+/*       CSW008 - Change for Midas/CAS interface                     */
+/*       074291 - Further enhancements to CRTOBJ                     */
+/*       S01516 - Incorporation of enhanced CRTOBJ into core         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CRTPRM &XBCRTPRM &XACRTPRM &MTA &MEMB)
+ 
+             DCL        VAR(&CRTPRM) TYPE(*CHAR) LEN(948)
+             DCL        VAR(&XBCRTPRM) TYPE(*CHAR) LEN(7000)
+             DCL        VAR(&XACRTPRM) TYPE(*CHAR) LEN(7000)
+             DCL        VAR(&MTA) TYPE(*CHAR) LEN(28)
+             DCL        VAR(&MEMB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&WXCRTPRM) TYPE(*CHAR) LEN(7000)
+             DCL        VAR(&QCTXT60) TYPE(*CHAR) LEN(60)
+             DCL        VAR(&QCMDTXT) TYPE(*CHAR) LEN(999)
+             DCL        VAR(&CMDNOPOS) TYPE(*DEC) LEN(5 0) VALUE(1)
+             DCL        VAR(&XCMDPOS) TYPE(*DEC) LEN(5 0) VALUE(9)
+             DCL        VAR(&QCTXTPOS) TYPE(*DEC) LEN(3 0)
+/* QCLSCAN variables. */
+             DCL        VAR(&LEN) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&START) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&TRANS) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&TRIM) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&WILD) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&POSN) TYPE(*DEC) LEN(3 0)
+ 
+             DCL        VAR(&CMDNO) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&BLANK) TYPE(*CHAR) LEN(999)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&TXTLEN) TYPE(*DEC) LEN(15 5) VALUE(948)
+             DCL        VAR(&POSTCRT) TYPE(*CHAR) LEN(1) VALUE(' ')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/* If &XBCRTPRM not blank, perform pre-compilation multiple command line parameters. */
+ 
+             IF         COND(%SST(&XBCRTPRM 1 5) *NE '     ') THEN(DO)
+                CHGVAR     VAR(&WXCRTPRM) VALUE(&XBCRTPRM)
+                CALLSUBR   SUBR(SRXCRTPRM)
+             ENDDO
+ 
+/* Create object from &CRTPRM */
+             CALLSUBR   SUBR(SRCRTPRM)
+ 
+/* If &XACRTPRM not blank, perform post-compilation multiple command line */
+/* parameters.                                                            */
+             IF         COND(%SST(&XACRTPRM 1 5) *NE '     ') THEN(DO)
+                CHGVAR     VAR(&POSTCRT)  VALUE('Y')
+                CHGVAR     VAR(&WXCRTPRM) VALUE(&XACRTPRM)
+                CALLSUBR   SUBR(SRXCRTPRM)
+             ENDDO
+ 
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to perform pre-compilation or post-compilation         */
+/* multiple command line parameters based on text passed to          */
+/* &WXCRTPRM.                                                        */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRXCRTPRM)
+ 
+             CHGVAR     VAR(&CMDNOPOS) VALUE(1)
+             CHGVAR     VAR(&XCMDPOS) VALUE(9)
+             CHGVAR     VAR(&QCTXTPOS) VALUE(1)
+ 
+             CHGVAR     VAR(&CMDNO) VALUE(%SST(&WXCRTPRM 1 5))
+ 
+XCMDLOOP:
+             IF         COND(&CMDNO *EQ '*OVR ' *OR &CMDNO *EQ '*ADD +
+                          ' *OR &CMDNO *EQ '*OVRF' *OR &CMDNO *EQ +
+                          '*ADDF') THEN(DO)
+/* Excute the command from one source section (70 char long). */
+                CHGVAR     VAR(%SST(&QCTXT60 1 60)) +
+                             VALUE(%SST(&WXCRTPRM &XCMDPOS 60))
+                CALL       PGM(QCMDEXC) PARM(&QCTXT60 60)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   IF         COND(&POSTCRT *EQ 'Y') THEN(DO)
+                      CALLSUBR   SUBR(SRERRMSG)
+                   ENDDO
+                ENDDO
+ 
+                CHGVAR     VAR(&CMDNOPOS) VALUE(&CMDNOPOS + 70)
+                CHGVAR     VAR(&XCMDPOS) VALUE(&XCMDPOS + 70)
+                CHGVAR     VAR(&CMDNO) VALUE(%SST(&WXCRTPRM &CMDNOPOS 5))
+             ENDDO
+             ELSE       CMD(DO)
+/* Build up a command from one or more src sections (each of 70 char long). */
+                CALLSUBR   SUBR(SRBLDQCTXT)
+ 
+                CALL       PGM(QCMDEXC) PARM(&QCMDTXT 999)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   IF         COND(&POSTCRT *EQ 'Y') THEN(DO)
+                      CALLSUBR   SUBR(SRERRMSG)
+                   ENDDO
+                ENDDO
+ 
+                CHGVAR     VAR(&QCMDTXT) VALUE(&BLANK)
+                IF         COND(&CMDNO *EQ '*END ') THEN(DO)
+                   CHGVAR     VAR(&CMDNOPOS) VALUE(&CMDNOPOS + 70)
+                   CHGVAR     VAR(&XCMDPOS) VALUE(&XCMDPOS + 70)
+                   CHGVAR     VAR(&CMDNO) VALUE(%SST(&WXCRTPRM &CMDNOPOS 5))
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&CMDNO *EQ '     ') THEN(DO)
+                RTNSUBR
+             ENDDO
+ 
+             GOTO       CMDLBL(XCMDLOOP)
+ 
+             ENDSUBR
+/* End of SRXCRTCMD. */
+ 
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to build one command line for pre-compilation or       */
+/* post-compilation from one or more than one source sections.  Each */
+/* section is 70 characters long in &WXCRTPRM. The command ends when */
+/* there is change of the values for the first 5 characters in the   */
+/* following section.                                                */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRBLDQCTXT)
+ 
+             CHGVAR     VAR(&QCTXTPOS) VALUE(1)
+BLDTXTLOOP:
+             CHGVAR     VAR(%SST(&QCMDTXT &QCTXTPOS 60)) +
+                          VALUE(%SST(&WXCRTPRM &XCMDPOS 60))
+ 
+             CHGVAR     VAR(&QCTXTPOS) VALUE(&QCTXTPOS + 60)
+             CHGVAR     VAR(&CMDNOPOS) VALUE(&CMDNOPOS + 70)
+             CHGVAR     VAR(&XCMDPOS) VALUE(&XCMDPOS + 70)
+             IF         COND(&CMDNO *NE %SST(&WXCRTPRM &CMDNOPOS 5)) +
+                          THEN(DO)
+                CHGVAR     VAR(&CMDNO) VALUE(%SST(&WXCRTPRM &CMDNOPOS 5))
+                CALLSUBR   SUBR(SRRPLMBR)
+                RTNSUBR
+             ENDDO
+ 
+             GOTO       CMDLBL(BLDTXTLOOP)
+ 
+             ENDSUBR
+/* End of subroutine SRBLDQCTXT. */
+ 
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to replace '*****' filler in &QCMDTXT with source      */
+/* member name.                                                      */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRRPLMBR)
+ 
+/* Check for simple file replacement. */
+             CHGVAR     VAR(&LEN) VALUE(999)
+             CHGVAR     VAR(&PATLEN) VALUE(11)
+             CALL       PGM(QCLSCAN) PARM(&QCMDTXT &LEN &START +
+                          '**********)' &PATLEN &TRANS &TRIM &WILD +
+                          &POSN)
+             IF         COND(&POSN > 0) THEN(DO)
+                CHGVAR     VAR(%SST(&QCMDTXT &POSN 10)) VALUE(&MEMB +
+                             *TCAT ')')
+             ENDDO
+ 
+             ENDSUBR
+/* End of subroutine SRRPLMBR. */
+ 
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to create object from parameter &CRTPRM and handle any */
+/* errors.                                                           */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRCRTPRM)
+ 
+             CALL       PGM(QCMDEXC) PARM(&CRTPRM &TXTLEN)
+ 
+/* Return any unexpected diagnostic messages to main program. */
+             MONMSG     MSGID(CPF0006) EXEC(DO)
+                CHGVAR     VAR(&MSG) VALUE('Compilation failed - see +
+                             job log for details.')
+                SNDPGMMSG  MSGID(SYS9898) MSGF(UTMSGF) MSGDTA(&MSG) +
+                             MSGTYPE(*ESCAPE)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+/* No diagnostic messages are given for SQL errors, so need to hard code */
+/* the message data.                                                     */
+             MONMSG     MSGID(SQL9001) EXEC(DO)
+                CHGVAR     VAR(&MSG) VALUE('SQL compile failed - see +
+                             previous message for details.')
+                SNDPGMMSG  MSGID(SYS9898) MSGF(UTMSGF) MSGDTA(&MSG) +
+                             MSGTYPE(*ESCAPE)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+/* Creation of RPG/CL/PF/LF/DSPF/PRTF/CMD/DTAARA failed. */
+             MONMSG     MSGID(QRG9001 CPF7302 CPF0801 CPF0815 +
+                          CPF0201 CPF1023 CPF0006 CPF2614 RNS9309 +
+                          CPF3C50 CPF5D05 CPF5D0B CPF5A02 RNS9310 +
+                          CPF0821 CPF0820) EXEC(DO)
+                SNDPGMMSG  MSGID(SYS0009) MSGF(UTMSGF) MSGDTA(&MTA) +
+                             TOPGMQ(*PRV) MSGTYPE(*ESCAPE)
+             ENDDO
+             MONMSG     MSGID(CPF2112) EXEC(DO)
+                SNDPGMMSG  MSGID(SYS0009) MSGF(UTMSGF) MSGDTA(&MTA) +
+                             TOPGMQ(*PRV) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ /* File could be created but member not added; typical case is duplicate */
+ /* key.                                                                  */
+             MONMSG     MSGID(CPF7306) EXEC(DO)
+                SNDPGMMSG  MSGID(SYS0010) MSGF(UTMSGF) MSGDTA(&MTA) +
+                             TOPGMQ(*PRV) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+             ENDSUBR
+/* End of subroutine SRCRTPRM. */
+ 
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to *ESCAPE error message when executing                */
+/* pre-compilation or post-compilation commands.                     */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRERRMSG)
+ 
+             CHGVAR     VAR(&MSG) VALUE('Post-compilation failed - +
+                          see job log for details.')
+             SNDPGMMSG  MSGID(SYS9898) MSGF(UTMSGF) MSGDTA(&MSG) +
+                          MSGTYPE(*ESCAPE)
+ 
+             ENDSUBR
+/* End of subroutine SRERRMSG. */
+ 
+END:
+             ENDPGM

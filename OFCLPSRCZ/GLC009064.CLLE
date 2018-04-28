@@ -1,0 +1,59 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Initialise RT Postings of Nostro Accounts')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC009064 - Initialise RT Postings of Nostro Accounts       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*                                                                   */
+/*       Last Amend No. MD027208  *Create  Date 27May14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD027208 - RT postings not included in Nostro Grp Totals    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2014')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Create data area in QTEMP */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CLRPFM     FILE(GLRTNOTD)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       ENDPGM
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC009064 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ ENDPGM:
+             MONMSG     MSGID(CPF8350)
+             ENDPGM
+ 

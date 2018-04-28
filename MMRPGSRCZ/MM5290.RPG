@@ -1,0 +1,2775 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Penalty Termination Maintenance')             *
+      *****************************************************************
+      *                                                               *
+      *  MIDAS¦DBA - Dealing Money Market Module                      *
+      *                                                               *
+      *  MM5290 - Penalty Termination Maintenance Program             *
+      *                                                               *
+      *  Function:  This program allows the user to insert, amend     *
+      *             delete, enquire and authorise Penalty Termination *
+      *             records for time deposits deals.  A subfile       *
+      *             allows the user to select records for enquiry or  *
+      *             update.                                           *
+      *                                                               *
+      *  Called By: MMC5290 - MIDAS MM Penalty Termination Maint.     *
+      *                                                               *
+      *  (C) Copyright MISYS INTERNATIONAL BANKING SYSTEMS LTD 2008   *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CDL093             Date 08Apr14               *
+      *                 MD022252           Date 11Sep13               *
+      *                 MD021527           Date 31Jul13               *
+      *                 AR1096788          Date 18Mar13               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG26488           Date 19Oct09               *
+      *                 258692             Date 02Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 257566             Date 05Nov08               *
+      *                 256795   *Create   Date 25Sep08               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CDL093 - MM Interest calculation type 9.                     *
+      *         - Add call to ZFEB29                                  *
+      *  MD022252 - User couldn't complete Interest Adjustment to IRS *
+      *             deal                                              *
+      *  MD021527 - System does not authorise penalty termination     *
+      *  AR1096788 - DLAA details should be written in core STRANF    *
+      *              file instead of the new DLSTRANFPD file          *
+      *              (Recompile)                                      *
+      *  AR996895 - Incorrect accrual interest calculation            *
+      *             (Child:AR996897) (Recompile)                      *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  BUG26488 - MMPTRMPD compiled with error - attributes are     *
+      *             incompatible (Recompile)                          *
+      *  258692 - Incorrect type of PTCNUM field in MMPTRMPD          *
+      *  257566 - Prevent fields OSDA, OMDA, PONS and RONS cleared on *
+      *           authorization.                                      *
+      *  256795 - Penalty Termination of Time Deposits (CDL052).      *
+      *                                                               *
+      *****************************************************************
+      *
+     FMM5290DFCF  E                    WORKSTN      KINFDS INFDS1
+     F                                        S1RRN KSFILE MM5290S1
+      *
+      ** Deal Amendments file
+     FMMLVDMLLIF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Penalty Terminations file - All Records
+     FMMPTRML0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *
+      ** Penalty Terminations file - Live Records
+     FMMPTRML1UF  E           K        DISK         KINFSR *PSSR
+     F            MMPTRMD0                          KRENAMEMMPTRMP1
+      *
+      ** Penalty Terminations file - Unauthorized Records
+     FMMPTRML2IF  E           K        DISK         KINFSR *PSSR
+     F            MMPTRMD0                          KRENAMEMMPTRMP2
+      *
+      ** MM deals front office files
+     FMMDEALLLIF  E           K        DISK         KINFSR *PSSR
+     F            MMDENSP0                          KIGNORE
+     F            MMDENBP0                          KIGNORE
+      *
+      ** SD Currencies Extension file
+     FSDCURRX0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** MM Deals file - Adjustment Update
+     FDEALSC  UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      *
+      ** STRAN Header
+     FSTRANH  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     F                                              KRECNO A#RRN
+      *
+      ** STRAN Record ID 'F'
+     FSTRANF  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     F                                              KRECNO A#RRN
+      *
+      *-------------------------------------------------------------------
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *   01 - Chain fail to LF/MMDEALLL
+      *   02 - Chain fail to PF/MMPTRMPD
+      *   03 - Read indicator on LF/MMLVDMLL
+      *
+      *   15 - F15 allowed
+      *   16 - F15 taken with action code ' '
+      *   17 - F15 taken with action code 'X'
+      *
+      *   20 - Enquiry/Maintenance Mode Indicator
+      *   21 - First Screen
+      *   22 - Second Screen
+      *   23 - Screen Protect
+      *   24 - Insert
+      *   25 - Amend
+      *   26 - Delete
+      *   27 - Enquire
+      *   28 - Authorise
+      *   29 - Protect action
+      *
+      *   30 - Multi-Branching
+      *
+      *   35 - SFL Place Cursor
+      *   36 - SFLDSP
+      *   37 - SFLDSPCTL
+      *   38 - SFLEND
+      *   39 - ROLLUP
+      *
+      *   40 - Error First Screen
+      *   41 - Error Action Code
+      *   42 - Error Deal Number
+      *   43 - Error Customer Number / Shortname
+      *
+      *   50 - Error Second Screen
+      *   51 - Error Penalty Rate
+      *
+      *   60 - '+' Adjustment amount
+      *   61 - '-' Adjustment amount
+      *   62 - STRANF file is full
+      *
+      *   90 - General Purpose Indicator
+      *   98 - Date Format Indicator
+      *
+      *--------------------------------------------------------------------
+      *
+     E                    CPY@    1   1 80               MKI Copyright array
+     E                    @W1        12  1               ZRATE SR. Array
+      *
+     E/COPY ZSRSRC,ZDATE9Z1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZEDITZ1
+     E/COPY ZSRSRC,ZRATE1Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+      *--------------------------------------------------------------------
+      *
+     I/COPY ZSRSRC,ZDAT10Z1
+     I/COPY ZSRSRC,ZINTDYZ1
+     I/COPY ZSRSRC,ZDATE9Z2
+     I***/COPY*ZSRSRC,ZTNLU1Z1                                                              MD022252
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+     IZ#BSTS    E DSZ#BST
+     IZ#ASTS    E DSZ#AST
+     IZ#WSTS    E DSZ#WST
+      *
+      ** Data structure of the standard deal, Loans/Deposits format.
+     I@SLDS     E DSMMSTDLPP
+     I              QQDORI                          QLDORI
+     I              QQMORI                          QLMORI
+     I              QQDOPI                          QLDOPI
+     I              QQMOPI                          QLMOPI
+     I              QQBORI                          QLBORI
+     I              QQBOPI                          QLBOPI
+     I              QQRONS                          QLRONS
+     I              QQPONS                          QLPONS
+     I              QQINSA                          QLINSA
+      *
+      **  Data structure of the standard deal, NA's bought format.
+     I@SBDS     E DSMMSTDBPP
+     I              QQDORI                          QBDORI
+     I              QQMORI                          QBMORI
+     I              QQDOPI                          QBDOPI
+     I              QQMOPI                          QBMOPI
+     I              QQBORI                          QBBORI
+     I              QQBOPI                          QBBOPI
+     I              QQRONS                          QBRONS
+     I              QQPONS                          QBPONS
+      *
+      **  Data structure of the standard deal, NA's sold format.
+     I@SSDS     E DSMMSTDSPP
+     I              QQDORI                          QSDORI
+     I              QQMORI                          QSMORI
+     I              QQBORI                          QSBORI
+     I              QQBOPI                          QSBOPI
+     I              QQRORI                          QSRORI
+     I              QQROPI                          QSROPI
+     I              QQRONS                          QSRONS
+     I              QQPONS                          QSPONS
+      *
+      **  Data structure of the standard deal, Deams format.
+     I@SADS     E DSMMSTDAPP
+     I              QQDORI                          QADORI
+     I              QQMORI                          QAMORI
+     I              QQDOPI                          QADOPI
+     I              QQMOPI                          QAMOPI
+     I              QQBORI                          QABORI
+     I              QQBOPI                          QABOPI
+     I              QQRORI                          QARORI
+     I              QQROPI                          QAROPI
+     I              QQRONS                          QARONS
+     I              QQPONS                          QAPONS
+      *
+      **  Data structure of the MM deal.
+     I@DLDS     E DSMMDELDPP
+      *
+      ** File Information Data structure for Display file
+     IINFDS1      DS
+     I                                    B 378 3790INSFRC
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Data Structure to pass parameters to Access programs (Short)
+     IDSFDY     E DSDSFDY
+      *
+      ** Data Structure to pass parameters to Access programs (Long)
+     IDSSDY     E DSDSSDY
+      *
+      ** External data structure for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External data structure for customer details
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** External data structure for Currency details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** External data structure for User details
+     ISDUSER    E DSMUSER
+      *
+      ** Data Structure for Penalty Termination file fields input
+     IFLFLDS    E DSMMPTRMPD
+      *
+      * Data Structure for Penalty Termination file fields saved
+     ISVFLDS    E DSMMPTRMPD
+     I              PTRECI                          SVRECI
+     I              PTDLNO                          SVDLNO
+     I              PTCNUM                          SVCNUM
+     I              PTCCY                           SVCCY
+     I              PTPCPL                          SVPCPL
+     I              PTBRCA                          SVBRCA
+     I              PTORBR                          SVORBR
+     I              PTSTYP                          SVSTYP
+     I              PTBOOK                          SVBOOK
+     I              PTDDAT                          SVDDAT
+     I              PTVDAT                          SVVDAT
+     I              PTMDAT                          SVMDAT
+     I              PTPMDT                          SVPMDT
+     I              PTDEFR                          SVDEFR
+     I              PTPENR                          SVPENR
+     I              PTDLRT                          SVDLRT
+     I              PTICBS                          SVICBS
+     I              PTFLID                          SVFLID
+     I              PTRDFC                          SVRDFC
+     I              PTBRTT                          SVBRTT
+     I              PTINTA                          SVINTA
+     I              PTPINT                          SVPINT
+     I              PTADJA                          SVADJA
+     I              PTCHTP                          SVCHTP
+     I              PTLCT                           SVLCT
+     I              PTUSRI                          SVUSRI
+     I              PTUSRX                          SVUSRX
+     I              PTCNMA                          SVCNMA                                  BUG26488
+      *
+      * Data Structure for Penalty Termination file fields from screen
+     IF#FLDS    E DSMMPTRMPD
+     I              PTRECI                          F#RECI
+     I              PTDLNO                          F#DLNO
+     I              PTCNUM                          F#CNUM
+     I              PTCCY                           F#CCY
+     I              PTPCPL                          F#PCPL
+     I              PTBRCA                          F#BRCA
+     I              PTORBR                          F#ORBR
+     I              PTSTYP                          F#STYP
+     I              PTBOOK                          F#BOOK
+     I              PTDDAT                          F#DDAT
+     I              PTVDAT                          F#VDAT
+     I              PTMDAT                          F#MDAT
+     I              PTPMDT                          F#PMDT
+     I              PTDEFR                          F#DEFR
+     I              PTPENR                          F#PENR
+     I              PTDLRT                          F#DLRT
+     I              PTICBS                          F#ICBS
+     I              PTFLID                          F#FLID
+     I              PTRDFC                          F#RDFC
+     I              PTBRTT                          F#BRTT
+     I              PTINTA                          F#INTA
+     I              PTPINT                          F#PINT
+     I              PTADJA                          F#ADJA
+     I              PTCHTP                          F#CHTP
+     I              PTLCT                           F#LCT
+     I              PTUSRI                          F#USRI
+     I              PTUSRX                          F#USRX
+     I              PTCNMA                          F#CNMA                                  BUG26488
+      *
+      **  Data structure to format separate dates into a 8N number
+     I#DFMT       DS
+     I                                        1   40W#YEAR
+     I                                        5   60W#MNTH
+     I                                        7   80W#DAY
+     I                                        1   80W#DATE
+      *
+      ** Data Structure for LDA
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure for RUNDAT
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Structure for insert message parameter passed to ZASNMS
+     I#MSGPM      DS
+     I I            X'23'                     1   1 #MSG11
+     I                                        2   7 #MSG27
+     I I            X'22'                     8   8 #MSG88
+      *
+      ** Status Text
+     I              'COMPLETE  '          C         CMPTXT
+     I              'AUTHORISED'          C         AUTTXT
+     I              '* DELETED '          C         DLTTXT
+      *                                                                                     MD022252
+      **  Data Structure to update last transaction number                                  MD022252
+      *                                                                                     MD022252
+     IDNATN       DS                              6                                         MD022252
+     I                                        1   60FNATN                                   MD022252
+      *
+      *--------------------------------------------------------------------
+      *
+      ** Receive input parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@MODE
+      *
+      ** Perform Initial Processing
+     C                     EXSR SRINIT
+      *
+      ** Perform Main Processing
+     C           *INKC     DOWEQ'0'                        B1
+     C                     EXSR SRMAIN
+     C                     END                             E1
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRMAIN - Main Program Processing                                  *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRMAIN    BEGSR
+      *
+      ** Initialise first screen
+     C                     EXSR SRINF1
+      *
+      ** Output first screen until valid or F3 taken
+     C           *INKC     DOUEQ'1'                        B1
+     C           *IN40     OREQ '0'
+      *
+     C                     EXSR SRDSF1
+     C           *INKC     CABEQ'1'       EMAIN
+      *
+      ** Either validate first screen or process select
+     C           *INKP     IFEQ '0'                        B2
+     C                     EXSR SRVLF1
+     C  N40                EXSR SRSCR2
+     C                     ELSE                            X2
+     C                     EXSR SRSELC
+     C                     END                             E2
+     C                     END                             E1
+      *
+     C           EMAIN     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRINF1 - Initialize First Screen                                  *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRINF1    BEGSR
+      *
+      ** Clear screen fields, enable F15 and clear error indicators
+     C                     CLEARMM5290F1
+     C                     MOVE '1'       *IN15
+     C                     MOVEA'10'      *IN,21
+     C                     MOVEA'0000'    *IN,40
+      *
+     C           EINF1     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRDSF1 - Display First Screen                                     *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRDSF1    BEGSR
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITECMDTXTF1
+     C                     EXFMTMM5290F1
+      *
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C           EDSF1     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRVLF1 - Validate First Screen                                    *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRVLF1    BEGSR
+      *
+      ** Reset format and error indicators
+     C                     CLEARFLFLDS
+     C                     CLEARSVFLDS
+     C                     CLEARF#FLDS
+     C                     MOVEA'0000'    *IN,40
+      *
+      ** Validate Action Code
+     C   20      SDACD     SCAN 'E'                      90
+     C  N20      SDACD     SCAN 'IADEX'                  90
+      *
+     C           *IN90     IFEQ '0'                        B1
+     C   20                MOVEL'MMM5123' ZAMSID
+     C  N20                MOVEL'MMM5100' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,40
+     C                     END                             E1
+      *
+      ** If not Multi-branching, call ZVACTU
+     C           AGMBIN    IFNE 'Y'                        B1
+     C                     CALL 'ZVACTU'
+     C                     PARM SDACD     P1ACTN
+     C                     PARM           P1ERR
+      *
+      ** User not authorised to action code for this menu item
+     C           P1ERR     IFEQ 1                          B2
+     C                     MOVEL'MMM5101' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,40
+     C                     END                             E2
+     C                     END                             E1
+      *
+      ** Continue validation only if not error
+     C           *IN40     CABEQ'1'       EVLF1
+      *
+      ** Validate Deal Number
+      ** Deal Number should be entered
+     C           SDNUM     IFEQ *BLANKS                    B1
+     C                     MOVEL'MMM5114' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN42
+      *
+      ** ... if entered, should be numeric
+     C                     ELSE                            X1
+      *
+     C                     TESTN          SDNUM      90
+     C                     MOVE SDNUM     W#TEST
+     C                     TESTZ          W#TEST         91
+     C           *IN90     IFEQ '0'                        B2
+     C           *IN91     OREQ '0'
+     C                     MOVEL'MMM5114' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN42
+     C                     END                             E2
+      *
+     C                     MOVE SDNUM     SDNUMN
+      *
+     C                     END                             E1
+      *
+      ** Continue validation only if not error
+     C           *IN40     CABEQ'1'       EVLF1
+      *
+      ** Validate Customer Number
+      ** Deal Number should be entered
+     C           SCNUM     IFEQ *BLANKS                    B1
+     C                     MOVEL'MMM5115' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN43
+      *
+      ** if not blanks, check if customer is existing MIDAS customer
+     C                     ELSE                            X1
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY'    P@OPTN
+     C                     PARM SCNUM     P3CUSH
+     C                     PARM *BLANKS   P@KYST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           P@RTCD    IFNE *BLANKS                    B2
+     C                     MOVEL'MMM5116' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN43
+      *
+     C                     ELSE                            X2
+     C                     MOVE *BLANKS   SCNUM
+     C                     MOVELBBCUST    SCNUM
+     C**********           MOVE BBCUST    W#CUST  60                                          258692
+     C                     MOVELBBCUST    W#CUST  6                                           258692
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+      ** Continue validation only if not error
+     C           *IN40     CABEQ'1'       EVLF1
+      *
+      ** Search for the deal in Penalty Termination file and Deals file
+     C                     MOVEA'00'      *IN,01
+      *
+     C           SDNUMN    CHAINMMDEALLL            N01
+     C           SDNUMN    CHAINMMPTRML0            N02
+      *
+      ** Store branch for action code checking
+     C  N02                MOVE PTBRCA    W#BRCA
+     C  N01                MOVE HKBRCA    W#BRCA
+      *
+     C           *IN01     IFEQ '0'                        B1
+     C           *IN02     OREQ '0'
+      *
+      ** If Multi-Branching, validate Action Code for Branch
+     C           AGMBIN    IFEQ 'Y'                        B2
+     C                     CALL 'ZVACTBU'
+     C                     PARM SDACD     P1ACTN
+     C                     PARM W#BRCA    P1BRCA
+     C                     PARM           P1ERR
+      *
+      ** User not authorised to any action codes for this menu item/br
+     C           P1ERR     IFEQ 1                          B3
+     C                     MOVEL'MMM5118' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,40
+     C                     END                             E3
+      *
+      ** User not authorised to this action code for this menu item/br
+     C           P1ERR     IFEQ 2                          B3
+     C                     MOVEL'MMM5102' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,40
+     C                     END                             E3
+     C                     END                             E2
+      *
+      ** If Authorise, user may not be same as user on insert
+     C           *IN02     IFEQ '0'                        B2
+     C           SDACD     IFEQ 'X'                        B3
+     C           USER      ANDEQPTUSRI
+     C                     MOVEL'MMM5119' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,40
+     C                     END                             E3
+     C                     END                             E2
+      *
+      ** Continue validation only if not error
+     C           *IN40     CABEQ'1'       EVLF1
+      *
+     C                     END                             E1
+      *
+      ** Validate further the input fields based on deal details extracted
+     C           SDACD     IFEQ 'I'                        B1
+      *
+      ** Deal should be existing in Deals Front office file
+     C           *IN01     IFEQ '1'                        B2
+     C                     MOVEL'MMM5105' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     GOTO EVLF1
+     C                     END                             E2
+      *
+      ** Customer entered must be same as Deal's customer
+     C**********           MOVE HKCNUM    H6CNUM  60                                          258692
+     C                     MOVELHKCNUM    H6CNUM  6                                           258692
+     C***********W#CUST    IFNE HKCNUM                     B2
+     C           W#CUST    IFNE H6CNUM                     B2
+     C                     MOVEL'MMM5117' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN,40
+     C                     MOVEA'11'      *IN,42
+     C                     GOTO EVLF1
+     C                     END                             E2
+      *
+      ** There should be no penalty termination entered for deal
+     C           *IN02     IFEQ '0'                        B2
+     C           PTRECI    ANDEQ'D'
+     C                     MOVEL'MMM5103' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     GOTO EVLF1
+     C                     END                             E2
+      *
+      ** Deal should be a Time Deposit Deal
+     C           HKTYPE    IFNE 'TD'                       B2
+     C                     MOVEL'MMM5104' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     END                             E2
+      *
+      ** Deal should have been authorized
+     C           HKDSTS    IFNE 'A'                        B2
+     C           HKDSTS    ANDNE'M'
+     C                     MOVEL'MMM5106' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+      *
+      **  ... and not matured.
+     C                     ELSE                            X2
+     C           HKDSTS    IFEQ 'M'                        B3
+     C                     MOVEL'MMM5107' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     END                             E3
+      *
+     C                     END                             E2
+      *
+      ** Deal should have been entered before today
+      ** ... or already valued
+     C                     Z-ADD*ZEROS    ZZDTIN
+     C                     Z-ADDHKVDYY    ZWYYYY
+     C                     Z-ADDHKVDMM    ZWMTH
+     C                     Z-ADDHKVDDD    ZWDAY
+      *
+     C           ZZDTIN    IFEQ 0                          B2
+     C                     Z-ADD0         W#VDAT
+     C                     ELSE                            X2
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    W#VDAT
+     C                     END                             E2
+      *
+     C                     Z-ADD*ZEROS    ZZDTIN
+     C                     Z-ADDHKDTYY    ZWYYYY
+     C                     Z-ADDHKDTMM    ZWMTH
+     C                     Z-ADDHKDTDD    ZWDAY
+      *
+     C           ZZDTIN    IFEQ 0                          B2
+     C                     Z-ADD0         W#DDAT
+     C                     ELSE                            X2
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    W#DDAT
+     C                     END                             E2
+      *
+     C           W#DDAT    IFGE BJRDNB                     B2
+     C           W#VDAT    ORGE BJRDNB
+     C                     MOVEL'MMM5108' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     END                             E2
+      *
+      ** Deal has not been rolled over.
+     C           HKROBY    IFNE *BLANKS                    B2
+     C           HKRBSI    ANDEQ'O'
+     C                     MOVEL'MMM5109' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     END                             E2
+      *
+      ** Convert the Interest control date and Last Interest date
+      ** to MIDAS day number format
+     C                     Z-ADD*ZEROS    ZZDTIN
+     C                     Z-ADDHKIAYY    ZWYYYY
+     C                     Z-ADDHKIAMM    ZWMTH
+     C                     Z-ADDHKIADD    ZWDAY
+      *
+     C           ZZDTIN    IFEQ 0                          B2
+     C                     Z-ADD0         W#ICDT
+     C                     ELSE                            X2
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    W#ICDT
+     C                     END                             E2
+      *
+     C                     Z-ADD0         ZZDTIN
+      *
+     C                     Z-ADDHKSLYY    ZWYYYY
+     C                     Z-ADDHKSLMM    ZWMTH
+     C                     Z-ADDHKSLDD    ZWDAY
+      *
+     C           ZZDTIN    IFEQ 0                          B2
+     C                     Z-ADD0         W#SLID
+     C                     ELSE                            X2
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    W#SLID
+     C                     END                             E2
+      *
+      ** Rundate should be greater than deal's interest accrual control date
+      ** ... or last interest date
+     C           BJRDNB    IFLT W#ICDT                     B2
+     C           BJRDNB    ORLT W#SLID
+     C                     MOVEL'MMM5110' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     END                             E2
+      *
+      ** Check the deal amendments file for any amendments entered for the deal
+      **  Set value for key of file to be greater than value required.
+     C                     MOVE SDNUM     K#DEMN
+     C                     MOVE '9999'    K#VDYY
+     C                     MOVE '99'      K#VDMM
+     C                     MOVE '99'      K#VDDD
+     C                     MOVE '999'     K#DEMS
+      *
+     C           K#DEAM    SETGTMMLVDMLL
+      *
+      ** Read the previous record on file.  (Should be the latest deal
+      ** amendment.)
+     C                     READPMMLVDMLL                 03
+     C                     MOVE HNDA38    W#DA38
+      *
+      **  If a record is found with the correct deal number, convert
+      **  its value date to a MIDAS day no.
+     C           *IN03     IFEQ '0'                        B2
+     C           W#DA38    ANDEQSDNUMN
+      *
+     C                     Z-ADD0         ZZDTIN
+      *
+     C                     Z-ADDHNVDYY    ZWYYYY
+     C                     Z-ADDHNVDMM    ZWMTH
+     C                     Z-ADDHNVDDD    ZWDAY
+      *
+     C           ZZDTIN    IFEQ 0                          B3
+     C                     MOVE *BLANKS   W#DMVD
+     C                     ELSE                            X3
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    W#DMVD
+     C                     END                             E3
+      *
+      **  If the rundate is earlier than the value date, it is
+      **  an error.
+     C           BJRDNB    IFLE W#DMVD                     B3
+     C                     MOVEL'MMM5111' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     END                             E3
+      *
+     C                     END                             E2
+      *
+      ** If deal maturing today, do not allow penalty termination
+     C                     Z-ADD*ZEROS    ZZDTIN
+     C                     Z-ADDHKMDYY    ZWYYYY
+     C                     Z-ADDHKMDMM    ZWMTH
+     C                     Z-ADDHKMDDD    ZWDAY
+      *
+     C                     EXSR ZDAT10
+      *
+     C           ZZMDNO    IFEQ BJRDNB                     B2
+     C                     MOVEL'MMM5124' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     END                             E2
+      *
+     C                     ELSE                            X1
+      *
+      ** If action code is 'A', 'E', 'D' or 'X', Deal should exist
+      ** in MMPTRMPD file
+     C           *IN02     IFEQ '1'                        B2
+     C                     MOVEL'MMM5112' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+      *
+     C                     ELSE                            X2
+      *
+     C           PTRECI    IFEQ '*'                        B3
+     C           SDACD     ANDNE'E'
+     C                     MOVEL'MMM5112' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     GOTO EVLF1
+     C                     END                             E3
+      *
+      ** Customer entered must be same as Deal's customer
+     C********** W#CUST    IFNE PTCNUM                     B3                               BUG26488
+     C           W#CUST    IFNE PTCNMA                     B3                               BUG26488
+     C                     MOVEL'MMM5117' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN,40
+     C                     MOVEA'11'      *IN,42
+     C                     GOTO EVLF1
+     C                     END                             E3
+      *
+     C           SDACD     IFEQ 'A'                        B3
+     C           SDACD     OREQ 'D'
+     C           SDACD     OREQ 'X'
+     C           PTMDAT    IFLT BJRDNB                     B4
+     C                     MOVEL'MMM5107' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     GOTO EVLF1
+     C                     END                             E4
+     C                     END                             E3
+      *
+     C           SDACD     IFEQ 'X'                        B3
+     C           PTCHTP    ANDEQ'X'
+     C                     MOVEL'MMM5113' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'111'     *IN,40
+     C                     END                             E3
+      *
+     C                     END                             E2
+     C                     END                             E1
+      *
+      ** Save file fields if no errors
+     C           *IN40     IFEQ '0'                        B1
+     C           SDACD     IFNE 'I'                        B2
+     C                     MOVE FLFLDS    SVFLDS
+     C                     END                             E2
+     C                     Z-ADDSDNUMN    F#DLNO
+     C**********           Z-ADDW#CUST    F#CNUM                                              258692
+     C                     MOVELW#CUST    F#CNUM                                              258692
+     C                     END                             E1
+      *
+     C           EVLF1     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRSCR2 - Main screen processing                                 *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRSCR2    BEGSR
+      *
+      ** Set on *INKE to initialise second screen
+     C                     MOVE '1'       *INKE
+      *
+      ** Output second screen until valid or F3 or F12 taken
+     C           *INKC     DOUEQ'1'                        B1
+     C           *INKL     OREQ '1'
+     C           *IN50     OREQ '0'
+     C           *INKE     ANDNE'1'
+     C   KE                EXSR SRINZ2
+      *
+      ** Keep the Penalty Rate value for checking if it has been amended
+     C                     MOVE SPRAT     W#PRTE
+      *
+     C                     EXSR SRDSP2
+      *
+      ** Process second screen if not F3, F5, F12
+     C           *INKC     IFNE '1'                        B2
+     C           *INKE     ANDNE'1'
+     C           *INKL     ANDNE'1'
+      *
+     C           *INKJ     CASEQ'1'       SRDELT
+     C           SDACD     CASEQ'E'       SRENQY
+     C           SDACD     CASNE'X'       SRVLF2
+     C                     END
+      *
+     C                     END                             E2
+      *
+      ** Perform update processing if valid and Insert/Amend
+     C           *IN50     IFEQ '0'                        B2
+     C           *INKC     ANDNE'1'
+     C           *INKE     ANDNE'1'
+     C           *INKJ     ANDNE'1'
+     C           *INKL     ANDNE'1'
+     C           SDACD     ANDNE'E'
+      *
+      ** Set on indicator to protect screen fields and redisplay screen
+     C           SDACD     IFNE 'X'
+     C                     MOVE '1'       *IN23
+     C                     EXSR SRDSP2
+     C                     END
+      *
+      ** If F3 or F12, set indicators
+     C           *INKC     IFEQ '1'                        B3
+     C           *INKL     OREQ '1'
+     C                     MOVE '0'       *IN23
+     C                     MOVE '1'       *IN50
+     C                     MOVE '0'       *INKL
+     C                     ELSE                            X3
+      *
+     C           SDACD     CASEQ'I'       SRINST
+     C           SDACD     CASEQ'A'       SRAMND
+     C           SDACD     CASEQ'X'       SRAUTH
+     C                     END
+      *
+     C                     END                             E3
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+     C           ESCR2     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRINZ2 - Initialize Second Screen                                 *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRINZ2    BEGSR
+      *
+      ** Reset screen fields and disable F15
+     C                     CLEARMM5290F2
+     C                     MOVE '0'       *IN15
+     C                     MOVEA'01000000'*IN,21
+      *
+      ** Set screen indicators
+     C           SDACD     COMP 'I'                      24
+     C           SDACD     COMP 'A'                      25
+     C           SDACD     COMP 'D'                      26
+     C           SDACD     COMP 'E'                      27
+     C           SDACD     COMP 'X'                      28
+      *
+     C  N24N25             MOVE '1'       *IN23
+      *
+      ** Fill screen fields with file fields if not insert
+     C           SDACD     IFNE 'I'                        B1
+      *
+     C                     MOVE SVFLDS    F#FLDS
+      *
+      ** Set Status Text
+     C           SVRECI    IFNE 'D'                        B2
+     C                     MOVE DLTTXT    SSTAT
+     C                     ELSE                            X2
+     C           SVCHTP    IFEQ 'X'                        B3
+      *
+      ** Authorising User
+     C                     MOVE SVUSRX    SAUSR
+      *
+      ** Retrieve User details to get user name
+     C                     CALL 'AOUSERR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM           SVUSRX
+     C           SDUSER    PARM *BLANKS   DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS                    B2
+     C                     MOVEL'MUSER'   @BFILE           ****************
+     C                     MOVEL'003'     @BASE            * DB ERROR 003 *
+     C                     MOVELSVUSRX    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E2
+      *
+     C                     MOVELUSER1     SANAR
+      *
+     C                     MOVE AUTTXT    SSTAT
+     C                     ELSE                            X3
+     C                     MOVE CMPTXT    SSTAT
+     C                     END                             E3
+     C                     END                             E2
+      *
+      ** Deal Subtype
+     C                     MOVE SVSTYP    SDSTP
+      *
+      ** Book
+     C                     MOVE SVBOOK    SBOOK
+      *
+      ** Booking Branch and Originating Branch
+     C                     MOVE SVBRCA    SBRCH
+     C                     MOVE SVORBR    SORBR
+      *
+      ** Deal Date
+     C                     Z-ADD*ZEROS    ZDAYNO
+     C                     Z-ADDSVDDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SDDAT
+      *
+      ** Value date
+     C                     Z-ADD*ZEROS    ZDAYNO
+     C                     Z-ADDSVVDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SVDAT
+      *
+      ** Maturity Date
+     C                     Z-ADD*ZEROS    ZDAYNO
+     C                     Z-ADDSVMDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SMDAT
+      *
+      ** Previous Maturity Date
+     C                     Z-ADD*ZEROS    ZDAYNO
+     C                     Z-ADDSVPMDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SPMDT
+      *
+      ** Currency
+     C                     MOVE SVCCY     SCCY
+      *
+      ** Get the no. of decimal places from the currencies file.
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM           SVCCY
+     C           SDCURR    PARM *BLANKS   DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS                    B2
+     C                     MOVEL'AOCURR'  @BFILE           ****************
+     C                     MOVEL'002'     @BASE            * DB ERROR 002 *
+     C                     MOVELSVCCY     @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E2
+      *
+     C                     Z-ADDA6NBDP    W#NBDP
+      *
+      ** Principal Amount
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     MOVE SVPCPL    ZFIELD
+     C                     Z-ADDW#NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SPAMT
+      *
+      ** Interest Method
+     C                     MOVE SVICBS    SINTM
+      *
+      ** First and Last Day Interest
+     C                     MOVE SVFLID    SFLDI
+      *
+      ** Round Down Interest
+     C                     MOVE SVRDFC    SRDIN
+      *
+      ** Base Rate
+     C                     MOVE SVBRTT    SBSRT
+      *
+      ** Spread/Rate
+     C                     Z-ADD7         ZADEC
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SVDLRT    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SSPRT
+      *
+      ** Total Interest
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     MOVE SVPINT    ZFIELD
+     C                     Z-ADDW#NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    STOTI
+      *
+      ** Penalty Rate
+     C                     Z-ADD7         ZADEC
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE SVPENR    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SPRAT
+      *
+      ** Total Interest - Adjusted
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     MOVE SVINTA    ZFIELD
+     C                     Z-ADDW#NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SPTOT
+      *
+      ** Adjustment
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADD*ZEROS    ZDECS
+     C                     MOVE SVADJA    ZFLD15
+     C                     Z-ADDW#NBDP    ZDECS
+     C                     MOVE *BLANKS   ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SADJ
+      *
+      ** Insert/Amend User
+     C                     MOVE SVUSRI    SIUSR
+      *
+     C                     ELSE                            X1
+      *
+      ** If Insert action, format the screen based from the retrieved Deals file
+      ** Deal Subtype
+     C                     MOVE HKSTYP    SDSTP
+     C                     MOVE HKSTYP    F#STYP
+      *
+      ** Book
+     C                     MOVE HKBOKC    SBOOK
+     C                     MOVE HKBOKC    F#BOOK
+      *
+      ** Booking Branch and Originating Branch
+     C                     MOVE HKBRCA    SBRCH
+     C                     MOVE HKORBR    SORBR
+     C                     MOVE HKBRCA    F#BRCA
+     C                     MOVE HKORBR    F#ORBR
+      *
+      ** Deal Date
+     C                     Z-ADD*ZEROS    ZDAYNO
+     C                     Z-ADDW#DDAT    ZDAYNO
+     C                     Z-ADDW#DDAT    F#DDAT
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SDDAT
+      *
+      ** Value date
+     C                     Z-ADD*ZEROS    ZDAYNO
+     C                     Z-ADDW#VDAT    ZDAYNO
+     C                     Z-ADDW#VDAT    F#VDAT
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SVDAT
+      *
+      ** Previous Maturity Date
+     C                     Z-ADD*ZEROS    ZZDTIN
+     C                     Z-ADDHKMDYY    ZWYYYY
+     C                     Z-ADDHKMDMM    ZWMTH
+     C                     Z-ADDHKMDDD    ZWDAY
+      *
+     C           ZZDTIN    IFEQ 0                          B2
+     C                     Z-ADD0         W#VDAT
+     C                     ELSE                            X2
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    W#MDAT
+     C                     END                             E2
+      *
+     C                     Z-ADD*ZEROS    ZDAYNO
+     C                     Z-ADDW#MDAT    ZDAYNO
+     C                     Z-ADDW#MDAT    F#PMDT
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SPMDT
+      *
+      ** Maturity Date
+     C                     Z-ADD*ZEROS    ZDAYNO
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     Z-ADDBJRDNB    F#MDAT
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     SMDAT
+      *
+      ** Currency
+     C                     MOVE HKCCY     SCCY
+     C                     MOVE HKCCY     F#CCY
+      *
+      ** Get the no. of decimal places from the currencies file.
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM           HKCCY
+     C           SDCURR    PARM *BLANKS   DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS                    B2
+     C                     MOVEL'AOCURR'  @BFILE           ****************
+     C                     MOVEL'004'     @BASE            * DB ERROR 004 *
+     C                     MOVELHKCCY     @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E2
+      *
+     C                     Z-ADDA6NBDP    W#NBDP
+      *
+      ** Principal Amount
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     MOVE HKAMNP    ZFIELD
+     C                     MOVE HKAMNP    F#PCPL
+     C                     Z-ADDW#NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SPAMT
+      *
+      ** Interest Method
+     C                     MOVE HKICMT    SINTM
+     C                     MOVE HKICMT    F#ICBS
+      *
+      ** First and Last Day Interest
+     C                     MOVE HKFLID    SFLDI
+     C                     MOVE HKFLID    F#FLID
+      *
+      ** Round Down Interest
+     C                     MOVE HKRDFC    SRDIN
+     C                     MOVE HKRDFC    F#RDFC
+      *
+      ** Base Rate
+     C                     MOVE HKDBSR    SBSRT
+     C                     MOVE HKDBSR    F#BRTT
+      *
+      ** Spread/Rate
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     MOVE HKINTR    ZFIELD
+     C                     Z-ADDHKINTR    F#DLRT
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SSPRT
+      *
+      ** Total Interest up to rundate using deal rate.
+      ** Get the deal details from DEALSDC
+     C           SDNUMN    CHAINDEALSC              N90
+      *
+     C           *IN90     IFEQ '1'                        B1
+     C                     MOVEL'DEALS'   @BFILE           ****************
+     C                     MOVEL'024'     @BASE            * DB ERROR 024 *
+     C                     MOVELSDNUMN    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     Z-ADDIACD      ZZBEG
+     C                     Z-ADDBJRDNB    ZZEND
+      *
+     C           HKFLID    IFEQ 'Y'
+     C                     ADD  1         ZZEND
+     C                     END
+      *
+     C                     MOVE HKICMT    ZZCALC
+     C                     Z-ADDHKAMNP    II@AMT
+     C                     Z-ADDHKINTR    II@RAT
+     C                     MOVE HKRDFC    II@RDI
+     C                     EXSR SRINTR
+      *
+     C           IO@INT    ADD  AITC      IO@INT
+     C                     ADD  AIAN      IO@INT
+     C                     ADD  AIAP      IO@INT
+      *
+     C                     Z-ADDIO@INT    W#INTA
+     C                     Z-ADDIO@INT    F#PINT
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     MOVE W#INTA    ZFIELD
+     C                     Z-ADDW#NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    STOTI
+      *
+      ** Penalty Rate - Get the Currency default rate from SDCURRX0 file
+     C                     Z-ADD*ZEROS    @@INPR
+     C           HKCCY     CHAINSDCURRD1             90
+      *
+     C           *IN90     IFEQ '1'                        B2
+     C           *IN90     OREQ '0'
+     C           MDRAT     ANDEQ0
+     C                     Z-ADD7         ZADEC
+     C                     MOVE HKINTR    ZFIELD
+     C                     Z-ADDHKINTR    W#PRAT
+     C                     Z-ADDHKINTR    F#DEFR
+     C                     Z-ADDHKINTR    F#PENR
+     C                     ELSE                            X2
+     C                     Z-ADD7         ZADEC
+     C                     MOVE MDRAT     ZFIELD
+     C                     Z-ADDMDRAT     W#PRAT
+     C                     Z-ADDMDRAT     F#DEFR
+     C                     Z-ADDMDRAT     F#PENR
+     C                     END                             E2
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SPRAT
+      *
+      ** Total Interest - Adjusted
+     C                     Z-ADDW#VDAT    ZZBEG
+     C                     Z-ADDBJRDNB    ZZEND
+     C           HKFLID    IFEQ 'Y'
+     C                     ADD  1         ZZEND
+     C                     END
+     C                     MOVE HKICMT    ZZCALC
+     C                     Z-ADDHKAMNP    II@AMT
+     C                     Z-ADDW#PRAT    II@RAT
+     C                     MOVE HKRDFC    II@RDI
+     C                     EXSR SRINTR
+     C                     Z-ADDIO@INT    W#ADJI
+     C                     Z-ADDIO@INT    F#INTA
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     MOVE W#ADJI    ZFIELD
+     C                     Z-ADDW#NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SPTOT
+      *
+      ** Adjustment
+     C           W#INTA    SUB  W#ADJI    W#ADJM
+     C                     Z-ADDW#ADJM    F#ADJA
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADD*ZEROS    ZDECS
+     C                     MOVE W#ADJM    ZFLD15
+     C                     Z-ADDW#NBDP    ZDECS
+     C                     MOVE *BLANKS   ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SADJ
+      *
+     C                     END                             E1
+      *
+     C           EINZF2    ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRDSP2 - Display Second Screen                                    *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRDSP2    BEGSR
+      *
+      ** Set Cursor Location fields
+     C           *IN23     IFEQ '1'
+     C           *IN51     OREQ '0'
+     C                     MOVE '0'       *IN50
+     C                     Z-ADD1         SLINE
+     C                     Z-ADD1         SPOSN
+     C                     END
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITECMDTXTF2
+     C                     WRITEMM5290F2
+     C                     WRITEMM5290F1
+     C                     READ MM5290F2                 90
+      *
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      ** Set off all error indicators
+     C                     MOVEA'00'      *IN,50
+      *
+     C           EDSP2     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRENQY - Enquiry Processing                                       *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRENQY    BEGSR
+      *
+      ** Check Action code not changed
+     C                     READ MM5290F1                 90
+      *
+      ** If it has changed, validate new action code
+     C           SDACD     IFNE 'E'                        B1
+      *
+     C                     EXSR SRVLF1
+      *
+     C           *IN40     DOWNE'0'                        B2
+     C                     EXSR SRDSP2
+     C                     READ MM5290F1                 90
+      *
+     C           *INKC     CABEQ'1'       EENQY
+     C           *INKL     CABEQ'1'       EENQY
+      *
+     C                     EXSR SRVLF1
+      *
+     C                     END                             E2
+      *
+      ** Force initialisation and redisplay of second screen
+     C                     MOVE '1'       *INKE
+     C                     END                             E1
+      *
+     C           EENQY     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRVLF2 - Validate Second Screen                                   *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRVLF2    BEGSR
+      *
+      ** Set on error indicator to force redisplay if action delete
+     C           SDACD     IFEQ 'D'                        B1
+     C                     MOVE '1'       *IN50
+     C                     GOTO EVLF2
+     C                     END                             E1
+      *
+     C                     MOVE '0'       *IN51
+      *
+      ** Penalty Rate
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVELSPRAT     ZFIELD    P
+     C                     Z-ADD4         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZALIGN
+      *
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVEL'MMM5120' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,50
+     C                     ELSE                            X1
+     C                     MOVE ZFIELD    F#PENR
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SPRAT
+     C                     ENDIF                           E1
+      *
+      ** If fixed rate, rate inserted can't be greater than deal date
+     C           HKBSRC    IFEQ *BLANKS                    B1
+     C           F#PENR    IFGT HKINTR                     B2
+     C                     MOVEL'MMM5122' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,50
+     C                     END                             E2
+     C                     END                             E1
+      *
+      ** Recalculate the new adjusted interest if rate was changed
+      ** Total Interest - Adjusted
+     C           W#PRTE    IFNE SPRAT                      B1
+     C           *IN51     ANDNE'1'
+     C                     Z-ADDF#VDAT    ZZBEG
+     C                     Z-ADDF#MDAT    ZZEND
+     C           F#FLID    IFEQ 'Y'                        B2
+     C                     ADD  1         ZZEND
+     C                     END                             E2
+     C                     MOVE F#ICBS    ZZCALC
+     C                     Z-ADDF#PCPL    II@AMT
+     C                     Z-ADDF#PENR    II@RAT
+     C                     MOVE F#RDFC    II@RDI
+     C                     EXSR SRINTR
+     C                     Z-ADDIO@INT    W#ADJI
+     C                     Z-ADDIO@INT    F#INTA
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     MOVE W#ADJI    ZFIELD
+     C                     Z-ADDW#NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE *BLANKS   SPTOT
+     C                     MOVE ZFIELD    SPTOT
+      *
+      ** Adjustment
+     C           F#PINT    SUB  W#ADJI    W#ADJM
+     C                     Z-ADDW#ADJM    F#ADJA
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADD*ZEROS    ZDECS
+     C                     MOVE W#ADJM    ZFLD15
+     C                     Z-ADDW#NBDP    ZDECS
+     C                     MOVE *BLANKS   ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   SADJ
+     C                     MOVE ZOUT21    SADJ
+      *
+      ** Redisplay the save file
+     C                     MOVE '1'       *IN50
+     C                     END                             E1
+      *
+     C                     MOVE '0'       *INKE
+      *
+     C           EVLF2     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRINST - Insert Processing                                        *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRINST    BEGSR
+      *
+     C  N02      SDNUMN    CHAINMMPTRML0             99
+      *
+      ** If record not found, error
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVEL'MMPTRML1'@BFILE           ****************
+     C                     MOVEL'023'     @BASE            * DB ERROR 023 *
+     C                     MOVELSDNUMN    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+      ** Move screen fields to file fields and update file
+     C                     MOVE F#FLDS    FLFLDS
+     C                     MOVE 'D'       PTRECI
+      *
+     C                     TIME           W#TMDT
+     C                     MOVELW#TMDT    PTLCT
+      *
+     C                     MOVE USER      PTUSRI
+     C                     MOVE 'I'       PTCHTP
+     C                     MOVE *BLANKS   PTUSRX
+      *                                                                                     MD021527
+     C                     MOVE W#CUST    PTCNMA                                            MD021527
+      *
+     C  N02                UPDATMMPTRMD0               99
+     C   02                WRITEMMPTRMD0               99
+      *
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVEL'MMPTRMPD'@BFILE           ****************
+     C                     MOVEL'005'     @BASE            * DB ERROR 005 *
+     C                     MOVELPTDLNO    @BKEY            ****************
+     C                     MOVE PTVDAT    @BKEY
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     COMIT
+      *
+      * Send completion message with deal number
+     C                     MOVEL'MMM5121' ZAMSID
+     C                     MOVE PTDLNO    #MSG27
+     C                     MOVEL#MSGPM    ZAMSDA    P
+     C                     EXSR ZASNMS
+      *
+     C           EINST     ENDSR
+      *
+      ******************************************************************
+      *                                                                *
+      *  SRINTR - Calculate Interest                                   *
+      *                                                                *
+      *  CALLS: ZINTDY (Calculate No. of Interest Days)                *
+      *                                                                *
+      *  Input Fields: ZZBEG  - Start Date of Period                   *
+      *                ZZEND  - End Date of Period                     *
+      *                ZZCALC - Interest Calculation Method            *
+      *                II@AMT - Principal Amount (15N)                 *
+      *                II@RAT - Interest Rate (11,7)                   *
+      *                II@RDI - Round Down Indicator                   *
+      *                                                                *
+      *  Output Field: IO@INT - Interest Amount (15,0)                 *
+      *                                                                *
+      *  Work Fields : IW@157 - 15,7                                   *
+      *                IW@210 - 21,0                                   *
+      *                IW@YR  - (Number of days in year) x 100         *
+      *                                                                *
+      ******************************************************************
+      *
+     C           SRINTR    BEGSR
+      *
+      ** Proceed only if Calc Method is a valid one.
+     C           ZZCALC    IFEQ '1'                        B1
+     C           ZZCALC    OREQ '2'
+     C           ZZCALC    OREQ '3'
+     C           ZZCALC    OREQ '4'
+     C           ZZCALC    OREQ '5'
+     C           ZZCALC    OREQ '6'
+     C           ZZCALC    OREQ '9'                                                           CDL093
+      *
+     C                     Z-ADDZZBEG     ZZBEG9  50                                          CDL093
+     C                     Z-ADDZZEND     ZZEND9  50                                          CDL093
+      *                                                                                       CDL093
+      ** Calculate Number of Interesr Days
+      *                                                                                       CDL093
+     C           ZZCALC    IFEQ '9'                                                           CDL093
+      *                                                                                       CDL093
+      ** Convert start date to YYYYMMDD format                                                CDL093
+      *                                                                                       CDL093
+     C                     Z-ADDZZBEG9    @@DAYN  50                                          CDL093
+     C                     EXSR ZDATE9                                                        CDL093
+     C                     Z-ADD@@VDT     ZZDATA  80                                          CDL093
+     C                     Z-ADD@@YR      ZZYY1   40                                          CDL093
+      *                                                                                       CDL093
+      ** Convert end date to YYYYMMDD format                                                  CDL093
+      *                                                                                       CDL093
+     C                     Z-ADDZZEND9    @@DAYN                                              CDL093
+     C                     EXSR ZDATE9                                                        CDL093
+     C                     Z-ADD@@VDT     ZZDATB  80                                          CDL093
+     C                     Z-ADD@@YR      ZZYY2   40                                          CDL093
+      *                                                                                       CDL093
+     C                     EXSR #FEB29                                                        CDL093
+     C                     ENDIF                                                              CDL093
+      *                                                                                       CDL093
+     C           ZZCALC    IFEQ '9'                                                           CDL093
+     C           #29FEB    ANDEQ'Y'                                                           CDL093
+     C           IKNIPD    ANDNE*ZERO                                                         CDL093
+     C           IKNIPD    ANDLTZZEND                                                         CDL093
+      *                                                                                       CDL093
+     C                     Z-ADDIKIPDM    @@IPDM  20                                          CDL093
+     C                     CALL 'MM001031'                                                    CDL093
+     C                     PARM           ZZBEG                                               CDL093
+     C                     PARM           ZZEND                                               CDL093
+     C                     PARM           IKNIPD                                              CDL093
+     C                     PARM '9'       ZZCALC                                              CDL093
+     C                     PARM           IKIPFQ                                              CDL093
+     C                     PARM           II@AMT                                              CDL093
+     C                     PARM           II@RAT                                              CDL093
+     C                     PARM 'N'       RNDDWN  1                                           CDL093
+     C                     PARM 'N'       FRSLST  1                                           CDL093
+     C                     PARM           @@IPDM                                              CDL093
+     C                     PARM           WINTR                                               CDL093
+      *                                                                                       CDL093
+     C                     Z-ADDWINTR     IO@INT                                              CDL093
+     C           *LIKE     DEFN IO@INT    WINTR                                               CDL093
+      *                                                                                       CDL093
+     C                     GOTO INTCLC                                                        CDL093
+      *                                                                                       CDL093
+     C                     ENDIF                                                              CDL093
+      *                                                                                       CDL093
+     C                     EXSR ZINTDY
+      *
+     C           ZZCALC    IFEQ '2'                        B2
+     C           ZZCALC    OREQ '3'
+     C           ZZCALC    OREQ '5'
+     C                     Z-ADD36000     IW@YR
+     C                     END                             E2
+      *
+     C           ZZCALC    IFEQ '1'                        B2
+     C           ZZCALC    OREQ '4'
+     C           ZZCALC    OREQ '9'                                                           CDL093
+     C           #29FEB    ANDNE'Y'                                                           CDL093
+     C                     Z-ADD36500     IW@YR
+     C                     END                             E2
+      *
+     C           ZZCALC    IFEQ '6'                        B2
+     C           ZZCALC    OREQ '9'                                                           CDL093
+     C           #29FEB    ANDEQ'Y'                                                           CDL093
+     C                     Z-ADD36600     IW@YR
+     C                     END                             E2
+      *
+     C           ZZCALC    IFEQ '6'
+     C           ZZCALC    OREQ '9'                                                           CDL093
+     C           #29FEB    ANDEQ'Y'                                                           CDL093
+     C           INT6DY    MULT II@RAT    IW@157
+     C                     ELSE
+     C           ZZINDY    MULT II@RAT    IW@157
+     C                     END
+      *
+     C           IW@157    MULT II@AMT    IW@210    H
+      *
+      ** Round down if round down indicator is 'Y'
+     C           II@RDI    IFEQ 'Y'                        B2
+     C           IW@210    DIV  IW@YR     IO@INT
+     C                     ELSE                            X2
+     C           IW@210    DIV  IW@YR     IO@INT    H
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *                                                                                       CDL093
+      * Interest has been calculated                                                          CDL093
+     C           INTCLC    TAG                                                                CDL093
+      *
+     C                     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRSELC - Display Select Screen                                    *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRSELC    BEGSR
+      *
+      ** If first time through, initialise subfile and select indicators
+     C                     MOVE '1'       *INKE
+      *
+     C           SDACD     IFNE 'X'                        B1
+     C                     MOVEA'10'      *IN,16
+     C                     ELSE                            X1
+     C                     MOVEA'01'      *IN,16
+     C                     END                             E1
+      *
+     C           *INKC     DOUEQ'1'                        B1
+     C           *INKL     OREQ '1'
+      *
+     C   KE                EXSR SRINZ1
+     C   KE                EXSR SRLOAD
+      *
+      * Display screen
+     C                     EXSR SRDSS1
+      *
+      * Process screen if not exit, refresh or previous screen
+     C           *INKC     IFEQ '0'                        B2
+     C           *INKE     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C           *IN39     CASEQ'1'       SRLOAD           Rollup
+     C           *IN37     CASEQ'1'       SRREAD           Subfile Displayed
+     C                     END
+      *
+     C                     END                             E2
+     C                     END                             E1
+      *
+      * Set off *IN40 to exit from #MAIN and select/subfile indicators
+     C                     MOVE '0'       *IN40
+     C                     MOVEA'00000'   *IN,35
+     C                     MOVEA'00'      *IN,16
+      *
+     C           ESELC     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRINZ1 - Initialize Subfile                                     *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRINZ1    BEGSR
+      *
+      ** Clear Subfile
+     C                     MOVEA'00000'   *IN,35
+     C                     WRITEMM5290C1
+     C                     MOVE '1'       *IN36
+      *
+     C                     Z-ADD0         S1RRN
+     C                     Z-ADD0         X1RRN
+      *
+      ** Process file depending upon action mode
+      **  16 = All, 17 = Authorized
+     C   16      *LOVAL    SETLLMMPTRML0
+     C   17      *LOVAL    SETLLMMPTRML2
+     C   16                READ MMPTRML0                 38
+     C   17                READ MMPTRML2                 38
+      *
+     C           EINZ1     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRLOAD - Load Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRLOAD    BEGSR
+      *
+     C                     Z-ADD0         S1LINE
+     C                     Z-ADDX1RRN     S1RRN
+      *
+      * Reset Position
+     C           *IN39     IFEQ '1'                        B1
+     C           X1DLNO    CHAINMMPTRML0            N38
+     C                     END                             E1
+      *
+      ** Load SFL page until SFL page full or end of file
+     C           *IN38     DOWNE'1'                        B1
+     C           S1LINE    ANDLT15
+      *
+      ** Validate user authorised to enquire on exchange
+     C                     MOVE 'E'       SDACD
+     C                     MOVE PTDLNO    SDNUM
+     C**********           MOVELPTCNUM    SCNUM                                             BUG26488
+     C                     MOVELPTCNMA    SCNUM                                             BUG26488
+     C                     EXSR SRVLF1
+      *
+      ** If user not authorised to enquire, skip to next record
+     C           *IN40     IFEQ '0'                        B2
+      *
+     C           *IN20     IFEQ '1'                        B3
+     C           *IN20     OREQ '0'
+     C           PTMDAT    ANDEQBJRDNB
+      *
+     C                     ADD  1         S1LINE
+      *
+      ** If line number is less than 15, output detail to subfile
+     C           S1LINE    IFLT 15                         B4
+      *
+      ** Execute SRINZ2 to format fields for screen
+     C                     EXSR SRINZ2
+      *
+      ** Write detail to subfile
+     C                     MOVE *BLANKS   S1SEL
+     C                     MOVE SDNUM     S1DLNO
+     C                     MOVELSCNUM     S1CUST
+     C                     MOVE SCCY      S1CCY
+     C                     MOVE SPAMT     S1AMT
+     C                     MOVE SVDAT     S1VALD
+     C                     MOVE SMDAT     S1MATD
+     C                     MOVE SSTAT     S1DSTS
+      *
+     C                     ADD  1         S1RRN      37
+      *
+      ** Set cursor indicator if first line of page
+     C           S1LINE    COMP 1                        35
+      *
+     C                     WRITEMM5290S1
+     C                     END                             E4
+     C                     END                             E3
+     C                     END                             E2
+      *
+      ** Read next record if not already Line 15
+     C           S1LINE    IFLT 15                         B2
+     C   16                READ MMPTRML0                 38
+     C   17                READ MMPTRML2                 38
+      *
+     C                     END                             E2
+     C                     END                             E1
+      *
+      ** Set subfile record number and save file details
+     C           X1RRN     ADD  1         C1SFRC
+     C                     Z-ADDS1RRN     X1RRN
+     C                     MOVE PTDLNO    X1DLNO
+      *
+      ** Clear messages from program message queue which will have
+      ** been sent from SRVLF1
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C           ELOAD     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRREAD - Read Subfile                                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRREAD    BEGSR
+      *
+     C                     READCMM5290S1                 90
+      *
+     C           *IN90     DOWEQ'0'                        B1
+     C           *INKC     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      ** If selection not blank, access Penalty Termination file to
+      ** obtain details
+     C           S1SEL     IFNE ' '                        B2
+     C                     MOVEA'000'     *IN,01
+     C           SDNUMN    CHAINMMPTRML0            N99
+      *
+      ** If record not found, error
+     C           *IN99     IFEQ '1'                        B3
+     C                     MOVEL'MMPTRML0'@BFILE           ****************
+     C                     MOVEL'006'     @BASE            * DB ERROR 006 *
+     C                     MOVELS1DLNO    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E3
+      *
+      ** Set action to protect if deleted
+     C           RECI      IFEQ '*'
+     C                     MOVE '1'       *IN29
+     C                     ELSE
+     C                     MOVE '0'       *IN29
+     C                     END
+      *
+     C                     MOVE 'E'       SDACD
+     C                     MOVE S1DLNO    SDNUM
+     C                     MOVELS1CUST    SCNUM
+      *
+      ** Reset save fields and process second screen
+     C                     EXSR SRVLF1
+     C                     EXSR SRSCR2
+      *
+     C                     END                             E2
+      *
+     C           *IN37     IFEQ '1'                        B2
+     C                     READCMM5290S1                 90
+     C                     ELSE                            X2
+     C                     MOVE '1'       *IN37
+     C                     MOVE '1'       *IN90
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+      ** Set off action protect and set on *INKL to exit from SRSELC
+     C                     MOVE '0'       *IN29
+     C                     MOVE '1'       *INKL
+      *
+     C           EREAD     ENDSR
+      *******************************************************************
+      *                                                                 *
+      * SRDSS1 - Display Subfile                                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRDSS1    BEGSR
+      *
+      ** If no records displayed, output message
+     C           S1RRN     IFEQ 0                          B1
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVEL'Y2U0008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             E1
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITECMDTXTS1
+     C                     EXFMTMM5290C1
+      *
+      ** Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      ** Maintain subfile page
+     C           INSFRC    IFNE 0                          B1
+     C                     Z-ADDINSFRC    C1SFRC
+     C                     END                             E1
+      *
+     C           EDSS1     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRAUTH - Authorization processing.                              *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRAUTH    BEGSR
+      *
+     C           SDNUMN    CHAINMMPTRML1             99
+      *
+      ** If record not found, error
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVEL'MMPTRML1'@BFILE           ****************
+     C                     MOVEL'007'     @BASE            * DB ERROR 007 *
+     C                     MOVELSDNUMN    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+      ** Clear the MM Standard Deal format field
+     C                     CLEAR@SLDS
+      *
+      ** Update the standard deal format file
+     C                     EXSR SRSLDS
+      *
+      ** Maturity Date
+     C                     Z-ADDPTMDAT    @@DAYN
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     W#DATE
+     C                     Z-ADDW#YEAR    IKMDYY
+     C                     Z-ADDW#MNTH    IKMDMM
+     C                     Z-ADDW#DAY     IKMDDD
+      *
+     C                     Z-ADDPTMDAT    IKMATD
+      *
+      ** Update Back and Front office files
+     C                     CALL 'MM0078'
+     C                     PARM           W#TERM
+     C                     PARM 'L'       W#TDIN
+     C                     PARM           @SLDS
+     C                     PARM           @SSDS
+     C                     PARM           @SBDS
+     C                     PARM           @SADS
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+      *
+     C           W#TERM    IFEQ 'E'                        B1
+     C                     MOVEL'MM0078'  @BFILE           ****************
+     C                     MOVEL'008'     @BASE            * DB ERROR 008 *
+     C                     MOVELSDNUM     @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     CALL 'MM0083'
+     C                     PARM           W#TERM
+     C                     PARM 'L'       W#TDIN
+     C                     PARM           @SLDS
+     C                     PARM           @SSDS
+     C                     PARM           @SBDS
+     C                     PARM           @SADS
+     C                     PARM           W#RACD
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           W#AURO
+     C                     PARM           PBFRCD100
+     C                     PARM           PAFRCD100
+      *
+     C           W#TERM    IFEQ 'E'                        B1
+     C                     MOVEL'MM0083'  @BFILE           ****************
+     C                     MOVEL'009'     @BASE            * DB ERROR 009 *
+     C                     MOVELSDNUM     @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+      **  Blank standard deal fields
+     C                     CLEAR@SLDS
+      *
+      **  Update the manual adjustment file
+     C                     MOVE '-'       A#SIGN
+     C                     EXSR SRMADJ
+      *
+      ** Update the Penalty Termination file
+     C                     TIME           W#TMDT
+     C                     MOVELW#TMDT    PTLCT
+      *
+     C                     MOVELUSER      PTUSRX
+     C                     MOVE 'X'       PTCHTP
+     C                     UPDATMMPTRMP1               99
+      *
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVEL'MMPTRMPD'@BFILE           ****************
+     C                     MOVEL'012'     @BASE            * DB ERROR 012 *
+     C                     MOVELPTDLNO    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      *  SRSLDS - Update the MM Standard deal format file               *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRSLDS    BEGSR
+      *
+     C                     MOVE 'IK'      IKRCID
+     C                     MOVE HKDLTF    IKDLTF
+     C                     MOVE HKDLUP    IKDLUP
+     C                     MOVE HKMLUP    IKMLUP
+     C                     MOVE HKYLUP    IKYLUP
+     C                     MOVE HKTLUP    IKTLUP
+     C                     MOVE HKCHTP    IKCHTP
+     C                     MOVE HKLCD     IKLCD
+     C                     MOVE HKLUID    IKLUID
+     C                     MOVE HKPCDN    IKPCDN
+     C                     MOVE SDNUM     IKDN38
+     C                     MOVE HKDADN    IKDADN
+     C                     Z-ADDHKAMNP    IKRBAT
+     C                     MOVE HKBKCD    IKBKCD
+     C                     MOVE HKCCY     IKCCY
+     C                     MOVE HKCYDP    IKCYDP
+     C                     MOVE HKVDYY    IKVDYY
+     C                     MOVE HKVDMM    IKVDMM
+     C                     MOVE HKVDDD    IKVDDD
+     C                     MOVE *BLANKS   IKDDLT
+     C                     MOVE HKMTYP    IKMTYP
+     C                     MOVE HKRBSI    IKRBSI
+     C                     MOVE HKTYPE    IKTYPE
+     C                     MOVE HKSTYP    IKSTYP
+     C                     MOVE HKCSNM    IKCSNM
+     C                     MOVE HKCNUM    IKCNUM
+     C                     MOVE HKAMNP    IKAMNP
+     C                     MOVE HKBRCA    IKBRCA
+     C                     MOVE HKDBRC    IKDBRC
+     C                     MOVE HKDDYY    IKDDYY
+     C                     MOVE HKDDMM    IKDDMM
+     C                     MOVE HKDDDD    IKDDDD
+     C                     MOVE HKBRKG    IKBRKG
+     C                     MOVE HKBKCY    IKBKCY
+     C                     MOVE HKBCDP    IKBCDP
+     C                     MOVE HKFEDF    IKFEDF
+     C                     MOVE HKPTFR    IKPTFR
+     C                     MOVE HKCDRF    IKCDRF
+     C                     MOVE HKPCTN    IKPCTN
+     C                     MOVE HKTIME    IKTIME
+     C                     MOVE HKDUSC    IKDUSC
+     C                     MOVELUSER      IKAOFR
+     C                     MOVE HKSLYY    IKSLYY
+     C                     MOVE HKSLMM    IKSLMM
+     C                     MOVE HKSLDD    IKSLDD
+     C                     MOVE HKROBY    IKROBY
+     C                     MOVE HKSPRD    IKSPRD
+     C                     MOVE HKIIRT    IKIIRT
+     C                     MOVE HKNIYY    IKNIYY
+     C                     MOVE HKNIMM    IKNIMM
+     C                     MOVE HKNIDD    IKNIDD
+     C                     MOVE HKIPFQ    IKIPFQ
+     C                     MOVE HKICMT    IKICMT
+     C                     MOVE HKIPDM    IKIPDM
+     C                     MOVE HKCPTI    IKCPTI
+     C                     MOVE HKCNTI    IKCNTI
+     C                     MOVE HKACSQ    IKACSQ
+     C                     MOVE HKNGVI    IKNGVI
+     C                     MOVE HKMTAX    IKMTAX
+     C                     MOVE HKMCDH    IKMCDH
+     C                     MOVE HKIAYY    IKIAYY
+     C                     MOVE HKIAMM    IKIAMM
+     C                     MOVE HKIADD    IKIADD
+     C                     MOVE HKBSRC    IKBSRC
+     C                     MOVE HKDBSR    IKDBSR
+     C                     MOVE HKNTCE    IKNTCE
+     C                     MOVE HKBRAT    IKBRAT
+     C                     MOVE HKMMDI    IKMMDI
+     C                     MOVE HKDORM    IKDORM
+     C                     MOVE HKORCM    IKORCM
+     C********             MOVE HKDORI    IKDORI
+     C********             MOVE HKMORI    IKMORI
+     C**********           MOVE HKDORI    QLDORI                                              257566
+     C**********           MOVE HKMORI    QQMORI                                              257566
+     C                     MOVE HKDORI    IKDORI                                              257566
+     C                     MOVE HKMORI    IKMORI                                              257566
+     C                     MOVE HKDCPI    IKDCPI
+     C                     MOVE HKMCPI    IKMCPI
+     C                     MOVE HKDOPM    IKDOPM
+     C                     MOVE HKMOPM    IKMOPM
+     C********             MOVE HKDOPI    IKDOPI
+     C********             MOVE HKMOPI    IKMOPI
+     C**********           MOVE HKDOPI    QLDOPI                                              257566
+     C**********           MOVE HKMOPI    QLMOPI                                              257566
+     C                     MOVE HKDOPI    IKDOPI                                              257566
+     C                     MOVE HKMOPI    IKMOPI                                              257566
+     C                     MOVE HKDCRI    IKDCRI
+     C                     MOVE HKMCRI    IKMCRI
+     C                     MOVE HKDFAC    IKDFAC
+     C                     MOVE HKMFAO    IKMFAO
+     C                     MOVE HKSPEC    IKSPEC
+     C                     MOVE HKFUID    IKFUID
+     C                     MOVE HKFLID    IKFLID
+     C                     MOVE HKRDFC    IKRDFC
+     C                     MOVE HKORBR    IKORBR
+     C                     MOVE HKPRFC    IKPRFC
+     C                     MOVE HKRSTM    IKRSTM
+     C*********            MOVE HKRONS    IKRONS
+     C**********           MOVE HKRONS    QLRONS                                              257566
+     C                     MOVE HKRONS    IKRONS                                              257566
+     C                     MOVE HKRIBN    IKRIBN
+     C                     MOVE HKRIBA    IKRIBA
+     C                     MOVE HKROBN    IKROBN
+     C                     MOVE HKROCN    IKROCN
+     C                     MOVE HKPSTM    IKPSTM
+     C*********            MOVE HKPONS    IKPONS
+     C**********           MOVE HKPONS    QLPONS                                              257566
+     C                     MOVE HKPONS    IKPONS                                              257566
+     C                     MOVE HKPIBN    IKPIBN
+     C                     MOVE HKPIBA    IKPIBA
+     C                     MOVE HKPOBN    IKPOBN
+     C                     MOVE HKPOCN    IKPOCN
+     C                     MOVE HKRCRN    IKRCRN
+     C                     MOVE HKRCRA    IKRCRA
+     C                     MOVE HKRVNO    IKRVNO
+     C                     MOVE HKAWBN    IKAWBN
+     C                     MOVE HKAWBA    IKAWBA
+     C                     MOVE HKBENN    IKBENN
+     C                     MOVE HKBENA    IKBENA
+     C                     MOVE HKDTP1    IKDTP1
+     C                     MOVE HKDTP2    IKDTP2
+     C                     MOVE HKDTP3    IKDTP3
+     C                     MOVE HKDTP4    IKDTP4
+     C                     MOVE HKDCHG    IKDCHG
+     C                     MOVE HKBTB1    IKBTB1
+     C                     MOVE HKBTB2    IKBTB2
+     C                     MOVE HKBTB3    IKBTB3
+     C                     MOVE HKBTB4    IKBTB4
+     C                     MOVE HKBTB5    IKBTB5
+     C                     MOVE HKBTB6    IKBTB6
+     C                     MOVE HKCVMR    IKCVMR
+     C                     MOVE HKROBR    IKROBR
+     C                     MOVE HKPOBR    IKPOBR
+     C                     MOVE HKBOKC    IKBOKC
+     C                     MOVE HKLNKN    IKLNKN
+     C                     MOVE HKDRID    IKDRID
+     C                     MOVE HKDDMR    IKDDMR
+     C                     MOVE HKAURO    IKAURO
+     C                     MOVE HKIPDS    IKIPDS
+     C                     MOVE HKROFQ    IKROFQ
+     C                     MOVE HKRLDN    IKRLDN
+     C                     MOVE HKIMET    IKIMET
+     C                     MOVE HKINSA    IKINSA
+     C                     MOVE HKINOS    IKINOS
+     C                     MOVE HKCNNA    IKCNNA
+     C                     MOVE HKSTCY    IKSTCY
+     C                     MOVE HKIC72    IKIC72
+     C                     MOVE HKISCY    IKISCY
+     C                     MOVE HKII72    IKII72
+     C                     MOVE HKRTFC    IKRTFC
+     C                     Z-ADDHKORDA    IKORDA
+     C                     Z-ADDHKDVSD    IKDVSD
+     C                     Z-ADDHKDDND    IKDDND
+     C                     Z-ADDBJRDNB    IKDLAD
+     C                     Z-ADDHKNIPD    IKNIPD
+     C                     Z-ADDHKSLID    IKSLID
+      *
+      ** Setup the Interest Accrual Control Date
+     C                     Z-ADD*ZEROS    ZZDTIN
+     C                     Z-ADDHKIAYY    ZWYYYY
+     C                     Z-ADDHKIAMM    ZWMTH
+     C                     Z-ADDHKIADD    ZWDAY
+      *
+     C           ZZDTIN    IFEQ 0                          B1
+     C                     Z-ADD0         IKIACD
+     C                     ELSE                            X1
+     C                     EXSR ZDAT10
+     C                     Z-ADDZZMDNO    IKIACD
+     C                     END                             E1
+      *
+      **  Set up transaction date in YYYYMMDD format.
+     C                     Z-ADDHKDTYY    IKDTYY
+     C                     Z-ADDHKDTMM    IKDTMM
+     C                     Z-ADDHKDTDD    IKDTDD
+      *
+     C                     Z-ADDHKFSRP    IKFSRP
+     C                     MOVE HKFSGN    IKFSGN
+     C                     MOVE HKFPRC    IKFPRC
+     C                     Z-ADDIKIACD    IKFCTD
+      *
+     C                     MOVE HKCDRP    IKCDRP
+     C                     Z-ADDHKFCLY    IKFCLY
+     C                     MOVE HKWRPI    IKWRPI
+     C                     Z-ADD0         IKFCLY
+     C                     Z-ADD0         IKBORM
+     C                     Z-ADD0         IKBOPM
+     C                     Z-ADD0         IKBAMT
+     C***********          Z-ADD0         IKBCNM
+     C                     MOVE *BLANKS   IKBCNM
+     C                     Z-ADD0         IKBVDT
+     C                     Z-ADD0         IKBIRT
+     C                     Z-ADD0         IKBNID
+     C                     Z-ADD0         IKBIDM
+     C                     Z-ADD0         IKBFVL
+     C                     Z-ADD0         IKBLID
+     C                     Z-ADD0         IKBMTD
+     C                     Z-ADD0         IKBNTC
+     C                     MOVE UDATE     IKMCHD
+     C                     MOVE 'A'       IKMACT
+     C                     Z-ADD0         IKRMTD
+     C                     MOVE ' '       IKWRPI
+     C                     MOVE HKINTR    IKINTR
+      *
+      ** Format the amended deals fields
+      ** Deal Status
+     C                     MOVE 'A'       IKDSTS
+      *
+      ** Deal last action
+     C                     MOVE 'A'       IKLACT
+      *
+      ** Deal action Date
+     C                     Z-ADDBJRDNB    @@DAYN
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     IKLDAT
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRMADJ - Process manual interest adjustment updates             *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRMADJ    BEGSR
+      *
+      ** Set the adjustment sign indicators
+     C           A#SIGN    COMP '+'                      60
+     C           A#SIGN    COMP '-'                      61
+      *
+      ** Access Deals record to be updated
+      *
+      *                    UNLCKDEALSC
+     C           SDNUMN    CHAINDEALSC               90
+      *
+     C           *IN90     IFEQ '1'                        B1
+     C                     MOVEL'DEALS'   @BFILE           ****************
+     C                     MOVEL'010'     @BASE            * DB ERROR 010 *
+     C                     MOVELSDNUMN    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+      ** Obtain last transaction number
+     C                     EXSR ZTNLU1
+      *
+      ** Update Deals fields
+     C   60                ADD  PTADJA    AIAN
+     C   61                SUB  PTADJA    AIAN
+      *
+      ** Amend Deals
+     C                     EXCPTDLSUPD
+      *
+      ** Update STRANF Detail Record
+      ** first check detail file is not full (from STRANH)
+     C                     Z-ADD1         A#RRN
+     C           A#RRN     CHAINSTRANHF              90
+      *
+     C           *IN90     IFEQ '1'                        B1
+     C                     MOVEL'STRANH'  @BFILE           ****************
+     C                     MOVEL'011'     @BASE            * DB ERROR 011 *
+     C                     MOVEL'*FIRST'  @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C           MNT       SUB  NAVT      A#DIFF
+     C           A#DIFF    COMP 2                      6262
+      *
+     C           *IN62     IFEQ '1'                        B1
+     C                     MOVEL'STRANF'  @BFILE           ****************
+     C                     MOVEL'013'     @BASE            * DB ERROR 013 *
+     C                     MOVEL'*FULL'   @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     Z-ADDNAVT      A#RRN
+     C           A#RRN     CHAINSTRANFF              90
+      *
+      ** Fill fields for STRANF records
+     C                     MOVE 'F'       RECI
+     C                     MOVE PTDLNO    DLNO
+     C**********           MOVE PTCNUM    CNUM                                              BUG26488
+     C                     MOVELPTCNMA    CNUM                                              BUG26488
+     C                     MOVE PTCCY     CCY
+     C                     Z-ADDPTADJA    MAAM
+     C                     MOVE A#SIGN    SIGN
+     C                     MOVE 'TD'      DTYP
+     C                     MOVE *BLANKS   INIRS
+     C                     MOVE PTBRCA    BRCA
+      *
+     C                     TIME           A#TIME
+     C                     MOVE A#TIME    UDTM
+      *
+     C                     Z-ADDNAVT      RRNT
+     C                     Z-ADDNATN      TNLU
+      *
+     C                     Z-ADD*ZEROS    USIT
+     C                     Z-ADD*ZEROS    AACF
+     C                     MOVE *BLANKS   FSGN
+     C                     MOVE FNATN     FLTRNN                                            MD022252
+      *
+     C                     UPDATSTRANFF
+      *
+      ** Update the header file
+     C                     Z-ADDNAVT      TNLU
+     C                     ADD  1         NAVT
+      *
+      ** Update Trailer Totals depending on the sign of the amount
+     C           *IN60     IFEQ '1'                        B1
+      *
+      ** Expand File Hash totals
+     C           HDIW      MULT 1000      A#HTOT
+     C                     ADD  HDID      A#HTOT
+      *
+      ** Store trailer values
+     C                     ADD  1         NOID
+     C                     ADD  MAAM      A#HTOT
+      *
+     C                     MOVE 'H'       RECI
+     C                     MOVELA#HTOT    HDIW
+     C                     MOVE A#HTOT    HDID
+     C                     END                             E1
+      *
+     C           *IN61     IFEQ '1'                        B1
+      *
+      ** Expand File Hash totals
+     C           HDDW      MULT 1000      A#HTOT
+     C                     ADD  HDDD      A#HTOT
+      *
+      ** Store trailer values
+     C                     ADD  1         NODD
+     C                     ADD  MAAM      A#HTOT
+      *
+     C                     MOVE 'H'       RECI
+     C                     MOVELA#HTOT    HDDW
+     C                     MOVE A#HTOT    HDDD
+     C                     END                             E1
+      *
+     C                     UPDATSTRANHF
+      *
+      ** Update Online positions file for adjustment amount
+     C   60                MOVE 'Y'       A#REVI
+     C   61                MOVE *BLANKS   A#REVI
+      *
+     C                     Z-ADDMAAM      A#AAMT
+     C                     MOVE DLNO      A#DLNO
+      *
+     C                     CALL 'MM5290A'
+     C                     PARM           A#DLNO
+     C                     PARM           A#AAMT
+     C                     PARM           A#REVI
+      *
+     C           *INU7     IFEQ '1'                        B1
+     C           *INU8     OREQ '1'
+     C                     MOVEL'DLM100'  @BFILE           ****************
+     C                     MOVEL'014'     @BASE            * DB ERROR 014 *
+     C                     MOVELSDNUM     @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRDELT - Deletion Processing.                                   *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRDELT    BEGSR
+      *
+     C           SDNUMN    CHAINMMPTRML1             99
+      *
+      ** If record not found, error
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVEL'MMPTRML1'@BFILE           ****************
+     C                     MOVEL'015'     @BASE            * DB ERROR 015 *
+     C                     MOVELSDNUMN    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C           PTCHTP    IFNE 'X'
+     C                     GOTO #UPDC
+     C                     END
+      *
+      **  Update the manual adjustment file
+     C                     MOVE '+'       A#SIGN
+     C                     EXSR SRMADJ
+      *
+      ** Clear the MM Standard Deal format field
+     C                     CLEAR@SLDS
+      *
+      ** Update the standard deal format file
+     C                     EXSR SRSLDS
+      *
+      ** Maturity Date
+     C                     Z-ADDPTPMDT    @@DAYN
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     W#DATE
+     C                     Z-ADDW#YEAR    IKMDYY
+     C                     Z-ADDW#MNTH    IKMDMM
+     C                     Z-ADDW#DAY     IKMDDD
+      *
+     C                     Z-ADDPTPMDT    IKMATD
+      *
+      ** Update Back and Front office files
+     C                     CALL 'MM0078'
+     C                     PARM           W#TERM
+     C                     PARM 'L'       W#TDIN
+     C                     PARM           @SLDS
+     C                     PARM           @SSDS
+     C                     PARM           @SBDS
+     C                     PARM           @SADS
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+      *
+     C           W#TERM    IFEQ 'E'                        B1
+     C                     MOVEL'MM0078'  @BFILE           ****************
+     C                     MOVEL'016'     @BASE            * DB ERROR 016 *
+     C                     MOVELSDNUM     @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     CALL 'MM0083'
+     C                     PARM           W#TERM
+     C                     PARM 'L'       W#TDIN
+     C                     PARM           @SLDS
+     C                     PARM           @SSDS
+     C                     PARM           @SBDS
+     C                     PARM           @SADS
+     C                     PARM           W#RACD
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           W#AURO
+     C                     PARM           PBFRCD100
+     C                     PARM           PAFRCD100
+      *
+     C           W#TERM    IFEQ 'E'                        B1
+     C                     MOVEL'MM0083'  @BFILE           ****************
+     C                     MOVEL'017'     @BASE            * DB ERROR 017 *
+     C                     MOVELSDNUM     @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+      **  Blank standard deal fields
+     C                     CLEAR@SLDS
+      *
+     C           #UPDC     TAG
+      ** Update the Penalty Termination file
+     C                     TIME           W#TMDT
+     C                     MOVELW#TMDT    PTLCT
+      *
+     C                     MOVELUSER      PTUSRI
+     C                     MOVE 'D'       PTCHTP
+     C                     MOVE '*'       PTRECI
+     C                     UPDATMMPTRMP1               99
+      *
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVEL'MMPTRMPD'@BFILE           ****************
+     C                     MOVEL'018'     @BASE            * DB ERROR 018 *
+     C                     MOVELPTDLNO    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRAMND - Amendment Processing.                                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRAMND    BEGSR
+      *
+     C           SDNUMN    CHAINMMPTRML1             99
+      *
+      ** If record not found, error
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVEL'MMPTRML1'@BFILE           ****************
+     C                     MOVEL'019'     @BASE            * DB ERROR 019 *
+     C                     MOVELSDNUMN    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C           PTCHTP    IFNE 'X'
+     C                     GOTO #UPDC2
+     C                     END
+      *
+      **  Update the manual adjustment file
+     C                     MOVE '+'       A#SIGN
+     C                     EXSR SRMADJ
+      *
+      ** Clear the MM Standard Deal format field
+     C                     CLEAR@SLDS
+      *
+      ** Update the standard deal format file
+     C                     EXSR SRSLDS
+      *
+      ** Maturity Date
+     C                     Z-ADDPTPMDT    @@DAYN
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     W#DATE
+     C                     Z-ADDW#YEAR    IKMDYY
+     C                     Z-ADDW#MNTH    IKMDMM
+     C                     Z-ADDW#DAY     IKMDDD
+      *
+     C                     Z-ADDPTPMDT    IKMATD
+      *
+      ** Update Back and Front office files
+     C                     CALL 'MM0078'
+     C                     PARM           W#TERM
+     C                     PARM 'L'       W#TDIN
+     C                     PARM           @SLDS
+     C                     PARM           @SSDS
+     C                     PARM           @SBDS
+     C                     PARM           @SADS
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+      *
+     C           W#TERM    IFEQ 'E'                        B1
+     C                     MOVEL'MM0078'  @BFILE           ****************
+     C                     MOVEL'020'     @BASE            * DB ERROR 020 *
+     C                     MOVELSDNUM     @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     CALL 'MM0083'
+     C                     PARM           W#TERM
+     C                     PARM 'L'       W#TDIN
+     C                     PARM           @SLDS
+     C                     PARM           @SSDS
+     C                     PARM           @SBDS
+     C                     PARM           @SADS
+     C                     PARM           W#RACD
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           W#AURO
+     C                     PARM           PBFRCD100
+     C                     PARM           PAFRCD100
+      *
+     C           W#TERM    IFEQ 'E'                        B1
+     C                     MOVEL'MM0083'  @BFILE           ****************
+     C                     MOVEL'021'     @BASE            * DB ERROR 022 *
+     C                     MOVELSDNUM     @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+      **  Blank standard deal fields
+     C                     CLEAR@SLDS
+      *
+     C           #UPDC2    TAG
+     C                     MOVE F#FLDS    FLFLDS
+      *
+      ** Update the Penalty Termination file
+     C                     TIME           W#TMDT
+     C                     MOVELW#TMDT    PTLCT
+      *
+     C                     MOVELUSER      PTUSRI
+     C                     MOVE 'A'       PTCHTP
+     C                     MOVE *BLANKS   PTUSRX
+     C                     UPDATMMPTRMP1               99
+      *
+     C           *IN99     IFEQ '1'                        B1
+     C                     MOVEL'MMPTRMPD'@BFILE           ****************
+     C                     MOVEL'022'     @BASE            * DB ERROR 022 *
+     C                     MOVELPTDLNO    @BKEY            ****************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *******************************************************************
+      *                                                                 *
+      * ZASNMS - Send Message to Program Message Queue                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'DRSMM'   ZAMSGF
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id
+     C                     PARM           ZAMSGF           Message file
+     C                     PARM           ZAMSDA           Message data
+     C                     PARM           ZAMSTP           Message type
+      *
+     C                     MOVEL*BLANKS   ZAMSGF
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAPGRL
+      *
+     C                     ENDSR
+      *****************************************************************                     MD022252
+      *                                                               *                     MD022252
+      *   ZTNLU1 -  Get Next Transaction Number                       *                     MD022252
+      *                                                               *                     MD022252
+      *****************************************************************                     MD022252
+      *                                                                                     MD022252
+     C           ZTNLU1    BEGSR                                                            MD022252
+      *                                                                                     MD022252
+     C           *NAMVAR   DEFN AAJTN     DNATN                                             MD022252
+     C           *LOCK     IN   DNATN                                                       MD022252
+     C                     MOVE FNATN     NATN    60                                        MD022252
+     C                     MOVE FNATN     ZZWK05  60                                        MD022252
+     C                     ADD  1         ZZWK05                                            MD022252
+     C                     MOVE ZZWK05    FNATN                                             MD022252
+     C                     OUT  DNATN                                                       MD022252
+     C                     ENDSR                                                            MD022252
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRINIT - Initial Program Subroutine                               *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Define key lists
+      ** Deal Amendments key
+     C           K#DEAM    KLIST
+     C                     KFLD           K#DEMN  60
+     C                     KFLD           K#VDYY  40
+     C                     KFLD           K#VDMM  20
+     C                     KFLD           K#VDDD  20
+     C                     KFLD           K#DEMS  30
+      *
+      ** Define all program work fields
+     C           *LIKE     DEFN DBFILE    @BFILE
+     C           *LIKE     DEFN DBASE     @BASE
+     C           *LIKE     DEFN DBKEY     @BKEY
+      *
+     C           *LIKE     DEFN BJRDNB    W#ICDT
+     C           *LIKE     DEFN BJRDNB    W#SLID
+     C           *LIKE     DEFN BJRDNB    W#DMVD
+     C           *LIKE     DEFN BJRDNB    W#VDAT
+     C           *LIKE     DEFN BJRDNB    W#DDAT
+     C           *LIKE     DEFN BJRDNB    W#MDAT
+     C           *LIKE     DEFN HKDN38    W#DA38
+     C           *LIKE     DEFN HKDN38    SDNUMN
+     C************LIKE     DEFN HKCNUM    W#CUST
+     C           *LIKE     DEFN A6NBDP    W#NBDP
+     C           *LIKE     DEFN HKINTR    W#PRAT
+     C           *LIKE     DEFN HKMTTI    W#ADJI
+     C           *LIKE     DEFN HKMTTI    W#ADJM
+     C           *LIKE     DEFN HKMTTI    W#INTA
+      *
+     C           *LIKE     DEFN SDACD     P1ACTN
+     C           *LIKE     DEFN PTDLNO    X1DLNO
+     C           *LIKE     DEFN HKBRCA    P1BRCA
+      *
+     C           *LIKE     DEFN HKRDFC    II@RDI
+      *
+     C                     MOVE P@RTCD    P@RTCD  7
+     C                     MOVE P@OPTN    P@OPTN  7
+     C                     MOVE P@KYST    P@KYST  7
+     C                     MOVE P@MODE    P@MODE  1
+     C                     MOVE P3CUSH    P3CUSH 10
+      *
+     C                     MOVE *BLANKS   ZAPGM  10
+     C                     MOVE *BLANKS   ZAPGRL  5
+     C                     MOVE *BLANKS   ZAMSID  7
+     C                     MOVE *BLANKS   ZAMSGF 10
+     C                     MOVE *BLANKS   ZAMSDA132
+     C                     MOVE *BLANKS   ZAMSTP  7
+      *
+     C                     Z-ADD0         P1ERR   10
+     C                     Z-ADD0         S1LINE  50
+      *
+     C                     MOVE *BLANKS   W#PRTE 12
+     C                     Z-ADD0         W#TMDT 120
+     C                     MOVE *BLANK    W#TEST  1
+     C                     MOVE *BLANK    W#TERM  1
+     C                     MOVE *BLANK    W#TDIN  1
+     C                     MOVE *BLANK    W#RACD  1
+     C                     MOVE *BLANK    W#AURO  1
+     C                     MOVE *BLANKS   W#BRCA  3
+      *
+     C                     Z-ADD0         II@STR  50
+     C                     Z-ADD0         II@END  50
+     C                     MOVEL*BLANKS   II@CAL  1
+     C                     Z-ADD0         II@AMT 150
+     C                     Z-ADD0         II@RAT 117
+     C                     Z-ADD0         IO@INT 150
+     C                     Z-ADD0         IW@157 157
+     C                     Z-ADD0         IW@210 210
+     C                     Z-ADD0         IW@YR   50
+      *
+     C                     Z-ADD0         S1RRN   50
+     C                     Z-ADD0         X1RRN   50
+      *
+     C                     MOVE *BLANKS   A#SIGN  1
+     C                     Z-ADD*ZEROS    A#RRN   50
+     C                     Z-ADD*ZEROS    A#DIFF  50
+     C                     Z-ADD*ZEROS    A#TIME  60
+     C                     Z-ADD*ZEROS    A#HTOT 180
+     C                     Z-ADD*ZEROS    A#DLNO  60
+     C                     Z-ADD*ZEROS    A#AAMT 130
+     C                     MOVE *BLANKS   A#REVI  1
+      *
+      ** Set up Copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Get Rundat
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Call access program AOBANKR0
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C           SDBANK    PARM *BLANKS   DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'@BFILE           ****************
+     C                     Z-ADD001       @BASE            * DB ERROR 001 *
+     C                     EXSR *PSSR                      ****************
+     C                     END
+      *
+      ** Set Date Indicator
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** Set Multi-Branching Indicator
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN30
+     C                     END
+      *
+      ** Set Enquiry/Maintenance Mode Indicator
+     C           P@MODE    IFEQ 'E'
+     C                     MOVE '1'       *IN20
+     C                     END
+      *
+     C                     MOVELPGM       ZAPGM
+     C                     MOVELPGM       ##PGM
+      *
+      ** Set screen constants and output Header
+     C                     MOVELUSER      SUSER
+     C                     MOVELPGM       SPGM
+     C                     MOVELAGMRDT    SRUNA
+     C                     MOVELWSID      SWSID
+      *
+      ** Write Screen Header
+     C                     WRITEMM5290H1
+      *
+     C           EINIT     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program Exception Error Routine                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MM5290'  DBPGM
+     C                     MOVEL@BFILE    DBFILE
+     C                     MOVEL@BASE     DBASE
+     C                     MOVEL@BKEY     DBKEY
+     C                     DUMP
+     C                     ROLBK
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY ZSRSRC,ZDAT10Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZEDITZ2
+     C/COPY ZSRSRC,ZRATE1Z2
+     C/COPY ZSRSRC,ZINTDYZ2
+     C/COPY ZSRSRC,ZDATE9Z3
+     C/COPY ZSRSRC,ZALIGNZ2
+     C***/COPY*ZSRSRC,ZTNLU1Z2                                                              MD022252
+     C/COPY ZSRSRC,ZSEDITZ31
+     C/COPY ZSRSRC,ZFEB29                                                                     CDL093
+      ********************************************************************
+      /EJECT
+      ** Deals detail record
+     ODEALSDCFE                DLSUPD
+     O                         AIAN
+      *
+      /EJECT
+**  CPY@
+(C) Copyright MISYS INTERNATIONAL BANKING SYSTEMS 2008
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

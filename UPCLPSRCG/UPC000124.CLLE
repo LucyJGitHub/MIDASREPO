@@ -1,0 +1,167 @@
+/*********************************************************************/
+/*X*I****OVRDBF*FILE(UPSBSDOF)*TOFILE(QADSPOBJ)***********************/ /*             */ /*CUP033*/
+/*XBI    OVRDBF FILE(UPSBSDOF) TOFILE(UPOBJDTPD)                     */                   /*CUP033*/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Chg subsys jobq entries-libs-Global Layer')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC000124 - Change subsystem job queue entries - libraries  */
+/*                   (Global Layer)                                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Last Amend No. BUG27240           Date 12Mar10              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CSM010             Date 22Jun07              */
+/*                      CPK027             Date 21May07              */
+/*                      CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CUP027  *CREATE    Date 25Mar04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BUG27240- Applied CPK029 file locking fix                   */
+/*       CPK029 - Stop lock on file.                                 */
+/*       CSM010 - Applied by CPK027.                                 */
+/*       CPK027 - Message file spelt incorrectly.                    */
+/*       CUP033 - Removal of System Value /COPYs.                    */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CUP027 - Global layer migration of Bridge ICD to the System */
+/*                Values file.                                       */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                       */ /*CUP033*/
+             PGM        PARM(&GPFXSVAL)                                                   /*CUP033*/
+ 
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
+/**COPY*UPCPYSRCG,UPGSVALDCL*                                        */ /*             */ /*CUP033*/
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)                                  /*CUP033*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+             DCL        VAR(&GXLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SUBSYSTEM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&REPLY1) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+/**********  DCLF       FILE(UPSBSDOF)                                                 */ /*CUP033*/
+             DCLF       FILE(UPSBSDOF) OPNID(A)                                           /*CUP033*/
+             DCLF       FILE(UPGSVALJ0) OPNID(B)                                          /*CUP033*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*             */ /*CUP033*/
+/**Check*if*all*relevant*fields*have*been*entered*in*ICD**/ /*                         */ /*CUP033*/
+/**********  IF         COND(&GPSBSID *EQ ' ') THEN(DO)                                */ /*CUP033*/
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF       OPNID(B)                                                          /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&B_GISVAL *EQ &GPFXSVAL) THEN(DO)                            /*CUP033*/
+                IF         COND(&B_GIVAL *EQ ' ') THEN(DO)                                /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&GPSBSID) VALUE(&B_GIVAL)                               /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+/**********     GOTO       CMDLBL(CHECK)                                    */ /*CUP033*/ /*CPK029*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+                ?    SYSTEMID
+                MONMSG     MSGID(CPF6801) EXEC(DO)                                        /*CUP033*/
+                   GOTO       CMDLBL(END)                                                 /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                RTVDTAARA  DTAARA(QTEMP/SYSID) RTNVAR(&GPSBSID)
+             ENDDO
+ 
+/* Save library list. */
+             SAVLIBL    SAVDTL(UPC000124)
+ 
+/* Set up library list */
+             CALL       PGM(GPC000016) PARM(&GPSBSID)
+ 
+             CHGVAR     VAR(&GXLIB) VALUE(&GPSBSID *TCAT 'GXLIB')
+             CHGVAR     VAR(&SUBSYSTEM) VALUE('M' *TCAT &GPSBSID *TCAT +
+                          'GSBS')
+ 
+/* Check to see if the susbsystem is correctly named yet. */
+             CHKOBJ     OBJ(&GXLIB/&SUBSYSTEM) OBJTYPE(*SBSD)
+/* If it is not found the attempt to find it in the XLIB and rename it. */
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/**********     DSPOBJD    OBJ(&GXLIB/*ALL) OBJTYPE(*SBSD) +                           */ /*CUP033*/
+/**********                  OUTPUT(*OUTFILE) OUTFILE(QTEMP/UPSBSDOF)                  */ /*CUP033*/
+                DSPOBJD    OBJ(&GXLIB/*ALL) OBJTYPE(*SBSD) +
+                             OUTPUT(*OUTFILE) OUTFILE(UPOBJDTPD)                          /*CUP033*/
+                CPYF       FROMFILE(UPOBJDTPD) TOFILE(QTEMP/UPSBSDOF) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)                               /*CUP033*/
+/**********     RCVF                                                                   */ /*CUP033*/
+/**********     ?          RNMOBJ OBJ(&GXLIB/&ODOBNM) OBJTYPE(*SBSD) +                 */ /*CUP033*/
+/**********                  NEWOBJ(&SUBSYSTEM) ?-ASPDEV(*)                            */ /*CUP033*/
+                RCVF       OPNID(A)
+                ?          RNMOBJ OBJ(&GXLIB/&A_ODOBNM) OBJTYPE(*SBSD) +
+                             NEWOBJ(&SUBSYSTEM) ?-ASPDEV(*)                               /*CUP033*/
+                MONMSG     MSGID(CPF6801) EXEC(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/* Display subsystem description to print. */
+             DSPSBSD    SBSD(&GXLIB/&SUBSYSTEM) OUTPUT(*PRINT)
+ 
+/* Create physical file to receive subsystem data. */
+             DLTF       FILE(QTEMP/UPSBSD)
+             MONMSG     MSGID(CPF0000)
+             CRTPF      FILE(QTEMP/UPSBSD) RCDLEN(132) TEXT('Midas +
+                          UP Subsystem description - from spool file')
+ 
+/* Copy spool file to physical file */
+             CPYSPLF    FILE(QPRTSBSD) TOFILE(QTEMP/UPSBSD) +
+                          SPLNBR(*LAST)
+ 
+/* Call program to process file and change routing entries */
+             CHGVAR     VAR(&ERROR) VALUE(' ')
+             CALL       PGM(UP0124) PARM(&GXLIB &SUBSYSTEM &ERROR)
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Change the autostart job entry'; this is assumed to be GP_ASJ. */
+             CHGAJE     SBSD(&GXLIB/&SUBSYSTEM) JOB(GP_ASJ) +
+                          JOBD(&GXLIB/GP_ASJ)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+/**********     SNDPGMMSG  MSGID(UPM0002) MSGF(UTGMSGF) +                              */ /*CPK027*/
+/**********               MSGDTA('UPC000124') MSGTYPE(*ESCAPE)                         */ /*CPK027*/
+                SNDPGMMSG  MSGID(UPM0002) MSGF(UTMSGF) +
+                          MSGDTA('UPC000124') MSGTYPE(*ESCAPE)                            /*CPK027*/
+             ENDDO
+ 
+ END:
+/* Restore original library list. */
+             RSTLIBL    SAVEDLIBL(UPC000124)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

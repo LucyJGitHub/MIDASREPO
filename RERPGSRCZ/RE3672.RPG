@@ -1,0 +1,434 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Retail Hist Update Task Split Copy recds')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE3672 - RE Retail History Update Task Split Copy records    *
+      *                                                               *
+      *  Function:  This program will copy a block of records from    *
+      *             the old driver LF/REDPOSL to a member in the      *
+      *             new driver PF/REHISUPD.                           *
+      *                                                               *
+      *  Called By: REC3672 - Retail History Update Split Task        *
+      *                       Split Server.                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD024320           Date 13Jan14               *
+      *  Prev Amend No. AR1075538          Date 08Feb13               *
+      *                 CRE083AX           Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 157855             Date 14Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 138736             Date 02Oct98               *
+      *                 CCB003 *Create     Date 14Oct96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD024320 - COB Component REC3661 00001 failed in error       *
+      *  AR1075538 - Database differences in REHPOSR1# between        *
+      *              KL and C1 systems. Move write of END record key  *
+      *              such that start and end key record of driver     *
+      *              file was populated based on RECTOT parm          *
+      *  CRE083AX - COB Restructure - RE COB Optimisation Phase 1     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  157855 - Additional Overdraft not being updated through      *
+      *           retail history update. Apply 156959.                *
+      *  138736 - Re-compile due to REHISUPD layout modification.     *
+      *           In case of linked account, the split file doesn't   *
+      *           contain the customer number of the secondary accnt. *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *           Copy records from old driver to new driver file.    *
+      *                                                               *
+      *****************************************************************
+      *
+     FREDPOSL IF  E           K        DISK         KINFSR *PSSR
+      *
+     F***REHISUPDUF**E                    DISK         KINFSR *PSSR A                       CRE083AX
+     FREHISUPDUF  E                    DISK         KINFSR *PSSR A    UC                    CRE083AX
+     F                                              KCOMIT
+      *
+     FREHISIPDUF  E                    DISK         KINFSR *PSSR A
+     F            REHISUD0                          KRENAMEINDEXF
+     F                                              KCOMIT
+      *
+      *****************************************************************
+      *                                                               *
+      *  Function of indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     80 - CHAIN indicator for REHISIPD                         *
+      *     81 - CHAIN indicator for REDPOSL                          *
+      *     82 - CHAIN indicator for REHISUPD                         *
+      *                                                               *
+      *  U7+U8 - Database error occurs                                *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *
+     IMADJPFF
+      ** Rename MOVD Field in MADJPFF Format - REDPOSL file
+     I              MOVD                            VALD
+      *
+     IINDEXF
+      ** Rename fields for REHISIPD format
+     I**********    RECI                            HRECI                                   CRE083AX
+     I              CNUM                            HCNUM
+     I              CCY                             HCCY
+     I              ACOD                            HACOD
+     I              ACSQ                            HACSQ
+     I              BRCA                            HBRCA
+     I**********    ACNO                            HACNO                                   CRE083AX
+     I**********    PSTD                            HPSTD                                   CRE083AX
+     I              VALD                            HVALD
+     I**********    PSTA                            HPSTA                                   CRE083AX
+     I**********    DRCR                            HDRCR                                   CRE083AX
+     I**********    SPOS                            HSPOS                                   CRE083AX
+     I**********    ATYP                            HATYP                                   CRE083AX
+     I**********    PRFC                            HPRFC                                   CRE083AX
+     I**********    REBI                            HREBI                                   CRE083AX
+     I**********    CHGA                            HCHGA                                   CRE083AX
+     I**********    DRIA                            HDRIA                                   CRE083AX
+     I**********    CRIA                            HCRIA                                   CRE083AX
+     I**********    RSEQ                            HRSEQ                                   CRE083AX
+     I**********    INTP                            HINTP                                   CRE083AX
+     I**********    INRT                            HINRT                                   CRE083AX
+     I**********    RAT1                            HRAT1                                   CRE083AX
+     I**********    BAL1                            HBAL1                                   CRE083AX
+     I**********    AODR                            HAODR                            157855 CRE083AX
+     I**********    ODRL                            HODRL                            157855 CRE083AX
+     I**********    ODLI                            HODLI                            157855 CRE083AX
+     I**********    ODIA                            HODIA                            157855 CRE083AX
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     INACCNO      DS
+      ** Data Structure for current account number read from REDPOSL
+     I**********                              1  18 NXTACT                                    CGL029
+     I                                        1  24 NXTACT                                    CGL029
+     I**********                              1   60CNUM                                      CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        7   9 CCY
+     I**********                             10  130ACOD                                      CGL029
+     I**********                             14  150ACSQ                                      CGL029
+     I**********                             16  18 BRCA                                      CGL029
+     I                                       10  190ACOD                                      CGL029
+     I                                       20  210ACSQ                                      CGL029
+     I                                       22  24 BRCA                                      CGL029
+      *
+     IPACCNO      DS
+      ** Data Structure for Previous account number read from REDPOSL
+     I**********                              1  18 PRVACT                                    CGL029
+     I                                        1  24 PRVACT                                    CGL029
+     I**********                              1   60WCNUM                                     CSD027
+     I                                        1   6 WCNUM                                     CSD027
+     I                                        7   9 WCCY
+     I**********                             10  130WACOD                                     CGL029
+     I**********                             14  150WACSQ                                     CGL029
+     I**********                             16  18 WBRCA                                     CGL029
+     I                                       10  190WACOD                                     CGL029
+     I                                       20  210WACSQ                                     CGL029
+     I                                       22  24 WBRCA                                     CGL029
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           RECTOT  70
+     C                     PARM           RTCODE  3
+      *
+     C                     OPEN REHISUPD                                                    CRE083AX
+      *                                                                                     CRE083AX
+      ** Initial processing
+     C           @FIRST    IFEQ ' '                                                         CRE083AX
+     C                     EXSR INIT
+     C                     MOVE 'Y'       @FIRST  1                                         CRE083AX
+     C                     ENDIF                                                            CRE083AX
+      *
+      ** Split records into new file
+     C                     EXSR TSPLIT
+      *
+      ** End processing
+     C                     EXSR END
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * TSPLIT - Split records into new driver and index files.       *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           TSPLIT    BEGSR
+      *
+     C                     Z-ADD0         TOT     70
+      *
+      ** Check the Index file and set the file pointer to the next
+      ** driver record to be copied accordingly.
+      *
+     C           1         SETLLREHISIPD                 80                                 CRE083AX
+     C                     READ REHISIPD                 80
+      *
+     C           *IN80     IFEQ '1'
+     C           *LOVAL    SETLLREDPOSL
+     C                     ELSE
+     C                     MOVE HBRCA     KBRCA
+     C**********           Z-ADDHCNUM     KCNUM                                               CSD027
+     C                     MOVE HCNUM     KCNUM                                               CSD027
+     C                     MOVE HCCY      KCCY
+     C                     Z-ADDHACOD     KACOD
+     C                     Z-ADDHACSQ     KACSQ
+     C                     Z-ADDHVALD     KVALD
+     C           KEY       SETGTREDPOSL
+     C                     ENDIF
+      *
+      ** Copy records to the new driver file until the limit
+      ** specified in the input parameter (RECTOT) is reached.
+      *
+     C           TOT       DOUEQRECTOT
+     C           *IN81     OREQ '1'
+      *
+     C                     CLEARREHISUD0
+     C                     READ REDPOSL                  81
+      *                                                                                     CRE083AX
+      ** Write first record, if there is one.                                               CRE083AX
+      *                                                                                     CRE083AX
+     C           *IN81     IFEQ '0'
+     C           TOT       IFEQ 0                                                           CRE083AX
+     C                     MOVE 'A'       RECID                                             CRE083AX
+     C                     MOVE ' '       PROT                                              CRE083AX
+      *                                                                                     CRE083AX
+      ** Do we want a timestamp in Core version?                                            CRE083AX
+      *                                                                                     CRE083AX
+     C                     CALL 'ZAGENTS'                                                   CRE083AX
+     C                     PARM           TMST                                              CRE083AX
+     C                     WRITEREHISUD0
+     C                     ENDIF                                                            CRE083AX
+     C                     ADD  1         TOT
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *                                                                                    AR1075538
+      ** Write last record, if there is one.                                               AR1075538
+      *                                                                                    AR1075538
+     C           *IN81     IFEQ '1'                                                        AR1075538
+     C           *HIVAL    SETGTREDPOSL                                                    AR1075538
+     C                     READPREDPOSL                  82                                AR1075538
+     C                     ENDIF                                                           AR1075538
+      *                                                                                    AR1075538
+     C           TOT       IFGT 0                                                          AR1075538
+     C                     MOVE 'Z'       RECID                                            AR1075538
+     C                     MOVE ' '       PROT                                             AR1075538
+      *                                                                                    AR1075538
+      ** Get the timestamp                                                                 AR1075538
+      *                                                                                    AR1075538
+     C                     CALL 'ZAGENTS'                                                  AR1075538
+     C                     PARM           TMST                                             AR1075538
+     C                     WRITEREHISUD0                                                   AR1075538
+     C                     ENDIF                                                           AR1075538
+      *
+      ** If not end of file on REDPOSL keep copying records to the new
+      ** driver file until the account number changes.
+      *
+     C           *IN81     IFEQ '0'
+      *
+      ** Store previous account details
+     C**********           Z-ADDCNUM      WCNUM                                               CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+     C                     MOVE CCY       WCCY
+     C                     Z-ADDACOD      WACOD
+     C                     Z-ADDACSQ      WACSQ
+     C                     MOVE BRCA      WBRCA
+      *
+     C                     CLEARREHISUD0
+     C                     READ REDPOSL                  81
+      *
+      ** Copy records until account number changes
+     C           PRVACT    DOWEQNXTACT
+     C           *IN81     ANDEQ'0'
+     C**********           WRITEREHISUD0                                                    CRE083AX
+     C**********           MOVE 'Y'       MULREC  1                               CRE083AX AR1075538
+     C                     CLEARREHISUD0
+     C                     READ REDPOSL                  81
+     C                     ENDDO
+      *
+     C                     ENDIF
+      **********                                                                  CRE083AX AR1075538
+     C********** MULREC    IFEQ 'Y'                                               CRE083AX AR1075538
+     C**********           READPREDPOSL                  82                       CRE083AX AR1075538
+     C**********           MOVE *BLANKS   MULREC                                  CRE083AX AR1075538
+     C**********           ENDIF                                                  CRE083AX AR1075538
+      **********                                                                  CRE083AX AR1075538
+      ***Write*last*record,*if*there*is*one.***************************           CRE083AX AR1075538
+      **********                                                                  CRE083AX AR1075538
+     C********** *IN81     IFEQ '1'                                               CRE083AX AR1075538
+     C********** *HIVAL    SETGTREDPOSL                                           CRE083AX AR1075538
+     C**********           READPREDPOSL                  82                       CRE083AX AR1075538
+     C**********           ENDIF                                                  CRE083AX AR1075538
+      **********                                                                  CRE083AX AR1075538
+     C********** TOT       IFGT 0                                                 CRE083AX AR1075538
+     C**********           MOVE 'Z'       RECID                                   CRE083AX AR1075538
+     C**********           MOVE ' '       PROT                                    CRE083AX AR1075538
+      **********                                                                  CRE083AX AR1075538
+      ***Do*we*want*a*timestamp*in*Core*version?***********************           CRE083AX AR1075538
+      **********                                                                  CRE083AX AR1075538
+     C**********           CALL 'ZAGENTS'                                         CRE083AX AR1075538
+     C**********           PARM           TMST                                    CRE083AX AR1075538
+     C**********           WRITEREHISUD0                                          CRE083AX AR1075538
+     C**********           ENDIF                                                  CRE083AX AR1075538
+      *                                                                                     CRE083AX
+      ** Set up fields for Index file with data from last record
+      ** written to PF/REHISUPD.
+      *
+     C           *HIVAL    SETGTREHISUPD
+     C                     READPREHISUPD                 82
+      *
+     C**********           MOVE RECI      HRECI                                             CRE083AX
+     C**********           Z-ADDCNUM      HCNUM                                               CSD027
+     C                     MOVE CNUM      HCNUM                                               CSD027
+     C                     MOVE CCY       HCCY
+     C                     Z-ADDACOD      HACOD
+     C                     Z-ADDACSQ      HACSQ
+     C                     MOVE BRCA      HBRCA
+     C**********           Z-ADDACNO      HACNO                                             CRE083AX
+     C**********           Z-ADDPSTD      HPSTD                                             CRE083AX
+     C                     Z-ADDVALD      HVALD
+     C**********           Z-ADDPSTA      HPSTA                                             CRE083AX
+     C**********           Z-ADDDRCR      HDRCR                                             CRE083AX
+     C**********           MOVE SPOS      HSPOS                                             CRE083AX
+     C**********           MOVE ATYP      HATYP                                             CRE083AX
+     C**********           MOVE PRFC      HPRFC                                             CRE083AX
+     C**********           MOVE REBI      HREBI                                             CRE083AX
+     C**********           Z-ADDCHGA      HCHGA                                             CRE083AX
+     C**********           Z-ADDDRIA      HDRIA                                             CRE083AX
+     C**********           Z-ADDCRIA      HCRIA                                             CRE083AX
+     C**********           MOVE RSEQ      HRSEQ                                             CRE083AX
+     C**********           Z-ADDINTP      HINTP                                             CRE083AX
+     C**********           Z-ADDINRT      HINRT                                             CRE083AX
+     C**********           MOVE RAT1      HRAT1                                             CRE083AX
+     C**********           MOVE BAL1      HBAL1                                             CRE083AX
+     C**********           MOVE AODR      HAODR                                      157855 CRE083AX
+     C**********           MOVE ODRL      HODRL                                      157855 CRE083AX
+     C**********           MOVE ODLI      HODLI                                      157855 CRE083AX
+     C**********           MOVE ODIA      HODIA                                      157855 CRE083AX
+      *
+      ** If Index file is empty write new record to it, else update
+      ** with details of last record written to PF/REHISUPD.
+      *
+     C           *IN80     IFEQ '1'
+     C                     CALL 'ZAGENTS'                                                   MD024320
+     C                     PARM           TMST                                              MD024320
+     C                     WRITEINDEXF
+     C                     ELSE
+     C                     UPDATINDEXF
+     C                     ENDIF
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * END - Exit program and return to calling program.             *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           END       BEGSR
+      *
+      ** If end of file on REDPOSL set return code to notify server
+      *
+     C           *IN81     IFEQ '1'
+     C           TOT       IFEQ 0                                                           CRE083AX
+     C                     MOVE 'NRF'     RTCODE                                            CRE083AX
+     C                     ELSE                                                             CRE083AX
+     C                     MOVE 'EOF'     RTCODE
+     C                     ENDIF                                                            CRE083AX
+     C                     ENDIF
+      *
+     C**********           SETON                     LR                                     CRE083AX
+     C                     CLOSEREHISUPD                                                    CRE083AX
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INIT - Initial processing.                                    *
+      *                                                               *
+      * Called by: MAIN PROCESSING                                    *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** KLIST for setting file pointer to next record to be copied
+     C           KEY       KLIST
+     C                     KFLD           KBRCA   3
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KCCY    3
+     C**********           KFLD           KACOD   40                                          CGL029
+     C                     KFLD           KACOD  100                                          CGL029
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KVALD   50
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE3672'  DBPGM     P
+     C                     OUT  LDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ROLBK
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+** CPY@ - Object Copyright
+(c) Misys International Banking Systems Ltd. 2001

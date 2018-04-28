@@ -1,0 +1,375 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Investment Company Codes Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ERLU56 - Investment Company Codes Report                     *
+      *                                                               *
+      *  Function:  This program gives a listing of all the invest-   *
+      *             ment Company Codes                                *
+      *  (phase(s)) Input cycle                                       *
+      *                                                               *
+      *  Called By: ERCLU56 - Inestment Company Codes Report          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CER001             Date 25Apr05               *
+      *  Prev Amend No. ULX008  *CREATE    Date 22Feb00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses *
+      *                                                               *
+      *****************************************************************
+     FERLUCCPPIF  E                    DISK         KINFSR *PSSR
+     FERLU56AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FERLU56P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  END    - End processing                                      *
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *****************************************************************
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+     IPSDS       SDS
+      **  Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISPOOL1      DS
+      **  File Information Data Structure for ERLU56P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for ERLU56AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IDSSDY     E DSDSSDY
+      **  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External data structures for Bank Details
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C                     EXSR INIT
+      *
+     C                     EXSR PROCES
+      *
+     C                     EXSR END
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *  PROCES - Subroutine to process records                       *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+     C           1         SETLLERLUCCPP
+     C                     READ ERLUCCPP                 89
+      *
+      **  No records, print 'No details to report' and exit pgm
+     C           *IN89     IFEQ *ON
+     C                     EXSR END
+     C                     ENDIF
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     EXSR WP1REC
+      *
+      **  Count records output
+     C                     ADD  1         RCOUNT
+      *
+      **  Read next record.
+     C                     READ ERLUCCPP                 89
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1REC
+      *****************************************************************
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *
+      *****************************************************************
+      *
+     C           WP1REC    BEGSR
+      *
+      **  For the first record to output, header should be written
+     C           WFIRP1    IFEQ 'Y'
+     C                     OPEN ERLU56P1
+     C                     EXSR RCFP1
+     C                     WRITEHEADPY
+     C                     MOVE 'N'       WFIRP1
+     C                     ELSE
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADPY
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVELX6INCC    RINCC
+     C                     MOVELX6INNM    RINNM
+     C                     MOVELX6LCTP    RLCTP
+      *
+     C                     Z-ADDX6LCDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RLCDT
+      *
+      ***  Write out Detail Record.
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/END
+      *****************************************************************
+      *  END -  Subroutine to end pgm                                 *
+      *****************************************************************
+     C           END       BEGSR
+      *
+     C           RCOUNT    IFNE 0
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADPY
+     C                     ENDIF
+      *
+      **  Write out Total Format.
+     C                     WRITETRAILPY
+      *
+      **  Write out no details to report
+     C                     ELSE
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *****************************************************************
+     C           AUDIT     BEGSR
+      *
+     C           WFIRAU    IFEQ 'Y'
+     C                     MOVE 'N'       WFIRAU
+     C                     EXSR RCFAU
+     C                     WRITEHEADAU
+     C                     ENDIF
+      *
+      **  If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      **  Or, if no records read, Output "No Details" message.
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      **  Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Receive Parameter List.
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      **  Call Access Program for Bank Details - Title, Run Date and
+      **  Run Day Number.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'WBFILE           ***************
+     C                     Z-ADD001       WWBASE           * DB ERROR 01 *
+     C                     MOVEL*BLANKS   WWBKEY           ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Check System Date Format, DDMMYY (*IN98 off)
+      **                            MMDDYY (*IN98 on).
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *LIKE     DEFN DBFILE    WBFILE
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      **  Report Work fields.
+     C                     MOVEL'Y'       WFIRAU  1
+     C                     MOVEL'Y'       WFIRP1  1
+     C                     Z-ADD0         RCOUNT  50
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *  *PSSR  - Error control subroutine                            *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      **  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELWWBASE    DBASE
+     C                     MOVELWWBKEY    DBKEY
+     C                     MOVELWBFILE    DBFILE
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     RETRN
+      *
+     C                     ELSE
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      **  If *PSSR already run, then just end the program here.
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *****************************************************************
+     C           RCFP1     BEGSR
+      *
+      **  Ensure Report Spool File recorded by RCF.
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *****************************************************************
+     C           RCFAU     BEGSR
+      *
+      **  Ensure Audit Spool File recorded by RCF.
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

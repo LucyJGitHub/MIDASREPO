@@ -1,0 +1,210 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP0867 - Process Switchable Features Init Pgm Changes        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.03 ----------------------------------------*
+      *  Prev Amend No. CPK015             Date 09Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CUP004 *CREATE     Date 18May98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CPK015  -  Improvements to Action Files.                     *
+      *  CUP004  -  Make upgrade of DTALIB files easier               *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write, update or delete fail
+      *
+     FUPSARPL0IF  E           K        DISK         KINFSR *PSSR
+     FSCSARPL1UF  E           K        DISK         KINFSR *PSSR A
+     F            @SARPL1                           KRENAMESARPF
+      *
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      * Fields with the same name will need to be renamed.
+     ISARPF
+     I              AKSARN                          SARN
+     I              AKPNAM                          PNAM
+     I              AKPRVC                          PRVC
+     I              AKPDSC                          PDSC
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           COMP      KLIST
+     C                     KFLD           AKSARN
+     C                     KFLD           AKPNAM
+      *
+     C           *LOVAL    SETLLUPSARPL0
+      *
+     C                     READ UPSARPL0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           *IN20     DOWEQ'0'
+      *
+     C           AKACTC    IFEQ 'I'
+     C                     EXSR SETVAL
+     C                     WRITESARPF                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           AKACTC    IFEQ 'D'
+     C           COMP      CHAINSCSARPL1             3069
+     C           *IN69     IFEQ *ON
+     C           *IN30     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+      *
+     C                     ELSE
+     C                     EXSR SETVAL
+     C                     DELETSARPF                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * If Action code = AMEND then read next record
+     C           AKACTC    IFEQ 'A'
+     C                     MOVELAKSARN    SARNX   6
+     C                     MOVELAKPNAM    PNAMX  10
+     C                     READ UPSARPL0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      * If SF number and program name do not match exit
+      *  - or if EOF indicator is on
+     C           AKSARN    IFNE SARNX
+     C           AKPNAM    ANDNEPNAMX
+     C           *IN20     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           COMP      CHAINSCSARPL1             3069
+     C           *IN69     IFEQ *ON
+     C           *IN30     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+      *
+     C                     ELSE
+      *
+     C                     EXSR SETVAL
+     C                     UPDATSARPF                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ UPSARPL0               6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *
+      * SETVAL subroutine - set values for deletes/writes/updates
+      *
+      *****************************************************************
+     C           SETVAL    BEGSR
+      * Set values to update record
+     C                     MOVELAKSARN    SARN
+     C                     MOVELAKPNAM    PNAM
+     C***********          MOVELAKPRVC    PRVC                                                CPK015
+     C                     MOVELAKPDSC    PDSC
+      * Only set values for some fields if insert                                             CPK015
+     C           AKACTC    IFEQ 'I'                                                           CPK015
+     C                     MOVELAKPRVC    PRVC                                                CPK015
+     C                     ENDIF                                                              CPK015
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

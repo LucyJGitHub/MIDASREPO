@@ -1,0 +1,744 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Future deal amendments by company')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - DEALING MODULE
+     F*                                                               *
+     F*   DL0832  -  FUTURE DEAL AMENDMENTS REPORT BY COMPANY.        *
+     F*   THIS PROGRAM IS BASED ON DL0830                             *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 27AUG96               *  *
+     F*                 LN0662             Date 01FEB91               *  *
+     F*                 LN0746             Date 18SEP90               *  *
+     F*          AMEND NO. E299               DATE 23MAR90            *     0018
+     F*                    257                DATE 08MAR90            *
+     F*                                                               *
+0011 F********************************************************************
+0010 F*                                                                  *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompiled)                                        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+0010 F*  S01408 - Hook DL0832CCP1 added                                  *
+0010 F*         - Hook DL0832CCP2 added                                  *
+0010 F*         - Hook DL0832FFP1 added                                  *
+0010 F*         - Hook DL0832FFP2 added                                  *
+0010 F*         - Hook DL0832IIP1 added                                  *
+0010 F*         - Hook DL0832OOP1 added                                  *
+0010 F*         - Hook DL0832OOP2 added                                  *
+0010 F*         - Hook DL0832OOP3 added                                  *
+0010 F*    LN0662 - CHANGES TO SDCURRL0 AND L1                           *
+     F*    LN0746 - P1 & AU FILES CHANGED TO SAME NAME AS PROGRAM        *LN0746
+     F*             DUMMY FILES CREATED                                  *LN0746
+     F*    E299   - 'AU' REPORT SHOULD NOT WRITE 'END OF REPORT'         *
+0010 F*    E257   - CHANGE SPOOL FILE NAME TO DL0830P1/AU                *
+     F********************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSDBRCHL3IF  E           K        DISK
+     FSDEAML1 IF  E           K        DISK
+     F/COPY WNCPYSRC,DL0832FFP1                                           S01408
+     F*SDCURRL0IF  E           K        DISK                              LN0662
+     FSDCURRL1IF  E           K        DISK                               LN0662
+     F***DL0832P1O   F     132     OF     PRINTER      KINFDS SPOOL     UCE257
+     F***830P1O   F     132     OF     PRINTER      KINFDS SPOOL UC E257  LN0746
+     FDL0832P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  LN0746
+     F***DL0832AUO   F     132     OA     PRINTER      KINFDS SPOOLU      E257
+     F***830AUO   F     132     OA     PRINTER      KINFDS SPOOLU   E257  LN0746
+     FDL0832AUO   F     132     OA     PRINTER      KINFDS SPOOLU         LN0746
+     F/SPACE 3
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            SDEAML1 - HEADER
+     F* 02                    - DETAIL
+     F* 03                    - TRAILER
+     F*       20      FIRST CYCLE CALCULATIONS DONE.
+     F*       21      DEAL AMENDMENT AMOUNT POSITIVE.
+     F*       22      SEQ. NO. LESS THAN 998.
+     F*       30      CURRENCY HAS O D.P.
+     F*       31                   1 D.P.
+     F*       32                   2 D.P.
+     F*       33                   3 D.P.
+     F*       34      DETAILS TO REPORT.
+     F*       35      DETAILS TO REPORT.
+     F*       37      RECORDS PRESENT ON DEAMSDI
+     F*       39      EOF OF READE ON DEAMSDI
+     F*       40      EOF OF READ.
+     F/COPY WNCPYSRC,DL0832FFP2                                           S01408
+     F*       60      CONDITIONS OPENING OF DL0832P1
+     F*       55      PRTF DL0832P1 OPEN FOR OUTPUT.
+     F*       56      CHAIN FAIL.
+     E                    CPY@    1   1 80
+     E                    CCYA      150  3
+     E                    DPA       150  1 0
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     I*
+     IDEAMSDHF    01
+     I*    DEAL AMENDMENTS FILE - HEADER RECORD.
+     I*
+     I*
+     I*
+     IDEAMSDIF    02
+     I*
+     I*    DEALS AMENDMENT FILE - DETAIL RECORD.
+     I*
+     I*
+     IDEAMSDJF    03
+     I*
+     I*    DEALS AMENDMENT FILE - TRAILER RECORD.
+     I/COPY WNCPYSRC,DL0832IIP1                                           S01408
+     I**
+     ISPOOL       DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+     I**
+     I@BIN        DS
+     I**   DEFINE A BLANK BINARY FIELD FOR USE WITH LINE COUNT
+     I                                    B   1   20@LINE
+     I**
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I@BANK     E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     I@COMP     E DSSDCOMPPD
+     I** EXTERNAL DS FOR COMPANY DETAILS
+     I*                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*
+     I/EJECT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           COMP    3         COMPANY OR ALL
+     C*    FIRST CYCLE CALCULATIONS.
+     C   20                GOTO NOTFC
+     C                     SETON                     20
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** READ BANK DETAILS VIA ACCESS PROGRAM
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           @BANK     PARM @BANK     DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE 10        ************
+     C                     MOVEL'01'      DBASE   3        * DBERR 01 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*
+     C*    CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C*    SET UP ARRAYS OF CCY/DP.
+     C                     EXSR CCYARR
+     C*
+     C*    DETAIL CALCULATIONS.
+     C           NOTFC     TAG                             ** NOTFC TAG **
+     C*
+     C           COMP      IFEQ 'ALL'
+     C           *LOVAL    SETLLSDBRCHL3
+     C                     READ SDBRCHL3                 40
+     C                     SETON                         60
+     C*
+     C                     ELSE
+     C*
+     C           COMP      CHAINSDBRCHL3             40
+     C           *IN40     IFEQ '0'
+     C                     MOVE A8CMCD    SAVE
+     C*******              CLOSEDL0832P1                                  E257
+     C***********          CLOSEDL0830P1                             E257 LN0746
+     C                     CLOSEDL0832P1                                  LN0746
+     C                     SETON                         60
+     C                     END
+     C                     END
+     C*
+     C           *IN40     DOWEQ'0'                        D1
+     C           A8CMCD    IFNE SAVE
+     C           COMP      ANDEQ'ALL'
+     C                     MOVE A8CMCD    SAVE    3
+     C*******              CLOSEDL0832P1                                  E257
+     C***********          CLOSEDL0830P1                             E257 LN0746
+     C                     CLOSEDL0832P1                                  LN0746
+     C                     SETON                         60
+     C                     END
+     C*
+     C           A8CMCD    IFNE SAVE
+     C           COMP      ANDNE'ALL'
+     C                     SETON                         40
+     C                     END
+     C           A8CMCD    DOWEQSAVE                       D2
+     C           *IN40     ANDEQ'0'
+     C*
+     C           A8BRCD    SETLLDEAMSDIF                 37
+     C           *IN60     IFEQ '1'                        B2
+     C           *IN37     ANDEQ'1'                        B2
+     C                     SETON                     55
+     C*******              OPEN DL0832P1                                  E257
+     C***********          OPEN DL0830P1                            E257  LN0746
+     C                     OPEN DL0832P1                                  LN0746
+     C                     SETOF                     60
+     C*
+     C* REPORT SPOOL FILE GENERATION
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM A8CMCD    @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'                         B3
+     C* Error during ZSFILE processing, return to calling program.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                              E3
+     C*
+     C                     Z-ADD0         PAGE
+     C*
+     C*  GET COMPANY NAME VIA ACCESS PGM AOCOMPR0
+     C*
+     C                     CALL 'AOCOMPR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM A8CMCD    @CENB   3
+     C           @COMP     PARM @COMP     DSFDY
+     C**
+     C           @RTCD     IFNE *BLANKS                    B3
+     C                     MOVEL'SDCOMPPD'DBFILE 10
+     C                     MOVEL'02'      DBASE   3        **************
+     C                     MOVEL@OPTN     DBOPTN  7        *DBERROR 002 *
+     C                     MOVELA8CMCD    DBKEY  29        **************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     ELSE
+     C** PRINT HEADER
+     C                     EXCPTHEAD
+     C                     END                             E3
+     C**
+     C                     END                             E2
+     C           DETAL     TAG                             ***DETAL***
+     C           A8BRCD    READEDEAMSDIF                 39
+     C   39                GOTO ENDD3
+     C*
+     C*    PROCESS DETAIL RECORDS ONLY.
+     C   02      RECI      COMP 'D'                      02
+     C  N02                GOTO ENDD3
+     C/COPY WNCPYSRC,DL0832CCP1                                           S01408
+     C*    INCREMENT COUNT OF RECORDS INPUT.
+     C           NREC      ADD  1         NREC    50
+     C*
+     C*    ADD DEAL AMENDMENT AMOUNT TO HASH TOTAL.
+     C           DAAM      DIV  1000      ZZAMT      21
+     C   21                EXSR GLZADD
+     C  N21                EXSR GLZSUB
+     C*
+     C*    DO NOT REPORT RECORDS WITH SEQUENCE NO. GREATER THAN
+     C*    OR EQUAL TO 998
+     C           DASN      COMP 998                    22
+     C  N22                GOTO ENDD3
+     C*
+     C*    CONVERT INPUT DATE TO DDMMMYY FORMAT
+     C                     Z-ADDORED      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    IDATE   7
+     C*
+     C*    CONVERT VALUE DATE TO DDMMMYY FORMAT
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    VDATE   7
+     C*
+     C*    SET INDICATOR FOR NO. OF D.P. FOR CCY.
+     C                     MOVE CCY       XCCY
+     C                     EXSR CCYDEP
+     C           XDECP     COMP 1                      3031
+     C           XDECP     COMP 2                    33  32
+     C*
+     C* PRINT DETAIL
+     C*
+     C           LINE      IFGE 60
+     C           @LINE     ANDNELINE
+     C                     EXCPTHEAD
+     C                     END
+     C*
+     C                     EXCPTDETAIL
+     C*
+     C*    INCREMENT COUNT OF RECORDS REPORTED.
+     C           NRIT      ADD  1         NRIT    50
+     C                     SETON                     3435
+     C           ENDD3     TAG                             ***ENDD3**
+     C  N39                GOTO DETAL
+     C                     READ SDBRCHL3                 40
+     C                     END                             ED2
+     C*
+     C           *IN35     IFEQ '1'
+     C           LINE      IFGE 57
+     C           @LINE     ANDNELINE
+     C                     EXCPTHEAD
+     C                     END
+     C                     EXCPTENDLN
+     C                     END
+     C                     MOVE '0'       *IN35
+     C*
+     C                     END                             ED1
+     C                     SETON                         LR
+     C           END       TAG                             ** END TAG **
+     C*
+     C*    TOTAL CALCULATIONS.
+      *
+     CLR                   Z-ADDSFNUMU    ZSNUM   60
+     C* TOTALS SPOOL FILE RECORDED BY RCF
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ
+     CLR                   PARM *BLANKS   @PARM   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUM
+     CLR                   PARM           ZSERR
+     C*
+     CLR         ZSERR     IFEQ 'Y'
+     C* Error during ZSFILE processing, return to calling program.
+     CLR                   SETON                     U7U8LR
+     CLR                   RETRN
+     CLR                   END
+     C*
+     C** PRINT AUDIT REPORT
+     C*
+     CLR                   EXCPTAUDIT
+     C*
+      *
+     CLR U7                GOTO ENDLR
+     C*
+     C*    COMPARE INPUT AND CALCULATED TOTALS
+     C*R         NLRA      COMP NREC                 U8U8
+     C*RNU8      VLAF      COMP ZZTOTI               U8U8
+     C*RNU8      VLAL      COMP ZZTOTD               U8U8
+     CLR         ENDLR     TAG                             ** ENDLR TAG **
+     C********************************************************************
+     C**
+     C**   SR. TO SET UP AN ARRAY OF CURRENCIES AND AN ARRAY OF
+     C**   DECIMAL PLACES FOR THOSE CURRENCIES.
+     C**
+     C           CCYARR    BEGSR                           *** CCYARR  ***
+     C**
+     C**   SET ARRAY INDEX TO ZERO.
+     C                     Z-ADD0         X       30
+     C**
+     C**   SET LOWER LIMIT AND READ CURRENCY FILE
+     C           *LOVAL    SETLL@A6REA3
+     C**
+     C**   LOOP TO READ CURRENCY DETAIL RECORDS.
+     C           XLOOP     TAG                             ** XLOOP TAG **
+     C                     READ @A6REA3                  99
+     C**
+     C**   END IF ALL CURRENCY RECORDS PROCESSED
+     C   99                GOTO XEND
+     C**
+     C**   INCREMENT ARRAY INDEX.
+     C           X         ADD  1         X
+     C**
+     C**   MOVE DATA INTO ARRAYS.
+     C                     MOVE A6CYCD    CCYA,X
+     C                     MOVE A6NBDP    DPA,X
+     C**
+     C**   CHECK FOR FULL ARRAY.96 ON IF FULL.
+     C           X         COMP 150                      96
+     C**
+     C**   GO TO READ NEXT RECORD.
+     C  N96                GOTO XLOOP
+     C**
+     C           XEND      TAG                             ** XEND TAG  **
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C**
+     C**   SR. TO OBTAIN NO. OF DECIMAL PLACES FOR A CURRENCY.
+     C**
+     C           CCYDEP    BEGSR                           *** CCYDEP  ***
+     C**
+     C**   SET ARRAY INDEX TO ONE AND RESET ERROR INDICATOR.
+     C                     Z-ADD1         X            99
+     C**
+     C**   INITIALIZE INPUT-OUTPUT FIELDS.
+     C                     Z-ADD0         XDECP   10
+     C                     MOVE XCCY      XCCY    3
+     C**
+     C**   LOOK UP NO. OF DECIMAL PLACES FOR CURRENCY.
+     C**   99 SETON FOR INVALID CURRENCY.
+     C           XCCY      LOKUPCCYA,X                   95
+     C   95                MOVE DPA,X     XDECP
+     C  N95                SETON                     99
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO SUBTRACT AN AMOUNT (ZZAMT) FROM THE TOTAL
+     C*                                                   (ZZTOTI,ZZTOTD)
+     C*  IND '99' IS SET BY AN OVERFLOW ERROR
+     CSR         GLZSUB    BEGSR                           *** GLZSUB ****
+     C* PROCESSING. JUST REVERSE THE 'SIGN' AND ADD
+     CSR                   Z-SUBZZAMT     ZZAMT  153       REVERSE 'SIGN'
+     CSR                   EXSR GLZADD                       AND 'ADD'
+     CSR                   Z-SUBZZAMT     ZZAMT            RESTORE 'SIGN'
+     CSR                   ENDSR
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C/COPY WNCPYSRC,DL0832CCP2                                           S01408
+     C**
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     O****DL0832P1E  203   55      HEAD                                   E257
+     O****DL0830P1E  203   55      HEAD                              E257 LN0746
+     ODL0832P1E  203   55      HEAD                                       LN0746
+     O                                   24 'REFERENCE DL0832P1'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        E  1     55      HEAD
+     O                                   57 'OUTSTANDING DEAL '
+     O                                   79 'AMENDMENTS BY CUSTOMER'
+     O        E  2     55      HEAD
+     O                                   64 '------------------------'
+     O                                   79 '---------------'
+     O        E  2     55      HEAD
+     O                                   12 'COMPANY'
+     O                         A8CMCD    16
+     O                         APCMNM    48
+     O        E  1     55      HEAD
+     O                                   24 'CUSTOMER DEAL      INPUT'
+     O                                   50 'VALUE   SEQ  AMENDMENT'
+     O                                   69 'SPREAD/     CCY'
+     O                                   86 'AMOUNT'
+     O/COPY WNCPYSRC,DL0832OOP1                                           S01408
+     O        E  2     55      HEAD
+     O                                   24 'NUMBER    NO.      DATE'
+     O                                   48 'DATE   NO.     TYPE'
+     O                                   59 'RATE'
+     O/COPY WNCPYSRC,DL0832OOP2                                           S01408
+     O        E  1     02 22 55DETAIL
+     O                         CNUM       7
+     O                         DLNO      15
+     O                         IDATE     25
+     O                         VDATE     34
+     O                         DASN      39
+     O                         AMTP      47
+     O                         RTSP  4   63
+     O                         CCY       69
+     O                 30      DAAM  2   86
+     O                 31      DAAM      88 '   ,   ,   ,   .0'
+     O                 32      DAAM      89 '  ,   ,   ,   . 0'
+     O                 33      DAAM      90 ' ,   ,   ,   .  0'
+     O/COPY WNCPYSRC,DL0832OOP3                                           S01408
+     O        E 3      55      ENDLN
+     O********                           66 '*** END OF COMPANY '
+     O********                           76 'REPORT ***'
+     O                                   66 '*** END OF REPORT FOR'
+     O                                   78 ' COMPANY ***'
+     O***DL0832AUE  203   LR      AUDIT                                   E257
+     O***DL0830AUE  203   LR      AUDIT                              E257 LN0746
+     ODL0832AUE  203   LR      AUDIT                                      LN0746
+     O                                   24 'REFERENCE DL0832AU'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  122 'PAGE'
+     O                         PAGE1 Z  127
+     O        E  1     LR      AUDIT
+     O                                   57 'OUTSTANDING DEAL '
+     O                                   79 'AMENDMENTS BY CUSTOMER'
+     O        E  2     LR      AUDIT
+     O                                   64 '------------------------'
+     O                                   79 '---------------'
+     O        E  220   LRNU7   AUDIT
+     O                                   18 'RUN CONTROL'
+     O        E  2     LRNU7   AUDIT
+     O                                   59 'NUMBER'
+     O                                   84 'VALUE'
+     O        E  2     LRNU7   AUDIT
+     O                                   25 'RECORDS PROCESSED'
+     O                         NREC  3   59
+     O                         ZZTOTIZ   81
+     O                         ZZTOTD    84
+     O        E  2     LRNU7   AUDIT
+     O                                   29 'DEAL AMENDMENTS FILE '
+     O                                   43 'CONTROL TOTALS'
+     O                         NLRA  3   59
+     O                         VLAF  Z   81
+     O                         VLAL      84
+     O        E 3     N34 LRNU7AUDIT
+     O                                   60 '***   NO DETAILS TO '
+     O                                   72 'REPORT   ***'
+     O        E 3      LR U7 U8AUDIT
+     O                                   71 '*** PRINT TERMINATED ***'
+     O        E 2      LR U7 U8AUDIT
+     O                                   57 'DATABASE ERROR'
+     O                         DBASE     61
+     O                                   67 'FILE'
+     O                         DBFILE    78
+     O        E 13     LR U7 U8AUDIT
+     O                                   49 'OPTION'
+     O                         DBOPTN    57
+     O                                   66 'KEY'
+     O                         DBKEY     96
+     O*****   E 3      LRNU7 34AUDIT                                      E299
+     O*****                              72 '***  END OF REPORT  ***'     E299
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,1399 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL List of todays deals')                        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module
+     F*                                                               *
+     F*  DL3440 - LIST OF TODAYS DEALS                                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10282           Date 04Feb06               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 184216             Date 28Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 056427             Date 28Oct93               *
+      *                 E41066             Date 16Jun92               *
+     F*                 S01358             DATE 03MAR92               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10282 - Fix field CLAS for DEALSDC.                       *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  184216 - Amended deals are not included in the report. Fix   *
+      *           is to add indicator 38 for change type equal to     *
+      *           amend.                                              *
+     F*  056427 - Ensure that RCF is updated with correct spool       *
+     F*           file name/number.                                   *
+     F*  E41066 - Only extract details of FX/MM Deals, FRA's          *
+     F*         - for example are not included in report.             *
+     F*  S01358 - LIST OF TODAYS DEALS                                *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FDLDTRXXLIP  E           K        DISK
+     F***TABDLI* IF  F      96 12AI     2 DISK                                                CGL029
+     FTABDLI  IF  F     230 12AI     2 DISK                                                   CGL029
+     F***CLINT**IF  F     256  7AI     2 DISK                                                 CER020
+     FCLINT   IF  F     264  7AI     2 DISK                                                   CER020
+     F***DEALS** IF  F     400  6AI     2 DISK                                                CGL029
+     F*DEALS***IF**F****2319**6AI*****2*DISK                                           CGL029 CDL038
+     FDEALS   IF  F    2606  6AI     2 DISK                                                   CDL038
+     FDL3440P1O   F     132     OF     PRINTER      KINFDS SPOOL1     UC
+     FDL3440AUO   F     132            PRINTER      KINFDS SPOOLU
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            DEAL TRANS.INDEX DETAIL RECORD
+     F* 02            DEAL TRANS.INDEX TRAILER RECORD
+     F* 03            INSTALLATION CONTROL DATA RECORD 1
+     F* 04            TABLE CURRENCY RECORD
+     F* 05            CUSTOMER RECORD 'A'
+     F* 06            DEALS - FOREIGN EXCHANGE RECORD
+     F* 07            DEALS - LOAN/DEPOSIT RECORD
+     F* 08            DEALS - NEGOTIABLE ASSET PURCHASED RECORD
+     F* 09            DEALS - NEGOTIABLE ASSET SOLD RECORD
+     F* 10            DEALS - TRAILER RECORD
+     F*    22         ZERO NOTICE DAYS ,'CALL', ON LOAN/DEPOSIT RECORD
+     F*    23         ZERO MATURITY DATE ON LOAN/DEP. RECORD
+     F*       20      PRINT OUT AMT1
+     F*       21      PRINT OUT AMT2
+     F*       30      DEAL TYPE IS 'NX' - DON'T PRINT RATE
+     F*       31      PRODUCT SORT CODE = 1
+     F*       32      PRODUCT SORT CODE = 2
+     F*       33      PRODUCT SORT CODE = 3
+     F*       34      DEAL TYPE IS 'OP' - FX OPTION
+     F*       35      ZERO DECIMAL PLACES FOR CURRENCY - PURCHASE FOR FX
+     F*       36      ZERO DECIMAL PLACES FOR FX SALE CURRENCY
+     F*       37      DEAL TYPE IS 'OT' - OPTION TAKEDOWN
+     F*       39      LOAN/DEP. RECORD IS FOR NOTICE DEAL
+     F*       40      LOAN/DEP. OR NA PURCHASED RECORD
+     F*       41      SKIP FIRST CYCLE PROCESSING
+     F*       42      FAILED CHAIN TO DEALS FILE
+     F*       43      CHANGE TYPE IS INSERT
+     F*       44      CHANGE TYPE IS DELETE
+     F*       45      FAILED CHAIN TO CURRENCY RECORD OF TABLE FILE
+     F*       46      1 DECIMAL PLACE  FOR CURRENCY - PURCHASE FOR FX
+     F*       47      2 DECIMAL PLACES FOR CURRENCY - PURCHASE FOR FX
+     F*       48      3 DECIMAL PLACES FOR CURRENCY - PURCHASE FOR FX
+     F*       49      FAILED CHAIN TO CUSTOMER MASTER FILE
+     F*       51      CONTROLS FOR INSERTED RECORDS OUT OF BALANCE
+     F*       52      CONTROLS FOR DELETED  RECORDS OUT OF BALANCE
+     F*       53      1 DECIMAL PLACE  FOR FX SALE CURRENCY
+     F*       54      2 DECIMAL PLACES FOR FX SALE CURRENCY
+     F*       55      3 DECIMAL PLACES FOR FX SALE CURRENCY
+     F*       56      1ST LEG SWAP EXPIRED
+     F*       65      MBIN = 'Y'
+     F*       75      INPUT FILE HAS AT LEAST ONE RECORD
+     F*       U7 U8   DATA BASE ERROR - PROGRAM HALTS
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    CPY@    1   1 80
+     E**
+     I*
+     I*
+     I*    DEAL TRANSACTIONS INDEX FILE - DETAIL RECORD.
+     I*
+     IDLDTRXDF    01
+     I              CHTP                            CHTP1
+     I                                              BRCA  L1
+     I*
+     I*
+     I*    DEAL TRANSACTIONS INDEX SORTED EXTRACT FILE - TRAILER RECORD.
+     I*
+     IDLDTRXTF    02
+     I              NORE                            NORED
+     I*
+     I*
+     I*    TABLE FILE - CURRENCIES RECORD 1.
+     I*
+     ITABDLI  NS  04   1 CD   2 C2   3 C0
+     I       AND      13 C1
+     I                                        1   1 RECI
+     I                                        2   30RECT
+     I                                       10  12 CCY
+     I                                       13  130SREC
+     I                                       14  27 CCNM
+     I                                    P  28  348SPOT
+     I                                       35  37 CCYS
+     I                                       38  380CDP
+     I                                       39  390TNOT
+     I                                       40  40 DCCY
+     I                                       41  44 SRC1
+     I                                       45  48 SRC2
+     I**********                             49  520TACC                                      CGL029
+     I                                       49  520QQTACC                                    CGL029
+     I**********                             53  560TEQV                                      CGL029
+     I                                       53  560QQTEQV                                    CGL029
+     I**********                             57  600SWQV                                      CGL029
+     I                                       57  600QQSWQV                                    CGL029
+     I**********                             61  640TAC4                                      CGL029
+     I                                       61  640QQTAC4                                    CGL029
+     I**********                             65  680TAC5                                      CGL029
+     I                                       65  680QQTAC5                                    CGL029
+     I                                       69  69 HIND
+     I                                    P  70  768PART
+     I                                       77  780SSNO
+     I                                    P  79  858ERLC
+     I                                    P  90  920LCD
+     I                                       93  93 CHTP
+     I                                    P  94  960TNLU
+     I                                      181 1900TACC                                      CGL029
+     I                                      191 2000TEQV                                      CGL029
+     I                                      201 2100SWQV                                      CGL029
+     I                                      211 2200TAC4                                      CGL029
+     I                                      221 2300TAC5                                      CGL029
+     I*
+     I*
+     I*    TABLE FILE CATCHALL.
+     I*
+     I        NS
+     I*
+     I*
+     I*    CLIENT FILE - CUSTOMER STANDING DATA RECORD.
+     I*
+     ICLINT   NS  05   1 CD   8 CA
+     I                                        1   1 RECI
+     I**********                              2   70CNUM                                      CSD027
+     I                                        2   7 CNUM                                      CSD027
+     I                                        8   8 RCDT
+     I                                        9  28 CRNM
+     I                                       29  38 CTWN
+     I                                       39  48 CSNM
+     I                                       49  56 CASK
+     I                                       57  68 TELX
+     I                                       69  80 CSID
+     I                                       81  82 ACOC
+     I                                       83  83 CBSI
+     I                                       84  85 CCTZ
+     I                                       86  87 CLOC
+     I**********                             88  930CPAR                                      CSD027
+     I                                       88  93 CPAR                                      CSD027
+     I                                       94  960BRCD
+     I                                       97  980LINS
+     I                                       99 1010LIND
+     I                                    P 102 1040DASU
+     I                                    P 105 1070CDIC
+     I                                    P 108 1100DADE
+     I                                      111 111 CMIN
+     I                                      112 112 CTYP
+     I                                      113 124 TELF
+     I                                      125 133 CHID
+     I                                      134 136 CHAB
+     I                                    P 250 2520LCD
+     I                                      253 253 CHTP
+     I                                    P 254 2560TNLU
+     I                                      257 257 CUGRP                                     CER020
+     I                                      258 261 CAB2                                      CER020
+     I                                      262 264 LOIC                                      CER020
+     I*
+     I*
+     I*    CLIENT FILE CATCHALL.
+     I*
+     I        NS
+     I*
+     I*
+     I*    DEALS FILE - DETAIL RECORD - FX SWAPS/OUTRIGHTS.
+     I*
+     IDEALS   NS  06   1 CD   8 CB
+     I       OR        1 CE   8 CB
+     I       OR        1 CM   8 CB
+     I       OR        1 CR   8 CB
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160CNUM                                      CSD027
+     I                                       11  16 CNUM                                      CSD027
+     I                                       17  190BRCD
+     I                                       20  21 DTYP
+     I                                       22  23 DLST
+     I                                    P  24  260DDAT
+     I                                    P  27  290VDAT
+     I                                    P  30  320OTDT
+     I                                       35  38 BRKC
+     I                                    P  39  450BAGE
+     I                                       46  48 PUCY
+     I                                    P  49  550PUAM
+     I                                    P  56  628EXRT
+     I                                       86  88 SLCY
+     I                                    P  89  950SLAM
+     I                                    P 117 1230BCEQ
+     I                                    P 131 1378LCXR
+     I                                      138 1390PCST
+     I**********                            140 151 OPCA                                      CGL029
+     I                                      140 151 QQOPCA                                    CGL029
+     I                                      152 161 TSCN
+     I                                      162 1630SCST
+     I**********                            164 175 OSCA                                      CGL029
+     I                                      164 175 QQOSCA                                    CGL029
+     I                                      176 185 TPCN
+     I                                    P 192 1980ORPA
+     I                                    P 205 2110ORSA
+     I                                      212 2120FSLI
+     I                                    P 241 2470SPPD
+     I                                    P 248 2540SPLA
+     I                                      255 257 SPLC
+     I                                      285 2900SODN
+     I                                      300 309 FACO
+     I                                      310 344 SPI
+     I                                      370 370 DNSI
+     I                                      371 371 DSTI
+     I                                      372 372 CNFI
+     I                                      373 373 ACEI
+     I                                      374 374 TLXI
+     I                                    P 391 3930ORED
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I                                     12921309 OPCA                                      CGL029
+     I                                     13101327 OSCA                                      CGL029
+     I                                     13641367 CLAS                                      CDL038
+     I*
+     I*
+     I*    DEALS FILE - DETAIL - TAKINGS/PLACINGS/TIME DEPOSITS/LOANS.
+     I*
+     IDEALS   NS  07   1 CD   8 CC
+     I       OR        1 CE   8 CC
+     I       OR        1 CM   8 CC
+     I       OR        1 CR   8 CC
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160CNUM                                      CSD027
+     I                                       11  16 CNUM                                      CSD027
+     I                                       17  190BRCD
+     I                                       20  21 DTYP
+     I                                       22  23 DLST
+     I                                    P  24  260DDAT
+     I                                    P  27  290VDAT
+     I                                    P  30  320MDAT            23
+     I                                       33  340CDAS
+     I                                       35  38 BRKC
+     I                                    P  39  450BAGE
+     I                                       46  48 CCY
+     I                                    P  49  550PCPL
+     I                                       56  56 INTC
+     I                                       63  640BRTT
+     I                                    P  65  707BRTE
+     I                                    P  71  767RTSP
+     I                                    P  77  827INTR
+     I                                       83  850NOTD            22
+     I                                       86 105 RNNA
+     I**********                            106 1110CHNA                                      CSD027
+     I                                      106 111 CHNA                                      CSD027
+     I                                      112 1140FACT
+     I                                      115 1160FCNO
+     I                                    P 117 1230OPAM
+     I                                    P 124 1308BCXR
+     I                                    P 131 1378LCXR
+     I                                      138 1390SDST
+     I**********                            140 151 OSDA                                      CGL029
+     I                                      140 151 QQOSDA                                    CGL029
+     I                                      152 161 TSTN
+     I                                      162 1630MDST
+     I**********                            164 175 OMDA                                      CGL029
+     I                                      164 175 QQOMDA                                    CGL029
+     I                                      176 185 TMAN
+     I                                      186 1910RODN
+     I                                    P 192 1980RODA
+     I                                      199 2040RBDN
+     I                                    P 205 2110RBDA
+     I                                      212 2120ICBS
+     I                                      213 213 IPFR
+     I                                    P 214 2200TOTI
+     I                                    P 221 2230NIDT
+     I                                    P 224 2260IBDT
+     I                                    P 227 2290SLID
+     I                                    P 230 2360AIPD
+     I                                    P 237 2390DLRC
+     I                                    P 240 2420IACD
+     I                                    P 243 2490AITC
+     I                                    P 250 2560AIAN
+     I                                    P 257 2630AIAP
+     I                                    P 264 2700IPRD
+     I                                    P 271 2770IPRM
+     I                                    P 278 2840ICTD
+     I                                    P 294 2960DAVD
+     I                                      297 2990DASN
+     I                                      300 309 FACO
+     I                                      310 344 SPI
+     I                                      345 3460INTF
+     I                                      370 370 DNSI
+     I                                      371 371 DSTI
+     I                                      372 372 CNFI
+     I                                      373 373 ACEI
+     I                                      374 374 TLXI
+     I                                    P 391 3930ORED
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I*************************************16721689 OMDA                               CGL029 CDL038
+     I*************************************16901707 OSDA                               CGL029 CDL038
+     I                                     17211738 OSDA                                      CDL038
+     I                                     17391756 OMDA                                      CDL038
+     I**********                           18981901 CLAS                             CDL038 BUG10282
+     I                                     20102013 CLAS                                    BUG10282
+     I*
+     I*    DEALS FILE - DETAIL RECORD - NEGOTIABLE ASSETS PURCHASED.
+     I*
+     IDEALS   NS  08   1 CD   8 CD
+     I       OR        1 CE   8 CD
+     I       OR        1 CM   8 CD
+     I       OR        1 CR   8 CD
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160ISCN                                      CSD027
+     I                                       11  16 ISCN                                      CSD027
+     I                                       17  190BRCD
+     I                                       20  21 DTYP
+     I                                       22  23 DLST
+     I                                    P  24  260DDAT
+     I                                    P  27  290VDAT
+     I                                    P  30  320MDAT
+     I                                       33  340IDAS
+     I                                       35  38 BRKC
+     I                                    P  39  450BAGE
+     I                                       46  48 CCY
+     I                                    P  49  550PUPR
+     I                                    P  57  627YRAT
+     I                                    P  71  767RTSP
+     I                                    P  77  827INTR
+     I                                       86 105 RNNA
+     I**********                            106 1110PCUS                                      CSD027
+     I                                      106 111 PCUS                                      CSD027
+     I                                      112 1140FACT
+     I                                      115 1160FCNO
+     I                                    P 117 1230FVAL
+     I                                    P 124 1308BCXR
+     I                                    P 131 1378LCXR
+     I                                      138 1390SDST
+     I**********                            140 151 OSDA                                      CGL029
+     I                                      140 151 QQOSDA                                    CGL029
+     I                                      152 161 TSTN
+     I                                      162 1630MDST
+     I**********                            164 175 OMDA                                      CGL029
+     I                                      164 175 QQOMDA                                    CGL029
+     I                                      176 185 TMAN
+     I                                    P 192 1980DISA
+     I                                    P 205 2110DPTD
+     I                                      212 2120ICBS
+     I                                      213 213 IPFR
+     I                                    P 214 2200TOTI
+     I                                    P 221 2230NIDT
+     I                                    P 224 2260IBDT
+     I                                    P 227 2290SLID
+     I                                    P 230 2360AIPD
+     I                                    P 237 2390DLRC
+     I                                    P 240 2420IACD
+     I                                    P 243 2490AITC
+     I                                    P 250 2560AIAN
+     I                                    P 257 2630AIAP
+     I                                    P 264 2700IPRD
+     I                                    P 271 2770IPRM
+     I                                    P 278 2840SAPRX
+     I                                      285 2900ASDN
+     I                                    P 291 2930SADT
+     I                                    P 294 2960DAVD
+     I                                      297 2990DASN
+     I                                      300 309 FACO
+     I                                      310 344 SPI
+     I                                      345 3460INTF
+     I                                      370 370 DNSI
+     I                                      371 371 DSTI
+     I                                      372 372 CNFI
+     I                                      373 373 ACEI
+     I                                      374 374 TLXI
+     I                                    P 391 3930ORED
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I*************************************11821199 OMDA                               CGL029 CDL038
+     I*************************************12001217 OSDA                               CGL029 CDL038
+     I                                     12451262 OSDA                                      CDL038
+     I                                     12631280 OMDA                                      CDL038
+     I                                     13171320 CLAS                                      CDL038
+     I*
+     I*
+     I*    DEALS FILE - DETAIL RECORD - NEGOTIABLE ASSETS SOLD.
+     I*
+     IDEALS   NS  09   1 CD   8 CE
+     I       OR        1 CE   8 CE
+     I       OR        1 CM   8 CE
+     I       OR        1 CR   8 CE
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160CNUM                                      CSD027
+     I                                       11  16 CNUM                                      CSD027
+     I                                       17  190BRCD
+     I                                       20  21 DTYP
+     I                                       22  23 DLST
+     I                                    P  24  260DDAT
+     I                                    P  27  290VDAT
+     I                                       35  38 BRKC
+     I                                    P  39  450BAGE
+     I                                       46  48 CCY
+     I                                    P  49  550SAPR
+     I                                    P  57  627YRAT
+     I                                    P  77  827INTR
+     I                                       86 105 RNNA
+     I**********                            106 1110ISCN                                      CSD027
+     I                                      106 111 ISCN                                      CSD027
+     I                                    P 117 1230FVAL
+     I                                      138 1390SETP
+     I**********                            140 151 OSAC                                      CGL029
+     I                                      140 151 QQOSAC                                    CGL029
+     I                                      152 161 TSEN
+     I                                      285 2900RPDN
+     I                                      291 2930PMDT
+     I                                      370 370 DNSI
+     I                                      371 371 DSTI
+     I                                      372 372 CNFI
+     I                                      373 373 ACEI
+     I                                      374 374 TLXI
+     I                                    P 391 3930ORED
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I                                     10481065 OSAC                                      CGL029
+     I                                     11021105 CLAS                                      CDL038
+     I*
+     I*
+     I*    DEALS FILE -TRAILER RECORD.
+     I*
+     IDEALS   NS  10   1 CT
+     I                                        1   1 RECI
+     I                                        2   70DLNO
+     I                                        8   8 RCDT
+     I                                        9  100RCDC
+     I**********                             11  160CNUM                                      CSD027
+     I                                       11  16 CNUM                                      CSD027
+     I                                    P  17  190NORE
+     I                                    P  20  220FLSZ
+     I                                    P  23  250NLRB
+     I                                    P  26  280NINS
+     I                                    P  29  310NDEL
+     I                                    P  32  340NLRA
+     I                                    P  35  420VLBF
+     I                                    P  43  440VLBL
+     I                                    P  45  520VRIF
+     I                                    P  53  540VRIL
+     I                                    P  55  620VRDF
+     I                                    P  63  640VRDL
+     I                                    P  65  720VLAF
+     I                                    P  73  740VLAL
+     I                                    P  75  770DTMR
+     I                                    P  78  800ITMR
+     I                                    P 394 3960LCD
+     I                                      397 397 CHTP
+     I                                    P 398 4000TNLU
+     I*
+     I*    DEALS FILE - CATCHALL.
+     I*
+     IDEALS   NS
+     I*
+     I*
+     I*    DATA STRUCTURES FOR AMOUNT FIELDS
+     I            DS
+     I                                        1  130AMT
+     I                                        1  130PUAM
+     I                                        1  130PCPL
+     I                                        1  130PUPR
+     I*
+     I            DS
+     I                                        1  130AMTA
+     I                                        1  130SLAM
+     I                                        1  130SAPR
+      *
+      *     file information data structure
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** EXTERNAL DS FOR BRANCHES DETAILS
+      *
+     ISDBANK    E DSSDBANKPD
+      **  EXTERNAL DS FOR BANK DETAILS
+     I              BJURPT                          TITL
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     I/EJECT
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           BRNCH   3
+     C**
+     C**  TURN OFF INDICATOR FOR 1ST PAGE PRINTOUT
+     C                     MOVE '0'       *IN50
+     C**
+     C*    ALL CYCLES AFTER FIRST
+     C   02                GOTO END
+     C   41                GOTO TAG1
+     C*
+     C*    FIRST CYCLE
+     C                     SETON                     41
+      *
+      ** Insert copyright
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     MOVE 'A'       CKEY    7
+     C                     MOVEL'20'      CCYKY  12
+     C                     MOVE '1'       CCYKY2  4
+     C*
+      *Access static data required to run the program
+      *
+     C                     EXSR START
+     C*
+     C*    DEALS RECORD PROCESSING
+     C           TAG1      TAG                             ** TAG TAG1  **
+     C  N01                GOTO END
+      *
+      **         Multibranching Processing
+      *
+      *
+     C           *INL1     IFEQ '1'
+     C                     CLOSEDL3440P1
+     C                     SETON                     7550
+     C           BRNCH     IFEQ 'ALL'
+     C           BRNCH     OREQ BRCA
+     C                     OPEN DL3440P1
+     C                     Z-ADD0         PAGE
+     C                     Z-ADD0         PAGE1
+      *
+      *  ensure pool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM1    ZSNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM BRCA      SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM1
+     C                     PARM           ZSERR   1
+      *
+      *  if an error in ZSFILE processing, return to calling program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+      ** Get the branch name if multibranching ind. is 'Y'
+     C*
+     C           MBIN      IFEQ 'Y'
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRCA      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVEL@DSNB     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 005*
+     C                     Z-ADD5         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDTIM       UDTM    40
+     C                     ADD  1         RECRD   50
+     C                     SETOF                     2021
+     C                     SETOF                     354647
+     C                     SETOF                     483653
+     C                     SETOF                     5455
+     C                     SETOF                     313233
+     C                     SETOF                     060708* CHAIN TO
+     C                     SETOF                     093940   DEALS
+     C           DLNO      CHAINDEALS                42        FILE
+     C   42                GOTO END
+     C           PROD      COMP 2                    333132
+     C   31                SETON                     2021
+     C   32                SETON                     20
+     C   33                SETON                     21
+     C   31                Z-ADDAMT       AMT1   130
+     C   31                Z-ADDAMTA      AMT2   130
+     C   32 09             Z-ADDAMTA      AMT1
+     C   32N09             Z-ADDAMT       AMT1
+     C   33                Z-ADDAMT       AMT2
+     C*
+     C*    CHECK FOR NOTICE DEAL
+     C   07 23   NOTD      COMP 0                    39
+     C*
+     C*    CLEAR DATA STRUCTURE FIELDS
+     C   07
+     COR 08                SETON                     40
+     C   40                Z-ADD0         AMTA
+     C   09                Z-ADD0         AMT
+     C*
+     C                     MOVE VDAT      ZDAYNO           * VALUE
+     C                     EXSR ZDATE2                        DATE
+     C                     MOVE ZADATE    VADATE  7            CONVERSION
+     C   09
+     COR 07 23             GOTO ACCUM
+     C   06                MOVE OTDT      ZDAYNO
+     C   09                MOVE PMDT      ZDAYNO
+     C*                                                    * MATURITY
+     C   40                MOVE MDAT      ZDAYNO              DATE
+     C                     EXSR ZDATE2                         CONVERSION
+     C*
+     C           ACCUM     TAG                             ** ACCUM TAG **
+     C                     SETOF                     343730
+     C                     SETOF                     4344
+     C*
+     C*    CHECK FOR FX OPTION DEAL
+     C   06      DTYP      COMP 'OP'                     34
+     C*
+     C*    CHECK FOR OPTION TAKEDOWN
+     C   06N34   DTYP      COMP 'OT'                     37
+     C*
+     C*    CHECK FOR NX DEAL
+     C     N34N37DTYP      COMP 'NX'                     30
+     C*
+     C*    HASH TOTALLING
+     C********** CHTP1     COMP 'R'                  434344               184216
+     C           CHTP1     COMP 'R'                      44               184216
+     C           CHTP1     COMP 'I'                      43               184216
+     C           CHTP1     COMP 'A'                      38               184216
+     C**
+     C**   IF SWAP REVERSAL,HAD 1ST LEG EXPIRED
+     C**   IE.VALUE LESS THAN TODAY, ORIG. ENTRY NOT TODAY
+     C                     SETOF                     56
+     C   44      DTYP      COMP 'SW'                     56
+     C   44N56   DTYP      COMP 'PS'                     56
+     C   56      VDAT      COMP RUND                   56
+     C   56      ORED      COMP RUND                 5656
+     C   56                GOTO RECTAG                     EXPIRED
+     C   43      ICT       ADD  1         ICT     50
+     C   44      DCT       ADD  1         DCT     50
+     C*
+     C*    SKIP HASH TOTALLING FOR OPTION TAKEDOWN
+     C   37                GOTO RECTAG
+     C   06 34 43          Z-ADDORPA      AMT
+     C   06 34 43          Z-ADDORSA      AMTA
+     C                     MOVE AMT       ZZAMT
+     C   09                MOVE SAPR      ZZAMT
+     C   43                MOVE ITOTI     ZZTOTI
+     C   43                MOVE ITOTD     ZZTOTD
+     C   44                MOVE DTOTI     ZZTOTI
+     C   44                MOVE DTOTD     ZZTOTD
+     C                     EXSR GLZADD
+     C   43                MOVE ZZTOTI    ITOTI  150
+     C   43                MOVE ZZTOTD    ITOTD   30
+     C   44                MOVE ZZTOTI    DTOTI  150
+     C   44                MOVE ZZTOTD    DTOTD   30
+     C*
+     C           RECTAG    TAG                             ** RECTAG    **
+     C           RCCT      ADD  1         RCCT    50       * RECORD COUNT
+     C*
+     C*    GET DECIMAL PLACES FOR CURRENCY - PURCHASE CCY FOR FX
+     C   06                MOVE PUCY      KCCY    3
+     C   07
+     COR 08
+     COR 09                MOVE CCY       KCCY
+     C                     MOVELKCCY      CCYKY2
+     C                     MOVE CCYKY2    CCYKY
+     C                     SETOF                     04
+     C           CCYKY     CHAINTABDLI               45
+     C*
+     C           *IN45     IFEQ '1'
+     C           *IN04     ORNE '1'
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABLE'   DBFILE
+     C                     MOVELCCYKY     DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 2  *
+     C                     OUT  LDA                        ***************
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           CDP       COMP 1                      3546
+     C           CDP       COMP 2                    48  47
+     C  N06                GOTO CUST
+     C*
+     C*    GET DECIMAL PLACES FOR FX SALE CURRENCY
+     C                     MOVELSLCY      CCYKY2
+     C                     MOVE CCYKY2    CCYKY
+     C                     SETOF                     04
+     C           CCYKY     CHAINTABDLI               45
+     C*
+     C           *IN45     IFEQ '1'
+     C           *IN04     ORNE '1'
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABLE'   DBFILE
+     C                     MOVELCCYKY     DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 3  *
+     C                     OUT  LDA                        ***************
+     C                     EXSR DBERR
+     C                     END
+     C           CDP       COMP 1                      3653
+     C           CDP       COMP 2                    55  54
+     C*
+     C*    CHAIN TO CUSTOMER MASTER FILE
+     C           CUST      TAG                             ** TAG CUST  **
+     C                     SETOF                     05
+     C                     MOVELCNUM      CKEY
+     C   08                MOVELISCN      CKEY
+     C           CKEY      CHAINCLINT                49
+     C*
+     C           *IN49     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CLINT'   DBFILE
+     C                     MOVELCKEY      DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 1  *
+     C                     OUT  LDA                        ***************
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           END       TAG                             **  TAG END  **
+     C*
+     C** Access static data if first cycle processing not completed.
+     C*
+     CLR         *IN41     IFEQ '0'
+     CLR                   EXSR START
+     CLR                   END
+     C*
+     CLR                   SETON                     OF
+     CLR                   ADD  1         RECRD
+     CLR                   MOVE 999999    DLNO
+     CLR         DLNO      CHAINDEALS                42
+     C*
+     CLR         ICT       COMP NINS                 5151
+     CLRN51      ITOTI     COMP VRIF                 5151
+     CLRN51      ITOTD     COMP VRIL                 5151
+     C*
+     CLR         DCT       COMP NDEL                 5252
+     CLRN52      DTOTI     COMP VRDF                 5252
+     CLRN52      DTOTD     COMP VRDL                 5252
+     C*
+     CLR         RECRD     COMP NORED                5757
+      *                                                                   E41066
+      ** File out of balance processing has been removed because          E41066
+      ** only FX/MM deals are reported in this report but the             E41066
+      ** deal file control totals are held for all deals.                 E41066
+      *                                                                   E41066
+     C***********                                                         E41066
+      ***If*'ALL' branches have been read process file out of bal.        E41066
+     C***********                                                         E41066
+     C*R*********BRNCH     IFEQ 'ALL'                                     E41066
+     C***********                                                         E41066
+     C*R**********IN51     IFEQ '1'                                       E41066
+     C*R**********IN52     OREQ '1'                                       E41066
+     C*R**********IN57     OREQ '1'                                       E41066
+     C***********                                                         E41066
+     C*R*********          SETON                     U8                   E41066
+     C*R*********          END                                            E41066
+     C*R*********          END                                            E41066
+      *
+      ** Ensure totals spool file recorded by RCF
+      *
+     C***LR******             Z-ADDSFNUM1    ZSNUMU  60                   056427
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      056427
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANKS   SENTY
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU
+     CLR                   PARM           ZSERR   1
+      *
+      *  if an error in ZSFILE processing, return to calling program
+      *
+     CLR         ZSERR     IFEQ 'Y'                        <-------\
+     CLR                   SETON                     U7U8LR        |
+     CLR                   RETRN                                   |
+     CLR                   END                             <-------/
+     C*
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE START:
+     C*    OBTAINS STATIC DATA REQUIRED TO RUN THE PROGRAM
+     C*
+     C*    CALLED FROM SUBROUTINES : MAIN
+     C*    CALLS SUBROUTINES :
+     C*
+     C*****************************************************************
+     C           START     BEGSR
+      *
+      *
+      ** Define data area LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *LOCK     IN   LDA                        INITIALIZE
+     C                     MOVEL*BLANK    DBPGM
+     C                     MOVE *BLANK    DBFILE
+     C                     Z-ADD*ZERO     DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'DL3440  'DBPGM
+     C                     OUT  LDA
+     C*
+     C**   ACCESS BANK DETAILS, FOR TITLE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 004 *
+     C                     Z-ADD4         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** in the data area RUNDAT
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** seton indicator for output if MBIN = 'Y'
+      *
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     65
+     C                     END
+     C*
+     C*
+     C**   Check system date format, DDMMYY OR MMDDYY.
+     C*
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C**  Setup indicator for 1st page printout
+     C*
+     C                     MOVE '1'       *IN50
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE DBERR:
+     C*    INFORMS DATA AREA OF DATA BASE ERROR, OUTPUTS MESSAGES
+     C*    ONTO REPORT, SETS ON INDICATORS & LEAVES PROGRAM.
+     C*
+     C*    CALLED FROM SUBROUTINES : MAIN
+     C*    CALLS SUBROUTINES :
+     C*
+     C*****************************************************************
+     C           DBERR     BEGSR
+     C*
+     C*
+     C*    OUTPUT DATA BASE ERROR MESSAGE TO PRINTER FILES.
+     C                     EXCPTDBP1
+     C                     EXCPTDBAU
+     C*
+     C*
+     C*    SET ON SWITCHES & LR INDICATOR.
+     C                     SETON                     U7U8LR
+     C*
+     C** Ensure AU spool file recorded by RCF
+     C*
+     C***********          Z-ADDSFNUM1    ZSNUMU  60                      056427
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      056427
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR   1
+     C*
+     C** if an error in ZSFILE processing, return to calling program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C*
+     C*    LEAVE PROGRAM.
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     ODL3440P1H   03   OF
+     O       OR        50
+     O                                   24 'REFERENCE DL3440P1'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        H   05   OF
+     O       OR        50
+     O                                   72 'LIST OF TODAYS DEALS'
+     O        H   06   OF
+     O       OR        50
+     O                                   72 '--------------------'
+     O*
+     O                 65                88 'BRANCH'
+     O                 65      BRCA      92
+     O                 65                93 '-'
+     O                 65      A8BRNM   123
+     O*
+     O        H   08   OFNLR
+     O       OR        50
+     O***********************************36 'DEAL   DEAL   VALUE'                             CDL038
+     O                                   36 'DEAL   DEAL       VALUE'                         CDL038
+     O                                   45 'MATURITY'
+     O                                   70 'INCOMING'
+     O                                  110 'OUTGOING'
+     O        H   0911 OFNLR
+     O       OR        50
+     O***********************************22 'CUSTOMER       NUMBER'                           CDL038
+     O***********************************43 'TYPE    DATE   DATE'                             CDL038
+     O                                   18 'CUSTOMER   NUMBER'                               CDL038
+     O                                   43 'TYPE        DATE   DATE'                         CDL038
+     O                                   70 'CCY              AMOUNT'
+     O                                   90 'RATE     CCY'
+     O                                  120 'AMOUNT    ACTION'
+     O                                  130 'TIME'
+     O        D  1     01N42N49
+     O       OR  2     01N42 49
+     O                         CNUM       6
+     O*************************DLNO      22                                                   CDL038
+     O*************************DTYP      25                                                   CDL038
+     O*************************          26 '-'                                               CDL038
+     O*************************DLST      28                                                   CDL038
+     O                         DLNO      18                                                   CDL038
+     O                         DTYP      21                                                   CDL038
+     O                                   22 '-'                                               CDL038
+     O                         DLST      24                                                   CDL038
+     O                         CLAS      28                                                   CDL038
+     O                         VADATE    37
+     O                         ZADATE    46
+     O                 06N34N37          46 '       '
+     O                 07 23 39NOTD  3   41
+     O                 07 23 39          42 ' '
+     O                 07 23 39          46 'DAYS'
+     O                 07 22 23          46 ' CALL  '
+     O                 31      PUCY      50
+     O                 32      CCY       50
+     O                 20 35   AMT1      67 ' ,   ,   ,   , 0 '
+     O                 20 46   AMT1      69 '   ,   ,   , 0 . '
+     O                 20 47   AMT1      70 '  ,   ,   , 0 .  '
+     O                 20 48   AMT1      71 ' ,   ,   , 0 .   '
+     O                 06N30   EXRT  L   86
+     O                 07N30   INTR  L   85
+     O                 08N30   YRAT  L   85
+     O                 09N30   YRAT  L   85
+     O                 06      SLCY      90
+     O                 33      CCY       90
+     O                 21 35N06AMT2     108 ' ,   ,   ,   , 0 '
+     O                 21 46N06AMT2     110 '   ,   ,   , 0 . '
+     O                 21 47N06AMT2     111 '  ,   ,   , 0 .  '
+     O                 21 48N06AMT2     112 ' ,   ,   , 0 .   '
+     O                 21 36 06AMT2     108 ' ,   ,   ,   , 0 '
+     O                 21 53 06AMT2     110 '   ,   ,   , 0 . '
+     O                 21 54 06AMT2     111 '  ,   ,   , 0 .  '
+     O                 21 55 06AMT2     112 ' ,   ,   , 0 .   '
+     O                 43               120 'INSERT'
+     O                 44               120 'DELETE'
+     O                 38               120 'AMEND'                       184216
+     O                         UDTM     131 '  .  '
+     O        DF 2     05N42N49
+     O                         CRNM      21
+     O                         CTWN      32
+     O        T 3      L1 65 75
+     O                                   61 '*** END OF'
+     O                                   79 ' BRANCH REPORT ***'
+     O        T 3      LRN65 75
+     O                                   61 '*** END OF'
+     O                                   72 ' REPORT ***'
+     O*
+     O        E  203           DBP1
+     O                                   24 'REFERENCE DL3420P1'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE1 Z  127
+     O                                   72 'LIST OF TODAYS DEALS'
+     O        E  1             DBP1
+     O                                   72 '--------------------'
+     O        E  230           DBP1
+     O                                   58 'DATABASE ERROR'
+     O                         DBASE     62
+     O                                   73 'IN PROGRAM'
+     ODL3440AUT  203   LR
+     O                                   24 'REFERENCE DL3420AU'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE1 Z  127
+     O        T  1     LR
+     O                                   72 'LIST OF TODAYS DEALS'
+     O        T  1     LR
+     O                                   72 '--------------------'
+     O        T  230   LR
+     O                                   18 'RUN CONTROLS'
+     O                                   72 '------------ REPORT'
+     O                                   83 '-----------'
+     O                                  116 '--------- FILE CONTROL'
+     O                                  124 '--------'
+     O        T  2     LR
+     O                                   59 'NUMBER'
+     O                                   84 'VALUE'
+     O                                   99 'NUMBER'
+     O                                  124 'VALUE'
+     O        T  2     LR
+     O                                   30 'RECORDS LISTED IN THIS'
+     O                                   37 'REPORT'
+     O                         RCCT  3   59
+     O        T  2     LR
+     O                                   28 'RECORDS BEFORE INPUT'
+     O                                   34 'CYCLE'
+     O                         NLRB  3   99
+     O                         VLBF  4  121
+     O                         VLBL     124
+     O        T  2     LR
+     O                                   24 'RECORDS INSERTED'
+     O                         ICT   3   59
+     O                         ITOTI 4   81
+     O                         ITOTD     84
+     O                         NINS  3   99
+     O                         VRIF  4  121
+     O                         VRIL     124
+     O                 51               128 '***'
+     O        T  2     LR
+     O                                   23 'RECORDS DELETED'
+     O                         DCT   3   59
+     O                         DTOTI 4   81
+     O                         DTOTD     84
+     O                         NDEL  3   99
+     O                         VRDF  4  121
+     O                         VRDL     124
+     O                 52               128 '***'
+     O        T  2     LR U8
+     O       OR        01 LRNU8
+     O                                   27 'RECORDS AFTER INPUT'
+     O                                   33 'CYCLE'
+     O                         NLRA  3   99
+     O                         VLAF  4  121
+     O                         VLAL     124
+     O        T  2     LR
+     O                                   25 'RECORDS READ FROM'
+     O                                   33 ' S/DTRXS'
+     O                         RECRD 3   59
+     O                         NORED 3   99
+     O                 57               128 '***'
+     O        T     01 LR U8
+     O                                  128 '***   DIFFERENCE   ***'
+     O*
+     O        E  203           DBAU
+     O                                   24 'REFERENCE DL3420AU'
+     O                         TITL      89
+     O                                  104 'DATE'
+     O                         RUNA     112
+     O                                  122 'PAGE'
+     O                         PAGE1 Z  127
+     O                                   72 'LIST OF TODAYS DEALS'
+     O        E  1             DBAU
+     O                                   72 '--------------------'
+     O        E  230           DBAU
+     O                                   58 'DATABASE ERROR'
+     O                         DBASE     62
+     O                                   73 'IN PROGRAM'
+     O                         DBPGM     84
+     O        E  1             DBAU
+     O                                   52 'FILENAME'
+     O                         DBFILE    61
+     O                                   65 'KEY'
+     O                         DBKEY     95
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

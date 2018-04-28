@@ -1,0 +1,685 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Update Copy Database')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3101 - EXTEL Update Copy Database                          *
+     F*                                                               *
+     F*  Function: The copy EXTEL database, which if also maintained  *
+     F*            on disk, is updated with each item of change data  *
+     F*            received via the EXTEL daily changes transmission, *
+     F*            thereby maintaining an up-to-date copy database.   *
+     F*                                                               *
+     F*  Called by: SEC3104 - EXTEL Daily Changes Update Control      *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. 052254             DATE 11JAN94               *
+     F*  PREV AMEND NO. E29170             DATE 14NOV91               *
+     F*                 S01117             DATE 10JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multi-branching                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+      *****************************************************************
+     F*
+     FEXTELF1 IF  E                    DISK
+     FTABTB10 IF  E                    DISK
+     FEXTELZ  IF  E                    DISK
+     FEXTF4A  IF  E                    DISK
+     FEXTF4B  IF  E                    DISK
+     FEXTF4C  IF  E                    DISK
+     FEXTF4D  IF  E                    DISK
+     FEXTF4E  IF  E                    DISK
+     FEXTF4F  IF  E                    DISK
+     FEXTF4G  IF  E                    DISK
+     FEXTF4H  IF  E                    DISK
+     FEXTF4I  IF  E                    DISK
+     FEXTF4J  IF  E                    DISK
+     FEXTF4K  IF  E                    DISK
+     FEXTF4L  IF  E                    DISK
+     FEXCDB   UF  E           K        DISK
+     FEXCDF4A UF  E                    DISK
+     FEXCDF4B UF  E                    DISK
+     FEXCDF4C UF  E                    DISK
+     FEXCDF4D UF  E                    DISK
+     FEXCDF4E UF  E                    DISK
+     FEXCDF4F UF  E                    DISK
+     FEXCDF4G UF  E                    DISK
+     FEXCDF4H UF  E                    DISK
+     FEXCDF4I UF  E                    DISK
+     FEXCDF4J UF  E                    DISK
+     FEXCDF4K UF  E                    DISK
+     FEXCDF4L UF  E                    DISK
+     FSE3101AUO   E                    PRINTER
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   55 - To check for Database Errors                           *
+     F*   56 - To Check for Records on PF/EXTELF1                     *
+     F*   57 -  To Check for corresponding Records on EXCDB           *
+     F*   58 -  To Check for Records on PF/EXTELZ                     *
+     F*   59 -  Sedol number not on PF/EXCDB & not valid              *
+     F*10-33 - Database Errors for Header files                       *
+     F*U7&U8 - Database Error Indicators                              *
+     F*   U8 -  File out of Balance Indicator                         *
+     F*   LR -  Program Termination                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*
+     E                    CPY@    1   1 80
+     E                    SN1     7   7  1 0
+     E                    SN2         7  1 0
+     E                    SN3         7  2 0
+     E*  Sedol number validation arrays
+     E*
+      /EJECT
+     I            DS
+     I*  Sedol number validation
+     I                                        1   70WRK7
+     I                                        1   70SN2
+     I*
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I*  Defining Local Data Area to display Error Messages
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+      *
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*****************************************************************
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C*
+     C           1         CHAINTABTB10              55
+     C*
+     C*  To check for Database Errors
+     C*
+     C           *IN55     IFEQ '1'                        **** B001
+     C           RECI      ORNE 'D'
+     C                     EXSR DBERR
+     C                     END                             **** E001
+     C*
+     C*  To Update Copy Database File with Customer Details
+     C*  from PF/EXTELF1(Customer Detail file)
+     C*
+     C                     READ EXTELF1                  56
+     C*
+     C           *IN56     DOWNE'1'                        **** B001
+     C                     ADD  1         COUNT
+     C*
+     C                     Z-ADDF1SCP     WRK7    70
+     C           WRK7      CHAINEXCDBDF              57
+     C*
+     C*   If not found on PF/EXCDB, may be new security.
+     C*   Check if valid Sedol number.
+     C*
+     C           *IN57     IFEQ '1'                        **** B002
+     C                     EXSR CHKSN
+     C                     END                             **** E002
+     C*
+     C*   If not valid Sedol number database error
+     C*
+     C           *IN57     IFEQ '1'                        **** B002
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVELWRK7      DBKEY            ***************
+     C                     Z-ADD02        DBASE            * DB ERROR 02 *
+     C                     MOVE 'EXCDB'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                             **** E002
+     C*
+     C*   Skip if valid Sedol number but not on PF/EXCDB
+     C*
+     C           *IN59     IFEQ '0'                        **** B002
+     C                     Z-ADDF4P       F4U
+     C                     Z-ADDF5P       F5U
+     C                     MOVE F6P       F6U
+     C                     MOVE F3P       F3U
+     C*
+     C                     UPDATEXCDBDF
+     C                     ADD  1         COUNT1
+     C*
+     C                     ELSE                            **** X002
+     C                     MOVE '0'       *IN59
+     C*
+     C                     END                             **** E002
+     C*
+     C                     READ EXTELF1                  56
+     C*
+     C                     END                             **** E001
+     C*
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4A with records from PF/EXTF4A
+     C*
+     C                     READ EXCDF4A                  10
+     C*
+     C           *IN10     IFEQ '1'
+     C           XRTYP     ORNE 'A'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'A'       DBKEY            ***************
+     C                     Z-ADD04        DBASE            * DB ERROR 04 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4A               11
+     C*
+     C           *IN11     IFEQ '1'
+     C           XRTYP     ORNE 'A'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'A'       DBKEY            ***************
+     C                     Z-ADD05        DBASE            * DB ERROR 05 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4AF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4B with records from PF/EXTF4B
+     C*
+     C                     READ EXCDF4B                  12
+     C*
+     C           *IN12     IFEQ '1'
+     C           XRTYP     ORNE 'B'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'B'       DBKEY            ***************
+     C                     Z-ADD06        DBASE            * DB ERROR 06 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4B               13
+     C*
+     C           *IN13     IFEQ '1'
+     C           XRTYP     ORNE 'B'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'B'       DBKEY            ***************
+     C                     Z-ADD07        DBASE            * DB ERROR 07 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4BF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4C with records from PF/EXTF4C
+     C*
+     C                     READ EXCDF4C                  14
+     C*
+     C           *IN14     IFEQ '1'
+     C           XRTYP     ORNE 'C'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'C'       DBKEY            ***************
+     C                     Z-ADD08        DBASE            * DB ERROR 08 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4C               15
+     C*
+     C           *IN15     IFEQ '1'
+     C           XRTYP     ORNE 'C'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'C'       DBKEY            ***************
+     C                     Z-ADD09        DBASE            * DB ERROR 09 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4CF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4D with records from PF/EXTF4D
+     C*
+     C                     READ EXCDF4D                  16
+     C*
+     C           *IN16     IFEQ '1'
+     C           XRTYP     ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'D'       DBKEY            ***************
+     C                     Z-ADD10        DBASE            * DB ERROR 10 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4D               17
+     C*
+     C           *IN17     IFEQ '1'
+     C           XRTYP     ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'D'       DBKEY            ***************
+     C                     Z-ADD11        DBASE            * DB ERROR 11 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4DF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4E with records from PF/EXTF4E
+     C*
+     C                     READ EXCDF4E                  18
+     C*
+     C           *IN18     IFEQ '1'
+     C           XRTYP     ORNE 'E'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'E'       DBKEY            ***************
+     C                     Z-ADD12        DBASE            * DB ERROR 12 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4E               19
+     C*
+     C           *IN19     IFEQ '1'
+     C           XRTYP     ORNE 'E'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'E'       DBKEY            ***************
+     C                     Z-ADD13        DBASE            * DB ERROR 13 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4EF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4F with records from PF/EXTF4F
+     C*
+     C                     READ EXCDF4F                  20
+     C*
+     C           *IN20     IFEQ '1'
+     C           XRTYP     ORNE 'F'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'F'       DBKEY            ***************
+     C                     Z-ADD14        DBASE            * DB ERROR 14 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4F               21
+     C*
+     C           *IN21     IFEQ '1'
+     C           XRTYP     ORNE 'F'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'F'       DBKEY            ***************
+     C                     Z-ADD15        DBASE            * DB ERROR 15 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4FF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4G with records from PF/EXTF4G
+     C*
+     C                     READ EXCDF4G                  22
+     C*
+     C           *IN22     IFEQ '1'
+     C           XRTYP     ORNE 'G'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'G'       DBKEY            ***************
+     C                     Z-ADD16        DBASE            * DB ERROR 16 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4G               23
+     C*
+     C           *IN23     IFEQ '1'
+     C           XRTYP     ORNE 'G'
+     C                     MOVEL'G'       DBKEY            ***************
+     C                     Z-ADD17        DBASE            * DB ERROR 17 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4GF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4H with records from PF/EXTF4H
+     C*
+     C                     READ EXCDF4H                  24
+     C*
+     C           *IN24     IFEQ '1'
+     C           XRTYP     ORNE 'H'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'H'       DBKEY            ***************
+     C                     Z-ADD18        DBASE            * DB ERROR 18 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4H               25
+     C*
+     C           *IN25     IFEQ '1'
+     C           XRTYP     ORNE 'H'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'H'       DBKEY            ***************
+     C                     Z-ADD19        DBASE            * DB ERROR 19 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4HF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4I with records from PF/EXTF4I
+     C*
+     C                     READ EXCDF4I                  26
+     C*
+     C           *IN26     IFEQ '1'
+     C           XRTYP     ORNE 'I'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'I'       DBKEY            ***************
+     C                     Z-ADD20        DBASE            * DB ERROR 20 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4I               27
+     C*
+     C           *IN27     IFEQ '1'
+     C           XRTYP     ORNE 'I'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'I'       DBKEY            ***************
+     C                     Z-ADD21        DBASE            * DB ERROR 21 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4IF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4J with records from PF/EXTF4J
+     C*
+     C                     READ EXCDF4J                  28
+     C*
+     C           *IN28     IFEQ '1'
+     C           XRTYP     ORNE 'J'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'J'       DBKEY            ***************
+     C                     Z-ADD22        DBASE            * DB ERROR 22 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4J               29
+     C*
+     C           *IN29     IFEQ '1'
+     C           XRTYP     ORNE 'J'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'J'       DBKEY            ***************
+     C                     Z-ADD23        DBASE            * DB ERROR 23 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4JF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4K with records from PF/EXTF4K
+     C*
+     C                     READ EXCDF4K                  30
+     C*
+     C           *IN30     IFEQ '1'
+     C           XRTYP     ORNE 'K'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'K'       DBKEY            ***************
+     C                     Z-ADD24        DBASE            * DB ERROR 24 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4K               31
+     C*
+     C           *IN31     IFEQ '1'
+     C           XRTYP     ORNE 'K'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'K'       DBKEY            ***************
+     C                     Z-ADD25        DBASE            * DB ERROR 25 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4KF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Update Header File PF/EXCDF4L with records from PF/EXTF4L
+     C*
+     C                     READ EXCDF4L                  32
+     C*
+     C           *IN32     IFEQ '1'
+     C           XRTYP     ORNE 'L'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'L'       DBKEY            ***************
+     C                     Z-ADD26        DBASE            * DB ERROR 26 *
+     C                     MOVE 'EXCF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C           1         CHAINEXTF4L               33
+     C*
+     C           *IN33     IFEQ '1'
+     C           XRTYP     ORNE 'L'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'L'       DBKEY            ***************
+     C                     Z-ADD27        DBASE            * DB ERROR 27 *
+     C                     MOVE 'EXTF4'   DBFILE           ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     UPDATEXCDF4LF
+     C*
+     C                     ADD  1         COUNT2
+     C/SPACE 3
+     C*
+     C*  To Calculate any Differences in Accumulator Totals
+     C*  and to Produce EXTEL Run Control Report
+     C*
+     C           1         CHAINEXTELZ               58
+     C*
+     C           *IN58     IFEQ '1'                        **** B001
+     C                     EXSR DBERR
+     C                     END                             **** E001
+     C*
+     C                     MOVE *BLANKS   DIFF
+     C                     MOVE *BLANKS   DIFF1
+     C*
+     C           NCRD      IFNE COUNT                      **** B001
+     C                     MOVE '***'     DIFF
+     C                     SETON                         U8
+     C                     END                             **** E001
+     C*
+     C           COUNT     IFNE COUNT1                     **** B001
+     C                     MOVE '***'     DIFF1
+     C                     END                             **** E001
+     C*
+     C*  To Produce Run Control Report
+     C*
+     C                     WRITEHEADER
+     C                     WRITEDETAIL
+     C***********          WRITEREPORT                                    E29170
+     C*
+     C*  To Terminate the Program
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*   Subroutine CHKSN - To check if Sedol Number is valid        *
+     C*                                                               *
+     C*   Called by :   Initial Process                               *
+     C*                                                               *
+     C*   Calls     :   None                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CHKSN     BEGSR
+     C*
+     C           SN1       MULT SN2       SN3
+     C                     XFOOTSN3       TSN     30
+     C                     DIV  10        TSN
+     C                     MVR            TSN        575759
+     C*
+     C                     ENDSR
+     C*
+     C*******************************************************************
+     C/SPACE 3
+     C*******************************************************************
+     C*                                                                 *
+     C*   Subroutine DBERR - To Display ERROR Messages                  *
+     C*                                                                 *
+     C*   Called by :   Initial Process                                 *
+     C*                 Final Process                                   *
+     C*                                                                 *
+     C*   Calls     :   None                                            *
+     C*                                                                 *
+     C*******************************************************************
+     C*
+     C           DBERR     BEGSR                           **** B001
+     C*
+     C                     SETON                     U7U8LR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   TABKEY 12
+     C                     MOVE *BLANKS   REASON 15
+     C                     MOVEL'SE3101'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C           *IN55     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'10'      TABKEY
+     C                     MOVE '01'      TABKEY           ***************
+     C                     Z-ADD01        DBASE            * DB ERROR 01 *
+     C                     MOVE 'TABTB'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     END
+     C*
+     C           *IN58     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TRAILER' REASON
+     C                     MOVE 'MISSING' REASON           ***************
+     C                     Z-ADD03        DBASE            * DB ERROR 03 *
+     C                     MOVE 'EXTLZ'   DBFILE           ***************
+     C                     MOVELREASON    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     END
+     C*
+     C                     WRITEHEADER
+     C                     WRITEDETAIL
+     C                     WRITEERROR
+     C***********          WRITEREPORT                                    E29170
+     C*
+     C***********          DUMP                                           S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C                     RETRN
+     C                     ENDSR                           **** E001
+     C*                                                                 *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*******************************************************************
+      /SPACE 3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** SN1 - Sedol number check digits
+1317391

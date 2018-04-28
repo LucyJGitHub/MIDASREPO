@@ -1,0 +1,157 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas UP Shell to add text to deliverables list')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - UP Module                                           */
+/*                                                                   */
+/*       UPC2095 - Shell for adding text to deliverables list        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CUT011             Date 13Mar08              */
+/*       Prev Amend No. CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CPK018             Date 23Feb04              */
+/*                      CUP024             Date 13Jun03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CPK015             Date 05Mar02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.01 ---------------------------------------------------*/
+/*                      CUP003 *CREATE     Date 29Sep99              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT011 - Read to end of file so that it is closed.          */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CPK018 - MidasPlus packaging.  Remove CHKLIBLE processing.  */
+/*       CUP024 - Migration of Bridge ICD to the System Values file. */
+/*       CPK015 - 4.01 packaging. Add MONMSG to error processing.    */
+/*       CUP003 - Utility to add text to driving file                */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                       */ /*CUP033*/
+             PGM        PARM(&BRGSVAL)                                                    /*CUP033*/
+ 
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
+/**COPY*UPCPYSRCG,UPGSVALDCL*                                        */ /*  */ /*CUP024*/ /*CUP033*/
+             DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)                                  /*CUP033*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&UPSTATPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
+             DCLF       FILE(UPGSVALJ0)                                                   /*CUP033*/
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create data area MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+/************RCVF                                                                      */ /*CUP024*/
+/**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*  */ /*CUP024*/ /*CUP033*/
+ 
+/**Check*if*all*relevant*fields*have*been*entered*in*ICD**/ /*                         */ /*CUP033*/
+ 
+/**********  IF         COND(&PTFUPG *EQ ' ') THEN(DO)                                 */ /*CUP033*/
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF                                                                         /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)                               /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+/**********     GOTO       CMDLBL(CHECK)                                    */ /*CUP033*/ /*CUT011*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+/* Set up messages for Midas Information Screen  */
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('UPC2095' 'ENTER' ' ')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**CHKLIBLE:                                                                           */ /*CPK018*/
+/**********  CHGVAR     VAR(&RETURN) VALUE(' ')                                        */ /*CPK018*/
+ 
+/**********  CHKLIBLE   LIBS(&PTFUPG) RETURN(&RETURN)                                  */ /*CPK018*/
+ 
+/**********  IF         COND(&RETURN *EQ 'F') THEN(DO)                                 */ /*CPK018*/
+/**********     EDTLIBL                                                                */ /*CPK018*/
+/**********     GOTO       CMDLBL(CHKLIBLE)                                            */ /*CPK018*/
+/**********  ENDDO                                                                     */ /*CPK018*/
+ 
+             RMVLIBLE   LIB(&PTFUPG)
+             MONMSG     MSGID(CPF0000)
+ 
+             ADDLIBLE   LIB(&PTFUPG) POSITION(*FIRST)
+ 
+             CHGVAR     VAR(&RETURN) VALUE(' ')
+ 
+             CALL       PGM(UPC0095) PARM(&RETURN)
+/*If the program ended abnormally then display general message */
+             IF         COND(&RETURN *NE ' ') THEN(DO)
+                RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                       MSGDTA('UPC0095') MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('UPC0095' 'JOBLOG' 'Y')
+                GOTO       CMDLBL(END)
+             ENDDO
+/*If the program encountered errors then display specific messages */
+             CHGVAR     VAR(&UPSTATPOS) VALUE(0)
+/**********  CALL       PGM(UPC0015) PARM('UPDLVCLJ' 'UPDLVCLK' +                      */ /*CPK018*/
+/**********            'UPC0095' &UPSTATPOS &RETURN)                                   */ /*CPK018*/
+             CALL       PGM(UPC0015) PARM('UPDLVCLK' 'UPC0095' +
+                          &UPSTATPOS &RETURN)                                             /*CPK018*/
+             IF         COND(&RETURN *NE ' ') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**Call*program*to*clear*down*status*fields**/ /*                                      */ /*CUP033*/
+/**********  CALL       PGM(UPC0021)                                                   */ /*CUP033*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC2095') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)                                                    /*CPK015*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)                                                    /*CPK015*/
+             CALL       PGM(SCC0010) PARM('UPC2095' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*CPK015*/
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

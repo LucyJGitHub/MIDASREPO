@@ -1,0 +1,685 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Stock Register list  - By Company')
+      **************************************************************************
+      *                                                                        *
+      *  Midas - Standing Data Module                                 *    *
+      *                                                                        *
+      *   SD0937 - Stock Register list  - by Company                           *
+      *                                                                        *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                                        *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01469             Date 06Mar94               *
+      *                                                                        *
+      **************************************************************************
+      *                                                                        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  S01469 - GERMAN FEATURE INCORPORATED INTO RELEASE 10                  *
+      *                                                                        *
+      **************************************************************************
+      *                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+      **************************************************************************
+      *
+      *-------------------------------------------------------------------------
+      *  Use of indicators:
+      *
+      *  *IN01  -  Overflow on SD0937P1
+      *  *IN10  -  Force customer detail output if retail account to be output
+      *  *IN21  -  Customer not live, print 'Date deleted'
+      *  *IN22  -  Account closed, print 'Date account closed'
+      *  *IN23  -  Print 'Date of first contact'
+      *  *IN30  -  Full list/on - COB processing/off
+      *  *IN50  -  Level break on customer, output new details
+      *  *IN51  -  Level break on account, output new details
+      *  *IN80  -  LOKUP operation successful
+      *  *IN88  -  Condition secondary READ loop
+      *  *IN89  -  Condition main READ loop
+      *  *IN90  -  Condition '*** NO DETAIL TO REPORT ***' output
+      *  *IN91  -  FIRST CYCLE INDICATOR
+      *  *IN92  -  MULTIBRANCH INDICATOR
+      *  *IN93  -  NO DETAILS FOR A COMPANY
+      *  *IN95  -  DATABASE error
+      *  *IN98  -  DATE FORMAT INDICATOR
+      *  *INU2  -  On = On request processing, Off = COB processing
+      *  *INLR  -  End processing
+      *-------------------------------------------------------------------------
+     FSD0937AUO   E                    PRINTER      KINFDS SPOOLU
+     FSD0937P1O   E             01     PRINTER      KINFDS SPOOL      UC
+     FSDCUSTJ0IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+      *-------------------------------------------------------------------------
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+     E                    MON     1  12  9
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+      *-------------------------------------------------------------------------
+      *
+     I*     LOCAL DATA AREA
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISPOOL       DS
+     I** FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I*  FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I            DS
+      *
+      * Use a DS to access file fields via the PRTF field names
+      * thus avoiding MOVE operations
+     I                                        1   6 BBCUST
+     I                                        1   6 P1CNUM
+     I                                        1   6 P1CUST
+      *
+     I                                        7  26 BBCRNM
+     I                                        7  26 P1CRNM
+      *
+     I                                       27  29 CCY
+     I                                       27  29 P1CCY
+      *
+     I**********                             30  330ACOD                                      CGL029
+     I**********                             30  33 P1ACOD                                    CGL029
+     I                                       30  390ACOD                                      CGL029
+     I                                       30  39 P1ACOD                                    CGL029
+      *
+     I**********                             34  350ACSQ                                      CGL029
+     I**********                             34  35 P1ACSQ                                    CGL029
+     I                                       40  410ACSQ                                      CGL029
+     I                                       40  41 P1ACSQ                                    CGL029
+      *
+     I**********                             36  450ACNO                                      CGL029
+     I**********                             36  45 P1ACNO                                    CGL029
+     I                                       42  510ACNO                                      CGL029
+     I                                       42  51 P1ACNO                                    CGL029
+     I*
+     I**********                             46  48 BRCA                                      CGL029
+     I**********                             46  48 P1BRCD                                    CGL029
+     I                                       52  54 BRCA                                      CGL029
+     I                                       52  54 P1BRCD                                    CGL029
+     I*
+     I* DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+     I*
+     ISDBANK    E DSSDBANKPD
+      *  External DS for Bank Details
+     ISDMMOD    E DSSDMMODPD
+      *  External DS for Modules Details
+     ISDCOMP    E DSSDCOMPPD
+      *  EXTERNAL DS FOR COMPANY DETAILS
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Initial processing
+      *-------------------------------------------------------------------------
+     C*
+     C* FIRST CYCLE PROCESSING
+     C*
+     C           *IN91     IFEQ '0'
+     C                     SETON                     91
+      *
+      * Determine whether COB or I/C processing required
+      *
+     C                     MOVE *INU2     *IN30
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*    DEFINE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ
+     C                     PARM           ENT     3
+     C*
+     C* OBTAIN RUN DATE, DATE FORMAT AND TITLE FROM SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '        '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SD0937  'DBPGM            ** DBASE 001 **
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     OUT  LDA
+     C                     SETON                     95U7U8
+     C                     SETON                     LR
+     C                     EXSR *PSSR
+     C                     WRITEAUDIT
+     C                     WRITESD0937TU
+     C                     GOTO END
+     C                     END
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C* Obtain Multibranching Indicator from SDMMODPD
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM '        '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL'SD0937  'DBPGM            ** DBASE 003 **
+     C                     MOVEL'SDMMODPD'DBFILE           ***************
+     C                     OUT  LDA
+     C                     SETON                     95U7U8
+     C                     SETON                     LR
+     C                     EXSR *PSSR
+     C                     WRITEAUDIT
+     C                     WRITESD0937TU
+     C                     GOTO END
+     C                     END
+     C*
+     C           BGMBIN    IFEQ 'Y'
+     C                     SETON                     92
+     C                     END
+     C*
+     C                     END
+      *
+      * Redefine key fields for program
+      *
+     C           *LIKE     DEFN BBCMCD    KCMCD
+     C           *LIKE     DEFN CNUM      KCNUM
+     C           *LIKE     DEFN CCY       KCCY
+     C           *LIKE     DEFN ACOD      KACOD
+     C           *LIKE     DEFN ACSQ      KACSQ
+      *
+      * Define KLIST to SETTLs on ACCNT
+      *
+     C           KSACCN    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+      *
+      * Setup key field values for SETLLs
+      *
+     C                     MOVE *LOVAL    KCCY
+     C                     MOVE *LOVAL    KACOD
+     C                     MOVE *LOVAL    KACSQ
+      *
+      * Force headings to be output for first page
+      *
+     C                     MOVE '1'       *IN01
+      *
+      * SET ON INDICATOR FOR '*** NO DETAILS TO REPORT***'
+      *
+     C                     MOVE '1'       *IN90
+      *
+      * SET ON INDICATOR FOR NO DETAILS IN ONE COMPANY
+      *
+     C                     MOVE '1'       *IN93
+      *
+      * Special processing for COB
+      *
+     C           *IN30     IFEQ '0'
+      *
+      * Get month full name
+      *
+     C                     MOVELBJMRDT    WWRK    5
+     C                     MOVE WWRK      WWRK1   3
+     C                     Z-ADD1         X       20
+     C           WWRK1     LOKUPZMNM,X                   80
+      *
+     C                     MOVEAMON,X     MONTH
+      *
+      * Get first day of the month - WWFDM
+      *
+     C                     MOVELBJMRDT    WWDAY   20
+     C                     SUB  1         WWDAY
+     C           BJRDNB    SUB  WWDAY     WWFDM   50
+      *
+     C                     END
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Main processing - loop on customer
+      *
+     C           ENT       IFNE 'ALL'
+     C                     MOVE ENT       KCMCD
+     C           KCMCD     CHAINSDCUSTJ0             89
+     C                     ELSE
+     C                     MOVE *LOVAL    KCMCD
+     C           KCMCD     SETLLSDCUSTJ0
+     C                     READ SDCUSTJ0                 89
+     C                     END
+      *
+     C           *IN89     DOWEQ'0'
+      *
+      * Reset indicator for every customer
+      *
+     C                     MOVE '0'       *IN10
+      *
+      * SET ON INDICATOR FOR DETAILS IN THIS COMPANY
+      *
+     C                     MOVE '1'       *IN93
+      *
+      * Format 'Customer original entry date' and increment counter
+      *
+     C           *IN30     IFEQ '1'                        COB RUN
+     C                     EXSR SORED
+     C                     MOVE '1'       *IN50
+     C           BBDTDL    IFEQ 0
+     C                     ADD  1         P2LCUS
+     C                     END
+      *
+     C                     ELSE                            INPUT CYCLE
+      *
+     C           BBORED    IFGE WWFDM                      1ST DAY OF MNTH
+     C           BBDTDL    ORGE WWFDM
+     C           BBLCD     ORGE WWFDM
+     C                     MOVE '1'       *IN50
+     C                     EXSR SORED
+      *
+      * Only increment opened customers total if opened this
+      * month
+     C           BBORED    IFGE WWFDM
+     C                     ADD  1         P2OCUS
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      * Format 'Date deleted'
+      *
+     C           BBDTDL    IFNE 0
+     C           *IN30     IFEQ '1'                        COB RUN
+     C                     MOVE '1'       *IN50
+     C                     EXSR SDADE
+      *
+     C                     ELSE                            INPUT CYCLE RUN
+      *
+     C           BBDTDL    IFGE WWFDM
+     C                     MOVE '1'       *IN50
+     C                     EXSR SDADE
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      * Get all retail accounts for this customer
+      *
+     C                     MOVELBBCUST    KCNUM
+     C           KSACCN    SETLLACCNT
+     C           KCNUM     READEACCNT                    88
+      *
+     C           *IN88     DOWEQ'0'
+      *
+      * If retail account opened, closed or changed this month
+      *
+     C           ATYP      IFEQ 'R'                        RETAIL A/C ONLY
+      *
+      * Format 'Original entry date' and increment counter
+      *
+     C           *IN30     IFEQ '1'                        COB RUN
+     C                     EXSR SOREDA
+     C                     MOVE '1'       *IN51
+     C           RECI      IFEQ 'D'                        LIVE RECORDS
+     C                     ADD  1         P2LRAC
+     C                     END
+      *
+     C                     ELSE                            INPUT CYCLE RUN
+      *
+     C           ORED      IFGE WWFDM
+     C           DACC      ORGE WWFDM
+     C           LCD       ORGE WWFDM
+     C                     MOVE '1'       *IN51
+     C                     EXSR SOREDA
+      *
+      * Only increment opened accounts total if opened since
+      * the first of the month
+     C           ORED      IFGE WWFDM
+     C                     ADD  1         P2ORAC
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      * Format 'Date account closed'
+      *
+     C           RECI      IFNE 'D'
+     C           *IN30     IFEQ '1'
+     C                     EXSR SDACC
+     C                     MOVE '1'       *IN51
+      *
+     C                     ELSE
+      *
+     C           DACC      IFGE WWFDM
+     C                     MOVE '1'       *IN51
+     C                     EXSR SDACC
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      * Force customer details output even if customer not opened, closed
+      * or changed this month, but only if account read is to be output, i.e.
+      * first account to be output, *IN10 must be off.
+      *
+     C           *IN10     IFEQ '0'
+     C           *IN51     ANDEQ'1'
+      *
+     C           *IN50     IFEQ '0'
+     C                     MOVE '1'       *IN50
+     C                     EXSR SORED
+     C                     END
+      *
+      * Reset indicator for next accounts, i.e. do not output customer details
+      * line for every account|
+      *
+     C                     MOVE '1'       *IN10
+     C                     END
+      *
+      * Print account details line
+     C                     EXSR SPRINT
+     C                     END
+      *
+      * Read next account
+      *
+     C           KCNUM     READEACCNT                    88
+     C                     END
+      *
+      * Print customer details line here if no retail accounts found
+      *
+     C                     EXSR SPRINT
+      *
+      * Read next customer
+      *
+     C           ENT       IFNE 'ALL'
+     C           KCMCD     READESDCUSTJ0                 89
+     C                     ELSE
+     C                     READ SDCUSTJ0                 89
+     C                     END
+     C                     END
+      *
+      * Calculate totals for audit list.
+      *
+     C           *IN30     IFEQ '1'
+     C           P2LCUS    ADD  P2CCUS    P2TCUS
+     C           P2LRAC    ADD  P2CRAC    P2TRAC
+     C                     END
+      *
+      * Execute print subroutine for trailer.
+      *
+     C                     MOVE '0'       *IN01
+     C                     EXSR SPRINT
+      *
+      * Execute subroutine for audit report and LR on.
+      *
+     C                     EXSR SAUDIT
+     C           END       TAG
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SDACC - Subroutine to format 'Date account closed'
+      *-------------------------------------------------------------------------
+      *
+     C           SDACC     BEGSR
+      *
+      * Format 'Date account closed'
+      *
+     C                     Z-ADDDACC      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     P1DACL
+     C                     ADD  1         P2CRAC
+     C                     MOVE '1'       *IN22
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SOREDA - Subroutine to format 'Original entry date'
+      *-------------------------------------------------------------------------
+      *
+     C           SOREDA    BEGSR
+      *
+      * Format 'Original entry date'
+      *
+     C                     Z-ADDORED      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     P1ORED
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SORED - Subroutine to format 'Customer original entry date'
+      *-------------------------------------------------------------------------
+      *
+     C           SORED     BEGSR
+      *
+     C                     Z-ADDBBORED    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     P1DFCT
+     C                     MOVE '1'       *IN23
+      *
+      * SET OFF '*** NO DETAILS TO REPORT ***' INDICATOR AS AT LEAST ONE    mer
+      * CUSTOMER IS PRESENT AND OPEN THE DETAILED REPORT
+      *
+     C                     MOVE '0'       *IN90
+     C                     MOVE '0'       *IN93
+      *
+      * Check for Change of Company and at least one record
+      *
+     C           BBCMCD    IFNE CMCDX
+      *
+      *  If not the first time around, write trailer, close the file
+      *  and open new spool file for the new company.
+      *
+     C           CMCDX     IFNE *BLANKS
+     C                     WRITESD0937T1
+     C                     END
+     C                     CLOSESD0937P1
+     C                     OPEN SD0937P1
+     C                     MOVE BBCMCD    CMCDX   3
+     C                     Z-ADD0         PAGE
+     C*
+     C**   TO GET COMPANY NAME
+     C*
+     C                     CALL 'AOCOMPR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BBCMCD    @DSNB   3
+     C           SDCOMP    PARM SDCOMP    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCOMPPD'DBFILE           *************
+     C                     MOVEL'002'     DBASE            * DBERR 002 *
+     C                     MOVEL'SD0937  'DBPGM            ************
+     C                     MOVEL@DSNB     DBKEY
+     C                     OUT  LDA
+     C                     SETON                     95U7U8
+     C                     SETON                     LR
+     C                     EXSR *PSSR
+     C                     WRITEAUDIT
+     C                     WRITESD0937TU
+     C                     GOTO END
+     C                     END
+     C*
+     C*   WRITE HEADER RECORDS AND SET OFF OVERFLOW INDICATOR
+     C*
+     C                     WRITESD0937H
+     C                     MOVE '0'       *IN01
+     C*
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     SFNUM1  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM CMCDX     SENTY
+     C                     PARM           SFILE
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SDADE - Subroutine to format 'Date deleted' and increment counter
+      *-------------------------------------------------------------------------
+      *
+     C           SDADE     BEGSR
+      *
+     C                     Z-ADDBBDTDL    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     P1DCLO
+     C                     MOVE '1'       *IN21
+     C                     ADD  1         P2CCUS
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SAUDIT - Subroutine for audit report
+      *-------------------------------------------------------------------------
+      *
+     C           SAUDIT    BEGSR
+     C*
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    SFNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           SFNUM2
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C* ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAMME
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C                     WRITEAUDIT
+      *
+      * Write 'NO DETAILS TO REPORT'
+      *
+     C           *IN90     IFEQ '1'
+     C                     WRITESD0937TU
+     C                     END
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*****************************************************************
+      /EJECT
+      *----------------------------------------------------------------
+      * SPRINT - Print subroutine
+      *----------------------------------------------------------------
+      *
+     C           SPRINT    BEGSR
+      *
+      * Write report headings if overflow.
+      *
+     C           *IN01     IFEQ '1'
+     C           *IN90     ANDNE'1'
+     C                     WRITESD0937H
+     C                     MOVE '0'       *IN01
+     C                     END
+      *
+      * Write customer details if customer changed.
+      *
+     C           *IN50     IFEQ '1'
+     C                     WRITESD0937F1
+     C                     MOVE '0'       *IN50
+     C                     END
+      *
+      * Write account details.
+      *
+     C           *IN51     IFEQ '1'
+      *
+      * Do not print 0000000000 retail account number
+      *
+     C           ACNO      IFEQ *ZEROS
+     C                     MOVEL*BLANKS   P1ACNO
+     C                     END
+      *
+     C                     WRITESD0937F2
+     C                     MOVE '0'       *IN51
+     C                     END
+      *
+      * Write report trailer.
+      *
+     C           *IN89     IFEQ '1'
+     C           *IN90     ANDNE'1'
+     C                     WRITESD0937T1
+     C                     END
+      *
+      * Reset indicators
+     C                     MOVEA'000'     *IN,21
+      *
+     C                     ENDSR
+      /EJECT
+0702 C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      * Include code for ZDATE2 subroutine
+      /COPY ZSRSRC,ZDATE2Z2
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** MON -  Array to contain month full names
+  JANUARY
+ FEBRUARY
+    MARCH
+    APRIL
+      MAY
+     JUNE
+     JULY
+   AUGUST
+SEPTEMBER
+  OCTOBER
+ NOVEMBER
+ DECEMBER
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

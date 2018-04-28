@@ -1,0 +1,163 @@
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Midas - Copy Source                                          *
+      *                                                               *
+      *  ZFWDT - Calculate Working Days Forward.                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  LAST AMEND NO. S01434             DATE 20SEP93               *
+      *  PREV AMEND NO. E38323             DATE 27JUL92               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  S01434 - There is an logic error when the array index 'ZINDX'*
+      *           holds the value '367' (days in year).               *
+      *                                                               *
+      *  E38323 - There is an incorrect gap to appear in the series   *
+      *           next working days. This error occurs under certain  *
+      *           circumstances: when a series of next working days   *
+      *           are required and the series goes from an old year   *
+      *           to a new year. The fix is to store the initial      *
+      *           value of ZDAYNO and z-add the value back to ZDAYNO  *
+      *           after the execution of the holiday checking routine *
+      *****************************************************************
+     C           ZFWDT     BEGSR
+      *
+      * Standard sub-routine to calculate up to 99 working days forward
+      * from a given start date.
+      * NB. Must be used in conjunction with ZACCH.
+      *
+      * NB: If required no. of working days forward is zero, then:-
+      *       if input date is a working day, then result is input date
+      *       else result is first working day after input date.
+      *
+      *     If required no. of working days forward is one, then:-
+      *       if input date is a working day, then result is next
+      *       working day
+      *       else result is first working day after input date.
+      *
+      * Thus, if input date is a holiday, then zero and one working day
+      * forward will return the same result.
+      *
+      *
+      **
+      *Define input parameters
+      **
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     MOVE ZCCY      ZCCY    3
+     C                     MOVE ZLOC      ZLOC    3                       S01194
+     C                     Z-ADDZNRDYS    ZNRDYS  20
+      **
+      *Define Output parameters
+      **
+     C                     Z-ADD0         ZDYNBR  50
+      *
+      * Move input date to output date
+      *
+      *
+     C                     Z-ADDZDAYNO    ZDYNBR
+      *
+      ** Save original value of ZDAYNO                                    E38323
+      *                                                                   E38323
+     C                     Z-ADDZDAYNO    ZDAYNT  50                      E38323
+      *
+      * Access holiday record
+      *
+     C                     MOVE '*SETGT ' ZOPTN
+     C                     EXSR ZACCH
+      *
+      * If no record was found, then just add no. of days forward
+      * required to input date to give output.
+      *
+     C           RTNCD     IFEQ '*NRF   '                  IF 1
+      *
+     C           ZDAYNO    ADD  ZNRDYS    ZDYNBR
+      *
+     C                     ELSE                            ELSE 1
+      *
+      * Otherwise, a holiday record was found and so need to count days
+      * forward to get required result.
+      *
+      * Subtract 1st. Jan date from given date and add 1 to give the
+      * nth day in the year (ZINDX).
+      *
+     C           ZDAYNO    SUB  DGJDNB    ZINDX
+     C                     ADD  1         ZINDX
+      *
+      * If no. of working days forward wanted is zero, then check first
+      * that given date is not a holiday. If it is, then change no. of
+      * days forward wanted to one to get next working day.
+      *
+     C           ZNRDYS    IFEQ 0                           IF 2
+     C           ZHL,ZINDX ANDEQ'X'
+     C                     ADD  1         ZNRDYS
+     C                     END                              FI 2
+      *
+      * While no. of working days left to find is greater than zero
+      *
+     C           ZNRDYS    DOWGT0                           DOW 1
+      *
+      * Add one to day in year index and to output date
+      *
+     C                     ADD  1         ZINDX
+     C                     ADD  1         ZDYNBR
+      *
+      * If output date is beyond stored 31st. Dec date, then need to
+      * get next holiday record with new parameters: output date is new
+      * input date; no. of days forward is current no. of days left to
+      * find.
+      *
+     C           ZDYNBR    IFGT DGDDNB                       IF 1
+      *
+     C                     Z-ADDZDYNBR    ZDAYNO
+      *
+      *
+     C                     MOVE '*SETGT ' ZOPTN
+     C                     EXSR ZACCH
+      *
+      * If no record was found, then add no. of days left to find to
+      * output date and subtract 1 to give required result and change
+      * no. left to find to zero to terminate loop.
+      *
+     C           RTNCD     IFEQ '*NRF   '                     IF 2
+      *
+     C                     ADD  ZNRDYS    ZDYNBR
+     C                     SUB  1         ZDYNBR
+     C                     Z-ADD0         ZNRDYS
+      *
+     C                     ELSE                               ELSE 2
+      *
+      * Otherwise, reset day in year value to one.
+      *
+     C                     Z-ADD1         ZINDX
+      *
+     C                     END                                FI 2
+      *
+     C                     END                               FI 1
+      *
+      * If working day then no. left to find is one less
+      *
+     C***********ZHL,ZINDX IFEQ ' '                          IF 1         S01434
+     C           ZNRDYS    IFNE 0                            IF 1         S01434
+     C           ZHL,ZINDX ANDEQ' '                          AND1         S01434
+     C                     SUB  1         ZNRDYS
+     C                     END                               FI 1
+      *
+     C                     END                              ENW 1
+      *
+      ** Move back original value of ZDAYNO                               E38323
+     C                     Z-ADDZDAYNT    ZDAYNO                          E38323
+      *
+     C                     END                             FI 1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT

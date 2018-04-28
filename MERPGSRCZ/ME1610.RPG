@@ -1,0 +1,859 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME BIC plus repair')                             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module                            *
+     F*                                                               *
+     F*  ME1610  - BIC plus repair                                    *
+     F*                                                               *
+     F*  Function - This program is called from within the straight-  *
+     F*             through processing to provide message field repair*
+     F*             using the BIC Plus database. The program receives *
+     F*             a field to be repaired plus a field describing the*
+     F*             type of field to be repaired, either 'A' for BIC, *
+     F*             'B' for branch, 'C' for clearing code or 'D' for  *
+     F*             a free format address.                            *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR322362           Date 10Jun13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CFT007  *CREATE    Date 03Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  AR322362 - Wrong city in BIC directory.                      *
+      *           - Recompile due to changes to MEBICPL1              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CFT007 - BIC Database Plus Integration                       *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FMEBICPL1IF  E           K        DISK                           UC
+     F* BIC Plus file keyed by BIC
+     FMEZIPPL0IF  E           K        DISK
+     F* ZIP placement and clearing code
+     FMEXPHRL0IF  E           K        DISK
+     F* Excluded phrases
+     F*
+      /EJECT
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *
+      *   70      Read & Chain operation
+      *
+      *   90 - 99
+      *
+      *   U7      Data base error
+      *   U8      Data base error
+      *
+      /EJECT
+      *
+      *   SUB-ROUTINE DEFINITIONS
+      *   -----------------------
+      *
+      *   INIT    Initialisation
+      *   RBIC    Perform a repair on a S.W.I.F.T BIC field
+      *   RBRCH   Perform a repair on a branch  field
+      *   RCLRCD  Perform a repair on clearing code field
+      *   RADDRS  Perform a repair on a free text address
+      *
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+     E                    ALPH    1   1 37
+     E                    QRYA    1   1 80                             array
+     E                    QRYB    1   1 54                             array
+     E                    QRYC    1   1 38                             array
+     E                    QRYD    1   1 20                             array
+      * Working arrays
+     E                    QSLT      261  1
+     E                    WEX        71  1
+     E                    GRP        36 35               Groups        array
+     E                    GLN        36  2 0             Groups lenghtsarray
+     E                    WRD         5 35               Words         array
+     E                    WLN         5  2 0             Words lenghts array
+     I* Constant for query selection
+     I              '(BSINDX *CT '        C         CINDX
+     I              '*AND '               C         CAND
+      /EJECT
+      * Data structure for compilation - Copyright insertion
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I* Alphanumeric data structures
+     I            DS
+     I                                        1  37 ALPH
+     I                                        1  37 CALPH
+      *
+     I*     Data Structure to split input parameter data
+     I***@IDATA*     DS                            251                                        CGL029
+     I@IDATA      DS                            261                                           CGL029
+     I                                        1   1 IFLG
+     I                                        2   7 ICNUM
+     I                                        8  10 ICCY
+     I**********                             11  14 IACOD                                     CGL029
+     I                                       11  14 IACOQQ                                    CGL029
+     I                                       15  16 IASQN
+     I                                       17  19 IBRCA
+     I                                       20 251 IDATA
+     I                                      252 261 IACOD                                     CGL029
+      *  Address lines
+     I                                       20 194 IADDR
+     I                                       20  54 ILIN1
+     I                                       55  89 ILIN2
+     I                                       90 124 ILIN3
+     I                                      125 159 ILIN4
+     I                                      160 194 ILIN5
+      *  Used to identify the clearing codes
+     I                                       20  20 I1TO1
+     I                                       20  21 I1TO2
+     I                                       20  23 I1TO4
+      *
+     I*  Data Structure to split Output parameter data
+     I@ODATA      DS                            251
+      *  Address lines
+     I                                       20  54 OLIN1
+     I                                       55  89 OLIN2
+     I                                       20 194 OADDR
+     I                                       55 194 OL2TO5
+      *  Used to identify the clearing codes
+     I                                       20  20 O1TO1
+     I                                       20  21 O1TO2
+     I                                       20  23 O1TO4
+      *
+     I*  Data Structure for extracted address
+     I            DS
+     I                                        1  71 WEXTRC
+     I                                        1  71 WEX
+      *
+     I* Data Structure for query selection
+     ICOMMD       DS                            395
+     I                                        1  80 QRYA
+     I                                       81 134 QRYB
+     I                                      135 395 QSLT
+      *
+     IDSFDY     E DSDSFDY
+     ISDTRAD    E DSSDTRADPD
+      /EJECT
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      *
+      * Initialise program
+     C                     MOVEACPY@      BIS@   80
+     C                     EXSR INIT
+      *
+     C                     SELEC
+     C           @IOPTN    WHEQ 'A'
+      *  Perform a repair on a S.W.I.F.T. BIC.
+     C                     EXSR RBIC
+     C           @IOPTN    WHEQ 'B'
+      *  Perform a repair on a Branch.
+     C                     EXSR RBRCH
+     C           @IOPTN    WHEQ 'C'
+      *  Perform a repair on a Clearing Code.
+     C                     EXSR RCLRCD
+     C           @IOPTN    WHEQ 'D'
+      *  Perform a repair on a free format address.
+     C                     EXSR RADDRS
+     C                     OTHER
+      *  The input option code is invalid.
+     C                     MOVE 'NOTFND'  @RTCD
+     C                     ENDSL
+      *
+      * Terminate program
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RBIC     : Perform a repair on a S.W.I.F.T BIC               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           RBIC      BEGSR
+      *
+     C                     OPEN MEBICPL1
+     C           I1TO1     IFEQ '/'
+      * The data starts with a '/', so it contains an account line or
+      * clearing code in addition to the BIC.
+     C           11        SUBSTILIN2     WBIC   11
+     C                     ELSE
+     C           11        SUBSTILIN1     WBIC
+     C                     ENDIF
+      *
+     C                     MOVE WBIC      WXXX    3
+     C           WXXX      IFEQ '   '
+     C                     MOVE 'XXX'     WBIC
+     C                     ENDIF
+      * Access BIC Database Plus file
+     C           WBIC      CHAINMEBICPL1             70
+     C           *IN70     IFEQ *ON
+     C                     MOVE 'NOTFND ' @RTCD
+     C                     ELSE
+     C                     MOVE '*MAP   ' @RTCD
+     C                     MOVE @IDATA    @ODATA
+      *
+     C           I1TO2     IFEQ '//'
+     C           I1TO4     ANDNE'//FW'
+     C           I1TO4     ANDNE'//RT'
+      * The address starts with a clearing code.
+     C           BICHIP    IFNE *BLANKS
+     C           @ICCY     ANDEQBLUSCY
+     C                     MOVE *BLANKS   OLIN1
+     C           '//CH'    CAT  BICHIP    OLIN1
+     C                     ELSE
+      *
+      * Copy Clearing prefix and National Id into line 1 of the output
+      * data
+     C           BINATI    IFNE *BLANKS
+     C           BICNTY    CHAINMEZIPPL0             70
+     C           *IN70     IFEQ *ON
+     C           ZICPFX    OREQ *BLANKS
+     C                     MOVEL'//'      ZICPFX
+     C                     ENDIF
+     C           ZICPFX    CAT  BINATI    OLIN1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           WXXX      IFEQ 'XXX'
+     C           WXXX      OREQ *BLANKS
+     C                     MOVE '   '     WBIC
+     C                     ENDIF
+      *
+     C           I1TO1     IFEQ '/'
+     C                     MOVE *BLANKS   OLIN2
+     C                     MOVELWBIC      OLIN2
+     C                     ELSE
+     C                     MOVE *BLANKS   OLIN1
+     C                     MOVELWBIC      OLIN1
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     CLOSEMEBICPL1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RBRCH    : Perform a repair on a branch                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           RBRCH     BEGSR
+      *
+     C           I1TO2     IFNE '//'
+      * No repair can be done as it contains free text
+     C                     MOVE @IDATA    @ODATA
+     C                     MOVE '*MAP   ' @RTCD
+     C                     ELSE
+      * Retrieve the clearing code length
+     C           ' '       CHEKRILIN1     P2      30
+      * Build the query
+     C                     Z-ADD1         P
+     C           P         DOWLEP2
+     C           1         SUBSTILIN1:P   QSLT,P
+     C                     ADD  1         P
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+      *
+      * add JFLD() and SEQONLY() at the end of the query command
+     C                     Z-ADD1         P1      30
+     C           P1        DOWLE38
+     C           1         SUBSTQRYC,1:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+      *
+     C           135       ADD  P         PRMLEN
+      ** Execute the query
+     C                     CALL 'QCMDEXC'
+     C                     PARM           COMMD
+     C                     PARM           PRMLEN 155
+      *
+      * Open and read BIC database plus file
+     C                     OPEN MEBICPL1
+     C                     READ MEBICPL1                 70
+      *
+     C           *IN70     IFEQ *ON
+      * No record found
+     C                     MOVE 'NOTFND ' @RTCD
+      * Close query and file
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRYD
+     C                     PARM 20        PRMLEN 155
+     C                     CLOSEMEBICPL1
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      * Store Branch and City
+     C                     MOVE BIBNCH    WKBNCH
+     C                     MOVE BICITY    WKCITY
+     C                     READ MEBICPL1                 70
+      * Close query and file
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRYD
+     C                     PARM 20        PRMLEN 155
+     C                     CLOSEMEBICPL1
+     C           *IN70     IFEQ *OFF
+      * More than one matching record found
+     C                     MOVE 'NOTFND ' @RTCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C           WKBNCH    IFNE *BLANKS
+      * Calculate Branch length
+     C           ' '       CHEKRWKBNCH    WLEN    20
+     C           WLEN      IFGT 35
+     C                     MOVE 'FMTERR ' @RTCD
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ELSE
+     C                     MOVE @IDATA    @ODATA
+     C                     MOVELWKBNCH    OLIN2
+     C                     MOVE '*MAP   ' @RTCD
+     C                     ENDIF
+      *
+     C                     ELSE
+      * Branch is blank
+     C                     MOVE @IDATA    @ODATA
+     C                     MOVE WKCITY    OLIN2
+     C                     MOVE '*MAP   ' @RTCD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCLRCD   : Perform a repair on a clearing code               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           RCLRCD    BEGSR
+      *
+      * Retrieve the clearing code length
+     C           ' '       CHEKRILIN1     P2
+      * Build the query
+     C                     Z-ADD1         P
+     C           P         DOWLEP2
+     C           1         SUBSTILIN1:P   QSLT,P
+     C                     ADD  1         P
+     C                     ENDDO
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+      *
+      * add JFLD() and SEQONLY() at the end of the query command
+     C                     Z-ADD1         P1
+     C           P1        DOWLE38
+     C           1         SUBSTQRYC,1:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO
+      *
+      *  Calcutate command length
+     C           135       ADD  P         PRMLEN
+      *
+      ** Execute the query
+     C                     CALL 'QCMDEXC'
+     C                     PARM           COMMD
+     C                     PARM           PRMLEN 155
+      *
+      * Open and read BIC database plus file
+     C                     OPEN MEBICPL1
+     C                     READ MEBICPL1                 70
+      *
+     C           *IN70     IFEQ *ON
+      * No record found
+     C                     MOVE 'NOTFND ' @RTCD
+     C                     ELSE
+     C                     READ MEBICPL1                 70
+     C           *IN70     IFEQ *OFF
+      * More than one matching record found
+     C                     MOVE 'NOTFND ' @RTCD
+     C                     ELSE
+      * Only one matching record found
+     C                     MOVE @IDATA    @ODATA
+     C                     MOVE '*MAP   ' @RTCD
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Close query and file
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRYD
+     C                     PARM 20        PRMLEN 155
+     C                     CLOSEMEBICPL1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RADDRS   : Perform a repair on a free text address           *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           RADDRS    BEGSR
+      *
+     C           I1TO2     IFEQ '//'                       B01
+      * The first line contains a clearing code.
+      * Retrieve the clearing code length.
+     C           ' '       CHEKRILIN1     P2
+      * Build the query
+     C                     Z-ADD1         P
+     C           P         DOWLEP2                         B02
+     C           1         SUBSTILIN1:P   QSLT,P
+     C                     ADD  1         P
+     C                     ENDDO                           E02
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+      *
+      * add JFLD() and SEQONLY() at the end of the query command
+     C                     Z-ADD1         P1
+     C           P1        DOWLE38                         B02
+     C           1         SUBSTQRYC,1:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO                           E02
+      *
+      *  Calcutate command length
+     C           135       ADD  P         PRMLEN
+      *
+      ** Execute the query
+     C                     CALL 'QCMDEXC'
+     C                     PARM           COMMD
+     C                     PARM           PRMLEN 155
+      *
+      * Open and read BIC database plus file
+     C                     OPEN MEBICPL1
+     C                     READ MEBICPL1                 70
+      *
+     C           *IN70     IFEQ *ON                        B02
+      * No record found
+     C                     MOVE 'NOTFND ' @RTCD
+      * Close query and file
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRYD
+     C                     PARM 20        PRMLEN 155
+     C                     CLOSEMEBICPL1
+     C                     ELSE                            X02
+      *
+      * Store Branch and City
+     C                     MOVELBIINST    WKINST
+     C                     MOVELBIADDR    WKADDR
+     C                     MOVELBILOCN    WKLOCN
+     C                     MOVELBIZIP     WKZIP
+     C                     MOVELBINATI    WKNATI
+     C                     MOVELBICNTY    WKCNTY
+     C                     MOVELBICHIP    WKCHIP
+      *
+     C                     READ MEBICPL1                 70
+      * Close query and file
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRYD
+     C                     PARM 20        PRMLEN 155
+     C                     CLOSEMEBICPL1
+     C           *IN70     IFEQ *OFF                       B03
+      * More than one matching record found
+     C                     MOVE 'NOTFND ' @RTCD
+     C                     ELSE                            X03
+      *
+      * Only one matching record found
+     C                     MOVE @IDATA    @ODATA
+     C           WKCNTY    CHAINMEZIPPL0             70
+     C           *IN70     IFEQ *ON                        B04
+     C                     MOVE *BLANKS   ZIZLST
+     C                     MOVEL'//'      ZICPFX
+     C                     END                             E04
+     C           ZICPFX    IFEQ *BLANKS                    B04
+     C                     MOVEL'//'      ZICPFX
+     C                     END                             E04
+      * Call the 'address reformatting routine'
+     C                     CALL 'FT0910'
+     C                     PARM           WKINST           I:Institution
+     C                     PARM           WKADDR           I:Address
+     C                     PARM           WKLOCN           I:Location
+     C                     PARM           WKZIP            I:ZIP
+     C                     PARM           ZIZLST           I:Place ZIP last Ind.
+     C                     PARM           WKADD            O:4 address lines
+     C                     PARM *BLANKS   @RTCD   7        O:Return Code
+      *
+     C           @RTCD     IFEQ *BLANKS                    B04
+     C                     MOVE @IDATA    @ODATA
+     C*                    MOVE WKADD     OL2TO5
+     C                     MOVE '*MAP   ' @RTCD
+     C                     ELSE                            X04
+     C                     MOVE 'FMTERR ' @RTCD
+     C                     ENDIF                           E04
+     C                     ENDIF                           E03
+     C                     ENDIF                           E02
+     C                     ENDIF                           E01
+      *
+      *
+     C           I1TO2     IFNE '//'                       B01
+     C           @RTCD     OREQ 'NOTFND '
+      * The address does not begin with a clearing code or the clearing
+      * code is incorrect.
+      * Identify the first non-blank lines
+     C                     MOVE *BLANKS   QSLT
+     C                     SELEC                           B02
+     C           ILIN1     WHNE *BLANKS
+     C           I1TO1     ANDNE'/'
+     C                     MOVELILIN1     WEXTRC
+     C                     Z-ADD1         WLNBR   10
+      *
+     C           ILIN2     WHNE *BLANKS
+     C                     MOVELILIN2     WEXTRC
+     C                     Z-ADD2         WLNBR
+      *
+     C           ILIN3     WHNE *BLANKS
+     C                     MOVELILIN3     WEXTRC
+     C                     Z-ADD3         WLNBR
+      *
+     C           ILIN4     WHNE *BLANKS
+     C                     MOVELILIN4     WEXTRC
+     C                     Z-ADD4         WLNBR
+      *
+     C           ILIN5     WHNE *BLANKS
+     C                     MOVELILIN5     WEXTRC
+     C                     Z-ADD5         WLNBR
+      *
+     C                     ENDSL                           E02
+      * Identify the last non-blank lines
+     C                     SELEC                           B02
+     C           ILIN5     WHNE *BLANKS
+     C           WLNBR     ANDLT5
+     C                     MOVE ILIN5     WEXTRC
+      *
+     C           ILIN4     WHNE *BLANKS
+     C           WLNBR     ANDLT4
+     C                     MOVE ILIN4     WEXTRC
+      *
+     C           ILIN3     WHNE *BLANKS
+     C           WLNBR     ANDLT3
+     C                     MOVE ILIN3     WEXTRC
+      *
+     C           ILIN2     WHNE *BLANKS
+     C           WLNBR     ANDLT2
+     C                     MOVE ILIN2     WEXTRC
+      *
+     C                     ENDSL                           E02
+      *
+      * Keep only alphabetic characters
+     C                     Z-ADD1         P1
+     C           P1        DOWGT0                          B02
+     C           CALPH     CHECKWEXTRC    P1
+     C           P1        IFGT 0                          B03
+     C                     MOVE ' '       WEX,P1
+     C                     ENDIF                           E03
+     C                     ENDDO                           E02
+      *
+      * Identify individual words or letters(up to 36 elements)
+     C                     Z-ADD1         P1
+     C                     Z-ADD1         P3      20       Element Nmbr
+     C           P1        DOWGT0                          B02
+     C           P3        ANDLE35
+     C                     Z-ADD0         WLEN    20
+     C           ' '       CHECKWEXTRC:P1 P1
+     C           P1        IFGT 0                          B03
+     C                     Z-ADDP1        P2
+     C           WEX,P2    DOWNE' '                        B04
+     C           P2        ANDLE71
+     C                     ADD  1         WLEN
+     C                     ADD  1         P2
+     C                     ENDDO                           E04
+     C           WLEN      SUBSTWEXTRC:P1 GRP,P3
+     C                     Z-ADDWLEN      GLN,P3
+     C                     Z-ADDP2        P1
+     C                     ADD  1         P3
+     C                     ENDIF                           E03
+     C                     ENDDO                           E02
+      *
+      *  Extract the first five elements which are more than three
+      *  characters in length and do not appear in the 'excluded
+      *  phrases' file.
+     C                     Z-ADDP3        P4      20
+     C                     Z-ADD1         P3
+     C                     Z-ADD1         P5      20
+     C           P3        DOWLEP4                         B02
+     C           P5        ANDLE5
+     C           GLN,P3    IFGT 3                          B03
+     C           GLN,P3    IFGT 20                         B04
+     C                     Z-ADDGLN,P3    WLN,P5
+     C                     MOVE GRP,P3    WRD,P5
+     C                     ADD  1         P5
+     C                     ELSE                            X04
+     C                     MOVELGRP,P3    WK20   20
+     C           WK20      CHAINMEXPHRL0             70
+     C           *IN70     IFEQ *ON                        B05
+     C                     Z-ADDGLN,P3    WLN,P5
+     C                     MOVE GRP,P3    WRD,P5
+     C                     ADD  1         P5
+     C                     ENDIF                           E05
+     C                     ENDIF                           E04
+     C                     ENDIF                           E03
+     C                     ADD  1         P3
+     C                     ENDDO                           E02
+      *
+     C*
+      *   Build the query
+      *   First identified word
+     C                     Z-ADD1         P1
+     C                     Z-ADD1         P2
+     C                     Z-ADD1         P       30
+     C           WLN,1     IFNE *ZERO                      B02
+     C           P1        DOWLEWLN,1                      B03
+     C           1         SUBSTWRD,1:P1  QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO                           E03
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+      *
+      *     Next identified search words
+     C                     Z-ADD2         P3
+     C           P3        DOWLE5                          B03
+     C           WLN,P3    ANDNE*ZERO
+     C                     Z-ADD1         P1
+     C                     Z-ADD1         P2
+     C           P2        DOWLE5                          B04
+     C           1         SUBSTCAND:P2   QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P2
+     C                     ENDDO                           E04
+     C                     Z-ADD1         P2
+     C           P2        DOWLE12                         B04
+     C           1         SUBSTCINDX:P2  QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P2
+     C                     ENDDO                           E04
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C           P1        DOWLEWLN,P3                     B04
+     C           1         SUBSTWRD,P3:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO                           E04
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+     C*
+     C                     ADD  1         P3
+     C                     ENDDO                           E03
+     C                     ELSE
+     C                     MOVE '"'       QSLT,P
+     C                     ADD  1         P
+     C                     MOVE ')'       QSLT,P
+     C                     ADD  2         P
+     C                     ENDIF                           E02
+      *
+      * add JFLD() and SEQONLY() at the end of the query command
+     C                     Z-ADD1         P1
+     C           P1        DOWLE38                         B02
+     C           1         SUBSTQRYC,1:P1 QSLT,P
+     C                     ADD  1         P
+     C                     ADD  1         P1
+     C                     ENDDO                           E02
+      *
+      *  Calcutate command length
+     C           135       ADD  P         PRMLEN
+      *
+      ** Execute the query
+     C                     CALL 'QCMDEXC'
+     C                     PARM           COMMD
+     C                     PARM           PRMLEN 155
+      *
+      * Open and read BIC database plus file
+     C                     OPEN MEBICPL1
+     C                     READ MEBICPL1                 70
+      *
+     C           *IN70     IFEQ *ON                        B02
+      * No record found
+     C                     MOVE 'NOTFND ' @RTCD
+      * Close query and file
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRYD
+     C                     PARM 20        PRMLEN 155
+     C                     CLOSEMEBICPL1
+     C                     ELSE                            X02
+      *
+      * Store Branch and City
+     C                     MOVELBIINST    WKINST
+     C                     MOVELBIADDR    WKADDR
+     C                     MOVELBILOCN    WKLOCN
+     C                     MOVELBIZIP     WKZIP
+     C                     MOVELBINATI    WKNATI
+     C                     MOVELBICNTY    WKCNTY
+     C                     MOVELBICHIP    WKCHIP
+      *
+     C                     READ MEBICPL1                 70
+      * Close query and file
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QRYD
+     C                     PARM 20        PRMLEN 155
+     C                     CLOSEMEBICPL1
+     C           *IN70     IFEQ *OFF                       B03
+      * More than one matching record found
+     C                     MOVE 'NOTFND ' @RTCD
+     C                     ELSE                            X03
+      *
+      * Only one matching record found
+     C           WKCNTY    CHAINMEZIPPL0             70
+     C           *IN70     IFEQ *ON                        B04
+     C                     MOVE *BLANKS   ZIZLST
+     C                     MOVEL'//'      ZICPFX
+     C                     END                             E04
+     C           ZICPFX    IFEQ *BLANKS                    B04
+     C                     MOVEL'//'      ZICPFX
+     C                     END                             E04
+      * Call the 'address reformatting routine'
+     C                     CALL 'FT0910'
+     C                     PARM           WKINST           I:Institution
+     C                     PARM           WKADDR           I:Address
+     C                     PARM           WKLOCN           I:Location
+     C                     PARM           WKZIP            I:ZIP
+     C                     PARM           ZIZLST           I:Place ZIP last Ind.
+     C                     PARM           WKADD 140        O:4 address lines
+     C                     PARM *BLANKS   @RTCD   7        O:Return Code
+      *
+     C           @RTCD     IFEQ *BLANKS                    B04
+     C                     MOVE @IDATA    @ODATA
+     C*                    MOVE WKADD     OL2TO5
+     C                     MOVE '*MAP   ' @RTCD
+     C                     ELSE                            X04
+     C                     MOVE 'FMTERR ' @RTCD
+     C                     ENDIF                           E04
+     C                     ENDIF                           E03
+     C                     ENDIF                           E02
+     C                     ENDIF                           E01
+      *
+     C           @RTCD     IFEQ '*MAP   '                  B01
+      * Need to format the address correctly
+      *
+     C           O1TO1     IFNE '/'                        B02
+      * The address does not start with a clearing code or an account.
+     C                     MOVE *BLANKS   OADDR
+     C                     MOVELWKADD     OADDR
+     C                     ENDIF                           E02
+      *
+     C           O1TO1     IFEQ '/'                        B02
+     C           O1TO2     ANDNE'//'
+     C           O1TO4     OREQ '//FW'
+     C           O1TO4     OREQ '//RT'
+      * The address starts with an account or a Fedwire or a RTGS code.
+     C                     MOVE WKADD     OL2TO5
+     C                     ENDIF                           E02
+      *
+     C           O1TO2     IFEQ '//'                       B02
+     C           O1TO4     ANDNE'//FW'
+     C           O1TO4     ANDNE'//RT'
+      * The address starts with a clearing code.
+     C           WKCHIP    IFNE *BLANKS                    B03
+     C           @ICCY     ANDEQBLUSCY
+     C                     MOVE *BLANKS   OLIN1
+     C           '//CH'    CAT  WKCHIP    OLIN1
+     C                     MOVE WKADD     OL2TO5
+      *
+     C                     ELSE                            X03
+     C           WKNATI    IFNE *BLANKS                    B04
+     C                     MOVE *BLANKS   OLIN1
+     C           ZICPFX    CAT  WKNATI    OLIN1
+     C                     MOVE WKADD     OL2TO5
+     C                     ELSE                            X04
+     C                     MOVE *BLANKS   OADDR
+     C                     MOVELWKADD     OADDR
+     C                     ENDIF                           E04
+     C                     ENDIF                           E03
+     C                     ENDIF                           E02
+     C                     ENDIF                           E01
+      *
+     C                     ENDSR
+      /EJECT
+      *******************************************************************
+      *  INIT  Program initialisation                                   *
+      *******************************************************************
+     CSR         INIT      BEGSR
+     C*
+     C** Entry Parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @IDATA
+     C                     PARM           @IOPTN  1
+     C                     PARM           @ICCY   3
+     C                     PARM           @ODATA251
+     C                     PARM           @RTCD   7
+      *
+     C           *LIKE     DEFN BIINST    WKINST
+     C           *LIKE     DEFN BIADDR    WKADDR
+     C           *LIKE     DEFN BILOCN    WKLOCN
+     C           *LIKE     DEFN BIZIP     WKZIP
+     C           *LIKE     DEFN BINATI    WKNATI
+     C           *LIKE     DEFN BICNTY    WKCNTY
+     C           *LIKE     DEFN BICHIP    WKCHIP
+     C           *LIKE     DEFN BIBNCH    WKBNCH
+     C           *LIKE     DEFN BICITY    WKCITY
+      *
+      ** Access Trade details
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*DBERR ' P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     CSR                   ENDSR                           INIT  ends
+      *******************************************************************
+      *
+      /EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** Alphanumeric characters
+ ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+** QRYA
+OPNQRYF FILE((MEBICPL1 *FIRST @BICPPD) (MEBICIPD *FIRST @BICIPD)) OPTION(*INP)
+** QRYB
+OPNID(MEBICPPD) FORMAT(MEBICPL0) QRYSLT('(BSINDX *CT "
+** QRYC
+') JFLD((BIKEY BSKEY)) SEQONLY(*YES 1)
+** QRYD
+CLOF OPNID(MEBICPPD)

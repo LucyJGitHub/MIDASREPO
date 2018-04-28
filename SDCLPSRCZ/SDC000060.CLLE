@@ -1,0 +1,189 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Central Data Acceptance Background Job')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000060 - SD Central Data Acceptance Background Job       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. CLE134             Date 01Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CSD031  *CREATE    Date 10Apr06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       CSD031 - Enhanced Centralised Static Data                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&DQUEUE) TYPE(*CHAR) LEN(10) +
+                          VALUE('SDACCPDTQ')
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10) VALUE('*LIBL')
+             DCL        VAR(&MSGLEN) TYPE(*DEC) LEN(5 0) VALUE(4040)
+             DCL        VAR(&RDATA) TYPE(*CHAR) LEN(4040)
+             DCL        VAR(&RWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&CNAMWK) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CVARWK) TYPE(*CHAR) LEN(40)
+             DCL        VAR(&CPARWK) TYPE(*CHAR) LEN(4000)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CCPROG) TYPE(*CHAR) LEN(10) +
+                          VALUE('SDC000060')
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNO) TYPE(*CHAR) LEN(6)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2006')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF0000)
+ 
+/* If data area LDA doesn't exist, create LDA. */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Retrieve Job Attribute - Job, User, Name  */
+ 
+             RTVJOBA    JOB(&JOB) USER(&USER) NBR(&JOBNO)
+ 
+/* Allocate data area */
+ 
+             ALCOBJ     OBJ((SDACCPSTS *DTAARA *EXCLRD)) WAIT(5)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))
+ 
+             CHGDTAARA  DTAARA(SDACCPSTS (1 1)) VALUE('Y')
+             CHGDTAARA  DTAARA(SDACCPSTS (2 10)) VALUE(&JOB)
+             CHGDTAARA  DTAARA(SDACCPSTS (12 10)) VALUE(&USER)
+             CHGDTAARA  DTAARA(SDACCPSTS (22 6)) VALUE(&JOBNO)
+ 
+ REPEAT:
+             CALL       PGM(QRCVDTAQ) PARM(&DQUEUE &DILIB &MSGLEN +
+                          &RDATA &RWAIT)
+ 
+             CHGVAR     VAR(&CNAMWK) VALUE(%SST(&RDATA 1 10))
+             CHGVAR     VAR(&CVARWK) VALUE(%SST(&RDATA 1 40))
+             CHGVAR     VAR(&CPARWK) VALUE(%SST(&RDATA 41 4000))
+ 
+             CHGVAR      VAR(&RTNCDE) VALUE('       ')
+ 
+             IF         COND(&CNAMWK = 'GPACODPD') THEN(DO)
+               CALL       PGM(SDACODACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPAKEYPD') THEN(DO)
+               CALL       PGM(SDAKEYACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPFAKYPD') THEN(DO)
+               CALL       PGM(SDFAKYACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPSAKYPD') THEN(DO)
+               CALL       PGM(SDSAKYACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPCUSTPD') THEN(DO)
+               CALL       PGM(SDCUSTACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPDLSTPD') THEN(DO)
+               CALL       PGM(SDDLSTACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPDTSTPD') THEN(DO)
+               CALL       PGM(SDDTSTACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPFACTPD') THEN(DO)
+               CALL       PGM(SDFACTACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPHOLIPD') THEN(DO)
+               CALL       PGM(SDHOLIACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPLOANPD') THEN(DO)
+               CALL       PGM(SDLOANACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPCURRPD') THEN(DO)
+               CALL       PGM(SDCURRACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPNARRPD') THEN(DO)
+               CALL       PGM(SDNARRACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPACOFPD') THEN(DO)
+               CALL       PGM(SDACOFACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPCTRYPD') THEN(DO)
+               CALL       PGM(SDCTRYACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPLOCNPD') THEN(DO)
+               CALL       PGM(SDLOCNACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPREGNPD') THEN(DO)
+               CALL       PGM(SDREGNACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPBRCHPD') THEN(DO)
+               CALL       PGM(SDBRCHACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPRECGPD') THEN(DO)
+               CALL       PGM(SDRECGACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+             IF         COND(&CNAMWK = 'GPLENOPD') THEN(DO)
+               CALL       PGM(SDLENOACP) PARM(&CPARWK &RTNCDE &CCPROG)
+             ENDDO
+ 
+/** Error processing */
+ 
+             IF         COND(&RTNCDE *NE '       ') THEN(DO)
+               SNDPGMMSG  MSGID(USR0377) MSGF(GBSDUSRMSG) +
+                          MSGDTA(&CVARWK) TOMSGQ(MOPERQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(REPEAT)
+ 
+             IF         COND(&CNAMWK *EQ *BLANKS)  THEN(DO)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/** Abnormal termination */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC000060 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             ENDPGM

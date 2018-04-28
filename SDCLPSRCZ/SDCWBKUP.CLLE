@@ -1,0 +1,167 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SD Compliance watch data backup')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Standing Data Module                             */
+/*                                                                   */
+/*       SDCWBKUP - Compliance Watch Data Backup                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/*       Last Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CSD015  *CREATE    Date 03Mar03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       CSD015 - Midas Compliance Watch - Watch List Checking       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCLF       FILE(SDCWBKUPDF)
+             DCL        VAR(&PRELIB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
+/*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/*                                                                                        /*CSC043*/
+/** Get the global IASP system values */                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 +
+                          'IASPgroup' &SVAL2 &SVALK3 +
+                          &SVAL3 &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK10 &SVAL10)                         /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Check whether system is in IASP environment. */                                       /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Get name of IASP. */                                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))                              /*CSC043*/
+                                                                                          /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+                                                                                          /*CSC043*/
+ 
+/** Get screen variable */
+ 
+             RTVJOBA  USER(&SUSER)
+             RTVJOBA  JOB(&SWSID)
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&SDATE)
+ 
+/** Retrieve current system prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRELIB)
+ 
+             CHGVAR     VAR(&SFRLIB) VALUE('CMPWATCH' *CAT &PRELIB)
+ 
+ PROMPT:     SNDRCVF    RCDFMT(DETAIL)
+ 
+/** If F3, return to RCF with action code = END */
+ 
+             IF         COND(&IN03 *EQ '1') THEN(DO)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+/** Clear error conditioning */
+ 
+             CHGVAR     VAR(&IN21) VALUE('0')
+             CHGVAR     VAR(&IN22) VALUE('0')
+ 
+/** Validate 'To Library' entry */
+ 
+             IF         COND(&STOLIB *EQ ' ') THEN(DO)
+               CHGVAR     VAR(&SERMSG) VALUE('Please enter library name')
+               CHGVAR     VAR(&IN21) VALUE('1')
+               GOTO   PROMPT
+             ENDDO
+ 
+             CHGVAR     VAR(&IN10) VALUE('1')
+             CHKOBJ     OBJ(&STOLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+               CRTLIB     LIB(&STOLIB) TEXT('Compliance Watch Data +
+                          Backup Library') ASPDEV(&IASP)                                  /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+               CRTLIB     LIB(&STOLIB) TEXT('Compliance Watch Data Backup Library')
+             ENDDO                                                                        /*CSC043*/
+               CHGVAR     VAR(&IN10) VALUE('0')
+               GOTO       CMDLBL(PROC)
+             ENDDO
+ 
+             IF         COND((&IN10 *EQ '1') *AND (&SRPLCE *EQ ' ')) +
+               THEN(GOTO   CMDLBL(PROMPT))
+ 
+/** Validate Replaced option entry */
+ 
+             IF         COND((&SRPLCE *NE 'Y') *AND +
+                          (&SRPLCE *NE 'N')) THEN(DO)
+               CHGVAR     VAR(&SERMSG) VALUE('Valid value is Y or N')
+               CHGVAR     VAR(&IN22) VALUE('1')
+               GOTO       CMDLBL(PROMPT)
+             ENDDO
+ 
+             IF         COND(&SRPLCE *EQ 'Y') THEN(DO)
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+              IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                  /*CSC043*/
+               CLRLIB     LIB(&STOLIB) ASPDEV(&IASP)                                      /*CSC043*/
+              ENDDO                                                                       /*CSC043*/
+              ELSE       CMD(DO)                                                          /*CSC043*/
+               CLRLIB     LIB(&STOLIB)
+              ENDDO                                                                       /*CSC043*/
+             ENDDO
+ 
+             IF         COND(&SRPLCE *EQ 'N') THEN(DO)
+               CHGVAR     VAR(&SRPLCE) VALUE(' ')
+               CHGVAR     VAR(&IN10) VALUE('0')
+               GOTO       CMDLBL(PROMPT)
+             ENDDO
+ 
+/** Process backup of library */
+ 
+ PROC:
+             CPYLIB     FROMLIB(&SFRLIB) TOLIB(&STOLIB) CRTLIB(*NO)
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDCWBKUP ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** End program */
+ 
+ END:
+ 
+             ENDPGM

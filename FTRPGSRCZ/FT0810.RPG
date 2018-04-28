@@ -1,0 +1,289 @@
+     H        1
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Check if payment reserved for batch auth')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module.                               *
+      *                                                               *
+      *  FT0810 - Check for Reserved Payment                          *
+      *                                                               *
+      *  Function - This program checks if a payment has already      *
+      *             been reserved by Batch Authorisation              *
+      *                                                               *
+      *  Called by: AOC8000                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Last Amend No. CFT009             Date 01Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CFT003  *CREATE    Date 06May98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CFT009 - FEES AND CHARGES - RECOMPILED.                      *
+      *  CFT003 - FT Batch Authorisation                              *
+      *           Based on FTH010 original references:                *
+      *           CFT078/098712/IMP060                                *
+      *                                                               *
+      *****************************************************************
+      *
+     FINPAYXL0IF  E           K        DISK                           UC
+     F** Midas extension file of INPAYDD
+     FOTPAYXL0IF  E           K        DISK                           UC
+     F** Midas extension file of OTPAYDD
+     F*
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F*       30         Chain fail to INPAYXL0/OTPAYXL0              *
+     F*       31         Outgoing payment type                        *
+     F*       32         Incoming payment type                        *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   SRINIT  - Initialisation processing                         *
+     F*   *PSSR   - Error handling                                    *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E                    CPY@    1   1 80               Midas copyright
+     E*
+     E                    CMD@    1   1 80
+      *
+      *  Array of QCMDEXC commands
+      *
+     E                    EDT        80  1
+      *
+      *  Array of QCMDEXC command to edit
+      *
+     I@TREF       DS                             15
+     I**  Data structure for FT Transaction Reference
+     I*
+     I                                       12  13 TRYP
+     I*
+     ILDA         DS                            256
+     I**  Local data area data structure
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+      * Sar Text details *
+      *
+     IDSFDY     E DSDSFDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+     I              'in batch'            C         #BTXT
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C** Declare the entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @TREF  15
+     C                     PARM           @RTCD   7
+     C                     PARM           @RDTA  80
+     C*
+     C** Declare the LDA as dataarea. No fields set up unless
+     C** DB error occurs as this program is called by other pgm.
+     C*
+     C           *NAMVAR   DEFN           LDA
+      *
+      * Initialise program
+      *
+     C           $FIRST    IFEQ *BLANKS
+     C                     EXSR SRINIT
+     C                     MOVEL'Y'       $FIRST  1
+     C                     END
+     C*
+     C** Must initialize the return code to blank
+     C*
+     C                     MOVE *BLANKS   @RTCD
+      *
+      *  Allow batch checking
+      *
+     C           CFT003    IFEQ *BLANKS
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C** Copyright insertion
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Chain to OTPAYXL0 for outgoing payment type
+     C*
+     C                     SELEC
+     C*
+     C           TRYP      WHEQ 'OP'
+     C           TRYP      OREQ 'SO'
+     C           TRYP      OREQ 'YO'
+     C           TRYP      OREQ 'RP'
+     C           TRYP      OREQ 'AO'
+     C                     MOVE *ON       *IN31
+     C                     MOVE *OFF      *IN32
+     C           @TREF     CHAINOTPAYXL0             30
+     C           *IN30     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FT0810'  DBFILE
+     C                     Z-ADD01        DBASE            *************
+     C                     MOVEL'OTPAYXL0'DBFILE           * DBERR 001 *
+     C                     MOVEL@TREF     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Chain to INPAYXL0 for incoming payment type
+     C*
+     C           TRYP      WHEQ 'IN'
+     C           TRYP      OREQ 'SI'
+     C           TRYP      OREQ 'YI'
+     C           TRYP      OREQ 'AI'
+     C                     MOVE *ON       *IN32
+     C                     MOVE *OFF      *IN31
+     C           @TREF     CHAININPAYXL0             30
+     C           *IN30     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FT0810'  DBFILE
+     C                     Z-ADD02        DBASE            *************
+     C                     MOVEL'INPAYXL0'DBFILE           * DBERR 002 *
+     C                     MOVEL@TREF     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ENDSL
+     C*
+     C** If Authorization Batch Number on extension file is not blank,
+     C** the transaction is currently reserved for Batch Authorization
+     C** or was already authorized by B.A.  Return '*IN USE' then.
+     C*
+     C           *IN31     IFEQ *ON                        If Outgoing
+     C           OPBANO    ANDNE*BLANKS
+     C                     MOVEL'*IN USE' @RTCD
+     C           #BTXT     CAT  OPBANO:1  @RDTA     P
+     C           OPRUSR    CAT  @RDTA:1   @RDTA
+     C                     ENDIF                           End If
+     C*
+     C           *IN32     IFEQ *ON                        If Incoming
+     C           INBANO    ANDNE*BLANKS
+     C                     MOVEL'*IN USE' @RTCD
+     C           #BTXT     CAT  INBANO:1  @RDTA     P
+     C           INRUSR    CAT  @RDTA:1   @RDTA
+     C                     ENDIF                           End If
+     C*
+     C                     SETON                         LR
+     C*
+     C*****************************************************************
+     C*   *PSSR - error handling                                      *
+     C*   Called by - anywhere within the program                     *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'FT0810'  DBPGM
+     C                     SETON                     U7U8LR
+     C                     END
+     C*
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    * *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Check for batch authorisation
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*VERIFY' P@OPTN  7
+     C                     PARM 'CFT003'  @SARD   6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      *  Allow batch checking
+      *
+     C           P@RTCD    IFEQ *BLANKS
+     C                     MOVEL'CFT003'  CFT003  6
+     C                     ELSE
+     C                     GOTO EXINIT
+     C                     ENDIF
+      *
+      * Open file INPAYXL0
+      *
+     C           FIL001    IFEQ *BLANKS
+      *
+      *  Override file INPAYXL0 to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'INPAYXL0'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C                     OPEN INPAYXL0
+     C                     MOVEL'Y'       FIL001  1
+     C                     END
+      *
+      * Open file OTPAYXL0
+      *
+     C           FIL002    IFEQ *BLANKS
+      *
+      *  Override file OTPAYXL0 to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'OTPAYXL0'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C                     OPEN OTPAYXL0
+     C                     MOVEL'Y'       FIL002  1
+     C                     END
+      *
+     CSR         EXINIT    ENDSR
+     C*****************************************************************
+     C/EJECT
+** CPY@   **      Object copyright
+(c) Misys International Banking Systems Ltd. 2001
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

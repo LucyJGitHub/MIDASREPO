@@ -1,0 +1,82 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Daily Journal Summary Report')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC4116 - Daily Journal Summary Report                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD021155           Date 09Jul13              */
+/*       Prev Amend No. CGL127AQ  *CREATE  Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD021155 - COB Restructure Phase 1 remnants                 */
+/*                - Still checks for CRT001                          */
+/*       CGL127AQ - General Ledger Module optimisation - Phase 1     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+/**********  DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                */ /*MD021155*/
+/**********  DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                */ /*MD021155*/
+/**********  DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                 */ /*MD021155*/
+/**********  DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                            */ /*MD021155*/
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/**Determine*if*Retail*Teller*System*is*switched*on*****************                 */ /*MD021155*/
+/*******************************************************************                 */ /*MD021155*/
+/**********  CHGVAR     VAR(&RTCD) VALUE('       ')                                  */ /*MD021155*/
+/**********  CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                  */ /*MD021155*/
+/**********  CHGVAR     VAR(&SAR) VALUE('CRT001')                                    */ /*MD021155*/
+/**********  CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)                 */ /*MD021155*/
+/*******************************************************************                 */ /*MD021155*/
+/**If*Retail*Teller*System*is*NOT*switched*on:*End******************                 */ /*MD021155*/
+/*******************************************************************                 */ /*MD021155*/
+/**********  IF         COND(&RTCD *NE '      ') THEN(GOTO +                         */ /*MD021155*/
+/**********               CMDLBL(END))                                               */ /*MD021155*/
+ 
+             CHGJOB     SWS(00000000)
+             SNDPGMMSG  MSG('DAILY JOURNAL SUMMARY REPORT') +
+                        TOMSGQ(MRUNQ) MSGTYPE(*INFO)
+ 
+             CALL       PGM(GL4116)
+ 
+/* Clear if no error */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             CLRPFM     FILE(ACJXH)
+             CLRPFM     FILE(ACJXD)
+             CLRPFM     FILE(ACJXT)
+             ENDDO
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR     VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 44))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC4116 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:         ENDPGM

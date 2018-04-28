@@ -1,0 +1,94 @@
+/*********************************************************************/
+/*X*I****OVRDBF*FILE(LENX)*TOFILE(QADSPFFD)***************************/                  /*BUG8856*/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Obtain length of source file')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC000580  - Obtain length of source file                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CUP033             Date 16Jan07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK025             Date 24Aug06              */
+/*                      BUG8856            Date 09Jun06              */
+/*                      CSM005  *REWRITE   Date 17Aug05              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CUP001 *CREATE     DATE 11Feb98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP033 - Delete of override is incorrect                    */
+/*       CPK025 - MidasPlus 1.3 packaging.  USe different file.      */
+/*       BUG8856 - DSPFFD changed at V5R3.  Use core outfile instead */
+/*       CSM005 - Rewrite of UPC0580.  Moved to global layer.        */
+/*       CUP001 - Introduction of BRIDGE                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE1 &LIB1 &LENY)
+ 
+             DCL        VAR(&LENY) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&FILE1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB1) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(132)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/************DCLF       FILE(LENX)                                                    */ /*BUG8856*/
+/**********  DCLF       FILE(UPCDFDPD)                                     */ /*BUG8856*/ /*CPK025*/
+             DCLF       FILE(UPFFDSTPD)                                                   /*CPK025*/
+ 
+/************DSPFFD     FILE(&LIB1/&FILE1) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/LENX)                                         */ /*BUG8856*/
+ 
+/* Set up DSPFFD outfile */                                                              /*BUG8856*/
+             DLTF       FILE(QTEMP/UPCDFDPD)                                             /*BUG8856*/
+             MONMSG     MSGID(CPF0000)                                                   /*BUG8856*/
+/**********  CPYF       FROMFILE(UPCDFDPD) TOFILE(QTEMP/UPCDFDPD) +                    */ /*CPK025*/
+/**********               CRTFILE(*YES)                                    */ /*BUG8856*/ /*CPK025*/
+/**********  OVRDBF     FILE(UPCDFDPD) TOFILE(QTEMP/UPCDFDPD) +                        */ /*CPK025*/
+/**********               OVRSCOPE(*JOB)                                   */ /*BUG8856*/ /*CPK025*/
+             CPYF       FROMFILE(UPFFDSTPD) TOFILE(QTEMP/UPCDFDPD) +
+                          CRTFILE(*YES)                                                   /*CPK025*/
+             OVRDBF     FILE(UPFFDSTPD) TOFILE(QTEMP/UPCDFDPD) +
+                          OVRSCOPE(*JOB)                                                  /*CPK025*/
+ 
+             DSPFFD     FILE(&LIB1/&FILE1) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/UPCDFDPD)                                        /*BUG8856*/
+ C:          RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))
+             IF         COND(&WHRLEN *EQ 165) THEN(DO)
+                CHGVAR     VAR(&LENY) VALUE(112)
+             ENDDO
+             IF         COND(&WHRLEN *EQ 145) THEN(DO)
+                CHGVAR     VAR(&LENY) VALUE(92)
+             ENDDO
+ 
+             GOTO       CMDLBL(C)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:      RCVMSG     MSGTYPE(*EXCP) RMV(*NO) MSGID(&MSGID)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             IF         COND(&MSGID *EQ ' ') THEN(CHGVAR VAR(&MSGID) +
+                          VALUE('*NULL'))
+             CHGVAR     VAR(&MSG) VALUE('Error ' *CAT &MSGID *BCAT ' +
+                          caused program UPC000580 to terminate; +
+                          see errors previously listed')
+             SNDPGMMSG  MSG(&MSG)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+/**********  DLTOVR     FILE(UPCDFDPD) LVL(*JOB)                           */ /*BUG8856*/ /*CUP033*/
+             DLTOVR     FILE(UPFFDSTPD) LVL(*JOB)                                         /*CUP033*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                   /*BUG8856*/
+             ENDPGM

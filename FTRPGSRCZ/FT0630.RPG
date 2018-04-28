@@ -1,0 +1,2136 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Identify pay/receive events (input cycle)')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - FUNDS TRANSFER MODULE                                *
+      *                                                               *
+      *  FT0630 - IDENTIFY PAY/RECEIVE EVENTS (INPUT CYCLE)           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR874076           Date 25Nov14               *
+      *  Prev Amend No. CFT048             Date 13Aug14               *
+      *                 CFT120             Date 28Sep12               *
+      *                 AR787620           Date 10Jun11               *
+      *                 CRE075             Date 06Dec10               *
+      *                 262746B            Date 27Nov09               *
+      *                 BUG26775           Date 16Nov09               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG15264A          Date 08Nov07               *
+      *                 BUG15264           Date 06Nov07               *
+      *                 250348             Date 25Sep07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 240698             Date 28Jun06               *
+      *                 CFT022             Date 30Jan06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 244746             Date 28Dec06               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 222663             Date 31Oct03               *
+      *                 CSW203             Date 26May03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01Jun00               *
+      *                 137181             Date 10Jan00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT004             DATE 26Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU006             DATE 29MAY98               *
+      *                 102884             DATE 20FEB98               *
+      *                 S01408             DATE 04NOV96               *
+      *                 096087             DATE 17JAN96               *
+      *                 S01408             DATE 17JAN96               *
+      *                 S01408             DATE 24NOV95               *
+      *                 S01408             DATE 24JUL95               *
+      *                 S01408             DATE 03FEB95               *
+      *                 071383             DATE 02AUG94               *
+      *                 060712             DATE 13JUL94               *
+      *                 S01408             DATE 18MAY94               *
+      *                 064663             DATE 14DEC93               *
+      *                 061236             DATE 27SEP93               *
+      *                 S01435             DATE 08SEP93               *
+      *                 059194             DATE 06AUG93               *
+      *                 S01408             DATE 24JUN93               *
+      *                 S01414             DATE 29MAR93               *
+      *                 E34452             DATE 23JAN92               *
+      *                 E32481             DATE 29JUL91               *
+      *                 E32920             DATE 03JUL91               *
+      *                 E24918             DATE 09MAY91               *
+      *                 E32873             DATE 01MAY91               *
+      *                 S01117             DATE 23AUG90               *
+      *                 S01195             DATE 23AUG90               *
+      *                 S01194             DATE 23AUG90               *
+      *                 E22850             DATE 27JUL90               *
+      *                 E21473             DATE 10MAY90               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  AR874076 - Branch and front-office ID on outgoing payments   *
+      *             are being corrupted when payments are generated.  *
+      *             (Child: AR874077)                                 *
+      *  CFT048 - FT Ignore Telex Notice Days                         *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,FTH00025                                 *
+      *             WNCPYSRC,FTH00026                                 *
+      *             WNCPYSRC,FTH00027                                 *
+      *             WNCPYSRC,FTH00028                                 *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  262746B - Generation of MT103                                *
+      *  BUG26775 - Generation of MT103                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  BUG15264A - Account not handled properly when validated if   *
+      *             it has '/' as first character.                    *
+      *  BUG15264 - Account not handled properly when validated if it *
+      *             has '/' as first character.                       *
+      *  250348 - Rename TMST field from ACNUMA/ACCNTAB               *
+      *           Pattern after fix 242863                            *
+      *  TEMPANN - This is just to compile FT0630 bcos of SLSH        *
+      *            THIS SHOULD BE REMOVED AFTER INVESTIGATION         *
+      *  CFT032 - Account line in field 50X in MT103                  *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  240698 - Applied fix 225877.                                 *
+      *  225877 - Do not set on *IN39 when Beneficiary contains a     *
+      *           SWIFT ID as this will cause MT202 to be generated   *
+      *           instead of MT103.                                   *
+      *  CFT022 - Upgrade of LBV050 to Midas Plus.                    *
+      *           Increment Notice days by 1 for FT processing.       *
+      *           Repeat setup of Currency and Telex notice arrays    *
+      *           including an increment of Telex Notice days by 1.   *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  244746 - Do not set on *IN39 when Beneficiary contains a     *
+      *           SWIFT ID as this will cause MT202 to be generated   *
+      *           instead of MT103.  Applied fix 225877.              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  222663 - Cannot generate MT100/MT103 when CSW203 is off      *
+      *  CSW203 - SWIFT 2003 Standards Update                         *
+      *  CFT009 - FT Fees and Charge Development-Recompiled           *
+      *  137181 - LCD and RECI can get corrupted on updating CQPACDD. *
+      *  CFT004 - International Bank Account Number                   *
+      *           New Account Type 'I' (IBAN)                         *
+      *  CEU006 - EMU Funds Transfer Enhancements (Recompile Only)    *
+      *  102884 - To calculate the control date for zero notice days  *
+      *           use existing sr/zf2c with days forward = 1, and     *
+      *           subtract 1 from the result.                         *
+      *  S01408 - Addition of core hook FT0630CCP9                    *
+      *           Addition of core hook FT0630CCP8                    *
+      *           Addition of core hook FT0630CCP7                    *
+      *           Addition of core hook FT0630CCP6                    *
+      *           Addition of core hook FT0630CCP5                    *
+      *           Addition of core hook FT0630CCP4                    *
+      *           Addition of core hook FT0630CCP3                    *
+      *  096087 - Array index error in ZF2C (RECOMPILE OVER ZF2C)     *
+      *  S01408 - Core hook FT0630CEMP added                          *
+      *  S01408 - Core hook FT0630CCP2 added                          *
+      *  S01408 - Core hook FT0630FFPG added                          *
+      *           Core hook FT0630CCP1 added                          *
+      *  S01408 - Core hook FT0630CCPG added                          *
+      *  071383 - Attempted to re-print Swift messages if the pay/    *
+      *           receive process crashed. Now the Swift msg type     *
+      *           flag is set to 'C' once the msg update has been     *
+      *           committed. This pgm must only select those          *
+      *           transactions that have not been set to 'C'.         *
+      *  060712 - Recompiled due to change in copy source ZF2C.       *
+      *  S01408 - Core hook FT0630VSR  added                          *
+      *           Core hook FT0630VS1  added                          *
+      *           Core hook FT0630VSF  added                          *
+      *  064663 - Move FT0630CEIP so that it is executed.             *
+      *  061236 - Missing functionality re: Generation of MT202.      *
+      *  S01435 - Incoming Message Management.                        *
+      *  059194 - Pay/Receive does not produce all messages.          *
+      *  S01408 - Core hook FT0630IPG added                           *
+      *           Core hook FT0630CEND added                          *
+      *           Core hook FT0630CEIP added                          *
+      *  S01414 - Book Code and Profit Centre Incorporation.          *
+      *           Rename of profit centre field on ACCNTABF           *
+      *  E34452 - CONFUSING PAY AND SETTLE CCY FOR ORBK CHAIN         *
+      *  E32481 - COVER 202 FLAG.                                     *
+      *  E32920 - MT100 Generated instead of MT202, regardless of     *
+      *           the value of Ordering Bank and Beneficiary.  Also   *
+      *           fix some abortions that have been hanging around    *
+      *           for years. This enhancement to E24918 supercedes it.*
+      *  E24918 - MT202 Generated when BEN is a non-bank but when     *
+      *           Ordering customer is entered and not ordering bank  *
+      *  E32873 - RECI, CHTP, AND LCD MAY BE CORRUPT WHEN WRITING A   *
+      *           RECORD TO OTPAY.                                    *
+      *  S01117 - REPORT WRITING PROGRAMS CHANGED TO ALLOW            *
+      *           REPORTING BY ORIGINATING BRANCH, OR BOOKING         *
+      *           BRANCH.                                             *
+      *  S01117 - AUTO PAY/RECEIVE FUNCTIONS AMENDED TO ONLY          *
+      *           ALLOW USERS TO GENERATE MESSAGES FOR PAYMENTS       *
+      *           THAT THEY HAVE AUTHORIZED, IF AUTO PAY/             *
+      *           RECEIVE INDICATOR IN I.C.D. IS SET TO Y.            *
+      *  S01195 - AMEND THIS PROGRAM WHICH USES THE EXISTING          *
+      *           HOLIDAY FILE TO USE THE NEW HOLIDAY FILE            *
+      *           FOR RELEASE 10.                                     *
+      *  S01194 - NEW DATABASE ERROR HANDLING TO COPE WITH            *
+      *           THE NEW STANDING DATA.                              *
+      *  E22850 - ARRAY  DIMENSIONS  INCREASED                        *
+      *           TO COPE WITH MORE CURRENCIES.                       *
+      *  E21473 - SENDS AN MT202 IF REQUESTED ON OUTGOING PAYMENTS.   *
+      *****************************************************************
+     F/COPY WNCPYSRC,FT0630F001
+     FPREVT   IP  E           K        DISK
+     F            OTPAYDDF                          KRENAMEDDFOTPAY
+     F            CQPACDDF                          KRENAMEDDFCQPAC
+     F            NTRANDDF                          KRENAMEDDFNTRAN
+     F/COPY WNCPYSRC,FT0630F002
+     FOTPAY   UF  E           K        DISK
+     F                                              KCOMIT
+     FCQPAC   UF  E           K        DISK
+     F            CQPADDDF                          KIGNORE
+     F                                              KCOMIT
+     FNTRAN   UF  E           K        DISK
+     F                                              KCOMIT
+     F**FT0630P1O   E                    PRINTER                          S01117
+     FFT0630AUO   E                    PRINTER                            S01117
+     FTABFP   IF  E           K        DISK
+     F            TABTB20F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F*
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F*
+     FACNUMA  IF  E           K        DISK
+     F/COPY WNCPYSRC,FT0630FFPG                                           S01408
+     F*                                                                   S01408
+     F*
+     F/EJECT
+     F*
+      ****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS                      *
+      ****************************************************************
+      * 01              RECORD READ FROM DDFOTPAY.                   *
+      * 02              RECORD READ FROM DDFCQPAC.                   *
+      * 03              RECORD READ FROM DDFNTRAN.                   *
+      *                                                              *
+      *       10        UNSUCCESSFUL CHAIN TO TABFP.                 *
+      *       40        FIRST CYCLE COMPLETED.                       *
+      *       80        END-OF-FILE  READ FROM TABFP.                *
+      *       81        UNSUCCESSFUL READ FROM TABFP.                *
+      *                                                              *
+      *       78        ) DATA                                       *
+      *       U7        ) BASE                                       *
+      *       U8        ) ERROR.                                     *
+      *             LR  LAST RECORD (TERMINATE PROGRAM).             *
+      *                                                              *
+      *  N.B:- 90-99    STANDARD SUBROUTINE INDICATORS.              *
+      ****************************************************************
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E**************      CCYA      100  3               CURRENCY CODES   E22850
+     E                    CCYA      200  3               CURRENCY CODES   E22850
+     E**************      CTND      100  1 0             TELEX NOTICE DAYSE22850
+     E                    CTND      200  1 0             TELEX NOTICE DAYSE22850
+     E**************      TNDT      100  5 0             TELEX NOTICE DATEE22850
+     E                    TNDT      200  5 0             TELEX NOTICE DATEE22850
+     E                    HCCYA      25  3               HOLIDAY DATE CCYS
+     E*
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E/COPY ZSRSRC,ZF2CE                                                  S01195
+     E/EJECT
+     I*
+     IDDFOTPAY    01
+     I/COPY WNCPYSRC,FT0630I001
+     IDDFCQPAC    02
+     IDDFNTRAN    03
+     I/COPY WNCPYSRC,FT0630I005
+     I*
+     IOTPAYDDF                                                            E32873
+     I              RECI                            OTRECI                E32873
+     I              LCD                             OTLCD                 E32873
+     I              CHTP                            OTCHTP                E32873
+     I*                                                                   S01414
+     ICQPACDDF                                                            137181
+     I              RECI                            CQRECI                137181
+     I              LCD                             CQLCD                 137181
+     I              CHTP                            CQCHTP                137181
+     I*                                                                   137181
+     I* Rename of ACCNTABF Profit Centre to avoid overwriting             S01414
+     I*                                                                   S01414
+     IACCNTABF                                                            S01117
+     I              BRCA                            ACBRCA                                  AR874076
+     I              PRFC                            ACPRFC                S01414
+     I              FRNT                            ACFRNT                                  AR874076
+     I              TMST                            ACTMST                                    250348
+      *                                                                                     AR874076
+      ** Rename of TABLETL branch                                                           AR874076
+      *                                                                                     AR874076
+     ITABLETLF                                                                              AR874076
+     I              BRCA                            ACBRCA                                  AR874076
+     I*                                                                   S01414
+     I*  Data Structure for AOIBANR4                                      CFT004
+     IP@ACCN    E DSACCNTAB                                               CFT004
+     I              BRCA                            BRCI                  CFT004
+     I              CNUM                            CNUMI                 CFT004
+     I              PRFC                            PRFCI                 CFT004
+     I              LCD                             LCDI                  CFT004
+     I              FRNT                            FRNTI                                   AR874076
+     I              TMST                            TMSTI                                     250348
+      **                                                                                      CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      ** 1st DS for access program , short data structure                                     CSC022
+      **                                                                                      CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      ** External data structure for SAR file details                                         CSC022
+      **                                                                                      CSC022
+      *                                                                                       CFT032
+     ISDCUST    E DSSDCUSTPD                                                                  CFT032
+      *                                                                                       CFT032
+      ** External data structure for Customer Details                                         CFT032
+      *                                                                                       CFT032
+     ISDCNST    E DSSDCNSTPD                                                                  CFT032
+      *                                                                                       CFT032
+      ** External data structure for Counterparty Nostros                                     CFT032
+      *                                                                                       CFT032
+     IMEBICD    E DSMEBICDPD                                                                  CFT032
+      *                                                                                       CFT032
+      ** External data structure for Midas BIC Directory                                      CFT032
+      *                                                                                       CFT032
+     IPSDS       SDS                                                                          CSC022
+     I                                        1  10 WPGM                                      CSC022
+     I                                      244 253 WJOBNM                                    CSC022
+     I                                      254 263 WUSRID                                    CSC022
+      **                                                                                      CSC022
+     I            DS
+     I*
+     I**********************************************
+     I*       DATA STRUCTURE FOR 'TABLETJ' TO      *
+     I*            IDENTIFY HOLIDAY CCY ARRAY.     *
+     I**********************************************
+     I*
+     I                                       15  89 HCCY
+     I                                       15  89 HCCYA
+     I*
+     I/COPY WNCPYSRC,FT0630I002
+     IDLDA        DS                            256
+     I*
+     I**********************************************
+     I*       DATA STRUCTURE USED IN THE EVENT     *
+     I*                    OF DATABASE ERRORS.     *
+     I**********************************************
+     I*
+     I**********                            134 138 DBFILE                S01194
+     I**********                            139 167 DBKEY                 S01194
+     I**********                            168 175 DBPGM                 S01194
+     I**********                            176 177 DBASE                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     I*
+     ICMTTXT      DS                            160
+     I*
+     I*********************************************
+     I*       DATA STRUCTURE TO PROVIDE TEXT      *
+     I*            ON COMIT ENTRY IN JOURNAL.     *
+     I*********************************************
+     I*
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTION
+     I                                       26  35 USRIDX
+     I                                       51  65 CMTREF
+     I                                       66  66 PRIN
+     I                                       67  67 MT100
+     I                                       68  68 MT202
+     I                                       69  69 MT400
+     I                                       70  70 MT200
+     I*
+     I                                       71  71 MT210
+     I                                       72  72 TXIN
+     I                                       73  73 BAIN
+     I                                       74  74 ISIN
+     I                                       75  75 MPIN
+     I/COPY WNCPYSRC,FT0630I003
+     I*                                                                   S01408
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      ************                                                  E24918E32920
+     I************DS                                                E24918E32920
+     I************                            1 140 ORDCU           E24918E32920
+     I************                            1  35 ORC1            E24918E32920
+     I************                           36  70 ORC2            E24918E32920
+     I************                           71 105 ORC3            E24918E32920
+     I************                          106 140 ORC4            E24918E32920
+     I**  DATA STRUCTURE TO RETRIEVE MULTI BRANCH INDICATOR               S01117
+     I*                                                                   S01117
+     IRUNDAT      DS                                                      S01117
+     I                                       13  13 @MBIN                 S01117
+     I*                                                                   S01117
+      **                                                                                      CSC022
+     I/COPY WNCPYSRC,FTH00025
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     I/COPY WNCPYSRC,FT0630I004
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I/COPY ZSRSRC,ZF2CI                                                  S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,FT0630IPG                                            S01408
+     C*                                                                   S01408
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*    FIRST CYCLE.     *
+     C***********************
+     C*
+     C           *IN40     IFEQ '0'                         N*IN40
+     C                     SETOF                     LR     LR IND
+     C                     EXSR ZSYSTM
+     C*
+     C           *IN99     IFEQ '1'                         ))))))))))))))
+     C**********           MOVE 'TABFP'   DBFNAM  5         )))  DATA  )))S01194
+     C**********           MOVELZTABKY    DBERKY 39         )))  BASE  )))S01194
+     C**********           MOVE '01'      DBERR#  2         ))) ERROR  )))S01194
+     C                     MOVE 'TABFP'   DBFNAM  8         )))  DATA  )))S01194
+     C                     MOVELZTABKY    DBERKY 29         )))  BASE  )))S01194
+     C                     MOVE '01'      DBERR#  3         ))) ERROR  )))S01194
+     C                     EXSR DBERR                       )))   01   )))
+     C                     END                              ))))))))))))))
+     C/COPY WNCPYSRC,FT0630C008
+     C*
+     C*****************************
+     C*    INITIAL PROCESSING.    *
+     C*****************************
+     C*                                                                   S01117
+     C**  RECEIVE IN PARAMETER OF USER PROFILE.                           S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           USRPF  10                       S01117
+     C*                                                                   S01117
+     C**  DATA STRUCTURES THAT ARE EXTERNALLY DESCRIBED                   S01117
+     C           *NAMVAR   DEFN           RUNDAT                          S01117
+     C                     IN   RUNDAT                                    S01117
+     C*
+     C*                                                                   S01117
+      *** Check if CFT004 is switched on  (IBAN)                          CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOSARDR0'                                CFT004
+     C                     PARM '       ' @RTCD   7                       CFT004
+     C                     PARM '*VERIFY' @OPTN   7                       CFT004
+     C                     PARM 'CFT004'  @SARD   6                       CFT004
+      *                                                                   CFT004
+     C           @RTCD     IFEQ *BLANK                                    CFT004
+     C                     MOVE 'Y'       CFT004  1                       CFT004
+     C                     ELSE                                           CFT004
+     C                     MOVE 'N'       CFT004                          CFT004
+     C                     ENDIF                                          CFT004
+      *                                                                   CFT004
+      ** Check if CFT014 is switched on                                                       CSW203
+      *                                                                                       CSW203
+     C                     CALL 'AOSARDR0'                                                    CSW203
+     C                     PARM '       ' PRTCD   7                                           CSW203
+     C                     PARM '*VERIFY' POPTN   7                                           CSW203
+     C                     PARM 'CFT014'  PSARD   6                                           CSW203
+      *                                                                                       CSW203
+     C           PRTCD     IFEQ *BLANKS                                                       CSW203
+     C                     MOVE 'Y'       CFT014  1                                           CSW203
+     C                     ELSE                                                               CSW203
+     C                     MOVE 'N'       CFT014                                              CSW203
+     C           PRTCD     IFNE '*NRF   '                                                     CSW203
+     C                     MOVEL'SCSARDPD'DBFNAM                                              CSW203
+     C                     MOVELPSARD     DBERKY                                              CSW203
+     C                     MOVE '16'      DBERR#                                              CSW203
+     C                     EXSR DBERR                                                         CSW203
+     C                     ENDIF                                                              CSW203
+     C                     ENDIF                                                              CSW203
+     C/COPY WNCPYSRC,FTH00026
+      *                                                                                       CFT048
+      ** check if CFT048 is switched on                                                       CFT048
+      *                                                                                       CFT048
+     C                     CALL 'AOSARDR0'                                                    CFT048
+     C                     PARM '       ' @RTCD                                               CFT048
+     C                     PARM '*VERIFY' @OPTN                                               CFT048
+     C                     PARM 'CFT048'  @SARD                                               CFT048
+      *                                                                                       CFT048
+     C           @RTCD     IFEQ *BLANK                                                        CFT048
+     C                     MOVE 'Y'       CFT048  1                                           CFT048
+     C                     ELSE                                                               CFT048
+     C                     MOVE 'N'       CFT048                                              CFT048
+     C                     ENDIF                                                              CFT048
+      *                                                                                       CFT048
+      *                                                                                       CSW203
+      ** Check if CSW203 is switched on                                                       CSW203
+      *                                                                                       CSW203
+     C                     CALL 'SWIF2003'                                                    CSW203
+     C                     PARM *BLANKS   PRTCD                                               CSW203
+      *                                                                                       CSW203
+     C           PRTCD     IFEQ 'CSW2003'                                                     CSW203
+     C                     MOVE 'Y'       CSW203  1                                           CSW203
+     C                     ELSE                                                               CSW203
+     C                     MOVE 'N'       CSW203                                              CSW203
+     C                     ENDIF                                                              CSW203
+      *                                                                                       CSW203
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+      **                                                                                      CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCRSKP  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD                                               CSC022
+     C                     PARM '*VERIFY '@OPTN                                               CSC022
+     C                     PARM 'CSC022'  @SARD                                               CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           WJOBNM    LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCRSKP                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           @RTCD     IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  DBERKY                                              CSC022
+     C                     MOVEL'SCSARDPD'DBFNAM                                              CSC022
+     C                     MOVE '17'      DBERR#                                              CSC022
+     C                     EXSR DBERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     MOVE *BLANKS   ZTABKY
+     C                     MOVEL'01'      ZTABKY
+     C                     MOVE '11'      ZTABKY
+     C           ZTABKY    CHAINTABFP                10
+     C  N10      RECI      COMP 'D'                  1010
+     C*
+     C           *IN10     IFEQ '1'                         ))))))))))))))
+     C                     MOVE 'TABFP'   DBFNAM            )))  DATA  )))
+     C                     MOVELZTABKY    DBERKY            )))  BASE  )))
+     C                     MOVE '03'      DBERR#            ))) ERROR  )))
+     C                     EXSR DBERR                       )))   03   )))
+     C                     END                              ))))))))))))))
+     C*
+     C***********************************
+     C*    SET UP CURRENCIES ARRAYS.    *
+     C***********************************
+     C*
+     C                     MOVEL'20    '  LLKEY  12
+     C                     MOVE '     1'  LLKEY
+     C           LLKEY     SETLLTABFP
+     C           TAGCCY    TAG                              TAG: TAGCCY
+     C                     READ TABFP                  8180
+     C*
+     C           *IN81     IFEQ '1'                         ))))))))))))))
+     C                     MOVE 'TABFP'   DBFNAM            )))  DATA  )))
+     C                     MOVELKEY       DBERKY            )))  BASE  )))
+     C                     MOVE '04'      DBERR#            ))) ERROR  )))
+     C                     EXSR DBERR                       )))   04   )))
+     C                     END                              ))))))))))))))
+     C*
+     C   80                GOTO TAGEND
+     C*
+     C           RECI      CABNE'D'       TAGCCY
+     C                     MOVE KEY       RECID1  1
+     C                     MOVELKEY       RECID2  2
+     C           RECID1    CABNE'1'       TAGCCY
+     C           RECID2    CABNE'20'      TAGEND
+     C*
+     C                     MOVE KEY       LLKEY
+     C                     MOVE '2'       LLKEY
+     C                     ADD  1         I       30
+     C                     MOVE KEY       CKEY    4
+     C                     MOVELCKEY      CCYA,I
+     C                     Z-ADDTNOT      CTND,I
+     C*
+     C**************************************
+     C*    CALCULATE TELEX NOTICE DATE.    *
+     C**************************************
+     C*
+     C/COPY WNCPYSRC,FTH00027
+     C                     MOVE LOCY      ZCCY1                           S01195
+     C/COPY WNCPYSRC,FTH00028
+     C                     MOVE SLOC      ZLOC1                           S01195
+     C**********           MOVELCKEY      ZCCY                            S01195
+     C                     MOVELCKEY      ZCCY2                           S01195
+     C                     MOVE *BLANKS   ZLOC2                           S01195
+     C           TNOT      IFEQ *ZERO                                     102884
+     C                     Z-ADD1         ZNRDYS                          102884
+     C                     ELSE                                           102884
+     C                     Z-ADDTNOT      ZNRDYS
+     C                     ENDIF                                          102884
+     C                     Z-ADDRUND      ZDAYNO
+     C**********           EXSR ZTXDAY                                    S01195
+     C                     EXSR ZF2C                                      S01195
+     C           TNOT      IFEQ *ZERO                                     102884
+     C                     SUB  1         ZDYNBR                          102884
+     C                     ENDIF                                          102884
+     C                     Z-ADDZDYNBR    TNDT,I
+     C           LLKEY     SETLLTABFP
+     C                     GOTO TAGCCY
+     C*
+     C***********                                                  S01408 064663
+     C***Core*hook for externalisation.                            S01408 064663
+     C*COPY*WNCPYSRC,FT0630CEIP                                    S01408 064663
+     C***********                                                  S01408 064663
+     C           TAGEND    TAG                              TAG: TAGEND
+     C** Core hook for externalisation.                                   064663
+     C/COPY WNCPYSRC,FT0630CEIP                                           064663
+      *** Check if CFT022 is switched on                                                      CFT022
+      *                                                                                       CFT022
+     C                     CALL 'AOSARDR0'                                                    CFT022
+     C                     PARM '       ' @RTCD                                               CFT022
+     C                     PARM '*VERIFY' @OPTN                                               CFT022
+     C                     PARM 'CFT022'  @SARD                                               CFT022
+      *                                                                                       CFT022
+     C           @RTCD     IFEQ *BLANK                                                        CFT022
+     C                     MOVE 'Y'       CFT022  1                                           CFT022
+     C                     ELSE                                                               CFT022
+     C                     MOVE 'N'       CFT022                                              CFT022
+     C                     ENDIF                                                              CFT022
+      *                                                                                       CFT022
+      *** Reset Currencies, Telex Notice Days & Date Arrays.                                  CFT022
+      *                                                                                       CFT022
+     C           CFT022    IFEQ 'Y'                                                           CFT022
+     C                     MOVE *LOVAL    CCYA                                                CFT022
+     C                     MOVE *LOVAL    CTND                                                CFT022
+     C                     MOVE *LOVAL    TNDT                                                CFT022
+      *                                                                                       CFT022
+      *** Reset Counter, Indicators & work fields.                                            CFT022
+      *                                                                                       CFT022
+     C                     Z-ADD*ZEROS    I                                                   CFT022
+     C                     MOVE *OFF      *IN80                                               CFT022
+     C                     MOVE *OFF      *IN81                                               CFT022
+     C                     MOVE *BLANKS   LLKEY                                               CFT022
+     C                     MOVE *BLANKS   CKEY                                                CFT022
+      *                                                                                       CFT022
+      *** Set up Currencies arrays again.                                                     CFT022
+      *                                                                                       CFT022
+     C                     MOVEL'20    '  LLKEY  12                                           CFT022
+     C                     MOVE '     1'  LLKEY                                               CFT022
+     C           LLKEY     SETLLTABFP                                                         CFT022
+     C           XXXTAG    TAG                              TAG: XXXTAG                       CFT022
+     C                     READ TABFP                  8180                                   CFT022
+      *                                                                                       CFT022
+     C           *IN81     IFEQ '1'                         ))))))))))))))                    CFT022
+     C                     MOVE 'TABFP'   DBFNAM            )))  DATA  )))                    CFT022
+     C                     MOVELKEY       DBERKY            )))  BASE  )))                    CFT022
+     C                     MOVE '18'      DBERR#            ))) ERROR  )))                    CFT022
+     C                     EXSR DBERR                       )))   18   )))                    CFT022
+     C                     END                              ))))))))))))))                    CFT022
+      *                                                                                       CFT022
+     C   80                GOTO XXXEND                                                        CFT022
+      *                                                                                       CFT022
+     C           RECI      CABNE'D'       XXXTAG                                              CFT022
+     C                     MOVE KEY       RECID1  1                                           CFT022
+     C                     MOVELKEY       RECID2  2                                           CFT022
+     C           RECID1    CABNE'1'       XXXTAG                                              CFT022
+     C           RECID2    CABNE'20'      XXXEND                                              CFT022
+      *                                                                                       CFT022
+     C                     MOVE KEY       LLKEY                                               CFT022
+     C                     MOVE '2'       LLKEY                                               CFT022
+     C                     ADD  1         I       30                                          CFT022
+     C                     MOVE KEY       CKEY    4                                           CFT022
+     C                     MOVELCKEY      CCYA,I                                              CFT022
+      *                                                                                       CFT022
+      *** Increment TELEX NOTICE DAYS by 1.                                                   CFT022
+      *                                                                                       CFT022
+     C           TNOT      ADD  1         TNOT                                                CFT022
+     C                     Z-ADDTNOT      CTND,I                                              CFT022
+      *                                                                                       CFT022
+      *** Calculate TELEX NOTICE DATE.                                                        CFT022
+      *                                                                                       CFT022
+     C                     MOVE LOCY      ZCCY1                                               CFT022
+     C                     MOVE SLOC      ZLOC1                                               CFT022
+     C                     MOVELCKEY      ZCCY2                                               CFT022
+     C                     MOVE *BLANKS   ZLOC2                                               CFT022
+      *                                                                                       CFT022
+     C           TNOT      IFEQ *ZERO                                                         CFT022
+     C                     Z-ADD1         ZNRDYS                                              CFT022
+     C                     ELSE                                                               CFT022
+     C                     Z-ADDTNOT      ZNRDYS                                              CFT022
+     C                     ENDIF                                                              CFT022
+      *                                                                                       CFT022
+     C                     Z-ADDRUND      ZDAYNO                                              CFT022
+     C                     EXSR ZF2C                                                          CFT022
+     C           TNOT      IFEQ *ZERO                                                         CFT022
+     C                     SUB  1         ZDYNBR                                              CFT022
+     C                     ENDIF                                                              CFT022
+     C                     Z-ADDZDYNBR    TNDT,I                                              CFT022
+      *                                                                                       CFT022
+     C           LLKEY     SETLLTABFP                                                         CFT022
+     C                     GOTO XXXTAG                                                        CFT022
+      *                                                                                       CFT022
+     C           XXXEND    TAG                              TAG: XXXEND                       CFT022
+     C                     ENDIF                                                              CFT022
+      *                                                                                       CFT022
+     C                     SETON                     40     1ST CYCLE DONE
+     C                     END                              END N*IN40
+     C*
+     C****************************
+     C*    DETAIL PROCESSING.    *
+     C****************************
+     C*
+     C/EJECT
+     C*
+     C************************************
+     C*    RECORD READ FROM OTPAYDD.     *
+     C************************************
+     C*
+     C           *IN01     IFEQ '1'
+     C*
+     C                     MOVE PREF      CMTREF
+     C*
+     C*** ONLY PROCESS IF AUTHORISED TODAY AND NOT BACK VALUED
+     C*
+     C           PVDT      IFGE RUND
+     C*
+      *                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CCP3                                           S01408
+      *                                                                   S01408
+     C                     DO   I         J       30
+     C*
+     C           PCCY      IFEQ CCYA,J
+     C*
+     C           PVDT      IFLE TNDT,J
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CCPG                                           S01408
+     C*                                                                   S01408
+      *                                                                                       CFT048
+      ** Ignore telex notice days                                                             CFT048
+      *                                                                                       CFT048
+     C           CFT048    OREQ 'Y'                                                           CFT048
+      *                                                                                       CFT048
+     C           CMTREF    CHAINOTPAY                10
+     C*
+     C           *IN10     IFEQ '1'                         ))))))))))))))
+     C                     MOVE 'OTPAY'   DBFNAM            )))  DATA  )))
+     C                     MOVELCMTREF    DBERKY            )))  BASE  )))
+     C                     MOVE '05'      DBERR#            ))) ERROR  )))
+     C                     EXSR DBERR                       )))   05   )))
+     C                     END                              ))))))))))))))
+     C***********                                                  S01117 059194
+     C****IF*THE*SYSTEM*IS*MULTI-BRANCHED*EXECUTE*SR*USRAUT*       S01117 059194
+     C***********                                                  S01117 059194
+     C***********@MBIN     IFEQ 'Y'                                S01117 059194
+     C***********          EXSR USRAUT                             S01117 059194
+     C************IN20     IFEQ '0'                                S01117 059194
+     C***********          GOTO ENDJ1                              S01117 059194
+     C***********          END                                     S01117 059194
+     C***********          END                                     S01117 059194
+     C*
+     C                     MOVE 'P'       PRIN
+     C*
+     C           STMT      IFEQ 0
+     C                     MOVE 'Y'       ISIN
+     C                     END
+     C*
+     C           STMT      IFEQ 2
+     C                     MOVE 'Y'       MPYI
+     C                     END
+     C*                                                                   E21473
+     C** CHECK FOR MT202 INDICATOR ON OUTGOING PAYMENTS FOR MAIL          E21473
+     C** PAYMENT ORDERS.                                                  E21473
+     C*                                                                   E21473
+     C           SNMT      IFEQ 'Y'                        B001           E21473
+     C           STMT      ANDEQ2                                         E21473
+     C           MT202C    ANDNE'C'                                       071383
+     C*********************MOVE 'Y'       MT202                     E21473E32481
+     C                     MOVE 'Y'       MT202C                          E32481
+     C                     END                             E001           E21473
+      *                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CCP4                                           S01408
+      *                                                                   S01408
+     C*
+     C           STMT      IFEQ 8
+     C           STMT      OREQ 1
+     C           STMT      OREQ 10
+      *                                                                   061236
+      * If MT202 keyword exists in field 1 of Ordering Customer and       061236
+      * Settlement type is '01' or '08' then MT202 message must be        061236
+      * produced.                                                         061236
+     C           STMT      IFEQ 8                                         061236
+     C           STMT      OREQ 1                                         061236
+     C                     MOVEL'MT202'   ORCFLD 35                       061236
+      *                                                                                     BUG26775
+     C                     CALL 'FT1020'                                                    BUG26775
+     C                     PARM ORCT      CNTYP   1                                         BUG26775
+     C                     PARM SMCY      CNCCY   3                                         BUG26775
+     C                     PARM ORC1      CNTR1  35                                         BUG26775
+     C                     PARM ORC2      CNTR2  35                                         BUG26775
+     C                     PARM ORC3      CNTR3  35                                         BUG26775
+     C                     PARM ORC4      CNTR4  35                                         BUG26775
+     C                     PARM ORC5      CNTR5  35                                         BUG26775
+     C                     PARM BNCT      BNTYP   1                                         BUG26775
+     C                     PARM PCCY      BNCCY   3                                         BUG26775
+     C                     PARM BNC1      BNTR1  35                                         BUG26775
+     C                     PARM BNC2      BNTR2  35                                         BUG26775
+     C                     PARM BNC3      BNTR3  35                                         BUG26775
+     C                     PARM BNC4      BNTR4  35                                         BUG26775
+     C                     PARM BNC5      BNTR5  35                                         BUG26775
+     C                     PARM 'C'       CTYP    1                                         BUG26775
+      *                                                                                     BUG26775
+     C           ORC1      IFEQ ORCFLD                                    061236
+     C           CTYP      OREQ 'B'                                                         BUG26775
+     C                     MOVE 'Y'       MT202                           061236
+     C                     GOTO ENDVA                                     061236
+     C                     END                                            061236
+     C                     END                                            061236
+     C*
+     C*  KLISTS FOR CHANGE
+     C           QCKEY     KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           QRECT   1
+     C                     MOVE 'A'       QRECT
+     C                     SETOF                     39
+     C********** BNCT      IFEQ 'S'                                                           225877
+     C**********           SETON                     39                                       225877
+     C**********           END                                                                225877
+     C           BNCT      IFEQ 'S'                                                           CFT032
+      *                                                                                     BUG26775
+     C                     CALL 'FT1020'                                                    BUG26775
+     C                     PARM ORCT      CNTYP   1                                         BUG26775
+     C                     PARM SMCY      CNCCY   3                                         BUG26775
+     C                     PARM ORC1      CNTR1  35                                         BUG26775
+     C                     PARM ORC2      CNTR2  35                                         BUG26775
+     C                     PARM ORC3      CNTR3  35                                         BUG26775
+     C                     PARM ORC4      CNTR4  35                                         BUG26775
+     C                     PARM ORC5      CNTR5  35                                         BUG26775
+     C                     PARM BNCT      BNTYP   1                                         BUG26775
+     C                     PARM PCCY      BNCCY   3                                         BUG26775
+     C                     PARM BNC1      BNTR1  35                                         BUG26775
+     C                     PARM BNC2      BNTR2  35                                         BUG26775
+     C                     PARM BNC3      BNTR3  35                                         BUG26775
+     C                     PARM BNC4      BNTR4  35                                         BUG26775
+     C                     PARM BNC5      BNTR5  35                                         BUG26775
+     C                     PARM 'C'       CTYP    1                                         BUG26775
+      *                                                                                     BUG26775
+     C           CTYP      IFEQ 'B'                                                         BUG26775
+     C                     SETON                     39                                     BUG26775
+     C                     ENDIF                                                            BUG26775
+      *                                                                                       CFT032
+     C********** 1         SUBSTBNC1:1    SLSH    1                                   CFT032 262746B
+     C********** SLSH      IFNE '/'                                                   CFT032 262746B
+     C**********           MOVELBNC1      W9BICC    P                                 CFT032 262746B
+     C********** 3         SUBSTBNC1:9    W9BICB                                      CFT032 262746B
+     C**********           ELSE                                                       CFT032 262746B
+     C**********           MOVELBNC2      W9BICC    P                                 CFT032 262746B
+     C********** 3         SUBSTBNC2:9    W9BICB                                      CFT032 262746B
+     C**********           ENDIF                                                      CFT032 262746B
+      *****************************************************************               CFT032 262746B
+     C**********           CALL 'ME1400'                                              CFT032 262746B
+     C**********           PARM *BLANKS   W9RTN   7                                   CFT032 262746B
+     C**********           PARM           W9BICC  8                                   CFT032 262746B
+     C**********           PARM           W9BICB  3                                   CFT032 262746B
+     C**********           PARM           SDCUST                                      CFT032 262746B
+     C**********           PARM           SDCNST                                      CFT032 262746B
+     C**********           PARM           MEBICD                                      CFT032 262746B
+     C**********           PARM *BLANKS   W9CUST  1                                   CFT032 262746B
+     C**********           PARM *BLANKS   W9CNST  1                                   CFT032 262746B
+     C**********           PARM *BLANKS   W9BICD  1                                   CFT032 262746B
+      *****************************************************************               CFT032 262746B
+     C********** W9RTN     IFEQ ' '                                                   CFT032 262746B
+     C********** W9CUST    IFEQ 'Y'                                                   CFT032 262746B
+     C********** BBBNBI    IFEQ 'Y'                                                   CFT032 262746B
+     C**********           MOVE *ON       *IN39                                       CFT032 262746B
+     C**********           ENDIF                                                      CFT032 262746B
+     C**********           ELSE                                                       CFT032 262746B
+     C********** BDSUBT    IFNE 'BEID'                                                CFT032 262746B
+     C********** BDSUBT    ANDNE'MCC'                                                 CFT032 262746B
+     C********** BDSUBT    ANDNE'TESP'                                                CFT032 262746B
+     C********** BDSUBT    ANDNE'TRCO'                                                CFT032 262746B
+     C**********           MOVE *ON       *IN39                                       CFT032 262746B
+     C**********           ENDIF                                                      CFT032 262746B
+     C**********           ENDIF                                                      CFT032 262746B
+     C**********           ELSE                                                       CFT032 262746B
+     C**********           SETON                     39                               CFT032 262746B
+     C**********           ENDIF                                                      CFT032 262746B
+      *                                                                                       CFT032
+     C                     END                                                                CFT032
+     C           BNCT      IFEQ 'C'
+     C           BNCT      OREQ 'G'
+     C           BNCT      OREQ 'P'
+     C                     MOVELBNC1      ##001   1                       S01435
+      *                                                                   S01435
+      *  If not / then use first line                                     S01435
+      *                                                                   S01435
+     C           ##001     IFNE '/'                                       S01435
+     C           BNCT      ANDEQ'C'                                       S01435
+     C           BNCT      OREQ 'G'                                       S01435
+     C           BNCT      OREQ 'P'                                       S01435
+     C                     MOVELBNC1      CNUM
+     C                     ELSE                                           S01435
+     C                     MOVELBNC2      CNUM                            S01435
+     C                     END                                            S01435
+     C                     END
+      *                                                                   S01435
+     C           BNCT      IFEQ 'R'
+     C                     MOVELBNC1      ACNO
+     C           ACNO      CHAINACNUMA               80
+     C  N80      RECI      COMP 'D'                  8080
+     C   80                DO
+     C                     MOVEL'ACNUMA'  DBFNAM            )))  DATA  )))
+     C                     MOVELACNO      DBERKY            )))  BASE  )))
+     C                     MOVE '06'      DBERR#            ))) ERROR  )))
+     C                     EXSR DBERR                       )))   06   )))
+     C                     END                              ))))))))))))))
+     C                     END                              ))))))))))))))
+     C*
+     C           BNCT      IFEQ 'N'
+     C                     MOVELBNC1      QNOS    2                    )))
+     C                     MOVELPCCY      QNOST   5                    )))
+     C***********          MOVELQNOS      QNOST                        )))E32920
+     C                     MOVE QNOS      QNOST                           E32920
+     C                     END
+     C           BNCT      IFEQ 'F'
+     C                     MOVELBNC1      QNOST                        )))
+     C                     END
+     C           BNCT      IFEQ 'N'
+     C           BNCT      OREQ 'F'
+     C                     MOVE *BLANK    ZTABKY                       )))
+     C                     MOVEL'70'      ZTABKY                       )))
+     C                     MOVE QNOST     ZTABKY                       )))
+     C           ZTABKY    CHAINTABLETLF             80
+     C  N80      RECI      COMP 'D'                  8080
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'TABFP'   DBFNAM            )))  DATA  )))
+     C                     MOVELZTABKY    DBERKY            )))  BASE  )))
+     C                     MOVE '08'      DBERR#            ))) ERROR  )))
+     C                     EXSR DBERR                       )))   08   )))
+     C                     END                              ))))))))))))))
+     C                     END                              ))))))))))))))
+      *   IBAN Number
+     C           CFT004    IFEQ 'Y'                                       CFT004
+     C           BNCT      ANDEQ'I'                                       CFT004
+     C           34        SUBSTBNC1:2    P@IBN  34                       CFT004
+     C                     MOVE *BLANKS   DSSDY                           CFT004
+     C                     CALL 'AOIBANR4'                                CFT004
+     C                     PARM           @RTCD                           CFT004
+     C                     PARM '*KEY   ' @OPTN                           CFT004
+     C                     PARM           P@IBN                           CFT004
+     C           P@ACCN    PARM           DSSDY                           CFT004
+     C           @RTCD     IFNE *BLANKS                                   CFT004
+     C                     MOVE 'N'       LIVEIB  1                       CFT004
+     C                     ELSE                                           CFT004
+     C                     MOVE 'Y'       LIVEIB                          CFT004
+     C**********           Z-ADDCNUMI     CNUM                                         CFT004 CSD027
+     C                     MOVE CNUMI     CNUM                                                CSD027
+     C                     ENDIF                                          CFT004
+     C                     ENDIF                                          CFT004
+     C*
+     C           BNCT      IFEQ 'C'
+     C           BNCT      OREQ 'P'
+     C           BNCT      OREQ 'R'
+     C           BNCT      OREQ 'F'
+     C           BNCT      OREQ 'N'
+     C           BNCT      OREQ 'G'
+     C           BNCT      OREQ 'I'                                       CFT004
+     C           LIVEIB    ANDEQ'Y'                                       CFT004
+     C           QCKEY     CHAINCLINTCBF             80
+     C  N80      RECI      COMP 'D'                  8080
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'CLINT'   DBFNAM            )))  DATA  )))
+     C                     MOVELCNUM      DBERKY            )))  BASE  )))
+     C                     MOVE '07'      DBERR#            ))) ERROR  )))
+     C                     EXSR DBERR                       )))   07   )))
+     C                     ELSE
+     C                     TESTB'0'       CMIN           39IS A BANK
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,FT0630VSF                                            S01408
+     C*                                                                   S01408
+     C                     END
+     C                     END
+      *                                                                   E32920
+      ** If Beneficiary is a bank, we need to check that Ordering Bank andE32920
+      ** Customer are banks in order to determine whether to send a MT100 E32920
+     C  N39                GOTO ENDOC                                     E32920
+      *                                                                   E32920
+     C***********ORBK      IFEQ 0                                                      E32920 CSD027
+     C           ORBK      IFEQ *BLANKS                                                       CSD027
+     C                     GOTO ENDOB                                     E32920
+     C                     END                                            E32920
+      *                                                                   E32920
+     C           ORBT      IFEQ 'C'                                       E32920
+     C           ORBT      OREQ 'P'                                       E32920
+     C                     MOVELORBK      CNUM                            E32920
+     C                     END                                            E32920
+     C           ORBT      IFEQ 'R'                                       E32920
+     C                     MOVELORBK      ACNO                            E32920
+     C           ACNO      CHAINACNUMA               80                   E32920
+     C  N80      RECI      COMP 'D'                  8080                 E32920
+     C   80                DO                                             E32920
+     C                     MOVEL'ACNUMA'  DBFNAM            )))  DATA  )))E32920
+     C                     MOVELACNO      DBERKY            )))  BASE  )))E32920
+     C                     MOVE '10'      DBERR#            ))) ERROR  )))E32920
+     C                     EXSR DBERR                       )))   10   )))E32920
+     C                     END                                            E32920
+     C                     END                                            E32920
+     C*                                                                   E32920
+     C           ORBT      IFEQ 'N'                                       E32920
+     C                     MOVELORBK      QNOS    2                       E32920
+     C*********************MOVELPCCY      QNOST   5                E32920 E34452
+     C                     MOVELSMCY      QNOST   5                       E34452
+     C                     MOVE QNOS      QNOST                           E32920
+     C                     END                                            E32920
+     C           ORBT      IFEQ 'F'                                       E32920
+     C                     MOVELORBK      QNOST                        )))E32920
+     C                     END                                            E32920
+     C           ORBT      IFEQ 'N'                                       E32920
+     C           ORBT      OREQ 'F'                                       E32920
+     C                     MOVE *BLANK    ZTABKY                       )))E32920
+     C                     MOVEL'70'      ZTABKY                       )))E32920
+     C                     MOVE QNOST     ZTABKY                       )))E32920
+     C           ZTABKY    CHAINTABLETLF             80                   E32920
+     C  N80      RECI      COMP 'D'                  8080                 E32920
+     C           *IN80     IFEQ '1'                                       E32920
+     C                     MOVEL'TABFP'   DBFNAM            )))  DATA  )))E32920
+     C                     MOVELZTABKY    DBERKY            )))  BASE  )))E32920
+     C                     MOVE '11'      DBERR#            ))) ERROR  )))E32920
+     C                     EXSR DBERR                       )))   11   )))E32920
+     C                     END                              ))))))))))))))E32920
+     C                     END                              ))))))))))))))E32920
+     C*                                                                   E32920
+     C           ORBT      IFEQ 'C'                                       E32920
+     C           ORBT      OREQ 'P'                                       E32920
+     C           ORBT      OREQ 'R'                                       E32920
+     C           ORBT      OREQ 'F'                                       E32920
+     C           ORBT      OREQ 'N'                                       E32920
+     C           QCKEY     CHAINCLINTCBF             80                   E32920
+     C  N80      RECI      COMP 'D'                  8080                 E32920
+     C           *IN80     IFEQ '1'                                       E32920
+     C                     MOVEL'CLINT'   DBFNAM            )))  DATA  )))E32920
+     C                     MOVELCNUM      DBERKY            )))  BASE  )))E32920
+     C                     MOVE '12'      DBERR#            ))) ERROR  )))E32920
+     C                     EXSR DBERR                       )))   12   )))E32920
+     C                     ELSE                                           E32920
+     C                     TESTB'0'       CMIN           39IS A BANK      E32920
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,FT0630VSR                                            S01408
+     C*                                                                   S01408
+     C                     END                                            E32920
+     C                     END                                            E32920
+     C           ENDOB     TAG                                            E32920
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CCP2                                           S01408
+     C*                                                                   S01408
+     C  N39                GOTO ENDOC                                     E32920
+      *                                                                   E32920
+      * Validate Ord Cust as above                                        E32920
+     C           ORCT      IFEQ 'S'                                       E32920
+      *                                                                                     BUG26775
+     C           CTYP      IFEQ 'B'                                                         BUG26775
+     C                     MOVE *ON       *IN39                                             BUG26775
+     C                     ENDIF                                                            BUG26775
+      *                                                                                     BUG26775
+     C********** 1         SUBSTORC1:1    SLSH                                        CFT032 TEMPANN
+     C********** 1         SUBSTORC1:1    SLSH    1                                 TEMPANN BUG26775
+     C********** SLSH      IFNE '/'                                                  CFT032 BUG26775
+     C**********           MOVELORC1      W9BICC    P                                CFT032 BUG26775
+     C********** 3         SUBSTORC1:9    W9BICB                                     CFT032 BUG26775
+     C**********           ELSE                                                      CFT032 BUG26775
+     C**********           MOVELORC2      W9BICC    P                                CFT032 BUG26775
+     C********** 3         SUBSTORC2:9    W9BICB                                     CFT032 BUG26775
+     C**********           ENDIF                                                     CFT032 BUG26775
+      *                                                                                       CFT032
+     C**********           CALL 'ME1400'                                             CFT032 BUG26775
+     C**********           PARM *BLANKS   W9RTN   7                                  CFT032 BUG26775
+     C**********           PARM           W9BICC  8                                  CFT032 BUG26775
+     C**********           PARM           W9BICB  3                                  CFT032 BUG26775
+     C**********           PARM           SDCUST                                     CFT032 BUG26775
+     C**********           PARM           SDCNST                                     CFT032 BUG26775
+     C**********           PARM           MEBICD                                     CFT032 BUG26775
+     C**********           PARM *BLANKS   W9CUST  1                                  CFT032 BUG26775
+     C**********           PARM *BLANKS   W9CNST  1                                  CFT032 BUG26775
+     C**********           PARM *BLANKS   W9BICD  1                                  CFT032 BUG26775
+      *                                                                                       CFT032
+     C********** W9RTN     IFEQ ' '                                                  CFT032 BUG26775
+     C********** W9CUST    IFEQ 'Y'                                                  CFT032 BUG26775
+     C********** BBBNBI    IFEQ 'Y'                                                  CFT032 BUG26775
+     C**********           MOVE *ON       *IN39                                      CFT032 BUG26775
+     C**********           ENDIF                                                     CFT032 BUG26775
+     C**********           ELSE                                                      CFT032 BUG26775
+     C********** BDSUBT    IFNE 'BEID'                                               CFT032 BUG26775
+     C********** BDSUBT    ANDNE'MCCO'                                               CFT032 BUG26775
+     C********** BDSUBT    ANDNE'TESP'                                               CFT032 BUG26775
+     C********** BDSUBT    ANDNE'TRCO'                                               CFT032 BUG26775
+     C**********           MOVE *ON       *IN39                                      CFT032 BUG26775
+     C**********           ENDIF                                                     CFT032 BUG26775
+     C**********           ENDIF                                                     CFT032 BUG26775
+     C**********           ELSE                                                      CFT032 BUG26775
+     C**********           SETON                     39                              E32920 BUG26775
+     C**********           ENDIF                                                     CFT032 BUG26775
+      *                                                                                       CFT032
+     C                     GOTO ENDOC                                     E32920
+     C                     END                                            E32920
+      *                                                                                       CFT032
+      ** Initialize work field                                                                CFT032
+      *                                                                                       CFT032
+     C                     MOVE *BLANKS   WFORC1 35                                           CFT032
+     C********** 1         SUBSTORC1:1    SLSH                                       CFT032 BUG26775
+     C           1         SUBSTORC1:1    SLSH    1                                         BUG26775
+     C           SLSH      IFEQ '/'                                                           CFT032
+     C           ORCT      IFEQ 'P'                                                           CFT032
+     C           ORCT      OREQ 'R'                                                           CFT032
+     C           ORCT      OREQ 'I'                                                        BUG15264A
+     C                     SUBSTORC1:2    WFORC1    P                                         CFT032
+     C                     ENDIF                                                              CFT032
+     C           ORCT      IFEQ 'C'                                                           CFT032
+     C                     MOVELORC2      WFORC1    P                                         CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ELSE                                                               CFT032
+     C           ORCT      IFEQ 'I'                                                           CFT032
+     C           '/'       CAT  ORC1      WFORC1    P                                         CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVELORC1      WFORC1    P                                         CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C           ORCT      IFEQ 'C'                                       E32920
+     C           ORCT      OREQ 'G'                                       E32920
+     C           ORCT      OREQ 'P'                                       E32920
+     C**********           MOVELORC1      CNUM                            E32920              CFT032
+     C                     MOVELWFORC1    CNUM                                                CFT032
+     C                     END                                            E32920
+     C           ORCT      IFEQ 'R'                                       E32920
+     C**********           MOVELORC1      ACNO                            E32920              CFT032
+     C                     MOVELWFORC1    ACNO                                                CFT032
+     C           ACNO      CHAINACNUMA               80                   E32920
+     C  N80      RECI      COMP 'D'                  8080                 E32920
+     C   80                DO                                             E32920
+     C                     MOVEL'ACNUMA'  DBFNAM            )))  DATA  )))E32920
+     C                     MOVELACNO      DBERKY            )))  BASE  )))E32920
+     C                     MOVE '13'      DBERR#            ))) ERROR  )))E32920
+     C                     EXSR DBERR                       )))   13   )))E32920
+     C                     END                                            E32920
+     C                     END                                            E32920
+     C*                                                                   E32920
+     C           ORCT      IFEQ 'N'                                       E32920
+     C**********           MOVELORC1      QNOS    2                       E32920              CFT032
+     C                     MOVELWFORC1    QNOS    2                                           CFT032
+     C*********************MOVELPCCY      QNOST   5                E32920 E34452
+     C                     MOVELSMCY      QNOST   5                       E34452
+     C                     MOVE QNOS      QNOST                           E32920
+     C                     END                                            E32920
+     C           ORCT      IFEQ 'F'                                       E32920
+     C**********           MOVELORC1      QNOST                        )))E32920              CFT032
+     C                     MOVELWFORC1    QNOST                                               CFT032
+     C                     END                                            E32920
+     C           ORCT      IFEQ 'N'                                       E32920
+     C           ORCT      OREQ 'F'                                       E32920
+     C                     MOVE *BLANK    ZTABKY                       )))E32920
+     C                     MOVEL'70'      ZTABKY                       )))E32920
+     C                     MOVE QNOST     ZTABKY                       )))E32920
+     C           ZTABKY    CHAINTABLETLF             80                   E32920
+     C  N80      RECI      COMP 'D'                  8080                 E32920
+     C           *IN80     IFEQ '1'                                       E32920
+     C                     MOVEL'TABFP'   DBFNAM            )))  DATA  )))E32920
+     C                     MOVELZTABKY    DBERKY            )))  BASE  )))E32920
+     C                     MOVE '14'      DBERR#            ))) ERROR  )))E32920
+     C                     EXSR DBERR                       )))   14   )))E32920
+     C                     END                                            E32920
+     C                     END                                            E32920
+     C*                                                                   E32920
+     C           ORCT      IFEQ 'A'                                       061236
+     C                     SETOF                     39                   061236
+     C                     END                                            061236
+      *                                                                                       CFT032
+      ** If ORCT = 'I' call AOIBANR4 to retrieve customer number                              CFT032
+      *                                                                                       CFT032
+     C           ORCT      IFEQ 'I'                                                           CFT032
+     C                     MOVELWFORC1    SLSH                                              BUG15264
+     C           SLSH      IFEQ '/'                                                         BUG15264
+     C                     MOVE *BLANKS   P@IBN                                             BUG15264
+     C           34        SUBSTWFORC1:2  P@IBN                                             BUG15264
+     C                     ELSE                                                            BUG15264A
+     C                     MOVELWFORC1    P@IBN                                            BUG15264A
+     C                     ENDIF                                                            BUG15264
+     C                     CALL 'AOIBANR4'                                                    CFT032
+     C                     PARM           @RTCD                                               CFT032
+     C                     PARM '*KEY   ' @OPTN                                               CFT032
+     C**********           PARM WFORC1    P@IBN                                      CFT032 BUG15264
+     C                     PARM           P@IBN                                             BUG15264
+     C           P@ACCN    PARM           DSSDY                                               CFT032
+     C           @RTCD     IFNE *BLANKS                                                       CFT032
+     C                     MOVE 'N'       LIVEIB                                              CFT032
+     C                     MOVEL'ACCNTAB' DBFNAM                                              CFT032
+     C                     MOVELWFORC1    DBERKY                                              CFT032
+     C                     MOVE '18'      DBERR#                                              CFT032
+     C                     EXSR DBERR                                                         CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVE 'Y'       LIVEIB                                              CFT032
+     C                     MOVE CNUMI     CNUM                                                CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C           ORCT      IFEQ 'C'                                       E32920
+     C           ORCT      OREQ 'P'                                       E32920
+     C           ORCT      OREQ 'R'                                       E32920
+     C           ORCT      OREQ 'F'                                       E32920
+     C           ORCT      OREQ 'N'                                       E32920
+     C           ORCT      OREQ 'G'                                       E32920
+     C           QCKEY     CHAINCLINTCBF             80                   E32920
+     C  N80      RECI      COMP 'D'                  8080                 E32920
+     C           *IN80     IFEQ '1'                                       E32920
+     C                     MOVEL'CLINT'   DBFNAM            )))  DATA  )))E32920
+     C                     MOVELCNUM      DBERKY            )))  BASE  )))E32920
+     C                     MOVE '15'      DBERR#            ))) ERROR  )))E32920
+     C                     EXSR DBERR                       )))   15   )))E32920
+     C                     ELSE                                           E32920
+     C                     TESTB'0'       CMIN           39IS A BANK      E32920
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,FT0630VS1                                            S01408
+     C*                                                                   S01408
+     C                     END                                            E32920
+     C                     END                                            E32920
+     C           ENDOC     TAG                                            E32920
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CCP1                                           S01408
+     C*                                                                   S01408
+     C********** ORBK      IFNE 0                                         E24918
+     C********** *IN39     ANDEQ'0'                                       E24918
+     C****Send*an*MT100*if*either*the*ordering*bank*is*not*entered*or*ifE2E32920
+     C***the*beneficiary*is*a*non-bank.                             E24918E32920
+     C***In*addition*if*ordering*customer*is*entered*then*send*MT100E24918E32920
+     C********   ORBK      IFEQ 0                                   E24918E32920
+     C********   *IN39     OREQ '0'                                 E24918E32920
+     C********   ORDCU     ORNE *BLANKS                             E24918E32920
+     C           *IN39     IFEQ '0'                                       E32920
+     C*                                                                   071383
+     C           MT100     IFNE 'C'                                       071383
+     C           CSW203    ANDNE'Y'                                                           222663
+     C           MT100     ORNE 'C'                                                           222663
+     C           CFT014    ANDEQ'Y'                                                           CSW203
+     C           CSW203    ANDEQ'Y'                                                           CSW203
+     C                     MOVE 'Y'       MT100
+     C                     END                                            071383
+     C*                                                                   071383
+     C                     ELSE
+     C*                                                                   071383
+     C           MT202     IFNE 'C'                                       071383
+     C                     MOVE 'Y'       MT202
+     C                     END                                            071383
+     C*                                                                   071383
+     C                     END
+     C*                                                                   071383
+     C           BNCT      IFEQ 'A'
+     C           BNCT      OREQ 'I'                                       CFT004
+     C           LIVEIB    ANDEQ'N'                                       CFT004
+     C*                                                                   071383
+     C           MT100     IFNE 'C'                                       071383
+     C           CSW203    ANDNE'Y'                                                           222663
+     C           MT100     ORNE 'C'                                                           222663
+     C           CFT014    ANDEQ'Y'                                                           CSW203
+     C           CSW203    ANDEQ'Y'                                                           CSW203
+     C                     MOVE 'Y'       MT100
+     C                     END                                            071383
+     C*                                                                   071383
+     C           MT202     IFNE 'C'                                       071383
+     C                     MOVE *BLANK    MT202
+     C                     END                                            071383
+     C*                                                                   071383
+     C                     END
+     C/COPY WNCPYSRC,FT0630C006
+      *                                                                   061236
+     C           ENDVA     TAG                                            061236
+      *                                                                   E32481
+      ** If senders correspondant is non-blank seton the cover 202 flag.  E32481
+      *                                                                   E32481
+     C           SNMT      IFEQ 'Y'                                       E32481
+     C********** SNCO      ANDNE0                                                      E32481 CSD027
+     C           SNCO      ANDNE*BLANKS                                                       CSD027
+     C/COPY WNCPYSRC,FT0630C007
+     C*                                                                   071383
+     C           MT202C    IFNE 'C'                                       071383
+     C                     MOVE 'Y'       MT202C                          E32481
+     C                     END                                            071383
+     C*                                                                   071383
+     C                     END                                            E32481
+      *                                                                   E32481
+     C                     END
+      *                                                                   E32481
+     C/COPY WNCPYSRC,FT0630C002
+      *                                                                                       CFT048
+     C           CFT048    IFEQ 'Y'                                                           CFT048
+      *                                                                                       CFT048
+      ***  Determine if SWIFT or Telex message to be generated                                CFT048
+      *                                                                                       CFT048
+     C                     MOVE 'N'       OSUFLG                                              CFT048
+     C           STMT      IFEQ 1                                                             CFT048
+     C           STMT      OREQ 8                                                             CFT048
+     C           STMT      OREQ 10                                                            CFT048
+     C                     EXSR MSGTYP                                                        CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  If SWIFT message to be generated or if Value date less than                        CFT048
+      ***  or equal to Telex Notice date update file to generate payments.                    CFT048
+      *                                                                                       CFT048
+     C           OSUFLG    IFEQ 'Y'                                                           CFT048
+     C           PVDT      ORLE TNDT,J                                                        CFT048
+     C                     UPDATOTPAYDDF                                                      CFT048
+     C                     ADD  1         UCOUNT                                              CFT048
+     C           CMTTXT    COMIT                                                              CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+     C                     GOTO ENDJ1                                                         CFT048
+     C                     ENDIF                                                              CFT048
+      *                                                                                       CFT048
+     C                     UPDATOTPAYDDF
+     C                     ADD  1         UCOUNT
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C           CMTTXT    COMIT
+     C                     ENDIF                                                              CSC022
+     C                     GOTO ENDJ1
+     C                     END                              END TNDT
+      *                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CCP5                                           S01408
+      *                                                                   S01408
+     C*
+     C                     END                              END PYDT
+     C*
+     C                     END                              END PCCY
+     C*
+     C                     END                              END DO J
+     C*
+     C           ENDJ1     TAG                              TAG: ENDJ1
+     C                     END                              END OEDT
+     C*
+     C*                    ELSE                             N*IN01
+     C*
+     C/EJECT
+     C*
+     C************************************
+     C*    RECORD READ FROM CQPACDD.     *
+     C************************************
+     C*
+     C           *IN02     IFEQ '1'
+     C*
+     C                     MOVE PREF      CMTREF
+     C*
+     C*** ONLY PROCESS IF AUTHORISED TODAY AND NOT BACK VALUED
+     C*
+     C           PVDT      IFGE RUND
+     C*
+      *                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CCP6                                           S01408
+      *                                                                   S01408
+     C                     DO   I         J
+     C*
+     C           PCCY      IFEQ CCYA,J
+     C*
+     C           PVDT      IFLE TNDT,J
+      *                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CCP7                                           S01408
+      *                                                                   S01408
+      *                                                                                       CFT048
+      ** Ignore telex notice days                                                             CFT048
+      *                                                                                       CFT048
+     C           CFT048    OREQ 'Y'                                                           CFT048
+      *                                                                                       CFT048
+     C           CMTREF    CHAINCQPAC                10
+     C*
+     C           *IN10     IFEQ '1'                         ))))))))))))))
+     C                     MOVE 'CQPAC'   DBFNAM            )))  DATA  )))
+     C                     MOVELCMTREF    DBERKY            )))  BASE  )))
+     C                     MOVE '06'      DBERR#            ))) ERROR  )))
+     C                     EXSR DBERR                       )))   06   )))
+     C                     END                              ))))))))))))))
+     C***********                                                  S01117 059194
+     C****IF*THE*SYSTEM*IS*MULTI-BRANCHED*EXECUTE*SR*USRAUT*       S01117 059194
+     C***********                                                  S01117 059194
+     C***********@MBIN     IFEQ 'Y'                                S01117 059194
+     C***********          EXSR USRAUT                             S01117 059194
+     C************IN20     IFEQ '0'                                S01117 059194
+     C***********          GOTO ENDJ2                              S01117 059194
+     C***********          END                                     S01117 059194
+     C***********          END                                     S01117 059194
+     C*
+     C                     MOVE 'P'       PRIN
+     C*
+     C           STMT      IFEQ 0
+     C                     MOVE 'Y'       ISIN
+     C                     ELSE                             STTP N0
+     C*
+     C           STMT      IFEQ 2
+     C                     MOVE 'Y'       MPYI
+     C                     END                              END STTP 2
+     C*
+     C*
+     C           STMT      IFEQ 8
+     C           STMT      OREQ 10
+     C           STMT      OREQ 1
+     C*                                                                   071383
+     C           MT400     IFNE 'C'                                       071383
+     C                     MOVE 'Y'       MT400
+     C                     END                                            071383
+     C*                                                                   071383
+     C                     END                              END STTP 8
+     C                     END                              END STTP 0
+     C*
+     C           SNMT      IFEQ 'Y'
+     C           STMT      ANDEQ8
+     C           SNMT      OREQ 'Y'
+     C           STMT      ANDEQ10
+     C*********************MOVE 'Y'       MT202                           E32481
+     C*                                                                   071383
+     C           MT202C    IFNE 'C'                                       071383
+     C                     MOVE 'Y'       MT202C                          E32481
+     C                     END                                            071383
+     C*                                                                   071383
+     C                     END                              END SNMT
+     C*
+     C           SNMT      IFEQ 'Y'
+     C           STMT      ANDEQ1
+     C           MT202C    ANDNE'C'                                       071383
+     C*********************MOVE 'Y'       MT202                           E32481
+     C                     MOVE 'Y'       MT202C                          E32481
+     C                     END                              END SNMT
+     C*
+     C           SNMT      IFEQ 'Y'
+     C           STMT      ANDEQ2
+     C           MT202C    ANDNE'C'                                       071383
+     C*********************MOVE 'Y'       MT202                           E32481
+     C                     MOVE 'Y'       MT202C                          E32481
+     C                     END                              END SNMT
+     C*
+     C/COPY WNCPYSRC,FT0630C003
+      *                                                                                       CFT048
+     C           CFT048    IFEQ 'Y'                                                           CFT048
+      *                                                                                       CFT048
+      ***  Determine if SWIFT or Telex message to be generated                                CFT048
+      *                                                                                       CFT048
+     C                     MOVE 'N'       OSUFLG                                              CFT048
+     C           STMT      IFEQ 1                                                             CFT048
+     C           STMT      OREQ 8                                                             CFT048
+     C           STMT      OREQ 10                                                            CFT048
+     C                     EXSR MSGTYP                                                        CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  If SWIFT message to be generated or if Value date less than                        CFT048
+      ***  or equal to Telex Notice date update file to generate payments.                    CFT048
+      *                                                                                       CFT048
+     C           OSUFLG    IFEQ 'Y'                                                           CFT048
+     C           PVDT      ORLE TNDT,J                                                        CFT048
+     C                     UPDATCQPACDDF                                                      CFT048
+     C                     ADD  1         UCOUNT                                              CFT048
+     C           CMTTXT    COMIT                                                              CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+     C                     GOTO ENDJ2                                                         CFT048
+     C                     ENDIF                                                              CFT048
+      *                                                                                       CFT048
+     C                     UPDATCQPACDDF
+     C                     ADD  1         UCOUNT
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C           CMTTXT    COMIT
+     C                     ENDIF                                                              CSC022
+     C                     GOTO ENDJ2
+      *                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CCP8                                           S01408
+      *                                                                   S01408
+     C                     END                              END PYDT
+     C*
+     C                     END                              END PCCY
+     C*
+     C                     END                              END DO J
+     C*
+     C           ENDJ2     TAG                              TAG: ENDJ2
+     C                     END                              END OEDT
+     C*
+     C                     ELSE                             N*IN02
+     C*
+     C/EJECT
+     C*
+     C************************************
+     C*    RECORD READ FROM NTRANDD.     *
+     C************************************
+     C*
+     C           *IN03     IFEQ '1'
+     C*
+     C                     MOVE TFRF      CMTREF
+     C*
+     C*** ONLY PROCESS IF AUTHORISED TODAY AND NOT BACK VALUED
+     C*
+     C           VDAT      IFGE RUND
+     C/COPY WNCPYSRC,FT0630C001
+     C*
+     C                     DO   I         J
+     C*
+     C           CCY       IFEQ CCYA,J
+     C*
+     C           VDAT      IFLE TNDT,J
+     C/COPY WNCPYSRC,FT0630C004
+      *                                                                                       CFT048
+      ***  Ignore telex notice days                                                           CFT048
+      *                                                                                       CFT048
+     C           CFT048    OREQ 'Y'                                                           CFT048
+      *                                                                                       CFT048
+     C           CMTREF    CHAINNTRAN                10
+     C*
+     C           *IN10     IFEQ '1'                         ))))))))))))))
+     C                     MOVE 'NTRAN'   DBFNAM            )))  DATA  )))
+     C                     MOVELCMTREF    DBERKY            )))  BASE  )))
+     C                     MOVE '07'      DBERR#            ))) ERROR  )))
+     C                     EXSR DBERR                       )))   07   )))
+     C                     END                              ))))))))))))))
+     C***********                                                  S01117 059194
+     C****IF*THE*SYSTEM*IS*MULTI-BRANCHED*EXECUTE*SR*USRAUT*       S01117 059194
+     C***********                                                  S01117 059194
+     C***********@MBIN     IFEQ 'Y'                                S01117 059194
+     C***********          EXSR USRAUT                             S01117 059194
+     C************IN20     IFEQ '0'                                S01117 059194
+     C***********          GOTO ENDJ3                              S01117 059194
+     C***********          END                                     S01117 059194
+     C***********          END                                     S01117 059194
+     C*
+     C                     MOVE 'P'       PRIN
+     C*                                                                   071383
+     C           MT200     IFNE 'C'                                       071383
+     C                     MOVE 'Y'       MT200
+     C                     END                                            071383
+     C*                                                                   071383
+     C           MT210     IFNE 'C'                                       071383
+     C                     MOVE 'Y'       MT210
+     C                     END                                            071383
+     C*                                                                   071383
+     C/COPY WNCPYSRC,FT0630C005
+      *                                                                                       CFT048
+     C           CFT048    IFEQ 'Y'                                                           CFT048
+      *                                                                                       CFT048
+      ***  Determine if SWIFT or Telex message to be generated                                CFT048
+      *                                                                                       CFT048
+     C                     MOVE 'N'       OSUFLG                                              CFT048
+     C                     EXSR MSGTYP                                                        CFT048
+      *                                                                                       CFT048
+      ***  If SWIFT message to be generated or if Value date less than                        CFT048
+      ***  or equal to Telex Notice date update file to generate payments.                    CFT048
+      *                                                                                       CFT048
+     C           OSUFLG    IFEQ 'Y'                                                           CFT048
+     C           VDAT      ORLE TNDT,J                                                        CFT048
+     C                     UPDATNTRANDDF                                                      CFT048
+     C                     ADD  1         UCOUNT                                              CFT048
+     C           CMTTXT    COMIT                                                              CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+     C                     GOTO ENDJ3                                                         CFT048
+     C                     ENDIF                                                              CFT048
+      *                                                                                       CFT048
+     C                     UPDATNTRANDDF
+     C                     ADD  1         UCOUNT
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCRSKP    ANDEQ'N'                                                           CSC022
+     C           CMTTXT    COMIT
+     C                     ENDIF                                                              CSC022
+     C                     END                              END VDAT
+      *                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CCP9                                           S01408
+      *                                                                   S01408
+     C*
+     C                     END                              END CCY
+     C*
+     C                     END                              END DO J
+     C*
+     C                     END                              END OEDT
+     C*
+     C/COPY WNCPYSRC,FT0630C009
+     C                     END                              END *IN03
+     C*
+     C                     END                              END *IN02
+     C*
+     C*                    END                              END *IN01
+     C*                                                                   S01117
+     C           ENDJ3     TAG                              TAG: ENDJ3    S01117
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0630CEMP                                           S01408
+      *                                                                                       CFT048
+      ** Reset SWIFT message indicators                                                       CFT048
+      *                                                                                       CFT048
+     C           CFT048    IFEQ 'Y'                                                           CFT048
+     C                     MOVE 'N'       MT100                                               CFT048
+     C                     MOVE 'N'       MT200                                               CFT048
+     C                     MOVE 'N'       MT202                                               CFT048
+     C                     MOVE 'N'       MT202C                                              CFT048
+     C                     MOVE 'N'       MT400                                               CFT048
+     C                     ENDIF                                                              CFT048
+     C*
+     C/EJECT
+     C*
+     C**********************************
+     C*    LAST RECORD PROCESSING.     *
+     C**********************************
+     C*
+     CLR                   ADD  1         PPAGE   40
+     CLR         *IN40     IFEQ '0'                         LRN40
+     CLR                   EXSR ZSYSTM
+     C*
+     CLR         *IN99     IFEQ '1'                         ))))))))))))))
+     C*LR*******           MOVE 'TABFP'   DBFNAM  5         )))  DATA  )))S01194
+     C*LR*******           MOVELZTABKY    DBERKY 39         )))  BASE  )))S01194
+     C*LR*******           MOVE '02'      DBERR#  2         ))) ERROR  )))S01194
+     CLR                   MOVE 'TABFP'   DBFNAM  8         )))  DATA  )))S01194
+     CLR                   MOVELZTABKY    DBERKY 29         )))  BASE  )))S01194
+     CLR                   MOVE '02'      DBERR#  3         ))) ERROR  )))S01194
+     CLR                   EXSR DBERR                       )))   02   )))
+     CLR                   END                              ))))))))))))))
+     C*
+     CLR                   END                              END LRN40
+     C*
+     CLR                   EXSR TIMESR
+     C*LR*******           WRITEP1HEAD                                    S01117
+     CLR                   WRITEAUHEAD                                    S01117
+     C*
+     C/EJECT
+     C*
+     C********************************************************************
+     C*    *     SUBROUTINE TO ACCESS INSTALLATION     *    *** ZSYSTM ***
+     C*    *                CONTROL DATA RECORD.       *    *** ZSYSTM ***
+     C********************************************************* ZSYSTM ***
+     C           ZSYSTM    BEGSR                            *** ZSYSTM ***
+     C*                                                     **************
+1492 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+1493 C                     MOVEL'01      'ZTABKY 12
+1494 C                     MOVE '  10'    ZTABKY
+1495 C**
+1496 C           ZTABKY    CHAINTABFP                99    ON NOT THERE
+1497 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+1498 C**
+1499 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+1500 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C*                                                     **************
+     C                     ENDSR                            *** ZSYSTM ***
+     C*************************************************************S01117 059194
+     C*****SUBROUTINE - USRAUT / USER AUTHORITY.            *** USRAUT117 059194
+     C***********                                           *** USRAUT117 059194
+     C*****TO*RESTRICT THE GENERATION OF PAYMENTS TO THOSE  *** USRAUT117 059194
+     C*****THAT*HAVE BEEN AUTHORISED BY THAT USER.          *** USRAUT117 059194
+     C*****THIS*SUBROUTINE WILL ONLY BE CALLED IF SYSTEM    *** USRAUT117 059194
+     C*****IS*MULTI-BRANCHED. ALSO IT WILL BE CALLED FOR    *** USRAUT117 059194
+     C*****EACH*FILE (OTPAY,CQPAC,NTRAN).                   *** USRAUT117 059194
+     C********************************************************* USRAUT117 059194
+     C***********USRAUT    BEGSR                            *** USRAUT117 059194
+     C***********                                           *******S01117 059194
+     C****CHECK*PARAMETER USRPF AGAINST AUTHORISE PROFILE          S01117 059194
+     C****1*OR*2*TO SEE IF THEY MATCH.                             S01117 059194
+     C***********                                                  S01117 059194
+     C***********          SETOF                     20            S01117 059194
+     C***********AUP2      IFEQ *BLANKS                            S01117 059194
+     C***********AUP1      IFEQ USRPF                              S01117 059194
+     C***********          SETON                     20            S01117 059194
+     C***********          END                                     S01117 059194
+     C***********          ELSE                                    S01117 059194
+     C***********AUP2      IFEQ USRPF                              S01117 059194
+     C***********          SETON                     20            S01117 059194
+     C***********          END                                     S01117 059194
+     C***********          END                                     S01117 059194
+     C***********                                                  S01117 059194
+     C***********          ENDSR                            *** USRAUT117 059194
+     C*                                                                   S01117
+     C/COPY ZSRSRC,ZF2C                                                   S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C********************************************************************S01195
+     C*****SUBROUTINE TO CALCULATE ANY NO OF DAYS FORWARD   *** ZTXDAY ***S01195
+     C**********      THAT ARE WORKING DAYS IN BOTH THE     *** ZTXDAY ***S01195
+     C**********      LOCAL AND ANY SPECIFIED CURRENCY.     *** ZTXDAY ***S01195
+     C**********                                            *** ZTXDAY ***S01195
+     C*****THIS SR. CAN BE USED WHEN THE INPUT CYCLE IS     *** ZTXDAY ***S01195
+     C*****RUNNING AS HOLIDAY RECS ARE ACCESSED BY CHAIN.   *** ZTXDAY ***S01195
+     C*****THEREFORE NEWLY ADDED RECS IN THE OVERFLOW       *** ZTXDAY ***S01195
+     C*****AREA CAN ALSO BE ACCESSED.                       *** ZTXDAY ***S01195
+     C********************************************************* ZTXDAY ***S01195
+     C********** ZTXDAY    BEGSR                            *** ZTXDAY ***S01195
+     C**********                                            **************S01195
+4562 C*****CALCULATIONS TO DEFINE INPUT FIELDS.                           S01195
+4563 C**********           Z-ADDZDAYNO    ZDAYNO  50       STARTING DATE  S01195
+4564 C**********           MOVE ZCCY      ZCCY    3        DATE CURRENCY  S01195
+4565 C**********           Z-ADDZNRDYS    ZNRDYS  20       NBR OF WORKING S01195
+4566 C*****LOCY DEFINED ON TABLE,TB-11;  AND SHOULD ALREADY HAVE          S01195
+4567 C*****BEEN INPUT.                                                    S01195
+4568 C**********                                           DAYS FORWARD   S01195
+4569 C*****CLEAR COUNT OF NBR OF DAYS ADDED, & DEFINE ZDYNBR.             S01195
+4570 C**********           Z-ADD0         ZDCNT   20                      S01195
+4571 C**********           Z-ADDZDAYNO    ZDYNBR  50                      S01195
+     C******SEE MANUAL ON SYSTEM SUBROUTINES                              S01195
+     C******IF ZNRDYS IS INPUT AS ZERO IT WILL NOW BE TREATED AS ZERO.    S01195
+     C******FIRST CHECK FOR ZERO NOTICE DAYS                              S01195
+     C********** ZNRDYS    COMP 0                        95       T1973   S01195
+     C***95*****           GOTO ZTXEND                                    S01195
+4572 C**********                                                          S01195
+4573 C*****LOOP TO INCREMENT DAY NUMBER AND CHECK FOR HOLIDAY.            S01195
+4574 C********** ZTLOP1    TAG                             ** ZTLOP1 TAG *S01195
+4575 C**********                                                          S01195
+4576 C**********           SETOF                     9596                 S01195
+4577 C********** ZDYNBR    ADD  1         ZDYNBR                          S01195
+4578 C**********                                                          S01195
+4579 C*****SET*KEY FOR FIRST HOLIDAY RECORD.                              S01195
+4580 C**********           MOVEL'22    '  ZDHKEY 12                       S01195
+4581 C**********           MOVELZDYNBR    ZWRK6   6                       S01195
+4582 C**********           MOVE '1'       ZWRK6                           S01195
+4583 C**********           MOVE ZWRK6     ZDHKEY                          S01195
+4584 C**********                                                          S01195
+4585 C*****CHAIN FOR HOLIDAY RECORD, RECORD 1 OR 2                        S01195
+4586 C********** ZTHCHN    TAG                             ** ZTHCHN TAG *S01195
+4587 C**********                                                          S01195
+4588 C********** ZDHKEY    CHAINTABFP                90    ON NOT THERE   S01195
+4589 C**N90***** RECI      COMP 'D'                  9090  DELETED        S01195
+4590 C**********                                                          S01195
+4591 C*****NO*RECORD 1 FOUND, IS NOT A HOLIDAY                            S01195
+4592 C***90N95**           GOTO ZTOAGN                                    S01195
+4593 C**********                                                          S01195
+4594 C*****NO*RECORD 2 FOUND                                              S01195
+4595 C***90*95*96          GOTO ZTLOP1                     EXC. NOT FOUND S01195
+4596 C***90*95N96          GOTO ZTOAGN                     INC. NOT FOUND S01195
+4597 C**********                                                          S01195
+4598 C*****DETERMINE TYPE FOUND, INCLUDE OR EXCLUDE                       S01195
+4599 C********** INEX      COMP 'E'                  92  91               S01195
+4600 C**********                                                          S01195
+4601 C*****CHECK IF DAY IS HOLIDAY FOR CURRENCY.                          S01195
+4602 C********** ZCCY      LOKUPHCCYA                    93               S01195
+4603 C**N93***** LOCY      LOKUPHCCYA                    93               S01195
+4604 C***91*93**           GOTO ZTOAGN                     EXCLUDE FOUND  S01195
+4605 C***92*93**           GOTO ZTLOP1                     INCLUDE FOUND  S01195
+4606 C**********                                                          S01195
+4607 C*****IF EXCLUDE OR INCLUDE NOT FOUND CHECK                          S01195
+4608 C*****FOR SECOND HOLIDAY RECORD, IF REQUIRED.                        S01195
+4609 C********** '   '     LOKUPHCCYA                    94ON IF NO RCD.2 S01195
+4610 C**********           MOVE ZDHKEY    ZWRK1   1                       S01195
+4611 C********** ZWRK1     COMP '1'                      95               S01195
+4612 C***91*95**           SETON                     96                   S01195
+4613 C***95N94**           MOVE '2'       ZDHKEY                          S01195
+4614 C***95N94**           GOTO ZTHCHN                     GET SECOND REC S01195
+4615 C**********                                                          S01195
+4616 C***91*****           GOTO ZTLOP1                     EXC. NOT FOUND S01195
+4617 C***92*****           GOTO ZTOAGN                     INC. NOT FOUND S01195
+4618 C**********                                                          S01195
+4619 C*****INCREMENT COUNT AND CHECK IF REQUIRED NUMBER OF DAYS           S01195
+4620 C*****HAVE BEEN ADDED. IF NOT, GO THROUGH LOOP1 AGAIN.               S01195
+4621 C********** ZTOAGN    TAG                             ** ZTOAGN TAG *S01195
+4622 C**********                                                          S01195
+4623 C********** ZDCNT     ADD  1         ZDCNT                           S01195
+4624 C********** ZDCNT     COMP ZNRDYS                 97                 S01195
+4625 C***97*****           GOTO ZTLOP1                                    S01195
+     C**********                                            **************S01195
+     C********** ZTXEND    ENDSR                            *** ZTXDAY ***S01195
+     C********************************************************************
+     C*    *     SUBROUTINE TO SET UP DATA STRUCTURE   *     *** DBERR ***
+     C*    *                FOR DATABASE ERRORS.       *     *** DBERR ***
+     C********************************************************** DBERR ***
+     C*    ERROR     CAUSE                                   *** DBERR ***
+     C*       01     VALID I.C.R.-1 RECORD NOT FOUND (IC).   *** DBERR ***
+     C*       02     VALID I.C.R.-1 RECORD NOT FOUND (LR).   *** DBERR ***
+     C*       03     VALID I.C.R.-2 RECORD NOT FOUND.        *** DBERR ***
+     C*       04     VALID CURRENCY RECORD NOT FOUND.        *** DBERR ***
+     C*       05     UNSUCCESSFUL CHAIN TO LF/OTPAY.         *** DBERR ***
+     C*       06     UNSUCCESSFUL CHAIN TO LF/CQPAC.         *** DBERR ***
+     C*       07     UNSUCCESSFUL CHAIN TO LF/NTRAN.         *** DBERR ***
+     C********************************************************** DBERR ***
+     C           DBERR     BEGSR                             *** DBERR ***
+     C*                                                      *************
+     C           *NAMVAR   DEFN LDA       DLDA
+     C           *LOCK     IN   DLDA
+     C                     MOVEL'FT0630'  DBPGM            ) SET UP
+     C                     MOVE DBFNAM    DBFILE           ) DATA BASE
+     C                     MOVELDBERKY    DBKEY            ) ERROR
+     C                     MOVE DBERR#    DBASE            ) FIELDS
+     C                     OUT  DLDA
+     C                     SETON                     U7U8LR
+     C                     SETON                     78
+     C**********           MOVE 'FT0630'  DBPROG  6                       S01194
+     C                     MOVE 'FT0630'  DBPROG 10                       S01194
+     C                     EXSR TIMESR
+     C**********           WRITEP1HEAD                                    S01117
+     C                     WRITEAUHEAD                                    S01117
+     C                     DUMP
+     C                     RETRN
+     C*                                                      *************
+     C                     ENDSR                             *** DBERR ***
+     C********************************************************************
+     C*          *    SUBROUTINE TO ACCESS TIME OF DAY.     *** TIMESR ***
+     C********************************************************* TIMESR ***
+     C           TIMESR    BEGSR                            *** TIMESR ***
+     C*                                                     **************
+     C                     TIME           TIME    60
+     C*                                                     **************
+     C                     ENDSR                            *** TIMESR ***
+     C********************************************************************
+     C*
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,FT0630CEND                                           S01408
+     C*                                                                   S01408
+      *****************************************************************                       CFT048
+      *                    SUBROUTINE MSGTYP                          *                       CFT048
+      *                TO DETERMINE MESSAGE TYPE                      *                       CFT048
+      *****************************************************************                       CFT048
+     C           MSGTYP    BEGSR                                                              CFT048
+      *                                                                                       CFT048
+      ***  IF CUSTOMER TRANSFER FORMAT SWIFT FIELDS                                           CFT048
+      *                                                                                       CFT048
+     C           MT100     IFEQ 'Y'                                                           CFT048
+      *                                                                                       CFT048
+      ***  IF RECEIVING BANK IS FULL NOSTRO, RETAIL ACCOUNT, CUSTOMER                         CFT048
+      ***  NUMBER OR FULL ACCOUNT DETERMINE SWIFT ADDRESS OF RECEIVING                        CFT048
+      ***  BANK.                                                                              CFT048
+      *                                                                                       CFT048
+     C           DSTT      IFEQ 'F'                                                           CFT048
+     C           DSTT      OREQ 'R'                                                           CFT048
+     C           DSTT      OREQ 'C'                                                           CFT048
+     C           DSTT      OREQ 'G'                                                           CFT048
+     C                     MOVELDSTT      ISPTP   1                                           CFT048
+     C                     MOVELDST1      ISPTY1 35                                           CFT048
+     C                     MOVE DST2      ISPTY2 35                                           CFT048
+     C                     MOVE DST3      ISPTY3 35                                           CFT048
+     C                     MOVE DST4      ISPTY4 35                                           CFT048
+     C                     MOVE *BLANKS   ISPTY5 35                                           CFT048
+     C                     MOVE PCCY      ISCCY   3                                           CFT048
+     C                     MOVE 'A'       IVTAG1  1                                           CFT048
+     C                     MOVE ' '       IVTAG2  1                                           CFT048
+     C                     MOVE ' '       IVTAG3  1                                           CFT048
+      *                                                                                       CFT048
+     C                     EXSR SWIFT                                                         CFT048
+     C                     END                                                                CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  IF BANK TRANSFER IN FAVOUR OF THIRD BANK                                           CFT048
+      *                                                                                       CFT048
+     C           MT202     IFEQ 'Y'                                                           CFT048
+      *                                                                                       CFT048
+      ***  DETERMINE SWIFT ADDRESS OF RECEIVING BANK                                          CFT048
+     C*                                                                                       CFT048
+     C                     MOVELDSTT      ISPTP                                               CFT048
+     C                     MOVELDST1      ISPTY1                                              CFT048
+     C                     MOVE DST2      ISPTY2                                              CFT048
+     C                     MOVE DST3      ISPTY3                                              CFT048
+     C                     MOVE DST4      ISPTY4                                              CFT048
+     C                     MOVE *BLANKS   ISPTY5                                              CFT048
+     C                     MOVE PCCY      ISCCY                                               CFT048
+     C                     MOVE 'A'       IVTAG1                                              CFT048
+     C                     MOVE ' '       IVTAG2                                              CFT048
+     C                     MOVE ' '       IVTAG3                                              CFT048
+     C                     EXSR SWIFT                                                         CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  IF ADVICE OF PAYMENT                                                               CFT048
+      *                                                                                       CFT048
+     C           MT400     IFEQ 'Y'                                                           CFT048
+      *                                                                                       CFT048
+      ***  DETERMINE SWIFT ADDRESS OF SENDERS CORRESPONDENT                                   CFT048
+      *                                                                                       CFT048
+     C           RBKT      IFEQ 'F'                                                           CFT048
+     C           RBKT      OREQ 'R'                                                           CFT048
+     C           RBKT      OREQ 'C'                                                           CFT048
+     C                     MOVELRBKT      ISPTP                                               CFT048
+     C                     MOVE RBK1      ISPTY1                                              CFT048
+     C                     MOVE RBK2      ISPTY2                                              CFT048
+     C                     MOVE RBK3      ISPTY3                                              CFT048
+     C                     MOVE RBK4      ISPTY4                                              CFT048
+     C                     MOVE *BLANKS   ISPTY5                                              CFT048
+     C                     MOVE PCCY      ISCCY                                               CFT048
+     C                     MOVE 'A'       IVTAG1                                              CFT048
+     C                     MOVE ' '       IVTAG2                                              CFT048
+     C                     MOVE ' '       IVTAG3                                              CFT048
+     C                     EXSR SWIFT                                                         CFT048
+     C                     END                                                                CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  IF TELEX MESSAGE TO BE GENERATED CHECK WHETHER COVER NOTE                          CFT048
+      ***  IS TO BE GENERATED BY SWIFT                                                        CFT048
+      *                                                                                       CFT048
+     C           OSUFLG    IFEQ 'N'                                                           CFT048
+     C           SNMT      ANDEQ'Y'                                                           CFT048
+     C           MT202C    ANDEQ'Y'                                                           CFT048
+      *                                                                                       CFT048
+      ***  DETERMINE SWIFT ADDRESS OF SENDERS CORRESPONDENT                                   CFT048
+      *                                                                                       CFT048
+     C                     MOVELSNCT      ISPTP                                               CFT048
+     C                     MOVELSNCO      ISPTY1                                              CFT048
+     C                     MOVE *BLANKS   ISPTY2                                              CFT048
+     C                     MOVE *BLANKS   ISPTY3                                              CFT048
+     C                     MOVE *BLANKS   ISPTY4                                              CFT048
+     C                     MOVE *BLANKS   ISPTY5                                              CFT048
+     C                     MOVE PCCY      ISCCY                                               CFT048
+     C                     MOVE 'A'       IVTAG1                                              CFT048
+     C                     MOVE ' '       IVTAG2                                              CFT048
+     C                     MOVE ' '       IVTAG3                                              CFT048
+     C                     EXSR SWIFT                                                         CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  IF BANK TRANSFER FOR OWN ACCOUNT                                                   CFT048
+      *                                                                                       CFT048
+     C           MT200     IFEQ 'Y'                                                           CFT048
+      *                                                                                       CFT048
+      ***  DETERMINE SWIFT ADDRESS OF DESTINATION BANK                                        CFT048
+      *                                                                                       CFT048
+     C                     MOVE 'N'       ISPTP                                               CFT048
+     C                     MOVELDEST      ISPTY1                                              CFT048
+     C                     MOVE *BLANKS   ISPTY2                                              CFT048
+     C                     MOVE *BLANKS   ISPTY3                                              CFT048
+     C                     MOVE *BLANKS   ISPTY4                                              CFT048
+     C                     MOVE *BLANKS   ISPTY5                                              CFT048
+     C                     MOVE CCY       ISCCY                                               CFT048
+     C                     MOVE 'A'       IVTAG1                                              CFT048
+     C                     MOVE ' '       IVTAG2                                              CFT048
+     C                     MOVE ' '       IVTAG3                                              CFT048
+     C                     EXSR SWIFT                                                         CFT048
+      *                                                                                       CFT048
+      ***  IF TELEX MESSAGE TO BE GENERATED CHECK WHETHER MT210 IS                            CFT048
+      ***  TO BE GENERATED BY SWIFT                                                           CFT048
+      *                                                                                       CFT048
+     C           OSUFLG    IFEQ 'N'                                                           CFT048
+     C                     MOVE 'N'       ISPTP   1                                           CFT048
+     C                     MOVELACBN      ISPTY1 35                                           CFT048
+     C                     MOVE *BLANKS   ISPTY2 35                                           CFT048
+     C                     MOVE *BLANKS   ISPTY3 35                                           CFT048
+     C                     MOVE *BLANKS   ISPTY4 35                                           CFT048
+     C                     MOVE *BLANKS   ISPTY5 35                                           CFT048
+     C                     MOVE CCY       ISCCY   3                                           CFT048
+     C                     MOVE 'A'       IVTAG1  1                                           CFT048
+     C                     MOVE ' '       IVTAG2  1                                           CFT048
+     C                     MOVE ' '       IVTAG3  1                                           CFT048
+     C                     EXSR SWIFT                                                         CFT048
+     C                     END                                                                CFT048
+     C                     END                                                                CFT048
+     C                     ENDSR                                                              CFT048
+      /EJECT                                                                                  CFT048
+      *****************************************************************                       CFT048
+      *                    SUBROUTINE SWIFT                           *                       CFT048
+      *          TO FORMAT SETTLEMENT PARTY TO SWIFT FORMAT           *                       CFT048
+      *          (BASED ON SR01 USED IN OTHER FT PGMS)                *                       CFT048
+      *****************************************************************                       CFT048
+     C           SWIFT     BEGSR                                                              CFT048
+      *                                                                                       CFT048
+      ***  INITIALISE OUTPUT PARAMETER FIELDS                                                 CFT048
+      *                                                                                       CFT048
+     C                     MOVE *BLANKS   OFSPT1 35                                           CFT048
+     C                     MOVE *BLANKS   OFSPT2 35                                           CFT048
+     C                     MOVE *BLANKS   OFSPT3 35                                           CFT048
+     C                     MOVE *BLANKS   OFSPT4 35                                           CFT048
+     C                     MOVE *BLANKS   OFSPT5 35                                           CFT048
+     C                     MOVE *BLANKS   OSTAG   1                                           CFT048
+     C                     MOVE 'N'       OSUFLG  1                                           CFT048
+     C                     MOVE *BLANKS   CSID                                                CFT048
+      *                                                                                       CFT048
+      ***  FULL NOSTRO PROCESSING - APPEND THE PAY CURRENCY                                   CFT048
+      ***  TO THE FIRST SETTLEMENT PARTY FIELD TO ACCESS NOSTRO DET                           CFT048
+      ***  FROM PF/TABLETL TO OBTAIN CUST NO.                                                 CFT048
+      *                                                                                       CFT048
+     C           ISPTP     IFEQ 'F'                                                           CFT048
+     C                     MOVELISPTY1    TLCCNN  5                                           CFT048
+     C                     MOVEL'70'      TABTLK 12                                           CFT048
+     C                     MOVE TLCCNN    TABTLK 12                                           CFT048
+     C           TABTLK    CHAINTABFP                10                                       CFT048
+     C           *IN10     IFEQ '1'                                                           CFT048
+     C                     MOVE 'TABFP'   DBFNAM                                              CFT048
+     C                     MOVELTABTLK    DBERKY                                              CFT048
+     C                     MOVE '20'      DBERR#                                              CFT048
+     C                     EXSR DBERR                                                         CFT048
+     C                     END                                                                CFT048
+     C                     MOVE CNUM      CUSTNO  60                                          CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  NOSTRO NO. PROCESSING - APPEND THE PAY CURRENCY TO THE                             CFT048
+      ***  FIRST 2 CHARS OF THE 1ST SETL PTY FIELD TO ACCESS NOSTRO DET                       CFT048
+      ***  FROM PF/TABLETL TO OBTAIN CUST NO.                                                 CFT048
+      *                                                                                       CFT048
+     C           ISPTP     IFEQ 'N'                                                           CFT048
+     C                     MOVELISPTY1    TLNN    2                                           CFT048
+     C                     MOVELISCCY     TLCCNN                                              CFT048
+     C                     MOVE TLNN      TLCCNN                                              CFT048
+     C                     MOVEL'70'      TABTLK                                              CFT048
+     C                     MOVE TLCCNN    TABTLK 12                                           CFT048
+     C           TABTLK    CHAINTABFP                10                                       CFT048
+     C           *IN10     IFEQ '1'                                                           CFT048
+     C                     MOVE 'TABFP'   DBFNAM                                              CFT048
+     C                     MOVELTABTLK    DBERKY                                              CFT048
+     C                     MOVE '21'      DBERR#                                              CFT048
+     C                     EXSR DBERR                                                         CFT048
+     C                     END                                                                CFT048
+     C                     MOVE CNUM      CUSTNO  60                                          CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  RETAIL ACCNT PROCESSING -                                                          CFT048
+      ***  USE 1ST 10 CHARS OF THE 1ST SETL PTY FIELD TO ACCESS                               CFT048
+      ***  THE ACCOUNT DETAILS FROM LF/ACNUMA TO OBTAIN CUST NO.                              CFT048
+      *                                                                                       CFT048
+     C           ISPTP     IFEQ 'R'                                                           CFT048
+     C                     MOVELISPTY1    ACNUMK 100                                          CFT048
+     C           ACNUMK    CHAINACNUMA               11                                       CFT048
+     C           *IN11     IFEQ '1'                                                           CFT048
+     C                     MOVE 'ACNUMA'  DBFNAM                                              CFT048
+     C                     MOVELACNUMK    DBERKY                                              CFT048
+     C                     MOVE '22'      DBERR#                                              CFT048
+     C                     EXSR DBERR                                                         CFT048
+     C                     END                                                                CFT048
+     C                     MOVE CNUM      CUSTNO  60                                          CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  FULL ACCOUNT/PARTIAL ACCOUNT/CUSTOMER PROCESSING - CUST NO.                        CFT048
+      ***  IS 1ST 6 CHARS OF THE 1ST SETL PTY FIELD.                                          CFT048
+      *                                                                                       CFT048
+     C           ISPTP     IFEQ 'G'                                                           CFT048
+     C           ISPTP     OREQ 'P'                                                           CFT048
+     C           ISPTP     OREQ 'C'                                                           CFT048
+     C                     MOVELISPTY1    CUSTNO                                              CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  ACCESS FULL CUSTOMER DETAILS FROM LF/CLINT                                         CFT048
+      *                                                                                       CFT048
+     C           ISPTP     IFEQ 'G'                                                           CFT048
+     C           ISPTP     OREQ 'P'                                                           CFT048
+     C           ISPTP     OREQ 'C'                                                           CFT048
+     C           ISPTP     OREQ 'F'                                                           CFT048
+     C           ISPTP     OREQ 'N'                                                           CFT048
+     C           ISPTP     OREQ 'R'                                                           CFT048
+      *                                                                                       CFT048
+     C                     MOVE CUSTNO    CUSTKY  60                                          CFT048
+      *                                                                                       CFT048
+      *   Access SDCUSTPD using customer number                                               CFT048
+      *                                                                                       CFT048
+     C                     MOVE *BLANKS   @KEY1                                               CFT048
+     C                     MOVELCUSTKY    @KEY1                                               CFT048
+     C                     CALL 'AOCUSTR0'                                                    CFT048
+     C                     PARM '*MSG   ' @RTCD   7                                           CFT048
+     C                     PARM '*KEY   ' @OPTN   7                                           CFT048
+     C                     PARM           @KEY1  10                                           CFT048
+     C                     PARM *BLANKS   @KYST   7                                           CFT048
+     C           SDCUST    PARM SDCUST    DSSDY                                               CFT048
+      *                                                                                       CFT048
+      ** Customer record not found - Error                                                    CFT048
+      *                                                                                       CFT048
+     C           @RTCD     IFNE *BLANKS                                                       CFT048
+     C                     MOVE '23'      DBERR#                                              CFT048
+     C                     MOVEL@KEY1     DBERKY                                              CFT048
+     C                     MOVEL'SDCUSTPD'DBFNAM                                              CFT048
+     C                     EXSR DBERR                                                         CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ** Move old field names to new to retain pgm continuity.                                CFT048
+      *                                                                                       CFT048
+     C                     MOVELBBPCNB    CPAR                                                CFT048
+     C                     MOVELBBCRNM    CRNM   20                                           CFT048
+     C                     MOVELBBCRTN    CTWN   10                                           CFT048
+     C                     MOVELBBCSID    CSID                                                CFT048
+     C                     MOVELBBTXA1    TELX                                                CFT048
+     C                     MOVELBBSTAD    STTX                                                CFT048
+     C                     MOVELBBCNA1    CNA1                                                CFT048
+     C                     MOVELBBCNA2    CNA2                                                CFT048
+     C                     MOVELBBCNA3    CNA3                                                CFT048
+     C                     MOVELBBCNA4    CNA4                                                CFT048
+      *                                                                                       CFT048
+     C           CSID      IFEQ *BLANKS                                                       CFT048
+     C           TELX      ANDEQ*BLANKS                                                       CFT048
+     C           STTX      ANDEQ*BLANKS                                                       CFT048
+     C                     MOVE 'N'       OSUFLG                                              CFT048
+     C                     ELSE                                                               CFT048
+     C                     MOVE 'Y'       OSUFLG                                              CFT048
+     C                     END                                                                CFT048
+     C                     GOTO SR01A                                                         CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  SWIFT ADDRESS AND AT LEAST ONE VALID TAG FIELDS = 'A'                              CFT048
+      *                                                                                       CFT048
+     C           ISPTP     IFEQ 'S'                                                           CFT048
+     C           IVTAG1    ANDEQ'A'                                                           CFT048
+     C                     MOVELISPTY1    SP12   12                                           CFT048
+     C                     MOVELSP12      SCSID  12                                           CFT048
+     C                     MOVELSCSID     OFSPT1                                              CFT048
+     C                     MOVE 'A'       OSTAG                                               CFT048
+     C                     MOVE 'Y'       OSUFLG                                              CFT048
+     C                     GOTO SR01N                                                         CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+     C           SR01A     TAG                                                                CFT048
+      ***  IF TYPE BLANK IGNORE                                                               CFT048
+     C           ISPTP     IFEQ ' '                                                           CFT048
+     C                     GOTO SR01N                                                         CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+      ***  VALID TAG FIELD = 'D' AND THE SWIFT ADDRESS ON LF/CLINT IS                         CFT048
+      ***  NON BLANK                                                                          CFT048
+      *                                                                                       CFT048
+     C           IVTAG1    IFEQ 'A'                                                           CFT048
+     C           CSID      ANDNE*BLANK                                                        CFT048
+     C                     MOVELCSID      SCSID                                               CFT048
+     C                     MOVELSCSID     OFSPT1                                              CFT048
+     C                     MOVE 'A'       OSTAG                                               CFT048
+     C                     MOVE 'Y'       OSUFLG                                              CFT048
+     C                     GOTO SR01N                                                         CFT048
+     C                     END                                                                CFT048
+      *                                                                                       CFT048
+     C           SR01N     TAG                                                                CFT048
+     C           MT202     IFEQ 'Y'                                                           CFT048
+     C                     MOVELOFSPT1    RECADD 12                                           CFT048
+      *                                                                                       CFT048
+      ***  IF BIC CODE DO NOT OUTPUT TO SWIFT                                                 CFT048
+      *                                                                                       CFT048
+     C                     MOVE RECADD    WKBIC   4                                           CFT048
+     C           WKBIC     IFEQ 'BIC '                                                        CFT048
+     C                     MOVE 'N'       OSUFLG                                              CFT048
+     C                     END                                                                CFT048
+     C                     END                                                                CFT048
+     C                     ENDSR                                                              CFT048
+      *                                                                                       CFT048
+     C/EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

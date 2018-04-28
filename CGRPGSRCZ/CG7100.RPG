@@ -1,0 +1,1015 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Audit Letter History Maintenance')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG7100 - Audit Letter History Maintenance                    *
+      *                                                               *
+      *  Function: Program shows an Audit Letter history maintenance  *
+      *            screen, user can choose to which customer reminder *
+      *            should be sent to.                                 *
+      *                                                               *
+      *  Called By: CGC7100 - Audit Letter History Maintenance        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. BUG24897           Date 22Jul09               *
+      *                 BUG23966           Date 11May09               *
+      *                 BUG23252           Date 20Mar09               *
+      *                 BUG23253           Date 13Mar09               *
+      *                 BUG22969           Date 17Feb09               *
+      *                 BUG22557           Date 30Jan09               *
+      *                 CER041  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG24897 - Audit letters history maintenance is unpopulated  *
+      *             after audit letters generated in COB              *
+      *  BUG23252 - The Re-Print Function is not Available            *
+      *  BUG23253 - Add 'Acknowledgement Reception' and 'Date of      *
+      *             Reception'                                        *
+      *  BUG22969 - Display Production date on screen                 *
+      *  BUG22557 - Removed Invalid Record display when file is empty *
+      *  CER041 - Audit Letters Correspondence                        *
+      *                                                               *
+      *****************************************************************
+      *
+     FCGAUHSL2UF  E           K        DISK
+      *
+     FCG7100DFCF  E                    WORKSTN
+     F                                        FRROW KSFILE CUSTSFL
+     F                                              KINFDS DSPFB
+      *
+     IDSPFB       DS
+     I                                    B 378 3790CSRRRN
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** Data structure for definition of bank specific details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data structure for definition of long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Program Status Data Structure - gives Job/Workstation name
+      ** and user ID
+      *
+     I**********  DS                                                               BUG22557 BUG22969
+     I**********                              1   60#PDATE                         BUG22557 BUG22969
+      *                                                                                     BUG23252
+     I              'Submitted'           C         WSTS                                    BUG23252
+      *                                                                                     BUG22557
+      *****************************************************************
+      *  USED INDICATORS:                                             *
+      *  - Subfile's indicator :                                      *
+      *****25*-*Page*up*/*down*****************************************                     BUG24897
+      *    25 - Page down                                             *                     BUG24897
+      *    26 - VLDCMDKEY                                             *
+      *    27 - Page up                                               *                     BUG24897
+      *    70 - SFLEND                                                *
+      *    71 - SFLDSP & SFLDSPCTL                                    *
+      *    72 - SFLCLR                                                *
+      *    73 - Error 'no record found'                               *
+      *    74 - SFLNXTCHG                                             *
+      *  - Indicators used by RPG                                     *
+      *    80 - READ the Audit Letters History files                  *
+      *    81 - read sub-file record changed                          *
+      *    82 - CHAIN the Audit Letters History files                 *
+      *    83 - chain sub-file                                        *
+      *                                                               *
+      *    90 - ON, if a selection has been made or a sub-file record *
+      *         has been changed.                                     *
+      *    91 - ON, if a selection has been made                      *                     BUG24897
+      *****************************************************************
+      *
+      ** Initialise parameters
+      *
+     C           THEKEY    KLIST
+     C                     KFLD           #CNUM
+     C                     KFLD           #BRCA
+     C                     KFLD           #PINR
+      *                                                                                     BUG24897
+      ** Keys containing the current top record in the subfile                              BUG24897
+      *                                                                                     BUG24897
+     C           KEYTOP    KLIST                                                            BUG24897
+     C                     KFLD           WCNUMT                                            BUG24897
+     C                     KFLD           WBRCAT                                            BUG24897
+     C                     KFLD           WPINRT                                            BUG24897
+     C                     KFLD           WPDATT                                            BUG24897
+      *                                                                                     BUG24897
+      ** Keys containing the current last record in the subfile                             BUG24897
+      *                                                                                     BUG24897
+     C           KEYLST    KLIST                                                            BUG24897
+     C                     KFLD           WCNUML                                            BUG24897
+     C                     KFLD           WBRCAL                                            BUG24897
+     C                     KFLD           WPINRL                                            BUG24897
+     C                     KFLD           WPDATL                                            BUG24897
+      *
+      ** Do until F3 is pressed
+      *
+     C           *INKC     DOWEQ*OFF
+      *
+      ** Clear sub-file
+      *
+     C                     EXSR SRCLR
+     C                     WRITEFNKEYS
+      *
+      ** Read 1. Audit Letters history record
+      *
+     C                     MOVE *ON       *IN25
+     C                     MOVE *ON       *IN26
+     C                     MOVE *OFF      *IN70
+     C                     MOVEL'1'       AGAIN   1
+      *
+      ** Do if no selection made or existing selection not changed
+      ** Or not F3
+      *
+     C           AGAIN     DOWEQ'1'
+     C           *INKC     ANDEQ*OFF
+      *
+      ** If ROLLUP
+      ** or ROLLDOWN                                                                        BUG24897
+      *
+     C           *IN25     IFEQ *ON
+     C           *IN26     ANDEQ*ON
+     C           *IN27     OREQ *ON                                                         BUG24897
+      *
+      ** Fill sub-file
+      *
+     C                     EXSR SRFILL
+      *
+     C                     END
+      *
+      ** Display Sub-file
+      *
+     C                     EXSR SRDSP
+      *
+     C                     EXSR SRACT
+     C                     END
+      *
+     C                     END
+      *
+      ** Program ends here
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************
+      *                                                               *
+      *  Subroutine SRCLR - Clear sub-file                            *
+      *                                                               *
+      *****************************************************************
+     C           SRCLR     BEGSR
+     C                     MOVE *ON       *IN72
+     C                     WRITECUSTCTL
+     C                     MOVE *OFF      *IN72
+     C                     Z-ADD0         FRROW   40
+     C                     Z-ADD0         TOROW   40
+      *                                                                                     BUG24897
+      ** Blank out saved top record                                                         BUG24897
+      *                                                                                     BUG24897
+     C                     MOVE *BLANKS   WCNUMT  6                                         BUG24897
+     C                     MOVE *BLANKS   WBRCAT  3                                         BUG24897
+     C                     MOVE *BLANKS   WPINRT  8                                         BUG24897
+     C                     MOVE *BLANKS   WPDATT  50                                        BUG24897
+      *                                                                                     BUG24897
+      ** Blank out saved last record                                                        BUG24897
+      *                                                                                     BUG24897
+     C                     MOVE *BLANKS   WCNUML  6                                         BUG24897
+     C                     MOVE *BLANKS   WBRCAL  3                                         BUG24897
+     C                     MOVE *BLANKS   WPINRL  8                                         BUG24897
+     C                     MOVE *BLANKS   WPDATL  50                                        BUG24897
+      *
+      ** Sub-routine ends here
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine SRFILL - Fill sub-file with records from the      *
+      *                      Audit Letters history file               *
+      *                                                               *
+      *****************************************************************
+     C           SRFILL    BEGSR
+     C                     MOVE *OFF      *IN74
+      *
+     C**********           Z-ADDTOROW     ANZREC  40                                        BUG24897
+     C**********           Z-ADDANZREC    FRROW                                             BUG24897
+      *
+      ** Show 12 records per screen
+      *
+     C                     Z-ADD12        RECPAG  40
+      *
+     C********** FRROW     ADD  1         RRN                                               BUG24897
+     C********** RECPAG    ADD  FRROW     TOROW                                             BUG24897
+      *
+      ** If page down, start from the last record displayed                                 BUG24897
+      *                                                                                     BUG24897
+     C           *IN25     IFEQ *ON                                                         BUG24897
+     C           KEYLST    SETLLCGAUHSL2                                                    BUG24897
+      *                                                                                     BUG24897
+     C                     ELSE                                                             BUG24897
+      *                                                                                     BUG24897
+      ** If page up, go back to the last 12 records read                                    BUG24897
+      *                                                                                     BUG24897
+     C           *IN27     IFEQ *ON                                                         BUG24897
+     C           KEYTOP    SETGTCGAUHSL2                                                    BUG24897
+     C                     READPCGAUHSL2                 80                                 BUG24897
+     C                     Z-ADD12        TOROW                                             BUG24897
+     C                     MOVE *OFF      *IN70                                             BUG24897
+      *                                                                                     BUG24897
+     C           TOROW     DOWGT0                                                           BUG24897
+     C           *IN80     ANDEQ*OFF                                                        BUG24897
+     C                     MOVEL'QSYST'   WQB10X                                            BUG24897
+     C                     MOVE 'RNTBL'   WQB10X                                            BUG24897
+     C                     CALL 'QDCXLATE'                                                  BUG24897
+     C                     PARM 3         WQA5N                                             BUG24897
+     C                     PARM FDBRCH    WQBRCH                                            BUG24897
+     C                     PARM           WQB10X                                            BUG24897
+     C                     PARM 'QSYS'    WQC10X                                            BUG24897
+     C                     CALL 'QDCXLATE'                                                  BUG24897
+     C                     PARM 1         WQA5N                                             BUG24897
+     C                     PARM FDFLAG    WQFLAG                                            BUG24897
+     C                     PARM           WQB10X                                            BUG24897
+     C                     PARM 'QSYS'    WQC10X                                            BUG24897
+      *                                                                                     BUG24897
+      ** Check selection fields - if fail, read next record.                                BUG24897
+      ** Customer number                                                                    BUG24897
+      *                                                                                     BUG24897
+     C           FDCUST    IFNE *BLANK                                                      BUG24897
+      *                                                                                     BUG24897
+      ** Scan for search string.                                                            BUG24897
+      *                                                                                     BUG24897
+     C                     CALL 'QCLSCAN'                                                   BUG24897
+     C                     PARM           FCNUM                                             BUG24897
+     C                     PARM 6         WQA3N                                             BUG24897
+     C                     PARM 1         WQB3N                                             BUG24897
+     C                     PARM           FDCUST                                            BUG24897
+     C                     PARM 6         WQC3N                                             BUG24897
+     C                     PARM '1'       WQD1                                              BUG24897
+     C                     PARM '1'       WQE1                                              BUG24897
+     C                     PARM '?'       WQF1                                              BUG24897
+     C                     PARM           WQG3N                                             BUG24897
+     C           WQG3N     CABLT1         PRVREC                                            BUG24897
+     C                     END                                                              BUG24897
+      *                                                                                     BUG24897
+      ** Branch                                                                             BUG24897
+      *                                                                                     BUG24897
+     C           FDBRCH    IFNE *BLANK                                                      BUG24897
+      *                                                                                     BUG24897
+      ** Scan for search string.                                                            BUG24897
+      *                                                                                     BUG24897
+     C                     CALL 'QCLSCAN'                                                   BUG24897
+     C                     PARM           FBRCA   3                                         BUG24897
+     C                     PARM 3         WQA3N   30                                        BUG24897
+     C                     PARM 1         WQB3N                                             BUG24897
+     C                     PARM           WQBRCH                                            BUG24897
+     C                     PARM 3         WQC3N                                             BUG24897
+     C                     PARM '1'       WQD1                                              BUG24897
+     C                     PARM '1'       WQE1                                              BUG24897
+     C                     PARM '?'       WQF1                                              BUG24897
+     C                     PARM           WQG3N                                             BUG24897
+     C           WQG3N     CABLT1         PRVREC                                            BUG24897
+     C                     END                                                              BUG24897
+      *                                                                                     BUG24897
+      ** Print item number                                                                  BUG24897
+      *                                                                                     BUG24897
+     C           FDPINR    IFNE *BLANK                                                      BUG24897
+      *                                                                                     BUG24897
+      ** Scan for search string.                                                            BUG24897
+      *                                                                                     BUG24897
+     C                     CALL 'QCLSCAN'                                                   BUG24897
+     C                     PARM           FPINR                                             BUG24897
+     C                     PARM 8         WQA3N                                             BUG24897
+     C                     PARM 1         WQB3N                                             BUG24897
+     C                     PARM           FDPINR                                            BUG24897
+     C                     PARM 8         WQC3N                                             BUG24897
+     C                     PARM '1'       WQD1                                              BUG24897
+     C                     PARM '1'       WQE1                                              BUG24897
+     C                     PARM '?'       WQF1                                              BUG24897
+     C                     PARM           WQG3N                                             BUG24897
+     C           WQG3N     CABLT1         PRVREC                                            BUG24897
+     C                     END                                                              BUG24897
+      *                                                                                     BUG24897
+     C           FDMODI    IFNE *BLANK                                                      BUG24897
+      *                                                                                     BUG24897
+      ** Scan for search string.                                                            BUG24897
+      *                                                                                     BUG24897
+     C                     CALL 'QCLSCAN'                                                   BUG24897
+     C                     PARM           FMODU                                             BUG24897
+     C                     PARM 2         WQA3N                                             BUG24897
+     C                     PARM 1         WQB3N                                             BUG24897
+     C                     PARM           FDMODI                                            BUG24897
+     C                     PARM 2         WQC3N                                             BUG24897
+     C                     PARM '1'       WQD1                                              BUG24897
+     C                     PARM '1'       WQE1                                              BUG24897
+     C                     PARM '?'       WQF1                                              BUG24897
+     C                     PARM           WQG3N                                             BUG24897
+     C           WQG3N     CABLT1         PRVREC                                            BUG24897
+     C                     END                                                              BUG24897
+      *                                                                                     BUG24897
+      ** Status                                                                             BUG24897
+      *                                                                                     BUG24897
+     C           FDFLAG    IFNE *BLANK                                                      BUG24897
+      *                                                                                     BUG24897
+      ** Scan for search string.                                                            BUG24897
+      *                                                                                     BUG24897
+     C                     CALL 'QCLSCAN'                                                   BUG24897
+     C                     PARM           FFLAG                                             BUG24897
+     C                     PARM 1         WQA3N                                             BUG24897
+     C                     PARM 1         WQB3N                                             BUG24897
+     C                     PARM           WQFLAG                                            BUG24897
+     C                     PARM 1         WQC3N                                             BUG24897
+     C                     PARM '1'       WQD1                                              BUG24897
+     C                     PARM '1'       WQE1                                              BUG24897
+     C                     PARM '?'       WQF1                                              BUG24897
+     C                     PARM           WQG3N                                             BUG24897
+     C           WQG3N     CABLT1         PRVREC                                            BUG24897
+     C                     END                                                              BUG24897
+     C                     SUB  1         TOROW                                             BUG24897
+     C           PRVREC    TAG                                                              BUG24897
+     C                     READPCGAUHSL2                 80                                 BUG24897
+     C                     ENDDO                                                            BUG24897
+      *                                                                                     BUG24897
+      ** If beggining of file reached, set the position                                     BUG24897
+      ** at the beginning of the file                                                       BUG24897
+      *                                                                                     BUG24897
+     C           *IN80     IFEQ *ON                                                         BUG24897
+     C           *LOVAL    SETLLCGAUHSL2
+     C                     ENDIF                                                            BUG24897
+     C                     ENDIF                                                            BUG24897
+     C                     ENDIF                                                            BUG24897
+      *                                                                                     BUG24897
+      ** If changes made in subfile, redisplay the current records                          BUG24897
+      *                                                                                     BUG24897
+     C           *IN90     IFEQ *ON                                                         BUG24897
+     C           KEYTOP    SETLLCGAUHSL2                                                    BUG24897
+     C                     ENDIF                                                            BUG24897
+      *                                                                                     BUG24897
+     C                     EXSR SRCLR                                                       BUG24897
+      *                                                                                     BUG24897
+     C                     READ CGAUHSL2                 80
+      *
+     C           *IN80     DOWEQ*OFF
+     C           *IN70     ANDEQ*OFF
+     C           FRROW     ANDLTRECPAG                                                      BUG24897
+      *
+      ** Translate entry in selection field to upper case characters
+      *
+     C********** FZFLAG    IFEQ 'N'                                                         BUG24897
+      *
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C           *LIKE     DEFN FDBRCH    WQBRCH
+     C                     CALL 'QDCXLATE'
+     C                     PARM 3         WQA5N   50
+     C                     PARM FDBRCH    WQBRCH
+     C                     PARM           WQB10X
+     C                     PARM 'QSYS'    WQC10X 10
+     C           *LIKE     DEFN FDFLAG    WQFLAG
+     C                     CALL 'QDCXLATE'
+     C                     PARM 1         WQA5N   50
+     C                     PARM FDFLAG    WQFLAG
+     C                     PARM           WQB10X
+     C                     PARM 'QSYS'    WQC10X 10
+      *
+      ** Check selection fields - if fail, read next record.
+      ** Customer number
+      *
+     C           FDCUST    IFNE *BLANK
+      *
+      ** Scan for search string.
+      *
+     C                     CALL 'QCLSCAN'
+     C                     PARM           FCNUM   6
+     C                     PARM 6         WQA3N   30
+     C                     PARM 1         WQB3N   30
+     C                     PARM           FDCUST
+     C                     PARM 6         WQC3N   30
+     C                     PARM '1'       WQD1    1
+     C                     PARM '1'       WQE1    1
+     C                     PARM '?'       WQF1    1
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         NXTREC
+     C                     END
+      *
+      ** Branch
+      *
+     C           FDBRCH    IFNE *BLANK
+      *
+      ** Scan for search string.
+      *
+     C                     CALL 'QCLSCAN'
+     C                     PARM           FBRCA   3
+     C                     PARM 3         WQA3N   30
+     C                     PARM 1         WQB3N   30
+     C                     PARM           WQBRCH
+     C                     PARM 3         WQC3N   30
+     C                     PARM '1'       WQD1    1
+     C                     PARM '1'       WQE1    1
+     C                     PARM '?'       WQF1    1
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         NXTREC
+     C                     END
+      *
+      ** Print item number
+      *
+     C           FDPINR    IFNE *BLANK
+      *
+      ** Scan for search string.
+      *
+     C                     CALL 'QCLSCAN'
+     C                     PARM           FPINR   8
+     C                     PARM 8         WQA3N   30
+     C                     PARM 1         WQB3N   30
+     C                     PARM           FDPINR
+     C                     PARM 8         WQC3N   30
+     C                     PARM '1'       WQD1    1
+     C                     PARM '1'       WQE1    1
+     C                     PARM '?'       WQF1    1
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         NXTREC
+     C                     END
+      *
+     C           FDMODI    IFNE *BLANK
+      *
+      ** Scan for search string.
+      *
+     C                     CALL 'QCLSCAN'
+     C                     PARM           FMODU   2
+     C                     PARM 2         WQA3N   30
+     C                     PARM 1         WQB3N   30
+     C                     PARM           FDMODI
+     C                     PARM 2         WQC3N   30
+     C                     PARM '1'       WQD1    1
+     C                     PARM '1'       WQE1    1
+     C                     PARM '?'       WQF1    1
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         NXTREC
+     C                     END
+      *
+      ** Status
+      *
+     C           FDFLAG    IFNE *BLANK
+      *
+      ** Scan for search string.
+      *
+     C                     CALL 'QCLSCAN'
+     C                     PARM           FFLAG   1
+     C                     PARM 1         WQA3N   30
+     C                     PARM 1         WQB3N   30
+     C                     PARM           WQFLAG
+     C                     PARM 1         WQC3N   30
+     C                     PARM '1'       WQD1    1
+     C                     PARM '1'       WQE1    1
+     C                     PARM '?'       WQF1    1
+     C                     PARM           WQG3N   30
+     C           WQG3N     CABLT1         NXTREC
+     C                     END
+      *
+     C                     ADD  1         FRROW
+     C                     MOVELFCNUM     #CNUM
+     C                     MOVELFBRCA     #BRCA
+     C                     MOVELFMODU     #MODL
+      *
+      ** Convert Midas Day No. into DDMMYY
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM FPDAT     WQ0001  50
+     C**********           PARM           ZDATFM  1                                         BUG22969
+     C                     PARM BJDFIN    ZDATFM  1                                         BUG22969
+     C**********           PARM           #PDAT                                             BUG22557
+     C**********           PARM           #PDATE                                   BUG22557 BUG22969
+     C                     PARM           #PDATE  60                                        BUG22969
+     C                     PARM           WQ0004  7
+     C                     MOVELFPINR     #PINR
+     C                     MOVELFREMI     #REMI
+     C                     MOVE #PDATE    #PDAT                                             BUG22557
+      *                                                                                     BUG23252
+      ** Move N To Reprint FLAG                                                             BUG23252
+      *                                                                                     BUG23252
+     C                     MOVE 'N'       #REPR                                             BUG23252
+      *
+      ** Move Flag-Message into #FLAG dependent on Status-Flag (A,C,R)
+      *
+     C                     EXSR SRFLAG
+      *                                                                                     BUG23253
+      ** Populate Acknowledgement Reception and Date of Reception                           BUG23253
+      *                                                                                     BUG23253
+     C           FACKR     IFNE 'Y'                                                         BUG23253
+     C                     MOVE 'N'       #ACKR                                             BUG23253
+     C                     ELSE                                                             BUG23253
+     C                     MOVE FACKR     #ACKR                                             BUG23253
+     C                     ENDIF                                                            BUG23253
+      *                                                                                     BUG23253
+     C           FACDT     IFNE *ZEROS                                                      BUG23253
+      *                                                                                     BUG23253
+     C                     CALL 'ZDATE2'                                                    BUG23253
+     C                     PARM FACDT     WQ0001                                            BUG23253
+     C                     PARM BJDFIN    ZDATFM                                            BUG23253
+     C                     PARM           #PDATE                                            BUG23253
+     C                     PARM           WQ0004                                            BUG23253
+      *                                                                                     BUG23253
+     C                     MOVE #PDATE    #ACDT                                             BUG23253
+      *                                                                                     BUG23253
+     C                     ELSE                                                             BUG23253
+     C                     MOVE *BLANKS   #ACDT                                             BUG23253
+      *                                                                                     BUG23253
+     C                     ENDIF                                                            BUG23253
+      *
+     C**********           ADD  1         ANZREC                                            BUG24897
+     C                     WRITECUSTSFL
+      *                                                                                     BUG24897
+      ** Remember first and last record displayed on screen                                 BUG24897
+      *                                                                                     BUG24897
+     C           FRROW     IFEQ 1                                                           BUG24897
+     C                     MOVE FCNUM     WCNUMT                                            BUG24897
+     C                     MOVE FBRCA     WBRCAT                                            BUG24897
+     C                     MOVE FPINR     WPINRT                                            BUG24897
+     C                     MOVE FPDAT     WPDATT                                            BUG24897
+     C                     END
+     C                     MOVE *BLANKS   WCNUML                                            BUG24897
+     C                     MOVE *BLANKS   WBRCAL                                            BUG24897
+     C                     MOVE *BLANKS   WPINRL                                            BUG24897
+     C                     MOVE *BLANKS   WPDATL                                            BUG24897
+     C                     MOVE FCNUM     WCNUML                                            BUG24897
+     C                     MOVE FBRCA     WBRCAL                                            BUG24897
+     C                     MOVE FPINR     WPINRL                                            BUG24897
+     C                     MOVE FPDAT     WPDATL                                            BUG24897
+      *
+     C           NXTREC    TAG
+     C                     READ CGAUHSL2                 80
+     C           *IN80     IFEQ *ON
+     C                     MOVE *ON       *IN70
+     C                     END
+     C                     END
+      *
+      ** If no records found
+      *
+     C           FRROW     IFEQ *ZERO
+     C                     MOVE *ON       *IN73
+     C                     Z-ADD1         FRROW
+     C                     MOVEL*BLANKS   #CNUM
+     C                     MOVEL*BLANKS   #BRCA
+     C                     MOVEL*BLANKS   #PDAT
+     C                     MOVEL*BLANKS   #PINR
+     C                     MOVEL*BLANKS   #REMI
+     C                     MOVEL*BLANKS   #FLAG
+     C                     MOVEL*BLANKS   #MODL
+     C                     MOVEL*BLANKS   #ACKR                                             BUG23253
+     C                     MOVEL*BLANKS   #ACDT                                             BUG23253
+     C                     WRITECUSTSFL
+     C                     MOVE *ON       *IN70                                             BUG22557
+     C                     ELSE                                                             BUG22557
+     C                     MOVE *OFF      *IN80                                             BUG22557
+     C                     END
+      *
+      ** Sub-routine ends here
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine SRDSP - show sub-file on screen                   *
+      *                                                               *
+      *****************************************************************
+     C           SRDSP     BEGSR
+     C                     MOVE *ON       *IN71
+      *
+      ** Midas Run Date
+      *
+     C                     MOVE BJMRDT    SRUNDT
+     C                     EXFMTCUSTCTL
+     C                     MOVE *OFF      *IN73
+     C                     MOVE *OFF      *IN71
+      *
+      ** Sub-routine ends here
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine SRACT - control actions in sub-file               *
+      *                                                               *
+      *****************************************************************
+     C           SRACT     BEGSR
+      *
+      ** If selections were made or have been changed
+      *
+     C           FDCUST    IFNE MCUST
+     C           FDBRCH    ORNE MBRCH
+     C           FDPINR    ORNE MPINR
+     C           FDMODI    ORNE MMODI
+     C           FDFLAG    ORNE MFLAG
+     C                     MOVEL'0'       AGAIN
+     C                     MOVE *ON       *IN90
+     C                     MOVE *ON       *IN91                                             BUG24897
+     C                     END
+      *
+      ** Remember selections made
+      *
+     C                     MOVELFDCUST    MCUST   6
+     C                     MOVELFDBRCH    MBRCH   3
+     C                     MOVELFDPINR    MPINR   8
+     C                     MOVELFDMODI    MMODI   2
+     C                     MOVELFDFLAG    MFLAG   1
+      *
+      ** Sub-routine SRCHG updates DB-file only, if a sub-file record
+      ** has been changed (s.a. sub-routine SRCHG)
+      *
+     C                     EXSR SRCHG
+      *
+      ** Sub-routine ends here
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine SRVAL - Check entry                               *
+      *                                                               *
+      *****************************************************************
+     C           SRVAL     BEGSR
+      *
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN32                                             BUG23253
+     C                     MOVE '0'       *IN33                                             BUG23253
+     C                     MOVE '0'       *IN34                                             BUG23252
+     C                     MOVE ' '       ERRFLG  1
+     C                     MOVE *BLANKS   WERROR  1                                         BUG23253
+      *
+     C           #REMI     IFNE 'Y'
+     C           #REMI     ANDNE'N'
+     C           #REMI     ANDNE*BLANK
+     C                     MOVE 'Y'       ERRFLG
+     C                     MOVEL'USR6208' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMES2
+     C                     MOVE '1'       *IN30
+     C                     END
+      *                                                                                     BUG23252
+      ** Validate 'Reprint' field                                                           BUG23252
+      *                                                                                     BUG23252
+     C           #REPR     IFNE 'Y'                                                         BUG23252
+     C           #REPR     ANDNE'N'                                                         BUG23252
+     C                     MOVE 'Y'       ERRFLG                                            BUG23252
+     C                     MOVEL'USR0805' ZAMSID                                            BUG23252
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                            BUG23252
+     C                     EXSR SRMES2                                                      BUG23252
+     C                     MOVE '1'       *IN34                                             BUG23252
+     C                     END                                                              BUG23252
+      *
+      ** Validate 'Acknowledgement Reception' field                                         BUG23253
+      *                                                                                     BUG23253
+     C           #ACKR     IFNE 'Y'                                                         BUG23253
+     C           #ACKR     ANDNE'N'                                                         BUG23253
+     C                     MOVE 'Y'       ERRFLG                                            BUG23253
+     C                     MOVE 'Y'       WERROR                                            BUG23253
+     C                     MOVEL'USR0805' ZAMSID                                            BUG23253
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                            BUG23253
+     C                     EXSR SRMES2                                                      BUG23253
+     C                     MOVE '1'       *IN32                                             BUG23253
+     C                     ENDIF                                                            BUG23253
+      *                                                                                     BUG23253
+      ** Validate 'Date of Acknowledgement' field                                           BUG23253
+      ** 'Date of Acknowledgement' is mandatory when                                        BUG23253
+      ** 'Acknowledgement Received' is 'Y'                                                  BUG23253
+      *                                                                                     BUG23253
+     C           #ACKR     IFEQ 'Y'                                                         BUG23253
+     C           #ACDT     ANDEQ*BLANKS                                                     BUG23253
+     C                     MOVE 'Y'       ERRFLG                                            BUG23253
+     C                     MOVEL'USR8319' ZAMSID                                            BUG23253
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                            BUG23253
+     C                     EXSR SRMES2                                                      BUG23253
+     C                     MOVE '1'       *IN33                                             BUG23253
+     C                     ENDIF                                                            BUG23253
+      *                                                                                     BUG23253
+     C           #ACDT     IFNE *BLANKS                                                     BUG23253
+      *                                                                                     BUG23253
+     C                     MOVE *ZEROS    WACDAT                                            BUG23253
+     C                     MOVE #ACDT     #PDATE                                            BUG23253
+     C                     CALL 'ZDATE1'                                                    BUG23253
+     C                     PARM *BLANKS   WQ0004                                            BUG23253
+     C                     PARM           #PDATE                                            BUG23253
+     C                     PARM BJDFIN    ZDATFM                                            BUG23253
+     C                     PARM           PZDAYN  50                                        BUG23253
+      *                                                                                     BUG23253
+     C           WQ0004    IFNE *BLANKS                                                     BUG23253
+      *                                                                                     BUG23253
+     C                     MOVE 'Y'       ERRFLG                                            BUG23253
+     C                     MOVE 'Y'       WERROR                                            BUG23253
+     C                     MOVEL'USR1040' ZAMSID                                            BUG23253
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                            BUG23253
+     C                     EXSR SRMES2                                                      BUG23253
+     C                     MOVE '1'       *IN33                                             BUG23253
+      *                                                                                     BUG23253
+     C                     ELSE                                                             BUG23253
+      *                                                                                     BUG23253
+     C********** PZDAYN    IFGE BJRDNB                                             BUG23253 BUG23966
+     C           PZDAYN    IFGT BJRDNB                                                      BUG23966
+      *                                                                                     BUG23253
+     C                     MOVE 'Y'       ERRFLG                                            BUG23253
+     C                     MOVE 'Y'       WERROR                                            BUG23253
+     C                     MOVEL'ASM0012' ZAMSID                                            BUG23253
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                            BUG23253
+     C                     EXSR SRMES2                                                      BUG23253
+     C                     MOVE '1'       *IN33                                             BUG23253
+      *                                                                                     BUG23253
+     C                     ELSE                                                             BUG23253
+     C                     MOVE PZDAYN    WACDAT  50                                        BUG23253
+     C                     ENDIF                                                            BUG23253
+      *                                                                                     BUG23253
+     C                     ENDIF                                                            BUG23253
+      *                                                                                     BUG23253
+     C                     ENDIF                                                            BUG23253
+      *                                                                                     BUG23253
+      ** 'Acknowledgement Received' is mandatory when                                       BUG23253
+      ** 'Date of Acknowledgement' is entered                                               BUG23253
+      *                                                                                     BUG23253
+     C           #ACDT     IFNE *BLANKS                                                     BUG23253
+     C           #ACKR     ANDEQ*BLANKS                                                     BUG23253
+     C                     MOVE 'Y'       ERRFLG                                            BUG23253
+     C                     MOVEL'USR8318' ZAMSID                                            BUG23253
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                            BUG23253
+     C                     EXSR SRMES2                                                      BUG23253
+     C                     MOVE '1'       *IN32                                             BUG23253
+     C                     ENDIF                                                            BUG23253
+      *                                                                                     BUG23253
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine SRCHG - update DB file, if field "Reminder        *
+      *                     neccessary" was set to 'Y' or 'N'         *
+      *                                                               *
+      *****************************************************************
+     C           SRCHG     BEGSR
+      *
+      ***Remember*the*Position*of*the*current*record                                        BUG24897
+      *
+     C**********           Z-ADDCSRRRN    MEMRRN  40                                        BUG24897
+      *
+      ** Read sub-file record, which is changed
+      *
+     C                     READCCUSTSFL                  81
+      *
+     C           *IN81     DOWEQ*OFF
+      *
+      ** At least one sub-file record has been changed --> switch
+      ** On *IN90
+      *
+     C                     MOVE *ON       *IN90
+     C                     MOVE *OFF      *IN74
+      *
+     C                     EXSR SRVAL
+      *
+      ** Access the Audit Letters history file by customer no.
+      ** and branch
+      *
+     C           THEKEY    CHAINCGAUHSL2             82
+     C           *IN82     IFEQ *OFF
+     C           ERRFLG    ANDEQ*BLANKS
+      *
+      ** Read again the sub-file record, which is changed
+      *
+     C           FRROW     CHAINCUSTSFL              83
+      *
+      ** Update the Audit Letters history file
+      *
+     C                     MOVEL#CNUM     FCNUM
+     C                     MOVEL#BRCA     FBRCA
+     C                     MOVEL#PINR     FPINR
+     C                     MOVEL#MODL     FMODU
+     C********** #REMI     IFEQ 'N'                                                         BUG23253
+     C           #ACKR     IFEQ 'Y'                                                         BUG23253
+     C                     MOVEL*BLANK    #REMI
+     C                     MOVEL'C'       #FLAG
+     C**********           ELSE                                                             BUG23253
+     C                     ENDIF                                                            BUG23253
+      *
+      ** If 'Reminder necessary Y/N' set to 'Y'
+      *
+     C           #REMI     IFEQ 'Y'                                                         BUG23253
+     C                     MOVEL*BLANK    #FLAG
+     C                     END
+     C                     MOVEL#REMI     FREMI
+     C                     MOVEL#FLAG     FFLAG
+     C                     MOVEL#ACKR     FACKR                                             BUG23253
+     C                     MOVELWACDAT    FACDT                                             BUG23253
+     C                     UPDATCGAUHSD0
+     C                     END
+      *
+     C                     EXSR SRFLAG
+      *                                                                                     BUG23252
+      ** If 'Reprint' set to 'Y'                                                            BUG23252
+      *                                                                                     BUG23252
+     C           #REPR     IFEQ 'Y'                                                         BUG23252
+      *                                                                                     BUG23252
+      ** Pass extract  Item nr to UDC_PRTGEN (Correspondence Manager)                       BUG23252
+      *                                                                                     BUG23252
+     C                     MOVE #PINR     P0ITMN                                            BUG23252
+     C                     MOVEL#CNUM     P0CORR                                            BUG23252
+     C                     CALL 'CG7105'                                                    BUG23252
+     C                     PARM           P0ITMN  80                                        BUG23252
+     C                     PARM           P0CORR 10                                         BUG23252
+     C                     PARM *BLANKS   P0RTN   7                                         BUG23252
+      *                                                                                     BUG23252
+     C           P0RTN     IFNE *BLANKS                                                     BUG23252
+      *                                                                                     BUG23252
+     C           P0RTN     IFEQ 'CGD1790'                                                   BUG23252
+     C                     MOVEL'NotFound'#RSTS                                             BUG23252
+     C                     ELSE                                                             BUG23252
+     C           P0RTN     IFEQ 'CGD1000'                                                   BUG23252
+     C                     MOVEL'CGD1000' ZAMSID                                            BUG23253
+     C                     MOVEL'CGUSRMSG'ZAMSGF                                            BUG23253
+     C                     EXSR SRMES2                                                      BUG23253
+     C                     MOVE '1'       *IN34                                             BUG23252
+     C                     ENDIF                                                            BUG23252
+     C                     ENDIF                                                            BUG23252
+      *                                                                                     BUG23252
+     C                     ELSE                                                             BUG23252
+     C                     MOVELWSTS      #RSTS                                             BUG23252
+     C                     ENDIF                                                            BUG23252
+      *                                                                                     BUG23252
+      ** Reset Reprint flag to 'N' If No Error                                              BUG23252
+      *                                                                                     BUG23252
+     C           *IN34     IFEQ *OFF                                                        BUG23252
+     C                     MOVE 'N'       #REPR                                             BUG23252
+     C                     ENDIF                                                            BUG23252
+      *                                                                                     BUG23252
+     C                     ENDIF                                                            BUG23252
+      *
+      ** Update screen
+      *
+     C                     MOVE *ON       *IN74                                             BUG23253
+     C                     UPDATCUSTSFL
+     C                     MOVE *OFF      *IN74                                             BUG23253
+      *
+      ** Reset Status flag to Blanks                                                        BUG23252
+      *                                                                                     BUG23252
+     C                     MOVEL*BLANKS   #RSTS                                             BUG23252
+      *
+      ** Read next changed sub-file record
+      *
+     C                     READCCUSTSFL                  81
+     C                     END
+      *
+     C                     WRITE#MSGCTL
+     C                     EXSR SRCLRQ
+      *
+      ** If ENTER hit, but no changes on screen have been done
+      ** --> show sub-file again
+      *
+     C           *IN90     IFEQ *OFF
+      *
+      ***Move*the*position*of*the*current*record*into*the                                   BUG24897
+      ***Relative*Record*Nr.                                                                BUG24897
+      *
+     C**********           Z-ADDFRROW     RRN                                               BUG24897
+     C                     ELSE
+      *
+      ** Put the saved record position back into RRN
+      *
+     C**********           Z-ADDFRROW     RRN                                               BUG23252
+     C**********           Z-ADDMEMRRN    RRN                                      BUG23252 BUG24897
+     C           *IN91     IFEQ *OFF                                                        BUG24897
+     C                     MOVE *OFF      *IN70                                             BUG24897
+     C                     EXSR SRFILL                                                      BUG24897
+     C                     ENDIF                                                            BUG24897
+     C                     MOVE *OFF      *IN90
+     C                     MOVE *OFF      *IN91                                             BUG24897
+     C                     END
+      *
+      ** Sub-routine ends here
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine SRFLAG - Translate flag --> message               *
+      *                                                               *
+      *****************************************************************
+     C           SRFLAG    BEGSR
+      *
+     C                     MOVEL*BLANKS   #FLAG
+      *
+      ** Audit Letter sent
+      *
+     C           FFLAG     IFEQ 'A'
+     C                     MOVEL'USR6209' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     MOVELZAMSTX    #FLAG
+     C                     END
+      *
+      ** Confirmation received
+      *
+     C           FFLAG     IFEQ 'C'
+     C                     MOVEL'USR6210' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     MOVELZAMSTX    #FLAG
+     C                     END
+      *
+      ** Reminder sent
+      *
+     C           FFLAG     IFEQ 'R'
+     C                     MOVEL'USR6211' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     MOVELZAMSTX    #FLAG
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine SRCLRQ - Clear Program Msgq                       *
+      *                                                               *
+      *****************************************************************
+     C           SRCLRQ    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMESS - Routine to receive a message                        *
+      *                                                               *
+      *****************************************************************
+     C           SRMESS    BEGSR
+      *
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     ENDIF
+      *
+     C                     CALL 'Y2RVMGC'
+     C                     PARM           WORTN   7
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTX132
+      *
+     C                     MOVE 'N'       HUGO    1
+     C                     ENDSR
+      *
+      ** SRMES2 - Routine to put a msg into errormsg subfile
+      *
+     C           SRMES2    BEGSR
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine SRCLRQ - Clear Program Msgq                       *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST ' ##OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Midas Run Date
+      *
+     C                     MOVE BJMRDT    SRUNDT
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *FLGMSG - Message dependent on Flag-Status (A,C,R)
+      * Audit Letter sent Confirmation received Reminder sent

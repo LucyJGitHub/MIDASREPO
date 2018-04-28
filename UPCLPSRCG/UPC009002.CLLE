@@ -1,0 +1,51 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Action file')                                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC009002 - Action File                                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CUP021  *CREATE    Date 11Jan11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP021 - Rewrite of Action File processing.                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             OVRDBF     FILE(AFCPL01) TOFILE(UPAFCPL0) SHARE(*NO)
+ 
+/* Call input function. */
+             CALL       PGM(UP009000) PARM(&RTCD &ERMS)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM

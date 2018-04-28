@@ -1,0 +1,106 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard Subroutines                                 *
+      *                                                               *
+      *  ZAMTEZ3LE -  CONVERT AMOUNT TO DISPLAY -38                   *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CAAA02  *CREATE    Date 06Sep03               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAA002 - WebFacing.                                          *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *     This routine converts a 15N amount with up to 3 implied   *
+      *     decimal places into a 12A field with thousands integer    *
+      *     half adjusted & leading zeroes suppressed.                *
+      *                                                               *
+      *       CALLS: NONE                                             *
+      *                                                               *
+      *       INPUT: @@IAMT 15,0  INPUT AMOUNT                        *
+      *              @@CCY  3A    INPUT CURRENCY                      *
+      *              @@CDP  1,0   CURRENCY DECIMAL PLACES             *
+      *                                                               *
+      *      OUTPUT: @@AMNT 12A   AMOUNT TO DISPLAY                   *
+      *                                                               *
+      *        USES: @@I          INDEX TO ARRAY OF AMOUNT            *
+      *              @@C          INDEX TO ARRAY OF DISPLAY AMOUNT    *
+      *              @D           ARRAY OF AMOUNT                     *
+      *              @J           ARRAY OF DISPLAY AMOUNT             *
+      *                                                               *
+      *                                                               *
+      *************************************************************** *
+      *
+     C     ZAMTE         BEGSR
+      *
+      *          INITIALISE ARRAYS
+      *
+     C                   MOVEA     *BLANKS       @D
+     C                   MOVEA     *BLANKS       @J
+      *
+      ** IF -VE AMOUNT THEN MAKE +VE
+     C     @@IAMT        IFLT      0
+     C                   Z-SUB     @@IAMT        @@IAMT
+     C                   END
+      *
+      ** Round up figures to the nearest thousand.
+      ** & store initial array index value
+     C     @@CDP         IFEQ      0                                            B1
+     C                   ADD       500           @@IAMT           15 0          *1
+     C                   Z-ADD     12            @@I                            *1
+     C                   END                                                    E1
+      *
+     C     @@CDP         IFEQ      1                                            B1
+     C                   ADD       5000          @@IAMT                         *1
+     C                   Z-ADD     11            @@I                            *1
+     C                   END                                                    E1
+      *
+     C     @@CDP         IFEQ      2                                            B1
+     C                   ADD       50000         @@IAMT                         *1
+     C                   Z-ADD     10            @@I                            *1
+     C                   END                                                    E1
+      *
+     C     @@CDP         IFEQ      3                                            B1
+     C                   ADD       500000        @@IAMT                         *1
+     C                   Z-ADD     9             @@I                            *1
+     C                   END                                                    E1
+      *
+      **  Place input amount into a 15 x 1 byte array
+     C                   MOVEA     @@AMDS        @D
+      *
+      **  Load output amount into a 12 x 1 byte array
+     C                   Z-ADD     12            @@C
+     C     @@I           DOWGT     0                                            B1
+     C                   MOVE      @D(@@I)       @J(@@C)                        *1
+     C                   SUB       1             @@C               2 0          *1
+     C                   SUB       1             @@I               2 0          *1
+     C                   END                                                    E1
+      *
+      ** Test successive elements of output amount setting zeroes to
+      ** blanks until the first element or a 'non zero' is reached.
+     C                   Z-ADD     1             @@C
+      *
+     C     @J(@@C)       DOUNE     '0'                                          B1
+     C     @J(@@C)       ANDNE     *BLANK                                       *1
+     C     @@C           OREQ      12                                           *1
+     C                   MOVE      *BLANK        @J(@@C)                        *1
+     C                   ADD       1             @@C                            *1
+     C                   END                                                    E1
+      *
+      ** MOVE @J TO DISPLAY FIELD
+     C                   MOVEA     @J            @@AMNT           12
+     C                   GOTO      ZAMTE9
+      *
+      ** DUMMY MOVES TO DEFINE FIELDS NOT DEFINED ELSEWHERE
+     C                   MOVE      @@CCY         @@CCY             3
+     C                   MOVE      @@CDP         @@CDP             1 0
+     C     ZAMTE9        ENDSR                                                  **ZAMTE9**
+      *****************************************************************
+      * End of /COPY ZAMTEZ3LE                                        *
+      *****************************************************************

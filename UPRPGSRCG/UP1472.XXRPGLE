@@ -1,0 +1,220 @@
+      *****************************************************************
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      ***UP1472 - Process Action File for SFMENUPD                    *                       CUP028
+      *  UP1472 - Process Action File for SFMENUPD and GPMENUPD       *                       CUP028
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP028  *MOVED     Date 07Sep04               *
+      *                 CUP024  *CREATE    Date 11Sep03               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP028 - Moved from zone to global.                          *
+      *           Amended to use UPMNU3L0 and GPMENUL0 instead of     *
+      *           files in zone.                                      *
+      *           Include new field MICON. (not activated, so not     *
+      *           compared.)                                          *
+      *  CUP024 - Creation of new set of Action File utilities.       *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write, update or delete fail
+      *
+     F*UPMNU2L0  IF   E           K DISK    INFSR(*PSSR)                                      CUP028
+     FUPMNU3L0  IF   E           K DISK    INFSR(*PSSR)                                       CUP028
+     F*SFMENUL0  UF A E           K DISK    INFSR(*PSSR)                                      CUP028
+     FGPMENUL0  UF A E           K DISK    INFSR(*PSSR)                                       CUP028
+     F                                     RENAME(SFMENUD0:MENUF) PREFIX(X)
+      /EJECT
+      *
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      ** Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     C     COMP          KLIST
+     C                   KFLD                    MIINDX
+      *
+     C******LOVAL        SETLL     UPMNU2L0                                                   CUP028
+     C     *LOVAL        SETLL     UPMNU3L0                                                   CUP028
+      *
+     C******             READ      UPMNU2L0                             6920                  CUP028
+     C                   READ      UPMNU3L0                             6920                  CUP028
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+      *
+     C     MIACTC        IFEQ      'I'
+     C                   EXSR      SETVAL
+     C                   WRITE     MENUF                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     MIACTC        IFEQ      'D'
+     C*****COMP          CHAIN     SFMENUL0                           3069                    CUP028
+     C     COMP          CHAIN     GPMENUL0                           3069                    CUP028
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+     C                   DELETE    MENUF                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      * If Action code = AMEND then read next record.
+     C     MIACTC        IFEQ      'A'
+     C                   MOVEL     MIINDX        INDXX            10
+     C*****              READ      UPMNU2L0                             6920                  CUP028
+     C                   READ      UPMNU3L0                             6920                  CUP028
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+      * If key fields do not match exit
+      *  - or if EOF indicator is on.
+     C     MIINDX        IFNE      INDXX
+     C     *IN20         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C*****COMP          CHAIN     SFMENUL0                           3069                    CUP028
+     C     COMP          CHAIN     GPMENUL0                           3069                    CUP028
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+      *
+     C                   EXSR      SETVAL
+     C                   UPDATE    MENUF                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C*****              READ      UPMNU2L0                             6920                  CUP028
+     C                   READ      UPMNU3L0                             6920                  CUP028
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *****************************************************************
+      *                                                               *
+      * SETVAL subroutine - set values for deletes/writes/updates     *
+      *                                                               *
+      *****************************************************************
+     C     SETVAL        BEGSR
+      * Set values to update record.
+     C                   MOVEL     MIZONE        XMIZONE
+     C                   MOVEL     MIINDX        XMIINDX
+     C                   Z-ADD     MISECL        XMISECL
+     C                   MOVEL     MIMODC        XMIMODC
+     C                   MOVEL     MIMMSN        XMIMMSN
+     C                   MOVEL     MIEXTP        XMIEXTP
+     C                   MOVEL     MIFRAM        XMIFRAM
+     C                   MOVEL     MIPATH        XMIPATH
+     C                   MOVEL     MIAAC1        XMIAAC1
+     C                   MOVEL     MIAAC2        XMIAAC2
+     C                   MOVEL     MIAAC3        XMIAAC3
+     C                   MOVEL     MIAAC4        XMIAAC4
+     C                   MOVEL     MIAAC5        XMIAAC5
+     C                   MOVEL     MIAAC6        XMIAAC6
+     C                   MOVEL     MIAAC7        XMIAAC7
+     C                   MOVEL     MIAAC8        XMIAAC8
+     C                   MOVEL     MIAAC9        XMIAAC9
+     C                   MOVEL     MIAAC10       XMIAAC10
+     C                   MOVEL     MIACOB        XMIACOB
+     C                   MOVEL     MIAPI1        XMIAPI1
+     C                   MOVEL     MIAPI2        XMIAPI2
+     C                   MOVEL     MIAPI3        XMIAPI3
+     C                   MOVEL     MIAPI4        XMIAPI4
+     C                   MOVEL     MIAPI5        XMIAPI5
+     C                   MOVEL     MIINS         XMIINS
+     C     MIACTC        IFEQ      'I'                                                        CUP028
+     C                   MOVEL     MICON         XMICON                                       CUP028
+     C                   ENDIF                                                                CUP028
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      ********************************************************************

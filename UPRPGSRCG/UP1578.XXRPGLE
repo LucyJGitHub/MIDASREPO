@@ -1,0 +1,475 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1578 - Action file compatibilty report for UPDFFL2PD       *
+      *                                                               *
+      *  Function:  This program compares the differences between     *
+      *             Action file delivered and the system.             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP022  *CREATE    Date 30Mar04               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP022 - Creation of new set of Action File utilities.       *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    30         Error on Read                                   *
+      *    31         EOF on Read                                     *
+      *    32         Chain Fail on Insert routine                    *
+      *    33         Chain Fail on Delete routine                    *
+      *    34         Record there on chain but different             *
+      *    36         Record there on Chain but different             *
+      *    37         Compare Indicator for Delete Routine            *
+      *    39         Switched on if a record is found on file(Delete)*
+      *    40         Conflicts detected                              *
+      *    41         First line of record written                    *
+      *    42         Same Record in Sys and UP for Insert            *
+      *    70         Error on Write                                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * *PSSR - Error processing                                      *
+      * *INZSR - Initialise                                           *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).  Similarly        *
+      *    D-spec initialisation only happens the first time.  Use    *
+      *    RESET for subsequent passes.                               *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     FUPDFFL2L0 IF   E             DISK    INFSR(*PSSR) Prefix(UP_) USROPN
+     FGPDFFLDL1 IF   E           K DISK    INFSR(*PSSR) Prefix(SYS_) USROPN
+     FUP0803P1  O    E             PRINTER INFDS(SPOOL)
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     D ACTIONFDTA     UDS           256
+     D SYSFIL                  1     10
+     D UPDFIL                 31     40
+      *
+      ** Data Area in QTEMP giving report header data
+ 
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+     D/COPY GPCPYSRCG,PSDS
+      *
+      ** Program Status Data Structure
+      *
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+     D Header          C                   'Report of the differences between -
+     D                                     the Existing System Record and the -
+     D                                     Replacement Record'
+ 
+     D Counter         C                   '---------+---------+---------+------
+     D                                     ----+---------+---------+---------+--
+     D                                     --------+---------+---------+'
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+     D UpdatArray      S              1A   DIM(31)
+ 
+     D SysArray        S              1A   DIM(31)
+ 
+     D ErrorArray      S              1A   DIM(31)
+ 
+      ** Data Structure for the Update file
+     D                 DS
+     D UP_FILNAM
+     D UP_FLDNAM
+     D UP_FLMODE
+ 
+     D  Updfield               1     31A
+     D  UPDLIN1                1     31A
+ 
+      ** Data Structure for the Core file
+     D                 DS
+     D SYS_FILNAM
+     D SYS_FLDNAM
+     D SYS_FLMODE
+ 
+     D  CoreFld                1     31A
+     D  SYSLIN1                1     31A
+ 
+      ** Data Structure for the Error indicators
+     D                 DS            31
+     D  Indfld                 1     31A
+     D  INDLIN1                1     31A
+ 
+     DSPOOL            DS
+     D SFILE                  83     92
+     D SFNUM                 123    124B 0
+     D OFLLN                 188    189B 0
+     D PRTLN                 367    368B 0
+ 
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+ 
+     D @RUN            S              1
+     D KEY_FILNAM      S                   LIKE(UP_FILNAM)
+     D KEY_FLDNAM      S                   LIKE(UP_FLDNAM)
+     D KEY_FLMODE      S                   LIKE(UP_FLMODE)
+     D X               S              5  0
+     D ACTION          S              7
+     D RMLN            S              2  0
+     D COUNT           S            100
+     D COUNT31         S             31
+     D Remainder       S              1
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+      *
+     C     *DTAARA       DEFINE                  LDA
+      *
+      * Set up key list
+     C     KEY           KLIST
+     C                   KFLD                    KEY_FILNAM
+     C                   KFLD                    KEY_FLDNAM
+     C                   KFLD                    KEY_FLMODE
+ 
+     C                   READ      UPDFFL2L0                            3031
+      *
+      * If an Error or End of file reached
+     C                   IF        *IN30 = '1'
+      *
+     C     *LOCK         IN        LDA
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      DBFILE =  'UPDFFL2L0'
+     C                   EVAL      DBKEY  =  UP_FILNAM + UP_FLDNAM + UP_FLMODE
+     C                   EVAL      DBPGM  =  PSProcPgm
+     C                   EVAL      DBASE  =  001
+     C                   EVAL      DBMOD  =  PSProcMod
+     C                   EVAL      DBPROC =  'SR/MAIN'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ELSE
+      *
+     C                   WRITE     HEADH                                70
+      *
+      * Do while a record exists
+     C                   DOW       *IN31 = '0'
+     C                   EVAL      ACTION = *BLANKS
+     C                   EVAL      Indfld = *BLANKS
+      *
+      * If Action Code is Insert
+     C                   IF        UP_APACTC = 'I'
+     C                   MOVEL     UP_FILNAM     KEY_FILNAM
+     C                   MOVEL     UP_FLDNAM     KEY_FLDNAM
+     C                   MOVEL     UP_FLMODE     KEY_FLMODE
+     C     KEY           CHAIN     GPDFFLDL1                          32
+      *
+      * If a record is found on the chain then print out a message
+     C                   IF        *IN32 = '0'
+      * If the two records are different - Move along Character by Character indicating
+      * differences on the third Array (ErrorArray) ELSE the record saying Identical
+     C                   IF        CoreFld <> Updfield
+     C                   MOVEA     Updfield      UpdatArray
+     C                   MOVEA     CoreFld       SysArray
+     C                   CLEAR                   ErrorArray
+     C                   Z-ADD     1             X
+      *
+     C                   DOU       X > 31
+     C     SysArray(X)   COMP      UpdatArray(X)                          43
+     C                   IF        *IN43 = '0'
+     C                   EVAL      *IN39 = '1'
+     C                   MOVEA     '*'           ErrorArray(X)
+     C                   ENDIF
+     C                   ADD       1             X
+     C                   ENDDO
+      * Move error indicator array to field for output
+     C                   MOVEA     ErrorArray    IndFld
+      *
+     C                   MOVEL     'INSERT'      ACTION
+     C                   EXSR      REPORT
+     C                   EVAL      *IN40 = '1'
+     C                   ELSE
+     C                   EVAL      *IN42 = '1'
+     C                   MOVEL     'INSERT'      ACTION
+     C                   EXSR      REPORT
+     C                   EVAL      *IN40 = '1'
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * If Action Code is Delete
+     C                   IF        UP_APACTC = 'D'
+     C                   MOVEL     UP_FILNAM     KEY_FILNAM
+     C                   MOVEL     UP_FLDNAM     KEY_FLDNAM
+     C                   MOVEL     UP_FLMODE     KEY_FLMODE
+     C     KEY           CHAIN     GPDFFLDL1                          33
+      *
+      * If a file is not found on the chain print out a message
+     C                   IF        *IN33 = '1'
+     C                   MOVEL     'DELETE'      ACTION
+     C                   EXSR      REPORT
+     C                   EVAL      *IN40 = '1'
+     C                   ELSE
+      *
+      * If the two records are different - Move along Character by Character indicating
+      * differences on the third Array (ErrorArray)
+     C                   IF        Corefld <> Updfield
+     C                   MOVEA     Updfield      UpdatArray
+     C                   MOVEA     CoreFld       SysArray
+     C                   CLEAR                   ErrorArray
+     C                   Z-ADD     1             X
+      *
+     C                   DOU       X > 31
+     C     SysArray(X)   COMP      UpdatArray(X)                          36
+     C                   IF        *IN36 = '0'
+     C                   EVAL      *IN34 = '1'
+     C                   MOVEA     '*'           ErrorArray(X)
+     C                   EndIf
+     C                   ADD       1             X
+     C                   EndDo
+      * Move error indicator array to field for output
+     C                   MOVEA     ErrorArray    IndFld
+      *
+      * Write out all three data structures with the indicator showing
+      * where the error is
+     C                   MOVEL     'DELETE'      ACTION
+     C                   EXSR      REPORT
+     C                   EVAL      *IN40 = '1'
+     C                   ENDIF
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   MOVEA     '000000000'   *IN(30)
+     C                   MOVEA     '0'           *IN(39)
+     C                   MOVEA     '00'          *IN(41)
+     C                   READ      UPDFFL2L0                            3031
+      *
+      * If an Error
+     C                   IF        *IN30 = '1'
+      *
+     C     *LOCK         IN        LDA
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      DBFILE =  'UPDFFL2L0'
+     C                   EVAL      DBKEY  =  UP_FILNAM + UP_FLDNAM + UP_FLMODE
+     C                   EVAL      DBPGM  =  PSProcPgm
+     C                   EVAL      DBASE  =  002
+     C                   EVAL      DBMOD  =  PSProcMod
+     C                   EVAL      DBPROC =  'SR/MAIN'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDDO
+     C                   ENDIF
+      * If there are no differences between the two files UP and Sys
+      * Print No Differences ...
+     C                   IF        *IN40 = '0'
+     C                   WRITE     NODIFS                               70
+     C                   ENDIF
+      *
+     C                   WRITE     TRAILP                               70
+ 
+ 
+     C                   SETON                                        LR
+     C                   RETURN
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * REPORT - WRITE To the printer file                            *
+      *                                                               *
+      * Called by: Main Prcessing                                     *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     REPORT        BEGSR
+      *
+      *
+     C                   IF        (*IN33 = '1') OR
+     C                             (*IN42 = '1')
+      * Overflow check for an Insert that exists or a Delete that is missing
+     C                   EXSR      OFLOW
+      * Write first 100  characters
+     C                   MOVEL     *BLANKS       UPDLIN
+     C                   MOVEL     *BLANKS       COUNT
+     C                   MOVEL     UPDLIN1       UPDLIN
+     C                   MOVEL     Counter       COUNT31
+     C                   MOVEL     COUNT31       COUNT
+     C                   WRITE     DTL1                                 70
+      * Set Off *IN41
+     C                   EVAL      *IN41 ='0'
+     C                   ENDIF
+      *
+     C                   IF        (*IN34 = '1') OR
+     C                             (*IN36 = '1') OR
+     C                             (*IN39 = '1')
+      * Overflow check for an Insert that exists or a Delete that is missing
+     C                   EXSR      OFLOW2
+      * Write first 100 characters
+     C                   MOVEL     *BLANKS       SYSLIN
+     C                   MOVEL     *BLANKS       UPDLIN
+     C                   MOVEL     *BLANKS       INDLIN
+     C                   MOVEL     *BLANKS       COUNT
+     C                   MOVEL     UPDLIN1       UPDLIN
+     C                   MOVEL     INDLIN1       INDLIN
+     C                   MOVEL     SYSLIN1       SYSLIN
+     C                   MOVEL     Counter       COUNT31
+     C                   MOVEL     COUNT31       COUNT
+     C                   WRITE     DTL2                                 70
+      * Set Off *IN41
+     C                   EVAL      *IN41 ='0'
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OFLOW - OVERFLOW Processing  for fields that                  *
+      *                 For Inserts that are there and                *
+      *                 Deletes that are missing                      *
+      *                                                               *
+      * Called by: Main Prcessing                                     *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     OFLOW         BEGSR
+      *
+     C     OFLLN         SUB       PRTLN         RMLN
+     C                   IF        RMLN <= 8
+     C                   WRITE     HEADH                                70
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OFLOW2- OVERFLOW Processing for differences on >200 chars     *
+      *         with file differences                                 *
+      *                                                               *
+      * Called by: Main Prcessing                                     *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     OFLOW2        BEGSR
+      *
+     C     OFLLN         SUB       PRTLN         RMLN
+     C                   IF        RMLN <= 14
+     C                   WRITE     HEADH                                70
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *INZSR        BEGSR
+      * Initialise program name
+      *
+     C                   MOVEL     'UP1578'      DBPGM
+      *
+     C                   MOVEL     HEADER        HEAD
+      * Open files
+     C                   OPEN      UPDFFL2L0
+     C                   OPEN      GPDFFLDL1
+     C                   ENDSR
+ 
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+      *
+     C                   ENDIF
+      *
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *
+     C                   ENDSR
+      *

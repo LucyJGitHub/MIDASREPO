@@ -1,0 +1,1224 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Forward position calculation')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portfolio Management Module                          *
+      *                                                               *
+      *  PM6220 - Forward Position Calculation                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Function : This program generated portfolio management       *
+      *   (COB)     holdings and calculates forward positions.        *
+      *                                                               *
+      *  Last Amend No. AR1067108          Date 11Dec12               *
+      *  Prev Amend No. AR1001183A         Date 20Nov12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23967           Date 14May09               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 194370             Date 12Jul01               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 06Dec01               *
+      *                 CPK015             Date 17Jun01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 21Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 130862             Date 18Oct98               *
+      *                 CSE005             Date 09Mar98               *
+      *                 CPM005             Date 26Jun96               *
+      *                 S01124             DATE 16JUN94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23967 - Add Local Industry Code Field. (Recompile)        *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG.               *
+      *           Recompile over changed ZYLDZ2.                      *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           recompilation over amended subroutine ZACCR.        *
+      *  CPB001 -  'Private Banking' Module                           *
+      *  130862 - Recompiled over ZLCDZ1 & ZDAYSZ2 changes.           *
+      *  CSE005 - Effect of holidays on FRN coupon dates:             *
+      *           recompilation over amended subroutine ZACCR.        *
+      *  CPM005 - Private Banking Phase 2                             *
+      *           Focus Group Changes upgraded to DBA                 *
+      *  S01124 - PBFG/3 - DISPLAY OF UNREALISED P&L ON FORWARD SE    *
+      *                    TRADE                                      *
+      *                                                               *
+      *****************************************************************
+     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*BJ*************************************************   CPM005
+     FPMFPSDL1IF  E           K        DISK         KINFSR *PSSR
+      *      PREFIX FL
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+     F***SEDEVED*IF**E           K        DISK         KINFSR *PSSR       CPM005
+     FSEDEV   IF  E           K        DISK         KINFSR *PSSR          CPM005
+     FSECEO   IF  E           K        DISK                               CPM005
+     F            SEDEVDF                           KRENAMESEDEVDO        CPM005
+     F            SNDEVDF                           KRENAMESNDEVDO        CPM005
+     F***SDPLINL4IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*PD*************************************************   CPM005
+     FPMDSPGL3IF  E           K        DISK         KINFSR *PSSR
+      *      PREFIX PA
+     F***PMVLGHPPIF**E           K        DISK         KINFSR *PSSR       CPM005
+     FPMVLGHPDIF  E           K        DISK         KINFSR *PSSR          CPM005
+      *      PREFIX PB
+     F***SDCURRL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*A6*************************************************   CPM005
+     F***SDCUSTL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*BB*************************************************   CPM005
+     F***SDPLCSL0IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*BB*&*QB********************************************   CPM005
+     FPMPORTLLIF  E           K        DISK         KINFSR *PSSR
+      *      PREFIX PN
+     F***PMHOLDZZUF**E           K        DISK         KINFSR *PSSR A     CPM005
+     FPMHOLDPAUF  E           K        DISK         KINFSR *PSSR A        CPM005
+     F***PMHOLDPPO***E           K        DISK         KINFSR *PSSR       CPM005
+     FPMHOLDPDO   E           K        DISK         KINFSR *PSSR          CPM005
+      *      PREFIX QF
+     F***PMHOLDX0O***E           K        DISK         KINFSR *PSSR       CPM005
+     FPMHOLDQ0O   E           K        DISK         KINFSR *PSSR          CPM005
+      *      PREFIX QF
+     F***PMHOLDX1O   E           K        DISK         KINFSR *PSSR       CPM005
+     FPMHOLDQ1O   E           K        DISK         KINFSR *PSSR          CPM005
+      *      PREFIX QF
+     FPM6220AUO   E                    PRINTER      KINFSR *PSSR
+      *****************************************************************
+      /COPY ZSRSRC,ZPOWER8Z1
+      /COPY ZSRSRC,ZPOWERZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZDAYSZ1
+     E                    CPY@    1   1 80
+      *
+      ** FORMAT SE DETAILS FOR OUTPUT
+     E                    ZLI        20  1
+      /COPY ZSRSRC,ZNCDZ1
+      *****************************************************************
+      /COPY ZSRSRC,ZNCDZ2
+      /COPY ZSRSRC,ZYLDZ1
+      *
+      **  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     ILDA         DS                            256
+     I***********                           132 141 DBFILE                CPM005
+     I                                      134 141 DBFILE                CPM005
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** OBTAIN EVENT CONTROL DATE
+     IPMSTAT      DS                            256
+     I                                        1   50ECD
+      *
+      **  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      **  DS FOR DATABASE ERROR IN INVTP
+     IWWKINV      DS
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+      *
+      **  DS FOR DATABASE ERROR IN PMPORTPP
+     IWWKPOR      DS
+     I**********                              1   60FLCNUM                                    CSD027
+     I                                        1   6 FLCNUM                                    CSD027
+     I                                        7  10 FLPTFR
+      *
+      **  DS TO OUTPUT POSITION SEQUENCING IN PMHOLDPP
+     I            DS
+     I                                        1  11 QFPOSQ
+     I                                        1   3 XXNMCY
+     I                                        4   4 WSBSIN
+     I                                        5   9 WAPDAT
+     I/COPY WNCPYSRC,PM6220I001
+      *                                                                   CPM005
+     ISDBANK    E DSSDBANKPD                                              CPM005
+      ** Data Structure for Bank ICD Access Pgm                           CPM005
+      *                                                                   CPM005
+     ISDPLIN    E DSSDPLINPD                                              CPM005
+      ** Data Structure for Instrument Types Details Access Pgm           CPM005
+      *                                                                   CPM005
+     ISDCURR    E DSSDCURRPD                                              CPM005
+      ** Data Structure for Currency Codes Details Access Pgm             CPM005
+      *                                                                   CPM005
+     ISDCUST    E DSSDCUSTPD                                              CPM005
+      ** Data Structure for Customers Details Access Pgm                  CPM005
+      *                                                                   CPM005
+     ISDMMOD    E DSSDMMODPD                                              CPB001
+      **  Module Details Accesses Via Access Program                      CPB001
+      *                                                                   CPB001
+     ISDPLCS    E DSSDPLCSPD                                              CPM005
+      ** Data Structure for Port Mgmt Customer Details Access Pgm         CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 CPM005
+      ** Short Data Structure for Access Programs                         CPM005
+      *                                                                   CPM005
+     IDSSDY     E DSDSSDY                                                 CPM005
+      ** Long Data Structure for Access Programs                          CPM005
+     IDSLDY     E DSDSLDY                                                 CPB001
+     I**  Very Long data structure                                        CPB001
+     I*                                                                   CPB001
+     I/COPY WNCPYSRC,PM6220I002
+      *                                                                   CPM005
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #MAIN    - MAIN PROCESSING                                       *
+      * #CLER    - CLEAR WORK FIELDS                                     *
+      * #W001    - OUTPUT ON PMHOLDPP                                    *
+      * #W002    - OUTPUT ON PMHOLDX0 & PMHOLDX1                         *
+      * #TERM    - TERMINATION PROCESSING                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C                     EXSR #INIT
+      *
+     C                     EXSR #MAIN
+      *
+     C                     EXSR #TERM
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPGM    - DATABASE ERROR                                        *
+      * WWBASE   - DATABASE ERROR                                        *
+      * WWFILE   - DATABASE ERROR                                        *
+      * WWKEY1   - DATABASE ERROR                                        *
+      * WWINVT   - ACCESS INVESTMENT TYPE                                *
+      * WWPORT   - ACCESS TO PMPORTPP                                    *
+      * WWCOUN   - NBR OF RECORDS OUTPUT ON PMHOLDPP                     *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+      *
+      **  PREPARE LDA:
+     C           *NAMVAR   DEFN           LDA
+     C***********          MOVEL'PM6220'  WWPGM  10                       CPM005
+     C                     MOVEL'PM6220'  DBPGM                           CPM005
+      *
+      **  GET INSTALLATION CONTROL DATA RECORD 1: BANK DETAILS
+     C************LOVAL    SETLLSDBANKL1                                  CPM005
+     C***********          READ SDBANKL1                 71               CPM005
+     C                     CALL 'AOBANKR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*FIRST'  WOPTN   7                       CPM005
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN71     IFEQ *ON                        *B1            CPM005
+     C***********          Z-ADD1         WWBASE  30       ***************CPM005
+     C***********          MOVEL'SDBANKL1'WWFILE 10        * DB ERROR 01 *CPM005
+     C***********          MOVEL*BLANKS   WWKEY1 28        ***************CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                        ***************CPM005
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *CPM005
+     C                     MOVE 'SDBANKPD'DBFILE           ***************CPM005
+     C                     MOVE *BLANKS   DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ELSE
+     C** TEST DATE FORMAT FOR SR/ZDATE2
+     C           BJDFIN    IFEQ 'M'                        **B2
+     C                     MOVE *ON       *IN98
+     C                     ENDIF                           **E2
+     C                     ENDIF                           *E1
+     C/COPY WNCPYSRC,PM6220C012
+      *
+      **  OBTAIN EVENT CONTROL MIDAS
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+     C*                                                                   CPB001
+     C**  Access Module Details                                           CPB001
+     C*                                                                   CPB001
+     C                     CALL 'AOMMODR0'                                CPB001
+     C                     PARM *BLANKS   WRTCD                           CPB001
+     C                     PARM '*FIRST'  WOPTN                           CPB001
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPB001
+      *
+      **  KLIST TO ACCESS INVTP FROM SECTY
+     C           WWINVT    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      **  KLIST TO ACCESS PMPORTLL
+     C           WWPORT    KLIST
+     C                     KFLD           FLCNUM
+     C                     KFLD           FLPTFR
+      *
+      **  SETUP NBR OF RECORDS OUTPUT ON PMHOLDPP
+     C                     Z-ADD*ZEROS    WWCOUN  30
+     C/COPY WNCPYSRC,PM6220C001
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #CLER    - CLEAR WORK FIELDS                                     *
+      * *PSSR    - ERROR IN FILE                                         *
+      * ZFSELN   -                                                       *
+      * ZCCYCN   -                                                       *
+      * ZPRCI    -                                                       *
+      * ZAPNUM   -                                                       *
+      * #W001    - OUTPUT ON PMHOLDPP                                    *
+      * #W002    - OUTPUT ON PMHOLDX0 & PMHOLDX1                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCSSN   - SAVED SECURITY SHORT NAME                             *
+      * WWCNUM   - SAVED CUSTOMER NUMBER                                 *
+      * WWPTFR   - SAVED PORTFOLIO REFERENCE                             *
+      * WWPTCY   - SAVED PORTFOLIO CCY                                   *
+      * WWBASE   - DATABASE ERROR                                        *
+      * WWFILE   - DATABASE ERROR                                        *
+      * WWKEY1   - DATABASE ERROR                                        *
+      * WWINVT   - ACCESS INVESTMENT TYPE                                *
+      * WWNODP   - NOMINAL CCY DECIMAL PLACE                             *
+      * WWNORT   - NOMINAL CCY SPREAD RATE                               *
+      * WWNOIN   - NOMINAL CCY MULT/DIV IND                              *
+      * WWNOSQ   - NOMINAL CCY RANKING SEQUENCE                          *
+      * WWPORT   - ACCESS TO PMPORTPP                                    *
+      * WWWNUM   - CUST.NBR IN ALPHA                                     *
+      * WWPTDP   - PORTFOLIO CCY DECIMAL PLACE                           *
+      * WWPTRT   - PORTFOLIO CCY SPREAD RATE                             *
+      * WWPTIN   - PORTFOLIO CCY MULT/DIV IND.                           *
+      * WWPTSQ   - PORTFOLIO CCY RANKING SEQUENCE                        *
+      * WWMFXR   - MARKET FX RATE                                        *
+      * WWCLPL   - CLOSED P/L IN PORTFOLIO CCY                           *
+      * WWFXPL   - FX P/L IN NOMINAL CCY                                 *
+      * WWONOM   - OTHER NOMINAL IN ABS VALUE                            *
+      * WWBOVL   - BOOK VALUE                                            *
+      * WWMAPL   - MARKET VALUE IN NOMINAL CCY                           *
+      * WWAPNU   - NET AP NUMERATOR IN PORTFOLIO CCY                     *
+      * WWMAPV   - MARKET P/L IN PORTFOLIO CCY                           *
+      *                                                                  *
+      ********************************************************************
+     C           #MAIN     BEGSR
+      *
+      **  SETUP SAVED FIELDS
+     C                     MOVEL*BLANKS   WWCSSN 10
+     C**********           Z-ADD*ZEROS    WWCNUM  60                                          CSD027
+     C                     MOVE *BLANKS   WWCNUM  6                                           CSD027
+     C                     MOVEL*BLANKS   WWPTFR  4
+     C                     MOVEL*BLANKS   WWPTCY  3
+      *
+     C           *LOVAL    SETLLPMFPSDL1
+     C                     READ PMFPSDL1                 71
+      *
+     C           *IN71     DOWEQ*OFF                       *BW1
+      *
+      **  CLEAR WORK FIELDS & BUFFERS
+     C                     MOVE FLBSIN    WXBSIN  1
+     C                     EXSR #CLER
+      *
+      **  SECURITY SHORT NAME <> TO OLD SECURITY
+     C           FLCSSN    IFNE WWCSSN                     *B1
+      *
+      **  ACCESS TO SECURITY FILE TO RETRIEVE DETAILS
+     C           FLCSSN    CHAINSECTY                72
+      *
+      **  IF RECORD NOT FOUND:
+     C           *IN72     IFEQ *ON                        **B2
+     C***********          Z-ADD2         WWBASE           ***************CPM005
+     C***********          MOVEL'SECTY'   WWFILE           * DB ERROR 02 *CPM005
+     C***********          MOVELFLCSSN    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD2         DBASE            ***************CPM005
+     C                     MOVE 'SECTY'   DBFILE           * DB ERROR 02 *CPM005
+     C                     MOVELFLCSSN    DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+      **  SAVE NEW SECURITY
+     C                     MOVELFLCSSN    WWCSSN
+     C                     Z-ADDMATY      WWMATY  50
+     C                     Z-ADDNMDP      QFNMDP
+     C                     MOVE SPBS      WSSPBS  1
+      *
+      **  ACCESS TO INVESTMENT TYPE TO RETRIEVE DETAILS
+     C           WWINVT    CHAININVTP                72
+      *
+      **  IF RECORD NOT FOUND:
+     C           *IN72     IFEQ *ON                        **B2
+     C***********          Z-ADD3         WWBASE           ***************CPM005
+     C***********          MOVEL'INVTP'   WWFILE           * DB ERROR 03 *CPM005
+     C***********          MOVELWWKINV    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD3         DBASE            ***************CPM005
+     C                     MOVE 'INVTP'   DBFILE           * DB ERROR 03 *CPM005
+     C                     MOVELWWKINV    DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+      **  ACCESS TO INSTRUMENT TYPE TO RETRIEVE DETAILS
+     C***********INNR      CHAINSDPLINL4             72                   CPM005
+     C                     MOVELINNR      WNINS   3                       CPM005
+     C                     CALL 'AOPLINR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WNINS                           CPM005
+     C           SDPLIN    PARM SDPLIN    DSFDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN72     IFEQ *ON                        **B2           CPM005
+     C***********          Z-ADD4         WWBASE           ***************CPM005
+     C***********          MOVEL'SDPLINL4'WWFILE           * DB ERROR 04 *CPM005
+     C***********          MOVELINNR      WWKEY1           ***************CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                        ***************CPM005
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *CPM005
+     C                     MOVE 'SDPLINPD'DBFILE           ***************CPM005
+     C                     MOVELWNINS     DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+      **  ACCESS TO DISPLAY GROUP TO RETRIEVE DETAILS
+     C           PDDSPG    CHAINPMDSPGL3             72
+      *
+      **  IF RECORD NOT FOUND:
+     C           *IN72     IFEQ *ON                        **B2
+     C***********          Z-ADD5         WWBASE           ***************CPM005
+     C***********          MOVEL'PMDSPGL3'WWFILE           * DB ERROR 05 *CPM005
+     C***********          MOVELPDDSPG    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD5         DBASE            ***************CPM005
+     C                     MOVE 'PMDSPGL3'DBFILE           * DB ERROR 05 *CPM005
+     C                     MOVELPDDSPG    DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+      **  ACCESS TO VALUATION GROUP TO RETRIEVE DETAILS
+     C***********PDVALG    CHAINPMVLGHPP             72                   CPM005
+     C           PDVALG    CHAINPMVLGHPD             72                   CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C           *IN72     IFEQ *ON                        **B2
+     C***********          Z-ADD6         WWBASE           ***************CPM005
+     C***********          MOVEL'PMVLGHPP'WWFILE           * DB ERROR 06 *CPM005
+     C***********          MOVELPDVALG    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD6         DBASE            ***************CPM005
+     C                     MOVE 'PMVLGHPD'DBFILE           * DB ERROR 06 *CPM005
+     C                     MOVELPDVALG    DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+      **  SETUP NARRATIVE
+     C                     MOVELNMCY      ZNMCY
+     C                     Z-ADDCPNR      ZCPNR
+     C                     Z-ADDMATY      ZMATY
+     C                     MOVELPROT      ZPROT
+     C                     EXSR ZFSELN
+      *
+      **  ACCESS TO CURRENCY TO RETRIEVE DETAILS
+     C***********NMCY      CHAINSDCURRL1             72                   CPM005
+     C                     MOVELNMCY      WCURR   3                       CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCURR                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN72     IFEQ *ON                        **B2           CPM005
+     C***********          Z-ADD7         WWBASE           ***************CPM005
+     C***********          MOVEL'SDCURRL1'WWFILE           * DB ERROR 07 *CPM005
+     C***********          MOVELNMCY      WWKEY1           ***************CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                        ***************CPM005
+     C                     Z-ADD7         DBASE            * DB ERROR 07 *CPM005
+     C                     MOVE 'SDCURRPD'DBFILE           ***************CPM005
+     C                     MOVELWCURR     DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+      **  SAVE DETAILS
+     C                     Z-ADDA6NBDP    WWNODP  10
+     C                     Z-ADDA6SPRT    WWNORT 138
+     C                     MOVELA6MDIN    WWNOIN  1
+     C                     Z-ADDA6RKSQ    WWNOSQ  30
+     C                     ENDIF                           *E1
+      *
+      **  CUSTOMER OR PORTFOLIO <> TO OLD CUSTOMER OR PORTFOLIO
+     C           FLCNUM    IFNE WWCNUM                     *B1
+     C           FLPTFR    ORNE WWPTFR
+      *
+      **  SAVE NEW PORTFOLIO
+     C                     MOVELFLPTFR    WWPTFR
+     C*
+     C           WWMATY    IFNE 0
+     C                     Z-ADDWWMATY    WWPDAT  50
+     C                     ELSE
+     C                     Z-ADD99000     WWPDAT
+     C                     END
+      *
+      **  PORTFOLIO <> '9997', '9998' AND '9999'
+     C           FLPTFR    IFNE '9997'                     **B2
+     C           FLPTFR    ANDNE'9998'
+     C           FLPTFR    ANDNE'9999'
+      *
+      **  ACCESS TO CURRENCY TO RETRIEVE DETAILS
+     C           WWPORT    CHAINPMPORTLL             72
+      *
+      **  IF RECORD NOT FOUND:
+     C           *IN72     IFEQ *ON                        ***B3
+     C***********          Z-ADD8         WWBASE           ***************CPM005
+     C***********          MOVEL'PMPORTLL'WWFILE           * DB ERROR 08 *CPM005
+     C***********          MOVELWWKPOR    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD8         DBASE            ***************CPM005
+     C                     MOVE 'PMPORTLL'DBFILE           * DB ERROR 08 *CPM005
+     C                     MOVELWWKPOR    DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           ***E3
+     C                     ENDIF                           **E2
+     C                     ENDIF                           *E1
+      **  CUSTOMER <> TO OLD CUSTOMER
+     C           FLCNUM    IFNE WWCNUM                     *B1
+      *
+      **  SAVE NEW CUSTOMER
+     C                     MOVELFLCNUM    WWCNUM
+      *
+      **  ACCESS TO CUSTOMER TO RETRIEVE DETAILS
+     C                     MOVE FLCNUM    WWWNUM  6
+     C***********WWWNUM    CHAINSDCUSTL1             72                   CPM005
+     C                     MOVELWWWNUM    WCSNM  10                       CPM005
+     C**********           CALL 'AOCUSTR0'                         CPM005 CPB001
+     C                     CALL 'AOCUSTR1'                                CPB001
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCSNM                           CPM005
+     C                     PARM *BLANKS   WCUST   7                       CPM005
+     C********** SDCUST    PARM SDCUST    DSSDY                    CPM005 CPB001
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB001
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN72     IFEQ *ON                        **B2           CPM005
+     C***********          Z-ADD9         WWBASE           ***************CPM005
+     C***********          MOVEL'SDCUSTL1'WWFILE           * DB ERROR 09 *CPM005
+     C***********          MOVELFLCNUM    WWKEY1           ***************CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD9         DBASE            ***************CPM005
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 09 *CPM005
+     C                     MOVELWCSNM     DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+      **  ACCESS TO CUSTOMER PORTFOLIO TO RETRIEVE DETAILS
+     C***********WWWNUM    CHAINSDPLCSL0             72                   CPM005
+     C                     MOVELWWWNUM    WCSNM                           CPM005
+     C                     CALL 'AOPLCSR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCSNM                           CPM005
+     C           SDPLCS    PARM SDPLCS    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN72     IFEQ *ON                        **B2           CPM005
+     C***********          Z-ADD10        WWBASE           ***************CPM005
+     C***********          MOVEL'SDPLCSL0'WWFILE           * DB ERROR 10 *CPM005
+     C***********          MOVELFLCNUM    WWKEY1           ***************CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD10        DBASE            ***************CPM005
+     C                     MOVE 'SDPLCSPD'DBFILE           * DB ERROR 10 *CPM005
+     C                     MOVELWCSNM     DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+     C                     ENDIF                           *E1
+      *
+      **  PORTFOLIO = '9997', '9998' OR '9999'
+     C           BBPRBA    IFNE 'Y'                                       CPB001
+     C           FLPTFR    IFEQ '9997'                     *B1
+     C           FLPTFR    OREQ '9998'
+     C           FLPTFR    OREQ '9999'
+     C                     MOVELQBCSBY    PNPTCY
+     C                     ENDIF                           *E1
+     C                     ELSE                                           CPB001
+     C                     MOVELPNPTCY    QBCSBY                          CPB001
+     C                     ENDIF                                          CPB001
+      *
+      **  PORTFOLIO CCY <> TO OLD PORTFOLIO CCY
+     C           PNPTCY    IFNE WWPTCY                     *B1
+      *
+      **  SAVE NEW PORTFOLIO CCY
+     C                     MOVELPNPTCY    WWPTCY
+      *
+      **  ACCESS TO CURRENCY WITH PORTFOLIO CCY
+     C***********PNPTCY    CHAINSDCURRL1             72                   CPM005
+     C                     MOVELPNPTCY    WCURR                           CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCURR                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN72     IFEQ *ON                        **B2           CPM005
+     C***********          Z-ADD11        WWBASE           ***************CPM005
+     C***********          MOVEL'SDCURRL1'WWFILE           * DB ERROR 11 *CPM005
+     C***********          MOVELPNPTCY    WWKEY1           ***************CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                        ***************CPM005
+     C                     Z-ADD11        DBASE            * DB ERROR 11 *CPM005
+     C                     MOVE 'SDCURRPD'DBFILE           ***************CPM005
+     C                     MOVELWCURR     DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+      **  SAVE DETAILS
+     C                     Z-ADDA6NBDP    WWPTDP  10
+     C                     Z-ADDA6SPRT    WWPTRT 138
+     C                     MOVELA6MDIN    WWPTIN  1
+     C                     Z-ADDA6RKSQ    WWPTSQ  30
+     C                     ENDIF                           *E1
+      *
+      **  CALCULATE CROSS RATE FROM PORTFOLIO CCY TO NOMINAL CCY
+     C                     MOVELPNPTCY    ZCCYT
+     C                     MOVELNMCY      ZCCYF
+     C                     Z-ADDWWPTRT    ZRATET
+     C                     Z-ADDWWNORT    ZRATEF
+     C                     MOVELWWPTIN    ZMDINT
+     C                     MOVELWWNOIN    ZMDINF
+     C                     Z-ADDWWPTDP    ZCDPT
+     C                     Z-ADDWWNODP    ZCDPF
+     C                     Z-ADD1         ZAMTF
+     C                     EXSR ZCCYCN
+      *
+     C                     MOVE 'M'       QFMFMD
+     C                     Z-ADDZCRSRT    WWMFXR
+     C                     Z-ADDZCRSRN    QFMFXD
+      *
+      ** CONVERT MARKET FX RATE TO FORMAT DEFINED BY RANKING SEQUENCE
+     C           WWNOSQ    IFGT WWPTSQ                     *B1
+     C           1         DIV  ZCRSRT    WWMFXR 138H
+     C                     MOVE 'D'       QFMFMD
+     C                     ENDIF                           *X1
+      *
+      **  CALCULATE CLOSED P/L FROM NOMINAL CCY TO PORTFOLIO CCY
+     C                     MOVELPNPTCY    ZCCYT
+     C                     MOVELNMCY      ZCCYF
+     C                     Z-ADDWWPTRT    ZRATET
+     C                     Z-ADDWWNORT    ZRATEF
+     C                     MOVELWWPTIN    ZMDINT
+     C                     MOVELWWNOIN    ZMDINF
+     C                     Z-ADDWWPTDP    ZCDPT
+     C                     Z-ADDWWNODP    ZCDPF
+     C                     Z-ADDFLCLPL    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WWCLPL 150
+      *
+      **  CALCULATE FX P/L FROM PORTFOLIO CCY TO NOMINAL CCY
+     C                     MOVELPNPTCY    ZCCYF
+     C                     MOVELNMCY      ZCCYT
+     C                     Z-ADDWWPTRT    ZRATEF
+     C                     Z-ADDWWNORT    ZRATET
+     C                     MOVELWWPTIN    ZMDINF
+     C                     MOVELWWNOIN    ZMDINT
+     C                     Z-ADDWWPTDP    ZCDPF
+     C                     Z-ADDWWNODP    ZCDPT
+     C                     Z-ADDFLFXPL    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WWFXPL 150
+      *
+     C                     Z-ADD*ZEROS    WWMAPL 150
+      *
+      **  CALCULATE MARKET PRICE
+     C                     Z-ADDMKPR      ZPRCIN
+     C                     Z-ADDECD       ZFDATE
+     C                     EXSR ZPRCI
+     C                     Z-ADDZPRCOT    QFMPRC           MARKET PRICE
+      *
+      **  OTHER NOMINAL <> TO 0 CALCULATE BOOK VALUE
+     C           FLONOM    IFNE *ZEROS                     *B1
+      *
+     C           FLONOM    COMP *ZEROS                 01
+     C   01                Z-SUBFLONOM    WWONOM 150
+     C  N01                Z-ADDFLONOM    WWONOM
+      *
+     C                     Z-ADDWWONOM    ZNOML
+     C                     Z-ADDZPRCOT    ZAVPR
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDWWNODP    ZNMCD
+     C                     MOVELSPBS      ZPRCB
+     C                     EXSR ZAPNUM
+     C                     Z-ADDZVALU     WWBOVL 150
+      *
+     C           FLONOM    IFGT *ZEROS                     **B2
+     C           WWBOVL    SUB  FLNAPU    WWMAPL
+     C                     ELSE                            **X2
+     C           FLAPNU    COMP *ZEROS                 01
+     C   01                Z-SUBFLNAPU    WWAPNU 150
+     C  N01                Z-ADDFLNAPU    WWAPNU
+     C           WWAPNU    SUB  WWBOVL    WWMAPL
+     C                     ENDIF                           **E2
+      *
+      **  CALCULATE MARKET P/L FROM NOMINAL CCY TO PORTFOLIO CCY
+     C                     MOVELPNPTCY    ZCCYT
+     C                     MOVELNMCY      ZCCYF
+     C                     Z-ADDWWPTRT    ZRATET
+     C                     Z-ADDWWNORT    ZRATEF
+     C                     MOVELWWPTIN    ZMDINT
+     C                     MOVELWWNOIN    ZMDINF
+     C                     Z-ADDWWPTDP    ZCDPT
+     C                     Z-ADDWWNODP    ZCDPF
+     C                     Z-ADDWWMAPL    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WWMAPV 150
+     C                     ENDIF                           *E1
+      *
+     C                     ADD  1         WWPDAT
+     C                     EXSR #W001
+      *
+     C                     READ PMFPSDL1                 71
+      *
+     C                     ENDDO                           *EW1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #CLER    - CLEAR WORK FIELDS                                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCLPL   - CLOSED P/L IN PORTFOLIO CCY                           *
+      * WWMFXR   - MARKET FX RATE                                        *
+      * WWFXPL   - FX P/L IN NOMINAL CCY                                 *
+      * WWONOM   - OTHER NOMINAL IN ABS VALUE                            *
+      * WWBOVL   - BOOK VALUE                                            *
+      * WWMAPL   - MARKET VALUE IN NOMINAL CCY                           *
+      * WWMAPV   - MARKET P/L IN PORTFOLIO CCY                           *
+      * WWFLD1   - WORK FIELD                                            *
+      * WWFLD2   - WORK FIELD                                            *
+      *                                                                  *
+      ********************************************************************
+     C           #CLER     BEGSR
+      *
+     C                     Z-ADD*ZEROS    WWCLPL
+     C                     Z-ADD*ZEROS    WWMFXR
+     C                     Z-ADD*ZEROS    WWFXPL
+     C                     Z-ADD*ZEROS    WWONOM
+     C                     Z-ADD*ZEROS    WWBOVL
+     C                     Z-ADD*ZEROS    WWMAPL
+     C                     Z-ADD*ZEROS    WWMAPV
+     C                     Z-ADD*ZEROS    WWFLD2
+      *
+     C                     CLEARPMHOLDP0
+     C                     CLEARPMHOLDD0
+     C                     CLEARPMHOLDD1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W001    - OUTPUT ON PMHOLDPP                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZAVPRC   -                                                       *
+      * #W002    - OUTPUT ON PMHOLDX0 & PMHOLDX1                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWNODP   - NOMINAL CCY DECIMAL PLACE                             *
+      * WWMFXR   - MARKET FX RATE                                        *
+      * WWFLD1   - WORK FIELD                                            *
+      * WWFXPL   - FX P/L IN NOMINAL CCY                                 *
+      * WWMAPV   - MARKET P/L IN PORTFOLIO CCY                           *
+      * WWFLD2   - WORK FIELD                                            *
+      * WWCLPL   - CLOSED P/L IN PORTFOLIO CCY                           *
+      * WWCOUN   - NBR OF RECORDS OUTPUT ON PMHOLDPP                     *
+      *                                                                  *
+      ********************************************************************
+     C           #W001     BEGSR
+      *
+     C                     MOVEL'D'       QFRECI           RECORD ID
+     C                     MOVELBBACOC    QFACOC           ACCOUNT OFFICER
+     C**********           Z-ADDFLCNUM    QFCNUM           CUST.NUMBER                        CSD027
+     C                     MOVE FLCNUM    QFCNUM           CUST.NUMBER                        CSD027
+     C                     MOVELFLPTFR    QFPTFR           PORTFOLIO REF.
+     C                     MOVEL'V'       QFTVDA           TRADE VAL.DATE ACTION
+     C                     MOVEL'SE'      QFMODI           MODULE ID
+     C                     MOVELPADSPS    QFDSPS           DISP.GROUP SEQ.
+     C                     MOVELPDDSPG    QFDSPG           DISP.GROUP CODE
+     C                     Z-ADDPDITDS    QFITDS           INST.DISP.SEQ.
+     C                     MOVELPDINNR    QFINNR           INST.TYPE
+     C                     Z-ADDPDVLIS    QFVLIS           VAL.GRP.INST.SEQ.
+     C                     MOVELPDVALG    QFVALG           VAL.GRP.CODE
+     C                     Z-ADDPBVLGS    QFVLGS           VAL.GRP.SEQ.
+     C**********           Z-ADD*ZEROS    QFTRNB           TRANSACTION NBR.                   CLE148
+     C                     MOVEL*BLANKS   QFTRNB           TRANSACTION NBR.                   CLE148
+     C                     MOVELFLCSSN    QFTDSS           SECURITY SHORT NAME
+     C                     MOVEL*BLANKS   QFDTYP           DEAL TYPE
+     C                     MOVEL*BLANKS   QFFOIS           F&O INSTRUMENT
+     C                     MOVELSRPN      QFTXT1           NARRATIVE 1
+     C                     MOVELZLIN      QFTXT2           NARRATIVE 2
+     C                     Z-ADDFLNOML    QFAMT1           AMOUNT 1
+     C                     Z-ADD*ZEROS    QFAMT2           AMOUNT 2
+     C                     MOVELNMCY      QFCCY1           CCY 1
+     C                     MOVEL*BLANKS   QFCCY2           CCY 2
+     C                     Z-ADDNMDP      QFCDP1           DEC.PLACE 1
+     C                     Z-ADDWWNODP    QFCDP2           DEC.PLACE 2
+     C                     Z-ADDWWMFXR    QFMFXR           MARKET FX RATE
+     C                     Z-ADD*ZEROS    QFBFXR           BOOK FX RATE
+      *
+     C           FLCLPL    ADD  WWMAPL    QFMVAL
+     C                     ADD  WWFXPL    QFMVAL
+      *
+     C                     Z-ADD*ZEROS    QFPUIT           PURCHASED INTEREST
+     C                     Z-ADD*ZEROS    QFACIS           ACCRUED INTEREST
+     C                     Z-ADD*ZEROS    QFNIDT           NEXT INT.PAY.DATE
+     C                     Z-ADD*ZEROS    QFSLID           START/LAST INT.DATE
+     C                     Z-ADD*ZEROS    QFNODA           NO.DAF FILES
+     C           WWCLPL    ADD  WWMAPV    QFPLMK           P/L MARKET
+     C                     Z-ADDFLFXPL    QFPLFX           P/L FX
+     C                     Z-ADD*ZEROS    QFBKYD           BOOK YIELD
+     C                     Z-ADD*ZEROS    QFMKYD           MARKET YIELD
+     C                     Z-ADD*ZEROS    QFDRYD           DIRECT YIELD
+     C                     MOVELSCOR      QFCNTR           COUNTRY OF RISK
+     C**********           Z-ADDSIDY      QFLIND           LOCAL IND.CODE                     CER020
+     C                     MOVELLOIC      QFLOIC           LOCAL IND.CODE                     CER020
+     C                     MOVEL'N'       QFSPLD           SECURITY POS.PLEDGE
+     C                     MOVEL*BLANKS   QFBYSF           CCY 1 BUY/SELL CCY
+      *
+     C           FLONOM    IFEQ *ZEROS                     *B1
+     C                     MOVEL'C'       QFOPCL           FX DEAL TEXT ENQY
+     C                     ELSE                            *X1
+     C                     MOVEL'O'       QFOPCL
+     C                     ENDIF                           *E1
+     C*
+     C** IF A POSITION HAS BEEN FULLY CLOSED THE MARKET PRICE SHOULD
+     C** BE SET TO THE PRICE AT WHICH THE POSITION WAS OPENED
+     C** THE COST OF THE OTHER POSITION = AP NUMERATOR CURRENT
+     C** POSITION - CLOSED PROFIYT
+     C           QFOPCL    IFEQ 'C'                        B1
+     C*
+     C           FLAPNU    IFLT 0
+     C                     Z-SUBFLAPNU    WAAPNU 150
+     C                     ELSE
+     C                     Z-ADDFLAPNU    WAAPNU
+     C                     END
+     C*
+     C           FLBSIN    IFEQ 'S'
+     C           WAAPNU    SUB  FLCLPL    ZVALU
+     C                     ELSE
+     C           WAAPNU    ADD  FLCLPL    ZVALU
+     C                     END
+     C*
+     C                     Z-ADDFLNOML    ZNOML
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDWWNODP    ZNMCD
+     C                     MOVELSPBS      ZPRCB
+     C                     EXSR ZAVPRC
+     C                     Z-ADDZAVPR     QFMPRC
+     C                     END                             E1
+      *
+     C                     MOVEL*BLANKS   QFFPLC           FX PROFIT/LOSS CCY
+     C                     Z-ADD*ZEROS    QFDLSQ           SEQ FX DEAL ENQY
+     C                     Z-ADD*ZEROS    QFRLDN           RELATED DEAL NUMBER
+     C                     Z-ADDFLONOM    QFOAMT           OTHER NOMINAL AMOUNT
+      *
+     C           WWMAPV    ADD  FLFXPL    WWFLD2 150
+     C           WWFLD2    ADD  WWCLPL    QFMVPC           MARKET VALUE PORT CCY
+      *
+     C                     Z-ADD*ZEROS    QFAIPC           ACCRUED INT.PORT.CCY
+      *
+     C           QFMVPC    IFGT *ZEROS                     *B1
+     C                     MOVEL'+'       QFINTC           INST.CATEGORY
+     C                     ELSE                            *X1
+     C                     MOVEL'-'       QFINTC
+     C                     ENDIF                           *E1
+      *
+     C                     Z-ADDECD       QFDXTR           DATE EXTRACTED
+     C                     MOVEL'Y'       QFHLDV           HOLDING VALUE
+      *
+     C                     MOVEL'N'       QFPFMR
+      *
+     C           PNPTFR    IFNE '9997'
+     C           PNPTFR    ANDNE'9998'
+     C           PNPTFR    ANDNE'9999'
+      *
+     C           PNPSDT    IFLE ECD                        *B1
+     C                     MOVEL'Y'       QFPFMR           PERF.FIGURE REQ.
+     C                     ENDIF                           *E1
+     C*
+     C** IF 9997, 9998 OR 9999 PORTFOLIOS, CHECK FLAGS FROM PF/SDPLCSPD
+     C                     ELSE
+     C           PNPTFR    IFEQ '9997'
+     C           QBPFM7    ANDEQ'Y'
+     C                     MOVE 'Y'       QFPFMR
+     C                     ELSE
+     C           PNPTFR    IFEQ '9998'
+     C           QBPFM8    ANDEQ'Y'
+     C                     MOVE 'Y'       QFPFMR
+     C                     ELSE
+     C           PNPTFR    IFEQ '9999'
+     C           QBPFM9    ANDEQ'Y'
+     C                     MOVE 'Y'       QFPFMR
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     MOVEL'N'       QFDLAM           LOAN/DEP.AMEND
+     C**********           Z-ADD*ZEROS    QFPLWH           PLACED WITH BANK                   CSD027
+     C                     MOVE *BLANKS   QFPLWH           PLACED WITH BANK                   CSD027
+     C                     Z-ADDFLPDAT    QFVDAT           VALUE DATE
+     C                     Z-ADD*ZEROS    QFSTRP           F&O STRIKE PRICE
+     C                     MOVE WSSPBS    QFSPBS           PRICE BASIS
+      *
+     C           FLONOM    IFEQ *ZEROS                     *B1
+     C                     MOVEL'FC'      QFPOST           POSITION TYPE
+     C                     MOVEL'FC'      QFPOTY           POSITION TYPE
+     C                     ELSE                            *X1
+     C                     MOVEL'FO'      QFPOST
+     C                     MOVEL'FO'      QFPOTY
+     C                     ENDIF                           *E1
+      *
+     C           QFMVPC    IFGT *ZEROS                     *B1
+     C                     MOVEL'A'       QFASLI           ASSET/LIAB.IND.
+     C                     ELSE                            *X1
+     C                     MOVEL'L'       QFASLI
+     C                     ENDIF                           *E1
+      *
+     C                     MOVEL*BLANKS   QFAEIN           AMERICAN/EUROPEAN
+     C                     Z-ADD*ZEROS    QFCLON           CLOSE OUT NBR.
+     C                     Z-ADD*ZEROS    QFSETD           SETTLEMENT DATE
+     C                     MOVEL*BLANKS   QFNOPO           NOTIONAL POSITION
+      *
+      ** DETERMINE THE BOOK PRICE OF THE POSITION. IF THE POSITION IS FULLY
+      ** OPEN THE BOOK PRICE IS THE PRICE OF THE WHOLE POSITION. IF THE
+      ** POSITION HAS BEEN PARTIALLY CLOSED THE BOOK PRICE IS THE PRICE
+      ** OF THOSE TRADES WHICH ARE PARTIALLY OR FULLY OPEN
+     C           FLONOM    IFEQ 0
+     C                     Z-ADDFLNOML    ZNOML
+     C                     Z-ADDFLAPNU    ZVALU
+     C                     ELSE
+     C*
+     C           FLONOM    IFLT 0
+     C                     Z-SUBFLONOM    WAONOM 150
+     C                     ELSE
+     C                     Z-ADDFLONOM    WAONOM
+     C                     END
+     C*
+     C           FLNAPU    IFLT 0
+     C                     Z-SUBFLNAPU    WANAPU 150
+     C                     ELSE
+     C                     Z-ADDFLNAPU    WANAPU
+     C                     END
+     C*
+     C                     Z-ADDWAONOM    ZNOML
+     C                     Z-ADDWANAPU    ZVALU
+     C                     END
+     C*
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDWWNODP    ZNMCD
+     C                     MOVELSPBS      ZPRCB
+     C                     EXSR ZAVPRC
+     C                     Z-ADDZAVPR     QFBOPR           BOOK PRICE
+      *
+      **  SETUP FOR POSITION SEQUENCING
+     C                     MOVE *BLANKS   QFPOSQ
+     C                     MOVELNMCY      XXNMCY
+     C                     MOVE 'A'       WSBSIN
+     C                     MOVELWWPDAT    WAPDAT
+      *
+      **  ADD 1 IN COUNTER
+     C                     ADD  1         WWCOUN
+      *
+      **  WRITE A RECORD IN PMHOLDPP
+     C/COPY WNCPYSRC,PM6220C002
+     C                     WRITEPMHOLDP0
+     C/COPY WNCPYSRC,PM6220C003
+      *
+      **  ALL PORTFOLIO IN BASE CCY (SDPLCSPD)
+     C           QBAPBC    IFEQ 'N'                        *B1
+     C                     EXSR #W002
+      *
+      **  WRITE RECORD IN PMHOLDX1
+     C/COPY WNCPYSRC,PM6220C004
+     C                     WRITEPMHOLDD1
+     C/COPY WNCPYSRC,PM6220C005
+     C                     ELSE                            *X1
+      *
+     C           FLPTFR    IFNE '9998'                     **B2
+     C           FLPTFR    ANDNE'9999'
+     C                     EXSR #W002
+      *
+      **  WRITE RECORD IN PMHOLDX0
+     C/COPY WNCPYSRC,PM6220C006
+     C                     WRITEPMHOLDD0
+     C/COPY WNCPYSRC,PM6220C007
+     C                     ENDIF                           **E2
+     C                     ENDIF                           *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W002    - OUTPUT ON PMHOLDX0 & PMHOLDX1                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #MAIN    - MAIN PROCESSING                                       *
+      * #W001    - OUTPUT ON PMHOLDPP                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W002     BEGSR
+      *
+     C                     MOVELNMCY      QFCCY            CCY CODE
+     C                     Z-ADD*ZEROS    QFPTPA           TRADE DATE POS.ASSET
+     C                     Z-ADD*ZEROS    QFPTNA           TRADE DATE NEG.ASSET
+     C                     Z-ADD*ZEROS    QFPTMV           TRADE DATE MKT LIAB.
+      *
+     C           QFMVPC    IFGT *ZEROS                     *B1
+     C                     Z-ADDQFMVPC    QFPVPA           VALUE DATE POS.ASSET
+     C                     ELSE                            *X1
+     C                     Z-ADD*ZEROS    QFPVPA
+     C                     ENDIF                           *E1
+      *
+     C           QFMVPC    IFLT *ZEROS                     *B1
+     C                     Z-SUBQFMVPC    QFPVNA           VALUE DATE NEG.ASSET
+     C                     ELSE                            *X1
+     C                     Z-ADD*ZEROS    QFPVNA
+     C                     ENDIF                           *E1
+      *
+     C                     Z-ADD*ZEROS    QFPVMV           VALUE DATE MKT LIAB.
+     C                     Z-ADD*ZEROS    QFPTAI           ACCRUED INTEREST
+     C                     Z-ADD*ZEROS    QFPTNI           ACCRUED INT.ON LIAB.
+      *
+     C           QFMVPC    IFGT *ZEROS                     *B1
+     C                     Z-ADDQFMVPC    QFASVL           ASSET VALUE
+     C                     ELSE                            *X1
+     C                     Z-ADD*ZEROS    QFASVL
+     C                     ENDIF                           *E1
+      *
+     C           QFMVPC    IFLT *ZEROS                     *B1
+     C                     Z-SUBQFMVPC    QFLIVL           LIAB.VALUE
+     C                     ELSE                            *X1
+     C                     Z-ADD*ZEROS    QFLIVL
+     C                     ENDIF                           *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #TERM    - TERMINATION PROCESSING                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCOUN   - NBR OF RECORDS OUTPUT ON PMHOLDPP                     *
+      *                                                                  *
+      ********************************************************************
+     C           #TERM     BEGSR
+      *
+     C                     Z-ADDWWCOUN    RRNORE
+     C                     WRITEPM6220PP
+     C                     MOVE *ON       *INLR
+      *
+      ****ACCESS*THE*PORTFOLIO*HOLDINGS*AUDIT*PF/PMHOLDZZ**************   CPM005
+      **  Access the Portfolio Holdings Audit PF/PMHOLDPA                 CPM005
+      *                                                                   CPM005
+     C***********          READ PMHOLDZZ                 72               CPM005
+     C                     READ PMHOLDPA                 72               CPM005
+      *
+     C                     MOVEL'D'       QFRECI
+     C                     ADD  RRNORE    QFNORE
+      *
+      ****IF*RECORD*NOT*FOUND*ON*PF/PMHOLDZZ,*WRITE*A*RECORD***********   CPM005
+      **  If record not found on PF/PMHOLDPA, write a record              CPM005
+      *                                                                   CPM005
+     C           *IN72     IFEQ *ON
+     C/COPY WNCPYSRC,PM6220C008
+     C                     WRITEPMHOLDZ0
+     C/COPY WNCPYSRC,PM6220C009
+     C                     ELSE
+      *
+      **  OTHERWISE, UPDATE RECORD
+     C/COPY WNCPYSRC,PM6220C010
+     C                     UPDATPMHOLDZ0
+     C/COPY WNCPYSRC,PM6220C011
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFILE   - DATABASE ERROR                                        *
+      * WWKEY1   - DATABASE ERROR                                        *
+      * WWBASE   - DATABASE ERROR                                        *
+      * WWPGM    - DATABASE ERROR                                        *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C************LOCK     IN   LDA                                       CPM005
+     C***********          MOVELWWFILE    DBFILE                          CPM005
+     C***********          MOVELWWKEY1    DBKEY                           CPM005
+     C***********          Z-ADDWWBASE    DBASE                           CPM005
+     C***********          MOVELWWPGM     DBPGM                           CPM005
+      *
+     C                     WRITEERRORAU
+      *
+     C***********          OUT  LDA                                       CPM005
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+     C**=================================================================
+      /COPY ZSRSRC,ZCCYCN
+      /COPY ZSRSRC,ZCCYXR
+      ***/COPY*ZSRSRC,ZFSELN                                              CPM005
+      /COPY PMCPYSRC,ZFSELN                                               CPM005
+      /COPY ZSRSRC,ZAPNUM
+      /COPY ZSRSRC,ZPRCIZ1
+      /COPY ZSRSRC,ZDAYSZ2
+      /COPY ZSRSRC,ZDYYRZ3
+      /COPY ZSRSRC,ZNCDZ3
+      /COPY ZSRSRC,ZLCDZ1
+      /COPY ZSRSRC,ZYLDZ2
+      /COPY ZSRSRC,ZYLDIZ1
+      /COPY ZSRSRC,ZAVPRC
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZACCZZ1                                                CPM005
+      /COPY ZSRSRC,ZCNSDZ1                                                CPM005
+      /COPY ZSRSRC,ZCALCD                                                 CPM005
+      /COPY ZSRSRC,ZACCRZ1                                                CPM005
+      /COPY ZSRSRC,ZRATEZ1                                                CPM005
+     C**=================================================================
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

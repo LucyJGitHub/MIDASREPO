@@ -1,0 +1,585 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL APPC Connection to Citydealer for Rates')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0001 - APPC connection program to CityDealer to exchange   *
+      *           FX and MM revaluation rates                         *
+      *                                                               *
+      *  Called By: DLC0001                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CCM001             Date 22Feb95               *
+      *                                    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  CCM001 - New Program. Citydealer/ Midas Revaluation Rates    *
+      *           Link.                                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FDLRICFF CF  E                    WORKSTN
+     F                                              KINFDS ERRDS
+     F                                              KNUM        2
+     FSDBANKL1IF  E                    DISK                           UC
+     FDL0001AUO   E                    PRINTER                        UC
+      *
+     F*                   ****************************
+     F*                   *  FUNCTION OF INDICATORS  *
+     F*                   ****************************
+     F*
+     F*    53         INVALID DATA RECEIVED FROM CITYDEALER
+     F*    60         WORK INDICATOR
+     F*    88         TURNAROUND RECEIVED FROM ICFF
+     F*    90         EOF READ DLRICFF
+     F*    92         ERROR READ MSINF
+     F*    99         CHAIN TO TABLE FILE FAILS
+     F*    U7+U8      DATABASE ERROR
+      *
+     E/EJECT
+      *
+      ** Copyright Statement and other arrays
+     E                    CPY@    1   1 80
+     E                    MAP     1   1 62
+     E                    MMM     1  12  3   MM      2
+     E                    IN        512  1               INCOMING MESSAGE
+     E                    ERR        19  4               ERROR CODES
+     I/EJECT
+      *
+      **  Data Structure for Compilation - Copyright Insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+      *
+      ** Data Structure for LOGIN
+     IIHEAD       DS                             75
+     I                                        1   2 ICODE
+     I                                        3   5 ICCY
+     I                                        6  13 IDATE
+     I                                       14  75 IMAP
+      *
+      ** Data Structure for Forward Rates
+     IFRHEAD      DS
+     I                                        1   2 FRCOD
+     I                                        3   5 FRCCY
+     I                                        6   7 FRSTS
+     I                                        6 130 FRDAT
+     I                                        8  83 FRERR
+     I                                      131 350 FRAT1
+     I                                      351 405 FRAT2
+      *
+      ** Data Structure for Money Market Rates
+     IMRHEAD      DS                            467
+     I                                        1   2 MRCOD
+     I                                        3   5 MRCCY
+     I                                        6   7 MRSTS
+     I                                        8  83 MRERR
+     I                                        6 236 MRAT1
+     I                                      237 467 MRAT2
+      *
+      **  Data structure for LOGOF
+     ILOHEAD      DS                             64
+     I I            'LO'                      1   2 LOCODE
+     I                                        3   5 LOSTS
+     I                                        3  10 LODAT
+     I                                        3  64 LOMAP
+      *
+      ** Data Structure for MPHAS                                                             CCB020
+     I***MPHAS*******DS                              1                                        CCB020
+     I**********                              1   1 PHAS                                      CCB020
+      *
+      ** Data Structure for DATE (YYMMMDD)
+     I@DAT1       DS                              7
+     I                                        1   2 @DD
+     I                                        3   5 @MMM
+     I                                        6   70@YY
+      *
+      ** Data Structure for DATE (YYYYMMDD)
+     I@DAT2       DS                              8
+     I                                        1   4 @YYYY
+     I                                        5   6 @MM
+     I                                        7   80@DD2
+      *
+      ** Data Structure for scanning error codes
+     IFSCAN       DS                              4
+      *
+      ** I/O Feedback Data Structure
+     IERRDS       DS                            488
+     I                                      273 282 PGMDEV
+     I                                      401 404 MAJMIN
+     I                                      401 402 MAJ
+      *
+     I*** Local data area for database error details
+     ILDA         DS
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IPSDS       SDS
+     I*** Program Status Data Structure - gives Job and
+     I*** User ID
+     I*
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I                                     *PROGRAM ##PGM
+     C/EJECT
+      *
+      ** Main Processing
+     C                     EXSR INIT
+      *
+     C           TERML     DOWEQ' '
+     C                     EXSR READ
+     C                     END
+      *
+     C/EJECT
+      *****************************************************************
+      *   READ      - Read ICF File for incoming data                 *
+      *   Calls     - FRSR  to process Forward Rates                  *
+      *               MRSR to process Money Market Rates              *
+      *   Called by - Main Process                                    *
+      *****************************************************************
+     C           READ      BEGSR
+      *
+      ** Read Communication File
+     C                     MOVE *BLANKS   FIELDI
+     C                     MOVEL'DLPGMA'  PGMDEV
+     C                     READ DLRICFF                9290
+      *
+      ** Test first for possible problem
+      ** If session not active -> MAJ is greater/equal '80'
+     C           MAJ       IFGE '80'
+     C                     EXSR LOGOF
+     C                     END                             E1
+      *
+      ** If input buffer length > fieldi, MAJMIN is '3431'
+     C           MAJMIN    IFEQ '3431'
+     C                     MOVE '0'       *IN92
+     C                     END                             E1
+      *
+      ** If timer expired, goto end and read again;
+      ** Else check for incoming data
+     C           MAJMIN    IFNE '0310'                     B1
+      *
+      ** If no data in the input buffer
+      ** MAJMIN/0300 : no data but TURNAROUND received -> End communication
+     C           MAJMIN    IFEQ '0300'                     *B2
+     C                     MOVE '11'      *INU7
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            ***************
+     C                     MOVE 'DLICFF'  DBFILE           * DB ERROR 02 *
+     C                     MOVE '0300TR'  DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     MOVEA*BLANKS   IN,1
+     C                     MOVEAFIELDI    IN,1
+     C                     EXSR REPORT
+     C                     END                             *E2
+      *
+      ** MAJMIN/0301 : no data and no TURNAROUND received
+     C           MAJMIN    IFNE '0301'                     *B2
+      *
+      ** If data in the buffer, check for data received
+     C                     MOVE *BLANKS   IHEAD
+     C                     MOVELFIELDI    IHEAD
+     C                     MOVEA*BLANKS   IN
+     C                     MOVEAFIELDI    IN
+      *
+     C           ICODE     CASEQ'FR'      FRSR
+     C           ICODE     CASEQ'MR'      MRSR
+     C           ICODE     CASEQ'LO'      LOGOF
+     C                     CAS            FAIL
+     C                     ENDCS
+      *
+     C                     END                             *E2
+     C                     END                             E1
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   FRSR      - Process Forward Rates                           *
+      *   Calls     - FWDRT to process Forward Rates                  *
+      *   Called by - READ                                            *
+      *****************************************************************
+     C           FRSR      BEGSR
+      *
+      ** Move incoming data into fields
+     C                     MOVE *BLANKS   ERROR  76
+     C                     MOVE *BLANKS   FRHEAD
+     C                     MOVEAIN        FRHEAD
+     C                     MOVE FRCCY     SAVCCY  3
+      *
+      ** Call Validation program DL0091 and set flag to active
+     C           FRFLAG    IFEQ *BLANK
+     C                     MOVE 'ACTIVE'  FRFLAG  6
+     C                     END
+      *
+     C                     CALL 'DL0091'
+     C                     PARM           FRCCY
+     C                     PARM           FRDAT
+     C                     PARM           FRAT1
+     C                     PARM           FRAT2
+     C                     PARM           ERROR
+      *
+      ** Check error return code
+     C                     MOVE 'OK'      STATUS  2
+     C           ERROR     IFNE *BLANKS                    B1
+     C                     MOVEAERROR     ERR
+     C                     Z-ADD1         A       20
+     C                     MOVE 'W'       ARG1    1
+     C           STATUS    DOWEQ'OK'                       *B2
+     C           A         ANDLE19
+     C                     MOVEAERR,A     FSCAN
+     C           ERR,A     IFNE *BLANKS                    **B3
+     C           ARG1      SCAN FSCAN                    60
+     C           *IN60     IFEQ '0'                        ***B4
+     C                     MOVE 'FA'      STATUS
+     C                     END                             ***E3
+     C                     END                             **E3
+     C                     ADD  1         A
+     C                     END                             *E2
+     C                     END                             E1
+      *
+      ** Send local data ack to citydealer
+     C                     MOVE *BLANK    FRDAT
+     C                     MOVE *BLANK    FRAT1
+     C                     MOVE *BLANK    FRAT2
+     C                     MOVE SAVCCY    FRCCY
+     C                     MOVE STATUS    FRSTS
+     C                     MOVELERROR     FRERR
+     C                     MOVE *BLANKS   FIELDO
+     C                     MOVELFRHEAD    FIELDO
+     C                     WRITEMSOUTF                 92
+     C                     WRITEINVITE                 92
+      *
+      ** If session not active -> MAJ is greater/equal '80'
+      ** STOP PROCESSING
+     C           MAJ       IFGE '80'
+     C                     EXSR LOGOF
+     C                     END                             E1
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   MRSR      - Process Money Market Rates                      *
+      *   Calls     - FWDRT to process Forward Rates                  *
+      *   Called by - READ                                            *
+      *****************************************************************
+     C           MRSR      BEGSR
+      *
+      ** Move incoming data into fields
+     C                     MOVE *BLANKS   ERROR  76
+     C                     MOVE *BLANKS   MRHEAD
+     C                     MOVEAIN        MRHEAD
+     C                     MOVE MRCCY     SAVCCY
+      *
+      ** Call Validation program FD0551 and set flag to 'ACTIVE'
+     C           MRFLAG    IFEQ *BLANK
+     C                     MOVE 'ACTIVE'  MRFLAG  6
+     C                     END
+     C                     CALL 'FD0551'
+     C                     PARM           MRCCY
+     C                     PARM           MRAT1
+     C                     PARM           MRAT2
+     C                     PARM           ERROR
+      *
+      ** Check error return code
+     C                     MOVE 'OK'      STATUS  2
+     C           ERROR     IFNE *BLANKS                    B1
+     C                     MOVEAERROR     ERR
+     C                     Z-ADD1         A       20
+     C                     MOVE 'W'       ARG1    1
+     C           STATUS    DOWEQ'OK'                       *B2
+     C           A         ANDLE19
+     C                     MOVEAERR,A     FSCAN
+     C           ERR,A     IFNE *BLANKS                    **B3
+     C           ARG1      SCAN FSCAN                    60
+     C           *IN60     IFEQ '0'                        ***B4
+     C                     MOVE 'FA'      STATUS
+     C                     END                             ***E3
+     C                     END                             **E3
+     C                     ADD  1         A
+     C                     END                             *E2
+     C                     END                             E1
+      *
+      ** Send local data ack to citydealer
+     C                     MOVE *BLANK    MRAT1
+     C                     MOVE *BLANK    MRAT2
+     C                     MOVE STATUS    MRSTS
+     C                     MOVE SAVCCY    MRCCY
+     C                     MOVE ERROR     MRERR
+     C                     MOVE *BLANKS   FIELDO
+     C                     MOVELMRHEAD    FIELDO
+     C                     WRITEMSOUTF                 92
+     C                     WRITEINVITE                 92
+      *
+      ** If session not active -> MAJ is greater/equal '80'
+      ** STOP PROCESSING
+     C           MAJ       IFGE '80'
+     C                     EXSR LOGOF
+     C                     END                             E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   FAIL      - Data from Citydealer cannot be processed        *
+      *   Calls     -                                                 *
+      *   Called by - READ                                            *
+      *****************************************************************
+     C           FAIL      BEGSR
+     C*
+     C                     MOVE '1'       *IN53
+     C                     EXSR REPORT
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPORT    - Print Error Report                              *
+      *   Calls     - LOGOF End communication                         *
+      *   Called by -                                                 *
+      *****************************************************************
+     C           REPORT    BEGSR
+      *
+     C** Open printer file and print error report.
+     C                     OPEN DL0001AU
+     C                     WRITEHEAD
+      *
+     C** Database Errors
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEDBASEO
+     C                     END
+      *
+      ** Login Error
+     C           LOSTS     IFNE *BLANKS
+     C                     WRITELOGERR
+     C                     END
+      *
+      ** Invalid data from Citydealer
+     C           *IN53     IFEQ '1'
+     C                     MOVELFIELDI    FIELDP
+     C                     WRITEDATA
+     C                     END
+      *
+     C                     CLOSEDL0001AU
+      *
+      ** Terminate connection -> LOGOF
+     C                     EXSR LOGOF
+      *
+     C                     ENDSR
+     C/EJECT
+      *
+      *****************************************************************
+      *   LOGOF     - Process Logout to Remote System                 *
+      *   Calls     -                                                 *
+      *   Called by -                                                 *
+      *****************************************************************
+     C           LOGOF     BEGSR
+      *
+      **  Prepare fields to end communication
+     C           LOSTS     IFEQ '    '
+     C                     MOVE 'END '    LOSTS
+     C                     END
+      *
+      **  End the two Midas validation program if started
+     C           FRFLAG    IFEQ 'ACTIVE'
+     C                     MOVE *BLANK    FRHEAD
+     C                     MOVE 'END'     FRCCY
+     C                     CALL 'DL0091'
+     C                     PARM           FRCCY
+     C                     PARM           FRDAT
+     C                     PARM           FRAT1
+     C                     PARM           FRAT2
+     C                     PARM           ERROR
+     C                     END
+      *
+     C           MRFLAG    IFEQ 'ACTIVE'
+     C                     MOVE *BLANK    MRHEAD
+     C                     MOVE 'END'     MRCCY
+     C                     CALL 'FD0551'
+     C                     PARM           MRCCY
+     C                     PARM           MRAT1
+     C                     PARM           MRAT2
+     C                     PARM           ERROR
+     C                     END
+      *
+      **  send End of transmission to Citydealer
+     C                     MOVEL'DLPGMA'  PGMDEV
+     C                     MOVE *BLANKS   FIELDO
+     C                     MOVELLOHEAD    FIELDO
+     C                     WRITEMSOUTF                 92
+     C                     WRITEPGMSTOP                92
+     C                     CLOSE*ALL
+      *
+      **  Terminate program
+     C                     MOVE 'T'       TERML   1
+     C                     SETON                         LR
+     C                     RETRN
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   INIT      - Prepare data and read ICFF for LOGIN            *
+      *   Calls     -                                                 *
+      *   Called by - Main Process                                    *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*** Setup LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Prepare default value fields
+     C                     MOVEAMAP       REFMAP 62
+      *
+      ** Access SDBANKPD for date and Base Currency
+     C                     OPEN SDBANKL1
+     C           1         SETLLSDBANKL1
+     C                     READ SDBANKL1                 90
+     C           *IN90     IFEQ '1'
+     C                     MOVE '11'      *INU7                         **
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            ***************
+     C                     MOVE 'SDBANK'  DBFILE           * DB ERROR 01 *
+     C                     MOVEL'      '  DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR REPORT
+     C                     END
+     C                     CLOSESDBANKL1
+      *
+      ** Check switchable feature to see if CCM001 is on
+     C                     MOVE 'N'       CCM001  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CCM001'  @SARD   6
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CCM001
+     C                     END
+      *
+      * Acquire Program Device
+     C                     MOVEL'DLPGMA'  PGMDEV
+     C           PGMDEV    ACQ  DLRICFF                92
+      *
+      * Unrecoverable error for "ACQ"  -> LOGOF
+     C           MAJ       IFGE '80'
+     C                     EXSR LOGOF
+     C                     END
+      *
+      * Read communication file for LOGIN
+     C                     MOVEL'DLPGMA'  PGMDEV
+     C                     READ MSINF                  9290
+      *
+      * Unrecoverable error for "READ"  -> LOGOF
+     C           MAJ       IFGE '80'
+     C                     EXSR LOGOF
+     C                     END
+      *
+      * Perform all control for valid LOGIN
+     C                     MOVE *BLANKS   IHEAD
+     C                     MOVELFIELDI    IHEAD
+      *
+      * 1) Check "T " and valid character maping
+     C           ICODE     IFNE 'T '
+     C           IMAP      ORNE REFMAP
+     C                     MOVEL'DATA'    LOSTS
+     C                     EXSR LOGOF
+     C                     END
+      *
+      * 2) Check Midas is in Input Cycle
+     C********** *NAMVAR   DEFN           MPHAS                                               CCB020
+     C**********           IN   MPHAS                                                         CCB020
+     C                     MOVEL'CBC00100'@CLPRM  9                                           CCB020
+     C                     MOVE '1'       @CLPRM                                              CCB020
+     C                     CALL @CLPRM                                                        CCB020
+     C                     PARM *BLANKS   COBST   4                                           CCB020
+     C********** PHAS      IFNE 'A'                                                           CCB020
+     C           COBST     IFEQ '*YES'                                                        CCB020
+     C                     MOVEL'COB '    LOSTS
+     C                     EXSR REPORT
+     C                     END
+      *
+      * 3) Check feature is "ON"
+     C           CCM001    IFNE 'Y'
+     C                     MOVEL'OFF '    LOSTS
+     C                     EXSR REPORT
+     C                     END
+      *
+      * 4) Check for identical Run Date  (format YYYYMMDD)
+     C                     MOVELBJMRDT    @DD0    1
+     C           @DD0      IFEQ ' '
+     C                     MOVEL'0'       BJMRDT
+     C                     END
+     C                     MOVELBJMRDT    @DAT1
+     C                     MOVE @DD       @DD2
+     C                     MOVE @YY       @YYYY
+     C           @YY       IFGE 72
+     C                     MOVEL'19'      @YYYY
+     C                     ELSE
+     C                     MOVEL'20'      @YYYY
+     C                     END
+     C                     Z-ADD1         M       20
+     C           @MMM      LOKUPMMM,M                    60
+     C           *IN60     IFEQ '1'
+     C                     MOVE MM,M      @MM
+     C                     END
+      *
+     C           IDATE     IFNE @DAT2
+     C                     MOVEL@DAT2     LODAT
+     C                     EXSR REPORT
+     C                     END
+      *
+      * 5) Check for valid Base Currency
+     C           ICCY      IFNE BJCYCD
+     C                     MOVELBJCYCD    LOSTS
+     C                     EXSR REPORT
+     C                     END
+      *
+      * LOGIN OK -> send login ack to remote system
+     C                     MOVE *BLANKS   FIELDO
+     C                     MOVELIHEAD     FIELDO
+     C                     MOVEL'DLPGMA'  PGMDEV
+     C                     WRITEMSOUTF                 92
+     C                     WRITEFORCE                  92
+     C                     WRITEINVITE                 92
+      *
+      * If session not active -> MAJ is greater/equal '80'
+     C           MAJ       IFGE '80'
+     C                     MOVE 'END '    LOSTS
+     C                     EXSR LOGOF
+     C                     END                             E1
+      * =================================
+      *
+     C                     ENDSR
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  MAP
+ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789
+**  MMM/MM (to convert DDMMMYY into YYYYMMDD)
+JAN01
+FEB02
+MAR03
+APR04
+MAY05
+JUN06
+JUL07
+AUG08
+SEP09
+OCT10
+NOV11
+DEC12

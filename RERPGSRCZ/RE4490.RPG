@@ -1,0 +1,504 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI close down')                               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4490 - Cashier Interface Close Down                        *
+      *                                                               *
+      *  Function:  This program closes the Cashier Interface         *
+      *             to Midas.  It reads the Active Jobs File to       *
+      *             retrieve all active jobs and either sends 'END'   *
+      *             to the Cashier Interface Program Data Queue or    *
+      *             does an ENDJOB.  Once this has completed, the     *
+      *             interface will not be available to receive        *
+      *             transactions from the remote CI branch            *
+      *             controllers.                                      *
+      *  (I/C Term)                                                   *
+      *                                                               *
+      *  Called By: REC4490 - CI Close Down                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CSC048             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197897             Date 18Oct01               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CRT005             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 122060             Date 21Aug97               *
+      *                 118737             Date 22May97               *
+      *                 CRT003  *CREATE    Date 22JUL96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSC048 - Journal Caching                                     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  197897 - Unnecessary dumps being produced by REC4490 in outq *
+      *           qexdebug due to duplicate call on program RE4436 in *
+      *           I/C termination.                                    *
+      *  CRT005 - Cashier Enhancement for Cash In/Cash Out            *
+      *  122060 - Drafts Issuance.                                    *
+      *  118737 - Remove deletion of data area: no longer needed.     *
+      *  CRT003 - Cashier Interface.                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FREACJBL0IF  E           K        DISK
+      **  CI Active Jobs
+      *
+     FREPLOGPDO   E                    DISK         KINFSR *PSSR
+      **  CI Jobs File
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                  ----------------------                       *
+      *                                                               *
+      *  11 - EOF ind                                                 *
+      *  88 - Error call to QCMDEXC for DLTDTAARA, ignore this to     *
+      *        enable restart                                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR -  Initialisation.                                    *
+      *  *PSSR  -  Program Error.                                     *
+      *  DBERR  -  Database Error Handling.                           *
+      *  WRTREP -  Write record to PF/REPLOGPD                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    DRP     1   1  9
+     E                    @TXT    1   5 80
+      ** Array containing Copyright statement
+      *
+      /EJECT
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ICISTAT    E DSCISTAT                        6
+      ** CI data area for comms seq no
+      *
+     I                                        1   6 WCSEQ
+      *
+     IWDSTM       DS                              8
+      ** Data structure for HH:MM:SS time
+      *
+     I                                        1   2 WHH
+     I                                        3   3 WC1
+     I                                        4   5 WMM
+     I                                        6   6 WC2
+     I                                        7   8 WSS
+      *
+     ITTIME       DS                             12                       RBA01
+      *                                                                   RBA01
+     I                                        7   8 WDT1                  RBA01
+     I                                        9  10 WDT2                  RBA01
+     I                                       11  12 WDT3                  RBA01
+     I                                        7  120WDATE                 RBA01
+     I                                        1  120WTMDS                 RBA01
+      *                                                                   RBA01
+     IPMSG        DS                           1500
+      ** Data structure for msg parameter of QSNDDTAQ
+      *
+     I                                        1 250 WMG1
+     I                                      251 500 WMG2
+     I                                      501 750 WMG3
+     I                                      7511000 WMG4
+     I                                     10011250 WMG5
+     I                                     12511500 WMG6
+      *
+     I            DS
+     I** Data structure to hold string constants for QCMDEXC
+     I                                        1  80 @CMD
+      *
+     I            DS
+     I** Data structure to hold string constants for QCMDEXC
+     I                                        1  80 @CMDI
+     I                                       16  43 @JOB
+      *
+     I            DS
+     I** Data structure to hold string constants for QCMDEXC (Call to RE4436)
+     I*
+     I                                        1  80 @CMDJ
+     I                                       28  37 @JNMJ
+     I                                       41  50 @JUSJ
+     I                                       54  59 @JNOJ
+      *
+     ISDBANK    E DSSDBANKPD
+      **  SD Bank ICD
+      *
+     ISDBAII    E DSSDBAIIPD
+      **  CI ICD
+      *
+     ISDBAIC    E DSSDBAICPD
+      **  CI Transaction Types
+      *
+     ISDBAIT    E DSSDBAITPD
+      **  CI Transaction Types
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** 2nd   DS for access programs, Long  data structure
+      *
+     I              ' FORCE(*YES)'        C         QPARM                                     CSC048
+      ** Constant for additional parm in SNDJRNE command                                      CSC048
+      *                                                                                       CSC048
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing.                       *
+      *                                                               *
+      * CALLS      WRTREP - Write record to PF/REPLOGPD               *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+     C                     MOVEL'RE4432'  K@JOBN
+     C           K@L0      CHAINREACJBL0             11
+      *
+     C           *IN11     DOWEQ'0'
+      *
+     C                     MOVEL*BLANKS   @CMDI
+     C                     MOVEL@TXT,2    @CMDI
+     C           '('       CAT  RQJBNO:0  @JOB
+     C           @JOB      CAT  '/':0     @JOB
+     C           @JOB      CAT  RQJBUS:0  @JOB
+     C           @JOB      CAT  '/':0     @JOB
+     C           @JOB      CAT  RQJBNM:0  @JOB
+     C           @JOB      CAT  ')':0     @JOB
+     C                     CALL 'QCMDEXC'              70
+     C                     PARM           @CMDI
+     C                     PARM 80        @LEN   155
+      *
+      ** Delay the job to ensure that job RE4432 has ended before carrying on.
+      *
+     C                     MOVEL@TXT,3    @CMD
+     C                     CALL 'QCMDEXC'
+     C                     PARM           @CMD
+     C                     PARM 80        @LEN
+      *
+      ***Delete*the*DTAARA/REC4432.******                                 118737
+      ***********************************                                 118737
+     C*********************MOVEL@TXT,4*** @CMD                            118737
+     C*********************CALL*'QCMDEXC'              88                 118737
+     C*********************PARM********** @CMD                            118737
+     C*********************PARM*80******* @LEN                            118737
+      *
+      ***Call*REC4436 to update RE4432 record id to *.                    197897
+      **********                                                          197897
+     C**********           MOVEL@TXT,5    @CMDJ                           197897
+     C**********           MOVELRQJBNM    @JNMJ                           197897
+     C**********           MOVELRQJBUS    @JUSJ                           197897
+     C**********           MOVELRQJBNO    @JNOJ                           197897
+      **********                                                          197897
+     C**********           CALL 'QCMDEXC'                                 197897
+     C**********           PARM           @CMDJ                           197897
+     C**********           PARM 80        @LEN                            197897
+      *
+     C           K@L0      CHAINREACJBL0             11
+      *
+     C                     ENDDO
+      *
+     C           *LOVAL    SETLLREACJBL0
+     C                     READ REACJBL0                 11
+      *
+     C           *IN11     DOWEQ'0'
+     C                     SELEC
+      *
+      ** System job is RE4144
+      *
+     C***********RQJBNM    WHEQ 'RE4144'                                  122060
+     C           RQJBNM    WHEQ 'CASH_REC'                                122060
+     C                     EXSR WRTREP
+      *
+     C                     MOVEL'RE4142'  W10    10
+     C                     MOVEADRP       W50    50
+     C           W10       CAT  W50       WPLST  60
+      *
+     C                     CALL 'REC4435'
+     C                     PARM           WPLST
+     C                     PARM FUJBDE    WJOBD  10
+     C                     PARM FUJBQU    WJOBQ  10
+      *
+      ** System job is RE4445
+      *
+     C           RQJBNM    WHEQ 'RE4445'
+      *
+     C**********           MOVEL*BLANKS   @CMD                                                CSC048
+     C**********           MOVEL@TXT,1    @CMD                                                CSC048
+     C**********           CALL 'QCMDEXC'              70                                     CSC048
+     C**********           PARM           @CMD                                                CSC048
+     C**********           PARM 80        @LEN   155                                          CSC048
+     C                     MOVEL@TXT,1    PCMD   84                                           CSC048
+     C                     CAT  QPARM:0   PCMD                                                CSC048
+     C                     CALL 'QCMDEXC'              70                                     CSC048
+     C                     PARM           PCMD                                                CSC048
+     C                     PARM 84        @LEN                                                CSC048
+      *
+      ** Other kinds of jobs
+      *
+     C                     OTHER
+      *
+     C           6         SUBSTRQJBNM:1  WKPGM  10
+     C           3         SUBSTRQJBNM:7  WKFNC   3
+      *
+      ** Get the dataqueue name and length
+      *
+     C                     CALL 'AOBAICR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WKPGM     @KEY1  10
+     C                     PARM WKFNC     @KEY2   3
+     C           SDBAIC    PARM SDBAIC    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD03        DBASE
+     C                     MOVEL'SDBAICPD'DBFILE
+     C                     MOVELRQJBNM    DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+     C                     MOVELRQJBNM    WDTQ   10
+     C                     Z-ADDCFDQLN    WDQLN   50
+     C                     ENDIF
+      *
+     C                     EXSR WRTREP
+      *
+     C                     MOVEL*BLANKS   WLIB   10
+     C                     MOVEL'*LIBL'   WLIB
+     C                     MOVEL*BLANKS   WMG1
+     C                     MOVEL*BLANKS   WMG2
+     C                     MOVEL*BLANKS   WMG3
+     C                     MOVEL*BLANKS   WMG4
+     C                     MOVEL*BLANKS   WMG5
+     C                     MOVEL*BLANKS   WMG6
+     C                     MOVEL'*END'    WMG1
+      *
+     C                     CALL 'QSNDDTAQ'
+     C                     PARM WDTQ      PDTAQ  10
+     C                     PARM WLIB      PLIB   10
+     C                     PARM WDQLN     PDQLN   50
+     C                     PARM           PMSG
+      *
+     C                     ENDSL
+      *
+     C                     READ REACJBL0                 11
+     C                     ENDDO
+      *
+     C                     MOVE '1'       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            WRTREP - Write record to PF/REPLOGPD               *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           WRTREP    BEGSR                           ** WRTREP **
+      *
+      ** Add 1 to the dataarea communication seq no
+      *
+     C           *LOCK     IN   CISTAT
+     C                     Z-ADD0         WSEQN   60
+     C                     MOVE WCSEQ     WSEQN
+     C                     ADD  1         WSEQN
+      *
+     C                     MOVE *BLANKS   WCSEQ
+     C                     MOVE WSEQN     WCSEQ
+     C                     OUT  CISTAT
+      *
+      ** Write record to PF/REPLOGPD
+      *
+     C                     MOVELWCSEQ     RICMSQ
+     C                     MOVEL'***'     RIBRCA
+      *
+     C***********RQJBNM    IFEQ 'RE4144'                                  122060
+     C           RQJBNM    IFEQ 'CASH_REC'                                122060
+     C                     MOVE *BLANKS   RIDTQN
+     C                     ELSE
+     C                     MOVELWDTQ      RIDTQN
+     C                     END
+      *
+     C                     MOVEL'*END'    RIRMDN
+     C                     MOVEL'***'     RITELD
+      *
+     C***********RQJBNM    IFEQ 'RE4144'                                  122060
+     C           RQJBNM    IFEQ 'CASH_REC'                                122060
+     C           WKFNC     OREQ *BLANKS
+     C                     MOVE *BLANKS   RITXTP
+     C                     ELSE
+     C                     MOVELFXBAIT    RITXTP
+     C                     END
+      *
+     C                     TIME           WTMDS  120                      RBA01
+     C           WDT1      CAT  '/'       WA      3                       RBA01
+     C           WDT2      CAT  '/'       WB      3                       RBA01
+     C           WA        CAT  WB        WC      6                       RBA01
+     C           WC        CAT  WDT3      WRCDT   8                       RBA01
+      *
+     C                     TIME           WTIME   60
+     C                     MOVELWTIME     WTIMEC  6
+     C           2         SUBSTWTIMEC:1  WHH
+     C           2         SUBSTWTIMEC:3  WMM
+     C           2         SUBSTWTIMEC:5  WSS
+     C                     MOVE ':'       WC1
+     C                     MOVE ':'       WC2
+      *
+     C                     MOVELWRCDT     RIRCDT                          RBA01
+     C                     MOVELWDSTM     RIRCTM
+     C                     MOVE 'N'       RISUCM
+     C                     MOVELWDSTM     RITMPS
+     C                     MOVEL'CI'      RISTAT
+     C                     MOVELWDSTM     RISTTM
+     C                     MOVEL'*END'    RICMSG
+      *
+     C                     WRITEREPLOGD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      ***/EJECT**                                                         RBA01
+      ***/COPY*ZSRSRC,ZDATE9Z3**                                          RBA01
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             DBERR - Database Error Handling.                  *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                   -                                           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL'RE4490'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS      DBERR  -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      **  Check to see that *PSSR has not been called yet
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *INZSR - Initialisation Subroutine                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR                           ** *INZSR **
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+      *
+     C           *NAMVAR   DEFN           CISTAT
+     C                     IN   CISTAT
+      *
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+      *
+     C           K@L0      KLIST
+     C                     KFLD           K@JOBN 10
+      *
+      ** Get the Bank ICD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      ** Get the CI ICD
+      *
+     C**********           CALL 'AOBAIIR0'                                                    CRT005
+     C                     CALL 'AOBAIIR1'                                                    CRT005
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBAII    PARM SDBAII    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE
+     C                     MOVEL'SDBAIIPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** Parameter for Draft Issuance End Program
+' ' 'End'
+** @TXT - Large text strings
+SNDJRNE    JRN(ICJRN) TYPE('XE') FILE(RSACMTPD) ENTDTA('STOP TF UPDATE')
+ENDJOB                                         OPTION(*CNTRLD)
+DLYJOB DLY(60)
+DLTDTAARA DTAARA(REC4432)
+CALL PGM(RE4436) PARM('D' '          ' '          ' '      ')

@@ -1,0 +1,917 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Outstanding loans by participant')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE3110 - Outstanding Loans by Participant Report             *
+      *                                                               *
+      *  Function:  This program will list all loans outstanding      *
+      *  (I/C and   against a participant. Ordinary loans will be     *
+      *    COB)     separated from those related to syndications.     *
+      *                                                               *
+      *  Called By: LEC3110 - Outstanding Loans by Participant        *
+      *                       Report Control Program                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 21Mar05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201123             Date 07Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             Date 04May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 121783             Date 20AUG97               *
+      *                 119489             Date 19Jun97               *
+      *                 CLE004 *Create     Date 02Dec96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                             *
+      *  CLE106 - Syndication Manager. (Recompile)                   *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  201123 - Include Original Borrower in this report when       *
+      *           processing type of loan is either 64, 65, 68 or 71. *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *             Recompiled over SDBRCHPD Changes                  *
+      *  121783 - Call new access object AOBRCHR1 instead of AOBRCHR0 *
+      *           (uses the long data structure DSSDY)                *
+      *  119489 - Outstanding loans by participants report is wrong   *
+      *  CLE004 - Customer Lending Enhancements - Syndications        *
+      *                                                               *
+      *****************************************************************
+     F****LEPARTL3IF  E           K        DISK         KINFSR *PSSR      119489
+     FLEFCLTL6IF  E           K        DISK         KINFSR *PSSR          119489
+     FLELOANL5IF  E           K        DISK         KINFSR *PSSR
+     FLE3110AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+     FLE3110P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     FLE3110P2O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL2
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    01           End of file on LEFCLTL6                       *
+      *    02           End of file on LELOANL5                       *
+      *                                                               *
+      *    10           Syndicated loan                               *
+      *                                                               *
+      *    30           LE3110P1 is open                              *
+      *    31           LE3110P2 is open                              *
+      *    32           Header to be printed in LE3110P1              *
+      *    33           Header to be printed in LE3110P2              *
+      *    34           Customer details already printed in LE3110P1  *
+      *    35           Customer details already printed in LE3110P2  *
+      *    37           Multibranching is on                          *
+      *                                                               *
+      *    98           Date Format: DDMMYY (off); MMDDYY (on)        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+      *
+      /EJECT
+      *
+     I*****LEPARTD0                                                       119489
+     IFCLTYFMF                                                            119489
+      ** Rename important fields similar to other files
+     I              BRCA                            LPBRCA
+     I              CNUM                            LPCNUM
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Rundat data area for system information
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for LE3110P1
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOL2      DS
+      ** File Information Data Structure for LE3110P2
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 188 1890OFLLN2
+     I                                    B 367 3680PRTLN2
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for LE3110AU
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I            DS
+      ** Format amount returned by standard subroutine
+     I                                        1  22 ZOUT22
+     I                                        4  21 ZOUT18
+     I                                        4  20 ZOUT17
+     I                                       21  21 ZNEG
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External data structures for Branch Details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+      ** External data structures for Customer Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      /EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *                                                               *
+      *  Main routine                                                 *
+      *  SRINIT - Initial Processing                                  *
+      *  SRPROC - Detail Processing                                   *
+      *  SRBRCH - Process change of branch                            *
+      *  SRCUSD - Access customer details                             *
+      *  SRCURR - Access currency details                             *
+      *  SRLOAN - Process and print loan details                      *
+      *  SRMOVD - Move details for reporting                          *
+      *  SRP1RC - Write a detail record to LE3110P1                   *
+      *  SRP1EN - Write end of report in LE3110P1                     *
+      *  SRP2RC - Write a detail record to LE3110P2                   *
+      *  SRP2EN - Write end of report to LE3110p2                     *
+      *  SROPEN - Open printer files and print header                 *
+      *  SRRCFP - Register the printer file via RCF                   *
+      *  SRAUDT - Output audit report and end program                 *
+      *  SRRCFA - Register the AU Printer file via RCF                *
+      *  SRENDP - End program processing                              *
+      *  *PSSR  - Error handling subroutine                           *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform detail processing
+      *
+     C                     EXSR SRPROC
+      *
+      ** End program processing
+      *
+     C                     EXSR SRENDP
+      /EJECT
+      *****************************************************************
+      * SRINIT  -  Initial Processing                                 *
+      * Called by: Main routine                                       *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive parameter list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQN   5
+     C                     PARM           PENTY   3
+      *
+      ** Call access program for bank details - Title, Run Date and
+      ** Run Day Number
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle database error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE3110'  DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check system date format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+      ** Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN37
+     C                     ENDIF
+      *
+      ** Initialise work fields
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         RQDLN2  30
+     C                     Z-ADD0         DIFLN2  30
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRPROC  -  Detail Processing                                  *
+      * Called by: Main routine                                       *
+      * Calls    : SRAUDT - Output audit report and end program       *
+      *            SRBRCH - Process change of branch                  *
+      *            SRCUSD - Access customer details                   *
+      *            SRLOAN - Access currency details                   *
+      *            SRP1EN - Write end of report in LE3110P1           *
+      *            SRP2EN - Write end of report in LE3110P2           *
+      *****************************************************************
+     C           SRPROC    BEGSR
+      *
+      ** Check if only a single branch to be process
+      *
+     C           PENTY     IFNE 'ALL'
+     C           PENTY     ANDNE'   '
+     C*****      PENTY     SETLLLEPARTL3                                  119489
+     C           PENTY     SETLLLEFCLTL6                                  119489
+     C                     ENDIF
+      *
+      ** Read first record from file
+      *
+     C                     READ LEFCLTL6                 01               119489
+     C*****                READ LEPARTL3                 01               119489
+      *
+      ** If End of Records, (*IN01), Perform: Audit Reporting (No
+      ** Records)
+      *
+     C           *IN01     IFEQ '1'
+     C           PENTY     ORNE 'ALL'
+     C           PENTY     ANDNE'   '
+     C           PENTY     ANDNELPBRCA
+     C                     EXSR SRAUDT
+     C                     ELSE
+      *
+      ** Do Until End of File
+      *
+     C           *IN01     DOWNE'1'
+      *
+      ** Process only those participants by the branch requested
+      *
+     C           PENTY     IFNE 'ALL'
+     C           PENTY     ANDNE'   '
+     C           PENTY     ANDNELPBRCA
+     C                     LEAVE
+     C                     ELSE
+      *
+      ** Process change of branch
+      *
+     C                     MOVE LPBRCA    WBRCA   3
+     C                     EXSR SRBRCH
+      *
+      ** Process the participant details for each branch
+      *
+     C           LPBRCA    DOWEQWBRCA
+     C           *IN01     ANDNE'1'
+      *
+      ** Participant should only be process once per branch
+      *
+     C           LPCNUM    IFNE WCNUM
+     C**********           Z-ADDLPCNUM    WCNUM   60                                          CSD027
+     C                     MOVE LPCNUM    WCNUM   6                                           CSD027
+     C                     MOVEA'00'      *IN,34
+      *
+      ** Check if participant have outstanding loans
+      *
+     C           WCNUM     SETLLLELOANL5
+     C                     READ LELOANL5                 02
+      *
+     C           LPCNUM    IFEQ CNUM
+     C           *IN02     ANDNE'1'
+      *
+      ** Retrieve customer details
+      *
+     C                     MOVELLPCNUM    WCUST  10
+     C                     EXSR SRCUSD
+      *
+      ** Process loan details
+      *
+     C           LPCNUM    DOWEQCNUM
+     C           *IN02     ANDNE'1'
+      *
+      ** Retrieve loan details
+      *
+     C                     EXSR SRLOAN
+      *
+     C                     READ LELOANL5                 02
+     C                     ENDDO
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C******               READ LEPARTL3                 01               119489
+     C                     READ LEFCLTL6                 01               119489
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Print 'End of Report' of LE3110P1
+      *
+     C           *IN30     IFEQ '1'
+     C                     EXSR SRP1EN
+     C                     ENDIF
+      *
+      ** Print 'End of Report' of LE3110P2
+      *
+     C           *IN31     IFEQ '1'
+     C                     EXSR SRP2EN
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRBRCH  -  Process change of branch                           *
+      * Called by: SRPROC - Detail processing                         *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRBRCH    BEGSR
+      *
+      ** Initialise indicators for every change of branch
+      *
+     C                     MOVEA'11'      *IN,32
+      *
+      ** Close printer files for every change of branch only if
+      ** Multibranching is on or report is requested by branch level
+      *
+     C           PENTY     IFNE *BLANKS
+     C           *IN37     OREQ '0'
+     C                     MOVEA'00'      *IN,30
+     C                     CLOSELE3110P1
+     C                     CLOSELE3110P2
+     C                     ENDIF
+      *
+      ** Get branch details using access object
+      *
+     C***********          CALL 'AOBRCHR0'                                121783
+     C                     CALL 'AOBRCHR1'                                121783
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY    'POPTN   7
+     C                     PARM WBRCA     PBRCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY                           121783
+     C***********SDBRCH    PARM SDBRCH    DSFDY                           121783
+      *
+      ** Handle database error
+      *
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE3110'  DBPGM
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELBRCA      DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRCUSD  -  Access customer details                            *
+      * Called by: SRPROC - Detail processing                         *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRCUSD    BEGSR
+      *
+      **  Access SDCUSTPD with access object
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WCUST     PCUST  10
+     C                     PARM *BLANKS   PKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Handle database error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE3110'  DBPGM
+     C                     MOVEL'SDCUSTPD'DBFILE           ************
+     C                     MOVELPCUST     DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRCURR  - Access currency details                             *
+      * Called by: SRMOVD - Move details for reporting                *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRCURR    BEGSR
+      *
+      **  Access SDCURRPD with access object
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK  'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM WCURR     PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Handle database error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE3110'  DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELWCURR     DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRLOAN  -  Process and print loan details                     *
+      * Called by: SRPROC - Detail processing                         *
+      * Calls    : SRMOVD - Move details for reporting                *
+      *            SROPEN - Open printer files and print header       *
+      *            SRP1RC - Write a detail record in LE3110P1         *
+      *            SRP2RC - Write a detail record in LE3110P2         *
+      *****************************************************************
+     C           SRLOAN    BEGSR
+      *
+      ** Check if loan is linked to syndication
+      *
+     C                     MOVE '0'       *IN10
+     C           LNKS      IFEQ 'Y'
+     C                     MOVE '1'       *IN10
+     C                     ENDIF
+      *
+      ** Move customer details for printing
+      *
+     C                     MOVE BBCRNM    RCRNM
+      *
+      ** Move and format details to report
+      *
+     C                     EXSR SRMOVD
+      *
+      ** Print details
+      *
+     C           *IN10     IFEQ '0'
+     C                     EXSR SROPEN
+     C                     EXSR SRP1RC
+     C                     ELSE
+     C                     EXSR SROPEN
+     C                     EXSR SRP2RC
+     C                     ENDIF
+      *
+      ** Check if customer details already printed
+      *
+     C           *IN34     IFEQ '0'
+     C           *IN35     OREQ '0'
+     C           *IN10     IFEQ '0'
+     C                     MOVE '1'       *IN34
+     C                     ELSE
+     C                     MOVE '1'       *IN35
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRMOVD  -  Move details for reporting                         *
+      * Called by: SRLOAN - Process and print loan details            *
+      * Calls    : SRCURR - Access currency details                   *
+      *****************************************************************
+     C           SRMOVD    BEGSR
+      *
+      ** Move loan details to report
+      *
+     C           PTYP      IFEQ 64                                                            201123
+     C           PTYP      OREQ 65                                                            201123
+     C           PTYP      OREQ 68                                                            201123
+     C           PTYP      OREQ 71                                                            201123
+     C                     MOVE OLNO      OLNOZ                                               201123
+     C                     ELSE                                                               201123
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+     C                     ENDIF                                                              201123
+      *                                                                                       201123
+     C                     MOVELLNRF      RLNRF
+     C                     MOVELLTYP      RLTYP
+     C                     MOVELSUTP      RSUTP
+     C                     MOVELCLAS      RCLAS                                               CLE042
+     C                     MOVELBRCA      RBRCA
+     C                     MOVELFCUS      RFCUS
+     C                     MOVELFTYP      RFTYP
+     C                     MOVELFSEQ      RFSEQ
+     C                     MOVELCCY       RCCY
+      *
+      ** Get currency decimal places
+      *
+     C                     MOVELCCY       WCURR   3
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    ZDECS
+      *
+      ** Format principal amount
+      *
+     C                     MOVEL*BLANKS   RCPAM
+     C                     Z-ADDCPAM      ZFLD15
+     C                     EXSR ZFRPED
+     C           ZNEG      IFEQ '-'
+     C                     MOVELZOUT18    RCPAM
+     C                     ELSE
+     C                     MOVELZOUT17    RCPAM
+     C                     ENDIF
+      *
+      ** Format value date
+      *
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RVDAT
+      *
+      ** Format maturity date
+      *
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RMDAT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRP1RC  -  Write a detail record to LE3110P1.                 *
+      * Called by: SRLOAN - Process and print loan details            *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRP1RC    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN34
+     C                     ENDIF
+      *
+      ** Write out Detail Record
+      *
+     C                     WRITEDETAIL1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRP1EN  -  Write end of report in LE3110P1                    *
+      * Called by: SRLOAN - Process and print loan details            *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRP1EN    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Total Format
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRP2RC  -  Write a detail records to LE3110P2                 *
+      * Called by: SRLOAN - Process and print loan details            *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRP2RC    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page
+      *
+     C                     Z-ADD1         RQDLN2
+     C           OFLLN2    SUB  PRTLN2    DIFLN2
+     C           DIFLN2    IFLE RQDLN2
+     C                     WRITEHEADP2
+     C                     MOVE '0'       *IN35
+     C                     ENDIF
+      *
+      ** Write out Detail Record
+      *
+     C                     WRITEDETAIL2
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRP2EN  -  Write end of report in LE3110P2                    *
+      * Called by: SRLOAN - Process and print loan details            *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRP2EN    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page
+      *
+     C                     Z-ADD4         RQDLN2
+     C           OFLLN2    SUB  PRTLN2    DIFLN2
+     C           DIFLN2    IFLE RQDLN2
+     C                     WRITEHEADP2
+     C                     ENDIF
+      *
+      ** Write out Total Format
+      *
+     C                     WRITETRAILP2
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SROPEN  -  Open printer files and print header                *
+      * Called by: SRLOAN - Process and print loan details            *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SROPEN    BEGSR
+      *
+     C           *IN10     IFEQ '0'
+     C           *IN30     IFEQ '0'
+     C                     OPEN LE3110P1
+      *
+      ** Register printer file to RCF
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C           PENTY     IFEQ *BLANKS
+     C                     MOVEL*BLANKS   SENTY
+     C                     ELSE
+     C                     MOVELLPBRCA    SENTY
+     C                     ENDIF
+     C                     MOVELSFILE1    SFILE
+     C                     EXSR SRRCFP
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN32
+     C                     ENDIF
+      *
+      ** Print header details if needed
+      *
+     C           *IN32     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN32
+     C                     MOVE LPBRCA    RBRCH
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           *IN31     IFEQ '0'
+     C                     OPEN LE3110P2
+      *
+      ** Register printer file to RCF
+      *
+     C                     Z-ADDSFNUM2    ZSNUM
+     C           PENTY     IFEQ *BLANKS
+     C                     MOVEL*BLANKS   SENTY
+     C                     ELSE
+     C                     MOVELLPBRCA    SENTY
+     C                     ENDIF
+     C                     MOVELSFILE2    SFILE
+     C                     EXSR SRRCFP
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN33
+     C                     ENDIF
+      *
+      ** Print header details if needed
+      *
+     C           *IN33     IFEQ '1'
+     C                     WRITEHEADP2
+     C                     MOVE '0'       *IN33
+     C                     MOVE LPBRCA    RBRCH
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRRCFP  -  Register the printer file via RCF                  *
+      * Called by: SROPEN - Open printer files and print header       *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRRCFP    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRAUDT  -  Output audit report and end program                *
+      * Called by: SRPROC - Detail processing                         *
+      * Calls    : SRRCFA - Register the AU printer file via RCF      *
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      ** Open Audit printer file
+      *
+     C                     OPEN LE3110AU
+      *
+      ** Register Audit report to RCF
+      *
+     C                     EXSR SRRCFA
+      *
+      ** Output Report Header
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a db error, output the db error information
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+      *
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+      ** Close Audit printer file
+      *
+     C                     CLOSELE3110AU
+      *
+      ** End Program and Return
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRRCFA  -  Register the AU Printer File via RCF               *
+      * Called by: SRAUDT - Output audit report and end program       *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRRCFA    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRENDP  -  End program processing                             *
+      * Called by: Main routine                                       *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRENDP    BEGSR
+      *
+      ** Close printer files
+      *
+     C                     MOVEA'00'      *IN,30
+     C                     CLOSELE3110P1
+     C                     CLOSELE3110P2
+      *
+      ** End program
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR - Program exception error routine                       *
+      *         Called automatically if a program error occurs,       *
+      *         or directly by the program code using EXSR.           *
+      *         This subroutine DUMPs the program just once.          *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+      ** Print audit report
+      *
+     C                     EXSR SRAUDT
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZFRPEDZ3
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

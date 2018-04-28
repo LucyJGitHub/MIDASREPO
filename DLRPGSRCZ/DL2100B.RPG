@@ -1,0 +1,836 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Fiduciary Deposits Enquiry')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL2100B - Fiduciary Deposits                                 *
+      *                                                               *
+      *  Function:  This program is called by DL2100 when feature     *
+      *  (phase(s)) CDL006 is activated to allow input of the takings *
+      *                                                               *
+      *  Called By: DL2100  - FI Enquiry                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006  *CREATE    Date 26Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in MMDELDPP.*
+      *  CDL006 - Dealing Fiduciary.                                  *
+      *                                                               *
+      *****************************************************************
+     FDL210BDFCF  E                    WORKSTN      KINFDS DSPFDS
+     F                                        SWRRN1KSFILE DL210BS1
+     FMMDELDLFIF  E           K        DISK         KINFSR *PSSR
+     FMMDELDL2IF  E           K        DISK         KINFSR *PSSR
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   03  - Program exit                                          *
+      *   12  - Previous screen                                       *
+      *   21  - Deleted record                                        *
+      *   25  - Rollup                                                *
+      *   50  - SFLEND                                                *
+      *   51  - SFL 1                                                 *
+      *   61  - Clear subfile                                         *
+      *   64  - Off and 61 off = subfile display                      *
+      *   81  - Portfolio Management 'Y'                              *
+      *   89  - Read equal to LF/MMDELDLF                             *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRMAIN - Detail Processing                                   *
+      *  SRENT1 - Enter on screen                                     *
+      *  SRENQY - Build subfile in enquiry                            *
+      *  SRPREV - Prev screen                                         *
+      *  SRHEAD - Setup subfile header                                *
+      *  SRTERM - Program Termination                                 *
+      *  ZASNMS - Send message to message queue                       *
+      *  ZA0770 - Converts YYYYMMMDD to a 6/0 Date format             *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  ZEDIT  - Insert decimal places                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+      /SPACE 3
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDPORT    E DSSDPORTPD
+      ** ICD Portfolio
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Module
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency details
+      *
+     IDSSDY     E DSDSSDY
+      ** Dummy data structure used by access programs
+      *
+     IDSFDY     E DSDSFDY
+      ** Dummy data structure used by access programs
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USID
+      *
+     IDSPFDS      DS
+     I                                    B 378 3790CPFPOS
+      *
+     IWRCUST      DS
+      ** Receive side
+      *
+     I                                        1   6 SHCNUM
+     I**********                              7  10 SFACOD                                    CGL029
+     I**********                             11  12 SFACSQ                                    CGL029
+     I                                        7  16 SFACOD                                    CGL029
+     I                                       17  18 SFACSQ                                    CGL029
+     IWPCUST      DS
+      ** Pay side
+      *                                       1   6 SHCUST
+     I**********                              7  10 SFACCD                                    CGL029
+     I**********                             11  12 SFASEQ                                    CGL029
+     I                                        7  16 SFACCD                                    CGL029
+     I                                       17  18 SFASEQ                                    CGL029
+      *
+     I@DFMT       DS
+      ** Data structure to format separate dates into a 8N number
+      *
+     I                                        1   40WYEAR
+     I                                        5   60WMNTH
+     I                                        7   80WDAY
+     I                                        1   80WDATE
+      *
+     I            DS                              6
+      ** Data structure to change format to MMDDYY/DDMMYY
+      *
+     I                                        1   60WZDTOU
+     I                                        1   20WZDAT1
+     I                                        3   40WZDAT2
+     I                                        5   60WZYYY
+      *
+     I            DS
+      ** Data structure for date in, to change format.
+      *
+     I                                        1   80WZDTIN
+     I                                        3   40WZYY
+     I                                        5   60WZMM
+     I                                        7   80WZDD
+      *
+      /EJECT
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Program Termination.
+      *
+     C                     EXSR SRTERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0 - Access Object for Bank Details                    *
+      *  AOMMODR0 - Access Object for Modules                         *
+      *  AOPORTR0 - Access Object for Portfolio Management            *
+      *  Y2CLMSC  - Clear Message Queue                               *
+      *  SRHEAD   - Subfile Header processing                         *
+      *  SRENQY   - Enquiry processing                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Entry List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PDLNO   6
+     C                     PARM           PMTYP   2
+     C                     PARM           PLNKN   6
+     C                     PARM           PRTCD   7
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Setup Indicator for screen
+      *
+     C                     MOVE *ON       *IN51
+      *
+      ** Define LDA for Database Error
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up user details
+      *
+     C                     MOVELUSID      SUSID
+     C                     MOVELWSID      SWSID
+      *
+      ** Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD001       DBASE            *************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set indicator *IN98 to indicate which date format to use
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Modules Details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' WRTCD
+     C                     PARM '*FIRST ' WOPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD002       DBASE            *************
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERR 002 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BGPFMG    IFEQ 'Y'
+     C                     MOVE *OFF      *IN81
+     C                     ELSE
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+      *
+      ** ICD Portfolio
+      *
+     C           BGPFMG    IFEQ 'Y'
+     C                     CALL 'AOPORTR0'
+     C                     PARM '*DBERR ' WRTCD
+     C                     PARM '*FIRST ' WOPTN
+     C           SDPORT    PARM SDPORT    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD003       DBASE            *************
+     C                     MOVEL'SDPORTPD'DBFILE           * DBERR 003 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Clear SFL
+      *
+     C                     Z-ADD1         SWRRN1
+     C                     MOVE *ON       *IN61
+     C                     WRITEDL210BC1
+     C                     MOVE *OFF      *IN61
+      *
+      ** Select the program MSGQ for error msg.
+      *
+     C                     MOVEL'*'       TOPQ
+     C                     MOVEL'*PRV'    TOPRQ
+     C                     MOVEL'*'       SDPGMQ
+     C                     MOVEL'GBDRSMM 'PMSGF  10
+      *
+      ** Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVEL'DL2100B' ZAPGM  10        Message queue
+     C                     MOVEL'GBDRSMM 'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      ** Initialize program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+      *
+      ** Setup Screen Headings
+      *
+     C                     EXSR SRHEAD
+      *
+     C                     EXSR SRENQY
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRMAIN
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  Y2CLMSC  - Clear Message Queue                               *
+      *  SRTERM   - Program Termination                               *
+      *  SRPREV   - Previous screen                                   *
+      *  SRENT1   - Enter on Screen                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAIN    BEGSR                           *** SRMAIN ***
+      *
+     C           *INLR     DOWEQ*OFF
+      *
+     C           *IN51     IFEQ *ON
+     C                     WRITEDL210BF1
+     C                     WRITEDL210BC0
+     C                     EXFMTDL210BC1
+     C                     ENDIF
+      *
+      ** Initialize program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+      *
+     C                     SELEC
+      *
+      ** Program terminated
+      *
+     C           *IN51     WHEQ *ON
+     C           *IN03     ANDEQ*ON
+     C                     EXSR SRTERM
+      *
+      ** Previous Screen
+      *
+     C           *IN51     WHEQ *ON
+     C           *IN12     ANDEQ*ON
+     C                     EXSR SRPREV
+      *
+      ** Enter on screen
+      *
+     C           *IN51     WHEQ *ON
+     C                     EXSR SRENT1
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRENT1
+      *****************************************************************
+      *                                                               *
+      *  SRENT1 - Enter on screen                                     *
+      *                                                               *
+      *  Called By: SRMAIN Subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRENT1    BEGSR                           *** SRENT1 ***
+      *
+      ** Leave SFL at same position
+      *
+     C                     Z-ADDCPFPOS    SWRRN1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRENQY
+      *****************************************************************
+      *                                                               *
+      *  SRENQY - Build subfile in enquiry                            *
+      *                                                               *
+      *  Called By: SRINIT Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZEDIT    - Edit amount                                       *
+      *  ZASNMS   - Send message to message queue                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRENQY    BEGSR                           *** SRENQY ***
+      *
+     C           ZZLNKN    SETLLMMDELDLF
+     C           ZZLNKN    READEMMDELDLF                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     MOVELHKDDLT    SFDELT
+     C                     MOVELHKDN38    SFDLNO
+     C                     MOVELHKCNUM    SFCNUM
+      *
+     C           HKPTFR    IFEQ '9997'
+     C                     MOVELFCR997    SFPTFR
+     C                     ELSE
+     C                     MOVELHKPTFR    SFPTFR
+     C                     ENDIF
+      *
+      ** Swap amount only to display
+      *
+     C           HKAMNP    IFLT *ZEROS
+     C                     Z-SUBHKAMNP    HKAMNP
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE HKAMNP    ZFIELD
+     C                     Z-ADDZCDP      ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SFAMNT
+      *
+      ** Trust Agreement
+      *
+     C                     MOVE *BLANKS   SFTRAS
+      *
+     C           HKMTYP    IFEQ 'DP'
+     C           HKMTYP    OREQ 'LP'
+     C           HKMTYP    OREQ 'DT'
+     C           HKMTYP    OREQ 'LT'
+     C                     MOVE HKFTST    SFTRAS
+     C                     ENDIF
+      *
+     C                     MOVELHKDORI    WRCUST
+     C                     MOVELHKPONS    WPCUST
+     C                     MOVELHKCSNM    SFCSSN
+     C                     WRITEDL210BS1
+     C                     ADD  1         SWRRN1
+     C           ZZLNKN    READEMMDELDLF                 89
+     C                     ENDDO
+      *
+      ** Display SFL at Top. If empty display message.
+      *
+     C           SWRRN1    IFEQ 1
+     C                     MOVE *ON       *IN64
+     C                     MOVEL'DLM2000' ZAMSID
+     C                     MOVEL*BLANKS   ZAMSDA
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     Z-ADD1         SWRRN1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTERM
+      *****************************************************************
+      *                                                               *
+      *  SRTERM - Program Termination                                 *
+      *                                                               *
+      *  Called By: Main Processing, SRMAIN subroutine                *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR                           *** SRTERM ***
+      *
+      ** End of pgm
+      *
+     C           *IN03     IFEQ *ON
+     C                     MOVE 'Y2U9999' PRTCD
+     C                     ELSE
+     C                     MOVE *BLANKS   PRTCD
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPREV
+      *****************************************************************
+      *                                                               *
+      *  SRPREV - Prev Screen                                         *
+      *                                                               *
+      *  Called By: SRMAIN subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPREV    BEGSR                           *** SRPREV ***
+      *
+      ** End of pgm, return to MM0089
+      *
+     C                     MOVE 'USR0790' PRTCD
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRHEAD
+      *****************************************************************
+      *                                                               *
+      *  SRHEAD - Setup subfile header                                *
+      *                                                               *
+      *  Called By: SRINIT subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOCUSTR0 - Access Object for Customer details                *
+      *  AOCURRR0 - Access Object for Currency details                *
+      *  ZEDIT    - Edit amount                                       *
+      *  ZA0770   - Convert date from YYYYMMDD to a 6,0 date format   *
+      *  *PSSR    - Error subroutine                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRHEAD    BEGSR                           *** SRHEAD ***
+      *
+      ** Retrieve Placing for header
+      *
+     C           PMTYP     IFEQ 'FL'
+     C           PMTYP     OREQ 'DP'
+     C           PMTYP     OREQ 'LP'
+     C                     MOVE PDLNO     WWDLNO  60
+     C                     MOVE PDLNO     ZZLNKN  60
+     C                     ELSE
+     C                     MOVE PLNKN     WWDLNO
+     C                     MOVE PLNKN     ZZLNKN
+     C                     ENDIF
+      *
+     C           WWDLNO    CHAINMMDELDL2             90
+      *
+      ** Check if deleted record
+      *
+     C           HKDDLT    IFEQ 'D'
+     C                     MOVE '1'       *IN21
+     C                     ELSE
+     C                     MOVE '0'       *IN21
+     C                     ENDIF
+      *
+     C                     MOVELBJMRDT    SDMRDT
+     C                     MOVE HKDN38    SDDLNO
+     C                     MOVE HKCNUM    SDCNUM
+      *
+     C           HKNTCE    IFLE *ZEROS
+     C                     MOVEL*BLANKS   SDNOTD
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE HKNTCE    ZFIELD
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SDNOTD
+     C                     ENDIF
+      *
+     C                     MOVE HKBRCA    SDBRCA
+     C                     MOVE HKSTYP    SDSTYP
+     C                     MOVE HKMTYP    SDTYPE
+      *
+      ** Customer shortname
+      *
+     C                     MOVE HKCNUM    WWCNUM  6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WWCNUM    WKEY1  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD004       DBASE            *************
+     C                     MOVEL'SDCUSTPD'DBFILE           * DBERR 004 *
+     C                     MOVE WWCNUM    DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBBCSSN    SDCSSN
+     C                     MOVELHKCCY     SDCCY
+      *
+      ** Get Currency Decimal Places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM SDCCY     WAJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     Z-ADD005       DBASE            *************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 005 *
+     C                     MOVELSDCCY     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZCDP    10
+      *
+      ** Swap amount only to display
+      *
+     C           HKAMNP    IFLT *ZEROS
+     C                     Z-SUBHKAMNP    HKAMNP
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE HKAMNP    ZFIELD
+     C                     Z-ADDZCDP      ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SDAMNT
+      *
+      ** Deal Date
+      *
+     C           HKDTYY    IFNE *ZEROS
+     C                     Z-ADDHKDTYY    WYEAR
+     C                     Z-ADDHKDTMM    WMNTH
+     C                     Z-ADDHKDTDD    WDAY
+     C                     Z-ADDWDATE     WZDTIN
+     C                     EXSR ZA0770
+     C                     MOVE WZDTOU    SDDATE
+     C                     ELSE
+     C                     MOVE *BLANKS   SDDATE
+     C                     ENDIF
+      *
+      ** Value Date
+      *
+     C           HKVDYY    IFNE *ZEROS
+     C                     Z-ADDHKVDYY    WYEAR
+     C                     Z-ADDHKVDMM    WMNTH
+     C                     Z-ADDHKVDDD    WDAY
+     C                     Z-ADDWDATE     WZDTIN
+     C                     EXSR ZA0770
+     C                     MOVE WZDTOU    SDVDAT
+     C                     ELSE
+     C                     MOVE *BLANKS   SDVDAT
+     C                     ENDIF
+      *
+      ** Maturity Date
+      *
+     C           HKMDYY    IFNE *ZEROS
+     C                     Z-ADDHKMDYY    WYEAR
+     C                     Z-ADDHKMDMM    WMNTH
+     C                     Z-ADDHKMDDD    WDAY
+     C                     Z-ADDWDATE     WZDTIN
+     C                     EXSR ZA0770
+     C                     MOVE WZDTOU    SDMDAT
+     C                     ELSE
+     C                     MOVE *BLANKS   SDMDAT
+     C                     ENDIF
+      *
+      ** Interest rate
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE HKINTR    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SDRATE
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZASNMS
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Send message to message queue                       *
+      *                                                               *
+      *  Called By: SRENQY subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  Y2SNMGC  - Send Messages                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR                           *** ZASNMS ***
+      *
+      ** Message file specified is PMSGF
+      *
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ** Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR ***
+      *
+     C                     MOVEL'*ERROR ' PRTCD
+     C                     CALL 'DBERRCTL'
+     C                     DUMP
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZA0770
+      *****************************************************************
+      *                                                               *
+      *  ZA0770 - Converts YYYYMMMDD to a 6/0 Date                    *
+      *                                                               *
+      *  Called By: SRHEAD subroutine                                 *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZA0770    BEGSR                           *** ZA0770 ***
+      *
+     C                     Z-ADDWZYY      WZYYY
+      *
+      ** Date Format = 'D' convert to MMDDYY format
+      *
+     C           BJDFIN    IFEQ 'D'
+     C                     Z-ADDWZDD      WZDAT1
+     C                     Z-ADDWZMM      WZDAT2
+     C                     ENDIF
+      *
+      ** Date Format = 'M' Convert to MMDDYY format
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     Z-ADDWZDD      WZDAT2
+     C                     Z-ADDWZMM      WZDAT1
+     C                     ENDIF
+      *
+      ** Move year part of data structure
+      *
+     C                     MOVE WZYYY     WZYY
+      *
+     C           ZA0779    ENDSR
+      *
+      ****************************************************************
+     C/COPY ZSRSRC,ZEDITZ2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

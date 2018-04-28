@@ -1,0 +1,88 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Accounting Rules Batch Details')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000586 - Midas OF Accounting Rules Batch Details         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD024290           Date 08Jan14              */
+/*       Prev Amend No. CGL135B  *CREATE   Date 10Jul13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD024290 - Do not delete activation group before the        */
+/*                  completion of the accounting rule process.       */
+/*       CGL135B - Accounting Rules Processing                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&BTID &ARST &SEQN &ZONE)
+ 
+             DCL        VAR(&BTID) TYPE(*CHAR) LEN(60)
+             DCL        VAR(&ARST) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&SEQN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+             CHGJOB SWS(00000000)
+ 
+/* Check if CGL135 is installed */
+ 
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('CGL135')
+ 
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+ 
+             IF         COND(&PRTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+ 
+/* Call the program that will process each step of the Posting Generation */
+ 
+             CALL       PGM(GL000586) PARM(&BTID &ARST &SEQN &ZONE)
+ 
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC000586 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*END:*****  RCLRSC                                                                       MD024290*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)                                            MD024290*/
+/**********  RCLRSC     LVL(*CALLER)                                                      MD024290*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)                                            MD024290*/
+/**********  RCLACTGRP  ACTGRP(*ELIGIBLE)                                                 MD024290*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)                                            MD024290*/
+END:                                                                                   /* MD024290*/
+             ENDPGM

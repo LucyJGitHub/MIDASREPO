@@ -1,0 +1,155 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_EXCEPTRP - Exception reporting                                      */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/*       Last Amend No. CLE164             Date 18Aug14                        */
+/*       Prev Amend No. AR1022007          Date 23Aug12                        */
+/*                      CLE134             Date 01Aug12                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER047             Date 19May08                        */
+/*                      CAP190             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/*                      CSD086             Date 18Mar10                        */
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 02Jun08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CAP185             Date 21Apr06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027             Date 10Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CDL038             Date 10May05                        */
+/*                      CAS011             Date 16May05                        */
+/*                      BUG7304            Date 09Jun05                        */
+/*                      CSW037A            Date 02May05                        */
+/*                      BUG4506            Date 29Apr05                        */
+/*                      BUG5033            Date 18Mar05                        */
+/*                      CAS010             Date 09Feb05                        */
+/*                      CGP009             Date 22Dec04                        */
+/*                      CSW037             Date 15Dec04                        */
+/*                      CSW036             Date 15Dec04                        */
+/*                      BUG4521            Date 18Nov04                        */
+/*                      BUG4402            Date 30Sep04                        */
+/*                      BUG4374            Date 27Sep04                        */
+/*                      CGP008  *CREATE    Date 23Sep04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)                 */
+/*                (Recompile)                                                  */
+/*       AR1022007 - [PDP] CC001 - Incorporate SM007 in PDP (Recompile)        */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER047 - German Features LF037-00 Reporting §24c                      */
+/*                (Recompile)                                                  */
+/*       CAP190 - Customer Exchange MQ enabling.                               */
+/*                (Recompile)                                                  */
+/*       CSD086 - Overridable Errors (Recompile)                               */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       CAP185 - MQ Series Interface (Recompile)                              */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type (Recompile)                           */
+/*       CDL038 - Extended Deal Sub Type (Recompile)                           */
+/*       CAS011 - EIR/AC Accounting Upgrade to MP1 (Recompile)                 */
+/*       BUG7304 - MSWDATA column data type changed to clob. Recompile.        */
+/*       CSW037A- Additional Field extended to 40 chars (recompile)            */
+/*       BUG4506 - Check for NULL in field MSWTREF
+/*       BUG5033- Recompiled over extended T_MSWIP.                            */
+/*       CAS010 - IAS + PB Enhancements Upgrade to MidasPlus (Recompile)       */
+/*       CGP009 - Local Zone Time Difference (Recreate)                        */
+/*       CSW037 - Additional Field Data on MT300/MT320                         */
+/*       CSW036 - Dual SWIFT BIC held on Client Details                        */
+/*       BUG4521 -Predeal Check Performance Enhancement (Recompiled)           */
+/*       BUG4402 - Exception Reporting fix.                                    */
+/*       BUG4374 - Addition of processing date                                 */
+/*       CGP008 - Exception Reporting.                                         */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+  EDID AS EDID,                                                                 :
+  ERID AS ERID,                                                                 :
+  CASE                                                                          :
+   WHEN EXTYPE IS NULL THEN 'GENERAL'                                           :
+   ELSE EXTYPE                                                                  :
+  END AS EXTYPE,                                                                :
+  CASE                                                                          :
+   WHEN EXTYPE IS NULL THEN 'GENERAL'                                           :
+   ELSE ETDESC                                                                  :
+  END AS EXDESC,                                                                :
+  EDWARNCODE AS WARNCODE,                                                       :
+  CASE                                                                          :
+*****WHEN*(LENGTH(EDTEXT)*>*40)*THEN*LEFT(EDTEXT,40)*****'...'******************:            BG18886
+     WHEN (LENGTH(EDTEXT) > 40) THEN LEFT(EDTEXT,40)  CONCAT '...'              :            BG18886
+     ELSE EDTEXT                                                                :
+  END AS EXMSG,                                                                 :
+  ERUSER AS INUSER,                                                             :
+  ERWDAT AS WDATE,                                                              :
+  ERWTIME AS WTIME,                                                             :
+  ERZONE AS T_ZONE,                                                             :
+  ERMOD AS MOD,                                                                 :
+  ERSMOD AS SMOD,                                                               :
+  ERAPI AS API,                                                                 :
+  CASE                                                                          :
+      WHEN  MSWTREF ='' THEN ERWIPID                                            :
+      WHEN  MSWTREF IS NULL THEN ERWIPID                  /*BUG4506*/
+         ELSE 0                                                                 :
+      END AS WIPID,                                                             :
+      ERWIPID AS EXWIPID,                                                       :
+      ERCNUM AS CNUM,                                                           :
+      CUSACO AS ACCO,                                                           :
+      ERPTFR AS PTFR,                                                           :
+      ERBRCA AS BRCA,                                                           :
+      ERBOOK AS BOOK,                                                           :
+      ERACCY AS ACCY,                                                           :
+      ERACOD AS ACCD,                                                           :
+      ERACSQ AS ACSQ,                                                           :
+      ERSESN AS SESN,                                                           :
+      ERMKTI AS MKTI,                                                           :
+      ERISTT AS ISTT,                                                           :
+      CASE ERYRNO                                                               :
+         WHEN 0 THEN ''                                                         :
+         ELSE CAST(ERYRNO AS CHAR(4))                                           :
+      END AS YRNO ,                                                             :
+      CASE ERMTHN                                                               :
+          WHEN 0 THEN ''                                                        :
+          ELSE CAST(ERMTHN AS CHAR(2))                                          :
+      END AS MTHN,                                                              :
+      ERPCAL AS PCAL,                                                           :
+      ERSTRP AS STRP,                                                           :
+      ERTREF AS TREF,                                                           :
+      ERTRTP AS TTYPE,                                                          :
+      ERTRST AS TSTYPE,                                                         :
+      ERTPFC AS TPFC,                                                           :
+      ERTDAT AS TDAT,                                                           :
+      ERSDAT AS SDAT,                                                           :
+/*****EREDAT AS EDAT************************************************************:            BUG4374
+      EREDAT AS EDAT,                                                           :            BUG4374
+      ERPDAT AS PDAT,                                                           :            BUG4374
+      NARRATIVE AS TYPE_DESC                                                    :            BUG4402
+      FROM T_GPEXRPH                                                            :
+      INNER JOIN T_GPEXRPD ON ERID=EDERID                                       :
+      LEFT OUTER  JOIN V_MLCUST ON CUSGLOB=ERCNUM                               :
+      LEFT OUTER JOIN T_GPEXMAP ON EDWARNCODE=EXWARNCODE  AND                   :
+      ERAPI=EXAPI                                                               :
+      LEFT OUTER JOIN T_GPEXTYP ON EXTYPE=ETCODE                                :
+      LEFT OUTER JOIN T_MSWIP ON ERWIPID = MSWID                                :
+      LEFT OUTER JOIN V_GPTRNDSC ON                                             :            BUG4402
+      ERMOD = MODULE AND ERTRTP=TRAN_TYPE AND ERTRST=SUB_TYPE                   :            BUG4402
+      AND ERZONE = ZONE                                                         :            BUG4402
+      WHERE ERWDAT IS NOT NULL;                                                 :
+                                                                                :
+                                                                                :
+/*****SELECT * FROM V_EXCEPTRP; ******************************/                 :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GP Exception reporting                      ';                     :
+                                                                                :

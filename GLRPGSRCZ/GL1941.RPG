@@ -1,0 +1,331 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Cust. Serv. Fees - FF Holdings Extract')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1941 - Customer Service Fees -                             *
+      *           Futures and Options Holdings Extract                *
+      *                                                               *
+      *  Function:  This program Evaluate Fut.&Opt. Holdings to be    *
+      *  (phase(s)) able to calculate Safe Custody fees and/or        *
+      *             Management Fees to Accrue.                        *
+      *                                                               *
+      *  Called By: GLC1941 - Cust. Serv. Fees - FF Holdings Extract  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. 247517             Date 09May07               *
+      *  Prev Amend No. CPK027             Date 16Apr07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241147             Date 26Oct06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 06May06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  247517 - Reversed fix 241147.                                *
+      *  CPK027 - Errors in compiling MP1_3_TTTS - recompile over     *
+      *           changed FFTVCLZ2.                                   *
+      *  241147 - Recompile.                                          *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FGLCUFEL7IF  E           K        DISK         KINFSR *PSSR
+      ** Customers With SC or MG fees to accrued.
+      *
+     FTRANSC  IF  E           K        DISK         KINFSR *PSSR
+      ** FF Transactions File - Live Transactions
+      *
+     FINTYP   IF  E           K        DISK         KINFSR *PSSR
+      ** Instrument Type
+      *
+     FPRICS1  IF  E           K        DISK         KINFSR *PSSR
+      ** Instrument Type
+      *
+     FGLHOLDPDO   E                    DISK         KINFSR *PSSR
+      ** Extract Holding Details
+      *
+     FGL1941AUO   E                    PRINTER
+      ** FF Holdings extract - audit
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   86  - Chain Failed Indicator for PRICE                      *
+      *   87  - Chain Failed Indicator for INVTP                      *
+      *   88  - Chain Failed Indicator for TRANSC                     *
+      *   89  - End of File Indicator                                 *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INSZR - Initialisation routine                              *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     IINTYPDF
+      ** Rename Fields in format INTYPDF
+     I              RECI                            IRECI
+     I              ISTT                            IISTT
+     I              ISCY                            IISCY
+      *
+     IPRICSDF
+      ** Rename Fields in format PRICSDF
+     I              RECI                            PRECI
+     I              ISTT                            PISTT
+     I              YRNO                            PYRNO
+     I              MTHN                            PMTHN
+     I              PCAL                            PPCAL
+     I              STRP                            PSTRP
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM @@PGM
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Access Object DS for Bank details file
+      *
+     ISDGELR    E DSSDGELRPD
+      ** Access Object DS For General Ledger Module I.C.D. Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Access Object DS Retrieve file details
+      *
+      /COPY ZSRSRC,FFSRDSZ1
+      ** FF Fields for FF trade Value standard Routine FFTVCL
+      *
+      /EJECT
+      ***************************************************************
+      *                      M A I N L I N E S                      *
+      ***************************************************************
+      *
+      ** Read GLCUFEL7 until EOF
+      *
+     C                     READ GLCUFED0                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ** Read TRANSC until EOF/no more Transaction for customer
+      *
+     C**********           MOVE F0CNUM    KCNUM   60                                          CSD027
+     C                     MOVE F0CNUM    KCNUM   6                                           CSD027
+      *
+     C           KCNUM     CHAINTRANSC               88
+     C           *IN88     DOWEQ*OFF
+      *
+      ** Process only Live Trades and Number of Cust's opened Contract > 0
+      *
+     C           TNBR      IFGT 0
+     C           NOCO      ANDGT0
+      *
+      ** Access Instrument Details
+      *
+     C           ISTT      CHAININTYP                87
+     C           *IN87     IFEQ *ON
+     C           IRECI     ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'INTYP   'DBFILE
+     C                     Z-ADD2         DBASE
+     C                     MOVELISTT      DBKEY
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Price Details to retrieve Price At Last EOC
+      *
+     C                     MOVE ISTT      KISTT
+     C                     Z-ADDYRNO      KYRNO
+     C                     Z-ADDMTHN      KMTHN
+     C                     MOVE PCAL      KPCAL
+     C                     Z-ADDSTRP      KSTRP
+      *
+     C           KPRIC     CHAINPRICS1               86
+      *
+     C           *IN86     IFEQ *ON
+     C           PRECI     OREQ '*'
+     C           PLEC      OREQ 0
+     C                     Z-ADDCOPR      FFPRIC
+     C                     ELSE
+     C                     Z-ADDPLEC      FFPRIC
+     C                     ENDIF
+      *
+      ** Fill up GLHOLDD0 with Transaction Details
+      *
+     C                     CLEARGLHOLDD0
+      *
+     C                     MOVE CUSC      F8CNUM
+     C                     MOVE PTFR      F8PTFR
+     C                     MOVEL'FF'      F8SRHO
+     C                     MOVE IISCY     F8CCY
+     C                     MOVELTNBR      F8TREF
+     C                     MOVELINNR      F8INST
+      *
+     C           ISTI      IFEQ 'N'
+     C                     MOVELISTT      F8MRKT
+     C                     ELSE
+     C                     MOVE *BLANKS   F8MRKT
+     C                     ENDIF
+      *
+      ** Calculated market Value using FFTVCL Standard routine
+      *
+     C                     Z-ADDNOCO      FFNOC
+     C                     Z-ADDFFPRIC    FFPRIC
+     C                     Z-ADDTKDM      FFTKDM
+     C                     Z-ADDMNPF      FFMNPF
+      *
+     C                     EXSR FFTVCL
+      *
+      ** If a broker is involved and Purchase, this is an Assets
+      **                         and Sale    , this is a Liability
+      ** If No broker is involved and purchase, this is a Liability
+      **                          and Sale    , this is an Asset
+      *
+     C********** BOCO      IFNE 0                                                             CSD027
+     C           BOCO      IFNE *BLANKS                                                       CSD027
+      *
+     C           TRTY      IFEQ 'P'
+     C                     Z-ADDNOCO      F8ASNV
+     C                     Z-ADDFFTNVL    F8ASMV
+     C                     ELSE
+     C                     Z-ADDNOCO      F8LINV
+     C                     Z-ADDFFTNVL    F8LIMV
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           TRTY      IFEQ 'P'
+     C                     Z-ADDNOCO      F8LINV
+     C                     Z-ADDFFTNVL    F8LIMV
+     C                     ELSE
+     C                     Z-ADDNOCO      F8ASNV
+     C                     Z-ADDFFTNVL    F8ASMV
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** All other fees stay blanks or Zero
+      *
+     C                     WRITEGLHOLDD0
+      *
+     C                     ENDIF
+      *
+      ** Next record
+      *
+     C           KCNUM     READETRANSC                   88
+     C                     ENDDO
+      *
+      ** Read next customer
+      *
+     C           F0CNUM    SETGTGLCUFEL7
+     C                     READ GLCUFEL7                 89
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      ***************************************************************
+      *               E N D    O F    M A I N L I N E S             *
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *                                                             *
+      *  *INZSR - Standard initial subroutine                       *
+      *                                                             *
+      *  Called by : automatically                                  *
+      *                                                             *
+      *  Calls     :                                                *
+      *                                                             *
+      ***************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read SDBANKPD to retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'*FIRST ' DBKEY     P
+     C                     MOVEL@@PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** KEY Definition
+      *
+     C           KPRIC     KLIST
+     C                     KFLD           KISTT   5
+     C                     KFLD           KYRNO   20
+     C                     KFLD           KMTHN   20
+     C                     KFLD           KPCAL   1
+     C                     KFLD           KSTRP  158
+      *
+     C                     ENDSR
+C     *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *                                                               *
+      * Called by : Automatically or EXSR                             *
+      *                                                               *
+      * Calls     :                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      ** Standard Subroutine
+      /COPY ZSRSRC,FFTVCLZ2
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

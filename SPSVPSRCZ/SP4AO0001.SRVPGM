@@ -1,0 +1,171 @@
+/*********************************************************************/
+/*STD    SVPBASE                                                     */
+/*EXI    MODULE(AOSARDR0   AOACCTR0   AOAPIR0    AOBANKR0            */
+/*EXI           AOBOOKR0   AOBRCHR0   AOBROKR0   AOBSRTR0            */
+/*EXI           AOCNSTR0   AOCNTLR0   AOCREPT    AOCURRR0            */
+/*EXI           AOCUSTR0   AODEALR0   AOGELRR0   AOHOLS0             */
+/*EXI           AOMMODR0   AONOSTR0   AOPLCSR2   AOPORTR0            */
+/*EXI           AOPRFCR0   AOTRADR0   AOBOOKR1   AOCUSTR1            */
+/*EXI           AOMAPCR0   AOMDFCR0   AOMDFSR0                       */
+/*EXI    ) SRCMBR(SP4AO0001) ACTGRP(*CALLER)                         */
+/*EXI    TEXT('Midas SP AO core kernel functions 1           FULL')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Service Program                                     */
+/*                                                                   */
+/*       SP4AO0001 - AO Core Kernel Functions Service Program 1      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       THIS SERVICE PROGRAM IS FULL. DO NOT ADD ANY NEW MODULES.   */
+/*                                                                   */
+/*       Last Amend No. MD024398           Date 11May14              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*                      CRE075             Date 06Dec10              */
+/*                      CER059             Date 19Jul10              */
+/*                      CER048             Date 19May08              */
+/*                      CER043             Date 19May08              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      256564             Date 17Sep08              */
+/*                      BUG17927           Date 23Apr08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      237337             Date 04Oct05              */
+/*                      240690             Date 29Jun06              */
+/*                      CSD031             Date 10Apr06              */
+/*                      CSD027             Date 13Dec05              */
+/*                      CSW037A            Date 02May05              */
+/*                      BUG6198            Date 04Apr05              */
+/*                      CSD025             Date 11Jan05              */
+/*                      CSW037             Date 15Dec04              */
+/*                      CSW036             Date 15Dec04              */
+/*                      CLE025             Date 20Oct03              */
+/*                      CSC022             Date 24Feb04              */
+/*                      CAS005             Date 16Dec02              */
+/*                      CGL013             Date 20Feb02              */
+/*                      210796             Date 09Jul03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      204923             Date 29Apr02              */
+/*                      CAS001             Date 23Nov01              */
+/*                      CSW024             Date 31Aug01              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                      CPK014  *CREATE    Date 09Oct01              */
+/*       ----------------------------------------------              */
+/*                      CSD006             Date 15Nov00              */
+/*                      CSD009             Date 10Oct00              */
+/*                      CDL008             Date 02May00              */
+/*                      174745             Date 09Feb00              */
+/*                      CSW020             Date 14Jan00              */
+/*                      CGL010             Date 08Nov99              */
+/*                      CSE006             Date 23Sep99              */
+/*                      CPB001             Date 21Sep99              */
+/*                      CAP032             Date 08Oct99              */
+/*                      CAP011             Date 07Sep99              */
+/*                      CFT004             Date 27Oct99              */
+/*                      CDL006             Date 26Apr99              */
+/*                      CAP006             Date 16Dec98              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD024398 - API Performance Optimisation (Recompile)         */
+/*                - Cache valid features, and do not set on LR.      */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*                (Recompile)                                        */
+/*       CRE075 - Effective Date for Retail Accounts (Recompile)     */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER048 - German Features - Taxes (Recompile)                */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting */
+/*               (recompiled)                                        */
+/*       256564 - Recompile due to PF changes done by fix 256330     */
+/*       BUG17927 - Recompiled due to change in AOCUSTR0.            */
+/*       237337 - Recompiled due to change in AOCUSTR0.              */
+/*       240690 - Applied fix 232494.                                */
+/*       232494 - Recompile over changes in AOCNTLR0.                */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)       */
+/*       CSD027 - Conversion Of Customer Number to Alpha             */
+/*       CSW037A- Additional Field extended to 40 chars (recompile)  */
+/*       BUG6198- Cannot save new Details for CUSD (Recompile)       */
+/*       CSD025 - Customer De-Activation                             */
+/*       CSW037 - Additional Field Data on MT300/MT320               */
+/*       CSW036 - Dual SWIFT BIC held on Client Details              */
+/*       CLE025 - Credit Lines (Recompile)                           */
+/*       CSC022 - Commitment Control Changes for MidasPlus           */
+/*                (Recompile)                                        */
+/*       CAS005 - Enhancements to CAS001, CAS002 and CAS004          */
+/*                (Recompile)                                        */
+/*       CGL013 - MT94x Message Generation. (Recompiled)             */
+/*       210796 - Change to AONOSTR0  - (Recompile)                  */
+/*       204923 - Rate Fix Days Adjustment (OIS) - (Recompile)       */
+/*       CAS001 - Net Present Value (NPV) Accounting (Recompile)     */
+/*       CSW024 - S.W.I.F.T. MT3xx Field 82/83/87 (Recompiled).      */
+/*       CPK014 - Release 4 packaging:                               */
+/*                - Rebuilding of the service program structure to   */
+/*                  reduce the number of objects, simplify the       */
+/*                  system and reduce signature violation problems.  */
+/*                - The original header box entries have been        */
+/*                  retained for reference.                          */
+/*                - The following DBA3 service programs have been    */
+/*                  put into this one: SP200BASE (partial) and       */
+/*                  SP290AO1.                                        */
+/*       ----------------------------------------------------------  */
+/*       CSD006 - Add new AO modules related to Market Data Feed     */
+/*       CSD009 - PCA Default Matrix Enhancement (Re-compiled)       */
+/*       CDL008 - Continuous Linked Settlement (Recompiled)          */
+/*       174745 - Recompile.                                         */
+/*                Put modules not previously contained in service    */
+/*                programs into service programs.                    */
+/*                Also removed modules which should not be included. */
+/*       CSW020 - SWIFT Decimal Places                               */
+/*                Recompiled over changed SDCURRPD                   */
+/*       CGL010 - Future Value Dated Journal Entries for Non-Retail  */
+/*                Accounts. (Recompiled over change in AOGELRR0)     */
+/*       CSE006 - Repurchase Agreement Enhancements - Recompile Only */
+/*       CPB001 - 'Private Banking' Module                           */
+/*                Recompiled due to change MODULE/AOCUSTR0           */
+/*       CAP032 - Conversion of Journal Batch Entry inputs into      */
+/*                modular structure to use as APIs.  Recompiled due  */
+/*                to change in module AOAPIR0.                       */
+/*       CAP011 - Substitution of Midas database flds for externl i/f*/
+/*                Recompiled                                         */
+/*       CFT004 - International Bank Account Numbers (recompile)     */
+/*       CDL006 - Dealing Fiduciary                                  */
+/*       CAP006 - Breakdown of Midas APIs into service programs      */
+/*                                                                   */
+/*********************************************************************/
+ 
+             STRPGMEXP  PGMLVL(*CURRENT) LVLCHK(*YES) SIGNATURE(*GEN)
+                EXPORT     SYMBOL(AOSARDR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOACCTR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOAPIR0)                                                /*CAP006*/
+                EXPORT     SYMBOL(AOBANKR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOBOOKR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOBRCHR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOBROKR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOBSRTR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOCNSTR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOCNTLR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOCREPT)                                                /*CAP006*/
+                EXPORT     SYMBOL(AOCURRR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOCUSTR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AODEALR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOGELRR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOHOLS0)                                                /*CAP006*/
+                EXPORT     SYMBOL(AOMMODR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AONOSTR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOPLCSR2)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOPORTR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOPRFCR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOTRADR0)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOBOOKR1)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOCUSTR1)                                               /*CAP006*/
+                EXPORT     SYMBOL(AOMAPCR0)                                               /*CSD006*/
+                EXPORT     SYMBOL(AOMDFCR0)                                               /*CSD006*/
+                EXPORT     SYMBOL(AOMDFSR0)                                               /*CSD006*/
+/* End of Midas Release 4 -------- Base -----------------------------*/
+/* End of Midas Release 4.01 ----------------------------------------*/
+/* End of Midas Plus 1.3 --------- Base -----------------------------*/
+             ENDPGMEXP
+/************************************************************************/
+/*       THIS SERVICE PROGRAM IS FULL. DO NOT ADD ANY NEW MODULES       */
+/************************************************************************/

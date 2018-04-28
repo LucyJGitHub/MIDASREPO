@@ -1,0 +1,374 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE CO Retrieve Blocked Position')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7570 - Corporate Actions Retrieve Block Position           *
+      *                                                               *
+      *  Function:  This program retrieve Block Positions.            *
+      *  (I/C)                                                        *
+      *                                                               *
+      *  Called By: SE0050 - Trade Detail Maintenance                 *
+      *             SE0070 - Depot Movements Maintenance              *
+      *             SE0205 - Client Holdings enquiry                  *
+      *             SE3000 - Bulk Trades Input                        *
+      *             SE3002 - Review Trades for Bulk Trade Input       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CSE007  *CREATE    Date 18Dec97               *
+      *                                    Date                       *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE007 - Corporate Actions                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ***  Midas SE Sustomer Position
+      *
+     FCPOSNL1 IF  E           K        DISK         KINFSR *PSSR
+      *
+      ***  Midas PM Curr Portfolio Pos in Sec Seq.          - Prefixe QA
+      *
+     FPMCPOSL0IF  E           K        DISK
+      *
+      ***  Midas SE Corporate Actions All Blocked Positions - Prefixes VC-VD-MC-MU
+      *
+     FSECOBAL1IF  E           K        DISK
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - Format SEERALD0 read                                  *
+      *   02  - Format SEBLKPD0 read                                  *
+      *   03  - Format SECOBKD0 read                                  *
+      *   04  - Format SECOALD0 read                                  *
+      *                                                               *
+      *   71  - Chain on file CPOSNL1 and PMCPOSL0                    *
+      *         Read file SECOBAL1                                    *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   P001   - Initial processing                                 *
+      *   P002   - Detail processing                                  *
+      *   P003   - Termination processing                             *
+      *                                                               *
+      *   *PSSR  - Program Error Handling Routine.                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ***  Array containing Copyright statement.
+      *
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+      ***  SECOBAL1 format SEERALD0 - Midas SE Early Redemption - Allocations      - Prefixe VC
+      *
+     ISEERALD0    01
+     I              VCRECI                          XXRECI
+     I              VCBRCD                          XXBRCD
+     I              VCCNUM                          XXCNUM
+     I              VCPTFR                          XXPTFR
+     I              VCERTP                          XXBLTY
+     I              VCSESN                          XXSESN
+     I              VCBEDT                          XXBEDT
+     I              VCNOMA                          XXNOMB
+      *
+      ***  SECOBAL1 format SEBLKPD0 - Midas SE Manually Blocked Positions          - Prefixe VD
+      *
+     ISEBLKPD0    02
+     I              VDRECI                          XXRECI
+     I              VDBRCD                          XXBRCD
+     I              VDCNUM                          XXCNUM
+     I              VDPTFR                          XXPTFR
+     I              VDBLTY                          XXBLTY
+     I              VDSESN                          XXSESN
+     I              VDBEDT                          XXBEDT
+     I              VDNOMB                          XXNOMB
+     I              VDBSTT                          XXBSTT
+      *
+      ***  SECOBAL1 format SECOBKD0 - Midas SE Corporate Actions Blocked Positions - Prefixe MU
+      *
+     ISECOBKD0    03
+     I              MURECI                          XXRECI
+     I              MUBRCD                          XXBRCD
+     I              MUCNUM                          XXCNUM
+     I              MUPTFR                          XXPTFR
+     I              MUBLTY                          XXBLTY
+     I              MUSESN                          XXSESN
+     I              MUBEDT                          XXBEDT
+     I              MUNOMB                          XXNOMB
+     I              MUBSTT                          XXBSTT
+      *
+      ***  SECOBAL1 format SECOALD0 - Midas SE Corporate Actions - Allocations     - Prefixe MC
+      *
+     ISECOALD0    04
+     I              MCRECI                          XXRECI
+     I              MCBRCD                          XXBRCD
+     I              MCCNUM                          XXCNUM
+     I              MCPTFR                          XXPTFR
+     I              MCBLTY                          XXBLTY
+     I              MCBSEC                          XXSESN
+     I              MCBEDT                          XXBEDT
+     I              MCBSTT                          XXBSTT
+      *
+      /EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform initialisation.
+      *
+     C                     EXSR P001
+      *
+      ***  Perform detail processing.
+      *
+     C                     EXSR P002
+      *
+      ***  Perform termination processing.
+      *
+     C                     EXSR P003
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P001   - Initial processing.                                 *
+      *                                                               *
+      *  Called By: Main processing.                                  *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           P001      BEGSR                           ***  P001  ***
+      *
+      ***  Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive input parameters.
+      *
+     C           *ENTRY    PLIST
+      *
+      ***  Input parameters.
+      *
+     C                     PARM           PPRUND  5        Run Date
+     C                     PARM           PPOBPO  1        Obtain Position
+     C                     PARM           PPBRCD  3        Branch Code
+     C                     PARM           PPSESN 10        Security Shortname
+     C                     PARM           PPCNUM  6        Customer Number
+     C                     PARM           PPPTFR  4        Portfolio Reference
+     C                     PARM           PPBLTY  1        Block Type
+      *
+      ***  Output parameters.
+      *
+     C                     PARM           PPNOBL 13        Nominal already Blocked
+     C                     PARM           PPNOPO 13        Nominal Position
+      *
+      ***  Define Key lists.
+      *
+     C           KEY1      KLIST                           CPOSNL1 key list.
+     C                     KFLD           KKBRCD
+     C                     KFLD           PPSESN
+     C                     KFLD           KKCNUM
+      *
+     C           KEY2      KLIST                           PMCPOSL0 key list.
+     C                     KFLD           PPSESN
+     C                     KFLD           KKCNUM
+     C                     KFLD           KKT
+     C                     KFLD           PPPTFR
+      *
+     C           KEY3      KLIST                           SECOBAL1 key list.
+     C                     KFLD           KKBRCD
+     C                     KFLD           KKCNUM
+     C                     KFLD           PPPTFR
+     C                     KFLD           KKBLTY
+     C                     KFLD           PPSESN
+     C                     KFLD           KKRUND
+      *
+      ***  Initialize key fields.
+      *
+     C                     MOVE PPRUND    KKRUND  50
+     C                     MOVE PPBRCD    KKBRCD  3
+     C**********           MOVE PPCNUM    KKCNUM  60                                          CSD027
+     C                     MOVE PPCNUM    KKCNUM  6                                           CSD027
+     C                     MOVE PPBLTY    KKBLTY  1
+     C                     MOVE 'T'       KKT     1
+      *
+      ***  Reset to zero output parameters.
+      *
+     C                     MOVE *BLANKS   PPNOBL
+     C                     MOVE *BLANKS   PPNOPO
+     C                     MOVE *ZEROS    WWNOBL 130
+     C                     MOVE *ZEROS    WWNOPO 130
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P002   - Detail processing.                                  *
+      *                                                               *
+      *  Called By: Main Processing.                                  *
+      *                                                               *
+      *  Calls: P003   - Termination processing.                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           P002      BEGSR                           ***  P002  ***
+      *
+      ***  If Branch, Security or Customer blank, terminate processing.
+      *
+     C           PPBRCD    IFEQ *BLANKS
+     C           PPSESN    OREQ *BLANKS
+     C           PPCNUM    OREQ *BLANKS
+     C                     EXSR P003
+     C                     ENDIF
+      *
+      ***  Obtain position, if 'Obtain position' parameter 'Y'.
+      *
+     C           PPOBPO    IFEQ 'Y'
+      *
+     C           PPPTFR    IFEQ *BLANKS
+      *
+     C           KEY1      CHAINCPOSNL1              71
+     C           *IN71     IFEQ '0'
+     C                     Z-ADDCSNT      WWNOPO
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           KEY2      CHAINPMCPOSL0             71
+     C           *IN71     IFEQ '0'
+     C                     Z-ADDQANOML    WWNOPO
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  If 'Block Type' parameter not 'P' or 'S' or 'Run date'
+      ***  parameter is equal zero, terminate processing.
+      *
+     C           PPBLTY    IFNE 'P'
+     C           PPBLTY    ANDNE'S'
+     C           KKRUND    OREQ *ZEROS
+     C                     EXSR P003
+     C                     ENDIF
+      *
+      ***  Obtain Blocked Nominal.
+      *
+     C           KEY3      SETLLSECOBAL1
+     C                     MOVEA'0000'    *IN,01
+     C                     READ SECOBAL1                 71
+      *
+     C           *IN71     DOWEQ'0'
+     C           KKBRCD    ANDEQXXBRCD
+     C           KKCNUM    ANDEQXXCNUM
+     C           PPPTFR    ANDEQXXPTFR
+     C           PPBLTY    ANDEQXXBLTY
+     C           WWNOBL    ANDNE*HIVAL
+      *
+      ***  If 01 ON = format SEERALD0 read, reset field XXBSTT: Block
+      ***  from Date/Blocked Start Date.
+      *
+     C           *IN01     IFEQ '1'
+     C                     Z-ADD0         XXBSTT
+     C                     ENDIF
+      *
+     C           XXRECI    IFEQ 'D'
+     C           XXSESN    ANDEQPPSESN
+     C           XXBEDT    ANDGEKKRUND
+     C           XXBSTT    ANDLEKKRUND
+      *
+     C           XXNOMB    IFEQ *HIVAL
+     C           XXNOMB    OREQ *ZEROS
+     C                     MOVE *HIVAL    WWNOBL
+     C                     ELSE
+     C                     ADD  XXNOMB    WWNOBL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVEA'0000'    *IN,01
+     C                     READ SECOBAL1                 71
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WWNOBL    PPNOBL
+     C                     MOVE WWNOPO    PPNOPO
+      *
+     C           EP002     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P003   - Termination processing.                             *
+      *                                                               *
+      *  Called By: Main processing.                                  *
+      *             P002   - Detail processing.                       *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           P003      BEGSR                           ***  P003  ***
+      *
+     C                     MOVE '0'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Handling Routine.                     *
+      *                                                               *
+      *  Called By: None.                                             *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ***  *PSSR  ***
+      *
+     C                     DUMP
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

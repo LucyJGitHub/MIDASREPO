@@ -1,0 +1,936 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Data feed request item (MDF)')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SD1453 - Data Feed Request Item (MDF)                        *
+      *                                                               *
+      *  Function:  This program is used to enter details related to  *
+      *  a data feed request item                                     *
+      *                                                               *
+      *  Called By: SD1452 - Data Feed Request Item List              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006  *CREATE    Date 12Sep00               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      * INDICATORS                                                    *
+      * 10 - Enable F10                                               *
+      * 29 - Protect all screen fields                                *
+      * 30-51 - Handle screen fields error                            *
+      * 90 - Work indicator                                           *
+      *****************************************************************
+     FSD1453DFCF  E                    WORKSTN
+     F                                              KINFSR *PSSR
+     FSDMDFIL0UF  E           K        DISK                      A    UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** Currency file
+     FSDCURRL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      ** Securities
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      ** Base rates
+     FSDBSRTL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      ** To handle errors which occured in field data item
+     E                    @E      1   6 26
+      ** Array of QCMDEXC commands
+     E                    CMD@    1   1 80
+      ** Array of QCMDEXC command to edit
+      /COPY SDCPYSRC,SD1453E001
+      ** To handle origin of data source
+     E                    @DS         6 32
+      ** To handle origin of MDF identifier
+     E                    @MI         6 20
+      ** To handle ICD data source
+     E                    @IS         6 32
+      *
+      ** Named constants
+     I              6                     C         @ESIZ
+      *
+     ISDY       E DSDSSDY
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      ** Midas SD MDF ICD
+     ISDMDFC    E DSSDMDFCPD
+      ** Midas SD MDF mapping code
+     ISDMAPC    E DSSDMAPCPD
+      ** Midas SD Data Feed Request Item Details
+     I@1DBRC    E DSSDMDFIPD
+     I#1DBRC      DS                           9999
+      ** To fill array of MDF data source (same order as array @E)
+      ** 1 spot rate
+      ** 2 forward rate
+      ** 3 borrow rate
+      ** 4 lend rate
+      ** 5 security price
+      ** 6 base rate
+     I@DSDS       DS
+     I                                        1  32 @DSRDS
+     I                                       33  64 @DFRDS
+     I                                       65  96 @DBODS
+     I                                       97 128 @DLEDS
+     I                                      129 160 @DSPDS
+     I                                      161 192 @DBRDS
+     I                                        1 192 @DS
+      ** To fill array of MDF identifier (same order as array @E)
+      ** 1 spot rate
+      ** 2 forward rate
+      ** 3 borrow rate
+      ** 4 lend rate
+      ** 5 security price
+      ** 6 base rate
+     I@MIDS       DS
+     I                                        1  20 @MSRID
+     I                                       21  40 @MFRNT
+     I                                       41  60 @MBOID
+     I                                       61  80 @MLEID
+     I                                       81 100 @MSPID
+     I                                      101 120 @MBFNT
+     I                                        1 120 @MI
+      ** To fill array of MDF ICD data source (same order as array @E)
+      ** 1 spot rate
+      ** 2 forward rate
+      ** 3 borrow rate
+      ** 4 lend rate
+      ** 5 security price
+      ** 6 base rate
+     I@ISDS       DS
+     I                                        1  32 @IDSRS
+     I                                       33  64 @IDFRS
+     I                                       65  96 @IDBOS
+     I                                       97 128 @IDLES
+     I                                      129 160 @IDSPS
+     I                                      161 192 @IDBRS
+     I                                        1 192 @IS
+      *
+      ** To handle errors which occured in field data item
+     IERRDTI      DS
+     I                                        1   1 ERAPIT
+     I                                        2   2 ERSMC1
+     I                                        3   9 ERMDFI
+     I                                       10  10 ERSMC2
+     I                                       11  17 ERKEYN
+     I                                       18  18 ERSMC3
+     I                                       19  26 ERFINM
+      *
+      ** For S/R RTVMTX
+      /COPY SDCPYSRC,SD1453I001
+      /EJECT
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTN   7
+      ** Request Id
+     C                     PARM           P@REQI
+      ** Data feed item
+     C                     PARM           P@DITM
+      ** Mapping code
+     C                     PARM           P@MAPC
+      ** Data source
+     C                     PARM           P@DTSC
+      ** Action code
+     C                     PARM           P@ANCD  1
+      ** Key Pressed
+     C                     PARM           P@KEYP  2
+      *
+     C           *LIKE     DEFN MIREQI    P@REQI
+     C           *LIKE     DEFN MIDITM    P@DITM
+     C           *LIKE     DEFN MCMAPC    P@MAPC
+     C           *LIKE     DEFN A6BODS    P@DTSC
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR INZPGM
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR MAIN
+     C                     ENDIF
+      *
+     C                     EXSR TERPGM
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      * INZPGM - Initialize program                                   *
+      *****************************************************************
+     C           INZPGM    BEGSR
+     C                     MOVEL*BLANK    P@RTN
+     C                     MOVEL'N'       WEND    1
+      ** Open file with option SHARE *NO
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDMDFIL0'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDMDFIL0
+      ** Initialize msg sub file pgmq
+     C                     MOVELPGM       ##PGM
+      ** Screen variables
+     C                     MOVELAGMRDT    SRUNA
+     C                     MOVELWSID      SWSID
+     C                     MOVELUSER      SUSER
+      *
+      ** Enable Fields
+     C                     EXSR ENAFLD
+      *
+      ** Enable Function Keys
+     C                     EXSR ENAKEY
+      *
+      ** Retrieve/Convert Informations from file record
+     C           P@REQI    IFNE *BLANK
+     C           P@DITM    ANDNE*BLANK
+     C                     EXSR RTVRCD
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR CVTRCD
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Retrieve system data
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR RTVSYD
+     C                     ENDIF
+      *
+     C           EINZPG    ENDSR
+      *****************************************************************
+      * TERPGM - Terminate program                                    *
+      *****************************************************************
+     C           TERPGM    BEGSR
+     C                     CLOSESDMDFIL0
+     C                     ENDSR
+      *****************************************************************
+      * MAIN - Main                                                   *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C           WEND      DOUEQ'Y'
+      ** Display screen
+     C                     EXSR DSPSCR
+      ** Exit requested ?
+     C           *INKC     IFNE '1'
+     C           *INKL     ANDNE'1'
+      ** Validate screen
+     C           P@ANCD    IFEQ 'I'
+     C           P@ANCD    OREQ 'A'
+     C                     EXSR VALSCR
+     C                     ENDIF
+      *
+     C           P@MSGI    IFEQ *BLANK
+     C           WQUERY    ANDNE'1'
+      ** Update process ?
+     C           *INKJ     IFEQ '1'
+     C           P@ANCD    OREQ 'I'
+     C           P@ANCD    OREQ 'A'
+     C           P@ANCD    OREQ 'E'
+      ** Lock records
+     C           P@ANCD    IFEQ 'D'
+     C           P@ANCD    OREQ 'A'
+     C                     EXSR LCKRCD
+     C                     ENDIF
+      ** Update them
+     C           P@MSGI    IFEQ *BLANK
+     C                     EXSR UPDFIL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      ** Call another transaction ?
+     C           P@MSGI    IFEQ *BLANK
+     C                     EXSR OTHPGM
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      * DSPSCR - Display screen                                       *
+      *****************************************************************
+     C           DSPSCR    BEGSR
+      *
+      ** Default screen values
+     C                     EXSR DFTSCR
+      *
+      ** Display the screen
+     C                     WRITE#MSGCTL
+     C                     EXFMTSD1453F0
+      *
+      ** Clear Message Q and highligthed fields
+     C                     CALL 'ZA0250'
+     C                     SETOF                     30
+      ** Used as a flag to determine whether validation error occured
+     C                     MOVEL*BLANK    P@MSGI
+      *
+      ** Determine which key has been pressed
+     C                     SELEC
+      ** F3 pressed
+     C           *INKC     WHEQ '1'
+     C                     MOVEL'Y'       WEND
+     C                     MOVEL'03'      P@KEYP
+      ** F10 pressed
+     C           *INKJ     WHEQ '1'
+     C                     SELEC
+     C           P@ANCD    WHEQ 'D'
+     C                     MOVEL'10'      P@KEYP
+     C                     OTHER
+     C                     ENDSL
+      ** F12 pressed
+     C           *INKL     WHEQ '1'
+     C                     MOVEL'Y'       WEND
+     C                     MOVEL'12'      P@KEYP
+      ** Enter pressed
+     C                     OTHER
+     C                     MOVEL*BLANK    P@KEYP
+     C                     SELEC
+     C           P@ANCD    WHEQ 'D'
+     C                     MOVEL'Y'       WEND
+     C           P@ANCD    WHEQ 'E'
+     C                     MOVEL'Y'       WEND
+     C                     OTHER
+     C                     ENDSL
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      * VALSCR - Validate screen                                      *
+      *****************************************************************
+     C           VALSCR    BEGSR
+      ** Help requested
+     C                     EXSR HLPREQ
+      *
+      ** Check data item
+     C                     EXSR CKDITM
+      *
+     C           EXVSCR    ENDSR
+      *****************************************************************
+      * OTHPGM - Other Programs need to be called                     *
+      *****************************************************************
+     C           OTHPGM    BEGSR
+      ** No other programs need to be called for now
+     C                     ENDSR
+      *****************************************************************
+      * UPDFIL - Update files                                         *
+      *****************************************************************
+     C           UPDFIL    BEGSR
+      *
+     C                     SELEC
+     C           P@ANCD    WHEQ 'I'
+     C                     CLEARSDMDFID0
+     C                     EXSR CVTOTH
+     C                     EXSR CVTSCR
+     C                     WRITESDMDFID0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0004' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+     C           P@ANCD    WHEQ 'D'
+     C                     DELETSDMDFID0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0004' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+     C           P@ANCD    WHEQ 'A'
+     C                     EXSR CVTOTH
+     C                     EXSR CVTSCR
+     C                     UPDATSDMDFID0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0004' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ELSE
+      ** Memorize to monitor updates done by other workstations
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     ENDIF
+     C                     ENDSL
+      *
+      ** End of the transaction
+     C           P@MSGI    IFEQ *BLANK
+     C                     MOVEL'Y'       WEND
+     C                     COMIT
+     C                     ELSE
+     C                     ROLBK
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * LCKRCD - Lock Records                                         *
+      *****************************************************************
+     C           LCKRCD    BEGSR
+      ** Check record hasn't been updated by another workstation
+      ** And prepare the update
+      ** Otherwise send error messages
+      *
+      ** Record deleted by another workstation ?
+     C                     MOVELSDITM     MIDITM
+     C           KMDFI0    CHAINSDMDFIL0             90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0007' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      ** Record updated by another workstation ?
+     C           *IN90     IFEQ '0'
+     C           @1DBRC    IFNE #1DBRC
+     C                     UNLCKSDMDFIL0               90
+     C           *IN90     IFEQ '1'
+     C                     EXSR ERR002
+     C                     ENDIF
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0007' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * RTVSYD - Retrieve System Data                                 *
+      *****************************************************************
+     C           RTVSYD    BEGSR
+      ** Retrieve MDF ICD
+     C                     CALL 'AOMDFCR0'             90
+     C                     PARM           P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C           SDMDFC    PARM           SDY
+     C           P@RTCD    IFNE *BLANK
+     C           *IN90     OREQ '1'
+     C                     MOVEL'SDM0041' P@RTN
+     C                     GOTO ERTSYD
+     C                     ELSE
+      ** Fill array @IS
+     C                     MOVELMDDSRS    @IDSRS
+     C                     MOVELMDDFRS    @IDFRS
+     C                     MOVELMDDBOS    @IDBOS
+     C                     MOVELMDDLES    @IDLES
+     C                     MOVELMDDSPS    @IDSPS
+     C                     MOVELMDDBRS    @IDBRS
+     C                     ENDIF
+      *
+     C           ERTSYD    ENDSR
+      *****************************************************************
+      * RTVRCD - Retrieve Information from file record                *
+      *****************************************************************
+     C           RTVRCD    BEGSR
+      *
+     C           KMDFI0    KLIST
+     C                     KFLD           P@REQI
+     C                     KFLD           MIDITM
+      ** Get record
+     C                     MOVELP@DITM    MIDITM
+     C           KMDFI0    CHAINSDMDFIL0             90
+     C           *IN90     IFEQ '0'
+      ** Unlock record
+     C                     UNLCKSDMDFIL0               90
+     C           *IN90     IFEQ '1'
+     C                     EXSR ERR002
+     C                     ENDIF
+      ** Memorize to monitor updates done by other workstations
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     ELSE
+     C                     MOVEL'SDM0047' P@RTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CVTRCD - Convert Record Fields                                *
+      *****************************************************************
+     C           CVTRCD    BEGSR
+     C                     MOVELMIREQI    SREQI
+     C                     MOVELMIDITM    SDITM
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CVTSCR - Convert Screen Fields                                *
+      *****************************************************************
+     C           CVTSCR    BEGSR
+     C                     MOVELSREQI     MIREQI
+     C                     MOVELSDITM     MIDITM
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CVTOTH - Convert Other Fields                                 *
+      *****************************************************************
+     C           CVTOTH    BEGSR
+     C                     MOVEL'D'       MIRECI
+     C                     ENDSR
+      *****************************************************************
+      * ENAKEY - Enable Function Keys                                 *
+      *****************************************************************
+     C           ENAKEY    BEGSR
+      *
+     C                     SETOF                     10
+      ** Enable F10 ?
+     C           P@ANCD    IFEQ 'D'
+     C                     SETON                     10
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * ENAFLD - Enable Fields                                        *
+      *****************************************************************
+     C           ENAFLD    BEGSR
+     C                     SETOF                     29
+      *
+      ** Protect fields
+     C           P@ANCD    IFEQ 'D'
+     C           P@ANCD    OREQ 'E'
+     C                     SETON                     29
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * DFTSCR - Default screen values                                *
+      *****************************************************************
+     C           DFTSCR    BEGSR
+      *
+     C                     MOVELP@REQI    SREQI
+      *
+     C                     ENDSR
+      *****************************************************************
+      * HLPREQ - Help Requested                                       *
+      *****************************************************************
+     C           HLPREQ    BEGSR
+      ** XXXXXX serve as an example
+     C                     MOVEL*BLANK    XXXXXX 10
+      ** Flag set to Y if '?' entered somewhere on the screen
+     C                     MOVEL'0'       WQUERY  1
+     C           '?'       SCAN XXXXXX    WIQM    30
+     C           WIQM      IFNE 0
+      ** Force redisplay
+     C                     MOVEL'1'       WQUERY
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKDITM - Check data feed item                                 *
+      *****************************************************************
+     C           CKDITM    BEGSR
+      *
+      ** Mandatory
+     C           SDITM     IFEQ *BLANK
+     C                     MOVEL'SDM0012' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+      *
+     C           *IN30     IFEQ '0'
+     C                     MOVELSDITM     MIDITM
+     C           KMDFI0    SETLLSDMDFIL0                 90
+      ** No duplicate records are admitted in insert mode
+     C                     SELEC
+     C           P@ANCD    WHEQ 'I'
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0026' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+      ** Record must exist
+     C           P@ANCD    WHEQ 'A'
+     C           *IN90     IFEQ '0'
+     C                     MOVEL'SDM0027' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+     C                     ENDSL
+     C                     ENDIF
+      *
+      ** Mapping code must exist before performing checks related to
+      ** API type.
+     C           *IN30     IFEQ '0'
+     C                     MOVELP@MAPC    WMAPC
+     C                     EXSR RTVMPC
+     C           WMPRTN    IFNE *BLANK
+     C                     MOVEL'SDM0028' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Checks related to API type.
+     C           *IN30     IFEQ '0'
+     C           WMPRTN    ANDEQ*BLANK
+     C                     MOVELMCAPIT    WCKAPI
+     C                     EXSR CHKAPI
+     C           WCKART    IFNE *BLANK
+     C                     MOVELWCKAMS    P@MSGI
+     C                     MOVELWCKAMD    P@MSGD
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * RTVMPC - Retrieve Mapping code info                           *
+      *****************************************************************
+     C           RTVMPC    BEGSR
+     C           *LIKE     DEFN P@MAPC    WMAPC
+     C                     MOVEL*BLANK    WMPRTN  2
+     C                     MOVELWMAPC     P@MAPC    P
+      *
+     C                     CALL 'AOMAPCR0'             90
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@MAPC
+     C           SDMAPC    PARM           SDY
+      *
+     C           P@RTCD    IFNE *BLANK
+     C                     MOVEL'01'      WMPRTN
+     C                     ENDIF
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'99'      WMPRTN
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    WMAPC
+     C                     ENDSR
+      *****************************************************************
+      * CHKAPI - Checks related to API type                           *
+      *****************************************************************
+     C           CHKAPI    BEGSR
+      *
+     C           *LIKE     DEFN MCAPIT    WCKAPI
+     C           *LIKE     DEFN P@MSGI    WCKAMS
+     C           *LIKE     DEFN P@MSGD    WCKAMD
+     C                     MOVEL*BLANK    WCKART  2
+     C                     MOVEL*BLANK    WCKAMS
+     C                     MOVEL*BLANK    WCKAMD
+      *
+      ** Retrieve range number of API type in array @E
+     C                     MOVELWCKAPI    WAPITY
+     C                     EXSR IDXAPI
+     C           WIDXRT    IFNE *BLANK
+     C                     MOVEL'SDM0040' WCKAMS
+     C                     MOVELWCKAPI    WCKAMD
+     C                     MOVEL'01'      WCKART
+     C                     GOTO ECKAPI
+     C                     ENDIF
+      *
+      ** Retrieve MDF info from appropriate file according value of
+      ** the index of API type in array @E
+     C                     MOVELSDITM     WKYRTV
+     C                     Z-ADDWIDXAP    WRTVIX
+     C                     EXSR RTVMDF
+     C           WRTMRC    IFNE *BLANK
+     C                     SELEC
+     C           WRTMRC    WHEQ '01'
+     C                     MOVEL'04'      WCKART
+     C                     MOVEA@E,WIDXAP ERRDTI
+     C                     MOVELERKEYN    P@RTMI
+     C                     EXSR RTVMTX
+     C                     MOVELP@RTT1    WCKAMD
+     C                     MOVEL'SDM0045' WCKAMS
+     C                     OTHER
+     C                     MOVEL'SDM0039' WCKAMS
+     C                     MOVELWCKAPI    WCKAMD
+     C                     MOVEL'02'      WCKART
+     C                     ENDSL
+     C                     GOTO ECKAPI
+     C                     ENDIF
+      *
+      ** X check MDF data
+      ** (MDF xxxxx identifier, MDF xxxxx data source,
+      ** screen data source, ICD data source)
+     C                     MOVELWDTSRC    WXCKDS
+     C                     MOVELWMDFID    WXCKID
+     C                     MOVELP@DTSC    WXSCDS
+     C                     MOVELWMDICS    WXICDS
+     C                     Z-ADDWIDXAP    WXIDXA
+     C                     EXSR XCKMDD
+     C           WXCKRT    IFNE *BLANK
+     C                     MOVELWXCKMS    WCKAMS
+     C                     MOVELWXCKMD    WCKAMD
+     C                     MOVEL'03'      WCKART
+     C                     GOTO ECKAPI
+     C                     ENDIF
+      *
+     C           ECKAPI    TAG
+     C                     MOVEL*BLANK    WCKAPI
+     C                     ENDSR
+      *****************************************************************
+      * IDXAPI - Retrieve index used for API type checkings           *
+      *****************************************************************
+     C           IDXAPI    BEGSR
+     C           *LIKE     DEFN ERAPIT    WAPITY
+     C                     Z-ADD0         WIDXAP  30
+     C                     MOVEL*BLANK    WIDXRT  2
+      *
+     C                     DO   @ESIZ     I       30
+     C                     MOVEA@E,I      ERRDTI
+     C           ERAPIT    IFEQ WAPITY
+     C                     Z-ADDI         WIDXAP
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Argument not found : return an error
+     C           WIDXAP    IFEQ 0
+     C                     MOVEL'01'      WIDXRT  2
+     C                     ENDIF
+     C                     MOVEL*BLANK    WAPITY
+      *
+     C                     ENDSR
+      *****************************************************************
+      * RTVMDF - Retrieve record from market data feed files          *
+      *****************************************************************
+     C           RTVMDF    BEGSR
+     C                     MOVEA@E,WRTVIX ERRDTI
+     C           *LIKE     DEFN P@DTSC    WDTSRC
+     C           *LIKE     DEFN A6SRID    WMDFID
+     C           *LIKE     DEFN MDDSRS    WMDICS
+     C                     MOVEL*BLANK    WDTSRC
+     C                     MOVEL*BLANK    WMDFID
+     C                     MOVEL*BLANK    WMDICS
+     C                     MOVEL*BLANK    WRTMRC  2
+      *
+     C                     SELEC
+     C           ERFINM    WHEQ 'SDCURRL0'
+     C                     MOVELWKYRTV    A6CYCD
+     C           A6CYCD    CHAINSDCURRL0             90
+     C           *IN90     IFEQ '0'
+      ** Fill array @DS
+     C                     MOVELA6SRDS    @DSRDS
+     C                     MOVELA6FRDS    @DFRDS
+     C                     MOVELA6BODS    @DBODS
+     C                     MOVELA6LEDS    @DLEDS
+      ** Fill array @MI
+     C                     MOVELA6SRID    @MSRID
+     C                     MOVELA6FRNT    @MFRNT
+     C                     MOVELA6BOID    @MBOID
+     C                     MOVELA6LEID    @MLEID
+     C                     ENDIF
+     C           ERFINM    WHEQ 'SECTY'
+     C                     MOVELWKYRTV    SESN
+     C           SESN      CHAINSECTY                90
+     C           *IN90     IFEQ '0'
+      ** Fill array @DS
+     C                     MOVELSPDS      @DSPDS
+      ** Fill array @MI
+     C                     MOVELSPID      @MSPID
+     C                     ENDIF
+     C           ERFINM    WHEQ 'SDBSRTL0'
+     C           KBSRT0    KLIST
+     C                     KFLD           BACYCD
+     C                     KFLD           BABSRC
+     C           3         SUBSTWKYRTV:1  BACYCD
+     C           2         SUBSTWKYRTV:4  BABSRC
+     C           KBSRT0    CHAINSDBSRTL0             90
+     C           *IN90     IFEQ '0'
+      ** Fill array @DS
+     C                     MOVELBABRDS    @DBRDS
+      ** Fill array @MI
+     C                     MOVELBAFRNT    @MBFNT
+     C                     ENDIF
+     C                     OTHER
+     C                     MOVEL'02'      WRTMRC
+     C                     GOTO EXRMDF
+     C                     ENDSL
+      *
+     C           *IN90     IFEQ '0'
+     C                     MOVEA@DS,WRTVIXWDTSRC
+     C                     MOVEA@MI,WRTVIXWMDFID
+     C                     MOVEA@IS,WRTVIXWMDICS
+     C                     ELSE
+     C                     MOVEL'01'      WRTMRC
+     C                     ENDIF
+      *
+     C           EXRMDF    TAG
+     C                     MOVEL*BLANK    WKYRTV256
+     C                     Z-ADD0         WRTVIX  30
+     C                     ENDSR
+      *****************************************************************
+      * XCKMDD - Cross check market data feed data                    *
+      *****************************************************************
+     C           XCKMDD    BEGSR
+      ** MDF xxxxx data source
+     C           *LIKE     DEFN WDTSRC    WXCKDS
+      ** MDF xxxxx identifier
+     C           *LIKE     DEFN WMDFID    WXCKID
+      ** Screen (in request details) data source
+     C           *LIKE     DEFN P@DTSC    WXSCDS
+      ** ICD MDF data source
+     C           *LIKE     DEFN WMDICS    WXICDS
+     C           *LIKE     DEFN WCKAMS    WXCKMS
+     C           *LIKE     DEFN WCKAMD    WXCKMD
+     C           *LIKE     DEFN WIDXAP    WXIDXA
+      *
+     C                     MOVEL*BLANK    WXCKRT  2
+     C                     MOVEL*BLANK    WXCKMS
+     C                     MOVEL*BLANK    WXCKMD
+      *
+      ** xxxxxx MDF identifier must not be blank
+     C           WXCKID    IFEQ *BLANK
+     C                     MOVEA@E,WXIDXA ERRDTI
+     C                     MOVELERMDFI    P@RTMI
+     C                     EXSR RTVMTX
+     C                     MOVEL'SDM0042' WXCKMS
+     C                     MOVELP@RTT1    WXCKMD
+     C                     MOVEL'01'      WXCKRT
+     C                     GOTO EXCKAP
+     C                     ENDIF
+      *
+      ** xxxxxx data source override if NOT blank must be equal
+      ** to the one entered on the screen
+     C           WXCKDS    IFNE *BLANK
+     C           WXCKDS    ANDNEWXSCDS
+     C                     MOVEA@E,WXIDXA ERRDTI
+     C                     MOVELERMDFI    P@RTMI
+     C                     EXSR RTVMTX
+     C                     MOVEL'SDM0043' WXCKMS
+     C                     MOVELP@RTT1    WXCKMD
+     C                     MOVEL'02'      WXCKRT
+     C                     GOTO EXCKAP
+     C                     ENDIF
+      *
+      ** xxxxxx data source override if blank.
+      ** Data source entered on the screen must be the same as the
+      ** one in the ICD file.
+     C           WXCKDS    IFEQ *BLANK
+     C           WXSCDS    ANDNEWXICDS
+     C                     MOVEA@E,WXIDXA ERRDTI
+     C                     MOVELERMDFI    P@RTMI
+     C                     EXSR RTVMTX
+     C                     MOVEL'SDM0044' WXCKMS
+     C                     MOVELP@RTT1    WXCKMD
+     C                     MOVEL'03'      WXCKRT
+     C                     GOTO EXCKAP
+     C                     ENDIF
+      *
+     C           EXCKAP    TAG
+     C                     MOVEL*BLANK    WXCKDS
+     C                     MOVEL*BLANK    WXCKID
+     C                     MOVEL*BLANK    WXSCDS
+     C                     MOVEL*BLANK    WXICDS
+     C                     Z-ADD0         WXIDXA
+     C                     ENDSR
+      *****************************************************************
+      * ERR002 - Error type 002, unlock SDMDFIL0 failed               *
+      *****************************************************************
+     C           ERR002    BEGSR
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDMDFIL0'DBFILE    P      *DB ERROR 002 *
+     C                     MOVEL'*UNLCK'  DBKEY     P      ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      **  Retrieve a message text RTVMTX
+      /COPY SDCPYSRC,SD1453C001
+      **  Execute an OS400 command
+      /COPY SDCPYSRC,SD1453C002
+      ** Send a message SNDMSG
+      /COPY SDCPYSRC,SD1453C003
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  @E
+S;SDM0029;SDM0035;SDCURRL0                        1 spot rate
+F;SDM0030;SDM0035;SDCURRL0                        2 forward rate
+B;SDM0031;SDM0035;SDCURRL0                        3 borrow rate
+L;SDM0032;SDM0035;SDCURRL0                        4 lend rate
+P;SDM0033;SDM0036;SECTY                           5 security price
+M;SDM0034;SDM0037;SDBSRTL0                        6 base rate
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

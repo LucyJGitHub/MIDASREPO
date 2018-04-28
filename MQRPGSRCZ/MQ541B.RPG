@@ -1,0 +1,855 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ RTEVENTS production initiation I/F')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Midas/Q Module                                       *
+     F*                                                               *
+     F*         MQ541B -  Production Initiation I/Face for RTEVENTS   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+     F*  Last Amend No. 193655             Date 26May06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CMQ001             Date 04NOV97               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  193655 - Mismatch on pgm variable since Year 2000            *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CMQ001 - MidasQ rationalisation.                             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F* 01 - 24          Function Keys 01 to 24                       *
+     F* 51               Include Dealing is Invalid                   *
+     F* 52               Include F&O is Invalid                       *
+     F* 53               Include Funds Transfer is Invalid            *
+     F* 54               Include Book Positions is Invalid            *
+     F* 55               Include Customer Positions is Invalid        *
+     F* 56               Include Depot Postions is Invalid            *
+     F* 57               Include Trades is Invalid                    *
+     F* 58               Include Portfolio Customer Trades is Invalid *
+     F* 59               Include Depot Movements is Invalid           *
+     F* 60               Select ALL is Invalid                        *
+     F* 61               Select from ALL is Invalid                   *
+     F* 62               Select Generic 1 and 2 is Invalid            *
+     F* 63               Select Generic 3 is Invalid                  *
+     F* 65               Position Cursor at ##LE                      *
+     F* 70               OPEN Fails - Must be a Batch job             *
+     F* 80               End of File for MQ542XLF, MQ543XLF, MQ544XLF *
+     F* 85               Command Key found in LOKUP Operation         *
+     F* 98               Error Occured in Validation.                 *
+     F* 99               Subfile End                                  *
+     F*                                                               *
+     F*****************************************************************
+     FMQ541BDFCF  E                    WORKSTN                        UC
+     F                                              KINFDS FINFDS
+     FMQ542XLFUF  E           K        DISK                      A    UC
+     FMQ543XLFUF  E           K        DISK                      A    UC
+     FMQ544XLFUF  E           K        DISK                      A    UC
+     F*****************************************************************
+     F/EJECT
+      **
+      ** Array to retrieve function key number
+      **
+     E                    TAB1    1  24  1   TAB2    2
+      **
+      ** Copyright insertion.
+      **
+     E                    CPY@    1   1 80
+     E/EJECT
+      **
+      ** Program Status Data Structure
+      **
+     IPGMDS      SDS
+     I                                        1  10 #PGMQ
+      **
+      ** File Information Data Structure
+      **
+     IFINFDS      DS
+     I                                      369 369 KEY
+     I                                    B 370 3710ROWCOL
+      **
+      ** Title Data Structure
+      **
+     I#RNAME      DS                             13
+     I                                        1   2 A
+     I                                        3  12 CPY#NM
+     I                                       13  13 B
+      **
+      ** System definition data area - O#XA01
+      **
+     IO#XA01      DS                           1000
+      **
+      ** Bring in the system definition block
+      **
+     I/COPY O#XP04,O#SDBLOCKP
+      **
+      ** Permanent Interface Data Structure
+      **
+     ICPY#IA      DS                            200
+     I                                        1   3 $$LE
+     I                                        4   6 $$DL
+     I                                        7   9 $$FF
+     I                                       10  12 $$FT
+     I                                       13  15 $$BP
+     I                                       16  18 $$CP
+     I                                       19  21 $$DP
+     I                                       22  24 $$TR
+     I                                       25  27 $$PC
+     I                                       28  30 $$DM
+     I                                       31  33 $$ALL
+     I                                       34  36 $$LIST
+     I                                       37  39 $$12
+     I                                       40  42 $$WILD
+     I                                       43  50 $$MQID
+     I                                       64  71 $$TMBR                193655
+     I                                       72  72 $$RTN                 193655
+     I***************************************63  70 $$TMBR                193655
+     I***************************************71  71 $$RTN                 193655
+      **
+      ** Temporary Interface Data Structure
+      **
+     ITIF#UR      DS                            500
+      **
+      ** Copyright Array for compilation
+      **
+     IA@CPY       DS
+     I                                        1  80 CPY@
+     I/EJECT
+      **
+      ** Parameter List Declaration
+      **
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           TIF#RC  1        Return code
+     C                     PARM           TIF#RN  70       Run number
+     C           CPY#NM    PARM           TIF#NM 10        Report name
+     C                     PARM           TIF#RD 40        Report title
+     C           CPY#IA    PARM           TIF#IA200        200 byte area
+     C                     PARM           TIF#UR           500 byte area
+     C                     PARM           TIF#NP  70       No.user params
+     C                     PARM           UPRM01  1        User param 1
+     C                     PARM           UPLN01 155       Length param 1
+     C                     PARM           UPRM02  1        User param2
+     C                     PARM           UPLN02 155       Length param 2
+     C                     PARM           UPRM03  1        User param 3
+     C                     PARM           UPLN03 155       Length param 3
+     C                     PARM           UPRM04  1        User param 4
+     C                     PARM           UPLN04 155       Length param 4
+     C                     PARM           UPRM05  1        User param 5
+     C                     PARM           UPLN05 155       Length param 5
+      **
+      ** Check whether running in batch mode. If so do nothing, as
+      ** interface program cannot be used in batch.
+      **
+     C                     CALL 'MQ541BC'
+     C                     PARM *BLANK    IBMODE  1
+      **
+      ** Only perform processing if in interactive mode ('1').
+      **
+     C           IBMODE    IFEQ '1'
+      **
+      ** Open Display File
+      **
+     C                     OPEN MQ541BDF               70
+      **
+      ** Initialise Program
+      **
+     C                     EXSR INIT
+      **
+      ** Display Screen
+      **
+     C           *IN98     DOUEQ'0'
+     C           *IN97     ANDEQ'0'
+      **
+      ** Write to message subfile if an error has occured
+      **
+     C           *IN98     IFEQ '1'
+     C                     WRITEMSGCTL
+     C                     ELSE
+      **
+      ** If No errors, position cursor at ##LE
+      **
+     C                     SETON                     65
+     C                     END
+      **
+      ** Re-Initialsise Action Bar Header Text in Case it has Changed
+      **
+     C                     EXSR SACT
+      **
+      ** Execute Header Format
+      **
+     C                     EXFMT##HEAD
+      **
+      ** Clear Subfile Message Queue
+      ** And Set Off Error Message Indicators
+      **
+     C           *IN98     IFEQ '1'
+     C                     CALL 'ZA0250'
+     C                     SETOF                     985051
+     C                     SETOF                     525354
+     C                     SETOF                     555657
+     C                     SETOF                     585960
+     C                     SETOF                     616263
+     C                     END
+     C                     SETOF                     6597
+      **
+      ** Process Command Keys
+      **
+     C                     SETOF                       85
+     C           KEY       LOKUPTAB1      TAB2           85
+     C   85                MOVE TAB2      CMDKEY  2
+      **
+      ** Exit Pressed?
+      **
+     C           CMDKEY    IFEQ O#SCEX
+     C                     MOVE 'E'       TIF#RC
+     C                     SETOF                     98
+     C                     ELSE
+      **
+      ** Bypass Pressed?
+      **
+     C           CMDKEY    IFEQ O#SCBY
+     C                     MOVE 'B'       TIF#RC
+     C                     SETOF                     98
+     C                     ELSE
+      **
+      ** Enter Pressed
+      **
+     C                     EXSR VALD
+     C                     END
+     C                     END
+     C                     END
+      **
+     C                     CLOSEMQ541BDF
+      **
+      ** Batch mode, so no processing required except setting up
+      ** return code 'P' indicating normal termination of program,
+      ** and setting up temporary user interface with permanent values.
+      **
+     C                     ELSE
+     C                     MOVE 'P'       TIF#RC
+     C                     MOVELCPY#IA    TIF#UR
+     C                     END
+      **
+      ** End Program
+      **
+     C                     SETON                     LR
+     C                     RETRN
+      **
+      ** Validation Subroutine
+      **
+     C           VALD      BEGSR
+      **
+      ** Enter Pressed, Check Cursor position
+      **
+     C           ROWCOL    DIV  256       ROW     20
+     C                     MVR            COL     20
+     C           ROW       IFEQ 1
+     C           COL       ANDEQ3
+     C           ROW       OREQ 2
+     C           COL       ANDNE1
+     C           COL       ANDNE12
+     C           COL       ANDNE23
+     C           COL       ANDNE34
+     C           COL       ANDNE45
+     C           COL       ANDNE56
+     C           COL       ANDNE67
+     C           COL       ANDNE74
+     C           COL       ANDNE80
+      **
+      ** Cursor in Action Bar, Send Error Message
+      **
+     C                     SETON                     98
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0013' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Enter Pressed, so Validate
+      **
+      ** Validate Lending
+      **
+     C                     MOVEL##LE      IN1     1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##LE
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##LE
+     C                     END
+      **
+      ** Validate Dealing
+      **
+     C                     MOVEL##DL      IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##DL
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##DL
+     C                     END
+      **
+      ** Validate F&O
+      **
+     C                     MOVEL##FF      IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##FF
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##FF
+     C                     END
+      **
+      ** Validate Funds Transfer
+      **
+     C                     MOVEL##FT      IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##FT
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##FT
+     C                     END
+      **
+      ** Validate Book Positions
+      **
+     C                     MOVEL##BP      IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##BP
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##BP
+     C                     END
+      **
+      ** Validate Portfolio Customer
+      **
+     C                     MOVEL##PC      IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##PC
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##PC
+     C                     END
+      **
+      ** Validate Depot Positions
+      **
+     C                     MOVEL##DP      IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##DP
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##DP
+     C                     END
+      **
+      ** Validate Trades
+      **
+     C                     MOVEL##TR      IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##TR
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##TR
+     C                     END
+      **
+      ** Validate Customer Positions
+      **
+     C                     MOVEL##CP      IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##CP
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##CP
+     C                     END
+      **
+      ** Validate Depot Movements
+      **
+     C                     MOVEL##DM      IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##DM
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##DM
+     C                     END
+      **
+      ** Validate Select All
+      **
+     C                     MOVEL##ALL     IN1
+     C           IN1       IFEQ 'Y'
+     C                     MOVE 'YES'     ##ALL
+     C                     END
+     C           IN1       IFEQ 'N'
+     C                     MOVE 'NO '     ##ALL
+     C                     END
+      **
+      ** Lending is not Valid
+      ** Send Error Message
+      **
+     C           ##LE      IFNE 'YES'
+     C           ##LE      ANDNE'NO '
+     C                     SETON                     9850
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0020' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Dealing is not Valid
+      ** Send Error Message
+      **
+     C           ##DL      IFNE 'YES'
+     C           ##DL      ANDNE'NO '
+     C                     SETON                     9851
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0021' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** F&O is not Valid
+      ** Send Error Message
+      **
+     C           ##FF      IFNE 'YES'
+     C           ##FF      ANDNE'NO '
+     C                     SETON                     9852
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0022' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Funds Transfer is not Valid
+      ** Send Error Message
+      **
+     C           ##FT      IFNE 'YES'
+     C           ##FT      ANDNE'NO '
+     C                     SETON                     9853
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0023' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Book Positions is not Valid
+      ** Send Error Message
+      **
+     C           ##BP      IFNE 'YES'
+     C           ##BP      ANDNE'NO '
+     C                     SETON                     9854
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0024' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Portfolio Customer is not Valid
+      ** Send Error Message
+      **
+     C           ##PC      IFNE 'YES'
+     C           ##PC      ANDNE'NO '
+     C                     SETON                     9858
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0028' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Depot Positions is not Valid
+      ** Send Error Message
+      **
+     C           ##DP      IFNE 'YES'
+     C           ##DP      ANDNE'NO '
+     C                     SETON                     9856
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0026' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Trades is not Valid
+      ** Send Error Message
+      **
+     C           ##TR      IFNE 'YES'
+     C           ##TR      ANDNE'NO '
+     C                     SETON                     9857
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0027' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Customer Positions is not Valid
+      ** Send Error Message
+      **
+     C           ##CP      IFNE 'YES'
+     C           ##CP      ANDNE'NO '
+     C                     SETON                     9855
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0025' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Depot Movements is not Valid
+      ** Send Error Message
+      **
+     C           ##DM      IFNE 'YES'
+     C           ##DM      ANDNE'NO '
+     C                     SETON                     9859
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0029' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** At Least one event type must be selected
+      **
+     C           ##LE      IFEQ 'NO '
+     C           ##DL      ANDEQ'NO '
+     C           ##FF      ANDEQ'NO '
+     C           ##FT      ANDEQ'NO '
+     C           ##BP      ANDEQ'NO '
+     C           ##CP      ANDEQ'NO '
+     C           ##DP      ANDEQ'NO '
+     C           ##TR      ANDEQ'NO '
+     C           ##PC      ANDEQ'NO '
+     C           ##DM      ANDEQ'NO '
+     C                     SETON                     985051
+     C                     SETON                     525354
+     C                     SETON                     555657
+     C                     SETON                     5859
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0033' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Select All is not Valid
+      ** Send Error Message
+      **
+     C           ##ALL     IFNE 'YES'
+     C           ##ALL     ANDNE'NO '
+     C                     SETON                     9860
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0030' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Select All is YES
+      ** Ensure the other fields are changed to NO
+      **
+     C           ##ALL     IFEQ 'YES'
+     C                     MOVE 'NO '     ##LIST
+     C                     MOVE 'NO '     ##12
+     C                     MOVE 'NO '     ##WILD
+     C                     END
+      **
+      ** Process the Selection Fields, ##SEL1,..,##SEL3
+      **
+      ** If entered, then error unless ##ALL is 'NO '
+      **
+     C           ##ALL     IFNE 'NO '
+      **
+     C           ##SEL1    IFNE *BLANK
+     C                     SETON                     979861
+     C                     END
+      **
+     C           ##SEL2    IFNE *BLANK
+     C                     SETON                     979862
+     C                     END
+      **
+     C           ##SEL3    IFNE *BLANK
+     C                     SETON                     979863
+     C                     END
+      **
+      ** If a field is in error (97 On), then Send error Message
+      **
+     C           *IN97     IFEQ '1'
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0031' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+     C                     ELSE
+      **
+      ** If not Already Called, and Selection requested
+      ** then Check a Member Exists in MQ541XPF
+      **
+     C           DONE      IFNE 'Y'
+     C           ##SEL1    IFNE *BLANK
+     C           ##SEL2    ORNE *BLANK
+     C           ##SEL3    ORNE *BLANK
+     C                     MOVE 'Y'       DONE    1
+     C                     CALL 'MQ541XC'
+     C                     PARM           $$TMBR
+     C                     PARM           O#SDLB
+      **
+      ** Also Create temporary records to ensure
+      ** any changes made are not permanent
+      **
+     C                     EXSR TEMP
+     C                     END
+     C                     END
+      **
+      ** Move YES into SE if any securities formats are used
+      **
+     C           ##BP      IFEQ 'YES'
+     C           ##CP      OREQ 'YES'
+     C           ##DP      OREQ 'YES'
+     C           ##TR      OREQ 'YES'
+     C           ##PC      OREQ 'YES'
+     C           ##DM      OREQ 'YES'
+     C                     MOVE 'YES'     SE      3
+     C                     ELSE
+     C                     MOVE 'NO '     SE
+     C                     END
+      **
+      ** Go to the Selection Pgm if Required
+      **
+     C           ##SEL1    IFNE *BLANK
+      **
+      ** Call The Selection Program
+      **
+     C                     CALL 'MQ542X'
+     C                     PARM           $$TMBR
+     C                     PARM           #RNAME
+     C                     PARM 'C'       MODE    1
+     C                     PARM           ##LIST
+     C                     PARM           RTN1    1
+     C                     PARM           ##LE
+     C                     PARM           ##DL
+     C                     PARM           ##FF
+     C                     PARM           ##FT
+     C                     PARM           SE
+     C                     MOVE *BLANKS   ##SEL1
+     C                     SETON                     97
+     C                     END
+      **
+     C           ##SEL2    IFNE *BLANK
+      **
+      ** Call The Selection Program
+      **
+     C                     CALL 'MQ543X'
+     C                     PARM           $$TMBR
+     C                     PARM           #RNAME
+     C                     PARM 'C'       MODE
+     C                     PARM           ##12
+     C                     PARM           RTN2    1
+     C                     PARM           ##LE
+     C                     PARM           ##DL
+     C                     PARM           ##FF
+     C                     PARM           ##FT
+     C                     PARM           SE
+     C                     MOVE *BLANKS   ##SEL2
+     C                     SETON                     97
+     C                     END
+      **
+     C           ##SEL3    IFNE *BLANK
+      **
+      ** Call The Selection Program
+      **
+     C                     CALL 'MQ544X'
+     C                     PARM           $$TMBR
+     C                     PARM           #RNAME
+     C                     PARM 'C'       MODE
+     C                     PARM           ##WILD
+     C                     PARM           RTN3    1
+     C                     MOVE *BLANKS   ##SEL3
+     C                     SETON                     97
+     C                     END
+      **
+      ** If any details have changed, then record this
+      **
+     C           RTN1      IFEQ 'C'
+     C           RTN2      OREQ 'C'
+     C           RTN3      OREQ 'C'
+     C                     MOVE 'Y'       $$RTN
+     C                     END
+      **
+     C                     END
+      **
+      ** If No Events Selected Send Error Message
+      **
+     C           ##ALL     IFEQ 'NO '
+     C           ##LIST    ANDEQ'NO '
+     C           ##12      ANDEQ'NO '
+     C           ##WILD    ANDEQ'NO '
+     C                     SETON                     986061
+     C                     SETON                     6263
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0032' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     END
+      **
+      ** Details are Valid If *IN98 is Off
+      ** But Defer Confirm if 97 is ON.
+      **
+     C           *IN98     IFEQ '0'
+     C           *IN97     ANDEQ'0'
+     C                     MOVE ##LE      $$LE
+     C                     MOVE ##DL      $$DL
+     C                     MOVE ##FF      $$FF
+     C                     MOVE ##FT      $$FT
+     C                     MOVE ##BP      $$BP
+     C                     MOVE ##CP      $$CP
+     C                     MOVE ##DP      $$DP
+     C                     MOVE ##TR      $$TR
+     C                     MOVE ##PC      $$PC
+     C                     MOVE ##DM      $$DM
+     C                     MOVE ##ALL     $$ALL
+     C                     MOVE ##LIST    $$LIST
+     C                     MOVE ##12      $$12
+     C                     MOVE ##WILD    $$WILD
+      **
+      ** Move changed data into temporary array, leaving existing data
+      ** in the permanent array
+      **
+     C                     MOVELCPY#IA    TIF#UR
+     C                     MOVE 'P'       TIF#RC
+     C                     END
+      **
+     C                     ENDSR
+      **
+      ** Create Temporary records for MQ542XLF, MQ543XLF, MQ544XLF
+      **
+     C           TEMP      BEGSR
+      **
+     C                     OPEN MQ542XLF
+     C           $$MQID    CHAINMQ542XLF             80
+     C           *IN80     DOWEQ'0'
+     C                     MOVE $$TMBR    MQID1
+     C                     WRITEOPT1
+     C           $$MQID    READEMQ542XLF                 80
+     C                     END
+     C                     CLOSEMQ542XLF
+      **
+     C                     OPEN MQ543XLF
+     C           $$MQID    CHAINMQ543XLF             80
+     C           *IN80     DOWEQ'0'
+     C                     MOVE $$TMBR    MQID2
+     C                     WRITEOPT2
+     C           $$MQID    READEMQ543XLF                 80
+     C                     END
+     C                     CLOSEMQ543XLF
+      **
+     C                     OPEN MQ544XLF
+     C           $$MQID    CHAINMQ544XLF             80
+     C           *IN80     DOWEQ'0'
+     C                     MOVE $$TMBR    MQID3
+     C                     WRITEOPT3
+     C           $$MQID    READEMQ544XLF                 80
+     C                     END
+     C                     CLOSEMQ544XLF
+      **
+     C                     ENDSR
+      **
+      ** Subroutine to Initialise Program
+      **
+     C           INIT      BEGSR
+      **
+      ** Get Midas/Q System Definition Block
+      **
+     C           *NAMVAR   DEFN           O#XA01
+     C                     IN   O#XA01
+     C                     MOVELO#XA01    O#SDBK
+      **
+      ** Initialise Data Structure Fields
+      **
+     C                     Z-ADD0         ROWCOL
+     C                     MOVE *BLANKS   KEY
+     C                     MOVE *BLANKS   $$RTN
+      **
+      ** Generate a Unique Internal Name for the report
+      ** In case a temporary member is required for changes defined
+      ** in this program
+      ** Get the Next Unique Number From MQ541XDA
+      ** Then Update the Data Area
+      **
+     C           *NAMVAR   DEFN MQ541XDA  MQIDX   60
+     C           *LOCK     IN   MQIDX
+     C                     MOVEL'TM'      $$TMBR
+     C                     MOVE MQIDX     $$TMBR
+     C                     ADD  1         MQIDX
+     C                     OUT  MQIDX
+      **
+      ** Set Up Action Bar Header Text
+      **
+     C                     EXSR SACT
+     C                     MOVE '-'       #BOX1
+     C                     MOVE '-('      A
+     C                     MOVE ')'       B
+      **
+      ** Output Footer
+      **
+      **
+      ** Enable installation defined command keys required in this pgm.
+      **
+     C                     Z-ADDCEX       I       30       Exit
+     C                     MOVE '1'       *IN,I
+     C                     Z-ADDCBY       I                Bypass
+     C                     MOVE '1'       *IN,I
+      **
+      ** Set up Screen Values
+      **
+     C                     MOVE $$LE      ##LE
+     C                     MOVE $$DL      ##DL
+     C                     MOVE $$FF      ##FF
+     C                     MOVE $$FT      ##FT
+     C                     MOVE $$BP      ##BP
+     C                     MOVE $$CP      ##CP
+     C                     MOVE $$DP      ##DP
+     C                     MOVE $$TR      ##TR
+     C                     MOVE $$PC      ##PC
+     C                     MOVE $$DM      ##DM
+     C                     MOVE $$ALL     ##ALL
+     C                     MOVE $$LIST    ##LIST
+     C                     MOVE $$12      ##12
+     C                     MOVE $$WILD    ##WILD
+     C                     WRITE##FOOT
+      **
+      ** Set up Message File
+      ** Set on Message Subfile end indicator.
+      **
+     C                     MOVE '1'       *IN99
+     **
+     C                     ENDSR
+     **
+     **  Subroutine to Set up Action Bar Header Text
+     **
+     C           SACT      BEGSR
+     C                     MOVEL'Report'  #BOX2
+     C                     MOVEL'Options' #BOX3
+     C                     MOVE *BLANKS   #BOX4
+     C                     MOVE *BLANKS   #BOX5
+     C                     MOVEL'Subsets' #BOX6
+     C                     MOVEL'House'   #BOX7
+     C                     MOVE 'keep '   #BOX7
+     C                     MOVEL'AS/400'  #BOX8
+     C                     MOVEL' Help'   #BOX9
+     C                     ENDSR
+     **
+     **
+     **
+** TAB1, TAB2 Array for command Key Usage
+ 01
+ 02
+ 03
+ 04
+ 05
+ 06
+ 07
+ 08
+ 09
+ 10
+ 11
+ 12
+£13
+¥14
+·15
+©16
+§17
+¶18
+¼19
+½20
+¾21
+[22
+]23
+¯24
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

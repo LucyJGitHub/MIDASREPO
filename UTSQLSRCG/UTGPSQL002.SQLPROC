@@ -1,0 +1,38 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       UTGP0001 - Build GPBRCHEXPD                                           */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2007                     */
+/*                                                                             */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*       Last Amend No. 249110             Date 07Aug07                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       249110 - Build GPBRCHEXPD from GZSDBRCHPD.                            */
+/*                                                                             */
+/*******************************************************************************/
+ 
+  CREATE PROCEDURE                                                              :
+  **********/**********                                                         :
+  LANGUAGE SQL                                                                  :
+  SPECIFIC UTGPSQL002 NOT DETERMINISTIC                                         :
+  MODIFIES SQL DATA CALLED ON NULL INPUT                                        :
+                                                                                :
+  BEGIN                                                                         :
+-- create temporary file for unmatched records                                  :
+                                                                                :
+    DECLARE GLOBAL TEMPORARY TABLE tempcs AS (SELECT a8brcd FROM                :
+    gzsdbrchpd LEFT OUTER JOIN gpbrchexpd ON a8brcd = bxbrcd where              :
+    bxbrcd IS NULL) with data on commit preserve rows with replace;             :
+                                                                                :
+    INSERT INTO gpbrchexpd (bxbrcd) SELECT a8brcd FROM tempcs;                  :
+                                                                                :
+  END;                                                                          :
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Build GPBRCHEXPD                                  ';                     :
+                                                                                :

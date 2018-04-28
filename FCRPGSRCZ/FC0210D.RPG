@@ -1,0 +1,1704 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FC Display periodic requests')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Report Control Facility                              *
+      *                                                               *
+      *  FC0210D - Display Periodic Requests Display file             *
+      *                                                               *
+      *  Function:                                                    *
+      *                                                               *
+      *  - Displays the records from DBF as a subfile.                *
+      *  - Loads the SFL from the SBF a page at a time.               *
+      *  - The DBF record at which the SFL display starts may be      *
+      *    controlled by positioning fields on the SFL header.        *
+      *  - Any key fields on the SFL header will be used as           *
+      *    positioning values.                                        *
+      *  - Any non-key fields on the SFL header will be used as       *
+      *    selection values: a maximum of W0SLM records will be       *
+      *    read from the DBF before giving up.                        *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL008             Date 03Mar99               *
+      *                 100607             Date 24Feb98               *
+      *                 S01117             Date 25Mar92               *
+      *                  LN1154       DATE 13MAY91                    *
+      *                  LN1200       DATE 13MAY91                    *
+      *                  LN1190       DATE 29APR91                    *
+      *                  LN0911       DATE 28OCT90                    *
+      *                  LN0792       DATE 26SEP90                    *
+      *                  LN0671       DATE 28AUG90                    *
+      *                  LN0375       DATE 14JUN90                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *      CGL008 - Security on Journal Entry. Recompile.           *
+      *      100607 - SUBFILE IS INCORRECT AFTER F12 TAKEN IN FC0210. *
+      *      S01117 - RECOMPILE FOR FT CHANGE TO MUSERDD              *
+      *      LN1154 - PROCESS ALL CHANGED RECORDS WITHOUT RELOADING   *
+      *               SUBFILE AND RE-DISPLAY SCREEN WITH ERROR MESSAGE*
+      *               IF ACTION CODE IS INVALID                       *
+      *      LN1200 - ALLOW PRINT COMMAND KEYS TO WORK                *
+      *      LN1190 - REMOVE 'USR' MESSAGES AND REPLACE WITH 'RCF'    *
+      *               MESSAGES.                                       *
+      *      LN0911 - RTGDTA(*JOBD) ADDED TO ALL SBMJOB CMDS.         *
+      *      LN0792 - SCAN LIMIT SIZE INCREASED FROM 500 TO 99999     *
+      *      LN0671 - STANDARDISE SCREEN APPEARANCE                   *
+      *      LN0375 - ARRAY @CN ELEMENT 11,CHANGED FROM FC0210P TO    *
+      *               FC0210.                                         *
+      *                                                               *
+      *****************************************************************
+     F/COPY WNCPYSRC,FC0210DFPG
+     FFC0210D#CF  E                    WORKSTN
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+      * DSP: Display Periodic Requests Display file
+      *
+     FFCPREQL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      * RTV: Periodic Requests         Retrieval index
+      *
+     FFCPREQL3IF  E           K        DISK
+      * RSQ: Periodic Requests         By Name, Per.Seq.No. Dsc
+      *
+     F*FCREPTL1IF*E*******    K        DISK                               LN1200
+      **RTV:*Report*Descriptions*******Retrieval*index                    LN1200
+      ********************                                                LN1200
+     F*FCRCOML1IF*E*******    K        DISK                               LN1200
+      **RTV:*Report*Components*********Retrieval*index                    LN1200
+      ********************                                                LN1200
+     F*FCRREQL0IF*E*******    K        DISK                      A        LN1200
+      **UPD:*Report*Requests***********Update*index                       LN1200
+      ********************                                                LN1200
+     E**********          UUSB    1   2 80                                LN0911
+     E********************UUSB    1   3 80                         LN0911 LN1200
+     E********************                                                LN1200
+     E***ARRAY*TO*CONTAIN*SBMJOB*COMMAND***                               LN1200
+     E*
+     E********************AEMQ    1   4 78                                LN0671
+     E                    AEMQ    1   3 78                                LN0671
+      *
+     E                    CPY@    1   1 80
+     E*Display Periodic RequestsInitialise Program E-Spec
+     E/COPY WNCPYSRC,FC0210DEPG
+     E                    @CN     1  22 25               Long constants.
+     E*                                                                   LN0671
+     E                    UHDR    1   2 53                                LN0671
+     E*                                                                   LN0671
+      * Renamed input format fields.
+     I@PREQA7
+      * Periodic Requests         By Name, Per.Seq.No. Dsc
+     I              D9RNAM                          WARNAM
+     I              D9PSQN                          WAPSQN
+     I              D9SOID                          WASOID
+     I              D9LVL                           WALVL
+     I              D9ETTY                          WAETTY
+     I              D9LCD                           WALCD
+     I              D9CHTP                          WACHTP
+     I              D9DLS1                          WADLS1
+     I              D9DLS2                          WADLS2
+     I              D9USRO                          WAUSRO
+     I              D9ARMF                          WAARMF
+     I              D9AROD                          WAAROD
+     I              D9DRQD                          WADRQD
+     I              D9USRR                          WAUSRR
+     I              D9PDSC                          WAPDSC
+     I              D9FREQ                          WAFREQ
+     I              D9FDAY                          WAFDAY
+     I              D9PFDT                          WAPFDT
+     I              D9LPDT                          WALPDT
+     I              D9PNDT                          WAPNDT
+     I              D9COTT                          WACOTT
+     I              D9CSEQ                          WACSEQ
+     I              D9TNLU                          WATNLU
+      *
+     I*
+     I*
+     I*
+     I*Display Periodic RequestsInitialise Program I-Spec
+     I/COPY WNCPYSRC,FC0210DIPG
+      /EJECT
+      * Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure.
+     IJBDTTM      DS
+      * Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure.
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure.
+      *
+     I            DS
+     I                                        1   20USEQ
+     I*REPSEQ*****DS******                                                LN1200
+     I********************                                                LN1200
+     I***REPORT*SEQUENCE*NUMBER*DATA*AREA***                              LN1200
+     I********************                                                LN1200
+     I********************                    1   50UUSEQ                 LN1200
+     I*UUCMD******DS******                                                LN1200
+     I********************                                                LN1200
+     I***DATA*STRUCTURE*FOR*SETTING*UP*SBMJOB*COMMAND***                  LN1200
+     I********************                                                LN1200
+     I********************                    1  80 UU1                   LN1200
+     I********************                   12  21 UURNAM                LN1200
+     I********************                   46  55 UUCNAM                LN1200
+     I********************                                                LN1200
+     I***PARAMETERS*IF*REQUIRED***                                        LN1200
+     I********************                                                LN1200
+     I********************                   62 161 UU2                   LN1200
+     I********************                                                LN1200
+     I***SEQUENCE/LEVEL/ENTITY***                                         LN1200
+     I********************                                                LN1200
+     I********************                  162 241 UU3                   LN1200
+     I********************                  163 167 UURQSQ                LN1200
+     I********************                  171 171 UULVL                 LN1200
+     I********************                  175 177 UUETTY                LN1200
+     I********************                  179 278 UUPARM                LN1200
+     I********************                  279 280 UUBRAK                LN1200
+     I********************                  281 294 UU4            LN0911 LN1200
+     I*
+     IUUFDY     E DSDSFDY
+     I*
+     I* 200 BYTE DATA STRUCTURE FOR INCOMING DATA ROM ACCESS PGM
+     I*
+     ID@USER    E DSMUSERDD
+     I*
+     I* USER DETAILS DATA STRUCTURE FOR ASSIGNING DATA FROM ACCESS PGM
+     I*
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      /EJECT
+      * Parameter declarations.
+     IP1PARM      DS
+      * I:    Program Mode of DSPFIL
+     I                                        1   1 P1AKST
+     IP2PARM      DS
+      * I:    User's Branch
+     I                                        1   3 P2DBRN
+     IP3PARM      DS
+      * B:MAP Report name
+     I                                        1  10 P3RNAM
+     IP4PARM      DS
+      * B:MAP Periodic Sequence Number
+     I                                        1   2 P4PSQN
+     IP5PARM      DS
+      * B:MAP Component Name
+     I                                        1  10 P5COTT
+     IP6PARM      DS
+      * B:MAP Component Sequence Number
+     I                                        1   5 P6CSEQ
+     IP7PARM      DS
+      * B:MAP Action Code
+     I                                        1   1 P7JTST
+     IP8PARM      DS
+      * I:    Auth. to multiple users
+     I                                        1   1 P8ATST
+     IP9PARM      DS
+      * I:    Auth. to multiple branch
+     I                                        1   1 P9AUST
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Action/Branch not valid'
+      * *SFLSEL
+     I                                        1   1 ZA0001
+      * Message data for 'Action/Branch not valid'
+      * *SFLSEL
+     I                                        1   1 ZA0002
+      * Message data for 'Action/Branch not valid'
+      * *SFLSEL
+     I                                        1   1 ZA0003
+      * Message data for 'Action/Branch not valid'
+      * *SFLSEL
+     I                                        1   1 ZA0004
+      /EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+     C           P1AKST    PARM           WP0001  1        Program Mode of
+     C           P2DBRN    PARM           WP0002  3        User's Branch
+     C           P3RNAM    PARM P3RNAM    WP0003 10        Report name
+     C           P4PSQN    PARM P4PSQN    WP0004  2        Periodic Sequen
+     C           P5COTT    PARM P5COTT    WP0005 10        Component Name
+     C           P6CSEQ    PARM P6CSEQ    WP0006  5        Component Seque
+     C           P7JTST    PARM P7JTST    WP0007  1        Action Code
+     C           P8ATST    PARM           WP0008  1        Auth. to multip
+     C           P9AUST    PARM           WP0009  1        Auth. to multip
+      *****************************************************************
+     C*                                                                   LN1154
+     C* Prevent initialization if further changed subfile records to      LN1154
+     C* process                                                           LN1154
+     C           *IN40     CABEQ'1'       APRTAG                          LN1154
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page.
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested:
+     C           W0RSF     DOWEQ'N'
+      * Display screen.
+     C                     EXSR CAEXFM
+      *   Process response:
+     C           APRTAG    TAG                                            LN1154
+      * Cancel & exit program.
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload.
+     C   05                CAS            FBRQRL
+      *   Display next SFL page.
+     C   27                CAS            BBLDSF
+      *   Process screen input.
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise & Load subfile page.
+      *================================================================
+      * Clear subfile.
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile.
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * USER: Initialise subfile control
+      * 00/copy member XX0210DISC - Periodic Requests  *
+     C*Display Periodic RequestsInitialise Subf Control
+     C/COPY WNCPYSRC,FC0210DISC
+      * Position DBF file:
+     C           KPOS      KLIST
+     C                     KFLD           D9RNAM           Report name
+     C                     KFLD           D9PSQN           Periodic Sequen
+      * Setup key.
+     C                     MOVEL#2RNAM    D9RNAM           Report name
+     C                     MOVEL#2PSQN    D9PSQN           Periodic Sequen
+     C           KPOS      SETLL@D9REJJ
+     C                     READ @D9REJJ                8782*82=EOF
+     C  N82                MOVELD9RNAM    SVRNAM 10                       100607
+     C  N82                MOVELD9PSQN    SVPSQN  2                       100607
+      * Save previous selector values.
+     C           *LIKE     DEFN #2SOID    WZSOID
+     C                     MOVEL#2SOID    WZSOID           Instruction Ide
+     C           *LIKE     DEFN #2LCD     WZLCD
+     C                     MOVEL#2LCD     WZLCD            Last Change Dat
+     C           *LIKE     DEFN #2CHTP    WZCHTP
+     C                     MOVEL#2CHTP    WZCHTP           Type of Last Ch
+     C           *LIKE     DEFN #2DLS1    WZDLS1
+     C                     MOVEL#2DLS1    WZDLS1           Distribution Li
+     C           *LIKE     DEFN #2DLS2    WZDLS2
+     C                     MOVEL#2DLS2    WZDLS2           Distribution Li
+     C           *LIKE     DEFN #2USRO    WZUSRO
+     C                     MOVEL#2USRO    WZUSRO           User ID For Out
+     C           *LIKE     DEFN #2ARMF    WZARMF
+     C                     MOVEL#2ARMF    WZARMF           Archived On Mic
+     C           *LIKE     DEFN #2AROD    WZAROD
+     C                     MOVEL#2AROD    WZAROD           Archived On Opt
+     C           *LIKE     DEFN #2DRQD    WZDRQD
+     C                     MOVEL#2DRQD    WZDRQD           Distribution Re
+     C           *LIKE     DEFN #2FREQ    WZFREQ
+     C                     MOVEL#2FREQ    WZFREQ           Frequency
+     C           *LIKE     DEFN #2FDAY    WZFDAY
+     C                     MOVEL#2FDAY    WZFDAY           Frequency Day N
+     C           *LIKE     DEFN #2PFDT    WZPFDT
+     C                     MOVEL#2PFDT    WZPFDT           First Date
+     C           *LIKE     DEFN #2LPDT    WZLPDT
+     C                     MOVEL#2LPDT    WZLPDT           Last Active Dat
+     C           *LIKE     DEFN #2PNDT    WZPNDT
+     C                     MOVEL#2PNDT    WZPNDT           Next Active Dat
+     C           *LIKE     DEFN #2COTT    WZCOTT
+     C                     MOVEL#2COTT    WZCOTT           Component Name
+     C           *LIKE     DEFN #2CSEQ    WZCSEQ
+     C                     MOVEL#2CSEQ    WZCSEQ           Component Seque
+     C           *LIKE     DEFN #2RNAM    WZRNAM
+     C                     MOVEL#2RNAM    WZRNAM           Report name
+     C           *LIKE     DEFN #2PSQN    WZPSQN
+     C                     MOVEL#2PSQN    WZPSQN           Periodic Sequen
+     C           *LIKE     DEFN #2USRR    WZUSRR
+     C                     MOVEL#2USRR    WZUSRR           User ID For Req
+     C           *LIKE     DEFN #2LVL     WZLVL
+     C                     MOVEL#2LVL     WZLVL            Level
+     C           *LIKE     DEFN #2ETTY    WZETTY
+     C                     MOVEL#2ETTY    WZETTY           Entity
+     C           *LIKE     DEFN #2PDSC    WZPDSC
+     C                     MOVEL#2PDSC    WZPDSC           Request Descrip
+      * Translate search mask for text field.
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C           *LIKE     DEFN #2PDSC    WQPDSC           Request Descrip
+     C                     CALL 'QDCXLATE'
+     C                     PARM 50        WQA5N   50       Len
+     C                     PARM #2PDSC    WQPDSC           Request Descrip
+     C                     PARM           WQB10X           QSYSTRNTBL
+     C                     PARM 'QSYS'    WQC10X 10
+      * Load subfile page.
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page.
+      *================================================================
+      * Re-establish fields in read-ahead record.
+     C   27                DO
+     C**N82****************READP@D9REJJ                  90*              100607
+     C**N82****************READ @D9REJJ                  90*              100607
+     C           *IN82     IFEQ '0'                                       100607
+     C                     MOVELSVRNAM    D9RNAM                          100607
+     C                     MOVELSVPSQN    D9PSQN                          100607
+     C           KPOS      SETLL@D9REJJ                  90               100607
+     C                     READ @D9REJJ                  90               100607
+     C  N90                MOVELD9RNAM    SVRNAM                          100607
+     C  N90                MOVELD9PSQN    SVPSQN                          100607
+     C                     END                                            100607
+     C                     END
+      *
+      * Setof record error indicators.
+     C                     MOVEL*ALL'0'   WKIND0  1
+     C                     MOVEAWKIND0    *IN,37
+      * Start at previous highest record in SFL.
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read.
+     C                     Z-ADD0         ##RRRD  50
+      *................................................................
+      * Load next SFL page until SFL page full, or :
+      * scan limit reached.
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFPG
+     C           ##RRRD    ANDLTW0SLM
+      * Check selection fields - if fail, read next record.
+     C           #2SOID    IFNE *BLANK                     Instruction Ide
+     C           D9SOID    CABNE#2SOID    BB020            Instruction Ide
+     C                     END
+     C           #2LCD     IFNE *ZERO                      Last Change Dat
+     C           D9LCD     CABNE#2LCD     BB020            Last Change Dat
+     C                     END
+     C           #2CHTP    IFNE *BLANK                     Type of Last Ch
+     C           D9CHTP    CABNE#2CHTP    BB020            Type of Last Ch
+     C                     END
+     C           #2DLS1    IFNE *BLANK                     Distribution Li
+      * Scan for search string.
+     C                     CALL 'QCLSCAN'
+     C                     PARM           D9DLS1           Distribution Li
+     C                     PARM 8         WQA3N   30       Length
+     C                     PARM 1         WQB3N   30       Start
+     C                     PARM           #2DLS1           Mask
+     C                     PARM 8         WQC3N   30       Length
+     C                     PARM '1'       WQD1    1        Translate
+     C                     PARM '1'       WQE1    1        Trim
+     C                     PARM '?'       WQF1    1        Wild
+     C                     PARM           WQG3N   30       Result
+     C           WQG3N     CABLT1         BB020
+     C                     END
+     C           #2DLS2    IFNE *BLANK                     Distribution Li
+      * Scan for search string.
+     C                     CALL 'QCLSCAN'
+     C                     PARM           D9DLS2           Distribution Li
+     C                     PARM 8         WQA3N   30       Length
+     C                     PARM 1         WQB3N   30       Start
+     C                     PARM           #2DLS2           Mask
+     C                     PARM 8         WQC3N   30       Length
+     C                     PARM '1'       WQD1    1        Translate
+     C                     PARM '1'       WQE1    1        Trim
+     C                     PARM '?'       WQF1    1        Wild
+     C                     PARM           WQG3N   30       Result
+     C           WQG3N     CABLT1         BB020
+     C                     END
+     C           #2USRO    IFNE *BLANK                     User ID For Out
+      * Scan for search string.
+     C                     CALL 'QCLSCAN'
+     C                     PARM           D9USRO           User ID For Out
+     C                     PARM 10        WQA3N   30       Length
+     C                     PARM 1         WQB3N   30       Start
+     C                     PARM           #2USRO           Mask
+     C                     PARM 10        WQC3N   30       Length
+     C                     PARM '1'       WQD1    1        Translate
+     C                     PARM '1'       WQE1    1        Trim
+     C                     PARM '?'       WQF1    1        Wild
+     C                     PARM           WQG3N   30       Result
+     C           WQG3N     CABLT1         BB020
+     C                     END
+     C           #2ARMF    IFNE *BLANK                     Archived On Mic
+     C           D9ARMF    CABNE#2ARMF    BB020            Archived On Mic
+     C                     END
+     C           #2AROD    IFNE *BLANK                     Archived On Opt
+     C           D9AROD    CABNE#2AROD    BB020            Archived On Opt
+     C                     END
+     C           #2DRQD    IFNE *BLANK                     Distribution Re
+     C           D9DRQD    CABNE#2DRQD    BB020            Distribution Re
+     C                     END
+     C           #2FREQ    IFNE *BLANK                     Frequency
+     C           D9FREQ    CABNE#2FREQ    BB020            Frequency
+     C                     END
+     C           #2FDAY    IFNE *ZERO                      Frequency Day N
+     C           D9FDAY    CABNE#2FDAY    BB020            Frequency Day N
+     C                     END
+     C           #2PFDT    IFNE *ZERO                      First Date
+     C           D9PFDT    CABNE#2PFDT    BB020            First Date
+     C                     END
+     C           #2LPDT    IFNE *ZERO                      Last Active Dat
+     C           D9LPDT    CABNE#2LPDT    BB020            Last Active Dat
+     C                     END
+     C           #2PNDT    IFNE *ZERO                      Next Active Dat
+     C           D9PNDT    CABNE#2PNDT    BB020            Next Active Dat
+     C                     END
+     C           #2COTT    IFNE *BLANK                     Component Name
+     C           D9COTT    CABNE#2COTT    BB020            Component Name
+     C                     END
+     C           #2CSEQ    IFNE *BLANK                     Component Seque
+     C           D9CSEQ    CABNE#2CSEQ    BB020            Component Seque
+     C                     END
+     C           #2RNAM    IFEQ *BLANK                     Report name
+     C           #2PSQN    IFNE *BLANK                     Periodic Sequen
+     C           D9PSQN    CABLT#2PSQN    BB020            Periodic Sequen
+     C                     END
+     C                     END
+     C           #2USRR    IFNE *BLANK                     User ID For Req
+     C           D9USRR    CABNE#2USRR    BB020            User ID For Req
+     C                     END
+     C           #2LVL     IFNE *BLANK                     Level
+     C           D9LVL     CABNE#2LVL     BB020            Level
+     C                     END
+     C           #2ETTY    IFNE *BLANK                     Entity
+     C           D9ETTY    CABNE#2ETTY    BB020            Entity
+     C                     END
+     C           #2PDSC    IFNE *BLANK                     Request Descrip
+      * Scan for search string.
+     C                     CALL 'QCLSCAN'
+     C                     PARM           D9PDSC           Request Descrip
+     C                     PARM 50        WQA3N   30       Length
+     C                     PARM 1         WQB3N   30       Start
+     C                     PARM           WQPDSC           Mask
+     C                     PARM 50        WQC3N   30       Length
+     C                     PARM '1'       WQD1    1        Translate
+     C                     PARM '1'       WQE1    1        Trim
+     C                     PARM '?'       WQF1    1        Wild
+     C                     PARM           WQG3N   30       Result
+     C           WQG3N     CABLT1         BB020
+     C                     END
+      * Load SFL fields.
+     C                     EXSR MBFL#1
+     C                     EXSR MC#1FN
+     C                     MOVEL'Y'       W0RSL   1
+      * USER: Initialise subfile record from DBF record
+      * 00/copy member XX0210DISR - Periodic Requests  *
+     C*Display Periodic RequestsInitialise Subfile Rcd
+     C/COPY WNCPYSRC,FC0210DISR
+      * DBF Record not selected.
+     C           W0RSL     CABNE'Y'       BB020
+      * Output to subfile.
+     C                     ADD  1         ##RR       81    *
+     C                     ADD  1         ##RROK
+      * Set screen conditioning indicators.
+     C                     EXSR GADSA1
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      * Increment scan check count.
+     C                     ADD  1         ##RRRD
+     C                     READ @D9REJJ                  82*82=EOF
+     C  N82                MOVELD9RNAM    SVRNAM                          100607
+     C  N82                MOVELD9PSQN    SVPSQN                          100607
+     C                     END                             OD 1 - ##SFPG
+      *................................................................
+      * If no DBF records found, display error message.
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point.
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      * If scan limit reached, display error message.
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen.
+      *================================================================
+      * Set screen conditioning indicators.
+     C                     EXSR GBDSA2
+     C           W0HLP     DOUEQ'N'
+      * Update screen time.
+     C                     TIME           ##TME            Screen time.
+      * PUTOVR unless conditioned fields change.
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C                     MOVEL'N'       W0HLP   1        Reset help requ
+      * If help requested, display help text.
+     C   25                EXSR ZHHPKY                     Display help te
+     C                     END
+      * Update job time.
+     C                     TIME           ##JTM            Job time.
+      * Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8388*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input.
+      *================================================================
+      *                                                                   LN1154
+      * Read next changed record if more changed records available        LN1154
+     C           *IN40     CABEQ'1'       RCTAG                           LN1154
+      * Maintain subfile position where possible.
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      *
+      * Confirm/update is not defered.
+     C                     MOVEL'N'       W0DCF   1
+      * CALC: Subfile control function fields
+      * 00/copy member XX0210DSFF - Periodic Requests  *
+     C*Display Periodic RequestsCalculate Control Fields
+     C/COPY WNCPYSRC,FC0210DSFF
+      * Change of position specified.
+     C           WZRNAM    CASNE#2RNAM    FBRQRL
+     C           WZPSQN    CASNE#2PSQN    FBRQRL
+     C           WZUSRR    CASNE#2USRR    FBRQRL
+     C           WZLVL     CASNE#2LVL     FBRQRL
+     C           WZETTY    CASNE#2ETTY    FBRQRL
+     C           WZPDSC    CASNE#2PDSC    FBRQRL
+     C                     END
+      * USER: Process subfile control (Pre-confirm)
+      * 00/copy member XX0210DPSC - Periodic Requests  *
+     C*Display Periodic RequestsProcess Subfile Control
+     C/COPY WNCPYSRC,FC0210DPSC
+      * Reload subfile requested:
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records.
+     C           RCTAG     TAG                                            LN1154
+     C                     EXSR DBPRSF
+     C                     END
+      * USER: Final processing (Pre-confirm)
+      * 00/copy member XX0210DFPR - Periodic Requests  *
+     C*Display Periodic RequestsFinal Processing
+     C/COPY WNCPYSRC,FC0210DFPR
+      * If error, Quit processing:
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested:
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      * USER: Process command keys
+      * 00/copy member XX0210DPCK - Periodic Requests  *
+     C*Display Periodic RequestsProcess Command Keys
+     C/COPY WNCPYSRC,FC0210DPCK
+      *CASE:     CTL.*CMD key is *Go to 'Add' mode
+     C           *IN09     IFEQ '1'                        *IF
+     C                     MOVEL@CN,01    WUJTST           Action Code
+      *CASE:     PAR.Program Mode of DSPFIL is Maintenance
+     C           P1AKST    IFEQ @CN,02                     *IF
+      *CASE:     WRK.Multi-branching Indicator is Multibranch system
+     C           WUMBIN    IFEQ @CN,03                     *IF
+      * Validate Input Action/Bch
+      * Validate Action Code - standard functions  *
+     C                     CALL 'ZVACTBU'              90  Validate Action
+     C                     PARM WUJTST    WQ0001  1        Action Code
+     C                     PARM P2DBRN    WQ0002  3        Entity
+     C           WUAJNB    PARM *ZERO     WQ0003  10       Error Flag
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      *CASE:     WRK.Error Flag is zero
+     C           WUAJNB    IFEQ *ZERO                      *IF
+     C                     MOVEL@CN,04    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is one
+     C           WUAJNB    IFEQ 1                          *IF
+     C                     MOVEL@CN,05    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is two
+     C           WUAJNB    IFEQ 2                          *IF
+     C                     MOVEL@CN,06    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Validate Input Action
+      * Validate Action Code - standard functions  *
+     C                     CALL 'ZVACTU'               90  Validate Action
+     C                     PARM WUJTST    WQ0004  1        Action Code
+     C           WUAJNB    PARM *ZERO     WQ0005  10       Error Flag
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      *CASE:     WRK.Error Flag is zero
+     C           WUAJNB    IFEQ *ZERO                      *IF
+     C                     MOVEL@CN,04    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is one
+     C           WUAJNB    IFEQ 1                          *IF
+     C                     MOVEL@CN,05    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is two
+     C           WUAJNB    IFEQ 2                          *IF
+     C                     MOVEL@CN,06    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+     C                     END                             *FI
+      *CASE:     WRK.Entity Valid Flag is No Error
+     C           WUAFST    IFEQ @CN,04                     *IF
+      * Select Report Components - Report Components  *
+     C                     CALL 'FC0302S'              90  Select period r
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C           P3RNAM    PARM P3RNAM    WQ0006 10        Report name
+     C           P5COTT    PARM P5COTT    WQ0007 10        Component Name
+     C           P6CSEQ    PARM P6CSEQ    WQ0008  5        Component Seque
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected ?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      *CASE:     PGM.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ @CN,07                     *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      *CASE:     PGM.*Return code is *Previous Screen
+     C           W0RTN     IFEQ @CN,08                     *IF
+      * Send message '*No value selected'
+     C                     MOVEL'Y2U0016' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     MOVEL'*PRV '   ZAPGRL           Pgmq rel.
+     C                     MOVEL'*COMP  ' ZAMSTP           Msg type.
+     C                     EXSR ZASNMS                     Send message
+      *
+     C                     ELSE
+      *CASE:     *OTHERWISE
+     C                     MOVEL@CN,01    P7JTST           Action Code
+     C                     MOVEL@CN,09    P4PSQN           Periodic Sequen
+      * Retrieve Next Seq. No. - Periodic Requests  *
+     C                     EXSR SARVGN
+     C                     MOVEL*BLANK    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Setup message data for message.
+     C                     MOVELWUSEL     ZA0001           *SFLSEL
+      * Send message 'Action/Branch not valid'
+     C                     MOVEL'RCF0037' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     99    *
+      *
+     C                     END                             *FI
+     C                     MOVEL@CN,03    W0RSF            *Reload subfile
+      *CASE:     PGM.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ @CN,07                     *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Send message 'F9 not allowed'
+     C                     MOVEL'RCF0010' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     99    *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      *CASE:     CTL.*CMD key is Print details
+     C           *IN11     IFEQ '1'                        *IF
+      * Submit Report
+      **Next*Report*Sequence*No.*-*standard*functions***                  LN1200
+     C*********************                                               LN1200
+      ***ACCESS*DATA*AREA*REPSEQ*FOR*NEXT*SEQUENCE*NUMBER,*AND*UPDATE     LN1200
+     C*********************                                               LN1200
+     C************NAMVAR***DEFN           REPSEQ                          LN1200
+     C************LOCK*****IN   REPSEQ                                    LN1200
+     C************         MOVE UUSEQ     WURQSQ                          LN1200
+     C*********************ADD  1         UUSEQ                           LN1200
+     C*********************OUT  REPSEQ                                    LN1200
+      **Get*Default*Output*Id*-*Report*Descriptions***                    LN1200
+     C*********************EXSR SBRVGN                                    LN1200
+      **Retrieve*parameters*-*Report*Components***                        LN1200
+     C*********************EXSR SCRVGN                                    LN1200
+      *CASE:*****PGM.*Return*code*is**Record*does*not*exist***            LN1200
+     C***********W0RTN     IFEQ @CN,15                     *IF            LN1200
+     C***********          MOVEL@CN,16    P0RTN            *Return code   LN1200
+     C***********          EXSR ZYEXPG                                    LN1200
+     C***********          END                             *FI            LN1200
+     C***********          MOVELWUDFTO    WUSOID           Instruction IdeLN1200
+      **Set*Up*Time*-*standard*functions***                               LN1200
+     C***********          MOVEL##JTM     WURQTM                          LN1200
+     C***********          MOVEL##USR     WUUSRR           User ID For ReqLN1200
+      *CASE:*****PAR.Multi-branching*Indicator*is*Multibranch*system***   LN1200
+     C***********WUMBIN    IFEQ @CN,03                     *IF            LN1200
+     C***********          MOVEL@CN,17    WUAPOP           Access Option  LN1200
+     C***********          MOVEL@CN,18    WUAPRC           Access Program LN1200
+     C***********          MOVEL*BLANK    WUETTY           Entity         LN1200
+     C***********          MOVEL@CN,14    WULVL            Level          LN1200
+      **Call*access*pgm*for*MUSER*-*standard*functions***                 LN1200
+     C***********                                                         LN1200
+     C***ACCESS*MUSER*FOR*USER'S*DEFAULT*BRANCH***                        LN1200
+     C***********                                                         LN1200
+     C***********          CALL 'AOUSERR0'                                LN1200
+     C***********          PARM           WUAPRC  7                       LN1200
+     C***********          PARM           WUAPOP  7                       LN1200
+     C***********          PARM           WUUSRR 10                       LN1200
+     C***********D@USER    PARM D@USER    UUFDY                           LN1200
+     C***********                                                         LN1200
+     C***********          MOVE DBRN      WUDBRN                          LN1200
+     C***********          MOVE DPPT      WUDEPT                          LN1200
+     C***********                                                         LN1200
+     C***********          ELSE                                           LN1200
+      *CASE:******OTHERWISE***                                            LN1200
+     C***********          MOVEL*BLANK    WULVL            Level          LN1200
+     C***********          MOVEL*BLANK    WUETTY           Entity         LN1200
+     C***********          MOVEL*BLANK    WUDBRN           User's Branch  LN1200
+     C***********          END                             *FI            LN1200
+      **Create*Report*Requests*-*Report*Requests***                       LN1200
+     C***********          EXSR SDCRRC                                    LN1200
+      **QCMDEXC*for*submit*report*-*standard*functions***                 LN1200
+     C***********                                                         LN1200
+     C***SUBMIT*REPORT*TO*BATCH***                                        LN1200
+     C***********                                                         LN1200
+     C***********          MOVE UUSB,1    UU1                             LN1200
+     C***********          MOVELUUSB,2    UU3                             LN1200
+     C***********          MOVELUUSB,3    UU4                      LN0911 LN1200
+     C***********          MOVEL@CN,11    UURNAM                          LN1200
+     C***********          MOVEL@CN,12    UUCNAM                          LN1200
+     C***********          MOVELWUCLPM    UU2                             LN1200
+     C***********          MOVEL*BLANK    UUPARM                          LN1200
+     C***********          MOVELWURQSQ    UURQSQ                          LN1200
+     C***********          MOVEL@CN,14    UULVL                           LN1200
+     C***********          MOVEL*BLANK    UUETTY                          LN1200
+     C***********          MOVE '))'      UUBRAK                          LN1200
+     C***********          CALL 'QCMDEXC'                                 LN1200
+     C***********          PARM           UUCMD                           LN1200
+     C**********           PARM 280       UULEN  155                      LN0911
+     C***********          PARM 294       UULEN  155               LN0911 LN1200
+     C*                                                                   LN1200
+     C                     MOVEL@CN,13    WUSEQ   5                       LN1200
+     C                     MOVEL@CN,14    WULVL                           LN1200
+     C*                                                                   LN1200
+      * Call FC0040X RCF Submit - Standard functions  *                   LN1200
+     C                     CALL 'FC0040X'              90                 LN1200
+     C           W0RTN     PARM W0RTN     W10003  7                       LN1200
+     C                     PARM @CN,11    W10004 10                       LN1200
+     C                     PARM @CN,12    W10005 10                       LN1200
+     C                     PARM WUSEQ     W10006  5                       LN1200
+     C                     PARM *BLANKS   W10007100                       LN1200
+     C                     PARM WUMBIN    W10008  1                       LN1200
+     C                     PARM WULVL     W10009  1                       LN1200
+     C                     PARM *BLANKS   W10010  3                       LN1200
+      *                                                                   LN1200
+     C           *IN90     IFEQ '1'                                       LN1200
+      * Call to program ended in error.                                   LN1200
+     C                     MOVEL'Y2U0021' W0RTN   7                       LN1200
+     C                     END                                            LN1200
+     C*
+      *CASE:     PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+      * Send message 'Report submitted'
+     C                     MOVEL'RCF0020' ZAMSID           Message id.
+     C                     MOVEL'*INFO  ' ZAMSTP           Msg type.
+     C                     EXSR ZASNMS                     Send message
+      *
+     C                     ELSE
+      *CASE:     *OTHERWISE
+     C                     MOVEL@CN,07    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     END                             *FI
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile records.
+      *================================================================
+      *                                                                   LN1154
+      * Return to point of exit if more changed subfile records           LN1154
+     C           *IN40     CABEQ'1'       SFTAG                           LN1154
+      *                                                                   LN1154
+     C                     READC#SFLRCD                  88*
+     C           *IN88     DOWEQ'0'
+      * Process SFL record.
+     C                     EXSR DCPRSR
+      * Set screen conditioning indicators.
+     C           SFTAG     TAG                                            LN1154
+     C                     SETOF                     40                   LN1154
+     C                     EXSR GADSA1
+     C                     UPDAT#SFLRCD
+     C* Re-display screen if SFLRCD not valid                             LN1154
+     C           *IN98     IFEQ '1'                                       LN1154
+     C                     EXSR CAEXFM                                    LN1154
+     C                     END                                            LN1154
+     C*                                                                   LN1154
+     C                     READC#SFLRCD                  88*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record.
+      *================================================================
+      * Setof error indicators and SFLNXTCHG.
+     C                     MOVEAWKIND0    *IN,37
+     C                     SETOF                     98    *
+     C                     EXSR MC#1FN
+      * USER: Process subfile record (Pre-confirm)
+      * 00/copy member XX0210DPSR - Periodic Requests  *
+     C*Display Periodic RequestsProcess Subfile Record
+     C/COPY WNCPYSRC,FC0210DPSR
+     C                     MOVEL#1SEL     WUJTST           Action Code
+      *CASE:     RCD.*SFLSEL is Enquire Request
+     C           #1SEL     IFEQ @CN,20                     *IF
+     C                     MOVEL@CN,04    WUAFST           Entity Valid Fl
+      *CASE:     PAR.Program Mode of DSPFIL is Maintenance
+     C           P1AKST    IFEQ @CN,02                     *IF
+      *CASE:     WRK.Multi-branching Indicator is Multibranch system
+     C           WUMBIN    IFEQ @CN,03                     *IF
+      * Validate Input Action/Bch
+      * Validate Action Code - standard functions  *
+     C                     CALL 'ZVACTBU'              90  Validate Action
+     C                     PARM WUJTST    WQ0009  1        Action Code
+     C                     PARM P2DBRN    WQ0010  3        Entity
+     C           WUAJNB    PARM *ZERO     WQ0011  10       Error Flag
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      *CASE:     WRK.Error Flag is zero
+     C           WUAJNB    IFEQ *ZERO                      *IF
+     C                     MOVEL@CN,04    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is one
+     C           WUAJNB    IFEQ 1                          *IF
+     C                     MOVEL@CN,05    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is two
+     C           WUAJNB    IFEQ 2                          *IF
+     C                     MOVEL@CN,06    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Validate Input Action
+      * Validate Action Code - standard functions  *
+     C                     CALL 'ZVACTU'               90  Validate Action
+     C                     PARM WUJTST    WQ0012  1        Action Code
+     C           WUAJNB    PARM *ZERO     WQ0013  10       Error Flag
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      *CASE:     WRK.Error Flag is zero
+     C           WUAJNB    IFEQ *ZERO                      *IF
+     C                     MOVEL@CN,04    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is one
+     C           WUAJNB    IFEQ 1                          *IF
+     C                     MOVEL@CN,05    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is two
+     C           WUAJNB    IFEQ 2                          *IF
+     C                     MOVEL@CN,06    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      *CASE:     WRK.Entity Valid Flag is No Error
+     C           WUAFST    IFEQ @CN,04                     *IF
+     C                     MOVEL@CN,20    P7JTST           Action Code
+      * PAR = RCD By name
+     C                     MOVEL#1RNAM    P3RNAM           Report name
+     C                     MOVEL#1PSQN    P4PSQN           Periodic Sequen
+     C                     MOVEL#1COTT    P5COTT           Component Name
+     C                     MOVEL#1CSEQ    P6CSEQ           Component Seque
+     C                     MOVEL*BLANK    P0RTN            *Return code
+     C***********          EXSR ZYEXPG                                    LN1154
+     C                     EXSR ZYEXPM                                    LN1154
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Setup message data for message.
+     C                     MOVEL#1SEL     ZA0002           *SFLSEL
+      * Send message 'Action/Branch not valid'
+     C                     MOVEL'RCF0037' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     9837  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      *CASE:     RCD.*SFLSEL is Amend Request
+     C           #1SEL     IFEQ @CN,21                     *IF
+      *CASE:     PAR.Program Mode of DSPFIL is Maintenance
+     C           P1AKST    IFEQ @CN,02                     *IF
+      *CASE:     WRK.Multi-branching Indicator is Multibranch system
+     C           WUMBIN    IFEQ @CN,03                     *IF
+      * Validate Input Action/Bch
+      * Validate Action Code - standard functions  *
+     C                     CALL 'ZVACTBU'              90  Validate Action
+     C                     PARM WUJTST    WQ0014  1        Action Code
+     C                     PARM P2DBRN    WQ0015  3        Entity
+     C           WUAJNB    PARM *ZERO     WQ0016  10       Error Flag
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      *CASE:     WRK.Error Flag is zero
+     C           WUAJNB    IFEQ *ZERO                      *IF
+     C                     MOVEL@CN,04    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is one
+     C           WUAJNB    IFEQ 1                          *IF
+     C                     MOVEL@CN,05    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is two
+     C           WUAJNB    IFEQ 2                          *IF
+     C                     MOVEL@CN,06    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Validate Input Action
+      * Validate Action Code - standard functions  *
+     C                     CALL 'ZVACTU'               90  Validate Action
+     C                     PARM WUJTST    WQ0017  1        Action Code
+     C           WUAJNB    PARM *ZERO     WQ0018  10       Error Flag
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      *CASE:     WRK.Error Flag is zero
+     C           WUAJNB    IFEQ *ZERO                      *IF
+     C                     MOVEL@CN,04    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is one
+     C           WUAJNB    IFEQ 1                          *IF
+     C                     MOVEL@CN,05    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is two
+     C           WUAJNB    IFEQ 2                          *IF
+     C                     MOVEL@CN,06    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+     C                     END                             *FI
+      *CASE:     WRK.Entity Valid Flag is No Error
+     C           WUAFST    IFEQ @CN,04                     *IF
+     C                     MOVEL@CN,21    P7JTST           Action Code
+      * PAR = RCD By name
+     C                     MOVEL#1RNAM    P3RNAM           Report name
+     C                     MOVEL#1PSQN    P4PSQN           Periodic Sequen
+     C                     MOVEL#1COTT    P5COTT           Component Name
+     C                     MOVEL#1CSEQ    P6CSEQ           Component Seque
+     C                     MOVEL*BLANK    P0RTN            *Return code
+     C***********          EXSR ZYEXPG                                    LN1154
+     C                     EXSR ZYEXPM                                    LN1154
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Setup message data for message.
+     C                     MOVEL#1SEL     ZA0003           *SFLSEL
+      * Send message 'Action/Branch not valid'
+     C                     MOVEL'RCF0037' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     9837  *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Send message 'Amendment not allowed'
+     C                     MOVEL'RCF0011' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     98    *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      *CASE:     RCD.*SFLSEL is *Delete request
+     C           #1SEL     IFEQ @CN,22                     *IF
+      *CASE:     PAR.Program Mode of DSPFIL is Maintenance
+     C           P1AKST    IFEQ @CN,02                     *IF
+      *CASE:     WRK.Multi-branching Indicator is Multibranch system
+     C           WUMBIN    IFEQ @CN,03                     *IF
+      * Validate Input Action/Bch
+      * Validate Action Code - standard functions  *
+     C                     CALL 'ZVACTBU'              90  Validate Action
+     C                     PARM WUJTST    WQ0019  1        Action Code
+     C                     PARM P2DBRN    WQ0020  3        Entity
+     C           WUAJNB    PARM *ZERO     WQ0021  10       Error Flag
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      *CASE:     WRK.Error Flag is zero
+     C           WUAJNB    IFEQ *ZERO                      *IF
+     C                     MOVEL@CN,04    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is one
+     C           WUAJNB    IFEQ 1                          *IF
+     C                     MOVEL@CN,05    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is two
+     C           WUAJNB    IFEQ 2                          *IF
+     C                     MOVEL@CN,06    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Validate Input Action
+      * Validate Action Code - standard functions  *
+     C                     CALL 'ZVACTU'               90  Validate Action
+     C                     PARM WUJTST    WQ0022  1        Action Code
+     C           WUAJNB    PARM *ZERO     WQ0023  10       Error Flag
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      *CASE:     WRK.Error Flag is zero
+     C           WUAJNB    IFEQ *ZERO                      *IF
+     C                     MOVEL@CN,04    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is one
+     C           WUAJNB    IFEQ 1                          *IF
+     C                     MOVEL@CN,05    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+      *CASE:     WRK.Error Flag is two
+     C           WUAJNB    IFEQ 2                          *IF
+     C                     MOVEL@CN,06    WUAFST           Entity Valid Fl
+     C                     END                             *FI
+     C                     END                             *FI
+      *CASE:     WRK.Entity Valid Flag is No Error
+     C           WUAFST    IFEQ @CN,04                     *IF
+     C                     MOVEL@CN,22    P7JTST           Action Code
+      * PAR = RCD By name
+     C                     MOVEL#1RNAM    P3RNAM           Report name
+     C                     MOVEL#1PSQN    P4PSQN           Periodic Sequen
+     C                     MOVEL#1COTT    P5COTT           Component Name
+     C                     MOVEL#1CSEQ    P6CSEQ           Component Seque
+     C                     MOVEL*BLANK    P0RTN            *Return code
+     C***********          EXSR ZYEXPG                                    LN1154
+     C                     EXSR ZYEXPM                                    LN1154
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Setup message data for message.
+     C                     MOVEL#1SEL     ZA0004           *SFLSEL
+      * Send message 'Action/Branch not valid'
+     C                     MOVEL'RCF0037' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     9837  *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      *CASE:     *OTHERWISE
+      * Send message 'Deletion not allowed'
+     C                     MOVEL'RCF0012' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     98    *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C           *IN98     IFEQ '1'
+      * SFLRCD invalid.
+     C  N99                Z-ADD##RR      ##SFRC     99    Invalid SFLRCD
+     C                     SETON                     84    SFLNXTCHG
+     C***********          ELSE                                           LN1154
+      **SFLRCD*valid.***                                                  LN1154
+     C***********          SETOF                     84    SFLNXTCHG      LN1154
+     C***********          MOVEL*BLANK    #1SEL                           LN1154
+     C                     END                             FI *IN98
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload.
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         GADSA1    BEGSR
+      *================================================================
+      * Set display attributes for Subfile record.
+      *================================================================
+     C                     MOVEL'0'       *IN77
+     C           WUMBIN    IFEQ @CN,19                     *IF
+     C                     MOVEL'1'       *IN77
+     C                     END                             *FI
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSA2    BEGSR
+      *================================================================
+      * Set display attributes for Subfile control.
+      *================================================================
+     C                     MOVEL'0'       *IN79
+     C           P8ATST    IFEQ @CN,19                     *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+     C                     MOVEL'0'       *IN78
+     C           WUAWST    IFEQ @CN,19                     *IF
+     C                     MOVEL'1'       *IN78
+     C                     END                             *FI
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @D9REJJ    fields to subfile.
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     MOVELD9SOID    #1SOID           Instruction Ide
+     C                     Z-ADDD9LCD     #1LCD            Last Change Dat
+     C                     MOVELD9CHTP    #1CHTP           Type of Last Ch
+     C                     MOVELD9DLS1    #1DLS1           Distribution Li
+     C                     MOVELD9DLS2    #1DLS2           Distribution Li
+     C                     MOVELD9USRO    #1USRO           User ID For Out
+     C                     MOVELD9ARMF    #1ARMF           Archived On Mic
+     C                     MOVELD9AROD    #1AROD           Archived On Opt
+     C                     MOVELD9DRQD    #1DRQD           Distribution Re
+     C                     MOVELD9FREQ    #1FREQ           Frequency
+     C                     Z-ADDD9FDAY    #1FDAY           Frequency Day N
+     C                     Z-ADDD9PFDT    #1PFDT           First Date
+     C                     Z-ADDD9LPDT    #1LPDT           Last Active Dat
+     C                     Z-ADDD9PNDT    #1PNDT           Next Active Dat
+     C                     MOVELD9COTT    #1COTT           Component Name
+     C                     MOVELD9CSEQ    #1CSEQ           Component Seque
+     C                     Z-ADDD9TNLU    #1TNLU           Transaction No.
+     C                     MOVELD9RNAM    #1RNAM           Report name
+     C                     MOVELD9PSQN    #1PSQN           Periodic Sequen
+     C                     MOVELD9USRR    #1USRR           User ID For Req
+     C                     MOVELD9LVL     #1LVL            Level
+     C                     MOVELD9ETTY    #1ETTY           Entity
+     C                     MOVELD9PDSC    #1PDSC           Request Descrip
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MC#1FN    BEGSR
+      *================================================================
+      * CALC: Subfile record function fields
+      *================================================================
+      * CALC: Subfile record function fields
+      * 00/copy member XX0210DRFF - Periodic Requests  *
+     C*Display Periodic RequestsCalculate Record Funcs
+     C/COPY WNCPYSRC,FC0210DRFF
+      *================================================================
+     CSR         MCEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control.
+      *================================================================
+     C                     MOVELP7JTST    #PJTST           Action Code
+     C                     MOVEL*BLANK    #2SOID           Instruction Ide
+     C                     Z-ADD*ZERO     #2LCD            Last Change Dat
+     C                     MOVEL*BLANK    #2CHTP           Type of Last Ch
+     C                     MOVEL*BLANK    #2DLS1           Distribution Li
+     C                     MOVEL*BLANK    #2DLS2           Distribution Li
+     C                     MOVEL*BLANK    #2USRO           User ID For Out
+     C                     MOVEL*BLANK    #2ARMF           Archived On Mic
+     C                     MOVEL*BLANK    #2AROD           Archived On Opt
+     C                     MOVEL*BLANK    #2DRQD           Distribution Re
+     C                     MOVEL*BLANK    #2FREQ           Frequency
+     C                     Z-ADD*ZERO     #2FDAY           Frequency Day N
+     C                     Z-ADD*ZERO     #2PFDT           First Date
+     C                     Z-ADD*ZERO     #2LPDT           Last Active Dat
+     C                     Z-ADD*ZERO     #2PNDT           Next Active Dat
+     C                     MOVELP5COTT    #2COTT           Component Name
+     C                     MOVELP6CSEQ    #2CSEQ           Component Seque
+     C                     MOVELP3RNAM    #2RNAM           Report name
+     C                     MOVELP4PSQN    #2PSQN           Periodic Sequen
+     C                     MOVEL*BLANK    #2USRR           User ID For Req
+     C                     MOVEL*BLANK    #2LVL            Level
+     C                     MOVEL*BLANK    #2ETTY           Entity
+     C                     MOVEL*BLANK    #2PDSC           Request Descrip
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Retrieve Next Seq. No. - Periodic Requests  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields.
+     C           *LIKE     DEFN WARNAM    WQSA01           Report name
+      * Define Keylist.
+     C           KPSSA     KLIST
+     C                     KFLD           WQSA01           Report name
+     C                     KFLD           WAPSQN           Periodic Sequen
+      * Define Keylist.
+     C           KRSSA     KLIST
+     C                     KFLD           WQSA01           Report name
+      * Move fields to key list.
+     C                     MOVELP3RNAM    WQSA01           Report name
+     C                     MOVELP4PSQN    WAPSQN           Periodic Sequen
+     C           KPSSA     SETLL@PREQA7                    *
+     C           KRSSA     READE@PREQA7                  90*
+     C           *IN90     IFEQ '1'
+      * DBF Record not found.
+     C**********           MOVEL'USR0736' W0RTN   7                       LN1190
+     C                     MOVEL'RCF0736' W0RTN   7                       LN1190
+      * USER: Processing if DBF record not found
+     C                     MOVEL@CN,10    P4PSQN           Periodic Sequen
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process DBF record
+     C                     MOVELWAPSQN    P4PSQN           Periodic Sequen
+      * Add 1 to Per.Seq.No. - Periodic Requests  *
+     C                     MOVE P4PSQN    USEQ
+     C                     ADD  1         USEQ
+     C                     MOVE USEQ      P4PSQN
+     C                     GOTO SAEXIT                     *QUIT
+     C           KRSSA     READE@PREQA7                  90*
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     C*SR*********SBRVGN****BEGSR                                         LN1200
+      *================================================================   LN1200
+      **Get*Default*Output*Id*-*Report*Descriptions***                    LN1200
+      *================================================================   LN1200
+     C***********          MOVEL*BLANK    W0RTN   7                       LN1200
+      **Define*Keylist.***                                                LN1200
+     C***********KRSSB     KLIST                                          LN1200
+     C***********          KFLD           DXRNAM           Report name    LN1200
+      **Move*fields*to*key*list.***                                       LN1200
+     C***********          MOVEL@CN,11    DXRNAM           Report name    LN1200
+     C***********KRSSB     CHAIN@DXREIK              90    *              LN1200
+     C************IN90     IFEQ '1'                                       LN1200
+      **DBF*Record*not*found.***                                          LN1200
+     C***********          MOVEL'USR0712' W0RTN   7                       LN1190
+     C***********          MOVEL'RCF0712' W0RTN   7                LN1190 LN1200
+      **USER:*Processing*if*DBF*record*not*found***                       LN1200
+     C***********          MOVEL@CN,15    W0RTN            *Return code   LN1200
+     C***********          GOTO SBEXIT                                    LN1200
+     C***********          END                                            LN1200
+      ***********                                                         LN1200
+     C************IN90     IFEQ '0'                                       LN1200
+      **USER:*Process*DBF*record***                                       LN1200
+      **PAR*=*DB1*By*name**                                               LN1200
+     C***********          MOVELDXDFTO    WUDFTO           Default Output LN1200
+     C***********          END                                            LN1200
+      *================================================================   LN1200
+     C*SR********SBEXIT    ENDSR                                          LN1200
+      /EJECT
+     C*SR********SCRVGN    BEGSR                                          LN1200
+      *================================================================   LN1200
+      **Retrieve*parameters*-*Report*Components***                        LN1200
+      *================================================================   LN1200
+     C***********          MOVEL*BLANK    W0RTN   7                       LN1200
+      **Define*Keylist.***                                                LN1200
+     C***********KRSSC     KLIST                                          LN1200
+     C***********          KFLD           D3RNAM           Report name    LN1200
+     C***********          KFLD           D3COTT           Component Name LN1200
+     C***********          KFLD           D3CSEQ           Component SequeLN1200
+      **Move*fields*to*key*list.***                                       LN1200
+     C***********          MOVEL@CN,11    D3RNAM           Report name    LN1200
+     C***********          MOVEL@CN,12    D3COTT           Component Name LN1200
+     C***********          MOVEL@CN,13    D3CSEQ           Component SequeLN1200
+     C***********KRSSC     CHAIN@D3REI5              90    *              LN1200
+     C************IN90     IFEQ '1'                                       LN1200
+      **DBF*Record*not*found.***                                          LN1200
+     C***********          MOVEL'USR0724' W0RTN   7                       LN1190
+     C***********          MOVEL'RCF0724' W0RTN   7                LN1190 LN1200
+      **USER:*Processing*if*DBF*record*not*found***                       LN1200
+     C***********          MOVEL@CN,15    W0RTN            *Return code   LN1200
+     C***********          GOTO SCEXIT                                    LN1200
+     C***********          END                                            LN1200
+      ***********                                                         LN1200
+     C************IN90     IFEQ '0'                                       LN1200
+      **USER:*Process*DBF*record***                                       LN1200
+      **PAR*=*DB1*By*name***                                              LN1200
+     C***********          MOVELD3CLPM    WUCLPM           Calling ParametLN1200
+     C***********          END                                            LN1200
+      *================================================================   LN1200
+     C*SR********SCEXIT    ENDSR                                          LN1200
+      /EJECT
+     C*SR********SDCRRC    BEGSR                                          LN1200
+      *================================================================   LN1200
+      **Create*Report*Requests*-*Report*Requests***                       LN1200
+      *================================================================   LN1200
+     C***********          MOVEL*BLANK    W0RTN   7                       LN1200
+      **Move*all*fields*to*@D5REI8***                                     LN1200
+     C***********          MOVELWURQSQ    D5RQSQ           Sequence NumberLN1200
+     C***********          MOVEL@CN,11    D5RNAM           Report name    LN1200
+     C***********          MOVELWUSOID    D5SOID           Instruction IdeLN1200
+     C***********          MOVELWULVL     D5LVL            Level          LN1200
+     C***********          MOVELWUETTY    D5ETTY           Entity         LN1200
+     C***********          MOVEL@CN,03    D5IPCY           Input Cycle    LN1200
+     C***********          MOVEL@CN,19    D5PDFL           Periodic       LN1200
+     C***********          MOVEL*BLANK    D5DLS1           Distribution LiLN1200
+     C***********          MOVEL*BLANK    D5DLS2           Distribution LiLN1200
+     C***********          MOVEL*BLANK    D5USRO           User ID For OutLN1200
+     C***********          MOVEL@CN,19    D5ARMF           Archived On MicLN1200
+     C***********          MOVEL@CN,19    D5AROD           Archived On OptLN1200
+     C***********          MOVEL@CN,19    D5DRQD           Distribution ReLN1200
+     C***********          MOVELWUUSRR    D5USRR           User ID For ReqLN1200
+     C***********          MOVELWUDBRN    D5DBRN           User's Branch  LN1200
+     C***********          Z-ADDWURQTM    D5RQTM           Request Time   LN1200
+     C***********          MOVEL@CN,19    D5COBR           Close Of BusineLN1200
+     C***********          MOVEL*BLANK    D5JBNM           Job Name       LN1200
+     C***********          MOVEL*BLANK    D5JUSR           User Name      LN1200
+     C***********          MOVEL*BLANK    D5JBNB           Job Number     LN1200
+     C***********          MOVEL*BLANK    D5PSQR           Periodic SequenLN1200
+     C***********          MOVEL@CN,12    D5COTT           Component Name LN1200
+     C***********          MOVEL@CN,13    D5CSEQ           Component SequeLN1200
+     C***********          Z-ADD*ZERO     D5TNLU           Transaction No.LN1200
+      ***********                                                         LN1200
+     C***********KLCRSD    KLIST                                          LN1200
+     C***********          KFLD           D5RQSQ           Sequence NumberLN1200
+      **Check*for*duplicate*primary*key.***                               LN1200
+     C***********KLCRSD    SETLL@D5REI8                  90*              LN1200
+     C************IN90     IFEQ '1'                                       LN1200
+     C***********          MOVEL'USR0729' W0RTN   7                       LN1190
+     C***********          MOVEL'RCF0729' W0RTN   7                LN1190 LN1200
+      **Send*message*'Report*Requests********EX'***                       LN1200
+     C***********          MOVEL'USR0729' ZAMSID           Message id.    LN1190
+     C***********          MOVEL'RCF0729' ZAMSID           Message LN1190 LN1200
+     C***********          EXSR ZASNMS                     Send message   LN1200
+     C***********          GOTO SDEXIT                                    LN1200
+     C***********          END                                            LN1200
+      ***********                                                         LN1200
+     C***********          WRITE@D5REI8                91  *              LN1200
+      ***********                                                         LN1200
+     C************IN91     IFEQ '1'                                       LN1200
+      **Write*error*detected.***                                          LN1200
+     C***********          MOVEL'Y2U0004' W0RTN   7                       LN1200
+     C***********          ELSE                                           LN1200
+      **DBF*Write*successful.***                                          LN1200
+     C***********          END                                            LN1200
+      *================================================================   LN1200
+     C*SR********SDEXIT    ENDSR                                          LN1200
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue.
+      *================================================================
+      * Send if first error message or not an error message.
+     C           ZAMSTP    IFNE *BLANK
+     C           ZAFSMS    ORNE 'N'
+     C           ZAMSTP    IFEQ *BLANK
+      * Signal first error message sent.
+     C                     MOVEL'N'       ZAFSMS
+     C                     END
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+      * If no message file specified use default.
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C                     END
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text.
+      *================================================================
+     C                     MOVEL'Y'       W0HLP   1        Signal help req
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Member name.
+     C                     PARM *BLANK    YYHPFL 10        *DFT text file.
+     C                     PARM *BLANK    YYHPLB 10        Help text lib.
+     C                     PARM           W0RTN   7        Return Code.
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program.
+      *================================================================
+      * USER: Exit program processing
+      * 00/copy member XX0210DEPP - Periodic Requests  *
+     C*Display Periodic RequestsExit Program Processing
+     C/COPY WNCPYSRC,FC0210DEPP
+      *CASE:     CTL.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL@CN,07    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct.
+      *================================================================
+      * Terminate program.
+     C                     SETON                     LR
+      *
+      * Exit program.
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT                                                              LN1154
+     CSR         ZYEXPM    BEGSR                                          LN1154
+      *================================================================   LN1154
+      * Exit program: Without ending                                      LN1154
+      *================================================================   LN1154
+      * SFLRCD valid.                                                     LN1154
+     C                     SETOF                     84    SFLNXTCHG      LN1154
+     C                     MOVEL*BLANK    #1SEL                           LN1154
+      * Exit program.                                                     LN1154
+     C                     SETON                     40                   LN1154
+     C                     RETRN                                          LN1154
+      *                                                                   LN1154
+      *================================================================   LN1154
+     CSR         ZYEXIM    ENDSR                                          LN1154
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation.
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+      * Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      * Define work field Action Code
+     C                     MOVEL*BLANK    WUJTST  1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Entity Valid Flag
+     C                     MOVEL*BLANK    WUAFST  1
+      * Define work field Error Flag
+     C                     Z-ADD*ZERO     WUAJNB  10
+      * Define work field *SFLSEL
+     C                     MOVEL*BLANK    WUSEL   1
+      * Obtain default message file.
+     C           *NAMVAR   DEFN FCMGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Sequence Number
+     C                     MOVEL*BLANK    WURQSQ  5
+      * Define work field Default Output Id
+     C                     MOVEL*BLANK    WUDFTO 10
+      * Define work field Calling Parameters
+     C                     MOVEL*BLANK    WUCLPM100
+      * Define work field Instruction Identifier
+     C                     MOVEL*BLANK    WUSOID 10
+      * Define work field Request Time
+     C                     Z-ADD*ZERO     WURQTM  40
+      * Define work field User ID For Request
+     C                     MOVEL*BLANK    WUUSRR 10
+      * Define work field Access Option
+     C                     MOVEL*BLANK    WUAPOP  7
+      * Define work field Access Program Return Cde
+     C                     MOVEL*BLANK    WUAPRC  7
+      * Define work field Entity
+     C                     MOVEL*BLANK    WUETTY  3
+      * Define work field Level
+     C                     MOVEL*BLANK    WULVL   1
+      * Define work field User's Branch
+     C                     MOVEL*BLANK    WUDBRN  3
+      * Define work field Department
+     C                     MOVEL*BLANK    WUDEPT  3
+      * Define work field display level/entity inpt
+     C                     MOVEL*BLANK    WUAWST  1
+      * Define work field run day number
+     C                     Z-ADD*ZERO     WURUND  50
+      * Define work field midas rundate
+     C                     MOVEL*BLANK    WURUNA  7
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSSF   1
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WUDATF  1
+      * Signal first error message outstanding.
+     C                     MOVEL'Y'       ZAFSMS  1
+     C************         Z-ADD06        ##SFPG  30       SFLPAG         LN0671
+     C                     Z-ADD04        ##SFPG  30       SFLPAG         LN0671
+     C                     Z-ADD1         ##SFRC
+     C                     Z-ADD*ZERO     ##RRMX           MAX RECNO
+     C*********************Z-ADD500       W0SLM   50       SCAN LIMIT     LN0792
+     C                     Z-ADD99999     W0SLM   50       SCAN LIMIT     LN0792
+      *................................................................
+      * USER: Initialise program
+      * 200 Byte Access Program - standard functions  *
+      *****************************************************************
+      **
+      ** DEFINE 200 BYTE DATA STRUCTURE
+      ** LAST AMEND : 00                         DATE : 00/00/00
+      **
+      * User Data Structure - standard functions  *
+      *****************************************************************
+      **
+      ** DEFINE USER DETAILS DATA STRUCTURE
+      ** LAST AMEND : 00                         DATE : 00/00/00
+      **
+      * Last Amd Hdr Box fc0210d - Periodic Requests  *
+      * Initialise DSPFIL program
+      * get rundate - rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE RUNA      ##RUNA
+     C                     MOVE RUNA      WURUNA
+     C                     MOVE RUND      WURUND
+     C                     MOVE SSF       WUSSF
+     C                     MOVE DATF      WUDATF
+     C                     MOVE MBIN      WUMBIN
+      * Set-up Display Screen - standard functions  *
+     C           P1AKST    IFEQ 'M'
+     C                     MOVEAUHDR,1    ##URPT                          LN0671
+     C                     MOVEAAEMQ,1    ##AENA
+     C                     MOVEAAEMQ,3    ##AFNA
+     C                     END
+      *
+     C           P1AKST    IFEQ 'E'
+     C                     MOVEAUHDR,2    ##URPT                          LN0671
+     C*********************MOVEAAEMQ,2    ##AENA                          LN0671
+     C*********************MOVEAAEMQ,4    ##AFNA                          LN0671
+     C                     MOVEAAEMQ,2    ##AFNA                          LN0671
+     C                     END
+      *
+      * Copyright Statement - standard functions  *
+     C                     MOVEACPY@      BIS@   80
+      *CASE:     PAR.Auth. to multiple branch is No
+     C           P9AUST    IFEQ @CN,19                     *IF
+     C                     MOVEL@CN,19    WUAWST           display level/e
+     C                     ELSE
+      *CASE:     WRK.Multi-branching Indicator is Non-Multibranch system
+     C           WUMBIN    IFEQ @CN,19                     *IF
+     C                     MOVEL@CN,19    WUAWST           display level/e
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/copy member XX0210DCPG - Periodic Requests  *
+     C*Display Periodic RequestsInitialise Program C-Spec
+     C/COPY WNCPYSRC,FC0210DCPG
+      * 00/copy member XX0210DEPG - Periodic Requests  *
+      * 00/copy member XX0210DFPG - Periodic Requests  *
+      * 00/copy member XX0210DIPG - Periodic Requests  *
+      * 00/copy member XX0210DOPG - Periodic Requests  *
+      * Initialise subfile control.
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+     O*Display Periodic RequestsInitialise Program O-Spec
+     O/COPY WNCPYSRC,FC0210DOPG
+     **  UUSB - SUBMIT REPORT TO BATCH                                    LN1200
+     **SBMJOB JOB(XXXXXXXXXX) JOBD(MBATCH) CMD(CALL XXXXXXXXXX PARM(      LN1200
+      **'     ' ' ' '   '                                                 LN1200
+      **RTGDTA(*JOBD)                                                     LN1200
+      *                                                                   LN0375
+      *  ARRAY @CN ELEMENT 11, CHANGED FROM FC0210P TO FC0210             LN0375
+      *                                                                   LN0375
+**
+A=Amend   D=Delete   E=Enquire
+E=Enquire   F3=Main Menu   F5=Refresh   F11=Print Report
+F3=Main Menu   F5=Refresh   F9=Go To 'Add' Mode   F11=Print Report
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** @CN Long constants used in program.
+I
+M
+Y
+0
+1
+2
+Y2U9999
+PREVSCN
+99
+01
+FC0210
+FCC0306
+10001
+S
+Y2U0005
+Y2U0004
+*KEY
+*DBERR
+N
+E
+A
+D
+**  UHDR
+            Periodic Requests Maintenance
+              Periodic Requests Enquiry

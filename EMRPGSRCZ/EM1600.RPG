@@ -1,0 +1,2002 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Parent details enquiry')
+     F********************************************************************
+     F*  Midas EXPOSURE MANAGEMENT ENQUIRY MODULE
+     F*                                                                  *
+     F*      EM1600 - CHILDREN BY PARENT ENQUIRY                         *
+     F*                                                                  *
+     F*  Function: This enquiry shows all the children for a specified
+     F*  (I/C)     parent. For each child displayed, the management
+     F*            limit, the current exposure against that limit, the
+     F*            available amount and offset amount are shown.
+     F*
+     F*            The parent information is displayed at the top of
+     F*            the enquiry screen and the overall parent total is
+     F*            shown at the bottom.
+     F*
+     F*            This enquiry is accessed from the Customer Limits/
+     F*            Exposure/Availability enquiry (EM0301) by pressing
+     F*            F4. This command key is available if the customer
+     F*            entered is a parent or a child.
+     F*
+     F*  Called By: EM0301
+     F*
+     F*  Calls:
+     F*
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAAA03             Date 30Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 120033             Date 12Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002             Date 23Sep99               *
+     F*                 E28696             Date 17Sep91               *  *
+     F*                     S01332            DATE 29JUL91               *
+     F*                     S01314            DATE 23APR91               *
+     F*                     S01253            DATE 17APR90               *
+     F*                     LN0071            DATE 16MAY90               *
+     F*                     S01199            DATE 07/11/89              *
+     F*                     S01117            DATE 24/10/89              *
+     F*                     S01179            DATE 04/11/88              *
+     F*                     S01129            DATE 25/11/87              *
+     F*                     E10832            DATE 17/06/87              *
+     F*                     S01128            DATE 19/12/86              *
+     F*                     E81177            DATE 01/12/86              *
+     F*                                                               *
+     F********************************************************************
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAAA03 - Webfacing Changes (Recompile)                       *
+      *  CSD007 - Customer Closing                                    *
+     F*  120033 - Clear the field prior to moving the customer number *
+     F*           into it .
+      *  CTI002 - EM / TI Interface                                   *
+      *           - Recompiled : File SDACODPD changed                *
+     F*  E28696 - EXPOSURES AND OFF-SETTING BALANCES DO NOT INCLUDE   *
+     F*           FRA, IRS, FUTURES, OPTIONS                          *
+     F*  S01332 - EM REL 10 ENHANCEMENTS: DESCRIPTION OF FUNCTION     *
+     F*           ADDED TO HEADER BOX                                 *
+     F*  S01314 - Changes made during PTF incorporation.              *
+     F*           Multilanguage tag changed.                          *
+     F*  S01253 - CHANGED FOR MULTILANGUAGE SCREENS                   *
+     F*      LN0071  -  MAKE CUSTOMER ON EMCEXX2 ALPHAMERIC              *
+     F*      S01199  -  HELP CHANGES                                     *E01199
+     F*      S01117  -  RELEASE TEN MULTIBRANCHING                       *
+     F*      S01179  -  AS400 CONVERSION                                 *E01179
+     F*      S01129  - SECURITIES TRADING RELEASE 2
+     F*      E10832  - CATER FOR THE CASE OF A PARENT HAVING NO          *E10832
+     F*                CHILDREN                                          *E10832
+     F*      S01128  - DISPLAY 2 LINES AS PER SUBFILE RECORD             *
+     F*              - ALLOW A SELECTION FOR DISPLAY OF CHILD DETAILS    *
+     F*      E81177  - EXPOSURE FIGURES INCORRECT                        *
+     F*              - EXPOSURE & AVAILABLE FIGURES SHOULD BE IN 000'S   *
+     F*              - OFFSET FIGURES INCORRECT                          *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FEM1600FMCF  E                    WORKSTN
+     F                                        RCDNBRKSFILE EM1600SF
+     FPACUS   IF  E           K        DISK
+     F            CLINTCBF                          KRENAMEPACUSCBF
+     FEMLIM   IF  E           K        DISK
+     F            EMLIML1F                          KIGNORE
+     F            EMLIML3F                          KIGNORE
+     FEMCEX   IF  E           K        DISK
+     F*
+     F*   E81177  - IGNORE EMCEXX1 (HEADER RECORD)                        E81177
+     F*
+     F            EMCEXX1F                          KIGNORE               E81177
+     F            EMCEXX3F                          KIGNORE
+     F***CLINT   IF  E           K        DISK                            E28696
+     F*********** CLINTCAF                          KIGNORE               E28696
+     FSNAME   IF  E           K        DISK
+     F            CLINTCBF                          KRENAMESNAMECBF
+     F****TABLE   IF  E           K        DISK                           S01129
+     FTABEM   IF  E           K        DISK                               S01129
+     F            TABTB11F                          KIGNORE               S01129
+     F            TABTB36F                          KIGNORE               S01129
+     F            TABTE10F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETIF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETTF                          KIGNORE
+     F***EMCON   IF  E           K        DISK                            E28696
+     F*********** EMCONPFF                          KRENAMEEMCONF         E28696
+     FEMEXSCL1IF  E           K        DISK                               E28696
+     F/COPY WNCPYSRC,EM1600F001
+     F*
+     F* 01            cmd/1
+     F**02            cmd/2                                               S01128
+     F* 02            cmd/12                                              S01179
+     F**05*******     cmd/5                                               E28696
+     F* 07            cmd/3                                               S01179
+     F* 06            EMLIM - DETAIL RECORD.
+     F**10****        ICDR 2                                              S01129
+     F* 11            subfile end
+     F**12****        currency table                                      S01129
+     F* 14            no customer details
+     F* 15            loan reversed
+     F* 16            error messages
+     F* 17            upper level link enquiry option
+     F* 18            display subfile
+     F**19************HELP*requested***********************               S01199
+     F* 20            display subfile control
+     F*       30      EMEXSCL1 RECORD NOT FOUND                           E28696
+     F*       45      NON-DISPLAY 'EXCLUDES' TEXT                         E28696
+     F*       47      EMLIM RECORD NOT FOUND
+     F*       60      READ S/FILE CHANGE RECORD                           S01128
+     F*       80      CHAIN FAILED INDICATOR
+     F*       81      CHAIN FAILED INDICATOR
+     F*       83      record id CLINT/SNAME
+     F*       84      details found
+     F*       85      MAIN PROCESSING LOOP
+     F*       86      DETSR - DETAILS PROCESSING LOOP
+     F*       87      DETSR - SUBFILE PROCESSING LOOP
+     F*       88      VALID SCREEN RESPONSE PROCESSED
+     F**
+     F*       90-99   used in standard subroutines
+     F**
+     F**
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+     E***********         ERR     1   9 79                MESSAGES        E28696
+     E                    ERR     1   7 79                MESSAGES        E28696
+     E                    ZA1        16  1               ZALIGN SR ARRAY
+     E                    ZA2        16  1               ZALIGN SR ARRAY
+     E*    ARRAYS FOR EDITING AN AMOUNT ACCORDING TO NO. OF DPS.
+     E                    ZEDT        5  4               EDITED AMOUNT
+     E                    ZED2        6  3               AMT WITH NO COMMA
+     E                    ZAMT        5  3               AMOUNT FIELD
+     E                    Z3          3  1               DUMMY 3 CHAR FLD
+     E                    ZCOM    1   4 20               EDT CHARS FOR AMT
+     E                    XCN        56  1               EXCLUSION NARR.  E28696
+     E                    LEG    10  10  7               LEGENDS          E28696
+     E*
+     I*
+     I*     EXPOSURE MANAGEMENT LIMITS FILE - DETAIL RECORD
+     I*
+     IEMLIML2F    06
+     I*
+     I*     EXCEX FILE - HEADER RECORD
+     I****    E81177  EMCEXX1F
+     I*             ZZ0065                          ZZXX65
+     I*
+     I*    PACUS FILE - DETAIL RECORD
+     IPACUSCBF
+     I              CNUM                            PCNUM
+     I              CRNM                            PCRNM
+     I              CTWN                            PCTWN
+     I*
+     I*****CLINT*FILE*-*DETAIL*RECORD                                     E28696
+     I***CLINTCBF    83                                                   E28696
+     I*
+     I*    SNAME FILE - DETAIL RECORD -
+     ISNAMECBF    83
+     I              CNUM                            SCNUM
+     I              CRNM                            SCRNM
+     I              CTWN                            SCTWN
+     I*
+     I*****TABLE FILE - ICDR 2                                            S01129
+     I*****TABTB11F    10                                                 S01129
+     I*
+     I*    TABLE FILE - CCY RECORD
+     ITABTG10F    12
+     I              KEY                             CURKEY
+     I*             ZZ0089                          ZZXX89
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**   DATA STRUCTURE FOR CURKEY
+     I            DS
+     I                                        1  12 CURKEY
+     I                                        1   2 RECT
+     I                                        9  11 CCY
+     I                                       12  12 SREC
+     I**   DATA STRUCTURE CUSTOMER/SHORTNAME ENTERED
+     I            DS
+     I                                        1  10 CUST
+     I                                        1   6 ICUSTN
+     I*
+     I*    EM LINK ENQUIRY CONTROL FILE
+     I            DS
+     I                                        1 140 EMCONT
+     I                                        1   1 RECI
+     I                                        2   9 PGN1
+     I                                       10  69 PGT1
+     I                                       70  70 PGL1
+     I                                       71  72 PGO1
+     I                                       73  80 PGN2
+     I                                       81 140 PGT2
+     I**  LOCAL DATA AREA FOR DATABASE RECORD
+     ILDA        UDS                            256
+     I**********                            134 138 DBFILE                S01117
+     I**********                            139 167 DBKEY                 S01117
+     I**********                            168 175 DBPGM                 S01117
+     I**********                            176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I** LINK ENQUIRY DATA AREA
+     IEMSDS     E DSEMDTA
+     I**   PROGRAM PARAMETERS DATA STRUCTURE                              E28696
+     IRQDTWF      DS                             20                       E28696
+     I                                        1   6 PARENT                E28696
+     I                                        7  12 CHILD                 E28696
+     I**   PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I*                                                                   E28696
+     ISDCUST    E DSSDCUSTPD                                              E28696
+      * DATA STRUCTURE FOR CUSTOMER DETAILS                               E28696
+     I*                                                                   E28696
+     ISCSARD    E DSSCSARDPD                                              CSD007
+      ** External Data Structure for Switchable Features                  CSD007
+      *                                                                   CSD007
+     IDSFDY     E DSDSFDY                                                 CSD007
+      ** First DS for access programs, short data structure               CSD007
+      *                                                                   CSD007
+     IDSSDY     E DSDSSDY                                                 E28696
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                E28696
+     I*                                                                   E28696
+     IDSLDY     E DSDSLDY                                                 CSD007
+      ** Third DS for access programs, very long data structure           CSD007
+      *                                                                   CSD007
+     I/SPACE 3
+     C********************************************************************S01253
+      ***********                                                   S01253E28696
+     C**Call*SDRTVTXT*pgm*to*access*appropriate*text                S01253E28696
+     C***for*a*field*used*in*a*SFL                                  S01253E28696
+      ***********                                                   S01253E28696
+     C***********          MOVEL'ZZGBMSGF'MSGNM                     S01253E28696
+     C***********          MOVEL'ZZM0456' MSGDNB                    S01253S01314
+     C***********          MOVEL'ZZM1154' MSGDNB                    S01314E28696
+     C***********          CALL 'SDRTVTXT'                          S01253E28696
+     C***********          PARM           MSGDNB  7                 S01253E28696
+     C***********          PARM           MSGNM  10                 S01253E28696
+     C***********          PARM           MSGTXT 80                 S01253E28696
+     C***********          MOVELMSGTXT    ZZM016                    S01253E28696
+      ***********                                                   S01253E28696
+     C***********          MOVEL'ZZM1152' MSGDNB                    S01253S01314
+     C***********          MOVEL'ZZM1155' MSGDNB                    S01314E28696
+     C***********          CALL 'SDRTVTXT'                          S01253E28696
+     C***********          PARM           MSGDNB  7                 S01253E28696
+     C***********          PARM           MSGNM  10                 S01253E28696
+     C***********          PARM           MSGTXT 80                 S01253E28696
+     C***********          MOVELMSGTXT    ZZM017                    S01253E28696
+      *                                                                   S01253
+     C********************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           EMSDS
+     C           *NAMVAR   DEFN           LDA
+     C***********CLKEY     KLIST                                          E28696
+     C***********          KFLD           CNUM                            E28696
+     C***********          KFLD           CLKEYA                          E28696
+     C***********                                                         E28696
+     C***********EMUPKY    KLIST                                          E28696
+     C***********          KFLD           PGN2                            E28696
+     C***********          KFLD           PGL1                            E28696
+     C***********                                                         E28696
+     C***********EMCNKY    KLIST                                          E28696
+     C***********          KFLD           PGN1                            E28696
+     C***********          KFLD           PGO1                            E28696
+     C**
+     C           LIMKEY    KLIST
+     C                     KFLD           RECJ
+     C                     KFLD           MLC
+     C********************************************************************
+     C**
+     C*    FIRST  CYCLE CALCULATIONS.
+     C*
+     C*   FIRST CYCLE ONLY
+     C                     EXSR FICYC
+     C**
+     C***********RQDTD     IFEQ *BLANKS                                 **E28696
+     C****IF*NO*INITIAL*PARENT*IN*DATA*AREA*EMSDS*THEN*CALL*SHORTNAME     E28696
+     C*******ENQUIRY                                                      E28696
+     C***********                                                         E28696
+     C***********          EXSR SHNSR                                     E28696
+     C***********          ELSE                                           E28696
+     C***********                                                         E28696
+     C****ELSE*ACCESS*PARENT*DETAILS                                      E28696
+     C***********          MOVELRQDTD     CNUM                          **E28696
+     C***********          END                                            E28696
+     C*                                                                   E28696
+     C**  STORE CUSTOMER NUMBER FROM DTAARA/EMSDS                         E28696
+     C**********           MOVELRQDTD     CNUM    60                                   E28696 CSD027
+     C                     MOVELRQDTD     CNUM    6                                           CSD027
+     C                     MOVELCNUM      CUST                            E28696
+     C**
+     C*   MAIN PROCESSING LOOP -
+     C                     SETON                     85
+     C           *IN85     DOWEQ'1'                                     **
+     C*
+     C*******IF*CMD/5*THEN*CALL*SHORTNAME*ENQUIRY                         E28696
+     C***05******          EXSR SHNSR                                     E28696
+     C*      GET CHILDREN FOR PARENT - LOAD SUBFILE
+     C                     EXSR DETSR
+     C                     END
+     C***
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**    DETSR SR TO GET DETAILS OF PARENT AND WRITE TO SCREEN
+     C**
+     C**   CALLED FROM   DETAIL TIME PROCESSING
+     C**   CALLS SR      LIN1SR,CMDSR2,LEOPS2,CUSTS2,DTRQSM,CLCHN
+     C*****CALLS*PROG.***EMC999*******************                        S01199
+     C*This subroutine controls the detail processing for a parent.
+     C*First  we clear the subfile,then access the relevant children
+     C*and load the details onto a subfile in LIN1SR.
+     C*If no children are found we display the message.
+     C*Then we write/read the details screen,and perform the following
+     C*processing
+     C****If*HELP*key*pressed*then*call*help*program*********             S01199
+     C*   Process command keys for ending program - in SR CMDSR2
+     C****If*cmd/5*then*end*subroutine                                    E28696
+     C*   If cmd/1 then call exposure enquiry - in SR LEOPS2
+     C*      Check on return if the customer number has changed
+     C*      If so,then display details for this customer
+     C*   If program called from menu then process the upper link enquiry
+     C*      option. - in LEOPS2
+     C*      Check on return if the customer number has changed
+     C*      If so,then display details for this parent.
+     C*   If new customer number/shortname entered then validate
+     C*      in SR EM1600
+     C*   If no request options or command keys then display error message
+     C*   if return code = 1 then call exposure enquiry
+     C*
+     C*
+     C*    Indicators used
+     C*****05**on*-*call*shortname*enquiry                                E28696
+     C*    14  off- display customer details
+     C*    16  off- display error messages
+     C*    17  off- upper level link enquiry available
+     C*    18  on - display subfile control
+     C*****19**on*-*HELP*requested******************                      S01199
+     C*    20  on - display subfile
+     C*    80  on - read fail
+     C*    81  on - read fail
+     C*    84  on - loans found
+     C*    86  on - subroutine processing loop
+     C*    87  on - subfile control processing loop
+     C*    88  on - valid function processed
+     C           DETSR     BEGSR                           *** DETSR  ***
+     C**
+     C**    SR PROCESSING LOOP
+     C                     SETON                     86
+     C           *IN86     DOWEQ'1'
+     C                     SETON                     16
+     C*
+     C**       GET CUSTOMER DETAILS
+     C                     EXSR CLCHN
+     C***********          MOVE CNUM      CNUMWF  60                    **E28696
+     C***********          MOVE CNUM      CUSPAR                        **E28696
+     C***********          MOVE CRNM      PARNM  20                     **E28696
+     C***********          MOVELCTWN      PARTW  10                     **E28696
+     C***********          MOVEL*BLANKS   CUST                          **E28696
+     C                     MOVE CUST      SCUST  10                       E28696
+     C*
+     C**       CLEAR SUBFILE
+     C                     SETOF                     1820
+     C                     WRITEEM1600SC
+     C**
+     C**
+     C*     ACCESS PACUS FOR THIS CUSTOMER
+     C**
+     C           CNUM      SETLLPACUS                    84 RECORD FOUND
+     C**
+     C**   ZEROISE OUTPUT FIELDS FOR THIS CUSTOMER
+     C                     Z-ADD0         AVAIL
+     C                     Z-ADD0         LIMTOT
+     C                     Z-ADD0         EXPTOT
+     C                     Z-ADD0         AVATOT
+     C                     Z-ADD0         BALTOT
+     C*                                                                   S01128
+     C***********          Z-ADD0         MFXAVA                    S01128E28696
+     C***********          Z-ADD0         LIMTFX 120                S01128E28696
+     C***********          Z-ADD0         EXPTFX                    S01128E28696
+     C***********          Z-ADD0         BALTFX                    S01128E28696
+     C***********          Z-ADD0         AVATFX 120                S01128E28696
+     C**                                                                  S01128
+     C**  SET LIMKEY TO ACCESS LIMITS FILE FOR PARENTS OVERALL LIMIT      S01128
+     C                     MOVE '1'       RECJ                            S01128
+     C                     MOVE CNUM      MLC                             S01128
+     C                     SETOF                     06                   S01128
+     C           LIMKEY    CHAINEMLIML2F             47                   S01128
+     C   06      RECI      COMP 'D'                  4747                 S01128
+     C           *IN47     IFEQ '0'                                       S01128
+     C                     Z-ADDMOAL      LIMTOT                          S01128
+     C***********          Z-ADDMFXL      LIMTFX                    S01128E28696
+     C                     END                                            S01128
+     C**
+     C*     RESET SUBFILE RELATIVE RECORD NUMBER
+     C                     Z-ADD0         RCDNBR
+     C**
+     C*     IF NO CHILDREN, DISPLAY MESSAGE
+     C           *IN84     IFEQ '0'
+     C***********          MOVE ERR,9     MSG                             E28696
+     C                     MOVE ERR,7     MSG                             E28696
+     C                     SETOF                     16
+     C                     ELSE
+     C**
+     C*     ELSE, ACCESS PACUS FOR THAT CUSTOMER,LOAD SUBFILE
+     C*
+     C                     SETOF                     81
+     C           *IN81     DOWEQ'0'
+     C           CNUM      READEPACUS                    81 ON=FAIL OR EOF
+     C           *IN81     IFEQ '0'
+     C                     ADD  1         RCDNBR
+     C                     EXSR LIN1SR
+     C**
+     C**      WRITE RECORD TO SUBFILE
+     C                     MOVE ' '       SELECT                          S01128
+     C                     WRITEEM1600SF                 80
+     C                     END
+     C                     END
+     C**                                                                  S01128
+     C*****EDIT*TOTAL*AMOUNTS                                             E28696
+     C*****1ST*LINE*FOR*FX*VALUES*ONLY                              S01128E28696
+     C*****FX*TOTAL*LIMIT                                           S01128E28696
+     C***********          Z-ADDLIMTFX    ZAMNT                     S01128E28696
+     C***********          EXSR ZEDIT                               S01128E28696
+     C***********          MOVE ZAMNTA    FXLIMT                    S01128E28696
+     C***********                                                   S01128E28696
+     C*****FX*TOTAL*EXPOSURE                                        S01128E28696
+     C***********          Z-ADDEXPTFX    ZAMNT                     S01128E28696
+     C***********          EXSR ZEDIT                               S01128E28696
+     C***********          MOVE ZAMNTA    FXEXPT                    S01128E28696
+     C***********                                                   S01128E28696
+     C*****FX*TOTAL*AVAILABILITY                                    S01128E28696
+     C***********LIMTFX    SUB  EXPTFX    AVATFX                    S01128E28696
+     C***********          Z-ADDAVATFX    ZAMNT                     S01128E28696
+     C***********          EXSR ZEDIT                               S01128E28696
+     C***********          MOVE ZAMNTA    FXAVAT                    S01128E28696
+     C***********                                                   S01128E28696
+     C*****FX*TOTAL*BALANCE                                         S01128E28696
+     C***********          Z-ADDBALTFX    ZAMNT                     S01128E28696
+     C***********          EXSR ZEDIT                               S01128E28696
+     C***********          MOVE ZAMNTA    FXBALT                    S01128E28696
+     C***********                                                   S01128E28696
+     C*****2ND*LINE*EXCLUDING*FX*VALUES                             S01128E28696
+     C**   EDIT TOTAL AMOUNTS                                             E28696
+     C**   TOTAL LIMIT                                                    S01128
+     C                     Z-ADDLIMTOT    ZAMNT
+     C                     EXSR ZEDIT
+     C                     MOVE ZAMNTA    LIMTSF
+     C**
+     C**   TOTAL EXPOSURE
+     C                     Z-ADDEXPTOT    ZAMNT
+     C                     EXSR ZEDIT
+     C                     MOVE ZAMNTA    EXPTSF
+     C**
+     C**   TOTAL AVAILABILITY
+     C           LIMTOT    SUB  EXPTOT    AVATOT                          S01128
+     C                     Z-ADDAVATOT    ZAMNT
+     C                     EXSR ZEDIT
+     C                     MOVE ZAMNTA    AVATSF
+     C**
+     C**   TOTAL BALANCE
+     C                     Z-ADDBALTOT    ZAMNT
+     C                     EXSR ZEDIT
+     C                     MOVE ZAMNTA    BALTSF
+     C**                                                                  S01128
+     C**      WRITE RECORD TO SUBFILE                                     S01128
+     C****                 MOVE ' '       SELECT                          S01128
+     C****                 WRITEEM1600SF                 80               S01128
+     C****                 END                                            S01128
+     C****                 END                                            S01128
+     C                     END
+     C**
+     C*     OUTPUT CUSTOMER DETAILS
+     C**
+     C                     TIME           MTIME
+     C                     SETOF                     14
+     C                     WRITEEM1600F1
+     C*
+     C**  IND. FOR SUBFILE CONTROL RECORD
+     C                     SETON                     1820
+     C*
+     C**  IF NO VALID RECORDS READ THEN DISPLAY ERROR MESSAGE
+     C           RCDNBR    IFEQ 0
+     C***********          MOVELERR,9     MSG                             E28696
+     C                     MOVELERR,7     MSG                             E28696
+     C                     SETOF                     162084
+     C                     ELSE
+     C                     Z-ADD1         RCDNBR
+     C                     END
+     C*
+     C**   SCREEN PROCESSING VALIDITY LOOP
+     C**********           SETOF                     19                   S01199
+     C                     SETON                     87
+     C           *IN87     DOWEQ'1'
+     C                     WRITEEM1600SC
+     C**
+     C**    PROCESS DETAILS SCREEN
+     C                     SETOF                     88
+     C***********          SETON                     19                   S01199
+     C************IN19     DOWEQ'1'                                       S01199
+     C**********           SETOF                     1980                 S01199
+     C                     SETOF                       80                 S01199
+     C                     READ EM1600SC               8080
+     C**
+     C*                                                                   E28696
+     C**  IF NEW CUSTOMER INPUT, BLANK OUT MESSAGE FIELD                  E28696
+     C           CUST      IFNE SCUST                                     E28696
+     C                     MOVE *BLANKS   MSG
+     C                     END                                            E28696
+     C*****IF*HELP*THEN*CALL*EMC999*******************                    S01199
+     C***19****************CALL*'EMC999'**************                    S01199
+     C*********************PARM           PROGNM                          S01199
+     C***********          END                                            S01199
+     C*                                                                   S01128
+     C*  READ CHANGE OF SUBFILE AND IF ANY OF THE CHILDREN SELECTED       S01128
+     C*  CALL EMC0301 AGAIN TO DISPLAY DETAILS OF SELECTED CHILD          S01128
+     C*                                                                   S01128
+     C*********************READCEM1600SF                 60               E10832
+     C  N20                SETON                     60                   E10832
+     C   20                READCEM1600SF                 60               E10832
+     C*                                                                   S01128
+     C*  THERE IS A S/FILE RECORD SELECTED                                S01128
+     C*                                                                   S01128
+     C*                                                                   E28696
+     C**  INITIALIZE COUNT OF SELECTED RECORDS TO ZERO                    E28696
+     C                     Z-ADD0         COUNT   20                      E28696
+     C           *IN60     DOWEQ'0'                                       S01128
+     C*                                                                   S01128
+     C           SELECT    IFEQ ' '                                       S01128
+     C                     READCEM1600SF                 60               S01128
+     C                     ELSE                                           S01128
+     C           SELECT    IFNE '1'                                       S01128
+     C***********          MOVELERR,7     MSG                       S01128E28696
+     C                     MOVELERR,6     MSG                             E28696
+     C                     SETON                         60               S01128
+     C                     MOVE *BLANK    SELECT                          E28696
+     C                     UPDATEM1600SF                                  E28696
+     C                     ELSE                                           S01128
+     C*                                                                   E28696
+     C**  ADD 1 TO COUNT OF SELECTED RECORDS                              E28696
+     C                     MOVE *BLANK    SELECT                          E28696
+     C                     UPDATEM1600SF                                  E28696
+     C                     ADD  1         COUNT                           E28696
+     C*                                                                   E28696
+     C**  IF THIS IS THE FIRST SELECTED RECORD ENCOUNTERED, STORE         E28696
+     C**  CUSTOMER NUMBER FROM SELECTED RECORD                            E28696
+     C           COUNT     IFEQ 1                                         E28696
+     C** FIND CUSTOMER NUMBER                                             S01128
+0209 C                     MOVE SNAMWF    SKEY   10                       S01128
+     C                     END                                            E28696
+     C                     READCEM1600SF                 60               E28696
+     C                     END                                            E28696
+     C                     END                                            E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  IF MORE THAN ONE RECORD SELECTED, DISPLAY ERROR MESSAGE         E28696
+     C           COUNT     IFGT 1                                         E28696
+     C                     MOVELERR,5     MSG                             E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  IF ONLY ONE RECORD SELECTED, ACCESS DETAILS FOR SELECTED        E28696
+     C**  CUSTOMER                                                        E28696
+     C           COUNT     IFEQ 1                                         E28696
+0212 C           SKEY      CHAINSNAME                25                   S01128
+0405 C           *IN25     IFEQ '0'                                       S01128
+0391 C**                                                                  S01128
+0392 C**     IF EXISTS THEN END PROGRAM,PASSING CNUM                      S01128
+     C                     MOVE *BLANKS   RQDTWF                          S01128
+     C                     MOVELSCNUM     RQDTWF                          S01128
+     C*                                                                   S01128
+     C                     SETON                     LR                   S01128
+     C**                                                                  S01128
+     C**  ACCESS EM DATA AREA AND UPDATE                                  S01128
+     C           *LOCK     IN   EMSDS                                     S01128
+0402 C                     MOVELEMCONT    EMSDS                           S01128
+     C                     MOVE '0'       RETND                           S01128
+     C                     MOVELRQDTWF    RQDTD                           S01128
+     C                     OUT  EMSDS                                     S01128
+     C                     RETRN                                          S01128
+     C*                                                                   S01128
+     C                     END                                            S01128
+     C                     END                                            S01128
+     C***********          END                                      S01128E28696
+     C***********          END                                      S01128E28696
+     C*
+     C*    CHECK COMMAND KEY RESPONSE
+     C                     EXSR CMDSR2
+     C           MSG       COMP *BLANKS              888816
+     C*
+     C*****IF*COMMAND*KEY*5*THEN*END*SR*LOOP                              E28696
+     C************IN05     IFEQ '1'                                       E28696
+     C***********          SETOF                     8687                 E28696
+     C***********          SETON                     88                   E28696
+     C***********          END                                            E28696
+     C           *IN88     IFEQ '0'
+     C*
+     C*    CUSTOMER ENTERED - VALIDATE
+     C***********CUST      IFNE *BLANKS                                   E28696
+     C           CUST      IFNE SCUST                                     E28696
+     C                     EXSR CUSTS2
+     C           MSG       COMP *BLANKS              888816
+     C*
+     C*    NEW CUSTOMER ENTERED
+     C   16      CNUM      IFNE CNUMHH
+     C                     SETON                     88
+     C                     SETOF                     87
+     C                     END
+     C                     END
+     C           *IN88     IFEQ '0'
+     C*
+     C*  NO SUBFILE AND NO CUSTOMER ENTERED
+     C  N88      CUST      IFEQ *BLANKS
+     C           *IN20     IFEQ '0'
+     C                     MOVELERR,1     MSG
+     C           MSG       COMP *BLANKS              888816
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   LIN1SR  SR TO FORMAT CHILD DETAILS FOR SUBFILE LINE 1
+     C**
+     C**   CALLED FROM   DETSR
+     C**   CALLS SR
+     C*    This subroutine formats the child details for the first line
+     C*    of the subfile record.
+     C*    Indicators used
+     C**
+     C           LIN1SR    BEGSR                           *** LIN1SR ***
+     C**
+     C**  SET LIMKEY TO ACCESS LIMITS FILE TO FIND OVERALL LIMIT
+     C                     MOVE '1'       RECJ
+     C                     MOVE PCNUM     MLC
+     C**********           MOVE PCNUM     CHLDWF  60                                          CSD027
+     C                     MOVE PCNUM     CHLDWF  6                                           CSD027
+     C                     MOVE CSNM      SNAMWF 10                     **
+     C                     SETOF                     06
+     C           LIMKEY    CHAINEMLIML2F             47
+     C   06      RECI      COMP 'D'                  4747
+     C           *IN47     IFEQ '1'
+     C                     Z-ADD0         MOAL
+     C                     Z-ADD0         MFXL                            S01128
+     C                     END
+     C**
+     C**   ACCESS EMCEX HEADER TO FIND EXPOSURE AMOUNT & OFF-SETTING BAL.
+     C**********           MOVE PCNUM     CHILDN  60                      LN0071
+     C                     MOVE PCNUM     CHILDN  6                       LN0071
+     C**           CHILDN    CHAINEMCEXX1F             57    CHAIN FAIL E8E81177
+     C****  N57      RECI      COMP 'D'                  5757             E81177
+     C****           *IN57     IFEQ '1'                                   E81177
+     C****                     Z-ADD0         MXPA                        E81177
+     C****                     Z-ADD0         MOSB                        E81177
+     C****                     END                                        E81177
+     C**
+     C*****ACCESS*EMCEX*DETAIL*TO*FIND*FX*EXPOSURE                        E28696
+     C**   ACCESS EMCEX DETAIL TO FIND EXPOSURE                           E28696
+     C           CHILDN    CHAINEMCEXX2F             57    CHAIN FAIL
+     C  N57      RECI      COMP 'D'                  5757
+     C           *IN57     IFEQ '1'
+     C                     Z-ADD0         MEXP   120                      E81177
+     C                     Z-ADD0         MOSB   120                      E81177
+     C                     Z-ADD0         MXPA   120                      E81177
+     C****                     Z-ADD0         MFXE                        E81177
+     C***********          Z-ADD0         MFXE                      S01128E28696
+     C***********          Z-ADD0         MFXB                      S01128E28696
+     C*                                                                   E81177
+     C                     ELSE                                           E81177
+     C/COPY WNCPYSRC,EM1600C001
+     C*                                                                   E81177
+     C***ACCUMULATE*EXPOSURE*EXCLUDING*FX'S                         E81177E28696
+     C***********                                                   E81177E28696
+     C***********          Z-ADDMMME      MEXP                      E81177E28696
+     C***********          ADD  MLEE      MEXP                      E81177E28696
+     C***********          ADD  MLAE      MEXP                      S01128E28696
+     C***********          ADD  MREE      MEXP                      E81177E28696
+     C*                                                                   E28696
+     C** ACCUMULATE EXPOSURES AND OFF-SETTING BALANCES FROM EXCEXX2       E28696
+     C                     EXSR ACCEXP                                    E28696
+     C*                                                                   E28696
+     C*  TURN IT TO 000'S                                                 E81177
+     C                     DIV  1000      MEXP      H                     E81177
+     C*                                                                   E81177
+     C*  FIND AVAILABILITY (LIMIT - EXPOSURE)                             E81177
+     C*                                                                   E81177
+     C           MOAL      SUB  MEXP      AVAIL  120                      E81177
+     C*                                                                   E81177
+     C***ACCUMULATE*FOR*OFF-SETTING*BALANCE                         E81177E28696
+     C***********                                                   E81177E28696
+     C***********          Z-ADDMMMB      MOSB                      E81177E28696
+     C***********          ADD  MLEB      MOSB                      E81177E28696
+     C***********          ADD  MLAB      MOSB                      S01128E28696
+     C***********          ADD  MREB      MOSB                      E81177E28696
+     C*  TURN IT TO 000'S                                                 E81177
+     C*                                                                   E81177
+     C                     DIV  1000      MOSB      H                     E81177
+     C*                                                                   E81177
+     C                     END
+     C**
+     C**   EXCLUDE FX EXPOSURE IN EXPOSURE TOTALS
+     C****           MXPA      SUB  MFXE      MEXP   120                  E81177
+     C**  UPDATE GRAND TOTALS (AMOUNTS ALREADY IN 000'S)
+     C****                 ADD  MOAL      LIMTOT                          S01128
+     C                     ADD  MEXP      EXPTOT
+     C****           MOAL      SUB  MEXP      AVAIL  120                  E81177
+     C****                 ADD  AVAIL     AVATOT                          S01128
+     C                     ADD  MOSB      BALTOT
+     C**
+     C**   EDIT AMOUNTS FOR OUTPUT
+     C**
+     C**   LIMIT
+     C                     Z-ADDMOAL      ZAMNT
+     C                     EXSR ZEDIT
+     C                     MOVE ZAMNTA    LIMSF
+     C**
+     C**   EXPOSURE
+     C                     Z-ADDMEXP      ZAMNT
+     C                     EXSR ZEDIT
+     C                     MOVE ZAMNTA    EXPSF
+     C**
+     C**   AVAILABILITY
+     C                     Z-ADDAVAIL     ZAMNT
+     C                     EXSR ZEDIT
+     C                     MOVE ZAMNTA    AVASF
+     C**
+     C**   BALANCE
+     C                     Z-ADDMOSB      ZAMNT
+     C                     EXSR ZEDIT
+     C                     MOVE ZAMNTA    BALSF
+     C*
+     C**                                                                  S01128
+     C*****EDIT*AMOUNTS*FOR*OUTPUT*OF*FX*VALUES                     S01128E28696
+     C***********                                                   S01128E28696
+     C*****FX*LIMIT                                                 S01128E28696
+     C***********          Z-ADDMFXL      ZAMNT                     S01128E28696
+     C***********          EXSR ZEDIT                               S01128E28696
+     C***********          MOVE ZAMNTA    FXLIM                     S01128E28696
+     C***********                                                   S01128E28696
+     C*****FX*EXPOSURE                                              S01128E28696
+     C***********          DIV  1000      MFXE      H               S01128E28696
+     C***********          Z-ADDMFXE      ZAMNT                     S01128E28696
+     C***********          EXSR ZEDIT                               S01128E28696
+     C***********          MOVE ZAMNTA    FXEXP                     S01128E28696
+     C***********                                                   S01128E28696
+     C*****FX*BALANCE                                               S01128E28696
+     C***********          DIV  1000      MFXB      H               S01128E28696
+     C***********          Z-ADDMFXB      ZAMNT                     S01128E28696
+     C***********          EXSR ZEDIT                               S01128E28696
+     C***********          MOVE ZAMNTA    FXOSB                     S01128E28696
+     C***********                                                   S01128E28696
+     C*****FX*AVAILABILITY                                          S01128E28696
+     C***********MFXL      SUB  MFXE      MFXAVA 120                S01128E28696
+     C***********          Z-ADDMFXAVA    ZAMNT                     S01128E28696
+     C***********          EXSR ZEDIT                               S01128E28696
+     C***********          MOVE ZAMNTA    FXAVA                     S01128E28696
+     C***********                                                   S01128E28696
+     C****ACCUMULATE*FOR*FX*TOTALS                                  S01128E28696
+     C***********                                                   S01128E28696
+     C****                 ADD  MFXL      LIMTFX 120                      S01128
+     C***********          ADD  MFXE      EXPTFX 120                S01128E28696
+     C***********          ADD  MFXB      BALTFX 120                S01128E28696
+     C****                 ADD  MFXAVA    AVATFX 120                      S01128
+     C**
+     C                     ENDSR                                       SR*
+     C**
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C***********                                                         E28696
+     C*****SHNSR*SR**PROMPT*FOR*CUSTOMER/SHORTNAME*AND*VALIDATE****       E28696
+     C***********                                                         E28696
+     C*****CALLED*FROM***DETAIL*TIME*PROCESSING                           E28696
+     C*****CALLS*SR******RETSR                                            E28696
+     C*****CALLS*PROG****EMC1900*CUSTOMER*SHORTNAMES*ENQUIRY              E28696
+     C*****This*is*a*standard*link*enquiry*subroutine*for*processing      E28696
+     C*****shortname*enquiry*requests.                                    E28696
+     C***********                                                         E28696
+     C***********SHNSR     BEGSR                           *** SHNSR   ***E28696
+     C***********                                                         E28696
+     C***ELSE*CALL*REQESTED*PROGRAM                                       E28696
+     C***********                                                         E28696
+     C********FIRST*UPDATE*DATA*AREA                                      E28696
+     C************LOCK     IN   EMSDS                                     E28696
+     C***********          MOVELEMCONT    EMSDS                           E28696
+     C***********          MOVE '0'       RETND                           E28696
+     C***********          MOVEL*BLANKS   RQDTD                           E28696
+     C***********          OUT  EMSDS                                     E28696
+     C***********                                                         E28696
+     C********CALL*PROGRAM                                                E28696
+     C***********          OUT  LDA                                       E28696
+     C***********          CALL 'EMC1900'                                 E28696
+     C************LOCK     IN   LDA                                       E28696
+     C***********                                                         E28696
+     C********CHECK*RETURN*CODE                                           E28696
+     C************LOCK     IN   EMSDS                                     E28696
+     C***********RETND     IFEQ '7'                                       E28696
+     C*************IF CMD/7 THEN END PROGRAM                              S01179
+     C*************IF*CMD/3*THEN*END*PROGRAM                        S01179E28696
+     C***********          MOVELRETND     RETNWF                          E28696
+     C***********          EXSR RETSR                                  D  E28696
+     C***********          END                                            E28696
+     C***********                                                         E28696
+     C********LOAD*REQUEST*DATA*INTO*CUSTOMER*FIELDS                      E28696
+     C***********          MOVELRQDTD     CNUM                            E28696
+     C***********                                                         E28696
+     C***********          ENDSR                                          E28696
+     C***********                                                         E28696
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*    CUSTS2 SR TO VALIDATE CUSTOMER ENTERED
+     C*
+     C**   CALLED FROM   DETSR
+     C**   CALLS SR      ZALIGN,CLCHN
+     C*
+     C*    This is a standard link enquiry subroutine for validating
+     C*    customer number/shortnames.
+     C*    Indicators used
+     C*    14  display/non display customer details
+     C*    17  off = upper link enquiry option available
+     C*    83  SNAME/CLINT record read
+     C*    80  chain fail
+     C*
+     C*
+     C           CUSTS2    BEGSR                           *** CUSTS2  ***
+     C*
+     C**
+     C*    ERROR IF CUSTOMER NO.NOT ENTERED,
+     C           CUST      IFEQ *BLANKS
+     C***17******          MOVELERR,1     MSG                             E28696
+     C**N17******          MOVELERR,2     MSG                             E28696
+     C  N20                MOVELERR,1     MSG                             E28696
+     C   20                MOVELERR,2     MSG                             E28696
+     C                     ELSE
+     C*
+     C*****IS*CUSTOMER*NO*OR*SHORTNAME*ENTERED.                           E28696
+     C***********                                                         E28696
+     C***********          Z-ADD0         ZADEC                           E28696
+     C***********          Z-ADD6         ZADIG                           E28696
+     C***********          MOVE '        'ZFIELD                          E28696
+     C***********          MOVEL'        'ZFIELD                          E28696
+     C***********          MOVELCUST      ZFIELD                          E28696
+     C***********          EXSR ZALIGN                                    E28696
+     C************IN99     IFEQ '0'                                       E28696
+     C***********                                                         E28696
+     C*****IF*CUST.*NO.*ENTERED,*CHECK*IT*IS*ON*CLIENT*FILE.              E28696
+     C*
+     C**  ACCESS CUSTOMER DETAILS                                         E28696
+     C**********           MOVELCNUM      CNUMHH  60                                          CSD027
+     C                     MOVELCNUM      CNUMHH  6                                           CSD027
+     C                     MOVELICUSTN    CNUM
+     C                     EXSR CLCHN
+     C************IN83     IFEQ '0'                                       E28696
+     C***********          MOVELCNUMHH    CNUM                            E28696
+     C***********          MOVE ERR,3     MSG                             E28696
+     C***********          END                                            E28696
+     C***********          ELSE                                           E28696
+     C***********                                                         E28696
+     C********SNAME*ENTERED,*CHECK*IT*IS*ON*SHORT*NAME*FILE.              E28696
+     C***********                                                         E28696
+     C***********          SETOF                     83                   E28696
+     C***********CUST      CHAINSNAME                80                   E28696
+     C***83******RECI      COMP 'D'                      83               E28696
+     C************IN83     IFEQ '0'                                       E28696
+     C***********                                                         E28696
+     C*****IF*NOT*FOUND*-*SNAME*ERROR*MESSSAGE                            E28696
+     C***********          MOVE ERR,4     MSG                             E28696
+     C***********          END                                            E28696
+     C***********          END                                            E28696
+     C                     END
+     C*
+     C*  IF CUSTOMER VALID THEN MOVE INTO ICUSTS
+     C           MSG       IFEQ *BLANKS
+     C                     MOVE CUST      ICUSTS 10
+     C                     MOVELCNUM      CNUMWF
+     C                     SETOF                     14
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*    CMDSR2 SR  COMMAND KEY VALIDATION AND RESPONSE
+     C*
+     C**   CALLED FROM   DETSR
+     C**   CALLS SR      RETSR
+     C*
+     C*    This is a standard link enquiry subroutine for processing
+     C*    the command keys.
+     C*
+     C*    Indicators used
+     C*    07  COMMAND 3                                                  S01179
+     C*    01  COMMAND 1
+     C*    02  COMMAND 12                                                 S01179
+     C*    17  OFF - UPPER LEVEL LINK ENQUIRY OPTION
+     C*
+     C           CMDSR2    BEGSR                           *** CMDSR2  ***
+     C*
+     C*    IF COMMAND 3 THEN END PROGRAM                                  S01179
+     C           *IN07     IFEQ '1'
+     C                     MOVE '7'       RETNWF  1
+     C                     EXSR RETSR
+     C                     ELSE
+     C**
+     C**************IF*COMMAND*12*TERMINATE*THE*PROGRAM             S01179E28696
+     C*             IF COMMAND 1 OR COMMAND 12 TERMINATE THE PROGRAM      E28696
+     C           *IN02     IFEQ '1'
+     C           *IN01     OREQ '1'                                       E28696
+     C*                                                                   E28696
+     C**  IF CHILD'S CUSTOMER NUMBER IS IN EMSDS, MOVE IT TO PARENT       E28696
+     C**  POSITION ON EMSDS, SO THAT ON RETURN TO EM0301, CHILD DETAILS   E28696
+     C**  WILL BE RE-DISPLAYED                                            E28696
+     C           CHILD     IFNE *BLANKS                                   E28696
+     C                     MOVE CHILD     PARENT                          E28696
+     C                     MOVE *BLANKS   CHILD                           E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C                     MOVE '2'       RETNWF
+     C                     EXSR RETSR
+     C                     END
+     C**
+     C                     END
+     C**
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT                                                              E28696
+     C********************************************************************E28696
+     C*    ACCEXP SR  ACCUMULATE EXPOSURES AND OFF-SETTING BALANCES       E28696
+     C*                                                                   E28696
+     C**   CALLED FROM   LIN1SR                                           E28696
+     C**   CALLS SR                                                       E28696
+     C*                                                                   E28696
+     C           ACCEXP    BEGSR                                          E28696
+     C*                                                                   E28696
+     C**  ZEROIZE EXPOSURE AND OFF-SETTING BALANCE                        E28696
+     C                     Z-ADD0         MEXP                            E28696
+     C                     Z-ADD0         MOSB                            E28696
+     C*                                                                   E28696
+     C**  ACCUMULATE ALL EXPOSURES AND OFF-SETTING BALANCES EXCEPT        E28696
+     C**  THOSE SPECIFIED TO BE EXCLUDED ON EMEXSCL1                      E28696
+     C**  (NB. SE-P/F CANNOT BE EXCLUDED)                                 E28696
+     C**  FOR ALL MODULES EXCEPT SE, IF EXPOSURE IS NEGATIVE, SUBTRACT    E28696
+     C**  IT FROM OFF-SETTING BALANCE                                     E28696
+     C*                                                                   E28696
+     C**  FX                                                              E28696
+     C           FXINC     IFEQ 'Y'                                       E28696
+     C           MFXE      IFGT 0                                         E28696
+     C                     ADD  MFXE      MEXP                            E28696
+     C                     ELSE                                           E28696
+     C                     SUB  MFXE      MOSB                            E28696
+     C                     END                                            E28696
+     C                     ADD  MFXB      MOSB                            E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  MM                                                              E28696
+     C           MMINC     IFEQ 'Y'                                       E28696
+     C           MMME      IFGT 0                                         E28696
+     C                     ADD  MMME      MEXP                            E28696
+     C                     ELSE                                           E28696
+     C                     SUB  MMME      MOSB                            E28696
+     C                     END                                            E28696
+     C                     ADD  MMMB      MOSB                            E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  FRA                                                             E28696
+     C           FRINC     IFEQ 'Y'                                       E28696
+     C           MFRE      IFGT 0                                         E28696
+     C                     ADD  MFRE      MEXP                            E28696
+     C                     ELSE                                           E28696
+     C                     SUB  MFRE      MOSB                            E28696
+     C                     END                                            E28696
+     C                     ADD  MFRO      MOSB                            E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  LOANS                                                           E28696
+     C           LEINC     IFEQ 'Y'                                       E28696
+     C           MLEE      IFGT 0                                         E28696
+     C                     ADD  MLEE      MEXP                            E28696
+     C                     ELSE                                           E28696
+     C                     SUB  MLEE      MOSB                            E28696
+     C                     END                                            E28696
+     C           MLAE      IFGT 0                                         E28696
+     C                     ADD  MLAE      MEXP                            E28696
+     C                     ELSE                                           E28696
+     C                     SUB  MLAE      MOSB                            E28696
+     C                     END                                            E28696
+     C                     ADD  MLEB      MOSB                            E28696
+     C                     ADD  MLAB      MOSB                            E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  RETAIL                                                          E28696
+     C           REINC     IFEQ 'Y'                                       E28696
+     C/COPY WNCPYSRC,EM1600C004
+     C           MREE      IFGT 0                                         E28696
+     C                     ADD  MREE      MEXP                            E28696
+     C                     ELSE                                           E28696
+     C                     SUB  MREE      MOSB                            E28696
+     C                     END                                            E28696
+     C                     ADD  MREB      MOSB                            E28696
+     C/COPY WNCPYSRC,EM1600C006
+     C                     END                                            E28696
+     C/COPY WNCPYSRC,EM1600C005
+     C*                                                                   E28696
+     C**  IRS                                                             E28696
+     C           IRINC     IFEQ 'Y'                                       E28696
+     C           MIRE      IFGT 0                                         E28696
+     C                     ADD  MIRE      MEXP                            E28696
+     C                     ELSE                                           E28696
+     C                     SUB  MIRE      MOSB                            E28696
+     C                     END                                            E28696
+     C                     ADD  MIRO      MOSB                            E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  SE-COUNTERPARTY (EXPOSURE ONLY)                                 E28696
+     C           CPINC     IFEQ 'Y'                                       E28696
+     C                     ADD  MSCE      MEXP                            E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  SE-ISSUER (EXPOSURE ONLY)                                       E28696
+     C           ISINC     IFEQ 'Y'                                       E28696
+     C                     ADD  MSIE      MEXP                            E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  SE-PORTFOLIO (OFF-SETTING BALANCE ONLY)                         E28696
+     C                     ADD  MSPO      MOSB                            E28696
+     C*                                                                   E28696
+     C**  FUTURES                                                         E28696
+     C           FUINC     IFEQ 'Y'                                       E28696
+     C           MFUE      IFGT 0                                         E28696
+     C                     ADD  MFUE      MEXP                            E28696
+     C                     ELSE                                           E28696
+     C                     SUB  MFUE      MOSB                            E28696
+     C                     END                                            E28696
+     C                     ADD  MFUO      MOSB                            E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  OPTIONS                                                         E28696
+     C           OPINC     IFEQ 'Y'                                       E28696
+     C           MOPE      IFGT 0                                         E28696
+     C                     ADD  MOPE      MEXP                            E28696
+     C                     ELSE                                           E28696
+     C                     SUB  MOPE      MOSB                            E28696
+     C                     END                                            E28696
+     C                     ADD  MOPO      MOSB                            E28696
+     C                     END                                            E28696
+     C/COPY WNCPYSRC,EM1600C002
+     C*                                                                   E28696
+     C                     ENDSR                                          E28696
+     C/COPY WNCPYSRC,EM1600C003
+     C********************************************************************E28696
+     C/EJECT
+     C********************************************************************
+     C*    FICYC SR  FIRST CYCLE CALCULATIONS
+     C*
+     C**   CALLED FROM   MAIN PROCESSING
+     C**   CALLS SR      TABCHN
+     C*
+     C*      This subroutine contains all the non-link enquiry process-
+     C*    ing found in the original enquiry program. It calls FICEM
+     C*    to perform the standard link enquiry initial processing.
+     C*
+     C           FICYC     BEGSR                           *** FICYC   ***
+     C*    ACCESS ICR1
+     C                     EXSR ZSYSTM                     ** EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVE ZTABKY    DBKEY
+     C                     MOVE 'EM1600'  DBPGM
+     C                     Z-ADD01        DBASE            DATABASE 01
+     C                     SETON                     LRU7U8
+     C                     EXSR RETSR
+     C                     END
+     C*****ACCESS EM CURRENCY ON ICR2                                     S01129
+     C*    ACCESS EM CURRENCY ON TABTB95                                  S01129
+     C**
+     C**   SET UP KEY FOR INSTALLATION CONTROL RECORD 2.
+     C                     MOVEL'01      'CURKEY
+     C*****                MOVE '  11'    CURKEY                          S01129
+     C                     MOVE '  95'    CURKEY                          S01129
+     C**
+     C*****      CURKEY    CHAINTABLE                99    ON NOT THERE   S01129
+     C           CURKEY    CHAINTABEM                99    ON NOT THERE   S01129
+     C**
+     C**N10N99****         SETON                         99ON - DELETED   S01129
+     C  N99      RECI      COMP '*'                      99ON - DELETED   S01129
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVE CURKEY    DBKEY
+     C                     MOVE 'EM1600'  DBPGM
+     C                     Z-ADD02        DBASE            DATABASE 02
+     C                     SETON                     LRU7U8
+     C                     EXSR RETSR
+     C                     END
+     C**   SET UP KEY FOR CURRENCY RECORD 1.
+     C                     MOVE LCCY      CCY
+     C                     MOVEL'20      'CURKEY
+     C                     MOVE '1'       CURKEY
+     C**
+     C****       CURKEY    CHAINTABLE                99    ON NOT THERE   S0
+     C           CURKEY    CHAINTABEM                99    ON NOT THERE   S01129
+     C**N12N99***          SETON                         99ON - DELETED   S01129
+     C  N99      RECI      COMP '*'                      99ON - DELETED   S01129
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVE CURKEY    DBKEY
+     C                     MOVE 'EM1600'  DBPGM
+     C                     Z-ADD03        DBASE            DATABASE 03
+     C                     SETON                     LRU7U8
+     C                     EXSR RETSR
+     C                     END
+     C                     MOVE CCNM      CCNMWF 14
+     C                     MOVE *BLANKS   CURKEY
+     C*
+     C*    INITIALISE FIELDS.
+     C***********          MOVE 'A'       CLKEYA  1                       E28696
+     C                     MOVE 'Y'       ZCOMMA
+     C                     MOVE 'Y'       ZMINUS
+     C                     Z-ADD0         ZCDP
+     C*    ZEROISE TOTAL FIELDS
+     C                     Z-ADD0         LIMTOT 120
+     C                     Z-ADD0         EXPTOT 120
+     C                     Z-ADD0         AVATOT 120
+     C                     Z-ADD0         BALTOT 120
+     C*                                                                   E28696
+     C**   DETERMINE WHICH MODULES TO BE EXCLUDED FROM TOTALS             E28696
+     C                     EXSR EXCTOT                                    E28696
+     C**
+     C**   CALL LINK ENQUIRY FIRST CYCLE SR
+     C                     EXSR FICEM2
+     C**
+      *                                                                   CGL011
+      ** Access Switchable Features file and check if CSD007              CSD007
+      ** is switched on or not.                                           CSD007
+      *                                                                   CSD007
+     C                     CALL 'AOSARDR0'                                CSD007
+     C                     PARM *BLANKS   PRTCD   7                       CSD007
+     C                     PARM '*VERIFY' POPTN   7                       CSD007
+     C                     PARM 'CSD007'  PSARD   6                       CSD007
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD007
+      *                                                                   CSD007
+     C           @RTCD     IFEQ *BLANKS                                   CSD007
+     C                     MOVE 'Y'       CSD007  1                       CSD007
+     C                     ELSE                                           CSD007
+     C                     MOVE 'N'       CSD007                          CSD007
+      *                                                                   CSD007
+      ** Database Error, if Return Code is not blanks or *NRF             CSD007
+      *                                                                   CSD007
+     C           PRTCD     IFNE '*NRF   '                                 CSD007
+     C                     MOVEL'SCSARDPD'DBFILE                          CSD007
+     C                     MOVEL'007'     DBASE                           CSD007
+     C                     MOVEL'CSD007  'DBKEY                           CSD007
+     C                     MOVE *ON       *INU7                           CSD007
+     C                     MOVE *ON       *INU8                           CSD007
+     C                     MOVE *ON       *INLR                           CSD007
+     C                     EXSR RETSR                                     CSD007
+     C                     ENDIF                                          CSD007
+     C                     ENDIF                                          CSD007
+     C*
+     C                     ENDSR
+     C********************************************************************
+0847 C**
+0738 C********************************************************************
+0739 C*    FICEM2 SR  FIRST CYCLE CALCULATIONS
+0741 C*
+     C**   CALLED FROM   FICYC
+     C**   CALLS SR
+0391 C**     This program is at level 2,so we access the information
+0391 C**   on emsds to find out who called this program.
+0391 C**   IF PGL1 = 2 then thats us,and we must have been called from
+0391 C**               the link enquiry below. We use PGN1(our name)
+0391 C**               to chain to the link enquiry option above.
+0391 C**   ELSE  we are the second program.
+0391 C**     If PGL1 is equal to 1 then we were called from the link
+0391 C**             enquiry above. seton 17 to non display the upper
+0391 C**             link enquiry option.
+0391 C**
+0391 C**     Else we must have been called from a menu directly,so we
+0391 C**   setof 17 to display the upper link enquiry option,using our
+0391 C**   program name PGN2.
+0391 C**
+0418 C**   Indicators used
+0418 C**   17  off = make upper link enquiry option available
+0418 C**   Fields defined
+0391 C**   PGN2DX - this program name
+0391 C**   PGN1DX - calling program name
+0391 C**   PGTXT  - this program title
+0391 C**   LEOPTX - upper link enquiry title
+0391 C*****PROGNM*-*program*name*for*help*function*************           S01199
+0391 C**
+0391 C**
+0740 C           FICEM2    BEGSR                           ** FICEM2   ***
+0391 C**
+0402 C                     MOVEL'EM1600  'PROGNM  8
+0391 C**
+0392 C**  ACCESS EM DATA AREA
+0405 C           *LOCK     IN   EMSDS
+0402 C                     MOVELPGN1D     PGN1DX  8
+0402 C                     MOVELPGN2D     PGN2DX  8
+0402 C                     MOVELRQDTD     RQDTWF 20
+0391 C**
+0392 C****CHECK*IF*CALLED*FROM*EM0302                                     E28696
+0402 C***********PGL1D     IFEQ '1'                                       E28696
+0402 C***********          SETON                     17                   E28696
+0402 C***********          ELSE                                           E28696
+0402 C***********          SETOF                     17                   E28696
+0402 C***********          END                                            E28696
+0744 C*
+0405 C                     OUT  EMSDS
+0345 C**
+0744 C*
+0745 C                     ENDSR
+0746 C********************************************************************
+     C/EJECT                                                              E28696
+     C********************************************************************E28696
+     C*    EXCTOT SR  DETERMINE WHICH MODULES TO BE EXCLUDED FROM         E28696
+     C*               TOTALS                                              E28696
+     C*                                                                   E28696
+     C**   CALLED FROM   FICYC                                            E28696
+     C**   CALLS SR                                                       E28696
+     C*                                                                   E28696
+     C           EXCTOT    BEGSR                                          E28696
+     C*                                                                   E28696
+     C                     Z-ADD1         XX      20                      E28696
+     C                     MOVEA*BLANKS   XCN,XX                          E28696
+     C*                                                                   E28696
+     C**  SET ALL INCLUDE FLAGS TO 'Y'                                    E28696
+     C                     MOVE 'Y'       FXINC   1                       E28696
+     C                     MOVE 'Y'       MMINC   1                       E28696
+     C                     MOVE 'Y'       FRINC   1                       E28696
+     C                     MOVE 'Y'       LEINC   1                       E28696
+     C                     MOVE 'Y'       REINC   1                       E28696
+     C                     MOVE 'Y'       IRINC   1                       E28696
+     C                     MOVE 'Y'       CPINC   1                       E28696
+     C                     MOVE 'Y'       ISINC   1                       E28696
+     C                     MOVE 'Y'       FUINC   1                       E28696
+     C                     MOVE 'Y'       OPINC   1                       E28696
+     C*                                                                   E28696
+     C**  ACCESS EM EXPOSURE SCALING FILE TO DETERMINE WHICH MODULES      E28696
+     C**  ARE TO BE EXCLUDED FROM TOTALS                                  E28696
+     C**  IF A RECORD FOUND AND INCLUDE IN TOTALS IS NOT 'Y',             E28696
+     C**     SET INCLUDE FLAG TO 'N' AND MOVE APPROPRIATE TEXT TO         E28696
+     C**     EXCLUSION NARRATIVE                                          E28696
+     C**  (IF RECORD NOT FOUND, MEANS MODULE TO BE INCLUDED)              E28696
+     C*                                                                   E28696
+     C**  FX                                                              E28696
+     C           'FX'      CHAINEMEXSCL1             30                   E28696
+     C           *IN30     IFEQ '0'                                       E28696
+     C           EKINTO    ANDNE'Y'                                       E28696
+     C                     MOVE 'N'       FXINC                           E28696
+     C                     MOVEALEG,1     XCN,XX                          E28696
+     C                     ADD  2         XX                              E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  MM                                                              E28696
+     C           'MM'      CHAINEMEXSCL1             30                   E28696
+     C           *IN30     IFEQ '0'                                       E28696
+     C           EKINTO    ANDNE'Y'                                       E28696
+     C                     MOVE 'N'       MMINC                           E28696
+     C           XX        IFNE 1                                         E28696
+     C                     MOVEA','       XCN,XX                          E28696
+     C                     ADD  1         XX                              E28696
+     C                     END                                            E28696
+     C                     MOVEALEG,2     XCN,XX                          E28696
+     C                     ADD  2         XX                              E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  FRA                                                             E28696
+     C           'FR'      CHAINEMEXSCL1             30                   E28696
+     C           *IN30     IFEQ '0'                                       E28696
+     C           EKINTO    ANDNE'Y'                                       E28696
+     C                     MOVE 'N'       FRINC                           E28696
+     C           XX        IFNE 1                                         E28696
+     C                     MOVEA','       XCN,XX                          E28696
+     C                     ADD  1         XX                              E28696
+     C                     END                                            E28696
+     C                     MOVEALEG,3     XCN,XX                          E28696
+     C                     ADD  3         XX                              E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  LOANS                                                           E28696
+     C           'LE'      CHAINEMEXSCL1             30                   E28696
+     C           *IN30     IFEQ '0'                                       E28696
+     C           EKINTO    ANDNE'Y'                                       E28696
+     C                     MOVE 'N'       LEINC                           E28696
+     C           XX        IFNE 1                                         E28696
+     C                     MOVEA','       XCN,XX                          E28696
+     C                     ADD  1         XX                              E28696
+     C                     END                                            E28696
+     C                     MOVEALEG,4     XCN,XX                          E28696
+     C                     ADD  5         XX                              E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  RETAIL                                                          E28696
+     C           'RE'      CHAINEMEXSCL1             30                   E28696
+     C           *IN30     IFEQ '0'                                       E28696
+     C           EKINTO    ANDNE'Y'                                       E28696
+     C                     MOVE 'N'       REINC                           E28696
+     C           XX        IFNE 1                                         E28696
+     C                     MOVEA','       XCN,XX                          E28696
+     C                     ADD  1         XX                              E28696
+     C                     END                                            E28696
+     C                     MOVEALEG,5     XCN,XX                          E28696
+     C                     ADD  6         XX                              E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  IRS                                                             E28696
+     C           'IR'      CHAINEMEXSCL1             30                   E28696
+     C           *IN30     IFEQ '0'                                       E28696
+     C           EKINTO    ANDNE'Y'                                       E28696
+     C                     MOVE 'N'       IRINC                           E28696
+     C           XX        IFNE 1                                         E28696
+     C                     MOVEA','       XCN,XX                          E28696
+     C                     ADD  1         XX                              E28696
+     C                     END                                            E28696
+     C                     MOVEALEG,6     XCN,XX                          E28696
+     C                     ADD  3         XX                              E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  SE-COUNTERPARTY                                                 E28696
+     C           'CP'      CHAINEMEXSCL1             30                   E28696
+     C           *IN30     IFEQ '0'                                       E28696
+     C           EKINTO    ANDNE'Y'                                       E28696
+     C                     MOVE 'N'       CPINC                           E28696
+     C           XX        IFNE 1                                         E28696
+     C                     MOVEA','       XCN,XX                          E28696
+     C                     ADD  1         XX                              E28696
+     C                     END                                            E28696
+     C                     MOVEALEG,7     XCN,XX                          E28696
+     C                     ADD  6         XX                              E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  SE-ISSUER                                                       E28696
+     C           'IS'      CHAINEMEXSCL1             30                   E28696
+     C           *IN30     IFEQ '0'                                       E28696
+     C           EKINTO    ANDNE'Y'                                       E28696
+     C                     MOVE 'N'       ISINC                           E28696
+     C           XX        IFNE 1                                         E28696
+     C                     MOVEA','       XCN,XX                          E28696
+     C                     ADD  1         XX                              E28696
+     C                     END                                            E28696
+     C                     MOVEALEG,8     XCN,XX                          E28696
+     C                     ADD  6         XX                              E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  FUTURES                                                         E28696
+     C           'FU'      CHAINEMEXSCL1             30                   E28696
+     C           *IN30     IFEQ '0'                                       E28696
+     C           EKINTO    ANDNE'Y'                                       E28696
+     C                     MOVE 'N'       FUINC                           E28696
+     C           XX        IFNE 1                                         E28696
+     C                     MOVEA','       XCN,XX                          E28696
+     C                     ADD  1         XX                              E28696
+     C                     END                                            E28696
+     C                     MOVEALEG,9     XCN,XX                          E28696
+     C                     ADD  7         XX                              E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  OPTIONS                                                         E28696
+     C           'OP'      CHAINEMEXSCL1             30                   E28696
+     C           *IN30     IFEQ '0'                                       E28696
+     C           EKINTO    ANDNE'Y'                                       E28696
+     C                     MOVE 'N'       OPINC                           E28696
+     C           XX        IFNE 1                                         E28696
+     C                     MOVEA','       XCN,XX                          E28696
+     C                     ADD  1         XX                              E28696
+     C                     END                                            E28696
+     C                     MOVEALEG,10    XCN,XX                          E28696
+     C                     ADD  7         XX                              E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  IF NO MODULES EXCLUDED, SET ON INDICATOR TO NON-DISPLAY         E28696
+     C**  'EXCLUDES:-' NARRATIVE                                          E28696
+     C           XX        IFEQ 1                                         E28696
+     C                     SETON                     45                   E28696
+     C*                                                                   E28696
+     C**  OTHERWISE, MOVE EXCLUSION NARRATIVE TO SCREEN FIELD             E28696
+     C                     ELSE                                           E28696
+     C                     SETOF                     45                   E28696
+     C*                                                                   E28696
+     C**  IF EXCLUSION NARRATIVE NOT FULL, MOVE BLANKS TO REST OF         E28696
+     C**  NARRATIVE                                                       E28696
+     C           XX        IFLT 57                                        E28696
+     C                     MOVEA*BLANKS   XCN,XX                          E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C                     MOVEAXCN       EXCNAR                          E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C                     ENDSR                                          E28696
+     C********************************************************************E28696
+     C**
+     C/EJECT
+     C********************************************************************
+     C**
+     C*    CLCHN SR. TO CHAIN TO CLIENT FILE.
+     C**   CALLED FROM   MAIN PROCESSING,CUSTS2
+     C**   CALLS SR
+     C*****This*is*a*standard*link*enquiry*subroutine*for*accessing*the   E28696
+     C*****CLINT***record*for*a*customer.                                 E28696
+     C*****Indicators*used                                                E28696
+     C*****80**on*-*chain*fail                                            E28696
+     C*****83**on*-*valid*record*found                                    E28696
+     C           CLCHN     BEGSR                           *** CLCHN  ***
+     C***********          SETOF                     83                   E28696
+     C***********CLKEY     CHAINCLINT                80                   E28696
+     C***83******RECI      COMP 'D'                      83               E28696
+     C*
+     C**  CALL ACCESS OBJECT TO ACCESS CUSTOMER DETAILS                   E28696
+     C                     MOVELCUST      CKEY                            E28696
+     C***********          CALL 'AOCUSTR0'                         E28696 CSD007
+     C                     CALL 'AOCUSTR2'                                CSD007
+     C                     PARM '*BLANKS' @RTCD   7                       E28696
+     C                     PARM '*KEY   ' @OPTN   7                       E28696
+     C                     PARM           CKEY   10                       E28696
+     C                     PARM           KEYSTS  7                       E28696
+     C***********SDCUST    PARM SDCUST    DSSDY                    E28696 CSD007
+     C           SDCUST    PARM SDCUST    DSLDY                           CSD007
+     C*                                                                   E28696
+      ** If CSD007 is on, allow processing of a closed record (return     CSD007
+      ** code '*NRF' and date deleted equal to zero).                     CSD007
+      *                                                                   CSD007
+     C           CSD007    IFEQ 'Y'                                       CSD007
+     C           @RTCD     ANDEQ'*NRF'                                    CSD007
+     C           BBDTDL    ANDEQ*ZERO                                     CSD007
+      *                                                                   CSD007
+     C                     MOVELBBCUST    CNUMWF                          CSD007
+     C                     MOVE BBCUST    CUSPAR                          CSD007
+     C                     MOVE BBCUST    CNUM                            CSD007
+     C                     MOVE *BLANKS   CUST                            CSD007
+     C                     MOVELBBCUST    CUST                            CSD007
+      *                                                                   CSD007
+     C                     ELSE                                           CSD007
+      *                                                                   CSD007
+     C**  IF INVALID, DISPLAY MESSAGE                                     E28696
+     C           @RTCD     IFNE *BLANKS                                   E28696
+     C                     SETOF                     16                   E28696
+     C           KEYSTS    IFEQ '*CNUM  '                                 E28696
+     C                     MOVELERR,3     MSG                             E28696
+     C                     ELSE                                           E28696
+     C                     MOVELERR,4     MSG                             E28696
+     C                     END                                            E28696
+     C*                                                                   E28696
+     C**  ELSE STORE CUSTOMER DETAILS                                     E28696
+     C                     ELSE                                           E28696
+     C**********           MOVELBBCUST    CNUMWF  60                                   E28696 CSD027
+     C                     MOVELBBCUST    CNUMWF  6                                           CSD027
+     C                     MOVE BBCUST    CUSPAR                          E28696
+     C                     MOVE BBCUST    CNUM                            E28696
+     C                     MOVE *BLANKS   CUST                            120033
+     C                     MOVELBBCUST    CUST                            E28696
+     C                     END                                            E28696
+      *                                                                   CSD007
+     C                     ENDIF                                          CSD007
+     C*                                                                   E28696
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C**
+     C********************************************************************
+     C***********                                                         E28696
+     C***EMCNSR**SR.*TO*CHAIN*TO*EMCON*FILE                               E28696
+     C*****CALLED*FROM***DTRQSM                                           E28696
+     C*****CALLS*SR                                                       E28696
+     C*****This*is*a*standard*link*enquiry*subroutine*for*accessing*the   E28696
+     C*****EMCONPF*record*for*the*lower*link*enquiry.                     E28696
+     C*****Indicators*used                                                E28696
+     C*****80**on*-*chain*fail/invalid*record                             E28696
+     C***********EMCNSR    BEGSR                           *** EMCNSR *** E28696
+     C***********                                                         E28696
+     C***********EMCNKY    CHAINEMCON                80                   E28696
+     C**N80******RECI      COMP 'D'                  8080                 E28696
+     C***********                                                         E28696
+     C***********          ENDSR                                          E28696
+     C***********                                                         E28696
+     C********************************************************************
+     C*    RETSR SR END OF PROGRAM PROCESSING
+     C**   CALLED FROM   CMDSR,LEOPS2,1 RQSM
+     C**   CALLS SR
+     C*    This is a standard link enquiry subroutine for ending the
+     C*    program.
+     C*    Indicators used
+     C*    LR  seton - terminate program
+     C           RETSR     BEGSR                           *** RETSR   ***
+     C*
+     C                     SETON                     LR
+     C*                                                                   E28696
+     C**  IF DATA BASE ERROR HAS OCCURRED, SET RETURN CODE TO 'E'         E28696
+     C           *INU7     IFEQ '1'                                       E28696
+     C                     MOVE 'E'       RETNWF                          E28696
+     C                     END                                            E28696
+     C**
+     C**  ACCESS EM DATA AREA
+     C           *LOCK     IN   EMSDS
+     C                     MOVE RETNWF    RETND
+     C                     MOVELRQDTWF    RQDTD
+     C                     OUT  EMSDS
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   STANDARD SUBROUTINES
+     C**
+     C********************************************************************
+     C**
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C**   CALLED BY FIRST RECORD PROCESSING.
+     C**
+     C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+     C**
+     C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+     C                     MOVEL'01      'ZTABKY 12
+     C                     MOVE '  10'    ZTABKY
+     C**
+     C****       ZTABKY    CHAINTABLE                99    ON NOT THERE   S01129
+     C           ZTABKY    CHAINTABEM                99    ON NOT THERE   S01129
+     C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C********************************************************************
+     C*****************************************************************
+     C*
+     C*  ZEDIT SR. SUBROUTINE TO EDIT AN AMOUNT FIELD FOR OUTPUT
+     C*
+     C*  CALLED BY: BASFMT, ENQFMT
+     C*
+     C*  INPUT FIELDS:
+     C*                    ZAMNT  15 0    AMOUNT FIELD TO BE EDITED
+     C*                    ZCDP    1,0    NO. OF DECIMAL PLACES
+     C*                    ZCOMMA  1 A    COMMAS WANTED ('Y' OR 'N')
+     C*                    ZMINUS  1 A    MINUS SIGN WANTED ('Y' OR 'N')
+     C*
+     C*  OUTPUT FIELDS:
+     C*                    ZAMNTA 21 A    EDITED AMOUNT FIELD
+     C*
+     C*  INDICATOR USED:
+     C*                    *IN94          SETON IF NON-ZERO CHARACTER
+     C*                                   FOUND IN THE AMOUNT
+     C*
+     C           ZEDIT     BEGSR                           ***  ZEDIT  ***
+     C*
+     C                     Z-ADDZAMNT     ZAMNT  150       I/P FIELD
+     C                     MOVE ZCOMMA    ZCOMMA  1        VALUE Y OR N
+     C                     MOVE ZMINUS    ZMINUS  1        VALUE Y OR N
+     C                     Z-ADDZCDP      ZCDP    10       NO. OF DPs.
+     C                     MOVE *BLANK    ZAMNTA 21        O/P FIELD
+     C                     MOVE '0'       *IN94
+     C*
+     C                     MOVE *BLANK    ZAMNTB 16        NON-COMMA EDIT
+     C                     MOVE *BLANK    ZAMNTC 20        NON-COMMA EDIT
+     C                     MOVE *BLANK    ZAMNTD 17        NON-COMMA EDIT
+     C                     MOVE *BLANK    ZFLD3  16        NON-COMMA EDIT
+     C                     MOVE '00000000'ZFLD1  15
+     C                     MOVEL'0000000' ZFLD1
+     C                     MOVE *BLANK    ZFLD2  20
+     C                     MOVE ' '       ZMINS   1        MINUS CHARCTER
+     C                     MOVEA*BLANK    ZEDT
+     C                     MOVEA*BLANK    ZED2
+     C                     MOVEA*BLANK    ZAMT
+     C                     MOVEA*BLANK    Z3
+     C*
+     C*  INCLUDE MINUS SIGN IF NEEDED
+     C*  PROCESS AMOUNT AS A POSTIVE NUMBER EVEN IF NEGATIVE
+     C           ZMINUS    IFEQ 'Y'                        **** B1
+     C           ZAMNT     IFLT 0                          **** B2
+     C                     MOVE '-'       ZMINS
+     C                     Z-SUBZAMNT     ZAMNT
+     C                     ELSE                            **** X2
+     C                     MOVE ' '       ZMINS
+     C                     END                             **** E2
+     C                     ELSE                            **** X2
+     C           ZAMNT     IFLT 0                          **** B2
+     C                     Z-SUBZAMNT     ZAMNT
+     C                     END                             **** E2
+     C                     END                             **** E1
+     C*
+     C*  SEPARATE INTEGER AND DECIMAL PARTS OF AMOUNT
+     C*  - ZERO DECIMAL PLACES
+     C           ZCDP      IFEQ 0                          **** B1
+     C                     MOVE ZAMNT     ZFLD1
+     C                     ELSE
+     C*
+     C*  - ONE DECIMAL PLACE
+     C           ZCDP      IFEQ 1                          **** B2
+     C                     MOVE ZAMNT     ZDEC1   1
+     C                     MOVELZAMNT     ZAMT1  14
+     C                     MOVE ZAMT1     ZFLD1
+     C                     ELSE
+     C*
+     C*  - TWO DECIMAL PLACES
+     C           ZCDP      IFEQ 2                          **** B3
+     C                     MOVE ZAMNT     ZDEC2   2
+     C                     MOVELZAMNT     ZAMT2  13
+     C                     MOVE ZAMT2     ZFLD1
+     C                     ELSE
+     C*
+     C*  - THREE DECIMAL PLACES
+     C           ZCDP      IFEQ 3                          **** B4
+     C                     MOVE ZAMNT     ZDEC3   3
+     C                     MOVELZAMNT     ZAMT3  12
+     C                     MOVE ZAMT3     ZFLD1
+     C                     ELSE
+     C*
+     C*  - EIGHT DECIMAL PLACES
+     C           ZCDP      IFEQ 8                          **** B5
+     C                     MOVE ZAMNT     ZDEC8   8
+     C                     MOVELZAMNT     ZAMT8   7
+     C                     MOVE ZAMT8     ZFLD1
+     C                     END                             **** E5
+     C                     END                             **** E4
+     C                     END                             **** E3
+     C                     END                             **** E2
+     C                     END                             **** E1
+     C*
+     C*  MOVE THE INTEGER FIELD INTO A 5X3 ARRAY FOR EDITING
+     C                     MOVEAZFLD1     ZAMT
+     C*
+     C/SPACE 3
+     C*
+     C****
+     C*
+     C*  CHECK IF COMMAS ARE NEEDED OR NOT
+     C*
+     C****
+     C           ZCOMMA    IFEQ 'Y'                        **** E1
+     C****
+     C*
+     C*  IF ZCOMMA  IS 'Y' MOVE COMMAS ETC. INTO A 5X4 EDITED ARRAY
+     C*  (FOR ZERO DECIMAL PLACES DO NOT WANT A DECIMAL POINT)
+     C*
+     C           ZCDP      IFEQ 0                          **** B2
+     C                     MOVEAZCOM,1    ZEDT
+     C                     ELSE
+     C                     MOVEAZCOM,2    ZEDT
+     C                     END                             **** E2
+     C*
+     C*
+     C*  READ THROUGH AMOUNT ARRAY SO AS TO PLACE EDITED DIGITS
+     C*  INTO ZEDT. THE ARRAY IS READ 3 CHARACTERS AT A TIME.
+     C*  ALL LEADING ZEROES ARE SUPPRESSED.
+     C                     DO   5         Z       10       **** B2
+     C*
+     C           *IN94     IFEQ '1'                        **** B3
+     C                     MOVELZAMT,Z    ZEDT,Z
+     C                     ELSE
+     C*
+     C*  BLANK OUT EDITED FIELD IF ZEROES ARE FOUND
+     C           ZAMT,Z    IFEQ '000'                      **** B4
+     C           Z         IFNE 5                          **** B5
+     C                     MOVE '    '    ZEDT,Z
+     C                     END                             **** E5
+     C                     ELSE
+     C*
+     C*  WHEN FIRST NON ZERO CHARACTERS ARE REACHED REMOVE LEADING
+     C*  ZEROES. READ ARRAY ELEMENT 1 CHARACTER AT A TIME.
+     C                     MOVE '1'       *IN94
+     C                     Z-ADD1         ZN      10
+     C                     MOVEAZAMT,Z    Z3
+     C           Z3,ZN     DOWEQ'0'                        **** B5
+     C                     MOVE ' '       Z3,ZN
+     C                     ADD  1         ZN
+     C                     END                             **** E5
+     C                     MOVEAZ3        ZEDT,Z
+     C                     END                             **** E4
+     C                     END                             **** E3
+     C                     END                             **** E2
+     C*
+     C*  PLACE EDITED ARRAY INTO ALPHA FIELD TO INCLUDE DECIMALS.
+     C                     MOVEAZEDT      ZFLD2
+     C*
+     C*  - ZERO DECIMAL PLACES
+     C           ZCDP      IFEQ 0                          **** B2
+     C                     MOVELZFLD2     ZAMT0  19
+     C                     MOVE ZAMT0     ZAMNTC
+     C                     ELSE
+     C*
+     C*  - ONE DECIMAL PLACE
+     C           ZCDP      IFEQ 1                          **** B3
+     C                     MOVE ZFLD2     ZAMT1A 19
+     C                     MOVELZAMT1A    ZAMNTC
+     C                     MOVE ZDEC1     ZAMNTC
+     C                     ELSE
+     C*
+     C*  - TWO DECIMAL PLACES
+     C           ZCDP      IFEQ 2                          **** B4
+     C                     MOVE ZFLD2     ZAMT2A 18
+     C                     MOVELZAMT2A    ZAMNTC
+     C                     MOVE ZDEC2     ZAMNTC
+     C                     ELSE
+     C*
+     C*  - THREE DECIMAL PLACES
+     C           ZCDP      IFEQ 3                          **** B5
+     C                     MOVE ZFLD2     ZAMT3A 17
+     C                     MOVELZAMT3A    ZAMNTC
+     C                     MOVE ZDEC3     ZAMNTC
+     C                     ELSE
+     C*
+     C*  - EIGHT DECIMAL PLACES
+     C           ZCDP      IFEQ 8                          **** B6
+     C                     MOVE ZFLD2     ZAMT8A 12
+     C                     MOVELZAMT8A    ZAMNTC
+     C                     MOVE ZDEC8     ZAMNTC
+     C                     END                             **** E6
+     C                     END                             **** E5
+     C                     END                             **** E4
+     C                     END                             **** E3
+     C                     END                             **** E2
+     C*
+     C*  INCLUDE MINUS SIGN IF NEEDED
+     C           ZMINUS    IFEQ 'Y'                        **** B2
+     C                     MOVELZAMNTC    ZAMNTA
+     C                     MOVE ZMINS     ZAMNTA
+     C                     ELSE                            **** X2
+     C                     MOVE ZAMNTC    ZAMNTA
+     C                     END                             **** E2
+     C*
+     C****                                                 ****
+     C*
+     C                     ELSE                            **** X1
+     C*
+     C****                                                 ****
+     C*
+     C*  ELSE IF ZCOMMA EQUAL 'N':
+     C*  MOVE FORMAT LEFT INTO A 6X3 ARRAY - 6TH ELEMENT CONTAINS D.P.
+     C*  (FOR ZERO DECIMAL PLACES DO NOT WANT A DECIMAL POINT)
+     C           ZCDP      IFEQ 0                          **** B2
+     C                     MOVEAZCOM,3    ZED2
+     C                     ELSE
+     C                     MOVEAZCOM,4    ZED2
+     C                     END                             **** E2
+     C*
+     C*
+     C*  READ THROUGH AMOUNT ARRAY SO AS TO PLACE EDITED DIGITS
+     C*  INTO ZED2. THE ARRAY IS READ 3 CHARACTERS AT A TIME.
+     C*  ALL LEADING ZEROES ARE SUPPRESSED.
+     C                     DO   5         Z       10       **** B2
+     C*
+     C           *IN94     IFEQ '1'                        **** B3
+     C                     MOVELZAMT,Z    ZED2,Z
+     C                     ELSE
+     C*
+     C*  SEARCH FOR FIRST NONE-ZERO CHARACTERS
+     C           ZAMT,Z    IFNE '000'                      **** B4
+     C*
+     C*  WHEN FIRST NON ZERO CHARACTERS ARE REACHED REMOVE LEADING
+     C*  ZEROES. READ ARRAY ELEMENT 1 CHARACTER AT A TIME.
+     C                     MOVE '1'       *IN94
+     C                     Z-ADD1         ZN      10
+     C                     MOVEAZAMT,Z    Z3
+     C           Z3,ZN     DOWEQ'0'                        **** B5
+     C                     MOVE ' '       Z3,ZN
+     C                     ADD  1         ZN
+     C                     END                             **** E5
+     C                     MOVEAZ3        ZED2,Z
+     C                     END                             **** E4
+     C                     END                             **** E3
+     C                     END                             **** E2
+     C*
+     C*  PLACE EDITED ARRAY INTO ALPHA FIELD TO INCLUDE DECIMALS.
+     C                     MOVEAZED2      ZFLD3
+     C*
+     C*  - ZERO DECIMAL PLACES
+     C           ZCDP      IFEQ 0                          **** B2
+     C                     MOVELZFLD3     ZAMT0B 15
+     C                     MOVE ZAMT0B    ZAMNTB
+     C                     ELSE
+     C*
+     C*  - ONE DECIMAL PLACE
+     C           ZCDP      IFEQ 1                          **** B3
+     C                     MOVE ZFLD3     ZAMT1B 15
+     C                     MOVELZAMT1B    ZAMNTB
+     C                     MOVE ZDEC1     ZAMNTB
+     C                     ELSE
+     C*
+     C*  - TWO DECIMAL PLACES
+     C           ZCDP      IFEQ 2                          **** B4
+     C                     MOVE ZFLD3     ZAMT2B 14
+     C                     MOVELZAMT2B    ZAMNTB
+     C                     MOVE ZDEC2     ZAMNTB
+     C                     ELSE
+     C*
+     C*  - THREE DECIMAL PLACES
+     C           ZCDP      IFEQ 3                          **** B5
+     C                     MOVE ZFLD3     ZAMT3B 13
+     C                     MOVELZAMT3B    ZAMNTB
+     C                     MOVE ZDEC3     ZAMNTB
+     C                     ELSE
+     C*
+     C*  - EIGHT DECIMAL PLACES
+     C           ZCDP      IFEQ 8                          **** B6
+     C                     MOVE ZFLD3     ZAMT8B  8
+     C                     MOVELZAMT8B    ZAMNTB
+     C                     MOVE ZDEC8     ZAMNTB
+     C                     END                             **** E6
+     C                     END                             **** E5
+     C                     END                             **** E4
+     C                     END                             **** E3
+     C                     END                             **** E2
+     C*
+     C*  INCLUDE MINUS SIGN IF NEEDED
+     C           ZMINUS    IFEQ 'Y'                        **** B2
+     C                     MOVELZAMNTB    ZAMNTD
+     C                     MOVE ZMINS     ZAMNTD
+     C                     ELSE                            **** X2
+     C                     MOVE ZAMNTB    ZAMNTD
+     C                     END                             **** E2
+     C*
+     C*  FINALLY MOVE NON-COMMA EDITED FIELD INTO O/P FIELD
+     C                     MOVE ZAMNTD    ZAMNTA
+     C*
+     C****
+     C                     END                             **** E1
+     C****
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C**
+     C********************************************************************
+     C**
+     C**   ZALIGN SR. TO VALIDATE AND RIGHT-ALIGN NUMERIC FIELDS.
+     C**
+     C           ZALIGN    BEGSR                           *** ZALIGN ***
+     C**
+     C                     SETOF                     929399
+     C**
+     C**   SAVE INPUT FIELD IN ARRAY, ZA1.
+     C                     MOVEAZFIELD    ZA1
+     C**
+     C**   CALCULATION TO DEFINE NUMBER STRUCTURE CONTROL FIELDS.
+     C                     Z-ADDZADIG     ZADIG   20
+     C                     Z-ADDZADEC     ZADEC   10
+     C**
+     C**   CALCULATIONS TO DEFINE/CLEAR FIELDS.
+     C                     MOVE ' '       ZA2
+     C                     MOVEAZA2       ZFIELD 16
+     C                     Z-ADD0         ZX      20
+     C                     Z-ADD0         ZY      20
+     C**
+     C**   ENSURE REQUIRED STRUCTURE OF FIELD IS VALID.
+     C           ZADIG     ADD  ZADEC     ZZ      20
+     C           ZZ        COMP 15                   99
+     C   99                GOTO ZAEND
+     C**
+     C**   LOOP TO FIND DECIMAL POINT, BLANKS AND CHARACTERS.
+     C           ZATAG1    TAG                             ** ZATAG1 TAG *
+     C           ZX        ADD  1         ZX
+     C**
+     C**   CHECK FOR DECIMAL POINT. ERROR IF SECOND DECIMAL POINT.
+     C           ZA1,ZX    COMP '.'                      90
+     C   90 93             SETON                     99
+     C   99                GOTO ZAEND
+     C**
+     C**   CHECK FOR BLANKS. BYPASS FOR FIRST BLANK AFTER CONTENT.
+     C           ZA1,ZX    COMP ' '                      91
+     C   91 92
+     COR 91 93             GOTO ZATAG2
+     C**
+     C**   CHECK FOR NUMERIC, IF NOT '.' OR ' '.
+     C  N90N91   ZA1,ZX    COMP '0'                    99
+     C  N90N91N99ZA1,ZX    COMP '9'                  99
+     C   99                GOTO ZAEND                      NOT NUMERIC
+     C**
+     C**   STORE DIGITS IN ARRAY AND HOW MANY.
+     C**   ZY, TOTAL OF DIGITS IN THE INPUT FIELD.
+     C**   ZZ, TOTAL OF DIGITS TO THE LEFT OF DECIMAL POINT.
+     C  N90N91   ZY        ADD  1         ZY         92
+     C  N90N91             MOVE ZA1,ZX    ZA2,ZY
+     C   90                Z-ADDZY        ZZ         93  93
+     C**
+     C           ZX        COMP 16                     94  CHECK IF ALL
+     C   94                GOTO ZATAG1
+     C**
+     C           ZATAG2    TAG                             ** ZATAG2 TAG *
+     C**
+     C**   IF NO DECIMAL POINT FOUND, SET TOTAL FIELD ZZ.
+     C  N93                Z-ADDZY        ZZ
+     C**
+     C**   CHECK FOR EMBEDDED BLANKS.
+     C   91 92
+     COR 91 93             MOVEAZA1,ZX    ZFIELD
+     C   91 92
+     COR 91 93   ZFIELD    COMP ' '                  9999
+     C   99                GOTO ZAEND                      EMBEDDED BLANK
+     C**
+     C**   ENSURE THAT NUMBER OF DIGITS ENTERED EITHER SIDE
+     C**   OF DECIMAL POINT ARE NOT MORE THAN ALLOWED.
+     C           ZZ        COMP ZADIG                99
+     C           ZY        SUB  ZZ        ZX
+     C  N99      ZADEC     SUB  ZX        ZX           9995
+     C   99                GOTO ZAEND
+     C   95                GOTO ZATAG4                     NO TRAILING
+     C**                                                   BLANKS.
+     C**   FILL THE TRAILING BLANKS WITH ZEROS.
+     C           ZY        ADD  ZX        ZZ
+     C           ZATAG3    TAG                             ** ZATAG3 TAG *
+     C           ZY        ADD  1         ZY
+     C                     MOVE '0'       ZA2,ZY
+     C           ZY        COMP ZZ                     94
+     C   94                GOTO ZATAG3
+     C**
+     C**   RIGHT-ALIGN THE VALUE BY MOVING BACK TO ARRAY, ZA1.
+     C           ZATAG4    TAG                             ** ZATAG4 TAG *
+     C                     MOVE '0'       ZA1
+     C                     Z-ADD16        ZX
+     C           ZATAG5    TAG                             ** ZATAG5 TAG *
+     C           ZY        COMP 0                        94
+     C   94                GOTO ZATAG6
+     C                     MOVE ZA2,ZY    ZA1,ZX
+     C           ZY        SUB  1         ZY
+     C           ZX        SUB  1         ZX
+     C                     GOTO ZATAG5
+     C           ZATAG6    TAG                             ** ZATAG6 TAG *
+     C**
+     C**   MOVE VALIDATED AND RIGHT-ALIGNED NUMBER BACK INTO ZFIELD.
+     C                     MOVEAZA1       ZFIELD
+     C**
+     C           ZAEND     ENDSR                           * ZAEND ENDSR *
+     C**
+     C**
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** ERR
+ ENTER A CUSTOMER NUMBER OR SHORTNAME
+ ENTER A CUSTOMER,SHORTNAME,OR SELECT AN OPTION
+ INVALID CUSTOMER NUMBER
+ INVALID CUSTOMER SHORTNAME
+ INVALID ENTRY - ONLY ONE OPTION MAY BE SELECTED
+ OPTION NOT AVAILABLE
+NO SUBSIDIARIES FOR THIS PARENT
+** ZCOM - EDIT FORMAT FOR AMOUNT FIELD
+   ,   ,   ,   ,  0
+   ,   ,   ,   ,  0.
+              0
+              0.
+**   LEG  - LEGENDS FOR SCREEN
+FX     MM     FRA    Loans  Retail IRS    SE-C/p SE-Iss FuturesOptions

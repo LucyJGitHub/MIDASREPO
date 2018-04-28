@@ -1,0 +1,1099 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Net Currency Commitment Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portfolio Management Module                          *
+      *                                                               *
+      *  PM6040 - PM Net Currency Report                              *
+      *                                                               *
+      *  Function:  This program prints the current 'Net Commitment'  *
+      *  (I/C,COB)  for each currency.                                *
+      *                                                               *
+      *  Called By: PMC6041 - PM Net Currency Commitment Report CLP   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 26Jun96               *
+      *                 S01124             Date 13Jun94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CPM005 - Private Banking Phase II                            *
+      *           Focus Group Changes Upgraded to DBA                 *
+      *  S01124 - PBFG/7 - Net Commitment By Currency                 *
+      *           PBFG/8 - Display Positions Split By Currency        *
+      *                                                               *
+      *****************************************************************
+     F***PMCUSTPOIF**E                    DISK         KINFSR *PSSR       CPM005
+     FPMCUSTQ0IF  E                    DISK         KINFSR *PSSR          CPM005
+     F*      PREFIX AZ,BB, QB
+     F**
+     FPMNTCMLLIF  E           K        DISK         KINFSR *PSSR
+     F*      PREFIX
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       CPM005
+     F*******PREFIX*BJ                                                    CPM005
+     F***SDPLCSL2IF**E           K        DISK         KINFSR *PSSR       CPM005
+     F*******PREFIX*QB                                                    CPM005
+     F***SDCURRL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+     F*******PREFIX*A6                                                    CPM005
+     F***SDCUSTL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+     F*******PREFIX*A6                                                    CPM005
+     F***SDPORTPDIF**E                    DISK         KINFSR *PSSR       CPM005
+     F*******PREFIX*P9                                                    CPM005
+     F***PMPORTPPIF**E           K        DISK         KINFSR *PSSR       CPM005
+     FPMPORTPDIF  E           K        DISK         KINFSR *PSSR          CPM005
+     F*      PREFIX PN
+     F***PM6040P1O***E                    PRINTER                     UC  CPM005
+     FPM6040P1O   E                    PRINTER      KINFSR *PSSR      UC  CPM005
+     F                                              KINFDS SPOOL1         CPM005
+     FPM6040AUO   E                    PRINTER      KINFSR *PSSR      UC  CPM005
+     F                                              KINFDS SPOOLU         CPM005
+     F**
+     F*==================================================================
+     F*                 FUNCTION OF INDICATORS
+     F*
+     F**  U8      - STANDARD RUN CONTROL ERROR
+     F**  U7 U8   - STANDARD DATABASE ERROR
+     F*
+     F**  LR      - LAST RECORD ON FILE
+     F*
+     F**                 *************************
+     F**                 ** INDICATORS NOT USED **
+     F**                 *************************
+     F*
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   80 *
+     F**      * 81   82   83   84   85   86   87   88   89   80 *
+     F**      * 91   92   93   94   95   96   97   97   99      *
+     F**      ***************************************************
+     F*
+     F*==================================================================
+     F/EJECT
+     E*==================================================================
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+     E*
+     E***********         CMD     1   1 39               QCMDEXC ARRAY    CPM005
+     E*
+      /COPY ZSRSRC,ZSEDITZ1
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E*==================================================================
+     E/EJECT
+     I*******************************************************************
+     I**  RENAME FIELDS IN PMPORTPP:
+     IPMPORTP0
+     I              PNCASN                          PXCASN
+     I*
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     I***LDA*****   UDS                            256
+     I***********                           132 183 DBLOT
+     I***********                           132 141 DBFILE
+     I***********                           142 170 DBKEY
+     I***********                           171 180 DBPGM
+     I***********                           181 1830DBASE
+     ILDA       E DSLDA                         256                       CPM005
+      *                                                                   CPM005
+      ** Local data area for database error details                       CPM005
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          CPM005
+      ** after each database error handling.                              CPM005
+      **                                                                  CPM005
+      **                                    134 141 DBFILE                CPM005
+      **       Defines:                     142 170 DBKEY                 CPM005
+      **                                    171 180 DBPGM                 CPM005
+      **                                    181 1830DBASE                 CPM005
+     ISPOOL1      DS                                                      CPM005
+      *                                                                   CPM005
+      ** File Information Data Structure for PM6040P1                     CPM005
+      *                                                                   CPM005
+     I                                       83  92 SFILE1                CPM005
+     I                                    B 123 1240SFNUM1                CPM005
+     I                                    B 188 1890OFLLN1                CPM005
+     I                                    B 367 3680PRTLN1                CPM005
+      *                                                                   CPM005
+     ISPOOLU      DS                                                      CPM005
+      *                                                                   CPM005
+      ** File Information Data Structure for PM6040AU                     CPM005
+      *                                                                   CPM005
+     I                                       83  92 SFILEU                CPM005
+     I                                    B 123 1240SFNUMU                CPM005
+     I*
+     I**  DATA STRUCTURE FOR ZSEDIT:
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  DATA STRUCTURE FOR ZOUT21:
+     I            DS
+     I                                        1  21 ZOUT21
+     I                                       21  21 WWPLUS
+     I*
+     ISDBANK    E DSSDBANKPD                                              CPM005
+      *                                                                   CPM005
+      **  SD Bank Details                                                 CPM005
+      *                                                                   CPM005
+     ISDCUST    E DSSDCUSTPD                                              CPM005
+      *                                                                   CPM005
+      **  SD Customer Details                                             CPM005
+      *                                                                   CPM005
+     ISDCURR    E DSSDCURRPD                                              CPM005
+      *                                                                   CPM005
+      **  SD Currency Details                                             CPM005
+      *                                                                   CPM005
+     ISDPORT    E DSSDPORTPD                                              CPM005
+      *                                                                   CPM005
+      **  SD Portfolio Management ICD Details                             CPM005
+      *                                                                   CPM005
+     ISDPLCS    E DSSDPLCSPD                                              CPM005
+      *                                                                   CPM005
+      **  SD Portfolio Management Customer Details                        CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 CPM005
+      *                                                                   CPM005
+      ** Short Data Structure                                             CPM005
+      *                                                                   CPM005
+     IDSSDY     E DSDSSDY                                                 CPM005
+      *                                                                   CPM005
+      ** Long Data Structure                                              CPM005
+      *                                                                   CPM005
+     I**================================================================
+     I/EJECT
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING
+      * P001     - OPEN/CLOSE PRINTER FILE                               *
+      * ZSEDIT   - FORMAT NUMBER TO PRINT                                *
+      * *PSSR    - STANDARD ERROR SUBROUTINE                             *
+      * #INIT    - INITAIL PROCESSING                                    *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * QCMDEXC  - CALL QCMDEXC TO OVERRIDE PRINTER FILE                 *
+      *                                                                  *
+      ********************************************************************
+     C*            MAIN PROGRAM  START
+     C**================================================================
+     C*
+     C**  DEFINE INPUT PARAMETER:
+     C           *ENTRY    PLIST
+     C***********          PARM           WWACOF  4                       CPM005
+     C***********          PARM           WWPNP8  6                       CPM005
+     C                     PARM           PSEQ    5                       CPM005
+     C                     PARM           PENT    3                       CPM005
+     C                     PARM           PCUST   6                       CPM005
+     C                     PARM           WWPREF  4
+     C*
+     C**  DEFINE KEY LIST TO ACCESS PMNTCMLL:
+     C           KKEY      KLIST
+     C                     KFLD           XXPNP8
+     C                     KFLD           XXPREF  4
+     C*
+     C           KKEY2     KLIST
+     C                     KFLD           K2CNUM
+     C                     KFLD           K2PTFR
+     C*
+     C**  DEFINE KEY LIST TO ACCESS PMPORTPP:
+     C           DFKEY     KLIST
+     C**********           KFLD           WWCUSN  60                                          CSD027
+     C                     KFLD           WWCUSN  6                                           CSD027
+     C                     KFLD           WWPRTF  4
+     C*
+     C**  INITIALIZATION:
+     C                     EXSR #INIT
+     C*
+     C                     EXSR MAIN
+     C*
+     C** TERMINATE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      ********************************************************************
+      *                                                                  *
+      * MAIN     - PRODUCE ON REQUEST CASHFLOW REPORT                    *
+      *                                                                  *
+      ********************************************************************
+     C           MAIN      BEGSR                           * MAIN   BGSR *
+     C*                                                    ***************
+     C**  INITIALISE 9997 RECORD INDICATOR:
+     C                     MOVE '0'       *IN35
+     C*
+     C****READ*RECORD*FROM*QRYF*PMCUSTPO:******************************   CPM005
+     C***********          READ PMCUSTPO                 73               CPM005
+      *                                                                   CPM005
+      ** Read record from QRYF PMCUSTQ0                                   CPM005
+      *                                                                   CPM005
+     C                     READ PMCUSTQ0                 73               CPM005
+     C*
+     C                     MOVE *BLANKS   XXCUST  6
+     C*
+     C****IF*NO*RECORD*READ*ON*PMCUSTPO,*OPEN*PRTF*AND*WRITE***********   CPM005
+     C**  IF NO RECORD READ ON PMCUSTQ0, OPEN PRTF AND WRITE              CPM005
+     C**     HEADER DETAILS:
+     C           *IN73     IFEQ '1'                        - B1
+     C***********          EXSR P001                                      CPM005
+     C***********          EXSR P002                                      CPM005
+     C                     MOVE 'Y'       WNODET  1                       CPM005
+     C                     EXSR AUDIT                                     CPM005
+     C                     ELSE                            - X1
+     C*
+     C                     MOVE '1'       *IN80
+     C                     MOVE 'N'       WNODET                          CPM005
+     C*
+     C***READ*UNTIL*EOF*ON*PMCUSTPO************************************   CPM005
+      *                                                                   CPM005
+      ** Read until EOF on PMCUSTQ0                                       CPM005
+     C*
+     C           *IN73     DOWEQ'0'                        - B2
+     C*
+     C**  GET CUSTOMER DETAILS:
+     C           BBCUST    IFNE XXCUST                     - B3
+     C*
+     C***********BBCUST    CHAINSDPLCSL2             86                   CPM005
+     C***********                                                         CPM005
+     C************IN86     IFEQ '1'                        - B4           CPM005
+     C***********          Z-ADD1         DBASE            ***************CPM005
+     C***********          MOVEL'SDPLCSL2'DBFILE           * DB ERROR 01 *CPM005
+     C***********          MOVELBBCUST    DBKEY            ***************CPM005
+     C***********          EXSR *PSSR                                     CPM005
+     C***********          END                             - E4           CPM005
+      *                                                                   CPM005
+      ** Access the Portfolio Management Customer Details                 CPM005
+      *                                                                   CPM005
+     C                     MOVELBBCUST    WBCUST 10                       CPM005
+     C                     CALL 'AOPLCSR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*KEY   ' WOPTN   7                       CPM005
+     C                     PARM           WBCUST                          CPM005
+     C           SDPLCS    PARM SDPLCS    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD001       DBASE            ***************CPM005
+     C                     MOVE 'SDPLCSPD'DBFILE           * DB ERROR 01 *CPM005
+     C                     MOVELWBCUST    DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** Access the Customer Details                                      CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOCUSTR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY   ' WOPTN                           CPM005
+     C                     PARM           WBCUST                          CPM005
+     C                     PARM *BLANKS   WKSTS   7                       CPM005
+     C           SDCUST    PARM SDCUST    DSSDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD002       DBASE            ***************CPM005
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 02 *CPM005
+     C                     MOVELWBCUST    DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+     C*
+     C                     MOVE BBCUST    XXCUST
+     C*
+     C                     END                             - E3
+     C*
+     C****IF*A/C*OFFICER*CODE/PMCUSTPO*HAS*CHANGED,********************   CPM005
+     C**  IF A/C OFFICER CODE/PMCUSTQ0 HAS CHANGED,                       CPM005
+     C**     AND OPEN AND CLOSE PRINTER FILE IF REQUIRED:
+     C           AZACOC    IFNE WWACOC                     - B3
+     C                     EXSR P001
+     C                     END                             - E3
+      *
+      ** PRINT DETAILS
+     C                     EXSR DETAIL
+      *
+     C           WWPREF    IFNE '*ALL'
+     C           WWTOT1    ANDNE0
+      *
+      ** FORMAT TOTAL AMOUNT
+     C                     Z-ADDWWTOT1    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRTOT1
+     C                     MOVE ZOUT21    RRTOT1
+     C                     Z-ADD0         WWTOT1
+      *
+     C                     Z-ADDZDECS     WDECS
+     C                     Z-ADD1000      ZFLD15
+     C                     Z-ADD1         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRTOT2
+     C                     MOVE ZOUT21    RRTOT2
+     C                     Z-ADDWDECS     ZDECS
+      *
+     C                     WRITEDETTOT
+     C                     END                             - E2
+      *
+      ** READ NEXT RECORD ON QUERY
+     C                     MOVE AZACOC    WWACOC  2
+     C***********          READ PMCUSTPO                 73               CPM005
+     C                     READ PMCUSTQ0                 73               CPM005
+     C                     MOVE '0'       *IN80
+     C                     END                             - E2
+     C*
+     C                     WRITEENDRE                  70
+     C                     CLOSEPM6040P1                                  CPM005
+     C*
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * MAIN   EDSR *
+     C*                                                    ***************
+      ********************************************************************
+      *
+      * SRRATE  - READ ALL DETAILS DEPENDING ON SELECTION TO RETRIEVE RATE
+      *
+      ********************************************************************
+     C           SRRATE    BEGSR
+      *
+     C                     Z-ADD0         TOT0
+     C                     Z-ADD0         TOT1
+      *
+     C**********           Z-ADDFJCNUM    K2CNUM  60                                          CSD027
+     C                     MOVE FJCNUM    K2CNUM  6                                           CSD027
+     C                     MOVE FJPTFR    K2PTFR  4
+      *
+     C           KKEY2     SETLLPMNTCMLL
+      *
+     C                     READ PMNTCMLL                 80
+      *
+     C                     MOVE FJPTFR    XXPTFR  4
+      **
+     C           *IN80     DOWEQ'0'                        - B1
+     C           FJCNUM    ANDEQK2CNUM
+     C           FJPTFR    ANDEQK2PTFR
+      *
+      ** CUMULATE
+     C           FJCVAL    ADD  FJCAPC    TOT0   150
+     C           TOT0      ADD  FJFFOR    TOT0
+     C                     ADD  TOT0      TOT1   150
+      *
+     C                     READ PMNTCMLL                 80
+      *
+     C                     END                             - E1
+      *
+      ** REPOSITION ON FILE
+     C           KKEY2     SETLLPMNTCMLL
+     C                     READ PMNTCMLL                 80
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      * DETAIL1 - WRITE DETAILS FOR CUSTOMER INPUT FROM LF/PMNTCMLL
+      *
+      ********************************************************************
+     C           DETAIL    BEGSR
+      *
+     C**********           MOVE BBCUST    XXPNP8  60                                          CSD027
+     C                     MOVE BBCUST    XXPNP8  6                                           CSD027
+     C                     MOVE WWPREF    XXPREF
+      *
+      ** *ALL PROCESSING
+     C           WWPREF    IFEQ '*ALL'                     - B1
+     C                     MOVE *BLANKS   XXPREF
+     C           KKEY      SETLLPMNTCMLL
+     C                     ELSE                            - X1
+     C           KKEY      SETLLPMNTCMLL
+     C                     END                             - E1
+      *
+     C                     READ PMNTCMLL                 80
+      *
+     C           WWPREF    IFNE '*ALL'                     - B1
+      *
+     C***********WWACOF    IFEQ '*ALL'                     - B11          CPM005
+     C***********WWPNP8    ANDEQ'*ALL'                                    CPM005
+     C           PENT      IFEQ 'ALL'                      - B11          CPM005
+     C           PCUST     ANDEQ'*ALL'                                    CPM005
+      *
+     C                     MOVE FJCNUM    WWCUST  6
+      *
+     C           FJPTFR    IFEQ WWPREF                     - B12
+     C           WWCUST    ANDEQBBCUST
+     C                     EXSR P002
+     C                     END                             - E12
+      *
+     C                     ELSE                            - X11
+     C                     EXSR P002
+     C                     END                             - E11
+     C                     END                             - E1
+      *
+      **
+     C           *IN80     DOWEQ'0'                        - B1
+     C           WWPREF    ANDEQ'*ALL'
+     C           FJCNUM    ANDEQXXPNP8
+      *
+      ** CUSTOMER & PORTFOLIO SELECTED
+     C           *IN80     OREQ '0'
+     C           WWPREF    ANDNE'*ALL'
+     C           FJCNUM    ANDEQXXPNP8
+     C           FJPTFR    ANDEQWWPREF
+      *
+     C***********WWACOF    IFEQ '*ALL'                     - B11          CPM005
+     C***********WWPNP8    ANDEQ'*ALL'                                    CPM005
+     C           PENT      IFEQ 'ALL'                      - B11          CPM005
+     C           PCUST     ANDEQ'*ALL'                                    CPM005
+     C           WWPREF    ANDNE'*ALL'
+      *
+     C           WWPREF    IFNE FJPTFR                     - B12
+     C                     GOTO NEXT
+     C                     END                             - E12
+     C                     END                             - E11
+      *
+      ** RESETUP HEADER AND PRINTER FILE NAME
+     C           FJPTFR    IFNE W2PTFR                     - B2
+     C           WWPREF    ANDEQ'*ALL'
+     C                     EXSR P002
+     C                     MOVE FJPTFR    W2PTFR  4
+     C                     END                             - E2
+      *
+      ** CHANGE OF CURRENCY
+     C           FJCURR    IFNE WWCURR                     - B2
+     C                     MOVE FJCURR    WWCURR  3
+     C***********FJCURR    CHAINSDCURRL1             81                   CPM005
+     C************IN81     IFEQ '1'                        - B3           CPM005
+     C***********          Z-ADD2         DBASE            ***************CPM005
+     C***********          MOVEL'SDCURRL1'DBFILE           * DB ERROR 02 *CPM005
+     C***********          MOVELFJCURR    DBKEY            ***************CPM005
+     C***********          EXSR *PSSR                                     CPM005
+     C***********          END                             - E3           CPM005
+      *                                                                   CPM005
+      ** Call Access Program for Currency Details                         CPM005
+      *                                                                   CPM005
+     C                     MOVE FJCURR    WCCY    3                       CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY   ' WOPTN                           CPM005
+     C                     PARM           WCCY                            CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *                                                                   CPM005
+      ** Handle Database Error                                            CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     MOVELWCCY      DBKEY            ***************CPM005
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 03 *CPM005
+     C                     Z-ADD003       DBASE            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+     C                     END                             - E2
+      *
+     C                     EXSR PRINT
+      *
+     C           NEXT      TAG
+     C                     READ PMNTCMLL                 80
+      *
+     C           FJCNUM    IFNE XXPNP8                     - B2
+     C           WWPREF    ANDEQ'*ALL'
+     C           FJPTFR    ORNE W2PTFR
+     C           WWPREF    ANDEQ'*ALL'
+      *
+      ** FORMAT TOTAL AMOUNT
+     C           WWTOT1    IFNE 0                          - B3
+     C                     Z-ADDWWTOT1    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRTOT1
+     C                     MOVE ZOUT21    RRTOT1
+      *
+     C                     Z-ADDZDECS     WDECS
+     C                     Z-ADD1000      ZFLD15
+     C                     Z-ADD1         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRTOT2
+     C                     MOVE ZOUT21    RRTOT2
+     C                     Z-ADDWDECS     ZDECS
+      *
+     C                     WRITEDETTOT
+     C                     Z-ADD0         WWTOT1
+     C                     END                             - E3
+      *
+     C                     END                             - E2
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      *
+      * PRINT  - SETUP DETAILS FROM PRINTER
+      *
+      ********************************************************************
+     C           PRINT     BEGSR
+      *
+     C                     MOVE 'J'       ZECODE
+      *
+     C                     MOVE FJCURR    RRCCY
+     C                     MOVELA6CYNM    RRCYNM
+      *
+      ** CURRENT VALUE
+     C                     Z-ADDFJCVAL    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRCURV
+     C                     MOVE ZOUT21    RRCURV
+      *
+     C                     MOVE FJCAPC    RRFWCC
+      *
+      ** FWD CAPITAL CHANGES
+     C                     Z-ADDFJCAPC    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRFWCC
+     C                     MOVE ZOUT21    RRFWCC
+      *
+      ** FWD COMMITMENTS
+     C                     Z-ADDFJFFOR    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRFWCO
+     C                     MOVE ZOUT21    RRFWCO
+      *
+     C           FJCVAL    ADD  FJCAPC    XXSUM1 150
+     C           XXSUM1    ADD  FJFFOR    XXSUM1
+     C                     MOVE XXSUM1    RRFWNC
+      *
+      ** FWD NET COMMITMENT
+     C                     Z-ADDXXSUM1    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRFWNC
+     C                     MOVE ZOUT21    RRFWNC
+      *
+      ** RATE
+     C           TOT1      IFNE 0                          - B1
+     C                     Z-ADDZDECS     WDECS   10
+      *
+     C           XXSUM1    MULT 100       TOT2   150
+      *
+     C           TOT2      DIV  TOT1      TOT3    51H
+      *
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE TOT3      ZFLD15
+     C                     Z-ADD1         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRRATE
+     C                     MOVE ZOUT21    RRRATE
+     C                     Z-ADDWDECS     ZDECS
+     C                     END
+      *
+      * FOREX F&O AMOUNT
+     C                     Z-ADDFJFORX    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRFFOA
+     C                     MOVE ZOUT21    RRFFOA
+      *
+      * UNHEDGED POSITION
+     C           XXSUM1    ADD  FJFORX    XXSUM2 150
+     C                     Z-ADDXXSUM2    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRUNPO
+     C                     MOVE ZOUT21    RRUNPO
+      *
+      ** CUMULATE TOTAL
+     C                     ADD  XXSUM1    WWTOT1 150
+      *
+     C           FJCVAL    IFNE 0                          - B1
+     C           FJCAPC    ORNE 0
+     C           FJFFOR    ORNE 0
+     C           FJFORX    ORNE 0
+      *
+     C                     WRITEDET01
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      ********************************************************************
+     C*
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * P002     - SETUP HEADER DETAILS                                  *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C           P002      BEGSR
+      *
+     C           *IN73     IFEQ '0'
+      ** CALCULATE TOTAL TO RETRIEVE RATE FOR EACH RECORD
+     C                     EXSR SRRATE
+      *
+     C*
+     C**  OUTPUT ACCOUNT OFFICER TEXT
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C*
+     C**  OUTPUT CUSTOMER TEXT
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C*
+     C** ACCESS LF/SDCUSTL1 TO RETRIEVE CUSTOMER SHORTNAME                CPM005
+     C***********BBCUST    CHAINSDCUSTL1             81                   CPM005
+     C************IN86     IFEQ '1'                        - B1           CPM005
+     C***********          Z-ADD8         DBASE            ***************CPM005
+     C***********          MOVEL'SDCUSTL1'DBFILE           * DB ERROR 08 *CPM005
+     C***********          MOVELBBCUST    DBKEY            ***************CPM005
+     C***********          EXSR *PSSR                                     CPM005
+      *                                                                   CPM005
+      ** Access the Customer Details                                      CPM005
+      *                                                                   CPM005
+     C                     MOVELBBCUST    WBCUST 10                       CPM005
+     C                     CALL 'AOCUSTR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY   ' WOPTN                           CPM005
+     C                     PARM           WBCUST                          CPM005
+     C                     PARM *BLANKS   WKSTS   7                       CPM005
+     C           SDCUST    PARM SDCUST    DSSDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD008       DBASE            ***************CPM005
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 08 *CPM005
+     C                     MOVELWBCUST    DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+      *                                                                   CPM005
+     C                     ELSE                            - X1
+     C                     MOVELBBCSSN    RRCSSN
+     C                     END                             - E1
+     C*
+     C**  OUTPUT PORTFOLIO TEXT
+     C*
+     C           FJPTFR    IFEQ '9997'                     - B1
+     C***********          MOVE P9R997    RRPORT                          CPM005
+     C***********          MOVELP9N997    RRNARR                          CPM005
+     C                     MOVE FCR997    RRPORT                          CPM005
+     C                     MOVELFCN997    RRNARR                          CPM005
+     C                     END                             - E1
+     C*
+     C           FJPTFR    IFEQ '9998'                     - B1
+     C***********          MOVE P9R998    RRPORT                          CPM005
+     C***********          MOVELP9N998    RRNARR                          CPM005
+     C                     MOVE FCR998    RRPORT                          CPM005
+     C                     MOVELFCN998    RRNARR                          CPM005
+     C                     END                             - E1
+     C*
+     C           FJPTFR    IFEQ '9999'                     - B1
+     C***********          MOVE P9R999    RRPORT                          CPM005
+     C***********          MOVELP9N999    RRNARR                          CPM005
+     C                     MOVE FCR999    RRPORT                          CPM005
+     C                     MOVELFCN999    RRNARR                          CPM005
+     C                     END                             - E1
+     C*
+     C           FJPTFR    IFNE '9999'                     - B1
+     C           FJPTFR    ANDNE'9998'
+     C           FJPTFR    ANDNE'9997'
+     C                     MOVELFJCNUM    WWCUSN
+     C                     MOVELFJPTFR    WWPRTF
+     C***********DFKEY     CHAINPMPORTPP             83                   CPM005
+     C           DFKEY     CHAINPMPORTPD             83                   CPM005
+     C*
+     C           *IN83     IFEQ '1'                        - B2
+     C                     Z-ADD4         DBASE            ***************
+     C***********          MOVEL'PMPORTPP'DBFILE           * DB ERROR 04 *CPM005
+     C                     MOVE 'PMPORTPD'DBFILE           * DB ERROR 04 *CPM005
+     C                     MOVELWWCUSN    DBKEY            ***************
+     C                     MOVE WWPRTF    DBKEY
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C                     MOVELPNPTFR    RRPORT
+     C                     MOVELPNPTFN    RRNARR
+     C                     MOVELPNPTCY    RRCURR
+     C*
+     C                     ELSE                            - X1
+     C                     MOVELQBCSBY    RRCURR
+     C                     END                             - E1
+     C*
+     C** ACCESS WITH PORTFOLIO CURRENCY TO RETRIEVE DECIMAL PLACES FOR EDITION
+     C***********RRCURR    CHAINSDCURRL1             81                   CPM005
+     C************IN81     IFEQ '1'                        - B3           CPM005
+     C***********          Z-ADD5         DBASE            ***************CPM005
+     C***********          MOVEL'SDCURRL1'DBFILE           * DB ERROR 05 *CPM005
+     C***********          MOVELFJCURR    DBKEY            ***************CPM005
+     C***********          EXSR *PSSR                                     CPM005
+      *                                                                   CPM005
+      ** Call Access Program for Currency Details                         CPM005
+      *                                                                   CPM005
+     C                     MOVE RRCURR    WCCY                            CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY   ' WOPTN                           CPM005
+     C                     PARM           WCCY                            CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *                                                                   CPM005
+      ** Handle Database Error                                            CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     MOVELWCCY      DBKEY            ***************CPM005
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 05 *CPM005
+     C                     Z-ADD005       DBASE            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+      *                                                                   CPM005
+     C                     ELSE
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     END                             - E3
+     C                     END
+     C*
+     C                     WRITEHEADRE
+     C                     WRITEACOFRE
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * P001     - OPEN/CLOSE PRINTER FILE                               *
+      *                                                                  *
+      ********************************************************************
+     C           P001      BEGSR                           * P001   BGSR *
+     C*                                                    ***************
+     C**  IF THIS IS THE FIRST RECORD PROCESSED,
+     C**     OVERRIDE THE PRTF TO PM0430PNNN (WHERE NNN IS THE PRINTER
+     C**     LOCATION CODE) AND OPEN PRINTER FILE:
+     C           *IN89     IFEQ '0'                        - B1
+     C*
+     C***********          MOVELAZPRTL    WWPRTL                          CPM005
+     C***********          MOVE WWPRTL    WWCMD                           CPM005
+     C***********          CALL 'QCMDEXC'                                 CPM005
+     C***********          PARM WWCMD     QCAA   43                       CPM005
+     C***********          PARM 43        QCAN   155                      CPM005
+     C                     MOVELAZACOC    WWACOS  2
+     C*
+     C                     OPEN PM6040P1
+      *                                                                   CPM005
+      ** RCF Processing for PM6040P1 File                                 CPM005
+      *                                                                   CPM005
+     C                     EXSR RCFP1                                     CPM005
+      *                                                                   CPM005
+     C***********          MOVE AZPRTL    SAVPRT                          CPM005
+     C                     MOVE '1'       *IN89
+     C                     ELSE                            - X1
+     C*
+     C*
+     C**  IF CHANGE OF PRINTER LOCATION CODE,
+     C**     OUTPUT END OF REPORT COMMENT, CLOSE THE OLD PRTF,
+     C**     OVERRIDE PRTF TO NEW FILE FOR PRINTER LOCATION CODE,
+     C**     OPEN THE NEW PRTF:
+     C***********AZPRTL    IFNE SAVPRT                     - B2           CPM005
+     C*
+     C************IN89     IFEQ '1'                        - B3           CPM005
+      *                                                                   CPM005
+      ** Write End of Report                                              CPM005
+      *                                                                   CPM005
+     C                     WRITEENDRE                                     CPM005
+      *                                                                   CPM005
+     C                     CLOSEPM6040P1
+     C***********          MOVE '0'       *IN89
+     C***********          END                             - E3           CPM005
+     C*
+     C***********          MOVELAZPRTL    WWPRTL                          CPM005
+     C***********          MOVE WWPRTL    WWCMD                           CPM005
+     C***********          CALL 'QCMDEXC'                                 CPM005
+     C***********          PARM WWCMD     QCAA                            CPM005
+     C***********          PARM 43        QCAN                            CPM005
+     C*
+     C                     OPEN PM6040P1
+      *                                                                   CPM005
+      ** RCF Processing for PM6040P1 File                                 CPM005
+      *                                                                   CPM005
+     C                     EXSR RCFP1                                     CPM005
+      *                                                                   CPM005
+     C***********          MOVE AZPRTL    SAVPRT                          CPM005
+     C                     MOVE '1'       *IN89
+     C                     MOVELAZACOC    WWACOS  2
+     C***********          END                             - E2           CPM005
+     C*
+     C                     END                             - E1
+     C*                                                    ***************
+     C                     ENDSR                           * P001   EDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - STANDARD ERROR SUBROUTINE                             *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                           * *PSSR BEGSR *
+     C*                                                    ***************
+      ** Check to see that *PSSR has not already been called              CPM005
+      *                                                                   CPM005
+     C           WRUN      IFEQ *BLANK                                    CPM005
+     C                     MOVE 'Y'       WRUN    1                       CPM005
+      *                                                                   CPM005
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR                           CPM005
+     C*
+     C**  PRINT DUMP AND CANCEL PROGRAM:
+     C                     DUMP
+     C*
+     C***********          MOVE '1'       *INLR                           CPM005
+     C                     EXSR AUDIT                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** If *PSSR already run, then just end the program here.            CPM005
+      *                                                                   CPM005
+     C                     MOVE '1'       *INU7                           CPM005
+     C                     MOVE '1'       *INU8                           CPM005
+     C                     MOVE '1'       *INLR                           CPM005
+      *                                                                        5
+     C                     RETRN
+     C*                                                    ***************
+     C                     ENDSR                           * *PSSR ENDSR *
+     C*                                                    ***************
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITAIL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - STANDARD ERROR SUBROUTINE                             *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           * #INIT BEGSR *
+     C*                                                    ***************
+     C**  PREPARE LDA:
+     C***********          MOVEL*BLANK    DBLOT                           CPM005
+     C           *NAMVAR   DEFN           LDA                             CPM005
+     C                     MOVEL'PM6040'  DBPGM
+     C*
+     C**  INITIALIZE INDICATORS:
+     C                     MOVE '0'       *IN
+     C                     MOVE '1'       *IN64
+     C                     MOVE '1'       *IN65
+     C                     MOVE '1'       *IN66
+     C                     MOVE '1'       *IN67
+     C                     MOVE '1'       *IN68
+     C                     MOVE '1'       *IN69
+     C                     Z-ADD0         WWTOT1
+     C*
+     C**  GET BANK DETAILS:
+     C***********1         SETLLSDBANKPD               71                 CPM005
+     C***********          READ SDBANKPD                 71               CPM005
+     C***********                                                         CPM005
+     C************IN71     IFEQ '1'                        - B1           CPM005
+     C***********          Z-ADD6         DBASE            ***************CPM005
+     C***********          MOVEL'SDBANKPD'DBFILE           * DB ERROR 06 *CPM005
+     C***********          MOVEL' NONE '  DBKEY            ***************CPM005
+     C***********          EXSR *PSSR                                     CPM005
+     C***********          END                             - E1           CPM005
+     C***********                                                         CPM005
+     C**  GET PORTFOLIO ICD:                                              CPM005
+     C***********          READ SDPORTPD                 72               CPM005
+     C***********                                                         CPM005
+     C************IN72     IFEQ '1'                        - B1           CPM005
+     C***********          Z-ADD7         DBASE            ***************CPM005
+     C***********          MOVEL'SDPORTPD'DBFILE           * DB ERROR 07 *CPM005
+     C***********          MOVEL' NONE '  DBKEY            ***************CPM005
+     C***********          EXSR *PSSR                                     CPM005
+     C***********          END                             - E1           CPM005
+     C***********                                                         CPM005
+     C**  BUILT COMMAND EXPRESSION FOR QCMDEXC:                           CPM005
+     C***********          MOVELCMD,1     WWCMD1 40                       CPM005
+     C***********          MOVE ')'       WWCMD1                          CPM005
+     C***********                                                         CPM005
+     C***********          MOVELCMD,1     WWCMD  43                       CPM005
+     C***********          MOVE ')'       WWPRTL  4                       CPM005
+      *                                                                   CPM005
+      ** Access the Bank Details                                          CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOBANKR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*FIRST ' WOPTN   7                       CPM005
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD006       DBASE            ***************CPM005
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 06 *CPM005
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** Access the Portfolio Management Details                          CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOPORTR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*FIRST ' WOPTN                           CPM005
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD007       DBASE            ***************CPM005
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 07 *CPM005
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+     C*
+     C**  INITIALIZE SAVPRT & FIELD OF KLIST:
+     C***********          MOVE *LOVAL    SAVPRT  3                       CPM005
+     C*                                                    ***************
+     C                     ENDSR                           * #INIT ENDSR *
+     C*                                                    ***************
+     C*
+      *                                                                   CPM005
+      *****************************************************************   CPM005
+      /TITLE SR/AUDIT                                                     CPM005
+      *****************************************************************   CPM005
+      *                                                               *   CPM005
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *   CPM005
+      *                                                               *   CPM005
+      *  Called By: Main Processing, PROCES, *PSSR                    *   CPM005
+      *  Calls: None.                                                 *   CPM005
+      *                                                               *   CPM005
+      *****************************************************************   CPM005
+      *                                                                   CPM005
+     C           AUDIT     BEGSR                           *** AUDIT  *** CPM005
+      *                                                                   CPM005
+      ** Open Audit File PM6040AU                                         CPM005
+      *                                                                   CPM005
+     C                     OPEN PM6040AU                                  CPM005
+      *                                                                   CPM005
+      ** RCF Processing for Audit File.                                   CPM005
+      *                                                                   CPM005
+     C                     EXSR RCFAU                                     CPM005
+      *                                                                   CPM005
+      ** Output Report Header and File Controls.                          CPM005
+      *                                                                   CPM005
+     C                     WRITEHEADAU                                    CPM005
+      *                                                                   CPM005
+      ** If there is a DB Error, Output the DB Error Information.         CPM005
+      *                                                                   CPM005
+     C           *INU7     IFEQ *ON                                       CPM005
+     C                     WRITEDBERROR                                   CPM005
+     C                     ELSE                                           CPM005
+      *                                                                   CPM005
+      ** Or, if no records read, Output "No Details" message.             CPM005
+      *                                                                   CPM005
+     C           WNODET    IFEQ 'Y'                                       CPM005
+     C                     WRITENODTLS                                    CPM005
+     C                     ENDIF                                          CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+      ** Close Audit File PM6040AU                                        CPM005
+      *                                                                   CPM005
+     C                     CLOSEPM6040AU                                  CPM005
+      *                                                                   CPM005
+     C                     ENDSR                                          CPM005
+      *                                                                   CPM005
+      *****************************************************************   CPM005
+      /TITLE SR/RCFP1                                                     CPM005
+      *****************************************************************   CPM005
+      *                                                               *   CPM005
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *   CPM005
+      *                                                               *   CPM005
+      *****************************************************************   CPM005
+      *                                                                   CPM005
+     C           RCFP1     BEGSR                            *** RCFP1  ***CPM005
+      *                                                                   CPM005
+      ** Ensure Report Spool File recorded by RCF.                        CPM005
+      *                                                                   CPM005
+     C                     Z-ADDSFNUM1    ZSNUM   60                      CPM005
+      *                                                                   CPM005
+     C                     MOVELAZACOC    SENTY                           CPM005
+      *                                                                   CPM005
+     C                     CALL 'ZSFILE'                                  CPM005
+     C                     PARM PSEQ      SEQ     5                       CPM005
+     C                     PARM           SENTY   3                       CPM005
+     C                     PARM           SFILE1                          CPM005
+     C                     PARM           ZSNUM                           CPM005
+     C                     PARM           ZSERR   1                       CPM005
+      *                                                                   CPM005
+      ** If Error occurs during ZSFILE processing, then return to the     CPM005
+      ** Calling Program.                                                 CPM005
+      *                                                                   CPM005
+     C           ZSERR     IFEQ 'Y'                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+     C                     ENDSR                                          CPM005
+      *                                                                   CPM005
+      *****************************************************************   CPM005
+      /TITLE SR/RCFAU                                                     CPM005
+      *****************************************************************   CPM005
+      *                                                               *   CPM005
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *   CPM005
+      *                                                               *   CPM005
+      *****************************************************************   CPM005
+      *                                                                   CPM005
+     C           RCFAU     BEGSR                            *** RCFAU  ***CPM005
+      *                                                                   CPM005
+      ** Ensure Audit Spool File recorded by RCF.                         CPM005
+      *                                                                   CPM005
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      CPM005
+      *                                                                   CPM005
+     C                     CALL 'ZSFILE'                                  CPM005
+     C                     PARM PSEQ      SEQ                             CPM005
+     C                     PARM *BLANKS   SENTY                           CPM005
+     C                     PARM           SFILEU                          CPM005
+     C                     PARM           ZSNUMU                          CPM005
+     C                     PARM *BLANK    ZSERR                           CPM005
+      *                                                                   CPM005
+      ** If Error occurs during ZSFILE processing, then return to the     CPM005
+      ** Calling Program.                                                 CPM005
+      *                                                                   CPM005
+     C           ZSERR     IFEQ 'Y'                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+     C                     ENDSR                                          CPM005
+      *                                                                   CPM005
+     C**=================================================================
+     C/EJECT
+**  ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**  ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

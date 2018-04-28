@@ -1,0 +1,237 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     Standing Data Module                          */
+/*                                                                   */
+/*       SDC27 -  I.C.D. MAINTENANCE  MODE 3                         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK017             Date 13Oct03              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      CCB009             Date 01Jun00              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      102911            DATE  30APR96             */
+/*                      067080            DATE  03MAR94             */
+/*                      060766             DATE 11FEB94              */
+/*                      E28863             DATE 04OCT91              */
+/*                      RT0159             DATE 26JUN91              */
+/*                      RT0004             DATE 08MAY91              */
+/*                      E21755             DATE 24JUN89              */
+/*                      E18573             DATE 11NOV89              */
+/*                      S01179             DATE 13SEP88              */
+/*                      S01129             DATE 10FEB87              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*       CPK017 - Midas Plus packaging.                              */
+/*                Remove sending of 'ICDR' and checking of MSGQ      */
+/*                MSTATUS for any active users.                      */
+/*       CCB009 - Journal files throughout close of business         */
+/*       102911 - When running from SCBEGIN at phase D, all the      */
+/*                physical files in TABICD need to be journaled.     */
+/*       067080 - E28863 IS INCOMPLETE - TABLETX AND TABLETA.        */
+/*       060766 - CPF4328 while doing an implicit OPEN to file       */
+/*                TABLE.  Client took SCBEGIN option 20 (SDC27) to   */
+/*                seton the system setup flag.  Applied fix 060989,  */
+/*                MONMSG STRJRN and ENDJRN and do not ENDJRN if I/C. */
+/*       E28863 - START & END JOURNALLING ON SDBANKPD AND            */
+/*                TABTB10 IN ORDER TO ALLOW THE SYSTEM SETUP         */
+/*                FLAG TO BE SET ON.                                 */
+/*       RT0159 - Messages should be sent via new Midas Info Scrn.   */
+/*       RT0004 - VAR &MEM IN LDA SHOULD BE 50 LONG.                 */
+/*       E21755 - E18573, LOGIC INCORRECT CORRECTED TO RUN IN        */
+/*                PHASE 'A' AND 'D' ONLY                             */
+/*       E18573 - SDC27 CHANGED TO RUN IN PHASE 'A' AND 'D' ONLY     */
+/*       S01179 - AS400 CONVERSION                                   */
+/*       S01129 - SECURITIES TRADING RELEASE 2                       */
+/*                                                                   */
+/*********************************************************************/
+ /*    */
+ PGM
+ /*    */
+ /*      INITIALISATION STAGE                                       */
+ /*    */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
+/************DCL        VAR(&MIDAS) TYPE(*CHAR) LEN(05)                                */ /*CPK017*/
+/************DCL        VAR(&RMV) TYPE(*LGL) LEN(1) VALUE('0')                         */ /*CPK017*/
+/************DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +                               */ /*CPK017*/
+/************           VALUE('SDC27 - Job cannot be run at this time. Other   +       */ /*CPK017*/
+/************                  job(s) are active')                                     */ /*CPK017*/
+/**********  DCLDTAARA  DTAARA(MPHAS)                               *  *S01179*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                /*S01179*/
+/**********  DCLDTAARA  DTAARA(LDA)                                 *  *S01179*/
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)                /*S01179*/
+/*                                                                      CCB009*/
+/* Declare variable CCB009 - flag for switchable feature                CCB009*/
+/*                                                                      CCB009*/
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
+/*/COPY WNCPYSRC,SDC27001                                            */
+ /*    */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNORMAL)
+/*                                                                      CCB009*/
+/** Check for Switchable feature CCB009.                                CCB009*/
+/*                                                                      CCB009*/
+             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
+                          'CCB009' &AOFMT)                            /*CCB009*/
+ /*    */
+             RTVJOBA    JOB(&JOB)
+/*/COPY WNCPYSRC,SDC27002                                            */
+ /*    */
+/*******************************************************************/
+/**SEND*MESSAGE*'ICDR'*TO*MSGQ*MSPECIAL*TO*PREVENT*OTHER*JOBS*******/ /*               */ /*CPK017*/
+/**INITIATING*WHILST*I.C.D.*MAINTENENCE*IS*ACTIVE.******************/ /*               */ /*CPK017*/
+/**CHECK*IF*OTHER*JOB(S)*ARE*CURRENTLY*ACTIVE*BY*RECEIVING*MESSAGES*/ /*               */ /*CPK017*/
+/**FROM*MSGQ*MSTATUS.***********************************************/ /*               */ /*CPK017*/
+/*******************************************************************/ /*               */ /*CPK017*/
+/************SNDPGMMSG  MSG('ICDR') TOMSGQ(MSPECIAL)                                   */ /*CPK017*/
+/************CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)                                      */ /*CPK017*/
+/************RCVMSG     MSGQ(MSTATUS) RMV(*YES)                                        */ /*CPK017*/
+/************CHGVAR     VAR(&RMV) VALUE('1')                                           */ /*CPK017*/
+/************RCVMSG     MSGQ(MSTATUS) RMV(*NO)                                         */ /*CPK017*/
+/************IF         COND(&MIDAS *NE '     ') THEN(DO)                              */ /*CPK017*/
+/**********     SNDPGMMSG MSG(&MSG) TOMSGQ(MOPERQ) TOPGMQ(*EXT)       /*RT0159*/
+/************   SNDPGMMSG MSG(&MSG) TOMSGQ(MOPERQ)                          */ /*RT0159*/ /*CPK017*/
+/************   CALL       PGM(SDC0700) PARM('SDC27' 'CANTRUNNOW' +                    */ /*CPK017*/
+/************                ' ')                                           */ /*RT0159*/ /*CPK017*/
+/************ENDDO                                                                     */ /*CPK017*/
+/************ELSE       CMD(DO)                                                        */ /*CPK017*/
+ /*    */
+/**********  RCVDTAARA  DTAARA(MPHAS)                               *  *S01179*/
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                  /*S01179*/
+ /*    */
+ /*          IF         COND(&MPHAS *NE 'A') THEN(DO)               *  *E21755*/
+ /*          IF         COND(&MPHAS *NE 'D') THEN(DO)         /*E18573**E21755*/
+             IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'D')) +
+                          THEN(DO)
+ /*    */
+/************SNDPGMMSG  MSG('SDC27 - Job cannot be run at this time. +
+                          Phase of Day must be A.') TOPGMQ(*EXT) +
+                          TOMSGQ(MOPERQ) */                           /*E18573*/
+/*********** SNDPGMMSG  MSG('SDC27 - Job cannot be run at this time. +/*RT0159*/
+/***********              Phase of Day must be A or D.') TOPGMQ(*EXT)+/*RT0159*/
+/***********              TOMSGQ(MOPERQ)                          E18573RT0159*/
+             SNDPGMMSG  MSG('SDC27 - Job cannot be run at this time. +
+                          Phase of Day must be A or D.') +
+                          TOMSGQ(MOPERQ)                              /*RT0159*/
+             CALL       PGM(SDC0700) PARM('SDC27' 'CANTRUNAOD' ' ')   /*RT0159*/
+             ENDDO                                                    /*E18573*/
+ /*          ENDDO                                                     *E21755*/
+ /*    */
+             ELSE       CMD(DO)
+ /*    */
+             OVRDBF     FILE(TABLE) TOFILE(TABICD)
+             OVRDBF     FILE(CLINTSE) TOFILE(CLINT)  /* S01129 */
+ /*    */
+/**********  SNDDTAARA  DTAARA(LDA)                                 *  *S01179*/
+             CHGDTAARA  DTAARA(LDA) VALUE(&LDA)                       /*S01179*/
+/*/COPY WNCPYSRC,SDC27003                                            */
+/************STRJRNPF   FILE(SDBANKPD TABTB10) JRN(ICJRN) +
+                          IMAGES(*BOTH) */                     /*E28863*067080*/
+/************STRJRNPF   FILE(SDBANKPD TABTB10 TABLETX TABLETA) +
+/************             JRN(ICJRN) IMAGES(*BOTH)        E28863*067080 102911*/
+             STRJRNPF   FILE(SDBANKPD TABTB10 TABLETX TABLETA +
+                          TABLET5 TABLETR TABLETH TABTB11 TABTB20 +
+                          TABTB30 TABTB35 TABTB36 TABTB40 TABTB50 +
+                          TABTB55 TABTB70 TABTB80 TABTB95 TABTE10 +
+                          TABTE20 TABTG10 TABTG20 TABTG40) +
+                          JRN(ICJRN) IMAGES(*BOTH)                   /*102911*/
+             MONMSG     MSGID(CPF7030)                               /*060766*/
+/*/COPY WNCPYSRC,SDC27004                                            */
+                                                                     /*060766*/
+             CALL       PGM(SD0265)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                ROLLBACK
+/***********    SNDPGMMSG MSG('Transaction failed. Re-input +         /*RT0159*/
+/***********          necessary. Enter to continue.') TOPGMQ(*EXT)    /*RT0159*/
+                CALL       PGM(SDC0700) PARM('SDC27' 'TRANSFAIL' ' +
+                             ')                                       /*RT0159*/
+             ENDDO
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+             IF         COND(&MPHAS *NE 'A') THEN(DO)                /*060766*/
+/***********      ENDJRNPF   FILE(SDBANKPD TABTB10) JRN(ICJRN) *060766*067080*/
+/************ENDJRNPF   FILE(SDBANKPD TABTB10 TABLETX TABLETA) +
+/************             JRN(ICJRN)                     060766*067080 102911 */
+/*/COPY WNCPYSRC,SDC27005                                            */
+             ENDJRNPF   FILE(SDBANKPD TABTB10 TABLETX TABLETA +
+                          TABLET5 TABLETR TABLETH TABTB11 TABTB20 +
+                          TABTB30 TABTB35 TABTB36 TABTB40 TABTB50 +
+                          TABTB55 TABTB70 TABTB80 TABTB95 TABTE10 +
+                          TABTE20 TABTG10 TABTG20 TABTG40) +
+                          JRN(ICJRN)                                /* 102911 */
+                  MONMSG     MSGID(CPF7032)                          /*060766*/
+/*/COPY WNCPYSRC,SDC27006                                            */
+             ENDDO                                                   /*060766*/
+             ENDDO                                                    /*CCB009*/
+/************ENDJRNPF   FILE(SDBANKPD TABTB10) JRN(ICJRN)  */ /*E28863 060766*/
+/*********** RCVDTAARA  DTAARA(LDA) *********************************  *S01179*/
+             RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)                      /*S01179*/
+             DLTOVR     FILE(*ALL)
+ /*    */
+/* SYSTEM ERROR - ABNORMAL TERMINATION OF PROGRAM         */
+             IF         COND(%SWITCH(XX1XXXXX)) THEN(DO)
+             ROLLBACK
+/*********** SNDPGMMSG  MSG('System error - Invalid data') +          /*RT0159*/
+/***********              TOPGMQ(*EXT)                                /*RT0159*/
+             CALL       PGM(SDC0700) PARM('SDC27' 'SYSERRINVD' ' ')   /*RT0159*/
+             ENDDO
+/*     */
+/* DATABASE ERROR - ABNORMAL TERMINATION OF PROGRAM          */
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+             ROLLBACK
+/*********** RCVDTAARA  DTAARA(LDA) *********************************  *S01179*/
+             RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)                      /*S01179*/
+/************CHGVAR     VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 44))       *RT0004*/
+             CHGVAR     VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 50))      /*RT0004*/
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT)
+/*********** SNDPGMMSG  MSG('Database error, required records not +   /*RT0159*/
+/***********              found.') TOPGMQ(*EXT)                       /*RT0159*/
+             CALL       PGM(SDC0700) PARM('SDC27' 'DBERRRECNF' ' ')   /*RT0159*/
+             ENDDO
+             ENDDO
+/************ENDDO                                                                     */ /*CPK017*/
+             GOTO       ENDCLPGM
+/*     */
+ ABNORMAL:
+/*********** SNDPGMMSG  MSG('Error - SD0265 or SDC27 ended +          /*RT0159*/
+/***********              abnormally') TOPGMQ(*EXT)                   /*RT0159*/
+             CALL       PGM(SDC0700) PARM('SDC27' 'SDC27ABN' ' ')     /*RT0159*/
+             MONMSG     MSGID(CPF0000)
+/*     */
+ ENDCLPGM:
+/*******************************************************************/
+/**SEND*'MIDAS'*MESSAGE*TO*MSGQ*MSTATUS*THAT*WAS*REMOVED*AT*TOP*OF**/ /*               */ /*CPK017*/
+/**THIS*PROGRAM.*REMOVE*MESSAGE*'ICDR'*FROM*MSGQ*MSPECIAL*AND*RESET*/ /*               */ /*CPK017*/
+/**MSGQ*MSTATUS.****************************************************/ /*               */ /*CPK017*/
+/*******************************************************************/ /*               */ /*CPK017*/
+/************IF         COND(&RMV) THEN(                      +                        */ /*CPK017*/
+/************   SNDPGMMSG  MSG('MIDAS') TOMSGQ(MSTATUS))                               */ /*CPK017*/
+/************                                                                          */ /*CPK017*/
+/************CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)                                     */ /*CPK017*/
+/************MONMSG     MSGID(CPF0000)                                                 */ /*CPK017*/
+/**REMOVE*'ICDR'*MSG*SENT*TO*MSPECIAL*AT*TOP*OF*PROGRAM*/ /*                           */ /*CPK017*/
+/************RCVMSG     MSGQ(MSPECIAL) RMV(*YES)                                       */ /*CPK017*/
+/************MONMSG     MSGID(CPF0000)                                                 */ /*CPK017*/
+/************CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)                                      */ /*CPK017*/
+/************MONMSG     MSGID(CPF0000)                                                 */ /*CPK017*/
+             RETURN
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ ENDPGM

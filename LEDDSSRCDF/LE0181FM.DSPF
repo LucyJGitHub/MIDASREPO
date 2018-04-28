@@ -1,0 +1,242 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas LE Outstanding Loans By Facility')               *
+     A**************************************************************************
+     A*                                                                        *
+     A*  Midas - Customer Lending Module
+     A*                                                                        *
+     A*       LE0181FM  OUTSTANDING LOANS BY FACILITY ENQUIRY                  *
+     A*                                                                        *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                                        *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Prev Amend No. AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 29Nov05               *
+      *                 BUG8293            Date 23Aug05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163949             Date 07Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 159495             Date 28Apr99               *
+      *                 147830             Date 17Dec98               *
+      *                 136625             Date 16Jun98               *
+      *                 BH3422             Date 21Sep92               *        *
+      *                 S01311             Date 17Jan91               *        *
+     A*                                                                        *
+     A*------------------------------------------------------------------------*
+     A*                                                                        *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00413                                 *
+      *             WNCPYSRC,LEH00414                                 *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     A*  BUG8293- Webfacing: Red bar appears on the bottom of the     *
+     A*           screen evenif no error message is displayed         *
+      *  163949 - Amend the field length of SCPAM to accomodate the   *
+      *           maximum possible Current Principal amount.          *
+      *  159495 - Fix SFLEND Processing.
+      *  147830 - New narrative on sfl display. Loans identified as   *
+      *           Prime,Intnl,Part or Risk. This replaces branch if   *
+      *           multibranching.                                     *
+      *  136625 - Loans by Facility Enquiry and Loans by Participant  *
+      *           Facility looks identical.                           *
+     A*  BH3422 - Help text amendments for Lending enhancements                *
+     A*       S01311 - EXPOSURE MANAGEMENT ENQUIRIES                           *
+     A*                New program created to replace LE0180                   *
+     A*                                                                        *
+     A**************************************************************************
+     A*
+     A*         /////////////////////////////////////////
+     A*        // WARNING: When creating this display //
+     A*       //   file, take options RSTDSP(*YES)   //
+     A*      //                       SHARE (*YES)  //
+     A*     /////////////////////////////////////////
+     A*****************************************************************
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      INDARA
+     A                                      CHGINPDFT
+     A                                      PRINT(MPRINT)
+     A*                                                       /BH3422/
+     A*                                                       /BH3422/
+     A                                      CF03
+     A          R LE0181F0                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A            USER          10A  O 01 02
+     A                                 01 13'LE0181'
+      *                                              Begin /136625/
+     A  23                             01 21'OUTSTANDING LOANS BY PARTICIPANT -
+     A                                      FACILITY ENQUIRY'
+     A                                      DSPATR(UL)
+     A                                      DSPATR(HI)
+     A N23                             01 27'OUTSTANDING LOANS BY FACILITY ENQ-
+     A                                      UIRY'
+     A***********                      01 27'OUTSTANDING LOANS BY FACILITY ENQ-
+     A***********                           UIRY'
+      *                                              End   /136625/
+     A                                      DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            BJMRDT         7A  O 01 72
+     A            WSID          10A  O 02 02
+     A                                 02 71TIME
+     A            BRTTL         40A  O 03 21
+     A N20
+     AO 21                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                 05 06'Customer'
+     A  21                                  DSPATR(ND)
+     A            BBCRNM        20A  O 05 16
+     A  21                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A            BBCRTN        10A  O 05 38
+     A  21                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A*/COPY WNCPYSRC,LEH00413
+     A                                 05 51'Facility'
+     A  21                                  DSPATR(ND)
+     A            FACAB          6A  O 05 62
+     A  21                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                 05 69'Branch'
+     A N20
+     AO 21                                  DSPATR(ND)
+     A            BRCA           3A  O 05 76
+     A*/COPY WNCPYSRC,LEH00414
+     A N20
+     AO 21                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      * Begin /CSD027/
+     A**********  CNUM           6S 0O 06 16                                                  CSD027
+     A            CNUM           6A  O 06 16
+      * End /CSD027/
+     A  21                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                 06 38'Rev.Credit'
+     A  21                                  DSPATR(ND)
+     A            RVCR           1A    06 49
+     A  21                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                 06 51'Date Changed'
+     A  21                                  DSPATR(ND)
+     A            RDATE          7A    06 65
+     A  21                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+      *                                              Begin /147830/
+     A                                 08 15'Synd.'
+     A  21                                  DSPATR(ND)
+      *                                              End   /147830/
+     A                                 08 26'Current'
+     A  21                                  DSPATR(ND)
+     A                                 08 42'Daily'
+     A  21                                  DSPATR(ND)
+     A                                 08 58'Accrued'
+     A  21                                  DSPATR(ND)
+     A                                 08 71'Part'
+     A  21                                  DSPATR(ND)
+     A                                 08 76'Mat.'
+     A  21                                  DSPATR(ND)
+     A                                 09 05'Loan'
+     A  21                                  DSPATR(ND)
+     A                                 09 11'Ccy'
+     A  21                                  DSPATR(ND)
+      *                                              Begin /147830/
+     A***                              09 15'Branch'
+     A*** N20
+     A***ON24
+     A***O 21                               DSPATR(ND)
+     A                                 09 15'Loan'
+     A  21                                  DSPATR(ND)
+      *                                              End   /147830/
+     A                                 09 25'Principal'
+     A  21                                  DSPATR(ND)
+     A                                 09 38'Interest Amount'
+     A  21                                  DSPATR(ND)
+     A                                 09 54'Interest to Date'
+     A  21                                  DSPATR(ND)
+     A                                 09 71'Sold'
+     A  21                                  DSPATR(ND)
+     A                                 09 76'Date'
+     A  21                                  DSPATR(ND)
+     A          R LE0181S1                  SFL
+     A            OPTN           1A  B 10 02DSPATR(UL HI PC)
+      **Start of change CLE148
+     A**********  LNNO           6S 0O 10 04DSPATR(HI)                                        CLE148
+     A            LNNO           6A  O 10 04DSPATR(HI)
+      **End of change CLE148
+     A            CCY            3A  O 10 11DSPATR(HI)
+      *                                              Begin /147830/
+     A***         BRCAL          3A  O 10 15DSPATR(HI)
+     A*** N20
+     A***ON24                               DSPATR(ND)
+     A***         SCPAM         17A  O 10 19DSPATR(HI)
+     A***         SDINT         16A  O 10 37DSPATR(HI)
+     A***         SAINT         17A  O 10 54DSPATR(HI)
+     A            SLNAR          5A  O 10 15DSPATR(HI)
+      *                                              Begin /163949/
+     A*********** SCPAM         17A  O 10 21DSPATR(HI)
+     A            SCPAM         18A  O 10 21DSPATR(HI)
+      *                                              End   /163949/
+     A            SDINT         14A  O 10 40DSPATR(HI)
+     A            SAINT         14A  O 10 57DSPATR(HI)
+      *                                              End   /147830/
+     A            PART           1A  O 10 72DSPATR(HI)
+     A            MDATE          7A  O 10 74DSPATR(HI)
+     A*
+     A          R LE0181C1                  SFLCTL(LE0181S1)
+     A                                      SFLSIZ(0012)
+     A                                      SFLPAG(0012)
+     A                                      BLINK
+     A  41                                  SFLDSP
+     A  42                                  SFLDSPCTL
+     A N41N42                               SFLCLR
+      *                                              Begin /159495/
+     A**60*****                             SFLEND
+     A  64                                  SFLEND
+      *                                              End   /159495/
+     A  45                                  ROLLUP(18)
+     A  46                                  ROLLDOWN(19)
+     A  06                                  CF01
+     A  06                                  CF12
+     A                                      OVERLAY
+      **Start of change BUG8293
+     A**********  MSG           79A  O 22  2DSPATR(RI)                                       BUG8293
+     A            MSG           79A  O 22  2
+     A  30                                  DSPATR(RI)
+      **End of change BUG8293
+     A                                      DSPATR(HI)
+     A N30                                  DSPATR(ND)
+     A N06                             23 02'F3=Exit'
+     A N06 45N46                       23 12'Rollup'
+     A N06 45 46                       23 12'Rollup   Rolldown'
+     A N06N45 46                       23 12'Rolldown'
+     A  06                             23 02'F1=Initial Enquiry'
+     A  06                             23 23'F3=Exit'
+     A  06                             23 33'F12=Previous'
+     A  06 45N46                       23 48'Rollup'
+     A  06 45 46                       23 48'Rollup   Rolldown'
+     A  06N45 46                       23 48'Rolldown'
+     A                                 24 02'Customer Number or Shortname'
+     A            SCUST         10A  B 24 33
+     A N31                                  DSPATR(UL)
+     A  31                                  DSPATR(RI)
+     A                                      DSPATR(HI)
+     A                                 24 47'Branch'
+     A N20                                  DSPATR(ND)
+     A            SBRCD          3A  B 24 55
+     A  20N32                               DSPATR(UL)
+     A  32                                  DSPATR(RI)
+     A N20                                  DSPATR(ND PR)
+     A                                      DSPATR(HI)
+     A                                 24 62'Facility'
+     A            SFACT          3A  B 24 72
+     A N33                                  DSPATR(UL)
+     A  33                                  DSPATR(RI)
+     A                                      DSPATR(HI)
+     A            SFCNO          2A  B 24 76
+     A N33                                  DSPATR(UL)
+     A  33                                  DSPATR(RI)
+     A                                      DSPATR(HI)

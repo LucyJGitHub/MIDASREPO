@@ -1,0 +1,147 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Account balances extract')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC3320A - Midas GL Account Balances Extract                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD024120           Date 19Aug14              */
+/*       Prev Amend No. CGL120  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD024120 - GLC33320 Performance Issues                      */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &MBR &CNAM &CSEQ)
+ 
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(44)
+             DCL        VAR(&RESTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&WKSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+ 
+             DCLF       FILE(SDMMODPD)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems +
+                          Ltd. 2012')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000 RNX0000) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GLC3320A - Account Balances Extract') +
+                        TOMSGQ(MRUNQ)
+ 
+/* Set performance overrides for sequential processing             */
+ 
+/**********  OVRDBF     FILE(ACCNTAB) SEQONLY(*YES 100)            */                   /*MD024120*/
+             OVRDBF     FILE(ACCNTAB) SEQONLY(*YES *BUF256KB)                           /*MD024120*/
+/**********  OVRDBF     FILE(ABEXAG) FRCRATIO(500) NBRRCDS(1000) + */                   /*MD024120*/
+/**********               SEQONLY(*YES 2000)                       */                   /*MD024120*/
+             OVRDBF     FILE(ABEXAG) FRCRATIO(500) NBRRCDS(1000) +
+                          SEQONLY(*YES 500)                                             /*MD024120*/
+             OVRDBF     FILE(TABLE) TOFILE(TABRE2)
+ 
+/* Determine sequence number from the task split sequence          */
+/* which has 0100x where X is task #                               */
+ 
+             CHGVAR     VAR(&WKSEQ) VALUE(&CSEQ)
+ 
+/* Set Job switches                                                */
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Check if GLC3320 sequence 1 or 2                                */
+ 
+             IF         COND((%SST(&WKSEQ 1 2) *EQ '01') *OR (&CSEQ +
+                          = 001) *OR (%SST(&WKSEQ 1 2) *EQ '02') +
+                          *OR (&CSEQ = 002)) THEN(DO)
+ 
+/* GLC3320 sequence 1 or 2: output REIAC, REHISBL retail II        */
+ 
+             CHGJOB     SWS(010X1000)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+/* CLC3320 sequence 3,4,5,6,7: Check if Retail is on               */
+/* OR Interest on Accounts is on - set U5                          */
+ 
+             RCVF
+             IF         COND(&BGNXST *EQ 'Y' *OR &BGNYST *EQ 'Y') +
+                          THEN(CHGJOB SWS(01XX1XXX))
+             ENDDO
+ 
+/* Check if post is blank: GLC3320 COB Seq 00001,01000x,02000x     */
+/* Daily or Acrurals                                               */
+ 
+             IF         COND(&POSTNUM *EQ ' ') THEN(DO)
+ 
+/* GLC3320 COB 00001,01000x,02000x: Daily or Acrurals:             */
+/* Check if Sequence is 01 (daily)                                 */
+ 
+             IF         COND((%SST(&WKSEQ 1 2) *EQ '01') *OR (&CSEQ +
+                          = 001)) THEN(DO)
+ 
+/* Sequence is 00001 (daily): Call Acc bal GL daily normal day     */
+ 
+             CALL       PGM(GL3320) PARM('1')
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+/* Sequence is 00002: Acrruals Next working day is a NWD:          */
+/* Call Acc bal GL daily                                           */
+ 
+             CALL       PGM(GL3320) PARM(' ')
+             ENDDO
+ 
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+/* Sequence is 00003,00004,00005,00006,00007:                      */
+/* Call Acc bal GL daily with the POST number 1-5                  */
+ 
+             IF         COND(&POSTNUM *EQ '2' *OR &POSTNUM *EQ '3' +
+                          *OR &POSTNUM *EQ '4') THEN(DO)
+/**********  OVRDBF     FILE(ACCNTAB) TOFILE(ZACCNTAB) SEQONLY(*YES + */                /*MD024120*/
+/**********               100)                                        */                /*MD024120*/
+             OVRDBF     FILE(ACCNTAB) TOFILE(ZACCNTAB) SEQONLY(*YES +
+                          *BUF256KB)                                                    /*MD024120*/
+             ENDDO
+ 
+             CALL       PGM(GL3320) PARM(&POSTNUM)
+             ENDDO
+ 
+             DLTOVR     FILE(TABLE)
+ 
+/* Check if all is OK: No database error,                          */
+/* No account balance error etc                                    */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/* All is OK: No database error,                                   */
+/* No account balance error etc: Commit                            */
+ 
+             COMMIT
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program GLC3320A ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             RETURN
+             ENDPGM

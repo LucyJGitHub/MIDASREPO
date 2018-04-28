@@ -1,0 +1,2418 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Customer collateral report')                  *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE1050 - CUSTOMER COLLATERAL REPORT                          *
+     F*                                                               *
+     F*  Function: Report showing the holdings for each portfolio     *
+     F*   (COB)    customer, summarising the market value, any other  *
+     F*            holdings and a collateral value.                   *
+     F*                                                               *
+     F*  Calls: ZACCRC - Calculate Interest - Customer Position       *
+     F*                                                               *
+     F*  Called by: SEC0802 - Customer Collateral Report              *
+     F*                                                               *
+     F*  Frequency: on request during COB                             *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 AR1067108          Date 11Dec12               *
+      *                 AR1001183          Date 20Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 234300             Date 29Sep06               *
+      *                 242286             Date 25Sep06               *
+      *                 240761             Date 06Jun06               *
+      *                 CDL049             Date 11May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG10348           Date 06Feb06               *
+      *                 CGL035             Date 01Mar05               *
+      *                 CDL038             Date 10May05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 BUG7985            Date 07Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CPK016             Date 04Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 126017             Date 14Nov97               *
+      *                 121768             Date 19Feb98               *
+     F*                 097885             DATE 03FEB97               *
+     F*                 095244             DATE 01NOV95               *
+     F*                 095238             DATE 31OCT95               *
+     F*                 065301             DATE 05MAY94               *
+     F*                 066550             DATE 04FEB94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01453             DATE 14DEC93               *
+     F*                 E37493             DATE  2APR92               *
+     F*                 E37680             DATE 26MAR92               *
+     F*                 E37297             DATE 24MAR92               *
+     F*                 E33117             DATE 10DEC91               *
+     F*                 E33034             DATE 10DEC91               *
+     F*                 E29170             DATE 24OCT91               *
+     F*                 S01117             DATE 22JUL91               *
+     F*                 E24473             DATE 23JAN91               *
+     F*                 S01269             DATE 31JUL90               *
+     F*                 E16814             DATE 20/02/89              *
+     F*                 S01176             DATE 15/08/88              *
+     F*                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *           to Midas Plus (Recompile)                           *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  240761 - The program should not end in error when an amount  *
+      *           is greater than 9999999. Instead place '*' in the   *
+      *           report field to denote overflow.                    *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  BUG10348- Database error occurred in TABLETT.  Amend program *
+      *            to use AOACOFR0 in retrieving account officer      *
+      *            details.                                           *
+      *  CGL035 - EUSD Upgrade to MidasPlus                           *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  BUG7985- Several components failed due to accessing TABLETR  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK016 - Release 5 packaging.  Clash of field names.         *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CIR004 - Dealing Calculation Method Change                   *
+      *         - Recompiled due to GLINTC and ZINTDY changes         *
+     F*  126017 - Correction to interest calculation for calculation  *
+     F*           basis 6 in SR/GLINTC. Add SR/ZDAT10                 *
+     F*  121768 - Recompile over changed GLINTCZ1                     *
+     F*  097885 - Recompiled for wrong calculation of number of day   *
+     F*           interest (ZINTDYZ2).                                *
+     F*  095244 - Recompiled for Calculation method 3                 *
+     F*  095238 - Recompiled for Calculation method 3                 *
+     F*  065301 - Recompiled over changed copy source ZACCR subr.     *
+     F*           with ZAMT increased to 15,0.                        *
+     F*  066550 - GLINTC has had historical problems and inaccuracies *
+     F*           and is now externaly descibed and changed to use    *
+     F*           ZINTDYZ1. See document atached to error no on GEMS  *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY    *
+     F*           POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED)     *
+     F*  E37493 - Recompiled over changed printer file                *
+     F*  E37680 - In single branch mode no details are reported as    *
+     F*           branch is blank                                     *
+     F*  E37297 - Strange problem with zoned decimal parameter        *
+     F*           passed to ZACCR                                     *
+     F*  E33117 - Some END statements are in the wrong place.         *
+     F*  E33034 - Using wrong branch field to chian to ACCNT          *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching.                                     *
+     F*  E24473 - Do not chain  to PF/TABLETT for A/C officer name if *
+     F*           the A/C officer code is blank  .                    *
+     F*  S01269 - Trade Authorisation: Recompiled for change to       *
+     F*           file TABSE                                          *
+     F*  E16814 - Various incorrect values reported.                  *
+     F*  S01176 - Release 3.1 Modifications.                          *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FCPOSNQ2 IF  E           K        DISK
+     FACCNT   IF  E           K        DISK                           U1
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     FSREAC   IF  E           K        DISK                           U1
+     F            REACRAF                           KIGNORE
+     F            REACRZF                           KIGNORE
+     FCUSDB   IF  E           K        DISK                           U2
+     FGTEES   IF  E           K        DISK                           U3
+     F            GTEESHHF                          KIGNORE
+     F            GTEESZZF                          KIGNORE
+     FCLOANB  IF  E           K        DISK                           U3
+     FPSOLD   IF  E           K        DISK                           U3
+     F            CLOANCLF                          KRENAMEPSOLDF
+     FTRDBV   IF  E           K        DISK
+     F***TABLETT*IF**E           K        DISK                                              BUG10348
+     F***SE1050P1O***E                    PRINTER                         E29170
+     FSE1050P1O   E                    PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     FSE1050AUO   E                    PRINTER                        UC  E29170
+     F                                              KINFDS SPOOLU         E29170
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F* ICD SE    TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F* CURRENCY  TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F* BRANCH    TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETAF                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   20  - Multibranching set on                                 *   S01117
+     F*   21  - DISC IND = D                                          *
+     F*   22  - DISC IND = S                                          *
+     F*   23  - ADVANCE COLL -VE                                      *
+     F*   24  - PLEDGE AGRRE = N                                      *
+     F*   35  - Nominal Currency decimal places equal to 0            *
+     F*   36  - Nominal Currency decimal places equal to 1            *
+     F*   37  - Nominal Currency decimal places equal to 2            *
+     F*   38  - Nominal Currency decimal places equal to 3            *
+     F*   78  - ON IF A LOAN RECORD READ                              *
+     F* 79,80 - ERROR ON READING OTHER FILES                          *
+     F*   82  - ON WHEN EOF ON INPUT FILES                            *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U1  - RETAIL MODULE PRESENT                                 *
+     F*   U2  - DEALING MODULE PRESENT                                *
+     F*   U3  - LENDING MODULE PRESENT                                *
+     F* U7-U8 - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  *PSSR  - DUMP program on error                               *   S01117
+     F*  FIRST  - OBTAINS ICD INFO AND CALCULATES REPORT CONTROL DATE *
+     F*  SEC    - CALCULATE LIMITS                                    *
+     F*  RETAIL - CALCULATE LIMIT PERIODS & AMOUNTS                   *
+     F*  DEALS  - CALCULATE LIMIT PERIOD END DATE                     *
+     F*  LEND   - CALCULATE EXPOSURE                                  *
+     F*  PRINT  - ACCESS DESCRIPTIONS                                 *
+     F*  PSOLDS - ADJUST FOR PARTICIPATIONS SOLD                      *
+     F*  GTEEL  - PRINT DETAIL REPORT                                 *
+     F*  GTEEF  - CONVERT EXPOSURE FROM NOMINAL TO BASE CURRENCY      *
+     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+     F*                                                               *
+     F*  GLINTC - CALCULATE ACCRUED INTEREST (USES ZSAVE,ZRSTOR)      *
+     F*  ZCONV  - CONVERT AMOUNT                                      *
+     F*  ZDATE2 - DATE FORMATTER                                      *
+     F*  ZEVCD  - CALCULATE ACCRUAL CONTROL DATE                      *
+     F*  ZICD2  - CHAINS TO ICD TABTB11                               *
+     F*  ZICDSE - CHAINS TO ICD TABTB36                               *
+     F*  ZSEDIT - EDIT FIELDS                                         *
+     F*  ZSYSTM - CHAINS TO ICD TABTB10                               *
+     F*                                                               *
+     F*  ZACCRC - CALCULATE ACCRUED INTEREST                          *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZPOWERZ1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZDATE9Z1                                               066550
+      /EJECT
+     I*TABLETTF**                                                                           BUG10348
+     I***********   ACOC                            TTACOC                                  BUG10348
+     IHSTTRDF                                                                                 CPK016
+     I              CRSK                            HTCRSK                                    CPK016
+     ITRADSDF                                                                                 CPK016
+     I              CRSK                            TDCRSK                                    CPK016
+     IDEALSDCF                                                                                CGL035
+     I              COLC                            EUCOLC                                    CGL035
+      /COPY ZSRSRC,ZSEDITZ2
+     I            DS
+     I*
+     I* DATA STRUCTURES TO STORE KEYS
+     I*
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I            DS
+     I                                        1  12 THKEY
+     I***********                             1   30CSBR                  S01117
+     I                                        1   3 CSBA                  S01117
+     I                                        4   5 ACOC
+     I                                        6   6 C1DI
+     I**********                              7  120CSCN                                      CSD027
+     I                                        7  12 CSCN                                      CSD027
+     I                                        7  12 ZZCUST                E37297
+     I            DS
+     I                                        1  12 LTKEY
+     I***********                             1   30LCSBR                 S01117
+     I                                        1   3 LCSBA                 S01117
+     I                                        4   5 LACOC
+     I                                        6   6 LC1DI
+     I**********                              7  120LCSCN                                     CSD027
+     I                                        7  12 LCSCN                                     CSD027
+     I            DS
+     I                                        1  12 PRKEY
+     I***********                             1   30PCSBR                 S01117
+     I                                        1   3 PCSBA                 S01117
+     I                                        4   5 PACOC
+     I                                        6   6 PC1DI
+     I**********                              7  120PCSCN                                     CSD027
+     I                                        7  12 PCSCN                                     CSD027
+     I*
+     I            DS
+     I***********                             1  15 KEYAC                 S01117
+     I**********                              1  18 KEYAC                              S01117 CGL029
+     I                                        1  24 KEYAC                                     CGL029
+     I**********                              1   60CUST                                      CSD027
+     I                                        1   6 CUST                                      CSD027
+     I                                        7   9 ACCY
+     I**********                             10  130ACOD                                      CGL029
+     I**********                             14  150ASEQ                                      CGL029
+     I**********                             16  18 ABRC                               S01117 CGL029
+     I                                       10  190ACOD                                      CGL029
+     I                                       20  210ASEQ                                      CGL029
+     I                                       22  24 ABRC                                      CGL029
+     I*
+     I            DS
+     I                                        1   6 GLNRF
+     I                                        1   30GFTYP
+     I                                        4   50GFSEQ
+     I*
+     I***LDA*****   UDS                            256                    S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+      *                                                                   S01117
+     ILDA         DS                            256                       S01117
+      *                                                                   S01117
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+      ** after each database error handling.                              S01117
+      *                                                                   S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+      *                                                                   S01117
+     IRUNDT       DS                                                      S01117
+      *                                                                   S01117
+      ** RUNDAT data area                                                 S01117
+      *                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     ISPOOLU      DS                                                      E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
+     I              A8BRNM                          BRNM                                     BUG7985
+     ISDACOF    E DSSDACOFPD                                                                BUG10348
+      ** ACCOUNT OFFICER                                                                    BUG10348
+      *                                                                                     BUG10348
+     IDSFDY     E DSDSFDY                                                                   BUG10348
+     IDSSDY     E DSDSSDY                                                                    BUG7985
+     I/COPY ZSRSRC,ZINTDYZ1                                               066550
+     I/COPY ZSRSRC,ZDATE9Z2                                               066550
+     I/COPY ZSRSRC,ZDAT10Z1                                               126017
+      /EJECT
+      *                                                                   S01117
+      ** Input Parameters                                                 S01117
+      *                                                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM           ENT     3                       S01117
+      *                                                                   S01117
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C* KEYLISTS FOR CHAINING TO FILES
+     C*
+     C* TABLE FILE
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY   12
+     C* TRADES FILE
+     C           KEYTR     KLIST
+     C***********          KFLD           CSBR                            S01117
+     C                     KFLD           CSBA                            S01117
+     C                     KFLD           CSCN
+     C                     KFLD           CSSC
+     C* SREAC  FILE
+     C           SRKEY     KLIST
+     C                     KFLD           SRRECI
+     C***********          KFLD           LCSBR                           S01117
+     C                     KFLD           LCSBA                           S01117
+     C                     KFLD           LCSCN
+     C* OTHER  FILES
+     C           OTKEY     KLIST
+     C***********          KFLD           LCSBR                           S01117
+     C                     KFLD           LCSBA                           S01117
+     C                     KFLD           LCSCN
+     C* ACCNT  FILE
+     C           ACKEY     KLIST
+     C                     KFLD           CUST
+     C                     KFLD           ACCY
+     C                     KFLD           ACOD
+     C                     KFLD           ASEQ
+     C                     KFLD           ABRC                            S01117
+     C* GTEES  FILE
+     C           GKEY      KLIST
+     C                     KFLD           GCNUM
+     C                     KFLD           GLNRF
+     C*
+     C* CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE1050  'DBPGM
+     C                     OUT  LDA                                       S01117
+      *                                                                   S01117
+      ** Read in RUNDAT data area                                         S01117
+      *                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      *                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     SETON                         20               S01117
+     C                     END                                            S01117
+     C*
+     C* OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     CABEQ'1'       ENDPGM
+     C*
+      /SPACE 5
+     C*
+     C* READ FIRST RECORD
+     C*
+     C                     Z-ADD70        LCNT
+     C                     READ CPOSNQ2                  82
+     C*
+     C* PROCESS RECORDS UNTIL EOF ON ALL THOSE BEING PROCESSED
+     C*
+     C           *IN82     DOWNE'1'
+     C*                                                                   E29170
+     C** ONLY PROCESS RECORD IF REQUESTED                                 E29170
+     C*                                                                   E29170
+     C           ENT       IFEQ 'ALL'                                     E29170
+     C           ENT       OREQ CSBA                                      E29170
+     C           MBIN      OREQ 'N'                                       E37680
+     C*
+     C* IF RECORD FOR NEW CATEGORY (& NOT FIRST RECORD) -
+     C*
+     C           THKEY     IFNE LTKEY
+     C           LTKEY     ANDNE*BLANKS
+     C*
+     C* DO RETAIL,DEALS,LENDING PROCESSING AS REQUIRED
+     C*
+     C   U1                EXSR RETAIL
+     C   U2                EXSR DEALS
+     C   U3                EXSR LEND
+     C*
+     C* ADD TOTAL CASH,DEPOSITS,G'TEES REC'D TO TOTAL COLLATERAL
+     C*
+     C           ACCCOL    ADD  ACCCAS    ACCCOL
+     C           ACCCOL    ADD  ACCDEP    ACCCOL
+     C           ACCCOL    ADD  ACCGUR    ACCCOL
+     C*
+     C* ADV COLL = TOTAL COLL - ( TOTAL LOANS,G'TEES GIVEN,FX)
+     C*
+     C           ACCCOL    SUB  ACCLOA    ACCADV
+     C           ACCADV    SUB  ACCGUG    ACCADV
+     C           ACCADV    SUB  ACCFX     ACCADV
+     C*
+     C* PRINT DETAILS
+     C*
+     C                     EXSR PRINT
+     C                     END
+     C*
+     C* DO POSITION RELATED PROCESSING
+     C*
+     C                     EXSR SEC
+     C*
+     C*     STORE NEW KEY FIELDS
+     C*
+     C                     MOVE THKEY     LTKEY
+     C                     MOVE CSCN      SCSCN
+     C                     MOVE CRNM      SCRNM
+     C                     MOVE CTWN      SCTWN
+     C                     MOVE C1PA      SC1PA
+     C                     END                                            E33117
+     C*
+     C* READ NEW RECORD FROM FILE
+     C*
+     C                     READ CPOSNQ2                  82
+     C***********          END                                      E29170E33117
+     C                     END
+     C*
+     C* IF END OF FILE & AT LEAST 1 RECORD READ -
+     C*     IF EXCEPT=Y CHECK WHETHER LIMITS HAVE BEEN EXCEEDED
+     C*
+     C           LTKEY     IFNE *BLANKS
+     C                     MOVE *BLANKS   THKEY
+     C*
+     C* DO RETAIL,DEALS,LENDING PROCESSING AS REQUIRE
+     C*
+     C   U1                EXSR RETAIL
+     C   U2                EXSR DEALS
+     C   U3                EXSR LEND
+     C*
+     C* ADD TOTAL CASH,DEPOSITS,G'TEES REC'D TO TOTAL COLLATERAL
+     C*
+     C           ACCCOL    ADD  ACCCAS    ACCCOL
+     C           ACCCOL    ADD  ACCDEP    ACCCOL
+     C           ACCCOL    ADD  ACCGUR    ACCCOL
+     C*
+     C* ADV COLL = TOTAL COLL - ( TOTAL LOANS,G'TEES GIVEN,FX)
+     C*
+     C           ACCCOL    SUB  ACCLOA    ACCADV
+     C           ACCADV    SUB  ACCGUG    ACCADV
+     C           ACCADV    SUB  ACCFX     ACCADV
+     C*
+     C* PRINT DETAILS
+     C*
+     C                     EXSR PRINT
+     C                     END
+     C*
+     C           FILOPN    IFEQ 'Y'                                       E29170
+     C           LCNT      IFGT MAXCNT
+     C                     WRITEHEADP1
+     C**********           Z-ADD13        LCNT                            E16814
+     C                     Z-ADD14        LCNT                            E16814
+     C                     END
+     C                     WRITETRAIL
+     C           *INU7     IFEQ '1'                                       E29170
+     C                     OPEN SE1050AU                                  E29170
+     C                     WRITEHEADAU                                    E29170
+     C                     WRITEERROR                                     E29170
+     C*                                                                   E33117
+     C** RCF PROCESSING FOR AUDIT PRINTER FILE                            E33117
+     C*                                                                   E33117
+     C                     EXSR RCFAU                                     E33117
+     C                     END                                            E29170
+     C***********                                                   E29170E33117
+     C***RCF*PROCESSING*FOR*AUDIT*PRINTER*FILE**********************E29170E33117
+     C***********                                                   E29170E33117
+     C***********          EXSR RCFAU                               E29170E33117
+     C*                                                                   E29170
+     C                     ELSE                                           E29170
+     C                     OPEN SE1050AU                                  E29170
+     C                     WRITEHEADAU                                    E29170
+     C                     WRITENODETL                                    E29170
+     C*                                                                   E29170
+     C** RCF PROCESSING FOR AUDIT PRINTER FILE                            E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C                     END                                            E29170
+     C*
+     C           ENDPGM    TAG
+     C*
+     C                     SETON                     LR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SEC   - SUBROUTINE TO CALCULATE POSITION RELATED AMOUNTS      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SEC       BEGSR                           ** SEC   **
+     C*
+     C* MARKET VALUE = NOMINAL X MARKET PRICE
+     C* (DIVIDED BY 100 IF PRICE BASIS IS P)
+     C*
+     C* Fetch Nominal currency decimal places
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELNMCY      ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 01 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C*
+     C                     Z-ADD*ZEROS    WVAL   150
+     C                     Z-ADD*ZEROS    WVAL0  150
+     C                     Z-ADD*ZEROS    WVAL1  151
+     C                     Z-ADD*ZEROS    WVAL2  152
+     C                     Z-ADD*ZEROS    WVAL3  153
+     C                     MOVEA'0000'    *IN,35
+     C           35        ADD  CDP       J       20
+     C                     MOVEA'1'       *IN,J
+     C           TVCL      IFEQ 'V'
+     C   35      CSNV      MULT MKPR      WVAL0
+     C   36      CSNV      MULT MKPR      WVAL1
+     C   37      CSNV      MULT MKPR      WVAL2
+     C   38      CSNV      MULT MKPR      WVAL3
+     C                     ELSE
+     C   35      CSNT      MULT MKPR      WVAL0
+     C   36      CSNT      MULT MKPR      WVAL1
+     C   37      CSNT      MULT MKPR      WVAL2
+     C   38      CSNT      MULT MKPR      WVAL3
+     C                     END
+     C*
+     C   35                MOVE WVAL0     WVAL
+     C   36                MOVE WVAL1     WVAL
+     C   37                MOVE WVAL2     WVAL
+     C   38                MOVE WVAL3     WVAL
+     C*
+     C           SPBS      IFEQ 'P'
+     C                     DIV  100       WVAL      H
+     C                     END
+     C*
+     C* allow for nominal  decimal places
+     C*
+     C           5         SUB  NMDP      DC      10
+     C           WVAL      MULT POWER8,DC WMKVAL 150
+     C*
+     C* IF SECURITY IS INTEREST BEARING -
+     C*
+     C           PROT      IFEQ '1'
+     C           PROT      OREQ '3'
+     C           PROT      OREQ '5'
+     C           PROT      OREQ '6'
+     C           PROT      OREQ '8'
+     C           PROT      OREQ '9'                                       S01176
+     C           DYBS      IFNE '4'
+     C*
+     C* CALCULATE ACCRUED INTEREST
+     C*
+     C                     MOVE 'A'       ZAB     1
+     C                     UNLCKLDA
+     C***********          Z-ADDCSBR      ZZBRCH  30                      S01117
+     C                     MOVE CSBA      ZZBRCH  3                       S01117
+     C***********          Z-ADDCSCN      ZZCUST  60                      E37297
+     C                     CALL 'ZACCRC'
+     C                     PARM           LCPN
+     C                     PARM           ECD
+     C                     PARM           ZZBRCH
+     C                     PARM           ZZCUST
+     C                     PARM           CSSC
+     C                     PARM           CDP
+     C                     PARM           ZIAMT
+     C                     PARM           ZAB
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE1050  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* IF NOMINAL CURRENCY NOT EQUAL TO BASE CURRENCY -
+     C*
+     C           NMCY      IFNE BCCY
+     C*
+     C           MDIN      IFEQ 0
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C*
+     C                     Z-ADDSPOT      ZEXCH
+     C*
+     C                     MOVE NMCY      ZCCYI
+     C                     MOVE BCCY      ZCCYO
+     C                     MOVE CDP       ZCDPI                           S01117
+     C                     Z-ADDZIAMT     ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*02*S01117
+     C***********          Z-ADD2         DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WINVAL 150
+     C                     ELSE
+     C                     Z-ADDZIAMT     WINVAL
+     C                     END
+     C*
+     C* remove BASE currency decimal places
+     C*
+     C           5         SUB  BSCCDP    DC
+     C                     MULT POWER8,DC WINVAL
+     C*
+     C* ADD ACCRUED INTEREST TO TOTAL CASH
+     C*
+     C                     ADD  WINVAL    ACCCAS
+     C                     END
+     C                     END
+     C*
+     C* IF NOMINAL CURRENCY NOT EQUAL TO BASE CURRENCY -
+     C*
+     C           NMCY      IFNE BCCY
+     C*
+     C* CONVERT MARKET VALUE FROM NOM TO BASE AT SPOT RATE
+     C* ACCESS NOMINAL CURRENCY RECORD FROM TABTG10
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELNMCY      ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 03 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C*
+     C           MDIN      IFEQ 0
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C*
+     C                     Z-ADDSPOT      ZEXCH
+     C*
+     C                     MOVE NMCY      ZCCYI
+     C                     MOVE BCCY      ZCCYO
+     C                     MOVE CDP       ZCDPI                           S01117
+     C                     Z-ADDWMKVAL    ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*04*S01117
+     C***********          Z-ADD4         DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WMKVAL
+     C                     END
+     C*
+     C* remove BASE currency decimal places
+     C*
+     C           5         SUB  BSCCDP    DC
+     C                     MULT POWER8,DC WMKVAL
+     C*
+     C**SUBTRACT*CONVERTED*MARKET*VALUE*FROM*TOTAL*MARKET*VALUE******     E16814
+     C* ADD CONVERTED MARKET VALUE TO TOTAL MARKET VALUE                  E16814
+     C*
+     C**********           SUB  WMKVAL    ACCMAR                          E16814
+     C                     ADD  WMKVAL    ACCMAR                          E16814
+     C*
+     C**SUB*CONVERTED*MARKET*VALUE*X*COLL*MARGIN*/*100*FROM*TOT*COLLATERALE16814
+     C* ADD CONVERTED MARKET VALUE X COLL MARGIN / 100 TO TOT COLLATERAL  E16814
+     C*
+     C           WMKVAL    MULT CMGN      WMKVAL
+     C           WMKVAL    DIV  100       WMKVAL
+     C**********           SUB  WMKVAL    ACCCOL                          E16814
+     C                     ADD  WMKVAL    ACCCOL                          E16814
+     C*
+     C* IF TRADE/VALUE COLLATERAL BASIS IS T -
+     C* ACCUMULATE O/S COUNTERVALUE FOR UNSETTLED TRADE -
+     C*
+     C           TVCL      IFEQ 'T'
+     C           KEYTR     SETLLTRDBV
+     C           KEYTR     READETRDBV                    80
+     C           *IN80     DOWNE'1'
+     C           RECI      IFEQ 'D'
+     C*
+     C* IF NOMINAL CURRENCY NOT EQUAL TO BASE CURRENCY -
+     C*
+     C           TNMC      IFNE BCCY
+     C*
+     C* CONVERT COUNTERVALUE FROM NOM TO BASE AT SPOT RATE
+     C* ACCESS NOMINAL CURRENCY RECORD FROM TABTG10
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELTNMC      ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 05 *
+     C                     Z-ADD5         DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C*
+     C           MDIN      IFEQ 0
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C*
+     C                     Z-ADDSPOT      ZEXCH
+     C*
+     C                     MOVE TNMC      ZCCYI
+     C                     MOVE CDP       ZCDPI                           S01117
+     C                     MOVE BCCY      ZCCYO
+     C**********           Z-ADDTCTR      ZAMTCI                          E16814
+     C                     Z-ADDTOSV      ZAMTCI                          E16814
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*06*S01117
+     C***********          Z-ADD6         DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WCVAL  150
+     C                     ELSE
+     C**********           Z-ADDTCTR      WCVAL                           E16814
+     C                     Z-ADDTOSV      WCVAL                           E16814
+     C                     END
+     C*
+     C* remove BASE currency decimal places
+     C*
+     C           5         SUB  BSCCDP    DC
+     C                     MULT POWER8,DC WCVAL
+     C*
+     C* ADD CONVERTED COUNTERVALUE TO TOTAL CASH IF PURCHASE
+     C*
+     C           TDTP      IFEQ 'TP'
+     C                     ADD  WCVAL     ACCCAS
+     C*
+     C* SUBTRACT CONVERTED COUNTERVALUE FROM TOTAL CASH IF SALE
+     C*
+     C                     ELSE
+     C           TDTP      IFEQ 'TS'
+     C                     SUB  WCVAL     ACCCAS
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C           KEYTR     READETRDBV                    80
+     C                     END
+     C                     END
+     C*
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* RETAIL- SUBROUTINE TO CALCULATE RETAIL TOTALS                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RETAIL    BEGSR                           ** RETAIL**
+     C*
+     C* FOR EACH A/C ON SREAC FOR THIS BRANCH / CUSTOMER
+     C*
+     C           SRKEY     SETLLREACRDF
+     C           SRKEY     READEREACRDF                  80
+     C           *IN80     DOWNE'1'
+     C                     Z-ADD*ZEROS    WACINT                          E16814
+     C*
+     C* ACCRUED INTEREST = DR ACCR INT + MAN ADJ TO SR + GEN ADJ TO DR+
+     C*                    CR ACCR INT + MAN ADJ TO CR + GEN ADJ TO CR
+     C*
+     C           DAIC1     ADD  MADI      WACINT 150
+     C           GADI      ADD  WACINT    WACINT
+     C           CAIC1     ADD  WACINT    WACINT
+     C           MACI      ADD  WACINT    WACINT
+     C           GACI      ADD  WACINT    WACINT
+     C*
+     C* ACCESS ACCNT FOR CLEARED BALANCE
+     C*
+      ***********                                                   S01117E33034
+      *Check*to*see*if*chain*branch*should*be*'pay*from'*or*'pay*to'S01117E33034
+      ***********                                                   S01117E33034
+     C***********TDTP      IFEQ 'TP'                                S01117E33034
+     C***********          MOVE PYTA      ABRC                      S01117E33034
+     C***********          ELSE                                     S01117E33034
+     C***********          MOVE PYFA      ABRC                      S01117E33034
+     C***********          END                                      S01117E33034
+     C                     MOVE BRCA      ABRC                            E33034
+      *                                                                   S01117
+     C           ACKEY     CHAINACCNT                79
+     C           *IN79     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'ACCNT'   DBFILE           ***************
+     C                     MOVELKEYAC     DBKEY            * DB ERROR 07 *
+     C                     Z-ADD7         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C*
+     C* ADD ACCRUED INTEREST TO CLEARED BALANCE
+     C*
+     C           WACINT    ADD  CLBL      WCLBL  150
+     C*
+     C* IF ACCOUNT CURRENCY NOT EQUAL TO BASE CURRENCY -
+     C*
+     C           CCY       IFNE BCCY
+     C*
+     C* CONVERT CLEARED BAL FROM ACC CCY TO BASE AT SPOT RATE
+     C* ACCESS ACCOUNT CURRENCY RECORD FROM TABTG10
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELCCY       ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 08 *
+     C                     Z-ADD8         DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C           MDIN      IFEQ 0
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C                     Z-ADDSPOT      ZEXCH
+     C*
+     C                     MOVE CCY       ZCCYI
+     C                     MOVE CDP       ZCDPI                           S01117
+     C                     MOVE BCCY      ZCCYO
+     C                     Z-ADDWCLBL     ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*09*S01117
+     C***********          Z-ADD9         DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WCLBL
+     C                     END
+     C*
+     C* remove BASE currency decimal places
+     C*
+     C           5         SUB  BSCCDP    DC
+     C                     MULT POWER8,DC WCLBL
+     C*
+     C* SUBTRACT CONVERTED CLEARED BALANCE FROM TOTAL CASH
+     C*
+     C           ACCCAS    SUB  WCLBL     ACCCAS
+     C*
+     C* READ NEXT SREAC RECORD
+     C*
+     C           SRKEY     READEREACRDF                  80
+     C                     END
+     C*
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* DEALS - SUBROUTINE TO CALCULATE DEALING TOTALS                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DEALS     BEGSR                           ** DEALS **
+     C*
+     C* FOR EACH REC ON CUSDB FOR THIS BRANCH / CUSTOMER
+     C*
+     C           OTKEY     SETLLCUSDB
+     C           OTKEY     READECUSDB                    80
+     C           *IN80     DOWNE'1'
+     C                     Z-ADD*ZEROS    WACINT                          E16814
+     C*
+     C* IF LOAN/DEPOSIT DEAL & VALUE DATE <= ACCRUAL CONTROL DATE
+     C*
+     C           RCDT      IFEQ 'C'
+     C           VDAT      ANDLEECD
+     C*
+     C* CALCULATE ACCRUED INTEREST -
+     C*  = 0 IF INT ACC CTL DATE > ACC CTL DATE
+     C*
+     C           IACD      IFGT ECD
+     C                     Z-ADD0         WACINT
+     C*
+     C*  OTHERWISE CALCULATE USING GLINTC
+     C*
+     C                     ELSE
+     C                     Z-ADDIACD      ZIBEG
+     C           MDAT      IFEQ 0
+     C           MDAT      ORGT ECD
+     C                     Z-ADDECD       ZIEND
+     C                     ELSE
+     C                     Z-ADDMDAT      ZIEND
+     C                     END
+     C                     Z-ADDICBS      ZICALC
+     C                     Z-ADDPCPL      ZIAMT
+     C                     Z-ADDINTR      ZIRATE
+     C                     EXSR GLINTC
+     C*
+     C*  ACCRUED INTEREST = ACCR INT SINCE CTL DATE + ACCR INT TO CTL DATE +
+     C*                     ACCR INT ADJ NOT POSTED + ACCR INT ADJ POSTED
+     C*
+     C           ZINTR     ADD  AITC      WACINT
+     C           AIAN      ADD  WACINT    WACINT
+     C           AIAP      ADD  WACINT    WACINT
+     C                     END
+     C*
+     C* IF DEAL CURRENCY NOT EQUAL TO BASE CURRENCY -
+     C*
+     C           CCY       IFNE BCCY
+     C*
+     C* CONVERT PRINCIPAL FROM DEAL CCY TO BASE AT SPOT RATE
+     C* ACCESS DEAL CURRENCY RECORD FROM TABTG10
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELCCY       ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 10 *
+     C                     Z-ADD10        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C           MDIN      IFEQ 0
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C                     Z-ADDSPOT      ZEXCH
+     C*
+     C                     MOVE CCY       ZCCYI
+     C                     MOVE CDP       ZCDPI                           S01117
+     C                     MOVE BCCY      ZCCYO
+     C                     Z-ADDPCPL      ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*11*S01117
+     C***********          Z-ADD11        DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WPCPL  150
+     C*
+     C* CONVERT ACCR INTL FROM DEAL CCY TO BASE AT SPOT RATE
+     C*
+     C                     MOVE CCY       ZCCYI
+     C                     MOVE BCCY      ZCCYO
+     C                     Z-ADDWACINT    ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*12*S01117
+     C***********          Z-ADD12        DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WACINT
+     C                     ELSE
+     C                     Z-ADDPCPL      WPCPL
+     C                     END
+     C*
+     C* remove BASE currency decimal places
+     C*
+     C           5         SUB  BSCCDP    DC
+     C                     MULT POWER8,DC WPCPL
+     C                     MULT POWER8,DC WACINT
+     C*
+     C* IF DEAL IS A DEPOSIT TAKEN -
+     C* ADD CONVERTED PRINCIPAL TO TOTAL DEPOSITS
+     C* ADD CONVERTED ACCRUED INTEREST TO TOTAL CASH
+     C*
+     C           RCDC      IFEQ 16
+     C                     ADD  WPCPL     ACCDEP
+     C                     ADD  WACINT    ACCCAS
+     C                     END
+     C*
+     C* IF DEAL IS A PLACING LOAN  -
+     C* ADD CONVERTED PRINCIPAL TO TOTAL DEPOSITS
+     C* SUBTRACT CONVERTED ACCRUED INTEREST FROM TOTAL CASH
+     C*
+     C           RCDC      IFEQ 15
+     C                     ADD  WPCPL     ACCDEP
+     C                     SUB  WACINT    ACCCAS
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF FX DEAL & VALUE DATE >  ACCRUAL CONTROL DATE
+     C*
+     C           RCDT      IFEQ 'B'
+     C           VDAT      ANDGTECD
+     C*
+     C* MULTIPLY DEAL BASE CCY EQUIV BY FX RISK / 100 & ADD TO TOTAL FX
+     C*
+     C           BCEQ      MULT FEXR      WFX    150
+     C           WFX       DIV  100       WFX       H
+     C*
+     C* remove BASE currency decimal places
+     C*
+     C           5         SUB  BSCCDP    DC
+     C                     MULT POWER8,DC WFX
+     C                     ADD  WFX       ACCFX
+     C*
+     C                     END
+     C*
+     C* READ NEXT CUSDB RECORD
+     C*
+     C           OTKEY     READECUSDB                    80
+     C                     END
+     C*
+     C*
+     C*
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* LEND  - SUBROUTINE TO CALCULATE LENDING TOTALS                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           LEND      BEGSR                           ** LEND  **
+     C*
+     C**********           MOVE *ZEROS    LFCUS                                               CSD027
+     C                     MOVE *BLANKS   LFCUS                                               CSD027
+     C                     MOVE *ZEROS    LFTYP
+     C                     MOVE *ZEROS    LFSEQ
+     C                     MOVE '0'       *IN78
+     C*
+     C* RESET FACILITY UTILISATION & GUARANTEE TOTAL
+     C*
+     C                     Z-ADD0         WFACU  150
+     C                     Z-ADD0         WGTOT  150
+     C*
+     C* FOR EACH REC ON CLOANB FOR THIS BRANCH / CUSTOMER
+     C*
+     C           OTKEY     SETLLCLOANB
+     C           OTKEY     READECLOANB                   80
+     C           *IN80     DOWNE'1'
+     C                     Z-ADD*ZEROS    WACINT                          E16814
+     C*
+     C* IF NEW FACILITY CUSTOMER/TYPE/SEQUENCE
+     C*
+     C           LFCUS     IFNE FCUS
+     C           LFTYP     ORNE FTYP
+     C           LFSEQ     ORNE FSEQ
+     C           *IN78     IFEQ '1'
+     C*
+     C*  - RETRIEVE DETAILS OF ANY GUARANTEES
+     C*
+     C                     EXSR GTEEF
+     C*
+     C* ADD THE SMALLER OF GUARANTEE TOTAL & FACILITY UTILISATION
+     C*         TO TOTAL GUARANTEES RECEIVED
+     C*
+     C           WGTOT     IFLT WFACU
+     C                     ADD  WGTOT     ACCGUR
+     C                     ELSE
+     C                     ADD  WFACU     ACCGUR
+     C                     END
+     C*
+     C* RESET FACILITY UTILISATION & GUARANTEE TOTAL
+     C*
+     C                     Z-ADD0         WFACU  150
+     C                     Z-ADD0         WGTOT  150
+     C                     END
+     C                     END
+     C                     MOVE '1'       *IN78
+     C*
+     C* IF START DATE <= ACC CTL DATE  < MAT DATE
+     C*
+     C           VDAT      IFLE ECD
+     C           ECD       ANDLTMDAT
+     C*
+     C* IF PROCESSING TYPE IS 70 (GUARANTEE ISSUED) -
+     C*
+     C           PTYP      IFEQ 70
+     C*
+     C* IF LOAN CURRENCY NOT EQUAL TO BASE CURRENCY -
+     C*
+     C           CCY       IFNE BCCY
+     C*
+     C* CONVERT CURR PRINCIPAL FROM LOAN CCY TO BASE AT SPOT RATE
+     C* ACCESS LOAN CURRENCY RECORD FROM TABTG10
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELCCY       ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 13 *
+     C                     Z-ADD13        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C           MDIN      IFEQ 0
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C                     Z-ADDSPOT      ZEXCH
+     C*
+     C                     MOVE CCY       ZCCYI
+     C                     MOVE CDP       ZCDPI                           S01117
+     C                     MOVE BCCY      ZCCYO
+     C                     Z-ADDCPAM      ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*14*S01117
+     C***********          Z-ADD14        DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WPCPL
+     C                     ELSE
+     C                     Z-ADDCPAM      WPCPL
+     C                     END
+     C*
+     C* remove BASE currency decimal places
+     C*
+     C           5         SUB  BSCCDP    DC
+     C                     MULT POWER8,DC WPCPL
+     C*
+     C* ADD CONVERTED CURR PRINCIPAL TO TOTAL GUARANTEES GIVEN
+     C*
+     C                     ADD  WPCPL     ACCGUG
+     C                     END
+     C*
+     C* IF PROCESSING TYPE IS 61, 62, 63
+     C*
+     C           PTYP      IFEQ 61
+     C           PTYP      OREQ 62
+     C           PTYP      OREQ 63
+     C*
+     C* CALCULATE ACCRUED INTEREST -
+     C*  = 0 IF INT ACC CTL DATE > ACC CTL DATE
+     C*
+     C           IACD      IFGT ECD
+     C                     Z-ADD0         WACINT
+     C*
+     C*  OTHERWISE CALCULATE USING GLINTC
+     C*
+     C                     ELSE
+     C                     Z-ADDIACD      ZIBEG
+     C           MDAT      IFEQ 0
+     C           MDAT      ORGT ECD
+     C                     Z-ADDECD       ZIEND
+     C                     ELSE
+     C                     Z-ADDMDAT      ZIEND
+     C                     END
+     C                     Z-ADDICBS      ZICALC
+     C                     Z-ADDCPAM      ZIAMT
+     C                     Z-ADDINTR      ZIRATE
+     C                     EXSR GLINTC
+     C*
+     C*  ACCRUED INTEREST = ACCR INT SINCE CTL DATE + ACCR INT TO CTL DATE +
+     C*                     ACCR INT ADJ NOT POSTED + ACCR INT ADJ POSTED
+     C*
+     C           ZINTR     ADD  AITC      WACINT
+     C           AIMN      ADD  WACINT    WACINT
+     C           AIAP      ADD  WACINT    WACINT
+     C                     END
+     C*
+     C*  STORE LOAN CURRENCY & PRINCIPAL
+     C*
+     C                     MOVE CCY       WLCCY   3
+     C                     Z-ADDCPAM      WPCPL
+     C*
+     C*  IF NO. PARTS > 0 ADJUST AMOUNTS
+     C*
+     C           NOPS      IFGT 0
+     C                     EXSR PSOLDS
+     C                     END
+     C*
+     C* IF LOAN CURRENCY NOT EQUAL TO BASE CURRENCY -
+     C*
+     C           WLCCY     IFNE BCCY
+     C*
+     C* CONVERT CURR PRINCIPAL FROM LOAN CCY TO BASE AT SPOT RATE
+     C* ACCESS LOAN CURRENCY RECORD FROM TABTG10
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELWLCCY     ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 15 *
+     C                     Z-ADD15        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C           MDIN      IFEQ 0
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C                     Z-ADDSPOT      ZEXCH
+     C*
+     C                     MOVE WLCCY     ZCCYI
+     C                     MOVE CDP       ZCDPI                           S01117
+     C                     MOVE BCCY      ZCCYO
+     C                     Z-ADDWPCPL     ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*16*S01117
+     C***********          Z-ADD16        DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WPCPL
+     C*
+     C* CONVERT ACCR INT FROM LOAN CCY TO BASE AT SPOT RATE
+     C*
+     C                     MOVE WLCCY     ZCCYI
+     C                     MOVE BCCY      ZCCYO
+     C                     Z-ADDWACINT    ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*17*S01117
+     C***********          Z-ADD17        DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WACINT
+     C                     END
+     C*
+     C* RETRIEVE DETAILS OF ANY GUARANTEES
+     C*
+     C                     EXSR GTEEL
+     C*                                                                   E16814
+     C* ADJUST AMOUNT FOR CURRENCY DECIMAL PLACES                         E16814
+     C*                                                                   E16814
+     C           5         SUB  BSCCDP    DP      10                      E16814
+     C           WPCPL     MULT POWER8,DP WKAMT     H                     E16814
+     C*
+     C* ADD CONVERTED CURR PRINCIPAL TO TOTAL LOANS
+     C*
+     C**********           ADD  WPCPL     ACCLOA                          E16814
+     C                     ADD  WKAMT     ACCLOA                          E16814
+     C*
+     C* SUBTRACT CONVERTED ACCR INTEREST FROM TOTAL CASH
+     C*                                                                   E16814
+     C* ADJUST AMOUNT FOR CURRENCY DECIMAL PLACES                         E16814
+     C*                                                                   E16814
+     C           5         SUB  BSCCDP    DP      10                      E16814
+     C                     MULT POWER8,DP WACINT    H                     E16814
+     C                     SUB  WACINT    ACCCAS
+     C*
+     C* ADD THE SMALLER OF GUARANTEE TOTAL & CONVERTED CURR PRINCIPAL
+     C*         PLUS CONVERTED ACCR INTEREST TO TOTAL GUARANTEES RECEIVED
+     C*
+     C           WPCPL     ADD  WACINT    ZZWORK 150
+     C           WGTOT     IFLT ZZWORK
+     C                     ADD  WGTOT     ACCGUR
+     C                     ELSE
+     C                     ADD  ZZWORK    ACCGUR
+     C                     END
+     C*
+     C* ADD CONVERTED CURR PRINCIPAL  & ACCR INTEREST TO FACILITY
+     C* UTILISATION
+     C*
+     C           WPCPL     ADD  WFACU     WFACU
+     C           WACINT    ADD  WFACU     WFACU
+     C*
+     C                     END
+     C                     END
+     C*
+     C* STORE VALUE OF FIELDS
+     C*
+     C                     MOVE FCUS      LFCUS
+     C                     MOVE FTYP      LFTYP
+     C                     MOVE FSEQ      LFSEQ
+     C*
+     C* READ NEXT CLOANB RECORD
+     C*
+     C           OTKEY     READECLOANB                   80
+     C                     END
+     C*
+     C* IF NEW FACILITY CUSTOMER/TYPE/SEQUENCE
+     C* (AT END OF FILE & AT LEAST 1 RECORD READ)
+     C*
+     C           *IN78     IFNE '0'
+     C*
+     C*  - RETRIEVE DETAILS OF ANY GUARANTEES
+     C*
+     C                     EXSR GTEEF
+     C*
+     C* ADD THE SMALLER OF GUARANTEE TOTAL & FACILITY UTILISATION
+     C*         TO TOTAL GUARANTEES RECEIVED
+     C*
+     C           WGTOT     IFLT WFACU
+     C                     ADD  WGTOT     ACCGUR
+     C                     ELSE
+     C                     ADD  WFACU     ACCGUR
+     C                     END
+     C                     END
+     C*
+     C*
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* GTEEL - SUBROUTINE TO PROCESS GUARANTEES FOR A LOAN           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           GTEEL     BEGSR                           ** GTEEL **
+     C*
+     C* FOR EACH REC ON GTEES FOR THIS OTHER LOAN NO
+     C*
+     C                     MOVE CNUM      GCNUM
+     C                     MOVE LNRF      GLNRF
+     C           GKEY      SETLLGTEES
+     C           GKEY      READEGTEES                    80
+     C           *IN80     DOWNE'1'
+     C*
+     C* IF START DATE < ACC CTL DATE  < END DATE  & GUA/SEC IND = G
+     C*
+     C           STTD      IFLT ECD
+     C           ECD       ANDLTEDDT
+     C           GSCI      ANDEQ'G'
+     C*
+     C* IF G'TEE CURRENCY NOT EQUAL TO BASE CURRENCY -
+     C*
+     C           CCY       IFNE BCCY
+     C*
+     C* CONVERT TOTAL AMOUNT FROM GTEE CCY TO BASE AT SPOT RATE
+     C* ACCESS GTEE CURRENCY RECORD FROM TABTG10
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELCCY       ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 18 *
+     C                     Z-ADD18        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C           MDIN      IFEQ 0
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C                     Z-ADDSPOT      ZEXCH
+     C*
+     C                     MOVE CCY       ZCCYI
+     C                     MOVE CDP       ZCDPI                           S01117
+     C                     MOVE BCCY      ZCCYO
+     C                     Z-ADDTAMT      ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*19*S01117
+     C***********          Z-ADD19        DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WTAMT  150
+     C                     ELSE
+     C                     Z-ADDTAMT      WTAMT
+     C                     END
+     C*
+     C* ADD CONVERTED TOTAL AMOUNT TO GTEE TOTAL
+     C*
+     C                     ADD  WTAMT     WGTOT
+     C                     END
+     C*
+     C* READ NEXT GTEE RECORD
+     C*
+     C           GKEY      READEGTEES                    80
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* GTEEF - SUBROUTINE TO PROCESS GUARANTEES FOR A FACILITY       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           GTEEF     BEGSR                           ** GTEEF **
+     C*
+     C* FOR EACH REC ON GTEES FOR THIS FACILITY CUST/ FACILITY LOAN
+     C*
+     C                     MOVE LFCUS     GCNUM
+     C                     MOVE *BLANKS   GLNRF
+     C                     Z-ADDLFTYP     GFTYP
+     C                     Z-ADDLFSEQ     GFSEQ
+     C           GKEY      SETLLGTEES
+     C           GKEY      READEGTEES                    80
+     C           *IN80     DOWNE'1'
+     C*
+     C* IF START DATE < ACC CTL DATE  < END DATE  & GUA/SEC IND = G
+     C*
+     C           STTD      IFLT ECD
+     C           ECD       ANDLTEDDT
+     C           GSCI      ANDEQ'G'
+     C*
+     C* IF G'TEE CURRENCY NOT EQUAL TO BASE CURRENCY -
+     C*
+     C           CCY       IFNE BCCY
+     C*
+     C* CONVERT TOTAL AMOUNT FROM GTEE CCY TO BASE AT SPOT RATE
+     C* ACCESS GTEE CURRENCY RECORD FROM TABTG10
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELCCY       ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 20 *
+     C                     Z-ADD20        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C           MDIN      IFEQ 0
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C                     Z-ADDSPOT      ZEXCH
+     C*
+     C                     MOVE CCY       ZCCYI
+     C                     MOVE CDP       ZCDPI                           S01117
+     C                     MOVE BCCY      ZCCYO
+     C                     Z-ADDTAMT      ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*21*S01117
+     C***********          Z-ADD21        DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      WTAMT  150
+     C                     ELSE
+     C                     Z-ADDTAMT      WTAMT
+     C                     END
+     C*
+     C* ADD CONVERTED TOTAL AMOUNT TO GTEE TOTAL
+     C*
+     C                     ADD  WTAMT     WGTOT
+     C                     END
+     C*
+     C* READ NEXT GTEES RECORD
+     C*
+     C           GKEY      READEGTEES                    80
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* PSOLDS- SUBROUTINE TO ADJUST FOR PARTICIPATIONS SOLD          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PSOLDS    BEGSR                           ** PSOLDS**
+     C*
+     C* ZEROISE ACCUMULATORS
+     C*
+     C                     Z-ADD0         WWPCPL 150
+     C                     Z-ADD0         WWACIN 150
+     C*
+     C* FOR EACH REC ON PSOLD FOR THIS OTHER LOAN NO
+     C*
+     C**********           MOVE LNRF      OTHLO   60                                          CSD027
+     C                     MOVE LNRF      OTHLO   6                                           CSD027
+     C           OTHLO     SETLLPSOLD
+     C           OTHLO     READEPSOLD                    80
+     C           *IN80     DOWNE'1'
+     C*
+     C* IF START DATE < ACC CTL DATE  < MAT DATE
+     C*
+     C           VDAT      IFLT ECD
+     C           ECD       ANDLTMDAT
+     C*
+     C* CALCULATE ACCRUED INTEREST -
+     C*  = 0 IF INT ACC CTL DATE > ACC CTL DATE
+     C*
+     C           IACD      IFGT ECD
+     C                     Z-ADD0         ZACINT 150
+     C*
+     C*  OTHERWISE CALCULATE USING GLINTC
+     C*
+     C                     ELSE
+     C                     Z-ADDIACD      ZIBEG
+     C           MDAT      IFEQ 0
+     C           MDAT      ORGT ECD
+     C                     Z-ADDECD       ZIEND
+     C                     ELSE
+     C                     Z-ADDMDAT      ZIEND
+     C                     END
+     C                     Z-ADDICBS      ZICALC
+     C                     Z-ADDCPAM      ZIAMT
+     C                     Z-ADDINTR      ZIRATE
+     C                     EXSR GLINTC
+     C*
+     C*  ACCRUED INTEREST = ACCR INT SINCE CTL DATE + ACCR INT TO CTL DATE +
+     C*                     ACCR INT ADJ NOT POSTED + ACCR INT ADJ POSTED
+     C*
+     C           ZINTR     ADD  AITC      ZACINT
+     C           AIMN      ADD  ZACINT    ZACINT
+     C           AIAP      ADD  ZACINT    ZACINT
+     C                     END
+     C*
+     C* IF LOAN CURRENCY NOT EQUAL TO BASE CURRENCY -
+     C*
+     C           CCY       IFNE BCCY
+     C*
+     C* CONVERT CURR PRINCIPAL FROM LOAN CCY TO BASE AT SPOT RATE
+     C* ACCESS LOAN CURRENCY RECORD FROM TABTG10
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELCCY       ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 22 *
+     C                     Z-ADD22        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C           MDIN      IFEQ 0
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C                     Z-ADDSPOT      ZEXCH
+     C*
+     C                     MOVE CCY       ZCCYI
+     C                     MOVE CDP       ZCDPI                           S01117
+     C                     MOVE BCCY      ZCCYO
+     C                     Z-ADDCPAM      ZAMTCI
+     C                     EXSR ZCONV
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*23*S01117
+     C***********          Z-ADD23        DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      ZPCPL  150
+     C*
+     C* CONVERT ACCR INT FROM LOAN CCY TO BASE AT SPOT RATE
+     C*
+     C                     MOVE CCY       ZCCYI
+     C                     MOVE BCCY      ZCCYO
+     C                     Z-ADDZACINT    ZAMTCI
+     C                     EXSR ZCONV
+      ***********                                                         S01117
+     C************INU8     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********          MOVE 'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELTKEY      DBKEY            ***DB*ERROR*24*S01117
+     C***********          Z-ADD24        DBASE            ***************S01117
+     C***********          GOTO ENDPGM                                    S01117
+     C***********          END                                            S01117
+     C*
+     C* MULTIPLY RESULT BY (100 - COLLATERAL CCY CONV) / 100
+     C*
+     C           ZAMTCO    MULT WCCC      ZACINT
+     C                     ELSE
+     C                     Z-ADDCPAM      ZPCPL
+     C                     END
+     C*
+     C* MAINTAIN TOTALS OF CONVERTED CURRENT PRINCIPAL & ACCR INTEREST
+     C*
+     C                     ADD  ZPCPL     WWPCPL
+     C                     ADD  ZACINT    WWACIN
+     C                     END
+     C*
+     C* READ NEXT PSOLD RECORD
+     C*
+     C           OTHLO     READEPSOLD                    80
+     C                     END
+     C*
+     C* SUBTRACT TOTAL CURRENT PRINCIPAL FROM CURRENT PRINCIPAL FOR LOAN
+     C*
+     C                     SUB  WWPCPL    WPCPL
+     C*
+     C* SUBTRACT TOTAL ACCR INTEREST FROM ACCR INTEREST FOR LOAN
+     C*
+     C                     SUB  WWACIN    WACINT
+     C*
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  PRINT -   SUBROUTINE TO PRINT DETAIL REPORT                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PRINT     BEGSR                           ** PRINT**
+     C*
+     C* IF NEW BRANCH -  OBTAIN BRANCH NAME FROM TABLETR
+     C* ONLY IF MULTIBRANCHING IS ON                                      E29170
+     C*
+     C***********LCSBR     IFNE PCSBR                                     S01117
+     C***********          MOVELLCSBR     SVBRCD                          S01117
+     C           LCSBA     IFNE PCSBA                                     S01117
+     C           *IN20     ANDEQ'1'                                       E29170
+     C                     MOVELLCSBA     SVBRCD                          S01117
+     C                     MOVE *BLANKS   TKEY
+     C**********           MOVEL'10'      TKEY                                               BUG7985
+     C***********          MOVE LCSBR     TKEY                            S01117
+     C**********           MOVE LCSBA     TKEY                                        S01117 BUG7985
+     C********** TABKEY    CHAINTABLETRF             80                                      BUG7985
+     C********** *IN80     IFEQ '1'                                                          BUG7985
+     C********** RECI      ORNE 'D'                                                          BUG7985
+     C                     CALL 'AOBRCHR1'                                                   BUG7985
+     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
+     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
+     C                     PARM LCSBA     PBRCH   3                                          BUG7985
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
+      *                                                                                      BUG7985
+     C           PRTCD     IFNE *BLANKS                                                      BUG7985
+     C           *LOCK     IN   LDA                                       S01117
+     C**********           MOVE 'TABLE'   DBFILE           ***************                   BUG7985
+     C**********           MOVELTKEY      DBKEY            * DB ERROR 25 *                   BUG7985
+     C                     MOVE 'SDBRCHPD'DBFILE                                             BUG7985
+     C                     MOVELLCSBA     DBKEY                                              BUG7985
+     C                     Z-ADD25        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C                     END
+     C*
+     C**IF*NEW*A/C*OFFICER-**OBTAIN*NAME*FROM*TABLETT**                                     BUG10348
+     C*
+     C           LACOC     IFNE PACOC
+     C           LACOC     ANDNE*BLANKS                                   E24473
+     C***********LACOC     CHAINTABLETTF             80                                     BUG10348
+     C************IN80     IFEQ '1'                                                         BUG10348
+     C********** RECI      ORNE 'D'                                                         BUG10348
+     C                     CALL 'AOACOFR0'                                                  BUG10348
+     C                     PARM *BLANKS   @RTCD   7                                         BUG10348
+     C                     PARM '*KEY   ' @OPTN   7                                         BUG10348
+     C                     PARM LACOC     @KEY1   2                                         BUG10348
+     C           SDACOF    PARM SDACOF    DSFDY                                             BUG10348
+      *                                                                                     BUG10348
+     C           @RTCD     IFNE *BLANKS                                                     BUG10348
+     C           @RTCD     ANDNE'*NOSEL '                                                   BUG10348
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELLACOC     DBKEY            * DB ERROR 26 *
+     C                     Z-ADD26        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C                     MOVE AZACON    ACON                                              BUG10348
+     C                     END
+     C*                                                                   E24473
+     C**  Clear A/C officer name if first record with blank A/C code      E24473
+     C**  is read.                                                        E24473
+     C           LACOC     IFNE PACOC                                     E24473
+     C           LACOC     ANDEQ*BLANKS                                   E24473
+     C                     MOVE *BLANKS   ACON                            E24473
+     C                     END                                            E24473
+     C*                                                                   E24473
+     C*
+     C*   CHECK FOR CHANGE IN MAIN KEY FIELDS
+     C*
+     C***********PCSBR     IFNE LCSBR                                     S01117
+     C***********PCSBR     ANDNE*ZEROS                                    S01117
+     C           PCSBA     IFNE LCSBA                                     S01117
+     C***********PCSBA     ANDNE*BLANKS                             S01117E29170
+     C           FILOPN    IFEQ 'Y'                                       E29170
+     C                     WRITETRAIL
+     C                     CLOSESE1050P1
+     C                     END                                            E29170
+     C                     OPEN SE1050P1
+     C                     Z-ADD0         LCNT
+     C                     Z-ADD0         PAGE
+     C                     MOVEL'Y'       FILOPN  1                       E29170
+     C*                                                                   E29170
+     C** RCF PROCESSING FOR DETAIL PRINTER FILE                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END
+     C*
+     C* IF THERE HAS BEEN A CHANGE IN ANY KEY FIELD
+     C*
+     C***********PCSBR     IFNE LCSBR                                     S01117
+     C           PCSBA     IFNE LCSBA                                     S01117
+     C           PACOC     ORNE LACOC
+     C           PC1DI     ORNE LC1DI
+     C*
+     C* SET IND. DEPENDING ON DISCRETIONARY IND.
+     C*
+     C                     SETOF                     2122
+     C           LC1DI     COMP 'D'                      21
+     C           LC1DI     COMP 'S'                      22
+     C*
+     C                     WRITEHEADP1
+     C**********           Z-ADD13        LCNT                            E16814
+     C                     Z-ADD14        LCNT                            E16814
+     C                     END
+     C*
+     C* SET TOTAL MARKET VALUE
+     C*
+     C           ACCMAR    DIV  1000      WKAMT  150H
+     C*
+     C* CHECK FOR OVERFLOW WHEN EDITING TO PRINT
+     C*
+     C           WKAMT     IFGT 9999999
+     C********** *LOCK     IN   LDA                                                    S01117 240761
+     C**********           MOVE 'OFLOW'   DBFILE           ***************                    240761
+     C**********           MOVELWKAMT     DBKEY            * DB ERROR 27 *                    240761
+     C**********           Z-ADD27        DBASE            ***************                    240761
+     C**********           SETON                     U7U8                                     240761
+     C**********           OUT  LDA                                                    S01117 240761
+     C**********           EXSR *PSSR                                                  S01117 240761
+     C**********           GOTO ENDPGM                                                        240761
+     C**********           END                                                                240761
+     C                     MOVE *ALL'*'   TOTMAR                                              240761
+     C                     ELSE                                                               240761
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTMAR
+     C                     END                                                                240761
+     C*
+     C* SET TOTAL CASH VALUE
+     C*
+     C           ACCCAS    DIV  1000      WKAMT  150H
+     C*
+     C* CHECK FOR OVERFLOW WHEN EDITING TO PRINT
+     C*
+     C           WKAMT     IFGT 9999999
+     C********** *LOCK     IN   LDA                                                    S01117 240761
+     C**********           MOVE 'OFLOW'   DBFILE           ***************                    240761
+     C**********           MOVELWKAMT     DBKEY            * DB ERROR 28 *                    240761
+     C**********           Z-ADD28        DBASE            ***************                    240761
+     C**********           SETON                     U7U8                                     240761
+     C**********           OUT  LDA                                                    S01117 240761
+     C**********           EXSR *PSSR                                                  S01117 240761
+     C**********           GOTO ENDPGM                                                        240761
+     C**********           END                                                                240761
+     C                     MOVE *ALL'*'   TOTCAS                                              240761
+     C                     ELSE                                                               240761
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTCAS
+     C                     END                                                                240761
+     C*
+     C* SET TOTAL DEPOSITS
+     C*
+     C           ACCDEP    DIV  1000      WKAMT  150H
+     C*
+     C* CHECK FOR OVERFLOW WHEN EDITING TO PRINT
+     C*
+     C           WKAMT     IFGT 9999999
+     C********** *LOCK     IN   LDA                                                    S01117 240761
+     C**********           MOVE 'OFLOW'   DBFILE           ***************                    240761
+     C**********           MOVELWKAMT     DBKEY            * DB ERROR 29 *                    240761
+     C**********           Z-ADD29        DBASE            ***************                    240761
+     C**********           SETON                     U7U8                                     240761
+     C**********           OUT  LDA                                                    S01117 240761
+     C**********           EXSR *PSSR                                                  S01117 240761
+     C**********           GOTO ENDPGM                                                        240761
+     C**********           END                                                                240761
+     C                     MOVE *ALL'*'   TOTDEP                                              240761
+     C                     ELSE                                                               240761
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTDEP
+     C                     END                                                                240761
+     C*
+     C* SET TOTAL GUARANTEES RECEIVED
+     C*
+     C           ACCGUR    DIV  1000      WKAMT  150H
+     C*
+     C* CHECK FOR OVERFLOW WHEN EDITING TO PRINT
+     C*
+     C           WKAMT     IFGT 9999999
+     C********** *LOCK     IN   LDA                                                    S01117 240761
+     C**********           MOVE 'OFLOW'   DBFILE           ***************                    240761
+     C**********           MOVELWKAMT     DBKEY            * DB ERROR 30 *                    240761
+     C**********           Z-ADD30        DBASE            ***************                    240761
+     C**********           SETON                     U7U8                                     240761
+     C**********           OUT  LDA                                                    S01117 240761
+     C**********           EXSR *PSSR                                                  S01117 240761
+     C**********           GOTO ENDPGM                                                        240761
+     C**********           END                                                                240761
+     C                     MOVE *ALL'*'   TOTGUR                                              240761
+     C                     ELSE                                                               240761
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTGUR
+     C                     END                                                                240761
+     C*
+     C* SET TOTAL COLLATERAL
+     C*
+     C           ACCCOL    DIV  1000      WKAMT  150H
+     C*
+     C* CHECK FOR OVERFLOW WHEN EDITING TO PRINT
+     C*
+     C           WKAMT     IFGT 9999999
+     C********** *LOCK     IN   LDA                                                    S01117 240761
+     C**********           MOVE 'OFLOW'   DBFILE           ***************                    240761
+     C**********           MOVELWKAMT     DBKEY            * DB ERROR 31 *                    240761
+     C**********           Z-ADD31        DBASE            ***************                    240761
+     C**********           SETON                     U7U8                                     240761
+     C**********           OUT  LDA                                                    S01117 240761
+     C**********           EXSR *PSSR                                                  S01117 240761
+     C**********           GOTO ENDPGM                                                        240761
+     C**********           END                                                                240761
+     C                     MOVE *ALL'*'   TOTCOL                                              240761
+     C                     ELSE                                                               240761
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTCOL
+     C                     END                                                                240761
+     C*
+     C* SET TOTAL LOANS
+     C*
+     C           ACCLOA    DIV  1000      WKAMT  150H
+     C*
+     C* CHECK FOR OVERFLOW WHEN EDITING TO PRINT
+     C*
+     C           WKAMT     IFGT 9999999
+     C**********           MOVE 'OFLOW'   DBFILE           ***************                    240761
+     C**********           MOVELWKAMT     DBKEY            * DB ERROR 32 *                    240761
+     C**********           Z-ADD32        DBASE            ***************                    240761
+     C**********           SETON                     U7U8                                     240761
+     C**********           GOTO ENDPGM                                                        240761
+     C**********           END                                                                240761
+     C                     MOVE *ALL'*'   TOTLOA                                              240761
+     C                     ELSE                                                               240761
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTLOA
+     C                     END                                                                240761
+     C*
+     C* SET TOTAL GUARANTEES GIVEN
+     C*
+     C           ACCGUG    DIV  1000      WKAMT  150H
+     C*
+     C* CHECK FOR OVERFLOW WHEN EDITING TO PRINT
+     C*
+     C           WKAMT     IFGT 9999999
+     C********** *LOCK     IN   LDA                                                    S01117 240761
+     C**********           MOVE 'OFLOW'   DBFILE           ***************                    240761
+     C**********           MOVELWKAMT     DBKEY            * DB ERROR 33 *                    240761
+     C**********           Z-ADD33        DBASE            ***************                    240761
+     C**********           SETON                     U7U8                                     240761
+     C**********           OUT  LDA                                                    S01117 240761
+     C**********           EXSR *PSSR                                                  S01117 240761
+     C**********           GOTO ENDPGM                                                        240761
+     C**********           END                                                                240761
+     C                     MOVE *ALL'*'   TOTGUG                                              240761
+     C                     ELSE                                                               240761
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTGUG
+     C                     END                                                                240761
+     C*
+     C* SET TOTAL FX VALUE
+     C*
+     C           ACCFX     DIV  1000      WKAMT  150H
+     C*
+     C* CHECK FOR OVERFLOW WHEN EDITING TO PRINT
+     C*
+     C           WKAMT     IFGT 9999999
+     C********** *LOCK     IN   LDA                                                    S01117 240761
+     C**********           MOVE 'OFLOW'   DBFILE           ***************                    240761
+     C**********           MOVELWKAMT     DBKEY            * DB ERROR 34 *                    240761
+     C**********           Z-ADD34        DBASE            ***************                    240761
+     C**********           SETON                     U7U8                                     240761
+     C**********           OUT  LDA                                                    S01117 240761
+     C**********           EXSR *PSSR                                                  S01117 240761
+     C**********           GOTO ENDPGM                                                        240761
+     C**********           END                                                                240761
+     C                     MOVE *ALL'*'   TOTFX                                               240761
+     C                     ELSE                                                               240761
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTFX
+     C                     END                                                                240761
+     C*
+     C* SET TOTAL ADVANCE COLLATERAL
+     C*
+     C           ACCADV    DIV  1000      WKAMT  150H
+     C*
+     C* CHECK FOR OVERFLOW WHEN EDITING TO PRINT
+     C*
+     C           WKAMT     IFGT 9999999
+     C********** *LOCK     IN   LDA                                                    S01117 240761
+     C**********           MOVE 'OFLOW'   DBFILE           ***************                    240761
+     C**********           MOVELWKAMT     DBKEY            * DB ERROR 35 *                    240761
+     C**********           Z-ADD35        DBASE            ***************                    240761
+     C**********           SETON                     U7U8                                     240761
+     C**********           OUT  LDA                                                    S01117 240761
+     C**********           EXSR *PSSR                                                  S01117 240761
+     C**********           GOTO ENDPGM                                                        240761
+     C**********           END                                                                240761
+     C                     MOVE *ALL'*'   TOTADV                                              240761
+     C                     ELSE                                                               240761
+     C                     Z-ADDWKAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTADV
+     C                     END                                                                240761
+     C*
+     C*   SET INDICATOR FOR PLEDGE AGREEMENT
+     C*
+     C                     SETOF                     24
+     C           SC1PA     COMP 'N'                      24
+     C*
+     C*   SET INDICATOR FOR -VE ADVANCE COLLATERAL
+     C*
+     C                     SETOF                     23
+     C           ACCADV    COMP 0                      23
+     C*
+     C*   CHECK FOR PAGE OVERFLOW
+     C*
+     C           LCNT      IFGT MAXCNT
+     C                     WRITEHEADP1
+     C**********           Z-ADD13        LCNT                            E16814
+     C                     Z-ADD14        LCNT                            E16814
+     C                     END
+     C*
+     C*   OUTPUT LINE
+     C*
+     C                     WRITEDETAIL
+     C*
+     C*   INCREMENT LINE COUNT
+     C*
+     C                     ADD  2         LCNT
+     C*
+     C*   RESET ACCUMULATORS
+     C*
+     C                     Z-ADD0         ACCMAR 150
+     C                     Z-ADD0         ACCCAS 150
+     C                     Z-ADD0         ACCDEP 150
+     C                     Z-ADD0         ACCGUR 150
+     C                     Z-ADD0         ACCCOL 150
+     C                     Z-ADD0         ACCLOA 150
+     C                     Z-ADD0         ACCGUG 150
+     C                     Z-ADD0         ACCFX  150
+     C                     Z-ADD0         ACCADV 150
+     C*
+     C           EPRINT    TAG                             ** EPRINT **
+     C                     MOVE LTKEY     PRKEY
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* FIRST - SUBROUTINE TO ACCESS ICD INFORMATION ETC              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C* ACCESS ICD
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 36 *
+     C                     Z-ADD36        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* ACCESS ICD2
+     C*
+     C                     EXSR ZICD2
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 37 *
+     C                     Z-ADD37        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* ACCESS ICDSE
+     C*
+     C                     EXSR ZICDSE
+     C           *INU7     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY            * DB ERROR 38 *
+     C                     Z-ADD38        DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* DETERMINE ACCRUAL CONTROL DATE
+     C*
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     EXSR ZEVCD
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* Fetch BASE currency decimal places
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELBCCY      ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             90
+     C  N90      RECI      COMP 'D'                  9090
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY            * DB ERROR 39 *
+     C                     Z-ADD39        DBASE            ***************
+     C                     SETON                     U7U8
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     END
+     C                     Z-ADDCDP       BSCCDP  10
+      *                                                                   S01117
+      ** Move base currency decimal places to field for use in ZCONV      S01117
+      *                                                                   S01117
+     C                     Z-ADDCDP       ZCDPO                           S01117
+     C*
+     C* CALCULATE (100 - COLLATERAL CCY CONVERSION) / 100
+     C*
+     C           100       SUB  CCCV      WCCC   152
+     C           WCCC      DIV  100       WCCC      H
+     C*
+     C                     Z-ADD50        MAXCNT  20
+     C                     Z-ADD70        LCNT    20
+     C                     MOVE 'D'       SRRECI  1
+     C           *LIKE     DEFN C1PA      SC1PA
+     C           *LIKE     DEFN CNUM      GCNUM
+     C           *LIKE     DEFN FCUS      LFCUS
+     C           *LIKE     DEFN FSEQ      LFSEQ
+     C           *LIKE     DEFN FTYP      LFTYP
+     C************NAMVAR   DEFN           LDA                             S01117
+     C***********          Z-ADD*ZEROS    PCSBR                           S01117
+     C                     MOVE *BLANKS   PCSBA                           S01117
+     C**********           Z-ADD*ZEROS    PCSCN                                               CSD027
+     C                     MOVE *BLANKS   PCSCN                                               CSD027
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      * *PSSR  - Database error subroutine.                           *   S01117
+      *          This subroutine DUMPs the program just once.         *   S01117
+      *                                                               *   S01117
+      * Called by: DB ERROR PROCESSING                                *   S01117
+      *                                                               *   S01117
+      * Calls: None                                                   *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR SR ** S01117
+      *                                                                   S01117
+     C           @RUN      IFEQ *BLANK                                    S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+      *                                                                   S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      ********************************************************************S01117
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM LCSBA     SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM           SENTY   3                       E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+      /EJECT
+     C/COPY ZSRSRC,GLINTCZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDAT10Z2                                               126017
+     C/EJECT                                                              126017
+     C/COPY ZSRSRC,ZCONVZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZRSTORZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSAVEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     C/COPY ZSRSRC,ZINTDYZ2                                               066550
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZDATE9Z3                                               066550
+      /EJECT                                                              066550
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

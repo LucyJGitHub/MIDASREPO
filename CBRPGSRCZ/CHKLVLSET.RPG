@@ -1,0 +1,385 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Set up COB component level file')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing Utilities
+     F*                                                               *
+     F*  CHKLVLSET - PROGRAM TO SET UP COB COMPONENT LEVEL FILE       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  Prev Amend No. SXXXXX             DATE XXXXXXX               *
+     F*                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *   CCB020 - COB Restructure - Secondary COB Infrastructure     *
+      *                                                               *
+      *****************************************************************
+     FCHKLVLPDO   E                    DISK
+     FCHKCMPL1IF  E           K        DISK                           UC
+     FCHKDPRL2UF  E           K        DISK
+     FCHKCMPL2UF  E           K        DISK
+     F*
+      /SPACE 2
+     F********************************************************************
+     F*
+     F*     C  L   FUNCTION OF INDICATORS
+     F*
+     F*    31      ALL RECORDS READ IN COMPONENTS FILE
+     F*    33      ALL RECORDS READ IN DEPENDENCIES FILE
+     F*    34      CHAIN FAIL TO COMPONENTS FILE
+     F*
+     F*    LR      LAST RECORD INDICATOR
+     F*
+     F*    U7&U8   DATABASE ERROR
+     F*
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E                    @CN     1   1 25
+     E** ARRAY OF ODD NAMES
+     E*
+     E                    CMP      1000 15
+     E** ARRAY CONTAINING COMPONENTS READ
+     E*
+     I*****************************************************************
+     I*
+     ICHKCMPD1
+     I              DHCOTT                          D1COTT
+     I              DHCSEQ                          D1CSEQ
+     I              DHCSTS                          D1CSTS
+     I              DHCSHP                          D1CSHP
+     I              DHCEPY                          D1CEPY
+     I              DHCTSL                          D1CTSL
+     I              DHCFOB                          D1CFOB
+     I              DHCTXT                          D1CTXT
+     I              DHCPRM                          D1CPRM
+     I              DHCRQD                          D1CRQD
+     I              DHCMOD                          D1CMOD
+     I              DHCEMI                          D1CEMI
+     I              DHCRES                          D1CRES
+     I              DHCODP                          D1CODP
+     I              DHCMEF                          D1CMEF
+     I              DHCFRQ                          D1CFRQ
+     I              DHCSDE                          D1CSDE
+     I              DHCSTI                          D1CSTI
+     I              DHCEDE                          D1CEDE
+     I              DHCETI                          D1CETI
+     I              DHCHTB                          D1CHTB
+     I              DHCHTA                          D1CHTA
+     I              DHCFAL                          D1CFAL
+     I*
+     ICHKCMPD2
+     I              DHCOTT                          D2COTT
+     I              DHCSEQ                          D2CSEQ
+     I              DHCSTS                          D2CSTS
+     I              DHCSHP                          D2CSHP
+     I              DHCEPY                          D2CEPY
+     I              DHCTSL                          D2CTSL
+     I              DHCFOB                          D2CFOB
+     I              DHCTXT                          D2CTXT
+     I              DHCPRM                          D2CPRM
+     I              DHCRQD                          D2CRQD
+     I              DHCMOD                          D2CMOD
+     I              DHCEMI                          D2CEMI
+     I              DHCRES                          D2CRES
+     I              DHCODP                          D2CODP
+     I              DHCMEF                          D2CMEF
+     I              DHCFRQ                          D2CFRQ
+     I              DHCSDE                          D2CSDE
+     I              DHCSTI                          D2CSTI
+     I              DHCEDE                          D2CEDE
+     I              DHCETI                          D2CETI
+     I              DHCHTB                          D2CHTB
+     I              DHCHTA                          D2CHTA
+     I              DHCFAL                          D2CFAL
+     I*
+     ICHKDPRD2
+     I              DIDSON                          D2DSON
+     I              DIDSOS                          D2DSOS
+     I              DIDRUN                          D2DRUN
+     I              DIDDON                          D2DDON
+     I              DIDDOS                          D2DDOS
+     I              DICDST                          D2CDST
+     I*
+     ILVLARR      DS
+     I                                        1  10 DHCOTT
+     I                                       11  15 DHCSEQ
+     I**  DATA STRUCTURE FOR MOVE OF
+     I**  COMPONENT TO LEVEL ARRAY
+     I*
+     IRTVARR      DS
+     I                                        1  10 D2DDON
+     I                                       11  15 D2DDOS
+     I**  DATA STRUCTURE FOR RETRIEVAL
+     I**  OF COMPONENTS FROM ARRAY
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**     LOCAL DATA AREA
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I/EJECT
+     C*****************************************************************
+     C*
+     C** DEFINE KEY LISTS
+     C*
+     C           BEGKEY    KLIST
+     C                     KFLD           D1COTT
+     C                     KFLD           D1CSEQ
+     C*
+     C           COMKEY    KLIST
+     C                     KFLD           D2DSON
+     C                     KFLD           D2DSOS
+     C*
+     C           DEPKEY    KLIST
+     C                     KFLD           D2DDON
+     C                     KFLD           D2DDOS
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C*
+     C                     EXSR SETUP
+     C*
+     C** DO WHILE RECORDS ARE READ FROM THE COMPONENTS FILE
+     C** ON NO OF OUTSTANDING DEPENDENCIES = 0 AND THE
+     C** COMPONENT READ IS NOT THE DUMMY COMPONENT 'COBEND'
+     C*
+     C                     MOVEL'SCOBFINI'SCOBFI 10                                           CCB020
+     C                     MOVE 'SH'      SCOBFI                                              CCB020
+     C********** D1COTT    DOWNE'COBEND'                                                      CCB020
+     C           D1COTT    DOWNESCOBFI                                                        CCB020
+     C           *IN31     ANDNE'1'
+     C*
+     C** RESET THE LEVEL NUMBERS FOR OUTPUT TO
+     C** THE REPORT AND THE ARRAY COUNT FIELD
+     C*
+     C                     ADD  1         DHFLVL
+     C                     Z-ADD1         DHSLVL
+     C                     Z-ADD0         X       40
+     C*
+     C** READ COMPONENTS FILE ON NO OF OUTSTANDING DEPENDENCIES = 0
+     C** PERFORM CLOSE AND OPEN OF FILE TO ENSURE ALL RECORDS ACCESSED
+     C*
+     C                     CLOSECHKCMPL1
+     C                     OPEN CHKCMPL1
+     C                     READ CHKCMPL1                 31
+     C*
+     C** DO WHILE COMPONENT NOT 'COBEND'
+     C** AND RECORDS NOT FOUND ON COMPONENTS FILE
+     C*
+     C********** D1COTT    DOWNE'COBEND'                                                      CCB020
+     C           D1COTT    DOWNESCOBFI                                                        CCB020
+     C           *IN31     ANDNE'1'
+     C*
+     C** WRITE THE COMPONENT DETAILS TO THE LEVEL FILE
+     C*
+     C                     MOVELD1COTT    DHCOTT
+     C                     MOVELD1CSEQ    DHCSEQ
+     C                     WRITECHKLVLD0
+     C*
+     C** ADD ONE TO THE SECOND LEVEL INDICATOR FIELD FOR NEXT RECORD
+     C*
+     C                     ADD  1         DHSLVL
+     C*
+     C** WRITE THE COMPONENT DETAILS TO THE ARRAY
+     C*
+     C                     ADD  1         X
+     C                     MOVELLVLARR    CMP,X
+     C*
+     C** DEFINE THE COMPONENT AS COMPLETE TO ALLOW THE
+     C** NEXT LEVEL TO BE SELECTED ON NEXT READ OF FILE
+     C*
+     C           BEGKEY    CHAINCHKCMPD2             34
+     C*
+     C** IF COMPONENT IS NOT FOUND THEN REPORT
+     C** ERROR AND END THE PROGRAM
+     C*
+     C           *IN34     IFEQ '1'
+     C                     MOVEL'CHKCMPL2'DBFILE
+     C                     MOVELD1COTT    ERCANM 15
+     C                     MOVE D1CSEQ    ERCANM           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C                     MOVE 'C'       D2CSTS
+     C                     EXCPTBEGSTS
+     C*
+     C** READ THE NEXT COMPONENT AT THIS LEVEL
+     C*
+     C                     READ CHKCMPL1                 31
+     C*
+     C                     END
+     C*
+     C** TAKE EACH COMPONENT FROM THE ARRAY BUILT
+     C** AND COMPLETE THE DEPENDENCIES FOR IT
+     C*
+     C           X         DOWGT0
+     C*
+     C                     MOVEACMP,X     RTVARR
+     C*
+     C           DEPKEY    SETLLCHKDPRD2
+     C           DEPKEY    READECHKDPRD2                 33
+     C*
+     C** IF THE COMPONENT IS NOT FOUND AS A DEPENDED-ON
+     C** COMPONENT IN THE DEPENDENCIES FILE THEN
+     C** REPORT DATABASE ERROR AND EXIT THE PROGRAM
+     C*
+     C           *IN33     IFEQ '1'
+     C                     MOVEL'CHKDPRL2'DBFILE
+     C                     MOVELD2DDON    ERCANM
+     C                     MOVE D2DDOS    ERCANM           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** COMPLETE EACH DEPENDENCY WHICH EXISTS
+     C** FOR COMPONENTS DEFINED TO THE ARRAY
+     C*
+     C           *IN33     DOWEQ'0'
+     C*
+     C                     MOVE 'C'       D2CDST
+     C                     EXCPTDEPSTS
+     C*
+     C** THEN REDUCE THE NUMBER OF OUTSTANDING DEPENDENCIES
+     C** BY ONE FOR EACH DEPENDS-ON COMPONENT
+     C*
+     C           COMKEY    CHAINCHKCMPD2             34
+     C*
+     C           *IN34     IFEQ '1'
+     C                     MOVEL'CHKCMPL2'DBFILE
+     C                     MOVELD2DSON    ERCANM
+     C                     MOVE D2DSOS    ERCANM           ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** SUBTRACT ONE FROM NO OF OUTSTANDING DEPENDENCIES FOR
+     C** THE DEPENDS-ON COMPONENT AND UPDATE THE COMPONENTS FILE
+     C*
+     C                     SUB  1         D2CODP
+     C                     EXCPTCOMODP
+     C*
+     C           DEPKEY    READECHKDPRD2                 33
+     C*
+     C                     END
+     C*
+     C** READ BACKWARDS THROUGH THE ARRAY
+     C*
+     C                     SUB  1         X
+     C*
+     C                     END
+     C*
+     C                     SETOF                     31
+     C*
+     C                     END
+     C*
+     C** WHEN THE ONLY RECORD LEFT IS TH DUMMY
+     C** 'COBEND' RECORD WRITE THIS TO THE LEVEL FILE
+     C*
+     C                     MOVELD1COTT    DHCOTT
+     C                     MOVELD1CSEQ    DHCSEQ
+     C                     WRITECHKLVLD0
+     C*
+     C                     SETON                     LR
+     C*
+     C********************************************************************
+     C*
+     C** SETUP
+     C*
+     C** SUBROUTINE TO INITIALISE PROGRAM
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           SETUP     BEGSR
+     C*
+     C** SET UP KEY FOR CHAIN TO COMPONENTS FILE TO CHECK
+     C** THAT DUMMY COMPONENT 'COBBEGIN' EXISTS IN FILE
+     C*
+     C                     MOVEL'COBBEGIN'D1COTT
+     C                     MOVEL'00001'   D1CSEQ
+     C*
+     C           BEGKEY    CHAINCHKCMPD2             34
+     C*
+     C** IF 'COBBEGIN' IS NOT FOUND THEN
+     C** REPORT ERROR AND END THE PROGRAM
+     C*
+     C           *IN34     IFEQ '1'
+     C                     MOVEL'CHKCMPL2'DBFILE
+     C                     MOVELD1COTT    ERCANM
+     C                     MOVE D1CSEQ    ERCANM           ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** REMOVE COMPLETED STATUS FROM 'COBBEGIN'
+     C** TO ALLOW PROGRAM TO WORK
+     C*
+     C                     MOVE ' '       D2CSTS
+     C                     EXCPTBEGSTS
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+     C** EXIT FROM PROGRAM
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** SETON INDICATORS U7 U8 LR AND RETURN TO CALLING PROGRAM
+     C*
+     C                     MOVEA@CN,1     DBPGM
+     C                     MOVELERCANM    DBKEY
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     O*****************************************************************
+     O** UPDATE OF CHKCMPL2 - OUTSTANDING DEPENDENCIES FIELD
+     OCHKCMPD2E                COMODP
+     O                         D2CODP
+     O*
+     O** UPDATE OF CHKDPRL2 - DEPENDENCY STATUS FIELD
+     OCHKDPRD2E                DEPSTS
+     O                         D2CDST
+     O*
+     O** UPDATE OF CHKCMPL2 - COMPONENT STATUS FIELD TO BLANK
+     O**                      FOR COBBEGIN
+     OCHKCMPD2E                BEGSTS
+     O                         D2CSTS
+     O*
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  @CN
+CHKLVLSET

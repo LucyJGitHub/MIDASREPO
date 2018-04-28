@@ -1,0 +1,455 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Missing prices report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE5986 - Missing Prices Report                               *
+      *                                                               *
+      *  Called By: SEC5977 - Telekurs Processing by Tape             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSE009   *CREATE   Date 16Mar99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSE009 - Telekurs Changes                                    *
+      *                                                               *
+      *****************************************************************
+     FSETKSEPDIF  E           K        DISK         KINFSR *PSSR
+      ***  Telekurs No. for Securities w/posn.
+      *
+     FSETKSCL0IF  E           K        DISK         KINFSR *PSSR
+      ***  Securities by Telekurs
+      *
+     FSETKURL1IF  E           K        DISK         KINFSR *PSSR
+      ***  Telekurs File
+      *
+     FSE5986P1O   E                    PRINTER      KINFSR *PSSR      UC
+      ***  Missing Prices Records - Report
+     F                                              KINFDS SPOOL1
+      *
+     FSE5986AUO   E                    PRINTER      KINFSR *PSSR      UC
+      ***  Missing Prices Records - Audit Report
+     F                                              KINFDS SPOOLU
+      *
+      /EJECT
+      *
+     E/COPY ZSRSRC,ZSERPT1
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+      /SPACE 3
+     ISPOOL1      DS
+      ***  File Information Data Structure for SE5986P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SE5986AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  Customer details file
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      ***  Second DS For Access Programs, Long Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      ***  First DS for access programs, short data structure
+      *
+     ICPYR@$      DS
+      ***  Data structure for compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *
+      /EJECT
+      *****************************************************************
+      *                M A I N   P R O C E S S I N G                  *
+      *****************************************************************
+      *
+      ***  Read file for record
+      *
+     C           *LOVAL    SETLLSETKSEPD
+     C                     READ SETKSEPD                 87
+      *
+      ***  Do While End of File not reached.
+      *
+     C           *IN87     DOWEQ*OFF
+      *
+     C                     Z-ADDSTTELK    WTELK
+     C                     MOVE STBOUR    WBOUR
+      *
+      ***  If Stock Exchange is not '000'
+      *
+     C           STBOUR    IFNE '000'
+      *
+      ***  Access LF/SETKURL1 using Telekurs Number and Stock Exchange
+      *
+     C           KEY1      CHAINSETKURL1             88
+      *
+      ***  If no record found, print a line on report SE5986P1
+      *
+     C           *IN88     IFEQ '1'
+     C                     EXSR #REPD1
+     C                     ENDIF
+      *
+      ***  If Stock Exchange is '000'
+      *
+     C                     ELSE
+      *
+     C           STTELK    SETLLSETKURL1
+     C           STTELK    READESETKURL1                 88
+      *
+      ***  If no record found, print a line on report SE5986P1
+      *
+     C           *IN88     IFEQ '1'
+     C                     EXSR #REPD1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Read next record.
+      *
+     C                     READ SETKSEPD                 87
+     C                     ENDDO
+      *
+      ***  If RCOUNT >< 0, Then Print Trailer
+      *
+     C           RCOUNT    IFNE 0
+     C           WWOPEN    ANDEQ'Y'
+     C                     WRITETRAILP1
+     C                     ENDIF
+      *
+      ***  Close Output file
+      *
+     C                     CLOSESE5986P1
+      *
+      ***  Perform audit report
+      *
+     C                     EXSR AUDIT
+      *
+      ***  Normal End of Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *         E N D   O F   M A I N   P R O C E S S I N G           *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #REPD1 - Process Report Lines.                               *
+      *  ------                                                       *
+      *  Called By : Main processing                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #REPD1    BEGSR
+      *
+     C                     ADD  1         RCOUNT
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C           WWOPEN    IFNE 'Y'
+     C                     EXSR RCFP1
+     C                     ENDIF
+      *
+     C                     Z-ADD3         RQDLN1           Check Overflow
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C           WFIRST    OREQ 'Y'
+     C                     WRITEHEADP1
+     C                     MOVE 'N'       WFIRST
+     C                     ENDIF
+      *
+      ***  Report Details
+      *
+     C                     MOVE STTELK    RTELK            Telekurs
+     C                     MOVE STBOUR    RBOUR            Stock Exchange
+      *
+     C           RTELK     CHAINSETKSCL0             89
+      *
+      ***  If record not found
+      *
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVE 'SETKSCL0'DBFILE           * DB ERROR 01 *
+     C                     MOVELRTELK     DBKEY     P      ***************
+     C                     MOVEL'SE5986'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE SESN      RSESN            Security
+     C                     MOVE NMCY      RNMCY            Nominal Currency
+      *
+     C                     MOVE *BLANKS   RSNAM
+     C                     MOVELSRPN      ZTITLE
+     C                     MOVE '0'       *IN98
+     C                     Z-ADDCPNR      ZCPRAT
+     C                     EXSR ZSERPT
+     C                     MOVELZRPNAM    RSNAM            Security Name
+      *
+      ***  Write out Detail Record.
+      *
+     C                     WRITEDETAIL1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *  ------                                                       *
+      *  Called By : Main Processing, *PSSR                           *
+      *  Calls     : None.                                            *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      ***  Normal audit  exit
+      *
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     ENDIF                           U7 = *ON
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ***  Open Report file
+      *
+     C                     CLOSESE5986P1
+      *
+     C                     OPEN SE5986P1
+     C                     MOVE 'Y'       WWOPEN
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM PENT      SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'SE5986P1'DBFILE           * DB ERROR 02 *
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P      ***************
+     C                     MOVEL'SE5986'  DBPGM     P
+     C                     OUT  LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Open printer File
+      *
+     C                     CLOSESE5986AU
+     C                     MOVE 'N'       WWRCF            Audit under RCF
+     C                     OPEN SE5986AU
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM PENT      SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVE 'SE5986AU'DBFILE           * DB ERROR 03 *
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P      ***************
+     C                     MOVEL'SE5986'  DBPGM     P
+     C                     OUT  LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WWRCF   1        Audit under RCF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *   ------                                                      *
+      *   Called by : Main processing                                 *
+      *   Calls     : None.                                           *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C                     EXSR RCFAU
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PENT    3
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SE5986'  DBPGM     P
+     C                     OUT  LDA
+      *
+      ***  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' WWRTCD  7
+     C                     PARM '*FIRST ' WWOPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           WWRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE    P      * DB ERROR 04 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ***************
+     C                     MOVEL'SE5986'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Set indicator 98 for date format used in ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RCOUNT
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     MOVE 'N'       WWOPEN  1
+     C                     MOVE 'Y'       WFIRST  1
+      *
+     C           KEY1      KLIST
+     C                     KFLD           WTELK   90
+     C                     KFLD           WBOUR   30
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error control subroutine                            *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C                     SETON                     U7U8
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C           WWRCF     IFEQ 'Y'
+     C                     MOVE 'Y'       WWOPEN  1        To avoid RCFAU in AUDIT
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZSERPT2
+     C/COPY ZSRSRC,ZSERPT3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,125 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas UP Shell for Support System set up')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC1603 - Shell for Support System set up                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP016  *CREATE    Date 02Dec02              */
+/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP016 - Add implementation software to core.               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PARMPGM)
+ 
+             DCL        VAR(&PARMPGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MSPREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SSPREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MDMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MDPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MDTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MDVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SDTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SUBMITJOB) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Get the Main System prefix. */
+             RTVDTAARA  DTAARA(SC24X7 (1 2)) RTNVAR(&MSPREFIX)
+ 
+/* Get the Support System prefix. */
+             RTVDTAARA  DTAARA(SC24X7 (3 2)) RTNVAR(&SSPREFIX)
+ 
+/* Prompt for whether job should be submitted. */
+             SUBMITJOB  ??SUBMITJOB(*NO)
+             MONMSG     MSGID(CPF6801) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+             RTVDTAARA  DTAARA(QTEMP/SUBMITJOB) RTNVAR(&SUBMITJOB)
+ 
+             CHGVAR     VAR(&MDMLIB) VALUE(&MSPREFIX *TCAT 'DMLIB')
+             CHGVAR     VAR(&MDPLIB) VALUE(&MSPREFIX *TCAT 'DPLIB')
+             CHGVAR     VAR(&MDTLIB) VALUE(&MSPREFIX *TCAT 'DTALIB')
+             CHGVAR     VAR(&MDVLIB) VALUE(&MSPREFIX *TCAT 'DVLIB')
+             CHGVAR     VAR(&SDTLIB) VALUE(&SSPREFIX *TCAT 'DTALIB')
+ 
+/* Create duplicate of ZZGBMSGF so that display file will still look */
+/*  correct when DTALIB is removed. */
+             DLTMSGF    MSGF(QTEMP/ZZGBMSGF)
+             MONMSG     MSGID(CPF2105)
+             CRTDUPOBJ  OBJ(ZZGBMSGF) FROMLIB(&MDTLIB) +
+                          OBJTYPE(*MSGF) TOLIB(QTEMP)
+             MONMSG     MSGID(CPF2110) EXEC(DO)
+                CRTDUPOBJ  OBJ(ZZGBMSGF) FROMLIB(&SDTLIB) +
+                             OBJTYPE(*MSGF) TOLIB(QTEMP)
+             ENDDO
+ 
+/* Remove libraries that are to be renmaed from library list. */
+             RMVLIBLE   LIB(&MDMLIB)
+             MONMSG     MSGID(CPF0000)
+             RMVLIBLE   LIB(&MDPLIB)
+             MONMSG     MSGID(CPF0000)
+             RMVLIBLE   LIB(&MDTLIB)
+             MONMSG     MSGID(CPF0000)
+             RMVLIBLE   LIB(&MDVLIB)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Call (or submit) program to duplicate the database. */
+             IF         COND(&SUBMITJOB *EQ '*YES') THEN(DO)
+                SBMJOB     CMD(CALL PGM(&PARMPGM) PARM(&MSPREFIX +
+                             &SSPREFIX)) JOB(&PARMPGM) JOBQ(*JOBD) +
+                             OUTQ(*JOBD) RTGDTA(*JOBD)
+             ENDDO
+ 
+             IF         COND(&SUBMITJOB *NE '*YES') THEN(DO)
+                CALL       PGM(&PARMPGM) PARM(&MSPREFIX &SSPREFIX)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC1603') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC1603' 'ENTER' ' ')
+             MONMSG     MSGID(CPF0000)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

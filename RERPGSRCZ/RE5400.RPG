@@ -1,0 +1,471 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Updated Postings from RE Hist Upd Rpt')
+      *****************************************************************
+      *                                                               *
+      *   Midas - Retail Module                                       *
+      *                                                               *
+      *  RE5400 - RE Updated Postings from RE History Update Report   *
+      *                                                               *
+      *  Function:  This program produces detailed report for records *
+      *             updated by Retail History Update process          *
+      *                                                               *
+      *  Called By: REC5400 - Retail History Update Report Component  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 132486             Date 20Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB003 *Create     Date 07Oct96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  132486 - First report must be enrolled in RCF.                        *
+      *  CCB003 - COB Performance Enhancements - Task Split           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     FREHISXL0IF  E           K        DISK
+      ** Retail History Update Extract
+      *
+     FRE5400P1O   E             89     PRINTER                        UC
+     F                                              KINFDS SPOOL
+      ** Retail History Update Report
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Function of indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     50 - No records processed indicator                       *
+      *                                                               *
+      *     80 - READ indicator for REHISXL0                          *
+      *     89 - Overflow indicator                                   *
+      *                                                               *
+      *  U7+U8 - Database error occurs                                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDBANK    E DSSDBANKPD
+      ** DS for bank details
+     I              BJURPT                          TITL
+     I              BJMRDT                          RUNA
+      *
+     ISDCURR    E DSSDCURRPD
+      ** DS for currency details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** DS for branch details
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** DS for Midas modules details
+      *
+     IDSFDY     E DSDSFDY
+      ** Data structure for access objects, short data structure
+      *
+     ISPOOL       DS
+      ***  DS for line number to handle overflow
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** Initial processing
+     C                     EXSR INIT
+      *
+      ** Main processing
+     C                     EXSR MAIN
+      *
+      ** End processing
+     C                     EXSR END
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * MAIN - Main Processing                                        *
+      *                                                               *
+      * Called by: C.MOD                                              *
+      * Calls:     ZDATE2, *PSSR                                      *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      ** Do first read before main loop
+     C                     READ REHISXL0                 80
+      *
+      ** If READ failed, set 'No records processed' indicator ON
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN50
+     C                     ELSE
+      *
+      ** Call access program for branch details
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM BRCA      @BRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELBRCA      DBKEY            * DBERR 06 *
+     C                     Z-ADD6         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      ** Moving branch code into old branch name
+     C                     MOVELBRCA      BRCOLD
+      ** Moving branch name into print field
+     C                     MOVELA8BRNM    BRNM
+      *
+      ** Write Report header details
+     C                     WRITEHEADP1
+      *
+      ** Write Branch header details
+     C                     WRITEHEADP2
+      *
+      ** Write Column header details
+     C                     WRITEHEADP3
+     C                     ENDIF
+      *
+      ** Loop while records read
+     C           *IN80     DOWEQ'0'
+      *
+      ** Check if branch has changed
+     C           BGMBIN    IFEQ 'Y'
+     C           BRCOLD    ANDNEBRCA
+     C                     EXSR NEWBRC
+     C                     ENDIF
+      *
+      ** Format details
+     C                     EXSR FORMAT
+      *
+      ** Write details
+     C                     WRITEDETP1
+      *
+      ** Check overflow
+     C                     EXSR OVRFLW
+      *
+      ** Read next record and loop back
+     C                     READ REHISXL0                 80
+      *
+     C                     ENDDO
+      *
+      ** End report
+     C                     EXSR ENDRPT
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      * NEWBRC - New branch reporting                                 *
+      *                                                               *
+      * Called by: MAIN                                               *
+      * Calls:     *PSSR                                              *
+      *****************************************************************
+     C           NEWBRC    BEGSR
+      *
+      ** End report for old branch
+     C                     WRITEENDP2
+     C                     CLOSERE5400P1
+      *
+      ** Start report for new branch
+     C                     OPEN RE5400P1
+     C                     Z-ADD0         PAGE
+      *
+      ** Call access program for branch details
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM BRCA      @BRCH   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELBRCA      DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Moving branch name into print field
+     C                     MOVELA8BRNM    BRNM
+      *
+      ** Moving branch code into old branch code
+     C                     MOVELBRCA      BRCOLD
+      *
+      ** Write Report header details
+     C                     WRITEHEADP1
+      *
+      ** Write Branch header details
+     C                     WRITEHEADP2
+      *
+      ** Write Column header details
+     C                     WRITEHEADP3
+      *
+      ** Call ZSFILE to log spool file details for report
+     C                     Z-ADDSFNUM     ZSNUM
+     C                     MOVELSFILE     ZSNAM
+     C                     CALL 'ZSFILE'
+     C                     PARM           ZSEQ    5
+     C                     PARM BRCA      ZENT    3
+     C                     PARM           ZSNAM  10
+     C                     PARM           ZSNUM   60
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If error perform database error handling and exit program
+     C           ZERR      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZSFILE'  DBFILE           ************
+     C                     MOVEL'RE5400P1'DBKEY            * DBERR 05 *
+     C                     Z-ADD5         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      * FORMAT - Format details                                       *
+      *                                                               *
+      * Called by: MAIN                                               *
+      * Calls:     *PSSR                                              *
+      *****************************************************************
+     C           FORMAT    BEGSR
+      *
+      ** Convert Midas Value Date to DDMMMYY...
+     C                     MOVE VALD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    UPDATE
+      *
+      ** Convert Midas History Date to DDMMMYY...
+     C                     MOVE HISD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ORDATE
+      *
+      ** Convert Posting Type to print field
+     C                     SELEC
+     C           TYPE      WHEQ 'P'
+     C                     MOVE 'POSTING 'PTYPE
+     C           TYPE      WHEQ 'M'
+     C                     MOVE 'MAN.ADJ.'PTYPE
+     C           TYPE      WHEQ 'R'
+     C                     MOVE 'RATE CHG'PTYPE
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * OVRFLW - Check overflow                                       *
+      *                                                               *
+      * Called by: MAIN                                               *
+      * Calls:     None                                               *
+      *****************************************************************
+     C           OVRFLW    BEGSR
+      *
+      ** Print new header if required
+     C           *IN89     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     WRITEHEADP2
+     C                     WRITEHEADP3
+     C                     MOVE '0'       *IN89
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * ENDRPT - End report                                           *
+      *                                                               *
+      * Called by: MAIN                                               *
+      * Calls:     None                                               *
+      *****************************************************************
+     C           ENDRPT    BEGSR
+      *
+      ** If no records processed
+     C           *IN50     IFEQ '1'
+      *
+      ** Write Main Header and 'No Records'
+     C                     WRITEHEADP1
+     C                     WRITEHEADP3
+     C                     WRITENONE
+     C                     WRITEENDP1
+     C                     ELSE
+      *
+      ** If some records processed
+     C           BGMBIN    IFEQ 'Y'
+     C                     WRITEENDP2
+     C                     ELSE
+     C                     WRITEENDP1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT - Initialisation routine                                 *
+      *                                                               *
+      * Called by: C.MOD                                              *
+      * Calls:     *PSSR                                              *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Access Bank ICD File for bank report heading, rundate and
+      ** date format indicator
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check date format and move rundate to print field
+     C           BJDFIN    COMP 'M'                      98
+      *
+      ** Call Modules details file for multibranch indiactor
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDMMODPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Open printer file
+     C                     OPEN RE5400P1
+      *
+     C********** BGMBIN    IFNE 'Y'                                       132486
+      *
+      ** Call ZSFILE to log spool file details for report
+     C                     Z-ADDSFNUM     ZSNUM
+     C                     MOVELSFILE     ZSNAM
+     C                     CALL 'ZSFILE'
+     C                     PARM           ZSEQ    5
+     C                     PARM *BLANKS   ZENT    3
+     C                     PARM           ZSNAM  10
+     C                     PARM           ZSNUM   60
+     C                     PARM *BLANKS   ZERR    1
+      *
+      ** If error perform database error handling and exit program
+     C           ZERR      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'ZSFILE'  DBFILE           ************
+     C                     MOVEL'RE5400P1'DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C**********           ENDIF                                          132486
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * END - End Routine                                             *
+      *                                                               *
+      * Called by: C.MOD                                              *
+      * Calls: None                                                   *
+      *****************************************************************
+     C           END       BEGSR
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *PSSR - Program exception error routine                       *
+      *                                                               *
+      * Called by: INIT, MAIN                                         *
+      * Calls:     None                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     MOVEL'RE5400'  DBPGM     P
+     C                     OUT  LDA
+      *
+     C                     WRITEERRP1
+      *
+     C                     DUMP
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+** CPY@ - Object copyright
+(c) Misys International Banking Systems Ltd. 2001
+** ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+** ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

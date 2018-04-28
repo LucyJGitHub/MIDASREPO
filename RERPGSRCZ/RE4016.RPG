@@ -1,0 +1,841 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE T&N rate changes at rollover')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail T&N Accounts                                  *
+      *                                                               *
+      *  RE4016 - Midas RE T&N rate changes at rollover               *
+      *                                                               *
+      *  Function:  This program reads REPRPNPD                       *
+      *  (IC/COB)   and for accounts rolled over since last run date  *
+      *             calculates the new rates by calling RE4017.       *
+      *             For fixed threshold rates it calculates the new   *
+      *             initial balance based on                          *
+      *             Account ledger + end of day postings              *
+      *             (except for interest postings)                    *
+      *             The program should be run in the COB automatically*
+      *             however, it can be called in Input Cycle of the   *
+      *             next day, so long as the correct dates are        *
+      *             entered. In this case the initial balance is      *
+      *             based only on the ledger balance.                 *
+      *             The program will process accounts for             *
+      *                start date < term value date <= end date.      *
+      *                                                               *
+      *  Called By: REC4016 - Midas RE T&N Rate Changes at rollover   *
+      *             REC4016I- Midas RE T&N Rate Changes at rollover   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CCB020             Date 06Aug12               *
+      *  Prev Amend No. AR943718           Date 03Apr12               *
+      *                 AR851899           Date 06Nov11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 AR782488           Date 31May11               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 231583             Date 18Dec09               *
+      *                 BUG27460           Date 18Dec09               *
+      *                 217717             Date 18Dec09               *
+      *                 CRE015 *CREATE     Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  AR943718 - Base Rate change did not apply the rounding       *
+      *             information on the accounts                       *
+      *  AR851899 - Term and notice base rate change did not apply    *
+      *             the rounding information on the accounts          *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  AR782488 - REC4016 component failed due to database error    *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  231583 - Balance not updated for credit only threshold rate. *
+      *  BUG27460 - Applied client fix RRXXXX RRCORR RRTEMP           *
+      *  RRXXXX - Add up all REEODPF postings for value date <= run   *
+      *           date.                                               *
+      *  RRCORR - Correction to initial balance.                      *
+      *  RRTEMP - TEMPORARY REMOVE PART OF EPK041 PROCESSING          *
+      *           IF EPK041  IS INSTALLED THIS AMENDMENT SHOULD       *
+      *           BE REVERSED OUT.                                    *
+      *  217717 - Allow EPK041 rates processing with or without       *
+      *           threshold rate.                                     *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Indicator    Description                                     *
+      *  ~~~~~~~~~    ~~~~~~~~~~~                                     *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     F/EJECT
+      *
+     FREPRPNPDUF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      *
+      ** Retail End of Day postings
+      *
+     FREEODLF IF  E           K        DISK         KINFSR *PSSR
+      * Retail End of Day postings
+      *
+     FAPOSTL1 IF  E           K        DISK         KINFSR *PSSR                              RRCORR
+      *                                                                                       RRCORR
+     FRE4016P2O   E             89     PRINTER      KINFDS SPOOL1
+      *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      *
+      *****************************************************************
+      *
+      *
+      ** Account details
+      *
+     IACFMT     E DSACCNTAB
+      *
+      ** Rate changes to be actioned
+      *
+     IREPFMT    E DSREPRPNPD
+      *
+      ** Currency details
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Bank details
+      *
+     IBKFMT     E DSSDBANKPD
+      *
+      ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** LOCAL DATA AREA
+      *
+     ILDA       E DSLDA
+      *
+      ** LOCAL DATA AREA
+      *
+     IJNSTAT    E DSJNSTAT
+      *
+      ** Program data structure
+      *
+     IPGMDS      SDS
+     I                                        1  10 SPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+      *
+      ** File information data structure - P1
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+      ** Parameters
+      *
+     IP@FMT     E DSDSSDY
+      *
+     I/EJECT
+      *
+      *****************************************************************
+      *
+      ** Initial Processing
+      *
+     C                     EXSR INIT
+      *
+      ** Main Processing
+      *
+     C                     EXSR MAIN
+      *
+      ** End Processing
+      *
+     C                     EXSR END
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+      *
+      ** These start and end date parameters are for input cycle
+      ** re-run only.
+      *
+     C                     PARM           STDATE  5                                           217717
+     C                     PARM           ENDATE  5                                           217717
+      *
+      ** Return Code
+      *
+     C                     PARM           P@RTCD  7
+      *                                                                                       217717
+      ** Mode                                                                                 217717
+      *                                                                                       217717
+     C                     PARM           PMODE   5                                           217717
+      *
+     C                     MOVEACPY@      MKI@@  80
+      *
+     C           RKEY1     KLIST
+     C                     KFLD           KBRCA   3
+     C                     KFLD           KCNUM   6
+     C                     KFLD           KCCY    3
+     C                     KFLD           KACOD  100
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KVDAT   50
+     C           RKEY2     KLIST                                                            AR851899
+     C                     KFLD           E2BRCA                                            AR851899
+     C                     KFLD           E2CNUM                                            AR851899
+     C                     KFLD           E2CCY                                             AR851899
+     C                     KFLD           E2ACOD                                            AR851899
+     C                     KFLD           E2ACSQ                                            AR851899
+     C                     KFLD           E2EVNT                                            AR851899
+     C                     KFLD           E2ITEM                                            AR851899
+     C*
+     C** Define LDA Dtaara
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C********** *NAMVAR   DEFN           MPHAS   1                                           CCB020
+     C**********           IN   MPHAS                                                         CCB020
+     C                     MOVEL'CBC00100'@CBPRM  9                                           CCB020
+     C                     MOVE '1'       @CBPRM                                              CCB020
+     C                     CALL @CBPRM                                                        CCB020
+     C                     PARM *BLANKS   COBST   4                                           CCB020
+      *
+      ** Get bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           BKFMT     PARM *BLANKS   P@FMT
+      *                                                                                     AR851899
+      ** Check if Interest Rate Rounding feature is switched on                             AR851899
+      *                                                                                     AR851899
+     C                     MOVE 'N'       CRE073  1                                         AR851899
+     C                     CALL 'AOSARDR0'                                                  AR851899
+     C                     PARM *BLANKS   W0RTCD  7                                         AR851899
+     C                     PARM '*VERIFY' W0OPTN  7                                         AR851899
+     C                     PARM 'CRE073'  W0SARD  6                                         AR851899
+      *                                                                                     AR851899
+     C           W0RTCD    IFNE *BLANKS                                                     AR851899
+     C           W0RTCD    ANDNE'*NRF   '                                                   AR851899
+     C           *LOCK     IN   LDA                                                         AR851899
+     C                     MOVEL'RE4016  'DBPGM                                             AR851899
+     C                     MOVEL'CRE073'  DBKEY                                             AR851899
+     C                     MOVE 'SCSARDPD'DBFILE                                            AR851899
+     C                     Z-ADD3         DBASE                                             AR851899
+     C                     OUT  LDA                                                         AR851899
+     C                     EXSR *PSSR                                                       AR851899
+     C                     ENDIF                                                            AR851899
+      *                                                                                     AR851899
+     C           W0RTCD    IFEQ *BLANKS                                                     AR851899
+     C                     MOVE 'Y'       CRE073                                            AR851899
+     C                     ENDIF                                                            AR851899
+      *
+      *  If in COB then,
+      *  Set start date = previous run date
+      *  Set end date = run date
+      *
+     C           *NAMVAR   DEFN           JNSTAT
+     C                     IN   JNSTAT
+      *                                                                                       217717
+      ** If Start date or end date are *PRUN or *RUND or *NXWD                                217717
+      ** get previous run date or run date or next working day                                217717
+      ** respectively
+      *                                                                                       217717
+     C                     SELEC                                                              217717
+     C           STDATE    WHEQ '*PRUN'                                                       217717
+     C                     Z-ADDPRUN      STADAT  50                                          217717
+     C           STDATE    WHEQ '*RUND'                                                       217717
+     C                     Z-ADDBJRDNB    STADAT  50                                          217717
+     C           STDATE    WHEQ '*NXWD'                                                       217717
+     C                     Z-ADDBJDNWD    STADAT  50                                          217717
+     C                     OTHER                                                              217717
+     C                     MOVE STDATE    STADAT                                              217717
+     C                     ENDSL                                                              217717
+      *                                                                                       217717
+     C                     SELEC                                                              217717
+     C           ENDATE    WHEQ '*PRUN'                                                       217717
+     C                     Z-ADDPRUN      ENDDAT  50                                          217717
+     C           ENDATE    WHEQ '*RUND'                                                       217717
+     C                     Z-ADDBJRDNB    ENDDAT  50                                          217717
+     C           ENDATE    WHEQ '*NXWD'                                                       217717
+     C                     Z-ADDBJDNWD    ENDDAT  50                                          217717
+     C                     OTHER                                                              217717
+     C                     MOVE ENDATE    ENDDAT                                              217717
+     C                     ENDSL                                                              217717
+      *                                                                                       217717
+      ** If start date = previous run date, check that next working day                       217717
+      ** from previous run date is the run date                                               217717
+      *                                                                                       217717
+     C                     MOVE ' '       PRUCHK  1
+     C           STDATE    IFEQ '*PRUN'
+     C                     CALL 'ZFRQB5'
+     C                     PARM 'D'       ZFREQ   1
+     C                     PARM PRUN      ZDAYNO  50
+     C                     PARM 0         ZMDAY   20
+     C                     PARM BJLCCY    ZCCY    3
+     C**********           PARM *BLANKS   ZLOC    3                                         AR782488
+     C                     PARM BJSLCD    ZLOC    3                                         AR782488
+     C                     PARM 'F'       ZDIREC  1
+     C                     PARM *BLANKS   ZRTRN   7
+     C           ZDAYNO    IFNE BJRDNB
+     C                     MOVE 'N'       PRUCHK
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** exit if start date > end date
+      ** or if previous run date is incorrect on JNSTAT
+      *
+     C           STADAT    IFGT ENDDAT
+     C           PRUCHK    OREQ 'N'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE4016  'DBPGM
+     C                     MOVEL'Dates   'DBFILE
+     C                     Z-ADD2         DBASE
+     C                     MOVELSTADAT    DBKEY
+     C                     MOVE ENDDAT    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Print header of printer file
+      *
+     C                     SETON                     89
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  MAIN   - Main Processing Control                             *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+      ** Read through REPRPNPD
+      *
+     C           *LOVAL    SETLLREPRPNPD
+     C                     READ REPRPNPD                 90
+     C           *IN90     DOWEQ'0'
+      *
+      ** Only do records where item = 1, no defaults
+      *
+     C           E2ITEM    IFEQ 1
+     C           E2BRCA    ANDNE*BLANKS
+     C           E2CNUM    ANDNE*BLANKS
+     C           E2CCY     ANDNE*BLANKS
+     C           E2ACOD    ANDNE0
+     C           E2ACSQ    ANDNE0
+      *
+      ** If term has matured, then need to rollover to next
+      ** term. (If end of period, it will simply be ignored)
+      *
+     C           E2MDAT    IFLT ENDDAT
+     C           E2MDAT    ANDGESTADAT
+     C                     MOVE ENDDAT    RUNCHG    P
+     C                     MOVEL'*COB   ' MAINT     P
+      *
+     C                     CALL 'RETNDAT1'
+     C                     PARM           REPFMT
+     C                     PARM           MAINT   7
+     C                     PARM           RUNCHG  5
+     C                     PARM           PRCEDE  50
+     C                     PARM           PRTCD   7
+      *
+     C           PRTCD     IFEQ '*ERROR'
+     C           *INU7     OREQ '1'
+     C           *INU8     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVELSPGM      DBPGM
+     C                     MOVEL'RETNDAT1'DBFILE
+     C                     MOVEL'*CALL'   DBKEY
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** start of term must be within date range
+      *
+     C                     Z-ADDE2VDAT    WVDAT   50                                        AR943718
+     C           WVDAT     DOWLEE2MDAT                                                      AR943718
+     C********** E2VDAT    IFLE ENDDAT                                                      AR943718
+     C********** E2VDAT    ANDGTSTADAT                                                      AR943718
+     C           WVDAT     IFLE ENDDAT                                                      AR943718
+     C           WVDAT     ANDGTSTADAT                                                      AR943718
+      *
+      ** Check if closed account
+      *
+     C                     EXSR GETACC
+      *
+      ** Do not process if a closed account
+      *
+     C           CLOSED    IFNE 'Y'
+      *
+      ** Calculate new initial balance if int type/subtype and fixed
+      ** periodic interest
+      *
+     C                     EXSR INIBAL
+      ** Save Debit and Credit Interest rate
+     C           CRE073    IFEQ 'Y'                                                         AR851899
+     C           PMODE     ANDEQ'RCHGR'                                                     AR851899
+     C                     Z-ADDE2DRIS    SVDRIS 117                                        AR851899
+     C                     Z-ADDE2CRIS    SVCRIS 117                                        AR851899
+     C                     ENDIF                                                            AR851899
+      ** Override value date before calling RE4017                                          AR943718
+     C                     Z-ADDWVDAT     E2VDAT                                            AR943718
+      *
+      ** Process interest rates
+      *
+     C                     CALL 'RE4017'                                                      217717
+      *
+      ** Record format of REPRPNPD
+      *
+     C                     PARM           REPFMT
+      *
+      ** Return Code
+      *
+     C                     PARM           P@RTCD  7
+     C                     PARM           PMODE   5                                           217717
+      *
+      ** Effective debit rates
+      *
+     C                     PARM 0         PDRIB   20                                          217717
+     C                     PARM 0         PDRIS  117                                          217717
+     C                     PARM 0         PDICT   20                                          217717
+     C                     PARM 0         PDCST   50                                          217717
+      *
+      ** Effective credit rates
+      *
+     C                     PARM 0         PCRIB   20                                          217717
+     C                     PARM 0         PCRIS  117                                          217717
+     C                     PARM 0         PCICT   20                                          217717
+     C                     PARM 0         PCCST   50                                          217717
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE4017'  DBPGM
+     C                     MOVELP@RTCD    DBFILE
+     C                     Z-ADD1         DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      ** If Debit and Credit Interest Rate was changed then amend                           AR851899
+     C           CRE073    IFEQ 'Y'                                                         AR851899
+     C           PMODE     ANDEQ'RCHGR'                                                     AR851899
+     C           SVDRIS    IFNE E2DRIS                                                      AR851899
+     C           SVCRIS    ORNE E2CRIS                                                      AR851899
+      ** Save new values                                                                    AR851899
+     C                     Z-ADDE2DRIS    SVDRIS                                            AR851899
+     C                     Z-ADDE2CRIS    SVCRIS                                            AR851899
+      ** Need to chain again else no read prior to update error will occur                  AR851899
+     C           RKEY2     CHAINREPRPNPD             82                                     AR851899
+     C           *IN82     IFEQ '0'                                                         AR851899
+     C                     MOVE '1'       *IN30                                             AR851899
+      ** Move new values                                                                    AR851899
+     C                     Z-ADDSVDRIS    E2DRIS                                            AR851899
+     C                     Z-ADDSVCRIS    E2CRIS                                            AR851899
+      ** Update record                                                                      AR851899
+     C                     EXCPTREPR1                                                       AR851899
+     C                     ENDIF                                                            AR851899
+     C                     ENDIF                                                            AR851899
+     C                     ENDIF                                                            AR851899
+     C                     MOVE '0'       *IN30                                             AR851899
+      *
+      ** End of 'closed account' condition
+      *
+     C                     ENDIF
+      *
+      ** End of term start within date range condition
+      *
+     C                     LEAVE                                                            AR943718
+     C                     ELSE                                                             AR943718
+     C                     ADD  1         WVDAT                                             AR943718
+     C           WVDAT     IFGT ENDDAT                                                      AR943718
+     C                     LEAVE                                                            AR943718
+     C                     ENDIF                                                            AR943718
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** End of item = 1 & no defaults condition
+      *
+     C                     ENDIF
+      *
+     C                     READ REPRPNPD                 90
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  END    - End Processing                                      *
+      *                                                               *
+      *****************************************************************
+     C           END       BEGSR
+      *
+      ** Commit changes
+      *
+     C                     COMIT
+      *
+      ** Final Spool output
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVEL*OFF      *IN89
+     C                     ADD  1         PAGNBR  50
+     C                     WRITEAUHEAD
+     C                     END
+     C           W0NBRU    IFEQ 0
+     C                     WRITENODETL
+     C                     ELSE
+     C                     WRITEAUEOR
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  GETACC - Get account details                                 *
+      *                                                               *
+      *****************************************************************
+     C           GETACC    BEGSR
+      *
+     C                     Z-ADD0         W#LDBL 150
+      *
+     C                     MOVE E2CNUM    P@CNUM  6
+     C                     MOVE E2CCY     P@CUCD  3
+     C                     MOVE E2ACOD    P@ACCD 10
+     C                     MOVE E2ACSQ    P@ACSQ  2
+     C                     MOVE E2BRCA    P@BRCA  3
+     C                     CLEARACFMT
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM *BLANKS   P@RETL 10
+     C                     PARM           P@CNUM  6
+     C                     PARM           P@CUCD  3
+     C                     PARM           P@ACCD 10
+     C                     PARM           P@ACSQ  2
+     C                     PARM           P@BRCA  3
+     C           ACFMT     PARM *BLANKS   P@FMT
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           P@RTCD    ANDNE'*NRF'
+     C           P@RTCD    ANDNE'*KEY'                                                        217717
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TNCHECK1'DBPGM
+     C                     MOVEL'ACCNTAB 'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     MOVELP@OPTN    DBKEY
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+     C                     MOVE ' '       CLOSED  1
+      *
+     C           P@RTCD    IFEQ '*NRF'
+     C           ACFMT     OREQ *BLANKS
+     C           ACST      OREQ 'C'
+     C                     MOVE 'Y'       CLOSED
+     C                     MOVE 'C'       ACST
+     C                     ELSE
+     C                     Z-ADDLDBL      W#LDBL 150
+     C                     ENDIF
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FREE'   P@OPTN  7
+     C                     PARM *BLANKS   P@RETL 10
+     C                     PARM           P@CNUM  6
+     C                     PARM           P@CUCD  3
+     C                     PARM           P@ACCD 10
+     C                     PARM           P@ACSQ  2
+     C                     PARM           P@BRCA  3
+     C           ACFMT     PARM *BLANKS   P@FMT
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  INIBAL - Balance Initialization Processing                   *
+      *                                                               *
+      *****************************************************************
+     C           INIBAL    BEGSR
+      *
+      ** If in input cycle, use ledger balance
+      ** else use ledger + REEODPF postings
+      ** excluding interest postings
+      ** to set new initial balance
+      *
+     C********** MPHAS     IFEQ 'A'                                                           CCB020
+     C           COBST     IFEQ '*NO'                                                         CCB020
+     C********** E2VDAT    ORLE PRUN                                                 RRCORR AR943718
+     C           WVDAT     ORLE PRUN                                                        AR943718
+      *
+      ** Store old balance and then get new one
+      *
+     C                     Z-ADDE2BALN    OLBALN 150
+     C                     EXSR GETBAL                                                        RRCORR
+      *
+      ** Final balance = Historic balance
+      *
+     C                     Z-ADDHISBAL    E2BALN 150
+     C                     ELSE
+     C                     EXSR GETRE1
+      *
+      ** Final balance = Ledger + End of Day postings
+      *
+     C           W#LDBL    ADD  EODBAL    E2BALN
+     C                     ENDIF
+      *
+     C           'RCHGR'   IFEQ PMODE                                                         217717
+     C           'RERCH'   OREQ PMODE                                                         217717
+      *
+      ** Update REPRPNPD with new initial balance
+      *
+     C                     EXCPTREPR1
+     C                     ENDIF                                                              217717
+      *
+      ** Write out to report
+      *
+     C           E2CNIR    IFEQ 'P'
+     C           E2CICT    ANDNE0
+     C           E2DNIR    OREQ 'P'
+     C           E2DICT    ANDNE0
+     C           E2BALN    IFNE OLBALN
+     C                     EXSR REPORT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  GETRE1 - Add up all REEODPF postings for value date <= run   *
+      *           date                                                *
+      *                                                               *
+      *****************************************************************
+     C           GETRE1    BEGSR
+      *
+      ** Add up all REEODPF postings for value date <= run date.                              RRXXXX
+      *
+     C                     MOVE E2BRCA    KBRCA
+     C                     MOVE E2CNUM    KCNUM
+     C                     MOVE E2CCY     KCCY
+     C                     Z-ADDE2ACOD    KACOD
+     C                     Z-ADDE2ACSQ    KACSQ
+     C                     Z-ADD0         KVDAT
+     C                     Z-ADD0         EODBAL 150
+     C           RKEY1     SETLLREEODLF
+     C                     READ REEODLF                  82
+     C           *IN82     DOWEQ*OFF
+     C           BRCA      ANDEQKBRCA
+     C           CNUM      ANDEQKCNUM
+     C           CCY       ANDEQKCCY
+     C           ACOD      ANDEQKACOD
+     C           ACSQ      ANDEQKACSQ
+      *
+     C           SPOS      IFNE '  GE-IC'
+     C           VALD      ANDLEBJRDNB                                                        RRXXXX
+     C           DRCR      IFEQ 1
+     C                     SUB  PSTA      EODBAL 150
+     C                     ELSE
+     C                     ADD  PSTA      EODBAL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ REEODLF                  82
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  GETBAL - Retrieve Balance Processing                         *
+      *                                                               *
+      *****************************************************************
+     C           GETBAL    BEGSR                                                              RRCORR
+      *                                                                                       RRCORR
+     C                     MOVE E2BRCA    KBRCA                                               RRCORR
+     C                     MOVE E2CNUM    KCNUM                                               RRCORR
+     C                     MOVE E2CCY     KCCY                                                RRCORR
+     C                     Z-ADDE2ACOD    KACOD                                               RRCORR
+     C                     Z-ADDE2ACSQ    KACSQ                                               RRCORR
+      *
+      ** Calculate next working day after value date -1
+      *
+     C********** E2VDAT    SUB  1         ZDAYNO                                            AR943718
+     C           WVDAT     SUB  1         ZDAYNO                                            AR943718
+     C                     CALL 'ZFRQB5'
+     C                     PARM 'D'       ZFREQ   1
+     C                     PARM           ZDAYNO  50
+     C                     PARM 0         ZMDAY   20
+     C                     PARM BJLCCY    ZCCY    3
+     C**********           PARM *BLANKS   ZLOC    3                                         AR782488
+     C                     PARM BJSLCD    ZLOC    3                                         AR782488
+     C                     PARM 'F'       ZDIREC  1
+     C                     PARM *BLANKS   ZRTRN   7
+     C                     Z-ADDZDAYNO    KVDAT
+      *                                                                                       RRCORR
+     C           RKEY1     SETGTAPOSTL1                                                       RRCORR
+     C                     READ APOSTL1                  82                                   RRCORR
+      *                                                                                       RRCORR
+     C           *IN82     IFEQ *OFF                                                          RRCORR
+     C           BRCA      ANDEQKBRCA                                                         RRCORR
+     C           CNUM      ANDEQKCNUM                                                         RRCORR
+     C           CCY       ANDEQKCCY                                                          RRCORR
+     C           ACOD      ANDEQKACOD                                                         RRCORR
+     C           ACSQ      ANDEQKACSQ                                                         RRCORR
+     C                     Z-ADDSDLB      HISBAL 150                                          RRCORR
+     C                     ELSE                                                               RRCORR
+     C                     Z-ADDW#LDBL    HISBAL                                              RRCORR
+     C                     ENDIF                                                              RRCORR
+      *                                                                                       RRCORR
+     C                     ENDSR                                                              RRCORR
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Report Processing                                   *
+      *                                                               *
+      *****************************************************************
+     C           REPORT    BEGSR
+      *
+      ** Ensure report spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      **  Error during ZSFILE processing, execute *PSSR
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   W0REAS256
+      *
+      ** Account Number
+      *
+     C                     MOVELE2KEY1    WACNO  10
+     C                     CAT  WACNO:1   W0REAS
+      *
+      ** Find out number of decimal places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM E2CCY     @CYCD   3
+     C           SDCURR    PARM SDCURR    P@FMT
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVEL@CYCD     DBKEY
+     C                     Z-ADD001       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Old Initial balance
+      *
+     C                     Z-ADDOLBALN    ZFLD
+      *
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD   150
+     C                     PARM A6NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+      *
+     C           16        SUBSTZOUT21:5  WXBALN 16
+     C                     CAT  WXBALN:1  W0REAS
+     C           E2BALN    IFLT 0
+     C                     CAT  '-':1     W0REAS
+     C                     ENDIF
+      *
+      ** New Initial balance
+      *
+     C                     Z-ADDE2BALN    ZFLD
+      *
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD   150
+     C                     PARM A6NBDP    ZDECS   10
+     C                     PARM '3'       ZECODE  1
+     C                     PARM           ZOUT21 21
+      *
+     C           16        SUBSTZOUT21:5  WXBALN 16
+     C                     CAT  WXBALN:1  W0REAS
+     C           E2BALN    IFLT 0
+     C                     CAT  '-':1     W0REAS
+     C                     ENDIF
+      *
+     C                     ADD  1         W0NBRU  80
+      *
+      ** Write to spool file
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVEL*OFF      *IN89
+     C                     ADD  1         PAGNBR  50
+     C                     WRITEAUHEAD
+     C                     ENDIF
+      *
+     C                     MOVELW0REAS    R1NARR
+     C                     WRITEAUDETS
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS     *
+      *                                                               *
+      *  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                 *
+      *                                                               *
+      *  CALLS: NOTHING                                               *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ROLBK
+     C                     MOVE '*ERROR'  P@RTCD
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *
+      ********************************************************************
+      *
+     OREPRPND0E                REPR1
+     O**********               E2BALN                                         RRTEMP 231583 AR851899
+     O                N30      E2BALN                                                       AR851899
+     O                 30      E2DRIS                                                       AR851899
+     O                 30      E2CRIS                                                       AR851899
+      *
+      ********************************************************************
+      *
+** CPY@: Object Copyright
+(c) Misys International Banking Systems Ltd. 2009

@@ -1,0 +1,993 @@
+0001 H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Check/update accrual date')
+0002 F*****************************************************************
+0002 F*                                                               *
+     F*  Midas - Standing Data Module
+0004 F*                                                               *
+0005 F*  SD0640 - CHECK/UPDATE ACCRUAL DATE                           *
+0006 F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0008  *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *                 214381             Date 02apr03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD009             Date 10Oct00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 056069             Date 17Feb94               *
+     F*                 046303             DATE 16JAN94               *
+     F*                 S10736             DATE 11NOV92               *
+     F*                 E43295             DATE 04SEP92               *
+     F*                 E38323             DATE 31JUL92               *
+     F*                 E30603             DATE 05NOV91               *
+     F*                 S01333             DATE 04APR91               *
+     F*                 E20929             DATE 25JLY90               *
+     F*                 LN0514             DATE 19JUL90               *
+     F*                 S01251             DATE 03FEB90               *
+0009 F*                 S01194             DATE 22JAN90               *
+0009 F*                 E20842             DATE 15JAN90               *
+0009 F*                 S01168             DATE 20/07/88              *
+0009 F*                 S01160             DATE 10/05/88              *
+0009 F*                 E43765             DATE 25/02/88              *
+0009 F*                 E11748             DATE 20/10/87              *
+0010 F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  214381 - Incorrect date shown on BSPL reports. Fix 056069    *
+      *           cannot handle monthly accrual.                      *
+      *  CSD009 - Profit Centre Accounting Default Matrix Enhancement *
+     F*  056069 - BSPL 'As at' date is not updated for Non-working Days  *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array   *
+     F*           error if no holiday record found - fixed by S01434. *
+     F*           Program recompiled.                                 *
+     F*  S10736 - MANAGEMENT ACCOUNTS                                 *
+     F*  E43295 - Amend processing for ANWD = 2 as produces wrong     *
+     F*           dates on GL0761                                     *
+0010 F*  E38323 - Recompiled due to a change in copy source ZFWDT subr*
+     F*  E30603 - Should not use ZFREQB subroutine which checks to    *
+     F*           see if Accrual Profit Date falls on a holiday.      *
+     F*           A modified subroutine ZFRQB2 has been created.      *
+     F*           Use /COPY of ZFRQB2Z1 to define ZFMD in E specs.    *
+     F*  S01333 - MIS GL Real Time Posting                            *
+     F*  E20929 - MANIPULATION OF ACCRUAL PROFIT DATE                 *
+     F*           IS NOT PRODUCING REQUIRED RESULTS. PROCESSING       *
+     F*           ON DATE HAS BEEN MODIFIED. METHOD OF PROCESSING     *
+     F*           NON-WORKING DAYS (ANWI) NOW IMPACTS ON DATE.        *
+     F*  LN0514 - RELEASE 10 CHANGES NOT FULLY APPLIED -              *
+     F*           REMOVE FILE OVERRIDE IN CREATION PARAMETERS.        *
+     F*  S01251 - SYNON FIELD/PROGRAM NAME CHANGES                    *
+0010 F*  S01194 - NEW SD FIELD NAMES                                  *
+     F*  E20842 - IF SYSTEM IS DAILY ACCRUAL, SDGELRPD IS NEVER       *
+     F*           UPDATED                                             *
+0010 F*  S01168 - UPDATE SD SYNON FILES AS WELL                       *
+     F*  S01160 - CLOSE OF BUSINESS ENHANCEMENTS                      *
+     F*  E43765 - ACCRUAL DATES ARE BEING MISSED.                     *
+     F*  E11748 - DURING EOD THE LAST ACCRUAL RUN ON TABTB35 IS       *
+     F*           UPDATED TO ZERO IF NOT AN ACCRUAL RUN.              *
+0012 F*                                                               *
+0011 F*****************************************************************
+0012 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/****F*: OVRDBF TABLE TABSDU                                    : * S01194LN0514
+     F*                                                               *
+     F*****************************************************************
+0013 F***TABLEU  UP  F      96 12AI     2 DISK                            S01194
+0013 FTABTB11 UP  F      96 12AI     2 DISK                               S01194
+     FSDGELRL0UF  E           K        DISK                               S01168
+0014 F***TABLEIF  F      96 12AI     2 DISK                               S01194
+     F/COPY WNCPYSRC,SD0640F001
+0015 F*
+0016 F**01****        TABLE RECORD - INSTALLATION CONTROL DATA 1          S01194
+0017 F**02****                     - INSTALLATION CONTROL DATA 2          S01194
+     F**03****        CATCHALL                                            S01194
+0018 F**04****        TABLE RECORD - INSTALLATION CONTROL DATA 35         S01194
+0018 F********09      INST.CONTROL DATA 35 FOUND                          S01194
+0018 F*       10      INST.CONTROL DATA 1 FOUND
+0019 F*       11                        2 FOUND
+0020 F***     12      ACCRUAL/PROFIT DATE NOT GREATER THAN
+0021 F*       12      ACCRUAL/PROFIT DATE NOT GREATER THAN
+0022 F*       14      DATE OF NEXT WORKING DAY
+     F*       16      APDA UPDATED TO LAST DATE OF MONTH
+     F*       21      MONTH IS FEBRUARY
+0016 F*****   24      SECURITIES TRADING IS IN THE SYSTEM                 S01194
+0023 F*       90-99   USED IN Z-SUBROUTINES
+0024 F*          U8   DATABASE ERROR
+0025 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+0026 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+0027 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+0028 E*****               HCCY       25  3               HOLIDAY CCYS     S01194
+0029 E                    ZHC        50  3               ZFREQ SR. ARRAY
+0030 E************        ZFMD   12  12  2               ZFREQ SR. ARRAY  E30603
+     E/COPY ZSRSRC,ZFRQB2Z1                                               E30603
+     E/COPY ZSRSRC,ZHOLE                                                  S01194
+     E* /COPY FOR ZFWDT SUBROUTINE                                        S01194
+     E                    CPY@    1   1 80
+0031 I*
+0032 I********  TABLES FILE RECORDS
+0033 I*
+0034 I*****TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.               S01194
+0035 I*****                                                               S01194
+0036 I****TABLEU  NS  01   1 CD   2 C0   3 C1                             S01194
+0037 I*****  AND      12 C1  13 C0                                        S01194
+0038 I*****                                   1   1 RECI                  S01194
+0039 I*****                                   2   30RECT                  S01194
+0040 I*****                                  12  130RCDE                  S01194
+0041 I*****                                  14  66 TITL                  S01194
+0042 I*****                                  67  67 DATF                  S01194
+0043 I*****                                  68  700DFBR                  S01194
+0044 I*****                                  74  74 MODI1                 S01194
+0045 I*****                                  75  75 MODI2                 S01194
+0046 I*****                                  76  76 MODI3                 S01194
+0047 I*****                               P  77  790RUND                  S01194
+0048 I*****                                  80  86 RUNA                  S01194
+0049 I*****                                  87  870SFLG                  S01194
+0050 I*****                               P  90  920LCD                   S01194
+0051 I*****                                  93  93 CHTP                  S01194
+0052 I*****                               P  94  960TNLU                  S01194
+0053 I*****                                   1  96 LOT                   S01194
+0054 I*****                                                               S01194
+0055 I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD 2.
+0056 I**
+0057 I********NS  02   1 CD   2 C0   3 C1                                 S01194
+0057 ITABTB11 NS  02   1 CD   2 C0   3 C1                                 S01194
+0058 I       AND      12 C1  13 C1
+0059 I                                        1   1 RECI
+0060 I                                        2   30RECT
+0061 I                                       12  130RCDE
+0062 I                                       14  16 BCCY
+0063 I                                       17  19 BCYL
+0064 I                                       20  22 HOCY
+0065 I**********                             23  280HEAD                                      CSD027
+0065 I                                       23  28 HEAD                                      CSD027
+0066 I                                    P  29  310APDA
+0067 I                                       35  35 APFQ
+0068 I                                    P  36  380LOGS
+0069 I                                       39  40 CUZR
+0070 I                                    P  41  430DNWD
+0071 I                                       44  460BVLP
+0072 I                                       47  49 LOCY
+0073 I                                       50  510FDAY
+0074 I                                       86  86 ISAV
+0075 I****                                P  87  890LLOG                  S01160
+0066 I                                       88  88 ANWI                  S01160
+0076 I                                    P  90  920LCD
+0077 I                                       93  93 CHTP
+0078 I                                    P  94  960TNLU
+0079 I                                        1  96 LOT
+0054 I**
+0055 I*****TABLE FILE - INSTALLATION CONTROL DATA RECORD 35               S01194
+0056 I*****                                                               S01194
+0057 I*****   NS  04   1 CD   2 C0   3 C1                                 S01194
+0058 I*****  AND      12 C3  13 C5                                        S01194
+     I*****                                   1   1 RECI                  S01194
+     I*****                                   2   30RECT                  S01194
+     I*****                                  12  130RCDE                  S01194
+     I*****                                  14  150PFMS                  S01194
+     I*****                                  16  170PFST                  S01194
+     I*****                                  18  18 UNPP                  S01194
+     I*****                                  19  19 UNLP                  S01194
+     I*****                                  21  230STBP                  S01194
+     I*****                                  24  24 PLPT                  S01194
+     I*****                                  25  25 PLPV                  S01194
+     I*****                                  26  26 EURI                  S01194
+     I*****                                  27  27 CEDI                  S01194
+     I*****                                  28  290NEN1                  S01194
+     I*****                                  30  310NCN1                  S01194
+     I*****                                  32  33 NEN2                  S01194
+     I*****                                  34  35 NCN2                  S01194
+     I*****                                  36  410ECLN                  S01194
+     I*****                                  42  470CCLN                  S01194
+     I*****                                  48  50 ECCC                  S01194
+     I*****                                  51  53 CDCC                  S01194
+     I*****                                  54  54 ACCE                  S01194
+     I*****                               P  55  570FPDT                  S01194
+     I*****                               P  58  600DLWK                  S01194
+     I*****                               P  61  630LWDM                  S01194
+     I*****                                  64  66 BEF                   S01194
+     I*****                                  67  69 DEM                   S01194
+     I*****                                  70  72 JPY                   S01194
+     I*****                                  73  73 EUAT                  S01194
+     I*****                                  74  74 BAIF                  S01194
+     I*****                                  75  75 DLEI                  S01194
+     I*****                               P  76  780LACR                  S01194
+     I*****                               P  90  920LCD                   S01194
+     I*****                                  93  93 CHTP                  S01194
+     I*****                               P  94  960TNLU                  S01194
+0085 I*****                                                               S01194
+0081 I**   CATCHALL FOR DELETED RECORDS.
+0096 I        NS  03
+     I/COPY WNCPYSRC,SD0640I002
+0083 I*****                                                               S01194
+0084 I*****TABLE FILE - HOLIDAY LIST                                      S01194
+0085 I*****                                                               S01194
+0086 I**TABLE NS  03   1 CD   2 C2   3 C2                                 S01194
+0097 I*****                                   1   1 RECI                  S01194
+0060 I*****                                   2   30RECT                  S01194
+0089 I*****                                   8  120HOL                   S01194
+0090 I*****                                  13  130SREC                  S01194
+0091 I*****                                  14  14 INEX                  S01194
+0092 I*****                                  15  89 HCCY                  S01194
+0093 I*****                               P  90  920LCD                   S01194
+0094 I*****                                  93  93 CHTP                  S01194
+0095 I*****                               P  94  960TNLU                  S01194
+0082 I*****   NS  03                                                      S01194
+0059 I*****                                   1   1 RECI                  S01194
+0060 I*****                                   2   30RECT                  S01194
+     I*****                                   8  120HOL             E43765S01194
+     I/COPY ZSRSRC,ZHOLI
+     I* /COPY FOR ZFWDT SUBROUTINE                                        S01194
+     I*****GLSTAT*DATA AREA                                        S01333 S10736
+     I*GLSTAT*****UDS                           256                S01333 S10736
+     I************                           74  78 EVCD0          S01333 S10736
+     I************                           79  83 EVCD1          S01333 S10736
+     I************                           84  88 EVCD2          S01333 S10736
+     I****GLTEMP*DATA AREA                                         S01333 S10736
+     I*GLTEMP*****UDS                           256                S01333 S10736
+     I************                           74  78 TEVCD0         S01333 S10736
+     I************                           79  83 TEVCD1         S01333 S10736
+     I************                           84  88 TEVCD2         S01333 S10736
+     I*    GLSTAT DATA AREA                                               056069
+     IGLSTAT     UDS                            256                       056069
+     I                                       74  78 EVCD0                 056069
+     I*   GLTEMP DATA AREA                                                056069
+     IGLTEMP     UDS                            256                       056069
+     I                                       74  78 TEVCD0                056069
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT FORMAT                 S01194
+     I*                                                                   S01194
+     ISDGELR    E DSSDGELRPD                                              S01194
+     I** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT FORMAT                 S01194
+     I/COPY WNCPYSRC,SD0640I001
+     I*                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE    S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I** SECOND DATA STRUCTURE FOR ACCESS OBJECTS, LONG DATA STRUCTURE    S01194
+     I*                                                                   S01194
+     C                     MOVEACPY@      BIS@   80
+0184 C************                                                 S01333 S10736
+     C*****DEFN*GLSTAT & GLTEMP                                    S01333 S10736
+0184 C************                                                 S01333 S10736
+     C************NAMVAR   DEFN           GLSTAT                   S01333 S10736
+     C************NAMVAR   DEFN           GLTEMP                   S01333 S10736
+0184 C************                                                 S01333 S10736
+     C*
+     C*                                                                   056069
+     C**   DEFN GLSTAT & GLTEMP                                           056069
+     C*                                                                   056069
+     C           *NAMVAR   DEFN           GLSTAT                          056069
+     C           *NAMVAR   DEFN           GLTEMP                          056069
+0098 C***01                SETON                     10                   S01194
+     C****CHECK*EXISTANCE*OF*SECURITIES*TRADING*MODULE*IN*SYSTEM          S01194
+     C***01                TESTB'4'       MODI1          24               S01194
+0100 C***04                SETON                     09LR                 S01194
+0099 C**N02                GOTO END                                       S01194
+0100 C**N24                SETON                     11LR                 S01194
+0100 C***24                SETON                     11                   S01194
+0101 C*****      DATF      COMP 'M'                      98 - MMDDYY      S01194
+     C*                                                                   S01194
+     C*    CHECK INSTALLATION CONTROL DATA                                S01194
+     C*    USE ACCESS OBJECTS TO OBTAIN RECORDS FROM                      S01194
+     C*    SDBANKPD AND SDGELRPD                                          S01194
+     C*                                                                   S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' P@RTCD  7                       S01194
+     C                     PARM '*FIRST ' P@OPTN  7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C*                                                                   S01194
+     C** IF ERROR FOUND BY ACCESS OBJECT EXIT                             S01194
+     C** PROGRAM AFTER SETTING ON U8 FOR CALLING PROGRAM                  S01194
+     C*                                                                   S01194
+     C           P@RTCD    IFNE *BLANKS                                   S01194
+     C                     SETON                     LRU8                 S01194
+     C                     RETRN                                          S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C**********           CALL 'AOGELRR0'                                             S01194 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' P@RTCD  7                       S01194
+     C                     PARM '*FIRST ' P@OPTN  7                       S01194
+     C********** SDGELR    PARM SDGELR    DSFDY                                        S01194 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*                                                                   S01194
+     C** IF ERROR FOUND BY ACCESS OBJECT EXIT                             S01194
+     C** PROGRAM AFTER SETTING ON U8 FOR CALLING PROGRAM                  S01194
+     C*                                                                   S01194
+     C           P@RTCD    IFNE *BLANKS                                   S01194
+     C                     SETON                     LRU8                 S01194
+     C                     RETRN                                          S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C* IF DATE FORMAT = 'M' SET ON IND 98 FOR ZDATE1 SUBROUTINE          S01194
+0101 C           BJDFIN    COMP 'M'                      98 - MMDDYY      S01194
+0102 C*
+0105 C*
+0106 C*****      APDA      COMP DNWD                   12                 S01194
+0106 C           BKAPDT    COMP BJDNWD                 12                 S01194
+0107 C*****      APFQ      COMP 'D'                      14               S01194
+0107 C           BKAPFQ    COMP 'D'                      14               S01194
+     C***12                Z-ADDAPDA      OAPDA   50                      S01194
+     C/COPY WNCPYSRC,SD0640C003
+     C*
+     C**   IF ACC/PROF FREQ = D  AND ACC/PROF DATE LESS THAN NEXT
+     C**   WORKING DAY, CHECK FOR END OF MONTH FALLING BETWEEN TWO
+     C   12 14             EXSR MTHEND
+     C**                                                                  S01160
+     C*****      ANWI      IFEQ '1'                                 S01160S01194
+     C***********BKANWD    IFEQ '1'                                 S01194E20929
+     C*****                MOVE RUND      RUNDX   50                S01160S01194
+     C***********          MOVE BJRDNB    RUNDX   50                S01194E20929
+     C***********RUNDX     ADD  1         RUNDX                     S01160E20929
+     C*****      RUNDX     IFEQ DNWD                                S01160S01194
+     C***********RUNDX     IFEQ BJDNWD                              S01194E20929
+     C***********RUNDX     ANDNEZDYNBR                              S01160E20929
+     C*****                MOVE ZDYNBR    DNWD                      S01160S01194
+     C***********          MOVE ZDYNBR    BJDNWD                    S01160E20929
+     C*****      DNWD      SUB  1         DNWD                      S01160S01194
+     C***********BJDNWD    SUB  1         BJDNWD                    S01160E20929
+     C***********          END                                      S01160E20929
+     C***********          END                                      S01160E20929
+     C*                                                                   E20929
+     C****************************************************************    E20929
+     C*                                                              *    E20929
+     C*                                                              *    E20929
+     C*         DAILY ACCRUALS PROCESSING........                    *    E20929
+     C*           MODE 0 - ACCRUAL/PROFIT DATE EQUALS BJDNWD - 1.    *    E20929
+     C*                                                              *    E20929
+     C*           MODE 1 - ACCRUAL/PROFIT DATE EQUALS BJDNWD - 1.    *    E20929
+     C*                                                              *    E20929
+     C*           MODE 2 - ACCRUAL/PROFIT DATE IS NOT CHANGED.       *    E20929
+     C*                                                              *    E20929
+     C*                                                              *    E20929
+     C****************************************************************    E20929
+     C*                                                                   E20929
+     C           BKAPFQ    IFEQ 'D'                         IF DAILY      E20929
+     C*                                                                   E20929
+     C           BKANWD    IFEQ '0'                         NORM PROCSSNG.E20929
+     C           BKANWD    OREQ '1'                         OR ADVANCE.   E20929
+     C/COPY WNCPYSRC,SD0640C001
+     C                     SUB  1         BJDNWD                          E20929
+     C/COPY WNCPYSRC,SD0640C002
+     C                     END                              END IF..      E20929
+     C*                                                                   E20929
+     C           BKANWD    IFEQ '2'                         IN ARREARS.   E20929
+     C/COPY WNCPYSRC,SD0640C005
+     C                     Z-ADDBKAPDT    BJDNWD                          E20929
+     C                     END                              END IF..      E20929
+     C*                                                                   E20929
+     C                     END                              END IF....    E20929
+     C*                                                                   E20929
+     C*                                                                   E20929
+     C**                                                                  S01160
+0108 C***14****************GOTO END                                       E20842
+     C*
+     C           *IN14     IFEQ '0'                                       E20842
+0109 C*****                MOVE APFQ      ZFREQ   1                       S01194
+     C                     MOVE BKAPFQ    ZFREQ   1                       S01194
+0110 C*****                MOVE LOCY      ZCCY                            S01194
+     C                     MOVE BJLCCY    ZCCY                            S01194
+0111 C*****                MOVE FDAY      ZMDAY                           S01194
+     C                     MOVE BKAPFD    ZMDAY                           S01194
+0112 C*****                MOVE APDA      ZDAYNO  50                      S01194
+     C                     MOVE BKAPDT    ZDAYNO  50                      S01194
+0113 C***12*****           EXSR ZFREQS                                    S01194
+0113 C***12*****           EXSR ZFREQB                              S01194E30603
+0113 C   12                EXSR ZFRQB2                                    E30603
+     C                     END                                            E20842
+0114 C*
+     C** UPDATE SD SYNON FILE                                             S01168
+     C*                                                                   S01168
+     C           *IN02     IFEQ '1'                                       S01168
+     C           *IN12     ANDEQ'1'                                       S01168
+     C                     MOVEL'GELR'    ICDFLG 10                       S01168
+     C*                                                                   S01168
+     C           ICDFLG    CHAINSDGELRL0             99                   S01168
+     C*                                                                   S01168
+     C           *IN99     IFEQ '0'                                       S01168
+     C*                                                                   S01168
+     C           *IN14     IFEQ '0'                                       S01168
+     C*********************Z-ADDZDAYNO    BKFOST                  S01168  S01194
+     C                     Z-ADDZDAYNO    BKAPDT                          S01194
+     C                     ELSE                                           S01168
+     C*********************Z-ADDDNWD      BKFOST                  S01168  S01194
+     C                     Z-ADDBJDNWD    BKAPDT                          S01194
+     C                     END                                            S01168
+     C*                                                                   S01168
+     C***********                                                         E20929
+     C************IN16     IFEQ '1'                                 S01168E20929
+     C*********************Z-ADDLASTD     BKFOST                  S01168  S01194
+     C***********          Z-ADDLASTD     BKAPDT                    S01194E20929
+     C***********          END                                      S01168E20929
+     C*                                                                   S01168
+     C                     UPDAT@BKREEB                                   S01168
+     C*                                                                   S01168
+     C                     ELSE                                           S01168
+     C******               SETON                       U8           S01168S01194
+     C                     SETON                     LRU8                 S01194
+     C                     RETRN                                          S01194
+     C                     END                                            S01168
+     C/COPY WNCPYSRC,SD0640C006
+     C*                                                                   S01168
+     C                     END                                            S01168
+     C*                                                                   S01168
+0115 C           END       TAG                             ** END TAG **
+0372 C************                                                 S01333 S10736
+     C*****UPDATE*EVENT CONTROL DATES ON GLSTAT & GLTEMP           S01333 S10736
+0372 C************                                                 S01333 S10736
+     C************         IN   GLSTAT                             S01333 S10736
+     C************         IN   GLTEMP                             S01333 S10736
+     C************         MOVE EVCD1     EVCD2                    S01333 S10736
+     C************         MOVE EVCD0     EVCD1                    S01333 S10736
+     C************         MOVE TEVCD1    TEVCD2                   S01333 S10736
+     C************         MOVE TEVCD0    TEVCD1                   S01333 S10736
+     C***********BJDNWD    SUB  1         NWDS1   50               S01333 S10736
+     C************                                                 E43295 S10736
+     C***********BKANWD    IFEQ '2'                                E43295 S10736
+     C***********BKAPFQ    ANDEQ'D'                                E43295 S10736
+     C***********BJDNWD    ADD  1         NWDS1   50               E43295 S10736
+     C************         END                                     E43295 S10736
+     C************                                                 E43295 S10736
+     C***********NWDS1     IFLT BKAPDT                             S01333 S10736
+     C************         MOVE NWDS1     EVCD0                    S01333 S10736
+     C************         MOVE NWDS1     TEVCD0                   S01333 S10736
+     C************         ELSE                                    S01333 S10736
+     C************         MOVE BKAPDT    EVCD0                    S01333 S10736
+     C************         MOVE BKAPDT    TEVCD0                   S01333 S10736
+     C************         END                                     S01333 S10736
+     C************         OUT  GLSTAT                             S01333 S10736
+     C************         OUT  GLTEMP                             S01333 S10736
+0372 C************                                                 S01333 S10736
+0372 C************                                                 S01333 S10736
+     C/COPY WNCPYSRC,SD0640C004
+     C*                                                                   056069
+     C**   UPDATE EVENT CONTROL DATES ON GLSTAT & GLTEMP                  056069
+     C*                                                                   056069
+      * Only when daily accrual to change the event control date on                           214381
+      * GLSTAT & GLTEMP                                                                       214381
+     C           *IN14     IFEQ '1'                                                           214381
+     C                     IN   GLSTAT                                    056069
+     C                     IN   GLTEMP                                    056069
+     C*                                                                   056069
+     C           BJDNWD    IFLT BKAPDT                                    056069
+     C                     MOVE BJDNWD    EVCD0                           056069
+     C                     MOVE BJDNWD    TEVCD0                          056069
+     C                     ELSE                                           056069
+     C                     MOVE BKAPDT    EVCD0                           056069
+     C                     MOVE BKAPDT    TEVCD0                          056069
+     C                     END                                            056069
+     C                     OUT  GLSTAT                                    056069
+     C                     OUT  GLTEMP                                    056069
+     C                     ENDIF                                                              214381
+     C*                                                                   056069
+     C                     SETON                     LR                   S01194
+0116 C*
+0117 C***LRN10                                                            S01194
+     C***ORN09 24                                                         S01194
+0118 C***ORN11             SETON                     U8    DATABASE ERROR S01194
+0119 C********************************************************************
+0120 C**
+0121 C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+0122 C**              CONVERT TO A NUMBER OF DAYS.
+0123 C**
+0124 C           ZDATE1    BEGSR                           *** ZDATE1 ***
+0125 C**
+0126 C**   CLEAR DAY NUMBER.
+0127 C                     Z-ADD0         ZDAYNO  50
+0128 C**
+0129 C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+0130 C                     Z-ADDZDATE     ZDATE   60
+0131 C**
+0132 C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+0133 C                     MOVE ZDATE     ZYEAR   20
+0134 C  N98                MOVELZDATE     ZDAY    20
+0135 C   98                MOVELZDATE     ZMTH    20
+0136 C                     MOVE ZDATE     ZWRK4   40
+0137 C  N98                MOVELZWRK4     ZMTH
+0138 C   98                MOVELZWRK4     ZDAY
+0139 C**
+0140 C**   ENSURE MONTH IS VALID.
+0141 C           ZMTH      COMP 0                      9999
+0142 C  N99      ZMTH      COMP 12                   99
+0143 C   99                GOTO ZDEND1                     BYPASS IF ERROR
+0144 C**
+0145 C**   CHECK FOR 30 DAY MONTHS.
+0146 C           ZMTH      COMP 4                        90IF 90 ON, 30
+0147 C  N90      ZMTH      COMP 6                        90DAY MONTH.
+0148 C  N90      ZMTH      COMP 9                        90
+0149 C  N90      ZMTH      COMP 11                       90
+0150 C**
+0151 C**   ENSURE DAY IS VALID.
+0152 C           ZDAY      COMP 0                      9999
+0153 C   90N99   ZDAY      COMP 30                   99
+0154 C  N90N99   ZDAY      COMP 31                   99
+0155 C   99                GOTO ZDEND1                     BYPASS IF ERROR
+0156 C**
+0157 C**   CHECK FOR LEAP YEAR AND FEBRUARY.
+0158 C           ZYEAR     ADD  28        ZYEAR
+0159 C           ZYEAR     DIV  4         ZLYR    20
+0160 C                     MVR            ZLY     10     91LEAP YR, 91 ON
+0161 C           ZMTH      COMP 2                    93  92FEB., 92 ON
+0162 C**                                                   PAST FEB, 93 ON
+0163 C**   IF FEBUARY FURTHER VALIDATE DAY.
+0164 C  N91 92   ZDAY      COMP 28                   99
+0165 C   91 92   ZDAY      COMP 29                   99
+0166 C   99                GOTO ZDEND1                     BYPASS IF ERROR
+0167 C**
+0168 C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANS
+0169 C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.
+0170 C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+0171 C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+0172 C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+0173 C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+0174 C**
+0175 C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+0176 C**
+0177 C**
+0178 C********************************************************************
+0179 C**
+0180 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+0181 C**
+0182 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+0183 C**
+0184 C**   CLEAR DATE FIELDS.
+0185 C                     Z-ADD0         ZDATE   60
+0186 C                     MOVEL'       ' ZADATE  7
+0187 C**
+0188 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+0189 C                     Z-ADDZDAYNO    ZDAYNO  50
+0190 C**
+0191 C**   DETERMINE YEAR NUMBER.
+0192 C**
+0193 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+0194 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+0195 C   99                GOTO ZDEND2
+0196 C**
+0197 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+0198 C           ZDAYN1    DIV  1461      ZLYR    20
+0199 C                     MVR            ZDAYN1           SAVE REMAINING
+0200 C**                                                   DAYS
+0201 C**   CALCULATE NUMBER OF REMAINING YEARS.
+0202 C                     Z-ADD1         ZWRK2   20
+0203 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+0204 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+0205 C  N90      ZWRK2     ADD  1         ZWRK2
+0206 C  N90                GOTO ZDTAG1
+0207 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+0208 C**
+0209 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+0210 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+0211 C**
+0212 C**   CALCULATE ACTUAL YEAR NUMBER.
+0213 C           ZLYR      MULT 4         ZWRK3   30
+0214 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+0215 C                     Z-ADDZWRK3     ZYEAR   20
+0216 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+0217 C**
+0218 C**   DETERMINE MONTH NUMBER.
+0219 C**
+0220 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+0221 C                     SETOF                     9293
+0222 C   91      ZDAYN1    COMP 59                     9293
+0223 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+0224 C**
+0225 C**   CALCULATE MONTH NUMBER.
+0226 C                     Z-ADD2         ZWRK2
+0227 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+0228 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+0229 C  N94      ZWRK2     ADD  1         ZWRK2
+0230 C  N94                GOTO ZDTAG2
+0231 C           ZWRK2     SUB  1         ZWRK2
+0232 C**
+0233 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+0234 C**
+0235 C**   DETERMINE DAY OF MONTH.
+0236 C**
+0237 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+0238 C           ZDAYN1    ADD  1         ZDAYN1
+0239 C**
+0240 C**   CALCULATE DAY OF MONTH.
+0241 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+0242 C**
+0243 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+0244 C   93      ZDAY      ADD  1         ZDAY
+0245 C**
+0246 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+0247 C  N98                MOVELZDAY      ZWRK4   40
+0248 C   98                MOVE ZDAY      ZWRK4
+0249 C  N98                MOVE ZMTH      ZWRK4
+0250 C   98                MOVELZMTH      ZWRK4
+0251 C                     MOVELZWRK4     ZDATE
+0252 C                     MOVE ZYEAR     ZDATE
+0253 C**
+0254 C**   FORMAT ALPHA DATE, DDMMMYY.
+0255 C           ZDAY      COMP 10                     95
+0256 C                     MOVELZDAY      ZWRK5   5
+0257 C   95                MOVEL' '       ZWRK5
+0258 C                     MOVE ZMNM,ZMTH ZWRK5
+0259 C                     MOVELZWRK5     ZADATE
+0260 C                     MOVE ZYEAR     ZADATE
+0261 C**
+0262 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+0263 C**
+0264 C**
+0265 C********************************************************************
+     C**
+     C**   SUBR TO ESTABLISH IF END OF MONTH FALLS BETWEEN ACCRUAL
+     C**   DATE AND FOLLOWING WORKING DAY
+     C**
+     C           MTHEND    BEGSR
+     C*
+     C**   DETERMINE DAY NUMBER OF LAST DAY OF MONTH
+     C*****                Z-ADDRUND      ZDAYNO                          S01194
+     C                     Z-ADDBJRDNB    ZDAYNO                          S01194
+0283 C                     EXSR ZDATE2
+     C                     MOVE ZFMD,ZMTH NDAYS   20
+     C           NDAYS     SUB  ZDAY      ZDIFF   20
+     C*****      RUND      ADD  ZDIFF     LASTD   50                      S01194
+     C           BJRDNB    ADD  ZDIFF     LASTD   50                      S01194
+     C*
+     C**   ADJUST FOR FEB AND LEAP YEAR
+     C           ZMTH      COMP 2                        21
+     C   21 91   LASTD     ADD  1         LASTD
+     C*
+     C**   DETERMINE NUMBER OF SECOND WORKING DAY ( ZDYNBR )
+     C*****                Z-ADDDNWD      ZDAYNO                          S01194
+     C                     Z-ADDBJDNWD    ZDAYNO                          S01194
+     C*****                MOVE LOCY      ZCCY                            S01194
+     C                     MOVE BJLCCY    ZCCY                            S01194
+     C                     Z-ADD1         ZNRDYS
+     C*********************EXSR ZDATE4                                    E43765
+     C*****                EXSR ZDAT4A                              E43765S01194
+     C                     EXSR ZFWDT                                     S01194
+     C*
+     C**   DETERMINE IF LAST DAY OF MONTH FALLS BETWEEN NEXT WORKING
+     C**   DAY AND SECOND WORKING DAY
+     C*****      LASTD     COMP DNWD                 16  16               S01194
+     C           LASTD     COMP BJDNWD               16  16               S01194
+     C   16      LASTD     COMP ZDYNBR                 16
+     C*
+     C           ENDMTH    ENDSR
+0266 C********************************************************************
+     C********************************************************************
+     C*****                                                               S01194
+     C*****ZDATE4*SR.*TO*CALCULATE*ANY*NUMBER*OF*WORKING                  E43765
+     C*****ZDAT4A*SR.*TO*CALCULATE*ANY*NUMBER*OF*WORKING            E43765S01194
+     C*****           DAYS FORWARD IN ANY CURRENCY.                       S01194
+     C*****                                                               S01194
+     C*****HOLIDAY RECORDS ARE ACCESSED BY 'READ' - FASTER THAN CHAINING  S01194
+     C*****FOR EACH RECORD - SO OVERFLOW AREA RECORDS ARE NOT ACCESSED    S01194
+     C*****& SR. SHOULD BE USED ONLY AFTER INPUT CYCLE TERMINATION.       S01194
+     C*****N.B. INPUT SPECS. MUST CONTAIN A CATCHALL FOR THE TABLE        S01194
+     C*****FILE WITH THE FIELDS 'RECI' & 'RECT' DEFINED                   S01194
+     C*****NB. IF THIS SR. IS INCLUDED IN ANY PROGRAM WHICH ALSO          S01194
+     C*****INCLUDES ANY OTHER Z SR. WHICH CHAINS TO S/TABLE,              S01194
+     C*****IT WILL BE NECESSARY TO DOUBLE DEFINE S/TABLE AS AN            S01194
+     C*****INPUT DEMAND FILE, AND ALSO AMEND THIS SR. TO ACCESS           S01194
+     C*****TABLED AND NOT TABLE.(THIS IS NOT DONE NOW IN THE S/38         S01194
+     C*****BECAUSE TABLE USES A LOGICAL FILE)                             S01194
+     C*****                                                               S01194
+     C***********ZDATE4    BEGSR                           *** ZDATE4 *** E43765
+     C*****      ZDAT4A    BEGSR                           *** ZDAT4E43765S01194
+     C*****                                                               S01194
+     C*****CALCULATIONS TO DEFINE INPUT FIELDS.                           S01194
+     C*****                Z-ADDZDAYNO    ZDAYNO  50       STARTING DATE  S01194
+     C*****                MOVE ZCCY      ZCCY    3        DATE CURRENCY  S01194
+    3C*****                Z-ADDZNRDYS    ZNRDYS  20       NBR OF WORKING S01194
+    3C*****                                                DAYS FORWARD   S01194
+    3C*****SET UP FORWARD DAY NUMBER.                                     S01194
+    3C*****      ZDAYNO    ADD  ZNRDYS    ZDYNBR  50                      S01194
+    3C*****                                                               S01194
+    3C*****SET KEY FOR, AND SET LOWER LIMITS ON, TABLE FILE.              S01194
+    3C*****                MOVEL'22    '  ZDHKEY 12                       S01194
+    3C*****                MOVELZDAYNO    ZWRK6   6                       S01194
+    3C*****                MOVE '1'       ZWRK6                           S01194
+    3C*****                MOVE ZWRK6     ZDHKEY                          S01194
+    3C*****                                                               S01194
+    3C*****      ZDHKEY    SETLLTABLE                                     S01194
+    3C*****                                                               S01194
+    3C*****LOOP TO CHECK FOR HOLIDAY, AND INCREMENT FORWARD DAY NUMBER.   S01194
+    3C*****      ZDLOP1    TAG                             ** ZDLOP1 TAG *S01194
+    3C*****                SETOF                     909192               S01194
+    3C*****                SETOF                     94                   S01194
+    3C*****                READ TABLE                    92ON, E.O.F.     S01194
+    3C**N92      RECT      COMP 22                   9292                 S01194
+    3C***92                GOTO ZDEND4                                    S01194
+    3C*****      RECI      COMP 'D'                  9494                 S01194
+    3C***94                GOTO ZDLOP1                                    S01194
+    3C*****                                                               S01194
+    3C*****      ZDLOP2    TAG                             ** ZDLOP2 TAG *S01194
+    3C*****                SETOF                     959697               S01194
+    3C**N92      HOL       COMP ZDYNBR               93                   S01194
+    3C***92                                                               S01194
+    3C**OR**3              GOTO ZDEND4                     ALL DAYS CHEKEDS01194
+    3C*****                                                               S01194
+    3C*****                MOVE HOL       ZLSHOL  50       SAVE THE DATE  S01194
+    3C*****                                                               S01194
+    3C*****CHECK IF RECORD IS INCLUDE OR EXCLUDE.                         S01194
+    3C*****      INEX      COMP 'I'                  909091               S01194
+    3C*****                                                               S01194
+    3C*****CHECK FOR CURRENCY ENTRY IN HCCY.                              S01194
+    3C*****      ZCCY      LOKUPHCCY                     94ON, CCY. FOUND S01194
+    3C***91 94             SETON                         97               S01194
+    3C***97      ZDYNBR    ADD  1         ZDYNBR           INCLUDE FOUND  S01194
+    3C***90N94             SETON                     95    EXCL.NOT FOUND S01194
+    3C*****                                                               S01194
+    3C*****READ NEXT RECORD & CHECK IF 2ND RECORD FOR THIS DATE.          S01194
+    3C*****                SETOF                     909192               S01194
+    3C*****                SETOF                     94                   S01194
+    3C*****                READ TABLE                    92               S01194
+    3C**N92      RECT      COMP 22                   9292                 S01194
+    3C**N92      RECI      COMP 'D'                  9494                 S01194
+    3C**N92      HOL       COMP ZLSHOL                   96               S01194
+    3C*****                                                               S01194
+    3C*****FOR 2ND RCD, IF INCL HOL ALREADY FOUND, RETURN TO ZDLOP1.      S01194
+    3C***96 97             GOTO ZDLOP1                                    S01194
+    3C*****                                                               S01194
+    3C*****ELSE, IF 2ND RCD TO BE PROCESSED, GOTO ZDLOP3                  S01194
+    3C***96N94             GOTO ZDLOP3                     RCD. 2 FOUND   S01194
+    3C*****                                                               S01194
+    3C*****IF 2ND RCD NOT FOUND & ENTRY NOT FOUND ON EXCLUDE              S01194
+    3C*****RECORD 1, ADD 1 TO ZDYNBR.                                     S01194
+    3C***95      ZDYNBR    ADD  1         ZDYNBR                          S01194
+     C*****IF LAST RECORD WAS DELETED, READ NEXT RECORD.            E43765S01194
+     C***94                GOTO ZDLOP1                              E43765S01194
+    3C*****                GOTO ZDLOP2                                    S01194
+    3C*****                                                               S01194
+    3C*****      ZDLOP3    TAG                             ** ZDLOP3 TAG *S01194
+    3C*****                                                               S01194
+    3C*****RCD 2 FOUND, & NO INCL HOL YET FOUND, CHECK FOR ENTRY IN HCCY. S01194
+    3C*****      ZCCY      LOKUPHCCY                     94               S01194
+    3C*****                                                               S01194
+    3C*****CHECK WHETHER INCLUDE OR EXCLUDE RCD.                          S01194
+    3C*****      INEX      COMP 'I'                  909091               S01194
+    3C*****                                                               S01194
+    3C*****IF INCLUDE RCD, & CURRENCY FOUND ON RCD 2, OR IF EXCLUDE RCD   S01194
+    3C*****& CURRENCY ENTRY NOT FOUND ON RCD 1 OR 2, ADD 1 TO ZDYNBR.     S01194
+    3C***91 94                                             INCLUDE FOUND  S01194
+    3C**OR*90N94 95ZDYNBR    ADD  1       ZDYNBR           EXCL.NOT FOUND S01194
+    3C*****                                                               S01194
+    3C*****                GOTO ZDLOP1                                    S01194
+    3C*****                                                               S01194
+    3C*****      ZDEND4    ENDSR                           * ZDEND ENDSR *S01194
+    3C*****                                                               S01194
+    3C*****                                                               S01194
+    3C********************************************************************
+0267 C**********                                                          S01194
+0268 C*****ZFREQ SR. TO INCREMENT A DAY NUMBER DATE BY A                  S01194
+0269 C**********                                                          S01194
+0270 C**********                                                          S01194
+0271 C********** ZFREQS    BEGSR                           *** ZFREQ ***  S01194
+0272 C**********                                                          S01194
+0273 C*****CALCULATIONS*TO*DEFINE/CLEAR*FIELDS.                           S01194
+0274 C**********           MOVE ZFREQ     ZFREQ   1                       S01194
+0275 C**********           Z-ADDZDAYNO    ZDAYNO  50                      S01194
+0276 C**********           Z-ADDZMDAY     ZMDAY   20                      S01194
+0277 C**********           MOVE ZCCY      ZCCY    3                       S01194
+0278 C**********                                                          S01194
+0279 C**********           MOVE '   '     ZHC                             S01194
+0280 C**********           MOVE ' '       ZTABKY 12                       S01194
+0281 C**********                                                          S01194
+0282 C*****CONVERT DAY NUMBER TO DATE.                                    S01194
+0283 C**********           EXSR ZDATE2                                    S01194
+0284 C**********                                                          S01194
+0285 C*****CHECK*FOR*AND*INCREMENT*FOR*CODE D-DAILY-WORKING DAY.          S01194
+0286 C********** ZFREQ     COMP 'D'                      91               S01194
+0287 C***91***** ZDAYNO    ADD  1         ZDAYNO                          S01194
+0288 C***91*****           GOTO ZFHCHK                                    S01194
+0289 C**********                                                          S01194
+0290 C*****CHECK*FOR*AND*INCREMENT*FOR*CODE*W-WEEKLY.                     S01194
+0291 C********** ZFREQ     COMP 'W'                      91               S01194
+0292 C***91***** ZDAYNO    ADD  7         ZDAYNO                          S01194
+0293 C***91*****           GOTO ZFEND                                     S01194
+0294 C**********                                                          S01194
+0295 C*****CHECK*FOR*AND*INCREMENT*FOR*CODE*F-FORTNIGHTLY.                S01194
+0296 C********** ZFREQ     COMP 'F'                      91               S01194
+0297 C***91***** ZDAYNO    ADD  14        ZDAYNO                          S01194
+0298 C***91*****           GOTO ZFEND                                     S01194
+0299 C**********                                                          S01194
+0300 C*****CHECK*FOR*AND*INCREMENT*FOR*CODE*S-SEMI-MONTHLY.               S01194
+0301 C********** ZFREQ     COMP 'S'                      91               S01194
+0302 C***91***** ZDAY      COMP 15                   939292               S01194
+0303 C***91*92**           Z-ADD31        ZDAY                            S01194
+0304 C***91*93**           Z-ADD15        ZDAY                            S01194
+0305 C***91*93** ZMTH      ADD  1         ZMTH                            S01194
+0306 C***91*****           GOTO ZFDATE                                    S01194
+0307 C**********                                                          S01194
+0308 C*****CHECK*FOR*AND*INCREMENT*FOR*CODE*M-MONTHLY.                    S01194
+0309 C********** ZFREQ     COMP 'M'                      91               S01194
+0310 C***91*****           Z-ADDZMDAY     ZDAY                            S01194
+0311 C***91***** ZMTH      ADD  1         ZMTH                            S01194
+0312 C***91*****           GOTO ZFDATE                                    S01194
+0313 C**********                                                          S01194
+0314 C*****CHECK*FOR*AND*INCREMENT*FOR*CODE*R-SIX*DAYS*BEFORE*END*OF*MONTHS01194
+0315 C********** ZFREQ     COMP 'R'                      91               S01194
+0316 C***91*****           Z-ADD31        ZDAY                            S01194
+0317 C***91***** ZMTH      ADD  1         ZMTH                            S01194
+0318 C***91*****           GOTO ZFDATE                                    S01194
+0319 C**********                                                          S01194
+0320 C*****CHECK*FOR*AND*INCREMENT*FOR*CODE*T-BIMONTHLY.                  S01194
+0321 C********** ZFREQ     COMP 'T'                      91               S01194
+0322 C***91*****           Z-ADDZMDAY     ZDAY                            S01194
+0323 C***91***** ZMTH      ADD  2         ZMTH                            S01194
+0324 C***91*****           GOTO ZFDATE                                    S01194
+0325 C**********                                                          S01194
+0326 C*****CHECK*FOR*AND*INCREMENT*FOR*CODE*Q-QUARTERLY.                  S01194
+0327 C********** ZFREQ     COMP 'Q'                      91               S01194
+0328 C***91*****           Z-ADDZMDAY     ZDAY                            S01194
+0329 C***91***** ZMTH      ADD  3         ZMTH                            S01194
+0330 C***91*****           GOTO ZFDATE                                    S01194
+0331 C**********                                                          S01194
+0332 C*****CHECK*FOR*AND*INCREMENT*FOR*CODE*X-SIX*MONTHLY.                S01194
+0333 C********** ZFREQ     COMP 'X'                      91               S01194
+0334 C***91*****           Z-ADDZMDAY     ZDAY                            S01194
+0335 C***91***** ZMTH      ADD  6         ZMTH                            S01194
+0336 C***91*****           GOTO ZFDATE                                    S01194
+0337 C**********                                                          S01194
+0338 C*****CHECK FOR AND INCREMENT FOR CODE Y-YEARLY.                     S01194
+0339 C********** ZFREQ     COMP 'Y'                      91               S01194
+0334 C***91*****           Z-ADDZMDAY     ZDAY                            S01194
+0340 C***91***** ZYEAR     ADD  1         ZYEAR                           S01194
+0341 C***91*****           GOTO ZFDATE                                    S01194
+0342 C**********                                                          S01194
+0343 C*****CHECK*FOR AND INCREMENT FOR CODE L-LAST CALENDAR DAY OF MONTH. S01194
+0344 C********** ZFREQ     COMP 'L'                      91               S01194
+0345 C***91*****           Z-ADD31        ZDAY                            S01194
+0346 C***91***** ZMTH      ADD  1         ZMTH                            S01194
+0347 C***91*****           GOTO ZFDATE                                    S01194
+0348 C**********                                                          S01194
+0349 C*****CHECK*FOR AND INCREMENT FOR CODE B-LAST WORKING DAY OF MONTH.  S01194
+0350 C********** ZFREQ     COMP 'B'                      91               S01194
+0351 C***91*****           Z-ADD31        ZDAY                            S01194
+0352 C***91***** ZMTH      ADD  1         ZMTH                            S01194
+0353 C***91*****           GOTO ZFDATE                                    S01194
+0354 C**********                                                          S01194
+0355 C*****CHECK*FOR AND INCREMENT FOR CODE A-MONTHLY ACCRUAL/PROFIT DATE.S01194
+0356 C********** ZFREQ     COMP 'A'                      91               S01194
+0357 C**********           MOVEL'01    '  ZTABKY                          S01194
+0358 C***91*****           MOVE '    11'  ZTABKY                          S01194
+0359 C***91***** ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0360 C**N99***** RECI      COMP '*'                      99               S01194
+0361 C***91N99**           Z-ADDAPDA      ZDAYNO                          S01194
+0362 C**********                                                          S01194
+0363 C*****BYPASS*IF*ZFREQ IS 'A' OR ANY OTHER VALUE                      S01194
+0364 C**********           GOTO ZFEND                                     S01194
+0365 C**********                                                          S01194
+0366 C**********                                                          S01194
+0367 C*****REFORMAT*DATE AND ENSURE VALID.                                S01194
+0368 C********** ZFDATE    TAG                             ** ZFDATE TAG* S01194
+0369 C**********                                                          S01194
+0370 C*****VALIDATE*MONTH.                                                S01194
+0371 C********** ZMTH      COMP 12                   91                   S01194
+0372 C***91***** ZMTH      SUB  12        ZMTH                            S01194
+0373 C***91***** ZYEAR     ADD  1         ZYEAR                           S01194
+0374 C**********                                                          S01194
+0375 C*****CHECK*FOR*LEAP*YEAR.                                           S01194
+0376 C********** ZYEAR     DIV  4         ZLYR    20                      S01194
+0377 C**********           MVR            ZLY     10     92LEAP YEAR-92 ONS01194
+0378 C**********                                                          S01194
+0379 C*****VALIDATE*DAY*NUMBER.                                           S01194
+0380 C**********           MOVE ZFMD,ZMTH ZWRK2   20                      S01194
+0381 C********** ZMTH      COMP 2                        93               S01194
+0382 C***92*93**           Z-ADD29        ZWRK2                           S01194
+0383 C**********                                                          S01194
+0384 C********** ZDAY      COMP ZWRK2                94                   S01194
+0385 C***94*****           Z-ADDZWRK2     ZDAY                            S01194
+0386 C**********                                                          S01194
+0387 C*****CHECK*IF*CODE R, TO SUBTRACT 6 DAYS.                           S01194
+0388 C********** ZFREQ     COMP 'R'                      91               S01194
+0389 C***91***** ZDAY      SUB  6         ZDAY                            S01194
+0390 C**********                                                          S01194
+0391 C*****REFORMAT*DATE, DDMMYY OR MMDDYY, AND CONVERT TO DAY NUMBER.    S01194
+0392 C**********           MOVELZDAY      ZWRK4   40                      S01194
+0393 C**********           MOVE ZMTH      ZWRK4                           S01194
+0394 C***98*****           MOVELZMTH      ZWRK4                           S01194
+0395 C***98*****           MOVE ZDAY      ZWRK4                           S01194
+0396 C**********           MOVELZWRK4     ZDATE                           S01194
+0397 C**********           MOVE ZYEAR     ZDATE                           S01194
+0398 C**********           EXSR ZDATE1                                    S01194
+0399 C**********                                                          S01194
+0400 C*****CHECK*IF*CODE B,TO BE CHECKED FOR HOLIDAY.                     S01194
+0401 C********** ZFREQ     COMP 'B'                      91               S01194
+0402 C***91N99**           GOTO ZFHCHK                                    S01194
+0403 C**********                                                          S01194
+0404 C**********           GOTO ZFEND                                     S01194
+0405 C**********                                                          S01194
+0406 C**********                                                          S01194
+0407 C*****CHECK*IF*DAY*NUMBER IS A HOLIDAY.                              S01194
+0408 C********** ZFHCHK    TAG                             ** ZFHCHK TAG *S01194
+0409 C**********           SETOF                     94                   S01194
+0410 C**********                                                          S01194
+0411 C*****DETERMINE*CODE.                                                S01194
+0412 C********** ZFREQ     COMP 'D'                      91               S01194
+0413 C********** ZFREQ     COMP 'B'                      92               S01194
+0414 C**********                                                          S01194
+0415 C*****SET*KEY*FOR FIRST HOLIDAY RECORD.                              S01194
+0416 C**********           MOVEL'22    '  ZTABKY                          S01194
+0417 C**********           MOVELZDAYNO    ZWRK6   6                       S01194
+0418 C**********           MOVE 1         ZWRK6                           S01194
+0419 C**********           MOVE ZWRK6     ZTABKY                          S01194
+0420 C**********                                                          S01194
+0421 C*****GET*HOLIDAY*RECORD.                                            S01194
+0422 C********** ZFHCHN    TAG                             ** ZFHCHN TAG* S01194
+0423 C********** ZTABKY    CHAINTABLE                93    ON NOT THERE   S01194
+0424 C**N93***** RECI      COMP '*'                      93               S01194
+0425 C**N94*****           MOVE '   '     ZHC                             S01194
+0426 C**********                                                          S01194
+0427 C*****STORE*CURRENCIES*IF RECORD FOUND.                              S01194
+0428 C**N94N93**           MOVEAHCCY      ZHC,1                           S01194
+0429 C***94N93**           MOVEAHCCY      ZHC,26                          S01194
+0430 C**********                                                          S01194
+0431 C*****GET*SECORD*RECORD, IF NOT ALREADY DONE.                        S01194
+0432 C**********           MOVE ZTABKY    ZWRK1   10                      S01194
+0433 C********** ZWRK1     COMP 1                        94               S01194
+0434 C**********           MOVE '2'       ZTABKY                          S01194
+0435 C***94N93**           GOTO ZFHCHN                                    S01194
+0436 C**********                                                          S01194
+0437 C*****BYPASS*TO*END IF NO FIRST RECORD FOUND.                        S01194
+0438 C***93*94**           GOTO ZFEND                                     S01194
+0439 C**********                                                          S01194
+0440 C*****DETERMINE*HOLIDAY RECORD TYPE.                                 S01194
+0441 C********** INEX      COMP 'E'                      95               S01194
+0442 C********** INEX      COMP 'I'                      96               S01194
+0443 C**********                                                          S01194
+0444 C*****CHECK*IF*CURRENCY ON HOLIDAY.                                  S01194
+0445 C********** ZCCY      LOKUPZHC                      97               S01194
+0446 C**********                                                          S01194
+0447 C*****BYPASS*IF*NOT HOLIDAY FOR CURRENCY.                            S01194
+0448 C***95*97**                                           EXCLUDE FOUND  S01194
+0449 C*OR*96N97**           GOTO ZFEND                     INCL. NOT FOUNDS01194
+0450 C**********                                                          S01194
+0451 C*****INCREMENT*OR*DECREMENT DAY NUMBER AS REQUIRED.                 S01194
+0452 C***91*95N97                                          EXCL. NOT FOUNDS01194
+0453 C*OR*91*96*97ZDAYNO    ADD  1         ZDAYNO          INCLUDE FOUND  S01194
+0454 C**********                                                          S01194
+0455 C***92*95N97                                          EXCL. NOT FOUNDS01194
+0456 C*OR*92*96*97ZDAYNO    SUB  1         ZDAYNO          INCLUDE FOUND  S01194
+0457 C**********           GOTO ZFHCHK                                    S01194
+0458 C**********                                                          S01194
+0459 C**********                                                          S01194
+0460 C********** ZFEND     ENDSR                           * ZFEND ENDSR *S01194
+0461 C**********                                                          S01194
+0462 C********************************************************************
+     C/COPY ZSRSRC,ZACCH
+     C* /COPY FOR ZFWDT SUBROUTINE                                        S01194
+     C/COPY ZSRSRC,ZCHKH
+     C* /COPY FOR ZFWDT SUBROUTINE                                        S01194
+     C/COPY ZSRSRC,ZFWDT
+     C* /COPY FOR ZFWDT SUBROUTINE                                        S01194
+     C**********/COPY ZSRSRC,ZFREQBZ2                                     E30603
+     C***********/COPY FOR ZFREQB SUBROUTINE                        S01194E30603
+     C/COPY ZSRSRC,ZFRQB2Z2                                               E30603
+     C* /COPY FOR ZFRQB2 SUBROUTINE                                 S01194E30603
+0462 C********************************************************************
+0463 O*TABLEU**D*       02 12                                             S01194
+0463 OTABTB11 D        02 12                                              S01194
+0464 O                      N14ZDAYNO    31P
+0465 O*****                  14DNWD      31P                              S01194
+0465 O                       14BJDNWD    31P                              S01194
+     O***********************16LASTD     31P                              E20929
+0463 O*****   D        04 11 LR                                           S01194
+0464 O*********                OAPDA     78P                              E11748
+     O*****            12      OAPDA     78P                        E11748S01194
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+** CPY@   OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

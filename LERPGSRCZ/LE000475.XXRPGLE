@@ -1,0 +1,815 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGBASEMOD****************************************************                       CLE164
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0475 - Pre-check Auto-settlements                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CLE164  *REDUNDANT Date 02Dec14               *
+      *  Prev Amend No. MD031227           Date 26Nov14               *
+      *                 MD023878           Date 06May14               *
+      *                 MD021630           Date 06Aug13               *
+      *                 AR1096466          Date 08Apr13               *
+      *                 AR1080035          Date 23Jan13               *
+      *                 AR1077185A         Date 14Jan13               *
+      *                 AR1068354          Date 09Jan13               *
+      *                 AR1074104          Date 07Jan13               *
+      *                 AR1063761          Date 04Dec12               *
+      *                 AR1021979          Date 01Aug12               *
+      *                 AR754685           Date 01Aug12               *
+      *                 AR724089           Date 01Aug12               *
+      *                 AR736567           Date 01Aug12               *
+      *                 AR402058           Date 01Aug12               *
+      *                 AR217562           Date 01Aug12               *
+      *                 AR217897           Date 01Aug12               *
+      *                 263074             Date 01Aug12               *
+      *                 CLE134  *CREATE    Date 01Aug12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  MD031227 - Retrieve overdraft limit regardless of the value  *
+      *             of overdraft flag.                                *
+      *  MD023878 - Imbalance posting was generated instead of        *
+      *             transfer to PDCL                                  *
+      *  MD021630 - Difference in PDCL Available Balance              *
+      *  AR1096466 - Block All Debits indicator is not retrieved when *
+      *              CAP205 = 'Y' and account's Include ABC = 'N'.    *
+      *  AR1080035 -  A MSGW on component LEC000459 00001 occurred    *
+      *               during COB run                                  *
+      *  AR1077185A - Loan reference generated is alphanumeric when   *
+      *               LoanAlphaAllow = 'N'.                           *
+      *  AR1068354 - No interest was computed when Base Rate only was *
+      *              inputted                                         *
+      *  AR1074104 - Erroneous Overdraft Line amount extracted by the *
+      *              system in LE00479P1                              *
+      *  AR1063761 - COB Optimisation Issues for PDP                  *
+      *  AR1021979 - Option C - Technical Enhancements Stated in POC  *
+      *  AR754685 - Incorrect available balance for settlement        *
+      *             account. Do not include forward-valued movements. *
+      *             (Child: AR754686)                                 *
+      *  AR724089 - Several performance issues in COB component       *
+      *             LEC0459.                                          *
+      *           - Create new subroutine for Initialisation          *
+      *           - Do not issue SETON LR when returning              *
+      *           - For each SETLL followed by READE, check if record *
+      *             is found first                                    *
+      *           - (Child: AR724090)                                 *
+      *  AR736567 - Incorrect available balance is being computed     *
+      *             when forward-valued postings exist. Use Cleared   *
+      *             Balance (CLBL) instead of Ledger balance (LDBL)   *
+      *             as the opening balance. (Child: AR736568)         *
+      *  AR402058 - Overdraft PDCL repayments are incorrect           *
+      *             (Child: AR402059)                                 *
+      *  AR217562 - Incorrect Repayment Methodology                   *
+      *             (Child: AR217563)                                 *
+      *  AR217897 - Incorrect calculation of Available Balance        *
+      *             (Child: AR217940)                                 *
+      *  263074 - Original Loans posting errors                       *
+      *         - Wrong Postings when interest and principal are paid *
+      *           on the same day (Recompile)                         *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *         - CC04: Block DR Account                              *
+      *                                                               *
+      *****************************************************************
+     FACCNTL0   IF   E           K DISK    INFSR(*PSSR)
+      ** Midas GL Account details - full a/c number
+      *
+     FACCNTL3   IF   E           K DISK    INFSR(*PSSR)                                    AR1096466
+     F                                     RENAME(ACCNTABF:ACCNTABK)                       AR1096466
+     F                                     PREFIX(K_)                                      AR1096466
+      ** Midas GL Account details - full a/c number                                        AR1096466
+      *                                                                                    AR1096466
+     FGLACBTL0  IF   E           K DISK    INFSR(*PSSR)
+      ** Midas GL Account Balances Today
+      *
+     FGLACNTL3  IF   E           K DISK    INFSR(*PSSR)                                    AR1021979
+      ** Midas GL Account Extension File
+      *
+     FGLGESTL3  IF   E           K DISK    PREFIX(ST)                                      AR1021979
+     F                                     INFSR(*PSSR)
+      ** Midas GL Stamp Tax Average Balance Postings
+      *
+     FCLOANL3   IF   E           K DISK    INFSR(*PSSR)
+      ** Midas LE Loans by facility for history takeon
+      *
+     F***ACPO1     IF   F  620    24AIDISK    KEYLOC(2)                                    AR1063761
+     FGLACPML0  IF   F  620    24AIDISK    KEYLOC(2)                                       AR1063761
+     F                                     INFSR(*PSSR)
+      ** Midas GL Accounts postings
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Key Fields
+      *
+     D KCNUM           S                   LIKE(CNUM)
+     D KCCY            S                   LIKE(CCY)
+     D KACOD           S                   LIKE(ACOD)
+     D KACSQ           S                   LIKE(ACSQ)
+     D KBRCA           S                   LIKE(BRCA)
+      *
+     D KACPO1          S             24    INZ
+      *
+      ** Passed Parameters
+      *
+     D P@CNUM          S              6
+     D P@SCCY          S              3
+     D P@BRCA          S              3                                                    AR1021979
+     D P@ACOD          S             10S 0                                                 AR1021979
+     D P@ACSQ          S              2S 0                                                 AR1021979
+     D P@SDAT          S              5P 0
+      *
+     D P@PCKO          S              5P 0
+     D P@PCKM          S              5P 0                                                  AR217562
+     D P@LNRF          S              6A
+     D P@IOVD          S              1A
+     D P@PDCL          S              1A                                                    AR217562
+      *
+     D P@RTCE          S              1
+     D P@BLBF          S             15P 0
+     D P@BLAF          S             15P 0
+     D P@OVLN          S             15P 0                                                 AR1021979
+     D P@OVTL          S             15P 0                                                 AR1021979
+      *
+     D MPHAS           DS             1
+     D  DSPHASE                1      1
+      *
+     D DSAPOST       E DS                  EXTNAME(APOSTPD)
+     D                                     PREFIX(AP)
+      *
+      **  Data Structure for AOSVALR0 string                                               AR1021979
+      *
+     DSVAL1            DS           200                                                    AR1021979
+     DSVAL11                   1      1                                                    AR1021979
+      *                                                                                    AR1021979
+     D SVALKK          C                   CONST('PDCLBlockDebit')                         AR1021979
+      *                                                                                    AR1021979
+      ** External Definitions
+      *
+     D/COPY ZACPYSRC,STD_D_SPEC
+      *
+     D/COPY ZACPYSRC,PSDS
+      *
+     D/COPY ZACPYSRC,PROCPARMS
+      *
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      ** First DS for Access Programs, Short Data Structure
+      *
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+      ** Second DS for Access Programs, Long Data Structure
+      *
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      ** Data Structure for Bank Details
+      *                                                                                    AR1021979
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                               AR1021979
+      ***  SAR Details                                                                     AR1021979
+      *
+     D SDCURR        E DS                  EXTNAME(SDCURRPD)                               AR1074104
+      **  External data structures for Currency Details                                    AR1074104
+      *                                                                                    AR1074104
+      ** Work Variables
+     D                 DS
+     D DSACOD0                       10S 0
+     D  DSACOD                       10    OVERLAY(DSACOD0)
+     D DSACSQ0                        2S 0
+     D  DSACSQ                        2    OVERLAY(DSACSQ0)
+      *
+      ** Additional Field Definitions
+     D @ACNT           S             21
+     D @SCCY           S              3
+     D @BRCA           S              3
+     D @SMAM           S             13  0
+     D @SDAT           S              5  0
+     D @RTCE           S              1
+     D @INCL           S              1
+     D @BLBF           S             15  0
+     D @BLAF           S             15  0
+     D W@FILE          S             10
+     D W@FCUS          S              6
+     D W@LOAN          S              6
+     D W@FACL          S              5
+     D W@FSEQ          S              2
+     D W@FCOD          S              2
+     D SEFACT          S              5  0
+     D W@RETB          S                   LIKE(RETB)                                      AR1096466
+      *
+     D PCCY            S              3                                                    AR1074104
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     I***ACPO1     NS                                                                      AR1063761
+     IGLACPML0  NS                                                                         AR1063761
+     I                                  1  620  APOSTDF
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *                                                                                     AR724089
+      ** Program Initialisation.                                                            AR724089
+      *                                                                                     AR724089
+     C                   EXSR      SRXEINIT                                                 AR724089
+      *
+      ** Process Request
+      *
+     C                   EXSR      SRXEAVLBAL
+      *
+     C     KACCNTL3      CHAIN     ACCNTL3                            90                    MD023878
+     C                   IF        BlockDebit = 'Y'                                        AR1021979
+      *                                                                                    AR1096466
+     C                   IF        CNUM = *BLANKS AND                                      AR1096466
+     C                             CCY  = *BLANKS AND                                      AR1096466
+     C                             ACOD = 0       AND                                      AR1096466
+     C                             ACSQ = 0       AND                                      AR1096466
+     C                             BRCA = *BLANKS                                          AR1096466
+      *                                                                                    AR1096466
+     C*****KACCNTL3      CHAIN(E)  ACCNTL3                                        AR1096466 MD023878
+     C**********         IF        %FOUND                                         AR1096466 MD023878
+     C                   IF        *IN90 = '0'                                              MD023878
+     C                   EVAL      W@RETB = K_RETB                                         AR1096466
+     C                   ENDIF                                                             AR1096466
+      *                                                                                    AR1096466
+     C                   ELSE                                                              AR1096466
+     C                   EVAL      W@RETB = RETB                                           AR1096466
+     C                   ENDIF                                                             AR1096466
+      *                                                                                    AR1096466
+     C**********         TESTB     '2'           RETB                     80               AR1096466
+     C                   TESTB     '2'           W@RETB                   80               AR1096466
+     C                   IF        *IN80 = *ON
+     C*****P@BLAF        IFLT      0                                                       AR1096466
+     C                   EVAL      P@BLAF = 0
+     C**********         ENDIF                                                             AR1096466
+     C                   ENDIF
+     C                   ENDIF                                                             AR1021979
+      *
+      ** Set available balance to zero if account is already closed                         MD023878
+      *                                                                                     MD023878
+     C                   IF        *IN90 = '0' AND K_RECI = 'C'                             MD023878
+     C                             AND P@BLAF <> 0                                          MD023878
+     C                   EVAL      P@BLAF = 0                                               MD023878
+     C                   ENDIF                                                              MD023878
+     C**********         EVAL      *INLR = *ON                                              AR724089
+      *
+     C                   RETURN
+      *****************************************************************                     AR724089
+      /EJECT                                                                                AR724089
+      *****************************************************************                     AR724089
+      *                                                               *                     AR724089
+      * SRXEINIT - Initialisation Routine                             *                     AR724089
+      *                                                               *                     AR724089
+      * Called by: Main Processing                                    *                     AR724089
+      *                                                               *                     AR724089
+      * Calls: *None                                                  *                     AR724089
+      *                                                               *                     AR724089
+      *****************************************************************                     AR724089
+     C     SRXEINIT      BEGSR                                                              AR724089
+      *                                                                                     AR724089
+      ** Initialisation                                                                     AR724089
+      *                                                                                     AR724089
+     C                   EVAL      P@RtCE = *BLANK                                          AR724089
+     C                   EVAL      P@BLBF = 0                                               AR724089
+     C                   EVAL      P@BLAF = 0                                               AR724089
+      *                                                                                     AR724089
+      ** If Midas Input Cycle, Retrieve Available Balance and Exit.                         AR724089
+      *                                                                                     AR724089
+     C                   EVAL      DSACod0 = P@ACod                                         AR724089
+     C                   EVAL      DSAcSq0 = P@AcSq                                         AR724089
+      *                                                                                     AR724089
+     C                   EVAL      KCNUM = P@CNUM                                          AR1021979
+     C                   EVAL      KCCY = P@SCCY                                           AR1021979
+     C                   EVAL      KACOD = P@ACOD                                          AR1021979
+     C                   EVAL      KACSQ = P@ACSQ                                          AR1021979
+     C                   EVAL      KBRCA = P@BRCA                                          AR1021979
+      *                                                                                     AR724089
+     C                   ENDSR                                                              AR724089
+      *****************************************************************                     AR724089
+      /EJECT                                                                                AR724089
+      *****************************************************************                     AR724089
+      *                                                               *                     AR724089
+      * SRXEAVLBAL - Evaluate Available Balance                       *                     AR724089
+      *                                                               *                     AR724089
+      * Called by: Main Processing                                    *                     AR724089
+      *                                                               *                     AR724089
+      * Calls: LE000042, SRXEOPNBAL, SRXEADJBALPOS, SrStampTax        *                     AR724089
+      *                                                               *                     AR724089
+      *****************************************************************                     AR724089
+     C     SRXEAVLBAL    BEGSR                                                              AR724089
+      *                                                                                     AR724089
+      ** Obtain Opening Balance                                                             AR724089
+      *                                                                                    AR1021979
+      ** Retrieve ABC flag from GLACNTQD                                                   AR1021979
+      *                                                                                    AR1021979
+     C                   IF        CAP205 = 'Y'                                            AR1021979
+     C     KACCNTL0      CHAIN(E)  GLACNTL3                                                AR1021979
+     C                   IF        %FOUND(GLACNTL3) AND (F1IABC = 'Y')                     AR1021979
+      *                                                                                    AR1021979
+     C                   CALL      'LE000042'    PSETTLE                                   AR1021979
+      *                                                                                    AR1021979
+     C                   ENDIF                                                             AR1021979
+     C                   ELSE                                                              AR1021979
+     C                   EXSR      SRXEOPNBAL
+     C                   ENDIF                                                             AR1021979
+      *
+      ** Adjust Balance with Days Postings
+      *
+     C                   EXSR      SRXEADJBALPOS
+      *                                                                                    AR1021979
+      ** Adjust Balance with Stamp Tax Postings                                            AR1021979
+      *                                                                                    AR1021979
+     C                   IF        CER049 = 'Y'                                            AR1021979
+     C                   EXSR      SrStampTax                                              AR1021979
+     C                   ENDIF                                                             AR1021979
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRXEOPNBAL - Evaluate Opening Balance                         *
+      *                                                               *
+      * Called by: SRXEAVLBAL                                         *
+      *                                                               *
+      * Calls: *None                                                  *
+      *                                                               *
+      *****************************************************************
+     C     SRXEOPNBAL    BEGSR
+      *
+      ** Initialisation
+      *
+     C                   EVAL      KCNUM = P@CNUM
+     C                   EVAL      KCCY = P@SCCY
+     C                   EVAL      KACOD = P@ACOD
+     C                   EVAL      KACSQ = P@ACSQ
+     C                   EVAL      KBRCA = P@BRCA
+      *
+      ** Retrieve Account Balance
+      *
+     C     KGLACBTL0     CHAIN(E)  GLACBTL0
+ 
+     C                   IF        %ERROR
+     C                   EVAL      P@RTCE = '8'
+     C**********         EVAL      *INLR = *ON                                              AR724089
+     C                   RETURN
+     C                   ENDIF
+ 
+     C                   IF        %FOUND(GLACBTL0)
+     C                   EVAL      P@BLBF = CLBL
+     C**********         EVAL      P@BLAF = LDBL                                            AR736567
+     C                   EVAL      P@BLAF = CLBL                                            AR736567
+     C                   ELSE                                                               AR217897
+     C                   EVAL      P@BLBF = 0                                               AR217897
+     C                   EVAL      P@BLAF = 0                                               AR217897
+     C                   ENDIF
+      *
+      ** Retrieve Account Details
+      *
+     C     KACCNTL0      CHAIN(E)  ACCNTL0
+      *
+     C                   IF        NOT %FOUND(ACCNTL0) OR
+     C                             %ERROR
+     C                   EVAL      P@RTCE = '9'
+     C**********         EVAL      *INLR = *ON                                              AR724089
+     C                   RETURN
+     C                   ENDIF
+      *
+     C**********         IF        NOT %FOUND(GLACBTL0)                                     AR217897
+     C**********         EVAL      P@BLBF = CLBL                                            AR217897
+     C**********         EVAL      P@BLAF = LDBL                                            AR217897
+     C**********         ENDIF                                                              AR217897
+      *
+      ** Adjust Available Balance
+      *
+     C                   EVAL      P@BLAF += HELD
+      *                                                                                    AR1074104
+      ** Get currency detail                                                               AR1074104
+      *                                                                                    AR1074104
+     C                   EXSR      SRGetCurrD                                              AR1074104
+      *
+      ** If Include Overdraft And Overdraft Exist
+      ** Adjust Available Balance
+      *
+     C**********         IF        P@IOVD = 'Y' AND                                         MD031227
+     C**********                   ODED >= BJRDNB                                           MD031227
+     C**********         EVAL      P@BLAF -= ODLN                                          AR1074104
+     C**********         EVAL      P@BLAF -= ODLN * (10**A6NBDP)                 AR1074104 AR1068354
+      *                                                                                     MD031227
+     C                   IF        ODED >= BJRDNB                                           MD031227
+     C                   EVAL      P@OVLN  = ODLN * (10**A6NBDP)                           AR1068354
+     C                                       * -1                                         AR1077185A
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRXEADJBALPOS - Adjust Available Balance by Adding Days       *
+      *                 Postings                                      *
+      *                                                               *
+      * Called by: SRXEAVLBAL                                         *
+      *                                                               *
+      * Calls: *None                                                  *
+      *                                                               *
+      *****************************************************************
+     C     SRXEADJBALPOS BEGSR
+      *
+      ** Initialisation
+      *
+     C                   EVAL      KACPO1 = P@CNUM + P@SCCY + DSACOD +
+     C                                      DSACSQ + P@BRCA
+      *
+      ** Retrieve & Add Postings
+      *
+     C*****KACPO1        SETGT     ACPO1                                         AR1021979 AR1063761
+     C*****KACPO1        READPE(E) ACPO1                                                   AR1063761
+     C     KACPO1        SETGT     GLACPML0                                                AR1063761
+     C     KACPO1        READPE(E) GLACPML0                                                AR1063761
+     C                   EVAL      DSAPOST = APOSTDF
+      *
+     C**********         DOW       NOT %EOF(ACPO1)                                         AR1063761
+     C                   DOW       NOT %EOF(GLACPML0)                                      AR1063761
+     C**********         IF        APRECI = 'P'                                             AR754685
+     C                   IF        APRECI = 'P' AND                                         AR754685
+     C                             APVALD <= BJRDNB                                         AR754685
+     C**********         IF        APSPOS = ' GE-IC' AND                           AR217897 MD021630
+     C                   IF        APSPOS = '  GE-IC' AND                                   MD021630
+     C                             APVALD < BJRDNB AND                                      AR736567
+     C                             APPSTD < BJRDNB                                          AR217897
+     C                   ELSE                                                               AR217897
+      *
+     C                   IF        APDRCR = 1
+     C                   EVAL      P@BLAF -= APPSTA
+      *
+     C                   ELSE
+     C                   EVAL      P@BLAF += APPSTA
+     C                   ENDIF
+     C                   ENDIF                                                              AR217897
+     C                   ENDIF
+      *
+     C*****KACPO1        READPE(E) ACPO1                                                   AR1063761
+     C     KACPO1        READPE(E) GLACPML0                                                AR1063761
+     C                   EVAL      DSAPOST = APOSTDF
+     C                   ENDDO
+      *
+     C                   ENDSR
+      *****************************************************************                    AR1021979
+      /EJECT                                                                               AR1021979
+      *****************************************************************                    AR1021979
+      *                                                               *                    AR1021979
+      * SrStampTax - Adjust todays balances with Stamp Tax Postings   *                    AR1021979
+      *                                                               *                    AR1021979
+      * Called by: Main Processing                                    *                    AR1021979
+      *                                                               *                    AR1021979
+      * Calls: *None                                                  *                    AR1021979
+      *                                                               *                    AR1021979
+      *****************************************************************                    AR1021979
+     C     SrStampTax    BEGSR                                                             AR1021979
+      *                                                                                    AR1021979
+      ** Initialise key fields                                                             AR1021979
+      *                                                                                    AR1021979
+     C                   EVAL      KCNUM = P@CNUM                                          AR1021979
+     C                   EVAL      KCCY = P@SCCY                                           AR1021979
+     C                   EVAL      KACOD = P@ACOD                                          AR1021979
+     C                   EVAL      KACSQ = P@ACSQ                                          AR1021979
+     C                   EVAL      KBRCA = P@BRCA                                          AR1021979
+      *                                                                                    AR1021979
+      ** Retrieve Stamp Tax Postings                                                       AR1021979
+      *                                                                                    AR1021979
+     C                   SETOFF                                       50                   AR1021979
+     C     KGLACNL3      SETLL     GLGESTL3                                                AR1021979
+     C     *IN50         DOWEQ     *OFF                                                    AR1021979
+     C     KGLACNL3      READE     GLGESTL3                               50               AR1021979
+      *                                                                                    AR1021979
+     C     *IN50         IFEQ      *OFF                                                    AR1021979
+     C                   IF        STRECI = 'P' AND STVALD <= BJRDNB                       AR1021979
+      *                                                                                    AR1021979
+     C                   IF        STDRCR = 1                                              AR1021979
+     C                   EVAL      P@BLAF -= STPSTA                                        AR1021979
+     C                   ELSE                                                              AR1021979
+     C                   EVAL      P@BLAF += STPSTA                                        AR1021979
+     C                   ENDIF                                                             AR1021979
+      *                                                                                    AR1021979
+     C                   ENDIF                                                             AR1021979
+     C                   ENDIF                                                             AR1021979
+      *                                                                                    AR1021979
+     C                   ENDDO                                                             AR1021979
+      *                                                                                    AR1021979
+     C                   ENDSR                                                             AR1021979
+      *****************************************************************                    AR1074104
+      /EJECT                                                                               AR1074104
+      *****************************************************************                    AR1074104
+      *                                                               *                    AR1074104
+      *  SRGetCurrD - Subroutine that Retrieves Currency Details      *                    AR1074104
+      *                                                               *                    AR1074104
+      *****************************************************************                    AR1074104
+     C     SRGetCurrD    BEGSR                                                             AR1074104
+                                                                                           AR1074104
+     C                   CALL      'AOCURRR0'                                              AR1074104
+     C                   PARM      *BLANKS       @RTCD                                     AR1074104
+     C                   PARM      '*KEY   '     @OPTN                                     AR1074104
+     C**********         PARM                    PCCY                            AR1074104 AR1080035
+     C                   PARM      KCCY          PCCY                                      AR1080035
+     C     SDCURR        PARM      SDCURR        DSSDY                                     AR1074104
+                                                                                           AR1074104
+     C                   IF        @RTCD <> *BLANKS                                        AR1074104
+     C     *LOCK         IN        LDA                                                     AR1074104
+     C                   EVAL      DBFILE = 'SDCURRPD'                                     AR1074104
+     C                   EVAL      DBKEY = PCCY                                            AR1074104
+     C                   EVAL      DBASE = 4                                               AR1074104
+     C                   OUT       LDA                                                     AR1074104
+     C                   EXSR      *PSSR                                                   AR1074104
+     C                   ENDIF                                                             AR1074104
+                                                                                           AR1074104
+     C                   ENDSR                                                             AR1074104
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Initialisation Rountine                              *
+      *                                                               *
+      * Called by: Automatically called                               *
+      *                                                               *
+      * Calls: AOSARDR0, AOSVALR0                                     *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+      ***Initialisation************************************************                     AR724089
+ 
+     C**********         EVAL      P@RTCE = *BLANK                                          AR724089
+     C**********         EVAL      P@BLBF = 0                                               AR724089
+     C**********         EVAL      P@BLAF = 0                                               AR724089
+ 
+      ** Retrieve Midas Status
+ 
+     C                   IN(E)     MPHAS
+ 
+      ***If*Midas*Input*Cycle,*Retrieve*Available*Balance*and*Exit.****                     AR724089
+ 
+     C**********         EVAL      DSACOD0 = P@ACOD                                         AR724089
+     C**********         EVAL      DSACSQ0 = P@ACSQ                                         AR724089
+ 
+      ***If*Input*Cycle************************************************                     AR724089
+ 
+     C**********         IF        DSPHASE = 'A'                                            AR724089
+     C**********         EVAL      @ACNT = P@CNUM + P@SCCY                                  AR724089
+     C**********                         + DSACOD +                                         AR724089
+     C**********                                 DSACSQ + P@BRCA                            AR724089
+ 
+      ***Retrieve*Available*Balance************************************                     AR724089
+ 
+     C**********         CALL(E)   'FTH005'                                                 AR724089
+     C**********         PARM                    @ACNT                                      AR724089
+     C**********         PARM      P@SCCY        @SCCY                                      AR724089
+     C**********         PARM      P@BRCA        @BRCA                                      AR724089
+     C**********         PARM      0             @SMAM                                      AR724089
+     C**********         PARM      P@SDAT        @SDAT                                      AR724089
+     C*****P@RTCE        PARM                    @RTCE                                      AR724089
+     C**********         PARM                    @INCL                                      AR724089
+     C*****P@BLBF        PARM                    @BLBF                                      AR724089
+     C*****P@BLAF        PARM                    @BLAF                                      AR724089
+ 
+     C**********         IF        %ERROR                                                   AR724089
+     C**********         EVAL      DBFILE = 'FTH005 '                                       AR724089
+     C**********         EVAL      DBASE = 1                                                AR724089
+     C**********         EVAL      DBKEY = @ACNT                                            AR724089
+     C**********         EXSR      *PSSR                                                    AR724089
+     C**********         ENDIF                                                              AR724089
+ 
+     C**********         EVAL      *INLR = *ON                                              AR724089
+     C**********         RETURN                                                             AR724089
+     C**********         ENDIF                                                              AR724089
+ 
+      ** Access Bank Details
+ 
+     C                   CALLB     'AOBANKR0'
+     C                   PARM      '*MSG    '    @RTCD
+     C                   PARM      '*FIRST  '    @OPTN
+     C     SDBANK        PARM      SDBANK        DSFDY
+ 
+     C                   IF        @RTCD <> *BLANK
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBKEY = '*FIRST'
+     C                   EVAL      DBFILE = 'SDBANKPD'
+     C                   MOVEL     '003'         DBASE                                     AR1021979
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *                                                                                    AR1021979
+      *** Check if CAP205 - Retail Account Balance Check feature is                        AR1021979
+      *** installed                                                                        AR1021979
+      *                                                                                    AR1021979
+     C                   MOVE      'N'           CAP205            1                       AR1021979
+     C                   CALLB     'AOSARDR0'                                              AR1021979
+     C                   PARM      *BLANKS       @RTCD             7                       AR1021979
+     C                   PARM      '*VERIFY'     @OPTN             7                       AR1021979
+     C                   PARM      'CAP205'      @SARD             6                       AR1021979
+      *                                                                                    AR1021979
+     C     @RTCD         IFEQ      *BLANKS                                                 AR1021979
+     C                   MOVE      'Y'           CAP205                                    AR1021979
+     C                   ELSE                                                              AR1021979
+     C     @RTCD         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      'N'           CAP205                                    AR1021979
+     C                   ELSE                                                              AR1021979
+      *                                                                                    AR1021979
+      ** Database Error                                                                    AR1021979
+      *                                                                                    AR1021979
+     C                   MOVEL     'SCSARDPD'    DBFILE                                    AR1021979
+     C                   MOVEL     '001'         DBASE                                     AR1021979
+     C                   MOVEL     @OPTN         DBKEY                                     AR1021979
+     C                   EXSR      *PSSR                                                   AR1021979
+     C                   ENDIF                                                             AR1021979
+     C                   ENDIF                                                             AR1021979
+      *                                                                                    AR1021979
+      *                                                                                    AR1021979
+      *** Check if CER049 - Portuguese Stamp Tax feauture is installed                     AR1021979
+      *                                                                                    AR1021979
+     C                   MOVE      'N'           CER049            1                       AR1021979
+     C                   CALLB     'AOSARDR0'                                              AR1021979
+     C                   PARM      *BLANKS       @RTCD             7                       AR1021979
+     C                   PARM      '*VERIFY'     @OPTN             7                       AR1021979
+     C                   PARM      'CER049'      @SARD             6                       AR1021979
+      *                                                                                    AR1021979
+     C     @RTCD         IFEQ      *BLANKS                                                 AR1021979
+     C                   MOVE      'Y'           CER049                                    AR1021979
+     C                   ELSE                                                              AR1021979
+     C     @RTCD         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      'N'           CER049                                    AR1021979
+     C                   ELSE                                                              AR1021979
+      *                                                                                    AR1021979
+      ** Database Error                                                                    AR1021979
+      *                                                                                    AR1021979
+     C                   MOVEL     'SCSARDPD'    DBFILE                                    AR1021979
+     C                   MOVEL     '002'         DBASE                                     AR1021979
+     C                   MOVEL     @OPTN         DBKEY                                     AR1021979
+     C                   EXSR      *PSSR                                                   AR1021979
+     C                   ENDIF                                                             AR1021979
+     C                   ENDIF                                                             AR1021979
+      *                                                                                    AR1021979
+     C                   CALL      'AOSVALR0'                                              AR1021979
+     C                   PARM                    @RTCD                                     AR1021979
+     C                   PARM      SVALKK        SVALK1           20                       AR1021979
+     C                   PARM                    SVAL1           200                       AR1021979
+     C                   PARM                    SVALK2           20                       AR1021979
+     C                   PARM                    SVAL2           200                       AR1021979
+     C                   PARM                    SVALK3           20                       AR1021979
+     C                   PARM                    SVAL3           200                       AR1021979
+     C                   PARM                    SVALK4           20                       AR1021979
+     C                   PARM                    SVAL4           200                       AR1021979
+     C                   PARM                    SVALK5           20                       AR1021979
+     C                   PARM                    SVAL5           200                       AR1021979
+     C                   PARM                    SVALK6           20                       AR1021979
+     C                   PARM                    SVAL6           200                       AR1021979
+     C                   PARM                    SVALK7           20                       AR1021979
+     C                   PARM                    SVAL7           200                       AR1021979
+     C                   PARM                    SVALK8           20                       AR1021979
+     C                   PARM                    SVAL8           200                       AR1021979
+     C                   PARM                    SVALK9           20                       AR1021979
+     C                   PARM                    SVAL9           200                       AR1021979
+     C                   PARM                    SVALK0           20                       AR1021979
+     C                   PARM                    SVAL10          200                       AR1021979
+      *                                                                                    AR1021979
+     C     @RTCD         IFNE      *BLANKS                                                 AR1021979
+                                                                                           AR1021979
+     C     SVAL10        IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      SVALK0        DBKEY                                     AR1021979
+     C                   ENDIF                                                             AR1021979
+     C     SVAL9         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      SVALK9        DBKEY                                     AR1021979
+     C                   ENDIF                                                             AR1021979
+     C     SVAL8         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      SVALK8        DBKEY                                     AR1021979
+     C                   ENDIF                                                             AR1021979
+     C     SVAL7         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      SVALK7        DBKEY                                     AR1021979
+     C                   ENDIF                                                             AR1021979
+     C     SVAL6         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      SVALK6        DBKEY                                     AR1021979
+     C                   ENDIF                                                             AR1021979
+     C     SVAL5         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      SVALK5        DBKEY                                     AR1021979
+     C                   ENDIF                                                             AR1021979
+     C     SVAL4         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      SVALK4        DBKEY                                     AR1021979
+     C                   ENDIF                                                             AR1021979
+     C     SVAL3         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      SVALK3        DBKEY                                     AR1021979
+     C                   ENDIF                                                             AR1021979
+     C     SVAL2         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      SVALK2        DBKEY                                     AR1021979
+     C                   ENDIF                                                             AR1021979
+     C     SVAL1         IFEQ      '*NRF'                                                  AR1021979
+     C                   MOVE      SVALK1        DBKEY                                     AR1021979
+     C                   ENDIF                                                             AR1021979
+                                                                                           AR1021979
+     C     *LOCK         IN        LDA                                                     AR1021979
+     C                   MOVEL     '004'         DBASE                                     AR1021979
+     C                   MOVE      'SDSVALPD'    DBFILE                                    AR1021979
+     C                   MOVE      'LE000475'    DBPGM                                     AR1021979
+     C                   OUT       LDA                                                     AR1021979
+     C                   EXSR      *PSSR                                                   AR1021979
+     C                   ENDIF                                                             AR1021979
+     C                   MOVEL     SVAL1         BlockDebit        1                       AR1021979
+      *                                                                                    AR1021979
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE
+      *****************************************************************
+      * @DEFN: Definition Rountine                                    *
+      *****************************************************************
+     C     @DEFN         BEGSR
+      *
+      ** Entry List
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    P@CNUM
+     C                   PARM                    P@SCCY
+     C                   PARM                    P@ACOD
+     C                   PARM                    P@ACSQ
+     C                   PARM                    P@BRCA
+     C                   PARM                    P@SDAT
+      *
+     C                   PARM                    P@LNRF
+     C                   PARM                    P@PCKO
+     C                   PARM                    P@IOVD
+      *
+     C                   PARM                    P@RTCE
+     C                   PARM                    P@BLBF
+     C                   PARM                    P@BLAF
+     C                   PARM                    P@OVLN                                    AR1021979
+     C                   PARM                    P@PCKM                                     AR217562
+     C                   PARM                    P@PDCL                                     AR217562
+     C                   PARM                    W@FILE                                     AR402058
+     C                   PARM                    W@FCUS                                     AR402058
+     C                   PARM                    W@LOAN                                     AR402058
+     C                   PARM                    W@FACL                                     AR402058
+     C                   PARM                    W@FSEQ                                     AR402058
+     C                   PARM                    W@FCOD                                     AR402058
+      *
+      ** Key List
+     C     KGLACBTL0     KLIST
+     C                   KFLD                    KCNUM
+     C                   KFLD                    KCCY
+     C                   KFLD                    KACOD
+     C                   KFLD                    KACSQ
+     C                   KFLD                    KBRCA
+      *
+     C     KACCNTL0      KLIST
+     C                   KFLD                    KCNUM
+     C                   KFLD                    KCCY
+     C                   KFLD                    KACOD
+     C                   KFLD                    KACSQ
+     C                   KFLD                    KBRCA
+      *
+     C     KACCNTL3      KLIST                                                             AR1096466
+     C                   KFLD                    KACOD                                     AR1096466
+     C                   KFLD                    KCCY                                      AR1096466
+     C                   KFLD                    KCNUM                                     AR1096466
+     C                   KFLD                    KACSQ                                     AR1096466
+     C                   KFLD                    KBRCA                                     AR1096466
+      *                                                                                    AR1096466
+                                                                                            AR217562
+     C                   EVAL      SEFACT = 0                                               AR217562
+                                                                                           AR1021979
+     C     PSETTLE       PLIST                                                             AR1021979
+      ** Input parameters                                                                  AR1021979
+     C                   PARM                    P@CNUM                                    AR1021979
+     C                   PARM                    P@SCCY                                    AR1021979
+     C                   PARM                    P@ACOD                                    AR1021979
+     C                   PARM                    P@ACSQ                                    AR1021979
+     C                   PARM                    P@BRCA                                    AR1021979
+      ** Output parameters                                                                 AR1021979
+     C                   PARM                    P@BLAF                                    AR1021979
+     C                   PARM                    P@OVLN                                    AR1021979
+     C                   PARM                    P@OVTL                                    AR1021979
+                                                                                           AR1021979
+     C     KGLACNL3      KLIST                                                             AR1021979
+     C                   KFLD                    KCNUM                                     AR1021979
+     C                   KFLD                    KCCY                                      AR1021979
+     C                   KFLD                    KACOD                                     AR1021979
+     C                   KFLD                    KACSQ                                     AR1021979
+     C                   KFLD                    KBRCA                                     AR1021979
+ 
+      ** Dataareas
+ 
+     C     *DTAARA       DEFINE                  MPHAS
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/COPY ZACPYSRC,PSSR_ILE
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) MIsys International Banking Systems Ltd. 2012

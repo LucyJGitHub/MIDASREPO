@@ -1,0 +1,186 @@
+      *****************************************************************
+      *                                                               *
+      * How to use this skeleton                                      *
+      *                                                               *
+      * Scan for '@@@' and this will indicate where lines of code     *
+      * need to be tailored.  Some lines will need to made live and   *
+      * some will need to be deleted.                                 *
+      * Remove this section and @@@ references after carrying out     *
+      * changes.                                                      *
+      *                                                               *
+      * What needs to be known                                        *
+      *                                                               *
+      * Action File physical name - UPaaaaPD                          *
+      * System file name - mmdddd                                     *
+      * File field names - ffxxxx, xxxx                               *
+      * Fields that make up unique key - ffkkkk                       *
+      * Field(s) not to be compared                                   *
+      * Program name - nnnn                                           *
+      * No. of indicators - nn                                        *
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+      *****************************************************************
+/*XBIA*  OVRDBF FILE(aaaa1) TOFILE(UPaaaaTPD)                         *               @@@
+/*XBIB*  OVRDBF FILE(aaaa2) TOFILE(UPaaaaTPD)                         *               @@@
+/*STD *  RPGBASEBND                                                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UPnnnn - Build Action File for mmddddPD                      *               @@@
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *                                                               *
+      *  Last Amend No. Cmmnnn  *CREATE    Date ddMmmyy               *
+      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Cmmnnn - description of feature.                             *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write or chain fail
+      *       70 - nn Indicators for changed fields                                   @@@
+      *
+     Faaaa1     IF   E             DISK    INFSR(*PSSR)                               @@@
+     Faaaa2     IF   E           K DISK    INFSR(*PSSR)                               @@@
+     F                                     RENAME(mmddddD0:ddddF) PREFIX(X)           @@@
+     FUPaaaaPD  O    E             DISK    INFSR(*PSSR)                               @@@
+      *
+      /EJECT
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *       Defines:                      142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      * Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    MODE              1
+      *
+     C     COMP          KLIST
+     C                   KFLD                    ffkkkk                               @@@
+     C                   KFLD                    ffkkkk                               @@@
+      *
+     C                   READ      aaaa1                                6920          @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+     C     COMP          CHAIN     ddddF                              3069            @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * If record not found then record has been deleted or added
+      *  depending on mode.
+     C     *IN30         IFEQ      *ON
+     C                   MOVE      MODE          ffACTC                               @@@
+     C                   WRITE     UPaaaaD0                             69            @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Need to find differences but this should only be run once;
+      *  run only if mode is 'Delete'.
+     C     MODE          IFEQ      'D'
+      *
+      * If record found then look for any differences; only look in
+      *  fields that have data all of the time.
+     C     *IN30         IFEQ      *OFF
+     C                   MOVE      'A'           ffACTC                               @@@
+      * @@@ Description of first field to compare
+      * @@@ Field names match those from file and renamed version
+     C     ffxxxx        IFNE      Xffxxxx                                            @@@
+     C                   SETON                                        70
+     C                   ENDIF
+      * @@@ repeat for all fields to compare                                          @@@
+     C     ffxxxx        IFNE      Xffxxxx                                            @@@
+     C                   SETON                                        71
+     C                   ENDIF
+      *
+      * @@@ Change length of INTEST and INTNUM to match number of fields compared
+     C*                  MOVEA     *IN(70)       INTEST            n                  @@@
+     C*                  MOVE      INTEST        INTNUM            n 0                @@@
+      * If any indicators are set on then write record.
+     C     INTNUM        IFNE      0
+     C                   WRITE     UPaaaaD0                             69            @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * Set values to write second record.
+      * @@@ not key fields and not Action Code
+     C                   MOVEL     Xffxxxx       ffxxxx                               @@@
+      *
+     C                   MOVEL     Xffxxxx       ffxxxx                               @@@
+      *
+     C                   WRITE     UPaaaaD0                             69            @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Read next record
+      * @@@ No. of zeros are usually more than number compared
+     C                   MOVEA     '0000000000'  *IN(70)                              @@@
+     C                   MOVEA     '0000000000'  *IN(80)                              @@@
+     C                   READ      aaaa1                                6920          @@@
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      ********************************************************************

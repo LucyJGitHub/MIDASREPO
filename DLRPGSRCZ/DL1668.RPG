@@ -1,0 +1,385 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL OIS Deal Rate Fixing prompt program')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL1668 - OIS Deal Rate Fixing prompt program                 *
+      *                                                               *
+      *  Function:  This program controls screen DL1642DF which is    *
+      *             used to specify the Currency Code which is then   *
+      *             passed into the Rate Fixing Process. All OIS      *
+      *             deals denominated in this currency will then      *
+      *             have their rates calculated and fixed.            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. CIR007   *CREATE   Date 11May01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CIR007 - Overnight Index Swaps                               *
+      *                                                               *
+      *****************************************************************
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Initial Processing                                  *
+      *  SRCONF - Controls 'Confirmation' display                     *
+      *  SRVCCY - Validates Base Rate Currency Code                   *
+      *  ZASNMS - Writes error messages to message subfile            *
+      *   *PSSR - Error Handling                                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   13  - If all fields are valid                               *
+      *   42  - If currency is valid                                  *
+      *   43  - If date is valid                                      *
+      *   44  - If rate is valid                                      *
+      *   50  - Test if base rate is numeric                          *
+      * 90-99 - Used by Standard Subroutines                          *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      *   99  - Date Format not valid.                                *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     FDL1642DFCF  E                    WORKSTN
+      *
+      *****************************************************************
+      *
+     E                    @CPY    1   1 80
+      *
+      *****************************************************************
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+     ILDA       E DSLDA                         256
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM #0PGM
+     I                                      244 253 #0WSID
+     I                                      254 263 #0USER
+      *
+      ** Data Structure for Currency details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Data Structure for Bank details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** First DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      ** Second DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      *****************************************************************
+      *                                                               *
+      *    M A I N     P R O C E S S I N G                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     EXSR SRINIT
+      *
+      ** Control Initial Display.
+      *
+     C           *IN13     DOWEQ'0'
+      *
+     C                     MOVE '0'       *INKL
+      *
+      ** Do while not F3, not F12, and not in 'Confirm Update' mode.
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           *IN13     ANDEQ'0'
+      *
+     C                     WRITEDL1642C0
+     C                     EXFMTDL1642F0
+      *
+      ** Clear Message Subfile.
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ZAPGMQ
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      ** Clear Error Indicator.
+      *
+     C                     MOVEL'N'       WERR    1
+     C                     MOVE '0'       *IN20
+      *
+      ** If F3 is pressed at this point, return to FCC0201 with PCMD
+      ** set to 'E' to end the transaction.
+      *
+     C                     SELEC
+     C           *INKC     WHEQ '1'
+     C                     MOVE 'E'       PCMD
+      *
+      ** If F12 is pressed at this point, return to FCC0201 with PCMD
+      ** set to 'F', so that the previous screen is displayed.
+      *
+     C           *INKL     WHEQ '1'
+     C                     MOVE 'F'       PCMD
+      *
+      ** If F5 is pressed at this point, clear the currency code
+      ** field on the screen, and start again.
+      *
+     C           *INKE     WHEQ '1'
+     C                     MOVE *BLANKS   #0CURR
+      *
+      ** Validate the currency code entered.
+      *
+     C                     OTHER
+     C                     EXSR SRVCCY
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           *IN13     IFEQ '1'
+     C                     EXSR SRCONF
+     C                     ELSE
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Return Control to FCC0201.
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCONF - Process 'Confirmation' screen                       *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCONF    BEGSR
+      *
+      ** If validation is successful, then *IN13 will be set on,
+      ** protecting all the fields,  and enabling F6. The screen is
+      ** displayed again at this point.
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKF     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C                     WRITEDL1642C0
+     C                     EXFMTDL1642F0
+      *
+      ** If F3 is pressed at this point, return to FCC0201 with PCMD
+      ** set to 'E' to end the transaction.
+      *
+     C                     SELEC
+      *
+     C           *INKC     WHEQ '1'
+     C                     MOVE 'E'       PCMD
+      *
+      ** If F12 or F5 is pressed at this point, we come out of
+      ** 'Confirm Update' mode, and start again.
+      *
+     C           *INKL     WHEQ '1'
+     C                     MOVE '0'       *IN13
+      *
+      ** If F6 is pressed at this point, we load the specified
+      ** currency code into the 'Parameters' parameter, ready for
+      ** return to FCC0201.
+      *
+     C           *INKF     WHEQ '1'
+     C                     MOVEL#0CURR    PPARM
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialisation subroutine                           *
+      *                                                               *
+      *  Called by: Main processing                                   *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Entry Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+     C                     PARM           PPARM 100
+     C                     PARM           PACT    1
+     C                     PARM           PCMD    1
+      *
+      ** Load Copyright statement.
+      *
+     C                     MOVEA@CPY      CPY2   80
+      *
+      ** Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Initialise LDA field.
+      *
+     C                     MOVEL#0PGM     ZAPGMQ
+     C                     MOVEL'DRSMM   'ZAMSGF
+      *
+      ** Call Access Program to obtain Banks details from PF/SDBANKPD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL1668  'DBPGM
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'*FIRST  'DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Obtain Midas Run Date
+      *
+     C                     MOVELBJMRDT    #0RUND
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on)
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVCCY - Validate currency code                              *
+      *                                                               *
+      *  Called by: Main Control                                      *
+      *                                                               *
+      *  Calls    : AOCURRR0                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVCCY    BEGSR
+      *
+      ** Currency Code must not be blank.
+      *
+     C           #0CURR    IFEQ *BLANKS
+     C                     MOVEL'MMA1192' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       WERR
+     C                     MOVE '1'       *IN20
+     C                     ENDIF
+      *
+      ** Currency Code must be valid.
+      *
+     C           #0CURR    IFNE *BLANKS
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #0CURR    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'MMA1193' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       WERR
+     C                     MOVE '1'       *IN20
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If no errors, set on *IN13 to protect the currency code
+      ** field, show the F6 literal, and enable F6 processing.
+      *
+     C           WERR      IFEQ 'N'
+     C                     MOVE '1'       *IN13
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Process error message                               *
+      *                                                               *
+      *  Called by: SRVCCY                                            *
+      *                                                               *
+      *  Calls    : Y2SNMGC                                           *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+**  @CPY
+(c) Misys International Banking Systems Ltd. 2001

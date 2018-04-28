@@ -1,0 +1,1190 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Create extract files for fees')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL1069 - DL Create Extract Files for Fees                    *
+      *                                                               *
+      *  Function: This program will, for each fee, calculate the fee *
+      *            amount, calculate the fee payment date, generate   *
+      *            the fee message, and the fee settlement message.   *
+      *                                                               *
+      *  Called By: DLC0211, DLC04                                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      *  Last Amend No. 262539             Date 10Dec08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAS011             Date 16May05               *
+      *                 CAS009  *CREATE    Date 04May04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  262539 - Allow up to 999 branches (instead of just 50)       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS011 - EIR/AC Accounting Upgrade to MP1                    *
+      *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Fees File
+     FDLFEEDL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      *  Pay/Receive extract details
+     FPREXPH  O   E                    DISK
+     F                                              KINFSR *PSSR
+      *  Pay/Receive extract header
+     FPREXZZ  UF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+     FDL1069AUO   E                    PRINTER      KINFDS SPOOLU
+      ** Pay/Receive Extract for Fees Printer File
+      *
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   25  - CHAIN to Header and Footer file                       *
+      *   30  - LOKUP Indicator                                       *
+      *   32  - Error on write to PREXPH                              *
+      *   69  - LOKUP Indicator                                       *
+      *   70  - Read Indicator (DLFEEDL1)                             *
+      *                                                               *
+      *   90  - Used in ZFWDT                                         *
+      *   91  - Used in ZFWDT                                         *
+      *                                                               *
+      * U7-U8 - Data Base Error                                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRPROC - Check if Message should be generated for the record *
+      *  SRTXDT - Set Telex Notice Date                               *
+      *  SRGEN  - Generate Message                                    *
+      *  SRTERM - Terminate Processing                                *
+      *  SRHASH - Set-up Hash variables                               *
+      *  CHKSW  - Check if SWIFT                                      *
+      *  VALID  - Validation of Instructions                          *
+      *  INIT   - Initializ program variables and standing data       *
+      *  DBERR  - To perform database error processing                *
+      *  *PSSR  - To Handle Abnormal Error Conditions                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E**********          BRCH       50  3               Branch Codes                         262539
+     E**********          BICU       50  6 0             Brch Int. Cust                       CSD027
+     E**********          BICU       50  6               Brch Int. Cust                CSD027 262539
+     E                    BRCH      999  3               Branch Codes                         262539
+     E                    BICU      999  6               Brch Int. Cust                       262539
+     E                    CURR      150  3               CCY DETAILS
+     E                    MDI       150  1               Mult/Div Ind.
+     E                    SPRT      150 13 8             Spot Rate
+     E                    NBDP      150  1 0             NB Dec. Places
+     E                    TND       150  1 0             Tlx Notice Day
+     E                    CPY@    1   1 80               COPYRIGHT
+     E/COPY ZSRSRC,ZHOLE
+      *
+     IPREXZZF
+     I              RECI                            TRECI
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for LE1069AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IPSDS       SDS
+      ** PROGRAM STATUS DATA STRUCTURE - REQUIRED FOR DUMP
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA
+      * DATABASE ERROR DS
+      *
+     ISDBANK    E DSSDBANKPD
+      **  EXTERNAL DS FOR BANK DETAILS
+      *
+     ISDTRAD    E DSSDTRADPD
+      **   TRADING DETAILS
+      *
+     ISDBRCH    E DSSDBRCHPD
+      * Define Access Object Branch detail
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Midas modules details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  EXTERNAL DS FOR CUSTOMER DETAILS
+      ***  SPLIT UP A/C OFFICER FOR VALIDITY CHECK.
+      *
+     I              QQDFAC                          QQDFA1                                    CAS011
+     I                                        1   1 BB1
+      *
+     ISDNOST    E DSSDNOSTPD
+      **  EXTERNAL DS FOR NOSTRO DETAILS
+     I              QQACCD                          QQACC1                                    CAS011
+     I              A7BRCD                          NBRCD
+     I              A7ACCD                          WACOD
+     I              A7ACSN                          WACSQ
+      *
+     ISCSARD    E DSSCSARDPD
+     I              LCD                             LCDX
+      ** SAR FILE DETAILS
+      *
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     IDSSDY     E DSDSSDY
+      * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *
+     IDSPREX    E DSPREXPH
+      ** PAY/RECEIVE EXTRACT DETAILS
+      *
+     I/COPY ZSRSRC,ZHOLI
+      *
+      /EJECT
+      ****************************************************************
+      *  MAIN PROCESSING                                             *
+      ****************************************************************
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR INIT
+      *
+      ** Generate Fee and Reversal Fee Messages
+      *
+     C                     READ DLFEEDL1                 70
+      *
+     C           *IN70     DOWEQ*OFF
+      *
+      ** Process only those transactions inserted today or actioned
+      ** today and SWIFT message has not been generated.
+      *
+     C           DFORED    IFEQ BJRDNB
+     C           DFLCHD    OREQ BJRDNB
+      *
+     C                     EXSR SRPROC
+      *
+     C                     ENDIF
+      *
+     C                     READ DLFEEDL1                 70
+      *
+     C                     ENDDO
+      *
+     C                     EXSR SRTERM
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+      ****************************************************************
+      *                                                              *
+      *  SRPROC - Check if message should be be generated            *
+      *                                                              *
+      *  Called from: Main Processing                                *
+      *                                                              *
+      *  Calls: SRTXDT, *PSSR, DBERR, SRGEN                          *
+      *                                                              *
+      ****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ** Reset Output fields
+      *
+     C                     CLEARDSPREX
+      *
+      ** Set Currency, Settlement Type and Our settlemnet Nostro
+      *
+     C                     MOVE DFFCCY    WCURR   3
+     C                     MOVE DFSTTL    WSETTL  20
+     C                     MOVELDFOURS    WOURS
+     C                     MOVE DFTHER    WTHEIR 10
+     C**********           Z-ADDDFCUST    WCNUM   60                                          CSD027
+     C                     MOVE DFCUST    WCNUM   6                                           CSD027
+      *
+      ** Payment Indicator
+      *
+     C           DFDTYP    IFEQ 'IP'
+     C           DFDTYP    OREQ 'TI'
+     C           DFDTYP    OREQ 'CL'
+     C           DFDTYP    OREQ 'DL'
+     C           DFDTYP    OREQ 'C2'
+     C           DFDTYP    OREQ 'BP'
+     C           DFDTYP    OREQ 'BD'
+     C           DFDTYP    OREQ 'TB'
+     C           DFDTYP    OREQ 'DA'
+     C           DFDTYP    OREQ 'TA'
+     C                     MOVE 'R'       WPYRC   1
+     C                     ENDIF
+      *
+     C           DFDTYP    IFEQ 'IT'
+     C           DFDTYP    OREQ 'TD'
+     C           DFDTYP    OREQ 'CI'
+     C           DFDTYP    OREQ 'CD'
+     C                     MOVE 'P'       WPYRC
+     C                     ENDIF
+      *
+     C           DFSCCY    IFNE DFFCCY
+     C           DFSCCY    ANDNE*BLANKS
+     C                     MOVE DFSCCY    WCURR
+     C                     ENDIF
+      *
+      ** Customer Number
+      *
+     C           WPYRC     IFNE 'R'
+      *
+     C********** DFPOBN    IFNE 0                                                             CSD027
+     C**********           Z-ADDDFPOBN    WCNUM                                               CSD027
+     C           DFPOBN    IFNE *BLANKS                                                       CSD027
+     C                     MOVE DFPOBN    WCNUM                                               CSD027
+     C                     ELSE
+     C********** DFPOCN    IFNE 0                                                             CSD027
+     C**********           Z-ADDDFPOCN    WCNUM                                               CSD027
+     C           DFPOCN    IFNE *BLANKS                                                       CSD027
+     C                     MOVE DFPOCN    WCNUM                                               CSD027
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           WPYRC     IFEQ 'R'
+      *
+     C********** DFROBN    IFNE 0                                                             CSD027
+     C**********           Z-ADDDFROBN    WCNUM                                               CSD027
+     C           DFROBN    IFNE *BLANKS                                                       CSD027
+     C                     MOVE DFROBN    WCNUM                                               CSD027
+     C                     ELSE
+     C********** DFROCN    IFNE 0                                                             CSD027
+     C**********           Z-ADDDFROCN    WCNUM                                               CSD027
+     C           DFROCN    IFNE *BLANKS                                                       CSD027
+     C                     MOVE DFROCN    WCNUM                                               CSD027
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Set Telex Notice Date
+      *
+     C                     EXSR SRTXDT
+     C                     Z-ADD0         PAYDAT
+      *
+      ** Payment Date
+      *
+     C           DFPYON    IFEQ *BLANKS
+     C           DFPSTD    ANDGEBJRDNB
+     C           DFPSTD    ANDLETXDT
+     C           DFPYON    OREQ 'S'
+     C           DFPSTD    ANDGEBJRDNB
+     C           DFPSTD    ANDLETXDT
+     C                     Z-ADDDFPSTD    PAYDAT  50
+     C                     ENDIF
+      *
+      ** "Payment on" is End and Start Date is between
+      **  Today and Telex Notice Date
+      *
+     C           DFPYON    IFEQ 'E'
+     C           DFPEND    ANDGEBJRDNB
+     C           DFPEND    ANDLETXDT
+      *
+      ** Set Payment Date to End Date
+      *
+     C                     Z-ADDDFPEND    PAYDAT
+      *
+     C                     ENDIF
+      *
+     C           DFPYON    IFEQ 'N'
+     C           DFNPYD    IFEQ 0
+     C           DFPEND    ANDGEBJRDNB
+     C           DFPEND    ANDLETXDT
+     C                     Z-ADDDFPEND    PAYDAT
+     C                     ENDIF
+     C           DFNPYD    IFGE BJRDNB
+     C           DFNPYD    ANDLETXDT
+     C                     Z-ADDDFNPYD    PAYDAT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Our Settlement Nostro
+      *
+     C                     MOVELDFOURS    WOURS   2
+      *
+     C           CVMI      IFEQ 'P'
+     C           DFCVMR    ANDEQ'Y'
+     C           WPYRC     ANDEQ'R'
+     C                     MOVE DFRVNO    WFACO  10
+     C                     MOVE DFRCRN    WTHEIR
+     C                     MOVELDFPONS    WOURS
+     C                     MOVE 'S'       CVMI
+     C                     ENDIF
+      *
+     C           CVMI      IFEQ ' '
+     C           DFCVMR    ANDEQ'Y'
+     C           WPYRC     ANDNE'R'
+     C                     MOVELDFRVNO    WOURS
+     C                     MOVE 'P'       CVMI
+     C                     ENDIF
+      *
+     C                     MOVE DFBRCA    WBRCA   3
+      *
+     C           BJSBRC    IFEQ *BLANKS
+      *
+     C**********           Z-ADD1         Z       20                                          262539
+     C                     Z-ADD1         Z       30                                          262539
+     C           WBRCA     LOKUPBRCH,Z                   30
+     C           *IN30     IFEQ *OFF
+     C           *LOCK     IN   LDA
+     C                     MOVE WBRCA     DBKEY
+     C                     Z-ADD10        DBASE
+     C                     MOVE 'DLFEED'  DBFILE
+     C                     MOVEL'DL1069'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C**********           MOVE BICU,Z    WBICN   60                                          CSD027
+     C                     MOVE BICU,Z    WBICN   6                                           CSD027
+     C                     ENDIF
+      *
+      ** Fee is inserted
+      *
+     C           DFORED    IFEQ BJRDNB
+     C           DFSWRI    ANDEQ*BLANKS
+      *
+     C                     MOVE 'D'       RECI
+      *
+      ** Pay Date equal Start Date and Start Pay/Rec Telex Ind is blank
+      *
+     C           PAYDAT    IFEQ DFPSTD
+     C           DFSPTI    ANDEQ*BLANKS
+      *
+     C                     EXSR SRGEN
+     C                     GOTO ENSRPR
+      *
+     C                     ENDIF
+      *
+      ** "Payment on" is End and Start Date is between
+      **  Today and Telex Notice Date
+      *
+     C           PAYDAT    IFEQ DFPEND
+     C           DFPYON    ANDEQ'E'
+     C           DFEPTI    ANDEQ*BLANKS
+     C           DFPYON    OREQ 'N'
+     C           PAYDAT    ANDEQDFNPYD
+     C           DFSPTI    ANDEQ*BLANKS
+      *
+     C                     EXSR SRGEN
+     C                     GOTO ENSRPR
+      *
+     C                     ENDIF
+      *
+     C           PAYDAT    IFEQ DFPEND
+     C           DFEPTI    ANDEQ*BLANKS
+      *
+     C                     EXSR SRGEN
+     C                     GOTO ENSRPR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** SWIFT Message regeneration is Amend or Reverse
+      *
+     C           DFSWRI    IFEQ 'A'
+     C           DFSWRI    OREQ 'R'
+     C                     MOVE 'R'       RECI
+      *
+     C                     EXSR SRGEN
+     C                     GOTO ENSRPR
+      *
+     C                     ENDIF
+      *
+      ** SWIFT Message regeneration is Amend or Generate
+      *
+     C           DFSWRI    IFEQ 'A'
+     C           DFSWRI    OREQ 'G'
+     C                     MOVE 'D'       RECI
+      *
+     C                     EXSR SRGEN
+     C                     GOTO ENSRPR
+      *
+     C                     ENDIF
+      *
+     C           ENSRPR    ENDSR
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  SRTXDT - Set Telex Notice Date                              *
+      *                                                              *
+      *  Called by: SRPROC                                           *
+      *  Calls    : ZFWDT, *PSSR, DBERR                              *
+      *                                                              *
+      ****************************************************************
+      *
+     C           SRTXDT    BEGSR
+      *
+     C                     MOVE WCURR     ZCCY
+     C                     Z-ADDBJRDNB    ZDAYNO
+      *
+     C           WCURR     LOKUPCURR,X                   69
+     C                     MOVE *OFF      *IN69
+     C                     MOVE TND,X     ZNRDYS
+      *
+     C           WSETTL    IFEQ 1
+     C           WSETTL    OREQ 2
+     C           WSETTL    OREQ 7
+     C           WSETTL    OREQ 8
+     C           WSETTL    OREQ 12
+      ** Method = Telex, Cheque to be sent, CHIPS, SWIFT, or Cheque to
+      **          Collected
+      *
+     C                     MOVE WOURS     KNONB
+     C                     MOVE WCURR     KCCY
+     C                     MOVE *BLANKS   KCNUM
+     C                     CALL 'AONOSTR0'PLIST1
+      ** Call Nostro Details Access Object
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE WOURS     DBKEY
+     C                     MOVELWCURR     DBKEY
+     C                     Z-ADD11        DBASE
+     C                     MOVEL'SDNOSTPD'DBFILE
+     C                     MOVEL'DL1069'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A7NOSN    ZLOC
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   ZLOC
+     C                     ENDIF
+      *
+      ** Calculate Number of days forward
+     C                     EXSR ZFWDT
+      *
+      ** Set Telex Notice Date
+     C                     Z-ADDZDYNBR    TXDT    50
+      *
+     C                     ENDSR
+      ****************************************************************
+      *                                                              *
+      *  SRGEN - Generate Message                                    *
+      *                                                              *
+      *  Called From: SRPROC                                         *
+      *                                                              *
+      *  Calls: SRHASH, *PSSR, CHKSW, VALID                          *
+      *                                                              *
+      ****************************************************************
+      *
+     C           SRGEN     BEGSR
+      *
+     C                     Z-ADDDFFAMT    WWAMT
+     C           CEU003    IFEQ 'Y'
+     C           DFSCCY    IFNE DFFCCY
+     C           DFSCCY    ANDNE*BLANKS
+     C                     MOVE DFSCCY    WCURR
+     C                     Z-ADDDFFAMT    FRAM
+     C                     MOVE DFFCCY    FRCY
+     C                     MOVE DFSCCY    TOCY
+     C                     EXSR XCAMT
+     C                     Z-ADDOUTA      WWAMT  130
+     C                     Z-ADDDFFAMT    OTRA
+     C                     MOVELDFFCCY    OTRC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Pay/Receive Indicator
+      *
+     C                     MOVE WPYRC     PYRC
+      *
+      ** Settlement Type
+      *
+     C                     MOVE DFSTTL    SETP
+      *
+      ** Fee Currency
+      *
+     C                     MOVE WCURR     CCY
+      *
+      ** Our Settlement Nostro
+      *
+     C                     MOVELWOURS     OSAC
+      *
+      ** Our Settlement Branch
+      *
+     C                     MOVE DFOSBR    OSBR
+      *
+      ** Value Date
+      *
+     C                     MOVE PAYDAT    VDAT
+      *
+      ** Their Settlement Nostro
+      *
+     C                     MOVE WTHEIR    TSEN
+      *
+      ** Customer Number
+      *
+     C**********           Z-ADDWCNUM     CNUM                                                CSD027
+     C                     MOVE WCNUM     CNUM                                                CSD027
+      *
+      ** Deal Number
+      *
+     C                     MOVE DFDLNO    DLNO
+      *
+      ** Fee Sequence
+      *
+     C                     Z-ADDDFFSEQ    DASN
+      *
+      ** Fee Amount
+      *
+     C                     Z-ADDWWAMT     EAMT
+      *
+      ** Record Type
+      *
+     C                     MOVE 'M'       RCDT
+      *
+      ** For Account of
+      *
+     C                     MOVE WFACO     FACO
+      *
+      ** Branch internal customer number
+      *
+     C                     MOVE WBICN     BICN
+      *
+      ** Deal Type
+      *
+     C                     MOVE DFDTYP    DTYP
+      *
+      ** Deal Sub-Type
+      *
+     C                     MOVE DFSTYP    DLST
+      *
+      ** Branch Code
+      *
+     C                     MOVE DFBRCA    BRCA
+      *
+      ** Message type indicator
+      *
+     C           WSETTL    IFEQ 8
+     C           WSETTL    OREQ 1
+     C           DFLCDT    ANDEQ'A'
+     C           RECI      ANDEQ'R'
+     C           WSETTL    OREQ 1
+     C           DFLCDT    ANDEQ'X'
+     C           RECI      ANDEQ'R'
+      *
+     C                     EXSR CHKSW
+      *
+     C           SWIFT     IFEQ 'Y'
+     C                     Z-ADD01        MTIN
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           WSETTL    IFEQ 8
+     C           SWIFT     ANDNE'Y'
+     C           WSETTL    OREQ 7
+      *
+     C           RECI      IFNE 'R'
+     C                     EXSR VALID
+      *
+     C           WCOMP     IFEQ 'Y'
+     C                     Z-ADD09        MTIN
+     C                     ELSE
+     C                     Z-ADD10        MTIN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Telex Method
+      *
+     C           WSETTL    IFEQ 1
+      *
+     C           RECI      IFNE 'R'
+     C           BLLCTB    ANDEQ'B'
+     C           WCURR     ANDEQBJLCCY
+     C                     Z-ADD11        MTIN
+      *
+     C                     ELSE
+      *
+     C           RECI      IFNE 'R'
+     C                     EXSR VALID
+      *
+     C           WCOMP     IFEQ 'Y'
+     C                     Z-ADD09        MTIN
+     C                     ELSE
+     C                     Z-ADD10        MTIN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Pay Ordering Bank Number
+      *
+     C                     MOVE DFPOBN    POBK
+      *
+      ** Receiver Correspondent Number
+      *
+     C                     MOVE DFRCRN    RCRD
+      *
+      ** Write record on PREXPH
+      *
+     C           MTIN      IFNE 0
+      *
+     C                     WRITEPREXPHF                25
+      *
+     C           *IN25     IFEQ '1'
+     C                     Z-ADD5         DBASE
+     C                     MOVEL'PREXPH  'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+      *
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     EXSR SRHASH
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  SRTERM - Termination processing                             *
+      *                                                              *
+      *  Called From: Main Processing                                *
+      *                                                              *
+      *  Calls: *PSSR                                                *
+      *                                                              *
+      ****************************************************************
+      *
+     C           SRTERM    BEGSR
+      *
+      ** output trailer record
+      *
+     C                     UPDATPREXZZF                25
+     C           *IN25     IFEQ '1'
+     C                     Z-ADD7         DBASE
+     C                     MOVEL'PREXZZ  'DBFILE
+     C                     MOVE *BLANKS   DBKEY
+      *
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  produce audit report
+      *
+     C                     WRITEDL1069A1
+     C                     WRITEDL1069A2
+      *
+     C                     ENDSR
+      *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  SRHASH - Setup Hash Variables                               *
+      *                                                              *
+      *  Called From: SRGEN                                          *
+      *                                                              *
+      *  Calls: None                                                 *
+      *                                                              *
+      ****************************************************************
+      *
+     C           SRHASH    BEGSR
+      *
+     C                     ADD  1         NORE
+     C                     Z-ADDHRWN      ZZTOTI
+     C                     Z-ADDHRDC      ZZTOTD
+     C           EAMT      DIV  1000      ZZAMT
+     C                     EXSR ZZADD
+     C                     Z-ADDZZTOTI    HRWN
+     C                     Z-ADDZZTOTD    HRDC
+      *
+     C                     ADD  1         ROP     50
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  CHKSW - Check if SWIFT                                      *
+      *                                                              *
+      *  Called From: SRGEN                                          *
+      *  Calls      : *PSSR, DBERR                                   *
+      *                                                              *
+      ****************************************************************
+      *
+     C           CHKSW     BEGSR
+      *
+     C                     MOVE *BLANKS   SWIFT   1
+     C                     MOVE *BLANKS   TELEX   1
+      *
+     C           WOURS     IFNE *BLANKS
+      *
+     C                     MOVELWOURS     KNONB
+     C                     MOVE WCURR     KCCY
+     C                     MOVE *BLANKS   KCNUM
+     C                     CALL 'AONOSTR0'PLIST1
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     Z-ADD13        DBASE
+     C                     MOVE 'SDNOSTPD'DBFILE
+     C                     MOVE WOURS     DBKEY
+     C                     MOVELKCCY      DBKEY
+     C                     MOVEL'DL1069'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVELA7CUST    KEYC1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           KEYC1  10
+     C                     PARM *BLANKS   KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      ** Call Nostro Details Access Object
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELA7CUST    DBKEY
+     C                     Z-ADD12        DBASE
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVEL'DL1069'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           BGMSDL    IFEQ 'Y'
+      *
+      ** Generate Swift Direct Link Module is On
+      *
+     C           BBGSFM    IFEQ 'Y'
+      *
+      ** Generate Swift Message Format is Yes
+      *
+     C                     MOVE 'Y'       SWIFT
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           BBCSID    IFEQ 'Y'
+      *
+      ** Generate Swift Message Format is Yes
+      *
+     C                     MOVE 'Y'       SWIFT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BBCMTI    IFEQ 'Y'
+      *
+      ** Customer Module Telex
+      *
+     C                     MOVE 'Y'       TELEX
+     C                     ENDIF
+      *
+     C           SWIFT     IFEQ 'Y'
+     C           TELEX     ANDEQ'Y'
+      *
+     C           BLSWPY    IFGT BLTXPY
+      *
+      ** Swift Confirmation Priority is greater than Telex confirmation
+      ** Priority
+      *
+     C                     MOVE *BLANKS   SWIFT
+     C                     MOVE 'Y'       TELEX
+      *
+     C                     ELSE
+      *
+     C           BLSWPY    IFLT BLTXPY
+      *
+      ** Swift Confirmation Priority is less than Telex confirmation
+      ** Priority
+      *
+     C                     MOVE *BLANKS   TELEX
+     C                     MOVE 'Y'       SWIFT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  VALID - Validation of Instructions                          *
+      *                                                              *
+      *  Called From: SRGEN                                          *
+      *  Calls      : *PSSR, DBERR                                   *
+      *                                                              *
+      ****************************************************************
+      *
+     C           VALID     BEGSR
+      *
+     C           WOURS     IFNE *BLANKS
+      *
+     C                     MOVELWOURS     KNONB
+     C                     MOVE WCURR     KCCY
+     C                     MOVE *BLANKS   KCNUM
+     C                     CALL 'AONOSTR0'PLIST1
+      ** Call Nostro Details Access Object
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE WOURS     DBKEY
+     C                     MOVELWCURR     DBKEY
+     C                     Z-ADD6         DBASE
+     C                     MOVEL'SDNOSTPD'DBFILE
+     C                     MOVEL'DL1069'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           WTHEIR    IFNE *BLANKS
+     C                     MOVE 'Y'       WCOMP   1
+      *
+      ** If Their Settlement is a customer number, that is a 6 digits
+      ** Number
+      *
+     C           PAYREC    IFEQ 'P'
+     C           WTHEIR    IFEQ A7NOSN
+     C                     MOVE 'C'       PAYREC  1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  XCAMT - Convert Amounts                                     *
+      *                                                              *
+      ****************************************************************
+     C           XCAMT     BEGSR
+      *
+     C                     CALL 'EU0200'
+     C                     PARM *BLANKS   PRTCD   7        Return Code
+     C                     PARM           FRAM   183       From amount
+     C                     PARM           FRCY    3        From Currency
+     C                     PARM           TOCY    3        To Currency
+     C                     PARM           OUTA   150       Out amount
+     C                     PARM           P@INTA 183       In amount
+     C                     PARM           P@EXRT 159       Exchange Rate
+     C                     PARM           P@MDIN  1        Mult/Div Ind
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'EU0200  'DBFILE
+     C                     MOVELFRCY      DBKEY
+     C                     Z-ADD9         DBASE
+     C                     MOVEL'LE1069 ' DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  INIT - Perform First Cycle Calcs.                           *
+      *                                                              *
+      *  Called From: Main Processing                                *
+      *                                                              *
+      *  Calls: ZDATE2,*PSSR,DBERR                                   *
+      *                                                              *
+      ****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      CPY@@  80
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Initialise LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'DL1069'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+     C                     MOVEL'DL1069'  DBPGM
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'DL1069 ' DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE BJMRDT    RUNDAX  7
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDMMODPD'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBGMBIN    MBIN    1
+      *
+      ** Access Trading Data
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*DBERR ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+      ** Read in information for dealing currencies.
+      ** Store in array
+      *
+     C                     Z-ADD1         X       30
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C                     PARM           PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C                     MOVE A6CYCD    CURR,X
+     C                     MOVELA6SPRT    SPRT,X           SPOT RATE
+     C                     MOVE A6NBDP    NBDP,X           DEC.PLACES
+     C                     MOVE A6MDIN    MDI,X            MULT/DIV
+     C                     MOVE A6TXND    TND,X            Telex Noti.
+      *
+      *
+     C           PRTCD     DOWNE'*EOF    '
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*NEXT  ' POPTN
+     C                     PARM           PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE '*EOF    '
+     C           A6DLCI    ANDEQ'Y'
+      *
+     C                     ADD  1         X
+     C                     MOVE A6CYCD    CURR,X
+     C                     MOVELA6SPRT    SPRT,X           SPOT RATE
+     C                     MOVE A6NBDP    NBDP,X           DEC.PLACES
+     C                     MOVE A6MDIN    MDI,X            MULT/DIV
+     C                     MOVE A6TXND    TND,X            Telex Noti.
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Read in information for branch and their corresponding branch
+      ** Internal customer number
+      *
+     C                     Z-ADD1         X       30
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C                     PARM           PDSNB   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+     C                     MOVE A8BRCD    BRCH,X
+     C                     MOVE A8BICN    BICU,X
+      *
+     C           PRTCD     DOWNE'*EOF    '
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*NEXT  ' POPTN
+     C                     PARM           PDSNB
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFNE '*EOF    '
+      *
+     C                     ADD  1         X
+     C                     MOVE A8BRCD    BRCH,X
+     C                     MOVE A8BICN    BICU,X
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           BJSBRC    IFNE *BLANKS
+      *
+     C**********           Z-ADD1         Z       20                                          262539
+     C                     Z-ADD1         Z                                                   262539
+     C           BJSBRC    LOKUPBRCH,Z                   30
+     C           *IN30     IFEQ *OFF
+     C           *LOCK     IN   LDA
+     C                     MOVELBRCA      DBKEY
+     C                     Z-ADD3         DBASE
+     C                     MOVE 'DLFEED'  DBFILE
+     C                     MOVEL'DL1069'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE BICU,Z    WBICN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Determine if CE003 is installed
+     C                     MOVE 'N'       CEU003  1
+     C                     MOVE 'CEU003'  PSARD   6
+     C                     CALL 'AOSARDR0'PLIST3
+     C           PRTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CEU003
+     C                     ELSE
+     C           PRTCD     IFNE '*NRF   '
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CEU003 ' DBKEY
+     C                     Z-ADD4         DBASE
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     MOVEL'LE1069 ' DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Parameter list for program 'AONOSTR0'
+      *
+     C           PLIST1    PLIST
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           KCNUM   6
+     C                     PARM           KCCY    3
+     C**********           PARM           KEYC    4                                           CAS011
+     C                     PARM           KEYC   10                                           CAS011
+     C                     PARM           KEYD    2
+     C                     PARM           KNONB   2
+     C                     PARM           KEYF    3
+     C                     PARM           KEYG   10
+     C                     PARM           KEYH    1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      ** Parameter list for program 'AOCUSTR0'
+      *
+     C           PLIST2    PLIST
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           CKEY   10
+     C                     PARM '*CNUM  ' KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Parameter list for program 'AOSARDR0'
+      *
+     C           PLIST3    PLIST
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM           PSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C                     READ PREXZZ                   26
+      *
+     C           *IN26     IFEQ '1'
+     C                     Z-ADD8         DBASE
+     C                     MOVEL'PREXZZ  'DBFILE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DBERR - Perform Database Error Processing                    *
+      *                                                               *
+      *  Called From: *PSSR                                           *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+     C                     WRITEDL1069A1
+     C                     WRITEDBFMT
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  *PSSR - Handdle abnormal error conditions                   *
+      *                                                              *
+      *  Called From: After abnormal operation occurs                *
+      *                                                              *
+      *  Calls: None                                                 *
+      *                                                              *
+      ****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     EXSR DBERR
+      *
+     C                     ENDSR
+      ******************************************************************
+      /EJECT
+      ****************************************************************
+      *
+     C/TITLE SR/ZFWDT
+     C/COPY ZSRSRC,ZFWDT
+      * Calculate Working day Forward
+     C/TITLE SR/ZACCH
+     C/COPY ZSRSRC,ZACCH
+      * Access a record from the holiday file
+      /EJECT
+     C/COPY ZSRSRC,ZZADDZ1
+      /EJECT
+      ****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2004

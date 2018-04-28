@@ -1,0 +1,389 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Trades file special processing (i/c)')
+      *****************************************************************
+      *  Midas  -  Midas Export Data Interface Module.                *
+      *                                                               *
+      *  ED0140 - Trades File Special Processing - Input Cycle        *
+      *                                                               *
+      *  Function: This program is one of the 'Special Processing     *
+      *            programs' that are called when the Drip Feed       *
+      *            process encounters a journal entry from a certain  *
+      *            file. In this case the file is PF/TRADSD. On       *
+      *            encountering Book Transfer trades the two legs     *
+      *            are put in an explicit commitment group and        *
+      *            given different Commit IDs.                        *
+      *                                                               *
+      *  Called By: ED0060 - Extract Journal entries within comit     *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 104193             Date 20AUG96               *
+      *                 101973             Date 07FEB96               *
+      *                 101971 *CREATE     DATE 17JUL95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  104193 - Remove SE0550 and SE3320 refs as these are now      *
+      *           specified on EDDFTFPD.                              *
+      *  101973 - Phase V Modifications:                              *
+      *           -Amended module title.                              *
+      *           -Correct deletion of journal entries after special  *
+      *            processing programs by handling it within those    *
+      *            programs.                                          *
+      *           -Removed processing by Relative Record Number as    *
+      *            this does not work across two files.               *
+      *           -Improved error handling.                           *
+      *           NOTE: No attempt has been made to retain unwanted   *
+      *            Phase 2 code as commented out text.                *
+      *  101971 - Phase II Modifications                              *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDNEWJL4UF  E           K        DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDNEWJD4
+      * New journal entries by commitment cycle
+      *
+     FEDOLDJL4UF  E           K        DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDOLDJD4
+      * Old journal entries by commitment cycle
+      *
+     FEDJRNEPDO   E                    DISK         KINFSR *PSSR
+     F            QJORDJE                           KRENAMEEDJRNED1
+      *
+      /TITLE FUNCTION OF INCICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01  -  EoF EDNEWJL4 or EDOLDJL4                            *
+      *    50  -  BEGIN/END CONTROL                                   *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *  PROCES - Perform Detail Processing                           *
+      *  BEGEND - Write a EDJRNEPD commit BEGIN or END record         *
+      *  WRITE  - Write a EDJRNEPD record                             *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E                    DATA1     125  1
+     E                    DATA2    3971  1
+     I/TITLE I-SPECIFICATIONS
+      *-----------------------------------------------------------
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      *-----------------------------------------------------------
+     I            DS
+      ** Data Structure for Journal record data parameter
+     I                                        1 125 IN1
+     I                                        1   50INENTL
+     I                                        6  150INSEQN
+     I                                        6  15 ALSEQN
+     I                                       16  16 INCODE
+     I                                       17  18 INENTT
+     I                                       19  24 INDATE
+     I                                       25  300INTIME
+     I                                       31  40 INJOB
+     I                                       41  50 INUSER
+     I                                       51  560INNBR
+     I                                       57  66 INPGM
+     I                                       67  76 INOBJ
+     I                                       77  86 INLIB
+     I                                       87  96 INMBR
+     I                                       97 1060INCTRR
+     I                                      107 107 INFLAG
+     I                                      108 1170INCCID
+     I                                      118 125 INRES
+      *
+      *-----------------------------------------------------------
+     I            DS
+      ** Data Structure for EDJRNEPD output
+     I                                        1 125 OUT1
+     I                                        1   50JOENTL
+     I                                        6  150JOSEQN
+     I                                       16  16 JOCODE
+     I                                       17  18 JOENTT
+     I                                       19  24 JODATE
+     I                                       25  300JOTIME
+     I                                       31  40 JOJOB
+     I                                       41  50 JOUSER
+     I                                       51  560JONBR
+     I                                       57  66 JOPGM
+     I                                       67  76 JOOBJ
+     I                                       77  86 JOLIB
+     I                                       87  96 JOMBR
+     I                                       97 1060JOCTRR
+     I                                      107 107 JOFLAG
+     I                                      108 1170JOCCID
+     I                                      118 125 JORES
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Parameter entry list
+     C           *ENTRY    PLIST
+      *IN PARAMETERS
+     C                     PARM           DATA1
+     C                     PARM           DATA2
+     C                     PARM           SRCF    1
+      *OUT PARAMETERS
+     C                     PARM JOOBJ     CDFILE  8
+     C                     PARM ALSEQN    CDBKEY 10
+     C                     PARM           WRTCD1  1
+     C                     PARM           RECCNT  50
+      *
+      ***  Copyright Statement and initialisation
+      *
+     C                     MOVEACPY@      MKI@   80
+     C                     Z-ADD*ZERO     RECCNT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR               *
+     C                     RETRN                                      *
+      *                                                               *
+      *================================================================
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+     C                     MOVEADATA1     IN1
+     C                     MOVEADATA1     OUT1      P
+     C                     MOVEADATA2     JOESD     P
+      *
+      *** Start by deleting the record read in by ED0060.
+      *** Use the journal sequence number from the incoming data parameter
+      *** to delete the record from 'Old' or 'New' as appropriate.
+      *
+     C           SRCF      IFEQ 'N'                        B1
+      *
+     C           INSEQN    DELETEDNEWJD4             01
+      *
+     C           *IN01     IFEQ '1'                        B2
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'EDNEWJL4'DBFILE           * DB ERROR 01 *
+     C                     MOVE INSEQN    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2
+      *
+     C                     ELSE                            X1
+      *
+     C           INSEQN    DELETEDOLDJD4             01
+      *
+     C           *IN01     IFEQ '1'                        B2
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'EDOLDJL4'DBFILE           * DB ERROR 02 *
+     C                     MOVE INSEQN    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E2
+      *
+     C                     ENDIF                           E1
+      *
+      **  Check for Book Transfer insert
+      *
+     C           INPGM     IFEQ 'SE0090'                   B1
+     C           INENTT    ANDEQ'PT'
+      *
+      **  Write Begin record
+      *
+     C                     MOVE *ON       *IN50
+     C                     EXSR BEGEND
+      *
+      *** Change commitment group identity and write data back into
+      *** file buffer as it was cleared when BEGIN was written
+      *
+     C                     MOVEADATA1     OUT1      P
+     C                     MOVEADATA2     JOESD     P
+     C                     MOVEL'A'       JOCCID
+      *
+      *** Write to the batch member
+      *
+     C                     EXSR WRITE
+      *
+      *** Read next Journal Entry (which will come 3 entries later thanis
+      *** this one - there are TRADSA records inbetween).
+      *
+     C                     ADD  3         INSEQN
+      *
+     C           SRCF      IFEQ 'O'                        B2
+     C           INSEQN    CHAINEDOLDJD4             01
+      *
+      *** If found then delete the record
+      *
+     C           *IN01     IFEQ *OFF                       B3
+     C                     DELETEDOLDJD4
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+      *** If from 'New' or not found on 'Old' then try 'New'
+      *
+     C           SRCF      IFEQ 'N'                        B2
+     C           *IN01     OREQ *ON
+      *
+     C           INSEQN    CHAINEDNEWJD4             01
+      *
+     C           *IN01     IFEQ *ON                        B3
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'EDNEWJL4'DBFILE           * DB ERROR 03 *
+     C                     MOVE INSEQN    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E3
+      *
+      *** delete the record
+      *
+     C                     DELETEDNEWJD4
+      *
+     C                     ENDIF                           E2
+      *
+      *** Write the second record to PF/EDJRNEPD
+      *
+     C                     EXSR WRITE
+      *
+      ** Write End Commit
+      *
+     C                     MOVE *OFF      *IN50
+     C                     EXSR BEGEND
+      *
+      ***else*avoid*confirmation*or*pay/receive*records*and***            140193
+      ****write*this*ordinary*trade*record********************            104193
+      *
+     C                     ELSE                            X1             104193
+      *
+     C***********INPGM     IFNE 'SE0550'                   B2             104193
+     C***********INPGM     ANDNE'SE3320'                                  104193
+      *
+     C                     EXSR WRITE
+      *
+     C***********          ENDIF                           E2             104193
+      *
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/WRITE
+      *****************************************************************
+      *                                                               *
+      *  WRITE - Write a detail record to EDJRNEPD                    *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRITE     BEGSR
+      *
+      **  Move input parameter data to output data structure
+      **   and entry specific data field (too big for DS)
+      *
+     C                     WRITEEDJRNED1
+     C                     ADD  1         RECCNT
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/BEGEND
+      *****************************************************************
+      *                                                               *
+      *  BEGEND - Write a BEGIN or END record to EDJRNEPD             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BEGEND    BEGSR
+      *
+      **  Initialize EDJRNEPD format
+      *
+     C                     CLEAREDJRNED1
+      *
+     C           *IN50     IFEQ *ON                        B1
+     C                     MOVEL'BEGIN'   JOOBJ
+     C                     ELSE                            X1
+     C                     MOVEL'END'     JOOBJ
+     C                     ENDIF                           E1
+      *
+     C                     WRITEEDJRNED1
+     C                     Z-ADD1         RECCNT
+      *
+     C                     ENDSR
+      *
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+     C                     MOVE 'E'       WRTCD1
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK                     B1
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'ED0140'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     DUMP
+     C                     END                             E1
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

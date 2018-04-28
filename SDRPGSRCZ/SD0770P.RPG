@@ -1,0 +1,230 @@
+     H        1
+      ********************************************************************
+/*STD *  RPGBASE                                                         *
+/*EXI *  TEXT('Midas SD Reference Rate Tolerance Report')
+      ********************************************************************
+      *                                                                  *
+      *  Midas - Standing Data Module                                    *
+      *                                                                  *
+      *  SD0770P - SD Reference Rate Tolerance Report                    *
+      *                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2006               *
+      *                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CDL049  *Created   Date 07Apr06                  *
+      *                                                                  *
+      ********************************************************************
+      *                                                                  *
+      *       CDL049  -  Addition of a Reference Rate field              *
+      *                                                                  *
+      ********************************************************************
+      *                                                                  *
+      *  S U B R O U T I N E   I N D E X                                 *
+      *                                                                  *
+      *  SRRPRT - Process Report Lines                                   *
+      *  SRRCFP - RCF Processing for P1 Report                           *
+      *  *INZSR - Initial Processing                                     *
+      *  *PSSR  - Program Error Processing Subroutine                    *
+      *  ZEDIT  - Edit an Amount                                         *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)     *
+      *                                                                  *
+      ********************************************************************
+      * Reference Rate File
+     FSDRRATPDIF  E                    DISK         KINFSR *PSSR
+      *
+      ** Reference Rate Tolerance Report
+     FSD0770P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS INFDS$
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      **
+     E/COPY ZSRSRC,ZEDITZ1
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** EXTERNAL DS FOR BANK DETAILS
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS For Access Programs, Short Data Structure
+      *
+     IINFDS$    E DSY2I$DSP
+      * Printer file information data structure.
+      *
+      * Parameter declarations.
+     IP1PARM      DS
+      * I:    Audit/Request Status Ind
+     I                                        1   1 P1ARSI
+     IP2PARM      DS
+     I* I:    Sequence number
+     I                                        1   5 P2RSQN
+     IP3PARM      DS
+      * I:    Entity
+     I                                        1   3 P3ENTY
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      **********************************************************************************************
+      ** Read file for record
+     C                     READ SDRRATPD                 89
+      *
+     C           *IN89     IFEQ *OFF
+     C                     EXSR SRRCFP
+     C                     WRITEHEADP1
+      ** Report Details
+      *
+     C                     MOVE IRATET    FXRRAT    P
+     C                     MOVE IINRRT    INRRAT    P
+      *
+     C           IRATET    IFNE *ZERO
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE IRATET    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    FXRRAT    P
+     C                     ELSE
+     C                     MOVE *BLANKS   FXRRAT
+     C                     ENDIF
+      *
+     C           IINRRT    IFNE *ZERO
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE IINRRT    ZFIELD
+     C                     Z-ADD3         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    INRRAT    P
+     C                     ELSE
+     C                     MOVE *BLANKS   INRRAT
+     C                     ENDIF
+      ** Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+     C                     ENDIF
+      *
+     C                     WRITETRAILP1
+      *
+     C                     CLOSESD0770P1
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7        Return code
+     C           P1ARSI    PARM           WP0001  1        Audit/Request S
+     C           P2RSQN    PARM           WP0002  5        RCF sequence nu
+     C                     PARM           @@PARM  1        Level
+     C           P3ENTY    PARM           WP0003  3        Entity
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      * Define work field ZSFILE error
+     C                     MOVEL*BLANK    WUZSER  1
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVE *BLANKS   P0RTN
+      ** Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SDBANKPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     MOVEL'SD0770P' DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set indicator 98 for date format used in ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  SRRCFP - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *  Called By : Main Processing,                                 *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           SRRCFP    BEGSR
+      *
+      ** Open Report file
+      *
+     C                     OPEN SD0770P1
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADD@$FNB     WUSFNB  60
+      *
+     C                     CALL 'ZSFILE'               90
+     C                     PARM P2RSQN    UURSQN  5        RCF seq no.
+     C                     PARM P3ENTY    UUENTY  3        Entity
+     C                     PARM @$FVN     UUSFNM 10        Spool file name
+     C                     PARM WUSFNB    UUSFNB  60       Spool file no.
+     C           WUZSER    PARM *BLANK    UUZSER  1        ZSFILE error
+      *
+      ** Call to program ended in error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           WUZSER    IFEQ 'Y'
+     C                     MOVEL'Y2U0004' P0RTN
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      *  *PSSR  - Error control subroutine                            *
+      *  Called by : SRRCFP, *INZSR                                   *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+     C/COPY ZSRSRC,ZEDITZ2
+     C********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2006

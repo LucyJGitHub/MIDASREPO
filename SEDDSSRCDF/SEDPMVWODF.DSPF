@@ -1,0 +1,644 @@
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SE Walk out depot movement display')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - Securities Trading Module                            *
+     A*                                                               *
+     A*  SEDPMVWODF - Walk Out Depot Movement Display file.           *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 237063             Date 20Nov05               *
+      *  Prev Amend No. CGL031             Date 05Jul04               *
+      *                 216805             Date 21Apr03               *
+      *                 211116             Date 01Nov02               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSE039             Date 21Jan03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 211204             Date 30Oct02               *
+      * Midas Release 4.01.01 ----------------------------------------*
+      *                 207006             Date 18Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 197908             Date 11Jan02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 191092             Date 16Mar01               *
+      *                 187544             Date 11Dec00               *
+     A*                 178695             Date 29Jun00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+     A*                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+     A*                 CPB001             Date 26Aug99               *
+     A*                 167223             Date 28SEP99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                 161339             Date 26May99               *
+     A*                 CAP003  *CREATE    Date 01May98               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  237063 - EU Tax fixes upgrade to MP build 103.               *
+      *  CGL031 - Taxation on Savings Income                          *
+      *  216805 - Movement Subtype field only dependent on Private    *
+      *           Banking. Fix is to also condition field if Corres-  *
+      *           pondence Manager module is on.                      *
+      *  211116 - Protect amendment of 'Mvt-Subtype' field for Private*
+      *           Banking customer transactions.                      *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE039 - Auto-settlement of trades                           *
+      *  211204 - Prevent input on non-display booking branch when in *
+      *           single branching mode                               *
+      *  207006 - Add Counterparty & Market Centre to SSI             *
+      *  197908 - Prevent input on non-display originating branch     *
+      *           field.                                              *
+     A*  191092 - SEDPMVSIN - Cursor on a Non Display field           *
+     A*           added for CSE017 (Cum/EX/Flat)                      *
+     A*  187544 - Depot Mvts - WI & WO: Review display of some        *
+     A*           PM/PB fields                                        *
+     A*  178695 - Protect Amend of Portfolio Reference                *
+     A*  CSE015 - Forward Valued Depot Movements                      *
+     A*  CSE017 - Cum/Ex Indicator on Depot Movements                 *
+     A*  CPB001 - 'Private Banking' Module                            *
+     A*  164735 - Make sure that the Depot Reference number is a      *
+     A*           six-digit numerical value. Correct position cursor  *
+     A*  161339 - Midas APIs Phase IV                                 *
+     A*           Prevent input to non-display fields                 *
+     A*  CAP003 - Conversion of SE inputs into modular structure to   *
+     A*           use as APIs.                                        *
+     A*                                                               *
+     A*****************************************************************
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      REF(*LIBL/MFRFL)
+     A                                      CHGINPDFT
+     A                                      MSGLOC(22)
+     A                                      PRINT(*LIBL/MPRINT)
+     A                                      INDARA
+     A*
+     A* -------------------------------------------------------------------*
+     A* * MESSAGE SUBFILE FORMAT                                           *
+     A* -------------------------------------------------------------------*
+     A*
+     A          R SEDMWOS1                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      SFL
+     A                                      SFLMSGRCD(22)
+     A            DDSFKY                    SFLMSGKEY
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A* -------------------------------------------------------------------*
+     A*   MESSAGE SUBFILE CONTROL                                          *
+     A* -------------------------------------------------------------------*
+     A*
+     A          R SEDMWOS0                  TEXT('MSG SUBFILE CONTRL')
+     A                                      CF03
+     A                                      CF12
+     A  71                                  CF07
+     A  72                                  CF08
+     A  73                                  CF10
+     A  74                                  CF14
+     A  75                                  CF15
+      *                                                         /*Start CSE039*/
+     A  77                                  CF22
+      *                                                         /*End CSE039*/
+     A                                      SFLCTL(SEDMWOS1)
+     A N96                                  SFLDSPCTL
+     A                                      SFLINZ
+     A                                      SFLDSP
+     A  97                                  SFLEND
+     A                                      SFLSIZ(5)
+     A                                      SFLPAG(1)
+     A                                      OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A* -------------------------------------------------------------------*
+     A*   MAIN DISPLAY SCREEN                                              *
+     A* -------------------------------------------------------------------*
+     A*
+     A          R SEDMWOD1
+     A                                      CF03
+     A                                      CF12
+     A  71                                  CF07
+     A  72                                  CF08
+     A  73                                  CF10
+     A  74                                  CF14
+     A  75                                  CF15
+      *                                                         /*Start CSE039*/
+     A  77                                  CF22
+      *                                                         /*End CSE039*/
+     A                                      FRCDTA
+     A                                      OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A                                  1  2'SEDMWOD1'
+     A                                  1 27'Walk Out Depot Movement'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            RUNDATE        7A  O  1 63
+     A            DDTIME         6Y 0O  1 72EDTWRD('  :  :  ')
+     A                                      OVRDTA
+     A                                      TEXT('Current Time')
+     A            DDWID         10A  O  2 70TEXT('Workstation ID')
+     A                                  4  2'Action:'
+     A            DDACTN         1A  B  4 10
+     A  10                                  DSPATR(RI)
+     A N10                                  DSPATR(HI)
+     A  68
+     AO 10N69                               DSPATR(PC)
+     A  69                                  DSPATR(PR)
+     A N69                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  4 12'Security'
+     A            DDDPSS        10A  B  4 21
+     A  11                                  DSPATR(RI)
+     A N11                                  DSPATR(HI)
+     A  11N70                               DSPATR(PC)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A            DDSECSTS       7A  O  5 21DSPATR(BL)
+     A                                      OVRDTA
+     A                                  4 33'Reference'
+     A            DDDPRN         6A  B  4 43
+     A  12                                  DSPATR(RI)
+     A N12                                  DSPATR(HI)
+     A*                             Start of change / 164735 /
+     A**11N69*******************************DSPATR(PC)
+     A  12N69                               DSPATR(PC)
+     A*                               End of change / 164735 /
+     A  69                                  DSPATR(PR)
+     A N69                                  DSPATR(UL)
+     A                                      OVRDTA
+     A*/COPY WNCPYSRC,SEDPMVWO01
+      *                                                         /*Start CSE039*/
+     A            DDSWSC         4A  O  4 51DSPATR(HI)
+     A                                      OVRDTA
+     A            DDCDNR        24A  O  4 56DSPATR(HI)
+     A                                      OVRDTA
+      *                                                         /*End CSE039*/
+     A            DDTRANSTS      7A  O  5 43DSPATR(BL)
+     A                                      OVRDTA
+     A                                  6  2'Out Depot'
+     A            DDDPOD        10A  B  6 12
+     A  13                                  DSPATR(RI PC)
+     A N13                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  7  6'Date'
+     A            DDDPDO         6A  B  7 12
+     A  14                                  DSPATR(RI PC)
+     A N14                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      *                                              Begin /CSE015/
+     A                                  7 42'Trade Date'
+     A N88                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDDMTD         6A  B  7 54
+     A  38                                  DSPATR(RI PC)
+     A N38                                  DSPATR(HI)
+     A  70
+     AO   N88                               DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A N88                                  DSPATR(ND)
+     A                                      OVRDTA
+      *                                              End   /CSE015/
+     A                                  8  2'Booking Branch'
+     A  80                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDDPBA         3A  B  8 17
+     A  15                                  DSPATR(RI PC)
+     A N15                                  DSPATR(HI)
+      **Start of change 211204
+     A**70******                            DSPATR(PR)
+     A  70
+     AO 80                                  DSPATR(PR)
+      **End of change 211204
+     A N70                                  DSPATR(UL)
+     A  80                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                  8 42'Originating Branch'
+     A  81                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDORBR         3A  B  8 61
+     A  16                                  DSPATR(RI PC)
+     A N16                                  DSPATR(HI)
+      **Start of change 197908
+     A**70******                            DSPATR(PR)
+     A  70
+     AO 81                                  DSPATR(PR)
+      **End of change 197908
+     A N70                                  DSPATR(UL)
+     A  81                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                  9  2'Book'
+     A            DDDPBK         2A  B  9  7
+     A  17                                  DSPATR(RI PC)
+     A N17                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A**Start of Change CGL031
+     A                                  9 42'Original Purchase Date'
+     A N78                                  DSPATR(ND)
+     A            DDOPDT         6A  B  9 65
+     A N78                                  DSPATR(ND)
+     A N78
+     AO 70                                  DSPATR(PR)
+     A  78N70                               DSPATR(UL)
+     A  78N45                               DSPATR(HI)
+     A  45                                  DSPATR(RI PC)
+     A                                      OVRDTA
+     A**End of Change CGL031
+     A                                 10  2'Beneficiary Customer'
+     A            DDDPBN        10A  B 10 23
+     A  18                                  DSPATR(RI PC)
+     A N18                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                 11  2'Nominal Amount'
+     A            DDDPNA        12A  B 11 17
+     A  19                                  DSPATR(RI PC)
+     A N19                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      *                                              Begin /CSE017/
+     A                                 10 42'Print Advice (Y/N)'
+     A N87                                  DSPATR(ND)
+     A            DDDPAP         1A  B 10 63
+     A  37                                  DSPATR(RI PC)
+     A N37                                  DSPATR(HI)
+     A N87
+     AO 70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A N87                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 11 42'Cum/Ex/Flat (C/X/F)'
+     A N87                                  DSPATR(ND)
+     A            DDDPIN         1A  B 11 63
+     A  36                                  DSPATR(RI PC)
+     A N36                                  DSPATR(HI)
+      *                                              Begin /191092/
+     A**70****                              DSPATR(PR)
+     A  70
+     AON87                                  DSPATR(PR)
+      *                                              End   /191092/
+     A N70                                  DSPATR(UL)
+     A N87                                  DSPATR(ND)
+     A                                      OVRDTA
+      *                                              End   /CSE017/
+     A                                 12  2'Narrative'
+     A            DDDPNR        35A  B 12 12
+     A  20                                  DSPATR(RI PC)
+     A N20                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                 13  2'Price'
+     A            DDMKTP        16A  B 13  8
+     A  21                                  DSPATR(RI PC)
+     A N21                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A**Start of Change CGL031
+     A                                 13 42'Fiscal Price'
+     A N78                                  DSPATR(ND)
+     A            DDFSPR        16A  B 13 56
+     A N78                                  DSPATR(ND)
+     A N78
+     AO 70                                  DSPATR(PR)
+     A  78N70                               DSPATR(UL)
+     A  78N44                               DSPATR(HI)
+     A  44                                  DSPATR(RI PC)
+     A                                      OVRDTA
+     A**End of Change CGL031
+     A                                 14  2'Profit Centre'
+     A  82                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDDPPC         4A  B 14 16
+     A  22                                  DSPATR(RI PC)
+     A N22                                  DSPATR(HI)
+     A**70***                               DSPATR(PR)                          161339
+     A  70                                                                      161339
+     AO 82                                  DSPATR(PR)                          161339
+     A N70                                  DSPATR(UL)
+     A  82                                  DSPATR(ND)
+     A                                      OVRDTA
+     A**Start of change 207006
+     A                                 14 42'Counterparty'
+     A  89                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDCPTY        10A  B 14 56
+     A  39                                  DSPATR(RI PC)
+     A N39                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  89                                  DSPATR(ND)
+     A                                      OVRDTA
+     A**End of change 207006
+     A                                 15  2'Customer Delivery/Withdrawal'
+     A  83                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDCWDI         1A  B 15 31
+     A  23                                  DSPATR(RI PC)
+     A N23                                  DSPATR(HI)
+     A**70***                               DSPATR(PR)                          161339
+     A  70                                                                      161339
+     AO 83                                  DSPATR(PR)                          161339
+     A N70                                  DSPATR(UL)
+     A  83                                  DSPATR(ND)
+     A                                      OVRDTA
+     A**Start of change 207006
+     A                                 15 42'Market Centre'
+     A  89                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDMRKT         2A  B 15 56
+     A  40                                  DSPATR(RI PC)
+     A N40                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  89                                  DSPATR(ND)
+     A                                      OVRDTA
+     A**End of change 207006
+     A                                 16  2'Portfolio Reference'
+     A*                                              Begin /CPB001/
+     A**83********                          DSPATR(ND)
+     A  83 85                               DSPATR(ND)
+     A*                                              End   /CPB001/
+     A                                      OVRATR
+     A            DDPTFR         4A  B 16 22
+     A  24                                  DSPATR(RI PC)
+     A N24                                  DSPATR(HI)
+     A**70***                               DSPATR(PR)                          161339
+     A*                                              Begin /CPB001/
+     A**70******************                                                    161339
+     A*O*83*****************                DSPATR(PR)                          161339
+     A*                                              Begin /178695/
+     A**70******************
+     A*O*83*85**************                DSPATR(PR)
+     A  70
+     AO 79
+     AO 83 85                               DSPATR(PR)
+     A*                                              End   /178695/
+     A*                                              End   /CPB001/
+     A*                                              Begin /178695/
+     A*N70***                               DSPATR(UL)
+     A N70N79                               DSPATR(UL)
+     A*                                              End   /178695/
+     A*                                              Begin /CPB001/
+     A**83***                               DSPATR(ND)
+     A  83 85                               DSPATR(ND)
+     A*                                              End   /CPB001/
+     A                                      OVRDTA
+     A**Start of change CGL031
+     A                                 16 28'Original Purchased Interest'
+     A N78                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDOPIN        14A  B 16 56
+     A N78                                  DSPATR(ND)
+     A N78
+     AO 70                                  DSPATR(PR)
+     A  78N70                               DSPATR(UL)
+     A  78N46                               DSPATR(HI)
+     A  46                                  DSPATR(RI PC)
+     A                                      OVRDTA
+     A**End of Change CGL031
+     A                                 17  2'Average Yield'
+     A  83                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDCYLD        12A  B 17 16
+     A  25                                  DSPATR(RI PC)
+     A N25                                  DSPATR(HI)
+     A**70***                               DSPATR(PR)                          161339
+     A  70                                                                      161339
+     AO 83                                  DSPATR(PR)                          161339
+     A N70                                  DSPATR(UL)
+     A  83                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 17 29'FX Rate'
+     A  83                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDSPXR        14A  O 17 37
+     A                                      DSPATR(HI)
+     A  83                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 17 52'M/D Indicator'
+     A  83                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDSPMD         1A  O 17 66
+     A                                      DSPATR(HI)
+     A  83                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*                                                         /*Start 187544*/
+     A*                                              Begin /CPB001/
+     A********                         18  2'Purchased Interest'
+     A*N85*86*
+     A*O*85***                               DSPATR(ND)
+     A********                              OVRATR
+     A********    DDPINT        15A  B 18 21
+     A**32****                              DSPATR(RI PC)
+     A*N32****                              DSPATR(HI)
+     A**85****
+     A*ON85*86
+     A*O*70***                               DSPATR(PR)
+     A*N70****                              DSPATR(UL)
+     A*N85*86*
+     A*O*85***                               DSPATR(ND)
+     A********                              OVRDTA
+     A********                         18 37'Accrued Indicator'
+     A*N85*86*
+     A*O*85***                               DSPATR(ND)
+     A********                              OVRATR
+     A********    DDACIN         1A  B 18 55
+     A**33****                              DSPATR(RI PC)
+     A*N33****                              DSPATR(HI)
+     A**85****
+     A*ON85*86
+     A*O*70***                               DSPATR(PR)
+     A*N70****                              DSPATR(UL)
+     A*N85*86*
+     A*O*85***                               DSPATR(ND)
+     A********                              OVRDTA
+     A                                 18 18'Purchased Interest'
+     A                                       DSPATR(ND)
+     A                                      OVRATR
+     A            DDPINT        15A  O 18 37
+     A                                       DSPATR(ND)
+     A                                      OVRDTA
+     A                                 18 55'Accrued Indicator'
+     A                                       DSPATR(ND)
+     A                                      OVRATR
+     A            DDACIN         1A  O 18 73
+     A                                       DSPATR(ND)
+     A                                      OVRDTA
+     A*******                          18 57'Mvt Subtype'
+     A                                 18  2'Mvt Subtype'
+     A*                                                         /*End   187544*/
+     A**Start of change 216805
+     A*N85*86***                                                                              216805
+     A*O*85*****                            DSPATR(ND)                                        216805
+     A**Start of change 237063
+     A*N85*86N78                                                                              237063
+     A***O*85N78                               DSPATR(ND)                                     237063
+     A N85 86N91
+     AO 85N91                               DSPATR(ND)
+     A**End of change 237063
+     A**End of change 216805
+     A                                      OVRATR
+     A*                                                         /*Start 187544*/
+     A********    DDMSTP         2A  B 18 69
+     A            DDMSTP         2A  B 18 14
+     A*                                                         /*End   187544*/
+     A  34                                  DSPATR(RI PC)
+     A N34                                  DSPATR(HI)
+     A  85
+     AON85 86
+      *                                                         /*Start 211116*/
+     AO 76
+      *                                                         /*End   211116*/
+     AO 70                                  DSPATR(PR)
+      *                                                         /*Start 211116*/
+     A*N70******                            DSPATR(UL)
+     A N70   N76                            DSPATR(UL)
+      *                                                         /*End   211116*/
+     A N85 86
+     AO 85                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*                                              End   /CPB001/
+     A                                 19  2'Charge Code'
+     A  84                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDDCHC         2A  B 19 14
+     A  26                                  DSPATR(RI PC)
+     A N26                                  DSPATR(HI)
+     A**70***                               DSPATR(PR)                          161339
+     A  70                                                                      161339
+     AO 84                                  DSPATR(PR)                          161339
+     A N70                                  DSPATR(UL)
+     A  84                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 19 42'Settlement Method'
+     A  84                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDDCSE         2A  B 19 60
+     A  27                                  DSPATR(RI PC)
+     A N27                                  DSPATR(HI)
+     A**70***                               DSPATR(PR)                          161339
+     A  70                                                                      161339
+     AO 84                                  DSPATR(PR)                          161339
+     A N70                                  DSPATR(UL)
+     A  84                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 20  2'Charge Currency'
+     A  84                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDDCCE         3A  B 20 18
+     A  28                                  DSPATR(RI PC)
+     A N28                                  DSPATR(HI)
+     A**70***                               DSPATR(PR)                          161339
+     A  70                                                                      161339
+     AO 84                                  DSPATR(PR)                          161339
+     A N70                                  DSPATR(UL)
+     A  84                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 20 42'Settlement Account'
+     A  84                                  DSPATR(ND)
+     A                                      OVRATR
+     A**Start of change CGL029
+     A**********  DDDCAT        12A  B 20 61                                                  CGL029
+     A            DDDCAT        18A  B 20 61
+     A**End of change CGL029
+     A  29                                  DSPATR(RI PC)
+     A N29                                  DSPATR(HI)
+     A**70***                               DSPATR(PR)                          161339
+     A  70                                                                      161339
+     AO 84                                  DSPATR(PR)                          161339
+     A N70                                  DSPATR(UL)
+     A  84                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 21  2'Charge Amount'
+     A  84                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDDCHA        14A  B 21 16
+     A  30                                  DSPATR(RI PC)
+     A N30                                  DSPATR(HI)
+     A**70***                               DSPATR(PR)                          161339
+     A  70                                                                      161339
+     AO 84                                  DSPATR(PR)                          161339
+     A N70                                  DSPATR(UL)
+     A  84                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 21 42'Settlement Branch'
+     A  84                                  DSPATR(ND)
+     A                                      OVRATR
+     A            DDDCAB         3A  B 21 60
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(HI)
+     A**70***                               DSPATR(PR)                          161339
+     A  70                                                                      161339
+     AO 84                                  DSPATR(PR)                          161339
+     A N70                                  DSPATR(UL)
+     A  84                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*
+     A* -------------------------------------------------------------------*
+     A* * MAIN SCREEN FOOTER                                               *
+     A* -------------------------------------------------------------------*
+     A*
+     A          R SEDMWOF1                  TEXT('SCREEN FOOTER')
+     A                                      CF03
+     A                                      CF12
+     A  71                                  CF07
+     A  72                                  CF08
+     A  73                                  CF10
+     A  74                                  CF14
+     A  75                                  CF15
+      *                                                         /*Start CSE039*/
+     A  77                                  CF22
+      *                                                         /*End CSE039*/
+     A                                      OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A*
+     A            DDFOTX        40A    23  2OVRDTA
+     A                                      DSPATR(HI)
+     A*
+     A                                 24  2'F3=Exit F12=Cancel'
+      *                                                         /*Start CSE039*/
+     A*********************************24 22'F8=Next'                                         CSE039
+     A                                 24 21'F8=Next'
+      *                                                         /*End CSE039*/
+     A N72                                  DSPATR(ND)
+     A                                      OVRATR
+      *                                                         /*Start CSE039*/
+     A*********************************24 31'F7=Prev'                                         CSE039
+     A                                 24 29'F7=Prev'
+      *                                                         /*End CSE039*/
+     A N71                                  DSPATR(ND)
+     A                                      OVRATR
+      *                                                         /*Start CSE039*/
+     A*********************************24 40'F14=Settlements'                                 CSE039
+     A                                 24 37'F14=Settlements'
+      *                                                         /*End CSE039*/
+     A N74                                  DSPATR(ND)
+     A                                      OVRATR
+      *                                                         /*Start CSE039*/
+     A                                 24 53'F22=Mvmt Status'
+     A N77                                  DSPATR(ND)
+     A                                      OVRATR
+     A*********************************24 57'F15=Select'                                      CSE039
+     A                                 24 69'F15=Select'
+      *                                                         /*End CSE039*/
+     A N75                                  DSPATR(ND)
+     A                                      OVRATR

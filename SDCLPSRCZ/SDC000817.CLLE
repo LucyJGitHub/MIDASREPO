@@ -1,0 +1,407 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD End Of Tax Year Processing')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000817 - Midas SD End Of Tax Year Processing             */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. CER059             Date 19Jul10              */
+/*       Prev Amend No. BUG26305A          Date 18Nov09              */
+/*                      BUG26534           Date 22Oct09              */
+/*                      BUG25733           Date 28Aug09              */
+/*                      BUG25039           Date 23Jul09              */
+/*                      BUG24574           Date 07Jul09              */
+/*                      BUG24173A          Date 17Jun09              */
+/*                      BUG24173           Date 12Jun09              */
+/*                      CER048A            Date 06Feb09              */
+/*                      CER048  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG26305A - L5 COB re-open failed                           */
+/*       BUG26534 - History File not Found for the year entered.     */
+/*                  Year entered not authorized.                     */
+/*       BUG25733 - History file not found for the year entered.     */
+/*                  Year entered not authorized.                     */
+/*       BUG25039 - Problem with posting on account                  */
+/*       BUG24574 - Withholding Tax - R4 vs M+                       */
+/*       BUG24173A - Exemption Threshold Extract contains no records */
+/*       BUG24173 - Exemption Threshold Extract contains no records  */
+/*       CER048A- German Features - Taxes                            */
+/*       CER048 - German Features - Taxes                            */
+/*                                                                   */
+/*********************************************************************/
+/**  Start Program */
+             PGM (&CNAM &CSEQ)
+ 
+/** Declare variable */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                        Misys International Banking Systems Ltd. 2008')
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7) VALUE('*KEY')                     /*CER048A*/
+             DCL        VAR(&PRTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')                     /*CER048A*/
+             DCL        VAR(&PFMT) TYPE(*CHAR) LEN(200) VALUE(' ')                       /*CER048A*/
+             DCL        VAR(&PDateIn) TYPE(*CHAR) LEN(6)                                 /*CER048A*/
+             DCL        VAR(&ZDateIn) TYPE(*DEC) LEN(6)                                  /*CER048A*/
+             DCL        VAR(&PDayNo) TYPE(*DEC) LEN(5)                                   /*CER048A*/
+             DCL        VAR(&ID) TYPE(*CHAR) LEN(2)                                      /*CER048A*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)                                  /*CER048A*/
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)                                  /*CER048A*/
+             DCL        VAR(&YY) TYPE(*CHAR) LEN(2)                                      /*CER048A*/
+             DCL        VAR(&YY1) TYPE(*DEC) LEN(2)                                      /*CER048A*/
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)                                   /*CER048A*/
+             DCL        VAR(&WStart) TYPE(*DEC) LEN(3)                                   /*CER048A*/
+             DCL        VAR(&WEnd) TYPE(*DEC) LEN(3)                                     /*CER048A*/
+             DCL        VAR(&WReset) TYPE(*CHAR) LEN(1)                                  /*CER048A*/
+             DCL        VAR(&WTxEndt) TYPE(*DEC) LEN(6)                                  /*CER048A*/
+             DCL        VAR(&WTxEndC) TYPE(*CHAR) LEN(6)                                 /*CER048A*/
+             DCL        VAR(&TXTHRP) TYPE(*DEC) LEN(2)                                   /*CER048A*/
+             DCL        VAR(&WMmYy) TYPE(*CHAR) LEN(4)                                   /*CER048A*/
+             DCL        VAR(&NxYrC) TYPE(*CHAR) LEN(5)                                 /*BUG24173A*/
+             DCL        VAR(&TXTYRP) TYPE(*DEC) LEN(2)                                  /*BUG24574*/
+             DCL        VAR(&MBRNAME) TYPE(*CHAR) LEN(10)                               /*BUG24574*/
+             DCL        VAR(&LFMBRNM) TYPE(*CHAR) LEN(10)                               /*BUG25039*/
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                                 /*BUG25039*/
+             DCL        VAR(&PCTRY) TYPE(*CHAR) LEN(2)                                  /*BUG26534*/
+             DCL        VAR(&PDAYNOC) TYPE(*CHAR) LEN(5)                               /*BUG26305A*/
+             DCL        VAR(&PRunDtD) TYPE(*DEC) LEN(5)                                /*BUG26305A*/
+             DCL        VAR(&PRunDtC) TYPE(*CHAR) LEN(5)                               /*BUG26305A*/
+ 
+             DCLF       FILE(SDBANKPD) RCDFMT(SDBANKD0)                                  /*CER048A*/
+                                                                                         /*CER048A*/
+/** Monitor for Error Messages from System */
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 MCH0000 +
+                          RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/** Check if Data Area LDA exists in QTEMP */
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+ 
+/** If LDA does not exists in QTEMP than Create */
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+ 
+/** Send Message to user to alerting starting of process */
+             SNDPGMMSG  MSG('SDC000817 - END OF TAX YEAR PROCESS +
+                          WILL NOW BE RUN') TOMSGQ(MOPERQ)
+                                                                                         /*CER048A*/
+/** Read SDBANKPD to retrieve Country Code,Runday number, Date of  */                    /*CER048A*/
+/** Next Working Day & Date Format Indicator                       */                    /*CER048A*/
+                                                                                         /*CER048A*/
+             RCVF      RCDFMT(SDBANKD0)                                                  /*CER048A*/
+                                                                                         /*CER048A*/
+             CHGVAR     VAR(&PRTNCODE) VALUE(' ')                                       /*BUG26534*/
+             CHGVAR     VAR(&POPTN)    VALUE('*KEY')                                    /*BUG26534*/
+             CHGVAR     VAR(&PFMT)     VALUE(' ')                                       /*BUG26534*/
+                                                                                        /*BUG26534*/
+             CHGVAR     VAR(&PRUNDTD) VALUE(&BJRDNB)                                   /*BUG26305A*/
+             CHGVAR     VAR(&PRUNDTC) VALUE(&PRUNDTD)                                  /*BUG26305A*/
+             CHGDTAARA  DTAARA(KESTAT (78 5)) VALUE(&PRUNDTC)                          /*BUG26305A*/
+                                                                                       /*BUG26305A*/
+/** Call AOLOCNR0 (Access Location codes to retrieve Country Code */                    /*BUG26534*/
+                                                                                        /*BUG26534*/
+             CALL      PGM(AOLOCNR0) PARM(&PRTNCODE &POPTN +
+                         &BJSLCD &PFMT)                                                 /*BUG26534*/
+             IF         COND(&PRTNCODE *NE ' ') THEN(GOTO +
+                           CMDLBL(ABNOR))                                               /*BUG26534*/
+                                                                                        /*BUG26534*/
+/** Call AOCTRYR0 (Access Country code to retrieve Tax Enddate */                        /*CER048A*/
+                                                                                         /*CER048A*/
+             CHGVAR     VAR(&PCTRY) VALUE(%SST(&PFMT 4 2))                              /*BUG26534*/
+             CHGVAR     VAR(&PFMT)     VALUE(' ')                                       /*BUG26534*/
+/**********  CALL      PGM(AOCTRYR0) PARM(&PRTNCODE &POPTN +                            /*BUG26534*/
+/**********              &BJCNCD &PFMT)                                     /*CER048A*/ /*BUG26534*/
+             CALL      PGM(AOCTRYR0) PARM(&PRTNCODE &POPTN +
+                         &PCTRY &PFMT)                                                  /*BUG26534*/
+             IF         COND(&PRTNCODE *NE ' ') THEN(GOTO +
+                           CMDLBL(ABNOR))                                                /*CER048A*/
+             CHGVAR     VAR(&WTxEndC) VALUE(%SST(&PFMT 74 4))                            /*CER048A*/
+             CHGVAR     VAR(&WTxEndT) VALUE(&WTxEndC)                                    /*CER048A*/
+                                                                                         /*CER048A*/
+             IF         COND(&WTxEndt *EQ 0) THEN(DO)                                    /*CER048A*/
+                                                                                         /*CER048A*/
+             IF         COND(&BJDFIN *EQ 'D') THEN(DO)                                   /*CER048A*/
+             CHGVAR     VAR(&WMmYy) VALUE('3112')                                        /*CER048A*/
+             CHGVAR     VAR(&PDATEIN) VALUE(&WMmYy  *TCAT +
+                          (%SST(&BJMRDT 6 2)))                                           /*CER048A*/
+             ENDDO                                                                       /*CER048A*/
+             ELSE       CMD(DO)                                                          /*CER048A*/
+             CHGVAR     VAR(&WMmYy) VALUE('1231')                                        /*CER048A*/
+             CHGVAR     VAR(&PDATEIN) VALUE(&WMmYy  *TCAT +
+                          (%SST(&BJMRDT 6 2)))                                           /*CER048A*/
+             ENDDO                                                                       /*CER048A*/
+                                                                                         /*CER048A*/
+             ENDDO                                                                       /*CER048A*/
+             ELSE       CMD(DO)                                                          /*CER048A*/
+             CHGVAR     VAR(&PDATEIN) VALUE(&WTxEndC *TCAT +
+                          (%SST(&BJMRDT 6 2)))                                           /*CER048A*/
+                                                                                         /*CER048A*/
+             ENDDO                                                                       /*CER048A*/
+                                                                                         /*CER048A*/
+/** Call ZDATE1 (Convert to day number) */                                               /*CER048A*/
+             CHGVAR     VAR(&PRTNCODE) VALUE(' ')                                        /*CER048A*/
+             CHGVAR     VAR(&ZDateIn) VALUE(&PDateIn)                                    /*CER048A*/
+             CALL      PGM(ZDATE1) PARM(&PRTNCODE &ZDateIn +
+                                     &BJDFIN &PDayNo)                                    /*CER048A*/
+                                                                                       /*BUG26305A*/
+             CHGVAR     VAR(&PDAYNOC) VALUE(&PDAYNO)                                   /*BUG26305A*/
+                                                                                         /*CER048A*/
+             IF         COND(&PRTNCODE *NE ' ') THEN(GOTO +
+                        CMDLBL(ABNOR))                                                   /*CER048A*/
+                                                                                         /*CER048A*/
+/** Check if this is an End of Tax Year run */                                           /*CER048A*/
+             IF         COND((&PDayNo *GE &BJRDNB) *AND (&PDayNo *LT +
+                          &BJDNWD)) THEN(DO)                                             /*CER048A*/
+                                                                                         /*CER048A*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ID)                                 /*CER048A*/
+             CHGVAR     VAR(&DMLIB) VALUE(&ID *CAT 'DMLIB')                              /*CER048A*/
+             CHGVAR     VAR(&DVLIB) VALUE(&ID *CAT 'DVLIB')                              /*CER048A*/
+             CHGVAR     VAR(&DPLIB) VALUE(&ID *CAT 'DPLIB')                             /*BUG25039*/
+             CHGVAR     VAR(&YY) VALUE(%SST(&BJMRDT 6 2))                                /*CER048A*/
+             CHGVAR     VAR(&YY1) VALUE(%SST(&BJMRDT 6 2))                               /*CER048A*/
+                                                                                         /*CER048A*/
+/** Delete All archived files with the tax year part of the number */                    /*CER048A*/
+/** equal to or less than the removal tax year */                                        /*CER048A*/
+                                                                                         /*CER048A*/
+             CHGVAR     VAR(&PRTNCODE) VALUE('*MSG    ')                                 /*CER048A*/
+             CHGVAR     VAR(&POPTN) VALUE('*FIRST  ')                                    /*CER048A*/
+             CHGVAR     VAR(&PFMT) VALUE(' ')                                            /*CER048A*/
+             CALL       PGM(AOSTAXR0) PARM(&PRTNCODE &POPTN &PFMT)                       /*CER048A*/
+                                                                                         /*CER048A*/
+             IF         COND(&PRTNCODE *NE ' ') THEN(GOTO +
+                           CMDLBL(ABNOR))                                                /*CER048A*/
+                                                                                         /*CER048A*/
+/**********  CHGVAR     VAR(&TXTHRP) VALUE(%SST(&PFMT 55 2))         */         /*CER048A BUG24574*/
+             CHGVAR     VAR(&TXTYRP) VALUE(%SST(&PFMT 57 2))                            /*BUG24574*/
+             CHGVAR     VAR(&WStart) VALUE(&YY1)                                         /*CER048A*/
+                                                                                         /*CER048A*/
+/**********  IF         COND(&YY1 *GT &TXTHRP) THEN(DO)              */         /*CER048A BUG24574*/
+             IF         COND(&YY1 *GT &TXTYRP) THEN(DO)                                 /*BUG24574*/
+             CHGVAR     VAR(&WEnd) VALUE(99)                                             /*CER048A*/
+             CHGVAR     VAR(&WReset) VALUE('Y')                                          /*CER048A*/
+             ENDDO                                                                       /*CER048A*/
+             ELSE       CMD(DO)                                                          /*CER048A*/
+             CHGVAR     VAR(&WReset) VALUE('N')                                          /*CER048A*/
+/**********  CHGVAR     VAR(&WEnd) VALUE(100 + &WStart - &TXTHRP)    */         /*CER048A BUG24574*/
+             CHGVAR     VAR(&WEnd) VALUE(100 + &WStart - &TXTYRP)                       /*BUG24574*/
+                                                                                         /*CER048A*/
+             IF         COND(&WEnd *EQ 100) THEN(DO)                                     /*CER048A*/
+             CHGVAR     VAR(&WEnd) VALUE(99)                                             /*CER048A*/
+             ENDDO                                                                       /*CER048A*/
+                                                                                         /*CER048A*/
+             IF         COND(&WEnd *GT 100) THEN(DO)                                     /*CER048A*/
+             CHGVAR     VAR(&WEnd) VALUE(&WEnd - 100)                                    /*CER048A*/
+             ENDDO                                                                       /*CER048A*/
+             ENDDO                                                                       /*CER048A*/
+                                                                                        /*BUG25039*/
+/** Check if it is a restart by calling program CB0160 */                               /*BUG25039*/
+                                                                                        /*BUG25039*/
+             CHGVAR     VAR(&YY) VALUE(&YY1)                                            /*BUG25039*/
+             CHGVAR     VAR(&STATUS) VALUE(' ')                                         /*BUG25039*/
+             CALL      PGM(CB0160) PARM(&CNAM &CSEQ &STATUS)                            /*BUG25039*/
+                                                                                        /*BUG25039*/
+/** If status is 'Y', restart */                                                        /*BUG25039*/
+                                                                                        /*BUG25039*/
+             IF         COND(&STATUS *EQ 'Y') THEN(DO)                                  /*BUG25039*/
+             CPYF       FROMFILE(&DPLIB/ZSDINPHPD) +
+                          TOFILE(&DMLIB/SDINPHPD) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE)                              /*BUG25039*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG25039*/
+             ENDDO                                                                      /*BUG25039*/
+             ELSE       CMD(DO)                                                         /*BUG25039*/
+             CPYF       FROMFILE(&DMLIB/SDINPHPD) +
+                          TOFILE(&DPLIB/ZSDINPHPD) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)                                                 /*BUG25039*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG25039*/
+                                                                                        /*BUG25039*/
+             ENDDO                                                                      /*BUG25039*/
+                                                                                         /*CER048A*/
+ START1:     IF         COND(&WStart *LE &WEnd) THEN(DO)                                 /*CER048A*/
+                                                                                         /*CER048A*/
+             CHGVAR     VAR(&YY) VALUE(&WStart)                                          /*CER048A*/
+/**********  CHGVAR     VAR(&FILE) VALUE('SDINPHL0' *CAT &YY)        */         /*CER048A BUG24574*/
+/**********  DLTF       FILE(&DVLIB/&FILE)                           */         /*CER048A BUG24574*/
+/**********  MONMSG     MSGID(CPF0000)                               */         /*CER048A BUG24574*/
+                                                                                         /*CER048A*/
+/**********  CHGVAR     VAR(&FILE) VALUE('SDINPHL1' *CAT &YY)        */         /*CER048A BUG24574*/
+/**********  DLTF       FILE(&DVLIB/&FILE)                           */         /*CER048A BUG24574*/
+/**********  MONMSG     MSGID(CPF0000)                               */         /*CER048A BUG24574*/
+                                                                                         /*CER048A*/
+/**********  CHGVAR     VAR(&FILE) VALUE('SDINPHL2' *CAT &YY)        */         /*CER048A BUG24574*/
+/**********  DLTF       FILE(&DVLIB/&FILE)                           */         /*CER048A BUG24574*/
+/**********  MONMSG     MSGID(CPF0000)                               */         /*CER048A BUG24574*/
+                                                                                         /*CER048A*/
+/**********  CHGVAR     VAR(&FILE) VALUE('SDINPHPD' *CAT &YY)        */         /*CER048A BUG24574*/
+/**********  DLTF       FILE(&DMLIB/&FILE)                           */         /*CER048A BUG24574*/
+                                                                                        /*BUG25039*/
+             CHGVAR     VAR(&LFMBRNM) VALUE('SDINPHL0' *CAT &YY)                        /*BUG25039*/
+             RMVM       FILE(&DVLIB/SDINPHL0) MBR(&LFMBRNM)                             /*BUG25039*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG25039*/
+             CHGVAR     VAR(&LFMBRNM) VALUE('SDINPHL1' *CAT &YY)                        /*BUG25039*/
+             RMVM       FILE(&DVLIB/SDINPHL1) MBR(&LFMBRNM)                             /*BUG25039*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG25039*/
+             CHGVAR     VAR(&LFMBRNM) VALUE('SDINPHL2' *CAT &YY)                        /*BUG25039*/
+             RMVM       FILE(&DVLIB/SDINPHL2) MBR(&LFMBRNM)                             /*BUG25039*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG25039*/
+             CHGVAR     VAR(&LFMBRNM) VALUE('SDINPHL3' *CAT &YY)                        /*BUG25039*/
+             RMVM       FILE(&DVLIB/SDINPHL3) MBR(&LFMBRNM)                             /*BUG25039*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG25039*/
+                                                                                        /*BUG25039*/
+             CHGVAR     VAR(&MBRNAME) VALUE('SDINPHPD' *CAT &YY)                        /*BUG24574*/
+             RMVM       FILE(&DMLIB/SDINPHPD) MBR(&MBRNAME)                             /*BUG24574*/
+             MONMSG     MSGID(CPF0000)                                                   /*CER048A*/
+                                                                                         /*CER048A*/
+             CHGVAR     VAR(&WStart) VALUE(&WStart + 1)                                  /*CER048A*/
+             IF         COND((&WReset *EQ 'Y') *AND (&WStart *GT 99)) +
+                          THEN(DO)                                                       /*CER048A*/
+             CHGVAR     VAR(&WStart) VALUE(0)                                            /*CER048A*/
+/*********   CHGVAR     VAR(&WEnd) VALUE(&YY1 - &TXTHRP)             */         /*CER048A BUG24574*/
+             CHGVAR     VAR(&WEnd) VALUE(&YY1 - &TXTYRP)                                /*BUG24574*/
+             ENDDO                                                                       /*CER048A*/
+                                                                                         /*CER048A*/
+             GOTO       CMDLBL(START1)                                                   /*CER048A*/
+             ENDDO                                                                       /*CER048A*/
+                                                                                         /*CER048A*/
+/** Check if it is a restart by calling program CB0160 */                                /*CER048A*/
+/**********  CHGVAR     VAR(&YY) VALUE(&YY1)                                    /*CER048A BUG25039*/
+/**********  CHGVAR     VAR(&STATUS) VALUE(' ')                                 /*CER048A BUG25039*/
+/**********  CALL      PGM(CB0160) PARM(&CNAM &CSEQ &STATUS)                    /*CER048A BUG25039*/
+                                                                                         /*CER048A*/
+/** If status is 'Y', restart */                                                         /*CER048A*/
+/**********  IF         COND(&STATUS *EQ 'Y') THEN(DO)                          /*CER048A BUG25039*/
+/**********  MOVOBJ     OBJ(&DMLIB/SDINPHL0) OBJTYPE(*FILE) +
+                          TOLIB(&DVLIB)                              */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(&DMLIB/SDINPHL1) OBJTYPE(*FILE) +
+                          TOLIB(&DVLIB)                              */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(&DMLIB/SDINPHL2) OBJTYPE(*FILE) +
+                          TOLIB(&DVLIB)                              */         /*CER048A BUG24574*/
+/**********  MONMSG     MSGID(CPF0000)                               */         /*CER048A BUG24574*/
+/**********  ENDDO                                                              /*CER048A BUG25039*/
+                                                                                         /*CER048A*/
+/***Create*files**/                                                             /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(&DVLIB/SDINPHL0) OBJTYPE(*FILE) +
+                          TOLIB(&DMLIB)                              */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(&DVLIB/SDINPHL1) OBJTYPE(*FILE) +
+                          TOLIB(&DMLIB)                              */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(&DVLIB/SDINPHL2) OBJTYPE(*FILE) +
+                          TOLIB(&DMLIB)                              */         /*CER048A BUG24574*/
+/**********  CRTDUPOBJ  OBJ(SDINPHPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*YES)                    */         /*CER048A BUG24574*/
+/**********  CRTDUPOBJ  OBJ(SDINPHL0) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*YES)                    */         /*CER048A BUG24574*/
+/**********  CRTDUPOBJ  OBJ(SDINPHL1) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*YES)                    */         /*CER048A BUG24574*/
+/**********  CRTDUPOBJ  OBJ(SDINPHL2) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) DATA(*YES)                    */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(&DMLIB/SDINPHL0) OBJTYPE(*FILE) +
+                          TOLIB(&DVLIB)                              */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(&DMLIB/SDINPHL1) OBJTYPE(*FILE) +
+                          TOLIB(&DVLIB)                              */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(&DMLIB/SDINPHL2) OBJTYPE(*FILE) +
+                          TOLIB(&DVLIB)                              */         /*CER048A BUG24574*/
+                                                                                       /*CER048A*/
+/***Rename*history*files*in*QTEMP*and*copy*in*MIDAS*libraries**/                /*CER048A BUG24574*/
+/**********  CHGVAR     VAR(&FILE) VALUE('SDINPHPD' *CAT &YY)        */         /*CER048A BUG24574*/
+/**********  RNMOBJ     OBJ(QTEMP/SDINPHPD) OBJTYPE(*FILE) +
+                          NEWOBJ(&FILE)                              */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(QTEMP/&FILE) OBJTYPE(*FILE) TOLIB(&DMLIB)*/         /*CER048A BUG24574*/
+/**********  CHGVAR     VAR(&FILE) VALUE('SDINPHL0' *CAT &YY)        */         /*CER048A BUG24574*/
+/**********  RNMOBJ     OBJ(QTEMP/SDINPHL0) OBJTYPE(*FILE) +
+                          NEWOBJ(&FILE)                              */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(QTEMP/&FILE) OBJTYPE(*FILE) TOLIB(&DVLIB)*/         /*CER048A BUG24574*/
+/**********  CHGVAR     VAR(&FILE) VALUE('SDINPHL1' *CAT &YY)        */         /*CER048A BUG24574*/
+/**********  RNMOBJ     OBJ(QTEMP/SDINPHL1) OBJTYPE(*FILE) +
+                          NEWOBJ(&FILE)                              */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(QTEMP/&FILE) OBJTYPE(*FILE) TOLIB(&DVLIB)*/         /*CER048A BUG24574*/
+/**********  CHGVAR     VAR(&FILE) VALUE('SDINPHL2' *CAT &YY)        */         /*CER048A BUG24574*/
+/**********  RNMOBJ     OBJ(QTEMP/SDINPHL2) OBJTYPE(*FILE) +
+                          NEWOBJ(&FILE)                              */         /*CER048A BUG24574*/
+/**********  MOVOBJ     OBJ(QTEMP/&FILE) OBJTYPE(*FILE) TOLIB(&DVLIB)*/         /*CER048A BUG24574*/
+                                                                                         /*CER048A*/
+                                                                                        /*BUG25733*/
+/** Retrieve the current year from Midas Run Date                    */                 /*BUG25733*/
+                                                                                        /*BUG25733*/
+             CHGVAR     VAR(&YY) VALUE(%SST(&BJMRDT 6 2))                               /*BUG25733*/
+                                                                                        /*BUG25733*/
+/** Add member to SDINPHPD as archive                                */                 /*BUG24574*/
+                                                                                        /*BUG24574*/
+             CHGVAR     VAR(&MBRNAME) VALUE('SDINPHPD' *CAT &YY)                        /*BUG24574*/
+             ADDPFM     FILE(&DMLIB/SDINPHPD) MBR(&MBRNAME)                             /*BUG24574*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG24574*/
+             CPYF       FROMFILE(&DMLIB/SDINPHPD) +
+                          TOFILE(&DMLIB/SDINPHPD) TOMBR(&MBRNAME) +
+                          MBROPT(*REPLACE)                                              /*BUG24574*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG24574*/
+                                                                                        /*BUG24574*/
+             CHGVAR     VAR(&LFMBRNM) VALUE('SDINPHL0' *CAT &YY)                        /*BUG25039*/
+             ADDLFM     FILE(&DVLIB/SDINPHL0) MBR(&LFMBRNM) +
+                          DTAMBRS((SDINPHPD (&MBRNAME)))                                /*BUG25039*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG25039*/
+             CHGVAR     VAR(&LFMBRNM) VALUE('SDINPHL1' *CAT &YY)                        /*BUG25039*/
+             ADDLFM     FILE(&DVLIB/SDINPHL1) MBR(&LFMBRNM) +
+                          DTAMBRS((SDINPHPD (&MBRNAME)))                                /*BUG25039*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG25039*/
+             CHGVAR     VAR(&LFMBRNM) VALUE('SDINPHL2' *CAT &YY)                        /*BUG25039*/
+             ADDLFM     FILE(&DVLIB/SDINPHL2) MBR(&LFMBRNM) +
+                          DTAMBRS((SDINPHPD (&MBRNAME)))                                /*BUG25039*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG25039*/
+             CHGVAR     VAR(&LFMBRNM) VALUE('SDINPHL3' *CAT &YY)                        /*BUG25039*/
+             ADDLFM     FILE(&DVLIB/SDINPHL3) MBR(&LFMBRNM) +
+                          DTAMBRS((SDINPHPD (&MBRNAME)))                                /*BUG25039*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG25039*/
+                                                                                        /*BUG25039*/
+             CALL      PGM(CB0150) PARM(&CNAM &CSEQ 'N')                                 /*CER048A*/
+/**Flag*DTAARA KESTAT pos 66 67 and set History Year to 67 68 */          /*BUG24173*/ /*BUG24173A*/
+/**********  CHGDTAARA  DTAARA(KESTAT (66 1)) VALUE('Y')      */          /*BUG24173*/ /*BUG24173A*/
+/**********  CHGDTAARA  DTAARA(KESTAT (67 68)) VALUE(&YY)     */          /*BUG24173*/ /*BUG24173A*/
+ 
+/** Call Program SD000817 to start process */
+             CALL      PGM(SD000817)
+ 
+/** Check SD000817 ran successfully using switches values */
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+             SNDPGMMSG  MSG('SD000817 ENDED ABNORMALLY') +
+                        TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             CALL      PGM(CB0150) PARM(&CNAM &CSEQ 'Y')                                /*BUG25039*/
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/* Flag DTAARA KESTAT pos 66 67 and set History Year to 67 68 */                       /*BUG24173A*/
+             CHGVAR     VAR(&NXYRC) VALUE(&BJDNWD)                                     /*BUG24173A*/
+             CHGDTAARA  DTAARA(KESTAT (66 2)) VALUE(&YY)                               /*BUG24173A*/
+             CHGDTAARA  DTAARA(KESTAT (68 5)) VALUE(&NXYRC)                            /*BUG24173A*/
+             CHGDTAARA  DTAARA(KESTAT (73 5)) VALUE(&PDAYNOC)                          /*BUG26305A*/
+ 
+/** Send Message to user to alerting end of process */
+             SNDPGMMSG  MSG('SDC000817 - END OF TAX YEAR PROCESS NOW +
+                          COMPLETE') TOMSGQ(MOPERQ)
+ 
+             ENDDO                                                                       /*CER048A*/
+                                                                                         /*CER048A*/
+/** Skip to ENDPGM Lable */
+             GOTO       CMDLBL(ENDPGM)
+ 
+ /** Send Message to User alerting failure */
+ 
+ ABNOR:      DMPCLPGM
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSG('SDC000817 ENDED ABNORMALLY') +
+                        TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             CALL      PGM(CB0150) PARM(&CNAM &CSEQ 'Y')                                /*BUG25039*/
+ 
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                        Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

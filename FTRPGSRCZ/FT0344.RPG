@@ -1,0 +1,1031 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Outgoing payments validation scr5 lvl2')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0344 - Validate Outgoing Payments - Screen 5, Level 2      *
+      *                                                               *
+      *  Function:  This program validates the level 2 screen 5       *
+      *             input for Outgoing Payments                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. CSW209  *CREATE    Date 01Apr09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *      50 - set up complete indicator                           *
+      *      87 - valid numeric character                             *
+      *      91 - Address line error                                  *
+      *      92 - Embedded blank lines exist                          *
+      *                                                               *
+      *****************************************************************
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+     E                    ERCD       38  4
+      *
+     E/COPY FTCPYSRC,SFTSWFTE
+      *
+     E                    WRN@       40  1
+     E/COPY FTCPYSRC,SFT0345SD
+     E/COPY FTCPYSRC,SFTVALDI
+     E/COPY FTCPYSRC,SFT0345FD
+     E/COPY FTCPYSRC,SFT0345ID
+     E/COPY FTCPYSRC,SFT0345SC
+     E/COPY FTCPYSRC,SFTADDRI
+     E/COPY FTCPYSRC,SFTVALCS
+      *
+     ICPYR@#      DS
+      *
+      ** Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY FTCPYSRC,SRERRI
+      *
+      ** End of Program Error Processing source
+      *
+      ** Data Structures for parameters to access programs
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Data Structures used by access programs
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+     IMEBICD    E DSMEBICDPD
+      *
+     ISDCNST    E DSSDCNSTPD
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      ** Define rundat data area
+      *
+     IZMUSER    E DSZMUSER
+      *
+      ** User / Branch Data Area
+      *
+     ICLSWTK      DS
+      *
+      ** REDEFINE SWIFT ARRAY AS FIELD FOR SETLL.
+      *
+     I                                        1  12 SW
+     IDSMTR       DS
+      *
+      ** DEFINE FIELDS FOR MESSAGE TRANSALATION
+      *
+     I                                        1 132 #MSDTA
+     I                                       15  30 #MPREF
+     I                                    P   1   20#MPART
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+     II#PARM      DS                            512
+     I                                        1   5 I#VFLD
+     I                                        6   8 I#PR
+     I                                        9   9 I#PRTT
+     I                                       10  20 I#PRTY
+     I                                       21  23 I#PCCY
+     I                                       24  26 I#RCCY
+     I                                       27  61 I#ACLN
+     I                                       27  27 I#ACC1
+     I                                       28  28 I#ACC2
+     I                                       29  29 I#ACC3
+     I                                       27  30 I#ACCL
+     I                                       29  30 I#ACCS
+     I                                       31  61 I#SPC1
+     I                                       62  64 I#MTYP
+     I                                       65  65 I#INBT
+     I                                       66  76 I#INBK
+     I                                       77  77 I#AWBT
+     I                                       78  88 I#AWBK
+     I                                       89  89 I#BENT
+     I                                       90 100 I#BENF
+     I                                      101 102 I#RSTM
+     I                                      103 104 I#PSTM
+     I                                      105 105 I#5354
+     I                                      106 107 I#MMOD
+     I                                      108 125 I#PYAC
+     I                                      126 143 I#RCAC
+     I                                      144 145 I#TTYP
+     I                                      146 146 I#COVR
+     I                                      257 466 I#BTB
+     I                                      257 291 I#BTB1
+     I                                      292 326 I#BTB2
+     I                                      327 361 I#BTB3
+     I                                      362 396 I#BTB4
+     I                                      397 431 I#BTB5
+     I                                      432 466 I#BTB6
+      *
+     IO#PARM      DS                            512
+     I                                        1  35 O#ACLN
+     I                                      257 466 O#BTB
+     I                                      257 291 O#BTB1
+     I                                      292 326 O#BTB2
+     I                                      327 361 O#BTB3
+     I                                      362 396 O#BTB4
+     I                                      397 431 O#BTB5
+     I                                      432 466 O#BTB6
+      *
+     IX#PARM      DS                            256
+     I                                        1  10 X#CPGM
+     I                                       12  12 X#ERRM
+     I                                       13  13 X#WARN
+     I                                       14  180X#INDX
+     I                                       19  25 X#MSGD
+     I                                       26  35 X#MSGF
+     I                                       36  41 X#FLDS
+     I                                       51 200 X#ERCD
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      ** Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           SDDATA
+     C                     PARM           V#DATA
+     C                     PARM           FDDATA
+     C                     PARM           E#DATA
+     C                     PARM           C#DATA
+     C                     PARM           IDDATA
+     C                     PARM           SCDATA
+      *
+      ** Set up Primary Reference for database errors
+      *
+     C                     MOVELSDDATA    W0PREF
+      *
+      ** Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      ** Determine the mode of processing and execute subroutine :-
+      **
+      ** Action Code : *VALID
+      ** --------------------
+      **
+      ** Called from FT0300 to validate all input fields on the detail
+      ** screen. Once verified, control returns to the calling program
+      ** where the appropriate error indicators are set on and the
+      ** processing continues.
+      *
+     C           W0ACT     CASEQ'*VALID  'SRPROC
+     C                     CAS            SRACT
+     C                     END
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      ** Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC   : Validate All Detail Fields Entered                *
+      *             Seton appropriate indicators and set up the array *
+      *             of relevant error codes for display.              *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPROC'  @STK,Q
+      *
+      ** Move warning array passed to WRN@ and error indicators
+      *
+     C                     MOVEAE#WARA    WRN@
+     C                     MOVEA*BLANKS   ERCD
+     C                     CLEARIDDATA
+     C                     Z-ADD0         X       50
+      *
+      ** Validate Remittance Information (Cover)
+      *
+     C                     EXSR SROCDP
+      *
+      ** Validate Sender to Receiver Information (Cover A)
+      *
+     C                     EXSR SROCBA
+      *
+      ** Validate Sender to Receiver Information (Cover B)
+      *
+     C                     EXSR SROCBB
+      *
+      ** Validate Instructed Currency and Amount (Cover)
+      *
+     C                     EXSR SROCIC
+      *
+      ** Move waring array back and errors
+      *
+     C                     MOVEAWRN@      E#WARA
+     C                     MOVEAERCD      C#ERCD
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROCDP   : Validate Remittance Information (Cover)           *
+      *                                                               *
+      *  CALLED BY: SRPROC                                            *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           SROCDP    BEGSR
+      *
+     C           SCOMVF    IFEQ 'COV'
+      *
+     C                     ELSE
+     C           SDCDP     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCDP1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00266' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'N'       IDCDP1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCDP
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SDCDP     IFNE *BLANKS
+     C                     MOVELSDCDP     ADDRSS
+      *
+     C                     MOVEL'Y'       ADLINE
+     C                     EXSR ADCHK
+      *
+      ** Embedded blank lines exist
+      *
+     C           *IN92     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCDP1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00215' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'N'       IDCDP1
+     C                     MOVEL'Y'       E#NOUP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+     C           ENDCDP    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROCBA   : Sender to Receiver Information (Cover A)          *
+      *                                                               *
+      *  CALLED BY: SRPROC                                            *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     C           SROCBA    BEGSR
+      *
+      ** If MT202 is set to Y
+      *
+     C           V#SNMT    IFEQ 'Y'
+      *
+      ** Sender to Receiver (Cover) can only be entered for
+      ** SWIFT 202 COV or SWIFT 205 COV
+      *
+     C                     ELSE
+     C           SDOCB     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDOCB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00234' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'N'       IDOCB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBA
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE 'A'       MSGFLD  1
+     C                     MOVE 1         LNUM    10
+     C                     MOVE 001       #N      30
+     C                     MOVEL*BLANKS   LINE   35
+      *
+     C           SDOCB     IFNE *BLANKS
+     C           LNUM      DOWLT7
+     C           35        SUBSTSDOCB:#N  LINE
+      *
+     C           LINE      IFNE *BLANKS
+     C                     MOVELLINE      SLASH1  1
+     C                     MOVE LINE      LINEX  34
+     C                     MOVELLINEX     SLASH2  1
+     C                     MOVE LINE      LINE33 33
+     C                     MOVE LINE      LINE26 26
+     C                     MOVELLINE26    LINE10  1
+      *
+     C           SLASH1    IFNE '/'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDOCB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00236' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     EXSR SRFLD
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBA
+     C                     ELSE
+      *
+     C           LNUM      IFEQ 1
+     C           SLASH2    ANDEQ'/'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDOCB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00237' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'N'       IDOCB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBA
+     C                     ENDIF
+      *
+     C           LNUM      IFNE 1
+     C           SLASH2    ANDEQ'/'
+     C           LINE33    ANDEQ*BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDOCB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00238' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     EXSR SRFLD
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBA
+     C                     ENDIF
+      *
+      *
+      ** Check the line for '8a/', where 8a represents
+      ** up to eight upper case alphabetic charaters
+      *
+     C                     Z-ADD2         #R      30
+     C           ALPHAN    CHECKLINE:#R   #R
+     C           #R        IFGE 11
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVEL'Y'       E#NOUP
+     C                     MOVELSDOCB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00239' FTMSID
+     C                     EXSR FTSNMS
+     C                     GOTO ENDCBA
+     C                     ENDIF
+      *
+      ** If #R less than eleven then this character must be "/"
+      *
+     C           #R        IFLT 11
+     C           1         SUBSTLINE:#R   ##001
+     C           ##001     IFNE '/'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVEL'Y'       E#NOUP
+     C                     MOVELSDOCB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00240' FTMSID
+     C                     EXSR FTSNMS
+     C                     GOTO ENDCBA
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           LNUM      ADD  1         LNUM
+     C           #N        ADD  35        #N
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C           SDOCB     IFNE *BLANKS
+     C                     MOVELSDOCB     ADDRSS
+      *
+     C                     MOVEL'Y'       ADLINE
+     C                     EXSR ADCHK
+      *
+      ** Embedded blank lines exist
+      *
+     C           *IN92     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDOCB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00235' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     EXSR SRFLD
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Cross Validation
+      *
+     C                     MOVELSDOCB     XXBTB
+     C                     EXSR SRXVAL
+     C                     MOVELXXBTB     SDOCB
+     C                     MOVELIXBTB     IDOCB
+      *
+     C           ENDCBA    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROCBB   : Sender to Receiver Information (Cover B)          *
+      *                                                               *
+      *  CALLED BY: SRPROC                                            *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     C           SROCBB    BEGSR
+      *
+      ** If Outgoing validation flag is set to Y
+      *
+     C           SCOMVF    IFEQ 'COV'
+      *
+     C                     ELSE
+     C           SDCBB     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCBB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00242' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'N'       IDCBB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBB
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE 'B'       MSGFLD  1
+     C                     MOVE 1         LNUM
+     C                     MOVE 001       #N
+     C                     MOVEL*BLANKS   LINE
+      *
+     C           SDCBB     IFNE *BLANKS
+     C           LNUM      DOWLT7
+     C           35        SUBSTSDCBB:#N  LINE
+      *
+     C           LINE      IFNE *BLANKS
+     C                     MOVELLINE      SLASH1
+     C                     MOVE LINE      LINEX
+     C                     MOVELLINEX     SLASH2
+     C                     MOVE LINE      LINE33
+     C                     MOVE LINE      LINE26
+     C                     MOVELLINE26    LINE10
+      *
+     C           SLASH1    IFNE '/'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCBB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00244' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     EXSR SRFLD
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBB
+     C                     ELSE
+      *
+     C           LNUM      IFEQ 1
+     C           SLASH2    ANDEQ'/'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCBB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00245' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'N'       IDCBB1
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBB
+     C                     ENDIF
+      *
+     C           LNUM      IFNE 1
+     C           SLASH2    ANDEQ'/'
+     C           LINE33    ANDEQ*BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCBB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00246' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     EXSR SRFLD
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBB
+     C                     ENDIF
+      *
+      ** Check the line for '8a/', where 8a represents
+      ** up to eight upper case alphabetic charaters
+      *
+     C                     Z-ADD2         #R      30
+     C           ALPHAN    CHECKLINE:#R   #R
+     C           #R        IFGE 11
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVEL'Y'       E#NOUP
+     C                     MOVELSDCBB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00247' FTMSID
+     C                     EXSR FTSNMS
+     C                     GOTO ENDCBB
+     C                     ENDIF
+      *
+      ** If #R less than eleven then this character must be "/"
+      *
+     C           #R        IFLT 11
+     C           1         SUBSTLINE:#R   ##001
+     C           ##001     IFNE '/'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVEL'Y'       E#NOUP
+     C                     MOVELSDCBB1    FTMSDT
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00248' FTMSID
+     C                     EXSR FTSNMS
+     C                     GOTO ENDCBB
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           LNUM      ADD  1         LNUM
+     C           #N        ADD  35        #N
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C           SDCBB     IFNE *BLANKS
+     C                     MOVELSDCBB     ADDRSS
+      *
+     C                     MOVEL'Y'       ADLINE
+     C                     EXSR ADCHK
+      *
+      ** Embedded blank lines exist
+      *
+     C           *IN92     IFEQ '1'
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCBB1    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00243' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     EXSR SRFLD
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCBB
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Cross Validation
+      *
+     C                     MOVELSDCBB     XXBTB
+     C                     EXSR SRXVAL
+     C                     MOVELXXBTB     SDCBB
+     C                     MOVELIXBTB     IDCBB
+      *
+     C           ENDCBB    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROCIC   : Validate Instructed Currency and Amount (Cover)   *
+      *                                                               *
+      *  CALLED BY: SRPROC - Control Process of Validation            *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           SROCIC    BEGSR
+      *
+     C           SCOMVF    IFEQ 'COV'
+      *
+     C                     ELSE
+     C           SDCICY    IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCICY    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00260' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'N'       IDCICY
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCOC
+     C                     ENDIF
+      *
+     C           SDCIAM    IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCIAM    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00261' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IDCIAM
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCOC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Instructed Currency (Cover)
+      *
+     C           SDCICY    IFNE *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY'    POPTN   7
+     C           SDCICY    PARM SDCICY    PCCY    3
+     C           SDCURR    PARM SDCURR    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCICY    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00218' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IDCICY
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCOC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Validate Instructed Amount (Cover)
+      *
+     C           SDCIAM    IFNE *BLANKS
+     C           SDCICY    IFEQ *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCIAM    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00220' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IDCIAM
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCOC
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDCIAM    ZFIELD    P
+     C                     MOVE '0'       *IN90
+      *
+     C                     CALL 'ZALIGN'               90
+     C                     PARM *BLANKS   ZRTN    7
+     C                     PARM           ZFIELD 16
+     C                     PARM A6NBDP    ZADEC   10
+     C                     PARM 13        ZADIG   20
+     C                     PARM *BLANKS   ZAFLD  16
+      *
+     C           ZRTN      IFNE *BLANKS
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVELSDCIAM    FTMSDT
+     C                     MOVEL'MEMSG'   FTMSGF
+     C                     MOVEL'ME00221' FTMSID
+     C                     MOVELE#CPGM    FTPGMQ
+     C                     EXSR FTSNMS
+     C                     MOVEL'Y'       IDCIAM
+     C                     MOVEL'Y'       E#NOUP
+     C                     GOTO ENDCOC
+     C                     ENDIF
+      *
+     C                     MOVE ZFIELD    SDCIAM
+     C                     MOVE ZFIELD    FDCIAM
+     C                     ENDIF
+      *
+     C           ENDCOC    ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRXVAL   : Cross Validation                                  *
+      *                                                               *
+      *  CALLED BY: SRPROC                                            *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     C           SRXVAL    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRXVAL'  @STK,Q
+      *
+      ** Call Bank to Bank Validation object.
+      ** Set up parameters
+      *
+     C                     MOVEL*BLANKS   W0RTN
+     C                     CLEARI#PARM
+      *
+      ** Set up Control fields
+      *
+     C                     MOVEL':72: '   I#VFLD
+     C                     MOVEL'PAY'     I#PR
+      *
+      ** Set up Currency fields
+      *
+     C                     MOVELV#PCCY    I#PCCY
+     C                     MOVELV#SMCY    I#RCCY
+      *
+      ** Set up Account with Bank
+      *
+     C           V#ACBT    IFNE *BLANKS
+     C                     MOVELV#ACBT    I#AWBT
+     C                     MOVELV#ABK1    ##001A  1
+     C           ##001A    IFEQ '/'
+     C                     MOVELV#ABK2    I#AWBK
+     C                     ELSE
+     C                     MOVELV#ABK1    I#AWBK
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set up Beneficiary
+      *
+     C           V#BNCT    IFNE *BLANKS
+     C                     MOVELV#BNCT    I#BENT
+     C                     MOVELV#BNF1    ##001A  1
+     C           ##001A    IFEQ '/'
+     C                     MOVELV#BNF2    I#BENF
+     C                     ELSE
+     C                     MOVELV#BNF1    I#BENF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Move in Bank to Bank Information
+      *
+     C                     MOVELXXBTB     I#BTB
+     C                     MOVELV#STMT    I#PSTM
+     C                     MOVEL*BLANKS   I#RSTM
+      *
+      ** Set up Receive/Settle account information
+      *
+     C                     MOVELV#FRGL    I#RCAC
+      *
+      ** Set up Pay account information
+      *
+     C                     MOVELV#TOGL    I#PYAC
+      *
+      ** If extra message and Rec Corr. then set 5354 field
+      *
+     C           V#SNCT    IFNE *BLANKS
+     C           V#RCOT    ANDNE*BLANKS
+     C                     MOVEL'Y'       I#5354
+     C                     ENDIF
+      *
+      ** Transaction Type
+      *
+     C                     MOVEL'OP'      I#TTYP
+      *
+      ** Covered Required
+      *
+     C                     MOVELV#SNMT    I#COVR
+      *
+      ** Set up message type
+      *
+     C                     SELEC
+     C           V#ORC1    WHEQ ORCFLD
+     C                     MOVEL'202'     I#MTYP
+     C                     OTHER
+     C                     MOVEL'100'     I#MTYP
+     C                     ENDSL
+     C                     CLEARO#PARM
+     C                     CLEARX#PARM
+      *
+      ** Send messages to correct calling process
+      *
+     C                     MOVELE#CPGM    X#CPGM
+     C                     MOVEL'FT'      I#MMOD
+      *
+     C                     MOVEL'MEC0114' X#MSGD
+     C                     MOVEL'MEMSG'   X#MSGF
+      *
+     C                     CALL 'ME9950'
+     C                     PARM           W0RTN   7
+     C                     PARM           I#PARM
+     C                     PARM           O#PARM
+     C                     PARM           X#PARM
+     C                     PARM           Z#PARM256
+      *
+      ** On return if errors copy into error array
+      *
+     C                     MOVELO#BTB     XXBTB
+      *
+     C           X#ERRM    IFNE *BLANKS
+      *
+     C                     MOVE X#FLDS    IXBTB
+     C                     MOVEL'Y'       E#MSGS
+     C                     MOVEL'Y'       E#NOUP
+      *
+     C                     ENDIF
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXXVAL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      ** Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 41 *
+     C                     Z-ADD41        W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFLD    : Get corresponding line number error               *
+      *                                                               *
+      *  CALLED BY: SROCBA, SROCBB                                    *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRFLD     BEGSR
+      *
+     C           MSGFLD    IFEQ 'A'
+     C           LNUM      IFEQ 1
+     C                     MOVEL'N'       IDOCB1
+     C                     ENDIF
+      *
+     C           LNUM      IFEQ 2
+     C                     MOVEL'N'       IDOCB2
+     C                     ENDIF
+      *
+     C           LNUM      IFEQ 3
+     C                     MOVEL'N'       IDOCB3
+     C                     ENDIF
+      *
+     C           LNUM      IFEQ 4
+     C                     MOVEL'N'       IDOCB4
+     C                     ENDIF
+      *
+     C           LNUM      IFEQ 5
+     C                     MOVEL'N'       IDOCB5
+     C                     ENDIF
+      *
+     C           LNUM      IFEQ 6
+     C                     MOVEL'N'       IDOCB6
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           MSGFLD    IFEQ 'B'
+     C           LNUM      IFEQ 1
+     C                     MOVEL'N'       IDCBB1
+     C                     ENDIF
+      *
+     C           LNUM      IFEQ 2
+     C                     MOVEL'N'       IDCBB2
+     C                     ENDIF
+      *
+     C           LNUM      IFEQ 3
+     C                     MOVEL'N'       IDCBB3
+     C                     ENDIF
+      *
+     C           LNUM      IFEQ 4
+     C                     MOVEL'N'       IDCBB4
+     C                     ENDIF
+      *
+     C           LNUM      IFEQ 5
+     C                     MOVEL'N'       IDCBB5
+     C                     ENDIF
+      *
+     C           LNUM      IFEQ 6
+     C                     MOVEL'N'       IDCBB6
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C           *LIKE     DEFN V#ORC1    ORCFLD
+     C           *LIKE     DEFN SDOCB     XXBTB
+     C           *LIKE     DEFN IDOCB     IXBTB
+     C                     MOVEL*BLANKS   ORCFLD
+     C                     MOVEL'MT202'   ORCFLD
+      *
+      ** Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      ** Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *
+      ** File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+     E/COPY FTCPYSRC,SFTADDRC
+     E/COPY FTCPYSRC,SFTADDRSC
+     E/COPY FTCPYSRC,SFTSWFTC
+     E/COPY FTCPYSRC,SFTSNMSC
+     C/EJECT
+      *
+      ** /Copy point for Outputs
+      *
+      ** Array ALPH and NUMC in O-Specs were deleted
+      **   ALPH  - ARRAY OF ALPHABETIC
+      **   ABCDEFGHIJKLMNOPQRSTUVWXYZ
+      **   NUMC  - ARRAY OF NUMERIC
+      **   1234567890
+      *
+     O/EJECT
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2009

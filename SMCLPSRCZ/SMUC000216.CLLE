@@ -1,0 +1,263 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Utility to delete records from FCPREQL0')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - FC Module                                           */
+/*                                                                   */
+/*       SMUC000216 - Utility to delete selected report name from    */
+/*                    FCPREQL0 and related files.                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. BUG27976           Date 18Aug10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BUG27092 *CREATE   Date 16Mar10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*  BUG27976 - Error running SMUC00216 during implementation -       */
+/*             upgrading an R4 system to BF                          */
+/*  BUG27092 - Utility program to delete a specific report name      */
+/*             from FCPREQL0 as well as all related files            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PREPORT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&INVLIB) TYPE(*CHAR) LEN(10)                                /*BUG27976*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)                                 /*BUG27976*/
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)                                /*BUG27976*/
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)                                    /*BUG27976*/
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                  /*BUG27976*/
+             DCL        VAR(&POP01) TYPE(*CHAR) LEN(20)                                 /*BUG27976*/
+             DCL        VAR(&POP02) TYPE(*CHAR) LEN(20)                                 /*BUG27976*/
+             DCL        VAR(&POP03) TYPE(*CHAR) LEN(20)                                 /*BUG27976*/
+             DCL        VAR(&POP04) TYPE(*CHAR) LEN(20)                                 /*BUG27976*/
+             DCL        VAR(&POP05) TYPE(*CHAR) LEN(20)                                 /*BUG27976*/
+             DCL        VAR(&POP06) TYPE(*CHAR) LEN(20)                                 /*BUG27976*/
+             DCL        VAR(&POP07) TYPE(*CHAR) LEN(20)                                 /*BUG27976*/
+             DCL        VAR(&POP08) TYPE(*CHAR) LEN(20)                                 /*BUG27976*/
+             DCL        VAR(&POP09) TYPE(*CHAR) LEN(20)                                 /*BUG27976*/
+             DCL        VAR(&POP10) TYPE(*CHAR) LEN(20)                                 /*BUG27976*/
+             DCL        VAR(&PVL01) TYPE(*CHAR) LEN(200)                                /*BUG27976*/
+             DCL        VAR(&PVL02) TYPE(*CHAR) LEN(200)                                /*BUG27976*/
+             DCL        VAR(&PVL03) TYPE(*CHAR) LEN(200)                                /*BUG27976*/
+             DCL        VAR(&PVL04) TYPE(*CHAR) LEN(200)                                /*BUG27976*/
+             DCL        VAR(&PVL05) TYPE(*CHAR) LEN(200)                                /*BUG27976*/
+             DCL        VAR(&PVL06) TYPE(*CHAR) LEN(200)                                /*BUG27976*/
+             DCL        VAR(&PVL07) TYPE(*CHAR) LEN(200)                                /*BUG27976*/
+             DCL        VAR(&PVL08) TYPE(*CHAR) LEN(200)                                /*BUG27976*/
+             DCL        VAR(&PVL09) TYPE(*CHAR) LEN(200)                                /*BUG27976*/
+             DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)                                /*BUG27976*/
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/**********  STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                  */                 /*BUG27976*/
+/**********  MONMSG     MSGID(CPF8351)                               */                 /*BUG27976*/
+ 
+/* Save a copy of the update files in INVLIB */                                         /*BUG27976*/
+ 
+             CHGVAR     VAR(&PRTCD) VALUE(' ')                                          /*BUG27976*/
+             CHGVAR     VAR(&POP01) VALUE('BrgMidasSystemPrefix')                       /*BUG27976*/
+             CALL       PGM(AOSVALR0) PARM(&PRTCD &POP01 &PVL01 +
+                          &POP02 &PVL02 &POP03 &PVL03 &POP04 &PVL04 +
+                          &POP05 &PVL05 &POP06 &PVL06 &POP07 &PVL07 +
+                          &POP08 &PVL08 &POP09 &PVL09 &POP10 &PVL10)                    /*BUG27976*/
+ 
+             IF         COND(&PRTCD *NE '       ') THEN(GOTO CMDLBL(ABNOR))             /*BUG27976*/
+ 
+             CHGVAR     VAR(&PRE) VALUE(%SST(&PVL01 1 2))                               /*BUG27976*/
+             CHGVAR     VAR(&INVLIB) VALUE(&PRE *TCAT 'INVLIB')                         /*BUG27976*/
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')                           /*BUG27976*/
+             CHGVAR     VAR(&DTALIB) VALUE(&PRE *TCAT 'DTALIB')                         /*BUG27976*/
+ 
+             CRTDUPOBJ  OBJ(FCPREQPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&INVLIB) NEWOBJ(BKFCPREQPD) DATA(*YES)                  /*BUG27976*/
+ 
+             MONMSG     MSGID(CPF4128 CPF2130 CPD2104) EXEC(DO)                         /*BUG27976*/
+             SNDPGMMSG  MSG('Failed to create backup file +
+                          BKFCPREQPD, exiting program') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*BUG27976*/
+             GOTO       CMDLBL(END)                                                     /*BUG27976*/
+             ENDDO                                                                      /*BUG27976*/
+ 
+             CRTDUPOBJ  OBJ(FCPARPPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&INVLIB) NEWOBJ(BKFCPARPPD) DATA(*YES)                  /*BUG27976*/
+ 
+             MONMSG     MSGID(CPF4128 CPF2130 CPD2104) EXEC(DO)                         /*BUG27976*/
+             SNDPGMMSG  MSG('Failed to create backup file +
+                          BKFCPARPPD, exiting program') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*BUG27976*/
+             GOTO       CMDLBL(END)                                                     /*BUG27976*/
+             ENDDO                                                                      /*BUG27976*/
+ 
+             CRTDUPOBJ  OBJ(MAARCPPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&INVLIB) NEWOBJ(BKMAARCPPD) DATA(*YES)                  /*BUG27976*/
+ 
+             MONMSG     MSGID(CPF4128 CPF2130 CPD2104) EXEC(DO)                         /*BUG27976*/
+             SNDPGMMSG  MSG('Failed to create backup file +
+                          BKMAARCPPD, exiting program') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*BUG27976*/
+             GOTO       CMDLBL(END)                                                     /*BUG27976*/
+             ENDDO                                                                      /*BUG27976*/
+ 
+             CRTDUPOBJ  OBJ(SDFCTLPA) FROMLIB(&DTALIB) OBJTYPE(*FILE) +
+                          TOLIB(&INVLIB) NEWOBJ(BKSDFCTLPA) DATA(*YES)                  /*BUG27976*/
+ 
+             MONMSG     MSGID(CPF4128 CPF2130 CPD2104) EXEC(DO)                         /*BUG27976*/
+             SNDPGMMSG  MSG('Failed to create backup file +
+                          BKSDFCTLPA, exiting program') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*BUG27976*/
+             GOTO       CMDLBL(END)                                                     /*BUG27976*/
+             ENDDO                                                                      /*BUG27976*/
+ 
+             CRTDUPOBJ  OBJ(FCRREQPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&INVLIB) NEWOBJ(BKFCRREQPD) DATA(*YES)                  /*BUG27976*/
+ 
+             MONMSG     MSGID(CPF4128 CPF2130 CPD2104) EXEC(DO)                         /*BUG27976*/
+             SNDPGMMSG  MSG('Failed to create backup file +
+                          BKFCRREQPD, exiting program') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*BUG27976*/
+             GOTO       CMDLBL(END)                                                     /*BUG27976*/
+             ENDDO                                                                      /*BUG27976*/
+ 
+             CRTDUPOBJ  OBJ(FCPARDPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&INVLIB) NEWOBJ(BKFCPARDPD) DATA(*YES)                  /*BUG27976*/
+ 
+             MONMSG     MSGID(CPF4128 CPF2130 CPD2104) EXEC(DO)                         /*BUG27976*/
+             SNDPGMMSG  MSG('Failed to create backup file +
+                          BKFCPARDPD, exiting program') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*BUG27976*/
+             GOTO       CMDLBL(END)                                                     /*BUG27976*/
+             ENDDO                                                                      /*BUG27976*/
+ 
+             CRTDUPOBJ  OBJ(MAARCDPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                          TOLIB(&INVLIB) NEWOBJ(BKMAARCDPD) DATA(*YES)                  /*BUG27976*/
+ 
+             MONMSG     MSGID(CPF4128 CPF2130 CPD2104) EXEC(DO)                         /*BUG27976*/
+             SNDPGMMSG  MSG('Failed to create backup file +
+                          BKMAARCDPD, exiting program') +
+                          TOMSGQ(MOPERQ MRUNQ)                                          /*BUG27976*/
+             GOTO       CMDLBL(END)                                                     /*BUG27976*/
+             ENDDO                                                                      /*BUG27976*/
+ 
+/* To list all records that must be deleted from file                */
+ 
+             CALL       PGM(SMU00216) PARM(' ' 'DL0760')
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                           CMDLBL(ABNOR))
+ 
+/* To delete/update records                                          */
+ 
+             CALL       PGM(SMU00216) PARM('D' 'DL0760')
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                           CMDLBL(ABNOR))
+ 
+/* After file update, re-run program passing blank on the 2nd parm   */
+/*  to check if no other record was left undeleted/unchanged         */
+ 
+             CALL       PGM(SMU00216) PARM(' ' 'DL0760')
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                           CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:
+ 
+/* Restore data to update files */                                                      /*BUG27976*/
+ 
+             CPYF       FROMFILE(&INVLIB/BKFCPREQPD) +
+                          TOFILE(&DMLIB/FCPREQPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                            /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             CPYF       FROMFILE(&INVLIB/BKFCPARPPD) +
+                          TOFILE(&DMLIB/FCPARPPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                            /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             CPYF       FROMFILE(&INVLIB/BKMAARCPPD) +
+                          TOFILE(&DMLIB/MAARCPPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                            /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             CPYF       FROMFILE(&INVLIB/BKSDFCTLPA) +
+                          TOFILE(&DTALIB/SDFCTLPA) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                            /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             CPYF       FROMFILE(&INVLIB/BKFCRREQPD) +
+                          TOFILE(&DMLIB/FCRREQPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                            /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             CPYF       FROMFILE(&INVLIB/BKFCPARDPD) +
+                          TOFILE(&DMLIB/FCPARDPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                            /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             CPYF       FROMFILE(&INVLIB/BKMAARCDPD) +
+                          TOFILE(&DMLIB/MAARCDPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                            /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC000216 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ 
+ END:
+/**********  ENDCMTCTL                                               */                 /*BUG27976*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)                       */                 /*BUG27976*/
+ 
+/* Delete backup files */                                                               /*BUG27976*/
+ 
+             DLTF       FILE(&INVLIB/BKFCPREQPD)                                        /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             DLTF       FILE(&INVLIB/BKFCPARPPD)                                        /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             DLTF       FILE(&INVLIB/BKMAARCPPD)                                        /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             DLTF       FILE(&INVLIB/BKSDFCTLPA)                                        /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             DLTF       FILE(&INVLIB/BKFCRREQPD)                                        /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             DLTF       FILE(&INVLIB/BKFCPARDPD)                                        /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             DLTF       FILE(&INVLIB/BKMAARCDPD)                                        /*BUG27976*/
+             MONMSG     MSGID(CPF2802)                                                  /*BUG27976*/
+ 
+             ENDPGM

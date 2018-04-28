@@ -1,0 +1,646 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FX Net deals completed by i/c termination')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas:- Dealing Module - Foreign Exchange.                   *
+      *                                                               *
+      *  FX0950 - Deals completed by I/C Termination                  *
+      *                                                               *
+      *  Function:  This program sets the net flag on FXDEALPP and    *
+      *             DEALSDB to 'N' if the reference is blank.         *
+      *  (phase(s)) I/C term.                                         *
+      *                                                               *
+      *  Called By: FXC0950 - Remove flags on Unnetted Deals.         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD031214           Date 25Nov14               *
+      *  Prev Amend No. CDL096             Date 24Nov14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CSW212             Date 03May12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER048             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CAS008             Date 16Jun04               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CDL010             Date 02Aug02               *
+      *                 CAS004             Date 26Jun02               *
+      *                 217684             Date 12May03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR005             Date 21Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CDL002   *CREATE   Date 01May97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031214 - Pay/Receive messages were generated for the back- *
+      *             dated settlement of FX+MM deals (value date of    *
+      *             pay/receive < today                               *
+      *           - if value date is greater than or equal to run date*
+      *             set PRI1/PRI3 to '1'                              *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CAS008 - IAS 39 Enhancements (Recompile)                     *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP.*
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  CAP056 - Automatic Authorisation of Interface deals          *
+      *           (Recompile)                                         *
+      *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
+      *  CAS001 - Net Present Value (NPV) Accounting (Recompile)      *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+      *  CIR005 - FRA/IRS Business Day Conventions to DEALSDG         *
+      *           (recompile)                                         *
+      *  CDL002 - FX Netting.                                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ** FX Deals (DEALSDB) by Deal No.
+     FDEALS   UF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      ** FX Deals (FXDEALPP) by Deal No.
+     FFXDEALLLUF  E           K        DISK
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      ** MIDAS Sorted deals transaction Index.
+     FSDTIX   UF  E           K        DISK                      A
+      *
+      *
+     FFX0950P1O   E             60     PRINTER      KINFDS SPOOL1     UC
+     FFX0950AUO   E                    PRINTER      KINFDS SPOOLA     UC
+      *
+      /COPY ZSRSRC,ZFRPEDZ1
+      *
+      * Currencies Details
+     E                    CY        200  3
+     E                    CDP       200  1 0
+     E                    CYND      200  1 0
+      *
+      * Working days forward for each currency
+     E                    NOTD      200  8 0
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      /SPACE 3
+      *
+     IDEALSDBF
+     I              RECI                            DRECI
+     I              DLNO                            DDLNO
+     I              VDAT                            DVDAT
+     I              RCDT                            DRCDT
+     I              BRCA                            DBRCA
+     I              CHTP                            DCHTP
+     I              ZZ001                           DZZ001
+     I              TNLU                            DTNLU
+      /COPY ZSRSRC,ZFRPEDZ2
+      *
+     ILDA       E DSLDA                         256
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDSSDY    E DSDSSDY
+      ** Dummy Data Structure for Access Objects.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank ICD Details accessed via Access Object.
+      *
+     ISDDEAL    E DSSDDEALPD
+      ** Dealing ICD Details accessed via Access Object.
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer ICD Details accessed via Access Object.
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+      *
+     ICYDDS     E DSSDCURRPD
+      **   Currency details from SDCURRD
+      *
+     ISPOOL1      DS
+     I** Information Data Structure for Printer File.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOLA      DS
+     I** Information Data Structure for Audit File.
+     I                                       83  92 SFILEA
+     I                                    B 123 1240SFNUMA
+      *
+      ** DataStructure:  Split MIDAS Alpha Run Date
+     I            DS
+     I                                        1   7 MRDATE
+     I                                        1   2 RUNADD
+     I                                        3   5 RUNAMM
+     I                                        6   7 RUNAYY
+      *
+      **  Data Structure:  Redefine parameter value date
+     I            DS
+     I                                        1   6 WFPLVD
+     I                                        1   2 WFPLDD
+     I                                        3   4 WFPLMM
+     I                                        5   6 WFPLYY
+     I            DS
+     I                                        7  120DDVALD
+     I                                        7   8 WFDDYY
+     I                                        9  10 WFDDMM
+     I                                       11  12 WFDDDD
+     I                                        7  12 WAVALD
+      *
+      **  Data Structure:  6 to 8 digit year/mont day field
+     I            DS
+     I                                        1   80WFVAL8
+     I                                        3   40WFVALY
+     I                                        3   80WFVALD
+      *
+      *  Data Structure to redefine file date fields
+     I            DS
+     I                                        1   80WFFHVL
+     I                                        1   40FHVDYY
+     I                                        5   60FHVDMM
+     I                                        7   80FHVDDD
+      *
+      *=========================================================================
+      *
+      * Main Processing
+      *
+      *=========================================================================
+      *
+     C                     READ DEALSDBF                 82
+      *
+     C                     EXSR DETAIL
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *=========================================================================
+      /EJECT
+      **************************************************************************
+      *
+      *  SR DETAIL - Detail Processing Subroutine
+      *
+      **************************************************************************
+      *
+     C           DETAIL    BEGSR
+      *
+     C           *IN82     DOWEQ'0'
+      * Clear Data Structures holding previous currency details        y
+     C                     MOVE *BLANKS   UPDATE  1
+     C           NETBY     IFEQ 'Y'
+     C           NETBR     ANDEQ*BLANK
+     C           NETSL     OREQ 'Y'
+     C           NETSR     ANDEQ*BLANK
+      *
+      * Check ccy to find date and process if pay/rec will be gen. today
+     C           DDLNO     CHAINFXDEALLL             81
+      *
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'FXDEALLL'DBFILE           *DB ERROR 001 *
+     C                     MOVELDDLNO     DBKEY            ***************
+     C                     MOVEL'FX0950'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           FHDDLT    IFEQ *BLANK
+     C                     Z-ADD1         K
+     C           FHCCY1    LOKUPCY,K                     79
+      * Set up Buy Ccy Details and record previous flag value.
+     C                     MOVE CDP,K     BUYDP
+     C                     MOVE FHNBUY    BUYPRV
+      * Check if value date against forward date
+     C           FHNBUY    IFEQ 'Y'
+     C           FHNBRF    ANDEQ*BLANK
+     C           WFFHVL    ANDLENOTD,K
+     C                     MOVE 'Y'       UPDATE
+     C                     MOVE 'N'       FHNBUY
+     C                     MOVE 'N'       NETBY
+     C                     ENDIF
+     C                     Z-ADD1         K
+     C           FHCCY2    LOKUPCY,K                     79
+      * Set up Sell Ccy Details and record previous flag value.
+     C                     MOVE CDP,K     SELDP
+     C                     MOVE FHNSEL    SELPRV
+      * Check if value date against forward date
+     C           FHNSEL    IFEQ 'Y'
+     C           FHNSRF    ANDEQ*BLANK
+     C           WFFHVL    ANDLENOTD,K
+     C                     MOVE 'Y'       UPDATE
+     C                     MOVE 'N'       FHNSEL
+     C                     MOVE 'N'       NETSL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           UPDATE    IFEQ 'Y'
+      *  Setup record to DTRIXDD
+     C                     Z-ADD0         PRI1                                              MD031214
+     C                     Z-ADD0         PRI3                                              MD031214
+     C           DVDAT     IFGE BJRDNB                                                      MD031214
+     C                     Z-ADD1         PRI1                                              MD031214
+     C                     Z-ADD1         PRI3                                              MD031214
+     C                     ENDIF                                                            MD031214
+     C                     MOVE 'D'       RECI
+     C                     MOVE 'D'       RCDT
+     C                     MOVELFHDN38    DLNO
+     C                     MOVELBJRDNB    VDAT
+     C                     Z-ADD0         DASN
+     C                     MOVE 'A'       CHTP
+     C                     MOVE 'N'       CNRQ
+     C                     MOVE 'N'       CNPR
+     C                     TIME           TIME1   60
+     C                     MOVELTIME1     TIME2   40
+     C                     Z-ADDTIME2     TIM
+     C                     MOVE 'N'       DADI
+     C**********           Z-ADD1         PRI1                                              MD031214
+     C                     Z-ADD0         PRI2
+     C**********           Z-ADD1         PRI3                                              MD031214
+     C                     MOVELFHDBRC    BRCA
+     C                     Z-ADD0         TNLU
+      *  Accumulate Hash Totals
+     C                     ADD  1         WFHSH#
+      *  Write to report
+     C                     EXSR WRTRPT
+      *  Update Files
+     C                     EXSR UPDATF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ DEALSDBF                 82
+     C                     MOVE 'N'       UPDATE
+     C                     ENDDO
+      *
+      *  Write Trailer
+     C           WFHSH#    IFGT 0
+     C                     WRITEFX0950T1
+      *
+      *  Update record to DTRIXDD if count needs changing
+     C                     Z-ADD0         DEALK   60
+     C           DEALK     CHAINSDTIX                88
+     C*
+     C           *IN88     IFEQ '1'
+     C                     MOVE '*FIRST ' DBKEY            ***************
+     C                     MOVEL'SDTIX   'DBFILE           * DBERROR 003 *
+     C                     Z-ADD3         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C                     ADD  WFHSH#    NDLR
+     C                     UPDATDTRIXHF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      **************************************************************************
+      *
+      *  SR UPDATF - Subroutine to Update files
+      *
+      **************************************************************************
+      *
+     C           UPDATF    BEGSR
+      *
+     C                     UPDATDEALSDBF               89
+      *
+      *  Update 'Last Change' details for FXDEALPP record
+     C                     MOVE RUNADD    FHDLUP
+     C                     MOVE RUNAMM    FHMLUP
+     C                     MOVE RUNAYY    FHYLUP
+     C                     TIME           FHTLUP
+     C                     MOVE 'A'       FHCHTP
+     C                     Z-ADDBJRDNB    FHLCD
+     C                     MOVELUSRID     FHLUID
+      *
+     C                     UPDATFXDEALP0               89
+      *  Write record to DTRIXDD
+     C                     WRITEDTRIXDF
+      *
+     C                     COMIT
+      *
+     C                     ENDSR
+      *
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *
+      *  SR WRTRPT - Write to Report
+      *
+      **************************************************************************
+      *
+     C           WRTRPT    BEGSR
+      *
+      *  Open Print File for this print request but only once!
+     C           ONCE      IFNE 'Y'
+     C                     OPEN FX0950P1
+     C                     EXSR RCFP1
+     C                     MOVE 'Y'       ONCE    1
+     C                     WRITEFX0950H1
+     C                     ENDIF
+      *
+      *  Write Header if overflow
+     C           *IN60     IFEQ *ON
+     C                     WRITEFX0950H1
+     C                     MOVE *OFF      *IN60
+     C                     ENDIF
+      *
+      * Buy Ccy and Amount
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE FHDBUY    ZFLD15
+     C                     Z-ADDBUYDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    PRBAMT
+      * Sell Ccy and Amount
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE FHDSEL    ZFLD15
+     C                     Z-ADDSELDP     ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    PRSAMT
+      *
+      *  Determine customer report name and town
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY'    @OPTN
+     C                     PARM FHDCSN    @KEY   10
+     C                     PARM           @KYST   7
+     C           SDCUST    PARM SDCUST    SDSSDY
+      *
+      *  Output date in local format
+     C           BJDFIN    IFNE 'M'
+     C                     MOVELFHVDDD    DATE#1
+     C                     MOVELFHVDMM    DATE#2
+     C                     ELSE
+     C                     MOVELFHVDDD    DATE#2
+     C                     MOVELFHVDMM    DATE#1
+     C                     ENDIF
+      *
+      * Edit Exchange Rate
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE FHDXRT    ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    PREXRT
+      *
+      *  Write Report Detail Line
+     C                     WRITEFX0950D1
+      *
+     C                     ENDSR
+      *
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Access Bank details.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    SDSSDY
+     C                     MOVELBJMRDT    MRDATE
+      *
+      ** Access Dealing details.
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDDEAL    PARM SDDEAL    SDSSDY                                              CGL029
+     C           SDDEAL    PARM SDDEAL    SDSSDY                                              CGL029
+     C*
+     C** LOAD CURRENCY AND DECIMAL PLACES ARRAYS
+     C*
+     C           *LIKE     DEFN A6NBDP    BUYDP
+     C           *LIKE     DEFN A6NBDP    SELDP
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C                     PARM *BLANKS   @KEYCY  3
+     C           CYDDS     PARM CYDDS     SDSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '*FIRST ' DBKEY            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERROR 002 *
+     C                     Z-ADD2         DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         X       30
+     C*
+     C           @RTCD     DOWEQ*BLANKS
+     C           X         OREQ 200
+     C*
+     C                     ADD  1         X
+     C                     MOVELA6CYCD    CY,X
+     C                     Z-ADDA6NBDP    CDP,X
+     C                     Z-ADDA6TXND    CYND,X
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*NEXT  ' @OPTN
+     C                     PARM *BLANKS   @KEYCY
+     C           CYDDS     PARM CYDDS     SDSSDY
+     C                     ENDDO
+      *
+     C                     Z-ADD1         K       30
+      *
+     C           CY,K      DOWNE*BLANKS
+     C           K         ANDLE200
+      *
+      * Set up Telex Notice Days for EACH currency
+     C                     MOVE CYND,K    WQ0038
+      *
+      * Calc. working days forward for EACH currency
+     C                     CALL 'ZFWDT'
+     C                     PARM BJRDNB    WQ0037  50
+     C                     PARM           WQ0038  20
+     C                     PARM *ZERO     ZDAYNO  50
+     C                     PARM BJLCCY    WQ0040  3
+     C                     PARM BJSLCD    WQ0041  3
+      *
+      * Convert working days forward number to date DDMMYY or MMDDYY
+     C                     CALL 'ZDATE2'
+     C                     PARM ZDAYNO    WQ0005  50
+     C                     PARM BJDFIN    WQ0006  1
+     C                     PARM *ZERO     ZDATE   60
+     C                     PARM *BLANK    WQ0008  7
+     C                     MOVE ZDATE     WFPLVD
+      *
+     C           BJDFIN    IFNE 'M'
+     C                     MOVE WFPLDD    WFDDDD
+     C                     MOVE WFPLMM    WFDDMM
+     C                     ELSE
+     C                     MOVE WFPLMM    WFDDDD
+     C                     MOVE WFPLDD    WFDDMM
+     C                     ENDIF
+     C                     MOVE WFPLYY    WFDDYY
+     C                     MOVE DDVALD    WFVALD
+     C           WFVALY    IFGE 72
+     C                     MOVEL'19'      WFVAL8
+     C                     ELSE
+     C                     MOVEL'20'      WFVAL8
+     C                     ENDIF
+      *
+     C                     MOVE WFVAL8    NOTD,K
+     C                     ADD  1         K
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR
+     C*
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+     C*
+     C** Error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+      * Signal error
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR
+     C*
+     C                     Z-ADDSFNUMA    ZSNUMA  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILEA
+     C                     PARM           ZSNUMA
+     C                     PARM *BLANK    ZSERR   1
+     C*
+     C** Error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+      * Signal error
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     ROLBK
+     C                     MOVE 'Y'       @RUN    1
+     C           *LOCK     IN   LDA
+     C                     MOVELLDA       LDA
+     C                     OUT  LDA
+     C                     DUMP
+      *
+     C                     OPEN FX0950AU
+     C                     EXSR RCFAU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /COPY ZSRSRC,ZFRPEDZ3
+      *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

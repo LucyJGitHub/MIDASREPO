@@ -1,0 +1,367 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Funding GAP Accrual Extract')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  MC0560 - Funding GAP Accrual Extract                         *
+      *                                                               *
+      *  Function:  This program extracts the details for the Funding *
+      *   (COB)     GAP Accrual postings.                             *
+      *                                                               *
+      *  Called By: MCC0560 - Funding GAP Accrual Report - Control Pgm*
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. 226963             Date 23Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 158557  *CREATE    Date 28Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  226963 - Duplicate backvalued accruals being written to      *
+      *           MCGEXTPD.  Applied fix 218046                       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  158557 - PCA015, Provide a Funding Gap Accrual Report        *
+      *           New report program.                                 *
+      *                                                               *
+      *****************************************************************
+     F*
+     FMCGAPAL0IF  E           K        DISK         KINFSR *PSSR
+     F**  Funding GAP Accrual Details File
+     F*
+     FMCGEXTPDO   E                    DISK         KINFSR *PSSR
+     F**  Funding GAP Accrual Extract File
+     F            MCGAPAD0                          KRENAMEMCGEXTD0
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   20  - EOF in Funding GAP Accrual Details File               *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7+U8 - Database Error                                        *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  SRINIT - Program Initialisation                              *
+     F*  SRDETL - Process Funding GAP Accrual Details                 *
+     F*  *PSSR  - Program Error Processing Subroutine                 *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E**  Array containing Copyright statement
+     E*
+     I/EJECT
+     I*
+     IMCGAPAD0
+     I              GPBRCA                          GOBRCA
+     I              GPCUST                          GOCUST
+     I              GPCURR                          GOCURR
+     I              GPACOD                          GOACOD
+     I              GPACSQ                          GOACSQ
+     I              GPPRFC                          GOPRFC
+     I              GPBALN                          GOBALN
+     I              GPRTSP                          GORTSP
+     I              GPFDAT                          GOFDAT
+     I              GPTDAT                          GOTDAT
+     I              GPACRL                          GOACRL
+     I              GPNDAY                          GONDAY
+     I              GPRUND                          GORUND
+     I              GPACIN                          GOACIN
+     I*
+     ILDA       E DSLDA                         256
+     I*
+     I**  Local data area for database error details
+     I**  *LOCK IN LDA immediately before and OUT LDA immediately
+     I**  after each database error handling.
+     I**
+     I**                                    134 141 DBFILE
+     I**       Defines:                     142 170 DBKEY
+     I**                                    171 180 DBPGM
+     I**                                    181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  External data structure for Bank Details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  First data structure for Access Programs, short DS
+     I*
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C**  Perform Initialisation.
+     C*
+     C                     EXSR SRINIT
+     C*
+     C**  Process Funding GAP Accrual Details.
+     C*
+     C                     EXSR SRDETL
+     C*
+     C**  End Program and Return.
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRINIT - Program Initialisation                              *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine                 *
+     C*  Calls    :  AOBANKR0 - Bank details access object            *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRINIT    BEGSR                           ** SRINIT **
+     C*
+     C           KGAPA     KLIST
+     C                     KFLD           WBRCA
+     C                     KFLD           WCUST
+     C                     KFLD           WCURR
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C                     KFLD           WPRFC
+     C*
+     C**  Initialise LDA field.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Call Access Program for Bank Details - Run Day Number.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0560  'DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Initialise Report Work fields.
+     C*
+     C                     MOVE *BLANK    WBRCA   3
+     C                     MOVE *BLANK    WCUST   6
+     C                     MOVE *BLANK    WCURR   3
+     C**********           MOVE *BLANK    WACOD   4                                           CGL029
+     C                     MOVE *BLANK    WACOD  10                                           CGL029
+     C                     MOVE *BLANK    WACSQ   2
+     C                     MOVE *BLANK    WPRFC   4
+     C                     Z-ADD0         WBALN  150
+     C                     Z-ADD0         WACRL  150
+     C                     Z-ADD0         WFDAT   50
+     C                     Z-ADD0         WTDAT   50
+     C                     Z-ADD0         WNDAY   30
+     C*
+     C           SRINI9    ENDSR                           ** SRINI9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRDETL - Process Funding GAP Accrual Details                 *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine.                *
+     C*  Calls    :  -                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRDETL    BEGSR                           ** SRDETL **
+     C*
+     C**  Read all records from LF/MCGAPAL0.
+     C*
+     C           *LOVAL    SETLLMCGAPAL0
+     C                     READ MCGAPAL0                 20
+     C*
+     C           *IN20     DOWEQ*OFF
+     C*
+     C**  On change of Profit Centre Account.
+     C*
+     C           WBRCA     IFNE GOBRCA
+     C           WCUST     ORNE GOCUST
+     C           WCURR     ORNE GOCURR
+     C           WACOD     ORNE GOACOD
+     C           WACSQ     ORNE GOACSQ
+     C           WPRFC     ORNE GOPRFC
+     C*
+     C                     MOVE GOBRCA    WBRCA
+     C                     MOVE GOCUST    WCUST
+     C                     MOVE GOCURR    WCURR
+     C                     MOVE GOACOD    WACOD
+     C                     MOVE GOACSQ    WACSQ
+     C                     MOVE GOPRFC    WPRFC
+     C*
+     C                     Z-ADD0         WBALN
+     C                     Z-ADD0         WACRL
+     C                     Z-ADD0         WFDAT
+     C                     Z-ADD0         WTDAT
+     C                     Z-ADD1         WNDAY
+     C*
+     C**  Get Last Accrual Date for this Profit Centre Account.
+     C*
+     C           KGAPA     SETGTMCGAPAL0
+     C           KGAPA     REDPEMCGAPAL0                 20
+     C           GORUND    IFEQ BJRDNB
+     C                     MOVE 'N'       GOACIN
+     C                     ENDIF
+     C*
+     C           *IN20     DOWEQ'0'
+     C           GOACIN    ANDNE'Y'
+     C           KGAPA     REDPEMCGAPAL0                 20
+     C           GORUND    IFEQ BJRDNB
+     C                     MOVE 'N'       GOACIN
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           *IN20     IFEQ '0'
+     C                     Z-ADDGOFDAT    WAFDAT  50
+     C                     ELSE
+     C                     Z-ADD0         WAFDAT
+     C                     ENDIF
+     C*
+     C           KGAPA     SETLLMCGAPAL0
+     C           KGAPA     READEMCGAPAL0                 20
+     C                     ENDIF
+     C*
+     C           GONDAY    IFEQ 0
+     C                     Z-ADD1         GONDAY
+     C                     ENDIF
+     C*
+     C**  Previous Day's Postings.
+     C*
+     C           GORUND    IFLT BJRDNB
+     C                     Z-ADDGOBALN    WBALN
+     C                     Z-ADDGOACRL    WACRL
+     C                     Z-ADDGOFDAT    WFDAT
+     C                     Z-ADDGOTDAT    WTDAT
+     C                     Z-ADDGONDAY    WNDAY
+     C                     ENDIF
+     C*
+     C**  Today's Postings.
+     C*
+     C           GORUND    IFEQ BJRDNB
+     C*
+     C**  Backvalued Accruals.
+     C*
+     C           GOFDAT    IFGE WFDAT
+     C           GOTDAT    ORLE WTDAT
+     C           GOBALN    ORNE WBALN
+     C           GOFDAT    IFLE WAFDAT
+     C           WACRL     MULT GONDAY    WWACRL 150
+     C                     DIV  WNDAY     WWACRL    H
+     C                     MOVE GOBRCA    GPBRCA
+     C                     MOVE GOCUST    GPCUST
+     C                     MOVE GOCURR    GPCURR
+     C                     MOVE GOACOD    GPACOD
+     C                     MOVE GOACSQ    GPACSQ
+     C                     MOVE GOPRFC    GPPRFC
+     C********** GOBALN    SUB  WBALN     GPBALN                                              226963
+     C                     Z-ADDGOBALN    GPBALN                                              226963
+     C                     Z-ADDGORTSP    GPRTSP
+     C                     Z-ADDGOFDAT    GPFDAT
+     C                     Z-ADDGOTDAT    GPTDAT
+     C********** GOACRL    SUB  WWACRL    GPACRL                                              226963
+     C                     Z-ADDGOACRL    GPACRL                                              226963
+     C                     Z-ADDGONDAY    GPNDAY
+     C                     Z-ADDGORUND    GPRUND
+     C                     MOVE GOACIN    GPACIN
+     C           GPBALN    IFNE 0
+     C                     WRITEMCGEXTD0
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C**  Today's Accruals.
+     C*
+     C           GOFDAT    IFGT WFDAT
+     C           GOTDAT    ANDGTWTDAT
+     C********** GOFDAT    ORGT WAFDAT                                                        226963
+     C           GOFDAT    IFGT WAFDAT                                                        226963
+     C                     MOVE GOBRCA    GPBRCA
+     C                     MOVE GOCUST    GPCUST
+     C                     MOVE GOCURR    GPCURR
+     C                     MOVE GOACOD    GPACOD
+     C                     MOVE GOACSQ    GPACSQ
+     C                     MOVE GOPRFC    GPPRFC
+     C                     Z-ADDGOBALN    GPBALN
+     C                     Z-ADDGORTSP    GPRTSP
+     C                     Z-ADDGOFDAT    GPFDAT
+     C                     Z-ADDGOTDAT    GPTDAT
+     C                     Z-ADDGOACRL    GPACRL
+     C                     Z-ADDGONDAY    GPNDAY
+     C                     Z-ADDGORUND    GPRUND
+     C                     MOVE GOACIN    GPACIN
+     C           GPBALN    IFNE 0
+     C                     WRITEMCGEXTD0
+     C                     ENDIF
+     C                     ENDIF                                                              226963
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     READ MCGAPAL0                 20
+     C*
+     C                     ENDDO
+     C*
+     C           SRDET9    ENDSR                           ** SRDET9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - Program Error Processing Subroutine                 *
+     C*                                                               *
+     C*  Called By:  SRINIT - Program Initialisation                  *
+     C*  Calls    :  -                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C**  Check to see that *PSSR has not already been called.
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C**  If *PSSR already run, then just end the program here.
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C           WPSS9     ENDSR                           ** *PSSR9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

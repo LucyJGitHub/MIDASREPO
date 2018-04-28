@@ -1,0 +1,1003 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Short term money market report extract')      *
+     H***********
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Dealing Module
+     F*                                                                  *
+     F*    DL6810 - SHORT TERM MONEY MARKET REPORT EXTRACT               *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 AR996895           Date 25Nov12               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 121768             Date 19Feb98               *
+      *                 126017             Date 17Nov97               *
+     F*                 097885             DATE 31JAN97               *
+     F*                 S01408             DATE 27AUG96               *
+     F*                 095244             DATE 01NOV95               *
+     F*                 095238             DATE 31OCT95               *
+     F*                 066550             DATE 04FEB94                  *
+     F*                 049238             DATE 22MAR93                  *
+     F*                 046985             DATE 17MAR93                  *
+     F*                 047226             DATE 17MAR93                  *
+     F*                 S01410             DATE 17FEB93                  *
+     F*                 S01390             DATE 25JUN92                  *
+     F*                 AUS027             DATE 11MAR91                  *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  AR996895 - Incorrect acrrual interest calculation            *
+      *             (Child: AR996897) (Recompile)                     *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+      *         - Recompiled due to GLINTC and ZINTDY changes         *
+     F*  121768 - Recompile over changed GLINTCZ1                     *
+     F*  126017 - Correction to interest calculation for calculation  *
+     F*           basis 6 in SR/GLINTC. Add SR/ZDAT10                 *
+     F*  097885 - Recompiled for wrong calculation of number of day   *
+     F*           interest (ZINTDYZ2).                                *
+     F*  S01408 - Add hook DL6810FFP1                                 *
+     F*         - Add hook DL6810CCP1                                 *
+     F*         - Add hook DL6810CCP2                                 *
+     F*         - Add hook DL6810CCP3                                 *
+     F*  095244 - Recompiled for Calculation method 3                 *
+     F*  095238 - Recompiled for Calculation method 3                 *
+     F*    066550 - GLINTC has had historical problems and inaccuracies  *
+     F*             and is now externaly descibed and changed to use     *
+     F*             ZINTDYZ1. See document atached to error no on GEMS   *
+     F*    049238  -  EXCLUDE MATURED AND DELETED DEALS                  *
+     F*                                                                  *
+     F*    046985  -  ONLY EXTRACT 'AUD' ITEMS AND EXCLUDE FORWARD DATE  *
+     F*               ITEMS; BKRAT SHOULD BE KEYED                       *
+     F*    047226  -  The accrued interest of the deals started          *
+     F*               after today shoud be 0.                            *
+     F*    S01410  -  Release 10.04 packaging change: program would no   *
+     F*               longer compile due to the removal of ZSYSTM, by    *
+     F*               S01390, a later, incompatible change to GLINTC,    *
+     F*               and the fact that S01390 set *IN89 on or off on    *
+     F*               checking the Date Format Indicator, instead of     *
+     F*               *IN98.                                             *
+     F*    S01390  -  Release 10 Changes for Australianisation           *
+     F*    AUS027  -  AUSTRALIAN PRODUCT - SHORT TERM MM REPORT          *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FDEALS   IP  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F**CLINT***IF**F     256  7AI     2 DISK                             S01390
+     F**TABLE***IF**F      96 12AI     2 DISK                             S01390
+     F***BKRAT***IF**E                    DISK                            S01390
+     F*KRAT***IF**E***************     DISK                     UC  S01390046985
+     FBKRAT   IF  E           K        DISK                           UC  046985
+     F/COPY WNCPYSRC,DL6810FFP1                                           S01408
+     FSTMMRH  O   F      96            DISK
+     F*STMMRD**O***F******96************DISK                              CDL038
+     FSTMMRD  O   F     100            DISK                               CDL038
+     FSTMMRT  O   F      96            DISK
+     F**DL6810P1O***F     132            PRINTER                          S01390
+     FDL6810AUO   F     132            PRINTER                            S01390
+     F*
+     F* 01            DEALS - LOANS/DEPOSIT LIVE RECORDS
+     F* 02                  - TRAILER
+     F* 03                  - CATCH ALL
+     F**04*******     CLINT - CUSTOMER STANDING DATA RECORDS              S01390
+     F*   11          TO DETERMINE RECORD TYPE  - 'D' IF ON
+     F*   12          TO DETERMINE 'TERM' FOR OUTPUT - 'A'  IF ON
+     F*   13                                         - 'F' IF ON, ELSE 'C'
+     F*   14          TO DETERMINE BROKER CODE FOR OUTPUT
+     F*   15          BROKERAGE RATE IND. = 'Y'
+     F*   16          WORK IND.
+     F*   20          FIRST CYCLE IND.
+     F*   21          OUTPUT FILE HEADER OF S/STMMR
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    CPY@    1   1 80                                S01390
+     E/COPY ZSRSRC,ZDATE9Z1                                               066550
+     IDEALSDCF
+     I              RECI                            RECID
+     IDEALSDFF
+     I              RECI                            RECIF
+     I***********                                                         S01390
+     I*****CLIENT*FILE*-*CUSTOMER*STANDING*DATA*RECORD.*******************S01390
+     I***********                                                         S01390
+     I**CLINT***NS* 04   1 CD   8 CA                                      S01390
+     I***********                             9  28 CRNM                  S01390
+     I***********                            39  48 CSNM                  S01390
+     I***********                                                         S01390
+     I*****CLINT*RECORDS*CATCH*ALL****************************************S01390
+     I***********                                                         S01390
+     I********NS*                                                         S01390
+     I***********                                                         S01390
+     I*****TABLE*FILE*-*INSTALLATION*CONTROL*DATA*RECORD*1.***************S01390
+     I***********                                                         S01390
+     I**TABLE***NS*      2 C0   3 C1  12 C1                               S01390
+     I*******AND*     13 C0                                               S01390
+     I***********                             1   1 RECI                  S01390
+     I***********                            14  66 TITL                  S01390
+     I***********                            67  67 DATF                  S01390
+     I***********                         P  77  790RUND                  S01390
+     I***********                            80  86 RUNA                  S01390
+     I***********                                                         S01390
+     I*****TABLE*FILE*-*INSTALLATION*CONTROL*DATA*RECORD*2.***************S01390
+     I***********                                                         S01390
+     I**TABLE***NS*      1 CD   2 C0   3 C1                               S01390
+     I*******AND*     12 C1  13 C1                                        S01390
+     I***********                             1   1 RECI                  S01390
+     I***********                             2   30RECT                  S01390
+     I***********                            12  130RCDE                  S01390
+     I***********                            14  16 BCCY                  S01390
+     I***********                            17  19 BCYL                  S01390
+     I***********                            20  22 HOCY                  S01390
+0102 I***********                            23  280HEAD                  S01390
+0103 I***********                         P  29  310APDA                  S01390
+0104 I***********                            35  35 APFQ                  S01390
+0105 I***********                         P  36  380LOGS                  S01390
+0106 I***********                            39  40 CUZR                  S01390
+0107 I***********                         P  41  430DNWD                  S01390
+0108 I***********                            44  460BVLP                  S01390
+0109 I***********                            47  49 LOCY                  S01390
+0110 I***********                            50  510FDAY                  S01390
+0111 I***********                            86  86 ISAV                  S01390
+0112 I***********                         P  87  890LLOG                  S01390
+0113 I***********                                                         S01390
+0114 I*****TABLE*RECORDS*CATCH*ALL****************************************S01390
+0115 I***********                                                         S01390
+0116 I********NS*                                                         S01390
+     I*                                                                   S01390
+     ISDBANK    E DSSDBANKPD                                              S01390
+     I* Bank Details Accesses Via Access Program                          S01390
+     I*                                                                   S01390
+     ISDBRCH    E DSSDBRCHPD                                              S01390
+     I* Branch Details Accessed Via Access Program                        S01390
+     I*                                                                   S01390
+     ISDCUST    E DSSDCUSTPD                                              S01390
+     I* Customer Details Accessed Via Access Program                      S01390
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I*                                                                   S01390
+     ISCSARD    E DSSCSARDPD                                              S01390
+     I** EXTERNAL DS FOR SAR DETAILS                                      S01390
+     I*                                                                   S01390
+     IDSFDY     E DSDSFDY                                                 S01390
+     I* First DS For Access Programs, Short Data Structure                S01390
+     I*                                                                   S01390
+     IDSSDY     E DSDSSDY                                                 S01390
+     I* Second DS For Access Programs, Long Data Structure                S01390
+     ILDA         DS                            256                       S01390
+     I*                                                                   S01390
+     I** Local Data Area To Identify Database Errors                      S01390
+     I*                                                                   S01390
+     I                                      134 141 DBFILE                S01390
+     I                                      142 170 DBKEY                 S01390
+     I                                      171 180 DBPGM                 S01390
+     I                                      181 1830DBASE                 S01390
+     I/COPY ZSRSRC,ZINTDYZ1                                               066550
+     I/COPY ZSRSRC,ZDATE9Z2                                               066550
+     I/COPY ZSRSRC,ZDAT10Z1                                               126017
+     I/COPY WNCPYSRC,DL6810I001
+0117 C**
+0118 C** FIRST CYCLE PROCESSING
+0119 C**
+0120 C   20                GOTO NOTFC
+0121 C                     SETON                     20
+     C/COPY WNCPYSRC,DL6810C004
+     C***********          EXSR ZSYSTM                                    S01390
+     C           *NAMVAR   DEFN           LDA                             S01390
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C*                                                                   S01390
+     C** READ BANK DETAILS VIA ACCESS PROGRAM                             S01390
+     C*                                                                   S01390
+     C                     CALL 'AOBANKR0'                                S01390
+     C                     PARM '*DBERR ' RTCD    7                       S01390
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDBANK    PARM SDBANK    DSFDY                           S01390
+     C           BJDFIN    IFEQ 'M'                                       S01390
+     C***********          SETON                     89             S01390S01410
+     C                     SETON                     98                   S01410
+     C                     END                                            S01390
+0123 C***********                                                         S01390
+0124 C******GET*ICD*RECORD-2**********************************************S01390
+0125 C***********                                                         S01390
+0126 C**N99******          MOVE '11'      ZTABKY                          S01390
+0127 C**N99******ZTABKY    CHAINTABLE                99                   S01390
+0128 C***99******          SETON                     U7LR                 S01390
+0129 C***99******          GOTO END                                       S01390
+     C*                                                                   S01390
+     C** Access SAR details file to determine if Australian Brokerage     S01390
+     C** is switched on                                                   S01390
+     C*                                                                   S01390
+     C                     CALL 'AOSARDR0'                                S01390
+     C                     PARM *BLANKS   RTCD    7                       S01390
+     C                     PARM '*VERIFY' OPTN    7                       S01390
+     C                     PARM 'AUS007'  @SARD   6                       S01390
+     C           SCSARD    PARM SCSARD    DSFDY                           S01390
+     C           RTCD      IFEQ *BLANK                                    S01390
+     C                     MOVEL'Y'       AUS007  1                       S01390
+     C                     END                                            S01390
+0130 C**
+0131 C                     SETON                     21
+0132 C                     EXSR ECPT
+0133 C                     SETOF                     21
+     C/COPY WNCPYSRC,DL6810C001
+0134 C           NOTFC     TAG
+0135 C*
+0136 C                     SETOF                     17    *
+0137 C                     MOVE ' '       CALL    1        *
+0138 C**
+0139 C** SKIP PROCESSING IF NOT LIVE DEPOSIT & LOAN RECORDS
+0140 C**
+     C           RECIF     IFEQ 'T'
+0142 C                     GOTO TRAIL
+     C                     END
+     C***                                                                 049238
+     C***  ONLY PROCESS LIVE RECORD                                       049238
+     C***                                                                 049238
+     C           RECID     CABNE'D'       END                             049238
+     C***                                                                 049238
+     C           RECID     IFEQ 'D'
+0143 C***********CCY       COMP LOCY                     01EXCL.NON 'AUD' S01390
+     C*******    CCY       COMP BJLCCY             01EXCL.NON 'AUD' S01390046985
+0144 C**N01**              GOTO END                                       046985
+     C**                                                                  046985
+     C**   EXCLUDE ITEMS THAT ARE FORWARD DATED;  CURRENCY NOT 'AUD'      046985
+     C**   AND MATURITY DATE LATER THAN RUN DATE (EXPIRED)                046985
+     C**                                                                  046985
+     C           CCY       CABNE'AUD'     END                             046985
+     C           VDAT      CABGTBJRDNB    END                             046985
+     C** IGNORE EXPIRED TERM DEALS                                        049238
+     C           MDAT      IFNE *ZEROS                                    049238
+     C           MDAT      CABLTBJRDNB    END                             049238
+     C                     END                                            049238
+     C**                                                                  046985
+     C                     END
+0145 C*
+0146 C** GET CLIENT INFORMATION FOR OUTPUT
+0147 C*
+0148 C***********          MOVELCNUM      CLIKEY  7                       S01390
+0149 C***********          MOVE 'A'       CLIKEY                          S01390
+0150 C***********          EXSR CLICHN                                    S01390
+     C                     MOVELCNUM      KYCN   10                       S01390
+     C                     CALL 'AOCUSTR0'                                S01390
+     C                     PARM *BLANKS   RTCD                            S01390
+     C                     PARM '*KEY   ' OPTN                            S01390
+     C                     PARM           KYCN                            S01390
+     C                     PARM *BLANKS   KYST    7                       S01390
+     C           SDCUST    PARM SDCUST    DSSDY                           S01390
+     C           RTCD      IFNE *BLANKS                                   S01390
+     C           *LOCK     IN   LDA                                       S01390
+     C                     MOVEL'SDCUSTPD'DBFILE                          S01390
+     C                     MOVELCNUM      DBKEY                           S01390
+     C                     Z-ADD1         DBASE                           S01390
+     C                     OUT  LDA                                       S01390
+     C                     SETON                     U7U8LR               S01390
+     C                     EXSR *PSSR                                     S01390
+     C                     GOTO END                                       S01390
+     C                     END                                            S01390
+     C*                                                                   S01390
+     C** Get Branch Information For Output                                S01390
+     C*                                                                   S01390
+     C**********           CALL 'AOBRCHR0'                                S01390              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   RTCD                            S01390
+     C                     PARM '*KEY   ' OPTN                            S01390
+     C                     PARM BRCA      KYBR    3                       S01390
+     C           SDBRCH    PARM SDBRCH    DSSDY                           S01390
+     C           RTCD      IFNE *BLANKS                                   S01390
+     C           *LOCK     IN   LDA                                       S01390
+     C                     MOVEL'SDBRCHPD'DBFILE                          S01390
+     C                     MOVELBRCA      DBKEY                           S01390
+     C                     Z-ADD2         DBASE                           S01390
+     C                     OUT  LDA                                       S01390
+     C                     SETON                     U7U8LR               S01390
+     C                     EXSR *PSSR                                     S01390
+     C                     GOTO END                                       S01390
+     C                     END                                            S01390
+0151 C*
+0152 C** DETERMINE THE RECORD TYPE FOR OUTPUT
+0153 C*
+0154 C           RCDC      COMP 16                       11
+0155 C   11                MOVE 'D'       RTYP    1
+0156 C  N11                MOVE 'L'       RTYP
+0157 C*
+0158 C** DETERMINE 'TERM' FROM NOTICE DAYS
+0159 C*
+0160 C           NOTD      COMP 0                        12
+0161 C   12                MOVE 'A'       TERM    1
+0162 C  N12      NOTD      COMP -999                     13
+0163 C  N12 13             MOVE 'F'       TERM
+0164 C  N12N13             MOVE 'C'       TERM
+0165 C*
+0166 C** DETERMINE BROKER CODE FOR OUTPUT
+0167 C*
+0168 C           BRKC      COMP 'PHON'                   14
+0169 C  N14      BRKC      COMP 'TELX'                   14
+0170 C  N14      BRKC      COMP 'MAIL'                   14
+0171 C   14                MOVE '    '    BRKC
+0172 C*
+0173 C** TO PREPARE INTEREST RATE FOR OUTPUT
+0174 C*
+0175 C                     Z-ADDINTR      RATE    74H
+0176 C*
+0177 C** CALCULATE ACCRUED INTEREST
+0178 C*
+     C** Accrued Interest of deals with value date > today is 0.          047226
+     C           VDAT      IFLE BJRDNB                                    047226
+0179 C                     Z-ADDIACD      ZIBEG
+0180 C           MDAT      COMP *ZEROS               16
+0181 C***16******RUND      COMP MDAT                 16  16               S01390
+     C   16      BJRDNB    COMP MDAT                 16  16               S01390
+0182 C   16                Z-ADDMDAT      ZIEND
+0183 C**N16******RUND      ADD  1         ZIEND                           S01390
+     C/COPY WNCPYSRC,DL6810CCP1                                           S01408
+     C  N16      BJRDNB    ADD  1         ZIEND                           S01390
+     C/COPY WNCPYSRC,DL6810CCP2                                           S01408
+0184 C                     Z-ADDPCPL      ZIAMT
+0185 C                     Z-ADDICBS      ZICALC
+0186 C                     Z-ADDINTR      ZIRATE
+     C/COPY WNCPYSRC,DL6810C002
+0187 C                     EXSR GLINTC
+     C/COPY WNCPYSRC,DL6810C003
+0188 C                     Z-ADDZINTR     WKINT  130H
+0189 C           WKINT     ADD  AITC      WORKTD 130
+0190 C           WORKTD    ADD  AIAP      WORKTD
+0191 C           WORKTD    ADD  AIAN      WORKTD
+0192 C           WORKTD    SUB  IPRD      INTA   130
+     C/COPY WNCPYSRC,DL6810CCP3                                           S01408
+     C                     ELSE                                           047226
+     C                     Z-ADD0         INTA                            047226
+     C                     END                                            047226
+0193 C*
+0194 C** CALCULATE ACCRUED BROKERAGE FOR OUTPUT
+0195 C*
+     C           AUS007    IFEQ 'Y'                                       S01390
+     C           FILOPF    IFNE 'Y'                                       S01390
+     C                     OPEN BKRAT                                     S01390
+     C                     MOVEL'Y'       FILOPF  1                       S01390
+     C                     END                                            S01390
+     C           DLNO      CHAINBKRAT                22
+     C                     ELSE                                           S01390
+     C                     SETON                     22                   S01390
+     C                     END                                            S01390
+     C***22                Z-ADD0         BRKG   130                      046985
+     C   22                Z-ADD0         BACD                            046985
+0228 C*
+0229 C** ACCUMULATED HASH TOTALS
+0230 C*
+0231 C           PCPL      DIV  1000      ZZAMT        16
+0232 C   16                Z-SUBZZAMT     ZZAMT
+0233 C                     Z-ADDHASHW     ZZTOTI
+0234 C                     Z-ADDHASHD     ZZTOTD
+0235 C                     EXSR GLZADD
+0236 C                     Z-ADDZZTOTD    HASHD   30
+0237 C                     Z-ADDZZTOTI    HASHW  150
+0238 C*
+0239 C** OUTPUT DETAIL RECORDS
+0240 C*
+     C                     SETON                     01
+0241 C                     EXSR ECPT
+     C                     SETOF                     01
+0242 C                     GOTO END
+0243 C**
+0244 C** TRAILER ENCOUNTERED
+0245 C**
+0246 C           TRAIL     TAG
+0248 C                     Z-ADDHASHD     HRDC    30
+0249 C                     Z-ADDHASHW     HRWN   150
+     C                     SETON                     02
+0250 C                     EXSR ECPT
+0251 C*
+0252 C** END OF CYCLE
+0253 C*
+0254 C           END       TAG
+0255 C*
+0256 C********************************************************************
+0257 C*
+0258 C* SUBROUTINE TO PERFORM THE EXCPTION OUTPUT & CALCULATE NO. OF
+0259 C*      RECORDS OUTPUT TO THE EXTRCAT FILE
+0260 C*
+0261 C           ECPT      BEGSR
+0262 C           NRECS     ADD  1         NRECS   50
+0263 C                     EXCPT
+0264 C                     ENDSR
+0265 C********************************************************************
+0266 C********************************************************************S01390
+0267 C*****GET*CUSTOMER*DETAILS*FROM*CLIENT*FILE**************************S01390
+0268 C***********                                                         S01390
+0269 C***********CLICHN    BEGSR                           *** CLICHN *** S01390
+0270 C***********          SETOF                     04                   S01390
+0271 C***********CLIKEY    CHAINCLINT                U7                   S01390
+0272 C**N04******          SETON                     U7LR                 S01390
+0273 C***U7******          MOVE CLIKEY    ERR     7                       S01390
+0274 C***********          ENDSR                                          S01390
+0275 C***********                                                         S01390
+0276 C********************************************************************S01390
+0277 C********************************************************************S01390
+0278 C*****ZSYSTM*SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RECORD.***S01390
+0279 C***********                                                         S01390
+0280 C***********ZSYSTM    BEGSR                           *** ZSYSTM *** S01390
+0281 C***********                                                         S01390
+0282 C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD.********************S01390
+0283 C***********          MOVEL'01      'ZTABKY 12                       S01390
+0284 C***********          MOVE '  10'    ZTABKY                          S01390
+0285 C***********                                                         S01390
+0286 C***********ZTABKY    CHAINTABLE                99    ON NOT THERE   S01390
+0287 C**N99******RECI      COMP 'D'                  9999  ON, IS DELETED S01390
+0288 C***********                                                         S01390
+0289 C*****CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.********************S01390
+0290 C***********DATF      COMP 'M'                      98MMDDYY, 98 ON  S01390
+0291 C***********                                                         S01390
+0292 C***********          ENDSR                                          S01390
+0293 C***********                                                         S01390
+0294 C********************************************************************S01390
+0295 C********************************************************************S01390
+0296 C***********                                                         S01390
+0297 C*****GLINTC*SR.*TO*CALCULATE*INTEREST*BETWEEN*ANY*TWO*DAY*NUMBERS.**S01390
+0298 C***********                                                         S01390
+0299 C*****THIS*VERSION*REPLACES*THE*ORIGINAL*GLINTC*SR.*NOW*NAMED********S01390
+0300 C*****GLINTO.********************************************************S01390
+0301 C***********                                                         S01390
+0302 C*****CALCULATION*METHODS*ARE*-**************************************S01390
+0303 C*****1**ACTUAL/365**************************************************S01390
+0304 C*****2**ACTUAL/360**************************************************S01390
+0305 C*****3**360/360*(SOMETIMES*CALLED*30/360)***************************S01390
+0306 C*****4**365/365*(EXCLUDING*29/02)***********************************S01390
+0307 C*****5**365/360*(EXCLUDING*29/02)***********************************S01390
+0308 C*****6**ACTUAL/366**************************************************S01390
+0309 C***********                                                         S01390
+0310 C*****REQUIRES*SUBRS.*-*ZDATE2,*ZSAVE,*&*ZRSTOR.*********************S01390
+0311 C***********                                                         S01390
+0312 C***********                                                         S01390
+0313 C***********GLINTC    BEGSR                           ** GLINTC  **  S01390
+0314 C***********                                                         S01390
+0315 C*****CALCULATIONS*TO*DEFINE*INPUT*FIELDS.***************************S01390
+0316 C***********          Z-ADDZIBEG     ZIBEG   50       STARTING DATE  S01390
+0317 C***********          Z-ADDZIEND     ZIEND   50       FINISHING DATE S01390
+0318 C***********          Z-ADDZICALC    ZICALC  10       CALC. BASIS    S01390
+0319 C***********          Z-ADDZIAMT     ZIAMT  150       PRINCIPAL      S01390
+0320 C***********          Z-ADDZIRATE    ZIRATE 117       RATE OF INTRST S01390
+0321 C***********                                                         S01390
+0322 C****TO*DETERMINE*NUMBER*OF*DAYS*INTEREST*TO*BE*CALCULATED***********S01390
+0323 C***********ZIEND     SUB  ZIBEG     ZDAYN1  50                      S01390
+0324 C***********                                                         S01390
+0325 C****CHECK*FOR*INTEREST*CALCULATION*BASIS****************************S01390
+0326 C*****USE*OF*INDICATRS***********************************************S01390
+0327 C*****1,92**2,90**3,91**4,97**5,96**6,95*****************************S01390
+0328 C***********          SETOF                     959697               S01390
+0329 C***********ZICALC    COMP 2                    919290               S01390
+0330 C**N91******          GOTO ZICAL                                     S01390
+0331 C***********ZICALC    COMP 5                    959796               S01390
+0332 C***97******ZICALC    COMP 3                    97  91               S01390
+0333 C***95******                                                         S01390
+0334 C**OR*96******          SETOF                     91                 S01390
+0335 C**N91******          GOTO ZILPCK                                    S01390
+0336 C***********                                                         S01390
+0337 C*****THIS*CODING*WILL*CALCULATE*THE*NUMBER*OF*DAYS*TO*USE*WHEN******S01390
+0338 C*****USING*THE*30/360*BASIS*-*METHOD*3.*****************************S01390
+0339 C***********          EXSR ZSAVE                                     S01390
+0340 C***********          Z-ADDZIBEG     ZDAYNO                          S01390
+0341 C***********          EXSR ZDATE2                                    S01390
+0342 C***********          MOVE ZDAY      ZISD    20                      S01390
+0343 C***********          MOVE ZMTH      ZISM    20                      S01390
+0344 C***********          MOVE ZYEAR     ZISY    20                      S01390
+0345 C***********          Z-ADDZIEND     ZDAYNO                          S01390
+0346 C***********          EXSR ZDATE2                                    S01390
+0347 C***********          MOVE ZDAY      ZIFD    20                      S01390
+0348 C***********          MOVE ZMTH      ZIFM    20                      S01390
+0349 C***********          MOVE ZYEAR     ZIFY    20                      S01390
+0350 C***********          EXSR ZRSTOR                                    S01390
+0351 C***********          SETOF                     93                   S01390
+0352 C***********30        SUB  ZISD      ZID1    50   93                 S01390
+0353 C***93******          Z-ADD0         ZID1                            S01390
+0354 C***********ZISM      COMP 12                       93               S01390
+0355 C***93******          Z-ADD0         ZISM                            S01390
+0356 C***93******ZISY      ADD  1         ZISY                            S01390
+0357 C***********ZIFD      COMP 31                       93               S01390
+0358 C***93******ZID1      ADD  30        ZID1                            S01390
+0359 C**N93******ZID1      ADD  ZIFD      ZID1                            S01390
+0360 C***********ZIFM      SUB  1         ZIFM                            S01390
+0361 C***********ZIFM      COMP ZIFY                     93               S01390
+0362 C***93******ZIFM      SUB  ZISM      ZINOM   30                      S01390
+0363 C***93******          GOTO ZIOUT                                     S01390
+0364 C***********12        SUB  ZISM      ZIM1    20                      S01390
+0365 C***********          Z-ADD1         ZISM                            S01390
+0366 C***********ZISY      ADD  1         ZISY                            S01390
+0367 C***********ZIFY      SUB  ZISY      ZIY1    20                      S01390
+0368 C***********ZIY1      MULT 12        ZIM2    30                      S01390
+0369 C***********ZIM2      ADD  ZIFM      ZIM2                            S01390
+0370 C***********ZIM1      ADD  ZIM2      ZINOM                           S01390
+0371 C***********ZIOUT     TAG                             * ZIOUT TAG *  S01390
+0372 C***********ZINOM     MULT 30        ZID2    50                      S01390
+0373 C***********ZID2      ADD  ZID1      ZDAYN1                          S01390
+0374 C***********          SETOF                     93                   S01390
+0375 C***********ZILPCK    TAG                             * ZILPCK TAG * S01390
+0376 C**N96N97***          GOTO ZICAL                                     S01390
+0377 C*****THE*FOLLOWING*CODING*APPLIES*FOR*METHODS*4*AND*5*ONLY.*********S01390
+0378 C*****1*DAY*IS*SUBTRACTED*FROM*ZDAYN1*FOR*EACH*OCCURANCE*OF*29*FEB***S01390
+0379 C*****IN*THE*INTEREST*CALCULATION*PERIOD*INCLUSIVE*OF*ZIBEG,*&*ZIEND.S01390
+0380 C***********                                                         S01390
+0381 C*****FIND*NO*OF*4*YEAR*PERIODS*BETWEEN*DATES************************S01390
+0382 C***********ZDAYN1    DIV  1461      ZIMAN   20                      S01390
+0383 C***********          MVR            ZIREM   50                      S01390
+0384 C*****FIND*NEXT*29*FEB*DAY*NO.*ON*OR*AFTER*ZIBEG.********************S01390
+0385 C***********ZIBEG     SUB  60        ZIBW1   50                      S01390
+0386 C***********ZIBW1     DIV  1461      ZIDW1   20                      S01390
+0387 C***********          MVR            ZIDREM  50                      S01390
+0388 C***********ZIDREM    COMP 0                        94               S01390
+0389 C***94******          Z-ADDZIBEG     ZIDW2   50                      S01390
+0390 C***94******          GOTO ZILP1                                     S01390
+0391 C*****ROUND*UP*RESULT************************************************S01390
+0392 C***********ZIDW1     ADD  1         ZIDW2                           S01390
+0393 C*****CALCULATE*NEXT*29*FEB.*****************************************S01390
+0394 C***********ZIDW2     MULT 1461      ZIDW2                           S01390
+0395 C***********ZIDW2     ADD  60        ZIDW2                           S01390
+0396 C***********ZILP1     TAG                             * ZILP1 TAG *  S01390
+0397 C*****IF*THIS*NEXT*29*FEB.*DAYNO*-*ZIBEG*IS*GR.*TH.*OR*EQ.*TO********S01390
+0398 C*****ZIREM*THEN*ADD*1*TO*ZIMAN.*************************************S01390
+0399 C***********ZIDW2     SUB  ZIBEG     ZILPCP  50                      S01390
+0400 C***********ZIREM     COMP ZILPCP               94  94               S01390
+0401 C***94******ZIMAN     ADD  1         ZIMAN                           S01390
+0402 C*****SUBTRACT*ZIMAN*FROM*ZDAYN1*TO*GIVE*VALUE*OF*ZDAYN1*************S01390
+0403 C*****REQUIRED*FOR*THIS*INTEREST*CALCULATION.************************S01390
+0404 C***********ZDAYN1    SUB  ZIMAN     ZDAYN1                          S01390
+0405 C***********          SETOF                     94                   S01390
+0406 C***********ZICAL     TAG                             * ZICAL TAG *  S01390
+0407 C***********                                                         S01390
+0408 C****CALCULATE*INTEREST**********************************************S01390
+0409 C***90******                                                         S01390
+0410 C**OR*91******                                                       S01390
+0411 C**OR*96******ZIAMT     DIV  36000     ZIWRK1 155H                   S01390
+0412 C***92******                                                         S01390
+0413 C**OR*97******ZIAMT     DIV  36500     ZIWRK1    H                   S01390
+0414 C***95******ZIAMT     DIV  36600     ZIWRK1    H                     S01390
+0415 C***********ZIWRK1    MULT ZIRATE    ZIWRK2 155H                     S01390
+0416 C***********ZIWRK2    MULT ZDAYN1    ZINTR  152H      AMT. OF INTRST S01390
+0417 C***********                                                         S01390
+0418 C***********          SETOF                     909192               S01390
+0419 C***********          SETOF                     959697               S01390
+0420 C***********          ENDSR                                          S01390
+0421 C***********                                                         S01390
+0422 C********************************************************************S01390
+0423 C********************************************************************S01390
+0424 C***********                                                         S01390
+0425 C*****ZSAVE*SR.*TO*MEMORISE*THE*SETTINGS*AND*TO*SET*OFF*INDICATORS***S01390
+0426 C****************90*-*97*BEFORE*EXECUTION*OF*A*Z-SUBROUTINE.*********S01390
+0427 C***********                                                         S01390
+0428 C*****THIS*SR.*IS*REQUIRED*ONLY*IF*INDICATORS************************S01390
+0429 C*****90*-*97*ARE*USED*ELSEWHERE*IN*A*PROGRAM.***********************S01390
+0430 C***********                                                         S01390
+0431 C***********ZSAVE     BEGSR                           *** ZSAVE ***  S01390
+0432 C***********                                                         S01390
+0433 C***********          BITOF'01234567'ZBITS   1                       S01390
+0434 C***90******          BITON'0'       ZBITS                           S01390
+0435 C***91******          BITON'1'       ZBITS                           S01390
+0436 C***92******          BITON'2'       ZBITS                           S01390
+0437 C***93******          BITON'3'       ZBITS                           S01390
+0438 C***94******          BITON'4'       ZBITS                           S01390
+0439 C***95******          BITON'5'       ZBITS                           S01390
+0440 C***96******          BITON'6'       ZBITS                           S01390
+0441 C***97******          BITON'7'       ZBITS                           S01390
+0442 C***********                                                         S01390
+0443 C***********          SETOF                     909192               S01390
+0444 C***********          SETOF                     939495               S01390
+0445 C***********          SETOF                     9697                 S01390
+0446 C***********                                                         S01390
+0447 C***********          ENDSR                                          S01390
+0448 C***********                                                         S01390
+0449 C***********                                                         S01390
+0450 C********************************************************************S01390
+0451 C********************************************************************S01390
+0452 C***********                                                         S01390
+0453 C*****ZRSTOR*SR.*TO*RESTORE*INDICATORS*90*-*97*TO*THE*SETTINGS*******S01390
+0454 C****************THEY*HAD*BEFORE*THE*EXECUTION*OF*SR.*ZSAVE.*********S01390
+0455 C***********                                                         S01390
+0456 C***********ZRSTOR    BEGSR                           *** ZRSTOR *** S01390
+0457 C***********                                                         S01390
+0458 C***********          TESTB'0'       ZBITS          90               S01390
+0459 C***********          TESTB'1'       ZBITS          91               S01390
+0460 C***********          TESTB'2'       ZBITS          92               S01390
+0461 C***********          TESTB'3'       ZBITS          93               S01390
+0462 C***********          TESTB'4'       ZBITS          94               S01390
+0463 C***********          TESTB'5'       ZBITS          95               S01390
+0464 C***********          TESTB'6'       ZBITS          96               S01390
+0465 C***********          TESTB'7'       ZBITS          97               S01390
+0466 C***********                                                         S01390
+0467 C***********          ENDSR                                          S01390
+0468 C***********                                                         S01390
+0469 C***********                                                         S01390
+0470 C********************************************************************S01390
+0471 C********************************************************************S01390
+0472 C*****ZDATE2*SR.*TO*CONVERT*A*DAY*NUMBER*TO*DATE*FORMATS.************S01390
+0473 C***********                                                         S01390
+0474 C*****THE*YEAR*2000,*BEING*DIVISIBLE*BY*400,*IS*A*LEAP*YEAR.*********S01390
+0475 C***********                                                         S01390
+0476 C***********ZDATE2    BEGSR                           *** ZDATE2 *** S01390
+0477 C***********                                                         S01390
+0478 C*****CLEAR*DATE*FIELDS.*********************************************S01390
+0479 C***********          Z-ADD0         ZDATE   60                      S01390
+0480 C***********          MOVEL'       ' ZADATE  7                       S01390
+0481 C***********                                                         S01390
+0482 C*****CALCULATION*TO*DEFINE*INPUT*DAY*NUMBER.************************S01390
+0483 C***********          Z-ADDZDAYNO    ZDAYNO  50                      S01390
+0484 C***********                                                         S01390
+0485 C*****DETERMINE*YEAR*NUMBER.*****************************************S01390
+0486 C***********                                                         S01390
+0487 C*****ADJUST*DAY*NUMBER*IN*CASE*LAST*DAY*OF*YEAR.********************S01390
+0488 C***********ZDAYNO    SUB  1         ZDAYN1  50   99                 S01390
+0489 C***99******          GOTO ZDEND2                                    S01390
+0490 C***********                                                         S01390
+0491 C*****CALCULATE*NUMBER*OF*4*YEAR*SPANS*SINCE*31/12/1971.*************S01390
+0492 C***********ZDAYN1    DIV  1461      ZLYR    20                      S01390
+0493 C***********          MVR            ZDAYN1           SAVE REMAINING S01390
+0494 C***********                                          DAYS           S01390
+0495 C*****CALCULATE*NUMBER*OF*REMAINING*YEARS.***************************S01390
+0496 C***********          Z-ADD1         ZWRK2   20                      S01390
+0497 C***********ZDTAG1    TAG                             ** ZDTAG1 TAG *S01390
+0498 C***********ZDAYN1    COMP ZYDY,ZWRK2             90                 S01390
+0499 C**N90******ZWRK2     ADD  1         ZWRK2                           S01390
+0500 C**N90******          GOTO ZDTAG1                                    S01390
+0501 C***********ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON S01390
+0502 C***********                                                         S01390
+0503 C*****DECREMENT*DAY*NO.*BY*DAYS*IN*REMAINING*YEARS.******************S01390
+0504 C**N91******ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          S01390
+0505 C***********                                                         S01390
+0506 C*****CALCULATE*ACTUAL*YEAR*NUMBER.**********************************S01390
+0507 C***********ZLYR      MULT 4         ZWRK3   30                      S01390
+0508 C***********ZWRK3     ADD  72        ZWRK3            BASE IS 1972   S01390
+0509 C***********          Z-ADDZWRK3     ZYEAR   20                      S01390
+0510 C***********ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           S01390
+0511 C***********                                                         S01390
+0512 C*****DETERMINE*MONTH*NUMBER.****************************************S01390
+0513 C***********                                                         S01390
+0514 C*****ADJUST*DAY*NO.*IN*CASE*LAST*DAY*OF*LEAP*YEAR*FEBRUARY.*********S01390
+0515 C***********          SETOF                     9293                 S01390
+0516 C***91******ZDAYN1    COMP 59                     9293               S01390
+0517 C***91N92***ZDAYN1    SUB  1         ZDAYN1                          S01390
+0518 C***********                                                         S01390
+0519 C*****CALCULATE*MONTH*NUMBER.****************************************S01390
+0520 C***********          Z-ADD2         ZWRK2                           S01390
+0521 C***********ZDTAG2    TAG                             ** ZDTAG2 TAG *S01390
+0522 C***********ZDAYN1    COMP ZMDY,ZWRK2             94                 S01390
+0523 C**N94******ZWRK2     ADD  1         ZWRK2                           S01390
+0524 C**N94******          GOTO ZDTAG2                                    S01390
+0525 C***********ZWRK2     SUB  1         ZWRK2                           S01390
+0526 C***********                                                         S01390
+0527 C***********          Z-ADDZWRK2     ZMTH    20       MONTH          S01390
+0528 C***********                                                         S01390
+0529 C*****DETERMINE*DAY*OF*MONTH.****************************************S01390
+0530 C***********                                                         S01390
+0531 C*****ADD*BACK*LAST*DAY*OF*YEAR*ADJUSTMENT.**************************S01390
+0532 C***********ZDAYN1    ADD  1         ZDAYN1                          S01390
+0533 C***********                                                         S01390
+0534 C*****CALCULATE*DAY*OF*MONTH.****************************************S01390
+0535 C***********ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            S01390
+0536 C***********                                                         S01390
+0537 C*****ADD*BACK*LEAP*YEAR*29TH*FEBUARY*ADJUSTMENT,*IF*REQUIRED.*******S01390
+0538 C***93******ZDAY      ADD  1         ZDAY                            S01390
+0539 C***********                                                         S01390
+0540 C*****FORMAT*DATE,*DDMMYY*OR*MMDDYY.*********************************S01390
+0541 C**N98******          MOVELZDAY      ZWRK4   40                      S01390
+0542 C***98******          MOVE ZDAY      ZWRK4                           S01390
+0543 C**N98******          MOVE ZMTH      ZWRK4                           S01390
+0544 C***98******          MOVELZMTH      ZWRK4                           S01390
+0545 C***********          MOVELZWRK4     ZDATE                           S01390
+0546 C***********          MOVE ZYEAR     ZDATE                           S01390
+0547 C***********                                                         S01390
+0548 C*****FORMAT*ALPHA*DATE,*DDMMMYY.************************************S01390
+0549 C***********ZDAY      COMP 10                     95                 S01390
+0550 C***********          MOVELZDAY      ZWRK5   5                       S01390
+0551 C***95******          MOVEL' '       ZWRK5                           S01390
+0552 C***********          MOVE ZMNM,ZMTH ZWRK5                           S01390
+0553 C***********          MOVELZWRK5     ZADATE                          S01390
+0554 C***********          MOVE ZYEAR     ZADATE                          S01390
+0555 C***********                                                         S01390
+0556 C***********ZDEND2    ENDSR                           * ZDEND2 ENDSR*S01390
+0557 C***********                                                         S01390
+0558 C********************************************************************S01390
+0559 C********************************************************************
+0560 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0561 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0562 C*
+0563 CSR         GLZADD    BEGSR                           *** GLZADD ****
+0564 C*
+0565 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+0566 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+0567 C*
+0568 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+0569 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+0570 CSR                   Z-ADDZZAMT     ZZWK1   33
+0571 CSR                   MOVE ZZWK1     ZZAMTD  30       DECIMAL FIELD
+0572 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0573 C*
+0574 CSR                   EXSR GLZSUM
+0575 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+0576 C*
+0577 C********************************************************************
+0578 C********************************************************************
+0579 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+0580 C*                        GLZADD, GLZSUB, GLZCMP.
+0581 C*          PARAMETERS PASSED -
+0582 C*                     I/P ZZAMTI ZZAMTD
+0583 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0584 C*
+0585 CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+0586 C*
+0587 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+0588 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+0589 CSR                   SETOF                     919293
+0590 CSR                   SETOF                     949599
+0591 C*
+0592 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+0593 CSR         ZZAMTI    COMP 0                      9293
+0594 CSR 93      ZZAMTD    COMP 0                      9293
+0595 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0596 C*
+0597 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+0598 CSR         ZZTOTI    COMP 0                      9193
+0599 CSR 93      ZZTOTD    COMP 0                      9193
+0600 C*
+0601 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+0602 CSR 93                Z-ADDZZAMTI    ZZTOTI
+0603 CSR 93                Z-ADDZZAMTD    ZZTOTD
+0604 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0605 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+0606 CSR 91N92
+0607 CORN91 92             GOTO ZZOFPS
+0608 C*
+0609 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+0610 CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+0611 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+0612 C*
+0613 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+0614 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+0615 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+0616 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+0617 C*
+0618 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+0619 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+0620 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+0621 CSRN99                Z-ADDZZWK2     ZZTOTD
+0622 CSRN99                Z-ADDZZWK3     ZZTOTI
+0623 C*
+0624 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+0625 CSR 99                Z-ADD0         ZZAMT  153
+0626 CSR                   GOTO ZZSEND
+0627 C*
+0628 C* THE 'SIGNS' ARE DIFFERENT
+0629 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+0630 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+0631 C*
+0632 CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+0633 CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+0634 C*
+0635 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+0636 C*
+0637 CSR 91                Z-SUBZZTOTI    ZZTOTI
+0638 CSR 91                Z-SUBZZTOTD    ZZTOTD
+0639 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+0640 C*
+0641 CSR         ZZTOTI    COMP ZZAMTI               93  95
+0642 CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+0643 C*
+0644 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+0645 CSR 95                Z-ADD0         ZZTOTI
+0646 CSR 95                Z-ADD0         ZZTOTD
+0647 CSR 95                GOTO ZZSEND
+0648 C*
+0649 C* IF ZZTOT GT. ZZAMT.
+0650 CSR 93      ZZAMTD    COMP ZZTOTD               94
+0651 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+0652 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+0653 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+0654 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+0655 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+0656 C*
+0657 C*
+0658 C* IF ZZAMT GT. ZZTOT.
+0659 CSRN93      ZZTOTD    COMP ZZAMTD               94
+0660 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+0661 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+0662 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+0663 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+0664 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+0665 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+0666 C*
+0667 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+0668 CSR                   SETOF                     94
+0669 CSR 93 91
+0670 CORN93 92             SETON                     94
+0671 CSR 94                Z-SUBZZTOTI    ZZTOTI
+0672 CSR 94                Z-SUBZZTOTD    ZZTOTD
+0673 C**
+0674 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+0675 CSR 92                Z-SUBZZAMTI    ZZAMTI
+0676 CSR 92                Z-SUBZZAMTD    ZZAMTD
+0677 CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+0678 C**
+0679 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+0680 CSR                   SETOF                     96
+0681 CSR         ZZTOTD    COMP 0                        91
+0682 CSR 91      ZZTOTI    COMP 0                      96
+0683 CSR 96                MOVE '.000-'   ZZNEGD  5
+0684 CSR                   ENDSR                             ** ENDSR **
+0685 C********************************************************************
+     C********************************************************************S01390
+     C*                                                                   S01390
+     C*  ERROR DUMP SUB-ROUTINE                                           S01390
+     C           *PSSR     BEGSR                           *** *PSSR  *** S01390
+     C*                                                                   S01390
+     C           @RUN      IFEQ *BLANK                                    S01390
+     C                     MOVE 'Y'       @RUN    1                       S01390
+     C                     DUMP                                           S01390
+     C                     OUT  LDA                                       S01390
+     C                     END                                            S01390
+     C                     ENDSR                           * *PSSR  ENDSR*S01390
+     C*                                                                   S01390
+     C********************************************************************S01390
+      /EJECT                                                              S01390
+     C/COPY ZSRSRC,GLINTCZ1                                               S01390
+      /EJECT                                                              S01390
+     C/COPY ZSRSRC,ZDATE2Z2                                               S01390
+      /EJECT                                                              S01390
+     C/COPY ZSRSRC,ZRSTORZ1                                               S01390
+      /EJECT                                                              S01390
+     C/COPY ZSRSRC,ZSAVEZ1                                                S01390
+      /EJECT                                                              S01390
+     C/COPY ZSRSRC,ZINTDYZ2                                               066550
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZDATE9Z3                                               066550
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZDAT10Z2                                               126017
+     C/EJECT                                                              126017
+0686 OSTMMRH  E        21                                                 E91208
+0687 O                                    1 'A'
+0686 OSTMMRD  E        01                                                 E91208
+0689 O                                    1 'D'
+0690 O                         RTYP       2
+0691 O                         CNUM       8
+0692 O***********              CRNM      28                               S01390
+     O                         BBCRNM    28                               S01390
+0693 O                         DLNO      34
+0694 O                         VDAT      37P
+0695 O                         MDAT      40P
+0696 O                         TERM      41
+0697 O                         RATE      45P
+0698 O                         PCPL      52P
+0699 O                         INTA      61P
+0700 O                         LCD       55P
+0701 O*                        BRKG      70P
+0701 O                         BACD      70P
+0702 O                         BRKC      65
+0703 O                         DLST      72
+0704 O***********              CSNM      82                               S01390
+     O                         BBCSSN    82                               S01390
+     O                         A8BRCD    92                               S01390
+     O                         A8CMCD    95                               S01390
+0705 O                         CALL      96
+     O                         CLAS     100                               CDL038
+0686 OSTMMRT  E        02                                                 E91208
+0707 O                                    1 'T'
+0708 O                         NRECS      4P
+0709 O                         HRWN      12P
+0710 O                         HRDC      14P
+0711 O**DL6810P1T**203******LR                                            S01390
+0712 O***********                        23 'REFERENCE DL6810'            S01390
+0711 ODL6810AUT  203      LR                                              S01390
+0712 O                                   23 'REFERENCE DL6810AU'          S01390
+0713 O***********              TITL      89                               S01390
+     O                         BJURPT    89                               S01390
+0714 O                                  104 'DATE'
+0715 O***********              RUNA     112                               S01390
+     O                         BJMRDT   112                               S01390
+0716 O                                  122 'PAGE'
+0717 O                         PAGE  Z  127
+0718 O        T  1     LR
+0719 O                                   60 'SHORT TERM MONEY '
+0720 O                                   81 'MARKET REPORT EXTRACT'
+0721 O        T  3     LR
+0722 O                                   60 '-----------------'
+0723 O                                   81 '---------------------'
+0724 O        T 31     LR
+0725 O                                   34 'CONTROL TOTALS'
+0726 O        T  2     LR
+0727 O                                   34 '--------------'
+0728 O        T  2     LR
+0729 O                                   65 'ON FILE'
+0730 O                                   90 'CALCULATED'
+0731 O        T  2     LR
+0732 O                                   25 'NUMBER OF DEALS'
+0733 O                                   38 'RECORDS READ'
+0734 O                         NORE  3   65
+0737 O        T  2     LR
+0738 O                                   27 'NUMBER OF EXTRACT'
+0739 O                                   43 'RECORDS WRITTEN'
+0740 O                         NRECS 3   90
+0741 O        T  2     LR
+0742 O                                   34 'VALUE OF RECORDS WRITTEN'
+0743 O                         HASHW Z   87
+0744 O                         HASHD     90
+0745 O********T*22     LR                                                 S01390
+0746 O***********                        71 '*** END OF REPORT ***'       S01390
+0747 O********T*2      U7 LR                                              S01390
+0748 O***********                        29 '*** DATABASE ERROR.'         S01390
+0749 O***********              ERR       39                               S01390
+     O        T 2      LR U7 U8                                           S01390
+     O                                   57 'DATABASE ERROR'              S01390
+     O                         DBASE     61                               S01390
+     O                                   67 'FILE'                        S01390
+     O                         DBFILE    76                               S01390
+     O        T 13     LR U7 U8                                           S01390
+     O                                   46 'KEY'                         S01390
+     O                         DBKEY     76                               S01390
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

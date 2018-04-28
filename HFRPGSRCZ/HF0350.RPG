@@ -1,0 +1,217 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas HF Select Date Gap to Restore')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - HISTORY AND AUDIT FACILITY
+     F*                                                               *
+     F*  HF0350 - HAF Select Date Gap to Restore                      *
+     F*                                                               *
+     F*  Function : To select start and end dates of historic data    *
+     F*  (I/C INT)  to be restored from storage media                 *
+     F*                                                               *
+     F*  Called By: HFC0350 - Control Program for Prints              *
+     F*                                                               *
+     F*  Calls    :                                                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  LAST AMEND NO. S01379             DATE 16SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  S01379 - HISTORY AND AUDIT FACILITY                          *
+     F*           NEW PROGRAM CREATED FOR SAR.                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FHF0350DFCF  E                    WORKSTN
+      ** Input Screen
+      *
+     FHFBSEQL0IF  E           K        DISK
+      ** Sequence per day backup/restore
+      *
+     FHFFILEL1IF  E           K        DISK
+      ** Files to use by file
+      *
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  03       CMD/3  (EXIT)  IS PRESSED                           *
+     F*  13       CMD/13 (START) IS PRESSED                           *
+     F*  30       ERROR ON START DATE                                 *
+     F*  31       ERROR ON END DATE                                   *
+     F*  32       ERROR ON HAF ITEM                                   *
+     F*  50       SCREEN ERROR ON SELECTION                           *
+     F*  U1       END PROGRAM                                         *
+     F*  U3       START RESTORE                                       *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      *
+     IHFREST     UDS                            256
+     I** Tape sequences for restoring historical journal entries
+     I                                        1   40SEQ1
+     I                                        5   80SEQ2
+     I                                        9  18 ITEJ
+     I*
+     IPSDS       SDS
+     I** Program status data structure
+     I                                      244 253 #JOB
+     I                                      254 263 #USER
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+      /EJECT
+      *
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Read in sequence number for restoring journal entries
+      *
+     C           *NAMVAR   DEFN           HFREST
+     C           *LOCK     IN   *NAMVAR
+      *
+      ** Define local data area
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    SRUNA            RUN DATE
+     C                     MOVE #USER     SUSER
+     C                     MOVEL#JOB      SWSID
+      *
+     C                     MOVEL'HF0350'  SPGMQ  10
+     C                     MOVEL*BLANKS   SSFKY   4
+     C                     MOVE *BLANKS   WUMSID  7        Message Identif
+     C                     MOVEL'HFMSGF'  WUMSGF 10        Message File Na
+      *
+      **---------------------------------------------------------------
+      ** MAIN PROCESSING
+      *
+     C           START     TAG
+      *
+      ** Display screen
+      *
+     C                     WRITEHF0350C0
+     C                     EXFMTHF0350F1
+      *
+      ** Clear program of messages
+      *
+     C                     CALL 'SCC0250'
+     C                     MOVEA'000'     *IN,30
+      *
+      ** Exit if CMD3 pressed
+      *
+     C           *IN03     IFEQ '1'
+     C                     SETON                     LR
+     C                     SETON                     U1
+     C                     GOTO ENDPGM
+     C                     END
+      *
+      ** Check start date
+      *
+     C           DAT1      CHAINHFBSEQL0             50
+     C           *IN50     IFEQ '1'
+     C                     MOVE '1'       *IN30
+     C                     MOVEL'HAF0057' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     GOTO START
+     C                     END
+     C                     Z-ADDSEQN      SEQ1
+      *
+      ** Check end date
+      *
+     C           DAT1      SETLLHFBSEQL0
+     C           DAT2      CHAINHFBSEQL0             50
+     C           *IN50     IFEQ '1'
+     C                     MOVE '1'       *IN31
+     C                     MOVEL'HAF0058' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     GOTO START
+     C                     END
+     C                     Z-ADDSEQN      SEQ2
+      *
+      ** Start date cannot be greater than end date
+      *
+     C           SEQ1      IFGT SEQ2
+     C                     MOVEA'11'      *IN,30
+     C                     MOVEL'HAF0059' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     GOTO START
+     C                     END
+      *
+      ** Check HAF item
+      *
+      ** Add 'J' to start of item name.
+      *
+     C                     MOVE *BLANKS   SITEX  10
+     C                     MOVEL'J'       SITEX
+     C                     MOVE ITEX      SITEX
+      *
+     C           SITEX     CHAINHFFILEL1             50
+     C           *IN50     IFEQ '1'
+     C                     MOVE '1'       *IN,32
+     C                     MOVEL'HAF0060' WUMSID           Message Identif
+      * Retrieve MSGF message - Standard Functions  *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+     C                     GOTO START
+     C                     END
+     C                     MOVELSITEX     ITEJ
+      *
+      ** Start reading from storage media if CMD13 pressed
+      *
+     C           *IN13     IFEQ '1'
+     C                     SETON                     U3LR
+      *
+      ** Clear program of messages
+      *
+     C                     CALL 'SCC0250'
+     C                     OUT  *NAMVAR
+      *
+     C                     ELSE
+     C                     GOTO START
+     C                     END
+      *
+     C           ENDPGM    TAG
+      *
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

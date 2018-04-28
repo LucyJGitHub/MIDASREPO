@@ -1,0 +1,455 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Update shadow account balances')
+     H**********                                                          S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                                 *
+     F*                                                               *
+     F*  PM1130 - PM UPDATE SHADOW ACCOUNT BALANCES                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 129927             Date 03Feb98               *
+      *                 CCB002             Date 03Sep96               *
+     F*                 109440             DATE 18OCT96               *
+     F*                 CPM005             DATE 18OCT96               *
+     F*                 S01486             DATE 05JUL94               *
+     F*                 R00611     DW      DATE 18OCT90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+     F*  129927 - Recompiled over renamed formats in PMACPOL0.        *
+     F*  CCB002  -  COB Performance Enhancements                      *
+     F*             MEMOS now accessed via GL key rather than old     *
+     F*             relative record number.                           *
+     A*  109440 - Recompiled over changed PMACPOL0                    *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           Just Recompiled because of PM File(s) changes       *
+     F*  S01486 - Private Banking upgrade to Release 10               *
+     F*  R00611  -  PRIN no set to C for new close of business        *
+     F*              when amount posted.                              *
+     F*                                                               *
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     FPM1130AUO   E             70     PRINTER
+     F***MEMOS   UF  E                    DISK                            CCB002
+     F***                                           KINFSR *PSSR          CCB002
+     F***ACCNTPT*IF**E                    DISK                            S01486
+     FPMACCNL1IF  E                    DISK                               S01486
+     F                                              KINFSR *PSSR
+     F***ACPOPT**IF**E           K        DISK                            S01486
+     FPMACPOL0IF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+      *                                                                   CCB002
+      * Define Shadow balances by G/L Account Number                      CCB002
+      *                                                                   CCB002
+     FMEMOSL1 UF  E           K        DISK         KINFSR *PSSR          CCB002
+      *                                                                   CCB002
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *
+      ****71******ACCESS*LF/SDBANKL1**************************************S01486
+      *   72      ACCOUNT MOVEMENT RECORD READ FROM LF/ACPO1
+      *   74      ACCESS LF/ACPO1
+      *   75      ACCESS PF/MEMOS
+      *   80      TEST POSTING RECORD INDICATOR
+      *   98      DATE FORMAT
+      *   LR      END OF FILE PMEVNT
+      *
+      *    UNUSED INDICATORS
+      *    -----------------
+      *       01  02  03  04  05  06  07  08  09  10
+      *       11  12  13  14  15  16  17  18  19  ..
+      *       ..  ..  ..  24  25  26  27  28  29  30
+      *       31  32  33  34  35  36  37  38  39  40
+      *       41  42  43  44  45  46  47  48  49  50
+      *       51  52  53  54  55  56  57  58  59  60
+      *       61  62  63  64  65  66  67  68  69  ..
+      *       ..  ..  ..  ..  ..  76  77  78  79  ..
+      *       81  82  83  84  85  86  87  88  89  90
+      *       91  92  93  94  95  96  97  ..  99
+      *
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *
+      ** ARRAYS USE IN ZDATE2 TO CONVERT A DAY NUMBER TO DATE FORMAT
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+     E                    CPY@    1   1 80
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *
+     IAPOSTPDF
+     I              BRCA                            RBRCA                 S01486
+     I              CNUM                            RCNUM
+     I              CCY                             RCCY
+     I              ACOD                            RACOD
+     I              ACSQ                            RACSQ
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+      *
+     I***LDA********UDS                             256                   S01486
+     I**************                        132 183 DBLOT                 S01486
+     I**************                        132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IPMSTAT      DS
+     I                                        1   50WWECD
+     I                                        1 256 WWSTAT
+     I*
+     I* Data structure for compilation - copyright insertion.
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+      *                                                                   CCB002
+     IUMEMER      DS                                                      CCB002
+      ** Data structure for database error on update of MEMOS             CCB002
+     I**********                              1   60U0CNUM                             CCB002 CSD027
+     I                                        1   6 U0CNUM                                    CSD027
+     I                                        7   9 U0CUCD                CCB002
+     I**********                             10  130U0ACCD                             CCB002 CGL029
+     I**********                             14  150U0ACSQ                             CCB002 CGL029
+     I**********                             16  18 U0BRCA                             CCB002 CGL029
+     I                                       10  190U0ACCD                                    CGL029
+     I                                       20  210U0ACSQ                                    CGL029
+     I                                       22  24 U0BRCA                                    CGL029
+      **************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * INDEX OF SUBROUTINES                                                   *
+      * MAIN     - MAIN PROCESSING                                             *
+      * P01      - DETERMINE EVENT CONTROL DATE                                *
+      * P02      - ACCOUNTS PROCESSING                                         *
+      * P03      - CALCULATE LEDGER AND CLEARED BALANCES                       *
+      * P04      - UPDATE SHADOW BALANCES                                      *
+      * ZEVCD    - DETERMINE EVENT CONTROL DATE                                *
+      * ZDATE2   - CONVERT A DAY NUMBER TO DATE FORMAT                         *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      * OVERSR   - OVERFLOW PROCESSING ON PM1130AU                             *
+      *                                                                        *
+      * EXTERNAL ROUTINES CALLED                                               *
+      *                                                                        *
+      **************************************************************************
+     C*
+     C           ACPKY     KLIST
+     C                     KFLD           BRCA                            S01486
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *
+      ** PERFORM INITIAL PROCESSING
+     C                     EXSR P01
+      *
+      ** PERFORM ACCOUNTS PROCESSING
+     C                     EXSR P02
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDETAILS
+      *
+     C                     SETON                     LR
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * P02      - ACCOUNTS PROCESSING                                         *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      * OVERSR   - OVERFLOW PROCESSING ON PM1130AU                             *
+      * P03      - CALCULATE LEDGER AND CLEARED BALANCES                       *
+      * P04      - UPDATE SHADOW BALANCES                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           P02       BEGSR                           **P02 BEGSR**
+      *
+      **ACCESS*LF/ACCNTPT*************************************************S01486
+      * ACCESS LF/PMACCNL1                                                S01486
+      *
+     C***********          READ ACCNTPT                  60               S01486
+     C                     READ PMACCNL1                 60               S01486
+      *
+     C           *IN60     DOWEQ'0'                        - B1
+      *
+      **ACCESS*LF/ACPO1*TO*GET*THE*POSTINGS*FOR*THIS*ACCOUNT**************S01486
+      * ACCESS LF/PMACPOL0 TO GET THE POSTINGS FOR THIS ACCOUNT           S01486
+      *
+     C***********ACPKY     SETLLACPOPT                                    S01486
+     C***********ACPKY     READEACPOPT                   74               S01486
+     C           ACPKY     SETLLPMACPOL0                                  S01486
+     C           ACPKY     READEPMACPOL0                 74               S01486
+      *
+     C           *IN74     DOWEQ'0'                        - B2
+      *
+      * UPDATE THE CLEARED AND THE LEDGER BALANCES
+      *
+     C                     EXSR P03
+      *
+     C***********ACPKY     READEACPOPT                   74               S01486
+     C           ACPKY     READEPMACPOL0                 74               S01486
+      *
+     C                     END                             - E2
+      *
+      * UPDATE PF/MEMOS WITH LEDGER AND CLEARED BALANCES
+      *
+     C                     EXSR P04
+     C                     ADD  1         R1NORE
+      *
+     C***********          READ ACCNTPT                  60               S01486
+     C                     READ PMACCNL1                 60               S01486
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR                           **P02 ENDSR**
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * P03      - CALCULATE LEDGER AND CLEARED BALANCES                       *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * OVERSR   - OVERFLOW PROCESSING ON PM1130AU                             *
+      * ZDATE2   - CONVERT A DAY NUMBER TO DATE FORMAT                         *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * P02      - ACCOUNTS PROCESSING                                         *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           P03       BEGSR                           **P03 BEGSR**
+      *
+      * CHECK IF THE LEDGER BALANCE MUST BE UPDATED
+      *
+     C*********************TESTB'4'       PRIN       80                   R00611
+      *
+     C************IN80*****IFEQ '1'                        - B1           R00611
+     C           PRIN      IFNE 'C'                                       R00611
+      *
+      * CHECK IF POSTING AMOUNT MUST BE POSITIVE OR NEGATIVE
+      *
+     C           DRCR      IFEQ 1                          - B2
+     C           LDBL      SUB  PSTA      LDBL
+     C                     ELSE                            - X2
+     C           LDBL      ADD  PSTA      LDBL
+     C                     END                             - E2
+      *
+     C                     END                             - E1
+      *
+      * CHECK IF THE CLEARED BALANCE MUST BE UPDATED
+      *
+     C           VALD      IFLE WWECD                      - B1
+      *
+      * CHECK IF POSTING AMOUNT MUST BE POSITIVE OR NEGATIVE
+      *
+     C           DRCR      IFEQ 1                          - B2
+     C           CLBL      SUB  PSTA      CLBL
+     C                     ELSE                            - X2
+     C           CLBL      ADD  PSTA      CLBL
+     C                     END                             - E2
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR                           **P03 ENDSR**
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * P04      - UPDATE SHADOW BALANCES                                      *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * P02      - ACCOUNTS PROCESSING                                         *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           P04       BEGSR                           **P04 BEGSR**
+      *
+     C***********RRNM      CHAINMEMOS                75                   CCB002
+      ***********                                                         CCB002
+     C************IN75     IFEQ '1'                        - B1           CCB002
+     C************LOCK     IN   LDA                                 S01486CCB002
+     C***********          Z-ADD04        DBASE            ***************CCB002
+     C***********          MOVEL'MEMOS   'DBFILE           **DB ERROR 04**CCB002
+     C***********          MOVELRRNM      DBKEY            ***************CCB002
+     C***********          OUT  LDA                                 S01486CCB002
+     C***********          EXSR *PSSR                                     CCB002
+     C***********          END                             - E5           CCB002
+      *                                                                   CCB002
+      ** GL key                                                           CCB002
+     C           GLKEY     KLIST                                          CCB002
+     C                     KFLD           W0CNUM           Customer NumberCCB002
+     C                     KFLD           W0CUCD           Currency code  CCB002
+     C                     KFLD           W0ACCD           Account code   CCB002
+     C                     KFLD           W0ACSQ           Account sequencCCB002
+     C                     KFLD           W0BRCA           Branch         CCB002
+      *                                                                   CCB002
+     C**********           MOVE CNUM      W0CNUM  60                                   CCB002 CSD027
+     C                     MOVE CNUM      W0CNUM  6                                           CSD027
+     C                     MOVE CCY       W0CUCD  3                       CCB002
+     C**********           MOVE ACOD      W0ACCD  40                                   CCB002 CGL029
+     C                     MOVE ACOD      W0ACCD 100                                          CGL029
+     C                     MOVE ACSQ      W0ACSQ  20                      CCB002
+     C                     MOVE BRCA      W0BRCA  3                       CCB002
+      *                                                                   CCB002
+     C           GLKEY     CHAINMEMOSL1              75                   CCB002
+      *                                                                   CCB002
+     C           *IN75     IFEQ '1'                                       CCB002
+     C           *LOCK     IN   LDA                        ***************CCB002
+     C                     Z-ADD5         DBASE            ** DB ERR 05 **CCB002
+     C                     MOVE 'MEMOSL1' DBFILE           ***************CCB002
+     C**********           Z-ADDW0CNUM    U0CNUM                                       CCB002 CSD027
+     C                     MOVE W0CNUM    U0CNUM                                              CSD027
+     C                     MOVE W0CUCD    U0CUCD                          CCB002
+     C                     Z-ADDW0ACCD    U0ACCD                          CCB002
+     C                     Z-ADDW0ACSQ    U0ACSQ                          CCB002
+     C                     MOVE W0BRCA    U0BRCA                          CCB002
+     C                     MOVELUMEMER    DBKEY                           CCB002
+     C                     EXSR *PSSR                                     CCB002
+     C                     ENDIF                                          CCB002
+      *
+      * UPDATE THE CLEARED AND THE LEDGER BALANCES WITH THE CALCULATED
+      *
+     C                     Z-ADDLDBL      LDBLN
+     C                     Z-ADDCLBL      CLBLN
+      *
+     C                     UPDATMEMOSMDF
+      *
+     C                     ENDSR                           **P04 ENDSR**
+      **************************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * P01      - DETERMINE EVENT CONTROL DATE                                *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      * ZEVCD    - DETERMINE EVENT CONTROL DATE                                *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           P01       BEGSR                           **P01 BEGSR**
+      *
+      *  SETUP DATA BASE ERROR FIELDS
+      *
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE 'PM1130  'DBPGM
+     C                     OUT  LDA                                       S01486
+     C*
+     C** DEFINE DATA AREA PMSTAT
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+      *
+      ***READ*ICD1*FROM*LF/SDBANKL1                                       S01486
+     C**   Access bank details to get run date                            S01486
+      *
+     C***********          READ SDBANKL1                 71               S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*MSG   ' PRTCD   7                       S01486
+     C                     PARM '*FIRST ' POPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C************IN71     IFEQ '1'                        - B1           S01486
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD01        DBASE            ***************
+     C***********          MOVE 'SDBANKL1'DBFILE           **DB ERROR 01**S01486
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                      ***************
+     C                     END                             - E1
+      *
+     C           BJDFIN    IFEQ 'M'                        - B1
+     C                     MOVE '1'       *IN98
+     C                     END                             - E1
+      *
+     C                     ENDSR                           **P01 ENDSR**
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * P01      - DETERMINE EVENT CONTROL DATE                                *
+      * P02      - ACCOUNTS PROCESSING                                         *
+      * P04      - UPDATE SHADOW BALANCES                                      *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           *PSSR     BEGSR                           ** *PSRR BSR**
+     C*                                                                   S01486
+     C** Report Database Error on Audit printer file                      S01486
+     C*                                                                   S01486
+     C                     WRITEHEADAU                                    S01486
+     C                     WRITEERRORAU                                   S01486
+     C**
+     C** ROLL BACK CHANGES , DUMP AND RETURN TO THE CALLING PROGRAM
+     C**
+     C                     SETON                     LRU7U8
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR                            ** *PSRR ESR**
+     C*=========================================================================
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

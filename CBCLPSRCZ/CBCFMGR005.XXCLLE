@@ -1,0 +1,66 @@
+/*******************************************************************/
+/*S*D****CLPBASEBND*************************************************/                  /*AR1096969*/
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Close of Business Processing                      */
+/*                                                                 */
+/*       CBCFMGR005 - Midas CB File Manager - Background Job       */
+/*                    Termination                                  */
+/*                                                                 */
+/*       (C) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. AR1096969*REDUNDANTDate 21Mar13            */
+/*       Prev Amend No. AR544186 *CREATE  Date 01Aug12             */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       AR1096969 - CBCFMGR_nn jobs should no longer run in our   */
+/*                   system                                        */
+/*                 - CCB022B - COB Restructure - COB File Manager  */
+/*                   (Missed out for drop2A delivery)              */
+/*       AR544186 - Improve performance of LEC0604/LEC07003 in     */
+/*                  COB (Child:AR544188)                           */
+/*                                                                 */
+/*******************************************************************/
+             PGM
+ 
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(+
+                           C) Copyright Misys International Banking +
+                           Systems 2012')
+ 
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DATA1) TYPE(*CHAR) LEN(350) +
+                           VALUE('SHUTDOWN')
+             DCL        VAR(&MSGLEN1) TYPE(*DEC) LEN(5 0) VALUE(350)
+             DCL        VAR(&SENT) TYPE(*DEC) LEN(2 0) VALUE(0)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+ 
+             CHKOBJ     OBJ(&DPLIB/CBADLFDTAQ) OBJTYPE(*DTAQ)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(END))
+ 
+ SNDDTAQ:    CALL       PGM(QSNDDTAQ) PARM('CBADLFDTAQ' &DPLIB +
+                           &MSGLEN1 &DATA1)
+ 
+             CHGVAR     VAR(&SENT) VALUE(&SENT + 1)
+             IF         COND(&SENT *EQ 10) THEN(GOTO CMDLBL(END))
+             GOTO       CMDLBL(SNDDTAQ)
+ 
+/** Error processing - Change the job switches and send message */
+/** to MOPERQ */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     &MSG VALUE('Program CBCFMGR005 terminated +
+                           abnormally')
+             SNDMSG     TOMSGQ(MOPERQ) MSG(&MSG)
+             DMPCLPGM
+ 
+ END:        CHGVAR     VAR(&MIBSCPY) VALUE('(C) Copiright Misys +
+                           International Banking Systems 2012')
+ ENDPGM

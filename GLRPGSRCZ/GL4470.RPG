@@ -1,0 +1,249 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL MTCash Narrative File Purge')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL4470 - MTCash Narrative File Purge                         *
+      *                                                               *
+      *  Function: This program will delete MTCash Narratives in COB  *
+      *            if both the Postings and the Batch have already    *
+      *            been deleted                                       *
+      *                                                               *
+      *  Called By: GLC4470                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. BUG26541           Date 26Oct09               *
+      *                 BUG23742*CREATE    Date 09May09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26541 - ENs in Multicash Narrative tab were lost after COB*
+      *             Applied BUG26382/BUG26382A fixes.                 *
+      *  BUG23742 - Improper handling of Ext Narr from Batch          *
+      *             Interface Input                                   *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Midas GL A/c Post Hist Detls by Source of Posting
+      *
+     FGLACPHL2IF  E           K        DISK
+      *
+      ** Midas GL Journal history posting LF
+      *
+     FGLJEHPL0IF  E           K        DISK
+      *
+      ** Midas GL Journal entry postings                                                   BUG26382A
+      *                                                                                    BUG26382A
+     FGLJENPL0IF  E           K        DISK                                                BUG26382A
+      *                                                                                    BUG26382A
+      ** Midas GL MultiCash Narratives File - Upd Indx
+      *
+     FGLMNARL2UF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Midas MultiCash Narratives File Purge - Audit
+      *
+     FGL4470AUO   E                    DISK
+      *
+      *****************************************************************
+      *  F U N C T I O N   O f   I N D I C A T O R S                  *
+      *                                                               *
+      *       01      END OF FILE - LF/GLMNARL2                       *
+      *       05      END OF FILE - LF/GLACPHL2                       *
+      *       06      END OF FILE - LF/GLJEHPL0                       *
+      *       U7&U8   DATABASE IN ERROR                               *
+      *                                                               *
+      *****************************************************************
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Copyright array
+      *
+      /SPACE 3
+     ICPYR@#      DS
+      *
+      ** Data Structure for compilation - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ** Bank details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** First DS for Access Programs, short Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      **     Local Data Area
+      *
+     ILDA       E DSLDA
+      *
+      ** Program Status Data Structure
+      *
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+      ** Key for Accounts Post Historic Details File
+      *
+     IWKEY        DS                              7
+     I                                        1   3 WBANB
+     I                                        4   6 WITNB
+      *
+     C/EJECT
+      *
+      **   Define Local Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Access Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL*BLANKS   DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'GL4470'  DBPGM
+     C                     Z-ADD001       DBASE
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Key List for Midas GL Journal Entry History Additional
+      ** Information by Batch Number and Batch Item Number
+      *
+     C           KLJEHP    KLIST
+     C                     KFLD           KPODT   50
+     C                     KFLD           KBATNO  3
+     C                     KFLD           KBITNO  30
+      *                                                                                    BUG26382A
+      ** Key List for Midas GL Journal entry postings                                      BUG26382A
+      *                                                                                    BUG26382A
+     C           KLJENP    KLIST                                                           BUG26382A
+     C                     KFLD           KBATNO                                           BUG26382A
+     C                     KFLD           KBITNO                                           BUG26382A
+      *                                                                                     BUG26382
+      ** Key List for Midas GL Posting files                                                BUG26382
+     C           KLAPOS    KLIST                                                            BUG26382
+     C                     KFLD           KPODT                                             BUG26382
+     C                     KFLD           WKEY                                              BUG26382
+      *
+      ** Set Number of Records deleted to zero
+      *
+     C                     Z-ADD0         RNXDL  150
+      *
+      ** Set up report heading fields
+      *
+     C                     MOVE BJURPT    RURPT  53
+     C                     MOVE BJMRDT    RMRDT   7
+      *
+      ** Loop to read & process records from MTCash Narratives file
+      *
+     C                     SETOF                         010506
+     C                     READ GLMNARL2                 01
+      *
+      ** While not End of File
+      *
+     C           *IN01     DOWEQ'0'
+      *
+     C                     MOVE BAPODT    KPODT                                             BUG26382
+     C                     MOVE BABANB    WBANB
+     C                     MOVE BAITNB    WITNB
+      *
+     C********** WKEY      CHAINGLACPHL2             05                                     BUG26382
+     C           KLAPOS    CHAINGLACPHL2             05                                     BUG26382
+      *
+      ** If No Record found, check on Journal History Posting file
+      *
+     C           *IN05     IFEQ '1'
+      *
+     C**********           MOVE BAPODT    KPODT                                             BUG26382
+     C                     MOVE BABANB    KBATNO
+     C                     MOVE BAITNB    KBITNO
+      *
+     C           KLJEHP    CHAINGLJEHPL0             06
+     C   06      KLJENP    CHAINGLJENPL0             06                                    BUG26382A
+      *
+     C           *IN06     IFEQ '1'
+      *
+      ** Delete the record from MTCash Narratives file when
+      ** corresponding records do not exist in both Accounts Post
+      ** Historic and Journal History Posting file
+      *
+     C                     DELETGLMNARD0
+      *
+      ** Add 1 to Number of records deleted
+      *
+     C                     ADD  1         RNXDL
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Read next record from file
+      *
+     C                     READ GLMNARL2                 01
+      *
+     C                     ENDDO
+      *
+      ** Write report headings, details and end of report text
+      *
+     C                     WRITEGL4470AH
+     C                     WRITEGL4470AD
+     C                     WRITEGL4470AT
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR - Exception Error Processing. Performed when SDBANKPD   *
+      *         in error or an exception error occurs                 *
+      *                                                               *
+      * CALLED BY : MAIN PROCESSING                                   *
+      *                                                               *
+      * CALLS     : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      * Check that this is the first time through the routine
+      * to prevent recursive calling which would loop the program.
+     C           RUN1      IFNE 'Y'
+     C                     MOVE 'Y'       RUN1    1
+      *
+      ** Write report headings and error text if Database Error.
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEGL4470AH
+     C                     WRITEGL4470AE
+     C                     OUT  LDA
+     C                     END
+      *
+      ** Dump Program and Return control
+      *
+     C                     DUMP
+     C                     END
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+** CPY@   OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2009

@@ -1,0 +1,155 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Set up initial Customer Lending')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000093 - Set up initial Customer Lending                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *CREATE    Date 06Oct10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFX &ERRPGM)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&FLSZ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&INCR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&LE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if Customer Lending is switched on - data area MMOD and file SDMMODPD. */
+             RTVDTAARA  DTAARA(MMOD (10 1)) RTNVAR(&LE)
+             CALL       PGM(AOMMODR0) PARM(&RTNCODE '*FIRST' &FMT)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('AOMMODR0')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(&LE *NE 'Y' *OR %SST(&FMT 28 1) *NE +
+                          'Y') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('*NOT ON')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Clear relevant files. */
+             CLRPFM     FILE(CLOANHH)
+             CLRPFM     FILE(CLOANZ1)
+             CLRPFM     FILE(FCLTYHH)
+             CLRPFM     FILE(FCLTYZZ)
+             CLRPFM     FILE(GTEESHH)
+             CLRPFM     FILE(GTEESZZ)
+             CLRPFM     FILE(GTREFHG)
+             CLRPFM     FILE(LOAMSDH)
+             CLRPFM     FILE(LOAMSZ1)
+             CLRPFM     FILE(HISTSHH)
+             CLRPFM     FILE(HISTSZX)
+             CLRPFM     FILE(LTRIX)
+             CLRPFM     FILE(LEFEEAZ)
+             CLRPFM     FILE(LEFEEZ)
+             CLRPFM     FILE(LEPEDFZ)
+             CLRPFM     FILE(LEPEFCZ)
+             CLRPFM     FILE(LEPEFFZ)
+             CLRPFM     FILE(LEPEFLZ)
+             CLRPFM     FILE(LEPEGLZ)
+             CLRPFM     FILE(LEPELNZ)
+             CLRPFM     FILE(LEPEMGZ)
+             CLRPFM     FILE(LEPEREZ)
+             CLRPFM     FILE(LEYTDHH)
+             CLRPFM     FILE(LEYTDZZ)
+             CLRPFM     FILE(MTRANZ)
+             CLRPFM     FILE(PEFMTC)
+ 
+/* Customer Lending master file set up. */
+             CALL       PGM(LE0005)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('LE0005')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             CHGDTAARA  DTAARA(LESTAT) VALUE('01000NNNOLDNNNNNNN')
+             CHGDTAARA  DTAARA(LETEMP) VALUE('01000NNNOLDNNNNNNN')
+ 
+/* Update LTRIX. */
+             INZPFM     FILE(LTRIX) TOTRCDS(1000)
+             CALL       PGM(LE0832)
+ 
+/* Set on the mandatory LE switchable features. */
+             CALL       PGM(SCC3012) PARM('LENDING MODULE      ')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SCC3012')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Prompt the CLE004 initialisation program(s). */
+             CALL       PGM(SC3090M) PARM(&RTNCODE 'CLE004' 'Lending +
+                          Enhancements - Tranches 1 and 2')
+             IF         COND(&RTNCODE *NE ' ' *AND &RTNCODE *NE +
+                          'Y2U9999' *AND &RTNCODE *NE 'USR0790') +
+                          THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SC-CLE004')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Prompt the CLE005 initialisation program(s). */
+             CALL       PGM(SC3090M) PARM(&RTNCODE 'CLE005' 'Lending +
+                          Enhancements - Tranche 3')
+             IF         COND(&RTNCODE *NE ' ' *AND &RTNCODE *NE +
+                          'Y2U9999' *AND &RTNCODE *NE 'USR0790') +
+                          THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SC-CLE005')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Prompt the CLE009 initialisation program(s). */
+             CALL       PGM(SC3090M) PARM(&RTNCODE 'CLE009' 'Lending +
+                          Input Cycle Fees')
+             IF         COND(&RTNCODE *NE ' ' *AND &RTNCODE *NE +
+                          'Y2U9999' *AND &RTNCODE *NE 'USR0790') +
+                          THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('SC-CLE009')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+/* Prompt the CLE105 initialisation program(s). */
+/*           CALL       PGM(SC3090M) PARM(&RTNCODE 'CLE105' 'New +   */
+/*                        Maint. Funct - Enhanced Lending Input')    */
+/*           IF         COND(&RTNCODE *NE ' ' *AND &RTNCODE *NE +    */
+/*                        'Y2U9999' *AND &RTNCODE *NE 'USR0790') +   */
+/*                        THEN(DO)                                   */
+/*              CHGVAR     VAR(&ERRPGM) VALUE('SC-CLE105')           */
+/*              GOTO       CMDLBL(ERROR)                             */
+/*           ENDDO                                                   */
+ 
+/* Call program to update LTRIX. */
+             CALL       PGM(LE0016) PARM(&FLSZ &INCR)
+             IF         COND(&INCR *EQ 'Y') THEN(DO)
+                INZPFM     FILE(LTRIX) TOTRCDS(&FLSZ)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                IF         COND(&ERRPGM *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SMC000093')
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

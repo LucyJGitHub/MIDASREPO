@@ -1,0 +1,789 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Display Extended Settle')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD0401E# - Extended Settlements Enquiry                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL094             Date 30May14               *
+      *  Prev Amend No. CSD095             Date 08Apr14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL031             Date 24Nov04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW097             Date 10Sep98               *
+      *                 CSD003             Date 02Jan98               *
+      *                 CEU003           Date 05Nov97                 *
+      *                 CSW005           Date 12Nov96                 *
+      *                 S01459           Date 12Nov96                 *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM FX SSI's      *
+      *  CDL031 - Effective Date on Extended SSI                      *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSW097 - SWIFT97 Changes for MT34* and MT36*                 *
+      *           Increase the size of XAGVV field by 2.              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - File removed from SD model.                       *
+      *  CEU003 - EMU Dealing Settlement Ccy Conversion               *
+      *  CSW005 - FRA/IRS MT34*, MT36* Message Generation.            *
+      *  S01459 - Addition of Midas headerbox.                        *
+      *                                                               *
+      *****************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0401E#99
+     A          R #RCDKEY                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*/COPY WNCPYSRC,SD0401E#98
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A*/COPY WNCPYSRC,SDH00377
+     A                                      SETOF(31 'Invalid: #1CYCD')
+     A                                      SETOF(32 'Invalid: #1CUST')
+     A                                      SETOF(33 'Invalid: #1TRTY')
+      ** Start of change CSD095
+     A                                      SETOF(36 'Invalid: #1BRCA')
+     A                                      SETOF(37 'Invalid: #1STYP')
+      ** End of change CSD095
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0401E1'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 27'Extended Settlements Enquiry'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #1CSSN        10   H      TEXT('Customer Shortname')
+     A            #1CRTN        10   H      TEXT('Customer Report Town')
+     A            #1CRNM        20   H      TEXT('Customer Report Name')
+     A*/COPY WNCPYSRC,SDH00378
+      ** Start of change CSD095
+     A                                  4  8'Branch..........:'
+     A  38                                  DSPATR(ND)
+     A            #1BRCA         3   B  4 26TEXT('Branch')
+     A N25                                  OVRDTA
+     A  36N38                               DSPATR(RI PC)
+     A N36N38                               DSPATR(UL HI)
+     A  38                                  DSPATR(ND)
+     A  38                                  DSPATR(PR)
+     A N25                                  OVRATR
+     A**********                        4  8'Currency Code...:'                               CSD095
+     A**********  #1CYCD         3   B  4 26TEXT('Currency Code')                             CSD095
+     A                                  5  8'Currency Code...:'
+     A            #1CYCD         3   B  5 26TEXT('Currency Code')
+      ** End of change CSD095
+     A*/COPY WNCPYSRC,SDH00379
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,SDH00380
+      ** Start of change CSD095
+     A**********                        5  8'Customer Number.:'                               CSD095
+     A**********  #1CUST         6   B  5 26TEXT('Customer Number')                           CSD095
+     A                                  6  8'Customer Number.:'
+     A            #1CUST         6   B  6 26TEXT('Customer Number')
+      ** End of change CSD095
+     A*/COPY WNCPYSRC,SDH00381
+     A                                      CHECK(RZ)
+     A N25                                  OVRDTA
+     A  32                                  DSPATR(RI PC)
+     A N32                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A*/COPY WNCPYSRC,SDH00382
+      ** Start of change CSD095
+     A**********                        6  8'Transaction Type:'                               CSD095
+     A**********  #1TRTY         2   B  6 26TEXT('Transaction Type')                          CSD095
+     A                                  7  8'Transaction Type:'
+     A            #1TRTY         2   B  7 26TEXT('Transaction Type')
+      ** End of change CSD095
+     A*/COPY WNCPYSRC,SDH00383
+     A* Condition: Valid Transactions
+     A                                      VALUES('FX' +
+     A                                             'MF' +
+     A                                             'MM' +
+     A                                             'FF' +
+     A                                             'NP' +
+     A                                             'FP' +
+     A                                             'NS' +
+     A                                             'FS' +
+     A                                             'AT' +
+     A                                             'OP' '?')
+     A                                      DSPATR(MDT)
+     A                                      CHECK(AB)
+     A N25                                  OVRDTA
+     A  33                                  DSPATR(RI PC)
+     A N33                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+      ** Start of change CSD095
+     A                                  8  8'Deal Sub-Type...:'
+     A  39                                  DSPATR(ND)
+     A            #1STYP         2   B  8 26TEXT('Deal Sub-Type')
+     A N25                                  OVRDTA
+     A  37N39                               DSPATR(RI PC)
+     A N37N39                               DSPATR(UL HI)
+     A  39                                  DSPATR(ND)
+     A  39                                  DSPATR(PR)
+     A N25                                  OVRATR
+      ** End of change CSD095
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0401E#97
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0401E#96
+     A                                      OVERLAY PUTOVR
+     A                                 23  2'F3=Exit'
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0401E#95
+     A          R #RCDDTL1                  TEXT('Details')
+     A*/COPY WNCPYSRC,SD0401E#94
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  87                                  CA12(12 'Key screen.')
+     A                                      ROLLUP(27 'Next page.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(28 'ROLLDOWN')
+     A                                      SETOF(99 'Global error flag')
+     A*/COPY WNCPYSRC,SD0401E#01
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0401E2'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 27'Extended Settlements Enquiry'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #1DSR1        35   H      TEXT('Def Conf Snd to Rec Inf 1')
+     A            #1DSR2        35   H      TEXT('Def Conf Snd to Rec Inf 2')
+     A            #1DSR3        35   H      TEXT('Def Conf Snd to Rec Inf 3')
+     A            #1DSR4        35   H      TEXT('Def Conf Snd to Rec Inf 4')
+     A            #1DSR5        35   H      TEXT('Def Conf Snd to Rec Inf 5')
+     A            #1DSR6        35   H      TEXT('Def Conf Snd to Rec Inf 6')
+     A            #1SSR1        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 1')
+     A            #1SSR2        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 2')
+     A            #1SSR3        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 3')
+     A            #1SSR4        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 4')
+     A            #1SSR5        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 5')
+     A            #1SSR6        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 6')
+     A            #1CND1        35   H      TEXT('FRA/IRS Conf Conditions 1')
+     A            #1CND2        35   H      TEXT('FRA/IRS Conf Conditions 2')
+     A            #1CND3        35   H      TEXT('FRA/IRS Conf Conditions 3')
+     A            #1CND4        35   H      TEXT('FRA/IRS Conf Conditions 4')
+     A            #1CND5        35   H      TEXT('FRA/IRS Conf Conditions 5')
+     A            #1CND6        35   H      TEXT('FRA/IRS Conf Conditions 6')
+     A            #1ISDA         4   H      TEXT('Version of ISDA Rules')
+     A            #1AGTY         6   H      TEXT('Type of ISDA agreement')
+     A            #1AGDT         6   H      TEXT('Date of ISDA Agreement')
+     A*                                              Begin /CSW097/
+     A*********** #1AGVV         2   H      TEXT('Version of ISDA Agreement')
+     A            #1AGVV         4   H      TEXT('Version of ISDA Agreement')
+     A*                                              End   /CSW097/
+     A            #1RCNB         8   H      TEXT('Receiver Number')
+     A            #1ROCS         6   H      TEXT('Rcpt - Ordering Customer')
+     A            #1POCS         6   H      TEXT('Pay - Ordering Customer')
+     A            #1ROBN         6   H      TEXT('Rcpt - Ordering Bank No.')
+     A            #1POBN         6   H      TEXT('Pay - Ordering Bank Numb.')
+     A            #1RCNO         8   H      TEXT('Receiver Correspondent No')
+     A            #1RIBN         8   H      TEXT('Rcpt - Intermed Bank No.')
+     A            #1PIBN         8   H      TEXT('Pay - Intermed Bank No.')
+     A            #1ACBN         8   H      TEXT('A/c With Bank No.')
+     A            #1BYNB         8   H      TEXT('Beneficiary Number')
+     A            #1DPY1        35   H      TEXT('Details of Payment 1')
+     A            #1DPY2        35   H      TEXT('Details of Payment 2')
+     A            #1DPY3        35   H      TEXT('Details of Payment 3')
+     A            #1DPY4        35   H      TEXT('Details of Payment 4')
+     A            #1DECG         3   H      TEXT('Details of charges')
+     A            #1BBI1        35   H      TEXT('Bank to Bank Info. 1')
+     A            #1BBI2        35   H      TEXT('Bank to Bank Info. 2')
+     A            #1BBI3        35   H      TEXT('Bank to Bank Info. 3')
+     A            #1BBI4        35   H      TEXT('Bank to Bank Info. 4')
+     A            #1BBI5        35   H      TEXT('Bank to Bank Info. 5')
+     A            #1BBI6        35   H      TEXT('Bank to Bank Info. 6')
+      **Start CDL094
+     A            #1RBB1        35   H      TEXT('Bnk to Bnk Rcv Instr 1')
+     A            #1RBB2        35   H      TEXT('Bnk to Bnk Rcv Instr 2')
+     A            #1RBB3        35   H      TEXT('Bnk to Bnk Rcv Instr 3')
+     A            #1RBB4        35   H      TEXT('Bnk to Bnk Rcv Instr 4')
+     A            #1RBB5        35   H      TEXT('Bnk to Bnk Rcv Instr 5')
+     A            #1RBB6        35   H      TEXT('Bnk to Bnk Rcv Instr 6')
+      **End of CDL094
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+      ** Start CDL031
+     A            #1EFFD         5  0H      TEXT('Effective Date')
+      ** End CDL031
+     A*/COPY WNCPYSRC,SDH00384
+      ** Start of change CSD095
+     A                                  4  8'Branch..........:'
+     A  38                                  DSPATR(ND)
+     A            #1BRCA         3      4 26TEXT('Branch')
+     A N25                                  OVRDTA
+     A N38                                  DSPATR(HI)
+     A  38                                  DSPATR(ND)
+     A**********                        4  8'Currency Code...:'                               CSD095
+     A**********  #1CYCD         3      4 26TEXT('Currency Code')                             CSD095
+     A                                  5  8'Currency Code...:'
+     A            #1CYCD         3      5 26TEXT('Currency Code')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                        4 33'Shortname  Report Name          R-               CSD095
+     A**********                            eport Town'                                       CSD095
+     A**********                        5  8'Customer Number.:'                               CSD095
+     A**********  #1CUST         6      5 26TEXT('Customer Number')                           CSD095
+     A                                  5 33'Shortname  Report Name          R-
+     A                                      eport Town'
+     A                                  6  8'Customer Number.:'
+     A            #1CUST         6      6 26TEXT('Customer Number')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1CSSN        10      5 33TEXT('Customer Shortname')                        CSD095
+     A            #1CSSN        10      6 33TEXT('Customer Shortname')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1CRNM        20      5 44TEXT('Customer Report Name')                      CSD095
+     A            #1CRNM        20      6 44TEXT('Customer Report Name')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1CRTN        10      5 65TEXT('Customer Report Town')                      CSD095
+     A            #1CRTN        10      6 65TEXT('Customer Report Town')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                        6  8'Transaction Type:'                               CSD095
+     A**********  #1TRTY         2      6 26TEXT('Transaction Type')                          CSD095
+     A                                  7  8'Transaction Type:'
+     A            #1TRTY         2      7 26TEXT('Transaction Type')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A                                  7 33'Deal Sub-Type:'
+     A  39                                  DSPATR(ND)
+     A            #1STYP         2      7 48TEXT('Deal Sub-Type')
+     A N25                                  OVRDTA
+     A N39                                  DSPATR(HI)
+     A  39                                  DSPATR(ND)
+      ** End of change CSD095
+     A** Start CDL031
+      ** Start of change CSD095
+     A**54******                        6 33'Effective Date:'                                 CSD095
+     A**54******  #1EDAT         6A     6 49TEXT('Effective Date')                            CSD095
+     A  54                              8  8'Effective Date:'
+     A  54        #1EDAT         6A     8 24TEXT('Effective Date')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**54******                        6 59'Conf/Prov Status:'                               CSD095
+     A**54******  #1STAT         1A     6 77TEXT('Conf/Prov Status')                          CSD095
+     A  54                              8 33'Conf/Prov Status:'
+     A  54        #1STAT         1A     8 52TEXT('Conf/Prov Status')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A** End CDL031
+     A*                                              Begin /CEU003/
+      ** Start of change CSD095
+     A**34******                        7  5'Settlement Currency'                             CSD095
+     A**34******  SSTCY          3      7 26TEXT('Settlement Currency')                       CSD095
+     A  34                              9  5'Settlement Currency'
+     A  34        SSTCY          3      9 26TEXT('Settlement Currency')
+      ** End of change CSD095
+     A  34N25                               OVRDTA
+     A  34                                  DSPATR(HI)
+      ** Start of change CSD095
+     A**34******                        7 45'Include ERI in Field 72'                         CSD095
+     A**34******  SIERI          1      7 69TEXT('ERI Indicator')                             CSD095
+     A  34                              9 45'Include ERI in Field 72'
+     A  34        SIERI          1      9 69TEXT('ERI Indicator')
+      ** End of change CSD095
+     A  34N25                               OVRDTA
+     A  34                                  DSPATR(HI)
+     A*                                              End   /CEU003/
+      ** Start of change CSD095
+     A**********                        8  5'Settlement Method      Receipts'                 CSD095
+     A**********  #1RSTY         2      8 38TEXT('Receipt - Settlement Type')                 CSD095
+     A                                 10  5'Settlement Method      Receipts'
+     A            #1RSTY         2     10 38TEXT('Receipt - Settlement Type')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                        8 65'Payments'                                        CSD095
+     A**********  #1PSTY         2      8 76TEXT('Pay - Settlement Type')                     CSD095
+     A                                 10 65'Payments'
+     A            #1PSTY         2     10 76TEXT('Pay - Settlement Type')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #DNBTX        17      9  5TEXT('Nostro Branch Text')                        CSD095
+     A            #DNBTX        17     11  5TEXT('Nostro Branch Text')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+      ** Start of change CSD095
+     A**********  #1ORBR         3      9 24TEXT('Our Receive Branch')                        CSD095
+     A            #1ORBR         3     11 24TEXT('Our Receive Branch')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A**Start of change CGL029
+     A**********  #1RONO        12      9 28TEXT('Receipt - Our Nostro')                      CGL029
+      ** Start of change CSD095
+     A**********  #1RONO        18      9 28TEXT('Receipt - Our Nostro')                      CSD095
+     A            #1RONO        18     11 28TEXT('Receipt - Our Nostro')
+      ** End of change CSD095
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A**Start of change CGL029
+     A**********  #1OPBR         3      9 62TEXT('Our Payment Branch')                        CGL029
+      ** Start of change CSD095
+     A**********  #1OPBR         3      9 56TEXT('Our Payment Branch')                        CSD095
+     A            #1OPBR         3     11 56TEXT('Our Payment Branch')
+      ** End of change CSD095
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A**Start of change CGL029
+     A**********  #1PONO        12      9 66TEXT('Pay - Our Nostro')                          CGL029
+      ** Start of change CSD095
+     A**********  #1PONO        18      9 60TEXT('Pay - Our Nostro')                          CSD095
+     A            #1PONO        18     11 60TEXT('Pay - Our Nostro')
+      ** End of change CSD095
+     A**End of change CGL029
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                       10  5'Recipient of payment instructions'               CSD095
+     A**********  #DSCRT        10     10 41TEXT('Screen receipt of MT100')                   CSD095
+     A                                 12  5'Recipient of payment instructions'
+     A            #DSCRT        10     12 41TEXT('Screen receipt of MT100')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                       10 56'Cover MT202 required'                            CSD095
+     A**********  #1CVMR         1     10 77TEXT('Cover Message Required')                    CSD095
+     A                                 12 56'Cover MT202 required'
+     A            #1CVMR         1     12 77TEXT('Cover Message Required')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                       11  2'50 Ordering Customer'                            CSD095
+     A**********  #DRSOC        10     11 30TEXT('R Screen Ordering Cust')                    CSD095
+     A                                 13  2'50 Ordering Customer'
+     A            #DRSOC        10     13 30TEXT('R Screen Ordering Cust')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #DPSOC        10     11 68TEXT('P Screen Ordering Cust')                    CSD095
+     A            #DPSOC        10     13 68TEXT('P Screen Ordering Cust')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                       12  2'52 Ordering Bank'                                CSD095
+     A**********  #DRSOB        10     12 30TEXT('R Screen ordering bank')                    CSD095
+     A                                 14  2'52 Ordering Bank'
+     A            #DRSOB        10     14 30TEXT('R Screen ordering bank')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #DPSOB        10     12 68TEXT('P Screen ordering bank')                    CSD095
+     A            #DPSOB        10     14 68TEXT('P Screen ordering bank')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                       13  2'54 Recipient''s Correspondent'                   CSD095
+     A**********  #DSCRC        10     13 68TEXT('Screen receiver Corr.')                     CSD095
+     A                                 15  2'54 Recipient''s Correspondent'
+     A            #DSCRC        10     15 68TEXT('Screen receiver Corr.')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1RCAL        35     14 43TEXT('Receiver Corr. A/c Line')                   CSD095
+     A            #1RCAL        35     16 43TEXT('Receiver Corr. A/c Line')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                       15  2'56 Intermediary Bank'                            CSD095
+     A**********  #DRSCI        10     15 30TEXT('R Screen Intermediary')                     CSD095
+     A                                 17  2'56 Intermediary Bank'
+     A            #DRSCI        10     17 30TEXT('R Screen Intermediary')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #DPSCI        10     15 68TEXT('P Screen Intermediary')                     CSD095
+     A            #DPSCI        10     17 68TEXT('P Screen Intermediary')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1RIBL        35     16  5TEXT('Rcpt - I/m Bank A/c Line')                  CSD095
+     A            #1RIBL        35     18  5TEXT('Rcpt - I/m Bank A/c Line')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1PIBA        35     16 43TEXT('Pay - I/m Bank A/c Line')                   CSD095
+     A            #1PIBA        35     18 43TEXT('Pay - I/m Bank A/c Line')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                       17  2'57 ''Account With'' Bank'                        CSD095
+     A**********  #DSACW        10     17 68TEXT('Screen A/c with')                           CSD095
+     A                                 19  2'57 ''Account With'' Bank'
+     A            #DSACW        10     19 68TEXT('Screen A/c with')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1ACBL        35     18 43TEXT('A/c With Bank Line')                        CSD095
+     A            #1ACBL        35     20 43TEXT('A/c With Bank Line')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                       19  2'58/59 Beneficiary'                               CSD095
+     A**********  #DSCBN        10     19 68TEXT('Screen Beneficiary')                        CSD095
+     A                                 21  2'58/59 Beneficiary'
+     A            #DSCBN        10     21 68TEXT('Screen Beneficiary')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1BACL        35     20 43TEXT('Beneficiary A/c Line')                      CSD095
+     A            #1BACL        35     22 43TEXT('Beneficiary A/c Line')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0401E#93
+     A          R #CMDTXT2                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0401E#92
+     A                                      OVERLAY PUTOVR
+     A                                 23  2'F3=Main Menu   F12=Previous   Rol-
+     A                                      lup'
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0401E#91
+     A          R #RCDDTL2                  TEXT('Details')
+     A*/COPY WNCPYSRC,SD0401E#90
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  87                                  CA12(12 'Key screen.')
+     A                                      ROLLDOWN(28 'Previous page.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(27 'ROLLUP')
+     A                                      SETOF(99 'Global error flag')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0401E3'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 27'Extended Settlements Enquiry'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #1CVMR         1   H      TEXT('Cover Message Required')
+     A            #1RSTY         2   H      TEXT('Receipt - Settlement Type')
+     A**Start of change CGL029
+     A**********  #1RONO        12   H      TEXT('Receipt - Our Nostro')                      CGL029
+     A            #1RONO        18   H      TEXT('Receipt - Our Nostro')
+     A**End of change CGL029
+     A            #1ROBN         6   H      TEXT('Rcpt - Ordering Bank No.')
+     A            #1ROCS         6   H      TEXT('Rcpt - Ordering Customer')
+     A            #1RIBN         8   H      TEXT('Rcpt - Intermed Bank No.')
+     A            #1RIBL        35   H      TEXT('Rcpt - I/m Bank A/c Line')
+     A            #1PSTY         2   H      TEXT('Pay - Settlement Type')
+     A**Start of change CGL029
+     A**********  #1PONO        12   H      TEXT('Pay - Our Nostro')                          CGL029
+     A            #1PONO        18   H      TEXT('Pay - Our Nostro')
+     A**End of change CGL029
+     A            #1POBN         6   H      TEXT('Pay - Ordering Bank Numb.')
+     A            #1POCS         6   H      TEXT('Pay - Ordering Customer')
+     A            #1PIBN         8   H      TEXT('Pay - Intermed Bank No.')
+     A            #1PIBA        35   H      TEXT('Pay - I/m Bank A/c Line')
+     A            #1RCNO         8   H      TEXT('Receiver Correspondent No')
+     A            #1RCAL        35   H      TEXT('Receiver Corr. A/c Line')
+     A            #1RCNB         8   H      TEXT('Receiver Number')
+     A            #1ACBN         8   H      TEXT('A/c With Bank No.')
+     A            #1ACBL        35   H      TEXT('A/c With Bank Line')
+     A            #1BYNB         8   H      TEXT('Beneficiary Number')
+     A            #1BACL        35   H      TEXT('Beneficiary A/c Line')
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+     A            #1ORBR         3   H      TEXT('Our Receive Branch')
+     A            #1OPBR         3   H      TEXT('Our Payment Branch')
+     A*                                              Begin /CEU003/
+     A  34        SSTCY          3   H      TEXT('Settlement Currency')
+     A  34        SIERI          1   H      TEXT('ERI Indicator')
+     A*                                              End   /CEU003/
+     A            #1DSR1        35   H      TEXT('Def Conf Snd to Rec Inf 1')
+     A            #1DSR2        35   H      TEXT('Def Conf Snd to Rec Inf 2')
+     A            #1DSR3        35   H      TEXT('Def Conf Snd to Rec Inf 3')
+     A            #1DSR4        35   H      TEXT('Def Conf Snd to Rec Inf 4')
+     A            #1DSR5        35   H      TEXT('Def Conf Snd to Rec Inf 5')
+     A            #1DSR6        35   H      TEXT('Def Conf Snd to Rec Inf 6')
+     A            #1SSR1        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 1')
+     A            #1SSR2        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 2')
+     A            #1SSR3        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 3')
+     A            #1SSR4        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 4')
+     A            #1SSR5        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 5')
+     A            #1SSR6        35   H      TEXT('Sett Conf Sndr-Rcvr Inf 6')
+     A            #1CND1        35   H      TEXT('FRA/IRS Conf Conditions 1')
+     A            #1CND2        35   H      TEXT('FRA/IRS Conf Conditions 2')
+     A            #1CND3        35   H      TEXT('FRA/IRS Conf Conditions 3')
+     A            #1CND4        35   H      TEXT('FRA/IRS Conf Conditions 4')
+     A            #1CND5        35   H      TEXT('FRA/IRS Conf Conditions 5')
+     A            #1CND6        35   H      TEXT('FRA/IRS Conf Conditions 6')
+     A            #1ISDA         4   H      TEXT('Version of ISDA Rules')
+     A            #1AGTY         6   H      TEXT('Type of ISDA agreement')
+     A            #1AGDT         6   H      TEXT('Date of ISDA Agreement')
+     A*                                              Begin /CSW097/
+     A*********** #1AGVV         2   H      TEXT('Version of ISDA Agreement')
+     A            #1AGVV         4   H      TEXT('Version of ISDA Agreement')
+     A*                                              End   /CSW097/
+     A*/COPY WNCPYSRC,SDH00385
+      ** Start of change CSD095
+     A                                  4  8'Branch..........:'
+     A  38                                  DSPATR(ND)
+     A            #1BRCA         3      4 26TEXT('Branch')
+     A N25                                  OVRDTA
+     A N38                                  DSPATR(HI)
+     A  38                                  DSPATR(ND)
+     A**********                        4  8'Currency Code...:'                               CSD095
+     A**********  #1CYCD         3      4 26TEXT('Currency Code')                             CSD095
+     A                                  5  8'Currency Code...:'
+     A            #1CYCD         3      5 26TEXT('Currency Code')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                        4 33'Shortname  Report Name          R-               CSD095
+     A**********                            eport Town'                                       CSD095
+     A**********                        5  8'Customer Number.:'                               CSD095
+     A**********  #1CUST         6      5 26TEXT('Customer Number')                           CSD095
+     A                                  5 33'Shortname  Report Name          R-
+     A                                      eport Town'
+     A                                  6  8'Customer Number.:'
+     A            #1CUST         6      6 26TEXT('Customer Number')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1CSSN        10      5 33TEXT('Customer Shortname')                        CSD095
+     A            #1CSSN        10      6 33TEXT('Customer Shortname')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1CRNM        20      5 44TEXT('Customer Report Name')                      CSD095
+     A            #1CRNM        20      6 44TEXT('Customer Report Name')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********  #1CRTN        10      5 65TEXT('Customer Report Town')                      CSD095
+     A            #1CRTN        10      6 65TEXT('Customer Report Town')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**********                        6  8'Transaction Type:'                               CSD095
+     A**********  #1TRTY         2      6 26TEXT('Transaction Type')                          CSD095
+     A                                  7  8'Transaction Type:'
+     A            #1TRTY         2      7 26TEXT('Transaction Type')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A                                  7 33'Deal Sub-Type:'
+     A  39                                  DSPATR(ND)
+     A            #1STYP         2      7 48TEXT('Deal Sub-Type')
+     A N25                                  OVRDTA
+     A N39                                  DSPATR(HI)
+     A  39                                  DSPATR(ND)
+      ** End of change CSD095
+     A** Start CDL031
+      ** Start of change CSD095
+     A**54******                        6 33'Effective Date:'                                 CSD095
+     A**54******  #1EDAT         6A     6 49TEXT('Effective Date')                            CSD095
+     A  54                              8  8'Effective Date:'
+     A  54        #1EDAT         6A     8 24TEXT('Effective Date')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CSD095
+     A**54******                        6 59'Conf/Prov Status:'                               CSD095
+     A**54******  #1STAT         1A     6 77TEXT('Conf/Prov Status')                          CSD095
+     A  54                              8 33'Conf/Prov Status:'
+     A  54        #1STAT         1A     8 52TEXT('Conf/Prov Status')
+      ** End of change CSD095
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A** End CDL031
+     A                                  9  2'70 Details of Payment'
+     A            #1DPY1        35     10  2TEXT('Details of Payment 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1DPY2        35     10 40TEXT('Details of Payment 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1DPY3        35     11  2TEXT('Details of Payment 3')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1DPY4        35     11 40TEXT('Details of Payment 4')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 13  2'71 Details of Charges'
+     A            #1DECG         3     13 72TEXT('Details of charges')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                 15  2'72 Bank to Bank Information'
+     A            #1BBI1        35     16  2TEXT('Bank to Bank Info. 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1BBI2        35     16 40TEXT('Bank to Bank Info. 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1BBI3        35     17  2TEXT('Bank to Bank Info. 3')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1BBI4        35     17 40TEXT('Bank to Bank Info. 4')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1BBI5        35     18  2TEXT('Bank to Bank Info. 5')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A            #1BBI6        35     18 40TEXT('Bank to Bank Info. 6')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      **Start of change CDL094
+     A                                 19  2'72 Bank to Bank Information (Recei-
+     A                                      ve Instructions)'
+     A  40                                  DSPATR(ND)
+     A            #1RBB1        35   O 20  2TEXT('Bnk to Bnk Rcv Instr 1')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A  40                                  DSPATR(ND)
+     A            #1RBB2        35   O 20 40TEXT('Bnk to Bnk Rcv Instr 2')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A  40                                  DSPATR(ND)
+     A            #1RBB3        35   O 21  2TEXT('Bnk to Bnk Rcv Instr 3')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A  40                                  DSPATR(ND)
+     A            #1RBB4        35   O 21 40TEXT('Bnk to Bnk Rcv Instr 4')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A  40                                  DSPATR(ND)
+     A            #1RBB5        35   O 22  2TEXT('Bnk to Bnk Rcv Instr 5')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A  40                                  DSPATR(ND)
+     A            #1RBB6        35   O 22 40TEXT('Bnk to Bnk Rcv Instr 6')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A  40                                  DSPATR(ND)
+      **End of change CDL094
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0401E#89
+     A          R #CMDTXT3                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0401E#88
+     A                                      OVERLAY PUTOVR
+     A                                 23  2'F3=Main Menu   F12=Previous   Rol-
+     A                                      ldown'
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0401E#87
+     A          R #MSGRCD                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0401E#86
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0401E#85
+     A          R #MSGCTL                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0401E#84
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0401E#83

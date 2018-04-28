@@ -1,0 +1,110 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Copy to intermediate files')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000033 - Copy using intermediate files.                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CSM010             Date 22Jun07              */
+/*       Prev Amend No. CSD027  *CREATE    Date 16Apr07              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CSM010 - Applied by CSD027.                                 */
+/*       CSD027 - MidasPlus 1.3 packaging.  Lux features, changes    */
+/*                for customer numbers.                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FROMFILE &TOFILE &FROMLIB &TOLIB +
+                          &FROMMBR &TOMBR)
+ 
+             DCL        VAR(&FROMFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOMBR) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2007')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if data queue (for holding field names) exists.  If it does clear */
+/*  it and if it doesn't create it.                                        */
+             CHKOBJ     OBJ(QTEMP/SM000044) OBJTYPE(*DTAQ)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTDTAQ    DTAQ(QTEMP/SM000044) MAXLEN(12) +
+                             TEXT('Temporary data queue for data +
+                             migration')
+             ENDDO
+             CALL       PGM(QCLRDTAQ) PARM('SM000044' 'QTEMP')
+ 
+/* Display list of file fields to outfile. */
+             DLTF       FILE(QTEMP/UPFFDSTPD)
+             MONMSG     MSGID(CPF0000)
+             DSPFFD     FILE(&FROMLIB/&FROMFILE) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/UPFFDSTPD)
+ 
+/* Call program to create intermediate source file. */
+             OVRDBF     FILE(UPFFDSTPD) TOFILE(QTEMP/UPFFDSTPD)
+             CALL       PGM(SM000044) PARM(&FROMFILE &RETURNCODE)
+             DLTOVR     FILE(UPFFDSTPD)
+             IF         COND(&RETURNCODE *EQ '*ERROR') THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Create intermediate version of file from newly created DDS. */
+             DLTF       FILE(QTEMP/&FROMFILE)
+             MONMSG     MSGID(CPF0000)
+             CRTPF      FILE(QTEMP/&FROMFILE) SRCFILE(QTEMP/RUNSQL) +
+                          SRCMBR(RUNSQLSTM) MAXMBRS(*NOMAX) +
+                          SIZE(*NOMAX)
+/* Copy from "from" library *NOCHK to allow for Cutomer Number change. */
+             CPYF       FROMFILE(&FROMLIB/&FROMFILE) +
+                          TOFILE(QTEMP/&FROMFILE) FROMMBR(&FROMMBR) +
+                          TOMBR(&TOMBR) MBROPT(*REPLACE) FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/* Copy from intermediate library to "to" version *MAP *DROP.  This will handle */
+/*  4 and 10 long account codes.                                                */
+             CPYF       FROMFILE(QTEMP/&FROMFILE) +
+                          TOFILE(&TOLIB/&TOFILE) FROMMBR(&FROMMBR) +
+                          TOMBR(&TOMBR) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+/* Call program to set customer numbers to blank if = '000000'. */
+             IF         COND(&FROMMBR *EQ '*FIRST') THEN(DO)
+                CALL       PGM(SM000041) PARM(&TOLIB &TOFILE &RETURNCODE)
+                IF         COND(&RETURNCODE *EQ '*ERROR') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+             ELSE       CMD(DO)
+                CALL       PGM(SMC000034) PARM(&TOLIB &TOFILE &RETURNCODE)
+                IF         COND(&RETURNCODE *EQ '*ERROR') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

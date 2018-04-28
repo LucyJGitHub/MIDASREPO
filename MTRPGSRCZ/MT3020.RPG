@@ -1,0 +1,429 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MT Install testkey interface')
+     F********************************************************************
+     F*                                                               *  *
+     F*    Midas Midas/TELEX MODULE                               *  *
+     F*                                                               *  *
+     F*    MT3020 - INSTALL TESTKEY INTERFACE                         *  *
+     F*                                                               *  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *  *
+     F*    CALLED FROM : MTC3010                                      *
+     F*                          PARMS: ACTN                          *  *
+     F*                                 DTAN                          *  *
+     F*    CALLED      : MTC3020                                      *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTK001             Date 11May99               *
+      *                 CMT001             Date 19Nov98               *  *S01179
+     F*                 S01179      DATE 14JUN89                      *
+     F*                 nnnnnn      DATE ddmmmyy                      *
+     F****************************************************************/
+      *  CRE026 - Consumer Banking                                    *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CTK001 - Testkey module conversion from DOS to WINDOWS       *
+      *           95/NT (Testkey II)                                  *
+     F*  CMT001 - Orion Telex 3.3 Implementation.                     *
+     F*           Re-compile due to re-delivery of N$UPL.             *
+     F*     S01179 - AS/400 CONVERSION
+     F****************************************************************/
+     F*                                                               *  *
+     F*                     USE OF INDICATORS                         *
+     F*                     ~~~~~~~~~~~~~~~~~                         *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *  *
+     F*         01       CMD/3 KEY PRESSED                            *
+     F*         11       NEW DEVICES INPUT                            *
+     F*         12       DEVICES DELETED                              *
+     F*         13       EQUAL NUMBER OF DEVICES                      *
+     F*         50       2 OR MORE DEVICE NAMES INSERTED WITH         *
+     F*                  THE SAME NAMES                               *
+     F*         51       TESTKEY INTERFACE OFF,BUT ONE OR MORE        *
+     F*                  DEVICE NAMES INPUT                           *
+     F*         52       TESTKEY INDICATOR ON,BUT NO DEVICE           *
+     F*                  NAMES INPUT                                  *
+     F*         53       TESTKEY INDICATOR NOT T OR BLANK             *
+     F*         60       CFA01 RECORD NOT FOUND(NEW INSERTION)        *
+     F*         61       INPUT DEFAULT PAYMENT OFFICER NOT VALID      *
+     F*                  NAME ON N#UP                                 *  *
+     F*         62       REVERSE IMAGE ERROR MESSAGE                  *
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F/EJECT
+     FN#CFA   UF  E                    DISK                      A
+     FN$UPL   IF  E           K        DISK
+     F*BISTKIP UF  E                    DISK                      A       S01179
+     FMT3020DFCF  E                    WORKSTN
+     E                    CPY@    1   1 80
+     E                    AR1        10 10
+     E********************ERR     1   7 66                                CTK001
+     E                    ERR     1  12 66                                CTK001
+     E*****************************************************************
+     E*  FUNCTION OF ARRAYS :                                         *
+     E*       AR1 - STORES VALUE OF DEVICES FOR COMPARISON            *
+     E*       ERR - STORES SCREEN ERROR MESSAGES                      *
+     E*****************************************************************
+     IDS1         DS
+     I*****************************************************************
+     I*  FUNCTION OF DATA STRUCTURE :                                 *
+     I*       TO HOLD SEPARATE VALUES OF DEVICES                      *
+     I*****************************************************************
+     I                                        1  10 DNM0
+     I                                       11  20 DNM1
+     I                                       21  30 DNM2
+     I                                       31  40 DNM3
+     I                                       41  50 DNM4
+     I                                       51  60 DNM5
+     I                                       61  70 DNM6
+     I                                       71  80 DNM7
+     I                                       81  90 DNM8
+     I                                       91 100 DNM9
+     I                                        1 100 AR1
+     IDSUSER    E DSMUSER                                                 CTK001
+      *                                                                   CTK001
+      ** LF/MUSER Access program record format data structure             CTK001
+      *                                                                   CTK001
+     IDSFDY     E DSDSFDY                                                 CTK001
+      *                                                                   CTK001
+      ** 200 byte data structure for access programs                      CTK001
+      *                                                                   CTK001
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ** Data structure to enable compilation - Copyright Insertion
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           DTAN  100
+     C                     PARM           NUM1    20
+     C                     PARM           NUM2    20
+     C*
+      ***Output*data*to*TKSRTPF*if*empty****                              S01179
+      *
+     C***********          READ BISTKIPF                 40               S01179
+     C************IN40     IFEQ '1'                                       S01179
+     C***********          MOVELERR,7     TYST                            S01179
+     C***********          WRITEBISTKIPF                                  S01179
+     C***********          END                                            S01179
+     C/SPACE 3
+     C*****************************************************************
+     C** 1. READ PRIMARY INPUT FILE                                   *
+     C*****************************************************************
+     C*
+     C                     READ N#CFA01                  60
+     C                     MOVE TKIF      TKWRK   1
+     C*
+     C*****************************************************************
+     C** 2. EXECUTE SUBROUTINE TO RIGHT ADJUST AND COUNT NUMBER       *
+     C**    OF DEVICES BEFORE SCREEN IS OUTPUT,MOVING COUNT INTO      *
+     C**    WORK FIELD                                                *
+     C*****************************************************************
+     C*
+     C                     EXSR TOTAL
+     C                     Z-ADDY         Z       20
+     C*
+     C*****************************************************************
+     C** 3. DISPLAY SCREEN,WITH FIELD VALUES FROM N#CFA01 IF AVAILABLE*
+     C**    OR BLANK FIELDS READY FOR INPUT,IF N#CFA01 CLEAR.         *
+     C*****************************************************************
+     C*
+      ** Access SAR details file to see if CTK001 (Testkey 2000           CTK001
+      ** is installed in the system)                                      CTK001
+      *                                                                   CTK001
+     C                     CALL 'AOSARDR0'                                CTK001
+     C                     PARM '       ' @RTCD   7                       CTK001
+     C                     PARM '*VERIFY' @OPTN   7                       CTK001
+     C                     PARM 'CTK001'  @SARD   6                       CTK001
+      *                                                                   CTK001
+     C           @RTCD     IFEQ *BLANK                                    CTK001
+     C                     MOVE 'Y'       CTK001  1                       CTK001
+     C                     MOVE *ON       *IN15                           CTK001
+     C                     END                                            CTK001
+     C*                                                                   CTK001
+     C                     EXSR SCREEN
+     C*
+     C*****************************************************************
+     C* 11.ONCE DETAILS CORRECT,WRITE TO FILE                         *
+     C*****************************************************************
+     C*
+     C           *IN60     IFEQ '1'
+     C                     WRITEN#CFA01
+     C                     ELSE
+     C                     UPDATN#CFA01
+     C                     END
+     C*
+     C*****************************************************************
+     C* 12.EXECUTE TOTAL SUBROUTINE FOR THE SECOND TIME TO GET        *
+     C*    VALUES OF NUM1 AND NUM2                                    *
+     C*****************************************************************
+     C*
+     C                     EXSR TOTAL
+     C*
+     C                     MOVE Z         NUM1
+     C                     MOVE Y         NUM2
+     C                     MOVE DS1       DTAN
+     C*
+     C                     SETON                     LR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*    INDEX TO SUBROUTINES
+     C*****************************************************************
+     C*
+     C*    1.SCREEN
+     C*
+     C*    2. VALID
+     C*
+     C*    3. TOTAL
+     C*
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*    1.  SCREENSUBROUTINE                        ** SCREEN **   *
+     C*        DISPLAYS AND READS SCREEN TILL INPUT IS VALID
+     C*
+     C*        CALLED BY  :   MAIN
+     C*
+     C*        CALLS      :  VALID
+     C*
+     C*
+     C*****************************************************************
+     C*
+     C           SCREEN    BEGSR
+     C           *IN49     DOUEQ'0'
+     C           *IN50     ANDEQ'0'
+     C           *IN51     ANDEQ'0'
+     C           *IN52     ANDEQ'0'
+     C           *IN53     ANDEQ'0'
+     C           *IN61     ANDEQ'0'
+     C           *IN49     IFEQ '1'
+     C           *IN15     IFEQ *OFF                                      CTK001
+     C**********           Z-ADD1         E       10                      CTK001
+     C                     Z-ADD1         E       20                      CTK001
+     C                     ELSE                                           CTK001
+     C                     Z-ADD10        E                               CTK001
+     C                     ENDIF                                          CTK001
+     C                     MOVEAERR,E     ERROR  66
+     C           *IN15     IFEQ *ON                                       CTK001
+     C                     MOVELWUSER     ERROR                           CTK001
+     C                     ENDIF                                          CTK001
+     C                     SETON                     62
+     C                     END
+     C           *IN50     IFEQ '1'
+     C           *IN15     IFEQ *OFF                                      CTK001
+     C                     Z-ADD2         E
+     C                     ELSE                                           CTK001
+     C                     Z-ADD7         E                               CTK001
+     C                     ENDIF                                          CTK001
+     C                     MOVEAERR,E     ERROR
+     C                     SETON                     62
+     C                     END
+     C           *IN51     IFEQ '1'
+     C           *IN15     IFEQ *OFF                                      CTK001
+     C                     Z-ADD3         E
+     C                     ELSE                                           CTK001
+     C                     Z-ADD8         E                               CTK001
+     C                     ENDIF                                          CTK001
+     C                     MOVEAERR,E     ERROR
+     C                     SETON                     62
+     C                     END
+     C           *IN52     IFEQ '1'
+     C           *IN15     IFEQ *OFF                                      CTK001
+     C                     Z-ADD4         E
+     C                     ELSE                                           CTK001
+     C                     Z-ADD9         E                               CTK001
+     C                     ENDIF                                          CTK001
+     C                     MOVEAERR,E     ERROR
+     C                     SETON                     62
+     C                     END
+     C           *IN53     IFEQ '1'
+     C                     Z-ADD5         E
+     C                     MOVEAERR,E     ERROR
+     C                     SETON                     62
+     C                     END
+     C           *IN61     IFEQ '1'
+     C           *IN15     IFEQ *OFF                                      CTK001
+     C                     Z-ADD6         E
+     C                     ELSE                                           CTK001
+     C                     Z-ADD11        E                               CTK001
+     C                     ENDIF                                          CTK001
+     C                     MOVEAERR,E     ERROR
+     C                     SETON                     62
+     C                     END
+     C                     EXFMTMT3020F0
+     C*
+     C*****************************************************************
+     C** 4. IF COMMAND 1 TAKEN,EXIT PROGRAM                           *
+     C*****************************************************************
+     C*
+     C           *IN01     IFEQ '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C*****************************************************************
+     C** 5. EXECUTE VALIDATION FOR SCREEN INPUT                       *
+     C*****************************************************************
+     C*
+     C                     EXSR VALID
+     C                     END
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C* 2.VALIDATION SUBROUTINE                         ** VALID **   *
+     C*        VALIDATES INPUT TO SCREEN                              *
+     C*                                                               *
+     C*        CALLED BY  :  SCREEN SUBROUTINE                        *
+     C*                                                               *
+     C*        CALLS      :  MTC3020                                  *
+     C*                                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALID     BEGSR
+     C                     SETOF                     495051
+1    C                     SETOF                     525362
+     C                     MOVE '0'       IND
+     C*
+     C*****************************************************************
+     C*  6. CHECK THAT DFPO IS ON USER PROFILE PHYSICAL.IF IT IS      *
+     C*     AND INPUT FIELD DATA STRUCTURE IS NOT BLANK,THEN PROGRESS *
+     C*****************************************************************
+     C*
+     C           DFPO      CHAINN$UPL                61
+     C           *IN61     IFNE '1'
+     C           DS1       ANDNE*BLANKS
+     C                     Z-ADD1         A       20
+     C                     Z-ADD1         B       20
+     C           A         DOWLE10
+     C           B         DOWLE10
+     C*
+     C*****************************************************************
+     C*  7. CHECK THAT DEVICE NAME IS VALID(DEVD ON QSYS)             *
+      *     if Testkey is DOS, otherwise, validate that entry         *   CTK001
+      *     is a valid Midas User profile (ie check with PF/MUSERDD)  *   CTK001
+     C*****************************************************************
+     C*
+     C           AR1,A     IFNE *BLANKS
+     C           A         ANDNEB
+     C  N50      AR1,A     COMP AR1,B                    50
+     C           *IN15     IFEQ *OFF                                      CTK001
+     C           *IN50     ANDEQ*OFF                                      CTK001
+     C  N50                CALL 'MTC3020'
+     C                     PARM           AR1,A
+     C                     PARM           IND     1
+     C           IND       IFEQ '1'
+     C                     SETON                     49
+     C                     END
+     C                     ELSE                                           CTK001
+      *                                                                   CTK001
+      ** Ensure that user ID entered is a valid Midas profile set         CTK001
+      ** within the system.                                               CTK001
+      *                                                                   CTK001
+     C                     CALL 'AOUSERR0'                                CTK001
+     C                     PARM *BLANK    WRTNC   7          Return code  CTK001
+     C                     PARM '*VERIFY' WOPTN   7          Option       CTK001
+     C                     PARM           AR1,A              User profile CTK001
+     C           DSUSER    PARM DSUSER    DSFDY              Rec format   CTK001
+      *                                                                   CTK001
+      ** Send error message if User Name not valid.                       CTK001
+      *                                                                   CTK001
+     C           WRTNC     IFNE *BLANKS                                   CTK001
+     C                     MOVE '1'       *IN49                           CTK001
+     C                     MOVE AR1,A     WUSER  10                       CTK001
+     C                     ENDIF                                          CTK001
+      *                                                                   CTK001
+     C                     ENDIF                                          CTK001
+     C                     END
+     C           B         ADD  1         B
+     C                     END
+     C           A         ADD  1         A
+     C           A         ADD  1         B
+     C                     END
+     C                     END
+     C*
+     C*****************************************************************
+     C*  8. ERROR IF TESTKEY IND BLANK,BUT DEVICE FIELDS NOT BLANK    *
+     C*****************************************************************
+     C*
+     C           TKIF      IFEQ *BLANKS
+     C           DS1       ANDNE*BLANKS
+     C                     SETON                     51
+     C                     END
+     C*
+     C*****************************************************************
+     C*  9. ERROR IF TESTKEY IND T,BUT DEVICE FIELDS BLANK            *
+     C*****************************************************************
+     C*
+     C           TKIF      IFEQ 'T'
+     C           DS1       ANDEQ*BLANKS
+     C                     SETON                     52
+     C                     END
+     C*
+     C*****************************************************************
+     C* 10. ERROR IF TESTKEY NOT T OR BLANK                           *
+     C*****************************************************************
+     C*
+     C           TKIF      IFNE 'T'
+     C           TKIF      IFNE ' '
+     C                     SETON                     53
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*        TOTAL SUBROUTINE                         ** TOTAL **   *
+     C*                                                               *
+     C*  SUBROUTINE TO COMPARE TOTAL OF DEVICES USED BEFORE SCREEN    *
+     C*  OUTPUT TO TOTAL AFTER OUTPUT,AND TO RIGHT ADJUST FIELDS      *
+     C*                                                               *
+     C*        CALLED BY  :  MAIN                                     *
+     C*                                                               *
+     C*        CALLS      :   -                                       *
+     C*                                                               *
+     C*                                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TOTAL     BEGSR
+     C                     Z-ADD1         X       20
+     C                     Z-ADD0         Y       20
+     C           X         DOWLE10
+     C           AR1,X     IFNE *BLANKS
+     C                     ADD  1         Y
+     C           X         IFNE Y
+     C                     MOVE AR1,X     AR1,Y
+     C                     MOVE *BLANKS   AR1,X
+     C                     END
+     C                     END
+     C                     ADD  1         X
+     C                     END
+     C                     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** ERR - ERROR MESSAGES
+ INVALID DEVICE NAME
+ DUPLICATED DEVICE NAMES
+ IF THERE IS NO TESTKEY INTERFACE THERE CAN BE NO DEVICE NAMES
+ IF TESTKEY INTERFACE PRESENT AT LEAST ONE DEVICE NAME IS REQUIRED
+ TESTKEY INTERFACE INDICATOR MUST BE T OR BLANK
+ THIS IS NOT A VALID I.D.
+ DUPLICATE USERS NAMES HAVE BEEN ENTERED
+ NO USERS SHOULD BE ENTERED AS THE INTERFACE INDICATOR IS BLANK
+ THERE MUST BE USER(S) AS THE INTERFACE INDICATOR IS NOT BLANK
+          IS NOT A VALID MIDAS USER ID
+ PAYMENT OFFICER MUST BE A VALID ID DEFINED IN TELEX SYSTEM
+START TESTKEY

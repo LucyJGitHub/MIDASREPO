@@ -1,0 +1,1686 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Maintain multi-branch indicator')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9009R - Midas SD Maintain Multibranch Indicator.           *
+      *                                                               *
+      *  Function:  This program allows the user to maintain details  *
+      *             on the multibranch indicator flag.                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *  Prev Amend No. CSD003             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAAA01             Date 22FEB95               *
+      *                 S01459             DATE 22FEB95               *
+      *                 S01339             DATE 27MAY92               *
+      *                 S01117             DATE 06FEB91               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CAAA01 - GUI/400 Development.                                *
+      *           - Flag MODUPDATE data area for update when          *
+      *             SDMMODPD has been amended.                        *
+      *  S01459 - Addition of headerbox and PSSR processing.          *
+      *  S01339 - Syndicated Loans module made redundant at R10.      *
+      *  S01117 - ADD RCF PROCESSING (LN1121)                         *
+      *                                                               *
+      *****************************************************************
+     F*
+     F*  S01212  - 14SEP89 - LOCAL RETURNS /COPY INCORPORATION            S01212
+     F*
+     F*00/Copy Member SD9009E   Initialise Program F-Spec
+     F/COPY WNCPYSRC,SD9009EFPG
+     FSD9009R#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Maintain MB indicator
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     FSDMMODL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Midas module flags update
+      *
+     FSDFCTLL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Standing data controls update
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*00/Copy Member SD9009E   Initialise Program E-Spec
+     E/COPY WNCPYSRC,SD9009EEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I****/COPY QWINDSRC,JCE1DTA                                          S01229
+     I/COPY QWINDSRC,SD9000GDTA                                           S01229
+     I*00/Copy Member SD9009E   Initialise Program I-Spec
+     I/COPY WNCPYSRC,SD9009EIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I@1DBRC    E DSSDMMODL0
+      * UPD : Midas SD Midas module flags update
+      * Current/previous master file format fields for change control
+      *
+     I#1DBRC      DS                            128
+      * Stored master file format fields
+     I                                        1   1 #1DB1
+      *
+     IYARDCS      DS                            128
+     IQSDFC1    E DSSDFCTLL0
+      * UPD : Midas SD Standing data controls update
+     IYBRDCS      DS                             22
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             10
+      * KEY: Midas SD Midas module flags retrieval
+      * I : RST Modules
+     I                                        1  10 P1MODS
+     IP2PARM      DS
+      * B : MAP Work Return code
+     I                                        1   5 P2WRTC
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Field must not be Blank'
+      * MB ind dsp function field
+     I                                        1   1 ZA0001
+      * Message data for 'Field is invalid'
+      * MB ind dsp function field
+     I                                        1   1 ZA0002
+      * Message data for 'Field is invalid'
+      * MB ind dsp function field
+     I                                        1   1 ZA0003
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: MIDAS Modu
+     C           P2WRTC    PARM P2WRTC    WP0001  5        Work Return cod
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Display and process key screen
+     C                     EXSR BADSKY
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1MODS    IFEQ *BLANK                     Modules
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE BBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     BBIN89  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           BGMODS           Modules
+      * Setup key
+     C                     MOVEL#1MODS    BGMODS           Modules
+     C           KRTV      CHAIN@BGREC8              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     99    *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     99    *
+      * Send message 'MIDAS Modules          NF'
+     C                     MOVEL'USR0096' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9009RSFF - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD9009RSFF
+     C                     END                             *FI
+      * USER: Initialize detail screen (existing record)
+      * Set up Footer(Midas Mods) - MIDAS Modules  *
+     C*
+     C*  DETAIL LINE FUNCTION KEY TEXT
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C*  If the program is in single program mode
+     C*
+     C           P2WRTC    IFEQ 'SINGL'                                   S01229
+     C* Setup footer text:
+     C* F3=Main Menu
+     C                     MOVEL'USR3353' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ELSE
+     C* Setup footer text:
+     C* F3=Main Menu   F12=Previous
+     C                     MOVEL'USR3346' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+      * CASE: WRK.Set Up Complete is Yes
+     C           WUSUC     IFEQ 'Y'                        *IF
+     C                     MOVEL'YES'     #DSSFF           System setup fu
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    #DSSFF           System setup fu
+     C                     MOVEL'NO'      #DSSFF           System setup fu
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9009RISE - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Initialise Dtl Exist Rcd
+     C/COPY WNCPYSRC,SD9009RISE
+     C                     END                             *FI
+     C                     END
+      *
+      *..................................................
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * USER: Validate key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9009RVKS - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Validate Key Screen
+     C/COPY WNCPYSRC,SD9009RVKS
+     C                     END                             *FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process detail screen input
+     C                     CAS            CFPRSC
+     C                     END
+     C           W0TRN     IFEQ 'R'
+     C           W0PMD     IFEQ 'ADD'
+     C                     EXSR MAIZ#1
+     C                     END
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE CBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     CBIN89  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9009RPKR - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD9009RPKR
+     C                     END                             *FI
+      * CASE: PAR.Work Return code is Single Program
+     C           P2WRTC    IFEQ 'SINGL'                    *IF
+      * Send message 'Function key not allowed'
+     C                     MOVEL'USR0533' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO CCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'PGM04'   P2WRTC           Work Return cod
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C   05                MOVEL'R'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * No error: update record
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * Validate MB ind dsp function field
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#DMBDF    W0NSRQ  1        MB ind dsp func
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1105253   Y2LSNO  70
+     C           #DMBDF    PARM #DMBDF    W0EXVL 20        MB ind dsp func
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+      * USER: Validate detail screen fields
+      * CASE: DTL.Multi-branching Indicator is Blank
+     C           #1MBIN    IFEQ *BLANK                     *IF
+      * CASE: DTL.MB ind dsp function field is Blank
+     C           #DMBDF    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#DMBDF    ZA0001           MB ind dsp func
+      * Send message 'Field must not be Blank'
+     C                     MOVEL'USR0751' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.MB ind dsp function field is *ALL values
+     C           #DMBDF    IFEQ 'Y'                        *IF
+     C           #DMBDF    OREQ 'N'
+     C           #DMBDF    OREQ *BLANK
+      * CASE: DTL.MB ind dsp function field is Blank
+     C           #DMBDF    IFEQ *BLANK                     *IF
+     C                     MOVEL#1MBIN    WUMBIN           Multi-branching
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL#DMBDF    WUMBIN           Multi-branching
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DMBDF    ZA0002           MB ind dsp func
+      * Send message 'Field is invalid'
+     C                     MOVEL'USR0752' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.MB ind dsp function field is *ALL values
+     C           #DMBDF    IFEQ 'Y'                        *IF
+     C           #DMBDF    OREQ 'N'
+     C           #DMBDF    OREQ *BLANK
+      * CASE: DTL.MB ind dsp function field is Blank
+     C           #DMBDF    IFEQ *BLANK                     *IF
+     C                     MOVEL#1MBIN    WUMBIN           Multi-branching
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL#DMBDF    WUMBIN           Multi-branching
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DMBDF    ZA0003           MB ind dsp func
+      * Send message 'Field is invalid'
+     C                     MOVEL'USR0752' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9009RVSF - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Validate Detail Screen
+     C/COPY WNCPYSRC,SD9009RVSF
+     C                     END                             *FI
+      * CALC: Detail screen function fields
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9009RSFF - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD9009RSFF
+     C                     END                             *FI
+      * USER: Validate detail screen relations
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9009RVSR - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Validate Screen Relns
+     C/COPY WNCPYSRC,SD9009RVSR
+     C                     END                             *FI
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * Process update request
+     C           W0PMD     CASNE'ADD'     EECHRQ
+     C                     END
+     C           W0RTN     IFNE *BLANK
+      * ROLLBACK required
+     C                     MOVEL'Y2U0018' P0RTN
+     C                     EXSR ZYEXPG
+     C                     END
+     C           W0RTN     IFEQ *BLANK
+      * USER: Process command keys
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9009RPCK - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Process Command Keys
+     C/COPY WNCPYSRC,SD9009RPCK
+     C                     END                             *FI
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request
+      *================================================================
+      * USER: Change DBF record
+      * Change MB Indicator - MIDAS Modules  *
+     C                     EXSR SACHRC
+     C           W0RTN     IFNE *BLANK
+      * Data update error
+      * Reset screen fields if changed record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1
+     C                     END
+     C                     ELSE
+      * Send message '*Record changed'
+     C                     MOVEL'Y2U0012' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+     C                     MOVEL'0'       *IN79
+     C           #1MBIN    IFEQ *BLANK                     *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     MOVELP2WRTC    #PWRTC           Work Return cod
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1MTMI           Midas/Telex Mod
+     C                     MOVEL*BLANK    #1SWFT           SWIFT Funds Tra
+     C                     MOVEL*BLANK    #1SWST           SWIFT Securitie
+     C                     MOVEL*BLANK    #1SWCL           SWIFT Customer
+     C                     MOVEL*BLANK    #1SWSL           SWIFT Synd Loan
+     C                     MOVEL*BLANK    #1SWSM           SWIFT Statement
+     C                     MOVEL*BLANK    #1SWDL           SWIFT Dealing
+     C                     MOVEL*BLANK    #1SDGL           Standing data/G
+     C                     MOVEL*BLANK    #1DLFX           Dealing: FX
+     C                     MOVEL*BLANK    #1SYLN           Syndicated Loan
+     C                     MOVEL*BLANK    #1EXMG           Exposure Manage
+     C                     MOVEL*BLANK    #1FNMO           Financial Model
+     C                     MOVEL*BLANK    #1STRT           Statutory Retur
+     C                     MOVEL*BLANK    #1CSLN           Customer Lendin
+     C                     MOVEL*BLANK    #1RTBN           Retail Banking
+     C                     MOVEL*BLANK    #1MSDL           Midas/Swift dir
+     C                     MOVEL*BLANK    #1SECS           Securities
+     C                     MOVEL*BLANK    #1AURC           Auto-reconcilia
+     C                     MOVEL*BLANK    #1BDLI           Bond Dealers In
+     C                     MOVEL*BLANK    #1DRSD           DRS Standing Da
+     C                     MOVEL*BLANK    #1DRCM           DRS Control mod
+     C                     MOVEL*BLANK    #1DRFE           DRS Foreign Exc
+     C                     MOVEL*BLANK    #1DRMM           DRS Money Marke
+     C                     MOVEL*BLANK    #1DRAR           DRS Arbitrage
+     C                     MOVEL*BLANK    #1FDTR           Funds Transfer
+     C                     MOVEL*BLANK    #1DRCA           DRS Common Appl
+     C                     MOVEL*BLANK    #1FUOP           Futures & Optio
+     C                     MOVEL*BLANK    #1MTSL           Midas/Telex Syn
+     C                     MOVEL*BLANK    #1MTDL           Midas/Telex Dea
+     C                     MOVEL*BLANK    #1MTGL           Midas/Telex Gen
+     C                     MOVEL*BLANK    #1MTCL           Midas/Telex Cus
+     C                     MOVEL*BLANK    #1NWMI           Message Managem
+     C                     MOVEL*BLANK    #1FIIN           FRA/IRS Indicat
+     C                     MOVEL*BLANK    #1DLMM           Dealing: MM
+     C                     MOVEL*BLANK    #1INCN           Internal Contra
+     C                     MOVEL*BLANK    #1TRMG           Treasury Manage
+     C                     MOVEL*BLANK    #1RKMG           Interest Risk M
+     C                     MOVEL*BLANK    #1TSKY           Testkey
+     C                     MOVEL*BLANK    #1MIDQ           Midas/Q
+     C                     MOVEL*BLANK    #1MFIC           Microfiche
+     C                     MOVEL*BLANK    #1IOAC           Interest on acc
+     C                     MOVEL*BLANK    #1WDPR           Window processi
+     C                     MOVEL*BLANK    #1SARP           SAR's processin
+     C                     MOVEL*BLANK    #1FRIN           French return i
+     C                     MOVEL*BLANK    #1LRIN           Lux return indi
+     C                     MOVEL*BLANK    #1DRIN           Dutch return in
+     C                     MOVEL*BLANK    #1GRIN           German return i
+     C                     MOVEL*BLANK    #1BRIN           Belgian return
+     C                     MOVEL*BLANK    #1IRIN           Italian return
+     C                     MOVEL*BLANK    #1SWEI           Swift External
+     C                     MOVEL*BLANK    #1PFMG           Portfolio Manag
+     C                     MOVEL*BLANK    #1CRMG           Credit Manageme
+     C                     MOVEL*BLANK    #1HORP           Head Office Rep
+     C                     MOVEL*BLANK    #1AVBL           Average Balance
+     C                     MOVEL*BLANK    #1MARG           Margins
+     C                     MOVEL*BLANK    #1CHIP           CHIPS
+     C                     MOVEL*BLANK    #1CHDL           Chips Dealing
+     C                     MOVEL*BLANK    #1CHLN           Chips Lending
+     C                     MOVEL*BLANK    #1CHOB           Chips Opening B
+     C                     MOVEL*BLANK    #1CHDI           Chips Direct Li
+     C                     MOVEL*BLANK    #1OPDK           Optical Disk
+     C                     MOVEL*BLANK    #1CFMT           Confirmation Ma
+     C                     MOVEL*BLANK    #1MIMX           Mimix
+     C                     MOVEL*BLANK    #1RCFI           Report Control
+     C                     MOVEL*BLANK    #1AMIN           Amps Int
+     C                     MOVEL*BLANK    #1SWRT           Swiss Returns
+     C                     MOVEL*BLANK    #1FLND           Fiduciary Loans
+     C                     MOVEL*BLANK    #1LMCR           Portfolio Lendi
+     C                     MOVEL*BLANK    #1CNTX           Cantonal Tax
+     C                     MOVEL*BLANK    #1STDU           Stamp Duty
+     C                     MOVEL*BLANK    #1UDRS           Use DRS Shortna
+     C                     MOVEL*BLANK    #1NNST           Leo Data Nucleu
+     C                     MOVEL*BLANK    #1NOST           Leo Letters of
+     C                     MOVEL*BLANK    #1NPST           Leo Collections
+     C                     MOVEL*BLANK    #1NQST           Leo Bills/Finan
+     C                     MOVEL*BLANK    #1NRST           Leo Bankers Acc
+     C                     MOVEL*BLANK    #1NSST           Leo Reimburseme
+     C                     MOVEL*BLANK    #1NTST           Taxes
+     C                     MOVEL*BLANK    #1NUST           History & Audit
+     C                     MOVEL*BLANK    #1NVST           Management Acco
+     C                     MOVEL*BLANK    #1NWST           IBLC Returns
+     C                     MOVEL*BLANK    #1NXST           Retail 3
+     C                     MOVEL*BLANK    #1NYST           Interest on Acc
+     C                     MOVEL*BLANK    #1NZST           Midas Export Da
+     C                     MOVEL*BLANK    #1N0ST           Analytical Acco
+     C                     MOVEL*BLANK    #1N1ST           User Defined Co
+     C                     MOVEL*BLANK    #1N2ST           Midas-Plato Int
+     C                     MOVEL*BLANK    #1N3ST           Midas-Trade Inn
+     C                     MOVEL*BLANK    #1N4ST           Reserved for La
+     C                     MOVEL*BLANK    #1N5ST           Reserved for La
+     C                     MOVEL*BLANK    #1N6ST           Reserved for La
+     C                     MOVEL*BLANK    #1N7ST           Reserved for La
+     C                     MOVEL*BLANK    #1N8ST           Reserved for La
+     C                     MOVEL*BLANK    #1N9ST           Reserved for La
+     C                     MOVEL*BLANK    #1OAST           Reserved for La
+     C                     MOVEL*BLANK    #1OBST           Reserved for La
+     C                     MOVEL*BLANK    #1OCST           Reserved for La
+     C                     MOVEL*BLANK    #1ODST           Reserved for La
+     C                     MOVEL*BLANK    #1OEST           Reserved for La
+     C                     MOVEL*BLANK    #1OFST           Reserved for La
+     C                     MOVEL*BLANK    #1OGST           Reserved for La
+     C                     MOVEL*BLANK    #1OHST           Reserved for La
+     C                     MOVEL*BLANK    #1OIST           Reserved for La
+     C                     MOVEL*BLANK    #1OJST           Reserved for La
+     C                     MOVEL*BLANK    #1OKST           Reserved for La
+     C                     MOVEL*BLANK    #1OLST           Reserved for La
+     C                     MOVEL*BLANK    #1OMST           Reserved for La
+     C                     MOVEL*BLANK    #1ONST           Reserved for La
+     C                     MOVEL*BLANK    #1OOST           Reserved for La
+     C                     MOVEL*BLANK    #1OPST           Reserved for La
+     C                     MOVEL*BLANK    #1OQST           Reserved for La
+     C                     MOVEL*BLANK    #1ORST           Reserved for La
+     C                     MOVEL*BLANK    #1OSST           Reserved for La
+     C                     MOVEL*BLANK    #DSSFF           System setup fu
+     C                     MOVEL*BLANK    #1MBIN           Multi-branching
+     C                     MOVEL*BLANK    #DMBDF           MB ind dsp func
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @BGREC8 fields to screen
+      *================================================================
+     C                     MOVELBGMODS    #1MODS           Modules
+     C                     Z-ADDBGLCD     #1LCD            Last Change Dat
+     C                     MOVELBGTYLC    #1TYLC           Type of Last Ch
+     C                     MOVELBGMTMI    #1MTMI           Midas/Telex Mod
+     C                     MOVELBGSWFT    #1SWFT           SWIFT Funds Tra
+     C                     MOVELBGSWST    #1SWST           SWIFT Securitie
+     C                     MOVELBGSWCL    #1SWCL           SWIFT Customer
+     C                     MOVELBGSWSL    #1SWSL           SWIFT Synd Loan
+     C                     MOVELBGSWSM    #1SWSM           SWIFT Statement
+     C                     MOVELBGSWDL    #1SWDL           SWIFT Dealing
+     C                     MOVELBGSDGL    #1SDGL           Standing data/G
+     C                     MOVELBGDLFX    #1DLFX           Dealing: FX
+     C                     MOVELBGSYLN    #1SYLN           Syndicated Loan
+     C                     MOVELBGEXMG    #1EXMG           Exposure Manage
+     C                     MOVELBGFNMO    #1FNMO           Financial Model
+     C                     MOVELBGSTRT    #1STRT           Statutory Retur
+     C                     MOVELBGCSLN    #1CSLN           Customer Lendin
+     C                     MOVELBGRTBN    #1RTBN           Retail Banking
+     C                     MOVELBGMSDL    #1MSDL           Midas/Swift dir
+     C                     MOVELBGSECS    #1SECS           Securities
+     C                     MOVELBGAURC    #1AURC           Auto-reconcilia
+     C                     MOVELBGBDLI    #1BDLI           Bond Dealers In
+     C                     MOVELBGDRSD    #1DRSD           DRS Standing Da
+     C                     MOVELBGDRCM    #1DRCM           DRS Control mod
+     C                     MOVELBGDRFE    #1DRFE           DRS Foreign Exc
+     C                     MOVELBGDRMM    #1DRMM           DRS Money Marke
+     C                     MOVELBGDRAR    #1DRAR           DRS Arbitrage
+     C                     MOVELBGFDTR    #1FDTR           Funds Transfer
+     C                     MOVELBGDRCA    #1DRCA           DRS Common Appl
+     C                     MOVELBGFUOP    #1FUOP           Futures & Optio
+     C                     MOVELBGMTSL    #1MTSL           Midas/Telex Syn
+     C                     MOVELBGMTDL    #1MTDL           Midas/Telex Dea
+     C                     MOVELBGMTGL    #1MTGL           Midas/Telex Gen
+     C                     MOVELBGMTCL    #1MTCL           Midas/Telex Cus
+     C                     MOVELBGNWMI    #1NWMI           Message Managem
+     C                     MOVELBGFIIN    #1FIIN           FRA/IRS Indicat
+     C                     MOVELBGDLMM    #1DLMM           Dealing: MM
+     C                     MOVELBGINCN    #1INCN           Internal Contra
+     C                     MOVELBGTRMG    #1TRMG           Treasury Manage
+     C                     MOVELBGRKMG    #1RKMG           Interest Risk M
+     C                     MOVELBGTSKY    #1TSKY           Testkey
+     C                     MOVELBGMIDQ    #1MIDQ           Midas/Q
+     C                     MOVELBGMFIC    #1MFIC           Microfiche
+     C                     MOVELBGIOAC    #1IOAC           Interest on acc
+     C                     MOVELBGWDPR    #1WDPR           Window processi
+     C                     MOVELBGSARP    #1SARP           SAR's processin
+     C                     MOVELBGFRIN    #1FRIN           French return i
+     C                     MOVELBGLRIN    #1LRIN           Lux return indi
+     C                     MOVELBGDRIN    #1DRIN           Dutch return in
+     C                     MOVELBGGRIN    #1GRIN           German return i
+     C                     MOVELBGBRIN    #1BRIN           Belgian return
+     C                     MOVELBGIRIN    #1IRIN           Italian return
+     C                     MOVELBGSWEI    #1SWEI           Swift External
+     C                     MOVELBGPFMG    #1PFMG           Portfolio Manag
+     C                     MOVELBGCRMG    #1CRMG           Credit Manageme
+     C                     MOVELBGHORP    #1HORP           Head Office Rep
+     C                     MOVELBGAVBL    #1AVBL           Average Balance
+     C                     MOVELBGMARG    #1MARG           Margins
+     C                     MOVELBGCHIP    #1CHIP           CHIPS
+     C                     MOVELBGCHDL    #1CHDL           Chips Dealing
+     C                     MOVELBGCHLN    #1CHLN           Chips Lending
+     C                     MOVELBGCHOB    #1CHOB           Chips Opening B
+     C                     MOVELBGCHDI    #1CHDI           Chips Direct Li
+     C                     MOVELBGOPDK    #1OPDK           Optical Disk
+     C                     MOVELBGCFMT    #1CFMT           Confirmation Ma
+     C                     MOVELBGMIMX    #1MIMX           Mimix
+     C                     MOVELBGRCFI    #1RCFI           Report Control
+     C                     MOVELBGAMIN    #1AMIN           Amps Int
+     C                     MOVELBGSWRT    #1SWRT           Swiss Returns
+     C                     MOVELBGFLND    #1FLND           Fiduciary Loans
+     C                     MOVELBGLMCR    #1LMCR           Portfolio Lendi
+     C                     MOVELBGCNTX    #1CNTX           Cantonal Tax
+     C                     MOVELBGSTDU    #1STDU           Stamp Duty
+     C                     MOVELBGUDRS    #1UDRS           Use DRS Shortna
+     C                     MOVELBGNNST    #1NNST           Leo Data Nucleu
+     C                     MOVELBGNOST    #1NOST           Leo Letters of
+     C                     MOVELBGNPST    #1NPST           Leo Collections
+     C                     MOVELBGNQST    #1NQST           Leo Bills/Finan
+     C                     MOVELBGNRST    #1NRST           Leo Bankers Acc
+     C                     MOVELBGNSST    #1NSST           Leo Reimburseme
+     C                     MOVELBGNTST    #1NTST           Taxes
+     C                     MOVELBGNUST    #1NUST           History & Audit
+     C                     MOVELBGNVST    #1NVST           Management Acco
+     C                     MOVELBGNWST    #1NWST           IBLC Returns
+     C                     MOVELBGNXST    #1NXST           Retail 3
+     C                     MOVELBGNYST    #1NYST           Interest on Acc
+     C                     MOVELBGNZST    #1NZST           Midas Export Da
+     C                     MOVELBGN0ST    #1N0ST           Analytical Acco
+     C                     MOVELBGN1ST    #1N1ST           User Defined Co
+     C                     MOVELBGN2ST    #1N2ST           Midas-Plato Int
+     C                     MOVELBGN3ST    #1N3ST           Midas-Trade Inn
+     C                     MOVELBGN4ST    #1N4ST           Reserved for La
+     C                     MOVELBGN5ST    #1N5ST           Reserved for La
+     C                     MOVELBGN6ST    #1N6ST           Reserved for La
+     C                     MOVELBGN7ST    #1N7ST           Reserved for La
+     C                     MOVELBGN8ST    #1N8ST           Reserved for La
+     C                     MOVELBGN9ST    #1N9ST           Reserved for La
+     C                     MOVELBGOAST    #1OAST           Reserved for La
+     C                     MOVELBGOBST    #1OBST           Reserved for La
+     C                     MOVELBGOCST    #1OCST           Reserved for La
+     C                     MOVELBGODST    #1ODST           Reserved for La
+     C                     MOVELBGOEST    #1OEST           Reserved for La
+     C                     MOVELBGOFST    #1OFST           Reserved for La
+     C                     MOVELBGOGST    #1OGST           Reserved for La
+     C                     MOVELBGOHST    #1OHST           Reserved for La
+     C                     MOVELBGOIST    #1OIST           Reserved for La
+     C                     MOVELBGOJST    #1OJST           Reserved for La
+     C                     MOVELBGOKST    #1OKST           Reserved for La
+     C                     MOVELBGOLST    #1OLST           Reserved for La
+     C                     MOVELBGOMST    #1OMST           Reserved for La
+     C                     MOVELBGONST    #1ONST           Reserved for La
+     C                     MOVELBGOOST    #1OOST           Reserved for La
+     C                     MOVELBGOPST    #1OPST           Reserved for La
+     C                     MOVELBGOQST    #1OQST           Reserved for La
+     C                     MOVELBGORST    #1ORST           Reserved for La
+     C                     MOVELBGOSST    #1OSST           Reserved for La
+     C                     MOVELBGMBIN    #1MBIN           Multi-branching
+      * Hold existing record image
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP2WRTC    #PWRTC           Work Return cod
+     C                     MOVELP1MODS    #1MODS           Modules
+      * USER: Initialize key screen
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9009RIKS - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Initialise Key Screen
+     C/COPY WNCPYSRC,SD9009RIKS
+     C                     END                             *FI
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SACHRC    BEGSR
+      *================================================================
+      * Change MB Indicator - MIDAS Modules  *
+      *================================================================
+      * Clear all neither parameters
+     C                     MOVEL*BLANK    WN0001  1        Midas/Telex Mod
+     C                     MOVEL*BLANK    WN0002  1        SWIFT Funds Tra
+     C                     MOVEL*BLANK    WN0003  1        SWIFT Securitie
+     C                     MOVEL*BLANK    WN0004  1        SWIFT Customer
+     C                     MOVEL*BLANK    WN0005  1        SWIFT Synd Loan
+     C                     MOVEL*BLANK    WN0006  1        SWIFT Statement
+     C                     MOVEL*BLANK    WN0007  1        SWIFT Dealing
+     C                     MOVEL*BLANK    WN0008  1        Standing data/G
+     C                     MOVEL*BLANK    WN0009  1        Dealing: FX
+     C                     MOVEL*BLANK    WN0010  1        Syndicated Loan
+     C                     MOVEL*BLANK    WN0011  1        Exposure Manage
+     C                     MOVEL*BLANK    WN0012  1        Financial Model
+     C                     MOVEL*BLANK    WN0013  1        Statutory Retur
+     C                     MOVEL*BLANK    WN0014  1        Customer Lendin
+     C                     MOVEL*BLANK    WN0015  1        Retail Banking
+     C                     MOVEL*BLANK    WN0016  1        Midas/Swift dir
+     C                     MOVEL*BLANK    WN0017  1        Securities
+     C                     MOVEL*BLANK    WN0018  1        Auto-reconcilia
+     C                     MOVEL*BLANK    WN0019  1        Bond Dealers In
+     C                     MOVEL*BLANK    WN0020  1        DRS Standing Da
+     C                     MOVEL*BLANK    WN0021  1        DRS Control mod
+     C                     MOVEL*BLANK    WN0022  1        DRS Foreign Exc
+     C                     MOVEL*BLANK    WN0023  1        DRS Money Marke
+     C                     MOVEL*BLANK    WN0024  1        DRS Arbitrage
+     C                     MOVEL*BLANK    WN0025  1        Funds Transfer
+     C                     MOVEL*BLANK    WN0026  1        DRS Common Appl
+     C                     MOVEL*BLANK    WN0027  1        Futures & Optio
+     C                     MOVEL*BLANK    WN0028  1        Midas/Telex Syn
+     C                     MOVEL*BLANK    WN0029  1        Midas/Telex Dea
+     C                     MOVEL*BLANK    WN0030  1        Midas/Telex Gen
+     C                     MOVEL*BLANK    WN0031  1        Midas/Telex Cus
+     C                     MOVEL*BLANK    WN0032  1        Message Managem
+     C                     MOVEL*BLANK    WN0033  1        FRA/IRS Indicat
+     C                     MOVEL*BLANK    WN0034  1        Dealing: MM
+     C                     MOVEL*BLANK    WN0035  1        Internal Contra
+     C                     MOVEL*BLANK    WN0036  1        Treasury Manage
+     C                     MOVEL*BLANK    WN0037  1        Interest Risk M
+     C                     MOVEL*BLANK    WN0038  1        Testkey
+     C                     MOVEL*BLANK    WN0039  1        Midas/Q
+     C                     MOVEL*BLANK    WN0040  1        Microfiche
+     C                     MOVEL*BLANK    WN0041  1        Interest on acc
+     C                     MOVEL*BLANK    WN0042  1        Window processi
+     C                     MOVEL*BLANK    WN0043  1        SAR's processin
+     C                     MOVEL*BLANK    WN0044  1        French return i
+     C                     MOVEL*BLANK    WN0045  1        Lux return indi
+     C                     MOVEL*BLANK    WN0046  1        Dutch return in
+     C                     MOVEL*BLANK    WN0047  1        German return i
+     C                     MOVEL*BLANK    WN0048  1        Belgian return
+     C                     MOVEL*BLANK    WN0049  1        Italian return
+     C                     MOVEL*BLANK    WN0050  1        Swift External
+     C                     MOVEL*BLANK    WN0051  1        Portfolio Manag
+     C                     MOVEL*BLANK    WN0052  1        Credit Manageme
+     C                     MOVEL*BLANK    WN0053  1        Head Office Rep
+     C                     MOVEL*BLANK    WN0054  1        Average Balance
+     C                     MOVEL*BLANK    WN0055  1        Margins
+     C                     MOVEL*BLANK    WN0056  1        Confirmation Ma
+     C                     MOVEL*BLANK    WN0057  1        Mimix
+     C                     MOVEL*BLANK    WN0058  1        Report Control
+     C                     MOVEL*BLANK    WN0059  1        Amps Int
+     C                     MOVEL*BLANK    WN0060  1        Swiss Returns
+     C                     MOVEL*BLANK    WN0061  1        Fiduciary Loans
+     C                     MOVEL*BLANK    WN0062  1        Portfolio Lendi
+     C                     MOVEL*BLANK    WN0063  1        Cantonal Tax
+     C                     MOVEL*BLANK    WN0064  1        Stamp Duty
+     C                     MOVEL*BLANK    WN0065  1        Use DRS Shortna
+     C                     MOVEL*BLANK    WN0066  1        Chips Dealing
+     C                     MOVEL*BLANK    WN0067  1        Chips Lending
+     C                     MOVEL*BLANK    WN0068  1        Chips Opening B
+     C                     MOVEL*BLANK    WN0069  1        CHIPS
+     C                     MOVEL*BLANK    WN0070  1        Chips Direct Li
+     C                     MOVEL*BLANK    WN0071  1        Optical Disk
+     C                     MOVEL*BLANK    WN0072  1        Leo Data Nucleu
+     C                     MOVEL*BLANK    WN0073  1        Leo Letters of
+     C                     MOVEL*BLANK    WN0074  1        Leo Collections
+     C                     MOVEL*BLANK    WN0075  1        Leo Bills/Finan
+     C                     MOVEL*BLANK    WN0076  1        Leo Bankers Acc
+     C                     MOVEL*BLANK    WN0077  1        Leo Reimburseme
+     C                     MOVEL*BLANK    WN0078  1        Taxes
+     C                     MOVEL*BLANK    WN0079  1        History & Audit
+     C                     MOVEL*BLANK    WN0080  1        Management Acco
+     C                     MOVEL*BLANK    WN0081  1        IBLC Returns
+     C                     MOVEL*BLANK    WN0082  1        Retail 3
+     C                     MOVEL*BLANK    WN0083  1        Interest on Acc
+     C                     MOVEL*BLANK    WN0084  1        Midas Export Da
+     C                     MOVEL*BLANK    WN0085  1        Analytical Acco
+     C                     MOVEL*BLANK    WN0086  1        User Defined Co
+     C                     MOVEL*BLANK    WN0087  1        Midas-Plato Int
+     C                     MOVEL*BLANK    WN0088  1        Midas-Trade Inn
+     C                     MOVEL*BLANK    WN0089  1        Reserved for La
+     C                     MOVEL*BLANK    WN0090  1        Reserved for La
+     C                     MOVEL*BLANK    WN0091  1        Reserved for La
+     C                     MOVEL*BLANK    WN0092  1        Reserved for La
+     C                     MOVEL*BLANK    WN0093  1        Reserved for La
+     C                     MOVEL*BLANK    WN0094  1        Reserved for La
+     C                     MOVEL*BLANK    WN0095  1        Reserved for La
+     C                     MOVEL*BLANK    WN0096  1        Reserved for La
+     C                     MOVEL*BLANK    WN0097  1        Reserved for La
+     C                     MOVEL*BLANK    WN0098  1        Reserved for La
+     C                     MOVEL*BLANK    WN0099  1        Reserved for La
+     C                     MOVEL*BLANK    WN0100  1        Reserved for La
+     C                     MOVEL*BLANK    WN0101  1        Reserved for La
+     C                     MOVEL*BLANK    WN0102  1        Reserved for La
+     C                     MOVEL*BLANK    WN0103  1        Reserved for La
+     C                     MOVEL*BLANK    WN0104  1        Reserved for La
+     C                     MOVEL*BLANK    WN0105  1        Reserved for La
+     C                     MOVEL*BLANK    WN0106  1        Reserved for La
+     C                     MOVEL*BLANK    WN0107  1        Reserved for La
+     C                     MOVEL*BLANK    WN0108  1        Reserved for La
+     C                     MOVEL*BLANK    WN0109  1        Reserved for La
+     C                     MOVEL*BLANK    WN0110  1        Reserved for La
+     C                     MOVEL*BLANK    WN0111  1        Reserved for La
+     C                     MOVEL*BLANK    WN0112  1        Reserved for La
+     C                     MOVEL*BLANK    WN0113  1        Reserved for La
+      *
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YARDC   1
+      *
+      * Move key fields to @BGREC7
+     C                     MOVEL#1MODS    BGMODS           Modules
+      *
+     C           KLCHSA    KLIST
+     C                     KFLD           BGMODS           Modules
+     C           KLCHSA    CHAIN@BGREC7              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SAEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Release record lock
+     C                     UNLCKSDMMODL0               91  *
+     C                     GOTO SAEXIT
+     C                     END                             FI #1DBRC
+      * Store record data for null update check
+     C                     MOVE @1DBRC    YARDCS
+      * Move non-key fields to @BGREC7
+     C                     Z-ADDWURDNB    BGLCD            Last Change Dat
+     C                     MOVEL'A'       BGTYLC           Type of Last Ch
+     C                     MOVELWUMBIN    BGMBIN           Multi-branching
+      *
+      * Set PGM.*Record Data Changed flag
+     C           @1DBRC    IFNE YARDCS
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      * USER: Processing before Data update
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'A'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SAEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD9009RBUW - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Before Update, Window on
+     C/COPY WNCPYSRC,SD9009RBUW
+     C                     END                             *FI
+      * 00/Copy Member SD9009RBDU - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Processing Before Update
+     C/COPY WNCPYSRC,SD9009RBDU
+     C                     END                             *FI
+      * Set PGM.*Record Data Changed flag
+     C           @1DBRC    IFNE YARDCS
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YARDC     IFEQ 'Y'
+     C                     UPDAT@BGREC7                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDMMODL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * Update saved record image
+     C                     MOVEL@1DBRC    #1DBRC
+      * DBF change successful
+      * USER: Processing after Data update
+      * Start of change CAAA01.
+     C                     MOVEL'Y'       WUUPRQ           Update Request
+      * Set update SDMMIDPD flag - MIDAS Modules  *
+     C                     CALL 'SDC9011'              90  Set update SDMM
+     C           WUUPRQ    PARM WUUPRQ    WQ0001  1        Update Request
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDC9011' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * End of change CAAA01.
+      * Update Rundate - MB Ind. - Rundate  *
+     C           *LOCK     IN   RUNDAT
+     C                     MOVE BGMBIN    MBIN                         D  S01229
+     C                     OUT  RUNDAT
+      * Update MBIN on TABTB11 - MIDAS Modules  *
+     C                     MOVEL'TABTB11M'WXPGM  10
+     C                     MOVE 'B '      WXPGM
+     C                     CALL WXPGM                  90  Update MBIN on
+     C                     PARM BGMBIN    WQ0002  1        Multi-branching
+     C                     PARM BGTYLC    WQ0003  1        Type of Last Ch
+     C                     PARM BGLCD     WQ0004  50       Last Change Dat
+     C           W0RTN     PARM *BLANK    WQ0005  7        *Return code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL'TABTB11M'W0CLPG 10
+     C                     MOVE 'B '      W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+      * Send message 'Unable to update'
+     C                     MOVEL'USR0015' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     END                             *FI
+      * CASE: PAR.Work Return code is Single Program
+     C           P2WRTC    IFEQ 'SINGL'                    *IF
+     C                     Z-ADD*ZERO     WUNORC           No. of Records
+     C                     Z-ADD*ZERO     WUNOIN           No. of Inserts
+     C                     Z-ADD1         WUNOAM           No. of Amends
+     C                     Z-ADD*ZERO     WUNODL           No. of Deletes
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SBCHRC
+      * CASE: PGM.*Return code is *Normal
+     C           W0RTN     IFEQ *BLANK                     *IF
+     C                     COMIT
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     ROLBK
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy member SD9002RADU - MIDAS Modules  *
+     C*                                                                   S01212
+     C/COPY WNCPYSRC,SD9002RADU                                           S01212
+     C*                                                                   S01212
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YBRDC   1
+      *
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDMMODPD'AHFLNM           Filename
+      *
+     C           KLCHSB    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSB    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SBEXIT
+     C                     END
+      *
+      * Store record data for null update check
+     C                     MOVE QSDFC1    YBRDCS
+      * USER: Processing after Data read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+      * Set PGM.*Record Data Changed flag
+     C           QSDFC1    IFNE YBRDCS
+     C                     MOVE 'Y'       YBRDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YBRDC     IFEQ 'Y'
+     C                     UPDAT@AHREAU                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDFCTLL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSC     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * 00/Copy Member SD9009REPP - MIDAS Modules  *
+     C*00/Copy Member SD9009R   Exit Program Processing
+     C/COPY WNCPYSRC,SD9009REPP
+     C                     END                             *FI
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'CMD01'   P2WRTC           Work Return cod
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    P2WRTC           Work Return cod
+     C                     MOVEL'FIN'     P2WRTC           Work Return cod
+     C                     END                             *FI
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field S01212
+     C                     MOVEL*BLANK    WUMFTS  1
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field Update Request
+     C                     MOVEL*BLANK    WUUPRQ  1
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD9009R#
+     C                     OPEN SDMMODL1
+     C                     OPEN SDMMODL0
+     C                     OPEN SDFCTLL0
+     C                     MOVEL'N'       W0PMT   1
+      * Set to *CHANGE mode
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * Start of change S01459.
+      * SD9009R Precompiler - MIDAS Modules  *
+      * End of change S01459.
+      * S01212 - Standard Functions  *
+      * Copyright Statement 1988 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+     C                     MOVEL'Y'       WUMFTS           S01212
+      * CASE: WRK.S01212 is Fix installed
+     C           WUMFTS    IFEQ 'Y'                        *IF
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SCRVGN
+      * Data Structure Midas Mods - MIDAS Modules  *
+      * 00/Copy Member SD9009EFPG - MIDAS Modules  *
+      * 00/Copy Member SD9009EEPG - MIDAS Modules  *
+      * 00/Copy Member SD9009EIPG - MIDAS Modules  *
+      * 00/Copy Member SD9009ECPG - MIDAS Modules  *
+     C*00/Copy Member SD9009E   Initialise Program C-Spec
+     C/COPY WNCPYSRC,SD9009ECPG
+      * 00/Copy Member SD9009EOPG - MIDAS Modules  *
+     C                     END                             *FI
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9009RPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9009RPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9009RPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*00/Copy Member SD9009E   Initialise Program O-Spec
+     O/COPY WNCPYSRC,SD9009EOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

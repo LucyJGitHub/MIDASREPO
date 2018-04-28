@@ -1,0 +1,82 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SD Consumer banking journal data area updat')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC91000B - Consumer Banking Journal Data Area Init         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. BG14615A *CREATE   Date 20Aug07              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       BG14615A - New program for CRE026.                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2007')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create LDA for job in QTEMP if it does not already exist */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+ 
+/* Mode 1 - First call */
+ 
+             IF         COND(&PMODE *EQ '1') THEN(DO)
+ 
+                CALL       PGM(SD91000B)
+ 
+             ENDDO
+ 
+/* Mode 2 - Second call */
+ 
+             IF         COND(&PMODE *EQ '2') THEN(DO)
+ 
+                CALL       PGM(SD91000B)
+ 
+             ENDDO
+ 
+/* Mode 3 - Deletion */
+ 
+             IF         COND(&PMODE *EQ '3') THEN(DO)
+ 
+/* There is no processing in Mode 3 */
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+ /* Send the error message */
+ 
+             SNDPGMMSG  MSG('Program SDC91000B ended abnormally') +
+                          TOMSGQ(MOPERQ)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

@@ -1,0 +1,202 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas SM Create XLIB objects')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC1032 - Create XLIB objects                               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/*       Last Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CUP025             Date 01Dec03              */
+/*                      CUP016 *CREATE     Date 01Apr03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       CUP025 - MidasPlus Bridge changes.                          */
+/*       CUP016 - Add implementation software to core.               */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&LIBGRP)                                                 */ /*CUP025*/
+             PGM        PARM(&LIBGRP &LAYER &GXLIB)                                      /*CUP025*/
+ 
+             DCL        VAR(&LIBGRP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)                                    /*CUP025*/
+             DCL        VAR(&GXLIB) TYPE(*CHAR) LEN(10)                                   /*CUP025*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2003')
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CURXLIB) TYPE(*CHAR) LEN(10)                                 /*CUP025*/
+/* Parameters for QCLSCAN. */
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&PATTERN) TYPE(*CHAR) LEN(2) VALUE('**')
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(2) VALUE(2)
+             DCL        VAR(&TRANSLATE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TRIM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&WILD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
+             DCL        VAR(&IASPPARM) TYPE(*CHAR) LEN(21)                                /*CSC043*/
+             DCL        VAR(&SBS_IASP) TYPE(*CHAR) LEN(18)                                /*CSC043*/
+/*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
+ 
+/* Declare driving file keyed on XLIB library. */
+             DCLF       FILE(SMSETUL0)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/*                                                                                        /*CSC043*/
+/** Get the global IASP system values */                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 'IASPdatabase' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Check whether system is in IASP environment. */                                       /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Get name of IASP. */                                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))                              /*CSC043*/
+                                                                                          /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+                                                                                          /*CSC043*/
+ 
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)                                 /*CUP025*/
+                CHGVAR     VAR(&XLIB) VALUE(&LIBGRP *TCAT 'XLIB')
+                CHGVAR     VAR(&CURXLIB) VALUE(&XLIB)                                     /*CUP025*/
+             ENDDO                                                                        /*CUP025*/
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)                               /*CUP025*/
+                CHGVAR     VAR(&CURXLIB) VALUE(&GXLIB)                                    /*CUP025*/
+             ENDDO                                                                        /*CUP025*/
+ 
+READNEXT:
+/* File is keyed on sequence so objects should be created in order. */
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHGJOBD)
+             ENDDO
+ 
+/* Scan object name to replace '**' with system ID. */
+             CHGVAR     VAR(&RESULT) VALUE('0')
+             CHGVAR     VAR(&STRLEN) VALUE(10)
+             CALL       PGM(QCLSCAN) PARM(&DFNAME &STRLEN &STRPOS +
+                          &PATTERN &PATLEN &TRANSLATE &TRIM &WILD +
+                          &RESULT)
+             IF         COND(&RESULT *GT 0) THEN(DO)
+                CHGVAR     VAR(%SST(&DFNAME &RESULT 2 )) VALUE(&LIBGRP)
+             ENDDO
+ 
+/* Scan command to replace '**' with system ID. */
+SCAN:
+             CHGVAR     VAR(&RESULT) VALUE('0')
+             CHGVAR     VAR(&STRLEN) VALUE(300)
+             CALL       PGM(QCLSCAN) PARM(&DFCMD &STRLEN &STRPOS +
+                          &PATTERN &PATLEN &TRANSLATE &TRIM &WILD +
+                          &RESULT)
+             IF         COND(&RESULT *GT 0) THEN(DO)
+                CHGVAR     VAR(%SST(&DFCMD &RESULT 2 )) VALUE(&LIBGRP)
+                GOTO       CMDLBL(SCAN)
+             ENDDO
+ 
+/* Special processing for certain object types. */
+             IF         COND(%SST(&DFTYPE 1 1) *EQ '*') THEN(DO)
+/**********     CHKOBJ     OBJ(&XLIB/&DFNAME) OBJTYPE(&DFTYPE)                         */ /*CUP025*/
+                CHKOBJ     OBJ(&CURXLIB/&DFNAME) OBJTYPE(&DFTYPE)                         /*CUP025*/
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+/*                                                                                        /*CSC043*/
+/** If object is a job description. */                                                    /*CSC043*/
+/*                                                                                        /*CSC043*/
+                   IF         COND(&DFTYPE *EQ '*JOBD') THEN(DO)                          /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+                    IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** create parameter to name initial IASP group */                                        /*CSC043*/
+/*                                                                                        /*CSC043*/
+                     CHGVAR     VAR(&IASPPARM) VALUE('INLASPGRP(' *CAT +
+                          &IASP *TCAT ')')                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** and append the parameter to the command. */                                           /*CSC043*/
+/*                                                                                        /*CSC043*/
+                     CHGVAR     VAR(&DFCMD) VALUE(&DFCMD *BCAT &IASPPARM)                 /*CSC043*/
+                    ENDDO                                                                 /*CSC043*/
+                   ENDDO                                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If object is a subsystem description */                                               /*CSC043*/
+/*                                                                                        /*CSC043*/
+                   IF         COND(&DFTYPE *EQ '*SBSD') THEN(DO)                          /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+                    IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** create parameter to name initial IASP group */                                        /*CSC043*/
+/*                                                                                        /*CSC043*/
+                     CHGVAR     VAR(&SBS_IASP) VALUE('ASPGRP(' *CAT +
+                          &IASP *TCAT ')')                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** and append the parameter to the command. */                                           /*CSC043*/
+/*                                                                                        /*CSC043*/
+                     CHGVAR     VAR(&DFCMD) VALUE(&DFCMD *BCAT &SBS_IASP)                 /*CSC043*/
+                    ENDDO                                                                 /*CSC043*/
+                   ENDDO                                                                  /*CSC043*/
+                   CALL       PGM(QCMDEXC) PARM(&DFCMD 300)
+                ENDDO
+             ENDDO
+ 
+/* For non-objects attempt to remove them first.  This is why the call to */
+/*  QCMDEXEC has monitor messages.                                        */
+/* Non-objects are part of the subsystem and include: Autostart job entry */
+/*                                                    Workstation entry   */
+/*                                                    Routing entries     */
+/*                                                    Job queue entries   */
+             IF         COND(%SST(&DFTYPE 1 1) *NE '*') THEN(DO)
+                CALL       PGM(QCMDEXC) PARM(&DFCMD 300)
+/* Subsystem not changed. */
+                MONMSG     MSGID(CPF1697)
+/* Active subsystem mayor may not have changed. */
+                MONMSG     MSGID(CPF1691)
+             ENDDO
+ 
+/* Job descriptions require special processing. */
+             IF         COND(&DFTYPE *EQ '*JOBD') THEN(DO)
+/**********     CALL       PGM(SMC1033) PARM(&DFNAME &XLIB)                            */ /*CUP025*/
+                CALL       PGM(SMC1033) PARM(&DFNAME &XLIB &LAYER &GXLIB)                 /*CUP025*/
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+CHGJOBD:
+/* Prompt the command to allow the user to change the job description library lists. */
+             CHGJOBDLBL SYSPREFIX(&LIBGRP)
+             MONMSG     MSGID(CPF6801)
+ 
+             GOTO       CMDLBL(END)
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

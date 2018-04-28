@@ -1,0 +1,1457 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Transfer Transfer Accruals')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas   -  General Ledger Module                             *
+      *                                                               *
+      *  GL999900 - Midas GL Account Transfer Transfer Accruals       *
+      *                                                               *
+      *  Function:  This program reads the acctrued interest to date  *
+      *             file REACRD and writes a set of entries to GLSUPD *
+      *             in order to transfer the account accruals from one*
+      *             branch to another.                                *
+      *                                                               *
+      *  Called by: GL003600                                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. CRE090             Date 14Feb14               *
+      *  Prev Amend No. AR1095876          Date 30Sep13               *
+      *                 AR899028           Date 25Jan12               *
+      *                 AR847269           Date 09Nov11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER042             Date 11May11               *
+      *                 CRE075             Date 06Dec10               *
+      *                 BUG27442           Date 14May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG27443           Date 13May10               *
+      *                 BUG27444           Date 12May10               *
+      *                 BUG27421           Date 04May10               *
+      *                 BUG27413           Date 12Apr10               *
+      *                 238259             Date 04Jan10               *
+      *                 CGL114  *CREATE    Date 04Jan10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
+      *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
+      *             RUND (Child: AR1095877) (Recompile)               *
+      *  AR899028 - NOSTRO AMAD System errors occured; applied        *
+      *             fix AR847269                                      *
+      *  AR847269 - Column F1DACN not in specified tables (Recompile) *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER042 - Interest Scale Report Correspondence                *
+      *           (Upgrade of FGE178/179) (Recompile)                 *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  BUG27442 - LERC30A 00001 failed                              *
+      *  BUG27443 - MEC103 00001 FOOB                                 *
+      *  BUG27444 - GLC3320 00001 FOOB                                *
+      *  BUG27421 - Generate timestamp value                          *
+      *  BUG27413 - ACCTFR 00001 - Data mapping error                 *
+      *  238259 - Write accrual transfers directly to APOSTPD/ACCNTAB.*
+      *           Set up some fields previously left blank. This fix  *
+      *           includes existing fix 194036 to set up the Narrative*
+      *  CGL114 - Account Transfer Utility                            *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FREACRDL1IF  E           K        DISK         KINFSR *PSSR
+      * Midas RE Interet Accrued amount to date
+      *
+     FAPOSTPD O   E           K        DISK         KINFSR *PSSR A                            238259
+     F                                              KCOMIT                                    238259
+      * Midas GL Account Postings                                                             238259
+      *                                                                                       238259
+     FAPOSTZZ UF  E           K        DISK                      A                            238259
+     F                                              KCOMIT                                    238259
+      * Midas GL Account Postings Trailer                                                     238259
+      *                                                                                       238259
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR                              238259
+     F            ACCNTAAF                          KIGNORE                                   238259
+     F            ACCNTACF                          KIGNORE                                   238259
+      * Midas GL Accounts Master File                                                         238259
+      *                                                                                       238259
+     FACCBA   UF  E           K        DISK         KINFSR *PSSR A                            238259
+     F            ACCNTAAF                          KIGNORE                                   238259
+     F            ACCNTABF                          KRENAMEACCBAABF                           238259
+     F                                              KCOMIT                                  BUG27444
+      * Midas GL Accounts Master File - Update                                                238259
+      *                                                                                       238259
+     FGLACNTQDO   E           K        DISK         KINFSR *PSSR A                          BUG27442
+     F                                              KCOMIT                                  BUG27442
+      * Midas GL Accounts Master Extension File                                             BUG27442
+      *                                                                                     BUG27442
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+     E                    INT         4 15 0
+     E                    DEC         4  3 0
+     E                    STAMP   1   1 26                                                  BUG27413
+      *
+     I/EJECT
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     I              '0000000000  '        C         WKZERO
+      *
+     IDSFRAC      DS
+     I                                        1   6 DSFCNU
+     I                                        7   9 DSFCCY
+     I                                       10  19 DSFACO
+     I                                       20  21 DSFACS
+     I                                       22  24 DSFBRC
+     IDSTOAC      DS
+     I                                        1   6 DSTCNU
+     I                                        7   9 DSTCCY
+     I                                       10  19 DSTACO
+     I                                       20  21 DSTACS
+     I                                       22  24 DSTBRC
+      *
+     IDSKITE      DS                             90
+     I                                        1   6 KCNUM
+     I                                        7  160KACOD
+     I                                       17  180KACSQ
+     I                                       19  21 KCCY
+     I                                       22  24 KBRCA
+      *
+     IDSKACC      DS                                                                          238259
+      * Datastructure: Key - ACCNT                                                            238259
+     I                                        1   6 CCNUM                                     238259
+     I                                        7  160CACOD                                     238259
+     I                                       17  180CACSQ                                     238259
+     I                                       19  21 CCCY                                      238259
+     I                                       22  24 CBRCA                                     238259
+      *                                                                                       238259
+     IDSKAC2      DS                                                                          238259
+      * Datastructure: Key - ACCBA                                                            238259
+     I                                        1   6 VCNUM                                     238259
+     I                                        7  160VACOD                                     238259
+     I                                       17  180VACSQ                                     238259
+     I                                       19  21 VCCY                                      238259
+     I                                       22  24 VBRCA                                     238259
+      *                                                                                       238259
+     IQUSEC       DS                                                                        BUG27421
+     I                                    B   1   40QUSBPR                                  BUG27421
+     I                                    B   5   80QUSBAV                                  BUG27421
+     I                                        9  15 QUSEI                                   BUG27421
+     I                                       16  16 QUSERE                                  BUG27421
+     I                                       17  32 QUSED0                                  BUG27421
+      *                                                                                     BUG27421
+     IOUTDAT      DS                                                                        BUG27421
+     I                                        1   4 APIYR                                   BUG27421
+     I                                        5   6 APIMH                                   BUG27421
+     I                                        7   8 APIDY                                   BUG27421
+     I                                        9  10 APIHR                                   BUG27421
+     I                                       11  12 APIMN                                   BUG27421
+     I                                       13  14 APISC                                   BUG27421
+     I                                       15  17 APIML                                   BUG27421
+      *                                                                                     BUG27421
+     ITIMEDS      DS                                                                        BUG27421
+     I                                        1   4 YEAR                                    BUG27421
+     I                                        6   7 MONTH                                   BUG27421
+     I                                        9  10 DAY                                     BUG27421
+     I                                       12  13 HOUR                                    BUG27421
+     I                                       15  16 MIN                                     BUG27421
+     I                                       18  19 SEC                                     BUG27421
+     I                                       21  23 MILSEC                                  BUG27421
+     I                                       24  26 MICSEC                                  BUG27421
+     ID@ACOD    E DSSDACODPD
+      *
+      ** Account Codes DS for assigning data from Access
+      ** Programs to work fields
+      *
+     IUUFDY     E DSDSLDY
+      *
+      ** Long Data Structure for Incoming Data from Access Program
+      *
+     IDSSDY     E DSDSSDY                                                                     238259
+      ** Second Data Structure for Access Programs, long data structure                       238259
+      *                                                                                       238259
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details for RunDate
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      **  Branch Codes
+      *
+      **  Hash totalling fields
+     I                                        1  153ZZAMT
+     I                                       16  300ZZAMTI
+     I                                       31  330ZZAMTD
+     I                                       34  360ZZTOTD
+     I                                       37  510ZZTOTI
+     I                                       52  520Z
+      *
+      ** Named Constants
+      *
+     I              'A/c Transfer'        C         C@NRDC
+     I              'Accrual Account     'C         NAME                                      238259
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@PRCD  4
+     C                     PARM           P@RFNO 10
+     C           DSFRAC    PARM           P@FRAC 24
+     C           DSTOAC    PARM           P@TOAC 24
+     C                     PARM           P@RTCD  1
+      *
+     C                     EXSR SRINIT
+      *
+     C           P@PRCD    IFEQ '*LR '
+      *
+      ** Update Trailer
+      *
+     C                     READ APOSTZZ                  25                                   238259
+      *
+     C           *IN25     IFEQ '0'
+     C                     ADD  NOR       NORE1
+     C                     ADD  DEC,1     HRDC
+     C                     ADD  INT,1     HRWN
+     C                     UPDATAPOSTZZF
+     C                     ELSE
+     C                     MOVE 'Z'       RECI
+     C                     Z-ADDNOR       NORE1
+     C                     Z-ADDDEC,1     HRDC
+     C                     Z-ADDINT,1     HRWN
+     C                     WRITEAPOSTZZF
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     EXSR XSIV01
+     C                     EXSR XMAPOS
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMAPOS - Maintain Midas GL Account Postings Detail, GLSUPD.  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: HASH                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XMAPOS    BEGSR
+      *
+     C           KAPOS     SETLLREACRDF
+     C           KAPOS     READEREACRDF                2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE
+     C                     MOVEL'REACRDL1'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN22     IFEQ *OFF
+      *
+     C           CAIC1     IFNE 0
+     C           DAIC1     ORNE 0
+     C           MADI      ORNE 0
+     C           GADI      ORNE 0
+     C           MACI      ORNE 0
+     C           GACI      ORNE 0
+      *
+      ** Access Account codes file for the following fields
+      ** Cr int acc Cr, Dr int acc Dr.
+      *
+     C                     MOVELACOD      UUACCD
+      *
+     C                     CALL 'AOACODR0'
+     C           WUAPRC    PARM WUAPRC    UUAPRC  7
+     C                     PARM '*KEY'    UUAPOP  7
+     C                     PARM           UUACCD 10
+     C           D@ACOD    PARM *BLANK    UUFDY
+      *
+     C           WUAPRC    IFEQ *BLANK
+      *
+     C                     MOVELA5CIAC    WFL1   10
+     C                     MOVELA5DIAD    WFL2   10
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE
+     C                     MOVEL'SDACODPD'DBFILE
+     C                     MOVELACOD      DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Account codes file for the following fields
+      ** Cr int acc Cr, Dr int acc Dr. TO ACCOUNT DETAILS
+      *
+     C                     MOVELDSTACO    UUACCD
+      *
+     C                     CALL 'AOACODR0'
+     C           WUAPRC    PARM WUAPRC    UUAPRC
+     C                     PARM '*KEY'    UUAPOP
+     C                     PARM           UUACCD
+     C           D@ACOD    PARM *BLANK    UUFDY
+      *
+     C           WUAPRC    IFEQ *BLANK
+      *
+     C                     MOVELA5CIAC    WFL12  10
+     C                     MOVELA5DIAD    WFL22  10
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'003'     DBASE
+     C                     MOVEL'SDACODPD'DBFILE
+     C                     MOVELACOD      DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Get From Branch: Internal customer number, Due From
+      ** account code, Due to account code.
+      *
+     C                     CALL 'AOBRCHR1'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY  '  @OPTN   7
+     C                     PARM DSFBRC    @BRCD   3
+     C           SDBRCH    PARM SDBRCH    UUFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'004'     DBASE
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVEL@BRCD     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA8DFAC    OLDACF 10
+     C                     MOVELA8DTAC    OLDACT 10
+     C                     MOVELA8BICN    OLDCUS  6
+      *
+      ** Get To Branch: Internal customer number, Interbranch
+      ** account code.
+      *
+     C                     CALL 'AOBRCHR1'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY  '  @OPTN
+     C                     PARM DSTBRC    @BRCD
+     C           SDBRCH    PARM SDBRCH    UUFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'005'     DBASE
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVEL@BRCD     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA8DTAC    NEWACT 10
+     C                     MOVELA8DFAC    NEWACF 10
+     C                     MOVELA8BICN    NEWCUS  6
+      *
+      ** Get Run Date - Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    UUFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'006'     DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Initialise Posting Narrative...
+      *
+     C                     MOVELC@NRDC    PNAR
+     C                     MOVE P@RFNO    PNAR                                                238259
+      *                                                                                       238259
+      ** Initialise other constant fields.                                                    238259
+      *                                                                                       238259
+     C                     MOVEL' GE-IER' SPOS                                                238259
+     C                     MOVEL'I'       GETP                                                238259
+     C                     Z-ADD91080     TRAT                                                238259
+     C                     MOVEL'91080'   OTTP                                                238259
+     C                     Z-ADD1         ACUM                                                238259
+      *
+      ** If there is debit accrued interest...
+      *
+     C           DAIC1     IFNE 0
+     C           DSFBRC    IFNE DSTBRC
+     C           WFL2      ORNE WFL22
+      *
+      ** Entry 1
+      *
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL2      ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     EXSR ACOUNT                                                        238259
+     C                     MOVE 'P'       RECI                                                238259
+     C                     MOVELNEWCUS    ASOC                                                238259
+     C                     Z-ADD1         DRCR
+     C                     MOVELDAIC1     PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     WRITEAPOSTPDF
+     C                     EXSR ACCUPD                                                        238259
+      *
+      ** Entry 2
+      *
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL22     ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     EXSR ACOUNT                                                        238259
+     C                     MOVE 'P'       RECI                                                238259
+     C                     MOVELOLDCUS    ASOC                                                238259
+     C                     Z-ADD0         DRCR
+     C                     MOVELDAIC1     PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     WRITEAPOSTPDF
+     C                     EXSR ACCUPD                                                        238259
+      *
+      ** Entry 3
+      *
+     C           DSFBRC    IFNE DSTBRC
+      *
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELOLDACT    ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     EXSR ACOUNT                                                        238259
+     C                     MOVE 'P'       RECI                                                238259
+     C                     MOVELOLDCUS    ASOC                                                238259
+     C                     Z-ADD0         DRCR
+     C                     MOVELDAIC1     PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     WRITEAPOSTPDF
+     C                     EXSR ACCUPD                                                        238259
+      *
+      ** Entry 4
+      *
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELNEWACF    ACOD
+     C                     MOVE '01'      ACSQ
+     C                     EXSR ACOUNT                                                        238259
+     C                     MOVE 'P'       RECI                                                238259
+     C                     MOVELNEWCUS    ASOC                                                238259
+     C                     Z-ADD1         DRCR
+     C                     MOVELDAIC1     PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     WRITEAPOSTPDF
+     C                     EXSR ACCUPD                                                        238259
+      *
+      ** Calculate trailer
+      *
+     C                     ADD  4         NOR     40
+     C           DAIC1     MULT 4         WRK    300
+      *
+     C                     ELSE
+     C                     ADD  2         NOR
+     C           DAIC1     MULT 2         WRK
+     C                     ENDIF
+      *
+     C           WRK       DIV  1000      ZZAMT
+     C                     Z-ADD1         Z
+     C                     Z-ADD1         S       10
+     C                     EXSR HASH
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If there is credit accrued interest...
+      *
+     C           CAIC1     IFNE 0
+     C           DSFBRC    IFNE DSTBRC
+     C           WFL1      ORNE WFL12
+      *
+      ** Entry 1
+      *
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL1      ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     EXSR ACOUNT                                                        238259
+     C                     MOVE 'P'       RECI                                                238259
+     C                     MOVELNEWCUS    ASOC                                                238259
+     C                     Z-ADD0         DRCR
+     C                     MOVELCAIC1     PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     WRITEAPOSTPDF
+     C                     EXSR ACCUPD                                                        238259
+      *
+      ** Entry 2
+      *
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL12     ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     EXSR ACOUNT                                                        238259
+     C                     MOVE 'P'       RECI                                                238259
+     C                     MOVELOLDCUS    ASOC                                                238259
+     C                     Z-ADD1         DRCR
+     C                     MOVELCAIC1     PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     WRITEAPOSTPDF
+     C                     EXSR ACCUPD                                                        238259
+      *
+     C           DSFBRC    IFNE DSTBRC
+      *
+      ** Entry 3
+      *
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELOLDACT    ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     EXSR ACOUNT                                                        238259
+     C                     MOVE 'P'       RECI                                                238259
+     C                     MOVELOLDCUS    ASOC                                                238259
+     C                     Z-ADD1         DRCR
+     C                     MOVELCAIC1     PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     WRITEAPOSTPDF
+     C                     EXSR ACCUPD                                                        238259
+      *
+      ** Entry 4
+      *
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELNEWACF    ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     EXSR ACOUNT                                                        238259
+     C                     MOVE 'P'       RECI                                                238259
+     C                     MOVELNEWCUS    ASOC                                                238259
+     C                     Z-ADD0         DRCR
+     C                     MOVELCAIC1     PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     WRITEAPOSTPDF
+     C                     EXSR ACCUPD                                                        238259
+      *
+      ** Calculate trailer
+      *
+     C                     ADD  4         NOR
+     C           CAIC1     MULT 4         WRK1   300
+     C                     ELSE
+     C                     ADD  2         NOR
+     C           CAIC1     MULT 2         WRK1
+     C                     ENDIF
+      *
+     C           WRK1      DIV  1000      ZZAMT
+     C                     Z-ADD1         Z
+     C                     Z-ADD1         S
+     C                     EXSR HASH
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If there is debit manual interest adjustment
+      *
+     C           MADI      IFNE 0
+     C           DSFBRC    IFNE DSTBRC
+     C           WFL2      ORNE WFL22
+      *
+      ** Entry 1
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL2      ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     MOVELMADI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Entry 2
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL22     ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     MOVELMADI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+     C           DSFBRC    IFNE DSTBRC
+      *
+      ** Entry 3
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELOLDACT    ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     MOVELMADI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Entry 4
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELNEWACF    ACOD
+     C                     MOVE '01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     MOVELMADI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Calculate trailer
+      *
+     C                     ADD  4         NOR
+     C           MADI      MULT 4         WRK
+      *
+     C                     ELSE
+     C                     ADD  2         NOR
+     C           DAIC1     MULT 2         WRK
+     C                     ENDIF
+      *
+     C           WRK       DIV  1000      ZZAMT
+     C                     Z-ADD1         Z
+     C                     Z-ADD1         S
+     C                     EXSR HASH
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If there is debit generated interest adjustment
+      *
+     C           GADI      IFNE 0
+     C           DSFBRC    IFNE DSTBRC
+     C           WFL2      ORNE WFL22
+      *
+      ** Entry 1
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL2      ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     MOVELGADI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Entry 2
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL22     ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     MOVELGADI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+     C           DSFBRC    IFNE DSTBRC
+      *
+      ** Entry 3
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELOLDACT    ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     MOVELGADI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Entry 4
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELNEWACF    ACOD
+     C                     MOVE '01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     MOVELGADI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Calculate trailer
+      *
+     C                     ADD  4         NOR
+     C           GADI      MULT 4         WRK
+      *
+     C                     ELSE
+      *
+     C                     ADD  2         NOR
+     C           DAIC1     MULT 2         WRK
+      *
+     C                     ENDIF
+      *
+     C           WRK       DIV  1000      ZZAMT
+     C                     Z-ADD1         Z
+     C                     Z-ADD1         S
+     C                     EXSR HASH
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If there is credit manual interest adjustment
+      *
+     C           MACI      IFNE 0
+      *
+     C           DSFBRC    IFNE DSTBRC
+     C           WFL1      ORNE WFL12
+      *
+      ** Entry 1
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL1      ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     MOVELMACI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Entry 2
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL12     ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     MOVELMACI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+     C           DSFBRC    IFNE DSTBRC
+      *
+      ** Entry 3
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELOLDACT    ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     MOVELMACI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Entry 4
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELNEWACF    ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     MOVELMACI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Calculate trailer
+      *
+     C                     ADD  4         NOR
+     C           MACI      MULT 4         WRK1
+     C                     ELSE
+      *
+     C                     ADD  2         NOR
+     C           CAIC1     MULT 2         WRK1
+      *
+     C                     ENDIF
+      *
+     C           WRK1      DIV  1000      ZZAMT
+     C                     Z-ADD1         Z
+     C                     Z-ADD1         S
+     C                     EXSR HASH
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If there is credit generated interest adjustment
+      *
+     C           GACI      IFNE 0
+      *
+     C           DSFBRC    IFNE DSTBRC
+     C           WFL1      ORNE WFL12
+      *
+      ** Entry 1
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL1      ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     MOVELGACI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Entry 2
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELWFL12     ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     MOVELGACI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+     C           DSFBRC    IFNE DSTBRC
+      *
+      ** Entry 3
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSFBRC    BRCA
+     C                     MOVELNEWCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELOLDACT    ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD1         DRCR
+     C                     MOVELGACI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Entry 4
+      *
+     C                     MOVE 'P'       RECI
+     C                     MOVELDSTBRC    BRCA
+     C                     MOVELOLDCUS    CNUM
+     C                     MOVELDSFCCY    CCY
+     C                     MOVELNEWACF    ACOD
+     C                     MOVEL'01'      ACSQ
+     C                     Z-ADD0         DRCR
+     C                     MOVELGACI      PSTA
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     MOVE 'G'       ATYP
+     C                     WRITEAPOSTPDF
+      *
+      ** Calculate trailer
+      *
+     C                     ADD  4         NOR
+     C           GACI      MULT 4         WRK1
+     C                     ELSE
+      *
+     C                     ADD  2         NOR
+     C           CAIC1     MULT 2         WRK1
+      *
+     C                     ENDIF
+      *
+     C           WRK1      DIV  1000      ZZAMT
+     C                     Z-ADD1         Z
+     C                     Z-ADD1         S
+     C                     EXSR HASH
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT                                                                                  238259
+      *****************************************************************                       238259
+      *                                                               *                       238259
+      *  ACCUPD: Update GL Accounts Master Detail and Trailer Files.  *                       238259
+      *                                                               *                       238259
+      *  Called By:                                                   *                       238259
+      *                                                               *                       238259
+      *  Calls:                                                       *                       238259
+      *                                                               *                       238259
+      *****************************************************************                       238259
+     C           ACCUPD    BEGSR                                                              238259
+      *                                                                                       238259
+      ** Check if Account already exists on ACCNTAB                                           238259
+      *                                                                                       238259
+     C                     MOVELBRCA      VBRCA                                               238259
+     C                     MOVELCNUM      VCNUM                                               238259
+     C                     MOVELCCY       VCCY                                                238259
+     C                     MOVELACOD      VACOD                                               238259
+     C                     MOVELACSQ      VACSQ                                               238259
+     C                     Z-ADD0         WRK2    10                                          238259
+      *                                                                                       238259
+     C           KYACCB    CHAINACCBAABF             2221                                     238259
+      *                                                                                       238259
+      ** DB Error if Record Lock Error occurred.                                              238259
+      *                                                                                       238259
+     C           *IN21     IFEQ *ON                                                           238259
+     C           *LOCK     IN   LDA                                                           238259
+     C                     MOVEL'GL999900'DBPGM     P                                         238259
+     C                     MOVEL'ACCBA'   DBFILE    P                                         238259
+     C                     MOVELDSKAC2    DBKEY     P                                         238259
+     C                     Z-ADD7         DBASE                                               238259
+     C                     OUT  LDA                                                           238259
+     C                     EXSR *PSSR                                                         238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+      * If record not found on ACCBA, open new account.                                       238259
+      *                                                                                       238259
+     C           *IN22     IFEQ *ON                                                           238259
+      *                                                                                       238259
+     C                     CLEARACCBAABF                                                      238259
+      *                                                                                       238259
+      ** Set up data and write new account record.                                            238259
+      *                                                                                       238259
+     C                     MOVE 'D'       RECI                                                238259
+     C                     MOVELVCNUM     CNUM                                                238259
+     C                     MOVELVCCY      CCY                                                 238259
+     C                     MOVELVACOD     ACOD                                                238259
+     C                     MOVELVACSQ     ACSQ                                                238259
+     C                     MOVELVBRCA     BRCA                                                238259
+     C                     MOVELNAME      ANAM                                                238259
+     C                     MOVE 'G'       ATYP                                                238259
+     C                     Z-ADDBJRDNB    DACO                                                238259
+     C                     Z-ADDBJRDNB    NSTD                                                238259
+     C                     Z-ADDBJRDNB    LSTD                                                238259
+     C                     MOVE 'B'       STFQ                                                238259
+     C                     Z-ADDBJRDNB    ORED                                                238259
+     C                     Z-ADDBJRDNB    LCD                                                 238259
+     C                     MOVE 'I'       CHTP                                                238259
+      *                                                                                       238259
+     C           DRCR      IFEQ 0                                                             238259
+     C                     Z-ADDPSTA      LDBL                                                238259
+     C                     Z-ADDPSTA      CLBL                                                238259
+     C                     MOVE 'DR'      CDBLAF  2                                           238259
+     C                     ELSE                                                               238259
+     C                     Z-SUBPSTA      LDBL                                                238259
+     C                     Z-SUBPSTA      CLBL                                                238259
+     C                     MOVE 'CR'      CDBLAF                                              238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+      ** Default Timestamp                                                                  BUG27413
+      *                                                                                     BUG27413
+     C**********           MOVEASTAMP,1   TMST                                     BUG27413 BUG27421
+     C                     MOVEASTAMP,1   TIMEDS                                            BUG27421
+     C                     EXSR SRTIME                                                      BUG27421
+     C                     MOVELTIMEDS    TMST                                              BUG27421
+     C                     WRITEACCBAABF                                                      238259
+      *                                                                                     BUG27442
+      ** Write new record in Accounts Master Extension File                                 BUG27442
+      *                                                                                     BUG27442
+     C                     CLEARGLACNTD0                                                    BUG27442
+     C                     MOVELVCNUM     F1CNUM                                            BUG27442
+     C                     MOVELVCCY      F1CCY                                             BUG27442
+     C                     MOVELVACOD     F1ACOD                                            BUG27442
+     C                     MOVELVACSQ     F1ACSQ                                            BUG27442
+     C                     MOVELVBRCA     F1BRCA                                            BUG27442
+     C                     WRITEGLACNTD0                                                    BUG27442
+      *                                                                                     BUG27442
+     C                     ADD  1         WRK2                                                238259
+     C                     MOVE 'DR'      CDBLBE  2                                           238259
+     C                     Z-ADD0         LDBLWK 150                                          238259
+      *                                                                                       238259
+      ** If record found, save ledger balance before update with posting                      238259
+      ** amount and save DR/CR before indicator                                               238259
+      *                                                                                       238259
+     C                     ELSE                                                               238259
+     C                     Z-ADDLDBL      LDBLWK                                              238259
+      *                                                                                       238259
+     C           LDBL      IFLT 0                                                             238259
+     C                     MOVE 'CR'      CDBLBE                                              238259
+     C                     ELSE                                                               238259
+     C                     MOVE 'DR'      CDBLBE                                              238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238229
+      ** Update balances with posting amount                                                  238259
+      *                                                                                       238259
+     C           DRCR      IFEQ 1                                                             238259
+     C                     SUB  PSTA      LDBL                                                238259
+     C                     SUB  PSTA      CLBL                                                238259
+     C                     ELSE                                                               238259
+     C                     ADD  PSTA      LDBL                                                238259
+     C                     ADD  PSTA      CLBL                                                238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+     C                     UPDATACCBAABF               21                                     238259
+      *                                                                                       238259
+      ** DB Error if File Error occurred.                                                     238259
+      *                                                                                       238259
+     C           *IN21     IFEQ *ON                                                           238259
+     C           *LOCK     IN   LDA                                                           238259
+     C                     MOVEL'GL999900'DBPGM     P                                         238259
+     C                     MOVEL'ACCBA'   DBFILE    P                                         238259
+     C                     MOVELDSKAC2    DBKEY     P                                         238259
+     C                     Z-ADD8         DBASE                                               238259
+     C                     OUT  LDA                                                           238259
+     C                     EXSR *PSSR                                                         238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+      ** Set CR/DR indicator after ledger bal updated.                                        238259
+      *                                                                                       238259
+     C           LDBL      IFLT 0                                                             238259
+     C                     MOVE 'CR'      CDBLAF                                              238259
+     C                     ELSE                                                               238259
+     C                     MOVE 'DR'      CDBLAF                                              238259
+     C                     ENDIF                                                              238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+      ** Update ACCNTAC hash totals                                                           238259
+      *                                                                                       238259
+     C                     MOVE '999999'  VCNUM                                               238259
+     C                     MOVEL'9  '     VCCY                                                238259
+     C                     MOVEL*ZEROS    VACOD                                               238259
+     C                     MOVEL*ZEROS    VACSQ                                               238259
+     C                     MOVE *BLANK    VBRCA                                               238259
+      *                                                                                       238259
+     C           KYACCB    CHAINACCBA                2221                                     238259
+      *                                                                                       238259
+      ** DB Error if File Error occurred.                                                     238259
+      *                                                                                       238259
+     C           *IN22     IFEQ '1'                                                           238259
+     C           *IN21     OREQ '1'                                                           238259
+     C           *LOCK     IN   LDA                                                           238259
+     C                     MOVEL'GL999900'DBPGM     P                                         238259
+     C                     MOVE 'ACCBA'   DBFILE                                              238259
+     C                     MOVELDSKAC2    DBKEY                                               238259
+     C                     Z-ADD9         DBASE                                               238259
+     C                     OUT  LDA                                                           238259
+     C                     EXSR *PSSR                                                         238259
+     C                     ELSE                                                               238259
+      *                                                                                       238259
+      ** Check if account Balance has changed sign                                            238259
+      *                                                                                       238259
+     C           CDBLBE    IFNE CDBLAF                                                        238259
+      *                                                                                       238259
+      ** Take saved Ledger Balance from one Hash Total and add new                            238259
+      ** Ledger Balance to the other Hash Total                                               238259
+      *                                                                                       238259
+     C           CDBLBE    IFEQ 'CR'                                                          238259
+     C                     Z-ADD0         ZZAMT                                               238259
+     C           LDBLWK    DIV  1000      ZZAMT                                               238259
+     C                     Z-ADDHWNC      ZZTOTI                                              238259
+     C                     Z-ADDHDCC      ZZTOTD                                              238259
+     C                     EXSR ZZSUB                                                         238259
+     C                     Z-ADDZZTOTI    HWNC                                                238259
+     C                     Z-ADDZZTOTD    HDCC                                                238259
+      *                                                                                       238259
+     C                     Z-ADD0         ZZAMT                                               238259
+     C           LDBL      DIV  1000      ZZAMT                                               238259
+     C                     Z-ADDHWND      ZZTOTI                                              238259
+     C                     Z-ADDHDCD      ZZTOTD                                              238259
+     C                     EXSR ZZADD                                                         238259
+     C                     Z-ADDZZTOTI    HWND                                                238259
+     C                     Z-ADDZZTOTD    HDCD                                                238259
+      *                                                                                       238259
+     C                     ELSE                                                               238259
+     C                     Z-ADD0         ZZAMT                                               238259
+     C           LDBLWK    DIV  1000      ZZAMT                                               238259
+     C                     Z-ADDHWND      ZZTOTI                                              238259
+     C                     Z-ADDHDCD      ZZTOTD                                              238259
+     C                     EXSR ZZSUB                                                         238259
+     C                     Z-ADDZZTOTI    HWND                                                238259
+     C                     Z-ADDZZTOTD    HDCD                                                238259
+      *                                                                                       238259
+     C                     Z-ADD0         ZZAMT                                               238259
+     C           LDBL      DIV  1000      ZZAMT                                               238259
+     C                     Z-ADDHWNC      ZZTOTI                                              238259
+     C                     Z-ADDHDCC      ZZTOTD                                              238259
+     C                     EXSR ZZADD                                                         238259
+     C                     Z-ADDZZTOTI    HWNC                                                238259
+     C                     Z-ADDZZTOTD    HDCC                                                238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+     C                     ELSE                                                               238259
+      *                                                                                       238259
+      ** Add posting amount to ACCNTAC hash Totals depending on A/c Bal                       238259
+      *                                                                                       238259
+     C                     Z-ADD0         ZZAMT                                               238259
+     C           PSTA      DIV  1000      ZZAMT                                               238259
+     C           LDBLWK    IFGT LDBL                                                          238259
+     C           CDBLBE    IFEQ 'DR'                                                          238259
+     C                     Z-ADDHWND      ZZTOTI                                              238259
+     C                     Z-ADDHDCD      ZZTOTD                                              238259
+     C                     EXSR ZZSUB                                                         238259
+     C                     Z-ADDZZTOTI    HWND                                                238259
+     C                     Z-ADDZZTOTD    HDCD                                                238259
+      *                                                                                       238259
+     C                     ELSE                                                               238259
+     C                     Z-ADDHWNC      ZZTOTI                                              238259
+     C                     Z-ADDHDCC      ZZTOTD                                              238259
+     C                     EXSR ZZADD                                                         238259
+     C                     Z-ADDZZTOTI    HWNC                                                238259
+     C                     Z-ADDZZTOTD    HDCC                                                238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+     C                     ELSE                                                               238259
+     C           CDBLBE    IFEQ 'DR'                                                          238259
+     C                     Z-ADDHWND      ZZTOTI                                              238259
+     C                     Z-ADDHDCD      ZZTOTD                                              238259
+     C                     EXSR ZZADD                                                         238259
+     C                     Z-ADDZZTOTI    HWND                                                238259
+     C                     Z-ADDZZTOTD    HDCD                                                238259
+      *                                                                                       238259
+     C                     ELSE                                                               238259
+     C                     Z-ADDHWNC      ZZTOTI                                              238259
+     C                     Z-ADDHDCC      ZZTOTD                                              238259
+     C                     EXSR ZZSUB                                                         238259
+     C                     Z-ADDZZTOTI    HWNC                                                238259
+     C                     Z-ADDZZTOTD    HDCC                                                238259
+     C                     ENDIF                                                              238259
+     C                     ENDIF                                                              238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+     C                     ADD  WRK2      NORE                                                238259
+     C                     ADD  WRK2      NINU                                              BUG27443
+     C                     ADD  WRK2      NOAU                                              BUG27442
+     C                     UPDATACCNTACF                                                      238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+     C                     ENDSR                                                              238259
+     C/EJECT                                                                                  238259
+      *****************************************************************                       238259
+      *                                                               *                       238259
+      *  ACOUNT - Retrieve Account and Account Code details.          *                       238259
+      *                                                               *                       238259
+      *  Called By:                                                   *                       238259
+      *                                                               *                       238259
+      *  Calls:                                                       *                       238259
+      *                                                               *                       238259
+      *****************************************************************                       238259
+     C           ACOUNT    BEGSR                                                              238259
+      *                                                                                       238259
+      * Retrieve Account details and Account Code details.                                    238259
+      *                                                                                       238259
+      * Set up key fields.                                                                    238259
+      *                                                                                       238259
+     C                     MOVELCNUM      CCNUM                                               238259
+     C                     MOVELCCY       CCCY                                                238259
+     C                     Z-ADDACOD      CACOD                                               238259
+     C                     Z-ADDACSQ      CACSQ                                               238259
+     C                     MOVELBRCA      CBRCA                                               238259
+      *                                                                                       238259
+     C                     MOVELACOD      UUACCD                                              238259
+     C                     MOVELCNUM      CNUMA   6                                           238259
+      *                                                                                       238259
+      * Retrieve Account to get PRFC.                                                         238259
+      *                                                                                       238259
+     C           KYACCN    CHAINACCNT                20                                       238259
+      *                                                                                       238259
+      * If Account not found, use Profit Centre Default Matrix                                238259
+      *                                                                                       238259
+     C           *IN20     IFEQ '1'                                                           238259
+     C                     CALL 'AOPRFMR0'                                                    238259
+     C                     PARM *BLANKS   RTCDPR  1                                           238259
+     C                     PARM *BLANKS   BOOKPR  2                                           238259
+     C                     PARM *BLANKS   TRTPPR  5                                           238259
+     C                     PARM *BLANKS   SUTPPR  2                                           238259
+     C                     PARM BRCA      BRANPR  3                                           238259
+     C                     PARM *BLANKS   DEPTPR  3                                           238259
+     C                     PARM *BLANKS   USERPR 10                                           238259
+     C                     PARM *BLANKS   ACOFPR  2                                           238259
+     C                     PARM CNUMA     CNUMPR  6                                           238259
+     C                     PARM *BLANKS   PRFCPR  4                                           238259
+      *                                                                                       238259
+     C           RTCDPR    IFEQ *BLANKS                                                       238259
+     C                     MOVELPRFCPR    PRFC                                                238259
+     C                     ELSE                                                               238259
+     C                     MOVE *BLANKS   PRFC                                                238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+      * Retrieve Account Code to get ACSC.                                                    238259
+      *                                                                                       238259
+     C                     CALL 'AOACODR0'                                                    238259
+     C           WUAPRC    PARM WUAPRC    UUAPRC                                              238259
+     C                     PARM '*KEY'    UUAPOP                                              238259
+     C                     PARM           UUACCD                                              238259
+     C           D@ACOD    PARM *BLANK    UUFDY                                               238259
+      *                                                                                       238259
+     C           WUAPRC    IFNE *BLANK                                                        238259
+     C           *LOCK     IN   LDA                                                           238259
+     C                     MOVEL'GL999900'DBPGM                                               238259
+     C                     MOVEL'SDACODPD'DBFILE                                              238259
+     C                     MOVELACOD      DBKEY                                               238259
+     C                     Z-ADD6         DBASE                                               238259
+     C                     OUT  LDA                                                           238259
+     C                     EXSR *PSSR                                                         238259
+     C                     ENDIF                                                              238259
+      *                                                                                       238259
+     C                     MOVELA5ACSC    ACSC                                                238259
+      *                                                                                       238259
+     C                     ENDSR                                                              238259
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  HASH - TO ADD ZZAMT TO HASH TOTALS IN ARRAYS INT & DEC       *
+      *         Z (No. of times to perform) supplied from calling     *
+      *         point.                                                *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: XMAPOS                                                *
+      *                                                               *
+      *****************************************************************
+     C           HASH      BEGSR
+      *
+     C                     DO   Z
+     C                     Z-ADDINT,S     ZZTOTI
+     C                     Z-ADDDEC,S     ZZTOTD
+     C           ZZAMT     IFLT 0
+     C                     Z-SUBZZAMT     ZZAMT
+     C                     ENDIF
+     C                     Z-ADDZZAMT     ZZAMTI
+     C                     MOVE ZZAMT     ZZAMTD
+     C                     ADD  ZZAMTD    ZZTOTD
+     C           ZZTOTD    IFLT ZZAMTD
+     C                     ADD  1         ZZTOTI
+     C                     ENDIF
+     C                     ADD  ZZAMTI    ZZTOTI
+     C                     Z-ADDZZTOTI    INT,S
+     C                     Z-ADDZZTOTD    DEC,S
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSIV01 -  Set Up Initial Values.                             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XSIV01    BEGSR
+      *
+     C                     MOVELDSFBRC    KBRCA
+     C                     MOVELDSFCNU    KCNUM
+     C                     MOVELDSFCCY    KCCY
+     C                     MOVELDSFACO    KACOD
+     C                     MOVELDSFACS    KACSQ
+     C                     MOVEL*BLANK    WUAPRC  7
+      *
+     C                     ENDSR
+      *****************************************************************                     BUG27421
+      /EJECT                                                                                BUG27421
+      *****************************************************************                     BUG27421
+      *                                                               *                     BUG27421
+      *  SRTIME -  Generate timestamp                                 *                     BUG27421
+      *                                                               *                     BUG27421
+      *  Called By: ACCUPD                                            *                     BUG27421
+      *                                                               *                     BUG27421
+      *  Calls: QWCCVTDT                                              *                     BUG27421
+      *                                                               *                     BUG27421
+      *****************************************************************                     BUG27421
+     C           SRTIME    BEGSR                                                            BUG27421
+      *                                                                                     BUG27421
+     C                     Z-ADD16        QUSBPR                                            BUG27421
+     C                     Z-ADD0         QUSBAV                                            BUG27421
+     C                     MOVE *BLANKS   INPFMT 10                                         BUG27421
+     C                     MOVEL'*CURRENT'INPFMT                                            BUG27421
+     C                     MOVE *BLANKS   INPVAR  1                                         BUG27421
+     C                     MOVE *BLANKS   OUTFMT 10                                         BUG27421
+     C                     MOVEL'*YYMD'   OUTFMT                                            BUG27421
+      *                                                                                     BUG27421
+      ** Use the API to get a 17-byte date/time value (down to the                          BUG27421
+      ** microsecond).                                                                      BUG27421
+      *                                                                                     BUG27421
+     C                     CALL 'QWCCVTDT'                                                  BUG27421
+     C                     PARM           INPFMT                                            BUG27421
+     C                     PARM           INPVAR                                            BUG27421
+     C                     PARM           OUTFMT                                            BUG27421
+     C                     PARM           OUTDAT                                            BUG27421
+     C                     PARM           QUSEC                                             BUG27421
+      *                                                                                     BUG27421
+      ** The OutDate field returned from the API and TimeStamp fields                       BUG27421
+      ** returned from this procedure have been broken down by data                         BUG27421
+      ** structures.  Copy the data from one to the other and exit.                         BUG27421
+      *                                                                                     BUG27421
+     C                     MOVELAPIYR     YEAR                                              BUG27421
+     C                     MOVELAPIMH     MONTH                                             BUG27421
+     C                     MOVELAPIDY     DAY                                               BUG27421
+     C                     MOVELAPIHR     HOUR                                              BUG27421
+     C                     MOVELAPIMN     MIN                                               BUG27421
+     C                     MOVELAPISC     SEC                                               BUG27421
+     C                     MOVELAPIML     MILSEC                                            BUG27421
+      *                                                                                     BUG27421
+     C                     ENDSR                                                            BUG27421
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT -  Initialise and define fields                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Initialise parameters, work fields, etc.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           KAPOS     KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KCCY
+     C                     KFLD           KBRCA
+      *                                                                                       238259
+     C           KYACCN    KLIST                                                              238259
+     C                     KFLD           CCNUM                                               238259
+     C                     KFLD           CCCY                                                238259
+     C                     KFLD           CACOD                                               238259
+     C                     KFLD           CACSQ                                               238259
+     C                     KFLD           CBRCA                                               238259
+      *                                                                                       238259
+     C           KYACCB    KLIST                                                              238259
+     C                     KFLD           VBRCA                                               238259
+     C                     KFLD           VCNUM                                               238259
+     C                     KFLD           VCCY                                                238259
+     C                     KFLD           VACOD                                               238259
+     C                     KFLD           VACSQ                                               238259
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called By: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not been called yet
+      *
+     C                     MOVE 'F'       P@RTCD
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/COPY ZSRSRC,ZZADDZ1                                                                    238259
+     C/COPY ZSRSRC,ZZSUBZ1                                                                    238259
+** CPY@
+(c) Misys International Banking Systems Ltd. 2010
+** STAMP - DUMMY TIMESTAMP                                                                  BUG27413
+0001-01-01-00.00.00.000000                                                                  BUG27413

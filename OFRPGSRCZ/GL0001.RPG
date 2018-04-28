@@ -1,0 +1,1055 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas OF Statement of Accounts Enquiry')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  GL0001  - Midas GL Statement of Accounts Enquiry             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CGL140   *CREATE   Date 12Dec12               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  CGL140 - Online Statement (GIB015)                           *
+      *                                                               *
+      *****************************************************************
+     FGL0002DFCF  E                    WORKSTN                        UC
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      ** DSP: Midas GL Customer Account Balances Subfile
+      *
+     FAPOST   IF  E           K        DISK
+     F            APOSTRAF                          KIGNORE
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      ** RTV : Midas GL Accounts Postings
+      *
+     FSTMTS   IF  E           K        DISK                           UC
+     F            STMTHHF                           KIGNORE
+     F            STMTZXF                           KIGNORE
+      ** RTV : Midas GL Accounts for Balance Statements
+      *
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+      ** RTV : Midas GL Accounts Master
+      *
+      *****************************************************************
+      *
+      ** Arrays:
+      *
+     E                    CPY@    1   1 80               Copyright array
+      ** Description     : Copyright notice for inclusion in all programs
+      *
+     E                    SBMARR  1   5 80
+      ** Description     : Array for SBMJOB command
+      *
+     E/COPY ZSRSRC,ZFRPEDZ1
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Data structures:
+      *
+     IPGMDS     ESDSY2PGDSP
+      ** Program data structure
+      *
+     IJBDTTM      DS
+      ** Job date/time
+      *
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      *
+      ** ABO Define Large string for CL CMD
+      *
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+      *
+     IINFDS#    E DSY2I#DSP
+      ** Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      ** File information data structure
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External DS for Currency Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Long DS for Access Programs
+      *
+     IEMSDS     E DSEMDTA
+      ** Field Definitiion for Data Area EMSDS
+      *
+     I                                      141 146 CNUMP
+     I                                      147 149 CURRP
+     I                                      150 159 ACODP
+     I                                      160 161 ACSQP
+     I                                      162 164 BRCHP
+     I                                      165 166 LINKP
+      *
+     IA@CPY       DS
+      ** Copyright array
+      *
+     I                                        1  80 CPY@
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      *
+     IDBERR       DS                            256
+      ** Data Structure used in Database Error Processing
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     ISBMDS       DS                            121
+      ** DS for Submit Job
+      *
+     I                                        1  35 SBM1
+     I                                       36  59 SBM2
+     I                                       60  63 SBM3
+     I                                       64  68 SBM4
+     I                                       69  73 SBM5
+     I                                       74  78 SBM6
+     I                                       79  83 SBM7
+     I                                       84 121 SBM8
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *
+      ** Constants:
+      *
+     I              '        B/F         'C         BFC
+     I              '        C/F         'C         CFC
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Initialize
+      *
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      *
+      ** Initialise & load subfile page
+      *
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      *
+      ** Display screen until reload requested
+      *
+     C           W0RSF     DOWEQ'N'
+      *
+      ** Display screen
+      *
+     C                     EXSR CAEXFM
+      *
+      ** Process response
+      ** Exit program
+      *
+     C   03                CAS            ZXEXPG
+      *
+      ** Cancel program
+      *
+     C   12                CAS            ZXEXPG
+      *
+      ** Print Statement of Account
+      *
+     C   09                CAS            SRPRNT
+      *
+      ** Display next SFL page
+      *
+     C   27                CAS            BBLDSF
+      *
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         BAIZSF    BEGSR
+      *
+      ** Initialise and load subfile page
+      ** Setup KLIST for ACCNT File
+      *
+     C           ACKY      KLIST
+     C                     KFLD           WCNUM
+     C                     KFLD           WCURR
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C                     KFLD           WBRCH
+      *
+     C                     MOVE CNUMP     WCNUM   6
+     C                     MOVE CURRP     WCURR   3
+     C                     MOVE ACODP     WACOD  100
+     C                     MOVE ACSQP     WACSQ   20
+     C                     MOVE BRCHP     WBRCH   3
+      *
+      ** Get Account Name and Account Type
+      *
+     C           ACKY      SETLLACCNT                91
+     C           ACKY      CHAINACCNT                91
+      *
+     C                     MOVE ANAM      #ANAM
+     C                     MOVE ATYP      WATYP   1
+      *
+      ** Move Account to Screen
+      *
+     C           ACSQP     CAT  WACCT     WACCT  28
+     C           '-'       CAT  WACCT     WACCT
+     C           ACODP     CAT  WACCT     WACCT
+     C           '-'       CAT  WACCT     WACCT
+     C           CURRP     CAT  WACCT     WACCT
+     C           '-'       CAT  WACCT     WACCT
+     C           CNUMP     CAT  WACCT     WACCT
+     C           '-'       CAT  WACCT     WACCT
+     C           BRCHP     CAT  WACCT     WACCT
+      *
+     C                     MOVELWACCT     #ACCT
+      *
+      ** Setup Account for Print Processing (SBMJOB)
+      *
+     C           ACSQP     CAT  PACCT     PACCT  24
+     C           ACODP     CAT  PACCT     PACCT
+     C           CURRP     CAT  PACCT     PACCT
+     C           CNUMP     CAT  PACCT     PACCT
+     C           BRCHP     CAT  PACCT     PACCT
+      *
+      ** Setup KLIST for STMTS File
+      *
+     C                     OPEN STMTS
+     C           STKY      KLIST
+     C                     KFLD           WBRCH
+     C                     KFLD           WCNUM
+     C                     KFLD           WCURR
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+     C                     KFLD           WATYP
+     C           STKY      SETLLSTMTAHF              92
+     C           STKY      CHAINSTMTAHF              92
+      *
+      ** Clear subfile
+      *
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      *
+      ** Reset no of records in subfile
+      *
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      *
+      ** Position DBF file
+      ** Setup KLIST for APOST File (Partial Key)
+      *
+     C           APKY      KLIST
+     C                     KFLD           WBRCH
+     C                     KFLD           WCNUM
+     C                     KFLD           WCURR
+     C                     KFLD           WACOD
+     C                     KFLD           WACSQ
+      *
+     C                     MOVE CNUMP     WCNUM
+     C                     MOVE CURRP     WCURR
+     C                     MOVE ACODP     WACOD
+     C                     MOVE ACSQP     WACSQ
+     C                     MOVE BRCHP     WBRCH
+      *
+      ** Read Postings
+      *
+     C           APKY      SETLLAPOSTPDF
+     C           APKY      READEAPOSTPDF               8782*82=EOF
+      *
+      ** Get B/F (convert to credit)
+      *
+     C           CFSB      MULT -1        WBAL   150
+      *
+      ** Load subfile page
+      *
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+     C                     CLOSESTMTS
+      *
+     CSR         BAEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         BBLDSF    BEGSR
+      *
+      ** Load subfile page
+      ** Re-establish fields in read-ahead record
+      *
+     C   27                DO
+     C  N82      APKY      REDPEAPOSTPDF                 90*
+     C  N82      APKY      READEAPOSTPDF                 90*
+     C                     END
+      *
+      ** Start at previous highest record in SFL
+      *
+     C                     Z-ADD##RRMX    ##RR    50
+      *
+      ** Reset count of DBF records read
+      *
+     C                     Z-ADD0         ##RRRD  50
+      *
+      ** Set required pages based on *Set Cursor or *Subfile Pages
+      *
+     C           W0RR0     IFGT 0
+     C           W0RR0     DIV  ##SFPG    ##SPG   30
+     C                     MVR            ##SLIN  30
+      *
+     C           ##SLIN    IFGT 0
+     C                     ADD  1         ##SPG
+     C                     END
+      *
+     C           W0SPG     IFGT ##SPG
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+      *
+     C                     ELSE
+     C                     Z-ADDW0SPG     ##SPG
+     C                     END
+      *
+      ** Compute lines required based on pages
+      *
+     C           ##SPG     MULT ##SFPG    ##SFLN  90
+      *
+     C           ##SFLN    IFGT 999
+     C                     Z-ADD999       ##SFLN
+     C                     END
+      *
+      ** Load next SFL page until SFL page full
+      ** If First Read and Not EOF, Write 'B/F' at top of Subfile
+      *
+     C           *IN82     IFEQ '0'
+     C           ##RR      ANDEQ0
+     C                     EXSR BFDISP
+     C                     ENDIF
+      *
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFLN
+     C           ##RRRD    ANDLTW0SLM
+      *
+      ** Load SFL fields
+      *
+     C                     EXSR MBFL#1
+      *
+      ** Write to SUBFILE only if condition in MBFL#1 is ok (WRTFLG = 'Y')
+      *
+     C           WRTFLG    IFEQ 'Y'
+      *
+      ** Output to subfile
+      *
+     C                     ADD  1         ##RR
+     C                     ADD  1         ##RROK     81    *
+      *
+      ** If SFLRCD invalid, note that errors present
+      *
+     C   98N99             SETON                     99    *
+     C                     WRITE#SFLRCD
+     C           BB020     TAG
+      *
+      ** Increment scan check count
+      *
+     C                     ADD  1         ##RRRD
+      *
+     C                     ENDIF
+      *
+     C           APKY      READEAPOSTPDF                 82*82=EOF
+     C                     END                             OD 1 - ##SFPG
+      *
+      ** If no DBF records found
+      *
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      *
+      ** Display B/F And C/F
+      *
+     C                     EXSR BFDISP
+     C                     EXSR CFDISP
+     C                     MOVE 'Y'       NOREC
+     C                     ENDIF                           FI ##RR = *ZERO
+      *
+      ** Display 'C/F' if End of Subfile
+      *
+     C           ##RR      IFGT *ZERO
+     C           *IN82     ANDEQ'1'
+     C           NOREC     ANDNE'Y'
+     C                     EXSR CFDISP
+     C                     ENDIF
+      *
+      ** Save highest SFL record load can continue at end point
+      *
+     C           ##RR      IFGT ##RRMX
+      *
+      ** Calculate top line
+      *
+     C           ##RROK    DIV  ##SFPG    ##SPG
+     C                     MVR            ##SLIN
+      *
+     C           ##SLIN    IFGT 0
+     C           ##RR      SUB  ##SLIN    ##SFRC
+     C                     ELSE
+     C           ##RR      SUB  ##SFPG    ##SFRC
+     C                     END
+      *
+     C                     ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      *
+      ** If scan limit reached, display error message
+      *
+     C           ##RRRD    IFGE W0SLM
+      *
+      ** Send message '*Scan limit reached'
+      *
+     C                     MOVEL'Y2U0017' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *
+     CSR         BBEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         BFDISP    BEGSR
+      *
+      ** Display B/F at top of Subfile
+      ** Clear Screen Fields
+      *
+     C                     EXSR CLRDSP
+      *
+      ** Format Last Statement Date
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM LSTD      ZDAYNO
+     C                     PARM 'M'       DATIND
+     C                     PARM 0         ZDATE
+     C                     PARM *BLANKS   ZADATE
+     C                     MOVE ZADATE    #PSDT
+      *
+      ** Move 'B/F' to Narrative
+      *
+     C                     MOVE BFC       #NARR
+      *
+      ** Format Balance
+      *
+     C                     MOVE *BLANKS   ZOUT22 22
+     C           -1        MULT WBAL      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+      *
+      ** If Balance is Debit but not = 0, Set 'DR'
+      *
+     C           WBAL      IFLT 1
+     C           WBAL      ANDNE0
+     C                     MOVE *BLANKS   ZFLD20
+     C                     MOVE *BLANKS   ZFLD22
+     C                     MOVELZOUT22    ZFLD20 20
+     C                     MOVELZFLD20    ZFLD22 22
+     C                     MOVE 'DR'      ZFLD22
+     C                     MOVE ZFLD22    #BAL
+     C                     ELSE
+     C                     MOVE ZOUT22    #BAL             Balance
+     C                     ENDIF
+      *
+      ** Output to subfile
+      *
+     C                     ADD  1         ##RR
+     C                     ADD  1         ##RROK     81    *
+      *
+      ** If SFLRCD invalid, note that errors present
+      *
+     C   98N99             SETON                     99    *
+     C                     WRITE#SFLRCD
+     C           BB021     TAG
+      *
+      ** Increment scan check count
+      *
+     C                     ADD  1         ##RRRD
+      *
+     CSR         BFEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         SRPRNT    BEGSR
+      *
+      ** Print Statement of Account
+      ** Intialize parameters for QCMDEXC
+      *
+     C                     MOVE *BLANKS   CMD   150
+     C                     MOVE *BLANKS   WRK   150
+      *
+      ** Move Start and End Dates to Character Work Fields
+      *
+     C                     MOVE SDATE     WSDT    5
+     C                     MOVE EDATE     WEDT    5
+     C                     Z-ADD150       LEN    155
+      *
+      ** Populate SBMDS
+      *
+     C                     MOVELSBMARR,1  SBM1
+     C                     MOVELPACCT     SBM2
+     C                     MOVELSBMARR,2  SBM3
+     C                     MOVELWSDT      SBM4
+     C                     MOVELSBMARR,3  SBM5
+     C                     MOVELWEDT      SBM6
+     C                     MOVELSBMARR,4  SBM7
+     C                     MOVELSBMARR,5  SBM8
+     C                     MOVELSBMDS     CMD
+      *
+      ** Submit Job GLC0064
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD
+     C                     PARM           LEN
+      *
+     CSR         SRPEND    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         CLRDSP    BEGSR
+      *
+      ** Clear Screen Fields
+      *
+     C                     MOVE *BLANKS   #PSDT
+     C                     MOVE *BLANKS   #VDAT
+     C                     MOVE *BLANKS   #CHEQ
+     C                     MOVE *BLANKS   #NARR
+     C                     MOVE *BLANKS   #DEBT
+     C                     MOVE *BLANKS   #CRDT
+     C                     MOVE *BLANKS   #BAL
+      *
+     CSR         CLREND    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         CFDISP    BEGSR
+      *
+      ** Display C/F at Bottom of Subfile
+      *
+     C                     EXSR CLRDSP
+      *
+      ** Display 'C/F' in Narrative
+      *
+     C                     MOVE CFC       #NARR
+      *
+      ** Format Ending Balance
+      *
+     C                     MOVE *BLANKS   ZOUT22 22
+     C           -1        MULT WBAL      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+      *
+      ** If Balance is Debit but not = 0, Set 'DR'
+      *
+     C           WBAL      IFLT 1
+     C           WBAL      ANDNE0
+     C                     MOVE *BLANKS   ZFLD20
+     C                     MOVE *BLANKS   ZFLD22
+     C                     MOVELZOUT22    ZFLD20
+     C                     MOVELZFLD20    ZFLD22
+     C                     MOVE 'DR'      ZFLD22
+     C                     MOVE ZFLD22    #BAL
+     C                     ELSE
+     C                     MOVE ZOUT22    #BAL             Balance
+     C                     ENDIF
+      *
+      ** Output to subfile
+      *
+     C                     ADD  1         ##RR
+     C                     ADD  1         ##RROK     81    *
+      *
+      ** If SFLRCD invalid, note that errors present
+      *
+     C   98N99             SETON                     99    *
+     C                     WRITE#SFLRCD
+     C           BB022     TAG
+      *
+      ** Increment scan check count
+      *
+     C                     ADD  1         ##RRRD
+      *
+     CSR         CFEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         CAEXFM    BEGSR
+      *
+      ** Display screen
+      *
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      *
+      ** Update screen time
+      *
+     C                     TIME           ##TME
+      *
+      ** PUTOVR unless conditioned fields change
+      *
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+      *
+      ** Maintain subfile position where possible
+      *
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      *
+      ** If help requested, display help text
+      *
+     C   25                EXSR ZHHPKY
+     C                     END
+      *
+      ** Update job time
+      *
+     C                     TIME           ##JTM
+      *
+      ** Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Reset first message only flag
+      *
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8392*
+      *
+     CSR         CAEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         FBRQRL    BEGSR
+      *
+      ** Request subfile reload
+      *
+     C                     MOVEL'Y'       W0RSF
+      *
+     CSR         FBEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         MBFL#1    BEGSR
+      *
+      ** Move APOSTPDF fields to subfile
+      *
+     C                     MOVE 'N'       WRTFLG
+      *
+      ** Clear Screen before writing next subfile
+      *
+     C                     EXSR CLRDSP
+     C           PSTD      IFGE SDATE
+     C           PSTD      ANDLEEDATE
+      *
+     C           PSTD      IFGT LSTD
+     C           DACO      OREQ LSTD
+     C           LSTP      ANDEQ0
+     C           PSTD      ANDGELSTD
+      *
+     C                     MOVE 'Y'       WRTFLG  1
+      *
+      ** Format Posting Date
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM PSTD      ZDAYNO  50
+     C                     PARM 'M'       DATIND  1
+     C                     PARM 0         ZDATE   60
+     C                     PARM *BLANKS   ZADATE  7
+     C                     MOVE ZADATE    #PSDT
+      *
+      ** Format Value Date
+      *
+     C                     CALL 'ZDATE2'
+     C                     PARM VALD      ZDAYNO  50
+     C                     PARM 'M'       DATIND
+     C                     PARM 0         ZDATE   60
+     C                     PARM *BLANKS   ZADATE  7
+     C                     MOVE ZADATE    #VDAT
+      *
+     C           CHQN      IFEQ *ZERO
+     C                     MOVE *BLANKS   #CHEQ
+     C                     ELSE
+     C                     MOVELCHQN      #CHEQ            Cheque No
+     C                     ENDIF
+      *
+     C                     MOVELPNAR      #NARR            Posting Narrative
+      *
+      ** RATE CHANGE entries don't have posting amount
+      *
+     C           RECI      IFEQ 'P'
+      *
+      ** Format Posting Amount
+      *
+     C                     CALL 'ZSEDIT'
+     C                     PARM PSTA      ZFLD15 150
+     C                     PARM A6NBDP    ZDECS   10
+     C                     PARM 'J'       ZECODE  1
+     C                     PARM           ZOUT21 21
+      *
+      ** If Credit, Move posting Amount to Credits
+      *
+     C           DRCR      IFEQ 1
+     C                     MOVELZOUT21    #CRDT            Credits
+     C                     ENDIF
+      *
+      ** If Debit, Move posting Amount to Debits
+      *
+     C           DRCR      IFEQ 0
+     C                     MOVELZOUT21    #DEBT            Debits
+     C                     ENDIF
+      *
+      ** Update Balance
+      *
+     C           DRCR      IFEQ 1
+     C           WBAL      ADD  PSTA      WBAL
+     C                     ENDIF
+     C           DRCR      IFEQ 0
+     C           WBAL      SUB  PSTA      WBAL
+     C                     ENDIF
+      *
+      ** Format Balance
+      *
+     C                     MOVE *BLANKS   ZOUT22 22
+     C           -1        MULT WBAL      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+      *
+      ** If Balance is Debit but not = 0, Set 'DR'
+      *
+     C           WBAL      IFLT 1
+     C           WBAL      ANDNE0
+     C                     MOVE *BLANKS   ZFLD20
+     C                     MOVE *BLANKS   ZFLD22
+     C                     MOVELZOUT22    ZFLD20
+     C                     MOVELZFLD20    ZFLD22
+     C                     MOVE 'DR'      ZFLD22
+     C                     MOVE ZFLD22    #BAL
+     C                     ELSE
+     C                     MOVE ZOUT22    #BAL             Balance
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     CSR         MBEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         ZASNMS    BEGSR
+      *
+      ** Send message to program's message queue
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      *
+      ** Clear all fields for default mechanism next time
+      *
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *
+     CSR         ZAEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         ZHHPKY    BEGSR
+      *
+      ** Display HELP text
+      ** Signal help request
+      *
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      ** Extract cursor row and column
+      *
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      ** Save cursor position for redisplay
+      *
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM *ZERO     YYLGCT  50       # of grps
+     C                     PARM *BLANK    YYLGVN 10        Label grps
+      *
+      ** Clear set cursor DDS indicator
+      *
+     CSR         ZHEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         ZXEXPG    BEGSR
+      *
+      ** Cancel & exit program
+      *
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'Q'       WRETN   1
+     C                     ENDIF
+     C           *IN12     IFEQ '1'
+     C                     MOVE 'U'       WRETN
+     C                     ENDIF
+     C                     EXSR ZYEXPG
+      *
+     CSR         ZXEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         ZYEXPG    BEGSR
+      *
+      ** Exit program: Direct
+      ** Pass Return value to EMDTA
+      *
+     C           *LOCK     IN   EMSDS
+     C                     MOVE WRETN     RETND
+     C                     OUT  EMSDS
+      *
+      ** Terminate program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     CSR         ZYEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SDATE   50
+     C                     PARM           EDATE   50
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     CSR         ZZINIT    BEGSR
+      *
+      ** Initialisation
+      *
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      *
+      ** Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      *
+      ** Set century digit (If YY prior to 1940 treat as 20YY)
+      *
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      *
+      ** Update screen time
+      *
+     C                     TIME           ##TME   60
+      *
+      ** Define work field Midas Run Date
+      *
+     C                     MOVEL*BLANK    WUMRDT  7
+      *
+      ** Define work field Run day number
+      *
+     C                     Z-ADD*ZERO     WURDNB  50
+      *
+      ** Define work field Set Up Complete
+      *
+     C                     MOVEL*BLANK    WUSUC   1
+      *
+      ** Define work field Date format flag
+      *
+     C                     MOVEL*BLANK    WUDFF   1
+      *
+      ** Define work field Multi-branching Indicator
+      *
+     C                     MOVEL*BLANK    WUMBIN  1
+      *
+      ** Define *Synon program work fields
+      *
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      *
+      ** Move main file information to JOB context
+      *
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      *
+      ** Open files
+      *
+     C                     OPEN GL0002DF
+     C                     MOVEL'N'       W0PMT   1
+     C                     Z-ADD13        ##SFPG  30       SFLPAG
+     C                     Z-ADD1         ##SFRC
+      *
+      ** Maximum record number
+      *
+     C                     Z-ADD*ZERO     ##RRMX
+      *
+      ** Scan limit
+      *
+     C                     Z-ADD500       W0SLM   50
+      *
+      ** Subfile pages
+      *
+     C                     Z-ADD1         W0SPG   30
+      *
+      ** Processed Subfile record
+      *
+     C                     Z-ADD0         W0RR0   40
+      *
+     C                     MOVEL*BLANK    W0GRP   1
+      *
+      ** USER: Initialize program
+      ** GL0001  Precompiler - Statement of Accounts
+      ** Copyright Statement 1999 - Standard Functions
+      ** Get Rundate - Rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+     C                     Z-ADD99999     W0SLM            *Scan limit
+      *
+     C           *NAMVAR   DEFN           EMSDS
+     C                     IN   EMSDS
+      *
+      ** Get Decimal Position for Currency
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           CURRP
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Intialize No Record Found Flag
+      *
+     C                     MOVE 'N'       NOREC   1
+      *
+     CSR         ZZEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZFRPEDZ3
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     CSR         *PSSR     BEGSR
+      *
+      ** Update Linked Enquiry Data Area with Return Code set to 'E',
+      ** update LDA with program name, set on error switch, dump
+      ** program and return to calling program
+      *
+     C           ERROR     IFEQ *BLANK
+     C                     MOVE 'Y'       ERROR   1
+      *
+     C           *LOCK     IN   EMSDS
+     C                     MOVE 'E'       RETND
+     C                     OUT  EMSDS
+      *
+     C                     MOVEL'GL0063  'DBPGM
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVE DBERR     @LDA
+     C                     OUT  @LDA
+      *
+     C                     SETON                     U7LR
+     C                     DUMP
+      *
+     C                     END
+      *
+     C                     RETRN
+      *
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2011
+** SBMARR
+SBMJOB CMD(CALL PGM(GLC0064) PARM('
+' X'
+F' X'
+F'))
+JOB(GLC0064) JOBD(MIDASIC) USER(*JOBD)

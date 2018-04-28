@@ -1,0 +1,1442 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Interest Accruals Using N-T-R Extract')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0906 - Interest Accruals Using Net-Treasury-Report Extract *
+      *                                                               *
+      *  Function:  This program extracts interest accrual data for   *
+      *  (COB)      Book Positions in Interest-Bearing Securities,    *
+      *             pre-report.                                       *
+      *                                                               *
+      *  Called By: SEC0906 - Interest Accruals Report                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006  *CREATE    Date 21Jan03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *                                                               *
+      *****************************************************************
+      *
+     FBKPHV   IF  E           K        DISK
+     F            BKPHDDF                           KRENAMEBKPHHDF
+     FBKPOS   IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+     FIACNXD  O   E                    DISK         KINFSR *PSSR
+     FSE0906AUO   E                    PRINTER
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   10  - Error on Chain.                                       *
+      *   23  - Previous Record not found on Book Positions.          *
+      *   24  - No more Records for this Key on Book Positions.       *
+      *   86  - Read fail on SEDEVD.                                  *
+      *   87  - Read fail on SEDEVD.                                  *
+      *   89  - End of File on BKPHV.                                 *
+      *                                                               *
+      * 90-99 - Used in Standard Subroutines.                         *
+      *                                                               *
+      *   U7  - Database Error.                                       *
+      *   U8  - Database / Control Error                              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Initial Processing                                  *
+      *  SRPROC - Main Processing                                     *
+      *  SRIACD - Subroutine to calculate and Output Interest         *
+      *           Accruals for Processing Types 1, 3, 5, 8 and 9.     *
+      *           (BASED ON SR/ZACCZ and SR/ZPCINT).                  *
+      *  SRIAC6 - Subroutine to output extract records for proces -   *
+      *           sing type 6 (SHULDSCHEIN) for multiple interest     *
+      *           periods                                             *
+      *  SRAUDT - Subroutine to update Book Position Header and to    *
+      *           output the control report.                          *
+      *  SRW01  - Subroutine to Output an Extract Record for a        *
+      *           Single Interest Period.                             *
+      *  SRW021 - Subroutine to write the First record for Security   *
+      *           Processing Types 1, 3, 5, 8 and 9.                  *
+      *  SRW022 - Subroutine to write the Intermediate record for     *
+      *           Security Processing Types 1, 3, 5, 8 and 9.         *
+      *  SRW023 - Subroutine to write the Last record for Security    *
+      *           Processing Types 1, 3, 5, 8 and 9.                  *
+      *  SRW031 - Subroutine to write first extract record for        *
+      *           SCHULDSCHEIN for multiple interest periods          *
+      *  SRW032 - Subroutine to write intermediate extract records    *
+      *           for SCHULDSCHEIN for multiple interest periods      *
+      *  SRW033 - Subroutine to write last extract record for         *
+      *           SCHULDSCHEIN for multiple interest periods          *
+      *  SRWRIT - Subroutine to Set Up the Common fields on IACNXD    *
+      *           and write the Record.                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *  ZACCR  - Calculates Interest Accrued.                        *
+      *  ZDATE1 - Converts Date to Days.                              *
+      *  ZDATE2 - Converts Days to Date.                              *
+      *  ZDAYS  - Calculates the Number of Days between Two Dates.    *
+      *  ZDYYR  - Calculates the Number of Days in the Interest Year. *
+      *  ZD5DYS - Calculates Number of Days in Int. Year for DVBS = 5.*
+      *  ZLCD   - Calculates Last Coupon Date.                        *
+      *  ZNCD   - Calculates Next Coupon Date.                        *
+      *  ZRATE  - Calculates the Effective Interest Rate.             *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZDAYSZ1                               29TH FEB ARRAY
+     E/COPY ZSRSRC,ZDATE2Z1                              ZYDY/ZMDY & ZM
+     E/COPY ZSRSRC,ZPOWER8Z1                             POWER8 ARRAY
+     E                    RPI        12  1               RATE/PAYMT IND
+     E/COPY ZSRSRC,ZNCDZ1                                CD AND CR
+     E                    CPY@    1   1 80
+      /EJECT
+     ISEDEVDF
+     I              NMCY                            NMCYSD
+     ISEDEVDO
+     I              NMCY                            NMCYSD
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+     I            DS
+      ** Data Structure for Investment File Key.
+      *
+     I                                        1   6 IKEY
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+      *
+     I            DS
+      ** Data Structure for Book Position Key.
+      *
+     I                                        1  20 BPKEY
+     I                                        1  10 BHSC
+     I                                       11  13 BHBA
+     I                                       14  15 BHBK
+     I                                       16  16 BHMK
+     I                                       17  17 BHTV
+     I                                    P  18  200WKPD
+      *
+     I            DS
+      ** Data Structure for Table File Key.
+      *
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                       11  120RCDE
+      *
+     I            DS
+      ** Data Structure for Interest Accrual Extract Record Key.
+      *
+     I                                        1  21 IACKEY
+     I                                        1   3 IABA
+     I                                        4   5 IABK
+     I                                        6   8 IACY
+     I                                        9  11 IAIT
+     I                                       12  21 IASS
+      *
+     I            DS
+      ** Data Structure for Book Position Record Key.
+      *
+     I                                        1  17 SBPKEY
+     I                                        1  10 BPSC
+     I                                       11  13 BPBA
+     I                                       14  15 BPBK
+     I                                       16  16 BPMK
+     I                                       17  17 BPTV
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** GE-ICD Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     IINVTD     E DSINVTPD
+     I              RECI                            INRECI
+     I              LCD                             INLCD
+     I              CHTP                            INCHTP
+      ** Investment Type Details
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     ICPY@2       DS
+      ** Data structure for compilation - copyright insertion
+      *
+     I                                        1  80 CPY@
+      /EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Initialisation
+      *
+     C                     EXSR SRINIT
+      *
+      ** Main Processing
+      *
+     C                     EXSR SRPROC
+      *
+      ** Output the Run Control Report and Terminate the Program.
+      *
+     C                     EXSR SRAUDT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Main Processing                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ** Define and clear work fields.
+      *
+     C           *LIKE     DEFN SESN      WKSC
+     C           *LIKE     DEFN BKAPDT    ECD
+     C           *LIKE     DEFN BPPD      WBPPD
+      *
+     C                     MOVE *BLANK    WKSC
+     C                     Z-ADD0         IREC    50
+     C                     Z-ADD0         OREC    50
+      *
+      ** Read Book Positions Header - Value Date Positions File.
+      *
+     C                     READ BKPHV                    89
+      *
+     C           *IN89     IFEQ *ON
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** Process all the Records on the File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+     C                     ADD  1         IREC
+      *
+      ** Chain to the Book Position File. Placed here so that a zero
+      ** position can be checked for if the Security isn't found.
+      *
+     C                     Z-ADDLPSD      WKPD
+      *
+     C           BKPKEY    CHAINBKPOS                10
+      *
+     C           *IN10     IFEQ *ON
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'BKPOS'   DBFILE
+     C                     MOVELBPKEY     DBKEY
+     C                     Z-ADD5         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check for change in the Security Shortname.
+      *
+     C           WKSC      IFNE BHSC
+     C                     MOVE 'Y'       WCHGSC  1
+     C                     MOVE BHSC      WKSC
+      *
+      ** Chain to the Security File.
+      *
+     C           BHSC      CHAINSECTY                10
+      *
+     C           *IN10     IFEQ *ON
+     C           RECI      ORNE 'D'
+      *
+      ** If the Nominal and Ex-Coupon Positions are both zero then
+      ** don't produce a DB Error, just ignore the record.
+      ** This doesn't cater for Schuldscheins.
+      ** (If there is a position but no live security then DBase Error).
+      *
+     C           NPSN      IFEQ *ZEROS
+     C           ECNP      ANDEQ*ZEROS
+     C           PROT      ANDNE'6'
+      *
+      ** Also ignore Matured instruments.
+      *
+     C           RECI      OREQ 'M'
+      *
+     C                     GOTO RDNEXT
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SECTY'   DBFILE
+     C                     MOVELBHSC      DBKEY
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If both nominal and ex-coupon nominal positions are zero
+      ** do not extract the record for reporting.
+      *
+     C           NPSN      IFEQ *ZEROS
+     C           ECNP      ANDEQ*ZEROS
+     C           PROT      ANDNE'6'
+      *
+      ** Ignore Book Position Header if Day Basis = 4, or the Initial
+      ** Date is Greater Than or Equal To the Accrual Control Date.
+      *
+     C           DYBS      OREQ '4'
+     C           ITLD      ORGE ECD
+     C                     GOTO RDNEXT
+     C                     ENDIF
+      *
+      ** Get processing type by calling AOINVTR0
+      *
+     C           WCHGSC    IFEQ 'Y'
+     C                     CALL 'AOINVTR0'
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM SITP      PINVT   3
+     C                     PARM NMCY      PCURR   3
+     C           INVTD     PARM INVTD     DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'INVTPD  'DBFILE
+     C                     MOVELIKEY      DBKEY
+     C                     Z-ADD4         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Ignore the Book Position Header if the Processing Type = 2,
+      ** 4 or 7, OR (PROT NOT= 3 AND Coupon Rate = 0).
+      *
+     C           PROT      IFEQ '2'
+     C           PROT      OREQ '4'
+     C           PROT      OREQ '7'
+     C                     GOTO RDNEXT
+     C                     ENDIF
+      *
+      ** Obtain nominal currency decimal places
+      *
+     C           WCHGSC    IFEQ 'Y'
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM NMCY      PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCURRPD'DBFILE
+     C                     MOVELNMCY      DBKEY
+     C                     Z-ADD6         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Determine the Last Coupon Date. (Returns ZZLCD).
+      ** NB: Must get Last Coupon Date BEFORE today.
+      *
+     C           BKALDI    IFEQ 'N'
+     C           ECD       SUB  1         ZECD
+     C                     ELSE
+     C                     Z-ADDECD       ZECD
+     C                     ENDIF
+      *
+     C                     EXSR ZLCD
+      *
+      ** Determine the Next Coupon Date. (Returns NCD).
+      *
+     C           BKALDI    IFEQ 'Y'
+     C                     ADD  1         ECD
+     C                     ENDIF
+      *
+     C                     EXSR ZNCD
+      *
+     C           BKALDI    IFEQ 'Y'
+     C                     SUB  1         ECD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Set Accrual Type for ZDAYS subroutine
+      *
+     C                     MOVE 'I'       ZACLT
+      *
+      ** Output Extract Records according to Processing Type.
+      *
+     C           PROT      IFEQ '1'
+     C           PROT      OREQ '3'
+     C           PROT      OREQ '5'
+     C           PROT      OREQ '8'
+     C           PROT      OREQ '9'
+     C                     EXSR SRIACD
+     C                     ELSE
+      *
+     C           PROT      IFEQ '6'
+     C                     EXSR SRIAC6
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Reset Accrual Type
+      *
+     C                     MOVE *BLANK    ZACLT
+      *
+      ** WCHGSC should only be reset to blank if INVTPD has been
+      ** accessed for changed security - if not read leave the
+      ** workfield set to 'Y' until next cycle
+      *
+     C                     MOVE *BLANK    WCHGSC
+      *
+     C           RDNEXT    TAG
+      *
+     C                     READ BKPHV                    89
+      *
+      ** End of Do Until 'Process all records on File'.
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialisation Processing                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Keylist for Investment Type.
+      *
+     C           INVKEY    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      ** Keylist for Book Position (with Position Date).
+      *
+     C           BKPKEY    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C                     KFLD           WKPD
+      *
+      ** Keylist for Book Position (without Position Date).
+      *
+     C           BKPKY2    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+      *
+      ** Keylist for Security Diary in 'Security/Date/Event Type' Order.
+      *
+     C           KISEDF    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           ZZLCD
+     C                     KFLD           SDET
+      *
+      ** Keylist for Security Diary in 'Security/Event Type/REVERSE Date' Order.
+      *
+     C           KISEDO    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           SDET
+     C                     KFLD           ZZLCD
+      *
+      ** Set Up Program Information.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SE0906  'DBPGM
+     C                     MOVEL*BLANK    DBKEY
+     C                     MOVEL*BLANK    DBFILE
+     C                     OUT  LDA
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check system date format, DDMMYY (*IN98 OFF)
+      **                           MMDDYY (*IN98 ON).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Access GE-ICD record
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDGELRPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Calculate the Accrual Control Date.
+      *
+     C           BKAPDT    IFLT BJDNWD
+      *
+     C           BKALDI    IFEQ 'Y'
+     C                     Z-ADDBKAPDT    ECD
+     C                     ELSE
+     C           BKAPDT    ADD  1         ECD
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           BKALDI    IFEQ 'Y'
+     C           BJDNWD    SUB  1         ECD
+     C                     ELSE
+     C                     Z-ADDBJDNWD    ECD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRIACD - Subroutine to calculate and Output Interest         *
+      *           Accruals for Processing Types 1, 3, 5, 8 and 9.     *
+      *           (BASED ON SR/ZACCZ and SR/ZPCINT).                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRIACD    BEGSR
+      *
+      ** Define and zeroize the Accrued Interest Output fields.
+      *
+     C                     Z-ADD*ZEROS    ZDCINT 130
+     C                     Z-ADD*ZEROS    ZDCEXI 130
+     C                     Z-ADD*ZEROS    WNODYS  50
+     C                     Z-ADD*ZEROS    ZDDAYS
+     C                     Z-ADD*ZEROS    ZDXINT 151
+     C                     Z-ADD*ZEROS    ZDXEXI 151
+      *
+      ** Initialize the fields that won't change that are required by
+      ** other Standard SRs that are called.
+      *
+     C                     MOVE PPDI      ZPPDI
+     C                     MOVE PROT      ZPROT
+     C                     Z-ADDSFPP      ZSFPP
+      *
+      ** Calculate the Purchased Interest, and Adjustment.
+      ** If the Last Position Date is before the Last Coupon Date
+      ** then zeroise interest and ex-Coupon Nominal.
+      *
+     C           LPSD      IFLT ZZLCD
+     C                     Z-ADD0         WPINT  150
+     C                     Z-ADD0         WINDN  150
+     C                     Z-ADD0         ECNP
+      *
+     C                     ELSE
+      *
+      ** Purchased Interest is Cum-Coupon plus Ex-Coupon Amount
+      *
+     C                     Z-ADDPILN      WPINT
+      *
+     C                     Z-ADDINDN      WINDN
+      *
+     C                     ENDIF
+      *
+      ** If the Security has no interest changes ...
+      *
+     C           CPNN      IFNE *ZEROS
+     C           PPDI      ANDEQ'N'
+     C           PROT      ANDNE'3'
+     C           PROT      ANDNE'5'
+     C           PROT      ANDNE'8'
+      *
+      ** Set up the Interest Rate
+      *
+     C                     Z-ADDCPNN      IRATE
+      *
+      ** Calculate the Total Interest on the Total Nominal Position.
+      *
+     C                     Z-ADDNPSN      ZAMT
+     C                     Z-ADDZZLCD     ZSDATE
+     C                     Z-ADDECD       ZEDATE
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C                     EXSR ZACCR
+      *
+     C                     Z-ADDZACCRD    ZDCINT
+     C                     Z-ADDZDDAYS    WNODYS  50
+      *
+      ** Calculate the Total Coupon as at the Next Coupon Date on the
+      ** Ex-Coupon Nominal Position.
+      *
+     C                     Z-ADDECNP      ZAMT
+     C                     Z-ADDZZLCD     ZSDATE
+     C                     Z-ADDNCD       ZEDATE
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C                     EXSR ZACCR
+      *
+     C                     Z-ADDZACCRD    ZDCEXI
+      *
+      ** Calculate the Interest Due, for Extract.
+      *
+     C           ZDCINT    SUB  ZDCEXI    WINTD  150
+     C           WINDN     IFNE *ZEROS
+     C                     Z-ADDWINTD     ZADINT 130
+     C                     ADD  WINDN     ZADINT
+     C                     ELSE
+     C                     Z-ADD*ZEROS    ZADINT
+     C                     ENDIF
+      *
+      ** Calculate the Accrued Interest Receivable, for Extract.
+      *
+     C           WINTD     SUB  WPINT     WAIR   150
+     C           WINDN     IFNE *ZEROS
+     C                     ADD  WINDN     WAIR
+     C                     ENDIF
+      *
+      ***  Write Extract Record.
+      *
+     C                     EXSR SRW01
+      *
+      ** ELSE the Security may have Interest changes ...
+      *
+     C                     ELSE
+      *
+      ** If there are Coupon details to report ...
+      *
+     C           CPNN      IFNE *ZEROS
+      *
+      ** Initialize with the values from SECTYD.
+      *
+     C                     Z-ADDCPNN      ZCPNR
+     C                     Z-ADDCFCT      ZCFCT
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE CPDP      ZPPCP
+      *
+      ** Defaults: The values on the Security File may have been
+      ** changed since the Start Date, so check the Security Diary
+      ** Events File for each one.
+      *
+     C                     Z-ADD0         SAVDT
+     C                     MOVE 'CP'      SDET
+     C           KISEDO    SETLLSNDEVDO
+     C                     READ SNDEVDO                  96
+     C           *IN96     IFEQ *OFF
+     C           SNSN      ANDEQSESN
+     C           SNET      ANDEQ'CP'
+     C                     Z-ADDSNDT      SAVDT   50
+     C                     Z-ADDSNCN      ZCPNR
+     C                     Z-ADDSNCF      ZCFCT
+     C                     MOVE SNCP      ZPPCP
+     C                     ELSE
+      *
+      ** Defaults: If no last coupon record exists then read
+      ** initial records from diary events file.
+      *
+     C                     MOVE 'IR'      SDET
+     C           KISEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  86
+     C           *IN86     IFEQ *OFF
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'IR'
+     C           SDDT      ANDGESAVDT
+     C                     Z-ADDSDNN      ZCPNR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           PROT      IFEQ '8'
+     C                     MOVE 'MP'      SDET
+     C           KISEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  86
+     C           *IN86     IFEQ *OFF
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'MP'
+     C           SDDT      ANDGESAVDT
+     C                     Z-ADDSDCP      ZCFCT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           PPDI      IFEQ 'Y'
+     C                     MOVE 'PP'      SDET
+     C           KISEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  86
+     C           *IN86     IFEQ *OFF
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'PP'
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Calculate the Effective Starting Interest Rate
+      *
+     C                     EXSR ZRATE
+      *
+      ** Access the Security Diary Events File to accumulate interest
+      ** over the period from the Previous Coupon Date to the Accrual
+      ** Control Date, taking account of Event Types IR/MP/PP.
+      *
+     C                     Z-ADDNPSN      ZAMT
+     C                     Z-ADDZZLCD     ZSDATE
+      *
+     C                     MOVE 'IR'      SDET
+     C           KISEDF    SETLLSEDEVDF
+     C           SESN      READESEDEVDF                  86
+      *
+     C           *IN86     IFEQ *ON
+     C                     MOVE 'IR'      SDET
+     C           KISEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  87
+     C           *IN87     IFEQ *OFF
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'IR'
+     C                     Z-ADDSDNN      ZCPNR
+     C                     EXSR ZRATE
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN86     DOWEQ*OFF
+     C           SDED      ANDLTECD
+      *
+     C           SDET      IFEQ 'IR'
+     C           SDET      OREQ 'MP'
+     C           SDET      OREQ 'PP'
+      *
+      ** Calculate the Accrued Interest UP TO the Event Date.
+      *
+     C                     Z-ADDSDED      ZEDATE
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C                     EXSR ZACCR
+      *
+     C                     ADD  ZACCRD    ZDCINT
+     C                     ADD  ZACCXD    ZDXINT
+     C                     Z-ADDZDDAYS    WNODYS
+      *
+      ** Output the First Extract Record if the Start of the Period
+      ** is the Last Coupon Date.
+      *
+     C           ZSDATE    IFEQ ZZLCD
+     C                     EXSR SRW021
+      *
+      ** ELSE Output an Intermediate Extract Record.
+      *
+     C                     ELSE
+     C                     EXSR SRW022
+     C                     ENDIF
+      *
+      ** Set the fields to the new values and calculate new Rate.
+      ** NOTE: New Rate affects the Period FROM the Event Date.
+      ** Only update the relevant field to the Event Type.
+      *
+     C           SDET      IFEQ 'IR'
+     C                     Z-ADDSDNN      ZCPNR
+     C                     ENDIF
+     C           SDET      IFEQ 'MP'
+     C                     Z-ADDSDCP      ZCFCT
+     C                     ENDIF
+     C           SDET      IFEQ 'PP'
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     ENDIF
+      *
+     C                     EXSR ZRATE
+     C                     Z-ADDSDED      ZSDATE
+      *
+      ** END of Event Types IR/MP/PP
+      *
+     C                     ENDIF
+      *
+     C           SESN      READESEDEVDF                  86
+     C                     ENDDO
+      *
+      ** Calculate the last bit of the Total Nominal Position Accrued
+      ** Interest up to the Accrual Control Date.
+      *
+     C                     Z-ADDECD       ZEDATE
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C                     EXSR ZACCR
+      *
+     C                     Z-ADDZDDAYS    WNODYS
+     C                     ADD  ZACCXD    ZDXINT
+     C                     Z-ADDZDXINT    ZDCINT    H
+      *
+      ** Now calculate the Total Coupon as at the Next Coupon Date on
+      ** the Ex-Coupon Nominal Position, IF there IS a position.
+      *
+     C           ECNP      IFNE *ZEROS
+     C                     Z-ADDECNP      ZAMT
+     C                     Z-ADDZZLCD     ZSDATE
+      *
+     C                     MOVE 'IR'      SDET
+     C           KISEDF    SETLLSEDEVDF
+     C           SESN      READESEDEVDF                  86
+      *
+     C           *IN86     DOWEQ*OFF
+     C           SDED      ANDLTNCD
+      *
+     C           SDET      IFEQ 'IR'
+     C           SDET      OREQ 'MP'
+     C           SDET      OREQ 'PP'
+      *
+      ** Calculate the Accrued Interest up to the Event Date.
+      *
+     C                     Z-ADDSDED      ZEDATE
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C                     EXSR ZACCR
+      *
+     C                     ADD  ZACCRD    ZDCEXI
+     C                     ADD  ZACCXD    ZDXEXI
+      *
+      ** Set the fields to the new values and calculate new Rate.
+      ** NOTE: New Rate affects the Period AFTER the Event Date.
+      ** Only update the relevant field to the Event Type as all the
+      ** other fields will be set to zero.
+      *
+     C           SDET      IFEQ 'IR'
+     C                     Z-ADDSDNN      ZCPNR
+     C                     ENDIF
+     C           SDET      IFEQ 'MP'
+     C                     Z-ADDSDCP      ZCFCT
+     C                     ENDIF
+     C           SDET      IFEQ 'PP'
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     ENDIF
+      *
+     C                     EXSR ZRATE
+     C                     Z-ADDSDED      ZSDATE
+      *
+      ** END of Event Types IR/MP/PP
+      *
+     C                     ENDIF
+      *
+     C           SESN      READESEDEVDF                  86
+     C                     ENDDO
+      *
+      ** When all Events before Next Coupon Date have been processed,
+      ** calculate the last bit of Accrued Interest up to NCD.
+      *
+     C                     Z-ADDNCD       ZEDATE
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C                     EXSR ZACCR
+      *
+     C                     ADD  ZACCXD    ZDXEXI
+     C                     Z-ADDZDXEXI    ZDCEXI    H
+      *
+      ** END of EX-Coupon calculation.
+      *
+     C                     ENDIF
+      *
+      ** Calculate the Interest Due, for extract.
+      *
+     C           ZDCINT    SUB  ZDCEXI    WINTD
+     C           WINDN     IFNE *ZEROS
+     C                     Z-ADDWINTD     ZADINT
+     C                     ADD  WINDN     ZADINT
+     C                     ELSE
+     C                     Z-ADD*ZEROS    ZADINT
+     C                     ENDIF
+      *
+      ** Calculate the Accrued Interest Receivable, for extract.
+      *
+     C           WINTD     SUB  WPINT     WAIR
+     C           WINDN     IFNE *ZEROS
+     C                     ADD  WINDN     WAIR
+     C                     ENDIF
+      *
+     C                     EXSR SRW023
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRIAC6  - Subroutine to output extract records for proces -  *
+      *            sing type 6 (SHULDSCHEIN) for multiple interest    *
+      *            periods                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRIAC6    BEGSR
+      *
+      ** Initialise total field
+      *
+     C                     Z-ADD0         ZDCINT
+     C                     Z-ADD0         WNODYS
+      *
+      ** Access first nominal position for this coupon period
+      *
+     C                     Z-ADDZZLCD     WKPD
+     C           BKPKEY    SETGTBKPOSDF
+      *
+      ** Find book position less than or equal to last coupon date
+      *
+     C                     READPBKPOSDF                2323
+     C           *IN23     IFEQ *OFF
+     C                     MOVELBPKEY     WBPKEY 17
+     C           WBPKEY    IFNE SBPKEY
+     C                     MOVE *ON       *IN23
+      *
+      ** No book pos found LE last coupon, so start date will be last
+      ** coupon date
+      *
+     C                     ELSE
+     C                     Z-ADDZZLCD     WEARL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If record not found - access following book position records
+      *
+     C           *IN23     IFEQ *ON
+     C           BKPKY2    READEBKPOSDF                  23
+     C           *IN23     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BKPOS'   DBFILE
+     C                     MOVELBPKEY     DBKEY
+     C                     Z-ADD7         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Position date will be start date
+      *
+     C                     Z-ADDBPPD      WEARL   50
+     C                     ENDIF
+      *
+     C                     Z-ADDNPSN      WNPSN  150
+     C           BKPKY2    READEBKPOSDF                  24
+     C           *IN24     IFEQ *OFF
+     C                     Z-ADDBPPD      W1PDT   50
+     C                     ELSE
+     C                     Z-ADD0         W1PDT
+     C                     ENDIF
+      *
+      ** Calculate interest for first nominal period
+      *
+     C                     Z-ADDWNPSN     ZAMT
+     C                     Z-ADDCPNN      IRATE
+     C                     Z-ADDWEARL     ZSDATE
+     C           W1PDT     IFNE 0
+     C                     Z-ADDW1PDT     ZEDATE
+     C                     ELSE
+     C                     Z-ADDECD       ZEDATE
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C                     EXSR ZACCR
+     C                     Z-ADDZACCRD    ZDCINT
+     C                     Z-ADDZDDAYS    WNODYS  50
+      *
+      ** Output first extract record
+      *
+     C                     EXSR SRW031
+      *
+     C           W1PDT     IFEQ 0
+     C                     GOTO EIACC6
+     C                     ENDIF
+      *
+     C           *IN24     DOUEQ*ON
+     C                     Z-ADDBPPD      WBPPD
+     C                     Z-ADDNPSN      WNPSN
+     C           BKPKY2    READEBKPOSDF                2424
+     C           *IN24     IFEQ *OFF
+     C           WBPPD     IFNE LPSD
+      *
+      ** Calculate interest for period
+      *
+     C                     Z-ADDWNPSN     ZAMT
+     C                     Z-ADDCPNN      IRATE
+     C                     Z-ADDWBPPD     ZSDATE
+     C                     Z-ADDBPPD      ZEDATE
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C                     EXSR ZACCR
+      *
+     C                     Z-ADDZACCRD    ZDCINT
+     C                     Z-ADDZDDAYS    WNODYS
+      *
+      ** Output intermediate extract records
+      *
+     C                     EXSR SRW032
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Calculate interest for last interest period
+      *
+     C                     Z-ADDWNPSN     ZAMT
+     C                     Z-ADDWBPPD     ZSDATE
+     C                     Z-ADDECD       ZEDATE
+     C                     Z-ADDCPNN      IRATE
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C                     EXSR ZACCR
+      *
+     C                     Z-ADDZACCRD    WAIR
+     C                     Z-ADDZDDAYS    WNODYS
+      *
+      ** Output last extract record
+      *
+     C                     EXSR SRW033
+      *
+     C           EIACC6    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to update Book Position Header and to    *
+      *           output the control report.                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output the Control Report
+      *
+     C                     WRITEHEADAU
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+      ** Terminate the Program.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRW01  - Subroutine to Output an Extract Record for a        *
+      *           Single Interest Period.                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRW01     BEGSR
+      *
+      ** Set Up fields in Record for IACNXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADDNCD       IANC
+     C                     Z-ADDZZLCD     IASP
+     C                     Z-ADDECD       IAEP
+     C                     Z-ADDNPSN      IANM
+     C                     Z-ADDCPNN      IACN
+     C                     Z-ADDWPINT     IAPI
+     C                     Z-ADDCPDP      IAPP
+     C                     Z-ADDCFCT      IACF
+     C                     Z-ADDWAIR      IARC
+     C                     Z-ADDWINTD     IAID
+     C                     Z-ADDWNODYS    IAND
+     C                     MOVE 'N'       IALR
+     C                     MOVE VLCY      IAVC
+     C                     Z-ADDSEXR      IAER
+     C                     Z-ADDWINDN     IPIA
+     C                     Z-ADDZADINT    IIDA
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRW021 - Subroutine to write the First record for Security   *
+      *           Processing Types 1, 3, 5, 8 and 9.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRW021    BEGSR
+      *
+      ** Set Up fields in Record for IACNXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADDNCD       IANC
+     C                     Z-ADDZZLCD     IASP
+     C                     Z-ADDZEDATE    IAEP
+     C                     Z-ADD0         IANM
+     C                     Z-ADDZCPNR     IACN
+     C                     Z-ADD0         IAPI
+     C                     Z-ADD0         IAPP
+     C                     Z-ADD0         IACF
+     C                     Z-ADD0         IARC
+     C                     Z-ADD0         IAID
+     C           SDET      IFEQ 'PP'
+     C                     Z-ADDZPPCP     IAPP
+     C                     ENDIF
+     C                     Z-ADDWNODYS    IAND
+     C                     MOVE 'N'       IALR
+     C           SDET      IFEQ 'PP'
+     C           SDTP      MULT 1000      IAPP
+     C                     ENDIF
+     C                     MOVE *BLANK    IAVC
+     C                     Z-ADD0         IAER
+     C                     Z-ADD*ZEROS    IPIA
+     C                     Z-ADD*ZEROS    IIDA
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRW022 - Subroutine to write the Intermediate record for     *
+      *           Security Processing Types 1, 3, 5, 8 and 9.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRW022    BEGSR
+      *
+      ** Set Up fields in Record for IACNXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADD0         IANC
+     C                     Z-ADDZSDATE    IASP
+     C                     Z-ADDZEDATE    IAEP
+     C                     Z-ADD0         IANM
+     C                     Z-ADDZCPNR     IACN
+     C                     Z-ADD0         IAPI
+     C                     Z-ADD0         IAPP
+     C                     Z-ADD0         IACF
+     C                     Z-ADD0         IARC
+     C                     Z-ADD0         IAID
+     C                     MOVE *BLANK    IAVC
+     C                     Z-ADD0         IAER
+     C                     Z-ADDWNODYS    IAND
+     C                     MOVE 'N'       IALR
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRW023 - Subroutine to write the Last record for Security    *
+      *           Processing Types 1, 3, 5, 8 and 9.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRW023    BEGSR
+      *
+      ** Set Up fields in Record for IACNXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADDNCD       IANC
+     C                     Z-ADDZSDATE    IASP
+     C                     Z-ADDECD       IAEP
+     C                     Z-ADDNPSN      IANM
+     C                     Z-ADDZCPNR     IACN
+     C                     Z-ADDWPINT     IAPI
+     C                     Z-ADDZPPCP     IAPP
+     C                     Z-ADDZCFCT     IACF
+     C                     Z-ADDWAIR      IARC
+     C                     Z-ADDWINTD     IAID
+     C                     Z-ADDWNODYS    IAND
+     C                     MOVE 'N'       IALR
+     C                     MOVE VLCY      IAVC
+     C                     Z-ADDSEXR      IAER
+     C                     Z-ADDWINDN     IPIA
+     C                     Z-ADDZADINT    IIDA
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRW031   - Subroutine to write first extract record for       *
+      *            SCHULDSCHEIN for multiple interest periods         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRW031    BEGSR
+      *
+      ** Set up fields in record for IACNXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADDNCD       IANC
+     C                     Z-ADDWEARL     IASP
+      *
+     C                     Z-ADDZDCINT    IARC
+     C                     Z-ADDZDCINT    IAID
+     C           W1PDT     IFEQ 0
+     C                     Z-ADDECD       IAEP
+     C                     MOVE 'Y'       IALR
+     C                     ELSE
+     C                     Z-ADDW1PDT     IAEP
+     C                     MOVE 'N'       IALR
+     C                     ENDIF
+      *
+     C                     Z-ADDWNODYS    IAND
+     C                     Z-ADDWNPSN     IANM
+     C                     Z-ADDCPNN      IACN
+     C                     Z-ADD0         IAPI
+     C                     Z-ADD0         IAPP
+     C                     Z-ADD0         IACF
+     C                     MOVE *BLANK    IAVC
+     C                     Z-ADD0         IAER
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRW032   - Subroutine to write intermediate extract records   *
+      *            for SCHULDSCHEIN for multiple interest periods     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRW032    BEGSR
+      *
+      ** Set up fields in record for IACNXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADD0         IANC
+     C                     Z-ADDWBPPD     IASP
+     C                     Z-ADDBPPD      IAEP
+     C                     Z-ADDZDCINT    IARC
+     C                     Z-ADDZDCINT    IAID
+     C                     Z-ADDWNPSN     IANM
+     C                     Z-ADDIRATE     IACN
+     C                     Z-ADD0         IACN
+     C                     Z-ADD0         IAPI
+     C                     Z-ADD0         IAPP
+     C                     Z-ADD0         IACF
+     C                     Z-ADDZDCINT    IARC
+     C                     Z-ADDZDCINT    IAID
+     C                     Z-ADDWNODYS    IAND
+     C                     MOVE *BLANK    IAVC
+     C                     Z-ADD0         IAER
+     C                     MOVE 'N'       IALR
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRW033   - Subroutine to write last extract record for        *
+      *            SCHULDSCHEIN for multiple interest periods         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRW033    BEGSR
+      *
+      ** Set up fields in record for IACNXD
+      *
+     C                     Z-ADDMATY      IAMY
+     C                     Z-ADD0         IANC
+     C                     Z-ADDWBPPD     IASP
+     C                     Z-ADDECD       IAEP
+     C                     Z-ADDNPSN      IANM
+     C                     Z-ADDCPNN      IACN
+     C                     Z-ADD0         IAPI
+     C                     Z-ADDCPDP      IAPP
+     C                     Z-ADDCFCT      IACF
+     C                     Z-ADDWAIR      IARC
+     C                     Z-ADDWAIR      IAID
+     C                     Z-ADDWNODYS    IAND
+     C                     MOVE VLCY      IAVC
+     C                     Z-ADDSEXR      IAER
+     C                     MOVE 'Y'       IALR
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRWRIT - Subroutine to Set Up the Common fields on IACNXD    *
+      *           and write the Record.                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR
+      *
+      ** Set Up the Key Fields.
+      *
+     C                     MOVE 'D'       RECI
+     C                     MOVE BHBA      IABA
+     C                     MOVE BHBK      IABK
+     C                     MOVE NMCY      IACY
+     C                     MOVE SITP      IAIT
+     C                     MOVE BHSC      IASS
+     C                     MOVE SRPN      IARN
+      *
+     C                     WRITEIACEXDF
+      *
+     C                     ADD  1         OREC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZACCRZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZLCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZRATEZ1
+      /EJECT
+      ***
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2003

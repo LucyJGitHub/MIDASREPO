@@ -1,0 +1,117 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+     C********************************************************************
+     C**
+     C**  ZDATE4 SR.  TO CALCULATE ANY NUMBER OF WORKING
+     C**              DAYS FORWARD IN ANY CURRENCY.
+     C**
+     C**              TABLETJ MUST BE INCLUDED IN THE PROGRAM AS A PART
+     C**              OF A LOGICAL VIEW, OR AS A PHYSICAL FILE.
+     C********************************************************************
+     C**
+     C           ZDATE4    BEGSR                           *** ZDATE4 ***
+     C**
+     C**   CALCULATIONS TO DEFINE INPUT FIELDS.
+     C                     Z-ADDZDAYNO    ZDAYNO  50       STARTING DATE
+     C                     MOVE ZCCY      ZCCY    3        DATE CURRENCY
+     C                     Z-ADDZNRDYS    ZNRDYS  20       NBR OF WORKING
+     C**                                                   DAYS FORWARD
+     C**   SET UP FORWARD DAY NUMBER.
+     C           ZDAYNO    ADD  ZNRDYS    ZDYNBR  50
+     C**
+     C**   SET KEY FOR, AND SET LOWER LIMITS ON, TABLE FILE.
+     C                     MOVEL'22    '  ZDHKEY 12
+     C                     MOVELZDAYNO    ZWRK6   6
+     C                     MOVE '1'       ZWRK6
+     C                     MOVE ZWRK6     ZDHKEY
+     C**
+     C           ZDHKEY    SETLLTABLETJF
+     C**
+     C**   LOOP TO CHECK FOR HOLIDAY, AND INCREMENT FORWARD DAY NUMBER.
+     C           ZDLOP1    TAG                             ** ZDLOP1 TAG *
+     C                     SETOF                     909192
+     C                     SETOF                     94
+     C                     READ TABLETJF                 92ON, E.O.F.
+     C   92                GOTO ZDEND4
+     C           RECI      COMP 'D'                  9494
+     C   94                GOTO ZDLOP1
+     C**
+     C                     MOVEAHCCY      HOLA
+     C                     MOVELRECT      HOL     50
+     C**
+     C           ZDLOP2    TAG                             ** ZDLOP2 TAG *
+     C                     SETOF                     959697
+     C  N92      HOL       COMP ZDYNBR               93
+     C   92
+     COR 93                GOTO ZDEND4                     ALL DAYS CHEKED
+     C**
+     C                     MOVE HOL       ZLSHOL  50       SAVE THE DATE
+     C**
+     C**   CHECK IF RECORD IS INCLUDE OR EXCLUDE.
+     C           INEX      COMP 'I'                  909091
+     C**
+     C**   CHECK FOR CURRENCY ENTRY IN HOLA.
+     C           ZCCY      LOKUPHOLA                     94ON, CCY. FOUND
+     C   91 94             SETON                         97
+     C   97      ZDYNBR    ADD  1         ZDYNBR           INCLUDE FOUND
+     C   90N94             SETON                     95    EXCL.NOT FOUND
+     C**
+     C**   READ NEXT RECORD & CHECK IF 2ND RECORD FOR THIS DATE.
+     C                     SETOF                     909192
+     C                     SETOF                     94
+     C                     READ TABLETJF                 92
+     C**
+     C  N92      RECI      COMP 'D'                  9494
+     C  N92                MOVEAHCCY      HOLA
+     C  N92                MOVELRECT      HOL
+     C  N92      HOL       COMP ZLSHOL                   96
+     C**
+     C**   FOR 2ND RCD, IF INCL HOL ALREADY FOUND, RETURN TO ZDLOP1.
+     C   96 97             GOTO ZDLOP1
+     C**
+     C**   ELSE, IF 2ND RCD TO BE PROCESSED, GOTO ZDLOP3
+     C   96N94             GOTO ZDLOP3                     RCD. 2 FOUND
+     C**
+     C**   IF 2ND RCD NOT FOUND & ENTRY NOT FOUND ON EXCLUDE
+     C**   RECORD 1, ADD 1 TO ZDYNBR.
+     C   95      ZDYNBR    ADD  1         ZDYNBR
+     C                     GOTO ZDLOP2
+     C**
+     C           ZDLOP3    TAG                             ** ZDLOP3 TAG *
+     C**
+     C**   RCD 2 FOUND, & NO INCL HOL YET FOUND, CHECK FOR ENTRY IN HOLA.
+     C           ZCCY      LOKUPHOLA                     94
+     C**
+     C**   CHECK WHETHER INCLUDE OR EXCLUDE RCD.
+     C           INEX      COMP 'I'                  909091
+     C**
+     C**   IF INCLUDE RCD, & CURRENCY FOUND ON RCD 2, OR IF EXCLUDE RCD
+     C**   & CURRENCY ENTRY NOT FOUND ON RCD 1 OR 2, ADD 1 TO ZDYNBR.
+     C   91 94                                             INCLUDE FOUND
+     COR 90N94 95ZDYNBR    ADD  1         ZDYNBR           EXCL.NOT FOUND
+     C**
+     C                     GOTO ZDLOP1
+     C**
+     C           ZDEND4    ENDSR                           * ZDEND ENDSR *
+     C**
+     C********************************************************************
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

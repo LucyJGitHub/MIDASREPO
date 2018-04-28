@@ -1,0 +1,887 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Spot Trade Historic Equiv. Postings Gen.')       *
+     H****************************************************************
+     H*                                                              *
+     H*          MIDAS ABS - BELGIAN REPORTING SYSTEM                *
+     H*                                                              *
+     H*  ER5343 - Spot Trade Historic Postings Generation            *
+     H*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+     H*                                                              *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 06May06               *
+      *                 CER001             Date 25Aug05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ER_R10             Date 25Oct94               *
+      *                 ER0206 PT          DATE 14JAN93              *
+     H*                    ER0998 PT          DATE   29DEC92         *
+     H*                    ER0999 PT          DATE   22DEC92         *
+     H*                    ER0114             DATE   08DEC92         *
+     H*                    ER0109 ADs         DATE   02DEC92         *
+     H*                                                              *
+     H****************************************************************
+     H*                                                              *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027A - Conversion Of Customer Number to Alpha (Recompile) *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+     H*     ER_R10 - EUROPEAN REPORTING - LUXEMBOURG UPGRADE IN R10  *
+     H*            - ADD BRANCH CODE (R10 MULTIBRANCHING)            *
+     H*     ER0206 - Record id. incorrectly set up for new postings  *
+     H*     ER0998 - Rounding error                                  *
+     H*     ER0999 - Fields CCY overriden by field from ACCNT        *
+     H*     ER0114 - Calculation errors for STHE A/c Postings gen.   *
+     H*     ER0109 - Use always SR/SCONV to convert an amount.       *
+     F*****************************************************************
+      *
+      *            Bank Data
+     FSDBANKL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      *            Currency Codes
+     FSDCURRL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      *            Spot Trade Historic Generated Entries
+     F***GESTHEL0IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FGLSHX2L4IF  E           K        DISK         KINFSR *PSSR                              CER001
+     F            APOSTHHF                          KIGNORE
+     F            APOSTZZF                          KIGNORE
+     F***GESTHEPDUF  E                    DISK                      A                         CER001
+     FGLSHX2PDUF  E                    DISK                      A                            CER001
+     F            APOSTPDF                          KRENAMEAPOSTPD1
+      *
+      *            ER Currency Codes
+     F***SDCURRY4IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDCYX2L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      *
+      *            ER Dealing Data
+     F***SDDEALY4IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDDLX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      *
+      *            Account Code Details
+     FSDACODL0IF  E           K        DISK         KINFSR *PSSR
+      *
+      *            G/L Account Master
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+      *
+      *            Spot Trade Historic Generated Entries - Trailer
+     F***GESTHEZZUF  E                    DISK                      A                         CER001
+     FGLSHX2PAUF  E                    DISK                      A                            CER001
+     F            APOSTZZF                          KRENAMEAPOSTZZ1
+      *
+      *            Audit Report
+     FER5343AUO   E             70     PRINTER
+      *
+      *****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F*       70         OVERFLOW INDICATOR FOR ER5343AU
+     F*       90         GENERAL FILE READ ERROR
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+      *
+      ** ARRAY USED IN CURRENCY AMOUNT CONVERSION
+      *
+     E                    POWER   1   7  7 3
+      *
+      ** ARRAY FOR NARRATIVES
+      *
+     E                    NAR     1   2 30
+      *
+      ** ARRAY FOR COPYRIGHT
+      *
+     E                    CPY@    1   1 80
+      *
+      ***REDEFINE*DUPLICATE*FIELD*NAMES*ON*GESTHEPD*(FOR OUTPUT)*******                       CER001
+      ** REDEFINE DUPLICATE FIELD NAMES ON GLSHX2PD (FOR OUTPUT)                              CER001
+      **   (For creation of new postings)
+      *
+     IAPOSTPD1
+     I              RECI                            RECI2                 ER0206
+     I**************BRCD                            BRCD2                 ER_R10
+     I              BRCA                            BRCA2                 ER_R10
+     I              CCY                             CCY2
+     I              ACOD                            ACOD2
+     I              CNUM                            CNUM2
+     I              ACSQ                            ACSQ2
+     I              PSTA                            PSTA2
+     I              DRCR                            DRCR2                 ER0999
+     IACCNTABF                                                            ER0999
+     I**************BRCD                            BRCDX           ER0999ER_R10
+     I              BRCA                            BRCAX                 ER_R10
+     I              CCY                             CCYX                  ER0999
+     I              ACOD                            ACODX                 ER0999
+     I              CNUM                            CNUMX                 ER0999
+     I              ACSQ                            ACSQX                 ER0999
+      *
+      ** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I*1PNAR      DS
+     I*I            'SPOT TRADE HISTORIC -    1  30 W1PNAR
+     I*I            'EQUIVALENT'
+     I*2PNAR      DS
+     I*I            'SPOT TRADE HIST. EQU-    1  30 W2PNAR
+     I*I            'IV. CONTRA'
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+      *
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          P R O G R A M   E N T R Y                            *
+      *                                                               *
+      *===============================================================*
+      *
+     C           GESTHE    KLIST
+     C                     KFLD           K0ACOD           * Account Code
+     C***********          KFLD           K0BRCD           * Branch Code  ER_R10
+     C                     KFLD           K0BRCA           * Branch Code  ER_R10
+     C                     KFLD           K0CCY            * Currency Code
+      *
+     C           SDBANK    KLIST
+     C                     KFLD           KKBANK           * Bank
+      *
+     C           SDDEAL    KLIST
+     C                     KFLD           KKDLDA           * Dealing Data
+      *
+     C           SDCURR    KLIST
+     C                     KFLD           KKCYCD           * Currency Code
+      *
+     C           SDACOD    KLIST
+     C                     KFLD           KKACCD           * Account Code
+      *
+     C           ACCNT0    KLIST
+     C                     KFLD           KKCNUM           * Customer No.
+     C                     KFLD           KKCCY            * Currency Code
+     C                     KFLD           KKACOD           * Account Code
+     C                     KFLD           KKACSQ           * Account Seq.
+     C                     KFLD           KKBRCA           * Branch Code. ER_R10
+      *
+     C           SDACCD    KLIST
+     C                     KFLD           KKACCD           * Account Code
+      *
+     C           *LIKE     DEFN BJBANK    KKBANK
+     C           *LIKE     DEFN ACOD      K0ACOD
+     C************LIKE     DEFN BRCD      K0BRCD                          ER_R10
+     C           *LIKE     DEFN BRCA      K0BRCA                          ER_R10
+     C           *LIKE     DEFN CCY       K0CCY
+     C           *LIKE     DEFN WADLDA    KKDLDA
+     C           *LIKE     DEFN A6CYCD    KKCYCD
+     C           *LIKE     DEFN CNUM      KKCNUM
+     C           *LIKE     DEFN CCY       KKCCY
+     C           *LIKE     DEFN ACOD      KKACOD
+     C           *LIKE     DEFN ACSQ      KKACSQ
+     C           *LIKE     DEFN BRCA      KKBRCA                          ER_R10
+     C           *LIKE     DEFN A5ACCD    KKACCD
+      *
+     C           *LIKE     DEFN PSTA      @#PSTA           * Posting Totals
+     C           *LIKE     DEFN PSTA      @2PSTA           * STHE Post.Amnt
+     C           *LIKE     DEFN PSTA      ##PSTA           * Overall Total
+     C           *LIKE     DEFN PSTA      ##PSTB           * Overall Post.
+     C           *LIKE     DEFN LDBL      @1LDBL           * STH Ledger Bal.
+     C           *LIKE     DEFN LDBL      @2LDBL           * STHE Ledger Bal.
+     C           *LIKE     DEFN A5ACTY    @2ACTY           * STHE A/c Type
+     C           *LIKE     DEFN A5ACTY    @3ACTY           * STHEC A/c Type
+     C************LIKE     DEFN BRCD      @@BRCD                          ER_R10
+     C           *LIKE     DEFN BRCA      @@BRCA                          ER_R10
+     C           *LIKE     DEFN CCY       @@CCY
+     C           *LIKE     DEFN CNUM      @@CNUM
+     C           *LIKE     DEFN ACSQ      @@ACSQ
+     C           *LIKE     DEFN A6SPRT    @@SPRT           * Spot Rate
+     C           *LIKE     DEFN A6NBDP    @@NBDP           * No. Decs.
+     C           *LIKE     DEFN A6MDIN    @@MDIN           * x or /
+      *
+     C                     Z-ADD0         @#RECS  50       * Postings Read
+     C                     Z-ADD0         ##RECS  50       * Overall Read
+     C                     Z-ADD0         ##POST  50       * Overall Post.
+      *
+      *===============================================================*
+      *
+      ** Perform Initialisation routine
+      *
+     C                     EXSR #INIT
+      *
+      *---------------------------------------------------------------*
+      *
+      ** Process all records from Spot Trade Historic Generated Entries
+      **   (only want Spot Trade Historic A/c's, ie. exclude Contra
+      **   A/c entries)
+      *
+     C                     MOVE WASTHA    K0ACOD           * Account Code
+     C           GESTHE    SETLLAPOSTPDF
+     C           *INLR     DOWEQ'0'                        *----------1
+     C           K0ACOD    READEAPOSTPDF                 LR
+      *
+      ** Perform Posting Processing on change of Branch or Currency
+      *
+     C***********BRCD      IFNE @@BRCD                     *---------2    ER_R10
+     C           BRCA      IFNE @@BRCA                     *---------2    ER_R10
+     C           CCY       ORNE @@CCY
+     C           *INLR     OREQ '1'                                       ER0114
+     C           @#PSTA    IFNE 0                          *--------3
+     C                     EXSR #POST
+     C                     END                             *--------3
+      *
+      ** Perform Retreive Processing on change of Branch or Currency
+      *
+     C           *INLR     IFEQ '0'                        *--------3
+     C***********BRCD      IFNE @@BRCD                     *-------4      ER_R10
+     C           BRCA      IFNE @@BRCA                     *-------4      ER_R10
+     C           CCY       ORNE @@CCY
+     C                     EXSR #RETV
+     C                     END                             *-------4
+     C                     END                             *--------3
+     C                     END                             *---------2
+      *
+      ** Perform Main Processing
+      *
+     C           *INLR     IFEQ '0'                        *---------2
+     C                     EXSR #MAIN
+     C                     END                             *---------2
+      *
+     C                     END                             *----------1
+      *
+      *---------------------------------------------------------------*
+      *
+      ** Perform Termination processing
+      *
+      ** Update Trailer
+      *
+     C           ##PSTB    IFNE 0                          *----------1
+     C                     EXSR #TRAIL
+     C                     END                             *----------1
+      *
+      ** Print Audit Trail
+      *
+     C                     EXSR #AUDIT
+      *
+     C                     RETRN
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #INIT  - INITIALISATION PROCESSING                   *
+      *                                                               *
+      *===============================================================*
+     C           #INIT     BEGSR
+      *
+      ** Prepare LDA
+      *
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'ER5343'  DBPGM
+      *
+      ** Get Installation Control Data record 1 for Base Currency
+      *
+     C                     MOVEL'BANK'    KKBANK           * Bank
+     C           SDBANK    CHAINSDBANKL0             90
+      *
+      ** WRITE HEADER OF THE AUDIT REPORT
+      *
+     C                     WRITEHEADER
+      *
+      ** Installation Control Data record 1 for Base Currency not found
+      *
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'001'     DBASE            ************
+     C                     MOVEL'SDBANKL0'DBFILE           * ERROR 01 *
+     C                     MOVELKKBANK    DBKEY            ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+      ** Get Base Currency record (for Currency attributes)
+      *
+     C                     MOVE BJCYCD    KKCYCD           * Currency Code
+     C           SDCURR    CHAINSDCURRL0             90
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'002'     DBASE            ************
+     C                     MOVELKKCYCD    DBKEY            * ERROR 02 *
+     C                     MOVEL'SDCURRL0'DBFILE           ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+     C                     Z-ADDA6SPRT    @@SPRT           * Base Spot Rate
+     C                     Z-ADDA6NBDP    @@NBDP           * Base Decs.
+     C                     MOVE A6MDIN    @@MDIN           * x or /
+      *
+      ** Access ER Dealing Data File (for Spot Trade Historic A/c)
+      *
+     C                     MOVEL'DEAL'    KKDLDA           * Dealing Data
+     C********** SDDEAL    CHAINSDDEALY4             90                                       CER001
+     C           SDDEAL    CHAINSDDLX1L0             90                                       CER001
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'003'     DBASE            ************
+     C**********           MOVEL'SDDEALY4'DBFILE           * ERROR 03 *                       CER001
+     C                     MOVEL'SDDLX1L0'DBFILE           * ERROR 03 *                       CER001
+     C                     MOVELKKDLDA    DBKEY            ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+     C           #INIT9    ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #MAIN  - MAIN PROCESSING                             *
+      *                                                               *
+      *===============================================================*
+     C           #MAIN     BEGSR
+      *
+      ** Store Branch & Currency etc. for STHE posting generation
+      *
+     C**********           MOVE BRCD      @@BRCD                          ER_R10
+     C                     MOVE BRCA      @@BRCA                          ER_R10
+     C                     MOVE CCY       @@CCY
+     C                     MOVE CNUM      @@CNUM
+     C                     MOVE ACSQ      @@ACSQ
+      *
+      ** Accumulate Posting Amounts and Number of records read
+      *
+     C                     ADD  PSTA      ##PSTA           * Overall TotalER0114
+     C           DRCR      IFEQ 1
+     C                     Z-SUBPSTA      PSTA
+     C                     END
+     C                     ADD  PSTA      @#PSTA           * Postings Total
+     C**********           ADD  PSTA      ##PSTA           * Overall TotalER0114
+     C                     ADD  1         @#RECS           * Postings Read
+     C                     ADD  1         ##RECS           * Overall Read
+      *
+     C           #MAIN9    ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #RETV  - RETRIEVAL PROCESSING (CHANGE OF BRANCH/CCY) *
+      *                                                               *
+      *===============================================================*
+     C           #RETV     BEGSR
+      *
+      ** Access Currency File (for Currency attributes)
+      *
+     C                     MOVE CCY       KKCYCD           * Currency Code
+     C           SDCURR    CHAINSDCURRL0             90
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'004'     DBASE            ************
+     C                     MOVELKKCYCD    DBKEY            * ERROR 04 *
+     C                     MOVEL'SDCURRL0'DBFILE           ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+      ** Access ER Currency File for (Spot Trade Historic Equivalent
+      **   A/c, WBTHEA, & Spot Trade Historic Equivalent Contra A/c,
+      **   WBTHEC)
+      *
+     C********** SDCURR    CHAINSDCURRY4             90                                       CER001
+     C           SDCURR    CHAINSDCYX2L0             90                                       CER001
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'005'     DBASE            ************
+     C                     MOVELKKCYCD    DBKEY            * ERROR 05 *
+     C**********           MOVEL'SDCURRY4'DBFILE           ************                       CER001
+     C                     MOVEL'SDCYX2L0'DBFILE           ************                       CER001
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+      ** Access G/L Account Master File (for Spot Trade Historic A/c)
+      *
+     C                     MOVE CNUM      KKCNUM           * Customer No.
+     C                     MOVE CCY       KKCCY            * Currency Code
+     C                     MOVE ACOD      KKACOD           * Account Code
+     C                     MOVE ACSQ      KKACSQ           * Account Seq.
+     C                     MOVE BRCA      KKBRCA           * Branch Code. ER_R10
+     C           ACCNT0    CHAINACCNT                90
+     C           *IN90     IFEQ '1'                        *----------1
+      *
+      ** Default Zero if not found
+      *
+     C                     Z-ADD0         @1LDBL           * STH Ledger Bal.
+     C                     ELSE                            X----------1
+     C                     Z-ADDLDBL      @1LDBL           * STH Ledger Bal.
+     C                     END                             *----------1
+      *
+      ** Access G/L Account Master File (for Spot Trade Historic Equiv)
+      *
+     C** Same **           MOVE CNUM      KKCNUM           * Customer No.
+     C                     MOVE BJCYCD    KKCCY            * Currency Code
+     C                     MOVE WBTHEA    KKACOD           * Account Code
+     C** Same **           MOVE ACSQ      KKACSQ           * Account Seq.
+     C** Same **           MOVE BRCA      KKBRCA           * Branch Code. ER_R10
+     C           ACCNT0    CHAINACCNT                90
+     C           *IN90     IFEQ '1'                        *----------1
+      *
+      ** Default Zero if not found
+      *
+     C                     Z-ADD0         @2LDBL           * STHE Ledger Bal.
+     C                     ELSE                            X----------1
+     C                     Z-ADDLDBL      @2LDBL           * STHE Ledger Bal.
+     C                     END                             *----------1
+      *
+      ** Access Account Codes File (for Account Type of Spot Trade
+      **   Historic Equivalent A/c)
+      *
+     C                     MOVE WBTHEA    KKACCD           * Account Code
+     C           SDACOD    CHAINSDACODL0             90
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'006'     DBASE            ************
+     C                     MOVELKKACCD    DBKEY            * ERROR 06 *
+     C                     MOVEL'SDACODL0'DBFILE           ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+     C                     MOVE A5ACTY    @2ACTY           * STHE A/c Type
+      *
+      ** Access Account Codes File (for Account Type of Spot Trade
+      **   Historic Equivalent Contra A/c)
+      *
+     C                     MOVE WBTHEC    KKACCD           * Account Code
+     C           SDACOD    CHAINSDACODL0             90
+     C           *IN90     IFEQ '1'                        *----------1
+     C                     MOVEL'007'     DBASE            ************
+     C                     MOVELKKACCD    DBKEY            * ERROR 07 *
+     C                     MOVEL'SDACODL0'DBFILE           ************
+     C                     EXSR *PSSR
+     C                     END                             *----------1
+      *
+     C                     MOVE A5ACTY    @3ACTY           * STHEC A/c Type
+      *
+      ** Zeroise accumulators
+      *
+     C                     Z-ADD0         @#PSTA           * Postings Total
+      *
+     C           #RETV9    ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #POST  - GENERATE POSTINGS                           *
+      *                                                               *
+      *===============================================================*
+     C           #POST     BEGSR
+      *
+      ** Store parameters for converting Posting Amount to Base Ccy
+      *
+     C                     Z-ADDA6SPRT    WWSRI            * Ccy Spot Rate
+     C                     Z-ADD@@SPRT    WWSRO            * Base Spot Rate
+     C                     Z-ADDA6NBDP    WWDPI            * Ccy Decs.
+     C                     Z-ADD@@NBDP    WWDPO            * Base Decs.
+     C                     MOVE A6MDIN    WWMDI            * x or /
+     C                     MOVE @@MDIN    WWMDO            * x or /
+      *
+      ** Calculate Spot Trade Historic Equivalent Posting Amount @2PSTA
+      **   (If it's for a Purchase / Sale Ccy & STH = 0,
+      **   ie. a 1st transaction)
+      *
+     C           @1LDBL    IFEQ 0                          *----------1
+     C           @#PSTA    IFLT 0                          *---------2
+     C                     Z-ADD@#PSTA    WWAMTI           * Ccy Amount
+     C                     EXSR SCONV
+     C                     Z-ADDWWAMTO    @2PSTA           * STHE Post.Amnt
+     C                     MOVE BJCYCD    CCY2             * Base Currency
+     C                     ELSE                            X---------2
+     C                     Z-ADD@#PSTA    WWAMTI           * Ccy Amount
+     C                     EXSR SCONV
+     C                     Z-ADDWWAMTO    @2PSTA           * STHE Post.Amnt
+     C                     MOVE BJCYCD    CCY2             * Base Currency
+     C                     END                             *---------2
+     C                     END                             *----------1
+      *
+      ** Calculate Spot Trade Historic Equivalent Posting Amount @2PSTA
+      **   (If it's for a Purchase / Sale Ccy & STH <> 0,
+      **   ie. a subsequent transaction of same type)
+      *
+     C           @1LDBL    IFNE 0                          *----------1
+     C           @#PSTA    IFLT 0                          *---------2
+     C           @1LDBL    ANDLT0
+     C                     Z-ADD@#PSTA    WWAMTI           * Ccy Amount
+     C                     EXSR SCONV
+     C                     Z-ADDWWAMTO    @2PSTA           * STHE Post.Amnt
+     C                     MOVE BJCYCD    CCY2             * Base Currency
+     C           WWAMTO    MULT 100       WWWK1  150                      ER0998
+     C           WWWK1     DIV  100       WWWK1                           ER0998
+     C                     MVR            WWR1    20                      ER0998
+     C           @1LDBL    MULT WWSRI     WWWK2  152                      ER0998
+     C           WWWK2     MULT 100       WWWK1  150                      ER0998
+     C           WWWK1     DIV  100       WWWK1                           ER0998
+     C                     MVR            WWR2    20                      ER0998
+     C           WWR1      ADD  WWR2      WWR3    30                      ER0998
+     C           WWR1      IFLE -50                                       ER0998
+     C           WWR2      ANDLE-50                                       ER0998
+     C           WWR3      ANDLE-100                                      ER0998
+     C           WWR3      ANDGE-150                                      ER0998
+     C                     ADD  1         @2PSTA                          ER0998
+     C                     END                                            ER0998
+     C           WWR1      IFGE -50                                       ER0998
+     C           WWR2      ANDGE-50                                       ER0998
+     C           WWR3      ANDLE-50                                       ER0998
+     C           WWR3      ANDGE-100                                      ER0998
+     C                     SUB  1         @2PSTA                          ER0998
+     C                     END                                            ER0998
+     C                     END                             *---------2
+     C           @#PSTA    IFGT 0                          *---------2
+     C           @1LDBL    ANDGT0
+     C                     Z-ADD@#PSTA    WWAMTI           * Ccy Amount
+     C                     EXSR SCONV
+     C                     Z-ADDWWAMTO    @2PSTA           * STHE Post.Amnt
+     C                     MOVE BJCYCD    CCY2             * Base Currency
+     C           WWAMTO    MULT 100       WWWK1  150                      ER0998
+     C           WWWK1     DIV  100       WWWK1                           ER0998
+     C                     MVR            WWR1    20                      ER0998
+     C           @1LDBL    MULT WWSRI     WWWK2  152                      ER0998
+     C           WWWK2     MULT 100       WWWK1  150                      ER0998
+     C           WWWK1     DIV  100       WWWK1                           ER0998
+     C                     MVR            WWR2    20                      ER0998
+     C           WWR1      ADD  WWR2      WWR3    30                      ER0998
+     C           WWR1      IFGE 50                                        ER0998
+     C           WWR2      ANDGE50                                        ER0998
+     C           WWR3      ANDGE100                                       ER0998
+     C           WWR3      ANDLE150                                       ER0998
+     C                     SUB  1         @2PSTA                          ER0998
+     C                     END                                            ER0998
+     C           WWR1      IFLE 50                                        ER0998
+     C           WWR2      ANDLE50                                        ER0998
+     C           WWR3      ANDGE50                                        ER0998
+     C           WWR3      ANDLE100                                       ER0998
+     C                     ADD  1         @2PSTA                          ER0998
+     C                     END                                            ER0998
+     C                     END                             *---------2
+     C                     END                             *----------1
+      *
+      ** Calculate Spot Trade Historic Equivalent Posting Amount @2PSTA
+      **   (If it's for a Purchase / Sale Ccy & STH <> 0 - loss,
+      **   ie. a subsequent transaction of opposite type with a loss)
+      **   NB: Only perform this calculation if numeric value             ER0114
+      **   (ie. ignore sign for test) of STH Ledger Balance (@1LDBL) >    ER0114
+      **   accumulated currency Posting Amount (@#PSTA)                   ER0114
+      *
+     C           @1LDBL    IFNE 0                          *----------1
+     C           @1LDBL    IFLT 0                                         ER0114
+     C                     Z-SUB@1LDBL    WWAMTI                          ER0114
+     C                     ELSE                                           ER0114
+     C                     Z-ADD@1LDBL    WWAMTI                          ER0114
+     C                     END                                            ER0114
+     C           @#PSTA    IFLT 0                                         ER0114
+     C                     Z-SUB@#PSTA    WWAMTO                          ER0114
+     C                     ELSE                                           ER0114
+     C                     Z-ADD@#PSTA    WWAMTO                          ER0114
+     C                     END                                            ER0114
+     C           WWAMTI    IFGT WWAMTO                     *---------2    ER0114
+     C           @#PSTA    IFGT 0                          *--------3
+     C           @1LDBL    ANDLT0
+     C********** @#PSTA    MULT @2LDBL    @2PSTA                          ER0114
+     C********** @#PSTA    DIV  @1LDBL    @2PSTA    H      * STHE Post.AmnER0114
+     C           @2LDBL    DIV  @1LDBL    @@RATE 138H      *              ER0114
+     C                     MULT -1        @@RATE                          ER0114
+     C           @@RATE    MULT @#PSTA    @2PSTA    H      * STHE Post.AmnER0114
+     C**********           MOVE @@CCY     CCY2             * Currency     ER0114
+     C                     MOVE BJCYCD    CCY2             * Base CurrencyER0114
+     C                     END                             *--------3
+     C           @#PSTA    IFLT 0                          *--------3
+     C           @1LDBL    ANDGT0
+     C********** @#PSTA    MULT @2LDBL    @2PSTA                          ER0114
+     C********** @#PSTA    DIV  @1LDBL    @2PSTA    H      * STHE Post.AmnER0114
+     C           @2LDBL    DIV  @1LDBL    @@RATE    H      *              ER0114
+     C                     MULT -1        @@RATE                          ER0114
+     C           @@RATE    MULT @#PSTA    @2PSTA    H      * STHE Post.AmnER0114
+     C**********           MOVE @@CCY     CCY2             * Currency     ER0114
+     C                     MOVE BJCYCD    CCY2             * Base CurrencyER0114
+     C                     END                             *--------3
+     C                     END                             *---------2
+     C                     END                             *----------1
+      *
+      ** Calculate Spot Trade Historic Equivalent Posting Amount @2PSTA
+      **   (If it's for a Purchase / Sale Ccy & STH <> 0 - profit,
+      **   ie. a subsequent transaction of opposite type with a profit)
+      **   NB: Only perform this calculation if numeric value             ER0114
+      **   (ie. ignore sign for test) of STH Ledger Balance (@1LDBL) <    ER0114
+      **   accumulated currency Posting Amount (@#PSTA)                   ER0114
+      *
+     C           @1LDBL    IFNE 0                          *----------1
+     C           @1LDBL    IFLT 0                                         ER0114
+     C                     Z-SUB@1LDBL    WWAMTI                          ER0114
+     C                     ELSE                                           ER0114
+     C                     Z-ADD@1LDBL    WWAMTI                          ER0114
+     C                     END                                            ER0114
+     C           @#PSTA    IFLT 0                                         ER0114
+     C                     Z-SUB@#PSTA    WWAMTO                          ER0114
+     C                     ELSE                                           ER0114
+     C                     Z-ADD@#PSTA    WWAMTO                          ER0114
+     C                     END                                            ER0114
+     C           WWAMTI    IFLT WWAMTO                     *---------2    ER0114
+     C           @#PSTA    IFLT 0                          *--------3
+     C           @1LDBL    ANDGT0
+     C           @#PSTA    ADD  @1LDBL    @2PSTA
+     C                     Z-ADD@2PSTA    WWAMTI           * Ccy Amount
+     C                     EXSR SCONV
+     C**********           Z-ADDWWAMTO    @2PSTA           * STHE Post.AmnER0114
+     C           WWAMTO    ADD  @2LDBL    @2PSTA           * STHE Post.AmnER0114
+     C                     MOVE BJCYCD    CCY2             * Base Currency
+     C                     END                             *--------3
+     C           @#PSTA    IFGT 0                          *--------3
+     C           @1LDBL    ANDLT0
+     C           @#PSTA    ADD  @1LDBL    @2PSTA
+     C******     @2PSTA    MULT A6SPRT    @2PSTA    H      * STHE Post.AmnER0109
+     C                     Z-ADD@2PSTA    WWAMTI           * Ccy Amount   ER0109
+     C                     EXSR SCONV                                     ER0109
+     C**********           Z-ADDWWAMTO    @2PSTA           * STHE  ER0109 ER0114
+     C           WWAMTO    ADD  @2LDBL    @2PSTA           * STHE Post.AmnER0114
+     C                     MOVE BJCYCD    CCY2             * Base CurrencyER0114
+     C                     END                             *--------3     ER0114
+     C                     END                             *---------2
+     C                     END                             *----------1
+      *---------------------------------------------------------------*
+      *
+      ** Generate Postings if calculated value <> 0
+      *
+     C           @2PSTA    IFNE 0                          *----------1
+     C           *HIVAL    CHAINAPOSTPD1             90
+      *
+      ** ACCOUNT CODE:- 'Spot Trade Historic Equivalent A/c Code'
+      *
+     C                     MOVE 'P'       RECI2            * Record id.   ER0206
+     C                     MOVE @@CNUM    CNUM2            * Customer No.
+     C                     MOVE WBTHEA    ACOD2            * STHE A/c Code
+     C                     MOVE @@ACSQ    ACSQ2            * A/c Sequence
+     C                     MOVE NAR,1     PNAR             * Post.Narrative
+     C           @2PSTA    IFLT 0
+     C                     Z-SUB@2PSTA    PSTA2            * STHE Post.Amnt
+     C**********           Z-ADD1         DRCR             * DR/CR Ind.   ER0114
+     C******               Z-ADD0         DRCR             * DR/CR IER0114ER0999
+     C                     Z-ADD0         DRCR2            * DR/CR Ind.   ER0999
+     C                     ELSE
+     C                     Z-ADD@2PSTA    PSTA2            * STHE Post.Amnt
+     C**********           Z-ADD0         DRCR             * DR/CR Ind.   ER0114
+     C******               Z-ADD1         DRCR             * DR/CR IER0114ER0999
+     C                     Z-ADD1         DRCR2            * DR/CR Ind.   ER0999
+     C                     END
+     C                     MOVE '  GE-SH' SPOS             * Source of Post.
+     C***********          MOVE @@BRCD    BRCD2            * Branch Code  ER_R10
+     C                     MOVE @@BRCA    BRCA2            * Branch Code  ER_R10
+     C                     MOVE @2ACTY    ATYP             * Account Type
+      *                    =====
+     C                     WRITEAPOSTPD1
+      *                    =====
+     C                     ADD  1         ##POST           * Overall Post.
+     C                     ADD  PSTA2     ##PSTB           * Overall Post.
+      *
+      ** ACCOUNT CODE:- 'Spot Trade Historic Equivalent Contra A/c Code'
+      *
+     C                     MOVE @@CNUM    CNUM2            * Customer No.
+     C                     MOVE BJCYCD    CCY2             * Base Currency
+     C                     MOVE WBTHEC    ACOD2            * STHEC A/c Code
+     C                     MOVE @@ACSQ    ACSQ2            * A/c Sequence
+     C                     MOVE NAR,2     PNAR             * Post.Narrative
+     C           @2PSTA    IFLT 0
+     C                     Z-SUB@2PSTA    PSTA2            * STHE Post.Amnt
+     C**********           Z-ADD0         DRCR             * DR/CR Ind.   ER0114
+     C*******              Z-ADD1         DRCR             * DR/CR IER0114ER0999
+     C                     Z-ADD1         DRCR2            * DR/CR Ind.   ER0999
+     C                     ELSE
+     C                     Z-ADD@2PSTA    PSTA2            * STHE Post.Amnt
+     C**********           Z-ADD1         DRCR             * DR/CR Ind.   ER0114
+     C*******              Z-ADD0         DRCR             * DR/CR IER0114ER0999
+     C                     Z-ADD0         DRCR2            * DR/CR Ind.   ER0999
+     C                     END
+     C                     MOVE '  GE-SH' SPOS             * Source of Post.
+     C***********          MOVE @@BRCD    BRCD2            * Branch Code  ER_R10
+     C                     MOVE @@BRCA    BRCA2            * Branch Code  ER_R10
+     C                     MOVE @3ACTY    ATYP             * Account Type
+      *                    =====
+     C                     WRITEAPOSTPD1
+      *                    =====
+     C                     ADD  1         ##POST           * Overall Post.
+     C                     ADD  PSTA2     ##PSTB           * Overall Post.
+      *
+     C                     END                             *----------1
+      *
+     C           #POST9    ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      *          #AUDIT - PRODUCE AUDIT REPORT                        *
+      *                                                               *
+      *===============================================================*
+     C           #AUDIT    BEGSR
+      *
+     C           ##POST    IFNE 0                          *----------1
+     C                     WRITECONTROL
+     C                     ELSE
+     C                     WRITENODET
+     C                     END                             *----------1
+      *
+     C                     WRITEENDRP
+      *
+     C           #AUDI9    ENDSR
+      *===============================================================*
+      /EJECT
+      *===============================================================*
+      *                                                               *
+      ***********#TRAIL*-*UPDATE/WRITE*A*TRAILER*IN*'GESTHEZZ'*********                       CER001
+      ** #TRAIL - UPDATE/WRITE A TRAILER IN 'GLSHX2PA'                *                       CER001
+      *                                                               *
+      *===============================================================*
+     C           #TRAIL    BEGSR
+      *
+      ** Calculate Hash-total of records, whole numbers and decimals
+      *
+     C           ##PSTB    DIV  1000      WWHRWN
+     C                     MVR            WWHRDC
+      *
+      ***Read*PF/GESTHEZZ**********************************************                       CER001
+      ** Read PF/GLSHX2PA                                                                     CER001
+      *
+     C                     MOVE 'T'       RECI
+      *
+     C********** 1         SETLLGESTHEZZ                                                      CER001
+     C           1         SETLLGLSHX2PA                                                      CER001
+     C**********           READ GESTHEZZ                 80                                   CER001
+     C                     READ GLSHX2PA                 80                                   CER001
+      *
+      ** If trailer already exists then update
+      *
+     C           *IN80     IFEQ '0'                        *----------1
+     C                     ADD  ##POST    NORE1            * No. Recs.
+     C                     ADD  WWHRWN    HRWN             * Hash Total
+     C           HRDC      ADD  WWHRDC    WWHRDC
+     C           WWHRDC    IFGE 1000                       *---------2
+     C           WWHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+     C                     ELSE                            X---------2
+     C                     Z-ADDWWHRDC    HRDC
+     C                     END                             *---------2
+      *                    =====
+     C                     UPDATAPOSTZZ1
+      *                    =====
+      *
+      ** Otherwise create
+      *
+     C                     ELSE                            X----------1
+     C                     Z-ADD##POST    NORE1
+     C                     ADD  2         NORE1
+     C                     Z-ADDWWHRWN    HRWN
+     C                     Z-ADDWWHRDC    HRDC
+      *                    =====
+     C                     WRITEAPOSTZZ1
+      *                    =====
+     C                     END                             *----------1
+      *
+     C           #TRAI9    ENDSR
+     C*===============================================================*
+     C/EJECT
+     C*===============================================================*
+      **
+      ** *PSSR  S/R
+      **
+     C*===============================================================*
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     WRITEERROR
+     C                     WRITEENDRP
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C*===============================================================*
+     C/EJECT
+     C*===============================================================*
+     C**                                                                 *
+     C**  SCONV - Converts an amount from one currency to another.       *
+     C**                                                                 *
+     C**  Input Fields - WWAMTI 15/0 amount in input currency            *
+     C**                 WWSRI  13/8 spot rate for input currency        *
+     C**                 WWSRO  13/8 spot rate for output currency       *
+     C**                 WWDPI  1/0  no. of decimals for input currency  *
+     C**                 WWDPO  1/0  no. of decimals for output currency *
+     C**                 WWMDI  1    mult/div indicator for input curr.  *
+     C**                 WWMDO  1    mult/div indicator for output curr. *
+     C**                                                                 *
+     C**  Arrays       - POWER  powers of 10                             *
+     C**                                                                 *
+     C****Output*Fields-*WWAMTO 15/0 output amount converted to new curr *ER0998
+     C**  Output Fields- WWAMTO 15/2 output amount converted to new curr *ER0998
+     C**                                                                 *
+     C**  CALLS    - NONE                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           SCONV     BEGSR                           **  SCONV    **
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDWWAMTI    WWAMTI 150
+     C************         Z-ADD0         WWAMTO 150                      ER0998
+     C                     Z-ADD0         WWAMTO 152                      ER0998
+     C           *LIKE     DEFN A6SPRT    WWSRI
+     C           *LIKE     DEFN A6SPRT    WWSRO
+     C           *LIKE     DEFN A6NBDP    WWDPI
+     C           *LIKE     DEFN A6NBDP    WWDPO
+     C           *LIKE     DEFN A6MDIN    WWMDI
+     C           *LIKE     DEFN A6MDIN    WWMDO
+     C*
+     C           WWDPO     SUB  WWDPI     Z       10
+     C           Z         ADD  4         Z
+     C*
+     C           WWMDI     IFNE WWMDO
+     C*
+     C** MULT/DIV INDICATORS DIFFERENT
+     C           WWSRI     MULT WWSRO     WWRATE 159H
+     C                     ELSE
+     C*
+     C** MULT/DIV INDICATORS THE SAME
+     C           WWSRO     IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           WWSRI     DIV  WWSRO     WWRATE    H
+     C                     END
+     C*
+     C           WWMDI     IFEQ 'D'
+     C           WWRATE    IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           POWER,Z   DIV  WWRATE    WWRATE    H
+     C                     ELSE
+     C           POWER,Z   MULT WWRATE    WWRATE    H
+     C                     END
+     C*
+     C           WWAMTI    MULT WWRATE    WWAMTO    H
+     C*
+     C           SC0       ENDSR                           **  SC0      **
+      /EJECT
+     C********************************************************************
+      *
+      ***REDEFINE*DUPLICATE*FIELD*NAMES*ON*GESTHEPD*(FOR OUTPUT)*******                       CER001
+      ** REDEFINE DUPLICATE FIELD NAMES ON GLSHX2PD (FOR OUTPUT)                              CER001
+      *
+**   POWER - POWERS OF 10 FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  NAR - NARRATIVES
+SPOT TRADE HISTORIC EQUIVALENT
+SPOT TRADE HIST. EQUIV. CONTRA
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

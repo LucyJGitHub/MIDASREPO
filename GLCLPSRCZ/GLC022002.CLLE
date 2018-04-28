@@ -1,0 +1,54 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Change LF path for file')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC022002 - Midas GL Change LF path for file                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CCB016A *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB016A - COB Restructure                                   */
+/*                 CCB016 (Change Logical File Maintenance)          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LFNAME &PFNAME &ACTION)
+ 
+             DCL        VAR(&LFNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PFNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ACTION) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PFGLSTAT) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Retrieve GLSTAT dtaara */
+ 
+             RTVDTAARA  DTAARA(GLSTAT (90 10)) RTNVAR(&PFGLSTAT)
+ 
+             IF         COND(&PFGLSTAT *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&PFGLSTAT) VALUE('APOSTPD')
+             ENDDO
+ 
+             IF         COND(&PFGLSTAT *EQ &PFNAME) THEN(DO)
+                CALL       PGM(CBC022001) PARM(&LFNAME ' ' *CHG +
+                              &ACTION)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Program GLC022002 ended abnormally.') +
+                          TOMSGQ(MOPERQ)
+ 
+END:
+             ENDPGM

@@ -1,0 +1,700 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Fiduciary deposits commission/charge grp')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Fiduciary Deposits                                   *
+      *                                                               *
+      *  SD1521 - Fiduciary Deposits Commission/Charge Groups Report. *
+      *                                                               *
+      * FUNCTION:  This Program produces a report, for audit          *
+      * (COB)      purposes, of all Commission/Charge group codes de- *
+      * (I/C)      fined to the system. The report runs on re-        *
+      *            quest in I/C and COB and shows a full list,        *
+      *            or automatically in COB and audits changes         *
+      *            made today.                                        *
+      *                                                               *
+      *  Called By: SDC1521                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *  Last Amend No. CDL006 *CREATE     Date 26Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL006 - Fiduciary Deposits                                  *
+      *                                                               *
+      *****************************************************************
+      *
+      *       FILE DEFINITIONS
+      *      ------------------
+      *
+      **   Fiduciary commission/charge group - Details
+     FSDCCGRL0IF  E           K        DISK
+      *
+      **   Fiduciary commission/charge group - Trailer
+     FSDCCGRPAIF  E                    DISK         KINFSR *PSSR
+      *
+      **   Fiduciary commission/charge group - Audit
+     FSD1521AUO   E             21     PRINTER      KINFDS ERF1DS
+     F                                              KINFSR *PSSR
+      *
+      **   Fiduciary commission/charge group - Report
+     FSD1521P1O   E             22     PRINTER      KINFDS ERF2DS     UC
+     F                                              KINFSR *PSSR
+      *
+      /EJECT
+      *
+      *****************************************************************
+      *                                                               *
+      *  ID F  C  H  L    FUNCTION OF INDICATORS                      *
+      *                  ------------------------                     *
+      *                                                               *
+      *     21         - Overflow indicator on SD1521AU               *
+      *     22         - Overflow indicator on SD1521P1               *
+      *                                                               *
+      *     10         - Print *** DIFFERENCE ***                     *
+      *     70         - File error                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      ** Array definition for date conversion
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+      **   Array for copyright
+      *
+     E                    CPY@    1   1 80
+      *
+      ********************************************************************
+     E/EJECT
+     E*****************************************************************
+      *
+      ** Date structure for compilation - Copyright insertion
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *
+      ** Program status date structure
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+      ** File information data structure
+     IERF1DS      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** For overflow - run control
+     I                                    B 367 3680LINE
+      *
+     IERF2DS      DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      *
+      ** For overflow - Print
+     I                                    B 367 3680LINE1
+      *
+      ** Local data area
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Date formatting date structure
+     IUPDATE      DS
+     I                                        1   2 FIDAY
+     I                                        3   5 FIMON
+     I                                        6   7 FIYER
+      *
+      ** Bank details
+     ISDBANK    E DSSDBANKPD
+      *
+     IDSSDY     E DSDSSDY
+      ** Seconf DS for access programs, long data structure
+      **
+      /EJECT
+      *****************************************************************
+      *
+      *               START MAINLINE
+      *              ----------------
+      *
+      **   Input parameter list
+      *
+     C           *ENTRY    PLIST
+      *
+      **   For selection of Full list or audit list
+      *
+     C                     PARM           MODE    1
+     C                     PARM           @RSEQ   5
+      *
+      **   Initial processing
+      *
+     C                     EXSR #A
+      *
+      **   Main processing
+      *
+     C                     EXSR #B
+      *
+     C           WWOPEN    IFEQ 'Y'
+      *
+      ** Call ZSFILE for P1 file
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     CLOSESD1521P1
+     C                     END
+      *
+      ** Call ZSFILE for AU file
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+      **   End program
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *     INDEX TO SUBROUTINES                                      *
+      *    ----------------------                                     *
+      *                                                               *
+      *    #A      - Initial processing                               *
+      *    #B      - Main processing                                  *
+      *    #BA     - Process full groups list                         *
+      *    #BB     - Process full list run controls                   *
+      *    #BC     - Process audit list                               *
+      *    #BD     - Process audit list run controls                  *
+      *    #ZA     - Datebase errors                                  *
+      *    #ZB     - Setup output fields for report                   *
+      *    *PSSR   - Program error handling subroutine                *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    #A        - This subroutine performs initial processing    *
+      *                                                               *
+      *    CALLED BY - MAINLINE                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #A        BEGSR
+      *
+     C                     SETOF                     10
+     C                     Z-ADD*ZEROS    LINE
+     C                     Z-ADD*ZEROS    LINE1
+      *
+      ** Initialise DB error fields and store program name for DB
+      ** error field
+      ** Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SD1521'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Initialise work fields
+     C                     MOVE '1'       WWFTT   1
+      *
+      ** Initialise run controls work fields
+     C                     Z-ADD*ZEROS    RRPROG
+     C                     Z-ADD*ZEROS    RRFILE
+     C                     MOVE *BLANK    RRACTN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    #B        - This subroutine performs Main processing       *
+      *                                                               *
+      *    CALLS     - #BA #BB #BC #BD #ZA                            *
+      *                                                               *
+      *    CALLED BY - MAINLINE                                       *
+      *                                                               *
+      *****************************************************************
+     C           #B        BEGSR
+      *
+      ** Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @@RTCD  7
+     C                     PARM '*FIRST ' @@OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+     C           @@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check for date format indicator.
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     ENDIF
+      *
+     C                     ADD  1         RRFILE
+      *
+      ** Check input patameter
+      *
+     C           MODE      IFEQ 'L'
+      *
+      ** Full list
+      *
+     C                     EXSR #BA
+      *
+      ** Full list run controls processing
+      *
+     C                     EXSR #BB
+     C                     ELSE
+     C           MODE      IFEQ 'I'
+     C           MODE      OREQ 'A'
+      *
+      ** Audit list
+      *
+     C                     EXSR #BC
+      *
+      ** Audit list run controls processing
+      *
+     C                     EXSR #BD
+     C                     ELSE
+      *
+      ** Standard database error handling
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'MODE'    DBFILE           ***************
+     C                     MOVELMODE      DBKEY            * DBERROR 001 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR #ZA
+     C                     END
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    #ZA       - Process Database Errors                        *
+      *                                                               *
+      *    CALLS     - None                                           *
+      *                                                               *
+      *    CALLED BY - #A #B #BB #BD                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ZA       BEGSR
+      *
+     C                     WRITEHEADER
+      *
+      * Write title for full list or audit list
+      *
+     C           MODE      IFEQ 'I'
+     C           MODE      OREQ 'A'
+     C                     WRITEHEAD3
+     C                     ELSE
+     C                     WRITEHEAD2
+     C                     END
+      *
+     C                     WRITEDBERROR
+      *
+      ** Call ZSFILE for AU file
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @RSEQ
+     C                     PARM *BLANKS   @PARM   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *
+      *****************************************************************
+      **                                                              *
+      **   #BA       - Process full safe custody fee groups list      *
+      **                                                              *
+      **   CALLS     - #ZB                                            *
+      **                                                              *
+      **   CALLED BY - #B                                             *
+      **                                                              *
+      *****************************************************************
+      *
+     C           #BA       BEGSR
+      *
+     C                     READ SDCCGRL0                 70
+     C           *IN70     IFEQ '1'
+      *
+      ** Seton flag to indicate null report
+      *
+     C                     MOVE '1'       WWEMTF  1
+      *
+      ** Should not produce run controls anymore
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITENULL1
+     C                     ELSE
+     C                     OPEN SD1521P1
+     C                     MOVE 'Y'       WWOPEN  1
+      *
+      ** While records on file
+      *
+     C           *IN70     DOWEQ'0'
+     C           CCRECI    IFEQ 'D'
+      *
+      ** Add 1 to number of records read
+      *
+     C                     ADD  1         RRPROG
+      *
+      ** output details to report
+      *
+     C                     EXSR #ZB
+     C                     END
+     C                     READ SDCCGRL0                 70
+     C                     END
+      *
+      ** No live records found on SDCCGRPD
+      *
+     C           RRPROG    IFEQ 0
+     C           WWEMTF    ANDNE'1'
+      *
+      ** Should not produce run controls anymore
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITENULL1
+     C                     END
+      *
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER4
+     C                     END
+     C                     WRITEFOOTING1
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    #ZB       - Setup output fields for table list             *
+      *                                                               *
+      *    CALLS     - NONE                                           *
+      *                                                               *
+      *    CALLED BY - #BA #BC                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #ZB       BEGSR
+      *
+      ** Convert Last Change date to DDMMMYY format for printing.
+      *
+     C                     Z-ADDCCLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    RRDATE
+      *
+     C           CCCHTP    IFEQ 'I'
+     C                     MOVEL'INSERT'  RRACTN
+     C                     END
+      *
+     C           CCCHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  RRACTN
+     C                     END
+     C*
+     C           CCCHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  RRACTN
+     C                     END
+      *
+      ** Set up commission/charge group code.
+      *
+     C                     MOVELCCCGRP    RRCHRG
+      *
+      ** Set up commission/charge group name.
+      *
+     C                     MOVELCCNARR    RRCHNR
+      *
+      ** Set up commission code.
+      *
+     C                     MOVELCCCCOD    RRCCOM
+      *
+      ** Set up charge code.
+      *
+     C                     MOVELCCCHOD    RRCHRC
+      *
+      ** Set up deal amendment charge code.
+      *
+     C                     MOVELCCDACD    RRCHRA
+      *
+      ** Set up last activity time for output
+      *
+     C                     MOVE CCTLUP    RRTIME
+      *
+     C           LINE1     IFGT 56
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+     C           MODE      IFEQ 'L'
+     C                     WRITEHEADER2
+     C                     ELSE
+     C           MODE      IFEQ 'I'
+     C           MODE      OREQ 'A'
+     C                     WRITEHEADER3
+     C                     END
+     C                     END
+     C                     WRITEHEADER4
+     C                     MOVE '0'       WWFTT
+     C                     END
+     C                     WRITEDETAIL1
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    #BC       - Process audit safe custody fee groups list     *
+      *                                                               *
+      *    CALLS     - #ZB                                            *
+      *                                                               *
+      *    CALLED BY - #B                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BC       BEGSR
+      *
+     C                     READ SDCCGRL0                 70
+     C           *IN70     IFEQ '1'
+      *
+      ** Seton flag to indicate null report
+      *
+     C                     MOVE '1'       WWEMTF  1
+      *
+      ** Should not produce run controls anymore
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD3
+     C                     WRITENULL1
+     C                     ELSE
+     C                     OPEN SD1521P1
+     C                     MOVE 'Y'       WWOPEN
+      *
+     C           *IN70     DOWEQ'0'
+      *
+      ** Add 1 to number of records read
+      *
+     C                     ADD  1         RRPROG
+      *
+      ** Add 1 to number of inserts
+     C*
+     C           CCCHTP    IFEQ 'I'
+     C                     ADD  1         RRINSR
+     C                     END
+      *
+      ** Add 1 to number of amends
+      *
+     C           CCCHTP    IFEQ 'A'
+     C                     ADD  1         RRAMND
+     C                     END
+      *
+      ** Add 1 to number of deletes
+      *
+     C           CCCHTP    IFEQ 'D'
+     C                     ADD  1         RRDLET
+     C                     END
+      *
+      ** Output details to report
+      *
+     C                     EXSR #ZB
+     C                     READ SDCCGRL0                 70
+     C                     END
+      *
+      ** No live records found on file SDCCGRL0
+      *
+     C           RRPROG    IFEQ 0
+     C           WWEMTF    ANDNE'1'
+      *
+      ** Should not produce run controls anymore
+      *
+     C                     MOVE 'Y'       WWNPRC  1
+     C                     WRITEHEADER
+     C                     WRITEHEAD3
+     C                     WRITENULL1
+     C                     END
+      *
+     C           LINE1     IFGT 56
+     C                     WRITEHEADER1
+     C                     WRITEHEADER3
+     C                     WRITEHEADER4
+     C                     END
+     C                     WRITEFOOTING1
+      *
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    #BB       - Process full list run controls                 *
+      *                                                               *
+      *    CALLS     - #ZA                                            *
+      *                                                               *
+      *    CALLED BY - #B                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BB       BEGSR
+      *
+     C           1         SETLLSDCCGRPA
+     C                     READ SDCCGRPA                 70
+     C           *IN70     IFEQ '1'
+     C           FIRECI    ORNE 'Z'
+      *
+      ** Trailer record not found - database error
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'SDCCGRPA'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 002 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR #ZA
+     C                     ELSE
+     C           RRPROG    IFNE FINORE
+      *
+      ** Records read <> Records on file
+      *
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *INU8
+     C                     END
+     C                     MOVE FINORE    RRFILE
+      *
+      ** Output run controls report
+      *
+     C           WWNPRC    IFNE 'Y'
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITEDETAILA
+     C                     END
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    #BD       - Process audit list run controls                *
+      *                                                               *
+      *    CALLS     - #ZA                                            *
+      *                                                               *
+      *    CALLED BY - #B                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BD       BEGSR
+      *
+     C                     READ SDCCGRPA                 70
+     C           *IN70     IFEQ '1'
+     C           FIRECI    ORNE 'Z'
+      *
+      ** Trailer record not found - Database error
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'SDCCGRPA'DBFILE           ***************
+     C                     MOVEL*BLANKS   DBKEY            * DBERROR 003 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR #ZA
+     C                     ELSE
+      *
+      ** Output run controls report
+      *
+     C           WWNPRC    IFNE 'Y'
+     C                     WRITEHEADER
+     C                     WRITEHEAD3
+     C                     WRITEDETAILB
+     C                     END
+     C                     END
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    *PSSR     - Program error handling routine                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

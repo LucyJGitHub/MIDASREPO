@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Set up initial Midas SWIFT')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000116 - Set up initial Midas SWIFT                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *CREATE    Date 04Oct10              */
+/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFX &ERRPGM)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             DCLF       FILE(MS0000DF)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if Midas SWIFT is switched on - data area MMOD and file SDMMODPD. */
+             RTVDTAARA  DTAARA(MMOD (18 1)) RTNVAR(&MS)
+             CALL       PGM(AOMMODR0) PARM(&RTNCODE '*FIRST' &FMT)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('AOMMODR0')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(&MS *NE 'Y' *OR %SST(&FMT 30 1) *NE +
+                          'Y') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('*NOT ON')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Prompt for T.I.D. of bank. */
+DISPLAY:
+             SNDRCVF
+             IF         COND(&TID *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&IN01) VALUE('1')
+                GOTO       CMDLBL(DISPLAY)
+             ENDDO
+ 
+/* Update data area MSSTAT. */
+             CHGDTAARA  DTAARA(MSSTAT (9 12)) VALUE(&TID)
+             CHGDTAARA  DTAARA(MSSTAT (6 3)) VALUE('OLD')
+             CHGDTAARA  DTAARA(MSSTAT (22 1)) VALUE('N')
+ 
+/* If SWIFT/GL Statements interface on, set up SWIFT accounts files. */
+             RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
+             IF         COND(%SST(&MMOD 26 1) *EQ 'Y') THEN(DO)
+                CLRPFM     FILE(SWACSSA)
+                CLRPFM     FILE(SWACSSC)
+                CLRPFM     FILE(SWPOSHH)
+                CLRPFM     FILE(SWPOSZZ)
+ 
+/* Call to MS0005 to set up SWIFT accounts files. */
+                OVRDBF     FILE(TABLE) TOFILE(TABMS)
+                CALL       PGM(MS0005)
+                DLTOVR     FILE(TABLE)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('MS0005')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                IF         COND(&ERRPGM *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SMC000116')
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,768 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ABS ER Guarantees/Collateral Master Update')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas¦ABS - EUROPEAN  REPORTING - NETHERLANDS                *
+      *                                                               *
+      *  RPG/ER0961 - Guarantees Master File Update                   *
+      *                                                               *
+      *  Function: This program runs to update the review date, the   *
+      *            review/expiry indicator and drop the guarantees    *
+      *            which are obsolete or which have reached the       *
+      *            retention period of 30 days after the end date.    *
+      *                                                               *
+      *                                                               *
+      *  Called By: CLP/ERC0960                                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX008             Date 19Jul00               *
+      *                 ULX008             Date 23Mar00               *
+      *                 ULX008             Date 23Mar00               *
+      *                 ULX012             Date 15Dec98               *
+      *                 143187             Date 23Sep98               *
+      *                 127865             Date 25NOV97               *
+      *                 ULX004     DMC     Date 21FEB97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *         - Rename CRSK in TRADSD                               *
+      *  ULX008 - "Commissariat aux Bourses" - Change control C       *
+      *           Recompiled due to changes in PF/ERLUICPD            *
+      *  ULX008 - "Commissariat aux Bourses" - Change control A       *
+      *           Recompiled due to changes in PF/ERLUICPD            *
+      *  ULX008 - CSSF Statutory Reporting - Commissariat aux Bourses *
+      *           Recompiled due to changes in PF/ERLUICPD            *
+      *  ULX012 - Guarantees and Collateral Management enhancements   *
+      *           Recompile over changed file ERLUICPD                *
+      *  143187 - if not found on ACNUM, check on ACCNT               *
+      *  127865 - CAD database error when SE is OFF.                  *
+      *  ULX004 - European Reporting Capital Adequacy                 *
+      *                                                               *
+      *****************************************************************
+      *
+      ***  Facility
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+      *
+      ***  Loans
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+      *
+      ***  MM Deals
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F************DEALSDDF                          KIGNORE               ULX004
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+      *
+      ***  A/C master
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+      *
+      ***  A/C master by Retail A/C
+     FACNUM   IF  E           K        DISK         KINFSR *PSSR
+     F            ACCNTABF                          KRENAMEACCNUMF
+      *
+      ***  SE trades by Trade Reference
+     FTRADS   IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *
+      ***  Book Position
+     FBKPHD   IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *
+      ***  Securities
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR          ULX004
+      ***  Netherlands ICD                                          Prefix RO
+     F*ERNLICL1IF  E           K        DISK         KINFSR *PSSR         ULX004
+      *
+      ***  ER ICD                                                   Prefix VP
+     FERLUICL1IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *
+      ***  Guarantees/Collateral                                    Prefix RR
+     FERGUARL0UF  E           K        DISK         KINFSR *PSSR
+      *
+      *----------------------------------------------------------------------
+      *
+      ***  Array for copyright, fields validations
+     E                    CPY@    1   1 80               Copyright
+      *
+      /COPY ZSRSRC,ZFREQBZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZHOLE
+      *
+      *----------------------------------------------------------------------
+      *
+     ITRADSDF                                                                                 UPG402
+     I              CRSK                            TDCRSK                                    UPG402
+      ***  Local data area for database error details
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  Program data structure.
+     IPGMDS     ESDSY2PGDSP
+      *
+      ***  Data structure for compilation  - Copyright insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ***  DS to access on transactions file
+     IRRUTSR      DS
+     I                                        1   30DSFACT
+     I                                        4   50DSFCNO
+      *
+     I                                        1   60DSRREF
+     I                                        1   6 DSLREF                                    CLE148
+      *
+     I**********                              1   60DSCUST                                   CSD027A
+     I                                        1   6 DSCUST                                   CSD027A
+     I                                        7   9 DSCURR
+     I**********                             10  130DSACOD                                    CER001
+     I**********                             14  150DSACSQ                                    CER001
+     I**********                             16  18 DSBRCA                                    CER001
+     I                                       10  190DSACOD                                    CER001
+     I                                       20  210DSACSQ                                    CER001
+     I                                       22  24 DSBRCA                                    CER001
+      *
+     I                                        1  100DSACNO
+      *
+      ***  ULX004 begin
+      *
+     I                                        1   6 DSTDRF                ULX004
+      *
+     I                                        1  10 DSBHSC                ULX004
+     I                                       11  13 DSBHBA                ULX004
+     I                                       14  15 DSBHBK                ULX004
+     I                                       16  16 DSBHMK                ULX004
+      *
+     I                                        1  10 DSSESN                ULX004
+      *
+      ***  ULX004 end
+      *
+     IRRSBYR      DS
+     I                                        1   60DBRREF
+      *
+     I**********                              1   60DBCUST                                   CSD027A
+     I**********                              7  100DBACOD                                    CER001
+     I**********                             11  120DBACSQ                                    CER001
+     I**********                             13  15 DBBRCA                                    CER001
+     I                                        1   6 DBCUST                                   CSD027A
+     I                                        7  160DBACOD                                    CER001
+     I                                       17  180DBACSQ                                    CER001
+     I                                       19  21 DBBRCA                                    CER001
+      *
+     I                                        1  100DBACNO
+      *
+      ***  ULX004 begin
+      *
+     I                                        1   3 DBCSBA                ULX004
+     I                                        4  13 DBCSSC                ULX004
+      *
+     I                                        1  10 DBSESN                ULX004
+      *
+      ***  ULX004 end
+      *
+      *
+      ***  DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      ***  DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      ***  External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      **  External DS for SE Trade ICD Details
+     ISDSTRD    E DSSDSTRDPD                                              ULX004
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                127865
+     I@MMOD     E DSSDMMODPD                                              127865
+      *
+      /COPY ZSRSRC,ZAOZ2
+      /COPY ZSRSRC,ZHOLI
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #RDUP    - SR REVIEW DATE UPDATE PROCESSING                      *
+      * #REUP    - REVIEW/EXPIRY INDICATOR UPDATE PROCESSING             *
+      * #GSPD    - SR GUARANTEES/SPECIFIC PROVISIONS DELETION            *
+      * *PSSR    - SR DATA BASE ERROR PROCESSING                         *
+      * *INZSR   - SR INITIAL PROCESSING                                 *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * AOBANKR0 - PGM ACCESS BANK DETAILS INFORMATIONS                  *
+      * AOSTRDR0 - PGM ACCESS SECURITY TRADING ICD                       *
+      *                                                                  *
+      ********************************************************************
+     C           *LOVAL    SETLLERGUARL0
+     C                     READ ERGUARL0                 70
+      *
+     C           *IN70     DOWEQ*OFF                       Not EOF
+      *
+      ***  Reset Working Indicators
+     C                     MOVE *OFF      *IN60            Update ind.
+     C                     MOVE *OFF      *IN61            Bypass ind.
+      *
+      ***  Check record change type & expired ind.
+     C           RRCHTP    IFEQ 'D'                        B1
+     C           RRRVEX    OREQ 'E'
+     C                     MOVE *ON       *IN61
+     C                     ENDIF                           E1
+      *
+     C           *IN61     IFEQ *OFF                       B1
+      *
+     C                     EXSR #REUP                                     ULX004
+      *
+      ***  If the Review Frequency is different from blanks
+     C           RRRVFQ    IFNE *BLANKS                    B2
+     C                     EXSR #RDUP
+     C                     ENDIF                           E2
+      *
+     C***********          EXSR #REUP                                     ULX004
+     C                     ENDIF                           E1
+      *
+     C                     EXSR #GSPD
+      *
+      ***  Read next record
+     C                     READ ERGUARL0                 70
+      *
+     C                     ENDDO
+      *
+      ***  End of program
+     C                     MOVE *ON       *INLR
+      *
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #RDUP    - SR REVIEW DATE UPDATE PROCESSING                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZFREQB   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #RDUP     BEGSR
+      *
+      ***  Review date less or equal next working day
+     C           RRRVDT    IFNE *ZEROS                     B1
+     C           RRRVDT    IFLT BJDNWD                     B2
+      *
+      ***  Calculate next Review date
+     C                     MOVE RRRVDT    ZDAYNO
+     C                     MOVE RRRVFQ    ZFREQ
+     C                     MOVE RRRVDY    ZMDAY
+     C                     EXSR ZFREQB
+      *
+      ***  Date calculated less than next work day, recalculate with review date
+     C           ZDAYNO    IFLT BJDNWD                     B3
+     C                     EXSR ZFREQB
+     C                     ENDIF                           E3
+      *
+      ***  End date greater than review date
+     C           RRENDT    IFGT ZDAYNO                     B3
+     C                     Z-ADDZDAYNO    RRRVDT
+     C                     MOVE *ON       *IN60            Update ind.
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #REUP    - REVIEW/EXPIRY INDICATOR UPDATE PROCESSING             *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRVPG   - WORK FIELD REVIEWAL DATE FOR GUARANTEES               *
+      * WWRVPP   - WORK FIELD REVIEWAL DATE FOR PROVISIONS               *
+      *                                                                  *
+      ********************************************************************
+     C           #REUP     BEGSR
+      *
+     C           RRRVEX    IFNE *BLANKS                                   ULX004
+     C                     MOVEL*BLANKS   RRRVEX
+     C                     MOVE *ON       *IN60                           ULX004
+     C                     ENDIF                                          ULX004
+      *
+      ***  Review date greater or equal run date
+     C           RRRVDT    IFNE *ZEROS                     B1
+     C           RRRVDT    ANDGEBJRDNB
+      *
+      ***  Provisions & review date is less or equal reviewal for provisions
+     C           RRSBYI    IFEQ 'S'                        B2
+     C           RRRVDT    IFLE WWRVPP                     B3
+     C                     MOVE 'R'       RRRVEX
+     C                     MOVE *ON       *IN60            Update indicator
+     C                     ENDIF                           E3
+     C                     ELSE                            X2
+      *
+      ***  Guarantess & review date is less or equal reviewal for guarantees
+     C           RRRVDT    IFLE WWRVPG                     B3
+     C                     MOVE 'R'       RRRVEX
+     C                     MOVE *ON       *IN60            Update indicator
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      ***  End date is less than next working day
+     C           RRENDT    IFLT BJDNWD                     B1
+     C                     MOVE 'E'       RRRVEX
+     C                     ENDIF                           E1
+      *
+      ***  USED TO SECURE REFERENCE
+     C                     SELEC                           SB1
+      *
+      ***  Used to secure is 'F' as facility
+     C           RRUTSI    WHEQ 'F'
+     C           WFCLTY    CHAINFCLTY                71
+      *
+     C           *IN71     IFEQ *ON                        B1
+     C           RECI      ORNE 'D'
+     C                     MOVE 'E'       RRRVEX
+     C                     ENDIF                           E1
+      *
+      ***  Used to secure is 'L' as loan in lending
+     C           RRUTSI    WHEQ 'L'
+     C********** DSRREF    CHAINCLOAN                71                                       CLE148
+     C           DSLREF    CHAINCLOAN                71                                       CLE148
+      *
+     C           *IN71     IFEQ *ON                        B1
+     C           RECI      ORNE 'D'
+     C                     MOVE 'E'       RRRVEX
+     C                     ENDIF                           E1
+      *
+      ***  Used to secure is 'D' as loan in dealing
+     C           RRUTSI    WHEQ 'D'
+     C           DSRREF    CHAINDEALS                71
+      *
+     C           *IN71     IFEQ *ON                        B1
+     C           RECI      ORNE 'D'
+     C                     MOVE 'E'       RRRVEX
+     C                     ENDIF                           E1
+      *
+      ***  Used to secure is 'N' as in Negotiable Asset Purchased
+     C           RRUTSI    WHEQ 'N'                                       ULX004
+     C           DSRREF    CHAINDEALS                71                   ULX004
+      *
+     C           *IN71     IFEQ *ON                        B1             ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVE 'E'       RRRVEX                          ULX004
+     C                     ENDIF                           E1             ULX004
+      *
+      ***  Used to secure is 'G' as general ledger
+     C           RRUTSI    WHEQ 'G'
+     C           WACCNT    CHAINACCNT                71
+      *
+     C           *IN71     IFEQ *ON                        B1
+     C           RECI      ORNE 'D'
+     C           ACST      ORNE ' '
+     C                     MOVE 'E'       RRRVEX
+     C                     ENDIF                           E1
+      *
+      ***  Used to secure is 'R' as retail account
+     C           RRUTSI    WHEQ 'R'
+     C           DSACNO    CHAINACNUM                71
+      *
+     C           *IN71     IFEQ *ON                        B1
+     C           RECI      ORNE 'D'
+     C           ACST      ORNE ' '
+     C                     MOVE 'E'       RRRVEX
+     C                     ENDIF                           E1
+      *
+      ***  Used to secure is 'T' (SE Trade)
+     C           RRUTSI    WHEQ 'T'                                       ULX004
+     C           DSTDRF    CHAINTRADS                71                   ULX004
+      *                                                                   ULX004
+     C           *IN71     IFEQ *ON                        B1             ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C           RECI      ANDNE'S'                                       ULX004
+     C           RECI      ANDNE'A'                                       ULX004
+     C                     MOVE 'E'       RRRVEX                          ULX004
+     C                     ENDIF                           E1             ULX004
+      *
+      ***  Used to secure is 'P' (SE Book position)
+     C           RRUTSI    WHEQ 'P'                                       ULX004
+     C                     MOVE BVSKTV    DSBHTV           * T/V Date Bas.ULX004
+     C           WBKPHD    CHAINBKPHD                71                   ULX004
+      *
+     C           *IN71     IFEQ *ON                        B1             ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVE 'E'       RRRVEX                          ULX004
+     C                     ENDIF                           E1             ULX004
+      *
+     C           RRUTSI    WHEQ 'S'                                       ULX004
+      *
+      **  Access to Security file with Used to Secure Reference
+      *
+     C           DSSESN    CHAINSECTY                71                   ULX004
+     C           *IN71     IFEQ *ON                        B1             ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVE 'E'       RRRVEX                          ULX004
+     C                     ENDIF                           E1             ULX004
+      *
+     C                     OTHER
+     C                     ENDSL                           ES1
+      *
+     C           RRRVEX    IFNE 'E'                        B1
+      *
+      ***  SECURED BY REFERENCE
+     C                     SELEC                           SB1
+      *
+      ***  Secured by is 'D' as loan in dealing
+     C           RRSBYI    WHEQ 'D'
+     C           DBRREF    CHAINDEALS                71
+      *
+     C           *IN71     IFEQ *ON                        B1
+     C           RECI      ORNE 'D'
+     C                     MOVE 'E'       RRRVEX
+     C                     ENDIF                           E1
+      *
+      ***  Secured by is 'G' as general ledger
+     C           RRSBYI    WHEQ 'G'
+     C           WACNT1    CHAINACCNT                71
+      *
+     C           *IN71     IFEQ *ON                        B1
+     C           RECI      ORNE 'D'
+     C           ACST      ORNE ' '
+     C                     MOVE 'E'       RRRVEX
+     C                     ENDIF                           E1
+      *
+      ***  Secured by is 'R' as retail account
+     C           RRSBYI    WHEQ 'R'
+     C           DBACNO    CHAINACNUM                71
+      *
+     C           *IN71     IFEQ *ON                        B1
+     C           WACNT1    CHAINACCNT                71                   143187
+     C           *IN71     IFEQ *ON                        B2             143187
+     C           RECI      ORNE 'D'
+     C           ACST      ORNE ' '
+     C                     MOVE 'E'       RRRVEX
+     C                     ENDIF                           E2             143187
+     C                     ENDIF                           E1
+      *
+      ***  Secured by is 'S' (specific provisions)
+     C           RRSBYI    WHEQ 'S'                                       ULX004
+     C           RRSBYR    ANDNE*BLANKS                                   ULX004
+     C           WACNT1    CHAINACCNT                71                   ULX004
+      *
+     C           *IN71     IFEQ *ON                        B1             ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C           ACST      ORNE ' '                                       ULX004
+     C                     MOVE 'E'       RRRVEX                          ULX004
+     C                     ENDIF                           E1             ULX004
+      *
+      ***  Secured by is 'C' (customer position)                          ULX004
+      *
+     C           RRSBYI    WHEQ 'C'                                       ULX004
+      *
+      **  Access to Security file with Used to Secure Reference           ULX004
+      *
+     C           DBCSSC    CHAINSECTY                71                   ULX004
+     C           *IN71     IFEQ *ON                        B1             ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVE 'E'       RRRVEX                          ULX004
+     C                     ENDIF                           E1             ULX004
+      *
+      ***  Secured by is 'N' (Nominal)                                    ULX004
+      *
+     C           RRSBYI    WHEQ 'N'                                       ULX004
+      *
+      **  Access to Security file with Used to Secure Reference           ULX004
+      *
+     C           DBSESN    CHAINSECTY                71                   ULX004
+     C           *IN71     IFEQ *ON                        B1             ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVE 'E'       RRRVEX                          ULX004
+     C                     ENDIF                           E1             ULX004
+      *
+     C                     OTHER
+     C                     ENDSL                           ES1
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #GSPD    - SR GUARANTEES/SPECIFIC PROVISIONS DELETION            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRETP   - WORK FIELD RETENTION DATE                             *
+      *                                                                  *
+      ********************************************************************
+     C           #GSPD     BEGSR
+      *
+      ***  Drop deleted records
+     C           RRCHTP    IFEQ 'D'                        B1
+     C                     DELETERGUARD0
+     C                     ELSE                            X1
+      *
+      ***  Drop Expired Records after a retention period
+     C           RRRVEX    IFEQ 'E'                        B2
+      *
+      ***  30 days before run date
+     C           RRENDT    IFLE WWRETP                     B3
+     C                     DELETERGUARD0
+     C                     ELSE                            X3
+     C                     UPDATERGUARD0
+     C                     ENDIF                           E3
+      *
+     C                     ELSE                            X2
+      *
+      ***  Update record when indicator is *on
+     C           *IN60     IFEQ *ON                        B3
+     C                     UPDATERGUARD0
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - SR DATA BASE ERROR PROCESSING                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * *INZSR   - SR INITIAL PROCESSING                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBFIL   - WORK FIELD DATABASE ERROR                             *
+      * WWBKEY   - WORK FIELD DATABASE ERROR                             *
+      * WWBASE   - WORK FIELD DATABASE ERROR                             *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+      ***  Update data area LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVELWWBFIL    DBFILE
+     C                     MOVELWWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  LDA
+      *
+     C                     DUMP
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *INZSR   - SR INITIAL PROCESSING                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * AOBANKR0 - PGM ACCESS BANK DETAILS INFORMATIONS                  *
+      * *PSSR    - SR DATA BASE ERROR PROCESSING                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBFIL   - WORK FIELD DATABASE ERROR                             *
+      * WWBKEY   - WORK FIELD DATABASE ERROR                             *
+      * WWBASE   - WORK FIELD DATABASE ERROR                             *
+      * WWRVPG   - WORK FIELD REVIEWAL DATE FOR GUARANTEES               *
+      * WWRVPP   - WORK FIELD REVIEWAL DATE FOR PROVISIONS               *
+      * WWRETP   - WORK FIELD RETENTION DATE                             *
+      * WWRCTP   - WORK FIELD ACCESS ON FACILITY TYPE FILE               *
+      *                                                                  *
+      ********************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Redefine database error fields
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ***  Get installation control : data record 1
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           BJDFIN    IFEQ 'M'                        Format mmddyy
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+     C*                                                                   127865
+     C** CALL ACCESS PROGRAM FOR MIDAS MODULES DETAILS                    127865
+     C                     CALL 'AOMMODR0'                                127865
+     C                     PARM '*MSG    '@RTCD   7                       127865
+     C                     PARM '*FIRST  '@OPTN   7                       127865
+     C           @MMOD     PARM @MMOD     DSFDY                           127865
+     C*                                                                   127865
+     C           @RTCD     IFNE *BLANK                                    127865
+     C                     MOVEL'SDMMODPD'WWBFIL            ************* 127865
+     C                     MOVEL'99'      WWBASE            *DBERROR 099* 127865
+     C                     MOVEL@OPTN     WWBKEY            ************* 127865
+     C                     EXSR *PSSR                                     127865
+     C                     END                                            127865
+     C           BGSECS    IFEQ 'Y'                                       127865
+      *
+      **  Get Securities Trading Installation Control Data Record 1
+      *
+     C                     CALL 'AOSTRDR0'                                ULX004
+     C                     PARM '*MSG   ' @RTCD                           ULX004
+     C                     PARM '*FIRST ' @OPTN                           ULX004
+     C           SDSTRD    PARM SDSTRD    DSFDY                           ULX004
+     C           @RTCD     IFNE *BLANKS                    *--------      ULX004
+     C                     Z-ADD3         WWBASE           ***************
+     C                     MOVEL'SDSTRDPD'WWBFIL           * DB ERROR 003*
+     C                     MOVEL'*FIRST'  WWBKEY           ***************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                           *--------      ULX004
+     C                     ENDIF                           *--------      127865
+      *
+      ***  Access European Reporting I.C.D. for Netherlands
+     C************LOVAL    SETLLERNLICL1                                  ULX004
+     C***********          READ ERNLICL1                 80               ULX004
+     C************IN80     IFEQ *ON                        - B1           ULX004
+     C***********          Z-ADD2         WWBASE           *****************
+     C***********          MOVEL'ERNLICL1'WWBFIL    P      ** DB ERROR 002**
+     C***********          MOVEL'I.C.D.'  WWBKEY    P      *****************
+     C***********          EXSR *PSSR                                     ULX004
+     C***********          ENDIF                           - E1           ULX004
+      *
+      ***  Access European Reporting I.C.D.
+     C           *LOVAL    SETLLERLUICL1                                  ULX004
+     C                     READ ERLUICL1                 80               ULX004
+     C           *IN80     IFEQ *ON                        - B1           ULX004
+     C                     Z-ADD2         WWBASE           *****************
+     C                     MOVEL'ERLUICL1'WWBFIL    P      ** DB ERROR 002**
+     C                     MOVEL'I.C.D.'  WWBKEY    P      *****************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                           - E1           ULX004
+      *
+      ***  Evaluate Reviewal period date for Guarantees
+     C           BJDNWD    SUB  1         WWRVPG  50       Reviewal Date Guar.
+     C           WWRVPG    ADD  VPCORD    WWRVPG
+      *
+      ***  Evaluate Reviewal period date for provisions
+     C           BJDNWD    SUB  1         WWRVPP  50       Reviewal Date Prov.
+     C           WWRVPP    ADD  VPPRRD    WWRVPP
+      *
+      ***  Calculate retention period
+     C           BJRDNB    SUB  30        WWRETP  50       Retention date
+      *
+      ***  Setup working fields
+     C                     MOVE BJLCCY    ZCCY             Local currency
+     C                     MOVE BJSLCD    ZLOC             Syst. location code
+      *
+      **  KLIST to access on FCLTY
+     C           WFCLTY    KLIST
+     C                     KFLD           RRRCUS
+     C                     KFLD           DSFACT
+     C                     KFLD           DSFCNO
+     C                     KFLD           WWRCTP
+      *
+      **  KLIST to access on ACCNT
+     C           WACCNT    KLIST
+     C                     KFLD           DSCUST
+     C                     KFLD           DSCURR
+     C                     KFLD           DSACOD
+     C                     KFLD           DSACSQ
+     C                     KFLD           DSBRCA
+      *
+      **  KLIST to access on ACCNT
+     C           WACNT1    KLIST
+     C                     KFLD           DBCUST
+     C***********          KFLD           DBCURR                         ULX004
+     C                     KFLD           RRGCCY                         ULX004
+     C                     KFLD           DBACOD
+     C                     KFLD           DBACSQ
+     C                     KFLD           RRBRCA
+      *
+      **  KLIST to access on BKPHD
+      *
+     C           WBKPHD    KLIST                                         ULX004
+     C                     KFLD           DSBHSC           * Security    ULX004
+     C                     KFLD           DSBHBA           * Branch Code ULX004
+     C                     KFLD           DSBHBK           * Book Code   ULX004
+     C                     KFLD           DSBHMK           * Market      ULX004
+     C                     KFLD           DSBHTV           * T/V DateLBasULX004
+      *
+     C           *LIKE     DEFN BHTV      DSBHTV           * T/V DateLBasULX004
+      *
+     C                     MOVE 'A'       WWRCTP  1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /COPY ZSRSRC,ZFREQBZ2
+      /COPY ZSRSRC,ZCHKH
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,ZDATE2Z2
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

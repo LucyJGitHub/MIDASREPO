@@ -1,0 +1,341 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF COB Audit Reconciliation')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas FUTURES AND OPTIONS MODULE
+     F*                                                                  *
+     F*   FF0560  -  FUTURES AND OPTIONS COB AUDIT RECONCILIATION        *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01393             Date 30Oct92               *
+      *                 S01117             Date 02Feb90               *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF* E           K        DISK                               S01117
+     FFFAUD   UF  E           K        DISK
+     F*F0560P1O** E                    PRINTER                            S01117
+     FFF0560AUO   E                    PRINTER                            S01117
+     F/SPACE 2                                                            S01117
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                           S01117
+     F*                                                                   S01117
+     F*     U7+U8       DATABASE ERROR                                    S01117
+     F/SPACE 2                                                            S01117
+     E                    CPY@    1   1 80
+     E                    NAR         3  4 0
+     E                    SWS         8  1
+     ITOTALS      DS
+     I*  AUDIT UPDATE COUNTS
+     I                                        1  12 NAR
+     I                                        1   40NINS
+     I                                        5   80NAMD
+     I                                        9  120NDEL
+     ILDA         DS                            256
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJURPT                          TITL                  S01117
+      *                                                                   S01117
+     I@DSFDY    E DSDSFDY                                                 S01117
+      **  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE              S01117
+      *                                                                   S01117
+      /EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C**
+     C**   Receive Parameters
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           AUDF    8
+     C                     PARM           FILDES 30
+     C                     PARM           TNINS   40
+     C                     PARM           TNAMD   40
+     C                     PARM           TNDEL   40
+     C                     PARM           SWS
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C* INITIALISING THE SWITCHES
+     C                     MOVE SWS,1     *INU1
+     C                     MOVE SWS,2     *INU2
+     C                     MOVE SWS,3     *INU3
+     C                     MOVE SWS,4     *INU4
+     C                     MOVE SWS,5     *INU5
+     C                     MOVE SWS,6     *INU6
+     C                     MOVE SWS,7     *INU7
+     C                     MOVE SWS,8     *INU8
+     C*                                                                   S01117
+     C**   IN THE DATAAREA RUNDAT                                         S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C**   ACCESS BANK DETAILS                                            S01117
+     C*                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+     C*
+     C*******ACCESSING*ICD1*OFF*TABLE*************************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10                  99*              S01117
+     C**N99******RECI      COMP 'D'                  9999                 S01117
+     C***********                                                         S01117
+     C*********IF RECORD NOT FOUND                                        S01117
+     C***********                                                         S01117
+     C************IN99     IFEQ '0'                        *            ? S01117
+     C           @RTCD     IFEQ *BLANK                                    S01117
+     C*                                                                   S01117
+     C           DATF      COMP 'M'                      98
+     C*
+     C**     PRINT PAGE HEADINGS
+     C*
+     C***********          WRITEFMTP101                                   S01117
+     C                     WRITEFMTAU01                                   S01117
+     C*
+     C                     ELSE
+     C                     SETON                     U7U8
+     C*
+     C**       UPDATING LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBPGM                           S01117
+     C                     MOVEL'FF0560  'DBPGM
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVE *BLANK    DBFILE                          S01117
+     C***********          MOVE '01'      DBASE            ***************S01117
+     C***********          MOVE 'TABFF'   DBFILE           **DB ERROR 01**S01117
+     C***********          MOVEL'01    '  TABKY  12        ***************S01117
+     C***********          MOVE '    10'  TABKY                           S01117
+     C***********          MOVELTABKY     DBKEY                           S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     MOVEL'SDBANKPD'DBFILE           **DB ERROR 01**S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     OUT  LDA
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C**     PRINT PAGE HEADINGS & DATABASE ERROR MESSAGE
+     C*
+     C***********          WRITEFMTP101                                   S01117
+     C***********          WRITEFMTP103                                   S01117
+     C                     WRITEFMTAU01                                   S01117
+     C                     WRITEFMTAU03                                   S01117
+     C                     EXSR SWTS
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C**       IF RECORD FOUND
+     C*
+     C                     EXSR P02
+     C                     EXSR SWTS
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C/EJECT
+     C********************************************************************
+     C*
+     C*   P02-SUBROUTINE TO ACCESS AUDIT RECORD AND DO RECONCILIATION
+     C*
+     C*  CALLED ONCE FROM MAIN PROGRAM
+     C*
+     C********************************************************************
+     C*
+     C           P02       BEGSR
+     C*
+     C** ACCESS AUDIT RECORD - DB ERROR IF NOT FOUND
+     C*
+     C           AUDF      CHAINFFAUD                99
+     C*
+     C           *IN,99    IFEQ '1'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANK    DBPGM                           S01117
+     C                     MOVEL'FF0560  'DBPGM
+     C                     MOVE *BLANK    DBKEY
+     C                     MOVE *BLANK    DBFILE                          S01117
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**S01117
+     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
+     C                     MOVELAUDF      DBFILE           ***************
+     C                     MOVEL'FFAUD'   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C***********          WRITEFMTP103                                   S01117
+     C                     WRITEFMTAU03                                   S01117
+     C*
+     C** OTHERWISE RECONCILE AUDIT TOTALS
+     C*
+     C                     ELSE
+     C           NINS      IFNE TNINS
+     C                     SETON                     21
+     C                     END
+     C           NAMD      IFNE TNAMD
+     C                     SETON                     22
+     C                     END
+     C           NDEL      IFNE TNDEL
+     C                     SETON                     23
+     C                     END
+     C*
+     C***********          WRITEFMTP102                                   S01117
+     C                     WRITEFMTAU02                                   S01117
+     C*
+     C**  UPDATE AUDIT FILE IF NO ERRORS
+     C*
+     C           *IN21     IFEQ '0'
+     C           *IN22     ANDEQ'0'
+     C           *IN23     ANDEQ'0'
+     C*
+     C                     Z-ADD*ZERO     NAR
+     C                     Z-ADDRUND      LARD
+     C*
+     C**  MARKTA
+     C*
+     C           AUDF      IFEQ 'MARKTA  '
+     C                     UPDATMARKTAF
+     C                     END
+     C*
+     C**  FOCLTA
+     C*
+     C           AUDF      IFEQ 'FOCLTA  '
+     C                     UPDATFOCLTAF
+     C                     END
+     C*
+     C**  CHGCMA
+     C*
+     C           AUDF      IFEQ 'CHGCMA  '
+     C                     UPDATCHGCMAF
+     C                     END
+     C*
+     C**  INTYPA
+     C*
+     C           AUDF      IFEQ 'INTYPA  '
+     C                     UPDATINTYPAF
+     C                     END
+     C*
+     C**  DEFLTA
+     C*
+     C           AUDF      IFEQ 'DEFLTA  '
+     C                     UPDATDEFLTAF
+     C                     END
+     C*
+     C**  TRNORA
+     C*
+     C           AUDF      IFEQ 'TRNORA  '
+     C                     UPDATTRNORAF
+     C                     END
+     C*
+     C**  FACKYA
+     C*
+     C           AUDF      IFEQ 'FACKYA  '
+     C                     UPDATFACKYAF
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF AUDIT TOTALS IN ERROR PASS FILE NAME BACK TO CALLING PGM
+     C*
+     C           *IN21     IFEQ '1'
+     C           *IN22     OREQ '1'
+     C           *IN23     OREQ '1'
+     C*
+     C                     SETON                     U8
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+      /EJECT
+     C****************************************************************
+     C*
+     C*   SWTS-SUBROUTINE TO RESET SWITCHES PARAMETER
+     C*
+     C*  CALLED  FROM MAIN PROGRAM
+     C*
+     C********************************************************************
+     C*
+     C           SWTS      BEGSR
+     C                     MOVE *INU1     SWS,1
+     C                     MOVE *INU2     SWS,2
+     C                     MOVE *INU3     SWS,3
+     C                     MOVE *INU4     SWS,4
+     C                     MOVE *INU5     SWS,5
+     C                     MOVE *INU6     SWS,6
+     C                     MOVE *INU7     SWS,7
+     C                     MOVE *INU8     SWS,8
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+      ** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

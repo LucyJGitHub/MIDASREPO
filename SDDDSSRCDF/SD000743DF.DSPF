@@ -1,0 +1,719 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Hedge strategy table maintenance display')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD000743DF - Hedge Strategy Table Maintenance Display   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 223706             Date 11Dec03               *
+      *  Prev Amend No. CAS006             Date 21Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS002  *CREATE    Date 14Jan02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  223706 - Change Narrative of Hedge Assessment Method         *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *  CAS002 - Hedge Strategy/Linkage                              *
+      *                                                               *
+      *****************************************************************
+      *
+     A                                      REF(MFRFL)
+     A                                      CA03
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      CHGINPDFT
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      MSGLOC(24)
+      *
+      ** Header
+      *
+     A          R SD000743F0                TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2002')
+     A            #0USER    R        O  1  2REFFLD(USER)
+     A                                  1 13'SD000743'
+     A  26                              1 30'Hedge Strategy Maintenance'
+     A                                      DSPATR(HI)
+     A  27                              1 30'Hedge Strategy Enquiry'
+     A                                      DSPATR(HI)
+     A  28                              1 31'Hedge Strategies Selection'
+     A                                      DSPATR(HI)
+     A  29                              1 31'New Hedge Strategy'
+     A                                      DSPATR(HI)
+     A                                  1 67'DATE '
+     A            #0RUNA    R        O  1 73REFFLD(RUNA)
+     A            #0WSID    R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A            #0TIME    R        O  2 73REFFLD(JOTIME)
+     A                                      EDTWRD('  :  :  ')
+      *
+      ** Subfile Record Format
+      *
+     A          R SD000743S0
+     A                                      SFL
+     A  84                                  SFLNXTCHG
+     A            #0ACTN         1   B  8  4TEXT('Action Code')
+     A  30                                  DSPATR(RI PC)
+     A N30                                  DSPATR(HI UL)
+     A            #0HESN        10   O  8  9TEXT('Hedge Shortname')
+     A                                      DSPATR(HI)
+     A            #0HELD        35   O  8 24TEXT('Hedge Description')
+     A                                      DSPATR(HI)
+     A            #0BRCA         3   O  8 64TEXT('Hedge Branch Code')
+     A                                      DSPATR(HI)
+      *
+      ** Subfile Control
+      *
+     A          R SD000743C0
+     A                                      SFLCTL(SD000743S0)
+     A                                      SFLPAG(14) SFLSIZ(15)
+     A                                      OVERLAY
+     A  80                                  SFLCLR
+     A  81                                  SFLDSP
+     A                                      SFLDSPCTL
+     A N80 81 82                            SFLEND
+     A N82                                  ROLLUP(31)
+     A N28                                  CA05
+     A N28N27                               CA09
+     A            #0RLRN         4  0H      SFLRCDNBR
+     A                                  4  9'Hedge'
+     A                                  4 24'Description'
+     A                                  4 64'Branch'
+     A                                  5  9'Name'
+     A                                  5 64'Code'
+     A            #0POS1        10   B  6  9TEXT('Hedge Shortname')
+     A                                      DSPATR(UL HI)
+     A            #0POS2        35   B  6 24TEXT('Hedge Description')
+     A                                      CHECK(LC) DSPATR(UL HI)
+     A            #0POS3         3   B  6 64TEXT('Branch Code')
+     A                                      DSPATR(UL HI)
+      *
+      ** Record Details
+      *
+     A          R SD000743F1                TEXT('Details')
+     A                                      OVERLAY
+     A  72                                  CA10
+     A                                      CA12
+     A            #1LCDT         5  0H      TEXT('Last Change Date')
+     A            #1CHTP         1   H      TEXT('Last Change Type')
+     A                                  4  2'Hedge Name...........:'
+     A            #1HESN        10   B  4 25TEXT('Hedge Shortname')
+     A  41                                  DSPATR(RI PC)
+     A N41                                  DSPATR(HI)
+     A  70N71N73                            DSPATR(UL)
+     A N70
+     AO 71
+     AO 73                                  DSPATR(PR)
+     A N70                              5  2'Hedge Description....:'
+     A            #1HELD        35   B  5 25TEXT('Hedge Description')
+     A                                      CHECK(LC)
+     A  42                                  DSPATR(RI PC)
+     A N70N71N73                            DSPATR(UL)
+     A N42                                  DSPATR(HI)
+     A  70
+     AO 71
+     AO 73                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A N70                              6  2'Branch Code..........:'
+     A            #1BRCA         3   B  6 25TEXT('Branch Code')
+     A  43                                  DSPATR(RI PC)
+     A N70N71N73                            DSPATR(UL)
+     A N43                                  DSPATR(HI)
+     A  70
+     AO 71
+     AO 73                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1BRNM        30   O  6 30TEXT('Branch Name')
+     A                                      DSPATR(HI)
+     A N71N72N73                            DSPATR(ND)
+     A N70                              8  2'Hedge Product Type.......:'
+     A            #1PRTP         2   B  8 29TEXT('Hedge Product Type')
+     A  44                                  DSPATR(RI PC)
+     A N70N71N73                            DSPATR(UL)
+     A N44                                  DSPATR(HI)
+     A  70
+     AO 71
+     AO 73                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A N32
+     AAN70                              8 34'Sub-Type....:'
+     A            #1PRST         2   B  8 48TEXT('Hedge Product Sub-Type')
+     A  45                                  DSPATR(RI PC)
+     A N32
+     AAN70N71N73                            DSPATR(UL)
+     A N45                                  DSPATR(HI)
+     A  32
+     AO 70
+     AO 71
+     AO 73                                  DSPATR(PR)
+     A  32
+     AO 70                                  DSPATR(ND)
+     A N70                              8 59'Risk.......:'
+     A**Start of change CAS006
+      *
+      ** Risk field was hidden for future use
+      *
+     A                                      DSPATR(ND)
+     A**End of change CAS006
+     A            #1HRSK         1   B  8 72TEXT('Hedge Risk')
+     A**Start of change CAS006
+     A                                      DSPATR(ND)
+     A                                      DSPATR(PR)
+     A**End of change CAS006
+     A  46                                  DSPATR(RI PC)
+     A N70N71N73                            DSPATR(UL)
+     A N46                                  DSPATR(HI)
+     A**Start of change CAS006
+     A**70******                                                                              CAS006
+     A*O*71*****                                                                              CAS006
+     A*O*73*****                            DSPATR(PR)                                        CAS006
+     A**70******                            DSPATR(ND)                                        CAS006
+     A**End of change CAS006
+     A N70                              9  2'Effectiveness Measure....:'
+     A**Start of change CAS006
+      *
+      ** Effectiveness measure field was hidden for future use
+      *
+     A                                      DSPATR(ND)
+     A**End of change CAS006
+     A            #1EFFM         1   B  9 29TEXT('Effectiveness Measure')
+     A**Start of change CAS006
+     A                                      DSPATR(ND)
+     A                                      DSPATR(PR)
+     A**End of change CAS006
+     A  47                                  DSPATR(RI PC)
+     A N70N71N73                            DSPATR(UL)
+     A N47                                  DSPATR(HI)
+     A**Start of change CAS006
+     A**70******                                                                              CAS006
+     A*O*71*****                                                                              CAS006
+     A*O*73*****                            DSPATR(PR)                                        CAS006
+     A**70******                            DSPATR(ND)                                        CAS006
+     A**End of change CAS006
+     A N70                              9 34'Upper %.....:'
+     A            #1EFUP         7  4B  9 48TEXT('Effectiveness Upper Pctg')
+     A                                      EDTCDE(3)
+     A                                      CHECK(FE)
+     A  48                                  DSPATR(RI PC)
+     A N48                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A N70                              9 59'Lower %....:'
+     A            #1EFLO         7  4B  9 72TEXT('Effectiveness Lower Pctg')
+     A                                      EDTCDE(3)
+     A                                      CHECK(FE)
+     A  49                                  DSPATR(RI PC)
+     A N49                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A N70                             10  2'Effectiveness Frequency..:'
+     A            #1EFFQ         1   B 10 29TEXT('Effectiveness Frequency')
+     A  50                                  DSPATR(RI PC)
+     A N70N71N73                            DSPATR(UL)
+     A N50                                  DSPATR(HI)
+     A  70
+     AO 71
+     AO 73                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+      **Start of change CAS006
+      **Start of change 223706
+     A*N61N70***                       11  2'Effectiveness Assessment.:'                      223706
+     A**********  #1MEFF         1   B 11 29TEXT('Effectiveness Assessment')                  223706
+     A N61N70                          11  2'Hedge Assessment Method..:'
+     A            #1MEFF         1   B 11 29TEXT('Hedge Assessment Method')
+      **End of change 223706
+     A  58                                  DSPATR(RI PC)
+     A N70N71
+     AAN61N58N74                            DSPATR(UL)
+     A N58                                  DSPATR(HI)
+     A  61
+     AO 70
+     AO 71
+     AO 74                                  DSPATR(PR)
+     A  61
+     AO 70                                  DSPATR(ND)
+      **End of change CAS006
+     A N70                             10 34'First Date..:'
+     A            #1FSDT         6   B 10 48TEXT('First Date')
+     A  51                                  DSPATR(RI PC)
+     A N51                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A N70                             12  2'Valid Derivative Types.......:'
+     A            #1DVT1        10   B 12 33TEXT('Derivative Type 1')
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DVT2        10   B 12 45TEXT('Derivative Type 2')
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DVT3        10   B 12 57TEXT('Derivative Type 3')
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DVT4        10   B 12 69TEXT('Derivative Type 4')
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DVT5        10   B 13  9TEXT('Derivative Type 5')
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DVT6        10   B 13 21TEXT('Derivative Type 6')
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DVT7        10   B 13 33TEXT('Derivative Type 7')
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DVT8        10   B 13 45TEXT('Derivative Type 8')
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DVT9        10   B 13 57TEXT('Derivative Type 9')
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DT10        10   B 13 69TEXT('Derivative Type 10')
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A N70                             15  2'Valid Derivative +
+     A                                      Sub-Types...........:'
+     A            #1DST1         2   B 15 41TEXT('Derivative Sub-Type 1')
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DST2         2   B 15 45TEXT('Derivative Sub-Type 2')
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DST3         2   B 15 49TEXT('Derivative Sub-Type 3')
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DST4         2   B 15 53TEXT('Derivative Sub-Type 4')
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DST5         2   B 15 57TEXT('Derivative Sub-Type 5')
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DST6         2   B 15 61TEXT('Derivative Sub-Type 6')
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DST7         2   B 15 65TEXT('Derivative Sub-Type 7')
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DST8         2   B 15 69TEXT('Derivative Sub-Type 8')
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DST9         2   B 15 73TEXT('Derivative Sub-Type 9')
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DS10         2   B 15 77TEXT('Derivative Sub-Type 10')
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A N70                             16  2'Valid Derivative +
+     A                                      Book Codes..........:'
+     A            #1DBK1         2   B 16 41TEXT('Derivative Book Code 1')
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DBK2         2   B 16 45TEXT('Derivative Book Code 2')
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DBK3         2   B 16 49TEXT('Derivative Book Code 3')
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DBK4         2   B 16 53TEXT('Derivative Book Code 4')
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DBK5         2   B 16 57TEXT('Derivative Book Code 5')
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DBK6         2   B 16 61TEXT('Derivative Book Code 6')
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DBK7         2   B 16 65TEXT('Derivative Book Code 7')
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DBK8         2   B 16 69TEXT('Derivative Book Code 7')
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DBK9         2   B 16 73TEXT('Derivative Book Code 9')
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1DB10         2   B 16 77TEXT('Derivative Book Code 10')
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A N70                             18  2'Valid Hedged Deal/+
+     A                                      Investment Types...:'
+     A            #1HDT1         3   B 18 41TEXT('Hedged Deal/Invt Type 1')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HDT2         3   B 18 45TEXT('Hedged Deal/Invt Type 2')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HDT3         3   B 18 49TEXT('Hedged Deal/Invt Type 3')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HDT4         3   B 18 53TEXT('Hedged Deal/Invt Type 4')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HDT5         3   B 18 57TEXT('Hedged Deal/Invt Type 5')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HDT6         3   B 18 61TEXT('Hedged Deal/Invt Type 6')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HDT7         3   B 18 65TEXT('Hedged Deal/Invt Type 7')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HDT8         3   B 18 69TEXT('Hedged Deal/Invt Type 8')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HDT9         3   B 18 73TEXT('Hedged Deal/Invt Type 9')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HD10         3   B 18 77TEXT('Hedged Deal/Invt Type 10')
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A N70                             19  2'Valid Hedged Deal +
+     A                                      Sub-Types..........:'
+     A            #1HST1         2   B 19 41TEXT('Hedged Deal Sub-Type 1')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HST2         2   B 19 45TEXT('Hedged Deal Sub-Type 2')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HST3         2   B 19 49TEXT('Hedged Deal Sub-Type 3')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HST4         2   B 19 53TEXT('Hedged Deal Sub-Type 4')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HST5         2   B 19 57TEXT('Hedged Deal Sub-Type 5')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HST6         2   B 19 61TEXT('Hedged Deal Sub-Type 6')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HST7         2   B 19 65TEXT('Hedged Deal Sub-Type 7')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HST8         2   B 19 69TEXT('Hedged Deal Sub-Type 8')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HST9         2   B 19 73TEXT('Hedged Deal Sub-Type 9')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HS10         2   B 19 77TEXT('Hedged Deal Sub-Type 10')
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A N70                             20  2'Valid Hedged Deal +
+     A                                      Book Codes.........:'
+     A            #1HBK1         2   B 20 41TEXT('Hedged Deal Book Code 1')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HBK2         2   B 20 45TEXT('Hedged Deal Book Code 2')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HBK3         2   B 20 49TEXT('Hedged Deal Book Code 3')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HBK4         2   B 20 53TEXT('Hedged Deal Book Code 4')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HBK5         2   B 20 57TEXT('Hedged Deal Book Code 5')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HBK6         2   B 20 61TEXT('Hedged Deal Book Code 6')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HBK7         2   B 20 65TEXT('Hedged Deal Book Code 7')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HBK8         2   B 20 69TEXT('Hedged Deal Book Code 8')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HBK9         2   B 20 73TEXT('Hedged Deal Book Code 9')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+     A            #1HB10         2   B 20 77TEXT('Hedged Deal Book Code 10')
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A N70N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A  70                                  DSPATR(ND)
+      *
+      ** Command Line
+      *
+     A          R SD000743F2                TEXT('Command keys')
+     A                                      OVERLAY
+     A  26                             23  2'A=Amend  D=Delete  E=Enquire  +
+     A                                      F3=Main Menu  F5=Refresh  +
+     A                                      F9=Go to ''Add'' Mode'
+     A  28                             23  2'1=Select request   F3=Exit'
+     A  29                             23  2'F3=Main Menu   F12=Previous'
+     A  27                             23  2'E=Enquire   F3=Main Menu   +
+     A                                      F5=Refresh'
+     A  72                             23  2'F3=Main Menu   F10=Delete   +
+     A                                      F12=Previous'
+      *
+      ** Message Record Format
+      *
+     A          R SD000743S1                TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            #1MSGK                    SFLMSGKEY
+     A            #1PGMQ                    SFLPGMQ
+      *
+      ** Message Control
+      *
+     A          R SD000743C1                TEXT('Program Messages')
+     A                                      SFLCTL(SD000743S1)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A                                      OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            #1PGMQ                    SFLPGMQ

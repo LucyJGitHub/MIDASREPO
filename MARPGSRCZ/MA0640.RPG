@@ -1,0 +1,428 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MA Set-up optical disk header string')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Microfiche/Optical Disk Archiving Module             *
+      *                                                               *
+      *  MA0640 - Create header record for optical disk processing.   *
+      *                                                               *
+      *  Function:  This program formats optical disk header details  *
+      *                                                               *
+      *  Called By: ZSFILE - Set up spool file numbers file           *
+      *             MA0600 - Split archive contents for collation     *
+      *             MA0610 - Archive output queue                     *
+      *             MA0620 - Collation control                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD024520           Date 24Jan14               *
+      *  Prev Amend No. MD021155           Date 08Jul13               *
+      *                 CCB020             Date 06Aug12               *
+      *                 AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 COR001             Date 14Feb95               *
+      *                 S01408             Date 22Feb95               *
+      *                 064177             DATE 07MAR94               *
+      *                 S01382             DATE 21JUL92               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD024520 - Archiving job SCC0420 is looping. Producing a     *
+      *             lot of dumps.                                     *
+      *  MD021155 - COB Restructure Phase 1 remnants                  *
+      *           - Parameter defined as SDBANKPD                     *
+      *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,MAH00010                                 *
+      *             WNCPYSRC,MAH00011                                 *
+      *             WNCPYSRC,MAH00012                                 *
+      *             WNCPYSRC,MAH00013                                 *
+      *  COR001 - ORF Multibranching (Add entity, system level & name *
+      *           to optical disk headers)                            *
+      *  S01408 - Addition of core hook MA0640FFPG                    *
+      *           Addition of core hook MA0640CCPG                    *
+      *  064177 - Retrieve rundate from new data area MAARCDAT so that*
+      *           correct run date will be written to optical report. *
+      *  S01382 - OPTICAL DISK REPORTING                              *
+      *           NEW PROGRAM CREATED FOR SAR.                        *
+      *                                                               *
+      *****************************************************************
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,MA0640FFPG                                           S01408
+     F*                                                                   S01408
+     FMAOHDRPDO   E                    DISK
+      ** Optical disk headers file.
+      *
+      /EJECT
+      *
+      ** Array containing Copyright statement.
+      *
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ILDA       E DSLDA                         256
+     I***SDBNK**   E DSSDBANKPD                                                      CCB020 MD021155
+     ISDSBNK    E DSSDSBNKTD                                                                MD021155
+      *
+      ** Internal header record data structure.
+      *
+     IHEAD        DS
+     I                                        1 198 HEAD1
+     I                                        1   4 HEADID
+     I                                        5   5 AST1
+     I                                        6  15 RPT
+     I                                       16  16 AST2
+     I********                               17  26 USER                  COR001
+     I********                               27  27 AST3                  COR001
+     I********                               28  37 JOB                   COR001
+     I********                               38  38 AST4                  COR001
+     I********                               39  44 JOBN                  COR001
+     I********                               45  45 AST5                  COR001
+     I********                               46  50 MRUN                  COR001
+     I********                               51  51 AST6                  COR001
+     I                                       17  17 RLVL                  COR001
+     I                                       18  18 AST10                 COR001
+     I                                       19  21 ENTY                  COR001
+     I                                       22  22 AST11                 COR001
+     I                                       23  24 SYSPRF                COR001
+     I                                       25  25 AST13                 COR001
+     I                                       26  35 USER                  COR001
+     I                                       36  36 AST3                  COR001
+     I                                       37  46 JOB                   COR001
+     I                                       47  47 AST4                  COR001
+     I                                       48  51 FILLER                COR001
+     I                                       52  58 MDATE
+     I                                       59  59 AST7
+     I                                       60  67 DDMMYY
+     I                                       68  68 AST8
+     I                                       69  72 SPLF
+     I                                       73  73 AST9
+     I                                       74  78 MRUN                  COR001
+     I                                       79  79 AST6                  COR001
+     I********                               74  74 RLVL                  COR001
+     I********                               75  75 AST10                 COR001
+     I********                               76  78 ENTY                  COR001
+     I********                               79  79 AST11                 COR001
+     I                                       80  89 PNAM
+     I                                       90  90 AST12
+     I                                       91  96 JOBN                  COR001
+     I                                       97  97 AST5                  COR001
+     I/COPY WNCPYSRC,MAH00010
+      *
+      ** Input header record data structure.
+      *
+     IIHEAD       DS
+     I                                        1 198 HEADER
+     I                                        1   4 OUTPUT
+     I                                        5  14 REPORT
+     I                                       15  24 USERID
+     I                                       25  34 JOBNAM
+     I                                       35  40 JOBNBR
+     I                                       41  44 SPLFNO
+     I                                       45  45 RPTLVL
+     I                                       46  48 ENTITY
+     I                                       49  53 RSEQNO
+     I                                       54  63 PRTFNM
+     I/COPY WNCPYSRC,MAH00011
+      *
+      ** Program status data structure.
+      *
+     ISTS        SDS
+     I                                      244 253 JOBI
+     I                                      264 2690JOBNBI
+     I***********                                                         064177
+     I***SDBANKPD*data*structure.**************************************   064177
+     I***********                                                         064177
+     I***BANK******E*DSSDBANKPD***************                            064177
+     I****************************************1 116 SDBANK                064177
+      *
+      ** DD/MM/YY data structure.
+      *
+     IDATEDS      DS
+     I                                        1   8 DMYDAT
+     I                                        1   2 DD
+     I                                        3   3 SLASH1
+     I                                        4   5 MM
+     I                                        6   6 SLASH2
+     I                                        7   8 YY
+      *
+      ** DDMMYY data structure.
+      *
+     IDMY         DS
+     I                                        1   6 RTNDAT
+     I                                        1   2 DD1
+     I                                        3   4 MM1
+     I                                        5   6 YY1
+     ISDSTAT    E DSSDSTAT                      256                       COR001
+      *                                                                   COR001
+      ** Standing Data Status Dataarea                                    COR001
+      *                                                                   COR001
+     I***DSFDY**   E DSDSFDY                                                       MD021155 MD024520
+     IDSSDY     E DSDSSDY                                                                   MD024520
+     I/COPY WNCPYSRC,MAH00012
+     I/EJECT
+      *
+      ** Set-up copyright parameter.
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Input parameters.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           IHEAD
+     C                     PARM           @RUN
+      *
+      ** Define local data area
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Internal header record initialisation.
+      *
+     C                     MOVE *ALL'\'   HEAD1
+     C                     MOVE '*$*$'    HEADID
+     C                     MOVE '*'       AST1
+     C                     MOVE REPORT    RPT
+     C                     MOVE '*'       AST2
+     C                     MOVE USERID    USER
+     C                     MOVE '*'       AST3
+     C                     MOVE JOBNAM    JOB
+     C                     MOVE '*'       AST4
+     C                     MOVE JOBNBR    JOBN
+     C                     MOVE '*'       AST5
+     C                     MOVE '*'       AST6
+     C                     MOVE '*'       AST7
+     C                     MOVE '*'       AST8
+     C                     MOVE SPLFNO    SPLF
+     C                     MOVE '*'       AST9
+     C                     MOVE RPTLVL    RLVL
+     C                     MOVE '*'       AST10
+     C                     MOVE ENTITY    ENTY
+     C                     MOVE '*'       AST11
+     C                     MOVE PRTFNM    PNAM
+     C                     MOVE '*'       AST12
+     C/COPY WNCPYSRC,MAH00013
+      *
+     C           *NAMVAR   DEFN           SDSTAT                          COR001
+      *                                                                   COR001
+     C           *LOCK     IN   SDSTAT                                    COR001
+      *                                                                   COR001
+     C                     MOVE LIBR      SYSPRF                          COR001
+     C                     MOVE '*'       AST13                           COR001
+     C                     OUT  SDSTAT                                    COR001
+      *                                                                   COR001
+      ** Check for blank entries in the header string and add standard
+      ** defaults if necessary.
+      *
+      ** Report name :
+      ** The default for field RPT is 'DFTRPT'
+      *
+     C           RPT       IFEQ *BLANKS
+     C                     MOVEL'DFTRPT'  RPT
+     C                     END
+      *
+      ** User Id for Output :
+      *
+     C           USER      IFEQ *BLANKS
+      *
+      ** If split archive contents for collation, default for field USER is
+      ** 'RCFUSER'
+      *
+     C           OUTPUT    IFEQ 'RCFR'
+     C                     MOVEL'RCFUSER' USER
+     C                     ELSE
+      *
+      ** If collation control, default for field USER is 'COLLATION'
+      *
+     C           OUTPUT    IFEQ 'COLL'
+     C                     MOVEL'COLLA'   USER
+     C                     MOVE 'TION '   USER
+     C                     ELSE
+      *
+      ** otherwise the default for USER is 'DFTUSER' :
+      *
+     C                     MOVEL'DFTUSER' USER
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** Job name :
+      ** The default for field JOB is blanks.
+      *
+      ** Job number :
+      ** The default for field JOBN is blanks.
+      *
+     C           JOBN      IFEQ *BLANKS
+     C                     MOVEL'000000'  JOBN
+     C                     END
+      *
+      ** Midas Run dates in day number, XXAAAXX and DD/MM/YY formats :
+      *
+     C***********          CALL 'AOBANKR0'                                064177
+     C***********          PARM '*MSG   ' @RTCD   7                       064177
+     C***********          PARM '*FIRST ' @OPTN   7                       064177
+     C***********          PARM           SDBANK                          064177
+     C***********                                                         064177
+     C***********@RTCD     IFNE *BLANK                                    064177
+     C************LOCK     IN   LDA                        ***************064177
+     C***********          MOVEL'SDBANKPD'DBFILE           * DBERROR 01  *064177
+     C***********          Z-ADD1         DBASE            ***************064177
+     C***********          MOVEL'MA0640'  DBPGM                           064177
+     C***********          MOVE *BLANKS   DBKEY                           064177
+     C***********          OUT  LDA                                       064177
+     C***********          EXSR *PSSR                                     064177
+     C***********          END                                            064177
+     C*                                                                   064177
+     C** Receive Data area MAARCDAT for archiving date                    064177
+     C*                                                                   064177
+     C********** *NAMVAR   DEFN MAARCDAT  PRUND   50                                   064177 CCB020
+     C**********           IN   PRUND                                                  064177 CCB020
+     C                     CALL 'AOSBNKR0'                                                    CCB020
+     C                     PARM           PRTCD   7                                           CCB020
+     C                     PARM '*FIRST ' POPTN   7                                           CCB020
+     C**********           PARM *BLANKS   SDBNK                                      CCB020 MD021155
+     C********** SDSBNK    PARM SDSBNK    DSFDY                                    MD021155 MD024520
+     C           SDSBNK    PARM SDSBNK    DSSDY                                             MD024520
+      *                                                                                       CCB020
+     C           PRTCD     IFEQ *BLANKS                                                       CCB020
+     C                     MOVE BJRDNB    PRUND   50                                          CCB020
+     C                     ELSE                                                               CCB020
+     C                     EXSR *PSSR                                                         CCB020
+     C                     ENDIF                                                              CCB020
+      *
+      ** Move Midas day information to data structure.
+      *
+     C***********          MOVE BJRDNB    MRUN                            064177
+     C***********          MOVE BJMRDT    MDATE                           064177
+     C                     MOVE PRUND     MRUN                            064177
+     C***********                                                         064177
+     C***Convert*Midas*date*to*DD/MM/YY*format.************************   064177
+     C***********                                                         064177
+     C*                                                                   064177
+     C** Convert Midas date to DDMMMYY and DD/MM/YY format.               064177
+     C*                                                                   064177
+     C                     CALL 'ZDATE2'
+     C***********          PARM           BJRDNB                          064177
+     C                     PARM PRUND     WQ0002  50                      064177
+     C                     PARM           BLANK   1
+     C                     PARM           RTNVAL  60
+     C***********          PARM           BLANKS  7                       064177
+     C                     PARM           ZADATE  7                       064177
+      *                                                                   064177
+     C                     MOVE ZADATE    MDATE                           064177
+      *
+     C                     MOVELRTNVAL    RTNDAT
+     C                     MOVE DD1       DD
+     C                     MOVE MM1       MM
+     C                     MOVE YY1       YY
+     C                     MOVE '/'       SLASH1
+     C                     MOVE '/'       SLASH2
+     C                     MOVE DMYDAT    DDMMYY
+      *
+      ** Spool file number :
+      ** The default for field SPLF is '0000'.
+      *
+     C           SPLF      IFEQ *BLANKS
+     C                     MOVEL'0000'    SPLF
+     C                     END
+      *
+      ** Report Level :
+      ** The default for field RLVL is blanks.
+      *
+      ** Entity :
+      ** The default for field ENTY is blanks.
+      *
+      ** RCF Sequence Number :
+      ** The default for field RCFSEQ is blanks.
+      *
+      ** Print file name :
+      *
+     C           PNAM      IFEQ *BLANKS
+      *
+      ** If archive output queues, default for field PNAM is the same as the
+      ** report name
+      *
+     C           OUTPUT    IFEQ 'OUTQ'
+     C                     MOVELREPORT    PNAM
+     C                     END
+      *
+     C                     END
+      *
+      *
+      ** If an update to MAOHDRPD has been requested then write
+      ** a new record to it
+      ** (field OUTPUT = 'OHDR' called from ZSFILE)
+      *
+     C           OUTPUT    IFEQ 'OHDR'
+     C                     MOVE 'N'       ATODAY
+     C                     MOVE RSEQNO    RCFSEQ
+     C                     MOVE SPLF      SPFN
+     C                     MOVE *BLANKS   HEADER
+     C                     MOVE HEAD1     HEADER
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,MA0640CCPG                                           S01408
+     C*                                                                   S01408
+     C                     WRITEMAOHDRD0
+      *
+     C                     ELSE
+      *
+      ** Otherwise if the calling program will process the header from here
+      ** then set up the header string in the return parameter
+      ** (field OUTPUT = 'RCFR' called from MA0600
+      **               = 'OUTQ' called from MA0610
+      **               = 'COLL' called from MA0620)
+      *
+     C                     MOVE *BLANKS   HEADER
+     C                     MOVE HEAD1     HEADER
+     C                     END
+      *
+      ** Exit program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

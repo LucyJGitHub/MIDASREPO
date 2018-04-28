@@ -1,0 +1,1822 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG UDC statement driver')                        *
+/*OVRF*: OVRDBF (XXSTMTAH) (STMTAH)                                 : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG4700 - Statement Driver File Production                    *
+      *                                                               *
+      *  Function:  This program reads all records on the file of     *
+      *             Statements to be produced and determines whether  *
+      *             each statement is to be produced in UDC or not    *
+      *             and whether the statement is to be produced via   *
+      *             normal MIDAS processes or not.                    *
+      *                                                               *
+      *             After the process has run CGSTMTPD contains all   *
+      *             statements to be produced via UDC, STMTS all to   *
+      *             be produced normally, the STMTS trailer is        *
+      *             maintained and the Account updated for statements *
+      *             which are suppressed.                             *
+      *                                                               *
+      *  Called By: CGCnnnn - XxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxX *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. MD029255           Date 25Nov14               *
+      *  Prev Amend No. AR864876           Date 18Nov11               *
+      *                 AR886391           Date 28Dec11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG24792           Date 07Jul09               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222373             Date 31Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 096633             Date 30Nov95               *
+      *                 089268             Date 06Jul95               *
+      *                 088009             DATE 23MAY95               *
+      *                 088001             DATE 11MAY95               *
+      *                 087279             DATE 03MAY95               *
+      *                 086161             DATE 29MAR95               *
+      *                 086163             DATE 29MAR95               *
+      *                 086178             DATE 29MAR95               *
+      *                 084352             DATE 07MAR95               *
+      *                 086186             DATE 01MAR95               *
+      *                                    DATE 01JAN95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD029255 - CM STATEMENT_TURNOVER extracts wrong <BfwdBalance>*
+      *             for GL and Retail accounts.                       *
+      *           - Make sure to update ECFB field when statement     *
+      *             frequency is 'E'.                                 *
+      *  AR864876 - Extra page number not updated (Child:AR864877)    *
+      *  AR886391 - FGE144 Suppress Monthly "Normal" Statement for    *
+      *             turnover statements in UDC                        *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG24792 - Next Statement date on ACCNTAB is incorrect       *
+      *           - Applied fix 239343. Replace FOK015 with CGL013    *
+      *         - Correct update of ACCNTAB for Multicash accounts    *
+      *           Changes for FOK015=Multicash stmt.frequency         *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222373 - Correct parameters on program calls                 *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *  096633 - Correct Turnover statement test                     *
+      *  089268 - CGSB corrupted : - account has to produce a         *
+      *           statement the day of the opening and if this one    *
+      *           is suppressed by UDC, The next statement includes   *
+      *           the postings of the day of the opening a second time*
+      *           because LSTP is 0 and LSTD still equal to DACO e    *
+      *           Increment LSTP even if statement suppress (S01536)  *
+      *         - Do not update LSTP/NSTD if statement suppress for   *
+      *           no posting reason.                                  *
+      *  088009 - Ensure that movements and Rate Changes on the date  *
+      *           an account is opened are not ignored.               *
+      *  088001 - Change S01534 to no movements only                  *
+      *  087279 - Read EODPOTS first then GLACNTL1                    *
+      *           If statement frequency E then set to M              *
+      *  086161 - Change to IGNDECERR(*YES)                           *
+      *  086163 - Use new logicals GLSTMTR and GLSTMTP                *
+      *  086178 - Access Apost by file name to check postings         *
+      *  084352 - Only suppress statement via s/f S01536 if           *
+      *           explicitly set up in UDC database for suppression;  *
+      *           not if correspondent doesn't exist.                 *
+      *  086186 - Add CPOST processing                                *
+      *  S01522 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  01   -    PRTF Overflow indicator (not used for Overflow)    *
+      *  50   -    Main file access indicator                         *
+      *  51   -    Secondary file access indicator                    *
+      *  70   -    TESTB indicator                                    *
+      *  90   -    ROLBK indicator                                    *
+      *  91   -    Error on CALL                                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FCGSTMTL0O   E                    DISK
+     F                                              KINFSR SRFILE
+     FEODPOTS IF  E           K        DISK
+     F            APOSTPDF                          KRENAMEEODPOTSF
+     F                                              KINFSR SRFILE
+     FGLACNTL1IF  E           K        DISK
+     F            ACCNTABF                          KRENAME@ACNTL1F
+     F                                              KINFSR SRFILE
+     FACCNT   UF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F            ACCNTAAF                          KIGNORE               088009
+     F            ACCNTACF                          KIGNORE               088009
+     FSTMTZX  UF  E                    DISK
+     F                                              KINFSR SRFILE
+     FXXSTMTAHO   E                    DISK
+     F            STMTAHF                           KRENAMEXSTMTAHF
+     F                                              KINFSR SRFILE
+     F*APOST***IF  E           K        DISK                              086163
+     FGLSTMTP IF  E           K        DISK                               086163
+     F                                              KINFSR SRFILE
+     FGLSTMTR IF  E           K        DISK                               086163
+     F                                              KINFSR SRFILE         086163
+     FCG4700P1O   E             01     PRINTER
+     F                                              KINFSR SRFILE
+     F                                              KINFDS DS4700
+     FSTMTS   IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F            STMTHHF                           KIGNORE
+     F            STMTZXF                           KIGNORE
+      *                                                                                     BUG24792
+      ** Midas GL Network accounts - MT94x - retrieval                                      BUG24792
+      *                                                                                     BUG24792
+     FGLNW94L8IF  E           K        DISK                                                 BUG24792
+     F/COPY WNCPYSRC,CG4700F001
+      /EJECT
+      *
+      **  Text array.
+     E**********          ##TXT   1   9 80                                                  AR886391
+     E                    ##TXT   1  10 80                                                  AR886391
+      *
+      **  Copyright array.
+     E                    ##CPY   1   1 80
+      /COPY CGCPYSRC,SRERRE
+     E/COPY WNCPYSRC,CG4700E001
+      /EJECT
+      *
+     ISTMTAHF
+      **  Rename fields to avoid corruption.
+     I              RECI                            S#RECI
+     I              ATYP                            S#ATYP
+     I              BRCA                            S#BRCA
+     I              CNUM                            S#CNUM
+     I              CCY                             S#CCY
+     I              ACOD                            S#ACOD
+     I              ACSQ                            S#ACSQ
+     I              MSFL                            S#MSFL
+     I              LSTD                            S#LSTD
+     I              NSTD                            S#NSTD
+     I              LSTP                            S#LSTP
+     I              CFSB                            S#CFSB
+     I              YTDB                            S#YTDB
+     I              GLBT                            S#GLBT
+      *
+     I@ACNTL1F
+      **  Rename fields to avoid corruption.
+     I              RECI                            S#RECI
+     I              ATYP                            S#ATYP
+     I              BRCA                            S#BRCA
+     I              CNUM                            S#CNUM
+     I              CCY                             S#CCY
+     I              ACOD                            S#ACOD
+     I              ACSQ                            S#ACSQ
+     I              LSTD                            S#LSTD
+     I              NSTD                            S#NSTD
+     I              LSTP                            S#LSTP
+     I              CFSB                            S#CFSB
+     I              YTDB                            S#YTDB
+     I              GLBT                            S#GLBT
+      *                                                                                     BUG24792
+     IGLNW94D0                                                                              BUG24792
+      ** SAR File Details Accessed via access program AOSARDR0                              BUG24792
+      *                                                                                     BUG24792
+     I              QQACCD                          QQACCS                                  BUG24792
+      *
+     I#XSTMT    E DSXXSTMTAH
+      **  DS to define output fields as block.
+      *
+     ISCSARD    E DSSCSARDPD
+      **  Sar Text details
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External DS for bank details
+      *
+     ISDGELR    E DSSDGELRPD
+      **  External DS for General Ledger Details
+      *                                                                   088009
+     ISDACCT    E DSACCNTAB                                               088009
+      **  External DS for account details                                 088009
+     I              RECI                            RECIAB                088009
+     I              CNUM                            CNUMAB                088009
+     I              CCY                             CCYAB                 088009
+     I              ACOD                            ACODAB                088009
+     I              ACSQ                            ACSQAB                088009
+     I              BRCA                            BRCAAB                088009
+     I              ATYP                            ATYPAB                088009
+     I              LSTD                            LSTDAB                088009
+     I              NSTD                            NSTDAB                088009
+     I              LSTP                            LSTPAB                088009
+     I              CFSB                            CFSBAB                088009
+     I              YTDB                            YTDBAB                088009
+     I              GLBT                            GLBTAB                088009
+     I              LCD                             LCDAB                 088009
+     I              ACODQQ                          ACO1QQ                                    CGL029
+      *
+     I##UDCR    E DSCGUDCRPD
+      **  External DS for UDC Reference Details
+      *
+     ISDNWRK    E DSSDNWRKPD                                                                AR864876
+     I*                                                                                     AR864876
+     I** Message network details                                                            AR864876
+     I*                                                                                     AR864876
+     IDSFDY     E DSDSFDY
+      **  Data Structure used by Access Programs
+      *                                                                   088009
+     IDSSDY     E DSDSSDY                                                 088009
+      **  Second DS for access programs, long data structure              088009
+     I*                                                                                     AR864876
+     IDSLDY     E DSDSLDY                                                                   AR864876
+      **  Third DS for access programs, very long data structure.                           AR864876
+      *
+     I/COPY WNCPYSRC,CG4700I001
+     I**                                                                  086186
+     IWKEYDS      DS                                                      086186
+     I                                        1   3 WBRCA                 086186
+     I                                        4   9 WCNUM                 086186
+     I                                       10  12 WCCY                  086186
+     I**********                             13  16 WACOD                              086186 CGL029
+     I**********                             17  18 WACSQ                              086186 CGL029
+     I**********                             19  23 WRUND                              086186 CGL029
+     I                                       13  22 WACOD                                     CGL029
+     I                                       23  24 WACSQ                                     CGL029
+     I                                       25  29 WRUND                                     CGL029
+     IDS4700      DS
+      **  CG4700P1 File information Data Structure
+     I                                    B 152 1530F#LINP
+     I                                    B 188 1890F#OVFL
+     I                                    B 367 3680F#CLIN
+      *
+     I##STMT      DS
+      **  DS to define output fields as block.
+     I                                        1   1 S#RECI
+     I                                        2   2 S#ATYP
+     I                                        3   5 S#BRCA
+     I**********                              6  110S#CNUM                                    CSD027
+     I                                        6  11 S#CNUM                                    CSD027
+     I                                       12  14 S#CCY
+     I**********                             15  180S#ACOD                                    CGL029
+     I                                       15  180QQACOD                                    CGL029
+     I                                       19  200S#ACSQ
+     I                                       21  21 S#MSFL
+     I                                       22  32 ZZ0011
+     I                                    P  33  350S#LSTD
+     I                                    P  36  380S#NSTD
+     I                                    P  39  400S#LSTP
+     I                                    P  41  480S#CFSB
+     I                                    P  49  560S#YTDB
+     I                                       57  57 S#GLBT
+     I                                       58  670S#ACOD                                    CGL029
+     I*
+     I            DS
+     I**  DS to format full Account ID for ACCNT DB Error
+     I**********                              1  18 ##ACID                                    CGL029
+     I                                        1  24 ##ACID                                    CGL029
+     I**********                              1   60##CNUM                                    CSD027
+     I                                        1   6 ##CNUM                                    CSD027
+     I                                        7   9 ##CCY
+     I**********                             10  130##ACOD                                    CGL029
+     I**********                             14  150##ACSQ                                    CGL029
+     I**********                             16  18 ##BRCA                                    CGL029
+     I                                       10  190##ACOD                                    CGL029
+     I                                       20  210##ACSQ                                    CGL029
+     I                                       22  24 ##BRCA                                    CGL029
+      *
+      **  Define constant fields
+     I              'STATEMENT '          C         C#STMT
+     I              'NORMAL    '          C         C#NORM
+     I              'TURNOVER  '          C         C#TURN
+      *
+      *
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      /COPY CGCPYSRC,SRERRI
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRNORM - Normal Statement Processing                        *
+      *   SRTURN - Turnover Statement Processing                      *
+      *   SRSTTY - Determine Statement Type                           *
+      *   SRDETL - Output a Detail Line                               *
+      *   SROVFL - Report Overflow Processing                         *
+      *   SRWUDC - Write UDC Statement Driver Record                  *
+      *   SRACCT - Handle Update of ACCNT for suppressed Statements   *
+      *   SRSUPM - Determine whether to suppress Statement - Midas    *
+      *   SRSUPU - Determine whether to suppress Statement - UDC      *
+      *   SRDETF - Determine figures for suppressed statement         *
+      *   SRINIT - Initial processing - On First Call                 *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRNORM - Normal Statement Processing           *
+      *                SRTURN - Turnover Statement Processing         *
+      *                SROVFL - Report Overflow Processing            *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Normal Statement Processing
+     C                     EXSR SRNORM
+      *
+      **  Turnover Statement Processing
+     C                     EXSR SRTURN
+      *
+      **  Set up and output report trailer.
+     C                     Z-ADD7         ##LGTH
+     C                     EXSR SROVFL
+     C                     WRITEF0TRL3
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Output 'End of Report' format
+     C                     Z-ADD3         ##LGTH  30
+     C                     EXSR SROVFL
+     C                     WRITEF0TRL4
+      *
+      **  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRNORM                                         *
+      * Function    :  Normal Statement Processing                    *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  SRSTTY - Determine Statement Type              *
+      *                SRSUPM - Suppress Statements - Midas           *
+      *                SRSUPU - Suppress Statements - UDC             *
+      *                SRWUDC - Write UDC Statement Driver Record     *
+      *                SRACCT - Update of Acct for Suppressed Stmts   *
+      *                SRDETL - Output a Detail Line                  *
+      *                SROVFL - Report Overflow Processing            *
+      *****************************************************************
+     C           SRNORM    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRNORM'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise fields.
+     C                     Z-ADD*ZEROS    R#NREC
+     C                     Z-ADD*ZEROS    R#SROP
+     C                     Z-ADD*ZEROS    R#UROP
+     C                     Z-ADD*ZEROS    R#TREC
+     C                     Z-ADD*ZEROS    R#MTOT
+     C                     Z-ADD*ZEROS    R#UTOT
+     C                     MOVE *BLANKS   R#BRCA
+      *
+      **  Read the Midas Statements Driver file.
+     C                     READ STMTS                    50
+      *
+      **  For each record found ...
+     C           *IN50     DOWEQ*OFF
+      *
+      **  Clear the UDC Statement Driver file format.
+     C                     CLEAR@STMTL0
+     C                     CLEARF1DTL1
+      *
+      **  Determine what sort of statement is to be produced
+     C                     EXSR SRSTTY
+      *                                                                   088009
+      **  Access account details (LF/ACCNT)                               088009
+     C                     CALL 'AOACCTR0'                                088009
+     C                     PARM *BLANKS   ##RTCD  7                       088009
+     C                     PARM '*KEY    '##OPTN  7                       088009
+     C                     PARM *BLANKS   ##RETL 10                       088009
+     C                     PARM           S#CNUM                          088009
+     C                     PARM           S#CCY                           088009
+     C                     PARM           S#ACOD                          088009
+     C                     PARM           S#ACSQ                          088009
+     C                     PARM           S#BRCA                          088009
+     C           SDACCT    PARM SDACCT    DSSDY                           088009
+      *                                                                   088009
+      **  If account master record not found, database error              088009
+     C           ##RTCD    IFNE *BLANK                                    088009
+      *                                                                   088009
+     C                     MOVEL'AOACCTR0'W0FILE                          088009
+     C                     MOVE S#CNUM    ##CNUM                          088009
+     C                     MOVE S#CCY     ##CCY                           088009
+     C                     MOVE S#ACOD    ##ACOD                          088009
+     C                     MOVE S#ACSQ    ##ACSQ                          088009
+     C                     MOVE S#BRCA    ##BRCA                          088009
+     C                     MOVEL##ACID    W0KEY            ***************088009
+     C                     Z-ADD15        W0ERNB           * DB ERROR 15 *088009
+     C                     MOVEL'MEM5004' W0MSGD           ***************088009
+     C                     MOVEL'MIDAS  ' W0MSGF                          088009
+     C                     EXSR SRERR                                     088009
+     C                     ENDIF                                          088009
+      *
+      **  Depending on Statement Type, flag output to relevant files.
+     C                     MOVE 'N'       ##SMID  1
+     C                     MOVE 'N'       ##SUDC  1
+     C                     MOVELC#NORM    ##PSTP
+     C                     MOVELS#NSTD    ##NSTD
+     C                     Z-ADDS#LSTD    ##LSTD
+     C                     Z-ADDS#LSTP    ##LSTP
+     C                     Z-ADDS#CFSB    ##CFSB
+     C                     ADD  1         R#NREC
+      *
+      **  ... Output to MIDAS Statement driver.
+     C           ##PROC    IFEQ 'Y'
+     C                     MOVE 'Y'       ##SMID
+     C                     ELSE
+     C                     MOVE 'Y'       R#DMID
+     C                     MOVE 'Y'       R#DUDC
+     C                     MOVEL##TXT,9   R#RDMI
+     C                     MOVEL##TXT,9   R#RDUD
+     C                     ENDIF
+      *
+      **  ... Output to UDC Statement driver (If not Management)
+     C           ##PROC    IFEQ 'Y'
+     C           SDMSFL    IFNE 'M'
+     C                     MOVE 'Y'       ##SUDC
+     C                     ELSE
+     C                     MOVE 'Y'       R#DUDC
+     C                     MOVEL##TXT,3   R#RDUD
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If a Statement is to be produced, check if the statement is
+      **  to be suppressed.
+     C           ##PROC    IFEQ 'Y'
+     C                     EXSR SRSUPM
+     C                     EXSR SRSUPU
+     C                     ENDIF
+      *                                                                                     BUG24792
+      ** Check GLNW94l8 if Multicash account, generate normal statement                     BUG24792
+      ** if Multicash frequency not 'E' (Turnover)                                          BUG24792
+      ** access to that file has now its own subroutine                                     BUG24792
+     C           CGL013    IFEQ 'Y'                                                         AR864876
+     C           CER030    ANDEQ'Y'                                                         AR864876
+     C                     EXSR SRMULT                                                      BUG24792
+     C           *IN51     IFEQ *OFF                                                        BUG24792
+     C           ##SUDC    ANDEQ'N'                                                         BUG24792
+     C           ##POST    ANDEQ'Y'                        postings                         BUG24792
+     C           #FSTFQ    ANDNE*BLANKS                                                     BUG24792
+     C           #FSTFQ    ANDNE'E'                        and <> "E"                       BUG24792
+     C                     MOVE 'Y'       ##SUDC           generate                         BUG24792
+     C                     END                                                              BUG24792
+     C                     ENDIF                                                            AR864876
+      *
+      **  Produce a UDC Statement, if not to be suppressed.
+     C           ##SUDC    IFEQ 'Y'
+     C                     EXSR SRWUDC
+     C                     ENDIF
+      *
+      **  Produce a Midas Statement record, if not to be suppressed.
+     C           ##SMID    IFEQ 'Y'
+     C                     CLEARXSTMTAHF
+     C                     MOVE ##STMT    #XSTMT
+     C                     WRITEXSTMTAHF
+     C                     ADD  1         ##REC   90
+     C                     MOVE 'Y'       R#OMID
+     C                     ADD  1         R#SROP
+      *
+      **  If no Midas Statement is to be produced handle update of
+      **  ACCNTAB.
+     C                     ELSE
+     C                     EXSR SRACCT
+     C                     ENDIF
+      *
+      **  Set up and output a Detail Line.
+     C                     EXSR SRDETL
+      *
+      **  Read the next record on the Midas Statements Driver file.
+     C                     READ STMTS                    50
+      *
+     C                     ENDDO
+      *
+      **  Update the Statements Trailer file.
+     C           1         CHAINSTMTZXF              50
+      *
+      **  If no record is found, process a database error.
+     C           *IN50     IFEQ *ON
+     C                     MOVEL'STMTZX  'W0FILE           ***************
+     C                     MOVEL'1       'W0KEY            * DB ERROR 01 *
+     C                     Z-ADD01        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      **  If a record is found, update the number of records
+     C           ##REC     ADD  2         NORE1
+     C                     UPDATSTMTZXF
+      *
+      **  Set up and output normal statement report trailer.
+     C                     Z-ADD5         ##LGTH  30
+     C                     EXSR SROVFL
+     C                     WRITEF0TRL1
+      *
+      **  Update totals fields.
+     C                     Z-ADDR#NREC    R#TREC
+     C                     Z-ADDR#SROP    R#MTOT
+     C                     Z-ADDR#UROP    R#UTOT
+      *
+      *................................................................
+      *
+     C           EXNORM    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRTURN                                         *
+      * Function    :  Turnover Statement Processing                  *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  SRSUPU - Suppress Statements - UDC             *
+      *                SRWUDC - Write UDC Statement Driver Record     *
+      *                SRDETL - Output a Detail Line                  *
+      *                SROVFL - Report Overflow Processing            *
+      *****************************************************************
+     C           SRTURN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRTURN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise fields.
+     C                     Z-ADD*ZEROS    R#NREC
+     C                     Z-ADD*ZEROS    R#UROP
+     C                     Z-ADD*ZEROS    ##REC
+     C                     MOVE *BLANKS   R#BRCA
+      *
+      **  Set up and output report header.
+     C                     MOVEL##TXT,8   R#SECT
+     C                     WRITEF0HDR1
+     C                     WRITEF0HDR2
+      ***********                                                         087279
+      ****Read*the Turnover Statements View of ACCNT.                     087279
+     C***********          READ GLACNTL1                 50               087279
+      *                                                                   087279
+      **  Read the Today's Postings                                       087279
+     C                     READ EODPOTS                  50               087279
+      *                                                                   087279
+      * Reset up key from EODPOTS                                         087279
+      *                                                                   087279
+     C           *LIKE     DEFN BRCA      K#BRCA                          087279
+     C           *LIKE     DEFN ATYP      K#ATYP                          087279
+     C           *LIKE     DEFN CNUM      K#CNUM                          087279
+     C           *LIKE     DEFN CCY       K#CCY                           087279
+     C           *LIKE     DEFN ACOD      K#ACOD                          087279
+     C           *LIKE     DEFN ACSQ      K#ACSQ                          087279
+     C                     MOVEL*BLANKS   K#BRCA                          087279
+     C                     MOVEL*BLANKS   K#ATYP                          087279
+     C**********           Z-ADD*ZERO     K#CNUM                                       087279 CSD027
+     C                     MOVE *BLANKS   K#CNUM                                              CSD027
+     C                     MOVEL*BLANKS   K#CCY                           087279
+     C                     Z-ADD*ZERO     K#ACOD                          087279
+     C                     Z-ADD*ZERO     K#ACSQ                          087279
+      *
+      **  For each potential Turnover Statement ...
+     C           *IN50     DOWEQ*OFF
+      *
+      **  Clear the UDC Statement Driver file format.
+     C                     CLEAR@STMTL0
+     C                     CLEARF1DTL1
+      ***********                                                         087279
+      ****...*determine if any movements exist.                           087279
+     C***********##EODP    SETLLEODPOTS                                   087279
+     C***********##EODP    READEEODPOTS                  51               087279
+      *                                                                   087279
+      * Set up key from EODPOTS                                           087279
+      *                                                                   087279
+     C                     MOVELBRCA      S#BRCA                          087279
+     C                     MOVELATYP      S#ATYP                          087279
+     C**********           Z-ADDCNUM      S#CNUM                                       087279 CSD027
+     C                     MOVE CNUM      S#CNUM                                              CSD027
+     C                     MOVELCCY       S#CCY                           087279
+     C                     Z-ADDACOD      S#ACOD                          087279
+     C                     Z-ADDACSQ      S#ACSQ                          087279
+      *                                                                   087279
+      * If account changed then check for turnover                        087279
+      *                                                                   087279
+     C           S#BRCA    IFNE K#BRCA                                    087279
+     C***********S#ATYP    ANDNEK#ATYP                              087279096633
+     C***********S#CNUM    ANDNEK#CNUM                              087279096633
+     C***********S#CCY     ANDNEK#CCY                               087279096633
+     C***********S#ACOD    ANDNEK#ACOD                              087279096633
+     C***********S#ACSQ    ANDNEK#ACSQ                              087279096633
+      *                                                                   087279
+     C           S#ATYP    ORNE K#ATYP                                    096633
+     C           S#CNUM    ORNE K#CNUM                                    096633
+     C           S#CCY     ORNE K#CCY                                     096633
+     C           S#ACOD    ORNE K#ACOD                                    096633
+     C           S#ACSQ    ORNE K#ACSQ                                    096633
+      *                                                                   087279
+     C                     MOVELBRCA      K#BRCA                          087279
+     C                     MOVELATYP      K#ATYP                          087279
+     C**********           Z-ADDCNUM      K#CNUM                                       087279 CSD027
+     C                     MOVE CNUM      K#CNUM                                              CSD027
+     C                     MOVELCCY       K#CCY                           087279
+     C                     Z-ADDACOD      K#ACOD                          087279
+     C                     Z-ADDACSQ      K#ACSQ                          087279
+      *                                                                   087279
+      **  ... determine if any movements exist.                           087279
+     C           ##EODP    CHAINGLACNTL1             51                   087279
+      *
+      **  If movements exist, output a UDC Driver Record.
+     C           *IN51     IFEQ *OFF
+     C           STFQ      ANDEQ'E'                                       087279
+     C                     ADD  1         ##REC
+      *
+     C                     MOVELC#TURN    ##PSTP
+     C                     Z-ADDBJRDNB    ##NSTD
+     C           BJRDNB    SUB  1         ##LSTD
+     C                     Z-ADDEPNO      ##LSTP
+     C                     Z-ADDECFB      ##CFSB
+     C                     MOVE 'Y'       ##SUDC
+      *
+      **  If a Statement is to be produced, check if the statement is
+      **  to be suppressed.
+     C                     EXSR SRSUPU
+      *                                                                                     BUG24792
+      ** Multicash accounts of this category are treated as NORMAL, so                      BUG24792
+      ** must be suppressed in this section...             MC frequency                     BUG24792
+      *                                                                                     BUG24792
+     C           #FSTFQ    IFNE ' '                                                         BUG24792
+     C           #FSTFQ    ANDNE'E'                        <> E & blank                     BUG24792
+     C                     MOVE 'N'       ##SUDC           suppress                         BUG24792
+     C                     END                                                              BUG24792
+      *
+      **  Produce a UDC Statement, if not to be suppressed.
+     C           ##SUDC    IFEQ 'Y'
+     C                     EXSR SRWUDC
+     C                     ENDIF
+      *
+      **  Set up and output a Detail Line.
+     C                     EXSR SRDETL
+      *
+     C                     ENDIF
+     C                     ENDIF                                          087279
+      ***********                                                         087279
+      ****Read*the Turnover Statements View of ACCNT.                     087279
+     C***********          READ GLACNTL1                 50               087279
+      *                                                                   087279
+      **  Read the Today's Postings                                       087279
+     C                     READ EODPOTS                  50               087279
+      *
+     C                     ENDDO
+      *
+      **  Set up and output Turnover statement report trailer.
+     C                     Z-ADD##REC     R#NREC
+     C                     ADD  R#NREC    R#TREC
+     C                     Z-ADDR#SROP    R#MTOT
+     C                     ADD  R#UROP    R#UTOT
+     C                     Z-ADD4         ##LGTH
+     C                     EXSR SROVFL
+     C                     WRITEF0TRL2
+      *
+      *................................................................
+      *
+     C           EXTURN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSTTY                                         *
+      * Function    :  Determine Statement Type                       *
+      *                                                               *
+      * Called by   :  SRNORM - Normal Statement Processing           *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRSTTY    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRSTTY'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Determine what sort of statement is to be produced
+     C                     MOVE *BLANK    ##PROC  1
+     C                     MOVE *BLANK    ##DEMA  1
+     C                     MOVE *BLANK    ##MANA  1
+     C                     MOVE *BLANK    SDMSFL
+      *
+      **  ... If the Next Statement Date is before the Date of Next
+      **      Working Day.
+     C/COPY WNCPYSRC,CG4700C004
+     C           S#NSTD    IFLT BJDNWD
+     C                     MOVE 'Y'       ##PROC
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG4700C005
+      *
+      **  ... If a Demand Statement has been requested.
+     C           ##PROC    IFNE 'Y'
+     C                     MOVE *OFF      *IN70
+     C                     TESTB'1'       S#GLBT         70
+     C           *IN70     IFEQ *ON
+     C                     MOVE 'Y'       ##DEMA
+     C                     MOVE 'D'       SDMSFL
+     C                     MOVE 'Y'       ##PROC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  ... If a Management Statement has been requested.
+     C           ##PROC    IFNE 'Y'
+     C                     MOVE *OFF      *IN70
+     C                     TESTB'0'       S#GLBT         70
+     C           *IN70     IFEQ *ON
+     C                     MOVE 'Y'       ##MANA
+     C                     MOVE 'M'       SDMSFL
+     C                     MOVE 'Y'       ##PROC
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXSTTY    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRDETL                                         *
+      * Function    :  Output a Detail Line                           *
+      *                                                               *
+      * Called by   :  SRNORM - Normal Statement Processing           *
+      *                SRTURN - Turnover Statement Processing         *
+      * Calls       :  SROVFL - Report Overflow Processing            *
+      *****************************************************************
+     C           SRDETL    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRDETL'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Handle Overflow
+     C                     Z-ADD2         ##LGTH  30
+     C                     EXSR SROVFL
+      *
+      **  If overflow has occurred or a change in Branch set up
+      **  appropriate fields.
+     C           ##OVFL    IFEQ 'Y'
+     C           ##BRCS    ORNE S#BRCA
+     C                     MOVE S#BRCA    R#BRCA
+     C                     MOVE S#BRCA    ##BRCS
+     C                     ENDIF
+      *
+      **  Set up remaining Account ID Fields
+     C                     MOVE S#CNUM    R#CNUM
+     C                     MOVE S#CCY     R#CCY
+     C                     MOVE S#ACOD    R#ACOD
+     C                     MOVE S#ACSQ    R#ACSQ
+      *
+      **  Output Detail line.
+     C                     WRITEF1DTL1
+      *
+      *................................................................
+      *
+     C           EXDETL    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SROVFL                                         *
+      * Function    :  Handle Overflow                                *
+      *                                                               *
+      * Called by   :  MAIN   - Mainline                              *
+      *                SRNORM - Normal Statement Processing           *
+      *                SRTURN - Turnover Statement Processing         *
+      *                SRDETL - Output a Detail Line                  *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SROVFL    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SROVFL'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise Overflow flag.
+     C                     MOVE *BLANKS   ##OVFL  1
+      *
+      **  Determine whether overflow required - Current Line + length
+      **  of format must exceed page length.
+     C           F#CLIN    ADD  ##LGTH    ##LINE  30
+     C           ##LINE    IFGT F#LINP
+     C                     WRITEF0HDR1
+     C                     WRITEF0HDR2
+     C                     MOVE 'Y'       ##OVFL
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXOVFL    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRWUDC                                         *
+      * Function    :  Write UDC Statement Driver Record              *
+      *                                                               *
+      * Called by   :  SRNORM - Normal Statement Processing           *
+      *                SRTURN - Turnover Statement Processing         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRWUDC    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRWUDC'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Set up fields for the UDC Statement Driver.
+     C                     MOVE DRPTYP    SDPTYP
+     C                     MOVE DRPSTP    SDPSTP
+     C                     MOVE 'D'       SDRECI
+     C                     MOVE S#RECI    SDRECM
+     C                     MOVE S#ATYP    SDATYP
+     C                     MOVE S#BRCA    SDBRCA
+     C**********           Z-ADDS#CNUM    SDCNUM                                              CSD027
+     C                     MOVE S#CNUM    SDCNUM                                              CSD027
+     C                     MOVE S#CCY     SDCCY
+     C                     Z-ADDS#ACOD    SDACOD
+     C                     Z-ADDS#ACSQ    SDACSQ
+     C                     Z-ADD##LSTD    SDLSTD
+     C                     Z-ADD##NSTD    SDNSTD
+     C                     Z-ADD##LSTP    SDLSTP
+     C                     Z-ADD##CFSB    SDCFSB
+     C                     Z-ADDS#YTDB    SDYTDB
+     C                     MOVE S#GLBT    SDGLBT
+      *
+      **  Output the UDC Statement Driver record.
+     C                     WRITE@STMTL0
+     C                     MOVE 'Y'       R#OUDC
+     C                     ADD  1         R#UROP
+      *
+      *................................................................
+      *
+     C           EXWUDC    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRACCT                                         *
+      * Function    :  Handle Update of ACCNT for suppressed Statemts *
+      *                                                               *
+      * Called by   :  SRNORM - Normal Statement Processing           *
+      * Calls       :  CG99FREQ - Statement Frequency Calculation     *
+      *****************************************************************
+     C           SRACCT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRACCT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  If the update of ACCNTAB is to be handled by UDC, by-pass
+      **  ACCNT update.
+     C           SDUPDA    IFEQ 'Y'
+     C                     GOTO EXACCT
+     C                     ENDIF
+      *
+      **  Access the appropriate ACCNTAB record handled by UDC ...
+     C           ##ACCT    CHAINACCNTABF             51
+      *
+      **  If no record found, database error.
+     C           *IN51     IFEQ *ON
+      *
+     C                     MOVE S#CNUM    ##CNUM
+     C                     MOVE S#CCY     ##CCY
+     C                     MOVE S#ACOD    ##ACOD
+     C                     MOVE S#ACSQ    ##ACSQ
+     C                     MOVE S#BRCA    ##BRCA           ***************
+     C                     MOVEL##ACID    W0KEY            * DB ERROR 02 *
+     C                     Z-ADD02        W0ERNB           ***************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  ... Determine the Next Statement Date
+      *
+      **  If the Statement Frequency is 'Z' - On Demand - set the
+      **  Next Statement Date to zero.
+     C           STFQ      IFEQ 'Z'
+     C                     Z-ADD*ZEROS    ##NSTD
+      *
+      **  If the Statement Frequency is any other value, calculate the
+      **  Next Statement Date.
+     C                     ELSE
+      *
+      **  If the Statement Frequency is 'A' - Accrual Profit/End of
+      **  Period, set the Next Statement Date to the current value
+      **  of the Accrual/Profit Date.
+     C           STFQ      IFEQ 'A'
+     C                     Z-ADDBKAPDT    ##NSTD
+     C                     MOVELBKAPFQ    W0FREQ
+     C                     Z-ADDBKAPFD    W0MDAY
+      *
+      **  Otherwise initialise the Next Statement Date to the Current
+      **  value.
+     C                     ELSE
+     C                     Z-ADDS#NSTD    ##NSTD
+     C                     MOVELSTFQ      W0FREQ
+     C                     Z-ADDSTDY      W0MDAY
+      *                                                                   087279
+      * If frequency E then convert to M                                  087279
+      *                                                                   087279
+     C           STFQ      IFEQ 'E'                                       087279
+     C                     MOVEL*BLANKS   W0FREQ                          087279
+     C                     MOVEL'M'       W0FREQ                          087279
+      * but consider a Multicash-frequency <> E to be used instead of "M"                   BUG24792
+     C           CGL013    IFEQ 'Y'                                                         BUG24792
+     C           CER030    ANDEQ'Y'                                                         AR864876
+     C           ATYP      ANDEQ'R'                                                         BUG24792
+     C           #FSTFQ    ANDNE*BLANKS                                                     BUG24792
+     C           #FSTFQ    ANDNE'E'                                                         BUG24792
+     C                     MOVEL#FSTFQ    W0FREQ           to calculate                     BUG24792
+     C                     ENDIF                           next stmt date                   BUG24792
+     C                     ENDIF                                          087279
+     C                     ENDIF
+      *
+      **  Set up static parameters.
+     C                     MOVE BJLCCY    W0CCY
+     C                     MOVE BJSLCD    W0LOC
+      *
+      **  Keep calculating the Next Statement Date until a value
+      **  not less than the Date of Next Working Day is found.
+     C/COPY WNCPYSRC,CG4700C006
+     C           ##NSTD    DOWLTBJDNWD
+     C                     Z-ADD##NSTD    W0RDNB
+      *
+     C                     CALL 'CG99FREQ'             91
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*NEWDATE'W0ACT   8
+     C                     PARM           W0FREQ 10
+     C                     PARM           W0RDNB  50
+     C                     PARM           W0MDAY  20
+     C                     PARM           W0CCY   3
+     C                     PARM           W0LOC   3
+     C                     PARM           W0EXT 256
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+     C           *IN91     OREQ *ON
+      *
+     C                     MOVEL'CG99FREQ'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 03 *
+     C                     Z-ADD03        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C                     Z-ADDW0RDNB    ##NSTD
+      *
+     C                     ENDDO
+     C/COPY WNCPYSRC,CG4700C007
+      *
+     C                     ENDIF
+      *
+      **  Update ACCNTAB fields.
+     C                     BITOF'01'      GLBT
+     C                     Z-ADD##NSTD    NSTD
+      *
+      **  If S01536 is active, Carried Forward Statement Balance, Year
+      **  to Date Balance (Cleared Balance) and Last Statement Date
+      **  should be updated on ACCNTAB as well as other fields.
+     C           S01536    IFEQ 'Y'
+     C                     Z-ADD##CFSB    CFSB
+     C                     Z-ADD##YTDB    YTDB
+     C           ##POST    IFEQ 'Y'                                       089268
+     C                     Z-ADDBJRDNB    LSTD
+     C                     ADD  1         LSTP                            089268
+     C                     ENDIF                                          089268
+      *                                                                                     MD029255
+      ** Update Extra Carried Forward Balance field for statement                           MD029255
+      ** frequency = 'E' (Turnover)                                                         MD029255
+      *                                                                                     MD029255
+     C           STFQ      IFEQ 'E'                                                         MD029255
+     C                     Z-ADD##CFSB    ECFB                                              MD029255
+     C                     ENDIF                                                            MD029255
+      *
+     C                     EXCPTACCNTE
+     C*                                                                   086186
+     C** If Account Statements Changes switchable feature is switched     086186
+     C** ON, call GL0421                                                  086186
+     C*                                                                   086186
+     C           S01520    IFEQ 'Y'                                       086186
+     C*                                                                   086186
+     C** Move fields                                                      086186
+     C*                                                                   086186
+     C                     MOVELBRCA      WBRCA                           086186
+     C                     MOVELCNUM      WCNUM                           086186
+     C                     MOVELCCY       WCCY                            086186
+     C                     MOVELACOD      WACOD                           086186
+     C                     MOVELACSQ      WACSQ                           086186
+     C                     MOVELBJRDNB    WRUND                           086186
+     C*                                                                   086186
+     C                     CALL 'GL0421'                                  086186
+     C                     PARM           WBRCA                           086186
+     C                     PARM           WCNUM                           086186
+     C                     PARM           WCCY                            086186
+     C                     PARM           WACOD                           086186
+     C                     PARM           WACSQ                           086186
+     C                     PARM BJRDNB    PRUND   50                      086186
+     C                     PARM CFSB      PSTBAL 150                      086186
+     C                     PARM           B#APRP  20                      154040              222373
+     C                     PARM *BLANKS   @ERROR  1                       086186
+     C*                                                                   086186
+     C** If an error occured in the called program, do database error     086186
+     C** processing                                                       086186
+     C*                                                                   086186
+     C                     SELEC                                          086186
+     C           @ERROR    WHEQ 'S'                                       086186
+     C                     MOVEL'GL0421  'W0FILE                          086186
+     C                     MOVELWACOD     W0KEY            ***************086186
+     C                     Z-ADD12        W0ERNB           * DB ERROR 12 *086186
+     C                     MOVEL'MEM5003' W0MSGD           ***************086186
+     C                     MOVEL'MIDAS   'W0MSGF                          086186
+     C                     MOVEL'SDACODPD'W0PREF                          086186
+     C                     EXSR SRERR                                     086186
+      *                                                                   086186
+     C           @ERROR    WHEQ 'C'                                       086186
+     C                     MOVEL'GL0421  'W0FILE                          086186
+     C                     MOVELWKEYDS    W0KEY            ***************086186
+     C                     Z-ADD14        W0ERNB           * DB ERROR 14 *086186
+     C                     MOVEL'MEM5003' W0MSGD           ***************086186
+     C                     MOVEL'MIDAS   'W0MSGF                          086186
+      *                    MOVEL'CPOSTDD 'W0PREF                          086186
+     C                     EXSR SRERR                                     086186
+     C                     ENDSL                                          086186
+     C*                                                                   086186
+     C                     END                                            086186
+     C*                                                                   086186
+     C                     ELSE
+      *
+      **  If S01536 is not active only update ACCNTAB with Next Date
+      **  and bit settings.
+     C                     EXCPTACCNTN
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXACCT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSUPM                                         *
+      * Function    :  Determine Whether to Suppress Stmt. - Midas    *
+      *                                                               *
+      * Called by   :  SRNORM - Normal Statement Processing           *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRSUPM    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRSUPM'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Check for Zero Balance SARs...
+      **  - S01533: If no movements and the Account Balance is zero,
+      **            suppress the statement.
+      **  - S01534: If no movements, suppress the statement.
+      *
+      **  ... If a statement is to be produced and is not a 'Demand'
+      **      check for the SARS.
+     C           SDMSFL    IFNE 'D'
+     C           S01533    IFEQ 'Y'
+     C           S01534    OREQ 'Y'
+     C/COPY WNCPYSRC,CG4700C001
+      *
+      **  Determine if any Postings or Rate Changes exist for the A/C.
+     C                     MOVE 'N'       ##POST  1
+     C                     MOVE 'N'       ##RTCH  1
+      *
+      **  - Postings
+     C***********##ACKD    SETGTAPOSTPDF                                  086178
+     C***********##ACKY    READEAPOSTPDF                 51               086178
+     C***********##ACKD    SETGTAPOST                               086178086163
+     C***********##ACKY    READEAPOST                    51         086178086163
+     C           S#LSTD    IFEQ DACO                                      088009
+     C           S#LSTP    ANDEQ*ZEROS                                    088009
+     C           ##ACKD    SETLLAPOSTPDF                                  088009
+     C                     ELSE                                           088009
+     C           ##ACKD    SETGTAPOSTPDF                                  086163
+     C                     ENDIF                                          088009
+     C           ##ACKY    READEAPOSTPDF                 51               086163
+     C           *IN51     IFEQ *OFF
+     C           PSTD      ANDLEBJRDNB
+     C                     MOVE 'Y'       ##POST
+     C                     ENDIF
+      *
+      **  - Rate Changes.
+     C           ##POST    IFEQ 'N'
+     C***********##ACKD    SETGTAPOSTRAF                                  086178
+     C***********##ACKY    READEAPOSTRAF                 51               086178
+     C***********##ACKD    SETGTAPOST                                     086178
+     C***********##ACKY    READEAPOST                    51               086178
+     C           S#LSTD    IFEQ DACO                                      088009
+     C           S#LSTP    ANDEQ*ZEROS                                    088009
+     C           ##ACKD    SETLLAPOSTRAF                                  088009
+     C                     ELSE                                           088009
+     C           ##ACKD    SETGTAPOSTRAF                                  086163
+     C                     ENDIF                                          088009
+     C           ##ACKY    READEAPOSTRAF                 51               086163
+     C           *IN51     IFEQ *OFF
+     C           PSTD      ANDLEBJRDNB
+     C                     MOVE 'Y'       ##RTCH
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If S01533 is applicable, the Carried Forward Statement
+      **  Balance is zero, and no movements exist, suppress the
+      **  statement.
+     C           S01533    IFEQ 'Y'
+     C           S#CFSB    ANDEQ*ZEROS
+     C           ##POST    ANDEQ'N'
+     C                     MOVE 'N'       ##SMID
+     C                     MOVE 'N'       ##SUDC
+     C                     MOVE 'Y'       R#DMID
+     C                     MOVE 'Y'       R#DUDC
+     C                     MOVEL##TXT,4   R#RDMI
+     C                     MOVEL##TXT,4   R#RDUD
+     C                     ENDIF
+      *
+      **  If S01534 is applicable, no rate changes and no movements
+      **  exist, suppress the statement.
+     C           S01534    IFEQ 'Y'
+     C********** ##RTCH    ANDEQ'N'                                       088001
+     C           ##POST    ANDEQ'N'
+     C                     MOVE 'N'       ##SMID
+     C                     MOVE 'N'       ##SUDC
+     C                     MOVE 'Y'       R#DMID
+     C                     MOVE 'Y'       R#DUDC
+     C                     MOVEL##TXT,5   R#RDMI
+     C                     MOVEL##TXT,5   R#RDUD
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG4700C002
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXSUPM    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSUPU                                         *
+      * Function    :  Determine Whether to Suppress Stmt. - UDC      *
+      *                                                               *
+      * Called by   :  SRNORM - Normal Statement Processing           *
+      *                SRTURN - Turnover Statement Processing         *
+      * Calls       :  CG9010 - Create Item Reference Record          *
+      *                SRDETF - Determine Suppressed Statement Figures*
+      *****************************************************************
+     C           SRSUPU    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRSUPU'  @STK,Q
+      *
+      *................................................................
+      *
+      **  If the statement is still to be produced for UDC, check if it
+      **  will be suppressed by UDC.
+     C           ##SUDC    IFEQ 'Y'
+     C                     MOVELS#BRCA    ##BRCA
+     C                     MOVELS#CNUM    ##CUST
+     C                     MOVELS#CNUM    ##CNUM
+     C                     MOVELS#CCY     ##CCY
+     C                     MOVELS#ACOD    ##ACOD
+     C                     MOVELS#ACSQ    ##ACSQ
+     C                     MOVELS#BRCA    DRBRCA
+     C                     MOVELC#STMT    DRPTYP
+     C                     MOVEL##PSTP    DRPSTP
+     C                     MOVEL##ACID    DRMACT
+      *
+     C                     CALL 'CG9010'               91
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*REF    '##MODE 10
+     C                     PARM 'NO '     ##CMT   3
+     C                     PARM           ##CUST  6
+     C                     PARM           ##UDCR
+     C                     PARM *BLANKS   ##ITMA  8
+      *
+      **  Blank return code implies generate correspondence.
+      **  CGD1270 => no error, but suppress output for this transaction.
+      *
+     C           ##RTCD    IFNE *BLANK
+     C           *IN91     OREQ *ON
+      *
+     C           ##RTCD    IFEQ 'CGD1270'
+     C                     MOVE 'N'       ##SUDC
+     C                     MOVE 'Y'       R#DUDC
+     C                     MOVEL##TXT,6   R#RDUD
+      *
+      **  - S01536: If statement to be suppressed in UDC, and statement
+      **            processed is not turnover, suppress the statement
+      **            in normal Midas.
+     C           S01536    IFEQ 'Y'
+     C           ##PSTP    ANDEQC#NORM
+     C           DRISTS    ANDNE'NOCR'                                    084352
+     C                     MOVE 'N'       ##SMID
+     C                     MOVE 'Y'       R#DMID
+     C                     MOVEL##TXT,6   R#RDMI
+      *
+      **  Determine the figures to update ACCNTAB for the suppressed
+      **  statement.
+     C                     EXSR SRDETF
+     C                     ENDIF
+     C                     ELSE
+      *
+     C                     MOVEL'CG9010  'W0FILE
+     C                     MOVEL##RTCD    W0KEY            ***************
+     C                     Z-ADD04        W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'CGD1286' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                     AR886391
+     C           ##PSTP    IFEQ C#NORM                                                      AR886391
+     C           ##SUDC    ANDEQ'Y'                                                         AR886391
+     C           STFQ      ANDEQ'E'                                                         AR886391
+     C                     MOVE 'N'       ##SUDC                                            AR886391
+     C                     MOVE 'Y'       R#DUDC                                            AR886391
+     C                     MOVEL##TXT,10  R#RDUD                                            AR886391
+     C                     ENDIF                                                            AR886391
+      *
+      **  If the statement is still to be produced for UDC, check for
+      **  UDC SAR ...
+     C           ##SUDC    IFEQ 'Y'
+      *
+      **  - S01535: If statement to be produced in UDC, suppress in
+      **            normal Midas.
+      *
+      **  Check for the SARs being applicable.
+      **  Set flag to show that UDC process must update ACCNTAB (Only
+      **  for non-Turnover Statements)
+     C           S01535    IFEQ 'Y'
+     C           ##PSTP    ANDEQC#NORM
+     C                     MOVE 'N'       ##SMID
+     C                     MOVE 'Y'       R#DMID
+     C                     MOVEL##TXT,6   R#RDMI
+     C                     MOVE 'Y'       SDUPDA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXSUPU    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRDETF                                         *
+      * Function    :  Determine figures for suppressed statement     *
+      *                                                               *
+      * Called by   :  SRSUPU - Suppress Statement - UDC              *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRDETF    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRDETF'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise output fields.
+     C                     Z-ADDS#YTDB    ##YTDB
+      *
+      **  Position the Posting file (Movements only) before the first
+      **  posting for the account. Find the next posting.
+     C           ##ACKY    SETLLAPOSTPDF
+     C           ##ACKY    READEAPOSTPDF                 51
+      *
+      **  For each record found, accumulate the figures, if applicable.
+     C           *IN51     DOWEQ*OFF
+      *
+      **  ... If the Posting Date is between the Last Statement Date
+      **      and the current date, accumulate.
+     C           PSTD      IFGT ##LSTD
+     C           PSTD      ANDLEBJRDNB
+     C           PSTD      ORGE ##LSTD                                    088009
+     C           ##LSTD    ANDEQDACO                                      088009
+     C           ##LSTP    ANDEQ*ZEROS                                    088009
+     C           PSTD      ANDLEBJRDNB                                    088009
+      *
+     C           DRCR      IFEQ *ZEROS
+     C                     ADD  PSTA      ##CFSB
+     C                     ELSE
+     C                     SUB  PSTA      ##CFSB
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  ... If the Account is Retail...
+     C           S#ATYP    IFEQ 'R'
+      *
+      **  ... If the Value Date is between the Last Statement Date
+      **      and the current date, and the Posting Date is before the
+      **      Value Date, accumulate.
+     C           VALD      IFGT ##LSTD
+     C           VALD      ANDLEBJRDNB
+     C           VALD      ANDGEPSTD
+     C           VALD      ORGE ##LSTD                                    088009
+     C           ##LSTD    ANDEQDACO                                      088009
+     C           ##LSTP    ANDEQ*ZEROS                                    088009
+     C           VALD      ANDLEBJRDNB                                    088009
+     C           VALD      ANDGEPSTD                                      088009
+      *
+      **  ... If the Posting Date is between the Last Statement Date
+      **      and the current date, and the Value Date is before the
+      **      Posting Date, accumulate.
+     C           PSTD      ORGT ##LSTD
+     C           PSTD      ANDLEBJRDNB
+     C           VALD      ANDLTPSTD
+     C           PSTD      ORGE ##LSTD                                    088009
+     C           PSTD      ANDLEBJRDNB                                    088009
+     C           ##LSTD    ANDEQDACO                                      088009
+     C           ##LSTP    ANDEQ*ZEROS                                    088009
+     C           VALD      ANDLTPSTD                                      088009
+      *
+     C           DRCR      IFEQ *ZEROS
+     C                     ADD  PSTA      ##YTDB
+     C                     ELSE
+     C                     SUB  PSTA      ##YTDB
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Find the next posting.
+     C           ##ACKY    READEAPOSTPDF                 51
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXDETF    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************                     BUG24792
+      * Subroutine  :  SRMULT                                         *                     BUG24792
+      * Function    :  Access multicash extension file                *                     BUG24792
+      *                                                               *                     BUG24792
+      * Called by   :  SRSUPU, SRNORM                                 *                     BUG24792
+      * Calls       :  None                                           *                     BUG24792
+      *****************************************************************                     BUG24792
+     C           SRMULT    BEGSR                                                            BUG24792
+      *                                                                                     BUG24792
+      **  Set up subroutine stack name                                                      BUG24792
+     C                     ADD  1         Q                                                 BUG24792
+     C                     MOVEL'SRMULT'  @STK,Q                                            BUG24792
+      *                                                                                     BUG24792
+     C                     MOVEL*BLANKS   #FSTFQ  1                                         BUG24792
+     C           ##ACKY    CHAINGLNW94L8             51                                     BUG24792
+     C           *IN51     IFEQ *OFF                                                        BUG24792
+     C           N4DSTN    IFNE *BLANKS                    participant                      BUG24792
+     C                     CALL 'AONWRKR1'                                                  AR864876
+     C                     PARM *BLANKS   ##RTCD                                            AR864876
+     C                     PARM '*KEY'    ##OPTN                                            AR864876
+     C                     PARM N4NWRK    PNWRK   6                                         AR864876
+     C           SDNWRK    PARM SDNWRK    DSLDY                                             AR864876
+     C           ##RTCD    IFEQ *BLANKS                                                     AR864876
+     C           EDMCNW    ANDEQ'Y'                                                         AR864876
+     C                     MOVELN40SFR    #FSTFQ           Save for updat                   BUG24792
+     C                     ENDIF                                                            AR864876
+     C                     ENDIF                                                            BUG24792
+     C                     ENDIF                                                            BUG24792
+      *................................................................                     BUG24792
+     C           EXMULT    TAG                                                              BUG24792
+      *                                                                                     BUG24792
+      **  Unwind subroutine stack name                                                      BUG24792
+     C                     MOVEA*BLANKS   @STK,Q                                            BUG24792
+     C                     SUB  1         Q                                                 BUG24792
+      *                                                                                     BUG24792
+     C                     ENDSR                                                            BUG24792
+      *****************************************************************                     BUG24792
+      /EJECT                                                                                BUG24792
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Key list for full Account
+     C           ##ACKY    KLIST
+     C                     KFLD           S#BRCA
+     C                     KFLD           S#CNUM
+     C                     KFLD           S#CCY
+     C                     KFLD           S#ACOD
+     C                     KFLD           S#ACSQ
+      *
+      **  Key list for full Account plus Posting Date
+     C           ##ACKD    KLIST
+     C                     KFLD           S#BRCA
+     C                     KFLD           S#CNUM
+     C                     KFLD           S#CCY
+     C                     KFLD           S#ACOD
+     C                     KFLD           S#ACSQ
+     C                     KFLD           S#LSTD
+      *
+      **  Key list for full Account plus Posting Date
+     C           ##ACCT    KLIST
+     C                     KFLD           S#CNUM
+     C                     KFLD           S#CCY
+     C                     KFLD           S#ACOD
+     C                     KFLD           S#ACSQ
+     C                     KFLD           S#BRCA
+      *
+      **  Keylist for Turnover Statement Movements
+     C           ##EODP    KLIST
+     C                     KFLD           S#BRCA
+     C                     KFLD           S#ATYP
+     C                     KFLD           S#CNUM
+     C                     KFLD           S#CCY
+     C                     KFLD           S#ACOD
+     C                     KFLD           S#ACSQ
+      *
+      **  Initialise work fields .....
+      *
+      **  Define fields .....
+     C           *LIKE     DEFN NSTD      ##NSTD
+     C           *LIKE     DEFN YTDB      ##YTDB
+     C           *LIKE     DEFN SDPSTP    ##PSTP
+     C           *LIKE     DEFN LSTD      ##LSTD
+     C           *LIKE     DEFN LSTP      ##LSTP
+     C           *LIKE     DEFN CFSB      ##CFSB
+     C           *LIKE     DEFN BRCA      ##BRCS
+      *
+      **  Call access program for Bank details
+     C                     CALL 'AOBANKR0'             91
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Database error
+     C           ##RTCD    IFNE *BLANK
+     C           *IN91     OREQ *ON
+      *
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD05        W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Call access program for General Ledger details
+     C**********           CALL 'AOGELRR0'             91                                     CGL029
+     C                     CALL 'AOGELRR1'             91                                     CGL029
+     C                     PARM '*MSG   ' ##RTCD
+     C                     PARM '*FIRST ' ##OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      **  Database error
+     C           ##RTCD    IFNE *BLANK
+     C           *IN91     OREQ *ON
+      *
+     C                     MOVEL'AOGELRR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD06        W0ERNB           * DB ERROR 06 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Set up and output report header.
+     C                     MOVEL##PGM     R#PGM
+     C                     MOVEL##TXT,1   R#TITL
+     C                     MOVEL##TXT,2   R#TIUL
+     C                     MOVEL##TXT,7   R#SECT
+     C                     WRITEF0HDR1
+     C                     WRITEF0HDR2
+      *
+      **  Determine which SARs are in effect ...
+      **  ... S01533 - Do not report Zero Movements, Zero Balance
+     C                     CALL 'AOSARDR0'             91
+     C                     PARM '       ' ##RTCD  7
+     C                     PARM '*VERIFY' ##OPTN  7
+     C                     PARM 'S01533'  ##SARD  6
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      **  If the Access Object returns an error code, process a
+      **  database error.
+     C           ##RTCD    IFNE *BLANK
+     C           ##RTCD    ANDNE'*NRF   '
+     C           *IN91     OREQ *ON
+     C                     MOVEL'SCSARDPD'W0FILE           ***************
+     C                     MOVEL'S01533'  W0KEY            * DB ERROR 07 *
+     C                     Z-ADD07        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           ##RTCD    IFEQ *BLANK
+     C                     MOVEL'Y'       S01533  1
+     C                     END
+      *
+      **  ... S01534 - Do not report Zero Movements
+     C                     CALL 'AOSARDR0'             91
+     C                     PARM '       ' ##RTCD
+     C                     PARM '*VERIFY' ##OPTN
+     C                     PARM 'S01534'  ##SARD
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      **  If the Access Object returns an error code, process a
+      **  database error.
+     C           ##RTCD    IFNE *BLANK
+     C           ##RTCD    ANDNE'*NRF   '
+     C           *IN91     OREQ *ON
+     C                     MOVEL'SCSARDPD'W0FILE           ***************
+     C                     MOVEL'S01534'  W0KEY            * DB ERROR 08 *
+     C                     Z-ADD08        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           ##RTCD    IFEQ *BLANK
+     C                     MOVEL'Y'       S01534  1
+     C/COPY WNCPYSRC,CG4700C003
+     C                     END
+      *
+      **  ... S01535 - If reported in UDC then remove from Old GL Stmt
+     C                     CALL 'AOSARDR0'             91
+     C                     PARM '       ' ##RTCD
+     C                     PARM '*VERIFY' ##OPTN
+     C                     PARM 'S01535'  ##SARD
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      **  If the Access Object returns an error code, process a
+      **  database error.
+     C           ##RTCD    IFNE *BLANK
+     C           ##RTCD    ANDNE'*NRF   '
+     C           *IN91     OREQ *ON
+     C                     MOVEL'SCSARDPD'W0FILE           ***************
+     C                     MOVEL'S01535'  W0KEY            * DB ERROR 09 *
+     C                     Z-ADD09        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           ##RTCD    IFEQ *BLANK
+     C                     MOVEL'Y'       S01535  1
+     C                     END
+      *
+      **  ... S01536 - If ignored in UDC remove from Old GL Stmt also.
+     C                     CALL 'AOSARDR0'             91
+     C                     PARM '       ' ##RTCD
+     C                     PARM '*VERIFY' ##OPTN
+     C                     PARM 'S01536'  ##SARD
+     C           SCSARD    PARM *BLANKS   DSFDY
+      *
+      **  If the Access Object returns an error code, process a
+      **  database error.
+     C           ##RTCD    IFNE *BLANK
+     C           ##RTCD    ANDNE'*NRF   '
+     C           *IN91     OREQ *ON
+     C                     MOVEL'SCSARDPD'W0FILE           ***************
+     C                     MOVEL'S01536'  W0KEY            * DB ERROR 10 *
+     C                     Z-ADD10        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           ##RTCD    IFEQ *BLANK
+     C                     MOVEL'Y'       S01536  1
+     C                     END
+      *                                                                   086186
+      **  ... S01520 - BLI Statement Changes - Historic Enquiry           086186
+     C                     CALL 'AOSARDR0'             91                 086186
+     C                     PARM '       ' ##RTCD                          086186
+     C                     PARM '*VERIFY' ##OPTN                          086186
+     C                     PARM 'S01520'  ##SARD                          086186
+     C           SCSARD    PARM *BLANKS   DSFDY                           086186
+      *                                                                   086186
+      **  If the Access Object returns an error code, process a           086186
+      **  database error.                                                 086186
+     C           ##RTCD    IFNE *BLANK                                    086186
+     C           ##RTCD    ANDNE'*NRF   '                                 086186
+     C           *IN91     OREQ *ON                                       086186
+     C                     MOVEL'SCSARDPD'W0FILE           ***************086186
+     C                     MOVEL'S01520'  W0KEY            * DB ERROR 10 *086186
+     C                     Z-ADD11        W0ERNB           ***************086186
+     C                     MOVEL'MEM5003' W0MSGD                          086186
+     C                     MOVEL'MIDAS  ' W0MSGF                          086186
+     C                     EXSR SRERR                                     086186
+     C                     END                                            086186
+     C/COPY WNCPYSRC,CG4700C008
+      *                                                                   086186
+     C           ##RTCD    IFEQ *BLANK                                    086186
+     C                     MOVEL'Y'       S01520  1                       086186
+     C                     END                                            086186
+      ** Access Switchable Features file and check if CGL013 is                             BUG24792
+      ** installed (Multicash paper statement frequency)                                    BUG24792
+      *                                                                                     BUG24792
+     C                     CALL 'AOSARDR0'                                                  BUG24792
+     C                     PARM *BLANKS   ##RTCD                                            BUG24792
+     C                     PARM '*VERIFY' ##OPTN                                            BUG24792
+     C                     PARM 'CGL013'  ##SARD                                            BUG24792
+     C           SCSARD    PARM SCSARD    DSFDY                                             BUG24792
+      *                                                                                     BUG24792
+     C           ##RTCD    IFEQ *BLANK                                                      BUG24792
+     C                     MOVEL'Y'       CGL013  1                                         BUG24792
+     C                     ELSE                                                             BUG24792
+     C                     MOVE 'N'       CGL013                                            BUG24792
+     C           ##RTCD    IFNE '*NRF   '                                                   BUG24792
+     C                     MOVEL'SCSARDPD'W0FILE                                            BUG24792
+     C                     MOVEL'CGL013'  W0KEY                                             BUG24792
+     C                     Z-ADD17        W0ERNB                                            BUG24792
+     C                     MOVEL'MEM5003' W0MSGD                                            BUG24792
+     C                     MOVEL'MIDAS  ' W0MSGF                                            BUG24792
+     C                     EXSR SRERR                                                       BUG24792
+     C                     ENDIF                                                            BUG24792
+     C                     ENDIF                                                            BUG24792
+      ** Access Switchable Features file and check if CER030 is                             AR864876
+      ** installed (Multicash German Feature)                                               AR864876
+      *                                                                                     AR864876
+     C                     CALL 'AOSARDR0'                                                  AR864876
+     C                     PARM *BLANKS   ##RTCD                                            AR864876
+     C                     PARM '*VERIFY' ##OPTN                                            AR864876
+     C                     PARM 'CER030'  ##SARD                                            AR864876
+     C           SCSARD    PARM SCSARD    DSFDY                                             AR864876
+      *                                                                                     AR864876
+     C           ##RTCD    IFEQ *BLANK                                                      AR864876
+     C                     MOVEL'Y'       CER030  1                                         AR864876
+     C                     ELSE                                                             AR864876
+     C                     MOVE 'N'       CER030                                            AR864876
+     C           ##RTCD    IFNE '*NRF   '                                                   AR864876
+     C                     MOVEL'SCSARDPD'W0FILE                                            AR864876
+     C                     MOVEL'CER030'  W0KEY                                             AR864876
+     C                     Z-ADD18        W0ERNB                                            AR864876
+     C                     MOVEL'MEM5003' W0MSGD                                            AR864876
+     C                     MOVEL'MIDAS  ' W0MSGF                                            AR864876
+     C                     EXSR SRERR                                                       AR864876
+     C                     ENDIF                                                            AR864876
+     C                     ENDIF                                                            AR864876
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY CGCPYSRC,SRERRPSSR
+      /EJECT
+      /COPY CGCPYSRC,SRERRC
+      /EJECT
+     C/COPY WNCPYSRC,CG4700C009
+      *****************************************************************
+     OACCNTABFE                ACCNTN
+     O                         GLBT
+     O                         NSTD
+     O        E                ACCNTE
+     O                         GLBT
+     O                         NSTD
+     O                         CFSB
+     O                         YTDB
+     O                         LSTD
+     O                         LSTP                                       089268
+     O                         ECFB                                                         MD029255
+** ##TXT - Text Array
+Midas - UDC Statement Driver Audit Report
+-----------------------------------------
+Management Statement
+Zero Bal., No trans.
+No Transactions
+Suppressed by UDC
+Standard Statements
+Turnover Statements
+Stmt not required
+Mthly Turn.suppr UDC                                                                        AR886391
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

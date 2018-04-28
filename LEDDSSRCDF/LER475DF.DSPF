@@ -1,0 +1,544 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas LE Profitability Enquiry')
+     A**************************************************************
+     A*                                                            *
+     A*  Midas - Customer Lending Module
+     A*                                                            *
+     A*   DSPF/LER475DF - Profitability Enquiry                    *
+     A*                                                            *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                            *
+     A*                                                            *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 29Nov05               *
+      *  Prev Amend No. CLE042             Date 06Sep05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163668             Date 14Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 117167             Date 19Feb98               *
+      *                 112563             DATE 27Jan97               *
+     A*                 BH3422             DATE 21SEP92            *
+     A*                                                            *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  163668 - Profitability showing on facility customer not on   *
+      *           agent customer                                      *
+     A*  117167 - Wrong Average Balance is being shown due to         *
+     A*           different definition of file field and screen field.*
+     A*           Change screen field to 15 0 then rearrange the      *
+     A*           screen to accomodate the change.                    *
+     A*  112563 - Header and footer changes required for GUI          *
+     A*           Multilanguage support.                              *
+     A*  BH3422 - Help text amendments for Lending enhancments        *
+     A*                                                               *
+     A*****************************************************************
+     A
+     A                                      CHGINPDFT
+     A                                      PRINT(MPRINT)
+     A                                      CF03(03 'CANCEL')
+     A                                      INDARA
+     A*                                                        /BH3422/
+     A*                                                        /BH3422/
+     A
+     A          R LER475D1                  TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A            USER          10A  O  1  2
+     A                                  1 13'LER475'
+     A                                  1 25'Customer Profitability'
+     A                                      DSPATR(UL HI)
+     A N26N27                           1 48'Enquiry'
+     A                                      DSPATR(UL HI)
+     A  26                              1 48'by Business Group'
+     A                                      DSPATR(UL HI)
+     A  27                              1 48'by Facility'
+     A                                      DSPATR(UL HI)
+     A            BJMRDT         7A  O 01 72
+     A*
+     A
+     A          R LER475D0
+     A                                      OVERLAY
+     A            JOB           10A  O  2  2
+     A                                 02 71TIME
+     A**                                             Begin /112563/
+     A* 19 ******                      22 66'F3 to Exit'
+     A  19                             22 54'F3=Exit'
+     A**                                             End   /112563/
+     A
+     A*
+     A          R LER475D2
+     A
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A  20                                  CF01(01 'Y-T-D')
+     A  21                                  CF02(02 'M-T-D')
+     A  24                                  CF04(04 'NEXT')
+     A  22                                  CF05(05 'DETAIL')
+     A  23                                  CF06(06 'GROUP')
+     A            TYPE           2   H
+     A*/COPY WNCPYSRC,LER475DF01
+     A                                 21  2'Enter:Customer'
+     A*/COPY WNCPYSRC,LER475DF02
+     A            CNUM          10   B 21 17
+     A     45                               DSPATR(RI PC)
+     A N45                                  DSPATR(UL)
+     A                                 21 28'OR A/C Off.'
+     A  40                             21 40'Total'
+     A  40        ATOT           1   B 21 46
+     A     46                               DSPATR(RI PC)
+     A N46                                  DSPATR(UL)
+     A N40        ACOF           2   B 21 40
+     A     46                               DSPATR(RI PC)
+     A N46                                  DSPATR(UL)
+     A N40                             21 48'OR Dept.'
+     A  41                             21 57'Total'
+     A  41        DTOT           1   B 21 63
+     A     47                               DSPATR(RI PC)
+     A N47                                  DSPATR(UL)
+     A  42        DEPT           3   B 21 57
+     A     47                               DSPATR(RI PC)
+     A N47                                  DSPATR(UL)
+     A  42                             21 65'OR Bank Total'
+     A  42        BTOT           1   B 21 79
+     A     48                               DSPATR(RI PC)
+     A N48                                  DSPATR(UL)
+     A
+     A*
+     A**                                             Begin /112563/
+     A* 20 ******                      22  2'F1 for Y-T-D'
+     A* 21 ******                      22  2'F2 for M-T-D'
+     A* 22 ******                      22 19'F5 for detail level'
+     A* 23 ******                      22 19'F6 for group level'
+     A* 24 ******                      22 43'F4 for next record'
+     A***********                      22 66'F3 to terminate'
+     A  20                             22  2'F1=Y-T-D'
+     A  21                             22  2'F2=M-T-D'
+     A  22                             22 15'F5=Detail level'
+     A  23                             22 15'F6=Group level'
+     A  24                             22 35'F4=Next record'
+     A                                 22 54'F3=Exit'
+     A**                                             End   /112563/
+     A
+     A          R LER475S1                  TEXT('M-T-D GROUP SUBFILE')
+     A                                      SFL
+     A************NARR          21      6  2
+     A************MAVV          10  0   6 24EDTCDE(K)
+     A************MFEE           7  0   6 39EDTCDE(K)
+     A************MMGN           7  0   6 50EDTCDE(K)
+     A************MAYR           6  4   6 61EDTCDE(K)
+     A************MAMR           6  4   6 70EDTCDE(K)
+     A*                                              Begin /117167/
+     A************NARR          21      7  2
+     A************MAVV          10  0   7 24EDTCDE(K)
+     A************MFEE           7  0   7 39EDTCDE(K)
+     A************MMGN           7  0   7 50EDTCDE(K)
+     A************MAYR           6  4   7 61EDTCDE(K)
+     A************MAMR           6  4   7 70EDTCDE(K)
+      *                                               Begin /CLE042/
+     A************NARR          21      8  2
+     A            NARR          22      8  2
+      *                                               End   /CLE042/
+      *                                               Begin /163668/
+     A*********** MAVV          15  0   8 29EDTCDE(K)
+     A            SMAVV         25      8 25
+      *                                               End   /163668/
+     A            MFEE           7  0   8 55EDTCDE(K)
+     A            MMGN           7  0   9 55EDTCDE(K)
+     A            MAYR           6  4   8 71EDTCDE(K)
+     A            MAMR           6  4   9 71EDTCDE(K)
+     A*                                              End   /117167/
+     A
+     A          R LER475C1                  SFLCTL(LER475S1)
+     A                                      SFLSIZ(100)
+     A*                                              Begin /117167/
+     A************                          SFLPAG(14)
+     A                                      SFLPAG(06)
+     A*                                              End   /117167/
+     A  30                                  SFLDSPCTL
+     A  71                                  SFLDSP
+     A N30                                  SFLCLR
+     A  31                                  SFLEND
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A
+     A*                                                             /*0117*/
+     A*N50********CNAME         20      2  2
+     A*N50********CTOWN         10      2 23
+      * Begin /CSD027/
+     A*N50******  KCNUM          6  0   2  5                                                  CSD027
+     A N50        KCNUM          6A     2  5
+      * End /CSD027/
+     A N50        CNAME         20      2 13
+     A N50        CTOWN         10      2 35
+     A************ANAME         22      2 34
+     A************DNAME         22      2 57
+     A**50********TOTN          25      2  8
+     A            KACOF          2      3  5
+     A            ANAME         30      3  8
+     A            DNAME         30      3 45
+     A  50        TOTN          25      3  8
+     A
+     A*N50********INAME         40      3  2
+     A N50        INAME         40      4  5
+     A*                                                             /*0117*/
+     A************                      3 44'M-T-D'  DSPATR(HI)
+     A************FRDT           7      3 50DSPATR(HI)
+     A************                      3 58'-' DSPATR(HI)
+     A************TODT           7      3 60DSPATR(HI)
+     A************DAYS           3  0   3 69EDTCDE(Z) DSPATR(HI)
+     A************                      3 73'DAYS' DSPATR(HI)
+     A************
+     A************                      4  2'Facility/Loan'
+     A************                      4 22'Average Balance'
+     A************                      4 44'Fees'
+     A************                      4 53'Margin'
+     A************                      4 62'Yield%'
+     A************                      4 70'Margin%'
+     A**25********                      5 29'* LAST RECORD FOUND *'
+     A                                  4 44'M-T-D'  DSPATR(HI)
+     A            FRDT           7      4 50DSPATR(HI)
+     A                                  4 58'-' DSPATR(HI)
+     A            TODT           7      4 60DSPATR(HI)
+     A            DAYS           3  0   4 69EDTCDE(Z) DSPATR(HI)
+     A                                  4 73'DAYS' DSPATR(HI)
+     A
+     A                                  5  2'Facility/Loan'
+     A*                                              Begin /117167/
+     A************                      5 22'Average Balance'
+     A************                      5 44'Fees'
+     A************                      5 53'Margin'
+     A************                      5 62'Yield%'
+     A************                      5 70'Margin%'
+     A**25********                      6 29'* LAST RECORD FOUND *'
+     A                                  5 31'Average Balance'
+     A                                  5 57'Fees'
+     A                                  6 56'Margin'
+     A                                  5 71'Yield%'
+     A                                  6 71'Margin%'
+     A  25                              7 28'* LAST RECORD FOUND *'
+     A*                                              End   /117167/
+     A                                      DSPATR(HI)
+     A
+     A          R LER475S2                  TEXT('Y-T-D GROUP SUBFILE')
+     A                                      SFL
+     A************NARR          21      6  2
+     A************YAVV          10  0   6 24EDTCDE(K)
+     A************YFEE           7  0   6 39EDTCDE(K)
+     A************YMGN           7  0   6 50EDTCDE(K)
+     A************YAYR           6  4   6 61EDTCDE(K)
+     A************YAMR           6  4   6 70EDTCDE(K)
+     A*                                              Begin /117167/
+     A************NARR          21      7  2
+     A************YAVV          10  0   7 24EDTCDE(K)
+     A************YFEE           7  0   7 39EDTCDE(K)
+     A************YMGN           7  0   7 50EDTCDE(K)
+     A************YAYR           6  4   7 61EDTCDE(K)
+     A************YAMR           6  4   7 70EDTCDE(K)
+      *                                               Begin /CLE042/
+     A************NARR          21      8  2
+     A            NARR          22      8  2
+      *                                               End   /CLE042/
+      *                                               Begin /163668/
+     A*********** YAVV          15  0   8 29EDTCDE(K)
+     A            SYAVV         25      8 25
+      *                                               End   /163668/
+     A            YFEE           7  0   8 55EDTCDE(K)
+     A            YMGN           7  0   9 55EDTCDE(K)
+     A            YAYR           6  4   8 71EDTCDE(K)
+     A            YAMR           6  4   9 71EDTCDE(K)
+     A*                                              End   /117167/
+     A
+     A          R LER475C2                  SFLCTL(LER475S2)
+     A                                      SFLSIZ(100)
+     A*                                              Begin /117167/
+     A************                          SFLPAG(14)
+     A                                      SFLPAG(06)
+     A*                                              End   /117167/
+     A  32                                  SFLDSPCTL
+     A  73                                  SFLDSP
+     A N32                                  SFLCLR
+     A  33                                  SFLEND
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A
+     A*                                                             /*0117*/
+     A*N50********CNAME         20      2  2
+     A*N50********CTOWN         10      2 23
+      * Begin /CSD027/
+     A*N50******  KCNUM          6  0   2  5                                                  CSD027
+     A N50        KCNUM          6A     2  5
+      * End /CSD027/
+     A N50        CNAME         20      2 13
+     A N50        CTOWN         10      2 35
+     A************ANAME         22      2 34
+     A************DNAME         22      2 57
+     A**50********TOTN          25      2  8
+     A            KACOF          2      3  5
+     A            ANAME         30      3  8
+     A            DNAME         30      3 45
+     A  50        TOTN          25      3  8
+     A
+     A*N50********INAME         40      3  2
+     A N50        INAME         40      4  5
+     A*                                                             /*0117*/
+     A************                      3 44'Y-T-D'  DSPATR(HI)
+     A************FRDT           7      3 50DSPATR(HI)
+     A************                      3 58'-' DSPATR(HI)
+     A************TODT           7      3 60DSPATR(HI)
+     A************DAYS           3  0   3 69EDTCDE(Z) DSPATR(HI)
+     A************                      3 73'DAYS' DSPATR(HI)
+     A************
+     A************                      4  2'Facility/Loan'
+     A************                      4 22'Average Balance'
+     A************                      4 44'Fees'
+     A************                      4 53'Margin'
+     A************                      4 62'Yield%'
+     A************                      4 70'Margin%'
+     A**25********                      5 29'* LAST RECORD FOUND *'
+     A                                  4 44'Y-T-D'  DSPATR(HI)
+     A            FRDT           7      4 50DSPATR(HI)
+     A                                  4 58'-' DSPATR(HI)
+     A            TODT           7      4 60DSPATR(HI)
+     A            DAYS           3  0   4 69EDTCDE(Z) DSPATR(HI)
+     A                                  4 73'DAYS' DSPATR(HI)
+     A
+     A                                  5  2'Facility/Loan'
+     A*                                              Begin /117167/
+     A************                      5 22'Average Balance'
+     A************                      5 44'Fees'
+     A************                      5 53'Margin'
+     A************                      5 62'Yield%'
+     A************                      5 70'Margin%'
+     A**25********                      6 29'* LAST RECORD FOUND *'
+     A                                  5 31'Average Balance'
+     A                                  5 57'Fees'
+     A                                  6 56'Margin'
+     A                                  5 71'Yield%'
+     A                                  6 71'Margin%'
+     A  25                              7 28'* LAST RECORD FOUND *'
+     A*                                              End   /117167/
+     A                                      DSPATR(HI)
+     A
+     A          R LER475S3                  TEXT('M-T-D DETAIL SUBFILE')
+     A                                      SFL
+     A************NARR          21      6  2
+     A************MAVV          10  0   6 24EDTCDE(K)
+     A************MFEE           7  0   6 39EDTCDE(K)
+     A************MMGN           7  0   6 50EDTCDE(K)
+     A************MAYR           6  4   6 61EDTCDE(K)
+     A************MAMR           6  4   6 70EDTCDE(K)
+     A*                                              Begin /117167/
+     A************NARR          21      7  2
+     A************MAVV          10  0   7 24EDTCDE(K)
+     A************MFEE           7  0   7 39EDTCDE(K)
+     A************MMGN           7  0   7 50EDTCDE(K)
+     A************MAYR           6  4   7 61EDTCDE(K)
+     A************MAMR           6  4   7 70EDTCDE(K)
+      *                                               Begin /CLE042/
+     A************NARR          21      8  2
+     A            NARR          22      8  2
+      *                                               End   /CLE042/
+      *                                               Begin /163668/
+     A*********** MAVV          15  0   8 29EDTCDE(K)
+     A            SMAVV         25      8 25
+      *                                               End   /163668/
+     A            MFEE           7  0   8 55EDTCDE(K)
+     A            MMGN           7  0   9 55EDTCDE(K)
+     A            MAYR           6  4   8 71EDTCDE(K)
+     A            MAMR           6  4   9 71EDTCDE(K)
+     A*                                              End   /117167/
+     A
+     A          R LER475C3                  SFLCTL(LER475S3)
+     A                                      SFLSIZ(100)
+     A*                                              Begin /117167/
+     A************                          SFLPAG(14)
+     A                                      SFLPAG(06)
+     A*                                              End   /117167/
+     A  34                                  SFLDSPCTL
+     A  72                                  SFLDSP
+     A N34                                  SFLCLR
+     A  35                                  SFLEND
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A
+     A*                                                             /*0117*/
+     A*N50********CNAME         20      2  2
+     A*N50********CTOWN         10      2 23
+      * Begin /CSD027/
+     A*N50******  KCNUM          6  0   2  5                                                  CSD027
+     A N50        KCNUM          6A     2  5
+      * End /CSD027/
+     A N50        CNAME         20      2 13
+     A N50        CTOWN         10      2 35
+     A************ANAME         22      2 34
+     A************DNAME         22      2 57
+     A**50********TOTN          25      2  8
+     A            KACOF          2      3  5
+     A            ANAME         30      3  8
+     A            DNAME         30      3 45
+     A  50        TOTN          25      3  8
+     A
+     A*N50********INAME         40      3  2
+     A N50        INAME         40      4  5
+     A*                                                             /*0117*/
+     A************                      3 44'M-T-D'  DSPATR(HI)
+     A************FRDT           7      3 50DSPATR(HI)
+     A************                      3 58'-' DSPATR(HI)
+     A************TODT           7      3 60DSPATR(HI)
+     A************DAYS           3  0   3 69EDTCDE(Z) DSPATR(HI)
+     A************                      3 73'DAYS' DSPATR(HI)
+     A************
+     A************                      4  2'Facility/Loan'
+     A************                      4 22'Average Balance'
+     A************                      4 44'Fees'
+     A************                      4 53'Margin'
+     A************                      4 62'Yield%'
+     A************                      4 70'Margin%'
+     A                                  4 44'M-T-D'  DSPATR(HI)
+     A            FRDT           7      4 50DSPATR(HI)
+     A                                  4 58'-' DSPATR(HI)
+     A            TODT           7      4 60DSPATR(HI)
+     A            DAYS           3  0   4 69EDTCDE(Z) DSPATR(HI)
+     A                                  4 73'DAYS' DSPATR(HI)
+     A
+     A                                  5  2'Facility/Loan'
+     A*                                              Begin /117167/
+     A************                      5 22'Average Balance'
+     A************                      5 44'Fees'
+     A************                      5 53'Margin'
+     A************                      5 62'Yield%'
+     A************                      5 70'Margin%'
+     A                                  5 31'Average Balance'
+     A                                  5 57'Fees'
+     A                                  6 56'Margin'
+     A                                  5 71'Yield%'
+     A                                  6 71'Margin%'
+     A*                                              End   /117167/
+     A
+     A          R LER475S4                  TEXT('Y-T-D DETAIL SUBFILE')
+     A                                      SFL
+     A************NARR          21      6  2
+     A************YAVV          10  0   6 24EDTCDE(K)
+     A************YFEE           7  0   6 39EDTCDE(K)
+     A************YMGN           7  0   6 50EDTCDE(K)
+     A************YAYR           6  4   6 61EDTCDE(K)
+     A************YAMR           6  4   6 70EDTCDE(K)
+     A*                                              Begin /117167/
+     A************NARR          21      7  2
+     A************YAVV          10  0   7 24EDTCDE(K)
+     A************YFEE           7  0   7 39EDTCDE(K)
+     A************YMGN           7  0   7 50EDTCDE(K)
+     A************YAYR           6  4   7 61EDTCDE(K)
+     A************YAMR           6  4   7 70EDTCDE(K)
+      *                                               Begin /CLE042/
+     A************NARR          21      8  2
+     A            NARR          22      8  2
+      *                                               End   /CLE042/
+      *                                               Begin /163668/
+     A*********** YAVV          15  0   8 29EDTCDE(K)
+     A            SYAVV         25      8 25
+      *                                               End   /163668/
+     A            YFEE           7  0   8 55EDTCDE(K)
+     A            YMGN           7  0   9 55EDTCDE(K)
+     A            YAYR           6  4   8 71EDTCDE(K)
+     A            YAMR           6  4   9 71EDTCDE(K)
+     A*                                              End   /117167/
+     A
+     A          R LER475C4                  SFLCTL(LER475S4)
+     A                                      SFLSIZ(100)
+     A*                                              Begin /117167/
+     A************                          SFLPAG(14)
+     A                                      SFLPAG(06)
+     A*                                              End   /117167/
+     A  36                                  SFLDSPCTL
+     A  74                                  SFLDSP
+     A N36                                  SFLCLR
+     A  37                                  SFLEND
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A
+     A*                                                             /*0117*/
+     A*N50********CNAME         20      2  2
+     A*N50********CTOWN         10      2 23
+      * Begin /CSD027/
+     A*N50******  KCNUM          6  0   2  5                                                  CSD027
+     A N50        KCNUM          6A     2  5
+      * End /CSD027/
+     A N50        CNAME         20      2 13
+     A N50        CTOWN         10      2 35
+     A************ANAME         22      2 34
+     A************DNAME         22      2 57
+     A**50********TOTN          25      2  8
+     A            KACOF          2      3  5
+     A            ANAME         30      3  8
+     A            DNAME         30      3 45
+     A  50        TOTN          25      3  8
+     A
+     A*N50********INAME         40      3  2
+     A N50        INAME         40      4  5
+     A*                                                             /*0117*/
+     A************
+     A************                      3 44'Y-T-D'  DSPATR(HI)
+     A************FRDT           7      3 50DSPATR(HI)
+     A************                      3 58'-' DSPATR(HI)
+     A************TODT           7      3 60DSPATR(HI)
+     A************DAYS           3  0   3 69EDTCDE(Z) DSPATR(HI)
+     A************                      3 73'DAYS' DSPATR(HI)
+     A************
+     A************                      4  2'Facility/Loan'
+     A************                      4 22'Average Balance'
+     A************                      4 44'Fees'
+     A************                      4 53'Margin'
+     A************                      4 62'Yield%'
+     A************                      4 70'Margin%'
+     A                                  4 44'Y-T-D'  DSPATR(HI)
+     A            FRDT           7      4 50DSPATR(HI)
+     A                                  4 58'-' DSPATR(HI)
+     A            TODT           7      4 60DSPATR(HI)
+     A            DAYS           3  0   4 69EDTCDE(Z) DSPATR(HI)
+     A                                  4 73'DAYS' DSPATR(HI)
+     A
+     A                                  5  2'Facility/Loan'
+     A*                                              Begin /117167/
+     A************                      5 22'Average Balance'
+     A************                      5 44'Fees'
+     A************                      5 53'Margin'
+     A************                      5 62'Yield%'
+     A************                      5 70'Margin%'
+     A                                  5 31'Average Balance'
+     A                                  5 57'Fees'
+     A                                  6 56'Margin'
+     A                                  5 71'Yield%'
+     A                                  6 71'Margin%'
+     A*                                              End   /117167/
+     A
+     A          R LER475ND                  TEXT('NO DETAILS FORMAT')
+     A                                      OVERLAY
+     A                                 14 10'** NO DETAILS FOR THIS ENQUIRY **'
+     A
+     A          R LER475SM                  TEXT('MESSAGE SUBFILE FORMAT')
+     A                                      SFL
+     A                                      SFLMSGRCD(24)
+     A            MSQK                      SFLMSGKEY
+     A            MSGQ                      SFLPGMQ
+     A
+     A          R LER475CM                  SFLCTL(LER475SM)
+     A                                      SFLSIZ(5)
+     A                                      SFLPAG(1)
+     A  43                                  SFLDSP SFLDSPCTL
+     A                                      SFLINZ
+     A  44                                  SFLEND
+     A            MSGQ                      SFLPGMQ
+     A                                 23  2'Roll Up/Down to browse'
+     A

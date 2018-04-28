@@ -1,0 +1,701 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Deal amend system take on proc. (CoB)')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0585 -  ED Deals AMENDS Upgrade for Repo indicator - COB   *
+      *                                                               *
+      *  Function: Program is for new system data take on for         *
+      *            the DEAMSDI file.                                  *
+      *            Program creates bulk transfer batches from         *
+      *            file PF/DEAMSDI. The DTA Preamble type used is     *
+      *            the Drip Feed type, NOT the bulk transfer type.    *
+      *            This is not the same as the rest of Bulk Transfer. *
+      *                                                               *
+      *  Called By: EDC0020 - Bulk Transfer Component                 *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Access Object for Bank Details ICD     *
+      *             AOMEXPR0 - Access Object for ED ICD               *
+      *             EDC0024  - Bulk Transfer Member Creation          *
+      *                                                               *
+      *  Notes:  i) ED0585AU is only printed for Database Errors, not *
+      *             each time this program runs.                      *
+      *         ii) When called, PF/EDSAVEPD will be overridden to    *
+      *             PF/EDSAVxPD.  PF/EDBUTFPD will be overridden to   *
+      *             PF/EDBUTxPD.  x = Stream number.                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 06Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 Patch E ---------------------------------------*
+      *                 170520             Date 19Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CED007 *CREATE     Date 04AUG97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  170520 - Recompile over changed TRANSD file                  *
+      *  CED007 - ED Special Processing Program                       *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDFBUTPDUF  E           K        DISK         KINFSR *PSSR
+      **  List of files to transfer to DTA
+     FEDBULKPDO   F    4096            DISK         KINFSR *PSSR      UC
+      **  Bulk Transfer data
+     FEDSAVXPDO   E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *   Batches to send to DTA
+     FEDBUAUPDO   E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      *   Audit File
+     FED0585AUO   E                    PRINTER                        UC
+      *   Audit Report
+      *
+     FDEAMSDI IF  E                    DISK         KINFSR *PSSR
+      *   Deal Amendments File
+      *
+     FDEALSC  IF  E           K        DISK         KINFSR *PSSR
+      *   Deals File
+      *
+      /TITLE FUNCTION OF INCICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    30  - Read Of PF/DEAMSDI                                   *
+      *    31  - Read Of LF/DEALSC                                    *
+      *    32  - Do 'Close the Batch' processing                      *
+      *    33  - NO EDFBUTPD Record Found To Delete                   *
+      *                                                               *
+      *    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #DETL  - Detail Processing                                   *
+      *  #BATCH - Create batch                                        *
+      *  #INIT  - Initial Processing                                  *
+      *  #LAST  - Termination processing                              *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E                    D1       3971  1
+      *
+     I/TITLE I-SPECIFICATIONS
+      *
+      *-----------------------------------------------------------        CED007
+     IDEALSDCF                                                            CED007
+      ** MM Deals                                                         CED007
+     I              RECI                            RECI2                 CED007
+     I              DLNO                            DLNO2                 CED007
+     I              VDAT                            VDAT2                 CED007
+     I              DASN                            DASN2                 CED007
+     I              DTYP                            DTYP2                 CED007
+     I              DLST                            DLST2                 CED007
+     I              BRTT                            BRTT2                 CED007
+     I              RTSP                            RTSP2                 CED007
+     I              CCY                             CCY2                  CED007
+     I              CNUM                            CNUM2                 CED007
+     I              FACO                            FACO2                 CED007
+     I              SPI                             SPI2                  CED007
+     I              BRCA                            BRCA2                 CED007
+     I              LSWC                            LSWC2                 CED007
+     I              ORED                            ORED2                 CED007
+     I              LCD                             LCD2                  CED007
+     I              CHTP                            CHTP2                 CED007
+     I              TNLU                            TNLU2                 CED007
+     I              RSTM                            RSTM2                 CED007
+     I              RONS                            RONS2                 CED007
+     I              RIBN                            RIBN2                 CED007
+     I              RIBA                            RIBA2                 CED007
+     I              ROBN                            ROBN2                 CED007
+     I              ROCN                            ROCN2                 CED007
+     I              PSTM                            PSTM2                 CED007
+     I              PONS                            PONS2                 CED007
+     I              PIBN                            PIBN2                 CED007
+     I              PIBA                            PIBA2                 CED007
+     I              POBN                            POBN2                 CED007
+     I              POCN                            POCN2                 CED007
+     I              RCRN                            RCRN2                 CED007
+     I              RCRA                            RCRA2                 CED007
+     I              RVNO                            RVNO2                 CED007
+     I              AWBN                            AWBN2                 CED007
+     I              AWBA                            AWBA2                 CED007
+     I              BENN                            BENN2                 CED007
+     I              BENA                            BENA2                 CED007
+     I              DTP1                            DTP12                 CED007
+     I              DTP2                            DTP22                 CED007
+     I              DTP3                            DTP32                 CED007
+     I              DTP4                            DTP42                 CED007
+     I              DCHG                            DCHG2                 CED007
+     I              BTB1                            BTB12                 CED007
+     I              BTB2                            BTB22                 CED007
+     I              BTB3                            BTB32                 CED007
+     I              BTB4                            BTB42                 CED007
+     I              BTB5                            BTB52                 CED007
+     I              BTB6                            BTB62                 CED007
+     I              CVMR                            CVMR2                 CED007
+     I              FSRP                            FSRP2                 CED007
+      *-----------------------------------------------------------
+     IPSDS       SDS
+      *
+      **  Program status data structure.
+      *
+     I                                      244 253 WJOB
+     I                                      254 263 WUSER
+     I                                      264 2690WJOBNO
+     I*
+      *-----------------------------------------------------------
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+      *-----------------------------------------------------------
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+      *-----------------------------------------------------------
+     IDEAMS     E DSDEAMSDI                                               CED007
+      ** MM Deals amendments                                              CED007
+      *-----------------------------------------------------------
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+      *-----------------------------------------------------------
+     ISDMEXP    E DSSDMEXPPD
+      ** ED ICD Details
+      *
+      *-----------------------------------------------------------
+     IBLKOUT      DS
+      ** Data Structure for EDBULKPD output
+     I                                        1   50JOENTL
+     I                                        6  150JOSEQN
+     I                                       16  16 JOCODE
+     I                                       17  18 JOENTT
+     I                                       19  24 JODATE
+     I                                       25  300JOTIME
+     I                                       31  40 JOJOB
+     I                                       41  50 JOUSER
+     I                                       51  560JONBR
+     I                                       57  66 JOPGM
+     I                                       67  76 JOOBJ
+     I                                       77  86 JOLIB
+     I                                       87  96 JOMBR
+     I                                       97 1060JOCTRR
+     I                                      107 107 JOFLAG
+     I                                      108 1170JOCCID
+     I                                      118 125 JORES
+      *-----------------------------------------------------------
+     IEDBULK      DS
+      ** ED ICD Details
+     I                                        1   60UBTCH0
+     I                                        7  120UBTCH1
+     I                                       13  180UBTCH2
+     I                                       19  240UBTCH3
+     I                                       25  300UBTCH4
+     I                                       31  360UBTCH5
+     I                                       37  420UBTCH6
+     I                                       43  480UBTCH7
+     I                                       49  540UBTCH8
+     I                                       55  600UBTCH9
+      *
+      *-----------------------------------------------------------
+     IWBATCH      DS                             10
+      ** Batch Name field
+     I                                        1   3 WEDDTX
+     I                                        4   40WSTREM
+     I                                        5  100WBATNN
+      *
+      *-----------------------------------------------------------
+     IWOVR        DS                             54
+      ** DS for QCMDEXC
+     I                                       44  53 WDSBAT
+      *
+      *-----------------------------------------------------------
+      ** Constant for QCMDEXC
+     I              'OVRDBF FILE(EDBULKPD-C         QOVR
+     I              ') TOFILE(EDBULKPD) M-
+     I              'BR(XXXXXXXXXX)'
+      *
+      *-----------------------------------------------------------
+     ITFROK       DS
+      * Setup Data structure for Deletion from Failed Bulk Transfers
+     I                                        1  10 XFILEN
+     I                                       11  20 XMEMBN
+      *
+      *-----------------------------------------------------------
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *-----------------------------------------------------------
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR #INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR #DETL
+      *
+      ***  Perform Final Processing.
+      *
+     C                     EXSR #LAST
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /EJECT
+      /TITLE SR/#DETL
+      *****************************************************************
+      *                                                               *
+      *  #DETL    - Subroutine to do the Detail Processing.           *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : #BATCH                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #DETL     BEGSR
+      *
+     C                     READ DEAMSDI                  30
+      *
+      *** If record found, call #BATCH to create a batch.
+      *
+     C           *IN30     IFEQ *OFF                       B1
+      *
+     C                     EXSR #BATCH
+      *
+      *** Else, set up fields for PF/EDBUAUPD and WRITE.
+      *
+     C                     ELSE                            X1
+      *
+     C                     MOVEL'No Batch'EABTCH
+     C                     Z-ADD*ZERO     EARECT
+     C                     WRITEEDBUAUD0
+     C                     ENDIF                           E1
+      *
+      ***  Process WHILE there are valid records.
+      *
+     C           *IN30     DOWEQ*OFF                       B1
+     C           RECI      IFEQ 'D'                        B2
+      *
+      *** Read the Deals File for the corresponding Deal.
+      *** The Deal must exist otherwise it is a Database error.
+      *
+     C           DLNO      CHAINDEALSC               31
+      *
+     C           *IN31     IFEQ '1'
+     C                     Z-ADD05        DBASE            ***************
+     C                     MOVEL'DEALSDC 'DBFILE           * DB ERROR 05 *
+     C                     MOVE DLNO      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *** Clear the array D1
+      *
+     C                     MOVEA*BLANKS   D1
+      *
+      *** Set Last Change Indicator to 'I' and move Repo indicator
+      *** of LF/DEALSC into position 838 of the data.
+      *
+     C                     MOVE 'I'       CHTP2
+     C                     MOVEADEAMS     D1
+     C                     MOVEADRID      D1,838
+      *
+      *** Set up record preamble data.
+      *
+     C                     TIME           WTMDT  120
+     C                     MOVELWTMDT     JOTIME
+     C                     MOVE WTMDT     JODATE
+     C                     Z-ADD348       JOENTL
+     C                     MOVE *BLANKS   JOOBJ
+     C                     MOVEL'DEAMSDI 'JOOBJ
+     C                     MOVE *BLANKS   JOMBR
+     C                     MOVEL'DEAMSDI 'JOMBR
+     C                     Z-ADDWCOMIT    JOCCID
+      *
+      *** Write record to PF/EDBULKPD
+      *
+     C                     EXCPTDTL
+      *
+      *** Increment commitment cycle number and record count.
+      *
+     C                     ADD  1         WCOMIT
+     C                     ADD  1         WCOUNT
+      *
+     C                     ENDIF                           E2
+      *
+      *** Read next record from LF/DEAMSDI
+      *
+     C                     READ DEAMSDI                  30
+      *
+      *** If record found and record count => max. no. recs in batch,
+      ***  OR no record found, set on indicator 32 to condition
+      ***  further processing.
+      *
+     C           *IN30     IFEQ *OFF                       B2
+     C           WCOUNT    IFGE E7BUMR                     B3
+     C           RECI      ANDEQ'D'
+     C                     SETON                     32
+     C                     ELSE                            X3
+     C                     SETOF                     32
+     C                     ENDIF                           E3
+     C                     ELSE                            X2
+     C                     SETON                     32
+     C                     ENDIF                           E2
+      *
+      *** If indicator 32 is on, do the 'close the batch' processing.
+      *
+     C           *IN32     IFEQ *ON                        B2
+     C                     CLOSEEDBULKPD
+      *
+      *** Set up data for BATCH LOCATION DETAILS
+      *
+     C                     MOVELUSVLIB    EFLIBR
+     C                     MOVEL'/'       EFSEP1
+     C                     MOVEL'EDBULKPD'EFFILE
+     C                     MOVEL'.'       EFSEP2
+     C                     MOVELWBATCH    EFMEMB
+     C                     MOVEL*BLANKS   EFBLNK
+     C                     MOVELUSQCD     EFSQCD
+      *
+     C                     WRITEEDSAVXD0
+      *
+      *** Set up data for Audit file and write to it
+      *
+     C                     MOVELWBATCH    EABTCH
+     C                     Z-ADDWCOUNT    EARECT
+     C                     WRITEEDBUAUD0
+      *
+      *** Set record count to zero.
+      *
+     C                     Z-ADD0         WCOUNT
+      *
+      *** If LF/DEALSC record was found, create next batch.
+      *
+     C           *IN30     IFEQ *OFF                       B3
+     C                     EXSR #BATCH
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+     C                     ENDDO                           E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/#BATCH
+      *****************************************************************
+      *                                                               *
+      *  #BATCH - Subroutine to create a batch                        *
+      *                                                               *
+      *  Called By: #DETL                                             *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #BATCH    BEGSR
+      *
+      *** Increment batch name
+      *
+     C                     ADD  1         WBATNN
+      *
+      *** Call EDC0024 to create new member of PF/EDBULKPD
+      *
+     C                     CALL 'EDC0024'
+     C                     PARM           WBATCH
+     C                     PARM           WRTCD4  1
+      *
+     C           WRTCD4    IFNE *BLANKS
+     C                     Z-ADD04        DBASE            ***************
+     C                     MOVEL'EDC0024 'DBFILE           * DB ERROR 04 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *** Override to new member of PF/EDBULKPD - Do this in RPG
+      *** rather than in EDC0024 as the override is needed at
+      *** this level.
+      *
+     C                     MOVELQOVR      WOVR
+     C                     MOVELWBATCH    WDSBAT
+     C                     CALL 'QCMDEXC'
+     C                     PARM           WOVR
+     C                     PARM 54        QLEN   155
+      *
+      *** Open PF/EDBULKPD now the correct member exists
+      *** Write header record of PF/EDBULKPD
+      *
+     C                     OPEN EDBULKPD
+     C                     EXCPTHDR
+      *
+      *** Add one to record count.
+      *
+     C                     ADD  1         WCOUNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/#INIT
+      *****************************************************************
+      *                                                               *
+      *  #INIT  - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      *** Program entry
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           USVLIB  7
+     C           XFILEN    PARM           UFILEN 10
+     C           XMEMBN    PARM           UMEMBN 10
+     C                     PARM           USQCD   3
+     C                     PARM           USTREM  1
+      *
+      ***  Copyright Statement.
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      *** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD1  7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD1    IFNE *BLANKS
+     C                     Z-ADD01        DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      *** Access ED ICD Details
+      *
+     C                     CALL 'AOMEXPR0'
+     C                     PARM '*MSG   ' WRTCD2  7
+     C                     PARM '*FIRST ' WOPTN
+     C           SDMEXP    PARM SDMEXP    DSFDY
+      *
+     C           WRTCD2    IFNE *BLANKS
+     C                     Z-ADD02        DBASE            ***************
+     C                     MOVEL'SDMEXPPD'DBFILE           * DB ERROR 02 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Initialisations
+      ***  Initialise Bulk Transfer Audit File fields
+     C                     MOVE *BLANKS   EABTCH
+     C                     MOVE *BLANKS   EAFNME
+     C                     MOVE *BLANKS   EAMNME
+     C                     Z-ADD*ZERO     EARECT
+      *
+      ***  Name of program
+      *
+     C                     MOVEL'ED0585'  DBPGM
+      *
+      ***  File and member names for PF/EDBUAUPD Audit file
+      *
+     C                     MOVEL'DEAMSDI 'EAFNME
+     C                     MOVEL'DEAMSDI 'EAMNME
+      *
+      ***  Components of batch name and batch location fields
+      *
+     C                     MOVEL'EDB'     WEDDTX
+     C                     MOVELUSTREM    WSTREM
+      *
+      ***  Get the next number for a batch for this stream from
+      ***     DTAARA/EDBULK
+      *
+     C           *NAMVAR   DEFN           EDBULK
+     C           *LOCK     IN   EDBULK
+     C                     SELEC
+     C           USTREM    WHEQ '0'
+     C                     Z-ADDUBTCH0    WBATNN
+     C           USTREM    WHEQ '1'
+     C                     Z-ADDUBTCH1    WBATNN
+     C           USTREM    WHEQ '2'
+     C                     Z-ADDUBTCH2    WBATNN
+     C           USTREM    WHEQ '3'
+     C                     Z-ADDUBTCH3    WBATNN
+     C           USTREM    WHEQ '4'
+     C                     Z-ADDUBTCH4    WBATNN
+     C           USTREM    WHEQ '5'
+     C                     Z-ADDUBTCH5    WBATNN
+     C           USTREM    WHEQ '6'
+     C                     Z-ADDUBTCH6    WBATNN
+     C           USTREM    WHEQ '7'
+     C                     Z-ADDUBTCH7    WBATNN
+     C           USTREM    WHEQ '8'
+     C                     Z-ADDUBTCH8    WBATNN
+     C           USTREM    WHEQ '9'
+     C                     Z-ADDUBTCH9    WBATNN
+     C                     ENDSL
+     C                     OUT  EDBULK
+      *
+      ***  More initialisation.
+      *
+     C                     Z-ADD1         WCOMIT  90
+     C                     Z-ADD0         WCOUNT  50
+      *
+     C                     Z-ADD1         JOSEQN
+     C                     MOVE 'R'       JOCODE
+     C                     MOVE 'PT'      JOENTT
+     C                     MOVE WJOB      JOJOB
+     C                     MOVE WUSER     JOUSER
+     C                     Z-ADDWJOBNO    JONBR
+     C                     MOVEL'EDC0020' JOPGM
+     C                     MOVEL'Bulk '   JOLIB
+     C                     MOVE 'Trans'   JOLIB
+     C                     Z-ADD0         JOCTRR
+     C                     MOVE '1'       JOFLAG
+     C                     MOVE *BLANKS   JORES
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      /TITLE SR/#LAST
+      *****************************************************************
+      *                                                               *
+      *  #LAST  - Subroutine to do Program Termination                *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LAST     BEGSR
+      *
+      ***     Update DTAARA/EDBULK
+      *
+     C           *LOCK     IN   EDBULK
+     C                     SELEC
+     C           USTREM    WHEQ '0'
+     C                     Z-ADDWBATNN    UBTCH0
+     C           USTREM    WHEQ '1'
+     C                     Z-ADDWBATNN    UBTCH1
+     C           USTREM    WHEQ '2'
+     C                     Z-ADDWBATNN    UBTCH2
+     C           USTREM    WHEQ '3'
+     C                     Z-ADDWBATNN    UBTCH3
+     C           USTREM    WHEQ '4'
+     C                     Z-ADDWBATNN    UBTCH4
+     C           USTREM    WHEQ '5'
+     C                     Z-ADDWBATNN    UBTCH5
+     C           USTREM    WHEQ '6'
+     C                     Z-ADDWBATNN    UBTCH6
+     C           USTREM    WHEQ '7'
+     C                     Z-ADDWBATNN    UBTCH7
+     C           USTREM    WHEQ '8'
+     C                     Z-ADDWBATNN    UBTCH8
+     C           USTREM    WHEQ '9'
+     C                     Z-ADDWBATNN    UBTCH9
+     C                     ENDSL
+     C                     OUT  EDBULK
+      *
+      ***  Delete record from Failed Bulk Transfers PF/EDFBUTPD
+     C           TFROK     DELETEDFBUTPD             33
+     C                     COMIT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      ***  ERROR REPORT  ED0585AU
+      *
+     C                     OPEN ED0585AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEED0585AU
+      *
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      ***
+     OEDBULKPDE                HDR
+     O                                   20 'MIDAS_DRIP_FEED     '
+     O                                   24 '4096'
+     OEDBULKPDE                DTL
+     O                         BLKOUT   125
+     O                         D1      4096
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,55 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                 /*MD020563*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000090 - CFC006 Initialisation Program                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. MD020563*REDUNDANT Date 22May13              */
+/*       Prev Amend No. CFC006  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD020563 - CFC006 issues                                    */
+/*       CFC006 - COB Restructure - Remove reports from COB          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SCC000090 - CFC006 Initialisation +
+                          Program') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             IF         COND((&PMODE *EQ '1') *OR (&PMODE *EQ '2')) +
+                          THEN(DO)
+ 
+             CALL       PGM(SC000090)
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program SCC000090 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+ END:
+             ENDPGM

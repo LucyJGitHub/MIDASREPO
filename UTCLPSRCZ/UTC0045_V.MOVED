@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/ /*             */ /*CUP002*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC0045_V - Validity checker for RSTJRNENV                  */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/*       Last Amend No. CUP002  *MOVED     Date 25Aug10              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSC020             Date 28Jul04              */
+/* Midas Release 4.01.03 --------------------------------------------*/
+/*                      CUP021 *CREATE     DATE 10Jan03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP002 - Moved to global layer.                             */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       CSC020 - Journaling changes for MidasPlus.                  */
+/*       CUP021 - Automation of system refresh                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MIDASSYSID)
+ 
+             DCL        VAR(&MIDASSYSID) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Create data area to list whether system is 'zone' or 'global'. */                      /*CSC020*/
+             DLTDTAARA  DTAARA(QTEMP/RSTJRNENV)                                           /*CSC020*/
+             MONMSG     MSGID(CPF0000)                                                    /*CSC020*/
+             CRTDTAARA  DTAARA(QTEMP/RSTJRNENV) TYPE(*CHAR) LEN(1)                        /*CSC020*/
+ 
+/* Check that the necessary JLIB exists. */
+             CHGVAR     VAR(&JLIB) VALUE(&MIDASSYSID *TCAT 'JLIB')
+             CHKOBJ     OBJ(&JLIB) OBJTYPE(*LIB) AUT(*ALL)
+             MONMSG     MSGID(CPF9801 CPF9802 CPF9810) EXEC(DO)
+/**********     CHGVAR     VAR(&JLIB) VALUE(&MIDASSYSID *TCAT 'GXLIB')  */         /*CSC020 CSC043*/
+                CHGVAR     VAR(&JLIB) VALUE(&MIDASSYSID *TCAT 'GJLIB')                    /*CSC043*/
+                CHKOBJ     OBJ(&JLIB) OBJTYPE(*LIB) AUT(*ALL)                             /*CSC020*/
+                MONMSG     MSGID(CPF9801 CPF9802 CPF9810) EXEC(DO)                        /*CSC020*/
+                   SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                                MSGDTA('0000Library' *BCAT &JLIB *BCAT +
+                                'does not exist or you have insufficient +
+                                authority.') MSGTYPE(*DIAG)
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO                                                                     /*CSC020*/
+                CHGDTAARA  DTAARA(QTEMP/RSTJRNENV) VALUE(G)                               /*CSC020*/
+                GOTO       CMDLBL(ENDPGM)                                                 /*CSC020*/
+             ENDDO
+             CHGDTAARA  DTAARA(QTEMP/RSTJRNENV) VALUE(Z)                                  /*CSC020*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,53 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO) ACTGRP(GOC011402)                            */
+/*EXI    TEXT('Midas GO Bulk Sync GZSDCUSTPD - Task Split Deletes')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing                                   */
+/*                                                                   */
+/*       GOC011402 - Midas GO Bulk Sync GZSDCUSTPD - Task Split      */
+/*                   Deletions                                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CGP017  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*        CGP017 - Global Layer - GOC0100 Task Split                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             OVRDBF     FILE(SDCUSTPD) SEQONLY(*YES 100)
+             OVRDBF     FILE(SDCUDLPD) SEQONLY(*YES 1000)
+             CPYF       FROMFILE(SDCUSTPD) TOFILE(SDCUDLPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+ 
+             CALL       PGM(GO011402)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GO011402 ended abnormally - see joblog') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

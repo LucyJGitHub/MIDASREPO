@@ -1,0 +1,95 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SM Edit subsystem files')
+/*XBI *  CRTPF FILE(QTEMP/UPSBSD) RCDLEN(132)                         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Implementation module                                *
+      *                                                               *
+      *  SM0131 - Edit file of subsystem details                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CUP016 *CREATE     Date 01Apr03               *
+      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CUP016 - Add implementation software to core.                *
+      *                                                               *
+      *****************************************************************
+     FUPSBSD  UF  E                    DISK
+     F            UPSBSD                            KRENAMESBSD
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ISBSD
+      * Renamed input format fields
+     I              UPSBSD                          SBSDTA
+      *
+     ISBSDTA      DS
+     I                                       27  36 RTGE
+     I                                       35  44 LIBJ
+     I                                       46  55 LIBR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ENT     1
+     C                     PARM           ERROR   1
+      *
+      * Read file until Routing Entry section found
+     C                     READ UPSBSD                 6970
+      * Save library name.
+     C                     MOVELLIBJ      WJLIB  10
+     C                     MOVELLIBR      WRLIB  10
+     C           *IN69     IFEQ *ON                        I01
+     C                     MOVE 'Y'       ERROR
+     C                     SETON                     70
+     C                     ENDIF                           E01
+      *
+     C           *IN70     DOUEQ*ON                        DO01
+     C           ENT       IFEQ 'J'                        I01
+     C           LIBJ      IFEQ WJLIB                      I02
+     C                     MOVEL'XXXXX'   LIBJ
+     C                     MOVE 'XXXXX'   LIBJ
+     C                     UPDATSBSD
+     C                     ELSE                            X02
+     C                     DELETSBSD
+     C                     ENDIF                           E02
+     C                     ENDIF                           E01
+     C           ENT       IFEQ 'R'                        I01
+     C           LIBR      IFEQ WRLIB                      I02
+     C                     MOVEL'XXXXX'   LIBR
+     C                     MOVE 'XXXXX'   LIBR
+     C                     UPDATSBSD
+     C                     ELSE                            X02
+     C           RTGE      IFNE '*RTGDTA'                  I03
+     C           LIBR      ANDNE'QSYS'
+     C                     DELETSBSD
+     C                     ENDIF                           E03
+     C                     ENDIF                           E02
+     C                     ENDIF                           E01
+      *
+     C                     READ UPSBSD                 6970
+     C           *IN69     IFEQ *ON                        I01
+     C                     MOVE 'Y'       ERROR
+     C                     SETON                     70
+     C                     ENDIF                           E02
+      *
+     C                     ENDDO                           ED01
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2003

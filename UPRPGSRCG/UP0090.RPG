@@ -1,0 +1,603 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UP Create deliverables list')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade Module                                       *
+      *                                                               *
+      *  UP0090 - Create Deliverables List                            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CUP030             Date 04Feb05               *
+      *  Prev Amend No. CPK020             Date 27Jul04               *
+      *                 CPK019             Date 02Jul04               *
+      *                 CUP025             Date 08Dec03               *
+      *                 CPK016             Date 12Jun03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CUP007             Date 10Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CUP001 *CREATE     Date 29Dec98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CUP030 - Handle REDUNDANT and RENAMED items.                 *
+      *  CPK020 - Handle deliverable data.                            *
+      *  CPK019 - Field reference file names have changed.            *
+      *  CUP025 - MidasPlus Bridge changes.                           *
+      *  CPK016 - Release 5 packaging.  Special handling for field    *
+      *           reference files.                                    *
+      *  CUP007 - Changes to correct handling of ILE objects.         *
+      *         - Remove default of values for fields not used.       *
+      *  CUP001 - Introduction of BRIDGE                              *
+      *                                                               *
+      *****************************************************************
+     FUPDLVCPDO   E                    DISK                      A
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     IINPUT       DS
+      *
+      *    Data structures for QUSLOBJ API  (OBJL0200 format)
+      *
+     I                                        1  20 USRSPC
+     I I            'CRTDLVLST'               1  10 SPCNAM
+     I I            'QTEMP'                  11  20 SPCLIB
+     I I            'OBJL0200'               21  28 FMTNAM
+     I                                       29  48 OBJLII
+     I I                                     29  38 OBJNMI
+     I                                       39  48 LIBNMI
+     I I            '*FILE'                  49  58 OBJTYI
+      *
+     ILIST        DS
+     I                                        1  20 OBJLIL
+     I                                        1  10 OBJNML
+     I                                       11  20 LIBNML
+     I                                       21  30 OBJTYL
+     I                                       31  31 INFSTS
+     I                                       32  41 OBJATR
+     I                                       42  91 TXTDSC
+     I                                       92 101 USRDAT
+     I                                      102 108 RSVD
+      *
+      *    General Header for User Space
+      *
+     IGENDS       DS
+     I                                        1  64 USRARA
+     I                                    B  65  680SIZHDR
+     I                                       69  72 RLSLVL
+     I                                       73  80 FMTNM1
+     I                                       81  90 APIUSE
+     I                                       91 103 DATTIM
+     I                                      104 104 INFST1
+     I                                    B 105 1080SIZUSE
+     I                                    B 109 1120OFFINP
+     I                                    B 113 1160SIZINP
+     I                                    B 117 1200OFFHDR
+     I                                    B 121 1240SIZHD1
+     I                                    B 125 1280OFFLST
+     I                                    B 129 1320SIZLST
+     I                                    B 133 1360NBRENT
+     I                                    B 137 1400SIZENT
+     I            DS
+     I                                    B   1   40LENDTA
+     I                                    B   5   80STRPOS
+     I                                    B   9  120LENSPC
+      *
+      *    Data structures for QUSLMBR API  (MBRL0200 format)
+      *
+     IINPUT2      DS
+     I                                        1  20 USRSP2
+     I I            'MBRLIST'                 1  10 SPCNM2
+     I I            'QTEMP'                  11  20 SPCLB2
+     I I            'MBRL0200'               21  28 FORMAT
+     I                                       29  48 FILLII
+     I                                       29  38 FILNAI
+     I                                       39  48 LIBNAI
+     I I            '*ALL'                   49  58 MBRNAI
+     I I            '0'                      59  59 OVRRID
+      *
+     IHEADER      DS
+     I                                        1  20 FILLIH
+     I                                        1  10 FILNAH
+     I**********                              1   2 PREFIX                                    CUP025
+     I**********                              9  10 SUFFIX                                    CUP025
+     I                                        9   9 GLBIND                                    CUP025
+     I                                        9  10 SUFFIX                                    CUP030
+     I                                       11  20 LIBNAH
+     I                                       21  30 FILATR
+     I                                       31  80 TEXT
+     I                                    B  81  840MBRNAH
+     I                                       85  85 SRCF
+     ILIST2       DS
+     I                                        1  10 MBRNAL
+     I                                       11  20 SRCTYP
+     I                                       11  14 SRCT4
+     I                                       11  18 SRCT8                                     CUP030
+     I                                       21  33 CRTDAT
+     I                                       34  46 LSTCHG
+     I                                       47  96 MBRTXT
+      *
+      *    General Header for User Space
+      *
+     IGENDS2      DS
+     I                                        1  64 USRAR2
+     I                                    B  65  680SZHDR2
+     I                                       69  72 RLSLV2
+     I                                       73  80 FMTNM2
+     I                                       81  90 APIUS2
+     I                                       91 103 DATTM2
+     I                                      104 104 INFST2
+     I                                    B 105 1080SIZUS2
+     I                                    B 109 1120OFFIP2
+     I                                    B 113 1160SIZIP2
+     I                                    B 117 1200OFFHD2
+     I                                    B 121 1240SIZHD2
+     I                                    B 125 1280OFSET
+     I                                    B 129 1320SZLST
+     I                                    B 133 1360NOENT
+     I                                    B 137 1400SZENT
+      *
+      *    Define binary field for DSPOBJD API
+      *
+     I            DS
+     I                                        1   40OBJDL
+     I                                    B   1   40OBJDLB
+      *
+      *    Define object and library for DSPOBJD API
+      *
+     I            DS
+     I                                        1  20 OBJ
+      * Fields to find 'DC' suffixed files
+     I                                        7   8 DC1
+     I                                        8   9 DC2
+     I                                        9  10 DC3
+     I                                        1  10 OBJNAM
+     I I            '*LIBL'                  11  20 OBJLIB
+      *
+      *    Error information for DSPOBJD API
+      *
+     IOBJDER      DS
+     I                                    B   1   40OBJDBP
+     I                                    B   5   80OBJDBA
+     I                                        9  15 OBJDEI
+     I                                       16  16 OBJDR
+      *
+     I            DS
+     I                                    B   1   40LNDTA
+     I                                    B   5   80STPOS
+     I                                    B   9  120LNSPC
+      *
+      *    Data structure for source file name breakdown
+      *
+     I            DS
+     I                                        1  10 NOOBJ
+     I                                        1   2 SK
+     I                                        1   3 ZSR
+     I                                        1   4 QWIN
+     I                                        3   5 CPY
+     I                                        4   6 CRT
+     IRCVERR      DS
+      *
+      *    Data structure to return error information
+      *
+     I I            0                     B   1   40BYTPRV
+      *
+     I***********   '*MAP *DROP'          C         FMTO
+     I              'Source File List'    C         TXT1
+     I              'Source File Member L-C         TXT2
+     I              'ist'
+     I/EJECT
+      *
+      *    Initial processing
+      *
+     C                     EXSR INIT
+      *
+      *    Main processing
+      *
+     C                     EXSR MAIN
+      *
+      *    End program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *********************************************************************
+      *
+      *    INIT SR - To perform program initialisation
+      *
+     C           INIT      BEGSR
+      *
+      *    Define parameters and set up source file name and library
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SRCFIL 10
+     C                     PARM           SRCLIB 10
+     C***********          PARM           DFTLIB  8                                           CPK020
+     C                     PARM           DFTLIB 10                                           CPK020
+     C                     PARM           PRJECT 10
+     C                     MOVE SRCFIL    OBJNMI
+     C                     MOVE SRCLIB    LIBNMI
+     C*
+     C**   Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *
+      *    Create user space for object list
+      *
+     C                     CALL 'QUSCRTUS'             99
+     C                     PARM           USRSPC
+     C                     PARM *BLANK    ATTRIB 10
+     C                     PARM 1024      LENSPC
+     C                     PARM *BLANK    VALUE   1
+     C                     PARM '*ALL'    PUBAUT 10
+     C                     PARM TXT1      TXT    50
+      *
+      *    Create user space for member list
+      *
+     C                     CALL 'QUSCRTUS'             99
+     C                     PARM           USRSP2
+     C                     PARM *BLANK    ATTRIB 10
+     C                     PARM 1024      LENSPC
+     C                     PARM *BLANK    VALUE   1
+     C                     PARM '*ALL'    PUBAUT 10
+     C                     PARM TXT2      TXT    50
+      *
+     C                     ENDSR
+      *
+      *********************************************************************
+      *
+      *    MAIN SR - To generate and process a list of source files
+      *
+     C           MAIN      BEGSR
+      *
+      *    Generate object list (list of source files)
+      *
+     C                     CALL 'QUSLOBJ'
+     C                     PARM           USRSPC
+     C                     PARM           FMTNAM
+     C                     PARM           OBJLII
+     C                     PARM           OBJTYI
+     C                     PARM           BYTPRV
+      *
+      *    Find offset, size and number of entries
+      *
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           USRSPC
+     C                     PARM 1         STRPOS
+     C                     PARM 140       LENDTA
+     C                     PARM           GENDS
+     C                     Z-ADDOFFLST    STRPOS
+     C                     ADD  1         STRPOS
+     C                     Z-ADDSIZENT    LENDTA
+     C                     Z-ADD1         COUNT  150
+      *
+      *    Read list entries
+      *
+     C           COUNT     DOWLENBRENT
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           USRSPC
+     C                     PARM           STRPOS
+     C                     PARM           LENDTA
+     C                     PARM           LIST
+      *
+      *    Produce member list for each source file
+      *
+     C           OBJATR    IFEQ 'PF'
+     C                     EXSR MEMBSR
+     C                     ENDIF
+      *
+     C                     ADD  1         COUNT
+     C                     ADD  SIZENT    STRPOS
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *********************************************************************
+      *
+      *    MEMBSR - To generate a source file member list
+      *
+     C           MEMBSR    BEGSR
+      *
+      *    Generate member list
+      *
+     C                     MOVE OBJNML    FILNAI
+     C                     MOVE LIBNML    LIBNAI
+     C                     CALL 'QUSLMBR'
+     C                     PARM           USRSP2
+     C                     PARM           FORMAT
+     C                     PARM           FILLII
+     C                     PARM           MBRNAI
+     C                     PARM '0'       OVRRID
+      *
+      *    Find offset, size and number of entries
+      *
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           USRSP2
+     C                     PARM 1         STPOS
+     C                     PARM 140       LNDTA
+     C                     PARM           GENDS2
+      *
+      *    Read header to check file is source file
+      *
+     C                     Z-ADDOFFHD2    STPOS
+     C                     ADD  1         STPOS
+     C                     Z-ADDSIZHD2    LNDTA
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           USRSP2
+     C                     PARM           STPOS
+     C                     PARM           LNDTA
+     C                     PARM           HEADER
+      *
+      *    If source file, process member list
+      *
+     C           SRCF      CASEQ'1'       SRCFSR
+     C                     ENDCS
+      *
+     C                     ENDSR
+      *
+      *********************************************************************
+      *
+      *    SRCFSR - To process a source file member list
+      *
+     C           SRCFSR    BEGSR
+      *
+      *    Set start position for list entries
+      *
+     C                     Z-ADDOFSET     STPOS
+     C                     ADD  1         STPOS
+     C                     Z-ADDSZENT     LNDTA
+     C                     Z-ADD1         NOMBR  150
+      *
+      *    Read list entries
+      *
+     C           NOMBR     DOWLENOENT
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           USRSP2
+     C                     PARM           STPOS
+     C                     PARM           LNDTA
+     C                     PARM           LIST2
+      *
+      * Display object description to see if it already exists; this
+      *  will update 'Change against previous release' field.
+      *
+     C                     MOVE *BLANKS   OBJTYP 10
+      * Determine object type
+     C           SRCTYP    IFEQ 'RPG'
+     C           SRCTYP    OREQ 'CLP'
+     C           SRCTYP    OREQ 'PGM'
+     C                     MOVEL'*PGM'    OBJTYP
+     C                     ELSE
+     C           SRCTYP    IFEQ 'PF'
+     C           SRCTYP    OREQ 'LF'
+     C           SRCTYP    OREQ 'DSPF'
+     C           SRCTYP    OREQ 'PRTF'
+     C           SRCTYP    OREQ 'SQLVIEW'                                                     CUP025
+     C           SRCTYP    OREQ 'SQLTBL'                                                      CUP025
+     C                     MOVEL'*FILE'   OBJTYP
+     C                     ELSE
+     C           SRCTYP    IFEQ 'DTAARA'
+     C                     MOVEL'*DTAARA' OBJTYP
+     C                     ELSE                                                               CUP025
+     C           SRCTYP    IFEQ 'DTAQ'                                                        CUP025
+     C                     MOVEL'*DTAQ'   OBJTYP                                              CUP025
+     C                     ELSE
+     C           SRCTYP    IFEQ 'CMD'
+     C                     MOVEL'*CMD'    OBJTYP
+     C                     ELSE
+     C           SRCTYP    IFEQ 'PNLGRP'
+     C                     MOVEL'*PNLGRP' OBJTYP
+     C                     ELSE
+     C           SRCTYP    IFEQ 'QRYDFN'
+     C                     MOVEL'*QRYDFN' OBJTYP
+     C                     ELSE                                                               CUP007
+     C           SRCTYP    IFEQ 'SRVPGM'
+     C                     MOVEL'*SRVPGM' OBJTYP
+     C                     ELSE                                                               CUP007
+     C           SRCTYP    IFEQ 'BNDDIR'
+     C                     MOVEL'*BNDDIR' OBJTYP
+     C                     ELSE                                                               CUP007
+     C           SRCTYP    IFEQ 'RPGLE'                                                       CUP007
+     C           SRCTYP    OREQ 'CLLE'                                                        CUP007
+     C           SRCTYP    OREQ 'CLE'                                                         CUP007
+     C                     MOVEL'*MODULE' OBJTYP                                              CUP007
+     C                     ENDIF                                                              CUP007
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF                                                              CUP025
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ERRRTN                                              CUP007
+     C                     MOVELMBRNAL    OBJNAM
+      *
+      * Only call DSPOBJD API if object type found
+     C           OBJTYP    IFNE *BLANK
+     C                     Z-ADD16        OBJDBP
+     C                     Z-ADD0         OBJDBA
+     C                     CLEAROBJDEI
+     C                     CALL 'QUSROBJD'
+     C                     PARM           OBJD   10
+     C                     PARM 10        OBJDLB
+     C                     PARM 'OBJD0100'OBJDFT  8
+     C                     PARM           OBJ
+     C                     PARM           OBJTYP
+     C                     PARM           OBJDER
+      * If object not found but type = *MODULE then try *PGM                                  CUP007
+     C           OBJDEI    IFEQ 'CPF9801'                                                     CUP007
+     C           OBJTYP    ANDEQ'*MODULE'                                                     CUP007
+     C                     MOVEL*BLANKS   OBJTYP                                              CUP007
+     C                     MOVEL'*PGM'    OBJTYP                                              CUP007
+     C                     CLEAROBJDEI                                                        CUP007
+     C                     CALL 'QUSROBJD'                                                    CUP007
+     C                     PARM           OBJD   10                                           CUP007
+     C                     PARM 10        OBJDLB                                              CUP007
+     C                     PARM 'OBJD0100'OBJDFT  8                                           CUP007
+     C                     PARM           OBJ                                                 CUP007
+     C                     PARM           OBJTYP                                              CUP007
+     C                     PARM           OBJDER                                              CUP007
+     C                     ENDIF                                                              CUP007
+      *
+     C                     ELSE
+      * Check if source only member
+     C                     MOVELFILNAI    NOOBJ
+     C           SK        IFEQ 'SK'
+     C           ZSR       OREQ 'ZSR'
+     C           QWIN      OREQ 'QWIN'
+     C           CPY       OREQ 'CPY'
+     C           CRT       OREQ 'CRT'
+      **Include*ILE*types*here rather than work out whether object                            CUP007
+      **type*is**PGM*or**MODULE                                                               CUP007
+     C***********SRCTYP    OREQ 'CLLE'                                                        CUP007
+     C***********SRCTYP    OREQ 'RPGLE'                                                       CUP007
+     C***********SRCTYP    OREQ 'CLE'                                                         CUP007
+     C           SRCT4     OREQ 'C_IN'
+     C***********          MOVE *BLANKS   ERRRTN                                              CUP007
+     C                     CALL 'UT0063'
+     C                     PARM           MBRNAL
+     C                     PARM           FILNAI
+     C                     PARM ' '       RTNLIB 10
+     C                     PARM           ERRRTN  1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *    Write deliverables list record for each source member
+      *
+     C                     EXSR WRITE
+      *
+     C                     ADD  1         NOMBR
+     C                     ADD  SZENT     STPOS
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *********************************************************************
+      *
+      *    WRITE SR - To write a deliverables list record
+      *
+     C           WRITE     BEGSR
+      *
+      *    Set up common fields for deliverables list
+      *
+     C                     MOVE MBRNAL    AUMBNM
+     C                     MOVE SRCTYP    AUMBTP
+     C                     MOVE MBRTXT    AUMBTX
+     C                     MOVE 'A'       AUCAPR
+     C***********          Z-ADD5         AUIPTY                                              CUP025
+     C                     Z-ADD9         AUIPTY                                              CUP025
+      * If a logical or a view has been made redundant or renamed then                        CUP030
+      *  make it high priority so that it is deleted first.                                   CUP030
+     C           SRCT8     IFEQ 'REDUNDAN'                                                    CUP030
+     C           SRCT8     OREQ 'RENAMED '                                                    CUP030
+     C           SUFFIX    IFEQ 'DV'                                                          CUP030
+     C           SUFFIX    OREQ 'GV'                                                          CUP030
+     C                     Z-ADD0         AUIPTY                                              CUP030
+     C                     ENDIF                                                              CUP030
+     C                     ENDIF                                                              CUP030
+      * If member is one of the field reference files then set Delivery                       CPK016
+      *  to 'I' ...                                                                           CPK016
+     C           MBRNAL    IFEQ 'MFRFL'                                                       CPK016
+     C***********MBRNAL    OREQ 'SCFRFCPD'                                             CPK016 CPK019
+     C***********MBRNAL    OREQ 'SCFRFRPD'                                             CPK016 CPK019
+     C***********MBRNAL    OREQ 'SCFRFXPD'                                             CPK016 CPK019
+     C***********MBRNAL    OREQ 'SCFRF0PD'                                             CPK016 CPK019
+     C***********MBRNAL    OREQ 'SCFRF1PD'                                             CPK016 CPK019
+     C***********MBRNAL    OREQ 'SCFRF2PD'                                             CPK016 CPK019
+     C***********MBRNAL    OREQ 'SCFRF3PD'                                             CPK016 CPK019
+     C***********MBRNAL    OREQ 'SCFRF4PD'                                             CPK016 CPK019
+     C***********MBRNAL    OREQ 'SCFRF5PD'                                             CPK016 CPK019
+     C***********MBRNAL    OREQ 'SCFRF6PD'                                             CPK016 CPK019
+     C           MBRNAL    OREQ 'GPFRFCPD'                                                    CPK019
+     C           MBRNAL    OREQ 'GPFRFRPD'                                                    CPK019
+     C           MBRNAL    OREQ 'GPFRFXPD'                                                    CPK019
+     C           MBRNAL    OREQ 'GPFRF0PD'                                                    CPK019
+     C           MBRNAL    OREQ 'GPFRF1PD'                                                    CPK019
+     C           MBRNAL    OREQ 'GPFRF2PD'                                                    CPK019
+     C           MBRNAL    OREQ 'GPFRF3PD'                                                    CPK019
+     C           MBRNAL    OREQ 'GPFRF4PD'                                                    CPK019
+     C           MBRNAL    OREQ 'GPFRF5PD'                                                    CPK019
+     C           MBRNAL    OREQ 'GPFRF6PD'                                                    CPK019
+     C                     MOVE 'I'       AUDTYP                                              CPK016
+      * ... otherwise move in 'O'.                                                            CPK016
+     C                     ELSE                                                               CPK016
+     C                     MOVE 'O'       AUDTYP
+     C                     ENDIF                                                              CPK016
+     C                     MOVE *BLANKS   AUCPYO
+     C                     MOVE *BLANKS   AUFMTO
+     C                     MOVE FILNAH    AUSRCF
+     C                     MOVE *BLANKS   AUDTLB
+     C***********          MOVELDFTLIB    AUDTLB                                              CUP007
+     C                     MOVE PRJECT    AUPROJ
+      *
+      *    Set up other values according to source type
+      *
+     C***********SRCTYP    IFEQ 'PF'                                                          CUP007
+     C***********          MOVELFMTO      AUFMTO                                              CUP007
+     C***********          MOVEL'*ADD'    AUCPYO                                              CUP007
+     C***********SUFFIX    IFEQ 'DA'                                                          CUP007
+     C***********          MOVEL'DPLIB'   AUDTLB                                              CUP007
+     C***********          ELSE                                                               CUP007
+     C***********SUFFIX    CAT  'LIB'     AUDTLB                                              CUP007
+     C***********          ENDIF                                                              CUP007
+     C***********          ENDIF                                                              CUP007
+      *
+     C***********SRCTYP    IFEQ 'LF'                                                          CUP007
+     C***********          MOVEL'DVLIB'   AUDTLB                                              CUP007
+     C***********          ENDIF                                                              CUP007
+      *
+     C***********SRCTYP    IFEQ 'DTAARA'                                                      CUP007
+     C***********SUFFIX    CAT  'LIB'     AUDTLB                                              CUP007
+     C***********          ENDIF                                                              CUP007
+      *
+     C***********SUFFIX    IFEQ 'DT'                                                          CUP007
+     C***********DC1       IFNE 'DC'                                                          CUP007
+     C***********DC2       ANDNE'DC'                                                          CUP007
+     C***********DC3       ANDNE'DC'                                                          CUP007
+     C***********          MOVEL'DTALIB'  AUDTLB                                              CUP007
+     C***********          ELSE                                                               CUP007
+     C***********          MOVEL'DMLIB'   AUDTLB                                              CUP007
+     C***********          ENDIF                                                              CUP007
+     C***********          MOVE 'D'       AUDTYP                                              CUP007
+     C***********          ENDIF                                                              CUP007
+      *
+     C***********SRCT4     IFEQ 'COPY'                                                        CUP007
+     C***********          MOVE 'C'       AUDTYP                                              CUP007
+     C***********          MOVE *BLANKS   AUDTLB                                              CUP007
+     C***********          ENDIF                                                              CUP007
+      *
+      * Use destination library field to list whether item is global or zonal.                CUP025
+     C           GLBIND    IFEQ 'G'                                                           CUP025
+     C                     MOVEL'*GLOBAL' AUDTLB                                              CUP025
+     C                     ELSE                                                               CUP025
+     C                     MOVEL'*ZONE'   AUDTLB                                              CUP025
+     C                     ENDIF                                                              CUP025
+      *
+      * If item was not found then 'Change against previous release
+      *  is set to 'NEW'
+     C           OBJDEI    IFEQ 'CPF9801'
+     C           OBJDEI    OREQ 'CPF9811'
+     C           OBJDEI    OREQ 'CPF9812'
+     C           ERRRTN    OREQ 'Y'
+     C                     MOVE 'N'       AUCAPR
+     C                     ENDIF
+      *
+     C                     WRITEUPDLVCD0               99
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

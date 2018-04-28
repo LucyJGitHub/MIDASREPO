@@ -1,0 +1,222 @@
+     H        1
+     H*****************************************************************
+/*OVRH*  CRTPF FILE(QTEMP/SPOOLS) RCDLEN(211) MBR(*NONE)              *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Generate spooled file page numbers')
+     H*****************************************************************
+     H*                                                               *
+     H*  Midas - Utilities module                                     *
+     H*                                                               *
+     H*  UT0270 - Generate page numbers for spooled files.            *
+     H*                                                               *
+     H*  Function:  This program finds the control record (written    *
+     H*             by the CPYFRMOUTQ processing) in a member of      *
+     H*             a spool files output file, and then updates the   *
+     H*             record following it with Release and PTF          *
+     H*             information, and with the page number.            *
+     H*                                                               *
+     H*  Called By: UTC0270 - GENPAGNUM CPP.                          *
+     H*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Last Amend No. CAA002 *CREATE     Date 31OCT95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAA002 - Development of utility to save, edit and restore    *
+      *           spooled files.                                      *
+     H*                                                               *
+     H*****************************************************************
+     F*
+     FSPOOLS  UF  E                    DISK         KINFSR *PSSR
+     F*
+     F** The above is a dummy file name; the real name has been
+     F** defined in the calling CL.
+     F** Rename the format to avoid clashing with the file or field
+     F** name.
+     F            SPOOLS                            KRENAMESPOOLSF
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     I/SPACE 3
+     I*
+     ISPOOLSF
+     I*
+     I** Rename the external field name to avoid clashing with the
+     I** file or format names.
+     I              SPOOLS                          SPOOL
+     I*
+     I/COPY UTCPYSRC,UTSPLREC
+     I*
+     IPAGENO      DS
+     I*
+     I** This structure is used to break down elements of the spooled
+     I** file record which contains the page number details.
+     I*                                      =============================
+     I*                                      All fields
+     I                                        1 211 PALL
+     I*                                      =============================
+     I*                                      First field
+     I                                        1   1 PFIRST
+     I*                                      =============================
+     I*                                      Remaining fields
+     I                                        2 211 PREST
+     I*                                      =============================
+     I*                                      Text for 'Release'
+     I I            'Release '               29  36 PTREL
+     I*                                      =============================
+     I*                                      Release
+     I I                                     37  40 PREL
+     I*                                      =============================
+     I*                                      Text for 'PTF'
+     I I            ' PTF '                  41  45 PTPTF
+     I*                                      =============================
+     I*                                      PTF
+     I                                       46  47 PPTF
+     I*                                      =============================
+     I*                                      Text for 'Page. . .'
+     I I            'Page     of    '        56  70 PTPAGE
+     I*                                      =============================
+     I*                                      Page number
+     I                                       61  63 PPAGE
+     I*                                      =============================
+     I*                                      Total pages
+     I                                       68  70 PTOTAL
+     I*                                      =============================
+     IPSDS       SDS
+     I*
+     I** Program Status Data Structure
+     I*
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I*
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C** Read the file from the end until the control record is found;
+     C** if the control record is not found, report the error to the
+     C** calling program and end in error.
+     C           *HIVAL    SETGTSPOOLSF
+     C           *IN99     DOUEQ*ON
+     C                     READPSPOOLSF                  99
+     C*
+     C** Remove the control field string for comparison.
+     C           22        SUBSTSPOOL:23  SUBSPL 22
+     C*
+     C** If there has been a read error, or if positions 2 - 211 of the
+     C** record do not match the corresponding postions in the SPLREC
+     C** data structure (externally defined in UTSPLREC member), then
+     C** the control record has not been read; otherwise it has, so
+     C** perform next phase.
+     C           *IN99     IFEQ *OFF
+     C           SUBSPL    ANDEQTTYPE
+     C                     EXSR CTLREC
+     C                     ENDIF
+     C*
+     C** If record was updated successfully, exit the subroutine.
+     C           FOUND     IFEQ 'Y'
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C** If the control record was not found, end in error.
+     C           FOUND     IFNE 'Y'
+     C                     MOVEL'NOCTLREC'RETCDE
+     C                     DUMP
+     C                     ENDIF
+     C*
+     C** Normal end.
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C           CTLREC    BEGSR
+     C*
+     C** Read the next record (ie the one after the control record.
+     C** This works on the assumption that this record will always be
+     C** blank.
+     C                     READ SPOOLSF                  99
+     C           *IN99     IFEQ *OFF
+     C*
+     C** Put the received fields into the output fields.
+     C                     MOVELRELEAS    PREL
+     C                     MOVELPTF       PPTF
+     C                     MOVELPAGE#     PPAGE
+     C                     MOVELTOTPAG    PTOTAL
+     C*
+     C                     MOVELPAGENO    SPOOL
+     C                     UPDATSPOOLSF
+     C*
+     C** After successful update, signal success to mainline.
+     C                     MOVEL'Y'       FOUND   1
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C           INIT      BEGSR
+     C           *ENTRY    PLIST
+     C*                                   Return code
+     C                     PARM           RETCDE 10
+     C*                                   Release level
+     C                     PARM           RELEAS  4
+     C*                                   PTF level
+     C                     PARM           PTF     2
+     C*                                   Page number
+     C                     PARM           PAGE#  22
+     C*                                   Total number of pages
+     C                     PARM           TOTPAG 22
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by: (**calling routines**)                             *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C*
+     C********************************************************************
+     C                     END
+     C*
+     C************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C********************************************************************
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

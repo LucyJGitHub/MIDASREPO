@@ -1,0 +1,1305 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Write FX deals on exercise of OTCs')          *
+      *****************************************************************
+     F*                                                               *
+     F*  Midas - Futures and Options Module                           *
+     F*                                                               *
+     F*  FF0391  -  WRITE FX DEALS ON EXERCISE OF OTCS                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      *  Prev Amend No. CSD095             Date 08Apr14               *
+      *                 CSW212             Date 03May12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 248035             Date 13Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 232451             Date 26May06               *
+      *                 CDL049             Date 06Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CDL031             Date 05Dec04               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222373             Date 03Nov03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CFF003 *CREATE     DATE 03APR97               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *           (Recompile)                                         *
+      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  248035 - Populate F3MACT with 'I' for insert.                *
+      *  232451 - When a forex option is exercised, the FX deal's     *
+      *           sell amount becomes negative.  Applied fix 230483.  *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CDL031 - Effective Date on Extended SSI (Recompile)          *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222373 - Correct parameters on program calls                 *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  CDL008 - Continuous Linked Settlement                        *
+     F*  CFF003 - ENHANCED OTC PROCESSING - PHASE II                  *
+     F*           UPGRADE FROM BLI LBL001                             *
+     F*                                                               *
+     F*****************************************************************
+     FTRANS   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     FSDEXSTL1IF  E           K        DISK
+     FCADLFALLUF  E                    DISK
+     FFXDEALPPO   E           K        DISK         KCOMIT
+     FFFOTFXPDO   E           K        DISK         KCOMIT
+     F/COPY WNCPYSRC,FF0391F001
+     F*
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       01         FIRST CYCLE COMPLETE
+     F*
+     F*       99         CHAIN FAILS
+     F*
+     F*
+     E********************************************************************
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+      *
+     E                    @YD     4   4  5 0A
+      *
+      **  ARRAY FOR SR. ZA0710 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @MD    13  13  5 0A
+      *
+      **  ARRAY FOR SR. ZA0710 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E/COPY ZSRSRC,ZPOWERZ1
+     E********************************************************************
+     E/COPY WNCPYSRC,FF0391E001
+      *
+     IZMUSER      DS                             17
+     I                                       14  16 DEPT
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      *
+     I@FXSTD    E DSFXSTDDPP
+      *
+      ** data structure of the standard deal
+      *
+     I@DEAL     E DSFXDEALPP
+     I              QQMORI                          MORIQQ                                    CGL029
+     I              QQDORI                          DORIQQ                                    CGL029
+     I              QQMOPI                          MOPIQQ                                    CGL029
+     I              QQDOPI                          DOPIQQ                                    CGL029
+     I              QQRONS                          RONSQQ                                    CGL029
+     I              QQPONS                          PONSQQ                                    CGL029
+      *
+      ** data structure of the FX deal
+     IZ#BSTS    E DSZ#BST
+     IZ#ASTS    E DSZ#AST
+     IZ#WSTS    E DSZ#WST
+     IZ#XSTS    E DSZ#XST                                                                     222373
+     I            DS
+      *
+      **  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@Z71Y
+     I                                        1   40@@Z71Y
+     I                                        1   10@@SSY1
+     I                                        2   20@@SSY2
+     I                                        3   30@@SSY3
+     I                                        4   40@@SSY4
+     I            DS
+      *
+      **  DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@VDT
+     I                                        1   80@@VDT
+     I                                        1   40@@YR
+     I                                        5   60@@Z71M
+     I                                        7   80@@Z71D
+     I********************************************************************
+     ISDMMOD    E DSSDMMODPD
+     I** MODULE DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDBANK    E DSSDBANKPD
+     I** BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDDEAL    E DSSDDEALPD
+     I** DEALING DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDFODA    E DSSDFODAPD
+     I** ENHANCED OTC DETAILS ACCESSED VIA ACCESS PROGRAM
+     I              QQACCD                          QQACD1                                    CGL029
+     ISDGELR    E DSSDGELRPD
+     I** GENERAL LEDGER ICD DETAILS ACCESSED VIA ACCESS PROGRAM
+     I              QQACCD                          QQACD2                                    CGL029
+     ISDCURR    E DSSDCURRPD
+     I** CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDCUST    E DSSDCUSTPD
+     I** CUSTOMER DETAILS
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I********************************************************************
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IPSDS       SDS
+      *
+      **  Program status data structure.
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 @USER
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+     I/COPY WNCPYSRC,FF0391I001
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ##TNBR  60
+     C                     PARM           ##NUCO  50
+     C                     PARM           ##CLSR  60
+     C                     PARM           ##TRSD  50
+     C                     PARM           ##VALD  50
+     C                     PARM           ##RTCD  7
+     C*
+     C** INITIALIZATION
+     C*
+     C           *IN01     IFEQ '0'
+     C                     EXSR INIT
+     C                     END
+     C*
+     C** MAIN PROCESSING
+     C*
+     C                     EXSR MAIN
+     C*
+     C** RETURN TO CALLING PROGRAM
+     C*
+     C                     RETRN
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      /EJECT
+      ********************************************************************
+      ** INDEX OF SUBROUTINES
+      **
+      ** INIT              INITIALISATION
+      **
+      ** MAIN              MAIN PROCESSING
+      **
+      ** FFXDL             FORMAT FX DEAL DETAILS FOR OUTPUT
+      **
+      ** DSETIN            DETERMINE SETTLEMENT INSTRUCTIONS
+      **
+      ** WFXDL             WRITE FX DEAL
+      **
+      ** *PSSR             HANDLE ABNORMAL ERROR CONDITIONS
+      **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      **
+      ** INIT  S/R - INITIALIZATION
+      ** CALLED AT START OF PROGRAM
+      ** CALLS NO OTHER ROUTINES
+      **
+      ********************************************************************
+     C*
+     C           INIT      BEGSR                           * INIT  BEGSR *
+     C*
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C** Access SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error occurs...
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDBANKPD'##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C** Access SDDEALPD
+     C*
+     C**********           CALL 'AODEALR0'                                                    CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                               CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+     C*
+     C** If error occurs...
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDDEALPD'##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDDEALPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C** Access SDCURRPD for base currency for accounting
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BJCYCD    @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 003 *
+     C                     MOVEL'*KEY'    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     Z-ADDA6SPRT    ACSPRT 138
+     C                     Z-ADDA6NBDP    ACNBDP  10
+     C                     MOVELA6MDIN    ACMDIN  1
+     C*
+     C** Access SDCURRPD for base currency for dealing
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BNCYCD    @AJCD
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 004 *
+     C                     MOVEL'*KEY'    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     Z-ADDA6SPRT    DLSPRT 138
+     C                     Z-ADDA6NBDP    DLNBDP  10
+     C                     MOVELA6MDIN    DLMDIN  1
+     C*
+     C                     MOVE '1'       *IN,01
+     C*
+     C* Access SDMMODPD to see if profit centre accounting is used
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C* Access SDGELRPD to see if profit centres and profit
+     C* centre defaults are used
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C           SDGELR    PARM SDGELR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDGELRPD'##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD015       DBASE            ***************
+     C                     MOVEL'SDGELRPD'DBFILE           *DB ERROR 015 *
+     C                     MOVEL'*KEY    'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*
+     C*  Access SDFODAPD
+     C*
+     C                     CALL 'AOFODAR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDFODA    PARM SDFODA    DSFDY
+     C*
+     C*  If error occurs...
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*EMPTY'
+     C                     MOVEL'SDFODAPD'##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD006       DBASE            ***************
+     C                     MOVEL'SDFODAPD'DBFILE           *DB ERROR 006 *
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C/COPY WNCPYSRC,FF0391C002
+     C*
+     C** If Enhanced OTC Processing not present
+     C** or if FX Deal Generation not required
+     C*
+     C           @RTCD     IFEQ '*EMPTY'
+     C           BXFXDG    ORNE 'Y'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C           XINIT     ENDSR                           ** XINIT  ESR**
+     C*===================================================================
+      /EJECT
+      ********************************************************************
+      **
+      ** MAIN  S/R MAIN PROCESSING
+      ** CALLED FROM MAIN BODY OF PROGRAM
+      ** CALLS  FFXDL FORMAT FX DEAL DETAILS FOR OUTPUT
+      **
+      ********************************************************************
+     C*
+     C           MAIN      BEGSR                           ** MAIN  BSR **
+     C*
+     C* ACCESS TRANSACTION DETAILS OF TRADE BEING EXERCISED
+     C*
+     C           ##CLSR    CHAINTRANSDF              99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'TRANSD'  ##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD007       DBASE            ***************
+     C                     MOVEL'TRANSD  'DBFILE           *DB ERROR 007 *
+     C                     MOVEL##CLSR    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C* ACCESS INSTRUMENT DETAILS OF TRADE BEING EXERCISED
+     C*
+     C           ISTT      CHAININTYPDF              99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'INTYPD'  ##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD008       DBASE            ***************
+     C                     MOVEL'INTYPD  'DBFILE           *DB ERROR 008 *
+     C                     MOVELISTT      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C* ACCESS CUSTOMER DETAILS
+     C*
+     C                     MOVEL*BLANK    @KEY1
+     C                     MOVELCUSC      @KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1  10
+     C                     PARM           @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C**
+     C**   - must exist as a live record on SDCUSTPD
+     C**
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDCUSTPD'##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD009       DBASE            ***************
+     C                     MOVEL'SDCUSTPD'DBFILE           *DB ERROR 009 *
+     C                     MOVEL'*KEY    'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C* FORMAT FX DEAL DETAILS FOR OUTPUT
+     C*
+     C                     EXSR FFXDL
+     C*
+     C           XMAIN     ENDSR                           ** XMAIN  ESR**
+     C*
+     C********************************************************************
+      /EJECT
+      ********************************************************************
+      **
+      ** FFXDL S/R TO FORMAT FX DEAL DETAILS FOR OUTPUT
+      ** CALLED FROM S/R MAIN
+      ** CALLS  ZA0710
+      **
+      ********************************************************************
+     C*
+     C           FFXDL     BEGSR                           ** FFXDL BSR **
+     C*
+     C* CLEAR ALL FX DEAL DETAILS
+     C*
+     C                     CLEAR@FXSTD
+     C*
+     C* RECORD ID
+     C*
+     C                     MOVEL'  '      F3RCID
+      *                                                                                       248035
+      ** Midas Action Code                                                                    248035
+      *                                                                                       248035
+     C                     MOVEL'I'       F3MACT                                              248035
+     C*
+     C* DEAL NUMBER 38
+     C*
+     C                     Z-ADDF3DN38    F3DN38
+     C*
+     C* VALUE DATE
+     C*
+     C                     Z-ADD##VALD    @@DAYN  50
+     C                     Z-ADD##VALD    F3VDDN                                              232451
+     C                     EXSR ZA0710
+     C                     MOVE @@YR      F3VDYY
+     C                     MOVE @@Z71M    F3VDMM
+     C                     MOVE @@Z71D    F3VDDD
+     C*
+     C* DEAL DATE
+     C*
+     C                     Z-ADD##TRSD    @@DAYN
+     C                     Z-ADD##TRSD    F3DDDN                                              232451
+     C                     EXSR ZA0710
+     C                     MOVE @@YR      F3DTYY
+     C                     MOVE @@Z71M    F3DTMM
+     C                     MOVE @@Z71D    F3DTDD
+     C*
+     C* DEAL STATUS
+     C*
+     C           BNFXAU    IFEQ 'Y'                                         1319
+     C                     MOVEL'C'       F3DSTS
+     C                     ELSE
+     C                     MOVEL'A'       F3DSTS
+     C                     END
+     C*
+     C* DEAL CUSTOMER SHORTNAME
+     C*
+     C                     MOVELBBCSSN    F3DCSN
+     C*
+     C* EXCHANGE RATE
+     C*
+     C                     Z-ADDSTRP      F3DXRT
+     C                     Z-ADDSTRP      F3OSRT
+     C*
+     C* DEAL FIRST AMOUNT & FIRST CURRENCY
+     C*
+     C           TRTY      IFEQ 'P'
+     C           PCAL      ANDEQ'C'
+     C           TRTY      OREQ 'S'
+     C           PCAL      ANDEQ'P'
+     C           ##NUCO    MULT CTAM      F3DAM1
+     C                     MOVELOTHC      F3CCY1
+     C                     ELSE
+     C           ##NUCO    MULT CCAM      F3DAM1
+     C*********************MOVELCCCY      F3CCY1                          073714
+     C                     MOVELCTCY      F3CCY1                          073714
+     C                     END
+     C*
+     C* DEAL SECOND AMOUNT & SECOND CURRENCY
+     C*
+     C           TRTY      IFEQ 'S'
+     C           PCAL      ANDEQ'C'
+     C           TRTY      OREQ 'P'
+     C           PCAL      ANDEQ'P'
+     C           ##NUCO    MULT CTAM      F3DAM2
+     C                     MOVELOTHC      F3CCY2
+     C                     ELSE
+     C           ##NUCO    MULT CCAM      F3DAM2
+     C*********************MOVELCCCY      F3CCY2                          073714
+     C                     MOVELCTCY      F3CCY2                          073714
+     C                     END
+     C*
+     C* GET PURCHASE CURRENCY DETAILS
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM F3CCY1    @AJCD
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD010       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 010 *
+     C                     MOVEL'*KEY    'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6SPRT    PCSPRT 138
+     C                     Z-ADDA6NBDP    PCNBDP  10
+     C                     MOVELA6MDIN    PCMDIN  1
+     C*
+     C* GET SALE CURRENCY DETAILS
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM F3CCY2    @AJCD
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD011       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 011 *
+     C                     MOVEL'*KEY    'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6SPRT    SCSPRT 138
+     C                     Z-ADDA6NBDP    SCNBDP  10
+     C                     MOVELA6MDIN    SCMDIN  1
+     C*
+     C* DEAL BASE CCY FOR ACCOUNTING
+     C*
+     C           F3CCY1    IFEQ BJCYCD
+     C                     Z-ADDF3DAM1    F3BCAE
+     C                     ELSE
+     C           F3CCY2    IFEQ BJCYCD
+     C                     Z-ADDF3DAM2    F3BCAE
+     C                     ELSE
+     C*
+     C* CONVERT SALE CURRENCY TO BASE CURRENCY FOR ACCOUNTING
+     C* AT CURRENT SPOT RATE
+     C*
+     C                     Z-ADDF3DAM2    ZAMTCI
+     C                     Z-ADDSCSPRT    ZEXCH
+     C                     MOVE SCMDIN    ZMD
+     C                     Z-ADDSCNBDP    ZCDPI
+     C                     Z-ADDACNBDP    ZCDPO
+     C                     EXSR ZCONVN
+     C                     Z-ADDZAMTCO    F3BCAE
+     C                     END
+     C                     END
+     C*
+     C* DEAL BASE CCY FOR DEALING
+     C*
+     C           F3CCY1    IFEQ BNCYCD
+     C                     Z-ADDF3DAM1    F3BCDE
+     C                     ELSE
+     C           F3CCY2    IFEQ BNCYCD
+     C                     Z-ADDF3DAM2    F3BCDE
+     C                     ELSE
+     C*
+     C* CONVERT SALE CURRENCY TO BASE CURRENCY FOR ACCOUNTING
+     C* AT CURRENT SPOT RATE
+     C*
+     C                     Z-ADDF3DAM2    ZAMTCI
+     C                     Z-ADDSCSPRT    ZEXCH
+     C                     MOVE SCMDIN    ZMD
+     C                     Z-ADDSCNBDP    ZCDPI
+     C                     Z-ADDACNBDP    ZCDPO
+     C                     EXSR ZCONVN
+     C*
+     C* IF BASE CURRENCY FOR DEALING = BASE CURRENCY FOR ACCOUNTING
+     C*
+     C           BNCYCD    IFEQ BJCYCD
+     C                     Z-ADDZAMTCO    F3BCDE
+     C                     ELSE
+     C                     Z-ADDZAMTCO    ZAMTCI
+     C                     Z-ADDDLSPRT    ZEXCH
+     C           DLMDIN    IFEQ 'M'
+     C                     MOVE 'D'       ZMD
+     C                     ELSE
+     C                     MOVE 'M'       ZMD
+     C                     END
+     C                     Z-ADDACNBDP    ZCDPI
+     C                     Z-ADDDLNBDP    ZCDPO
+     C                     EXSR ZCONVN
+     C                     Z-ADDZAMTCO    F3BCDE
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* DEAL SPOT BASE CCY EQUIV. (DEAL WILL BE SPOT)
+     C*
+     C                     Z-ADDF3BCDE    F3DSBE
+     C*
+     C* DEAL MULT/DIV FIRST AMNT IND.
+     C* CHECK IF MULTIPLY
+     C                     Z-ADDF3DAM1    ZAMTCI
+     C                     Z-ADDF3DXRT    ZEXCH
+     C                     MOVE 'M'       ZMD
+     C                     Z-ADDPCNBDP    ZCDPI
+     C                     Z-ADDSCNBDP    ZCDPO
+     C                     EXSR ZCONVN
+     C           ZAMTCO    ADD  1         ZAMTA1 205
+     C           ZAMTCO    SUB  1         ZAMTS1 205
+     C           F3DAM2    IFGT ZAMTA1
+     C           F3DAM2    ORLT ZAMTS1
+     C                     MOVEL'D'       F3DMD1
+     C                     ELSE
+     C                     MOVEL'M'       F3DMD1
+     C                     END
+     C*
+     C* DEAL BRANCH CODE
+     C*
+     C                     MOVELBRCA      F3DBRC
+     C*
+     C* DEAL DONE DATE
+     C*
+     C                     MOVEL@@VDT     F3DDDT
+     C*
+     C* DEAL TYPE
+     C*
+     C           F3CCY1    IFEQ BJCYCD
+     C                     MOVEL'FS'      F3TYPE
+     C                     ELSE
+     C           F3CCY2    IFEQ BJCYCD
+     C                     MOVEL'FP'      F3TYPE
+     C                     ELSE
+     C                     MOVEL'CX'      F3TYPE
+     C                     END
+     C                     END
+     C*
+     C* DEAL SUB-TYPE
+     C*
+     C                     MOVELBXDFDS    F3STYP
+     C*
+     C* BROKER CODE
+     C*
+     C                     MOVELBXDFDB    F3BROK
+     C*
+     C* BROKERAGE
+     C*
+     C                     Z-ADD*ALL'9'   F3BRKG
+     C*
+     C* DEAL LAST ACTION
+     C*
+     C           BNFXAU    IFEQ 'Y'                                         1319
+     C                     MOVEL'I'       F3LACT
+     C                     ELSE
+     C                     MOVEL'X'       F3LACT
+     C                     END
+     C*
+     C* USER
+     C*
+     C                     MOVEL@USER     F3DUSC
+     C*
+     C* USER
+     C*
+     C           BNFXAU    IFNE 'Y'                                         1319
+     C                     MOVEL@USER     F3AOFR
+     C                     END
+     C*
+     C* CUSTOMER NUMBER
+     C*
+     C                     MOVELCUSC      F3CNUM
+     C*
+     C* BRANCH CODE
+     C*
+     C                     MOVELBRCA      F3MBCA
+     C*
+     C* DEAL DATE DAY NUMBER
+     C*
+     C                     Z-ADD##TRSD    F3DDDN
+     C*
+     C* VALUE DATE DAY NUMBER
+     C*
+     C                     Z-ADD##VALD    F3VDDN
+     C*
+     C* BOOK CODE
+     C*
+     C                     MOVELBOKC      F3BOKC
+     C*
+     C* ORIGINATING BRANCH
+     C*
+     C                     MOVELORBR      F3ORBR
+     C*
+     C* if profit centres and profit centre defaults are used
+     C*
+     C           BKPRCU    IFEQ 'Y'
+     C           BKPCDU    ANDEQ'Y'
+     C*
+     C* get ZMUSER to access default department code
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C                     UNLCKZMUSER
+     C*
+     C* get the profit centre from the profit centre matrix
+     C*
+     C                     MOVELF3TYPE    TRTP    5
+     C                     CALL 'AOPRFMR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM BOKC      BOOK    2
+     C                     PARM           TRTP    5
+     C                     PARM BXDFDS    SUTP    2
+     C                     PARM BRCA      BRAN    3
+     C                     PARM DEPT      DEPT1   3
+     C                     PARM @USER     USER   10
+     C                     PARM BBACOC    ACOF    2
+     C                     PARM BBCUST    CUST    6
+     C                     PARM           PRFC    4
+      *
+      * if no profit centre is found AND profit centre accounting is on
+      * then there is a database error
+      *
+     C           @RTCD     IFNE '0'
+     C           BGN0ST    IFEQ 'Y'
+     C                     MOVEL'SDPRFMPD'##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD016       DBASE            ***************
+     C                     MOVEL'SDPRFMPD'DBFILE           *DB ERROR 016 *
+     C                     MOVELTRTP      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ELSE
+      *
+      * set up profit centre fields before write to files
+      *
+     C                     MOVELPRFC      F3PRFC
+     C                     MOVELPRFC      FHPRFC
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C*
+     C* DETERMINE SETTLEMENT INSTRUCTIONS
+     C*
+     C                     EXSR DSETIN
+     C/COPY WNCPYSRC,FF0391C001
+     C*
+     C* WRITE THE FX DEAL
+     C*
+     C                     EXSR WFXDL
+     C*
+     C           XFFXDL    ENDSR                           ** XFFXDL ESR**
+     C*
+     C********************************************************************
+      /EJECT
+      ********************************************************************
+      **
+      ** WFXDL S/R TO WRITE THE FX DEAL
+      ** CALLED FROM S/R MAIN
+      **
+      ********************************************************************
+     C           WFXDL     BEGSR                           ** WFXDL  BSR**
+     C*
+     C** blank out the record for output
+     C                     CLEAR@DEAL
+     C*
+     C**  Move '*' into the logical delete flag.
+     C                     MOVE '*'       FHDLTF
+     C*
+     C** Get automatic deal number
+     C*
+     C** Loop here until a record is found
+     C           *IN99     DOUEQ'0'                        B1
+     C           1         SETLLCADLFALL
+     C                     READ CADLFALL                 99
+     C           *IN99     IFEQ '0'                        B2
+     C*
+     C** If a record is found delete it
+     C                     DELETCADLFAP0
+     C                     ELSE                            X2
+     C*
+     C** Else call the regeneration program
+     C                     CALL 'CA0040'
+     C                     PARM           @TERM
+     C           @TERM     IFEQ 'E'                        B3
+     C                     ROLBK
+     C                     MOVEL'CA0040  '##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD012       DBASE            ***************
+     C                     MOVEL'CA0040  'DBFILE           *DB ERROR 012 *
+     C                     MOVEL'*KEY    'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** Insert the deal number
+     C                     MOVE FKDN38    FHDN38
+     C                     MOVE FKDN38    F3DN38
+      *                                                                                       232451
+      ** Update the deal and value date day number fields now                                 232451
+      *                                                                                       232451
+     C                     MOVE F3DDDN    FHDDDN                                              232451
+     C                     MOVE F3VDDN    FHVDDN                                              232451
+     C*
+     C**  Write the new record to reserve one position in the file
+     C*
+     C                     MOVEASTAMP,1   FHTMST           Default Timestamp                  CPK015
+     C                     WRITEFXDEALP0
+     C*
+     C**  Write the deal details to the OTC FX Deals file
+     C*
+     C                     WRITEFXSTDDP0
+      *                                                                                       232451
+      ** Make sure Deal Second Amount field is negative.                                      232451
+      *                                                                                       232451
+     C           F3DAM1    IFGE 0                                                             232451
+     C           F3DAM2    ANDGT0                                                             232451
+     C                     Z-SUBF3DAM2    F3DAM2                                              232451
+     C                     ENDIF                                                              232451
+     C*
+     C**  Update FX Database
+     C*
+     C                     CALL 'FX0320'
+     C                     PARM *BLANKS   @TERM   1
+     C                     PARM           @FXSTD
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           Z#XSTS                                              222373
+     C           @TERM     IFEQ 'E'
+     C                     ROLBK
+     C                     MOVEL'FX0320  '##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD013       DBASE            ***************
+     C                     MOVEL'FX0320  'DBFILE           *DB ERROR 013 *
+     C                     MOVEL'*BLANKS 'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Midas Update Control Sundry Updates
+     C*
+     C                     CALL 'FX0391'
+     C                     PARM *BLANKS   @TERM
+     C                     PARM           @FXSTD
+     C                     PARM           @POVER  1
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM           Z#XSTS                          154448
+     C           @TERM     IFEQ 'E'
+     C                     ROLBK
+     C                     MOVEL'FX0391  '##RTCD
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD014       DBASE            ***************
+     C                     MOVEL'FX0391  'DBFILE           *DB ERROR 014 *
+     C                     MOVEL'*BLANKS 'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C           XWFXDL    ENDSR                           ** XWFXDL ESR**
+     C*
+     C********************************************************************
+      /EJECT
+      ********************************************************************
+      **
+      ** DSETIN S/R TO DETERMINE SETTLEMENT INSTRUCTIONS
+      ** CALLED FROM S/R MAIN
+      **
+      ********************************************************************
+     C           DSETIN    BEGSR                           ** DSETIN BSR**
+     C*
+     C*  Keylist for SSI file = CURRENCY/CUSTOMER/DEAL TYPE
+     C*
+     C           USKEY     KLIST
+     C                     KFLD           BYCYCD
+     C                     KFLD           BYCUST
+     C                     KFLD           BYTRTY
+     C*
+     C* PAY CURRENCY = SELL CURRENCY = 'PRIME' CURRENCY
+     C*
+     C                     MOVELF3CCY2    BYCYCD
+     C                     MOVELCUSC      BYCUST
+     C                     MOVEL'FX'      BYTRTY
+     C*
+     C           USKEY     CHAINSDEXSTL1             90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'AT'      BYTRTY
+     C           USKEY     CHAINSDEXSTL1             90
+     C                     END
+     C*
+     C           *IN90     IFEQ '0'
+     C                     MOVELBYRSTY    F3RSTM
+     C                     MOVELBYRONO    F3RONS
+     C                     MOVELBYROBN    F3ROBN
+     C                     MOVELBYROCS    F3ROCN
+     C                     MOVELBYRIBN    F3RIBN
+     C                     MOVELBYRIBL    F3RIBA
+     C                     MOVELBYPSTY    F3PSTM
+     C                     MOVELBYPONO    F3PONS
+     C                     MOVELBYPOBN    F3POBN
+     C                     MOVELBYPOCS    F3POCN
+     C                     MOVELBYPIBN    F3PIBN
+     C                     MOVELBYPIBA    F3PIBA
+     C                     MOVELBYRCNO    F3RCRN
+     C                     MOVELBYRCAL    F3RCRA
+     C                     MOVELBYRCNB    F3RVNO
+     C                     MOVELBYACBN    F3AWBN
+     C                     MOVELBYACBL    F3AWBA
+     C                     MOVELBYBYNB    F3BENN
+     C                     MOVELBYBACL    F3BENA
+     C                     MOVELBYDPY1    F3DTP1
+     C                     MOVELBYDPY2    F3DTP2
+     C                     MOVELBYDPY3    F3DTP3
+     C                     MOVELBYDPY4    F3DTP4
+     C                     MOVELBYDECG    F3DCHG
+     C                     MOVELBYBBI1    F3BTB1
+     C                     MOVELBYBBI2    F3BTB2
+     C                     MOVELBYBBI3    F3BTB3
+     C                     MOVELBYBBI4    F3BTB4
+     C                     MOVELBYBBI5    F3BTB5
+     C                     MOVELBYBBI6    F3BTB6
+     C                     MOVELBYCVMR    F3CVMR
+     C                     MOVELBYORBR    F3ROBR
+     C                     MOVELBYOPBR    F3POBR
+     C                     ELSE
+     C                     MOVEL'00'      F3RSTM
+     C                     MOVEL*BLANKS   F3RONS
+     C                     MOVEL*BLANKS   F3ROBN
+     C                     MOVEL*BLANKS   F3ROCN
+     C                     MOVEL*BLANKS   F3RIBN
+     C                     MOVEL*BLANKS   F3RIBA
+     C                     MOVEL'00'      F3PSTM
+     C                     MOVEL*BLANKS   F3PONS
+     C                     MOVEL*BLANKS   F3POBN
+     C                     MOVEL*BLANKS   F3POCN
+     C                     MOVEL*BLANKS   F3PIBN
+     C                     MOVEL*BLANKS   F3PIBA
+     C                     MOVEL*BLANKS   F3RCRN
+     C                     MOVEL*BLANKS   F3RCRA
+     C                     MOVEL*BLANKS   F3RVNO
+     C                     MOVEL*BLANKS   F3AWBN
+     C                     MOVEL*BLANKS   F3AWBA
+     C                     MOVEL*BLANKS   F3BENN
+     C                     MOVEL*BLANKS   F3BENA
+     C                     MOVEL*BLANKS   F3DTP1
+     C                     MOVEL*BLANKS   F3DTP2
+     C                     MOVEL*BLANKS   F3DTP3
+     C                     MOVEL*BLANKS   F3DTP4
+     C                     MOVEL*BLANKS   F3DCHG
+     C                     MOVEL*BLANKS   F3BTB1
+     C                     MOVEL*BLANKS   F3BTB2
+     C                     MOVEL*BLANKS   F3BTB3
+     C                     MOVEL*BLANKS   F3BTB4
+     C                     MOVEL*BLANKS   F3BTB5
+     C                     MOVEL*BLANKS   F3BTB6
+     C                     MOVEL*BLANKS   F3CVMR
+     C                     MOVEL*BLANKS   F3ROBR
+     C                     MOVEL*BLANKS   F3POBR
+     C                     END
+     C*
+     C* RECEIVE CURRENCY = BUY CURRENCY
+     C*
+     C                     MOVELF3CCY1    BYCYCD
+     C                     MOVELCUSC      BYCUST
+     C                     MOVEL'FX'      BYTRTY
+     C*
+     C           USKEY     CHAINSDEXSTL1             90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'AT'      BYTRTY
+     C           USKEY     CHAINSDEXSTL1             90
+     C                     END
+     C*
+     C           *IN90     IFEQ '0'
+     C                     MOVELBYRSTY    F3RSTM
+     C                     MOVELBYRONO    F3RONS
+     C                     MOVELBYROBN    F3ROBN
+     C                     MOVELBYROCS    F3ROCN
+     C                     MOVELBYRIBN    F3RIBN
+     C                     MOVELBYRIBL    F3RIBA
+     C                     MOVELBYORBR    F3ROBR
+      *
+      * Else if no instructions for Buy Currency, set fields to
+      * blanks so no default to Sell Currency values
+     C                     ELSE
+     C                     MOVEL'00'      F3RSTM
+     C                     MOVE *BLANKS   F3RONS
+     C                     MOVE *BLANKS   F3ROBN
+     C                     MOVE *BLANKS   F3ROCN
+     C                     MOVE *BLANKS   F3RIBN
+     C                     MOVE *BLANKS   F3RIBA
+     C                     MOVE *BLANKS   F3ROBR
+     C                     END
+     C*
+     C* DRS SETTLEMENT INSTRUCTIONS
+     C*
+     C                     MOVE *BLANKS   F3DORM
+     C           F3RSTM    IFEQ 01
+     C                     MOVE 'TELX '   F3DORM
+     C                     END
+     C           F3RSTM    IFEQ 07
+     C                     MOVE 'CHIPS'   F3DORM
+     C                     END
+     C           F3RSTM    IFEQ 08
+     C                     MOVE 'SWIFT'   F3DORM
+     C                     END
+     C           F3RSTM    IFEQ 12
+     C                     MOVE 'CCOLL'   F3DORM
+     C                     END
+     C           F3RSTM    IFEQ 02
+     C                     MOVE 'CSENT'   F3DORM
+     C                     END
+     C           F3RSTM    IFEQ 03
+     C                     MOVE 'COMP '   F3DORM
+     C                     END
+     C           F3RSTM    IFEQ 04
+     C                     MOVE 'PCURR'   F3DORM
+     C                     END
+     C           F3RSTM    IFEQ 14
+     C                     MOVE 'CURR '   F3DORM
+     C                     END
+     C           F3RSTM    IFEQ 05
+     C                     MOVE 'MACC '   F3DORM
+     C                     END
+     C           F3RSTM    IFEQ 06
+     C                     MOVE 'SUSP '   F3DORM
+     C                     END
+      *
+     C                     MOVE *BLANKS   F3DOPM
+     C           F3PSTM    IFEQ 01
+     C                     MOVE 'TELX '   F3DOPM
+     C                     END
+     C           F3PSTM    IFEQ 07
+     C                     MOVE 'CHIPS'   F3DOPM
+     C                     END
+     C           F3PSTM    IFEQ 08
+     C                     MOVE 'SWIFT'   F3DOPM
+     C                     END
+     C           F3PSTM    IFEQ 12
+     C                     MOVE 'CCOLL'   F3DOPM
+     C                     END
+     C           F3PSTM    IFEQ 12
+     C                     MOVE 'CSENT'   F3DOPM
+     C                     END
+     C           F3PSTM    IFEQ 03
+     C                     MOVE 'COMP '   F3DOPM
+     C                     END
+     C           F3PSTM    IFEQ 04
+     C                     MOVE 'PCURR'   F3DOPM
+     C                     END
+     C           F3PSTM    IFEQ 14
+     C                     MOVE 'CURR '   F3DOPM
+     C                     END
+     C           F3PSTM    IFEQ 05
+     C                     MOVE 'MACC '   F3DOPM
+     C                     END
+     C           F3PSTM    IFEQ 06
+     C                     MOVE 'SUSP '   F3DOPM
+     C                     END
+     C*
+     C* MIDAS (OTHER) SETTLEMENT INSTRUCTIONS
+     C*
+     C                     MOVELF3RSTM    F3ORCM
+     C                     MOVELF3RONS    F3MORI
+     C                     MOVELF3PSTM    F3DMPM
+     C                     MOVELF3PONS    F3MOPI
+     C                     MOVELF3RIBN    F3MCPI
+     C                     MOVELF3AWBN    F3MCRI
+     C                     MOVELF3BENN    F3MFAC
+     C           XSETIN    ENDSR                           ** XSETIN ESR**
+     C*
+     C********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ZA0710 CONVERT MIDAS DAY NO. TO DRS (YYYYMMDD) FORMAT.        *
+      *                                                               *
+      * INPUT FIELD:       @@DAYN                                     *
+      *                                                               *
+      * OUTPUT FIELD:      @@VDT                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZA0710    BEGSR
+      *
+     C                     SETOF                     8081
+     C                     Z-ADD0         @@RTN   10
+     C                     Z-ADD0         @@VDT
+     C                     Z-ADD1         @@I     20
+     C                     Z-ADD1         @@J     20
+     C                     Z-ADD1         @@LEAP  10
+      *
+     C           @@DAYN    IFLT 1
+     C                     Z-ADD1         @@RTN
+     C                     GOTO ZA0719
+     C                     END
+      *
+      * DIVISION TO DETERMINE WETHER LEAP YEAR.
+      *
+     C           @@DAYN    DIV  1461      @@Z71Y
+     C                     MVR            @@RDAY  50
+      *
+      * CALCULATING YEAR.
+      *
+     C           @@Z71Y    MULT 4         @@Z71Y
+     C                     ADD  1972      @@Z71Y
+      *
+      * CHECKING IF YEAR IS GREATER THAN OR EQUAL TO 2100
+      *
+     C           @@Z71Y    IFGE 2100
+     C                     ADD  @@SSY2    @@RDAY
+     C                     END
+      *
+      * LOKUP ARRAY @YD TO SEE HOW MANY YEARS OF A FOUR YEAR CYCLE
+      * HAVE PASSED.
+      *
+     C           @@RDAY    LOKUP@YD,@@I                8080
+      *
+      * IF YEAR IS A LEAP YEAR SSLEAP IS SET TO ZERO.
+      *
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD0         @@LEAP
+     C                     END
+      *
+      * ADD INDEX TO YEAR TO GIVE CORRECT YEAR AND ADJUST '@@RDAY'.
+      *
+     C           @@LEAP    IFEQ 1
+     C           @@RDAY    SUB  @YD,@@I   @@RDAY
+     C                     ADD  @@I       @@Z71Y
+     C                     END
+      *
+      * PROCESSING FOR A LEAP YEAR.
+      *
+     C           @@LEAP    IFEQ 0
+      *
+      * IF '@@RDAY' = 60 DATE MUST BE 29TH OF FEBRUARY.
+      *
+     C           @@RDAY    IFEQ 60
+     C                     Z-ADD29        @@Z71D
+     C                     Z-ADD2         @@Z71M
+     C                     GOTO ZA0711
+     C                     END
+      *
+      * IF '@@RDAY' > 60 DATE IS AFTER 29TH OF FEBRUARY,CONVERSION CAN
+      * PROCEED AS USUAL AFTER SUBTRACTING THE EXTRA DAY FOR THE LEAP
+      * YEAR. NOTE : '@@RDAY' < 60 CONVERSION PROCEEDS AS USUAL.
+      *
+     C           @@RDAY    IFGT 60
+     C           @@RDAY    SUB  1         @@RDAY
+     C                     END
+      *
+     C                     END
+      *
+      * IF DAY '@@DAYN' IS EXACTLY DIVISIBLE BY 1461 (NUMBER OF DAYS
+      * IN 4 YEARS) THEN DATE MUST BE LAST DAY OF PREVIOUS FOUR YEAR
+      * GROUP.
+      *
+     C           @@RDAY    IFEQ 0
+     C                     Z-ADD31        @@Z71D
+     C                     Z-ADD12        @@Z71M
+     C                     SUB  1         @@Z71Y
+     C                     GOTO ZA0711
+     C                     END
+      *
+      * LOOK UP ARRAY ARRAY @MD TO DETERMINE WHICH MONTH '@@RDAY'
+      * OCCURS IN
+      *
+     C           @@RDAY    LOKUP@MD,@@J                81
+     C                     Z-ADD@@J       @@Z71M
+     C           @@RDAY    SUB  @MD,@@J   @@Z71D
+      *
+      * DS @@VDT  IS RETURNED IN YYYYMMDD FORMAT
+      *
+     C           ZA0711    TAG
+      *
+     C                     MOVE @@Z71Y    @@YR
+      *
+     C           ZA0719    ENDSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: INIT, MAIN, FFXDL, WFXDL                           *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY ZSRSRC,ZCONVNZ1
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+** @YD  USED BY SR. ZA0710 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0710 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

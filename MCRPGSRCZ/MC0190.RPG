@@ -1,0 +1,891 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Update relative period numbers')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0190 - UPDATE RELATIVE PERIOD NUMBERS ONLINE               *
+     F*                                                               *
+     F*  Function: This program will find any current periods within  *
+     F*  COB       a period set that has expired before the next      *
+     F*            working day and updates the relative period        *
+     F*            numbers accordingly, generating new periods if     *
+     F*            necessary.                                         *
+     F*                                                               *
+     F*  Called By: MCC0190 - Update Relative Period Numbers Control. *
+     F*                                                               *
+     F*  Calls: AOBANKR0 - Read Access to Bank Details.               *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CMC001             Date 18Mar96               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  CMC001 - Management Accounts Enhancement for PCA:            *
+     F*           Update the relative period numbers of period sets   *
+     F*           if the current End of Period Date is before the     *
+     F*           event control date defined as the earlier of the    *
+     F*           accrual profit date and the date of the next working*
+     F*           day minus 1 and if CMC001 feature is installed.     *
+     F*                                                               *
+     F*****************************************************************
+     FGLPERDL2IF  E           K        DISK
+     FGLPERSL1IF  E           K        DISK
+     FGLPERDL0UF  E           K        DISK
+     FGLPERDPDO   E                    DISK
+     FMC0190P1O   E             31     PRINTER      KINFDS SPOOL1     UC
+     FMC0190P2O   E             32     PRINTER      KINFDS SPOOL2     UC
+     FMC0190AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      /EJECT
+     F*****************************************************************
+     F*  F U N C T I O N  O F  I N D I C A T O R S                    *
+     F*                                                               *
+     F*  11 - End of GLPERDL2 reached.                                *
+     F*  12 - End of GLPERDL0 reached.                                *
+     F*  13 - Chain for GLPERSL1 failed.                              *
+     F*                                                               *
+     F*  21 - Error in call to ZSFILE                                 *
+     F*                                                               *
+     F*  31 - Overflow indicator for MC0190P1                         *
+     F*  32 - Overflow indicator for MC0190P2                         *
+     F*                                                               *
+     F*  41 - Indicator to cause line skip on MC0190P1.               *
+     F*  42 - Select on fields in printer file MC0190P1.              *
+     F*                                                               *
+     F* 90-99 Indicators used in standard subroutines (not all used   *
+     F*       in this program).                                       *
+     F*                                                               *
+     F* U7-U8 - Database Error.                                       *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FUTPD     - Generate future periods                          *
+     F*  PDYR      - Generate a year's worth of future periods        *
+     F*  EOPDT     - Calculate next end of period date                *
+     F*                                                               *
+     F*  ZDATE1    - Convert date to day number                       *
+     F*  ZDATE2    - Convert day number to DDMMMYY                    *
+     F*  ZCHKH     - Check for holidays                               *
+     F*  ZACCH     - Check for holidays                               *
+     F*                                                               *
+     F*  *PSSR     - Error handling subroutine                        *
+     F*****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      *  Copyright array
+     E                    QCMD    1   1 65
+      *  QCMDEXC command
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    ZFMD   12  12  2
+      *  End of Period Date Calculation
+     E/COPY ZSRSRC,ZHOLE
+      /SPACE 3
+      *
+     I@BLREDR
+      * Rename fields in GLPERDL0.
+     I              DTPSTC                          DTPST0
+     I              DTPDCT                          DTPDC0
+     I              DTPDYR                          DTPDY0
+     I              DTRPDN                          DTRPD0
+     I              DTEPDD                          DTEPD0
+      *
+     I@PERDDW
+      * Rename fields in GLPERDL2.
+     I              DTPSTC                          DTPST2
+     I              DTEPDD                          DTEPD2
+      *
+     ILDA       E DSLDA
+      *  Local Data Area
+      *
+     IPSDS       SDS
+      * Program Status Data Structure
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDBANK    E DSSDBANKPD
+      *  DS for SDBANKPD
+      *
+     ISDGELR    E DSSDGELRPD                                              CMC001
+      *  DS for SDGELRPD                                                  CMC001
+      *                                                                   CMC001
+     ISCSARD    E DSSCSARDPD                                              CMC001
+      *  DS for SCSARDPD                                                  CMC001
+      *                                                                   CMC001
+     IDSFDY     E DSDSFDY
+      * Short Data Structure for Access Objects
+      *
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+     ISPOOL1      DS
+      *  P1 printer file information data structure
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOL2      DS
+      *  P2 printer file information data structure
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+      *
+     ISPOOLU      DS
+      *  AU printer file information data structure
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     C/EJECT
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define work fields
+     C           *LIKE     DEFN DTRPDN    MNFPD
+      * Minimum Number Of Future Periods
+     C           *LIKE     DEFN DTRPDN    WRPDNO
+      * Relative Period Number work field
+     C           *LIKE     DEFN DTEPDD    PEOPDT
+      * Previous End of Period Date
+     C           *LIKE     DEFN DTPDNY    APDNOY
+      * Alpha Number of Periods in Year
+     C           *LIKE     DEFN DTST1D    SOT1R
+      * Start of Term 1 work field
+     C           *LIKE     DEFN DTST2D    SOT2R
+      * Start of Term 2 work field
+     C           *LIKE     DEFN DTSPDD    SSOPD1
+      * Save Start of Term 1
+     C           *LIKE     DEFN DTSPDD    SSOPD2
+      * Save Start of Term 2
+     C                     MOVE 'Y'       RUN1    1
+     C                     MOVE 'N'       OPEN1   1
+     C                     MOVE 'N'       OPEN2   1
+     C                     MOVE *BLANKS   SEQNO   5
+      *
+      * Call Access Program AOBANKR0 to retrieve bank details.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG    'RTNCD   7
+     C                     PARM '*FIRST  'OPTN    7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      * If error found execute error routine.
+     C           RTNCD     IFNE *BLANK
+     C                     MOVEL'MC0190  'ERRPGM 10
+     C                     MOVEL'SDBANKPD'ERRFIL 10         *************
+     C                     Z-ADD001       ERRBAS  30        *DBERROR 001*
+     C                     EXSR *PSSR                       *************
+     C                     END
+      *                                                                   CMC001
+      ** Call Access Program AOSARDR0 to check if Management Accounts     CMC001
+      ** Enhancement (CMC001 feature is installed).                       CMC001
+      *                                                                   CMC001
+     C                     MOVE 'N'       CMC001  1                       CMC001
+     C                     CALL 'AOSARDR0'                                CMC001
+     C                     PARM *BLANKS   RTNCD   7                       CMC001
+     C                     PARM '*VERIFY' OPTN    7                       CMC001
+     C                     PARM 'CMC001'  PSARN   6                       CMC001
+     C           SCSARD    PARM SCSARD    DSFDY                           CMC001
+      *                                                                   CMC001
+      * If error found execute error routine.                             CMC001
+     C           RTNCD     IFNE *BLANK                                    CMC001
+     C           RTNCD     IFNE '*NRF'                                    CMC001
+     C                     MOVEL'MC0190  'ERRPGM                          CMC001
+     C                     MOVEL'SCSARDPD'ERRFIL            ************* CMC001
+     C                     Z-ADD003       ERRBAS            *DBERROR 003* CMC001
+     C                     MOVELPSARN     ERRKEY            ************* CMC001
+     C                     EXSR *PSSR                                     CMC001
+     C                     ENDIF                                          CMC001
+     C                     ELSE                                           CMC001
+     C                     MOVE 'Y'       CMC001                          CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CMC001
+      ** Call Access Program AOGELRR0 to retrieve acrrual profit date.    CMC001
+      *                                                                   CMC001
+     C**********           CALL 'AOGELRR0'                                CMC001              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   RTNCD                           CMC001
+     C                     PARM '*FIRST ' OPTN                            CMC001
+     C********** SDGELR    PARM SDGELR    DSFDY                           CMC001              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   CMC001
+      * If error found execute error routine.                             CMC001
+     C           RTNCD     IFNE *BLANK                                    CMC001
+     C                     MOVEL'MC0190  'ERRPGM                          CMC001
+     C                     MOVEL'SDGELRPD'ERRFIL            ************* CMC001
+     C                     Z-ADD004       ERRBAS            *DBERROR 004* CMC001
+     C                     MOVELOPTN      ERRKEY            ************* CMC001
+     C                     EXSR *PSSR                                     CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CMC001
+      ** Define Event Control Date as accrual/profit date or date         CMC001
+      ** of next working day minus 1, whichever is earlier.               CMC001
+      ** If CMC001 feature is installed, use the event control date       CMC001
+      ** defined above in updating the relative period number.            CMC001
+      ** Otherwise, the date of next working day (old processing)         CMC001
+      ** should STILL be used, this being the event control date.         CMC001
+      *                                                                   CMC001
+     C           BJDNWD    SUB  1         WODNWD  50                      CMC001
+      *                                                                   CMC001
+     C           CMC001    IFEQ 'Y'                                       CMC001
+     C           WODNWD    IFLT BKAPDT                                    CMC001
+     C                     Z-ADDWODNWD    WOEVCD  50                      CMC001
+     C                     ELSE                                           CMC001
+     C                     Z-ADDBKAPDT    WOEVCD                          CMC001
+     C                     ENDIF                                          CMC001
+      *                                                                   CMC001
+     C                     ELSE                                           CMC001
+     C                     Z-ADDBJDNWD    WOEVCD                          CMC001
+     C                     ENDIF                                          CMC001
+      *
+      * Move Base Currency to field for use in End of Period Date
+      * calculations and set up report fields.
+     C                     MOVE BJCYCD    ZCCY
+     C                     MOVE BJMRDT    RMRDT
+     C                     MOVE BJURPT    RURPT
+      *
+      * Find date format and set on 98 accordingly.  This is used in
+      * the standard subroutines.
+     C           BJDFIN    COMP 'M'                      98
+      *
+      *  Set on overflow indicators to produce headers.
+     C                     SETON                     3132
+      *
+      * Set lower limits on GLPERDL2 to read first record.
+     C           *LOVAL    SETLLGLPERDL2
+     C                     READ GLPERDL2                 11
+      *
+      **Do*while*the*End*of*Period*Date*is*less*than*the*Next**           CMC001
+      **Working*Day*(from*SDBANKPD).**Because*GLPERDL2*selects*           CMC001
+      **only*records*with*relative*period*number*=*0*(ie;*the**           CMC001
+      **current*period)*this*will*find*any*current*period*which           CMC001
+      **has*expired*before*the*next*working*day.***************           CMC001
+     C***********DTEPD2    DOWLTBJDNWD                                    CMC001
+      *                                                                   CMC001
+      * Do while the End of Period Date is less than the event            CMC001
+      * control date (defined above).  Because GLPERDL2 selects           CMC001
+      * only records with relative period number = 0 (ie; the             CMC001
+      * current period) this will find any current period which           CMC001
+      * has expired before the event control date.                        CMC001
+     C           DTEPD2    DOWLTWOEVCD                                    CMC001
+     C           *IN11     ANDEQ'0'
+      *
+      * Read the first record with a matching Set Code (from GLPERDL0).
+      * If a current period has changed then for each Period in a
+      * Period Set the Relative Period Number will be updated.
+     C           DTPST2    SETLLGLPERDL0
+     C                     READ GLPERDL0                 12
+      *
+      * Continue processing for all records with the Set Code or until
+      * the end of the file is reached.
+     C           DTPST0    DOWEQDTPST2
+     C           *IN12     ANDEQ'0'
+      *
+      * Subtract 1 from Relative Period Number and update Period
+      * Details file.
+     C                     SUB  1         DTRPD0
+     C                     EXCPTUPDAT
+      *
+      * Store last End of Period Date, Period Year & Century and
+      * Relative Period Number for use in calculating future data.
+     C                     Z-ADDDTEPD0    PEOPDT
+     C                     Z-ADDDTRPD0    WRPDNO
+     C                     MOVE DTPDY0    WPDYR   20
+     C                     MOVE DTPDC0    WPDCT   20
+      *
+     C                     READ GLPERDL0                 12
+     C                     END
+      *
+      * Execute subroutine to check for future periods for Period Set.
+     C                     EXSR FUTPD
+      *
+     C                     READ GLPERDL2                 11
+     C                     END
+      *
+      * If print files have been opened write final lines.
+     C           OPEN1     IFEQ 'Y'
+     C                     WRITEP1EF
+     C                     END
+     C           OPEN2     IFEQ 'Y'
+     C                     WRITEP2EF
+     C                     END
+      *
+     C                     SETON                     LR
+      /EJECT
+      ********************************************************************
+      *
+      *  FUTPD Subroutine to check number of future periods for
+      *        each Period Set with an expired current period.
+      *
+      *    CALLED BY : Main Processing
+      *
+      *    CALLS     : SR/*PSSR
+      *                SR/ZDATE2
+      *                SR/EOPDT
+      *                PGM/ZSFILE
+      *                PGM/QCMDEXC
+      *
+     C           FUTPD     BEGSR
+      *
+      * Chain to Period Set file to get data about Period Set on
+      * GLPERDL2 record.
+     C           DTPST2    CHAINGLPERSL1             13
+      *
+      * If chain fails then perform error handling.
+     C           *IN13     IFEQ '1'
+     C                     MOVEL'MC0190  'ERRPGM 10
+     C                     MOVEL'GLPERSPD'ERRFIL 10
+     C***********          MOVE DTPST2    ERRKEY  1         ************* CMC001
+     C                     MOVELDTPST2    ERRKEY 29         ************* CMC001
+     C                     Z-ADD002       ERRBAS  30        *DBERROR 002*
+     C                     EXSR *PSSR                       *************
+     C                     END
+      *
+      * Set up fields for report.
+      *
+     C                     MOVE STPSTC    RPSTC
+     C                     MOVE STPSNM    RPSNM
+     C                     MOVE STPPAN    RPPAN
+     C                     MOVE STPTM1    RPTM1
+     C                     MOVE STPTM2    RPTM2
+     C                     MOVE STPFCD    RPFCD
+     C                     MOVE STPFBD    RPFBD
+     C                     MOVE STHPYR    RHPYR
+     C                     MOVE STFPYR    RFPYR
+      * Set on overflow indicator for generated periods report.
+     C                     SETON                     31
+      *
+      * If the Frequency Code is not blank then future periods
+      * can be generated.
+     C           STPFCD    IFNE ' '
+      *
+      * Set term counts to '1'.
+     C                     Z-ADD1         TCT1    20
+     C                     Z-ADD1         TCT2    20
+      *
+      * Set work fields to ' ' or '0' for comparison against
+      * values on file.  This will force output first time.
+     C                     MOVE *BLANKS   RPDYR
+     C                     Z-ADD0         SOT1R
+     C                     Z-ADD0         SOT2R
+      *
+      * Multiply Periods per Annum by 3 to get Minimum Number of
+      * Future Periods.
+     C           STPPAN    MULT 3         MNFPD
+      *
+      * Do while the Minimum Number of Future Periods is greater
+      * than the final period number for that period set, ie; the
+      * last Relative Period Number to be updated on the Period
+      * Details file (in the main processing) or the last Relative
+      * Period Number to be written to the Period Details file
+      * (done in this Do While loop).
+     C           MNFPD     DOWGTWRPDNO
+      *
+      * Check if file has already been opened.  If not open it and
+      * perform ZSFILE processing.
+     C           OPEN1     IFEQ 'N'
+     C                     MOVE 'Y'       OPEN1
+     C                     OPEN MC0190P1
+      *
+      * Ensure totals spool file recorded by RCF
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY    3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      * If error in ZSFILE, exit via *PSSR subroutine
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     21
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+      * Set fields for period year.
+      *
+      * Set work field for Period Number Within Year to '01' for each
+      * period year
+     C                     Z-ADD1         WPDNOY  20
+     C                     MOVE WPDNOY    APDNOY
+      *
+      * Change Period Year.
+     C           WPDYR     IFEQ 99
+     C                     ADD  1         WPDCT
+     C                     MOVE '00'      DTPDYR
+     C                     Z-ADD0         WPDYR
+     C                     MOVE WPDCT     DTPDCT
+     C                     ELSE
+     C                     ADD  1         WPDYR
+     C                     MOVE WPDYR     DTPDYR
+     C                     MOVE WPDCT     DTPDCT
+     C                     END
+      *
+     C           PEOPDT    ADD  1         DTSOYD
+      *
+     C                     MOVE STPSTC    DTPSTC
+     C                     MOVE *BLANKS   DTPDNM
+      *
+      * Reformat Last Change Date on Period Set file.
+     C                     Z-ADDSTLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RLCD    7
+      *
+      * Convert Last Change Type to text.
+     C           STTYLC    IFEQ 'A'
+     C                     MOVE 'Amend '  RLCHGT  6
+     C                     ELSE
+     C                     MOVE 'Insert'  RLCHGT
+     C                     END
+      *
+     C                     SETON                     4241
+      *
+      * Generate years worth of periods
+     C                     EXSR PDYR
+     C                     END
+      *
+      * If Frequency Code = ' ' then future periods can not be
+      * generated.
+     C                     ELSE
+      *
+      * If Periods Per Annum is greater than the last Relative
+      * Period Number updated in GLPERDL0 (stored in the work field)
+      * then send warning message that future periods need to be
+      * generated and write record to report.
+     C           STPPAN    IFGT WRPDNO
+      *
+      * Send warning message to MOPERQ that future periods need to be
+      * generated.
+     C                     Z-ADD65        LEN    155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QCMD
+     C                     PARM           LEN
+      * Check if file has already been opened.  If not open it and
+      * perform ZSFILE processing.
+     C           OPEN2     IFEQ 'N'
+     C                     MOVE 'Y'       OPEN2
+     C                     OPEN MC0190P2
+      *
+      * Ensure totals spool file recorded by RCF
+     C                     Z-ADDSFNUM2    ZSNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      * If error in ZSFILE, exit via *PSSR subroutine
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     21
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+      * If overflow indicator on then write headers for MC0190P2.
+     C           *IN32     IFEQ '1'
+     C                     SETOF                     32
+     C                     WRITEP21F
+     C                     END
+      *
+      * Convert End of Year Date.
+     C                     Z-ADDPEOPDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REOYDP
+     C                     WRITEP22F
+     C                     END
+     C                     END
+     C           FUTPDE    ENDSR
+      /EJECT
+      ********************************************************************
+      *
+      *  PDYR  Subroutine to generate a year's worth of periods.
+      *
+      *    CALLED BY : FUTPD
+      *
+      *    CALLS     : EOPDT
+      *                ZDATE2
+      *
+     C           PDYR      BEGSR
+     C           WPDNOY    DOWLESTPPAN
+      *
+      * Update fields and write new record to GLPERDPD.
+      *
+     C                     MOVE APDNOY    DTPDNY
+     C                     MOVE APDNOY    RPDNY
+     C                     MOVE APDNOY    WPDNOY
+     C                     ADD  1         WPDNOY
+     C                     MOVE WPDNOY    APDNOY
+      *
+      * Set work field for Relative Period Number.
+     C                     ADD  1         WRPDNO
+     C                     Z-ADDWRPDNO    DTRPDN
+     C                     Z-ADDWRPDNO    RRPDN
+      *
+      * Use previous End of Period Date to calculate new Start of
+      * Period Date.
+     C           PEOPDT    ADD  1         DTSPDD
+      *
+      * If Terms are applicable:
+     C           STPTM1    IFNE 0
+      * TERM 1.
+      * Save Start of Period Date if this is the first time through
+      * for a term.
+     C           TCT1      IFEQ 1
+     C                     Z-ADDDTSPDD    SSOPD1
+     C                     END
+     C                     Z-ADDSSOPD1    DTST1D
+      *
+      * If Pds per Term is not equal to the count this means a term
+      * is still being processed.  When they are equal a new term is
+      * started.
+     C           STPTM1    IFNE TCT1
+     C                     ADD  1         TCT1
+     C                     ELSE
+     C                     Z-ADD1         TCT1
+     C                     END
+      *
+      * TERM 2.
+      * Save Start of Period Date if this is the first time through
+      * for a term.
+     C           TCT2      IFEQ 1
+     C                     Z-ADDDTSPDD    SSOPD2
+     C                     END
+     C                     Z-ADDSSOPD2    DTST2D
+      *
+      * If Pds per Term is not equal to the count this means a term
+      * is still being processed.  When they are equal a new term is
+      * started.
+     C           STPTM2    IFNE TCT2
+     C                     ADD  1         TCT2
+     C                     ELSE
+     C                     Z-ADD1         TCT2
+     C                     END
+      *
+      * Else if Terms are not applicable set fields to '0'
+     C                     ELSE
+     C                     Z-ADD0         DTST1D
+     C                     Z-ADD0         DTST2D
+     C                     END
+      *
+      * Calculate new End of Period Date.
+     C                     Z-ADDPEOPDT    ZDAYNO
+     C                     Z-ADDSTPFBD    ZMDAY
+     C                     MOVE STPFCD    ZFREQ
+     C                     EXSR EOPDT
+     C                     Z-ADDZDAYNO    DTEPDD
+      *
+     C                     WRITEGLPERDD0
+      *
+      * Move End of Period Date to Previous End of Period Date.
+     C                     Z-ADDDTEPDD    PEOPDT
+      *
+      * If overflow indicator on then perform processing for Period
+      * Set and then write headers for MC0190P1.
+     C           *IN31     IFEQ '1'
+     C                     SETOF                     31
+     C                     WRITEP11F
+     C                     END
+      *
+      * Set up fields for detail lines of report MC0190P1.
+     C                     MOVELDTPDCT    RPDYR
+     C                     MOVE DTPDYR    RPDYR
+      *
+     C                     Z-ADDDTSOYD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RSOYPT
+      *
+      * If Terms are applicable:
+     C           STPTM1    IFNE 0
+      *
+      * Perform processing to print only changed Start of Term Dates.
+     C           DTST1D    IFEQ SOT1R
+     C                     MOVE *BLANKS   RSOT1P
+     C                     ELSE
+     C                     Z-ADDDTST1D    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RSOT1P
+     C                     Z-ADDDTST1D    SOT1R
+     C                     END
+      *
+     C           DTST2D    IFEQ SOT2R
+     C                     MOVE *BLANKS   RSOT2P
+     C                     ELSE
+     C                     Z-ADDDTST2D    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RSOT2P
+     C                     Z-ADDDTST2D    SOT2R
+     C                     END
+      *
+      * Else if Terms are not applicable set fields to ' '
+     C                     ELSE
+     C                     MOVE *BLANKS   RSOT1P
+     C                     MOVE *BLANKS   RSOT2P
+     C                     END
+      *
+      * Convert rest of dates.
+     C                     Z-ADDDTEPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REOPDP
+      *
+     C                     Z-ADDDTSPDD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RSOPDP
+      *
+      * Write detail line.
+     C                     WRITEP12F
+     C                     SETOF                     4142
+      *
+     C                     END
+      *
+     C           PDYRE     ENDSR
+      ********************************************************************
+      /EJECT
+     C********************************************************************
+      *
+      *  EOPDT Subroutine to calculate new period date
+      *        (This is a changed version of standard subroutine
+      *         ZFREQB.)
+      *
+      *    CALLED BY : FUTPD
+      *                PDYR
+      *
+      *    CALLS     : ZDATE1
+      *                ZDATE2
+      *                ZCHKH
+      *
+     C           EOPDT     BEGSR
+      *
+      * Set up work fields.
+     C                     MOVE ZFREQ     ZFREQ   1
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     Z-ADDZMDAY     ZMDAY   20
+     C                     MOVE ZCCY      ZCCY    3
+      *
+      * Convert day number to date.
+     C                     EXSR ZDATE2
+      *
+      * If the day number input (zmday ) is zero set it equal to the
+      * day number of the start date.
+     C           ZMDAY     IFEQ 0
+     C                     MOVELZADATE    ZZWRK2  2
+     C                     MOVE ZZWRK2    ZMDAY
+     C                     END
+      *
+      * Check for and increment for code 1,2,3,4,5,6,7 = Weekly.
+     C           ZFREQ     IFEQ '1'
+     C           ZFREQ     OREQ '2'
+     C           ZFREQ     OREQ '3'
+     C           ZFREQ     OREQ '4'
+     C           ZFREQ     OREQ '5'
+     C           ZFREQ     OREQ '6'
+     C           ZFREQ     OREQ '7'
+     C           ZDAYNO    ADD  7         ZDAYNO
+     C                     GOTO ZFEND
+     C                     END
+      *
+      * Check for and increment for code F = Fortnightly.
+     C           ZFREQ     IFEQ 'F'
+     C           ZDAYNO    ADD  14        ZDAYNO
+     C                     GOTO ZFEND
+     C                     END
+      *
+      * Check for and increment for code S = Semi-monthly.
+     C           ZFREQ     IFEQ 'S'
+     C           ZDAY      IFLE 15
+     C                     Z-ADD31        ZDAY
+     C                     ELSE
+     C                     Z-ADD15        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+     C                     END
+      *
+      * Check for and increment for code M = Monthly.
+     C           ZFREQ     IFEQ 'M'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+      *
+      * Check for and increment for code R = 6 days before end of month.
+     C           ZFREQ     IFEQ 'R'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+      *
+      * Check for and increment for code T = Bi-monthly.
+     C           ZFREQ     IFEQ 'T'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  2         ZMTH
+     C                     END
+      *
+      * Check for and increment for code Q = Quarterly.
+     C           ZFREQ     IFEQ 'Q'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  3         ZMTH
+     C                     END
+      *
+      * Check for and increment for code X = Semi-annually.
+     C           ZFREQ     IFEQ 'X'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  6         ZMTH
+     C                     END
+      *
+      * Check for and increment for code Y = Annually.
+     C           ZFREQ     IFEQ 'Y'
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     END
+      *
+      * Check for and increment for code L = Last Calendar Day of Month.
+     C           ZFREQ     IFEQ 'L'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+      *
+      * Check for and increment for code B = Last Working Day of Month.
+     C           ZFREQ     IFEQ 'B'
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     END
+      *
+      * Reformat date and validate.
+      * MONTH
+     C           ZMTH      IFGT 12
+     C           ZMTH      SUB  12        ZMTH
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     END
+      *
+      * Check for leap year.
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10
+      * DAY NUMBER
+     C                     MOVE ZFMD,ZMTH ZWRK2   20
+     C           ZMTH      IFEQ 2
+     C           ZLY       ANDEQ0
+     C                     Z-ADD29        ZWRK2
+     C                     END
+      *
+     C           ZDAY      IFGT ZWRK2
+     C                     Z-ADDZWRK2     ZDAY
+     C                     END
+      *
+      * Check if code R, to subtract 6 days.
+     C           ZFREQ     IFEQ 'R'
+     C           ZDAY      SUB  6         ZDAY
+     C                     END
+      *
+      * Reformat date, DDMMYY OR MMDDYY, and convert to day number.
+     C                     MOVELZDAY      ZWRK4   40
+     C                     MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C   98                MOVE ZDAY      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C                     EXSR ZDATE1
+      *
+      * Check if code B to be checked for holiday.
+     C           ZFREQ     COMP 'B'                      91
+     C   91N99             GOTO ZFHCHK
+      *
+     C                     GOTO ZFEND
+      *
+      * Check if day number is holiday.
+     C**
+     C           ZFHCHK    TAG                             ** ZFHCHK TAG *
+      *
+      * Check if currency on holiday.
+     C                     EXSR ZCHKH
+     C           ZIND      CABEQ'W'       ZFEND
+      *
+     C           ZDAYNO    SUB  1         ZDAYNO
+     C                     GOTO ZFHCHK
+      *
+     C           ZFEND     ENDSR                           * ZFEND ENDSR *
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      ********************************************************************
+      *
+      *  *PSSR Subroutine to handle program error
+      *
+      *    CALLED BY : Main Processing
+      *                FUTPD
+      *
+      *    CALLS     : PGM/ZSFILE
+      *
+     C           *PSSR     BEGSR
+      *
+      * Check that this is the first time through the routine
+      * to prevent recursive calling which would loop the progam.
+     C           RUN1      IFEQ 'Y'
+     C                     MOVE 'N'       RUN1
+      *
+      * Check if any of the calls to ZSFILE ended in error.  ZSFILE
+      * has its own error handling so most of this routine can be
+      * skipped.
+     C           *IN21     IFEQ '0'
+     C                     DUMP
+      *
+      * Database error handling.
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELERRPGM    DBPGM
+     C                     MOVELERRKEY    DBKEY
+     C                     MOVELERRFIL    DBFILE
+     C                     Z-ADDERRBAS    DBASE
+     C                     OUT  LDA
+      *
+      * Open audit file and perform ZSFILE processing.
+     C                     OPEN MC0190AU
+      *
+      * Ensure totals spool file recorded by RCF
+     C                     Z-ADDSFNUMU    ZSNUM
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+      *
+      * Write audit report.
+     C                     WRITEAU1F
+     C                     END
+     C                     END
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      *
+      * Update Relative Period Number field on GLPERDL0.
+     O@BLREDR E                UPDAT
+     O                         DTRPD0
+      ********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**  QCMD
+SNDMSG 'WARNING - Future periods must be inserted' TOMSGQ(MOPERQ)
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031

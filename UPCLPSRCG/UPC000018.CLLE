@@ -1,0 +1,118 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Update View priorities on UPSFMTPD')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC000018 - Update View priorities on UPSFMTPD              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CUP038             Date 06Jul07              */
+/*       Prev Amend No. CSM010             Date 22Jun07              */
+/*                      CPK027             Date 21May07              */
+/*                      CUP034             Date 28Feb07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK021  *CREATE    Date 22Sep04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP038 - General changes post 1.3.  Monitor for UPSFMTPD    */
+/*                being empty.                                       */
+/*       CSM010 - Applied by CPK027.                                 */
+/*       CPK027 - Message file spelt incorrectly.                    */
+/*       CUP034 - Not all views are now named V_* so we have to cope */
+/*                with all possibilities.                            */
+/*       CPK021 - New utility to work out priorities for SQL views.  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PREFIX)
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&LIBRARY) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Take security copy of UPSFMTPD. */
+             DLTF       FILE(QTEMP/UPSFMT)                                                /*CUP034*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP034*/
+             CPYF       FROMFILE(UPSFMTPD) TOFILE(QTEMP/UPSFMT) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+ 
+/**Perform*copies*to*remove*all*V_**records*from*UPSFMTPD.**/ /*                       */ /*CUP034*/
+/**********  CPYF       FROMFILE(UPSFMTPD) TOFILE(QTEMP/UPSFMTQT) +                    */ /*CUP034*/
+/**********               MBROPT(*REPLACE) CRTFILE(*YES) +                             */ /*CUP034*/
+/**********               INCCHAR(FSFILE 1 *NE 'V_')                                   */ /*CUP034*/
+ 
+/* Perform copies to remove all view records from UPSFMTPD. */                            /*CUP034*/
+             CPYF       FROMFILE(UPSFMTPD) TOFILE(QTEMP/UPSFMTQT) +
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCCHAR(FSTYPE 1 *NE 'V')                                       /*CUP034*/
+             CPYF       FROMFILE(QTEMP/UPSFMTQT) TOFILE(UPSFMTPD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                    /*CUP038*/
+ 
+/* Call program to update UPSFMTQT for global layer. */
+             CHGVAR     VAR(&LIBRARY) VALUE(&PREFIX *TCAT 'GVLIB')
+             CALL       PGM(UPC000019) PARM(&LIBRARY)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*CUP034*/
+                GOTO       CMDLBL(ERROR)                                                  /*CUP034*/
+             ENDDO                                                                        /*CUP034*/
+ 
+/* Copy results back onto UPSFMTPD. */
+             CPYF       FROMFILE(QTEMP/UPSFMTQT) TOFILE(UPSFMTPD) +
+                          MBROPT(*ADD)
+ 
+/* Call program to update UPSFMTQT for zone layer. */
+             CHGVAR     VAR(&LIBRARY) VALUE(&PREFIX *TCAT 'DVLIB')
+             CALL       PGM(UPC000019) PARM(&LIBRARY)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                  /*CUP034*/
+                GOTO       CMDLBL(ERROR)                                                  /*CUP034*/
+             ENDDO                                                                        /*CUP034*/
+ 
+/* Copy results back onto UPSFMTPD. */
+             CPYF       FROMFILE(QTEMP/UPSFMTQT) TOFILE(UPSFMTPD) +
+                          MBROPT(*ADD)
+ 
+             GOTO       CMDLBL(END)
+ ERROR:
+/* Copy back security copy. */
+             CPYF       FROMFILE(QTEMP/UPSFMT) TOFILE(UPSFMTPD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF0000)
+/* Set up general error message. */
+/**********  RTVMSG     MSGID(UPM0001) MSGF(UTGMSGF) +                                 */ /*CPK027*/
+/**********               MSGDTA('UPC000018') MSG(&MESSAGE)                            */ /*CPK027*/
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC000018') MSG(&MESSAGE)                               /*CPK027*/
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC000018' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

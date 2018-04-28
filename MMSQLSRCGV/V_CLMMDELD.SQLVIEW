@@ -1,0 +1,132 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Money Market Dealing Module                                   */
+/*                                                                             */
+/*       V_CLMMDELD - Collateralised Lending Deposit Position                  */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. CDL096             Date 22Sep14                        */
+/*       Prev Amend No. CDL094             Date 30May14                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CDL049             Date 11Jul06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027             Date 10Dec05                        */
+/*                      CDL038             Date 10May05                        */
+/*                      CDL033             Date 10Feb05                        */
+/*                      BUG5391            Date 18Jan05                        */
+/*                      BUG4746            Date 10Nov04                        */
+/*                      BUG3644 *CREATE    Date 12Jul04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CDL096 - Business Day Conventions on MM Deals                         */
+/*                (Recompile)                                                  */
+/*       CDL094 - Enhance  Receive Settlement Instructions (Recompile)         */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CDL049 - Addition of a Reference Rate field (recompile)               */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CDL038 - Extended Deal Sub Type (Recompile)                           */
+/*       CDL033 - Floating Rate CDs Issued (Recompile)                         */
+/*       BUG5391 - Double display of Deposit deal for collateral               */
+/*       BUG4746 - Error in CL Reports                                         */
+/*       BUG3644 - Serious Error in Collateralised Lending                     */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  HKCNUM ,                                                                      :
+  PADHKCNUM ,                                                                   :
+  HKDN38 ,                                                                      :
+  PADHKDN38 ,                                                                   :
+  HKCCY ,                                                                       :
+  HKAMNP ,                                                                      :
+  HKMTYP ,                                                                      :
+  HKSTYP ,                                                                      :
+  HKDVSD ,                                                                      :
+  HKMATD ,                                                                      :
+  HKDDLT ,                                                                      :
+  A8ZONE ,                                                                      :
+  P_NOML ,                                                                      :
+  P_ASLI ,                                                                      :
+  P_NMDP )                                                                      :
+  AS                                                                            :
+  SELECT                                                                        :
+  HKCNUM,                                                                       :
+**DIGITS(HKCNUM)*AS*PADHKCNUM,**************************************************:             CSD027
+         HKCNUM  AS PADHKCNUM,                                                  :             CSD027
+  HKDN38,                                                                       :
+  DIGITS(HKDN38) AS PADHKDN38,                                                  :
+  HKCCY,                                                                        :
+  HKAMNP,                                                                       :
+  HKMTYP,                                                                       :
+  HKSTYP,                                                                       :
+  HKDVSD,                                                                       :
+  HKMATD,                                                                       :
+  HKDDLT,                                                                       :
+  A8ZONE,                                                                       :
+  P_NOML,                                                                       :
+  P_ASLI,                                                                       :
+  P_NMDP                                                                        :
+  FROM                                                                          :
+  (SELECT HKCNUM,HKDN38,HKCCY,HKAMNP,HKMTYP,HKSTYP,HKDVSD,                      :
+  HKMATD,HKDDLT,A8ZONE                                                          :
+  FROM                                                                          :
+  GZMMDELDPP,                                                                   :
+  GZSDBRCHPD                                                                    :
+  WHERE A8BRCD=HKBRCA) A,                                                       :
+  GPTRAPPD B, GPPOSNPD C                                                        :
+  WHERE T_MOD = 'DL' AND T_SMOD = 'LDNI' AND A.HKCNUM = T_CNUM                  :
+/*AND*A.HKDN38*=*CAST(T_TREF*AS*NUMERIC(6))*AND*T_ID*=*P_ID*********************:            BUG4746
+  AND A.HKDN38 = T_TR6N AND T_ID = P_ID                                         :            BUG4746
+/*AND*P_TVDI='V'*AND*P_PSTP='C'*;***********************************************:            BUG5391
+  AND P_TVDI='V' AND P_PSTP='C'                                                 :            BUG5391
+  AND T_ZONE=A8ZONE;                                                            :            BUG5391
+                                                                                :            BUG5391
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  ( HKCNUM IS 'Customer            Number' ,                                    :
+  HKDN38 IS 'Deal no             38' ,                                          :
+  HKCCY IS 'Curr                Code' ,                                         :
+  HKAMNP IS 'Amount' ,                                                          :
+  HKMTYP IS 'MID                 deal                type' ,                    :
+  HKSTYP IS 'Deal                Sub                 Type' ,                    :
+  HKDVSD IS 'Dl val/             start               date' ,                    :
+  HKMATD IS 'Maturty             Date' ,                                        :
+  HKDDLT IS 'Dl                  del                 ind' ,                     :
+  A8ZONE IS 'Zone' ,                                                            :
+  P_NOML IS 'Nominal' ,                                                         :
+  P_ASLI IS 'Asset/              Liability' ,                                   :
+  P_NMDP IS 'Nominal             Decimal             Plces' ) ;                 :
+                                                                                :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  ( HKCNUM TEXT IS 'Customer number' ,                                          :
+  HKDN38 TEXT IS 'Deal number 38' ,                                             :
+  HKCCY TEXT IS 'Currency code' ,                                               :
+  HKAMNP TEXT IS 'Amount' ,                                                     :
+  HKMTYP TEXT IS 'MIDAS deal type' ,                                            :
+  HKSTYP TEXT IS 'Deal subtype' ,                                               :
+  HKDVSD TEXT IS 'Deal value/start date' ,                                      :
+  HKMATD TEXT IS 'Maturity date' ,                                              :
+  HKDDLT TEXT IS 'Deal deleted indicator' ,                                     :
+  A8ZONE TEXT IS 'Zone' ,                                                       :
+  P_NOML TEXT IS 'Nominal' ,                                                    :
+  P_ASLI TEXT IS 'Asset/Liability' ,                                            :
+  P_NMDP TEXT IS 'Nominal Decimal Places' ) ;                                   :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas MM Deposit Position                         ';                     :
+                                                                                :

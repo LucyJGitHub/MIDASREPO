@@ -1,0 +1,295 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF EOC Indicators Prompt')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0475  -  END OF CENTRE INDICATORS PROMPT                     *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*   LAST AMEND NO. S01456             DATE 08NOV93                 *
+     F*   PREV AMEND NO. S01199             DATE 27FEB90                 *
+     F*                  S01117             DATE 24JAN90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+     F*   S01456  -  'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   S01199  -  HELP SYSTEM                                     *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF* E                    DISK                               S01117
+     FMKCTL   UF  E           K        DISK
+     FFF0475DFCF  E                    WORKSTN
+     F*
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*
+     F****03*-**HELP*REQUESTED***************************************     S01199
+     F*   10 -  A/C KEYS MISSING FIELD NOT 'Y','N' OR BLANK
+     F*   11 -  POSTINGS OUT OF BALANCE FIELD NOT 'Y','N' OR BLANK
+     F*   12 -  OUTPUT ERROR MESSAGE ARRAY
+     F*   13 -  SPOT MONTH REPORT FIELD NOT 'Y','N' OR BLANK
+     F*   30 -  CHAIN FAIL ON MKCTL
+     F*
+     F*     80-89       Reserved for Standard FF Subroutines
+     F*
+     F*     90-99       Reserved for Standard MIDAS Subroutines
+     F*
+     F*     U7+U8       Database Errors
+     F*
+     F/SPACE 2
+     E                    CPY@    1   1 80
+     E*EXTENSION SPECIFICATIONS****************************************
+     E*
+     E** ERROR CODE ARRAY
+     E                    ERR        19  4
+     I*INPUT SPECIFICATIONS *******************************************
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I************                          134 138 DBFILE                S01117
+     I************                          139 167 DBKEY                 S01117
+     I************                          168 175 DBPGM                 S01117
+     I************                          176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IRUNDT       DS                                                      S01117
+      **  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*
+     IPSDS       SDS
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C********************************************************************
+      **
+      ** INITIAL PROCESSING
+      **
+     C********************************************************************
+     C*
+     C*  CLEAR LDA
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANK    DBPGM                           S01117
+     C                     Z-ADD*ZERO     DBASE                           S01117
+     C                     MOVEL'FF0475'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C           *LIKE     DEFN MRKT      MARK
+     C           *ENTRY    PLIST
+     C                     PARM           MARK
+     C*
+     C***********                                                         S01117
+     C***ACCESS*ICD*RECORD*TO*OBTAIN*RUNDATE******************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 99               S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********          MOVE 'TABLE'   DBFILE                          S01117
+     C***********          MOVEL'TABTB10' DBKEY            ***************S01117
+     C***********          Z-ADD1         DBASE            * DB ERROR 01 *S01117
+     C***********          EXSR DBERR                      ***************S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+     C**      IN THE DATAAREA                                             S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C********************************************************************
+      **
+      ** MAIN PROCESSING
+      **
+     C********************************************************************
+     C**
+     C** ACCESS MKCTL RECORD FOR UPDATE
+     C           MARK      CHAINMKCTLDF              30
+     C           *IN30     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MKCTL'   DBFILE
+     C                     MOVELMARK      DBKEY            ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C**
+     C** MOVE VALUES FROM MKCTL TO DISPLAY FIELDS
+     C**
+     C                     MOVE AKMI      SACMIS
+     C                     MOVE POBI      SPOOB
+     C                     MOVE SMRI      SSMRI
+     C**
+     C                     EXFMTFF0475F0
+     C********** *IN03     DOWEQ'1'                                       S01199
+     C**********           EXSR HELP                                      S01199
+     C**********           READ FF0475DF                 45               S01199
+     C**********           END                                            S01199
+     C**
+     C** CALL VALID S/R TO VALIDATE SCREEN ENTRIES
+     C                     EXSR VALID
+     C*
+     C**
+     C** CALL VALID S/R WHILE SCREEN ENTRIES INVALID
+     C           *IN12     DOWEQ'1'
+     C                     EXFMTFF0475F0
+     C****************************************************************    S01199
+     C*****DOW*HELP*KEY*PRESSED***************************************    S01199
+     C************IN03     DOWEQ'1'                                       S01199
+     C***********          EXSR HELP                                      S01199
+     C***********          READ FF0475DF                 45               S01199
+     C***********          END                                            S01199
+     C*
+     C                     EXSR VALID
+     C                     END
+     C*
+     C** UPDATE MKCTL FIELDS WITH VALID SCREEN VALUES
+     C**                                   (DEFAULT IS 'N')
+     C           SACMIS    IFEQ *BLANKS
+     C                     MOVE 'N'       AKMI
+     C                     ELSE
+     C                     MOVE SACMIS    AKMI
+     C                     END
+     C           SPOOB     IFEQ *BLANKS
+     C                     MOVE 'N'       POBI
+     C                     ELSE
+     C                     MOVE SPOOB     POBI
+     C                     END
+     C           SSMRI     IFEQ *BLANKS
+     C                     MOVE 'N'       SMRI
+     C                     ELSE
+     C                     MOVE SSMRI     SMRI
+     C                     END
+     C                     UPDATMKCTLDF
+     C*
+     C**
+     C                     SETON                     LR
+     C                     RETRN
+     C/EJECT
+     C********************************************************************
+      **
+      ** VALID S/R TO VALIDATE SCREEN INDICATOR ENTRIES
+      ** CALLED BY MAIN PROCESSING
+      **
+     C********************************************************************
+     C*
+     C           VALID     BEGSR
+     C                     SETOF                     101112
+     C                     SETOF                     13
+     C                     MOVEA*BLANKS   ERR
+     C* *
+     C** SET ERR ARRAY INDEX TO 1
+     C                     Z-ADD1         X       20
+     C*
+     C** VALIDATE 'A/C KEYS MISSING' PROMPT
+     C           SACMIS    IFNE 'Y'
+     C           SACMIS    ANDNE'N'
+     C           SACMIS    ANDNE*BLANKS
+     C                     MOVE '1'       *IN10
+     C                     MOVE '001'     ERR,X
+     C                     ADD  1         X
+     C                     END
+     C*
+     C** VALIDATE 'POSTINGS O.O.B' PROMPT
+     C           SPOOB     IFNE 'Y'
+     C           SPOOB     ANDNE'N'
+     C           SPOOB     ANDNE*BLANKS
+     C                     MOVE '1'       *IN11
+     C                     MOVE '002'     ERR,X
+     C                     ADD  1         X
+     C                     END
+     C*
+     C** VALIDATE 'SPOT MONTH REPORT PROMPT'
+     C           SSMRI     IFNE 'Y'
+     C           SSMRI     ANDNE'N'
+     C           SSMRI     ANDNE*BLANKS
+     C                     MOVE '1'       *IN13
+     C                     MOVE '003'     ERR,X
+     C                     ADD  1         X
+     C                     END
+     C*
+     C** SETON ERROR MESSAGE INDICATOR IF INVALID ENTRIES
+     C           *IN10     IFEQ '1'
+     C           *IN11     OREQ '1'
+     C           *IN13     OREQ '1'
+     C                     MOVE '1'       *IN12
+     C                     END
+     C           *IN12     IFEQ '1'
+     C                     MOVEAERR       ERRCOD
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      **
+      ** DBERR S/R TO HANDLE DATABASE ERRORS AND TERMINATE PROGRAM
+      ** CALLED IN ALL S/RS
+      ** CALLS NO OTHER SUBROUTINES.
+      **
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C****************************************************************    S01199
+     C*EJECT**********************************************************    S01199
+     C*****SUB-ROUTINE*HELP*-*CALLS*HELP*TEXT*************************    S01199
+     C**************************CALLED*BY*-*SR.VALID******************    S01199
+     C**************************CALLS*PGM*MHELP.**********************    S01199
+     C***********HELP      BEGSR                                          S01199
+     C***********                                                         S01199
+     C***********          MOVEL'FF0475'  HBPGM   6                       S01199
+     C***********          MOVEAERR       HERCD 160                       S01199
+     C***********          CALL 'MHELP'                                   S01199
+     C***********          PARM           HBPGM                           S01199
+     C***********          PARM           HERCD                           S01199
+     C***********          ENDSR                                          S01199
+     C*****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

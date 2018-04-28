@@ -1,0 +1,781 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CSD053
+/*STD *  RPGBNOCVT                                                    *                       CSD053
+/*EXS *  RPGCVTOPT1                                                   *                       CSD053
+/*EXI *  TEXT('Midas CG UDC charge processing')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                  *
+     F*                                                               *
+     F*  CG5270 - UDC Charge Processing                               *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: CGC5270 - UDC Charge Processing                   *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD053             Date 01Jun06               *
+      *  Prev Amend No. BUG2330            Date 29Apr04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CCG015             Date 13Jun01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 03Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD053 - Correspondence Manager Multilanguage Upgrade        *
+      *         - (Recompile)                                         *
+     F*  BUG2330- CG programs looking at wrong dataarea for CSC022    *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CCG015 - Correspondence Manager Phase 1 (Recompile)          *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*Cpysrc Templates Initialise Program F-spec
+     F/COPY WNCPYSRC,CG5270DFPG
+     FCGUDCLL2UF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      *
+      * RSQ : UDC Log records           Charges to be calculated
+      *
+     FCGCORRL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * RTV : Correspondent Details     By Correspondent
+      *
+     FCGUDCRL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * RTV : UDC Reference             By Item/dest.correspondent
+      *
+     FCGCSCHL5IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * RSQ : Correspondent Schedules   By Primary Correspondent
+      *
+     FCGCSCHL3IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * RTV : Correspondent Schedule    By Account
+      *
+     FCGCSCHL2IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * RTV : Correspondent Schedule    By Account code
+      *
+     FCGCORRL3IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * RSQ : Correspondent Details     System and Branches
+      *
+     FCGCORRLCIF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * RSQ : Correspondent Details     By Correspondent Types
+      *
+     FCGCSCHL0UF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      *
+      * UPD : Correspondent Schedules   Update Index
+      *
+     FCGCORRL0UF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+      *
+      * UPD : Correspondent Details     Update index
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E***************** FIRST COMPILE TIME ARRAY *********************
+      *                                                                                       CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      *                                                                                       CSC022
+     E                    WCMT       10 10                                                    CSC022
+      *                                                                                       CSC022
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     E*EDTRCD: Cpysrc Templates Initialise Program E-spec
+     E/COPY WNCPYSRC,CG5270DEPG
+      /EJECT
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I*  End of Program Error Processing copysource
+     I*
+     I*
+     I*EDTRCD: Cpysrc Templates Initialise Program I-spec
+     I/COPY WNCPYSRC,CG5270DIPG
+      /EJECT
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+     IMMODDS    E DSSDMMODPD
+     I*
+     I* Modules Data Structure *
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I*                                                                   S01194
+     I* Data Structures used by Access Programs                           S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I*                                                                   S01194
+     I* Data Structures used by Access Programs                           S01194
+     I*                                                                   S01194
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      * Switchable Features Details accessed via Access Program                               CSC022
+      *                                                                                       CSC022
+     IWDSJOB    E DSSCCMTJOB                                                                  CSC022
+     I              COMITNUM                        WCMTNO                                    CSC022
+     I              COMITJOB1                       WJOB01                                    CSC022
+     I              COMITJOB2                       WJOB02                                    CSC022
+     I              COMITJOB3                       WJOB03                                    CSC022
+     I              COMITJOB4                       WJOB04                                    CSC022
+     I              COMITJOB5                       WJOB05                                    CSC022
+     I              COMITJOB6                       WJOB06                                    CSC022
+     I              COMITJOB7                       WJOB07                                    CSC022
+     I              COMITJOB8                       WJOB08                                    CSC022
+     I              COMITJOB9                       WJOB09                                    CSC022
+     I              COMITJOB10                      WJOB10                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      *                                                                                       CSC022
+      /EJECT
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Read all records on the log file indicating charges
+      *  to be calculated
+      *
+     C           *LOVAL    SETLL@UDCLL2
+     C                     READ @UDCLL2                  91
+     C           *IN91     DOWEQ'0'
+      *
+      * Get UDC Reference record
+      *
+     C           KUDCR     KLIST
+     C                     KFLD           DRITEM
+     C                     KFLD           DRDCOR
+      *
+     C                     Z-ADDDLITEM    DRITEM
+     C                     MOVELDLDCOR    DRDCOR
+      *
+     C           KUDCR     CHAIN@UDCRL1              90
+      *
+      *  If not found error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGUDCRL1'W0FILE
+     C                     MOVELDRITEM    ##008A  8
+     C           ##008A    CAT  DLDCOR    W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      * Set up Print Item Type and Sub-type variables
+      *
+     C           *LIKE     DEFN DRPTYP    ##PTYP
+     C           *LIKE     DEFN DRPSTP    ##PSTP
+     C           *LIKE     DEFN CPPCOR    ##PCOR
+     C           *LIKE     DEFN CPCORR    ##DCOR
+     C                     MOVELDRPTYP    ##PTYP
+     C                     MOVELDRPSTP    ##PSTP
+      *
+      * Calculate charges for correspondent
+      *
+     C                     EXSR SRCORR
+      *
+      * Calculate charges for Correspondent Type
+      *
+     C                     EXSR SRCTYP
+      *
+      * Calculate charges for Branch
+      *
+     C                     EXSR SRBRCH
+      *
+      * Calculate charges for System
+      *
+     C                     EXSR SRSYSM
+      *
+      *  Update message to charges calculated and commit
+      *
+     C                     MOVEL'CGD1805' DLMSID
+     C                     TIME           DLATIM
+     C                     EXCPTUDCLL2
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+      *
+      *  Read next record
+      *
+     C                     READ @UDCLL2                  91
+     C                     ENDDO
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCORR   : Calculate Correspondent Charges                   *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCORR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCORR'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG5270CORR
+      *
+      *  Get correspondent record
+      *
+     C           KCORR     KLIST
+     C                     KFLD           CDCORR
+      *
+     C                     MOVELDLDCOR    CDCORR
+     C           KCORR     CHAIN@CORRL1              90
+      *
+      *  If not found error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'CGCORRL1'W0FILE
+     C                     MOVELDLDCOR    W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Call subroutine to access and update schedules
+      *
+     C                     MOVELDRPCOR    ##PCOR
+     C                     MOVELDRDCOR    ##DCOR
+     C                     EXSR SRCSCH
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCORR    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCTYP   : Calculate Correspondent Type Charges              *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCTYP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCTYP'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG5270CTYP
+      *
+      *  Get correspondent type record
+      *
+     C           KCTYP     KLIST
+     C                     KFLD           CDCTYP
+      *
+     C           KCTYP     CHAIN@CORRLC              90
+      *
+      *  If found
+      *
+     C           *IN90     IFEQ '0'
+      *
+      *  Call subroutine to access and update schedules
+      *
+     C                     MOVELCDCORR    ##PCOR
+     C                     MOVELCDCORR    ##DCOR
+     C                     EXSR SRCSCH
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCTYP    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCORR   : Calculate Branch Charges                          *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBRCH    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRBRCH'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG5270BRCH
+      *
+      *  Get branch record
+      *
+     C           KBRCH     KLIST
+     C                     KFLD           DRBRCA
+      *
+     C           KBRCH     CHAIN@CORRL3              90
+      *
+      *  If found
+      *
+     C           *IN90     IFEQ '0'
+      *
+      *  Call subroutine to access and update schedules
+      *
+     C                     MOVELCDCORR    ##PCOR
+     C                     MOVELCDCORR    ##DCOR
+     C                     EXSR SRCSCH
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXBRCH    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSYSM   : Calculate System Charges                          *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSYSM    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRSYSM'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG5270SYSM
+      *
+      *  Get branch record
+      *
+     C           *LIKE     DEFN DRBRCA    ##BRCA
+     C           KBRCH2    KLIST
+     C                     KFLD           ##BRCA
+      *
+     C                     MOVEL*BLANKS   ##BRCA
+     C           KBRCH2    CHAIN@CORRL3              90
+      *
+      *  If found
+      *
+     C           *IN90     IFEQ '0'
+      *
+      *  Call subroutine to access and update schedules
+      *
+     C                     MOVELCDCORR    ##PCOR
+     C                     MOVELCDCORR    ##DCOR
+     C                     EXSR SRCSCH
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXSYSM    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCSCH   : Access Schedules for update                       *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCSCH    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCSCH'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG5270CSCH
+      *
+      *  If account specified then look for schedule
+      *
+     C           KCSHL3    KLIST
+     C                     KFLD           CPMACT
+     C                     KFLD           CPCORR
+     C                     KFLD           CPPTYP
+     C                     KFLD           CPPSTP
+      *
+     C                     MOVELDRMACT    CPMACT
+     C                     MOVEL##DCOR    CPCORR
+     C                     MOVEL##PTYP    CPPTYP
+     C                     MOVEL##PSTP    CPPSTP
+      *
+      *  Access L3 to see if record exists
+      *
+     C           KCSHL3    SETLL@CSCHL3
+     C           KCSHL3    READE@CSCHL3                  90
+      *
+      *  If found and currency
+      *
+     C           *IN90     IFEQ '0'
+     C           CPCCCY    ANDNE*BLANKS
+     C           CPACHG    ANDNE'S'
+      *
+      *  Add charge update and exit
+      *
+     C           KFULL     KLIST
+     C                     KFLD           CPCORR
+     C                     KFLD           CPPTYP
+     C                     KFLD           CPPSTP
+     C                     KFLD           CPSEQN
+      *
+     C           KFULL     CHAIN@CSCHL0              90
+      *
+     C                     ADD  CPCITM    CPBSNB
+     C                     EXCPTCSCHL0
+     C                     GOTO EXCSCH
+     C                     ENDIF
+      *
+      *  If account specified then look for schedule by account
+      *
+     C           KCSHL2    KLIST
+     C                     KFLD           CPACCD
+     C                     KFLD           CPCORR
+     C                     KFLD           CPPTYP
+     C                     KFLD           CPPSTP
+      *
+     C********** 4         SUBSTDRMACT:10 CPACCD    P                                         CGL029
+     C           10        SUBSTDRMACT:10 CPACCD    P                                         CGL029
+     C                     MOVEL##DCOR    CPCORR
+     C                     MOVEL##PTYP    CPPTYP
+     C                     MOVEL##PSTP    CPPSTP
+      *
+      *  Access L2 to see if record exists
+      *
+     C           KCSHL2    SETLL@CSCHL2
+     C           KCSHL2    READE@CSCHL2                  90
+      *
+      *  If found and currency
+      *
+     C           *IN90     IFEQ '0'
+     C           CPCCCY    ANDNE*BLANKS
+     C           CPACHG    ANDNE'S'
+      *
+      *  Add charge update and exit
+      *
+     C           KFULL     CHAIN@CSCHL0              90
+      *
+     C                     ADD  CPCITM    CPBSNB
+     C                     EXCPTCSCHL0
+     C                     GOTO EXCSCH
+     C                     ENDIF
+      *
+      *  Get full details
+      *
+     C           KCSCH     KLIST
+     C                     KFLD           CPPCOR
+     C                     KFLD           CPPTYP
+     C                     KFLD           CPPSTP
+     C                     KFLD           CPCORR
+      *
+     C                     MOVEL##PCOR    CPPCOR
+     C                     MOVEL##PTYP    CPPTYP
+     C                     MOVEL##PSTP    CPPSTP
+     C                     MOVEL##DCOR    CPCORR
+      *
+     C           KCSCH     SETLL@CSCHL5
+     C           KCSCH     READE@CSCHL5                  90
+      *
+      *  If found and currency
+      *
+     C           *IN90     IFEQ '0'
+     C           CPCCCY    ANDNE*BLANKS
+     C           CPACHG    ANDNE'S'
+      *
+      *  Add charge update and exit
+      *
+     C           KFULL     CHAIN@CSCHL0              90
+      *
+     C                     ADD  CPCITM    CPBSNB
+     C                     EXCPTCSCHL0
+     C                     GOTO EXCSCH
+     C                     ENDIF
+      *
+      *  Get partial details
+      *
+     C                     MOVEL##PCOR    CPPCOR
+     C                     MOVEL##PTYP    CPPTYP
+     C                     MOVEL*BLANKS   CPPSTP
+     C                     MOVEL##DCOR    CPCORR
+      *
+     C           KCSCH     SETLL@CSCHL5
+     C           KCSCH     READE@CSCHL5                  90
+      *
+      *  If found and currency
+      *
+     C           *IN90     IFEQ '0'
+     C           CPCCCY    ANDNE*BLANKS
+     C           CPACHG    ANDNE'S'
+      *
+      *  Add charge update and exit
+      *
+     C           KFULL     CHAIN@CSCHL0              90
+      *
+     C                     ADD  CPCITM    CPBSNB
+     C                     EXCPTCSCHL0
+     C                     GOTO EXCSCH
+     C                     ENDIF
+      *
+      *  Get default details
+      *
+     C                     MOVEL##PCOR    CPPCOR
+     C                     MOVEL*BLANKS   CPPTYP
+     C                     MOVEL*BLANKS   CPPSTP
+     C                     MOVEL##DCOR    CPCORR
+      *
+     C           KCSCH     SETLL@CSCHL5
+     C           KCSCH     READE@CSCHL5                  90
+      *
+      *  If found and currency
+      *
+     C           *IN90     IFEQ '0'
+     C           CPCCCY    ANDNE*BLANKS
+     C           CPACHG    ANDNE'S'
+      *
+      *  Add charge update and exit
+      *
+     C           KFULL     CHAIN@CSCHL0              90
+      *
+     C                     ADD  CPCITM    CPBSNB
+     C                     EXCPTCSCHL0
+     C                     GOTO EXCSCH
+     C                     ENDIF
+      *
+      *  If Correspondent and currency
+      *
+     C           CDCCCY    IFNE *BLANKS
+     C           CPACHG    ANDNE'S'
+      *
+      *  Add charge update and exit
+      *
+     C           KCORR     CHAIN@CORRL0              90
+      *
+     C                     ADD  CDCITM    CDBSNB
+     C                     EXCPTCORRL0
+     C                     GOTO EXCSCH
+     C                     ENDIF
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCSCH    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG5270INIT
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   P@RTCD                                              CSC022
+     C                     PARM '*VERIFY' P@OPTN                                              CSC022
+     C                     PARM 'CSC022'  P@SARD                                              CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C                     MOVE 'N'       WCMTSK                                              CSC022
+      *                                                                                       CSC022
+     C                     IN   WDSJOB                                                        CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+     C                     Z-ADD1         I       20                                          CSC022
+      *                                                                                       CSC022
+     C           ##JOB     LOKUPWCMT,I                   51                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ELSE                                                               CSC022
+     C           P@RTCD    IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD6         W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           *LIKE     DEFN SARN      P@SARD                                              CSC022
+     C************NAMVAR   DEFN           WDSJOB                                       CSC022BUG2330
+     C           *NAMVAR   DEFN SCCMTJOB  WDSJOB                                             BUG2330
+      *                                                                                       CSC022
+     C                     ENDIF                                                              CSC022
+     C*
+     C* Get modules information
+     C*
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD5         W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *
+      * Cpysrc Templates Initialise Program C-spec
+      *
+     C/COPY WNCPYSRC,CG5270DCPG
+     C/EJECT
+      *
+      * PSSR Processing
+      *
+     C/COPY CGCPYSRC,SRERRPSSR
+      *
+      * File and Program Error Processing
+      *
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+     O@UDCLL2 E                UDCLL2
+     O                         DLMSID
+     O                         DLATIM
+     O@CSCHL0 E                CSCHL0
+     O                         CPBSNB
+     O@CORRL0 E                CORRL0
+     O                         CDBSNB
+      *
+      * Cpysrc Templates Initialise Program O-spec
+      *
+     O/COPY WNCPYSRC,CG5270DOPG
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

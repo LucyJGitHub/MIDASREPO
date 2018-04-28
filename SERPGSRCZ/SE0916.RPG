@@ -1,0 +1,471 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Unrealised P/L Using N-T-P Ana. Extract')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0916 - Midas SE Unrealised Profit and Loss Using Net-      *
+      *           Treasury-Prices Analysis Extract                    *
+      *                                                               *
+      *  Function: This program extracts details from the Book        *
+      *   (COB)    Position Header (Trade or Value Date Basis) for    *
+      *            all non-zero Nominal Positions. The extract is     *
+      *            used in the generation of the Unrealised Profit    *
+      *            and Loss Using Net-Treasury-Prices Analysis        *
+      *            Report (Program SE0917).                           *
+      *                                                               *
+      *  Called by: SEC0911 - Midas SE Unrealised Profit and Loss     *
+      *                       Using Net-Treasury-Prices Analysis      *
+      *                                                               *
+      *            Frequency:                                         *
+      *            - On user request during COB                       *
+      *            - Automatically at EOM COB on Value Date basis     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS008             Date 11May04               *
+      *                 CAS006  *CREATE    Date 21Jan03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS008 - Delayed Hedge Assessment                            *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *                                                               *
+      *****************************************************************
+      *
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+     FBKPHJ3T IF  E                    DISK         KINFSR *PSSR
+      ** Midas SE Book Position Headers Join 3 - Trade
+      *
+     FUPLNXD  O   E                    DISK         KINFSR *PSSR
+      ** Midas SE Unrealised P/L Using N-T-P Extract File
+      *
+     FIACNX   IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Interest Accruals Using N-T-R Extract
+      *
+     FUPLHXD  O   E                    DISK         KINFSR *PSSR                              CAS008
+      ** Midas SE Historic Unrealised P/L Using N-T-P                                         CAS008
+      *                                                                                       CAS008
+     FUPLHXL1 IF  E           K        DISK         KINFSR *PSSR                              CAS008
+     F            UPLHXDF                           KRENAMESEDEVDO                            CAS008
+      *                                                                                       CAS008
+     FASHTRNJ0IF  E           K        DISK         KINFSR *PSSR                              CAS008
+      *                                                                                       CAS008
+     FSE0916AUO   E                    PRINTER
+      ** Midas SE Unrealized P/L Using N-T-P Extract Audit
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   20  - Trade/Value Date Basis Indicator                      *
+      *   21  - BKPHJ3T EOF Indicator                                 *
+      *   22  - Trade/Value Date Basis = PTYPE Indicator              *
+      *   23  - IACNX Search (CHAIN) Indicator                        *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR - Program Initialisation Subroutine.                  *
+      *  *PSSR  - Program Exception Subroutine.                       *
+      *  SRWRX  - Writes records to the Extract File.                 *
+      *  SRAU   - Writes the Audit Report.                            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--------------------------------------+
+      ** ¦ E-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+     E                    CPY@    1   1 80
+      ** Copyright Statement Array
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--------------------------------------+
+      ** ¦ I-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+     IIACEXDF
+     I              RECI                            IRID
+     I              IARC                            IAIR
+      ** IACEXDF Record Format
+      *
+     ILDA       E DSLDA                         256
+      ** Local Data Area for Database Error Details
+      *
+      **       Defines:                     134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details Data Structure
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CAS008
+      ** Switchable Feature Details Data Structure                                            CAS008
+      *                                                                                       CAS008
+     IDSFDY     E DSDSFDY
+      ** Short Access Object Data Structure
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--------------- Start of Main Processing -------------------+
+      ** ¦                                                            ¦
+      ** ¦  *INZSR is automatically executed at program activation.   ¦
+      ** ¦                                                            ¦
+      ** +------------------------------------------------------------+
+      *
+      ** Read a Book Position Header record.
+      *
+     C                     READ BKPHJ3T                  21
+      *
+     C           *IN21     DOWEQ*ZERO
+      *
+      ** Increment the Record Count.
+      *
+     C                     ADD  1         INCNT   50
+      *
+      ** Determine if the Trade/Value Date Basis field matches PTYPE.
+      *
+     C           PTYPE     IFEQ 'T'
+     C           BHTV      IFEQ 'T'
+     C                     MOVE *ON       *IN22
+     C                     ENDIF
+     C                     ELSE
+     C           BHTV      IFEQ 'V'
+     C                     MOVE *ON       *IN22
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Raise a DB exception if Nominal Currency = Blanks.
+      *
+     C           NMCY      IFEQ *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECTY'   DBFILE
+     C                     MOVELBHSC      DBKEY
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Raise a DB exception if Investment Type = Blanks.
+      *
+     C           INAM      IFEQ *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'INVTP'   DBFILE
+     C           NMCY      CAT  SITP      ITKEY   6
+     C                     MOVELITKEY     DBKEY
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Output an extract record if Nominal Position is not equal
+      ** to zero and Trade/Value Date Basis equals PTYPE.
+      *
+     C           NPSN      IFNE *ZERO
+     C           *IN22     ANDEQ*ON
+     C                     EXSR SRWRX
+     C                     ADD  1         OUTCNT  50
+     C                     ENDIF
+      *
+     C                     READ BKPHJ3T                  21
+      *
+     C                     ENDDO
+      *
+      ** Write the Audit Report.
+      *
+     C                     EXSR SRAU
+      *
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRWRX - Writes records to the Extract File.                  *
+      *                                                               *
+      *****************************************************************
+     C           SRWRX     BEGSR
+      *
+     C                     MOVE 'D'       RECI
+     C                     MOVE BHBA      URBA
+     C                     MOVE BHBK      URBK
+     C                     MOVE NMCY      URCY
+     C                     MOVE BHMK      URMK
+     C                     MOVE SITP      URIT
+     C                     MOVE BHSC      URSS
+     C                     Z-ADDNPSN      ERNP
+     C                     Z-ADDLAVN      URAP
+      *
+      ** Set the Price Date.
+      *
+     C           LATD      IFGT LPSD
+     C                     Z-ADDLATD      PRDT
+     C                     ELSE
+     C           LPRC      IFGT LPSD
+     C                     Z-ADDLPRC      PRDT
+     C                     ELSE
+     C                     Z-ADDLPSD      PRDT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Set the Accrued Interest Using Net-Treasury-Rate field.
+      *
+     C                     MOVE URBA      KBRCH
+     C                     MOVE URBK      KBKCD
+     C                     MOVE URCY      KCCY
+     C                     MOVE URIT      KINVT
+     C                     MOVE URSS      KSESN
+      *
+     C           KIACN     SETLLIACNX
+     C           KIACN     READEIACNX                    23
+      *
+     C                     Z-ADD0         WIAIR  130
+     C                     Z-ADD0         IARC
+     C           *IN23     DOWEQ'0'
+     C                     ADD  IAIR      WIAIR  130
+     C           KIACN     READEIACNX                    23
+     C                     ENDDO
+      *
+     C           WIAIR     IFNE 0
+     C                     Z-ADDWIAIR     IARC
+     C                     ENDIF
+      *
+     C                     WRITEUPLNXDF
+      *                                                                                       CAS008
+     C           CAS008    IFEQ 'Y'                                                           CAS008
+      *                                                                                       CAS008
+     C                     MOVE '0'       *IN01                                               CAS008
+     C           AKEY1     SETLLASHTRNJ0                                                      CAS008
+     C           AKEY1     READEASHTRNJ0                 01                                   CAS008
+      *                                                                                       CAS008
+     C           *IN01     DOWEQ'0'                                                           CAS008
+     C           SKEY1     CHAINUPLHXL1              02                                       CAS008
+      *                                                                                       CAS008
+     C           *IN02     IFEQ '1'                                                           CAS008
+     C           BJRDNB    IFEQ FSNDTA                                                        CAS008
+     C           BJRDNB    OREQ FSEFFD                                                        CAS008
+     C                     Z-ADDFSEFFD    EFDT                                                CAS008
+     C                     Z-ADDFSNDTA    NDTA                                                CAS008
+     C                     Z-ADDFSHEDI    HGID                                                CAS008
+     C                     MOVE FSDTTP    DTTP                                                CAS008
+     C                     WRITEUPLHXDF                                                       CAS008
+     C                     ENDIF                                                              CAS008
+     C                     ENDIF                                                              CAS008
+      *                                                                                       CAS008
+     C           AKEY1     READEASHTRNJ0                 01                                   CAS008
+     C                     ENDDO                                                              CAS008
+      *                                                                                       CAS008
+     C                     ENDIF                                                              CAS008
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAU - Writes the Audit Report.                              *
+      *                                                               *
+      *****************************************************************
+     C           SRAU      BEGSR
+      *
+      ** Write the Report Header Record Format.
+      *
+     C                     WRITEHEADER
+      *
+      ** If there is a DB exception, write the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** If no records were read, write the "No Details" message.
+      ** Otherwise, write the Control Record Format.
+      *
+     C           INCNT     IFEQ *ZERO
+     C                     WRITENODTLS
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Program Exception Subroutine.                        *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check if *PSSR has not been called already.
+      *
+     C           WRUN      IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+      ** Write the Audit Report.
+      *
+     C                     EXSR SRAU
+      *
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+      ** Return to the calling program.
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Program Initialisation Subroutine.                  *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Begin Parameter List
+      ** ====================
+      *
+      ** Input Parameter:
+      *
+      ** Trade/Value Date Basis
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PTYPE   1
+      *
+      ** End Parameter List
+      ** ==================
+      *
+      ** Midas SE Interest Accruals Using N-T-R Extract Key List
+      *
+     C           KIACN     KLIST
+     C                     KFLD           KBRCH   3
+     C                     KFLD           KBKCD   2
+     C                     KFLD           KCCY    3
+     C                     KFLD           KINVT   3
+     C                     KFLD           KSESN  10
+      *                                                                                       CAS008
+     C           AKEY1     KLIST                                                              CAS008
+     C                     KFLD           URSS                                                CAS008
+      *                                                                                       CAS008
+     C           SKEY1     KLIST                                                              CAS008
+     C                     KFLD           URBA                                                CAS008
+     C                     KFLD           URBK                                                CAS008
+     C                     KFLD           URCY                                                CAS008
+     C                     KFLD           URMK                                                CAS008
+     C                     KFLD           URIT                                                CAS008
+     C                     KFLD           URSS                                                CAS008
+     C                     KFLD           FSEFFD                                              CAS008
+     C                     KFLD           FSNDTA                                              CAS008
+     C                     KFLD           FSHEDI                                              CAS008
+      *
+      ** Set the Copyright Array.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define the Local Data Area.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+      ** Set the Database Program Name.
+      *
+     C                     MOVEL'SE0916'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Access Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set the Trade/Value Date Basis Indicator.
+      *
+     C           PTYPE     IFEQ 'T'
+     C                     MOVE *ON       *IN20
+     C                     ENDIF
+      *
+      ** Check if CAS008 is switched ON.                                                      CAS008
+      *                                                                                       CAS008
+     C                     CALL 'AOSARDR0'                                                    CAS008
+     C                     PARM *BLANKS   PRTCD   7                                           CAS008
+     C                     PARM '*VERIFY' POPTN   7                                           CAS008
+     C                     PARM 'CAS008'  PSARD   6                                           CAS008
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS008
+      *                                                                                       CAS008
+     C                     MOVE 'N'       CAS008  1                                           CAS008
+     C           PRTCD     IFEQ *BLANKS                                                       CAS008
+     C                     MOVE 'Y'       CAS008                                              CAS008
+     C                     ELSE                                                               CAS008
+      *                                                                                       CAS008
+     C           PRTCD     IFNE '*NRF'                                                        CAS008
+     C           *LOCK     IN   LDA                                                           CAS008
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS008
+     C                     MOVEL'CAS008'  DBKEY                                               CAS008
+     C                     Z-ADD4         DBASE                                               CAS008
+     C                     OUT  LDA                                                           CAS008
+     C                     EXSR *PSSR                                                         CAS008
+     C                     ENDIF                                                              CAS008
+      *                                                                                       CAS008
+     C                     ENDIF                                                              CAS008
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2003

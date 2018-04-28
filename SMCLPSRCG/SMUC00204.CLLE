@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Generate Permission Patch Backups')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00204 - Midas SM Backout Permission Patch               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD020108 *CREATE   Date 18Apr13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD020108 - Permission Patch                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PERMBCKUP)
+ 
+             DCL        VAR(&PERMBCKUP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GLOBPFX) TYPE(*CHAR) LEN(2) VALUE('**')
+             DCL        VAR(&OVWRT) TYPE(*CHAR) LEN(1) VALUE(Y)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHKOBJ     OBJ(&PERMBCKUP) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+             CRTLIB     LIB(&PERMBCKUP) TEXT('Permission Spreadsheet +
+                          Patch - Backups')
+             ENDDO
+ 
+             CHKOBJ     OBJ(&PERMBCKUP/PATCHSTAT) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&OVWRT) +
+                          VALUE('N'))
+ 
+             IF         COND(&OVWRT *EQ 'Y') THEN(DO)
+             SNDUSRMSG  MSG('Overwrite this backup library? Y/N') +
+                          VALUES(Y N) MSGRPY(&OVWRT)
+             IF         COND(&OVWRT *EQ 'N') THEN(GOTO CMDLBL(CANCEL))
+             ENDDO
+ 
+             CLRLIB     LIB(&PERMBCKUP)
+             MONMSG     MSGID(CPF0000)
+ 
+             DLTDTAARA  DTAARA(&PERMBCKUP/PATCHSTAT)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTDTAARA  DTAARA(&PERMBCKUP/PATCHSTAT) TYPE(*CHAR) +
+                          LEN(10) VALUE('**') TEXT('Patch Status Data +
+                          Area') /* 1-2:GlobPrefix */
+ 
+             CALL       PGM(SMU00201) PARM(&GLOBPFX)
+             IF         COND(&GLOBPFX *EQ '**') THEN(DO)
+             SNDPGMMSG  MSG('Could not retrieve Global Prefix.')
+                        GOTO  CMDLBL(ERROR)
+             ENDDO
+ 
+             CHGDTAARA  DTAARA(&PERMBCKUP/PATCHSTAT (1 2)) +
+                          VALUE(&GLOBPFX)
+ 
+             DLTF       FILE(&PERMBCKUP/BFLIB)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTSAVF    FILE(&PERMBCKUP/BFLIB) TEXT('Permission +
+                          Spreadsheet Patch - BF schema backup')
+ 
+             CHGVAR     VAR(&BFLIB) VALUE(&GLOBPFX *CAT 'BFLIB')
+ 
+             SAVLIB     LIB(&BFLIB) DEV(*SAVF) +
+                          SAVF(&PERMBCKUP/BFLIB) TGTRLS(V5R4M0) +
+                          SAVACT(*LIB) OUTPUT(*PRINT)
+ 
+             CPYF       FROMFILE(GPMTXTPD) +
+                          TOFILE(&PERMBCKUP/GPMTXTPD) MBROPT(*ADD) +
+                          CRTFILE(*YES)
+ 
+             CPYF       FROMFILE(GPMENUPD) +
+                          TOFILE(&PERMBCKUP/GPMENUPD) MBROPT(*ADD) +
+                          CRTFILE(*YES)
+ 
+             CPYF       FROMFILE(MITB_PERMM) +
+                          TOFILE(&PERMBCKUP/MITB_PERMM) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+ 
+             GOTO       CMDLBL(END)
+CANCEL:
+             SNDPGMMSG  MSG('Backup process cancelled.')
+             GOTO       CMDLBL(END)
+ERROR:
+             SNDPGMMSG  MSG('Backup program ended abnormally.')
+END:
+             ENDPGM

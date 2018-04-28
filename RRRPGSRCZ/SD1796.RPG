@@ -1,0 +1,298 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Abnormal termination report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Restart Recovery Module                          *
+     F*                                                               *
+     F*  SD1796 - LAST SUCESSFUL TRANSACTIONS PRIOR TO ABNORMAL       *
+     F*           SYSTEM TERMINATION                                  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 059503             Date 22JUN94               *
+     F*                 S01194             Date 21DEC89               *
+     F*                 E13205             DATE 13/03/89              *
+     F*                 E11284             DATE 23/11/87              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  059503 - Workstation id truncated when updated to file       *
+     F*           MNTYF.  Print the 10-char WS ID to report.          *
+     F*  S01194 - NEW STANDING DATA                                   *
+     F*  E13205 - Alter title of report                               *
+     F*           Print header even if no items to report             *
+     F*  E11284 - TIDY UP REPORT HEADING                              *
+     F*                                                               *
+0011 F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+*****F*: OVRDBF TABLE TABICD                                        : *   S01194
+     F*                                                               *
+     F*****************************************************************
+     FMNTYF   IP  E                    DISK
+0017 F*ABLE   IF  E           K        DISK                               S01194
+     F**********  TABLETAF                          KIGNORE               S01194
+     F**********  TABLETXF                          KIGNORE               S01194
+     F**********  TABLETHF                          KIGNORE               S01194
+     F**********  TABLETRF                          KIGNORE               S01194
+     F**********  TABTB11F                          KIGNORE               S01194
+     F**********  TABTB20F                          KIGNORE               S01194
+     F**********  TABTB30F                          KIGNORE               S01194
+     F**********  TABTB40F                          KIGNORE               S01194
+     F**********  TABTB50F                          KIGNORE               S01194
+     F**********  TABTB55F                          KIGNORE               S01194
+     F**********  TABTE10F                          KIGNORE               S01194
+     F**********  TABTE20F                          KIGNORE               S01194
+     F**********  TABTG10F                          KIGNORE               S01194
+     F**********  TABTG20F                          KIGNORE               S01194
+     FSD1796P1O   F     132     OF     PRINTER                            S01124
+     F*****************************************************************
+     F*                                                               *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                       *
+     F*                                                               *
+     F* 10               OUTPUT TITLE                                 *
+     F* 11               FIRST CYCLE                                  *
+     F* 80               NON-BLANK WORKSTATION ID                     *   059503
+     F* 99               STANDARD SUBROUTINE                          *
+     F* U7&U8            DATABASE ERROR                               *
+     F*                                                               *
+     F*****************************************************************
+     E                    CPY@    1   1 80
+     I*****************************************************************
+     I** DATASTRUCTURES FOR EDIT OF MTIME
+     I            DS
+     I                                        1   60MTIME
+     I                                        1   2 HR
+     I                                        3   4 MIN
+     I                                        5   6 SEC
+     I            DS
+     I                                        1   8 ETIME
+     I                                        1   2 EHR
+     I                                        3   3 PT1
+     I                                        4   5 EMIN
+     I                                        6   6 PT2
+     I                                        7   8 ESEC
+     I** DATASTRUCTURE FOR DATA FIELDS
+     I            DS
+     I                                       51 250 DATAA
+     I                                      251 450 DATAB
+     I                                       51 130 DATA1
+     I                                      131 210 DATA2
+     I                                      211 290 DATA3
+     I                                      291 370 DATA4
+     I                                      371 450 DATA5
+     I* LOCAL DATA AREA FOR DATABASE ERROR
+     ILDA        UDS                            256
+     I**************                        134 138 DBFILE                S01194
+     I**************                        139 167 DBKEY                 S01194
+     I**************                        168 175 DBPGM                 S01194
+     I**************                        176 1770DBASE                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     I*
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I              BJDFIN                          DATF                  S01194
+     I              BJMRDT                          RUNA                  S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I*****************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C** PARAMETER LIST FOR PROGRAM 'AOBANKR0'                            S01194
+     C           PLISTA    PLIST                                          S01194
+     C                     PARM '*MSG   ' RTCD    7                       S01195
+     C                     PARM '*FIRST ' OPTN    7                       S01195
+     C           SDBANK    PARM SDBANK    DSFDY                           S01195
+     C*
+     C                     SETOF                     10
+     C*                                                                   S01194
+     C** FIRST CYCLE
+     C*                                                                   S01194
+     C   11                GOTO MAIN
+0350 C**   GET INSTALLATION CONTROL DATA RECORD
+0351 C                     EXSR ZSYSTM
+0352 C   99                SETON                     U7U8LRNOT FOUND,
+     C   99                MOVE 'SD1796  'DBPGM
+     C***99*****           MOVE 'TABLE'   DBFILE                          S01194
+     C   99                MOVE 'SDBANKPD'DBFILE                          S01194
+     C   99                MOVE 01        DBASE
+     C***99*****           MOVE *BLANKS   DBKEY                           S01194
+     C***99*****           MOVELZTABKY    DBKEY            ************   S01194
+0353 C   99                GOTO ENDD                       *DB ERROR 01OR.
+     C                     TIME           FTIME   60       ************
+     C                     MOVE '.'       PT1
+     C                     MOVE '.'       PT2
+     C                     Z-ADD0         COUNT  100                      E13205
+     C                     SETON                     1011
+     C* MAIN PROCESSING
+     C           MAIN      TAG
+     C                     ADD  1         COUNT  100                      E13205
+     C   10
+     COR OF                EXCPTHDR
+     C* MOVE MTIME TO EDITED TIME
+     C                     MOVE HR        EHR
+     C                     MOVE MIN       EMIN
+     C                     MOVE SEC       ESEC
+     C*                                                                   059503
+     C** Print 10-char ws id. If blank, print 3-char ws id.               059503
+     C*                                                                   059503
+     C                     SETOF                     80                   059503
+     C           WSTI      IFNE *BLANKS                                   059503
+     C                     SETON                     80                   059503
+     C                     END                                            059503
+     C*                                                                   059503
+     C                     EXCPTDTL
+     C           ENDD      TAG
+     C   U7 U8             EXCPTDBER
+     CLR                   EXSR SREND
+     CLR                   EXCPTEND
+     C*
+     C*****************************************************************   E13205
+     C*                                                               *   E13205
+     C*   Subroutine SREND - checks to if the header has been         *   E13205
+     C*   output. If it has not then no transactions to report.       *   E13205
+     C*                                                               *   E13205
+     C*****************************************************************   E13205
+     C*                                                                   E13205
+     CSR         SREND     BEGSR                                          E13205
+     C           COUNT     IFGT 0                                         E13205
+     C                     GOTO SREXIT                                    E13205
+     C                     END                                            E13205
+     C*                                                                   E13205
+     C**   Get installation control data record and release.              E13205
+     C*                                                                   E13205
+     C                     EXSR ZSYSTM                                    E13205
+     C           *IN99     IFEQ '1'                                       E13205
+     C                     SETON                     U7U8LRNOT FOUND,     E13205
+     C                     MOVE 'SD1796  'DBPGM                           E13205
+     C************         MOVE 'TABLE'   DBFILE           *******  E13205S01194
+     C                     MOVE 'SDBANKPD'DBFILE           *******  E13205S01194
+     C                     MOVE 01        DBASE            * DB error *   E13205
+     C************         MOVE *BLANKS   DBKEY            *******  E13205S01194
+     C***********          MOVELZTABKY    DBKEY                     E13205S01194
+     C                     EXCPTDBER                                      E13205
+     C                     RETRN                                          E13205
+     C                     END                                            E13205
+     C*                                                                   E13205
+     C                     TIME           FTIME   60                      E13205
+     C                     MOVE '.'       PT1                             E13205
+     C                     MOVE '.'       PT2                             E13205
+     C*                                                                   E13205
+     C                     EXCPTHDR                                       E13205
+     C                     EXCPTNTRNS                                     E13205
+     C*                                                                   E13205
+     CSR         SREXIT    ENDSR                                          E13205
+     C*
+0814 C********************************************************************
+0815 C**
+0816 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0817 C**
+0818 C           ZSYSTM    BEGSR                           *** ZSYSTEM ***
+0819 C**
+0820 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0821 C**********           MOVEL'01      'ZTABKY 12                       S01194
+0822 C**********           MOVE '  10'    ZTABKY                          S01194
+0823 C**********                                                          S01194
+0824 C********** ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0825 C**N99***** RECI      COMP 'D'                  9999  ON, IS DELETE  S01194
+     C**                                                                  S01194
+     C                     CALL 'AOBANKR0'PLISTA                          S01194
+     C           RTCD      COMP *BLANKS              9999                 S01194
+     C*                                                                   S01194
+0826 C**
+0827 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0828 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0829 C**
+0830 C                     ENDSR
+0831 C**
+0832 C**
+     O*****************************************************************
+     O*
+     O*  PRINT REPORT
+     O*
+     O*  OUTPUT REPORT TITLES
+     OSD1796P1E   03           HDR                                        S01124
+     O                                   21 'REFERENCE SD1796'
+     O*                                  54 'INCOMPLETE TRANS'            E13205
+     O*********                          77 'ACTIONS AT ABNORM'           E11284
+     O*********                          98 'AL SYSTEM TERMINATION'       E11284
+     O*                                  71 'ACTIONS AT ABNORM'     E11284E13205
+     O*                                  92 'AL SYSTEM TERMINATION' E11284E13205
+     O                                   67 'LAST COMPLETE TRANSACTIO'    E13205
+     O                                   90 'NS FOR ACTIVE PROCESSES'     E13205
+     O                                  110 'DATE'
+     O                         RUNA     118
+     O                                  125 'PAGE'
+     O                         PAGE     129
+     O        E 1              HDR
+     O                                   58 '~~~~~~~~~~~~~~~~~~~~~~~~'
+     O                                   81 '~~~~~~~~~~~~~~~~~~~~~~~~'
+     O                                   98 '~~~~~~~~~~~~~~~~~'
+     O                                  110 'TIME'
+     O                         FTIME    119 '  .  .  '
+     O*
+     O*  OUTPUT REPORT DETAILS
+     O        E 2              DTL
+     O                                   14 'USER'
+     O                         USER      26
+     O                                   40 'WORKSTATION'
+     O*************************WSID******45                               059503
+     O                N80      WSID      45                               059503
+     O                 80      WSTI      52                               059503
+     O***********************************52 'TIME'                        059503
+     O                                   59 'TIME'                        059503
+     O*************************ETIME*****64                               059503
+     O                         ETIME     71                               059503
+     O        E 2              DTL
+     O                                   16 'MODULE'
+     O                         MODI      20
+     O                                   30 'PROGRAM'
+     O                         PGMN      40
+     O                                   58 'TRANSACTION NO.'
+     O                         TREFN     64
+     O                                   73 'ACTION'
+     O                         ACTC      75
+     O        E 3              DTL
+     O                                   27 'TRANSACTION DATA:'
+     O                         DATA1    110
+     O        E 2              DTL
+     O                         DATA2    110
+     O        E 2              DTL
+     O                         DATA3    110
+     O        E 2              DTL
+     O                         DATA4    110
+     O        E 2              DTL
+     O                         DATA5    110
+     O*
+     O*   OUTPUT DATABASE ERROR MESSAGE
+     O        E 2              DBER
+     O                                   27 'DATABASE ERROR IN'
+     O                         DBPGM     36
+     O                                   39 'AT'
+     O                         DBASE     42
+     O                                   48 ',FILE'
+     O                         DBFILE    54
+     O                                   59 ',KEY'
+     O                         DBKEY     90
+     O*                                                                   E13205
+     O*   Indicate that no transactions were found                        E13205
+     O*                                                                   E13205
+     O        E 2              NTRNS                                      E13205
+     O                                   75 '*** NO TRANSACTIONS ***'     E13205
+     O*   OUTPUT END OF REPORT MESSAGE
+     O        E 2              END
+     O                                   75 '*** END OF REPORT ***'
+     O*
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

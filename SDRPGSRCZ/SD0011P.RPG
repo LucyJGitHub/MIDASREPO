@@ -1,0 +1,353 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Next Available Customer Report')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - STANDING DATA MODULE
+     F*                                                                  *
+     F*   SD0011P - NEXT AVAILABLE CUSTOMER REPORT                       *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 193591             Date 03Dec02               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 29Apr96               *
+      *                 S01408             Date 17Apr96               *
+     F*                    S01408             DATE 23FEB96               *
+     F*                                       DATE DDMMMYY               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  193591 - Conditioned the calculation for the next available  *
+      *           customer number depending on the BJMODT (Modulus 10 *
+      *           checking) field in SDBANKPD.                        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+     F*     S01408 - Addition of core hook SD0011PEP3                    *
+     F*              Addition of core hook SD0011PEP4                    *
+     F*     S01408 - Addition of core hook SD0011PEP1                    *
+     F*              Addition of core hook SD0011PEP2                    *
+     F*              Addition of core hook SD0011PCP7                    *
+     F*              Addition of core hook SD0011PCP8                    *
+     F*     S01408 - Addition of core hook SD0011PCP1                    *
+     F*              Addition of core hook SD0011PCP2                    *
+     F*              Addition of core hook SD0011PCP3                    *
+     F*              Addition of core hook SD0011PCP4                    *
+     F*              Addition of core hook SD0011PCP5                    *
+     F*              Addition of core hook SD0011PCP6                    *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSDCUSTL1IF  E           K        DISK
+     FSD0011P1O   E             10     PRINTER      KINFDS SPOOL
+     F*
+     F** FUNCTION OF INDICATORS
+     F*
+     F*       01      CUSTOMER FOUND
+     F*       10      OVERFLOW INDICATOR
+     F*       20      AT LEAST ONE NUMBER IN RANGE
+     F*
+     F/EJECT
+     E*
+     E                    FRST   10  10  6 0
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,SD0011PEP3                                           S01408
+     E*                                                                   S01408
+     E                    LAST   10  10  6 0
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,SD0011PEP4                                           S01408
+     E*                                                                   S01408
+     E                    FINL   10  10  6 0
+     E                    LINE        5  6
+     E                    ZCA1        6  1
+     E                    ZCA2        6  1 0
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,SD0011PEP1                                           S01408
+     E*                                                                   S01408
+     E                    ZCA3        8  1 0
+     E*                                                                   S01408
+     E/COPY WNCPYSRC,SD0011PEP2                                           S01408
+     E*                                                                   S01408
+     E                    CPY@    1   1 80
+     E*
+     E/EJECT
+     I*
+     I            DS
+     I                                        1   60ZCNUM
+     I                                        7   70ZCHK
+     I*
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** ACCESS BANK DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     I/EJECT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ    5
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C**  IF ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C** DEFINE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** GET BANK TITLE AND RUNDATE
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     WRITEHEADER
+     C                     WRITEERROR
+     C                     WRITEFINAL
+     C           *LOCK     IN   LDA                        ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 01  *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C***INITIALISE*COUNTERS*AND*SET*UP*LOOP*TO*PRINT*10*PAGES*********                       193591
+     C*
+     C                     Z-ADD1         F       10
+     C                     Z-ADD1         RANGE   20
+     C                     MOVE FRST,RANGEZCNUM                                               193591
+     C           RANGE     DOWLT11
+     C                     WRITEHEADER
+     C                     MOVE '0'       *IN10
+     C**********           MOVE FRST,RANGEZCNUM                                               193591
+     C*
+     C** SET UP LOOP TO PRINT EACH PAGE
+     C*
+     C           *IN10     DOWEQ'0'
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0011PCP1
+     C*                                                                   S01408
+     C*
+     C*
+     C** CALCULATE NEXT RANGE NUMBER
+     C*
+     C           BJMODT    IFEQ 'Y'                                                           193591
+     C                     EXSR ZCHDIG
+     C                     ENDIF                                                              193591
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0011PCP2
+     C*                                                                   S01408
+     C*
+     C** ACCESS CUSTOMER FILE
+     C*
+     C                     MOVE '000000'  ZCNUMA  6
+     C                     MOVE ZCNUM     ZCNUMA
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0011PCP3
+     C*                                                                   S01408
+     C                     MOVE ZCHK      ZCNUMA
+     C*
+     C** GO TO NEXT PAGE IF END OF RANGE
+     C*
+     C********** ZCNUM     IFGE LAST,RANGE                                                    193591
+     C           BJMODT    IFEQ 'N'                                                           193591
+     C           ZCNUM     ANDGEFINL,RANGE                                                    193591
+     C           BJMODT    OREQ 'Y'                                                           193591
+     C           ZCNUM     ANDGELAST,RANGE                                                    193591
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0011PCP4
+     C*                                                                   S01408
+     C                     MOVE '1'       *IN10
+     C**********           ELSE                                                               193591
+     C                     END                                                                193591
+     C           BJMODT    IFEQ 'N'                                                           193591
+     C           ZCNUM     ANDLEFINL,RANGE                                                    193591
+     C           BJMODT    OREQ 'Y'                                                           193591
+     C           ZCNUM     ANDLELAST,RANGE                                                    193591
+     C           ZCNUMA    SETLLSDCUSTL1                 01
+     C*
+     C** ACCEPT NUMBER IF CUSTOMER DOES NOT EXIST
+     C*
+     C           *IN01     IFEQ '0'
+     C                     MOVE ZCNUMA    LINE,F
+     C                     ADD  1         F
+     C                     MOVE '1'       *IN20
+     C                     END
+     C*
+     C                     END
+     C*
+     C** PRINT LINE WHEN FULL
+     C*
+     C           F         IFGT 5
+     C           *IN10     OREQ '1'
+     C                     MOVE LINE,1    LINE01
+     C                     MOVE LINE,2    LINE02
+     C                     MOVE LINE,3    LINE03
+     C                     MOVE LINE,4    LINE04
+     C                     MOVE LINE,5    LINE05
+     C                     WRITEDETAIL
+     C                     Z-ADD1         F
+     C                     MOVEA*BLANKS   LINE
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0011PCP5
+     C*                                                                   S01408
+     C*
+     C** INCREASE NEXT NUMBER FOR MODULUS 10 CHECKING
+     C*
+     C           BJMODT    IFEQ 'Y'                                                           193591
+     C           ZCNUM     ANDLTLAST,10                                                       193591
+     C                     ADD  10        ZCNUM
+     C                     ELSE                                                               193591
+     C           BJMODT    IFEQ 'N'                                                           193591
+     C           ZCNUM     ANDLTFINL,10                                                       193591
+     C                     ADD  1         ZCNUM                                               193591
+     C                     ENDIF                                                              193591
+     C                     ENDIF                                                              193591
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0011PCP6
+     C*                                                                   S01408
+     C*
+     C                     END
+     C*
+     C** SEND MESSAGE IF NO RECORDS FOUND IN RANGE
+     C*
+     C           *IN20     IFEQ '0'
+     C                     MOVE FRST,RANGENFND1
+     C                     MOVE FINL,RANGENFND2
+     C                     WRITENFOUND
+     C                     END
+     C*
+     C           BJMODT    IFEQ 'N'                                                           193591
+     C           ZCNUM     ANDGEFINL,RANGE                                                    193591
+     C           BJMODT    OREQ 'Y'                                                           193591
+     C           ZCNUM     ANDGELAST,RANGE                                                    193591
+     C                     ADD  1         RANGE
+     C           RANGE     IFLT 11                                                            193591
+     C                     MOVE FRST,RANGEZCNUM                                               193591
+     C                     END                                                                193591
+     C                     END                                                                193591
+     C                     MOVE '0'       *IN10
+     C                     MOVE '0'       *IN20
+     C                     END
+     C*
+     C                     WRITEFINAL
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C/EJECT
+     C********************************************************************
+     C*
+     C/COPY WNCPYSRC,SD0011PC01
+     C**   ZCHDIG SR. TO MOD.10 CHECK DIGIT VERIFY A SIX DIGIT NUMBER.
+     C*
+     C*    CALLED BY: MAIN
+     C*    CALLS:
+     C*
+     C********************************************************************
+     C*
+     C           ZCHDIG    BEGSR
+     C*
+     C**   CALCULATION TO DEFINE NUMBER FIELD.
+     C*
+     C                     Z-ADDZCNUM     ZCNUM
+     C*
+     C**   MOVE CUSTOMER NUMBER TO ALPHA FIELD AND ARRAY.
+     C*
+     C                     MOVE ZCNUM     ZWRK6   6
+     C                     MOVEAZWRK6     ZCA1
+     C                     MOVE ZCA1      ZCA2
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0011PCP7                                           S01408
+     C*                                                                   S01408
+     C*
+     C**   MULTIPLY FIRST, THIRD AND FIFTH DIGITS BY 2.
+     C*
+     C           ZCA2,1    MULT 2         ZDIG1   20
+     C           ZCA2,3    MULT 2         ZDIG3   20
+     C           ZCA2,5    MULT 2         ZDIG5   20
+     C*
+     C**   MOVE RELEVANT DIGITS INTO ARRAY FOR XFOOT TO ADD ELEMENTS.
+     C*
+     C                     MOVELZDIG1     ZCA3,1
+     C                     MOVE ZDIG1     ZCA3,2
+     C                     MOVE ZCA2,2    ZCA3,3
+     C                     MOVELZDIG3     ZCA3,4
+     C                     MOVE ZDIG3     ZCA3,5
+     C                     MOVE ZCA2,4    ZCA3,6
+     C                     MOVELZDIG5     ZCA3,7
+     C                     MOVE ZDIG5     ZCA3,8
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0011PCP8                                           S01408
+     C*                                                                   S01408
+     C*
+     C**   ADD ELEMENTS AND OBTAIN CHECK DIGIT.
+     C*
+     C                     XFOOTZCA3      ZCHK
+     C           10        SUB  ZCHK      ZCHK
+     C*
+     C**   COMPARE CALCULATED CHECK DIGIT WITH INPUT.
+     C*
+     C           ZCHK      COMP ZCA2,6               9999
+     C*
+     C                     ENDSR
+     C/COPY WNCPYSRC,SD0011PC02
+     C*
+     C********************************************************************
+     C/EJECT
+**   FRST  -  FIRST NUMBERS IN RANGES
+000000100000200000300000400000500000600000700000800000900000
+**   LAST  -  LAST NUMBERS IN RANGES (FOR CALCULATING)
+099990199990299990399990499990599990699990799990899990999990
+**   FINL  -  LAST NUMBERS IN RANGES (FOR REPORTING)
+099999199999299999399999499999599999699999799999899999999999
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

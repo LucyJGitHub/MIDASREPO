@@ -1,0 +1,173 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Currency/Time of Netting Maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD1250DF - Currency/Time of Netting Maintenance         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CDL025  *CREATE    Date 07Nov04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL025 - FX Netting Payment Generation                       *
+      *                                                               *
+      *****************************************************************
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      REF(*LIBL/MFRFL)
+     A                                      CHGINPDFT
+     A                                      MSGLOC(24)
+     A                                      CA03(03 'Exit.')
+     A                                      CA05(05 'Reset.')
+     A                                      CA12(12 'Reset.')
+     A                                      INDARA
+     A                                      PRINT(*LIBL/MPRINT)
+      *
+      *--------------------------*
+      ***  Subfile Record Format *
+      *--------------------------*
+      *
+     A          R SD0016F0                  SFL
+     A                                      TEXT('(c) Misys International Banki-
+     A                                      ng Systems Ltd. 2001')
+     A                                      SETOF(83 'Force input format')
+     A  84                                  SFLNXTCHG
+     A            S#RNTD         1S 0H      TEXT('Notice Days')
+     A            S#TIME         4A  H      TEXT('Time')
+     A            S#LCCY1        3A  H      TEXT('Currency')
+     A            S#LCCY2        3A  H      TEXT('Currency')
+     A            S1SEL          1A  B 10  5TEXT('Action Code')
+     A N32                                  DSPATR(HI)
+     A  32                                  DSPATR(RI)
+     A N79N32                               DSPATR(UL)
+     A  32                                  DSPATR(PC)
+     A  79                                  DSPATR(PR)
+     A  79N32                               DSPATR(ND)
+     A            SLRNTD         1A  B 10 15
+     A N37                                  DSPATR(HI)
+     A  37                                  DSPATR(RI)
+     A N77N37                               DSPATR(UL)
+     A  37                                  DSPATR(PC)
+     A  77                                  DSPATR(PR)
+     A            SLTIME         5A  B 10 24
+     A N34                                  DSPATR(HI)
+     A  34                                  DSPATR(RI)
+     A N77N34                               DSPATR(UL)
+     A  34                                  DSPATR(PC)
+     A  77                                  DSPATR(PR)
+     A            SLCCY1         3A  B 10 35TEXT('Country of Tax Treaty')
+     A N33                                  DSPATR(HI)
+     A  33                                  DSPATR(RI)
+     A N78N33                               DSPATR(UL)
+     A  33                                  DSPATR(PC)
+     A  78                                  DSPATR(PR)
+     A            SLCCY2         3A  B 10 49TEXT('Country of Tax Treaty')
+     A N36                                  DSPATR(HI)
+     A  36                                  DSPATR(RI)
+     A N78N36                               DSPATR(UL)
+     A  36                                  DSPATR(PC)
+     A N70
+     AO 78                                  DSPATR(PR)
+     A N70                                  DSPATR(ND)
+      *
+      *--------------------*
+      ***  Subfile Control *
+      *--------------------*
+      *
+     A          R SD0016F1                  SFLCTL(SD0016F0)
+     A                                      SFLSIZ(0013)
+     A                                      SFLPAG(0012)
+     A                                      TEXT('Subfile control.')
+     A                                      SETOF(83 'Force input format')
+     A                                      BLINK
+     A                                      OVERLAY
+     A  80                                  SFLCLR
+     A N80                                  SFLDSPCTL
+     A N80 81                               SFLDSP
+     A N80 81 82                            SFLEND
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A N82                                  ROLLUP(27 'Next page.')
+     A N31                                  CF09(09 'Change mode.')
+     A                                      SETOF(40 'Global error flag')
+     A            SRLRN          4S 0H      SFLRCDNBR
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'SD0016'
+     A                                  1 67'DATE '
+     A            SRUNA     R        O  1 73REFFLD(RUNA)
+     A N31                              2 22'Currency/Time of Netting Maintenan-
+     A                                      ce'
+     A                                      DSPATR(UL)
+     A                                      DSPATR(HI)
+     A  31                              2 22'Currency/Time of Netting Enquiry'
+     A                                      DSPATR(UL)
+     A                                      DSPATR(HI)
+     A            SWSID     R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A            STIME     R        O  2 73REFFLD(JOTIME)
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  2'Customer.........:'
+     A            #1CUST         6A  O  4 21TEXT('Customer Number')
+     A                                      DSPATR(HI)
+     A            #1CSSN        10A  O  4 30TEXT('Customer Shortname')
+     A                                      DSPATR(HI)
+     A            #1CNA1        35A  O  4 43TEXT('Cust. Name & Address 1')
+     A                                      DSPATR(HI)
+     A                                  6 12'Release'
+     A                                  6 24'Time'
+     A                                  6 32'Currency 1'
+     A  70                              6 46'Currency 2'
+     A                                  7 10'Notice Days'
+     A N89        SPOSN1    R     A  B  8 35REFFLD(SDCTNMP0/LCCY1 SDCTNMPD)
+     A                                      TEXT('Country Code')
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                      DSPATR(PC)
+     A N89 70     SPOSN2    R     A  B  8 49REFFLD(SDCTNMP0/LCCY1 SDCTNMPD)
+     A                                      TEXT('Country Code')
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A                                      DSPATR(PC)
+      *
+      *-----------------*
+      ***  Command Line *
+      *-----------------*
+      *
+     A          R SD0016F2                  TEXT('Command keys')
+     A                                      OVERLAY PUTOVR
+     A  89N31                          23  3'F3=Main menu   F5=Refresh   F9=Go-
+     A                                       to ''CHANGE'' mode   F12=Previous'
+     A N89N31                          23  3'D=Delete   F3=Main menu   F5=Refr-
+     A                                      esh   F9=Go to ''ADD'' mode   F12=P-
+     A                                      revious'
+     A  31                             23  3'F3=Client Details   F5=Refresh   -
+     A                                      F12=Previous'
+      *
+      *--------------------------*
+      ***  Message Record Format *
+      *--------------------------*
+      *
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            SPGM                      SFLPGMQ
+      *
+      *--------------------*
+      ***  Message Control *
+      *--------------------*
+      *
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+      **86                                  OVERLAY PUTOVR
+     A  86                                  OVERLAY
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            SPGM                      SFLPGMQ

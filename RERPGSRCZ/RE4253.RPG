@@ -1,0 +1,284 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Bureau de Change Exchange Rate Table')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4253    - Bureau de Change Exchange rate table print       *
+     F*                                                               *
+     F*  Function:   This program generates the list of Bureau de     *
+     F*  (I/C O/R)   Change Exchange Rates.                           *
+     F*  (COB O/R)                                                    *
+     F*                                                               *
+     F*  Called By: REC4253 - Bureau de Change Ex Rate Table Print    *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. BUG1990            Date 20Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CRT001  *CREATE    Date 28Feb95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  BUG1990 - Apply fix 225983 from GEMS to handle overflow.     *
+     F*  CRT001 - Retail Teller System.                               *
+     F*                                                               *
+     F*****************************************************************
+      *----------------------------------------------------------------
+     F***RE4253P1O   E                    PRINTER      KINFDS SPOOL      UC                  BUG1990
+     FRE4253P1O   E             11     PRINTER      KINFDS SPOOL      UC                     BUG1990
+      *
+     FRE4253AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      *
+      * SNB exchange rate table
+     FREBDCRPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*                      FUNCTION OF INDICATORS                   *
+     F*                                                               *
+     F*  11 - Overflow                                                *                      BUG1990
+     F*  21 = Chain fail                                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  *PSSR - Program Error.                                       *
+     F*  DBERR - Database Error Handling.                             *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+      *----------------------------------------------------------------
+     E                    CPY@    1   1 80
+      *
+      * Program Status Data Structure
+     IDSSYS      SDS
+     I                                        1  10 S#PGM
+     I                                      244 253 S#JOB
+     I*
+     I** FILE INFORMATION DATA STRUCTURE
+     I*
+     ISPOOL       DS
+     I                                        9   9 OPEN
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE
+     I*
+     ISPOOLU      DS
+     I                                        9   9 OPENU
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 367 3680LINE1
+     I*
+     ILDA         DS                            256
+     I**  Local data area for data base errors.
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+     I**  Field combining the following fields
+     I                                      134 183 DBLOT
+     I**  Name of database file in error
+     I                                      134 141 DBFILE
+     I**  Key value causing database error
+     I                                      142 170 DBKEY
+     I**  Name of program causing database error
+     I                                      172 180 DBPGM
+     I**  Number of database error
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+     I**  Bank Details
+     I*
+     IDSFDY     E DSDSFDY
+      *First DS for Access Programs, short data structure
+     I*
+      *----------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ    5
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C                     TIME           STIME   60
+     C                     MOVELSTIME     TIME
+     C                     Z-ADD0         NORE    50
+     C*
+     C**   Reset LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'RE4253'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*
+     C** Get Midas run-date and title
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If record not found?
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD1         DBASE            ** DB ERR 01 *
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     MOVE @OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     READ REBDCRPD                 21
+     C*
+     C           *IN21     IFEQ '0'
+     C*
+     C                     OPEN RE4253P1
+     C*
+     C** Ensure Report Spool File Recorded by RCF for P1 report
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+     C*
+     C** Error During ZSFILE Processing, Return to Calling Program
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C                     WRITE#HEAD
+     C*
+     C                     END
+     C*
+      *
+     C           *IN21     DOWEQ'0'
+     C                     ADD  1         NORE
+      *
+     C                     WRITE#TABLE
+     C                     READ REBDCRPD                 21
+      *
+     C           *IN11     IFEQ '1'                                                          BUG1990
+     C                     WRITE#HEAD                                                        BUG1990
+     C                     MOVE '0'       *IN11                                              BUG1990
+     C                     ENDIF                                                             BUG1990
+      *                                                                                      BUG1990
+     C                     ENDDO
+      *
+     C           NORE      IFEQ 0
+     C                     OPEN RE4253AU
+     C*
+     C** Ensure Audit Spool File recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ
+     C                     PARM *BLANK    SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM2
+     C                     PARM           ZSERR
+     C*
+     C** If an error occurred during ZSFILE processing,
+     C** return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     WRITEAUHDNG
+     C                     WRITENODTLS
+     C                     CLOSERE4253AU
+     C*
+     C                     ELSE
+     C                     WRITE#TRAIL
+     C                     WRITEENDOFR
+     C                     CLOSERE4253P1
+      *
+     C                     END
+      *
+     C                     MOVE *ON       *INLR
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR - Program Error.                                       *
+     C*                                                               *
+     C*  CALLS                                                        *
+     C*                                                               *
+     C*  CALLED BY  MAIN   - Control Processing                       *
+     C*                                                               *
+     C*  FLDS USED         -                                          *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     SETON                     LRU7U8
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* DBERR  - Database Error Handling : Terminates pgm.            *
+     C*                                                               *
+     C* CALLED BY  MAIN - Control Processing.                         *
+     C*                                                               *
+     C* CALLS                                                         *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+     C*
+     C                     OPEN RE4253AU
+     C                     OUT  LDA
+     C*
+     C** Ensure Audit Spool File recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM2  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           @SEQ
+     C                     PARM *BLANK    SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM2
+     C                     PARM           ZSERR
+     C*
+     C** If an error occurred during ZSFILE processing,
+     C** return to the calling program.
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     MOVEL'RE4253'  DBPGM
+      *
+     C                     WRITEAUHDNG
+     C                     WRITEDBERROR
+     C                     CLOSERE4253AU
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**   CPY@  **        OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

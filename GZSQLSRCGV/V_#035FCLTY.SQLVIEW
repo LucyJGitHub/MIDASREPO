@@ -1,0 +1,600 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing                                             */
+/*                                                                             */
+/*       V_#FCLTY - Global Facilies View                                       */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. CLE134             Date 01Aug12                        */
+/*       Prev Amend No. CSF011             Date 12Sep11                        */
+/*                      CLE147             Date 30Sep11                        */
+/*                      CER049             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 30May08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/*                      245340             Date 29Jan07                        */
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CAP185             Date 21Apr06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      CLE041             Date 19Feb05                        */
+/*                      BUG5404            Date 18Jan05                        */
+/*                      BUG5326            Date 04Jan05                        */
+/*                      CLE040             Date 05Jul04                        */
+/*                      BUG2611            Date 13Sep04                        */
+/*                      BUG3723            Date 19Jul04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CLE147 - Aggregate Facility (Recompile)                               */
+/*       CER049 - Stamp Tax (Recompile)                                        */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to Midas Plus       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       245340 - FO ID, Assoc FO ID, Repair Loc and Timestamp are missing     */
+/*       CAP185 - MQ Series Interface                                          */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type                                       */
+/*       CLE106 - Syndications Manager                                         */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       CLE041 - Collaterised Lending Phase 2B                                */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       BUG5326- performance enhancement                                      */
+/*       CLE040 - Collaterised Lending Phase 2 (Recompile)                     */
+/*       BUG2611- New reference for credit agreement/tranche                   */
+/*       BUG3723- Missing Rule of 78s (CLE028) change in the Lending           */
+/*                APIs as description in the amendment history.                */
+/*       CLE025 - Credit Lines                                                 */
+/*       BUG1912- SQL performance analysis required                            */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+   SELECT                                                                       :
+    M.ACOF, M.AUSR, M.AWBA, M.AWBN, M.BENA, M.BENN, M.BRCA, M.CACY, M.CAXR,     :
+    M.CMDI, M.DTP1, M.DTP2, M.DTP3, M.DTP4, M.CRSK, M.CVMR, M.DCHG,             :
+****M.DFST,*M.DFTP,*M.DICB,*M.DLFS,*M.FCCY,*M.FCTI,*M.FSTS,*********************:             CLE042
+    M.DFTP, M.DFST, M.DFCL, M.DICB, M.DLFS, M.FCCY, M.FCTI, M.FSTS,             :             CLE042
+    M.IUSR, M.LPPS, M.LPTP, M.MCCY, M.MCSI, M.NACD, M.NAR1, M.NAR2, M.NAR3,     :
+    M.NAR4, M.NOMR, M.OMDB, M.ORBR, M.OSDB, M.OVPC, M.PCOB, M.PCRF, M.PIBA,     :
+    M.PIBN, M.PMFC, M.PMFN, M.PMFT, M.PONS, M.PRTR, M.PSTM, M.RCRA, M.RCRN,     :
+    M.RCSI, M.RCTP, M.RECI, M.RIBA, M.RIBN, M.RLPD, M.RONS, M.RSTM, M.RVCR,     :
+    M.RVDY, M.RVFR, M.RVNO, M.SCCY, M.SHTP, M.SKFR, M.SKFS, M.PSCY,             :
+****M.SKIR,*M.SKIS,*M.SYCP,*M.SYIN,*M.TRCA,**M.XUSR,*M.CHTP,*M.PFTI,************: /*BUG2611*/
+    M.SKIR, M.SKIS, M.SYCP, M.SYIN, M.XUSR, M.CHTP, M.PFTI,                     : /*BUG2611*/
+    M.ICCY, M.LAID, M.PASI, M.REPI, M.BTB1, M.BTB2, M.BTB3, M.BTB4, M.BTB5,     :
+    M.BTB6, N.MBFC, N.PRFC, N.BTIN,                                             :
+    CASE WHEN M.TRCA='' THEN 'FC' ELSE M.TRCA END AS TRCA,                      : /*BUG2611*/
+    M.FRNT, M.AFRT, M.REPA, M.STMP,                                             :         /*245340*/
+****DIGITS(M.CNUM)*AS*PADCNUM,**************************************************:             CSD027
+           M.CNUM  AS PADCNUM,                                                  :             CSD027
+    DIGITS(M.FACT) AS PADFACT,                                                  :
+    DIGITS(M.FCNO) AS PADFCNO,                                                  :
+****DIGITS(M.PMFC)*AS*PADPMFC,**************************************************:             CSD027
+           M.PMFC  AS PADPMFC,                                                  :             CSD027
+    DIGITS(M.PMFT) AS PADPMFT,                                                  :
+    DIGITS(M.PMFN) AS PADPMFN,                                                  :
+****DIGITS(M.ANUM) AS PADANUM,**************************************************: /*CLE106*/
+****CASE*WHEN*M.ANUM*<>*0*THEN*DIGITS(M.ANUM)*ELSE*''**END*AS*PADANUM,**********: /*CLE106*/  CSD027
+    CASE WHEN M.ANUM <> '' THEN       M.ANUM  ELSE ''  END AS PADANUM,          : /*CLE106*/  CSD027
+    DIGITS(M.ACSQ) AS PADACSQ,                                                  :
+****DIGITS(M.CANM)*AS*PADCANM,**************************************************:             CSD027
+           M.CANM  AS PADCANM,                                                  :             CSD027
+    DIGITS(M.CAFT) AS PADCAFT,                                                  :
+    DIGITS(M.CAFN) AS PADCAFN,                                                  :
+****DIGITS(M.INUM)*AS*PADINUM,**************************************************:             CSD027
+****DIGITS(M.POBN)*AS*PADPOBN,**************************************************:             CSD027
+****DIGITS(M.POCN)*AS*PADPOCN,**************************************************:             CSD027
+****DIGITS(M.ROBN)*AS*PADROBN,**************************************************:             CSD027
+****DIGITS(M.ROCN)*AS*PADROCN,**************************************************:             CSD027
+           M.INUM  AS PADINUM,                                                  :             CSD027
+           M.POBN  AS PADPOBN,                                                  :             CSD027
+           M.POCN  AS PADPOCN,                                                  :             CSD027
+           M.ROBN  AS PADROBN,                                                  :             CSD027
+           M.ROCN  AS PADROCN,                                                  :             CSD027
+    DIGITS(M.LPBR) AS PADLPBR,                                                  :
+    CASE WHEN DTAP=0 THEN NULL ELSE DATE(DTAP+719892) END AS FDTAP,             :
+    CASE WHEN DTEX=0 THEN NULL ELSE DATE(DTEX+719892) END AS FDTEX,             :
+    CASE WHEN RVDT=0 THEN NULL ELSE DATE(RVDT+719892) END AS FRVDT,             :
+    CASE WHEN CDTE=0 THEN NULL ELSE DATE(CDTE+719892) END AS FCDTE,             :
+    CASE WHEN AVLD=0 THEN NULL ELSE DATE(AVLD+719892) END AS FAVLD,             :
+    CASE WHEN JDTE=0 THEN NULL ELSE DATE(JDTE+719892) END AS FJDTE,             :
+    CASE WHEN COMD=0 THEN NULL ELSE DATE(COMD+719892) END AS FCOMD,             :
+    CASE WHEN VDTC=0 THEN NULL ELSE DATE(VDTC+719892) END AS FVDTC,             :
+    CASE WHEN M.ORED=0 THEN NULL ELSE DATE(M.ORED+719892) END AS FORED,         :
+    CASE WHEN M.LCD=0 THEN NULL ELSE DATE(M.LCD+719892) END AS FLCD,            :
+    CASE WHEN RVCD=0 THEN NULL ELSE DATE(RVCD+719892) END AS FRVCD,             :
+    CASE WHEN RUN0=0 THEN NULL ELSE DATE(RUN0+719892) END AS FRUN00,            :
+    CASE WHEN RUN1=0 THEN NULL ELSE DATE(RUN1+719892) END AS FRUN01,            :
+    CASE WHEN RUN2=0 THEN NULL ELSE DATE(RUN2+719892) END AS FRUN02,            :
+    CASE WHEN RUN3=0 THEN NULL ELSE DATE(RUN3+719892) END AS FRUN03,            :
+    CASE WHEN RUN4=0 THEN NULL ELSE DATE(RUN4+719892) END AS FRUN04,            :
+    CASE WHEN RUN5=0 THEN NULL ELSE DATE(RUN5+719892) END AS FRUN05,            :
+    CASE WHEN RUN6=0 THEN NULL ELSE DATE(RUN6+719892) END AS FRUN06,            :
+    CASE WHEN RUN7=0 THEN NULL ELSE DATE(RUN7+719892) END AS FRUN07,            :
+    CASE WHEN RUN8=0 THEN NULL ELSE DATE(RUN8+719892) END AS FRUN08,            :
+    CASE WHEN RUN9=0 THEN NULL ELSE DATE(RUN9+719892) END AS FRUN09,            :
+****DEC((SHPC/10000000000)*C1.SCALING,31,4) AS "SSHPC",*************************: BUG5326
+****(SHPC/10000000000) AS SSHPC,************************************************:     BUG5326 CLE106
+    (SHPC/1000000000000) AS SSHPC,                                              :             CLE106
+****DEC(FAMT*C1.SCALING,31,4) AS "SFAMT",***************************************: BUG5326
+    FAMT AS SFAMT,                                                              : BUG5326
+****DEC(FAMT*C1.SCALING*C1.RATE,31,4) AS "BSFAMT",******************************: BUG5326
+****DEC(MTDH*C1.SCALING,31,4) AS "SMTDH",***************************************: BUG5326
+    MTDH AS SMTDH,                                                              : BUG5326
+****DEC(MTDH*C1.SCALING*C1.RATE,31,4) AS "BSMTDH",******************************: BUG5326
+****DEC(MTDL*C1.SCALING,31,4) AS "SMTDL",***************************************: BUG5326
+    MTDL AS SMTDL,                                                              : BUG5326
+****DEC(MTDL*C1.SCALING*C1.RATE,31,4) AS "BSMTDL",******************************: BUG5326
+****DEC(MTDA*C1.SCALING,31,4) AS "SMTDA",***************************************: BUG5326
+    MTDA AS SMTDA,                                                              : BUG5326
+****DEC(MTDA*C1.SCALING*C1.RATE,31,4) AS "BSMTDA",******************************: BUG5326
+****DEC(LPAM*C1.SCALING,31,4) AS "SLPAM",***************************************: BUG5326
+    LPAM AS SLPAM,                                                              : BUG5326
+****DEC(LPAM*C1.SCALING*C1.RATE,31,4) AS "BSLPAM",******************************: BUG5326
+****DEC(CAMD*C1.SCALING,31,4) AS "SCAMD",***************************************: BUG5326
+    CAMD AS SCAMD,                                                              : BUG5326
+****DEC(CAMD*C1.SCALING*C1.RATE,31,4) AS "BSCAMD",******************************: BUG5326
+****DEC(OAM1*C1.SCALING,31,4) AS "SOAM01",**************************************: BUG5326
+    OAM1 AS SOAM01,                                                             : BUG5326
+****DEC(OAM1*C1.SCALING*C1.RATE,31,4) AS "BSOAM01",*****************************: BUG5326
+****DEC(OAM2*C1.SCALING,31,4) AS "SOAM02",**************************************: BUG5326
+    OAM2 AS SOAM02,                                                             : BUG5326
+****DEC(OAM2*C1.SCALING*C1.RATE,31,4) AS "BSOAM02",*****************************: BUG5326
+****DEC(OAM3*C1.SCALING,31,4) AS "SOAM03",**************************************: BUG5326
+    OAM3 AS SOAM03,                                                             : BUG5326
+****DEC(OAM3*C1.SCALING*C1.RATE,31,4) AS "BSOAM03",*****************************: BUG5326
+****DEC(OAM4*C1.SCALING,31,4) AS "SOAM04",**************************************: BUG5326
+    OAM4 AS SOAM04,                                                             : BUG5326
+****DEC(OAM4*C1.SCALING*C1.RATE,31,4) AS "BSOAM04",*****************************: BUG5326
+****DEC(OAM5*C1.SCALING,31,4) AS "SOAM05",**************************************: BUG5326
+    OAM5 AS SOAM05,                                                             : BUG5326
+****DEC(OAM5*C1.SCALING*C1.RATE,31,4) AS "BSOAM05",*****************************: BUG5326
+****DEC(OAM6*C1.SCALING,31,4) AS "SOAM06",**************************************: BUG5326
+    OAM6 AS SOAM06,                                                             : BUG5326
+****DEC(OAM6*C1.SCALING*C1.RATE,31,4) AS "BSOAM06",*****************************: BUG5326
+****DEC(OAM7*C1.SCALING,31,4) AS "SOAM07",**************************************: BUG5326
+    OAM7 AS SOAM07,                                                             : BUG5326
+****DEC(OAM7*C1.SCALING*C1.RATE,31,4) AS "BSOAM07",*****************************: BUG5326
+****DEC(OAM8*C1.SCALING,31,4) AS "SOAM08",**************************************: BUG5326
+    OAM8 AS SOAM08,                                                             : BUG5326
+****DEC(OAM8*C1.SCALING*C1.RATE,31,4) AS "BSOAM08",*****************************: BUG5326
+****DEC(OAM9*C1.SCALING,31,4) AS "SOAM09",**************************************: BUG5326
+    OAM9 AS SOAM09,                                                             : BUG5326
+****DEC(OAM9*C1.SCALING*C1.RATE,31,4) AS "BSOAM09",*****************************: BUG5326
+****DEC(OA10*C1.SCALING,31,4) AS "SOAM10",**************************************: BUG5326
+    OA10 AS SOAM10,                                                             : BUG5326
+****DEC(OA10*C1.SCALING*C1.RATE,31,4) AS "BSOAM10",*****************************: BUG5326
+****DEC(QTDA*C1.SCALING,31,4) AS "SQTDA",***************************************: BUG5326
+    QTDA AS SQTDA,                                                              : BUG5326
+****DEC(QTDA*C1.SCALING*C1.RATE,31,4) AS "BSQTDA",******************************: BUG5326
+****DEC(YTDA*C1.SCALING,31,4) AS "SYTDA",***************************************: BUG5326
+    YTDA AS SYTDA,                                                              : BUG5326
+****DEC(YTDA*C1.SCALING*C1.RATE,31,4) AS "BSYTDA",******************************: BUG5326
+    SUBSTRING(M.ALCY,1,3) AS ALCY01, SUBSTRING(M.ALCY,4,3) AS ALCY02,           :
+    SUBSTRING(M.ALCY,7,3) AS ALCY03, SUBSTRING(M.ALCY,10,3) AS ALCY04,          :
+    SUBSTRING(M.ALCY,13,3) AS ALCY05, SUBSTRING(M.ALCY,16,3) AS ALCY06,         :
+    SUBSTRING(M.ALCY,19,3) AS ALCY07,SUBSTRING(M.ALCY,22,3) AS ALCY08,          :
+    SUBSTRING(M.ALCY,25,3) AS ALCY09,SUBSTRING(M.ALCY,28,3) AS ALCY10,          :
+    SUBSTRING(M.ALCY,31,3) AS ALCY11,SUBSTRING(M.ALCY,34,3) AS ALCY12,          :
+    SUBSTRING(DTPS,1,1) AS DTPS01, SUBSTRING(DTPS,2,1) AS DTPS02,               :
+    SUBSTRING(DTPS,3,1) AS DTPS03, SUBSTRING(DTPS,4,1) AS DTPS04,               :
+    SUBSTRING(DTPS,5,1) AS DTPS05,                                              :
+    SUBSTRING(DTPX,1,1) AS DTPX01, SUBSTRING(DTPX,2,1) AS DTPX02,               :            BUG3723
+    SUBSTRING(DTPX,3,1) AS DTPX03, SUBSTRING(DTPX,4,1) AS DTPX04,               :            BUG3723
+    SUBSTRING(DTPX,5,1) AS DTPX05, SUBSTRING(DTPX,6,1) AS DTPX06,               :            BUG3723
+    SUBSTRING(RTPS,1,1) AS RTPS01, SUBSTRING(RTPS,2,1) AS RTPS02,               :
+    SUBSTRING(RTPS,3,1) AS RTPS03, SUBSTRING(RTPS,4,1) AS RTPS04,               :
+    SUBSTRING(RTPS,5,1) AS RTPS05, SUBSTRING(RTPS,6,1) AS RTPS06,               :
+****TRIM(TRIM(SUBSTRING(M.ALCY,1,3))**' '**TRIM(SUBSTRING(M.ALCY,4,3))**'****   :            BG18886
+****'**TRIM(SUBSTRING(M.ALCY,7,3))**' '**TRIM(SUBSTRING(M.ALCY,10,3))**' ****   :            BG18886
+****'**TRIM(SUBSTRING(M.ALCY,13,3))**' '**TRIM(SUBSTRING(M.ALCY,16,3))**'****   :            BG18886
+****'**TRIM(SUBSTRING(M.ALCY,19,3))**' '**TRIM(SUBSTRING(M.ALCY,22,3))**'****   :            BG18886
+****'**TRIM(SUBSTRING(M.ALCY,25,3))**' '**TRIM(SUBSTRING(M.ALCY,28,3))**'*****  :            BG18886
+****'**TRIM(SUBSTRING(M.ALCY,31,3))**' '**TRIM(SUBSTRING(M.ALCY,34,3))) AS****  :            BG18886
+    TRIM(TRIM(SUBSTRING(M.ALCY,1,3)) CONCAT'                                    :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,4,3)) CONCAT'                                 :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,7,3)) CONCAT'                                 :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,10,3)) CONCAT'                                :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,13,3)) CONCAT'                                :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,16,3)) CONCAT'                                :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,19,3)) CONCAT'                                :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,22,3)) CONCAT'                                :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,25,3)) CONCAT'                                :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,28,3)) CONCAT'                                :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,31,3)) CONCAT'                                :            BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,34,3))) AS                                    :            BG18886
+    ALCYS,                                                                      :
+****TRIM(BTB1)**' '**TRIM(BTB2)**' '**TRIM(BTB3)**' '**TRIM(BTB4)**'            :            BG18886
+****'**TRIM(BTB5)**' '**TRIM(BTB6) AS BTB,                                      :            BG18886
+****TRIM(TRIM(DTP1)**' '**TRIM(DTP2)**'  **TRIM(DTP3)**' '**TRIM(DTP4))         :            BG18886
+    TRIM(BTB1) CONCAT ' ' CONCAT TRIM(BTB2) CONCAT                              :            BG18886
+    ' ' CONCAT TRIM(BTB3) CONCAT ' ' CONCAT TRIM(BTB4) CONCAT ' '               :            BG18886
+    CONCAT TRIM(BTB5) CONCAT ' ' CONCAT TRIM(BTB6) AS BTB,                      :            BG18886
+    TRIM(TRIM(DTP1) CONCAT ' ' CONCAT TRIM(DTP2) CONCAT ' '                     :            BG18886
+    CONCAT TRIM(DTP3) CONCAT ' ' CONCAT TRIM(DTP4))                             :            BG18886
+    AS DTP,                                                                     :
+****TRIM(TRIM(NAR1)**' '**TRIM(NAR2)**' '**TRIM(NAR3)**' '**TRIM(NAR4))         :            BG18886
+    TRIM(TRIM(NAR1) CONCAT' 'CONCAT TRIM(NAR2) CONCAT'                          :            BG18886
+    'CONCAT TRIM(NAR3) CONCAT' 'CONCAT TRIM(NAR4))                              :            BG18886
+    AS NAR,                                                                     :
+    CASE WHEN CSEL=' ' THEN 'N' ELSE CSEL END AS YNCSEL,                        :
+    CASE WHEN SECI=' ' THEN 'N' ELSE SECI END AS YNSECI,                        :
+    CASE WHEN X.FCXPOR = 0 THEN ' ' ELSE DIGITS(X.FCXPOR) END AS PADFCXPOR,     :             CLE025
+    X.FCXLVR, X.FCXLVA, X.FCXLVW, X.FCXALV,                                     :             CLE025
+****DEC(X.FCXOML*C1.SCALING,31,4) AS "SFCXOML",*********************************: CLE025,BUG5326
+    X.FCXOML AS SFCXOML,                                                        : BUG5326
+****DEC(X.FCXOML*C1.SCALING*C1.RATE,31,4) AS "BSFCXOML",************************: CLE025,BUG5326
+    X.FCXMST, X.FCXSTC, X.FCXPWF, X.FCXPIS, X.FCXDEA,                           :             CLE025
+    CASE WHEN X.FCXCGP = 0 THEN ' ' ELSE CAST(X.FCXCGP AS CHAR(20)) END AS      :             CLE025
+     AFCXCGP,                                                                   :             CLE025
+****DEC(X.FCXCOF*C1.SCALING,31,4) AS "SFCXCOF",*********************************: CLE025,BUG5326
+    X.FCXCOF AS SFCXCOF,                                                        : BUG5326
+****DEC(X.FCXCOF*C1.SCALING*C1.RATE,31,4) AS "BSFCXCOF",************************: CLE025,BUG5326
+****DEC(X.FCXCV2*C1.SCALING,31,4) AS "SFCXCV2",*********************************: CLE025,BUG5326
+    X.FCXCV2 AS SFCXCV2,                                                        : BUG5326
+****DEC(X.FCXCV2*C1.SCALING*C1.RATE,31,4) AS "BSFCXCV2",************************: CLE025,BUG5326
+    X.FCXLVL, X.FCXCLV,                                                         :             CLE025
+****A8ZONE AS CUSTZONE, V_GPGLCUSL.* *******************************************: BUG5326
+    CASE WHEN S1.SARN IS NULL THEN 'N' ELSE 'Y' END AS CLE024,                  :             CLE041
+    CASE WHEN S2.SARN IS NULL THEN 'N' ELSE 'Y' END AS CLE025,                  :             CLE041
+    A8ZONE AS CUSTZONE,                                                         : BUG5326
+    CGGLOB , CGCSSN , CGRNM  , CGRTN , CGICD , CGACO ,                          : BUG5326
+    CGCNCZ , CGCOLC , CGBRCD , CGCUST , CGZONE                                  : BUG5326
+    , CGLCSSN, CGLRNM, CGLRTN                                                   :             CER043
+   ,M.PEXD,M.PNXD                                                               :             CER020
+   FROM GZFCLTYFM AS M                                                          :
+   LEFT JOIN GZFCLTYFN AS N                                                     :
+    ON N.CNUM=M.CNUM AND N.FACT=M.FACT AND N.FCNO=M.FCNO AND M.BRCA=N.ZZ003     :
+   LEFT JOIN GZLEFCLTQD AS X                                                    :             CLE025
+****ON*X.FCXFCU*=*DIGITS(M.CNUM)*AND*X.FCXFTP*=*DIGITS(M.FACT)*AND**************:      CLE025 CSD027
+    ON X.FCXFCU =        M.CNUM  AND X.FCXFTP = DIGITS(M.FACT) AND              :      CLE025 CSD027
+       X.FCXFNO = DIGITS(M.FCNO) AND X.FCXBRC = M.BRCA                          :             CLE025
+   LEFT JOIN GZSDBRCHPD ON M.BRCA = A8BRCD                                      :
+***LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(M.CNUM)**********:            BUG1912
+***LEFT JOIN GPGLCUSL V_GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = M.CNUM*********: BUG1912,BUG5326
+***LEFT*JOIN*GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*M.CNUM*;******************: BUG5326     CLE041
+   LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = M.CNUM                    : BUG5326     CLE041
+   LEFT JOIN GZSCSARDPD S1 ON A8ZONE=S1.ZONE AND S1.SARN='CLE024'               :             CLE041
+   LEFT JOIN GZSCSARDPD S2 ON A8ZONE=S2.ZONE AND S2.SARN='CLE025'               :             CLE041
+   UNION ALL                                                                    :             CLE041
+   SELECT                                                                       :             CLE041
+    M.ACOF, M.AUSR, M.AWBA, M.AWBN, M.BENA, M.BENN, M.BRCA, M.CACY, M.CAXR,     :             CLE041
+    M.CMDI, M.DTP1, M.DTP2, M.DTP3, M.DTP4, M.CRSK, M.CVMR, M.DCHG,             :             CLE041
+****M.DFST,*M.DFTP,*M.DICB,*M.DLFS,*M.FCCY,*M.FCTI,*M.FSTS,*********************:      CLE041 CLE042
+    M.DFTP, M.DFST, M.DFCL, M.DICB, M.DLFS, M.FCCY, M.FCTI, M.FSTS,             :             CLE042
+    M.IUSR, M.LPPS, M.LPTP, M.MCCY, M.MCSI, M.NACD, M.NAR1, M.NAR2, M.NAR3,     :             CLE041
+    M.NAR4, M.NOMR, M.OMDB, M.ORBR, M.OSDB, M.OVPC, M.PCOB, M.PCRF, M.PIBA,     :             CLE041
+    M.PIBN, M.PMFC, M.PMFN, M.PMFT, M.PONS, M.PRTR, M.PSTM, M.RCRA, M.RCRN,     :             CLE041
+    M.RCSI, M.RCTP, M.RECI, M.RIBA, M.RIBN, M.RLPD, M.RONS, M.RSTM, M.RVCR,     :             CLE041
+    M.RVDY, M.RVFR, M.RVNO, M.SCCY, M.SHTP, M.SKFR, M.SKFS, M.PSCY,             :             CLE041
+    M.SKIR, M.SKIS, M.SYCP, M.SYIN, M.XUSR, M.CHTP, M.PFTI,                     :             CLE041
+    M.ICCY, M.LAID, M.PASI, M.REPI, M.BTB1, M.BTB2, M.BTB3, M.BTB4, M.BTB5,     :             CLE041
+****M.BTB6,*N.MBFC,*N.PRFC,*N.BTIN,*M.TRCA,*************************************:      CLE041 245340
+    M.BTB6, N.MBFC, N.PRFC, N.BTIN, M.TRCA, M.FRNT, M.AFRT, M.REPA, M.STMP,     :             245340
+****DIGITS(M.CNUM)*AS*PADCNUM,**************************************************:      CLE041 CSD027
+           M.CNUM  AS PADCNUM,                                                  :             CSD027
+    DIGITS(M.FACT) AS PADFACT,                                                  :             CLE041
+    DIGITS(M.FCNO) AS PADFCNO,                                                  :             CLE041
+****DIGITS(M.PMFC)*AS*PADPMFC,**************************************************:      CLE041 CSD027
+           M.PMFC  AS PADPMFC,                                                  :             CSD027
+    DIGITS(M.PMFT) AS PADPMFT,                                                  :             CLE041
+    DIGITS(M.PMFN) AS PADPMFN,                                                  :             CLE041
+****DIGITS(M.ANUM)*AS*PADANUM,**************************************************:      CLE041 CSD027
+           M.ANUM  AS PADANUM,                                                  :             CSD027
+    DIGITS(M.ACSQ) AS PADACSQ,                                                  :             CLE041
+****DIGITS(M.CANM)*AS*PADCANM,**************************************************:      CLE041 CSD027
+           M.CANM  AS PADCANM,                                                  :             CSD027
+    DIGITS(M.CAFT) AS PADCAFT,                                                  :             CLE041
+    DIGITS(M.CAFN) AS PADCAFN,                                                  :             CLE041
+****DIGITS(M.INUM)*AS*PADINUM,**************************************************:      CLE041 CSD027
+****DIGITS(M.POBN)*AS*PADPOBN,**************************************************:      CLE041 CSD027
+****DIGITS(M.POCN)*AS*PADPOCN,**************************************************:      CLE041 CSD027
+****DIGITS(M.ROBN)*AS*PADROBN,**************************************************:      CLE041 CSD027
+****DIGITS(M.ROCN)*AS*PADROCN,**************************************************:      CLE041 CSD027
+           M.INUM  AS PADINUM,                                                  :             CSD027
+           M.POBN  AS PADPOBN,                                                  :             CSD027
+           M.POCN  AS PADPOCN,                                                  :             CSD027
+           M.ROBN  AS PADROBN,                                                  :             CSD027
+           M.ROCN  AS PADROCN,                                                  :             CSD027
+    DIGITS(M.LPBR) AS PADLPBR,                                                  :             CLE041
+    CASE WHEN DTAP=0 THEN NULL ELSE DATE(DTAP+719892) END AS FDTAP,             :             CLE041
+    CASE WHEN DTEX=0 THEN NULL ELSE DATE(DTEX+719892) END AS FDTEX,             :             CLE041
+    CASE WHEN RVDT=0 THEN NULL ELSE DATE(RVDT+719892) END AS FRVDT,             :             CLE041
+    CASE WHEN CDTE=0 THEN NULL ELSE DATE(CDTE+719892) END AS FCDTE,             :             CLE041
+    CASE WHEN AVLD=0 THEN NULL ELSE DATE(AVLD+719892) END AS FAVLD,             :             CLE041
+    CASE WHEN JDTE=0 THEN NULL ELSE DATE(JDTE+719892) END AS FJDTE,             :             CLE041
+    CASE WHEN COMD=0 THEN NULL ELSE DATE(COMD+719892) END AS FCOMD,             :             CLE041
+    CASE WHEN VDTC=0 THEN NULL ELSE DATE(VDTC+719892) END AS FVDTC,             :             CLE041
+    CASE WHEN M.ORED=0 THEN NULL ELSE DATE(M.ORED+719892) END AS FORED,         :             CLE041
+    CASE WHEN M.LCD=0 THEN NULL ELSE DATE(M.LCD+719892) END AS FLCD,            :             CLE041
+    CASE WHEN RVCD=0 THEN NULL ELSE DATE(RVCD+719892) END AS FRVCD,             :             CLE041
+    CASE WHEN RUN0=0 THEN NULL ELSE DATE(RUN0+719892) END AS FRUN00,            :             CLE041
+    CASE WHEN RUN1=0 THEN NULL ELSE DATE(RUN1+719892) END AS FRUN01,            :             CLE041
+    CASE WHEN RUN2=0 THEN NULL ELSE DATE(RUN2+719892) END AS FRUN02,            :             CLE041
+    CASE WHEN RUN3=0 THEN NULL ELSE DATE(RUN3+719892) END AS FRUN03,            :             CLE041
+    CASE WHEN RUN4=0 THEN NULL ELSE DATE(RUN4+719892) END AS FRUN04,            :             CLE041
+    CASE WHEN RUN5=0 THEN NULL ELSE DATE(RUN5+719892) END AS FRUN05,            :             CLE041
+    CASE WHEN RUN6=0 THEN NULL ELSE DATE(RUN6+719892) END AS FRUN06,            :             CLE041
+    CASE WHEN RUN7=0 THEN NULL ELSE DATE(RUN7+719892) END AS FRUN07,            :             CLE041
+    CASE WHEN RUN8=0 THEN NULL ELSE DATE(RUN8+719892) END AS FRUN08,            :             CLE041
+    CASE WHEN RUN9=0 THEN NULL ELSE DATE(RUN9+719892) END AS FRUN09,            :             CLE041
+    (SHPC/10000000000) AS "SSHPC",                                              :             CLE041
+    FAMT AS "SFAMT",                                                            :             CLE041
+    MTDH AS "SMTDH",                                                            :             CLE041
+    MTDL AS "SMTDL",                                                            :             CLE041
+    MTDA AS "SMTDA",                                                            :             CLE041
+    LPAM AS "SLPAM",                                                            :             CLE041
+    CAMD AS "SCAMD",                                                            :             CLE041
+    OAM1 AS "SOAM01",                                                           :             CLE041
+    OAM2 AS "SOAM02",                                                           :             CLE041
+    OAM3 AS "SOAM03",                                                           :             CLE041
+    OAM4 AS "SOAM04",                                                           :             CLE041
+    OAM5 AS "SOAM05",                                                           :             CLE041
+    OAM6 AS "SOAM06",                                                           :             CLE041
+    OAM7 AS "SOAM07",                                                           :             CLE041
+    OAM8 AS "SOAM08",                                                           :             CLE041
+    OAM9 AS "SOAM09",                                                           :             CLE041
+    OA10 AS "SOAM10",                                                           :             CLE041
+    QTDA AS "SQTDA",                                                            :             CLE041
+    YTDA AS "SYTDA",                                                            :             CLE041
+    SUBSTRING(M.ALCY,1,3) AS ALCY01, SUBSTRING(M.ALCY,4,3) AS ALCY02,           :             CLE041
+    SUBSTRING(M.ALCY,7,3) AS ALCY03, SUBSTRING(M.ALCY,10,3) AS ALCY04,          :             CLE041
+    SUBSTRING(M.ALCY,13,3) AS ALCY05, SUBSTRING(M.ALCY,16,3) AS ALCY06,         :             CLE041
+    SUBSTRING(M.ALCY,19,3) AS ALCY07,SUBSTRING(M.ALCY,22,3) AS ALCY08,          :             CLE041
+    SUBSTRING(M.ALCY,25,3) AS ALCY09,SUBSTRING(M.ALCY,28,3) AS ALCY10,          :             CLE041
+    SUBSTRING(M.ALCY,31,3) AS ALCY11,SUBSTRING(M.ALCY,34,3) AS ALCY12,          :             CLE041
+    SUBSTRING(DTPS,1,1) AS DTPS01, SUBSTRING(DTPS,2,1) AS DTPS02,               :             CLE041
+    SUBSTRING(DTPS,3,1) AS DTPS03, SUBSTRING(DTPS,4,1) AS DTPS04,               :             CLE041
+    SUBSTRING(DTPS,5,1) AS DTPS05,                                              :             CLE041
+    SUBSTRING(DTPX,1,1) AS DTPX01, SUBSTRING(DTPX,2,1) AS DTPX02,               :             CLE041
+    SUBSTRING(DTPX,3,1) AS DTPX03, SUBSTRING(DTPX,4,1) AS DTPX04,               :             CLE041
+    SUBSTRING(DTPX,5,1) AS DTPX05, SUBSTRING(DTPX,6,1) AS DTPX06,               :             CLE041
+    SUBSTRING(RTPS,1,1) AS RTPS01, SUBSTRING(RTPS,2,1) AS RTPS02,               :             CLE041
+    SUBSTRING(RTPS,3,1) AS RTPS03, SUBSTRING(RTPS,4,1) AS RTPS04,               :             CLE041
+    SUBSTRING(RTPS,5,1) AS RTPS05, SUBSTRING(RTPS,6,1) AS RTPS06,               :             CLE041
+****TRIM(TRIM(SUBSTRING(M.ALCY,1,3))**' '**TRIM(SUBSTRING(M.ALCY,4,3))**'       :    CLE041  BG18886
+****'**TRIM(SUBSTRING(M.ALCY,7,3))**' '**TRIM(SUBSTRING(M.ALCY,10,3))**'        :    CLE041  BG18886
+****'**TRIM(SUBSTRING(M.ALCY,13,3))**' '**TRIM(SUBSTRING(M.ALCY,16,3))**'       :    CLE041  BG18886
+****'**TRIM(SUBSTRING(M.ALCY,19,3))**' '**TRIM(SUBSTRING(M.ALCY,22,3))**'       :    CLE041  BG18886
+****'**TRIM(SUBSTRING(M.ALCY,25,3))**' '**TRIM(SUBSTRING(M.ALCY,28,3))**'       :    CLE041  BG18886
+****'**TRIM(SUBSTRING(M.ALCY,31,3))**' '**TRIM(SUBSTRING(M.ALCY,34,3))) AS      :    CLE041  BG18886
+    TRIM(TRIM(SUBSTRING(M.ALCY,1,3)) CONCAT'                                    :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,4,3)) CONCAT'                                 :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,7,3)) CONCAT'                                 :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,10,3)) CONCAT'                                :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,13,3)) CONCAT'                                :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,16,3)) CONCAT'                                :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,19,3)) CONCAT'                                :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,22,3)) CONCAT'                                :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,25,3)) CONCAT'                                :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,28,3)) CONCAT'                                :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,31,3)) CONCAT'                                :    CLE041  BG18886
+    'CONCAT TRIM(SUBSTRING(M.ALCY,34,3))) AS                                    :    CLE041  BG18886
+    ALCYS,                                                                      :    CLE041  BG18886
+****TRIM(BTB1)**' '**TRIM(BTB2)**' '**TRIM(BTB3)**' '**TRIM(BTB4)**'            :    CLE041  BG18886
+****'**TRIM(BTB5)**' '**TRIM(BTB6) AS BTB,                                      :     CLE041 BG18886
+****TRIM(TRIM(DTP1)**' '**TRIM(DTP2)**' '**TRIM(DTP3)**' '**TRIM(DTP4))         :     CLE041 BG18886
+    TRIM(BTB1) CONCAT' 'CONCAT TRIM(BTB2) CONCAT'                               :     CLE041 BG18886
+    'CONCAT TRIM(BTB3) CONCAT' 'CONCAT TRIM(BTB4) CONCAT'                       :     CLE041 BG18886
+    'CONCAT TRIM(BTB5) CONCAT' 'CONCAT TRIM(BTB6) AS BTB,                       :     CLE041 BG18886
+    TRIM(TRIM(DTP1) CONCAT' 'CONCAT TRIM(DTP2) CONCAT'                          :     CLE041 BG18886
+    'CONCAT TRIM(DTP3) CONCAT' 'CONCAT TRIM(DTP4))                              :    CLE041  BG18886
+    AS DTP,                                                                     :             CLE041
+****TRIM(TRIM(NAR1)**' '**TRIM(NAR2)**' '**TRIM(NAR3)**' '**TRIM(NAR4))         :    CLE041  BG18886
+    TRIM(TRIM(NAR1) CONCAT ' ' CONCAT TRIM(NAR2) CONCAT '                            CLE041  BG18886
+    'CONCAT TRIM(NAR3) CONCAT' 'CONCAT TRIM(NAR4))                                   CLE041  BG18886
+    AS NAR,                                                                     :             CLE041
+    CASE WHEN CSEL=' ' THEN 'N' ELSE CSEL END AS YNCSEL,                        :             CLE041
+    CASE WHEN SECI=' ' THEN 'N' ELSE SECI END AS YNSECI,                        :             CLE041
+    CASE WHEN X.FCXPOR = 0 THEN ' ' ELSE DIGITS(X.FCXPOR) END AS PADFCXPOR,     :             CLE041
+    X.FCXLVR, X.FCXLVA, X.FCXLVW, X.FCXALV, X.FCXOML AS "SFCXOML",              :             CLE041
+    X.FCXMST, X.FCXSTC, X.FCXPWF, X.FCXPIS, X.FCXDEA,                           :             CLE041
+    CASE WHEN X.FCXCGP = 0 THEN ' ' ELSE CAST(X.FCXCGP AS CHAR(20)) END AS      :             CLE041
+     AFCXCGP,  X.FCXCOF AS "SFCXCOF", X.FCXCV2 AS "SFCXCV2", X.FCXLVL, X.FCXCLV,:             CLE041
+    CASE WHEN S1.SARN IS NULL THEN 'N' ELSE 'Y' END AS CLE024,                  :             CLE041
+    CASE WHEN S2.SARN IS NULL THEN 'N' ELSE 'Y' END AS CLE025,                  :             CLE041
+    A8ZONE AS CUSTZONE,                                                         :             CLE041
+    CGGLOB , CGCSSN , CGRNM  , CGRTN , CGICD , CGACO ,                          :             CLE041
+    CGCNCZ , CGCOLC , CGBRCD , CGCUST , CGZONE                                  :             CLE041
+    , CGLCSSN, CGLRNM, CGLRTN                                                   :             CER043
+   ,0 as PEXD, 0 as PNXD                                                        :             CER020
+   FROM GZLEAGFMPD AS M                                                         :             CLE041
+   LEFT JOIN GZLEAGFNPD AS N                                                    :             CLE041
+    ON N.CNUM=M.CNUM AND N.FACT=M.FACT AND N.FCNO=M.FCNO AND M.BRCA=N.ZZ003     :             CLE041
+   LEFT JOIN GZLEAGFTQD AS X                                                    :             CLE041
+****ON*X.FCXFCU*=*DIGITS(M.CNUM)*AND*X.FCXFTP*=*DIGITS(M.FACT)*AND**************:      CLE041 CSD027
+    ON X.FCXFCU =        M.CNUM  AND X.FCXFTP = DIGITS(M.FACT) AND              :             CSD027
+       X.FCXFNO = DIGITS(M.FCNO) AND X.FCXBRC = M.BRCA                          :             CLE041
+   LEFT JOIN GZSDBRCHPD ON M.BRCA = A8BRCD                                      :             CLE041
+   LEFT JOIN GPGLCUSL V_GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = M.CNUM         :             CLE041
+   LEFT JOIN GZSCSARDPD S1 ON A8ZONE=S1.ZONE AND S1.SARN='CLE024'               :             CLE041
+   LEFT JOIN GZSCSARDPD S2 ON A8ZONE=S2.ZONE AND S2.SARN='CLE025';              :             CLE041
+***LEFT JOIN V_GLOBRATE C1 ON C1.CCY=FCCY;**************************************: BUG5326
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+   (ALCY01 IS 'Allowed             Currency            1',                      :
+    ALCY02 IS 'Allowed             Currency            2',                      :
+    ALCY03 IS 'Allowed             Currency            3',                      :
+    ALCY04 IS 'Allowed             Currency            4',                      :
+    ALCY05 IS 'Allowed             Currency            5',                      :
+    ALCY06 IS 'Allowed             Currency            6',                      :
+    ALCY07 IS 'Allowed             Currency            7',                      :
+    ALCY08 IS 'Allowed             Currency            8',                      :
+    ALCY09 IS 'Allowed             Currency            9',                      :
+    ALCY10 IS 'Allowed             Currency            10',                     :
+    ALCY11 IS 'Allowed             Currency            11',                     :
+    ALCY12 IS 'Allowed             Currency            12',                     :
+    DTPS01 IS 'Drawing             Type                1',                      :
+    DTPS02 IS 'Drawing             Type                2',                      :
+    DTPS03 IS 'Drawing             Type                3',                      :
+    DTPS04 IS 'Drawing             Type                4',                      :
+    DTPS05 IS 'Drawing             Type                5',                      :
+    DTPX01 IS 'Drawing             Type                1',                      :            BUG3723
+    DTPX02 IS 'Drawing             Type                2',                      :            BUG3723
+    DTPX03 IS 'Drawing             Type                3',                      :            BUG3723
+    DTPX04 IS 'Drawing             Type                4',                      :            BUG3723
+    DTPX05 IS 'Drawing             Type                5',                      :            BUG3723
+    DTPX06 IS 'Drawing             Type                6',                      :            BUG3723
+    RTPS01 IS 'Rollover            Period              1',                      :
+    RTPS02 IS 'Rollover            Period              2',                      :
+    RTPS03 IS 'Rollover            Period              3',                      :
+    RTPS04 IS 'Rollover            Period              4',                      :
+    RTPS05 IS 'Rollover            Period              5',                      :
+    RTPS06 IS 'Rollover            Period              6',                      :
+    ALCYS  IS 'Allowed             Currencies',                                 :
+    BTB    IS 'Bank to             Bank                Info',                   :
+    DTP    IS 'Drawing             Tupes',                                      :
+    NAR    IS 'Narrative');                                                     :
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+   (ALCY01 TEXT IS 'Allowable Currency 1',                                      :
+    ALCY02 TEXT IS 'Allowable Currency 2',                                      :
+    ALCY03 TEXT IS 'Allowable Currency 3',                                      :
+    ALCY04 TEXT IS 'Allowable Currency 4',                                      :
+    ALCY05 TEXT IS 'Allowable Currency 5',                                      :
+    ALCY06 TEXT IS 'Allowable Currency 6',                                      :
+    ALCY07 TEXT IS 'Allowable Currency 7',                                      :
+    ALCY08 TEXT IS 'Allowable Currency 8',                                      :
+    ALCY09 TEXT IS 'Allowable Currency 9',                                      :
+    ALCY10 TEXT IS 'Allowable Currency 10',                                     :
+    ALCY11 TEXT IS 'Allowable Currency 11',                                     :
+    ALCY12 TEXT IS 'Allowable Currency 12',                                     :
+    DTPS01 TEXT IS 'Drawing Type 1',                                            :
+    DTPS02 TEXT IS 'Drawing Type 2',                                            :
+    DTPS03 TEXT IS 'Drawing Type 3',                                            :
+    DTPS04 TEXT IS 'Drawing Type 4',                                            :
+    DTPS05 TEXT IS 'Drawing Type 5',                                            :
+    DTPX01 TEXT IS 'Drawing Type 1',                                            :            BUG3723
+    DTPX02 TEXT IS 'Drawing Type 2',                                            :            BUG3723
+    DTPX03 TEXT IS 'Drawing Type 3',                                            :            BUG3723
+    DTPX04 TEXT IS 'Drawing Type 4',                                            :            BUG3723
+    DTPX05 TEXT IS 'Drawing Type 5',                                            :            BUG3723
+    DTPX06 TEXT IS 'Drawing Type 6',                                            :            BUG3723
+    RTPS01 TEXT IS 'Rollover Period 1',                                         :
+    RTPS02 TEXT IS 'Rollover Period 2',                                         :
+    RTPS03 TEXT IS 'Rollover Period 3',                                         :
+    RTPS04 TEXT IS 'Rollover Period 4',                                         :
+    RTPS05 TEXT IS 'Rollover Period 5',                                         :
+    RTPS06 TEXT IS 'Rollover Period 6',                                         :
+    ALCYS  TEXT IS 'Allowed Currencies',                                        :
+    BTB    TEXT IS 'Bank to Bank Info',                                         :
+    DTP    TEXT IS 'Drawing Tupes',                                             :
+    NAR    TEXT IS 'Narrative');                                                :
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADCNUM    AS CNUM       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADFACT    AS FACT       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADFCNO    AS FCNO       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADPMFC    AS PMFC       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADPMFT    AS PMFT       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADPMFN    AS PMFN       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADANUM    AS ANUM       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADACSQ    AS ACSQ       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADCANM    AS CANM       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADCAFT    AS CAFT       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADCAFN    AS CAFN       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADINUM    AS INUM       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADPOBN    AS POBN       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADPOCN    AS POCN       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADROBN    AS ROBN       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADROCN    AS ROCN       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADLPBR    AS LPBR       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD PADFCXPOR  AS FCXPOR     USING GZLEFCLTQD                      :             CLE025
+ * DESCRIBEFIELD AFCXCGP    AS FCXCGP     USING GZLEFCLTQD                      :             CLE025
+ * DESCRIBEFIELD FDTAP      AS DTAP       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FDTEX      AS DTEX       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRVDT      AS RVDT       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FCDTE      AS CDTE       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FAVLD      AS AVLD       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FJDTE      AS JDTE       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FCOMD      AS COMD       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FVDTC      AS VDTC       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FORED      AS ORED       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FLCD       AS LCD        USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRVCD      AS RVCD       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRUN00     AS RUN0       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRUN01     AS RUN1       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRUN02     AS RUN2       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRUN03     AS RUN3       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRUN04     AS RUN4       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRUN05     AS RUN5       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRUN06     AS RUN6       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRUN07     AS RUN7       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRUN08     AS RUN8       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD FRUN09     AS RUN9       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD SFAMT      AS FAMT       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSFAMT     AS FAMT       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SMTDH      AS MTDH       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSMTDH     AS MTDH       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SMTDL      AS MTDL       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSMTDL     AS MTDL       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SMTDA      AS MTDA       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSMTDA     AS MTDA       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SLPAM      AS LPAM       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSLPAM     AS LPAM       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SCAMD      AS CAMD       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSCAMD     AS CAMD       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SOAM01     AS OAM1       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSOAM01    AS OAM1       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SOAM02     AS OAM2       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSOAM02    AS OAM2       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SOAM03     AS OAM3       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSOAM03    AS OAM3       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SOAM04     AS OAM4       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSOAM04    AS OAM4       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SOAM05     AS OAM5       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSOAM05    AS OAM5       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SOAM06     AS OAM6       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSOAM06    AS OAM6       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SOAM07     AS OAM7       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSOAM07    AS OAM7       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SOAM08     AS OAM8       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSOAM08    AS OAM8       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SOAM09     AS OAM9       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSOAM09    AS OAM9       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SOAM10     AS OA10       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSOAM10    AS OA10       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SQTDA      AS QTDA       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSQTDA     AS QTDA       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SYTDA      AS YTDA       USING GZFCLTYFM                       :
+***DESCRIBEFIELD BSYTDA     AS YTDA       USING GZFCLTYFM  (BASECCY)************:BUG5326
+ * DESCRIBEFIELD SFCXOML    AS FCXOML     USING GZFCLTYFM                       :CLE025
+***DESCRIBEFIELD BSFCXOML   AS FCXOML     USING GZFCLTYFM  (BASECCY)************:CLE025,BUG5326
+ * DESCRIBEFIELD SFCXCOF    AS FCXCOF     USING GZFCLTYFM                       :CLE025
+***DESCRIBEFIELD BSFCXCOF   AS FCXCOF     USING GZFCLTYFM  (BASECCY)************:CLE025,BUG5326
+ * DESCRIBEFIELD SFCXCV2    AS FCXCV2     USING GZFCLTYFM                       :CLE025
+***DESCRIBEFIELD BSFCXCV2   AS FCXCV2     USING GZFCLTYFM  (BASECCY)************:CLE025,BUG5326
+ * DESCRIBEFIELD YNCSEL     AS CSEL       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD YNSECI     AS SECI       USING GZFCLTYFM                       :
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Global facilities view - GZFCLTYFM       ';                     :
+                                                                                :

@@ -1,0 +1,255 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ Report def'n interface - MQFUTOPTNS')
+     F*****************************************************************
+     F*                                                               *
+     F*   Midas - Midas/Q Module                                      *
+     F*                                                               *
+     F*   MQ0700 - REPORT DEFINITION INTERFACE FOR SUBSET MQFUTOPTNS  *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*     LAST AMEND NO  CMQ001            DATE  03NOV97            *
+     F*     PREV AMEND NO  S01179            DATE  15SEP92            *
+     F*                    E26428            DATE  19FEB92            *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*    CMQ001 - MidasQ rationalisation                            *
+     F*    S01179 - AS400 CONVERSION. KEYWORD RTGAID IS NOT SUPPORTED *
+     F*             ON AS400. DISPLAY FILE AMENDED SO THAT FUNCTION   *
+     F*             KEYS F1-F24 SET ON INDICATORS 31-54 RESPECTIVELY  *
+     F*             WHEN PRESSED. THESE ARE THEN CHECKED AGAINST THE  *
+     F*             KEYS DEFINED IN MIDASQ FOR EXIT, BYPASS & CHANGE. *
+     F*    E26428 - PROGRAM CREATED TO ALLOW SELECTION OF BOOK,       *
+     F*             CUSTOMER & BROKER POSITIONS.                      *
+     F*                                                               *
+     F********************************************************************
+     F* Description    :
+     F* ~~~~~~~~~~~
+     F* This program is a report definition interface used in
+     F* conjunction with subset MQFUTOPNS. It is invoked by MIDAS/Q
+     F* during report definition (CREATE or REVIEW) of any report
+     F* defined or being defined in subset MQFUTOPTNS when the process
+     F* RUNINFO (or NAME) is used, immediately after the standard
+     F* MIDAS/Q screen for that process has been presented and the
+     F* Enter/Rec Adv key pressed.
+     F*
+     F* When invoked it requests that the user enter the types of
+     F* Futures & Options Positions (Customer, Broker or Book) to
+     F* be included in the report.
+     F*
+     F* This information is mapped into the 200 byte permanent report
+     F* storage area (known in this program as EXT#IA) for later use
+     F* in the production initiation interface program and/or the
+     F* compiled report module.
+     F*
+     F* Refer to the MIDAS/Q Technical Guide for further information
+     F* on the use and operation of "Report definition" interface
+     F* programs.
+     F*
+     F/EJECT
+     F* Parameter List
+     F* ~~~~~~~~~~~~~~
+     F* This parameter list is the standard type used by a "report
+     F* definition interface" program.  It is described in more detail
+     F* in the MIDAS/Q Technical Guide.
+     F*
+     F* Symbolic
+     F*  Name    Type   Length   Description
+     F* ~~~~~~   ~~~~   ~~~~~~   ~~~~~~~~~~~
+     F* EXT#RC   Char      1     Return code ('T' 'E' 'B' or 'P')
+     F* EXT#CA   Char      1     Change allowed
+     F* EXT#PR   Char     10     Next process field
+     F* EXT#PD   Char     20     Current process description
+     F* EXT#RL   Packed  3,1     MIDAS/Q release level
+     F* EXT#ST   Char     20     Site name
+     F* EXT#NM   Char     10     Report name
+     F* EXT#RD   Char     40     Report description
+     F* EXT#IA   Char    200     200 byte report storage area
+     F/EJECT
+     F* File declarations
+     F* ~~~~~~~~~~~~~~~~~
+     FMQ0700DFCF  E                    WORKSTN
+     F***********                                   KINFDS DINFDS         S01179
+     E                    CPY@    1   1 80
+     I/EJECT
+     I* Data structure specifications
+     I* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     I*
+     I* Data Structure for Compilation - Copyright Insertion
+     I*
+     I            DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**File*information*data*structure*-*display*file**                  S01179
+     I***********                                                         S01179
+     I*DINFDS**** DS                                                      S01179
+     I***********                           287 288 CMDKEY                S01179
+     I*
+     I* Permanent interface area
+     I*
+     ICPY#IA      DS
+     I                                        1   3 INCBRK
+     I                                        4   6 INCCUS
+     I                                        7   9 INCBOK
+     I*
+     I*
+     I* System definition data area - O#XA01
+     I*
+     IO#XA01      DS                           1000
+      *
+     I*
+      ** Bring in the system definition block
+      /COPY O#XP04,O#SDBLOCKP
+      *
+     C/EJECT
+     C* Parameter List Declaration
+     C* ~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C           *ENTRY    PLIST
+     C                     PARM           EXT#RC  1        Return code
+     C                     PARM           EXT#CA  1        Change allowed
+     C                     PARM           EXT#PR 10        Next process
+     C                     PARM           EXT#PD           Current process
+     C                     PARM           EXT#RL  31       ODX release
+     C                     PARM           EXT#ST 20        Site name
+     C           CPY#NM    PARM           EXT#NM 10        Report name
+     C                     PARM           EXT#RD 40        Report title
+     C           CPY#IA    PARM           EXT#IA200        200 byte area
+      *
+     C/EJECT
+     C* Program initialisation
+     C* ~~~~~~~~~~~~~~~~~~~~~~
+      *
+      * Retrieve MIDAS/Q system definition block...
+      *
+     C           *NAMVAR   DEFN           O#XA01
+     C                     IN   O#XA01
+     C                     MOVELO#XA01    O#SDBK
+      *
+      * Enable installation defined command keys required in this pgm..
+      *
+     C                     Z-ADDCEX       I       30       Exit
+     C                     MOVE '1'       *IN,I
+     C                     Z-ADDCBY       I                Bypass
+     C                     MOVE '1'       *IN,I
+      *
+      * ....only enabling CHANGE if user is authorised...
+      *
+     C           EXT#CA    IFEQ 'Y'
+     C                     Z-ADDCCH       I                Change
+     C                     MOVE '1'       *IN,I
+     C                     END
+      *
+     C           INCBRK    COMP 'YES'                    71
+     C  N71      INCBRK    COMP 'NO '                    71
+     C           *IN71     IFNE '1'
+     C                     MOVEL'YES'     INCBRK
+     C                     END
+      *
+     C           INCCUS    COMP 'YES'                    71
+     C  N71      INCCUS    COMP 'NO '                    71
+     C           *IN71     IFNE '1'
+     C                     MOVEL'YES'     INCCUS
+     C                     END
+      *
+     C           INCBOK    COMP 'YES'                    71
+     C  N71      INCBOK    COMP 'NO '                    71
+     C           *IN71     IFNE '1'
+     C                     MOVEL'YES'     INCBOK
+     C                     END
+      *
+     C/EJECT
+     C* Program mainline
+     C* ~~~~~~~~~~~~~~~~
+      *
+      * Display the screen format....
+      *
+     C           *INLR     DOWEQ'0'
+     C                     EXFMTMQ0100F1
+      *
+      * ...if valid command key used...
+      *
+     C           *IN26     IFEQ '1'
+      *                                                                   S01179
+      * ...set up CMDKEY to search through indicators 31-54 (these are    S01179
+      * set on when function keys F1-F24 respectively are pressed)...
+      *                                                                   S01179
+     C                     Z-ADD31        CMDKEY  20                      S01179
+      *                                                                   S01179
+      * ...Find out which function key was pressed...                     S01179
+      *                                                                   S01179
+     C           '1'       LOKUP*IN,CMDKEY               25               S01179
+      *                                                                   S01179
+      * ...Subtract 30 from the number of the indicator to get the        S01179
+      * number of the function key which was pressed...                   S01179
+      *                                                                   S01179
+     C                     SUB  30        CMDKEY  20                      S01179
+      *
+      *    ...process exit command key...
+      *
+     C***********CMDKEY    IFEQ O#SCEX                                    S01179
+     C           CMDKEY    IFEQ CEX                                       S01179
+     C                     MOVE 'E'       EXT#RC
+     C                     SETON                     LR
+      *
+      *    ...process bypass command key...
+      *
+     C                     ELSE
+     C***********CMDKEY    IFEQ O#SCBY                                    S01179
+     C           CMDKEY    IFEQ CBY                                       S01179
+     C                     MOVE 'B'       EXT#RC
+     C                     SETON                     LR
+      *
+      *    ...process change command key (disable command key and
+      *       make screen input capable)...
+      *
+     C                     ELSE
+     C***********CMDKEY    IFEQ O#SCCH                                    S01179
+     C           CMDKEY    IFEQ CCH                                       S01179
+     C                     SETON                     30
+     C                     Z-ADDCCH       I                Change
+     C                     MOVE '0'       *IN,I
+     C                     END
+     C                     END
+     C                     END
+      *
+      * No valid command key used, so, if in change mode, revert to
+      * display mode and enable CHANGE command key....
+      *
+     C                     ELSE
+     C           *IN30     IFEQ '1'
+     C                     SETOF                     30
+     C                     Z-ADDCCH       I                Change
+     C                     MOVE '1'       *IN,I
+      *
+      *    ...otherwise, we are in display mode, so finish...
+      *
+     C                     ELSE
+     C                     SETON                     LR
+     C                     END
+      *
+     C                     END
+     C                     END
+      *
+      * If bypass or exit command keys not used and values were changed
+      * then return new values and set return code to 'UPDATE'...
+      *
+     C           *IN26     IFNE '1'
+     C           CPY#IA    IFNE EXT#IA
+     C                     MOVE 'U'       EXT#RC
+     C                     MOVELCPY#IA    EXT#IA
+     C                     END
+     C                     END
+      *
+     C                     RETRN
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

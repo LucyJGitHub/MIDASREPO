@@ -1,0 +1,271 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+     C********************************************************************
+     C**
+     C**   ZTCAL2 SR. TO CALCULATE TAX ON CHARGES/COMMISSIONS
+     C**
+     C           ZTCAL2    BEGSR
+     C*
+     C*  WORK FIELDS
+     C*
+     C                     Z-ADD*ZEROS    ZAMTX  150
+     C                     Z-ADD*ZEROS    ZAMT0  150
+     C                     Z-ADD*ZEROS    ZAMT1  151
+     C                     Z-ADD*ZEROS    ZAMT2  152
+     C                     Z-ADD*ZEROS    ZAMT3  153
+     C                     Z-ADD*ZEROS    ZCN     20
+     C                     Z-ADD*ZEROS    ZCP     20
+     C*
+     C*  LOOP UNTIL ALL RANGES CONSIDERED
+     C*
+     C           ZCN       DOUEQZZ
+     C                     ADD  1         ZCN
+     C           ZCN       SUB  1         ZCP
+     C*
+     C*  NO UPPER LIMITS
+     C*
+     C           ZRA,ZCN   IFEQ *ZEROS
+     C           ZCN       ANDEQ1
+     C*
+     C*  STRAIGHT % CALCULATED
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCHG0     MULT ZPC,ZZ    ZAM0
+     C                     DIV  100       ZAM0      H
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCHG1     MULT ZPC,ZZ    ZAM1
+     C                     DIV  100       ZAM1      H
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCHG2     MULT ZPC,ZZ    ZAM2
+     C                     DIV  100       ZAM2      H
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCHG3     MULT ZPC,ZZ    ZAM3
+     C                     DIV  100       ZAM3      H
+     C                     END
+     C*
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C*  UPPER LIMIT ARRIVED AT.
+     C*
+     C           ZRA,ZCN   IFEQ *ZEROS
+     C           ZCN       ANDNE1
+     C           ZCN       OREQ 15
+     C*
+     C*  FINAL % CALCULATED
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCHGA     SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT0
+     C                     MULT ZPC,ZCN   ZAMT0
+     C                     DIV  100       ZAMT0     H
+     C                     ADD  ZAMT0     ZAM0
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCHGA     SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT1
+     C                     MULT ZPC,ZCN   ZAMT1
+     C                     DIV  100       ZAMT1     H
+     C                     ADD  ZAMT1     ZAM1
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCHGA     SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT2
+     C                     MULT ZPC,ZCN   ZAMT2
+     C                     DIV  100       ZAMT2     H
+     C                     ADD  ZAMT2     ZAM2
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCHGA     SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT3
+     C                     MULT ZPC,ZCN   ZAMT3
+     C                     DIV  100       ZAMT3     H
+     C                     ADD  ZAMT3     ZAM3
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  CHECK FIRST RANGE CALCULATION
+     C*
+     C           ZRA,ZCN   IFNE *ZEROS
+     C           ZCN       ANDEQ1
+     C*
+     C           ZCHGA     IFGT ZRA,1
+     C*
+     C           ZDECS     IFEQ 0
+     C                     MOVE ZRA,1     ZAMT0
+     C           ZAMT0     MULT ZPC,1     ZAM0
+     C                     DIV  100       ZAM0      H
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C                     MOVE ZRA,1     ZAMT1
+     C           ZAMT1     MULT ZPC,1     ZAM1
+     C                     DIV  100       ZAM1      H
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C                     MOVE ZRA,1     ZAMT2
+     C           ZAMT2     MULT ZPC,1     ZAM2
+     C                     DIV  100       ZAM2      H
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C                     MOVE ZRA,1     ZAMT3
+     C           ZAMT3     MULT ZPC,1     ZAM3
+     C                     DIV  100       ZAM3      H
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ZCHGA     IFLE ZRA,1
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCHG0     MULT ZPC,1     ZAM0
+     C                     DIV  100       ZAM0      H
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCHG1     MULT ZPC,1     ZAM1
+     C                     DIV  100       ZAM1      H
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCHG2     MULT ZPC,1     ZAM2
+     C                     DIV  100       ZAM2      H
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCHG3     MULT ZPC,1     ZAM3
+     C                     DIV  100       ZAM3      H
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  ADD TO THE LOOP FOR MIDDLE VALUES
+     C*
+     C           ZRA,ZCN   IFNE *ZEROS
+     C           ZCN       ANDNE1
+     C*
+     C           ZCHGA     IFGT ZRA,ZCN
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZRA,ZCN   SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT0
+     C                     MULT ZPC,ZCN   ZAMT0
+     C                     DIV  100       ZAMT0     H
+     C                     ADD  ZAMT0     ZAM0
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZRA,ZCN   SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT1
+     C                     MULT ZPC,ZCN   ZAMT1
+     C                     DIV  100       ZAMT1     H
+     C                     ADD  ZAMT1     ZAM1
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZRA,ZCN   SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT2
+     C                     MULT ZPC,ZCN   ZAMT2
+     C                     DIV  100       ZAMT2     H
+     C                     ADD  ZAMT2     ZAM2
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZRA,ZCN   SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT3
+     C                     MULT ZPC,ZCN   ZAMT3
+     C                     DIV  100       ZAMT3     H
+     C                     ADD  ZAMT3     ZAM3
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ZCHGA     IFLE ZRA,ZCN
+     C*
+     C           ZDECS     IFEQ 0
+     C           ZCHGA     SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT0
+     C                     MULT ZPC,ZCN   ZAMT0
+     C                     DIV  100       ZAMT0     H
+     C                     ADD  ZAMT0     ZAM0
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C           ZDECS     IFEQ 1
+     C           ZCHGA     SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT1
+     C                     MULT ZPC,ZCN   ZAMT1
+     C                     DIV  100       ZAMT1     H
+     C                     ADD  ZAMT1     ZAM1
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C           ZDECS     IFEQ 2
+     C           ZCHGA     SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT2
+     C                     MULT ZPC,ZCN   ZAMT2
+     C                     DIV  100       ZAMT2     H
+     C                     ADD  ZAMT2     ZAM2
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C           ZDECS     IFEQ 3
+     C           ZCHGA     SUB  ZRA,ZCP   ZAMTX
+     C                     MOVE ZAMTX     ZAMT3
+     C                     MULT ZPC,ZCN   ZAMT3
+     C                     DIV  100       ZAMT3     H
+     C                     ADD  ZAMT3     ZAM3
+     C                     GOTO ZDAN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ZDAN      ENDSR
+     C*
+     C********************************************************************
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

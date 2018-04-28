@@ -1,0 +1,197 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO) ACTGRP(GOC0110T2)                            */
+/*EXI    TEXT('Midas GO Global Upd Acc Ext - TS Server')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC0110T2 - Global Update Account Extension TS Server       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CGP017  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CGP017 - Global Layer - GOC0100 Task Split                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAME &CSEQ &COPY_RECS)
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE(ACBXDVPD)
+             DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
+                          VALUE(ACBXIXPD)
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('GOACBXSRV')
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&COPY_RECS) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&RTN_CODE) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&WKCUR) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&WKTOT) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&WKDLT) TYPE(*DEC) LEN(10 0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GOC0110T2 - Global Update Account +
+                          Extension - Task Split Server') TOMSGQ(MRUNQ)
+ 
+             RTVMBRD    FILE(ACCNTBXC) NBRCURRCD(&WKCUR) +
+                          NBRDLTRCD(&WKDLT)
+             CHGVAR     VAR(&WKTOT) VALUE(&WKCUR + &WKDLT)
+             IF         COND(&WKCUR *EQ 0) THEN(GOTO CMDLBL(END))
+ 
+/* Start commitment control */
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             ALCOBJ     OBJ((&INDEXFL *FILE *EXCL))
+ 
+/* Read COB components file to check the restart status */
+ 
+             CALL       PGM(CB0160) PARM(&CNAME &CSEQ &STAT)
+ 
+/* Check if any problems with COB components file */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If restart status = F, only resend END message to sub-Task */
+ 
+             IF         COND(&STAT = 'F') THEN(DO)
+             GOTO       CMDLBL(SNDEND)
+             ENDDO
+ 
+/* Set restart status to 'Y' */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+ 
+/* Wait for data queue entry */
+ 
+RECEIVE:
+             CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* Extract member name */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10))
+ 
+/* Clear the driving file */
+ 
+             CLRPFM     FILE(&DRIVER) MBR(&MEMBER)
+ 
+/* Override driving file and trailer file */
+ 
+             OVRDBF     FILE(&DRIVER) TOFILE(&DRIVER) MBR(&MEMBER)
+ 
+/* Call the program to copy records to specified member */
+ 
+             CALL       PGM(GO0110T2) PARM(&COPY_RECS &WKTOT +
+                          &RTN_CODE)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Set up data queue and message data */
+ 
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('PROMPT')
+ 
+/* If return code = EOF, set restart status to 'N' and terminate */
+ 
+             IF         COND(&RTN_CODE *NE 'NRF') THEN(DO)
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+             ENDDO
+ 
+             IF         COND(&RTN_CODE = 'EOF' +
+                        *OR &RTN_CODE = 'NRF') THEN(DO)
+                CHGVAR     VAR(&STAT) VALUE('F')
+                CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+                GOTO       CMDLBL(SNDEND)
+             ENDDO
+ 
+/* If return code <> EOF, wait for another data queue entry */
+ 
+             GOTO       CMDLBL(RECEIVE)
+ SNDEND:
+ 
+/* Retrieve first member description */
+ 
+             RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)
+ 
+/* Set up data queue and message data */
+ 
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('END')
+ 
+/* Send message data to data queue */
+ 
+ LOOP:
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+/* Retrieve next member description */
+ 
+             RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&SNDDTAQ)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(RCVDTAQ))
+ 
+/* Loop for all members in driving file */
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&SNDDTAQ)
+             GOTO       CMDLBL(LOOP)
+RCVDTAQ:
+             CALL       PGM(QRCVDTAQ) PARM(&RCVDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &RCVWAIT)
+ 
+/* If message = FINISH, terminate the program */
+ 
+             IF         COND(%SST(&MSGDATA 1 6) = 'FINISH') THEN(DO)
+             CHGVAR     VAR(&STAT) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAME &CSEQ &STAT)
+             GOTO       CMDLBL(END)
+             ENDDO
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&MEMBER) VALUE(%SUBSTRING(&MSGDATA 1 10))
+             CHGVAR     VAR(&SNDDTAQ) VALUE(&MEMBER)
+             CHGVAR     VAR(&MSGDATA) VALUE('END')
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+             MONMSG     MSGID(CPF9801)
+             GOTO       CMDLBL(RCVDTAQ)
+             ENDDO
+ 
+ABNOR:
+             SNDPGMMSG  MSG('Program GOC0110T2 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDCMTCTL
+             ENDPGM

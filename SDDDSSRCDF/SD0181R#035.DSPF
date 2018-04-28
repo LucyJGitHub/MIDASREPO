@@ -1,0 +1,754 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Country codes maintenance')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD0181R# - Edit country codes record                    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *                                                               *
+      *  Last Amend No. MD030956           Date 09Oct14               *
+      *  Prev Amend No. CTI006             Date 31Mar14               *
+      *                 MD027804           Date 30Jun14               *
+      *                 MD027093           Date 30May14               *
+      *                 MD026498           Date 29Apr14               *
+      *                 CGL132             Date 01May13               *
+      *                 CSW213             Date 03Jun13               *
+      *                 AR754499           Date 05May11               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER045             Date 20Jul09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11779           Date 27Jul06               *
+      *                 BUG11769           Date 25Jul06               *
+      *                 BUG11705           Date 17Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 236137             Date 21Sep05               *
+      *                 232543             Date 29Mar05               *
+      *                 CGL032             Date 05Jul04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CGP001             Date 10Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date  7Jul99               *
+      *                 CFT004             Date 22Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD003             Date 02JAN98               *
+      *                 S01408             DATE 02AUG96               *
+      *                 S01461             DATE 17JAN94               *
+      *                 S01459             DATE 17JAN94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD030956 - Additional changes to BFM-TI enhancement          *
+      *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
+      *  MD027804 - Fields should be in a protected mode during       *
+      *             delete action                                     *
+      *  MD027093 - Country Codes Issues                              *
+      *  MD026498 - Mandatory field country of tax is disabled        *
+      *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
+      *           Classification - Master                             *
+      *  CSW213 - SWIFT Changes 2013                                  *
+      *  AR754499 - In the Country Codes Maintenance, fields Currency *
+      *             of Tax and Country of Tax (Y/N) are not being     *
+      *             displayed (Child: AR754500)                       *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER045 - German Features - Reporting Bundesbank              *
+      *  BUG11779 - Changed CSD031's display indicator from 41 to 50  *
+      *             to accomodate proper display of screen fields     *
+      *  BUG11769 - Accept to Zone narrative became Central Data and  *
+      *             Effective Date field became protected             *
+      *  BUG11705 - CSD031 is *OFF, Eff Date and Central Data fields  *
+      *             are displayed. *IN45 was used by 232543.          *
+      *  CSD031 - Enhanced Centralised Static Data                    *
+      *  236137 - Change Control for CGL031                           *
+      *  232543 - Fix to CGL032                                       *
+      *  CGL032 - Automatic Exchange of Information                   *
+      *  CGL014 - Collaterals Processing                              *
+      *  CGP001 - Global Processing.                                  *
+      *  CPB001 - 'Private Banking' Module                            *
+      *  CFT004 - Straight Through Processing Phase 2                 *
+      *         - International Bank Account Numbers                  *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - File removed from SD model.                       *
+      *  S01408 - Addition of standard hooks.                         *
+      *  S01461 - The Midas Export module processing was removed      *
+      *           and moved to the Eureka platform.                   *
+      *  S01459 - Addition of Midas headerbox.                        *
+      *                                                               *
+      *****************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0181R#99
+     A          R #RCDKEY                   TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A*/COPY WNCPYSRC,SD0181R#98
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '89')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A                                      CF09(09 'Change mode.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1CNCD')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0181R1'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**********                        2 33'New Country Code'                                CSD031
+      **Start of change BUG11779
+     A*N41******                        2 33'New Country Code'                              BUG11779
+     A**41******                        2 29'New Central Country Code'                      BUG11779
+     A N50                              2 33'New Country Code'
+     A  50                              2 29'New Central Country Code'
+      **End of change BUG11779
+      **End of change CSD031
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A                                  8  6'Country Code:'
+     A            #1CNCD         2   B  8 20TEXT('Country Code')
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0181R#97
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0181R#96
+     A                                      OVERLAY PUTOVR
+     A            ##CTX1        78     23  2TEXT('Command Text 1')
+     A N25                                  OVRDTA
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0181R#95
+     A          R #RCDDTL1                  TEXT('Details')
+     A*/COPY WNCPYSRC,SD0181R#94
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(89 '''ADD'' mode')
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  87                                  CA12(12 'Key screen.')
+     A N89                                  CF10(10 'Delete.')
+      **Start of change CSW213
+     A  84                                  CA15(15 'ISO Country Code')
+      **End of change CSW213
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1CNNM')
+     A                                      SETOF(32 'Invalid: #1ISOC')
+     A                                      SETOF(33 'Invalid: #1RGCD')
+      *                                              Begin /CFT004/
+     A                                      SETOF(34 'Invalid: #1BBAN')
+     A                                      SETOF(35 'Invalid: #1BBRL')
+      *                                              End   /CFT004/
+     A*                                              Begin /CPB001/
+     A                                      SETOF(37 'Invalid: #1CTAY')
+     A                                      SETOF(38 'Invalid: #1CTZP')
+     A                                      SETOF(39 'Invalid: #1CTWC')
+     A*                                              End   /CPB001/
+     A**Start of change CGL032
+     A                                      SETOF(41 'Invalid: #1ETXY')
+     A                                      SETOF(42 'Invalid: #1RPFQ')
+     A                                      SETOF(43 'Invalid: #1TXCY')
+     A                                      SETOF(44 'Invalid: #1JAMG')
+     A**End of change CGL032
+      **Start of change CSD031
+     A                                      SETOF(48 'Invalid: #1AACC')
+     A                                      SETOF(49 'Invalid: #1EACC')
+      **End of change CSD031
+      **Start of change CER045
+     A                                      SETOF(52 'Invalid: #1GRIC')
+      **End of change CER045
+      **Start of change CGL132
+     A**********                            SETOF(47 'Invalid: #1FAAT')                     MD026498
+     A**********                            SETOF(48 'Invalid: #1FAIN')                     MD026498
+     A                                      SETOF(53 'Invalid: #1FAAT')
+     A                                      SETOF(54 'Invalid: #1FAIN')
+      **End of change MD026498
+      **End of change CGL132
+     A*.........................................................................
+     A*                                              Begin /CPB001/
+     A*                                              End   /CPB001/
+      *                                              Begin /CFT004/
+     A*                                              Begin /CPB001/
+     A*                                              End   /CPB001/
+      *                                              End   /CFT004/
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0181R2'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**********                        2 29'Country Codes Maintenance'                       CSD031
+      **Start of change BUG11779
+     A*N41******                        2 29'Country Codes Maintenance'                     BUG11779
+     A N50                              2 29'Country Codes Maintenance'
+      **End of change BUG11779
+      **End of change CSD031
+     A                                      DSPATR(HI)
+      **Start of change CSD031
+      **Start of change BUG11779
+     A**41******                        2 25'Central Country Codes Maintenance'             BUG11779
+     A  50                              2 25'Central Country Codes Maintenance'
+      **End of change BUG11779
+     A                                      DSPATR(HI)
+      **End of change CSD031
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #1MLOC        10   H      TEXT('Midas Export Value MLOC')
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+      **Start of change CGL132
+     A**********                        6  2'Country Code.............:'                      CGL132
+     A**********  #1CNCD         2      6 29TEXT('Country Code')                              CGL132
+     A                                  5  2'Country Code.............:'
+     A            #1CNCD         2      5 29TEXT('Country Code')
+      **End of change CGL132
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A*                                              Begin /CPB001/
+     A*****                             9  2'Country Name.............:'
+     A*****       #1CNNM        30   B  9 29TEXT('Country Name')
+     A*****                                 CHECK(LC)
+     A*N25*                                 OVRDTA
+     A**31*                                 DSPATR(RI PC)
+     A*N31*                                 DSPATR(UL HI)
+     A*N25*                                 OVRATR
+     A*****                            12  2'ISO Country Code.........:'
+     A*****       #1ISOC         2   B 12 29TEXT('ISO Country code')
+     A*N25*                                 OVRDTA
+     A**32*                                 DSPATR(RI PC)
+     A*N32*                                 DSPATR(UL HI)
+     A*N25*                                 OVRATR
+     A*****                            15  2'Region Code..............:'
+     A*****       #1RGCD         2   B 15 29TEXT('Region Code')
+     A*****                                 CHECK(FE)
+     A*N25*                                 OVRDTA
+     A**33*                                 DSPATR(RI PC)
+     A*N33*                                 DSPATR(UL HI)
+     A*N25*                                 OVRATR
+      **Start of change CGL132
+     A**********                        8  2'Country Name.............:'                      CGL132
+     A**********  #1CNNM        30   B  8 29TEXT('Country Name')                              CGL132
+     A                                  7  2'Country Name.............:'
+     A            #1CNNM        30   B  7 29TEXT('Country Name')
+      **End of change CGL132
+     A                                      CHECK(LC)
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N31******                            DSPATR(UL HI)                                   MD027804
+     A N31N79                               DSPATR(UL)
+     A N31                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+      **End of change MD027804
+     A N25                                  OVRATR
+     A**Start of change CGP001
+     A**********                       10  2'ISO Country Code.........:'
+     A**********  #1ISOC         2   B 10 29TEXT('ISO Country code')
+      **Start of change CGL132
+     A*N68******                       10  2'ISO Country Code.........:'                      CGL132
+     A*N68******  #1ISOC         2   B 10 29TEXT('ISO Country code')                          CGL132
+     A N68                              9  2'ISO Country Code.........:'
+     A N68        #1ISOC         2   B  9 29TEXT('ISO Country code')
+      **End of change CGL132
+     A**End of change CGP001
+     A N25                                  OVRDTA
+     A  32                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N32******                            DSPATR(UL HI)                                   MD027804
+     A N32N79                               DSPATR(UL)
+     A N32                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+      **End of change MD027804
+     A N25                                  OVRATR
+     A**Start of change CGL032
+      **Start of change CGL132
+     A**40******                       10 35'End of Tax Year..........:'                      CGL132
+     A**********  #1ETXY         4   B 10 62TEXT('End of Tax Year')                           CGL132
+     A  40                              9 35'End of Tax Year..........:'
+     A            #1ETXY         4   B  9 62TEXT('End of Tax Year')
+      **End of change CGL132
+     A N25                                  OVRDTA
+     A  41                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N41******                            DSPATR(UL HI)                                   MD027804
+     A*N40******                            DSPATR(PR ND)                                   MD027804
+     A N41N79                               DSPATR(UL)
+     A N41                                  DSPATR(HI)
+     A N40                                  DSPATR(ND)
+     A    N40
+     AO 79 40                               DSPATR(PR)
+      **End of change MD027804
+     A N25                                  OVRATR
+     A**End of change CGL032
+      **Start of change CGL132
+     A**********                       12  2'Region Code..............:'                      CGL132
+     A**********  #1RGCD         2   B 12 29TEXT('Region Code')                               CGL132
+     A                                 11  2'Region Code..............:'
+     A            #1RGCD         2   B 11 29TEXT('Region Code')
+      **End of change CGL132
+     A                                      CHECK(FE)
+     A N25                                  OVRDTA
+     A  33                                  DSPATR(RI PC)
+      **Start of change CSD031
+     A*N33******                            DSPATR(UL HI)                                     CSD031
+      **Start of change BUG11779
+     A**45N41***                            DSPATR(PR)                                      BUG11779
+     A*N33*45*41                                                                            BUG11779
+     A*ON33N45N41                            DSPATR(UL HI)                                  BUG11779
+      **Start of change MD027804
+     A**45N50***                            DSPATR(PR)                                      MD027804
+     A*N33*45*50                                                                            MD027804
+     A*ON33N45N50                            DSPATR(UL HI)                                  MD027804
+     A  45N50
+     AO    79                               DSPATR(PR)
+     A N33 45 50
+     A N79
+     AON33N45N50
+     A N79                                  DSPATR(UL)
+     A N33                                  DSPATR(HI)
+      **End of change MD027804
+      **End of change BUG11779
+      **End of change CSD031
+     A N25                                  OVRATR
+     A**Start of change CGL032
+      **Start of change CGL132
+     A**40******                       12 35'Reporting Frequency......:'                      CGL132
+     A**********  #1RPFQ         1   B 12 62TEXT('Reporting Frequency')                       CGL132
+     A  40                             11 35'Reporting Frequency......:'
+     A            #1RPFQ         1   B 11 62TEXT('Reporting Frequency')
+      **End of change CGL132
+     A N25                                  OVRDTA
+     A  42                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N42******                            DSPATR(UL HI)                                   MD027804
+     A*N40******                            DSPATR(PR ND)                                   MD027804
+     A N42N79                               DSPATR(UL)
+     A N42                                  DSPATR(HI)
+     A N40                                  DSPATR(ND)
+     A    N40
+     AO 79 40                               DSPATR(PR)
+      **End of change MD027804
+     A N25                                  OVRATR
+     A**End of change CGL032
+     A*
+      **Start of change CGL132
+     A**85******                       14  2'Associated currency......:'                      CGL132
+     A**********  #1CTAY         3   B 14 29TEXT('Associated currency')                       CGL132
+     A  85                             13  2'Associated currency......:'
+     A            #1CTAY         3   B 13 29TEXT('Associated currency')
+      **End of change CGL132
+     A                                      CHECK(FE)
+     A N25                                  OVRDTA
+     A  37                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N37******                            DSPATR(UL HI)                                   MD027804
+     A*N85******                            DSPATR(PR ND)                                   MD027804
+     A N37N79                               DSPATR(UL)
+     A N37                                  DSPATR(HI)
+     A N85                                  DSPATR(ND)
+     A    N85
+     AO 79 85                               DSPATR(PR)
+      **End of change MD027804
+     A N25                                  OVRATR
+     A**Start of change CGL032
+     A**Start of change 232543
+     A**40******                       14 35'Currency of Tax..........:'                      232543
+     A**Start of change BUG11705
+     A**45******                       14 35'Currency of Tax..........:'                    BUG11705
+      **Start of change CGL132
+     A**47******                       14 35'Currency of Tax..........:'                      CGL132
+     A  47                             13 35'Currency of Tax..........:'
+      **End of change CGL132
+     A**End of change BUG11705
+     A**End of change 232543
+      **Start of change CGL132
+     A**********  #1TXCY         3   B 14 62TEXT('Currency of Tax')                           CGL132
+     A            #1TXCY         3   B 13 62TEXT('Currency of Tax')
+      **End of change CGL132
+     A N25                                  OVRDTA
+     A  43                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N43******                            DSPATR(UL HI)                                   MD027804
+     A N43N79                               DSPATR(UL)
+     A N43                                  DSPATR(HI)
+      **End of change MD027804
+     A**Start of change 232543
+     A*N40******                            DSPATR(PR ND)                                     232543
+     A**Start of change BUG11705
+     A*N45******                            DSPATR(PR ND)                                   BUG11705
+      **Start of change MD027804
+     A*N47******                            DSPATR(PR ND)                                   MD027804
+     A N47                                  DSPATR(ND)
+     A    N47
+     AO 79 47                               DSPATR(PR)
+      **End of change MD027804
+     A**End of change BUG11705
+     A**End of change 232543
+     A N25                                  OVRATR
+     A**End of change CGL032
+      **Start of change CGL132
+     A**85******                       16  2'ZIP Code.................:'                      CGL132
+     A**********  #1CTZP         4   B 16 29TEXT('Zip code')                                  CGL132
+      **Start of change CTI006
+     A**85******                       15  2'ZIP Code.................:'                      CTI006
+     A  85N65                          15  2'ZIP Code.................:'
+      **End of change CTI006
+     A            #1CTZP         4   B 15 29TEXT('Zip code')
+      **End of change CGL132
+     A                                      CHECK(FE)
+     A N25                                  OVRDTA
+     A  38                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N38******                            DSPATR(UL HI)                                   MD027804
+     A*N85******                            DSPATR(PR ND)                                   MD027804
+     A N38N79                               DSPATR(UL)
+     A N38                                  DSPATR(HI)
+      **Start of change CTI006
+     A*N85******                            DSPATR(ND)                                        CTI006
+     A  85 65
+     AON85                                  DSPATR(ND)
+      **End of change CTI006
+     A    N85
+      **Start of change MD030956
+     AO 85 65
+      **End of change MD030956
+     AO 79 85                               DSPATR(PR)
+      **End of change MD027804
+     A N25                                  OVRATR
+     A**Start of change 236137
+     A**Start of change BUG11705
+     A**45******                       18 35'Country of Tax (Y/N).....:'                    BUG11705
+      **Start of change CGL132
+     A**47******                       18 35'Country of Tax (Y/N).....:'                      CGL132
+     A  47                             17 35'Country of Tax (Y/N).....:'
+     A**End of change BUG11705
+     A**********  #1CCTS         1   B 18 62TEXT('Country of Tax')                            CGL132
+     A            #1CCTS         1   B 17 62TEXT('Country of Tax')
+      **End of change CGL132
+     A N25                                  OVRDTA
+     A  46                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N46******                            DSPATR(UL HI)                                   MD027804
+     A N46N79                               DSPATR(UL)
+     A N46                                  DSPATR(HI)
+      **End of change MD027804
+     A**Start of change BUG11705
+     A*N45******                            DSPATR(PR ND)                                   BUG11705
+      **Start of change MD027804
+     A*N47******                            DSPATR(PR ND)                                   MD027804
+     A N47                                  DSPATR(ND)
+     A    N47
+     AO 79 47                               DSPATR(PR)
+      **End of change MD027804
+     A**End of change BUG11705
+     A N25                                  OVRATR
+     A**End of change 236137
+     A**Start of change CGL032
+      **Start of change CGL132
+     A**40******                       16 35'Joint Account Management.:'                      CGL132
+     A**********  #1JAMG         1   B 16 62TEXT('Joint Account Management')                  CGL132
+     A  40                             15 35'Joint Account Management.:'
+     A            #1JAMG         1   B 15 62TEXT('Joint Account Management')
+      **End of change CGL132
+     A N25                                  OVRDTA
+     A  44                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N44******                            DSPATR(UL HI)                                   MD027804
+     A*N40******                            DSPATR(PR ND)                                   MD027804
+     A N44N79                               DSPATR(UL)
+     A N44                                  DSPATR(HI)
+     A N40                                  DSPATR(ND)
+     A    N40
+     AO 79 40                               DSPATR(PR)
+      **End of change MD027804
+     A N25                                  OVRATR
+     A**End of change CGL032
+      **Start of change CGL014
+     A**85******                       18  2'Weighting code...........:'                      CGL014
+     A  84
+      **Start of change CGL132
+     A*O*85*****                        18  2'Weighting code...........:'                     CGL132
+      **Start of change CTI006
+     A***O*85***                          17  2'Weighting code...........:'                   CTI006
+     AO 85N65                          17  2'Weighting code...........:'
+      **End of change CTI006
+      **End of change CGL132
+      **End of change CGL014
+      **Start of change CGL132
+     A**********  #1CTWC         2   B 18 29TEXT('Wreighting code')                           CGL132
+     A            #1CTWC         2   B 17 29TEXT('Wreighting code')
+      **End of change CGL132
+     A                                      CHECK(FE)
+     A N25                                  OVRDTA
+     A  39                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N39******                            DSPATR(UL HI)                                   MD027804
+     A N39N79                               DSPATR(UL)
+     A N39                                  DSPATR(HI)
+      **End of change MD027804
+      **Start of change CGL014
+     A*N85******                            DSPATR(PR ND)                                     CGL014
+      **Start of change MD027804
+     A*N85N84***                            DSPATR(PR ND)                                   MD027804
+      **Start of change CTI006
+     A*N85N84***                            DSPATR(ND)                                        CTI006
+     A N84 85 65
+     AON85N84                               DSPATR(ND)
+      **End of change CTI006
+     A    N85N84
+     AO    79 84
+      **Start of change MD030956
+     AO 85 65
+      **End of change MD030956
+     AO    79 85                            DSPATR(PR)
+      **End of change MD027804
+      **End of change CGL014
+     A N25                                  OVRATR
+     A*                                              End   /CPB001/
+      *                                              Begin /CFT004/
+     A*                                              Begin /CPB001/
+     A**36******                       18  2'BBAN length..............:'
+     A**********  #1BBAN         2   B 18 29TEXT('BBAN total length')
+      **Start of change CGL132
+     A**36******                       20  2'BBAN length..............:'                      CGL132
+     A**********  #1BBAN         2   B 20 29TEXT('BBAN total length')                         CGL132
+     A  36                             19  2'BBAN length..............:'
+     A            #1BBAN         2   B 19 29TEXT('BBAN total length')
+      **End of change CGL132
+     A*                                              End   /CPB001/
+     A N25                                  OVRDTA
+     A  34                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N34*36***                            DSPATR(UL HI)                                   MD027804
+     A N34 36N79                            DSPATR(UL)
+     A N34 36                               DSPATR(HI)
+      **End of change MD027804
+     A N36                                  DSPATR(ND)
+      **Start of change MD027804
+     A*N36******                            DSPATR(PR)
+     A    N36
+     AO 79 36                               DSPATR(PR)
+      **End of change MD027804
+     A N25                                  OVRATR
+     A*                                              Begin /CPB001/
+     A**36******                       18 35'Bank length..............:'
+     A**********  #1BBRL         2   B 18 62TEXT('BBAN bank length')
+      **Start of change CGL132
+     A**36******                       20 35'Bank length..............:'                      CGL132
+     A**********  #1BBRL         2   B 20 62TEXT('BBAN bank length')                          CGL132
+     A  36                             19 35'Bank length..............:'
+     A            #1BBRL         2   B 19 62TEXT('BBAN bank length')
+      **End of change CGL132
+     A*                                              End   /CPB001/
+     A N25                                  OVRDTA
+     A  35                                  DSPATR(RI PC)
+      **Start of change MD027804
+     A*N35*36***                            DSPATR(UL HI)                                   MD027804
+     A N35 36N79                            DSPATR(UL)
+     A N35 36                               DSPATR(HI)
+      **End of change MD027804
+     A N36                                  DSPATR(ND)
+      **Start of change MD027804
+     A*N36******                            DSPATR(PR)                                      MD027804
+     A    N36
+     AO 79 36                               DSPATR(PR)
+      **End of change MD027804
+     A N25                                  OVRATR
+      *                                              End   /CFT004/
+      **Start of change CSD031
+      **Start of change BUG11769
+     A**45*41***                       22  2'Accept to Zone...........:'                    BUG11769
+     A**45N41***                       22  2'Central Data.............:'                    BUG11769
+     A  45 50                          22  2'Accept to Zone...........:'
+     A  45N50                          22  2'Central Data.............:'
+      **End of change BUG11769
+     A  45                             22 35'Effective Date...........:'
+      **Start of change BUG11769
+     A**45*41***  #1AACC         1   B 22 29TEXT('Accept to Zone')                          BUG11769
+     A  45 50     #1AACC         1   B 22 29TEXT('Accept to Zone')
+      **End of change BUG11769
+     A     48                               DSPATR(RI PC)
+      **Start of change MD027804
+     A****N48***                            DSPATR(UL HI)                                   MD027804
+     A N48N79                               DSPATR(UL)
+     A N48                                  DSPATR(HI)
+     A  79                                  DSPATR(PR)
+      **End of change MD027804
+      **Start of change CER045
+      **Start of change AR754499
+     A**47******                       21  2'GRI Country Code.........:'                    AR754499
+     A  51                             21  2'GRI Country Code.........:'
+      **End of change AR754499
+     A            #1GRIC         3   B 21 29TEXT('GRI Country Code')
+     A N25                                  OVRDTA
+     A  52                                  DSPATR(RI PC)
+      **Start of change AR754499
+     A*N52*47***                            DSPATR(UL HI)                                   AR754499
+     A*N47******                            DSPATR(ND)                                      AR754499
+     A*N47******                            DSPATR(PR)                                      AR754499
+      **Start of change MD027804
+     A*N52*51***                            DSPATR(UL HI)                                   MD027804
+     A N52 51N79                            DSPATR(UL)
+     A N52 51                               DSPATR(HI)
+      **End of change MD027804
+     A N51                                  DSPATR(ND)
+      **Start of change MD027804
+     A*N51******                            DSPATR(PR)                                      MD027804
+     A    N51
+     AO 79 51                               DSPATR(PR)
+      **End of change MD027804
+      **End of change AR754499
+     A N25                                  OVRATR
+      **End of change CER045
+      **Start of change BUG11769
+     A**45N41***  #1GPDT         1   O 22 29TEXT('Central Data')                            BUG11769
+     A  45N50     #1GPDT         1   O 22 29TEXT('Central Data')
+      **End of change BUG11769
+     A                                      DSPATR(HI)
+     A N25                                  OVRDTA
+     A N25                                  OVRATR
+     A  45        #1EACC         6   B 22 62TEXT('Effective Date')
+     A     49                               DSPATR(RI PC)
+      **Start of change BUG11769
+     A****N49*41                            DSPATR(UL)                                      BUG11769
+      **Start of change MD027804
+     A****N49*50                            DSPATR(UL)                                      MD027804
+     A N49 50N79                            DSPATR(UL)
+      **End of change MD027804
+      **End of change BUG11769
+     A    N49                               DSPATR(HI)
+      **Start of change BUG11769
+     A****N41***                            DSPATR(PR)                                      BUG11769
+      **Start of change MD027804
+     A****N50***                            DSPATR(PR)                             BUG11769 MD027804
+     A    N50
+     AO 79 50                               DSPATR(PR)
+      **End of change MD027804
+      **End of change BUG11769
+     A N25                                  OVRDTA
+     A N25                                  OVRATR
+      **End of change CSD031
+      **Start of change CGL132
+      **Start of change MD026498
+     A**49******                       21  2'FATCA Agreement Type.....:'                    MD026498
+     A**********  #1FAAT         3   B 21 29TEXT('FATCA Agreement Type')                    MD026498
+     A*N25******                            OVRDTA                                          MD026498
+     A**47******                            DSPATR(RI PC)                                   MD026498
+     A*N47*49***                            DSPATR(HI)                                      MD026498
+     A*N47*49***                                                                            MD026498
+     A*N50******                            DSPATR(UL)                                      MD026498
+     A*N49******                            DSPATR(ND)                                      MD026498
+     A*N49******                                                                            MD026498
+     A*O***50***                            DSPATR(PR)                                      MD026498
+     A*N25******                            OVRATR                                          MD026498
+      **********                                                                            MD026498
+     A**49******                       21 35'FATCA Indicia?...........:'                    MD026498
+     A**********  #1FAIN         1   B 21 62TEXT('FATCA Indicia')                           MD026498
+     A*N25******                            OVRDTA                                          MD026498
+     A**48******                            DSPATR(RI PC)                                   MD026498
+     A*N47*49***                            DSPATR(HI)                                      MD026498
+     A*N47*49***                                                                            MD026498
+     A*N50******                            DSPATR(UL)                                      MD026498
+     A*N49******                            DSPATR(ND)                                      MD026498
+     A*N49******                                                                            MD026498
+     A*O***50***                            DSPATR(PR)                                      MD026498
+     A*N25******                            OVRATR                                          MD026498
+     A  55                             20  2'FATCA Agreement Type.....:'
+     A            #1FAAT         3   B 20 29TEXT('FATCA Agreement Type')
+     A N25                                  OVRDTA
+     A  53                                  DSPATR(RI PC)
+     A N53 55                               DSPATR(HI)
+     A N53 55
+      **Start of change MD027804
+     A N79
+      **End of change MD027804
+     A N56                                  DSPATR(UL)
+     A N55                                  DSPATR(ND)
+     A N55
+      **Start of change MD027804
+     AO 79 55
+      **End of change MD027804
+     AO    56                               DSPATR(PR)
+     A N25                                  OVRATR
+      *
+     A  55                             20 35'FATCA Indicia?...........:'
+     A            #1FAIN         1   B 20 62TEXT('FATCA Indicia')
+     A N25                                  OVRDTA
+     A  54                                  DSPATR(RI PC)
+      **Start of Change MD027093
+     A*N53*55***                            DSPATR(HI)                                      MD027093
+     A*N53*55***                                                                            MD027093
+     A N54 55                               DSPATR(HI)
+     A N54 55
+      **End of change MD027093
+      **Start of change MD027804
+     A N79
+      **End of change MD027804
+     A N56                                  DSPATR(UL)
+     A N55                                  DSPATR(ND)
+     A N55
+      **Start of change MD027804
+     AO 79 55
+      **End of change MD027804
+     AO    56                               DSPATR(PR)
+     A N25                                  OVRATR
+      **End of change MD026498
+      **End of change CGL132
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0181R#93
+     A          R #CMDTXT2                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0181R#92
+     A                                      OVERLAY PUTOVR
+     A            ##CTX1        78     23  2TEXT('Command Text 1')
+     A N25                                  OVRDTA
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0181R#91
+     A          R #MSGRCD                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0181R#90
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0181R#89
+     A          R #MSGCTL                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0181R#88
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0181R#87

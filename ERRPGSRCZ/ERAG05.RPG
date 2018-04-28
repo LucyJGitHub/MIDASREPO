@@ -1,0 +1,386 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AGDL Customers linked')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  ERAG05 - AGDL Reporting customers linked                     *
+      *                                                               *
+      *  Function:  This program enables the user to filled customers *
+      *             linked file using a menu option .                 *
+      *  (phase(s)) Input cycle and end of year                       *
+      *                                                               *
+      *  Called By: ERCAG05  - AGDL customers linked                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 11May06               *
+      *  Prev Amend No. CER001             Date 25Aug05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 187689             Date 21Dec00               *
+      *                 ULX012             Date 09Feb00               *
+      *  Prev Amend No. ULX008             Date 25Feb00               *
+      *  Prev Amend No. 166701             Date 02Sep99               *
+      *                 ULX010  *CREATE    Date 06apr98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  187689 - GRD currency in EMU                                 *
+      *           Recompiled due to changes in PF/SDCUSTX6            *
+      *  ULX012 - Pledges and Multiple Guarantors Management          *
+      *           Recompile only due to changes in PF/SDCUSTX6        *
+      *  ULX008 - CSSF Statuatory Reporting : Commissariat aux Bourses*
+      *           Recompiled due to changes in PF/SDCUSTX6            *
+      *  166701 - Number of records truncated                         *
+      *           (Just recompiled)                                   *
+      *  ULX010 - AGDL Reporting statistiques sur les d{pôts garantis *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FSDCUSTL5IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Customers file
+      *
+     FAGDLSEPPIF  E           K        DISK         KINFSR *PSSR
+      *
+      ** AGDL ICD Setup
+      *
+     F***SDCUSTX6IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDCUX2PDIF  E           K        DISK         KINFSR *PSSR                              CER001
+      *
+      ** Economic sector
+      *
+     FAGDLCUV0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      *
+      ** AGDL account file
+      *
+     FERAG05AUO   E             66     PRINTER
+     F                                              KINFDS SPOOLU
+      *
+      ** Audit report
+      *
+      /SPACE 3
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    TES        30  4
+      *
+      ** Array containing economic sector to be extracted
+      *
+     E                    XABB       50  3   XABC    6
+      *
+      ** Array containing the branch code and
+      **                  the internal customer for the branch
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data Structure for bank details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** Data Structure for branch details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Short Data Structure for acces programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Long Data Structure for acces programs
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOLU      DS
+      *
+      ***  File Information Data Structure for ERAG05AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      ****************************************************************
+      ** Program Start                                               *
+      ****************************************************************
+      *
+     C                     EXSR #INIT
+      *
+      ** Read account file
+      *
+     C                     READ SDCUSTL5                 70
+      *
+      *
+     C           *IN70     DOWEQ*OFF                       B1
+      *
+      ** Check if customer is not a bank
+      *
+     C           BBBNBI    IFEQ 'N'                        B2
+      *
+      ***Access*SDCUSTX6***********************************************                       CER001
+      ** Access SDCUX2PD                                                                      CER001
+      *                                                                                       CER001
+     C                     EXSR #CUS6
+      *
+      ** Check if customer is the initial branch customer
+      *
+     C   76                EXSR #CUSB
+      *
+      ** Write record
+      *
+     C   76                EXSR SRWRIT
+      *
+     C                     ENDIF                           E2
+     C                     READ SDCUSTL5                 70
+     C                     ENDDO                           E1
+      ****************************************************************
+      ** Program End                                                 *
+      ****************************************************************
+     C                     WRITEDETA
+     C                     WRITEENDAU
+     C                     SETON                       LR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      **#CUS6****Subroutine*Access*SDCUSTX6****************************                       CER001
+      * #CUS6    Subroutine Access SDCUX2PD                           *                       CER001
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+     C           #CUS6     BEGSR
+      **
+     C                     MOVE *OFF      *IN76
+      ***If*new*client*chain*to*SDCUSTX6*******************************                       CER001
+      ** If new client chain to SDCUX2PD                                                      CER001
+      *
+     C********** BBCUST    CHAINSDCUSTX6             77                                       CER001
+     C           BBCUST    CHAINSDCUX2PD             77                                       CER001
+      ** Check if economic sector is to be extracted
+      *
+     C           *IN77     IFEQ *OFF
+     C******               MOVE VFECOS    WFECOS  4                       166701
+     C                     MOVE VFNCOS    WFECOS  4                       166701
+     C           WFECOS    LOKUPTES                      76
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #CUSB    Subroutine To check customer is initial customer     *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+     C           #CUSB     BEGSR
+      ** Check if customer is the initial branch customer
+      ** for the branch
+      *
+     C                     Z-ADD1         J       20
+     C                     MOVE *OFF      *IN78
+     C                     MOVE *OFF      *IN76
+     C           BBBRCD    LOKUPXABB,J                   78
+     C           *IN78     IFEQ '1'                        B1
+     C           BBCUST    ANDNEXABC,J                     1
+     C                     MOVE *ON       *IN76
+     C                     ENDIF                           E1
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #INIT  - Subroutine to do program initialisation              *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INIT     BEGSR                           ** #INIT  **
+      *
+      ** Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Access to bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS                    B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 002 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           BJDFIN    IFEQ 'M'                        B1
+     C                     SETON                     98
+     C                     ENDIF                           E1
+      *
+      ***  Access to branch Details for loading all the branches
+      ***  for the bank (50 branches maximum)
+      ***  array XABB = branch code / array XABC = branch customer
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C                     PARM *BLANKS   WKEY3   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS                    B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ****************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 003 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+     C                     Z-ADD0         J
+     C           WRTCD     DOWEQ*BLANK
+     C                     ADD  1         J
+     C                     MOVE A8BRCD    XABB,J
+     C                     MOVE A8BICN    XABC,J
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*NEXT  ' WOPTN   7
+     C                     PARM *BLANKS   WKEY3   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+     C                     ENDDO                           E1
+      *
+      ** Acces to AGDLSEPP
+      *
+     C                     READ AGDLSEPP                 71
+     C           *IN71     IFEQ '1'                        B1
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'AGDLSEPP'DBFILE           *DB ERROR 004 *
+     C                     MOVEL'*FIRST  'DBKEY     P      ***************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+     C                     MOVEAAGECON    TES
+      *
+     C                     WRITEHEADAU
+     C                     Z-ADD*ZEROS    RREXTR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRWRIT - Subroutine to write a record to AGDLCUV0             *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR                           ** SRWRIT **
+      *
+      ** Acces to AGDLCUV0
+      *
+     C**********           MOVE BBCUST    WKCUST  60                                         CSD027A
+     C                     MOVE BBCUST    WKCUST  6                                          CSD027A
+     C           WKCUST    CHAINAGDLCUV0             72
+      *
+      ** Add a record if the key doesn't exist
+      *
+     C           *IN72     IFEQ '1'                        B1
+     C**********           Z-ADDWKCUST    ADCUST                                             CSD027A
+     C**********           Z-ADD0         ADLINK                                             CSD027A
+     C                     MOVE WKCUST    ADCUST                                             CSD027A
+     C                     MOVE *BLANKS   ADLINK                                             CSD027A
+     C                     ADD  1         RREXTR
+     C                     WRITEAGDLCUD0
+     C                     COMIT
+     C                     ENDIF                           E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       @RUN    1
+     C                     ENDIF                           - E1
+      *
+     C           DBASE     IFEQ 0                          - B1
+     C                     Z-ADD999       DBASE
+     C                     ENDIF                           - E1
+      *
+      ***  Print error message in Audit report
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     WRITEENDAU
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

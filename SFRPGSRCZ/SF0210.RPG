@@ -1,0 +1,419 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SF Password enquiry')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  SECURITY PROFILE FACILITY
+     F*                                                                  *
+     F*    SF0210 - MIDAS PASSWORD ENQUIRY                               *
+     F*                                                                  *
+     F*  Function: This program displays the password details for each   *
+     F*            user:- number of sign-ons and the date and time of    *
+     F*            the last password change.                             *
+     F*            The enquiry is only used if the Universal Password    *
+     F*            Change Facility is used.                              *
+     F*                                                                  *
+     F*  Where Used: Input Cycle                                         *
+     F*                                                                  *
+     F*  Called By: SFC0210                                              *
+     F*                                                                  *
+     F*  Calls: None                                                     *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 239898             Date 29May06               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAAA01             Date 08Mar95               *
+      *                 S01117             Date 25Mar92               *S01117
+     F*                   S01269        DATE  25JUN91                    *S01199
+     F*                   S01199        DATE  19/09/89                   *S01199
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  239898 - Reporting About Users (Recompiled).  Applied core   *
+      *  BUG11032 - Reporting About Users (Recompile)                 *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+     F*    CAAA01 - GUI/400 development
+     F*           - recompiled over changed MUSERDD
+     F*    S01117 - RECOMPILE FOR FT CHANGE TO MUSERDD                   *
+     F*    S01269 - RECOMPILE OVER CHANGED LF/MUSER                      *
+     F*    S01199 - HELP SYSTEM.                                         *S01199
+     F*                                                                  *
+     F********************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+SPUP F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*                 ************************
+     F*                  Function of Indicators
+     F*                 ************************
+     F*
+     F* ID F  C  H  L
+     F*
+     F*      19         HELP
+     F*      20         Error in SUSRC field
+     F*      21         SETLL on MUSER failed
+     F*      23         End of file MUSER or subfile full
+     F*      25         Failed read to SDBANKPD
+     F*      26         Off first time through
+     F*      28         Blank found in SUSRC
+     F*      29         Failed read from SF0210F3
+     F*      30         No universal password change on record
+     F*      55         Clear subfile
+     F*      98         Date format is 'M'
+     F*      99         Error on date
+     FMUSER   IF  E           K        DISK
+     FSF0210DFCF  E                    WORKSTN
+     F                                        RECNUMKSFILE SF0210F2
+     E                    CPY@    1   1 80
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    CHK1       10  1               SUSRC CHECK
+     E                    ERR        19  4               ERRORS
+     IPSDS       SDS
+     I**
+     I**     Program status data structure.
+     I**
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 SWSID
+     I                                      254 263 USRID
+     I*
+     ILDA         DS                            256
+     I**
+     I**     Local data area.
+     I**
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+0276 I*
+     I* DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     C**
+     C                     MOVEACPY@      BIS@   80
+     C**
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C*    SETON U6 FOR CL MESSAGE AND END IF PASSWORD CHANGE
+     C*      FACILITY NOT USED
+     C*
+     C           BJPCFU    IFNE 'Y'
+     C                     SETON                       LRU6
+     C                     RETRN
+     C                     END
+     C*
+     C*   DATE FORMAT CHECK
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C*   RUN DATE CHECK
+     C*
+     C                     MOVE BJMRDT    SRUNA
+     C*
+     C*   CHECK LAST PASSWORD CHANGE DATE AND TIME
+     C*
+     C           LPWD      IFEQ 0
+     C           LPWT      ANDEQ*BLANKS
+     C                     SETON                     30
+     C                     ELSE
+     C*
+     C* CONVERT DATE
+     C*
+     C                     MOVE LPWD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SLUPWD
+     C                     MOVE LPWT      SLUPWT
+     C                     END
+     C**
+     C**  MAIN PROCESSING
+     C**
+     C           TAG01     TAG                             **** TAG01 ****
+     C                     Z-ADD0         Z       20
+     C                     MOVE *BLANKS   ERCD
+     C                     MOVEA'0000'    *IN,20
+     C                     MOVE '0'       *IN28
+     C**
+     C** LOOP UNTIL A CORRECT USER PROFILE IS ENTERED
+     C**
+     C           *IN20     DOUEQ'0'
+     C                     WRITESF0210F1
+     C**
+     C*    READ WORKSTATION FILE / HELP FACILITY
+     C**
+     C**         *IN19     DOUEQ'0'                                       S01199
+     C                     READ SF0210F1                 19
+     C**         *IN19     IFEQ '1'                                       S01199
+     C**                   MOVEAERR       HERCD 160                       S01199
+     C**                   MOVEL'SF0210  'HBPGM   6                       S01199
+     C**                   CALL 'MHELP'                                   S01199
+     C**                   PARM           HBPGM                           S01199
+     C**                   PARM           HERCD                           S01199
+     C**                   END                                            S01199
+     C**                   END                                            S01199
+     C**
+     C** IF F3 PRESSED, EXIT
+     C**
+     C           *INKC     IFEQ '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C**
+     C**  INITIALISE FIELDS AND INDICATORS
+     C**
+     C                     SETOF                     20
+     C                     Z-ADD0         Z       20
+     C                     MOVE *BLANKS   ERCD
+     C                     MOVEA'0000'    *IN,20
+     C                     MOVE '0'       *IN28
+     C**
+     C           SUSRC     IFNE *BLANKS
+     C**
+     C** CHECK SUSRC IS LEFT ADJUSTED
+     C**
+     C                     MOVELSUSRC     CHK     1
+     C           CHK       IFEQ ' '
+     C                     SETON                     20
+     C                     ADD  1         Z
+     C                     MOVE '001'     ERR,Z
+     C                     GOTO TAG02
+     C                     END
+     C**
+     C** CHECK SUSRC CONTAINS NO EMBEDDED BLANKS
+     C**
+     C                     MOVEASUSRC     CHK1
+     C                     Z-ADD1         X       20
+     C           X         DOWLE10
+     C           CHK1,X    IFNE ' '
+     C           *IN28     IFEQ '1'
+     C                     SETON                     20
+     C                     ADD  1         Z
+     C                     MOVE '002'     ERR,Z
+     C                     GOTO TAG02
+     C                     END
+     C**
+     C                     ELSE
+     C                     SETON                     28
+     C                     END
+     C**
+     C                     ADD  1         X
+     C                     END
+     C**
+     C**  GET USER DETAILS FORM LF/MUSER
+     C**
+     C           SUSRC     SETLLMUSER                2121
+     C           *IN21     IFEQ '1'
+     C                     SETON                     20
+     C                     ADD  1         Z
+     C                     MOVE '003'     ERR,Z
+     C                     END
+     C                     ELSE
+     C           *LOVAL    SETLLMUSER
+     C                     END
+     C**
+     C**  ERROR PROCESSING
+     C**
+     C           TAG02     TAG                             **** TAG02 ****
+     C           *IN20     IFEQ '1'
+     C                     MOVEAERR       ERCD
+     C                     END
+     C                     END
+     C**
+     C** CLEAR SUBFILE IF NOT FIRST TIME THROUGH
+     C**
+     C           *IN26     IFEQ '1'
+     C                     SETON                     55
+     C                     WRITESF0210F3
+     C                     SETOF                     55
+     C                     END
+     C**
+     C                     SETON                     26
+     C                     Z-ADD0         RECNUM  20
+     C**
+     C**  READ MUSER
+     C**
+     C           *IN23     DOUEQ'1'
+     C                     READ MUSER                    23
+     C           *IN23     IFEQ '0'
+     C           RECI      IFEQ 'D'
+     C                     ADD  1         RECNUM
+     C                     MOVE USRP      SUSRP
+     C                     MOVE SOCNT     SSOCNT
+     C**
+     C** CONVERT DATE
+     C**
+     C                     MOVE LPWD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SLPWD
+     C                     MOVE LPWT      SLPWT
+     C                     WRITESF0210F2                 23
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     WRITESF0210F4
+     C                     WRITESF0210F3
+     C**
+     C**  NEXT RECORD PROCESSING
+     C**
+     C           TAG03     TAG                             **** TAG03 ****
+     C                     READ SF0210F3                 29
+     C**
+     C**  EXIT AFTER F3
+     C**
+     C           *INKC     IFEQ '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C**
+     C** PREVIOUS SCREEN AFTER F12
+     C**
+     C           *INKL     IFEQ '1'
+     C                     MOVE *BLANKS   SUSRC
+     C                     GOTO TAG01
+     C                     END
+     C**
+     C** NEXT RECORD IF ENTER IS PRESSED
+     C**
+     C                     GOTO TAG03
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

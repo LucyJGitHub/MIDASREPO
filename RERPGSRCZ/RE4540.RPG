@@ -1,0 +1,314 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Cashier TCP/IP socket debugging print')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Cashier Interface Module                             *
+      *                                                               *
+      *  RE4540 - Midas Cashier TCP/IP Socket Debugging Print         *
+      *                                                               *
+      *  Function:  This program genrates an audit of all the TCP/IP  *
+      *             functions used by the communication programs      *
+      *  Author: Alain Differdange                                    *
+      *  Called By: REC4540 - Midas Cashier TCP/IP Socket Debugging   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *  Last Amend No. CRT004  *CREATE    Date 01Jul00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *                                                               *
+      *****************************************************************
+     FRE4540AUO   E             11     PRINTER
+     FRETCPDPDO   E                    DISK
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      /SPACE 3
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, Short data structure
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     IMSGR        DS                           1000
+      *
+      **  Data structure for message data returned on Dataqueue.
+      *
+      /EJECT
+      *
+      ** Main Processing
+      *
+     C                     EXSR MAIN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Subroutine                           *
+      *                                                               *
+      * Calls             -                                           *
+      *                                                               *
+      * Called By         -                                           *
+      *                                                               *
+      * Flds Used         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           MAIN      BEGSR                           ** *INZSR **
+      *
+      ** Write Page Header
+      *
+     C                     WRITEHEADPY
+     C                     Z-ADD0         LNCNT   20
+      *
+      ** Loop on Receive data queue
+      *
+     C           *INLR     DOWEQ*OFF                       - B1
+      *
+      * Receive data queue
+      *
+     C                     EXSR RCVDTQ
+      *
+      ** First level of details (Communication job references and function used)
+      *
+     C*                    MOVELJOBNM     XRJNM
+     C*                    MOVELJOBUS     XRJUS
+     C*                    MOVELJOBNB     XRJNB
+     C           10        SUBSTSNDI:9    XRJNM
+     C           10        SUBSTSNDI:19   XRJUS
+     C           6         SUBSTSNDI:29   XRJNB
+     C                     MOVELMSGR      XRTCPF
+     C                     TIME           TIMSTP 140
+     C                     MOVELTIMSTP    XRTIM
+     C                     MOVE TIMSTP    XRDAT
+      *
+      * Trace file
+      *
+     C                     MOVELXRJNM     DBJNM
+     C                     MOVELXRJUS     DBJUS
+     C                     MOVELXRJNB     DBJNB
+     C                     MOVELXRTCPF    DBTCPF
+     C                     SUBSTMSGR:11   DBTCPD
+     C                     MOVELTIMSTP    DBTIM
+     C                     MOVE TIMSTP    DBDAT
+     C                     WRITERETCPDD0
+      *
+      * Control overflow
+      *
+     C           *IN11     IFEQ *ON                        - B2
+     C                     WRITEHEADPY
+     C                     MOVEL*OFF      *IN11
+     C                     ENDIF                           - E2
+      *
+     C                     WRITEDETAIL1
+      *
+      ** Second level of details. (Generate up to 10 lines of details with message itself)
+      *
+     C                     Z-ADD0         I       20
+     C                     Z-ADD0         S       30
+      *
+     C           0         DO   9         I                - B2
+      *
+     C           I         MULT 100       S
+     C                     ADD  11        S
+      *
+     C           I         IFNE 9
+     C           100       SUBSTMSGR:S    XRTCPD
+     C                     ELSE
+     C           90        SUBSTMSGR:S    XRTCPD
+     C                     ENDIF
+      *
+      * Output only, non blank detail lines
+      *
+     C           XRTCPD    IFNE *BLANKS                    - B3
+      *
+      * Control overflow
+      *
+     C           *IN11     IFEQ *ON                        - B4
+     C                     WRITEHEADPY
+     C                     MOVEL*OFF      *IN11
+     C                     ENDIF                           - E4
+      *
+     C                     WRITEDETAIL2
+     C                     ENDIF                           - E3
+      *
+      * If message 'STOP', stop debugging functions
+      *
+     C           XRTCPF    IFEQ 'STOP'                     - B3
+      *
+      * Control overflow
+      *
+     C           *IN11     IFEQ *ON                        - B4
+     C                     WRITEHEADPY
+     C                     MOVEL*OFF      *IN11
+     C                     ENDIF                           - E4
+     C                     WRITETRAILPY
+      *
+     C                     MOVEL*ON       *INLR
+     C                     RETRN
+     C                     ENDIF                           - E3
+      *
+     C                     ENDDO                           - E2
+      *
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RCVDTQ - Receive Dataqueue Processing.             *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing.                  *
+      *                                                               *
+      *****************************************************************
+     C           RCVDTQ    BEGSR
+      *
+      ** Set up Data Queue Length parm for receive data queue
+      *
+     C           DTQRCV    PLIST
+     C                     PARM           DTAQR  10
+     C                     PARM           LIBR   10
+     C                     PARM           LENR    50
+     C                     PARM           MSGR
+     C                     PARM           WAITR   50
+     C                     PARM           KEYO    2
+     C                     PARM           KEYL    30
+     C                     PARM           KEYD    5
+     C                     PARM           SNDL    30
+     C                     PARM           SNDI   36
+      *
+     C                     MOVEL'RE4540DQ'DTAQR     P
+     C                     MOVEL'*LIBL'   LIBR      P
+     C                     Z-ADD1000      LENR
+     C                     Z-ADD-1        WAITR
+     C                     MOVEL*BLANKS   KEYO
+     C                     Z-ADD0         KEYL
+     C                     Z-ADD34        SNDL
+      *
+     C                     CALL 'QRCVDTAQ'DTQRCV
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *INZSR - Initialisation Subroutine                 *
+      *                                                               *
+      * Calls             -                                           *
+      *                                                               *
+      * Called By         -                                           *
+      *                                                               *
+      * Flds Used         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR                           ** *INZSR **
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Access bank details for midas-run-date
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     70
+     C                     END
+      *
+      ** If record does not exist
+     C           *IN70     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD1         DBASE            ** DB ERR 01 **
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     MOVEL'RE4540'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,381 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Master file audit record setup')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0005 - SECURITIES TRADING FILE SET UP                      *
+     F*                                                               *
+     F*  Function: This program performs the initial set up of all    *
+     F*  (I/C INT) the SE Audit files either by writing a blank       *
+     F*            record to the file or creating a trailer record,   *
+     F*            as appropriate.                                    *
+     F*                                                               *
+     F*  Called By: SEC00 - SE Module Set Up                          *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG12646           Date 14Nov06               *
+      *  Prev Amend No. 222727             Date 05Nov03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 054257             Date 17Nov93               *
+     F*                 052254             DATE 17NOV93               *
+     F*                 052253             DATE 17NOV93               *
+     F*                 E37170             DATE 25MAR92               *
+     F*                 S01117             DATE 29OCT90               *
+     F*                 S01271             DATE 14NOV90               *
+     F*                 S01190             DATE 07/07/89              *
+     F*                 E18163             DATE 26/04/89              *
+     F*                 S01186             DATE 06/01/89              *
+     F*                 E14756             DATE 01/09/88              *
+     F*                 E14758             DATE 01/09/88              *
+     F*                 S01176             DATE 18/08/88              *
+     F*                 S01169             DATE 01/06/88              *
+     F*                 E14757             DATE 01/09/88              *
+     F*                 E13889             DATE 05/07/88              *
+     F*                 S01155             DATE 25/04/88              *
+     F*                 S01155             DATE 20/04/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  BUG12646 - Cater for SEACKA file control length increase     *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+     F*  054257 - RECOMPILED AS PREV CURRENT FACTOR AMENDED FROM 9,8  *
+     F*           to 10,9                                             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  052253 - Reset values of NINS, NAMD and NDEL before write    *
+     F*           to TNRANAA in case data existed in BOOKDA           *
+     F*  E37170 - File ECTLXL9 redundant                              *
+     F*  S01117 - MULTIBRANCHING                                      *
+     F*  S01271 - PAY/RECEIVE IN INPUT CYCLE - ADDITION TO PF/SEEUCA  *
+     F*  S01190 - EUCLID Fix/Enhancement.                             *
+     F*  E18163 - SEEUCA was having two Trailer records written to it.*
+     F*  S01186 - EXVALZ is set up in SE3114.                         *
+     F*         - (Duplicate of fix E16880).                          *
+     F*  E14756 - INITIALISE FUNDSAC WITH NORE = 0.                   *   E14756
+     F*  E14758 - INITIALISE SEEUCA.                                  *   E14758
+     F*  S01176 - ST 3.1 AUSTRALIAN ENHANCEMENTS.                     *   S01176
+     F*  S01169 - SECURITIES TRADING 3.1 (BAER INCORPORATION).        *   S01169
+     F*  E14757 - INITIALISE SETLXA.                                  *   E14757
+     F*  E13889 - BOOKD SHOULD NOT BE UNCONDITIONALLY CLEARED AS      *   E13889
+     F*           IT MAY CONTAIN DATA FOR FF MODULE.                  *   E13889
+     F*  S01155 - POSETA IS NOW SET UP IN L1BGIN BECAUSE IT IS A      *   S01155
+     F*           MULTI-MEMBERED TRAILER.                             *   S01155
+     F*  S01155 - SE INCORPORATION ERROR FIX.                         *   S01155
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FBKMTHA  O   E                    DISK                      A
+     FBKPHDA  O   E                    DISK                      A
+     FBKPHHA  O   E                    DISK                      A
+     FBKPOSA  O   E                    DISK                      A
+     F*BOOKDA*O   E                    DISK                      A        E13889
+     FBOOKDA  IF  E                    DISK                      A        E13889
+     FBPACHA  O   E                    DISK                      A
+     FCAPRHA  O   E                    DISK                      A
+     FCDEPPA  O   E                    DISK                      A
+     FCLIABA  O   E                    DISK                      A
+     F***TRA  O   E                    DISK                      A
+     FCNCTRA  O   E                    DISK                      A        S01155
+     FCPOSNA  O   E                    DISK                      A
+     FCUBRDA  O   E                    DISK                      A        S01169
+     FDPOSNA  O   E                    DISK                      A
+     FDPTMVA  O   E                    DISK                      A
+     F*****EXVALZ  O   E                    DISK                    S01169S01186
+     FFUNDSAC O   E                    DISK                      A
+     FHSTTRA  O   E                    DISK                      A
+     F**VTPA  O   E                    DISK                      A
+     FINVTPA  O   E                    DISK                      A        S01155
+     FLMTPA   O   E                    DISK                      A
+     F*OSETA**O   E                    DISK                      A        S01155
+     FPRICEA  O   E                    DISK                      A
+     FSEACKA  O   E                    DISK                      A
+     FSECACA  O   E                    DISK                      A        S01169
+     FSECGTA  O   E                    DISK                      A        S01169
+     FSEEUCA  O   E                    DISK                      A        E14758
+     F*****A  O   E                    DISK                      A        S01169
+     F**CTYA  O   E                    DISK                      A
+     FSECTYA  O   E                    DISK                      A        S01155
+     FSEDEVA  O   E                    DISK                      A
+     FSEMKCA  O   E                    DISK                      A
+     FSETLEA  O   E                    DISK                      A
+     F**IMA   O   E                    DISK                      A
+     FSETLXA  O   E                    DISK                      A        E14757
+     FSLIMA   O   E                    DISK                      A        S01155
+     FSNDEVA  O   E                    DISK                      A
+     F**DSEA  O   E                    DISK                      A
+     FSTDSEA  O   E                    DISK                      A        S01155
+     FTNRANAA O   E                    DISK                      A
+     FTRADSA  O   E                    DISK                      A
+     FUDEPPA  O   E                    DISK                      A
+     F*ECTLXL9*O***E                    DISK                      A       E37170
+     FESETTST O   E                    DISK                      A
+     FCPPRIA  O   E                    DISK                      A        S01176
+     FSEPCA   O   E                    DISK                      A        S01117
+      /SPACE 3
+     E                    CPY@    1   1 80
+      /SPACE 3
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C***  Update database files
+     C*
+     C                     EXCPTBKMTHO
+     C                     EXCPTBKPHDO
+     C                     EXCPTBKPHHO
+     C                     EXCPTBKPOSO
+     C*********************EXCPTBOOKDO                                    E13889
+     C                     EXCPTBPACHO
+     C                     EXCPTCAPRHO
+     C                     EXCPTCDEPPO
+     C                     EXCPTCLIABO
+     C*********************EXCPTCNCTRO
+     C                     EXCPTCNCTRO                                    S01155
+     C                     EXCPTCPOSNO
+     C                     EXCPTCUBRDO                                    S01169
+     C                     EXCPTDPOSNO
+     C                     EXCPTDPTMVO
+     C*********************EXCPTEXVALO                              S01169S01186
+     C*********************EXCPTFUNDSO                                    E14756
+     C                     EXCPTHSTTRO
+     C*********************EXCPTINVTPO
+     C                     EXCPTINVTPO                                    S01155
+     C                     EXCPTLMTPO
+     C*********************EXCPTPOSETO                                    S01155
+     C                     EXCPTPRICEO
+     C*                                                                                     BUG12646
+     C***  Set up trailer record for file SEACKA                                            BUG12646
+     C*                                                                                     BUG12646
+     C                     Z-ADD0         SLRB10                                            BUG12646
+     C                     Z-ADD0         SINS10                                            BUG12646
+     C                     Z-ADD0         SAMD10                                            BUG12646
+     C                     Z-ADD0         SDEL10                                            BUG12646
+     C                     Z-ADD0         NORE10                                            BUG12646
+     C                     EXCPTSEACKO
+     C                     EXCPTSECACO                                    S01169
+     C*********************EXCPTSECHGO
+     C                     EXCPTSECGTO                                    S01169
+     C*********************EXCPTSECTYO
+     C                     EXCPTSECTYO                                    S01155
+     C                     EXCPTSEDEVO
+     C                     EXCPTSEMKCO
+     C                     EXCPTSETLEO
+     C                     EXCPTSETLXO                                    E14757
+     C*********************EXCPTSLIMO
+     C                     EXCPTSLIMO                                     S01155
+     C                     EXCPTSNDEVO
+     C*********************EXCPTSTDSEO
+     C                     EXCPTSTDSEO                                    S01155
+     C                     EXCPTTRADSO
+     C                     EXCPTUDEPPO
+     C                     EXCPTCPPRIO                                    S01176
+     C*
+     C**  Check for data in BOOKDA before updating file
+     C*
+     C           1         CHAINBOOKDAF              99    *              E13889
+     C   99                EXCPTBOOKDO                                    E13889
+     C*
+     C***  Set up trailer record for file SETTST
+     C*
+     C                     MOVE 'T'       RECI
+     C                     MOVEL'99999999'SCRF
+     C                     MOVE '99'      SCRF
+     C                     Z-ADD999999    TRDF
+     C                     Z-ADD1         NORE
+     C                     Z-ADD0         LCD
+     C                     Z-ADD0         TNLU
+     C                     EXCPTESETTO
+     C*
+     C*****Set*up*trailer*record*for*file*ECTLXl9**********************   E37170
+     C***********                                                         E37170
+     C***********          MOVE '9'       ACTC                            E37170
+     C***********          Z-ADD99999     EULN                            E37170
+     C***********          Z-ADD99999     EUDT                            E37170
+     C***********          Z-ADD99999     EURO                            E37170
+     C***********          Z-ADD99        EUIN                            E37170
+     C***********          Z-ADD999999    TRDR                            E37170
+     C***********          Z-ADD1         EUNU                            E37170
+     C***********          EXCPTECTLXO                                    E37170
+     C***********                                                         E37170
+     C***********          Z-ADD99        EUB9                     E14758 E18163
+     C***********          Z-ADD0         EUNU                     E14758 E18163
+     C***********          EXCPTSEEUCO                             E14758 E18163
+     C*
+     C***  Set up trailer record for file FUNDSAC
+     C*
+     C                     MOVE '999'     CCY
+     C                     Z-ADD99999     ADAT
+     C                     Z-ADD0         NORE                            E14756
+     C                     EXCPTFUNDSO
+     C*
+     C***  Set up trailer record for file SEEUCA
+     C*
+     C                     Z-ADD99999     EULN                            S01169
+     C                     Z-ADD0         EUNU                            S01169
+     C                     Z-ADD99        EUB9                            S01169
+     C                     MOVE '9'       ACTC                            S01169
+     C                     Z-ADD99999     EURO                            S01169
+     C                     Z-ADD99999     EUDT                            S01169
+     C                     Z-ADD99        EUIN                            S01169
+     C                     Z-ADD999999    TRDR                            S01169
+     C                     MOVE '9'       EUTG                            S01271
+     C                     EXCPTSEEUCO                                    S01169
+     C*                                                                   S01169
+     C*  Set RECI on file TNRANAA
+     C*
+     C                     MOVE 'H'       RECI
+      *                                                                   052253
+      * Reset audit control values                                        052253
+     C                     Z-ADD0         NINS                            052253
+     C                     Z-ADD0         NAMD                            052253
+     C                     Z-ADD0         NDEL                            052253
+     C                     EXCPTTNRANO
+     C*
+     C***  Set up trailer record for file SEPCA                           S01117
+     C*                                                                   S01117
+     C                     Z-ADD0         SLRB                            S01117
+     C                     Z-ADD0         SINS                            S01117
+     C                     Z-ADD0         SAMD                            S01117
+     C                     Z-ADD0         SDEL                            S01117
+     C                     Z-ADD0         NORE                            S01117
+     C                     EXCPTSEPCAO                                    S01117
+     C*
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *================================================================
+     O/EJECT
+     OBKMTHAF EADD             BKMTHO
+     O                         *ALL
+     OBKPHDAF EADD             BKPHDO
+     O                         *ALL
+     OBKPHHAF EADD             BKPHHO
+     O                         *ALL
+     OBKPOSAF EADD             BKPOSO
+     O                         *ALL
+     OBOOKDAF EADD             BOOKDO
+     O                         *ALL
+     OBPACHAF EADD             BPACHO
+     O                         *ALL
+     OCAPRHAF EADD             CAPRHO
+     O                         *ALL
+     OCDEPPAF EADD             CDEPPO
+     O                         *ALL
+     OCLIABAF EADD             CLIABO
+     O                         *ALL
+     O***TRAF EADD             CNCTRO
+     O***                      *ALL
+     OCNCTRAF EADD             CNCTRO                                     S01155
+     O                         *ALL                                       S01155
+     OCPOSNAF EADD             CPOSNO
+     O                         *ALL
+     OCUBRDAF EADD             CUBRDO                                     S01169
+     O                         *ALL                                       S01169
+     ODPOSNAF EADD             DPOSNO
+     O                         *ALL
+     ODPTMVAF EADD             DPTMVO
+     O                         *ALL
+     O******EXVALZF EADD             EXVALO                         S01169S01186
+     O******                   *ALL                                 S01169S01186
+     OFUNDSACFEADD             FUNDSO
+     O                         *ALL
+     OHSTTRAF EADD             HSTTRO
+     O                         *ALL
+     O**VTPAF EADD             INVTPO
+     O**                       *ALL
+     OINVTPAF EADD             INVTPO                                     S01155
+     O                         *ALL                                       S01155
+     OLMTPAF  EADD             LMTPO
+     O                         *ALL
+     O*OSETAF*EADD             POSETO                                     S01155
+     O********                 *ALL                                       S01155
+     OPRICEAF EADD             PRICEO
+     O                         *ALL
+     OSEACKAF EADD             SEACKO
+     O                         *ALL
+     OSEEUCAF EADD             SEEUCO                                     E14758
+     O                         *ALL                                       E14758
+     OSECACAF EADD             SECACO
+     O                         *ALL
+     O**CHGAF EADD             SECHGO
+     O**                       *ALL
+     OSECGTAF EADD             SECGTO                                     S01169
+     O                         *ALL                                       S01169
+     O**CTYAF EADD             SECTYO
+     O**                       *ALL
+     OSECTYAF EADD             SECTYO                                     S01155
+     O                         *ALL                                       S01155
+     OSEDEVAF EADD             SEDEVO
+     O                         *ALL
+     OSEMKCAF EADD             SEMKCO
+     O                         *ALL
+     OSETLEAF EADD             SETLEO
+     O                         *ALL
+     OSETLXAF EADD             SETLXO                                     E14757
+     O                         *ALL                                       E14757
+     O**IMAF  EADD             SLIMO
+     O**                       *ALL
+     OSLIMAF  EADD             SLIMO                                      S01155
+     O                         *ALL                                       S01155
+     OSNDEVAF EADD             SNDEVO
+     O                         *ALL
+     O**DSEAF EADD             STDSEO
+     O**                       *ALL
+     OSTDSEAF EADD             STDSEO                                     S01155
+     O                         *ALL                                       S01155
+     OTNRANAAFEADD             TNRANO
+     O                         *ALL
+     OTRADSAF EADD             TRADSO
+     O                         *ALL
+     OUDEPPAF EADD             UDEPPO
+     O                         *ALL
+     O*ECTLXL9FEADD             ECTLXO                                    E37170
+     O*                        *ALL
+     OESETTSTFEADD             ESETTO
+     O*                        *ALL
+     O                         *ALL                                       S01190
+     OCPPRIAF EADD             CPPRIO                                     S01176
+     O                         *ALL                                       S01176
+     OSEPCAF  EADD             SEPCAO                                     S01117
+     O                         *ALL                                       S01117
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

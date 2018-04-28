@@ -1,0 +1,703 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Audit Letters Detail Selection Maintenance')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG7060 - Audit Letters Detail Selection Maintenance          *
+      *                                                               *
+      *  Function: Program shows an Audit Letter Detail screen to     *
+      *            confirm Deletion,Enter a new selection or to amend *
+      *            an existing selection                              *
+      *                                                               *
+      *  Called By: CG7050 - Audit Letter Selection                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. BUG23250A          Date 27Mar09               *
+      *                 CER041  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23250A - Show Zero Confirmation on Display in Edit Mode   *
+      *              (Recompile)                                      *
+      *  CER041 - Audit Letters Correspondence                        *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Indicator Use by Display file                                *
+      *  -----------------------------                                *
+      *  20 - Customer No. is mandatory(NOT USED, DFT.IS ALL CUSTOMER)*
+      *  21 - No Cust. within Range to be processed                   *
+      *  22 - Customer Range not valid                                *
+      *  23 - Branch Code not valid                                   *
+      *  24 - Modul not valid                                         *
+      *  25 - Customer No. is not valid                               *
+      *  26 - VLDCMDKEY                                               *
+      *  30-34 Module fields                                          *
+      *                                                               *
+      *  Used Indicators :                                            *
+      *  -----------------                                            *
+      *  89 - ON, if record found                                     *
+      *  90 - ON, if Action Code is 'D' (Del. Selection)              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Midas SD Customer details retrieval
+      *
+     FSDCUSTL1IF  E           K        DISK
+      *
+      ** Audit Letter Selection file
+      *
+     FCGAUSLL1IF  E           K        DISK
+      *
+      ** Audit Letters Detail Selection Maintenance Display
+      *
+     FCG7060DFCF  E                    WORKSTN
+      *
+     IPDATA       DS
+     I                                        1   6 #CNFR
+     I                                        7  12 #CNTO
+     I                                       13  15 #BRCH
+     I                                       16  16 #MODLE
+     I                                       17  17 #MODRE
+     I                                       18  18 #MODMM
+     I                                       19  19 #MODFX
+     I                                       20  20 SMODFR
+     I                                       21  21 SMODIR
+     I                                       22  22 SMODSE
+     I                                       23  23 SMODFF
+     I                                       24  24 #MODAL
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              A8RECI                          A8RECI
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          PGFAC
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data structure for definition of long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Program Status Data Structure - gives Job/Workstation name
+      ** and User ID
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+      *****************************************************************
+      *                                                               *
+      *  Main Processing                                              *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           PDATA
+     C                     PARM           PCODE   1
+     C                     PARM           P1RTN   1
+      *
+      ** Key List for Audit Letter Selection file CGAUSLL1
+      *
+     C           KAUSL     KLIST
+     C                     KFLD           #CNFR
+     C                     KFLD           #CNTO
+     C                     KFLD           #MODLE
+     C                     KFLD           #MODRE
+     C                     KFLD           #MODMM
+     C                     KFLD           #MODFX
+     C                     KFLD           SMODFR
+     C                     KFLD           SMODIR
+     C                     KFLD           SMODSE
+     C                     KFLD           SMODFF
+     C                     KFLD           #MODAL
+     C                     KFLD           #BRCH
+      *
+      ** Save the Passed TO Customer Number to validate Amend
+      *
+     C                     MOVE #CNTO     WCNTO   6
+      *
+     C                     WRITECGAUDLHF
+      *
+     C           PCODE     IFEQ 'D'
+      *
+      ** Show 'F10=Confirm Delete' on screen
+      *
+     C                     MOVE *ON       *IN90
+     C                     END
+      *
+     C                     WRITEFNKEYS
+      *
+      ** Do until F3 or F10 or F12 or ENTER is pressed
+      *
+     C           *INKC     DOUEQ*ON
+     C           *INKJ     OREQ *ON
+     C           *INKL     OREQ *ON
+     C           *IN26     OREQ *OFF
+     C           PCODE     ANDNE'D'
+     C           ERRS      ANDEQ'N'
+     C           QSTMRK    ANDEQ'N'
+     C                     SELEC
+     C           PCODE     WHEQ 'D'
+     C                     EXSR SRDEL
+      *
+     C           PCODE     WHEQ 'A'
+     C                     EXSR SRAMD
+      *
+     C           PCODE     WHEQ 'I'
+     C                     EXSR SRENT
+      *
+     C                     ENDSL
+      *
+     C                     END
+      *
+      ** Program ends here
+      *
+     C                     SELEC
+     C           *INKC     WHEQ *ON
+     C                     MOVEL'1'       P1RTN
+     C           *INKJ     WHEQ *ON
+     C                     MOVEL'2'       P1RTN
+     C           *INKL     WHEQ *ON
+     C                     MOVEL'3'       P1RTN
+     C           *IN26     WHEQ *OFF
+     C                     MOVEL'4'       P1RTN
+     C                     ENDSL
+     C                     MOVE *OFF      *IN90
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRDEL     : Confirm Deletetion                               *
+      *                                                               *
+      *  Called by : Main Processing                                  *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+     C           SRDEL     BEGSR
+      *
+     C                     EXFMTCGAUDLDF
+      *
+      ** Sub-routine ends here
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAMD     : Amend existing Selection                         *
+      *                                                               *
+      *  Called by : Main Processing                                  *
+      *                                                               *
+      *  Calls     : SRCLRQ, SRVAL                                    *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRAMD     BEGSR
+      *
+     C                     DO   *HIVAL
+      *
+     C                     EXFMTCGAUDLAF
+      *
+     C                     EXSR SRCLRQ
+     C                     EXSR SRVAL
+      *
+      ** Is the validation OK?
+      *
+     C           ERRS      IFEQ 'N'
+     C           *INKL     OREQ *ON
+     C           *INKC     OREQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     WRITE#MSGCTL
+      *
+     C                     ENDDO
+      *
+      ** Sub-routine ends here
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRENT     : Enter a new Selection                            *
+      *                                                               *
+      *  Called by : Main Processing                                  *
+      *                                                               *
+      *  Calls     : SRCLRQ, SRVAL                                    *
+      *                                                               *
+      *****************************************************************
+     C           SRENT     BEGSR
+      *
+     C                     DO   *HIVAL
+      *
+     C                     EXFMTCGAUDLEF
+      *
+     C                     EXSR SRCLRQ
+     C                     EXSR SRVAL
+      *
+      ** Is the validation OK?
+      *
+     C           ERRS      IFEQ 'N'
+     C           *INKL     OREQ *ON
+     C           *INKC     OREQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     WRITE#MSGCTL
+      *
+     C                     ENDDO
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVAL     : Validate Selection                               *
+      *                                                               *
+      *  Called by : SRAMD, SRENT                                     *
+      *                                                               *
+      *  Calls     : SRMESS                                           *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           SRVAL     BEGSR
+      *
+     C                     MOVEA'000000'  *IN,20
+     C                     MOVEA'00000'   *IN,30
+     C                     MOVEA'0000'    *IN,35
+      *
+      ** Cust. no. is blank, default Cust.no. to 000000-999999
+      *
+     C           #CNFR     IFEQ *BLANKS
+     C                     MOVEL'000000'  #CNFR
+     C                     MOVEL'999999'  #CNTO
+     C                     ELSE
+     C           #CNFR     IFEQ '?       '
+      *
+      ** If Question Mark has been keyed in --> Remember that
+      *
+     C                     MOVEL'Y'       QSTMRK  1
+     C                     MOVE *ON       *IN26
+     C                     ELSE
+     C                     MOVEL'N'       QSTMRK
+     C                     END
+      *
+      ** Check Cust.No. only, if no cust. range chosen
+      *
+     C           #CNTO     IFEQ *BLANKS
+     C           #CNTO     OREQ '?       '
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   #RTCD   7
+     C                     PARM '*KEY   ' #OPTN   7
+     C           #CNFR     PARM #CNFR     #KEY1  10
+     C                     PARM           #KYST   7
+     C                     PARM           SDCUST
+     C           #RTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN25
+     C                     MOVEL'USR8205' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Validate 'Range TO'-Field
+      *
+     C           #CNTO     IFEQ '?       '
+      *
+      ** If Question Mark has been keyed in --> Remember that
+      *
+     C                     MOVEL'Y'       QSTMRK
+     C                     MOVE *ON       *IN26
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   #RTCD
+     C                     PARM '*KEY   ' #OPTN
+     C           #CNTO     PARM #CNTO     #KEY1
+     C                     PARM           #KYST
+     C                     PARM           SDCUST
+     C           #RTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN25
+     C                     MOVEL'USR8205' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+     C                     ELSE
+     C                     MOVEL'N'       QSTMRK
+     C                     END
+      *
+      ** Range TO has to be greater than Cust.no.
+      *
+     C           #CNTO     IFNE *BLANKS
+     C           #CNTO     ANDLT#CNFR
+     C                     MOVE *ON       *IN22
+     C                     MOVEL'USR8206' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+      *
+      ** There is no Cust.no within chosen Range for processing
+      *
+     C           #CNTO     IFNE *BLANKS
+     C           #CNFR     SETLLSDCUSTL1
+     C                     READ SDCUSTL1                 80
+     C           *IN80     IFEQ *ON
+     C           BBCUST    ORGT #CNTO
+     C                     MOVE *ON       *IN21
+     C                     MOVEL'USR8207' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     ENDIF
+     C                     END
+      *
+      ** Branch code has to be a live branch code or 'ALL'
+      *
+     C           #BRCH     IFNE *BLANKS
+     C           #BRCH     ANDNE'ALL'
+     C           #BRCH     IFEQ '?       '
+      *
+      ** If Question Mark has been keyed in --> Remember that
+      *
+     C                     MOVEL'Y'       QSTMRK
+     C                     ELSE
+     C                     MOVEL'N'       QSTMRK
+     C                     END
+      *
+      ** Chain Branch File
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   #RTCD
+     C                     PARM '*KEY   ' #OPTN
+     C           #BRCH     PARM #BRCH     #BRCD   3
+     C                     PARM           SDBRCH
+      *
+      ** If Branch Code does not exist in Branch File
+      ** OR not a Live Branch Code
+      *
+     C           #RTCD     IFNE *BLANKS
+     C           A8RECI    OREQ 'L'
+     C                     MOVE *ON       *IN23
+     C                     MOVEL'USR9015' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+     C                     END
+      *
+      ** If Module(s) 'ALL' selected, other moduls have to be blank
+      *
+     C           #MODAL    IFEQ 'Y'
+     C           #MODLE    ANDEQ'Y'
+     C           #MODAL    OREQ 'Y'
+     C           #MODRE    ANDEQ'Y'
+     C           #MODAL    OREQ 'Y'
+     C           #MODMM    ANDEQ'Y'
+     C           #MODAL    OREQ 'Y'
+     C           #MODFX    ANDEQ'Y'
+     C           #MODAL    OREQ 'Y'
+     C           SMODFR    ANDEQ'Y'
+     C           #MODAL    OREQ 'Y'
+     C           SMODIR    ANDEQ'Y'
+     C           #MODAL    OREQ 'Y'
+     C           SMODSE    ANDEQ'Y'
+     C           #MODAL    OREQ 'Y'
+     C           SMODFF    ANDEQ'Y'
+     C                     MOVE *ON       *IN24
+     C                     MOVEL'USR9016' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+      *
+      ** If all modules are 'N' --> Error
+      *
+     C           #MODLE    IFEQ 'N'
+     C           #MODRE    ANDEQ'N'
+     C           #MODMM    ANDEQ'N'
+     C           #MODFX    ANDEQ'N'
+     C           SMODFR    ANDEQ'N'
+     C           SMODIR    ANDEQ'N'
+     C           SMODSE    ANDEQ'N'
+     C           SMODFF    ANDEQ'N'
+     C           #MODAL    ANDEQ'N'
+     C                     MOVE *ON       *IN24
+     C                     MOVEL'USR8209' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+      *
+      ** Check all 5 module fields
+      *
+     C           #MODLE    IFNE *BLANKS
+     C           #MODLE    ANDNE'Y'
+     C           #MODLE    ANDNE'N'
+     C                     MOVE *ON       *IN30
+     C                     MOVEL'USR8210' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+      *
+     C           #MODRE    IFNE *BLANKS
+     C           #MODRE    ANDNE'Y'
+     C           #MODRE    ANDNE'N'
+     C                     MOVE *ON       *IN31
+     C                     MOVEL'USR8210' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+      *
+     C           #MODMM    IFNE *BLANKS
+     C           #MODMM    ANDNE'Y'
+     C           #MODMM    ANDNE'N'
+     C                     MOVE *ON       *IN32
+     C                     MOVEL'USR8210' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+      *
+     C           #MODFX    IFNE *BLANKS
+     C           #MODFX    ANDNE'Y'
+     C           #MODFX    ANDNE'N'
+     C                     MOVE *ON       *IN33
+     C                     MOVEL'USR8210' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+      *
+     C           SMODFR    IFNE *BLANKS
+     C           SMODFR    ANDNE'Y'
+     C           SMODFR    ANDNE'N'
+     C                     MOVE *ON       *IN35
+     C                     MOVEL'USR8210' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     ENDIF
+      *
+     C           SMODIR    IFNE *BLANKS
+     C           SMODIR    ANDNE'Y'
+     C           SMODIR    ANDNE'N'
+     C                     MOVE *ON       *IN36
+     C                     MOVEL'USR8210' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     ENDIF
+      *
+     C           SMODSE    IFNE *BLANKS
+     C           SMODSE    ANDNE'Y'
+     C           SMODSE    ANDNE'N'
+     C                     MOVE *ON       *IN37
+     C                     MOVEL'USR8210' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     ENDIF
+      *
+     C           SMODFF    IFNE *BLANKS
+     C           SMODFF    ANDNE'Y'
+     C           SMODFF    ANDNE'N'
+     C                     MOVE *ON       *IN38
+     C                     MOVEL'USR8210' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     ENDIF
+      *
+     C           #MODAL    IFNE *BLANKS
+     C           #MODAL    ANDNE'Y'
+     C           #MODAL    ANDNE'N'
+     C                     MOVE *ON       *IN34
+     C                     MOVEL'USR8210' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+      *
+      ** End of plausibility check, set default values
+      ** If Branch code is blank, default to 'ALL'
+      *
+     C           #BRCH     IFEQ *BLANKS
+     C                     MOVEL'ALL'     #BRCH
+     C                     END
+      *
+      ** If Modules all blank, module 'ALL' default to 'Y'
+      *
+     C           #MODLE    IFEQ *BLANKS
+     C           #MODRE    ANDEQ*BLANKS
+     C           #MODMM    ANDEQ*BLANKS
+     C           #MODFX    ANDEQ*BLANKS
+     C           SMODFR    ANDEQ*BLANKS
+     C           SMODIR    ANDEQ*BLANKS
+     C           SMODSE    ANDEQ*BLANKS
+     C           SMODFF    ANDEQ*BLANKS
+     C           #MODAL    ANDEQ*BLANKS
+     C                     MOVEL'Y'       #MODAL
+     C                     END
+      *
+      ** If Module LE is blank, default to 'N'
+      *
+     C           #MODLE    IFEQ *BLANKS
+     C                     MOVEL'N'       #MODLE
+     C                     END
+      *
+      ** If Module RE is blank, default to 'N'
+      *
+     C           #MODRE    IFEQ *BLANKS
+     C                     MOVEL'N'       #MODRE
+     C                     END
+      *
+      ** If Module FX is blank, default to 'N'
+      *
+     C           #MODFX    IFEQ *BLANKS
+     C                     MOVEL'N'       #MODFX
+     C                     END
+      *
+      ** If Module MM is blank, default to 'N'
+      *
+     C           #MODMM    IFEQ *BLANKS
+     C                     MOVEL'N'       #MODMM
+     C                     END
+      *
+     C           SMODFR    IFEQ *BLANKS
+     C                     MOVEL'N'       SMODFR
+     C                     END
+      *
+     C           SMODIR    IFEQ *BLANKS
+     C                     MOVEL'N'       SMODIR
+     C                     END
+      *
+     C           SMODSE    IFEQ *BLANKS
+     C                     MOVEL'N'       SMODSE
+     C                     END
+      *
+     C           SMODFF    IFEQ *BLANKS
+     C                     MOVEL'N'       SMODFF
+     C                     END
+      *
+      ** If Module ALL is blank, default to 'N'
+      *
+     C           #MODAL    IFEQ *BLANKS
+     C                     MOVEL'N'       #MODAL
+     C                     END
+      *
+      ** Validate Enter operation for the new record
+      *
+     C           KAUSL     SETLLCGAUSLL1                 89
+      *
+     C           PCODE     IFEQ 'I'
+     C           *IN89     ANDEQ'1'
+     C                     MOVE *ON       *IN21
+     C                     MOVEL'USR3989' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+      *
+      ** Validate Amend operation if TO Customer is changed
+      *
+     C           PCODE     IFEQ 'A'
+     C           #CNTO     ANDNEWCNTO
+      *
+     C           KAUSL     SETLLCGAUSLL1                 89
+      *
+     C           *IN89     IFEQ '1'
+     C                     MOVE *ON       *IN22
+     C                     MOVEL'USR7746' ZAMSID
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C                     EXSR SRMESS
+     C                     END
+     C                     END
+      *
+     C           *IN20     IFEQ *ON
+     C           *IN21     OREQ *ON
+     C           *IN22     OREQ *ON
+     C           *IN23     OREQ *ON
+     C           *IN24     OREQ *ON
+     C           *IN25     OREQ *ON
+     C           *IN30     OREQ *ON
+     C           *IN31     OREQ *ON
+     C           *IN32     OREQ *ON
+     C           *IN33     OREQ *ON
+     C           *IN34     OREQ *ON
+     C           *IN35     OREQ *ON
+     C           *IN36     OREQ *ON
+     C           *IN37     OREQ *ON
+     C           *IN38     OREQ *ON
+     C                     MOVEL'Y'       ERRS    1
+     C                     ELSE
+     C                     MOVEL'N'       ERRS
+     C                     END
+      *
+      ** Sub-routine ends here
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLRQ    : Clear Program Msgq                               *
+      *                                                               *
+      *  Called by : SRAMD SRENT                                      *
+      *  Main routine - Main controlling subroutine                   *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+     C           SRCLRQ    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMESS    : Routine to send messages to message subfile.     *
+      *                                                               *
+      *  Called by : SRVAL                                            *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+     C           SRMESS    BEGSR
+      *
+     C           ZAPGM     IFEQ *BLANKS
+     C                     MOVEL##PGM     ZAPGM
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR    : Initialisation Subroutine                        *
+      *                                                               *
+      *  Called by : *INZSR is executed at program activation.        *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST ' ##OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Midas Run Date
+      *
+     C                     MOVE BJMRDT    SRUNDT
+     C                     ENDSR

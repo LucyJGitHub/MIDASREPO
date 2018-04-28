@@ -1,0 +1,97 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Add currencies to GPCURRPD')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000030 - Add currencies to GPCURRPD                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/*       Last Amend No. CFB001             Date 12Nov14              */
+/*       Prev Amend No. CTP011             Date 10Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK024  *RENAME    Date 08Feb06              */
+/*                      CSM007  *CREATE    Date 04Nov05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CFB001 - FusionBanking Midas Rebranding                     */
+/*       CTP011 - Bank Fusion Midas Rebranding                       */
+/*       CPK024 - Renamed from SMC000021 as program already existed  */
+/*                in global layer.                                   */
+/*       CSM007 - Part of change to improve implementation.          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SQL) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Run the following script to synchronise GPCURRPD;     */
+/* (all currencies in SDCURRPD must also be on GPCURRPD) */
+ 
+/* INSERT INTO GPCURRPD SELECT A6CYCD, CYDESC, A6NBDP,1,'M',0,'I',      */
+/* 'MIDASPLUS' FROM (SELECT DISTINCT A6CYCD, A6NBDP FROM SDCURRPD) T    */
+/* INNER JOIN GPICURRPD ON T.A6CYCD = CYCYCD WHERE NOT EXISTS           */
+/* (SELECT GCCYCD FROM GPCURRPD WHERE A6CYCD = GCCYCD)                  */
+ 
+/* INSERT INTO GPCURRPD (GCCYCD, GCDESC, GCNBDP, GCSPRT, GCMDIN,        */                /*CTP011*/
+/*  GCLCD, GCCHTP, GCCUSR) SELECT A6CYCD, CYDESC, A6NBDP,1,'M',0,'I',   */                /*CTP011*/
+/* 'BANKFUSION' FROM (SELECT DISTINCT A6CYCD, A6NBDP FROM SDCURRPD) T   */                /*CTP011*/
+/* INNER JOIN GPICURRPD ON T.A6CYCD = CYCYCD WHERE NOT EXISTS           */                /*CTP011*/
+/* (SELECT GCCYCD FROM GPCURRPD WHERE A6CYCD = GCCYCD)                  */                /*CTP011*/
+                                                                                          /*CTP011*/
+/* First set up the file used for the RUNSQLSTM command.  */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM)
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* Set up the statement line-by-line....                 */
+/**********  CHGVAR     VAR(&SQL) VALUE('INSERT INTO GPCURRPD SELECT +
+                          A6CYCD, CYDESC, A6NBDP,1,''M'',0,''I'',')    */                 /*CTP011*/
+             CHGVAR     VAR(&SQL) VALUE('INSERT INTO GPCURRPD (GCCYCD, +
+                          GCDESC, GCNBDP, GCSPRT, GCMDIN, GCLCD,')                        /*CTP011*/
+             CALL       PGM(UTWRTSQL) PARM(&SQL &MODE)                                    /*CTP011*/
+             CHGVAR     VAR(&SQL) VALUE('GCCHTP, GCCUSR) SELECT +
+                          A6CYCD, CYDESC, A6NBDP,1,''M'',0,''I'',')                       /*CTP011*/
+             CALL       PGM(UTWRTSQL) PARM(&SQL &MODE)
+/**********  CHGVAR     VAR(&SQL) VALUE('''MIDASPLUS'' FROM (SELECT +
+                          DISTINCT A6CYCD, A6NBDP FROM SDCURRPD)')     */                 /*CTP011*/
+/**********  CHGVAR     VAR(&SQL) VALUE('''BANKFUSION'' FROM (SELECT + */                 /*CFB001*/
+/**********               DISTINCT A6CYCD, A6NBDP FROM SDCURRPD)') */              /*CTP011 CFB001*/
+             CHGVAR     VAR(&SQL) VALUE(''' '' FROM (SELECT +
+                          DISTINCT A6CYCD, A6NBDP FROM SDCURRPD)')                        /*CFB001*/
+             CALL       PGM(UTWRTSQL) PARM(&SQL &MODE)
+             CHGVAR     VAR(&SQL) VALUE('T INNER JOIN GPICURRPD ON +
+                          T.A6CYCD = CYCYCD WHERE NOT EXISTS ')
+             CALL       PGM(UTWRTSQL) PARM(&SQL &MODE)
+             CHGVAR     VAR(&SQL) VALUE('(SELECT GCCYCD FROM +
+                          GPCURRPD WHERE A6CYCD = GCCYCD)')
+             CALL       PGM(UTWRTSQL) PARM(&SQL &MODE)
+ 
+/* ....then run it.                                      */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE) NAMING(*SYS)
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ END:
+             ENDPGM

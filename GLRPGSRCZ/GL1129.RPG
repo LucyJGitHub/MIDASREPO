@@ -1,0 +1,713 @@
+0001 H                                                                    GL1129
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Amount accrual input-Master update')             *
+0002 F********************************************************************
+0003 F*                                                                  *
+     F*  Midas  GENERAL LEDGER MODULE
+0005 F*                                                                  *
+0006 F*     GL1129 - AMOUNT ACCRUAL INPUT - S/AMACC                      *
+0007 F*              MASTER FILE UPDATE                                  *
+0008 F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0010 F*                                                                  *
+      *  Last Amend No. MD029265           Date 15Aug14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL064             Date 10Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+0011 F*                 CGL003             Date 11Dec96               *
+0011 F*                 S01199             Date 27Feb90               *
+0011 F*                     LN0419   DATE - 18JUL90                      *
+0011 F*                     S01194   DATE - 18/08/89                     *
+0011 F*                     S01117   DATE - 11/04/89                     *
+0012 F*                                                                  *
+0013 F********************************************************************
+      *  MD029265 - Cannot complete accrual input insert due to       *
+      *             missing narrative upon 'Enter' (Recompile)        *
+     F*  CGL064 - Associated Customer / Cost Centre Validation           *
+     F*           Changes                                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     CGL003 - Add processing for Accrual Frequency on Amount      *
+     F*              Accruals                                            *
+0012 F*     S01199 - HELP SYSTEM                                         *GL1121
+0012 F*     LN0419 - LDA POSITIONS DID NOT CORRESPOND TO OTHER GL112* PGM*
+0012 F*     S01194 - SYNON STANDING DATA UPDATE                          *
+0012 F*     S01117 - MULTIBRANCHING                                      *
+0012 F*                                                                  *
+0013 F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0016 F*L1120FMCF* F     317            WORKSTN                            S01117
+0016 F**GL1120FMO   F     318            WORKSTN                    S01117CGL003
+     FGL1120FMO   F     327            WORKSTN                            CGL003
+0019 F**AMACC   UF  F     128  7AI     2 DISK                       GL1129CGL003
+0019 F***AMACC** UF  F     134  7AI     2 DISK                                         CGL003 CGL029
+     F***AMACC** UF  F     154  7AI     2 DISK                                         CGL029 CGL064
+     FAMACC   UF  F     160  7AI     2 DISK                                                   CGL064
+     F                                              KCOMIT
+     F**AMACCD  O   F     128            DISK                             CGL003
+     F***AMACCD* O   F     134            DISK                                         CGL003 CGL029
+     F***AMACCD* O   F     154            DISK                                         CGL029 CGL06
+     FAMACCD  O   F     160            DISK                                                   CGL064
+     F                                              KCOMIT
+     F                                              KINFSR INFSR
+     F                                              KINFDS INFDS
+0023 F*                                                                   GL1129
+0024 F*       FUNCTION OF INDICATORS                                      GL1129
+0025 F*       STANDARD INPUT PROGRAM INDICATORS                           GL1129
+0014 F*       01      USED TO CONDITION FIRST TIME PASS                   GL1129
+0015 F*       45      SET ON IF ERROR DURING READ FROM THE WORK STATION   GL1129
+     F****************& HELP IND                                          S01199
+0027 F*       U7      DATABASE ERROR                                      GL1129
+0031 F*       89      BLINK ACTION CODE LABEL                             GL1129
+0032 F*       88      NON-DISPLAY ERROR MESSAGE/CODES                     GL1129
+0033 F*       87      NON-DISPLAY CHANGE DETAILS                          GL1129
+0034 F*       86      NON-DISPLAY USEFUL DATA                             GL1129
+0035 F*       85      OUTPUT ENQUIRE - SE - SCREEN                        GL1129
+0036 F*       84      OUTPUT DELETE - SD - SCREEN                         GL1129
+0037 F*       83      OUTPUT AMEND - SA - SCREEN                          GL1129
+0038 F*       82      OUTPUT INSERT - SI - SCREEN                         GL1129
+0039 F*       81      OUTPUT INITIAL - SF - SCREEN                        GL1129
+0040 F*       80      BLINK DELETE CHECK FIELD LABEL                      GL1129
+0041 F*       79      SYSTEM SET-UP FLAG ON                               GL1129
+0042 F*       78      SI SCREEN READ IN                                   GL1129
+0043 F*       77      SA SCREEN READ IN                                   GL1129
+0044 F*       76      SD SCREEN READ IN                                   GL1129
+0045 F*       RECORD ID INDICATORS                                        GL1129
+0046 F*       75      MASTER FILE - HEADER                                GL1129
+0047 F*       74      MASTER FILE - DETAIL RECORD                         GL1129
+0048 F*       73      MASTER FILE - TRAILER                               GL1129
+0049 F*       72      MASTER FILE - NO RECORD FOUND                       GL1129
+0054 F*       67      WTRN - SI RECORD                                    GL1129
+0055 F*       66      WTRN - SA RECORD                                    GL1129
+0056 F*       65      WTRN - SD RECORD                                    GL1129
+0057 F*       64      RECORD UPDATED BY ANOTHER WORKSTATION               GL1129
+0058 F*       FILE UPDATE INDICATORS                                      GL1129
+0060 F*       54      UPDATE OF MASTER TRAILER                            GL1129
+0062 F*       52      UPDATE OF MASTER DETAIL                             GL1129
+0065 F*       SUNDRY INDS                                                 GL1129
+0066 F*       49      DELETE INCLUDES SETTING RECI TO *, OTHERWISE LEAVE  GL1129
+     E                    CPY@    1   1 80
+0067 E*    STANDARD TABLES/ARRAYS                                         GL1129
+0068 E                    ERCD       19  4               ERROR CODES      GL1129
+0069 E                    ERCM    1   1 79               ERROR MESSAGES   GL1129
+0070 E                    NR          5  5 0                              GL1129
+0071 E                    WN          5 15 0                              GL1129
+0072 E                    DC          5  3 0                              GL1129
+0073 I*    STANDARD FILES                                                 GL1129
+0074 I*                                                                   GL1129
+0075 I*    WORKSTATION FILE                                               GL1129
+0076 I*                                                                   GL1129
+0077 I*L1120FMNS*                                                         S01117
+0078 I*                                                                   GL1129
+0079 I*    MASTER FILE - HEADER RECORD                                    GL1129
+0080 I*                                                                   GL1129
+0081 IAMACC   NS  75   1 CA                                               GL1129
+0082 I*                                                                   GL1129
+0083 I*    MASTER FILE - TRAILER                                          GL1129
+0084 I*                                                                   GL1129
+0085 I        NS  73   1 CZ                                               GL1129
+0086 I                                        1   1 RECI                  GL1129
+0087 I                                    P  31  330TNLU                  GL1129
+0088 I                                       34  34 IRRI                  GL1129
+0089 I                                    P  35  49 NR                    GL1129
+0090 I                                    P  50  89 WN                    GL1129
+0091 I                                    P  90  99 DC                    GL1129
+0092 I************************************    1 128 OLD3            GL1129CGL003
+     I**********                              1 134 OLD3                               CGL003 CGL029
+     I**********                              1 154 OLD3                               CGL029 CGL064
+     I                                        1 160 OLD3                                      CGL064
+0093 I*                                                                   GL1129
+0094 I*    MASTER FILE - DETAIL RECORD                                    GL1129
+0095 I*                                                                   GL1129
+0096 I        NS  74                                                      GL1129
+0097 I*                                                                   GL1129
+0098 I*    STANDARD MASTER FILE TNLU AND OLD HASH AMOUNT                  GL1129
+0099 I                                    P  31  330MTNLU                 GL1129
+0100 I                                    P  41  470OLDH                  GL1129
+0101 I*    OLD MASTER FILE CHARACTER STRINGS                              GL1129
+0102 I************************************    1 128 OLD1            GL1129CGL003
+     I**********                              1 134 OLD1                               CGL003 CGL029
+     I**********                              1 154 OLD1                               CGL029 CGL064
+     I                                        1 160 OLD1                                      CGL064
+0103 I*                                                                   GL1129
+0135 I*    WORKSTATION TRANSACTION FILE                                   GL1129
+0136 I*                                                                   GL1129
+0137 IWSTRN      UDS                            860                       GL1129
+0140 I*    MASTER FILE KEY                                                GL1129
+0141 I                                        2   8 MASTKY                GL1129
+0142 I*    STANDARD NEW HASH AMOUNT                                       GL1129
+0143 I                                    P  41  470NEWH                  GL1129
+0144 I*    NEW MASTER FILE CHARACTER STRINGS                              GL1129
+0145 I****************************************1 128 NEW1            GL1129CGL003
+0146 I****************************************1 128 NEW128          GL1129CGL003
+     I**********                              1 134 NEW1                               CGL003 CGL029
+     I**********                              1 134 NEW134                             CGL003 CGL029
+     I**********                              1 154 NEW1                               CGL029 CGL064
+     I**********                              1 154 NEW154                             CGL029 CGL064
+     I                                        1 160 NEW1                                      CGL064
+     I                                        1 160 NEW160                                    CGL064
+     I*
+     I                                      401 460 LOG60
+     I                                      401 401 WST401
+     I                                      468 469 WST469
+0149 I*    STANDARD SCREEN FIELDS                                         GL1129
+0150 I                                      461 478 SCN18                 GL1129
+0151 I                                      461 716 SCN256                GL1129
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0156 I*                                                                   GL1129
+0157 I*    STANDARD LOCAL DATA AREA FIELDS                                GL1129
+0158 I*                                                                   GL1129
+0159 ILDA        UDS                            256                       GL1129
+0160 I                                        1   8 LPROC                 GL1129
+0354 I***********                           134 138 LFILE                 S01194
+0355 I***********                           139 167 LKEY                  S01194
+0356 I***********                           168 175 LPROG                 S01194
+0357 I***********                           176 1770LDBNO                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I***********                           171 178 DBPGM           S01194LN0419
+     I                                      171 180 DBPGM                 LN0419
+     I***********                           179 1800DBASE           S01194LN0419
+     I                                      181 1830DBASE                 LN0419
+0165 I***********                           181 1850LRUND                 LN0419
+0073 I                                      184 1880LRUND                 LN0419
+0166 I***********                           186 192 LRUNA                 LN0419
+0074 I                                      189 195 LRUNA                 LN0419
+0167 I***********                           193 193 LDATF                 LN0419
+0075 I                                      196 196 LDATF                 LN0419
+0168 I***********                           194 1940LSFLG                 S01117
+     I***********                           194 194 LSFLG                 LN0419
+0076 I                                      197 197 LSFLG                 LN0419
+0169 I***********                           195 1960LKEYL                 LN0419
+0077 I                                      198 1990LKEYL                 LN0419
+0170 I***********                           197 202 LISP                  LN0419
+0078 I                                      200 205 LISP                  LN0419
+0171 I***********                           203 203 LTWOL                 LN0419
+0079 I                                      206 206 LTWOL                 LN0419
+0172 I***********                           204 2040LLDLP                 LN0419
+0080 I                                      207 2070LLDLP                 LN0419
+0173 I***********                           205 2090LTNLU                 LN0419
+0081 I                                      208 2120LTNLU                 LN0419
+0174 I***********                           210 210 LDELM                 LN0419
+0082 I                                      213 213 LDELM                 LN0419
+0175 I***********                           211 211 LDUD                  LN0419
+0083 I                                      214 214 LDUD                  LN0419
+     I*  DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240TIME
+     I                                       25  25 ACTION
+     I                                       51 306 LOTSC
+     I*
+     I*  DATA STRUCTURE TO UPDATE LASTTRANSACTION NUMBER
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I*  PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      254 263 USRID
+     I*
+     I*  ERROR HANDLING DATASTRUCTURE
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     C                     MOVEACPY@      BIS@   80
+     C*  ERROR HANDLING
+     C           STATUS    IFEQ 01021
+     C                     EXSR UDLOG
+     C                     GOTO END
+     C                     END
+     C*  LOCK IN DATA AREAS
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WSTRN
+     C           *LOCK     IN   LDA
+     C           *LOCK     IN   WSTRN
+     C*
+0129 C*  FIRST CYCLE PROCESSING                                           GL1129
+     C           WST401    IFEQ 'D'
+     C           WST469    COMP 'SI'                     67
+     C           WST469    COMP 'SA'                     66
+     C           WST469    COMP 'SD'                     65
+     C                     END
+     C*
+     C*
+     C                     SETOF                     01
+      ** THE FOLLOWING IF BLOCK IS NEVER EXECUTED, SO COMMENTED OUT       S01117
+     C************IN01     IFEQ '1'                                       S01117
+     C************IN45     DOUEQ'0'                                       S01117
+0271 C***********          READ GL1120FM                 45               S01117
+     C************IN45     IFEQ '1'                                       S01117
+     C***********          MOVEAERCD      HERCD 160                       S01117
+     C***********          MOVEL'GL1120'  HBPGM   8                       S01117
+     C***********          CALL 'MHELP'                                   S01117
+     C***********          PARM           HBPGM                           S01117
+     C***********          PARM           HERCD                           S01117
+     C***********          END                                            S01117
+     C***********          END                                            S01117
+     C***********          END                                            S01117
+     C*
+0176 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM   GL1129
+0177 C*                                                                   GL1129
+0181 C                     MOVELLISP      WPROG   8                       GL1129
+0182 C                     MOVE '9  '     WPROG                           GL1129
+0183 C                     MOVELWPROG     SPID    6                       GL1129
+0184 C*  SET-UP STANDARD LDA FIELDS                                       GL1129
+0185 C**********           MOVE WPROG     LPROG                           S01194
+0185 C                     MOVE WPROG     DBPGM                           S01194
+0186 C                     Z-ADD9         LLDLP                           GL1129
+0187 C*  SET-UP STANDARD BLANK FIELDS                                     GL1129
+0188 C                     MOVE ' '       BLK200200                       GL1129
+0189 C*  INITIALISE STANDARD INDICATORS                                   GL1129
+0190 C                     SETON                     88    * NON-DISPLAY  GL1129
+0191 C           LDATF     COMP 'M'                      98* DATE FORMAT  GL1129
+0192 C***********LSFLG     COMP 1                        79* SSF          S01117
+     C           LSFLG     COMP 'Y'                      79* SSF          S01117
+0193 C           LDELM     COMP '*'                      49* DELETE METHODGL1129
+0194 C*                                                                   GL1129
+0195 C*  CLEAR ERROR CODE ARRAY, RESET INDEX                              GL1129
+0196 C*                                                                   GL1129
+0197 C                     MOVE BLK200    ERMSG  79                       GL1129
+0198 C                     MOVE '    '    ERCD                            GL1129
+0199 C                     Z-ADD0         S       20                      GL1129
+0200 C*                                                                   GL1129
+0201 C*  PROCESSING IN ONE CYCLE                                          GL1129
+0202 C*                                                                   GL1129
+0203 C                     SETON                     LR                   GL1129
+0204 C*                                                                   GL1129
+0205 C                     Z-ADD0         ZERO05  50                      GL1129
+0206 C*                                                                   GL1129
+0207 C*  SET-UP KEY FOR MASTER FILE TRAILER                               GL1129
+0208 C                     MOVEL'999999A' TRLRKY  7                       GL1129
+0220 C*                                                                   GL1129
+0221 C*  EXECUTE UPDATE/LOGGING PROCEDURE                                 GL1129
+0222 C*                                                                   GL1129
+0223 C                     EXSR UDLOG                                     GL1129
+0224 C*                                                                   GL1129
+0225 C           END       TAG                             ** END TAG     GL1129
+0248 C*                                                                   GL1129
+     C*
+     C                     OUT  LDA
+     C                     OUT  WSTRN
+     C*
+0226 C*                                                                   GL1129
+0227 C********************************************************************GL1129
+0228 C**                                                                  GL1129
+0229 C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT                        GL1129
+0230 C**                                                                  GL1129
+0231 C           SUBSF     BEGSR                           ***  SUBSF  ***GL1129
+0232 C                     SETON                     81                   GL1129
+0233 C                     MOVE '1  '     LPROC                           GL1129
+0234 C                     MOVE 'SF'      SID     2                       GL1129
+0235 C                     ENDSR                                          GL1129
+0236 C********************************************************************GL1129
+0237 C**                                                                  GL1129
+0238 C**   SUBR. - TO CHAIN TO MASTER FILE                                GL1129
+0239 C**                                                                  GL1129
+0240 C           MASTCH    BEGSR                           *** MASTCH  ***GL1129
+0241 C                     SETOF                     727374               GL1129
+0242 C                     SETOF                     75                   GL1129
+0243 C           MASTKY    CHAINAMACC                72                   GL1129
+0244 C                     ENDSR                                          GL1129
+0245 C********************************************************************GL1129
+0255 C**                                                                  GL1129
+0256 C**   SUBR. - TO PERFORM EXCEPTION OUTPUT                            GL1129
+0257 C**                                                                  GL1129
+0258 C           EXEPT     BEGSR                           ***  EXEPT  ***GL1129
+0259 C                     EXCPT                                          GL1129
+0260 C                     SETOF                     505152               GL1129
+0261 C                     SETOF                     535455               GL1129
+0262 C                     SETOF                     81                   GL1129
+0263 C                     ENDSR                                          GL1129
+0264 C********************************************************************GL1129
+0265 C**                                                                  GL1129
+0266 C**   SUBR. - TO PERFORM UPDATING                                    GL1129
+0267 C**                                                                  GL1129
+0268 C           UDLOG     BEGSR                           ***  UDLOG  ***GL1129
+0269 C*                                                                   GL1129
+0276 C*                                                                   GL1129
+     C*  ERROR HANDLING
+     C           STATUS    IFEQ 01021
+     C                     Z-ADD0         STATUS  50
+     C                     GOTO INFTAG
+     C                     END
+0277 C                     TIME           TIME    60                      GL1129
+0278 C*                                                                   GL1129
+0279 C*  ZEROISE MASTER FILE TNLU                                         GL1129
+0280 C*                    Z-ADD0         MTNLU                           GL1129
+0281 C*                                                                   GL1129
+0282 C*  UPDATE CHAIN TO THE MASTER FILE DETAIL RECORD                    GL1129
+0283 C                     EXSR MASTCH                                    GL1129
+0284 C*                                                                   GL1129
+0285 C*  CHECK IF STATUS CHANGED                                          GL1129
+0286 C           MTNLU     COMP LTNLU                6464                 GL1129
+     C           INFTAG    TAG
+0287 C*                                                                   GL1129
+0288 C*  OUTPUT INITIAL SCREEN WITH MSG IF STATUS CHANGED                 GL1129
+0289 C  N64                GOTO UDLOG1                                    GL1129
+0290 C                     EXSR SUBSF                                     GL1129
+0291 C                     SETOF                     88                   GL1129
+0292 C           S         ADD  1         S                               GL1129
+0293 C                     MOVE '918'     ERCD,S                          GL1129
+0294 C                     MOVE ERCM,1    ERMSG                           GL1129
+0295 C                     EXSR EXEPT                                     GL1129
+0296 C                     GOTO UDEND                                     GL1129
+0297 C*                                                                   GL1129
+0298 C           UDLOG1    TAG                             ** UDLOG1 TAG  GL1129
+0299 C*                                                                   GL1129
+0326 C*                                                                   GL1129
+0327 C*  OTHERWISE, OUTPUT NEW INITIAL SCREEN AND CONTINUE PROCESSING     GL1129
+0328 C                     EXSR SUBSF                                     GL1129
+0329 C                     EXSR EXEPT                                     GL1129
+0330 C*                                                                   GL1129
+     C*  OBTAIN LAST TRANSACTION NUMBER AND SETUP STANDARD OUTPUT
+0334 C*  INFORMATION                                                      GL1129
+     C                     EXSR ZTNLU1
+     C                     MOVE 'GL'      MDID    2
+     C                     MOVEL'GL1120'  PGMN    8
+     C                     MOVE WSID      WSIDX   3
+     C                     MOVE USRID     USRIDX 10
+     C                     MOVE SCN256    LOTSC 256
+0346 C*                                                                   GL1129
+0348 C*  UPDATE MASTER FILE DETAIL RECORD                                 GL1129
+0349 C                     SETON                     51                   GL1129
+0350 C                     EXSR EXEPT                                     GL1129
+0351 C*                                                                   GL1129
+0363 C*                                                                   GL1129
+0364 C*  UPDATE CHAIN TO THE MASTER FILE TRAILER                          GL1129
+0365 C                     MOVE TRLRKY    MASTKY                          GL1129
+0366 C                     EXSR MASTCH                                    GL1129
+0367 C**N73******          SETON                     U7                   S01117
+0367 C  N73                SETON                     U7U8LR               S01117
+0368 C**N73******          MOVELWPROG     LFILE                           S01194
+0368 C  N73                MOVELWPROG     DBFILE                          S01194
+0369 C**N73******          MOVE BLK200    LKEY                            S01194
+0369 C  N73                MOVE BLK200    DBKEY                           S01194
+0370 C**N73******          MOVELMASTKY    LKEY                            S01194
+0369 C  N73                MOVE MASTKY    DBKEY                           S01194
+0371 C**N73******          MOVE '97'      LDBNO            ** DB ERROR 97 S01194
+0371 C  N73                MOVE '97'      DBASE            ** DB ERROR 97 S01194
+0372 C  N73                GOTO UDEND                                     GL1129
+0373 C*                                                                   GL1129
+0379 C*  IF THERE IS NO HASH TOTAL FIELD ON THE MASTER FILE DETAIL RECORD,GL1129
+0380 C*  THEN ZEROISE OLDH/NEWH AND CONTINUE AS IF THERE IS.              GL1129
+0381 C*                                                                   GL1129
+0384 C*                                                                   GL1129
+0385 C*  UPDATE FILE CONTROLS                                             GL1129
+0386 C*                                                                   GL1129
+0387 C*  UPDATE NUMBER AND HASH OF RECORDS ON FILE                        GL1129
+0388 C*                                                                   GL1129
+0389 C*  NOT DONE FOR DELETE IF RECI NOT SET TO *                         GL1129
+0390 C*                                                                   GL1129
+0391 C   65N49             GOTO UDLOG2                                    GL1129
+0392 C*                                                                   GL1129
+0393 C                     SETOF                     96                   GL1129
+0394 C*                                                                   GL1129
+0395 C*  INSERT                                                           GL1129
+0396 C   67                Z-ADD1         H          97    *  ADD         GL1129
+0397 C   67                MOVE NEWH      ZZAMT                           GL1129
+0398 C*  AMEND                                                            GL1129
+0399 C   66                Z-ADD1         H          97    *  ADD         GL1129
+0400 C   66      NEWH      SUB  OLDH      WRK15  150                      GL1129
+0401 C   66                MOVE WRK15     ZZAMT                           GL1129
+0402 C*  SUPPRESS UPDATE OF NR,1 FOR AMENDMENT                            GL1129
+0403 C   66                SETON                     96                   GL1129
+0404 C*  DELETE - IF * PUT IN RECORD ID                                   GL1129
+0405 C   65                Z-ADD1         H            97  *  SUBTRACT    GL1129
+0406 C   65                MOVE OLDH      ZZAMT                           GL1129
+0407 C*                                                                   GL1129
+0408 C                     EXSR NPZHSH                                    GL1129
+0409 C*                                                                   GL1129
+0410 C           UDLOG2    TAG                             ** UDLOG2 TAG  GL1129
+0411 C*                                                                   GL1129
+0412 C*  UPDATE NUMBER AND HASH OF RECORDS INSERTED/AMENDED/DELETED TODAY GL1129
+0413 C*                                                                   GL1129
+0414 C                     SETOF                     96                   GL1129
+0415 C*                                                                   GL1129
+0416 C*  INSERT                                                           GL1129
+0417 C   67                Z-ADD3         H          97    *  ADD         GL1129
+0418 C   67                MOVE NEWH      ZZAMT                           GL1129
+0419 C*  AMEND                                                            GL1129
+0420 C   66                Z-ADD4         H          97    *  ADD         GL1129
+0421 C   66      NEWH      SUB  OLDH      WRK15                           GL1129
+0422 C   66                MOVE WRK15     ZZAMT                           GL1129
+0423 C*  DELETE - WHETHER RECORD ID SET TO * OR NOT                       GL1129
+0424 C   65                Z-ADD5         H          97    *  ADD         GL1129
+0425 C   65                MOVE OLDH      ZZAMT                           GL1129
+0426 C*                                                                   GL1129
+0427 C                     EXSR NPZHSH                                    GL1129
+0428 C*                                                                   GL1129
+     C*  UPDATE MASTER FILE TRAILER
+     C                     SETON                     54
+     C                     EXSR EXEPT
+0451 C*                                                                   GL1129
+     C*    END COMIT CYCLE
+     C           CMTTXT    COMIT
+     C*
+0452 C           UDEND     ENDSR                           ** UDEND TAG   GL1129
+0453 C*                                                                   GL1129
+0454 C********************************************************************GL1129
+0455 C**                                                                  GL1129
+0456 C**   SUBR. - SUBROUTINE TO ADD  -97 ON-  OR SUBTRACT  -97 OFF-  1   GL1129
+0457 C**           TO/FROM NR,H AND TO ADD/SUBTRACT ZZAMT TO/FROM WN/DC,H.GL1129
+0458 C**           96 ON SUPPRESSES THE UPDATE OF NR,H - USED FOR AMEND   GL1129
+0459 C**                                                                  GL1129
+0460 C           NPZHSH    BEGSR                           ***  NPZHSH ***GL1129
+0461 C                     Z-ADDH         H       10                      GL1129
+0462 C*                                                                   GL1129
+0463 C   97N96   NR,H      ADD  1         NR,H                            GL1129
+0464 C  N97N96   NR,H      SUB  1         NR,H                            GL1129
+0465 C*                                                                   GL1129
+0466 C                     Z-ADDWN,H      ZZTOTI                          GL1129
+0467 C                     Z-ADDDC,H      ZZTOTD                          GL1129
+0468 C   97                EXSR GLZADD                                    GL1129
+0469 C  N97                EXSR GLZSUB                                    GL1129
+0470 C                     Z-ADDZZTOTI    WN,H                            GL1129
+0471 C                     Z-ADDZZTOTD    DC,H                            GL1129
+0472 C*                                                                   GL1129
+0473 C                     ENDSR                                          GL1129
+0474 C********************************************************************GL1129
+0475 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)  GL1129
+0476 C*   IND '99' IS SET BY AN OVERFLOW ERROR                            GL1129
+0477 C*                                                                   GL1129
+0478 CSR         GLZADD    BEGSR                           *** GLZADD ****GL1129
+0479 C*                                                                   GL1129
+0480 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT  GL1129
+0481 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS GL1129
+0482 C*                                                                   GL1129
+0483 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS                       GL1129
+0484 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD  GL1129
+0485 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD  GL1129
+0486 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW                  GL1129
+0487 C*                                                                   GL1129
+0488 CSR                   EXSR GLZSUM                                    GL1129
+0489 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *GL1129
+0490 C*                                                                   GL1129
+0491 C********************************************************************GL1129
+0492 C* SUBROUTINE TO SUBTRACT AN AMOUNT (ZZAMT) FROM THE TOTAL           GL1129
+0493 C*                                                   (ZZTOTI,ZZTOTD) GL1129
+0494 C*  IND '99' IS SET BY AN OVERFLOW ERROR                             GL1129
+0495 CSR         GLZSUB    BEGSR                           *** GLZSUB ****GL1129
+0496 C* PROCESSING. JUST REVERSE THE 'SIGN' AND ADD                       GL1129
+0497 CSR                   Z-SUBZZAMT     ZZAMT  153       REVERSE 'SIGN' GL1129
+0498 CSR                   EXSR GLZADD                       AND 'ADD'    GL1129
+0499 CSR                   Z-SUBZZAMT     ZZAMT            RESTORE 'SIGN' GL1129
+0500 CSR                   ENDSR                                          GL1129
+0501 C********************************************************************GL1129
+0502 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -            GL1129
+0503 C*                        GLZADD, GLZSUB, GLZCMP.                    GL1129
+0504 C*          PARAMETERS PASSED -                                      GL1129
+0505 C*                     I/P ZZAMTI ZZAMTD                             GL1129
+0506 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.       GL1129
+0507 C*                                                                   GL1129
+0508 CSR         GLZSUM    BEGSR                           *** GLZSUM ****GL1129
+0509 C*                                                                   GL1129
+0510 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI  GL1129
+0511 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD  GL1129
+0512 CSR                   SETOF                     919293               GL1129
+0513 CSR                   SETOF                     949599               GL1129
+0514 C*                                                                   GL1129
+0515 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG                      GL1129
+0516 CSR         ZZAMTI    COMP 0                      9293               GL1129
+0517 CSR 93      ZZAMTD    COMP 0                      9293               GL1129
+0518 CSR 93                GOTO ZZSEND                     ZERO BYPASS    GL1129
+0519 C*                                                                   GL1129
+0520 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.                       GL1129
+0521 CSR         ZZTOTI    COMP 0                      9193               GL1129
+0522 CSR 93      ZZTOTD    COMP 0                      9193               GL1129
+0523 C*                                                                   GL1129
+0524 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.                           GL1129
+0525 CSR 93                Z-ADDZZAMTI    ZZTOTI                          GL1129
+0526 CSR 93                Z-ADDZZAMTD    ZZTOTD                          GL1129
+0527 CSR 93                GOTO ZZSEND                     ZERO BYPASS    GL1129
+0528 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.                        GL1129
+0529 CSR 91N92                                                            GL1129
+0530 CORN91 92             GOTO ZZOFPS                                    GL1129
+0531 C*                                                                   GL1129
+0532 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40                      GL1129
+0533 CSR         ZZWK2     COMP 999                  93    '93' = CARRY   GL1129
+0534 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.GL1129
+0535 C*                                                                   GL1129
+0536 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VEGL1129
+0537 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VEGL1129
+0538 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3                           GL1129
+0539 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3                           GL1129
+0540 C*                                                                   GL1129
+0541 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED    GL1129
+0542 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS. GL1129
+0543 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE      GL1129
+0544 CSRN99                Z-ADDZZWK2     ZZTOTD                          GL1129
+0545 CSRN99                Z-ADDZZWK3     ZZTOTI                          GL1129
+0546 C*                                                                   GL1129
+0547 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT. GL1129
+0548 CSR 99                Z-ADD0         ZZAMT  153                      GL1129
+0549 CSR                   GOTO ZZSEND                                    GL1129
+0550 C*                                                                   GL1129
+0551 C* THE 'SIGNS' ARE DIFFERENT                                         GL1129
+0552 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**GL1129
+0553 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT            GL1129
+0554 C*                                                                   GL1129
+0555 CSR 92                Z-SUBZZAMTI    ZZAMTI 150                      GL1129
+0556 CSR 92                Z-SUBZZAMTD    ZZAMTD  30                      GL1129
+0557 C*                                                                   GL1129
+0558 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.           GL1129
+0559 C*                                                                   GL1129
+0560 CSR 91                Z-SUBZZTOTI    ZZTOTI                          GL1129
+0561 CSR 91                Z-SUBZZTOTD    ZZTOTD                          GL1129
+0562 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.                            GL1129
+0563 C*                                                                   GL1129
+0564 CSR         ZZTOTI    COMP ZZAMTI               93  95               GL1129
+0565 CSR 95      ZZTOTD    COMP ZZAMTD               93  95               GL1129
+0566 C*                                                                   GL1129
+0567 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.                                   GL1129
+0568 CSR 95                Z-ADD0         ZZTOTI                          GL1129
+0569 CSR 95                Z-ADD0         ZZTOTD                          GL1129
+0570 CSR 95                GOTO ZZSEND                                    GL1129
+0571 C*                                                                   GL1129
+0572 C* IF ZZTOT GT. ZZAMT.                                               GL1129
+0573 CSR 93      ZZAMTD    COMP ZZTOTD               94                   GL1129
+0574 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI                          GL1129
+0575 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2                           GL1129
+0576 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI                          GL1129
+0577 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD                          GL1129
+0578 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD                          GL1129
+0579 C*                                                                   GL1129
+0580 C*                                                                   GL1129
+0581 C* IF ZZAMT GT. ZZTOT.                                               GL1129
+0582 CSRN93      ZZTOTD    COMP ZZAMTD               94                   GL1129
+0583 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150                      GL1129
+0584 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2                           GL1129
+0585 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI                          GL1129
+0586 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI                          GL1129
+0587 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD                          GL1129
+0588 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD                          GL1129
+0589 C*                                                                   GL1129
+0590 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE          GL1129
+0591 CSR                   SETOF                     94                   GL1129
+0592 CSR 93 91                                                            GL1129
+0593 CORN93 92             SETON                     94                   GL1129
+0594 CSR 94                Z-SUBZZTOTI    ZZTOTI                          GL1129
+0595 CSR 94                Z-SUBZZTOTD    ZZTOTD                          GL1129
+0596 C**                                                                  GL1129
+0597 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.            GL1129
+0598 CSR 92                Z-SUBZZAMTI    ZZAMTI                          GL1129
+0599 CSR 92                Z-SUBZZAMTD    ZZAMTD                          GL1129
+0600 CSR         ZZSEND    TAG                             ** ZZSEND TAG *GL1129
+0601 C**                                                                  GL1129
+0602 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.           GL1129
+0603 CSR                   SETOF                     96                   GL1129
+0604 CSR         ZZTOTD    COMP 0                        91               GL1129
+0605 CSR 91      ZZTOTI    COMP 0                      96                 GL1129
+0606 CSR 96                MOVE '.000-'   ZZNEGD  5                       GL1129
+0607 CSR                   ENDSR                             ** ENDSR **  GL1129
+0608 C********************************************************************GL1129
+     C*                                                                   GL1129
+     C*   ZTNLU1 SR. - TO LOCK THE TRANSACTION NUMBER DATA AREA AND       GL1129
+     C*                THEN UPDATE AND RELEASE THE DATA AREA.             GL1129
+     C*                                                                   GL1129
+     C           ZTNLU1    BEGSR                                          GL1129
+     C           *NAMVAR   DEFN MNATN     DNATN                           GL1129
+     C           *LOCK     IN   DNATN                                     GL1129
+     C                     MOVE FNATN     NATN    50                      GL1129
+     C                     MOVE FNATN     ZZWK05  50                      GL1129
+     C                     ADD  1         ZZWK05                          GL1129
+     C                     MOVE ZZWK05    FNATN                           GL1129
+     C                     OUT  DNATN                                     GL1129
+     C                     ENDSR                                          GL1129
+     C*****************************************************************   GL1129
+     C**   FILE EXCEPTION / ERROR HANDLING SUBROUTINE                     GL1129
+     C           INFSR     BEGSR                                          GL1129
+     C**   CHECK ERROR TYPE                                               GL1129
+     C           STATUS    IFEQ 01021                                     GL1129
+     C**   CHAIN FILE TO GET CURRENT DETAILS                              GL1129
+     C           MASTKY    CHAINAMACC                72                   GL1129
+     C**                                                                  GL1129
+     C           *IN72     IFEQ '0'                                       GL1129
+     C**   ROLLBACK UPDATES ALREADY DONE                                  GL1129
+     C                     ROLBK                                          GL1129
+     C**   SET ON 'RECORD UPDATED BY ANOTHER WORKSTATION' INDICATOR       GL1129
+     C                     SETON                     64                   GL1129
+     C**   RESET OTHER INDICATORS                                         GL1129
+     C                     SETOF                     505152               GL1129
+     C                     SETOF                     535455               GL1129
+     C                     SETOF                     81                   GL1129
+     C**                                                                  GL1129
+     C                     MOVE '*DETC '  EXTTAG  6                       GL1129
+     C**                                                                  GL1129
+     C                     ELSE                                           GL1129
+     C**                                                                  GL1129
+     C                     MOVE '*CANCL'  EXTTAG                          GL1129
+     C                     END                                            GL1129
+     C**                                                                  GL1129
+     C                     ELSE                                           GL1129
+     C**                                                                  GL1129
+     C                     MOVE '*CANCL'  EXTTAG                          GL1129
+     C                     END                                            GL1129
+     C**                                                                  GL1129
+     C                     ENDSREXTTAG                                    GL1129
+0671 C********************************************************************GL1129
+0609 O*  WORKSTATION - INITIAL SCREEN OUTPUT                              GL1129
+0610 O*                                                                   GL1129
+0611 OGL1120FME        81                                                 GL1129
+0612 O                                   K8 'GL1120F1'                    GL1129
+     O                         SCN18     18
+0614 O                         SID        9                               GL1129
+0615 O                         SPID      15                               GL1129
+0617 O*  ERROR FIELDS                                                     GL1129
+0618 O                         ERMSG    111                               GL1129
+0619 O                         ERCD     190                               GL1129
+0620 O*                                                                   GL1129
+0651 O*  MASTER FILE - DETAIL RECORD UPDATE, FOR INSERT                   GL1129
+0652 O*  WHEN NO RECORD ON FILE                                           GL1129
+0653 O*                                                                   GL1129
+0654 OAMACCD  E        51 72                                              GL1129
+0655 O*************************NEW1     128                         GL1129CGL003
+0655 O**********               NEW1     134                                            CGL003 CGL029
+0655 O**********               NEW1     154                                            CGL029 CGL064
+0655 O                         NEW1     160                                                   CGL064
+0656 O                         NATN      33P                              GL1129
+0657 O*                                                                   GL1129
+0658 O*  MASTER FILE - DETAIL RECORD UPDATE, FOR INSERT OVER DELETED/     GL1129
+0659 O*  BACKED OUT RECORD AND AMEND/DELETE                               GL1129
+0660 O*                                                                   GL1129
+0661 OAMACC   E        51N72                                              GL1129
+0662 O*************************NEW1     128                         GL1129CGL003
+0662 O**********               NEW1     134                                            CGL003 CGL029
+0662 O**********               NEW1     154                                            CGL029 CGL064
+0662 O                         NEW1     160                                                   CGL064
+0663 O                         NATN      33P                              GL1129
+0664 O*                                                                   GL1129
+0682 O*                                                                   GL1129
+0683 O*  MASTER FILE - TRAILER UPDATE                                     GL1129
+0684 O*                                                                   GL1129
+0685 OAMACC   E        54                                                 GL1129
+0686 O*************************OLD3     128                         GL1129CGL003
+     O**********               OLD3     134                                            CGL003 CGL029
+     O**********               OLD3     154                                            CGL029 CGL064
+     O                         OLD3     160                                                   CGL064
+0687 O                         NATN      33P                              GL1129
+0688 O                                   34 'Y'                           GL1129
+0689 O                         NR        49P                              GL1129
+0690 O                         WN        89P                              GL1129
+0691 O                         DC        99P                              GL1129
+0692 O*                                                                   GL1129
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+**   ERROR MESSAGES
+THIS RECORD HAS BEEN UPDATED BY ANOTHER WORKSTATION

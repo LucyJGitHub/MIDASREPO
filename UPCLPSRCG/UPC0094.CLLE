@@ -1,0 +1,173 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UP0094OF) TOFILE(QADSPOBJ)                      */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Populate driving file from dlv. data')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0094 - Populate driving file from delivered data         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. AR936709           Date 26Mar12              */
+/*       Prev Amend No. AR850292           Date 24Jan11              */
+/*                      CUP021             Date 24Jan11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK019             Date 09Jul04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR936709 - Create UPERRMQT earlier in the process.          */
+/*       Ar850292 - Rename of UP0094 to avoid zone / global clash.   */
+/*       CUP021 - Rewrite of Action File processing.                 */
+/*       CPK019 - Addition to CRTDLVLIST utility.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBRARY)
+ 
+             DCL        VAR(&LIBRARY) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&OBJECT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AMENDORNEW) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&GLOBORZONE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&ITEMTEXT) TYPE(*CHAR) LEN(50)
+/* Parameters for QCLSCAN. */
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0) VALUE(10)
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&PATTERN) TYPE(*CHAR) LEN(2) VALUE('_X')
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(2) VALUE(2)
+             DCL        VAR(&TRANSLATE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TRIM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&WILD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3)
+             DCL        VAR(&SAVENAME) TYPE(*CHAR) LEN(10)                                /*CUP021*/
+ 
+             DCLF       FILE(UP0094OF)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/**Delete*and*recreate*temporary*error*message*file.*****************/                  /*AR936709*/
+/**********  DLTF       FILE(QTEMP/UPERRMQT)  */                                        /*AR936709*/
+/**********  MONMSG     MSGID(CPF0000)  */                                              /*AR936709*/
+/**********  CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) */                             /*AR936709*/
+ 
+/* Display all objects in delivered data library. */
+             DSPOBJD    OBJ(&LIBRARY/*ALL) OBJTYPE(*ALL) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/UP0094OF)
+             MONMSG     MSGID(CPF2123) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+ READFILE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGVAR     VAR(&GLOBORZONE) VALUE('       ')
+             CHGVAR     VAR(&AMENDORNEW) VALUE('     ')
+ 
+/* Perform some basic checks on objects in the deliverable data library. */
+             IF         COND(&ODOBTP *EQ '*MSGF') THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('*MSGF')
+             ENDDO
+ 
+             IF         COND(&ODOBTP *EQ '*FILE') THEN(DO)
+                IF         COND(&ODOBAT *NE 'PF') THEN(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('WRONGTYPE')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*FILE')
+                   CHGVAR     VAR(&OBJECT) VALUE(*BLANKS)                                 /*CUP021*/
+/* Check file name for '_X' to see if it is a delete. */
+                   CALL       PGM(QCLSCAN) PARM(&ODOBNM &STRLEN &STRPOS +
+                                &PATTERN &PATLEN &TRANSLATE &TRIM &WILD +
+                                &RESULT)
+                   IF         COND(&RESULT *GT 0) THEN(DO)
+/**********           CHGVAR     VAR(&OBJECT) VALUE('          ')                      */ /*CUP021*/
+                      CHGVAR     VAR(&RESULT) VALUE(&RESULT - 1)
+                      CHGVAR     VAR(&OBJECT) VALUE(%SST(&ODOBNM 1 &RESULT))
+                      CHGVAR     VAR(&ODOBNM) VALUE(&OBJECT)
+                   ENDDO
+                   ELSE       CMD(DO)                                                     /*CUP021*/
+                      CHGVAR     VAR(&SAVENAME) VALUE(&ODOBNM)                            /*CUP021*/
+                   ENDDO                                                                  /*CUP021*/
+/* If the '_X' root name matches the saved name then do no further */                     /*CUP021*/
+/*  processing.  A record will already have been written to the    */                     /*CUP021*/
+/*  deliverables list.                                             */                     /*CUP021*/
+                   IF         COND(&OBJECT *EQ &SAVENAME) THEN(DO)                        /*CUP021*/
+                      GOTO       CMDLBL(READFILE)                                         /*CUP021*/
+                   ENDDO                                                                  /*CUP021*/
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&ODOBTP *EQ '*DTAARA') THEN(DO)
+                   CHGVAR     VAR(&OBJTYPE) VALUE('*DTAARA')
+             ENDDO
+ 
+             IF         COND(&ODOBTP *NE '*MSGF' *AND &ODOBTP *NE +
+                          '*FILE' *AND &ODOBTP *NE '*DTAARA') THEN(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('WRONGTYPE')
+             ENDDO
+ 
+/* If object is correct type then determine whether object exists in library list ... */
+             IF         COND(&OBJTYPE *NE 'WRONGTYPE') THEN(DO)
+                RTVOBJD    OBJ(&ODOBNM) OBJTYPE(&ODOBTP) +
+                             RTNLIB(&RTNLIB) TEXT(&ITEMTEXT)
+/* ... and set appropriate value to be passed to driving file ... */
+                   MONMSG     MSGID(CPF9801 CPF9812) EXEC(DO)
+                   CHGVAR     VAR(&AMENDORNEW) VALUE('NEW  ')
+                   CHGVAR     VAR(&GLOBORZONE) VALUE('UNKNOWN')
+                   CHGVAR     VAR(&ITEMTEXT) VALUE(' ')
+                ENDDO
+                IF         COND(&AMENDORNEW *NE 'NEW') THEN(DO)
+                   CHGVAR     VAR(&AMENDORNEW) VALUE('AMEND')
+                   IF         COND(%SST(&RTNLIB 3 1) = 'G') THEN(DO)
+                      CHGVAR     VAR(&GLOBORZONE) VALUE('GLOBAL ')
+                   ENDDO
+                   ELSE       CMD(DO)
+                      IF         COND(%SST(&RTNLIB 3 1) = 'D') THEN(DO)
+                         CHGVAR     VAR(&GLOBORZONE) VALUE('ZONE   ')
+                      ENDDO
+                      ELSE       CMD(DO)
+                         CHGVAR     VAR(&GLOBORZONE) VALUE('UNKNOWN')
+                      ENDDO
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/* Call program to update deliverables list. */
+             IF         COND(&ODOBNM *EQ 'UPAFCPPD') THEN(DO)                             /*CUP021*/
+                OVRDBF     FILE(UPAFCPPD) TOFILE(&LIBRARY/UPAFCPPD)                       /*CUP021*/
+             ENDDO                                                                        /*CUP021*/
+/**********  CALL       PGM(UP0094) PARM('*WRITE ' &ODOBNM &OBJTYPE +                */ /*Ar850292*/
+/**********               &ODOBTX &ITEMTEXT &AMENDORNEW &GLOBORZONE)                 */ /*Ar850292*/
+             CALL       PGM(UP000094) PARM('*WRITE ' &ODOBNM +
+                          &OBJTYPE &ODOBTX &ITEMTEXT &AMENDORNEW +
+                          &GLOBORZONE)                                                  /*Ar850292*/
+             IF         COND(&ODOBNM *EQ 'UPAFCPPD') THEN(DO)                             /*CUP021*/
+                DLTOVR     FILE(UPAFCPPD)                                                 /*CUP021*/
+/* Call program to update text for files on UPAFCPPD. */                                  /*CUP021*/
+                CALL       PGM(UPC0095) PARM(' ')                                         /*CUP021*/
+             ENDDO                                                                        /*CUP021*/
+ 
+             GOTO       CMDLBL(READFILE)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,1219 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Incomplete securities report')                *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0650 - INCOMPLETE SECURITIES REPORT                        *
+     F*                                                               *
+     F*  Function: Report details of all Securities, together with    *
+     F*   (COB)    any Trades input relating to them, which are       *
+     F*            specified as 'Incomplete'.                         *
+     F*                                                               *
+     F*  Called by: SEC0612F - Incomplete Securities Report           *
+     F*             Frequency:                                        *
+     F*             - Daily during COB                                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. AR1067108          Date 11Dec12               *
+      *  Prev Amend No. AR1001183A         Date 20Nov12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 229857             Date 07Oct04               *
+      *                 226570             Date 27Jun04               *
+      *                 211407             Date 07Jan03               *
+      *                 207543             Date 17JUL02               *
+      *                 194370             Date 12Jul01               *
+      *                 180056             Date 18Oct00               *
+      *                 CSE037             Date 29Apr02               *
+      *                 CSE035             Date 22Apr02               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun01               *
+      *                 CSE031             Date 09Nov01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 16Dec98               *
+      *                 130862             Date 18Oct98               *
+      *                 151945             Date 06Jan99               *
+      *                 CSE005             Date 04Feb97               *
+      *                 084704             Date 01Aug96               *
+     F*                 083039             DATE 01AUG96               *
+     F*                 059110             DATE 25JUL96               **
+     F*                 088047             DATE 26JUN96               *
+     F*                 100228             DATE 30MAY96               *
+     F*                 099886             DATE 18APR96               *
+     F*                 100017             DATE 18APR96               *
+     F*                 100603             DATE 07MAR96               *
+     F*                 S01408             DATE 04FEB96               *
+     F*                 090761             DATE 25OCT95               *
+     F*                 092961             DATE 04OCT95               *
+     F*                 091254             DATE 20OCT95               *
+     F*                 086491             DATE 15JUN95               *
+     F*                 064575             DATE 15AUG94               *
+     F*                 068316             DATE 13JUL94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 E39495             DATE 17FEB93               *
+     F*                 E47922             DATE 01FEB93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E29170             DATE 31OCT91               *
+     F*                 E27092             DATE 03SEP91               *
+     F*                 S01117             DATE 07JUN91               *
+     F*                 S01195             DATE 07JUN91               *
+     F*                 S01271             DATE 19JUN90               *
+     F*                 E23591             DATE 14SEP90               *
+     F*                 E22230             DATE 25MAY90               *
+     F*                 E22230             DATE 25MAY90               *
+     F*                 E21668             DATE 01MAY90               *
+     F*                 E21616             DATE 03APR90               *
+     F*                 E20953             DATE 31JAN90               *
+     F*                 S01232             DATE 17NOV89               *
+     F*                 E20380             DATE 30NOV89               *
+     F*                 E19966             DATE 30OCT89               *
+     F*                 E16772             DATE 19/06/89              *
+     F*                 E17303             DATE 21/04/89              *
+     F*                 E14689             DATE 13/09/88              *
+     F*                 E13911             DATE 24/06/88              *
+     F*                 S01158             DATE 06/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  229857 - Recompiled due to change in ZYLDZ2.                 *
+      *  226570 - Recompiled due to change in ZYLDZ2.                 *
+      *  211407 - Recompile after change on copy sources ZYLDZ2,      *
+      *           ZACCRZ1 and ZYCEZ1 for NX/NNX processing.           *
+      *           The change was to call subroutine ZLCD1 instead     *
+      *           of ZLCD in retrieving the PERIOD for NNX processing *
+      *           and ZNCD1 is called instead of ZNCD in retrieving   *
+      *           the WBENCD for NNX processing. Also rewrite tests   *
+      *           for identifying if position is NX,NNX or CUM.       *
+      *  207543 - CEU018 Not working on a price basis.                *
+      *           Recompiled over changed ZYLDZ2.                     *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  180056 - Recompiled over changed in ZDYYRZ3.                 *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *           Recompile over changed ZACCRZ1/ZYLDZ2/ZYCEZ1
+     F*  206316 - Recompiled over changed ZLCDZ1.                     *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG.               *
+      *           Recompile over changed ZYLDZ2.                      *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+      *  180707 - No Position Settlements generated. Recompile over   *
+      *           changes in /COPY ZNCDZ3.                            *
+      *  CAC005 - Profit Centre Accounting - SE Enhancement           *
+     F*  130862 - Recompiled over ZLCDZ1 & ZDAYSZ2 changes.           *
+     F*  151945 - Recompiled Over changed ZDYYRZ3 .                   *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD/ZACCR).   *
+     F*  084704 - RECOMPILE OVER CHANGED ZYLDZ2 SUB.                  *
+     F*  083039 - RECOMPILE OVER CHANGED ZYLDZ2 SUB.                  *
+     F*  059110 - Recompiled over changed ZYLDZ2 sub.                 *
+     F*  088047 - RECOMPILE over change SR/ZYLDZ2.                    *
+     F*  100228 - RECOMPILE OVER CHANGED ZDYYRZ3, ZLCDZ1 & ZNCDZ3.    *
+     F*  099886 - Rounding problem for partly paid securities.        *
+     F*           Recompile over amended standard subroutine ZACCZ.   *
+     F*  100017 - Position settlement unable to pick up day adj. on   *
+     F*           SECTYD. Change subroutine to use DADJN to stop      *
+     F*           interest day adjustment being used for amortisation.*
+     F*           Recompile over amended subroutine ZDAYS.            *
+     F*  100603 - File controls out of balance at month end if last   *
+     F*           security on file has matured.                       *
+     F*  S01408 - Addition of core hook SE0650FFP1
+     F*           Addition of core hook SE0650CCP1
+     F*           Addition of core hook SE0650CCP2
+     F*           Addition of core hook SE0650CCP3
+     F*           Addition of core hook SE0650CCP4
+     F*           Addition of core hook SE0650CCP5
+     F*           Addition of core hook SE0650CCP6
+     F*  090761 - Should not show Deleted or Matured securities on    *
+     F*           Incomplete Securities  exception report.            *
+     F*  092961 - Recompile over ZDAYSZ2 which was amended by 086491  *
+     F*           (Wrong number of days calculated for day basis 1    *
+     F*           when start or end day is last day of February)      *
+     F*  091254 - RECOMPILE OVER CHANGED ZLCDZ1 & ZNCDZ3              *
+     F*  086491 - Wrong nbr of days calculated for day basis 1        *
+     F*           when start or end day is last day of February       *
+     F*           Recompiled for ZSRSRC/ZDAYSZ2 changes.              *
+     F*  064575 - Recompiled over amended ZYLDZ2 subroutine.          *
+     F*  068316 - Report should show status of incomplete security    *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  E39495 - New /COPY subroutine ZCALCD added (called from      *
+     F*           sr. ZYLD)                                           *
+     F*         - /COPY subroutines ZACCZZ1 and ZCNSDZ1 added (called *
+     F*           from sr. ZYLD and ZCALCD)                           *
+     F*         - /COPY subroutines ZACCRZ1 and ZRATEZ1 added (called *
+     F*           from sr. ZACCZ)                                     *
+     F*         - Recompiled over changed ZYLDZ2                      *
+     F*  E47922 - Recompiled over changed SR/ZYLDZ2.                  *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files and SR/ZYLD.    *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  E27092 - Recompiled over changed SR/ZLCD                     *
+     F*  S01117 - Multibranching                                      *
+     F*  S01195 - Holiday amendment                                   *
+     F*  S01271 - Recompiled for Pay/Receive in Input Cycle changes   *
+     F*           to TRADSD and/or DPTMVD                             *
+     F*  E23591 - FILE TRADSE ALSO TO INCLUDE RECI='A' RECORDS.(TRADES*
+     F*           CHANGED OR AMENDED TODAY).                          *
+     F*           HENCE RECOMPILED OVER TRADSE.                       *
+     F*           IN ADDITION, THE TOTAL NO RECORDS CALCULATED FIELD, *
+     F*           OUTPUT TO SE0650AU WAS CORRECTED TO NEW FIELD STOTLI*
+     F*           HENCE RECOMPILED OVER SE0650AU.                     *
+     F*  E22230 - Australian Yield Mods moved to 'Change of Security'.*   E22230
+     F*  E21668 - Recompiled over changed SR/ZYLDZ2.                  *   E21668
+     F*  E21616 - Recompiled over changed SR/ZLCD.                    *   E21616
+     F*  E20953 - Use Cum/Ex Indicator from Trade for Australian      *   E20953
+     F*           Price/Yield conversion.                             *   E20953
+     F*  S01232 - Australian Yields modifications.                    *   S01232
+     F*  E20380 - Recompile for changed ZYLDZ1/2 and include ZLCDZ1.  *   E20380
+     F*  E19966 - Maturity Date value '999999' treated as Midas Day   *   E19966
+     F*           in error.                                           *   E19966
+     F*  E16772 - Recompiled for the Dividend Payment Amount field    *   E16772
+     F*           changes.                                            *   E16772
+     F*  E17303 - RECOMPILE PROGRAM OVER CHANGED ZDYYRZ3 ZYLDZ1 ZYLDZ2*   E17303
+     F*  E14689 - PRINTER FILE OVERFLOW ERROR.                        *   E14689
+     F*  E13911 - POST INCORPORATION DEVELOPMENT FIX.                 *   E13911
+     F*  S01158 - POST INCORPORATION DEVELOPMENT FIX.                 *   S01158
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSECTY   IF  E           K        DISK
+     FSECTYA  IF  E                    DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+     FTRADSE  IF  E           K        DISK
+     FSE0650P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL          E29170
+     FSE0650AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F*********   TABTG10F                          KIGNORE               S01232
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********   TABLETJF                          KIGNORE               S01232
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK                               E39495
+     F            SEDEVDF                           KRENAMESEDEVDO        E39495
+     F            SNDEVDF                           KRENAMESNDEVDO        E39495
+     FINVTP   IF  E           K        DISK                               E39495
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SE0650FFP1                                           S01408
+     F*                                                                   S01408
+     F/EJECT                                                              E39495
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   15  - P1 OPEN.                                              *
+     F*   20  - END OF INPUT - SECURITIES (SECTY).                    *
+     F*   25  - END OF INPUT - TRADES     (TRADSE).                   *
+     F*   30  - TRADES HEADINGS TO BE PRINTED.                        *
+     F*   35  - TRADE TYPE IS PURCHASE.                               *
+     F*   36  - TRADE TYPE IS SALE.                                   *
+     F****37**-*RECI*ON*SECTYD*IS*'C'*-*CANCELLED.**                  *   090761
+     F*   40  - COUNTERPARTY OR ISSUER NOT FOUND ON CLINTCB.          *
+     F*   41  - SECURITY IS TRADED ON AN AUSTRALIAN YIELD BASIS.      *   S01232
+     F*   45  - 'PERPETUAL' PRINTED FOR MATURITY DATE, SR/ZDATE2 NOT  *   E19966
+     F*         EXECUTED.                                             *   E19966
+     F*                                                               *   E39495
+     F*   60  - CHAIN FAIL ON INVTP                                   *   E39495
+     F*                                                               *
+     F*   99  - GENERAL ERROR                                         *
+     F*                                                               *
+     F*   U7  - DATABASE ERROR                                        *
+     F*   U8  - CONTROL OR DATABASE ERROR                             *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - INITIALISATION                                      *
+     F*  PRTSEC - FORMATS SECURITY DATA FOR REPORT                    *
+     F*  PRTRAD - FORMATS TRADE DATA FOR REPORT                       *
+     F*  AUDIT  - CHECKS AUDIT FILE (SECTYA)                          *
+     F*  PRINT  - PRINTS CONTROL TOTALS REPORT                        *
+     F*  GETSEC - READS NEXT RECORD FROM SECTY                        *
+     F*  GETRAD - READS NEXT RECORD FROM TRADSE                       *
+     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+     F*                                                               *
+     F*  ZACCR  - CALCULATE ACCRUED INTEREST BETWEEN TWO DATES        *   E39495
+     F*  ZACCZ  - CALCULATE ACCRUED INTEREST BETWEEN TWO DATES        *   E39495
+     F*  ZCALCD - CALCULATE LONG TERM CD PRICE FROM YIELD             *   E39495
+     F*  ZCNSD  - CALCULATE CONSIDERATION                             *   E39495
+     F*  ZDATE2 - CONVERTS DATE FROM DAY NO. TO DDMMMYY               *
+     F*  ZLCD   - GET PREVIOUS COUPON DATE.                           *
+     F*  ZPRCO  - FORMATS PRICE AS PRICE/DISCOUNT/YIELD               *
+     F*  ZRATE  - CALCULATE EFFECTIVE INTEREST RATE                   *   E39495
+     F*  ZSEDIT - FORMATS AMOUNT FOR PRINTING                         *
+     F*  ZSYSTM - ACCESSES ICD 1(TABTB10)                             *
+     F***ZYCE***-*DETERMINE*CUM/EX*PARAMETER*FOR*AUSTRALIAN*YIELD******   E20953
+     F*  *PSSR  - ERROR HANDLING                                      *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZACCRZ0                                                E39495
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*COPY*ZSRSRC,ZDATE6Z1                                        S01232 S01195
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZPOWER8Z1                                              S01232
+      /EJECT
+      *                                                                                       CSE037
+     IINVTPDF                                                                                 CSE037
+     I              SFLG                            ISFLG                                     CSE037
+      *                                                                                       CSE037
+     I/COPY ZSRSRC,ZNCDZ2
+     I/COPY ZSRSRC,ZSEDITZ2
+     I* DATA STRUCTURE FOR TABLE FILE KEY
+     I*
+     ITABKEY      DS
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I*
+     I***LDA*****   UDS                            256                    S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR SPOOL FILE NAME                                          E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+      **  EXTERNAL DS FOR HOLIDAY DETAILS                                 S01195
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+      **  EXTERNAL DS FOR HOLIDAY DETAILS AND ACCESS OBJECTS              S01195
+     IDSFDY     E DSDSFDY                                                 S01195
+      *                                                                   S01195
+      ** First DS for access programs, short data structure               S01195
+     I*                                                                   S01195
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I/COPY ZSRSRC,ZYLDZ1
+     I/COPY WNCPYSRC,SE0650I001
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C**  INITIALISATION
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  READ FIRST RECORD FROM SECTY UNLESS ERROR
+     C*
+     C           *INU7     IFEQ '0'
+     C                     EXSR GETSEC
+     C                     END
+     C*
+     C**  PROCESS EACH SECURITY UNTIL EOF OR DATABASE ERROR
+     C*
+     C           *IN20     DOWEQ'0'
+     C           *INU7     ANDEQ'0'
+     C*
+     C           INCS      IFEQ 'C'
+     C*
+     C**  IF SECURITY COMPLETE, NO FURTHER ACTION
+     C*
+     C                     ADD  1         STOTC
+     C*
+     C                     ELSE
+     C*
+     C**  SECURITY NOT COMPLETE - PRINT REPORT
+     C*
+     C                     ADD  1         STOTI
+     C*
+     C                     EXSR PRTSEC
+     C*
+     C**  READ TRADSE UNTIL SHORTNAMES MATCH
+     C*
+     C           TDSS      DOWLTSESN
+     C                     EXSR GETRAD
+     C  N25                END
+     C*
+     C**  PROCESS EACH TRADE UNTIL CHANGE OF SHORT NAME, EOF OR ERROR
+     C*
+     C           TDSS      DOWEQSESN
+     C           *IN25     ANDEQ'0'
+     C           *INU7     ANDEQ'0'
+     C*
+     C                     EXSR PRTRAD
+     C*
+     C**  READ NEXT TRADE FROM TRADSE
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0650CCP1                                           S01408
+     C*                                                                   S01408
+     C                     EXSR GETRAD
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0650CCP2                                           S01408
+     C*                                                                   S01408
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  READ NEXT SECURITY FROM SECTY
+     C*
+     C                     EXSR GETSEC
+     C*
+     C                     END
+     C*
+     C**  IF NO DATABASE ERRORS .....
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C**  CHECK AUDIT FILE (SECTYA)
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     END
+     C*
+     C**  PRINT CONTROL TOTALS REPORT OR ERROR MESSAGE
+     C*
+     C                     EXSR PRINT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  FIRST  - SR. INITIALISATION SUBROUTINE
+     C*
+     C*  CALLED BY: MAIN PROCESSING
+     C*  CALLS    : ZSYSTEM
+     C*
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C*                                                                   E39495
+     C           INVTPK    KLIST                                          E39495
+     C                     KFLD           NMCY                            E39495
+     C                     KFLD           SITP                            E39495
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0650CCP3                                           S01408
+     C*                                                                   S01408
+     C*
+     C**  PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE0650'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C* INPUT PARAMETER :                                                 S01117
+     C*                                                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*                                                                   S01117
+     C**  INITIALISE ACCUMULATORS & LINE COUNT
+     C*
+     C                     Z-ADD0         STOTR   50
+     C                     Z-ADD0         STOTRC  50                      E13911
+     C                     Z-ADD0         STOTRM  50                      E13911
+     C                     Z-ADD0         STOTC   50
+     C                     Z-ADD0         STOTI   50
+     C                     Z-ADD0         RTOTS   50
+     C                     Z-ADD0         RTOTT   50
+     C*
+     C                     Z-ADD99        LINECT  20
+     C*
+     C**  INITIALISE SHORTNAME TO FORCE INITIAL READ OF TRADSE
+     C*
+     C                     MOVEL*LOVAL    TDSS
+     C*
+     C**  ACCESS ICD 1 (TABTB10)
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C**  ERROR IN ZSYSTM
+     C*
+     C           *IN,99    IFEQ '1'
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C                     Z-ADD1         DBASE                        ***S01117
+     C                     MOVEL'TABSE'   DBFILE           ***************
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C*
+     C                     END
+     C*
+     C**  ACCESS ICD 2 (TABTB11)
+     C*
+     C           *INU8     IFNE '1'
+     C*
+     C                     EXSR ZICD2
+     C*
+     C**  ERROR IN ZICD2
+     C*
+     C           *INU8     IFEQ '1'                        ***************
+     C                     SETON                     U7                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**S01117
+     C                     Z-ADD2         DBASE                        ***S01117
+     C                     MOVEL'TABSE'   DBFILE           ***************
+     C                     MOVELTKEY      DBKEY
+     C                     OUT  LDA                                       S01117
+     C*
+     C                     ELSE
+     C*
+     C**  DETERMINE EVENT CONTROL DATE
+     C*
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     EXSR ZEVCD
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+      ** Access Switchable feature files for CAC005                       CAC005
+      *                                                                   CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD   7                       CAC005
+     C                     PARM '*VERIFY' POPTN   7                       CAC005
+     C                     PARM 'CAC005'  PSARD   6                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVE 'Y'       CAC005  1                       CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVE 'N'       CAC005                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                                       CSE035
+      ** Access SAR details file to see if CSE035 is installed                                CSE035
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   @RTCD   7                                           CSE035
+     C                     PARM '*VERIFY' @OPTN   7                                           CSE035
+     C                     PARM 'CSE035'  @SARD   6                                           CSE035
+      *                                                                                       CSE035
+     C           @RTCD     IFEQ *BLANK                                                        CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     END                                                                CSE035
+      *                                                                                       207543
+      ** Access SAR details file to see if CEU018 is installed                                207543
+      *                                                                                       207543
+     C                     CALL 'AOSARDR0'                                                    207543
+     C                     PARM *BLANKS   @RTCD                                               207543
+     C                     PARM '*VERIFY' @OPTN                                               207543
+     C                     PARM 'CEU018'  @SARD                                               207543
+      *                                                                                       207543
+     C           @RTCD     IFEQ *BLANK                                                        207543
+     C                     MOVE 'Y'       CEU018  1                                           207543
+     C                     ELSE                                                               207543
+     C                     MOVE 'N'       CEU018                                              207543
+     C                     ENDIF                                                              207543
+      *                                                                   CAC005
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PRTSEC  - SR. TO FORMAT DATA FOR SECURITY
+     C*
+     C*  CALLED BY: MAIN PROCESSING
+     C*  CALLS    : ZSEDIT; ZDATE2
+     C*
+     C*****************************************************************
+     C*
+     C           PRTSEC    BEGSR                           **PRTSEC BEGSR**
+     C*
+     C**  SKIP TO NEW PAGE IF NECESSARY
+     C*
+     C***********LINECT    IFGT 55                                        E14689
+     C           LINECT    IFGT 50                                        E14689
+     C           *IN15     IFEQ '0'
+     C                     OPEN SE0650P1
+     C                     SETON                     15
+     C                     EXSR RCFP1                                     E29170
+     C                     END
+     C                     WRITEHEADP1
+     C                     Z-ADD9         LINECT
+     C                     END
+     C*
+     C**  SEE IF CANCELLED SECURITY
+     C*
+     C***********RECI      IFEQ 'C'                                       068316
+     C***********XRECI     IFEQ 'C'                                 068316090761
+     C***********          SETON                     37                   090761
+     C***********          ELSE                                           090761
+     C***********          SETOF                     37                   090761
+     C***********          END                                            090761
+     C*
+     C**  FORMAT COUPON RATE
+     C*
+     C                     MOVEL*BLANK    ZFLD15
+     C                     MOVE CPNR      ZFLD15
+     C                     MOVEL'L'       ZECODE
+     C                     Z-ADD7         ZDECS
+     C*
+     C                     EXSR ZSEDIT
+     C*
+     C                     MOVE ZOUT21    ECPNR
+     C*
+     C**  FORMAT MATURITY DATE
+     C*
+     C           MATY      COMP 99999                    45               E19966
+     C           *IN45     IFEQ '0'                                       E19966
+     C                     Z-ADDMATY      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    EMATY
+     C                     END                                            E19966
+     C*
+     C**  LOOK UP CLINTCB RECORD FOR ISSUER
+     C*
+     C           ISSR      CHAINCLINTCBF             40
+     C*
+     C           *IN,40    IFEQ '0'
+     C           RECI      ANDEQ'*'
+     C*
+     C                     MOVE '1'       *IN40
+     C*
+     C                     END
+     C*
+     C**  FORMAT ISSUED DATE
+     C*
+     C                     Z-ADDISSD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    EISSD
+     C*
+     C**  WRITE SECURITY DETAIL LINE
+     C*
+     C           LINECT    IFGT 50                                        E14689
+     C                     WRITEHEADP1                                    E14689
+     C                     Z-ADD9         LINECT                          E14689
+     C                     END                                            E14689
+     C*                                                                   E14689
+     C                     WRITESECDET
+     C*
+     C**  RESET MATURITY DATE INDICATOR                                   E19966
+     C*                                                                   E19966
+     C                     SETOF                     45                   E19966
+     C*                                                                   E19966
+     C                     ADD  4         LINECT
+     C*
+     C                     ADD  1         RTOTS
+     C*
+     C**  INDICATE TRADES HEADINGS REQUIRED
+     C*
+     C                     MOVE '1'       *IN30
+     C*
+     C**  CALCULATE NEXT COUPON DATE FOR ZPRCO
+     C*
+     C                     EXSR ZNCD
+     C*                                                                   S01232
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PRTRAD  - SR TO FORMAT DATA FOR TRADES
+     C*
+     C*  CALLED BY: MAIN PROCESSING
+     C*  CALLS    : ZSEDIT; ZPRCO; ZDATE2
+     C*
+     C*****************************************************************
+     C*
+     C           PRTRAD    BEGSR                           **PRTRAD BEGSR**
+      *                                                                   CAC005
+      ** If CAC005 is installed, retrieve the corresponding user book.    CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM *BLANKS   PRTCD                           CAC005
+     C                     PARM '*USER  ' POPTN                           CAC005
+     C                     PARM           PBKCD   2                       CAC005
+     C                     PARM           PPRFC   4                       CAC005
+     C                     PARM TDBK      PPSBK   2                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPBKCD     TDBK                            CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C**  SKIP TO NEW PAGE IF NECESSARY
+     C*
+     C***********LINECT    IFGT 58                                        E14689
+     C           LINECT    IFGT 40                                        E14689
+     C                     WRITEHEADP1
+     C                     WRITESECDET                                    E14689
+     C***********          Z-ADD9         LINECT                          E14689
+     C                     Z-ADD13        LINECT                          E14689
+     C                     MOVE '1'       *IN30
+     C                     END
+     C*
+     C**  PRINT HEADINGS IF FIRST TRADE FOR THIS SECURITY OR NEW PAGE
+     C*
+     C           *IN30     IFEQ '1'
+     C                     WRITETRADHD
+     C                     ADD  2         LINECT
+     C                     MOVE '0'       *IN30
+     C                     END
+     C*
+     C**  DETERMINE TRADE TYPE (TP = PURCHASE / TS = SALE)
+     C*
+     C                     SETOF                     3536
+     C*
+     C           TDTP      IFEQ 'TP'
+     C                     MOVE '1'       *IN35
+     C                     END
+     C*
+     C           TDTP      IFEQ 'TS'
+     C                     MOVE '1'       *IN36
+     C                     END
+     C*
+     C**  FORMAT TRADE DATE
+     C*
+     C                     Z-ADDTDDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ETDDT
+     C*
+     C**  FORMAT VALUE DATE
+     C*
+     C                     Z-ADDTDVD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ETDVD
+     C*
+     C**  LOOK UP CLINTCB RECORD FOR COUNTERPARTY
+     C*
+     C           TCNR      CHAINCLINTCBF             40
+     C*
+     C           *IN40     IFEQ '0'
+     C           RECI      ANDEQ'*'
+     C*
+     C                     MOVE '1'       *IN40
+     C*
+     C                     END
+     C*
+     C           *IN40     IFEQ '0'
+     C           CSNM      ANDEQ*BLANK
+     C*
+     C                     MOVE '1'       *IN40
+     C*
+     C                     END
+     C*
+     C**  FORMAT NOMINAL
+     C*
+     C                     MOVEL*BLANK    ZFLD15
+     C                     MOVE NOML      ZFLD15
+     C                     MOVEL'J'       ZECODE
+     C                     Z-ADDNMDP      ZDECS
+     C*
+     C                     EXSR ZSEDIT
+     C*
+     C                     MOVE ZOUT21    ENOML
+     C*
+     C**  FORMAT PRICE
+     C*
+     C                     Z-ADDPRIC      ZPRICE
+     C                     Z-ADDTDVD      ZFDATE
+     C*                                                                   S01232
+     C**  IF AN AUSTRALIAN YIELD SECURITY - SET UP PARAMETERS             S01232
+     C*                                                                   S01232
+     C           *IN41     IFEQ '1'                                       S01232
+     C           NOML      ANDNE0                                         S01232
+     C           ITRA      DIV  NOML      WRKPI                           S01232
+     C***********          Z-ADDTDVD      WRKD    50               S01232 E20953
+     C***********          EXSR ZYCE                               S01232 E20953
+     C                     ELSE                                           S01232
+     C                     Z-ADD0         WRKPI                           S01232
+     C***********          MOVE 'C'       SCUMEX                   S01232 E20953
+     C                     END                                            S01232
+     C                     MOVE ACIN      SCUMEX                          E20953
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0650CCP4                                           S01408
+     C*                                                                   S01408
+     C                     Z-ADDNOML      ZNOML                           E39495
+     C*
+     C                     EXSR ZPRCO
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0650CCP5                                           S01408
+     C*                                                                   S01408
+     C*
+     C                     MOVEL*BLANK    ZFLD15
+     C                     MOVE ZPRCOT    ZFLD15
+     C                     MOVEL'L'       ZECODE
+     C                     Z-ADD8         ZDECS
+     C*
+     C                     EXSR ZSEDIT
+     C*
+     C                     MOVE ZOUT21    EPRIC
+     C*
+     C**  WRITE TRADES DETAIL LINE
+     C*
+     C                     WRITETRADET
+     C*
+     C                     ADD  1         LINECT
+     C*
+     C                     ADD  1         RTOTT
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SE0650CCP6                                           S01408
+     C*                                                                   S01408
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  AUDIT  - SR TO CHECK AUDIT FILE - (SECTYA)
+     C*
+     C*  CALLED BY: MAIN PROCESSING
+     C*  CALLS    : NO OTHER SUBROUTINES
+     C*
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR                           **AUDIT BEGSR**
+     C*
+     C           1         CHAINSECTYAF              99
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8            ***************
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+     C                     Z-ADD3         DBASE                        ***S01117
+     C                     MOVEL'SECTYA'  DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C*
+     C                     ELSE
+     C*
+     C**  CHECK CONTROL TOTALS AGREE
+     C*
+     C           STOTR     ADD  STOTRM    TOTLIV  50                      E13911
+     C***********STOTR     IFNE NORE                                      E13911
+     C           TOTLIV    IFNE NORE                                      E13911
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *INU8
+     C***********          ELSE                                    S01232 E22230
+     C***********                                                  S01232 E22230
+     C***SET*UP*INDICATOR FOR AUSTRALIAN YIELDS                    S01232 E22230
+     C***********                                                  S01232 E22230
+     C***********STBS      IFEQ 'Y'                                S01232 E22230
+     C***********SYBS      ANDEQ'AU'                               S01232 E22230
+     C***********          SETON                     41            S01232 E22230
+     C***********          ELSE                                    S01232 E22230
+     C***********          SETOF                     41            S01232 E22230
+     C***********          END                                     S01232 E22230
+     C***********                                                  S01232 E22230
+     C****ACCESS*TABTG10 FOR NOMINAL CURRENCY DECIMAL PLACES       S01232 E22230
+     C***********                                                  S01232 E22230
+     C***********          MOVEL'20      'TKEY   12                S01232 E22230
+     C***********          MOVELNMCY      ZWK4    4                S01232 E22230
+     C***********          MOVE 1         ZWK4                     S01232 E22230
+     C***********          MOVE ZWK4      TKEY                     S01232 E22230
+     C***********TKEY      CHAINTABTG10F             25            S01232 E22230
+     C**N25******RECI      COMP 'D'                  2525          S01232 E22230
+     C***********                                                  S01232 E22230
+     C***********                                                  S01232 E22230
+     C***IF*NOMINAL CCY NOT THERE, PERFORM STD DB ERROR            S01232 E22230
+     C***********                                                  S01232 E22230
+     C************IN25     IFEQ '1'                                S01232 E22230
+     C***********          MOVE '1'       *INU7                    S01232 E22230
+     C***********          MOVE '1'       *INU8                    S01232 E22230
+     C***********          MOVE 'TG10 '   DBFILE                   S01232 E22230
+     C***********          MOVELTKEY      DBKEY            ************** E22230
+     C***********          Z-ADD4         DBASE            * DB ERROR 04* E22230
+     C***********          ELSE                            ************** E22230
+     C***********          Z-ADDCDP       NCDP                     S01232 E22230
+     C***********          END                                     S01232 E22230
+     C                     END
+     C*
+     C                     Z-ADDNORE      SNORE   50
+     C                     Z-ADDTOTLIV    STOTLI  50                      E23591
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           **AUDIT ENDSR**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PRINT  - SR TO PRINT CONTROL TOTALS REPORT
+     C*
+     C*  CALLED BY: MAIN PROCESSING
+     C*  CALLS    : NO OTHER SUBROUTINES
+     C*
+     C*****************************************************************
+     C*
+     C           PRINT     BEGSR                           **PRINT BEGSR**
+     C*
+     C           *IN15     IFEQ '1'
+     C                     WRITETRAILP1
+     C                     END
+     C*
+     C                     WRITEHEADAU
+     C*
+     C           *INU7     IFEQ '0'
+     C                     WRITETOTALS
+     C*                                                                   E29170
+     C           *IN15     IFEQ '0'                                       E29170
+     C                     WRITENONE                                      E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ELSE
+     C                     WRITEERROR
+     C                     EXSR *PSSR                                     S01117
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ENDSR                           **PRINT ENDSR**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  GETSEC - SR. READ NEXT RECORD FROM SECTY AND INCREMENT COUNTER
+     C*
+     C*  CALLED BY: MAIN PROCESSING
+     C*  CALLS    : NO OTHER SUBROUTINES
+     C*
+     C*****************************************************************
+     C*
+     C           GETSEC    BEGSR                           **GETSEC BEGSR**
+     C*
+     C*  Only report on live securities (RECI = 'D')                      090761
+     C*                                                                   090761
+     C***********RECI      DOUNE'*'                                       090761
+     C************IN,20    ORNE '0'                                       090761
+     C                     MOVE ' '       RECI                            090761
+     C           RECI      DOWNE'D'                                       090761
+     C           *IN,20    ANDNE'1'                                       090761
+     C***********          READ SECTY                    20               100603
+     C           RECI      IFEQ 'C'                                       090761
+     C                     ADD  1         STOTRC                          090761
+     C                     END                                            090761
+     C           RECI      IFEQ 'M'                                       090761
+     C                     ADD  1         STOTRM                          090761
+     C                     END                                            090761
+     C                     READ SECTY                    20               100603
+     C                     END
+     C*                                                                   068316
+     C                     MOVE RECI      XRECI   1                       068316
+     C*
+     C*******T END OF FILE, ADD TO COUNT OF SECURITIES READ               S01158
+     C**  IF NOT END OF FILE AND NOT A CANCELLATION, ADD TO COUNT OF      S01158
+     C**  SECURITIES
+     C*
+     C           *IN,20    IFEQ '0'
+     C***********RECI      ANDNE'C'                                 S01158E13911
+     C***********RECI      IFEQ 'C'                                 E13911090761
+     C***********          ADD  1         STOTRC                    E13911090761
+     C***********          ELSE                                     E13911090761
+     C***********RECI      IFEQ 'D'                                 E13911090761
+     C*
+     C           STOTR     ADD  1         STOTR
+     C***********          ELSE                                     E13911090761
+     C***********RECI      IFEQ 'M'                                 E13911090761
+     C***********          ADD  1         STOTRM                    E13911090761
+     C***********          END                                      E13911090761
+     C***********          END                                      E13911090761
+     C***********          END                                      E13911090761
+     C*                                                                   E22230
+     C**  SET UP INDICATOR FOR AUSTRALIAN YIELDS                          E22230
+     C*                                                                   E22230
+     C           STBS      IFEQ 'Y'                                       E22230
+     C           SYBS      ANDEQ'AU'                                      E22230
+     C                     SETON                     41                   E22230
+     C                     ELSE                                           E22230
+     C                     SETOF                     41                   E22230
+     C                     END                                            E22230
+     C*                                                                   E22230
+     C**  ACCESS TABTG10 FOR NOMINAL CURRENCY DECIMAL PLACES              E22230
+     C*                                                                   E22230
+     C                     MOVEL'20      'TKEY   12                       E22230
+     C                     MOVELNMCY      ZWK4    4                       E22230
+     C                     MOVE 1         ZWK4                            E22230
+     C                     MOVE ZWK4      TKEY                            E22230
+     C           TKEY      CHAINTABTG10F             25                   E22230
+     C  N25      RECI      COMP 'D'                  2525                 E22230
+     C*                                                                   E22230
+     C**  IF NOMINAL CCY NOT THERE, PERFORM STD DB ERROR                  E22230
+     C*                                                                   E22230
+     C           *IN25     IFEQ '1'                                       E22230
+     C                     MOVE '1'       *INU7                           E22230
+     C                     MOVE '1'       *INU8                           E22230
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TG10 '   DBFILE                          E22230
+     C                     MOVELTKEY      DBKEY            ************** E22230
+     C                     Z-ADD4         DBASE            * DB ERROR 04* E22230
+     C                     OUT  LDA                                       S01117
+     C                     ELSE                            ************** E22230
+     C                     Z-ADDCDP       NCDP                            E22230
+     C*                                                                   E39495
+     C** Access investment types file for processing type                 E39495
+     C*                                                                   E39495
+     C           INVTPK    CHAININVTP                60                   E39495
+     C           *IN60     IFEQ '1'                                       E39495
+     C                     MOVE '1'       *INU7                           E39495
+     C                     MOVE '1'       *INU8            ***************E39495
+     C                     MOVEL'05'      DBASE            **DB ERROR 05**E39495
+     C                     MOVEL'INVTP'   DBFILE           ***************E39495
+     C                     MOVELNMCY      INVTDB  6                       E39495
+     C                     MOVE SITP      INVTDB                          E39495
+     C                     MOVELINVTDB    DBKEY                           E39495
+     C                     END                                            E39495
+     C*                                                                   E39495
+     C                     END                                            E22230
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*
+     C*  GETRAD   - SR TO READ NEXT RECORD FROM TRADSE
+     C*
+     C*  CALLED BY: MAIN PROCESSING
+     C*  CALLS    : NO OTHER SUBROUTINES
+     C*
+     C*****************************************************************
+     C*
+     C           GETRAD    BEGSR                           **GETRAD BEGSR**
+     C*
+     C                     READ TRADSE                   25
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*   *PSSR -- ERROR HANDLING SUBROUTINE                              S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C           *PSSR     BEGSR                                          S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     SETON                     LR                   S01117
+     C                     RETRN                                          S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+     C**                                                                  S01117
+     C*****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM *BLANKS   SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C/EJECT                                                              E39495
+     C/COPY ZSRSRC,ZACCRZ1                                                E39495
+     C/EJECT                                                              E39495
+     C/COPY ZSRSRC,ZACCZZ1                                                E39495
+     C/EJECT                                                              E39495
+     C/COPY ZSRSRC,ZCALCD                                                 E39495
+     C/EJECT                                                              E39495
+     C/COPY ZSRSRC,ZCNSDZ1                                                E39495
+      /EJECT                                                              S01232
+     C*COPY*ZSRSRC,XDATE3Z1**                                      S01232 S01195
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT                                                              E20380
+     C/COPY ZSRSRC,ZLCDZ1                                                 E20380
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZPRCOZ1
+     C/EJECT                                                              E39495
+     C/COPY ZSRSRC,ZRATEZ1                                                E39495
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+     C***/EJECT****************                                    S01232 E20953
+     C***/COPY*ZSRSRC,ZYCEZ1***                                    S01232 E20953
+      /EJECT
+     C/COPY ZSRSRC,ZYLDOZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDZ2
+      /EJECT
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

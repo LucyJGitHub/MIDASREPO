@@ -1,0 +1,153 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SC Restart Support to Main System Transition')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC004320 - Restart 'Support' to 'Main' System Transition   */
+/*                   Processing                                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Last Amend No. CSC011  *CREATE    Date 18Sep01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC011 - 24x7 Midas Availability                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/** Declare variables */
+ 
+             DCL        VAR(&CPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SCNF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RPLY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&LIBR) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&S1MAIN) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&S3STRT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&S4STRT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&S4PHAS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Initialise contents of dataarea */
+ 
+             RTVDTAARA  DTAARA(SC24X7 (1 2)) RTNVAR(&S1MAIN)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&LIBR)
+ 
+             IF         COND(&LIBR *NE &S1MAIN) THEN(DO)
+ 
+                CHGVAR     VAR(&CPGM) VALUE('SCC004320')
+                CHGVAR     VAR(&SCNF) VALUE('SDC0700F10')
+                CHGVAR     VAR(&RPLY) VALUE(' ')
+ 
+                CALL       PGM(SDC0700) PARM(&CPGM &SCNF &RPLY)
+ 
+/** Database error processing */
+ 
+                IF       COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                     TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+             ELSE       CMD(DO)
+ 
+                RTVDTAARA  DTAARA(SCSUPP (1 1)) RTNVAR(&S3STRT)
+ 
+                IF         COND(&S3STRT *EQ 'Y') THEN(DO)
+                   CALL       PGM(SCC004310)
+ 
+/** Database error processing */
+ 
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                      RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                      SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                        MSGDTA(&MEM) TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                      GOTO       CMDLBL(ABNOR)
+                   ENDDO
+                ENDDO
+ 
+                ELSE       CMD(DO)
+ 
+                   RTVDTAARA  DTAARA(SCREOP (1 1)) RTNVAR(&S4STRT)
+                   RTVDTAARA  DTAARA(SCREOP (2 1)) RTNVAR(&S4PHAS)
+ 
+                   IF         COND(&S4STRT *EQ 'Y') THEN(DO)
+                      IF         COND(&S4PHAS *EQ ' ') THEN(DO)
+                         CALL       PGM(SC004330)
+ 
+/** Database error processing */
+ 
+                         IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                           RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                           SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                             MSGDTA(&MEM) TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                           GOTO       CMDLBL(ABNOR)
+                         ENDDO
+                      ENDDO
+ 
+                      CALL       PGM(SCC004340)
+ 
+/** Database error processing */
+ 
+                         IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                           RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                           SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                             MSGDTA(&MEM) TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                           GOTO       CMDLBL(ABNOR)
+                         ENDDO
+ 
+                   ENDDO
+ 
+                   ELSE       CMD(DO)
+ 
+                      CHGVAR     VAR(&CPGM) VALUE('SCC004320')
+                      CHGVAR     VAR(&SCNF) VALUE('SDC0700F12')
+                      CHGVAR     VAR(&RPLY) VALUE(' ')
+ 
+                   CALL       PGM(SDC0700) PARM(&CPGM &SCNF &RPLY)
+ 
+/** Database error processing */
+ 
+                      IF        COND(%SWITCH(XXXXXX11)) THEN(DO)
+                         RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                         SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) +
+                         MSGDTA(&MEM) TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                         GOTO       CMDLBL(ABNOR)
+                      ENDDO
+                   ENDDO
+ 
+                ENDDO
+ 
+             ENDDO
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/** Abnormal termination - batch job */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC004320 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,507 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Sec. Turnover-Book Pos'n Extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1070 - SECURITY TURNOVER - BOOK POSITION EXTRACT           *
+     F*                                                               *
+     F*  Function: To identify the book positions (Branch, Market,    *
+     F*   (COB)    Book, Security) for which there has been a non-    *
+     F*            zero nominal position (trade or value date basis)  *
+     F*            during this calendar month, for production of the  *
+     F*            Security Turnover Report.                          *
+     F*                                                               *
+     F*  Called by: SEC0804 - Security Turnover Report                *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01502             Date 08JUL94               *
+     F*                 S01455             Date 05NOV93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E29170             DATE 01NOV91               *
+     F*                 S01117             DATE 31MAY91               *
+     F*                 E18620             DATE 24JUL89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+     F*           in length of SESTAT, 133 long.                      *
+     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+     F*           Recompiled due to changes in PF/TABTB80.            *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multibranching                                      *
+     F*  E18620 - Recompile to pick up new SESTAT                     *   E18620
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE1070AUO   E                    PRINTER
+     FBKPHDA  IF  E           K        DISK
+     FTOVRPA  O   E                    DISK         KINFDS TOVADS
+     F                                              KINFSR TOVASR
+     FTOVRPD  O   E                    DISK         KINFDS TOVRDS
+     F                                              KINFSR TOVRSR
+     FBKPSO   IF  E           K        DISK
+     FBKPHD   IF  E           K        DISK
+     FTABICD  IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB30F                          KIGNORE
+     F            TABTB35F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTB50F                          KIGNORE
+     F            TABTB55F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   31  - END OF FILE FOR BKPHDDF                               *
+     F*   32  - END OF BRANCH,SECURITY,MARKET,TR/VALUE BASIS ON READP *
+     F*   41  - RECORD NOT FOUND WHEN CHAINING TO BKPOSDF             *
+     F*   50  - USED TO CONDITION DIFFERENCE MESSAGE IN AUDIT PRINT   *
+     F*   97  - USED TO CONDITION STATUS BEING OUTPUT IN AUDIT PRINT  *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F* U7-U8 - DATABASE ERROR                                        *
+     F*   U8  - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS    *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  FIRST  - OBTAINS ICD INFO                                    *
+     F*  TOVRSR - PERFORMS DB ERROR IF ERROR WHEN WRITING RECORDS TO  *
+     F*           THE EXTRACT FILE                                    *
+     F*  TOVASR - PERFORMS DB ERROR IF ERROR WHEN WRITING THE EXTRACT *
+     F*           AUDIT FILE RECORD                                   *
+     F*  W01    - WRITES RECORDS TO THE EXTRACT FILE                  *
+     F*  AUDIT  - OUTPUTS CONTROL REPORT AND WRITES EXTRACT AUDIT REC *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZSYSTM - CHAINS TO ICD TABTB10                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /SPACE 3
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I* DS BKPHIN IS USED FOR REDFINING SOME OF THE INPUT FIELDS AS ONE
+     I* FIELD SO THAT THEY CAN BE MOVED INTO THE OUTPUT FIELDS IN ONE
+     I* MOVE IT IS ALSO USED IN SETTING UP ERROR KEY WHEN CHAINING TO
+     I* BKPSO FILE IF AN ERROR OCCURS.
+     I*
+     I            DS
+     I***********                             1   30BHBR                  S01117
+     I                                        1   3 BHBA                  S01117
+     I                                        4   4 BHMK
+     I                                        5   6 BHBK
+     I                                        7  16 BHSC
+     I                                        1  16 BKPHIN
+     I*
+     I* DS TOVOUT IS USED FOR REDFINING 4 OF THE 5 OUTPUT FIELDS AS ONE
+     I* FIELD SO THAT MOVING CONTENTS OF INPUT FIELDS TO OUTPUT FIELDS
+     I* CAN BE IN ONE MOVE OPERATION
+     I*
+     I            DS
+     I***********                             1   30TBBR                  S01117
+     I                                        1   3 TBBA                  S01117
+     I                                        4   4 TBMK
+     I                                        5   6 TBBK
+     I                                        7  16 TBSS
+     I                                        1  16 TOVOUT
+     I*
+     I*
+     ISESTAT    E DS
+     I*
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*
+     ITOVADS      DS
+     I                                     *STATUS  TVASTS
+     I*
+     ITOVRDS      DS
+     I                                     *STATUS  TOVSTS
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C**  CLEAR LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'SE1070  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C**  SET UP KEY LIST FOR OBTAINING INFORMATION FROM THE BOOK
+     C**  POSITIONS FILE
+     C*
+     C           KBKPSO    KLIST
+     C                     KFLD           BHSC
+     C***********          KFLD           BHBR                            S01117
+     C                     KFLD           BHBA                            S01117
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C                     KFLD           LPSD
+     C*
+     C           RECKEY    KLIST
+     C                     KFLD           BHSC
+     C***********          KFLD           BHBR                            S01117
+     C                     KFLD           BHBA                            S01117
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C*
+     C**  INITIALISE RECORD COUNTS.
+     C*
+     C                     Z-ADD0         IREC    50
+     C                     Z-ADD0         WRTREC  50
+     C*
+     C**  OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C**  CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C**  READ A RECORD, CHECK TO SEE IF THE END OF FILE HAS BEEN
+     C**  REACHED IF EOF HAS NOT BEEN REACHED ENTER LOOP AND PROCESS
+     C*
+     C                     READ BKPHDDF                  31
+     C           *IN31     DOWEQ'0'
+     C*
+     C**  INCREMENT COUNT OF ALL RECORDS READ BY 1
+     C*
+     C                     ADD  1         IREC    50
+     C*
+     C**  CHECK CURRENT BOOK POSITION HEADER IS A LIVE RECORD, THAT
+     C**  IT IS NOT ON GREY MARKET AND THAT A RECORD WITH THIS BRANCH,
+     C**  MARKET, BOOK, OR SECURITY HAS NOT BEEN PREVIOUSLY EXTRACTED
+     C*
+     C           RECI      IFEQ 'D'
+     C           BHMK      ANDNE'G'
+     C           BKPHIN    ANDNETOVOUT
+     C*
+     C** ACCESS CURRENT POSITIONS FILE BKPSO TO OBTAIN NOMINAL POSITION
+     C** INFO. FOR THIS RECORD. IF RECORD NOT FOUND OR DELETED, PERFORM
+     C** STANDARD DB ERROR
+     C*
+     C           KBKPSO    CHAINBKPOSDF              41
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'BKPSO'   DBFILE
+     C*
+     C**  SET UP KEY IN ERROR FOR PRINTING
+     C*
+     C                     MOVELBHTV      TMPFLD  6
+     C                     MOVE LPSD      TMPFLD
+     C                     MOVELBKPHIN    BKPSKY 22
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE TMPFLD    BKPSKY           *****************
+     C                     MOVELBKPSKY    DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C**  IF THE NOMINAL POSITION VALUE IS NOT EQ 0, WRITE THE CURRENT
+     C**  RECORD TO THE EXTRACT FILE USING SUBROUTINE W01.
+     C*
+     C           NPSN      IFNE 0
+     C                     EXSR W01
+     C*
+     C**  IF NOMINAL POSITION VALUE = 0, FIND PREVIOUS NOMINAL
+     C**  POSITION VALUE NE 0 FOR THIS BRANCH,SECURITY,MARKET AND
+     C**  TRADE/VALUE BASIS.
+     C**  LOOP UNTIL A NON-ZERO NOMINAL POSITION IS FOUND OR UNTIL
+     C**  CONDITIONS BELOW ARE MET
+     C*
+     C                     ELSE
+     C*
+     C*
+     C           BPPD      DOULTWKSM
+     C           NPSN      ORNE 0
+     C           *IN32     OREQ '1'
+     C*
+     C** READ NEXT RECORD FROM BKPOS. IF NOT EOF AND LAST POS'N DATE GE
+     C** START OF MONTH AND THE NOMINAL POSITION NE 0, EXTRACT RECORD.
+     C*
+     C           RECKEY    READEBKPOSDF                  32
+     C           *IN32     IFEQ '0'
+     C           BPPD      ANDGEWKSM
+     C           NPSN      ANDNE0
+     C*
+     C                     EXSR W01
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF EOF OR CHANGE IN BRANCH, SECURITY ETC. SET OFF THE
+     C**  INDICATOR SO LOOP CAN EXECUTE AGAIN IF NEED BE.
+     C*
+     C                     SETOF                     32
+     C                     END
+     C                     END
+     C*
+     C* READ NEXT BOOK HEADER RECORD READY FOR PROCESSING
+     C*
+     C                     READ BKPHDDF                  31
+     C*
+     C                     END
+     C*
+     C* EXECUTE THE AUDIT SR AND THEN END PGM.
+     C*
+     C           EAUDIT    TAG
+     C                     EXSR AUDIT
+     C                     SETON                     LR
+      /EJECT
+     C**********************************************************************
+     C*
+     C*  FIRST  - SUBROUTINE TO ACCESS ICD INFORMATION
+     C*
+     C**********************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C**  ACCESS ICDS
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C                     ELSE
+     C*
+     C**  Calculate start of month date in day no format -
+     C**   = end of previous month + 1
+     C*
+     C           *NAMVAR   DEFN           SESTAT
+     C                     IN   SESTAT
+     C                     MOVE EOPM      WKSM
+     C           WKSM      ADD  1         WKSM    50
+     C                     END
+     C*
+     C                     ENDSR
+     C**********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C*  W01  - SUBROUTINE TO WRITE OUT RECORDS TO THE EXTRACT FILE
+     C*
+     C**********************************************************************
+     C*
+     C           W01       BEGSR                           ** W01 **
+     C*
+     C**  MOVE THE FIELDS TO BE WRITTEN TO THE OUTPUT FIELDS
+     C*
+     C                     MOVE BKPHIN    TOVOUT
+     C                     MOVE 'D'       RECI
+     C*
+     C**  WRITE THE RECORD TO THE EXTRACT FILE AND INCREMENT COUNT OF
+     C**  RECORDS WRITTEN BY 1
+     C*
+     C                     WRITETOVRPDF
+     C                     ADD  1         WRTREC  50
+     C*
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  TOVRSR  - SUBROUTINE FOR ERROR HANDLING OF BOOK POSITIONS
+     C*
+     C*****************************************************************
+     C*
+     C           TOVRSR    BEGSR
+     C*
+     C                     MOVE 'TOVRP'   DBFILE
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVELTOVOUT    DBKEY            *****************
+     C                     Z-ADD3         DBASE            ** DB ERROR 03 **
+     C                     MOVE TOVSTS    DBSTAT  5        *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  TOVASR  - SR FOR ERROR HANDLING OF BOOK POSITIONS AUDIT
+     C*
+     C*****************************************************************
+     C*
+     C           TOVASR    BEGSR
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TOVRP'   DBFILE
+     C                     MOVELNORE      DBKEY            *****************
+     C                     Z-ADD4         DBASE            ** DB ERROR 04 **
+     C                     MOVE TVASTS    DBSTAT  5        *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE '1'       *IN97
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  AUDIT  - THIS SUBROUTINE WRITES OUT THE AUDIT DETAILS TO THE
+     C*           PRINTER SE1070AU
+     C*
+     C*****************************************************************
+     C*
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C** IF THERE HAVE BEEN NO DB ERRORS DURING PROCESSING, READ THE
+     C** AUDIT RECORD FOR FILE BKPHD
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C** IF THE AUDIT RECORD IS NOT FOUND, PERFORM STANDARD DB ERROR
+     C*
+     C                     READ BKPHDA                   99
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'BKPHD'   DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 05 **
+     C                     Z-ADD5         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C**  IF NO ERROR HAS OCCURRED, CHECK NO. OF RECORDS READ WITH
+     C**  NO. IN AUDIT RECORD. IF SAME, WRITE AUDIT RECORD
+     C*
+     C                     ELSE
+     C                     Z-ADDNORE      NOREC   50
+     C           IREC      IFEQ NOREC
+     C                     Z-ADDWRTREC    NORE
+     C*
+     C                     WRITETOVRPAF
+     C                     ELSE
+     C                     SETON                     U850
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  WRITE THE AUDIT HEADER TO PRINTER FILE
+     C*
+     C                     WRITEHEADAU
+     C*
+     C**  IF A DB ERROR HAS OCCURRED, WRITE THE ERROR DETAILS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C*
+     C**IF THE NUMBER OF RECORDS READ = 0, WRITE "NO DETAILS TO REPORT"
+     C*
+     C                     ELSE
+     C           IREC      IFEQ 0
+     C                     WRITENONE
+     C*
+     C**  WRITE THE CONTROL DETAILS
+     C*
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     END
+     C                     END
+     C***********                                                         E29170
+     C****WRITE*THE*END*OF*REPORT*TRAILER*********************************E29170
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

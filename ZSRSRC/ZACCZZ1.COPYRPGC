@@ -1,0 +1,266 @@
+      *****************************************************************
+      **                                                             **
+      ** ZACCZ  - Subroutine to calculate Accrued Interest between   **
+      **          two specified Dates. (The Start Date will usually  **
+      **          be a Coupon Payment Date or Initial Date).         **
+      **                                                             **
+      ** INPUT  - ZDCSDT (5,0)  Start Date                           **
+      **          ZDCEDT (5,0)  End Date                             **
+      **          ZAMT   (11,0) Nominal Amount (for ZACCR)           **
+      **                                                             **
+      ** READS  - SEDEV/SEDEVDF                                      **
+      **          SECEO/SEDEVDO                                      **
+      **          SECEO/SNDEVDO                                      **   E20568
+      **                                                             **
+      ** OUTPUT - ZDCINT (13,0) Accrued Interest                     **
+      **          ZDXINT (15,1) Accrued Interest                     **   055420
+      **                                                             **
+      ** CALLS  - ZRATE  (Calculate Effective Interest Rate)         **
+      **          ZACCR  (Calculate Accrued Interest)                **
+      **                                                             **
+      *****************************************************************
+      **                                                             **
+      ** Last Amend No. AR1067108          Date 11Dec12              **
+      ** Prev Amend No. AR1001183A         Date 20Nov12              **
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      ** Prev Amend No. 099886             DATE 17APR96              **
+      **                055420             DATE 24NOV93              **
+      **                E21131             DATE 14FEB90              **
+      **                E20568             DATE 08DEC89              **
+      **                E20085             DATE 06NOV89              **
+      **                                                             **
+      *--------------------------------------------------------------**
+      **                                                             **
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen)                                         *
+      ** 099886 - Rounding problem for partly paid securities.       **
+      **          Changed this routine to use 15,1 work field for    **
+      **          calculation, and then round up to 15,0.            **
+      ** 055420 - ROUNDING PROBLEM FOR MORTGAGE BACKED SECURITIES.   **   E20568
+      ** E21131 - Incorrect interest calculation on discounts.       **   E20568
+      ** E20568 - Read non-diary events file before diary events file**   E20568
+      **          to pick up coupon rate, current factor and PP price**   E20568
+      ** E20085 - Interest and Coupon Calculations Rewrite:          **   E20085
+      **         - This subroutine has been rewritten to perform the **   E20085
+      **           Interest Accrual calculations throughout the      **   E20085
+      **           system. Numerous errors are corrected with this   **   E20085
+      **           rewrite. It will be called from the routines and  **   E20085
+      **           programs listed below.                            **   E20085
+      **                                                             **
+      *---------------------------------------------------------------*
+      **                                                             **
+      ** This Subroutine is called from:                             **
+      **    Programs: SE0920, SE2210, SE2220, SE2270                 **
+      **              ZACRBD, ZACRCD, ZACRFB, ZACRFC, ZACRFD,        **
+      **              ZACCRC, ZACCRD.                                **
+      **                                                             **
+      ** Similar Subroutine: ZPCINT (for Input Cycle).               **
+      ** Program SE0901 uses Internal SR based on this one.          **
+      **                                                             **
+      *****************************************************************
+      *
+     C           ZACCZ     BEGSR                           *** ZACCDC ***
+      *
+      ***  Define the Keylists for SEDEV/SEDEVDF and SECEO/SEDEVDO.
+      ***  NOTE: SECEO is Keyed by Security/Event Type/REVERSE Date.
+      *
+     C           KZSEDF    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           ZDCSDT
+     C                     KFLD           SDET
+      *
+     C           KZSEDO    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           SDET
+     C                     KFLD           ZDCSDT
+      *
+      ***  Define the Input Date fields.
+      *
+     C                     Z-ADDZDCSDT    ZDCSDT  50
+     C                     Z-ADDZDCEDT    ZDCEDT  50
+      *
+      ***  Define and zeroize the Accrued Interest Output field.
+      *
+     C                     Z-ADD*ZEROS    ZDCINT 130
+     C                     Z-ADD*ZEROS    ZDXINT 151                      055420
+      *
+      ***  Initialize the fields that won't change that are required by
+      ***  other Standard SRs that are called.
+      *
+     C                     MOVE PPDI      ZPPDI
+     C                     MOVE PROT      ZPROT
+     C                     Z-ADDSFPP      ZSFPP
+      *
+      ***  If the Security has no interest changes ...
+      *
+     C           CPNR      IFNE *ZEROS
+     C           PPDI      ANDEQ'N'
+     C           PROT      ANDNE'3'
+     C           PROT      ANDNE'5'
+     C           PROT      ANDNE'8'
+      *
+      ***  Set up the Interest Rate
+      *
+     C                     Z-ADDCPNR      IRATE
+      *
+      ***  Calculate the Accrued Interest
+      *
+     C                     Z-ADDZDCSDT    ZSDATE
+     C                     Z-ADDZDCEDT    ZEDATE
+      *
+     C                     EXSR ZACCR
+     C                     Z-ADDZACCRD    ZDCINT
+     C                     Z-ADDZACCXD    ZDXINT                          055420
+      *
+      *---------------------------------------------------------------*
+      ***  ELSE the Security may have Interest changes ...
+      *
+     C                     ELSE
+      *
+      ***  Initialize with the values from SECTYD.
+      *
+     C                     Z-ADDCPNR      ZCPNR
+     C                     Z-ADDCFCT      ZCFCT
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE CPDP      ZPPCP
+     C                     Z-ADD0         SAVDT                           E21131
+      *                                                                   E20568
+      ***  Defaults: The values on the Security File may have been        E20568
+      ***  changed since the Start Date, so check the Security Non-Diary  E20568
+      ***  Events File for each one.                                      E20568
+      *                                                                   E20568
+     C                     MOVE 'CP'      SDET                            E20568
+     C           KZSEDO    SETLLSNDEVDO                                   E20568
+     C                     READ SNDEVDO                  96               E20568
+     C           *IN96     IFEQ '0'                                       E20568
+     C***********SDSN      ANDEQSESN                               E20568 E21131
+     C***********SDET      ANDEQ'CP'                               E20568 E21131
+     C           SNSN      ANDEQSESN                                      E21131
+     C           SNET      ANDEQ'CP'                                      E21131
+     C                     Z-ADDSNDT      SAVDT   50                      E21131
+     C                     Z-ADDSNCR      ZCPNR                           E20568
+     C                     Z-ADDSNCF      ZCFCT                           E20568
+     C                     MOVE SNCP      ZPPCP                           E20568
+     C                     END                                            E20568
+      *
+      ***  Defaults: If no last coupon record exists then read            E20568
+      ***  initial records from diary events file.                        E20568
+      *
+     C                     MOVE 'IR'      SDET
+     C           KZSEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  96
+     C           *IN96     IFEQ '0'
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'IR'
+     C           SDDT      ANDGESAVDT                                     E21131
+     C                     Z-ADDSDNC      ZCPNR
+     C                     END
+      *
+     C           PROT      IFEQ '8'
+     C                     MOVE 'MP'      SDET
+     C           KZSEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  96
+     C           *IN96     IFEQ '0'
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'MP'
+     C           SDDT      ANDGESAVDT                                     E21131
+     C                     Z-ADDSDCP      ZCFCT
+     C                     END
+     C                     END
+      *
+     C           PPDI      IFEQ 'Y'
+     C                     MOVE 'PP'      SDET
+     C           KZSEDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  96
+     C           *IN96     IFEQ '0'
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'PP'
+     C           SDDT      ANDGESAVDT                                     E21131
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     END
+     C                     END
+      *
+      ***  Calculate the Effective Starting Interest Rate
+      *
+     C                     EXSR ZRATE
+      *
+      *---------------------------------------------------------------*
+      ***  Access the Security Diary Events File to accumulate interest
+      ***  over the period from the Start Date to the End Date, taking
+      ***  account of Event Types IR/MP/PP.
+      *
+     C                     Z-ADDZDCSDT    ZSDATE
+      *
+     C                     MOVE 'IR'      SDET
+     C           KZSEDF    SETLLSEDEVDF
+     C           SESN      READESEDEVDF                  96
+      *
+     C           *IN96     DOWEQ'0'
+     C           SDED      ANDLTZDCEDT
+      *
+     C           SDET      IFEQ 'IR'
+     C           SDET      OREQ 'MP'
+     C           SDET      OREQ 'PP'
+      *
+      ***  Calculate the Accrued Interest UP TO the Event Date.
+      *
+     C                     Z-ADDSDED      ZEDATE
+     C                     EXSR ZACCR
+     C                     ADD  ZACCRD    ZDCINT
+     C                     ADD  ZACCXD    ZDXINT                          055420
+      *
+      ***  Set the fields to the new values and calculate new Rate.
+      ***  NOTE: New Rate affects the Period FROM the Event Date.
+      ***  Only update the relevant field to the Event Type.
+      *
+     C           SDET      IFEQ 'IR'
+     C                     Z-ADDSDNC      ZCPNR
+     C                     END
+     C           SDET      IFEQ 'MP'
+     C                     Z-ADDSDCP      ZCFCT
+     C                     END
+     C           SDET      IFEQ 'PP'
+     C                     Z-ADD*ZEROS    ZPPCP
+     C                     MOVE SDTP      ZPPCP
+     C                     END
+      *
+     C                     EXSR ZRATE
+     C                     Z-ADDSDED      ZSDATE
+      *
+      ***  END of Event Types IR/MP/PP
+     C                     END
+      *
+     C           SESN      READESEDEVDF                  96
+     C                     END
+      *
+      ***  Calculate the last bit of Accrued Interest up to End Date.
+      *
+     C                     Z-ADDZDCEDT    ZEDATE
+      *                                                                                   AR1001183A
+      ** Override the interest rate, this changes is for CRE073                           AR1001183A
+      *                                                                                   AR1001183A
+     C           WRCHG     IFEQ 'Y'                                                       AR1001183A
+     C                     Z-ADDCPNR      IRATE                                           AR1001183A
+     C                     ENDIF                                                          AR1001183A
+     C                     EXSR ZACCR
+     C*********************ADD  ZACCRD    ZDCINT                          099886
+     C                     ADD  ZACCXD    ZDXINT                          055420
+     C                     Z-ADDZDXINT    ZDCINT    H                     099886
+      *
+     C                     END
+      ** Initialize this field, so error will not occur on program                        AR1001183A
+      ** that used this copy source, this changes is for CRE073                           AR1001183A
+     C                     MOVE ' '       WRCHG   1                                       AR1001183A
+      *
+     C                     ENDSR
+      *
+      *****************************************************************

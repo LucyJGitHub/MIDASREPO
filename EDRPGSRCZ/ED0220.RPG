@@ -1,0 +1,227 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED FX deals reconciliation extract')             *
+      *****************************************************************
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0220 -  ED FX Deals Reconciliation Extract                 *
+      *                                                               *
+      *  Function: This program is one of the Reconciliation Report   *
+      *            Extract programs.  This program processes FX deals *
+      *            from the Dealing module.                           *
+      *            NOTE: For efficiency, as this program processes a  *
+      *            number of potentially very large files, the Logic  *
+      *            Cycle is exploited.                                *
+      *                                                               *
+      *  Called By: EDC0220                                           *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL049             Date 06Jul06               *
+      *                 CDL038             Date 10May05               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 103198             Date 05JUN96               *
+      *                 101973 *CREATE     Date 29JAN96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  103198 - NX TRANSACTIONS SHOULD NOT BE EXTRACTED             *
+      *  101973 - Phase V Modifications                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDDEALL1IP  E           K        DISK         KINFSR *PSSR
+      * FX Deals by Branch and Currency
+      *
+     FEDREC2PDO   E                    DISK         KINFSR *PSSR
+      * ED FX Reconciliation Data
+      *
+     FED0220AUO   E                    PRINTER                        UC
+      * Program Audit report
+      *
+     F/COPY WNCPYSRC,ED0220F001
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    31  -  Extract to write                                    *
+      *    40  -  First Cycle                                         *
+      *    41  -  SDBANKR0 error                                      *
+      *    L2  -  Level break for Branch                              *
+      *    L1  -  Level break for Currency                            *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     I/TITLE I-SPECIFICATIONS
+      *-----------------------------------------------------------
+     IDEALSDBF
+     I                                              BRCA  L2
+     I                                              PUCY  L1
+     IPSDS       SDS
+      ** Program Status
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I                                      276 281 WDATE
+     I                                      282 287 WTIME
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Midas Access Object Short Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Copyright Statement.
+      *
+     C           *IN40     IFEQ *OFF
+     C                     MOVEACPY@      MKI@   80
+     C                     Z-ADD2         EJTRTY
+     C/COPY WNCPYSRC,ED0220C001
+      *
+      **  Get run date for comparison against value date and
+      **  report title (used on error report)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     41
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     SETON                     40
+     C                     ENDIF
+      *
+     C   L2                MOVELBRCA      EJBRCA
+     C   L1                MOVELPUCY      EJCCYC
+     C   L1                SETOF                     31
+      *
+      **  Accumulate if deal is not in the past. FX options - use the
+      **  original principal.
+      *
+     C           BJRDNB    IFLE VDAT
+     C           DTYP      ANDNE'PS'                                      103198
+     C           DTYP      ANDNE'NX'                                      103198
+     C                     ADD  1         EJTCOT
+     C           DTYP      IFEQ 'OP'
+     C                     ADD  ORPA      EJTVAL
+     C                     ELSE
+     C                     ADD  PUAM      EJTVAL
+     C                     ENDIF
+     C                     SETON                     31
+     C                     ENDIF
+     C/COPY WNCPYSRC,ED0220C002
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: MAIN                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ***  Set up LDA data
+      *
+     C                     MOVEL'ED0220'  DBPGM
+      *
+      ***  Set up deal key if the error did not occur in 1st cycle process
+      *
+     C           *IN41     IFEQ *OFF
+     C                     MOVEL'EDDEALL1'DBFILE
+     C                     MOVEL'001'     DBASE
+     C                     MOVELBRCA      KEY1    7 P
+     C                     MOVE PUCY      KEY1
+     C                     MOVELKEY1      DBKEY     P
+     C                     MOVE DLNO      DBKEY
+     C                     ENDIF
+      *
+      ***  Output LDA
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      **  Print audit report ED0220AU
+      *
+     C                     OPEN ED0220AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEED0220AU
+      *
+     C                     DUMP
+      *
+     C                     END
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      **********************************************************************
+     OEDREC2D0T        L1 31
+     O                         EJBRCA
+     O                         EJCCYC
+     O                         EJTRTY
+     O                         EJTCOT B
+     O                         EJTVAL B
+      **********************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

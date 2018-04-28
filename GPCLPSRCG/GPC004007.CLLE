@@ -1,0 +1,112 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GP Users Security Report Selection')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GPC004007 - Midas GP Users Security Report Selection        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR892737B          Date 28Jan12              */
+/*       Prev Amend No. AR892737A *CREATE  Date 16Jan12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR892737B - Permissions by User Report does not allow lower */
+/*                   case characters on user profile                 */
+/*       AR892737A - Permissions by User Report does not allow lower */
+/*                   case characters on user profile                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PSEQ &PLEVL &PENTY &PPARM &PACT &PCMD)
+ 
+             DCL        VAR(&PSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PLEVL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PENTY) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&PPARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&PACT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PCMD) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&PARM01) TYPE(*CHAR) LEN(100) VALUE(' ')
+             DCL        VAR(&PARM02)  TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&PARM03)  TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&PARM04)  TYPE(*CHAR) LEN(100) VALUE(' ')
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             SNDPGMMSG  MSG('GPC004007 - Midas GP Users Security +
+                          Report Selection') TOMSGQ(MRUNQ)
+ 
+/** Initialise job switches and create data area */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+/** Call Selection Program */
+ 
+             CHGVAR     VAR(&PARM01) VALUE(&PSEQ *CAT &PLEVL *CAT +
+                          &PENTY *CAT &PACT *CAT &PCMD)
+             CHGVAR     VAR(&PARM04) VALUE(&PPARM)
+ 
+             CALL       PGM(GPCADPTWRP) PARM(GP004007 &PARM01 +
+                          &PARM02 &PARM03 &PARM04)
+ 
+             CHGVAR     VAR(&PSEQ) VALUE(%SUBSTRING(&PARM01 1 5))                      /*AR892737B*/
+             CHGVAR     VAR(&PLEVL) VALUE(%SUBSTRING(&PARM01 6 1))                     /*AR892737B*/
+             CHGVAR     VAR(&PENTY) VALUE(%SUBSTRING(&PARM01 7 3))                     /*AR892737B*/
+             CHGVAR     VAR(&PACT) VALUE(%SUBSTRING(&PARM01 10 1))                     /*AR892737B*/
+             CHGVAR     VAR(&PCMD) VALUE(%SUBSTRING(&PARM01 11 1))                     /*AR892737B*/
+             CHGVAR     VAR(&PPARM) VALUE(&PARM04)                                     /*AR892737B*/
+                                                                                       /*AR892737B*/
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(GPOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/** Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            GPC004007 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/** Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+             SNDUSRMSG  MSG('Program GPC004007 ended abnormally - +
+                          see job log')
+             ENDDO
+ 
+END:
+             ENDPGM

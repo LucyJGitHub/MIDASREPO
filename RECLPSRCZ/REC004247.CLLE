@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE RATM Calculation of Penalty Amount')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas RE - Retail Module                                    */
+/*                                                                   */
+/*       REC004247 - Midas RE RATM Calculation of Penalty Amount     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. AR849279           Date 14Oct11              */
+/*       Prev Amend No. CRE072  *CREATE    Date 30Jun11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR849279 - RATM Calculation does not accept Debit Account   */
+/*                  other than Retail Account Format                 */
+/*       CRE072 - BankFusion Midas Teller Related Changes            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCD &PKEY1 &PAJAA &PDC01 &PPNIN &PDC02)
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+/**********  DCL        VAR(&PKEY1) TYPE(*CHAR) LEN(24) */                              /*AR849279*/
+             DCL        VAR(&PKEY1) TYPE(*CHAR) LEN(10)                                 /*AR849279*/
+             DCL        VAR(&PAJAA) TYPE(*DEC) LEN(15 0)
+             DCL        VAR(&PDC01) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PPNIN) TYPE(*DEC) LEN(13 2)
+             DCL        VAR(&PDC02) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/* Global monitor message. */
+ 
+/*           MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))                            */
+ 
+             ADDLIBLE LIB(QTEMP) POSITION(*LAST)
+             MONMSG     MSGID(CPF2103)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Call program */
+ 
+             CALL       PGM(RE004247) PARM(&PRTCD &PKEY1 &PAJAA &PDC01 &PPNIN &PDC02)
+ 
+/* Database error processing. */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination */
+ 
+             SNDUSRMSG  MSG('Program RE004247 ended abnormally - see +
+                          job log') MSGTYPE(*INFO)
+ 
+END:
+             ENDPGM

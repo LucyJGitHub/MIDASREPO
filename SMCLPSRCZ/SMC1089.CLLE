@@ -1,0 +1,85 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Load file mbrs info into GPFILMBRPD - Ctl')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC1089 - Load file members info for files in SMBRCFLDL5    */
+/*                 Control program                                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP025 *CREATE     Date 06Feb04              */
+/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP025 - Change branches utility                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+/* Branch fields information headers file  */
+             DCLF       FILE(SMBRCFLDL5)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area /MIDASMSG in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+             CLRPFM     FILE(SMFILMBRPD)
+ 
+/* Get a record from SMBRCFLDL5 */
+LOOP:
+             RCVF
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ENDPGM))
+ 
+             DSPFD      FILE(&BFFILE) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/SM1089OF) +
+                          OUTMBR(*FIRST *REPLACE)
+ 
+/* Call program to add the file member info to SMFILMBRPD */
+             CALL       PGM(SM1089) PARM(&BFFILE)
+ 
+/*   If no error, loop back to process next file rec */
+             IF         COND(%SWITCH(XXXXXX00)) THEN(GOTO LOOP)
+ 
+ABNOR:
+/* Abnormal termination */
+             IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE(Y)
+                RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                             MSGDTA('SMC1089') MSG(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                             joblog and dump for details')
+                MONMSG     MSGID(CPF0000)
+                CALL       PGM(SCC0010) PARM('SMC1089' 'JOBLOG' 'Y')
+                MONMSG     MSGID(CPF0000 MCH0000)
+ 
+                CHGJOB     SWS(XXXXXX11)
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

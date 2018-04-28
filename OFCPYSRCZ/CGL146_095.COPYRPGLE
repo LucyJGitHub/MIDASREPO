@@ -1,0 +1,93 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPGLE)                                 *
+      *                                                               *
+      *  CGL146_095 - Midas OF MT950 File Extract                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *                                                               *
+      *  Last Amend No. CGL146A  *CREATE   Date 10Jul13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL146A - MT940/MT950 Production in Input Cycle              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  SRSeqNum - Retrieve sequence number                          *
+      *                                                               *
+      *****************************************************************
+     C     SRSeqNum      BEGSR
+ 
+      ** Retrieve last sequence number from data area
+ 
+     C                   IF        M5SDTE = BJRDNB
+     C                             OR WStmtDate = 'N'
+     C     *LOCK         IN        MGMT94DA
+     C                   EVAL      WSeqNum = MGSEQN + 1
+     C                   EVAL      MGSEQN = WSeqNum
+     C                   OUT       MGMT94DA
+     C                   ENDIF
+ 
+     C                   IF        M5SDTE <> BJRDNB
+     C                             AND WStmtDate = 'Y'
+     C                   EVAL      ZMDAY = M5SDTE
+     C                   Exsr      Call_ZM0060
+     C                   Move      ZMDATE        WRundNum
+     C                   Move      ZMDATE        WRundChr
+ 
+      ** Access last generated sequence number from MGOREFPD
+ 
+     C                   Eval      WTrno = 'GL' + WRundChr + '999999'
+ 
+     C     WTrno         SETGT     MGOREFL0
+     C                   READP     MGOREFL0                               15
+ 
+      ** If ReadP successful, and first 8 characters of record read equals
+      ** 'GL' + rundate, store sequence number
+ 
+     C                   IF        *IN15 = *Off And
+     C                             %subst(E_TRNO: 1 : 8) = 'GL' + WRundChr
+     C                   EVAL      WSeqChr = %subst(E_TRNO : 9 : 6)
+     C                   ELSE
+ 
+      ** Else  ReadP not successful or first 2 components do not match,
+      ** this is first GL message so set sequence to blank
+ 
+     C                   EVAL      WSeqChr = *BLANKS
+     C                   ENDIF
+     C                   EVAL      WSeqNum = WSeqNum + 1
+     C                   ENDIF
+ 
+      ** Set history retention date
+ 
+     C                   EVAL      ZMDAY = M5SDTE + ENDSMN
+     C                   Exsr      Call_ZM0060
+     C                   MOVE      ZMDATE        WHrdt
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *                                                               *
+      *  SRRtvExtRec - Retrieve Extenstion record                     *
+      *                                                               *
+      *****************************************************************
+     C     SRRtvExtRec   BEGSR
+ 
+     C                   IF        CGL146 = 'Y'
+     C                   Eval      KNwrk  = MGNWRK
+     C                   Eval      KBrca  = MGBRCA
+     C                   Eval      KCnum  = MGCNUM
+     C                   Eval      Kccy   = MGCCY
+     C                   Eval      KAccd  = MGACCD
+     C                   Eval      KAcsq  = MGACSQ
+     C                   Eval      KNaty  = MGNATY
+ 
+     C     KNwrkAc       CHAIN     MGF950I0
+ 
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      * End of /COPY CGL146_095                                       *
+      *****************************************************************

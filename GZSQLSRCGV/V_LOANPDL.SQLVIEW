@@ -1,0 +1,61 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing                                             */
+/*                                                                             */
+/*       V_LOANPDL - Global Loans/PDCL File                                    */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2012                     */
+/*                                                                             */
+/*       Last Amend No. AR836324           Date 01Aug12                        */
+/*       Prev Amend No. AR690629           Date 01Aug12                        */
+/*                      AR696643           Date 01Aug12                        */
+/*                      CLE134  *CREATE    Date 01Aug12                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       AR836324 - Wrong loan status displayed for Matured PDCLs. Properly    */
+/*                  display Matured status for PDCL. (Child: AR836325).        */
+/*       AR690629 - Wrong loan status displayed for Origin Loans. If RCAT is   */
+/*                  zero, status will depend on RECI. (Child: AR690630)        */
+/*       AR696643 - PDCL changed status to Past due Frozen, with interest      */
+/*                  outstanding<0                                              */
+/*                - Wrong loan status displayed for PDCLs. Add additional WHEN */
+/*                  clause on setting up STATUS field. (Child: AR719674)       */
+/*       CLE134 - Past Due Call Loan Processing                                */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+   SELECT                                                                       :
+   V_#LOANPDL.*,                                                                :
+   CASE WHEN PADPTYP IN ('66','67','69','72') THEN 'PS' WHEN PADPTYP IN         :
+   ('64','65','68','71')                                                        :
+   THEN 'PP' ELSE 'LN' END AS LOANCLASS,                                        :
+***CASE*WHEN*(LTYP*LIKE*'X%'*OR*LTYP*LIKE*'Y%'*OR*LTYP*LIKE*'Z%')***************            AR696643
+***CASE*WHEN*(RECI*=*'M'*OR*RECI*=*'R')*THEN*RECI*******************************:  AR696643 AR690629
+   CASE WHEN (RECI = 'R') THEN RECI                                             :           AR690629
+        WHEN (LTYP LIKE 'X%' OR LTYP LIKE 'Y%' OR LTYP LIKE 'Z%')               :           AR836324
+            AND RECI = 'M' THEN RECI                                            :           AR836324
+        WHEN (LTYP LIKE 'X%' OR LTYP LIKE 'Y%' OR LTYP LIKE 'Z%')               :           AR696643
+            AND SCPAM > 0 THEN 'D'                                              :
+        WHEN (LTYP LIKE 'X%' OR LTYP LIKE 'Y%' OR LTYP LIKE 'Z%')               :
+            AND SCPAM = 0 THEN 'F'                                              :
+        WHEN NOT (LTYP LIKE 'X%' OR LTYP LIKE 'Y%' OR LTYP LIKE 'Z%')           :
+            AND RCAT IS NOT NULL AND RCAT > 0 THEN 'P'                          :
+        WHEN NOT (LTYP LIKE 'X%' OR LTYP LIKE 'Y%' OR LTYP LIKE 'Z%')           :
+************AND*(RCAT*IS*NULL*OR*RCAT*=*0)*THEN*'D'*****************************:           AR690629
+            AND (RCAT IS NULL OR RCAT = 0) THEN RECI                                        AR690629
+        ELSE RECI                                                               :
+   END AS STATUS,                                                               :
+   (SELECT COUNT(*)                                                             :
+   FROM LELOANX0 EX                                                             :
+   WHERE EX.PADLNRF = V_#LOANPDL.PADLNRF                                        :
+   AND EX.CUSTZONE = V_#LOANPDL.CUSTZONE)                                       :
+   AS PCLIP                                                                     :
+   FROM V_#LOANPDL;                                                             :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Loan details listview - V_#LOANPDL       ';                     :
+                                                                                :

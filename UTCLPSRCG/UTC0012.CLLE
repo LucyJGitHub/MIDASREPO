@@ -1,0 +1,157 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Check for existence of /COPY member')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC0012 - CRTOBJ: Check for existence of /COPY member       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUT012             Date 10Feb11              */
+/*       Prev Amend No. CUT008  *REWRITE   Date 10Feb11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BG18886            Date 22May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG7706            Date 28Nov05              */
+/*                      CPK018  *MOVED     Date 26Apr04              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      138757             Date 10Jul98              */
+/*                      CAP002             Date 19Nov97              */
+/*                      CAA015             Date 08Aug97              */
+/*                      CPK008             Date 12Feb97              */
+/*                      095092             DATE 20AUG95              */
+/*                      092401             DATE 30AUG95              */
+/*                      074291             DATE 24AUG94              */
+/*                      S01516             DATE 18JUL94              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUT012 - Handle of copy members from OFCPYSRC, OFCPYSRCG    */
+/*                At core layer, ignore when /COPY from OFCPYSRC not */
+/*                found but report if they are copied into source.   */
+/*                At OF layer, error when /COPY from OFCPYSRC not    */
+/*                found.                                             */
+/*       CUT008 - Rewrite of CRTOBJ.                                 */
+/*                Change the output of message from MSGQ to file by  */
+/*                calling UP008010.                                  */
+/*       BG18886 - Amend non-standard codes                          */
+/*       BUG7706 - Make CRTOBJ fail if core /COPYs are missing.      */
+/*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
+/*       138757 - The value of &CPYLIB was not being blanked before  */
+/*                returning to the calling program.                  */
+/*              - RETURN commands replaced with GOTO ENDPGM          */
+/*       CAP002 - Fix introduced during MM API development: the /COPY*/
+/*                searching could not cope with a library name in the*/
+/*                /COPY line.                                        */
+/*       CAA015 - Change search library list so that system supplied */
+/*                 /COPY members will be found.                      */
+/*       CPK008 - DBA R2 packaging:                                  */
+/*                - Changes for source being 112 long.               */
+/*       095092 - Remove prohibition on including /COPYs for RPG     */
+/*       092401 - Return /COPY library name to calling program.      */
+/*       074291 - Rewritten for further enhancements to CRTOBJ       */
+/*       S01516 - Incorporation of enhanced CRTOBJ into core         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CPYFIL &CPYMBR &SRCTYP &ERROR &CPYLIB)
+ 
+             DCL        VAR(&CPYFIL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCTYP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+/* Parameters passed to UP008010. */
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+             MONMSG     MSGID(CPF0000)
+ 
+/* If &CPYLIB not blank, check if the /COPY source file exists in the CPYLIB. */
+             IF         COND(&CPYLIB *NE ' ') THEN(DO)
+                CHKOBJ     OBJ(&CPYLIB/&CPYFIL) OBJTYPE(*FILE) +
+                             MBR(&CPYMBR)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   CHGVAR     VAR(&CPYLIB) VALUE('          ')
+                   CALLSUBR   SUBR(SRNOTFOUND)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+             ENDDO
+ 
+             ELSE       CMD(DO)
+/* Check that the /COPY source file member exists in the library list. */
+                CALL       PGM(UT0063) PARM(&CPYMBR &CPYFIL &CPYLIB ' ')
+/* If it doesn't then report to file if needed. */
+                IF         COND(&CPYLIB *EQ ' ') THEN(DO)
+                   CALLSUBR   SUBR(SRNOTFOUND)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+             ENDDO
+ 
+/* Create temporary source if needed. */
+             CRTSRCPF   FILE(QTEMP/COPYSRC) RCDLEN(112)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+               RMVM       FILE(QTEMP/COPYSRC) MBR(*ALL)
+               MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+/* Add /COPY member to temporary source. */
+             CPYSRCF    FROMFILE(&CPYLIB/&CPYFIL) +
+                          TOFILE(QTEMP/COPYSRC) FROMMBR(&CPYMBR) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF0000)
+ 
+/*/COPY OFCPYSRCG,UTC0012MP1    */                                                        /*CUT012*/
+/* Report any OPCPYSRC /COPY member copied into source. */                                /*CUT012*/
+             IF         COND(%SST(&CPYFIL 1 8) *EQ 'OFCPYSRC') THEN(DO)                   /*CUT012*/
+                CHGVAR     VAR(&ERRORMSG) VALUE('/COPY member' *BCAT +
+                             &CPYMBR *TCAT ' in' *BCAT &CPYFIL *TCAT ' +
+                             copied in.')                                                 /*CUT012*/
+                CALL       PGM(UP008010) PARM(*WRITE 'CRTOBJ' &ERRORMSG)                  /*CUT012*/
+             ENDDO                                                                        /*CUT012*/
+/*/COPY OFCPYSRCG,UTC0012MP2    */                                                        /*CUT012*/
+ 
+             CHGVAR     VAR(&CPYLIB) VALUE('          ')
+             GOTO       CMDLBL(ENDPGM)
+ 
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to handle when /COPY is not found.  Error message will */
+/* be sent to be reported.                                           */
+/*                                                                   */
+/*********************************************************************/
+ 
+             SUBR       SUBR(SRNOTFOUND)
+ 
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+             CHGVAR     VAR(&ERRORMSG) VALUE('/COPY member' *BCAT +
+                          &CPYMBR *TCAT ' not found in' *BCAT &CPYFIL)
+             CALL       PGM(UP008010) PARM(*WRITE 'CRTOBJ' &ERRORMSG)
+ 
+             IF         COND(%SST(&CPYFIL 1 8) *EQ 'WNCPYSRC') THEN(DO)
+                RTNSUBR
+             ENDDO
+ 
+/*/COPY OFCPYSRCG,UTC0012MP1    */                                                        /*CUT012*/
+             IF         COND(%SST(&CPYFIL 1 8) *EQ 'OFCPYSRC') THEN(DO)                   /*CUT012*/
+                RTNSUBR                                                                   /*CUT012*/
+             ENDDO                                                                        /*CUT012*/
+/*/COPY OFCPYSRCG,UTC0012MP2    */                                                        /*CUT012*/
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                          occurred in CRTOBJ - see low level +
+                          messages') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDSUBR
+/* End of subroutine SRNOTFOUND. */
+ 
+ENDPGM:
+             ENDPGM

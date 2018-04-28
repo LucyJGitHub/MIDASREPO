@@ -1,0 +1,88 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas ZA Clear a file')                               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas standard routines                                     */
+/*                                                                   */
+/*       ZAcCLRFILE - Clear a file                                   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01.03 --------------------------------------------*/
+/*       Last Amend No. 210279             Date 14Jan03              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CAP002  *CREATE    Date 06May98              */
+/*                      Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       210279 - Add MONMSG after CLRPFM to avoid component failure */
+/*                when attemptiong to clear a non-existing file.     */
+/*       CAP002 - Conversion of Midas inputs to API format.          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RETURNCODE &FILE)
+ 
+/*/COPY WNCPYSRC,ZACLRFILE01                                         */
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10) /* +
+                          Return code */
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10) /* File to +
+                          clear */
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,ZACLRFILE02                                         */
+ 
+             CLRPFM     FILE(&FILE)
+             MONMSG     MSGID(CPF0000)                                                    /*210279*/
+ 
+/*/COPY WNCPYSRC,ZACLRFILE03                                         */
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,ZACLRFILE04                                         */
+ 
+             CHGVAR     VAR(&RETURNCODE) VALUE('Error')
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Module +
+                            ZACLRFILE ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Abnormal termination - interactive job */
+ 
+             IF         COND(&JOBTYPE = '1') THEN(DO)
+ 
+             ENDDO
+ 
+ END:
+ 
+/*/COPY WNCPYSRC,ZACLRFILE05                                         */
+ 
+             ENDPGM

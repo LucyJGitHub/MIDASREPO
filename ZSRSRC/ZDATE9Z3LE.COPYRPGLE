@@ -1,0 +1,117 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Copy Source                                          *
+      *                                                               *
+      *  ZDATE9 - Convert Midas day number to YYYYMMDD                *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CIR013  *Create    Date 14Apr05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CIR013 - Additional calculation method for FRA/IRS/CCF       *
+      *           Conversion of ZDATE9Z3 to RPGLE                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C     ZDATE9        BEGSR
+      *
+     C                   SETOFF                                       9091
+     C                   MOVE      '0'           @@RTN             1
+     C                   Z-ADD     0             @@VDT
+     C                   Z-ADD     1             @@I               2 0
+     C                   Z-ADD     1             @@J               2 0
+     C                   Z-ADD     1             @@LEAP            1 0
+      *
+     C     @@DAYN        IFLT      1
+     C                   MOVE      '1'           @@RTN
+     C                   GOTO      ZDAT79
+     C                   END
+      *
+      * DIVISION TO DETERMINE WETHER LEAP YEAR.
+      *
+     C     @@DAYN        DIV       1461          @@Z71Y
+     C                   MVR                     @@RDAY            5 0
+      *
+      * CALCULATING YEAR.
+      *
+     C     @@Z71Y        MULT      4             @@Z71Y
+     C                   ADD       1972          @@Z71Y
+      *
+      * CHECKING IF YEAR IS GREATER THAN OR EQUAL TO 2100
+      *
+     C     @@Z71Y        IFGE      2100
+     C                   ADD       @@SSY2        @@RDAY
+     C                   END
+      *
+      * LOKUP ARRAY @YD TO SEE HOW MANY YEARS OF A FOUR YEAR CYCLE
+      * HAVE PASSED.
+      *
+     C     @@RDAY        LOOKUP    @YD(@@I)                             9090
+      *
+      * IF YEAR IS A LEAP YEAR SSLEAP IS SET TO ZERO.
+      *
+     C     *IN90         IFEQ      '0'
+     C                   Z-ADD     0             @@LEAP
+     C                   END
+      *
+      * ADD INDEX TO YEAR TO GIVE CORRECT YEAR AND ADJUST '@@RDAY'.
+      *
+     C     @@LEAP        IFEQ      1
+     C     @@RDAY        SUB       @YD(@@I)      @@RDAY
+     C                   ADD       @@I           @@Z71Y
+     C                   END
+      *
+      * PROCESSING FOR A LEAP YEAR.
+      *
+     C     @@LEAP        IFEQ      0
+      *
+      * IF '@@RDAY' = 60 DATE MUST BE 29TH OF FEBRUARY.
+      *
+     C     @@RDAY        IFEQ      60
+     C                   Z-ADD     29            @@Z71D
+     C                   Z-ADD     2             @@Z71M
+     C                   GOTO      ZA0711
+     C                   END
+      *
+      * IF '@@RDAY' > 60 DATE IS AFTER 29TH OF FEBRUARY,CONVERSION CAN
+      * PROCEED AS USUAL AFTER SUBTRACTING THE EXTRA DAY FOR THE LEAP
+      * YEAR. NOTE : '@@RDAY' < 60 CONVERSION PROCEEDS AS USUAL.
+      *
+     C     @@RDAY        IFGT      60
+     C     @@RDAY        SUB       1             @@RDAY
+     C                   END
+      *
+     C                   END
+      *
+      * IF DAY '@@DAYN' IS EXACTLY DIVISIBLE BY 1461 (NUMBER OF DAYS
+      * IN 4 YEARS) THEN DATE MUST BE LAST DAY OF PREVIOUS FOUR YEAR
+      * GROUP.
+      *
+     C     @@RDAY        IFEQ      0
+     C                   Z-ADD     31            @@Z71D
+     C                   Z-ADD     12            @@Z71M
+     C                   SUB       1             @@Z71Y
+     C                   GOTO      ZA0711
+     C                   END
+      *
+      * LOOK UP ARRAY ARRAY @MD TO DETERMINE WHICH MONTH '@@RDAY'
+      * OCCURS IN
+      *
+     C     @@RDAY        LOOKUP    @MD(@@J)                             91
+     C                   Z-ADD     @@J           @@Z71M
+     C     @@RDAY        SUB       @MD(@@J)      @@Z71D
+      *
+      * DS @@VDT  IS RETURNED IN YYYYMMDD FORMAT
+      *
+     C     ZA0711        TAG
+      *
+     C                   MOVE      @@Z71Y        @@YR
+      *
+     C     ZDAT79        ENDSR
+     C*****************************************************************

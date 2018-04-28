@@ -1,0 +1,332 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL Interface Monitor')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3109  -  EXTEL Interface Monitor                           *
+     F*                                                               *
+     F*  Function: Monitor the status of the link from EXTEL.         *
+     F*  (I/C INT) When the transmission has successfully completed   *
+     F*            the program continues and so allows the COB to     *
+     F*            begin.                                             *
+     F*            The user has the option to start the COB without   *
+     F*            a successful completion of the transmission.       *
+     F*            The information requested in SE3108, the Interface *
+     F*            Control Maintenance Program, is displayed on the   *
+     F*            screen                                             *
+     F*                                                               *
+     F*  Called by: SEC3109 - Extel Interface Monitor                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 052254             Date 11JAN94               *
+     F*                 S01117             Date 11JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01117 - Multi-branching                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSE3109DFCF  E                    WORKSTN
+     F                                              KNUM        1
+     FTABTB10 IF  E                    DISK
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01 - F3 KEY PRESSED                                         *
+     F*   02 - F12 KEY PRESSED                                        *
+     F*   80 - TIME OUT PERIOD ELAPSED                                *
+     F*   88 - DATE FORMAT IS MMDDYY                                  *
+     F*   89 - FILE ERROR                                             *
+     F*U7-U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   ICDR1        Access TABTB10 for ICD 1                       *
+     F*   OVRRD        Override to continue EOD                       *
+     F*   MVFLD        Set up screen fields from EXSTAT               *
+     F*   *PSSR        Default Error Handling                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /EJECT
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I**       Local Data Area
+     I*
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     IEXSTTD    E DSEXSTAT
+     I*
+     I**       Data Area  EXSTAT - EXTEL Interface Data
+     I*
+     IPSDS       SDS
+     I*
+     I**      DATA AREA FOR PROGRAM STATUS DISK AREA
+     I*
+     I                                     *PROGRAM #PGM
+     I                                      201 208 #FILE
+     I                                      244 253 WID
+     I                                      254 263 USRID
+     I*
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*----------------------------------------------------------------
+     C*
+     C**     GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C                     EXSR ICDR1
+     C*
+     C**     DB Error if no record found.
+     C*
+     C           *IN89     IFEQ '1'                        B1
+     C***********          MOVE '01'      #BASE            *************  S01117
+     C                     Z-ADD1         #BASE            *************  S01117
+     C                     MOVEL'TABLE'   #FILE            * DBERR  01 *
+     C                     MOVEL'TABTB10' #KEY             *************
+     C**
+     C                     EXSR *PSSR                      *1
+     C**
+     C                     END                             E1
+     C**
+     C**     Access  Data Area  EXSTAT - EXTEL Interface Data
+     C**
+     C           *NAMVAR   DEFN EXSTAT    EXSTTD
+     C**
+     C**     Output screen if transmission not completed. Wait until
+     C**     time out has elapsed and return to program to check EXST
+     C**     on EXSTAT. Loop until all processes finished or until the
+     C**     override taken.
+     C**
+     C**     Process if EXTEL status on EXSTAT indicates not completed
+     C**
+     C           EXST      DOWNE'F'                        B1
+     C**
+     C                     IN   EXSTTD                 89  *1
+     C**
+     C**     DB Error if no record found.
+     C**
+     C           *IN89     IFEQ '1'                        B*2
+     C***********          MOVE '02'      #BASE            *************  S01117
+     C                     Z-ADD2         #BASE            *************  S01117
+     C                     MOVEL'DTARA'   #FILE            * DBERR  02 *
+     C                     MOVEL'EXSTAT'  #KEY             *************
+     C**
+     C                     EXSR *PSSR                      **2
+     C**
+     C                     END                             E*2
+     C**
+     C**     Process if EXTEL status on EXSTAT indicates not completed
+     C**
+     C           EXST      IFNE 'F'                        B*2
+     C**
+     C**     Output EXSTAT fields to screen
+     C**
+     C                     EXSR MVFLD                      **2
+     C**
+     C**     Write to format, read from file
+     C**
+     C                     WRITESE3109F1                   **2
+     C                     READ SE3109DF               8089**2
+     C**
+     C**     Error processing.
+     C**
+     C           *IN89     IFEQ '1'                        B**3
+     C***********          MOVE '03'      #BASE            *************  S01117
+     C                     Z-ADD3         #BASE            *************  S01117
+     C                     MOVEL'DSPF/'   #FILE            * DBERR  03 *
+     C                     MOVEL'SE3109DF'#KEY             *************
+     C**
+     C                     EXSR *PSSR                      ***3
+     C**
+     C                     END                             E**3
+     C**
+     C**     Option to Override
+     C**
+     C           *IN01     IFEQ '1'                        B**3
+     C                     EXSR OVRRD                      ***3
+     C                     END                             E**3
+     C**
+     C                     END                             E*2
+     C                     END                             E1
+     C**
+     C**  END PROGRAM
+     C**
+     C                     SETON                     LR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    ICDR1 - ACCESS TABTB10                                    *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ICDR1     BEGSR                                       ***
+     C**
+     C                     READ TABTB10                  89
+     C           *IN89     IFEQ '0'                        B1
+     C           RECI      ANDEQ'D'                        B1
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C**
+     C           DATF      IFEQ 'M'                        B*2
+     C                     MOVE '1'       *IN88            **2
+     C                     END                             E*2
+     C**
+     C                     ELSE                            X1
+     C                     MOVE '1'       *IN89            *1
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    OVRRD - OVERRIDE TO CONTINUE END OF DAY WITHOUT           *
+     C**            SUCCESSFUL TRANSMISSION FROM EXTEL                *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns                                     *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           OVRRD     BEGSR                           ***  OVRRD  ***
+     C**
+     C                     WRITESE3109F1
+     C                     READ SE3109DF               8089
+     C**
+     C**     Error processing.
+     C**
+     C           *IN89     IFEQ '1'
+     C***********          MOVE '04'      #BASE            *************  S01117
+     C                     Z-ADD4         #BASE            *************  S01117
+     C                     MOVEL'DSPF/'   #FILE            * DBERR  04 *
+     C                     MOVEL'SE3109DF'#KEY             *************
+     C**
+     C                     EXSR *PSSR
+     C**
+     C                     END
+     C**
+     C**     Option to Override
+     C**
+     C           *IN02     IFEQ '1'
+     C**
+     C                     SETON                     LR
+     C                     RETRN
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    MVFLD - SET UP SCREEN FIELDS FROM EXSTAT                  *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           MVFLD     BEGSR                                       ***
+     C**
+     C                     MOVE WID       IWID   10
+     C                     MOVE RUNA      IRUNA   7
+     C                     MOVE TWIN      ITWIN   1
+     C                     MOVE TDEV      ITDEV  10
+     C                     MOVE APIN      IAPIN   1
+     C                     MOVE CDIN      ICDIN   1
+     C                     MOVE CCIN      ICCIN   1
+     C                     MOVE DVDI      IDVDI   1
+     C                     MOVE VPRN      IVPRN   1
+     C                     MOVE DREC      IDREC   60
+     C                     MOVE SQNR      ISQNR   3
+     C                     MOVE STNR      ISTNR  30
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    *PSSR - DEFAULT ERROR HANDLING                            *
+     C**                                                              *
+     C**    CALLED FROM:  anywhere                                    *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           *PSSR     BEGSR                                       ***
+     C**
+     C           WERROR    IFNE 'Y'
+     C                     MOVE 'Y'       WERROR  1
+     C                     DUMP
+     C        NU8          SETON                       U7U8
+     C**
+     C           *NAMVAR   DEFN           LDA
+     C           *LIKE     DEFN DBKEY     #KEY
+     C           *LIKE     DEFN DBASE     #BASE
+     C**
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL#PGM      DBPGM
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL#FILE     DBFILE
+     C***********          MOVEL#BASE     DBASE                           S01117
+     C                     Z-ADD#BASE     DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C**
+     C                     END
+     C**
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C/EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

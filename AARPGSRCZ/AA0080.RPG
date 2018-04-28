@@ -1,0 +1,825 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AA Transactions by profit centre')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Analytical Accounting Module                         *
+      *                                                               *
+      *  AA0080 - Transactions by Profit Centre                       *
+      *                                                               *
+      *  Function:  This program will list all transactions which uses*
+      *             the unallocated profit centre.                    *
+      *                                                               *
+      *  Called By: AAC0080 - Transactions by Profit Centre List -    *
+      *                       Control Program                         *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 04Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG2304            Date 30Apr04               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 222727             Date 05Nov03               *
+      *                 CPK016             Date 03Sep03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 175479             Date 08Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPK009             Date 16Aug99               *
+      *                 124823 *CREATE     Date 08Aug97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG2304 - Various file layout changes. Recompile.            *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CPK016 - Release 5 packaging.  Field name clash.             *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP *
+      *           ,MMDELDPP, MMDENBPP AND MMDENSPP.                   *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *           Recompiled over changed PF/INPAYDD.                 *
+      *  175479 - Recompiled over changes in INPAYDD & OTPAYDD        *
+      *  CPK009 - Recompile problems found in DBA R3.00 packaging.    *
+      *  124823 - Provide a report for transactions by profit centre  *
+      *           New report program.                                 *
+      *                                                               *
+      *****************************************************************
+     F*
+     FABDEALLLIF  E           K        DISK         KINFSR *PSSR
+     F**  Internal Deals
+     F*
+     FFXDEALLLIF  E           K        DISK         KINFSR *PSSR
+     F**  Foreign Exchange Deals
+     F*
+     FMMDEALLLIF  E           K        DISK         KINFSR *PSSR
+     F**  Money Market Deals
+     F*
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR
+     F**  Customer Loans
+     F*
+     FOTPAY   IF  E           K        DISK         KINFSR *PSSR
+     F**  Outgoing Payments
+     F*
+     FINPAY   IF  E           K        DISK         KINFSR *PSSR
+     F**  Incoming Payments
+     F*
+     FCQCOD   IF  E           K        DISK         KINFSR *PSSR
+     F**  Cheques to be Collected
+     F*
+     FCQPAC   IF  E           K        DISK         KINFSR *PSSR
+     F**  Cheques to be Paid
+     F*
+     FNTRAN   IF  E           K        DISK         KINFSR *PSSR
+     F**  Nostro Transfer
+     F*
+     FTRADS   IF  E           K        DISK         KINFSR *PSSR
+     F**  SE Trades
+     F*
+     FCUSEX   IF  E           K        DISK         KINFSR *PSSR
+     F            CUSEXH1F                          KIGNORE
+     F            CUSEXZ1F                          KIGNORE
+     F**  RE Customer Exchanges
+     F*
+     FTTRANL1 IF  E           K        DISK         KINFSR *PSSR
+     F            TTRANPTF                          KIGNORE
+     F**  RE Teller Transactions
+     F*
+     FSTAND   IF  E           K        DISK         KINFSR *PSSR
+     F            STANDSAF                          KIGNORE
+     F            STANDSCF                          KIGNORE
+     F**  RE Standing Order
+     F*
+     FAA0080AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+     F**  Transactions by Profit Centre - Audit Report
+     F*
+     FAA0080P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     F**  Transactions by Profit Centre - Detail Report
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - EOF in transaction files                              *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7+U8 - Database Error                                        *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  SRPRNT - Print Transaction Details                           *
+     F*  SRAUDT - Print Audit Report                                  *
+     F*  *PSSR  - Program Error Processing Subroutine                 *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E**  Array containing Copyright statement
+     E*
+     E                    MOD     1  15 25
+     E**  Module Description
+     E*
+     I/EJECT
+      ** Rename NLRA field in CLOANCK to distinuish it from same                              CPK009
+      ** named field defined in CLOANZ1                                                       CPK009
+      *                                                                                       CPK009
+     ICLOANCKF                                                                                CPK009
+     I              NLRA                            NLRACK                                    CPK009
+     ITRADSDF                                                                                 CPK016
+     I              CRSK                            TDCRSK                                    CPK016
+     I            DS
+     I                                        1  18 WTRNM
+     I                                        1   6 WDLNO1
+     I                                        7   7 WSLASH
+     I                                        8  13 WDLNO2
+     I                                        1  15 WPREF
+     I                                       16  16 WSLAS1
+     I                                       17  18 WCQSQ
+     I                                        1   1 WTBRI
+     I                                        2   2 WSL1
+     I                                        3   5 WITLB
+     I                                        6   6 WSL2
+     I                                        7   9 WTBID
+     I                                       10  10 WSL3
+     I                                       11  15 WTNRT
+     I*
+     ILDA       E DSLDA                         256
+     I*
+     I**  Local data area for database error details
+     I**  *LOCK IN LDA immediately before and OUT LDA immediately
+     I**  after each database error handling.
+     I**
+     I**                                    134 141 DBFILE
+     I**       Defines:                     142 170 DBKEY
+     I**                                    171 180 DBPGM
+     I**                                    181 1830DBASE
+     I*
+     ISPOOL1      DS
+     I**  File Information Data Structure for AA0080P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     I*
+     ISPOOLU      DS
+     I**  File Information Data Structure for AA0080AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  External data structure for Bank Details
+     I*
+     ISDPCAC    E DSSDPCACPD
+     I**  External data structure for PCA ICD Details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  First data structure for Access Programs, short DS
+     I*
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C**  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C**  Receive Parameter List.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQN   5
+     C                     PARM           PLEVL   1
+     C                     PARM           PENTY   3
+     C*
+     C**  Initialise LDA field.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C**  Call Access Program for Bank Details - Title, Run Date and
+     C**  Run Day Number.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AA0080  'DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Check System Date Format, DDMMYY (*IN98 off)
+     C**                            MMDDYY (*IN98 on).
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+     C*
+     C**  Call Access Program for PCA ICD Details.
+     C*
+     C                     CALL 'AOPCACR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*FIRST ' WOPTN
+     C           SDPCAC    PARM SDPCAC    DSFDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AA0080  'DBPGM
+     C                     MOVEL'SDPCACPD'DBFILE           ************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C**  Initialise Report Work fields.
+     C*
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     MOVE 'N'       WOPEN   1
+     C*
+     C**  Process Internal Deals.
+     C*
+     C           *LOVAL    SETLLABDEALLL
+     C                     READ ABDEALP0                 10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           JPPRFC    IFEQ FTUAPC
+     C           JPMMPC    OREQ FTUAPC
+     C                     MOVEL*BLANKS   WTRNM
+     C                     MOVELJPFD38    WDLNO1
+     C                     MOVEL'/'       WSLASH
+     C                     MOVELJPSD38    WDLNO2
+     C                     MOVELWTRNM     RTRNM
+     C                     MOVELMOD,1     RMODL
+     C                     MOVELJPMDTY    RDLTP
+     C                     MOVELJPSTYP    RDLST
+     C                     MOVELJPPRFC    RPRF1
+     C                     MOVELJPMMPC    RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ ABDEALP0                 10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Foreign Exchange Deals.
+     C*
+     C           *LOVAL    SETLLFXDEALLL
+     C                     READ FXDEALLL                 10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           FHPRFC    IFEQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELFHDN38    RTRNM
+     C                     MOVELMOD,2     RMODL
+     C                     MOVELFHTYPE    RDLTP
+     C                     MOVELFHSTYP    RDLST
+     C                     MOVELFHPRFC    RPRF1
+     C                     MOVEL*BLANKS   RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ FXDEALLL                 10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Money Market (Loans/Deposits) Deals.
+     C*
+     C           *LOVAL    SETLLMMDEALLL
+     C                     READ MMDELDP0                 10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           HKPRFC    IFEQ FTUAPC
+     C           HKFPRC    OREQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELHKDN38    RTRNM
+     C                     MOVELMOD,3     RMODL
+     C                     MOVELHKTYPE    RDLTP
+     C                     MOVELHKSTYP    RDLST
+     C                     MOVELHKPRFC    RPRF1
+     C                     MOVELHKFPRC    RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ MMDELDP0                 10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Money Market (Negotiable Assets Purchased) Deals.
+     C*
+     C           *LOVAL    SETLLMMDEALLL
+     C                     READ MMDENBP0                 10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           HLPRFC    IFEQ FTUAPC
+     C           HLFPRC    OREQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELHLDN38    RTRNM
+     C                     MOVELMOD,4     RMODL
+     C                     MOVELHLTYPE    RDLTP
+     C                     MOVELHLSTYP    RDLST
+     C                     MOVELHLPRFC    RPRF1
+     C                     MOVELHLFPRC    RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ MMDENBP0                 10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Money Market (Negotiable Assets Sold) Deals.
+     C*
+     C           *LOVAL    SETLLMMDEALLL
+     C                     READ MMDENSP0                 10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           HMPRFC    IFEQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELHMDN38    RTRNM
+     C                     MOVELMOD,5     RMODL
+     C                     MOVELHMTYPE    RDLTP
+     C                     MOVELHMSTYP    RDLST
+     C                     MOVELHMPRFC    RPRF1
+     C                     MOVEL*BLANKS   RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ MMDENSP0                 10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Customer Loans.
+     C*
+     C           *LOVAL    SETLLCLOAN
+     C                     READ CLOANCLF                 10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           PRFC      IFEQ FTUAPC
+     C           FPRC      OREQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELLNRF      RTRNM
+     C                     MOVELMOD,6     RMODL
+     C                     MOVELLTYP      RDLTP
+     C                     MOVELSUTP      RDLST
+     C                     MOVELPRFC      RPRF1
+     C                     MOVELFPRC      RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ CLOANCLF                 10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Outgoing Payments.
+     C*
+     C           *LOVAL    SETLLOTPAY
+     C                     READ OTPAY                    10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           PRFC      IFEQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELPREF      RTRNM
+     C                     MOVELMOD,7     RMODL
+     C                     MOVELPYTP      RDLTP
+     C                     MOVELPYST      RDLST
+     C                     MOVELPRFC      RPRF1
+     C                     MOVEL*BLANKS   RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ OTPAY                    10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Incoming Payments.
+     C*
+     C           *LOVAL    SETLLINPAY
+     C                     READ INPAY                    10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           PRFC      IFEQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELPREF      RTRNM
+     C                     MOVELMOD,8     RMODL
+     C                     MOVELPYTP      RDLTP
+     C                     MOVELPYST      RDLST
+     C                     MOVELPRFC      RPRF1
+     C                     MOVEL*BLANKS   RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ INPAY                    10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Cheques for Collection.
+     C*
+     C           *LOVAL    SETLLCQCOD
+     C                     READ CQCOD                    10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           CQSQ      IFEQ 0
+     C                     MOVELPYTP      WPYTP   2
+     C                     MOVELPYST      WPYST   2
+     C                     ENDIF
+     C*
+     C           PRFC      IFEQ FTUAPC
+     C                     MOVEL*BLANKS   WTRNM
+     C                     MOVELPREF      WPREF
+     C                     MOVEL'/'       WSLAS1
+     C                     MOVELCQSQ      WCQSQ
+     C                     MOVELWTRNM     RTRNM
+     C                     MOVELMOD,9     RMODL
+     C                     MOVELWPYTP     RDLTP
+     C                     MOVELWPYST     RDLST
+     C                     MOVELPRFC      RPRF1
+     C                     MOVEL*BLANKS   RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ CQCOD                    10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Cheques to be Paid.
+     C*
+     C           *LOVAL    SETLLCQPAC
+     C                     READ CQPAC                    10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           CQSQ      IFEQ 0
+     C                     MOVELPYTP      WPYTP
+     C                     MOVELPYST      WPYST
+     C                     ENDIF
+     C*
+     C           PRFC      IFEQ FTUAPC
+     C                     MOVEL*BLANKS   WTRNM
+     C                     MOVELPREF      WPREF
+     C                     MOVEL'/'       WSLAS1
+     C                     MOVELCQSQ      WCQSQ
+     C                     MOVELWTRNM     RTRNM
+     C                     MOVELMOD,10    RMODL
+     C                     MOVELWPYTP     RDLTP
+     C                     MOVELWPYST     RDLST
+     C                     MOVELPRFC      RPRF1
+     C                     MOVEL*BLANKS   RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ CQPAC                    10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Nostro Transfers.
+     C*
+     C           *LOVAL    SETLLNTRAN
+     C                     READ NTRAN                    10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           PRFC      IFEQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELTFRF      RTRNM
+     C                     MOVELMOD,11    RMODL
+     C                     MOVELPYTP      RDLTP
+     C                     MOVELPYST      RDLST
+     C                     MOVELPRFC      RPRF1
+     C                     MOVEL*BLANKS   RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ NTRAN                    10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Securities Trades.
+     C*
+     C           *LOVAL    SETLLTRADS
+     C                     READ TRADS                    10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           BPRC      IFEQ FTUAPC
+     C           TPRC      OREQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELTDRF      RTRNM
+     C                     MOVELMOD,12    RMODL
+     C                     MOVELTDTP      RDLTP
+     C                     MOVELTSUB      RDLST
+     C                     MOVELBPRC      RPRF1
+     C                     MOVELTPRC      RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ TRADS                    10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Customer Exchanges
+     C*
+     C           *LOVAL    SETLLCUSEX
+     C                     READ CUSEXCEF                 10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           PRFC      IFEQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELIPDN      RTRNM
+     C                     MOVELMOD,13    RMODL
+     C                     MOVEL*BLANKS   RDLTP
+     C                     MOVEL*BLANKS   RDLST
+     C                     MOVELPRFC      RPRF1
+     C                     MOVEL*BLANKS   RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ CUSEXCEF                 10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Retail Teller Transactions
+     C*
+     C           *LOVAL    SETLLTTRANL1
+     C                     READ TTRANPDF                 10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           PRFC      IFEQ FTUAPC
+     C                     MOVEL*BLANKS   WTRNM
+     C                     MOVELTBRI      WTBRI
+     C                     MOVEL'/'       WSL1
+     C                     MOVELITLB      WITLB
+     C                     MOVEL'/'       WSL2
+     C                     MOVELTBID      WTBID
+     C                     MOVEL'/'       WSL3
+     C                     MOVELTBTN      WTNRT
+     C                     MOVELWTRNM     RTRNM
+     C                     MOVELMOD,14    RMODL
+     C                     MOVEL*BLANKS   RDLTP
+     C                     MOVEL*BLANKS   RDLST
+     C                     MOVELPRFC      RPRF1
+     C                     MOVEL*BLANKS   RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ TTRANPDF                 10
+     C*
+     C                     ENDDO
+     C*
+     C**  Process Retail Standing Orders
+     C*
+     C           *LOVAL    SETLLSTAND
+     C                     READ STANDSBF                 10
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C           PRFC      IFEQ FTUAPC
+     C                     MOVEL*BLANKS   RTRNM
+     C                     MOVELSTOR      RTRNM
+     C                     MOVELMOD,15    RMODL
+     C                     MOVEL*BLANKS   RDLTP
+     C                     MOVEL*BLANKS   RDLST
+     C                     MOVELPRFC      RPRF1
+     C                     MOVEL*BLANKS   RPRF2
+     C                     EXSR SRPRNT
+     C                     ENDIF
+     C*
+     C                     READ STANDSBF                 10
+     C*
+     C                     ENDDO
+     C*
+     C**  Print Audit Report.
+     C*
+     C                     EXSR SRAUDT
+     C*
+     C**  End Program and Return.
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRPRNT - Print Transaction Details                           *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine                 *
+     C*  Calls    :                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRPRNT    BEGSR                           ** SRPRNT **
+     C*
+     C**  Open printer file AA0080P1 if not yet open.
+     C*
+     C           WOPEN     IFEQ 'N'
+     C*
+     C                     MOVE 'Y'       WOPEN
+     C                     OPEN AA0080P1
+     C                     WRITEAA0080D0
+     C*
+     C                     MOVE *BLANKS   SENTY
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C**  Check that sufficient lines remain for the Format. If not,
+     C**  write out the Main Headings on a new page.
+     C*
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEAA0080D0
+     C                     ENDIF
+     C*
+     C**  Write out Detail Record.
+     C*
+     C                     WRITEAA0080D1
+     C*
+     C           SRPRN9    ENDSR                           ** SRPRN9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SRAUDT - Print Audit Report                                  *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine                 *
+     C*              *PSSR  - Program Error Processing Subroutine     *
+     C*  Calls    :                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SRAUDT    BEGSR                           ** SRAUDT **
+     C*
+     C**  If P1 report is open, print report footer
+     C*
+     C           WOPEN     IFEQ 'Y'
+     C*
+     C**  Check that sufficient lines remain for the Format. If not,
+     C**  write out the Main Headings on a new page.
+     C*
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEAA0080D0
+     C                     ENDIF
+     C*
+     C                     WRITEAA0080D3
+     C                     ENDIF
+     C*
+     C**  Print Audit File if no details to report or database error.
+     C*
+     C           WOPEN     IFEQ 'N'
+     C           *INU7     OREQ '1'
+     C           *INU8     ANDEQ'1'
+     C*
+     C                     OPEN AA0080AU
+     C                     WRITEAA0080A0
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEAA0080A2
+     C                     ELSE
+     C                     WRITEAA0080A1
+     C                     ENDIF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C           SRAUD9    ENDSR                           ** SRAUD9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - Error control subroutine                            *
+     C*                                                               *
+     C*  Called By:  MAIN   - Main Processing Routine                 *
+     C*  Calls    :  SRAUDT - Print Audit Report                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C**  Check to see that *PSSR has not already been called.
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+     C*
+     C                     RETRN
+     C*
+     C           WPSS9     ENDSR                           ** WPSS9 **
+     C*
+     C*****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**  MOD - Module Description
+INTERNAL DEAL
+FOREIGN EXCHANGE
+LOAN/DEPOSIT
+NA PURCHASED
+NA SOLD
+CUSTOMER LOAN
+OUTGOING PAYMENT
+INCOMING PAYMENT
+CHEQUES FOR COLLECTION
+CHEQUES TO BE PAID
+NOSTRO TRANSFER
+SECURITIES TRADE
+CUSTOMER EXCHANGES
+RETAIL TELLER
+RETAIL STANDING ORDER

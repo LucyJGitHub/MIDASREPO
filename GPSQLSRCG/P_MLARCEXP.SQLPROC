@@ -1,0 +1,80 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       P_MLARCEXP - Midas GP Archive limit exposures                         */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*       Last Amend No. BUG4714            Date 04Nov04                        */
+/*       Prev Amend No. BUG3680            Date 14Jul04                        */
+/*                      BUG1698            Date 14May04                        */
+/*                      BUG1910            Date 21Apr04                        */
+/*                    . CGP001  *CREATE    Date 29Mar04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       BUG4714- ML fixes  to CL Phase 2 EOD Enhancments for Branch 3         */
+/*       BUG3680- ML EOD not inserting enough Limits records into the history  */
+/*                table during COB                                             */
+/*       BUG1698- Monthly summary values returned are wrong                    */
+/*       BUG1910- Archiving of exposures in EOD clears all exposure history.   */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE PROCEDURE                                                              :
+  **********/**********                                                         :
+  (IN INZONE VARCHAR(20) )                                                      :
+  LANGUAGE SQL                                                                  :
+  SPECIFIC P_MLARCEXP NOT DETERMINISTIC                                         :
+  MODIFIES SQL DATA CALLED ON NULL INPUT                                        :
+  BEGIN                                                                         :
+     DECLARE rundate DATE ;                                                     :
+                                                                                :
+/* Get the zones rundate */                                                     :
+     DECLARE C1 CURSOR FOR                                                      :
+         SELECT RUNDATE FROM V_MLBRRNDT WHERE ZONE = inzone ;                   :
+                                                                                :
+         OPEN C1 ; FETCH C1 INTO rundate ; CLOSE C1 ;                           :
+                                                                                :
+/**Remove*old*exposures**/******************************************************:BUG1910
+/* Remove records due to expire today */                                        :BUG1910
+*****DELETE*FROM*T_MLEXPHST*WHERE*EHDATE*<=*rundate*;***************************:BUG1910
+     DELETE FROM T_MLEXPHST WHERE EHDATE = rundate                              :BUG1910
+     AND EHLIMITID IN ( SELECT LILIMITID FROM T_MLLIMIT                         :BUG1910
+*****WHERE*LIEXPBRCH*IN*(*SELECT*BRANCH*FROM*V_MLBRRNDT*WHERE*ZONE*=*inzone*)***:    BUG1910 BUG4714
+*****OR*LIEXPBRCH*IS*NULL*AND*EXISTS*(*SELECT*DISTINCT*GLOBAL*FROM*V_MLBRRNDT***:    BUG1910 BUG4714
+     WHERE (LIEXPBRCH IN ( SELECT BRANCH FROM V_MLBRRNDT WHERE ZONE = inzone )) :            BUG4714
+     OR (LIEXPBRCH='' AND EXISTS ( SELECT GLOBAL FROM V_MLBRRNDT                :            BUG4714
+     WHERE ZONE = inzone AND GLOBAL = 'Y')                                      :BUG1910
+****)*;*************************************************************************:    BUG1910 BUG4714
+    )) ;                                                                        :            BUG4714
+                                                                                :
+/**Archive*todays*exposure*for*all*limits**/************************************:BUG1910
+/* Archive todays limits for the given zone */                                  :BUG1910
+     INSERT INTO T_MLEXPHST                                                     :
+     SELECT LILIMITID, LISTATUS, RUNDATE, LIAMT, LIBASEAMT, LIEXPOSURE,         :
+         LIOFFSET FROM T_MLLIMIT                                                :
+*****WHERE*LISTATUS*IN*('A',*'I')*AND*LIEXPOSURE*IS*NOT*NULL********************:BUG1910
+*********AND*LIOFFSET*IS*NOT*NULL*;*********************************************:BUG1910
+*****WHERE*LISTATUS*IN*('A',*'I')*AND*(*****************************************:BUG1910BUG1698
+     WHERE LISTATUS IN ('A', 'I') AND                                           :BUG1698
+     LIEXPOSURE IS NOT NULL AND LIOFFSET IS NOT NULL AND (                      :BUG1698
+        LIEXPBRCH IN ( SELECT BRANCH FROM V_MLBRRNDT WHERE ZONE = inzone ) OR ( :BUG1910
+********LIEXPBRCH*IS*NULL*AND*EXISTS*(*SELECT*DISTINCT*GLOBAL*FROM*V_MLBRRNDT***:BUG1910BUG3680
+        (LIEXPBRCH IS NULL OR LIEXPBRCH = '') AND EXISTS ( SELECT DISTINCT      :BUG3680
+        GLOBAL FROM V_MLBRRNDT                                                  :BUG3680
+        WHERE ZONE = inzone AND GLOBAL = 'Y') )                                 :BUG1910
+         ) ;                                                                    :BUG1910
+                                                                                :BUG1910
+  END;                                                                          :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Midas GP Archive limit exposures                  ';                     :
+                                                                                :

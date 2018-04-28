@@ -1,0 +1,169 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL OIS Events File Housekeeping')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL1657 - OIS Events File Housekeeping                        *
+      *                                                               *
+      *  Function:  This program will remove redundant records from   *
+      *  (CoB)      the OIS Events file.                              *
+      *                                                               *
+      *  Called By: DLC1657 - OIS Events File Housekeeping Control    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CDL038             Date 10May05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. CIR007  *CREATE    Date 11May01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CIR007 - Overnight Index Swaps                               *
+      *                                                               *
+      *****************************************************************
+      *
+      ** OIS Merged Events by Value date
+     FDLOEVTL1UF  E           K        DISK         KINFSR *PSSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    01         File access indicator for the primary file      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *PSSR - Error processing                                     *
+      *  *INZSR - Initialise                                          *
+      *                                                               *
+      *    The *INZSR subroutine will only get called automatically   *
+      *    on entry to the module the first time it is run            *
+      *    (unless you end the program with LR on).                   *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Short data structure for access objects
+     IDSFDY     E DSDSFDY
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External Data Structure for Bank Details
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Read through the LF for records which no longer need to be
+      ** retained for merging into the Events file
+     C                     READ DLOEVTL1                 01
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+      ** Value date is at least 30 days prior to run date
+     C           L4VDAT    IFLE WQCLDT
+     C                     DELETDLOEVTD0
+     C                     READ DLOEVTL1                 01
+     C                     ELSE
+     C                     MOVE '1'       *IN01
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Termination Processing
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR      - Program Initialisation routine                  *
+      *                                                               *
+      *  Called by: Implicitly on program activation                  *
+      *                                                               *
+      *  Calls:     AOBANKR0                                          *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL1657'  DBPGM     P
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA
+      *
+      ** Call Access prog. for Bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Establish a Control Date, one month before run date
+     C           BJRDNB    SUB  31        WQCLDT  50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called by: Error processing routines                         *
+      *                                                               *
+      *  Calls:     DBERRCTL                                          *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,203 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas GL Balance Sheet / P & L Reporting')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas General Ledger Module
+     A*                                                               *
+     A*  GL0761P1 - Balance Sheet / Profit + Loss Report              *
+     A*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     A*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*  LAST AMEND NO. CSD005             DATE 12MAR99               *
+     A*  PREV Amend No. 124974             DATE 20May98               *
+     A*                 S01408             DATE 11Apr95               *
+     A*                 074474             DATE 12Oct94               *
+     A*                 048916             DATE 09Aug93               *
+     A*                 052437             DATE 17MAR93               *
+     A*                 S10736             DATE 16OCT92               *
+     A*                 E31298             DATE 15SEP92               *
+     A*                                                               * **
+     A*---------------------------------------------------------------- **
+     A*                                                               * **
+     A*  CSD005 - Switchable feature- if account narrative feature    *  *
+     A*           is active the current account description shall be  *  *
+     A*           replaced with the account narrative.                *  *
+     A*  124974 - ADDHED field added for extra heading needed for     *
+     A*           BSPL reports. Applied fix 063148.                   *
+     F*  S01408 - Core hook GL0761P1R1 added                          *
+     F*         - Core hook GL0761P1R2 added                          *
+     A*  074474 - When sublevel total has been output, output a blank *
+     A*           line before writing the next detail record.         *
+     A*  048916 - Print 'End of Branch/Company Report' at end.        *
+     A*  052437 - Print BR/CO/CONSOLIDATED heading for MGMT ACCTS     * **
+     A*  S10736 - Print report using Management Accounts 'Analysis    * **
+     A*           by' Criteria.                                       *
+     A*  E31298 - Print currency type selected as well as             *
+     A*           the currency name                                   *
+     A*                                                               * **
+     A*****************************************************************
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     A*                                                               *
+     A*****************************************************************
+     A                                      REF(MFRFL)
+      **
+      **   *************
+      **   PAGE HEADINGS
+      **   *************
+      **
+     A          R W01                       SKIPB(3)
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                     6'REFERENCE GL0761P1'
+     A            BJURPT        53A       39
+     A                                   100'DATE'
+     A            BJMRDT         7A      105
+     A                                   122'PAGE'
+     A                                   127PAGNBR
+     A                                      EDTCDE(J) SPACEA(1)
+      *
+     A                                   100'TIME'
+     A                                   105TIME EDTWRD('  :  :  ')
+     A                                      SPACEA(1)
+      *
+     A*/COPY WNCPYSRC,GL0761P101
+      *                                              Begin /124974/
+     A*********** G5RSNM        30A       48SPACEA(1)
+     A            G5RSNM        30A       48
+     A            ADDHED        35A       78SPACEA(1)
+      *                                              End   /124974/
+     A*/COPY WNCPYSRC,GL0761P102
+     A            NMUL          30A       48SPACEA(1)
+      *
+     A            PRTDT         50A       50SPACEA(1)
+      * Start                                                /*S10736*/
+     A**********  DTUL          50A       50SPACEA(2)        /*S10736*/
+     A            DTUL          50A       50SPACEA(1)
+      * END                                                  /*S10736*/
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL0761P1R1
+     A*                                                    End of   /*S01408*/
+      *
+     A                                     4'CURRENCY - '
+     A*********           START OF CHANGE                  /E31298/
+     A*********   RPCCY         14A       15
+     A            RPCCY         32A       15
+     A*                                                    Begin of /*S01408*/
+     A*/COPY WNCPYSRC,GL0761P1R2
+     A*                                                    End of   /*S01408*/
+     A*                   END OF CHANGE                    /E31298/
+      * Start                                                /*052437*/
+      **Start**                                              /*S10736*/
+     A**76*****                           80'MANAGEMENT ACCOUNTS -'
+     A**76*****   PRCGDS        30A      102
+      **End****                                              /*S10736*/
+      * End                                                  /*052437*/
+      *
+     A  73                                80'BRANCH - '
+     A  73        A8BRNM        30        90
+      *
+     A  74                                80'COMPANY - '
+     A  74        APCMNM        30        90
+      *
+     A  75                                80'CONSOLIDATED'
+      * Start                                                /*S10736*/
+     A********************************   130' ' SPACEA(2)    /*S10736*/
+     A                                   132' ' SPACEA(1)
+      * Start                                                /*052437*/
+     A  76                                80'MANAGEMENT ACCOUNTS -'
+     A  76        PRCGDS        30A      102SPACEA(1)
+      * End                                                  /*052437*/
+      ** Print 'Large' Entity heading for Management Accounts report
+     A  76        LEH           96A        4
+     A  76        TRMTYP        24A      102SPACEA(1)
+     A  76        PRENT2        96A        4
+      *
+     A************SCALE**********9        98SPACEA(1)
+     A            SCALE          9       100SPACEA(1)
+     A*/COPY WNCPYSRC,GL0761P109
+      * End                                                  /*S10736*/
+      *
+     A          R W02                       SPACEB(1)
+      *
+     A*/COPY WNCPYSRC,GL0761P107
+     A  70N60                             87'---------------------'
+     A*/COPY WNCPYSRC,GL0761P104
+     A                                      SPACEA(1)
+     A**  Print extra blanks before a heading line
+     A
+     A*********              Start of Change               /074474/
+     A*N70N71N81                          85' ' SPACEA(1)
+     A N70N71N81
+     AO 82 71N81                          85' ' SPACEA(1)
+     A*                      End of Change                 /074474/
+      *
+      *************                                       Begin/CSD005/
+     A**61*****   NAM1          47         6
+      *
+     A**62*****   NAM2          47        10
+      *
+     A**63*****   NAM3          47        14
+      *
+     A**64*****   NAM4          47        18
+      *
+     A**65*****   NAM5          47        22
+      *
+     A**66*****   NAM6          47        26
+      *
+     A**67*****   NAM7          47        30
+      *
+     A**68*****   NAM8          47        34
+      *
+     A**69*****   NAM9          47        38
+      *
+     A  61        NAM1          72         6
+      *
+     A  62        NAM2          72        10
+      *
+     A  63        NAM3          72        14
+      *
+     A  64        NAM4          72        18
+      *
+     A  65        NAM5          72        22
+      *
+     A  66        NAM6          72        26
+      *
+     A  67        NAM7          72        30
+      *
+     A  68        NAM8          46        34
+      *
+     A  69        NAM9          42        38
+      **************                                        End/CSD005/
+     A  71N81     RAMT          21        87
+     A*/COPY WNCPYSRC,GL0761P105
+      *
+     A  71 81     TAMT          21       110 SPACEA(1)
+     A*/COPY WNCPYSRC,GL0761P108
+     A  71 81N53                         110'====================='
+      * Start                                                /*S10736*/
+     A************************************  SPACEA(3) *****  /*S10736*/
+     A                                      SPACEA(2)
+      * End                                                  /*S10736*/
+     A*/COPY WNCPYSRC,GL0761P106
+     A  71 81 53                         110'====================='
+     A
+     A*/COPY WNCPYSRC,GL0761P103
+      *
+      ** End of Report Format
+      *
+     A          R W03                       TEXT('End of Report Format')
+     A                                      SKIPB(58)
+     A*********              START OF CHANGE               /048916/
+     A*********                           56'*** End of Report ***'
+     A            EOR           30        56
+     A*                      END OF CHANGE                 /048916/

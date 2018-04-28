@@ -1,0 +1,178 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Midas/Telex Data            *RDR')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  ACCESS OBJECTS
+     F*                                                                  *
+     F*     AOMTLXR0 - READ ACCESS TO MIDAS/TELEX DATA FILE              *
+     F*                I.C.D. RECORD - ONLY ONE RECORD IN FILE
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01230             Date 23/11/89               S01230
+     F*                 S01230             Date 06/11/89              *S01230
+     F*                    E01168             DATE 14/02/89               E01168
+     F*                                                                  *
+     F********************************************************************
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01230 - STANDARDISE ACCESS PROGRAMS                         *S01230
+     F********************************************************************S01230
+     F*
+     F* ID F  C  H  L     FUNCTION OF INDICATORS
+     F*
+     F*       01       OPEN FILE - SDMTLXL1
+     F*       90       FILE ERROR
+     F*       91       OPEN ERROR
+     F*       92       CLOSE ERROR
+     F*       93       EMPTY FILE
+     F*       96       OPTION ERROR
+     F*
+     F********************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     FSDMTLXL1IF  E           K        DISK                           UC
+      * IN  - @BRREFA Midas/Telex D.  (MTXK)
+      ************************************************************
+      /EJECT
+     E*ESTART
+      ************************************************************
+     E                    @MG     1   1 50
+      ************************************************************
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT
+     I*ISTART
+      ************************************************************
+     IP@MGDA      DS
+     I                                        1  50 @MG
+      *
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     I***********D@FMT     E DSSDMTLXD0                                   S01230
+     ID@FMT     E DSSDMTLXPD                                              S01230
+      * @BRREFA - Midas/Telex Data Record Format Data Structure
+      *
+     IP@FMT     E DSDSFDY                                                 S01230
+     I* EXTERNAL DATA STRUCTURE TO HOLD THE OUTGOING RECORD FORMAT        S01230
+     I* OF THE FILE.                                                      S01230
+      *                                                                   S01230
+     I*******P@FMT       DS                             15                S01230
+     I*******                                 1  15 BSCOPY                S01230
+      * Copy of Record Format Data Structure to be Passed Back
+      * to the Calling Program After 1st Call.
+      *
+      *
+      ************************************************************
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+      ************************************************************        S01230
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@OPTN  7        I:Option
+     C                     PARM D@FMT     P@FMT            O:Format
+      *****************************************************
+      *MAIN
+     C                     SETOF                     909192 ¦ Reset
+     C                     SETOF                     9396   ¦ error flags
+      *
+      * First call - open file - read record - close file
+      *
+      * Subsequent calls will return the format name.
+      *
+     C           P@OPTN    IFEQ '*FIRST  '                 IF 1  VALID
+     C           P@OPTN    OREQ '*NEXT   '                       OPTION
+     C           P@OPTN    OREQ '*PREV   '                       HAS
+     C           P@OPTN    OREQ '*LAST   '                       BEEN
+     C           P@OPTN    OREQ '*KEY    '                       ENTERED
+     C           P@OPTN    OREQ '*FREE   '
+     C           P@OPTN    OREQ '*SAME   '                                E01168
+     C           P@OPTN    OREQ '*VERIFY '                                E01168
+     C           *IN01     IFEQ '0'                        IF 2 FIRST TIME
+     C                     SETON                     01      Set ind.
+     C                     OPEN SDMTLXL1               91    Open file
+     C           *IN91     CABEQ'1'       T@SKIP         LR  Open error
+     C                     READ @BRREFA                9093  Read record
+     C                     CLOSESDMTLXL1               92    Close file
+     C           *IN92     CABEQ'1'       T@SKIP         LR  Close error
+     C           *IN93     CABEQ'1'       T@SKIP         LR  Empty error
+     C                     SETON                     LR      Set ind.
+     C                     END                             FI 2
+     C                     ELSE
+     C                     SETON                     96
+     C                     END                             FI 1
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG                             +++ SKIP +++
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No Errors
+     C   90                MOVE '*ERROR ' P@RTCD           File error
+     C   91                MOVE '*OPEN  ' P@RTCD           Open error
+     C   92                MOVE '*CLOSE ' P@RTCD           Close error
+     C   93                MOVE '*EMPTY ' P@RTCD           Empty file
+     C   96                MOVE '*OPTION' P@RTCD           Option Inval
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '                  IF 9 SEND MSG
+     C           P@RTCD    ANDNE*BLANK                      AND ERROR
+     C   90                MOVE 'ACO1001' P@MGID             File error
+     C   91                MOVE 'ACO1002' P@MGID             Open error
+     C   92                MOVE 'ACO1003' P@MGID             Close error
+     C   93                MOVE 'ACO1004' P@MGID             Empty file
+     C   96                MOVE 'ACO1007' P@MGID             OPTION INVAL
+     C                     CALL 'ZASNMG'                     <SEND MSG>
+     C                     PARM *BLANK    W@RTCD  7          B:Return code
+     C                     PARM PGNAME    P@PGNM 10          I:Prog name
+     C                     PARM '*PRV'    P@DEST  5          I:Destination
+     C                     PARM           P@MGID  7          I:Msg ID
+     C                     PARM *BLANK    P@MSGF 10          I:Msg file
+     C                     PARM *BLANK    P@MGKY  4          O:Msg key
+     C                     PARM           P@MGDA 50          I:Msg data
+     C                     PARM '*DIAG'   P@MGTP  7          I:Msg type
+     C                     END                             FI 9
+      *
+      * Caller Requests DB Error Handling
+      *
+     C           W@RTCD    IFEQ '*DBERR '                  IF
+     C           P@RTCD    ANDNE*BLANK                       AND
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END                             FI
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************
+      *ENDMAIN
+**
+AOMTLXPD  AOMTLXR0  Midas/Telex Data
+** CPY@     : Copyright notice for inclusion in all programs           graS01230
+(c) Misys International Banking Systems Ltd. 2001

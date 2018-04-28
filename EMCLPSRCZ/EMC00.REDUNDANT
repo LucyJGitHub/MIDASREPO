@@ -1,0 +1,183 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/********************************************************************/
+/*                                                                  */
+/*       Midas     EXPOSURE MANAGEMENT MODULE                   */
+/*                                                                  */
+/*       EMC00 - INITIAL FILE SET UP                                */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CSC020             Date 31Mar04              */
+/*                      215893             Date 12Jun03              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                      CSE017             Date 20Oct99              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      S01408             Date 06Aug96              */
+/*                      S01408             Date 28Nov95              */
+/*                      E26192            DATE  14JUN91             */
+/*                      S01339            DATE  28MAY91             */
+/*                      E20438            DATE  15FEB90             */
+/*                      E15674            DATE  11/10/88            */
+/*                      E15492            DATE  27/09/88            */
+/*                                                                  */
+/*------------------------------------------------------------------*/
+/*                                                                  */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*       CSC020 - Journaling changes for MidasPlus.                  */
+/*       215893 - The process that activates the Exposure Management */
+/*                module performs end journalling on some files      */
+/*                which gives problems afterwards.  Check for feature*/
+/*                CCB009(Midas Journalling during Close of Business).*/
+/*       CSE017 - Cum/Ex Indicator on Depot Movements (Recompiled)   */
+/*       S01408  -  HOOK ADDED FOR EMC00005                         */
+/*               -  HOOK ADDED FOR EMC00004                         */
+/*               -  HOOK ADDED FOR EMC00003                         */
+/*               -  HOOK ADDED FOR EMC00002                         */
+/*       S01408  -  HOOK ADDED FOR EMC00001                         */
+/*       E26192  -  THIS PROGRAM SHOULD JOURNAL THE SAME FILES AS   */
+/*                  SPECIFIED ON THE RCVJRNE COMMAND IN EMC0202     */
+/*       S01339  -  REMOVAL OF SYNDICATED LOANS/SYNDICATED LOAN     */
+/*                  FACILITIES.                                     */
+/*       E20438  -  CHECK FOR EXISTENCE OF ICJRN BEFORE TRYING      */
+/*                  TO START JOURNALING (THE FILES MUST BE          */
+/*                  JOURNALED SUCCESFULLY ONCE, THE PREVIOUS        */
+/*                  FIXES ASSUMED ICJRN EXISTED WHICH WAS NOT       */
+/*                  NECESSARILY TRUE)                               */
+/*       E15674  -  ADDITIONAL FILES MUST BE JOURNALLED             */
+/*       E15492  -  FILES USED BY EM MUST BE JOURNALLED AT LEAST    */
+/*                  ONCE OR EM0101 MAY FAIL                         */
+/*                                                                  */
+/********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/**/
+             DCL        VAR(&EMSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&LIBR) TYPE(*CHAR) LEN(2)                 /*E20438*/
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6)                 /*E20438*/
+             DCL        VAR(&JRN) TYPE(*CHAR) LEN(1) VALUE('N')       /*E20438*/
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)             /*E20438*/
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)                                   /*215893*/
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)                                  /*215893*/
+/**/
+             RTVDTAARA  DTAARA(EMSTAT) RTNVAR(&EMSTAT)
+/**/
+             SNDPGMMSG  MSG('Exposure Management Initial file setup') +
+                                                    TOMSGQ(MOPERQ)
+/**/
+             IF         COND(%SUBSTRING(&EMSTAT 1 1) *EQ ' ') +
+                          THEN(DO)
+/**/
+                   CALL       PGM(EM0002)
+/**/                                                                  /*E20438*/
+/** CREATE JOURNAL AND RECEIVER IF THEY DO NOT EXIST  **/             /*E20438*/
+/**/                                                                  /*E20438*/
+                RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)             /*E20438*/
+                CHGVAR     VAR(&LIBR) VALUE(%SST(&SDSTAT 6 2))        /*E20438*/
+                CHGVAR     VAR(&JLIB) VALUE(&LIBR *TCAT 'JLIB')       /*E20438*/
+/*/COPY WNCPYSRC,EMC00001                                            / *S01408*/
+/**/                                                                  /*E20438*/
+             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
+                          'CCB009' &AOFMT)                                                /*215893*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)                              /*215893*/
+                CHKOBJ     OBJ(&JLIB/ICJRN) OBJTYPE(*JRN)             /*E20438*/
+                MONMSG     MSGID(CPF9801) EXEC(DO)                    /*E20438*/
+                CHGVAR     VAR(&JRN) VALUE('Y')                       /*E20438*/
+/***************CRTJRNRCV  JRNRCV(&JLIB/ICRCV001)                      *E20438**************CSC020*/
+/***************CRTJRN     JRN(&JLIB/ICJRN) JRNRCV(&JLIB/ICRCV001)     *E20438**************CSC020*/
+                CRTJRNRCV  JRNRCV(&JLIB/IR00000001)                                       /*CSC020*/
+                CRTJRN     JRN(&JLIB/ICJRN) JRNRCV(&JLIB/IR00000001)                      /*CSC020*/
+                ENDDO                                                 /*E20438*/
+/**/                                                                  /*E20438*/
+/**/                                                                  /*E15492*/
+/** JOURNAL AND UNJOURNAL MIDAS MASTER FILES USED BY EM **/           /*E15492*/
+/**/                                                                  /*E15492*/
+/**/                                                                  /*E15492*/
+/* JRNPF   FILE(DEALSDB DEALSDC DEALSDD DEAMSDI LOANSCS CLOANCL +
+     ACCNTAB LOAMSDK MEMOS LOANSCR FCLTYFM FACILFB REPAYRD) JRN(ICJRN)/*E15674*/
+/* STRJRNPF      FILE(DEALSDB DEALSDC DEALSDD DEAMSDI LOANSCS +       /*E20438*/
+/*                 CLOANCL ACCNTAB LOAMSDK MEMOS LOANSCR +  *E15674*/ /*E20438*/
+/*                 FCLTYFM FACILFB REPAYRD TRADSD DPTMVD +  *E15674*/ /*E20438*/
+/*                 SETLED) JRN(ICJRN)  */                  /*E15674*/ /*E20438*/
+/**STRJRNPF      FILE(DEALSDB DEALSDC DEALSDD DEAMSDI LOANSCS +       /*S01339*/
+/**************    CLOANCL ACCNTAB LOAMSDK MEMOS LOANSCR +            /*S01339*/
+/**************    FCLTYFM FACILFB REPAYRD TRADSD DPTMVD +            /*S01339*/
+/**************    SETLED) JRN(&JLIB/ICJRN)                /*E20438*/ /*S01339*/
+/************STRJRNPF   FILE(DEALSDB DEALSDC DEALSDD DEAMSDI CLOANCL /*E26192*/
+/************             ACCNTAB LOAMSDK MEMOS FCLTYFM TRADSD +     /*E26192*/
+/************             DPTMVD SETLED) JRN(&JLIB/ICJRN) /* S01339  /*E26192*/
+/*                                                                    /*S01408*/
+/*/COPY WNCPYSRC,EMC00002                                             /*S01408*/
+/*                                                                    /*S01408*/
+             STRJRNPF   FILE(FXDEALPP MMDELDPP MMDENBPP MMDEAMPP     /*E26192*/+
+                          CLOANCL ACCNTAB LOAMSDK MEMOS FCLTYFM      /*E26192*/+
+                          TRADSD DPTMVD SETLED TABTB10 DEALSDG       /*E26192*/+
+                          POSTNCD) JRN(&JLIB/ICJRN)                  /*E26192*/
+/*                                                                    /*S01408*/
+/*/COPY WNCPYSRC,EMC00003                                             /*S01408*/
+/*                                                                    /*S01408*/
+     MONMSG CPF0000                                                   /*E15492*/
+/**/                                                                  /*E15492*/
+/* ENDJRNPF   FILE(DEALSDB DEALSDC DEALSDD DEAMSDI LOANSCS CLOANCL +  /*E15674*/
+/*           ACCNTAB LOAMSDK MEMOS LOANSCR FCLTYFM FACILFB REPAYRD) + /*E15674*/
+/*           JRN(ICJRN)  */                                /*E15492*/ /*E15674*/
+/* ENDJRNPF   FILE(DEALSDB DEALSDC DEALSDD DEAMSDI LOANSCS+ *E15674*/ /*E20438*/
+/*                 CLOANCL ACCNTAB LOAMSDK MEMOS LOANSCR +  *E15674*/ /*E20438*/
+/*                 FCLTYFM FACILFB REPAYRD TRADSD DPTMVD +  *E15674*/ /*E20438*/
+/*                 SETLED) JRN(ICJRN)  */                  /*E15674*/ /*E20438*/
+/* ENDJRNPF   FILE(DEALSDB DEALSDC DEALSDD DEAMSDI LOA     +          /*S01339*/
+/*************     CLOANCL ACCNTAB LOAMSDK MEMOS LOANSCR +            /*S01339*/
+/*************     FCLTYFM FACILFB REPAYRD TRADSD DPTMVD +            /*S01339*/
+/*************     SETLED) JRN(&JLIB/ICJRN)                /*E20438*/ /*S01339*/
+/************ENDJRNPF   FILE(DEALSDB DEALSDC DEALSDD DEAMSDI CLOANCL /*E26192*/
+/************             ACCNTAB LOAMSDK MEMOS FCLTYFM TRADSD +     /*E26192*/
+/************             DPTMVD SETLED) JRN(&JLIB/ICJRN) /*S01339*/ /*E26192*/
+/*                                                                    /*S01408*/
+/*/COPY WNCPYSRC,EMC00004                                             /*S01408*/
+/*                                                                    /*S01408*/
+             ENDJRNPF   FILE(FXDEALPP MMDELDPP MMDENBPP MMDEAMPP     /*E26192*/+
+                          CLOANCL ACCNTAB LOAMSDK MEMOS FCLTYFM      /*E26192*/+
+                          TRADSD DPTMVD SETLED TABTB10 DEALSDG       /*E26192*/+
+                          POSTNCD) JRN(&JLIB/ICJRN)                  /*E26192*/
+/*                                                                    /*S01408*/
+/*/COPY WNCPYSRC,EMC00005                                             /*S01408*/
+/*                                                                    /*S01408*/
+     MONMSG CPF0000                                                   /*E15492*/
+/**/                                                                  /*E15492*/
+/**/                                                                  /*E20438*/
+             IF         COND(&JRN *EQ 'Y') THEN(DO)                   /*E20438*/
+                   DLTJRN     JRN(&JLIB/ICJRN)                        /*E20438*/
+/**/                                                                  /*E20438*/
+/* CHANGE JOB ATTRIBUTES FOR INQMSGRPY SO THAT "RECEIVER NEVER HAD  *  *E20438*/
+/* FULL SAVE" MESSAGES ARE ANSWERED AUTOMATICALLY BY THE PROGRAM,   *  *E20438*/
+/* THEN CHANGE THE JOB AGAIN TO THE ORIGINAL STATE AFTER RECEIVERS  *  *E20438*/
+/* HAVE BEEN DELETED                                                *  *E20438*/
+/**/                                                                  /*E20438*/
+                   CHGJOB     INQMSGRPY(*DFT)                         /*E20438*/
+/******************DLTJRNRCV  JRNRCV(&JLIB/ICRCV001)                   *E20438**************CSC020*/
+                   DLTJRNRCV  JRNRCV(&JLIB/IR00000001)                                    /*CSC020*/
+                   CHGJOB     INQMSGRPY(*RQD)                         /*E20438*/
+             ENDDO                                                    /*E20438*/
+             ENDDO                                                                        /*215893*/
+/**/                                                                  /*E20438*/
+                   CHGDTAARA  DTAARA(EMSTAT) VALUE('YY')
+/**/
+                   SNDPGMMSG  MSG('Exposure management files +
+                                               set up') TOMSGQ(MOPERQ)
+                   ENDDO
+/**/
+             ELSE          CMD(SNDPGMMSG   MSG('Exposure management +
+                             files already exist')  TOMSGQ(MOPERQ))
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+          ENDPGM

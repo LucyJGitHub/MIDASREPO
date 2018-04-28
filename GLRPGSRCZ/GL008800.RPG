@@ -1,0 +1,393 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Transfer Gen. Balancing Entries')
+      *****************************************************************
+      *                                                               *
+      *  Midas   -  General Ledger Module                             *
+      *                                                               *
+      *  GL008800  -  Generate Balancing Entries                      *
+      *                                                               *
+      *  Function:  This program generates balancing entries where    *
+      *             the Midas accounts have become out of balance     *
+      *             after the Account Transfer Utility has been run.  *
+      *                                                               *
+      *             The main Booking Branch is defined as the Branch  *
+      *             Code, maintained on the GL Posting Interface      *
+      *             - Default Maintenance function.                   *
+      *                                                               *
+      *             The process is to read through the Accounts file  *
+      *             (ACBRC). If the total amount for each Branch/     *
+      *             Currency is not zero, 2 balancing entries are     *
+      *             created.                                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *                                                               *
+      *  Last Amend No. BUG27769           Date 09Jun10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CGL114  *CREATE    Date 04Jan10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BUG27769 - Incorrect error code                              *
+      *  CGL114 - Account Transfer Utility                            *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FACBRC   IP  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FGLIPDFPDIF  E           K        DISK         KINFSR *PSSR
+     FGLIPOSPDO   E           K        DISK         KINFSR *PSSR
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     IACCNTABF    01
+     I                                              BRCA  L1
+     I                                              CCY   L1
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+     IDSFDY     E DSDSFDY
+      *
+      ** Definition: First DS for Access Programs, Short Data Structure
+      *
+     IDSLDY     E DSDSLDY
+      *
+      ** Definition: Second DS for Access Programs, Long Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Definition: Bank Details Accessed Via Access Program.
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** Definition: Branch Details Accessed Via Access Program.
+      *
+     IDSKITE      DS                             90
+     I                                        1   6 BICUST
+     I                                        7   9 BICYCD
+     I                                       10  19 BIACCD
+     I                                       20  21 BIACSN
+     I                                       22  24 BIBCBH
+      *
+      ** Named Constants
+      *
+     I              'A/c Transfer'        C         C@NRDC
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C                     EXSR PACNT
+      *
+      ** Process ccy in total time.
+      *
+     CL1                   EXSR L1DTL
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  L1DTL - Change of Branch/Currency                            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: XSIPOS                                                *
+      *                                                               *
+      *****************************************************************
+     C           L1DTL     BEGSR
+      *
+     C           WKLDBL    IFNE *ZERO
+      *
+      ** Only process if the Branch is NOT the Booking Branch.
+      *
+     C           BRCA      CASNEBDBRCH    XSIPOS
+     C                     ENDCS
+     C                     ENDIF
+      *
+     C                     Z-ADD*ZERO     WKLDBL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PACNT - Process Account                                      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           PACNT     BEGSR
+      *
+      ** Accumulate Ledger Balance.
+      *
+     C                     ADD  LDBL      WKLDBL
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSIPOS - Set Batch Interface Input                           *
+      *                                                               *
+      *  Called By: L1DTL                                             *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           XSIPOS    BEGSR
+      *
+      ** Set Fields for Reverse Entry
+      *
+     C                     MOVE BRCA      BIBCBH
+     C                     MOVE CCY       BICYCD
+     C                     MOVE '01'      BIACSN
+     C                     MOVE *BLANKS   BIRACN
+     C                     MOVE *BLANKS   BITRTY
+     C                     Z-ADDBJRDNB    BIVLDT
+     C                     MOVELC@NRDC    BINRDC
+     C                     Z-ADDWKLDBL    BIPTAM
+      *
+     C           WKLDBL    IFLT *ZERO
+     C           WKLDBL    MULT -1        BIPTAM
+     C                     ENDIF
+      *
+      ** Retrieve Branch Info.
+      *
+     C                     CALL 'AOBRCHR1'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BIBCBH    @DSBN   3
+     C           SDBRCH    PARM *BLANKS   DSLDY
+      *
+     C           *IN90     IFEQ *ON
+     C           @RTCD     OREQ '*ERROR*'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL008800'DBPGM
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'AOBRCHR1'DBFILE
+     C                     MOVELBIBCBH    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE WKBICN    BICUST
+      *
+      ** If posting is a Credit amount then create a Debit entry using
+      ** the Branch TO Account Code.
+      *
+     C           WKLDBL    IFLT *ZERO
+     C                     MOVE 'D'       BIDCIN
+     C                     MOVE A8DTAC    BIACCD
+      *
+      ** Else, Create a Credit entry using the Branch FROM Accont Code.
+      *
+     C                     ELSE
+     C                     MOVE 'C'       BIDCIN
+     C                     MOVE A8DFAC    BIACCD
+     C                     ENDIF
+      *
+     C                     WRITEGLIPOSD0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL008800'DBPGM
+     C                     Z-ADD002       DBASE
+     C                     MOVEL'GLIPOSPD'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set Fields for Compensating Balancing Entry to the Booking
+      ** Branch using the Internal Customer No. of the Booking Branch.
+      *
+     C                     MOVE BDBRCH    BIBCBH
+     C                     MOVE CCY       BICYCD
+     C                     MOVE '01'      BIACSN
+     C                     MOVE *BLANKS   BIRACN
+     C                     MOVE *BLANKS   BITRTY
+     C                     Z-ADDBJRDNB    BIVLDT
+     C                     MOVELC@NRDC    BINRDC
+     C                     Z-ADDWKLDBL    BIPTAM
+      *
+     C           WKLDBL    IFLT *ZERO
+     C           WKLDBL    MULT -1        BIPTAM
+     C                     ENDIF
+      *
+     C                     MOVE A8BICN    BICUST
+      *
+      ** If Balance is a Credit amount then use the FROM Account Code of
+      ** the Booking Branch.
+      *
+     C           WKLDBL    IFLT *ZERO
+     C                     MOVE 'C'       BIDCIN
+     C                     MOVE WKDFAC    BIACCD
+      *
+      ** Else, Use the TO Account of the Booking Branch.
+      *
+     C                     ELSE
+     C                     MOVE 'D'       BIDCIN
+     C                     MOVE WKDTAC    BIACCD
+     C                     ENDIF
+      *
+     C                     WRITEGLIPOSD0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL008800'DBPGM
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'GLIPOSPD'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR -  Initialise and define fields                       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Initialise parameters, work fields, etc.
+      *
+     C                     MOVEACPY@      MKI@@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C           *LIKE     DEFN LDBL      WKLDBL
+      *
+      ** Retrieve Run Date.
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM *BLANKS   DSFDY
+      *
+     C           *IN90     IFEQ '1'
+     C********** @RTCD     OREQ '*ERROR*'                                                   BUG27769
+     C           @RTCD     ORNE *BLANKS                                                     BUG27769
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL008800'DBPGM
+     C                     Z-ADD004       DBASE
+     C                     MOVEL'AOBANKR0'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set Default Values.
+      *
+     C                     READ GLIPDFPD               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *IN22     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL008800'DBPGM
+     C                     Z-ADD005       DBASE
+     C                     MOVEL'GLIPDFPD'DBFILE
+     C                     MOVEL'No REC  'DBKEY
+     C                     MOVEL'GL008800'DBPGM
+     C                     Z-ADD005       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Retrieve Default Branch Info. and Store the Data.
+      *
+     C                     CALL 'AOBRCHR1'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BDBRCH    @DSBN   3
+     C           SDBRCH    PARM *BLANKS   DSLDY
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     OREQ '*ERROR*'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL008800'DBPGM
+     C                     Z-ADD006       DBASE
+     C                     MOVEL'AOBRCHR1'DBFILE
+     C                     MOVELBDBRCH    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A8BICN    WKBICN  6
+     C                     MOVE A8DTAC    WKDTAC 10
+     C                     MOVE A8DFAC    WKDFAC 10
+      *
+     C                     CLOSEGLIPDFPD
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called By: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not been called yet
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2010

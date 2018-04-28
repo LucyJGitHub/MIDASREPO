@@ -1,0 +1,259 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Check for incompete payments')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *   FT0108 - Check for incomplete payments.                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CDL049             Date 07Jul06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *   Prev Amend No. CFT009            DATE   01JUN00             *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 175479             DATE 08FEB00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                  142590            DATE   16MAR99             *
+      *                  061008            DATE   28SEP93             *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CFT009 - FT Fees and Charge Development-Recompiled           *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *           Recompiled over changed PF/INPAYDD.                 *
+      *  175479 - Recompiled over changes in INPAYDD                  *
+      *  142590 - Re-compiled over changed logical files NONAUBB and  *
+      *         - NONAUOB                                             *
+      *  061008 - Missing functionality for FT Cheques processing     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  50    First cycle                                            *
+      *  99    EOF on Read                                            *
+      *                                                               *
+      *****************************************************************
+     FNONAUBB IF  E           K        DISK                           UC
+      *
+      *  Non-authorised Funds Transfer Payments by Booking Branch
+      *
+     FNONAUOB IF  E           K        DISK                           UC
+      *
+      *  Non-authorised Funds Transfer Payments by Originating Branch
+      *
+     F            OTPAYDDF                          KRENAMEOTPAYDFF
+     F            INPAYDDF                          KRENAMEINPAYDFF
+     F            CQPACDDF                          KRENAMECQPACDFF
+     F            CQCODDDF                          KRENAMECQCODDFF
+     F            NTRANDDF                          KRENAMENTRANDFF
+     F/EJECT
+     E                    CPY@    1   1 80
+     E/EJECT
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0PTP   2
+     C                     PARM           W0BRC   3
+     C                     PARM           W0ACT   8
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      * Set key depending on screen selection
+      *
+     C           W0BRC     IFEQ 'ALL'
+     C                     MOVEL*LOVAL    #BRCH   3
+     C                     ELSE
+     C                     MOVELW0BRC     #BRCH
+     C                     END
+      *
+      *  Determine the mode of processing and execute subroutine :
+      *
+     C           W0ACT     CASEQ'*BOOK   'SRBOOK
+     C           W0ACT     CASEQ'*ORGN   'SRORGN
+     C                     END
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBOOK   : Checks if unauthorised payments selected by       *
+      *             booking branch exist on the system.               *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBOOK    BEGSR
+      *
+      *  Set lower limit using booking branch
+      *
+     C           KBRCH     SETLLNONAUBB
+      *
+      *  Read record format depending on payment type
+      *
+     C                     SELEC
+      *
+     C           W0PTP     WHEQ 'OP'
+     C                     READ OTPAYDDF                 99
+     C/COPY WNCPYSRC,FT0108C001
+      *
+     C           W0PTP     WHEQ 'IN'
+     C                     READ INPAYDDF                 99
+     C/COPY WNCPYSRC,FT0108C002
+      *
+     C           W0PTP     WHEQ 'CC'
+     C                     READ CQCODDDF                 99
+      *
+     C           W0PTP     WHEQ 'CP'
+     C                     READ CQPACDDF                 99
+      *
+     C           W0PTP     WHEQ 'NT'
+     C                     READ NTRANDDF                 99
+      *
+     C                     ENDSL
+      *
+      *  If no payments found, move *NOREC to return parm.
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'*NOREC ' W0RTN
+     C                     ELSE
+      *
+      * If payment found but for different branch, move *NOREC to
+      * return parm.
+     C           W0BRC     IFNE 'ALL'
+     C           W0BRC     ANDNEBRCA
+     C                     MOVEL'*NOREC ' W0RTN
+     C                     ELSE
+      *
+      *  If  payment found, move *blanks to return parm.
+      *
+     C                     MOVEL'       ' W0RTN
+     C                     END
+     C                     END
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRORGN   : Checks if unauthorised payments selected by       *
+      *             originating branch exist on the system.           *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRORGN    BEGSR
+      *
+      *  Set lower limit using originating branch
+      *
+     C           KBRCH     SETLLNONAUOB
+      *
+      *  Read record format depending on payment type
+      *
+     C                     SELEC
+      *
+     C           W0PTP     WHEQ 'OP'
+     C                     READ OTPAYDFF                 99
+     C/COPY WNCPYSRC,FT0108C003
+      *
+     C           W0PTP     WHEQ 'IN'
+     C                     READ INPAYDFF                 99
+     C/COPY WNCPYSRC,FT0108C004
+      *
+     C           W0PTP     WHEQ 'CC'
+     C                     READ CQCODDFF                 99
+      *
+     C           W0PTP     WHEQ 'CP'
+     C                     READ CQPACDFF                 99
+      *
+     C           W0PTP     WHEQ 'NT'
+     C                     READ NTRANDFF                 99
+      *
+     C                     ENDSL
+      *
+      *  If no payments found, move *NOREC to return parm.
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'*NOREC ' W0RTN
+     C                     ELSE
+      *
+      * If payment found but for different branch, move *NOREC to
+      * return parm.
+     C           W0BRC     IFNE 'ALL'
+     C           W0BRC     ANDNEORBR
+     C                     MOVEL'*NOREC ' W0RTN
+     C                     ELSE
+      *
+      *  If  payment found, move *blanks to return parm.
+      *
+     C                     MOVEL'       ' W0RTN
+     C                     END
+     C                     END
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :                                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      * Open Files
+      *
+     C                     OPEN NONAUBB
+     C                     OPEN NONAUOB
+      *
+      * Klist  for NONAUBB/NONAUOB
+      *
+     C           KBRCH     KLIST
+     C                     KFLD           #BRCH
+      *
+     CSR                   ENDSR
+     C/EJECT
+**  CPY@ table
+(c) Misys International Banking Systems Ltd. 2001

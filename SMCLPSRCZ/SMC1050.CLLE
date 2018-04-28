@@ -1,0 +1,221 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Implementation product selection')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC1050 - Select and restore non-database libraries         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/*       Last Amend No. AR790665           Date 14Jun11              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP033             Date 12Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CPK022  *REWRITE   Date 29Sep04              */
+/*                      CUP016 *CREATE     Date 01Apr03              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       AR790665 - Handle more than one program library.            */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       CUP033 - Removal of System Value /COPYs.                    */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CPK022 - Remove PLIB split.                                 */
+/*       CUP016 - Add implementation software to core.               */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&MODE)                                                    */ /*CUP033*/
+             PGM        PARM(&MODE &PGMLIBSVAL &PTFOBJSVAL &JOBDSVAL)                     /*CUP033*/
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&PGMLIBSVAL) TYPE(*CHAR) LEN(20)                              /*CUP033*/
+             DCL        VAR(&PTFOBJSVAL) TYPE(*CHAR) LEN(20)                              /*CUP033*/
+             DCL        VAR(&JOBDSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                   /*CSC043*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                                  /*CSC043*/
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)                                  /*CSC043*/
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
+ 
+/**COPY*UPCPYSRC,UPSVALDCL*                                          */ /*             */ /*CUP033*/
+             DCL        VAR(&JOBD) TYPE(*CHAR) LEN(10)                                    /*CUP033*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+             DCL        VAR(&DEVD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RSTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBLIST) TYPE(*CHAR) LEN(200)                              /*AR790665*/
+             DCL        VAR(&LIBPOS) TYPE(*DEC) LEN(3 0) VALUE(1)                       /*AR790665*/
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2004')
+ 
+             DCLF       FILE(UPSVALJ0)                                                    /*CUP033*/
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create Midas Info Screen data area in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG MSGID(CPF2105)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          TEXT('Midas Info Screen Data Area')
+ 
+/**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*             */ /*CUP033*/
+/**********  IF         COND(&MODE *EQ '*IMP') THEN(DO)                                */ /*CUP033*/
+/**Get*library*name*from*system*values.**/ /*                                          */ /*CUP033*/
+/**********     IF         COND(&CORLIB *EQ ' ') THEN(DO)                              */ /*CUP033*/
+/**********        CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE('Unable to +             */ /*CUP033*/
+/**********                     retrieve program library name.  Check')                */ /*CUP033*/
+/**********        CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('system +                */ /*CUP033*/
+/**********                     values.')                                              */ /*CUP033*/
+/**********        CALL       PGM(SCC0010) PARM('SMC1050' 'ENTER' ' ')                 */ /*CUP033*/
+/**********        GOTO       CMDLBL(ENDPGM)                                           */ /*CUP033*/
+/**********     ENDDO                                                                  */ /*CUP033*/
+/**********     CHGVAR     VAR(&RSTLIB) VALUE(&CORLIB)                                 */ /*CUP033*/
+/**********  ENDDO                                                                     */ /*CUP033*/
+ 
+/**********  IF         COND(&MODE *EQ '*UPG') THEN(DO)                                */ /*CUP033*/
+/**Get*library*name*from*system*values.**/ /*                                          */ /*CUP033*/
+/**********     IF         COND(&PTFOBJ *EQ ' ') THEN(DO)                              */ /*CUP033*/
+/**********        CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE('Unable to +             */ /*CUP033*/
+/**********                     retrieve program library name.  Check')                */ /*CUP033*/
+/**********        CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('system +                */ /*CUP033*/
+/**********                     values.')                                              */ /*CUP033*/
+/**********        CALL       PGM(SCC0010) PARM('SMC1050' 'ENTER' ' ')                 */ /*CUP033*/
+/**********        GOTO       CMDLBL(ENDPGM)                                           */ /*CUP033*/
+/**********     ENDDO                                                                  */ /*CUP033*/
+/**********     CHGVAR     VAR(&RSTLIB) VALUE(&PTFOBJ)                                 */ /*CUP033*/
+/**********  ENDDO                                                                     */ /*CUP033*/
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF                                                                         /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&MODE *EQ '*IMP') THEN(DO)                                   /*CUP033*/
+                IF         COND(&GISVAL *EQ &PGMLIBSVAL) THEN(DO)                         /*CUP033*/
+                   IF         COND(&GIVAL *EQ ' ') THEN(DO)                               /*CUP033*/
+                      CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                               /*CUP033*/
+                   ENDDO                                                                  /*CUP033*/
+                   ELSE       CMD(DO)                                                     /*CUP033*/
+/**********           CHGVAR     VAR(&RSTLIB) VALUE(&GIVAL)               */ /*CUP033*/ /*AR790665*/
+                      CHGVAR     VAR(&LIBLIST) VALUE(&GIVAL)                            /*AR790665*/
+                   ENDDO                                                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&MODE *EQ '*UPG') THEN(DO)                                   /*CUP033*/
+                IF         COND(&GISVAL *EQ &PTFOBJSVAL) THEN(DO)                         /*CUP033*/
+                   IF         COND(&GIVAL *EQ ' ') THEN(DO)                               /*CUP033*/
+                      CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                               /*CUP033*/
+                   ENDDO                                                                  /*CUP033*/
+                   ELSE       CMD(DO)                                                     /*CUP033*/
+                      CHGVAR     VAR(&RSTLIB) VALUE(&GIVAL)                               /*CUP033*/
+                   ENDDO                                                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &JOBDSVAL) THEN(DO)                              /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&JOBD) VALUE(&GIVAL)                                    /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)                      /*CUP033*/
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                      /*CUP033*/
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)                      /*CUP033*/
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)                      /*CUP033*/
+                CALL       PGM(SCC0010) PARM('SMC1050' 'ENTER' ' ')                       /*CUP033*/
+                GOTO       CMDLBL(ENDPGM)                                                 /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCDE +
+                          'IASPinstallation' &SVAL1 'IASPgroup' +
+                          &SVAL2 ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ')                                  /*CSC043*/
+ /* Check whether system is in IASP environment. */                                       /*CSC043*/
+             CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                             /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+/** Get name of IASP. */                                                                  /*CSC043*/
+                CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))                            /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+ 
+DEVICENAME:
+             ?          DEVICENAME
+             MONMSG     MSGID(CPF6801) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             RTVDTAARA  DTAARA(QTEMP/DEVD) RTNVAR(&DEVD)
+ 
+/* Check device is valid. */
+             CHKOBJ     OBJ(&DEVD) OBJTYPE(*DEVD)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('Device' +
+                             *BCAT &DEVD *BCAT 'does not exist.')
+                CALL       PGM(SCC0010) PARM('SMC1050' 'ENTER' ' ')
+                GOTO       CMDLBL(DEVICENAME)
+             ENDDO
+ 
+/**********  SBMJOB     CMD(RSTLIB SAVLIB(&RSTLIB) DEV(&DEVD) +                        */ /*CUP033*/
+/**********               OUTPUT(*PRINT)) JOB(&RSTLIB) JOBD(SETUP)                     */ /*CUP033*/
+                                                                                        /*AR790665*/
+/* Loop through the system value to restore all program libraries. */                   /*AR790665*/
+RSTLIB:                                                                                 /*AR790665*/
+             IF         COND(%SST(&LIBLIST &LIBPOS 10) *NE ' ') +
+                          THEN(DO)                                                      /*AR790665*/
+             CHGVAR     VAR(&RSTLIB) VALUE(%SST(&LIBLIST &LIBPOS 10))                   /*AR790665*/
+/*                                                                                        /*CSC043*/
+/** If restoring to an IASP environment */                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+             SBMJOB     CMD(RSTLIB SAVLIB(&RSTLIB) DEV(&DEVD) +
+                          RSTASPDEV(&IASP) OUTPUT(*PRINT)) +
+                          JOB(&RSTLIB) JOBD(&JOBD)                                        /*CCS043*/
+             ENDDO                                                                        /*CSC043*/
+             ELSE       CMD(DO)                                                           /*CSC043*/
+             SBMJOB     CMD(RSTLIB SAVLIB(&RSTLIB) DEV(&DEVD) +
+                          OUTPUT(*PRINT)) JOB(&RSTLIB) JOBD(&JOBD)                        /*CUP033*/
+             ENDDO                                                                        /*CSC043*/
+             CHGVAR     VAR(&LIBPOS) VALUE(&LIBPOS + 10)                                /*AR790665*/
+             GOTO       CMDLBL(RSTLIB)                                                  /*AR790665*/
+             ENDDO                                                                      /*AR790665*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal program end. */
+ABNOR:
+             CHGVAR     VAR(&MEM) VALUE('SMC1050 - Job has Ended +
+                          Abnormally')
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSG(&MEM)
+             MONMSG     MSGID(CPF0000)
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC1050') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC1050' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000)
+ENDPGM:
+             ENDPGM

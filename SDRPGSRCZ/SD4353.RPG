@@ -1,0 +1,870 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Enquiry Customer Report Name')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD4353 - Customer Report Name Enquiry                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSW037A            Date 02May05               *
+      *  Prev Amend No. CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 154530             Date 29Mar01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 30Aug96               *
+      *                 S01124             Date 21Jun94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  154530 - Deleted customers are displayed on enquiry.         *
+      *           If deletion date > 0, do not display.               *
+      *  CPM005 - Private Banking Phase 2                             *
+      *           Focus Group Changes upgraded to DBA                 *
+      *  S01124 - PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+      *                                                               *
+      *****************************************************************
+     F/COPY WNCPYSRC,SD4353F001
+     F***SD3180D#CF  E                    WORKSTN                         CPM005
+     FSD4353DFCF  E                    WORKSTN                            CPM005
+     F                                        ##RR  KSFILE #SFLRCD
+     F                                              KINFDS INFDS#
+      * DSP: Enquiry on clients        Display file
+      *
+     FSDCUSL11IF  E           K        DISK
+     F                                              KINFDS INFDS1
+      * RSQ: Client Details            Live customers
+      *
+     E                    @CN     1   2 25               Long constants.
+     E                    CPY@    1   1 80                                CPM005
+     E/COPY WNCPYSRC,SD4353E001
+      /EJECT
+      * Data structures:-
+     E/COPY WNCPYSRC,SD4353E002
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure.
+     IJBDTTM      DS
+      * Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure.
+      *
+     IINFDS1    E DSY2I1DSP
+     I                                     *RECORD  FORM
+      * File information data structure.
+      *
+      * Outward parameters.
+     IPARC        DS                              6
+      * KEY: Client Details            Retrieval index
+      * I:MAP Customer Number
+     I                                        1   6 PACUST
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     I/COPY WNCPYSRC,SD4353I001
+      *                                                                   CPM005
+      **  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION           CPM005
+     ICPYR@#      DS                                                      CPM005
+     I                                        1  80 CPY@                  CPM005
+     I                                        1  20 CPY@##                CPM005
+      /EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+      *****************************************************************
+      * Initialise
+     C                     EXSR ZZINIT
+      *
+     C                     DO   *HIVAL
+      * Initialise & load subfile page.
+     C                     EXSR BAIZSF
+     C                     MOVEL'N'       W0RSF   1
+      * Display screen until reload requested:
+     C           W0RSF     DOWEQ'N'
+      * Display screen.
+     C                     EXSR CAEXFM
+      *   Process response:
+      * Cancel & exit program.
+     C   03                CAS            ZXEXPG
+      * HOME: Request subfile reload.
+     C   05                CAS            FBRQRL
+      *   Display next SFL page.
+     C   27                CAS            BBLDSF
+      *   Process 'Scan' function
+     C   16                CAS            BAIZSF
+      *   Process screen input.
+     C                     CAS            DAPR##
+     C                     END
+      *
+     C                     END                             OD W0RSF
+     C                     END                             OD *HIVAL
+      *****************************************************************
+      /EJECT
+     CSR         BAIZSF    BEGSR
+      *================================================================
+      * Initialise & Load subfile page.
+      *================================================================
+      * Clear subfile.
+     C                     SETON                     80
+     C                     WRITE#SFLCTL
+     C                     SETOF                     80
+      * Reset no of records in subfile.
+     C                     Z-ADD*ZERO     ##RRMX  50 81     SETOF 81
+      * Position DBF file:
+     C           KPOS      KLIST
+     C                     KFLD           BBCRNM           Customer S/name
+      * Setup key.
+     C           *IN16     IFEQ '0'
+     C                     MOVEL#2CRNM    BBCRNM           Customer S/name
+     C           KPOS      SETLLSDCUSL11
+     C                     ELSE
+      *
+      ** If 'Scan' request position on the beginning of the file
+     C           *LOVAL    SETLLSDCUSL11
+     C                     END
+      *
+     C                     READ SDCUSL11               8782*82=EOF
+      * Save previous selector values.
+     C           *LIKE     DEFN #2CNA1    WZCNA1
+     C                     MOVEL#2CNA1    WZCNA1           Cust. Name & Ad
+     C           *LIKE     DEFN #2CNA2    WZCNA2
+     C                     MOVEL#2CNA2    WZCNA2           Cust. Name & Ad
+     C           *LIKE     DEFN #2CNA3    WZCNA3
+     C                     MOVEL#2CNA3    WZCNA3           Cust. Name & Ad
+     C           *LIKE     DEFN #2CNA4    WZCNA4
+     C                     MOVEL#2CNA4    WZCNA4           Cust. Name & Ad
+     C           *LIKE     DEFN #2PAIN    WZPAIN
+     C                     MOVEL#2PAIN    WZPAIN           Parent Indicato
+     C           *LIKE     DEFN #2DRCS    WZDRCS
+     C                     MOVEL#2DRCS    WZDRCS           DRS Customer Sh
+     C********** *LIKE     DEFN #2DRLC    WZDRLC                          CPM005
+     C**********           MOVEL#2DRLC    WZDRLC           DRS Location CoCPM005
+     C           *LIKE     DEFN #2ACOC    WZACOC
+     C                     MOVEL#2ACOC    WZACOC           Account Officer
+     C           *LIKE     DEFN #2CNCZ    WZCNCZ
+     C                     MOVEL#2CNCZ    WZCNCZ           Country of Citi
+     C           *LIKE     DEFN #2COLC    WZCOLC
+     C                     MOVEL#2COLC    WZCOLC           Country of Loca
+     C           *LIKE     DEFN #2SSDT    WZSSDT
+     C                     MOVEL#2SSDT    WZSSDT           Suspended Date
+     C           *LIKE     DEFN #2DOIC    WZDOIC
+     C                     MOVEL#2DOIC    WZDOIC           Date of Initial
+     C           *LIKE     DEFN #2PCNB    WZPCNB
+     C                     MOVEL#2PCNB    WZPCNB           Parent Customer
+     C           *LIKE     DEFN #2CASC    WZCASC
+     C                     MOVEL#2CASC    WZCASC           Customer Alpha
+     C           *LIKE     DEFN #2BRCD    WZBRCD
+     C                     MOVEL#2BRCD    WZBRCD           Branch code
+     C           *LIKE     DEFN #2BNBI    WZBNBI
+     C                     MOVEL#2BNBI    WZBNBI           Bank/non-bank I
+     C           *LIKE     DEFN #2LINC    WZLINC
+     C                     MOVEL#2LINC    WZLINC           Local Instituti
+     C           *LIKE     DEFN #2LICD    WZLICD
+     C                     MOVEL#2LICD    WZLICD           Local Industry
+     C           *LIKE     DEFN #2CTNB    WZCTNB
+     C                     MOVEL#2CTNB    WZCTNB           Customer Teleph
+     C           *LIKE     DEFN #2REID    WZREID
+     C                     MOVEL#2REID    WZREID           Reuter Id.
+     C           *LIKE     DEFN #2BSIN    WZBSIN
+     C                     MOVEL#2BSIN    WZBSIN           Branch/Subsidia
+     C           *LIKE     DEFN #2CSTY    WZCSTY
+     C                     MOVEL#2CSTY    WZCSTY           Customer Type
+     C           *LIKE     DEFN #2TAIN    WZTAIN
+     C                     MOVEL#2TAIN    WZTAIN           Taxable Indicat
+     C           *LIKE     DEFN #2CSID    WZCSID
+     C                     MOVEL#2CSID    WZCSID           Customer Swift
+     C           *LIKE     DEFN #2STAD    WZSTAD
+     C                     MOVEL#2STAD    WZSTAD           STTX Address
+     C           *LIKE     DEFN #2TXA1    WZTXA1
+     C                     MOVEL#2TXA1    WZTXA1           Telex Address 1
+     C           *LIKE     DEFN #2TXA2    WZTXA2
+     C                     MOVEL#2TXA2    WZTXA2           Telex Address 2
+     C           *LIKE     DEFN #2TXA3    WZTXA3
+     C                     MOVEL#2TXA3    WZTXA3           Telex Address 3
+     C           *LIKE     DEFN #2TXA4    WZTXA4
+     C                     MOVEL#2TXA4    WZTXA4           Telex Address 4
+     C           *LIKE     DEFN #2TXA5    WZTXA5
+     C                     MOVEL#2TXA5    WZTXA5           Telex Address 5
+     C           *LIKE     DEFN #2CHID    WZCHID
+     C                     MOVEL#2CHID    WZCHID           Chips Id
+     C           *LIKE     DEFN #2CHSC    WZCHSC
+     C                     MOVEL#2CHSC    WZCHSC           Chaps sort code
+     C           *LIKE     DEFN #2CABA    WZCABA
+     C                     MOVEL#2CABA    WZCABA           Chips ABA
+     C           *LIKE     DEFN #2BFIC    WZBFIC
+     C                     MOVEL#2BFIC    WZBFIC           BOJ Fin. Inst.
+     C           *LIKE     DEFN #2BLCD    WZBLCD
+     C                     MOVEL#2BLCD    WZBLCD           Bankleitzahl Co
+     C           *LIKE     DEFN #2FWCD    WZFWCD
+     C                     MOVEL#2FWCD    WZFWCD           Fedwire Code
+     C********** *LIKE     DEFN #2MB12    WZMB12                          CPM005
+     C**********           MOVEL#2MB12    WZMB12           Msg Branch 1/2 CPM005
+     C********** *LIKE     DEFN #2MR12    WZMR12                          CPM005
+     C**********           MOVEL#2MR12    WZMR12           Msg Route 1/2 (CPM005
+     C********** *LIKE     DEFN #2MBR3    WZMBR3                          CPM005
+     C**********           MOVEL#2MBR3    WZMBR3           Msg Branch 3 (CCPM005
+     C********** *LIKE     DEFN #2MRT3    WZMRT3                          CPM005
+     C**********           MOVEL#2MRT3    WZMRT3           Msg Route 3 (CoCPM005
+     C********** *LIKE     DEFN #2MBR4    WZMBR4                          CPM005
+     C**********           MOVEL#2MBR4    WZMBR4           Msg Branch 4 -CCPM005
+     C********** *LIKE     DEFN #2MRT4    WZMRT4                          CPM005
+     C**********           MOVEL#2MRT4    WZMRT4           Msg Route 4 -CoCPM005
+     C********** *LIKE     DEFN #2MRT5    WZMRT5                          CPM005
+     C**********           MOVEL#2MRT5    WZMRT5           Msg Route 5 (seCPM005
+     C********** *LIKE     DEFN #2MRT7    WZMRT7                          CPM005
+     C**********           MOVEL#2MRT7    WZMRT7           Msg Route 7 (LeCPM005
+     C********** *LIKE     DEFN #2MRT9    WZMRT9                          CPM005
+     C**********           MOVEL#2MRT9    WZMRT9           Msg Route 9 (FrCPM005
+     C********** *LIKE     DEFN #2MBR5    WZMBR5                          CPM005
+     C**********           MOVEL#2MBR5    WZMBR5           Msg Branch 5(seCPM005
+     C********** *LIKE     DEFN #2MBR7    WZMBR7                          CPM005
+     C**********           MOVEL#2MBR7    WZMBR7           Msg Branch 7(LeCPM005
+     C********** *LIKE     DEFN #2MBR9    WZMBR9                          CPM005
+     C**********           MOVEL#2MBR9    WZMBR9           Msg Branch 9(FrCPM005
+     C********** *LIKE     DEFN #2GCRF    WZGCRF                          CPM005
+     C**********           MOVEL#2GCRF    WZGCRF           Global CustomerCPM005
+     C********** *LIKE     DEFN #2GCCS    WZGCCS                          CPM005
+     C**********           MOVEL#2GCCS    WZGCCS           Global CustomerCPM005
+     C********** *LIKE     DEFN #2GIDC    WZGIDC                          CPM005
+     C**********           MOVEL#2GIDC    WZGIDC           Global IndustryCPM005
+     C********** *LIKE     DEFN #2GISC    WZGISC                          CPM005
+     C**********           MOVEL#2GISC    WZGISC           Global InstitutCPM005
+     C           *LIKE     DEFN #2LCD     WZLCD
+     C                     MOVEL#2LCD     WZLCD            Last Change Dat
+     C           *LIKE     DEFN #2TYLC    WZTYLC
+     C                     MOVEL#2TYLC    WZTYLC           Type of Last Ch
+     C           *LIKE     DEFN #2LALD    WZLALD
+     C                     MOVEL#2LALD    WZLALD           Last Audit Lett
+     C           *LIKE     DEFN #2LDHD    WZLDHD
+     C                     MOVEL#2LDHD    WZLDHD           Last Dels Histo
+     C           *LIKE     DEFN #2LRLD    WZLRLD
+     C                     MOVEL#2LRLD    WZLRLD           Last Retail Let
+     C           *LIKE     DEFN #2DTDL    WZDTDL
+     C                     MOVEL#2DTDL    WZDTDL           Date Deleted
+     C           *LIKE     DEFN #2LETI    WZLETI
+     C                     MOVEL#2LETI    WZLETI           LE Past/Int Tel
+     C           *LIKE     DEFN #2CMTI    WZCMTI
+     C                     MOVEL#2CMTI    WZCMTI           Customer Module
+     C           *LIKE     DEFN #2CRNM    WZCRNM
+     C                     MOVEL#2CRNM    WZCRNM           Customer Report
+      * Translate search mask for text field.
+     C                     MOVEL'QSYST'   WQB10X 10
+     C                     MOVE 'RNTBL'   WQB10X
+     C           *LIKE     DEFN #2CRNM    WQCRNM           Report Name
+     C                     CALL 'QDCXLATE'
+     C                     PARM 20        WQA5N   50       Len
+     C                     PARM #2CRNM    WQCRNM           Report Name
+     C                     PARM           WQB10X           QSYSTRNTBL
+     C                     PARM 'QSYS'    WQC10X 10
+      * Load subfile page.
+     C                     Z-ADD0         ##RROK  50
+     C                     EXSR BBLDSF
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBLDSF    BEGSR
+      *================================================================
+      * Load subfile page.
+      *================================================================
+      * Re-establish fields in read-ahead record.
+     C   27                DO
+     C  N82                READPSDCUSL11                 90*
+     C  N82                READ SDCUSL11                 90*
+     C                     END
+      *
+      * Setof record error indicators.
+     C                     MOVEL*ALL'0'   WKIND0  1
+     C                     MOVEAWKIND0    *IN,35
+      * Start at previous highest record in SFL.
+     C                     Z-ADD##RRMX    ##RR    50
+      * Reset count of DBF records read.
+     C                     Z-ADD0         ##RRRD  50
+      *................................................................
+      * Load next SFL page until SFL page full, or :
+      * scan limit reached.
+     C           *IN82     DOWEQ'0'                        DO
+     C           ##RROK    ANDLT##SFPG
+     C           ##RRRD    ANDLTW0SLM
+      *
+     C/COPY WNCPYSRC,SD4353C001
+     C           #2CRNM    IFNE *BLANK                     Customer Report
+     C           *IN16     ANDEQ'1'
+      *
+     C           WWSCAN    OREQ 'Y'
+     C           *IN27     ANDEQ'1'
+     C           #2CRNM    ANDNE*BLANKS
+      *
+      ** SETUP PARAMTER DEPENDING ON WHICH FORMAT PROCESSED.
+     C           FORM      IFEQ 'SDCUSTD0'
+     C                     MOVELBBCRNM    XXCRNM 20
+     C                     END
+      *
+     C           FORM      IFEQ 'SDPATTD0'
+     C**********           MOVELF2USID    XXCRNM                          CPM005
+     C                     MOVELF2URID    XXCRNM                          CPM005
+     C                     END
+      *
+     C           FORM      IFEQ 'SDJUSRD0'
+     C**********           MOVELF3USID    XXCRNM                          CPM005
+     C                     MOVELF3URID    XXCRNM                          CPM005
+     C                     END
+      *
+      * Scan for search string.
+     C                     CALL 'QCLSCAN'
+     C                     PARM           XXCRNM           Customer Report
+     C                     PARM 20        WQA3N   30       Length
+     C                     PARM 1         WQB3N   30       Start
+     C                     PARM           #2CRNM           Mask
+     C                     PARM 20        WQC3N   30       Length
+     C                     PARM '1'       WQD1    1        Translate
+     C                     PARM '1'       WQE1    1        Trim
+     C                     PARM '?'       WQF1    1        Wild
+     C                     PARM           WQG3N   30       Result
+     C           WQG3N     CABLT1         BB020
+     C                     END
+     C           BBDTDL    IFEQ 0                                         154530
+      * Load SFL fields.
+     C                     EXSR MBFL#1
+      * Output to subfile.
+     C                     ADD  1         ##RR       81    *
+     C                     ADD  1         ##RROK
+     C                     WRITE#SFLRCD
+     C                     END                                            154530
+     C           BB020     TAG
+      * Increment scan check count.
+     C                     ADD  1         ##RRRD
+     C                     READ SDCUSL11                 82*82=EOF
+     C                     END                             OD 1 - ##SFPG
+      *
+      ** REMOVE MESSAGE 'WAIT...SCAN IN PROGRESS !'
+     C                     WRITEFSCAN2
+      *
+     C           ##RROK    IFEQ ##SFPG                     - B1
+     C           *IN16     ANDEQ'1'
+     C                     MOVE 'Y'       WWSCAN  1
+      *
+     C                     ELSE                            - X1
+      *
+     C           ##RROK    IFEQ ##SFPG                     - B2
+     C           *IN27     ANDEQ'1'
+     C           WWSCAN    ANDEQ'Y'
+      *
+     C                     ELSE                            - X2
+     C                     MOVE 'N'       WWSCAN
+     C                     END                             - E2
+      *
+     C                     END                             - E1
+      *................................................................
+      * If no DBF records found, display error message.
+     C           ##RR      IFEQ *ZERO
+     C           *IN82     ANDEQ'1'
+      * Send message '*No data to display'
+     C                     MOVEL'Y2U0008' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                             FI ##RR = *ZERO
+      *
+      *................................................................
+      * Save highest SFL record load can continue at end point.
+     C           ##RR      IFGT ##RRMX
+     C           ##RRMX    ADD  1         ##SFRC
+     C                     Z-ADD##RR      ##RRMX
+     C                     END
+      * If scan limit reached, display error message.
+     C           ##RRRD    IFGE W0SLM
+      * Send message '*Scan limit reached'
+     C                     MOVEL'Y2U0017' ZAMSID           Message id.
+     C                     MOVEL'Y2USRMSG'ZAMSGF           Message file.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C                     Z-ADD0         ##RROK
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         CAEXFM    BEGSR
+      *================================================================
+      * Display screen.
+      *================================================================
+     C           W0HLP     DOUEQ'N'
+      * Update screen time.
+     C                     TIME           ##TME            Screen time.
+      * PUTOVR unless conditioned fields change.
+     C                     SETON                     86
+     C           *IN81     IFNE CAIN81
+     C                     SETOF                     86
+     C                     END
+     C                     MOVE *IN81     CAIN81  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C                     MOVEL'N'       W0HLP   1        Reset help requ
+      *
+     C           *IN16     IFEQ '1'
+     C           #2CRNM    ANDNE*BLANKS
+      *
+     C           *IN27     OREQ '1'
+     C           WWSCAN    ANDEQ'Y'
+     C           #2CRNM    ANDNE*BLANKS
+      *
+     C                     WRITEFSCAN1
+     C                     END
+      *
+      * If help requested, display help text.
+     C   25                EXSR ZHHPKY                     Display help te
+     C                     END
+      * Update job time.
+     C                     TIME           ##JTM            Job time.
+      * Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag.
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C                     SETOF                       8388*
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         DAPR##    BEGSR
+      *================================================================
+      * Process screen input.
+      *================================================================
+      * Maintain subfile position where possible.
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    ##SFRC
+     C                     END
+      *
+      * Confirm/update is not defered.
+     C                     MOVEL'N'       W0DCF   1
+      * Change of position specified.
+     C           WZCRNM    CASNE#2CRNM    FBRQRL
+     C                     END
+      * Reload subfile requested:
+     C           W0RSF     CABEQ'Y'       DAEXIT
+     C           *IN81     IFEQ '1'
+      * Process subfile records.
+     C                     EXSR DBPRSF
+     C                     END
+      * If error, Quit processing:
+     C           *IN99     CABEQ'1'       DAEXIT
+      * Defer confirm/update requested:
+     C           W0DCF     CABEQ'Y'       DAEXIT
+      *================================================================
+     CSR         DAEXIT    ENDSR
+      /EJECT
+     CSR         DBPRSF    BEGSR
+      *================================================================
+      * Process modified subfile records.
+      *================================================================
+     C                     READC#SFLRCD                  88*
+     C           *IN88     DOWEQ'0'
+      * Clear messages from program message queue.                        CPM005
+     C                     CALL 'Y2CLMSC'                                 CPM005
+     C                     PARM ##PGM     ZAPGM  10                       CPM005
+     C                     PARM '*SAME'   ZAPGRL  5                       CPM005
+      * Process SFL record.
+     C                     EXSR DCPRSR
+     C                     UPDAT#SFLRCD
+     C                     READC#SFLRCD                  88*
+     C                     END
+      *================================================================
+     CSR         DBEXIT    ENDSR
+      /EJECT
+     CSR         DCPRSR    BEGSR
+      *================================================================
+      * Process subfile record.
+      *================================================================
+      * Setof error indicators and SFLNXTCHG.
+     C                     MOVEAWKIND0    *IN,35
+     C                     SETOF                     98    *
+      * Check value for #1SEL. If not equal to 'E' 'P' 'J' or ' ', send   CPM005
+      * error msg.                                                        CPM005
+     C           #1SEL     IFNE 'E'                        *IF            CPM005
+     C           #1SEL     ANDNE'P'                                       CPM005
+     C           #1SEL     ANDNE'J'                                       CPM005
+     C           #1SEL     ANDNE' '                                       CPM005
+     C                     MOVE '1'       *IN35                           CPM005
+     C                     MOVEL'MMM1001' ZAMSID                          CPM005
+     C                     MOVEL'PMUSRMSG'ZAMSGF           Message file.  CPM005
+     C                     EXSR ZASNMS                                    CPM005
+     C                     ENDIF                           *FI            CPM005
+     C*                                                                   CPM005
+      * USER: Process subfile record (Pre-confirm)
+      *CASE:     RCD.*SFLSEL is *Enquire
+     C           #1SEL     IFEQ @CN,01                     *IF
+      * Display Client Details 3s - Client Details  *
+     C                     MOVEL*BLANK    PARC
+     C                     MOVEL#1CUST    PACUST           Customer Number
+      *
+     C                     CALL 'SD0011E'              90  Display Client
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C                     PARM           PARC             KEY: Client Det
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error.
+     C                     MOVEL'Y2U0021' W0RTN   7
+     C                     END
+      *
+      * Error detected ?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     98    *
+     C                     END
+     C                     MOVEL@CN,02    W0RSF            *Reload subfile
+      *CASE:     CTL.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     END                             *FI
+     C*
+     C** CALL POWER OF ATTORNEY
+     C           #1SEL     IFEQ 'P'                        - B1
+     C           #1TYPE    ANDEQ'P'
+     C**********           CALL 'SDC31'                                   CPM005
+     C**********           PARM 'SD3120'  PARM1   8                       CPM005
+     C**********           PARM 'Q'       PARM2   1                       CPM005
+     C**********           PARM #1CUST    PARM3   6                       CPM005
+     C                     CALL 'SD4351D'                                 CPM005
+     C                     PARM *BLANKS   PARM1   7                       CPM005
+     C                     PARM 'E'       PARM2   1                       CPM005
+     C                     PARM #1CUST    PARM3   6                       CPM005
+     C                     END                             - E1
+     C*
+     C** JOINT ACCOUNT USER
+     C           #1SEL     IFEQ 'J'                        - B1
+     C           #1TYPE    ANDEQ'J'
+     C**********           CALL 'SDC31'
+     C**********           PARM 'SD3110'  PARM1
+     C**********           PARM 'Q'       PARM2
+     C**********           PARM #1CUST    PARM3
+     C                     CALL 'SD4361D'                                 CPM005
+     C                     PARM *BLANKS   PARM1   7                       CPM005
+     C                     PARM 'E'       PARM2   1                       CPM005
+     C                     PARM #1CUST    PARM3   6                       CPM005
+     C                     END                             - E1
+     C*
+     C           *IN98     IFEQ '1'
+      * SFLRCD invalid.
+     C  N99                Z-ADD##RR      ##SFRC     99    Invalid SFLRCD
+     C                     SETON                     84    SFLNXTCHG
+     C                     ELSE
+      * SFLRCD valid.
+     C                     SETOF                     84    SFLNXTCHG
+     C           *IN35     IFEQ '0'                                       CPM005
+     C                     MOVEL*BLANK    #1SEL
+     C                     END                                            CPM005
+     C                     END                             FI *IN98
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         FBRQRL    BEGSR
+      *================================================================
+      * Request subfile reload.
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *
+      ** REFRESH SUBFILE WITH BLANK SELECT
+     C           *IN05     IFEQ '1'
+     C                     MOVE *BLANKS   #2CRNM
+     C                     END
+      *================================================================
+     CSR         FBEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+     C                     MOVEL*BLANK    #1SEL
+     C                     MOVELBBCNA1    #1CNA1           Cust. Name & Ad
+     C                     MOVELBBCNA2    #1CNA2           Cust. Name & Ad
+     C                     MOVELBBCNA3    #1CNA3           Cust. Name & Ad
+     C                     MOVELBBCNA4    #1CNA4           Cust. Name & Ad
+     C                     MOVELBBPAIN    #1PAIN           Parent Indicato
+     C                     MOVELBBDRCS    #1DRCS           DRS Customer Sh
+     C**********           MOVELBBDRLC    #1DRLC           DRS Location CoCPM005
+     C                     MOVELBBACOC    #1ACOC           Account Officer
+     C                     MOVELBBCNCZ    #1CNCZ           Country of Citi
+     C                     MOVELBBCOLC    #1COLC           Country of Loca
+     C                     Z-ADDBBSSDT    #1SSDT           Suspended Date
+     C                     Z-ADDBBDOIC    #1DOIC           Date of Initial
+     C                     MOVELBBPCNB    #1PCNB           Parent Customer
+     C                     MOVELBBCASC    #1CASC           Customer Alpha
+     C                     MOVELBBBRCD    #1BRCD           Branch code
+     C                     MOVELBBBNBI    #1BNBI           Bank/non-bank I
+     C                     MOVELBBLINC    #1LINC           Local Instituti
+     C                     MOVELBBLICD    #1LICD           Local Industry
+     C                     MOVELBBCTNB    #1CTNB           Customer Teleph
+     C                     MOVELBBREID    #1REID           Reuter Id.
+     C                     MOVELBBBSIN    #1BSIN           Branch/Subsidia
+     C                     MOVELBBCSTY    #1CSTY           Customer Type
+     C                     MOVELBBTAIN    #1TAIN           Taxable Indicat
+     C                     MOVELBBCSID    #1CSID           Customer Swift
+     C                     MOVELBBSTAD    #1STAD           STTX Address
+     C                     MOVELBBTXA1    #1TXA1           Telex Address 1
+     C                     MOVELBBTXA2    #1TXA2           Telex Address 2
+     C                     MOVELBBTXA3    #1TXA3           Telex Address 3
+     C                     MOVELBBTXA4    #1TXA4           Telex Address 4
+     C                     MOVELBBTXA5    #1TXA5           Telex Address 5
+     C                     Z-ADDBBCHID    #1CHID           Chips Id
+     C                     Z-ADDBBCHSC    #1CHSC           Chaps sort code
+     C                     Z-ADDBBCABA    #1CABA           Chips ABA
+     C                     MOVELBBBFIC    #1BFIC           BOJ Fin. Inst.
+     C                     MOVELBBBLCD    #1BLCD           Bankleitzahl Co
+     C                     Z-ADDBBFWCD    #1FWCD           Fedwire Code
+     C**********           Z-ADDBBMB12    #1MB12           Msg Branch 1/2 CPM005
+     C**********           MOVELBBMR12    #1MR12           Msg Route 1/2 (CPM005
+     C**********           Z-ADDBBMBR3    #1MBR3           Msg Branch 3 (CCPM005
+     C**********           MOVELBBMRT3    #1MRT3           Msg Route 3 (CoCPM005
+     C**********           Z-ADDBBMBR4    #1MBR4           Msg Branch 4 -CCPM005
+     C**********           MOVELBBMRT4    #1MRT4           Msg Route 4 -CoCPM005
+     C**********           MOVELBBMRT5    #1MRT5           Msg Route 5 (seCPM005
+     C**********           MOVELBBMRT7    #1MRT7           Msg Route 7 (LeCPM005
+     C**********           MOVELBBMRT9    #1MRT9           Msg Route 9 (FrCPM005
+     C**********           Z-ADDBBMBR5    #1MBR5           Msg Branch 5(seCPM005
+     C**********           Z-ADDBBMBR7    #1MBR7           Msg Branch 7(LeCPM005
+     C**********           Z-ADDBBMBR9    #1MBR9           Msg Branch 9(FrCPM005
+     C**********           MOVELBBGCRF    #1GCRF           Global CustomerCPM005
+     C**********           MOVELBBGCCS    #1GCCS           Global CustomerCPM005
+     C**********           MOVELBBGIDC    #1GIDC           Global IndustryCPM005
+     C**********           MOVELBBGISC    #1GISC           Global InstitutCPM005
+     C                     Z-ADDBBLCD     #1LCD            Last Change Dat
+     C                     MOVELBBTYLC    #1TYLC           Type of Last Ch
+     C                     Z-ADDBBLALD    #1LALD           Last Audit Lett
+     C                     Z-ADDBBLDHD    #1LDHD           Last Dels Histo
+     C                     Z-ADDBBLRLD    #1LRLD           Last Retail Let
+     C                     Z-ADDBBDTDL    #1DTDL           Date Deleted
+     C                     MOVELBBLETI    #1LETI           LE Past/Int Tel
+     C                     MOVELBBCMTI    #1CMTI           Customer Module
+      *
+      ** CUSTOMER MASTER FILE
+     C           FORM      IFEQ 'SDCUSTD0'
+     C                     MOVELBBCUST    #1CUST           Customer Number
+     C                     MOVELBBCSSN    #1CSSN           Customer Shortn
+     C                     MOVELBBCRNM    #1CRNM           Customer Report
+     C                     MOVELBBCRTN    #1CRTN           Customer Report
+     C                     MOVEL' '       #1TYPE
+     C                     END
+      *
+      ** POWER OF ATTORNEY
+     C           FORM      IFEQ 'SDPATTD0'
+     C                     MOVELF2CUST    #1CUST           Customer Number
+     C                     MOVEL*BLANKS   #1CSSN
+     C                     MOVEL'********'#1CSSN           Customer Shortn
+     C**********           MOVELF2USID    #1CRNM           Customer ReportCPM005
+     C                     MOVELF2URID    #1CRNM           Customer ReportCPM005
+     C                     MOVEL*BLANKS   #1CRTN
+     C                     MOVEL'********'#1CRTN           Customer Report
+     C                     MOVEL'P'       #1TYPE
+     C                     END
+      *
+      ** JOINT ACCOUNT USER
+     C           FORM      IFEQ 'SDJUSRD0'
+     C                     MOVELF3CUST    #1CUST           Customer Number
+     C                     MOVEL*BLANKS   #1CSSN
+     C                     MOVEL'********'#1CSSN           Customer Shortn
+     C**********           MOVELF3USID    #1CRNM           Customer ReportCPM005
+     C                     MOVELF3URID    #1CRNM           Customer ReportCPM005
+     C                     MOVEL*BLANKS   #1CRTN
+     C                     MOVEL'********'#1CRTN           Customer Report
+     C                     MOVEL'J'       #1TYPE
+     C                     END
+     C                     MOVEL*BLANK    #1SEL            *SFLSEL
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MEIZ#2    BEGSR
+      *================================================================
+      * Initialise subfile control.
+      *================================================================
+     C                     MOVEL*BLANK    #2CNA1           Cust. Name & Ad
+     C                     MOVEL*BLANK    #2CNA2           Cust. Name & Ad
+     C                     MOVEL*BLANK    #2CNA3           Cust. Name & Ad
+     C                     MOVEL*BLANK    #2CNA4           Cust. Name & Ad
+     C                     MOVEL*BLANK    #2PAIN           Parent Indicato
+     C                     MOVEL*BLANK    #2DRCS           DRS Customer Sh
+     C**********           MOVEL*BLANK    #2DRLC           DRS Location CoCPM005
+     C                     MOVEL*BLANK    #2ACOC           Account Officer
+     C                     MOVEL*BLANK    #2CNCZ           Country of Citi
+     C                     MOVEL*BLANK    #2COLC           Country of Loca
+     C                     Z-ADD*ZERO     #2SSDT           Suspended Date
+     C                     Z-ADD*ZERO     #2DOIC           Date of Initial
+     C                     MOVEL*BLANK    #2PCNB           Parent Customer
+     C                     MOVEL*BLANK    #2CASC           Customer Alpha
+     C                     MOVEL*BLANK    #2BRCD           Branch code
+     C                     MOVEL*BLANK    #2BNBI           Bank/non-bank I
+     C                     MOVEL*BLANK    #2LINC           Local Instituti
+     C                     MOVEL*BLANK    #2LICD           Local Industry
+     C                     MOVEL*BLANK    #2CTNB           Customer Teleph
+     C                     MOVEL*BLANK    #2REID           Reuter Id.
+     C                     MOVEL*BLANK    #2BSIN           Branch/Subsidia
+     C                     MOVEL*BLANK    #2CSTY           Customer Type
+     C                     MOVEL*BLANK    #2TAIN           Taxable Indicat
+     C                     MOVEL*BLANK    #2CSID           Customer Swift
+     C                     MOVEL*BLANK    #2STAD           STTX Address
+     C                     MOVEL*BLANK    #2TXA1           Telex Address 1
+     C                     MOVEL*BLANK    #2TXA2           Telex Address 2
+     C                     MOVEL*BLANK    #2TXA3           Telex Address 3
+     C                     MOVEL*BLANK    #2TXA4           Telex Address 4
+     C                     MOVEL*BLANK    #2TXA5           Telex Address 5
+     C                     Z-ADD*ZERO     #2CHID           Chips Id
+     C                     Z-ADD*ZERO     #2CHSC           Chaps sort code
+     C                     Z-ADD*ZERO     #2CABA           Chips ABA
+     C                     MOVEL*BLANK    #2BFIC           BOJ Fin. Inst.
+     C                     MOVEL*BLANK    #2BLCD           Bankleitzahl Co
+     C                     Z-ADD*ZERO     #2FWCD           Fedwire Code
+     C**********           Z-ADD*ZERO     #2MB12           Msg Branch 1/2 CPM005
+     C**********           MOVEL*BLANK    #2MR12           Msg Route 1/2 (CPM005
+     C**********           Z-ADD*ZERO     #2MBR3           Msg Branch 3 (CCPM005
+     C**********           MOVEL*BLANK    #2MRT3           Msg Route 3 (CoCPM005
+     C**********           Z-ADD*ZERO     #2MBR4           Msg Branch 4 -CCPM005
+     C**********           MOVEL*BLANK    #2MRT4           Msg Route 4 -CoCPM005
+     C**********           MOVEL*BLANK    #2MRT5           Msg Route 5 (seCPM005
+     C**********           MOVEL*BLANK    #2MRT7           Msg Route 7 (LeCPM005
+     C**********           MOVEL*BLANK    #2MRT9           Msg Route 9 (FrCPM005
+     C**********           Z-ADD*ZERO     #2MBR5           Msg Branch 5(seCPM005
+     C**********           Z-ADD*ZERO     #2MBR7           Msg Branch 7(LeCPM005
+     C**********           Z-ADD*ZERO     #2MBR9           Msg Branch 9(FrCPM005
+     C**********           MOVEL*BLANK    #2GCRF           Global CustomerCPM005
+     C**********           MOVEL*BLANK    #2GCCS           Global CustomerCPM005
+     C**********           MOVEL*BLANK    #2GIDC           Global IndustryCPM005
+     C**********           MOVEL*BLANK    #2GISC           Global InstitutCPM005
+     C                     Z-ADD*ZERO     #2LCD            Last Change Dat
+     C                     MOVEL*BLANK    #2TYLC           Type of Last Ch
+     C                     Z-ADD*ZERO     #2LALD           Last Audit Lett
+     C                     Z-ADD*ZERO     #2LDHD           Last Dels Histo
+     C                     Z-ADD*ZERO     #2LRLD           Last Retail Let
+     C                     Z-ADD*ZERO     #2DTDL           Date Deleted
+     C                     MOVEL*BLANK    #2LETI           LE Past/Int Tel
+     C                     MOVEL*BLANK    #2CMTI           Customer Module
+     C                     MOVEL*BLANK    #2CRNM           Customer Report
+      *================================================================
+     CSR         MEEXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue.
+      *================================================================
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGM
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      * Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text.
+      *================================================================
+     C                     MOVEL'Y'       W0HLP   1        Signal help req
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Member name.
+     C                     PARM *BLANK    YYHPFL 10        *DFT text file.
+     C                     PARM *BLANK    YYHPLB 10        Help text lib.
+     C                     PARM           W0RTN   7        Return Code.
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel & exit program.
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct.
+      *================================================================
+      * Terminate program.
+     C                     SETON                     LR
+      *
+      * Exit program.
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation.
+      *================================================================
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+      * Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      * Define work field midas rundate
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+     C**********           Z-ADD14        ##SFPG  30       SFLPAG         CPM005
+     C                     Z-ADD16        ##SFPG  30       SFLPAG         CPM005
+     C                     Z-ADD1         ##SFRC
+     C                     Z-ADD*ZERO     ##RRMX           MAX RECNO
+     C                     Z-ADD99999     W0SLM   50       SCAN LIMIT
+      *................................................................
+      * USER: Initialise program
+      * Standard RPG Creation PAR - Standard Functions  *
+      * Hdr Box Enq. on clients - Client Details  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB
+     C                     MOVE SUC       WUSUC
+     C                     MOVE DFF       WUDFF
+     C                     MOVE MBIN      WUMBIN
+      * Initialise subfile control.
+     C                     EXSR MEIZ#2
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+** @CN Long constants used in program.
+E
+Y
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,2250 @@
+      *****************************************************************
+/*S*D****DSPFDFRWN*****************************************************                    AR1071025
+/*STD *  DSPFBASE                                                     *                    AR1071025
+/*EXI *  TEXT('Midas AK Dealing account keys generation')             *
+     A********************************************************************
+     A*                                                                  *
+     A*  Midas - Account Key Generator                               *
+     A*                                                                  *
+     A*  AK0020DF - Dealing Account Keys Generation                      *
+     A*                                                                  *
+ 
+     A*                                                                  *
+      *  Last Amend No. AR1071025          Date 16Jan13               *
+      *  Prev Amend No. 260980             Date 13Jul09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 232543             Date 28Mar05               *
+      *                 CGL031             Date 05Jul04               *
+      *                 CDL038             Date 10May05               *
+      *                 CAS011             Date 16May05               *
+      *                 CAS009             Date 04May04               *
+      *                 CAS010             Date 09Feb05               *
+      *                 BUG6077            Date 07Mar05               *
+      *                 CDL017             Date 19Apr04               *
+      *                 TDA009             Date 19Mar04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 120834             Date 14Jul97               *
+      *                 CAC001             Date 01Feb96               *
+     A*                 080603             Date 06JAN95               *
+     A*                 S01460             Date 09DEC93               *
+     A*                 S01440             Date 06SEP93                  *
+     A*                                                                  *
+     A********************************************************************
+     A*                                                                  *
+      *  AR1071025 - Erroneous field will only highlight after the    *
+      *              second enter (Recompile)                         *
+      *  260980 - Display missing fields introduced by CDL017.        *
+      *  232543 - Fix to CGL031                                       *
+      *  CGL031 - Taxation of Savings Income                          *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CAS011 - EIR/AC Accounting Upgrade to MP1                    *
+      *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
+      *  CAS010 - IAS + PB Enhancements Upgrade to Midasplus          *
+      *  BUG6077 - Strange field on Account Key Generator             *
+      *  CDL017 - Penalty Fees and Early Maturity of Fixed Term Deals *
+      *  TDA009 - Increase the display file size from 24 x 80 to      *
+      *           27 x 132 to accommodate the fieldS F5, F8 and F10.  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *  CAS004 - Hedge Accounting Phase A                            *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+     A*  120834 - Generate FX Margin keys only for FP,FS and CX       *
+     A*  CAC001 - Profit Centre Accounting Development:               *
+     A*           If Analytical Accounting is installed, new account  *
+     A*           codes for PCA will be available for input.          *
+     A*  080603  -  Clarify A/cs required for MM Deal date entries       *
+     A*             Allow Withholding Tax A/c for BRT                    *
+     A*             Allow input of Taxable Interest Contra A/c           *
+     A*             Allow input of Non Taxable Interest A/c & Contra     *
+     A*             Generate Front up interest Keys
+     A*  S01460  -  To allow the Withholding Tax A/C keys to be          *
+     A*             produced.                                            *
+     A*                                                                  *
+     A*  S01440 - Addition of 4 Account code fields for Deal Types       *
+     A*           PI and SI. These will be used for interest accruals
+     A*                                                                  *
+     A********************************************************************
+     A*
+     A*         /////////////////////////////////////////
+     A*        // WARNING: When creating this display //
+     A*       //   file, take options RSTDSP(*YES)   //
+     A*      //                       SHARE (*YES)  //
+     A*     /////////////////////////////////////////
+     A*
+     A*****************************************************************
+     A*
+      *                                              Begin /CAC001/
+     A                                      REF(MFRFL)
+      *                                              End   /CAC001/
+     A                                      PRINT(MPRINT)
+     A                                      CF03(03 'Exit')
+     A**Start of change TDA009
+     A                                      DSPSIZ(*DS4)
+     A**End of change TDA009
+     A          R ACKEYSF
+     A                                      TEXT('(c) Misys International +
+     A                                      Banking Systems Ltd. +
+     A                                      2001')
+     A                                      PUTOVR
+     A                                      OVERLAY
+     A**********                                     Begin /080603/
+     A**********                                     End   /080603/
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  B  4 24
+     A                                      OVRDTA
+     A N50                                  DSPATR(UL HI)
+     A  50                                  DSPATR(RI PC)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  B  4 51
+     A                                      OVRDTA
+     A**Start of change CDL038
+     A**************************************CHECK(FE)                                         CDL038
+     A**End of change CDL038
+     A N51                                  DSPATR(UL HI)
+     A  51                                  DSPATR(RI PC)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  B  4 76                                                  CDL038
+     A                                      OVRDTA                                            CDL038
+     A N98 26                               DSPATR(UL HI)                                     CDL038
+     A  98 26                               DSPATR(RI PC)                                     CDL038
+     A N26                                  DSPATR(PR ND)                                     CDL038
+     A**End of change CDL038
+     A                                 23  1'F3=Exit'
+     A*
+     A*  FOREIGN EXCHANGE
+     A*
+     A          R ACKEYFX
+     A                                      CF12(12 'Previous')
+     A                                      OVERLAY
+     A                                      PUTOVR
+      *                                              Begin /CAC001/
+      *                                              End   /CAC001/
+      *                                              Begin /CAC001/
+      *                                              End   /CAC001/
+      *                                              Begin /CAC001/
+      *                                              End   /CAC001/
+      *                                              Begin /CAC001/
+      *                                              End   /CAC001/
+      *                                              Begin /CAC001/
+      *                                              End   /CAC001/
+      *                                              Begin /CAC001/
+      *                                              End   /CAC001/
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+     A                                  6  8'Foreign Exchange:'
+     A                                  8 15'Forward Purchases Account-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  F1             4   B  8 65                                                  CGL029
+     A            F1            10   B  8 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N52                                  DSPATR(UL HI)
+     A  52                                  DSPATR(RI PC)
+     A                                  9 24'Posting Reference........-
+     A                                      ..............:'
+     A            F1PREF         1   B  9 65
+     A                                      OVRDTA
+     A N08                                  DSPATR(UL HI)
+     A  08                                  DSPATR(RI PC)
+     A                                 10 15'Forward Sales Account....-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  F2             4   B 10 65                                                  CGL029
+     A            F2            10   B 10 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N53                                  DSPATR(UL HI)
+     A  53                                  DSPATR(RI PC)
+     A                                 11 24'Posting Reference........-
+     A                                      ..............:'
+     A            F2PREF         1   B 11 65
+     A                                      OVRDTA
+     A N09                                  DSPATR(UL HI)
+     A  09                                  DSPATR(RI PC)
+     A                                 12 15'Forward Position Account.-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  F3             4   B 12 65                                                  CGL029
+     A            F3            10   B 12 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N54                                  DSPATR(UL HI)
+     A  54                                  DSPATR(RI PC)
+      *                                              Begin /CAC001/
+      *                                              Begin /120834/
+     A**48*******                      13 15'Forward FX Margin & Contr-
+     A  48 06                          13 15'Forward FX Margin & Contr-
+      *                                              End   /120834/
+     A**Start of change CGL029
+     A**********                            a Account..............:'                         CGL029
+     A**********  SFFXM     R        B 13 65REFFLD(PRFC)                                      CGL029
+     A                                      a Account..:'
+     A            SFFXM         10   B 13 53
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  48N49                               DSPATR(UL HI)
+     A  48 49                               DSPATR(RI PC)
+      *                                              Begin /120834/
+     A*N48*******                           DSPATR(ND)
+     A N06
+     AON48                                  DSPATR(ND PR)
+      *                                              End   /120834/
+     A**Start of change CGL029
+     A**********  SFFXC     R        B 13 72REFFLD(PRFC)                                      CGL029
+     A            SFFXC         10   B 13 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  48N28                               DSPATR(UL HI)
+     A  48 28                               DSPATR(RI PC)
+     A N48                                  DSPATR(ND PR)
+     A* Not displayed if other than Deal Type SW
+     A***********                      13 15'Swap Profit Amortisation -
+     A***********                           Account................:'
+     A                                 14 15'Swap Profit Amortisation -
+     A                                      Account................:'
+      *                                              End   /CAC001/
+     A  29
+     AO 17                                  DSPATR(ND)
+      *                                              Begin /CAC001/
+     A*********** F4             4   B 13 65
+     A**Start of change CGL029
+     A**********  F4             4   B 14 65                                                  CGL029
+     A            F4            10   B 14 65
+     A**End of change CGL029
+      *                                              End   /CAC001/
+     A                                      OVRDTA
+     A  29
+     AO 17                                  DSPATR(ND PR)
+     A N55                                  DSPATR(UL HI)
+     A  55                                  DSPATR(RI PC)
+     A* Not displayed if other than Deal Type SW
+     A*                      ***************START OF CHANGE S01440
+      *                                              Begin /CAC001/
+     A*N17*******                      14 24'Posting Reference........-
+     A***********                           ..............:'
+     A N17                             15 24'Posting Reference........-
+     A                                      ..............:'
+      *                                              End   /CAC001/
+     A***                              14 24'Posting Reference........-
+     A***                                   ..............:'
+     A*                      ***************END OF CHANGE S01440
+     A  29
+     AO 17                                  DSPATR(ND)
+     A*                      ***************START OF CHANGE S01440
+      *                                              Begin /CAC001/
+     A*N17******* F4PREF         1   B 14 65
+     A N17        F4PREF         1   B 15 65
+      *                                              End   /CAC001/
+     A***         F4PREF         1   B 14 65
+     A                                      OVRDTA
+     A*                      ***************END OF CHANGE S01440
+     A  29
+     AO 17                                  DSPATR(ND PR)
+     A N13                                  DSPATR(UL HI)
+     A  13                                  DSPATR(RI PC)
+     A* Not displayed if other than Deal Type SW
+     A*                      ***************START OF CHANGE S01440
+      *                                              Begin /CAC001/
+     A*N17*******                      15 15'Swap Profit Income Accoun-
+     A***********                           t......................:'
+     A N17                             16 15'Swap Profit Income Accoun-
+     A                                      t......................:'
+      *                                              End   /CAC001/
+     A***                              15 15'Swap Profit Income Accoun-
+     A***                                   t......................:'
+     A*                      ***************END OF CHANGE S01440
+     A  29
+     AO 17                                  DSPATR(ND)
+     A*                      ***************START OF CHANGE S01440
+      *                                              Begin /CAC001/
+     A*N17******* F5             4   B 15 65
+     A**Start of change CGL029
+     A*N17******  F5             4   B 16 65                                                  CGL029
+     A N17        F5            10   B 16 65
+     A**End of change CGL029
+      *                                              End   /CAC001/
+     A***         F5             4   B 15 65
+     A*                      ***************END OF CHANGE S01440
+     A                                      OVRDTA
+     A  29
+     AO 17                                  DSPATR(ND PR)
+     A N56                                  DSPATR(UL HI)
+     A  56                                  DSPATR(RI PC)
+     A* Not displayed if other than Deal Type SW
+     A*                      ***************START OF CHANGE S01440
+      *                                              Begin /CAC001/
+     A*N17*******                      16 15'Swap Loss Amortisation Ac-
+     A***********                           count..................:'
+     A N17                             17 15'Swap Loss Amortisation Ac-
+     A                                      count..................:'
+      *                                              End   /CAC001/
+     A***                              16 15'Swap Loss Amortisation Ac-
+     A***                                   count..................:'
+     A*                      ***************END OF CHANGE S01440
+     A  29
+     AO 17                                  DSPATR(ND)
+     A*                      ***************START OF CHANGE S01440
+      *                                              Begin /CAC001/
+     A*N17******* F6             4   B 16 65
+     A**Start of change CGL029
+     A*N17******  F6             4   B 17 65                                                  CGL029
+     A N17        F6            10   B 17 65
+     A**End of change CGL029
+      *                                              End   /CAC001/
+     A***         F6             4   B 16 65
+     A*                      ***************END OF CHANGE S01440
+     A                                      OVRDTA
+     A  29
+     AO 17                                  DSPATR(ND PR)
+     A N57                                  DSPATR(UL HI)
+     A  57                                  DSPATR(RI PC)
+     A* Not displayed if other than Deal Type SW
+     A*                      ***************START OF CHANGE S01440
+      *                                              Begin /CAC001
+     A*N17*******                      17 24'Posting Reference........-
+     A***********                           ..............:'
+     A N17                             18 24'Posting Reference........-
+     A                                      ..............:'
+      *                                              End   /CAC001/
+     A***                              17 24'Posting Reference........-
+     A***                                   ..............:'
+     A*                      ***************END OF CHANGE S01440
+     A  29
+     AO 17                                  DSPATR(ND)
+     A*                      ***************START OF CHANGE S01440
+      *                                              Begin /CAC001/
+     A*N17******* F6PREF         1   B 17 65
+     A N17        F6PREF         1   B 18 65
+      *                                              End   /CAC001/
+     A***         F6PREF         1   B 17 65
+     A*                      ***************END OF CHANGE S01440
+     A                                      OVRDTA
+     A  29
+     AO 17                                  DSPATR(ND PR)
+     A N14                                  DSPATR(UL HI)
+     A  14                                  DSPATR(RI PC)
+     A* Not displayed if other than Deal Type SW
+      *                                              Begin /CAC001/
+     A***********                      18 15'Swap Loss Expense Account-
+     A***********                           .......................:'
+     A                                 19 15'Swap Loss Expense Account-
+     A                                      .......................:'
+      *                                              End   /CAC001/
+     A  29
+     AO 17                                  DSPATR(ND)
+      *                                              Begin /CAC001/
+     A*********** F7             4   B 18 65
+     A**Start of change CGL029
+     A**********  F7             4   B 19 65                                                  CGL029
+     A            F7            10   B 19 65
+     A**End of change CGL029
+      *                                              End   /CAC001/
+     A                                      OVRDTA
+     A  29
+     AO 17                                  DSPATR(ND PR)
+     A                                      CHECK(FE)
+     A N58                                  DSPATR(UL HI)
+     A  58                                  DSPATR(RI PC)
+      *                                              Begin /CAC001/
+     A  48                             20 15'FX Margin Income Account.-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  SFXMI     R        B 20 65REFFLD(PRFC)                                      CGL029
+     A            SFXMI         10   B 20 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  48N65                               DSPATR(UL HI)
+     A  48 65                               DSPATR(RI PC)
+      **Start of change BUG6077
+     A*N48******                            DSPATR(ND)                                       BUG6077
+     A N48                                  DSPATR(ND PR)
+      **End of change BUG6077
+      *                                              End   /CAC001/
+     A*
+     A*                      ***************START OF CHANGE S01440
+     A*
+      *                                              Begin /CAC001/
+     A*N70*******                      14 15'Purchase Accrual Account.-
+     A***********                           .......................:'
+     A N70                             15 15'Purchase Accrual Account.-
+     A                                      .......................:'
+      *                                              End   /CAC001/
+     A  70                                  DSPATR(ND)
+      *                                              Begin /CAC001/
+     A*N70******* F8             4   B 14 65
+     A**Start of change CGL029
+     A*N70******  F8             4   B 15 65                                                  CGL029
+     A N70        F8            10   B 15 65
+     A**End of change CGL029
+      *                                              End   /CAC001/
+     A                                      OVRDTA
+     A  70                                  DSPATR(ND PR)
+     A N71                                  DSPATR(UL HI)
+     A  71                                  DSPATR(RI PC)
+      *                                              Begin /CAC001/
+     A*N70*******                      15 15'Purchase Income Account..-
+     A***********                           .......................:'
+     A N70                             16 15'Purchase Income Account..-
+     A                                      .......................:'
+      *                                              End   /CAC001/
+     A  70                                  DSPATR(ND)
+      *                                              Begin /CAC001/
+     A*N70******* F9             4   B 15 65
+     A**Start of change CGL029
+     A*N70******  F9             4   B 16 65                                                  CGL029
+     A N70        F9            10   B 16 65
+     A**End of change CGL029
+      *                                              End   /CAC001/
+     A                                      OVRDTA
+     A  70                                  DSPATR(ND)
+     A N72                                  DSPATR(UL HI)
+     A  72                                  DSPATR(RI PC)
+      *                                              Begin /CAC001/
+     A*N70*******                      16 15'Sale Accrual Account.....-
+     A***********                           .......................:'
+     A N70                             17 15'Sale Accrual Account.....-
+     A                                      .......................:'
+      *                                              End   /CAC001/
+     A  70                                  DSPATR(ND)
+      *                                              Begin /CAC001/
+     A*N70******* F10            4   B 16 65
+     A**Start of change CGL029
+     A*N70******  F10            4   B 17 65                                                  CGL029
+     A N70        F10           10   B 17 65
+     A**End of change CGL029
+      *                                              End   /CAC001/
+     A                                      OVRDTA
+     A  70                                  DSPATR(ND)
+     A N73                                  DSPATR(UL HI)
+     A  73                                  DSPATR(RI PC)
+      *                                              Begin /CAC001/
+     A*N70*******                      17 15'Sale Expense Account.....-
+     A***********                           .......................:'
+     A N70                             18 15'Sale Expense Account.....-
+     A                                      .......................:'
+      *                                              End   /CAC001/
+     A  70                                  DSPATR(ND)
+      *                                              Begin /CAC001/
+     A*N70******* F11            4   B 17 65
+     A**Start of change CGL029
+     A*N70******  F11            4   B 18 65                                                  CGL029
+     A N70        F11           10   B 18 65
+     A**End of change CGL029
+      *                                              End   /CAC001/
+     A                                      OVRDTA
+     A  70                                  DSPATR(ND)
+     A N74                                  DSPATR(UL HI)
+     A  74                                  DSPATR(RI PC)
+     A*
+     A*                       **************END OF CHANGE S01440
+     A*
+     A                                 23  1'F3=Exit   F12=Previous'
+     A*
+     A*  LOANS AND DEPOSITS (MONEY MARKET)
+     A*
+     A          R ACKEYMM
+     A                                      CF12(12 'Previous')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A***********                                    Begin /080603/
+     A***********                                    End   /080603/
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+     A                                  6  8'Loans/Deposits'
+     A                                  8 15'Principal Account........-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  F1             4   B  8 65                                                  CGL029
+     A            F1            10   B  8 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N52                                  DSPATR(UL HI)
+     A  52                                  DSPATR(RI PC)
+     A                                 10 15'Interest Accrual Account.-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  F2             4   B 10 65                                                  CGL029
+     A            F2            10   B 10 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N53                                  DSPATR(UL HI)
+     A  53                                  DSPATR(RI PC)
+     A* Not displayed if Deal Type CI
+     A                                 11 15'Posting Reference........-
+     A                                      .......................:'
+     A  34                                  DSPATR(ND)
+     A            F2PREF         1   B 11 65
+     A                                      OVRDTA
+     A  34                                  DSPATR(ND PR)
+     A N27                                  DSPATR(UL HI)
+     A  27                                  DSPATR(RI PC)
+     A***********                                    Begin /080603/
+     A***********                      13 15'Interest Income/Expense A-
+     A***********                           ccount.................:'
+     A                                 13 15'Interest Income/Expense A-
+     A                                      /c (Accrual Contra)....:'
+     A***********                                    End   /080603/
+     A**Start of change CGL029
+     A**********  F3             4   B 13 65                                                  CGL029
+     A            F3            10   B 13 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N54                                  DSPATR(UL HI)
+     A  54                                  DSPATR(RI PC)
+     A***********                                    Begin /080603/
+     A***********                      15 15'Deal Date Contingent Asse-
+     A***********                           t Account..............:'
+     A                                 15 15'Deal Date Contingency & C-
+     A                                      ontra Account..........:'
+     A***********                                    End   /080603/
+     A**Start of change CGL029
+     A**********  F4             4   B 15 65                                                  CGL029
+     A            F4            10   B 15 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N55                                  DSPATR(UL HI)
+     A  55                                  DSPATR(RI PC)
+     A***********                                    Begin /080603/
+     A**Start of change CGL029
+     A**********  F5             4   B 15 72                                                  CGL029
+     A**Start of change TDA009
+     A**********  F5            10   B 15 72                                                  TDA009
+     A            F5            10   B 15 76
+     A**End of change TDA009
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N56                                  DSPATR(UL HI)
+     A  56                                  DSPATR(RI PC)
+     A***********                                    End   /080603/
+     A* Not displayed if Deal Type CI
+     A                                 16 15'Posting Reference........-
+     A                                      .......................:'
+     A  34                                  DSPATR(ND)
+     A            F4PREF         1   B 16 65
+     A                                      OVRDTA
+     A  34                                  DSPATR(ND PR)
+     A N05                                  DSPATR(UL HI)
+     A  05                                  DSPATR(RI PC)
+     A***********                                    Begin /080603/
+     A***********                      18 15'Deal Date Contingent Liab-
+     A***********                           ility Account..........:'
+     A*********** F5             4   B 18 65               /080603/
+     A***********                           OVRDTA         /080603/
+     A*N56*******                           DSPATR(UL HI)  /080603/
+     A**56*******                           DSPATR(RI PC)  /080603/
+     A***********                                    End   /080603/
+     A* Not displayed if Deal Type CL, CD or CI
+     A***********                                    Begin /S01460/
+     A***********                      20 15'Rollover Suspense Account-
+     A***********                           .......................:'
+     A***********                                    Begin /080603/
+     A***********                      19 15'Rollover Suspense Account-
+     A***********                           .......................:'
+     A                                 18 15'Rollover Suspense Account-
+     A                                      .......................:'
+     A***********                                    End   /080603/
+     A***********                                    End   /S01460/
+     A  34
+     AO 20
+     AO 19                                  DSPATR(ND)
+     A***********                                    Begin /S01460/
+     A*********** F6             4   B 20 65
+     A***********                                    Begin /080603/
+     A*********** F6             4   B 19 65
+     A**Start of change CGL029
+     A**********  F6             4   B 18 65                                                  CGL029
+     A            F6            10   B 18 65
+     A**End of change CGL029
+     A***********                                    End   /080603/
+     A***********                                    End   /S01460/
+     A                                      OVRDTA
+     A  34
+     AO 20
+     AO 19                                  DSPATR(ND PR)
+     A***********                                    Begin /S01460/
+     A***********                           CHECK(FE)
+     A***********                                    End   /S01460/
+     A N57                                  DSPATR(UL HI)
+     A  57                                  DSPATR(RI PC)
+     A***********                                    Begin /S01460/
+     A***********                                    Begin /080603/
+     A**Not*displayed if Deal Type CL, CD or CI            /080603/
+     A***********                      21 15'Interest Paid Subject/To -
+     A***********                           Tax Assessment.........:'
+     A*N70*******                                          /080603/
+     A*ON29*70***                           DSPATR(ND)     /080603/
+     A*********** F7             4   B 21 65               /080603/
+     A***********                           OVRDTA         /080603/
+     A*N70*******                                          /080603/
+     A*ON29*70***                           DSPATR(ND PR)  /080603/
+     A*N58*******                           DSPATR(UL HI)  /080603/
+     A**58*******                           DSPATR(RI PC)  /080603/
+     A**Not*displayed if Deal Type CL, CD or CI            /080603/
+     A***********                      22 15'Withheld Tax Liability Ac-
+     A***********                           count..................:'
+     A***********                                          /080603/
+     A*N70*******                                          /080603/
+     A*ON29*70***                           DSPATR(ND)     /080603/
+     A*********** F8             4   B 22 65               /080603/
+     A***********                           OVRDTA         /080603/
+     A*N70*******                                          /080603/
+     A*ON29*70***                           DSPATR(ND PR)  /080603/
+     A***********                           CHECK(FE)      /080603/
+     A*N59*******                           DSPATR(UL HI)  /080603/
+     A**59*******                           DSPATR(RI PC)  /080603/
+     A N70
+     AON29 70
+     AO 69                             19 15'Income Paid/Recv''d & Con-
+     A                                      tra Account.............:'
+     A  69
+     AO 70 29                               DSPATR(ND)
+     A                                 19 15'Income Paid/Recv''d & Con-
+     A                                      tra A/c (Non Taxable)...:'
+     A N70
+     AON29 70
+     AO 69                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  F7             4   B 19 65                                                  CGL029
+     A            F7            10   B 19 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  69                                  DSPATR(ND PR)
+     A N58                                  DSPATR(UL HI)
+     A  58                                  DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********  F8             4   B 19 72                                                  CGL029
+     A**Start of change TDA009
+     A**********  F8            10   B 19 72                                                  TDA009
+     A            F8            10   B 19 76
+     A**End of change TDA009
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  69                                  DSPATR(ND PR)
+     A N59                                  DSPATR(UL HI)
+     A  59                                  DSPATR(RI PC)
+     A* Only displayed if Deal Types IT, TD, CD, and W/H Tax SAR
+     A                                 20 15'Income Paid/Recv''d & Con-
+     A                                      tra A/c (Taxable).......:'
+     A N70
+     AON29 70
+     AO 69                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  F9             4   B 20 65                                                  CGL029
+     A            F9            10   B 20 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N70
+     AO 69
+     AON29 70                               DSPATR(ND PR)
+     A N60                                  DSPATR(UL HI)
+     A  60                                  DSPATR(RI PC)
+     A**Start of change CGL029
+     A**********  F10            4   B 20 72                                                  CGL029
+     A**Start of change TDA009
+     A**********  F10           10   B 20 72                                                  TDA009
+     A            F10           10   B 20 76
+     A**End of change TDA009
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N70
+     AO 69
+     AON29 70                               DSPATR(ND PR)
+     A N61                                  DSPATR(UL HI)
+     A  61                                  DSPATR(RI PC)
+     A* Only displayed if Deal Type IT, TD, CD, and Taxable
+     A                                 21 15'Withheld Tax Liability Ac-
+     A                                      count..................:'
+     A N71
+     AO 69
+     AON29 71                               DSPATR(ND)
+     A**Start of change CGL029
+     A**********  F11            4   B 21 65                                                  CGL029
+     A            F11           10   B 21 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N71
+     AO 69
+     AON29 71                               DSPATR(ND PR)
+     A N62                                  DSPATR(UL HI)
+     A  62                                  DSPATR(RI PC)
+     A                                      CHECK(FE)
+     A***********                                    End   /080603/
+     A***********                                    End   /S01460/
+     A                                 23  1'F3=Exit   F12=Previous'
+     A*
+      **  Start of change for CDL017
+     A          R ACKEYM1
+     A                                      CF12(12 'Previous')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+      *
+     A                                  6  8'Loans/Deposits'
+      *
+     A                                 10 15'Deal Date Contingent Pena-
+     A                                      lty Income & Contra....:'
+     A**Start of change CGL029
+     A*********** F12            4   B 10 65
+     A            F12           10   B 10 65
+     A**End   of change CGL029
+     A                                      OVRDTA
+     A N52                                  DSPATR(UL HI)
+     A  52                                  DSPATR(RI PC)
+     A**Start of change CGL029
+     A*********** F13            4   B 10 72
+     A**Start of change 260980
+     A**********  F13           10   B 10 72                                                  260980
+     A            F13           10   B 10 76
+     A**End of change 260980
+     A**End   of change CGL029
+     A                                      OVRDTA
+     A N53                                  DSPATR(UL HI)
+     A  53                                  DSPATR(RI PC)
+     A                                 11 15'Deal Date Contingent Pena-
+     A                                      lty Expense & Contra...:'
+     A**Start of change CGL029
+     A*********** F14            4   B 11 65
+     A            F14           10   B 11 65
+     A**End   of change CGL029
+     A                                      OVRDTA
+     A N54                                  DSPATR(UL HI)
+     A  54                                  DSPATR(RI PC)
+     A**Start of change CGL029
+     A*********** F15            4   B 11 72
+     A**Start of change 260980
+     A**********  F15           10   B 11 72                                                  260980
+     A            F15           10   B 11 76
+     A**End of change 260980
+     A**End   of change CGL029
+     A                                      OVRDTA
+     A N55                                  DSPATR(UL HI)
+     A  55                                  DSPATR(RI PC)
+     A                                 12 15'Posting Reference........-
+     A                                      .......................:'
+     A            F12PRF         1   B 12 65
+     A                                      OVRDTA
+     A N27                                  DSPATR(UL HI)
+     A  27                                  DSPATR(RI PC)
+      *
+     A                                 14 15'Maturity Date Penalty Inc-
+     A                                      ome Account............:'
+     A**Start of change CGL029
+     A*********** F16            4   B 14 65
+     A            F16           10   B 14 65
+     A**End   of change CGL029
+     A                                      OVRDTA
+     A N56                                  DSPATR(UL HI)
+     A  56                                  DSPATR(RI PC)
+     A                                 15 15'Maturity Date Penalty Exp-
+     A                                      ense Account...........:'
+     A**Start of change CGL029
+     A*********** F17            4   B 15 65
+     A            F17           10   B 15 65
+     A**End   of change CGL029
+     A                                      OVRDTA
+     A N57                                  DSPATR(UL HI)
+     A  57                                  DSPATR(RI PC)
+     A                                 16 15'Posting Reference........-
+     A                                      .......................:'
+     A            F16PRF         1   B 16 65
+     A                                      OVRDTA
+     A N28                                  DSPATR(UL HI)
+     A  28                                  DSPATR(RI PC)
+      *
+     A*/COPY WNCPYSRC,AKH00122
+     A                                 23  1'F3=Exit   F12=Previous'
+      **  End of changes for CDL017
+      *
+     A*  NEGOTIABLE ASSETS
+     A*
+     A          R ACKEYNA
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+     A                                  6  8'Negotiable Assets'
+     A                                      DSPATR(HI)
+     A                                  8 15'Principal Account........-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  F1             4   B  8 65                                                  CGL029
+     A            F1            10   B  8 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N52                                  DSPATR(UL HI)
+     A  52                                  DSPATR(RI PC)
+     A* Not displayed if Deal Type TB, DA, or TA
+     A                                  9 15'Interest Accrual Account.-
+     A                                      .......................:'
+     A  33                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  F2             4   B  9 65                                                  CGL029
+     A            F2            10   B  9 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  33                                  DSPATR(ND PR)
+     A N53                                  DSPATR(UL HI)
+     A  53                                  DSPATR(RI PC)
+     A* Not displayed if Deal Type TB, DA, or TA
+     A                                 10 24'Posting Reference........-
+     A                                      ..............:'
+     A  33                                  DSPATR(ND)
+     A            F2PREF         1   B 10 65
+     A                                      OVRDTA
+     A  33                                  DSPATR(ND PR)
+     A N15                                  DSPATR(UL HI)
+     A  15                                  DSPATR(RI PC)
+     A* Not displayed if Deal Type TB, DA, or TA
+     A                                 11 15'Interest Income Account..-
+     A                                      .......................:'
+     A  33                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  F3             4   B 11 65                                                  CGL029
+     A            F3            10   B 11 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  33                                  DSPATR(ND PR)
+     A N54                                  DSPATR(UL HI)
+     A  54                                  DSPATR(RI PC)
+     A* Not displayed if Deal Type C1
+     A                                 12 15'Discount Amortisation Acc-
+     A                                      ount...................:'
+     A  31                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  F4             4   B 12 65                                                  CGL029
+     A            F4            10   B 12 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  31                                  DSPATR(ND PR)
+     A N55                                  DSPATR(UL HI)
+     A  55                                  DSPATR(RI PC)
+     A* Not displayed if Deal Type C1
+     A                                 13 24'Posting Reference........-
+     A                                      ..............:'
+     A  31                                  DSPATR(ND)
+     A            F4PREF         1   B 13 65
+     A                                      OVRDTA
+     A  31                                  DSPATR(ND PR)
+     A**Start of change CDL038
+     A N05                                  DSPATR(UL HI)                                     CDL038
+     A  05                                  DSPATR(RI PC)                                     CDL038
+     A*N26**********************************DSPATR(UL HI)                                     CDL038
+     A**26**********************************DSPATR(RI PC)                                     CDL038
+     A**End of change CDL038
+     A* Not displayed if Deal Type C1
+     A                                 14 15'Discount Income Account..-
+     A                                      .......................:'
+     A  31                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  F5             4   B 14 65                                                  CGL029
+     A            F5            10   B 14 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  31                                  DSPATR(ND PR)
+     A N56                                  DSPATR(UL HI)
+     A  56                                  DSPATR(RI PC)
+     A* Not displayed if Deal Type C1, TB, DA or TA
+     A                                 15 15'Premium Amortisation Acco-
+     A                                      unt....................:'
+     A  31
+     AO 33                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  F6             4   B 15 65                                                  CGL029
+     A            F6            10   B 15 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  31
+     AO 33                                  DSPATR(ND PR)
+     A N57                                  DSPATR(UL HI)
+     A  57                                  DSPATR(RI PC)
+     A* Not displayed if Deal Type C1, TB, DA or TA
+     A                                 16 24'Posting Reference........-
+     A                                      ..............:'
+     A  31
+     AO 33                                  DSPATR(ND)
+     A            F6PREF         1   B 16 65
+     A                                      OVRDTA
+     A  31
+     AO 33                                  DSPATR(ND PR)
+     A**Start of change CDL038
+     A N27                                  DSPATR(UL HI)                                     CDL038
+     A  27                                  DSPATR(RI PC)                                     CDL038
+     A*N26**********************************DSPATR(UL HI)                                     CDL038
+     A**26**********************************DSPATR(RI PC)                                     CDL038
+     A**End of change CDL038
+     A* Not displayed if Deal Type C1, TB, DA or TA
+     A                                 17 15'Premium Expense Account..-
+     A                                      .......................:'
+     A  31
+     AO 33                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  F7             4   B 17 65                                                  CGL029
+     A            F7            10   B 17 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A  31
+     AO 33                                  DSPATR(ND PR)
+     A N58                                  DSPATR(UL HI)
+     A  58                                  DSPATR(RI PC)
+     A                                 18 15'Profit On Sale Of Negotia-
+     A                                      ble Asset..............:'
+     A**Start of change CGL029
+     A**********  F8             4   B 18 65                                                  CGL029
+     A            F8            10   B 18 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N59                                  DSPATR(UL HI)
+     A  59                                  DSPATR(RI PC)
+     A                                 19 15'Loss On Sale Of Negotiabl-
+     A                                      e Asset................:'
+     A**Start of change CGL029
+     A**********  F9             4   B 19 65                                                  CGL029
+     A            F9            10   B 19 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N60                                  DSPATR(UL HI)
+     A  60                                  DSPATR(RI PC)
+     A                                 20 15'Reverse Accounting?......-
+     A                                      .......................:'
+     A            OP1            1   B 20 65
+     A                                      OVRDTA
+     A                                      CHECK(FE)
+     A N61                                  DSPATR(UL HI)
+     A  61                                  DSPATR(RI PC)
+     A                                 23  1'F3=Exit   F12=Previous'
+     A*
+     A*  NOSTRO TRANSFER
+     A*
+     A          R ACKEYNO
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+     A                                  6  8'Nostro Transfer'
+     A                                      DSPATR(HI)
+     A                                  6 24'- NO CODES NEED TO BE ENTERED'
+     A                                 10  8'- Press ENTER on this screen to -
+     A                                      generate Account Keys'
+     A                                 11 28'for Nostro Transfers'
+     A                                 23  1'F3=Exit   F12=Previous'
+      *                                              Begin /CAC001/
+     A          R ACKEYAA
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+     A*/COPY WNCPYSRC,AKH00127
+     A                                 10 15'Internal Loan Account....-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  SINTL     R        B 10 65REFFLD(PRFC)                                      CGL029
+     A            SINTL         10   B 10 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N66                                  DSPATR(UL HI)
+     A  66                                  DSPATR(RI PC)
+     A                                 11 15'Internal Deposit Account.-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  SINTD     R        B 11 65REFFLD(PRFC)                                      CGL029
+     A            SINTD         10   B 11 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N67                                  DSPATR(UL HI)
+     A  67                                  DSPATR(RI PC)
+     A                                 12 15'COF Expense Account......-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  SCOFE     R        B 12 65REFFLD(PRFC)                                      CGL029
+     A            SCOFE         10   B 12 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N68                                  DSPATR(UL HI)
+     A  68                                  DSPATR(RI PC)
+     A                                 13 15'Accrued COF Payable Accou-
+     A                                      nt.....................:'
+     A**Start of change CGL029
+     A**********  SACOFP    R        B 13 65REFFLD(PRFC)                                      CGL029
+     A            SACOFP        10   B 13 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N79                                  DSPATR(UL HI)
+     A  79                                  DSPATR(RI PC)
+     A                                 14 15'COF Income Account.......-
+     A                                      .......................:'
+     A**Start of change CGL029
+     A**********  SCOFI     R        B 14 65REFFLD(PRFC)                                      CGL029
+     A            SCOFI         10   B 14 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N84                                  DSPATR(UL HI)
+     A  84                                  DSPATR(RI PC)
+     A                                 15 15'Accrued COF Receivable Ac-
+     A                                      count..................:'
+     A**Start of change CGL029
+     A**********  SACOFR    R        B 15 65REFFLD(PRFC)                                      CGL029
+     A            SACOFR        10   B 15 65
+     A**End of change CGL029
+     A                                      OVRDTA
+     A N85                                  DSPATR(UL HI)
+     A  85                                  DSPATR(RI PC)
+     A                                 23  1'F3=Exit   F12=Previous'
+      *                                              End   /CAC001/
+     A*/COPY WNCPYSRC,AKH00128
+      ** Start of change CAS001
+     A          R AKEYNPV
+      *
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+     A                                  6 15'Unrealised Profit NPV Account.....-
+     A                                      ..............:'
+     A**Start of change CGL029
+     A**********  SUPAC          4A  B  6 65OVRDTA                                            CGL029
+     A            SUPAC         10A  B  6 65OVRDTA
+     A**End of change CGL029
+     A N86                                  DSPATR(UL HI)
+     A  86                                  DSPATR(RI PC)
+      *
+     A                                  7 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SUPPR          1A  B  7 65OVRDTA
+     A N87                                  DSPATR(UL HI)
+     A  87                                  DSPATR(RI PC)
+      *
+     A                                  8 23'Income/Equity Account.............-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SIEAC          4A  B  8 65OVRDTA                                            CGL029
+     A            SIEAC         10A  B  8 65OVRDTA
+     A**End of change CGL029
+     A N88                                  DSPATR(UL HI)
+     A  88                                  DSPATR(RI PC)
+      *
+     A                                 10 15'Unrealised Loss NPV Account.......-
+     A                                      ..............:'
+     A**Start of change CGL029
+     A**********  SULAC          4A  B 10 65OVRDTA                                            CGL029
+     A            SULAC         10A  B 10 65OVRDTA
+     A**End of change CGL029
+     A N89                                  DSPATR(UL HI)
+     A  89                                  DSPATR(RI PC)
+      *
+     A                                 11 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SULPR          1A  B 11 65OVRDTA
+     A N90                                  DSPATR(UL HI)
+     A  90                                  DSPATR(RI PC)
+      *
+     A                                 12 23'Expense/Equity Account............-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SEEAC          4A  B 12 65OVRDTA                                            CGL029
+     A            SEEAC         10A  B 12 65OVRDTA
+     A**End of change CGL029
+     A N91                                  DSPATR(UL HI)
+     A  91                                  DSPATR(RI PC)
+      *
+      **Start of change CAS009
+      *
+     A                                 14 15'Unrealised Profit Amortised Cost A-
+     A                                      ccount........:'
+     A**Start of change CAS011
+     A**********  UPACAC         4A  B 14 65OVRDTA                                            CAS011
+     A            UPACAC        10A  B 14 65OVRDTA
+     A**End of change CAS011
+     A N72                                  DSPATR(UL HI)
+     A  72                                  DSPATR(RI PC)
+      *
+     A                                 15 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            UPACPR         1A  B 15 65OVRDTA
+     A N73                                  DSPATR(UL HI)
+     A  73                                  DSPATR(RI PC)
+      *
+     A                                 16 23'Income/Equity Account.............-
+     A                                      ......:'
+     A**Start of change CAS011
+     A**********  UPACIE         4A  B 16 65OVRDTA                                            CAS011
+     A            UPACIE        10A  B 16 65OVRDTA
+     A**End of change CAS011
+     A N74                                  DSPATR(UL HI)
+     A  74                                  DSPATR(RI PC)
+      *
+     A                                 18 15'Unrealised Loss Amortised Cost A-
+     A                                      ccount..........:'
+     A**Start of change CAS011
+     A**********  ULACAC         4A  B 18 65OVRDTA                                            CAS011
+     A            ULACAC        10A  B 18 65OVRDTA
+     A**End of change CAS011
+     A N75                                  DSPATR(UL HI)
+     A  75                                  DSPATR(RI PC)
+      *
+     A                                 19 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            ULACPR         1A  B 19 65OVRDTA
+     A N76                                  DSPATR(UL HI)
+     A  76                                  DSPATR(RI PC)
+      *
+     A                                 20 23'Expense/Equity Account............-
+     A                                      ......:'
+     A**Start of change CAS011
+     A**********  ULACEE         4A  B 20 65OVRDTA                                            CAS011
+     A            ULACEE        10A  B 20 65OVRDTA
+     A**End of change CAS011
+     A N77                                  DSPATR(UL HI)
+     A  77                                  DSPATR(RI PC)
+      *
+      **End of change CAS009
+      *
+     A                                 23  1'F3=Exit   F12=Previous'
+      ** End of change CAS001
+      *
+     A**Start of change CGL031
+     A          R AKEYTAX
+      *
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change 232543
+     A**********                        6  9'EU Witholding Tax Countries.:'                   232543
+     A                                  6  9'EU Tax Countries of Residence:'
+     A**End of change 232543
+      *
+     A**Start of change 232543
+     A**********  SWTC1          2A  B  6 39OVRDTA                                            232543
+     A            SWTC1          2A  B  6 40OVRDTA
+     A**End of change 232543
+     A N86                                  DSPATR(UL HI)
+     A  86                                  DSPATR(RI PC)
+      *
+     A**Start of change 232543
+     A**********  SWTC2          2A  B  6 42OVRDTA                                            232543
+     A            SWTC2          2A  B  6 43OVRDTA
+     A**End of change 232543
+     A N87                                  DSPATR(UL HI)
+     A  87                                  DSPATR(RI PC)
+      *
+     A**Start of change 232543
+     A**********  SWTC3          2A  B  6 45OVRDTA                                            232543
+     A            SWTC3          2A  B  6 46OVRDTA
+     A**End of change 232543
+     A N88                                  DSPATR(UL HI)
+     A  88                                  DSPATR(RI PC)
+      *
+     A**Start of change 232543
+     A**********  SWTC4          2A  B  6 48OVRDTA                                            232543
+     A            SWTC4          2A  B  6 49OVRDTA
+     A**End of change 232543
+     A N89                                  DSPATR(UL HI)
+     A  89                                  DSPATR(RI PC)
+      *
+     A**Start of change 232543
+     A**********  SWTC5          2A  B  6 51OVRDTA                                            232543
+     A            SWTC5          2A  B  6 52OVRDTA
+     A**End of change 232543
+     A N90                                  DSPATR(UL HI)
+     A  90                                  DSPATR(RI PC)
+      *
+     A**Start of change 232543
+     A**********  SWTC6          2A  B  6 54OVRDTA                                            232543
+     A            SWTC6          2A  B  6 55OVRDTA
+     A**End of change 232543
+     A N91                                  DSPATR(UL HI)
+     A  91                                  DSPATR(RI PC)
+      *
+     A**Start of change 232543
+     A**********  SWTC7          2A  B  6 57OVRDTA                                            232543
+     A            SWTC7          2A  B  6 58OVRDTA
+     A**End of change 232543
+     A N92                                  DSPATR(UL HI)
+     A  92                                  DSPATR(RI PC)
+      *
+     A**Start of change 232543
+     A**********  SWTC8          2A  B  6 60OVRDTA                                            232543
+     A            SWTC8          2A  B  6 61OVRDTA
+     A**End of change 232543
+     A N93                                  DSPATR(UL HI)
+     A  93                                  DSPATR(RI PC)
+      *
+     A**Start of change 232543
+     A**********  SWTC9          2A  B  6 63OVRDTA                                            232543
+     A            SWTC9          2A  B  6 64OVRDTA
+     A**End of change 232543
+     A N94                                  DSPATR(UL HI)
+     A  94                                  DSPATR(RI PC)
+      *
+     A**Start of change 232543
+     A**********  SWTC10         2A  B  6 66OVRDTA                                            232543
+     A            SWTC10         2A  B  6 67OVRDTA
+     A**End of change 232543
+     A N95                                  DSPATR(UL HI)
+     A  95                                  DSPATR(RI PC)
+      *
+     A                                  8 10'Interest and Principal Repaid +
+     A                                      Together at Maturity?...:'
+     A            SIPRT          1A  B  8 66OVRDTA
+     A N96                                  DSPATR(UL HI)
+     A  96                                  DSPATR(RI PC)
+     A                                 23  1'F3=Exit   F12=Previous'
+     A**End of change CGL031
+      **Start of change CAS009
+      *
+     A          R AKEYFEA
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                                  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+      *
+     A                                 23  1'F3=Exit   F12=Previous'
+      **Start of change CAS011
+     A**********                        6  3'Linear'                                          CAS011
+     A**********                        7  3'Fee'                                             CAS011
+     A**********                        8  3'Codes:'                                          CAS011
+     A**********  LFC1           2A  B  7 10                                                  CAS011
+     A                                  5  3'Linear'
+     A                                  5 10'Fee'
+     A                                  6  3'Codes'
+     A            LFC1           2A  B  7  5
+      **End of change CAS011
+     A                                      OVRDTA
+     A N20                                  DSPATR(UL HI)
+     A  20                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LFC2           2A  B  8 10                                                  CAS011
+     A            LFC2           2A  B  8  5
+      **End of change CAS011
+     A                                      OVRDTA
+     A N21                                  DSPATR(UL HI)
+     A  21                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LFC3           2A  B  9 10                                                  CAS011
+     A            LFC3           2A  B  9  5
+      **End of change CAS011
+     A                                      OVRDTA
+     A N22                                  DSPATR(UL HI)
+     A  22                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LFC4           2A  B 10 10                                                  CAS011
+     A            LFC4           2A  B 10  5
+      **End of change CAS011
+     A                                      OVRDTA
+     A N23                                  DSPATR(UL HI)
+     A  23                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LFC5           2A  B 11 10                                                  CAS011
+     A            LFC5           2A  B 11  5
+      **End of change CAS011
+     A                                      OVRDTA
+     A N24                                  DSPATR(UL HI)
+     A  24                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********                        7 14'Income'                                          CAS011
+     A**********                        8 14'Account:'                                        CAS011
+     A                                  5 14'Income'
+     A                                  6 14'Account'
+     A**********  LIA1           4A  B  7 23                                                  CAS011
+     A            LIA1          10A  B  7 14
+      **End of change CAS011
+     A                                      OVRDTA
+     A N25                                  DSPATR(UL HI)
+     A  25                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LIA2           4A  B  8 23                                                  CAS011
+     A            LIA2          10A  B  8 14
+      **End of change CAS011
+     A                                      OVRDTA
+     A N26                                  DSPATR(UL HI)
+     A  26                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LIA3           4A  B  9 23                                                  CAS011
+     A            LIA3          10A  B  9 14
+      **End of change CAS011
+     A                                      OVRDTA
+     A N27                                  DSPATR(UL HI)
+     A  27                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LIA4           4A  B 10 23                                                  CAS011
+     A            LIA4          10A  B 10 14
+      **End of change CAS011
+     A                                      OVRDTA
+     A N28                                  DSPATR(UL HI)
+     A  28                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LIA5           4A  B 11 23                                                  CAS011
+     A            LIA5          10A  B 11 14
+      **End of change CAS011
+     A                                      OVRDTA
+     A N29                                  DSPATR(UL HI)
+     A  29                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********                        7 29'Amortisation'                                    CAS011
+     A**********                        8 29'Account:'                                        CAS011
+     A                                  5 31'Amortisation'
+     A                                  6 31'Account'
+     A**********  LMA1           4A  B  7 42                                                  CAS011
+     A            LMA1          10A  B  7 31
+      **End of change CAS011
+     A                                      OVRDTA
+     A N30                                  DSPATR(UL HI)
+     A  30                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LMA2           4A  B  8 42                                                  CAS011
+     A            LMA2          10A  B  8 31
+      **End of change CAS011
+     A                                      OVRDTA
+     A N31                                  DSPATR(UL HI)
+     A  31                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LMA3           4A  B  9 42                                                  CAS011
+     A            LMA3          10A  B  9 31
+      **End of change CAS011
+     A                                      OVRDTA
+     A N32                                  DSPATR(UL HI)
+     A  32                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LMA4           4A  B 10 42                                                  CAS011
+     A            LMA4          10A  B 10 31
+      **End of change CAS011
+     A                                      OVRDTA
+     A N33                                  DSPATR(UL HI)
+     A  33                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LMA5           4A  B 11 42                                                  CAS011
+     A            LMA5          10A  B 11 31
+      **End of change CAS011
+     A                                      OVRDTA
+     A N34                                  DSPATR(UL HI)
+     A  34                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********                        7 48'Accrual'                                         CAS011
+     A**********                        8 48'Account:'                                        CAS011
+     A                                  5 48'Accrual'
+     A                                  6 48'Account'
+     A**********  LAA1           4A  B  7 57                                                  CAS011
+     A            LAA1          10A  B  7 48
+      **End of change CAS011
+     A                                      OVRDTA
+     A N35                                  DSPATR(UL HI)
+     A  35                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LAA2           4A  B  8 57                                                  CAS011
+     A            LAA2          10A  B  8 48
+      **End of change CAS011
+     A                                      OVRDTA
+     A N36                                  DSPATR(UL HI)
+     A  36                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LAA3           4A  B  9 57                                                  CAS011
+     A            LAA3          10A  B  9 48
+      **End of change CAS011
+     A                                      OVRDTA
+     A N37                                  DSPATR(UL HI)
+     A  37                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LAA4           4A  B 10 57                                                  CAS011
+     A            LAA4          10A  B 10 48
+      **End of change CAS011
+     A                                      OVRDTA
+     A N38                                  DSPATR(UL HI)
+     A  38                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LAA5           4A  B 11 57                                                  CAS011
+     A            LAA5          10A  B 11 48
+      **End of change CAS011
+     A                                      OVRDTA
+     A N39                                  DSPATR(UL HI)
+     A  39                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********                        7 62'Posting Ref.:'                                   CAS011
+     A                                  6 62'Posting Ref.'
+     A**********  LPR1           1A  B  7 76                                                  CAS011
+     A            LPR1           1A  B  7 67
+      **End of change CAS011
+     A                                      OVRDTA
+     A N40                                  DSPATR(UL HI)
+     A  40                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LPR2           1A  B  8 76                                                  CAS011
+     A            LPR2           1A  B  8 67
+      **End of change CAS011
+     A                                      OVRDTA
+     A N41                                  DSPATR(UL HI)
+     A  41                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LPR3           1A  B  9 76                                                  CAS011
+     A            LPR3           1A  B  9 67
+      **End of change CAS011
+     A                                      OVRDTA
+     A N42                                  DSPATR(UL HI)
+     A  42                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LPR4           1A  B 10 76                                                  CAS011
+     A            LPR4           1A  B 10 67
+      **End of change CAS011
+     A                                      OVRDTA
+     A N43                                  DSPATR(UL HI)
+     A  43                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  LPR5           1A  B 11 76                                                  CAS011
+     A            LPR5           1A  B 11 67
+      **End of change CAS011
+     A                                      OVRDTA
+     A N44                                  DSPATR(UL HI)
+     A  44                                  DSPATR(RI PC)
+     A                                 12  3'Non-Linear'
+     A                                 13  3'Fee'
+      **Start of change CAS011
+     A**********                       14  3'Codes:'                                          CAS011
+     A                                 13  7'Codes'
+     A**********  NFC1           2A  B 13 10                                                  CAS011
+     A            NFC1           2A  B 14  5
+      **End of change CAS011
+     A                                      OVRDTA
+     A N45                                  DSPATR(UL HI)
+     A  45                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NFC2           2A  B 14 10                                                  CAS011
+     A            NFC2           2A  B 15  5
+      **End of change CAS011
+     A                                      OVRDTA
+     A N46                                  DSPATR(UL HI)
+     A  46                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NFC3           2A  B 15 10                                                  CAS011
+     A            NFC3           2A  B 16  5
+      **End of change CAS011
+     A                                      OVRDTA
+     A N47                                  DSPATR(UL HI)
+     A  47                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NFC4           2A  B 16 10                                                  CAS011
+     A            NFC4           2A  B 17  5
+      **End of change CAS011
+     A                                      OVRDTA
+     A N48                                  DSPATR(UL HI)
+     A  48                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NFC5           2A  B 17 10                                                  CAS011
+     A            NFC5           2A  B 18  5
+      **End of change CAS011
+     A                                      OVRDTA
+     A N49                                  DSPATR(UL HI)
+     A  49                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********                       13 14'Income'                                          CAS011
+     A**********                       14 14'Account:'                                        CAS011
+     A                                 12 14'Income'
+     A                                 13 14'Account'
+     A**********  NIA1           4A  B 13 23                                                  CAS011
+     A            NIA1          10A  B 14 14
+      **End of change CAS011
+     A                                      OVRDTA
+     A N50                                  DSPATR(UL HI)
+     A  50                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NIA2           4A  B 14 23                                                  CAS011
+     A            NIA2          10A  B 15 14
+      **End of change CAS011
+     A                                      OVRDTA
+     A N51                                  DSPATR(UL HI)
+     A  51                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NIA3           4A  B 15 23                                                  CAS011
+     A            NIA3          10A  B 16 14
+      **End of change CAS011
+     A                                      OVRDTA
+     A N52                                  DSPATR(UL HI)
+     A  52                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NIA4           4A  B 16 23                                                  CAS011
+     A            NIA4          10A  B 17 14
+      **End of change CAS011
+     A                                      OVRDTA
+     A N53                                  DSPATR(UL HI)
+     A  53                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NIA5           4A  B 17 23                                                  CAS011
+     A            NIA5          10A  B 18 14
+      **End of change CAS011
+     A                                      OVRDTA
+     A N54                                  DSPATR(UL HI)
+     A  54                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********                       13 29'Amortisation'                                    CAS011
+     A**********                       14 29'Account:'                                        CAS011
+     A                                 12 31'Amortisation'
+     A                                 13 31'Account'
+     A**********  NMA1           4A  B 13 42                                                  CAS011
+     A            NMA1          10A  B 14 31
+      **End of change CAS011
+     A                                      OVRDTA
+     A N55                                  DSPATR(UL HI)
+     A  55                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NMA2           4A  B 14 42                                                  CAS011
+     A            NMA2          10A  B 15 31
+      **End of change CAS011
+     A                                      OVRDTA
+     A N56                                  DSPATR(UL HI)
+     A  56                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NMA3           4A  B 15 42                                                  CAS011
+     A            NMA3          10A  B 16 31
+      **End of change CAS011
+     A                                      OVRDTA
+     A N57                                  DSPATR(UL HI)
+     A  57                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NMA4           4A  B 16 42                                                  CAS011
+     A            NMA4          10A  B 17 31
+      **End of change CAS011
+     A                                      OVRDTA
+     A N58                                  DSPATR(UL HI)
+     A  58                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NMA5           4A  B 17 42                                                  CAS011
+     A            NMA5          10A  B 18 31
+      **End of change CAS011
+     A                                      OVRDTA
+     A N59                                  DSPATR(UL HI)
+     A  59                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********                       13 62'Posting Ref.:'                                   CAS011
+     A                                 13 52'Posting Ref.:'
+     A**********  NPR1           1A  B 13 76                                                  CAS011
+     A            NPR1           1A  B 14 56
+      **End of change CAS011
+     A                                      OVRDTA
+     A N60                                  DSPATR(UL HI)
+     A  60                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NPR2           1A  B 14 76                                                  CAS011
+     A            NPR2           1A  B 15 56
+      **End of change CAS011
+     A                                      OVRDTA
+     A N61                                  DSPATR(UL HI)
+     A  61                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NPR3           1A  B 15 76                                                  CAS011
+     A            NPR3           1A  B 16 56
+      **End of change CAS011
+     A                                      OVRDTA
+     A N62                                  DSPATR(UL HI)
+     A  62                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NPR4           1A  B 16 76                                                  CAS011
+     A            NPR4           1A  B 17 56
+      **End of change CAS011
+     A                                      OVRDTA
+     A N63                                  DSPATR(UL HI)
+     A  63                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**********  NPR5           1A  B 17 76                                                  CAS011
+     A            NPR5           1A  B 18 56
+      **End of change CAS011
+     A                                      OVRDTA
+     A N64                                  DSPATR(UL HI)
+     A  64                                  DSPATR(RI PC)
+     A  78                             19 16'Discount Amortisation Account/Post-
+     A                                      ing Reference.:'
+      **Start of change CAS011
+     A**78******  DAAMAC         4A  B 19 66                                                  CAS011
+     A  78        DAAMAC        10A  B 19 66
+      **End of change CAS011
+     A                                      OVRDTA
+     A N65                                  DSPATR(UL HI)
+     A  65                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**78******  DAAPR1         1A  B 19 71                                                  CAS011
+     A  78        DAAPR1         1A  B 19 77
+      **End of change CAS011
+     A                                      OVRDTA
+     A N66                                  DSPATR(UL HI)
+     A  66                                  DSPATR(RI PC)
+     A  78                             20 26'Income Account....................-
+     A                                      ....:'
+      **Start of change CAS011
+     A**78********DAAINA         4A  B 20 66                                                  CAS011
+     A  78        DAAINA        10A  B 20 66
+      **End of change CAS011
+     A                                      OVRDTA
+     A N67                                  DSPATR(UL HI)
+     A  67                                  DSPATR(RI PC)
+     A  78                             21 16'Premium Amortisation Account/Posti-
+     A                                      ng Reference..:'
+      **Start of change CAS011
+     A**78******  PAAMAC         4A  B 21 66                                                  CAS011
+     A  78        PAAMAC        10A  B 21 66
+      **End of change CAS011
+     A                                      OVRDTA
+     A N68                                  DSPATR(UL HI)
+     A  68                                  DSPATR(RI PC)
+      **Start of change CAS011
+     A**78******  PAAPR1         1A  B 21 71                                                  CAS011
+     A  78        PAAPR1         1A  B 21 77
+      **End of change CAS011
+     A                                      OVRDTA
+     A N69                                  DSPATR(UL HI)
+     A  69                                  DSPATR(RI PC)
+     A  78                             22 26'Expense Account...................-
+     A                                      ....:'
+      **Start of change CAS011
+     A**78********PAAEXA         4A  B 22 66                                                  CAS011
+     A  78        PAAEXA        10A  B 22 66
+      **End of change CAS011
+     A                                      OVRDTA
+     A N70                                  DSPATR(UL HI)
+     A  70                                  DSPATR(RI PC)
+      *
+      **End of change CAS009
+      *
+      **Start of change CAS004
+      ** Hedge Accounting Account Keys
+     A          R AKEYHAC
+      *
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+      *
+     A                                  6 15'Effective Fair Value Hedge Profit -
+     A                                      Contra Account:'
+     A**Start of change CGL029
+     A**********  SEFVHP         4A  B  6 65OVRDTA                                            CGL029
+     A            SEFVHP        10A  B  6 65OVRDTA
+     A**End of change CGL029
+     A N86                                  DSPATR(UL HI)
+     A  86                                  DSPATR(RI PC)
+      *
+     A                                  7 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SFVPPR         1A  B  7 65OVRDTA
+     A N87                                  DSPATR(UL HI)
+     A  87                                  DSPATR(RI PC)
+      *
+     A                                  8 23'Other Income Account..............-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SOTINC         4A  B  8 65OVRDTA                                            CGL029
+     A            SOTINC        10A  B  8 65OVRDTA
+     A**End of change CGL029
+     A N88                                  DSPATR(UL HI)
+     A  88                                  DSPATR(RI PC)
+      *
+     A                                 10 15'Effective Fair Value Hedge Loss -
+     A                                      Contra Account..:'
+     A**Start of change CGL029
+     A**********  SEFVHL         4A  B 10 65OVRDTA                                            CGL029
+     A            SEFVHL        10A  B 10 65OVRDTA
+     A**End of change CGL029
+     A N89                                  DSPATR(UL HI)
+     A  89                                  DSPATR(RI PC)
+      *
+     A                                 11 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SFVLPR         1A  B 11 65OVRDTA
+     A N90                                  DSPATR(UL HI)
+     A  90                                  DSPATR(RI PC)
+      *
+     A                                 12 23'Other Expense Account.............-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SOTEXP         4A  B 12 65OVRDTA                                            CGL029
+     A            SOTEXP        10A  B 12 65OVRDTA
+     A**End of change CGL029
+     A N91                                  DSPATR(UL HI)
+     A  91                                  DSPATR(RI PC)
+      *
+     A                                 14 15'Effective Cash Flow Hedge Profit -
+     A                                      Contra Account.:'
+     A**Start of change CGL029
+     A**********  SECFHP         4A  B 14 65OVRDTA                                            CGL029
+     A            SECFHP        10A  B 14 65OVRDTA
+     A**End of change CGL029
+     A N92                                  DSPATR(UL HI)
+     A  92                                  DSPATR(RI PC)
+      *
+     A                                 15 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SCFPPR         1A  B 15 65OVRDTA
+     A N93                                  DSPATR(UL HI)
+     A  93                                  DSPATR(RI PC)
+      *
+     A                                 16 23'Other Comprehensive Income Account-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SOCOMP         4A  B 16 65OVRDTA                                            CGL029
+     A            SOCOMP        10A  B 16 65OVRDTA
+     A**End of change CGL029
+     A N94                                  DSPATR(UL HI)
+     A  94                                  DSPATR(RI PC)
+      *
+     A                                 18 15'Effective Cash Flow Hedge Loss -
+     A                                      Contra Account...:'
+     A**Start of change CGL029
+     A**********  SECFHL         4A  B 18 65OVRDTA                                            CGL029
+     A            SECFHL        10A  B 18 65OVRDTA
+     A**End of change CGL029
+     A N95                                  DSPATR(UL HI)
+     A  95                                  DSPATR(RI PC)
+      *
+     A                                 19 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SCFLPR         1A  B 19 65OVRDTA
+     A N96                                  DSPATR(UL HI)
+     A  96                                  DSPATR(RI PC)
+      *
+     A                                 20 23'Other Comprehensive Income Account-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SOCOML         4A  B 20 65OVRDTA                                            CGL029
+     A            SOCOML        10A  B 20 65OVRDTA
+     A**End of change CGL029
+     A N97                                  DSPATR(UL HI)
+     A  97                                  DSPATR(RI PC)
+      *
+     A                                 23  1'F3=Exit   F12=Previous'
+      *
+      ** Hedge Accounting Account Keys for 'CX' Deal Type
+      *
+      ** Effective
+      *
+     A          R AKEYECX
+      *
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+      *
+     A                                  6 15'Effective Fair Value Hedge Profit -
+     A                                      Contra Account:'
+     A**Start of change CGL029
+     A**********  SEFVHP         4A  B  6 65OVRDTA                                            CGL029
+     A            SEFVHP        10A  B  6 65OVRDTA
+     A**End of change CGL029
+     A N86                                  DSPATR(UL HI)
+     A  86                                  DSPATR(RI PC)
+      *
+     A                                  7 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SEFVRP         1A  B  7 65OVRDTA
+     A N87                                  DSPATR(UL HI)
+     A  87                                  DSPATR(RI PC)
+      *
+     A                                  8 23'Hedge Profit Account..............-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SEFVAP         4A  B  8 65OVRDTA                                            CGL029
+     A            SEFVAP        10A  B  8 65OVRDTA
+     A**End of change CGL029
+     A N88                                  DSPATR(UL HI)
+     A  88                                  DSPATR(RI PC)
+      *
+     A                                 10 15'Effective Fair Value Hedge Loss -
+     A                                      Contra Account..:'
+     A**Start of change CGL029
+     A**********  SEFVHL         4A  B 10 65OVRDTA                                            CGL029
+     A            SEFVHL        10A  B 10 65OVRDTA
+     A**End of change CGL029
+     A N89                                  DSPATR(UL HI)
+     A  89                                  DSPATR(RI PC)
+      *
+     A                                 11 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SEFVRL         1A  B 11 65OVRDTA
+     A N90                                  DSPATR(UL HI)
+     A  90                                  DSPATR(RI PC)
+      *
+     A                                 12 23'Hedge Loss Account................-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SEFVAL         4A  B 12 65OVRDTA                                            CGL029
+     A            SEFVAL        10A  B 12 65OVRDTA
+     A**End of change CGL029
+     A N91                                  DSPATR(UL HI)
+     A  91                                  DSPATR(RI PC)
+      *
+     A                                 14 15'Effective Cash Flow Hedge Profit -
+     A                                      Contra Account.:'
+     A**Start of change CGL029
+     A**********  SECFHP         4A  B 14 65OVRDTA                                            CGL029
+     A            SECFHP        10A  B 14 65OVRDTA
+     A**End of change CGL029
+     A N92                                  DSPATR(UL HI)
+     A  92                                  DSPATR(RI PC)
+      *
+     A                                 15 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SECFRP         1A  B 15 65OVRDTA
+     A N93                                  DSPATR(UL HI)
+     A  93                                  DSPATR(RI PC)
+      *
+     A                                 16 23'Other Comprehensive Income Account-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SECFAP         4A  B 16 65OVRDTA                                            CGL029
+     A            SECFAP        10A  B 16 65OVRDTA
+     A**End of change CGL029
+     A N94                                  DSPATR(UL HI)
+     A  94                                  DSPATR(RI PC)
+      *
+     A                                 18 15'Effective Cash Flow Hedge Loss -
+     A                                      Contra Account...:'
+     A**Start of change CGL029
+     A**********  SECFHL         4A  B 18 65OVRDTA                                            CGL029
+     A            SECFHL        10A  B 18 65OVRDTA
+     A**End of change CGL029
+     A N95                                  DSPATR(UL HI)
+     A  95                                  DSPATR(RI PC)
+      *
+     A                                 19 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SECFRL         1A  B 19 65OVRDTA
+     A N96                                  DSPATR(UL HI)
+     A  96                                  DSPATR(RI PC)
+      *
+     A                                 20 23'Other Comprehensive Income Account-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SECFAL         4A  B 20 65OVRDTA                                            CGL029
+     A            SECFAL        10A  B 20 65OVRDTA
+     A**End of change CGL029
+     A N97                                  DSPATR(UL HI)
+     A  97                                  DSPATR(RI PC)
+      *
+     A                                 23  1'F3=Exit   F12=Previous'
+      *
+      ** Ineffective
+      *
+     A          R AKEYICX
+      *
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+      *
+     A                                  6 13'Ineffective Fair Value Hedge -
+     A                                      Profit Contra Account:'
+     A**Start of change CGL029
+     A**********  SIFVHP         4A  B  6 65OVRDTA                                            CGL029
+     A            SIFVHP        10A  B  6 65OVRDTA
+     A**End of change CGL029
+     A N86                                  DSPATR(UL HI)
+     A  86                                  DSPATR(RI PC)
+      *
+     A                                  7 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SIFVRP         1A  B  7 65OVRDTA
+     A N87                                  DSPATR(UL HI)
+     A  87                                  DSPATR(RI PC)
+      *
+     A                                  8 23'Trading Profit Account............-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SIFVAP         4A  B  8 65OVRDTA                                            CGL029
+     A            SIFVAP        10A  B  8 65OVRDTA
+     A**End of change CGL029
+     A N88                                  DSPATR(UL HI)
+     A  88                                  DSPATR(RI PC)
+      *
+     A                                 10 13'Ineffective Fair Value Hedge Loss -
+     A                                      Contra Account..:'
+     A**Start of change CGL029
+     A**********  SIFVHL         4A  B 10 65OVRDTA                                            CGL029
+     A            SIFVHL        10A  B 10 65OVRDTA
+     A**End of change CGL029
+     A N89                                  DSPATR(UL HI)
+     A  89                                  DSPATR(RI PC)
+      *
+     A                                 11 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SIFVRL         1A  B 11 65OVRDTA
+     A N90                                  DSPATR(UL HI)
+     A  90                                  DSPATR(RI PC)
+      *
+     A                                 12 23'Trading Loss Account..............-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SIFVAL         4A  B 12 65OVRDTA                                            CGL029
+     A            SIFVAL        10A  B 12 65OVRDTA
+     A**End of change CGL029
+     A N91                                  DSPATR(UL HI)
+     A  91                                  DSPATR(RI PC)
+      *
+     A                                 14 13'Ineffective Cash Flow Hedge -
+     A                                      Profit Contra Account.:'
+     A**Start of change CGL029
+     A**********  SICFHP         4A  B 14 65OVRDTA                                            CGL029
+     A            SICFHP        10A  B 14 65OVRDTA
+     A**End of change CGL029
+     A N92                                  DSPATR(UL HI)
+     A  92                                  DSPATR(RI PC)
+      *
+     A                                 15 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SICFRP         1A  B 15 65OVRDTA
+     A N93                                  DSPATR(UL HI)
+     A  93                                  DSPATR(RI PC)
+      *
+     A                                 16 23'Trading Profit Account............-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SICFAP         4A  B 16 65OVRDTA                                            CGL029
+     A            SICFAP        10A  B 16 65OVRDTA
+     A**End of change CGL029
+     A N94                                  DSPATR(UL HI)
+     A  94                                  DSPATR(RI PC)
+      *
+     A                                 18 13'Ineffective Cash Flow Hedge Loss -
+     A                                      Contra Account...:'
+     A**Start of change CGL029
+     A**********  SICFHL         4A  B 18 65OVRDTA                                            CGL029
+     A            SICFHL        10A  B 18 65OVRDTA
+     A**End of change CGL029
+     A N95                                  DSPATR(UL HI)
+     A  95                                  DSPATR(RI PC)
+      *
+     A                                 19 23'Posting Reference 1 or 3..........-
+     A                                      ......:'
+     A            SICFRL         1A  B 19 65OVRDTA
+     A N96                                  DSPATR(UL HI)
+     A  96                                  DSPATR(RI PC)
+      *
+     A                                 20 23'Trading Loss Account..............-
+     A                                      ......:'
+     A**Start of change CGL029
+     A**********  SICFAL         4A  B 20 65OVRDTA                                            CGL029
+     A            SICFAL        10A  B 20 65OVRDTA
+     A**End of change CGL029
+     A N97                                  DSPATR(UL HI)
+     A  97                                  DSPATR(RI PC)
+      *
+     A                                 23  1'F3=Exit   F12=Previous'
+      **End of change CAS004
+      **Start of change CAS005
+     A          R AKEYUCX
+      *
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      CF12(12 'Previous')
+     A            USRID         10A  O  1  2
+     A                                  1 13'AK0020'
+     A            RUNA           7A  O  1 72
+     A            WSID          10A  O  2  2
+     A                                  2 24'Dealing Account Key Generation'
+     A                                      DSPATR(HI)
+     A                               O  2 71TIME
+     A                                      EDTWRD('  :  :  ')
+     A                                  4  4'Deal Type.........:'
+     A            TYPE           2A  O  4 24DSPATR(HI)
+     A                                  4 31'Deal Sub Type.....:'
+     A            STYP           2A  O  4 51DSPATR(HI)
+     A**Start of change CDL038
+     A  26                              4 60'Class.........:'                                 CDL038
+     A            CLAS           4A  O  4 76DSPATR(HI)                                        CDL038
+     A**End of change CDL038
+      *
+     A                                  6 10'Unrealised Fair Value Revalued -
+     A                                      Profit Contra Account.:'
+      **Start of change CAS010
+     A**********  SUFVRP         4A  B  6 65OVRDTA                                            CAS010
+     A            SUFVRP        10A  B  6 65OVRDTA
+      **End of change CAS010
+     A N86                                  DSPATR(UL HI)
+     A  86                                  DSPATR(RI PC)
+      *
+     A                                  7 18'Posting Reference 1 or 3.......-
+     A                                      ..............:'
+     A            SUVPPR         1A  B  7 65OVRDTA
+     A N87                                  DSPATR(UL HI)
+     A  87                                  DSPATR(RI PC)
+      *
+     A                                  8 18'Unrealised Fair Value Revalued -
+     A                                      Profit Account:'
+      **Start of change CAS010
+     A**********  SUFVPA         4A  B  8 65OVRDTA                                            CAS010
+     A            SUFVPA        10A  B  8 65OVRDTA
+      **End of change CAS010
+     A N88                                  DSPATR(UL HI)
+     A  88                                  DSPATR(RI PC)
+      *
+     A                                 10 10'Unrealised Fair Value Revalued -
+     A                                      Loss Contra Account...:'
+      **Start of change CAS010
+     A**********  SUFVRL         4A  B 10 65OVRDTA                                            CAS010
+     A            SUFVRL        10A  B 10 65OVRDTA
+      **End of change CAS010
+     A N89                                  DSPATR(UL HI)
+     A  89                                  DSPATR(RI PC)
+      *
+     A                                 11 18'Posting Reference 1 or 3.......-
+     A                                      ..............:'
+     A            SUVLPR         1A  B 11 65OVRDTA
+     A N90                                  DSPATR(UL HI)
+     A  90                                  DSPATR(RI PC)
+      *
+     A                                 12 18'Unrealised Fair Value Revalued -
+     A                                      Loss Account..:'
+      **Start of change CAS010
+     A**********  SUFVLA         4A  B 12 65OVRDTA                                            CAS010
+     A            SUFVLA        10A  B 12 65OVRDTA
+      **End of change CAS010
+     A N91                                  DSPATR(UL HI)
+     A  91                                  DSPATR(RI PC)
+      *
+     A                                 14 10'Unrealised Cash Flow Revalued -
+     A                                      Profit Contra Account..:'
+      **Start of change CAS010
+     A**********  SUCFRP         4A  B 14 65OVRDTA                                            CAS010
+     A            SUCFRP        10A  B 14 65OVRDTA
+      **End of change CAS010
+     A N92                                  DSPATR(UL HI)
+     A  92                                  DSPATR(RI PC)
+      *
+     A                                 15 18'Posting Reference 1 or 3......-
+     A                                      ...............:'
+     A            SUFPPR         1A  B 15 65OVRDTA
+     A N93                                  DSPATR(UL HI)
+     A  93                                  DSPATR(RI PC)
+      *
+     A                                 16 18'Unrealised Cash Flow Revalued -
+     A                                      Profit Account.:'
+      **Start of change CAS010
+     A**********  SUCFPA         4A  B 16 65OVRDTA                                            CAS010
+     A            SUCFPA        10A  B 16 65OVRDTA
+      **End of change CAS010
+     A N94                                  DSPATR(UL HI)
+     A  94                                  DSPATR(RI PC)
+      *
+     A                                 18 10'Unrealised Cash Flow Revalued -
+     A                                      Loss Contra Account....:'
+      **Start of change CAS010
+     A**********  SUCFRL         4A  B 18 65OVRDTA                                            CAS010
+     A            SUCFRL        10A  B 18 65OVRDTA
+      **End of change CAS010
+     A N95                                  DSPATR(UL HI)
+     A  95                                  DSPATR(RI PC)
+      *
+     A                                 19 18'Posting Reference 1 or 3......-
+     A                                      ...............:'
+     A            SUFLPR         1A  B 19 65OVRDTA
+     A N96                                  DSPATR(UL HI)
+     A  96                                  DSPATR(RI PC)
+      *
+     A                                 20 18'Unrealised Cash Flow Revalued -
+     A                                      Loss Account...:'
+      **Start of change CAS010
+     A**********  SUCFLA         4A  B 20 65OVRDTA                                            CAS010
+     A            SUCFLA        10A  B 20 65OVRDTA
+      **End of change CAS010
+     A N97                                  DSPATR(UL HI)
+     A  97                                  DSPATR(RI PC)
+      *
+     A                                 23  1'F3=Exit   F12=Previous'
+      **End of change CAS005
+     A*
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            SPGMQ                     SFLPGMQ
+     A*
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A                                      OVERLAY
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  27
+     AON27                                  SFLEND
+     A            SPGMQ                     SFLPGMQ

@@ -1,0 +1,50 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Set up access path maintenance')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC022001 - Midas GL Set up access path maintenance         */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CCB016A *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB016A - COB Restructure                                   */
+/*                 CCB016 (Change Logical File Maintenance)          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&APOST) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&EODPO) TYPE(*DEC) LEN(10 0)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             RTVMBRD    FILE(APOSTPD) NBRCURRCD(&APOST)
+             RTVMBRD    FILE(EODPOPD) NBRCURRCD(&EODPO)
+             CHGVAR     VAR(&EODPO) VALUE(&EODPO * 11)
+ 
+             IF         COND(&EODPO < &APOST) THEN(DO)
+                CHGDTAARA  DTAARA(GLSTAT (90 10)) VALUE(APOSTPD)
+             ENDDO
+             ELSE       CMD(DO)
+                CHGDTAARA  DTAARA(GLSTAT (90 10)) VALUE(GLACPHPD)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Program GLC022001 ended abnormally.') +
+                          TOMSGQ(MOPERQ)
+ 
+END:
+             ENDPGM

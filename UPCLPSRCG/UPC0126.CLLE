@@ -1,0 +1,346 @@
+/*********************************************************************/
+/*X*I****OVRDBF*FILE(UPJOBDQT)*TOFILE(QADSPOBJ)***********************/ /*             */ /*CPK025*/
+/*XBI    OVRDBF FILE(UPJOBDQT) TOFILE(UPOBJDTPD)                     */                   /*CPK025*/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP CHGJOBDLBL CPP')                             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC0126 - Change job descriptions' library lists            */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CPK025             Date 21Jul06              */
+/*       Prev Amend No. CUP025             Date 01Dec03              */
+/*                      CSC017  *CREATE    Date 25Feb03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CPK025 - MidasPlus 1.3 packaging.  Use core templates for   */
+/*                IBM outfiles to prevent problems with operating    */
+/*                system upgrades.                                   */
+/*       CUP025 - MidasPlus Bridge changes.                          */
+/*       CSC017 - Changes for 250 library list                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYSPREFIX &MODE)
+ 
+             DCL        VAR(&SYSPREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(2800)
+             DCL        VAR(&MIDASICLBL) TYPE(*CHAR) LEN(2750)
+             DCL        VAR(&JOBDLIBL) TYPE(*CHAR) LEN(2750)
+             DCL        VAR(&JOBDLIBLN) TYPE(*CHAR) LEN(2750)
+             DCL        VAR(&DTAQLEN) TYPE(*DEC) LEN(5 0) VALUE(10)
+             DCL        VAR(&WAIT) TYPE(*DEC) LEN(5 0) VALUE(0)
+             DCL        VAR(&HEADING) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&EXITCODE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&UP0127RTN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NOSMSETULF) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&LIBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&START) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(10)                                   /*CUP025*/
+             DCL        VAR(&DFTJOBD) TYPE(*CHAR) LEN(10)                                 /*CUP025*/
+             DCL        VAR(&JOBDFILE) TYPE(*CHAR) LEN(10)                                /*CUP025*/
+ 
+             DCLF       FILE(UPJOBDQT)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2003')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Retrieve data area to see if job descriptions apply to a zone or */                    /*CUP025*/
+/*  Global layer.                                                   */                    /*CUP025*/
+             RTVDTAARA  DTAARA(QTEMP/LAYER) RTNVAR(&LAYER)                                /*CUP025*/
+ 
+             IF         COND(&LAYER *EQ 'Z') THEN(DO)                                     /*CUP025*/
+                CHGVAR     VAR(&XLIB) VALUE(&SYSPREFIX *TCAT 'XLIB')                      /*CUP025*/
+                CHGVAR     VAR(&DFTJOBD) VALUE('MIDASIC')                                 /*CUP025*/
+                CHGVAR     VAR(&JOBDFILE) VALUE('SMSETULF')                               /*CUP025*/
+             ENDDO                                                                        /*CUP025*/
+             ELSE       CMD(DO)                                                           /*CUP025*/
+                CHGVAR     VAR(&XLIB) VALUE(&SYSPREFIX *TCAT 'GXLIB')                     /*CUP025*/
+                CHGVAR     VAR(&DFTJOBD) VALUE('GPBATCH')                                 /*CUP025*/
+                CHGVAR     VAR(&JOBDFILE) VALUE('SMSETULK')                               /*CUP025*/
+                OVRDBF     FILE(SMSETULF) TOFILE(SMSETULK) OVRSCOPE(*JOB)                 /*CUP025*/
+             ENDDO                                                                        /*CUP025*/
+ 
+/* Check that SMSETULF exists in the library list.  If it does not */
+/*  then all job descriptions will be treated as non-core. */
+/**********  CHKOBJ     OBJ(SMSETULF) OBJTYPE(*FILE)                                   */ /*CUP025*/
+             CHKOBJ     OBJ(&JOBDFILE) OBJTYPE(*FILE)                                     /*CUP025*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&NOSMSETULF) VALUE(Y)
+             ENDDO
+ 
+/**********  CHGVAR     VAR(&XLIB) VALUE(&SYSPREFIX *TCAT 'XLIB')                      */ /*CUP025*/
+ 
+/* Create data queue for storage of "old" library list. */
+             DLTDTAQ    DTAQ(QTEMP/CHGJOBDO)
+             MONMSG     MSGID(CPF2105)
+             CRTDTAQ    DTAQ(QTEMP/CHGJOBDO) MAXLEN(10) SEQ(*FIFO) +
+                          TEXT('Temporary data queue for CHGJOBDLBL')
+ 
+/* Create data queue for storage of "new" library list. */
+             DLTDTAQ    DTAQ(QTEMP/CHGJOBDN)
+             MONMSG     MSGID(CPF2105)
+             CRTDTAQ    DTAQ(QTEMP/CHGJOBDN) MAXLEN(10) SEQ(*FIFO) +
+                          TEXT('Temporary data queue for CHGJOBDLBL')
+ 
+/* Check to find which job description to access first. */
+             IF         COND(&MODE *NE '*CORE' *AND &MODE *NE '*ALL' +
+                          *AND &MODE *NE '*ONEBYONE') THEN(DO)
+                CHGVAR     VAR(&JOBD) VALUE(&MODE)
+                RTVJOBD    JOBD(&XLIB/&MODE) INLLIBL(&JOBDLIBL)
+             ENDDO
+             ELSE       CMD(DO)
+/**********     CHGVAR     VAR(&JOBD) VALUE('MIDASIC')                                 */ /*CUP025*/
+/**********     RTVJOBD    JOBD(&XLIB/MIDASIC) INLLIBL(&JOBDLIBL)                      */ /*CUP025*/
+                CHGVAR     VAR(&JOBD) VALUE(&DFTJOBD)                                     /*CUP025*/
+                RTVJOBD    JOBD(&XLIB/&DFTJOBD) INLLIBL(&JOBDLIBL)                        /*CUP025*/
+             ENDDO
+ 
+/* Send library names to data queue. */
+             CHGVAR     VAR(&START) VALUE(1)
+LIBLLOOP:
+             CHGVAR     VAR(&LIBNAME) VALUE(%SST(&JOBDLIBL &START 10))
+             IF         COND(&LIBNAME *EQ '          ') THEN(DO)
+                GOTO       CMDLBL(FIRSTEDIT)
+             ENDDO
+             CALL       PGM(QSNDDTAQ) PARM('CHGJOBDO' 'QTEMP' +
+                          &DTAQLEN &LIBNAME)
+             CHGVAR     VAR(&START) VALUE(&START + 11)
+             GOTO       CMDLBL(LIBLLOOP)
+ 
+FIRSTEDIT:
+/* Call program to edit job description library list. */
+/**********  IF         COND(&JOBD *NE 'MIDASIC') THEN(DO)                             */ /*CUP025*/
+             IF         COND(&JOBD *NE &DFTJOBD) THEN(DO)                                 /*CUP025*/
+                CHGVAR     VAR(&HEADING) VALUE(&MODE)
+             ENDDO
+             ELSE       CMD(DO)
+/**********     CHGVAR     VAR(&HEADING) VALUE('MIDASIC')                              */ /*CUP025*/
+                CHGVAR     VAR(&HEADING) VALUE(&DFTJOBD)                                  /*CUP025*/
+             ENDDO
+             CALL       PGM(UP0126) PARM(&HEADING &EXITCODE)
+             IF         COND(&EXITCODE *EQ 'Exit' *OR &EXITCODE *EQ +
+                          'Cancel') THEN(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Receive library names from data queue and then change job description. */
+             CHGVAR     VAR(&JOBDLIBLN) VALUE(' ')
+             CHGVAR     VAR(&START) VALUE(1)
+QRCVDTAQ1:
+             CALL       PGM(QRCVDTAQ) PARM('CHGJOBDN' 'QTEMP' +
+                          &DTAQLEN &LIBNAME &WAIT)
+             IF         COND(&DTAQLEN *EQ 0) THEN(DO)
+                GOTO       CMDLBL(CHGJOBD1)
+             ENDDO
+             CHGVAR     VAR(%SST(&JOBDLIBLN &START 10)) VALUE(&LIBNAME)
+             CHGVAR     VAR(&START) VALUE(&START + 11)
+             GOTO       CMDLBL(QRCVDTAQ1)
+CHGJOBD1:
+             CHGVAR     VAR(&CMD) VALUE(' ')
+             CHGVAR     VAR(&CMD) VALUE('CHGJOBD JOBD(' *TCAT &XLIB +
+                          *TCAT '/' *TCAT &JOBD *TCAT ') INLLIBL(' +
+                          *TCAT &JOBDLIBLN *TCAT ')')
+             CHGVAR     VAR(&MIDASICLBL) VALUE(&JOBDLIBLN)
+             CALL       PGM(QCMDEXC) PARM(&CMD 2800)
+ 
+/* If just changing a named job description then end program now. */
+/**********  IF         COND(&JOBD *NE 'MIDASIC') THEN(DO)                             */ /*CUP025*/
+             IF         COND(&JOBD *NE &DFTJOBD) THEN(DO)                                 /*CUP025*/
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Get list of all job descriptions in the systems XLIB. */
+             DLTF       FILE(QTEMP/UPJOBDQT)                                              /*CPK025*/
+             MONMSG     MSGID(CPF0000)                                                    /*CPK025*/
+             CPYF       FROMFILE(UPOBJDTPD) TOFILE(QTEMP/UPJOBDQT) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                                  /*CPK025*/
+             DSPOBJD    OBJ(&XLIB/*ALL) OBJTYPE(*JOBD) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/UPJOBDQT)
+ 
+NEXTJOBD:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/* *ALL mode */
+             IF         COND(&MODE *EQ '*ALL') THEN(DO)
+/**********     IF         COND(&ODOBNM *NE 'MIDASIC') THEN(DO)                        */ /*CUP025*/
+                IF         COND(&ODOBNM *NE &DFTJOBD) THEN(DO)                            /*CUP025*/
+                   CHGVAR     VAR(&CMD) VALUE(' ')
+                   CHGVAR     VAR(&CMD) VALUE('CHGJOBD JOBD(' *TCAT &XLIB +
+                                *TCAT '/' *TCAT &ODOBNM *TCAT ') +
+                                INLLIBL(' *TCAT &MIDASICLBL *TCAT ')')
+                   CALL       PGM(QCMDEXC) PARM(&CMD 2800)
+                   GOTO       CMDLBL(NEXTJOBD)
+                ENDDO
+             ENDDO
+ 
+/* *CORE mode */
+             CHGVAR     VAR(&UP0127RTN) VALUE(N)
+             CALL       PGM(QCLRDTAQ) PARM('CHGJOBDO' 'QTEMP     ')
+             IF         COND(&MODE *EQ '*CORE') THEN(DO)
+/**********     IF         COND(&ODOBNM *NE 'MIDASIC') THEN(DO)                        */ /*CUP025*/
+                IF         COND(&ODOBNM *NE &DFTJOBD) THEN(DO)                            /*CUP025*/
+/* Call program to see if job description is a core library list. */
+                   IF         COND(&NOSMSETULF *EQ 'N') THEN(DO)
+                      CALL       PGM(UP0127) PARM(&ODOBNM &UP0127RTN)
+                   ENDDO
+                   IF         COND(&UP0127RTN *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&CMD) VALUE(' ')
+                      CHGVAR     VAR(&CMD) VALUE('CHGJOBD JOBD(' *TCAT &XLIB +
+                                   *TCAT '/' *TCAT &ODOBNM *TCAT ') +
+                                   INLLIBL(' *TCAT &MIDASICLBL *TCAT ')')
+                      CALL       PGM(QCMDEXC) PARM(&CMD 2800)
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(&JOBDLIBL) VALUE(' ')
+                      RTVJOBD    JOBD(&XLIB/&ODOBNM) INLLIBL(&JOBDLIBL)
+                      CHGVAR     VAR(&START) VALUE(1)
+                      CHGVAR     VAR(&DTAQLEN) VALUE(10)
+LIBLLOOP2:
+                      CHGVAR     VAR(&LIBNAME) VALUE(%SST(&JOBDLIBL &START 10))
+                      IF         COND(&LIBNAME *EQ '          ') THEN(DO)
+                         GOTO       CMDLBL(EDITCORE)
+                      ENDDO
+                      CALL       PGM(QSNDDTAQ) PARM('CHGJOBDO' 'QTEMP' +
+                                   &DTAQLEN &LIBNAME)
+                      CHGVAR     VAR(&START) VALUE(&START + 11)
+                      GOTO       CMDLBL(LIBLLOOP2)
+EDITCORE:
+                      CHGVAR     VAR(&HEADING) VALUE(&ODOBNM *BCAT '- not a +
+                                   core job description')
+                      CALL       PGM(UP0126) PARM(&HEADING &EXITCODE)
+                      IF         COND(&EXITCODE *EQ 'Exit') THEN(DO)
+                         GOTO       CMDLBL(ENDPGM)
+                      ENDDO
+                      IF         COND(&EXITCODE *EQ 'Cancel') THEN(DO)
+                         GOTO       CMDLBL(NEXTJOBD)
+                      ENDDO
+/* Receive library names from data queue and then change job description. */
+                      CHGVAR     VAR(&JOBDLIBLN) VALUE(' ')
+                      CHGVAR     VAR(&START) VALUE(1)
+QRCVDTAQ2:
+                      CALL       PGM(QRCVDTAQ) PARM('CHGJOBDN' 'QTEMP' +
+                                   &DTAQLEN &LIBNAME &WAIT)
+                      IF         COND(&DTAQLEN *EQ 0) THEN(DO)
+                         GOTO       CMDLBL(CHGJOBD2)
+                      ENDDO
+                      CHGVAR     VAR(%SST(&JOBDLIBLN &START 10)) VALUE(&LIBNAME)
+                      CHGVAR     VAR(&START) VALUE(&START + 11)
+                      GOTO       CMDLBL(QRCVDTAQ2)
+CHGJOBD2:
+                      CHGVAR     VAR(&CMD) VALUE(' ')
+                      CHGVAR     VAR(&CMD) VALUE('CHGJOBD JOBD(' *TCAT &XLIB +
+                                   *TCAT '/' *TCAT &ODOBNM *TCAT ') INLLIBL(' +
+                                   *TCAT &JOBDLIBLN *TCAT ')')
+                      CALL       PGM(QCMDEXC) PARM(&CMD 2800)
+                   ENDDO
+                   GOTO       CMDLBL(NEXTJOBD)
+                ENDDO
+             ENDDO
+ 
+/* *ONEBYONE mode */
+             CHGVAR     VAR(&UP0127RTN) VALUE(N)
+             CALL       PGM(QCLRDTAQ) PARM('CHGJOBDO' 'QTEMP     ')
+             IF         COND(&MODE *EQ '*ONEBYONE') THEN(DO)
+/**********     IF         COND(&ODOBNM *NE 'MIDASIC') THEN(DO)                        */ /*CUP025*/
+                IF         COND(&ODOBNM *NE &DFTJOBD) THEN(DO)                            /*CUP025*/
+/* Call program to see if job description is a core library list. */
+                   IF         COND(&NOSMSETULF *EQ 'N') THEN(DO)
+                      CALL       PGM(UP0127) PARM(&ODOBNM &UP0127RTN)
+                   ENDDO
+                   IF         COND(&UP0127RTN *EQ 'Y') THEN(DO)
+                      CHGVAR     VAR(&HEADING) VALUE(&ODOBNM)
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGVAR     VAR(&HEADING) VALUE(&ODOBNM *BCAT '- not a +
+                                   core job description')
+                   ENDDO
+                   CHGVAR     VAR(&JOBDLIBL) VALUE(' ')
+                   RTVJOBD    JOBD(&XLIB/&ODOBNM) INLLIBL(&JOBDLIBL)
+                   CHGVAR     VAR(&START) VALUE(1)
+                   CHGVAR     VAR(&DTAQLEN) VALUE(10)
+LIBLLOOP3:
+                   CHGVAR     VAR(&LIBNAME) VALUE(%SST(&JOBDLIBL &START 10))
+                   IF         COND(&LIBNAME *EQ '          ') THEN(DO)
+                      GOTO       CMDLBL(EDIT1BY1)
+                   ENDDO
+                   CALL       PGM(QSNDDTAQ) PARM('CHGJOBDO' 'QTEMP' +
+                                &DTAQLEN &LIBNAME)
+                   CHGVAR     VAR(&START) VALUE(&START + 11)
+                   GOTO       CMDLBL(LIBLLOOP3)
+EDIT1BY1:
+                CALL       PGM(UP0126) PARM(&HEADING &EXITCODE)
+                IF         COND(&EXITCODE *EQ 'Exit') THEN(DO)
+                   GOTO       CMDLBL(ENDPGM)
+                ENDDO
+                IF         COND(&EXITCODE *EQ 'Cancel') THEN(DO)
+                   GOTO       CMDLBL(NEXTJOBD)
+                ENDDO
+/* Receive library names from data queue and then change job description. */
+                CHGVAR     VAR(&JOBDLIBLN) VALUE(' ')
+                CHGVAR     VAR(&START) VALUE(1)
+QRCVDTAQ3:
+                CALL       PGM(QRCVDTAQ) PARM('CHGJOBDN' 'QTEMP' +
+                             &DTAQLEN &LIBNAME &WAIT)
+                IF         COND(&DTAQLEN *EQ 0) THEN(DO)
+                   GOTO       CMDLBL(CHGJOBD3)
+                ENDDO
+                CHGVAR     VAR(%SST(&JOBDLIBLN &START 10)) VALUE(&LIBNAME)
+                CHGVAR     VAR(&START) VALUE(&START + 11)
+                GOTO       CMDLBL(QRCVDTAQ3)
+CHGJOBD3:
+                CHGVAR     VAR(&CMD) VALUE(' ')
+                CHGVAR     VAR(&CMD) VALUE('CHGJOBD JOBD(' *TCAT &XLIB +
+                             *TCAT '/' *TCAT &ODOBNM *TCAT ') INLLIBL(' +
+                             *TCAT &JOBDLIBLN *TCAT ')')
+                CALL       PGM(QCMDEXC) PARM(&CMD 2800)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(NEXTJOBD)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC0126') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC0126' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             IF         COND(&LAYER *EQ 'G') THEN(DO)                                     /*CUP025*/
+                DLTOVR     FILE(SMSETULF) LVL(*JOB)                                       /*CUP025*/
+             ENDDO                                                                        /*CUP025*/
+ 
+             ENDPGM

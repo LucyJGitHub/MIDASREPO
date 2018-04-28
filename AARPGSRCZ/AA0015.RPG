@@ -1,0 +1,2336 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AA Database files book conversion')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Module                                      *
+      *                                                               *
+      *  AA0015 - SE Database Files Book Conversion                   *
+      *                                                               *
+      *  Function:  This utility program will change the book field   *
+      *  (I/C)      in the Securities Trading master files from user  *
+      *             book into designated pseudo book. The profit      *
+      *             centre combined with the user books from these    *
+      *             files will determine the pseudo books that will   *
+      *             replace the user books.                           *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 234300             Date 22Sep06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 222727             Date 05Nov03               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01.01 ----------------------------------------*
+      *                 207006             Date 18Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 20Oct99               *
+      *                 CSE017             Date 20Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005  *CREATE    Date 23Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  207006 - Add Counterparty & Market Centre to SSI (Recompile) *
+      *  CSD006 - Recompiled over changed file; PRICED.               *
+      *  CSE023 - Treaty Withholding Tax (Recompiled)                 *
+      *  CSE015 - Forward Valued Depot Movements (Recompiled)         *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements.                *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements.                *
+      *  CAC005 - Profit Centre Accounting - SE Enhancement           *
+      *                                                               *
+      *****************************************************************
+     FTRADS   UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FBULKR   UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FHSTTTR  UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FDPTMVR  UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FPRICED  UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FBKMTHD  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FBKPHDD  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FBKPHHD  UF  E                    DISK         KINFSR *PSSR
+     F            BKPHDDF                           KRENAMEBKPHHDF
+     F                                              KCOMIT
+     FBKRVLD  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FMATEXD  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FBKPOSD  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FBPACHD  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FUPLEXD  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FUDEPPD  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FTREVED  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FSEERALPDUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FSECOALPDUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FSECOAPL0UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FSECOREPDUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FSECORHPDUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FSECOSIPDUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FPMPLTRL0UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FSEPCBD  IF  E           K        DISK
+     FAA0015P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FAA0015AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+      *
+     ISEPCBDF
+     I              RECI                            SERECI
+     I              LCD                             SELCD                 S01194
+     I              CHTP                            SECHTP
+     I              TNLU                            SETNLU
+      *                                                                   CSE017
+     IDPTMVDF                                                             CSE017
+     I              DPAP                            DDPAP                 CSE017
+      *
+     IKSEPCD      DS
+     I                                        1   2 KBKCD
+     I                                        3   5 KBRCA
+     I                                        6  15 KSESN
+     I                                       16  16 KMKTI
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IAADTA     E DSAADTA
+      ** Analytical Accounting Data Area
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for AA0015P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for AA0015AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 367 3680PRTLNU
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access programs (200 long)
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P001 - Main Processing                                       *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:     SRP002 - Program Initialisation                   *
+      *             SRP003 - Process PF/TRADSD                        *
+      *             SRP004 - Process PF/BULKTD                        *
+      *             SRP005 - Process PF/HSTTRD                        *
+      *             SRP006 - Process PF/DPTMVD                        *
+      *             SRP007 - Process PF/PRICED                        *
+      *             SRP008 - Process PF/BKMTHD                        *
+      *             SRP009 - Process PF/BKPHDD                        *
+      *             SRP010 - Process PF/BKPHHD                        *
+      *             SRP011 - Process PF/BKRVLD                        *
+      *             SRP012 - Process PF/MATEXD                        *
+      *             SRP013 - Process PF/BKPOSD                        *
+      *             SRP014 - Process PF/BPACHD                        *
+      *             SRP015 - Process PF/UPLEXD                        *
+      *             SRP016 - Process PF/UDEPPD                        *
+      *             SRP017 - Process PF/TREVED                        *
+      *             SRP018 - Process PF/SEERALPD                      *
+      *             SRP019 - Process PF/SECOALPD                      *
+      *             SRP020 - Process PF/SECOAPPD                      *
+      *             SRP021 - Process PF/SECOREPD                      *
+      *             SRP022 - Process PF/SECORHPD                      *
+      *             SRP023 - Process PF/SECOSIPD                      *
+      *             SRP024 - Process PF/PMLTRPD                       *
+      *             SRP025 - Get Book Position Profit Centre          *
+      *             SRP026 - Get Book Position Profit Centre (Partial)*
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD1  7
+     C                     PARM           PMODE   1
+      *
+     C           PMODE     IFNE '1'
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     EXSR SRP002
+     C                     EXSR SRP003
+     C                     EXSR SRP004
+     C                     EXSR SRP005
+     C                     EXSR SRP006
+     C                     EXSR SRP007
+     C                     EXSR SRP008
+     C                     EXSR SRP009
+     C                     EXSR SRP010
+     C                     EXSR SRP011
+     C                     EXSR SRP012
+     C                     EXSR SRP013
+     C                     EXSR SRP014
+     C                     EXSR SRP015
+     C                     EXSR SRP016
+     C                     EXSR SRP017
+     C                     EXSR SRP018
+     C                     EXSR SRP019
+     C                     EXSR SRP020
+     C                     EXSR SRP021
+     C                     EXSR SRP022
+     C                     EXSR SRP023
+     C                     EXSR SRP024
+      *
+     C           WROLBK    IFEQ 'Y'
+     C                     MOVE '*ERROR'  PRTCD1
+     C                     ROLBK
+     C                     SETON                     U7U8
+     C                     ELSE
+     C                     COMIT
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Bank ICD Access Object                 *
+      *             *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP002    BEGSR
+     C*
+     C           KSEPCB    KLIST
+     C                     KFLD           KBKCD
+     C                     KFLD           KBRCA
+     C                     KFLD           KSESN
+     C                     KFLD           KMKTI
+     C*
+     C           KSEPC1    KLIST
+     C                     KFLD           KBKCD
+     C                     KFLD           KBRCA
+     C                     KFLD           KSESN
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AA0015'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access dtaara AADTA to get the profit centre
+      *
+     C           *NAMVAR   DEFN           AADTA
+     C                     IN   AADTA
+      *
+     C           AGDFF     COMP 'M'                      98
+      *
+      ** Initialise WP1OPN
+      *
+     C                     MOVE 'N'       WP1OPN  1
+     C                     MOVE 'N'       WP2OPN  1
+     C                     MOVE 'N'       WROLBK  1
+     C                     Z-ADD0         WSR     30
+      *
+      ** Initialise Indicators
+      *
+     C                     MOVEA'11111111'*IN,20
+     C                     MOVEA'11111111'*IN,28
+     C                     MOVEA'111111'  *IN,36
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP003 - Process PF/TRADSD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book Profit Centre Matirx Access Object*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP003    BEGSR
+      *
+     C                     MOVE 'N'       WTRADS  1
+     C                     Z-ADD0         WNREC   50
+     C                     ADD  1         WSR
+      *
+     C           *LOVAL    SETLLTRADS
+     C                     READ TRADS                    20
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*PSEUDO' POPTN   7
+     C                     PARM TDBK      PBOOK   2
+     C                     PARM BPRC      PPRFC   4
+     C                     PARM           PPSBK   2
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK   2
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WTRADS    IFEQ 'N'
+     C                     MOVE 'Y'       WTRADS
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HA
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HA
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DA
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     TDBK
+     C                     UPDATTRADSDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     READ TRADS                    20
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP004 - Process PF/BULKTD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP004    BEGSR
+      *
+     C                     MOVE 'N'       WBULKT  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           *LOVAL    SETLLBULKR
+     C                     READ BULKR                    21
+      *
+     C           *IN21     DOWEQ*OFF
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM TDBK      PBOOK
+     C                     PARM BPRC      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK   2
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WBULKT    IFEQ 'N'
+     C                     MOVE 'Y'       WBULKT
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HB
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HB
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DB
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     TDBK
+     C                     UPDATBULKTDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     READ BULKR                    21
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP005 - Process PF/HSTTRD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP005    BEGSR
+      *
+     C                     MOVE 'N'       WHSTTR  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           *LOVAL    SETLLHSTTTR
+     C                     READ HSTTTR                   22
+      *
+     C           *IN22     DOWEQ*OFF
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM TDBK      PBOOK
+     C                     PARM BPRC      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK   2
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WHSTTR    IFEQ 'N'
+     C                     MOVE 'Y'       WHSTTR
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HA
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HA
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DA
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     TDBK
+     C                     UPDATHSTTRDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     READ HSTTTR                   22
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP006 - Process PF/DPTMVD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP006    BEGSR
+      *
+     C                     MOVE 'N'       WDPTMV  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           *LOVAL    SETLLDPTMVR
+     C                     READ DPTMVR                   23
+      *
+     C           *IN23     DOWEQ*OFF
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*PSEUDO' POPTN   7
+     C                     PARM DPBK      PBOOK   2
+     C                     PARM DPPC      PPRFC   4
+     C                     PARM           PPSBK   2
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK   2
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WDPTMV    IFEQ 'N'
+     C                     MOVE 'Y'       WDPTMV
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HC
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HC
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DC
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     DPBK
+     C                     UPDATDPTMVDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     READ DPTMVR                   23
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP007 - Process PF/PRICED                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP025 - Get Book Position Profit Centre          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP007    BEGSR
+      *
+     C                     MOVE 'N'       WPRICE  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           *LOVAL    SETLLPRICED
+     C                     READ PRICED                   24
+      *
+     C           *IN24     DOWEQ*OFF
+      *
+     C           PBOK      IFNE *BLANKS
+      *
+     C                     MOVE PBOK      KBKCD
+     C                     MOVE PBRA      KBRCA
+     C                     MOVE PSSN      KSESN
+     C                     MOVE PMKT      KMKTI
+     C                     MOVE 'Y'       WVAL    1
+     C                     EXSR SRP025
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM PBOK      PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WPRICE    IFEQ 'N'
+     C                     MOVE 'Y'       WPRICE
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HD
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HD
+     C                     ENDIF
+      *
+      ** Convert Value Date
+      *
+     C                     Z-ADDPVDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     WPVDT
+      *
+     C                     WRITEAA0015DD
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     PBOK
+     C                     UPDATPRICEDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ PRICED                   24
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP008 - Process PF/BKMTHD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP025 - Get Book Position Profit Centre          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP008    BEGSR
+      *
+     C                     MOVE 'N'       WBKMTH  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLBKMTHD
+     C                     READ BKMTHD                   25
+      *
+     C           *IN25     DOWEQ*OFF
+      *
+     C           BKBO      IFNE *BLANKS
+      *
+     C                     MOVE BKBO      KBKCD
+     C                     MOVE BKBA      KBRCA
+     C                     MOVE BKSS      KSESN
+     C                     MOVE BKMK      KMKTI
+     C                     MOVE 'N'       WVAL
+     C                     EXSR SRP025
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM BKBO      PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WBKMTH    IFEQ 'N'
+     C                     MOVE 'Y'       WBKMTH
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HE
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HE
+     C                     ENDIF
+      *
+     C                     WRITEAA0015D1
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     BKBO
+     C                     UPDATBKMTHDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ BKMTHD                   25
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP009 - Process PF/BKPHDD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP025 - Get Book Position Profit Centre          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP009    BEGSR
+      *
+     C                     MOVE 'N'       WBKPHD  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLBKPHDD
+     C                     READ BKPHDD                   26
+      *
+     C           *IN26     DOWEQ*OFF
+      *
+     C           BHBK      IFNE *BLANKS
+      *
+     C                     MOVE BHBK      KBKCD
+     C                     MOVE BHBA      KBRCA
+     C                     MOVE BHSC      KSESN
+     C                     MOVE BHMK      KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP025
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM BHBK      PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WBKPHD    IFEQ 'N'
+     C                     MOVE 'Y'       WBKPHD
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HE
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HE
+     C                     ENDIF
+      *
+     C                     WRITEAA0015D2
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     BHBK
+     C                     UPDATBKPHDDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ BKPHDD                   26
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP010 - Process PF/BKPHHD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP025 - Get Book Position Profit Centre          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP010    BEGSR
+      *
+     C                     MOVE 'N'       WBKPHH  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLBKPHHD
+     C                     READ BKPHHD                   27
+      *
+     C           *IN27     DOWEQ*OFF
+      *
+     C           BHBK      IFNE *BLANKS
+      *
+     C                     MOVE BHBK      KBKCD
+     C                     MOVE BHBA      KBRCA
+     C                     MOVE BHSC      KSESN
+     C                     MOVE BHMK      KMKTI
+     C                     MOVE 'N'       WVAL
+     C                     EXSR SRP025
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM BHBK      PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WBKPHH    IFEQ 'N'
+     C                     MOVE 'Y'       WBKPHH
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HE
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HE
+     C                     ENDIF
+      *
+     C                     WRITEAA0015D2
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     BHBK
+     C                     UPDATBKPHHDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ BKPHHD                   27
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP011 - Process PF/BKRVLD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP026 - Get Book Position Profit Centre (Partial)*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP011    BEGSR
+      *
+     C                     MOVE 'N'       WBKRVL  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLBKRVLD
+     C                     READ BKRVLD                   28
+      *
+     C           *IN28     DOWEQ*OFF
+      *
+     C           BHBK      IFNE *BLANKS
+      *
+     C                     MOVE BHBK      KBKCD
+     C                     MOVE BHBA      KBRCA
+     C                     MOVE BHSC      KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP026
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM BHBK      PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK   2
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WBKRVL    IFEQ 'N'
+     C                     MOVE 'Y'       WBKRVL
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HF
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HF
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DF
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     BHBK
+     C                     UPDATBKRVLDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ BKRVLD                   28
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP012 - Process PF/MATEXD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP026 - Get Book Position Profit Centre (Partial)*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP012    BEGSR
+      *
+     C                     MOVE 'N'       WMATEX  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLMATEXD
+     C                     READ MATEXD                   29
+      *
+     C           *IN29     DOWEQ*OFF
+      *
+     C           BHBK      IFNE *BLANKS
+      *
+     C                     MOVE BHBK      KBKCD
+     C                     MOVE BHBA      KBRCA
+     C                     MOVE BHSC      KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP026
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM BHBK      PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WMATEX    IFEQ 'N'
+     C                     MOVE 'Y'       WMATEX
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HG
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HG
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DG
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     BHBK
+     C                     UPDATMATEXDF
+     C                     Z-ADD0         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ MATEXD                   29
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP013 - Process PF/BKPOSD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP025 - Get Book Position Profit Centre          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP013    BEGSR
+      *
+     C                     MOVE 'N'       WBKPOS  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLBKPOSD
+     C                     READ BKPOSD                   30
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+     C           BPBK      IFNE *BLANKS
+      *
+     C                     MOVE BPBK      KBKCD
+     C                     MOVE BPBA      KBRCA
+     C                     MOVE BPSC      KSESN
+     C                     MOVE BPMK      KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP025
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM BPBK      PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WBKPOS    IFEQ 'N'
+     C                     MOVE 'Y'       WBKPOS
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HE
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HE
+     C                     ENDIF
+      *
+     C                     WRITEAA0015D3
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     BPBK
+     C                     UPDATBKPOSDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ BKPOSD                   30
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP014 - Process PF/BPACHD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP025 - Get Book Position Profit Centre          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP014    BEGSR
+      *
+     C                     MOVE 'N'       WBPACH  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLBPACHD
+     C                     READ BPACHD                   31
+      *
+     C           *IN31     DOWEQ*OFF
+      *
+     C           BCBO      IFNE *BLANKS
+      *
+     C                     MOVE BCBO      KBKCD
+     C                     MOVE BCBA      KBRCA
+     C                     MOVE BCSS      KSESN
+     C                     MOVE BCMK      KMKTI
+     C                     MOVE 'N'       WVAL
+     C                     EXSR SRP025
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM BCBO      PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WBPACH    IFEQ 'N'
+     C                     MOVE 'Y'       WBPACH
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HH
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HH
+     C                     ENDIF
+      *
+      ** Convert Date
+      *
+     C                     Z-ADDBCAD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     WBCAD
+      *
+     C                     WRITEAA0015DH
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     BCBO
+     C                     UPDATBPACHDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ BPACHD                   31
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP015 - Process PF/UPLEXD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP025 - Get Book Position Profit Centre          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP015    BEGSR
+      *
+     C                     MOVE 'N'       WUPLEX  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLUPLEXD
+     C                     READ UPLEXD                   32
+      *
+     C           *IN32     DOWEQ*OFF
+      *
+     C           URBK      IFNE *BLANKS
+      *
+     C                     MOVE URBK      KBKCD
+     C                     MOVE URBA      KBRCA
+     C                     MOVE URSS      KSESN
+     C                     MOVE URMK      KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP025
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM URBK      PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WUPLEX    IFEQ 'N'
+     C                     MOVE 'Y'       WUPLEX
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HI
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HI
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DI
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     URBK
+     C                     UPDATUPLEXDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ UPLEXD                   32
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP016 - Process PF/UDEPPD                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP025 - Get Book Position Profit Centre          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP016    BEGSR
+      *
+     C                     MOVE 'N'       WUDEPP  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLUDEPPD
+     C                     READ UDEPPD                   33
+      *
+     C           *IN33     DOWEQ*OFF
+      *
+     C           UDBK      IFNE *BLANKS
+      *
+     C                     MOVE UDBK      KBKCD
+     C                     MOVE UDBA      KBRCA
+     C                     MOVE UDSN      KSESN
+     C                     MOVE UDMK      KMKTI
+     C                     MOVE 'N'       WVAL
+     C                     EXSR SRP025
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM UDBK      PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK   2
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WUDEPP    IFEQ 'N'
+     C                     MOVE 'Y'       WUDEPP
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HJ
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HJ
+     C                     ENDIF
+      *
+      ** Convert Date
+      *
+     C                     Z-ADDUDDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     WUDDT
+      *
+     C                     WRITEAA0015DJ
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     UDBK
+     C                     UPDATUDEPPDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ UDEPPD                   33
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP017 - Process PF/TREVED                                   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP017    BEGSR
+      *
+     C                     MOVE 'N'       WTREVE  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLTREVED
+     C                     READ TREVED                   34
+      *
+     C           *IN34     DOWEQ*OFF
+      *
+     C           TRBK      IFNE *BLANKS
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM TRBK      PBOOK
+     C                     PARM PRFC      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WTREVE    IFEQ 'N'
+     C                     MOVE 'Y'       WTREVE
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HK
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HK
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DK
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     TRBK
+     C                     UPDATTREVEDF
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ TREVED                   34
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP018 - Process PF/SEERALPD                                 *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP026 - Get Book Position Profit Centre (Partial)*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP018    BEGSR
+      *
+     C                     MOVE 'N'       WSERAL  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLSEERALPD
+     C                     READ SEERALPD                 35
+      *
+     C           *IN35     DOWEQ*OFF
+      *
+     C           VCBOOK    IFNE *BLANKS
+      *
+     C                     MOVE VCBOOK    KBKCD
+     C                     MOVE VCBRCD    KBRCA
+     C                     MOVE VCSESN    KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP026
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM VCBOOK    PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WSERAL    IFEQ 'N'
+     C                     MOVE 'Y'       WSERAL
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HL
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HL
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DL
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     VCBOOK
+     C                     UPDATSEERALD0
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ SEERALPD                 35
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP019 - Process PF/SECOALPD                                 *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP026 - Get Book Position Profit Centre (Partial)*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP019    BEGSR
+      *
+     C                     MOVE 'N'       WSCOAL  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLSECOALPD
+     C                     READ SECOALPD                 36
+      *
+     C           *IN36     DOWEQ*OFF
+      *
+     C           MCBOOK    IFNE *BLANKS
+      *
+     C                     MOVE MCBOOK    KBKCD
+     C                     MOVE MCBRCD    KBRCA
+     C                     MOVE MCSESN    KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'N'       WVAL
+     C                     EXSR SRP026
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM MCBOOK    PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WSCOAL    IFEQ 'N'
+     C                     MOVE 'Y'       WSCOAL
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HM
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HM
+     C                     ENDIF
+      *
+     C                     WRITEAA0015D4
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     MCBOOK
+     C                     UPDATSECOALD0
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ SECOALPD                 36
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP020 - Process PF/SECOAPPD                                 *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP026 - Get Book Position Profit Centre (Partial)*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP020    BEGSR
+      *
+     C                     MOVE 'N'       WSCOAP  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           *LOVAL    SETLLSECOAPL0
+     C                     READ SECOAPL0                 37
+      *
+     C           *IN37     DOWEQ*OFF
+      *
+     C           MXBOOK    IFNE *BLANKS
+      *
+     C                     MOVE MXBOOK    KBKCD
+     C                     MOVE MXBRCD    KBRCA
+     C                     MOVE MXSESN    KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP026
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM MXBOOK    PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WSCOAP    IFEQ 'N'
+     C                     MOVE 'Y'       WSCOAP
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HM
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HM
+     C                     ENDIF
+      *
+     C                     WRITEAA0015D5
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     MXBOOK
+     C                     UPDATSECOAPD0
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ SECOAPL0                 37
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP021 - Process PF/SECOREPD                                 *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP026 - Get Book Position Profit Centre (Partial)*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP021    BEGSR
+      *
+     C                     MOVE 'N'       WSCORE  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLSECOREPD
+     C                     READ SECOREPD                 38
+      *
+     C           *IN38     DOWEQ*OFF
+      *
+     C           MQBOOK    IFNE *BLANKS
+      *
+     C                     MOVE MQBOOK    KBKCD
+     C                     MOVE MQBRCD    KBRCA
+     C                     MOVE MQSESN    KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP026
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM MQBOOK    PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK   2
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WSCORE    IFEQ 'N'
+     C                     MOVE 'Y'       WSCORE
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HN
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HN
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DN
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     MQBOOK
+     C                     UPDATSECORED0
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ SECOREPD                 38
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP022 - Process PF/SECORHPD                                 *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP022    BEGSR
+      *
+     C                     MOVE 'N'       WSCORH  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLSECORHPD
+     C                     READ SECORHPD                 39
+      *
+     C           *IN39     DOWEQ*OFF
+      *
+     C           MPBOOK    IFNE *BLANKS
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM MPBOOK    PBOOK
+     C                     PARM AABKPC    PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WSCORH    IFEQ 'N'
+     C                     MOVE 'Y'       WSCORH
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HO
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HO
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DO
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     MPBOOK
+     C                     UPDATSECORHD0
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ SECORHPD                 39
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP023 - Process PF/SECOSIPD                                 *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP026 - Get Book Position Profit Centre (Partial)*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP023    BEGSR
+      *
+     C                     MOVE 'N'       WSCOSI  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           1         SETLLSECOSIPD
+     C                     READ SECOSIPD                 40
+      *
+     C           *IN40     DOWEQ*OFF
+      *
+     C           MOBOOK    IFNE *BLANKS
+      *
+     C                     MOVE MOBOOK    KBKCD
+     C                     MOVE MOBRCD    KBRCA
+     C                     MOVE MOSESN    KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP026
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM MOBOOK    PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WSCOSI    IFEQ 'N'
+     C                     MOVE 'Y'       WSCOSI
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HP
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HP
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DP
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     MOBOOK
+     C                     UPDATSECOSID0
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ SECOSIPD                 40
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP024 - Process PF/PMPLTRPD                                 *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *             SRP025 - Get Book Position Profit Centre          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP024    BEGSR
+      *
+     C                     MOVE 'N'       WPPLTR  1
+     C                     Z-ADD0         WNREC
+     C                     ADD  1         WSR
+      *
+     C           *LOVAL    SETLLPMPLTRL0
+     C                     READ PMPLTRL0                 41
+      *
+     C           *IN41     DOWEQ*OFF
+      *
+     C                     MOVE OUTDBK    KBKCD
+     C                     MOVE OUTDBR    KBRCA
+     C                     MOVE OUTDSS    KSESN
+     C                     MOVE OUTDMI    KMKTI
+     C                     EXSR SRP025
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*PSEUDO' POPTN
+     C                     PARM OUTDBK    PBOOK
+     C                     PARM PCBK      PPRFC
+     C                     PARM           PPSBK
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   PPSBK
+     C                     MOVE 'Y'       WROLBK
+     C                     ENDIF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN AA0015P1
+     C                     WRITEAA0015H0
+     C                     ENDIF
+      *
+     C           WPPLTR    IFEQ 'N'
+     C                     MOVE 'Y'       WPPLTR
+     C           PRTLN1    IFGT 50
+     C                     WRITEAA0015H0
+     C                     ENDIF
+     C                     WRITEAA0015H1
+     C                     WRITEAA0015H2
+     C                     WRITEAA0015HQ
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0015H0
+     C                     WRITEAA0015HQ
+     C                     ENDIF
+      *
+     C                     WRITEAA0015DQ
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELPPSBK     OUTDBK
+     C                     UPDATPMPLTRP0
+     C                     ADD  1         WNREC
+     C                     ENDIF
+      *
+     C                     READ PMPLTRL0                 41
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP025 - Get Book Position Profit Centre                     *
+      *                                                               *
+      *  Called by: SRP007 - Process PF/PRICED                        *
+      *             SRP008 - Process PF/BKMTHD                        *
+      *             SRP009 - Process PF/BKPHDD                        *
+      *             SRP010 - Process PF/BKPHHD                        *
+      *             SRP013 - Process PF/BKPOSD                        *
+      *             SRP014 - Process PF/BPACHD                        *
+      *             SRP015 - Process PF/UPLEXD                        *
+      *             SRP016 - Process PF/UDEPPD                        *
+      *             SRP024 - Process PF/PMLTRPD                       *
+      *                                                               *
+      *  Calls:     *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP025    BEGSR
+     C*
+     C           KSEPCB    CHAINSEPCBDF              80
+     C           *IN80     IFEQ '1'
+     C           WVAL      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SEPCBD'  DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     MOVELKSEPCD    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE AABKPC    PCBK
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           PCBK      IFEQ *BLANKS
+     C                     MOVE AABKPC    PCBK
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP026 - Get Book Position Profit Centre (Partial)           *
+      *                                                               *
+      *  Called by: SRP011 - Process PF/BKRVLD                        *
+      *             SRP012 - Process PF/MATEXD                        *
+      *             SRP018 - Process PF/SEERALPD                      *
+      *             SRP019 - Process PF/SECOALPD                      *
+      *             SRP020 - Process PF/SECOAPPD                      *
+      *             SRP021 - Process PF/SECOREPD                      *
+      *             SRP023 - Process PF/SECOSIPD                      *
+      *                                                               *
+      *  Calls:     *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP026    BEGSR
+     C*
+     C           KSEPC1    CHAINSEPCBDF              80
+     C           *IN80     IFEQ '1'
+     C           WVAL      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SEPCBD'  DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVELKSEPCD    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE AABKPC    PCBK
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           PCBK      IFEQ *BLANKS
+     C                     MOVE AABKPC    PCBK
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Process AUDIT REPORT                                *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBKPCR0 - Book-Profit Centre Matrix Access Object*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+     C           WP2OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP2OPN
+     C                     OPEN AA0015AU
+     C                     WRITEAA0015A0
+     C                     ENDIF
+      *
+     C           PRTLNU    IFGT 55
+     C                     WRITEAA0015A0
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           WSR       WHEQ 1
+     C                     WRITEAA0015AA
+      *
+     C           WSR       WHEQ 2
+     C                     WRITEAA0015AB
+      *
+     C           WSR       WHEQ 3
+     C                     WRITEAA0015AC
+      *
+     C           WSR       WHEQ 4
+     C                     WRITEAA0015AD
+      *
+     C           WSR       WHEQ 5
+     C                     WRITEAA0015AE
+      *
+     C           WSR       WHEQ 6
+     C                     WRITEAA0015AF
+      *
+     C           WSR       WHEQ 7
+     C                     WRITEAA0015AG
+      *
+     C           WSR       WHEQ 8
+     C                     WRITEAA0015AH
+      *
+     C           WSR       WHEQ 9
+     C                     WRITEAA0015AI
+      *
+     C           WSR       WHEQ 10
+     C                     WRITEAA0015AJ
+      *
+     C           WSR       WHEQ 11
+     C                     WRITEAA0015AK
+      *
+     C           WSR       WHEQ 12
+     C                     WRITEAA0015AL
+      *
+     C           WSR       WHEQ 13
+     C                     WRITEAA0015AM
+      *
+     C           WSR       WHEQ 14
+     C                     WRITEAA0015AN
+      *
+     C           WSR       WHEQ 15
+     C                     WRITEAA0015AO
+      *
+     C           WSR       WHEQ 16
+     C                     WRITEAA0015AP
+      *
+     C           WSR       WHEQ 17
+     C                     WRITEAA0015AQ
+      *
+     C           WSR       WHEQ 18
+     C                     WRITEAA0015AR
+      *
+     C           WSR       WHEQ 19
+     C                     WRITEAA0015AS
+      *
+     C           WSR       WHEQ 20
+     C                     WRITEAA0015AT
+      *
+     C           WSR       WHEQ 21
+     C                     WRITEAA0015AV
+      *
+     C           WSR       WHEQ 22
+     C                     WRITEAA0015AW
+      *
+     C                     ENDSL
+      *
+     C                     WRITEAA0015A1
+      *
+     C           WSR       IFEQ 22
+     C                     WRITEAA0015A2
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Database error subroutine.                           *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     MOVE '*ERROR'  PRTCD1
+     C                     ROLBK
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

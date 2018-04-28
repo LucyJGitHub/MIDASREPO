@@ -1,0 +1,1358 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Unauth Request for Transfer/CCT - Orig br')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0574 - Unauthorised Request for Transfer/Customer Credit   *
+      *           Transfer List (Originating Branch)                  *
+      *                                                               *
+      *  Function:  This program generates reports for unauthorised   *
+      *  (I/C or    request for transfer or customer credit transfer. *
+      *   COB)                                                        *
+      *                                                               *
+      *  Called By: FT0570 - Midas FT RFT/CCT Payments Reports        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. BUG25160           Date 23Jul09               *
+      * Midas Release 4.04 -------------------------------------------*
+      *  Prev Amend No. 229420             Date 06Sep04               *
+      *                 226942 *CREATE     Date 27May04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  BUG25160 - Apply core fix 229420 and 226942.                 *
+      *  229420 - Branch 'ALL' request doesn't work.                  *
+      *  226942 - Make RFT/CCT Authorised/Unauthorised reports        *
+      *           available in the system.                            *
+      *                                                               *
+      *****************************************************************
+     F**FT101HLGIF  E                    DISK                                                 229420
+     FFT101HLGIF  E           K        DISK                                                   229420
+     FFT102HLGIF  E           K        DISK
+     FFT101DL0IF  E           K        DISK
+     FFT102DL0IF  E           K        DISK
+     FFT0574AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FFT0574P1O   E             05     PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - End of file for FT101HLG                              *
+      *   02  - No record found equal for FT101DL0                    *
+      *   03  - End of file for FT102HLG                              *
+      *   04  - No record found equal for FT102DL0                    *
+      *   05  - Overflow                                              *
+      *   10  - FT102HLG record read                                  *
+      *   11  - CSW201 enhancement is installed                       *
+      *   12  - Display set 2 of senders charges fields               *
+      *   13  - Display set 3 of senders charges fields               *
+      *   14  - Display set 4 of senders charges fields               *
+      *   15  - Display set 5 of senders charges fields               *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SRRPRT - Process Report Lines                                *
+      *                                                               *
+      *  SRWRIT - Format and Write a Detail Record to the Report      *
+      *  SRPEND - Write End of Report                                 *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  SRRP1  - RCF Processing for P1 Report                        *
+      *  SRRAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *  ZEDIT  - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZEDITZ1
+      /SPACE 3
+      *
+      ** Rename Field
+      *
+     IFT101HD0
+     I              SINST                           SINSTX
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for FT0573P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for FT0573AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      **  First data structure for Access Programs, short DS
+      *
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+     C                     EXSR SRRP1
+      *
+      ***  Output Audit Report and End Program.
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : SRRAU  - RCF Processing for Audit Report          *
+      *             AOBANKR0 Access Program                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PTYPE   2
+     C                     PARM           PSTRT   50
+     C                     PARM           PENDT   50
+     C                     PARM           PMENU   3
+     C                     PARM           PRNTP   1
+     C                     PARM           @RSEQ   5
+     C                     PARM           @RLEV   1
+     C                     PARM           @RENT   3
+      *                                                                                       229420
+     C           @RLEV     IFEQ 'B'                                                           229420
+     C                     MOVE *ON       *IN20                                               229420
+     C                     ELSE                                                               229420
+     C                     MOVE *OFF      *IN20                                               229420
+     C                     ENDIF                                                              229420
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVELUSER      RUSER
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     MOVEL'*FIRST ' DBKEY            ***************
+     C                     MOVEL'FT0574'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check if enhancement CSW201 is on
+      *
+     C                     CALL 'SWIF2001'
+     C                     PARM *BLANKS   PRTCD
+      *
+     C           PRTCD     IFEQ 'CSW2001'
+     C                     MOVE 'Y'       CSW201  1
+     C                     MOVE '1'       *IN11
+     C                     ELSE
+     C                     MOVE 'N'       CSW201
+     C                     MOVE '0'       *IN11
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR SRRAU
+      *
+     C                     MOVEL'Y'       WFRST   1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : SRAUDT - Produce Audit Report and End Program     *
+      *             SRRPRT - Process Report Lines                     *
+      *             SRPEND - Write End of Report                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      ***  Read first record from File.
+      *
+     C                     Z-ADD0         RCNT1
+     C                     Z-ADD0         RCNT2
+     C                     MOVEL'N'       WRFT    1
+     C                     MOVEL'N'       WCCT    1
+     C                     MOVEL*BLANKS   PBRCA   3
+      *
+     C           @RLEV     IFNE 'S'
+     C           @RENT     ANDNE*BLANKS
+     C                     MOVE @RENT     PBRCA
+     C                     ENDIF
+      *
+     C           PMENU     IFEQ 'RFT'
+     C           *LOVAL    SETLLFT101HLG                                                      229420
+     C                     READ FT101HLG                 01
+     C*                                                                                       229420
+     C                     MOVE BRCA      WBRCA                                               229420
+     C*                                                                                       229420
+      *
+      ** Do While End of File.
+      *
+     C           *IN01     DOWEQ'0'
+      *
+     C           PTYPE     IFEQ *BLANKS
+     C           PBRCA     ANDEQ*BLANKS
+      *
+     C           PTYPE     OREQ *BLANKS
+     C           PBRCA     ANDEQBRCA
+      *
+     C           PTYPE     OREQ PYTP
+     C           PBRCA     ANDEQ*BLANKS
+      *
+     C           PTYPE     OREQ PYTP
+     C           PBRCA     ANDEQBRCA
+      *                                                                                       229420
+     C           PTYPE     OREQ *BLANKS                                                       229420
+     C           PBRCA     ANDEQ'ALL'                                                         229420
+      *                                                                                       229420
+     C           PTYPE     OREQ PYTP                                                          229420
+     C           PBRCA     ANDEQ'ALL'                                                         229420
+      *
+     C           RFTID     CHAINFT101DL0             02
+      *
+      ** Count records read.
+      *
+     C                     MOVE 'Y'       WHDR    1
+      *
+     C           *IN02     DOWEQ'0'
+      *
+     C***********          ADD  1         RCNT1                                               229420
+     C           PSTRT     IFEQ 0
+     C           PENDT     ANDEQ0
+      *
+     C           PSTRT     ORLE INDATE
+     C           PENDT     ANDEQ0
+      *
+     C           PSTRT     ORLE INDATE
+     C           PENDT     ANDGEINDATE
+     C*                                                                                       229420
+     C                     ADD  1         RCNT1                                               229420
+     C*                                                                                       229420
+     C                     MOVEL'Y'       WRFT
+      *
+      ** Process Report Lines.
+      *
+     C                     EXSR SRRPRT
+      *
+     C                     ENDIF
+      *
+     C           RFTID     READEFT101DL0                 02
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** Read next record.
+      *
+     C                     READ FT101HLG                 01
+      *
+     C           *IN01     IFEQ '1'
+     C           WFRST     ANDEQ'N'
+     C                     EXSR SRPEND
+     C                     ENDIF
+     C*                                                                                       229420
+     C*  Create a new spoolfile on change of branch if branch = ALL                           229420
+     C           PBRCA     IFEQ 'ALL'                                                         229420
+     C                     EXSR CHGBRC                                                        229420
+     C                     ENDIF                                                              229420
+      *                                                                                       229420
+      *
+     C                     ENDDO
+     C                     ELSE
+      *
+     C           *LOVAL    SETLLFT102HLG                                                      229420
+     C                     READ FT102HLG                 03
+     C*                                                                                       229420
+     C                     MOVE BRCA      WBRCA                                               229420
+     C*                                                                                       229420
+      *
+      ** Do While End of File.
+      *
+     C           *IN03     DOWEQ'0'
+      *
+     C           PTYPE     IFEQ *BLANKS
+     C           PBRCA     ANDEQ*BLANKS
+      *
+     C           PTYPE     OREQ *BLANKS
+     C           PBRCA     ANDEQBRCA
+      *
+     C           PTYPE     OREQ CCTTYP
+     C           PBRCA     ANDEQ*BLANKS
+      *
+     C           PTYPE     OREQ CCTTYP
+     C           PBRCA     ANDEQBRCA
+      *                                                                                       229420
+     C           PTYPE     OREQ *BLANKS                                                       229420
+     C           PBRCA     ANDEQ'ALL'                                                         229420
+      *                                                                                       229420
+     C           PTYPE     OREQ CCTTYP                                                        229420
+     C           PBRCA     ANDEQ'ALL'                                                         229420
+      *
+     C           CCTID     CHAINFT102DL0             04
+      *
+      ** Count records read.
+      *
+     C                     MOVE 'Y'       WHDR
+      *
+     C           *IN04     DOWEQ'0'
+      *
+     C***********          ADD  1         RCNT2                                               229420
+     C           PSTRT     IFEQ 0
+     C           PENDT     ANDEQ0
+      *
+     C           PSTRT     ORLE INDATE
+     C           PENDT     ANDEQ0
+      *
+     C           PSTRT     ORLE INDATE
+     C           PENDT     ANDGEINDATE
+     C*                                                                                       229420
+     C                     ADD  1         RCNT2                                               229420
+     C*                                                                                       229420
+     C                     MOVEL'Y'       WCCT
+     C                     MOVE '1'       *IN10
+      *
+      ** Process Report Lines.
+      *
+     C                     EXSR SRRPRT
+      *
+     C                     ENDIF
+      *
+     C           CCTID     READEFT102DL0                 04
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** Read next record.
+      *
+     C                     READ FT102HLG                 03
+      *
+     C           *IN03     IFEQ '1'
+     C           WFRST     ANDEQ'N'
+     C           RCNT2     ANDNE0
+     C                     EXSR SRPEND
+     C                     ENDIF
+     C*                                                                                       229420
+     C*  Create a new spoolfile on change of branch if branch = ALL                           229420
+     C           PBRCA     IFEQ 'ALL'                                                         229420
+     C                     EXSR CHGBRC                                                        229420
+     C                     ENDIF                                                              229420
+      *                                                                                       229420
+      *
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C           WRFT      IFEQ 'N'
+     C           WCCT      ANDEQ'N'
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRPRT
+      *****************************************************************
+      *                                                               *
+      *  SRRPRT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : SRWRIT - Format and Write a Detail Record to the  *
+      *                      Report                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRPRT    BEGSR
+      *
+     C                     EXSR SRRCLR
+      *
+      ** RFT Details
+      *
+     C           *IN10     IFEQ '0'
+      *
+     C           WHDR      IFEQ 'Y'
+     C                     MOVELRFTID     RTRID
+     C                     MOVELSNDREF    RSNDRF
+     C                     MOVELPYTP      RTYPE
+     C                     MOVELPYST      RSTYP
+     C                     MOVELBRCA      RBBRC
+     C                     MOVELORBR      ROBRC
+     C                     MOVELBOKC      RBOKC
+     C                     MOVELPRFC      RPRFC
+     C                     MOVELCUSTRF    RCSRF
+     C                     MOVELHINPTY    RINPY
+     C                     MOVELHOCUS1    ROCS1
+     C                     MOVELHOCUS2    ROCS2
+     C                     MOVELHOCUS3    ROCS3
+     C                     MOVELHOCUS4    ROCS4
+     C                     MOVELHOCUS5    ROCS5
+     C                     MOVELHACSV1    RAT35
+     C                     MOVELHACSV2    RAT11
+     C                     MOVELSINSTX    RSINT
+     C                     MOVELSWPRIO    RSWPR
+      *
+     C                     Z-ADDEXDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     REXDT
+     C                     Z-ADDDBTVDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     RDRVD
+      *
+     C                     MOVELAUTHTX    RAUTH
+      *
+     C                     MOVELHANDCY    WCCY    3
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE HANDCG    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RHDCH
+     C                     ENDIF
+      *
+     C                     MOVELHANDCY    RCCCY
+     C                     MOVELHANDAC    RACNT
+     C                     ENDIF
+      *
+     C                     MOVELRFTID     RTID
+     C                     MOVELTRNSID    RTRNRF
+     C                     MOVELFXDREF    RFXDRF
+     C                     MOVELTINPTY    RDIPY
+     C                     MOVELINSCA4    RINS1
+     C                     MOVELINSCB4    RINS2
+     C                     MOVELINSCC4    RINS3
+     C                     MOVELINSCD4    RINS4
+     C                     MOVELINSCE4    RINS5
+     C                     MOVELINSA31    RINS6
+     C                     MOVELINSB31    RINS7
+      *
+     C                     MOVELTRNCCY    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE TRNAMT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RTRAM
+     C                     ENDIF
+      *
+     C                     MOVELTRNCCY    RTRCY
+     C                     MOVELPAYCCY    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE PAYAMT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPYAM
+     C                     ENDIF
+      *
+     C                     MOVELPAYCCY    RPYCY
+     C                     Z-ADDCRDVDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     RCRVD
+     C                     MOVELGOPFLG    ROTFL
+     C                     MOVELTOCUS1    RDOC1
+     C                     MOVELTOCUS2    RDOC2
+     C                     MOVELTOCUS3    RDOC3
+     C                     MOVELTOCUS4    RDOC4
+     C                     MOVELTOCUS5    RDOC5
+     C                     MOVELTASI35    RDAT3
+     C                     MOVELTACC11    RDAT1
+     C                     MOVELTINST1    RINM1
+     C                     MOVELTINST2    RINM2
+     C                     MOVELTINST3    RINM3
+     C                     MOVELTINST4    RINM4
+     C                     MOVELTINST5    RINM5
+     C                     MOVELTINSTA    RINM6
+     C                     MOVELTACA35    RAWI1
+     C                     MOVELTACB35    RAWI2
+     C                     MOVELTACC35    RAWI3
+     C                     MOVELTACD35    RAWI4
+     C                     MOVELTACE35    RAWI5
+     C                     MOVELTACA11    RAW11
+     C                     MOVELTBNA35    RBEN1
+     C                     MOVELTBNB35    RBEN2
+     C                     MOVELTBNC35    RBEN3
+     C                     MOVELTBND35    RBEN4
+     C                     MOVELTBNE35    RBEN5
+     C                     MOVELTRMA35    RREM1
+     C                     MOVELTRMB35    RREM2
+     C                     MOVELTRMC35    RREM3
+     C                     MOVELTRMD35    RREM4
+     C                     MOVELTRGA35    RREG1
+     C                     MOVELTRGB35    RREG2
+     C                     MOVELTRGC35    RREG3
+      *
+     C                     MOVELTOCCY     WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE TOOAMT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RORAM
+     C                     ENDIF
+      *
+     C                     MOVELTOCCY     RORCY
+     C                     MOVELTDCHGS    RCHRG
+      *
+     C                     MOVELRCHCCY    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE RCVCHG    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RCHAM
+     C                     ENDIF
+      *
+     C                     MOVELRCHCCY    RCCY
+      *
+     C                     MOVELRCPCCY    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE RCPCHG    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPCHAM
+     C                     ENDIF
+      *
+     C                     MOVELRCPCCY    RPCHCY
+     C                     MOVELRCTCCY    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE RCTCHG    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RTCHAM
+     C                     ENDIF
+      *
+     C                     MOVELRCTCCY    RTCHCY
+      *
+     C           XRATE     IFNE 0
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE XRATE     ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVELZFIELD    RRATE
+     C                     ENDIF
+     C                     MOVELXRATEO    RRTIN
+     C                     MOVELCHGACC    RCHAT
+      *
+     C           CHQNUM    IFNE 0
+     C                     MOVELCHQNUM    RCQNO
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** CCT Details
+      *
+     C           WHDR      IFEQ 'Y'
+     C                     MOVELCCTID     RTRID
+     C                     MOVELFILREF    RSNDRF
+     C                     MOVELCCTTYP    RTYPE
+     C                     MOVELCCTTST    RSTYP
+     C                     MOVELBRCA      RBBRC
+     C                     MOVELORBR      ROBRC
+     C                     MOVELBOKC      RBOKC
+     C                     MOVELPRFC      RPRFC
+     C                     MOVELCCTBOC    RBOCD
+     C                     MOVELCCTDST    RDEST
+     C                     MOVELTOCUS1    ROCS1
+     C                     MOVELTOCUS2    ROCS2
+     C                     MOVELTOCUS3    ROCS3
+     C                     MOVELTOCUS4    ROCS4
+     C                     MOVELOINST3    ROI35
+     C                     MOVELOINST1    ROI11
+     C                     MOVELREGRP1    RRGR1
+     C                     MOVELREGRP2    RRGR2
+     C                     MOVELREGRP3    RRGR3
+     C                     MOVELSINST     RSINT
+     C                     MOVELSWPRIO    RSWPR
+     C                     MOVELTRNSTP    RTTCD
+      *
+     C                     Z-ADDDBTVDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     RDRVD
+      *
+     C                     Z-ADDTTVDTE    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     RTTVD
+      *
+     C                     MOVELCCTCCY    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE CCTAMT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RTSAM
+      *
+     C                     MOVE SUMCCT    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RSAMTS
+      *
+     C                     MOVE SUMSCG    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RSDCHG
+      *
+     C                     MOVE SUMRCH    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RRCCHG
+     C                     ENDIF
+      *
+     C                     MOVELCCTCCY    RTSCY
+     C                     MOVELCCTCHG    RCHG
+      *
+     C           CCTRTE    IFNE 0
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE CCTRTE    ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVELZFIELD    REXRT
+     C                     ENDIF
+      *
+     C                     MOVELSNDCOR    RSCOR
+     C                     MOVELRCVCOR    RRCOR
+     C                     MOVELADNLI1    RADIN1
+     C                     MOVELADNLI2    RADIN2
+     C                     MOVELADNLI3    RADIN3
+     C                     MOVELADNLI4    RADIN4
+     C                     MOVELADNLI5    RADIN5
+     C                     MOVELADNLI6    RADIN6
+     C                     ENDIF
+      *
+     C                     MOVELCCTID     RTID
+     C                     MOVELTRNSID    RTRNRF
+     C                     MOVELCCTCCY    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE CCTAMT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RTRAM
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SNDCTF    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RTSCCY
+      *
+     C           CSW201    IFEQ 'Y'
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDCTF2    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RTSCY2
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDCTF3    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RTSCY3
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDCTF4    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RTSCY4
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDCTF5    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RTSCY5
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE RCVCTF    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RTCCCY
+     C                     ENDIF
+      *
+     C                     MOVELCCTCCY    RTRCY
+     C                     Z-ADDCRDVDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDATE     RCRVD
+      *
+     C                     MOVELORDCU1    RDOC1
+     C                     MOVELORDCU2    RDOC2
+     C                     MOVELORDCU3    RDOC3
+     C                     MOVELORDCU4    RDOC4
+     C                     MOVELORDI35    RDOI1
+     C                     MOVELORDI11    RDOI2
+     C                     MOVELACCI35    RAWI1
+     C                     MOVELACCI11    RAWI2
+     C                     MOVELBENF1     RBEN1
+     C                     MOVELBENF2     RBEN2
+     C                     MOVELBENF3     RBEN3
+     C                     MOVELBENF4     RBEN4
+     C                     MOVELBENF5     RBEN5
+     C                     MOVELREMI1     RREM1
+     C                     MOVELREMI2     RREM2
+     C                     MOVELREMI3     RREM3
+     C                     MOVELREMI4     RREM4
+     C                     MOVELREGRP1    RREG1
+     C                     MOVELREGRP2    RREG2
+     C                     MOVELREGRP3    RREG3
+      *
+     C                     MOVELPAYCCY    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE PAYAMT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPYAM
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SNDOCG    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPSCCY
+      *
+     C           CSW201    IFEQ 'Y'
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDOCG2    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPSCY2
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDOCG3    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPSCY3
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDOCG4    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPSCY4
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDOCG5    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPSCY5
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE RCVOCG    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RPCCCY
+     C                     ENDIF
+      *
+     C                     MOVELPAYCCY    RPYCY
+     C                     MOVELCCYCHG    RCHRG
+      *
+     C                     MOVELRCVCCY    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE RCVCHG    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RCHAM
+     C                     ENDIF
+      *
+     C                     MOVELRCVCCY    RCCY
+     C                     MOVELSNDCCY    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SNDCHG    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RSCHAM
+     C                     ENDIF
+      *
+     C                     MOVELSNDCCY    RSCCY
+      *
+      ** If CSW201 is ON, output new set of Senders Charges fields
+      *
+     C           CSW201    IFEQ 'Y'
+      *
+     C                     MOVELSDCCY2    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     MOVE '1'       *IN12
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDCHG2    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RSCHA2
+     C                     MOVE SDCCY2    RSCCY2
+     C                     ENDIF
+      *
+     C                     MOVELSDCCY3    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     MOVE '1'       *IN13
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDCHG3    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RSCHA3
+     C                     MOVE SDCCY3    RSCCY3
+     C                     ENDIF
+      *
+     C                     MOVELSDCCY4    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     MOVE '1'       *IN14
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDCHG4    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RSCHA4
+     C                     MOVE SDCCY4    RSCCY4
+     C                     ENDIF
+      *
+     C                     MOVELSDCCY5    WCCY
+     C           WCCY      IFNE *BLANKS
+     C                     MOVE '1'       *IN15
+     C                     EXSR SRCURR
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SDCHG5    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RSCHA5
+     C                     MOVE SDCCY5    RSCCY5
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           XRATE     IFNE 0
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE XRATE     ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVELZFIELD    RRATE
+     C                     ENDIF
+      *
+     C                     MOVELGOPFLG    ROTFL
+     C           CHQNUM    IFNE 0
+     C                     MOVELCHQNUM    RCQNO
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Write out the record.
+      *
+     C                     EXSR SRWRIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRRCLR - Clears all report fields                            *
+      *                                                               *
+      *  Called By: SRPROC - Detail Processing                        *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+     C           SRRCLR    BEGSR
+      *
+     C                     MOVEL*BLANKS   RTRID
+     C                     MOVEL*BLANKS   RTID
+     C                     MOVEL*BLANKS   RSNDRF
+     C                     MOVEL*BLANKS   RTYPE
+     C                     MOVEL*BLANKS   RSTYP
+     C                     MOVEL*BLANKS   RBBRC
+     C                     MOVEL*BLANKS   ROBRC
+     C                     MOVEL*BLANKS   RBOKC
+     C                     MOVEL*BLANKS   RPRFC
+     C                     MOVEL*BLANKS   RCSRF
+     C                     MOVEL*BLANKS   RBOCD
+     C                     MOVEL*BLANKS   RINPY
+     C                     MOVEL*BLANKS   RDEST
+     C                     MOVEL*BLANKS   ROCS1
+     C                     MOVEL*BLANKS   ROCS2
+     C                     MOVEL*BLANKS   ROCS3
+     C                     MOVEL*BLANKS   ROCS4
+     C                     MOVEL*BLANKS   ROCS5
+     C                     MOVEL*BLANKS   ROI35
+     C                     MOVEL*BLANKS   ROI11
+     C                     MOVEL*BLANKS   RAT35
+     C                     MOVEL*BLANKS   RAT11
+     C                     MOVEL*BLANKS   RSINT
+     C                     MOVEL*BLANKS   RSWPR
+     C                     Z-ADD0         REXDT
+     C                     Z-ADD0         RDRVD
+     C                     MOVEL*BLANKS   RAUTH
+     C                     MOVEL*BLANKS   RHDCH
+     C                     MOVEL*BLANKS   RCCCY
+     C                     MOVEL*BLANKS   RACNT
+     C                     MOVEL*BLANKS   RTRNRF
+     C                     MOVEL*BLANKS   RTYCD
+     C                     MOVEL*BLANKS   RFXDRF
+     C                     MOVEL*BLANKS   RDIPY
+     C                     MOVEL*BLANKS   RINS1
+     C                     MOVEL*BLANKS   RINS2
+     C                     MOVEL*BLANKS   RINS3
+     C                     MOVEL*BLANKS   RINS4
+     C                     MOVEL*BLANKS   RINS5
+     C                     MOVEL*BLANKS   RINS6
+     C                     MOVEL*BLANKS   RINS7
+     C                     MOVEL*BLANKS   RTRAM
+     C                     MOVEL*BLANKS   RTRCY
+     C                     MOVEL*BLANKS   RPYAM
+     C                     MOVEL*BLANKS   RPYCY
+     C                     Z-ADD0         RCRVD
+     C                     MOVEL*BLANKS   ROTFL
+     C                     MOVEL*BLANKS   RDOC1
+     C                     MOVEL*BLANKS   RDOC2
+     C                     MOVEL*BLANKS   RDOC3
+     C                     MOVEL*BLANKS   RDOC4
+     C                     MOVEL*BLANKS   RDOC5
+     C                     MOVEL*BLANKS   RDOI1
+     C                     MOVEL*BLANKS   RDOI2
+     C                     MOVEL*BLANKS   RRGR1
+     C                     MOVEL*BLANKS   RRGR2
+     C                     MOVEL*BLANKS   RRGR3
+     C                     MOVEL*BLANKS   RTTCD
+     C                     Z-ADD0         RTTVD
+     C                     MOVEL*BLANKS   RTSAM
+     C                     MOVEL*BLANKS   RSAMTS
+     C                     MOVEL*BLANKS   RSDCHG
+     C                     MOVEL*BLANKS   RRCCHG
+     C                     MOVEL*BLANKS   RTSCY
+     C                     MOVEL*BLANKS   RCHG
+     C                     MOVEL*BLANKS   REXRT
+     C                     MOVEL*BLANKS   RSCOR
+     C                     MOVEL*BLANKS   RRCOR
+     C                     MOVEL*BLANKS   RADIN1
+     C                     MOVEL*BLANKS   RADIN2
+     C                     MOVEL*BLANKS   RADIN3
+     C                     MOVEL*BLANKS   RADIN4
+     C                     MOVEL*BLANKS   RADIN5
+     C                     MOVEL*BLANKS   RADIN6
+     C                     MOVEL*BLANKS   RDAT3
+     C                     MOVEL*BLANKS   RDAT1
+     C                     MOVEL*BLANKS   RINM1
+     C                     MOVEL*BLANKS   RINM2
+     C                     MOVEL*BLANKS   RINM3
+     C                     MOVEL*BLANKS   RINM4
+     C                     MOVEL*BLANKS   RINM5
+     C                     MOVEL*BLANKS   RAWI1
+     C                     MOVEL*BLANKS   RAWI2
+     C                     MOVEL*BLANKS   RAWI3
+     C                     MOVEL*BLANKS   RAWI4
+     C                     MOVEL*BLANKS   RAWI5
+     C                     MOVEL*BLANKS   RAW11
+     C                     MOVEL*BLANKS   RBEN1
+     C                     MOVEL*BLANKS   RBEN2
+     C                     MOVEL*BLANKS   RBEN3
+     C                     MOVEL*BLANKS   RBEN4
+     C                     MOVEL*BLANKS   RBEN5
+     C                     MOVEL*BLANKS   RREM1
+     C                     MOVEL*BLANKS   RREM2
+     C                     MOVEL*BLANKS   RREM3
+     C                     MOVEL*BLANKS   RREM4
+     C                     MOVEL*BLANKS   RREG1
+     C                     MOVEL*BLANKS   RREG2
+     C                     MOVEL*BLANKS   RREG3
+     C                     MOVEL*BLANKS   RORAM
+     C                     MOVEL*BLANKS   RORCY
+     C                     MOVEL*BLANKS   RCHRG
+     C                     MOVEL*BLANKS   RCHAM
+     C                     MOVEL*BLANKS   RCCY
+     C                     MOVEL*BLANKS   RPCHCY
+     C                     MOVEL*BLANKS   RPCHAM
+     C                     MOVEL*BLANKS   RTCHCY
+     C                     MOVEL*BLANKS   RTCHAM
+     C                     MOVEL*BLANKS   RPCCCY
+     C                     MOVEL*BLANKS   RTCCCY
+     C                     MOVEL*BLANKS   RSCCY
+     C                     MOVEL*BLANKS   RSCHAM
+     C                     MOVEL*BLANKS   RPSCCY
+     C                     MOVEL*BLANKS   RTSCCY
+     C                     MOVEL*BLANKS   RSCCY2
+     C                     MOVEL*BLANKS   RSCHA2
+     C                     MOVEL*BLANKS   RPSCY2
+     C                     MOVEL*BLANKS   RTSCY2
+     C                     MOVEL*BLANKS   RSCCY3
+     C                     MOVEL*BLANKS   RSCHA3
+     C                     MOVEL*BLANKS   RPSCY3
+     C                     MOVEL*BLANKS   RTSCY3
+     C                     MOVEL*BLANKS   RSCCY4
+     C                     MOVEL*BLANKS   RSCHA4
+     C                     MOVEL*BLANKS   RPSCY4
+     C                     MOVEL*BLANKS   RTSCY4
+     C                     MOVEL*BLANKS   RSCCY5
+     C                     MOVEL*BLANKS   RSCHA5
+     C                     MOVEL*BLANKS   RPSCY5
+     C                     MOVEL*BLANKS   RTSCY5
+     C                     MOVEL*BLANKS   RRATE
+     C                     MOVEL*BLANKS   RRTIN
+     C                     MOVEL*BLANKS   RCHAT
+     C                     MOVEL*BLANKS   RCQNO
+     C                     MOVEA'0000'    *IN,12
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  SRCURR - Calls AOCURRR0 Access Program                       *
+      *                                                               *
+      *  Called By: SRRPRT - Process Report Lines                     *
+      *  Calls:     AOCURRR0 - Currency Access Program                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCURR    BEGSR
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM WCCY      PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     MOVELWCCY      DBKEY            ***************
+     C                     MOVEL'FT0574'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRWRIT
+      *****************************************************************
+      *                                                               *
+      *  SRWRIT - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: SRRPRT - Process Report Lines                     *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR
+      *
+     C           WFRST     IFEQ 'Y'
+     C                     OPEN FT0574P1
+     C                     MOVEL'N'       WFRST
+     C                     ENDIF
+      *
+      ***  Write record
+      *
+     C           WHDR      IFEQ 'Y'
+     C                     WRITEHEADP1
+     C                     WRITEHEADP2
+     C                     WRITEDETAIL1
+     C                     WRITEDETAIL2
+     C           CSW201    IFEQ 'Y'
+     C           *IN10     ANDEQ'1'
+     C                     WRITEHEADP1
+     C                     WRITEDETAIL4
+     C                     ENDIF
+     C                     WRITEDETAIL3
+     C                     ELSE
+     C                     WRITEHEADP1
+     C                     WRITEDETAIL4
+     C                     WRITEDETAIL3
+     C                     ENDIF
+      *
+      *
+     C                     MOVE 'N'       WHDR
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPEND
+      *****************************************************************
+      *                                                               *
+      *  SRPEND - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: SRPROC - Detail Processing                        *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPEND    BEGSR                                       **
+      *
+      ***  Write out Trailer
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, SRPROC, *PSSR                    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C           RCNT1     IFNE 0
+     C           RCNT2     ORNE 0
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCNT1     IFEQ 0
+     C           RCNT2     ANDEQ0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRP1
+      *****************************************************************
+      *                                                               *
+      *  SRRP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRP1     BEGSR
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM @RSEQ     SEQ     5
+     C                     PARM @RENT     SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRAU
+      *****************************************************************
+      *                                                               *
+      *  SRRAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRAU     BEGSR
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM @RSEQ     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CHGBRC                                                                        229420
+      *****************************************************************                       229420
+      *                                                               *                       229420
+      *  CHGBRC - Create new spoolfile for branch 'ALL' requests      *                       229420
+      *                                                               *                       229420
+      *****************************************************************                       229420
+      *                                                                                       229420
+     C           CHGBRC    BEGSR                                                              229420
+     C*                                                                                       229420
+     C           PTYPE     IFEQ *BLANKS                                                       229420
+     C           BRCA      ANDNEWBRCA                                                         229420
+      *                                                                                       229420
+     C           PMENU     OREQ 'RFT'                                                         229420
+     C           PTYPE     ANDEQPYTP                                                          229420
+     C           BRCA      ANDNEWBRCA                                                         229420
+      *                                                                                       229420
+     C           PMENU     OREQ 'CCT'                                                         229420
+     C           PTYPE     ANDEQCCTTYP                                                        229420
+     C           BRCA      ANDNEWBRCA                                                         229420
+      *                                                                                       229420
+     C           WFRST     IFEQ 'N'                                                           229420
+     C*  Write end of report for this branch                                                  229420
+     C                     WRITETRAILP1                                                       229420
+     C*  Close spool file, open a new one and call ZSFILE                                     229420
+     C                     MOVE BRCA      @RENT                                               229420
+     C                     CLOSEFT0574P1                                                      229420
+     C                     OPEN FT0574P1                                                      229420
+     C                     EXSR SRRP1                                                         229420
+     C                     ENDIF                                                              229420
+     C*                                                                                       229420
+     C                     MOVE BRCA      WBRCA   3                                           229420
+      *                                                                                       229240
+     C                     END                                                                229420
+     C*                                                                                       229420
+     C                     ENDSR                                                              229420
+      *****************************************************************                       229420
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZEDIT
+     C/COPY ZSRSRC,ZEDITZ2
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,444 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Zero Effective Interest Rate rpt')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0200 - List of Deals with Zero Effective Interest Rate     *
+      *                                                               *
+      *                                                               *
+      *  (C) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL033   *CREATE   Date 10Feb05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *                                                               *
+      *****************************************************************
+      *
+     FDEALSL1 IF  E           K        DISK
+     F                                              KINFDS INFDS
+      * RTV: Deals file
+      *
+     FDL0200P1O   E                    PRINTER      KINFDS SPOOL      UC
+      * PRT: Printer file for Zero Effective Interest Rate
+      *
+     FDL0200AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      * PRT: Printer file for Zero Effective Interest Rate (Audit)
+     E*****************************************************************
+     E                    CPY@    1   1 80
+     E                    RTS        14  1  A            SPREAD RATE
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+     I*****************************************************************
+     I/COPY ZSRSRC,ZFRPEDZ2
+      /SPACE 3
+     IINFDS       DS                            528
+     I                                       38  45 RCDFMT
+      *
+      * File information data structure
+      *
+     ISPOOL       DS
+      *
+      **  File information data structure
+      *
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680PRTLNE
+      *
+     ISPOOLU      DS
+      *
+      **  File information data structure
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      **  Bank details file
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      **  Branch codes file
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      **  Currencies file
+      *
+     IDSFDY     E DSDSFDY
+      *
+      **  First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      **  Second DS for access programs, long data structure
+      *
+     I            DS
+     I                                        1  14 PRTSP
+     I                                        1  14 RTS
+      ********************************************************************
+      *
+      *  MAIN PROCESSING
+      *
+      ********************************************************************
+      *
+      **  At Change of branch
+      **  Detail Processing
+      *
+     C           *LOVAL    SETLLDEALSDCF
+     C                     READ DEALSDCF                 30
+      *
+      **  Process DEALSL1 file while not EOF
+      *
+     C           *IN30     DOWEQ*OFF
+      *
+     C           BRCA      IFNE SBRCA
+     C                     EXSR SRINL1
+     C                     ENDIF
+      *
+     C           RECI      IFEQ 'D'                        If active
+     C           INTR      ANDEQ*ZEROS                     and 0 rate
+     C           BRTT      ANDNE*ZEROS                     & bas rt cde
+     C           CCY       ANDNE*BLANKS                    & currcy cde
+     C                     MOVE 'Y'       SELECT
+     C                     EXSR SRDETL                     process
+     C                     ENDIF                           of active
+      *
+     C           BRCA      IFNE SBRCA
+     C                     MOVE BRCA      SBRCA
+     C                     ENDIF
+      *
+     C                     READ DEALSDCF                 30
+      *
+     C           BRCA      IFNE SBRCA
+     C           *IN30     OREQ *ON
+     C                     EXSR SREOL1
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      **  Branch # break
+      **  Last Record
+      *
+     C                     EXSR SRINLR
+      *
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL- Load Detaild Line                                    *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      * Clear Detail record format
+      *
+     C                     CLEARDL0200D2
+      *
+      * Move Deal Number, Currency Code and base Rate Code
+      *
+     C                     MOVE DLNO      PDLNO            DEAL NUMBER
+     C                     MOVE CCY       PCCY             CURRENCY CDE
+     C                     MOVE BRTT      PBRTT            BASE RTE CDE
+      *
+      * Base Rate
+      *
+     C           BRTE      IFNE *ZEROS
+     C           BRTE      MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     MOVE 'C'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PBRTE
+     C                     ENDIF
+      *
+      * Spread Rate
+      *
+     C           RTSP      IFNE *ZEROS
+      *
+     C                     MOVE *BLANKS   NEG     1
+     C           RTSP      IFLT *ZEROS
+     C                     MULT -1        RTSP
+     C                     MOVE 'Y'       NEG
+     C                     ENDIF
+      *
+     C           RTSP      MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     PRTSP
+     C                     ENDIF
+      *
+     C           NEG       IFEQ 'Y'
+     C                     Z-ADD1         X       30
+     C                     MOVE *OFF      *IN55
+     C           ' '       LOKUPRTS,X                55
+      *
+     C           *IN55     IFEQ *ON
+     C           X         ANDGT1
+     C                     SUB  1         X
+     C                     MOVE '-'       RTS,X
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * Short Term Rate
+      *
+     C           XKSTRT    MULT 10000000  ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     MOVE 'C'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT1     PSTRT
+      *
+      * Interest Effective Date
+      *
+     C           *LIKE     DEFN VDAT      WRKDAT
+      *
+     C           DLRC      IFEQ *ZEROS
+     C                     Z-ADDVDAT      WRKDAT
+     C                     ELSE
+     C                     Z-ADDDLRC      WRKDAT
+     C                     ENDIF
+      *
+     C           WRKDAT    IFNE *ZEROS
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM           WRKDAT           Work Midas Date
+     C                     PARM BJDFIN    WQ0002  1        date format fla
+     C                     PARM *ZEROS    @3VDAT  60       Work Converted
+     C                     PARM *BLANKS   PDLRC            Work Alpha Date
+     C                     ENDIF
+      *
+      ** Print Headings fof the new branch or at overflow
+      *
+     C           BRCA      IFNE SBRCA
+     C           PRTLNE    ORGT 58
+     C                     WRITEDL0200D1
+     C                     ENDIF
+      *
+      ** Print Details
+      *
+     C                     WRITEDL0200D2
+     C                     ADD  1         SCOUNT
+      *
+     C                     ENDSR
+      *
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINL1- New Branch Number                                    *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINL1    BEGSR
+      *
+     C                     CLOSEDL0200P1
+     C                     OPEN DL0200P1
+     C                     MOVE *BLANKS   SELECT  1
+      *
+      **  Ensure report spool file recorded by RCF
+      **  transfer binary data into numeric field
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM BRCA      @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+      *
+      **  Error during ZSFILE processing, return to calling program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     Z-ADD0         PAGE
+      *
+      **  Use access program to read branch codes file
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BRCA      @DSNB   3
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD3         DBASE            * DBERR 03 *  *
+     C                     MOVELBRCA      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELBRCA      PBRCA
+     C                     MOVELA8BRNM    PBRNM
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREOL1- Branch Number Break                                  *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREOL1    BEGSR
+      *
+     C           PRTLNE    IFGT 56
+     C                     WRITEDL0200D1
+     C                     ENDIF
+      *
+     C                     WRITEDL0200D4
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINLR- Subroutine to handle last record processing          *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINLR    BEGSR
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANK    @PARM
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR   1
+      *
+      **  Error during ZSFILE processing, return to calling program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C           SCOUNT    IFEQ *ZEROS
+     C                     WRITENODTLS
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     CLOSEDL0200AU
+     C*
+     C                     MOVE *ON       *INLR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Subroutine to handle abnormal error conditions       *
+      *                                                               *
+      *  Called By:  Main Processing, SRPNAR,                         *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     WRITEDBERROR
+     C                     CLOSEDL0200AU
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR- First Time Routine                                   *
+      *                                                               *
+      *  Called By:  MAIN                                             *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+     *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     MOVE *BLANKS   SBRCA   3
+      *
+      **  Read RUNDAT for multi-branching indicator
+      *
+     C                     IN   RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT 13
+      *
+      **  Use access program to read bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      *
+     C           BJDFIN    COMP 'M'                      98
+      *
+     C                     OPEN DL0200AU
+     C                     WRITEHEADAU
+      *
+     C                     ENDSR
+      *
+     *****************************************************************
+     C*
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C*
+** CPY@   **      OBJECT COPYRIGHT
+(C) Misys International Banking Systems Ltd. 2005
+     X/COPY ZSRSRC,ZDATE2Z3

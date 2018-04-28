@@ -1,0 +1,137 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Daily Journal')                              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC0340A - GL Daily Journal                                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CGL120  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &MEMBER &CNAM &CSEQ &RESTART)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems +
+                          Ltd. 2012')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LDA)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)  TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTYP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTYP0) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTYP1) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTYP2) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTYP3) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RESTART) TYPE(*CHAR) LEN(1)
+ 
+             SNDPGMMSG  MSG('GLC0340A - GL Daily Journal') +
+                        TOMSGQ(MRUNQ)
+ 
+             RTVDTAARA  DTAARA(GLSTAT (70 1)) RTNVAR(&RTYP0)
+             RTVDTAARA  DTAARA(GLSTAT (71 1)) RTNVAR(&RTYP1)
+             RTVDTAARA  DTAARA(GLSTAT (72 1)) RTNVAR(&RTYP2)
+             RTVDTAARA  DTAARA(GLSTAT (73 1)) RTNVAR(&RTYP3)
+ 
+             OVRDBF     FILE(GLDLYPPD) TOFILE(GLDLYPPD) MBR(&MEMBER) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+ 
+             IF         COND(&POSTNUM *EQ '1') THEN(DO)
+             CHGVAR     VAR(&RTYP) VALUE(&RTYP0)
+             CHGJOB     SWS(XXXXX100)
+             OVRDBF     FILE(ACJND) TOFILE(ACJND1) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             OVRDBF     FILE(ACJNT) TOFILE(ACJNT1) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             ENDDO
+ 
+             IF         COND(&POSTNUM *EQ '2') THEN(DO)
+             CHGVAR     VAR(&RTYP) VALUE(&RTYP1)
+             CHGJOB     SWS(XXXXX000)
+             OVRDBF     FILE(ACJND) TOFILE(ACJND2) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             OVRDBF     FILE(ACJNT) TOFILE(ACJNT2) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             ENDDO
+ 
+             IF         COND(&POSTNUM *EQ '3') THEN(DO)
+             CHGVAR     VAR(&RTYP) VALUE(&RTYP2)
+             CHGJOB     SWS(XXXXX000)
+             OVRDBF     FILE(ACJND) TOFILE(ACJND3) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             OVRDBF     FILE(ACJNT) TOFILE(ACJNT3) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             ENDDO
+ 
+             IF         COND(&POSTNUM *EQ '4') THEN(DO)
+             CHGVAR     VAR(&RTYP) VALUE(&RTYP1)
+             CHGJOB     SWS(XXXXX000)
+             OVRDBF     FILE(ACJND) TOFILE(ACJND4) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             OVRDBF     FILE(ACJNT) TOFILE(ACJNT4) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             ENDDO
+ 
+             IF         COND(&POSTNUM *EQ '5') THEN(DO)
+             CHGVAR     VAR(&RTYP) VALUE(&RTYP3)
+             CHGJOB     SWS(XXXXX100)
+             OVRDBF     FILE(ACJND) TOFILE(ACJND5) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             OVRDBF     FILE(ACJNT) TOFILE(ACJNT5) FRCRATIO(500) +
+                          NBRRCDS(1000) SEQONLY(*YES 2000)
+             ENDDO
+ 
+             CALL       PGM(GL0340) PARM(&RTYP &POSTNUM)
+             DLTOVR     FILE(GLDLYPPD ACJND ACJNT)
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+             ENDDO
+ 
+             ELSE      CMD(DO)
+ 
+/* Database Error                                                  */
+ 
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                   CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                   SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                                TOMSGQ(MOPERQ MRUNQ)
+                ENDDO
+ 
+                ELSE       CMD(DO)
+ 
+                   IF         COND(%SWITCH(XXXXXX01)) THEN(DO)
+                      SNDPGMMSG  MSG('DAILY JOURNAL DOES NOT BALANCE') +
+                                   TOMSGQ(MRUNQ)
+                      SNDPGMMSG  MSG('DAILY JOURNAL DOES NOT BALANCE') +
+                                   TOMSGQ(MOPERQ)
+ 
+/* Run audit program to determine if any discrepancy between       */
+/* generated entries files and trailers.                           */
+ 
+                      CALL       PGM(GLC0345)
+ 
+                   ENDDO
+                   ELSE       CMD(DO)
+                      CHGJOB     SWS(XXXXXX01)
+ 
+                      SNDPGMMSG  MSG('FILE OUT OF BALANCE - SACBL') +
+                                   TOMSGQ(MRUNQ)
+                      SNDPGMMSG  MSG('FILE OUT OF BALANCE - SACBL') +
+                                   TOMSGQ(MOPERQ)
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             RETURN
+             ENDPGM

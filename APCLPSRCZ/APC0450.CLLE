@@ -1,0 +1,108 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas AP Retail Advices Job')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - APIs                                                */
+/*                                                                   */
+/*       APC0450 - MIDAS AP Retail Advices Job                       */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CRE020  *CREATE    Date 20Jan04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&DTAQ) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(10)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&WAIT) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MOD) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2004')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             ALCOBJ     OBJ((APRTADDTR *DTAARA *EXCL))
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Set up call to QRCVDTAQ */
+ 
+             CHGVAR     VAR(&WAIT) VALUE(-1)
+             CHGVAR     VAR(&DTAQ) VALUE('APRTADDTQ   ')
+             CHGVAR     VAR(&DTAQLIBL) VALUE('*LIBL')
+             CHGVAR     VAR(&MSGLENGTH) VALUE(12)
+ 
+ RCVDTA:
+             CLOF       OPNID(READVCPD)
+             MONMSG     MSGID(CPF4520)
+ 
+             CALL       PGM(QRCVDTAQ) PARM(&DTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA &WAIT)
+ 
+             IF         COND(%SST(&MSGDATA 1 3) = 'END') THEN(DO)
+                DLCOBJ     OBJ((APRTADDTR *DTAARA *EXCL))
+                MONMSG     MSGID(CPF0000)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGVAR     VAR(&PGM) VALUE(%SUBSTRING(&MSGDATA 1 10))
+             CHGVAR     VAR(&MOD) VALUE(%SUBSTRING(&MSGDATA 11 2))
+ 
+             OPNQRYF    FILE((READVCPD)) FORMAT(READVCPD) +
+                          QRYSLT('RPRGMN *EQ "' *CAT &PGM *CAT '" +
+                          *AND RAUTHI *EQ "Y" *AND RSAPIN *EQ "N"')
+ 
+             CPYFRMQRYF FROMOPNID(READVCPD) TOFILE(QTEMP/READVCPQ) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+ 
+             RCVMSG     PGMQ(*SAME) MSGTYPE(*LAST) MSGID(&MSGID)
+ 
+             IF         COND(&MSGID *EQ 'CPC2957') THEN(GOTO +
+                          CMDLBL(RCVDTA))
+ 
+/** Submit Retail Advice Generation */
+ 
+             SBMJOB     CMD(CALL PGM(REC000881) PARM(&PGM &MOD)) +
+                          JOB(REC000881) JOBD(MBATCH) USER(*JOBD) +
+                          RTGDTA(*JOBD) INLLIBL(*JOBD) MSGQ(MOPERQ)
+ 
+             GOTO       CMDLBL(RCVDTA)
+ 
+ ABNOR:
+ 
+/** Abnormal termination */
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          APC0450 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             DLTF       FILE(QTEMP/READVCPQ)
+             MONMSG     MSGID(CPF2105)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

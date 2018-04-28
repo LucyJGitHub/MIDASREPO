@@ -1,0 +1,80 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO) ACTGRP(GLC003280)                            */
+/*EXI    TEXT('Midas GL IBAN installation program')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC003280 - Midas GL IBAN installation program              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CGL120  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RETN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ. */
+ 
+             SNDPGMMSG  MSG('Midas GL IBAN installation program +
+                          started GLC003280') TOMSGQ(MRUNQ) +
+                          MSGTYPE(*INFO)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CALL       PGM(GL3280) PARM(&RETN)
+             IF         COND(&RETN *NE '       ') THEN(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(0XXXXXXX)
+ 
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ERROR:
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA *ALL) RTNVAR(&LDA)
+                CHGVAR     VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 44))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             IF         COND(%SWITCH(XXXXXX10)) THEN(DO)
+                CHGVAR     VAR(&MSG) VALUE('IBAN Generation failed')
+                SNDPGMMSG  MSGID(MEM0002) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC003280 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000)
+ 
+END:
+             ENDPGM

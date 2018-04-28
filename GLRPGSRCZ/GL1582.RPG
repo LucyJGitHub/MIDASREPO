@@ -1,0 +1,1582 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Review postings profit centres')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas GENERAL LEDGER MODULE
+     F*                                                                  *
+     F*      GL1582 - REVIEW POSTINGS' PROFIT CENTRE                     *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 214592             Date 26Mar03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 156040             Date 10Apr00               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002             Date 23Sep98               *
+     F*                     108027        DATE 28JAN98                   *
+     F*                     075323        DATE 13JAN98                   *
+     F*                     S10736        DATE 03SEP92                   *
+     F*                     E38492        DATE 14APR92                   *
+     F*                     E38388        DATE 10APR92                   *
+     F*                     LN0467        DATE 04SEP90                   *
+     F*                     BHF266        DATE 17JUL90                   *
+     F*                                                                  *
+      ********************************************************************
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  214592  -  Change most error codes so they match the GL         *
+      *             Instruction Manual                                   *
+      *  156040  -  Cannot distinguish between postings for same         *
+      *             Profit Centre, account and date.                     *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *    CSD005  -  Standing Data Account Narrative.  Add new field
+      *               to SDACODPD.  Recompilation of programs.
+      *    CTI002  -  Recompiled : File SDACODPD changed
+     F*    108027  -  Not able to amend profit centre on postings for    *
+     F*               closed accounts - users may need to do this for    *
+     F*               Management Accounts, so changed program to allow   *
+     F*               postings for closed accounts to be amended.        *
+     A*    075323  -  Incorrect dec places and account details output    *
+     A*               on Profit Centre reports because incorrect posting *
+     A*               accessed if RRN on APOSTPD greater than 9999. Fix  *
+     A*               is to increase the size of the Relative Record No. *
+     A*               field in Posting Profit Centres file and screen.   *
+     F*    S10736  -  MANAGEMENT ACCOUNTING                              *
+     F*            -  RECOMPILED OVER NEW LF/GLPOSTL1, GLPOSTL2,         *
+     F*               GLPOSTL3, GLPOSTL4.                                *
+     F*    E38492  -  RETAIL ACCOUNT SHOULD NOT SHOW WHEN RETAIL IS NOT  *
+     F*               ON OR RETAIL ACCOUNT NUMBERS ARE NOT USED          *
+     F*    E38388  -  ONLY CHECK BOOKING BRANCHES IF MUTIBRANCHING       *
+     F*    LN0467  -  IN CASE OF AN ENQURIY, USE 'ZVBBU' FOR BRANCH      *
+     F*               VALIDATION IN PLACE OF 'ZVACTBU' OR 'ZVACTU'.      *
+     F*               ALSO FIX A LITTLE ERROETTE REGRADING SUBFILE SIZE  *
+     F*    BHF266  -  WHEN ICDR SPECIFIES THAT PRFC CHANGE FUNCTION IS   *
+     F*               NOT AVAILABLE, THE SUBFILE SHOULD NOT BE DISPLAYED *
+     F********************************************************************
+     F* FUNCTION OF INDICATOR
+     F*
+     F*  01 - F3 PROGRAMME END
+     F*  02 - F12 PREVIOUS SCREEN
+     F*
+     F*  05 - SFLCLR
+     F*  06 - SFLDSPCTL
+     F*  07 - SFLDSP
+     F*  08 - SFLEND
+     F*
+     F*  10 - BRANCH CODE ENTERED NOT VALID
+     F*  11 - PROFIT CENTRE ENTERED NOT VALID
+     F*  12 - CUSTOMER ENTERED NOT VALID
+     F*  13 - CURRENCY CODE ENTERED NOT VALID
+     F*  14 - ACCOUNT CODE ENTERED NOT VALID
+     F*  15 - ACCOUNT SEQUENCE NUMBER ENTERED NOT VALID
+     F*  16 - ACCOUNT ENTERED NOT VALID
+     F*  17 - RETAIL ACCOUNT ENTERED NOT VALID
+     F*  18 - FROM DATE ENTERED NOT VALID
+     F*  19 - TO DATE ENTERED NOT VALID
+     F*  20 -  1ST SCREEN ERROR INDICATOR
+     F*  21 -  ONLY 'ALL' IS ALLOWED FOR FLD010
+     F*  22 -  ONLY 'Y' IS ALLOWED FOR FLD014
+     F*  23 -  NO RECORDS FOUND
+     F*  24 -  2ND SCREEN ERROR INDICATOR
+     F*  25 -  BOTH FULL AND RETAIL ACCOUNT DETAILS HAVE BEEN ENTERED
+     F*  26 -  PROTECT WRITE IF CONFIRMATION SCREEN
+     F*  27 -  MUST CHOOSE EITHER A SINGLE RECORD OR 'ALL'
+     F*  28 -  MORE THAN 500 RECORDS IN SUBFILE - NOT ALL OF THEM SHOWN
+     F*
+     F*  50 - MULTIBRANCHING MODE
+     F*  51 - ENQUIRY MODE
+     F*  52 - RETAIL MODULE PRESENT ON THE SYSTEM
+     F*  53 - BRANCH CODE HAS BEEN ENTERED
+     F*  54 - BRANCH CODE HAS NOT BEEN ENETERED
+     F*  55 - CUSTOMER NUMBER/SHORTNAME HAS BEEN ENTERED
+     F*  56 - CUSTOMER NUMBER/SHORTNAME HAS NOT BEEN ENTERED
+     F*  57 - CURRENCY CODE HAS BEEN ENTERED
+     F*  58 - CURRENCY CODE HAS NOT BEEN ENTERED
+     F*  59 - ACCOUNT CODE HAS BEEN ENTERED
+     F*  60 - ACCOUNT CODE HAS NOT BEEN ENTERED
+     F*  61 - ACCOUNT SEQUENCE NUMBER HAS BEEN ENTERED
+     F*  62 - ACCOUNT SEQUENCE NUMBER HAS NOT BEEN ENTERED
+     F*  63 - RETAIL ACCOUNT HAS BEEN ENTERED
+     F*  64 - RETAIL ACCOUNT HAS NOT BEEN ENTERED
+     F*
+     F*  69 - PROFIT CENTRES NOT USED                                     BHF266
+     F*  70 - PROFIT CENTRE CHANGE NOT AVAILABLE
+     F*  71 - END OF FILE FOR ACCNT
+     F*  72 - END OF FILE FOR ACNUM
+     F*  74 - END OF FILE FOR SUBFILE
+     F*  75 - END OF FILE FOR SUBFILE
+     F*  76 - END OF FILE FOR GLPOSTL1,GLPOSTL2,GLPOSTL3,GLPOSTL4.
+     F*  77 - LAST SUBFILE RECORD
+     F*  78 - SUBFILE RECORD NOT FOUND
+     F*  79 - END OF READ ON SUBFILE
+     F*  80 - FLD014 NOT 'Y' OR BLANK
+     F*  81 - TESTING FOR NUMERIC ENTRY
+     F*
+     F*  90-99 USED IN ZDATE1 AND Z-DATE2 SUBROUTINES
+     F*  98 - DATE FORMAT INDICATOR
+     F*
+     F*  U7&U8 - DATABASE ERROR
+     F*
+     FGL1582DFCF  E                    WORKSTN
+     F                                        RRN1  KSFILE GL1582F3
+     FGLPOSTL1IF  E           K        DISK
+     F                                              KINFDS INFDS1
+     FGLPOSTL2IF  E           K        DISK
+     F                                              KINFDS INFDS2
+     FGLPOSTL3IF  E           K        DISK
+     F                                              KINFDS INFDS3
+     FGLPOSTL4IF  E           K        DISK
+     F                                              KINFDS INFDS4
+     FACCNT   IF  E           K        DISK
+     FACNUM   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACCNT1
+     FPSTPRF1 O   E           K        DISK                      A
+     FPSTPRF2 O   E           K        DISK
+     E                    ERC        20  4
+     E                    ERCD       10  4
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR.ARRAY
+      *                                                                   156040
+     E/COPY ZSRSRC,ZFRPEDZ1                                               156040
+      *                                                                                       214592
+      ** Rename fields for GLPOSTL1                                                           214592
+      *                                                                                       214592
+     IAPOSTPDF                                                                                214592
+     I              ACKEY                           GLACKY                                    214592
+      *                                                                   156040
+     I*     USER DEFAULT DATA STRUCTURE
+     IZMUSER      DS
+     I                                       11  13 BRC
+     I                                       14  16 DPPT
+     I                                       17  17 BANK
+     I*     LOCAL DATA AREA
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IACCODE      DS
+     I                                        1   3 BRCA
+     I**********                              4   90CNUM                                      CSD027
+     I                                        4   9 CNUM                                      CSD027
+     I                                       10  12 CCY
+     I**********                             13  160ACOD                                      CGL029
+     I**********                             17  180ACSQ                                      CGL029
+     I                                       13  220ACOD                                      CGL029
+     I                                       23  240ACSQ                                      CGL029
+     I*
+     I*  FILE INFORMATION DATA STRUCTURE FOR GLPOSTL1
+     I*
+     IINFDS1      DS
+     I                                      261 270 FORM1
+     I                                    B 397 4000RRNUM1
+     I*
+     I*  FILE INFORMATION DATA STRUCTURE FOR GLPOSTL2
+     I*
+     IINFDS2      DS
+     I                                      261 270 FORM2
+     I                                    B 397 4000RRNUM2
+     I*
+     I*  FILE INFORMATION DATA STRUCTURE FOR GLPOSTL3
+     I*
+     IINFDS3      DS
+     I                                      261 270 FORM3
+     I                                    B 397 4000RRNUM3
+     I*
+     I*  FILE INFORMATION DATA STRUCTURE FOR GLPOSTL4
+     I*
+     IINFDS4      DS
+     I                                      261 270 FORM4
+     I                                    B 397 4000RRNUM4
+     I**
+     I**     Program status data structure.
+     I**
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 SWSID
+     I                                      254 263 USRID
+     I*
+     I* DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I              BGMBIN                          MBIN
+     I*                                                                   E38492
+     ISDRETL    E DSSDRETLPD                                              E38492
+     I*
+     ISDBANK    E DSSDBANKPD
+     I              BJMRDT                          SRUNA
+     I*
+     ISDGELR    E DSSDGELRPD
+     I              QQACCD                          QQACCX                                    CGL029
+     I*
+     ISDPRFC    E DSSDPRFCPD
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I*
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          QQACCY                                    CGL029
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFAX                                    CGL029
+     I*
+     ISDCURR    E DSSDCURRPD
+     I*
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     I/COPY ZSRSRC,ZFRPEDZ2                                               156040
+      *                                                                   156040
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* INITIAL PROCESSING - INITIALISE FEILDS
+     C*
+     C                     MOVE *BLANKS   ERR1
+     C                     MOVE *BLANKS   ERR2
+     C                     MOVEA*BLANKS   ERC
+     C                     MOVEA*BLANKS   ERCD
+     C                     Z-ADD0         ERRCOD
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ACTCOD  1
+     C                     PARM           RTNCOD  1
+     C*
+     C                     MOVE *BLANKS   RTNCOD
+     C*
+     C* CHECK MULTIBRANCHING AND RETAIL MODULE FROM SDMMODPD
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C           MBIN      COMP 'Y'                      50
+     C*
+     C           BGRTBN    COMP 'Y'                      52
+     C*                                                                   E38492
+     C* IF RETAIL IS PRESENT, SEE IF RETIAL ACCOUNT NUMBERS ARE USED      E38492
+     C*                                                                   E38492
+     C           *IN52     IFEQ '1'                                       E38492
+     C                     CALL 'AORETLR0'                                E38492
+     C                     PARM '*DBERR  '@RTCD   7                       E38492
+     C                     PARM '*FIRST  '@OPTN   7                       E38492
+     C           SDRETL    PARM SDRETL    DSFDY                           E38492
+     C           BMRANR    IFEQ 'N'                                       E38492
+     C                     SETOF                         52               E38492
+     C                     END                                            E38492
+     C                     END                                            E38492
+     C**
+     C**  GET ZMUSER
+     C**
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C                     UNLCKZMUSER
+     C**
+     C**  IF ENQUIRY MODE, SET ON INDICATOR ACCORDINGLY
+     C**
+     C           ACTCOD    COMP 'E'                      51
+     C*
+     C* IS PROFIT CENTRE CHANGEABLE?(FROM SDGELRPD)
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C           BKPRCU    IFEQ 'N'                                       BHF266
+     C                     SETON                     69                   BHF266
+     C                     END                                            BHF266
+     C*                                                                   BHF266
+     C           BKPRCA    IFEQ 'N'
+     C                     SETON                     70
+     C                     END
+     C*
+     C* OBTAIN RUN DATE, DATE FORMAT AND  FROM SDBANKPD
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C********************************************************************
+     C* MAIN PROCESSING
+     C********************************************************************
+     C*
+     C* DO WHILE F3 IS NOT PRESSED
+     C*
+     C           *IN01     DOWEQ'0'
+     C*
+     C*  IF RETAIL ACCOUNT WAS ENTERED ON THE FIRST SCREEN, BLANK OUT
+     C*  FULL ACCOUNT DETAILS (FOR SUBSEQUENT DISPLAYS OF FIRST SCREEN)
+     C*
+     C           *IN63     IFEQ '1'
+     C           *IN25     ANDEQ'0'
+     C           *IN16     ANDEQ'0'
+     C                     MOVE *BLANKS   FLD003
+     C                     MOVE *BLANKS   FLD004
+     C                     MOVE *BLANKS   FLD005
+     C                     MOVE *BLANKS   FLD006
+     C                     END
+     C*
+     C*  IF FULL ACCOUNT DETAILS WERE ENTERED AND RETIAL MODULE IS
+     C*  PRESENT, BLANK OUT RETAIL ACCOUNT (SEE PREVIOUS COMMENT)
+     C*
+     C           *IN52     IFEQ '1'
+     C           *IN55     IFEQ '1'
+     C           *IN57     ANDEQ'1'
+     C           *IN59     ANDEQ'1'
+     C           *IN61     ANDEQ'1'
+     C           *IN20     ANDEQ'0'
+     C                     MOVE *BLANKS   FLD007
+     C                     END
+     C                     END
+     C*
+     C* DO NOT DISPLAY DEFAULT BRANCH UNLESS THAT FIELD IS IN ERROR
+     C*
+     C           *IN10     IFEQ '0'
+     C           *IN54     ANDEQ'1'
+     C                     MOVE *BLANKS   FLD001
+     C                     END
+     C*
+     C* DISPLAY ERROR IF THERE IS ONE
+     C*
+     C                     MOVEAERC       ERR1
+     C                     MOVEA*BLANKS   ERC
+     C                     Z-ADD0         W
+     C*
+     C*  DISPLAY FIRST SCREEN
+     C*
+     C                     WRITEGLHEADER
+     C                     EXFMTGL1582F1
+     C*
+     C* SET INDICATORS TO ZERO
+     C*
+     C                     MOVEA'00000000'*IN,10
+     C                     MOVEA'00000000'*IN,18
+     C                     MOVEA'000'     *IN,26
+     C*
+     C* CHECK FIELDS USED
+     C*
+     C           FLD001    COMP *BLANKS              535354
+     C           FLD003    COMP *BLANKS              555556
+     C           FLD004    COMP *BLANKS              575758
+     C           FLD005    COMP *BLANKS              595960
+     C           FLD006    COMP *BLANKS              616162
+     C           *IN52     IFEQ '1'
+     C           FLD007    COMP *BLANKS              636364
+     C                     END
+     C*
+     C* ONLY ONE OF ACCOUNT DETAILS IS ALLOWED
+     C*
+     C           *IN63     IFEQ '1'
+     C           *IN55     IFEQ '1'
+     C           *IN57     OREQ '1'
+     C           *IN59     OREQ '1'
+     C           *IN61     OREQ '1'
+     C                     SETON                     2520
+     C                     ADD  1         W       20
+     C**********           MOVEL'001'     ERC,W                                               214592
+     C                     MOVEL'016'     ERC,W                                               214592
+     C                     END
+     C                     END
+     C*
+     C*IF FULL ACCOUNT DETAILS ENTERED, IT MUST INCLUDE ALL FOUR FIELDS
+     C*
+     C           *IN20     IFEQ '0'
+     C*
+     C           *IN55     IFEQ '1'
+     C           *IN57     OREQ '1'
+     C           *IN59     OREQ '1'
+     C           *IN61     OREQ '1'
+     C*
+     C           *IN56     IFEQ '1'
+     C           *IN58     OREQ '1'
+     C           *IN60     OREQ '1'
+     C           *IN62     OREQ '1'
+     C                     SETON                     2016
+     C                     ADD  1         W
+     C**********           MOVEL'002'     ERC,W                                               214592
+     C                     MOVEL'004'     ERC,W                                               214592
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*   IF BRANCH BLANK PUT IN DEFAULT BRANCH
+     C*
+     C           FLD001    IFEQ '   '
+     C                     MOVELBRC       FLD001
+     C                     END
+     C*
+     C* IF NO ERRORS VALIDATE FEILDS
+     C*
+     C           *IN20     IFEQ '0'
+     C*
+     C* IN MBIN = 'Y' VALIDATE BRANCH CODE AND AUTHORITY, OTHERWISE
+     C* ONLY VALIDATE AUTHORITY
+     C*
+     C           *IN50     IFEQ '1'
+     C           FLD001    ANDNE'ALL'
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM FLD001    @KEYB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     1020
+     C                     ADD  1         W
+     C**********           MOVEL'003'     ERC,W                                               214592
+     C                     MOVEL'001'     ERC,W                                               214592
+     C                     ELSE
+     C                     MOVE A8BRCD    FLD001
+     C                     END
+     C                     END
+     C*
+     C           *IN20     IFEQ '0'
+     C*
+     C           FLD001    IFNE 'ALL'
+     C*
+     C           *IN51     IFEQ '1'                                       LN0467
+     C           *IN50     IFEQ '1'                                       E38388
+     C                     CALL 'ZVBBU'                                   LN0467
+     C                     PARM           FLD001                          LN0467
+     C                     PARM *ZEROS    ERRCOD                          LN0467
+     C                     END                                            E38388
+     C                     ELSE                                           LN0467
+     C           *IN50     IFEQ '1'
+     C                     CALL 'ZVACTBU'
+     C                     PARM           ACTCOD
+     C                     PARM           FLD001
+     C                     PARM           ERRCOD  10
+     C*
+     C                     ELSE
+     C                     CALL 'ZVACTU'
+     C                     PARM           ACTCOD
+     C                     PARM           ERRCOD  10
+     C                     END
+     C                     END                                            LN0467
+     C*
+     C                     ELSE
+     C                     Z-ADD0         ERRCOD
+     C           BANK      IFNE 'Y'
+     C                     Z-ADD3         ERRCOD
+     C                     END
+     C                     END
+     C*
+     C           ERRCOD    IFNE 0
+     C                     SETON                     1020
+     C                     ADD  1         W
+     C           ERRCOD    IFEQ 1
+     C**********           MOVEL'004'     ERC,W                                               214592
+     C                     MOVEL'002'     ERC,W                                               214592
+     C                     ELSE
+     C           ERRCOD    IFEQ 2
+     C**********           MOVEL'005'     ERC,W                                               214592
+     C                     MOVEL'002'     ERC,W                                               214592
+     C                     ELSE
+     C**********           MOVEL'006'     ERC,W                                               214592
+     C                     MOVEL'002'     ERC,W                                               214592
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C* VALIDATE PROFIT CENTRE
+     C*
+     C           FLD002    IFNE '    '
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM FLD002    @KEYP   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     1120
+     C                     ADD  1         W
+     C**********           MOVEL'007'     ERC,W                                               214592
+     C                     MOVEL'003'     ERC,W                                               214592
+     C                     ELSE
+     C                     MOVE DSPCCD    FLD002
+     C                     END
+     C                     END
+     C*
+     C* IF FULL ACCOUNT ENTERED VALIDATE CUSTOMER
+     C* IF CUSTOMER NOT NUMERIC USE SHORTNAME TO VALIDATE
+     C*
+     C           FLD003    IFEQ *BLANKS
+     C**********           Z-ADD0         FLD03X  60                                          CSD027
+     C                     MOVE *BLANKS   FLD03X  6                                           CSD027
+     C**********           Z-ADD0         FLD05X  40                                          CGL029
+     C                     Z-ADD0         FLD05X 100                                          CGL029
+     C                     Z-ADD0         FLD06X  20
+     C                     ELSE
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM FLD003    @KEYC  10
+     C                     PARM           P@KYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C*  IF VALID ENTRY DETERMINE IF CUSTOMER NUMBER OR SHORTNAME
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     1220
+     C                     ADD  1         W
+     C**********           MOVEL'008'     ERC,W                                               214592
+     C                     MOVEL'012'     ERC,W                                               214592
+     C                     ELSE
+     C*
+     C* USE CUSTOMER NUMBER FOR ACCOUNT VALIDATION IF SHORTNAME WAS
+     C* ENTERED PREVIOUSLY
+     C*
+     C                     MOVE *BLANKS   FLD003
+     C           P@KYST    IFEQ '*CNUM'
+     C                     MOVELBBCUST    FLD003
+     C                     MOVE BBCUST    FLD03X
+     C                     MOVE BBCSSN    CSNM
+     C                     ELSE
+     C                     MOVE BBCSSN    FLD003
+     C                     MOVE BBCUST    FLD03X
+     C                     END
+     C                     END
+     C*
+     C*  VALIDATE CURRENCY
+     C*
+     C           FLD004    IFNE *BLANKS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM FLD004    @KEYY   4
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     1320
+     C                     ADD  1         W
+     C**********           MOVEL'009'     ERC,W                                               214592
+     C                     MOVEL'013'     ERC,W                                               214592
+     C                     ELSE
+     C                     MOVE A6CYCD    FLD004
+     C                     END
+     C                     END
+     C*
+     C* VALIDATE ACCOUNT CODE AND SEQUENCE
+     C*
+     C           FLD005    IFNE *BLANKS
+     C                     MOVE FLD005    FLD05X
+     C*
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C**********           PARM FLD005    @KEYA   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM FLD005    @KEYA  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     1420
+     C                     ADD  1         W
+     C**********           MOVEL'010'     ERC,W                                               214592
+     C                     MOVEL'014'     ERC,W                                               214592
+     C                     ELSE
+     C                     MOVE A5ACCD    FLD005
+     C                     MOVE A5ACCD    FLD05X
+     C           A5TOIN    IFEQ 'Y'
+     C                     SETON                     1420
+     C                     ADD  1         W
+     C**********           MOVEL'011'     ERC,W                                               214592
+     C                     MOVEL'014'     ERC,W                                               214592
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           FLD006    IFNE *BLANKS
+     C                     TESTN          FLD006     81
+     C                     MOVE FLD006    FLD06X
+     C*
+     C           *IN81     IFEQ '0'
+     C           FLD06X    ORGT 99
+     C           FLD06X    ORLT 1
+     C                     SETON                     1520
+     C                     ADD  1         W
+     C**********           MOVEL'012'     ERC,W                                               214592
+     C                     MOVEL'015'     ERC,W                                               214592
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C           FLD001    IFNE 'ALL'
+     C*
+     C* CHECK ACCOUNT DETAILS IF NO ERRORS IN COMPONENT FIELDS
+     C*
+     C           *IN20     IFEQ '0'
+     C           *IN55     ANDEQ'1'
+     C           *IN57     ANDEQ'1'
+     C           *IN59     ANDEQ'1'
+     C           *IN61     ANDEQ'1'
+     C*
+     C           ACKEY     KLIST
+     C                     KFLD           FLD03X
+     C                     KFLD           FLD004
+     C                     KFLD           FLD05X
+     C                     KFLD           FLD06X
+     C                     KFLD           FLD001
+     C*
+     C           ACKEY     CHAINACCNTABF             71
+     C*
+     C           *IN71     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           RECI      ANDNE'C'                                       108027
+     C                     SETON                     1620
+     C                     ADD  1         W
+     C**********           MOVEL'013'     ERC,W                                               214592
+     C                     MOVEL'005'     ERC,W                                               214592
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C* CHECK RETAIL ACCOUNT NUMBER
+     C*
+     C           *IN52     IFEQ '1'
+     C           FLD007    IFNE *BLANKS
+     C*
+     C                     MOVE FLD007    FLD07X 100
+     C*
+     C           FLD07X    CHAINACNUM                72
+     C*
+     C           *IN72     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           RECI      ANDNE'C'                                       108027
+     C                     SETON                     1720
+     C                     ADD  1         W
+     C**********           MOVEL'014'     ERC,W                                               214592
+     C                     MOVEL'017'     ERC,W                                               214592
+     C                     MOVE *BLANKS   FLD004
+     C                     ELSE
+     C           BRCA      IFNE FLD001
+     C                     CALL 'ZVBBU'
+     C                     PARM           BRCA
+     C                     PARM *ZEROS    ERRCOD
+     C                     END
+     C           ERRCOD    IFNE 0
+     C                     SETON                     1720
+     C                     ADD  1         W
+     C**********           MOVEL'015'     ERC,W                                               214592
+     C                     MOVEL'018'     ERC,W                                               214592
+     C                     MOVE *BLANKS   FLD004
+     C                     ELSE
+     C                     MOVE CNUM      FLD03X
+     C                     MOVE CCY       FLD004
+     C                     MOVE ACOD      FLD05X
+     C                     MOVE ACSQ      FLD06X
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C*  VALIDATE DATES & COMPARE TO RUN DATE , THEN CONVERT TO DAY NO.
+     C*
+     C                     Z-ADD0         TDATEM
+     C                     Z-ADD0         FDATEM
+     C*
+     C           FLD009    IFNE *BLANKS
+     C                     MOVE FLD009    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C           *IN99     IFNE '0'
+     C                     SETON                     1920
+     C                     ADD  1         W
+     C**********           MOVEL'016'     ERC,W                                               214592
+     C                     MOVEL'021'     ERC,W                                               214592
+     C                     ELSE
+     C           ZDAYNO    IFGT BJRDNB
+     C                     SETON                     1920
+     C                     ADD  1         W
+     C**********           MOVEL'017'     ERC,W                                               214592
+     C                     MOVEL'023'     ERC,W                                               214592
+     C                     ELSE
+     C                     MOVE ZDAYNO    TDATEM
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE BJRDNB    TDATEM
+     C                     END
+     C*
+     C           FLD008    IFNE *BLANKS
+     C                     MOVE FLD008    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C           *IN99     IFNE '0'
+     C                     SETON                     1820
+     C                     ADD  1         W
+     C**********           MOVEL'018'     ERC,W                                               214592
+     C                     MOVEL'020'     ERC,W                                               214592
+     C                     ELSE
+     C                     MOVE ZDAYNO    FDATEM
+     C                     END
+     C*
+     C                     END
+     C*
+     C*  MAKE SURE 'FROM DATE' NOT LATER THAN 'TO DATE'
+     C*
+     C           FLD008    IFNE *BLANKS
+     C           FLD009    ANDNE*BLANKS
+     C           FDATEM    ANDGTTDATEM
+     C                     SETON                     181920
+     C                     ADD  1         W
+     C**********           MOVEL'019'     ERC,W                                               214592
+     C                     MOVEL'023'     ERC,W                                               214592
+     C                     END
+     C*
+     C                     END
+     C*
+     C***IF*NO*ERRORS*GO*TO*THE*SECOND*SCREEN                             BHF266
+     C*  IF NO ERRORS ON THE FIRST SCREEN AND PROFIT CENTRES ARE USED &   BHF266
+     C*  AMENDABLE OR IF NO ERRORS FOUND AND PROFIT CENTRES ARE USED      BHF266
+     C*  BUT ARE NOT AMENDABLE AND THE PROGRAMME IS IN ENQUIRY MODE GO    BHF266
+     C*  AND PROCESS THE SECOND SCREEN                                    BHF266
+     C*
+     C           *IN20     IFEQ '0'
+     C           *IN69     ANDEQ'0'                                       BHF266
+     C           *IN70     ANDEQ'0'                                       BHF266
+     C           *IN51     OREQ '1'                                       BHF266
+     C           *IN69     ANDEQ'0'                                       BHF266
+     C           *IN70     ANDEQ'1'                                       BHF266
+     C           *IN20     ANDEQ'0'                                       BHF266
+     C*
+     C                     MOVE *BLANKS   FLD010
+     C                     MOVE *BLANKS   FLD011
+     C                     MOVE *BLANKS   FLD014
+     C*
+     C* LOAD SUBFILE
+     C*
+     C                     EXSR LODSF
+     C*
+     C* WHILE F3 OR F12 ARE NOT PRESSED, DISPLAY SUBFILE
+     C*
+     C           *IN01     DOWEQ'0'
+     C           *IN02     ANDEQ'0'
+     C*
+     C*  SET UP BRANCH CODE AND NAME
+     C*
+     C                     MOVE FLD001    SBRCA
+     C                     MOVE A8BRNM    SBRNM
+     C*
+     C           FLD001    IFEQ 'ALL'
+     C                     MOVE *BLANKS   SBRNM
+     C                     END
+     C*
+     C* DISPLAY ERROR IF THERE IS ONE
+     C*
+     C                     MOVEAERCD      ERR2
+     C                     MOVEA*BLANKS   ERCD
+     C                     Z-ADD0         V
+     C*
+     C                     WRITEGL1582F2
+     C                     EXFMTGL1582F4
+     C*
+     C                     SETOF                     212224
+     C                     SETOF                     252627
+     C                     SETOF                     807475
+     C*
+     C*  IF IN AMEND MODE, READ THE SCREEN
+     C*
+     C           *IN23     IFEQ '0'
+     C           *IN51     ANDEQ'0'
+     C           *IN01     ANDEQ'0'
+     C           *IN02     ANDEQ'0'
+     C*
+     C                     READ GL1582F2                 74
+     C                     EXSR GETREC
+     C*
+     C* CAN ONLY ENTER 'ALL' IN THIS FIELD
+     C*
+     C           FLD010    IFNE '   '
+     C           FLD010    ANDNE'ALL'
+     C           *IN24     ANDEQ'0'
+     C                     SETOF                     28
+     C                     SETON                     2124
+     C                     ADD  1         V       20
+     C                     MOVEL'032'     ERCD,V
+     C                     END
+     C*
+     C* MUST SELECT 'ALL' OR INDIVIDUAL RECORDS
+     C*
+     C           FLD010    IFEQ '   '
+     C           Z         ANDEQ0
+     C           *IN24     ANDEQ'0'
+     C                     SETOF                     28
+     C                     SETON                     212427
+     C                     ADD  1         V
+     C                     MOVEL'031'     ERCD,V
+     C                     END
+     C*
+     C* CANNOT ENTER BOTH
+     C*
+     C           FLD010    IFEQ 'ALL'
+     C           Z         ANDNE0
+     C           *IN24     ANDEQ'0'
+     C                     SETOF                     28
+     C                     SETON                     272421
+     C                     ADD  1         V
+     C                     MOVEL'033'     ERCD,V
+     C                     END
+     C*
+     C* IF FILLED, MUST ONLY USE 'Y' AND NOTHING ELSE
+     C*
+     C           *IN80     IFEQ '1'
+     C           *IN24     ANDEQ'0'
+     C                     SETOF                     28
+     C                     SETON                     2427
+     C                     ADD  1         V
+     C                     MOVEL'030'     ERCD,V
+     C                     END
+     C*
+     C*  NEW PROFIT CENTRE MUST EXIST IF NOT LEFT BLANK
+     C*
+     C           FLD011    IFNE '    '
+     C           *IN24     ANDEQ'0'
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM FLD011    @KEYP
+     C           SDPRFC    PARM SDPRFC    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETOF                     28
+     C                     SETON                     2224
+     C                     ADD  1         V
+     C                     MOVEL'034'     ERCD,V
+     C                     ELSE
+     C                     MOVE DSPCCD    FLD011
+     C                     END
+     C                     END
+     C*
+     C*  NEW PROFIT CENTER CANNOT BE THE SAME AS THE OLD PROFIT CENTRE
+     C*
+     C           FLD011    IFEQ FLD002
+     C           *IN24     ANDEQ'0'
+     C                     SETOF                     28
+     C                     SETON                     2224
+     C                     ADD  1         V
+     C                     MOVEL'034'     ERCD,V
+     C                     END
+     C*
+     C* UPDATE SUBFILE
+     C*
+     C           *IN27     IFEQ '1'
+     C                     EXSR UPDSF
+     C                     END
+     C*
+     C*   IF NO ERRORS RECEIVED AND EXIT OR
+     C*   PREV SCREEN NOT PRESSED, ASK FOR CONFIRMATION
+     C*
+     C           *IN24     IFEQ '0'
+     C           *IN01     ANDEQ'0'
+     C           *IN02     ANDEQ'0'
+     C*
+     C                     SETOF                     28
+     C                     SETON                     26
+     C                     EXSR UPDSF
+     C                     WRITEGL1582F2
+     C                     EXFMTGL1582F4
+     C*
+     C*    IF CONFIRM IS YES AND END OR PREV SCREEN NOT PRESSED
+     C*    WRITE RECORDS TO FILE
+     C*
+     C           *IN01     IFEQ '0'
+     C           *IN02     ANDEQ'0'
+     C*
+     C           FLD010    IFNE 'ALL'
+     C                     Z-ADD0         RRN1
+     C                     Z-ADD1         SDREC1
+     C           *IN77     DOUEQ'1'
+     C                     ADD  1         RRN1
+     C           RRN1      CHAINGL1582F3             77
+     C           *IN77     IFEQ '0'
+     C           FLD014    ANDNE' '
+     C                     MOVELFLD017    BRCA
+     C                     MOVE USRID     USRP
+     C                     TIME           TIME
+     C                     MOVELFLD019    POSRRN
+     C                     ADD  1         NOREQ
+     C*
+     C*  IF LAST RECORD READ WAS A 'LIVE' POSTING PUT 'L' AS INDICATOR
+     C*  ELSE PUT 'H' FOR 'HISTORIC' POSTINGS
+     C*
+     C           FLD020    IFEQ 'APOSTPD1'
+     C           FLD020    OREQ 'APOSTPDF'
+     C           FLD020    OREQ 'APOSTPD3'
+     C           FLD020    OREQ 'APOSTPD4'
+     C                     MOVEL'L'       POSIND
+     C                     ELSE
+     C                     MOVEL'H'       POSIND
+     C                     END
+     C*
+     C                     WRITEPSTPRF2R
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     READ GL1582F2                 77
+     C                     MOVE FLD002    PRFC
+     C                     MOVE FLD011    NPRFC
+     C*
+     C*  BLANK OUT CUSTOMER NUMBER ENTRY ON PF/PSTPRF* UNLESS CUSTOMER
+     C*  MUMBER OR RETAIL ACCOUNT WAS ENTERED ON THE ORIGINAL SCREEN
+     C*
+     C           *IN64     IFEQ '1'
+     C           *IN56     ANDEQ'1'
+     C**********           Z-ADD0         CNUM                                                CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C                     ELSE
+     C                     MOVE FLD03X    CNUM
+     C                     END
+     C*
+     C*  BLANK OUT CURRENCY CODE ENTRY ON PF/PSTPRF* UNLESS CURRENCY
+     C*  CODE OR RETAIL ACCOUNT WAS ENTERED ON THE ORIGINAL SCREEN
+     C*
+     C           *IN64     IFEQ '1'
+     C           *IN58     ANDEQ'1'
+     C                     MOVE *BLANKS   CCY
+     C                     ELSE
+     C                     MOVE FLD004    CCY
+     C                     END
+     C*
+     C*  BLANK OUT ACCOUNT CODE ENTRY ON PF/PSTPRF* UNLESS ACCOUNT
+     C*  CODE OR RETAIL ACCOUNT WAS ENTERED ON THE ORIGINAL SCREEN
+     C*
+     C           *IN64     IFEQ '1'
+     C           *IN60     ANDEQ'1'
+     C                     Z-ADD0         ACOD
+     C                     ELSE
+     C                     MOVE FLD05X    ACOD
+     C                     END
+     C*
+     C*  BLANK OUT ACCOUNT SEQ ENTRY ON PF/PSTPRF* UNLESS ACCOUNT
+     C*  SEQ OR RETAIL ACCOUNT WAS ENTERED ON THE ORIGINAL SCREEN
+     C*
+     C           *IN64     IFEQ '1'
+     C           *IN62     ANDEQ'1'
+     C                     Z-ADD0         ACSQ
+     C                     ELSE
+     C                     MOVE FLD06X    ACSQ
+     C                     END
+     C*
+     C*  BLANK OUT CUSTOMER SHORTNAME ENTRY ON PF/PSTPRF* UNLESS
+     C*  IT WAS ENTERED ON THE ORIGINAL SCREEN
+     C*
+     C           *IN56     IFEQ '1'
+     C                     MOVE *BLANKS   CSNM
+     C                     ELSE
+     C           P@KYST    IFEQ '*CNUM'
+     C                     MOVE *BLANKS   CSNM
+     C                     ELSE
+     C                     MOVE FLD003    CSNM
+     C                     END
+     C                     END
+     C*
+     C*  IF RETAIL MODULE IS PRESENT AND REQUEST BY RETAIL ACCOUNT,
+     C*  USE THAT NUMBER, OTHERWISE USE INFORMATION FROM LF/ACCNT
+     C*
+     C           *IN52     IFEQ '1'
+     C           *IN63     IFEQ '1'
+     C                     MOVE FLD007    ACNO
+     C                     END
+     C           *IN64     IFEQ '1'
+     C                     MOVE FLD018    ACNO
+     C                     END
+     C                     END
+     C*
+     C                     MOVE FLD001    BRCA
+     C                     MOVE USRID     USRP
+     C                     TIME           TIME
+     C           FLD010    IFEQ 'ALL'
+     C                     MOVE 'Y'       ALLREQ
+     C                     MOVE RRN1      NOREQ
+     C                     ELSE
+     C                     MOVE 'N'       ALLREQ
+     C                     END
+     C                     WRITEPSTPRF1R
+     C*
+     C                     SETON                         01
+     C                     MOVE 'C'       RTNCOD
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           ENDTAG    TAG
+     C*
+     C                     SETON                       LR
+     C*
+     C********************************************************************
+     C*
+     C*  GETREC SR - CHECK SUBFILE RECORD
+     C*
+     C*  CALLED - FROM THE MAIN PROCESSING
+     C*
+     C           GETREC    BEGSR
+     C*
+     C                     Z-ADD0         Z       30
+     C                     Z-ADD1         RRN1
+     C*
+     C           RRN1      CHAINGL1582F3             75
+     C*
+     C           *IN75     DOWEQ'0'
+     C*
+     C*  IF NOT BLANK ADD 1 TO INDEX
+     C*
+     C           FLD014    IFNE ' '
+     C                     ADD  1         Z
+     C*
+     C*  IF NOT 'Y' SET ON APPROPRIATE INDICATOR
+     C*
+     C           FLD014    IFNE 'Y'
+     C                     SETON                     80
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ADD  1         RRN1
+     C           RRN1      CHAINGL1582F3             75
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C**
+     C**   LODSF SR. TO LOAD SUBFILE FOR THE POSTINGS REVIEW SCREEN
+     C**
+     C**      CALLED FROM : MAIN PROCESSING
+     C**      CALLS : SR/MATCH1 AND SR/MATCH2
+      *       CALLS      -  ZFRPED  Format Amount for Output              156040
+     C**
+     C/SPACE 2
+     C           LODSF     BEGSR                           ** LODSF  SR **
+     C**
+     C**   SETUP SUBFILE CONTROL FIELDS
+     C**
+     C                     Z-ADD0         RRN1    30
+     C                     Z-ADD1         SDREC1
+     C**
+     C**   CLEAR SUBFILE
+     C                     MOVEA'1001'    *IN,05
+     C                     WRITEGL1582F4
+     C                     MOVEA'01'      *IN,05
+     C**
+     C**   ACCESS APPROPRIATE POSTINGS RECORDS
+     C*
+     C           *IN55     IFEQ '1'
+     C           *IN63     OREQ '1'
+     C                     EXSR MATCH1
+     C                     ELSE
+     C                     EXSR MATCH2
+     C                     END
+     C*
+     C           *IN76     IFEQ '1'
+     C                     SETON                     23
+     C                     END
+     C*
+     C           *IN76     DOWEQ'0'
+     C                     ADD  1         RRN1
+     C*
+     C                     MOVELPRFC      FLD015
+     C                     Z-ADDPSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    FLD016
+     C***********          MOVELACCODE    FLD017                          E38492
+     C   50                MOVELACCODE    FLD017                          E38492
+     C**N50*****           MOVE ACCODE    ACCOD1 15                                    E38492 CGL029
+     C  N50                MOVE ACCODE    ACCOD1 21                                           CGL029
+     C  N50                MOVELACCOD1    FLD017                          E38492
+     C           ACNO      IFEQ 0
+     C                     MOVE *BLANKS   FLD018
+     C                     ELSE
+     C                     MOVELACNO      FLD018
+     C                     END
+     C                     MOVELRRNUM     FLD019
+     C                     MOVELFORM      FLD020
+      *                                                                   156040
+      * If currency has changed                                           156040
+      *    Store new currency                                             156040
+      *    Call Currency Details Access Program for new currency          156040
+      *                                                                   156040
+     C           CCY       IFNE CCYX                                      156040
+     C                     MOVE CCY       CCYX    3                       156040
+     C                     CALL 'AOCURRR0'                                156040
+     C                     PARM '*DBERR'  @RTCD   7                       156040
+     C                     PARM '*KEY    '@OPTN   7                       156040
+     C                     PARM           CCY                             156040
+     C           SDCURR    PARM SDCURR    DSSDY                           156040
+     C                     END                                            156040
+      *                                                                   156040
+      * Format Posting Amount for output                                  156040
+      *                                                                   156040
+     C           DRCR      IFEQ 0                                         156040
+     C                     Z-ADDPSTA      ZFLD15                          156040
+     C                     ELSE                                           156040
+     C                     Z-SUBPSTA      ZFLD15                          156040
+     C                     END                                            156040
+     C                     Z-ADDA6NBDP    ZDECS                           156040
+     C                     MOVE 'A'       ZECODE                          156040
+     C                     EXSR ZFRPED                                    156040
+     C                     MOVE ZOUT22    PSTAD  19                       156040
+     C                     MOVE PSTAD     FLD021                          156040
+     C                     MOVE *BLANKS   FLD022                          156040
+     C                     MOVELDLREF     FLD022                          156040
+     C           GETP      IFEQ 'G'                                       156040
+     C                     MOVELPREF      FLD022                          156040
+     C                     END                                            156040
+     C           FLD022    IFEQ *BLANKS                                   156040
+     C                     MOVELSPOS      FLD022                          156040
+     C                     END                                            156040
+     C                     WRITEGL1582F3
+     C*
+     C* DO RELEVENT SUBROUTINE DEPENDING ON THE REQUEST
+     C*
+     C           *IN55     IFEQ '1'
+     C           *IN63     OREQ '1'
+     C*
+     C           FLD001    IFEQ 'ALL'
+     C                     EXSR READ3
+     C                     ELSE
+     C                     EXSR READ1
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           FLD001    IFEQ 'ALL'
+     C                     EXSR READ4
+     C                     ELSE
+     C                     EXSR READ2
+     C                     END
+     C*
+     C                     END
+     C*
+     C           RRN1      IFEQ 500                                       LN0467
+     C                     MOVE ZADATE    MDATE                           LN0467
+     C                     SETON                       2876               LN0467
+     C                     END                                            LN0467
+     C*                                                                   LN0467
+     C                     END
+     C*
+     C***********RRN1      IFEQ 500                                       LN0467
+     C***********          MOVE ZADATE    MDATE                           LN0467
+     C***********          SETON                       2876               LN0467
+     C***********          END                                            LN0467
+     C**
+     C**
+     C**   NO RECORDS IN SUBFILE
+     C**
+     C           RRN1      IFGT 0
+     C                     SETON                     07
+     C                     END
+     C**
+     C                     ENDSR
+     C**
+     C*********************************************************************
+     C**
+     C**   UPDSF SR. TO UPDATE SUBFILE FOR THE POSTINGS CONFIRMATION
+     C**   SCREEN
+     C**
+     C**      CALLED FROM : MAIN PROCESSING
+     C**
+     C/SPACE 2
+     C           UPDSF     BEGSR                           ** UPDSF  SR **
+     C**
+     C                     Z-ADD1         RRN1
+     C           RRN1      CHAINGL1582F3             78
+     C**
+     C**   UPDATE POSTINGS RECORDS
+     C**
+     C           *IN78     DOWEQ'0'
+     C                     UPDATGL1582F3
+     C                     ADD  1         RRN1
+     C           RRN1      CHAINGL1582F3             78
+     C                     END
+     C**
+     C                     SUB  1         RRN1
+     C**
+     C                     ENDSR
+     C**
+     C*********************************************************************
+     C**
+     C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+     C**              CONVERT TO A NUMBER OF DAYS.
+     C**
+     C**      CALLED FROM : MAIN PROCESSING
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE1    BEGSR                           ***  ZDATE1 ***
+     C**
+     C**   CLEAR DAY NUMBER.
+     C                     Z-ADD0         ZDAYNO  50
+     C**
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C                     Z-ADDZDATE     ZDATE   60
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID.
+     C           ZMTH      COMP 0                      9999
+     C  N99      ZMTH      COMP 12                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR 30 DAY MONTHS.
+     C           ZMTH      COMP 4                        90IF 90 ON, 30
+     C  N90      ZMTH      COMP 6                        90DAY MONTH.
+     C  N90      ZMTH      COMP 9                        90
+     C  N90      ZMTH      COMP 11                       90
+     C**
+     C**   ENSURE DAY IS VALID.
+     C           ZDAY      COMP 0                      9999
+     C   90N99   ZDAY      COMP 30                   99
+     C  N90N99   ZDAY      COMP 31                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR LEAP YEAR AND FEBRUARY.
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10     91LEAP YR, 91 ON
+     C           ZMTH      COMP 2                    93  92FEB., 92 ON
+     C**                                                   PAST FEB, 93 ON
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C  N91 92   ZDAY      COMP 28                   99
+     C   91 92   ZDAY      COMP 29                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANS
+     C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.
+     C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+     C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+     C**
+     C           ZDEND1    ENDSR                           ***  ZDEND1 ***
+     C**
+     C*********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**      CALLED FROM : MAIN PROCESSING
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           ***  ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ***  ZDTAG1 ***
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ***  ZDTAG2 ***
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           ***  ZDEND2 ***
+     C**
+      *---------------------------------------------------------------*   156040
+     C/COPY ZSRSRC,ZFRPEDZ3                                               156040
+     C********************************************************************
+     C*
+     C* MATCH2 SR POSITION POSTINGS FILE FOR PROFIT CENTRE ONLY REQS
+     C*
+     C*       CALLED FROM : SR/LODSF
+     C*       CALLS : SR/READ2, SR/READ4
+     C*
+     C           MATCH2    BEGSR
+     C*
+     C           KEY2      KLIST
+     C                     KFLD           FLD002
+     C                     KFLD           FLD001
+     C                     KFLD           FDATEM
+     C*
+     C           KEY4      KLIST
+     C                     KFLD           FLD002
+     C                     KFLD           FDATEM
+     C*
+     C           FLD001    IFEQ 'ALL'
+     C           KEY4      SETLLGLPOSTL4             76
+     C                     EXSR READ4
+     C                     ELSE
+     C           KEY2      SETLLGLPOSTL2             76
+     C                     EXSR READ2
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C* READ2 SR -
+     C* READ POSTINGS RECORD UNLESS DATE OR PROFIT CENTRE IS DEIFFERENT
+     C*
+     C*       CALLED FROM : SR/MATCH2
+     C*
+     C           READ2     BEGSR
+     C*
+     C                     READ GLPOSTL2                 76
+     C*
+     C           PRFC      IFEQ FLD002
+     C           BRCA      ANDEQFLD001
+     C           PSTD      ANDLETDATEM
+     C***********          Z-ADDRRNUM2    RRNUM   40                      075323
+     C                     Z-ADDRRNUM2    RRNUM  100                      075323
+     C                     MOVELFORM2     FORM   10
+     C                     ELSE
+     C                     SETON                         76
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C* READ4 SR -
+     C* READ POSTINGS RECORD UNLESS DATE OR PROFIT CENTRE IS DEIFFERENT
+     C*
+     C*       CALLED FROM : SR/MATCH2
+     C*
+     C           READ4     BEGSR
+     C*
+     C                     READ GLPOSTL4                 76
+     C*
+     C           PRFC      IFEQ FLD002
+     C           PSTD      ANDLETDATEM
+     C***********          Z-ADDRRNUM4    RRNUM   40                      075323
+     C                     Z-ADDRRNUM4    RRNUM  100                      075323
+     C                     MOVELFORM4     FORM   10
+     C                     ELSE
+     C                     SETON                         76
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C*  MATCH1 SR -
+     C*  POSITION POSTINGS FILE FOR ACCOUNT/PROFIT CENTRE REQUESTS
+     C*
+     C*       CALLED FROM : SR/LODSF
+     C*       CALLS : SR/READ1,SR/READ3
+     C*
+     C           MATCH1    BEGSR
+     C*
+     C           KEY1      KLIST
+     C                     KFLD           FLD002
+     C                     KFLD           FLD03X
+     C                     KFLD           FLD004
+     C                     KFLD           FLD05X
+     C                     KFLD           FLD06X
+     C                     KFLD           FLD001
+     C                     KFLD           FDATEM
+     C*
+     C           KEY3      KLIST
+     C                     KFLD           FLD002
+     C                     KFLD           FLD03X
+     C                     KFLD           FLD004
+     C                     KFLD           FLD05X
+     C                     KFLD           FLD06X
+     C                     KFLD           FDATEM
+     C*
+     C           FLD001    IFEQ 'ALL'
+     C           KEY3      SETLLGLPOSTL3             76
+     C                     EXSR READ3
+     C                     ELSE
+     C           KEY1      SETLLGLPOSTL1             76
+     C                     EXSR READ1
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C* READ1 SR -
+     C* READ POSTINGS RECORD UNLESS DATE, PROFIT CENTRE OR ACCOUNT
+     C* DETAILS ARE DIFFERENT
+     C*
+     C*       CALLED FROM : SR/MATCH1
+     C*
+     C           READ1     BEGSR
+     C*
+     C                     READ GLPOSTL1                 76
+     C*
+     C           PRFC      IFEQ FLD002
+     C           CNUM      ANDEQFLD03X
+     C           CCY       ANDEQFLD004
+     C           ACOD      ANDEQFLD05X
+     C           ACSQ      ANDEQFLD06X
+     C           BRCA      ANDEQFLD001
+     C           PSTD      ANDLETDATEM
+     C                     Z-ADDRRNUM1    RRNUM
+     C                     MOVELFORM1     FORM
+     C                     ELSE
+     C                     SETON                         76
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C*
+     C* READ3 SR -
+     C* READ POSTINGS RECORD UNLESS DATE, PROFIT CENTRE OR ACCOUNT
+     C* DETAILS ARE DIFFERENT
+     C*
+     C*       CALLED FROM : SR/MATCH1
+     C*
+     C           READ3     BEGSR
+     C*
+     C                     READ GLPOSTL3                 76
+     C*
+     C           PRFC      IFEQ FLD002
+     C           CNUM      ANDEQFLD03X
+     C           CCY       ANDEQFLD004
+     C           ACOD      ANDEQFLD05X
+     C           ACSQ      ANDEQFLD06X
+     C           PSTD      ANDLETDATEM
+     C                     Z-ADDRRNUM3    RRNUM
+     C                     MOVELFORM3     FORM
+     C                     ELSE
+     C                     SETON                         76
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM -- MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

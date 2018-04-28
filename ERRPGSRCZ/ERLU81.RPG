@@ -1,0 +1,556 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LMI Audit Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting                                   *
+      *                                                               *
+      *  ERLU81 - LMI CAD Audit Report                                *
+      *                                                               *
+      *  Function:  This program will list the transactions           *
+      *             processed for CAD purposes                        *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 03May06               *
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 CAD007 PT          Date 24Jul98               *
+      *                 CAD005 PT          Date 20Jul98               *
+      *                 ULX004             Date 28MAR97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD027A - Conversion of customer number to alpha (post       *
+      *            build 103). Recompiled.                            *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  CAD007 - CAD adaptation to data dictionary version 1.6       *
+      *           (recompiled only)                                   *
+      *  CAD005 - Reports title changed to include 'Integrated'       *
+      *           (Recompiled only)                                   *
+      *  ULX004 - Capital Adequacy                                    *
+      *           IML Circular 97/138                                 *
+      *            Recompile                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     F***ERLUCAL0IF**E           K        DISK                                                CER001
+     FERLCAXL0IF  E           K        DISK                                                   CER001
+      *
+     F***ERPRDCPDIF**E           K        DISK                                                CER001
+     FERPCDXPDIF  E           K        DISK                                                   CER001
+      *
+     FERLU81AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FERLU81P1O   E                    PRINTER
+     F                                              KINFDS SPOOL1
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REPORT - Process Report Lines                                *
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+      *
+     E/COPY ZSRSRC,ZFRPEDZ1
+      *
+      ** Month prefix
+     E                    TMNM   12  12  3
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      /SPACE 3
+     I/COPY ZSRSRC,ZFRPEDZ2
+     IWLDA      E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+     IDBERR       DS
+     I                                      134 141 WBFILE
+     I                                      142 170 WBKEY
+     I                                      171 180 WBPGM
+     I                                      181 1830WBASE
+     I                                      184 256 WFILL
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Data Structure to format date
+      *
+     I            DS
+     I                                        1   80WWDTIN
+     I                                        1   40WINYY
+     I                                        5   60WINMM
+     I                                        7   80WINDD
+      *
+     I            DS
+     I                                        1   7 WWDTOU
+     I                                        1   2 WWOUDD
+     I                                        3   5 WWOUMM
+     I                                        6   7 WWOUYY
+      *
+     ISPOOL1      DS
+      ***  File Information Data Structure for MMNNNNPY.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for MMNNNNAU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I              'Not defined'         C         WWNDEF
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  Output Audit Report and End Program.
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *LIKE     DEFN EXPRDC    W#PRDC
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           BJMRDT  7
+     C                     PARM           BJURPT 53
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVEL'ERLU81'  WBPGM
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     MOVE *OFF      *IN98
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  REPORT - Process Report Lines                                *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      ***  Read first record from File.
+      *
+     C**********           READ ERLUCAL0                 89                                   CER001
+     C                     READ ERLCAXL0                 89                                   CER001
+      *
+      ***  If End of Records, (*IN89), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN89     IFEQ *ON
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  Do Until End of File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+      *
+     C**********           READ ERLUCAL0                 89                                   CER001
+     C                     READ ERLCAXL0                 89                                   CER001
+      *
+      ***  End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+      *
+      ***  Write End Of Report
+      *
+     C                     EXSR WP1END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPORT    BEGSR                           *** REPORT ***
+      *
+     C                     MOVE EXORIG    RORIG
+     C                     MOVE EXDECK    RDECK
+     C                     MOVE EXCCYL    RCCYL
+      *
+     C                     MOVE 'I'       RBKTP
+     C           EXBKTP    IFEQ 1
+     C                     MOVE 'T'       RBKTP
+     C                     ENDIF
+      *
+     C                     MOVE EXCUST    RCUST
+     C                     MOVE EXCRNM    RCRNM
+     C                     MOVE EXCUCL    RCUCL
+     C                     MOVE EXECOS    RECOS
+     C                     MOVE EXISSR    RISSR
+     C                     MOVELEXISSN    RIRNM
+     C                     MOVE EXLISS    RLISS
+     C           EXISEC    IFEQ *ZEROS
+     C           EXISSN    ANDEQ*BLANKS
+     C                     MOVE *BLANKS   RISEC
+     C                     ELSE
+     C                     MOVE EXISEC    RISEC
+     C                     ENDIF
+     C                     MOVELEXUISS    RSESN
+      *
+      ***  Edit amounts for report
+      *
+     C                     Z-ADD3         ZDECS
+     C                     MOVE 'J'       ZECODE
+      *
+     C                     MOVE EXAMNT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RAMNT
+      *
+     C                     MOVE EXLAMT    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RLAMT
+      *
+     C                     MOVE EXNOMA    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RNOMA
+      *
+     C                     MOVE EXLNOM    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RLNOM
+      *
+     C                     MOVE EXMKT1    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RMKT1
+      *
+     C                     MOVE EXLMK1    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RLMK1
+      *
+     C                     MOVE EXMKT2    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RMKT2
+      *
+     C                     MOVE EXLMK2    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RLMK2
+      *
+     C                     MOVE EXDEMK    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RDEMK
+      *
+     C                     MOVE EXLDMK    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RLDMK
+      *
+     C                     MOVE EXORCV    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RORCV
+      *
+     C                     MOVE EXLOCV    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RLOCV
+      *
+     C                     MOVE EXEXPR    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     REXPR
+      *
+     C                     MOVE EXLEXP    ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT3     RLEXP
+      *
+      ***  Edit dates for report
+      *
+     C                     Z-ADDEXDATA    WWDTIN
+     C                     EXSR WDTCV
+     C                     MOVE WWDTOU    RDATA
+      *
+     C                     Z-ADDEXDATB    WWDTIN
+     C                     EXSR WDTCV
+     C                     MOVE WWDTOU    RDATB
+      *
+     C                     Z-ADDEXEXDA    WWDTIN
+     C                     EXSR WDTCV
+     C                     MOVE WWDTOU    REXDA
+      *
+     C                     Z-ADDEXFMSW    WWDTIN
+     C                     EXSR WDTCV
+     C                     MOVE WWDTOU    RFMSW
+      *
+     C                     Z-ADDEXSTDA    WWDTIN
+     C                     EXSR WDTCV
+     C                     MOVE WWDTOU    RSTDA
+      *
+     C                     Z-ADDEXFMDT    WWDTIN
+     C                     EXSR WDTCV
+     C                     MOVE WWDTOU    RFMDT
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WDTCV
+      *****************************************************************
+      *                                                               *
+      *  WDTCV  - Subroutine to Convert date from YYYYMMDD to DDMMMYY *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WDTCV     BEGSR                           *** WDTCV  ***
+      *
+     C           WWDTIN    IFEQ *ZEROS
+     C                     MOVE *BLANKS   WWDTOU
+     C                     ELSE
+     C                     MOVE WINYY     WWOUYY
+     C                     MOVE TMNM,WINMMWWOUMM
+     C                     MOVE WINDD     WWOUDD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1REC
+      *****************************************************************
+      *                                                               *
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1REC    BEGSR                           *** WP1REC ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD13        RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C           W#PRDC    ORNE EXPRDC
+      *
+     C           W#PRDC    IFNE EXPRDC
+      *
+     C                     MOVE EXPRDC    RPRDC
+     C                     MOVE EXPRDC    W#PRDC
+      *
+     C********** EXPRDC    CHAINERPRDCPD             39                                       CER001
+     C           EXPRDC    CHAINERPCDXPD             39                                       CER001
+      *
+     C           *IN39     IFEQ *ON
+     C                     MOVELWWNDEF    RPNAR     P
+     C                     ELSE
+     C                     MOVELEXPNAR    RPNAR     P
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ***  Write out Detail Record.
+      *
+     C                     WRITEDETLP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1END
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1END    BEGSR                           *** WP1END ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ***  Write out Total Format.
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVE DBERR     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZFRPED
+     C/COPY ZSRSRC,ZFRPEDZ3
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005

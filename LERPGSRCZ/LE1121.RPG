@@ -1,0 +1,1160 @@
+0001 H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Interest accruals by company')                *
+0003 F*                                                                  *
+0002 F********************************************************************
+0003 F*                                                                  *
+     F*     Midas - Customer Lending Module                              *
+0005 F*                                                                  *
+0006 F*     LE1121 - INTEREST ACCRUALS BY COMPANY                        *
+0007 F*         THIS PROGRAM WAS GENERATED FROM LE1120                   *
+     F*                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+0011 F*                                                                  *
+      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 212002             Date 17Nov02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 184482             Date 03Jul01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+0010  *                 E43043             Date 11Feb97               *
+0010 F*                 046205             Date 11NOV93               *
+0010 F*                     S01392             DATE 14SEP92              *
+     F*                     S01268             DATE 10MAY90              *
+0011 F*                                                                  *
+0011 F*------------------------------------------------------------------*
+0011 F*                                                                  *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c             *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  212002 - Condition the header output with *IN75.                *
+      *  184482 - Print total line output on the next page with          *
+      *           heading if overflow.                                   *
+     F*     E43043 - LOANS SOLD THROUGH THE USE OF PART. SOLD ARE NOT    *
+     F*              LISTED CORRECTLY ON THE INTEREST ACCRUALS REPORT.   *
+     F*              (AMENDED E17788..)                                  *
+0011 F*     046205 - WHEN NO DETAILS TO REPORT, NO P1 REPORT NEEDED      *
+     F*     S01392 - JAPANESE SUBMODULE ENHANCEMENTS                     *
+     F*     S01268 - ADD CUSTOMER REPORT TOWN TO REPORT
+0012 F********************************************************************
+0011 F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0011 F*                                                                  *
+0013 F*SLACXL1*IP**F*****128  1AI     1 DISK                                                  CLE042
+     FSLACXL1 IP  F     132  1AI     1 DISK                                                   CLE042
+     FLEACXHH IF  F     128            DISK
+     FLE1121P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC
+0016 FLE1121AUO   F     132     OA     PRINTER      KINFDS SPOOLU
+     F*
+0017 F* ID F  C  H  L    FUNCTION OF INDICATORS
+0018 F* 01            SLACXL1 - HEADER
+0019 F* 02                    - DETAIL
+0020 F* 03                    - TRAILER
+0022 F*    21         W/T ACCRUED 0
+0023 F*    22         W/T TO ACCRUE 0
+0024 F*       23      BOTH W/T FIELDS 0
+0025 F*       24      BOTH LT/WT TOTAL FIELDS 0
+0026 F*       25      BOTH CCY/WT TOTAL FIELDS 0
+0027 F*    26         ACCRUAL TO DATE 0
+0028 F*    27         PART. SOLD LOAN REF. GREATER THAN 0
+0029 F*       28      LOAN HAS PARTS. SOLD
+0030 F*       29      BOTH LN/WT FIELDS 0
+0031 F*       30      OUTPUT HEADINGS IF NO DETS TO REP OR D/B ERR IN F/C
+0032 F*       31      OUTPUT CUST. NO. AND NAME ON L2 OR OF
+0032 F*       33      MULTIBRANCHING INDICATOR (MBIN) = Y
+0033 F*       35      WORK INDICATOR
+0034 F*       40      FIRST CYCLE
+     F/COPY WNCPYSRC,LE1121F001
+0035 F*       60-63   CURRENCY DECIMAL PLACES 0-3
+     F*       75      MULTIBRANCHING OUTPUT CONDITIONING
+     F*       76      SKIP WHEN CMPYM > REQUESTED COMPANY
+0036 F*       90-99   STANDARD SUBROUTINES
+0037 F*       U7,U8   STANDARD MIDAS USAGE
+0038 F*             L1 - LOAN REF. CHANGE
+0039 F*             L2 - CUSTOMER CHANGE
+0040 F*             L3 - LOAN TYPE/SUB TYPE CHANGE
+0041 F*             L4 - CURRENCY CHANGE
+0042 F*             L5 - COMPANY CHANGE
+     F/EJECT
+      /COPY ZSRSRC,ZDATE2Z1                                               S01392
+     E                    CPY@    1   1 80
+     E/EJECT
+0046 I**
+0047 I**   SORTED INTEREST ACCRUALS EXTRACT
+0048 I**
+0049 ISLACXL1 NS  01   1 CH
+0050 I                                        1   1 RECI
+0051 I                                    P   6   80TDAT
+0052 I        NS  02   1 CD
+0053 I                                        1   1 RECI
+0055 I                                        5   7 CCY   L4
+0056 I                                        8   9 LTYP
+0057 I                                       10  11 SUTP
+0058 I**
+0059 I                                        8  11 LTSTP L3
+0060 I**
+0061 I                                       12  130PTYP
+0062 I**********                             14  190CNUM  L2                                  CSD027
+0062 I                                       14  19 CNUM  L2                                  CSD027
+0063 I**********                             20  250LNRF  L1                                  CLE148
+     I                                       20  25 LNRF  L1                                  CLE148
+0064 I                                    P  26  280ACFR
+0065 I                                    P  29  310ACTO            26
+0066 I                                    P  32  377INTR
+0067 I                                    P  38  440CPAM
+0068 I                                    P  45  510AMAD
+     I                                    P  52  580AMTA
+0070 I                                    P  59  650WTAD            21
+0071 I                                    P  66  720WTTA            22
+0072 I**********                             73  780PSLN        27                            CLE148
+     I                                       73  78 PSLN                                      CLE148
+     I                                       79  81 CMPYM L5
+     I                                      129 132 CLAS  L3                                  CLE042
+     I/COPY WNCPYSRC,LE1121I001
+0073 I        NS  03   1 CT
+0074 I                                        1   1 RECI
+     I/COPY WNCPYSRC,LE1121I002
+0075 I                                    P   2   40NORE
+     I/COPY WNCPYSRC,LE1121I002
+0076 I        NS
+0048 I*
+0049 ILEACXHH NS       1 CH
+0050 I                                        1   1 RECI
+0051 I                                    P   6   80TDAT
+      **
+     ISDCUST    E DSSDCUSTPD
+      **   CUSTOMER
+     I              BBCNCZ                          CCTZ
+     I              BBACOC                          ACOC
+     I              BBCRNM                          CRNM
+      *
+     ISDCURR    E DSSDCURRPD
+      **   CURRENCY
+     I              A6NBDP                          CDP
+     I              A6TXND                          TNOT
+     I              A6DLCI                          DCCY
+     I              A6SPRT                          SPOT
+     I              A6MDIN                          MDIN
+     I*
+     ISDLOAN    E DSSDLOANPD
+     I              AYLNTD                          LNARR
+     I*
+      *
+     ISDBANK    E DSSDBANKPD
+      ** BANK DETAILS
+     I              BJBVPD                          BVLP
+     I              BJURPT                          TITL
+     I              BJCYCD                          BCCY
+     I              BJDNWD                          DNWD
+      *
+     ISDCOMP    E DSSDCOMPPD
+     I**  EXTERNAL DS FOR COMPANY CODE DETAILS
+     I              APCMNM                          CMNM
+0178 I**   LOCAL DATA AREA FOR DATABASE ERROR IDENTIFICATION
+0179 ILDA        UDS                            256
+0353 I                                      134 141 DBFILE
+0354 I                                      142 170 DBKEY
+0355 I                                      171 180 DBPGM
+0356 I                                      181 1830DBASE
+     I**
+     I**   FILE INFORMATION DATA STRUCTURE
+     I**
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN1                184482
+     I                                    B 367 3680PRTLN1                184482
+     I**
+     I**   FILE INFORMATION DATA STRUCTURE
+     I**
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I**
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I/COPY WNCPYSRC,LE1121I003
+     IRUNDT       DS
+     I**  DATA AREA RUNDAT
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I/EJECT
+     C           *IN02     IFEQ *ON                                                           CLE148
+     C           PSLN      IFGT *BLANKS                                                       CLE148
+     C                     MOVE *ON       *IN27                                               CLE148
+     C                     ELSE                                                               CLE148
+     C                     MOVE *OFF      *IN27                                               CLE148
+     C                     ENDIF                                                              CLE148
+     C                     ENDIF                                                              CLE148
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5         SEQUENCE
+     C                     PARM           BRNCH   3         COMPANY OR ALL
+     C**
+     C                     MOVEACPY@      BIS@   80
+0184 C**
+0185 C**   FIRST CYCLE
+0186 C**
+0187 C   40                GOTO ENDFC
+     C   40                Z-ADD0         RQDLN1  30                      184482
+     C   40                Z-ADD0         DIFLN1  30                      184482
+0188 C                     SETON                     4030
+0188 C                     SETOF                     7576
+     C**
+     C**   IN THE DATAAREA RUNDAT
+     C**
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C**
+     C*     IF MBIN=Y, SET ON *IN33
+     C**
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     33
+     C                     END
+     C*
+0189 C**
+0190 C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+0191 C                     SETON                     U7U8LR
+0192 C                     MOVE 'SDCUSTPD'DBFILE           ************
+0194 C                     Z-ADD1         DBASE            * DBASE 01 *
+0195 C                     GOTO END                        ************
+     C                     END
+     C/COPY WNCPYSRC,LE1121C001
+      **
+      **   READ IN HEADER OF THE PRIMARY FILE
+      **
+     C                     READ LEACXHH                  99
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8LR***************
+     C                     Z-ADD06        DBASE            * DATABASE
+     C                     MOVEL'LE1121'  DBPGM            *
+     C                     MOVEL'H'       DBKEY            *   06
+     C                     MOVEL'LEACXHH' DBFILE           ***************
+     C                     GOTO ENDLR
+     C                     END
+     C**
+0196 C**
+0197 C**   CONVERT TITLE DATE
+0198 C**
+0199 C                     Z-ADDTDAT      ZDAYNO
+0200 C                     EXSR ZDATE2
+0201 C                     MOVE ZADATE    TDATA   7
+0202 C**
+0203 C**   SET UP KEY FIELDS
+0204 C**
+0206 C                     MOVEL'20'      K101    3
+ 209 C**
+0210 C                     Z-ADD1         COUNT   50
+0211 C           ENDFC     TAG                             ** ENDFC TAG **
+0212 C**
+0213 C**   MAIN PROCESSING
+     C/COPY WNCPYSRC,LE1121C008
+0214 C**
+     C*
+     C/COPY WNCPYSRC,LE1121C008
+     C   03                GOTO END
+     C   LR                SETON                     76
+     C   LR                GOTO END
+     C                     MOVE '0'       *IN45                           184482
+     C*
+     C           MBIN      IFEQ 'Y'
+     C*
+     C**      IF CMPYM IS LESS THAN THE REQUIRED COMPANY,
+     C**      SKIP THE CALCULATION
+     C*
+     C           BRNCH     IFGT CMPYM
+     C           BRNCH     ANDNE'ALL'
+     C                     SETOF                     75
+     C                     GOTO END
+     C                     END
+     C*
+     C**      IF CMPYM IS GREATER THAN THE REQUIRED COMPANY,
+     C**      END THE PROGRAM
+     C*
+     C           BRNCH     IFLT CMPYM
+     C           BRNCH     ANDNE'ALL'
+     C                     SETON                     LR76
+     C                     SETOF                     75
+     C                     GOTO END
+     C                     END
+     C*
+     C           *INL5     IFEQ '1'
+     C                     CLOSELE1121P1
+     C**
+     C*       IF MBIN=YES, AND A REQUIRED BRANCH AND A LEVEL BREAK,
+     C*       OPEN LE1121P1
+     C**
+     C           BRNCH     IFEQ 'ALL'
+     C           BRNCH     OREQ CMPYM
+     C                     SETON                     75
+     C                     MOVE 'Y'       P1OP    1
+     C                     OPEN LE1121P1
+     C                     Z-ADD0         PAGE
+     C                     Z-ADD0         PAGE1
+     C**
+     C*       ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C**
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     OUT  LDA
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM CMPYM     SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C**
+     C* TO GET COMPANY NAME *
+     C**
+     C                     CALL 'AOCOMPR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CMPYM     @CENB   3
+     C           SDCOMP    PARM SDCOMP    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL@CENB     DBKEY
+     C                     MOVEL'SDCOMPPD'DBFILE           ************
+     C                     Z-ADD5         DBASE            * DBASE 05 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C                     SETON                     U7U8LR
+     C   U8                GOTO END
+     C                     END
+     C**
+     C                     ELSE
+     C                     SETOF                     75
+     C                     END
+     C                     END
+     C**
+     C*       IF MBIN='N' AND FIRST CYCLE,
+     C*       OPEN LE1121P1
+     C**
+     C                     ELSE
+     C           P1OP      IFNE 'Y'
+     C                     SETON                     75    ALLOW OUTPUTPUT
+     C                     MOVE 'Y'       P1OP    1
+     C                     OPEN LE1121P1
+     C                     Z-ADD0         PAGE
+     C                     Z-ADD0         PAGE1
+     C**
+     C*       ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C**
+     C**
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     OUT  LDA
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C                     END
+     C                     END
+     C**
+0215 C  N02                GOTO END
+0216 C           COUNT     ADD  1         COUNT
+0217 C                     SETOF                     30
+0218 C**
+0219 C**   CHANGE OF CURRENCY - INIT. FIELDS, CHAIN FOR DP'S
+0220 C**
+     C           *INL4     IFEQ '1'
+0221 C                     Z-ADD0         CCYPR  130
+0222 C                     Z-ADD0         CCYIAD 130
+0223 C                     Z-ADD0         CCYITA 130
+0224 C                     Z-ADD0         CCYWAD 130
+0225 C                     Z-ADD0         CCYWTA 130
+     C/COPY WNCPYSRC,LE1121C002
+0226 C**
+     C                     MOVELCCY       K101
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           K101    3                    A
+     C           SDCURR    PARM SDCURR    DSSDY                        B
+     C           @RTCD     IFNE *BLANK
+0230 C                     SETON                     U7U8LR
+0231 C                     MOVE 'SDCURRPD'DBFILE
+0232 C                     MOVELK101      DBKEY            ************
+0233 C                     Z-ADD2         DBASE            * DBASE 02 *
+0234 C                     GOTO END                        ************
+     C                     END
+0235 C**
+0236 C           CDP       COMP 1                      6061
+0237 C           CDP       COMP 2                    63  62
+     C                     END
+0238 C**
+0239 C**   CHANGE OF LOAN TYPE/SUB TYPE - INIT. FIELDS,CHAIN FOR NAME
+0240 C**
+     C           *INL3     IFEQ '1'
+0241 C                     Z-ADD0         LTPR   130
+0242 C                     Z-ADD0         LTIAD  130
+0243 C                     Z-ADD0         LTITA  130
+0244 C                     Z-ADD0         LTWAD  130
+0245 C                     Z-ADD0         LTWTA  130
+     C/COPY WNCPYSRC,LE1121C003
+0246 C**
+     C                     CALL 'AOLOANR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*KEY'    @OPTN   7
+     C                     PARM LTYP      @LNTY   2
+     C                     PARM SUTP      @LNST   2
+     C                     PARM CLAS      @LNCL   4                                           CLE042
+     C           SDLOAN    PARM SDLOAN    DSFDY
+     C           @RTCD     IFNE *BLANKS
+0250 C                     SETON                     U7U8LR
+0251 C                     MOVE 'SDLOANPD'DBFILE
+     C                     MOVEL@LNTY     DBKEY                                               CLE042
+     C                     CAT  @LNST:1   DBKEY                                               CLE042
+     C                     CAT  @LNCL:1   DBKEY                                               CLE042
+0252 C*********************MOVEL@LNST     DBKEY            ************                       CLE042
+0253 C                     Z-ADD3         DBASE            * DBASE 03 *
+0254 C                     GOTO END                        ************
+     C                     END
+     C                     END
+0255 C**
+0256 C**   CHANGE OF CUSTOMER - CHAIN TO CLIENT FILE
+0257 C**
+     C           *INL2     IFEQ '1'
+0258 C                     SETOF                     99
+0259 C                     MOVELCNUM      KEYC
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           KEYC   10
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFNE *BLANKS
+0262 C                     SETON                     U7U8LR
+0263 C                     MOVE 'SDCUSTPD'DBFILE
+0264 C                     MOVELKEYC      DBKEY            ************
+0265 C                     Z-ADD4         DBASE            * DBASE 04 *
+0266 C                     GOTO END                        ************
+     C                     END
+     C                     END
+0267 C**
+0268 C**   CHANGE OF LOAN REF. - INIT. FIELDS AND IND.S
+0269 C**
+     C           *INL1     IFEQ '1'
+     C************IN27     ANDEQ'0'                                       E43043
+0270 C***********          Z-ADDCPAM      LNPR   130                E17788E43043
+0271 C***********          Z-ADDAMAD      LNIAD  130                E17788E43043
+0272 C***********          Z-ADDAMTA      LNITA  130                E17788E43043
+0273 C***********          Z-ADDWTAD      LNWAD  130                E17788E43043
+0274 C***********          Z-ADDWTTA      LNWTA  130                E17788E43043
+     C**********           ELSE                                           E43043
+0270 C***********          Z-ADD0         LNPR   130                E17788E43043
+0271 C***********          Z-ADD0         LNIAD  130                E17788E43043
+0272 C***********          Z-ADD0         LNITA  130                E17788E43043
+0273 C***********          Z-ADD0         LNWAD  130                E17788E43043
+0274 C***********          Z-ADD0         LNWTA  130                E17788E43043
+0270 C                     Z-ADD0         SNPR   130                      E43043
+0271 C                     Z-ADD0         SNIAD  130                      E43043
+0272 C                     Z-ADD0         SNITA  130                      E43043
+0273 C                     Z-ADD0         SNWAD  130                      E43043
+0274 C                     Z-ADD0         SNWTA  130                      E43043
+     C/COPY WNCPYSRC,LE1121C004
+0275 C                     SETOF                     28                   E43043
+     C                     END
+0275 C*********************SETOF                     28                   E43043
+0276 C**
+0277 C**   IF PART. SOLD SUBTRACT AMOUNTS FROM ORIG. LOAN ACCUMULATORS
+0278 C**
+     C           *IN27     IFEQ '1'
+0279 C                     SETON                     28
+0280 C           SNPR      SUB  CPAM      SNPR                            E43043
+0281 C           SNIAD     SUB  AMAD      SNIAD                           E43043
+0282 C           SNITA     SUB  AMTA      SNITA                           E43043
+0283 C           SNWAD     SUB  WTAD      SNWAD                           E43043
+0284 C           SNWTA     SUB  WTTA      SNWTA                           E43043
+0280 C*******    LNPR      SUB  CPAM      LNPR                            E43043
+0281 C*******    LNIAD     SUB  AMAD      LNIAD                           E43043
+0282 C*******    LNITA     SUB  AMTA      LNITA                           E43043
+0283 C*******    LNWAD     SUB  WTAD      LNWAD                           E43043
+0284 C*******    LNWTA     SUB  WTTA      LNWTA                           E43043
+0285 C**
+0286 C**   IF PART. SOLD REVERSE SIGN OF AMOUNTS
+0287 C**
+0288 C                     Z-SUBCPAM      CPAM
+0289 C                     Z-SUBAMAD      AMAD
+0290 C                     Z-SUBAMTA      AMTA
+0291 C                     Z-SUBWTAD      WTAD
+0292 C                     Z-SUBWTTA      WTTA
+0285 C                     ELSE                                           E43043
+0280 C           SNPR      ADD  CPAM      SNPR                            E43043
+0281 C           SNIAD     ADD  AMAD      SNIAD                           E43043
+0282 C           SNITA     ADD  AMTA      SNITA                           E43043
+0283 C           SNWAD     ADD  WTAD      SNWAD                           E43043
+0284 C           SNWTA     ADD  WTTA      SNWTA                           E43043
+     C/COPY WNCPYSRC,LE1121C005
+     C                     END
+0293 C**
+0294 C**   CONVERT DATES
+0295 C**
+0296 C                     Z-ADDACFR      ZDAYNO
+0297 C                     EXSR ZDATE2
+0298 C                     MOVE ZADATE    ACFRA   7
+0299 C**
+0300 C  N26                Z-ADDACTO      ZDAYNO
+0301 C  N26                EXSR ZDATE2
+0302 C  N26                MOVE ZADATE    ACTOA   7
+0303 C   26                MOVE 'CALL   ' ACTOA
+0304 C                     SETOF                     2331
+0305 C   21 22             SETON                     23
+     C/COPY WNCPYSRC,LE1121C006
+0306 C**
+0307 C   OF
+0308 COR L2                SETON                     31
+0309 C           END       TAG                             ** END TAG ****
+      *
+     C           *IN76     IFEQ '1'
+     C                     GOTO ENDLR
+     C                     END
+0310 C**
+0311 C**   LEVEL BREAKS
+0312 C**
+0313 C**
+0314 C**   ADD AMOUNTS INTO ACCUMULATORS
+0315 C**   - PRINCIPAL
+0270 CL1                   Z-ADDSNPR      LNPR   130                      E43043
+0316 CL1         CCYPR     ADD  LNPR      CCYPR
+0317 CL1         LTPR      ADD  LNPR      LTPR
+0318 C**   - INTEREST ACCRUED TO DATE
+0271 CL1                   Z-ADDSNIAD     LNIAD  130                      E43043
+0319 CL1         CCYIAD    ADD  LNIAD     CCYIAD
+0320 CL1         LTIAD     ADD  LNIAD     LTIAD
+0321 C**   - INTEREST TO ACCRUE
+0272 CL1                   Z-ADDSNITA     LNITA  130                      E43043
+0322 CL1         CCYITA    ADD  LNITA     CCYITA
+0323 CL1         LTITA     ADD  LNITA     LTITA
+0324 C**   - WITHHOLDING TAX ACCRUED TO DATE
+0273 CL1                   Z-ADDSNWAD     LNWAD  130                      E43043
+0325 CL1         CCYWAD    ADD  LNWAD     CCYWAD
+0326 CL1         LTWAD     ADD  LNWAD     LTWAD
+0327 C**   - WITHHOLDING TAX TO ACCRUE
+0274 CL1                   Z-ADDSNWTA     LNWTA  130                      E43043
+0328 CL1         CCYWTA    ADD  LNWTA     CCYWTA
+0329 CL1         LTWTA     ADD  LNWTA     LTWTA
+     C/COPY WNCPYSRC,LE1121C007
+0330 C**
+0331 CL1                   SETOF                     29
+0332 CL1 28      LNWAD     COMP 0                        29
+0333 CL1 28 29   LNWTA     COMP 0                        29
+     C/COPY WNCPYSRC,LE1121C009
+0334 C**
+0335 CL3         LTWAD     COMP 0                        24
+0336 CL3 24      LTWTA     COMP 0                        24
+     C/COPY WNCPYSRC,LE1121C009
+      *                                                                   184482
+      ** Check that sufficient lines remain for the Format. If not        184482
+      ** write out the Main Headings on a new page.                       184482
+      *                                                                   184482
+     CL3                   Z-ADD2         RQDLN1                          184482
+     CL3         OFLLN1    SUB  PRTLN1    DIFLN1                          184482
+     CL3         DIFLN1    IFLE RQDLN1                                    184482
+     CL3                   MOVE '1'       *IN45                           184482
+     CL3                   ENDIF                                          184482
+      *                                                                   184482
+0337 C**
+0338 CL4         CCYWAD    COMP 0                        25
+0339 CL4 25      CCYWTA    COMP 0                        25
+0340 C**
+0341 C**   LAST RECORD CALCS
+0342 C**
+0343 CLR         COUNT     ADD  1         COUNT
+0344 CLR U7                MOVE 'LE1121'  DBPGM
+     C**
+     C*       IF MBIN='Y' AND BRNCH=A PARTICULARE BRANCH NAME
+     C*       NO CHECKING ON THE CONTROL TOTAL
+     C**
+     CLR         MBIN      IFEQ 'N'
+     CLR         MBIN      OREQ 'Y'
+     CLR         BRNCH     ANDEQ'ALL'
+0345 CLRNU8      COUNT     COMP NORE                 U8U8
+     CLR                   END
+0318 CLR         COUNT     COMP 3                      30
+     C**
+     C**    WHEN LR INDICATOR SET ON WITHOUT EXECUTING THE FIRST
+     C**    CYCLE
+     C**
+     CLR         ENDLR     TAG
+     C**
+     C*       ENSURE TOTAL SPOOL FILE RECORDED BY RCF
+     C**
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60
+     C**
+     CLR                   OUT  LDA
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ
+     CLR                   PARM *BLANK    SENTY   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU
+     CLR                   PARM           ZSERR   1
+     CLR         *LOCK     IN   LDA
+      *
+     CLR         ZSERR     IFEQ 'Y'
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     CLR                   SETON                     U7U8
+     CLR                   RETRN
+     CLR                   END
+      *
+     C**********LR         P1OP      IFNE 'Y'                             046205
+     C**********LR                   EXSR #ZZ                             046205
+     C**********LR                   SETON                     30         046205
+     C/COPY WNCPYSRC,LE1121C010
+     C**********LR                   END                                  046205
+     C**********LR U7 U8             EXSR *PSSR                           046205
+0364 C*
+0346 C********************************************************************
+     C/COPY WNCPYSRC,LE1121C010
+     C/EJECT
+     C/SPACE 3
+0436 C********************************************************************
+0437 C**
+0438 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0439 C**
+0440 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+0441 C**
+0442 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     99
+     C                     END
+0448 C**
+0449 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0450 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0451 C**
+0452 C                     ENDSR
+0453 C**
+0454 C**
+     C********************************************************************
+     C/SPACE 3
+     C********************************************************************
+     C*
+     C* SUBROUTINE : #ZZ
+     C*
+     C**CALLED*BY*MAIN*PROCESSING*DURING*TOTAL*TIME*CALCULATIONS*IF       046205
+     C**THE*P1*FILES*HAVE*NOT*ALREADY*BEEN*OPENED*(IE,*IF*THERE*ARE*      046205
+     C**NO*RECORDS*READ*AND*THEREFORE*FILES*OPENING*NOT*PERFORMED)        046205
+     C*
+     C* IF NO DETAILS TO REPORT, NO P1 REPORT SHOULD BE PRODUCED AND      046205
+     C* THE AU REPORT SHOULD SAY 'NO DETAILS TO REPORT'                   046205
+     C*                                                                   046205
+     C********** #ZZ       BEGSR                                          046205
+     C*
+     C***OPEN*P1*SPOOL*FILE*                                              046205
+     C*
+     C**********           OPEN LE1121P1                                  046205
+     C**********           SETON                     58                   046205
+     C*
+     C***IF*REPORT*FOR*ALL*ENTITIES*CALL*ZSFILE*WITH*BLANK*SENTY*         046205
+     C*
+     C********** BRNCH     IFEQ 'ALL'                      B1             046205
+     C********** MBIN      ORNE 'Y'                                       046205
+     C*
+     C***ENSURE*REPORT*SPOOL*FILE*RECORDED*BY*RCF*                        046205
+     C**
+     C**********           Z-ADDSFNUM     ZSNUM   60                      046205
+     C*
+     C**********           OUT  LDA                                       046205
+     C**********           CALL 'ZSFILE'                                  046205
+     C**********           PARM           SEQ                             046205
+     C**********           PARM *BLANKS   SENTY   3                       046205
+     C**********           PARM           SFILE                           046205
+     C**********           PARM           ZSNUM                           046205
+     C**********           PARM           ZSERR   1                       046205
+     C********** *LOCK     IN   LDA                                       046205
+      ****ERROR*DURING*ZSFILE*PROCESSING,*RETURN*TO*CALLING*PROGRAM*      046205
+     C********** ZSERR     IFEQ 'Y'                                       046205
+     C**********           SETON                     U7U8LR               046205
+     C**********           RETRN                                          046205
+     C**********           END                                            046205
+     C*
+     C**********           MOVE 'ALL'     CMPYM                           046205
+     C**********           MOVE *BLANKS   CMNM                            046205
+     C*
+     C***ELSE*REPORT*BY*ENTITY*SO*CALL*ZSFILE*WITH*ENTITY*REQUESTED*      046205
+     C*
+     C**********           ELSE                            X1             046205
+     C*
+     C***ENSURE*REPORT*SPOOL*FILE*RECORDED*BY*RCF*                        046205
+     C**
+     C**********           Z-ADDSFNUM     ZSNUM   60                      046205
+     C*
+     C**********           OUT  LDA                                       046205
+     C**********           CALL 'ZSFILE'                                  046205
+     C**********           PARM           SEQ                             046205
+     C**********           PARM CMPYM     SENTY   3                       046205
+     C**********           PARM           SFILE                           046205
+     C**********           PARM           ZSNUM                           046205
+     C**********           PARM           ZSERR   1                       046205
+     C********** *LOCK     IN   LDA                                       046205
+      ****ERROR*DURING*ZSFILE*PROCESSING,*RETURN*TO*CALLING*PROGRAM*      046205
+     C********** ZSERR     IFEQ 'Y'                                       046205
+     C**********           SETON                     U7U8LR               046205
+     C**********           RETRN                                          046205
+     C**********           END                                            046205
+     C*
+     C**********           MOVE BRNCH     CMPYM                           046205
+     C*
+     C***AND*GET*ENTITY*DETAILS*FOR*REPORT*HEADINGS*WHEN*MULTIBRANCHING   046205
+     C*
+     C********** MBIN      IFEQ 'Y'                                       046205
+     C**********           CALL 'AOCOMPR0'                                046205
+     C**********           PARM '*MSG   ' @RTCD   7                       046205
+     C**********           PARM '*KEY   ' @OPTN   7                       046205
+     C**********           PARM CMPYM     @CENB   3                       046205
+     C********** SDCOMP    PARM SDCOMP    DSFDY                           046205
+     C********** @RTCD     IFNE *BLANKS                                   046205
+     C**********           MOVEL@CENB     DBKEY                           046205
+     C**********           MOVEL'SDCOMPPD'DBFILE           ************   046205
+     C**********           Z-ADD11        DBASE            * DBASE 11 *   046205
+     C**********           MOVEL@OPTN     DBOPTN  7        ************   046205
+     C**********           SETON                     U7U8                 046205
+     C**********           EXSR *PSSR                                     046205
+     C**********           GOTO #ZZ9                                      046205
+     C**********           END                                            046205
+     C**********           END                                            046205
+     C*
+     C**********           END                             E1             046205
+     C*
+     C***OUTPUT*'NO*DETAILS*TO*REPORT'*IN*P1*                             046205
+     C*
+     C**********           SETON                     58                   046205
+     C*
+     C********** #ZZ9      ENDSR                                          046205
+     C*
+0340 C**
+     C********************************************************************
+     C/SPACE 3
+      /COPY ZSRSRC,ZDATE2Z4                                               S01392
+     C********************************************************************
+     C*
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C*  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS
+     C*
+     C*  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C                     ENDSR                           ** *PSSR **
+     C*
+     C********************************************************************
+     C/EJECT
+0456 O**
+0457 O**   CUSTOMER LENDING INTEREST ACCRUALS REPORT
+0458 O**
+0459 OLE1121P1D   03   L4 75NU7
+0460 O       OR        OFNL4 75
+0460 O       AND      NU7
+0461 O                                   22 'REFERENCE LE1121P1'
+0462 O                         TITL      89
+0463 O                                  104 'DATE'
+0464 O                         RUNA     112
+0465 O                                  122 'PAGE'
+0466 O                         PAGE  Z  127
+0467 O        D   05   L4 75NU7
+0468 O       OR        OFNL4 75
+0460 O       AND      NU7
+0471 O                                   46 'CUSTOMER LENDING INTERES'
+0472 O                                   58 'T ACCRUALS -'
+0473 O                                   80 'UP TO AND EXCLUDING -'
+0474 O                         TDATA     88
+     O                 33                97 'COMPANY'
+     O                 33      CMPYM    101
+     O                 33               102 '-'
+     O                 33      CMNM     132
+0475 O        D   06   L4 75NU7
+0476 O       OR        OFNL4 75
+0460 O       AND      NU7
+0477 O                                   46 '------------------------'
+0478 O                                   58 '-------------'
+0479 O                                   81 '-----------------------'
+0480 O                                   88 '-------'
+0481 O        D   09   L4 75NU7
+0482 O       OR        OFNL4 75
+0460 O       AND      NU7
+0483 O*****                              13 'CUSTOMER'                    S01268
+0483 O                                    6 'CUST.'                       S01268
+     O                                   12 'NAME'                        S01268
+0484 O                                   52 'LOAN   ACCRUAL PERIOD'
+0485 O                                   72 'RATE       CCY'
+0486 O                                  104 'PRINCIPAL    ACCRUED TO'
+0487 O                                  128 'DATE          TO ACCRUE'
+0488 O        D   10   L4 75NU7
+0489 O       OR        OFNL4 75
+0460 O       AND      NU7
+     O                                   12 'NUMBER TOWN'                 S01268
+0490 O                                   50 'NUMBER   FROM     TO'
+0491 O        D 2      L3 75NU7
+0492 O       OR        OFNL3 75
+0460 O       AND      NU7
+0495 O                         LNARR     35
+0496 O**
+0497 O**   DETAIL LINE 1
+0498 O**
+0499 O        D 2      02NU7 31
+     O       AND       75
+0500 O       OR 1      02NU7N31
+     O       AND       75
+0501 O                   N27 31CNUM       7
+0502 O                   N27 31CRNM      28
+0503 O                       27          28 'PART. SOLD'
+0504 O                       27PSLN      36
+0505 O                      N27LNRF      36
+0506 O                         ACFRA     45
+0507 O                         ACTOA     53
+0508 O                         INTR      67 '  0 .       -'
+0509 O                         CCY       72
+0510 O                       60CPAM      91 ' ,   ,   ,   , 0 -'
+0511 O                       61CPAM      91 '   ,   ,   , 0 . -'
+0512 O                       62CPAM      91 '  ,   ,   , 0 .  -'
+0513 O                       63CPAM      91 ' ,   ,   , 0 .   -'
+0514 O**
+0515 O                       60AMAD     110 ' ,   ,   ,   , 0 -'
+0516 O                       61AMAD     110 '   ,   ,   , 0 . -'
+0517 O                       62AMAD     110 '  ,   ,   , 0 .  -'
+0518 O                       63AMAD     110 ' ,   ,   , 0 .   -'
+0519 O**
+     O                       60AMTA     129 ' ,   ,   ,   , 0 -'
+     O                       61AMTA     129 '   ,   ,   , 0 . -'
+     O                       62AMTA     129 '  ,   ,   , 0 .  -'
+     O                       63AMTA     129 ' ,   ,   , 0 .   -'
+0524 O**
+0525 O**   DETAIL LINE 2
+0526 O**
+0527 O********D 1      02N23NU7                                           S01268
+     O*******AND          75                                        S01117S01268
+0527 O        D 1      02NU7 75                                           S01268
+     O                   N27 31BBCRTN    18                               S01268
+0528 O********           N21 60WTAD     110 ' ,   ,   ,   , 0 -'          S01268
+0529 O********           N21 61WTAD     110 '   ,   ,   , 0 . -'          S01268
+0530 O********           N21 62WTAD     110 '  ,   ,   , 0 .  -'          S01268
+0531 O********           N21 63WTAD     110 ' ,   ,   , 0 .   -'          S01268
+0528 O                N23N21 60WTAD     110 ' ,   ,   ,   , 0 -'          S01268
+0529 O                N23N21 61WTAD     110 '   ,   ,   , 0 . -'          S01268
+0530 O                N23N21 62WTAD     110 '  ,   ,   , 0 .  -'          S01268
+0531 O                N23N21 63WTAD     110 ' ,   ,   , 0 .   -'          S01268
+0532 O**
+0533 O*****              N22 60WTTA     129 ' ,   ,   ,   , 0 -'          S01268
+0534 O*****              N22 61WTTA     129 '   ,   ,   , 0 . -'          S01268
+0535 O*****              N22 62WTTA     129 '  ,   ,   , 0 .  -'          S01268
+0536 O*****              N22 63WTTA     129 ' ,   ,   , 0 .   -'          S01268
+0537 O*****                             132 'W/T'                         S01268
+0533 O                N23N22 60WTTA     129 ' ,   ,   ,   , 0 -'          S01268
+0534 O                N23N22 61WTTA     129 '   ,   ,   , 0 . -'          S01268
+0535 O                N23N22 62WTTA     129 '  ,   ,   , 0 .  -'          S01268
+0536 O                N23N22 63WTTA     129 ' ,   ,   , 0 .   -'          S01268
+0537 O                N23               132 'W/T'                         S01268
+     O/COPY WNCPYSRC,LE1121O001
+     O********T***03***L3*45***                                                        184482 212002
+     O        T   03   L3 45 75                                                               212002
+     O                                   22 'REFERENCE LE1121P1'          184482
+     O                         TITL      89                               184482
+     O                                  104 'DATE'                        184482
+     O                         RUNA     112                               184482
+     O                                  122 'PAGE'                        184482
+     O                         PAGE  Z  127                               184482
+     O********T***05***L3*45***                                                        184482 212002
+     O        T   05   L3 45 75                                                               212002
+     O                                   46 'CUSTOMER LENDING INTERES'    184482
+     O                                   58 'T ACCRUALS -'                184482
+     O                                   80 'UP TO AND EXCLUDING -'       184482
+     O                         TDATA     88                               184482
+     O                 33                97 'COMPANY'                     184482
+     O                 33      CMPYM    101                               184482
+     O                 33               102 '-'                           184482
+     O                 33      CMNM     132                               184482
+     O********T***06***L3 45                                                           184482 212002
+     O        T   06   L3 45 75                                                               212002
+     O                                   46 '------------------------'    184482
+     O                                   58 '-------------'               184482
+     O                                   81 '-----------------------'     184482
+     O                                   88 '-------'                     184482
+     O********T*2******L3*45***                                                        184482 212002
+     O        T 2      L3 45 75                                                               212002
+     O                         LNARR     35                               184482
+0538 O**
+0539 O**   NET TOTAL LINE FOR LOAN WITH PARTS. SOLD - 1
+0540 O**
+0541 O        T 1      L1NU7N30
+0542 O       AND       28N29 75
+0543 O       OR 11     L1NU7N30
+0544 O       AND       28 29 75
+0545 O                                   68 'LOAN NET TOTAL'
+0546 O                       60LNPR      91 ' ,   ,   ,   , 0 -'
+0547 O                       61LNPR      91 '   ,   ,   , 0 . -'
+0548 O                       62LNPR      91 '  ,   ,   , 0 .  -'
+0549 O                       63LNPR      91 ' ,   ,   , 0 .   -'
+0550 O**
+0551 O                       60LNIAD    110 ' ,   ,   ,   , 0 -'
+0552 O                       61LNIAD    110 '   ,   ,   , 0 . -'
+0553 O                       62LNIAD    110 '  ,   ,   , 0 .  -'
+0554 O                       63LNIAD    110 ' ,   ,   , 0 .   -'
+0555 O**
+0556 O                       60LNITA    129 ' ,   ,   ,   , 0 -'
+0557 O                       61LNITA    129 '   ,   ,   , 0 . -'
+0558 O                       62LNITA    129 '  ,   ,   , 0 .  -'
+0559 O                       63LNITA    129 ' ,   ,   , 0 .   -'
+0560 O**
+0561 O**   NET TOTAL LINE FOR LOAN WITH PARTS. SOLD - 2
+0562 O**
+0563 O        T 11     L1NU7N30
+0564 O       AND       28N29 75
+0565 O                       60LNWAD    110 ' ,   ,   ,   , 0 -'
+0566 O                       61LNWAD    110 '   ,   ,   , 0 . -'
+0567 O                       62LNWAD    110 '  ,   ,   , 0 .  -'
+0568 O                       63LNWAD    110 ' ,   ,   , 0 .   -'
+0569 O**
+0570 O                       60LNWTA    129 ' ,   ,   ,   , 0 -'
+0571 O                       61LNWTA    129 '   ,   ,   , 0 . -'
+0572 O                       62LNWTA    129 '  ,   ,   , 0 .  -'
+0573 O                       63LNWTA    129 ' ,   ,   , 0 .   -'
+0574 O                                  132 'W/T'
+0575 O**
+0576 O**   TOTAL LINE - LOAN TYPE/SUB TYPE - 1
+0577 O**
+0578 O        T 2      L3NU7N30
+0579 O       AND      N28 75
+0580 O       OR 1      L3NU7N30
+0581 O       AND       28 75
+     O/COPY WNCPYSRC,LE1121O002
+0582 O                                   68 'LOAN TYPE/SUB TYPE TOTAL'
+     O/COPY WNCPYSRC,LE1121O003
+0583 O                       60LTPR      91 ' ,   ,   ,   , 0 -'
+0584 O                       61LTPR      91 '   ,   ,   , 0 . -'
+0585 O                       62LTPR      91 '  ,   ,   , 0 .  -'
+0586 O                       63LTPR      91 ' ,   ,   , 0 .   -'
+0587 O**
+0588 O                       60LTIAD    110 ' ,   ,   ,   , 0 -'
+0589 O                       61LTIAD    110 '   ,   ,   , 0 . -'
+0590 O                       62LTIAD    110 '  ,   ,   , 0 .  -'
+0591 O                       63LTIAD    110 ' ,   ,   , 0 .   -'
+0592 O**
+0593 O                       60LTITA    129 ' ,   ,   ,   , 0 -'
+0594 O                       61LTITA    129 '   ,   ,   , 0 . -'
+0595 O                       62LTITA    129 '  ,   ,   , 0 .  -'
+0596 O                       63LTITA    129 ' ,   ,   , 0 .   -'
+0597 O**
+0598 O**   TOTAL LINE - LOAN TYPE/SUB TYPE - 2
+0599 O        T 1      L3NU7N24
+0600 O       AND      N30 75
+0601 O                       60LTWAD    110 ' ,   ,   ,   , 0 -'
+0602 O                       61LTWAD    110 '   ,   ,   , 0 . -'
+0603 O                       62LTWAD    110 '  ,   ,   , 0 .  -'
+0604 O                       63LTWAD    110 ' ,   ,   , 0 .   -'
+0605 O**
+0606 O                       60LTWTA    129 ' ,   ,   ,   , 0 -'
+0607 O                       61LTWTA    129 '   ,   ,   , 0 . -'
+0608 O                       62LTWTA    129 '  ,   ,   , 0 .  -'
+0609 O                       63LTWTA    129 ' ,   ,   , 0 .   -'
+0610 O                                  132 'W/T'
+     O/COPY WNCPYSRC,LE1121O004
+0611 O**
+0612 O**   TOTAL LINE - CURRENCY - 1
+0613 O**
+0614 O        T 2      L4NU7N30
+     O       AND       75
+     O/COPY WNCPYSRC,LE1121O005
+0615 O                                   68 'CURRENCY TOTAL'
+     O/COPY WNCPYSRC,LE1121O006
+0616 O                         CCY       72
+0617 O                       60CCYPR     91 ' ,   ,   ,   , 0 -'
+0618 O                       61CCYPR     91 '   ,   ,   , 0 . -'
+0619 O                       62CCYPR     91 '  ,   ,   , 0 .  -'
+0620 O                       63CCYPR     91 ' ,   ,   , 0 .   -'
+0621 O**
+0622 O                       60CCYIAD   110 ' ,   ,   ,   , 0 -'
+0623 O                       61CCYIAD   110 '   ,   ,   , 0 . -'
+0624 O                       62CCYIAD   110 '  ,   ,   , 0 .  -'
+0625 O                       63CCYIAD   110 ' ,   ,   , 0 .   -'
+0626 O**
+0627 O                       60CCYITA   129 ' ,   ,   ,   , 0 -'
+0628 O                       61CCYITA   129 '   ,   ,   , 0 . -'
+0629 O                       62CCYITA   129 '  ,   ,   , 0 .  -'
+0630 O                       63CCYITA   129 ' ,   ,   , 0 .   -'
+0631 O**
+0632 O**   TOTAL LINE - CURRENCY - 2
+0633 O**
+0634 O        T 1      L4NU7N25
+0635 O       AND      N30 75
+0636 O                       60CCYWAD   110 ' ,   ,   ,   , 0 -'
+0637 O                       61CCYWAD   110 '   ,   ,   , 0 . -'
+0638 O                       62CCYWAD   110 '  ,   ,   , 0 .  -'
+0639 O                       63CCYWAD   110 ' ,   ,   , 0 .   -'
+0640 O**
+0641 O                       60CCYWTA   129 ' ,   ,   ,   , 0 -'
+0642 O                       61CCYWTA   129 '   ,   ,   , 0 . -'
+0643 O                       62CCYWTA   129 '  ,   ,   , 0 .  -'
+0644 O                       63CCYWTA   129 ' ,   ,   , 0 .   -'
+0645 O                                  132 'W/T'
+     O/COPY WNCPYSRC,LE1121O007
+0646 O**
+0647 O**   HEADINGS IF NO DETAILS TO REPORT OR D/B ERROR IN FIRST CYCLE
+0648 O**
+0649 O********T*  03   LR 30                                              046205
+0461 O**********                         22 'REFERENCE LE1121P1'          046205
+0462 O**********               TITL      89                               046205
+0463 O**********                        104 'DATE'                        046205
+0464 O**********               RUNA     112                               046205
+0465 O**********                        122 'PAGE'                        046205
+0466 O**********               PAGE  Z  127                               046205
+0656 O********T*  05   LR 30                                              046205
+0471 O**********                         46 'CUSTOMER LENDING INTERE      046205
+0472 O**********                         58 'T ACCRUALS -'                046205
+0473 O**********                         80 'UP TO AND EXCLUDING -'       046205
+0474 O**********               TDATA     88                               046205
+     O**********       33                97 'COMPANY'                     046205
+     O**********       33      CMPYM    101                               046205
+     O**********       33               102 '-'                           046205
+     O**********       33      CMNM     132                               046205
+0661 O********T*  06   LR 30                                              046205
+0662 O**********                         46 '-----------------------      046205
+0663 O**********                         58 '------------'                046205
+0664 O**********                         81 '-----------------------      046205
+0665 O**********                         88 '-------'                     046205
+0666 O********T*  09   LR 30                                              046205
+0483 O*****                              13 'CUSTOMER'                    S01268
+0483 O**********                          6 'CUST.'                 S01268046205
+     O**********                         12 'NAME'                  S01268046205
+0484 O**********                         52 'LOAN   ACCRUAL PERIOD'       046205
+0485 O**********                         72 'RATE       CCY'              046205
+0486 O**********                        104 'PRINCIPAL    ACCRUED TO      046205
+0487 O**********                        128 'DATE          TO ACCRUE      046205
+0672 O********T*  10   LR 30                                              046205
+     O**********                         12 'TOWN'                  S01268046205
+0490 O**********                         50 'NUMBER   FROM     TO'        046205
+0674 O********T*  17   LR 30NU7                                           046205
+0675 O**********                         76 '*** NO DETAILS TO REPOR      046205
+0675 O**********                         80 '***'                         046205
+0676 O**
+0677 O**   DATABASE ERROR
+0678 O**
+0679 O********T*32     LR U7                                              046205
+0680 O**********                         51 '*** REFERENCE LE1121'        046205
+     O**********                         72 'DATABASE ERROR ***'          046205
+     O**********LE1121P1T 3      L5 75 33                                 046205
+     O*******OR*       LR 30 33                                           046205
+     O**********                         66 '*** END OF REPORT FOR'       046205
+     O**********                         74 'COMPANY'                     046205
+     O**********               CMPYM     78                               046205
+     O**********                         82 ' ***'                        046205
+     O********T*3      LR 75N33                                           046205
+     O*******OR*       LR 30N33                                           046205
+     O**********                         76 '*** END OF REPORT ***'       046205
+0646 O**
+0688 O**
+0689 O**   FILE CONTROL REPORT
+0690 O**
+0691 OLE1121AUT   03   LR
+0692 O                                   22 'REFERENCE LE1121AU'
+0693 O                         TITL      89
+0694 O                                  104 'DATE'
+0695 O                         RUNA     112
+0696 O                                  122 'PAGE'
+0697 O                         PAGE1 Z  127
+0698 O        T   05   LR
+0699 O                                   65 'CUSTOMER LENDING INTERES'
+0700 O                                   89 'T ACCRUALS - FILE CONTRO'
+0701 O                                   91 'LS'
+0702 O        T   06   LR
+0703 O                                   65 '------------------------'
+0704 O                                   89 '------------------------'
+0705 O                                   91 '--'
+0706 O        T   09   LR
+0707 O                                   28 'S/SLACXL1 - RUN CONTROLS'
+0708 O                                   59 'NUMBER'
+0709 O        T   10   LR
+0710 O                                   28 '----------------------'
+0711 O                                   59 'OF RECORDS'
+0712 O        T   12   LR
+0713 O                                   29 'TOTAL RECORDS ON FILE'
+0714 O                      NU7NORE  3   59
+0715 O        T   14   LR
+0716 O                                   29 'TOTAL RECORDS ON FILE'
+0717 O                                   42 '- CALCULATED'
+0718 O                         COUNT 3   59
+0719 O                    U8NU7         111 '***   DIFFERENCE   ***'
+0674 O        T   17   LR 30NU7
+0675 O                                   76 '*** NO DETAILS TO REPORT'
+0675 O                                   80 '***'
+0676 O**
+0677 O**   DATABASE ERROR
+0678 O**
+0679 O        T 32     LR U7
+0680 O                                   39 '*** REFERENCE '
+     O                         DBPGM     51
+0681 O                                   71 'DATABASE ERROR AT'
+0682 O                         DBASE     75
+0683 O        T        LR U7
+0684 O                                   39 'FILENAME'
+0685 O                         DBFILE    48
+0686 O                                   52 'KEY'
+0687 O                         DBKEY     82
+**  ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**  ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

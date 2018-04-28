@@ -1,0 +1,64 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Submitted Send Message to MQ')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000119 - Submitted Send Message to MQ                    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCD &PRFX &MQMGR &MQUEUE &MSG)
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MQUEUE) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MQMGR1) TYPE(*CHAR) LEN(49)
+             DCL        VAR(&MQUEUE1) TYPE(*CHAR) LEN(49)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(2000)
+             DCL        VAR(&MSG1) TYPE(*CHAR) LEN(2001)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems +
+                          Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&MQMGR1) VALUE(&MQMGR)
+             CHGVAR     VAR(&MQUEUE1) VALUE(&MQUEUE)
+             CHGVAR     VAR(&MSG1) VALUE(&MSG)
+             CHGVAR     VAR(%SST(&MQMGR1 49 1)) VALUE('-')
+             CHGVAR     VAR(%SST(&MQUEUE1 49 1)) VALUE('-')
+             CHGVAR     VAR(%SST(&MSG1 2001 1)) VALUE('-')
+ 
+             SBMJOB     CMD(CALL PGM(ZAMSGTOMQ) PARM(&RTCD &PRFX +
+                          &MQMGR1 &MQUEUE1 &MSG1)) JOB(SC000119) +
+                          JOBD(MBATCH) JOBQ(INTERFACE) +
+                          PRTDEV(*CURRENT) OUTQ(*JOBD) USER(*JOBD) +
+                          RTGDTA(*JOBD) INLLIBL(*JOBD)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/** Abnormal termination */
+ 
+             CHGVAR     VAR(&RTCD) VALUE('*ERROR')
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000119 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

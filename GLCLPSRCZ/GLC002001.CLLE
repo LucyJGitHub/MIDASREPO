@@ -1,0 +1,50 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL JEs Report: batch brch/ccy totals')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC002001 - Midas GL JEs Report: batch brch/ccy totals      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. AR1097467 *CREATE   Date 27Mar13             */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       AR1097467 - Expected 15% COB run optimization not met       */
+/*                   Split reporting into different components       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* GL Reporting */
+ 
+             CALL       PGM(GL0112P) PARM(' ' ' ' 'B' 'ALL')
+ 
+/* Reclaim resource inserted to ensure all Synon files are closed */
+ 
+             RCLRSC
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal Termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC002001 ended abnormally.') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,110 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM shell to prompt ACTIONFILE command')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000122 - Shell to prompt ACTIONFILE command.  It ensures */
+/*                   that the data library is at the top of the      */
+/*                   list.                                           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Last Amend No. MD020092A          Date 19Apr13              */
+/*       Prev Amend No. A1084804 *CREATE   Date 25Jan13              */
+/*                      xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD020092A - Incorrect concatenation of system prefix and    */
+/*                  library name.                                    */
+/*       A1084804 - New program to control library list for          */
+/*                  ACTIONFILE.                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFXSVAL)
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DELDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GENPGM) TYPE(*CHAR) LEN(10) +
+                          VALUE('SMC000122')
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPSVALJ0)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2013')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+/* Set up messages for Midas Information Screen  */
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM(&GENPGM 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CALL       PGM(UPC0014) PARM(&SBSID)
+ 
+/**********  CHGVAR     VAR(&DELDTALIB) VALUE(&SBSID *BCAT 'DTALIB')     */            /*MD020092A*/
+             CHGVAR     VAR(&DELDTALIB) VALUE(&SBSID *TCAT 'DTALIB')                   /*MD020092A*/
+ 
+/* Temporarily change ACTIONFILE's product library to be the deliverable */
+/*  data library so that it at the top of the library list.              */
+             CHGCMD     CMD(ACTIONFILE) PRDLIB(&DELDTALIB)
+ 
+             ?          ACTIONFILE
+             MONMSG     MSGID(CPF6801)
+ 
+             CHGCMD     CMD(ACTIONFILE) PRDLIB(*NONE)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) MSGDTA(&GENPGM) +
+                          MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM(&GENPGM 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000)
+ 
+ 
+ENDPGM:
+             ENDPGM

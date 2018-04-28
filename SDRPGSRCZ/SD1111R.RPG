@@ -1,0 +1,3867 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Leo customer details maintenace')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1111R - Midas SD Leo customer details maintenance          *
+      *                                                               *
+      *  Function:  This program allows the user to maintain details  *
+      *             on LEO customers.                                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 080810             Date 10Jul96               *
+      *                 084382             DATE 31MAY95               *
+      *                 083859             DATE 31MAY95               *
+      *                 081649             DATE 10FEB95               *
+      *                 067989             DATE 30SEP94               *
+      *                 S01467             DATE 01JUN94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  080810 - When inserting a new record, the Midas Industry     *
+      *           Code must be right aligned when it is defaulted     *
+      *           into the Business Code field.                       *
+      *  084382 - Validate the account officer that has been          *
+      *           defaulted from the customers file against the leo   *
+      *           files.                                              *
+      *  083859 - The acronym cannot have leading or embedded blanks. *
+      *           The acronym cannot be ALL numeric unless it is the  *
+      *           same as the customer number.                        *
+      *           Question mark processing is not available for       *
+      *           acronym.                                            *
+      *  081649 - Amend the acronym validation to default '******XX'  *
+      *           (where 'XX' is the Leo branch code) for a branch    *
+      *           internal customer.                                  *
+      *  067989 - Move program out of the main customer details       *
+      *           commitment cycle.                                   *
+      *  S01467 - Midas-Leo Integration - New program.                *
+      *                                                               *
+      *****************************************************************
+     F*LEO customer details mnt Initialise Program F-spec
+     F/COPY WNCPYSRC,SD1111RFPG
+     FSD1111R#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Leo customer details maintenance
+      *
+     FSDCLEOL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas-Leo customer interface retrieval
+      *
+     FSDCUSTL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Customer details retrieval
+      *
+     FSDBRCHL5IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RSQ : Midas SD Branch codes by customer number
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     FSDCLEOL0UF  E           K        DISK                      A    UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0004
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Midas-Leo customer interface update
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*LEO customer details mnt Initialise Program E-spec
+     E/COPY WNCPYSRC,SD1111REPG
+      * Long constants
+     E                    @CN#    1   1  6   @CN    25
+      *                                                                                       CSC022
+      ** Commitment Control Array                                                             CSC022
+     E                    WCMTAR     10 10                                                    CSC022
+      *                                                                                       CSC022
+      ** Dummy Data Structures used by Access Programs.                                       CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      *                                                                                       CSC022
+      ** Switchable Features File                                                             CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+     I              LCD                             WLCD                                      CSC022
+      *                                                                                       CSC022
+      ** Commitment Control dataarea                                                          CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCMTJB                                    CSC022
+     I*
+      ** Local data area for database error details                                           CSC022
+     ILDA       E DSLDA                         256                                           CSC022
+     I*
+     I*
+     I*
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I*
+     I/COPY WNCPYSRC,SD1111RI04
+     I/COPY QWINDSRC,SD1110GDTA
+     I*
+     I*
+     I*
+     I*LEO customer details mnt Initialise Program I-spec
+     I/COPY WNCPYSRC,SD1111RIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I@1DBRC    E DSSDCLEOL0
+      * UPD : Midas SD Midas-Leo customer interface update
+      * Current/previous master file format fields for change control
+      *
+     I#1DBRC      DS                            159
+      * Stored master file format fields
+     I                                        1   1 #1DB1
+      *
+     ID@CPRO      DS
+     I***  Leo CUSPRO file details
+     I*
+     I                                        1   80CPCNO
+     I                                    P   9  120CPUPD
+     I                                       13  20 CPUSR
+     I                                       21  28 CPACR
+     I                                       29  29 CPSTAT
+     I                                       30  64 CPNAM
+     I                                       65  68 CPBCOD
+     I                                       69  73 CPRES
+     I                                       74  78 CPRIS
+     I                                       79  84 CPRESP
+     I                                       85  96 CPACNO
+     I                                       97 108 CPTAX
+     I                                      109 109 CPBANK
+     I                                    P 119 1220CPCD
+     I                                      123 126 CPOF1
+     I                                      127 130 CPOF2
+     I                                      131 142 CPALT
+     I/COPY WNCPYSRC,SD1111RI01
+     I*
+     ID@CCOM      DS
+     I***  Leo CUSCOM file details
+     I*
+     I                                        1   8 CCCACR
+     I                                        9  100CCSEQ
+     I                                    P  11  140CCUPD
+     I                                       15  22 CCUSR
+     I                                       23  57 CCADR1
+     I                                       58  92 CCADR2
+     I                                       93 127 CCADR3
+     I                                      128 162 CCADR4
+     I                                      163 164 CCSTE
+     I                                      165 174 CCZIP
+     I                                      175 189 CCTEL
+     I                                      190 201 CCSID
+     I                                      202 213 CCTNO
+     I                                      214 228 CCABK
+     I                                      229 240 CCOID
+     I                                    P 241 2440CCUID
+     I                                    P 245 2490CCFRB
+     I*
+     I            DS
+     I                                        1  10 WUCSSN
+     I                                        8   8 WUCS08
+     I                                        9   9 WUCS09
+     I                                       10  10 WUCS10
+     I*
+     ISDCUST      DS                            520                       S01435
+     I*                                                                   S01435
+     ISDCNST    E DSSDCNSTPD                                              S01435
+     I*                                                                   S01435
+     IMEBICD    E DSMEBICDPD                                              S01435
+     I            DS
+     I                                        1   60WUWCDT
+     I                                        1   40WUMMDD
+     I                                        5   60WUHNNB
+     I*
+     I            DS
+     I                                        1   7 WUWADT
+     I                                        1   70WUWNDT
+     IBUPA1       DS                            800
+     I* Data structure for CUSPRO
+     I*
+     IBUPA2       DS                            800
+     I* Data structure for CUSCOM
+     I*
+     IWUDELR      DS
+     I                                        1 250 WUDR01
+     I                                      251 500 WUDR02
+     I                                      501 750 WUDR03
+     I                                      7511000 WUDR04
+     I                                     10011250 WUDR05
+     I                                     12511500 WUDR06
+     I                                     15011750 WUDR07
+     I                                     17512000 WUDR08
+     I                                     20012250 WUDR09
+     I                                     22512500 WUDR00
+     I                                     25012750 WUDR11
+     I                                     27513000 WUDR12
+      * Outward parameters
+     IPARC        DS                           3064
+      * RCD : Midas SD Deleted records file retrieval
+      * I :  File name
+     I                                        1  10 PAFNME
+      * I :  Long Key
+     I                                       11  60 PALKEY
+      * I :  Deleted Data Record Pt1
+     I                                       61 310 PADR01
+      * I :  Deleted Data Record Pt2
+     I                                      311 560 PADR02
+      * I :  Deleted Data Record Pt3
+     I                                      561 810 PADR03
+      * I :  Deleted Data Record Pt4
+     I                                      8111060 PADR04
+      * I :  Deleted Data Record Pt5
+     I                                     10611310 PADR05
+      * I :  Deleted Data Record Pt6
+     I                                     13111560 PADR06
+      * I :  Deleted Data Record Pt7
+     I                                     15611810 PADR07
+      * I :  Deleted Data Record Pt8
+     I                                     18112060 PADR08
+      * I :  Deleted Data Record Pt9
+     I                                     20612310 PADR09
+      * I :  Deleted Data Record Pt10
+     I                                     23112560 PADR00
+      * I :  Deleted Data Record Pt11
+     I                                     25612810 PADR11
+      * I :  Deleted Data Record Pt12
+     I                                     28113060 PADR12
+      * I :  Last Change Date
+     I                                    P306130630PALCD
+      * I :  Type of Last Change
+     I                                     30643064 PATYLC
+      *
+     IYARDCS      DS                            159
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IUUSDY     E DSDSSDY
+     I*
+     I* 800 byte DS for incoming data from Access Program
+     I*
+     ID@ACCT    E DSACCNTAB
+     I*
+     IYRSW0A      DS                           9999
+     IYRSW0B      DS                           9999
+     IYRSW0C      DS                           9999
+     IYRSW0D      DS                           9999
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+     IID0004      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS
+      * I : MAP Customer Number
+     I/COPY WNCPYSRC,SD1111RI02
+     I                                        1   6 P1CUST
+     I/COPY WNCPYSRC,SD1111RI03
+     IP2PARM      DS
+      * I :  Action Code
+     I                                        1   1 P2ANCD
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Acronym must be entered'
+      * Acronym
+     I                                        1   8 ZA0001
+      * Message data for 'Leo Internal Cust Invalid'
+      * Acronym
+     I                                        1   8 ZA0002
+      * Message data for 'Acronym must be unique'
+      * Acronym
+     I                                        1   8 ZA0003
+      * Message data for 'Leading blank not allowed'
+      * Acronym
+     I                                        1   8 ZA0004
+      * Message data for 'No embedded blank in Acro'
+      * Acronym
+     I                                        1   8 ZA0005
+      * Message data for 'No embedded blank in Acro'
+      * Acronym
+     I                                        1   8 ZA0006
+      * Message data for 'No embedded blank in Acro'
+      * Acronym
+     I                                        1   8 ZA0007
+      * Message data for 'No embedded blank in Acro'
+      * Acronym
+     I                                        1   8 ZA0008
+      * Message data for 'No embedded blank in Acro'
+      * Acronym
+     I                                        1   8 ZA0009
+      * Message data for 'No embedded blank in Acro'
+      * Acronym
+     I                                        1   8 ZA0010
+      * Message data for 'Acronym not all numeric'
+      * Acronym
+     I                                        1   8 ZA0011
+      * Message data for 'No '?' processing in Acro'
+      * Acronym
+     I                                        1   8 ZA0012
+      * Message data for 'Display name/city is reqd'
+      * Display Name/City
+     I                                        1  35 ZA0013
+      * Message data for '1st and 2nd lines are req'
+      * Cust. Name & Address 1
+     I                                        1  35 ZA0014
+      * Cust. Name & Address 2
+     I                                       36  70 ZA0015
+      * Message data for 'Bank indicator is reqd'
+      * Leo Bank Indicator
+     I                                        1   1 ZA0016
+      * Message data for 'Bank indicator 'Y' or 'N''
+      * Leo Bank Indicator
+     I                                        1   1 ZA0017
+      * Message data for 'Business Code is required'
+      * Business Code
+     I                                        1   4 ZA0018
+      * Message data for 'Business code invalid'
+      * Business Code
+     I                                        1   4 ZA0019
+      * Message data for 'Officer code invalid'
+      * LEO account officer 2
+     I                                        1   4 ZA0020
+      * Message data for 'Responsibility code invld'
+      * Responsibility Code
+     I                                        1   6 ZA0021
+      * Message data for 'Retail Account is closed'
+      * Retail A/C number
+     I                                        1  12 ZA0022
+      * Message data for 'Account does not exist'
+      * Retail A/C number
+     I                                        1  12 ZA0023
+      * Message data for 'SWIFT ID must be blank'
+      * Customer Swift Id
+     I                                        1  12 ZA0024
+      * Message data for 'Embedded Spaces Found'
+      * Customer Swift Id
+     I                                        1  12 ZA0025
+      * Message data for 'SWIFT must be 8,9,11,12'
+      * Customer Swift Id
+     I                                        1  12 ZA0026
+      * Message data for 'Posns 1-6 must be letters'
+      * Customer Swift Id
+     I                                        1  12 ZA0027
+      * Message data for 'SWIFT must be 8,9,11,12'
+      * Customer Swift Id
+     I                                        1  12 ZA0028
+      * Message data for 'Invalid Characters found'
+      * Customer Swift Id
+     I                                        1  12 ZA0029
+      * Message data for 'SWIFT must be 8/11 long'
+      * Customer Swift Id
+     I                                        1  12 ZA0030
+      * Message data for 'Swift Entry Not Allowed'
+      * Customer Swift Id
+     I                                        1  12 ZA0031
+      * Message data for 'BIC Identifier Not Found'
+      * Customer Swift Id
+     I                                        1  12 ZA0032
+      * Message data for 'FRB Routing must be blank'
+      * LEO FRB routing code func
+     I                                        1   9 ZA0033
+      * Message data for 'FRB must be numeric'
+      * LEO FRB routing code func
+     I                                        1   9 ZA0034
+      * Message data for 'Answerback must be blank'
+      * LEO answerback
+     I                                        1  15 ZA0035
+      * Message data for 'Universal ID numeric'
+      * LEO Universal ID func
+     I                                        1   7 ZA0036
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0037
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C/COPY WNCPYSRC,SD1111RC01
+     C           P1CUST    PARM           WP0001  6        Customer Number
+     C/COPY WNCPYSRC,SD1111RC02
+     C           P2ANCD    PARM           WP0002  1        Action Code
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Check passed parameters
+     C                     EXSR FACKPM
+      * Perform once if all passed, else repeat
+     C           W0RPT     DOUEQ'N'
+      * Display and process key screen
+     C                     EXSR BADSKY
+     C                     END
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1CUST    IFEQ *BLANK                     Customer Number
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * Switch between *ADD/*CHANGE modes
+     C   09                CAS            BCCHMD
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE BBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     BBIN89  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BCCHMD    BEGSR
+      *================================================================
+      * Switch between *ADD/*CHANGE modes
+      *================================================================
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     ELSE
+     C                     MOVEL'ADD'     W0PMD
+     C                     END
+      *================================================================
+     CSR         BCEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           FGCUST           Customer Number
+      * Setup key
+     C                     MOVEL#1CUST    FGCUST           Customer Number
+     C           KRTV      CHAIN@CLEOL1              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     9931  *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * Verify record existence against program mode
+     C           W0PMD     IFNE 'ADD'
+      * If record does not exist, error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     9931  *
+      * Send message 'Customer LEO Details   NF'
+     C                     MOVEL'USR2335' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * 00/Copy member SD1111RSFF - Customer LEO Details  *
+     C*LEO customer details mnt Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD1111RSFF
+      * USER: Initialize detail screen (existing record)
+      * Set up Footer for DTL scr - Customer LEO Details  *
+     C*
+     C*  DETAIL LINE COMMAND KEY TEXT
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C*  If Action Code is Delete :
+     C*
+     C           P2ANCD    IFEQ 'D'
+     C* Setup footer text:
+     C* F3=Client Details   F10=Delete   F12=Previous
+     C                     MOVEL'USR3339' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C*  If Action Code is Insert :
+     C*
+     C           P2ANCD    IFEQ 'I'
+     C* Setup footer text:
+     C* F3=Client Details   F12=Previous
+     C                     MOVEL'USR3340' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C*  If Action Code is Amend :
+     C*
+     C           P2ANCD    IFEQ 'A'
+     C* Setup footer text:
+     C* F3=Client Details   F12=Previous
+     C                     MOVEL'USR3340' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+      * 00/Copy member SD1111RISE - Customer LEO Details  *
+     C*LEO customer details mnt Initialise Dtl Exist Rcd
+     C/COPY WNCPYSRC,SD1111RISE
+      * Move Cus Num into screen - Customer LEO Details  *
+      *
+      * Build up the LEO Customer number by adding two zeroes to
+      * the begining of the Midas Customer number.
+      * for display purposes.
+      *
+     C                     MOVEL'00'      #DLCUS
+     C                     MOVE P1CUST    #DLCUS
+     C/COPY WNCPYSRC,SD1111RC21
+     C                     MOVE #DLCUS    WULCUN  80
+     C                     MOVEL*BLANK    WUEOTX           Option for ACCO
+     C                     MOVEL'*KEY'    WUEOTX           Option for ACCO
+      * Call AOC0001 /call CAOUCU - Customer LEO Details  *
+     C*  Call to the AOC0001 which calls the LEO program CAOUCU.
+     C*
+     C                     CALL 'AOC0001'
+     C           WUAPRC    PARM WUAPRC    UUAPRC  7        B:Return Cd
+     C                     PARM WUEOTX    UUEOTX  7        I:Option
+     C                     PARM WULCUN    UULCUN  80       I:Customer numb
+     C                     PARM WUKSTS    UUKSTS  7        I:Key Status
+     C           D@CPRO    PARM *BLANK    UUSDY            O:Format
+     C*
+      * Move CUSPRO fields to scr - Customer LEO Details  *
+     C*
+     C/COPY WNCPYSRC,SD1111RC03
+     C                     MOVE CPCNO     #DLCUS
+     C                     MOVELCPACR     #DACRO
+     C                     MOVE CPSTAT    WUSTAT  1
+     C                     MOVELCPNAM     #DDNMC
+     C                     MOVELCPBCOD    #DBCDE
+     C                     MOVELCPRES     #DLCRE
+     C                     MOVELCPRIS     #DLCRS
+     C                     MOVELCPRESP    #DRSPC
+     C                     MOVELCPACNO    #DRACN
+     C                     MOVELCPTAX     #DTCDE
+     C                     MOVE CPBANK    #1BNBI
+     C                     MOVE CPBANK    #DLBIN  1
+     C                     MOVE CPOF1     #DLAO1
+     C                     MOVE CPOF2     #DLAO2
+     C                     MOVE CPACR     WULCUS  8
+     C/COPY WNCPYSRC,SD1111RC04
+     C*
+     C                     MOVEL*BLANK    WUEOTX           Option for ACCO
+     C                     MOVEL'*KEY'    WUEOTX           Option for ACCO
+      * Call AOC0002 /call CAOUCC - Customer LEO Details  *
+     C*
+     C*  Call to the AOC0002 which calls the LEO program CAOUCC.
+     C*
+     C                     CALL 'AOC0002'
+     C           WUAPRC    PARM WUAPRC    UUAPRC           B:Return Cd
+     C                     PARM WUEOTX    UUEOTX           I:Option
+     C                     PARM WULCUS    UULCUS  8        I:Customer numb
+     C                     PARM WUKSTS    UUKSTS           I:Key Status
+     C           D@CCOM    PARM *BLANK    UUSDY            O:Format
+     C*
+      * Move CUSCOM fields to scr - Customer LEO Details  *
+     C*
+     C* Move values into screen fields.
+     C*
+     C                     MOVELCCADR1    #1CNA1
+     C                     ADD  CCSEQ     WUSEQN  20
+     C                     MOVELCCADR2    #1CNA2
+     C                     MOVELCCADR3    #1CNA3
+     C                     MOVELCCADR4    #1CNA4
+     C                     MOVELCCZIP     #DPCDE
+     C                     MOVELCCTEL     #DTELP
+     C                     MOVELCCSID     #1CSID
+     C                     MOVELCCTNO     #DTLXN
+     C                     MOVELCCABK     #DLANS
+     C                     MOVELCCOID     #DLOID
+     C                     Z-ADDCCUID     #DLUNI
+     C                     Z-ADDCCFRB     #DLFRB
+     C*
+      * FRB Routing Code
+      * CASE: DTL.LEO FRB Routing code is Zero
+     C           #DLFRB    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    #DFRBF           LEO FRB routing
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DLFRB    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0001  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0002 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0003  10       ZALIGN No Of De
+     C                     PARM 9         WQ0004  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0005 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0006 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0007  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Zalign FRB - Customer LEO Details  *
+     C*
+     C                     MOVE WUZASF    #DFRBF
+     C*
+     C                     END                             *FI
+      * Universal ID
+      * CASE: DTL.LEO Universal Id is Zero
+     C           #DLUNI    IFEQ *ZERO                      *IF
+     C                     MOVEL*BLANK    #DUNIF           LEO Universal I
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DLUNI    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0008  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0009 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0010  10       ZALIGN No Of De
+     C                     PARM 7         WQ0011  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0012 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0013 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0014  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Zalign universal ID - Customer LEO Details  *
+     C*
+     C                     MOVE WUZASF    #DUNIF
+     C*
+     C                     END                             *FI
+      * Call access objects with option equals *FREE
+     C                     MOVEL*BLANK    WUEOTX           Option for ACCO
+     C                     MOVEL'*FREE'   WUEOTX           Option for ACCO
+      * Call AOC0001 /call CAOUCU - Customer LEO Details  *
+     C*  Call to the AOC0001 which calls the LEO program CAOUCU.
+     C*
+     C                     CALL 'AOC0001'
+     C           WUAPRC    PARM WUAPRC    UUAPRC  7        B:Return Cd
+     C                     PARM WUEOTX    UUEOTX  7        I:Option
+     C                     PARM WULCUN    UULCUN  80       I:Customer numb
+     C                     PARM WUKSTS    UUKSTS  7        I:Key Status
+     C           D@CPRO    PARM *BLANK    UUSDY            O:Format
+     C*
+     C                     MOVEL*BLANK    WUEOTX           Option for ACCO
+     C                     MOVEL'*FREE'   WUEOTX           Option for ACCO
+      * Call AOC0002 /call CAOUCC - Customer LEO Details  *
+     C*
+     C*  Call to the AOC0002 which calls the LEO program CAOUCC.
+     C*
+     C                     CALL 'AOC0002'
+     C           WUAPRC    PARM WUAPRC    UUAPRC           B:Return Cd
+     C                     PARM WUEOTX    UUEOTX           I:Option
+     C                     PARM WULCUS    UULCUS  8        I:Customer numb
+     C                     PARM WUKSTS    UUKSTS           I:Key Status
+     C           D@CCOM    PARM *BLANK    UUSDY            O:Format
+     C*
+     C                     END
+      *
+     C                     ELSE
+     C/COPY WNCPYSRC,SD1111RC05
+      * If record already exists, error
+     C           *IN90     IFEQ '0'
+     C                     SETON                     9931  *
+      * Send message 'Customer LEO Details   EX'
+     C                     MOVEL'USR2336' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C/COPY WNCPYSRC,SD1111RC06
+      * USER: Initialize detail screen (new record)
+      * Set up Footer for DTL scr - Customer LEO Details  *
+     C*
+     C*  DETAIL LINE COMMAND KEY TEXT
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C*  If Action Code is Delete :
+     C*
+     C           P2ANCD    IFEQ 'D'
+     C* Setup footer text:
+     C* F3=Client Details   F10=Delete   F12=Previous
+     C                     MOVEL'USR3339' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C*  If Action Code is Insert :
+     C*
+     C           P2ANCD    IFEQ 'I'
+     C* Setup footer text:
+     C* F3=Client Details   F12=Previous
+     C                     MOVEL'USR3340' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C*  If Action Code is Amend :
+     C*
+     C           P2ANCD    IFEQ 'A'
+     C* Setup footer text:
+     C* F3=Client Details   F12=Previous
+     C                     MOVEL'USR3340' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+      * Move Cus Num into screen - Customer LEO Details  *
+     C/COPY WNCPYSRC,SD1111RC07
+     C                     MOVEL'00'      #DLCUS
+     C                     MOVE P1CUST    #DLCUS
+     C/COPY WNCPYSRC,SD1111RC08
+     C                     MOVE #DLCUS    WULCUN  80
+      * Get LEO information - Client Details  *
+     C                     EXSR SARVGN
+      * Start of change 081649.
+      * Check for a Branch Internal Customer.
+      * Retrieve Int Cust Branch - Branch Codes  *
+     C                     EXSR SBRVGN
+      * Initialise the Acronym field.
+      * CASE: PGM.*Return code is Customer on branch codes
+     C           W0RTN     IFEQ 'BRANCH'                   *IF
+     C                     MOVEL'Y'       WUICIN           Internal Custom
+      * Call leo program CAOUBR - Customer LEO Details  *
+     C                     CALL 'AOC0005'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0015  7        Access Pgm Retu
+     C                     PARM '*FIND'   WQ0016  7        Option for ACCO
+     C                     PARM WULEOB    WQ0017  2        Leo Branch Code
+     C                     PARM WUBRCD    WQ0018  3        Branch code
+     C           WUKSTS    PARM *BLANK    WQ0019  7        Key status
+     C           WUSFMT    PARM *BLANK    WQ0020256        Access object f
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0005' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Check access object return code.
+      * CASE: WRK.Access Pgm Return Code is *Normal
+     C           WUAPRC    IFEQ *BLANK                     *IF
+      * Default acronym value for a Branch Internal Customer.
+     C                     Z-ADD2         YRSW03
+     C                     Z-ADD3         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00256
+     C           ZQ        ORGT 00256
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBSTWUSFMT:ZQ WULEOB    P  90  Leo Branch Code
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     Z-ADD*ZEROS    ZQ      50
+     C           @CN,01    CAT  WULEOB:ZQ #DACRO    P      Acronym
+     C                     MOVEL'Y'       WUPRLA           Protect Leo Acr
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    #DACRO           Acronym
+     C                     MOVEL'******'  #DACRO           Acronym
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Set up Acronym - Customer LEO Details  *
+     C*
+     C** Set up the Acronym from the customer shortname.
+      ** If Midas acronym is of the format 'XXXXXX    ', use the first
+      ** 8 positions. If posns 8 to 10 are not blank, assume it is of
+      ** format 'XXXXX  XXX', and use the first 5 and last 3 positions.
+     C*
+     C                     MOVELWUCSSN    WUACRO  8
+     C           WUCS08    IFNE *BLANK
+     C           WUCS09    ANDNE*BLANK
+     C           WUCS10    ANDNE*BLANK
+     C                     MOVE WUCSSN    WUACRR  3
+     C                     MOVE WUACRR    WUACRO
+     C                     END
+     C                     MOVELWUACRO    #DACRO           Acronym
+     C                     MOVEL'N'       WUICIN           Internal Custom
+     C                     END                             *FI
+      * End of change 081649.
+     C/COPY WNCPYSRC,SD1111RC09
+     C                     MOVEL*BLANK    #DDNMC           Display Name/Ci
+     C                     MOVELWUCRNM    #DDNMC           Display Name/Ci
+     C                     MOVELWUCNA1    #1CNA1           Cust. Name & Ad
+     C                     MOVELWUCNA2    #1CNA2           Cust. Name & Ad
+     C                     MOVELWUCNA3    #1CNA3           Cust. Name & Ad
+     C                     MOVELWUCNA4    #1CNA4           Cust. Name & Ad
+     C                     MOVEL*BLANK    #DTELP           Telephone
+     C                     MOVELWUCTNB    #DTELP           Telephone
+     C                     MOVELWUBNBI    #DLBIN           Leo Bank Indica
+      * Start of change 080810
+      * Move Ind Code to Bus Code - Customer LEO Details  *
+     C                     MOVEL*BLANK    #DBCDE
+     C                     MOVE WULICD    #DBCDE
+      * End of change 080810
+     C                     MOVEL*BLANK    #DLCRS           LEO Country of
+     C                     MOVELWUCNCZ    #DLCRS           LEO Country of
+     C                     MOVEL*BLANK    #DLCRE           LEO Country of
+     C                     MOVELWUCOLC    #DLCRE           LEO Country of
+     C/COPY WNCPYSRC,SD1111RC10
+      * Start of fix 084382
+      * Officer Code 1
+      * CASE: WRK.Account Officer Code is Blank
+     C           WUACOC    IFEQ *BLANK                     *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUAKEY           Access object k
+     C                     MOVEL*BLANK    WUAPRC           Access Pgm Retu
+     C                     MOVEL'17'      WUCONS           Constant for ac
+     C                     MOVEL*BLANK    WUPCOD           Parameter code
+     C                     MOVELWUACOC    WUPCOD           Parameter code
+      * Set up key for CAOUT2 Leo - Customer LEO Details  *
+     C*
+     C** Set up the key for access object CAOUT2.
+     C*
+     C                     MOVELWUCONS    WUSTOR  6
+     C                     MOVE WUPCOD    WUSTOR
+     C                     MOVELWUSTOR    WUAKEY
+      * Call leo program CAOUT2 - Customer LEO Details  *
+     C                     CALL 'AOC0004'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0021  7        Access Pgm Retu
+     C                     PARM '*KEY'    WQ0022  7        Option for ACCO
+     C                     PARM WUAKEY    WQ0023 12        Access object k
+     C           WUKSTS    PARM *BLANK    WQ0024  7        Key status
+     C           WUFTPR    PARM *BLANK    WQ0025256        field text para
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0004' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * CASE: WRK.Access Pgm Return Code is AP No Record Found
+     C           WUAPRC    IFEQ '*NRF'                     *IF
+     C                     MOVEL*BLANK    WUACOC           Account Officer
+     C                     END                             *FI
+      * Call leo program CAOUT2 - Customer LEO Details  *
+     C                     CALL 'AOC0004'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0026  7        Access Pgm Retu
+     C                     PARM '*FREE'   WQ0027  7        Option for ACCO
+     C                     PARM WUAKEY    WQ0028 12        Access object k
+     C           WUKSTS    PARM *BLANK    WQ0029  7        Key status
+     C           WUFTPR    PARM *BLANK    WQ0030256        field text para
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0004' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * End of fix 084382
+     C                     MOVEL*BLANK    #DLAO1           LEO account off
+     C                     MOVELWUACOC    #DLAO1           LEO account off
+     C                     MOVELWUCSID    #1CSID           Customer Swift
+     C                     MOVEL*BLANK    #DTLXN           LEO Telex numbe
+     C                     MOVELWUTXA1    #DTLXN           LEO Telex numbe
+     C                     MOVEL*BLANK    #DLOID           LEO Other ID/So
+     C                     MOVELWUCASC    #DLOID           LEO Other ID/So
+      * 00/Copy member SD1111RISN - Customer LEO Details  *
+     C*LEO customer details mnt Initialise Dtl New Rcd
+     C/COPY WNCPYSRC,SD1111RISN
+     C                     END
+     C/COPY WNCPYSRC,SD1111RC11
+     C                     END
+      *..................................................
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+     C           W0PMD     IFNE 'ADD'
+     C                     END
+      * USER: Validate key screen
+      * 00/Copy member SD1111RVKS - Customer LEO Details  *
+     C*LEO customer details mnt Validate Key Screen
+     C/COPY WNCPYSRC,SD1111RVKS
+      * Customer Number required
+     C           #1CUST    IFEQ *BLANK                     IF
+     C                     SETON                     9931  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process detail screen input
+     C                     CAS            CFPRSC
+     C                     END
+     C           W0TRN     IFEQ 'R'
+     C           W0PMD     IFEQ 'ADD'
+     C                     EXSR MAIZ#1
+     C                     END
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE CBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     CBIN89  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * 00/Copy member SD1111RPKR - Customer LEO Details  *
+     C*LEO customer details mnt Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD1111RPKR
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   05                MOVEL'R'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * If delete is not pending....
+      * Validate details
+     C  N10                CAS            DCVLDL
+     C                     END
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * No error: update record
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * USER: Validate detail screen fields
+      * Disable 'ENTER' in Delete mode.
+      * CASE: PAR.Action Code is Delete
+     C           P2ANCD    IFEQ 'D'                        *IF
+      * Send message 'F3/F10/F12 valid only'
+     C                     MOVEL'USR2343' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+      * Insert Mode - Validate acronym.
+      * CASE: PGM.*Program mode is *ADD
+     C           W0PMD     IFEQ 'ADD'                      *IF
+      * Acronym
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : DTL.Acronym is Blank
+      *   |- c2    : WRK.Internal Customer Ind is Not branch internal cus
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           #DACRO    IFEQ *BLANK                     *IF
+     C           WUICIN    IFEQ 'N'                        *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0001           Acronym
+      * Send message 'Acronym must be entered'
+     C                     MOVEL'USR2315' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Start of change 081649.
+      * If a branch internal customer.
+      * CASE: PGM.*Return code is Customer on branch codes
+     C           W0RTN     IFEQ 'BRANCH'                   *IF
+      * Call leo program CAOUBR - Customer LEO Details  *
+     C                     CALL 'AOC0005'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0031  7        Access Pgm Retu
+     C                     PARM '*FIND'   WQ0032  7        Option for ACCO
+     C                     PARM WULEOB    WQ0033  2        Leo Branch Code
+     C                     PARM WUBRCD    WQ0034  3        Branch code
+     C           WUKSTS    PARM *BLANK    WQ0035  7        Key status
+     C           WUSFMT    PARM *BLANK    WQ0036256        Access object f
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0005' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Check access object return code.
+      * CASE: WRK.Access Pgm Return Code is *Normal
+     C           WUAPRC    IFEQ *BLANK                     *IF
+      * Default acronym value for a Branch Internal Customer.
+     C                     Z-ADD2         YRSW03
+     C                     Z-ADD3         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00256
+     C           ZQ        ORGT 00256
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBSTWUSFMT:ZQ WULEOB    P  90  Leo Branch Code
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     Z-ADD*ZEROS    ZQ      50
+     C           @CN,01    CAT  WULEOB:ZQ #DACRO    P      Acronym
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    #DACRO           Acronym
+     C                     MOVEL'******'  #DACRO           Acronym
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0002           Acronym
+      * Send message 'Leo Internal Cust Invalid'
+     C                     MOVEL'USR2648' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * For a non-Internal Branch Customer, check that it is unique.
+     C                     MOVEL#DACRO    WUACRO           Acronym
+      * Call leo program CAOUCA - Customer LEO Details  *
+     C                     CALL 'AOC0003'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0037  7        Access Pgm Retu
+     C                     PARM '*KEY'    WQ0038  7        Option for ACCO
+     C                     PARM WUACRO    WQ0039  8        Acronym
+     C           WUKSTS    PARM *BLANK    WQ0040  7        Key status
+     C           WUFTPR    PARM *BLANK    WQ0041256        field text para
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0003' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Check return code.
+      * CASE: WRK.Access Pgm Return Code is AP No Record Found
+     C           WUAPRC    IFEQ '*NRF'                     *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Acronym can be the same if customer number is the same
+     C                     MOVELWUFTPR    WUFT08           Work leo custom
+      * Check for uniqueness.
+      * CASE: WRK.Work leo customer NE DTL.LEO Customer number
+     C           WUFT08    IFNE #DLCUS                     *IF
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0003           Acronym
+      * Send message 'Acronym must be unique'
+     C                     MOVEL'USR2316' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Call leo program CAOUCA - Customer LEO Details  *
+     C                     CALL 'AOC0003'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0042  7        Access Pgm Retu
+     C                     PARM '*FREE'   WQ0043  7        Option for ACCO
+     C                     PARM WUACRO    WQ0044  8        Acronym
+     C           WUKSTS    PARM *BLANK    WQ0045  7        Key status
+     C           WUFTPR    PARM *BLANK    WQ0046256        field text para
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0003' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * End of change 081649.
+     C                     END                             *FI
+      * Start of fix 083859
+      * Acronym must not have leading or embedded blanks.
+     C                     Z-ADD1         YRSW03
+     C                     Z-ADD1         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00008
+     C           ZQ        ORGT 00008
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#DACRO:ZQ WUACR1    P  90  Acronym 1
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     Z-ADD1         YRSW03
+     C                     Z-ADD2         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00008
+     C           ZQ        ORGT 00008
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#DACRO:ZQ WUACR2    P  90  Acronym 2
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     Z-ADD1         YRSW03
+     C                     Z-ADD3         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00008
+     C           ZQ        ORGT 00008
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#DACRO:ZQ WUACR3    P  90  Acronym 3
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     Z-ADD1         YRSW03
+     C                     Z-ADD4         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00008
+     C           ZQ        ORGT 00008
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#DACRO:ZQ WUACR4    P  90  Acronym 4
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     Z-ADD1         YRSW03
+     C                     Z-ADD5         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00008
+     C           ZQ        ORGT 00008
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#DACRO:ZQ WUACR5    P  90  Acronym 5
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     Z-ADD1         YRSW03
+     C                     Z-ADD6         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00008
+     C           ZQ        ORGT 00008
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#DACRO:ZQ WUACR6    P  90  Acronym 6
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     Z-ADD1         YRSW03
+     C                     Z-ADD7         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00008
+     C           ZQ        ORGT 00008
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#DACRO:ZQ WUACR7    P  90  Acronym 7
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     Z-ADD1         YRSW03
+     C                     Z-ADD8         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00008
+     C           ZQ        ORGT 00008
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#DACRO:ZQ WUACR8    P  90  Acronym 8
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     MOVEL'N'       WUEFLD           Error field
+      * CASE: WRK.Acronym 1 is Blank
+     C           WUACR1    IFEQ *BLANK                     *IF
+     C                     MOVEL'Y'       WUEFLD           Error field
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0004           Acronym
+      * Send message 'Leading blank not allowed'
+     C                     MOVEL'USR2842' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Acronym 2 is Blank
+      *   |- c2    : WRK.Acronym 3 is Not blank
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WUACR2    IFEQ *BLANK                     *IF
+     C           WUACR3    IFNE *BLANK                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       WUEFLD           Error field
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0005           Acronym
+      * Send message 'No embedded blank in Acro'
+     C                     MOVEL'USR2839' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Acronym 3 is Blank
+      *   |- c2    : WRK.Acronym 4 is Not blank
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WUACR3    IFEQ *BLANK                     *IF
+     C           WUACR4    IFNE *BLANK                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       WUEFLD           Error field
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0006           Acronym
+      * Send message 'No embedded blank in Acro'
+     C                     MOVEL'USR2839' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Acronym 4 is Blank
+      *   |- c2    : WRK.Acronym 5 is Not blank
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WUACR4    IFEQ *BLANK                     *IF
+     C           WUACR5    IFNE *BLANK                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       WUEFLD           Error field
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0007           Acronym
+      * Send message 'No embedded blank in Acro'
+     C                     MOVEL'USR2839' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Acronym 5 is Blank
+      *   |- c2    : WRK.Acronym 6 is Not blank
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WUACR5    IFEQ *BLANK                     *IF
+     C           WUACR6    IFNE *BLANK                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       WUEFLD           Error field
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0008           Acronym
+      * Send message 'No embedded blank in Acro'
+     C                     MOVEL'USR2839' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Acronym 6 is Blank
+      *   |- c2    : WRK.Acronym 7 is Not blank
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WUACR6    IFEQ *BLANK                     *IF
+     C           WUACR7    IFNE *BLANK                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       WUEFLD           Error field
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0009           Acronym
+      * Send message 'No embedded blank in Acro'
+     C                     MOVEL'USR2839' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Acronym 7 is Blank
+      *   |- c2    : WRK.Acronym 8 is Not blank
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WUACR7    IFEQ *BLANK                     *IF
+     C           WUACR8    IFNE *BLANK                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+     C                     MOVEL'Y'       WUEFLD           Error field
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0010           Acronym
+      * Send message 'No embedded blank in Acro'
+     C                     MOVEL'USR2839' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Acronym cannot be all numeric
+      * CASE: WRK.Error field is Not error
+     C           WUEFLD    IFEQ 'N'                        *IF
+      * Test for all numeric
+      * CASE: DTL.LEO Customer number NE DTL.Acronym
+     C           #DLCUS    IFNE #DACRO                     *IF
+     C                     MOVEL'N'       WUNERF           Numeric error f
+      * Check acronym numeric - Customer LEO Details  *
+     C                     CALL 'SD1112X'              90  Check acronym n
+     C                     PARM *BLANK    W0RTN   7
+     C           WUNERF    PARM *BLANK    WQ0047  1        Numeric error f
+     C                     PARM #DACRO    WQ0048  8        Acronym
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD1112X' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9931  *
+     C                     END
+      * CASE: WRK.Numeric error flag is All numeric
+     C           WUNERF    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUEFLD           Error field
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0011           Acronym
+      * Send message 'Acronym not all numeric'
+     C                     MOVEL'USR2840' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Question mark processing not available
+      * CASE: WRK.Error field is Not error
+     C           WUEFLD    IFEQ 'N'                        *IF
+     C                     Z-ADD1         YRSW03
+     C                     Z-ADD1         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00008
+     C           ZQ        ORGT 00008
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#DACRO:ZQ WUACR1    P  90  Acronym 1
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+     C                     Z-ADD1         YRSW03
+     C                     Z-ADD2         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00008
+     C           ZQ        ORGT 00008
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#DACRO:ZQ WUACR2    P  90  Acronym 2
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+      * CASE:
+      *  - c1 AND c2
+      *   |- c1    : WRK.Acronym 1 is Question mark
+      *   |- c2    : WRK.Acronym 2 is Blank
+      *   '-
+     C                     MOVEL'0'       Y0CX01  1
+     C           WUACR1    IFEQ '?'                        *IF
+     C           WUACR2    IFEQ *BLANK                     *IF
+     C                     MOVEL'1'       Y0CX01
+     C                     END                             *FI
+     C                     END                             *FI
+     C           Y0CX01    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DACRO    ZA0012           Acronym
+      * Send message 'No '?' processing in Acro'
+     C                     MOVEL'USR2841' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * End of fix 083859
+     C                     END                             *FI
+      * Display Name/City
+      * CASE: DTL.Display Name/City is Blank
+     C           #DDNMC    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#DDNMC    ZA0013           Display Name/Ci
+      * Send message 'Display name/city is reqd'
+     C                     MOVEL'USR2306' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9932  *
+      *
+     C                     END                             *FI
+      * Name and Address
+      * CASE:
+      *  - c1 OR c2
+      *   |- c1    : DTL.Cust. Name & Address 1 is Blank
+      *   |- c2    : DTL.Cust. Name & Address 2 is Blank
+      *   '-
+     C           #1CNA1    IFEQ *BLANK                     *IF
+     C           #1CNA2    OREQ *BLANK                     *OR
+      * Setup message data for message
+     C                     MOVEL#1CNA1    ZA0014           Cust. Name & Ad
+     C                     MOVEL#1CNA2    ZA0015           Cust. Name & Ad
+      * Send message '1st and 2nd lines are req'
+     C                     MOVEL'USR2307' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     993334*
+      *
+     C                     END                             *FI
+      * Bank indicator
+      * CASE: DTL.Leo Bank Indicator is Blank
+     C           #DLBIN    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#DLBIN    ZA0016           Leo Bank Indica
+      * Send message 'Bank indicator is reqd'
+     C                     MOVEL'USR2308' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9939  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * CASE: DTL.Leo Bank Indicator is Valid values
+     C           #DLBIN    IFEQ 'Y'                        *IF
+     C           #DLBIN    OREQ 'N'
+     C                     MOVEL#DLBIN    #1BNBI           Bank/non-bank I
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DLBIN    ZA0017           Leo Bank Indica
+      * Send message 'Bank indicator 'Y' or 'N''
+     C                     MOVEL'USR2309' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9939  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Business Code
+      * CASE: DTL.Business Code is Blank
+     C           #DBCDE    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#DBCDE    ZA0018           Business Code
+      * Send message 'Business Code is required'
+     C                     MOVEL'USR2317' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9940  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUAKEY           Access object k
+     C                     MOVEL*BLANK    WUAPRC           Access Pgm Retu
+     C                     MOVEL'03'      WUCONS           Constant for ac
+     C                     MOVEL#DBCDE    WUPCOD           Parameter code
+      * Set up key for CAOUT2 Leo - Customer LEO Details  *
+     C*
+     C** Set up the key for access object CAOUT2.
+     C*
+     C                     MOVELWUCONS    WUSTOR  6
+     C                     MOVE WUPCOD    WUSTOR
+     C                     MOVELWUSTOR    WUAKEY
+      * Call leo program CAOUT2 - Customer LEO Details  *
+     C                     CALL 'AOC0004'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0049  7        Access Pgm Retu
+     C                     PARM '*KEY'    WQ0050  7        Option for ACCO
+     C                     PARM WUAKEY    WQ0051 12        Access object k
+     C           WUKSTS    PARM *BLANK    WQ0052  7        Key status
+     C           WUFTPR    PARM *BLANK    WQ0053256        field text para
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0004' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * CASE: WRK.Access Pgm Return Code is AP No Record Found
+     C           WUAPRC    IFEQ '*NRF'                     *IF
+      * Setup message data for message
+     C                     MOVEL#DBCDE    ZA0019           Business Code
+      * Send message 'Business code invalid'
+     C                     MOVEL'USR2324' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9940  *
+      *
+     C                     END                             *FI
+      * Call leo program CAOUT2 - Customer LEO Details  *
+     C                     CALL 'AOC0004'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0054  7        Access Pgm Retu
+     C                     PARM '*FREE'   WQ0055  7        Option for ACCO
+     C                     PARM WUAKEY    WQ0056 12        Access object k
+     C           WUKSTS    PARM *BLANK    WQ0057  7        Key status
+     C           WUFTPR    PARM *BLANK    WQ0058256        field text para
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0004' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+     C/COPY WNCPYSRC,SD1111RC22
+      * Officer Code
+      * CASE: DTL.LEO account officer 2 is Blank
+     C           #DLAO2    IFEQ *BLANK                     *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUAKEY           Access object k
+     C                     MOVEL*BLANK    WUAPRC           Access Pgm Retu
+     C                     MOVEL'17'      WUCONS           Constant for ac
+     C                     MOVEL#DLAO2    WUPCOD           Parameter code
+      * Set up key for CAOUT2 Leo - Customer LEO Details  *
+     C*
+     C** Set up the key for access object CAOUT2.
+     C*
+     C                     MOVELWUCONS    WUSTOR  6
+     C                     MOVE WUPCOD    WUSTOR
+     C                     MOVELWUSTOR    WUAKEY
+      * Call leo program CAOUT2 - Customer LEO Details  *
+     C                     CALL 'AOC0004'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0059  7        Access Pgm Retu
+     C                     PARM '*KEY'    WQ0060  7        Option for ACCO
+     C                     PARM WUAKEY    WQ0061 12        Access object k
+     C           WUKSTS    PARM *BLANK    WQ0062  7        Key status
+     C           WUFTPR    PARM *BLANK    WQ0063256        field text para
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0004' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * CASE: WRK.Access Pgm Return Code is AP No Record Found
+     C           WUAPRC    IFEQ '*NRF'                     *IF
+      * Setup message data for message
+     C                     MOVEL#DLAO2    ZA0020           LEO account off
+      * Send message 'Officer code invalid'
+     C                     MOVEL'USR2328' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9941  *
+      *
+     C                     END                             *FI
+      * Call leo program CAOUT2 - Customer LEO Details  *
+     C                     CALL 'AOC0004'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0064  7        Access Pgm Retu
+     C                     PARM '*FREE'   WQ0065  7        Option for ACCO
+     C                     PARM WUAKEY    WQ0066 12        Access object k
+     C           WUKSTS    PARM *BLANK    WQ0067  7        Key status
+     C           WUFTPR    PARM *BLANK    WQ0068256        field text para
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0004' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Responsibility Code
+      * CASE: DTL.Responsibility Code is Entered
+     C           #DRSPC    IFNE *BLANK                     *IF
+     C                     MOVEL*BLANK    WUAKEY           Access object k
+     C                     MOVEL*BLANK    WUAPRC           Access Pgm Retu
+     C                     MOVEL'13'      WUCONS           Constant for ac
+     C                     MOVEL#DRSPC    WUPCD6           Parameter field
+      * Key for Responsibility cd - Customer LEO Details  *
+     C*
+     C* Set up the key for access object CAOUT2
+     C* to check for Responsibility Code
+     C*
+     C                     MOVELWUCONS    WUSTR8  8
+     C                     MOVE WUPCD6    WUSTR8
+     C                     MOVELWUSTR8    WUAKEY
+      * Call leo program CAOUT2 - Customer LEO Details  *
+     C                     CALL 'AOC0004'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0069  7        Access Pgm Retu
+     C                     PARM '*KEY'    WQ0070  7        Option for ACCO
+     C                     PARM WUAKEY    WQ0071 12        Access object k
+     C           WUKSTS    PARM *BLANK    WQ0072  7        Key status
+     C           WUFTPR    PARM *BLANK    WQ0073256        field text para
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0004' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * CASE: WRK.Access Pgm Return Code is AP No Record Found
+     C           WUAPRC    IFEQ '*NRF'                     *IF
+      * Setup message data for message
+     C                     MOVEL#DRSPC    ZA0021           Responsibility
+      * Send message 'Responsibility code invld'
+     C                     MOVEL'USR2327' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9942  *
+      *
+     C                     END                             *FI
+      * Call leo program CAOUT2 - Customer LEO Details  *
+     C                     CALL 'AOC0004'              90  Call leo progra
+     C           WUAPRC    PARM WUAPRC    WQ0074  7        Access Pgm Retu
+     C                     PARM '*FREE'   WQ0075  7        Option for ACCO
+     C                     PARM WUAKEY    WQ0076 12        Access object k
+     C           WUKSTS    PARM *BLANK    WQ0077  7        Key status
+     C           WUFTPR    PARM *BLANK    WQ0078256        field text para
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'AOC0004' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * Retail A/C Number
+      * CASE: DTL.Retail A/C number is Entered
+     C           #DRACN    IFNE *BLANK                     *IF
+     C                     MOVEL*BLANK    WUAPOP           Access Pgm Opti
+     C                     MOVEL'*KEY'    WUAPOP           Access Pgm Opti
+     C                     MOVEL#DRACN    WURETL           Retail
+     C                     MOVEL*BLANK    WUCUST           Customer Number
+     C                     MOVEL*BLANK    WUCYCD           Currency Code
+     C                     MOVEL*BLANK    WUACCD           Account Code
+     C                     MOVEL*BLANK    WUACSW           Account Sequenc
+     C                     MOVEL*BLANK    WUBRCD           Branch code
+      * Call AOACCTR0 - Customer LEO Details  *
+     C*
+     C*  Call to Access Program - AOACCTR0 Check Account Number
+     C*  Access Account Details file for the file fields
+     C*
+     C                     CALL 'AOACCTR0'
+     C           WUAPRC    PARM WUAPRC    UUAPRC  7        B:Return Cd
+     C                     PARM WUAPOP    UUAPOP  7        B:Option
+     C                     PARM WURETL    UUACID 10        I:Account Identifier
+     C                     PARM WUCUST    UUCUST  6        I:Customer Number
+     C                     PARM WUCYCD    UUCYCD  3        I:Currency Code
+     C**********           PARM WUACCD    UUACNO  4        I:Account Code Num                 CGL029
+     C                     PARM WUACCD    UUACNO 10                                           CGL029
+     C                     PARM WUACSW    UUACSN  2        I:Account Sequence
+     C                     PARM WUBRCD    UUBRCD  3        I:Branch code
+     C           D@ACCT    PARM *BLANK    UUSDY            O:Format
+     C*
+     C*
+     C**   Pass back A/c Status, Currency Code and Branch Code
+     C*
+     C                     MOVE ACST      WUASTT           O:A/c Status
+      *
+      **   Not allowed to enter 12 long code, just first ten (but leave
+      **   field as 12 so can pick up all details from Leo).
+      *
+     C                     MOVE #DRACN    WUACN2  2
+      *
+      * Check the return code
+      * CASE: WRK.Access Pgm Return Code is *Normal
+     C           WUAPRC    IFEQ *BLANK                     *IF
+      * CASE: WRK.Retl Accnt field two long is Blank
+     C           WUACN2    IFEQ *BLANK                     *IF
+      * Is the retail account closed?
+      * CASE: WRK.Account status is Closed
+     C           WUASTT    IFEQ 'C'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DRACN    ZA0022           Retail A/C numb
+      * Send message 'Retail Account is closed'
+     C                     MOVEL'USR2318' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9943  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#DRACN    ZA0023           Retail A/C numb
+      * Send message 'Account does not exist'
+     C                     MOVEL'USR2319' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9943  *
+      *
+     C                     END                             *FI
+     C                     MOVEL*BLANK    WUAPOP           Access Pgm Opti
+     C                     MOVEL'*FREE'   WUAPOP           Access Pgm Opti
+      * Call AOACCTR0 - Customer LEO Details  *
+     C*
+     C*  Call to Access Program - AOACCTR0 Check Account Number
+     C*  Access Account Details file for the file fields
+     C*
+     C                     CALL 'AOACCTR0'
+     C           WUAPRC    PARM WUAPRC    UUAPRC  7        B:Return Cd
+     C                     PARM WUAPOP    UUAPOP  7        B:Option
+     C                     PARM WURETL    UUACID 10        I:Account Identifier
+     C                     PARM WUCUST    UUCUST  6        I:Customer Number
+     C                     PARM WUCYCD    UUCYCD  3        I:Currency Code
+     C**********           PARM WUACCD    UUACNO  4        I:Account Code Num                 CGL029
+     C                     PARM WUACCD    UUACNO 10                                           CGL029
+     C                     PARM WUACSW    UUACSN  2        I:Account Sequence
+     C                     PARM WUBRCD    UUBRCD  3        I:Branch code
+     C           D@ACCT    PARM *BLANK    UUSDY            O:Format
+     C*
+     C*
+     C**   Pass back A/c Status, Currency Code and Branch Code
+     C*
+     C                     MOVE ACST      WUASTT           O:A/c Status
+     C                     MOVE #DRACN    WUACN2  2
+     C                     END                             *FI
+      * SWIFT Address
+      * CASE: DTL.Customer Swift Id is Not Blank
+     C           #1CSID    IFNE *BLANK                     *IF
+      * CASE: DTL.Leo Bank Indicator is Non-Bank
+     C           #DLBIN    IFEQ 'N'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1CSID    ZA0024           Customer Swift
+      * Send message 'SWIFT ID must be blank'
+     C                     MOVEL'USR2310' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Midas/SWIFT Direct Link Present.
+      * CASE: WRK.Midas/Swift direct link is Yes
+     C           WUMSDL    IFEQ 'Y'                        *IF
+      * Split SWIFT to 12 Chars - Client Details  *
+     C                     CALL 'SD0011U1'             90  Split SWIFT to
+     C           W0RTN     PARM W0RTN     WQ0079  7        *Return code
+     C                     PARM #1CSID    WQ0080 12        Swift id
+     C           WUSICL    PARM *BLANK    WQ0081  1        Swift ID is 10
+     C           WUC6NL    PARM *BLANK    WQ0082  1        Characters 1-6
+     C           WUINVC    PARM *BLANK    WQ0083  1        Invalid Charact
+     C           WUSIL8    PARM *BLANK    WQ0084  1        SWIFT ID < 8 Ch
+     C           WUEMSP    PARM *BLANK    WQ0085  1        Embedded Spaces
+     C           WUBICL    PARM *BLANK    WQ0086  1        Length of fld i
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0011U1'W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     9945  *
+     C                     END
+      * Embedded blanks in the SWIFT ID
+      * CASE: WRK.Embedded Spaces is Spaces Found
+     C           WUEMSP    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1CSID    ZA0025           Customer Swift
+      * Send message 'Embedded Spaces Found'
+     C                     MOVEL'USR0771' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945  *
+      *
+     C                     END                             *FI
+      * SWIFT ID is 10 characters long
+      * CASE: WRK.Swift ID is 10 Chars Long is True
+     C           WUSICL    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1CSID    ZA0026           Customer Swift
+      * Send message 'SWIFT must be 8,9,11,12'
+     C                     MOVEL'USR0772' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945  *
+      *
+     C                     END                             *FI
+      * The first 6 characters of SWIFT ID are not letters
+      * CASE: WRK.Characters 1-6 not Letter is Not Letters
+     C           WUC6NL    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1CSID    ZA0027           Customer Swift
+      * Send message 'Posns 1-6 must be letters'
+     C                     MOVEL'USR0773' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945  *
+      *
+     C                     END                             *FI
+      * SWIFT ID is less than 8 characters long
+      * CASE: WRK.SWIFT ID < 8 Chars Long is True
+     C           WUSIL8    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1CSID    ZA0028           Customer Swift
+      * Send message 'SWIFT must be 8,9,11,12'
+     C                     MOVEL'USR0772' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945  *
+      *
+     C                     END                             *FI
+      * Invalid characters found in SWIFT ID
+      * CASE: WRK.Invalid Characters is Invalid Characters Found
+     C           WUINVC    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1CSID    ZA0029           Customer Swift
+      * Send message 'Invalid Characters found'
+     C                     MOVEL'USR0775' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945  *
+      *
+     C                     END                             *FI
+      * Ensure that length of SWIFT ID is 8 or 11
+      * CASE: WRK.Length of fld is 9 or 12 is Length is 9 or 12
+     C           WUBICL    IFEQ '1'                        *IF
+      * Setup message data for message
+     C                     MOVEL#1CSID    ZA0030           Customer Swift
+      * Send message 'SWIFT must be 8/11 long'
+     C                     MOVEL'USR1141' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945  *
+      *
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1CSID    ZA0031           Customer Swift
+      * Send message 'Swift Entry Not Allowed'
+     C                     MOVEL'USR1419' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945  *
+      *
+     C                     END                             *FI
+     C                     MOVEL#1CSID    WUBIC8           BICC Code - 8 L
+     C                     Z-ADD3         YRSW03
+     C                     Z-ADD9         ZQ      50
+     C           YRSW03    IFLT 1
+     C           ZQ        ORLT 1
+     C           YRSW03    ORGT 00012
+     C           ZQ        ORGT 00012
+     C                     MOVEL'Y2U0510' W0RTN
+     C                     ELSE
+     C           YRSW03    SUBST#1CSID:ZQ WUBIC3    P  90  BICC Code - 3 L
+     C   90                MOVEL'Y2U0510' W0RTN
+     C                     END
+      * BICC Code Validation - Client Details  *
+     C*                                                                   S01435
+     C* Call ME1400 to validate identifier.                               S01435
+     C*                                                                   S01435
+     C                     CALL 'ME1400'                                  S01435
+     C                     PARM *BLANKS   WUBICR                          S01435
+     C                     PARM           WUBIC8                          S01435
+     C                     PARM           WUBIC3                          S01435
+     C                     PARM           SDCUST                          S01435
+     C                     PARM           SDCNST                          S01435
+     C                     PARM           MEBICD                          S01435
+     C                     PARM *BLANKS   WUBICC  1                       S01435
+     C                     PARM *BLANKS   WUBICS  1                       S01435
+     C                     PARM *BLANKS   WUBICI  1                       S01435
+     C*                                                                   S01435
+      * Check BIC validation return code.
+      * CASE:
+      *  - c1 OR c2 OR c3
+      *   |- c1    : WRK.BIC Return Code is MIN0244
+      *   |- c2    : WRK.BIC Return Code is MIN0245
+      *   |- c3    : WRK.BIC Return Code is MIN0246
+      *   '-
+     C           WUBICR    IFEQ 'MIN0244'                  *IF
+     C           WUBICR    OREQ 'MIN0245'                  *OR
+     C           WUBICR    OREQ 'MIN0246'                  *OR
+      * Setup message data for message
+     C                     MOVEL#1CSID    ZA0032           Customer Swift
+      * Send message 'BIC Identifier Not Found'
+     C                     MOVEL'USR2241' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9945  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * FRB Routing Code
+      * CASE: DTL.LEO FRB routing code func is Entered
+     C           #DFRBF    IFNE *BLANK                     *IF
+      * CASE: DTL.Leo Bank Indicator is Non-Bank
+     C           #DLBIN    IFEQ 'N'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DFRBF    ZA0033           LEO FRB routing
+      * Send message 'FRB Routing must be blank'
+     C                     MOVEL'USR2311' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9946  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DFRBF    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0087  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0088 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0089  10       ZALIGN No Of De
+     C                     PARM 9         WQ0090  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0091 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0092 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0093  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * CASE: WRK.Err Code is Error Found
+     C           WUERCD    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DFRBF    ZA0034           LEO FRB routing
+      * Send message 'FRB must be numeric'
+     C                     MOVEL'USR2312' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9946  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVE WUZAFF    #DLFRB           LEO FRB Routing
+      * Zalign FRB - Customer LEO Details  *
+     C*
+     C                     MOVE WUZASF    #DFRBF
+     C*
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * Answerback
+      * CASE: DTL.LEO answerback is Entered
+     C           #DLANS    IFNE *BLANK                     *IF
+      * CASE: DTL.LEO Telex number is Blank
+     C           #DTLXN    IFEQ *BLANK                     *IF
+      * Setup message data for message
+     C                     MOVEL#DLANS    ZA0035           LEO answerback
+      * Send message 'Answerback must be blank'
+     C                     MOVEL'USR2313' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9948  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * Universal ID
+      * CASE: DTL.LEO Universal ID func is Entered
+     C           #DUNIF    IFNE *BLANK                     *IF
+     C                     MOVEL*BLANK    WUZASF           ZALIGN Screen F
+     C                     MOVEL#DUNIF    WUZASF           ZALIGN Screen F
+      * Call ZALIGN & ZEDIT
+      * ZALIGN Screen Field - Standard Functions  *
+     C                     CALL 'ZALIGN'               90  ZALIGN Screen F
+     C           W0RTN     PARM W0RTN     WQ0094  7        *Return code
+     C           WUZASF    PARM WUZASF    WQ0095 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0096  10       ZALIGN No Of De
+     C                     PARM 7         WQ0097  20       ZALIGN No Of Di
+     C           WUZAFF    PARM *BLANK    WQ0098 16        ZALIGN File Fie
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZALIGN'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+     C                     MOVEL'Y'       WUERCD           Err Code
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'N'       WUERCD           Err Code
+      * ZEDIT Screen Field - Standard Functions  *
+     C                     CALL 'ZEDIT'                90  ZEDIT Screen Fi
+     C           WUZASF    PARM WUZASF    WQ0099 16        ZALIGN Screen F
+     C                     PARM *ZERO     WQ0100  10       ZALIGN No Of De
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZEDIT'   W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+     C                     END                             *FI
+      * CASE: WRK.Err Code is Error Found
+     C           WUERCD    IFEQ 'Y'                        *IF
+      * Setup message data for message
+     C                     MOVEL#DUNIF    ZA0036           LEO Universal I
+      * Send message 'Universal ID numeric'
+     C                     MOVEL'USR2314' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9949  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVE WUZAFF    #DLUNI           LEO Universal I
+      * Zalign universal ID - Customer LEO Details  *
+     C*
+     C                     MOVE WUZASF    #DUNIF
+     C*
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy member SD1111RVSF - Customer LEO Details  *
+     C*LEO customer details mnt Validate Detail Screen
+     C/COPY WNCPYSRC,SD1111RVSF
+      * CALC: Detail screen function fields
+      * 00/Copy member SD1111RSFF - Customer LEO Details  *
+     C*LEO customer details mnt Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD1111RSFF
+      * USER: Validate detail screen relations
+     C                     MOVEL##USR     WUUPRF           User Profile
+      * Status
+      * CASE: PGM.*Program mode is *ADD
+     C           W0PMD     IFEQ 'ADD'                      *IF
+     C                     MOVEL'O'       WUSTAT           Status
+     C                     END                             *FI
+      * Sequence number
+      * CASE: PGM.*Program mode is *ADD
+     C           W0PMD     IFEQ 'ADD'                      *IF
+     C                     Z-ADD*ZERO     WUSEQN           Sequence number
+     C                     ADD  1         WUSEQN           Sequence number
+     C                     END                             *FI
+     C                     Z-ADDWURDNB    WUWMDT           Work Midas Date
+      * Check File Date - Rundate  *
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM WUWMDT    WQ0101  50       Work Midas Date
+     C                     PARM 'M'       WQ0102  1        Date format fla
+     C           WUWCDT    PARM *ZERO     WQ0103  60       Work Converted
+     C           WUWADT    PARM *BLANK    WQ0104  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZDATE2'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Conversion of date - Customer LEO Details  *
+     C*
+     C                     MOVE *BLANK    WUYFLD  3
+     C           WUHNNB    IFLT 72
+     C                     MOVEL'1'       WUYFLD
+     C                     ELSE
+     C                     MOVEL'0'       WUYFLD
+     C                     END
+     C*
+     C                     MOVE WUHNNB    WUYFLD
+     C                     MOVELWUYFLD    WUWADT
+     C                     MOVE WUMMDD    WUWADT
+      * Check for errors - Customer LEO Details  *
+     C*
+     C* IF INDICATOR 99 IS ON, THERE HAS BEEN AN ERROR, IN THAT CASE
+     C* SET 'ERROR FOUND' FIELD TO 'Y'.
+     C*
+     C                     MOVE 'N'       WUERFD
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'Y'       WUERFD
+     C                     END
+      * CASE: WRK.Error found is Error not found
+     C           WUERFD    IFEQ 'N'                        *IF
+      * Call BUC0002 /call CCIU10 - Customer LEO Details  *
+     C*
+     C* Move values into file fields.
+     C* CUSPRO
+     C*
+     C/COPY WNCPYSRC,SD1111RC12
+     C                     MOVE #DLCUS    CPCNO
+     C                     Z-ADDWUWNDT    CPUPD
+     C                     MOVELWUUPRF    CPUSR
+     C                     MOVE WUSTAT    CPSTAT
+     C                     MOVEL#DACRO    CPACR
+     C                     MOVEL#DDNMC    CPNAM
+     C                     MOVEL#DBCDE    CPBCOD
+     C                     MOVEL#DLCRE    CPRES
+     C                     MOVEL#DLCRS    CPRIS
+     C                     MOVEL#DRSPC    CPRESP
+     C                     MOVEL#DRACN    CPACNO
+     C                     MOVEL#DTCDE    CPTAX
+     C                     MOVE #DLBIN    CPBANK
+     C                     MOVE #DLAO1    CPOF1
+     C                     MOVE #DLAO2    CPOF2
+     C*
+     C* Move values into file fields.
+     C* CUSCOM
+     C*
+     C                     MOVE #DACRO    CCCACR
+     C                     ADD  WUSEQN    CCSEQ
+     C                     Z-ADDWUWNDT    CCUPD
+     C                     MOVELWUUPRF    CCUSR
+     C                     MOVE #1CNA1    CCADR1
+     C                     MOVE #1CNA2    CCADR2
+     C                     MOVE #1CNA3    CCADR3
+     C                     MOVE #1CNA4    CCADR4
+     C                     MOVE #DTELP    CCTEL
+     C                     MOVE #1CSID    CCSID
+     C                     MOVE #DTLXN    CCTNO
+     C                     MOVE #DLANS    CCABK
+     C                     MOVE #DLOID    CCOID
+     C                     Z-ADD#DLUNI    CCUID
+     C                     Z-ADD#DLFRB    CCFRB
+     C                     MOVE #DPCDE    CCZIP
+     C*
+     C                     MOVELD@CPRO    BUPA1
+     C                     MOVELD@CCOM    BUPA2
+     C*
+     C* Call BUC0002 LEO PGM
+     C*
+     C                     CALL 'BUC0002'                              'LE
+     C           WUAPRC    PARM *BLANK    WUAPRC  7        *Return code
+     C                     PARM           BUPA1                        e
+     C                     PARM           BUPA2                        e
+     C*
+      * CASE: PGM.*Return code is Old Table Error
+     C           W0RTN     IFEQ '*ERROR*'                  *IF
+      * Send message 'Unable to update file'
+     C                     MOVEL'USR2330' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy member SD1111RVSR - Customer LEO Details  *
+     C*LEO customer details mnt Validate Screen Relns
+     C/COPY WNCPYSRC,SD1111RVSR
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * Process delete request
+     C   10                CAS            EDDLRQ
+      * Process add request
+     C           W0PMD     CASEQ'ADD'     ECADRQ
+      * Process update request
+     C           W0PMD     CASNE'ADD'     EECHRQ
+     C                     END
+     C           W0RTN     IFNE *BLANK
+      * Error: ROLLBACK any DBF changes
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C                     ROLBK
+     C                     ELSE                                                               CSC022
+     C           WSKIP     IFNE 'Y'                                                           CSC022
+     C                     ROLBK                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     GOTO EBEXIT
+     C                     ELSE
+      * Otherwise COMMIT any DBF changes
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           WSKIP     OREQ 'N'                                                           CSC022
+     C           CSC022    ANDEQ'Y'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+     C                     END
+     C           W0RTN     IFEQ *BLANK
+      * USER: Process command keys
+      * 00/Copy member SD1111RPCK - Customer LEO Details  *
+     C*LEO customer details mnt Process Command Keys
+     C/COPY WNCPYSRC,SD1111RPCK
+     C           W0PMD     IFEQ 'ADD'
+      * Exit after successful add
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         ECADRQ    BEGSR
+      *================================================================
+      * Process add request
+      *================================================================
+      * USER: Create DBF record
+      * Create - Leo details mnt - Customer LEO Details  *
+     C                     EXSR SCCRRC
+     C           W0RTN     IFEQ *BLANK
+      * Send message '*Record added'
+     C                     MOVEL'Y2U0011' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         ECEXIT    ENDSR
+      /EJECT
+     CSR         EDDLRQ    BEGSR
+      *================================================================
+      * Process delete request
+      *================================================================
+      * USER: Delete DBF record
+      * Delete - Leo details mnt - Customer LEO Details  *
+     C                     EXSR SDDLRC
+     C           W0RTN     IFEQ *BLANK
+      * Send message '*Record deleted'
+     C                     MOVEL'Y2U0013' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EDEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request
+      *================================================================
+      * USER: Change DBF record
+      * Change - Leo details mnt - Customer LEO Details  *
+     C                     EXSR SECHRC
+     C           W0RTN     IFNE *BLANK
+      * Data update error
+      * Reset screen fields if changed record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1
+     C                     END
+     C                     ELSE
+      * Send message '*Record changed'
+     C                     MOVEL'Y2U0012' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters
+      *================================================================
+      * Is full key present?
+     C           P1CUST    IFEQ *BLANK                     Customer Number
+      * Not every key field passed - loop program
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      * Full key passed, so single shot program
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+     C                     MOVEL'0'       *IN79
+     C           WUPRLA    IFEQ 'Y'                        *IF
+     C                     MOVEL'1'       *IN79
+     C                     END                             *FI
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     Z-ADD*ZERO     #DLUNI           LEO Universal I
+     C                     Z-ADD*ZERO     #DLFRB           LEO FRB Routing
+     C                     MOVEL*BLANK    #1BNBI           Bank/non-bank I
+     C                     MOVEL*BLANK    #DLCUS           LEO Customer nu
+     C                     MOVEL*BLANK    #DACRO           Acronym
+     C                     MOVEL*BLANK    #DDNMC           Display Name/Ci
+     C                     MOVEL*BLANK    #1CNA1           Cust. Name & Ad
+     C                     MOVEL*BLANK    #1CNA2           Cust. Name & Ad
+     C                     MOVEL*BLANK    #1CNA3           Cust. Name & Ad
+     C                     MOVEL*BLANK    #1CNA4           Cust. Name & Ad
+     C                     MOVEL*BLANK    #DPCDE           Postal Code
+     C                     MOVEL*BLANK    #DTELP           Telephone
+     C                     MOVEL*BLANK    #DLBIN           Leo Bank Indica
+     C                     MOVEL*BLANK    #DBCDE           Business Code
+     C                     MOVEL*BLANK    #DLCRS           LEO Country of
+     C                     MOVEL*BLANK    #DLCRE           LEO Country of
+     C                     MOVEL*BLANK    #DLAO1           LEO account off
+     C                     MOVEL*BLANK    #DLAO2           LEO account off
+     C                     MOVEL*BLANK    #DRSPC           Responsibility
+     C                     MOVEL*BLANK    #DRACN           Retail A/C numb
+     C                     MOVEL*BLANK    #DTCDE           LEO Tax Code
+     C                     MOVEL*BLANK    #1CSID           Customer Swift
+     C                     MOVEL*BLANK    #DFRBF           LEO FRB routing
+     C                     MOVEL*BLANK    #DTLXN           LEO Telex numbe
+     C                     MOVEL*BLANK    #DLANS           LEO answerback
+     C                     MOVEL*BLANK    #DUNIF           LEO Universal I
+     C                     MOVEL*BLANK    #DLOID           LEO Other ID/So
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @CLEOL1 fields to screen
+      *================================================================
+     C                     MOVELFGCUST    #1CUST           Customer Number
+     C                     MOVELFGBNBI    #1BNBI           Bank/non-bank I
+     C                     MOVELFGCNA1    #1CNA1           Cust. Name & Ad
+     C                     MOVELFGCNA2    #1CNA2           Cust. Name & Ad
+     C                     MOVELFGCNA3    #1CNA3           Cust. Name & Ad
+     C                     MOVELFGCNA4    #1CNA4           Cust. Name & Ad
+     C                     MOVELFGCSID    #1CSID           Customer Swift
+      * Hold existing record image
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP1CUST    #1CUST           Customer Number
+      * USER: Initialize key screen
+      * 00/Copy member SD1111RIKS - Customer LEO Details  *
+     C*LEO customer details mnt Initialise Key Screen
+     C/COPY WNCPYSRC,SD1111RIKS
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get LEO information - Client Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELP1CUST    BBCUST           Customer Number
+     C           KRSSA     CHAIN@BBREBF              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0081' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     MOVELBBCSSN    WUCSSN           Customer Shortn
+     C                     MOVELBBCNA1    WUCNA1           Cust. Name & Ad
+     C                     MOVELBBCNA2    WUCNA2           Cust. Name & Ad
+     C                     MOVELBBCNA3    WUCNA3           Cust. Name & Ad
+     C                     MOVELBBCNA4    WUCNA4           Cust. Name & Ad
+     C                     MOVELBBCRNM    WUCRNM           Customer Report
+     C                     MOVELBBACOC    WUACOC           Account Officer
+     C                     MOVELBBCNCZ    WUCNCZ           Country of Citi
+     C                     MOVELBBCOLC    WUCOLC           Country of Loca
+     C                     MOVELBBCASC    WUCASC           Customer Alpha
+     C                     MOVELBBBRCD    WUBRCD           Branch code
+     C                     MOVELBBBNBI    WUBNBI           Bank/non-bank I
+     C                     MOVELBBLICD    WULICD           Local Industry
+     C                     MOVELBBCTNB    WUCTNB           Customer Teleph
+     C                     MOVELBBCSID    WUCSID           Customer Swift
+     C                     MOVELBBTXA1    WUTXA1           MIDAS Telex Sho
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Retrieve Int Cust Branch - Branch Codes  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Declare restrictor key work fields
+     C           *LIKE     DEFN A8BICN    WQSB01           Branch Internal
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           WQSB01           Branch Internal
+      * Move fields to key list
+     C                     MOVELP1CUST    WQSB01           Branch Internal
+     C           KRSSB     SETLL@BRCHFM                    *
+     C           KRSSB     READE@BRCHFM                  90*
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0075' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL*BLANK    W0RTN            *Return code
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN90     DOWEQ'0'
+      * USER: Process Data record
+     C                     MOVEL*BLANK    W0RTN            *Return code
+     C                     MOVEL'BRANCH'  W0RTN            *Return code
+     C           KRSSB     READE@BRCHFM                  90*
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCCRRC    BEGSR
+      *================================================================
+      * Create - Leo details mnt - Customer LEO Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move all fields to @CLEOL0
+     C                     MOVEL#1CUST    FGCUST           Customer Number
+     C                     MOVEL#1CNA1    FGCNA1           Cust. Name & Ad
+     C                     MOVEL#1CNA2    FGCNA2           Cust. Name & Ad
+     C                     MOVEL#1CNA3    FGCNA3           Cust. Name & Ad
+     C                     MOVEL#1CNA4    FGCNA4           Cust. Name & Ad
+     C                     MOVEL#1BNBI    FGBNBI           Bank/non-bank I
+     C                     MOVEL#1CSID    FGCSID           Customer Swift
+      *
+     C           KLCRSC    KLIST
+     C                     KFLD           FGCUST           Customer Number
+      * Check for duplicate primary key
+     C           KLCRSC    SETLL@CLEOL0                  90*
+     C/COPY WNCPYSRC,SD1111RC13
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'USR2336' W0RTN   7
+      * Send message 'Customer LEO Details   EX'
+     C                     MOVEL'USR2336' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SCEXIT
+     C                     END
+     C/COPY WNCPYSRC,SD1111RC14
+      *
+     C                     WRITE@CLEOL0                91  *
+     C/COPY WNCPYSRC,SD1111RC15
+      *
+     C           *IN91     IFEQ '1'
+     C/COPY WNCPYSRC,SD1111RC16
+      * Write error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C/COPY WNCPYSRC,SD1111RC17
+     C                     ELSE
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDDLRC    BEGSR
+      *================================================================
+      * Delete - Leo details mnt - Customer LEO Details  *
+      *================================================================
+     C/COPY WNCPYSRC,SD1111RC18
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move key fields to @CLEOL0
+     C                     MOVEL#1CUST    FGCUST           Customer Number
+      *
+     C           KLDLSD    KLIST
+     C                     KFLD           FGCUST           Customer Number
+     C           KLDLSD    CHAIN@CLEOL0              9091  *
+     C           *IN90     IFEQ '1'
+      * Record already deleted
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+      * Send message '*Database operation error'
+     C                     MOVEL'Y2U0004' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SDEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Release record lock
+     C           KLDLSD    SETLL@CLEOL0              9091  *
+     C                     GOTO SDEXIT
+     C                     END                             FI #1DBRC
+      *................................................................
+     C/COPY WNCPYSRC,SD1111RC19
+     C                     DELET@CLEOL0                91  *
+     C           *IN91     IFEQ '1'
+      * Delete error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C/COPY WNCPYSRC,SD1111RC20
+     C                     ELSE
+      * DBF delete successful
+      * USER: Processing after Data update
+      * WUDELR Data Structure - SD Deleted Records File  *
+     C                     MOVEL@1DBRC    WUDELR
+      * Write Deleted Record - SD Deleted Records File  *
+     C                     CLEARPARC
+     C                     MOVEL'SDCLEOPD'PAFNME           File name
+     C                     MOVEL#1CUST    PALKEY           Long Key
+     C                     MOVELWUDR01    PADR01           Deleted Data Re
+     C                     MOVELWUDR02    PADR02           Deleted Data Re
+     C                     MOVELWUDR03    PADR03           Deleted Data Re
+     C                     MOVELWUDR04    PADR04           Deleted Data Re
+     C                     MOVELWUDR05    PADR05           Deleted Data Re
+     C                     MOVELWUDR06    PADR06           Deleted Data Re
+     C                     MOVELWUDR07    PADR07           Deleted Data Re
+     C                     MOVELWUDR08    PADR08           Deleted Data Re
+     C                     MOVELWUDR09    PADR09           Deleted Data Re
+     C                     MOVELWUDR00    PADR00           Deleted Data Re
+     C                     MOVELWUDR11    PADR11           Deleted Data Re
+     C                     MOVELWUDR12    PADR12           Deleted Data Re
+     C                     Z-ADDWURDNB    PALCD            Last Change Dat
+     C                     MOVEL'D'       PATYLC           Type of Last Ch
+      *
+     C                     CALL 'SD0520X'              90  Write Deleted R
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             RCD: SD Deleted
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0520X' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,SD1111RC23
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         SECHRC    BEGSR
+      *================================================================
+      * Change - Leo details mnt - Customer LEO Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * USER: Processing before Data read
+     C                     GOTO SEEXIT                     *QUIT
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YARDC   1
+      *
+      * Move key fields to @CLEOL0
+     C                     MOVEL#1CUST    FGCUST           Customer Number
+      *
+     C           KLCHSE    KLIST
+     C                     KFLD           FGCUST           Customer Number
+     C           KLCHSE    CHAIN@CLEOL0              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SEEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SEEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Release record lock
+     C                     UNLCKSDCLEOL0               91  *
+     C                     GOTO SEEXIT
+     C                     END                             FI #1DBRC
+      * Store record data for null update check
+     C                     MOVE @1DBRC    YARDCS
+      * Move non-key fields to @CLEOL0
+     C                     MOVEL#1CNA1    FGCNA1           Cust. Name & Ad
+     C                     MOVEL#1CNA2    FGCNA2           Cust. Name & Ad
+     C                     MOVEL#1CNA3    FGCNA3           Cust. Name & Ad
+     C                     MOVEL#1CNA4    FGCNA4           Cust. Name & Ad
+     C                     MOVEL#1BNBI    FGBNBI           Bank/non-bank I
+     C                     MOVEL#1CSID    FGCSID           Customer Swift
+      *
+      * Set PGM.*Record Data Changed flag
+     C           @1DBRC    IFNE YARDCS
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YARDC     IFEQ 'Y'
+     C                     UPDAT@CLEOL0                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDCLEOL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * Update saved record image
+     C                     MOVEL@1DBRC    #1DBRC
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SEEXIT    ENDSR
+      /EJECT
+     CSR         SFRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSF     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSF     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SFEXIT    ENDSR
+      /EJECT
+     CSR         SGRVGN    BEGSR
+      *================================================================
+      * get practically everythin - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSG     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSG     CHAIN@BGREC8              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0096' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDMMODPD'ZA0037           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SGEXIT                     *QUIT
+     C                     GOTO SGEXIT
+     C                     END
+      *
+      * USER: Exit processing
+      * PAR = DB1 By name
+     C                     MOVELBGSDGL    WUSDGL           Standing data/G
+     C                     MOVELBGDLFX    WUDLFX           Dealing: FX
+     C                     MOVELBGSYLN    WUSYLN           Syndicated Loan
+     C                     MOVELBGEXMG    WUEXMG           Exposure Manage
+     C                     MOVELBGCSLN    WUCSLN           Customer Lendin
+     C                     MOVELBGRTBN    WURTBN           Retail Banking
+     C                     MOVELBGMSDL    WUMSDL           Midas/Swift dir
+     C                     MOVELBGSECS    WUSECS           Securities
+     C                     MOVELBGAURC    WUAURC           Auto-reconcilia
+     C                     MOVELBGFDTR    WUFDTR           Funds Transfer
+     C                     MOVELBGFUOP    WUFUOP           Futures & Optio
+     C                     MOVELBGNWMI    WUNWMI           Message Managem
+     C                     MOVELBGFIIN    WUFIIN           FRA/IRS Indicat
+     C                     MOVELBGDLMM    WUDLMM           Dealing: MM
+     C                     MOVELBGTRMG    WUTRMG           Treasury Manage
+     C                     MOVELBGRKMG    WURKMG           Interest Risk M
+     C                     MOVELBGMFIC    WUMFIC           Microfiche
+     C                     MOVELBGIOAC    WUIOAC           Interest on acc
+     C                     MOVELBGCFMT    WUCFMT           Confirmation Ma
+     C                     MOVELBGRCFI    WURCFI           Report Control
+     C                     MOVELBGOPDK    WUOPDK           Optical Disk
+     C                     MOVELBGNUST    WUNUST           History & Audit
+     C                     MOVELBGNZST    WUNZST           Midas Export Da
+      *================================================================
+     CSR         SGEXIT    ENDSR
+      /EJECT
+     CSR         SHRVGN    BEGSR
+      *================================================================
+      * Check existence of Cust. - Customer LEO Details  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSH     KLIST
+     C                     KFLD           FGCUST           Customer Number
+      * Move fields to key list
+     C                     MOVELP1CUST    FGCUST           Customer Number
+     C           KRSSH     CHAIN@CLEOL1              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR2335' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SHEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+     C                     END
+      *================================================================
+     CSR         SHEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * 00/Copy member SD1111REPP - Customer LEO Details  *
+     C*LEO customer details mnt Exit Program Processing
+     C/COPY WNCPYSRC,SD1111REPP
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C                     ROLBK                       90
+     C                     ELSE                                                               CSC022
+     C           WSKIP     IFNE 'Y'                                                           CSC022
+     C                     ROLBK                       90                                     CSC022
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 is on.                                CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WSKIP   1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFNE *BLANKS                                                       CSC022
+     C           @RTCD     ANDNE'*NRF   '                                                     CSC022
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC022
+     C                     Z-ADD1         DBASE                                               CSC022
+     C                     MOVEL'CSC022'  DBKEY                                               CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCMTJB    WCMTAR                                              CSC022
+     C           ##JOB     LOKUPWCMTAR                   10                                   CSC022
+     C           *IN10     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WSKIP                                               CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+     C/COPY WNCPYSRC,SD1111RC24
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Option for ACCOBJ
+     C                     MOVEL*BLANK    WUEOTX  7
+      * Define work field Access Pgm Return Code
+     C                     MOVEL*BLANK    WUAPRC  7
+      * Define work field LEO Customer (numeric)
+     C                     Z-ADD*ZERO     WULCUN  80
+      * Define work field Key status
+     C                     MOVEL*BLANK    WUKSTS  7
+      * Define work field ZALIGN Screen Fun Field
+     C                     MOVEL*BLANK    WUZASF 16
+      * Define work field ZALIGN File Field
+     C                     MOVEL*BLANK    WUZAFF 16
+      * Define work field Err Code
+     C                     MOVEL*BLANK    WUERCD  1
+      * Define work field Customer Shortname
+     C                     MOVEL*BLANK    WUCSSN 10
+      * Define work field Cust. Name & Address 1
+     C                     MOVEL*BLANK    WUCNA1 35
+      * Define work field Cust. Name & Address 2
+     C                     MOVEL*BLANK    WUCNA2 35
+      * Define work field Cust. Name & Address 3
+     C                     MOVEL*BLANK    WUCNA3 35
+      * Define work field Cust. Name & Address 4
+     C                     MOVEL*BLANK    WUCNA4 35
+      * Define work field Customer Report Name
+     C                     MOVEL*BLANK    WUCRNM 20
+      * Define work field Account Officer Code
+     C                     MOVEL*BLANK    WUACOC  2
+      * Define work field Country of Citizenship
+     C                     MOVEL*BLANK    WUCNCZ  2
+      * Define work field Country of Location
+     C                     MOVEL*BLANK    WUCOLC  2
+      * Define work field Customer Alpha Sort Code
+     C                     MOVEL*BLANK    WUCASC  8
+      * Define work field Branch code
+     C                     MOVEL*BLANK    WUBRCD  3
+      * Define work field Bank/non-bank Indicator
+     C                     MOVEL*BLANK    WUBNBI  1
+      * Define work field Local Industry Code
+     C                     MOVEL*BLANK    WULICD  3
+      * Define work field Customer Telephone Number
+     C                     MOVEL*BLANK    WUCTNB 12
+      * Define work field Customer Swift Id
+     C                     MOVEL*BLANK    WUCSID 12
+      * Define work field MIDAS Telex Shortname
+     C                     MOVEL*BLANK    WUTXA1 10
+      * Define work field Internal Customer Ind
+     C                     MOVEL*BLANK    WUICIN  1
+      * Define work field Leo Branch Code
+     C                     MOVEL*BLANK    WULEOB  2
+      * Define work field Access object format
+     C                     MOVEL*BLANK    WUSFMT256
+      * Define work field Protect Leo Acronym
+     C                     MOVEL*BLANK    WUPRLA  1
+      * Define work field Acronym
+     C                     MOVEL*BLANK    WUACRO  8
+      * Define work field Access object key for LEO
+     C                     MOVEL*BLANK    WUAKEY 12
+      * Define work field Constant for access objct
+     C                     MOVEL*BLANK    WUCONS  2
+      * Define work field Parameter code
+     C                     MOVEL*BLANK    WUPCOD  4
+      * Define work field field text parameter
+     C                     MOVEL*BLANK    WUFTPR256
+      * Define work field Work leo customer
+     C                     MOVEL*BLANK    WUFT08  8
+      * Define work field Acronym 1
+     C                     MOVEL*BLANK    WUACR1  1
+      * Define work field Acronym 2
+     C                     MOVEL*BLANK    WUACR2  1
+      * Define work field Acronym 3
+     C                     MOVEL*BLANK    WUACR3  1
+      * Define work field Acronym 4
+     C                     MOVEL*BLANK    WUACR4  1
+      * Define work field Acronym 5
+     C                     MOVEL*BLANK    WUACR5  1
+      * Define work field Acronym 6
+     C                     MOVEL*BLANK    WUACR6  1
+      * Define work field Acronym 7
+     C                     MOVEL*BLANK    WUACR7  1
+      * Define work field Acronym 8
+     C                     MOVEL*BLANK    WUACR8  1
+      * Define work field Error field
+     C                     MOVEL*BLANK    WUEFLD  1
+      * Define work field Numeric error flag
+     C                     MOVEL*BLANK    WUNERF  1
+      * Define work field Parameter field six long
+     C                     MOVEL*BLANK    WUPCD6  6
+      * Define work field Access Pgm Option
+     C                     MOVEL*BLANK    WUAPOP  7
+      * Define work field Retail
+     C                     MOVEL*BLANK    WURETL 10
+      * Define work field Customer Number
+     C                     MOVEL*BLANK    WUCUST  6
+      * Define work field Currency Code
+     C                     MOVEL*BLANK    WUCYCD  3
+      * Define work field Account Code
+     C**********           MOVEL*BLANK    WUACCD  4                                           CGL029
+     C                     MOVEL*BLANK    WUACCD 10                                           CGL029
+      * Define work field Account Sequence No.  WRK
+     C                     MOVEL*BLANK    WUACSW  2
+      * Define work field Retl Accnt field two long
+     C                     MOVEL*BLANK    WUACN2  2
+      * Define work field Account status
+     C                     MOVEL*BLANK    WUASTT  1
+      * Define work field Midas/Swift direct link
+     C                     MOVEL*BLANK    WUMSDL  1
+      * Define work field Swift ID is 10 Chars Long
+     C                     MOVEL*BLANK    WUSICL  1
+      * Define work field Characters 1-6 not Letter
+     C                     MOVEL*BLANK    WUC6NL  1
+      * Define work field Invalid Characters
+     C                     MOVEL*BLANK    WUINVC  1
+      * Define work field SWIFT ID < 8 Chars Long
+     C                     MOVEL*BLANK    WUSIL8  1
+      * Define work field Embedded Spaces
+     C                     MOVEL*BLANK    WUEMSP  1
+      * Define work field Length of fld is 9 or 12
+     C                     MOVEL*BLANK    WUBICL  1
+      * Define work field BICC Code - 8 Long
+     C                     MOVEL*BLANK    WUBIC8  8
+      * Define work field BICC Code - 3 Long
+     C                     MOVEL*BLANK    WUBIC3  3
+      * Define work field BIC Return Code
+     C                     MOVEL*BLANK    WUBICR  7
+      * Define work field User Profile
+     C                     MOVEL*BLANK    WUUPRF  8
+      * Define work field Status
+     C                     MOVEL*BLANK    WUSTAT  1
+      * Define work field Sequence number for leo
+     C                     Z-ADD*ZERO     WUSEQN  20
+      * Define work field Work Midas Date
+     C                     Z-ADD*ZERO     WUWMDT  50
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Work Converted Date
+     C                     Z-ADD*ZERO     WUWCDT  60
+      * Define work field Work Alpha Date
+     C                     MOVEL*BLANK    WUWADT  7
+      * Define work field Error found
+     C                     MOVEL*BLANK    WUERFD  1
+      * Define work field Deleted Data Record Pt1
+     C                     MOVEL*BLANK    WUDR01250
+      * Define work field Deleted Data Record Pt2
+     C                     MOVEL*BLANK    WUDR02250
+      * Define work field Deleted Data Record Pt3
+     C                     MOVEL*BLANK    WUDR03250
+      * Define work field Deleted Data Record Pt4
+     C                     MOVEL*BLANK    WUDR04250
+      * Define work field Deleted Data Record Pt5
+     C                     MOVEL*BLANK    WUDR05250
+      * Define work field Deleted Data Record Pt6
+     C                     MOVEL*BLANK    WUDR06250
+      * Define work field Deleted Data Record Pt7
+     C                     MOVEL*BLANK    WUDR07250
+      * Define work field Deleted Data Record Pt8
+     C                     MOVEL*BLANK    WUDR08250
+      * Define work field Deleted Data Record Pt9
+     C                     MOVEL*BLANK    WUDR09250
+      * Define work field Deleted Data Record Pt10
+     C                     MOVEL*BLANK    WUDR00250
+      * Define work field Deleted Data Record Pt11
+     C                     MOVEL*BLANK    WUDR11250
+      * Define work field Deleted Data Record Pt12
+     C                     MOVEL*BLANK    WUDR12250
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field Standing data/Gen.Ledger
+     C                     MOVEL*BLANK    WUSDGL  1
+      * Define work field Dealing: FX
+     C                     MOVEL*BLANK    WUDLFX  1
+      * Define work field Syndicated Loans (REDUN)
+     C                     MOVEL*BLANK    WUSYLN  1
+      * Define work field Exposure Management
+     C                     MOVEL*BLANK    WUEXMG  1
+      * Define work field Customer Lending
+     C                     MOVEL*BLANK    WUCSLN  1
+      * Define work field Retail Banking
+     C                     MOVEL*BLANK    WURTBN  1
+      * Define work field Securities
+     C                     MOVEL*BLANK    WUSECS  1
+      * Define work field Auto-reconciliations
+     C                     MOVEL*BLANK    WUAURC  1
+      * Define work field Funds Transfer
+     C                     MOVEL*BLANK    WUFDTR  1
+      * Define work field Futures & Options
+     C                     MOVEL*BLANK    WUFUOP  1
+      * Define work field Message Management
+     C                     MOVEL*BLANK    WUNWMI  1
+      * Define work field FRA/IRS Indicator
+     C                     MOVEL*BLANK    WUFIIN  1
+      * Define work field Dealing: MM
+     C                     MOVEL*BLANK    WUDLMM  1
+      * Define work field Treasury Management
+     C                     MOVEL*BLANK    WUTRMG  1
+      * Define work field Interest Risk Management
+     C                     MOVEL*BLANK    WURKMG  1
+      * Define work field Microfiche
+     C                     MOVEL*BLANK    WUMFIC  1
+      * Define work field Interest on accounts
+     C                     MOVEL*BLANK    WUIOAC  1
+      * Define work field Confirmation Matching
+     C                     MOVEL*BLANK    WUCFMT  1
+      * Define work field Report Control Facility
+     C                     MOVEL*BLANK    WURCFI  1
+      * Define work field Optical Disk
+     C                     MOVEL*BLANK    WUOPDK  1
+      * Define work field History & Audit Facility
+     C                     MOVEL*BLANK    WUNUST  1
+      * Define work field Midas Export Data Module
+     C                     MOVEL*BLANK    WUNZST  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Open files
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+      * Define *Synon program work fields
+     C                     Z-ADD*ZEROS    YRSW00  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW01  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW02  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW03  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW04  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW05  50       *Synon (5,0) wo
+     C                     MOVEL*BLANKS   YRSW06  1        *String work fi
+     C                     MOVEL*BLANKS   YRSW07  1        *String work fi
+     C                     MOVEL*BLANKS   YRSW08  7        *Return code
+     C                     MOVEL*BLANKS   YRSW09  1        *String work fi
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0A           *Synon (9999) w
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0B           *Synon (9999) w
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0C           *Synon (9999) w
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0D           *Synon (9999) w
+     C                     MOVEL*BLANKS   YRSW0E  1        *String work fi
+     C                     MOVEL*BLANKS   YRSW0F  1        *String work fi
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+     C                     OPEN SD1111R#
+     C                     OPEN SDCLEOL1
+     C                     OPEN SDCUSTL1
+     C                     OPEN SDBRCHL5
+     C                     OPEN SDMMODL1
+     C                     OPEN SDCLEOL0
+      * Dummy move for compiler
+     C                     MOVE '0'       @CN#,1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD1111R precompiler - Customer LEO Details  *
+      * Copyright Statement 1994 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SFRVGN
+      * Data structure - Customer LEO Details  *
+      * Define 800 Byte Dummy DS - Standard Functions  *
+      * Define ACCNTAB DS - Standard Functions  *
+      * Initialise WRK cust field - Customer LEO Details  *
+     C* Initialise WRK. Leo Customer number.
+     C                     MOVE *BLANK    WULCUS  8
+     C                     Z-ADD0         WULCUN  80
+      * get practically everythin - MIDAS Modules  *
+     C                     EXSR SGRVGN
+      * Program mode processing
+      * CASE: PAR.Action Code is Insert
+     C           P2ANCD    IFEQ 'I'                        *IF
+     C                     MOVEL'ADD'     W0PMD            *Program mode
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'CHG'     W0PMD            *Program mode
+     C                     END                             *FI
+      * If there isn't a record for customer create it.
+      * CASE: PAR.Action Code is Amend
+     C           P2ANCD    IFEQ 'A'                        *IF
+      * Check existence of Cust. - Customer LEO Details  *
+     C                     EXSR SHRVGN
+      * If no record found, go into insert mode.
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+     C                     MOVEL'ADD'     W0PMD            *Program mode
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'CHG'     W0PMD            *Program mode
+     C                     END                             *FI
+     C                     END                             *FI
+      * Clear Subfile Messages - Standard Functions  *
+     C                     CALL 'ZA0250'               90  Clear Subfile M
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'ZA0250'  W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Start of change 081649.
+      * Determine whether to protect the Acronym field.
+      * CASE: PGM.*Program mode is *ADD
+     C           W0PMD     IFEQ 'ADD'                      *IF
+     C                     MOVEL'N'       WUPRLA           Protect Leo Acr
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'Y'       WUPRLA           Protect Leo Acr
+     C                     END                             *FI
+      * Start of change 081649.
+      * 00/Copy member SD1111RFPG - Customer LEO Details  *
+      * 00/Copy member SD1111REPG - Customer LEO Details  *
+      * 00/Copy member SD1111RIPG - Customer LEO Details  *
+      * 00/Copy member SD1111RCPG - Customer LEO Details  *
+     C*LEO customer details mnt Initialise Program C-spec
+     C/COPY WNCPYSRC,SD1111RCPG
+      * 00/Copy member SD1111ROPG - Customer LEO Details  *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD1111RPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD1111RPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD1111RPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*LEO customer details mnt Initialise Program O-spec
+     O/COPY WNCPYSRC,SD1111ROPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001
+** @CN
+00001 ******

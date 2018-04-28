@@ -1,0 +1,207 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas UP Check shared formats')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0025 - Check shared formats                              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Last Amend No. CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CSM005             Date 21Sep05              */
+/*                      CPK018             Date 23Feb04              */
+/*                      CUP024             Date 13Jun03              */
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*                      CSC011             Date 19Aug02              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CPK015             Date 05Mar02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CUP002             Date 15Apr99              */
+/*                      CUP001 *CREATE     Date 23Jul98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CPK018 - MidasPlus packaging.  Remove CHKLIBLE processing.  */
+/*       CUP024 - Migration of Bridge ICD to the System Values file. */
+/*       CSC011 - 24x7 availability.  Upgrade of Support system.     */
+/*       CPK015 - 4.01 packaging. Add MONMSG to error processing.    */
+/*       CUP002 - Improve query with use of shared format file       */
+/*       CUP001 - Introduction of BRIDGE                             */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM                                                                       */ /*CUP033*/
+             PGM        PARM(&PFXSVAL &BRGSVAL)                                           /*CUP033*/
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
+/**COPY*UPCPYSRC,UPSVALDCL*                                          */ /*  */ /*CUP024*/ /*CUP033*/
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                    /*CUP033*/
+             DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)                                  /*CUP033*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(10)                                   /*CSC011*/
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)               /*CUP002*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
+             DCLF       FILE(UPSVALJ0)                                                    /*CUP033*/
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area /MIDASMSG in QTEMP */                             /*CUP002*/
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)                        /*CUP002*/
+             MONMSG     MSGID(CPF0000)                                /*CUP002*/
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')                                  /*CUP002*/
+                                                                      /*CUP002*/
+/************RCVF                                                                      */ /*CUP024*/
+/**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*  */ /*CUP024*/ /*CUP033*/
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF                                                                         /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)                               /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&SBSID) VALUE(&GIVAL)                                   /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)                               /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&PTFUPG) VALUE(&GIVAL)                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)                      /*CUP033*/
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)                      /*CUP033*/
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)                      /*CUP033*/
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)                      /*CUP033*/
+                CALL       PGM(SCC0010) PARM('UPC0025' 'ENTER' ' ')                       /*CUP033*/
+                GOTO       CMDLBL(END)                                                    /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             CALL       PGM(UPC0014) PARM(&SBSID)                     /*CUP002*/
+/**CHKLIBLE:                                                                */ /*CUP002*/ /*CPK018*/
+/**********  CHGVAR     VAR(&RETURN) VALUE(' ')                             */ /*CUP002*/ /*CPK018*/
+/**********  CHKLIBLE   LIBS(&PTFUPG) RETURN(&RETURN)                       */ /*CUP002*/ /*CPK018*/
+/**********  IF         COND(&RETURN *EQ 'F') THEN(DO)                      */ /*CUP002*/ /*CPK018*/
+/**********     EDTLIBL                                                     */ /*CUP002*/ /*CPK018*/
+/**********     GOTO CHKLIBLE                                               */ /*CUP002*/ /*CPK018*/
+/**********  ENDDO                                                          */ /*CUP002*/ /*CPK018*/
+                                                                      /*CUP002*/
+             RMVLIBLE   LIB(&PTFUPG)                                  /*CUP002*/
+             MONMSG     MSGID(CPF0000)                                /*CUP002*/
+             ADDLIBLE   LIB(&PTFUPG)                                  /*CUP002*/
+                                                                      /*CUP002*/
+             CHGVAR     VAR(&DMLIB) VALUE(&SBSID *CAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&SBSID *CAT 'DPLIB')
+             CHGVAR     VAR(&DVLIB) VALUE(&SBSID *CAT 'DVLIB')
+             CHGVAR     VAR(&DTALIB) VALUE(&SBSID *CAT 'DTALIB')
+             CHGVAR     VAR(&DZLIB) VALUE(&SBSID *CAT 'DZLIB')                            /*CSC011*/
+ 
+             DLTF       FILE(&PTFUPG/UPRCDFMT)
+             MONMSG     MSGID(CPF0000)
+ 
+             DSPFD      FILE(&DMLIB/*ALL) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) +
+                          OUTFILE(&PTFUPG/UPRCDFMT) OUTMBR(*FIRST *ADD)
+ 
+             DSPFD      FILE(&DPLIB/*ALL) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) +
+                          OUTFILE(&PTFUPG/UPRCDFMT) OUTMBR(*FIRST *ADD)
+ 
+             DSPFD      FILE(&DVLIB/*ALL) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) +
+                          OUTFILE(&PTFUPG/UPRCDFMT) OUTMBR(*FIRST *ADD)
+ 
+             DSPFD      FILE(&DTALIB/*ALL) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) +
+                          OUTFILE(&PTFUPG/UPRCDFMT) OUTMBR(*FIRST *ADD)
+ 
+/* Check that DZLIB exists before attempting to display. */                               /*CSC011*/
+             CHKOBJ     OBJ(&DZLIB) OBJTYPE(*LIB)                                         /*CSC011*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CSC011*/
+                GOTO       CMDLBL(PROCESS)                                                /*CSC011*/
+             ENDDO                                                                        /*CSC011*/
+             DSPFD      FILE(&DZLIB/*ALL) TYPE(*RCDFMT) +
+                          OUTPUT(*OUTFILE) +
+                          OUTFILE(&PTFUPG/UPRCDFMT) OUTMBR(*FIRST *ADD)                   /*CSC011*/
+ 
+PROCESS:                                                                                  /*CSC011*/
+             OVRDBF     FILE(UPSFMTQF) TOFILE(&PTFUPG/UPRCDFMT) +
+                          SHARE(*YES)
+/************OPNQRYF    FILE((UPRCDFMT) (UPRCDFMT) (UPDLVCPD)) +   */ /*CUP002*/
+/************             FORMAT(UPSFMTQF) QRYSLT('1/RFFILE *NE +  */ /*CUP002*/
+/************             2/RFFILE') KEYFLD((SFSRCF *ASCEND) +     */ /*CUP002*/
+/************             (SFMBNM)) JFLD((1/RFNAME 2/RFNAME) +     */ /*CUP002*/
+/************             (1/RFFILE 3/AUMBNM)) JORDER(*FILE) +     */ /*CUP002*/
+/************             MAPFLD((SFSRCF '3/AUSRCF') (SFLIB1 +     */ /*CUP002*/
+/************             '1/RFLIB') (SFNAME '1/RFNAME') (SFFILE + */ /*CUP002*/
+/************             '2/RFFILE') (SFLIB2 '2/RFLIB') (SFMBNM + */ /*CUP002*/
+/************             '3/AUMBNM'))                             */ /*CUP002*/
+             OPNQRYF    FILE((&PTFUPG/UPRCDFMT) (&PTFUPG/UPRCDFMT) +
+                          (&PTFUPG/UPDLVCPD)) FORMAT(UPSFMTQF) +
+                          QRYSLT('1/RFFILE *NE 2/RFFILE *AND +
+                          1/RFFATR *NE "LF" *AND 3/AUMBTP *EQ "PF" +
+                          *AND 3/AUDTYP *NE "I"') KEYFLD((SFSRCF +
+                          *ASCEND) (SFMBNM)) JFLD((1/RFNAME +
+                          2/RFNAME) (1/RFFILE 3/AUMBNM)) +
+                          JORDER(*FILE) MAPFLD((SFSRCF '3/AUSRCF') +
+                          (SFLIB1 '1/RFLIB') (SFNAME '1/RFNAME') +
+                          (SFFILE '2/RFFILE') (SFLIB2 '2/RFLIB') +
+                          (SFMBNM '3/AUMBNM'))                        /*CUP002*/
+             CALL       PGM(UP0025)
+             CLOF       OPNID(UPRCDFMT)
+             DLTOVR     FILE(UPSFMTQF)
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC0025') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)                                                    /*CPK015*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)                                                    /*CPK015*/
+             CALL       PGM(SCC0010) PARM('UPC0025' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*CPK015*/
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

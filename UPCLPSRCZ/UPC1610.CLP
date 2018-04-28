@@ -1,0 +1,99 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas UP Initial system setup - Support System')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC1610 - Set up initial Midas Support System               */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CUP016  *CREATE    Date 02Dec02              */
+/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP016 - Add implementation software to core.               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MSYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SSYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2002')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create Midas Info Screen data area in QTEMP */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG MSGID(CPF2105)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          TEXT('Midas Info Screen Data Area')
+ 
+/* Retrieve Main System ID. */
+             RTVDTAARA  DTAARA(SC24X7 (1 2)) RTNVAR(&MSYSID)
+/* Retrieve Support System ID. */
+             RTVDTAARA  DTAARA(SC24X7 (3 2)) RTNVAR(&SSYSID)
+ 
+/* Set up Main library list. */
+             CALL       PGM(UPC0014) PARM(&MSYSID)
+ 
+/* Call program to create libraries for Midas Support System. */
+             CALL       PGM(UPC1611) PARM(&SSYSID)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call program to create objects required in the Support System JLIB. */
+             CALL       PGM(SMC1024) PARM(&SSYSID)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Change text for restored Support System database libraries. */
+             CHGVAR     VAR(&DMLIB) VALUE(&SSYSID *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&SSYSID *TCAT 'DPLIB')
+             CHGVAR     VAR(&DVLIB) VALUE(&SSYSID *TCAT 'DVLIB')
+             CHGVAR     VAR(&DTLIB) VALUE(&SSYSID *TCAT 'DTALIB')
+             CHGOBJD    OBJ(&DMLIB) OBJTYPE(*LIB) TEXT('Midas master +
+                          physical files, data areas lib. - SS')
+             CHGOBJD    OBJ(&DPLIB) OBJTYPE(*LIB) TEXT('Midas +
+                          non-master phys. files, data areas lib. - +
+                          SS')
+             CHGOBJD    OBJ(&DVLIB) OBJTYPE(*LIB) TEXT('Midas +
+                          logical files library - SS')
+             CHGOBJD    OBJ(&DTLIB) OBJTYPE(*LIB) TEXT('Midas +
+                          delivered data library - SS')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC1610') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC1610' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000)
+ENDPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

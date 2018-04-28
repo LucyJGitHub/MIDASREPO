@@ -1,0 +1,80 @@
+     C*************************************************************************
+     C*                                                                       *
+     C*  ZFXAVP - CALCULATE AVERAGE FX RATE                                   *
+     C*                                                                       *
+     C*  PURPOSE : TO CALCULATE AN AVERAGE FX RATE (VALUE OF HOLDING IN       *
+     C*            PORTFOLIO CURRENCY DIVIDED BY VALUE IN NOMINAL CURRENCY)   *
+     C*                                                                       *
+     C*  INPUT  FIELDS                                                        *
+     C*       ZAPNM  15 0     AVERAGE PRICE NUMERATOR                         *
+     C*       ZFXAP  15 0     FX AVERAGE PRICE NUMERATOR                      *
+     C*       ZNMCD   1 0     NOMINAL CURRENCY DECIMAL PLACES (0-3)           *
+     C*       ZPTCD   1 0     PORTFOLIO CURRENCY DECIMAL PLACES (0-3)         *
+     C*                                                                       *
+     C*  OUTPUT  FIELDS                                                       *
+     C*       ZAVFX  13 8     AVERAGE FX RATE                                 *
+     C*                                                                       *
+     C*  ALSO REQUIRED                                                        *
+     C*       POWER8 ARRAY    ARRAY FOR CURRENCY CONVERSIONS                  *
+     C*                                                                       *
+     C*  WORK FIELDS:                                                          *
+     C*       ZI      1 0     INDEX TO POWER ARRAY                             *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                        *
+     C**************************************************************************
+      *                                                                        *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. S01486             DATE 13JUL94                        *
+     C*  PREV AMEND NO. 049213             DATE 20DEC93                        *
+     C*                                                                        *
+     C*------------------------------------------------------------------------*
+     C*                                                                        *
+     C*  S01486  -  Created for Private Banking (Portfolio Management)         *
+     C*  049213  -  Incorrect calculation of FX average price due to overflow  *
+     C*                                                                        *
+     C**************************************************************************
+     C           ZFXAVP    BEGSR                           *** ZFXAVP ***
+     C*
+     C** DEFINE ALL FIELDS
+     C*
+     C                     Z-ADDZAPNM     ZAPNM  150
+     C                     Z-ADDZFXAP     ZFXAP  150
+     C                     Z-ADDZNMCD     ZNMCD   10
+     C                     Z-ADDZPTCD     ZPTCD   10
+     C                     Z-ADDZAVFX     ZAVFX  138
+     C*
+     C** IF AP NUMERATOR = 0   END PROCESS
+     C           ZAPNM     IFEQ 0
+     C                     Z-ADD0         ZAVFX
+     C*
+     C** IF AP NUMERATOR NOT = ZEROS
+     C                     ELSE
+     C*
+     C** DIVIDE FX AP NUMERATOR BY AP NUMERATOR
+     C****       ZFXAP     DIV  ZAPNM     ZAVFX     H                     49213
+     C           ZFXAP     DIV  ZAPNM     WWAVFX 218H                     49213
+     C*
+     C** SET POWER8 INDEX TO 5 - NBR NOM CCY DEC. PLACES + NBR PORT CCY DEC. PL.
+     C           5         SUB  ZNMCD     ZI      10
+     C                     ADD  ZPTCD     ZI
+     C*
+     C** DIVIDE AVERAGE PRICE BY POWER
+     C****       ZAVFX     DIV  POWER8,ZI ZAVFX     H                     49213
+     C           WWAVFX    DIV  POWER8,ZI ZAVFX     H                     49213
+     C*
+     C** SET AVERAGE PRICE POSITIVE
+     C           ZAVFX     IFLE 0
+     C                     Z-SUBZAVFX     ZAVFX
+     C                     END
+     C*
+     C** END CONDITION NOMINAL = ZERO
+     C                     END
+     C*
+     C           ZXAVP9    ENDSR
+      **************************************************************************

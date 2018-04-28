@@ -1,0 +1,617 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Spot Trade Hist. A/c Postings Generation')
+     H****************************************************************
+     H*                                                              *
+     H*  MIDAS ABS - EUROPEAN REPORTING                              *
+     H*                                                              *
+     H*  ER5342 - SPOT TRADE ACCOUNTS POSTINGS GENERATION            *
+     H*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+     H*                                                              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027A            Date 06May06               *
+      *  Prev Amend No. CER001             Date 25Aug05               *
+      *                 ER_R10             Date 18Oct94               *
+      *                 ER0142 VT          Date 04Jan93               *
+     H*                 ER0999                 DATE  22DEC92         *
+     H*                                                              *
+     H*****************************************************************
+     H*                                                              *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+     H*  ER_R10 - EUROPEAN REPORTING - LUXEMBOURG UPGRADE IN R10     *
+     H*         - MULTIBRANCHING CHANGES                             *
+     H*  ER0142 - GENERATE ONLY ONE POSTING FOR THE SPOT TRADE       *
+     H*           HISTORIC ACCOUNT BY BRANCH CODE AND/OR BY CCY.     *
+     H*           (SAME PROCESSING THAN FOR THE "CONTRA" POSTINGS)   *
+     H*                                                              *
+     H*  ER0999 - WWHRDC TOO SHORT                                   *
+     H*                                                              *
+     H*****************************************************************
+     F*
+     F***EODPOAC IF  E           K        DISK                                                CER001
+     FGLPSX1L0IF  E           K        DISK                                                   CER001
+     F* End of Day Postings Details
+     F*
+     FSDBANKL1IF  E           K        DISK         KINFSR *PSSR
+     F* Bank Details - Rtv idx
+     F*
+     FSDTRADL1IF  E           K        DISK
+     F* RTV: Trading Data              Retrieval index
+     F*
+     FSDACODL1IF  E           K        DISK         KINFSR *PSSR
+     F* Account Code details - Rtv idx
+     F*
+     F***SDDEALY4IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDDLX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+     F* Dealing I.C.D. - Extended file - Rtv idx
+     F*
+     F***GESTHEPDO   E                    DISK                                                CER001
+     FGLSHX2PDO   E                    DISK                                                   CER001
+     F            APOSTPDF                          KRENAMEAPOSTPDR
+     F* Spot Trade Historic Postings Generation
+     F*
+     F***GESTHEZZUF  E                    DISK                      A                         CER001
+     FGLSHX2PAUF  E                    DISK                      A                            CER001
+     F* Spot Trad Historic Postings Generation Trailer Record
+     F*
+     FER5342AUO   E                    PRINTER
+     F*
+     F*****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAY FOR NARRATIVE
+     E*
+     E                    AR      1   2 30
+     E*
+     E** ARRAY FOR ACCOUNT CODE AND ACCOUNT CODE TYPE
+     E*
+     E**********          ARCD        2  4                                                    CER001
+     E                    ARCD        2 10                                                    CER001
+     E                    TYPE        2  1
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T                                  =
+     C*================================================================
+     C*
+     C** KEY DEFINITION
+     C*
+     C           KKEY      KLIST
+     C**********           KFLD           KACOD   40                                          CER001
+     C                     KFLD           KACOD  100                                          CER001
+     C***********          KFLD           KBRCD   30                      ER_R10
+     C                     KFLD           KBRCA   3                       ER_R10
+     C                     KFLD           KCCY    3
+     C*
+     C** FIRST CYCLE
+     C*
+     C                     EXSR #INIT
+     C*
+     C** DETAIL PROCESSING
+     C*
+     C** SETUP KEY FIELDS
+     C*
+     C                     MOVE BLSPTA    KACOD
+     C***********          Z-ADD*ZEROS    KBRCD                           ER_R10
+     C                     MOVE *BLANKS   KBRCA                           ER_R10
+     C                     MOVE *BLANKS   KCCY
+     C*
+     C                     Z-ADD1         I
+     C*
+     C** FIRST GENERATION OF POSTINGS WHICH HAVE AN ACCOUNT CODE EQUAL TO
+     C** THE SPOT TRADE ACCOUNT CODE
+     C*
+     C                     EXSR #GENP
+     C*
+     C** SETUP KEY FIELDS
+     C*
+     C                     MOVE ARCD,2    KACOD
+     C*
+     C                     Z-ADD2         I
+     C*
+     C** SECOND GENERATION OF POSTINGS WHICH HAVE AN ACCOUNT CODE EQUAL TO
+     C** THE INTERMEDIARY FORWARD TRADE A/C CODE
+     C*
+     C                     EXSR #GENP
+     C*
+     C** UPDATE TRAILER
+     C*
+     C                     EXSR #TRAIL
+     C           WWTOTG    IFNE 0                          - B1
+     C                     WRITECONTROL
+     C                     ELSE
+     C                     WRITENODET
+     C                     END                             - E1
+     C*
+     C** TERMINATION PROCESSING
+     C*
+     C                     WRITEENDRP
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*************************************************************************
+     C* #GENP- GENERATE POSTINGS                                              *
+     C*************************************************************************
+     C           #GENP     BEGSR
+     C*
+     C********** KKEY      SETLLEODPOAC              80                                       CER001
+     C**********           READ EODPOAC                  80                                   CER001
+     C           KKEY      SETLLGLPSX1L0             80                                       CER001
+     C                     READ GLPSX1L0                 80                                   CER001
+     C*
+     C***********          Z-ADDCNUM      WCNUM   60                                         CSD027A
+     C                     MOVE CNUM      WCNUM   6                                          CSD027A
+     C                     Z-ADDACSQ      WACSQ   20
+     C***********          Z-ADDBRCD      WBRCD   30                      ER_R10
+     C                     MOVE BRCA      WBRCA   3                       ER_R10
+     C                     MOVE CCY       WCCY    3
+     C*
+     C** WHILE SAME ACCOUNT CODE AND END OF FILE NOT REACHED
+     C*
+     C           ACOD      DOWEQKACOD                      - B1
+     C           *IN80     ANDEQ'0'
+     C*
+     C                     ADD  1         WWRECS
+     C*
+     C** IF CHANGE OF BRANCH CODE OR CURRENCY AND IF THE POSTINGS AMOUNTS
+     C** WORK FIELD IS DIFFERENT THAN ZERO
+     C*
+     C***********BRCD      IFNE WBRCD                      - B2           ER_R10
+     C           BRCA      IFNE WBRCA                      - B2           ER_R10
+     C           WWTOT     ANDNE*ZEROS
+     C           CCY       ORNE WCCY
+     C           WWTOT     ANDNE*ZEROS
+     C                     EXSR #CHGT
+     C                     END                             - E2
+     C******                                                              ER0142
+     C***GENERATE A POSTING FOR THE SPOT TRADE HISTORIC ACCOUNT           ER0142
+     C******                                                              ER0142
+     C******               MOVE 'P'       RECI                            ER0142
+     C******               MOVE ARCD,1    ACOD                            ER0142
+     C******               MOVELAR,1      PNAR                            ER0142
+     C******               MOVE TYPE,I    ATYP                            ER0142
+     C******               MOVE '  GE-SH' SPOS                            ER0142
+     C******               BITOF'01234567'PRIN                            ER0142
+     C******                                                              ER0142
+     C***SETUP THE RETAIL INDICATOR                                       ER0142
+     C******                                                              ER0142
+     C******     TYPE,I    IFEQ 'R'                        - B1           ER0142
+     C******               Z-ADD1         RIND                            ER0142
+     C******               ELSE                            - X1           ER0142
+     C******               Z-ADD0         RIND                            ER0142
+     C******               END                             - E1           ER0142
+     C******                                                              ER0142
+     C***SETUP THE VALUE AND POSTING DATES WITH THE RUN DATE              ER0142
+     C******                                                              ER0142
+     C******               Z-ADDBJRDNB    VALD                            ER0142
+     C******               Z-ADDBJRDNB    PSTD                            ER0142
+     C******                                                              ER0142
+     C***WRITE A RECORD                                                   ER0142
+     C******                                                              ER0142
+     C******               WRITEAPOSTPDR                                  ER0142
+     C******                                                              ER0142
+     C******               ADD  PSTA      WWTOTG                          ER0142
+     C*
+     C** SETUP A WORK FIELD FOLLOWING THE CONTAIN OF DEBIT/CREDIT INDICATOR
+     C*
+     C           DRCR      IFEQ 1                          - B2
+     C                     SUB  PSTA      WWTOT
+     C                     ELSE                            - X2
+     C                     ADD  PSTA      WWTOT
+     C                     END                             - E2
+     C******                                                              ER0142
+     C***ADD 1 TO THE NUMBER OF POSTINGS GENERATED                        ER0142
+     C******                                                              ER0142
+     C******               ADD  1         WWCPT                           ER0142
+     C*
+     C** IF CHANGE OF CUSTOMER NUMBER, KEEP THE NEW CUST NUMBER IN A WORK FIELD
+     C*
+     C           CNUM      IFNE WCNUM
+     C**********           Z-ADDCNUM      WCNUM                                              CSD027A
+     C                     MOVE CNUM      WCNUM                                              CSD027A
+     C                     END
+     C*
+     C** IF CHANGE OF ACCOUNT SEQUENCE, KEEP THE NEW A/C SEQ. IN A WORK FIELD
+     C*
+     C           ACSQ      IFNE WACSQ
+     C                     Z-ADDACSQ      WACSQ
+     C                     END
+     C*
+     C** IF CHANGE OF BRANCH CODE, KEEP THE NEW BRANCH CODE IN A WORK FIELD
+     C*
+     C***********BRCD      IFNE WBRCD                      - B1           ER_R10
+     C           BRCA      IFNE WBRCA                      - B1           ER_R10
+     C***********          Z-ADDBRCD      WBRCD                           ER_R10
+     C                     MOVE BRCA      WBRCA                           ER_R10
+     C                     END                             - E1
+     C*
+     C** IF CHANGE OF CURRENCY, KEEP THE NEW CURRENCY IN A WORK FIELD
+     C*
+     C           CCY       IFNE WCCY                       - B1
+     C                     MOVE CCY       WCCY
+     C                     END                             - E1
+     C*
+     C** READ NEXT RECORD
+     C*
+     C**********           READ EODPOAC                  80                                   CER001
+     C                     READ GLPSX1L0                 80                                   CER001
+     C                     END                             - E1
+     C*
+     C***GENERATE*A*POSTING*FOR*THE*SPOT*TRADE*HISTORIC*CONTRA*ACCOUNT    ER0142
+     C** GENERATE POSTINGS (a) FOR THE SPOT TRADE HISTORIC ACCOUNT        ER0142
+     C**               AND (b) FOR THE SPOT TRADE HISTORIC CONTRA ACCOUNT ER0142
+     C*
+     C           WWTOT     IFNE *ZEROS                     - B1
+     C                     EXSR #CHGT
+     C                     END                             - E1
+     C*
+     C                     ENDSR
+     C*************************************************************************
+      /EJECT
+     C*************************************************************************
+     C* #CHGT - IF CHANGE OF BRCD OR CCY, GENERATE A POSTING                  *
+     C*************************************************************************
+     C           #CHGT     BEGSR
+     C*
+     C** KEEP THE FIELDS IN WORK FIELDS
+     C*
+     C**********           Z-ADDCNUM      SCNUM   60                                         CSD027A
+     C                     MOVE CNUM      SCNUM   6                                          CSD027A
+     C                     Z-ADDACSQ      SACSQ   20
+     C***********          Z-ADDBRCD      SBRCD   30                      ER_R10
+     C                     MOVE BRCA      SBRCA   3                       ER_R10
+     C                     MOVE CCY       SCCY    3
+     C                     Z-ADDDRCR      SDRCR   10
+     C                     Z-ADDPSTA      SPSTA  130
+     C*                                                                   ER0142
+     C** GENERATE A POSTING FOR THE SPOT TRADE HISTORIC ACCOUNT           ER0142
+     C*                                                                   ER0142
+     C                     MOVE 'P'       RECI                            ER0142
+     C**********           Z-ADDWCNUM     CNUM                                        ER0142 CSD027A
+     C                     MOVE WCNUM     CNUM                                               CSD027A
+     C                     MOVE WCCY      CCY                             ER0142
+     C                     MOVE ARCD,1    ACOD                            ER0142
+     C                     Z-ADDWACSQ     ACSQ                            ER0142
+     C***********          Z-ADDWBRCD     BRCD                      ER0142ER_R10
+     C                     MOVE WBRCA     BRCA                            ER_R10
+     C                     MOVELAR,1      PNAR                            ER0142
+     C                     MOVE TYPE,I    ATYP                            ER0142
+     C                     MOVE '  GE-SH' SPOS                            ER0142
+     C                     BITOF'01234567'PRIN                            ER0142
+     C*                                                                   ER0142
+     C** SETUP THE RETAIL INDICATOR                                       ER0142
+     C*                                                                   ER0142
+     C           TYPE,I    IFEQ 'R'                        - B1           ER0142
+     C                     Z-ADD1         RIND                            ER0142
+     C                     ELSE                            - X1           ER0142
+     C                     Z-ADD0         RIND                            ER0142
+     C                     END                             - E1           ER0142
+     C*                                                                   ER0142
+     C** SETUP THE VALUE AND POSTING DATES WITH THE RUN DATE              ER0142
+     C*                                                                   ER0142
+     C                     Z-ADDBJRDNB    VALD                            ER0142
+     C                     Z-ADDBJRDNB    PSTD                            ER0142
+     C*                                                                   ER0142
+     C           WWTOT     IFLT *ZEROS                     - B1           ER0142
+     C                     MOVE '1'       DRCR                            ER0142
+     C                     Z-SUBWWTOT     WWTOT                           ER0142
+     C                     ELSE                            - X1           ER0142
+     C                     MOVE '0'       DRCR                            ER0142
+     C                     END                             - E1           ER0142
+     C*                                                                   ER0142
+     C                     Z-ADDWWTOT     PSTA                            ER0142
+     C*                                                                   ER0142
+     C** WRITE A RECORD                                                   ER0142
+     C*                                                                   ER0142
+     C                     WRITEAPOSTPDR                                  ER0142
+     C*
+     C** GENERATE A POSTING FOR THE SPOT TRADE HISTORIC CONTRA ACCOUNT
+     C*
+     C******               MOVE 'P'       RECI                            ER0142
+     C******               Z-ADDWCNUM     CNUM                            ER0142
+     C******               MOVE WCCY      CCY                             ER0142
+     C                     MOVE WASTHC    ACOD
+     C******               Z-ADDWACSQ     ACSQ                            ER0142
+     C******               Z-ADDWBRCD     BRCD                            ER0142
+     C                     MOVELAR,2      PNAR
+     C******               MOVE TYPE,I    ATYP                            ER0142
+     C******               MOVE '  GE-SH' SPOS                            ER0142
+     C******               BITOF'01234567'PRIN                            ER0142
+     C******                                                              ER0142
+     C***SETUP THE RETAIL INDICATOR                                       ER0142
+     C******                                                              ER0142
+     C******     TYPE,I    IFEQ 'R'                        - B1           ER0142
+     C******               Z-ADD1         RIND                            ER0142
+     C******               ELSE                            - X1           ER0142
+     C******               Z-ADD0         RIND                            ER0142
+     C******               END                             - E1           ER0142
+     C*
+     C** SETUP THE DEBIT/CREDIT INDICATOR
+     C*
+     C           DRCR      IFEQ 1                          - B1           ER0142
+     C                     MOVE '0'       DRCR                            ER0142
+     C                     ELSE                            - X1           ER0142
+     C                     MOVE '1'       DRCR                            ER0142
+     C                     END                             - E1           ER0142
+     C*                                                                   ER0142
+     C******     WWTOT     IFLT *ZEROS                     - B1           ER0142
+     C******               MOVE '0'       DRCR                            ER0142
+     C******               Z-SUBWWTOT     WWTOT                           ER0142
+     C******               ELSE                            - X1           ER0142
+     C******               MOVE '1'       DRCR                            ER0142
+     C******               END                             - E1           ER0142
+     C******                                                              ER0142
+     C***SETUP THE VALUE AND POSTING DATES WITH THE RUN DATE              ER0142
+     C******                                                              ER0142
+     C******               Z-ADDBJRDNB    VALD                            ER0142
+     C******               Z-ADDBJRDNB    PSTD                            ER0142
+     C******                                                              ER0142
+     C******               Z-ADDWWTOT     PSTA                            ER0142
+     C*
+     C** WRITE A RECORD
+     C*
+     C                     WRITEAPOSTPDR
+     C*
+     C***ADD*THE*POSTING*AMOUNT*TO*THE*TOTAL*WORK*FIELD                   ER0142
+     C** ADD THE POSTING AMOUNTS OF THE 2 RECORDS TO THE TOTAL WORK FIELD ER0142
+     C*
+     C******               ADD  PSTA      WWTOTG                          ER0142
+     C                     Z-ADD*ZEROS    WWTOTP                          ER0142
+     C           WWTOT     MULT 2         WWTOTP 130                      ER0142
+     C                     ADD  WWTOTP    WWTOTG                          ER0142
+     C*
+     C** RESET THE WORK FIELD TO ZERO
+     C*
+     C                     Z-ADD*ZEROS    WWTOT
+     C*
+     C***ADD*1*TO*THE*NUMBER*OF*POSTINGS*GENERATED                        ER0142
+     C** ADD 2 TO THE NUMBER OF POSTINGS GENERATED                        ER0142
+     C*
+     C******               ADD  1         WWCPT                           ER0142
+     C                     ADD  2         WWCPT                           ER0142
+     C*
+     C** RESTORE THE SAVED FIELDS
+     C*
+     C                     MOVE SCCY      CCY
+     C***********          Z-ADDSCNUM     CNUM                                               CSD027A
+     C                     MOVE SCNUM     CNUM                                               CSD027A
+     C                     Z-ADDSACSQ     ACSQ
+     C***********          Z-ADDSBRCD     BRCD                            ER_R10
+     C                     MOVE SBRCA     BRCA                            ER_R10
+     C                     Z-ADDSDRCR     DRCR
+     C                     Z-ADDSPSTA     PSTA
+     C*
+     C                     ENDSR
+     C*************************************************************************
+      /EJECT
+     C*************************************************************************
+     C**#TRAIL*-*UPDATE/WRITE*A*TRAILER*RECORD*IN*GESTHEZZ*********************               CER001
+     C* #TRAIL - UPDATE/WRITE A TRAILER RECORD IN GLSHX2PA                    *               CER001
+     C*************************************************************************
+     C           #TRAIL    BEGSR
+     C*
+     C                     MOVE 'T'       RECI
+     C*
+     C** CALCULATE HASH-TOTAL OF RCDS WHOLE NUMBERS AND DECIMALS
+     C*
+     C           WWTOTG    DIV  1000      WWHRWN
+     C                     MVR            WWHRDC
+     C*
+     C***READ*PF/GESTHEZZ******************************************************               CER001
+     C** READ PF/GLSHX2PA                                                                     CER001
+     C*
+     C********** 1         SETLLGESTHEZZ                                                      CER001
+     C**********           READ GESTHEZZ                 80                                   CER001
+     C           1         SETLLGLSHX2PA                                                      CER001
+     C                     READ GLSHX2PA                 80                                   CER001
+     C*
+     C** IF TRAILER ALREADY EXISTS THEN UPDATE
+     C*
+     C           *IN80     IFEQ '0'                        - B1
+     C***********WWCPT     ADD  2         NORE1
+     C                     ADD  WWCPT     NORE1
+     C                     ADD  WWHRWN    HRWN
+     C           HRDC      ADD  WWHRDC    WWHRDC
+     C*
+     C           WWHRDC    IFGE 1000                       - B2
+     C           WWHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+     C                     ELSE                            - X2
+     C                     Z-ADDWWHRDC    HRDC
+     C                     END                             - E2
+     C*
+     C                     UPDATAPOSTZZF
+     C*
+     C** OTHERWISE WRITE A NEW RECORD
+     C*
+     C                     ELSE                            - X1
+     C           WWCPT     ADD  2         WWCPT
+     C                     Z-ADDWWCPT     NORE1
+     C                     Z-ADDWWHRWN    HRWN
+     C                     Z-ADDWWHRDC    HRDC
+     C                     WRITEAPOSTZZF
+     C                     END                             - E1
+     C*
+     C                     ENDSR
+     C*************************************************************************
+      /EJECT
+     C*************************************************************************
+     C**
+     C**  #INIT       SUBROUTINE TO INITIALIZE STATIC FIELDS AND ACCESS STANDING
+     C**              DATA CALLED ONCE AT START OF PROGRAM FROM MAIN LINE.
+     C**
+     C*************************************************************************
+     C*                                                    *****************
+     C           #INIT     BEGSR                           ** #INIT BEGSR **
+     C*                                                    *****************
+     C**  PREPARE LDA
+     C*
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'ER5342'  DBPGM
+     C*
+     C**  INITIALIZE INDICATORS
+     C*
+     C                     MOVE '0'       *IN
+     C*
+     C**  INITIALIZE WORK FIELDS
+     C*
+     C                     Z-ADD0         WWTOT  130
+     C                     Z-ADD0         WWTOTG 130
+     C*
+     C                     Z-ADD0         WWRECS  50       Postings Read
+     C                     Z-ADD0         WWCPT   50       Counter
+     C                     Z-ADD0         WWHRWN 150       Hash Total (Integer)
+     C***************      Z-ADD0         WWHRDC  30       Hash Total (DecER0999
+     C                     Z-ADD0         WWHRDC  50       Hash Total (DecER0999
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C                     READ SDBANKL1                 80
+     C*
+     C** IF RECORD NOT FOUND
+     C*
+     C           *IN80     IFEQ '1'                        - B1
+     C                     MOVEL'001'     DBASE            *****************
+     C                     MOVEL'SDBANKL1'DBFILE           ** DB ERROR 01 **
+     C                     MOVEL'*NONE '  DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C** WRITE HEADER OF THE AUDIT REPORT
+     C*
+     C                     WRITEHEADER
+     C*
+     C**  RETRIEVE SPOT TRADING ACCOUNT CODE
+     C*
+     C                     READ SDTRADL1                 80
+     C*
+     C** IF RECORD NOT FOUND
+     C*
+     C           *IN80     IFEQ '1'                        - B1
+     C                     MOVEL'002'     DBASE            *****************
+     C                     MOVEL'SDTRADL1'DBFILE           ** DB ERROR 02 **
+     C                     MOVEL'*NONE '  DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C** RETRIEVE NEW A/C CODES
+     C*
+     C********** *LOVAL    SETLLSDDEALY4                                                      CER001
+     C**********           READ SDDEALY4                 80                                   CER001
+     C           *LOVAL    SETLLSDDLX1L0                                                      CER001
+     C                     READ SDDLX1L0                 80                                   CER001
+     C*
+     C** IF RECORD NOT FOUND
+     C*
+     C           *IN80     IFEQ '1'                        - B1
+     C                     MOVEL'003'     DBASE            *****************
+     C**********           MOVEL'SDDEALY4'DBFILE           ** DB ERROR 03 **                  CER001
+     C                     MOVEL'SDDLX1L0'DBFILE           ** DB ERROR 03 **                  CER001
+     C                     MOVEL'*NONE '  DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C** STORE A/C IN A ARRAY
+     C*
+     C                     MOVEAWASTHA    ARCD,1
+     C                     MOVEAWAIFTA    ARCD,2
+     C*
+     C** RETRIEVE THE ACCOUNT TYPE  OF 1. SPOT TRADE HISTORIC A/C
+     C**                               2. SPOT TRADE HISTORIC CONTRA A/C
+     C*
+     C                     Z-ADD1         I       10
+     C*
+     C           I         DOWLE2                          - B1
+     C*
+     C** RETRIEVE THE ACCOUNT CODE TYPE
+     C*
+     C           ARCD,I    CHAINSDACODL1             80
+     C*
+     C** IF RECORD NOT FOUND
+     C*
+     C           *IN80     IFEQ '1'                        - B2
+     C                     MOVEL'004'     DBASE            *****************
+     C                     MOVEL'SDACODL1'DBFILE           ** DB ERROR 04 **
+     C                     MOVELARCD,I    DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C*
+     C** KEEP THE ACCOUNT TYPES IN AN ARRAY
+     C*
+     C                     MOVEAA5ACTY    TYPE,I
+     C*
+     C                     ADD  1         I
+     C                     END                             - E1
+     C*
+     C                     ENDSR
+     C*************************************************************************
+      /EJECT
+     C*************************************************************************
+     C**
+     C** *PSSR  S/R : ABNORMAL TERMINATION SUBROUTINE
+     C**
+     C*************************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     WRITEERROR
+     C                     WRITEENDRP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*************************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005
+**  AR
+SPOT TRADE HISTORIC
+SPOT TRADE HISTORIC CONTRA

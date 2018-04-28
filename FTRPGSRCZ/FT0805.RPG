@@ -1,0 +1,1114 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Checking for insufficient funds')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module.                               *
+      *                                                               *
+      *                                                               *
+      *  FT0805 - Checking for Insufficient Funds                     *
+      *                                                               *
+      *  Function:  To check if the Vostro Accnt of the Payment       *
+      *             being authorised has enough funds.                *
+      *                                                               *
+      *  Called by: FT0803 - Reporting/Authorising Program            *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. AR663078           Date 19Aug14               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 216511             Date 31May07               *
+      *                 207477             Date 16Aug07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CRE020             Date 20Jan04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 175079             Date 31Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFT003  *CREATE    Date 06May98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR663078 - Funds Check Error. Add validation for newly intro-*
+      *           duced system values and use them as condition in    *
+      *           adjusting the balance of unauthorized transactions. *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CAP204 - Teller Related APIs - Account Transfer (Recompile)  *
+      *  216511 - Validate account.                                   *
+      *  207477 - If account balance is zero, do not show err msg     *
+      *           (Customer has insufficient funds...).  Only show    *
+      *           err msg if account balance is negative.             *
+      *           Preventive fix applied 177773.                      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CRE020 - Midas Plus Online Printing of Advices (GE7)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  175079 - System displays 'Customer account has insufficient  *
+      *           funds for payment' even though there is enough to   *
+      *           cover the payment.  Rename BRCA of OTPAYDD and      *
+      *           INPAYDD to avoid corruption of account branch code  *
+      *           in RSACMTPD.                                        *
+      *  CFT003 - Incorporate Into Core                               *
+      *           Based on FTH005 original reference HUB01B           *
+      *                                                               *
+      *****************************************************************
+      *
+     FMEMOSL1 IF  E           K        DISK
+     F*
+     FRSACMTL1IF  E           K        DISK
+     F            APOSTPDF                          KIGNORE
+      *
+      * Include Shadow Post movements only
+      *
+     FOTPAY   IF  E           K        DISK                           UC
+      *
+      * Check for Unauthorised Outgoing Payments
+      *
+     FINPAY   IF  E           K        DISK                           UC
+      *
+      * Check for Unauthorised Incoming Payments
+      *
+     F/EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    20    Chain to MEMOS file                                  *
+      *    21    Insufficient Funds                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     F/SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *   #HINIT  -  Initialisation routine                           *
+      *   #HATYP  -  Determine Accnt Type                             *
+      *   #HNOST  -  Processing for Nostro Accnt                      *
+      *   #HRETL  -  Processing for Retail Accnt                      *
+      *   #HPART  -  Processing for Partial Accnt                     *
+      *   #HFULL  -  Processing for full Accnt                        *
+      *   #HNCDE  -  Processing for Nostro Code                       *
+      *   #HFCHK  -  Fund Calculation and Insufficient Fund Checking  *
+      *   SRADJB  -  Fund Calculation and Insufficient Fund Checking  *
+      *   *PSSR   -  Error handling                                   *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E*
+      * Copyright notice for inclusion in all programs
+     E                    CPY@    1   1 80               Midas copyright
+     E                    DB1        29  1
+     E                    CMD@    1   1 80
+      **  Array of QCMDEXC commands
+      *
+     E                    EDT        80  1
+      **  Array of QCMDEXC command to edit
+      *
+      ** Rename booking branch of payment to avoid corruption of the                          175079
+      ** account branch code                                                                  175079
+      *                                                                                       175079
+     IOTPAYDDF                                                                                175079
+     I              BRCA                            PBRCA                                     175079
+     IINPAYDDF                                                                                175079
+     I              BRCA                            IBRCA                                     175079
+      *                                                                                     AR663078
+     I              'FundChkUnautTrSubstr'C         SYSVL0                                  AR663078
+     I              'FundChkInclCrMovem'  C         SYSVL1                                  AR663078
+     I              'FundChkInclDrMovem'  C         SYSVL2                                  AR663078
+      ** System Value Constants                                                             AR663078
+      *                                                                                     AR663078
+     I*
+     I** Data structure for the Account being passed
+     I*
+     I            DS
+     I**********                              1  15 @ACCNT                                    CGL029
+     I                                        1  21 @ACCNT                                    CGL029
+     I                                        1   3 @ACCY
+     I                                        4   5 @NOST
+     I                                        6  12 @W612
+     I                                        1   6 @CNUM
+     I**********                              7  10 @ACOD                                     CGL029
+     I**********                             11  12 @ASEQ                                     CGL029
+     I                                        7  16 @ACOD                                     CGL029
+     I                                       17  18 @ASEQ                                     CGL029
+     I                                        1  10 @RETN
+     I                                       11  12 @WK12
+     I                                        7   9 @FCCY
+     I**********                             10  13 @FACD                                     CGL029
+     I**********                             14  15 @FSEQ                                     CGL029
+     I                                       10  19 @FACD                                     CGL029
+     I                                       20  21 @FSEQ                                     CGL029
+     I                                        1   2 @NSTR
+     I**********                             13  15 @PBRC                                     CGL029
+     I                                       19  21 @PBRC                                     CGL029
+     I*
+     I** Data structure for MEMO Dbase error key
+     I*
+     I            DS
+     I**********                              1  18 EMEMO                                     CGL029
+     I                                        1  24 EMEMO                                     CGL029
+     I                                        1   6 ECNNM
+     I                                        7   9 ECUCD
+     I**********                             10  13 EACCD                                     CGL029
+     I**********                             14  15 EACSQ                                     CGL029
+     I**********                             16  18 EBRCD                                     CGL029
+     I                                       10  19 EACCD                                     CGL029
+     I                                       20  21 EACSQ                                     CGL029
+     I                                       22  24 EBRCD                                     CGL029
+     I*
+     I** Data Structure for Dbase Error
+     I*
+     ILDA         DS                            256
+     I                                      131 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     ISDNOST    E DSSDNOSTPD
+     I* NOSTRO DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I* CUSTOMER DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     ISDCURR    E DSSDCURRPD                                                                  CFT003
+      * CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM                                          CFT003
+     I*                                                                                       CFT003
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* FIRST DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     ID@ACCT    E DSACCNTAB
+     I*
+     I*  Account Details DS for assigning data from Access
+     I*  Programs to work fields
+     I*
+     I/COPY WNCPYSRC,FT0805I001
+     I*
+     I/EJECT
+     C*
+     C*****************************************************************
+     C*   Main process                                                *
+     C*   Calls     #HINIT  Initialisation routine                    *
+     C*             #HATYP  Determine Account Type                    *
+     C*             #HNOST  Processing for Nostro Accnt               *
+     C*             #HRETL  Processing for Retail Accnt               *
+     C*             #HPART  Processing for Partial Accnt              *
+     C*             #HFCHK  Fund Calculation and Insufficient Funds   *
+     C*                     Checking                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C**  Call Initial Routine
+     C*
+     C                     EXSR #HINIT
+     C/COPY WNCPYSRC,FT0805C003
+     C*
+     C**  Determine Accnt Type
+     C*
+     C                     EXSR #HATYP
+     C*
+     C**  Process according to Accnt Type
+     C*
+     C           @ATYP     CASEQ'N'       #HNOST
+     C           @ATYP     CASEQ'R'       #HRETL
+     C           @ATYP     CASEQ'P'       #HPART
+     C           @ATYP     CASEQ'F'       #HFULL
+     C           @ATYP     CASEQ'M'       #HNCDE
+     C                     END
+     C*
+     C           ATYP      IFEQ 'R'
+     C           @ORETB    ANDEQ*BLANKS                                                       216511
+     C                     EXSR #HFCHK
+     C                     END
+      *                                                                                       216511
+      ** Check Debit/Credit Indicator.                                                        216511
+      *                                                                                       216511
+     C                     SELEC                                                              216511
+     C           @ORETB    WHEQ 'TWO'                                                         216511
+     C                     TESTB'2'       RETB           23                                   216511
+     C           @ORETB    WHEQ 'THREE'                                                       216511
+     C                     TESTB'3'       RETB           23                                   216511
+     C                     OTHER                                                              216511
+     C                     MOVEL*BLANKS   @ORETB                                              216511
+     C                     ENDSL                                                              216511
+      *                                                                                       216511
+     C           *IN23     IFEQ '0'                                                           216511
+     C                     MOVEL*BLANKS   @ORETB                                              216511
+     C                     ENDIF                                                              216511
+     C*
+     C**  Exit program
+     C*
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   #HINIT   : Initialisation Routine                           *
+     C*   Called by: Main process                                     *
+     C*   Calls    : Nothing                                          *
+     C*****************************************************************
+     C*
+     C           #HINIT    BEGSR
+     C*
+     C** Copyright insertion
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Declare Entry Parameter List
+     C*
+     C           *ENTRY    PLIST
+     C**********           PARM           @ACNT  15                                           CGL029
+     C                     PARM           @ACNT  21                                           CGL029
+     C                     PARM           @SCCY   3
+     C                     PARM           @BRCA   3
+     C                     PARM           @SMAM  130
+     C                     PARM           @SDAT   50
+     C                     PARM           @RTCE   1
+     C                     PARM           @ORETB  5                                           216511
+     C/COPY WNCPYSRC,FT0805C007
+     C*
+     C                     MOVE *BLANK    RETB                                                216511
+     C                     MOVE *BLANK    ATYP                                                CFT003
+     C                     MOVE @ACNT     @ACCNT
+     C*
+     C**  Set up LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'FT0805'  DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM           @OPTN   7        B:Option
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      * Open file OTPAY
+      *
+     C           FIL001    IFEQ *BLANKS
+      *
+      *  Override file OTPAY to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'OTPAY   'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     OPEN OTPAY
+     C                     MOVEL'Y'       FIL001  1
+     C                     END
+      *
+      * Open file INPAY
+      *
+     C           FIL002    IFEQ *BLANKS
+      *
+      *  Override file INPAY to share(*NO)
+      *
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'INPAY   'U#FILE 10
+     C                     MOVEAU#FILE    EDT,17
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'                9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     OPEN INPAY
+     C                     MOVEL'Y'       FIL002  1
+     C                     END
+      *                                                                                     AR663078
+      ** Call AOSVALR0 to check system values                                               AR663078
+      *                                                                                     AR663078
+     C                     MOVEL*BLANKS   PSVOPT 20                                         AR663078
+     C                     MOVELSYSVL0    PSVOPT 20                                         AR663078
+      *                                                                                     AR663078
+     C                     MOVE *BLANKS   PBLNK1 20                                         AR663078
+     C                     MOVE *BLANKS   PBLNK2200                                         AR663078
+      *                                                                                     AR663078
+     C                     CALL 'AOSVALR0'                                                  AR663078
+     C                     PARM *BLANKS   PRTCD   7                                         AR663078
+     C                     PARM           PSVOPT                                            AR663078
+     C                     PARM           PSVAL 200                                         AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+      *                                                                                     AR663078
+     C           PRTCD     IFNE *BLANKS                                                     AR663078
+     C                     MOVE 'E'       @RTCE                                             AR663078
+     C                     MOVEL'AOSVALPD'DBFILE           *************                    AR663078
+     C                     MOVEL'101'     DBASE            * DBERR 101 *                    AR663078
+     C                     MOVELPSVOPT    DBKEY            *************                    AR663078
+      *                                                                                     AR663078
+      ** Return to calling program                                                          AR663078
+      *                                                                                     AR663078
+     C                     EXSR *PSSR                                                       AR663078
+      *                                                                                     AR663078
+     C                     ELSE                                                             AR663078
+     C           PSVAL     IFEQ 'Y'                                                         AR663078
+     C                     MOVEL'Y'       XFUNCS  1                                         AR663078
+     C                     ELSE                                                             AR663078
+     C                     MOVEL'N'       XFUNCS                                            AR663078
+     C                     ENDIF                                                            AR663078
+      *                                                                                     AR663078
+     C                     ENDIF                                                            AR663078
+      *                                                                                     AR663078
+      ** Call AOSVALR0 to check system values                                               AR663078
+      *                                                                                     AR663078
+     C                     MOVEL*BLANKS   PSVOPT 20                                         AR663078
+     C                     MOVELSYSVL1    PSVOPT 20                                         AR663078
+      *                                                                                     AR663078
+     C                     MOVE *BLANKS   PBLNK1 20                                         AR663078
+     C                     MOVE *BLANKS   PBLNK2200                                         AR663078
+      *                                                                                     AR663078
+     C                     CALL 'AOSVALR0'                                                  AR663078
+     C                     PARM *BLANKS   PRTCD   7                                         AR663078
+     C                     PARM           PSVOPT                                            AR663078
+     C                     PARM           PSVAL 200                                         AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+      *                                                                                     AR663078
+     C           PRTCD     IFNE *BLANKS                                                     AR663078
+     C                     MOVE 'E'       @RTCE                                             AR663078
+     C                     MOVEL'AOSVALPD'DBFILE           *************                    AR663078
+     C                     MOVEL'102'     DBASE            * DBERR 102 *                    AR663078
+     C                     MOVELPSVOPT    DBKEY            *************                    AR663078
+      *                                                                                     AR663078
+      ** Return to calling program                                                          AR663078
+      *                                                                                     AR663078
+     C                     EXSR *PSSR                                                       AR663078
+      *                                                                                     AR663078
+     C                     ELSE                                                             AR663078
+     C           PSVAL     IFEQ 'Y'                                                         AR663078
+     C                     MOVEL'Y'       XSUBCR  1                                         AR663078
+     C                     ELSE                                                             AR663078
+     C                     MOVEL'N'       XSUBCR                                            AR663078
+     C                     ENDIF                                                            AR663078
+      *                                                                                     AR663078
+     C                     ENDIF                                                            AR663078
+      *                                                                                     AR663078
+      ** Call AOSVALR0 to check system values                                               AR663078
+      *                                                                                     AR663078
+     C                     MOVEL*BLANKS   PSVOPT 20                                         AR663078
+     C                     MOVELSYSVL2    PSVOPT 20                                         AR663078
+      *                                                                                     AR663078
+     C                     MOVE *BLANKS   PBLNK1 20                                         AR663078
+     C                     MOVE *BLANKS   PBLNK2200                                         AR663078
+      *                                                                                     AR663078
+     C                     CALL 'AOSVALR0'                                                  AR663078
+     C                     PARM *BLANKS   PRTCD   7                                         AR663078
+     C                     PARM           PSVOPT                                            AR663078
+     C                     PARM           PSVAL 200                                         AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+     C                     PARM           PBLNK1                                            AR663078
+     C                     PARM           PBLNK2                                            AR663078
+      *                                                                                     AR663078
+     C           PRTCD     IFNE *BLANKS                                                     AR663078
+     C                     MOVE 'E'       @RTCE                                             AR663078
+     C                     MOVEL'AOSVALPD'DBFILE           *************                    AR663078
+     C                     MOVEL'103'     DBASE            * DBERR 103 *                    AR663078
+     C                     MOVELPSVOPT    DBKEY            *************                    AR663078
+      *                                                                                     AR663078
+      ** Return to calling program                                                          AR663078
+      *                                                                                     AR663078
+     C                     EXSR *PSSR                                                       AR663078
+      *                                                                                     AR663078
+     C                     ELSE                                                             AR663078
+     C           PSVAL     IFEQ 'Y'                                                         AR663078
+     C                     MOVEL'Y'       XSUBDR  1                                         AR663078
+     C                     ELSE                                                             AR663078
+     C                     MOVEL'N'       XSUBDR                                            AR663078
+     C                     ENDIF                                                            AR663078
+      *                                                                                     AR663078
+     C                     ENDIF                                                            AR663078
+      *                                                                                     AR663078
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   #HATYP   : Subroutine to Determine the Accnt type           *
+     C*   Called by: Main process                                     *
+     C*   Calls    : Nothing                                          *
+     C*****************************************************************
+     C*
+     C           #HATYP    BEGSR
+     C*
+     C                     MOVE *BLANKS   @ATYP   1
+     C**********           Z-ADD16        @X      20                                          CGL029
+     C                     Z-ADD22        @X      20                                          CGL029
+     C                     MOVE *BLANKS   @TMP1   1
+     C*
+     C           @TMP1     DOWEQ' '
+     C                     SUB  1         @X
+     C           1         SUBST@ACCNT:@X @TMP1
+     C                     END
+     C*
+     C********** @X        IFEQ 15                                                            CGL029
+     C           @X        IFEQ 21                                                            CGL029
+     C*
+     C** Check if position 7 to 9 of @ACNT is equal to the settlement
+     C** currency.  If not equal, it is a partial account with the
+     C** branch code in position 13-25.
+     C*
+     C           @FCCY     IFEQ @SCCY
+     C                     MOVE 'F'       @ATYP
+     C                     ELSE
+     C                     MOVE 'P'       @ATYP
+     C                     MOVE @PBRC     @BRCA
+     C                     END
+     C*
+     C                     END
+     C*
+     C********** @X        IFEQ 12                                                            CGL029
+     C           @X        IFEQ 18                                                            CGL029
+     C                     MOVE 'P'       @ATYP
+     C                     END
+     C*
+     C           @X        IFEQ 10
+     C                     MOVE 'R'       @ATYP
+     C                     END
+     C*
+     C           @X        IFEQ 5
+     C                     MOVE 'N'       @ATYP
+     C                     END
+     C*
+     C           @X        IFEQ 2
+     C                     MOVE 'M'       @ATYP
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   #HNOST   : Processing for Nostro Accnt                      *
+     C*   Called by: Main process                                     *
+     C*   Calls    : Nothing                                          *
+     C*****************************************************************
+     C*
+     C           #HNOST    BEGSR
+     C*
+     C**  Check for Nostro Accnt using Access object.
+     C*
+     C                     MOVE @ACCY     @KEYB
+     C                     MOVE @NOST     @KEYE
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANK    @KEYA   6
+     C                     PARM           @KEYB   3
+     C**********           PARM *BLANK    @KEYC   4                                           CGL029
+     C                     PARM *BLANK    @KEYC  10                                           CGL029
+     C                     PARM *BLANK    @KEYD   2
+     C                     PARM           @KEYE   2
+     C                     PARM *BLANKS   @KEYG   3
+     C                     PARM *BLANKS   @KEYH  10
+     C                     PARM *BLANKS   @KEYI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+     C*
+     C** DB error if no customer number found for this currency/nostro
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'001'     DBASE            * DBERR 001 *
+     C                     MOVEL@KEYB     DBKEY            *************
+     C                     MOVE @KEYE     DBKEY
+     C*
+     C** Return to Calling program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     END
+     C*
+     C** Record found. Determine Overdraft Limit and Relative Rec No.
+     C** in MEMOS.
+     C*
+     C*
+     C*  Call to Access Program - AOACCTR0 Check Account Number
+     C*  Access Account Details file for the file fields
+     C*
+     C                     MOVE A7ACSN    @ACSQ
+     C                     MOVEAA7CUST    DB1,6
+     C                     MOVEA@SCCY     DB1,9
+     C**********           MOVEAA7ACCD    DB1,13                                              CGL029
+     C**********           MOVEA@ACSQ     DB1,15                                              CGL029
+     C**********           MOVEA@BRCA     DB1,17                                              CGL029
+     C                     MOVEAA7ACCD    DB1,19                                              CGL029
+     C                     MOVEA@ACSQ     DB1,21                                              CGL029
+     C                     MOVEA@BRCA     DB1,24                                              CGL029
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM *BLANKS   @RETL  10        I:Account Identifier
+     C                     PARM A7CUST    @CNNM   6        I:Customer Number
+     C                     PARM @SCCY     @CUCD   3        I:Currency Code
+     C**********           PARM A7ACCD    @ACCD   4        I:Account Code Num                 CGL029
+     C                     PARM A7ACCD    @ACCD  10                                           CGL029
+     C                     PARM           @ACSQ   2        I:Account Sequence
+     C                     PARM A7BRCD    @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+     C*
+     C** DB error if no customer number found for this currency/nostro
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'002'     DBASE            * DBERR 002 *
+     C                     MOVEADB1       DBKEY            *************
+     C*
+     C** Return to Calling program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA  3
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   #HRETL   : Processing for Retail Accnt                      *
+     C*   Called by: Main process                                     *
+     C*   Calls    : Nothing                                          *
+     C*****************************************************************
+     C*
+     C           #HRETL    BEGSR
+     C*
+     C*  Call to Access Program - AOACCTR0 Check Account Number
+     C*  Access Account Details file for the file fields
+     C*
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM @RETN     @RETL  10        I:Account Identifier
+     C                     PARM *BLANKS   @CNNM   6        I:Customer Number
+     C                     PARM *BLANKS   @CUCD   3        I:Currency Code
+     C**********           PARM *BLANKS   @ACCD   4        I:Account Code Num                 CGL029
+     C                     PARM *BLANKS   @ACCD                                               CGL029
+     C                     PARM *BLANKS   @ACSQ   2        I:Account Sequence
+     C                     PARM *BLANKS   @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+     C*
+     C**  If nor record found, output dbase error and return to
+     C**  calling program.
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'ACCNT   'DBFILE           *************
+     C                     MOVEL'003'     DBASE            * DBERR 003 *
+     C                     MOVEL@RETN     DBKEY            *************
+     C*
+     C** Return to Calling program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+     C*
+     C                     END
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   #HPART   : Processing for Partial Accnt                     *
+     C*   Called by: Main process                                     *
+     C*   Calls    : Nothing                                          *
+     C*****************************************************************
+     C*
+     C           #HPART    BEGSR
+     C*
+     C*  Call to Access Program - AOACCTR0 Check Account Number
+     C*  Access Account Details file for the file fields
+     C*
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM *BLANKS   @RETL  10        I:Account Identifier
+     C                     PARM @CNUM     @CNNM   6        I:Customer Number
+     C                     PARM @SCCY     @CUCD   3        I:Currency Code
+     C**********           PARM @ACOD     @ACCD   4        I:Account Code Num                 CGL029
+     C                     PARM @ACOD     @ACCD                                               CGL029
+     C                     PARM @ASEQ     @ACSQ   2        I:Account Sequence
+     C                     PARM @BRCA     @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+     C*
+     C**  If nor record found, output dbase error and return to
+     C**  calling program.
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'ACCNT   'DBFILE           *************
+     C                     MOVEL'004'     DBASE            * DBERR 004 *
+     C                     MOVE @ACCNT    DBKEY            *************
+     C*
+     C** Return to Calling program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   #HFULL   : Processing for Full Accnt                        *
+     C*   Called by: Main process                                     *
+     C*   Calls    : Nothing                                          *
+     C*****************************************************************
+     C*
+     C           #HFULL    BEGSR
+     C*
+     C*  Call to Access Program - AOACCTR0 Check Account Number
+     C*  Access Account Details file for the file fields
+     C*
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD   7        B:Return Cd
+     C                     PARM '*KEY'    @OPTN   7        B:Option
+     C                     PARM *BLANKS   @RETL  10        I:Account Identifier
+     C                     PARM @CNUM     @CNNM   6        I:Customer Number
+     C                     PARM @FCCY     @CUCD   3        I:Currency Code
+     C**********           PARM @FACD     @ACCD   4        I:Account Code Num                 CGL029
+     C                     PARM @FACD     @ACCD                                               CGL029
+     C                     PARM @FSEQ     @ACSQ   2        I:Account Sequence
+     C                     PARM @BRCA     @BRCD   3        I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+     C*
+     C**  If nor record found, output dbase error and return to
+     C**  calling program.
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'ACCNT   'DBFILE           *************
+     C                     MOVEL'005'     DBASE            * DBERR 005 *
+     C                     MOVE @ACCNT    DBKEY            *************
+     C*
+     C** Return to Calling program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   #HNCDE   : Processing for Nostro Code                       *
+     C*   Called by: Main process                                     *
+     C*   Calls    : Nothing                                          *
+     C*****************************************************************
+     C*
+     C           #HNCDE    BEGSR
+     C*
+     C**  Check for Nostro Accnt using Access object.
+     C*
+     C                     MOVE @SCCY     @KEYB
+     C                     MOVE @NSTR     @KEYE
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM *BLANK    @KEYA
+     C                     PARM           @KEYB
+     C                     PARM *BLANK    @KEYC
+     C                     PARM *BLANK    @KEYD
+     C                     PARM           @KEYE
+     C                     PARM *BLANKS   @KEYG
+     C                     PARM *BLANKS   @KEYH
+     C                     PARM *BLANKS   @KEYI
+     C           SDNOST    PARM SDNOST    DSFDY
+     C*
+     C** DB error if no customer number found for this currency/nostro
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'006'     DBASE            * DBERR 006 *
+     C                     MOVEL@KEYB     DBKEY            *************
+     C                     MOVE @KEYE     DBKEY
+     C*
+     C** Return to Calling program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     END
+     C*
+     C** Record found. Determine Overdraft Limit and Relative Rec No.
+     C** in MEMOS.
+     C*
+     C*
+     C*  Call to Access Program - AOACCTR0 Check Account Number
+     C*  Access Account Details file for the file fields
+     C*
+     C                     MOVE A7ACSN    @ACSQ
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD            B:Return Cd
+     C                     PARM '*KEY'    @OPTN            B:Option
+     C                     PARM *BLANKS   @RETL            I:Account Identifier
+     C                     PARM A7CUST    @CNNM            I:Customer Number
+     C                     PARM @SCCY     @CUCD            I:Currency Code
+     C                     PARM A7ACCD    @ACCD            I:Account Code Num
+     C                     PARM           @ACSQ            I:Account Sequence
+     C                     PARM A7BRCD    @BRCD            I:Branch code
+     C           D@ACCT    PARM D@ACCT    DSSDY            O:Format
+     C*
+     C** DB error if no customer number found for this currency/nostro
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'SDNOSTPD'DBFILE           *************
+     C                     MOVEL'008'     DBASE            * DBERR 008 *
+     C                     MOVEADB1       DBKEY            *************
+     C*
+     C** Return to Calling program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     ELSE
+     C                     MOVELBRCA      W0BRCA
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   #HFCHK   : Fund Caluclation and Insufficient Fund Checking  *
+     C*   Called by: Main process                                     *
+     C*   Calls    : Nothing                                          *
+     C*****************************************************************
+     C*
+     C           #HFCHK    BEGSR
+      *
+      * Define and set key for MEMOSL1
+      *
+     C           KMEMO     KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+      *
+     C*
+     C**  Chain to MEMOS file to get the Shadow cleared balance.
+     C*
+     C           KMEMO     CHAINMEMOSL1              20
+     C*
+     C**  If record not found issue a dbase errorr and return to
+     C*   calling program.
+     C*
+     C           *IN20     IFEQ '1'
+     C                     MOVE 'E'       @RTCE
+     C                     MOVEL'MEMOSL1' DBFILE           *************
+     C                     MOVEL'007'     DBASE            * DBERR 007 *
+     C                     MOVE CNUM      ECNNM            *************
+     C                     MOVE CCY       ECUCD
+     C                     MOVE ACOD      EACCD
+     C                     MOVE ACSQ      EACSQ
+     C                     MOVE BRCA      EBRCD
+     C                     MOVELEMEMO     DBKEY
+     C*
+     C** Return to Calling program
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     END
+      *
+      ** Adjust Balance for unauthorised transactions
+      *
+     C           XFUNCS    IFEQ 'Y'                                                         AR663078
+     C                     MOVEL'YES'     ##MODE  3
+     C                     ELSE                                                             AR663078
+     C                     MOVEL'NO '     ##MODE                                            AR663078
+     C                     ENDIF                                                            AR663078
+     C           ##MODE    IFEQ 'YES'
+     C                     EXSR SRADJB
+     C                     ENDIF
+      *                                                                                       CFT003
+      * Access settlement currency decimal places                                             CFT003
+     C                     CALL 'AOCURRR0'                                                    CFT003
+     C                     PARM *BLANKS   @RTCD                                               CFT003
+     C                     PARM '*KEY    '@OPTN                                               CFT003
+     C                     PARM @SCCY     @CURR   3                                           CFT003
+     C           SDCURR    PARM SDCURR    DSSDY                                               CFT003
+      *                                                                                       CFT003
+     C           @RTCD     IFNE *BLANK                                                        CFT003
+     C                     MOVE 'E'       @RTCE                                               CFT003
+     C                     MOVEL'SDCURRPD'DBFILE           *************                      CFT003
+     C                     MOVEL'009'     DBASE            * DBERR 009 *                      CFT003
+     C                     MOVEL@SCCY     DBKEY            *************                      CFT003
+     C                     EXSR *PSSR                                                         CFT003
+     C                     ENDIF                                                              CFT003
+      *                                                                                       CFT003
+      **  Convert overdraft limit to same factor as cleared balance from MEMOS                CFT003
+      **  (ODLN is in whole currency units whereas CLBLN is unformatted full                  CFT003
+      **  amount with decimal places)                                                         CFT003
+     C           *LIKE     DEFN ODLN      WODLN +03                                           CFT003
+     C                     SELEC                                                              CFT003
+     C           A6NBDP    WHEQ 0                                                             CFT003
+     C                     Z-ADDODLN      WODLN                                               CFT003
+     C           A6NBDP    WHEQ 1                                                             CFT003
+     C           ODLN      MULT 10        WODLN                                               CFT003
+     C           A6NBDP    WHEQ 2                                                             CFT003
+     C           ODLN      MULT 100       WODLN                                               CFT003
+     C           A6NBDP    WHEQ 3                                                             CFT003
+     C           ODLN      MULT 1000      WODLN                                               CFT003
+     C                     OTHER                                                              CFT003
+     C                     MOVE 'E'       @RTCE                                               CFT003
+     C                     MOVEL'SDCURRPD'DBFILE           *************                      CFT003
+     C                     MOVEL'010'     DBASE            * DBERR 010 *                      CFT003
+     C                     MOVELA6NBDP    DBKEY            *************                      CFT003
+     C                     EXSR *PSSR                                                         CFT003
+     C                     ENDSL                                                              CFT003
+      *
+      **  Compute for Insufficient fund.
+      *
+     C/COPY WNCPYSRC,FT0805C004
+     C           WODLN     SUB  CLBLN     @HRES  150                                          CFT003
+     C***********ODLN      SUB  CLBLN     @HRES  150                                          CFT003
+     C/COPY WNCPYSRC,FT0805C005
+     C***********@HRES     COMP 0                    21                                       207477
+      *
+      **  If transaction is forward valued.
+      *
+      * Note in ##MODE amount has already been adjusted
+      *
+     C/COPY WNCPYSRC,FT0805C001
+     C           @SDAT     IFGT BJRDNB
+     C           ##MODE    OREQ 'YES'
+     C***********@HRES     SUB  @SMAM     @HRES      21                                       207477
+     C           @HRES     SUB  @SMAM     @HRES                                               207477
+     C                     END
+     C/COPY WNCPYSRC,FT0805C002
+     C*
+      ** If account has insufficient funds, *IN21 is 'OFF'.                                   207477
+      *                                                                                       207477
+     C           @HRES     IFLT 0                                                             207477
+     C                     MOVE '0'       *IN21                                               207477
+     C                     ELSE                                                               207477
+     C                     MOVE '1'       *IN21                                               207477
+     C                     ENDIF                                                              207477
+      *                                                                                       207477
+     C           *IN21     IFEQ '1'
+     C                     MOVE 'N'       @RTCE
+     C                     ELSE
+     C                     MOVE 'Y'       @RTCE
+     C/COPY WNCPYSRC,FT0805C008
+     C                     END
+     C*
+     C**  Pass back the full account to FTC0803. Details from ACCNTAB
+     C*
+     C                     MOVE *BLANKS   @ACCNT
+     C                     MOVE CNUM      @CNUM
+     C                     MOVE CCY       @FCCY
+     C                     MOVE ACOD      @FACD
+     C                     MOVE ACSQ      @FSEQ
+     C                     MOVE @ACCNT    @ACNT
+     C                     MOVE W0BRCA    @BRCA
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*   SRADJB - Adjust Balance for Un-authorised Transactions      *
+     C*   Called by - #HFCHK Check Sufficient Funds                   *
+     C*****************************************************************
+     C*
+     C           SRADJB    BEGSR
+      *
+      * Define Key for RSACMTL1
+      *
+     C           KRSAC     KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *
+     C                     MOVEL*BLANKS   ##FUND
+      *
+      * SETLL and read all entries
+      *
+     C           KRSAC     SETLLRSACMTL1
+     C           KRSAC     READERSACMTL1                 91
+     C           *IN91     DOWEQ'0'
+      *
+      * If FUND not blank find if OP or IN
+      *
+     C           FUND      IFNE *BLANKS
+     C           2         SUBSTFUND:12   ##002A  2
+      *
+      * Check Outgoing
+      *
+     C           ##002A    IFEQ 'OP'
+     C           ##FUND    ANDNEFUND
+     C********** FUND      CHAINOTPAY                92                                       CGL029
+     C**********           MOVE FUND      KFUND  15                                    CGL029 CRE020
+     C                     MOVELFUND      KFUND  15                                           CRE020
+     C           KFUND     CHAINOTPAY                92                                       CGL029
+     C                     ENDIF
+      *
+      * Check Incoming
+      *
+     C           ##002A    IFEQ 'IN'
+     C           ##FUND    ANDNEFUND
+     C********** FUND      CHAININPAY                92                                       CGL029
+     C**********           MOVE FUND      KFUND                                        CGL029 CRE020
+     C                     MOVELFUND      KFUND                                               CRE020
+     C           KFUND     CHAININPAY                92                                       CGL029
+     C                     ENDIF
+      *
+      * Check Incoming
+      *
+     C           *IN92     IFEQ *OFF
+     C           AUIN      ANDEQ*BLANKS
+      *
+      * Adjust balances only back-valued or today
+      *
+      * If Debit, decrease balance towards credit (negative)
+      *
+     C           DORC      IFEQ 0
+     C           XSUBDR    ANDEQ'Y'                                                         AR663078
+     C           VUDT      ANDLEBJRDNB
+     C           CLBLN     SUB  MVAM      CLBLN
+     C                     ENDIF
+      *
+      * If Credit, increase balance towards debit (positive)
+      *
+     C           DORC      IFEQ 1
+     C           XSUBCR    ANDEQ'Y'                                                         AR663078
+     C           VUDT      ANDLEBJRDNB
+     C           CLBLN     ADD  MVAM      CLBLN
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Save reference
+      *
+     C           *LIKE     DEFN FUND      ##FUND
+     C                     MOVELFUND      ##FUND
+      *
+     C                     ENDIF
+      *
+      * Read Next Record
+      *
+     C           KRSAC     READERSACMTL1                 91
+     C                     ENDDO
+      *
+     C           EXADJB    ENDSR
+     C/COPY WNCPYSRC,FT0805C006
+     C/EJECT
+     C*****************************************************************
+     C*   *PSSR - error handling                                      *
+     C*   Called by - anywhere within the program                     *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C/EJECT
+     C*
+** CPY@   Object Copyright
+(c) Misys International Banking Systems Ltd. 2001
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

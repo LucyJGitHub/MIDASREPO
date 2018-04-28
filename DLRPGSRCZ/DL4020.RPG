@@ -1,0 +1,2009 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Principal change schedule maintenance')       *
+     F*****************************************************************
+     F*                                                               *
+     F*   Midas DEALING MODULE                                        *
+     F*                                                               *
+     F*   DL4020 - PRINCIPAL CHANGE SCHEDULE MAINTENANCE              *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+     F*  Function:  This program allows the user to enter a number    *
+     F*  (I/C)      of principal change date and the corresponding    *
+     F*             principal amount.  It will return the first       *
+     F*             unprocessed date to the calling program.          *
+     F*                                                               *
+     F*  Called By: DL1600WC      - Fees, Buy-outs & Proc Method      *
+     F*             DL0170        - Deals File Enquiry                *
+     F*                                                               *
+      *  Last Amend No. 245692             Date 09Dec13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. CIR008             Date 13Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 187897             Date 20Dec00               *
+      *                 CIR006             Date 21Aug00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 167561             Date 20SEP99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 01MAR99               *
+     F*                 S01408             DATE 03OCT96               *
+     F*                 100291             DATE 04APR96               *
+     F*                 CIR001  *CREATE    DATE 13JUN95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".                                        *
+      *         - Applied for MD23981.                                *
+      *  CIR008 - FRA/IRS Deals Authorisation                         *
+      *  187897 - If date entered is a holiday, program must validate *
+      *           it correctly.                                       *
+      *  CIR006 - FRA/IRS Amortisation of Caps/Collars/Floors &       *
+      *           Individual Compounding Swaps.                       *
+      *         - Amortisation of Caps/Collars/Floors only            *
+     A*  167561 - Plato Information should not appear when module OFF *
+     F*  S01408 - Addition of Core Hook DL4020CCP2                    *
+     F*           Addition of Core Hook DL4020CCP1                    *
+     F*  100291 - Principal changes must not be dated prior to the    *
+     F*           interest accrual control date. The control date     *
+     F*           passed will contain the next principal change date  *
+     F*           entered on DL1600WC, which will be validated as     *
+     F*           being greater than the control dates.               *
+     F*  CIR001 - Interest Rate Calendars.                            *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FDL4020DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE DL4020S0
+     FDLPCSCPDIF  E           K        DISK
+     FDLDETUL0UF  E           K        DISK                      A
+     F            DLPCSCD0                          KRENAMEDLPCSCD1
+     F                                              KCOMIT
+     F/COPY WNCPYSRC,DL4020F001
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N  C T I O N    O F    I N D I C A T O R S               *
+     F*                                                               *
+     F*  05         Subfile rollup                                    *
+     F*  06         Subfile rolldown                                  *
+     F*  25         Enquiry mode - F8 for next screen                 *
+     F*  75         Subfile error message id                          *
+     F*  98         Date Format Indicator                             *
+     F*  U7         Database Error                                    *
+     F*  U8         Database Error                                    *
+     F*  LR         Exit program                                      *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  #LDSP   -  Display Initial Screen                            *
+     F*  #LFLSB  -  Fill Subfile Screen                               *
+     F*  #LRDWN  -  Process Rolldown Key                              *
+     F*  #LPRIA  -  Process Insert and Amend                          *
+     F*  #LPDEL  -  Process Single Delete                             *
+     F*  #LPDLA  -  Delete All Records                                *
+     F*  #LCNVD - Convert Details                                     *
+     F*  #LVLDT  -  Validate Date                                     *
+     F*  #LCFLW  -  Generate Cash Flow                                *
+     F*  SRUPDT  -  Update affected records                           *   CPL002
+     F*  #LGCTL  -  Get the Control Date                              *
+     F*  #LRTCD  -  Setup Return Codes                                *
+     F*  #LINIT  -  Initial Screen Processing                         *
+     F*  ZASNMS  -  Send Message to Program Message Queue             *
+     F*  *PSSR   -  Error Subroutine                                  *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Copyright Statement
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/COPY ZSRSRC,FFDATEZ1
+     E/COPY ZSRSRC,ZDATE1Z1
+     E/COPY ZSRSRC,ZHOLE
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    CAT         4  1  A
+     E                    ZEROS      10  1
+     E                    NARR    1   3 35
+     E                    LETT    7   7  1
+     E/COPY WNCPYSRC,DL4020E001
+     I/EJECT
+     I/COPY WNCPYSRC,DL4020I002
+     I/COPY ZSRSRC,FFDATEZ2
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     ILDA         DS                            256
+      **  Data structure for database error
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IFORMDT      DS
+     I*
+     I**  DS for Formula Dates
+     I                                        1   7 SDATE
+     I                                        1   1 SWRK1
+     I                                        2   2 SWRK2
+     I                                        1   2 SDN1
+     I                                        3   3 SWRK3
+     I                                        4   4 SWRK4
+     I                                        5   5 SWRK5
+     I                                        4   5 SDN2
+     I                                        6   6 SWRK6
+     I                                        4   6 S456
+     I                                        7   7 SWRK7
+     I/COPY WNCPYSRC,DL4020I003
+     I*
+     I**  Input Fields
+     I            DS
+     I***********                             1  25 INPUTF                CPL002
+     I                                        1  26 INPUTF                CPL002
+     I                                        1   1 SACTN
+     I                                        2   8 SSELD
+     I                                        9   9 SCOHO
+     I                                       10  25 SPAMT
+     I                                       26  26 SIDIND                CPL002
+     I/COPY WNCPYSRC,DL4020I004
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZHOLDS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     ISDDEAL    E DSSDDEALPD                                                                  245692
+     I** EXTERNAL DS FOR DEALING DETAILS                                                      245692
+     I*                                                                                       245692
+     IDSFDY     E DSDSFDY
+     I**  First DS for access programs, short data structure
+     ISDMMOD    E DSSDMMODPD                                              167561
+     I** Midas Module data structure                                      167561
+     I*
+     ISCSARD    E DSSCSARDPD                                              CIR006
+      ** SAR descriptions                                                 CIR006
+      *                                                                   CIR006
+     I/COPY WNCPYSRC,DL4020I001
+     C/EJECT
+      *****************************************************************
+      *
+      **  Copyright statement.
+      *
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C                     MOVE '0'       ZEROS
+     C                     Z-ADD10        #C      20
+     C*
+     C**  Input Parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PDLNO   60       * DEAL NUMBER
+     C                     PARM           PDTYP   2        * DEAL TYPE
+     C                     PARM           POTIN   1        * OUR/THEIR
+     C                     PARM           PCTDAT  6        * CONTROL DATE
+     C                     PARM           PCVDAT  6        * VALUE DATE
+     C                     PARM           PCMDAT  6        * MATURITY DATE
+     C                     PARM           PCCY    3        * CURRENCY
+     C                     PARM           PCDP    10       * CURRENCY DEC.PL
+     C                     PARM           PPAMT  150       * PRINCIPAL AMTCPL002
+     C                     PARM           PPSCD   1        * PASS CODE
+     C                     PARM           PRTCD   7        * RETURN CODE
+     C/COPY WNCPYSRC,DL4020C005
+     C**  Validation
+     C           KIRSDV    KLIST
+     C                     KFLD           DLNO
+     C                     KFLD           OTIN
+     C                     KFLD           $PRDT
+     C**  Setll
+     C           KIRSDL    KLIST
+     C                     KFLD           DLNO
+     C                     KFLD           OTIN
+     C                     KFLD           PRDT
+     C**  Partial
+     C           KIRSDP    KLIST
+     C                     KFLD           DLNO
+     C                     KFLD           OTIN
+     C*
+     C**  Initial Processing
+     C*
+     C                     EXSR #LINIT
+     C*
+     C**  Display Screen
+     C*
+     C           *INKC     DOWEQ'0'
+     C           *INKH     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR #LDSP
+     C                     END
+     C*
+     C**  Return Control Date
+     C*
+     C                     EXSR #LGCTL
+     C*
+     C**  Setup return code
+     C*
+     C                     EXSR #LRTCD
+     C*
+     C                     SETON                     LR
+      *****************************************************************
+      *                                                               *
+      *  #LDSP  - Display Initial Screen                              *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      : #LFLSB  -  Fill Subfile                         *
+      *               ROLLDWN -  Process Rolldown                     *
+      *               #LPDEL  -  Delete a Single Record               *
+      *               #LPDLA  -  Delete all records                   *
+      *               #LPRIA  -  Process Insert, Amend                *
+      *                                                               *
+     C*****************************************************************
+     C           #LDSP     BEGSR
+     C*
+     C                     Z-ADD*ZERO     PRDT
+     C/COPY WNCPYSRC,DL4020C006
+     C*
+     C**  Fill up Subfile
+     C*
+     C                     EXSR #LFLSB
+     C*
+      *
+      **  Display the Footer Record Format depending on parameters to
+      **    ensure that the correct help text is displayed.
+      *
+     C           PDTYP     IFEQ 'RS'
+      *                                                                   CIR006
+      **  If CIR006 is On, also process Caps/Collars and Floors.          CIR006
+      *                                                                   CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           PDTYP     ANDEQ'RP'                                      CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           PDTYP     ANDEQ'RR'                                      CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           PDTYP     ANDEQ'RF'                                      CIR006
+     C*
+     C/COPY WNCPYSRC,DL4020CCP1
+     C*
+     C                     WRITEDL4020F0                   Principal change
+     C                     ELSE
+     C           POTIN     IFEQ 'U'
+     C                     WRITEDL4020F1                   Our principal change
+     C                     ELSE
+     C                     WRITEDL4020F2                   Their principal chg
+     C                     END
+     C                     END
+      *
+      **  Display the Error Message Subfile
+      *
+     C                     WRITE#MSGCTL
+      *
+      **  Display/Read Subfile Control
+      *
+     C                     WRITEDL4020C0
+      *
+     C           AGAIN     TAG
+     C                     READ DL4020C0                 99*
+      *
+      **  Clear message subfile and reset error indicator
+      *
+     C                     CALL 'ZA0250'
+     C                     MOVEAZEROS     *IN,10
+     C                     MOVE 'N'       WERR
+     C*
+     C**  Do while NOT F3, F8, F12
+     C*
+     C           *INKC     DOWEQ'0'
+     C           *INKH     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C**  Rolldown
+     C*
+     C           *IN06     IFEQ '1'
+     C                     EXSR #LRDWN
+     C                     END
+     C*
+     C**  F10 to delete one record
+     C*
+     C           *INKJ     IFEQ '1'
+     C                     EXSR #LPDEL
+     C*
+     C**  Return to start of page
+     C*
+     C                     MOVEL#PRDT     PRDT
+     C                     END
+     C*
+     C**  F16 to delete all records
+     C*
+     C           *INKQ     IFEQ '1'
+     C                     EXSR #LPDLA
+     C                     END
+     C*
+     C**  Record selected
+     C*
+     C           *IN04     IFEQ '0'
+     C                     READCDL4020S0                 99*RECORD CHANGED
+     C                     END
+     C*
+     C**  Transfer action code,deal number,conf. holiday etc. to top of screen
+     C*
+     C           *IN04     IFEQ '0'
+     C           *IN99     ANDEQ'0'
+     C*
+     C                     MOVELSACTN1    SACTN
+     C                     MOVELSPRDT     SSELD
+     C                     MOVELSCOHO1    SCOHO
+     C                     MOVELSPCEA     SPAMT
+     C*
+     C                     MOVEL#PRDT     PRDT
+     C/COPY WNCPYSRC,DL4020C007
+     C*
+     C**  Enter pressed
+     C*
+     C                     ELSE
+     C           INPUTF    IFNE *BLANKS
+     C                     EXSR #LPRIA
+     C/COPY WNCPYSRC,DL4020C017
+     C*
+     C**  Return to start of page
+     C*
+     C                     MOVEL#PRDT     PRDT
+     C                     ELSE
+     C*
+     C**  Turn on indicator for F8 command key if control
+     C**  fields are blank and ENTER pressed.
+     C*
+     C           *INKJ     IFEQ '0'
+     C           *INKQ     ANDEQ'0'
+     C           *IN05     ANDEQ'0'
+     C           *IN06     ANDEQ'0'
+     C           *IN25     ANDEQ'0'
+     C                     MOVE '1'       *INKH
+     C                     LEAVE
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     EXSR #LFLSB
+      *
+      **  Display the Footer Record Format depending on parameters to
+      **    ensure that the correct help text is displayed.
+      *
+     C           PDTYP     IFEQ 'RS'
+      *                                                                   CIR006
+      **  If CIR006 is On, also process Caps/Collars and Floors.          CIR006
+      *                                                                   CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           PDTYP     ANDEQ'RP'                                      CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           PDTYP     ANDEQ'RR'                                      CIR006
+     C           CIR006    OREQ 'Y'                                       CIR006
+     C           PDTYP     ANDEQ'RF'                                      CIR006
+     C*
+     C/COPY WNCPYSRC,DL4020CCP2
+     C*
+     C                     WRITEDL4020F0                   Principal change
+     C                     ELSE
+     C           POTIN     IFEQ 'U'
+     C                     WRITEDL4020F1                   Our principal change
+     C                     ELSE
+     C                     WRITEDL4020F2                   Their principal chg
+     C                     END
+     C                     END
+      *
+      **  Display the Error Message Subfile
+      *
+     C                     WRITE#MSGCTL
+      *
+      **  Display/Read Subfile Control
+      *
+     C                     WRITEDL4020C0
+     C                     READ DL4020C0                 99*
+      *
+      **  Clear message subfile and reset error indicator
+      *
+     C                     CALL 'ZA0250'
+     C                     MOVEAZEROS     *IN,10
+     C                     MOVE 'N'       WERR
+      *
+     C                     END                             *INKC DOWEQ
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LFLSB - Fill Subfile Screen                                 *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      : #LCNVD  -  Convert Detail Screen                *
+      *                                                               *
+     C*****************************************************************
+     C           #LFLSB    BEGSR
+     C                     MOVEA'001'     *IN,1
+     C                     MOVEA'1'       *IN,4
+     C                     Z-ADD*ZERO     RRN
+     C/COPY WNCPYSRC,DL4020C008
+     C*
+     C**  Clear Subfile
+     C*
+     C                     WRITEDL4020C0                   *
+     C*
+     C**  Position pointer on file
+     C*
+     C           KIRSDL    SETLLDLPCSCD0
+     C*
+     C**  Read first record from file and store 'TOP OF PAGE' date
+     C*
+     C           KIRSDP    READEDLPCSCD0                 99*
+     C           *IN99     IFEQ '0'
+     C                     MOVELPRDT      #PRDT   50
+     C                     ELSE
+     C                     Z-ADD*ZERO     #PRDT
+     C                     Z-ADD*ZERO     PRDT
+     C                     END
+     C*
+     C**  Read until end of file or end of page
+     C*
+     C           *IN99     DOWEQ'0'
+     C                     ADD  1         RRN     40     04*
+     C                     EXSR #LCNVD
+     C                     WRITEDL4020S0
+     C           RRN       IFEQ #C
+     C*
+     C**  Read one extra record to get key for start of next page
+     C*
+     C           KIRSDP    READEDLPCSCD0                 99*
+     C           *IN99     IFEQ '1'
+     C                     Z-ADDWPRDT     PRDT
+     C                     ELSE
+     C                     SETON                         99*
+     C                     Z-ADDPRDT      WPRDT   50
+     C                     MOVE '0'       *IN03
+     C                     END
+     C                     ELSE
+     C*
+     C**  Read next record
+     C*
+     C           KIRSDP    READEDLPCSCD0                 99*
+     C           *IN99     IFEQ '1'
+     C                     Z-ADDWPRDT     PRDT
+      *
+      **  Display Amount at maturity date
+      *
+     C           PAMT      IFEQ *ZERO
+     C                     MOVEL*BLANK    SMPAMT
+     C                     ELSE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE PAMT      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SMPAMT
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C           *IN,4     IFEQ '1'
+     C                     MOVEA'01'      *IN,1
+     C                     ELSE
+     C                     MOVEA'11'      *IN,1
+     C                     END
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LRDWN - Process Rolldown Key                                *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      :                                                 *
+      *                                                               *
+     C*****************************************************************
+     C           #LRDWN    BEGSR
+     C*
+     C**  Read previous 16 records to get key for start of previous page
+     C*
+     C                     Z-ADD*ZERO     RRN
+     C                     Z-ADD#PRDT     PRDT
+     C           KIRSDL    SETGTDLPCSCD0
+     C           KIRSDP    REDPEDLPCSCD0                 99*
+     C*
+     C           *IN99     DOWEQ'0'
+     C           RRN       ANDLT#C
+     C           KIRSDP    REDPEDLPCSCD0                 99*
+     C                     ADD  1         RRN
+     C                     END
+     C*
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD*ZERO     PRDT
+     C                     END
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LPRIA - Process Insert and Amend                            *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      : ZDATE1 -  Convert date to day number            *
+      **********      ZFWDT  -  Find number of working days forward   *   187897
+      *               ZCHKH  -  Check if date is a holiday            *   187897
+      *               ZALIGN -  Validate/right align numeric          *
+      *               #LVLDT -  Validate Date                         *
+      *               #LGCTL -  Get Control Date                      *
+      *               #LCFLW -  Generate Cash Flow                    *
+      *                                                               *
+     C*****************************************************************
+     C           #LPRIA    BEGSR
+     C****
+     C****   A C T I O N    C O D E  =  D        ( D E L E T E  )
+     C****
+     C*
+     C**  F10 must be taken
+     C*
+     C           SACTN     IFEQ 'D'
+     C                     MOVEL'DLM0140' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO EPROIC
+     C                     END
+     C****
+     C****   A C T I O N    C O D E  =  I        ( I N S E R T  )
+     C****
+     C           SACTN     IFEQ 'I'
+     C*
+     C**  Date must be specified
+     C*
+     C           SSELD     IFEQ *BLANK
+     C                     MOVEL'DLM0141' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     ELSE
+     C*
+     C**  Date must be a valid date
+     C*
+     C                     MOVELSSELD     ZDATE
+     C                     MOVELZDATE     WSDCP   6
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    $PRDT   50
+     C*
+     C**  Invalid Date
+     C*
+     C           *IN99     IFEQ '1'
+     C           ZDAYNO    OREQ *ZERO
+     C           SSELD     ORNE WSDCP
+     C                     MOVEL'DLM0142' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     END
+     C*
+     C**  Date cannot be less than or equal to value date
+     C*
+     C           ZDAYNO    IFLE CVDYN
+     C                     MOVEL'DLM0143' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     END
+      *                                                                   100291
+      **  Date cannot be less than the control date                       100291
+      *                                                                   100291
+     C           ZDAYNO    IFLT CCDYN                                     100291
+     C                     MOVEL'DLM0176' ZAMSID                          100291
+     C                     EXSR ZASNMS                                    100291
+     C                     MOVE '1'       *IN12                           100291
+     C                     END                                            100291
+     C*
+     C**  Date cannot be greater than maturity date
+     C*
+     C           ZDAYNO    IFGT CMDYN
+     C                     MOVEL'DLM0144' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     END
+     C*
+     C**  Date cannot be less than or equal to last 'processed' date
+     C*
+     C           ZDAYNO    IFLE LPRDYN
+     C                     MOVEL'DLM0145' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     END
+     C*
+     C** Check if date a holiday (IND 99 set on if it is)
+     C*
+     C                     Z-ADDZDAYNO    ZDAYNO
+     C                     MOVE CCCY      ZCCY
+     C                     MOVE *BLANKS   ZLOC
+     C**********           Z-ADD0         ZNRDYS                          187897
+     C**********           EXSR ZFWDT                                     187897
+     C                     EXSR ZCHKH                                     187897
+     C           ZIND      IFEQ 'H'                                       187897
+     C                     MOVE '1'       *IN99                           187897
+     C                     ELSE                                           187897
+     C                     MOVE '0'       *IN99                           187897
+     C                     ENDIF                                          187897
+     C*
+     C**  If date is not a holiday according to SDHOLPD,
+     C**  But is Saturday or Sunday, then treat it as a holiday
+     C*
+     C           *IN99     IFEQ '0'
+     C           ZDAYNO    DIV  7         WRK153
+     C                     MOVE WRK153    WRK30
+     C           WRK30     IFEQ 142
+     C           WRK30     OREQ 285
+     C                     MOVE '1'       *IN99
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  Confirmed holiday ind. must be 'Y' if date is a holiday, else *BLANK
+     C*
+     C           SCOHO     IFNE 'Y'
+     C           *IN99     ANDEQ'1'
+     C           SCOHO     ORNE *BLANK
+     C           *IN99     ANDEQ'0'
+     C                     MOVEL'DLM0146' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN13
+     C                     END
+     C*
+     C**  Amount must be specified
+     C*
+     C           SPAMT     IFEQ *BLANK
+     C                     MOVEL'DLM0148' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN,15
+     C                     ELSE
+     C*
+     C**  Validate amount
+     C*
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SPAMT     ZFIELD
+     C           13        SUB  CDP       ZADIG
+     C                     Z-ADDCDP       ZADEC
+     C                     MOVE *OFF      *IN99
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WPAMT  150
+     C*
+     C**  Invalid amount
+     C*
+     C           *IN99     IFEQ '1'
+     C           WPAMT     OREQ *ZERO
+     C                     MOVEL'DLM0149' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN,15
+     C                     END
+     C                     END
+     C*                                                                   167561
+     C** If Midas-Plato module is on                                      167561
+     C           *IN53     IFEQ '1'                                       167561
+      *                                                                   CPL002
+      ** Validate Increase/Decrease Indicator                             CPL002
+      ** Must not be *blanks                                              CPL002
+      *                                                                   CPL002
+     C           SIDIND    IFEQ *BLANKS                                   CPL002
+     C                     MOVEL'DLM0149' ZAMSID                          CPL002
+     C                     EXSR ZASNMS                                    CPL002
+     C                     MOVE '1'       *IN,15                          CPL002
+     C                     ELSE                                           CPL002
+      *                                                                   CPL002
+      ** Must have 'I' or 'D' as value.                                   CPL002
+      *                                                                   CPL002
+     C           SIDIND    IFEQ 'I'                                       CPL002
+     C           SIDIND    OREQ 'D'                                       CPL002
+     C                     MOVELSIDIND    WIDIND  1                       CPL002
+     C                     ELSE                                           CPL002
+     C                     MOVEL'DLM0149' ZAMSID                          CPL002
+     C                     EXSR ZASNMS                                    CPL002
+     C                     MOVE '1'       *IN,15                          CPL002
+     C                     ENDIF                                          CPL002
+     C                     ENDIF                                          CPL002
+      *                                                                   CPL002
+     C                     END                                            167561
+     C/COPY WNCPYSRC,DL4020C009
+     C*
+     C**  A record already exists for this date
+     C*
+     C           KIRSDV    CHAINDLPCSCD0             99    *
+     C           *IN99     IFEQ '0'
+     C                     MOVEL'DLM0150' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,11
+     C                     END
+     C/COPY WNCPYSRC,DL4020C018
+     C*
+     C**  Record added
+     C*
+     C           WERR      IFNE 'Y'
+     C                     Z-ADD$PRDT     PRDT
+     C                     MOVELSCOHO     COHO
+     C                     Z-ADDWPAMT     PAMT
+      *                                                                   CPL002
+     C** If Midas-Plato Module is ON                                      167561
+     C           *IN53     IFEQ '1'                                       167561
+     C*                                                                   167561
+      ** Write the new principal amount and the Principal Change          CPL002
+      ** amounts accordingly (based on Increase/decrease ind)             CPL002
+      *                                                                   CPL002
+     C           WIDIND    IFEQ 'D'                                       CPL002
+     C                     Z-SUBWPAMT     WPAMT                           CPL002
+     C                     ENDIF                                          CPL002
+      *                                                                   CPL002
+      ** If date entered is on or prior to the control date, add          CPL002
+      **   the change amount to original principal amount.                CPL002
+      *                                                                   CPL002
+     C           PRDT      IFLE CCDYN                                     CPL002
+     C           PPAMT     ADD  WPAMT     PAMT                            CPL002
+     C                     ELSE                                           CPL002
+      *                                                                   CPL002
+      ** If date entered is between existing records, access the          CPL002
+      **   previous record and add change amount to the principal         CPL002
+      **   amount on this record.                                         CPL002
+      *                                                                   CPL002
+     C           KIRSDL    SETLLDLPCSCD1                                  CPL002
+     C                     READPDLPCSCD1                 98               CPL002
+     C           *IN98     IFEQ '0'                                       CPL002
+     C                     ADD  WPAMT     PAMT                            CPL002
+     C                     ELSE                                           CPL002
+     C           PPAMT     ADD  WPAMT     PAMT                            CPL002
+     C                     ENDIF                                          CPL002
+      *                                                                   CPL002
+     C                     ENDIF                                          CPL002
+      *                                                                   CPL002
+     C                     Z-ADDWPAMT     CAMT                            CPL002
+      *                                                                   CPL002
+     C                     Z-ADD$PRDT     PRDT                            CPL002
+     C                     MOVELSCOHO     COHO                            CPL002
+     C*                                                                   167561
+     C                     END                                            167561
+     C*                                                                   167561
+     C                     MOVEL*BLANK    DTPR
+     C/COPY WNCPYSRC,DL4020C010
+     C*
+     C                     WRITEDLPCSCD1
+     C*                                                                   167561
+     C** If Midas-Plato is ON.                                            167561
+     C*                                                                   167561
+     C           *IN53     IFEQ 'Y'                                       167561
+      *                                                                   CPL002
+      ** Update records with processing dates greater than the            CPL002
+      ** processing date of the inserted record.                          CPL002
+      *                                                                   CPL002
+     C                     MOVE CAMT      WDIFF                           CPL002
+     C                     EXSR SRUPDT                                    CPL002
+      *                                                                   CPL002
+     C                     END                                            167561
+     C*                                                                   167561
+     C                     MOVEL*BLANKS   INPUTF
+     C                     END
+     C                     GOTO EPROIC
+     C                     END                             *SACTN
+     C****
+     C****   A C T I O N    C O D E  =  A        ( A M E N D  )
+     C****
+     C           SACTN     IFEQ 'A'
+     C*
+     C**  Date must be specified
+     C*
+     C           SSELD     IFEQ *BLANK
+     C                     MOVEL'DLM0141' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     ELSE
+     C*
+     C**  Date must be a valid date
+     C*
+     C                     MOVELSSELD     ZDATE
+     C                     MOVELZDATE     WSDCP   6
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    $PRDT   50
+     C*
+     C**  Invalid date
+     C*
+     C           *IN99     IFEQ '1'
+     C           ZDAYNO    OREQ *ZERO
+     C           SSELD     ORNE WSDCP
+     C                     MOVEL'DLM0142' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     END
+     C*
+     C**  Check if date a holiday (IND 99 set on if it is)
+     C*
+     C                     Z-ADDZDAYNO    ZDAYNO
+     C                     MOVE CCCY      ZCCY
+     C                     MOVE *BLANKS   ZLOC
+     C**********           Z-ADD0         ZNRDYS                          187897
+     C**********           EXSR ZFWDT                                     187897
+     C                     EXSR ZCHKH                                     187897
+     C           ZIND      IFEQ 'H'                                       187897
+     C                     MOVE '1'       *IN99                           187897
+     C                     ELSE                                           187897
+     C                     MOVE '0'       *IN99                           187897
+     C                     ENDIF                                          187897
+     C*
+     C**  If date is not a holiday according to SDHOLPD,
+     C**  But is Saturday or Sunday, then treat it as a holiday
+     C*
+     C           *IN99     IFEQ '0'
+     C           ZDAYNO    DIV  7         WRK153
+     C                     MOVE WRK153    WRK30
+     C           WRK30     IFEQ 142
+     C           WRK30     OREQ 285
+     C                     MOVE '1'       *IN99
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  Confirmed holiday ind. must be 'Y' if date is a holiday, else *BLANK
+     C*
+     C           SCOHO     IFNE 'Y'
+     C           *IN99     ANDEQ'1'
+     C           SCOHO     ORNE *BLANK
+     C           *IN99     ANDEQ'0'
+     C                     MOVEL'DLM0146' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN13
+     C                     END
+     C*
+     C**  Amount must be specified
+     C*
+     C           SPAMT     IFEQ *BLANK
+     C                     MOVEL'DLM0148' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN,15
+     C                     ELSE
+     C*
+     C**  Validate amount
+     C*
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SPAMT     ZFIELD
+     C           13        SUB  CDP       ZADIG
+     C                     Z-ADDCDP       ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WPAMT
+     C*
+     C**  Invalid amount
+     C*
+     C           *IN99     IFEQ '1'
+     C           WPAMT     OREQ *ZERO
+     C                     MOVEL'DLM0149' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN,15
+     C                     END
+     C                     END
+      *                                                                   CPL002
+     C** If Midas-Plato is present                                        167561
+     C           *IN53     IFEQ '1'                                       167561
+     C*                                                                   167561
+      ** Validate Increase/Decrease Indicator                             CPL002
+      ** Must not be *blanks                                              CPL002
+      *                                                                   CPL002
+     C           SIDIND    IFEQ *BLANKS                                   CPL002
+     C                     MOVEL'DLM0149' ZAMSID                          CPL002
+     C                     EXSR ZASNMS                                    CPL002
+     C                     MOVE '1'       *IN,15                          CPL002
+     C                     ELSE                                           CPL002
+      *                                                                   CPL002
+      ** Must have 'I' or 'D' as value.                                   CPL002
+      *                                                                   CPL002
+     C           SIDIND    IFEQ 'I'                                       CPL002
+     C           SIDIND    OREQ 'D'                                       CPL002
+     C                     MOVELSIDIND    WIDIND                          CPL002
+     C                     ELSE                                           CPL002
+     C                     MOVEL'DLM0149' ZAMSID                          CPL002
+     C                     EXSR ZASNMS                                    CPL002
+     C                     MOVE '1'       *IN,15                          CPL002
+     C                     ENDIF                                          CPL002
+     C                     ENDIF                                          CPL002
+     C*                                                                   167561
+     C                     END                                            167561
+      *                                                                   CPL002
+     C/COPY WNCPYSRC,DL4020C011
+     C*
+     C**  A record does not exist on the dates file
+     C*
+     C           KIRSDV    CHAINDLPCSCD1             99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'DLM0158' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,11
+     C                     END
+     C/COPY WNCPYSRC,DL4020C019
+     C*
+     C**  Record updated
+     C*
+     C           WERR      IFNE 'Y'
+     C                     MOVELSCOHO     COHO
+     C*                                                                   167561
+     C** If Midas-Plato is present                                        167561
+     C           *IN53     IFEQ '1'                                       167561
+      *                                                                   CPL002
+      ** Get the difference of the new change in amount and the previos   CPL002
+      ** change in amount then add to principal amount                    CPL002
+      *                                                                   CPL002
+     C           WIDIND    IFEQ 'D'                                       CPL002
+     C                     Z-SUBWPAMT     CAMTX  150                      CPL002
+     C                     ELSE                                           CPL002
+     C                     Z-ADDWPAMT     CAMTX                           CPL002
+     C                     ENDIF                                          CPL002
+      *                                                                   CPL002
+     C           CAMTX     SUB  CAMT      WDIFF  150                      CPL002
+     C           WIDIND    IFEQ 'D'                                       CPL002
+     C                     Z-SUBWPAMT     CAMT                            CPL002
+     C                     ELSE                                           CPL002
+     C***********          Z-ADDWPAMT     PAMT                            CPL002
+     C                     Z-ADDWPAMT     CAMT                            CPL002
+     C                     ENDIF                                          CPL002
+     C           PAMT      ADD  WDIFF     PAMT                            CPL002
+      *                                                                   CPL002
+     C*                    ADD  CAMT      PAMT                            CPL002
+     C*                                                                   167561
+     C** Else if Midas-Plato is not ON.                                   167561
+     C                     ELSE                                           167561
+     C                     Z-ADDWPAMT     PAMT                            167561
+     C*                                                                   167561
+     C                     END                                            167561
+     C/COPY WNCPYSRC,DL4020C012
+     C*
+     C                     UPDATDLPCSCD1
+     C*                                                                   167561
+     C** If Midas-Plato is present                                        167561
+     C           *IN53     IFEQ '1'                                       167561
+      *                                                                   CPL002
+      ** Update records with processing dates greater than the            CPL002
+      ** processing date of the amended record.                           CPL002
+      *                                                                   CPL002
+     C                     EXSR SRUPDT                                    CPL002
+     C*                                                                   167561
+     C                     END                                            167561
+      *                                                                   CPL002
+     C                     MOVEL*BLANKS   INPUTF
+     C                     END
+     C                     GOTO EPROIC
+     C                     END                             *SACTN
+     C****
+     C****   A C T I O N    C O D E  =  M , Q , X , Y  ( F R E Q U E N C Y )
+     C****
+     C           SACTN     IFEQ 'M'
+     C           SACTN     OREQ 'Q'
+     C           SACTN     OREQ 'X'
+     C           SACTN     OREQ 'Y'
+     C*
+     C**  Formula must be specified
+     C*
+     C           SSELD     IFEQ *BLANK
+     C                     MOVEL'DLM0153' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     ELSE
+     C*
+     C**  Date must be a formula
+     C*
+     C                     MOVEL*BLANKS   SDATE
+     C                     MOVELSSELD     SDATE
+     C                     EXSR #LVLDT
+     C*
+     C**  Invalid formula
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'DLM0154' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     END
+     C                     END
+     C*
+     C**  Amount must be specified
+     C*
+     C           SPAMT     IFEQ *BLANK
+     C                     MOVEL'DLM0148' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN,15
+     C                     ELSE
+     C*
+     C**  Validate amount
+     C*
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SPAMT     ZFIELD
+     C           13        SUB  CDP       ZADIG
+     C                     Z-ADDCDP       ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WPAMT
+     C*
+     C**  Invalid amount
+     C*
+     C           *IN99     IFEQ '1'
+     C           WPAMT     OREQ *ZERO
+     C                     MOVEL'DLM0149' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN,15
+     C                     END
+     C                     END
+     C*                                                                   167561
+     C** If Midas-Plato is present                                        167561
+     C           *IN53     IFEQ '1'                                       167561
+      *                                                                   CPL002
+      ** Validate Increase/Decrease Indicator                             CPL002
+      ** Must not be *blanks                                              CPL002
+      *                                                                   CPL002
+     C           SIDIND    IFEQ *BLANKS                                   CPL002
+     C                     MOVEL'DLM0149' ZAMSID                          CPL002
+     C                     EXSR ZASNMS                                    CPL002
+     C                     MOVE '1'       *IN,15                          CPL002
+     C                     ELSE                                           CPL002
+      *                                                                   CPL002
+      ** Must have 'I' or 'D' as value.                                   CPL002
+      *                                                                   CPL002
+     C           SIDIND    IFEQ 'I'                                       CPL002
+     C           SIDIND    OREQ 'D'                                       CPL002
+     C                     MOVELSIDIND    WIDIND                          CPL002
+     C                     ELSE                                           CPL002
+     C                     MOVEL'DLM0149' ZAMSID                          CPL002
+     C                     EXSR ZASNMS                                    CPL002
+     C                     MOVE '1'       *IN,15                          CPL002
+     C                     ENDIF                                          CPL002
+     C                     ENDIF                                          CPL002
+     C*                                                                   167561
+     C                     END                                            167561
+      *                                                                   CPL002
+     C*
+     C**  Get control date - first non precessed date
+     C*
+     C                     EXSR #LGCTL
+     C*
+     C**  If no start date present, formula cannot be used
+     C*
+     C           CTLDYN    IFEQ *ZERO
+     C                     MOVEL'DLM0155' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     END
+     C*
+     C**  Generate CASH FLOW and exit
+     C*
+     C           WERR      IFNE 'Y'
+     C                     EXSR #LCFLW
+     C                     MOVEL*BLANKS   INPUTF
+     C                     GOTO EPROIC
+     C                     END
+     C****
+     C****   A C T I O N    C O D E  NOT = I , A , D ,  M , X , Q , Y
+     C****
+     C*
+     C**  Action code can only be IAD, MXQY
+     C*
+     C                     ELSE
+     C                     MOVEL'DLM0156' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN,11
+     C                     GOTO EPROIC
+     C                     END
+     C*
+     C           EPROIC    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LPDEL - Process Single Delete                               *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      : ZDATE1 - Convert date to day number             *
+      *                                                               *
+     C*****************************************************************
+     C           #LPDEL    BEGSR
+     C*
+     C**  Action code must be 'D' to delete
+     C*
+     C           SACTN     IFNE 'D'
+     C                     MOVEL'DLM0157' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN11
+     C                     GOTO EPRODL
+     C                     END
+     C*
+     C**  Date must be specified
+     C*
+     C           SSELD     IFEQ *BLANK
+     C                     MOVEL'DLM0141' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     ELSE
+     C*
+     C**  Date must be a valid date
+     C*
+     C                     MOVELSSELD     ZDATE
+     C                     MOVELZDATE     WSDCP   6
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    $PRDT
+     C*
+     C**  Invalid date
+     C*
+     C           *IN99     IFEQ '1'
+     C           ZDAYNO    OREQ *ZERO
+     C           SSELD     ORNE WSDCP
+     C                     MOVEL'DLM0142' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN12
+     C                     END
+     C                     END
+     C*
+     C**  A record does not exist on the dates file
+     C*
+     C           WERR      IFNE 'Y'
+     C           KIRSDV    CHAINDLPCSCD1             99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'DLM0158' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,11
+     C                     GOTO EPRODL
+     C                     END
+     C*
+     C**  This record can't be deleted as its event has already been processed
+     C*
+     C           DTPR      IFEQ 'Y'
+     C                     UPDATDLPCSCD1                     * RELEASE
+     C                     MOVEL'DLM0159' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEA'11'      *IN,11
+     C                     GOTO EPRODL
+     C                     END
+      *                                                                   CPL002
+      ** Store the deleted change in principal amount                     CPL002
+      *                                                                   CPL002
+     C                     Z-SUBCAMT      WDIFF                           CPL002
+     C*
+     C**  Record deleted
+     C*
+     C                     DELETDLPCSCD1
+     C*                                                                   167561
+     C** If Midas-Plato is present                                        167561
+     C           *IN53     IFEQ '1'                                       167561
+      *                                                                   CPL002
+      ** Update amounts of records with processing date greater than      CPL002
+      ** that of the deleted record.                                      CPL002
+      *                                                                   CPL002
+     C                     EXSR SRUPDT                                    CPL002
+     C*                                                                   167561
+     C                     END                                            167561
+      *                                                                   CPL002
+     C                     MOVEL*BLANKS   INPUTF
+     C/COPY WNCPYSRC,DL4020C003
+     C                     END
+     C           EPRODL    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LPDLA - Delete All Records                                  *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      :                                                 *
+      *                                                               *
+     C*****************************************************************
+     C           #LPDLA    BEGSR
+     C*
+     C**  Delete all records on the dates file, except those processed
+     C*
+     C                     Z-ADD*ZERO     PRDT
+     C           KIRSDL    SETLLDLPCSCD1
+     C           KIRSDP    READEDLPCSCD1                 99*
+     C           *IN99     DOWEQ'0'
+     C           DTPR      IFNE 'Y'
+     C                     DELETDLPCSCD1                     *DELETE
+     C/COPY WNCPYSRC,DL4020C004
+     C                     ELSE
+     C                     UPDATDLPCSCD1                     *RELEASE
+     C                     END
+     C           KIRSDP    READEDLPCSCD1                 99*
+     C                     END                             *IN99
+     C                     Z-ADD*ZERO     PRDT
+     C                     MOVEL*BLANKS   INPUTF
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LCNVD - Convert Details                                     *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      : ZDATE2 - Convert day number to date             *
+      *               ZSEDIT - Edit numeric fields                    *
+      *                                                               *
+     C*****************************************************************
+     C           #LCNVD    BEGSR
+     C*
+     C**  Action code
+     C*
+     C                     MOVEL*BLANK    SACTN1
+     C*
+     C**  Convert date
+     C*
+     C                     Z-ADDPRDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     SPRDT
+     C*
+     C**  Day in week (Saturday and Sunday only)
+     C*
+     C                     MOVEL*BLANK    SDYWK
+     C           PRDT      DIV  7         WRK153 153
+     C                     MOVE WRK153    WRK30   30
+     C           WRK30     IFEQ 142
+     C                     MOVEL'SAT'     SDYWK
+     C                     END
+     C           WRK30     IFEQ 285
+     C                     MOVEL'SUN'     SDYWK
+     C                     END
+     C*
+     C****Convert*principal*amount*****                                   CPL002
+     C**  Convert principal change amount                                 CPL002
+     C           *IN53     IFEQ '0'                                       167561
+     C                     Z-ADDPAMT      @TAMT  150                      167561
+     C                     Z-ADD0         CAMT                            167561
+     C                     ELSE                                           167561
+     C                     Z-ADDCAMT      @TAMT                           167561
+     C                     END                                            167561
+     C*                                                                   167561
+     C*
+     C***********PAMT      IFEQ *ZERO                                     CPL002
+     C***********CAMT      IFEQ *ZERO                              CPL002 167561
+     C           @TAMT     IFEQ *ZERO                                     167561
+     C                     MOVEL*BLANK    SPCEA
+     C                     ELSE
+     C                     Z-ADD*ZERO     ZFLD15
+     C***********          MOVE PAMT      ZFLD15                          CPL002
+     C***********          MOVE CAMT      ZFLD15                   CPL002 167561
+     C                     MOVE @TAMT     ZFLD15                          167561
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SPCEA
+     C                     END
+      *                                                                   CPL002
+      ** Display Increase/Decrease Indicator                              CPL002
+      *                                                                   CPL002
+     C           CAMT      IFGT *ZERO                                     CPL002
+     C                     MOVE 'I'       SIND1                           CPL002
+     C                     ELSE                                           CPL002
+     C           CAMT      IFLT *ZERO                                     CPL002
+     C                     MOVE 'D'       SIND1                           CPL002
+     C                     ELSE                                           CPL002
+     C                     MOVE *BLANKS   SIND1                           CPL002
+     C                     END                                            CPL002
+     C                     END                                            CPL002
+     C/COPY WNCPYSRC,DL4020C013
+     C*
+     C**  Convert processed ind
+     C*
+     C           DTPR      IFEQ 'Y'
+     C                     MOVE '1'       *IN10
+     C                     MOVEL'YES'     SDTPR
+     C                     ELSE
+     C                     MOVE '0'       *IN10
+     C                     MOVEL*BLANK    SDTPR
+     C                     END
+     C/COPY WNCPYSRC,DL4020C014
+     C*
+     C**  Other variables
+     C*
+     C                     MOVE COHO      SCOHO1
+     C*
+     C**  Protect
+     C*
+     C   50                MOVE '1'       *IN10
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LVLDT - Validate Date                                       *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      : ZDATE2 - Convert day number to a date           *
+      *               ZSEDIT - Edit numeric fields                    *
+      *                                                               *
+     C*****************************************************************
+     C           #LVLDT    BEGSR
+     C*
+     C                     SETOF                     99
+     C*
+      **  Validate first two positions
+      **    First two positions are mandatory
+     C*
+     C           SDN1      IFEQ *BLANK
+     C                     SETON                     99
+     C                     END
+     C*
+      **       Are positions 1&2 numeric  ?
+     C*
+     C                     MOVE 0         WRK3A   3
+     C                     MOVELSDN1      WRK3A
+     C                     TESTN          WRK3A      24
+     C*
+      **       If SDN1   is numeric
+     C*
+     C           *IN24     IFEQ '1'
+     C                     MOVE SDN1      WRK2N   20
+     C*
+      **       Number must be between 1 and 28, or be 31.
+     C*
+     C           WRK2N     IFGT 28
+     C           SDN1      ANDNE'31'
+     C           WRK2N     ORLT 1
+     C                     SETON                     99
+     C                     END
+     C*
+      **    If not numeric
+     C*
+     C                     ELSE
+     C*
+      **   Position 1 to be numeric  1-4 incl
+     C*
+     C           SWRK1     IFLT '1'
+     C           SWRK1     ORGT '4'
+     C                     SETON                     99
+     C                     END
+     C*
+      **  1ST character valid - check 2ND is in array of day in week codes
+     C*
+     C           SWRK2     LOKUPLETT                     24
+     C           *IN24     IFEQ '0'
+     C                     SETON                     99
+     C                     END
+     C*
+      **  End of non-numeric validation
+     C*
+     C                     END
+     C*
+      **  Validate position 3
+     C*
+      **  If position 1/2 is 31, pos 3 must be blank, or 4,5,6 have entry
+      **  If position 1 and 2 are not '31' pos.3 must be '+' or '-'
+     C*
+     C*
+     C           SDN1      IFEQ '31'
+     C           SWRK3     ANDNE*BLANK
+     C           S456      ANDEQ*BLANK
+     C                     SETON                     99
+     C                     END
+     C*
+     C           SDN1      IFNE '31'
+     C           SWRK3     ANDNE'+'
+     C           SWRK3     ANDNE'-'
+     C                     SETON                     99
+     C                     END
+     C*
+     C           SDN1      IFEQ '31'
+     C           SWRK3     ANDNE'+'
+     C           SWRK3     ANDNE'-'
+     C           SWRK3     ANDNE' '
+     C                     SETON                     99
+     C                     END
+     C*
+      **  Validate positions 4 and 5
+      **    If entered must be numeric, between 1 and 28 inclusive
+     C*
+     C           SDN2      IFNE *BLANK
+     C*
+     C                     MOVE 0         WRK3A
+     C                     MOVELSDN2      WRK3A
+     C                     TESTN          WRK3A      24
+     C*
+      **  Not valid numeric
+     C*
+     C           *IN24     IFEQ '0'
+     C                     SETON                     99
+     C                     ELSE
+     C*
+      **  Valid number, check range
+     C*
+     C                     MOVE SDN2      WRK2N
+     C           WRK2N     IFLT 1
+     C           WRK2N     ORGT 28
+     C                     SETON                     99
+     C                     END
+     C                     END
+     C*
+      **  End of numeric validation for pos 4/5
+     C*
+     C                     END
+     C*
+      **  Validate position 6
+     C*
+      **    If positions 4 and 5 are entered pos.6 must be A,B or C
+     C*
+     C           SDN2      IFNE *BLANK
+     C           SWRK6     ANDNE'A'
+     C           SWRK6     ANDNE'B'
+     C           SWRK6     ANDNE'C'
+     C                     SETON                     99
+     C                     END
+     C*
+      **  Validate position 7
+     C*
+      **  If position 6 is 'A' then pos 7 must be '+' or'-'
+      **  otherwise it must be blank.
+     C*
+     C           SWRK6     IFEQ 'A'
+     C           SWRK7     IFNE '+'
+     C           SWRK7     ANDNE'-'
+     C                     SETON                     99
+     C                     END
+     C*
+     C                     ELSE
+     C           SWRK7     IFNE ' '
+     C                     SETON                     99
+     C                     END
+     C*
+     C                     END
+     C*
+     C           XTVDAT    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LCFLW - Generate Cash Flow                                  *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      : FFDATE - Convert FF Date Formula                *
+      *               ZSEDIT - Edit numeric fields                    *
+      *                                                               *
+     C*****************************************************************
+     C           #LCFLW    BEGSR
+     C                     MOVELSSELD     FFDATC
+     C                     MOVELCCCY      FFCCY1
+     C                     MOVEL*BLANK    FFCCY2
+     C                     MOVE *BLANK    FFCCY3
+     C                     Z-ADD*ZERO     PRDT
+     C                     MOVE SMPAMT    PAMT                            CPL002
+      *
+      **  Calculate next settlement date using SR.FFDATE
+      *
+     C           PRDT      DOWLTCMDYN
+     C                     Z-ADDYRNO      FFYR
+     C                     Z-ADDMTHN      FFMTH
+     C                     MOVE *BLANKS   FFLOC
+     C                     EXSR FFDATE
+     C                     MOVE FFDAY     PRDT
+     C           PRDT      IFLT CMDYN
+     C           PRDT      ANDGECTLDYN
+     C           KIRSDL    CHAINDLPCSCD1             99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    COHO
+     C                     Z-ADDWPAMT     PAMT
+     C*                                                                   167561
+     C** If Midas-Plato module is on                                      167561
+     C           *IN53     IFEQ '1'                                       167561
+      *                                                                   CPL002
+      ** Write Principal Change amount accordingly.                       CPL002
+      *                                                                   CPL002
+     C           WIDIND    IFEQ 'D'                                       CPL002
+     C                     Z-SUBWPAMT     CAMT                            CPL002
+     C                     ELSE                                           CPL002
+     C                     Z-ADDWPAMT     CAMT                            CPL002
+     C                     ENDIF                                          CPL002
+      *                                                                   CPL002
+     C***********          Z-ADDTPAMT     PAMT                            CPL002
+      *                                                                   CPL002
+     C                     MOVE PRDT      PRDT1  150                      CPL002
+     C                     MOVE COHO      COHO1   1                       CPL002
+     C                     MOVE CAMT      CAMT1  150                      CPL002
+      *                                                                   CPL002
+     C           KIRSDL    SETLLDLPCSCD1                                  CPL002
+     C                     READPDLPCSCD1                 98               CPL002
+     C           *IN98     IFEQ '0'                                       CPL002
+     C                     MOVE PAMT      PAMT1  150                      CPL002
+     C                     ENDIF                                          CPL002
+     C                     MOVE PRDT1     PRDT                            CPL002
+     C                     MOVE COHO1     COHO                            CPL002
+     C                     MOVE CAMT1     CAMT                            CPL002
+     C                     ADD  CAMT      PAMT1                           CPL002
+     C                     MOVE PAMT1     PAMT                            CPL002
+     C*                                                                   167561
+     C                     END                                            167561
+     C*                                                                   167561
+     C                     MOVEL*BLANK    DTPR
+     C                     WRITEDLPCSCD1
+     C*                                                                   167561
+     C** If Midas-Plato module is on                                      167561
+     C           *IN53     IFEQ '1'                                       167561
+      *                                                                   CPL002
+      ** Update principal amounts of records with processing dates        CPL002
+      ** greater than that of the inserted record.                        CPL002
+      *                                                                   CPL002
+     C                     MOVE CAMT      WDIFF                           CPL002
+     C                     EXSR SRUPDT                                    CPL002
+     C*                                                                   167561
+     C                     END                                            167561
+      *                                                                   CPL002
+     C                     END
+     C                     END
+     C*
+     C**  Update year/month according to frequency
+     C*
+     C           SACTN     IFEQ 'M'
+     C                     ADD  1         MTHN
+     C                     END
+     C           SACTN     IFEQ 'Q'
+     C                     ADD  3         MTHN
+     C                     END
+     C           SACTN     IFEQ 'X'
+     C                     ADD  6         MTHN
+     C                     END
+     C           SACTN     IFEQ 'Y'
+     C                     ADD  1         YRNO
+     C                     END
+     C*
+     C**  If past end of year
+     C*
+     C           MTHN      IFGT 12
+     C                     ADD  1         YRNO
+     C                     SUB  12        MTHN
+     C                     END
+     C                     END
+     C                     ENDSR
+      /EJECT                                                              CPL002
+      *****************************************************************   CPL002
+      *                                                               *   CPL002
+      *  SRUPDT - Change Principal amounts of affected records        *   CPL002
+      *                                                               *   CPL002
+      *  Called by  : #LPRIA and #LPDEL                               *   CPL002
+      *                                                               *   CPL002
+      *  Calls      :  none                                           *   CPL002
+      *                                                               *   CPL002
+      *                                                               *   CPL002
+      *****************************************************************   CPL002
+      *                                                                   CPL002
+     C           SRUPDT    BEGSR                           ** SRUPDT **   CPL002
+      *                                                                   CPL002
+     C           KIRSDL    SETGTDLPCSCD1                                  CPL002
+     C           KIRSDP    READEDLPCSCD1                 99               CPL002
+     C           *IN99     DOWEQ'0'                                       CPL002
+     C                     ADD  WDIFF     PAMT                            CPL002
+     C                     UPDATDLPCSCD1                                  CPL002
+     C           KIRSDP    READEDLPCSCD1                 99               CPL002
+     C                     ENDDO                                          CPL002
+      *                                                                   CPL002
+     C                     ENDSR                                          CPL002
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LGCTL - Get the Control Date                                *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      : ZDATE2 - Convert day number to a date           *
+      *                                                               *
+     C*****************************************************************
+     C           #LGCTL    BEGSR
+     C*
+     C**  Get the control date - the first non processed date
+     C*
+     C                     Z-ADD*ZERO     PRDT
+     C                     Z-ADD*ZERO     CTLDYN  50
+     C*
+     C           KIRSDL    SETLLDLPCSCD0
+     C           KIRSDP    READEDLPCSCD0                 99*
+     C*
+     C           *IN99     DOWEQ'0'
+     C           CTLDYN    ANDEQ*ZERO
+     C           DTPR      IFNE 'Y'
+     C                     Z-ADDPRDT      CTLDYN
+     C                     END
+     C           KIRSDP    READEDLPCSCD0                 99*
+     C                     END
+     C*
+     C**  Get DD/MM/YY format of date, and month and year
+     C*
+     C           CTLDYN    IFNE *ZERO
+     C                     Z-ADDCTLDYN    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     CTLDAT
+     C                     Z-ADDZYEAR     YRNO    20
+     C                     Z-ADDZMTH      MTHN    20
+     C                     ELSE
+     C                     Z-ADD*ZERO     YRNO
+     C                     Z-ADD*ZERO     MTHN
+     C                     END
+     C*
+     C                     MOVELCTLDAT    PCTDAT
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LINIT - Initial Processing                                  *
+      *                                                               *
+      *  Called by  : MAIN   - Main Processing Routine                *
+      *                                                               *
+      *  Calls      : ZDATE1 - Convert date to a day number           *
+      *               *PSSR  - Database Error Processing              *
+      *                                                               *
+     C*****************************************************************
+     C           #LINIT    BEGSR
+      *
+      **  Define Data area LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Initialise database error fields
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LN0044  'DBPGM
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     OUT  LDA
+      *
+     C                     MOVEL'DRSMM '  ZAMSGF
+      *
+      ** Access bank details for the run date
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'FIRST'   DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVELBJMRDT    SRUNA
+      *
+      ** Check system date format, DDMMYY or MMDDYY.
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+      *                                                                                       245692
+      ** Access DEALING ICD details                                                           245692
+      *                                                                                       245692
+     C                     CALL 'AODEALR1'                                                    245692
+     C                     PARM *BLANKS   @RTCD   7                                           245692
+     C                     PARM '*FIRST ' @OPTN   7                                           245692
+     C           SDDEAL    PARM SDDEAL    DSFDY                                               245692
+      *                                                                                       245692
+     C           @RTCD     IFNE *BLANKS                                                       245692
+     C           *LOCK     IN   LDA                                                           245692
+     C                     MOVEL'SDDEALPD'DBFILE                                              245692
+     C                     MOVEL'FIRST'   DBKEY                                               245692
+     C                     Z-ADD26        DBASE                                               245692
+     C                     OUT  LDA                                                           245692
+     C                     EXSR *PSSR                                                         245692
+     C                     ENDIF                                                              245692
+     C*                                                                   167561
+     C**   SDMMODPD - TO SEE IF MIDAS-PLATO INTERFACE IS SWITCHED ON      167561
+     C*                                                                   167561
+     C                     CALL 'AOMMODR0'                                167561
+     C                     PARM *BLANKS   @RTCD                           167561
+     C                     PARM '*FIRST ' @OPTN                           167561
+     C           SDMMOD    PARM SDMMOD    DSFDY                           167561
+     C           @RTCD     IFNE *BLANKS                                   167561
+     C           *LOCK     IN   LDA                                       167561
+     C                     Z-ADD23        DBASE            **DB ERROR 23**167561
+     C                     MOVE 'SDMMODPD'DBFILE                          167561
+     C                     MOVEL*BLANKS   DBKEY                           167561
+     C                     OUT  LDA                                       167561
+     C                     EXSR *PSSR                                     167561
+     C                     ELSE                                           167561
+     C                     MOVE '0'       *IN53                           167561
+     C           BGN2ST    IFEQ 'Y'                                       167561
+     C                     MOVE '1'       *IN53                           167561
+     C                     END                                            167561
+     C                     END                                            167561
+      *                                                                   CIR006
+      ** Determine if CIR006 Enhancement is On.                           CIR006
+      *                                                                   CIR006
+     C                     CALL 'AOSARDR0'                                CIR006
+     C                     PARM *BLANKS   @RTCD                           CIR006
+     C                     PARM '*VERIFY '@OPTN                           CIR006
+     C                     PARM 'CIR006'  @SARD   6                       CIR006
+     C           SCSARD    PARM SCSARD    DSFDY                           CIR006
+      *                                                                   CIR006
+     C           @RTCD     IFNE *BLANKS                                   CIR006
+     C           @RTCD     ANDNE'*NRF   '                                 CIR006
+     C                     MOVEL'SCSARDPD'DBFILE                          CIR006
+     C                     Z-ADD24        DBASE                           CIR006
+     C                     MOVEL'CIR006'  DBKEY                           CIR006
+     C                     EXSR *PSSR                                     CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                   CIR006
+     C           @RTCD     IFEQ *BLANKS                                   CIR006
+     C                     MOVE 'Y'       CIR006  1                       CIR006
+     C                     ELSE                                           CIR006
+     C                     MOVE 'N'       CIR006                          CIR006
+     C                     ENDIF                                          CIR006
+      *                                                                                       CIR008
+      ** Check if switchable feature CIR008 is switched on                                    CIR008
+      *                                                                                       CIR008
+     C                     CALL 'AOSARDR0'                                                    CIR008
+     C                     PARM *BLANKS   PRTCD   7                                           CIR008
+     C                     PARM '*VERIFY' POPTN   7                                           CIR008
+     C                     PARM 'CIR008'  PSARD   6                                           CIR008
+     C           SCSARD    PARM SCSARD    DSFDY                                               CIR008
+      *                                                                                       CIR008
+     C           PRTCD     IFNE *BLANK                                                        CIR008
+     C           PRTCD     ANDNE'*NRF   '                                                     CIR008
+     C                     MOVEL'SCSARDPD'DBFILE                                              CIR008
+     C                     Z-ADD25        DBASE                                               CIR008
+     C                     MOVEL'CIR008'  DBKEY                                               CIR008
+     C                     EXSR *PSSR                                                         CIR008
+     C                     ENDIF                                                              CIR008
+      *                                                                                       CIR008
+     C           PRTCD     IFEQ *BLANKS                                                       CIR008
+     C                     MOVE 'Y'       CIR008  1                                           CIR008
+     C                     ELSE                                                               CIR008
+     C                     MOVE 'N'       CIR008                                              CIR008
+     C                     ENDIF                                                              CIR008
+     C*
+     C**  Set work variable from passed parameter
+     C*
+     C                     MOVE PDLNO     DLNO    60
+     C                     MOVE POTIN     OTIN    1
+     C                     MOVE PCTDAT    CTLDAT  6
+     C                     MOVE PCMDAT    CMDAT   6
+     C                     MOVE PCVDAT    CVDAT   6
+     C                     MOVE PCCY      CCCY    3
+     C                     MOVE PCDP      CDP     10
+     C                     MOVE PPSCD     PSCD    1
+     C*
+     C**  Set screen variable from passed parameter
+     C*
+     C                     MOVE PDLNO     SDLNO
+     C                     MOVE PCVDAT    SCVDAT
+     C                     MOVE PCMDAT    SCMDAT
+     C*
+     C**  Set screen protect indicator if enquiry
+     C*
+     C           PSCD      IFEQ 'E'
+     C           PSCD      OREQ 'X'                                                           CIR008
+     C           CIR008    ANDEQ'Y'                                                           CIR008
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN25
+     C                     END
+     C/COPY WNCPYSRC,DL4020C001
+     C*
+     C**  Set narrative
+     C*
+     C                     MOVELNARR,1    SNARR
+     C           OTIN      IFEQ 'U'
+     C                     MOVELNARR,2    SNARR
+     C                     END
+     C           OTIN      IFEQ 'T'
+     C                     MOVELNARR,3    SNARR
+     C                     END
+     C*
+     C**  Determine value day number
+     C*
+     C           CVDAT     IFNE *BLANK
+     C                     MOVELCVDAT     ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    CVDYN   50
+     C                     ELSE
+     C                     Z-ADD*ZERO     CVDYN
+     C                     END
+     C*
+     C**  Determine maturity day number
+     C*
+     C           CMDAT     IFNE *BLANK
+     C                     MOVELCMDAT     ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    CMDYN   50
+     C                     ELSE
+     C                     Z-ADD*ZERO     CMDYN
+     C                     END
+     C*
+     C**  Determine last date processed (ie last rate change/int payment date)
+     C*
+     C                     Z-ADD*ZERO     PRDT
+     C                     Z-ADD*ZERO     LPRDYN  50
+     C*
+     C           KIRSDL    SETLLDLPCSCD0
+     C           KIRSDP    READEDLPCSCD0                 99*
+     C*
+     C           *IN99     DOWEQ'0'
+     C           DTPR      ANDEQ'Y'
+     C                     Z-ADDPRDT      LPRDYN
+     C           KIRSDP    READEDLPCSCD0                 99*
+     C                     END
+     C*
+     C**  Determine amount at maturity date
+     C*
+     C                     Z-ADD99999     PRDT
+     C                     MOVE *BLANKS   SMPAMT
+     C*
+     C           *HIVAL    SETGTDLPCSCD0
+     C           KIRSDP    REDPEDLPCSCD0                 99*
+     C*
+     C           *IN99     IFEQ '0'
+     C           PAMT      IFEQ *ZERO
+     C                     MOVEL*BLANK    SMPAMT
+     C                     ELSE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE PAMT      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SMPAMT
+     C                     END
+     C                     END
+     C*
+     C**  Check if need to create new record
+     C*
+     C           CTLDAT    IFNE *BLANK
+     C                     MOVELCTLDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     Z-ADDZDAYNO    $PRDT   50
+     C           *IN99     IFEQ '0'
+     C           ZDAYNO    ANDNE*ZERO
+     C           ZDAYNO    ANDGTLPRDYN
+     C*
+     C**  Record to be added?
+     C*
+     C           KIRSDV    CHAINDLPCSCD0             99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVE 'I'       SACTN
+     C                     MOVELCTLDAT    SSELD
+     C                     END
+     C                     END
+      *                                                                   100291
+      ** If the control date has been passed, save the contol date        100291
+      **   day number, otherwise set it to zero.                          100291
+      *                                                                   100291
+     C                     Z-ADD$PRDT     CCDYN   50                      100291
+     C                     ELSE                                           100291
+     C                     Z-ADD*ZEROS    CCDYN                           100291
+      *                                                                   100291
+     C                     END
+      *                                                                   CPL002
+      ** Set up the initial principal amount.                             CPL002
+      *                                                                   CPL002
+     C                     Z-ADDPPAMT     PAMT                            CPL002
+      *                                                                   CPL002
+     C/COPY WNCPYSRC,DL4020C002
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #LRTCD - Setup Return Codes                                  *
+      *                                                               *
+      *  Called by  : Main Program                                    *
+      *                                                               *
+      *  Calls      :  -                                              *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LRTCD    BEGSR                           ** #LPRTCD **
+      *
+     C                     SELEC
+     C           *INKL     WHEQ '1'
+     C                     MOVE 'USR0790' PRTCD
+     C           *INKC     WHEQ '1'
+     C                     MOVE 'Y2U9999' PRTCD
+     C                     OTHER
+     C                     MOVE *BLANKS   PRTCD
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - Send Message to Program Message Queue               *
+      *                                                               *
+      *  Called by  : All subroutines sending messages to screen      *
+      *                                                               *
+      *  Calls      :  -                                              *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR                           ** ZASNMS **
+      *
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      *
+      **  Send message to program's message queue
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        PROGRAM QUEUE
+     C                     PARM           ZAPGRL  5        REL QUEUE
+     C                     PARM           ZAMSID  7        MESSAGE ID
+     C                     PARM           ZAMSGF 10        MESSAGE FILE
+     C                     PARM           ZAMSDA132        MESSAGE DATA
+     C                     PARM           ZAMSTP  7        MESSAGE TYPE
+      *
+      ** Clear all fields for default mechanism next time
+      *
+     C                     MOVEL*BLANK    ZAPGMQ           PROGRAM QUEUE
+     C                     MOVEL*BLANK    ZAPGRL           REL QUEUE
+     C                     MOVEL*BLANK    ZAMSDA           MESSAGE DATA
+     C                     MOVEL*BLANK    ZAMSTP           MESSAGE TYPE
+      *
+     C                     MOVE 'Y'       WERR    1
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY WNCPYSRC,DL4020C015
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Database Error Handling Subroutine                   *
+      *                                                               *
+      *  Called By:  #LDBER - Database Error Processing               *
+      *              #LRCF  - Subroutine to call ZSFILE               *
+      *                                                               *
+      *  Calls    :  none                                             *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZCHKH
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZFWDT
+     C/COPY ZSRSRC,ZBKDT
+     C*COPY*ZSRSRC,ZSEDITZ3***                                                                245692
+     C/COPY ZSRSRC,ZSEDITZ4                                                                   245692
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,FFDATEZ3
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY WNCPYSRC,DL4020C016
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001
+**   TABDY/TABNO - SHORTNAMES & DAY NUMBERS
+F0S1X2M3U4W5T6
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** NARR
+PRINCIPAL CHANGE SCHEDULE
+OUR PRINCIPAL CHANGE SCHEDULE
+THEIR PRINCIPAL CHANGE SCHEDULE
+**   LETT - LETTERS FOR DAYS TO VALIDATE DATE FORMULAS
+MUWTFSX
+     X/COPY WNCPYSRC,DL4020X001

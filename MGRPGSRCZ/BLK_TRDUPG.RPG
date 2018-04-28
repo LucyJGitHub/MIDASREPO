@@ -1,0 +1,164 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MT5xx : To switch on feature S01401')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  BLK_TRDUPG Default bulk & trade extension Files for MT5xx    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 237294             Date 15Dec05               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG2606            Date 14May04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 OA0071             Date 25May93               *
+      *                 S01401             Date 29Mar93               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  237294 -  Program failed during switching on of S01401.      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG2606 - Extension and Extended Settlements for Bulk Trades *
+      *            and SE Trades must have the same format            *
+      *            (Recompile).                                       *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  OA0071 - NEW FIELD SCMG
+      *  S01401 - The generation of MT500 SWIFT Messages if the       *
+      *           option is available.  NEW PROGRAM.                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FTRADS   IF  E           K        DISK
+     FBULKSDX1O   E                    DISK
+     F            TRADSDD1                          KRENAMEBULKSDD1
+     FTRADSDX1O   E                    DISK
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01     - Chain/Read end of file indicator                  *
+      *    02     - Chain/Read fail indicator                         *
+      *    U7-U8  -  Data base                                        *
+      *    *INLR  -  End processing                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Process Insert                                      *
+      *  WRITE  - Process Write                                       *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+     I/EJECT
+     ILDA         DS                            256
+      *
+      * Data structure for data-base error processing.
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      /EJECT
+      *****************************************************************
+      * Main processing
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+     C           TDRF      IFNE SAVT
+     C                     EXSR WRITE
+     C                     MOVELTDRF      SAVT    6
+     C                     ENDIF
+      *
+     C                     READ TRADS                    01
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *  INIT - Routine to handle initial processing.                 *
+      *****************************************************************
+     C           INIT      BEGSR
+      **  Copyright Statement
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     READ TRADS                  0201
+      *
+     C           *IN02     IFEQ *ON
+      **   Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BLK_TRDU'DBPGM
+     C                     MOVE 'PG'      DBPGM
+     C                     Z-ADD01        DBASE            ************
+     C                     MOVEL'TRADS   'DBFILE           * DBER 001 *
+     C                     MOVEL'        'DBKEY            ************
+     C                     OUT  LDA
+     C                     SETON                     LRU7U8
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     MOVEL'N'       T1CONG
+     C                     MOVEL'N'       T1RCDG
+     C                     Z-ADD0         T1LSWS
+     C                     Z-ADD0         T1LSSC
+     C                     MOVEL'N'       T1GMES
+     C                     MOVEL'N'       T1GMEC
+     C                     MOVEL'N'       T1SCMG                          OA0071
+      *
+     C                     MOVEL'N'       B1CONG
+     C                     MOVEL'N'       B1RCDG
+     C                     Z-ADD0         B1LSWS
+     C                     Z-ADD0         B1LSSC
+     C                     MOVEL'N'       B1GMES
+     C                     MOVEL'N'       B1GMEC
+     C                     MOVEL'N'       B1SCMG                          OA0071
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  WRITE - Routine to handle write processing.                  *
+      *****************************************************************
+     C           WRITE     BEGSR
+      *
+     C                     MOVELTDRF      T1TDRF
+     C                     MOVELTDRF      B1TDRF
+      *
+     C                     TIME           WWTIME  60
+     C                     MOVELWWTIME    T1TRTT
+     C                     MOVELWWTIME    B1TRTT
+      *
+     C                     MOVEASTAMP,1   B1TMST           Default Timestamp                  237294
+     C                     WRITEBULKSDD1
+     C                     MOVEASTAMP,1   T1TMST           Default Timestamp                  CPK015
+     C                     WRITETRADSDD1
+     C                     ENDSR
+      *****************************************************************
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

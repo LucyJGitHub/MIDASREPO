@@ -1,0 +1,905 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Bilateral agreement types maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management Module                            *
+      *                                                               *
+      *  ME1700 - Midas ME Bilateral Agreement Types Maintenance      *
+      *                                                               *
+      *  Function:  This program displays Bilateral Agreement Types   *
+      *             subfile                                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. BUG24356           Date 16Jun09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *  Prev Amend No. CFT014             Date 25May00               *
+      *                 CFT013  *CREATE    Date 25May00               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  BUG24356-Cannot add records in Bilateral Agreement Type      *
+      *           Maintenance.                                        *
+      *  CFT014 - Straight-through Processing Phase 2 MT103 Messages  *
+      *           Generation for FT.                                  *
+      *  CFT013 - Straight-through Processing Phase 2 MT103 Messages  *
+      *           Generation for non-FT.                              *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Midas ME Bilateral Agreement Types display file
+      *
+     FME1700DFCF  E                    WORKSTN
+     F                                        SRRN  KSFILE RSFLRCD
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      *
+      ** Midas ME Bilateral Agreement Types retrieval index
+      *
+     FMEBATYL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      ** Midas ME Bilateral Agreement Types update index
+      *
+     FMEBATYL0UF  E           K        DISK                      A
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** Copyright notice for inclusion in all programs
+      *
+     E                    CPY@    1   1 80
+      *
+      * Copyright array
+      *
+     IA@CPY       DS
+     I                                        1  80 CPY@
+      *
+      ** Program data structure
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+      ** Display file information data structure
+      *
+     IINFDS#    E DSY2I#DSP
+      *
+      ** Local data area data structure
+      *
+     IWLDA      E DSLDA
+      *
+      ** Bank's data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Data structure for PF/MEBATYPD
+      *
+     IWDBRC     E DSMEBATYL0
+      *
+      ** Data structure used by access program
+      *
+     IDSFDY     E DSDSFDY
+      *
+     I              'ABCDEFGHIJKLMNOPQRST-C         ALPNUM
+     I**********    'UVWXYZ1234567890'                                                      BUG24356
+     I              'UVWXYZ1234567890_'                                                     BUG24356
+      *
+      ** Initialize
+      *
+      *****************************************************************
+     C                     EXSR SRINIT
+      *
+     C                     DO   *HIVAL
+      *
+      ** Initialise & load subfile page
+      *
+     C                     EXSR SRIZSF
+     C                     MOVEL'N'       W0RSF   1
+      *
+      ** Display screen until reload requested
+      *
+     C           W0RSF     DOWEQ'N'
+      *
+      ** Display screen
+      *
+     C                     EXSR SRDSPS
+      *
+      ** Cancel & exit program
+      *
+     C   03                CAS            SREXIT
+      *
+      ** Request subfile reload
+      *
+     C   05                CAS            SRRQRL
+      *
+      ** Display next SFL page
+      *
+     C   27                CAS            SRLDSF
+      *
+      ** Process screen input
+      *
+     C                     CAS            SRPROC
+     C                     END
+      *
+     C                     ENDDO
+     C                     ENDDO
+      *
+      ** Terminate program
+      *
+     C                     MOVE '1'       *INLR
+      *****************************************************************
+      /EJECT
+     CSR         SRIZSF    BEGSR
+      *================================================================
+      ** Initialise and load subfile page
+      *================================================================
+      *
+      ** Clear subfile
+      *
+     C                     SETON                     80
+     C                     WRITERSFLCTL
+     C                     SETOF                     80
+      *
+      ** Reset no of records in subfile
+      *
+     C                     Z-ADD*ZERO     WRRN    50 81
+     C           WMODE     IFNE 'ADD'
+     C           *LIKE     DEFN SEBATY    WZBATY
+     C                     MOVE *BLANKS   WZBATY
+     C                     MOVELSEBATY    WZBATY
+      *
+      ** Position DBF file
+      *
+     C           KPOS      KLIST
+     C                     KFLD           M1BATY
+      *
+      ** Setup key
+      *
+     C                     MOVELSEBATY    M1BATY
+     C           KPOS      SETLLMEBATYL1
+     C                     READ MEBATYL1               8782
+     C                     ELSE
+     C                     MOVE '0'       *IN82
+     C                     ENDIF
+     C                     EXSR SRLDSF
+      *================================================================
+     CSR         EXIZSF    ENDSR
+      /EJECT
+     CSR         SRLDSF    BEGSR
+      *================================================================
+      ** Load subfile page
+      *================================================================
+     C                     MOVE '0'       *IN84
+      *
+      ** Re-establish fields in read-ahead record
+      *
+     C           *IN27     IFEQ '1'
+     C           WMODE     ANDNE'ADD'
+     C  N82                READPMEBATYL1                 90
+     C  N82                READ MEBATYL1                 90
+     C                     ENDIF
+      *
+      ** Start at previous highest record in SFL
+      *
+     C                     Z-ADDWRRN      SRRN    50
+     C                     Z-ADD0         WCTR    50
+     C                     Z-ADD0         WCTR2   50
+      *
+      ** Set required pages based on *Set Cursor or *Subfile Pages
+      *
+     C           W0RR0     IFGT 0
+     C           W0RR0     DIV  WSFPG     WSPG    30
+     C                     MVR            WSLIN   30
+     C           WSLIN     IFGT 0
+     C                     ADD  1         WSPG
+     C                     ENDIF
+     C           W0SPG     IFGT WSPG
+     C                     Z-ADDW0SPG     WSPG
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADDW0SPG     WSPG
+     C                     ENDIF
+      *
+      ** Compute lines required based on pages
+      *
+     C           WSPG      MULT WSFPG     WSFLN
+     C           WSFLN     IFGT 999
+     C                     Z-ADD999       WSFLN
+     C                     ENDIF
+      *
+      ** Load next SFL page until SFL page full, or
+      ** Scan limit reached
+      *
+     C           *IN82     DOWEQ'0'
+     C           WCTR      ANDLTWSFLN
+     C           WCTR2     ANDLTW0SLM
+      *
+      ** Setof record error indicators
+      *
+     C                     MOVE *ALL'0'   WKIND0  3
+     C                     MOVEAWKIND0    *IN,31
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+      *
+     C           PMMODE    IFEQ 'E'
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN51
+     C                     ELSE
+     C           WMODE     IFEQ 'ADD'
+     C                     MOVE '1'       *IN50
+     C                     ENDIF
+     C           WMODE     IFEQ 'CHG'
+     C                     MOVE '1'       *IN21
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXSR SRISFF
+      *
+     C           WMODE     IFNE 'ADD'
+      *
+      ** Load SFL fields
+      *
+     C                     EXSR SRLSFF
+     C                     MOVELWDBRC     SDBRC
+     C                     ENDIF
+      *
+      ** Output to subfile
+      *
+     C                     ADD  1         SRRN
+     C                     ADD  1         WCTR       81
+      *
+     C                     WRITERSFLRCD
+      *
+      ** Increment scan check count
+      *
+     C                     ADD  1         WCTR2
+     C           WMODE     IFNE 'ADD'
+     C                     READ MEBATYL1                 82
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Save highest SFL record load can continue at end point
+      *
+     C           SRRN      IFGT WRRN
+      *
+      ** Calculate top line
+      *
+     C           WCTR      DIV  WSFPG     WSPG
+     C                     MVR            WSLIN
+     C           WSLIN     IFGT 0
+     C           SRRN      SUB  WSLIN     SSFRC
+     C                     ELSE
+     C           SRRN      SUB  WSFPG     SSFRC
+     C                     ENDIF
+     C                     ADD  1         SSFRC
+     C                     Z-ADDSRRN      WRRN
+     C                     ENDIF
+      *
+      ** If scan limit reached, display error message
+      *
+     C           WCTR2     IFGE W0SLM
+      *
+      ** Send message 'Scan limit reached'
+      *
+     C                     MOVEL'ME00010' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     Z-ADD0         WCTR
+     C                     ENDIF
+      *================================================================
+     CSR         EXLDSF    ENDSR
+      /EJECT
+     CSR         SRDSPS    BEGSR
+      *================================================================
+      ** Display screen
+      *================================================================
+     C           *IN82     IFEQ '1'
+     C           WRRN      ANDEQ0
+      *
+      ** Send message '*No data to display'
+      *
+     C                     MOVEL'ME00001' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     WRITERMSGCTL
+      *
+     C           PMMODE    IFEQ 'M'
+     C           WMODE     IFEQ 'CHG'
+     C                     MOVELWTXTC     SCTX1
+     C                     ELSE
+     C                     MOVELWTXTA     SCTX1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITERCMDTXT1
+      *
+      ** Update screen time
+      *
+     C                     TIME           STIME
+      *
+     C                     EXFMTRSFLCTL
+      *
+      ** Maintain subfile position where possible
+      *
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    SSFRC
+     C                     ENDIF
+      *
+     C                     EXSR SRCLR
+      *================================================================
+     CSR         EXDSPS    ENDSR
+      /EJECT
+     CSR         SRPROC    BEGSR
+      *================================================================
+      ** Process screen input
+      *================================================================
+     C           WMODE     IFNE 'ADD'
+     C           WZBATY    ANDNESEBATY
+     C                     EXSR SRRQRL
+     C           W0RSF     CABEQ'Y'       EXPROC
+     C                     ENDIF
+      *
+     C           PMMODE    IFEQ 'E'
+     C                     EXSR SRRQRL
+     C           W0RSF     CABEQ'Y'       EXPROC
+     C                     ENDIF
+      *
+     C                     MOVE *BLANK    WERR    1
+     C                     MOVE 'Y'       WNULL   1
+      *
+     C           WRRN      IFNE 0
+      *
+     C           WMODE     IFEQ 'CHG'
+     C                     EXSR SRPRS1
+     C                     ENDIF
+      *
+     C           WERR      IFEQ *BLANK
+     C           WNULL     ANDEQ'N'
+     C           WMODE     OREQ 'ADD'
+     C                     EXSR SRPRS2
+     C                     ENDIF
+      *
+     C           WERR      IFEQ *BLANK
+     C           WNULL     ANDEQ'N'
+     C                     EXSR SRPRS3
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           WERR      IFEQ *BLANK
+     C           *IN09     ANDEQ'1'
+     C           WMODE     IFEQ 'ADD'
+     C                     MOVE 'CHG'     WMODE
+     C                     ELSE
+     C                     MOVE 'ADD'     WMODE
+     C                     ENDIF
+     C                     EXSR SRRQRL
+     C                     ENDIF
+      *
+     C           WNULL     IFEQ 'Y'
+     C                     EXSR SRRQRL
+     C                     ENDIF
+      *================================================================
+     CSR         EXPROC    ENDSR
+      /EJECT
+     CSR         SRPRS1    BEGSR
+      *================================================================
+      ** Validate Option
+      *================================================================
+     C                     READCRSFLRCD                  92
+      *
+      ** Process subfile record
+      *
+     C           *IN92     DOWEQ'0'
+      *
+      ** Setof record error indicators
+      *
+     C                     MOVEL*ALL'0'   WKIND0
+     C                     MOVEAWKIND0    *IN,31
+     C                     MOVE 'N'       WNULL
+     C                     MOVE '1'       *IN84
+     C           SCSEL     IFNE 'D'
+     C           SCSEL     ANDNE*BLANK
+     C                     MOVE '1'       *IN33
+     C           WERR      IFEQ *BLANK
+     C                     MOVE 'Y'       WERR
+     C                     Z-ADDSRRN      SSFRC
+     C                     MOVEL'ME00002' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     UPDATRSFLRCD
+     C                     READCRSFLRCD                  92
+     C                     ENDDO
+      *================================================================
+     CSR         EXPRS1    ENDSR
+      /EJECT
+     CSR         SRPRS2    BEGSR
+      *================================================================
+      ** Validate details
+      *================================================================
+     C                     READCRSFLRCD                  92
+      *
+      ** Process subfile record
+      *
+     C           *IN92     DOWEQ'0'
+      *
+      ** Setof record error indicators
+      *
+     C                     MOVEL*ALL'0'   WKIND0
+     C                     MOVEAWKIND0    *IN,31
+     C                     MOVE *BLANK    WERROR  1
+     C                     MOVE '0'       *IN84
+     C           WMODE     IFEQ 'CHG'
+     C           SBATY     ORNE *BLANKS
+     C           SBATD     ORNE *BLANKS
+     C                     MOVE 'N'       WNULL
+     C                     MOVE '1'       *IN84
+     C           SCSEL     IFEQ *BLANK
+     C                     EXSR SRVREC
+     C           WERROR    IFEQ 'Y'
+     C           WERR      ANDEQ*BLANK
+     C                     MOVE 'Y'       WERR
+     C                     Z-ADDSRRN      SSFRC
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     UPDATRSFLRCD
+     C                     READCRSFLRCD                  92
+     C                     ENDDO
+      *================================================================
+     CSR         EXPRS2    ENDSR
+      /EJECT
+     CSR         SRVREC    BEGSR
+      *================================================================
+      ** Validate details screen fields
+      *================================================================
+     C           WMODE     IFEQ 'ADD'
+      *
+     C           SBATY     IFEQ *BLANKS
+     C           SBATD     ANDNE*BLANKS
+     C                     MOVEL'ME00012' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN31
+     C                     MOVE 'Y'       WERROR
+     C                     ENDIF
+      *
+     C           SBATY     IFNE *BLANKS
+     C                     MOVE *BLANKS   WFLDC
+     C                     MOVELSBATY     WFLDC  10
+     C                     MOVE '0'       *IN70
+     C           ALPNUM    CHECKWFLDC     N       20     70
+     C           *IN70     IFEQ '1'
+     C           11        SUB  N         Y       20
+     C                     MOVE *BLANK    WCHR   10
+     C           Y         SUBSTWFLDC:N   WCHR
+     C           WCHR      IFNE *BLANK
+     C                     MOVEL'ME00014' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN31
+     C                     MOVE 'Y'       WERROR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SBATD     IFEQ *BLANKS
+     C           SBATY     ANDNE*BLANKS
+     C                     MOVEL'ME00015' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN32
+     C                     MOVE 'Y'       WERROR
+     C                     ENDIF
+      *================================================================
+     CSR         EXVREC    ENDSR
+      /EJECT
+     CSR         SRPRS3    BEGSR
+      *================================================================
+      ** Update database
+      *================================================================
+     C           WMODE     IFEQ 'ADD'
+     C                     EXSR SRRQRL
+     C                     ELSE
+     C                     MOVE 'N'       W0RSF
+     C                     ENDIF
+      *
+     C                     READCRSFLRCD                  92
+      *
+      ** Process subfile record
+      *
+     C           *IN92     DOWEQ'0'
+      *
+      ** Setof record error indicators
+      *
+     C                     MOVEL*ALL'0'   WKIND0
+     C                     MOVEAWKIND0    *IN,31
+     C                     MOVE *BLANK    WERROR
+     C                     MOVE '0'       *IN84
+      *
+     C           WMODE     IFEQ 'ADD'
+     C                     EXSR SRADD
+     C                     ELSE
+     C           SCSEL     IFEQ 'D'
+     C                     EXSR SRDEL
+     C                     EXSR SRRQRL
+     C                     ELSE
+     C                     EXSR SRAMD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           WERROR    IFEQ 'Y'
+     C                     MOVE '1'       *IN84
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN32
+     C           *IN50     IFEQ '0'
+     C           *IN51     ANDEQ'0'
+     C                     MOVE '1'       *IN33
+     C                     ENDIF
+      *
+     C           WERR      IFEQ *BLANK
+     C                     MOVE 'Y'       WERR
+     C                     Z-ADDSRRN      SSFRC
+     C                     ENDIF
+      *
+     C                     ROLBK
+     C                     ELSE
+     C                     COMIT
+     C                     ENDIF
+      *
+     C                     MOVE *BLANK    SCSEL
+     C                     UPDATRSFLRCD
+     C                     READCRSFLRCD                  92
+     C                     ENDDO
+      *
+     C           WERR      IFNE *BLANK
+     C                     MOVE 'N'       W0RSF
+     C                     ENDIF
+      *================================================================
+     CSR         EXPRS3    ENDSR
+      /EJECT
+     CSR         SRADD     BEGSR
+      *================================================================
+      ** Add record
+      *================================================================
+     C           SBATY     CHAIN@BATYL0              60
+     C           *IN60     IFEQ '0'
+     C                     MOVEL'ME00007' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WERROR
+     C                     GOTO EXADD
+     C                     ENDIF
+      *
+     C                     MOVE SBATY     M1BATY
+     C                     MOVE SBATD     M1BATD
+     C                     MOVE ##JOB     M1ACJN
+     C                     MOVE ##USR     M1ACUN
+     C                     MOVE STIME     M1ACTM
+     C                     MOVE BJMRDT    M1ACDA
+     C                     MOVE 'I'       M1ACTY
+      *
+     C                     WRITE@BATYL0                91
+      *
+      ** Display error msg if file update not successful
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'ME00011' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WERROR
+     C                     ENDIF
+      *================================================================
+     CSR         EXADD     ENDSR
+      /EJECT
+     CSR         SRDEL     BEGSR
+      *================================================================
+      ** Delete record
+      *================================================================
+     C           SBATY     CHAIN@BATYL0              60
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'ME00008' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WERROR
+     C                     GOTO EXDEL
+     C                     ENDIF
+      *
+     C           WDBRC     IFNE SDBRC
+     C                     MOVEL'ME00009' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WERROR
+     C                     EXSR SRLSFF
+     C                     MOVELWDBRC     SDBRC
+     C                     GOTO EXDEL
+     C                     ENDIF
+      *
+     C                     DELET@BATYL0                91
+      *
+      ** Display error msg if file update not successful
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'ME00011' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WERROR
+     C                     ENDIF
+      *================================================================
+     CSR         EXDEL     ENDSR
+      /EJECT
+     CSR         SRAMD     BEGSR
+      *================================================================
+      ** Amend record
+      *================================================================
+     C           SBATY     CHAIN@BATYL0              60
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'ME00008' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WERROR
+     C                     GOTO EXAMD
+     C                     ENDIF
+      *
+     C           WDBRC     IFNE SDBRC
+     C                     MOVEL'ME00009' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WERROR
+     C                     EXSR SRLSFF
+     C                     MOVELWDBRC     SDBRC
+     C                     GOTO EXAMD
+     C                     ENDIF
+      *
+     C                     MOVE SBATD     M1BATD
+     C                     MOVE ##JOB     M1ACJN
+     C                     MOVE ##USR     M1ACUN
+     C                     MOVE STIME     M1ACTM
+     C                     MOVE BJMRDT    M1ACDA
+     C                     MOVE 'A'       M1ACTY
+      *
+     C                     UPDAT@BATYL0                91
+      *
+      ** Display error msg if file update not successful
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'ME00011' ZAMSID
+     C                     MOVEL'MEMSG'   ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       WERROR
+     C                     ELSE
+     C                     MOVELWDBRC     SDBRC
+     C                     ENDIF
+      *================================================================
+     CSR         EXAMD     ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      ** Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      *================================================================
+     CSR         EXSNMS    ENDSR
+      /EJECT
+     CSR         SRCLR     BEGSR
+      *================================================================
+      ** Clear messages in program queue
+      *================================================================
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *================================================================
+     CSR         EXCLR     ENDSR
+      /EJECT
+     CSR         SREXIT    BEGSR
+      *================================================================
+      ** Exit program processing
+      *================================================================
+     C                     SETON                     LR
+     C                     RETRN
+      *================================================================
+     CSR         EXEXIT    ENDSR
+      /EJECT
+     CSR         SRRQRL    BEGSR
+      *================================================================
+      ** Request subfile reload
+      *================================================================
+     C                     MOVEL'Y'       W0RSF
+      *================================================================
+     CSR         EXRQRL    ENDSR
+      /EJECT
+     CSR         SRLSFF    BEGSR
+      *================================================================
+      ** Move MEBATYL1 fields to subfile
+      *================================================================
+     C                     MOVELM1ACJN    SACJN
+     C                     MOVELM1ACUN    SACUN
+     C                     MOVELM1ACTM    SACTM
+     C                     MOVELM1ACDA    SACDA
+     C                     MOVELM1ACTY    SACTY
+     C                     MOVELM1BATY    SBATY
+     C                     MOVELM1BATD    SBATD
+      *================================================================
+     CSR         EXLSFF    ENDSR
+      /EJECT
+     CSR         SRISFF    BEGSR
+      *================================================================
+      ** Initialise subfile fields
+      *================================================================
+     C                     MOVE *BLANKS   SDBRC
+     C                     MOVE *BLANKS   SCSEL
+     C                     MOVE *BLANKS   SACJN
+     C                     MOVE *BLANKS   SACUN
+     C                     MOVE *BLANKS   SACTM
+     C                     MOVE *BLANKS   SACDA
+     C                     MOVE *BLANKS   SACTY
+     C                     MOVE *BLANKS   SBATY
+     C                     MOVE *BLANKS   SBATD
+      *================================================================
+     CSR         EXISFF    ENDSR
+      /EJECT
+     CSR         SRINIT    BEGSR
+      *================================================================
+      ** Initialisation
+      *================================================================
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           PMMODE  1
+      *
+      ** Update LDA with initial values for DB error fields
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'ME1700'  DBPGM
+     C                     OUT  WLDA
+      *
+      ** Update Screen Time
+      *
+     C                     TIME           STIME   60
+      *
+      ** Get Bank's Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST  'P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If return with an error (LR seton in called program) then
+      ** process for database error.
+      *
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD001       DBASE
+     C                     OUT  WLDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Get Midas Rundate
+      *
+     C                     MOVE BJMRDT    SMRDT   7
+      *
+     C                     Z-ADD11        WSFPG   30
+     C                     Z-ADD1         SSFRC
+      *
+      ** Maximum record number
+      *
+     C                     Z-ADD*ZERO     WRRN
+      *
+      ** Scan limit
+      *
+     C                     Z-ADD500       W0SLM   50
+      *
+      ** Subfile pages
+      *
+     C                     Z-ADD1         W0SPG   30
+     C                     Z-ADD0         W0RR0   40
+     C                     EXSR SRCLR
+     C                     Z-ADD11        WSFLN   50
+     C           PMMODE    IFEQ 'E'
+      *
+      ** Setup header text:
+      *
+     C                     MOVEL'USR9105' PMSGID  7        Message Identifier
+     C                     MOVEL'SDUSRMSG'PMSGF  10
+     C                     MOVE *BLANKS   PMSGT  80
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           PMSGID    PARM PMSGID    WQ0286  7        Message Identifier
+     C           PMSGF     PARM PMSGF     WQ0287 10        Message File Name
+     C           PMSGT     PARM PMSGT     WQ0288 80        Message Text
+     C                     MOVELPMSGT     SURPT
+      *
+     C                     MOVE *BLANKS   PMSGT  80
+     C                     MOVEL'USR3353' PMSGID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           PMSGID    PARM PMSGID    KE0286  7        Message Identifier
+     C           PMSGF     PARM PMSGF     KE0287 10        Message File Name
+     C           PMSGT     PARM PMSGT     KE0288 80        Message Text
+     C                     MOVELPMSGT     SCTX1
+      *
+     C                     ELSE
+      *
+     C                     MOVEL'SDUSRMSG'PMSGF  10
+     C                     MOVE *BLANKS   PMSGT  80
+      *
+     C                     MOVEL'USR9106' PMSGID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           PMSGID    PARM PMSGID    WQ0286  7        Message Identifier
+     C           PMSGF     PARM PMSGF     WQ0287 10        Message File Name
+     C           PMSGT     PARM PMSGT     WQ0288 80        Message Text
+     C                     MOVELPMSGT     SURPT
+      *
+     C                     MOVE *BLANKS   WTXTC  80
+     C                     MOVE *BLANKS   WTXTA  80
+     C                     MOVE *BLANKS   PMSGT  80
+     C                     MOVEL'USR3348' PMSGID           Message Identifier
+      *
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           PMSGID    PARM PMSGID    KE0286  7        Message Identifier
+     C           PMSGF     PARM PMSGF     KE0287 10        Message File Name
+     C           PMSGT     PARM PMSGT     KE0288 80        Message Text
+     C                     MOVELPMSGT     WTXTC
+      *
+     C                     MOVE *BLANKS   PMSGT  80
+     C                     MOVEL'USR9102' PMSGID           Message Identifier
+      *
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           PMSGID    PARM PMSGID    KE0286  7        Message Identifier
+     C           PMSGF     PARM PMSGF     KE0287 10        Message File Name
+     C           PMSGT     PARM PMSGT     KE0288 80        Message Text
+     C                     MOVELPMSGT     WTXTA
+     C                     ENDIF
+      *
+     C                     Z-ADD99999     W0SLM
+     C                     MOVE *BLANKS   WMODE   3
+     C                     MOVEL'CHG'     WMODE
+      *================================================================
+     CSR         EXINIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *================================================================
+      ** Standard db error processing
+      *================================================================
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      *================================================================
+     CSR         EXPSSR    ENDSR
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,200 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D ***RPGBASEMOD****************************************************                       CGP016
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GOWTTCBCA-Write to GPETRAPPD Consumer banking Account Details*
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CGP016  *REDUNDANT Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. BUG14382A          Date 28Jul07               *
+      *                 BUG14101A          Date 29Jun07               *
+      *                 BUG14101           Date 19Jun07               *
+      *                 CRE026  *CREATE    Date 24May06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGP016 - Global database - Re-use deleted records            *
+      *  BUG14382A - Customer Portfolio Enquiry Does not Work.        *
+      *              Background job EQ_ONL_SYN is generating errors   *
+      *              due to SCPF.
+      *  BUG14101A - Recompile due to LIBL                            *
+      *  BUG14101 - Background job EQ_ONL_SYN is generated errors     *
+      *             and looping (Recompile)                           *
+      *  CRE026 - Consumer Banking                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *    XX    - Function of Indicator                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  *PSSR          -  Program exception error routine            *
+      *  *INZSR         -  Initialisation Subroutine                  *
+      *  TRAP_ACCTEQ    - Universal Transaction Updates - Account     *
+      *  SET_TRAPACCTEQ - Setup Transaction Index Record              *
+      *  WRITE_TRAP     - Write Transaction Index Record              *
+      *                                                               *
+      *  The *INZSR subroutine will only get called automatically     *
+      *  on entry to the module the first time it is run              *
+      *  (unless you end the program with LR on).  Similarly          *
+      *  D-spec initialisation only happens the first time.  Use      *
+      *  RESET for subsequent passes.                                 *
+      *                                                               *
+      *****************************************************************
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+ 
+      ** T R A N S A C T I O N    D E T A I L S
+     D T_TRAP        E DS                  EXTNAME(GPETRAPPD)
+ 
+ 
+     D*ACCTEQ***     E DS                  EXTNAME(SCPF)                                   BUG14382A
+     D ACCTEQ        E DS                  EXTNAME(SC10LF)                                 BUG14382A
+ 
+     D I#RTCD          S              7
+     D I#ERMS          S             50
+     D I#BIMG          S           4000
+     D I#AIMG          S           4000
+     D W#RTCD          S              7
+     D W#ERMS          S             50
+     D T_PRRN          S              5  0
+     D I#LOC           S              4
+     D I#CUSTDEFLT     S              1
+      ***************************************************************
+      *                MAIN PROCESSING                              *
+      ***************************************************************
+      *
+      ** Entry Parameters
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    I#RTCD
+     C                   PARM                    I#ERMS
+     C                   PARM                    I#BIMG
+     C                   PARM                    I#AIMG
+      *
+      ** Universal Transaction Updates
+      *
+     C                   EXSR      TRAP_ACCTEQ
+ 
+     C                   RETURN
+ 
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  TRAP_ACCTEQ - Universal Transaction Updates - Account        *
+      *                                                               *
+      *  Called By: MAIN PROCESSING                                   *
+      *                                                               *
+      *  Calls:     SET_TRAPACCTEQ, WRITE_TRAP                        *
+      *****************************************************************
+     C     TRAP_ACCTEQ   BEGSR
+ 
+     C                   MOVEL     I#AIMG        ACCTEQ
+      *
+      ** Setup transaction index record
+      ** Write transaction index record
+      *
+     C                   EXSR      SET_TRAPACCTEQ
+     C     W#RTCD        IFNE      '*NOEXT*'
+     C                   EXSR      WRITE_TRAP
+     C                   ENDIF
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SET_TRAPACCTEQ - SETUP TRANSACTION INDEX RECORD              *
+      *                                                               *
+      *  Called By: TRAP_ACCTEQ                                       *
+      *                                                               *
+      *  Calls:     GOSETCBCA, *PSSR                                  *
+      *****************************************************************
+     C     SET_TRAPACCTEQBEGSR
+ 
+     C                   CALL      'GOSETCBCA'
+     C                   PARM      *BLANK        W#RTCD
+     C                   PARM      *BLANK        W#ERMS
+      *
+      ** Inputs
+      *
+     C                   PARM                    ACCTEQ
+      *
+      ** Outputs
+      *
+     C                   PARM                    T_TRAP
+     C                   PARM      *ZERO         T_PRRN
+ 
+     C     W#RTCD        IFEQ      '*ERROR'
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETCBCA'
+     C                   EXSR      *PSSR
+     C                   END
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      *  WRITE_TRAP - WRITE TRANSACTION INDEX RECORD                  *
+      *                                                               *
+      *  Called By: TRAP_ACCTEQ                                       *
+      *                                                               *
+      *  Calls:     GOWRTTRAPE, *PSSR                                 *
+      *****************************************************************
+     C     WRITE_TRAP    BEGSR
+      *
+      ** Commitment Cycle ID
+      *
+     C                   Z-ADD     0             T_CCID
+ 
+     C                   MOVEL     'GLOB'        I#LOC
+     C                   MOVEL     'Y'           I#CUSTDEFLT
+ 
+     C                   CALL      'GOWRTTRAPE'
+     C                   PARM      *BLANK        W#RTCD
+     C                   PARM      *BLANK        W#ERMS
+      *
+      ** Inputs
+      *
+     C                   PARM                    I#LOC
+     C                   PARM                    I#CUSTDEFLT
+     C                   PARM                    T_TRAP
+ 
+     C     W#RTCD        IFEQ      '*ERROR'
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOWRTTRAPE'
+     C                   EXSR      *PSSR
+     C                   END
+ 
+     C                   ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Initial subroutine                                   *
+      *                                                               *
+      *  Called By: Called automatically at program start             *
+      *                                                               *
+      *  Calls:     None                                              *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+     C                   ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * * P S S R  --- A B N O R M A L   E R R O R   C O N D I T I O N S
+      /COPY GOCPYSRC,GOPSSR
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

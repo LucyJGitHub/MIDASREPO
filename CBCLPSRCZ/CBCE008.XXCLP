@@ -1,0 +1,123 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CCB016A*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBCE008 - CB Change AP maintenance option to *REBLD for all */
+/*                 logical files build over APOSTPD except for files */
+/*                 need for GLC2550 and GLC4450.                     */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. CCB016A *REDUNDANT Date 06Aug12              */
+/*       Prev Amend No. AR991606           Date 11Feb13              */
+/*                      AR799250           Date 16Nov12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      CCB016  *CREATE    Date 28May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB016A - COB Restructure                                   */
+/*                 CCB016 (Change Logical File Maintenance)          */
+/*       AR991606 - CPF2962 during copy of CBLATRPA (Child:AR991609) */
+/*       AR799250 - V6R1 Upgrade: CBCE008 failed in COB. Fix is to   */
+/*                  delete CBLATRPX if it does not match the no. of  */
+/*                  fields in CBLATRPA. (Child: AR799251)            */
+/*       CCB016 - COB Enhancements: change APOSTPD LFs to *REBLD     */
+/*                before GLC2550 and GLC4450.                        */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          COPYRIGHT MISYS INTERNATIONAL BANKING +
+                          SYSTEMS 2008')
+ 
+             DCL        VAR(&MIDPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MDMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MDPLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+ 
+             DCLF       FILE(QAFDLGL)
+ 
+/******************************************************************************/
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ                                                                          */
+ 
+             SNDPGMMSG  MSG('CBCE008 - CB Change APOSTPD Logical +
+                          File access paths to *REBLD') TOMSGQ(MRUNQ)
+ 
+/* Retrieve system prefix and set program variables                                               */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&MIDPFX)
+ 
+             CHGVAR     VAR(&MDMLIB) VALUE(&MIDPFX *TCAT 'DMLIB')
+             CHGVAR     VAR(&MDPLIB) VALUE(&MIDPFX *TCAT 'DPLIB')
+ 
+/* Fill CBLATRPA file with APOSTPD LF attributes                                                  */
+ 
+             CALL       PGM(CBCE003)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Add to CBLATRPA attributes for logical files buil over GLACPHPD only                           */
+ 
+             CALL       PGM(CBCE010) PARM('GLACPHPD  ')
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Save original content of CBLATRPA - it will be restored by CBCE009 after finish of GLC42       */
+ 
+             DLTF       FILE(&MDPLIB/CBLATRPX)                                          /*AR991606*/
+             MONMSG     MSGID(CPF2105)                                                  /*AR991606*/
+             CPYF       FROMFILE(&MDPLIB/CBLATRPA) +
+                          TOFILE(&MDPLIB/CBLATRPX) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+                                                                                        /*AR799250*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2965) EXEC(DO)                         /*AR799250*/
+                DLTF       FILE(&MDPLIB/CBLATRPX)                                       /*AR799250*/
+                CPYF       FROMFILE(&MDPLIB/CBLATRPA) +
+                             TOFILE(&MDPLIB/CBLATRPX) MBROPT(*REPLACE) +
+                             CRTFILE(*YES)                                              /*AR799250*/
+             ENDDO                                                                      /*AR799250*/
+ 
+/* Change path maintenance to *REBLD in case it is initially set to *IMMED and file does not      */
+/* need for GLC2550 and GLC4450 run.                                                              */
+ 
+             OVRDBF     FILE(QAFDLGL) TOFILE(&MDPLIB/CBLATRPA)
+ NEXTLF:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOFILE))
+ 
+             IF         COND((&LGMANT *EQ 'I') +
+                        *AND (&LGFILE *NE 'APOST') +
+                        *AND (&LGFILE *NE 'GLACPHL ') +
+                        *AND (&LGFILE *NE 'GLACPHL1')) THEN(DO)
+                 CHGLF      FILE(&LGLIB/&LGFILE) MAINT(*REBLD)
+                 MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+             GOTO       CMDLBL(NEXTLF)
+ EOFILE:
+             DLTOVR     FILE(*ALL)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Error processing - Change the job switches and send messages to MRUNQ and MOPERQ               */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     &MSG VALUE('Program CBCE008 terminated abnormally')
+             SNDMSG     TOMSGQ(MRUNQ MOPERQ) MSG(&MSG)
+             DMPCLPGM
+ 
+ END:        CHGVAR     VAR(&MIBSCPY) VALUE('(C) COPYRIGHT MISYS +
+                          INTERNATIONAL BANKING SYSTEMS 2008')
+ ENDPGM

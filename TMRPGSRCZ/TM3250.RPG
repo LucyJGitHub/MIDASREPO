@@ -1,0 +1,1450 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Cost to close - all currencies enquiry')         *
+     F****************************************************************
+     F*                                                              *
+     F*                                                              *
+     F*  Midas - Treasury Management Module
+     F*                                                              *
+     F*          TM3250 - COST TO CLOSE - ALL CURRENCIES ENQUIRY     *    S01166
+     F*                        (FORMERLY DL3250)                     *
+     F*                                                              *
+     F*     Function: This enquiry shows the overall profit          *
+     F*     (I/C)     calculated by a real time revaluation of money *
+     F*               market positions.                              *
+     F*                                                              *
+     F*     Called by: TMC0311 - TM Enquiry control                  *
+     F*           via: DL3100  - Treasury management controller      *
+     F*                                                              *
+     F*     Calls    : ZA0250  - Clear program message queue.        *
+     F*              : ZA0240  - Display program message queue.      *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 09Jun06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01319             Date 14Aug91               *
+      *                 S01117             Date 22Nov90               *
+     F*                         S01194    DATE   22NOV90             *
+     F*                         E20774    DATE   15MAR90             *
+     F*                         S01199    DATE   28FEB90             *    S01199
+     F*                         E19855    DATE   03NOV89             *    S01199
+     F*                         E90072    DATE   31/01/89            *    S01166
+     F*                         S01166    DATE   01/07/88            *    S01166
+     F*                         S01149    DATE   08/02/88            *    S01149
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                        *
+      *  CRE026 - Consumer Banking                                    *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+     F*   S01319  -  Remove redundant processing
+     F*   S01117 - NEW COPYRIGHT STATEMENT                            *
+     F*            DEALING PROGRAMS USED ONLY IN TREASURY MGMT.      *
+     F*            MODULE NOW PREFIXED WITH 'TM'                     *
+     F*                                                              *
+     F*   S01194 - NEW STANDING DATA PROCESSING                      *
+     F*                                                              *
+     F*   E20774 - REPLACE QCAEXEC WITH QCMDEXC                      *    E20774
+     F*                                                              *
+     F*   S01199 - HELP SYSTEM.                                  *     S01199
+     F*                                                              *
+     F*          E19855 - Same P/L figure being displayed for the    *
+     F*                   L/D & N/A options. However the total is    *
+     F*                   not the total of these together.           *
+     F*                                                              *
+     F*          E90072 - When displaying the subfile and prompting  *
+     F*                   for included deal types,the program should *
+     F*                   check for each deal type and not just for  *
+     F*                   blanks.                                    *
+     F*                   Also,*in90 is already used in the program, *
+     F*                   so this has been replaced with *in11.      *
+     F*                                                              *
+     F*          S01149 - Amendment to allow split between L/D and   *
+     F*                   N/A deal types.                            *
+     F*                                                              *
+     F****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       60         General purpose
+     F*****   61         End/start of LF/FDCCYTLL                         S01194
+     F*       61         End/start of LF/SDCURRL0                         S01194
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         DATABASE ERROR
+     F*
+     F*****************************************************************
+     F/EJECT
+     F****CA38CPLLUF  E                DISK         KINFSR INFSR      UC  S01166
+     FMMREVCLLIF  E                    DISK         KINFSR INFSR      UC
+     FMMFWDTLLIF  E           K        DISK         KINFSR INFSR      UC
+     F*FDCCYTLLIF  E           K        DISK         KINFSR INFSR      UC S01194
+     FSDCURRL0IF  E           K        DISK         KINFSR INFSR      UC  S01194
+     F*DL3250DDCF  E                    WORKSTN                 UC  S01166S01117
+     F*****                                         KNUM        1   S01166S01117
+     F*****                                   RRN   KSFILE DL3250S1 S01166S01117
+     FTM3250DDCF  E                    WORKSTN                        UC  S01117
+     F                                              KNUM        1         S01117
+     F                                        RRN   KSFILE TM3250S1       S01117
+     F*FDUSSILLIF**E*********K********DISK*********KINFSR*INFSRUC***S01166S01319
+     FMUSER   IF  E           K        DISK         KINFSR INFSR      UC  S01319
+     E*
+     E                    CPY@    1   1 80                                S01117
+     E* Copyright array                                                   S01117
+     E*
+     E***Array used to load heading lines                                 S01166
+     E****                @H      1   3 52                                S01166
+     E*
+     E** Array for detail lines
+     E****                @L         10 52                                S01166
+     E*
+     E** Array used to load messages
+     E****                @M      1   1 52                                S01166
+     E*
+     E*       ARRAY FOR DISPLAY AMOUNT (SIGNED)(MM1016)
+     E************        @A         13  1                                S01166
+     E*
+     E**  Used by internal standard subroutine, MM1018.
+     E************        @W         16  1                                S01166
+     E*
+     E*       ARRAY FOR AMOUNT INPUT
+     E                    @D         15  1
+     E*       ARRAY FOR DISPLAY AMOUNT
+     E                    @J         12  1
+     E*                                                                   S01166
+     E                    @OVR    1   1 36                                S01166
+     E*                                                                   S01166
+     E*                                                                   S01166
+     E**  ARRAY OF POWERS OF TEN                                          S01166
+     E                    @PW     1   9 10 0                              S01166
+     E*                                                                   S01166
+     E**  ARRAY FOR NUMERIC CONVERSION                                    S01166
+     E                    @K         16  1                                S01166
+     E*                                                                   S01166
+     E*
+     E*                                                                   S01166
+     I****AMENQ1      DS                            728                   S01166
+     I****                                                                S01166
+     I** Data structure for AMENQ1AA data area                            S01166
+     I****MASK        DS                            728                   S01166
+     I****                                                                S01166
+     I** Data structure to format AMENQ1                                  S01166
+     I** 3 heading lines                                                  S01166
+     I** (Literals plus revaluation time and START/END flag)              S01166
+     I****                                    1 156 @HEAD                 S01166
+     I****                                   36  37 @HH                   S01166
+     I****                                   39  40 @MM                   S01166
+     I****                                   42  43 @SS                   S01166
+     I****                                  100 104 @POS                  S01166
+     I****                                                                S01166
+     I** 10 detail lines (formatted in @DLINE data structure)             S01166
+     I****                                  157 676 @L                    S01166
+     I****                                                                S01166
+     I** 1 message line                                                   S01166
+     I****                                  625 728 @MSG                  S01166
+     IPSDS       SDS
+     I*
+     I**  Program status data structure.
+     I**  Field containing FILE NAME
+     I                                      201 208 @FILE
+     I** field containing workstation id                                  S01166
+     I                                      244 253 @JOB                  S01166
+     I** field containing user id                                         S01166
+     I                                      254 263 @USER                 S01166
+     I*                                                                   S01166
+     I           UDS                            256
+     I*
+     I**  LOCAL DATA AREA for database error
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I****@DLINE  DS                             52                       S01166
+     I*                                                                   S01166
+     I**  Data structure to define detail line fields                     S01166
+     I****                                    1   3 @CCY                  S01166
+     I****                                   10  20 @NET                  S01166
+     I****                                   25  35 @INT                  S01166
+     I****                                   40  50 @PL                   S01166
+     I*********** DS                                               S01149 S01166
+     I***********                                                  S01149 S01166
+     I**  Data structure to define current prompt line data        S01149 S01166
+     I***********                             1  80 FAEPT1         S01149 S01166
+     I***********                            60  62 @LDNA          S01149 S01166
+     I**************                                               S01149 S01166
+     I*****@DSLDN DS                              3                S01149 S01166
+     I**************                                               S01149 S01166
+     I****Data structure to remove '/' from input deal type        S01149 S01166
+     I**************                          1   3 @DLDNA         S01149 S01166
+     I**************                          1   1 @LNCH          S01149 S01166
+     I**************                          3   3 DACH           S01149 S01166
+     I@TLRV       DS
+     I*
+     I**  Data structure to split IDTLRV time field for HH:MM:SS format
+     I                                        1   2 @TLRVH
+     I                                        3   4 @TLRVM
+     I                                        5   6 @TLRVS
+     I*                                                                   S01166
+     IDDLREV      DS                                                      S01166
+     I*                                                                   S01166
+     I**  Data structure to form display time field in  HH:MM:SS format   S01166
+     I                                        1   2 @HH                   S01166
+     I                                        4   5 @MM                   S01166
+     I                                        7   8 @SS                   S01166
+     I*                                                                   S01166
+     I@@AMDS      DS                             15
+     I*
+     I** DATASTUCTURE TO CONVERT @@IAMT DECIMAL FIELD TO ALPHA FIELD
+     I                                        1  150@@IAMT
+     I**                                                                  S01166
+     I** data structure for command in array @ovr                         S01166
+     I@OVRID      DS                             36                       S01166
+     I                                       32  350@WAIT                 S01166
+     I**                                                                  S01166
+     I**                                                                  S01166
+     C*****************************************************************
+     C                     MOVEACPY@      BIS@   80                       S01117
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN     - Driver routine - controls program logic            *
+     C*                                                               *
+     C* CALLS    #A       - Initial processing                        *
+     C*          #B       - Record processing - Load detail control   *
+     C*          #C       - Final processing                          *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED**@TERM**-*Termination parameter*( /E/T)**************   S01166
+     C*                                                               *
+     C*****************************************************************
+     C*****************************************************************
+     C*
+     C****       @TERM     IFNE 'T'                        B1             S01166
+     C****                 EXSR #A                         *1             S01166
+     C****                 EXSR #B                         *1             S01166
+     C****                 END                             E1             S01166
+     C*                                                                   S01166
+     C                     EXSR #A                                        S01166
+     C*                                                                   S01166
+     C           *IN01     DOWNE'1'                        B1             S01166
+     C           *INU7     ANDNE'1'                        *1             S01166
+     C                     EXSR #B                         *1             S01166
+     C                     END                             E1             S01166
+     C*
+     C                     EXSR #C
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* SUBROUTINES USED                                              *
+     C*                                                               *
+     C*  01  #B       - Record processing - Load detail control       *
+     C*  02  #BA      - Backward processing                           *
+     C*  03  #BB      - Forward processing                            *
+     C*  04  #BC      - Format detail line                            *
+     C*  05  ZA0860   - Convert short amount to display format        *   S01166
+     C****** MM1016   - Convert amount to Display/38 fmt (000s)       *   S01166
+     C****** MM1015   - Convert amount to Display/38 fmt (000s)       *   S01166
+     C****** MM1018   - Convert amount to Display/38 fmt (integer)    *   S01166
+     C*  08  #A       - Initial processing                            *
+     C*  09  #C       - Final processing                              *
+     C*  10  *PSSR    - Program error handler                         *
+     C*  11  INFSR    - File error handler                            *
+     C*                                                               *
+     C* EXTERNAL ROUTINE                                              *
+     C*****  CM0020   - Command module for PC display                 *   S01166
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #B       - Record processing - Load detail control            *
+     C*                                                               *
+     C* CALLS    #BA      - Backward processing                       *
+     C*          #BB      - Forward processing                        *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Driver routine - controls program logic   *
+     C*                                                               *
+     C* FLDS USED**@ENQT**-*Enquiry*type*parameter*( /F/U/D/L/R)*******   S01166
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C** If database error then no further processing
+     C           *INU7     CABEQ'1'       #B9
+     C*                                                                   S01166
+     C*****                WRITEDL3250F0               80          S01166 S01117
+     C                     WRITETM3250F0               80                 S01117
+     C*                                                                   S01166
+     C*****                WRITEDL3250F1               80          S01166 S01117
+     C                     WRITETM3250F1               80                 S01117
+     C*                                                                   S01166
+     C           *IN05     IFEQ '0'                                       S01166
+     C                     SETON                     46                   S01166
+     C*****                WRITEDL3250C0               80          S01166 S01117
+     C                     WRITETM3250C0               80                 S01117
+     C                     END                                            S01166
+     C*                                                                   S01166
+     C*                                                                   S01166
+     C*   Display subfile and prompt for included deal types              S01166
+     C*                                                                   S01166
+     C****       DDDLTP    IFEQ *BLANKS                            E90072 S01166
+     C****                 SETOF                     35            E90072 S01166
+     C****                 ELSE                                    E90072 S01166
+     C****                 SETON                     35            E90072 S01166
+     C****                 END                                     E90072 S01166
+     C*                                                                   S01166
+     C           DDDLTP    IFEQ 'L/D'                                     E90072
+     C           DDDLTP    OREQ 'N/A'                                     E90072
+     C           DDDLTP    OREQ 'ALL'                                     E90072
+     C                     SETON                       35                 E90072
+     C                     ELSE                                           E90072
+     C                     SETOF                       35                 E90072
+     C                     END                                            E90072
+     C*                                                                   S01166
+     C                     SETON                       36                 S01166
+     C*                                                                   S01166
+     C*****                WRITEDL3250C1               80          S01166 S01117
+     C                     WRITETM3250C1               80                 S01117
+     C*                                                                   S01166
+     C*****                READ DL3250DD               0580        S01166 S01117
+     C                     READ TM3250DD               0580               S01117
+     C*                                                                   S01166
+     C**         *IN10     DOWEQ'1'                                S01166 S01199
+     C**                   SETOF                     10            S01166 S01199
+     C**                   CALL 'SDMENU'                           S01166 S01199
+     C**                   READ DL3250DD               0580        S01166 S01199
+     C**                   END                                     S01166 S01199
+     C*                                                                   S01166
+     C           *IN05     IFEQ '1'                                       S01166
+     C                     MOVELDDTYPE    DDDLTP           REFRESH        S01166
+     C                     END                                            S01166
+     C*                                                                   S01166
+     C           DDDLTP    IFEQ *BLANKS                                   S01166
+     C                     MOVEL'ALL'     DDDLTP                          S01166
+     C                     END                                            S01166
+     C*                                                                   S01166
+     C******               SETOF                     90             S01166E90072
+     C                     SETOF                     11                   E90072
+     C                     CALL 'ZA0250'                                  S01166
+     C*                                                                   S01166
+     C*  Validate included deal types - must be L/D, N/A or ALL.          S01166
+     C           DDDLTP    IFNE 'L/D'                                     S01166
+     C           DDDLTP    ANDNE'N/A'                                     S01166
+     C           DDDLTP    ANDNE'ALL'                                     S01166
+     C********             SETON                     90            S01166 E90072
+     C                     SETON                     11                   E90072
+     C                     MOVEL'MMM0582' @MSGID 10                       S01166
+     C                     CALL 'ZA0240'                                  S01166
+     C                     PARM           @MSGID                          S01166
+     C                     GOTO #B9                                       S01166
+     C                     END                                            S01166
+     C*                                                                   S01166
+     C* update displayed deal type                                        S01166
+     C                     MOVELDDDLTP    DDTYPE                          S01166
+     C*                                                                   S01166
+     C* reset subfile end indicator                                       S01166
+     C                     SETOF                     30                   S01166
+     C*                                                                   S01166
+     C*
+     C** Processing determined by forward (' ',F,U) or backward (D,L)
+     C**  roll requirement
+     C****       @ENQT     IFEQ 'L'                        B1             S01166
+     C****       @ENQT     OREQ 'D'                        *1             S01166
+     C           *IN26     IFEQ '1'                        B1             S01166
+     C                     EXSR #BA                        *1
+     C                     ELSE                            X1
+     C                     EXSR #BB                        *1
+     C                     END                             E1
+     C*
+     C* reset rollup rolldown indicators                                  S01166
+     C                     SETOF                     2526                 S01166
+     C*                                                                   S01166
+     C           #B9       ENDSR                           #B9
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BA      - Backward processing                                *
+     C*                                                               *
+     C* CALLS    #BC      - Format detail line                        *
+     C*                                                               *
+     C* CALLED BY  #B     - Record processing - Load detail control   *
+     C*                                                               *
+     C* FLDS USED**@ENQT**-*Enquiry*type*parameter*( /F/U/D/L/R)*******   S01166
+     C*          **@POS***-*File position display (START/ /END)********   S01166
+     C*            DDPOSN - File position display (START/ /END)       *   S01166
+     C*            @DATA  - Data for display flag (Y/N)               *
+     C*************@CT    - Count of records for display              *   S01166
+     C*            @C     - Count of records for display              *   S01166
+     C*************@DLINE - Display detail line                       *   S01166
+     C*            @L     - Detail line array                         *
+     C*                                                               *
+     C*****************************************************************
+     C           #BA       BEGSR
+     C*
+     C** If Enquiry type = Last then position at end of file
+     C****       @ENQT     IFEQ 'L'                        B1             S01166
+     C****       *HIVAL    SETGTFDCCYTLL                   *1             S01166
+     C****                 MOVEL'END'     @POS             *1             S01166
+     C****                 END                             E1             S01166
+     C*
+     C** If Enquiry type = Rolldown then position at roll key top
+     C****       @ENQT     IFEQ 'D'                        B1             S01166
+     C           *IN26     IFEQ '1'                        B1             S01166
+     C****                 MOVELFARKT1    KEY              *1             S01166
+     C*****                MOVELTKEY      KEY              *1      S01166 S01194
+     C*****      KEY       SETLLFDCCYTLL                   *1             S01194
+     C                     MOVELTKEY      @KEY    3        *1             S01194
+     C           @KEY      SETLLSDCURRL0                   *1             S01194
+     C                     END                             E1
+     C*
+     C** Priming read and store bottom roll key
+     C*****                READPFDCCYTLL                 61               S01194
+     C                     READPSDCURRL0                 61               S01194
+     C           *IN61     IFEQ '0'                        B1
+     C****                 MOVELKEY       FARKB1           *1             S01166
+     C*****                MOVELKEY       BKEY             *1      S01166 S01194
+     C                     MOVELA6CYCD    BKEY    3        *1             S01194
+     C                     MOVEL'     '   DDPOSN           *1             S01166
+     C*                                                                   S01166
+     C*   Clear subfile                                                   S01166
+     C*                                                                   S01166
+     C                     SETOF                     3536                 S01166
+     C*                                                                   S01166
+     C*****                WRITEDL3250C1               80          S01166 S01117
+     C                     WRITETM3250C1               80                 S01117
+     C*                                                                   S01166
+     C                     ELSE                            X1
+     C*****************    MOVE 'N'       @DATA            *1             S01166
+     C                     MOVEL'START'   DDPOSN           *1             S01166
+     C                     MOVEL'RTM0001' @MSGID           *1             S01166
+     C                     CALL 'ZA0240'                   *1             S01166
+     C                     PARM           @MSGID           *1             S01166
+     C                     GOTO #BA9                       *1             S01166
+     C                     END                             E1
+     C*
+     C** Reading backwards through LF/FCCYTLL, format and assign detail
+     C** lines until display full or no more records
+     C****                 Z-ADD11        @CT                             S01166
+     C                     Z-ADD12        RRN                             S01166
+     C*                                                                   S01166
+     C*
+     C****       @CT       DOWGT1                          B1             S01166
+     C           RRN       DOWGT0                          B1             S01166
+     C           *IN61     ANDEQ'0'                        *1
+     C*
+     C                     EXSR #BC                        *1
+     C****                 SUB  1         @CT              *1             S01166
+     C****                 MOVE @DLINE    @L,@CT           *1             S01166
+     C*                                                                   S01166
+     C*****                WRITEDL3250S1                   *1      S01166 S01117
+     C                     WRITETM3250S1                   *1             S01117
+     C*                                                                   S01166
+     C*
+     C****                 MOVELKEY       FARKT1                          S01166
+     C*****                MOVELKEY       TKEY                     S01166 S01194
+     C                     MOVE A6CYCD    TKEY    3                       S01194
+     C*
+     C*****                READPFDCCYTLL                 61*1             S01194
+     C                     READPSDCURRL0                 61*1             S01194
+     C*
+     C                     SUB  1         RRN              *1             S01166
+     C*                                                                   S01166
+     C                     END                             E1
+     C*
+     C** If front of file hit and end record not on display
+     C**   assign start of file literal to display line 1
+     C           *IN61     IFEQ '1'                        B1
+     C****       @POS      ANDNE'END'                      *1             S01166
+     C           DDPOSN    ANDNE'END'                      *1             S01166
+     C****                 MOVEL'START'   @POS             *1             S01166
+     C                     MOVEL'START'   DDPOSN  5        *1             S01166
+     C                     END                             E1
+     C*
+     C           #BA9      ENDSR                           #BA9
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BB      - Forward processing                                 *
+     C*                                                               *
+     C* CALLS    #BC      - Format detail line                        *
+     C*                                                               *
+     C* CALLED BY  #B     - Record processing - Load detail control   *
+     C*                                                               *
+     C* FLDS USED**@ENQT**-*Enquiry*type*parameter*( /F/U/D/L/R)*******   S01166
+     C*          **@POS***-*File position display (START/ /END)********   S01166
+     C*            DDPOSN - File position display (START/ /END)       *   S01166
+     C*            @DATA  - Data for display                          *
+     C*************@CT    - Count of records for display              *   S01166
+     C*            @C     - Count of records for display              *   S01166
+     C*************@DLINE - Display detail line                       *   S01166
+     C*            @L     - Detail line array                         *
+     C*                                                               *
+     C*****************************************************************
+     C           #BB       BEGSR
+     C*
+     C***** Enquiry type = First then position at front of file           S01166
+     C****       @ENQT     IFEQ 'F'                        B1             S01166
+     C****       @ENQT     OREQ ' '                        *1             S01166
+     C** If this is the first enquiry then position at front of file      S01166
+     C           @FSTEQ    IFEQ 'Y'                        B1             S01166
+     C*****      *LOVAL    SETLLFDCCYTLL                   *1             S01194
+     C           *LOVAL    SETLLSDCURRL0                   *1             S01194
+     C****                 MOVEL'START'   @POS             *1             S01166
+     C                     MOVEL'START'   DDPOSN           *1             S01166
+     C*  save key for top of screen                                       S01166
+     C*****                MOVELKEY       TKEY   12        *1      S01166 S01194
+     C                     MOVE A6CYCD    TKEY             *1             S01194
+     C                     END                             E1
+     C*
+     C** If Enquiry type = Rollup then position after roll key bottom
+     C****       @ENQT     IFEQ 'U'                        B1             S01166
+     C           *IN25     IFEQ '1'                        B1             S01166
+     C****                 MOVELFARKB1    KEY              *1             S01166
+     C*****                MOVELBKEY      KEY              *1      S01166 S01194
+     C*****      KEY       SETGTFDCCYTLL                   *1             S01194
+     C                     MOVELBKEY      @KEY             *1             S01194
+     C           @KEY      SETGTSDCURRL0                   *1             S01194
+     C*                                                    *1             S01166
+     C                     ELSE                            X1             S01166
+     C*                                                    *1             S01166
+     C* enter has been pressed - keep position on file     *1             S01166
+     C*****      TKEY      SETLLFDCCYTLL                   *1      S01166 S01194
+     C           TKEY      SETLLSDCURRL0                   *1             S01194
+     C*                                                    *1             S01166
+     C                     END                             E1
+     C*
+     C** If Enquiry type = Refresh
+     C****       @ENQT     IFEQ 'R'                        B1             S01166
+     C           *IN05     IFEQ '1'                        B1             S01166
+     C           @FSTEQ    OREQ 'Y'                        B1             S01166
+     C*
+     C                     MOVE 'N'       @FSTEQ           *1             S01166
+     C                     SETOF                     05                   S01166
+     C** Position file at roll key top
+     C****                 MOVELFARKT1    KEY              *1             S01166
+     C*****                MOVELTKEY      KEY              *1      S01166 S01194
+     C*****      KEY       SETLLFDCCYTLL                   *1             S01194
+     C                     MOVE TKEY      @KEY             *1             S01194
+     C           @KEY      SETLLSDCURRL0                   *1             S01194
+     C*
+     C** Check for start of file (read previous record)
+     C*****                READPFDCCYTLL                 60*1             S01194
+     C                     READPSDCURRL0                 60*1             S01194
+     C           *IN60     IFEQ '1'                        B*2
+     C****                 MOVEL'START'   @POS             **2            S01166
+     C                     MOVEL'START'   DDPOSN           **2            S01166
+     C                     END                             E*2
+     C*
+     C** Reposition file
+     C****                 MOVELFARKT1    KEY              *1             S01166
+     C*****                MOVELTKEY      KEY              *1      S01166 S01194
+     C*****      KEY       SETLLFDCCYTLL                   *1             S01194
+     C                     MOVE TKEY      @KEY             *1             S01194
+     C           @KEY      SETLLSDCURRL0                   *1             S01194
+     C*
+     C                     END                             E1
+     C*
+     C** Priming read and store top roll key
+     C*****                READ FDCCYTLL                 61               S01194
+     C                     READ SDCURRL0                 61               S01194
+     C           *IN61     IFEQ '0'                        B1
+     C****                 MOVELKEY       FARKT1           *1             S01166
+     C*****                MOVELKEY       TKEY             *1      S01166 S01194
+     C                     MOVE A6CYCD    TKEY             *1             S01194
+     C           *IN25     IFEQ '1'                        B*2            S01166
+     C                     MOVEL'     '   DDPOSN           **2            S01166
+     C                     END                             E*2            S01166
+     C*                                                                   S01166
+     C*   Clear subfile                                                   S01166
+     C*                                                                   S01166
+     C                     SETOF                     3536                 S01166
+     C*                                                                   S01166
+     C*****                WRITEDL3250C1               80          S01166 S01117
+     C                     WRITETM3250C1               80                 S01117
+     C*                                                                   S01166
+     C                     ELSE                            X1
+     C******************   MOVE 'N'       @DATA            *1             S01166
+     C                     MOVEL'END  '   DDPOSN           *1             S01166
+     C                     MOVEL'RTM0001' @MSGID                          S01166
+     C                     CALL 'ZA0240'                                  S01166
+     C                     PARM           @MSGID                          S01166
+     C                     SETON                     30                   S01166
+     C                     GOTO #BB9                                      S01166
+     C                     END                             E1
+     C*
+     C** Reading forwards through LF/FCCYTLL, format and assign detail
+     C** lines until display full or no more records
+     C****                 Z-ADD0         @CT     30                      S01166
+     C                     Z-ADD1         RRN     40                      S01166
+     C*
+     C****       @CT       DOWLT10                         B1             S01166
+     C           RRN       DOWLE12                         B1             S01166
+     C           *IN61     ANDEQ'0'                        *1
+     C*
+     C                     EXSR #BC                        *1
+     C****                 ADD  1         @CT              *1             S01166
+     C****                 MOVE @DLINE    @L,@CT           *1             S01166
+     C*
+     C*****                WRITEDL3250S1                   *1      S01166 S01117
+     C                     WRITETM3250S1                   *1             S01117
+     C*                                                                   S01166
+     C****                 MOVELKEY       FARKB1           *1             S01166
+     C*****                MOVELKEY       BKEY   12        *1      S01166 S01194
+     C                     MOVE A6CYCD    BKEY             *1             S01194
+     C*
+     C*****                READ FDCCYTLL                 61*1             S01194
+     C                     READ SDCURRL0                 61*1             S01194
+     C*
+     C                     ADD  1         RRN              *1             S01166
+     C                     END                             E1
+     C*
+     C** If end of file hit, move literal to display heading
+     C           *IN61     IFEQ '1'                        B1
+     C****                 MOVEL'END  '   @POS             *1             S01166
+     C                     MOVEL'END  '   DDPOSN           *1             S01166
+     C* end of file reached - do not display '+'                          S01166
+     C                     SETON                     30    *1             S01166
+     C                     END                             E1
+     C*
+     C           #BB9      ENDSR                           #BB9
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BC      - Format detail line                                 *
+     C*                                                               *
+     C* CALLS****MM1016   - Convert amount to Display/38 fmt (000s)   *   S01166
+     C*      ****MM1018   - Convert amount to Display/38 fmt (integer)*   S01166
+     C*          ZA0860   - Convert amount to Display/AS400 fmt       *   S01166
+     C*                                                               *
+     C* CALLED BY  #BA    - Backward processing                       *
+     C*            #BB    - Forward processing                        *
+     C*                                                               *
+     C* FLDS USED**@DLINE*-*Display detail line************************   S01166
+     C*            @CCY   - Currency                                  *
+     C*            @@CCY  - Currency                                  *
+     C*            @@CDP  - No of decimal places                      *
+     C****         @@IAMT - Input amount to MM1016                    *   S01166
+     C****         @@AMOU - Output from MM1016                        *   S01166
+     C*            @NET   - Net cash flow movement                    *
+     C*            @INT   - Net interest movement                     *
+     C****         @@AMIN - Input amount to MM1018                    *   S01166
+     C****         @@AMOT - Output from MM1018                        *   S01166
+     C*            @PL    - Cost to close P/L                         *
+     C*************@LDNA  - Input deal enquiry type                S01149 S01166
+     C*            DDDLTP - Input deal enquiry type                   *   S01166
+     C*************@LDNA2 - Deal type flag (without slash)     *   S01149 S01166
+     C*            @LDFLG - L/D found for all enquiry                 *   S01149
+     C*            @NIMT  - Store of net interest movement for ccy    *   S01149
+     C*            @NCMT  - Store of net cash flow movement for ccy   *   S01149
+     C*            @CCPL  - Store of cost to close P/L                *   S01149
+     C*                                                               *
+     C*****************************************************************
+     C           #BC       BEGSR
+     C*
+     C** Initialise detail line build area
+     C****                 MOVE *BLANKS   @DLINE                          S01166
+     C*
+     C** Currency code - assign
+     C****                 MOVE CCY       @CCY                            S01166
+     C*****                MOVE CCY       DDCCY   3                S01166 S01194
+     C                     MOVE A6CYCD    DDCCY   3                       S01194
+     C*
+     C** Get LF/MMFWDTLL record for currency
+     C*****      CCY       CHAINMMFWDTLL             60                   S01194
+     C           A6CYCD    CHAINMMFWDTLL             60                   S01194
+     C*                                                                   S01149
+     C** Only process if total for ccy found or not deleted               S01149
+     C           *IN60     IFEQ '0'                                       S01149
+     C           HVDLTF    ANDNE'*'                                       S01149
+     C*                                                                   S01149
+     C** If both deal types are required                                  S01149
+     C***********@LDNA     IFEQ *BLANKS                            S01149 S01166
+     C***********@LDNA     OREQ 'ALL'                              S01149 S01166
+     C           DDDLTP    IFEQ 'ALL'                                     S01166
+     C*                                                                   S01149
+     C** Store 'LD' data from MMFWDTLL data fields                        S01149
+     C                     Z-ADDHVNCML    @NCMT                           S01149
+     C                     Z-ADDHVNIML    @NIMT                           S01149
+     C                     Z-ADDHVCPLL    @CCPL                           S01149
+     C*                                                                   S01149
+     C** Add in NA deal totals                                            S01149
+     C                     ADD  HVNCMN    @NCMT                           S01149
+     C                     ADD  HVNIMN    @NIMT                           S01149
+     C                     ADD  HVCPLN    @CCPL                           S01149
+     C                     END                                            S01149
+     C*                                                                   S01149
+     C** If 'LD' only requested                                           S01149
+     C***********@LDNA     IFEQ 'LD'                               S01149 S01166
+     C           DDDLTP    IFEQ 'L/D'                                     S01166
+     C                     Z-ADDHVNCML    @NCMT                           S01149
+     C                     Z-ADDHVNIML    @NIMT                           S01149
+     C** E19855 - For the display od L/D only, Cost to Close P/L          E19855
+     C**          for L/D should be used, no N/A.                         E19855
+     C*                                                                   E19855
+     C************         Z-ADDHVCPLN    @CCPL                    S01149 E19855
+     C                     Z-ADDHVCPLL    @CCPL                           E19855
+     C*                                                                   E19855
+     C                     END                                            S01149
+     C*                                                                   S01149
+     C** If 'NA' only requested                                           S01149
+     C***********@LDNA     IFEQ 'NA'                               S01149 S01166
+     C           DDDLTP    IFEQ 'N/A'                                     S01166
+     C                     Z-ADDHVNCMN    @NCMT                           S01149
+     C                     Z-ADDHVNIMN    @NIMT                           S01149
+     C                     Z-ADDHVCPLN    @CCPL                           S01149
+     C                     END                                            S01149
+     C*                                                                   S01149
+     C                     ELSE                                           S01149
+     C*
+     C** If no valid record found then leave detail line blank
+     C*****      *IN60     IFEQ '1'                        B1             S01149
+     C*****      HVDLTF    OREQ '*'                        *1             S01149
+     C*****                GOTO #BC9                       *1             S01166
+     C                     Z-ADD0         @NCMT                           S01166
+     C                     Z-ADD0         @NIMT                           S01166
+     C                     Z-ADD0         @CCPL                           S01166
+     C                     END                             E1
+     C*
+     C** Assign data used by formatting subroutines
+     C******               MOVE CCY       @@CCY                           S01166
+     C******               MOVE CDP       @@CDP                           S01166
+     C*
+     C** Net cash flow movement - format & assign
+     C*****                MOVE HVNCMT    @@IAMT                          S01149
+     C*****                Z-ADD@NCMT     @@AMTW                   S01149 S01166
+     C*******************  EXSR MM1016                                    S01166
+     C*                                                                   S01166
+     C*****      CDP       ADD  3         @S      20               S01149 S01194
+     C           A6NBDP    ADD  3         @S      20                      S01194
+     C                     Z-ADD@PW,@S    @SCALE 100                      S01149
+     C           @NCMT     DIV  @SCALE    @@NUM     H                     S01149
+     C*                                                                   S01166
+     C                     EXSR ZA0860                                    S01166
+     C*                                                                   S01166
+     C****                 MOVE @@AMOU    @NET                            S01166
+     C                     MOVE @@ALPH    DDNET  11                       S01166
+     C*
+     C** Net interest movement - format & assign
+     C*****                MOVE HVNIMT    @@IAMT                          S01149
+     C*****                Z-ADD@NIMT     @@AMTW                   S01149 S01166
+     C*******************  EXSR MM1016                                    S01166
+     C*                                                                   S01166
+     C*****      CDP       ADD  3         @S                       S01149 S01194
+     C           A6NBDP    ADD  3         @S                              S01194
+     C                     Z-ADD@PW,@S    @SCALE                          S01149
+     C           @NIMT     DIV  @SCALE    @@NUM     H                     S01149
+     C*                                                                   S01166
+     C                     EXSR ZA0860                                    S01166
+     C*                                                                   S01166
+     C****                 MOVE @@AMOU    @INT                            S01166
+     C                     MOVE @@ALPH    DDINTR 11                       S01166
+     C*
+     C** Cost to close P/L - format & assign
+     C*****                MOVE HVCCPL    @@AMIN                          S01149
+     C*******************  EXSR MM1018                                    S01166
+     C*****                Z-ADDCDP       @S                       S01166 S01194
+     C*****      CDP       IFEQ 0                                  S01166 S01194
+     C                     Z-ADDA6NBDP    @S                              S01194
+     C           A6NBDP    IFEQ 0                                         S01194
+     C                     Z-ADD@CCPL     @@NUM                           S01166
+     C                     ELSE                                           S01166
+     C                     Z-ADD@PW,@S    @SCALE                          S01166
+     C           @CCPL     DIV  @SCALE    @@NUM     H                     S01166
+     C                     END                                            S01166
+     C                     EXSR ZA0860                                    S01166
+     C****                 MOVE @@AMOT    @PL                             S01166
+     C                     MOVE @@ALPH    DDPL   13                       S01166
+     C*
+     C           #BC9      ENDSR                           #BC9
+     C/EJECT                                                              S01166
+     C*****************************************************************   S01166
+     C****************************************************************    S01166
+     C*                                                              *    S01166
+     C*     ZA0860 -  CONVERT SHORT AMOUNT TO DISPLAY FORMAT         *    S01166
+     C*                                                              *    S01166
+     C*       CALLS:                                                 *    S01166
+     C*                                                              *    S01166
+     C*       INPUT: @@NUM  15N    (NUMERIC INPUT AMOUNT)            *    S01166
+     C*                                                              *    S01166
+     C*      OUTPUT: @@ALPH 16A    (ALPHA OUTPUT AMOUNT)             *    S01166
+     C*                                                              *    S01166
+     C*        USES: @K     15A  - ARRAY TO HOLD INPUT AMOUNT        *    S01166
+     C*              @@I     1N  - INDEX TO @K                       *    S01166
+     C*              @@WORK 15A  - ALPHA INPUT AMOUNT                *    S01166
+     C*                                                              *    S01166
+     C*     AMEND NO. 000001                  DATE   14/07/86        *    S01166
+     C*       Amendment to correct output if its value is zero.      *    S01166
+     C*                                                              *    S01166
+     C****************************************************************    S01166
+     C*                                                                   S01166
+     C           ZA0860    BEGSR                                          S01166
+     C*                                                                   S01166
+     C                     Z-ADD@@NUM     @@NUM  150                      S01166
+     C*                                                                   S01166
+     C**  IF THE NUMBER IS ZERO, PLACE A SINGLE ZERO IN THE LAST PLACE    S01166
+     C**  OF THE ARRAY, AND SET THE SIGN TO BLANK.  THEN BY-PASS          S01166
+     C**  FURTHER SUBROUTINE PROCESSING.                                  S01166
+     C           @@NUM     IFEQ 0                          B1             S01166
+     C                     MOVEA*BLANKS   @K               *1             S01166
+     C                     MOVE '0'       @K,15            *1             S01166
+     C                     GOTO ZA0868                     *1             S01166
+     C                     END                             E1             S01166
+     C*                                                                   S01166
+     C** SET UP SIGN OF OUTPUT AMOUNT                                     S01166
+     C           @@NUM     IFLT 0                          B1             S01166
+     C                     MOVE '-'       @K,16            *1             S01166
+     C                     Z-SUB@@NUM     @@NUM            *1             S01166
+     C                     ELSE                            X1             S01166
+     C                     MOVE '+'       @K,16            *1             S01166
+     C                     END                             E1             S01166
+     C*                                                                   S01166
+     C**  SET UP INPUT AMOUNT ARRAY                                       S01166
+     C                     MOVE @@NUM     @@WORK 15                       S01166
+     C                     MOVEA@@WORK    @K                              S01166
+     C*                                                                   S01166
+     C**  BLANK OUT EACH ELEMENT OF @K FROM LEFT TO RIGHT                 S01166
+     C**  UNTIL FIRST NON-ZERO ELEMENT OR 15TH ELEMENT                    S01166
+     C                     MOVE '0'       *IN90                           S01166
+     C                     Z-ADD1         @@I     20                      S01166
+     C           *IN90     DOUEQ'1'                        B1             S01166
+     C           @@I       OREQ 15                         *1             S01166
+     C*                                                    *1             S01166
+     C** IF ARRAY ELEMENT ZERO, SET TO BLANKS              *1             S01166
+     C           @K,@@I    IFEQ '0'                        B*2            S01166
+     C                     MOVE *BLANK    @K,@@I           **2            S01166
+     C                     ELSE                            X*2            S01166
+     C                     MOVE '1'       *IN90            **2            S01166
+     C                     END                             E*2            S01166
+     C                     ADD  1         @@I              *1             S01166
+     C                     END                             E1             S01166
+     C*                                                                   S01166
+     C** TAG ZA0868                                                       S01166
+     C           ZA0868    TAG                             **ZA0868**     S01166
+     C*                                                                   S01166
+     C** SET UP OUTPUT AMOUNT                                             S01166
+     C                     MOVEA@K        @@ALPH 16                       S01166
+     C*                                                                   S01166
+     C           ZA0869    ENDSR                           **ZA0869**     S01166
+     C*                                                                   S01166
+      /EJECT                                                              S01166
+     C****************************************************************
+     C*                                                              *
+     C*                                                              *
+     C*     MIDAS/DRS - MONEY MARKET MODULE                          *
+     C*                                                              *
+     C*     MM1016 -  CONVERT AMOUNT TO DISPLAY -38                  *
+     C*                                                              *
+     C*     This routine converts a 15N amount with up to 3 implied  *
+     C*     decimal places into a 13A field with thousands integer   *
+     C*     half adjusted , leading zeroes suppressed & signed(+ or  *
+     C*     -).                                                      *
+     C*                                                              *
+     C*     AMEND NO. XXXXXX                  DATE   XX/XX/XX        *
+     C*                                                              *
+     C*       CALLS: NONE                                            *
+     C*                                                              *
+     C*       INPUT: @@IAMT 15,0  INPUT AMOUNT                       *
+     C*              @@CCY  3A    INPUT CURRENCY                     *
+     C*                                                              *
+     C*      OUTPUT: @@AMOU 13A   SIGNED AMOUNT TO DISPLAY           *
+     C*                                                              *
+     C*        USES: @@AMNT       AMOUNT TO DISPLAY                  *
+     C*              @@SIGN       SIGN OF AMOUNT                     *
+     C*              @A           ARRAY OF DISPLAY AMOUNT (SIGNED)   *
+     C*                                                              *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C******     MM1016    BEGSR                                          S01166
+     C******                                                              S01166
+     C** Initialise fields                                                S01166
+     C******               MOVEA*BLANKS   @A                              S01166
+     C******               MOVE *BLANKS   @@AMOU 13                       S01166
+     C******               MOVE *BLANK    @@SIGN                          S01166
+     C******                                                              S01166
+     C** Find sign of input field                                         S01166
+     C******     @@IAMT    IFGT *ZERO                      B1             S01166
+     C******               MOVE '+'       @@SIGN  1        *1             S01166
+     C******               ELSE                            X1             S01166
+     C******     @@IAMT    IFLT *ZERO                      B*2            S01166
+     C******               MOVE '-'       @@SIGN           **2            S01166
+     C******               END                             E*2            S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C**  Execute MM1015 to convert the input amount to display format.   S01166
+     C******               EXSR MM1015                                    S01166
+     C******                                                              S01166
+     C** If a database error was discovered by MM1015 exit routine.       S01166
+     C******     *INU7     IFEQ '1'                        B1             S01166
+     C******               GOTO M10169                     *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C** Place output amount into array @A                                S01166
+     C******               MOVEL@@AMNT    @@AMOU                          S01166
+     C******               MOVEA@@AMOU    @A                              S01166
+     C******                                                              S01166
+     C** Place sign into array & move to output field.                    S01166
+     C******               MOVE @@SIGN    @A,13                           S01166
+     C******               MOVEA@A        @@AMOU                          S01166
+     C******                                                              S01166
+     C******     M10169    ENDSR                           **M10169**     S01166
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*                                                              *
+     C*     MIDAS/DRS - MONEY MARKET MODULE                          *
+     C*                                                              *
+     C*     MM1015 -  CONVERT AMOUNT TO DISPLAY -38                  *
+     C*                                                              *
+     C*     This routine converts a 15N amount with up to 3 implied  *
+     C*     decimal places into a 12A field with thousands integer   *
+     C*     half adjusted & leading zeroes suppressed.               *
+     C*                                                              *
+     C*     AMEND NO. XXXXXX                  DATE   XX/XX/XX        *
+     C*                                                              *
+     C*       CALLS: NONE                                            *
+     C*                                                              *
+     C*       INPUT: @@IAMT 15,0  INPUT AMOUNT                       *
+     C*              @@CCY  3A    INPUT CURRENCY                     *
+     C*              @@CDP  1,0   CURRENCY DECIMAL PLACES            *
+     C*                                                              *
+     C*      OUTPUT: @@AMNT 12A   AMOUNT TO DISPLAY                  *
+     C*                                                              *
+     C*        USES: @@I          INDEX TO ARRAY OF AMOUNT           *
+     C*              @@C          INDEX TO ARRAY OF DISPLAY AMOUNT   *
+     C*              @D           ARRAY OF AMOUNT                    *
+     C*              @J           ARRAY OF DISPLAY AMOUNT            *
+     C*                                                              *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C******     MM1015    BEGSR                                          S01166
+     C******                                                              S01166
+     C******     INITIALISE ARRAYS                                        S01166
+     C******                                                              S01166
+     C******               MOVEA*BLANKS   @D                              S01166
+     C******               MOVEA*BLANKS   @J                              S01166
+     C******                                                              S01166
+     C** IF -VE AMOUNT THEN MAKE +VE                                      S01166
+     C******     @@IAMT    IFLT 0                                         S01166
+     C******               Z-SUB@@IAMT    @@IAMT                          S01166
+     C******               END                                            S01166
+     C******                                                              S01166
+     C** Round up figures to the nearest thousand.                        S01166
+     C** & store initial array index value                                S01166
+     C******     @@CDP     IFEQ 0                          B1             S01166
+     C******               ADD  500       @@IAMT 150       *1             S01166
+     C******               Z-ADD12        @@I              *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C******     @@CDP     IFEQ 1                          B1             S01166
+     C******               ADD  5000      @@IAMT           *1             S01166
+     C******               Z-ADD11        @@I              *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C******     @@CDP     IFEQ 2                          B1             S01166
+     C******               ADD  50000     @@IAMT           *1             S01166
+     C******               Z-ADD10        @@I              *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C******     @@CDP     IFEQ 3                          B1             S01166
+     C******               ADD  500000    @@IAMT           *1             S01166
+     C******               Z-ADD9         @@I              *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C**  Place input amount into a 15 x 1 byte array                     S01166
+     C******               MOVEA@@AMDS    @D                              S01166
+     C******                                                              S01166
+     C**  Load output amount into a 12 x 1 byte array                     S01166
+     C******               Z-ADD12        @@C                             S01166
+     C******     @@I       DOWGT0                          B1             S01166
+     C******               MOVE @D,@@I    @J,@@C           *1             S01166
+     C******               SUB  1         @@C     20       *1             S01166
+     C******               SUB  1         @@I     20       *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C** Test successive elements of output amount setting zeroes to      S01166
+     C** blanks until the first element or a 'non zero' is reached.       S01166
+     C******               Z-ADD1         @@C                             S01166
+     C******                                                              S01166
+     C******     @J,@@C    DOUNE'0'                        B1             S01166
+     C******     @J,@@C    ANDNE*BLANK                     *1             S01166
+     C******     @@C       OREQ 12                         *1             S01166
+     C******               MOVE *BLANK    @J,@@C           *1             S01166
+     C******               ADD  1         @@C              *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C** MOVE @J TO DISPLAY FIELD
+     C******               MOVEA@J        @@AMNT 12                       S01166
+     C******               GOTO M10159                                    S01166
+     C******                                                              S01166
+     C** DUMMY MOVES TO DEFINE FIELDS NOT DEFINED ELSEWHERE               S01166
+     C******               MOVE @@CCY     @@CCY   3                       S01166
+     C******               MOVE @@CDP     @@CDP   10                      S01166
+     C******     M10159    ENDSR                           **M10159**     S01166
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* MM1018 - Subroutine to edit an amount to show integers only   *
+     C*          with zero suppression and a sign.                    *
+     C*                                                               *
+     C* CALLED BY :                                                   *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* INPUT  : @@AMIN Amount to be edited.                          *
+     C*          @@CDP  Currency decimal places.                      *
+     C*                                                               *
+     C* OUTPUT : @@AMOT Edited output amount.                         *
+     C*                                                               *
+     C* USES :   @@AMIN Amount to be edited.                          *
+     C*          @@AMIA Alpha version of amount to be edited.         *
+     C*          @@AMI1 Amount field with 1 decimal place.            *
+     C*          @@AMI2 Amount field with 2 decimal place.            *
+     C*          @@AMI3 Amount field with 3 decimal place.            *
+     C*          @@AMOT Edited output amount.                         *
+     C*          @@N    Counter field.                                *
+     C*          @@SIGN Field to hold sign of input amount.           *
+     C*          @W     Work array.                                   *
+     C*                                                               *
+     C*****************************************************************
+     C******     MM1018    BEGSR                                          S01166
+     C******                                                              S01166
+     C******fine fields used.                                             S01166
+     C******               Z-ADD@@AMIN    @@AMIN 150                      S01166
+     C******               Z-ADD@@CDP     @@CDP   10                      S01166
+     C******               MOVE *BLANKS   @@AMIA 15                       S01166
+     C******               Z-ADD0         @@AMI1 151                      S01166
+     C******               Z-ADD0         @@AMI2 152                      S01166
+     C******               Z-ADD0         @@AMI3 153                      S01166
+     C******               MOVE *BLANKS   @@AMOT 16                       S01166
+     C******               Z-ADD0         @@N     20                      S01166
+     C******               MOVE *BLANK    @@SIGN  1                       S01166
+     C******                                                              S01166
+     C******itialise work array.                                          S01166
+     C******               MOVEA*BLANKS   @W                              S01166
+     C******                                                              S01166
+     C**  If the input amount is 0, output a zero with no sign and set    S01166
+     C**  up the output field. By-pass further processing.                S01166
+     C******     @@AMIN    IFEQ 0                          B1             S01166
+     C******               MOVE *ZERO     @W,15            *1             S01166
+     C******               MOVEA@W        @@AMOT           *1             S01166
+     C******               GOTO M10189                     *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C**  Find the sign of the input amount - if negative, make the       S01166
+     C**  amount +ve.                                                     S01166
+     C******     @@AMIN    IFGE 0                          B1             S01166
+     C******               MOVE '+'       @@SIGN           *1             S01166
+     C******               ELSE                            X1             S01166
+     C******               MOVE '-'       @@SIGN           *1             S01166
+     C******               Z-SUB@@AMIN    @@AMIN           *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C**  Convert the input amount to integers only.                      S01166
+     C******                                                              S01166
+     C**  Move the input field into a field with an actual number of      S01166
+     C**  decimal places equal to the implied number.                     S01166
+     C**  Z-ADD the field back into the input amount field to remove      S01166
+     C**  the decimal places.                                             S01166
+     C**  Move the resulting field into the first 15 positions of the     S01166
+     C**  work array.                                                     S01166
+     C******     @@CDP     IFEQ 0                          B1             S01166
+     C******               MOVE @@AMIN    @@AMIA           *1             S01166
+     C******               MOVEA@@AMIA    @W               *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C******     @@CDP     IFEQ 1                          B1             S01166
+     C******               MOVE @@AMIN    @@AMI1           *1             S01166
+     C******               Z-ADD@@AMI1    @@AMIN    H      *1             S01166
+     C******               MOVE @@AMIN    @@AMIA           *1             S01166
+     C******               MOVEA@@AMIA    @W               *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C******     @@CDP     IFEQ 2                          B1             S01166
+     C******               MOVE @@AMIN    @@AMI2           *1             S01166
+     C******               Z-ADD@@AMI2    @@AMIN    H      *1             S01166
+     C******               MOVE @@AMIN    @@AMIA           *1             S01166
+     C******               MOVEA@@AMIA    @W               *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C******     @@CDP     IFEQ 3                          B1             S01166
+     C******               MOVE @@AMIN    @@AMI3           *1             S01166
+     C******               Z-ADD@@AMI3    @@AMIN    H      *1             S01166
+     C******               MOVE @@AMIN    @@AMIA           *1             S01166
+     C******               MOVEA@@AMIA    @W               *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C**  Remove leading zeros from the figure and replace with blanks,   S01166
+     C**  unless the half adjusted figure is zero, in which case, place   S01166
+     C**  a zero in the 15th position.                                    S01166
+     C******               Z-ADD1         @@N                             S01166
+     C******     @@N       DOWLE14                         B1             S01166
+     C******     @W,@@N    ANDEQ'0'                        X1             S01166
+     C******               MOVE *BLANK    @W,@@N           *1             S01166
+     C******               ADD  1         @@N              *1             S01166
+     C******               END                             E1             S01166
+     C******                                                              S01166
+     C**  Place the sign in the final position.                           S01166
+     C******               MOVE @@SIGN    @W,16                           S01166
+     C******                                                              S01166
+     C**  Move the final array into the output field.                     S01166
+     C******               MOVEA@W        @@AMOT                          S01166
+     C******                                                              S01166
+     C******     M10189    ENDSR                           **M10189**     S01166
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #A       - Initial processing                                 *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY  MAIN   - Driver routine - controls program logic   *
+     C*                                                               *
+     C* FLDS USED**@TERM**-*Termination parameter*( /E/T)**************   S01166
+     C*          **@ENQT**-*Enquiry type parameter*( /F/U/D/L/R)*******   S01166
+     C*            @RLRF  - Roll/refresh parameter                    *
+     C*            @FIRST - First cycle flag                          *
+     C*************@H     - Heading lines array                       *   S01166
+     C*            @L     - Detail line array                         *
+     C*            @M     - Message line array                        *
+     C*            @HEAD  - Heading lines                             *
+     C*          **@POS***-*File position display (START/ /END)********   S01166
+     C*            DDPOSN - File position display (START/ /END)       *   S01166
+     C*            @MSG   - Message line                              *
+     C*            @DATA  - Data for display flag (Y/N)               *
+     C*            @TLRV  - Time of last revaluation                  *
+     C*            @TLRVH                                             *
+     C*            @TLRVM                                             *
+     C*            @TLRVS                                             *
+     C*            @HH    - Time last revaluation display             *
+     C*            @MM                                                *
+     C*            @SS                                                *
+     C*************@LDNA  - Input deal enquiry type            *   S01149 S01166
+     C*************@LDNA2 - Deal type flag (without slash)     *   S01149 S01166
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C*
+     C****       *ENTRY    PLIST                                          S01166
+     C****                 PARM           @TERM   1                       S01166
+     C****                 PARM           @ENQT   1                       S01166
+     C****                 PARM           @RLRF  24                       S01166
+     C*
+     C****       *NAMVAR   DEFN AMENQ1AA  AMENQ1                          S01166
+     C*
+     C                     MOVE 'Y'       @FSTEQ  1        *1             S01166
+     C**  set on subfile end indicator                                    S01166
+     C                     MOVE '1'       *IN40                           S01166
+     C                     MOVE '1'       *IN30                           S01166
+     C**  initialise screen message queue                                 S01166
+     C                     MOVEL'*'       DDPGMQ                          S01166
+     C**  Move workstation id into screen field                           S01166
+     C                     MOVEL@JOB      DDWSID                          S01166
+     C** Execute only on first call to program
+     C           @FIRST    IFNE '1'                        B1
+     C                     MOVE '1'       @FIRST  1        *1
+     C*
+     C** Open files
+     C****                 OPEN CA38CPLL                   *1             S01166
+     C                     OPEN MMREVCLL                   *1
+     C                     OPEN MMFWDTLL                   *1
+     C*****                OPEN FDCCYTLL                   *1             S01194
+     C                     OPEN SDCURRL0                   *1             S01194
+     C*********************OPEN*FDUSSILL****************************S01166S01319
+     C                     OPEN MUSER                                     S01319
+     C*
+     C** Set up display headings
+     C*******************  MOVEA@H        @HEAD            *1             S01149
+     C*
+     C** Set up program name
+     C*****                MOVEL'DL3250'  DBPGM            *1      S01166 S01117
+     C                     MOVEL'TM3250'  DBPGM            *1             S01117
+     C*
+     C                     END                             E1
+     C*
+     C** Access record on LF/CA38CPLL to obtain current prompts.
+     C** If not found then database error
+     C****       1         CHAINCA38CPLL             60                   S01166
+     C****       *IN60     IFEQ '1'                        B1             S01166
+     C****                 MOVE '001'     DBASE            ***************S01166
+     C****                 MOVEL'CA38CPLL'DBFILE           *             *S01166
+     C****                 MOVE '1'       DBKEY            * DBERROR 001 *S01166
+     C****                 MOVE '1'       *INU7            *             *S01166
+     C****                 MOVE '1'       *INU8            ***************S01166
+     C****                 GOTO #A9                        *1             S01166
+     C****                 END                             E1             S01166
+     C*
+     C**************************************************************S01166S01319
+     C*********************MOVEL@USER*****@USER3**3*****************S01166S01319
+     C**************************************************************S01166S01319
+     C***********@USER3****CHAINFDUSSIP0*************61*************S01166S01319
+     C**DATABASE*ERROR*IF*USER*NOT*FOUND****************************S01166S01319
+     C**************************************************************S01166S01319
+     C************IN61*****IFEQ*'1'*********************************S01166S01319
+     C*********************MOVE*'FDUSSIP0'DBFILE********************S01166S01319
+     C*********************MOVE*'009'*****DBASE************DB*ERR*00S01166S01319
+     C*********************MOVEL@USER3****DBKEY*********************S01166S01319
+     C*********************MOVE*'FDUSSILL'@FILE*********************S01166S01319
+     C*********************EXSR*INFSR*******************************S01166S01319
+     C*********************END**************************************S01166S01319
+     C           @USER     CHAINMUSER                61                   S01319
+     C*                                                                   S01319
+     C           *IN61     IFEQ '1'                                       S01319
+     C*                                                                   S01319
+     C                     MOVEL'MUSER'   DBFILE           ***************S01319
+     C                     MOVE '009'     DBASE            *             *S01319
+     C                     MOVEL@USER     DBKEY            * DBERROR 009 *S01319
+     C                     EXSR INFSR                      *              S01319
+     C*                                                    ***************S01319
+     C                     END                                            S01319
+     C*                                                                   S01166
+     C***********USREF*****IFEQ*'Y'                                 S01319S01319
+     C           AURF      IFEQ 'Y'                                       S01319
+     C                     MOVEL@OVR,1    @OVRID                          S01166
+     C*********************Z-ADDUSRFPD****@WAIT********************S01166*S01319
+     C                     Z-ADDREFP      @WAIT                           S01319
+     C                     Z-ADD36        QCALEN 155                      S01166
+     C*********************CALL 'QCAEXEC'                           S01166E20774
+     C                     CALL 'QCMDEXC'                                 E20774
+     C                     PARM           @OVRID                          S01166
+     C                     PARM           QCALEN                          S01166
+     C                     END                                            S01166
+     C*                                                                   S01166
+     C*****                OPEN DL3250DD                           S01166 S01117
+     C                     OPEN TM3250DD                                  S01117
+     C*                                                                   S01166
+     C** Access record on LF/MMREVCLL to obtain revaluation status
+     C** If not found then database error
+     C           1         CHAINMMREVCLL             60
+     C           *IN60     IFEQ '1'                        B1
+     C                     MOVE '002'     DBASE            ***************
+     C                     MOVEL'MMREVCLL'DBFILE           *             *
+     C                     MOVE '1'       DBKEY            * DBERROR 002 *
+     C                     MOVE '1'       *INU7            *             *
+     C                     MOVE '1'       *INU8            ***************
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C*
+     C**  Access AMENQ1AA to allocate for output                          S01166
+     C****       *LOCK     IN   AMENQ1                                    S01166
+     C*                                                            S01149 S01166
+     C** Set up display headings                                   S01149 S01166
+     C***********@LDNA     IFEQ *BLANKS                            S01149 S01166
+     C***********          MOVEL'ALL'     @H,2                     S01149 S01166
+     C***********          ELSE                                    S01149 S01166
+     C***********          MOVEL@LDNA     @H,2                     S01149 S01166
+     C***********          END                                     S01149 S01166
+     C*                                                                   S01149
+     C***********          MOVEA@H        @HEAD                    S01149 S01166
+     C*                                                                   S01149
+     C           *LIKE     DEFN HVNIML    @NIMT                           S01149
+     C           *LIKE     DEFN HVNCML    @NCMT                           S01149
+     C           *LIKE     DEFN HVCPLL    @CCPL                           S01149
+     C*
+     C** General initialisation
+     C*****************    MOVE *BLANKS   @DATA   1                       S01166
+     C****                 MOVE *BLANKS   @POS                            S01166
+     C                     MOVE *BLANKS   DDPOSN                          S01166
+     C                     MOVE '  :  :  'DDLREV                          S01166
+     C*
+     C** Initialise display detail and message lines (4-14)
+     C****                 MOVE *BLANKS   @L                              S01166
+     C****                 MOVE *BLANKS   @MSG                            S01166
+     C*
+     C** Move time of last revaluation to display line 1
+     C                     MOVE IDTLRV    @TLRV
+     C                     MOVE @TLRVH    @HH
+     C                     MOVE @TLRVM    @MM
+     C                     MOVE @TLRVS    @SS
+     C*
+     C** If revaluation in progress, move message to display line 14
+     C           IDRIPI    IFEQ 'Y'                        B1
+     C****                 MOVE @M,1      @MSG             *1             S01166
+     C                     SETON                     70    *1             S01166
+     C                     END                             E1
+     C*
+     C           #A9       ENDSR                           #A9
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C       - Final processing                                   *
+     C*                                                               *
+     C**CALLS****CM0020***-*Command module for PC display**************   S01166
+     C*                                                               *
+     C* CALLED BY  MAIN   - Driver routine - controls program logic   *
+     C*                                                               *
+     C* FLDS USED**@TERM**-*Termination*parameter*( /E/T)**************   S01166
+     C*          **@ENQN**-                                           *   S01166
+     C*          **@ENQT**-*Enquiry*type*parameter*( /F/U/D/L/R)*******   S01166
+     C*          **@DATA**-*Data for display:**************************   S01166
+     C*          **@EMID**-********************************************   S01166
+     C*          **@SWER**-********************************************   S01166
+     C*          **@WF1***-********************************************   S01166
+     C*                                                               *
+     C*****************************************************************
+     C           #C        BEGSR
+     C*
+     C** If program termination requested
+     C**    set LR and terminate
+     C****       @TERM     IFEQ 'T'                        B1             S01166
+     C                     MOVE '1'       *INLR            *1
+     C****                 GOTO #C9                        *1             S01166
+     C****                 END                             E1             S01166
+     C*
+     C** Set enquiry number paramter
+     C****                 MOVE '117'     @ENQN                           S01166
+     C*
+     C** If database error
+     C**    set termination parameter and LR
+     C**    by-pass AMENQ1AA and CA38CPPP update
+     C****       *INU7     IFEQ '1'                        B1             S01166
+     C****                 MOVE 'E'       @TERM            *1             S01166
+     C****                 MOVE '1'       *INLR            *1             S01166
+     C****                 GOTO #C8                        *1             S01166
+     C****                 END                             E1             S01166
+     C*
+     C** If roll key request and no data
+     C**    set dummy return code and by-pass AMENQ1AA, CA38CPPP update
+     C****       @ENQT     IFEQ 'U'                        B1             S01166
+     C****       @ENQT     OREQ 'D'                        *1             S01166
+     C****       @DATA     IFEQ 'N'                        B*2            S01166
+     C****                 MOVE '999'     @ENQN            **2            S01166
+     C****                 GOTO #C8                        **2            S01166
+     C****                 END                             E*2            S01166
+     C****                 END                             E1             S01166
+     C*
+     C** Move window mask to data structure for output                    S01166
+     C****                 MOVE MASK      AMENQ1                          S01166
+     C*
+     C** Update current prompts file (roll key top & bottom)
+     C****                 UPDATCA38CPP0                                  S01166
+     C*
+     C*
+     C           #C8       TAG                             #C8
+     C****                                                                S01166
+     C** Update enquiry window 1 data area (if input)                     S01166
+     C****       @TERM     IFNE 'E'                        B1             S01166
+     C****                 OUT  AMENQ1                     *1             S01166
+     C****                 END                             E1             S01166
+     C*
+     C** Pass parameters back to PC                                       S01166
+     C****                 CALL 'CM0020'                                  S01166
+     C****                 PARM           @TERM                           S01166
+     C****                 PARM 'ER'      @EMID   2                       S01166
+     C****                 PARM '1'       @SWER   1                       S01166
+     C****                 PARM           @ENQT                           S01166
+     C****                 PARM           @ENQN   3                       S01166
+     C****                 PARM *BLANK    @WF1    1                       S01166
+     C*
+     C                     RETRN
+     C*
+     C           #C9       ENDSR                           #C9
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR    - Program error handler                              *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         - RPG if program error                      *
+     C*                                                               *
+     C* FLDS USED  @ERR1  - Error routine *PSSR already performed     *
+     C*          **@TERM**-*Termination*parameter*( /E/T)**************   S01166
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C** SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR1     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR1   1        *1
+     C*
+     C                     MOVE '1'       *INU6            *1
+     C****                 MOVE 'E'       @TERM                           S01166
+     C*
+     C** SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVEL'991'     DBASE            *1
+     C*
+     C                     DUMP                            *1
+     C                     END                             E1
+     C*
+     C** TERMINATE THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* INFSR    - File error handler                                 *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         - RPG if untrapped file error               *
+     C*                                                               *
+     C* FLDS USED  @ERR2  - Error routine *INFSR already performed    *
+     C*          **@TERM**-*Termination*parameter*( /E/T)**************   S01166
+     C*            @FILE  - File in error                             *
+     C*                                                               *
+     C*****************************************************************
+     C           INFSR     BEGSR
+     C*
+     C** SET @ERR2 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS
+     C           @ERR2     IFNE 'Y'                        B1
+     C                     MOVE 'Y'       @ERR2   1        *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C****                 MOVE 'E'       @TERM                           S01166
+     C*
+     C** SET UP FIELDS IN LOCAL DATA AREA
+     C                     MOVE @FILE     DBFILE           *1
+     C                     MOVE '992'     DBASE            *1
+     C*
+     C                     DUMP                            *1
+     C                     END                             E1
+     C*
+     C** TERMINATE THE PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C/EJECT
+** CPY@ - COPYRIGHT STATEMENT                                             S01117
+(c) Misys International Banking Systems Ltd. 2001
+** @OVR                                                                   S01166
+OVRDSPF FILE(TM3250DD) WAITRCD(    )
+**  @PWR - ARRAY OF POWERS OF 10
+0000000010
+0000000100
+0000001000
+0000010000
+0000100000
+0001000000
+0010000000
+0100000000
+1000000000

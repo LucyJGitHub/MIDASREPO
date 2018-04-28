@@ -1,0 +1,320 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas UP Checks for libraries involved in moves')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0351 - Library checking for moving objects live          */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CSC043             Date 18Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. CPK015             Date 05Mar02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CUP001 *CREATE     Date 20Nov98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CSC043 - MidasPlus IASP Enablement                          */
+/*       CPK015 - 4.01 packaging. Add MONMSG to error processing.    */
+/*       CUP001 - Introduction of BRIDGE                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &UCLIB &UPLIB &CPLIB &CORLIB +
+                          &RETURN)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&UCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CORLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&TODAY) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&UCLIBMOV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&UPLIBMOV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPLIBMOV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MPLIBMOV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBLIST) TYPE(*CHAR) LEN(40)
+             DCL        VAR(&LIBLIST1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&UPSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&TEST) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&START) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                  /*CSC043*/
+             DCL        VAR(&IASP) TYPE(*CHAR) LEN(10)                                    /*CSC043*/
+/*/COPY GPCPYSRCG,GPSVALDCL  */                                                           /*CSC043*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             RTVJOBA    DATE(&TODAY)
+/*                                                                                        /*CSC043*/
+/** Get the global IASP system values */                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+             CALL       PGM(GPAOSVALR0) PARM(&RSVALRTNC +
+                          'IASPinstallation' &SVAL1 'IASPgroup' +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10)                                               /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Check whether system is in IASP environment. */                                       /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP_YN) VALUE(%SST(&SVAL1 1 1))                            /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+             IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                                   /*CSC043*/
+/*                                                                                        /*CSC043*/
+/** Get name of IASP. */                                                                  /*CSC043*/
+/*                                                                                        /*CSC043*/
+              CHGVAR     VAR(&IASP) VALUE(%SST(&SVAL2 1 10))                              /*CSC043*/
+                                                                                          /*CSC043*/
+             ENDDO                                                                        /*CSC043*/
+ 
+             CHGDTAARA  DTAARA(UPSTAT (50 5)) VALUE(' ')
+/* Processing for libraries where objects are to be moved to */
+/* Check whether user has authority to CRTLIB command */
+             CHGDTAARA  DTAARA(UPSTAT (50 1)) VALUE('Y')
+             CHKOBJ     OBJ(CRTLIB) OBJTYPE(*CMD) AUT(*USE)
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                CHGDTAARA  DTAARA(UPSTAT (50 1)) VALUE(N)
+             ENDDO
+             RTVDTAARA  DTAARA(UPSTAT) RTNVAR(&UPSTAT)
+ 
+/* Check whether any libraries need to be created */
+             IF         COND(&MODE *EQ 'C') THEN(DO)
+                CHGDTAARA  DTAARA(UPSTAT (51 1)) VALUE('Y')
+                CHGVAR     VAR(&UCLIBMOV) VALUE('#.' *TCAT &UCLIB)
+                CHKOBJ     OBJ(&UCLIBMOV) OBJTYPE(*LIB)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGDTAARA  DTAARA(UPSTAT (51 1)) VALUE('N')
+                   IF         COND(%SST(&UPSTAT 50 1) *EQ 'Y') THEN(DO)
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+                    IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                            /*CSC043*/
+                      CRTLIB     LIB(&UCLIBMOV) TEXT('Temporary for BRIDGE' +
+                          *BCAT &TODAY) ASPDEV(&IASP)                                     /*CSC043*/
+                    ENDDO                                                                 /*CSC043*/
+                    ELSE       CMD(DO)                                                    /*CSC043*/
+                      CRTLIB     LIB(&UCLIBMOV) TEXT('Temporary for +
+                          BRIDGE' *BCAT &TODAY)
+                    ENDDO                                                                 /*CSC043*/
+                   ENDDO
+                GOTO       CMDLBL(UPLIB)
+                ENDDO
+/* If library exists then send screen to ask what needs to be done */
+                CALL       PGM(UPC0352) PARM(&UCLIBMOV &RETURN)
+                IF         COND(&RETURN *EQ 'C') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+                IF         COND(&RETURN *EQ 'F') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+ 
+UPLIB:
+                CHGDTAARA  DTAARA(UPSTAT (52 1)) VALUE('Y')
+                CHGVAR     VAR(&UPLIBMOV) VALUE('#.' *TCAT &UPLIB)
+                CHKOBJ     OBJ(&UPLIBMOV) OBJTYPE(*LIB)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGDTAARA  DTAARA(UPSTAT (52 1)) VALUE('N')
+                   IF         COND(%SST(&UPSTAT 50 1) *EQ 'Y') THEN(DO)
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+                    IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                            /*CSC043*/
+                      CRTLIB     LIB(&UPLIBMOV) TEXT('Temporary for BRIDGE' +
+                          *BCAT &TODAY) ASPDEV(&IASP)                                     /*CSC043*/
+                    ENDDO                                                                 /*CSC043*/
+                    ELSE       CMD(DO)                                                    /*CSC043*/
+                      CRTLIB     LIB(&UPLIBMOV) TEXT('Temporary for +
+                          BRIDGE' *BCAT &TODAY)
+                    ENDDO                                                                 /*CSC043*/
+                   ENDDO
+                GOTO       CMDLBL(CPLIB)
+                ENDDO
+/* If library exists then send screen to ask what needs to be done */
+                CALL       PGM(UPC0352) PARM(&UPLIBMOV &RETURN)
+                IF         COND(&RETURN *EQ 'C') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+                IF         COND(&RETURN *EQ 'F') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+CPLIB:
+             IF         COND(&MODE *EQ 'B' *OR &MODE *EQ 'C') THEN(DO)
+                CHGDTAARA  DTAARA(UPSTAT (53 1)) VALUE('Y')
+                CHGVAR     VAR(&CPLIBMOV) VALUE('#.' *TCAT &CPLIB)
+                CHKOBJ     OBJ(&CPLIBMOV) OBJTYPE(*LIB)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CHGDTAARA  DTAARA(UPSTAT (53 1)) VALUE('N')
+                   IF         COND(%SST(&UPSTAT 50 1) *EQ 'Y') THEN(DO)
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+                    IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                            /*CSC043*/
+                      CRTLIB     LIB(&CPLIBMOV) TEXT('Temporary for BRIDGE' +
+                          *BCAT &TODAY) ASPDEV(&IASP)                                     /*CSC043*/
+                    ENDDO                                                                 /*CSC043*/
+                    ELSE       CMD(DO)                                                    /*CSC043*/
+                      CRTLIB     LIB(&CPLIBMOV) TEXT('Temporary for +
+                          BRIDGE' *BCAT &TODAY)
+                    ENDDO                                                                 /*CSC043*/
+                   ENDDO
+                GOTO       CMDLBL(MPLIB)
+                ENDDO
+                CALL       PGM(UPC0352) PARM(&CPLIBMOV &RETURN)
+                IF         COND(&RETURN *EQ 'C') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+                IF         COND(&RETURN *EQ 'F') THEN(DO)
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+MPLIB:
+             CHGDTAARA  DTAARA(UPSTAT (54 1)) VALUE('Y')
+             CHGVAR     VAR(&MPLIBMOV) VALUE('#.' *TCAT &CORLIB)
+             CHKOBJ     OBJ(&MPLIBMOV) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGDTAARA  DTAARA(UPSTAT (54 1)) VALUE('N')
+                IF         COND(%SST(&UPSTAT 50 1) *EQ 'Y') THEN(DO)
+/*                                                                                        /*CSC043*/
+/** If IASP environment */                                                                /*CSC043*/
+/*                                                                                        /*CSC043*/
+                  IF         COND(&IASP_YN *EQ 'Y') THEN(DO)                              /*CSC043*/
+                   CRTLIB     LIB(&MPLIBMOV) TEXT('Temporary for BRIDGE' +
+                          *BCAT &TODAY) ASPDEV(&IASP)                                     /*CSC043*/
+                  ENDDO                                                                   /*CSC043*/
+                  ELSE       CMD(DO)                                                      /*CSC043*/
+                   CRTLIB     LIB(&MPLIBMOV) TEXT('Temporary for +
+                          BRIDGE' *BCAT &TODAY)
+                  ENDDO                                                                   /*CSC043*/
+                ENDDO
+             GOTO       CMDLBL(CRTLIB)
+             ENDDO
+             CALL       PGM(UPC0352) PARM(&MPLIBMOV &RETURN)
+             IF         COND(&RETURN *EQ 'C') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+             IF         COND(&RETURN *EQ 'F') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+CRTLIB:
+/* If user has does not have CRTLIB but all libraries exist then  */
+/*  end program */
+             RTVDTAARA  DTAARA(UPSTAT) RTNVAR(&UPSTAT)
+             CHGVAR     VAR(&TEST) VALUE(%SST(&UPSTAT 50 5))
+             IF         COND(&TEST *EQ 'N   Y' *OR &TEST *EQ 'N  YY' +
+                          *OR &TEST *EQ 'N YYY' *OR &TEST *EQ +
+                          'NYYYY') THEN(GOTO CMDLBL(END))
+ 
+/* If user does not have CRTLIB authority and libraries need to be  */
+/*  created then send appropriate message */
+             IF         COND(%SST(&UPSTAT 50 1) *EQ 'N') THEN(DO)
+                CHGVAR     VAR(&COUNT) VALUE(0)
+                IF         COND(%SST(&UPSTAT 51 1) *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+                   CHGVAR     VAR(&START) VALUE((&COUNT * 10) - 9)
+                  CHGVAR VAR(%SST(&LIBLIST &START 10)) VALUE(&UCLIBMOV)
+                ENDDO
+                IF         COND(%SST(&UPSTAT 52 1) *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+                   CHGVAR     VAR(&START) VALUE((&COUNT * 10) - 9)
+                  CHGVAR VAR(%SST(&LIBLIST &START 10)) VALUE(&UPLIBMOV)
+                ENDDO
+                IF         COND(%SST(&UPSTAT 53 1) *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+                   CHGVAR     VAR(&START) VALUE((&COUNT * 10) - 9)
+                  CHGVAR VAR(%SST(&LIBLIST &START 10)) VALUE(&CPLIBMOV)
+                ENDDO
+                IF         COND(%SST(&UPSTAT 54 1) *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)
+                   CHGVAR     VAR(&START) VALUE((&COUNT * 10) - 9)
+                  CHGVAR VAR(%SST(&LIBLIST &START 10)) VALUE(&MPLIBMOV)
+                ENDDO
+/* Build up correct message and send to screen if libraries need to */
+/*  be created */
+                IF         COND(&COUNT *GT 0) THEN(DO)
+                   RTVMSG     MSGID(UPM0013) MSGF(UTMSGF) MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                   RTVMSG     MSGID(UPM0021) MSGF(UTMSGF) MSG(&MESSAGE)
+                   CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)
+                   IF         COND(&COUNT *GE 1) THEN(DO)
+                      CHGVAR VAR(&LIBLIST1) +
+                             VALUE(%SST(&LIBLIST 1 10))
+                      RTVMSG     MSGID(UPM0022) MSGF(UTMSGF) +
+                          MSGDTA(&LIBLIST1) MSG(&MESSAGE)
+                      CHGDTAARA DTAARA(MIDASMSG (251 50)) +
+                           VALUE(&MESSAGE)
+                   ENDDO
+                   IF         COND(&COUNT *GE 2) THEN(DO)
+                      CHGVAR VAR(&LIBLIST1) +
+                             VALUE(%SST(&LIBLIST 11 10))
+                      RTVMSG     MSGID(UPM0022) MSGF(UTMSGF) +
+                          MSGDTA(&LIBLIST1) MSG(&MESSAGE)
+                      CHGDTAARA DTAARA(MIDASMSG (301 50)) +
+                           VALUE(&MESSAGE)
+                   ENDDO
+                   IF         COND(&COUNT *GE 3) THEN(DO)
+                      CHGVAR VAR(&LIBLIST1) +
+                             VALUE(%SST(&LIBLIST 21 10))
+                      RTVMSG     MSGID(UPM0022) MSGF(UTMSGF) +
+                          MSGDTA(&LIBLIST1) MSG(&MESSAGE)
+                      CHGDTAARA DTAARA(MIDASMSG (351 50)) +
+                           VALUE(&MESSAGE)
+                   ENDDO
+                   IF         COND(&COUNT *EQ 4) THEN(DO)
+                      CHGVAR VAR(&LIBLIST1) +
+                             VALUE(%SST(&LIBLIST 31 10))
+                      RTVMSG     MSGID(UPM0022) MSGF(UTMSGF) +
+                          MSGDTA(&LIBLIST1) MSG(&MESSAGE)
+                      CHGDTAARA DTAARA(MIDASMSG (401 50)) +
+                           VALUE(&MESSAGE)
+                   ENDDO
+                   CALL       PGM(SCC0010) PARM('UPC0351' 'ENTER' ' ')
+/* If screen is displayed then halt further processing */
+                   CHGVAR     VAR(&RETURN) VALUE('H')
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+/* Set up messages for Midas Information Screen  */
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC0351') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)                                                    /*CPK015*/
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)                                                    /*CPK015*/
+             CALL       PGM(SCC0010) PARM('UPC0351' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*CPK015*/
+             CHGVAR     VAR(&RETURN) VALUE('F')
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

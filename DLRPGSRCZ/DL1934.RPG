@@ -1,0 +1,350 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL IR Report prompt for currency')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module
+     F*                                                               *
+     F*  DL1934 - FRA/IRS CURRENCY PROMPT PROGRAM                     *
+     F*                                                               *
+     F*  Function: This Program prompts for the Currency to run,      *
+     F*    (I/C)   depending on Input Parameter:                      *
+     F*              A - FRA/IRS Rates File List                      *
+     F*              B - MM Rates and Discount Factors Report         *
+     F/COPY WNCPYSRC,DL1934F001
+     F*                                                               *
+     F*  This program is very similar to DL1953.                      *
+     F*                                                               *
+     F*  Called by: DLC1934A - FRA/IRS Rates File List                *
+     F*             DLC1934B - MM Rates & Discount Factors Report     *
+     F/COPY WNCPYSRC,DL1934F002
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. E38654             Date 27Apr92               *
+      *                 S01328             Date 12Mar91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+     F*  E38654 - F12 DOES NOT WORK                                   *
+     F*  S01328 - FRA/IRS Revaluations - New Program                  *
+     F*                                                               *
+     F****************************************************************
+      *
+     FDL1934DFCF  E                    WORKSTN
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*                                                               *
+     F*     3  - EXIT PROGRAM                                         *
+     F*    12  - PREVIOUS SCREEN                                      *
+     F*                                                               *
+     F*    20  - PROGRAM CALLED FOR FRA OR IRS RATES FILE LIST        *
+     F*    21  - PROGRAM CALLED FOR MM RATES AND DISCOUNT FACTORS     *
+     F*                                                               *
+     F*    40  - ERROR ON INPUT CURRENCY                              *
+     F*                                                               *
+     F*    70  - INPUT PASSED VALIDATION                              *
+     F*                                                               *
+     F*  U7+U8   DATABASE ERROR                                       *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  VAL    - Validate input from user                            *
+     F*  ERROR  - Send message to program message queue               *
+     F*  *PSSR  - Database Error Processing                           *
+     F*                                                               *
+     F*  Index to external programs used                              *
+     F*                                                               *
+     F*  ZA0250 - Clear message subfile                               *
+     F*  ZA0240 - Add a message to message subfile                    *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E*
+     E                    CPY@    1   1 80
+     E** COMPILE TIME ARRAY FOR COPYRIGHT STATEMENT
+      /SPACE 3
+     I*
+     IPSDS       SDS
+     I*   Program Status Data Structure
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* External Data-Structure for Bank Installation Control Data.
+     I*
+     ISDCURR    E DSSDCURRPD
+     I* External Data-Structure for Currency Codes.
+     I*
+     IDSFDY     E DSDSFDY
+     I* First Byte Data-Structure for Access Programs.
+     I*
+     IDSSDY     E DSDSSDY
+     I* Second Byte Data-Structure for Access Programs.
+     I*
+     IRPARM       DS
+     I** Currency prompt - output parameter
+     I                                        1   3 PCCY
+     I*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C                     EXSR INIT
+     C*
+     C* If CA03 has been pressed or if validation successful end pgm.
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'                                       E38654
+     C           *IN70     ANDEQ'0'
+     C*
+     C* Write subfile record, if error exists message will be displayed
+     C                     WRITEDL1934C0
+     C*
+     C* Display initial input screen or, if in error, re-display.
+     C                     EXFMTDL1934P1
+     C*
+     C* Validate user input, if in error send msg to error subfile.
+     C                     EXSR VAL
+     C*
+     C                     END
+     C*
+     C* end program
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  INIT       - Initial Processing                              *
+     C*                                                               *
+     C*  CALLED BY: - Main Processing                                 *
+     C*                                                               *
+     C*  CALLS:     - ZA0250 - Clear message subfile                  *
+     C*                                                               *
+     C*  USES:      - PMODE  - Mode to run program -                  *
+     F*                        A - FRA/IRS Rates File List            *
+     F*                        B - MM Rates & Discount Factors Report *
+     F/COPY WNCPYSRC,DL1934F003
+     C*               RPARM  - Input/Output parameter: 100A DS        *
+     C*                         01-03 PCCY   - Output : Selected Ccy  *
+     C*               RCMD   - Command Key taken                      *
+     C*               DATE   - Run date from the ICD                  *
+     C*               WCCY   - Screen field - Currency                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   1
+     C                     PARM           RPARM
+     C                     PARM           RCMD    1
+     C                     PARM           RACT    1                       E38654
+     C*
+     C/COPY WNCPYSRC,DL1934C001
+     C** if Mode indicates Rates File List set *IN20 on/*IN21 off
+     C           PMODE     IFEQ 'A'
+     C                     MOVE '1'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     END
+     C*
+     C** if Mode indicates Discount Factors set *IN21 on/*IN20 off
+     C           PMODE     IFEQ 'B'
+     C                     MOVE '1'       *IN21
+     C                     MOVE '0'       *IN20
+     C                     END
+     C*
+     C/COPY WNCPYSRC,DL1934C002
+     C**  Access Installation Control Data for Local CCY Code and Date.
+     C**  (database error processing handled by the access program)
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C*   If amend, enquire or delete, move parameter to screen           E38654
+     C*   If insert move local currency to screen                         E38654
+     C*                                                                   E38654
+     C           RACT      IFEQ 'A'                                       E38654
+     C           RACT      OREQ 'D'                                       E38654
+     C*                                                                   E38654
+     C           PCCY      IFEQ '***'                                     E38654
+     C                     MOVE *BLANKS   WCCY                            E38654
+     C                     ELSE                                           E38654
+     C                     MOVE PCCY      WCCY                            E38654
+     C                     END                                            E38654
+     C*                                                                   E38654
+     C                     ELSE                                           E38654
+     C                     MOVE BJLCCY    WCCY
+     C                     END                                            E38654
+     C*                                                                   E38654
+     C                     MOVE BJMRDT    DATE
+     C*
+     C* Set up subfile message queue as program message queue and
+     C* clear messages.
+     C                     MOVEL'*'       DDPGMQ
+     C                     CALL 'ZA0250'
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  VAL        - Validate input from user                        *
+     C*                                                               *
+     C*  CALLED BY: - Main Processing                                 *
+     C*                                                               *
+     C*  CALLS:     - ERROR  - Send a message to program message queue*
+     C*               ZA0250 - Clear message subfile                  *
+     C*                                                               *
+     C*  USES:        PCCY   - Output parameter: Selected Currency    *
+     C*               WCCY   - Screen field - Currency                *
+     C*               RCMD   - Command Key taken                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VAL       BEGSR
+     C*
+     C** Reset error indicator
+     C                     MOVE '0'       *IN40
+     C*
+     C** if CA03 then set up RCF field; end subroutine and exit program
+     C           *IN03     IFEQ '1'
+     C                     MOVEL'E'       RCMD
+     C                     GOTO VAL9
+     C                     END
+     C*
+     C** if CA12 has not been pressed then perform validation
+     C           *IN12     IFEQ '0'
+     C*
+     C**  if Currency blank do not validate (blank means 'ALL'.)
+     C           WCCY      IFNE *BLANKS
+     C*
+     C** Validate Currency entered by user.
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WCCY      WWCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** If Currency is invalid set up error indicator.
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN40
+     C*
+     C** ...else allow for '?' on input and set up Currency
+     C                     ELSE
+     C                     MOVELA6CYCD    WCCY
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If no error on Currency then move input field to the output
+     C** parameter; indicate validation successful.
+     C           *IN40     IFEQ '0'
+     C*
+     C**  if Currency blank (blank means 'ALL') then set to asterisks
+     C**  to avoid RPARM being returned as all blanks
+     C           WCCY      IFEQ *BLANKS
+     C                     MOVE '***'     PCCY
+     C                     ELSE
+     C                     MOVE WCCY      PCCY
+     C                     END
+     C*
+     C                     MOVE '1'       *IN70
+     C*
+     C** ...error in input field move error messages into message
+     C** subfile for display
+     C                     ELSE
+     C                     EXSR ERROR
+     C                     END
+     C*
+     C** ...else CA12 pressed - set field to default as before
+     C                     ELSE
+     C                     MOVE BJLCCY    WCCY
+     C*
+     C* and clear any error messages in the message subfile.
+     C                     CALL 'ZA0250'
+     C*
+     C                     MOVEL'F'       RCMD                            E38654
+     C                     END
+     C*
+     C           VAL9      ENDSR                           ** VAL9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ERROR      - Send message to program message queue           *
+     C*                                                               *
+     C*  CALLED BY: - VAL - Validate input from user                  *
+     C*                                                               *
+     C*  CALLS:     - ZA0250 - Clear message subfile                  *
+     C*             - ZA0240 - Add a message to message subfile       *
+     C*                                                               *
+     C*****************************************************************
+     C           ERROR     BEGSR
+     C*
+     C** clear message subfile
+     C                     CALL 'ZA0250'
+     C*
+     C** If error on Currency send error message to message subfile
+     C           *IN40     IFEQ '1'
+     C                     CALL 'ZA0240'
+     C                     PARM 'FIS0001' @MSGID 10
+     C                     END
+     C*
+     C                     ENDSR                           ** ERROR9 **
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR      - Database Error Processing                       *
+     C*                                                               *
+     C*  CALLED BY:   Executes whenever file of program exception     *
+     C*               error occurs                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C*
+     C** (no need to set up LDA since all database errors handled by
+     C**  access programs)
+     C*
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C                     CALL 'DBERRCTL'
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

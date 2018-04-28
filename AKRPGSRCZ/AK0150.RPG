@@ -1,0 +1,380 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AK Internal Contract A/c Key Gen Report')
+      ********************************************************************
+      *                                                                  *
+      *  Midas - Account Key Generator                                *
+      *                                                                  *
+      *     AK0150 - Account Keys Generation Report - Internal Contracts.*
+      *                                                                  *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CDL038             Date 10May05                  *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *     PREV AMEND NO. 047369             Date 10JAN94               *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *      CDL038 - Extended Deal Sub Type                             *
+      *      047369 - NARRATIVE CODES SHOULD BE LAPHA NOT NUMERIC.       *
+      *                                                                  *
+      ********************************************************************
+     F*
+     FZACKEYL1IF  E           K        DISK
+     FFDDTSTL1IF  E           K        DISK                                                   CDL038
+     FAK0150P1O   E             99     PRINTER      KINFDS SPOOL
+     F*
+     F********************************************************************
+     F*
+     F*  Function of Indicators
+     F*
+     F*  10 - End of file ZACKEYL1
+     F*  70 - Output '*Continued*'
+     F*  99 - Overflow indicator
+     F*
+     F********************************************************************
+     F/EJECT
+     E*
+     E                    DESC    1   1 17
+     E** Description Array
+     E*
+     E                    CPY@    1   1 80
+     E** Copyright Array
+     E*
+     E********************************************************************
+     E/EJECT
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** Data Structure for Compilation  - Copyright Insertion
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+     I*
+     ISPOOL       DS
+     I*
+     I**  Spool information data structure for main print
+     I*
+     I                                       83  90 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     IAKEY        DS
+     I                                        1   2 TYP
+     I                                        4   5 SUBTYP
+     I                                       11  14 CLAS                                      CDL038
+     I** Account Key Data Structure
+     I*
+     ITYPE@       DS                                                                          CDL038
+     I                                        1   2 TYP@                                      CDL038
+     I                                        4   5 SUBTY@                                    CDL038
+     I                                        7  10 CLAS@                                     CDL038
+     I*                                                                                       CDL038
+     I********************************************************************
+     I/EJECT
+     C*
+     C** Concatenate Type and Subtype fields
+     C*
+     C           TYPSTY    KLIST
+     C                     KFLD           TYP                                                 CDL038
+     C                     KFLD           SUBTYP                                              CDL038
+     C                     KFLD           CLAS                                                CDL038
+     C*********************KFLD           KTYP    2                                           CDL038
+     C*********************KFLD           KSUBTY  2                                           CDL038
+     C*
+     C** Use access program AOBANKR0 to retrieve header details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**  Ensure report spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  Error during ZSFILE processing, return to calling program
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C** Write report headings
+     C*
+     C                     WRITEFMTW01
+     C*
+     C***Initialise*work*fields*for*Previous*Type/Subtype.                                    CDL038
+     C** Initialise work fields for Previous Type/Subtype/Class.                              CDL038
+     C*
+     C                     MOVE *BLANKS   PRVTYP  2
+     C                     MOVE *BLANKS   PRVSTY  2
+     C                     MOVE *BLANKS   PRVCLS  4                                           CDL038
+     C*
+     C                     MOVE *BLANKS   DESNM  37
+     C                     MOVE *BLANKS   TYPE@                                               CDL038
+     C*********************MOVE *BLANKS   TYPE@   5                                           CDL038
+     C*
+     C** Set record counter to zero
+     C*
+     C                     Z-ADD0         RECCNT
+     C*
+     C** Read first record for ZACKEYL1
+     C*
+     C                     READ ZACKEYL1                 10
+     C           *IN10     IFEQ '1'
+     C                     WRITEFMTW02
+     C                     ELSE
+     C*
+     C** Add one to record counter
+     C*
+     C                     ADD  1         RECCNT
+     C                     END
+     C*
+     C** Do while record in ZACKEYL1
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C***Type/Subtype*same*as*previous*Type/Subtype                                           CDL038
+     C** Type/Subtype/Class same as previous Type/Subtype/Class                               CDL038
+     C*
+     C           TYP       IFEQ PRVTYP
+     C           SUBTYP    ANDEQPRVSTY
+     C           CLAS      ANDEQPRVCLS                                                        CDL038
+     C                     EXSR ALPHA
+     C                     WRITEFMTW05
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   TYPE@
+     C                     MOVELTYP       TYP@                                                CDL038
+     C                     MOVELSUBTYP    SUBTY@                                              CDL038
+     C                     MOVELCLAS      CLAS@                                               CDL038
+     C*********************MOVELTYP       TYPE@                                               CDL038
+     C*********************MOVE SUBTYP    TYPE@                                               CDL038
+     C*
+     C***Type/Subtype*different*to*previous*Type/Subtype                                      CDL038
+     C** Type/Subtype/Class different to previous Type/Subtype/Class                          CDL038
+     C*
+     C*********************MOVEADESC,1    DESNM                                               CDL038
+     C*                                                                                       CDL038
+     C** Look up Description Table                                                            CDL038
+     C*                                                                                       CDL038
+     C                     MOVE *BLANKS   DESNM                                               CDL038
+     C           TYPSTY    CHAINFDDTSTL1             30    *                                  CDL038
+     C           *IN30     IFEQ '0'                                                           CDL038
+     C                     MOVELNARR11    DESNM                                               CDL038
+     C                     ELSE                                                               CDL038
+     C                     MOVEADESC,1    DESNM                                               CDL038
+     C                     END                                                                CDL038
+     C*                                                                                       CDL038
+     C*
+     C***Move*Type/Subtype*into*previous*Type/Subtype*work*fields                             CDL038
+     C** Move Type/Subtype/Class into previous Type/Subtype work fields                       CDL038
+     C*
+     C                     WRITEFMTW03
+     C                     WRITEFMTW04
+     C*
+     C                     MOVE TYP       PRVTYP
+     C                     MOVE SUBTYP    PRVSTY
+     C                     MOVE CLAS      PRVCLS                                              CDL038
+     C*
+     C                     EXSR ALPHA
+     C                     WRITEFMTW05
+     C                     END
+     C*
+     C** Read record for ZACKEYL1
+     C*
+     C                     READ ZACKEYL1                 10
+     C*
+     C** Overflow
+     C*
+     C           *IN99     IFEQ '1'
+     C                     WRITEFMTW01
+     C*
+     C           *IN10     IFEQ '0'
+     C*
+     C           TYP       IFEQ PRVTYP
+     C           SUBTYP    ANDEQPRVSTY
+     C           CLAS      ANDEQPRVCLS                                                        CDL038
+     C                     MOVE '1'       *IN70
+     C                     WRITEFMTW03
+     C                     MOVE '0'       *IN70
+     C                     WRITEFMTW04
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     MOVE '0'       *IN99
+     C*
+     C** Output end of report
+     C*
+     C           *IN10     IFEQ '1'
+     C                     WRITEFMTEND
+     C                     ELSE
+     C*
+     C** Add one to record counter
+     C*
+     C                     ADD  1         RECCNT
+     C                     END
+     C*
+     C                     END
+     C                     SETON                         LR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C* ALPHA:      Subroutine to move numeric file fields to alpha      *
+     C*             report fields, and ensure that if file field         *
+     C*             is zero then blanks are printed.                     *
+     C*                                                                  *
+     C* CALLED BY:  Main                                                 *
+     C*                                                                  *
+     C* CALLS:                                                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ALPHA     BEGSR
+     C*
+     C** Set up Account Codes
+     C*
+     C           ACD1      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA1
+     C                     ELSE
+     C                     MOVE ACD1      ACDA1
+     C                     END
+     C*
+     C           ACD2      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA2
+     C                     ELSE
+     C                     MOVE ACD2      ACDA2
+     C                     END
+     C*
+     C           ACD3      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA3
+     C                     ELSE
+     C                     MOVE ACD3      ACDA3
+     C                     END
+     C*
+     C           ACD4      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA4
+     C                     ELSE
+     C                     MOVE ACD4      ACDA4
+     C                     END
+     C*
+     C           ACD5      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA5
+     C                     ELSE
+     C                     MOVE ACD5      ACDA5
+     C                     END
+     C*
+     C           ACD6      IFEQ *ZERO
+     C                     MOVE *BLANKS   ACDA6
+     C                     ELSE
+     C                     MOVE ACD6      ACDA6
+     C                     END
+     C*
+     C** Set up Narrative Codes
+     C*
+     C                     MOVE NCD1      NCDA1                           047369
+     C                     MOVE NCD2      NCDA2                           047369
+     C                     MOVE NCD3      NCDA3                           047369
+     C                     MOVE NCD4      NCDA4                           047369
+     C                     MOVE NCD5      NCDA5                           047369
+     C                     MOVE NCD6      NCDA6                           047369
+     C***********NCD1      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA1                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD1      NCDA1                           047369
+     C***********          END                                            047369
+     C***********NCD2      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA2                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD2      NCDA2                           047369
+     C***********          END                                            047369
+     C***********NCD3      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA3                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD3      NCDA3                           047369
+     C***********          END                                            047369
+     C***********NCD4      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA4                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD4      NCDA4                           047369
+     C***********          END                                            047369
+     C***********NCD5      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA5                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD5      NCDA5                           047369
+     C***********          END                                            047369
+     C***********NCD6      IFEQ *ZERO                                     047369
+     C***********          MOVE *BLANKS   NCDA6                           047369
+     C***********          ELSE                                           047369
+     C***********          MOVE NCD6      NCDA6                           047369
+     C***********          END                                            047369
+     C*
+     C** Set up Posting References
+     C*
+     C           PRF1      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA1
+     C                     ELSE
+     C                     MOVE PRF1      PRFA1
+     C                     END
+     C*
+     C           PRF2      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA2
+     C                     ELSE
+     C                     MOVE PRF2      PRFA2
+     C                     END
+     C*
+     C           PRF3      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA3
+     C                     ELSE
+     C                     MOVE PRF3      PRFA3
+     C                     END
+     C*
+     C           PRF4      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA4
+     C                     ELSE
+     C                     MOVE PRF4      PRFA4
+     C                     END
+     C*
+     C           PRF5      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA5
+     C                     ELSE
+     C                     MOVE PRF5      PRFA5
+     C                     END
+     C*
+     C           PRF6      IFEQ *ZERO
+     C                     MOVE *BLANKS   PRFA6
+     C                     ELSE
+     C                     MOVE PRF6      PRFA6
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C********************************************************************
+     C/EJECT
+**  DESC
+Internal Contract
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

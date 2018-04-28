@@ -1,0 +1,1031 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU EMU mapping GL accounts')
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Module                                           *
+      *                                                               *
+      *  EU0710 - EMU Mapping GL Accounts                             *
+      *                                                               *
+      *  Function:  This program will create records in the EMU       *
+      *  (I/C)      Mapping Details GL Account.                       *
+      *                                                               *
+      *  Called By: EUC0700 - 'In' Currency to Euro GL Account Mapping*
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. 239589             Date 24Apr06               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 153384             Date 24Feb99               *
+      *                 155345             Date 16FEB99               *
+      *                 151529             Date 24DEC98               *
+      *                 CEU028  *Create    Date 24Aug98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  239589 - DS1T01 'N' means that there is no one to one mapping*
+      *           EU0700 only writes to EUCYSQPD when DS1T01 = "Y"    *
+      *           153384 causes database error as no record exist of  *
+      *           indicated currency exists in EUCYSQPD.              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *  153384 - EUMULT field is added to the mapping details file   *
+      *           EUGLMLPD .                                          *
+      *           DS1TO1 'N' is a one to one mapping , mapping details*
+      *           created according to this mapping rule as in the    *
+      *           instruction manual .                                *
+      *  155345 - Only open GLHIBL if Analytical Accounts is on.      *
+      *  151529 - SEQUENCE OF EURO ACCOUNT BEGINS WITH 2 INSTEAD OF 1 *
+      *  CEU028 - EMU GL Utilities                                    *
+      *                                                               *
+      *****************************************************************
+     FEUWORKL1IF  E           K        DISK         KINFSR *PSSR
+     FEUCYSQL1IF  E           K        DISK         KINFSR *PSSR
+     FEUPOSTL1IF  E           K        DISK         KINFSR *PSSR
+     F*GLHIBLL0IF*E*********  K        DISK         KINFSR *PSSR          155345
+     FGLHIBLL0IF  E           K        DISK         KINFSR *PSSR      UC  155345
+     FEUGLMLL2IF  E           K        DISK         KINFSR *PSSR          151429
+     F            EUGLMLD0                          KRENAMEEUGLMLD2       151429
+     FEUGLMLL1UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FEU0710P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FEU0710P2O   E                    PRINTER      KINFDS SPOOL2     UC
+     F                                              KINFSR *PSSR
+     FEU0710AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  40 - End of File for EUWORKPD                                *
+      *  41 - No Find for EUGLMLPD                                    *
+      *  42 - No Find for EUPOSTPD                                    *
+      *  43 - No Find for EUCYSQPD                                    *
+      *  44 - No Find for GLHIBLPD                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRP002  - Main Processing                                    *
+      *  SRP003  - Process Requested IN Accounts                      *
+      *  SRP004  - Create Mapped Records                              *
+      *  SRP005  - Print EU0710P1 Details                             *
+      *  SRP006  - Print EU0710P2 Details                             *
+      *  SRP007  - Audit Report                                       *
+      *  SRCFP1  - Subroutine to register EU0710P1                    *
+      *  SRCFP2  - Subroutine to register EU0710P2                    *
+      *  SRCFAU  - Subroutine to register EU0710AU                    *
+      *                                                               *
+      *  *PSSR   - Program exception error routine                    *
+      *  ZSEDIT  - Subroutine to insert decimal point & sign          *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /COPY ZSRSRC,ZSEDITZ1
+      /SPACE 3
+      *
+     IPSCRN1      DS                            200
+     I                                        1   3 DSBRCA
+     I                                        4   9 DSCNUM
+     I                                       10  12 DSCCY1
+     I                                       13  15 DSCCY2
+     I                                       16  18 DSCCY3
+     I                                       19  21 DSCCY4
+     I                                       22  24 DSCCY5
+     I                                       25  27 DSCCY6
+     I                                       28  30 DSCCY7
+     I                                       31  33 DSCCY8
+     I                                       34  36 DSCCY9
+     I                                       37  39 DSCY10
+     I                                       40  42 DSCY11
+     I                                       43  44 DSACSC
+     I**********                             45  48 DSFRAC                                    CGL029
+     I**********                             49  52 DSTOAC                                    CGL029
+     I**********                             53  53 DS1TO1                                    CGL029
+     I                                       45  54 DSFRAC                                    CGL029
+     I                                       55  64 DSTOAC                                    CGL029
+     I                                       65  65 DS1TO1                                    CGL029
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for EU0710P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOL2      DS
+      ** File Information Data Structure for EU0710P2
+      *
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+     I                                    B 367 3680PRTLN2
+     ISPOOLU      DS
+      ** File Information Data Structure for EU0710AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Branch Codes
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Code
+      *
+     ISDGELR    E DSSDGELRPD
+      ** General Ledger ICD Access Object
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Module Details Access Object
+      *
+     ISDPCAC    E DSSDPCACPD
+      ** PCA ICD Details Access Object
+      *
+     IDSSDY     E DSDSSDY
+      ** DS for access programs, Long data structure
+      *
+     IDSFDY     E DSDSFDY
+      ** DS for access programs, Short data structure
+      *
+      /COPY ZSRSRC,ZSEDITZ2
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P001 - Main Processing                                       *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:     SRP002 - Program Initialisation                   *
+      *             SRP003 - Process Requested IN Accounts            *
+      *             SRP007 - Audit Report                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSCRN1
+      *
+     C                     EXSR SRP002
+     C                     EXSR SRP003
+     C                     EXSR SRP007
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Bank ICD Access Object                 *
+      *             AOGELRR0 - General Ledger Access Object           *
+      *             AOMMODR0 - Module Details Access Object           *
+      *             AOPCACR0 - PCA Details Access Object              *
+      *             AOBRCHR0 - Branch Details Access Object           *
+      *             *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP002    BEGSR
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EU0710'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Get Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access General Ledger ICD
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST  'POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDGELRPD'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Module Details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDMMODPD'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** If Analytical Accounting is installed, Access PCA ICD Details
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C                     CALL 'AOPCACR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDPCAC    PARM SDPCAC    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPCACPD'DBFILE           ************
+     C                     Z-ADD4         DBASE            * DBERR 04 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     OPEN GLHIBLL0                                  155345
+     C                     MOVE 'Y'       W@GLOP  1                       155345
+     C                     ENDIF
+      *
+      ** Access Branch Details
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY    'POPTN   7
+     C                     PARM DSBRCA    PBRCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     Z-ADD5         DBASE            * DBERR 05 *
+     C                     MOVELDSBRCA    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Currency Details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM BKEURO    PCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD6         DBASE            * DBERR 06 *
+     C                     MOVELBKEURO    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    WDEC    10
+      *
+      ** Initialise Currency work fields
+      *
+     C                     MOVE *BLANKS   WCCY    3
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP003 - Process Requested IN Accounts                       *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     SRP004 - Create Mapped Records                    *
+      *             SRP006 - Print EU0710P2 Details                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP003    BEGSR
+      *
+     C           KEY1      KLIST
+     C                     KFLD           KBRCH   3
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KCCY    3
+     C**********           KFLD           KACOD   40                                          CGL029
+     C                     KFLD           KACOD  100                                          CGL029
+     C                     KFLD           KACSQ   20
+      *
+     C           KEY2      KLIST
+     C                     KFLD           KPCG    2
+     C                     KFLD           KBRCH   3
+     C                     KFLD           KCCY    3
+     C**********           KFLD           KACD    4                                           CGL029
+     C                     KFLD           KACD   10                                           CGL029
+     C                     KFLD           KCNO    6
+     C                     KFLD           KASQ    2
+      *
+     C                     Z-ADD0         RCNT
+     C                     Z-ADD0         RCNT2
+      *
+     C           *LOVAL    SETLLACCNTABF
+     C                     READ ACCNTABF                 40
+      *
+      **  Do while record LF/EUWORKL1
+      *
+     C           *IN40     DOWEQ*OFF
+      *
+     C                     MOVE BRCA      KBRCH
+     C**********           Z-ADDCNUM      KCNUM                                               CSD027
+     C                     MOVE CNUM      KCNUM                                               CSD027
+     C                     MOVELCNUM      KCNO
+     C                     MOVE CCY       KCCY
+     C                     Z-ADDACOD      KACOD
+     C                     MOVE ACOD      KACD
+     C                     Z-ADDACSQ      KACSQ
+     C                     MOVE ACSQ      KASQ
+     C                     ADD  1         RCNT2
+      *
+      ** Check if account exists in LF/EUGLMLL1
+      *
+     C           KEY1      CHAINEUGLMLD0             41
+      *
+      ** If account does not exist, check LF/EUPOSTL1
+      *
+     C           *IN41     IFEQ *ON
+     C           KEY1      CHAINAPOSTPDF             42
+     C                     ENDIF
+      *
+      ** If account does not exists, check 1-to-1 Mapping if 'N'
+      ** Move 'Sequence Number' to 'Euro Sequence Number'
+      *
+     C***********DS1TO1    IFEQ 'N'                                       153384
+      *                                                                   153384
+      ** If not a 1-to-1 Mapping  , one Euro acc per combination is 'Y'   153384
+      ** a combination is brca,acod,acsq and cnum .                       153384
+     C********** DS1TO1    IFEQ 'Y'                                                    153384 239589
+     C           DS1TO1    IFEQ 'N'                                                           239589
+     C                     Z-ADDACSQ      WSQN
+     C                     ELSE
+      *
+      ***If*1-to-1*Mapping*is*'Y',*check*the*currency*read*is*equal       153384
+      *                                                                   153384
+      ** If 1-to-1 Mapping , check the currency read is equal             153384
+      ** to workfield currency
+      *
+     C           WCCY      IFNE CCY
+     C                     MOVE CCY       WCCY
+     C           WCCY      CHAINEUCYSQD0             43
+      *
+      ** If currency is not in LF/EUCYSQL1, database error
+      *
+     C           *IN43     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'EUCYSQPD'DBFILE           ************
+     C                     Z-ADD7         DBASE            * DBERR 07 *
+     C                     MOVELCCY       DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** If currency exist, move sequence number to euro sequence no.
+      *
+     C                     Z-ADDEUINSQ    WSQN    20
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** If account exists in either LF/EUGLMLL1 or LF/EUPOSTL1
+      ** Print EU0710P2 Details
+      *
+     C           *IN41     IFEQ *OFF
+     C           *IN42     OREQ *OFF
+     C                     EXSR SRP006
+     C                     ELSE
+      *
+      ** If Analytical Accounting is installed
+      *
+     C           BGN0ST    IFEQ 'Y'
+      *
+     C                     MOVE FTPRCG    KPCG
+      *
+     C           KEY2      CHAINGLHIBLL0             44
+      *
+      ** For each record read, create mapped record
+      *
+     C           *IN44     DOWEQ*OFF
+     C                     MOVE HBPDCB    WPDCB  19
+     C                     Z-ADDHBPDCB    WDPDCB 190
+     C                     MOVE HBPCCD    WPCCD   4
+     C                     EXSR SRP004
+     C           KEY2      READEGLHIBLL0                 44
+     C                     ENDDO
+      *
+     C                     ELSE
+      *
+      ** If Analytical Accounting is not installed, create mapped
+      ** record, using LDBL from LF/EUWORKL1 and PRFC from
+      ** LF/EUWORKL1
+      *
+     C                     MOVE LDBL      WPDCB
+     C                     Z-ADDLDBL      WDPDCB
+     C                     MOVE PRFC      WPCCD
+     C                     EXSR SRP004
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ ACCNTABF                 40
+     C                     ENDDO
+      *
+      ** End of report for EU0710P1
+      *
+     C           WFP1      IFEQ 'Y'
+     C           PRTLN1    IFLT 55
+     C                     WRITEEU0710D3
+     C                     ELSE
+     C                     WRITEEU0710D1
+     C                     WRITEEU0710D3
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** End of Report for EU0710P2
+      *
+     C           WFP2      IFEQ 'Y'
+     C           PRTLN2    IFLT 55
+     C                     WRITEEU0710D6
+     C                     ELSE
+     C                     WRITEEU0710D4
+     C                     WRITEEU0710D6
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP004 - Create Mapped Records                               *
+      *                                                               *
+      *  Called by: SRP003 - Process Requested IN Account             *
+      *                                                               *
+      *  Calls:     EU0200   - EURO Currency Conversion               *
+      *             SRP005   - Print EU0710P1 Details                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP004    BEGSR
+      *
+      ** Convert the 'IN Balance' from 'IN Currency' to Euro using
+      ** PGM/EU0200 to get the 'EURO Balance'
+      *
+     C                     CALL 'EU0200'
+     C                     PARM *BLANKS   PRTCD            RETURN CODE
+     C                     PARM WDPDCB    PFRAM  183       FROM CCY AMT
+     C                     PARM CCY       PFRCY   3        FROM CCY
+     C                     PARM BKEURO    PTOCY   3        TO CCY
+     C                     PARM *ZEROS    POUTA  150       OUTRIGHT AMT
+     C                     PARM *ZEROS    PINTA  183       INTERIM AMT
+     C                     PARM *ZEROS    PEXRT  159       XCHANGE RATE
+     C                     PARM *BLANKS   PMDIN   1        M/D IND
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD9         DBASE            ************
+     C                     MOVEL'*CALL   'DBFILE           * DBERR 09 *
+     C                     MOVEL'EU0200'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDPOUTA     PAMT   150
+      *                                                                   151529
+      ** IF ONE TO ONE MAPPING                                            151529
+      ** CHECK IF ACCOUNT ALREADY EXIST IN THE MAPPING FILE               151529
+      ** IF YES, INCREMENT ACCOUNT SEQUENCE                               151529
+     C***********DS1TO1    IFEQ 'Y'                                151529*153384
+     C           DS1TO1    IFEQ 'N'                                       153384
+      *                                                                   151529
+     C           KEYEUR    KLIST                                          151529
+     C                     KFLD           EUEBRC                          151529
+     C                     KFLD           EUECNM                          151529
+     C                     KFLD           EUECCY                          151529
+     C                     KFLD           EUEACD                          151529
+     C                     KFLD           EUESQN                          151529
+     C*                                                                   151529
+     C                     MOVE BRCA      EUEBRC                          151529
+     C**********           Z-ADDCNUM      EUECNM                                       151529 CSD027
+     C                     MOVE CNUM      EUECNM                                              CSD027
+     C                     MOVE BKEURO    EUECCY                          151529
+     C                     Z-ADDACOD      EUEACD                          151529
+     C                     MOVE WSQN      EUESQN                          151529
+     C*                                                                   151529
+     C                     MOVE '0'       *IN70                           151529
+     C           KEYEUR    CHAINEUGLMLL2             70                   151529
+     C*                                                                   151529
+     C           *IN70     DOWEQ'0'                                       151529
+     C* RECORD FOUND                                                      151529
+     C                     ADD  1         EUESQN                          151529
+     C                     ADD  1         WSQN                            151529
+     C           KEYEUR    CHAINEUGLMLL2             70                   151529
+     C*                                                                   151529
+     C** IF LAST SEQUENCE AVAILABLE AND RECORD FOUND, EXIT PROCESSING     151529
+     C           *IN70     IFEQ '0'                                       151529
+     C           EUESQN    ANDEQ99                                        151529
+     C                     MOVE '1'       *IN70                           151529
+      ** Print EU0710P2 Details                                           151529
+      *                                                                   151529
+     C                     EXSR SRP006                                    151529
+     C                     GOTO ENDWRI                                    151529
+     C                     END                                            151529
+     C*                                                                   151529
+     C                     END                                            151529
+     C*                                                                   151529
+     C                     END                                            151529
+      *
+      ** Setup EUGLMLL1 fields and write record to file
+      *
+     C                     MOVE BRCA      EUIBRC
+     C**********           Z-ADDCNUM      EUICNM                                              CSD027
+     C                     MOVE CNUM      EUICNM                                              CSD027
+     C                     MOVE CCY       EUICCY
+     C                     Z-ADDACOD      EUIACD
+     C                     Z-ADDACSQ      EUISQN
+     C                     MOVE WPCCD     EUIPRF
+     C                     MOVE WPDCB     EUIBAL
+     C                     MOVE BRCA      EUEBRC
+     C**********           Z-ADDCNUM      EUECNM                                              CSD027
+     C                     MOVE CNUM      EUECNM                                              CSD027
+     C                     MOVE BKEURO    EUECCY
+     C                     Z-ADDACOD      EUEACD
+     C                     MOVE WSQN      EUESQN
+     C                     MOVE WPCCD     EUEPRF
+     C                     MOVE PAMT      EUEBAL
+     C                     MOVE *BLANKS   EUOPFA
+     C                     MOVE *BLANKS   EUACLO
+     C                     MOVE DS1TO1    EUMULT                          153384
+      *
+     C                     WRITEEUGLMLD0
+     C                     ADD  1         RCNT
+      *
+      ** Print EU0710P1 Details
+      *
+     C                     EXSR SRP005
+      *
+     C*********************ENDSR                                          151529
+     C           ENDWRI    ENDSR                                          151529
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP005 - Print EU0710P1 Details                              *
+      *                                                               *
+      *  Called by: SRP004   - Create Mapped Records                  *
+      *                                                               *
+      *  Calls:     AOCURRR0 - Currency Details Access Object         *
+      *             ZSEDIT   - Edit Screen Field                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP005    BEGSR
+      *
+      ** Clear Report Field
+      *
+     C                     CLEAREU0710D2
+      *
+      ** Setup Report fields
+      *
+     C                     MOVE DSBRCA    RBRCA
+     C                     MOVE A8BRNM    RBRNM
+     C                     MOVE DSCNUM    RCNUM
+     C                     MOVE DSCCY1    RCCY1
+     C                     MOVE DSCCY2    RCCY2
+     C                     MOVE DSCCY3    RCCY3
+     C                     MOVE DSCCY4    RCCY4
+     C                     MOVE DSCCY5    RCCY5
+     C                     MOVE DSCCY6    RCCY6
+     C                     MOVE DSCCY7    RCCY7
+     C                     MOVE DSCCY8    RCCY8
+     C                     MOVE DSCCY9    RCCY9
+     C                     MOVE DSCY10    RCCY10
+     C                     MOVE DSCY11    RCCY11
+     C                     MOVE DSACSC    RACSC
+     C                     MOVE DSFRAC    RFRAC
+     C                     MOVE DSTOAC    RTOAC
+      *
+      ** Open EU0710P1 and write header
+      *
+     C           WFLG1     IFNE 'Y'
+     C                     OPEN EU0710P1
+     C                     EXSR SRCFP1
+     C                     WRITEEU0710D1
+     C                     MOVE 'Y'       WFLG1   1
+     C                     ENDIF
+      *
+      ** Format Account Balance
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM CCY       PCYCD
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD10        DBASE            * DBERR 10 *
+     C                     MOVELCCY       DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE WPDCB     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WPDCB
+      *
+      ** Format for Euro Currency Amount
+      *
+     C                     Z-ADDWDEC      ZDECS
+     C                     MOVE PAMT      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WBAL   21
+      *
+      ** If Analytical Accounting is installed, the next record read
+      ** would only print the profit centre
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C           CNUM1     ANDNECNUM
+     C           BGN0ST    OREQ 'Y'
+     C           CCY1      ANDNECCY
+     C           BGN0ST    OREQ 'Y'
+     C           ACOD1     ANDNEACOD
+     C           BGN0ST    OREQ 'Y'
+     C           ACSQ1     ANDNEACSQ
+     C           BGN0ST    OREQ 'N'
+      *
+      ** 'In' GL Account
+      *
+     C                     MOVE CNUM      RICNUM
+     C                     MOVE CCY       RICCY
+     C                     MOVE ACOD      RIACOD
+     C                     MOVE ACSQ      RIACSQ
+     C**********           Z-ADDCNUM      CNUM1   60                                          CSD027
+     C                     MOVE CNUM      CNUM1   6                                           CSD027
+     C**********           Z-ADDACOD      ACOD1   40                                          CGL029
+     C                     Z-ADDACOD      ACOD1  100                                          CGL029
+     C                     Z-ADDACSQ      ACSQ1   20
+     C                     MOVE CCY       CCY1    3
+      *
+      ** Euro GL Account
+      *
+     C                     MOVE CNUM      RECNUM
+     C                     MOVE BKEURO    RECCY
+     C                     MOVE ACOD      REACOD
+     C                     MOVE WSQN      REACSQ
+     C                     ENDIF
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C                     MOVE WPCCD     RIPRFC
+     C                     MOVE WPCCD     REPRFC
+     C                     ENDIF
+      *
+      ** Account Balance
+      *
+     C                     MOVE WPDCB     RIAB
+     C                     MOVE WBAL      REAB
+      *
+      ** Print Details
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEEU0710D1
+     C                     ENDIF
+      *
+     C                     WRITEEU0710D2
+      *
+     C                     MOVE 'Y'       WFP1    1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP006 - Print EU0710P2 Details                              *
+      *                                                               *
+      *  Called by: SRP003   - Process Requested IN Account           *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP006    BEGSR
+      *
+      ** Clear Report fields
+      *
+     C                     CLEAREU0710D5
+      *
+      ** Setup Report fields
+      *
+     C                     MOVE DSBRCA    RBRCA
+     C                     MOVE A8BRNM    RBRNM
+     C                     MOVE DSCNUM    RCNUM
+     C                     MOVE DSCCY1    RCCY1
+     C                     MOVE DSCCY2    RCCY2
+     C                     MOVE DSCCY3    RCCY3
+     C                     MOVE DSCCY4    RCCY4
+     C                     MOVE DSCCY5    RCCY5
+     C                     MOVE DSCCY6    RCCY6
+     C                     MOVE DSCCY7    RCCY7
+     C                     MOVE DSCCY8    RCCY8
+     C                     MOVE DSCCY9    RCCY9
+     C                     MOVE DSCY10    RCCY10
+     C                     MOVE DSCY11    RCCY11
+     C                     MOVE DSACSC    RACSC
+     C                     MOVE DSFRAC    RFRAC
+     C                     MOVE DSTOAC    RTOAC
+      *
+      ** 'In' GL Account
+      *
+     C                     MOVE CNUM      RICNO2
+     C                     MOVE CCY       RICCY2
+     C                     MOVE ACOD      RIAC2
+     C                     MOVE ACSQ      RIASQ2
+      *
+      ** Euro GL Account
+      *
+     C                     MOVE CNUM      RECNO2
+     C                     MOVE BKEURO    RECCY2
+     C                     MOVE ACOD      REAC2
+     C                     MOVE WSQN      REASQ2
+      *
+      ** Print Report
+      *
+     C           WFLG2     IFNE 'Y'
+     C                     OPEN EU0710P2
+     C                     EXSR SRCFP2
+     C                     WRITEEU0710D4
+     C                     MOVE 'Y'       WFLG2   1
+     C                     ENDIF
+      *
+     C           PRTLN2    IFGT 55
+     C                     WRITEEU0710D4
+     C                     ENDIF
+      *
+     C                     WRITEEU0710D5
+      *
+     C                     MOVE 'Y'       WFP2    1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP007 - Audit Report                                        *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *             *PSSR - Program exception error routine           *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP007    BEGSR
+      *
+      ** Output Report Header
+      *
+     C                     OPEN EU0710AU
+     C                     EXSR SRCFAU
+      *
+     C                     MOVELBJURPT    RURPT
+     C                     MOVELBJMRDT    RMRDT
+      *
+     C                     WRITEEU0710A1
+     C                     WRITEEU0710A2
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEEU0710A4
+     C                     ELSE
+     C           WFP1      IFNE 'Y'
+     C           WFP2      ANDNE'Y'
+     C                     WRITEEU0710A3
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     COMIT
+     C           W@GLOP    IFEQ 'Y'                                       155345
+     C                     CLOSEGLHIBLL0                                  155345
+     C                     MOVE 'N'       W@GLOP                          155345
+     C                     END                                            155345
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: SRP003   - Process Requested IN Accounts           *
+      *            SRP007   - Audit Report                            *
+      *                                                               *
+      * Calls    : None                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ROLBK
+     C           W@GLOP    IFEQ 'Y'                                       155345
+     C                     CLOSEGLHIBLL0                                  155345
+     C                     MOVE 'N'       W@GLOP                          155345
+     C                     END                                            155345
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     EXSR SRP007
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFP1  - Subroutine to register EU0710P1 RCF.               *
+      *                                                               *
+      *  Called by: SRP005   - Print EU0710P1 Details                 *
+      *                                                               *
+      *  Calls:     ZSFILE   - Set-up spool file                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFP1    BEGSR
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFP2  - Subroutine to register EU0710P2 RCF.               *
+      *                                                               *
+      *  Called by: SRP006   - Print EU0710P2 Details                 *
+      *                                                               *
+      *  Calls:     ZSFILE   - Set up spool file                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFP2    BEGSR
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE2
+     C                     PARM           SFNUM2
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFAU  - Subroutine to register EU0710AU RCF.               *
+      *                                                               *
+      *  Called by: SRP007   - Audit Report                           *
+      *                                                               *
+      *  Calls:     ZSFILE   - Set-up spool file                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFAU    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM           SENTY
+     C                     PARM           SFILEU
+     C                     PARM           SFNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /COPY ZSRSRC,ZSEDITZ3
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

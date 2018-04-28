@@ -1,0 +1,698 @@
+     H        1
+      *---------------------------------------------------------------*
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Display Sub-Lines')                           *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Midas - Exposure Management Module                           *
+      *                                                               *
+      *  EM0360 - DISPLAY SUB-LINES                                   *
+      *                                                               *
+      *  Function:  This program will display all Trade Finance      *
+      *  sub-lines with the associated limits and exposures.          *
+      *                                                               *
+      *  Called By:        - Menu option                              *
+      *                                                               *
+      *  Calls: ZA0250   - Clear program subfile message queue        *
+      *         EM0350   - Detailed sub-limit display                 *
+      *         AOCREPT  - Access program (General ledger)            *
+      *         DBERRCTL - Error processing                           *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002  *CREATE    Date 19Aug98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompiled)                                        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CTI002 - Trade Innovation Phase II  *CREATE                  *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    Subfile SFL360SL                                           *
+      *    30         sfldsp                                          *
+      *    31         sflclr                                          *
+      *   N31         sfldspctl                                       *
+      *    32         sflCLR                                          *
+      *    34         sflnxtchg                                       *
+      *    39         error in sel                                    *
+      *                                                               *
+      *    Subfile SFL360SA                                           *
+      *    40         sfldsp                                          *
+      *    41         sflclr                                          *
+      *   N41         sfldspctl                                       *
+      *    42         sflend                                          *
+      *    43         sflnxtchg                                       *
+      *    44         error in sel                                    *
+      *    45         protect  sel                                    *
+      *                                                               *
+      *    Subfile SFL360CB                                           *
+      *    50         sfldsp                                          *
+      *    51         sflclr                                          *
+      *   N51         sfldspctl                                       *
+      *    52         sflend                                          *
+      *    53         sflnxtchg                                       *
+      *    54         error in sel                                    *
+      *    55         protect  sel                                    *
+      *                                                               *
+      *    70         No records in subfile                           *
+      *    80-89      General Chain indicators                        *
+      *    98         DATE FORMAT                                     *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  LOD@SL - Load subfile SFL360SL                               *
+      *  PRC@SL - Process subfile CTL360SL                            *
+      *  CLR@SL - Clear subfile SFL360SL                              *
+      *  CLR@SA - Clear subfile SFL360SA                              *
+      *  LOD@SA - Load subfile SFL360SA                               *
+      *  PRC@SA - Process subfile SFL360SA                            *
+      *  CLR@CB - Clear subfile SFL360CB                              *
+      *  LOD@CB - Load subfile SFL360CB                               *
+      *  PRC@CB - Process subfile SFL360CB                            *
+      *  *INZSR - Initial processing                                  *
+      *  SNDMSG - Send message                                        *
+      *  OVRFLW - Test overflow %                                     *
+      *  *PSSR  - Error processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      * Display File
+     FEM0360FMCF  E                    WORKSTN
+     F                                        SLRRN KSFILE SFL360SL
+     F                                        SARRN KSFILE SFL360SA
+     F                                        CBRRN KSFILE SFL360CB
+      *
+      * Sub-Line File
+     FEMTFSLL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Sub-Line Accounts File
+     FEMTFSAL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Customer Sub-Limits File
+     F/COPY WNCPYSRC,EM0360F001
+     FEMTFCBL1IF  E           K        DISK
+     F/COPY WNCPYSRC,EM0360F002
+     F                                              KINFSR *PSSR
+      *
+      * Customer Details File
+     FSDCUSTL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Accounts Details File
+     FSDACODL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Exposure Management Installation Control File
+     FSDEXPML0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * Currency File
+     FSDCURRL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      * -------------------------------------------------------------------
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      * -------------------------------------------------------------------
+      /SPACE 3
+      *
+     ILDA       E DS
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      * -------------------------------------------------------------------
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+      * -------------------------------------------------------------------
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+      * -------------------------------------------------------------------
+     I                                     *PROGRAM #PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      * -------------------------------------------------------------------
+     IMSGDS       DS
+     I I            ' '                       1   7 MSGID
+     I I            'EMUSRMSG'                8  17 MSGF
+     I I            '*LIBL'                  18  27 MSGLIB
+     I I            ' '                      28 283 MSGDTA
+     I I            '*PRV'                  284 288 MSGREL
+      * -------------------------------------------------------------------
+      *
+     C           *IN03     DOWEQ*OFF
+      *
+     C/COPY WNCPYSRC,EM0360C001
+     C                     WRITEMSGCTL
+     C                     WRITETRL360
+     C                     EXFMTCTL360SL
+      *
+     C                     CALL 'ZA0250'
+      *
+     C/COPY WNCPYSRC,EM0360C002
+      * Process subfile records
+     C                     EXSR PRC@SL
+      *
+     C                     ENDDO
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+      * -------------------------------------------------------------------
+      * Load SFL360SL Subfile Data
+      *  LOD@SL
+      * -------------------------------------------------------------------
+     C           LOD@SL    BEGSR
+      *
+      * Set to first record
+     C           *LOVAL    SETLLEMTFSLL0
+      *
+      * Read all records (as there can only be a maximum of 26)
+     C                     READ EMTFSLL0                 89
+     C           *IN89     DOWEQ*OFF
+      *
+      * Increment subfile RRN
+     C                     ADD  1         SLRRN
+      *
+      * Get exposures from account details file
+     C                     SETOF                         88
+     C                     Z-ADD*ZEROS    SLLIM
+     C           SLTYPE    SETLLEMTFSAL0             8888
+     C           SLTYPE    READEEMTFSAL0                 88
+     C           *IN88     DOWEQ*OFF
+     C                     ADD  SALIM     SLLIM
+     C           SLTYPE    READEEMTFSAL0                 88
+     C                     ENDDO
+      *
+      * Divide exposure by 1000
+     C           SLEXP     IFNE 0
+     C                     DIV  1000      SLEXP     H
+     C                     ENDIF
+      *
+      * Calculate utilisation percentage (EXPOSURE / LIMIT) * 100
+     C           SLLIM     IFGT 0
+     C           SLEXP     DIV  SLLIM     TEMP   155
+     C           TEMP      MULT 100       TEMP2
+     C                     EXSR OVRFLW
+     C                     Z-ADDTEMP2     SLUTIL
+     C                     ELSE
+     C                     Z-ADD0         SLUTIL
+     C                     ENDIF
+      *
+      * Write data
+     C                     WRITESFL360SL
+      *
+     C                     READ EMTFSLL0                 89
+     C                     ENDDO
+      *
+     C           SLRRN     IFGT 0
+     C                     MOVE *ON       *IN30
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Process CTL360SL Subfile Data
+      *  PRC@SL
+      * -------------------------------------------------------------------
+     C           PRC@SL    BEGSR
+      *
+      * Read subfile for any subfile select records
+     C                     SETOF                         33
+     C                     READCSFL360SL                 33
+     C           *IN33     DOWEQ*OFF
+     C                     SETOF                         37
+      *
+     C                     SELEC
+      * Select current record
+     C           SLTSL     WHEQ '1'
+     C                     EXSR CLR@SA
+     C                     EXSR LOD@SA
+     C                     EXSR PRC@SA
+      *
+      * If subfile select != 1 then Error Message
+     C                     OTHER
+     C           SLTSL     IFNE *BLANK
+     C                     SETON                     37
+     C                     MOVELSLTSL     MSGDTA
+     C                     MOVEL'EMT0004' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      * Update subfile
+     C           SLRRN     CHAINSFL360SL             89
+     C                     MOVE *BLANK    SLTSL
+      * Sflnxtchg
+     C                     SETON                     34
+     C                     UPDATSFL360SL
+      *
+     C                     READCSFL360SL                 33
+     C                     ENDDO
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Clear SFL360SL Subfile
+      *  CLR@SL
+      * -------------------------------------------------------------------
+     C           CLR@SL    BEGSR
+     C/COPY WNCPYSRC,EM0360C003
+      *
+     C                     SETOF                       30
+     C                     SETON                       31
+     C                     WRITECTL360SL
+     C                     SETOF                       31
+      *
+      * Reset SFLRRN
+     C                     Z-ADD0         SLRRN
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Clear SFL360SA Subfile
+      *  CLR@SA
+      * -------------------------------------------------------------------
+     C           CLR@SA    BEGSR
+      *
+     C                     SETON                       4041
+     C                     WRITECTL360SA
+     C                     SETOF                       4041
+      *
+      * Reset SFLRRN
+     C                     Z-ADD0         SARRN
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Load SFL360SA Subfile Data
+      *  LOD@SA
+      * -------------------------------------------------------------------
+     C           LOD@SA    BEGSR
+     C                     SETON                         45
+      *
+      * Set to Sub-Line Accounts file
+     C           SLTYPE    SETLLEMTFSAL0             8888
+     C           SLTYPE    READEEMTFSAL0                 88
+     C           *IN88     DOWEQ*OFF
+     C                     SETOF                         45
+      *
+      * Move Data
+     C                     MOVELSAACOD    A5ACCD
+     C           A5ACCD    CHAINSDACODL0             99
+     C           *IN99     IFEQ *ON
+     C                     MOVEL*BLANKS   A5ACCN
+     C                     ENDIF
+      *
+      * Divide exposure by 1000
+     C           SAEXP     IFNE 0
+     C                     DIV  1000      SAEXP     H
+     C                     ENDIF
+      *
+      * Calculate utilisation percentage (EXPOSURE / LIMIT) * 100
+     C           SALIM     IFGT 0
+     C           SAEXP     DIV  SALIM     TEMP   155
+     C           TEMP      MULT 100       TEMP2
+     C                     EXSR OVRFLW
+     C                     Z-ADDTEMP2     SAUTIL
+     C                     ELSE
+     C                     Z-ADD0         SAUTIL
+     C                     ENDIF
+      *
+      * Write record
+     C                     ADD  1         SARRN
+     C                     WRITESFL360SA
+      *
+     C           SLTYPE    READEEMTFSAL0                 88
+     C                     ENDDO
+      *
+     C           SARRN     IFNE 0
+     C                     MOVE *ON       *IN40
+     C                     ENDIF
+      *
+     C           *IN40     IFEQ *OFF
+     C                     SETON                       7040
+     C                     ADD  1         SARRN
+     C                     MOVE *BLANKS   SAACOD
+     C                     Z-ADD0         SAEXP
+     C                     MOVE *BLANKS   A5ACCN
+     C                     Z-ADD0         SALIM
+     C                     Z-ADD0         SAUTIL
+     C                     WRITESFL360SA
+     C                     MOVEL'EMT0028' MSGID
+     C                     EXSR SNDMSG
+     C                     SETOF                         70
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Process Subfile SFL360SA
+      *  PRC@SA
+      * -------------------------------------------------------------------
+     C           PRC@SA    BEGSR
+      *
+     C                     SETOF                         12
+      *
+     C           *IN12     DOWEQ*OFF
+     C/COPY WNCPYSRC,EM0360C004
+      *
+     C                     WRITEMSGCTL
+     C                     WRITETRL360
+     C                     EXFMTCTL360SA
+      *
+     C                     CALL 'ZA0250'
+      *
+      * Read subfile for any subfile select records
+     C                     SETOF                         33
+     C                     READCSFL360SA                 33
+     C           *IN33     DOWEQ*OFF
+     C                     SETOF                         44
+      *
+     C                     SELEC
+      * Select current record
+     C           SLTSA     WHEQ '1'
+     C/COPY WNCPYSRC,EM0360C005
+     C                     EXSR CLR@CB
+     C                     EXSR LOD@CB
+     C                     EXSR PRC@CB
+     C/COPY WNCPYSRC,EM0360C006
+      *
+      * If subfile select != 1 then Error Message
+     C                     OTHER
+     C           SLTSA     IFNE *BLANK
+     C                     SETON                     44
+     C                     MOVELSLTSA     MSGDTA
+     C                     MOVEL'EMT0004' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+      * Update subfile
+     C           SARRN     CHAINSFL360SA             89
+     C                     MOVE *BLANK    SLTSA
+      * Sflnxtchg
+     C                     SETON                     43
+     C                     UPDATSFL360SA
+      *
+     C                     READCSFL360SA                 33
+     C/COPY WNCPYSRC,EM0360C007
+     C                     ENDDO
+      *
+     C                     ENDDO
+      *
+     C                     SETOF                         70
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Clear SFL360CB Subfile
+      *  CLR@CB
+      * -------------------------------------------------------------------
+     C           CLR@CB    BEGSR
+      *
+     C                     SETON                       5051
+     C                     WRITECTL360CB
+     C                     SETOF                       5051
+      *
+      * Reset SFLRRN
+     C                     Z-ADD0         CBRRN
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Load SFL360CB Subfile
+      *  LOD@CB
+      * -------------------------------------------------------------------
+     C           LOD@CB    BEGSR
+     C                     SETON                       55
+      *
+      * Set to Sub-Line Accounts file
+     C/COPY WNCPYSRC,EM0360C008
+     C           SAACOD    SETLLEMTFCBL1             8888
+     C           SAACOD    READEEMTFCBL1                 88
+     C/COPY WNCPYSRC,EM0360C009
+     C           *IN88     DOWEQ*OFF
+     C                     SETOF                       55
+      *
+      * Get customer name
+     C           CBCUST    CHAINSDCUSTL0             87
+     C           *IN87     IFEQ *ON                        NOT FOUND
+     C                     MOVE *BLANKS   BBCRNM
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,EM0360C010
+      * Divide exposure by 1000
+     C           CBEXP     IFNE 0
+     C                     DIV  1000      CBEXP     H
+     C                     ENDIF
+      *
+      * Calculate utilisation percentage (EXPOSURE / LIMIT) * 100
+     C           CBLIM     IFGT 0
+     C           CBEXP     DIV  CBLIM     TEMP   155
+     C           TEMP      MULT 100       TEMP2
+     C                     EXSR OVRFLW
+     C                     Z-ADDTEMP2     CBUTIL
+     C                     ELSE
+     C                     Z-ADD0         CBUTIL
+     C                     ENDIF
+      *
+      * Write record
+     C                     ADD  1         CBRRN
+     C                     WRITESFL360CB
+      *
+     C/COPY WNCPYSRC,EM0360C011
+     C           SAACOD    READEEMTFCBL1                 88
+     C/COPY WNCPYSRC,EM0360C012
+     C                     ENDDO
+      *
+     C           CBRRN     IFNE 0
+     C                     MOVE *ON       *IN50
+     C/COPY WNCPYSRC,EM0360C013
+     C                     ENDIF
+      *
+     C           *IN50     IFEQ *OFF
+     C                     SETON                       7050
+     C                     ADD  1         CBRRN
+     C                     MOVE *BLANKS   CBCUST
+     C                     Z-ADD0         CBEXP
+     C                     MOVE *BLANKS   BBCRNM
+     C                     Z-ADD0         CBLIM
+     C                     Z-ADD0         CBUTIL
+     C                     WRITESFL360CB
+     C                     MOVEL'EMT0028' MSGID
+     C                     EXSR SNDMSG
+     C                     SETOF                         70
+     C                     ENDIF
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Process SFL360CB Subfile
+      *  PRC@CB
+      * -------------------------------------------------------------------
+     C           PRC@CB    BEGSR
+      *
+     C                     SETOF                         24
+      *
+     C           *IN24     DOWEQ*OFF
+      *
+     C                     WRITEMSGCTL
+     C                     WRITETRL360
+     C                     EXFMTCTL360CB
+      *
+     C                     CALL 'ZA0250'
+      *
+      * Read subfile for any subfile select records
+     C                     SETOF                         33
+     C                     READCSFL360CB                 33
+     C/COPY WNCPYSRC,EM0360C014
+     C           *IN33     DOWEQ*OFF
+     C                     SETOF                         54
+      *
+     C/COPY WNCPYSRC,EM0360C015
+     C                     SELEC
+      * Select current record
+     C           SLTCB     WHEQ '1'
+     C                     CALL 'EM0350'
+     C                     PARM           CBCUST
+     C                     PARM           SAACOD
+      *
+     C/COPY WNCPYSRC,EM0360C016
+      * If subfile select != 1 then Error Message
+     C                     OTHER
+     C           SLTCB     IFNE *BLANK
+     C                     SETON                     54
+     C                     MOVELSLTCB     MSGDTA
+     C                     MOVEL'EMT0004' MSGID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C/COPY WNCPYSRC,EM0360C017
+      * Update subfile
+     C           CBRRN     CHAINSFL360CB             89
+     C                     MOVE *BLANK    SLTCB
+      * Sflnxtchg
+     C                     SETON                     53
+     C/COPY WNCPYSRC,EM0360C018
+     C                     UPDATSFL360CB
+      *
+     C                     READCSFL360CB                 33
+     C                     ENDDO
+      *
+     C/COPY WNCPYSRC,EM0360C019
+     C                     ENDDO
+      *
+      *
+     C/COPY WNCPYSRC,EM0360C020
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Initialisation Routine
+      *  *INZSR
+      * -------------------------------------------------------------------
+     C           *INZSR    BEGSR
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      * Get default currency
+     C           *LOVAL    SETLLSDEXPML0
+     C                     READ SDEXPML0                 89
+     C           *IN89     IFEQ *ON                        No Records
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDEXPMPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Get currency Name
+     C           BUCYCD    CHAINSDCURRL1             89
+     C           *IN89     IFEQ *ON                        No Records
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDCURRPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'CTI002'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Clear and load EMTFSLL0 subfile data
+     C                     EXSR CLR@SL
+     C                     EXSR LOD@SL
+      *
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine OVRFLW
+      * Test overflow
+      * -------------------------------------------------------------------
+     C           OVRFLW    BEGSR
+     C           *LIKE     DEFN TEMP      TEMP2
+     C           TEMP2     IFGT 999.99
+     C                     Z-ADD999.99    TEMP2
+     C                     ENDIF
+     C                     ENDSR
+      * -------------------------------------------------------------------
+      * Subroutine SNDMSG
+      * Send Program Message
+      * -------------------------------------------------------------------
+     C           SNDMSG    BEGSR
+      *
+      * Only write message if requested
+     C           MSGID     IFNE *BLANKS
+     C                     CALL 'AOCREPT'
+     C                     PARM           MSGID
+     C                     PARM           MSGF
+     C                     PARM           MSGLIB
+     C                     PARM           MSGDTA
+     C                     PARM '*SAME'   MSGREL
+     C                     PARM           #PGM
+     C                     PARM *BLANK    FTMSGQ 10
+     C                     PARM *BLANK    FTMSGT  7
+      *
+      * Reset message Id
+     C                     RESETMSGDS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      * -------------------------------------------------------------------
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

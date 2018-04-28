@@ -1,0 +1,686 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Retail branch status')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4433 - Retail Connection Branch Status                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             Date 04May00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CRT003  *CREATE    Date 01Feb00               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CRT004 - Cashier Midas TCP/IP interface (SDBRCHPD)           *
+      *  CDL008 - Continuous Linked Settlement (recompile SDBRCHPD)   *
+      *  CRT003 - Cashier Interface.                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FRE4433DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        @RRN  KSFILE RE4433S0
+     F                                              KINFDS FIDS
+      **  Display file
+      *
+     FSDBRCHL1IF  E           K        DISK         KINFSR *PSSR
+      **  SD Branch Codes - Retrieval
+      *
+     FSDBRCHL0UF  E           K        DISK         KINFSR *PSSR
+      **  SD Branch Codes - Update
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                  ----------------------                       *
+      *                                                               *
+      *  11 - EOF for REACJBL0.                                       *
+      *  12 - EOF for RE4433S0 (READC).                               *
+      *  13 - Error on selection value.                               *
+      *  14 - Display second screen; Call RE4431.                     *
+      *  15 - Disable rollup.                                         *
+      *  16 - Subfile Clear.                                          *
+      *  17 - Non-display Select footer.                              *
+      *  18 - Maintenance/Enquiry mode.                               *
+      *                                                               *
+      *  KC - Exit.                                                   *
+      *  KE - Refresh.                                                *
+      *  KL - Previous.                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   -  Initialisation.                                    *
+      *  *PSSR  -  Program Error.                                     *
+      *  CLRSF  -  Clear Subfile.                                     *
+      *  DBERR  -  Database Error Handling.                           *
+      *  LDSFL  -  Actual Subfile Load.                               *
+      *  LOAD   -  Load Subfile Details.                              *
+      *  RVACJB -  Retrieve Active Jobs.                              *
+      *  PRSLCT -  Process Selection.                                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      ** Rename fields on record format
+      *
+     I@A8REB1
+     I              A8BRCD                          @BRCD1
+     I              A8BRST                          @BRST1
+      *
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IFIDS        DS
+      **  File Information Data Structure
+      *
+     I                                     *STATUS  STATUS
+     I                                       38  45 @FMT
+     I                                    B 378 3790LRRN
+     I                                    B 376 3770CRRN
+     I                                    B 380 3810HRRN
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM @PROG
+     I                                      208 215 @FILE
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank Details
+      *
+     I            DS
+     I I            'Closed              -    1  25 W#CLOS
+     I              '     '
+     I            DS
+     I I            'Awaiting Download   -    1  25 W#AWDN
+     I              '     '
+     I            DS
+     I I            'Open Off-Line       -    1  25 W#OPOF
+     I              '     '
+     I            DS
+     I I            'Download Complete   -    1  25 W#DWCM
+     I              '     '
+     I            DS
+     I I            'Open                -    1  25 W#OPON
+     I              '     '
+     I            DS
+     I I            'Initializing Forward-    1  25 W#OFWD
+     I              'ing  '
+     I            DS
+     I I            'Not a Cashier branch-    1  25 W#NTCS
+     I              '     '
+     I            DS
+     I I            'Branch Monitor Suspe-    1  25 W#COFF
+     I              'nded '
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** 2nd   DS for access programs, Long  data structure
+      *
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P1DFMD  1        Display file mode
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      INIT   - Access ICD Details                        *
+      *            LOAD   - Load Subfile Details                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      **  Access ICD Details then load subfile screen.
+      *
+     C                     EXSR INIT
+      *
+      ** If pgm in maintenance mode display extra keys.
+      *
+     C           P1DFMD    IFEQ 'M'
+     C                     MOVE *ON       *IN18
+     C                     ENDIF
+      *
+     C                     EXSR LOAD
+      *
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             CLRSF - Clear Subfile.                            *
+      *                                                               *
+      * CALLED BY  LOAD   - Load Subfile Details.                     *
+      *            PRSLCT - Process Selection.                        *
+      *                                                               *
+      *****************************************************************
+     C           CLRSF     BEGSR                           ** CLRSF  **
+      *
+      **  Subfile clear.
+      *
+     C                     MOVE '1'       *IN16
+     C                     WRITERE4433C0
+     C                     MOVE '0'       *IN16
+      *
+     C                     MOVEL'0'       *IN17
+     C                     Z-ADD0         @RRN    50
+     C                     Z-ADD1         I
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             LDSFL - Actual Subfile Load.                      *
+      *                                                               *
+      * CALLED BY  LOAD   - Load Subfile Details.                     *
+      *            PRSLCT - Process Selection.                        *
+      *                                                               *
+      *****************************************************************
+     C           LDSFL     BEGSR                           ** LDSFL  **
+      *
+     C                     MOVEL'0'       *IN13
+     C                     MOVEL'0'       *IN15
+     C                     Z-ADD1         WCTR    50
+      *
+     C           HRRN      ADD  1         SRRN
+     C           LRRN      ADD  14        WORK1
+      *
+     C           WORK1     IFEQ HRRN
+     C           LRRN      OREQ 0
+      *
+     C           *LOVAL    SETLLSDBRCHL1
+     C                     READ SDBRCHL1                 89
+      *
+      **  Load up to 15 function lines per screen.
+      *
+     C           WCTR      DOWLE15
+     C           *IN89     ANDNE'1'
+      *
+     C                     SELEC
+      *
+     C           A8BRST    WHEQ 'C'
+     C                     MOVELW#CLOS    SDESC
+      *
+     C           A8BRST    WHEQ 'D'
+     C                     MOVELW#AWDN    SDESC
+      *
+     C           A8BRST    WHEQ 'F'
+     C                     MOVELW#OPOF    SDESC
+      *
+     C           A8BRST    WHEQ 'S'
+     C                     MOVELW#DWCM    SDESC
+      *
+     C           A8BRST    WHEQ 'O'
+     C                     MOVELW#OPON    SDESC
+      *
+     C           A8BRST    WHEQ 'P'
+     C                     MOVELW#COFF    SDESC
+      *
+     C           A8BRST    WHEQ 'N'
+     C                     MOVELW#NTCS    SDESC
+      *
+     C                     OTHER
+     C                     MOVELA8BRST    SDESC
+      *
+     C                     ENDSL
+      *
+      ** Load branch code and name
+      *
+     C                     MOVELA8BRCD    SBRCD
+     C                     MOVELA8BRNM    SBRNM
+     C                     MOVELA8BRST    SBRST
+      *
+      ** Clear select field
+      *
+     C                     MOVEL*BLANKS   SSLCT
+      *
+     C                     ADD  1         I
+     C                     ADD  1         @RRN
+     C                     ADD  1         WCTR
+      *
+     C                     WRITERE4433S0
+      *
+     C                     READ SDBRCHL1                 89
+      *
+     C                     ENDDO
+      *
+      **  Disable rollup when no active jobs are found.
+      *
+     C           SRRN      ADD  WCTR      WORK1
+     C                     SUB  1         WORK1
+     C           *IN89     IFEQ '1'
+     C                     MOVEL'1'       *IN15
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            LOAD   - Load Subfile Details.                     *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Processing.                          *
+      *                                                               *
+      * CALLS      CLRSF  - Clear Subfile Load.                       *
+      *            LDSFL  - Actual Subfile Load.                      *
+      *            PRSLCT - Process Selection.                        *
+      *                                                               *
+      *****************************************************************
+     C           LOAD      BEGSR                           ** LOAD   **
+      *
+      **  Display screen header format.
+      *
+     C                     MOVEL@USER     SUSER
+     C                     MOVEL@JOB      SWSID
+     C                     WRITERE4433F0
+      *
+     C                     Z-ADD1         I       20
+      *
+      **  Initial subfile load.
+      *
+     C                     EXSR CLRSF
+     C                     EXSR LDSFL
+     C                     MOVEL*BLANKS   SERRL
+      *
+      **  Do While Cmd 3 and Cmd 12 are off
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C           I         IFEQ 1
+      *
+      **  Write no details screen.
+      *
+     C                     MOVEL'0'       *IN15
+     C                     MOVEL'1'       *IN17
+     C                     WRITERE4433F2
+     C                     EXFMTRE4433F1
+      *
+      **  If Refresh (Cmd 5) is requested.
+      *
+     C           *INKE     IFEQ '1'
+     C                     MOVEL*BLANKS   SERRL
+     C                     EXSR CLRSF
+     C                     EXSR LDSFL
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      **  Else Write details sub-file.
+      *
+     C                     WRITERE4433F2
+     C                     EXFMTRE4433C0
+     C                     Z-ADD0         COUNT   10
+      *
+      **  If Roll-up is pressed.
+      *
+     C           *IN01     IFEQ '1'
+     C                     Z-ADDHRRN      @RRN
+     C                     EXSR LDSFL
+      *
+     C                     ELSE
+      **  Refresh (Cmd 5) is requested.
+      *
+     C           *INKE     IFEQ '1'
+     C                     MOVEL*BLANKS   SERRL
+     C                     EXSR CLRSF
+     C                     EXSR LDSFL
+      *
+      **  If a selection is made.
+      *
+     C                     ELSE
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR PRSLCT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            GETRRN - Get LRRN of the page where the record     *
+      *                     belongs to.                               *
+      *                                                               *
+      * CALLED BY  PRSLCT - Process Selection.                        *
+      *                                                               *
+      *****************************************************************
+     C           GETRRN    BEGSR                           ** GETRRN **
+      *
+     C           CRRN      DIV  15        WORK1   40
+     C                     MVR            REM     40
+     C           WORK1     MULT 15        WORK2   40
+     C           REM       IFEQ 0
+     C           WORK2     SUB  14        WLRRN
+     C                     ELSE
+     C           WORK2     ADD  1         WLRRN   40
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PRSLCT - Process Selection.                        *
+      *                                                               *
+      * CALLED BY  LOAD   - Load Subfile Details.                     *
+      *                                                               *
+      * CALLS      LDSFL  - Actual Subfile Load.                      *
+      *                                                               *
+      *****************************************************************
+     C           PRSLCT    BEGSR                           ** PRSLCT **
+      *
+     C                     Z-ADD1         COUNT
+      *
+     C                     MOVEL*BLANKS   SERRL
+      *
+      ** Read subfile for changed selection field
+      *
+     C                     READCRE4433S0                 12
+      *
+     C           *IN12     DOWEQ'0'
+      *
+     C                     MOVEL'0'       *IN13
+     C                     MOVEL*BLANKS   @MSGDT
+      *
+      **  For Valid selection, if ('F' or 'C').
+      *
+     C           SSLCT     IFEQ 'F'
+     C           SSLCT     OREQ 'C'
+      *
+      ** Check if is a Cashier Branch
+      *
+     C           SBRCD     CHAINSDBRCHL0             41
+     C           @BRST1    IFEQ 'N'
+      *
+     C                     MOVEL'1'       *IN13
+      *
+      ** Retrieve error message
+      *
+     C                     MOVEL'USR0082' @MSGID
+     C                     MOVELSBRCD     @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    SERRL
+      *
+     C                     EXSR GETRRN
+     C                     UPDATRE4433S0
+      *
+     C                     ELSE
+      *
+     C                     MOVEL*BLANKS   SERRL
+      *
+      ** Retrieve Branch Code for update
+      *
+     C           SBRCD     CHAINSDBRCHL0             41
+      *
+      ** If no record found, database error
+      *
+     C           *IN41     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHL0'DBFILE
+     C                     MOVELSBRCD     DBKEY
+     C                     Z-ADD02        DBASE
+     C                     EXSR DBERR
+      *
+      ** Else, if record found
+      *
+     C                     ELSE
+      *
+      ** If record's 'Branch status' has been changed by another process
+      *
+     C           @BRST1    IFNE SBRST
+      *
+     C                     MOVEL'1'       *IN13
+      *
+     C                     MOVEL'USR0080' @MSGID
+     C                     MOVELSBRCD     @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    SERRL
+      *
+     C                     UNLCKSDBRCHL0
+      *
+     C                     EXSR GETRRN
+      *
+     C                     UPDATRE4433S0
+     C                     Z-ADDWLRRN     SRRN
+      *
+      ** Else, if record not amended then update
+      *
+     C                     ELSE
+      *
+     C                     MOVELSSLCT     @BRST1
+     C                     UPDAT@A8REB1
+      *
+      *
+      ** Retrieve Branch Code for update
+      *
+     C           SBRCD     CHAINSDBRCHL1             42
+      *
+      ** If no record found, database error
+      *
+     C           *IN42     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHL1'DBFILE
+     C                     MOVELSBRCD     DBKEY
+     C                     Z-ADD03        DBASE
+     C                     EXSR DBERR
+      *
+      ** Else, if record found
+      *
+     C                     ELSE
+      *
+      ** Re-Load branch code, name and status
+      *
+     C                     MOVEL*BLANKS   SSLCT
+     C                     MOVELA8BRCD    SBRCD
+     C                     MOVELA8BRNM    SBRNM
+     C                     MOVELA8BRST    SBRST
+      *
+     C                     SELEC
+      *
+     C           A8BRST    WHEQ 'C'
+     C                     MOVELW#CLOS    SDESC
+      *
+     C           A8BRST    WHEQ 'D'
+     C                     MOVELW#AWDN    SDESC
+      *
+     C           A8BRST    WHEQ 'F'
+     C                     MOVELW#OPOF    SDESC
+      *
+     C           A8BRST    WHEQ 'S'
+     C                     MOVELW#DWCM    SDESC
+      *
+     C           A8BRST    WHEQ 'O'
+     C                     MOVELW#OPON    SDESC
+      *
+     C           A8BRST    WHEQ 'P'
+     C                     MOVELW#OFWD    SDESC
+      *
+     C           A8BRST    WHEQ 'N'
+     C                     MOVELW#NTCS    SDESC
+      *
+     C                     OTHER
+     C                     MOVELA8BRST    SDESC
+      *
+     C                     ENDSL
+      *
+     C                     UPDATRE4433S0
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      **  Invalid selection, display error message.
+      *
+     C           SSLCT     IFNE *BLANK
+     C                     MOVEL'1'       *IN13
+      *
+      ** Retrieve error message
+     C                     MOVEL'USR0081' @MSGID
+     C                     MOVELSSLCT     @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    SERRL
+      *
+     C                     EXSR GETRRN
+      *
+     C                     UPDATRE4433S0
+     C                     Z-ADDWLRRN     SRRN
+      *
+     C                     ELSE
+     C                     MOVEL'0'       *IN13
+     C                     EXSR GETRRN
+      *
+     C           COUNT     IFLT 1
+     C                     UPDATRE4433S0
+     C                     ENDIF
+     C                     Z-ADDWLRRN     SRRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READCRE4433S0                 12
+     C                     EXSR CLRSF
+     C                     EXSR LDSFL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /COPY ZSRSRC,RBRMSGC1
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             DBERR - Database Error Handling.                  *
+      *                                                               *
+      * CALLED BY  LDSFL  - Actual Subfile Load.                      *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PROG     DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      **  Check to see that *PSSR has not been called yet
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            INIT   - Initialisation Subroutine                 *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR                           **  INIT  **
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+      *
+     C           KKEY      KLIST
+     C                     KFLD           A8BRCD
+      *
+      **  Bank details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK'  @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Initialise work fields.
+      *
+     C                     MOVE *BLANK    WRUN    1
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+      *
+      ** Set up error message file
+      *
+     C                     MOVEL'CIMSGF'  @MSGF
+     C                     MOVEL*BLANKS   @MSGID
+     C                     MOVEL*BLANKS   @MSGDT
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

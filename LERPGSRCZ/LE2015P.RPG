@@ -1,0 +1,469 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Loan Manager bulk transfer prompt program')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE2015P - Bulk Transfer Prompt Program                       *
+      *                                                               *
+      *  Function:  This will be the prompt program for LE2015        *
+      *             Lending Bulk Transfer. This will act as a         *
+      *             filter for the transfer type and for the          *
+      *             branches requiring transfer.                      *
+      *                                                               *
+      *  Called by: LEC2015P                                          *
+      *                                                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *  Prev Amend No. 203561             Date 21Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             Date 04May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 121783             Date 20AUG97               *
+      *                 CLE004  *CREATE    Date 11JUN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  203561 - Check for disabled branches and update parameters   *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *             Recompiled over SDBRCHPD Changes                  *
+      *  121783 - Call new access object AOBRCHR1 instead of AOBRCHR0 *
+      *           (uses the long data structure DSSDY)                *
+      *  CLE004 - Customer Lending Enhancements - Tranche 2           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *                                                               *
+      *  40 - Protect and non-display if Syndicated Lending not active*
+      *  41 - Error indicator for Transfer type field                 *
+      *  42 - Error indicator for Branch field                        *
+      *  45 - Message SFLEND                                          *
+      *                                                               *
+      *---------------------------------------------------------------*
+      * U7 U8 LR                                                      *
+      *****************************************************************
+     FLE2015DFCF  E                    WORKSTN
+      *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+     ILDA       E DS
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+      ** External DS for bank details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for branch details
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** External DS for switchable features details
+     ISCSARD    E DSSCSARDPD
+      *
+      *  First DS for access program, short Data Structure
+     IDSFDY     E DSDSFDY
+      *
+      * Second DS for access program, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           SERV    3                                           203561
+     C                     PARM           BRCH    3
+     C*********************PARM           MQ     10                                           203561
+      *
+      /EJECT
+      *****************************************************************
+      *  MAIN
+      *****************************************************************
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR INIT
+      *
+      ** Display Prompt Screen
+      *
+     C                     EXSR DISPLY
+      *
+      ** Terminate the Program
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *  INIT - Initialisation
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **   Define the LDA for error handling
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     SETOF                     414245
+     C                     SETOF                     40
+      *
+      *    Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG'    @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERR 001 *
+     C                     Z-ADD1         DBASE            *************
+     C                     MOVEL'LE2015P' DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                       203561
+      ****Access*Switchable*features*file*for                                                 203561
+      ****Customer*Lending*Enhancements-Syndications-Tranche*II                               203561
+      *                                                                                       203561
+     C***********          CALL 'AOSARDR0'                                                    203561
+     C***********          PARM *BLANKS   @RTCD                                               203561
+     C***********          PARM '*VERIFY' @OPTN                                               203561
+     C***********          PARM 'CLE004'  @SARD   6                                           203561
+     C***********SCSARD    PARM SCSARD    DSFDY                                               203561
+      ***********                                                                             203561
+     C***********@RTCD     IFNE *BLANK                                                        203561
+     C***********@RTCD     ANDNE'*NRF   '                                                     203561
+     C************LOCK     IN   LDA                                                           203561
+     C***********          MOVEL'SCSARDPD'DBFILE            ************                      203561
+     C***********          MOVEL'CLE004'  DBKEY             *DBERR 002 *                      203561
+     C***********          Z-ADD2         DBASE             ************                      203561
+     C***********          MOVEL'LE2015P' DBPGM                                               203561
+     C***********          OUT  LDA                                                           203561
+     C***********          EXSR *PSSR                                                         203561
+     C***********          ENDIF                                                              203561
+      ***********                                                                             203561
+     C***********@RTCD     IFEQ *BLANK                                                        203561
+     C***********          MOVE 'Y'       CLE004  1                                           203561
+     C***********          ELSE                                                               203561
+     C***********          MOVE 'N'       CLE004                                              203561
+     C***********          ENDIF                                                              203561
+      ***********                                                                             203561
+      ****Access*Switchable features file for                                                 203561
+      ***********                                                                             203561
+     C***********          CALL 'AOSARDR0'                                                    203561
+     C***********          PARM *BLANKS   @RTCD                                               203561
+     C***********          PARM '*VERIFY' @OPTN                                               203561
+     C***********          PARM 'CLE006'  @SARD                                               203561
+     C***********SCSARD    PARM SCSARD    DSFDY                                               203561
+      ***********                                                                             203561
+     C***********@RTCD     IFNE *BLANK                                                        203561
+     C***********@RTCD     ANDNE'*NRF   '                                                     203561
+     C************LOCK     IN   LDA                                                           203561
+     C***********          MOVEL'SCSARDPD'DBFILE            ************                      203561
+     C***********          MOVEL'CLE006'  DBKEY             *DBERR 003 *                      203561
+     C***********          Z-ADD3         DBASE             ************                      203561
+     C***********          MOVEL'LE2015P' DBPGM                                               203561
+     C***********          OUT  LDA                                                           203561
+     C***********          EXSR *PSSR                                                         203561
+     C***********          ENDIF                                                              203561
+      ***********                                                                             203561
+     C***********@RTCD     IFEQ *BLANK                                                        203561
+     C***********          MOVE 'Y'       CLE006  1                                           203561
+     C***********          ELSE                                                               203561
+     C***********          MOVE 'N'       CLE006                                              203561
+     C***********          END                                                                203561
+      *                                                                                       203561
+      **  Access Switchable features file for presence of the CLE010                          203561
+      **  Loan Manager switchable feature                                                     203561
+      *                                                                                       203561
+     C                     CALL 'AOSARDR0'                                                    203561
+     C                     PARM *BLANKS   @RTCD                                               203561
+     C                     PARM '*VERIFY' @OPTN                                               203561
+     C                     PARM 'CLE010'  @SARD   6                                           203561
+     C           SCSARD    PARM SCSARD    DSFDY                                               203561
+      *                                                                                       203561
+     C           @RTCD     IFNE *BLANK                                                        203561
+     C           @RTCD     ANDNE'*NRF   '                                                     203561
+     C           *LOCK     IN   LDA                                                           203561
+     C                     MOVEL'SCSARDPD'DBFILE            ************                      203561
+     C                     MOVEL'CLE010'  DBKEY             *DBERR 002 *                      203561
+     C                     Z-ADD2         DBASE             ************                      203561
+     C                     MOVEL'LE2015P' DBPGM                                               203561
+     C                     OUT  LDA                                                           203561
+     C                     EXSR *PSSR                                                         203561
+     C                     ENDIF                                                              203561
+      *                                                                                       203561
+     C           @RTCD     IFEQ *BLANK                                                        203561
+     C                     MOVE 'Y'       CLE010  1                                           203561
+     C                     ELSE                                                               203561
+     C                     MOVE 'N'       CLE010                                              203561
+     C                     ENDIF                                                              203561
+      *
+     C                     MOVE 'N'       W#PC    1
+      *
+     C***********CLE004    IFEQ 'Y'                                                           203561
+     C***********CLE006    ANDEQ'Y'                                                           203561
+     C           CLE010    IFEQ 'Y'                                                           203561
+     C                     MOVE 'Y'       W#PC
+     C                     MOVE 'Y'       W#ERR1  1
+     C                     ENDIF
+      *
+      * Set up message file name for error message execution, and
+      * rundate.
+      *
+     C                     MOVEL'LERMSGF 'ZAMSGF
+     C                     MOVE BJMRDT    SRUNA
+     C                     MOVEL'LE2015P' DBPGM
+      *
+      * Clear message queue for screen.
+      *
+     C                     EXSR CLEARM
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  DISPLY - Display Prompt screen
+      *****************************************************************
+      *
+     C           DISPLY    BEGSR
+      *
+      **Error*Syndicated*Lending*not*active.                                                  203561
+      * Error Loan Manager Interface not active                                               203561
+      *
+     C           W#PC      IFEQ 'N'
+     C*********************MOVEL'LEP0200' ZAMSID                                              203561
+     C                     MOVEL'LEP0206' ZAMSID                                              203561
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN40
+     C                     ENDIF
+      *
+     C                     WRITELE2015F0                   Header
+     C                     EXSR SCREEN
+      *
+     C           *IN03     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+     C           W#ERR1    ANDEQ'Y'
+     C           W#PC      ANDEQ'Y'
+      *
+     C                     MOVE 'N'       W#ERR1
+      *
+      * Validate screen fields.
+      *
+     C                     EXSR VALID
+      *
+      * Display error message.
+      *
+     C           W#ERR1    IFEQ 'Y'
+     C                     EXSR SCREEN
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      * If exit or error pressed, blank out return parameters.
+      * Otherwise set up Mode and Branch fields.
+      *
+     C           *IN03     IFEQ *ON
+     C           *IN12     OREQ *ON
+     C           W#PC      OREQ 'N'
+      *
+     C                     MOVE *BLANKS   MODE
+     C                     MOVE *BLANKS   SERV                                                203561
+     C                     MOVE *BLANKS   BRCH
+      *
+     C                     ELSE
+      *
+     C                     MOVE TRANSF    MODE
+     C                     MOVELBRCHC     BRCH
+      *
+     C*********************ENDIF                                                              203561
+      *
+     C           BRCH      IFNE *BLANKS
+     C           BRCH      ANDNE'ALL'                                                         203561
+     C*********************MOVELW#MQ      MQ                                                  203561
+     C                     MOVELW#MQ      SERV                                                203561
+     C                     ELSE
+     C*********************MOVE *BLANKS   MQ                                                  203561
+     C                     MOVE 'ALL'     SERV                                                203561
+     C                     ENDIF
+     C                     ENDIF                                                              203561
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  VALID - Validate Screen input
+      *****************************************************************
+      *
+     C           VALID     BEGSR
+      *
+      *   Validate Transfer Type field
+      *
+     C           TRANSF    IFNE 'L'
+     C           TRANSF    ANDNE'S'
+     C           TRANSF    ANDNE'B'
+     C                     MOVEL'LEP0201' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN41
+     C                     MOVE 'Y'       W#ERR1
+     C                     ELSE
+     C                     MOVE *OFF      *IN41
+     C                     ENDIF
+      *
+     C           BRCHC     IFNE *BLANKS
+     C           BRCHC     ANDNE'ALL'                                                         203561
+      *
+      *   Access Branch file for field validation
+      *
+     C***********          CALL 'AOBRCHR0'                                121783
+     C                     CALL 'AOBRCHR1'                                121783
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BRCHC     @DSNB   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+      * Record not found
+     C           @RTCD     IFEQ '*NRF'
+     C           @RTCD     OREQ '*NOSEL'
+     C                     MOVEL'LEP0202' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       W#ERR1
+     C                     MOVE *ON       *IN42
+      *
+     C                     ELSE
+      * DB error
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE            ************
+     C                     MOVELBRCHC     DBKEY             *DBERR 004 *
+     C                     Z-ADD4         DBASE             ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      * OK (@RTCD= blanks)
+      *
+      * Check whether the branch has been disabled                                            203561
+      *                                                                                       203561
+     C                     CALL 'LEC2019'                                                     203561
+     C                     PARM BRCHC     BRCHC
+     C                     PARM 'N'       DISABL  1
+     C           DISABL    IFEQ 'Y'
+     C                     MOVEL'LEP0205' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       W#ERR1
+     C                     MOVE *ON       *IN42
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE *OFF      *IN42
+     C                     MOVELA8MQBU    W#MQ   10
+     C                     MOVELA8BRCD    BRCHC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SCREEN  - Display Screen
+      *****************************************************************
+     C           SCREEN    BEGSR
+      *
+     C           *IN05     DOUEQ*OFF
+      *
+      * Refresh
+     C           *IN05     IFEQ *ON
+     C                     MOVE *BLANKS   TRANSF
+     C                     MOVE *BLANKS   BRCHC
+     C                     SETOF                     4142
+     C                     ENDIF
+      *
+     C                     SETON                     45    Msg SFLEND
+     C                     WRITE#MSGCTL                    Messages
+     C                     EXFMTLE2015F1                   Main Screen
+     C                     EXSR CLEARM
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  ZASNMS - Sends messages to the program's message queue       *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZAMSDA
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CLEARM  -  Clears the message queue                           *
+      *****************************************************************
+     C           CLEARM    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR - Exception error processing
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** PSSR **
+      *
+     C           @DUMP     IFEQ *BLANK
+     C                     DUMP
+     C                     MOVE 'Y'       @DUMP   1
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+** CPY@
+(c) Misys International Banking Systems Ltd. 2001

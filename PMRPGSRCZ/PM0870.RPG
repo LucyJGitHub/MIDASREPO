@@ -1,0 +1,400 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Save Historical FX rates')                    *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module.                     *
+     F*                                                               *
+     F*  RPG/PM0870 - Save Historical FX Rates.                       *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01486             Date 12Jul94               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting. *
+      *           (Recompile)                                         *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FPM0870AUO   E                    PRINTER
+     F****PREFIX*OF*PMHSEXZZ*IS*'Q8'                                      S01486
+     F**PMHSEXZZUF**E********************DISK                      A      S01486
+     F**  PREFIX OF PMHSEXPA IS 'Q8'                                      S01486
+     FPMHSEXPAUF  E                    DISK                      A        S01486
+     F                                              KINFSR *PSSR
+     F****PREFIX*OF*SDBANKL1*IS*'BJ'******                                S01486
+     F***SDBANKL1IF**E***********K********DISK                            S01486
+     F************************************          KINFSR *PSSR          S01486
+     F** PREFIX OF SDCURRL0 IS 'A6'
+     FSDCURRL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F****PREFIX**F*PMHSEXPP*IS 'Q8'                                      S01486
+     F***PMHSEXPPIF**E***********K********DISK                      A     S01486
+     F**  PREFIX OF PMHSEXPD IS 'Q8'                                      S01486
+     FPMHSEXPDIF  E           K        DISK                      A        S01486
+     F                                              KINFSR *PSSR
+     E*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       71: INDICATOR FOR READ
+     F*       72: INDICATOR FOR READ
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * ..   ..   73   74   75   76   77   78   79   80 *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     E*****************************************************************
+     E*
+     E**   Array for copyright
+     E                    CPY@    1   1 80
+     E*
+     I*****************************************************************
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01486
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I**LDA********UDS**********************      256                     S01486
+     I**************************************132 183 DBLOT                 S01486
+     I**************************************132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * INIT     - INITIAL PROCESSING                                    *
+      * #P01     - CURRENCY PROCESSING                                   *
+      * #P02     - AUDIT PROCESSING                                      *
+      * #W01     - WRITE TO HISTORIC EXCHANGE RATES                      *
+      * #W0201   - WRITE TO HISTORIC EXCHANGE RATES AUDIT                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C** KEY DEFINITION
+     C*****************************************************************
+     C*
+     C           KHSEX     KLIST
+     C                     KFLD           A6CYCD
+     C                     KFLD           BJRDNB
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C** MAIN PROCESSING
+     C*****************************************************************
+     C*
+     C                     EXSR INIT
+     C*
+     C** EXECUTE #P01 => CURRENCY PROCESSING
+     C                     EXSR #P01
+     C*
+     C** EXECUTE #P02 => AUDIT PROCESSING
+     C                     EXSR #P02
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INIT     - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           INIT      BEGSR                           ** INIT  BSR **
+     C*
+     C** PREPARE LDA
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM0870'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01486
+     C                     Z-ADD1         DBASE            * DBERROR  01 *S01486
+     C                     MOVEL@OPTN     DBKEY            ***************S01486
+     C                     MOVEL@OPTN     DBOPTN  7                       S01486
+     C                     OUT  LDA                                       S01486
+     C*********************READ SDBANKL1                 71               S01486
+     C************IN71*****IFEQ '1'                                       S01486
+     C***ERROR*************                                               S01486
+     C*********************MOVEL'SDBANKL1'DBFILE           ***************S01486
+     C*********************MOVEL*BLANKS   DBKEY                           S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           EINIT     ENDSR                           ** END INIT  **
+     C*
+     C********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - CURRENCY PROCESSING                                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W01     - WRITE TO HISTORIC EXCHANGE RATES                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR                           ** #P01  BSR **
+     C*
+     C*  READ FROM LF/SDCURRL0 - CURRENCY CODES
+     C           *LOVAL    SETLLSDCURRL0
+     C                     READ SDCURRL0                 71
+     C           *IN71     DOWEQ'0'
+     C*
+     C***SET*LOWER*LIMITS*ON*PF/PMHSEXPP - HISTORIC EXCHANGE RATES USING  S01486
+     C***CURRENCY*CODE*FROM*LF/SDCURRL0 AND DATE*EQUAL TO RUN DAY NUMBER  S01486
+     C***FROM*LF/SDBANKL1 AS KEY                                          S01486
+     C*  ACCESS PF/PMHSEXPD - HISTORIC EXCHANGE RATES USING CURRENCY CODE S01486
+     C*  FROM SDCURRPD AND RUN DAY NUMBER FROM SDBANKPD.                  S01486
+     C***********KHSEX     SETGTPMHSEXPP                                  S01486
+     C***********          READPPMHSEXPP                 72               S01486
+     C           KHSEX     SETGTPMHSEXPD                                  S01486
+     C                     READPPMHSEXPD                 72               S01486
+     C*
+     C** IF BEGINNING OF FILE ON PF/PMHSEXPP REACHED OR IF CURRENCY       S01486
+     C** CODE FROM LF/SDCURRL0 IS NOT EQUAL TO CURRENCY FROM              S01486
+     C** PF/PMHSEXPP                                                      S01486
+     C** IF BEGINNING OF FILE ON PF/PMHSEXPD REACHED OR IF CURRENCY       S01486
+     C** CODE FROM SDCURRPD IS NOT EQUAL TO CURRENCY FROM                 S01486
+     C** PF/PMHSEXPD                                                      S01486
+     C           *IN72     IFEQ '1'
+     C           Q8CCY     ORNE A6CYCD
+     C*
+     C** WRITE A RECORD AS PER #W01 - WRITE TO HISTORIC EXCHANGE RATES
+     C                     EXSR #W01
+     C*
+     C** ADD 1 TO A COUNT OF RECORDS WRITTEN
+     C                     ADD  1         PPREC
+     C                     ELSE
+     C*
+     C** OTHERWISE, IF CURRENCY CODE FROM LF/SDCURRL0 IS EQUAL TO         S01486
+     C** CURRENCY FROM PF/PMHSEXPP                                        S01486
+     C** OTHERWISE, IF CURRENCY CODE FROM SDCURRPD IS EQUAL TO            S01486
+     C** CURRENCY FROM PF/PMHSEXPD                                        S01486
+     C*
+     C** IF SPOT RATE FROM LF/SDCURRL0 IS NOT EQUAL TO SPOT RATE FROM     S01486
+     C** PF PMHSEXPP                                                      S01486
+     C** IF SPOT RATE FROM SDCURRPD IS NOT EQUAL TO SPOT RATE FROM        S01486
+     C** PF/PMHSEXPD                                                      S01486
+     C           Q8CCY     IFEQ A6CYCD
+     C           Q8SPOT    ANDNEA6SPRT
+     C*
+     C** WRITE A RECORD AS PER #W01 - WRITE TO HISTORIC EXCHANGE RATES
+     C                     EXSR #W01
+     C*
+     C** ADD 1 TO A COUNT OF RECORDS WRITTEN
+     C                     ADD  1         PPREC
+     C                     END
+     C                     END
+     C*
+     C** READ FROM LF/SDCURRL0
+     C                     READ SDCURRL0                 71
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P02     - AUDIT PROCESSING                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W0201   - WRITE TO HISTORIC EXCHANGE RATES AUDIT                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P02      BEGSR                           *** #P02   ***
+     C*
+     C***ACCESS*PF/PMHSEXZZ*-*HISTORIC*EXCHANGE*RATES*AUDIT               S01486
+     C*********************READ PMHSEXZZ                 72               S01486
+     C** ACCESS PF/PMHSEXPA - HISTORIC EXCHANGE RATES AUDIT               S01486
+     C                     READ PMHSEXPA                 72               S01486
+     C           *IN72     IFEQ '1'
+     C*
+     C** SET NUMBER OF LIVE RECORDS EQUAL TO A COUNT OF RECORDS
+     C** WRITTEN
+     C                     Z-ADDPPREC     Q8NORE
+     C*
+     C***********RECORD*TO PF/PMHSEXZZ*AS*PER*#W0201*-*WRITE TO******     S01486
+     C** WRITE A RECORD TO PF/PMHSEXPA AS PER #W0201 - WRITE TO           S01486
+     C** HISTORIC EXCHANGE RATES AUDIT
+     C                     ELSE
+     C*
+     C** ADD COUNT OF RECORDS WRITTEN TO NUMBER OF LIVE RECORDS
+     C                     ADD  PPREC     Q8NORE
+     C*
+     C******ATE*PF/PMHSEXZZ*AS*PER*#W0201**********************           S01486
+     C** UPDATE PF/PMHSEXPA AS PER #W0201                                 S01486
+     C                     END
+     C*
+     C                     EXSR #W0201
+     C*
+     C** PRODUCE AUDIT REPORT - WRITE TO SAVE HISTORICAL
+     C** FX RATES AUDIT REPORT
+     C                     WRITEPM0870PP
+     C                     WRITEPM0870P1                                  S01486
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W01     - WRITE TO HISTORIC EXCHANGE RATES                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - CURRENCY PROCESSING                                   *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W01      BEGSR
+     C*
+     C                     MOVEL'D'       Q8RECI
+     C*
+     C** CURRENCY CODE FROM LF/SDCURRL0
+     C                     MOVELA6CYCD    Q8CCY
+     C*
+     C*****N*DAY*NUMBER*FROM*LF/SDBANKL1***************                   S01486
+     C** RUN DAY NUMBER FROM SDBANKPD                                     S01486
+     C                     Z-ADDBJRDNB    Q8SDAT
+     C*
+     C** SPOT RATE FROM LF/SDCURRL0
+     C                     Z-ADDA6SPRT    Q8SPOT
+     C*
+     C** MULT./DIV. INDICATOR FROM LF/SDCURRL0
+     C                     MOVELA6MDIN    Q8MDV1
+     C*
+     C** DEC. PLACES FROM LF/SDCURRL0
+     C                     Z-ADDA6NBDP    Q8CDP
+     C*
+     C                     WRITEPMHSEXP0
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W0201   - WRITE TO HISTORIC EXCHANGE RATES AUDIT                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P02     - AUDIT PROCESSING                                      *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W0201    BEGSR                           *** #W0201 ***
+     C                     MOVEL'D'       Q8RECI
+     C           *IN72     IFEQ '1'
+     C                     WRITEPMHSEXZ0
+     C                     ELSE
+     C                     UPDATPMHSEXZ0
+     C                     END
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * INIT     - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C**                                                                  S01486
+     C** OUTPUT TO AUDIT                                                  S01486
+     C                     WRITEPM0870PP                                  S01486
+     C                     WRITEERRORAU                                   S01486
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C*
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

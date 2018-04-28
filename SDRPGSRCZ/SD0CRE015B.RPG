@@ -1,0 +1,157 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE T&N Accounts - Initialisation Program')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail T&N Accounts                                  *
+      *                                                               *
+      *  SD0CRE015B - Initialisation Program                          *
+      *                                                               *
+      *  Function:  This program will set next cap date to zero if    *
+      *             existing cap date is far in the future so that it *
+      *             will be recalculated in the cob                   *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CRE015  *CREATE    Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FREPRPNPDUF  E           K        DISK         KINFSR *PSSR
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+     C/EJECT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C           *LOVAL    SETLLREPRPNPD
+     C                     READ REPRPNPD                 90
+      *
+     C           *IN90     DOWEQ'0'
+      *
+      ** For A records, recalculate next cap date if it is > 20000 (Midas day number)
+      *
+     C           E2EVNT    IFEQ 'A'
+     C           E2ITEM    ANDEQ1
+     C           E2TPRD    ANDEQ'T'
+     C           E2CNUM    ANDNE*BLANKS
+     C           E2CCY     ANDNE*BLANKS
+     C           E2ACOD    ANDNE0
+     C           E2ACSQ    ANDNE0
+     C           E2BRCA    ANDNE*BLANKS
+      *
+     C                     MOVE ' '       UPDATE
+      *
+     C           E2NCID    IFGT 20000
+     C                     Z-ADD0         E2NCID
+     C                     MOVE 'Y'       UPDATE  1
+     C                     ENDIF
+      *
+     C           E2NDID    IFGT 20000
+     C                     Z-ADD0         E2NDID
+     C                     MOVE 'Y'       UPDATE
+     C                     ENDIF
+      *
+     C           UPDATE    IFEQ 'Y'
+     C                     UPDATREPRPND0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *
+     C                     READ REPRPNPD                 90
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called By: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not been called yet
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+** CPY@
+(c) Misys International Banking Systems Ltd. 2009

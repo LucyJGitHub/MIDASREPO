@@ -1,0 +1,1270 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MT Testkey request by destination')
+      *****************************************************************
+      *                                                               *
+      *  Midas - TELEX INTERFACE                                      *
+      *                                                               *
+      *   MT4020 - TESTKEY REQUEST BY DESTINATION                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 164455             Date 22Aug00               *
+      *                  170748           DATE 01Aug00                *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                  CTK001           DATE 11May99                *
+      *                  113352           DATE 13Feb97                *
+      *                  067236            DATE 01NOV94               *
+      *                  067054            DATE 01NOV94               *
+      *                  E29833            DATE 18OCT91               *   E29833
+      *                  S01344            DATE 14OCT91               *   S01344
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+      *   164455 - Output 4-digit output sequence to TKOTOPF (as per  *
+      *            Kindle fix in BISTKO.EXE)                          *
+      *   170748 - Wrong keys are being calculated for outgoing       *
+      *            messages when more than one Testkey users send     *
+      *            batches of telexes for BISTKO calculation          *
+      *   CTK001 - Testkey module conversion from DOS to WINDOWS      *
+      *            95/NT (Testkey II)                                 *
+      *   113352  -  RECOMPILE OVER CHANGES IN MGOREFPD               *
+      *   067236 - Return code added to Testkey CL processing         *
+      *   067054 - Pass telex shortname to Testkey, rather than       *
+      *            customer number                                    *
+      *   E29833 - EOF MGOREFLX/Y NOT DETECTED                        *   E29833
+      *   S01344 - SWIFT RATIONALISATION PHASE 2                      *   S01344
+      *                                                               *
+      *****************************************************************
+     FMT4020DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE MT4020F4
+     F                                              KINFDS INFDS
+     FMGOREFL0UF  E           K        DISK
+     F            MGOREFD0                          KRENAMEMGOREF00
+     FMGOREFLXIF  E           K        DISK
+     F            MGOREFD0                          KRENAMEMGOREF0X
+     FMGOREFLYIF  E           K        DISK
+     F            MGOREFD0                          KRENAMEMGOREF0Y
+     FMUSER   IF  E           K        DISK
+     F**SDMMODPDIF  E                    DISK                             S01344
+     FSDBANKPDIF  E                    DISK
+     FSDBRCHL0IF  E           K        DISK
+     FSDCUSTL0IF  E           K        DISK
+     FSDCUSTL2IF  E           K        DISK
+     FSDCUSTLAIF  E           K        DISK
+     FSDCNSTL4IF  E           K        DISK
+     F***TKOTOPF*IF  E                    DISK                        UC  170748
+     FTKOTOPF IF  E                    DISK                      A    UC  170748
+     FTKOTIPF O   E                    DISK                      A    UC
+     FTKIBCKPDIF  E                    DISK                           UC  170748
+      *
+      * ID C  F  H  L    Function of indicators
+      *    10            EOF MGOREFPD
+      *    11            EOF MT4020F4
+      *****12************RECORD SELECTED FROM SUB-FILE                    S01344
+      *****13************LOKUP FAIL ON TABC                               S01344
+      *    12            EOF TKOTOPF                                      S01344
+      *    13            Record lock on PF/MGOREFPD                       CTK001
+      *    20            SFLDSP
+      *    21            SFLDSPCTL
+      *    22            SFLEND
+      *    23            Rollup
+      *    30            Error
+      *    31            Branch error
+      *    32            Customer error
+      *    33            Address error
+      *    40            FMT LOKUP                                        S01344
+      *    41            Multibranching on
+      *    42            Data structure error                             S01344
+      *    50            Module,system non match
+      *    58            MGOREFLY key branch,address
+      *    59            MGOREFLX key address
+      *    83            EOF SDBRCHL0
+      *****84************EOF SDSYSTL0                                     S01344
+      *    85            EOF SDCUSTPD
+      *****86************EOF SDMEMOL0                                     S01344
+      *    87            EOF SDBANKPD
+      *****88************EOF SDMMODPD                                     S01344
+      *    89            EOF MUSER
+      *    KC            F3 pressed
+      *    KL            F12 pressed
+      *    U7,U8         DB Error
+      *
+     E********************TXT     1  16 78               text             CTK001
+     E                    TXT     1  18 78               text             CTK001
+     E                    TABC    1  21  4   TABC1  61                    164455
+      ** Table of System Error Code VS Error Narrative                    164455
+      *                                                                   164455
+     E                    CPY@    1   1 80
+     E                    FMT        30  1
+     E                    AMT        17  1
+      *                                                                   CTK001
+     E********************DATX       31  1                         CTK001 164455
+     E                    DATX       29  1                                164455
+      ** Work array to suppress blanks at the end of Correspondent        CTK001
+      *                                                                   CTK001
+     E********************TKAR       30  1                                S01344
+      ***Array*to*format*the testkey                                      S01344
+      ********************                                                S01344
+     E********************TABE    1  13  4   TABE1   1                    S01344
+      ***Table*of*error*codes v testkey status                            S01344
+      ********************                                                S01344
+     E********************SYER    1   1 78                                S01344
+      ***Table*of*text*for system errors                                  S01344
+      ********************                                                S01344
+     E********************TABC    1   8  2   TABC1  33                    S01344
+      ***Table*of*System*error codes v text for that code                 S01344
+      *
+     IINFDS       DS
+     I                                    B 378 3790LSTRRN
+      **  Last subfile start RRN
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+      **  Workstation ID
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     IDSSTAT      DS                            256
+     I                                        1   50SEQ
+      **  MTSTAT data area
+      *
+     I***DSTRN*******DS                         99                 S01344 164455
+     I***********                             1   20W              S01344 164455
+     I***********                             3  18 TNR1           S01344 164455
+     IDSTRN       DS                       9999                           164455
+     I                                        1   40W                     164455
+     I                                        5  20 TNR1                  164455
+      ** Data structure to hold TRNO of message tested                    S01344
+      *
+     I            DS
+     I                                        1  35 TKIN
+     I***********                             1   20W1                    164455
+     I***********                             3   3 DTTP                  164455
+     I***********                             4   4 CLN                   164455
+     I***********                             5  35 DATA                  164455
+     I***********                             5  35 DATX           CTK001 164455
+     I***********                             8   8 DTA4                  164455
+     I***********                            11  12 DTA2                  164455
+     I***********                            13  13 DTA3                  164455
+     I***********                            15  15 DTA5           067054 164455
+     I                                        1   40W1                    164455
+     I                                        5   5 DTTP                  164455
+     I                                        6   6 CLN                   164455
+     I                                        7  35 DATA                  164455
+     I                                        7  35 DATX                  164455
+     I                                       10  10 DTA4                  164455
+     I                                       13  14 DTA2                  164455
+     I                                       15  15 DTA3                  164455
+     I                                       17  17 DTA5                  164455
+      **  Data structure to hold message passed to testkey
+      *
+      ********************                                                S01344
+     I*DSTRN*******DS*****                   99                           S01344
+     I********************                    1   20W                     S01344
+     I********************                    3   3 MSMI1                 S01344
+     I********************                    4  18 TNRF1                 S01344
+     I********************                    3  18 TNR1                  S01344
+     I********************                   19  230RNUM                  S01344
+      ***Data*structure*to hold trn and rrn of rec in sub-file            S01344
+      ********************                                                S01344
+     IDSTKOT      DS                             34
+     I                                        1  34 TKOT
+     I***********                             1   20ID                    164455
+     I                                        1   50ID                    164455
+     I********************                    1   5 ENUM                  S01344
+     I                                        2   2 SYS1
+     I********************                    2   3 SYS2                  S01344
+     I***********                             4  33 TSKY1                 164455
+     I                                        7  34 TSKY1                 164455
+     I***********                             4   4 ERRR                  164455
+     I                                        7   7 ERRR                  164455
+     I                                        7   8 ERCD1                 164455
+     I                                        7  10 ERCD2                 164455
+     I********************                    4   5 ERCE                  S01344
+     I********************                    4   7 ERRC                  S01344
+     I********************                    4  10 ERBC                  S01344
+      ********************                                                S01344
+      ** Data structure to hold message received from testkey
+      *
+     I            DS
+     I                                        1   6 SVDT
+     I                                        1   2 YY
+     I                                        3   4 MM
+     I                                        5   6 DD
+      *
+     I            DS
+     I                                        1   6 @SVDT
+     I                                        1   2 @DD
+     I                                        3   4 @MM
+     I                                        5   6 @YY
+     I*SYERR*******DS******                       78                      S01344
+     I********************                    1  78 SYST                  S01344
+     I********************                   35  39 ERNO                  S01344
+     I********************                   41  41 DASH                  S01344
+     I********************                   43  78 ETXT                  S01344
+     I*TKERR*******DS******                        7                      S01344
+     I********************                    1   1 TSKE                  S01344
+      ****Data*structure*to reformat value date                           S01344
+      ********************                                                S01344
+      *****************************************************************   S01344
+      *
+     C           KEYX      KLIST
+     C                     KFLD           NWDS
+      *
+     C           KEYY      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           NWDS
+     C***********MEST***** KLIST                                          S01344
+     C******************** KFLD           TNR1                            S01344
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - main process                                        *
+      *   INIT  - initial process                                     *
+      *   VSEL  - validate selection                                  *
+      *   ENQY  - perform enquiry                                     *
+      *   VRCD  - obtain first record matching selection criteria     *
+      *   LINK  - perform lower link                                  *
+      *   REPLY - update with generated testkey                       *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN - Main process                                         *
+      *   Calls -  INIT initial process                               *
+      *            VSEL validate selection                            *
+      *            ENQY perform enquiry                               *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Display selection screen until F3 pressed
+     C           *INKC     DOWEQ'0'
+      *
+      **  If no errors clear input fields
+     C           *IN30     IFEQ '0'
+     C                     MOVE *BLANKS   SBCH
+     C                     MOVE *BLANKS   SCUS
+     C                     MOVE *BLANKS   SADR
+     C                     END
+      *
+     C                     WRITEMT4020F1
+     C                     EXFMTMT4020F2
+      *
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     303132
+     C                     SETOF                     33
+      *
+      **  If F3 not pressed validate selection
+     C           *INKC     IFEQ '0'
+     C                     EXSR VSEL
+      *
+      **  If selection valid
+     C           *IN30     IFEQ '0'
+     C                     MOVE *BLANKS   SELECT
+     C                     SETOF                     5859
+      *
+      **  Process messages by branch,address
+     C           MBIN      IFEQ 'Y'
+     C           SBCH      ANDNE'ALL'
+     C                     SETON                     58
+      *
+      **  Process messages by address
+     C                     ELSE
+     C                     SETON                     59
+     C                     END
+      *
+      **  Perform until error, F3 or F12 pressed
+     C************INKL**** DOUEQ'1'                                       E29833
+     C           *IN30     DOUEQ'1'                                       E29833
+     C           *INKL     OREQ '1'                                       E29833
+     C           *INKC     OREQ '1'
+      *
+      **  Perform enquiry
+     C                     EXSR ENQY
+      *
+      ****Only*proceed*if*no error, F3/F12 not pressed                    E29833
+      ****and*a*record*selected from sub-file                             E29833
+      **  If no errors, F3 and F12 not pressed                            E29833
+     C           *IN30     IFEQ '0'                                       E29833
+     C           *INKL     ANDEQ'0'                                       E29833
+     C           *INKC     ANDEQ'0'
+     C           WCOUNT    ANDGT0                                         CTK001
+     C************IN12**** ANDEQ'0'                                       E29833
+      *
+      **  Perform generation
+     C                     CLOSETKOTIPF
+     C                     CLOSETKOTOPF
+     C                     CLOSETKIBCKPD                                  170748
+     C                     CALL 'MTC4030'
+     C                     PARM *BLANK    @MTRT   1                       067236
+     C                     OPEN TKIBCKPD                                  170748
+     C                     OPEN TKOTIPF
+     C                     OPEN TKOTOPF
+      *
+      **  Append generated Testkeys
+     C                     EXSR REPLY
+     C                     END
+     C************IN30**** IFEQ '1'                                       S01344
+     C******************** EXFMTMT4020F2                                  S01344
+     C******************** END                                            S01344
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MT4020'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Open the two Testkey files
+     C                     OPEN TKOTIPF
+     C                     OPEN TKOTOPF
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+      *
+      **  Access MUSER for user's authority
+     C           USRID     CHAINMUSER                89
+      *
+     C           *IN89     IFEQ '1'                                   1
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            **************
+     C                     MOVELUSRID     DBKEY            * DB EROR 01 *
+     C                     MOVEL'MUSER'   DBFILE           **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      ********************                                                S01344
+      ****Access*SDMMODPD*for active networks                             S01344
+     C***********1******** CHAINSDMMODPD             88                   S01344
+      ********************                                                S01344
+     C************IN88**** IFEQ '1'                                   1   S01344
+     C************LOCK**** IN   LDA                                       S01344
+     C******************** Z-ADD2         DBASE            ************** S01344
+     C******************** MOVEL'FIRST'   DBKEY            * DB EROR 02 * S01344
+     C******************** MOVEL'SDMMODPD'DBFILE           ************** S01344
+     C******************** OUT  LDA                                       S01344
+     C******************** EXSR *PSSR                                     S01344
+     C******************** END                                       E1   S01344
+      *
+      **  Access SDBANKPD for date format
+     C           1         CHAINSDBANKPD             87
+      *
+     C           *IN87     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            **************
+     C                     MOVEL'FIRST'   DBKEY            * DB EROR 03 *
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **  Seton multibranching indicator
+     C           MBIN      IFEQ 'Y'                                   1
+     C                     SETON                     41
+     C                     END                                       E1
+      *                                                                   CTK001
+      ** Access SAR details file to see if CTK001 (Testkey 2000           CTK001
+      ** is installed in the system)                                      CTK001
+      *                                                                   CTK001
+     C                     CALL 'AOSARDR0'                                CTK001
+     C                     PARM '       ' @RTCD   7                       CTK001
+     C                     PARM '*VERIFY' @OPTN   7                       CTK001
+     C                     PARM 'CTK001'  @SARD   6                       CTK001
+      *                                                                   CTK001
+     C           @RTCD     IFEQ *BLANK                                    CTK001
+     C                     MOVE 'Y'       CTK001  1                       CTK001
+     C                     END                                            CTK001
+     C*                                                                   CTK001
+      *
+     C******************** Z-ADD0         RRN     50       INIT RRN       S01344
+     C******************** Z-ADD0         Y       20                      S01344
+     C******************** Z-ADD1         C       20                      S01344
+     C******************** DO   99                                        S01344
+     C***********C******** OCUR DSTRN                                     S01344
+     C******************** Z-ADD0         W                               S01344
+     C******************** ADD  1         C                               S01344
+     C******************** END                                            S01344
+     C                     Z-ADD0         RRN     50                      S01344
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VSEL  - Validate selection                                  *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           VSEL      BEGSR
+     C******************** MOVE *BLANKS   SFMG                            S01344
+      *
+      **  Destination customer & address cannot be entered
+     C           SCUS      IFNE *BLANKS
+     C           SADR      ANDNE*BLANKS
+     C                     MOVELTXT,3     SFMG
+     C                     SETON                     303233
+      *
+      **  If entered customer must be on customer file
+     C                     ELSE
+     C           SCUS      IFNE *BLANKS
+     C                     MOVELSCUS      @WK6    6
+     C           @WK6      CHAINSDCUSTL0             85
+      *
+     C           *IN85     IFEQ '1'
+     C           SCUS      CHAINSDCUSTL2             85
+      *
+     C           *IN85     IFEQ '1'
+     C                     MOVELTXT,4     SFMG
+     C                     SETON                     3032
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      **  If multibranching active
+     C           MBIN      IFEQ 'Y'
+      *
+      **  and branch blank use default branch
+     C           SBCH      IFEQ *BLANK
+     C                     MOVE DBRN      SBCH
+     C                     END
+      *
+     C           SBCH      IFEQ 'ALL'
+      *
+      **  Bank level authority or system routing officer
+      **  authorised to all branches
+     C           BANK      IFNE 'Y'
+     C           ROUF      ANDNE'Y'
+     C                     MOVELTXT,11    SFMG
+     C                     SETON                     3031
+     C                     END
+      *
+      **  Is branch code valid
+     C                     ELSE
+     C           SBCH      CHAINSDBRCHL0             83
+      *
+     C           *IN83     IFEQ '1'
+     C                     MOVELTXT,8     SFMG
+     C                     SETON                     3031
+     C                     END
+     C                     END
+      *
+      **  If System is single branch use single branch
+     C                     ELSE
+     C                     MOVE BJSBRC    SBCH
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQY - Perform enquiry                                      *
+      *   Called by main process                                      *
+      *   Calls - VRCD obtain first record matching selection criteria*
+      *           LINK perform lower link                             *
+      *****************************************************************
+      *
+     C           ENQY      BEGSR
+      *
+      **  Set up key fields
+     C           SBCH      IFEQ 'ALL'
+     C                     MOVE *BLANKS   BRCA
+     C                     ELSE
+     C                     MOVE SBCH      BRCA
+     C                     END
+      *
+     C           SCUS      IFEQ *BLANKS
+     C           SADR      ANDEQ*BLANKS
+     C**********           Z-ADD*ZEROS    DECN                                                CSD027
+     C                     MOVE *BLANKS   DECN                                                CSD027
+     C                     END
+      *
+     C                     MOVE BBCUST    DECN
+     C                     MOVE SADR      NWDS
+     C**********           MOVE BBCUST    @CUS    60                                          CSD027
+     C                     MOVE BBCUST    @CUS    6                                           CSD027
+      *
+      **  Set lower limit on appropriate file
+     C           *IN58     IFEQ '1'
+     C           KEYY      SETLLMGOREF0Y
+     C                     END
+     C           *IN59     IFEQ '1'
+     C           KEYX      SETLLMGOREF0X
+     C                     END
+      *
+      **  Obtain first record matching selection criteria
+     C                     EXSR VRCD
+      *
+      **  Write 'No records match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE TXT,10    SFMG
+     C                     SETON                     30
+     C                     ELSE
+      *
+      **  Clear data structure                                            S01344
+     C***********          Z-ADD1         C       20               S01344 164455
+     C***********          DO   99                                 S01344 164455
+     C                     Z-ADD1         C       40                      164455
+     C                     DO   9999                                      164455
+     C           C         OCUR DSTRN                                     S01344
+     C                     Z-ADD0         W                               S01344
+     C                     MOVE *BLANKS   TNR1                            S01344
+     C                     ADD  1         C                               S01344
+     C                     END                                            S01344
+     C                     Z-ADD1         C                               S01344
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMT4020F5
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+     C                     MOVE *BLANKS   SELECT                          S01344
+      *
+      **  Perform rollup
+     C           *IN23     DOUEQ'0'
+      *
+      **  RRN of first record on page
+     C                     Z-ADDRRN       DSPREC
+     C                     Z-ADD0         @CNT    20
+      *
+      **  Fill subfile page
+     C           *IN10     DOWEQ'0'
+     C           @CNT      ANDLT17
+      *
+     C                     MOVELNWDS      ADDR
+     C           DEST      CHAINSDCUSTLA             90
+     C           *IN90     IFEQ '0'
+     C                     MOVELBBCRNM    DEST
+     C                     ELSE
+     C           DEST      CHAINSDCNSTL4             90
+     C           *IN90     IFEQ '0'
+     C                     MOVELAWCPNM    DEST
+     C                     END
+     C                     END
+      *                                                                   170748
+      **  If record is awaiting a testkey highlight display               170748
+      *
+     C           TSKS      IFEQ 'R'                                       170748
+     C                     MOVE *ON       *IN30                           170748
+     C                     ENDIF                                          170748
+      *
+      **  Write subfile record
+     C                     WRITEMT4020F4
+     C                     ADD  1         RRN
+     C                     ADD  1         @CNT
+      *
+      **  Obtain next record matching selection criteria
+     C                     EXSR VRCD
+     C                     END
+      *
+      **  If EOF set on SFLEND
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     END
+      ********************                                                S01344
+      ****Display*error*message from the last REPLY routine               S01344
+     C***********SFMG***** IFEQ ' '                                       S01344
+     C******************** MOVE SAVM      SFMG                            S01344
+     C******************** END                                            S01344
+     C******************** MOVE *BLANKS   SAVM                            S01344
+      *
+      **  Display subfile
+     C                     WRITEMT4020F3
+     C                     EXFMTMT4020F5
+      *
+     C                     Z-ADDLSTRRN    DSPREC
+     C******************** MOVE *BLANKS   SELECT                          S01344
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     2230
+      *
+      **  If F3, F12 or rollup not pressed perform lower link
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C           *IN23     ANDEQ'0'
+     C                     EXSR LINK
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** If only one message is selected from the ENQY screen and         CTK001
+      ** that message can not be processed due to : a) record is          CTK001
+      ** locked by another requesting user or b) a testkey has            CTK001
+      ** already been created for that message from other                 CTK001
+      ** workstation, set *ON error indicator to display message.         CTK001
+      *                                                                   CTK001
+     C           *IN14     IFEQ *ON                                       CTK001
+     C           WCOUNT    ANDEQ0                                         CTK001
+     C                     MOVE *ON       *IN30                           CTK001
+     C                     ENDIF                                          CTK001
+      *                                                                   CTK001
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VRCD - Obtain first record matching selection criteria      *
+      *   Called by - ENQY Process enquiry                            *
+      *****************************************************************
+      *
+     C           VRCD      BEGSR
+      *
+      **  Do until EOF or matching record found
+     C           *IN10     DOUEQ'1'
+     C           *IN50     OREQ '0'
+     C                     SETOF                         50
+      *
+      **  Read appropriate file
+     C           *IN58     IFEQ '1'
+     C                     READ MGOREF0Y                 10
+     C                     END
+     C           *IN59     IFEQ '1'
+     C                     READ MGOREF0X                 10
+     C                     END
+     C/COPY WNCPYSRC,MT4020C001
+      *
+      **  If branch entered check for upper limit
+     C           MBIN      IFEQ 'Y'
+     C           SBCH      ANDNE'ALL'
+     C           SBCH      ANDNEBRCA
+     C                     SETON                     10
+     C                     END
+      *
+      **  If address entered check for upper limit
+     C           SADR      IFNE *BLANKS
+     C           SADR      ANDNENWDS
+     C                     SETON                     10
+     C                     END
+     C******************** MOVE *BLANKS   RPLY                            S01344
+     C***********TSKY***** IFNE *BLANKS                                   S01344
+     C******************** MOVE TSKY      TKERR                           S01344
+     C***********TSKE***** IFEQ 'E'                                       S01344
+     C******************** MOVE TSKY      RPLY                            S01344
+     C******************** ELSE                                           S01344
+     C******************** MOVE 'TESTKEY' RPLY                            S01344
+     C******************** END                                            S01344
+     C******************** END                                            S01344
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   LINK - Perform lower link                                   *
+      *   Called by - ENQY Process enquiry                            *
+      *****************************************************************
+      *
+     C           LINK      BEGSR
+      *
+     C                     MOVE *OFF      *IN14                           CTK001
+     C                     Z-ADD0         WCOUNT  20                      CTK001
+      *                                                                   CTK001
+     C                     MOVE ADDR      SADDR  10
+     C                     MOVE DEST      SDEST  10
+     C                     MOVE MODI      SMODI   2
+     C                     MOVE MGDE      SMGDE   60
+     C                     MOVE SYTM      SSYTM   6
+     C                     MOVE TRNO      STRNO  16
+     C                     MOVE MTPY      SMTPY   3
+     C                     MOVE BRCA      SBRCA   3
+     C                     Z-ADDRRN       SRRN    50
+     C                     READCMT4020F4                 11
+      *
+      **  Loop until no more records selected
+     C           *IN11     DOUEQ'1'
+      *
+      **  Advance pointer to first non-blank record
+     C           *IN11     DOWEQ'0'
+     C           SELECT    ANDEQ' '
+     C                     READCMT4020F4                 11
+     C                     END
+      *
+      **  If non-blank detail found, process 'Linked enquiry'.
+      **  Otherwise, return to main processing.
+     C           *IN11     IFEQ '0'
+     C******************** SETOF                     12                   S01344
+     C                     MOVE ' '       SELECT
+     C                     UPDATMT4020F4
+      *
+     C***********TRNO      CHAINMGOREFL0             10                   CTK001
+     C           TRNO      CHAINMGOREFL0             1013                 CTK001
+      *
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            **************
+     C                     MOVELTRNO      DBKEY            * DB EROR 04 *
+     C                     MOVEL'MGOREFL0'DBFILE           **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   170748
+      ** If testkey has been requested but not yet received               170748
+      *                                                                   170748
+     C           TSKS      IFEQ 'R'                                       170748
+     C                     MOVE *ON       *IN13                           170748
+     C                     ENDIF                                          170748
+      *                                                                   CTK001
+     C           *IN13     IFEQ *ON                                       CTK001
+     C                     MOVELTXT,18    SFMG      P                     CTK001
+     C                     MOVE TRNO      SFMG                            CTK001
+     C                     MOVE *ON       *IN14                           CTK001
+     C                     ENDIF                                          CTK001
+      *                                                                   CTK001
+      ** Ensure that requested Outgoing Telex not already sent            CTK001
+      ** as records selected for subfile could be changed by              CTK001
+      ** another user while this still on screen, check again here.       CTK001
+      *                                                                   CTK001
+     C           TSKS      IFEQ 'Y'                                       CTK001
+     C           TSKY      ANDEQ*BLANKS                                   CTK001
+     C           *IN13     ANDNE*ON                                       CTK001
+     C*                                                                   CTK001
+      *
+      ** Add 1 to message count and store it againt the trn of the msg
+     C******************** ADD  1         Y                               S01344
+     C***********Y******** OCUR DSTRN                                     S01344
+     C******************** Z-ADDY         W                               S01344
+     C           C         OCUR DSTRN                                     S01344
+     C                     Z-ADDC         W                               S01344
+     C                     Z-ADDC         W1                              S01344
+     C                     MOVE TRNO      TNR1
+     C******************** Z-ADDRRN       RNUM                            S01344
+     C                     ADD  1         C                               S01344
+      *
+      **  Write the 1st record to TKOTIPF
+     C******************** Z-ADDY         W1                              S01344
+     C                     MOVE 'U'       DTTP
+     C                     MOVE ':'       CLN
+     C                     MOVE *BLANKS   DATA
+     C                     MOVEL'MIDAS'   DATA
+     C                     MOVE MODI      DTA2
+     C                     MOVE ':'       DTA3
+     C                     WRITETKOTIPFF
+      *
+      **  Write the 2nd record to TKOTIPF
+     C                     MOVE 'S'       DTTP
+     C                     MOVE *BLANKS   DATA
+     C******************** MOVELDECN      DATA                            067054
+     C******************** MOVEL':'       DTA2                            067054
+     C                     MOVELNWDS      DATA                            067054
+      *                                                                   CTK001
+      ** Suppress trailing blanks before attaching the colon at           CTK001
+      ** the end of the Destination/Correspondent name                    CTK001
+      *                                                                   CTK001
+     C           CTK001    IFEQ 'Y'                                       CTK001
+      *                                                                   CTK001
+      ** Determine position for colon in the array                        CTK001
+      *                                                                   CTK001
+     C***********          Z-ADD31        N       20               CTK001 164455
+     C                     Z-ADD29        N       20                      164455
+      *                                                                   CTK001
+     C           N         DOWGT*ZERO                                     CTK001
+     C           DATX,N    ANDEQ*BLANKS                                   CTK001
+     C                     SUB  1         N                               CTK001
+     C                     ENDDO                                          CTK001
+      *                                                                   CTK001
+     C           N         IFNE *ZERO                                     CTK001
+     C                     ADD  1         N                               CTK001
+     C                     MOVE ':'       DATX,N                          CTK001
+     C                     ENDIF                                          CTK001
+      *                                                                   CTK001
+     C                     ELSE                                           CTK001
+      *                                                                   CTK001
+     C                     MOVEL':'       DTA5                            067054
+      *                                                                   CTK001
+     C                     ENDIF                                          CTK001
+      *                                                                   CTK001
+     C                     WRITETKOTIPFF
+      *
+      **  Write the 3rd record to TKOTIPF
+     C                     MOVE YY        @YY
+     C                     MOVE MM        @MM
+     C                     MOVE DD        @DD
+      *
+     C                     MOVE 'D'       DTTP
+     C                     MOVE *BLANKS   DATA
+     C                     MOVEL@SVDT     DATA
+     C                     MOVEL':'       DTA2
+     C                     WRITETKOTIPFF
+      *
+      **  Write the 4th record to TKOTIPF
+     C                     MOVE 'C'       DTTP
+     C                     MOVE *BLANKS   DATA
+     C                     MOVELCCY       DATA
+     C                     MOVEL':'       DTA4
+     C                     WRITETKOTIPFF
+      *
+      **  Write the 5th record to TKOTIPF
+     C                     MOVE 'A'       DTTP
+     C                     MOVE *BLANKS   FMT
+     C                     Z-ADD1         X       20
+      *
+      **  format amount field                                             S01344
+     C           TRNM      IFEQ *BLANKS                                   S01344
+     C                     MOVEAAMTS      FMT
+     C                     ELSE                                           S01344
+     C                     MOVEAAMTX      FMT                             S01344
+     C                     END                                            S01344
+      *
+     C           X         DOWLT30
+     C           FMT,X     ANDNE','
+     C           FMT,X     ANDNE' '
+     C                     ADD  1         X
+     C                     END
+     C                     MOVE ':'       FMT,X
+      *
+      **  Blank out any remainder
+     C           X         IFLT 30
+     C                     ADD  1         X
+     C                     MOVEA*BLANKS   FMT,X
+     C                     END
+     C                     MOVEAFMT       DATA
+     C                     WRITETKOTIPFF
+      *                                                                   CTK001
+      * Now mark the message file as testkey requested                    170748
+     C                     MOVE 'R'       TSKS                            170748
+     C                     UPDATMGOREF00                                  170748
+      *                                                                   170748
+      ** Increment processed Telex message counter by 1                   CTK001
+      *                                                                   CTK001
+     C                     ADD  1         WCOUNT                          CTK001
+      *
+      ********************                                                S01344
+      ****format*amount*field                                             S01344
+     C***********TRNM***** IFEQ *BLANKS                                   S01344
+     C******************** MOVE AMTS      AMT                             S01344
+     C******************** ELSE                                           S01344
+     C******************** MOVE AMTX      AMT                             S01344
+     C******************** END                                            S01344
+     C                     READCMT4020F4                 11
+     C******************** ELSE                                           S01344
+     C******************** SETON                     12                   S01344
+      *                                                                   CTK001
+      ** If Testkey has been generated for this message by another        CTK001
+      ** user, set indicator *IN14 *ON and send appropriate               CTK001
+      ** message on the screen.                                           CTK001
+      *                                                                   CTK001
+     C                     ELSE                                           CTK001
+      *                                                                   CTK001
+      ** If TSKY not blank and NOT record allocation problem.             CTK001
+      *                                                                   CTK001
+     C           *IN13     IFEQ *OFF                                      CTK001
+     C                     MOVELTXT,17    SFMG      P                     CTK001
+     C                     MOVE TRNO      SFMG                            CTK001
+     C                     MOVE *ON       *IN14                           CTK001
+     C                     UNLCKMGOREFL0                                  CTK001
+     C                     ENDIF                                          CTK001
+      *                                                                   CTK001
+     C                     ENDIF                                          CTK001
+      *                                                                   CTK001
+     C                     END
+      *
+     C                     Z-ADDSRRN      RRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   REPLY - Perform lower link                                  *
+      *   Called by - ENQY Process enquiry                            *
+      *****************************************************************
+      *
+     C           REPLY     BEGSR
+      ********************                                                S01344
+      ***Read*the*TKOTOPF*file                                            S01344
+      ***DOWHILE*not*end*of file                                          S01344
+      ********************                                                S01344
+     C******************** READ TKOTOPFF                 24               S01344
+     C******************** MOVE *BLANKS   SAVM   78                       S01344
+     C******************** MOVE *BLANKS   SYST                            S01344
+      *
+      **  If the testkey has not been generated, update the output        170748
+      **  file from the input file before processing. This is to          170748
+      **  update the file to show no longer awited from Testkey.          170748
+      *                                                                   170748
+     C           @MTRT     IFEQ 'E'                                       170748
+     C                     EXSR NOTK                                      170748
+     C                     ENDIF                                          170748
+      *                                                                   170748
+      **  Read the TKOTOPF file                                           S01344
+     C                     READ TKOTOPFF                 12               S01344
+      *                                                                   S01344
+     C           *IN12     DOWEQ'0'                                       S01344
+      *
+      **  Display system error
+     C***********SYS1      IFEQ 'E'                                       170748
+     C******************** MOVEASYER,1    SYST                            S01344
+     C******************** MOVELENUM      ERNO                            S01344
+     C***********SYS2***** LOKUPTABC      TABC1          13               S01344
+     C************IN13**** IFEQ '1'                                       S01344
+     C******************** MOVEL'-'       DASH                            S01344
+     C******************** MOVELTABC1     ETXT                            S01344
+     C******************** END                                            S01344
+     C******************** MOVELSYST      SAVM                            S01344
+     C******************** MOVE '  '      SYS2                            S01344
+     C******************** SETON                         24               S01344
+     C******************** END                                            S01344
+     C************IN24**** DOWEQ'0'                                       S01344
+      ********************                                                S01344
+      ***Get*the*trn*of*the record                                        S01344
+      ********************                                                S01344
+     C***********ID******* OCUR DSTRN                  72                 S01344
+      ********************                                                S01344
+      ***If*the*error*indicator is not turned on, access the              S01344
+      ***message*index*record. (NB a spurious blank record is             S01344
+      ***written*every*time to the end of the file TKOTOPF                S01344
+      ***when*records*are*copied from BISTKO.OUT which causes             S01344
+      ***an*error*on*the*occurrence)                                      S01344
+      ********************                                                S01344
+     C************IN72**** IFEQ '0'                                       S01344
+      ********************                                                S01344
+     C***********MEST***** CHAINMGOREFL0             81                   S01344
+      ********************                                                S01344
+      ***If*record*not*found process data base error                      S01344
+      ********************                                                S01344
+     C************IN81**** IFEQ '1'                                       S01344
+     C************LOCK**** IN   LDA                                       S01344
+     C******************** SETON                     U7U8LR               S01344
+     C******************** Z-ADD5         DBASE            ************** S01344
+     C******************** MOVE 'MGORF'   DBFILE           * DB EROR 05 * S01344
+     C******************** MOVELTNR1      DBKEY            ************** S01344
+     C******************** OUT  LDA                                       S01344
+     C******************** RETRN                                          S01344
+      ********************                                                S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+      ***Set*up*the*fields requiring updating                             S01344
+      ********************                                                S01344
+     C******************** MOVELRUNA      LADT                            S01344
+     C******************** TIME           LATMX   60                      S01344
+     C******************** MOVELLATMX     LATM                            S01344
+      ********************                                                S01344
+      ***IF*a*test*key*was generated (error code not generated)           S01344
+     C***********ERRR***** IFNE 'E'                                       S01344
+      ********************                                                S01344
+     C******************** MOVE 'I'       TSKS                            S01344
+      ********************                                                S01344
+      ***Update*the*record with the generated test key                    S01344
+      ***after*removing*the colon                                         S01344
+      ********************                                                S01344
+     C******************** MOVEATSKY1     TKAR                            S01344
+     C******************** Z-ADD1         Q       20                      S01344
+     C***********':'****** LOKUPTKAR,Q                   86               S01344
+     C************IN86**** IFEQ '1'                                       S01344
+     C******************** MOVEA*BLANKS   TKAR,Q                          S01344
+     C******************** END                                            S01344
+     C******************** MOVEATKAR      TSKY                            S01344
+      ********************                                                S01344
+      ***ELSE*************                                                S01344
+      ***Update*the*testkey status field to reflect the error             S01344
+      ***condition*which*prevented the successful calculation             S01344
+      ***of*the*test*key*as returned by the Testkey module                S01344
+      ********************                                                S01344
+     C******************** ELSE                                           S01344
+      ********************                                                S01344
+     C******************** MOVE ERBC      TSKY                            S01344
+      ********************                                                S01344
+     C***********ERCE***** IFEQ 'E1'                                      S01344
+     C******************** MOVE '1'       TSKS                            S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+     C***********ERCE***** IFEQ 'E2'                                      S01344
+     C***********ERRC***** LOKUPTABE      TABE1          71               S01344
+     C************IN71**** IFEQ '1'                                       S01344
+     C******************** MOVE TABE1     TSKS                            S01344
+     C******************** ELSE                                           S01344
+     C******************** MOVE '2'       TSKS                            S01344
+     C******************** END                                            S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+     C***********ERCE***** IFEQ 'E3'                                      S01344
+     C******************** MOVE '6'       TSKS                            S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+     C***********ERCE***** IFEQ 'E4'                                      S01344
+     C******************** MOVE '7'       TSKS                            S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+     C***********ERCE***** IFEQ 'E5'                                      S01344
+     C***********ERRC***** LOKUPTABE      TABE1          71               S01344
+     C************IN71**** IFEQ '1'                                       S01344
+     C******************** MOVE TABE1     TSKS                            S01344
+     C******************** ELSE                                           S01344
+     C******************** MOVE '8'       TSKS                            S01344
+     C******************** END                                            S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+     C***********ERCE***** IFEQ 'E6'                                      S01344
+     C******************** MOVE 'F'       TSKS                            S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+     C***********ERCE***** IFEQ 'E7'                                      S01344
+     C******************** MOVE 'G'       TSKS                            S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+     C***********ERCE***** IFEQ 'E8'                                      S01344
+     C***********ERRC***** LOKUPTABE      TABE1          71               S01344
+     C************IN71**** IFEQ '1'                                       S01344
+     C******************** MOVE TABE1     TSKS                            S01344
+     C******************** ELSE                                           S01344
+     C******************** MOVE 'H'       TSKS                            S01344
+     C******************** END                                            S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+     C***********ERCE***** IFEQ 'EF'                                      S01344
+     C******************** MOVE 'M'       TSKS                            S01344
+      ********************                                                S01344
+     C******************** END                                            S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+      *********Update*the*message index record                            S01344
+      ********************                                                S01344
+     C******************** UPDATMGOREF00                                  S01344
+      ********************                                                S01344
+     C******************** COMIT                                          S01344
+      ********************                                                S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+      ***Read*the*next*record on TKOTOPF                                  S01344
+     C******************** READ TKOTOPFF                 24               S01344
+      ********************                                                S01344
+     C******************** END                                            S01344
+      ********************                                                S01344
+      ***Clear*the*data*area DSTRN and reset the counter 'Y'              S01344
+     C******************** Z-ADD0         Y                               S01344
+     C******************** Z-ADD1         C                               S01344
+     C******************** DO   99                                        S01344
+     C***********C******** OCUR DSTRN                                     S01344
+     C******************** Z-ADD0         W                               S01344
+     C******************** MOVE *BLANKS   TNR1                            S01344
+     C******************** Z-ADD0         RNUM                            S01344
+     C******************** ADD  1         C                               S01344
+     C******************** END                                            S01344
+     C***********          UNLCKMGOREFL0                           CTK001 170748
+     C***********          MOVELTKOT      SFMG                     S01344 170748
+     C***********          SETON                     30            S01344 170748
+      *
+     C***********          ELSE                                    S01344 170748
+     C           ID        OCUR DSTRN                  42                 S01344
+      *
+      **  If the error indicator is not turned on, access the             S01344
+      **  message index record. (NB a spurious blank record is            S01344
+      **  written every time to the end of the file TKOTOPF               S01344
+      **  when records are copied from BISTKO.OUT which causes            S01344
+      **  an error on the occurrence)                                     S01344
+     C           *IN42     IFEQ '0'                                       S01344
+     C           TNR1      CHAINMGOREFL0             10                   S01344
+      *
+     C           *IN10     IFEQ '1'                                       S01344
+     C           *LOCK     IN   LDA                                       S01344
+     C                     SETON                     U7U8LR               S01344
+     C                     Z-ADD5         DBASE                           S01344
+     C                     MOVELTNR1      DBKEY            * DB ERROR 05 *S01344
+     C                     MOVEL'MGOREFL0'DBFILE                          S01344
+     C                     OUT  LDA                                       S01344
+     C                     EXSR *PSSR                                     S01344
+     C                     END                                            S01344
+      *
+      **  Display test key error                                          S01344
+     C           ERRR      IFEQ 'E'                                       S01344
+      *                                                                   164455
+      ** Check the error code table for full error narrative.             164455
+      *                                                                   164455
+     C           ERCD2     LOKUPTABC      TABC1          37               164455
+      *                                                                   164455
+      ** If error code detected, search for full error                    164455
+      ** narrative, otherwise, output the error code itself.              164455
+      *                                                                   164455
+     C           *IN37     IFEQ *ON                                       164455
+     C                     MOVE TABC1     SFMG                            164455
+      *                                                                   164455
+     C                     ELSE                                           164455
+     C                     MOVE *BLANKS   WERCD   4                       164455
+     C                     MOVELERCD1     WERCD                           164455
+     C           WERCD     LOKUPTABC      TABC1          38               164455
+      *                                                                   164455
+     C           *IN38     IFEQ *ON                                       164455
+     C                     MOVE TABC1     SFMG                            164455
+     C                     ELSE                                           164455
+     C***********          MOVELTKOT      SFMG                     S01344 164455
+     C                     MOVE TKOT      SFMG                            164455
+     C                     ENDIF                                          164455
+      *                                                                   164455
+     C                     ENDIF                                          164455
+      *
+     C***********          MOVE TNR1      SFMG                     S01344 164455
+     C                     MOVELTNR1      SFMG                            164455
+     C                     SETON                     30                   S01344
+      ** If a message is returned with an error, the message file         170748
+      ** should be noted as ready for issue.  If it is left as            170748
+      ** message requested, it would be necessary to run the              170748
+      ** reset program once the error had been corrected.                 170748
+      *
+      **  Update the record with the testkey after removing colon         S01344
+     C                     ELSE                                           S01344
+      ** If there is no general error for the whole batch                 170748
+     C           @MTRT     IFNE 'E'                                       170748
+     C                     MOVEATSKY1     FMT                             S01344
+     C                     Z-ADD1         X                               S01344
+     C           ':'       LOKUPFMT,X                    40               S01344
+     C           *IN40     IFEQ '1'                                       S01344
+     C                     MOVEA*BLANKS   FMT,X                           S01344
+     C                     END                                            S01344
+      *
+      **  Update the message index record                                 S01344
+     C           *NAMVAR   DEFN MTSTAT    DSSTAT                          S01344
+     C           *LOCK     IN   DSSTAT                                    S01344
+     C                     ADD  1         SEQ                             S01344
+     C                     OUT  DSSTAT                                    S01344
+     C                     MOVEAFMT       TSKY                            S01344
+     C                     MOVE SEQ       TSEQ                            S01344
+      *
+     C                     MOVE '2'       MGSG                            S01344
+     C                     MOVE 'RSND'    MGST                            S01344
+     C                     MOVE RUNA      LADT                            S01344
+     C                     TIME           LATM                            S01344
+     C                     MOVE RUNA      RELD                            S01344
+     C                     MOVE LATM      RELT                            S01344
+     C                     MOVE USRID     RUSR                            S01344
+     C                     MOVE WSID      RWSN                            S01344
+      *
+      ** End moved here in order to update MGOREF with Y                  170748
+     C                     ENDIF                                          170748
+     C                     ENDIF                                          170748
+      *                                                                   170748
+      ** Update the field to show back from requested                     170748
+      *                                                                   170748
+     C                     MOVE 'Y'       TSKS                            170748
+      *                                                                   170748
+     C                     UPDATMGOREF00                                  S01344
+     C***********          END                                     S01344 170748
+     C                     END                                            S01344
+     C***********          END                                     S01344 170748
+      *
+      **  Read the next record on TKOTOPF                                 S01344
+     C                     READ TKOTOPFF                 12               S01344
+     C                     END                                            S01344
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************   170748
+      *    NOTK - Update output file from input if TKs not produced   *   170748
+      *****************************************************************   170748
+      *                                                                   170748
+     C           NOTK      BEGSR                                          170748
+      *                                                                   170748
+     C                     READ TKIBCKPD                 91               170748
+     C           *IN91     DOWNE*ON                                       170748
+     C                     Z-ADDW1        ID                              170748
+     C                     WRITETKOTOPFF                                  170748
+     C           W1        DOWEQID                                        170748
+     C           *IN91     ANDNE*ON                                       170748
+     C                     READ TKIBCKPD                 91               170748
+     C                     ENDDO                                          170748
+     C                     ENDDO                                          170748
+      *                                                                   170748
+     C                     ENDSR                                          170748
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+**  message
+'X' must be entered in one status field
+Module invalid
+Destination customer or address must be entered
+Destination customer invalid
+Date format invalid
+Date after run date
+System invalid
+Default branch invalid
+Not authorised to any actions for branch/es
+No messages to report
+Routing Officer or bank level authority required for branch 'ALL'
+Action code invalid
+Unreleased
+Released incomplete
+Released complete
+Cancelled/released/undelivered
+Testkey for this message has been requested by other user :
+Request for this message failed, allocated by other user :
+** TABC vs TABC1 ** TK2000 ERROR CODES
+E1  ERROR: Destination not defined as Correspondent in Testkey
+E2  ERROR: Invalid Correspondent Status in Testkey. Please check.
+E2 1ERROR: Correspondent Status is NEW. Requires Authorisation.
+E2 2ERROR: Correspondent Status is KEY CHECKED
+E2 4ERROR: Correspondent Status is AMENDED. Re-Authorise it.
+E3  ERROR: Amount is invalid
+E4  ERROR: Currency Code is invalid
+E5  ERROR: Relevant Data for this message missing
+E5 SERROR: Correspondent Name is missing
+E5 DERROR: Date is missing
+E5 CERROR: Currency is missing
+E5 AERROR: Amount is missing
+E5 NERROR: Beneficiary Name is missing
+E5 UERROR: Originator/Operator Name is missing
+E5 TERROR: Missing text
+E6  ERROR: Testkey Start of Day/End of Day missing
+E7  ERROR: Invalid Data
+E8  ERROR: Duplicate Data found
+E8 SERROR: Duplicate correspondent found
+E8 DERROR: Duplicate date found
+E8 UERROR: Duplicate Originator/Operator Name found
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,1963 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ABS ER Extract program - Guarantees')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas¦ABS - EUROPEAN  REPORTING - NETHERLANDS                *
+     F*                                                               *
+     F*  RPG/ER0960 - Extract program - Guarantees                    *
+     F*                                                               *
+     F*  Function: Create Guarantee extract to complete European      *
+     F*            Returns file.                                      *
+     F*                                                               *
+     F*  Called By: CLP/ERC0960 -                                     *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *                                                               *
+      *  BE CAREFUL : ER3090 BASED ON ER0960. ALL AMENDMENTS DONE ON  *   ULX012
+      *               SUBROUTINE #SBYI MUST BE INCLUDED ON ER3090     *   ULX012
+      *                                                               *
+      *  Last Amend No. CDL096             Date 22Sep14               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CGL035             Date 01Mar05               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 03Oct04               *
+      *                 187689             Date 21Dec00               *
+      *                 176557             Date 16May00               *
+      *                 ULX008             Date 25Feb00               *
+      *                 CAD028             Date 05Jan99               *
+      *                 ULX012             Date 29Oct98               *
+      *                 143187             Date 24Sep98               *
+      *                 128241 PT          Date 08Jan98               *
+     F*                 127865             Date 25Nov97               *
+     F*                 ULX004             Date 26FEB97               *
+     F*                 099953             Date 21FEB96               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CGL035 - EUSD Upgrade to MidasPlus                           *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *         - Rename CRSK in TRADSD                               *
+      *  187689 - GRD currency in EMU                                 *
+      *           Recompiled due to changes in PF/SDCUSTX6            *
+      *  176557 - If field BVSKTV from SE ICD is equal to 'T' it means*
+      *           that the bank works at value date and reciprocal.   *
+      *  ULX008 - CSSF Statuatory Reporting : Commissariat aux Bourses*
+      *           Recompiled due to changes in PF/SDCUSTX6            *
+      *  CAD028 - Recompiled on SDCTRYX6 new layout                   *
+      *  ULX012 - Guarantees and Collateral Management enhancements   *
+      *           BE CAREFUL : ALL AMENDMENTS DONE IN SR/ #SBYI MUST  *
+      *                        DONE IN RPG/ER3090                     *
+      *         - Pledges and Multiple Guarantors Management          *
+      *         - Securities Guaranteed Management                    *
+      *  143187 - if not found on ACNUM, check on ACCNT               *
+      *  128241 - For proc. type 8, current factor must be considered *
+      *  127865 - CAD database error when SE is OFF.                  *
+      *  ULX004 - European Reporting Capital Adequacy                 *
+      *         - IML Circular 97/138                                 *
+      *           Recompile only                                      *
+     F*  099953 - Zone A split between 'Special' and 'Others'         *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    88       FCLTY    file                                     *
+     F*    89       ERGUARL1 file                                     *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*  ===============================                              *
+     F*                                                               *
+     F*  *INZSR            Initial processing                         *
+     F*  *PSSR             Error processing                           *
+     F*  #FILL             Fill EXtract record and write it           *
+     F*  #UTSI             Make 'Used to Secure Indicator' validation *
+     F*  #SBYI             Make 'Secure by Indicator' validation      *
+     F*  #OTHER            Make other validations                     *
+     F*                                                               *
+     F*================================================================
+     FERGUARL1IF  E           K        DISK         KINFSR *PSSR
+      * Guarantee/collateral Provision Retrieve Index            Prefix RR
+      *
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR
+      *  Facility Types
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+      *                                                                   ULX004
+     F***FCLTYMY6IF  E           K        DISK         KINFSR *PSSR                    ULX004 CER001
+     FLEFCX2L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      *  Facility Types Extension                                         ULX004
+      *
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR
+      *  Loans
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+      *
+      *            SE Trades
+     FTRADS   IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *
+      *            Book Positions Header
+     FBKPHD   IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *            Book Positions
+     FBKPOS   IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *
+      * Investment Types file
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *
+      *            Securities
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *
+      *            Customer Positions
+     FCPOSN   IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *
+      * Prices file
+     FPRICT   IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *
+      * Commercial Paper Prices file
+     FCPPRIC  IF  E           K        DISK         KINFSR *PSSR          ULX004
+      *
+     FDEALS   IF  E           K        DISK         KINFSR *PSSR
+      *  MM Deals
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F************DEALSDDF                          KIGNORE               ULX004
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+      *
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR
+      *  A/C master
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+      *
+     FACNUM   IF  E           K        DISK         KINFSR *PSSR
+      * A/C master by Retail A/C
+     F            ACCNTABF                          KRENAMEACCNUMF
+      *
+     F*********SDCTRYY9IF  E           K        DISK         KINFSR *PSSR ULX004
+     F***SDCTRYY6IF  E           K        DISK         KINFSR *PSSR                    ULX004 CER001
+     FSDCTX2L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      * Country - extended details     Retrieval index           Prefix WF
+      *
+     F*********SDCUSTY9IF  E           K        DISK         KINFSR *PSSR ULX004
+     F***SDCUSTY6IF  E           K        DISK         KINFSR *PSSR                    ULX004 CER001
+     FSDCUX2L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      * Customer - extended details    Retrieval index           Prefix VF
+      *
+     FERGUEXL0O   E           K        DISK         KINFSR *PSSR
+      * Guarantee/collateral extract   Update  Index             Prefix RT
+      *
+     FER0960AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU         ULX004
+      * Audit report
+      *
+     FEREXTSV1IF  E           K        DISK         KINFSR *PSSR          ULX012
+      ***  Midas Expos.Transact.Types/Guar Codes Decis.Table              ULX012
+      *                                                                   ULX012
+     E/TITLE E-SPECIFICATIONS
+      ***  Array for copyright, fields validations
+      *
+     E                    CPY@    1   1 80               Copyright
+      *
+     E********************GTAB    1  20 10   GTEC    4 0 Guar. Table Ext. 099953
+     E***********         GTAB    1  28 10   GTEC    4 0 Guar. Table      ULX004
+     E***********         GARR    1  24  3 0 GAEC    4 0                  ULX004
+      *
+      *
+     E/COPY ZSRSRC,ZYMTXZ1                                                ULX004
+     E*********           POWER   1   8  8 4             Power for ZCCYCN ULX004
+     E                    POWER   1   7  7 3             Power for ZCCYCN ULX004
+      ** ARRAY USED IN CURRENCY AMOUNT CONVERSION FOR ZAPNUM
+     E/COPY ZSRSRC,ZPOWER8Z1                                              ULX004
+      * ========================================================================
+     I/TITLE I-SPECIFICATIONS
+     ITRADSDF                                                                                 UPG402
+     I              CRSK                            TDCRSK                                    UPG402
+     IPRICEDF                                                                                 CGL035
+     I              PEXI                            EUPEXI                                    CGL035
+      *
+     ILDA         DS                            256
+      ***  Local data area for database error details
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IPSDS       SDS
+     I                                        1  10 PGM
+     ICPYR@#      DS
+      ***  Data structure for compilation  - Copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     IWORKDS      DS
+      * Working data structure to verify key following Use to Secure ind.
+      *
+      *** 1) Facility
+      *
+     I                                        1   30XXFCTP
+     I                                        4   50XXFCSQ
+      *
+      *** 2) Deals/loans  (General ledger first part)
+      *
+     I**********                              1   60XXDELO                                   CSD027A
+     I                                        1   6 XXDELO                                   CSD027A
+      *
+      ***  3) General ledger (use XXDELO + ...)
+      *
+     I                                        7   9 XXCCY
+     I**********                             10  130XXACOD                                    CER001
+     I**********                             14  150XXACSQ                                    CER001
+     I**********                             16  18 XXBRCA                                    CER001
+     I                                       10  190XXACOD                                    CER001
+     I                                       20  210XXACSQ                                    CER001
+     I                                       22  24 XXBRCA                                    CER001
+      *
+      ***  4) Retail account
+      *
+     I                                        1  100XXACNO
+      *
+     I                                        1   6 XXTDRF                ULX004
+      *
+     I                                        1  10 XXBHSC                ULX004
+     I                                       11  13 XXBHBA                ULX004
+     I                                       14  15 XXBHBK                ULX004
+     I                                       16  16 XXBHMK                ULX004
+      *
+     I                                        1  10 XXSESN                ULX004
+     IWRK2DS      DS
+      * Working data structure to verify key following Secure by ind.
+     I**********                              1   60X2CNUM                                   CSD027A
+     I**********                              7  100X2ACOD                                  CER001
+     I**********                             11  120X2ACSQ                                  CER001
+     I**********                             13  15 X2BRCA                                  CER001
+     I                                        1   6 X2CNUM                                   CSD027A
+     I                                        7  160X2ACOD                                  CER001
+     I                                       17  180X2ACSQ                                  CER001
+     I                                       19  21 X2BRCA                                  CER001
+      *  Retail
+     I                                        1  100X2ACNO
+      *
+     I                                        1   3 X2CSBA                ULX004
+     I                                        4  13 X2CSSC                ULX004
+      *
+     I                                        1  10 X2SESN                ULX004
+      *
+     IWWCOMP      DS
+      * Comparison Field composed by 3 fields
+     I                                        1   3 XXGCOD
+     I                                        4   8 XXGUEC
+     I                                        9   9 XXGUZA
+     I                                       10  10 XXZANL
+      *
+     ISPOOLU      DS                                                      ULX004
+      ***  File Information Data Structure for MMNNNNAU.
+     I                                       83  92 SFILEU                ULX004
+     I                                    B 123 1240SFNUMU                ULX004
+      *
+     IDSFDY     E DSDSFDY
+      * DS for access programs, short data structure
+     IDSSDY     E DSDSSDY
+      * DS for access programs, long data structure
+     ISDBANK    E DSSDBANKPD
+      * External DS for Bank Details
+      *
+     ISDSTRD    E DSSDSTRDPD                                              ULX004
+      **  External DS for SE Trade ICD Details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QDFACC                                    CER001
+      * External DS for Customer details
+      *
+     ISDCURR    E DSSDCURRPD
+      * External DS for Currency details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      * External DS for Branch details
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                127865
+     I@MMOD     E DSSDMMODPD                                              127865
+      *
+      /EJECT
+      * =========================================================== *
+      ***          M A I N L I N E S    S T A R T                 ***
+      * =========================================================== *
+      *
+      ***  Positioning into Guarantees /collaterals Details file
+      *
+     C**********           Z-ADD*LOVAL    KRCUS                                              CSD027A
+     C                     MOVE *BLANKS   KRCUS                                              CSD027A
+     C                     MOVE *LOVAL    KUTSI
+     C                     MOVE *LOVAL    KUTSR
+     C                     Z-ADD*LOVAL    KGSEQ
+     C           RRKEY     SETLLERGUARL1                 89First record
+      *
+      ***  Is file empty
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Read all records
+      *
+     C                     READ ERGUARL1                 89
+     C           *IN89     DOWEQ*OFF
+      *
+      ***  If Record is not 'Expired'
+      *
+     C           RRRVEX    IFNE 'E'
+     C           RRCHTP    ANDNE'D'                                       ULX004
+      *                                                                   ULX012
+     C           ULX012    IFEQ 'N'                                       ULX012
+     C           ULX012    OREQ 'Y'                                       ULX012
+     C           RRUTSI    ANDNE'X'                                       ULX012
+     C                     EXSR #FILL
+     C                     ENDIF
+      *                                                                   ULX012
+     C                     ENDIF                                          ULX012
+      *
+     C                     READ ERGUARL1                 89
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ***  End of program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      * =========================================================== *
+      ***            M A I N L I N E S    E N D                   ***
+      * =========================================================== *
+      /EJECT
+      * =========================================================== *
+      ***        I N T E R N A L    S U B R O U T I N E S         ***
+      * =========================================================== *
+      *
+      * =========================================================== *
+      *                                                             *
+      ***  #FILL  S/R : Fill ERGUEXPD record                      ***
+      ***  Called     : Mainlines                                 ***
+      ***  Calls      :                                           ***
+      ***  Remark     :                                           ***
+      *                                                             *
+      * =========================================================== *
+     C           #FILL     BEGSR
+      *
+      ***  Fill WORKDS with Used to Secure Reference
+      *
+     C                     MOVE RRUTSR    WORKDS
+      *
+      ***  Work with Used to Secured Indicator (RRUTSI)
+      *
+     C                     EXSR #UTSI
+      *
+      ***  Work with Secure by Indicator (RRSBYI)
+      *
+     C                     EXSR #SBYI
+      *
+      ***  Fill other fields in general subroutine #other
+      *
+     C                     EXSR #OTHER
+      *
+      ***  Write ERGUEXPD record
+      *
+     C           RTUTSA    IFGT 0                                         ULX004
+     C           RTUTSI    OREQ 'S'                                       ULX004
+     C                     WRITEERGUEXD0
+     C                     ENDIF                                          ULX004
+     C                     RESETERGUEXD0
+      *
+     C                     ENDSR
+      /EJECT
+      * =========================================================== *
+      *                                                             *
+      ***  #UTSI  S/R : Fill extract fields depending of RRUTSI   ***
+      ***  Called     : #FILL                                     ***
+      ***  Calls      :                                           ***
+      ***  Remark     :                                           ***
+      *                                                             *
+      * =========================================================== *
+     C           #UTSI     BEGSR
+      *
+     C                     SELEC
+     C           RRUTSI    WHEQ 'F'
+      *
+      ***  Secure by a Facility
+      *
+     C                     MOVE RRRCUS    KCNUM
+     C                     MOVE XXFCTP    KFACT
+     C                     MOVE XXFCSQ    KFCNO
+     C                     MOVE 'A'       KRCTP            Live Facility
+      *
+     C           KFCLTY    CHAINFCLTY                80
+     C           *IN80     IFEQ *ON
+     C                     MOVEL'FCLTY'   WWBFIL    P       *************
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 001 *
+     C                     Z-ADD1         WWBASE            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Fill fields RTUTSC / RTUTSA (Facility amount)
+      *
+     C                     MOVE FCCY      RTUTSC            Used to sec. CCY
+     C**********           Z-ADDFAMT      RTUTSA            Used to sec.  ULX004
+      *                                                                   ULX004
+     C********** KFCLTX    CHAINFCLTYMY6             80                                ULX004 CER001
+     C           KFCLTX    CHAINLEFCX2L0             80                                       CER001
+     C           *IN80     IFEQ *ON                                       ULX004
+     C                     MOVEL'FCLTY'   WWBFIL    P       ************* ULX004
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 018 * ULX004
+     C                     Z-ADD18        WWBASE            ************* ULX004
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *                                                                   ULX004
+      ***  If facility secures the loan, the used to secured amount is    ULX004
+      ***  the facility amount used.                                      ULX004
+      *                                                                   ULX004
+     C           RRUTSL    IFEQ 'Y'                                       ULX004
+     C                     Z-ADDVNEXPO    RTUTSA            Used to sec.  ULX004
+      *                                                                   ULX004
+      ***  Otherwise, the used to secured amount is the facility amount   ULX004
+      ***  available                                                      ULX004
+      *                                                                   ULX004
+     C                     ELSE                                           ULX004
+     C           FAMT      SUB  VNEXPO    RTUTSA                          ULX004
+     C           RTUTSA    IFLT *ZEROS                                    ULX004
+     C                     Z-ADD*ZEROS    RTUTSA                          ULX004
+     C                     ENDIF                                          ULX004
+     C                     ENDIF                                          ULX004
+      *
+      *** - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ***
+      *
+     C           RRUTSI    WHEQ 'L'
+      *
+      ***  Secure by a loan
+      *
+     C**********           Z-ADDXXDELO    KLNRF                                              CSD027A
+     C                     MOVE XXDELO    KLNRF                                              CSD027A
+      *
+     C           KCLOAN    CHAINCLOAN                80
+     C           *IN80     IFEQ *ON
+     C                     MOVEL'CLOAN'   WWBFIL    P       *************
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 002 *
+     C                     Z-ADD2         WWBASE            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Fill fields RTUTSC / RTUTSA
+      ***       (Current principal Amount MINUS Participation sold Amount)
+      *
+     C                     MOVE CCY       RTUTSC            Used to sec. CCY
+     C           CPAM      SUB  PSAM      RTUTSA            Used to sec. Amount
+      *
+      *** - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ***
+      *
+     C           RRUTSI    WHEQ 'D'
+      *
+      ***  Secure by a deal
+      *
+     C**********           Z-ADDXXDELO    KDLNO                                              CSD027A
+     C                     MOVE XXDELO    KDLNO                                              CSD027A
+      *
+     C           KDEALS    CHAINDEALS                80
+     C           *IN80     IFEQ *ON
+     C                     MOVEL'DEALS'   WWBFIL    P       *************
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 003 *
+     C                     Z-ADD3         WWBASE            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Fill fields RTUTSC / RTUTSA  (Principal amount)
+      *
+     C                     MOVE CCY       RTUTSC            Used to sec. CCY
+     C                     Z-ADDPCPL      RTUTSA            Used to sec. Amount
+      *
+      *** - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ***
+      *
+     C           RRUTSI    WHEQ 'N'                                       ULX004
+      *
+      ***  Secure by a Negitiable Asset Purchased
+      *
+     C**********           Z-ADDXXDELO    KDLNO                                       ULX004 CSD027A
+     C                     MOVE XXDELO    KDLNO                                              CSD027A
+      *
+     C           KDEALS    CHAINDEALS                80                   ULX004
+     C           *IN80     IFEQ *ON                                       ULX004
+     C                     MOVEL'DEALS'   WWBFIL    P       ************* ULX004
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 040 * ULX004
+     C                     Z-ADD40        WWBASE            ************* ULX004
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+      ***  Fill fields RTUTSC / RTUTSA
+      *
+     C                     MOVE CCY       RTUTSC            Used to sec. CCYX004
+     C           DTYP      IFEQ 'C2'                                      ULX004
+     C           DTYP      OREQ 'BP'                                      ULX004
+     C           DTYP      OREQ 'BD'                                      ULX004
+     C           PUPR      SUB  PINT1     RTUTSA            Used to sec. Amount4
+     C                     ELSE                                           ULX004
+     C                     Z-ADDPUPR      RTUTSA            Used to sec. Amount4
+     C                     ENDIF                                          ULX004
+      *
+      *** - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ***
+      *
+     C           RRUTSI    WHEQ 'G'
+      *
+      ***  Secure by a GL account
+      *
+     C**********           Z-ADDXXDELO    KCNUM                                              CSD027A
+     C                     MOVE XXDELO    KCNUM                                              CSD027A
+     C                     MOVE XXCCY     KCCY
+     C                     Z-ADDXXACOD    KACOD
+     C                     Z-ADDXXACSQ    KACSQ
+     C                     MOVE XXBRCA    KBRCA
+      *
+     C           KACCNT    CHAINACCNT                80
+     C           *IN80     IFEQ *ON
+     C                     MOVEL'ACCNT'   WWBFIL    P       *************
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 004 *
+     C                     Z-ADD4         WWBASE            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Fill fields RTUTSC / RTUTSA  (Ledger or Cleared balance)
+      *
+     C                     MOVE CCY       RTUTSC            Used to sec. CCY
+      *
+     C           ATYP      IFEQ 'R'                                       ULX004
+     C           CLBL      IFLT *ZEROS                                    ULX004
+     C                     Z-ADD0         RTUTSA                          ULX004
+     C                     ELSE                                           ULX004
+     C                     Z-ADDCLBL      RTUTSA                          ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     ELSE                                           ULX004
+     C           LDBL      IFLT *ZEROS
+     C                     Z-ADD0         RTUTSA            Used to sec. Amount
+     C                     ELSE
+     C                     Z-ADDLDBL      RTUTSA            Used to sec. Amount
+     C                     ENDIF
+     C                     ENDIF                                          ULX004
+      *
+      *** - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ***
+      *
+     C           RRUTSI    WHEQ 'R'
+      *
+      ***  Secure by a Retail account
+      *
+     C                     Z-ADDXXACNO    KACNO
+      *
+     C           KACNUM    CHAINACNUM                80
+     C           *IN80     IFEQ *ON
+     C                     MOVEL'ACNUM'   WWBFIL    P       *************
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 005 *
+     C                     Z-ADD5         WWBASE            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Fill fields RTUTSC / RTUTSA  (Ledger balance)
+      *
+     C                     MOVE CCY       RTUTSC            Used to sec. CCY
+      *
+     C           CLBL      IFLT *ZEROS
+     C***********          Z-SUBCLBL      RTUTSA                    ULX004mount
+     C                     Z-ADD0         RTUTSA                    ULX004mount
+     C                     ELSE
+     C                     Z-ADDCLBL      RTUTSA            Used to sec. Amount
+     C                     ENDIF
+      *
+      ***  Save complete account number
+      *
+     C**********           Z-ADDCNUM      SVCNUM  60                                         CSD027A
+     C                     MOVE CNUM      SVCNUM  6                                          CSD027A
+     C                     MOVE CCY       SVCCY   3
+     C**********           Z-ADDACOD      SVACOD  40                                          CER001
+     C                     Z-ADDACOD      SVACOD 100                                          CER001
+     C                     Z-ADDACSQ      SVACSQ  20
+     C                     MOVE BRCA      SVBRCA  3
+      *
+      ***  Secure by an SE Trade
+      *
+     C           RRUTSI    WHEQ 'T'                                       ULX004
+     C           XXTDRF    CHAINTRADS                71                   ULX004
+      *
+     C           *IN71     IFEQ *ON                                       ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C           RECI      ANDNE'S'                                       ULX004
+     C           RECI      ANDNE'A'                                       ULX004
+     C                     MOVEL'TRADS'   WWBFIL    P       **************
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 021  *
+     C                     Z-ADD21        WWBASE            **************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     MOVE TNMC      RTUTSC                          ULX004
+     C                     Z-ADDTCTR      RTUTSA                          ULX004
+      *
+      ***  Secure by an SE Book Position
+      *
+     C           RRUTSI    WHEQ 'P'                                       ULX004
+     C**********           MOVE BVSKTV    XXBHTV                    ULX004176557
+     C           BVSKTV    IFEQ 'V'                                       176557
+     C                     MOVE 'T'       XXBHTV                          176557
+     C                     ELSE                                           176557
+     C                     MOVE 'V'       XXBHTV                          176557
+     C                     END                                            176557
+     C           WBKPHD    CHAINBKPHD                71
+      *
+     C           *IN71     IFEQ *ON                                       ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVEL'BKPHD'   WWBFIL    P       **************
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 022  *
+     C                     Z-ADD22        WWBASE            **************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     MOVE LPSD      XXBPPD                          ULX004
+     C           LPSD      IFEQ 0                                         ULX004
+     C                     MOVE FPSD      XXBPPD                          ULX004
+     C                     ENDIF                                          ULX004
+     C           WBKPOS    CHAINBKPOS                71
+      *
+     C           *IN71     IFEQ *ON                                       ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVEL'BKPOS'   WWBFIL    P       **************
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 023  *
+     C                     Z-ADD23        WWBASE            **************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C           XXSESN    CHAINSECTY                71
+      *
+     C           *IN71     IFEQ *ON                                       ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVEL'SECTY'   WWBFIL    P       **************
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 024  *
+     C                     Z-ADD24        WWBASE            **************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     CALL 'AOCURRR0'                                ULX004
+     C                     PARM *BLANKS   @RTCD                           ULX004
+     C                     PARM '*KEY    '@OPTN                           ULX004
+     C                     PARM NMCY      @KEY1   3                       ULX004
+     C           SDCURR    PARM SDCURR    DSFDY                           ULX004
+      *
+      ** Validate currency entered exists
+      *
+     C           @RTCD     IFNE *BLANKS                                   ULX004
+     C                     MOVEL'SDCURRPD'WWBFIL    P       **************
+     C                     MOVELNMCY      WWBKEY    P       * DBERR 025  *
+     C                     Z-ADD25        WWBASE            **************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     MOVE NMCY      RTUTSC                          ULX004
+      *
+     C                     Z-ADDNPSN      ZNOML                           ULX004
+     C                     Z-ADDMKPR      ZAVPR                           ULX004
+     C                     Z-ADDNMDP      ZNMDP                           ULX004
+     C                     Z-ADDA6NBDP    ZNMCD                           ULX004
+     C                     MOVE SPBS      ZPRCB                           ULX004
+     C                     EXSR ZAPNUM                                    ULX004
+     C                     Z-ADDZVALU     RTUTSA                          ULX004
+      *
+      ***  Secure by an Security
+      *
+     C           RRUTSI    WHEQ 'S'                                       ULX004
+      *
+     C           XXSESN    CHAINSECTY                71
+      *
+     C           *IN71     IFEQ *ON                                       ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVEL'SECTY'   WWBFIL    P       **************
+     C                     MOVELWORKDS    WWBKEY    P       * DBERR 026  *
+     C                     Z-ADD26        WWBASE            **************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     MOVE NMCY      RTUTSC                          ULX004
+     C                     Z-ADD0         RTUTSA                          ULX004
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      * =========================================================== *
+      *                                                             *
+      ***  #SBYI  S/R : Fill Extract fields depending of RRSBYI   ***
+      ***  Called     : #FILL                                     ***
+      ***  Calls      :                                           ***
+      ***  Remark     :                                           ***
+      *                                                             *
+      * =========================================================== *
+     C           #SBYI     BEGSR
+      *
+      ***  Move Secure by indicator into working data structure
+      *
+     C                     MOVELRRSBYR    WRK2DS
+      *
+     C                     SELEC
+     C           RRSBYI    WHEQ 'A'
+      *
+      ***  Secure by a Amount
+      ***  Fill Fields RTGVBY, RTGCCY, RTGAMT with ERGUARPD values
+      *
+     C**********           Z-ADDRRGVBY    RTGVBY                                             CSD027A
+     C                     MOVE RRGVBY    RTGVBY                                             CSD027A
+     C                     MOVE RRGCCY    RTGCCY
+     C                     Z-ADDRRGAMT    RTGAMT
+      *
+      *** - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ***
+      *
+     C           RRSBYI    WHEQ 'D'
+      *
+      ***  Secure by a Time Deposit
+      *
+     C**********           Z-ADDX2CNUM    KDLNO                                              CSD027A
+     C                     MOVE X2CNUM    KDLNO                                              CSD027A
+     C           KDEALS    CHAINDEALS                80
+     C           *IN80     IFEQ *ON
+     C                     MOVEL'DEALS'   WWBFIL    P       *************
+     C                     MOVELWRK2DS    WWBKEY    P       * DBERR 006 *
+     C                     Z-ADD6         WWBASE            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Fill Fields RTGVBY, RTGCCY, RTGAMT with DEALS values
+      *
+     C**********           Z-ADDCNUM      RTGVBY            Cust. No.                        CSD027A
+     C                     MOVE CNUM      RTGVBY            Cust. No.                        CSD027A
+     C                     MOVE CCY       RTGCCY
+     C                     Z-ADDPCPL      RTGAMT            Principal Amount
+      *
+      *** - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ***
+      *
+     C           RRSBYI    WHEQ 'G'
+      *
+      ***  Secure by a GL account
+      *
+      *
+     C**********           Z-ADDX2CNUM    KCNUM                                              CSD027A
+     C                     MOVE X2CNUM    KCNUM                                              CSD027A
+     C                     MOVE RRGCCY    KCCY
+     C                     Z-ADDX2ACOD    KACOD
+     C                     Z-ADDX2ACSQ    KACSQ
+     C                     MOVE X2BRCA    KBRCA
+      *
+     C           KACCNT    CHAINACCNT                80
+     C           *IN80     IFEQ *ON
+     C                     MOVEL'ACCNT'   WWBFIL    P       *************
+     C                     MOVELWRK2DS    WWBKEY    P       * DBERR 007 *
+     C                     Z-ADD7         WWBASE            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Fill Fields RTGVBY, RTGCCY, RTGAMT with ACCNT values
+      ***   ERGUARPD/RRGCCY for Currency
+      *
+     C**********           Z-ADDCNUM      RTGVBY            Cust. No.                        CSD027A
+     C                     MOVE CNUM      RTGVBY            Cust. No.                        CSD027A
+     C                     MOVE RRGCCY    RTGCCY
+     C           ATYP      IFEQ 'R'                         Retail Account ?
+      *
+     C           CLBL      IFLT *ZEROS
+     C                     Z-SUBCLBL      RTGAMT            Cleared balance
+     C                     ELSE
+     C***********          Z-ADDCLBL      RTGAMT                          ULX004
+     C                     Z-ADD0         RTGAMT                          ULX004
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           LDBL      IFLT *ZEROS
+     C                     Z-SUBLDBL      RTGAMT
+     C                     ELSE
+     C***********          Z-ADDLDBL      RTGAMT                          ULX004
+     C                     Z-ADD0         RTGAMT                          ULX004
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *** - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ***
+      *
+     C           RRSBYI    WHEQ 'R'
+      *
+      ***  Secure by a Retail account
+      *
+     C                     Z-ADDX2ACNO    KACNO
+      *
+     C           KACNUM    CHAINACNUM                80
+     C           *IN80     IFEQ *ON
+      *                                                                   143187
+     C**********           Z-ADDX2CNUM    KCNUM                                       143187 CSD027A
+     C                     MOVE X2CNUM    KCNUM                                              CSD027A
+     C                     MOVE RRGCCY    KCCY                            143187
+     C                     Z-ADDX2ACOD    KACOD                           143187
+     C                     Z-ADDX2ACSQ    KACSQ                           143187
+     C                     MOVE X2BRCA    KBRCA                           143187
+      *                                                                   143187
+     C           KACCNT    CHAINACCNT                80                   143187
+     C           *IN80     IFEQ *ON                                       143187
+     C                     MOVEL'ACNUM'   WWBFIL    P       *************
+     C                     MOVELWRK2DS    WWBKEY    P       * DBERR 008 *
+     C                     Z-ADD8         WWBASE            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                                          143187
+      *
+      ***  Fill Fields RTGVBY, RTGCCY, RTGAMT with ACNUM values
+      *
+     C**********           Z-ADDCNUM      RTGVBY            Cust. No.                        CSD027A
+     C                     MOVE CNUM      RTGVBY            Cust. No.                        CSD027A
+     C                     MOVE CCY       RTGCCY
+      *
+     C           CLBL      IFLT *ZEROS
+     C                     Z-SUBCLBL      RTGAMT            Cleared balance
+     C                     ELSE
+     C***********          Z-ADDCLBL      RTGAMT                          ULX004
+     C                     Z-ADD0         RTGAMT                          ULX004
+     C                     ENDIF
+      *
+      *** - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ***
+      *
+     C           RRSBYI    WHEQ 'P'
+      *
+      ***  Secure by a Percentage
+      ***  Fill Fields RTGVBY with ERGUARPD value,
+      ***  RTGCCY is the RTUTSC previously defined,
+      ***  RTGAMT is the RTUTSA previously calculated.
+      *
+     C**********           Z-ADDRRGVBY    RTGVBY                                             CSD027A
+     C                     MOVE RRGVBY    RTGVBY                                             CSD027A
+     C                     MOVE RTUTSC    RTGCCY
+     C***********RRGPER    IFNE *ZEROS                                    ULX004
+     C***********RTUTSA    MULT RRGPER    WWN150 150                      ULX004
+     C***********WWN150    DIV  100       RTGAMT                          ULX004
+     C***********          ELSE                                           ULX004
+     C                     Z-ADDRTUTSA    RTGAMT
+     C***********          END                                            ULX004
+      *
+      *** - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ***
+      *
+     C           RRSBYI    WHEQ 'S'
+      *
+      ***  Secure by a Provisions
+      *
+     C           RRSBYR    IFNE *BLANKS
+      *
+      ***  Read accnt
+      *
+     C**********           Z-ADDX2CNUM    KCNUM                                              CSD027A
+     C                     MOVE X2CNUM    KCNUM                                              CSD027A
+     C                     MOVE RTUTSC    KCCY
+     C                     Z-ADDX2ACOD    KACOD
+     C                     Z-ADDX2ACSQ    KACSQ
+     C                     MOVE X2BRCA    KBRCA
+      *
+     C           KACCNT    CHAINACCNT                80
+     C           *IN80     IFEQ *ON
+     C                     MOVEL'ACCNT'   WWBFIL    P       *************
+     C                     MOVELWRK2DS    WWBKEY    P       * DBERR 009 *
+     C                     Z-ADD9         WWBASE            *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Fill zones with 'Used to secure' values
+      *
+     C                     MOVE CNUM      RTGVBY
+     C                     MOVE RTUTSC    RTGCCY
+      *
+     C           ATYP      IFEQ 'R'                         Retail Account ?
+      *
+     C           CLBL      IFLT *ZEROS
+     C                     Z-SUBCLBL      RTGAMT            Cleared balance
+     C                     ELSE
+     C***********          Z-ADDCLBL      RTGAMT                          ULX004
+     C                     Z-ADD0         RTGAMT                          ULX004
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           LDBL      IFLT *ZEROS
+     C                     Z-SUBLDBL      RTGAMT            Ledger Balance
+     C                     ELSE
+     C***********          Z-ADDLDBL      RTGAMT                          ULX004
+     C                     Z-ADD0         RTGAMT                          ULX004
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE                            RRSBYR is blank
+      *
+      ***  Fill zones with ERGUARPD or/and 'Used to Secure' values
+      *
+     C**********           Z-ADDRRGVBY    RTGVBY                                             CSD027A
+     C                     MOVE RRGVBY    RTGVBY                                             CSD027A
+     C                     MOVE RTUTSC    RTGCCY
+      *
+     C           RRGAMT    IFEQ *ZEROS
+      *
+     C***********RRGPER    IFNE *ZEROS                                    ULX004
+     C***********RTUTSA    MULT RRGPER    WWN150 150                      ULX004
+     C***********WWN150    DIV  100       RTGAMT                          ULX004
+     C***********          ELSE                                           ULX004
+     C                     Z-ADDRTUTSA    RTGAMT
+     C***********          ENDIF                                          ULX004
+      *
+     C                     ELSE
+     C                     Z-ADDRRGAMT    RTGAMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  Secure by a customer position
+      *
+     C           RRSBYI    WHEQ 'C'                                       ULX004
+      *
+      ** Build key to CPOSN file
+      *
+     C**********           MOVE RRGVBY    X2CSCN  60                                  ULX004 CSD027A
+     C                     MOVE RRGVBY    X2CSCN  6                                          CSD027A
+      *
+      **  Access to Customer Postions file with Secured By Reference
+      *
+     C           WCPOSN    CHAINCPOSN                71                   ULX004
+     C           *IN71     IFEQ *ON                                       ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVEL'CPOSN'   WWBFIL    P       **************
+     C                     MOVELWRK2DS    WWBKEY    P       * DBERR 019  *
+     C                     Z-ADD19        WWBASE            **************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     MOVE RRGVBY    RTGVBY           * CustomerLNum.
+      *
+      **  Access to Security file with Security No. for Nominal Currency
+      *
+     C           X2CSSC    CHAINSECTY                71                   ULX004
+      *
+      ** Store data from Customer Position
+      *
+     C           *IN71     IFEQ *ON                                       ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVEL'SECTY'   WWBFIL    P       *************
+     C                     MOVELX2CSSC    WWBKEY    P       * DBERR 020 *
+     C                     Z-ADD20        WWBASE            *************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     MOVE NMCY      RTGCCY                          ULX004
+      *
+      ***  Calculate the Market Value
+      *
+     C                     EXSR P007                                      ULX004
+     C                     Z-ADDZVALU     RTGAMT                          ULX004
+      *                                                                   ULX012
+     C           ULX012    IFEQ 'Y'                                       ULX012
+     C                     MOVE ISSR      RTGVBY                          ULX012
+     C                     EXSR #CHKGU                                    ULX012
+     C                     ENDIF                                          ULX012
+      *
+      ***  Secure by a nominal
+      *
+     C           RRSBYI    WHEQ 'N'                                       ULX004
+      *
+     C           X2SESN    CHAINSECTY                71                   ULX004
+      *
+      ** Store data from Customer Position
+      *
+     C           *IN71     IFEQ *ON                                       ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVEL'SECTY'   WWBFIL    P       *************
+     C                     MOVELWRK2DS    WWBKEY    P       * DBERR 030 *
+     C                     Z-ADD30        WWBASE            *************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *                                                                   128241
+     C           INVKA     CHAININVTPDF              71                   128241
+     C           *IN71     IFEQ *ON                        - B1           128241
+     C                     MOVEL'029'     WWBASE            ************* 128241
+     C                     MOVEL'INVTP   'WWBFIL            * DBERR 029 * 128241
+     C                     MOVELNMCY      WWBKEY            ************* 128241
+     C                     MOVE SITP      WWBKEY                          128241
+     C                     EXSR *PSSR                                     128241
+     C                     ENDIF                                          128241
+      *                                                                   128241
+     C**********           Z-ADDISSR      RTGVBY                                      ULX004 CSD027A
+     C                     MOVE ISSR      RTGVBY                                             CSD027A
+     C                     MOVE NMCY      RTGCCY                          ULX004
+      *
+     C                     CALL 'AOCURRR0'                                ULX004
+     C                     PARM *BLANKS   @RTCD                           ULX004
+     C                     PARM '*KEY    '@OPTN                           ULX004
+     C                     PARM NMCY      @KEY1   3                       ULX004
+     C           SDCURR    PARM SDCURR    DSFDY                           ULX004
+      *
+      ** Validate currency entered exists
+      *
+     C           @RTCD     IFNE *BLANKS                                   ULX004
+     C                     MOVEL'SDCURRPD'WWBFIL    P       **************
+     C                     MOVELNMCY      WWBKEY    P       * DBERR 045  *
+     C                     Z-ADD45        WWBASE            **************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     Z-ADDRRGAMT    ZNOML                           ULX004
+     C                     Z-ADDMKPR      ZAVPR                           ULX004
+     C                     Z-ADDNMDP      ZNMDP                           ULX004
+     C                     Z-ADDA6NBDP    ZNMCD                           ULX004
+     C                     MOVE SPBS      ZPRCB                           ULX004
+     C                     EXSR ZAPNUM                                    ULX004
+     C                     Z-ADDZVALU     RTGAMT                          ULX004
+      *
+      ***  For mortgage-backed securities, current factor must be         128241
+      ***  considered                                                     128241
+      *                                                                   128241
+     C           PROT      IFEQ '8'                                       128241
+     C                     MULT CFCT      RTGAMT                          128241
+     C                     ENDIF                                          128241
+     C                     ENDSL
+      *
+      ***  Calculate percentage amount
+      *
+     C           ULX012    IFEQ 'N'                                       ULX012
+      *                                                                   ULX012
+     C           RRGPER    IFNE *ZEROS                                    ULX004
+     C           RTGAMT    MULT RRGPER    WWN150 150                      ULX004
+     C           WWN150    DIV  100       RTGAMT                          ULX004
+     C                     ENDIF                                          ULX004
+      *                                                                   ULX012
+     C                     ELSE                                           ULX012
+      *                                                                   ULX012
+     C           RRINSA    IFNE 'Y'                                       ULX012
+     C           RRINSA    OREQ 'Y'                                       ULX012
+     C           RRSBYI    ANDEQ'P'                                       ULX012
+      *                                                                   ULX012
+     C           RRGPER    IFNE *ZEROS                                    ULX012
+     C           RTGAMT    MULT RRGPER    WWN150 150                      ULX012
+     C           WWN150    DIV  100       RTGAMT                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+     C                     ELSE                                           ULX012
+     C                     Z-ADDRRGAMT    RTGAMT                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+     C                     ENDIF                                          ULX012
+      *
+     C                     ENDSR
+      ******************************************************************* ULX012
+      *  #CHKGU  - Check if the Security has a Guarantor                * ULX012
+      ******************************************************************* ULX012
+     C           #CHKGU    BEGSR                                          ULX012
+      *                                                                   ULX012
+      ***  Setup Fields Used to Find Guarantor                            ULX012
+      *                                                                   ULX012
+     C                     Z-ADD1         WCPTR   10                      ULX012
+     C                     MOVE 'N'       WFIND   1                       ULX012
+      *                                                                   ULX012
+     C           WFIND     DOWNE'Y'                                       ULX012
+     C           WCPTR     ANDLE8                                         ULX012
+      *                                                                   ULX012
+     C                     SELEC                                          ULX012
+      *                                                                   ULX012
+     C           WCPTR     WHEQ 1                                         ULX012
+     C                     MOVE *BLANKS   WCNUM                           ULX012
+     C                     MOVE *BLANKS   WTRTY                           ULX012
+     C                     MOVE X2CSSC    WTRTY                           ULX012
+     C                     MOVE *BLANKS   WCURR                           ULX012
+      *                                                                   ULX012
+     C           WCPTR     WHEQ 2                                         ULX012
+     C                     MOVE *BLANKS   WCNUM                           ULX012
+     C                     MOVELSITP      WTRTY     P                     ULX012
+     C                     MOVE *BLANKS   WCURR                           ULX012
+      *                                                                   ULX012
+     C           WCPTR     WHEQ 3                                         ULX012
+     C                     MOVE *BLANKS   WCNUM                           ULX012
+     C                     MOVELSITP      WTRTY     P                     ULX012
+     C                     MOVE NMCY      WCURR                           ULX012
+      *                                                                   ULX012
+     C           WCPTR     WHEQ 4                                         ULX012
+     C                     MOVE ISSR      WCNUM                           ULX012
+     C                     MOVELSITP      WTRTY     P                     ULX012
+     C                     MOVE *BLANKS   WCURR                           ULX012
+      *                                                                   ULX012
+     C           WCPTR     WHEQ 5                                         ULX012
+     C                     MOVE ISSR      WCNUM                           ULX012
+     C                     MOVELSITP      WTRTY     P                     ULX012
+     C                     MOVE NMCY      WCURR                           ULX012
+      *                                                                   ULX012
+     C           WCPTR     WHEQ 6                                         ULX012
+     C                     MOVE ISSR      WCNUM                           ULX012
+     C                     MOVE *BLANKS   WTRTY     P                     UULX03
+     C                     MOVE *BLANKS   WCURR                           ULX012
+      *                                                                   ULX012
+     C           WCPTR     WHEQ 7                                         ULX012
+     C                     MOVE *BLANKS   WCNUM                           ULX012
+     C                     MOVE *BLANKS   WTRTY     P                     ULX012
+     C                     MOVE NMCY      WCURR                           ULX012
+      *                                                                   ULX012
+     C           WCPTR     WHEQ 8                                         ULX012
+     C                     MOVE ISSR      WCNUM                           ULX012
+     C                     MOVE *BLANKS   WTRTY     P                     ULX012
+     C                     MOVE NMCY      WCURR                           ULX012
+      *                                                                   ULX012
+     C                     ENDSL                                          ULX012
+      *                                                                   ULX012
+     C           KERGU     CHAINEREXTSV1            N20                   ULX012
+      *                                                                   ULX012
+      ***  If Record Found and 'To Be Secured'                            ULX012
+      *                                                                   ULX012
+     C           *IN20     IFEQ *OFF                                      ULX012
+     C           XTTBES    ANDEQ'Y'                                       ULX012
+     C                     MOVE 'Y'       WFIND                           ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+     C                     ADD  1         WCPTR                           ULX012
+      *                                                                   ULX012
+     C                     ENDDO                                          ULX012
+      *                                                                   ULX012
+      ***  If Guarantor Found                                             ULX012
+      *                                                                   ULX012
+     C           WFIND     IFEQ 'Y'                                       ULX012
+      *                                                                   ULX012
+     C                     MOVE XTGBYC    RTGVBY                          ULX012
+      *                                                                   ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX012
+     C                     ENDSR                                          ULX012
+      /EJECT
+      * =========================================================== *
+      *                                                             *
+      ***  #OTHER S/R : Make other fields validations             ***
+      ***  Called     : #FILL                                     ***
+      ***  Calls      :                                           ***
+      ***  Remark     :                                           ***
+      *                                                             *
+      * =========================================================== *
+     C           #OTHER    BEGSR
+      *
+      ***  1) Secured by amount in use to secure Currency (RTGAUS)
+     C           RTGCCY    IFNE RTUTSC
+      *
+      ***  From Currency information
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTGCCY    KYGCCY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    Error
+     C                     MOVEL'SDCURRPD'WWBFIL    P      *************
+     C                     MOVELRTGCCY    WWBKEY    P      * DBERR 010 *
+     C                     Z-ADD10        WWBASE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA6CYCD    ZCCYF            Currency code
+     C                     Z-ADDA6SPRT    ZRATEF           Spot rate
+     C                     MOVELA6MDIN    ZMDINF           Mult/div ind
+     C                     Z-ADDA6NBDP    ZCDPF            NBr. dec
+      *
+      ***  To currency Information
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTUTSC    KYUTSC  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    Error
+     C                     MOVEL'SDCURRPD'WWBFIL    P      *************
+     C                     MOVELRTUTSR    WWBKEY    P      * DBERR 011 *
+     C                     Z-ADD11        WWBASE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA6CYCD    ZCCYT            Currency code
+     C                     Z-ADDA6SPRT    ZRATET           Spot rate
+     C                     MOVELA6MDIN    ZMDINT           Mult/div ind
+     C                     Z-ADDA6NBDP    ZCDPT            NBr. dec
+      *
+     C                     Z-ADDRTGAMT    ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     RTGAUS
+     C                     ELSE
+     C                     Z-ADDRTGAMT    RTGAUS
+     C                     ENDIF
+      *
+      *** 2) Receiving customer
+      *
+     C**********           Z-ADDRRRCUS    RTRCUS                                             CSD027A
+     C                     MOVE RRRCUS    RTRCUS                                             CSD027A
+      *
+      *** 3) Branch code  (from customer branch code
+      *
+     C                     MOVE RTRCUS    WWALP6  6
+     C                     MOVELWWALP6    KYCUST 10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           KYCUST
+     C                     PARM '*CNUM'   @PKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    Error
+     C                     MOVEL'SDCUSTPD'WWBFIL    P      *************
+     C                     MOVELRTRCUS    WWBKEY    P      * DBERR 012 *
+     C                     Z-ADD12        WWBASE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C********             MOVE BBBRCD    RTBRCA                          ULX004
+     C                     MOVE RRBRCA    RTBRCA                          ULX004
+      *
+      ***  4) Account officer
+      *
+     C                     MOVE BBACOC    RTACOF
+      *
+      ***  5) Company code from branch
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM RTBRCA    KYBRCA  3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    Error
+     C                     MOVEL'SDBRCHPD'WWBFIL    P      *************
+     C                     MOVELRTBRCA    WWBKEY    P      * DBERR 013 *
+     C                     Z-ADD13        WWBASE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A8CMCD    RTCOMP
+      *
+      ***  6) Use to secure indicator/Reference (Retail --> Full account)
+      *
+     C                     MOVE RRUTSI    RTUTSI
+      *
+     C           RRUTSI    IFEQ 'R'
+     C                     MOVE *BLANKS   WORKDS
+     C**********           Z-ADDSVCNUM    XXDELO                                             CSD027A
+     C                     MOVE SVCNUM    XXDELO                                             CSD027A
+     C                     MOVE SVCCY     XXCCY
+     C                     Z-ADDSVACOD    XXACOD
+     C                     Z-ADDSVACSQ    XXACSQ
+     C                     MOVE SVBRCA    XXBRCA
+     C                     MOVELWORKDS    RTUTSR
+     C                     ELSE
+     C                     MOVE RRUTSR    RTUTSR
+     C                     ENDIF
+      *
+      ***  7) guarantees information
+      *
+     C                     MOVE RRGCOD    RTGCOD
+     C                     MOVE RRGSEQ    RTGSEQ
+      *
+      ***  8) Secure by information
+      *
+     C                     MOVE RRSBYI    RTSBYI
+     C                     MOVE RRSBYR    RTSBYR
+      *
+      *** 9) Guarantee percentage
+      *
+     C           RRGPER    IFEQ *ZEROS
+     C                     MOVE 100       RTGPER
+     C                     ELSE
+     C                     MOVE RRGPER    RTGPER
+     C                     END
+      *
+      *** 10) Dates information
+      *
+     C                     Z-ADDRRSTDT    RTSTDT
+     C                     Z-ADDRRENDT    RTENDT
+     C                     Z-ADDRRRVDT    RTRVDT
+      *
+      *** 11) guarantor country code (From given by Cust. No)
+      *
+     C                     MOVE RTGVBY    WWALP6
+     C                     MOVELWWALP6    KYCUST
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           KYCUST
+     C                     PARM '*CNUM'   @PKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS                    Error
+     C                     MOVEL'SDCUSTPD'WWBFIL    P      *************
+     C                     MOVELRTGVBY    WWBKEY    P      * DBERR 014 *
+     C                     Z-ADD14        WWBASE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BBBNBI    IFEQ 'Y'
+     C                     MOVE BBCNCZ    RTGCTY
+     C                     ELSE
+     C                     MOVE BBCOLC    RTGCTY
+     C                     ENDIF
+      *
+      ***  12) Guarantor Zone A/B indicator
+      *
+     C***********RTGCTY    CHAINSDCTRYY9             80                   ULX004
+     C********** RTGCTY    CHAINSDCTRYY6             80                                ULX004 CER001
+     C           RTGCTY    CHAINSDCTX2L0             80                                       CER001
+     C           *IN80     IFEQ *ON
+     C***********          MOVEL'SDCTRYY9'WWBFIL    P      *********      ULX004
+     C**********           MOVEL'SDCTRYY6'WWBFIL    P      *********                   ULX004 CER001
+     C                     MOVEL'SDCTX2L0'WWBFIL    P      *********                          CER001
+     C                     MOVELRTGCTY    WWBKEY    P      * DBERR 015 *
+     C                     Z-ADD15        WWBASE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C***********          MOVE RDZONA    RTGUZA                          ULX004
+     C                     MOVE WFICTR    RTGUZA                          ULX004
+      *
+      ***  13) Guarantor Economic Sector
+      *
+     C                     MOVE RTGVBY    KCUST   6
+     C***********KCUST     CHAINSDCUSTY9             80                   ULX004
+     C********** KCUST     CHAINSDCUSTY6             80                                ULX004 CER001
+     C           KCUST     CHAINSDCUX2L0             80                                       CER001
+     C           *IN80     IFEQ *ON
+     C***********          MOVEL'SDCUSTY9'WWBFIL    P                     ULX004
+     C**********           MOVEL'SDCUSTY6'WWBFIL    P      *********                   ULX004 CER001
+     C                     MOVEL'SDCUX2L0'WWBFIL    P      *********                   ULX004 CER001
+     C                     MOVELRTGVBY    WWBKEY    P      * DBERR 016 *
+     C                     Z-ADD16        WWBASE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C***********          Z-ADDRBINSC    RTGUEC                          ULX004
+     C***********          Z-ADDVFECOS    RTGUEC                    ULX004ULX004
+     C                     Z-ADDVFNCOS    RTGUEC                          ULX004
+      *
+      ***  14) Calculated guarantee Percentage
+      *
+     C           RRSBYI    IFEQ 'P'
+     C           RRSBYI    OREQ 'S'
+     C           RRSBYR    ANDEQ*BLANKS
+     C           RRGAMT    ANDEQ*ZEROS
+      *
+     C           RTUTSA    IFNE 0
+     C                     Z-ADDRTGPER    RTGCPE
+     C                     ELSE
+     C                     Z-ADD*ZEROS    RTGCPE
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           RTUTSA    IFNE 0
+     C********** RTGAUS    DIV  RTUTSA    WWN185 185                      ULX004
+     C********** WWN185    MULT RTGPER    RTGCPE    H                     ULX004
+      **********                                                          ULX004
+     C********** RTGCPE    IFEQ *ZEROS                                    ULX004
+     C********** RTGAUS    ANDGTRTUTSA                                    ULX004
+     C**********           Z-ADD999       RTGCPE                          ULX004
+     C**********           ENDIF                                          ULX004
+      *                                                                   ULX004
+     C           RTGAUS    MULT 100       WWN185 185                      ULX004
+     C           WWN185    DIV  RTUTSA    RTGCPE    H                     ULX004
+      *
+     C                     ELSE
+     C                     Z-ADD0         RTGCPE
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           RRUTSI    IFEQ 'S'                                       ULX004
+     C                     Z-ADDRTGPER    RTGCPE                          ULX004
+     C                     ENDIF                                          ULX004
+      *
+      ***  15) Guarantee extended code
+      *
+     C                     MOVE RTGCOD    RTGECD                          ULX004
+      *
+     C***********          MOVE *OFF      *IN60                           ULX004
+     C***********RTGCOD    IFEQ 100                                       ULX004
+      *
+      ***  If 'Nederlandse Credietverzekering Maatschappij' from the Customer
+      ***  details file equal to 'Y'
+     C***********RBNCVM    IFEQ 'Y'                                       ULX004
+     C***********          Z-ADD6000      RTGECD                          ULX004
+     C***********          MOVE *ON       *IN60                           ULX004
+     C***********          ELSE                                           ULX004
+      *
+     C***********          MOVE *BLANKS   WWCOMP                          ULX004
+     C***********          MOVE RTGCOD    XXGCOD                          ULX004
+     C***********          MOVE RTGUEC    XXGUEC                          ULX004
+     C***********          MOVE RTGUZA    XXGUZA                          ULX004
+      *
+      ***  Special sector 12210, 12220 validation
+      *
+     C***********XXGUEC    IFEQ '12210'                                   ULX004
+     C***********XXGUZA    ANDEQ'Y'                                       ULX004
+     C***********XXGUEC    OREQ '12220'                                   ULX004
+     C***********XXGUZA    ANDEQ'Y'                                       ULX004
+     C***********RTGCTY    IFEQ 'NL'                                      ULX004
+     C***********          MOVE 'Y'       XXZANL                          ULX004
+     C***********          ELSE                                           ULX004
+     C***********          MOVE 'N'       XXZANL                          ULX004
+     C***********          ENDIF                           GCTY           ULX004
+     C***********          ENDIF                           12210 12220X004
+      *
+     C***********          Z-ADD1         N       30                      ULX004
+     C***********WWCOMP    LOKUPGTAB,N                   60               ULX004
+     C************IN60     IFEQ *ON                                       ULX004
+     C***********          Z-ADDGTEC,N    RTGECD                          ULX004
+     C***********          ENDIF                                          ULX004
+     C***********          ENDIF                           RBNCVM = 'Y'004
+     C***********          ENDIF                           GCOD = 100LX004
+      *
+     C************IN60     IFEQ *OFF                       Not found      ULX004
+     C***********          Z-ADD1         N       30                      ULX004
+     C***********RTGCOD    LOKUPGARR,N                   60               ULX004
+     C************IN60     IFEQ *ON                                       ULX004
+     C***********          Z-ADDGAEC,N    RTGECD                          ULX004
+     C***********          ENDIF                                          ULX004
+     C***********          ENDIF                                          ULX004
+      *
+      ***  16) Review/expiry indicator / Naarative
+      *
+     C                     MOVE RRRVEX    RTRVEX
+     C                     MOVELRRNARR    RTNARR
+     C                     MOVE RRRVFQ    RTRVFQ
+      *
+      ***  17) Used to secure loan                                        ULX004
+      *                                                                   ULX004
+     C                     MOVE RRUTSL    RTUTSL                          ULX004
+      *
+     C                     ENDSR
+      /EJECT
+      **************************************************************************
+      * P007 - MARKET VALUE CALCULATION
+      **************************************************************************
+      *
+     C           P007      BEGSR
+      *
+     C           X2CSSC    CHAINSECTY                71                   ULX004
+     C           *IN71     IFEQ *ON                        - B1           ULX004
+     C           RECI      ORNE 'D'                                       ULX004
+     C                     MOVEL'026'     WWBASE           *****************
+     C                     MOVEL'SECTY   'WWBFIL           ** DB ERRORX264**
+     C                     MOVELX2CSSC    WWBKEY           *****************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                           - E1           ULX004
+      *
+     C                     CALL 'AOCURRR0'                                ULX004
+     C                     PARM *BLANKS   @RTCD                           ULX004
+     C                     PARM '*KEY    '@OPTN                           ULX004
+     C                     PARM NMCY      @KEY1                           ULX004
+     C           SDCURR    PARM SDCURR    DSFDY                           ULX004
+      *
+      ** Validate currency entered exists
+      *
+     C           @RTCD     IFNE *BLANKS                                   ULX004
+     C                     MOVEL'SDCURRPD'WWBFIL    P       **************
+     C                     MOVELNMCY      WWBKEY    P       * DBERR 02700*
+     C                     Z-ADD27        WWBASE            **************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     Z-ADDA6NBDP    WWDPI                           ULX004
+     C                     MOVELA6MDIN    WWMDI                           ULX004
+     C                     Z-ADDA6SPRT    WWSRI                           ULX004
+      *
+     C           INVKA     CHAININVTPDF              71                   ULX004
+     C           *IN71     IFEQ *ON                        - B1           ULX004
+     C                     MOVEL'028'     WWBASE           *****************
+     C                     MOVEL'SECTY   'WWBFIL           **     DBULX004**
+     C                     MOVELNMCY      WWBKEY           **    ERRORX004**
+     C                     MOVE SITP      WWBKEY           **     28ULX004**
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                                          ULX004
+      *
+      ** DECIDE WHERE TO GET THE PRICE DETAILS -
+      **   *IN81 ON = FROM CPPRIC, *IN82 ON = PRIC, ELSE SECTY
+      *
+     C                     MOVEA'000'     *IN,80                          ULX004
+     C           PROT      IFEQ '9'                        - B1           ULX004
+     C           TRBS      ANDEQ'Y'                                       ULX004
+     C                     MOVE SITP      KINVT                           ULX004
+     C                     MOVE NMCY      KCCY                            ULX004
+     C           CPPKA     CHAINCPPRIDF              80                   ULX004
+     C           *IN80     IFEQ *OFF                       - B2           ULX004
+     C           RECI      ANDNE'*'                                       ULX004
+     C                     MOVE *ON       *IN81                           ULX004
+     C                     ENDIF                           - E2           ULX004
+     C                     ENDIF                           - E1           ULX004
+      *
+     C           *IN81     IFEQ *OFF                       - B1           ULX004
+     C                     MOVE 'V'       PTYPE                           ULX004
+     C**********           MOVE *ZEROS    PCUS                                        ULX004 CSD027A
+     C                     MOVE *BLANKS   PCUS                                               CSD027A
+     C                     Z-ADD0         PDAT                            ULX004
+     C           KEYPT     SETLLPRICT                71                   ULX004
+     C           *IN71     IFEQ *OFF                       - B2           ULX004
+     C           KEYPTP    READEPRICT                    71               ULX004
+     C           RECI      DOWEQ'*'                        - B3           ULX004
+     C           *IN71     ANDNE*ON                                       ULX004
+     C           KEYPTP    READEPRICT                    71               ULX004
+     C           RECI      IFNE '*'                        - B4           ULX004
+     C                     SETON                     82                   ULX004
+     C                     ENDIF                           - E4           ULX004
+     C                     ENDDO                           - E3           ULX004
+     C                     ENDIF                           - E2           ULX004
+     C                     ENDIF                           - E1           ULX004
+      *
+      ** MARKET PRICE
+      *
+     C           *IN81     IFEQ *OFF                       - B1           ULX004
+     C           *IN82     ANDEQ*OFF                                      ULX004
+     C                     MOVE MKPR      WK15   158                      ULX004
+     C                     ENDIF                           - E1           ULX004
+      *
+     C           *IN82     IFEQ *ON                        - B1           ULX004
+     C                     MOVE PPRC      WK15                            ULX004
+     C                     ENDIF                           - E1           ULX004
+      *
+     C           *IN81     IFEQ *ON                        - B1           ULX004
+      *
+      * Calculate Yield using standard subroutine ZYMTX
+      *
+     C                     Z-ADDMATY      ZMDAT                           ULX004
+     C                     Z-ADDBJRDNB    ZBASD                           ULX004
+      *
+     C                     Z-ADDND01      ZND,1                           ULX004
+     C                     Z-ADDND02      ZND,2                           ULX004
+     C                     Z-ADDND03      ZND,3                           ULX004
+     C                     Z-ADDND04      ZND,4                           ULX004
+     C                     Z-ADDND05      ZND,5                           ULX004
+     C                     Z-ADDND06      ZND,6                           ULX004
+     C                     Z-ADDND07      ZND,7                           ULX004
+     C                     Z-ADDND08      ZND,8                           ULX004
+     C                     Z-ADDND09      ZND,9                           ULX004
+     C                     Z-ADDND10      ZND,10                          ULX004
+     C                     Z-ADDND11      ZND,11                          ULX004
+     C                     Z-ADDND12      ZND,12                          ULX004
+     C                     Z-ADDND13      ZND,13                          ULX004
+     C                     Z-ADDND14      ZND,14                          ULX004
+     C                     Z-ADDND15      ZND,15                          ULX004
+     C                     Z-ADDND16      ZND,16                          ULX004
+     C                     Z-ADDND17      ZND,17                          ULX004
+     C                     Z-ADDND18      ZND,18                          ULX004
+     C                     Z-ADDND19      ZND,19                          ULX004
+     C                     Z-ADDND20      ZND,20                          ULX004
+     C                     Z-ADDND21      ZND,21                          ULX004
+     C                     Z-ADDND22      ZND,22                          ULX004
+     C                     Z-ADDND23      ZND,23                          ULX004
+     C                     Z-ADDND24      ZND,24                          ULX004
+     C                     Z-ADDND25      ZND,25                          ULX004
+      *
+     C                     Z-ADDYR01      ZRT,1                           ULX004
+     C                     Z-ADDYR02      ZRT,2                           ULX004
+     C                     Z-ADDYR03      ZRT,3                           ULX004
+     C                     Z-ADDYR04      ZRT,4                           ULX004
+     C                     Z-ADDYR05      ZRT,5                           ULX004
+     C                     Z-ADDYR06      ZRT,6                           ULX004
+     C                     Z-ADDYR07      ZRT,7                           ULX004
+     C                     Z-ADDYR08      ZRT,8                           ULX004
+     C                     Z-ADDYR09      ZRT,9                           ULX004
+     C                     Z-ADDYR10      ZRT,10                          ULX004
+     C                     Z-ADDYR11      ZRT,11                          ULX004
+     C                     Z-ADDYR12      ZRT,12                          ULX004
+     C                     Z-ADDYR13      ZRT,13                          ULX004
+     C                     Z-ADDYR14      ZRT,14                          ULX004
+     C                     Z-ADDYR15      ZRT,15                          ULX004
+     C                     Z-ADDYR16      ZRT,16                          ULX004
+     C                     Z-ADDYR17      ZRT,17                          ULX004
+     C                     Z-ADDYR18      ZRT,18                          ULX004
+     C                     Z-ADDYR19      ZRT,19                          ULX004
+     C                     Z-ADDYR20      ZRT,20                          ULX004
+     C                     Z-ADDYR21      ZRT,21                          ULX004
+     C                     Z-ADDYR22      ZRT,22                          ULX004
+     C                     Z-ADDYR23      ZRT,23                          ULX004
+     C                     Z-ADDYR24      ZRT,24                          ULX004
+     C                     Z-ADDYR25      ZRT,25                          ULX004
+      *
+     C                     EXSR ZYMTX                                     ULX004
+     C                     MOVE ZY1       WK15                            ULX004
+     C                     ENDIF                                          ULX004
+      *
+      ** CALCULATE MARKET PRICE
+      ** ONLY WHEN THE PRICE HAS BEEN FOUND                               ERL438
+      *
+     C           WK15      IFNE *ZEROS                              ULX004ERL438
+     C           BVSKTV    IFEQ 'T'                                       ULX004
+     C                     Z-ADDCSNV      ZNOML                           ULX004
+     C                     ELSE                                           ULX004
+     C                     Z-ADDCSNT      ZNOML                           ULX004
+     C                     ENDIF                                          ULX004
+     C                     Z-ADDWK15      ZAVPR                           ULX004
+     C                     Z-ADDNMDP      ZNMDP                           ULX004
+     C                     Z-ADDWWDPI     ZNMCD                           ULX004
+     C                     MOVE SPBS      ZPRCB                           ULX004
+     C                     EXSR ZAPNUM                                    ULX004
+     C                     ELSE                                     ULX004ERL438
+     C                     Z-ADD*ZEROS    ZVALU                     ULX004ERL438
+     C                     ENDIF                                    ULX004ERL438
+      *
+     C                     ENDSR
+      /EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**  SCONV - Converts an amount from one currency to another.       *
+     C**                                                                 *
+     C**  Input Fields - WWAMTI 15/0 amount in input currency            *
+     C**                 WWSRI  13/8 spot rate for input currency        *
+     C**                 WWSRO  13/8 spot rate for output currency       *
+     C**                 WWDPI  1/0  no. of decimals for input currency  *
+     C**                 WWDPO  1/0  no. of decimals for output currency *
+     C**                 WWMDI  1    mult/div indicator for input curr.  *
+     C**                 WWMDO  1    mult/div indicator for output curr. *
+     C**                                                                 *
+     C**  Arrays       - POWER  powers of 10                             *
+     C**                                                                 *
+     C**  Output Fields- WWAMTO 15/0 output amount converted to new curr *
+     C**                                                                 *
+     C**  CALLS    - NONE                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           SCONV     BEGSR                                          ULX004
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDWWAMTI    WWAMTI 150                      ULX004
+     C                     Z-ADD0         WWAMTO 150                      ULX004
+     C           *LIKE     DEFN A6SPRT    WWSRI                           ULX004
+     C           *LIKE     DEFN A6SPRT    WWSRO                           ULX004
+     C           *LIKE     DEFN A6NBDP    WWDPI                           ULX004
+     C           *LIKE     DEFN A6NBDP    WWDPO                           ULX004
+     C           *LIKE     DEFN A6MDIN    WWMDI                           ULX004
+     C           *LIKE     DEFN A6MDIN    WWMDO                           ULX004
+      *
+     C           WWDPO     SUB  WWDPI     Z       10                      ULX004
+     C           Z         ADD  4         Z                               ULX004
+      *
+     C           WWMDI     IFNE WWMDO                                     ULX004
+      *
+      ** MULT/DIV INDICATORS DIFFERENT
+     C           WWSRI     MULT WWSRO     WWRATE 159H                     ULX004
+     C                     ELSE                                           ULX004
+      *
+      ** MULT/DIV INDICATORS THE SAME
+     C           WWSRO     IFEQ 0                                         ULX004
+     C                     GOTO SC0                                       ULX004
+     C                     END                                            ULX004
+     C           WWSRI     DIV  WWSRO     WWRATE    H                     ULX004
+     C                     END                                            ULX004
+      *
+     C           WWMDI     IFEQ 'D'                                       ULX004
+     C           WWRATE    IFEQ 0                                         ULX004
+     C                     GOTO SC0                                       ULX004
+     C                     END                                            ULX004
+     C           POWER,Z   DIV  WWRATE    WWRATE    H                     ULX004
+     C                     ELSE                                           ULX004
+     C           POWER,Z   MULT WWRATE    WWRATE    H                     ULX004
+     C                     END                                            ULX004
+      *
+     C           WWAMTI    MULT WWRATE    WWAMTO    H                     ULX004
+      *
+     C           SC0       ENDSR                                          ULX004
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***ULX004
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      ULX004
+      *
+     C                     CALL 'ZSFILE'                                  ULX004
+     C                     PARM *BLANKS   SEQ     5                       ULX004
+     C                     PARM *BLANKS   SENTY   3                       ULX004
+     C                     PARM           SFILEU                          ULX004
+     C                     PARM           ZSNUMU                          ULX004
+     C                     PARM *BLANK    ZSERR   1                       ULX004
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'                                       ULX004
+     C                     SETON                     U7U8LR               ULX004
+     C                     RETRN                                          ULX004
+     C                     ENDIF                                          ULX004
+      *
+     C                     ENDSR                                          ULX004
+      *
+      /EJECT
+      * =========================================================== *
+      *                                                             *
+      ***  *PSSR  S/R : Problem handling process                  ***
+      ***  Called     :                                           ***
+      ***  Calls      :                                           ***
+      *                                                             *
+      * =========================================================== *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       WRUN    1
+     C                     ENDIF
+      *
+      ***  Update data area LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     MOVELWWBFIL    DBFILE
+     C                     MOVELWWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  LDA
+     C                     DUMP                                           ULX004
+      *
+      ***  Write Audit report
+      *
+     C                     OPEN ER0960AU
+     C                     EXSR RCFAU                                     ULX004
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEER0960AU
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      * =========================================================== *
+      *                                                             *
+      ***  *INZSR S/R : Initial processing                        ***
+      ***  Called     : Once at start of program (first cycle)    ***
+      ***  Calls      : *PSSR                                     ***
+      *                                                             *
+      * =========================================================== *
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Redefine database error fields
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ***  Get installation control : data record 1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                    Error
+     C                     MOVEL'SDBANKPD'WWBFIL    P      *************
+     C                     MOVEL'BANK'    WWBKEY    P      * DBERR 017 *
+     C                     Z-ADD17        WWBASE           *************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BJDFIN    IFEQ 'M'                        Format mmddyy
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+     C*                                                                   127865
+     C** CALL ACCESS PROGRAM FOR MIDAS MODULES DETAILS                    127865
+     C                     CALL 'AOMMODR0'                                127865
+     C                     PARM '*MSG    '@RTCD   7                       127865
+     C                     PARM '*FIRST  '@OPTN   7                       127865
+     C           @MMOD     PARM @MMOD     DSFDY                           127865
+     C*                                                                   127865
+     C           @RTCD     IFNE *BLANK                                    127865
+     C                     MOVEL'SDMMODPD'WWBFIL            ************* 127865
+     C                     MOVEL'99'      WWBASE            *DBERROR 099* 127865
+     C                     MOVEL@OPTN     WWBKEY            ************* 127865
+     C                     EXSR *PSSR                                     127865
+     C                     END                                            127865
+     C           BGSECS    IFEQ 'Y'                                       127865
+      *
+      **  Get Securities Trading Installation Control Data Record 1
+      *
+     C                     CALL 'AOSTRDR0'                                ULX004
+     C                     PARM '*MSG   ' @RTCD                           ULX004
+     C                     PARM '*FIRST ' @OPTN                           ULX004
+     C           SDSTRD    PARM SDSTRD    DSFDY                           ULX004
+     C           @RTCD     IFNE *BLANKS                    *--------      ULX004
+     C                     Z-ADD18        WWBASE           ***************
+     C                     MOVEL'SDSTRDPD'WWBFIL           * DB ERROR 018*
+     C                     MOVEL'*FIRST'  WWBKEY           ***************
+     C                     EXSR *PSSR                                     ULX004
+     C                     ENDIF                           *--------      ULX004
+     C                     ENDIF                           *--------      127865
+      *                                                                   ULX012
+      **  Determine if feature ULX012 is installed                        ULX012
+     C                     MOVE 'N'       ULX012  1                       ULX012
+     C                     CALL 'AOSARDR0'                                ULX012
+     C                     PARM '       ' @RTCD   7                       ULX012
+     C                     PARM '*VERIFY' @OPTN   7                       ULX012
+     C                     PARM 'ULX012'  @SARD   6                       ULX012
+      *                                                                   ULX012
+      **  If feature ULX012 is installed.                                 ULX012
+     C           @RTCD     IFEQ *BLANKS                                   ULX012
+     C                     MOVE 'Y'       ULX012                          ULX012
+     C                     ENDIF                                          ULX012
+      *
+      ***  KLIST definition
+      *
+     C           RRKEY     KLIST                           ERGUARL1 key
+     C**********           KFLD           KRCUS   60                                         CSD027A
+     C                     KFLD           KRCUS   6                                          CSD027A
+     C                     KFLD           KUTSI   1
+     C**********           KFLD           KUTSR  18                                           CER001
+     C                     KFLD           KUTSR  24                                           CER001
+     C                     KFLD           KGSEQ   30
+      *
+     C           KCLOAN    KLIST                           CLOAN key
+     C**********           KFLD           KLNRF   60                                          CLE148
+     C                     KFLD           KLNRF   6                                           CLE148
+      *
+     C           KDEALS    KLIST                           DEALS Key
+     C                     KFLD           KDLNO   60
+      *
+     C           KFCLTY    KLIST                           FCLTY key
+     C**********           KFLD           KCNUM   60                                         CSD027A
+     C                     KFLD           KCNUM   6                                          CSD027A
+     C                     KFLD           KFACT   30
+     C                     KFLD           KFCNO   20
+     C                     KFLD           KRCTP   1
+      *
+     C********** KFCLTX    KLIST                           FCLTYMY6 key                ULX004 CER001
+     C           KFCLTX    KLIST                           LEFCX2L0 key                       CER001
+     C**********           KFLD           KCNUM   60                                  ULX004 CSD027A
+     C                     KFLD           KCNUM   6                                          CSD027A
+     C                     KFLD           KFACT   30                      ULX004
+     C                     KFLD           KFCNO   20                      ULX004
+      *
+     C           KACCNT    KLIST                           ACCNT key
+     C**********           KFLD           KCNUM   60                                         CSD027A
+     C                     KFLD           KCNUM   6                                          CSD027A
+     C                     KFLD           KCCY    3
+     C**********           KFLD           KACOD   40                                         CER001
+     C                     KFLD           KACOD  100                                         CER001
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KBRCA   3
+      *
+     C           KACNUM    KLIST                           ACNUM key
+     C                     KFLD           KACNO  100
+      *
+      **  KLIST to access on CPOSN
+      *
+     C           WCPOSN    KLIST                                          ULX004
+     C                     KFLD           X2CSBA                          ULX004
+     C                     KFLD           X2CSSC                          ULX004
+     C                     KFLD           X2CSCN                          ULX004
+      *
+      **  KLIST to access on BKPHD
+      *
+     C           WBKPHD    KLIST                                          ULX004
+     C                     KFLD           XXBHSC                          ULX004
+     C                     KFLD           XXBHBA                          ULX004
+     C                     KFLD           XXBHBK                          ULX004
+     C                     KFLD           XXBHMK                          ULX004
+     C                     KFLD           XXBHTV                          ULX004
+      *
+      **  KLIST to access on BKPOS
+      *
+     C           WBKPOS    KLIST                                          ULX004
+     C                     KFLD           XXBHSC                          ULX004
+     C                     KFLD           XXBHBA                          ULX004
+     C                     KFLD           XXBHBK                          ULX004
+     C                     KFLD           XXBHMK                          ULX004
+     C                     KFLD           XXBHTV                          ULX004
+     C                     KFLD           XXBPPD                          ULX004
+     C*
+     C           CPPKA     KLIST                                          ULX004
+     C                     KFLD           KINVT   3                       ULX004
+     C                     KFLD           KCCY    3                       ULX004
+      *
+     C           INVKA     KLIST                                          ULX004
+     C                     KFLD           NMCY                            ULX004
+     C                     KFLD           SITP                            ULX004
+     C*
+     C           KEYPT     KLIST                                          ULX004
+     C                     KFLD           PTYPE   2                       ULX004
+     C                     KFLD           SESN                            ULX004
+     C                     KFLD           PDAT    50                      ULX004
+     C**********           KFLD           PCUS    60                                  ULX004 CSD027A
+     C                     KFLD           PCUS    6                                          CSD027A
+      *
+     C           KEYPTP    KLIST                                          ULX004
+     C                     KFLD           PTYPE                           ULX004
+     C                     KFLD           SESN                            ULX004
+      *                                                                   ULX012
+     C           KERGU     KLIST                                          ULX012
+     C                     KFLD           WMODI   2                       ULX012
+     C**********           KFLD           WCNUM   60                                  ULX012 CSD027A
+     C                     KFLD           WCNUM   6                                          CSD027A
+     C                     KFLD           WTRTY  13                       ULX012
+     C                     KFLD           WCURR   3                       ULX012
+      *                                                                   ULX012
+     C                     MOVE 'SE'      WMODI                           ULX012
+      *
+     C           *LIKE     DEFN BHTV      XXBHTV                          ULX004
+     C           *LIKE     DEFN BPPD      XXBPPD                          ULX004
+      *
+     C                     ENDSR
+      /EJECT
+      * =========================================================== *
+      ***        S T A N D A R D    S U B R O U T I N E S         ***
+      * =========================================================== *
+     C/COPY ZSRSRC,ZCCYCN
+      * Convert amount From CCY inTO another CCY
+      * Input fields  : From : ZAMTF (15,0), ZCCYF(3), ZRATEF (13,8)
+      *                        ZMDINF (1), ZCDPF (1,0)
+      *                 To   : ZCCYT(3), ZRATET (13,8)
+      *                        ZMDINT (1), ZCDPT (1,0)
+      * Output fields : ZAMTT (15,0), ZCRSRCT (13,8), ZCRSMD (1)
+      /EJECT
+     C/COPY ZSRSRC,ZYMTXZ2                                                ULX004
+      /EJECT
+     C/COPY ZSRSRC,ZAPNUM                                                 ULX004
+      /EJECT
+      * =========================================================== *
+      ***                      A R R A Y S                        ***
+      * =========================================================== *
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2005
+**  POWER  (7,3)  For ZCCYCN subroutine
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

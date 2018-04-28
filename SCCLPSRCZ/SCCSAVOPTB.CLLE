@@ -1,0 +1,48 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SC Save Options Config. - Initialisation')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCCSAVOPTB - Save Options Configuration - Initialisation    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CBF002  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CBF002 - BF Infrastructure: Backup and Recovery             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Copy JNSTAT and TAPOPT to SCSVOPTPD */
+ 
+             CALL       PGM(SCSAVOPT)  PARM(&PRTCD)
+             IF         COND(&PRTCD *NE '      ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Job +
+                          terminated - ' *CAT &PRTCD *CAT ' issue +
+                          in file SCSVOPTPD') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+END:
+             ENDPGM
+ 

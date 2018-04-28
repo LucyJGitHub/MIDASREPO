@@ -1,0 +1,591 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL IR swap rates list')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - FRA/IRS Module                                       *
+     F*                                                               *
+     F*  DL1936 - SWAP RATES LIST                                     *
+     F*                                                               *
+     F*  Function: To print a list of Swap Rates.                     *
+     F*            Each list can be selected by Currency.             *
+     F*                                                               *
+     F*  Called By: DLC1936 - Swap Rates List Control                 *
+     F*                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CIR013             Date 25Apr05               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 203249             Date 15Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CIR001             Date 13Jun95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Add method 9 - actual/365, 366 for Feb 29 period.   *
+      *  203249 - If currency changed and overflow encountered, the   *
+      *           previous currency read is printed on the next page  *
+      *           instead of the current currency.                    *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+     F*  CIR001 - Interest Rate Calendars                             *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,DL1936F001
+     FDLSWPRL3IF  E           K        DISK         KINFSR *PSSR
+     FDLIRDFL1IF  E           K        DISK         KINFSR *PSSR
+     FDL1936P1O   E             05     PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL
+     FDL1936AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    04  - OUTPUT INT.CAL.MTH, FREQUENCY CODE AND NAMES         *
+     F*    05  - OVERFLOW INDICATOR DL1936P1                          *
+     F*    06  - CHANGE OF INT.CAL.MTH.                               *
+     F*    07  - CHANGE OF CURRENCY                                   *
+     F*    14  - END OF FILE DLSWPRL3                                 *
+     F*    16  - CHAIN FAIL DLSWPRL3                                  *
+     F*    54  - AT LEAST ONE SET OF DETAILS OUTPUT - USED FOR        *
+     F*          PRINTER FILE CONDITIONING.                           *
+     F*    80  - DATA BASE ERROR INDICATOR                            *
+     F*                                                               *
+     F*  U7+U8 - DATA BASE ERROR (JOB SWITCH)                         *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  #B     - MAIN PROCESSING                                     *
+     F*  ZA0150 - STANDARD SUBROUTINE TO ACCESS I.C.D.                *
+     F*  #A     - INITIAL PROCESSING                                  *
+     F*  #C     - TERMINATION PROCESSING                              *
+     F*  #CA    - FILE CONTROL PROCESSING                             *
+     F*  ZEDIT  - EDIT A NUMERIC FIELD FOR DISPLAY                    *
+     F*  *PSSR  - ERROR HANDLING SUBROUTINE                           *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E*
+     E                    CPY@    1   1 80
+     E***********         INC     1   6 22                                CIR004
+     E***********         INC     1   7 22                                             CIR004 CIR013
+     E                    INC     1   8 22                                                    CIR013
+     E                    FRN     1   2 20
+     E**  COPYRIGHT ARRAY.
+     E*
+     E/COPY ZSRSRC,ZEDITZ1
+     E*
+     E/EJECT
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     ISDBANK    E DSSDBANKPD
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     ISDCURR    E DSSDCURRPD
+     I* CURRENCY DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     ISCSARD    E DSSCSARDPD                                              CIR004
+      ** Data Structure for Switchable Feature Details                    CIR004
+      *                                                                   CIR004
+     IPSDS       SDS
+     I**  PROGRAM STATUS DATA STRUCTURE
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I*
+     IDBERR       DS                            256
+     I** DATA AREA FOR DATABASE ERROR INFORMATION
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISPOOL       DS
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE - AU REPORT
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I/EJECT
+     C*
+     C**  INITIAL PROCESSING
+     C                     EXSR #A
+     C*
+     C**  MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**  TERMINATION PROCESSING
+     C                     EXSR #C
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #B - MAIN PROCESSING.                                        *
+     C*       CONTROLS SET UP OF DL1936P1 DETAILS.                    *
+     C*       OUTPUTS DL1936P1 DETAILS.                               *
+     C*                                                               *
+     C*  CALLED BY:  CONTROL PROCESSING                               *
+     C*                                                               *
+     C*  CALLS       ZEDIT  - EDIT A NUMERIC FIELD FOR DISPLAY        *
+     C*                                                               *
+     C*  USES:       @CALC  - TOTAL NUMBER OF DETAILS OUTPUT          *
+     C*              ORCCY  - CURRENCY OF LAST RECORD READ            *
+     C*              OINCL  - INT.CAL.MTH. OF LAST RECORD READ        *
+     C*              ZFIELD - INPUT FIELD TO ZEDIT                    *
+     C*              ZADEC  - DECIMAL PLACES USED BY ZEDIT            *
+     C*              SEQ    - RCF - SEQUENCE NUMBER OF REPORT         *
+     C*              SENTY  - RCF - ENTITY OF REPORT (BLANK)          *
+     C*              SFILE  - RCF - REPORT FILE NAME                  *
+     C*              ZSNUM  - RCF - REPORT FILE NUMBER (DECIMAL)      *
+     C*              SFNUM  - RCF - REPORT FILE NUMBER (BINARY)       *
+     C*              ZSERR  - RCF - ERROR IN ZSFILE                   *
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C** DO UNTIL END OF SWAP RATES FILE
+     C           *IN14     DOWNE'1'
+     C*
+     C** RESET CHANGE OF CURRENCY AND CHANGE OF INT.CAL.MTH. INDICATORS
+     C                     MOVE '0'       *IN06
+     C                     MOVE '0'       *IN07
+     C*
+     C** READ THE SWAP RATES FILE
+     C                     READ DLSWPRL3                 14
+     C*
+     C** IF END OF FILE THEN GOTO END
+     C           *IN14     IFEQ '1'
+     C                     MOVE '1'       *INLR
+     C                     GOTO #B9
+     C                     END
+     C*
+     C** IF CURRENCY CHANGED INDICATE CHANGE OF CURRENCY AND INT.CAL.MTH
+     C           IRCCY     IFNE ORCCY
+     C                     MOVE '1'       *IN07
+     C                     MOVE '1'       *IN06
+     C                     END
+     C*
+     C** IF INT.CAL.MTH CHANGED INDICATE CHANGE INT.CAL.MTH ONLY
+     C           IRINCL    IFNE OINCL
+     C                     MOVE '1'       *IN06
+     C                     END
+     C*
+     C/COPY WNCPYSRC,DL1936C001
+     C**  IF DATA BASE ERROR HAS OCCURRED NO MORE PROCESSING IN THIS
+     C**  ROUTINE
+     C           *IN80     IFEQ '1'
+     C                     GOTO #B9
+     C                     END
+     C*
+     C** OPEN PRINTER FILE AND INDICATE THAT THERE IS AT LEAST ONE
+     C** DETAIL TO REPORT; ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C           *IN54     IFEQ '0'
+     C                     OPEN DL1936P1
+     C                     MOVE '1'       *IN54
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C**
+     C           ZSERR     IFEQ 'Y'
+      *
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     END
+     C*
+     C***IF*OVERFLOW*INDICATOR*IS*ON*THROW*PAGE*AND*WRITE*HEADER                              203249
+     C********** *IN05     IFEQ '1'                                                           203249
+     C**********           WRITEDL1936R0                                                      203249
+     C**********           END                                                                203249
+     C*
+     C/COPY WNCPYSRC,DL1936C002
+     C** IF THERE IS A CHANGE OF CURRENCY ACCESS CURRENCY DETAILS
+     C           *IN07     IFEQ '1'
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM IRCCY     @CRKEY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     Z-ADD1         DBASE            * DBERR 001 *
+     C                     MOVELIRCCY     DBKEY            *************
+     C                     EXSR *PSSR
+     C                     GOTO #B9
+     C                     END
+     C*
+     C** IF OVERFLOW INDICATOR IS OFF (IE. NEW PAGE NOT JUST STARTED)
+     C** THEN WRITE HEADING FOR PRINTER FILE
+     C           *IN05     IFEQ '0'
+     C                     WRITEDL1936R0
+     C                     END
+     C*
+     C                     END
+      *                                                                                       203249
+      ** If overflow indicator is on, write next page and header                              203249
+      *                                                                                       203249
+     C           *IN05     IFEQ '1'                                                           203249
+     C                     WRITEDL1936R0                                                      203249
+     C                     END                                                                203249
+     C*
+     C           *IN06     IFEQ '1'
+     C*
+     C* SET UP THE INT.CAL.MTH NAME
+     C                     SELEC
+     C           IRINCL    WHEQ '1'
+     C                     MOVELINC,1     RINCN
+     C           IRINCL    WHEQ '2'
+     C                     MOVELINC,2     RINCN
+     C           IRINCL    WHEQ '3'
+     C                     MOVELINC,3     RINCN
+     C           IRINCL    WHEQ '4'
+     C                     MOVELINC,4     RINCN
+     C           IRINCL    WHEQ '5'
+     C                     MOVELINC,5     RINCN
+     C           IRINCL    WHEQ '6'
+     C                     MOVELINC,6     RINCN
+     C           IRINCL    WHEQ '7'                                CIR004
+     C           CIR004    ANDEQ'Y'                                CIR004
+     C                     MOVELINC,7     RINCN                    CIR004
+     C           IRINCL    WHEQ '9'                                                           CIR013
+     C                     MOVELINC,8     RINCN                                               CIR013
+     C                     ENDSL
+     C*
+     C* SET UP THE FREQUENCY NAME
+     C                     SELEC
+     C           IRFREQ    WHEQ 'X'
+     C                     MOVELFRN,1     RFRQN
+     C           IRFREQ    WHEQ 'Y'
+     C                     MOVELFRN,2     RFRQN
+     C                     ENDSL
+     C                     END
+     C*
+     C** IF CHANGE OF INT.CAL.MTH. OR OVERFLOW INDICATOR ON THEN INDICATE
+     C** OUTPUT OF INT.CAL.MTH, FREQUENCY CODE AND NAMES
+     C           *IN06     IFEQ '1'
+     C           *IN05     OREQ '1'
+     C                     MOVE '1'       *IN04
+     C                     END
+     C*
+     C** YEARS, MONTHS, DAYS
+     C                     MOVEL*BLANK    RPDYR
+     C                     MOVEL*BLANK    RPDMN
+     C                     MOVEL*BLANK    RPDDY
+     C           IRPDYR    IFGT *ZERO
+     C                     MOVELIRPDYR    RPDYR
+     C                     END
+     C           IRPDMN    IFGT *ZERO
+     C                     MOVELIRPDMN    RPDMN
+     C                     END
+     C           IRPDDY    IFGT *ZERO
+     C                     MOVELIRPDDY    RPDDY
+     C                     END
+     C*
+     C** CONVERT RATE TO DISPLAY FORMAT
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE IRRATE    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SWRATE
+     C*
+     C** ACCESS DISCOUNT FACTORS
+     C           DLIRDK    KLIST
+     C                     KFLD           IRCCY
+     C                     KFLD           IRINCL
+     C                     KFLD           IRFREQ
+     C                     KFLD           IRMMDN
+     C           DLIRDK    CHAINDLIRDFL1             99    *
+     C           *IN99     IFEQ '0'
+     C*
+     C** CONVERT DISCOUNT FACTOR TO DISPLAY FORMAT
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE I2DF      ZFIELD
+     C                     Z-ADD9         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    DSCFCT
+     C*
+     C** CONVERT CUMMULATIVE DISCOUNT FACTOR TO DISPLAY FORMAT
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE I2CDF     ZFIELD
+     C                     Z-ADD9         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    CUMDSF
+     C                     ELSE
+     C                     MOVE *BLANK    DSCFCT
+     C                     MOVE *BLANK    CUMDSF
+     C                     END
+     C*
+     C** IF OVERFLOW INDICATOR ON THEN SET IT OFF
+     C           *IN05     IFEQ '1'
+     C                     MOVE '0'       *IN05
+     C                     END
+     C*
+     C** WRITE DETAIL RECORD TO DL1936P1
+     C                     WRITEDL1936R1
+     C*
+     C** SAVE CURRENCY AND INT.CAL.MTH. FOR COMPARISON TO NEXT READ
+     C                     MOVE IRCCY     ORCCY   3
+     C                     MOVE IRINCL    OINCL   1
+     C*
+     C** INCREMENT COUNT OF RECORDS OUTPUT
+     C                     ADD  1         @CALC
+     C*
+     C** SET OFF INDICATOR THAT OUTPUTS INT.CAL.MTH, FREQ. CODE & NAMES
+     C                     MOVE '0'       *IN04
+     C*
+     C/COPY WNCPYSRC,DL1936C003
+     C                     END
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C           #B9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ZA0150    - THIS SUBROUTINE CALLS THE ACCESS PROGRAM AOBANKR0*
+     C*              TO GET ICD.  *IN80 IS SET ON IN *PSSR IF THE     *
+     C*              CALL TO AOBANKR0 FAILS.  DETAILS OF THE ATTEMPTED*
+     C*              ACCESS ARE PLACED IN THE LDA IF ACCESS FAILS.    *
+     C*                                                               *
+     C*  CALLED BY:  #A - INITIAL PROCESSING                          *
+     C*                                                               *
+     C*****************************************************************
+     C           ZA0150    BEGSR
+     C**
+     C**   ACCESS BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** IF ACCESS PROGRAM FAILS CALL SR. *PSSR
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     Z-ADD2         DBASE            * DBERR 002 *
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           ZA0159    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A  - INITIAL PROCESSING                        *
+     C*                                                               *
+     C*  CALLED BY :  CONTROL PROCESSING                              *
+     C*                                                               *
+     C*  CALLS     :  ZA0150 - STANDARD SUBROUTINE TO ACCESS ICD      *
+     C*                                                               *
+     C*  USES:        SEQ    - RCF - SEQUENCE NUMBER OF REPORT        *
+     C*               @CALC  - TOTAL NUMBER OF DETAILS OUTPUT         *
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C*
+     C                     MOVEACPY@      BIS@   80
+      *                                                                   CIR004
+      ** Access Switchable Features Details                               CIR004
+      *                                                                   CIR004
+     C                     CALL 'AOSARDR0'                                CIR004
+     C                     PARM *BLANKS   PRTCD   7                       CIR004
+     C                     PARM '*VERIFY 'POPTN   7                       CIR004
+     C                     PARM 'CIR004'  PSARD   6                       CIR004
+     C           SCSARD    PARM SCSARD    DSFDY                           CIR004
+     C           PRTCD     IFEQ *BLANKS                                   CIR004
+     C                     MOVE 'Y'       CIR004  1                       CIR004
+     C                     ELSE                                           CIR004
+     C                     MOVE 'N'       CIR004                          CIR004
+     C                     ENDIF                                          CIR004
+     C*
+     C**  ACCESS INSTALLATION CONTROL DATA
+     C                     EXSR ZA0150
+     C*
+     C** IF SR. ZA0150 FAILS GOTO END
+     C           *IN80     IFEQ '1'
+     C                     GOTO #A9
+     C                     END
+     C*
+     C**  LOAD PRINTER FILE FIELDS WITH DATE AND TITLE
+     C                     MOVE BJURPT    RRTITL
+     C                     MOVE BJMRDT    RRRUNA
+     C*
+     C**  SET NUMBER OF RECORDS READ TO ZERO
+     C                     Z-ADD0         @CALC   50
+     C*
+     C           #A9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #C        - TERMINATION PROCESSING                           *
+     C*                                                               *
+     C*  CALLED BY : CONTROL PROCESSING                               *
+     C*                                                               *
+     C*  CALLS     : ZA0150 - STANDARD SUBROUTINE TO ACCESS I.C.D.    *
+     C*              #CA    - FILE CONTROL PROCESSING                 *
+     C*                                                               *
+     C*  USES:       SEQ    - RCF - SEQUENCE NUMBER OF REPORT         *
+     C*              SENTY  - RCF - ENTITY OF REPORT (BLANK)          *
+     C*              SFILE  - RCF - REPORT FILE NAME                  *
+     C*              ZSNUM  - RCF - REPORT FILE NUMBER (DECIMAL)      *
+     C*              SFNUM  - RCF - REPORT FILE NUMBER (BINARY)       *
+     C*              ZSERR  - RCF - ERROR IN ZSFILE                   *
+     C*                                                               *
+     C*****************************************************************
+     C           #C        BEGSR
+     C*
+     C** CALL ZSFILE  FOR AUDIT REPORT
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANK    SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+     C*
+     C** IF ERROR CODE = 'Y' THEN TERMINATE THE PROGRAM
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C**  IF DATA BASE ERROR HAS OCCURRED OUTPUT TOTAL REPORT HEADINGS;
+     C**  PRINT ERROR MESSAGE AND EXIT PROGRAM.
+     C           *IN80     IFEQ '1'
+     C                     WRITEDLTOTSR0
+     C                     WRITEDLTOTSR1
+     C                     GOTO #C9
+     C                     END
+     C*
+     C**  PRODUCE STANDARD TOTALS REPORT
+     C                     EXSR #CA
+     C*
+     C**  IF A DATA BASE ERROR HAS OCCURRED, BYPASS FURTHER PRODESSING
+     C           *INU7     CABEQ'1'       #C9
+     C*
+     C**  PRINTS 'END OF REPORT' IF *IN54 ON.
+     C           *IN54     IFEQ '1'
+     C                     WRITEDL1936R2
+     C                     END
+     C*
+     C                     RETRN
+     C           #C9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*  #CA - PRODUCES STANDARD TOTALS REPORT                      *
+     C*                                                              *
+     C*  CALLED BY:  #C                                        *
+     C*                                                              *
+     C*  CALLS:                                                 *
+     C*                                                              *
+     C*  USES:       @CALC  - TOTAL NUMBER OF DETAILS OUTPUT          *
+     C*                                                              *
+     C****************************************************************
+     C           #CA       BEGSR
+     C*
+     C**  SET UP CALCULATED NUMBER OF RECORDS FIELD
+     C                     Z-ADD@CALC     RRCALC
+     C*
+     C**  PRINT STANDARD TOTALS REPORT
+     C                     WRITEDLTOTSR0
+     C*
+     C           #CA9      ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZEDITZ2
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR - ERROR HANDLING SUBROUTINE.                           *
+     C*                                                               *
+     C*  CALLED BY:  EXECUTES WHENEVER FILE OR PROGRAM EXCEPTION      *
+     C*              ERROR OCCURS.                                    *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*  USES:                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVE 'DL1936  'DBPGM
+     C*
+     C** LOAD LDA WITH DATABASE ERROR INFORMATION FROM DBERR
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVE DBERR     @LDA
+     C                     OUT  @LDA
+     C*
+     C                     SETON                     U7U8LR
+     C*
+     C** SET ON DATABASE ERROR INDICATOR AND DUMP
+     C                     MOVE '1'       *IN80
+     C                     DUMP
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Misys International Banking Systems Ltd. 2001
+** INT.CAL.MTH NAMES
+ACTUAL/365
+ACTUAL/360
+30/360
+ACTUAL/365 (IGN 29FEB)
+ACTUAL/360 (IGN 29FEB)
+ACTUAL/ACTUAL
+Eurobond                                                                  CIR004
+ACTUAL/365 (366 29FEB)                                                                        CIR013
+** FREQUENCY NAMES
+SEMI-ANNUAL
+ANNUAL

@@ -1,0 +1,194 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+  SD STANDARD SUB-ROUTINE - ZF2C
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Purpose:
+  ~~~~~~~~
+   To calculate the nth working day forward from a given start date for
+   any two given currencies and (optional) locations.
+ 
+  Notes for when including in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  NB: ZHOLE, ZHOLI ,ZHOLDS & ZACCH should only be included in
+      a source program ONCE <<<-------
+ 
+   /COPY ZSRSRC,ZHOLE should be included in the 'E' specifications
+      This is an array that allows individual days in a year to be
+      accessed in the sub-routine.
+ 
+   /COPY ZSRSRC,ZF2CE should be included in the 'E' specifications
+      This defines two separate holiday arrays, one for each currency.
+      It is similar to ZHOLE.
+ 
+   /COPY ZSRSRC,ZHOLI should be included in the 'I' specifications
+      This includes a data structure specification that allows the
+      fields of the holiday record to be manipulated more easily.
+      It also contains a data structure that defines all the fields
+      used in the sub-routine.
+ 
+   /COPY ZSRSRC,ZF2CI should be included in the 'I' specifications
+      This is similar to ZHOLI, but does for ZF2CE what ZHOLI does for
+      ZHOLE. It also has a data structure to define fields that are
+      only used in ZF2C.
+ 
+   /COPY ZSRSRC,ZHOLDS should be included in the 'I' spec to define
+      the datastructure required for the call of the access program.
+ 
+   /COPY ZSRSRC,ZACCH should be included in the subroutine section
+      This sub-routine will access the holiday file as necessary and
+      sets up the holiday array for use by the main sub-routine.
+ 
+   /COPY ZSRSRC,ZF2C should be included in the subroutine section
+      This is the sub-routine that will actually determine the nth
+      working day forward from the given input date for the two
+      currencies.
+ 
+   Requirements:
+   ~~~~~~~~~~~~
+   Input:
+   ~~~~~
+   ZDAYNO - A five digit numeric field containing the day number, as a
+            number of days from 31DEC71, that we wish to calculate the
+            number of days forward from.
+ 
+   ZCCY1  - A three-character alphabetic field containing the name of
+            the first currency.
+ 
+   ZLOC1  - A three-character alphabetic field containing the name of
+            the first location. This field is optional and should be
+            blank if no location is to be specified.
+ 
+   ZCCY2  - A three-character alphabetic field containing the name of
+            the second currency.
+ 
+   ZLOC2  - A three-character alphabetic field containing the name of
+            the second location. This field is optional and should be
+            blank if no location is to be specified.
+ 
+   ZNRDYS - A two digit numeric field containing the number of days
+            forward that is to be calculated. Note that zero is a valid
+            value.
+ 
+   Procedure:
+   ~~~~~~~~~
+   1. - Move input date to output date.
+ 
+   2. - The following describes all the pre-checking that takes place
+        to determine if a file access is really necessary. Where input
+        values are checked to see if they are equal to previously
+        stored values, the meaning should be taken as: "currency and
+        location input match those stored and input date is between the
+        1st Jan and 31st Dec dates stored (inclusive)."
+ 
+   3. - If first currency input values equal first currency stored
+        values, then do not need file access for first currency.
+ 
+   3.1 - If second currency input values do not equal second currency
+         stored values, then need to set up work values and get holiday
+         record using ZACCH. Move result to second currency stored
+         value and second currency holiday array. No more pre-checking
+         is required.
+ 
+   3.2 - Otherwise, second currency input equals second currency stored
+         and so no more pre-checking is done.
+ 
+   4. - Otherwise, first currency input value may equal second currency
+        stored value and file access would not be required for first
+        currency.
+ 
+   4.1 - If second currency input value does not equal first currency
+         stored value, then need to set up work values and get holiday
+         record using ZACCH. Move result to first currency stored value
+         and finish pre-checking.
+ 
+   4.2 - Otherwise, second currency input equals first currency stored
+         value and so no more pre-checking is required.
+ 
+   5. - Otherwise, first currency input value does not equal either of
+        the stored values. However, second currency has still to be
+        checked against stored values as 3 & 4 failed and so 3.1, 3.2,
+        4.1 & 4.2 were not done.
+ 
+   6. - If second input value equals second stored value, then set up
+        work values with first input values and get holiday record
+        using ZACCH. Move result to first currency stored values. No
+        more pre-checking is required.
+ 
+   6.1 - Otherwise, second input value does not equal second stored
+         value, but may equal first. If it does, then set up work value
+         with first input value and get record using ZACCH. Move result
+         to second stored value. No more pre-checking is required.
+ 
+   7. - Otherwise, second input value does not equal either of the
+        stored values. Therefore, need to do file access for each
+        currency, so do them in turn. Move results to first stored
+        value and second stored value respectively.
+ 
+   8. - This marks the end of the pre-checking. Continue with the rest
+        of the process:
+ 
+   9. - If both currencies returned no record found, then just add no.
+        of days forward to input date to give output date. No more
+        processing is required.
+ 
+   9.1 - Otherwise, at least one currency returned a record. Check to
+         see if second currency gave no record found. If so, then need
+         to move 1st. Jan/31st Dec dates from first stored value into
+         the file fields.
+ 
+   9.2 - Subtract the 1st. Jan date just retrieved from the input date
+         and add one to give a day in year number that is used as the
+         index value, ZINDX, for the holiday arrays ZHLA & ZHLB.
+ 
+   9.3 - If the no. of days forward required is zero and start date is
+         a holiday in EITHER currency (or both), then change the no. of
+         days to one.
+ 
+   9.4 - While the no. of working days still to find is greater than
+         zero, do the following:
+ 
+   9.4.1 - Add one to the day in year index and to the output date.
+ 
+   9.4.2 - If the output date is beyond the 31st Dec date, then access
+           holiday file with new parameters for BOTH currencies:
+ 
+   9.4.2.1 - Input date is current output date; no. of days forward is
+             just the no. still left to find.
+ 
+   9.4.2.2 - If no record was found for BOTH currencies then add no. of
+             days forward to output date and subtract one to give the
+             correct output date. Set no. of days to find to zero to
+             terminate while loop.
+ 
+   9.4.2.3 - Otherwise, at least one record was found. If no record was
+             found for second currency, then move first stored 1st Jan/
+             31st Dec dates to the file fields. Re-set the day in year
+             index value to one.
+ 
+   9.4.3 - If the value in ZHLA,ZINDX equals ' ' AND the value in
+           ZHLB,ZINDX also equals ' ', then the no. of working days
+           left to find is one less.
+ 
+   Output:
+   ~~~~~~
+   ZDYNBR - A five digit numeric field that contains the value of the
+            nth working day forward from the input date, expressed as a
+            number of days from 31DEC71.
+ 

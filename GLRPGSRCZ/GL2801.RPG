@@ -1,0 +1,631 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Fontis Details Display Selection')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-Fontis Interface                               *
+      *                                                               *
+      *  GL2801 - Fontis Details Display Selection                    *
+      *                                                               *
+      *  Function:  This program is called via GL3271 Account         *
+      *  Maintenance/Enquiry and determines whether the user wishes   *
+      *  to enter Fontis Interface Details.                           *
+      *                                                               *
+      *  Called By: GLC2800 - Fontis Accounts Details Maintenance     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG2368            Date 30Apr04               *
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL004 *CREATE     Date 22Jan97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  BUG2368- Programs looking at wrong dataarea for CSC022       *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL004 - Midas-Fontis Interface                              *
+      *                                                               *
+     F*****************************************************************
+     F*
+     FGL2801DFCF  E                    WORKSTN
+     F                                              KINFDS INFDS#
+     F                                              KINFSR SRFILE
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E*
+      *
+     E                    @STK      100 10   @REC    3 0
+      *
+      *  Subroutine stack
+      *
+      ** Array to hold commitment jobs name                                                   CSC022
+      *                                                                                       CSC022
+     E                    WCMT       10 10                                                    CSC022
+     E*
+     E*
+      *
+     IDSPGM     ESDSY2PGDSP
+      *
+      *  Program data structure
+      *
+     ILDA       E DSLDA                         256
+      *
+      *  Local data area for database error details
+      *  *LOCK IN LDA immediately before and OUT LDA immediately
+      *  after each database error handling.
+      *
+      *  Rename filler field on LDA                                       CRT001
+      *  CRT001 changes mean that there is now a field ZZ019 on APOSTPD   CRT001
+      *  and associated PFs, which are held in a DS in some CG programs.  CRT001
+      *  The same field in two DS causes those programs to fail to        CRT001
+      *  compile - hence this version of ZZ019 is renamed.                CRT001
+     I              ZZ019                           DBZZ19                CRT001
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     IERDTA     E DSCGERDTA
+      *
+      *  Send message data structure
+      *
+      *                                       1  10 ERPGM
+      *                                      11  20 ERFILE
+      *                                      21  50 ERKEY
+      *                                      51  550ERERNB
+      *                                      56 135 ERNARR
+      *                                     136 145 ERSTK
+      *                                     146 175 ERPREF
+      *
+     IM#DTA       DS                            256
+      *
+      *  Message Data - Action field
+      *
+      *                          Field Text
+     I                                        1  80 #MSGTX
+      *                          Data Text
+     I                                       81 256 ##MSGD
+     I*DSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I*                                       1 132 #MSDTA
+     I*                                     133 264 #MSTX1
+     I*#MSTX2      DS
+     I*                                       1 256 #MSTXA
+     I*                                     257 512 #MSTXB
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     I*
+     I*
+     I*EDTRCD: Cpysrc Templates Initialise Program I-spec
+      *
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+      *                                                                   S01241
+      *                                                                   S01241
+     IDATA        DS                           1024                       S01241
+      *                                                                   S01241
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      ** First DS for Access programs, Short Data Structure                                   CSC022
+      *                                                                                       CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      ** External DS for SAR Details                                                          CSC022
+      *                                                                                       CSC022
+     IWDSJOB    E DSSCCMTJOB                                                                  CSC022
+     I              COMITNUM                        WCMTNO                                    CSC022
+     I              COMITJOB1                       WJOB01                                    CSC022
+     I              COMITJOB2                       WJOB02                                    CSC022
+     I              COMITJOB3                       WJOB03                                    CSC022
+     I              COMITJOB4                       WJOB04                                    CSC022
+     I              COMITJOB5                       WJOB05                                    CSC022
+     I              COMITJOB6                       WJOB06                                    CSC022
+     I              COMITJOB7                       WJOB07                                    CSC022
+     I              COMITJOB8                       WJOB08                                    CSC022
+     I              COMITJOB9                       WJOB09                                    CSC022
+     I              COMITJOB10                      WJOB10                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      *                                                                                       CSC022
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           RTCD             Return Code
+     C                     PARM           YORN             Option Y/N
+     C*
+     C*  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C* Get Rundate - Rundate  *
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+     C                     MOVEL'Y'       YORN    1
+      *
+     C                     TIME           ##TME
+      * Obtain default message file
+     C                     MOVEL'GLUSRMSG'ZADFMF 10
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   PRTCD   7                                           CSC022
+     C                     PARM '*VERIFY' POPTN   7                                           CSC022
+     C                     PARM 'CSC022'  PSARD                                               CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           PRTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C                     MOVE 'N'       WCMTSK                                              CSC022
+      *                                                                                       CSC022
+     C                     IN   WDSJOB                                                        CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+     C                     Z-ADD1         I       20                                          CSC022
+      *                                                                                       CSC022
+     C           ##JOB     LOKUPWCMT,I                   50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ELSE                                                               CSC022
+     C           PRTCD     IFNE '*NRF'                                                        CSC022
+     C           *LOCK     IN   LDA                                                           CSC022
+     C                     MOVEL'CSC022'  DBFILE                                              CSC022
+     C                     MOVEL'SCSARDPD'DBKEY                                               CSC022
+     C                     Z-ADD1         DBASE                                               CSC022
+     C                     OUT  LDA                                                           CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           *LIKE     DEFN SARN      PSARD                                               CSC022
+     C************NAMVAR   DEFN           WDSJOB                                       CSC022BUG2368
+     C           *NAMVAR   DEFN SCCMTJOB  WDSJOB                                             BUG2368
+      *                                                                                       CSC022
+     C                     ENDIF                                                              CSC022
+      *
+     C                     MOVEL'N'       ##OPTN
+      *
+     C           ##OPTN    DOUEQ'Y'
+     C           ##OPTN    OREQ 'N'
+     C           *IN03     OREQ *ON
+     C           *IN12     OREQ *ON
+      *
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDFM1
+      *
+     C           *IN03     IFEQ *ON
+     C                     MOVEL'Y2U9999' RTCD    7
+     C                     RETRN
+     C                     END
+      *
+     C           *IN12     IFEQ *ON
+     C                     MOVEL'USR0790' RTCD
+     C                     RETRN
+     C                     END
+      *
+     C                     SETOF                     31
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+      *
+     C           ##OPTN    IFNE 'Y'
+     C           ##OPTN    ANDNE'N'
+     C           ##OPTN    IFNE ' '
+     C                     SETON                     31
+     C                     TIME           ##TME
+     C                     MOVEL'USR0911' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     SETON                     31
+     C                     TIME           ##TME
+     C                     MOVEL'USR0912' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+     C           ##OPTN    IFEQ 'N'
+     C                     MOVEL'N'       YORN
+     C                     END
+      *
+     C                     END
+      *
+     C                     RETRN
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      *
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+     C                     ENDSR
+      *================================================================
+      *================================================================
+     C*
+     C* PSSR Processing
+     C*
+     C*****************************************************************
+     C**  Subroutine *PSSR handles program errors.                   **
+     C**                                                             **
+     C**                                                             **
+     C**                                                             **
+     C*****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C                     DUMP
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     ROLBK                       90
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C*
+     C* If second time through, halt:
+     C*
+     C           @@PSSR    IFNE *BLANK
+     C                     SETON                     H1  LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C* Flag routine as started; define action code:
+     C*
+     C                     MOVE 'Y'       @@PSSR  1
+     C                     MOVE W0ACT     W0ACT   8
+     C* Select:
+     C                     SELEC
+     C*
+     C* Test field W0ACT (set externally but defined here):
+     C*___________________________________________________________________
+     C           W0ACT     WHNE '*PRINT  '
+     C           ##STCD    ANDEQ121                          array index
+     C           W0ACT     ORNE '*PRINT  '
+     C           ##STCD    ANDEQ122                          occurrence
+     C*
+     C* In diagnostic mode, with an array index error --
+     C*  issue a specific message and return:
+     C*
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'CGD1262' #MSGID  7
+     C                     PARM 'CGUSRMSG'#MSGF  10
+     C                     PARM *BLANKS   #MSGFL 10
+     C                     PARM *BLANKS   #MSGDT256
+     C                     PARM '*PRV '   #MSGR   5
+     C                     PARM '*'       #PRGM  10
+     C                     PARM 'MOPERQ ' #MSGQ  10
+     C                     PARM '*INFO  ' #MSGT   7
+     C*
+     C* Reset subroutine flag:
+     C*
+     C                     MOVE 'N'       @@PSSR
+     C*___________________________________________________________________
+     C           W0ACT     WHEQ '*PRINT  '
+     C*
+     C* In print mode --
+     C*  issue a specific message and return:
+     C*
+     C                     MOVE '*ERROR ' W0RTN   7
+     C*
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'CGD1262' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM *BLANKS   #MSGFL
+     C                     PARM *BLANKS   #MSGDT
+     C                     PARM '*PRV '   #MSGR
+     C                     PARM '*'       #PRGM
+     C                     PARM 'MOPERQ ' #MSGQ
+     C                     PARM '*INFO  ' #MSGT
+     C*
+     C* Reset subroutine flag:
+     C*
+     C                     MOVE 'N'       @@PSSR
+     C*___________________________________________________________________
+     C                     OTHER
+     C*
+     C* Any other mode or type of error.
+     C*
+     C* Set LDA values and format message for MOPERQ:
+     C*
+     C                     MOVE ##PGM     ERPGM
+     C                     MOVE ##RTVN    ERFILE
+     C           ##MSID    CAT  ##SQNO    ERKEY     P
+     C                     Z-ADD998       ERERNB
+     C                     MOVEL##MSWK    ERNARR
+     C*
+     C* Move data to the LDA data area:
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVELW0KEY     DBKEY
+     C                     Z-ADDW0ERNB    DBASE
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA
+     C*
+     C* Provide a fuller report:
+     C*
+     C                     MOVEA@STK      #@STK 100
+     C*
+     C                     CALL 'CGZERROR'             9090
+     C                     PARM           ##ERTN  7
+     C                     PARM           DSPGM
+     C                     PARM           ERDTA
+     C                     PARM           #@STK
+     C* End the program:
+     C                     SETON                     U7U8LR
+     C                     MOVE '*ERROR*' W0RTN   7
+     C                     RETRN
+     C*
+     C                     ENDSL
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C* File and Program Error Processing
+     C*
+      *****************************************************************
+      *                                                               *
+      *  SRFILE   : *PSSR routine for all files                       *
+      *                                                               *
+      *  CALLED BY: IBM controlled - invalid access to file           *
+      *                                                               *
+      *  CALLS    : CGZERROR                                          *
+      *                                                               *
+      * In the INIT sub-routine, the fields W0MSGD and W0MSGF should  *
+      * be set to the default message I.D and message file that are   *
+      * used for the module. If not, the defaults of MEM5002 and MIDAS*
+      * will be used.                                                 *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFILE    BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     ROLBK                       90
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      *  If called again seton LR and return
+      *
+     C           @@FILE    IFNE *BLANKS
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     MOVEL'Y'       @@FILE  1
+      *
+      *  Send message to MOPERQ
+      *
+     C                     MOVEL*BLANKS   ERDTA
+     C                     MOVEL##PGM     ERPGM
+      *
+     C           Q         IFGT 1
+     C           Q         ANDLT101
+     C                     MOVEL@STK,Q    ERSTK
+     C                     ELSE
+     C                     MOVEL'*Nostkin'ERSTK
+     C                     END
+      *
+     C                     MOVEL##ERST    ERKEY
+     C                     Z-ADD999       ERERNB
+     C                     MOVEL##ERFL    ERFILE
+     C                     MOVELW0PREF    ERPREF
+      *
+      * Get message for sending and place in msg field
+      *
+     C                     CALL 'SDRTVTXT'             9090
+     C                     PARM 'MEM5002' #MSGID
+     C                     PARM 'MIDAS   '#MSGF
+     C                     PARM *BLANKS   #MSGTX
+      *
+     C                     MOVEL#MSGTX    ERNARR
+      *
+      * Send message
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID  7
+     C                     PARM 'MIDAS  ' #MSGF  10
+     C                     PARM *BLANKS   #MSGFL 10
+     C                     PARM ERDTA     #MSGDT256
+     C                     PARM '*PRV'    #MSGR   5
+     C                     PARM '*'       #PRGM  10
+     C                     PARM 'MOPERQ ' #MSGQ  10
+     C                     PARM '*INFO  ' #MSGT   7
+      *
+      *  Fill LDA with error data
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELW0KEY     DBKEY
+     C                     Z-ADDW0ERNB    DBASE
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA
+      *
+      *  Close down program
+      *
+     C                     SETON                     U7U8LR
+     C                     MOVEL'*ERROR*' W0RTN   7
+     C*
+     C* Provide a fuller report:
+     C*
+     C                     MOVEA@STK      #@STK 100
+     C*
+     C                     CALL 'CGZERROR'             9090
+     C                     PARM           ##ERTN  7
+     C                     PARM           DSPGM
+     C                     PARM           ERDTA
+     C                     PARM           #@STK
+      *
+     C                     RETRN
+      *
+     CSR         EXFILE    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: All subroutines                                   *
+      *                                                               *
+      *  CALLS    : CGZERROR                                          *
+      *                                                               *
+      * In the INIT sub-routine, the fields W0MSGD and W0MSGF should  *
+      * be set to the default message I.D and message file that are   *
+      * used for the module. If not, the defaults of MEM5001 and MIDAS*
+      * will be used.                                                 *
+      *                                                               *
+      *****************************************************************
+     CSR         SRERR     BEGSR
+      *
+      *  Define work variables
+      *
+     C           *LIKE     DEFN ERKEY     W0KEY
+     C           *LIKE     DEFN ERERNB    W0ERNB
+     C           *LIKE     DEFN ERFILE    W0FILE
+     C           *LIKE     DEFN ERPREF    W0PREF           Primary Ref.
+      *
+     C           *LIKE     DEFN #MSGID    W0MSGD           Msg I.D.
+     C           *LIKE     DEFN #MSGF     W0MSGF           Msg File
+      *
+     C                     Z-ADDQ         Q       50
+      *
+      *  Dump program
+      *
+     C                     DUMP
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     ROLBK                       90
+     C                     ENDIF                                                              CSC022
+      *
+      *  Set up the details of the message to be sent to MOPERQ
+      *
+     C                     MOVEL*BLANKS   ERDTA
+     C                     MOVEL##PGM     ERPGM
+      *
+     C           Q         IFGT 1
+     C           Q         ANDLT101
+     C                     MOVEL@STK,Q    ERSTK
+     C                     ELSE
+     C                     MOVEL'*Nostkin'ERSTK
+     C                     END
+      *
+     C                     MOVELW0KEY     ERKEY
+     C                     Z-ADDW0ERNB    ERERNB
+     C                     MOVELW0FILE    ERFILE
+     C                     MOVELW0PREF    ERPREF
+      *
+      * Get message for message code. If the msg code or the msg file
+      * have not been set up then use the defaults.
+      *
+     C           W0MSGD    IFEQ *BLANKS
+     C                     MOVEL'MEM5001' C#FMSG  7
+     C                     ELSE
+     C                     MOVELW0MSGD    C#FMSG
+     C                     END
+      *
+     C           W0MSGF    IFEQ *BLANKS
+     C                     MOVEL'MIDAS   'C#FMSF 10
+     C                     ELSE
+     C                     MOVELW0MSGF    C#FMSF
+     C                     END
+      *
+     C                     CALL 'SDRTVTXT'             9090
+     C                     PARM C#FMSG    #MSGID
+     C                     PARM C#FMSF    #MSGF
+     C                     PARM *BLANKS   #MSGTX
+      *
+     C                     MOVEL#MSGTX    ERNARR
+      *
+      * Send message
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID  7
+     C                     PARM 'MIDAS  ' #MSGF  10
+     C                     PARM *BLANKS   #MSGFL 10
+     C                     PARM ERDTA     #MSGDT256
+     C                     PARM '*PRV '   #MSGR   5
+     C                     PARM '*'       #PRGM  10
+     C                     PARM 'MOPERQ ' #MSGQ  10
+     C                     PARM '*INFO  ' #MSGT   7
+      *
+      *  Fill LDA with error data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELW0KEY     DBKEY
+     C                     Z-ADDW0ERNB    DBASE
+     C                     MOVELW0FILE    DBFILE
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA
+      *
+      *  Close down program
+      *
+     C                     SETON                     U7U8LR
+     C                     MOVEL'*ERROR*' W0RTN   7
+     C*
+     C* Provide a fuller report:
+     C*
+     C                     MOVEA@STK      #@STK 100
+     C*
+     C                     CALL 'CGZERROR'             9090
+     C                     PARM           ##ERTN  7
+     C                     PARM           DSPGM
+     C                     PARM           ERDTA
+     C                     PARM           #@STK
+     C* End the program:
+     C                     RETRN
+      *
+     CSR         EXERR     ENDSR
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

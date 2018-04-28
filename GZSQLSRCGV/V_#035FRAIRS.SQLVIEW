@@ -1,0 +1,722 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#FRAIRS - Global FRA / IRS                                          */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2003                     */
+/*                                                                             */
+/*       Last Amend No. CSF011             Date 12Sep11                        */
+/*       Prev Amend No. CER059             Date 19Jul10                        */
+/*                      CER043             Date 02Jun08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 30May08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CAP185             Date 21Apr06                        */
+/*                      CIR014             Date 11May06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CDL038             Date 10May05                        */
+/*                      CAS010             Date 09Feb05                        */
+/*                      CDL028             Date 07Feb05                        */
+/*                      BG5842R            Date 31Mar05                        */
+/*                      BUG6190            Date 07Mar05                        */
+/*                      BUG5484            Date 19Jan05                        */
+/*                      BUG5404            Date 17Jan05                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      BUG1099 *CREATE    Date 11Feb04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       CAP185 - MQ Series Interface                                          */
+/*       CIR014 - Mark to Market Cross-currency Interest Rate Swaps            */
+/*                (Recompile)                                                  */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CDL038 - Extended Deal Sub Type                                       */
+/*       CAS010 - IAS + PB Enhancements Upgrade to MidasPlus (Recompile)       */
+/*       CDL028 - Automatic Rate Interpolations                                */
+/*       BG5842R - Standardise all base rate references                        */
+/*       BUG6190- Performance Enhancement "Order By"                           */
+/*       BUG5484- Performance Enhancement                                      */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       CLE025 - Credit Lines                                                 */
+/*       BUG1912- SQL performance analysis required                            */
+/*       BUG1099- New field FUNPCD from UNPCD.  Added BAPR.                    */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+   SELECT                                                                       :
+    HEDIN, USTRT, USPIN, UFRFD, UICFR, UICFD, UIPFD, TCUCY, TSTRT, TBRTE,       :
+    TRTSP, TSPIN, TEINR, TICBS, TFRFD, TICFR, TICFD, TNIPD,  TIPFR, TIPFD,      :
+    TBCXR, TAIPD, CLRAT, FLRAT, AVPER, TIRAT, AACRT, RSETM, CPPBK, PSETM,       :
+    CPRBK, SDCAR, DDTM, BRSQ, BYSL, TDSTI, TDNSI, UBRTE, UEINR, UICBS,          :
+    UIPFR, UBCXR, URACC, UPACC, UDNSI, UDSTI, UCUCY, URTSP, UINPM, UNPCD,       :
+    TINPM, UPFE, UPPR, URFIN, PSCY, RSCY, RECI, RCDT, RCDC, BRCA, DTYP,         :
+/***DLST,*BRKC,*BAGE,*TAXI,*FACO,*SPI,*ZZ059,*CNFI,*ACEI,*TLXI,*SETF,***********:            CDL038
+    DLST, CLAS, BRKC, BAGE, TAXI, FACO, SPI, ZZ059, CNFI, ACEI, TLXI, SETF,     :            CDL038
+    ZZ009, LSWC, LSWS, CHTP, BOKC, ORBR, ROBR, POBR, BAPR,                      :            BUG1099
+    PRFC, TRFIN, UOBRT, TOBRT, RONS, RIBN, RIBA, ROBN, ROCN, PONS, PIBN,        :
+    PIBA, POBN, POCN, RCRN, RCRA, RVNO, AWBN, AWBA, BENN, BENA, DTP1,           :
+    DTP2, DTP3, DTP4, DCHG, BTB1, BTB2, BTB3, BTB4, BTB5, BTB6, CVMR,           :
+    DSR1, DSR2, DSR3, DSR4, DSR5, DSR6, SSR1, SSR2, SSR3, SSR4, SSR5,           :
+    SSR6, CND1, CND2, CND3, CND4, CND5, CND6, ISDA, AGTY, AGVV,                 :
+    UFRRF, TFRRF, VDEI, MDEI, PDEI, IC72, FRNT, REPA, ZZ026, AGVC, CAIN,        :
+    L1CYP1, L1CYP2, L1CYP3, L1CYP4, L1CYP5, L1CYP6, L1CYP7, L1CYP8,             :
+    L1CYP9, L1CYP0, L1PDCN, L1AMCN, L1CYR1, L1CYR2, L1CYR3, L1CYR4,             :
+    L1CYR5, L1CYR6, L1CYR7, L1CYR8, L1CYR9, L1CYR0, L2CYP1, L2CYP2,             :
+    L2CYP3, L2CYP4, L2CYP5, L2CYP6, L2CYP7, L2CYP8, L2CYP9, L2CYP0,             :
+    L2PDCN, L2AMCN, L2CYR1, L2CYR2, L2CYR3, L2CYR4, L2CYR5, L2CYR6,             :
+    L2CYR7, L2CYR8, L2CYR9, L2CYR0, FSOYLC, FSTYLC, FIUSRI, FIDSTS,             :
+    FIAUTH, FSUEFR, FSTEFR, FSOFYC, FSTFYC, FSRKVL, FSRKSN, FIUSRA,             :
+    FIUSRX,                                                                     :
+    FSOSDT, FSOS1B, FSOS1D, FSOS2B, FSOS2D, FSOEDT, FSOE1B, FSOE1D, FSOE2B,     :             CDL028
+    FSOE2D, FSTSDT, FSTS1B, FSTS1D, FSTS2B, FSTS2D, FSTEDT, FSTE1B, FSTE1D,     :             CDL028
+    FSTE2B, FSTE2D,                                                             :             CDL028
+    DLNO,CNUM,UBRTT,TBRTT,RSTM,PSTM,CDAS,LNKDN,                                 :BUG6190
+    DDAT,VDAT,MDAT,UINFD,USLIP,UNICD,UICBD,UNIPD,                               :BUG6190
+    UIPBD,UIACD,TINFD,TSLIP,TNICD,TICBD,TIPBD,TIACD,                            :BUG6190
+    ULPCD,TLPCD,TNPCD,UPVD,BODD,BOVD,PLULRC,                                    :BUG6190
+    PLTLRC,LCD,AGDT,ORED,N.F1FCCU,N.F1FACT,N.F1FCNO,                            :BUG6190
+    DIGITS(DLNO)  AS PADDLNO,                                                   :
+****DIGITS(CNUM)**AS*PADCNUM,***************************************************:             CSD027
+           CNUM   AS PADCNUM,                                                   :             CSD027
+    DIGITS(UBRTT) AS PADUBRTT,                                                  :
+    DIGITS(TBRTT) AS PADTBRTT,                                                  :
+    DIGITS(RSTM)  AS PADRSTM,                                                   :
+    DIGITS(PSTM)  AS PADPSTM,                                                   :
+    DIGITS(CDAS)  AS PADCDAS,                                                   :
+    DIGITS(BRSQ)  AS PADBRSQ,                                                   :            BG5842R
+    DIGITS(FSOS1B) AS PADFSOS1B,                                                :             CDL028
+    DIGITS(FSOS2B) AS PADFSOS2B,                                                :             CDL028
+    DIGITS(FSOE1B) AS PADFSOE1B,                                                :             CDL028
+    DIGITS(FSOE2B) AS PADFSOE2B,                                                :             CDL028
+    DIGITS(FSTS1B) AS PADFSTS1B,                                                :             CDL028
+    DIGITS(FSTS2B) AS PADFSTS2B,                                                :             CDL028
+    DIGITS(FSTE1B) AS PADFSTE1B,                                                :             CDL028
+    DIGITS(FSTE2B) AS PADFSTE2B,                                                :             CDL028
+    CASE WHEN RECI = 'R' THEN 'DELETED' ELSE                                    :
+    CASE WHEN RECI = 'M' THEN 'MATURED' ELSE                                    :
+    CASE WHEN RECI = 'D' AND FIDSTS = 'C' THEN 'COMPLETE' ELSE                  :
+    CASE WHEN RECI = 'D' AND FIDSTS = 'A' THEN 'AUTHORISED' ELSE                :
+    CASE WHEN RECI = 'D' AND FIDSTS = 'R' THEN 'REQUIRES REAUTHORISATION'       :
+    END END END END END AS PADSTS,                                              :
+    CASE WHEN LNKDN = 0 THEN ' ' ELSE DIGITS(LNKDN) END AS PADLNKDN,            :
+    CASE WHEN LAND(X'08',UDNSI) <> X'00' THEN 'Y' ELSE 'N' END AS UDNSI3,       :
+    CASE WHEN LAND(X'01',UDNSI) <> X'00' THEN 'Y' ELSE 'N' END AS UDNSI0,       :
+    CASE WHEN LAND(X'08',TDNSI) <> X'00' THEN 'Y' ELSE 'N' END AS TDNSI3,       :
+    CASE WHEN LAND(X'01',TDNSI) <> X'00' THEN 'Y' ELSE 'N' END AS TDNSI0,       :
+    CASE WHEN LAND(X'04',UDSTI) <> X'00' THEN 'Y' ELSE 'N' END AS UDSTI2,       :
+    CASE WHEN LAND(X'04',TDSTI) <> X'00' THEN 'Y' ELSE 'N' END AS TDSTI2,       :
+    CASE WHEN LAND(X'80',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS  CNFI7,        :
+    CASE WHEN LAND(X'20',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS  CNFI5,        :
+    CASE WHEN LAND(X'10',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS  CNFI4,        :
+    CASE WHEN LAND(X'08',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS  CNFI3,        :
+    CASE WHEN LAND(X'04',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS  CNFI2,        :
+    CASE WHEN LAND(X'01',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS  CNFI0,        :
+    CASE WHEN LAND(X'04',ACEI) <> X'00' THEN 'Y' ELSE 'N' END AS  ACEI2,        :
+    CASE WHEN LAND(X'02',ACEI) <> X'00' THEN 'Y' ELSE 'N' END AS  ACEI1,        :
+    CASE WHEN LAND(X'01',ACEI) <> X'00' THEN 'Y' ELSE 'N' END AS  ACEI0,        :
+    CASE WHEN LAND(X'10',TLXI) <> X'00' THEN 'Y' ELSE 'N' END AS  TLXI4,        :
+    CASE WHEN LAND(X'08',TLXI) <> X'00' THEN 'Y' ELSE 'N' END AS  TLXI3,        :
+    CASE WHEN BAGE = 0 THEN ' '  ELSE DIGITS(BAGE)  END AS PADBAGE,             :
+    CASE WHEN UFRFD = 0 THEN ' ' ELSE DIGITS(UFRFD) END AS PADUFRFD,            :
+    CASE WHEN TFRFD = 0 THEN ' ' ELSE DIGITS(TFRFD) END AS PADTFRFD,            :
+    CASE WHEN URTSP = 0 THEN ' ' ELSE DIGITS(URTSP) END AS PADURTSP,            :
+    CASE WHEN TRTSP = 0 THEN ' ' ELSE DIGITS(TRTSP) END AS PADTRTSP,            :
+    CASE WHEN UICFD = 0 THEN ' ' ELSE DIGITS(UICFD) END AS PADUICFD,            :
+    CASE WHEN TICFD = 0 THEN ' ' ELSE DIGITS(TICFD) END AS PADTICFD,            :
+    CASE WHEN USTRT = 0 THEN ' ' ELSE DIGITS(USTRT) END AS PADUSTRT,            :
+    CASE WHEN TSTRT = 0 THEN ' ' ELSE DIGITS(TSTRT) END AS PADTSTRT,            :
+    CASE WHEN UIPFD = 0 THEN ' ' ELSE DIGITS(UIPFD) END AS PADUIPFD,            :
+    CASE WHEN TIPFD = 0 THEN ' ' ELSE DIGITS(TIPFD) END AS PADTIPFD,            :
+    CASE WHEN CLRAT = 0 THEN ' ' ELSE DIGITS(CLRAT) END AS PADCLRAT,            :            BUG1099
+    CASE WHEN FLRAT = 0 THEN ' ' ELSE DIGITS(FLRAT) END AS PADFLRAT,            :            BUG1099
+****CASE*WHEN*ROCN*=*0*THEN*'*'* ELSE*DIGITS(ROCN)**END*AS*PADROCN,*************:             CSD027
+****CASE*WHEN*ROBN*=*0*THEN*'*'* ELSE*DIGITS(ROBN)**END*AS*PADROBN,*************:             CSD027
+****CASE*WHEN*POCN*=*0*THEN*'*'* ELSE*DIGITS(POCN)**END*AS*PADPOCN,*************:             CSD027
+****CASE*WHEN*POBN*=*0*THEN*'*'* ELSE*DIGITS(POBN)**END*AS*PADPOBN,*************:             CSD027
+    CASE WHEN ROCN ='' THEN ' '  ELSE        ROCN   END AS PADROCN,             :             CSD027
+    CASE WHEN ROBN ='' THEN ' '  ELSE        ROBN   END AS PADROBN,             :             CSD027
+    CASE WHEN POCN ='' THEN ' '  ELSE        POCN   END AS PADPOCN,             :             CSD027
+    CASE WHEN POBN ='' THEN ' '  ELSE        POBN   END AS PADPOBN,             :             CSD027
+    CASE WHEN AGVV = 0 THEN ' '  ELSE DIGITS(AGVV)  END AS PADAGVV,             :
+    CASE WHEN DDAT=0 THEN NULL ELSE DATE(DDAT+719892) END AS FDDAT,             :
+    CASE WHEN VDAT=0 THEN NULL ELSE DATE(VDAT+719892) END AS FVDAT,             :
+    CASE WHEN MDAT=0 THEN NULL ELSE DATE(MDAT+719892) END AS FMDAT,             :
+    CASE WHEN UINFD=0 THEN NULL ELSE DATE(UINFD+719892) END AS FUINFD,          :
+    CASE WHEN USLIP=0 THEN NULL ELSE DATE(USLIP+719892) END AS FUSLIP,          :
+    CASE WHEN UNICD=0 THEN NULL ELSE DATE(UNICD+719892) END AS FUNICD,          :
+    CASE WHEN UICBD=0 THEN NULL ELSE DATE(UICBD+719892) END AS FUICBD,          :
+    CASE WHEN UNIPD=0 THEN NULL ELSE DATE(UNIPD+719892) END AS FUNIPD,          :
+    CASE WHEN UIPBD=0 THEN NULL ELSE DATE(UIPBD+719892) END AS FUIPBD,          :
+    CASE WHEN UIACD=0 THEN NULL ELSE DATE(UIACD+719892) END AS FUIACD,          :
+    CASE WHEN TINFD=0 THEN NULL ELSE DATE(TINFD+719892) END AS FTINFD,          :
+    CASE WHEN TSLIP=0 THEN NULL ELSE DATE(TSLIP+719892) END AS FTSLIP,          :
+    CASE WHEN TNICD=0 THEN NULL ELSE DATE(TNICD+719892) END AS FTNICD,          :
+    CASE WHEN TICBD=0 THEN NULL ELSE DATE(TICBD+719892) END AS FTICBD,          :
+    CASE WHEN TNIPD=0 THEN NULL ELSE DATE(TNIPD+719892) END AS FTNIPD,          :
+    CASE WHEN TIPBD=0 THEN NULL ELSE DATE(TIPBD+719892) END AS FTIPBD,          :
+    CASE WHEN TIACD=0 THEN NULL ELSE DATE(TIACD+719892) END AS FTIACD,          :
+    CASE WHEN ULPCD=0 THEN NULL ELSE DATE(ULPCD+719892) END AS FULPCD,          :
+    CASE WHEN TLPCD=0 THEN NULL ELSE DATE(TLPCD+719892) END AS FTLPCD,          :
+    CASE WHEN TNPCD=0 THEN NULL ELSE DATE(TNPCD+719892) END AS FTNPCD,          :
+    CASE WHEN UNPCD=0 THEN NULL ELSE DATE(UNPCD+719892) END AS FUNPCD,          :            BUG1099
+    CASE WHEN UPVD=0 THEN NULL ELSE DATE(UPVD+719892) END AS FUPVD,             :
+    CASE WHEN BODD=0 THEN NULL ELSE DATE(BODD+719892) END AS FBODD,             :
+    CASE WHEN BOVD=0 THEN NULL ELSE DATE(BOVD+719892) END AS FBOVD,             :
+    CASE WHEN PLULRC=0 THEN NULL ELSE DATE(PLULRC+719892) END AS FPLULRC,       :
+    CASE WHEN PLTLRC=0 THEN NULL ELSE DATE(PLTLRC+719892) END AS FPLTLRC,       :
+    CASE WHEN LCD=0 THEN NULL ELSE DATE(LCD+719892) END AS FLCD,                :
+    CASE WHEN AGDT=0 THEN NULL ELSE DATE(AGDT+719892) END AS FAGDT,             :
+    CASE WHEN ORED=0 THEN NULL ELSE DATE(ORED+719892) END AS FORED,             :
+    CASE WHEN FSOSDT=0 THEN NULL ELSE DATE(FSOSDT+719892) END AS FFSOSDT,       :             CDL028
+    CASE WHEN FSOS1D=0 THEN NULL ELSE DATE(FSOS1D+719892) END AS FFSOS1D,       :             CDL028
+    CASE WHEN FSOS2D=0 THEN NULL ELSE DATE(FSOS2D+719892) END AS FFSOS2D,       :             CDL028
+    CASE WHEN FSOEDT=0 THEN NULL ELSE DATE(FSOEDT+719892) END AS FFSOEDT,       :             CDL028
+    CASE WHEN FSOE1D=0 THEN NULL ELSE DATE(FSOE1D+719892) END AS FFSOE1D,       :             CDL028
+    CASE WHEN FSOE2D=0 THEN NULL ELSE DATE(FSOE2D+719892) END AS FFSOE2D,       :             CDL028
+    CASE WHEN FSTSDT=0 THEN NULL ELSE DATE(FSTSDT+719892) END AS FFSTSDT,       :             CDL028
+    CASE WHEN FSTS1D=0 THEN NULL ELSE DATE(FSTS1D+719892) END AS FFSTS1D,       :             CDL028
+    CASE WHEN FSTS2D=0 THEN NULL ELSE DATE(FSTS2D+719892) END AS FFSTS2D,       :             CDL028
+    CASE WHEN FSTEDT=0 THEN NULL ELSE DATE(FSTEDT+719892) END AS FFSTEDT,       :             CDL028
+    CASE WHEN FSTE1D=0 THEN NULL ELSE DATE(FSTE1D+719892) END AS FFSTE1D,       :             CDL028
+    CASE WHEN FSTE2D=0 THEN NULL ELSE DATE(FSTE2D+719892) END AS FFSTE2D,       :             CDL028
+****DEC(BAGE*C1.SCALING,31,4) AS "SBAGE",***************************************:BUG5484
+****DEC(BAGE*C1.SCALING*C1.RATE,31,4) AS "BSBAGE",******************************:BUG5484
+****DEC(UPAMT*C1.SCALING,31,4) AS "SUPAMT",*************************************:BUG5484
+****DEC(UPAMT*C1.SCALING*C1.RATE,31,4) AS "BSUPAMT",****************************:BUG5484
+****DEC(UIALC*C1.SCALING,31,4) AS "SUIALC",*************************************:BUG5484
+****DEC(UIALC*C1.SCALING*C1.RATE,31,4) AS "BSUIALC",****************************:BUG5484
+****DEC(UAITC*C1.SCALING,31,4) AS "SUAITC",*************************************:BUG5484
+****DEC(UAITC*C1.SCALING*C1.RATE,31,4) AS "BSUAITC",****************************:BUG5484
+****DEC(UAIPD*C1.SCALING,31,4) AS "SUAIPD",*************************************:BUG5484
+****DEC(UAIPD*C1.SCALING*C1.RATE,31,4) AS "BSUAIPD",****************************:BUG5484
+****DEC(UAIAN*C1.SCALING,31,4) AS "SUAIAN",*************************************:BUG5484
+****DEC(UAIAN*C1.SCALING*C1.RATE,31,4) AS "BSUAIAN",****************************:BUG5484
+****DEC(UAIAP*C1.SCALING,31,4) AS "SUAIAP",*************************************:BUG5484
+****DEC(UAIAP*C1.SCALING*C1.RATE,31,4) AS "BSUAIAP",****************************:BUG5484
+****DEC(UIPRD*C1.SCALING,31,4) AS "SUIPRD",*************************************:BUG5484
+****DEC(UIPRD*C1.SCALING*C1.RATE,31,4) AS "BSUIPRD",****************************:BUG5484
+****DEC(UIPRM*C1.SCALING,31,4) AS "SUIPRM",*************************************:BUG5484
+****DEC(UIPRM*C1.SCALING*C1.RATE,31,4) AS "BSUIPRM",****************************:BUG5484
+****DEC(UNSAM*C1.SCALING,31,4) AS "SUNSAM",*************************************:BUG5484
+****DEC(UNSAM*C1.SCALING*C1.RATE,31,4) AS "BSUNSAM",****************************:BUG5484
+****DEC(UTAXD*C1.SCALING,31,4) AS "SUTAXD",*************************************:BUG5484
+****DEC(UTAXD*C1.SCALING*C1.RATE,31,4) AS "BSUTAXD",****************************:BUG5484
+****DEC(UTAXM*C1.SCALING,31,4) AS "SUTAXM",*************************************:BUG5484
+****DEC(UTAXM*C1.SCALING*C1.RATE,31,4) AS "BSUTAXM",****************************:BUG5484
+****DEC(TPAMT*C2.SCALING,31,4) AS "STPAMT",*************************************:BUG5484
+****DEC(TPAMT*C2.SCALING*C2.RATE,31,4) AS "BSTPAMT",****************************:BUG5484
+****DEC(TIALC*C2.SCALING,31,4) AS "STIALC",*************************************:BUG5484
+****DEC(TIALC*C2.SCALING*C2.RATE,31,4) AS "BSTIALC",****************************:BUG5484
+****DEC(TAITC*C2.SCALING,31,4) AS "STAITC",*************************************:BUG5484
+****DEC(TAITC*C2.SCALING*C2.RATE,31,4) AS "BSTAITC",****************************:BUG5484
+****DEC(TAIPD*C2.SCALING,31,4) AS "STAIPD",*************************************:BUG5484
+****DEC(TAIPD*C2.SCALING*C2.RATE,31,4) AS "BSTAIPD",****************************:BUG5484
+****DEC(TAIAN*C2.SCALING,31,4) AS "STAIAN",*************************************:BUG5484
+****DEC(TAIAN*C2.SCALING*C2.RATE,31,4) AS "BSTAIAN",****************************:BUG5484
+****DEC(TAIAP*C2.SCALING,31,4) AS "STAIAP",*************************************:BUG5484
+****DEC(TAIAP*C2.SCALING*C2.RATE,31,4) AS "BSTAIAP",****************************:BUG5484
+****DEC(TIPRD*C2.SCALING,31,4) AS "STIPRD",*************************************:BUG5484
+****DEC(TIPRD*C2.SCALING*C2.RATE,31,4) AS "BSTIPRD",****************************:BUG5484
+****DEC(TIPRM*C2.SCALING,31,4) AS "STIPRM",*************************************:BUG5484
+****DEC(TIPRM*C2.SCALING*C2.RATE,31,4) AS "BSTIPRM",****************************:BUG5484
+****DEC(TNSAM*C2.SCALING,31,4) AS "STNSAM",*************************************:BUG5484
+****DEC(TNSAM*C2.SCALING*C2.RATE,31,4) AS "BSTNSAM",****************************:BUG5484
+****DEC(TTAXD*C2.SCALING,31,4) AS "STTAXD",*************************************:BUG5484
+****DEC(TTAXD*C2.SCALING*C2.RATE,31,4) AS "BSTTAXD",****************************:BUG5484
+****DEC(TTAXM*C2.SCALING,31,4) AS "STTAXM",*************************************:BUG5484
+****DEC(TTAXM*C2.SCALING*C2.RATE,31,4) AS "BSTTAXM",****************************:BUG5484
+****DEC(UAEXA*C1.SCALING,31,4) AS "SUAEXA",*************************************:BUG5484
+****DEC(UAEXA*C1.SCALING*C1.RATE,31,4) AS "BSUAEXA",****************************:BUG5484
+****DEC(TAEXA*C2.SCALING,31,4) AS "STAEXA",*************************************:BUG5484
+****DEC(TAEXA*C2.SCALING*C2.RATE,31,4) AS "BSTAEXA",****************************:BUG5484
+****DEC(OUSI*C1.SCALING,31,4) AS "SOUSI",***************************************:BUG5484
+****DEC(OUSI*C1.SCALING*C1.RATE,31,4) AS "BSOUSI",******************************:BUG5484
+****DEC(OUSA*C1.SCALING,31,4) AS "SOUSA",***************************************:BUG5484
+****DEC(OUSA*C1.SCALING*C1.RATE,31,4) AS "BSOUSA",******************************:BUG5484
+****DEC(TUSI*C2.SCALING,31,4) AS "STUSI",***************************************:BUG5484
+****DEC(TUSI*C2.SCALING*C2.RATE,31,4) AS "BSTUSI",******************************:BUG5484
+****DEC(TUSA*C2.SCALING,31,4) AS "STUSA",***************************************:BUG5484
+****DEC(TUSA*C2.SCALING*C2.RATE,31,4) AS "BSTUSA",******************************:BUG5484
+****DEC(UOPAM*C1.SCALING,31,4) AS "SUOPAM",*************************************:BUG5484
+****DEC(UOPAM*C1.SCALING*C1.RATE,31,4) AS "BSUOPAM",****************************:BUG5484
+****DEC(TOPAM*C2.SCALING,31,4) AS "STOPAM",*************************************:BUG5484
+****DEC(TOPAM*C2.SCALING*C2.RATE,31,4) AS "BSTOPAM",****************************:BUG5484
+****DEC(FSUIPB*C1.SCALING,31,4) AS "SFSUIPB",***********************************:BUG5484
+****DEC(FSUIPB*C1.SCALING*C1.RATE,31,4) AS "BSFSUIPB",**************************:BUG5484
+****DEC(FSUPRB*C1.SCALING,31,4) AS "SFSUPRB",***********************************:BUG5484
+****DEC(FSUPRB*C1.SCALING*C1.RATE,31,4) AS "BSFSUPRB",**************************:BUG5484
+****DEC(FSUIAB*C1.SCALING,31,4) AS "SFSUIAB",***********************************:BUG5484
+****DEC(FSUIAB*C1.SCALING*C1.RATE,31,4) AS "BSFSUIAB",**************************:BUG5484
+****DEC(FSUALB*C1.SCALING,31,4) AS "SFSUALB",***********************************:BUG5484
+****DEC(FSUALB*C1.SCALING*C1.RATE,31,4) AS "BSFSUALB",**************************:BUG5484
+****DEC(FSUITB*C1.SCALING,31,4) AS "SFSUITB",***********************************:BUG5484
+****DEC(FSUITB*C1.SCALING*C1.RATE,31,4) AS "BSFSUITB",**************************:BUG5484
+****DEC(FSUINB*C1.SCALING,31,4) AS "SFSUINB",***********************************:BUG5484
+****DEC(FSUINB*C1.SCALING*C1.RATE,31,4) AS "BSFSUINB",**************************:BUG5484
+****DEC(FSUPMB*C1.SCALING,31,4) AS "SFSUPMB",***********************************:BUG5484
+****DEC(FSUPMB*C1.SCALING*C1.RATE,31,4) AS "BSFSUPMB",**************************:BUG5484
+****DEC(FSUSAB*C1.SCALING,31,4) AS "SFSUSAB",***********************************:BUG5484
+****DEC(FSUSAB*C1.SCALING*C1.RATE,31,4) AS "BSFSUSAB",**************************:BUG5484
+****DEC(FSUPAM*C1.SCALING,31,4) AS "SFSUPAM",***********************************:BUG5484
+****DEC(FSUPAM*C1.SCALING*C1.RATE,31,4) AS "BSFSUPAM",**************************:BUG5484
+****DEC(FSUURL*C1.SCALING,31,4) AS "SFSUURL",***********************************:BUG5484
+****DEC(FSUURL*C1.SCALING*C1.RATE,31,4) AS "BSFSUURL",**************************:BUG5484
+****DEC(FSUURP*C1.SCALING,31,4) AS "SFSUURP",***********************************:BUG5484
+****DEC(FSUURP*C1.SCALING*C1.RATE,31,4) AS "BSFSUURP",**************************:BUG5484
+****DEC(FSTIPB*C2.SCALING,31,4) AS "SFSTIPB",***********************************:BUG5484
+****DEC(FSTIPB*C2.SCALING*C2.RATE,31,4) AS "BSFSTIPB",**************************:BUG5484
+****DEC(FSTPRB*C2.SCALING,31,4) AS "SFSTPRB",***********************************:BUG5484
+****DEC(FSTPRB*C2.SCALING*C2.RATE,31,4) AS "BSFSTPRB",**************************:BUG5484
+****DEC(FSTIAB*C2.SCALING,31,4) AS "SFSTIAB",***********************************:BUG5484
+****DEC(FSTIAB*C2.SCALING*C2.RATE,31,4) AS "BSFSTIAB",**************************:BUG5484
+****DEC(FSTALB*C2.SCALING,31,4) AS "SFSTALB",***********************************:BUG5484
+****DEC(FSTALB*C2.SCALING*C2.RATE,31,4) AS "BSFSTALB",**************************:BUG5484
+****DEC(FSTITB*C2.SCALING,31,4) AS "SFSTITB",***********************************:BUG5484
+****DEC(FSTITB*C2.SCALING*C2.RATE,31,4) AS "BSFSTITB",**************************:BUG5484
+****DEC(FSTINB*C2.SCALING,31,4) AS "SFSTINB",***********************************:BUG5484
+****DEC(FSTINB*C2.SCALING*C2.RATE,31,4) AS "BSFSTINB",**************************:BUG5484
+****DEC(FSTPMB*C2.SCALING,31,4) AS "SFSTPMB",***********************************:BUG5484
+****DEC(FSTPMB*C2.SCALING*C2.RATE,31,4) AS "BSFSTPMB",**************************:BUG5484
+****DEC(FSTSAB*C2.SCALING,31,4) AS "SFSTSAB",***********************************:BUG5484
+****DEC(FSTSAB*C2.SCALING*C2.RATE,31,4) AS "BSFSTSAB",**************************:BUG5484
+****DEC(FSTPAM*C2.SCALING,31,4) AS "SFSTPAM",***********************************:BUG5484
+****DEC(FSTPAM*C2.SCALING*C2.RATE,31,4) AS "BSFSTPAM",**************************:BUG5484
+****DEC(FSTURL*C2.SCALING,31,4) AS "SFSTURL",***********************************:BUG5484
+****DEC(FSTURL*C2.SCALING*C2.RATE,31,4) AS "BSFSTURL",**************************:BUG5484
+****DEC(FSTURP*C2.SCALING,31,4) AS "SFSTURP",***********************************:BUG5484
+****DEC(FSTURP*C2.SCALING*C2.RATE,31,4) AS "BSFSTURP",**************************:BUG5484
+    BAGE AS SBAGE,                                                              :BUG5484
+    UPAMT AS SUPAMT,                                                            :BUG5484
+    UIALC AS SUIALC,                                                            :BUG5484
+    UAITC AS SUAITC,                                                            :BUG5484
+    UAIPD AS SUAIPD,                                                            :BUG5484
+    UAIAN AS SUAIAN,                                                            :BUG5484
+    UAIAP AS SUAIAP,                                                            :BUG5484
+    UIPRD AS SUIPRD,                                                            :BUG5484
+    UIPRM AS SUIPRM,                                                            :BUG5484
+    UNSAM AS SUNSAM,                                                            :BUG5484
+    UTAXD AS SUTAXD,                                                            :BUG5484
+    UTAXM AS SUTAXM,                                                            :BUG5484
+    TPAMT AS STPAMT,                                                            :BUG5484
+    TIALC AS STIALC,                                                            :BUG5484
+    TAITC AS STAITC,                                                            :BUG5484
+    TAIPD AS STAIPD,                                                            :BUG5484
+    TAIAN AS STAIAN,                                                            :BUG5484
+    TAIAP AS STAIAP,                                                            :BUG5484
+    TIPRD AS STIPRD,                                                            :BUG5484
+    TIPRM AS STIPRM,                                                            :BUG5484
+    TNSAM AS STNSAM,                                                            :BUG5484
+    TTAXD AS STTAXD,                                                            :BUG5484
+    TTAXM AS STTAXM,                                                            :BUG5484
+    UAEXA AS SUAEXA,                                                            :BUG5484
+    TAEXA AS STAEXA,                                                            :BUG5484
+    OUSI AS SOUSI,                                                              :BUG5484
+    OUSA AS SOUSA,                                                              :BUG5484
+    TUSI AS STUSI,                                                              :BUG5484
+    TUSA AS STUSA,                                                              :BUG5484
+    UOPAM AS SUOPAM,                                                            :BUG5484
+    TOPAM AS STOPAM,                                                            :BUG5484
+    FSUIPB AS SFSUIPB,                                                          :BUG5484
+    FSUPRB AS SFSUPRB,                                                          :BUG5484
+    FSUIAB AS SFSUIAB,                                                          :BUG5484
+    FSUALB AS SFSUALB,                                                          :BUG5484
+    FSUITB AS SFSUITB,                                                          :BUG5484
+    FSUINB AS SFSUINB,                                                          :BUG5484
+    FSUPMB AS SFSUPMB,                                                          :BUG5484
+    FSUSAB AS SFSUSAB,                                                          :BUG5484
+    FSUPAM AS SFSUPAM,                                                          :BUG5484
+    FSUURL AS SFSUURL,                                                          :BUG5484
+    FSUURP AS SFSUURP,                                                          :BUG5484
+    FSTIPB AS SFSTIPB,                                                          :BUG5484
+    FSTPRB AS SFSTPRB,                                                          :BUG5484
+    FSTIAB AS SFSTIAB,                                                          :BUG5484
+    FSTALB AS SFSTALB,                                                          :BUG5484
+    FSTITB AS SFSTITB,                                                          :BUG5484
+    FSTINB AS SFSTINB,                                                          :BUG5484
+    FSTPMB AS SFSTPMB,                                                          :BUG5484
+    FSTSAB AS SFSTSAB,                                                          :BUG5484
+    FSTPAM AS SFSTPAM,                                                          :BUG5484
+    FSTURL AS SFSTURL,                                                          :BUG5484
+    FSTURP AS SFSTURP,                                                          :BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(UNRL*C3.SCALING,31,4) ELSE*******************:BUG5484
+****DEC(UNRL*C1.SCALING,31,4) END AS "SUNRL",***********************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(UNRL*C3.SCALING,31,4) ELSE*******************:BUG5484
+****DEC(UNRL*C1.SCALING*C1.RATE,31,4) END AS "BSUNRL",**************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(UNRLP*C3.SCALING,31,4) ELSE******************:BUG5484
+****DEC(UNRLP*C1.SCALING,31,4) END AS "SUNRLP",*********************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(UNRLP*C3.SCALING,31,4) ELSE******************:BUG5484
+****DEC(UNRLP*C1.SCALING*C1.RATE,31,4) END AS "BSUNRLP",************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSEFUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSEFUP*C1.SCALING,31,4) END AS "SFSEFUP",*******************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSEFUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSEFUP*C1.SCALING*C1.RATE,31,4) END AS "BSFSEFUP",**********************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSECUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSECUP*C1.SCALING,31,4) END AS "SFSECUP",*******************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSECUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSECUP*C1.SCALING*C1.RATE,31,4) END AS "BSFSECUP",**********************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSXFUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSXFUP*C1.SCALING,31,4) END AS "SFSXFUP",*******************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSXFUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSXFUP*C1.SCALING*C1.RATE,31,4) END AS "BSFSXFUP",**********************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSXCUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSXCUP*C1.SCALING,31,4) END AS "SFSXCUP",*******************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSXCUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSXCUP*C1.SCALING*C1.RATE,31,4) END AS "BSFSXCUP",**********************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSTRUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSTRUP*C1.SCALING,31,4) END AS "SFSTRUP",*******************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSTRUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSTRUP*C1.SCALING*C1.RATE,31,4) END AS "BSFSTRUP",**********************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSTFUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSTFUP*C1.SCALING,31,4) END AS "SFSTFUP",*******************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSTFUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSTFUP*C1.SCALING*C1.RATE,31,4) END AS "BSFSTFUP",**********************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSTCUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+****DEC(FSTCUP*C1.SCALING,31,4) END AS "SFSTCUP",*******************************:BUG5484
+****CASE WHEN DTYP = 'RX' THEN DEC(FSTCUP*C3.SCALING,31,4) ELSE*****************:BUG5484
+*** DEC(FSTCUP*C1.SCALING*C1.RATE,31,4) END AS "BSFSTCUP",**********************:BUG5484
+    CASE WHEN DTYP =  'RX' THEN UNRL END AS RXSUNRL,                            :BUG5484
+****CASE WHEN DTYP**=*'RX' THEN UNRL END AS SUNRL,******************************:BUG5484 BG18886
+    CASE WHEN DTYP <> 'RX' THEN UNRL END AS SUNRL,                              :BUG5484 BG18886
+    CASE WHEN DTYP =  'RX' THEN UNRLP END AS RXSUNRLP,                          :BUG5484
+****CASE WHEN DTYP**=*'RX' THEN UNRLP END AS SUNRLP,****************************:BUG5484 BG18886
+    CASE WHEN DTYP <> 'RX' THEN UNRLP END AS SUNRLP,                            :BUG5484 BG18886
+    CASE WHEN DTYP =  'RX' THEN FSEFUP END AS RXSFSEFUP,                        :BUG5484
+****CASE WHEN DTYP**=*'RX' THEN FSEFUP END AS SFSEFUP,**************************:BUG5484 BG18886
+    CASE WHEN DTYP <> 'RX' THEN FSEFUP END AS SFSEFUP,                          :BUG5484 BG18886
+    CASE WHEN DTYP =  'RX' THEN FSECUP END AS RXSFSECUP,                        :BUG5484
+****CASE WHEN DTYP**=*'RX' THEN FSECUP END AS SFSECUP,**************************:BUG5484 BG18886
+    CASE WHEN DTYP <> 'RX' THEN FSECUP END AS SFSECUP,                          :BUG5484 BG18886
+    CASE WHEN DTYP =  'RX' THEN FSXFUP END AS RXSFSXFUP,                        :BUG5484
+****CASE WHEN DTYP**=*'RX' THEN FSXFUP END AS SFSXFUP,**************************:BUG5484 BG18886
+    CASE WHEN DTYP <> 'RX' THEN FSXFUP END AS SFSXFUP,                          :BUG5484 BG18886
+    CASE WHEN DTYP  = 'RX' THEN FSXCUP END AS RXSFSXCUP,                        :BUG5484
+****CASE WHEN DTYP**=*'RX' THEN FSXCUP END AS SFSXCUP,**************************:BUG5484 BG18886
+    CASE WHEN DTYP <> 'RX' THEN FSXCUP END AS SFSXCUP,                          :BUG5484 BG18886
+    CASE WHEN DTYP  = 'RX' THEN FSTRUP END AS RXSFSTRUP,                        :BUG5484
+****CASE WHEN DTYP**=*'RX' THEN FSTRUP END AS SFSTRUP,**************************:BUG5484 BG18886
+    CASE WHEN DTYP <> 'RX' THEN FSTRUP END AS SFSTRUP,                          :BUG5484 BG18886
+    CASE WHEN DTYP  = 'RX' THEN FSTFUP END AS RXSFSTFUP,                        :BUG5484
+****CASE WHEN DTYP**=*'RX' THEN FSTFUP END AS SFSTFUP,**************************:BUG5484 BG18886
+    CASE WHEN DTYP <> 'RX' THEN FSTFUP END AS SFSTFUP,                          :BUG5484 BG18886
+    CASE WHEN DTYP  = 'RX' THEN FSTCUP END AS RXSFSTCUP,                        :BUG5484
+****CASE WHEN DTYP**=*'RX' THEN FSTCUP END AS SFSTCUP,**************************:BUG5484 BG18886
+    CASE WHEN DTYP <> 'RX' THEN FSTCUP END AS SFSTCUP,                          :BUG5484 BG18886
+****CASE WHEN UPPR = 'P' THEN DEC(UPAD*C1.SCALING,31,4) WHEN UPPR = 'R'*********:BUG5484
+****THEN DEC(UPAD*C2.SCALING,31,4) END AS "SUPAD",******************************:BUG5484
+****CASE WHEN UPPR = 'P' THEN DEC(UPAD*C1.SCALING*C1.RATE,31,4) WHEN UPPR*******:BUG5484
+****= 'R' THEN DEC(UPAD*C2.SCALING*C2.RATE,31,4) END AS "BSUPAD",***************:BUG5484
+****CASE WHEN UPPR = 'P' THEN DEC(BOAM*C1.SCALING,31,4) WHEN UPPR = 'R'*********:BUG5484
+****THEN DEC(BOAM*C2.SCALING,31,4) END AS "SBOAM",******************************:BUG5484
+****CASE WHEN UPPR = 'P' THEN DEC(BOAM*C1.SCALING*C1.RATE,31,4) WHEN UPPR*******:BUG5484
+****= 'R' THEN DEC(BOAM*C2.SCALING*C2.RATE,31,4) END AS "BSBOAM",***************:BUG5484
+****CASE WHEN UPPR = 'P' THEN DEC(UPFE*C1.SCALING,31,4) WHEN UPPR = 'R'*********:BUG5484
+****THEN DEC(UPFE*C2.SCALING,31,4) END AS "SUPFE",******************************:BUG5484
+****CASE WHEN UPPR = 'P' THEN DEC(UPFE*C1.SCALING*C1.RATE,31,4) WHEN UPPR*******:BUG5484
+****= 'R' THEN DEC(UPFE*C2.SCALING*C2.RATE,31,4) END AS "BSUPFE",***************:BUG5484
+    CASE WHEN UPPR = 'P' THEN UPAD END AS PUPAD,                                :BUG5484
+    CASE WHEN UPPR = 'R' THEN UPAD END AS RUPAD,                                :BUG5484
+    CASE WHEN UPPR = 'P' THEN BOAM END AS PBOAM,                                :BUG5484
+    CASE WHEN UPPR = 'R' THEN BOAM END AS RBOAM,                                :BUG5484
+    CASE WHEN UPPR = 'P' THEN UPFE END AS PUPFE,                                :BUG5484
+    CASE WHEN UPPR = 'R' THEN UPFE END AS RUPFE,                                :BUG5484
+    CASE WHEN BYSL = 'B' THEN DIGITS(TBRTT)                                     :
+    ELSE DIGITS(UBRTT) END AS "RFRTE",                                          :
+    CASE WHEN BYSL = 'B' THEN DIGITS(TBRTT)                                     :
+    ELSE DIGITS(UBRTT) END AS "SRFRTE",                                         :
+****CASE*WHEN*N.F1FCCU*=*0*THEN*'*'*ELSE*DIGITS(N.F1FCCU)*END*AS*PADF1FCCU,*****:      CLE025 CSD027
+    CASE WHEN N.F1FCCU ='' THEN ' ' ELSE        N.F1FCCU  END AS PADF1FCCU,     :      CLE025 CSD027
+    CASE WHEN N.F1FACT = 0 THEN ' ' ELSE DIGITS(N.F1FACT) END AS PADF1FACT,     :             CLE025
+    CASE WHEN N.F1FCNO = 0 THEN ' ' ELSE DIGITS(N.F1FCNO) END AS PADF1FCNO,     :             CLE025
+****A8ZONE AS CUSTZONE, V_GPGLCUSL.*********************************************:BUG5484
+    A8ZONE AS CUSTZONE,                                                         :BUG5484
+    GPGLCUSL.CGGLOB,GPGLCUSL.CGCSSN,GPGLCUSL.CGRNM,GPGLCUSL.CGRTN,              :BUG5484
+    GPGLCUSL.CGICD,GPGLCUSL.CGACO,GPGLCUSL.CGCNCZ,GPGLCUSL.CGCOLC,              :BUG5484
+    GPGLCUSL.CGBRCD,GPGLCUSL.CGCUST,GPGLCUSL.CGZONE                             :BUG5484
+    FROM GZDEALSDG                                                              :
+    LEFT JOIN GZDLDLDGQD AS N ON N.F1DLNO = DIGITS(DLNO) AND BRCA = N.F1BRCA    :           CLE025
+    LEFT JOIN GZSDBRCHPD ON BRCA = A8BRCD                                       :
+****LEFT JOIN GZSDBANKPD ON BJZONE = A8ZONE*************************************:BUG5484
+****LEFT*JOIN*V*GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(CNUM)***********:          BUG1912
+****LEFT JOIN GPGLCUSL V_GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = CNUM**********:BUG5484   BUG1912
+    LEFT JOIN GPGLCUSL GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = CNUM;           :BUG5484
+****LEFT JOIN V_GLOBRATE C1 ON C1.CCY=UCUCY*************************************:BUG5484
+****LEFT JOIN V_GLOBRATE C2 ON C2.CCY=TCUCY*************************************:BUG5484
+****LEFT JOIN V_GLOBRATE C3 ON C3.CCY=BJCYCD;***********************************:BUG5484
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (PADSTS IS 'Status',                                                        :
+     UDNSI3   IS 'Our Amendment       Payment             Conf Request',        :
+     UDNSI0   IS 'Our Effective       Interest            Rate Fixed',          :
+     TDNSI3   IS 'Their Amendment     Payment             Conf Request',        :
+     TDNSI0   IS 'Their Effective     Interest            Rate Fixed',          :
+     UDSTI2   IS 'Our Fed Funds       Indicator           is Y',                :
+     TDSTI2   IS 'Their Fed Funds     Indicator           is Y',                :
+     CNFI7    IS 'Confirmation        Fed Funds           Indicator is Y',      :
+     CNFI5    IS 'Their Rate          Fixed advice        Produced',            :
+     CNFI4    IS 'Our Rate            Fixed advice        Produced',            :
+     CNFI3    IS 'Counterparty        Payment Conf.       Produced',            :
+     CNFI2    IS 'User Payment        Confirmation        Produced',            :
+     CNFI0    IS 'Start Date          Confirmation Not    yet Produced',        :
+     ACEI2    IS 'Maturity Date       Account Keys        Produced',            :
+     ACEI1    IS 'Value Date          Account Keys        Produced',            :
+     ACEI0    IS 'Deal Date           Account Keys        Produced',            :
+     TLXI4    IS 'Pay/Receive         Reporting           User',                :
+     TLXI3    IS 'Pay/Receive         Reporting           Counterparty',        :
+     RFRTE    IS 'Reference Rate'                                      );       :
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+    (PADSTS TEXT IS 'Status',                                                   :
+     UDNSI3   TEXT IS 'Our Amendment Payment Confirmation Request',             :
+     UDNSI0   TEXT IS 'Our Effective Interest Rate Fixed',                      :
+     TDNSI3   TEXT IS 'Their Amendment Payment Conf Request',                   :
+     TDNSI0   TEXT IS 'Their Effective Interest Rate Fixed',                    :
+     UDSTI2   TEXT IS 'Our Fed Funds Indicator is Y',                           :
+     TDSTI2   TEXT IS 'Their Fed Funds Indicator is Y',                         :
+     CNFI7    TEXT IS 'Confirmation Fed Funds Indicator is Y',                  :
+     CNFI5    TEXT IS 'Their Rate Fixed advice Produced',                       :
+     CNFI4    TEXT IS 'Our Rate Fixed advice Produced',                         :
+     CNFI3    TEXT IS 'Counterparty Payment Confirmation Produced',             :
+     CNFI2    TEXT IS 'User Payment Confirmation Produced',                     :
+     CNFI0    TEXT IS 'Start Date Confirmation Not yet Produced',               :
+     ACEI2    TEXT IS 'Maturity Date Account Keys Produced',                    :
+     ACEI1    TEXT IS 'Value Date Account Keys Produced',                       :
+     ACEI0    TEXT IS 'Deal Date Account Keys Produced',                        :
+     TLXI4    TEXT IS 'Pay/Receive Reporting User',                             :
+     TLXI3    TEXT IS 'Pay/Receive Reporting Counterparty');                    :
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADDLNO    AS DLNO       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADCNUM    AS CNUM       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADUBRTT   AS UBRTT      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADTBRTT   AS TBRTT      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADRSTM    AS RSTM       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADPSTM    AS PSTM       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADCDAS    AS CDAS       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADLNKDN   AS LNKDN      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADBAGE    AS BAGE       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADUFRFD   AS UFRFD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADTFRFD   AS TFRFD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADURTSP   AS URTSP      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADTRTSP   AS TRTSP      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADUICFD   AS UICFD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADTICFD   AS TICFD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADUSTRT   AS USTRT      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADTSTRT   AS TSTRT      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADUIPFD   AS UIPFD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADTIPFD   AS TIPFD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADCLRAT   AS CLRAT      USING GZDEALSDG                       :            BUG1099
+ * DESCRIBEFIELD PADFLRAT   AS FLRAT      USING GZDEALSDG                       :            BUG1099
+ * DESCRIBEFIELD PADBRSQ    AS BRSQ       USING GZDEALSDG                       :            BG5842R
+ * DESCRIBEFIELD PADROCN    AS ROCN       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADROBN    AS ROBN       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADPOCN    AS POCN       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADPOBN    AS POBN       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADAGVV    AS AGVV       USING GZDEALSDG                       :
+ * DESCRIBEFIELD PADF1FCCU  AS FCCU       USING GZDLDLDGQD                      :             CLE025
+ * DESCRIBEFIELD PADF1FACT  AS FACT       USING GZDLDLDGQD                      :             CLE025
+ * DESCRIBEFIELD PADF1FCNO  AS FCNO       USING GZDLDLDGQD                      :             CLE025
+ * DESCRIBEFIELD FDDAT      AS DDAT       USING GZDEALSDG                       :
+ * DESCRIBEFIELD FVDAT      AS VDAT       USING GZDEALSDG                       :
+ * DESCRIBEFIELD FMDAT      AS MDAT       USING GZDEALSDG                       :
+ * DESCRIBEFIELD FUINFD     AS UINFD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FUSLIP     AS USLIP      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FUNICD     AS UNICD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FUICBD     AS UICBD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FUNIPD     AS UNIPD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FUIPBD     AS UIPBD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FUIACD     AS UIACD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FTINFD     AS TINFD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FTSLIP     AS TSLIP      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FTNICD     AS TNICD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FTICBD     AS TICBD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FTNIPD     AS TNIPD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FTIPBD     AS TIPBD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FTIACD     AS TIACD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FULPCD     AS ULPCD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FTLPCD     AS TLPCD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FTNPCD     AS TNPCD      USING GZDEALSDG                       :
+ * DESCRIBEFIELD FUNPCD     AS UNPCD      USING GZDEALSDG                       :            BUG1099
+ * DESCRIBEFIELD FUPVD      AS UPVD       USING GZDEALSDG                       :
+ * DESCRIBEFIELD FBODD      AS BODD       USING GZDEALSDG                       :
+ * DESCRIBEFIELD FBOVD      AS BOVD       USING GZDEALSDG                       :
+ * DESCRIBEFIELD FPLULRC    AS PLULRC     USING GZDEALSDG                       :
+ * DESCRIBEFIELD FPLTLRC    AS PLTLRC     USING GZDEALSDG                       :
+ * DESCRIBEFIELD FLCD       AS LCD        USING GZDEALSDG                       :
+ * DESCRIBEFIELD FAGDT      AS AGDT       USING GZDEALSDG                       :
+ * DESCRIBEFIELD FORED      AS ORED       USING GZDEALSDG                       :
+ * DESCRIBEFIELD SBAGE      AS BAGE       USING GZDEALSDG                       :
+***DESCRIBEFIELD BSBAGE     AS BAGE       USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUPAMT     AS UPAMT      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUPAMT    AS UPAMT      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUIALC     AS UIALC      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUIALC    AS UIALC      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUAITC     AS UAITC      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUAITC    AS UAITC      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUAIPD     AS UAIPD      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUAIPD    AS UAIPD      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUAIAN     AS UAIAN      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUAIAN    AS UAIAN      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUAIAP     AS UAIAP      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUAIAP    AS UAIAP      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUIPRD     AS UIPRD      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUIPRD    AS UIPRD      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUIPRM     AS UIPRM      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUIPRM    AS UIPRM      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUNSAM     AS UNSAM      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUNSAM    AS UNSAM      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUTAXD     AS UTAXD      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUTAXD    AS UTAXD      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUTAXM     AS UTAXM      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUTAXM    AS UTAXM      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STPAMT     AS TPAMT      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTPAMT    AS TPAMT      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STIALC     AS TIALC      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTIALC    AS TIALC      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STAITC     AS TAITC      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTAITC    AS TAITC      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STAIPD     AS TAIPD      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTAIPD    AS TAIPD      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STAIAN     AS TAIAN      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTAIAN    AS TAIAN      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STAIAP     AS TAIAP      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTAIAP    AS TAIAP      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STIPRD     AS TIPRD      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTIPRD    AS TIPRD      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STIPRM     AS TIPRM      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTIPRM    AS TIPRM      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STNSAM     AS TNSAM      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTNSAM    AS TNSAM      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STTAXD     AS TTAXD      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTTAXD    AS TTAXD      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STTAXM     AS TTAXM      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTTAXM    AS TTAXM      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUAEXA     AS UAEXA      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUAEXA    AS UAEXA      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STAEXA     AS TAEXA      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTAEXA    AS TAEXA      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SOUSI      AS OUSI       USING GZDEALSDG                       :
+***DESCRIBEFIELD BSOUSI     AS OUSI       USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SOUSA      AS OUSA       USING GZDEALSDG                       :
+***DESCRIBEFIELD BSOUSA     AS OUSA       USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STUSI      AS TUSI       USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTUSI     AS TUSI       USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STUSA      AS TUSA       USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTUSA     AS TUSA       USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUOPAM     AS UOPAM      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUOPAM    AS UOPAM      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD STOPAM     AS TOPAM      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSTOPAM    AS TOPAM      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUIPB    AS FSUIPB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUIPB   AS FSUIPB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUPRB    AS FSUPRB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUPRB   AS FSUPRB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUIAB    AS FSUIAB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUIAB   AS FSUIAB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUALB    AS FSUALB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUALB   AS FSUALB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUITB    AS FSUITB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUITB   AS FSUITB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUINB    AS FSUINB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUINB   AS FSUINB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUPMB    AS FSUPMB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUPMB   AS FSUPMB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUSAB    AS FSUSAB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUSAB   AS FSUSAB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUPAM    AS FSUPAM     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUPAM   AS FSUPAM     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUURL    AS FSUURL     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUURL   AS FSUURL     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSUURP    AS FSUURP     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSUURP   AS FSUURP     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTIPB    AS FSTIPB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTIPB   AS FSTIPB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTPRB    AS FSTPRB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTPRB   AS FSTPRB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTIAB    AS FSTIAB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTIAB   AS FSTIAB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTALB    AS FSTALB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTALB   AS FSTALB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTITB    AS FSTITB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTITB   AS FSTITB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTINB    AS FSTINB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTINB   AS FSTINB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTPMB    AS FSTPMB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTPMB   AS FSTPMB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTSAB    AS FSTSAB     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTSAB   AS FSTSAB     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTPAM    AS FSTPAM     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTPAM   AS FSTPAM     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTURL    AS FSTURL     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTURL   AS FSTURL     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTURP    AS FSTURP     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTURP   AS FSTURP     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUNRL      AS UNRL       USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUNRL     AS UNRL       USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SUNRLP     AS UNRLP      USING GZDEALSDG                       :
+***DESCRIBEFIELD BSUNRLP    AS UNRLP      USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSEFUP    AS FSEFUP     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSEFUP   AS FSEFUP     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSECUP    AS FSECUP     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSECUP   AS FSECUP     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSXFUP    AS FSXFUP     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSXFUP   AS FSXFUP     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSXCUP    AS FSXCUP     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSXCUP   AS FSXCUP     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTRUP    AS FSTRUP     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTRUP   AS FSTRUP     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTFUP    AS FSTFUP     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTFUP   AS FSTFUP     USING GZDEALSDG  (BASECCY)************:BUG5484
+ * DESCRIBEFIELD SFSTCUP    AS FSTCUP     USING GZDEALSDG                       :
+***DESCRIBEFIELD BSFSTCUP   AS FSTCUP     USING GZDEALSDG  (BASECCY)************:BUG5484
+***DESCRIBEFIELD SUPAD      AS UPAD       USING GZDEALSDG***********************:BUG5484
+***DESCRIBEFIELD BSUPAD     AS UPAD       USING GZDEALSDG  (BASECCY)************:BUG5484
+***DESCRIBEFIELD SBOAM      AS BOAM       USING GZDEALSDG***********************:BUG5484
+***DESCRIBEFIELD BSBOAM     AS BOAM       USING GZDEALSDG  (BASECCY)************:BUG5484
+***DESCRIBEFIELD SUPFE      AS UPFE       USING GZDEALSDG***********************:BUG5484     BUG1099
+***DESCRIBEFIELD BSUPFE     AS UPFE       USING GZDEALSDG  (BASECCY)************:BUG5484     BUG1099
+ * DESCRIBEFIELD PADFSOS1B  AS FSOS1B     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD PADFSOS2B  AS FSOS2B     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD PADFSOE1B  AS FSOE1B     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD PADFSOE2B  AS FSOE2B     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD PADFSTS1B  AS FSTS1B     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD PADFSTS2B  AS FSTS2B     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD PADFSTE1B  AS FSTE1B     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD PADFSTE2B  AS FSTE2B     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSOSDT    AS FSOSDT     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSOS1D    AS FSOS1D     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSOS2D    AS FSOS2D     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSOEDT    AS FSOEDT     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSOE1D    AS FSOE1D     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSOE2D    AS FSOE2D     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSTSDT    AS FSTSDT     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSTS1D    AS FSTS1D     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSTS2D    AS FSTS2D     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSTEDT    AS FSTEDT     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSTE1D    AS FSTE1D     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD FFSTE2D    AS FSTE2D     USING GZDEALSDG                       :             CDL028
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEEND                                                                  :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ FRA / IRS - GZDEALSDG                    ';                     :
+                                                                                :
